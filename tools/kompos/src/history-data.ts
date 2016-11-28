@@ -14,6 +14,7 @@ export class HistoryData {
   private messages: IdMap<IdMap<number>> = {};
   private maxMessageCount = 0;
   private strings = {};
+  private currentReceiver = "";
 
   constructor(){
     this.addActor("0:0", "Platform"); //add main actor 
@@ -86,7 +87,7 @@ export class HistoryData {
       var typ = data.getInt8(i);
       i++;
       switch(typ){
-        case 1: 
+        case 1:
           var aid = (data.getInt32(i+4) + ':' + data.getInt32(i));
           //8 byte causal message id
           var type:number = data.getInt16(i+16); //type
@@ -102,6 +103,7 @@ export class HistoryData {
           //8 byte promise id
           //8 byte resolving message id
           i += 16;
+          i += readParameter(data, i, null);
           break;
         case 4:
           //8 byte promise id
@@ -109,26 +111,76 @@ export class HistoryData {
           i += 16;
           break;
         case 5:
-          var num = data.getInt16(i); //num messages
           //8 byte message base id
-          var rec = (data.getInt32(i+14) + ':' + data.getInt32(i+10)); //receiver id
-          i += 18;
-          var j;
-          for(j = 0; j < num; j++){
-            var sender = (data.getInt32(i+4) + ':' + data.getInt32(i)); //sender id
-            //8 byte causal message id
-            var sym = data.getInt16(i+16); //selector
-            this.addMessage(sender, rec);
-            i += 18;
-          }
+          this.currentReceiver = (data.getInt32(i+12) + ':' + data.getInt32(i+8)); //receiver id
+          i += 16;
           break;
         case 6:
           var thread = data.getInt8(i); //Thread
           //8 byte timestamp
           i += 9;
           break;
+        case 7:
+          //8 byte message base id
+          this.currentReceiver = (data.getInt32(i+12) + ':' + data.getInt32(i+8)); //receiver id
+          var offset = data.getInt16(i+16); //id offset
+          i += 18;
+          break;
+        case 8:
+          var sender = (data.getInt32(i+4) + ':' + data.getInt32(i)); //sender id
+          //8 byte causal message id
+          var sym = data.getInt16(i+16); //selector
+          //8byte execution start
+          //8byte send time
+          var numParam = data.getInt8(i+34);//parameter count
+          i += 35;
+          var k;
+          for(k = 0; k < numParam; k++){
+            i += readParameter(data, i, null);
+          }
+          this.addMessage(sender, this.currentReceiver);
+          break;
+        case 9:
+          //8 byte promise id
+          var sender = (data.getInt32(i+12) + ':' + data.getInt32(i+8)); //sender id
+          //8 byte causal message id
+          var sym = data.getInt16(i+24); //selector
+          //8byte execution start
+          //8byte send time
+          var numParam = data.getInt8(i+42);//parameter count
+          i += 43;
+          var k;
+          for(k = 0; k < numParam; k++){
+            i += readParameter(data, i, null);
+          }
+          this.addMessage(sender, this.currentReceiver);
+          break;
       }
     }
+  }
+}
+
+function readParameter(dv:DataView, offset:number, o):number{
+  var paramType = dv.getInt8(offset);
+  switch(paramType){
+    case 0: //false
+      return 1;
+    case 1: //true
+      return 1;
+    case 2: //long
+      return 9;
+    case 3: //double
+      return 9;
+    case 4: //promise (promise id)
+      return 9;
+    case 5: //resolver (promise id)
+      return 9;
+    case 6: //Object Type
+      return 3;
+    case 7: //String
+      return 1;
+    default:
+      return 1;
   }
 }
 

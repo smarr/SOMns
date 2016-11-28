@@ -118,7 +118,7 @@ public class SPromise extends SObjectWithClass {
     SResolver resolver = createResolver(promise, "oE:block");
 
     PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(),
-        owner, block, resolver, blockCallTarget, false, false, false);
+        owner, block, resolver, blockCallTarget, false, false, false, promise);
     registerOnError(msg, current);
     return promise;
   }
@@ -165,7 +165,7 @@ public class SPromise extends SObjectWithClass {
     SResolver resolver = createResolver(promise, "oEx:class:block");
 
     PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), owner,
-        block, resolver, blockCallTarget, false, false, false);
+        block, resolver, blockCallTarget, false, false, false, promise);
 
     synchronized (this) {
       if (resolutionState == Resolution.ERRORNOUS) {
@@ -198,13 +198,9 @@ public class SPromise extends SObjectWithClass {
     assert owner != null;
     msg.resolve(result, owner, current);
 
-    if (VmSettings.ACTOR_TRACING && this.resolutionState == Resolution.SUCCESSFUL) {
-      getPromiseMessages().add(msg.getTarget().sendAndGetId(msg));
-    } else {
-      // update the message flag for the message breakpoint at receiver side
-      msg.setIsMessageReceiverBreakpoint(isBreakpointOnPromiseResolution);
-      msg.getTarget().send(msg);
-    }
+    // update the message flag for the message breakpoint at receiver side
+    msg.setIsMessageReceiverBreakpoint(isBreakpointOnPromiseResolution);
+    msg.getTarget().send(msg);
   }
 
   public final synchronized void addChainedPromise(@NotNull final SPromise remote) {
@@ -393,7 +389,7 @@ public class SPromise extends SObjectWithClass {
 
       if (VmSettings.ACTOR_TRACING) {
         if (p.resolutionState != Resolution.CHAINED) {
-          ActorExecutionTrace.promiseResolution(p.getPromiseId());
+          ActorExecutionTrace.promiseResolution(p.getPromiseId(), result);
         }
       }
 

@@ -51,6 +51,10 @@ public abstract class EventualMessage {
     return causalMessageId;
   }
 
+  public SResolver getResolver() {
+    return resolver;
+  }
+
   public abstract SSymbol getSelector();
 
   public SourceSection getTargetSourceSection() {
@@ -162,6 +166,8 @@ public abstract class EventualMessage {
       assert originalSender != null;
       return originalSender;
     }
+
+    public abstract SPromise getPromise();
   }
 
   /**
@@ -172,6 +178,7 @@ public abstract class EventualMessage {
     private final SSymbol selector;
     protected Actor target;
     protected Actor finalSender;
+    protected final SPromise originalTarget;
 
     protected PromiseSendMessage(final long causalMessageId, final SSymbol selector,
         final Object[] arguments, final Actor originalSender,
@@ -180,6 +187,8 @@ public abstract class EventualMessage {
       super(causalMessageId, arguments, originalSender, resolver, onReceive, triggerMessageReceiverBreakpoint,
           triggerPromiseResolverBreakpoint, triggerPromiseResolutionBreakpoint);
       this.selector = selector;
+      assert (args[0] instanceof SPromise);
+      this.originalTarget = (SPromise) args[0];
     }
 
     @Override
@@ -219,16 +228,23 @@ public abstract class EventualMessage {
       return "PSendMsg(" + selector.toString() + " " + Arrays.toString(args) +  ", " + t
         + ", sender: " + (finalSender == null ? "" : finalSender.toString()) + ")";
     }
+
+    @Override
+    public SPromise getPromise() {
+      return originalTarget;
+    }
   }
 
   /** The callback message to be send after a promise is resolved. */
   public static final class PromiseCallbackMessage extends PromiseMessage {
+    protected final SPromise promise;
 
     public PromiseCallbackMessage(final long causalMessageId, final Actor owner, final SBlock callback,
         final SResolver resolver, final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint,
-        final boolean triggerPromiseResolverBreakpoint, final boolean triggerPromiseResolutionBreakpoint) {
+        final boolean triggerPromiseResolverBreakpoint, final boolean triggerPromiseResolutionBreakpoint, final SPromise parent) {
       super(causalMessageId, new Object[] {callback, null}, owner, resolver, onReceive,
           triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint, triggerPromiseResolutionBreakpoint);
+      this.promise = parent;
     }
 
     @Override
@@ -260,6 +276,11 @@ public abstract class EventualMessage {
     @Override
     public String toString() {
       return "PCallbackMsg(" + Arrays.toString(args) + ")";
+    }
+
+    @Override
+    public SPromise getPromise() {
+      return promise;
     }
   }
 
@@ -301,6 +322,10 @@ public abstract class EventualMessage {
   public static long getCurrentExecutingMessageId() {
     Thread t = Thread.currentThread();
     return ((ActorProcessingThread) t).currentMessageId;
+  }
+
+  public Object[] getArgs() {
+    return args;
   }
 
   /**

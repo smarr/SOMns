@@ -25,7 +25,6 @@ import tools.debugger.frontend.Suspension;
 import tools.debugger.message.InitialBreakpointsMessage;
 import tools.debugger.message.Message.IncommingMessage;
 import tools.debugger.message.Message.OutgoingMessage;
-import tools.debugger.message.MessageHistory;
 import tools.debugger.message.ScopesRequest;
 import tools.debugger.message.ScopesResponse;
 import tools.debugger.message.SourceMessage;

@@ -3,8 +3,9 @@ package tools.debugger.message;
 import java.util.ArrayList;
 
 import som.vmobjects.SSymbol;
+import tools.debugger.message.Message.OutgoingMessage;
 
-public class SymbolMessage extends Message {
+public class SymbolMessage extends OutgoingMessage {
   private final String[] symbols;
   private final int[] ids;
 

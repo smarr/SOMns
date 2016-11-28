@@ -27,16 +27,20 @@ import som.VmSettings;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
+import som.interpreter.actors.EventualMessage.PromiseMessage;
+import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.Mailbox;
 import som.interpreter.actors.SFarReference;
+import som.interpreter.actors.SPromise;
+import som.interpreter.actors.SPromise.SResolver;
 import som.vm.ObjectSystem;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 import tools.debugger.FrontendConnector;
 
 public class ActorExecutionTrace {
 
-  private static final int MSG_BUFFER_SIZE = 128;
   private static final int BUFFER_POOL_SIZE = Runtime.getRuntime().availableProcessors() * 4;
   private static final int BUFFER_SIZE = 4096 * 1024;
 
@@ -49,7 +53,6 @@ public class ActorExecutionTrace {
   //contains symbols that need to be written to file/sent to debugger, e.g. actor type, message type
   private static final ArrayList<SSymbol> symbolsToWrite = new ArrayList<>();
 
-  private static long actorSystemStartTime;
   private static FrontendConnector front = null;
 
   private static Thread workerThread = new TraceWorkerThread();
@@ -69,7 +72,6 @@ public class ActorExecutionTrace {
   public static void recordMainActor(final Actor mainActor,
       final ObjectSystem objectSystem) {
     if (VmSettings.ACTOR_TRACING) {
-      actorSystemStartTime = System.currentTimeMillis();
       workerThread.start();
     }
   }
@@ -129,11 +131,15 @@ public class ActorExecutionTrace {
   protected enum Events {
     ActorCreation((byte) 1, 19),
     PromiseCreation((byte) 2, 17),
-    PromiseResolution((byte) 3, 17),
+    PromiseResolution((byte) 3, 28),
     PromiseChained((byte) 4, 17),
-    Mailbox((byte) 5, 19), //plus contained messages
-    Thread((byte) 6, 9); //at the beginning of buffer, allows to track what was created/executed on which thread, really cheap solution, timestamp?
+    Mailbox((byte) 5, 17),
+
+    Thread((byte) 6, 9), //at the beginning of buffer, allows to track what was created/executed on which thread, really cheap solution, timestamp?
     //for memory events another buffer is needed (the gc callback is on Thread[Service Thread,9,system])
+    MailboxContd((byte) 7, 19),
+    BasicMessage((byte) 8, 7),
+    PromiseMessage((byte) 9, 7);
 
     private final byte id;
     private final int size;
@@ -182,6 +188,7 @@ public class ActorExecutionTrace {
       if (t.getThreadLocalBuffer().remaining() < Events.PromiseCreation.size) {
         swapBuffer(t);
       }
+
       ByteBuffer b = t.getThreadLocalBuffer();
       b.put(Events.PromiseCreation.id);
       b.putLong(promiseId); // id of the created promise
@@ -189,7 +196,7 @@ public class ActorExecutionTrace {
     }
   }
 
-  public static void promiseResolution(final long promiseId) {
+  public static void promiseResolution(final long promiseId, final Object value) {
     if (!VmSettings.ACTOR_TRACING) {
       return;
     }
@@ -202,11 +209,14 @@ public class ActorExecutionTrace {
       if (t.getThreadLocalBuffer().remaining() < Events.PromiseResolution.size) {
         swapBuffer(t);
       }
+
       ByteBuffer b = t.getThreadLocalBuffer();
       b.put(Events.PromiseResolution.id);
       b.putLong(promiseId); // id of the promise
       b.putLong(t.getCurrentMessageId()); // resolving message
-      //resolved with
+
+      writeParameter(value, b);
+
       t.resolvedPromises++;
     }
   }
@@ -224,6 +234,7 @@ public class ActorExecutionTrace {
       if (t.getThreadLocalBuffer().remaining() < Events.PromiseChained.size) {
         swapBuffer(t);
       }
+
       ByteBuffer b = t.getThreadLocalBuffer();
       b.put(Events.PromiseChained.id);
       b.putLong(parent); // id of the parent
@@ -242,22 +253,89 @@ public class ActorExecutionTrace {
     if (current instanceof ActorProcessingThread) {
       ActorProcessingThread t = (ActorProcessingThread) current;
 
-      if (t.getThreadLocalBuffer().remaining() < Events.Mailbox.size + m.size() * 18) {
+      if (t.getThreadLocalBuffer().remaining() < Events.Mailbox.size + 100 * 50) {
         swapBuffer(t);
       }
+
       ByteBuffer b = t.getThreadLocalBuffer();
       b.put(Events.Mailbox.id);
-      b.putShort((short) m.size()); //number of messages in the mailbox. enough??
       b.putLong(m.getBasemessageId()); //base id for messages
       b.putLong(actor.getActorId()); //receiver of the messages
+      int idx = 0;
+
       for (EventualMessage em : m) {
+        if (b.remaining() < (45 + em.getArgs().length * 9)) {
+          swapBuffer(t);
+          b = t.getThreadLocalBuffer();
+          b.put(Events.MailboxContd.id);
+          b.putLong(m.getBasemessageId());
+          b.putLong(actor.getActorId()); //receiver of the messages
+          b.putShort((short) idx);
+        }
+
+        if (em instanceof PromiseSendMessage) {
+          b.put(Events.PromiseMessage.id);
+          b.putLong(((PromiseMessage) em).getPromise().getPromiseId());
+        } else {
+          b.put(Events.BasicMessage.id);
+        }
+
         b.putLong(em.getSender().getActorId()); // sender
         b.putLong(em.getCausalMessageId());
         b.putShort(em.getSelector().getSymbolId());
+        b.putLong(m.getMessageExecutionStart(idx));
+        b.putLong(m.getMessageSendTime(idx));
+
+        Object[] args = em.getArgs();
+        b.put((byte) (args.length - 1)); //num paramaters
+
+        for (int i = 1; i < args.length; i++) {
+          //gonna need a 8 plus 1 byte for most parameter, boolean just use two identifiers.
+          if (args[i] instanceof SFarReference) {
+            Object o = ((SFarReference) args[i]).getValue();
+            writeParameter(o, b);
+          } else {
+            writeParameter(args[i], b);
+          }
+        }
+
+        idx++;
       }
     }
 
     logMemoryUsage();
+  }
+
+  private static void writeParameter(final Object param, final ByteBuffer b) {
+    if (param instanceof SPromise) {
+      b.put((byte) 0x04);
+      b.putLong(((SPromise) param).getPromiseId());
+    } else if (param instanceof SResolver) {
+      b.put((byte) 0x05);
+      b.putLong(((SResolver) param).getPromise().getPromiseId());
+    } else if (param instanceof SAbstractObject) {
+      b.put((byte) 0x06);
+      b.putShort(((SAbstractObject) param).getSOMClass().getName().getSymbolId());
+    } else {
+      if (param instanceof Long) {
+        b.put((byte) 0x02);
+        b.putLong((Long) param);
+      } else if (param instanceof Double) {
+        b.put((byte) 0x03);
+        b.putDouble((Double) param);
+      } else if (param instanceof Boolean) {
+        if ((Boolean) param) {
+          b.put((byte) 0x01);
+        } else {
+          b.put((byte) 0x00);
+        }
+      } else if (param instanceof String) {
+        b.put((byte) 0x07);
+      } else {
+
+        throw new RuntimeException("unexpected parameter type");
+      }
+    }
   }
 
   /**
