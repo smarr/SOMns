@@ -49,8 +49,8 @@ Actors.som pos=2443 len=6	read	Actors	1
 Actors.som pos=2443 len=6	read	ALL	1
 Actors.som pos=3381 len=5	read	Actors	1
 Actors.som pos=3381 len=5	read	ALL	1
-Actors.som pos=3631 len=0	read	Actors	1
-Actors.som pos=3631 len=0	read	ALL	1
+Actors.som pos=3611 len=0	read	Actors	1
+Actors.som pos=3611 len=0	read	ALL	1
 Collections.som pos=1089 len=19	read	Collections class	1
 Collections.som pos=1089 len=19	read	ALL	1
 Collections.som pos=1102 len=6	read	Kernel	1
