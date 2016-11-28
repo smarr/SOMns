@@ -40,9 +40,9 @@ import tools.debugger.message.StepMessage.Stop;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SuspendedEventMessage;
 import tools.debugger.message.UpdateBreakpoint;
-import tools.debugger.session.AsyncMessageReceiverBreakpoint;
 import tools.debugger.message.VariablesRequest;
 import tools.debugger.message.VariablesResponse;
+import tools.debugger.session.AsyncMessageReceiverBreakpoint;
 import tools.debugger.session.BreakpointInfo;
 import tools.debugger.session.Breakpoints;
 import tools.debugger.session.LineBreakpoint;
@@ -99,6 +99,10 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   public void prepareSteppingUntilNextRootNode() {
     breakpoints.prepareSteppingUntilNextRootNode();
+  }
+
+  public void prepareSteppingAfterNextRootNode() {
+    breakpoints.prepareSteppingAfterNextRootNode();
   }
 
   synchronized SuspendedEvent getSuspendedEvent(final int activityId) {

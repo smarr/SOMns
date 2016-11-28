@@ -58,6 +58,10 @@ public class Breakpoints {
     debuggerSession.prepareSteppingUntilNextRootNode();
   }
 
+  public void prepareSteppingAfterNextRootNode() {
+    debuggerSession.prepareSteppingAfterNextRootNode();
+  }
+
   public synchronized void addOrUpdate(final LineBreakpoint bId) {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {

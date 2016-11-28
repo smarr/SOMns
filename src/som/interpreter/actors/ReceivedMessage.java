@@ -7,6 +7,7 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
+import som.VmSettings;
 import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
@@ -30,9 +31,13 @@ public class ReceivedMessage extends ReceivedRootNode {
   public Object execute(final VirtualFrame frame) {
     EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
 
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.triggerPromiseResolverBreakpoint) {
+      dbg.prepareSteppingAfterNextRootNode();
+    }
+
     Object result = onReceive.doPreEvaluated(frame, msg.args);
 
-    resolvePromise(frame, msg.resolver, result, msg.triggerPromiseResolverBreakpoint, msg.triggerPromiseResolutionBreakpoint);
+    resolvePromise(frame, msg.resolver, result, msg.triggerPromiseResolutionBreakpoint);
     return null;
   }
 
@@ -54,6 +59,10 @@ public class ReceivedMessage extends ReceivedRootNode {
     public Object execute(final VirtualFrame frame) {
       EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
 
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.triggerPromiseResolverBreakpoint) {
+        dbg.prepareSteppingAfterNextRootNode();
+      }
+
       Object result = onReceive.doPreEvaluated(frame, msg.args);
       future.complete(result);
       return result;
@@ -72,9 +81,13 @@ public class ReceivedMessage extends ReceivedRootNode {
     public Object execute(final VirtualFrame frame) {
       EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
 
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.triggerPromiseResolverBreakpoint) {
+        dbg.prepareSteppingAfterNextRootNode();
+      }
+
       Object result = onReceive.call(frame, msg.args);
 
-      resolvePromise(frame, msg.resolver, result, msg.triggerPromiseResolverBreakpoint, msg.triggerPromiseResolutionBreakpoint);
+      resolvePromise(frame, msg.resolver, result, msg.triggerPromiseResolutionBreakpoint);
       return null;
     }
   }

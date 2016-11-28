@@ -8,33 +8,44 @@ import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
+import som.VmSettings;
 import som.interpreter.actors.SPromise.SResolver;
+import tools.debugger.WebDebugger;
 
 
 public abstract class ReceivedRootNode extends RootNode {
 
   @Child protected ResolvePromiseNode resolve;
 
+  protected final WebDebugger dbg;
+
   protected ReceivedRootNode(final Class<? extends TruffleLanguage<?>> language,
       final SourceSection sourceSection, final FrameDescriptor frameDescriptor) {
     super(language, sourceSection, frameDescriptor);
     assert sourceSection != null;
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      this.dbg = VM.getWebDebugger();
+    } else {
+      this.dbg = null;
+    }
   }
 
-  protected final void resolvePromise(final VirtualFrame frame, final SResolver resolver, final Object result,
-      final boolean isBreakpointOnPromiseResolver, final boolean isBreakpointOnPromiseResolution) {
+  protected final void resolvePromise(final VirtualFrame frame,
+      final SResolver resolver, final Object result,
+      final boolean isBreakpointOnPromiseResolution) {
     // lazy initialization of resolution node
     if (resolve == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       if (resolver == null) {
         this.resolve = insert(new NullResolver(getSourceSection()));
       } else {
-        this.resolve = insert(ResolvePromiseNodeFactory.create(false, getSourceSection(), null, null, null, null));
+        this.resolve = insert(ResolvePromiseNodeFactory.create(false, getSourceSection(), null, null, null));
       }
     }
 
     // resolve promise
-    resolve.executeEvaluated(frame, resolver, result, isBreakpointOnPromiseResolver, isBreakpointOnPromiseResolution);
+    resolve.executeEvaluated(frame, resolver, result, isBreakpointOnPromiseResolution);
   }
 
   /**
@@ -46,12 +57,10 @@ public abstract class ReceivedRootNode extends RootNode {
     }
 
     @Override
-    public Object executeEvaluated(final VirtualFrame frame, final SResolver receiver, final Object argument,
-        final boolean isBreakpointOnPromiseResolver, final boolean isBreakpointOnPromiseResolution) {
+    public Object executeEvaluated(final VirtualFrame frame,
+        final SResolver receiver, final Object argument,
+        final boolean isBreakpointOnPromiseResolution) {
       assert receiver == null;
-      if (isBreakpointOnPromiseResolver) {
-        haltNode.executeEvaluated(frame, argument);
-      }
       /* TODO: add a tag to the send node to disable or remove the button
        * if (isBreakpointOnResolutionAtRcvr) {} */
       return null;
@@ -59,8 +68,7 @@ public abstract class ReceivedRootNode extends RootNode {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver,
-        final Object argument, final Object isBreakpointOnPromiseResolver,
-        final Object isBreakpointOnPromiseResolution) {
+        final Object argument, final Object isBreakpointOnPromiseResolution) {
       return null;
     }
 
