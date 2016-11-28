@@ -367,7 +367,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
         handlePromiseResult((SPromise) result);
         return;
       } else {
-        throw new NotYetImplementedException();
+        VM.errorExit("The application's #main: method returned a " + result.toString() + ", but it needs to return a Promise or Integer as return value.");
       }
     } catch (InterruptedException | ExecutionException e) {
       // TODO Auto-generated catch block
