@@ -25,6 +25,8 @@ public class SPromise extends SObjectWithClass {
 
   @CompilationFinal private static SClass promiseClass;
 
+  private boolean triggerResolutionBreakpointOnUnresolvedChainedPromise;
+
   public static SPromise createPromise(final Actor owner) {
     if (VmSettings.DEBUG_MODE) {
       return new SDebugPromise(owner);
@@ -323,7 +325,7 @@ public class SPromise extends SObjectWithClass {
       // TODO: restore 10000 as parameter in testAsyncDeeplyChainedResolution
       if (promise.chainedPromise != null) {
         Object wrapped = promise.chainedPromise.owner.wrapForUse(result, current, null);
-        resolveAndTriggerListenersUnsynced(result, wrapped, promise.chainedPromise, current, isBreakpointOnPromiseResolution);
+        resolveAndTriggerListenersUnsynced(result, wrapped, promise.chainedPromise, current, promise.chainedPromise.isTriggerResolutionBreakpointOnUnresolvedChainedPromise());
         resolveMoreChainedPromisesUnsynced(promise, result, current, isBreakpointOnPromiseResolution);
       }
     }
@@ -416,5 +418,14 @@ public class SPromise extends SObjectWithClass {
   public static void setPairClass(final SClass cls) {
     assert pairClass == null || cls == null;
     pairClass = cls;
+  }
+
+  boolean isTriggerResolutionBreakpointOnUnresolvedChainedPromise() {
+    return triggerResolutionBreakpointOnUnresolvedChainedPromise;
+  }
+
+  void setTriggerResolutionBreakpointOnUnresolvedChainedPromise(
+      final boolean triggerResolutionBreakpointOnUnresolvedChainedPromise) {
+    this.triggerResolutionBreakpointOnUnresolvedChainedPromise = triggerResolutionBreakpointOnUnresolvedChainedPromise;
   }
 }

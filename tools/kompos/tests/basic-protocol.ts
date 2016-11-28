@@ -439,12 +439,11 @@ describe('Basic Protocol', function() {
 
     after(closeConnectionAfterSuite);
 
-    //TODO: need to fix the expected source section, it should be startLine 18 and method Ping>>#start:
     it('should accept promise resolver breakpoint, and halt on expected source section', onlyWithConnection(() => {
       return suspendP.then(msg => {
-        expect(msg.stack).lengthOf(1);
-        expect(msg.stack[0].methodName).to.equal(undefined);
-        expect(msg.stack[0].sourceSection.startLine).to.equal(73);
+        expect(msg.stack).lengthOf(2);
+        expect(msg.stack[0].methodName).to.equal("Ping>>#start");
+        expect(msg.stack[0].sourceSection.startLine).to.equal(15);
       });
     }));
   });
@@ -516,12 +515,11 @@ describe('Basic Protocol', function() {
 
     after(closeConnectionAfterSuite);
 
-    //TODO: need to fix the expected source section, it should be startLine 60 and method Pong>>#ping:
     it('should accept promise resolver breakpoint for null resolution, and halt on expected source section', onlyWithConnection(() => {
       return suspendP.then(msg => {
-        expect(msg.stack).lengthOf(1);
-        expect(msg.stack[0].methodName).to.equal(undefined);
-        expect(msg.stack[0].sourceSection.startLine).to.equal(16);
+        expect(msg.stack).lengthOf(2);
+        expect(msg.stack[0].methodName).to.equal("Pong>>#ping:");
+        expect(msg.stack[0].sourceSection.startLine).to.equal(57);
       });
     }));
   });
@@ -555,12 +553,11 @@ describe('Basic Protocol', function() {
 
     after(closeConnectionAfterSuite);
 
-    //TODO: need to fix the expected source section, it should be startLine 32 and method Ping>>#validate:
     it('should accept promise resolver breakpoint for chained resolution, and halt on expected source section', onlyWithConnection(() => {
       return suspendP.then(msg => {
-        expect(msg.stack).lengthOf(1);
-        expect(msg.stack[0].methodName).to.equal(undefined);
-        expect(msg.stack[0].sourceSection.startLine).to.equal(26);
+        expect(msg.stack).lengthOf(2);
+        expect(msg.stack[0].methodName).to.equal("Ping>>#validate:");
+        expect(msg.stack[0].sourceSection.startLine).to.equal(31);
       });
     }));
   });
@@ -586,8 +583,8 @@ describe('Basic Protocol', function() {
         enabled: true,
         coord: {
           uri:         pingPongUri,
-          startLine:   31,
-          startColumn: 16,
+          startLine:   26,
+          startColumn: 20,
           charLength:   3}};
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
@@ -597,7 +594,7 @@ describe('Basic Protocol', function() {
     it('should accept promise resolution breakpoint for chained resolution, and halt on expected source section', onlyWithConnection(() => {
       return suspendP.then(msg => {
         expect(msg.stack).lengthOf(2);
-        expect(msg.stack[0].methodName).to.equal("Ping>>#$blockMethod@27@54:");
+        expect(msg.stack[0].methodName).to.equal("Ping>>#$blockMethod@27@33:");
         expect(msg.stack[0].sourceSection.startLine).to.equal(27);
       });
     }));

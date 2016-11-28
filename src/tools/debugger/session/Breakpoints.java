@@ -99,7 +99,6 @@ public class Breakpoints {
   private Breakpoint saveTruffleBasedBreakpoints(final SectionBreakpoint bId) {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {
-      WebDebugger.log("SetSectionBreakpoint: " + bId);
       bp = Breakpoint.newBuilder(bId.getCoordinate().uri).
           lineIs(bId.getCoordinate().startLine).
           columnIs(bId.getCoordinate().startColumn).
@@ -117,7 +116,6 @@ public class Breakpoints {
     FullSourceCoordinate coord = bId.getCoordinate();
     BreakpointEnabling<T> existingBP = breakpoints.get(coord);
     if (existingBP == null) {
-      WebDebugger.log("SetSectionBreakpoint: " + bId);
       existingBP = new BreakpointEnabling<T>(bId);
       breakpoints.put(coord, existingBP);
     } else {
