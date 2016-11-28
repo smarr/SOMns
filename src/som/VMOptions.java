@@ -41,7 +41,7 @@ public class VMOptions {
 
     while (parsedArgument) {
       if (currentArg >= arguments.length) {
-        return null;
+        return new String[0];
       } else {
         if (arguments[currentArg].equals("--platform")) {
           platformFile = arguments[currentArg + 1];
@@ -75,7 +75,7 @@ public class VMOptions {
     if (currentArg < arguments.length) {
       return Arrays.copyOfRange(arguments, currentArg, arguments.length);
     } else {
-      return null;
+      return new String[0];
     }
   }
 
