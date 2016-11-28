@@ -37,6 +37,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.compiler.MixinDefinition.ClassSlotDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.MixinDefinition.SlotMutator;
+import som.compiler.ProgramDefinitionError.SemanticDefinitionError;
 import som.compiler.Variable.Argument;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
@@ -151,20 +152,11 @@ public final class MixinBuilder {
     this.structuralProbe = structuralProbe;
   }
 
-  public static class MixinDefinitionError extends Exception {
-    private static final long serialVersionUID = 9200967710874738189L;
-    private final String message;
-    private final SourceSection source;
+  public static class MixinDefinitionError extends SemanticDefinitionError {
+    private static final long serialVersionUID = 5030639383869198851L;
 
     MixinDefinitionError(final String message, final SourceSection source) {
-      this.message = message;
-      this.source = source;
-    }
-
-    @Override
-    public String toString() {
-      return source.getSource().getName() + ":" + source.getStartLine() + ":" +
-            source.getStartColumn() + ":error: " + message;
+      super(message, source);
     }
   }
 

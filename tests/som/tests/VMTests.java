@@ -3,7 +3,6 @@ package som.tests;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.BeforeClass;
@@ -23,7 +22,7 @@ public class VMTests {
   public void testProcessArgumentsNothing() {
     VMOptions opts = new VMOptions(new String[0]);
     assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
-    assertNull(opts.args);
+    assertArrayEquals(opts.args, new String[0]);
   }
 
   @Test
@@ -31,7 +30,7 @@ public class VMTests {
     VMOptions opts = new VMOptions(
         new String[] {"--platform", "foo.som"});
     assertEquals(opts.platformFile, "foo.som");
-    assertNull(opts.args);
+    assertArrayEquals(opts.args, new String[0]);
   }
 
   @Test
@@ -39,7 +38,7 @@ public class VMTests {
     VMOptions opts = new VMOptions(
         new String[] {"--kernel", "foo.som"});
     assertEquals(opts.kernelFile, "foo.som");
-    assertNull(opts.args);
+    assertArrayEquals(opts.args, new String[0]);
   }
 
   @Test
@@ -64,7 +63,7 @@ public class VMTests {
         new String[] {"--profile"});
     assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
     assertTrue(opts.profilingEnabled);
-    assertNull(opts.args);
+    assertArrayEquals(opts.args, new String[0]);
   }
 
   @Test
@@ -74,6 +73,6 @@ public class VMTests {
     assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
     assertTrue(opts.debuggerEnabled);
     assertFalse(opts.profilingEnabled);
-    assertNull(opts.args);
+    assertArrayEquals(opts.args, new String[0]);
   }
 }

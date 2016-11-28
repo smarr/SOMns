@@ -40,6 +40,7 @@ import com.sun.istack.internal.NotNull;
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.compiler.ProgramDefinitionError.SemanticDefinitionError;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope.MethodScope;
@@ -109,6 +110,14 @@ public final class MethodBuilder {
     throwsNonLocalReturn          = false;
     needsToCatchNonLocalReturn    = false;
     embeddedBlockMethods = new ArrayList<SInvokable>();
+  }
+
+  public static class MethodDefinitionError extends SemanticDefinitionError {
+    private static final long serialVersionUID = 3901992766649011815L;
+
+    MethodDefinitionError(final String message, final SourceSection source) {
+      super(message, source);
+    }
   }
 
   public Collection<Argument> getArguments() {
@@ -264,7 +273,8 @@ public final class MethodBuilder {
     addArgument(arg, source);
   }
 
-  public void addLocalIfAbsent(final String local, final SourceSection source) {
+  public void addLocalIfAbsent(final String local, final SourceSection source)
+      throws MethodDefinitionError {
     if (locals.containsKey(local)) {
       return;
     }
@@ -272,7 +282,12 @@ public final class MethodBuilder {
     addLocal(local, source);
   }
 
-  public Local addLocal(final String local, final SourceSection source) {
+  public Local addLocal(final String local, final SourceSection source)
+      throws MethodDefinitionError {
+    if (arguments.containsKey(local)) {
+      throw new MethodDefinitionError("Method already defines argument " + local + ". Can't define local variable with same name.", source);
+    }
+
     Local l = new Local(
         local, currentScope.getFrameDescriptor().addFrameSlot(local), source);
     assert !locals.containsKey(local);

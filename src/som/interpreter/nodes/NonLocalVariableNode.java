@@ -8,6 +8,7 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
@@ -44,6 +45,8 @@ public abstract class NonLocalVariableNode extends ContextualNode {
   protected boolean isTaggedWith(final Class<?> tag) {
     if (tag == LocalVariableTag.class) {
       return true;
+    } else if (tag == StatementTag.class) {
+      return isMarkedAsRootExpression();
     } else {
       return super.isTaggedWith(tag);
     }

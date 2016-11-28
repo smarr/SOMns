@@ -18,11 +18,10 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VM;
 import som.VmSettings;
 import som.compiler.AccessModifier;
-import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
-import som.compiler.Parser.ParseError;
+import som.compiler.ProgramDefinitionError;
 import som.compiler.SourcecodeCompiler;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.SomLanguage;
@@ -105,7 +104,7 @@ public final class ObjectSystem {
       module = compiler.compileModule(source, structuralProbe);
       loadedModules.put(uri, module);
       return module;
-    } catch (ParseError | MixinDefinitionError e) {
+    } catch (ProgramDefinitionError e) {
       VM.errorExit(e.getMessage());
       throw new IOException(e);
     }

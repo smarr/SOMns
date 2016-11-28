@@ -27,6 +27,7 @@ public abstract class SArray extends SAbstractObject {
 
   public SArray(final Object storage, final SClass clazz) {
     assert !(storage instanceof Long);
+    assert storage != null;
     this.storage = storage;
     this.clazz   = clazz;
   }

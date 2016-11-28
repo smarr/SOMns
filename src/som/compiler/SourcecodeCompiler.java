@@ -27,22 +27,20 @@ package som.compiler;
 import com.oracle.truffle.api.source.Source;
 
 import som.VM;
-import som.compiler.MixinBuilder.MixinDefinitionError;
-import som.compiler.Parser.ParseError;
 import tools.SourceCoordinate;
 import tools.language.StructuralProbe;
 
 public class SourcecodeCompiler {
 
   public MixinDefinition compileModule(final Source source,
-      final StructuralProbe structuralProbe) throws ParseError, MixinDefinitionError {
+      final StructuralProbe structuralProbe) throws ProgramDefinitionError {
     Parser parser = new Parser(
         source.getReader(), source.getLength(), source, structuralProbe);
     return compile(parser, source);
   }
 
   protected final MixinDefinition compile(final Parser parser,
-      final Source source) throws ParseError, MixinDefinitionError {
+      final Source source) throws ProgramDefinitionError {
     SourceCoordinate coord = parser.getCoordinate();
     MixinBuilder mxnBuilder = parser.moduleDeclaration();
     MixinDefinition result = mxnBuilder.assemble(parser.getSource(coord));

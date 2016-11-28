@@ -65,12 +65,12 @@ public final class StackTraceResponse extends Response {
       final Suspension suspension, final int requestId) {
     ArrayList<DebugStackFrame> frames = suspension.getStackFrames();
 
-    StackFrame[] arr = new StackFrame[Math.min(frames.size(), levels)];
-
     int skipFrames = suspension.isHaltPrimitive() ? Suspension.FRAMES_SKIPPED_FOR_HALT : 0;
     if (startFrame > skipFrames) {
       skipFrames = startFrame;
     }
+
+    StackFrame[] arr = new StackFrame[Math.min(frames.size(), levels) - skipFrames];
 
     for (int frameId = skipFrames; frameId < frames.size() && frameId < levels; frameId += 1) {
       StackFrame f = createFrame(suspension, frameId, frames.get(frameId));
