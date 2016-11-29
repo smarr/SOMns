@@ -12,7 +12,7 @@ import * as fs from 'fs';
 import {X_OK} from 'constants';
 
 import {SourceCoordinate, FullSourceCoordinate, SourceMessage, SuspendEventMessage,
-  BreakpointData, SectionBreakpointData, Respond, StepMessage, Frame,
+  BreakpointData, Respond, StepMessage, Frame,
   createLineBreakpointData, createSectionBreakpointData} from '../src/messages';
 
 const PRINT_SOM_OUTPUT = false;
@@ -51,6 +51,27 @@ function expectSourceCoordinate(section: SourceCoordinate) {
 function expectFullSourceCoordinate(section: FullSourceCoordinate) {
   expectSourceCoordinate(section);
   expect(section).to.have.property('uri');
+}
+
+class HandleFirstSuspendEvent {
+  private firstSuspendCaptured: boolean;
+  public getSuspendEvent: (event: OnMessageEvent) => void;
+
+  public readonly suspendP: Promise<SuspendEventMessage>;
+
+  constructor() {
+    this.firstSuspendCaptured = false;
+    this.suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
+      this.getSuspendEvent = (event: OnMessageEvent) => {
+        if (this.firstSuspendCaptured) { return; }    
+        const data = JSON.parse(event.data);
+        if (data.type === "suspendEvent") {
+          this.firstSuspendCaptured = true;
+          resolve(data);
+        }
+      };
+    });
+  }
 }
 
 function send(socket: WebSocket, respond: Respond) {
@@ -257,35 +278,23 @@ describe('Basic Protocol', function() {
   });
 
   describe('setting a line breakpoint', () => {
-    // Capture first suspended event for testing
-    let firstSuspendCaptured = false;
-    let getSuspendEvent: (event: OnMessageEvent) => void;
-    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
-      getSuspendEvent = (event: OnMessageEvent) => {
-        if (firstSuspendCaptured) { return; }    
-        const data = JSON.parse(event.data);
-        if (data.type === "suspendEvent") {
-          firstSuspendCaptured = true;
-          resolve(data);
-        }
-      };
-    });
+    const event = new HandleFirstSuspendEvent();
 
     before('Start SOMns and Connect', () => {
       const breakpoint = createLineBreakpointData(pingPongUri, 70, true);
-      connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
+      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
     });
 
     after(closeConnectionAfterSuite);
 
     it('should accept line breakpoint, and halt on expected line', onlyWithConnection(() => {
-      return suspendP.then(msg => {
+      return event.suspendP.then(msg => {
         expectStack(msg.stack, 7, "PingPong>>#benchmark", 70);
       });
     }));
 
     it('should have a well structured suspended event', onlyWithConnection(() => {
-      return suspendP.then(msg => {
+      return event.suspendP.then(msg => {
         expectFullSourceCoordinate(msg.stack[0].sourceSection);
         expect(msg.id).to.equal("se-0");
         expect(msg.sourceUri).to.equal(pingPongUri);
@@ -296,243 +305,147 @@ describe('Basic Protocol', function() {
   });
 
   describe('setting a source section sender breakpoint', () => {
-    // Capture first suspended event for testing
-    let firstSuspendCaptured = false;
-    let getSuspendEvent: (event: OnMessageEvent) => void;
-    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
-      getSuspendEvent = (event: OnMessageEvent) => {
-        if (firstSuspendCaptured) { return; }    
-        const data = JSON.parse(event.data);
-        if (data.type === "suspendEvent") {
-          firstSuspendCaptured = true;
-          resolve(data);
-        }
-      };
-    });
+    const event = new HandleFirstSuspendEvent();
 
     before('Start SOMns and Connect', () => {
       const breakpoint = createSectionBreakpointData(pingPongUri, 16, 14, 3,
         "MessageSenderBreakpoint", true);
-      connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
+      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
     });
 
     after(closeConnectionAfterSuite);
 
     it('should accept send breakpoint, and halt on expected source section', onlyWithConnection(() => {
-      return suspendP.then(msg => {
+      return event.suspendP.then(msg => {
         expectStack(msg.stack, 2, "Ping>>#start", 16);
       });
     }));    
   });
 
   describe('setting a source section asynchronous method receiver breakpoint', () => {
-    // Capture first suspended event for testing
-    let firstSuspendCaptured = false;
-    let getSuspendEvent: (event: OnMessageEvent) => void;
-    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
-      getSuspendEvent = (event: OnMessageEvent) => {
-        if (firstSuspendCaptured) { return; }
-        const data = JSON.parse(event.data);
-        if (data.type === "suspendEvent") {
-          firstSuspendCaptured = true;
-          resolve(data);
-        }
-      };
-    });
+    const event = new HandleFirstSuspendEvent();
 
     before('Start SOMns and Connect', () => {
       const breakpoint = createSectionBreakpointData(pingPongUri, 57, 9, 88,
         "AsyncMessageReceiverBreakpoint", true);
-      connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
+      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
     });
 
     after(closeConnectionAfterSuite);
 
     it('should accept async method receiver breakpoint, and halt on expected source section', onlyWithConnection(() => {
-      return suspendP.then(msg => {
+      return event.suspendP.then(msg => {
         expectStack(msg.stack, 2, "Pong>>#ping:", 57);
       });
     }));
   });
 
   describe('setting a source section receiver breakpoint', () => {
-    // Capture first suspended event for testing
-    let firstSuspendCaptured = false;
-    let getSuspendEvent: (event: OnMessageEvent) => void;
-    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
-      getSuspendEvent = (event: OnMessageEvent) => {
-        if (firstSuspendCaptured) { return; }    
-        const data = JSON.parse(event.data);
-        if (data.type === "suspendEvent") {
-          firstSuspendCaptured = true;
-          resolve(data);
-        }
-      };
-    });
+    const event = new HandleFirstSuspendEvent();
 
     before('Start SOMns and Connect', () => {
       const breakpoint = createSectionBreakpointData(pingPongUri, 16, 14, 3,
         "MessageReceiverBreakpoint", true);
-      connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
+      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
     });
 
     after(closeConnectionAfterSuite);
 
     it('should accept send breakpoint, and halt on expected source section', onlyWithConnection(() => {
-      return suspendP.then(msg => {
+      return event.suspendP.then(msg => {
         expectStack(msg.stack, 2, "Pong>>#ping:", 57);
       });
     }));
   });
 
  describe('setting a source section promise resolver breakpoint for normal resolution', () => {
-    // Capture first suspended event for testing
-    let firstSuspendCaptured = false;
-    let getSuspendEvent: (event: OnMessageEvent) => void;
-    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
-      getSuspendEvent = (event: OnMessageEvent) => {
-        if (firstSuspendCaptured) { return; }    
-        const data = JSON.parse(event.data);
-        if (data.type === "suspendEvent") {
-          firstSuspendCaptured = true;
-          resolve(data);
-        }
-      };
-    });
+    const event = new HandleFirstSuspendEvent();
 
     before('Start SOMns and Connect', () => {
       const breakpoint = createSectionBreakpointData(pingPongUri, 73, 17, 3,
         "PromiseResolverBreakpoint", true);
-      connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
+      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
     });
 
     after(closeConnectionAfterSuite);
 
     it('should accept promise resolver breakpoint, and halt on expected source section', onlyWithConnection(() => {
-      return suspendP.then(msg => {
+      return event.suspendP.then(msg => {
         expectStack(msg.stack, 2, "Ping>>#start", 15);
       });
     }));
   });
 
   describe('setting a source section promise resolution breakpoint for normal resolution', () => {
-    // Capture first suspended event for testing
-    let firstSuspendCaptured = false;
-    let getSuspendEvent: (event: OnMessageEvent) => void;
-    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
-      getSuspendEvent = (event: OnMessageEvent) => {
-        if (firstSuspendCaptured) { return; }    
-        const data = JSON.parse(event.data);
-        if (data.type === "suspendEvent") {
-          firstSuspendCaptured = true;
-          resolve(data);
-        }
-      };
-    });
+    const event = new HandleFirstSuspendEvent();
 
     before('Start SOMns and Connect', () => {
       const breakpoint = createSectionBreakpointData(pingPongUri, 73, 17, 3,
         "PromiseResolutionBreakpoint", true);
-      connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
+      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
     });
 
     after(closeConnectionAfterSuite);
 
     it('should accept promise resolution breakpoint, and halt on expected source section', onlyWithConnection(() => {
-      return suspendP.then(msg => {
+      return event.suspendP.then(msg => {
         expectStack(msg.stack, 2, "Thing>>#println", 71);
       });
     }));
   });
 
   describe('setting a source section promise resolver breakpoint for null resolution', () => {
-    // Capture first suspended event for testing
-    let firstSuspendCaptured = false;
-    let getSuspendEvent: (event: OnMessageEvent) => void;
-    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
-      getSuspendEvent = (event: OnMessageEvent) => {
-        if (firstSuspendCaptured) { return; }    
-        const data = JSON.parse(event.data);
-        if (data.type === "suspendEvent") {
-          firstSuspendCaptured = true;
-          resolve(data);
-        }
-      };
-    });
+    const event = new HandleFirstSuspendEvent();
 
     before('Start SOMns and Connect', () => {
       const breakpoint = createSectionBreakpointData(pingPongUri, 16, 14, 3,
         "PromiseResolverBreakpoint", true);
-      connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
+      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
     });
 
     after(closeConnectionAfterSuite);
 
     it('should accept promise resolver breakpoint for null resolution, and halt on expected source section', onlyWithConnection(() => {
-      return suspendP.then(msg => {
+      return event.suspendP.then(msg => {
         expectStack(msg.stack, 2, "Pong>>#ping:", 57);
       });
     }));
   });
 
   describe('setting a source section promise resolver breakpoint for chained resolution', () => {
-    // Capture first suspended event for testing
-    let firstSuspendCaptured = false;
-    let getSuspendEvent: (event: OnMessageEvent) => void;
-    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
-      getSuspendEvent = (event: OnMessageEvent) => {
-        if (firstSuspendCaptured) { return; }    
-        const data = JSON.parse(event.data);
-        if (data.type === "suspendEvent") {
-          firstSuspendCaptured = true;
-          resolve(data);
-        }
-      };
-    });
+    const event = new HandleFirstSuspendEvent();
 
     before('Start SOMns and Connect', () => {
       const breakpoint = createSectionBreakpointData(pingPongUri, 26, 20, 3,
         "PromiseResolverBreakpoint", true);
-      connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
+      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
     });
 
     after(closeConnectionAfterSuite);
 
     it('should accept promise resolver breakpoint for chained resolution, and halt on expected source section', onlyWithConnection(() => {
-      return suspendP.then(msg => {
+      return event.suspendP.then(msg => {
         expectStack(msg.stack, 2, "Ping>>#validate:", 31);
       });
     }));
   });
 
    describe('setting a source section promise resolution breakpoint for chained resolution', () => {
-    // Capture first suspended event for testing
-    let firstSuspendCaptured = false;
-    let getSuspendEvent: (event: OnMessageEvent) => void;
-    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
-      getSuspendEvent = (event: OnMessageEvent) => {
-        if (firstSuspendCaptured) { return; }    
-        const data = JSON.parse(event.data);
-        if (data.type === "suspendEvent") {
-          firstSuspendCaptured = true;
-          resolve(data);
-        }
-      };
-    });
+     const event = new HandleFirstSuspendEvent();
 
-    before('Start SOMns and Connect', () => {
-      const breakpoint = createSectionBreakpointData(pingPongUri, 26, 20, 3,
-        "PromiseResolutionBreakpoint", true);
-      connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
-    });
+     before('Start SOMns and Connect', () => {
+       const breakpoint = createSectionBreakpointData(pingPongUri, 26, 20, 3,
+         "PromiseResolutionBreakpoint", true);
+       connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
+     });
 
-    after(closeConnectionAfterSuite);
+     after(closeConnectionAfterSuite);
 
-    it('should accept promise resolution breakpoint for chained resolution, and halt on expected source section', onlyWithConnection(() => {
-      return suspendP.then(msg => {
-        expectStack(msg.stack, 2, "Ping>>#$blockMethod@27@33:", 27);
-      });
-    }));
+     it('should accept promise resolution breakpoint for chained resolution, and halt on expected source section', onlyWithConnection(() => {
+       return event.suspendP.then(msg => {
+         expectStack(msg.stack, 2, "Ping>>#$blockMethod@27@33:", 27);
+       });
+     }));
   });
 
   describe('stepping', () => {
@@ -624,28 +537,16 @@ describe('Basic Protocol', function() {
   });
 
   describe('execute `1 halt` and get suspended event', () => {
-    // Capture first suspended event for testing
-    let firstSuspendCaptured = false;
-    let getSuspendEvent: (event: OnMessageEvent) => void;
-    let suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
-      getSuspendEvent = (event: OnMessageEvent) => {
-        if (firstSuspendCaptured) { return; }    
-        const data = JSON.parse(event.data);
-        if (data.type === "suspendEvent") {
-          firstSuspendCaptured = true;
-          resolve(data);
-        }
-      };
-    });
+    const event = new HandleFirstSuspendEvent();
 
     before('Start SOMns and Connect', () => {
-      connectionP = startSomAndConnect(getSuspendEvent, [], ['halt']);
+      connectionP = startSomAndConnect(event.getSuspendEvent, [], ['halt']);
     });
 
     after(closeConnectionAfterSuite);
 
     it('should halt on expected source section', onlyWithConnection(() => {
-      return suspendP.then(msg => {
+      return event.suspendP.then(msg => {
         expectStack(msg.stack, 7, "PingPongApp>>#testHalt", 84);
       });
     }));
