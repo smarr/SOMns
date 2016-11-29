@@ -1,6 +1,6 @@
 import {Source, SourceCoordinate, AbstractBreakpointData, LineBreakpointData,
   SectionBreakpointData, SectionBreakpointType,
-  createLineBreakpointData} from './messages';
+  createLineBreakpointData, createSectionBreakpointData} from './messages';
 
 export type Breakpoint = LineBreakpoint | MessageBreakpoint |
   AsyncMethodRcvBreakpoint | PromiseBreakpoint;
@@ -89,7 +89,7 @@ export class PromiseBreakpoint extends AbstractBreakpoint<SectionBreakpointData>
 
 export function createLineBreakpoint(source: Source, sourceId: string,
     line: number, clickedSpan: Element) {
-  return new LineBreakpoint(createLineBreakpointData(source.uri, line),
+  return new LineBreakpoint(createLineBreakpointData(source.uri, line, false),
     source, sourceId, clickedSpan);
 }
 
@@ -97,14 +97,17 @@ export function createMsgBreakpoint(source: Source,
     sourceSection: SourceCoordinate, sectionId: string,
     type: SectionBreakpointType) {
   return new MessageBreakpoint(
-    getSectionBreakpointData(source, sourceSection, type),
+    createSectionBreakpointData(source.uri, sourceSection.startLine,
+      sourceSection.startColumn, sourceSection.charLength, type, false),
     source, sectionId);
 }
 
 export function createAsyncMethodRcvBreakpoint(source: Source,
     sourceSection: SourceCoordinate, sectionId: string) {
   return new AsyncMethodRcvBreakpoint(
-    getSectionBreakpointData(source, sourceSection, "AsyncMessageReceiverBreakpoint"),
+    createSectionBreakpointData(source.uri, sourceSection.startLine,
+      sourceSection.startColumn, sourceSection.charLength,
+      "AsyncMessageReceiverBreakpoint", false),
     source, sectionId);
 }
 
@@ -112,20 +115,7 @@ export function createPromiseBreakpoint(source: Source,
     sourceSection: SourceCoordinate, sectionId: string,
     type: SectionBreakpointType) {  /** this can change if we need a specialized type for the promises */
   return new MessageBreakpoint(
-    getSectionBreakpointData(source, sourceSection, type),
+    createSectionBreakpointData(source.uri, sourceSection.startLine,
+      sourceSection.startColumn, sourceSection.charLength, type, false),
     source, sectionId);
-}
-
-export function getSectionBreakpointData(source: Source,
-    sourceSection: SourceCoordinate, type: SectionBreakpointType) {
-     let breakpoint: SectionBreakpointData = {
-       type: type,
-       enabled: false,
-       coord: {
-         uri:         source.uri,
-         startLine:   sourceSection.startLine,
-         startColumn: sourceSection.startColumn,
-         charLength:  sourceSection.charLength }};
-    
-    return breakpoint;
 }

@@ -12,8 +12,8 @@ import * as fs from 'fs';
 import {X_OK} from 'constants';
 
 import {SourceCoordinate, FullSourceCoordinate, SourceMessage, SuspendEventMessage,
-  BreakpointData, LineBreakpointData, SectionBreakpointData, Respond,
-  StepMessage, Frame} from '../src/messages';
+  BreakpointData, SectionBreakpointData, Respond, StepMessage, Frame,
+  createLineBreakpointData, createSectionBreakpointData} from '../src/messages';
 
 const PRINT_SOM_OUTPUT = false;
 
@@ -272,12 +272,7 @@ describe('Basic Protocol', function() {
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: LineBreakpointData = {
-        type: "LineBreakpoint",
-        line: 70,
-        sourceUri: pingPongUri,
-        enabled: true
-      };
+      const breakpoint = createLineBreakpointData(pingPongUri, 70, true);
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
@@ -316,14 +311,8 @@ describe('Basic Protocol', function() {
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SectionBreakpointData = {
-        type: "MessageSenderBreakpoint",
-        enabled: true,
-        coord: {
-          uri:         pingPongUri,
-          startLine:   16,
-          startColumn: 14,
-          charLength:   3}};
+      const breakpoint = createSectionBreakpointData(pingPongUri, 16, 14, 3,
+        "MessageSenderBreakpoint", true);
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
@@ -352,15 +341,8 @@ describe('Basic Protocol', function() {
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SectionBreakpointData = {
-        type: "AsyncMessageReceiverBreakpoint",
-        enabled: true,
-        coord: {
-          uri:         pingPongUri,
-          startLine:   57,
-          startColumn:  9,
-          charLength:  88}
-      };
+      const breakpoint = createSectionBreakpointData(pingPongUri, 57, 9, 88,
+        "AsyncMessageReceiverBreakpoint", true);
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
@@ -389,14 +371,8 @@ describe('Basic Protocol', function() {
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SectionBreakpointData = {
-        type: "MessageReceiverBreakpoint",
-        enabled: true,
-        coord: {
-          uri:         pingPongUri,
-          startLine:   16,
-          startColumn: 14,
-          charLength:   3}};
+      const breakpoint = createSectionBreakpointData(pingPongUri, 16, 14, 3,
+        "MessageReceiverBreakpoint", true);
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
@@ -425,14 +401,8 @@ describe('Basic Protocol', function() {
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SectionBreakpointData = {
-        type: "PromiseResolverBreakpoint",
-        enabled: true,
-        coord: {
-          uri:         pingPongUri,
-          startLine:   73,
-          startColumn: 17,
-          charLength:   3}};
+      const breakpoint = createSectionBreakpointData(pingPongUri, 73, 17, 3,
+        "PromiseResolverBreakpoint", true);
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
@@ -461,14 +431,8 @@ describe('Basic Protocol', function() {
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SectionBreakpointData = {
-        type: "PromiseResolutionBreakpoint",
-        enabled: true,
-        coord: {
-          uri:         pingPongUri,
-          startLine:   73,
-          startColumn: 17,
-          charLength:   3}};
+      const breakpoint = createSectionBreakpointData(pingPongUri, 73, 17, 3,
+        "PromiseResolutionBreakpoint", true);
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
@@ -497,14 +461,8 @@ describe('Basic Protocol', function() {
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SectionBreakpointData = {
-        type: "PromiseResolverBreakpoint",
-        enabled: true,
-        coord: {
-          uri:         pingPongUri,
-          startLine:   16,
-          startColumn: 14,
-          charLength:   3}};
+      const breakpoint = createSectionBreakpointData(pingPongUri, 16, 14, 3,
+        "PromiseResolverBreakpoint", true);
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
@@ -533,14 +491,8 @@ describe('Basic Protocol', function() {
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SectionBreakpointData = {
-        type: "PromiseResolverBreakpoint",
-        enabled: true,
-        coord: {
-          uri:         pingPongUri,
-          startLine:   26,
-          startColumn: 20,
-          charLength:   3}};
+      const breakpoint = createSectionBreakpointData(pingPongUri, 26, 20, 3,
+        "PromiseResolverBreakpoint", true);
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
@@ -569,14 +521,8 @@ describe('Basic Protocol', function() {
     });
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SectionBreakpointData = {
-        type: "PromiseResolutionBreakpoint",
-        enabled: true,
-        coord: {
-          uri:         pingPongUri,
-          startLine:   26,
-          startColumn: 20,
-          charLength:   3}};
+      const breakpoint = createSectionBreakpointData(pingPongUri, 26, 20, 3,
+        "PromiseResolutionBreakpoint", true);
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
@@ -611,14 +557,8 @@ describe('Basic Protocol', function() {
     };
 
     before('Start SOMns and Connect', () => {
-      const breakpoint: SectionBreakpointData = {
-        type: "MessageSenderBreakpoint",
-        enabled: true,
-        coord: {
-          uri:         pingPongUri,
-          startLine:   16,
-          startColumn: 14,
-          charLength:   3}};
+      const breakpoint = createSectionBreakpointData(pingPongUri, 16, 14, 3,
+        "MessageSenderBreakpoint", true);
       connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
     });
 
@@ -651,12 +591,7 @@ describe('Basic Protocol', function() {
         suspendPs[1].then(msgAfterStep => {
           connectionP.then(con => {
             // set another breakpoint, after stepping, and with connection
-            const lbp: LineBreakpointData = {
-              type: "LineBreakpoint",
-              line: 22,
-              sourceUri: pingPongUri,
-              enabled:   true
-            };
+            const lbp = createLineBreakpointData(pingPongUri, 22, true);
             send(con.socket, {action: "updateBreakpoint", breakpoint: lbp});
             send(con.socket, {action: "resume", suspendEvent: msgAfterStep.id});  
           });
@@ -671,20 +606,10 @@ describe('Basic Protocol', function() {
       return new Promise((resolve, reject) => {
         suspendPs[2].then(msgAfterStep => {
           connectionP.then(con => {
-            const lbp22: LineBreakpointData = {
-              type: "LineBreakpoint",
-              line:      23,
-              sourceUri: pingPongUri,
-              enabled:   true
-            };
+            const lbp22 = createLineBreakpointData(pingPongUri, 23, true);
             send(con.socket, {action: "updateBreakpoint", breakpoint: lbp22});
             
-            const lbp21: LineBreakpointData = {
-              type: "LineBreakpoint",
-              line:      22,
-              sourceUri: pingPongUri,
-              enabled:   false
-            };
+            const lbp21 = createLineBreakpointData(pingPongUri, 22, false);
             send(con.socket, {action: "updateBreakpoint", breakpoint: lbp21});
             send(con.socket, {action: "resume", suspendEvent: msgAfterStep.id});
 
