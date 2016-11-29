@@ -10,7 +10,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -149,6 +148,21 @@ public class ActorExecutionTrace {
       this.size = size;
     }
   };
+
+  protected enum ParamTypes{
+    False,
+    True,
+    Long,
+    Double,
+    Promise,
+    Resolver,
+    Object,
+    String;
+
+    byte id() {
+      return (byte) this.ordinal();
+    }
+  }
 
   public static void actorCreation(final SFarReference actor) {
     if (!VmSettings.ACTOR_TRACING) {
@@ -308,31 +322,30 @@ public class ActorExecutionTrace {
 
   private static void writeParameter(final Object param, final ByteBuffer b) {
     if (param instanceof SPromise) {
-      b.put((byte) 0x04);
+      b.put(ParamTypes.Promise.id());
       b.putLong(((SPromise) param).getPromiseId());
     } else if (param instanceof SResolver) {
-      b.put((byte) 0x05);
+      b.put(ParamTypes.Resolver.id());
       b.putLong(((SResolver) param).getPromise().getPromiseId());
     } else if (param instanceof SAbstractObject) {
-      b.put((byte) 0x06);
+      b.put(ParamTypes.Object.id());
       b.putShort(((SAbstractObject) param).getSOMClass().getName().getSymbolId());
     } else {
       if (param instanceof Long) {
-        b.put((byte) 0x02);
+        b.put(ParamTypes.Long.id());
         b.putLong((Long) param);
       } else if (param instanceof Double) {
-        b.put((byte) 0x03);
+        b.put(ParamTypes.Double.id());
         b.putDouble((Double) param);
       } else if (param instanceof Boolean) {
         if ((Boolean) param) {
-          b.put((byte) 0x01);
+          b.put(ParamTypes.True.id());
         } else {
-          b.put((byte) 0x00);
+          b.put(ParamTypes.False.id());
         }
       } else if (param instanceof String) {
-        b.put((byte) 0x07);
+        b.put(ParamTypes.String.id());
       } else {
-
         throw new RuntimeException("unexpected parameter type");
       }
     }
@@ -353,11 +366,9 @@ public class ActorExecutionTrace {
   private static class TraceWorkerThread extends Thread{
     @Override
     public void run() {
-      File folder = new File(System.getProperty("user.dir") + "/traces");
-      folder.mkdir();
-
-      File f = new File(folder.getAbsolutePath() + "/" + new Date().toString() + ".trace");
-      File sf = new File(folder.getAbsolutePath() + "/" + new Date().toString() + ".sym");
+      File f = new File(VmSettings.TRACE_FILE + ".trace");
+      File sf = new File(VmSettings.TRACE_FILE + ".sym");
+      f.getParentFile().mkdirs();
 
       try (FileOutputStream fos = new FileOutputStream(f);
           FileOutputStream sfos = new FileOutputStream(sf);

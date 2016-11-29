@@ -8,6 +8,7 @@ public class VmSettings {
   public static final boolean DEBUG_MODE;
   public static final boolean ACTOR_TRACING;
   public static final boolean MEMORY_TRACING;
+  public static final String TRACE_FILE;
   public static final boolean INSTRUMENTATION;
   public static final boolean DYNAMIC_METRICS;
   public static final boolean DNU_PRINT_STACK_TRACE;
@@ -27,6 +28,7 @@ public class VmSettings {
     FAIL_ON_MISSING_OPTIMIZATIONS = getBool("som.failOnMissingOptimization", false);
     DEBUG_MODE      = getBool("som.debugMode",      false);
     ACTOR_TRACING   = getBool("som.actorTracing",   false);
+    TRACE_FILE      = System.getProperty("som.traceFile", System.getProperty("user.dir") + "/traces/trace");
     MEMORY_TRACING = getBool("som.memoryTracing",   false);
 
     boolean dm = getBool("som.dynamicMetrics", false);

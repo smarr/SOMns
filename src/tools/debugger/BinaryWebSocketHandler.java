@@ -18,8 +18,7 @@ public class BinaryWebSocketHandler extends WebSocketServer{
 
   @Override
   public void onClose(final WebSocket conn, final int arg1, final String arg2, final boolean arg3) {
-    // TODO Auto-generated method stub
-
+    // no-op
   }
 
   @Override
@@ -30,7 +29,7 @@ public class BinaryWebSocketHandler extends WebSocketServer{
 
   @Override
   public void onMessage(final WebSocket conn, final String msg) {
-    // TODO Auto-generated method stub
+    // no-op
   }
 
   @Override

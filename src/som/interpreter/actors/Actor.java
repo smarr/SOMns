@@ -59,6 +59,9 @@ public class Actor {
     }
   }
 
+  /** Used to shift the thread id to the 8 most significant bits. */
+  private static final int THREAD_ID_SHIFT = 56;
+
   /** Buffer for incoming messages. */
   private Mailbox mailbox = Mailbox.createNewMailbox(16);
 
@@ -283,19 +286,19 @@ public class Actor {
     }
 
     protected long generateActorId() {
-      long result = (threadId << 56) | nextActorId;
+      long result = (threadId << THREAD_ID_SHIFT) | nextActorId;
       nextActorId++;
       return result;
     }
 
     protected long generateMessageBaseId(final int numMessages) {
-      long result = (threadId << 56) | nextMessageId;
+      long result = (threadId << THREAD_ID_SHIFT) | nextMessageId;
       nextMessageId += numMessages;
       return result;
     }
 
     protected long generatePromiseId() {
-      long result = (threadId << 56) | nextPromiseId;
+      long result = (threadId << THREAD_ID_SHIFT) | nextPromiseId;
       nextPromiseId++;
       return result;
     }
