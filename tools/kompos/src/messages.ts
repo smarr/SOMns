@@ -130,12 +130,28 @@ export interface SectionBreakpointData extends AbstractBreakpointData {
   coord: FullSourceCoordinate;
 }
 
-export function createLineBreakpointData(sourceUri: string, line: number): LineBreakpointData {
+export function createLineBreakpointData(sourceUri: string, line: number,
+    enabled: boolean): LineBreakpointData {
   return {
     type: "LineBreakpoint",
     line:      line,
     sourceUri: sourceUri,
-    enabled:   false};
+    enabled:   enabled};
+}
+
+export function createSectionBreakpointData(sourceUri: string, line: number,
+    column: number, length: number, type: SectionBreakpointType,
+    enabled: boolean) {
+  let breakpoint: SectionBreakpointData = {
+    type: type,
+    enabled: enabled,
+    coord: {
+      uri:         sourceUri,
+      startLine:   line,
+      startColumn: column,
+      charLength:  length }};
+    
+  return breakpoint;
 }
 
 export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
