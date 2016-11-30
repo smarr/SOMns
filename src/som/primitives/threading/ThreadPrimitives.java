@@ -113,7 +113,7 @@ public final class ThreadPrimitives {
     }
   }
 
-  private static final class SomThread extends Thread {
+  public static final class SomThread extends Thread {
     private final Object[] args;
     private final SBlock block;
 

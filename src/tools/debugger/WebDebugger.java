@@ -21,6 +21,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import gson.ClassHierarchyAdapterFactory;
 import som.interpreter.actors.Actor.ActorProcessingThread;
+import som.primitives.threading.ThreadPrimitives.SomThread;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.InitialBreakpointsMessage;
 import tools.debugger.message.Message.IncommingMessage;
@@ -133,6 +134,8 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     Object current;
     if (thread instanceof ActorProcessingThread) {
       current = ((ActorProcessingThread) thread).currentMessage.getTarget();
+    } else if (thread instanceof SomThread) {
+      current = thread;
     } else {
       assert thread.getClass() == Thread.class : "Should support other thread subclasses explicitly";
       current = thread;
