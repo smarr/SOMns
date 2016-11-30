@@ -1,8 +1,9 @@
 /* jshint -W097 */
 'use strict';
 
-import {IdMap, MessageHistoryMessage, MessageData, FarRefData} from './messages';
+import {IdMap} from './messages';
 import {dbgLog} from './source';
+import {displayMessageHistory} from './visualizations';
 
 var horizontalDistance = 100,
   verticalDistance = 100;
@@ -12,35 +13,42 @@ export class HistoryData {
   private actorsPerType: IdMap<number> = {};
   private messages: IdMap<IdMap<number>> = {};
   private maxMessageCount = 0;
+  private strings = {};
+  private currentReceiver = "";
 
-  private updateActors(msgHist: MessageHistoryMessage) {
-    for (var aId in msgHist.actors) {
-      var actor = msgHist.actors[aId];
-      hashAtInc(this.actorsPerType, actor.typeName, 1);
+  constructor(){
+    this.addActor("0:0", "Platform"); //add main actor 
+  }
 
-      var selfSends = hasSelfSends(actor.id, msgHist.messages);
+  addActor(id: string, type: string) {
+    hashAtInc(this.actorsPerType, type, 1);
       var node = {
-        id: actor.id,
-        name: actor.typeName,
-        reflexive: selfSends,
-        x: horizontalDistance + horizontalDistance * this.actorsPerType[actor.typeName],
+        id: id,
+        name: type,
+        reflexive: false, // selfsends TODO what is this used for, maybe set to true when checking mailbox.
+        x: horizontalDistance + horizontalDistance * this.actorsPerType[type],
         y: verticalDistance * Object.keys(this.actorsPerType).length,
-        type: actor.typeName
+        type: type
       };
+      this.actors[id.toString()] = node;
+  }
 
-      this.actors[actor.id] = node;
+  addStrings(ids: number[], strings: string[]){
+    var i;
+    for (i = 0; i < ids.length; i++) {
+      this.strings[ids[i].toString()] = strings[i];
     }
   }
 
-  private countMessagesSenderToReceiver(msgHist: MessageHistoryMessage) {
-    for (let msg of msgHist.messages) {
-      if (!this.messages.hasOwnProperty(msg.senderId)) {
-        this.messages[msg.senderId] = {};
+  addMessage(sender: string, target: string) {
+      if(target == "0:0") return;
+
+      if (!this.messages.hasOwnProperty(sender.toString())) {
+        this.messages[sender.toString()] = {};
       }
-      if (msg.senderId !== msg.targetId) {
-        hashAtInc(this.messages[msg.senderId], msg.targetId, 1);
+      if (sender !== target) {
+        hashAtInc(this.messages[sender.toString()], target.toString(), 1);
       }
-    }
   }
 
   getLinks() {
@@ -73,20 +81,107 @@ export class HistoryData {
     return this.maxMessageCount
   }
 
-  updateData(msgHist: MessageHistoryMessage) {
-    dbgLog("[Update] #msg: " + msgHist.messages.length + " #act: " + msgHist.actors.length);
-    this.updateActors(msgHist);
-    this.countMessagesSenderToReceiver(msgHist);
+  updateDataBin(data: DataView){
+    var i = 0;
+    while(i < data.byteLength){
+      var typ = data.getInt8(i);
+      i++;
+      switch(typ){
+        case 1:
+          var aid = (data.getInt32(i+4) + ':' + data.getInt32(i));
+          //8 byte causal message id
+          var type:number = data.getInt16(i+16); //type
+          this.addActor(aid, this.strings[type]);
+          i += 18;
+          break;
+        case 2:
+          //8 byte promise id
+          //8 byte causal message id
+          i += 16;
+          break;
+        case 3:
+          //8 byte promise id
+          //8 byte resolving message id
+          i += 16;
+          i += readParameter(data, i, null);
+          break;
+        case 4:
+          //8 byte promise id
+          //8 byte chained promise id
+          i += 16;
+          break;
+        case 5:
+          //8 byte message base id
+          this.currentReceiver = (data.getInt32(i+12) + ':' + data.getInt32(i+8)); //receiver id
+          i += 16;
+          break;
+        case 6:
+          var thread = data.getInt8(i); //Thread
+          //8 byte timestamp
+          i += 9;
+          break;
+        case 7:
+          //8 byte message base id
+          this.currentReceiver = (data.getInt32(i+12) + ':' + data.getInt32(i+8)); //receiver id
+          var offset = data.getInt16(i+16); //id offset
+          i += 18;
+          break;
+        case 8:
+          var sender = (data.getInt32(i+4) + ':' + data.getInt32(i)); //sender id
+          //8 byte causal message id
+          var sym = data.getInt16(i+16); //selector
+          //8byte execution start
+          //8byte send time
+          var numParam = data.getInt8(i+34);//parameter count
+          i += 35;
+          var k;
+          for(k = 0; k < numParam; k++){
+            i += readParameter(data, i, null);
+          }
+          this.addMessage(sender, this.currentReceiver);
+          break;
+        case 9:
+          //8 byte promise id
+          var sender = (data.getInt32(i+12) + ':' + data.getInt32(i+8)); //sender id
+          //8 byte causal message id
+          var sym = data.getInt16(i+24); //selector
+          //8byte execution start
+          //8byte send time
+          var numParam = data.getInt8(i+42);//parameter count
+          i += 43;
+          var k;
+          for(k = 0; k < numParam; k++){
+            i += readParameter(data, i, null);
+          }
+          this.addMessage(sender, this.currentReceiver);
+          break;
+      }
+    }
   }
 }
 
-function hasSelfSends(actorId: string, messages: MessageData[]) {
-  for (var i in messages) {
-    if (messages[i].senderId === actorId) {
-      return true;
-    }
+function readParameter(dv:DataView, offset:number, o):number{
+  var paramType = dv.getInt8(offset);
+  switch(paramType){
+    case 0: //false
+      return 1;
+    case 1: //true
+      return 1;
+    case 2: //long
+      return 9;
+    case 3: //double
+      return 9;
+    case 4: //promise (promise id)
+      return 9;
+    case 5: //resolver (promise id)
+      return 9;
+    case 6: //Object Type
+      return 3;
+    case 7: //String
+      return 1;
+    default:
+      return 1;
   }
-  return false;
 }
 
 function hashAtInc(hash, idx: string, inc: number) {

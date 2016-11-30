@@ -13,10 +13,12 @@ import {Breakpoint} from './breakpoints';
  */
 export class VmConnection {
   private socket: WebSocket;
+  private binarySocket: WebSocket;
   private controller: Controller;
 
   constructor() {
     this.socket = null;
+    this.binarySocket = null;
     this.controller = null;
   }
 
@@ -31,6 +33,11 @@ export class VmConnection {
   connect() {
     console.assert(this.socket === null || this.socket.readyState === WebSocket.CLOSED);
     this.socket = new WebSocket("ws://localhost:7977");
+
+    console.assert(this.binarySocket === null || this.binarySocket.readyState === WebSocket.CLOSED);
+    this.binarySocket = new WebSocket("ws://localhost:7978");
+    (<any>this.binarySocket).binaryType = "arraybuffer"; //workaround, typescript dosn't recognize this property
+    
 
     var controller = this.controller;
     this.socket.onopen = function (e) {
@@ -55,13 +62,18 @@ export class VmConnection {
         case "suspendEvent":
           controller.onExecutionSuspension(data);
           break;
-        case "messageHistory":
-          controller.onMessageHistory(data);
+        case "symbolMessage":
+          controller.onSymbolMessage(data);
           break;
         default:
           controller.onUnknownMessage(data);
           break;
       }
+    };
+
+    this.binarySocket.onmessage = function (e) {
+      var data: DataView = new DataView(e.data);
+      controller.onTracingData(data);
     };
   }
 

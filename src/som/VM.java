@@ -186,6 +186,7 @@ public final class VM {
    * To be called from {@link ObjectSystem}.
    */
   public void realExit(final int errorCode) {
+    Actor.shutDownActorPool();
     engine.dispose();
     System.exit(errorCode);
   }
@@ -235,6 +236,17 @@ public final class VM {
 
   @TruffleBoundary
   public static void println(final String msg) {
+    // Checkstyle: stop
+    System.out.println(msg);
+    // Checkstyle: resume
+  }
+
+  @TruffleBoundary
+  /**
+   * This method is used to print reports about the number of created artifacts.
+   * For example actors, messages and promises.
+   */
+  public static void printConcurrencyEntitiesReport(final String msg) {
     // Checkstyle: stop
     System.out.println(msg);
     // Checkstyle: resume

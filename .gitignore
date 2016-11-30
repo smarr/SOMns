@@ -13,3 +13,4 @@ newspeak
 *.ns3
 tools/kompos/node_modules
 tools/kompos/out
+traces

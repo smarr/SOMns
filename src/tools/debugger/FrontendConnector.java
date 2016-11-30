@@ -2,10 +2,9 @@ package tools.debugger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -24,9 +23,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import som.VmSettings;
 import som.interpreter.actors.Actor;
-import som.interpreter.actors.EventualMessage;
-import som.interpreter.actors.SFarReference;
-import tools.ObjectBuffer;
+import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
@@ -34,13 +31,13 @@ import tools.actors.ActorExecutionTrace;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message;
 import tools.debugger.message.Message.OutgoingMessage;
-import tools.debugger.message.MessageHistory;
 import tools.debugger.message.ScopesResponse;
 import tools.debugger.message.SourceMessage;
 import tools.debugger.message.SourceMessage.SourceData;
 import tools.debugger.message.StackTraceResponse;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SuspendedEventMessage;
+import tools.debugger.message.SymbolMessage;
 import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.AsyncMessageReceiverBreakpoint;
 import tools.debugger.session.Breakpoints;
@@ -69,11 +66,14 @@ public class FrontendConnector {
    * Receives requests from the client.
    */
   private final WebSocketHandler receiver;
+  private final BinaryWebSocketHandler binaryHandler;
 
   /**
    * Sends requests to the client.
    */
   private WebSocket sender;
+
+  private WebSocket binarySender;
 
   /**
    * Future to await the client's connection.
@@ -81,10 +81,11 @@ public class FrontendConnector {
   private CompletableFuture<WebSocket> clientConnected;
 
   private final Gson gson;
+  private static final int MESSAGE_PORT = 7977;
+  private static final int BINARY_PORT = 7978;
+  private static final int DEBUGGER_PORT = 8888;
 
   private final ArrayList<Source> notReady = new ArrayList<>(); //TODO rename: toBeSend
-
-  private int numActors = 0;
 
   public FrontendConnector(final Breakpoints breakpoints,
       final Instrumenter instrumenter, final WebDebugger webDebugger,
@@ -98,14 +99,15 @@ public class FrontendConnector {
 
     try {
       log("[DEBUGGER] Initialize HTTP and WebSocket Server for Debugger");
-      int port = 7977;
-      receiver = initializeWebSocket(port, clientConnected);
+      receiver = initializeWebSocket(MESSAGE_PORT, clientConnected);
       log("[DEBUGGER] Started WebSocket Server");
 
-      port = 8888;
-      contentServer = initializeHttpServer(port);
+      binaryHandler = new BinaryWebSocketHandler(new InetSocketAddress(BINARY_PORT));
+      binaryHandler.start();
+
+      contentServer = initializeHttpServer(DEBUGGER_PORT);
       log("[DEBUGGER] Started HTTP Server");
-      log("[DEBUGGER]   URL: http://localhost:" + port + "/index.html");
+      log("[DEBUGGER]   URL: http://localhost:" + DEBUGGER_PORT + "/index.html");
     } catch (IOException e) {
       log("Failed starting WebSocket and/or HTTP Server");
       throw new RuntimeException(e);
@@ -203,53 +205,28 @@ public class FrontendConnector {
     sendSource(source, loadedSourcesTags, rootNodes.get(source));
   }
 
+  public void sendSymbols(final ArrayList<SSymbol> symbolstowrite) {
+    send(new SymbolMessage(symbolstowrite));
+  }
+
+  public void sendTracingData(final ByteBuffer b) {
+    binarySender.send(b);
+  }
+
   public void awaitClient() {
     assert clientConnected != null;
+    assert binaryHandler.getConnection() != null;
     log("[DEBUGGER] Waiting for debugger to connect.");
     try {
       sender = clientConnected.get();
+      if (VmSettings.ACTOR_TRACING) {
+        binarySender = binaryHandler.getConnection().get();
+      }
     } catch (InterruptedException | ExecutionException ex) {
       throw new RuntimeException(ex);
     }
+    ActorExecutionTrace.setFrontEnd(this);
     log("[DEBUGGER] Debugger connected.");
-  }
-
-  /**
-   * will be removed, required to send actor information incremental.
-   */
-  private Map<SFarReference, String> createNewActorsMap(
-      final ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread) {
-    HashMap<SFarReference, String> map = new HashMap<>();
-
-    for (ObjectBuffer<SFarReference> perThread : actorsPerThread) {
-      Iterator<SFarReference> iter = perThread.iteratorFromMemory();
-      perThread.memorize();
-
-      while (iter.hasNext()) {
-        SFarReference a = iter.next();
-        map.put(a, "a-" + numActors);
-        numActors += 1;
-      }
-    }
-    return map;
-  }
-
-  /**
-   * will be removed, required to map message senders/receivers to ids.
-   */
-  private static Map<Actor, String> createActorIdMap(
-      final ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread) {
-    HashMap<Actor, String> map = new HashMap<>();
-    int numActors = 0;
-    for (ObjectBuffer<SFarReference> perThread : actorsPerThread) {
-      for (SFarReference a : perThread) {
-        assert !map.containsKey(a);
-        map.put(a.getActor(), "a-" + numActors);
-        numActors += 1;
-      }
-
-    }
-    return map;
   }
 
   public void sendSuspendedEvent(final Suspension suspension) {
@@ -279,44 +256,9 @@ public class FrontendConnector {
   }
 
   public void sendTracingData() {
-    if (!VmSettings.ACTOR_TRACING) {
-      return;
+    if (VmSettings.ACTOR_TRACING) {
+      Actor.forceSwapBuffers();
     }
-
-    ObjectBuffer<ObjectBuffer<SFarReference>> actorsPerThread = ActorExecutionTrace.getAllCreateActors();
-    ObjectBuffer<ObjectBuffer<ObjectBuffer<EventualMessage>>> messagesPerThread = ActorExecutionTrace.getAllProcessedMessages();
-
-    Map<SFarReference, String> newActors = createNewActorsMap(actorsPerThread);
-    Map<Actor, String> completeActorIdMap = createActorIdMap(actorsPerThread);
-
-
-    MessageHistory msg = MessageHistory.create(
-        newActors, messagesPerThread, completeActorIdMap);
-
-    String m = gson.toJson(msg, Message.class);
-    log("[ACTORS] Message length: " + m.length());
-    sender.send(m);
-
-    ActorExecutionTrace.clearProcessedMessages();
-  }
-
-  public void sendActorHistory() {
-    if (!VmSettings.ACTOR_TRACING) {
-      return;
-    }
-
-    ensureConnectionIsAvailable();
-
-    log("[ACTORS] send message history");
-
-    sendTracingData();
-    log("[ACTORS] Message sent?");
-    try {
-      Thread.sleep(150000);
-    } catch (InterruptedException e1) { }
-    log("[ACTORS] Message sent waiting completed");
-
-    sender.close();
   }
 
   public void registerOrUpdate(final LineBreakpoint bp) {
@@ -377,9 +319,15 @@ public class FrontendConnector {
     contentServer.stop(delaySec);
 
     sender.close();
+    if (binarySender != null) {
+      binarySender.close();
+    }
     try {
       int delayMsec = 1000;
       receiver.stop(delayMsec);
+      if (binarySender != null) {
+        binaryHandler.stop(delayMsec);
+      }
     } catch (InterruptedException e) { }
   }
 }

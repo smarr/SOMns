@@ -1,11 +1,14 @@
 package som.interpreter.actors;
 
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
@@ -16,7 +19,6 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
-import tools.ObjectBuffer;
 import tools.actors.ActorExecutionTrace;
 import tools.debugger.WebDebugger;
 
@@ -43,6 +45,8 @@ public class Actor {
   public static Actor createActor() {
     if (VmSettings.DEBUG_MODE) {
       return new DebugActor();
+    } else if (VmSettings.ACTOR_TRACING) {
+      return new TracingActor();
     } else {
       return new Actor();
     }
@@ -52,18 +56,28 @@ public class Actor {
     Thread current = Thread.currentThread();
     if (current instanceof ActorProcessingThread) {
       ActorProcessingThread t = (ActorProcessingThread) current;
-      t.createdActors.append(actorFarRef);
     }
   }
 
+  /** Used to shift the thread id to the 8 most significant bits. */
+  private static final int THREAD_ID_SHIFT = 56;
+
   /** Buffer for incoming messages. */
-  private ObjectBuffer<EventualMessage> mailbox = new ObjectBuffer<>(16);
+  private Mailbox mailbox = Mailbox.createNewMailbox(16);
 
   /** Flag to indicate whether there is currently a F/J task executing. */
   private boolean isExecuting;
 
   /** Is scheduled on the pool, and executes messages to this actor. */
   private final ExecAllMessages executor;
+
+  //used to collect absolute numbers from the threads
+  private static long numCreatedMessages = 0;
+  private static long numCreatedActors = 0;
+  private static long numCreatedPromises = 0;
+  private static long numResolvedPromises = 0;
+
+  private static ArrayList<ActorProcessingThread> threads = new ArrayList<>();
 
   /**
    * Possible roles for an actor.
@@ -122,6 +136,7 @@ public class Actor {
   protected void logMessageAddedToMailbox(final EventualMessage msg) { }
   protected void logMessageBeingExecuted(final EventualMessage msg) { }
   protected void logNoTaskForActor() { }
+  public long getActorId() { return 0; }
 
   /**
    * Send the give message to the actor.
@@ -131,6 +146,9 @@ public class Actor {
   @TruffleBoundary
   public synchronized void send(final EventualMessage msg) {
     assert msg.getTarget() == this;
+    if (VmSettings.ACTOR_TRACING) {
+      mailbox.addMessageSendTime();
+    }
     mailbox.append(msg);
     logMessageAddedToMailbox(msg);
 
@@ -140,13 +158,18 @@ public class Actor {
     }
   }
 
+  public synchronized long sendAndGetId(final EventualMessage msg) {
+    send(msg);
+    return mailbox.getBasemessageId() + mailbox.size() - 1;
+  }
+
   /**
    * Is scheduled on the fork/join pool and executes messages for a specific
    * actor.
    */
   private static final class ExecAllMessages implements Runnable {
     private final Actor actor;
-    private ObjectBuffer<EventualMessage> current;
+    private Mailbox current;
 
     ExecAllMessages(final Actor actor) {
       this.actor = actor;
@@ -171,6 +194,11 @@ public class Actor {
     }
 
     private void processCurrentMessages(final ActorProcessingThread currentThread, final WebDebugger dbg) {
+      if (VmSettings.ACTOR_TRACING) {
+        current.setExecutionStart(System.nanoTime());
+        current.setBaseMessageId(currentThread.generateMessageBaseId(current.size()));
+        currentThread.currentMessageId = current.getBasemessageId();
+      }
       for (EventualMessage msg : current) {
         actor.logMessageBeingExecuted(msg);
         currentThread.currentMessage = msg;
@@ -180,11 +208,16 @@ public class Actor {
             dbg.prepareSteppingUntilNextRootNode();
           }
         }
-
+        if (VmSettings.ACTOR_TRACING) {
+          current.addMessageExecutionStart();
+        }
         msg.execute();
+        if (VmSettings.ACTOR_TRACING) {
+          currentThread.currentMessageId += 1;
+        }
       }
       if (VmSettings.ACTOR_TRACING) {
-        currentThread.processedMessages.append(current);
+        ActorExecutionTrace.mailboxExecuted(current, actor);
       }
     }
 
@@ -195,10 +228,13 @@ public class Actor {
         if (current.isEmpty()) {
           // complete execution after all messages are processed
           actor.isExecuting = false;
+
           return false;
         }
-        actor.mailbox = new ObjectBuffer<>(actor.mailbox.size());
+
+        actor.mailbox = Mailbox.createNewMailbox(actor.mailbox.size());
       }
+
       return true;
     }
   }
@@ -223,21 +259,75 @@ public class Actor {
   private static final class ActorProcessingThreadFactor implements ForkJoinWorkerThreadFactory {
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
-      return new ActorProcessingThread(pool);
+      ActorProcessingThread t = new ActorProcessingThread(pool);
+      threads.add(t);
+      return t;
     }
   }
 
   public static final class ActorProcessingThread extends ForkJoinWorkerThread {
     public EventualMessage currentMessage;
+    private static AtomicInteger threadIdGen = new AtomicInteger(0);
     protected Actor currentlyExecutingActor;
-    protected final ObjectBuffer<SFarReference> createdActors;
-    protected final ObjectBuffer<ObjectBuffer<EventualMessage>> processedMessages;
+    protected final long threadId;
+    protected long nextActorId = 1;
+    protected long nextMessageId;
+    protected long nextPromiseId;
+    protected long currentMessageId;
+    protected ByteBuffer tracingDataBuffer;
+    public long resolvedPromises;
 
     protected ActorProcessingThread(final ForkJoinPool pool) {
       super(pool);
+      threadId = threadIdGen.getAndIncrement();
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.swapBuffer(this);
+      }
+    }
 
-      createdActors = ActorExecutionTrace.createActorBuffer();
-      processedMessages = ActorExecutionTrace.createProcessedMessagesBuffer();
+    protected long generateActorId() {
+      long result = (threadId << THREAD_ID_SHIFT) | nextActorId;
+      nextActorId++;
+      return result;
+    }
+
+    protected long generateMessageBaseId(final int numMessages) {
+      long result = (threadId << THREAD_ID_SHIFT) | nextMessageId;
+      nextMessageId += numMessages;
+      return result;
+    }
+
+    protected long generatePromiseId() {
+      long result = (threadId << THREAD_ID_SHIFT) | nextPromiseId;
+      nextPromiseId++;
+      return result;
+    }
+
+    public ByteBuffer getThreadLocalBuffer() {
+      return tracingDataBuffer;
+    }
+
+    public void setThreadLocalBuffer(final ByteBuffer threadLocalBuffer) {
+      this.tracingDataBuffer = threadLocalBuffer;
+    }
+
+    public long getCurrentMessageId() {
+      return currentMessageId;
+    }
+
+    @Override
+    protected void onTermination(final Throwable exception) {
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.returnBuffer(this.tracingDataBuffer);
+        this.tracingDataBuffer = null;
+        VM.printConcurrencyEntitiesReport("[Thread " + threadId + "]\tA#" + (nextActorId - 1) + "\t\tM#" + nextMessageId + "\t\tP#" + nextPromiseId);
+        numCreatedActors += nextActorId - 1;
+        numCreatedMessages += nextMessageId;
+        numCreatedPromises += nextPromiseId;
+        numResolvedPromises += resolvedPromises;
+      }
+      threads.remove(this);
+      super.onTermination(exception);
     }
   }
 
@@ -262,12 +352,31 @@ public class Actor {
       VmSettings.NUM_THREADS, new ActorProcessingThreadFactor(),
       new UncaughtExceptions(), true);
 
+  public static final void shutDownActorPool() {
+      actorPool.shutdown();
+      try {
+        actorPool.awaitTermination(10, TimeUnit.SECONDS);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
+      if (VmSettings.ACTOR_TRACING) {
+        VM.printConcurrencyEntitiesReport("[Total]\t\tA#" + numCreatedActors + "\t\tM#" + numCreatedMessages + "\t\tP#" + numCreatedPromises);
+        VM.printConcurrencyEntitiesReport("[Unresolved] " + (numCreatedPromises - numResolvedPromises));
+      }
+  }
+
+  public static final void forceSwapBuffers() {
+    for (ActorProcessingThread t: threads) {
+      ActorExecutionTrace.swapBuffer(t);
+    }
+  }
+
   @Override
   public String toString() {
     return "Actor";
   }
 
-  public ObjectBuffer<EventualMessage> getMailbox() {
+  public Mailbox getMailbox() {
     return mailbox;
   }
 
@@ -305,6 +414,25 @@ public class Actor {
     @Override
     public String toString() {
       return "Actor[" + (isMain ? "main" : id) + "]";
+    }
+  }
+
+  public static final class TracingActor extends Actor {
+    protected final long actorId;
+
+    public TracingActor() {
+      super();
+      if (Thread.currentThread() instanceof ActorProcessingThread) {
+        ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
+        this.actorId = t.generateActorId();
+      } else {
+        actorId = 0; //main actor
+      }
+    }
+
+    @Override
+    public long getActorId() {
+      return actorId;
     }
   }
 }

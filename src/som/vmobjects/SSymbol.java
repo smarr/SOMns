@@ -24,15 +24,27 @@
 
 package som.vmobjects;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
+import som.VmSettings;
 import som.vm.constants.Classes;
+import tools.actors.ActorExecutionTrace;
 
 public final class SSymbol extends SAbstractObject {
   private final String string;
   private final int    numberOfSignatureArguments;
+  private final short symbolId;
+  private static AtomicInteger idGenerator = new AtomicInteger(0);
 
   public SSymbol(final String value) {
     string = value;
     numberOfSignatureArguments = determineNumberOfSignatureArguments();
+    if (VmSettings.ACTOR_TRACING) {
+      symbolId = (short) idGenerator.getAndIncrement();
+      ActorExecutionTrace.logSymbol(this);
+    } else {
+      symbolId = 0;
+    }
   }
 
   @Override
@@ -49,6 +61,10 @@ public final class SSymbol extends SAbstractObject {
   public String getString() {
     // Get the string associated to this symbol
     return string;
+  }
+
+  public short getSymbolId() {
+    return symbolId;
   }
 
   private int determineNumberOfSignatureArguments() {

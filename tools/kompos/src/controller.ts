@@ -2,13 +2,13 @@
 "use strict";
 
 import {Debugger}     from './debugger';
-import {SourceMessage, SuspendEventMessage, MessageHistoryMessage,
+import {SourceMessage, SuspendEventMessage, SymbolMessage,
   SectionBreakpointType} from './messages';
 import {LineBreakpoint, MessageBreakpoint, AsyncMethodRcvBreakpoint, PromiseBreakpoint,
   createLineBreakpoint, createMsgBreakpoint,
   createAsyncMethodRcvBreakpoint, createPromiseBreakpoint} from './breakpoints';
 import {dbgLog}       from './source';
-import {displayMessageHistory, resetLinks} from './visualizations';
+import {displayMessageHistory, resetLinks, updateStrings, updateData} from './visualizations';
 import {View}         from './view';
 import {VmConnection} from './vm-connection';
 
@@ -92,8 +92,13 @@ export class Controller {
       msg, this.dbg.getSourceId(msg.stack[0].sourceSection.uri));
   }
 
-  onMessageHistory(msg: MessageHistoryMessage) {
-    displayMessageHistory(msg);
+  onSymbolMessage(msg: SymbolMessage){
+    updateStrings(msg);
+  }
+
+  onTracingData(data: DataView){
+    updateData(data);
+    displayMessageHistory();
   }
 
   onUnknownMessage(msg: any) {

@@ -13,6 +13,7 @@ import som.primitives.ObjectPrims.IsValue;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
 import som.primitives.Primitive;
 import som.primitives.actors.PromisePrims.IsActorModule;
+import tools.actors.ActorExecutionTrace;
 
 
 @GenerateNodeFactory
@@ -29,6 +30,7 @@ public abstract class CreateActorPrim extends BinaryComplexOperation {
 
     if (VmSettings.ACTOR_TRACING) {
       Actor.traceActorsExceptMainOne(ref);
+      ActorExecutionTrace.actorCreation(ref);
     }
     return ref;
   }
