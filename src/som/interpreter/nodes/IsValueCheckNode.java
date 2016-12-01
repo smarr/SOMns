@@ -2,6 +2,8 @@ package som.interpreter.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
@@ -50,7 +52,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       if (!(receiver instanceof SImmutableObject)) {
         // can remove ourselves, this node is only used in initializers,
         // which are by definition monomorphic
-        replace(self);
+        dropCheckNode();
         return receiver;
       }
 
@@ -61,8 +63,19 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
             executeEvaluated(frame, receiver);
       } else {
         // neither transfer object nor value, so nothing to check
-        replace(self);
+        dropCheckNode();
         return receiver;
+      }
+    }
+
+    private void dropCheckNode() {
+      if (getParent() instanceof WrapperNode) {
+        // in case there is a wrapper, get rid of it first
+        Node wrapper = getParent();
+        wrapper.replace(self);
+        VM.insertInstrumentationWrapper(self);
+      } else {
+        replace(self);
       }
     }
   }
