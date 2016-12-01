@@ -31,21 +31,21 @@ GraphSearch.som pos=1544 len=10	at:	ArrayRead BasicPrimitiveOperation VirtualInv
 GraphSearch.som pos=1544 len=10	at:	ArrayRead BasicPrimitiveOperation VirtualInvokeReceiver	TOTAL	8957
 GraphSearch.som pos=1722 len=5	at:	ArrayRead BasicPrimitiveOperation VirtualInvokeReceiver	ref	2999
 GraphSearch.som pos=1722 len=5	at:	ArrayRead BasicPrimitiveOperation VirtualInvokeReceiver	TOTAL	2999
-GraphSearch.som pos=1754 len=56	at:put:	ArrayWrite BasicPrimitiveOperation	ref	2999
-GraphSearch.som pos=1754 len=56	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	2999
+GraphSearch.som pos=1754 len=56	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	ref	2999
+GraphSearch.som pos=1754 len=56	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	2999
 GraphSearch.som pos=1791 len=3	+	BasicPrimitiveOperation OpArithmetic	int	2999
 GraphSearch.som pos=1791 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	2999
 GraphSearch.som pos=1845 len=11	+	BasicPrimitiveOperation OpArithmetic	int	2999
 GraphSearch.som pos=1845 len=11	+	BasicPrimitiveOperation OpArithmetic	TOTAL	2999
-GraphSearch.som pos=2086 len=17	at:put:	ArrayWrite BasicPrimitiveOperation	int	17915
-GraphSearch.som pos=2086 len=17	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	17915
+GraphSearch.som pos=2086 len=17	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	int	17915
+GraphSearch.som pos=2086 len=17	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	17915
 GraphSearch.som pos=2122 len=3	+	BasicPrimitiveOperation OpArithmetic	int	17915
 GraphSearch.som pos=2122 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	17915
 GraphSearch.som pos=2706 len=7	at:	ArrayRead BasicPrimitiveOperation ControlFlowCondition	bool	18000
 GraphSearch.som pos=2706 len=7	at:	ArrayRead BasicPrimitiveOperation ControlFlowCondition	bool	2999
 GraphSearch.som pos=2706 len=7	at:	ArrayRead BasicPrimitiveOperation ControlFlowCondition	TOTAL	20999
-GraphSearch.som pos=2747 len=18	at:put:	ArrayWrite BasicPrimitiveOperation	bool	2999
-GraphSearch.som pos=2747 len=18	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	2999
+GraphSearch.som pos=2747 len=18	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	bool	2999
+GraphSearch.som pos=2747 len=18	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	2999
 GraphSearch.som pos=2791 len=7	at:	ArrayRead BasicPrimitiveOperation VirtualInvokeReceiver	ref	2999
 GraphSearch.som pos=2791 len=7	at:	ArrayRead BasicPrimitiveOperation VirtualInvokeReceiver	TOTAL	2999
 GraphSearch.som pos=2843 len=7	at:	ArrayRead BasicPrimitiveOperation VirtualInvokeReceiver	ref	2999
@@ -61,23 +61,23 @@ GraphSearch.som pos=2977 len=5	at:	ArrayRead BasicPrimitiveOperation	TOTAL	17915
 GraphSearch.som pos=3012 len=6	at:	ArrayRead BasicPrimitiveOperation ControlFlowCondition	bool	5639
 GraphSearch.som pos=3012 len=6	at:	ArrayRead BasicPrimitiveOperation ControlFlowCondition	bool	12276
 GraphSearch.som pos=3012 len=6	at:	ArrayRead BasicPrimitiveOperation ControlFlowCondition	TOTAL	17915
-GraphSearch.som pos=3052 len=30	at:put:	ArrayWrite BasicPrimitiveOperation	int	5639
-GraphSearch.som pos=3052 len=30	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	5639
+GraphSearch.som pos=3052 len=30	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	int	5639
+GraphSearch.som pos=3052 len=30	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	5639
 GraphSearch.som pos=3070 len=7	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgument	int	5639
 GraphSearch.som pos=3070 len=7	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgument	TOTAL	5639
 GraphSearch.som pos=3079 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	5639
 GraphSearch.som pos=3079 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	5639
-GraphSearch.som pos=3118 len=16	at:put:	ArrayWrite BasicPrimitiveOperation	bool	5639
-GraphSearch.som pos=3118 len=16	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	5639
+GraphSearch.som pos=3118 len=16	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	bool	5639
+GraphSearch.som pos=3118 len=16	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	5639
 GraphSearch.som pos=3261 len=7	at:	ArrayRead BasicPrimitiveOperation ControlFlowCondition	bool	18000
 GraphSearch.som pos=3261 len=7	at:	ArrayRead BasicPrimitiveOperation ControlFlowCondition	bool	2999
 GraphSearch.som pos=3261 len=7	at:	ArrayRead BasicPrimitiveOperation ControlFlowCondition	TOTAL	20999
-GraphSearch.som pos=3305 len=17	at:put:	ArrayWrite BasicPrimitiveOperation	bool	2998
-GraphSearch.som pos=3305 len=17	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	2998
-GraphSearch.som pos=3349 len=17	at:put:	ArrayWrite BasicPrimitiveOperation	bool	2998
-GraphSearch.som pos=3349 len=17	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	2998
-GraphSearch.som pos=3424 len=18	at:put:	ArrayWrite BasicPrimitiveOperation	bool	2998
-GraphSearch.som pos=3424 len=18	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	2998
+GraphSearch.som pos=3305 len=17	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	bool	2998
+GraphSearch.som pos=3305 len=17	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	2998
+GraphSearch.som pos=3349 len=17	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	bool	2998
+GraphSearch.som pos=3349 len=17	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	2998
+GraphSearch.som pos=3424 len=18	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	bool	2998
+GraphSearch.som pos=3424 len=18	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	2998
 GraphSearch.som pos=3562 len=46	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
 GraphSearch.som pos=3710 len=3	+	BasicPrimitiveOperation OpArithmetic	int	2999
 GraphSearch.som pos=3710 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	2999
@@ -157,9 +157,9 @@ Harness.som pos=6326 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComp
 Harness.som pos=6405 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
 Harness.som pos=6481 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
 Harness.som pos=6615 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
-Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	9026
-Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	131717
-Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	140743
+Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	9026
+Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	131717
+Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	140743
 Kernel.som pos=8069 len=6	+	BasicPrimitiveOperation OpArithmetic	int	131717
 Kernel.som pos=8069 len=6	+	BasicPrimitiveOperation OpArithmetic	TOTAL	131717
 Kernel.som pos=12597 len=13	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
@@ -187,8 +187,8 @@ Kernel.som pos=22177 len=14	>	BasicPrimitiveOperation ControlFlowCondition OpCom
 Kernel.som pos=22177 len=14	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	17915
 Kernel.som pos=22187 len=4	size	BasicPrimitiveOperation OpLength PrimitiveArgument	arr	17915
 Kernel.som pos=22187 len=4	size	BasicPrimitiveOperation OpLength PrimitiveArgument	TOTAL	17915
-Kernel.som pos=22451 len=24	at:put:	ArrayWrite BasicPrimitiveOperation	ref	17915
-Kernel.som pos=22451 len=24	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	17915
+Kernel.som pos=22451 len=24	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	ref	17915
+Kernel.som pos=22451 len=24	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	17915
 Kernel.som pos=22502 len=3	+	BasicPrimitiveOperation OpArithmetic	int	17915
 Kernel.som pos=22502 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	17915
 Kernel.som pos=24059 len=10	-	BasicPrimitiveOperation OpArithmetic RootTag StatementTag	int	2999
