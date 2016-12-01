@@ -16,6 +16,7 @@ import {SourceCoordinate, FullSourceCoordinate, SourceMessage, SuspendEventMessa
   createLineBreakpointData, createSectionBreakpointData} from '../src/messages';
 
 const PRINT_SOM_OUTPUT = false;
+const PRINT_CMD_LINE   = false;
 
 interface SomConnection {
   somProc: ChildProcess;
@@ -97,7 +98,9 @@ function startSomAndConnect(onMessageHandler?: OnMessageHandler,
   let args = ['-G', '-t1', '-wd', 'tests/pingpong.som'];
   if (triggerDebugger) { args = ['-d'].concat(args); };
   if (extraArgs) { args = args.concat(extraArgs); }
-
+  if (PRINT_CMD_LINE) {
+    console.log("[CMD]" + som + args.join(' '));
+  }
   const somProc = spawn(som, args);
   const promise = new Promise((resolve, reject) => {
     let connecting = false;
