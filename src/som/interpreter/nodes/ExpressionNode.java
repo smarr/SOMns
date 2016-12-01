@@ -73,6 +73,8 @@ public abstract class ExpressionNode extends SOMNode {
 
   public void markAsVirtualInvokeReceiver()  { throw new UnsupportedOperationException(); }
 
+  public void markAsStatement()  { throw new UnsupportedOperationException(); }
+
   public abstract Object executeGeneric(final VirtualFrame frame);
 
   @Override

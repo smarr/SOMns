@@ -3,7 +3,6 @@ package som.interpreter.nodes;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
-import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
@@ -91,14 +90,6 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
       }
     }
     return replacedBy;
-  }
-
-  @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
-    if (tag == StatementTag.class) {
-      return isMarkedAsRootExpression();
-    }
-    return super.isTaggedWith(tag);
   }
 
   @Override

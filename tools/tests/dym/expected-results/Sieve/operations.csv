@@ -7,9 +7,9 @@ Harness.som pos=6326 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComp
 Harness.som pos=6405 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
 Harness.som pos=6481 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
 Harness.som pos=6615 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
-Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	7
-Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	20005
-Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	20012
+Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	7
+Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	20005
+Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	20012
 Kernel.som pos=8069 len=6	+	BasicPrimitiveOperation OpArithmetic	int	20005
 Kernel.som pos=8069 len=6	+	BasicPrimitiveOperation OpArithmetic	TOTAL	20005
 Kernel.som pos=12597 len=13	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
@@ -34,11 +34,11 @@ Sieve.som pos=1678 len=3	+	BasicPrimitiveOperation OpArithmetic	int	1337
 Sieve.som pos=1678 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	1337
 Sieve.som pos=1702 len=3	+	BasicPrimitiveOperation OpArithmetic	int	1337
 Sieve.som pos=1702 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	1337
-Sieve.som pos=1723 len=7	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	1338
-Sieve.som pos=1723 len=7	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	22137
-Sieve.som pos=1723 len=7	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	23475
-Sieve.som pos=1782 len=20	at:put:	ArrayWrite BasicPrimitiveOperation	bool	22137
-Sieve.som pos=1782 len=20	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	22137
+Sieve.som pos=1723 len=7	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	1338
+Sieve.som pos=1723 len=7	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	22137
+Sieve.som pos=1723 len=7	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	23475
+Sieve.som pos=1782 len=20	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	bool	22137
+Sieve.som pos=1782 len=20	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	22137
 Sieve.som pos=1788 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	22137
 Sieve.som pos=1788 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	22137
 Sieve.som pos=1811 len=3	+	BasicPrimitiveOperation OpArithmetic	int	22137

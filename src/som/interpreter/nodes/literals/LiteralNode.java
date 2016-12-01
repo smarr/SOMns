@@ -23,7 +23,6 @@ package som.interpreter.nodes.literals;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
-import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
@@ -66,8 +65,6 @@ public abstract class LiteralNode extends ExprWithTagsNode
   protected boolean isTaggedWith(final Class<?> tag) {
     if (tag == LiteralTag.class) {
       return true;
-    } else if (tag == StatementTag.class) {
-      return isMarkedAsRootExpression();
     } else {
       return super.isTaggedWith(tag);
     }

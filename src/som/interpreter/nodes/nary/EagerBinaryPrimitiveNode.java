@@ -3,7 +3,6 @@ package som.interpreter.nodes.nary;
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
-import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -39,9 +38,6 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitive {
 
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
-    if (tag == StatementTag.class) {
-      return isMarkedAsRootExpression();
-    }
     assert !(primitive instanceof WrapperNode);
     return primitive.isTaggedWithIgnoringEagerness(tag);
   }

@@ -11,9 +11,11 @@ import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.DebuggerSession;
 import com.oracle.truffle.api.debug.DebuggerSession.SteppingLocation;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 
 import som.interpreter.actors.ReceivedRootNode;
 import tools.SourceCoordinate.FullSourceCoordinate;
+import tools.actors.Tags.EventualMessageSend;
 import tools.debugger.WebDebugger;
 
 
@@ -76,11 +78,11 @@ public class Breakpoints {
   }
 
   public synchronized void addOrUpdate(final MessageSenderBreakpoint bId) {
-    saveTruffleBasedBreakpoints(bId);
+    saveTruffleBasedBreakpoints(bId, EventualMessageSend.class);
   }
 
   public synchronized void addOrUpdate(final AsyncMessageReceiverBreakpoint bId) {
-    Breakpoint bp = saveTruffleBasedBreakpoints(bId);
+    Breakpoint bp = saveTruffleBasedBreakpoints(bId, RootTag.class);
     bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
   }
 
@@ -96,13 +98,14 @@ public class Breakpoints {
     saveBreakpoint(bId, promiseResolutionBreakpoints);
   }
 
-  private Breakpoint saveTruffleBasedBreakpoints(final SectionBreakpoint bId) {
+  private Breakpoint saveTruffleBasedBreakpoints(final SectionBreakpoint bId, final Class<?> tag) {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {
       bp = Breakpoint.newBuilder(bId.getCoordinate().uri).
           lineIs(bId.getCoordinate().startLine).
           columnIs(bId.getCoordinate().startColumn).
           sectionLength(bId.getCoordinate().charLength).
+          tag(tag).
           build();
       debuggerSession.install(bp);
       truffleBreakpoints.put(bId, bp);

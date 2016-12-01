@@ -6,7 +6,6 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
@@ -210,12 +209,4 @@ public abstract class OuterObjectRead
 
   @Specialization(guards = "contextLevel == 0")
   public SBlock doSBlockDirect(final SBlock receiver) { return receiver; }
-
-  @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
-    if (tag == StatementTag.class) {
-      return isMarkedAsRootExpression();
-    }
-    return super.isTaggedWith(tag);
-  }
 }

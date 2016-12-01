@@ -45,6 +45,11 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
    */
   private static final byte VIRTUAL_INVOKE_RECEIVER = 1 << 4;
 
+  /**
+   * Indicate that this node is the first/root node of a statement.
+   */
+  private static final byte STATEMENT = 1 << 5;
+
   public ExprWithTagsNode(final SourceSection sourceSection) {
     super(sourceSection);
   }
@@ -110,6 +115,12 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
   }
 
   @Override
+  public void markAsStatement() {
+    assert getSourceSection() != null;
+    tagWith(STATEMENT);
+  }
+
+  @Override
   protected void onReplace(final Node newNode, final CharSequence reason) {
     if (newNode instanceof WrapperNode) { return; }
 
@@ -126,7 +137,7 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
     if (tag == StatementTag.class) {
-      return true;
+      return isTagged(STATEMENT);
     } else if (tag == RootTag.class) {
       return isTagged(ROOT_EXPR);
     } else if (tag == LoopBody.class) {

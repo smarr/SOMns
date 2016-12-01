@@ -5,9 +5,9 @@ Harness.som pos=6326 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComp
 Harness.som pos=6405 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
 Harness.som pos=6481 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
 Harness.som pos=6615 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
-Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	5458
-Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	46261
-Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	51719
+Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	5458
+Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	46261
+Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	51719
 Kernel.som pos=8069 len=6	+	BasicPrimitiveOperation OpArithmetic	int	45861
 Kernel.som pos=8069 len=6	+	BasicPrimitiveOperation OpArithmetic	TOTAL	45861
 Kernel.som pos=12597 len=13	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
@@ -24,8 +24,8 @@ Kernel.som pos=16849 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag S
 Kernel.som pos=16849 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	bool	1999
 Kernel.som pos=16849 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	TOTAL	2399
 Platform.som pos=1041 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
-Queens.som pos=1860 len=12	at:put:	ArrayWrite BasicPrimitiveOperation	int	5649
-Queens.som pos=1860 len=12	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	5649
+Queens.som pos=1860 len=12	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	int	5649
+Queens.som pos=1860 len=12	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	5649
 Queens.som pos=1935 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	5599
 Queens.som pos=1935 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	50
 Queens.som pos=1935 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	5649
@@ -46,17 +46,17 @@ Queens.som pos=2176 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgume
 Queens.som pos=2176 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	43799
 Queens.som pos=2180 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	43799
 Queens.som pos=2180 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	43799
-Queens.som pos=2241 len=20	at:put:	ArrayWrite BasicPrimitiveOperation	bool	5649
-Queens.som pos=2241 len=20	at:put:	ArrayWrite BasicPrimitiveOperation	bool	5250
-Queens.som pos=2241 len=20	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	10899
-Queens.som pos=2278 len=20	at:put:	ArrayWrite BasicPrimitiveOperation	bool	5649
-Queens.som pos=2278 len=20	at:put:	ArrayWrite BasicPrimitiveOperation	bool	5250
-Queens.som pos=2278 len=20	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	10899
+Queens.som pos=2241 len=20	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	bool	5649
+Queens.som pos=2241 len=20	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	bool	5250
+Queens.som pos=2241 len=20	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	10899
+Queens.som pos=2278 len=20	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	bool	5649
+Queens.som pos=2278 len=20	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	bool	5250
+Queens.som pos=2278 len=20	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	10899
 Queens.som pos=2284 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	10899
 Queens.som pos=2284 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	10899
-Queens.som pos=2315 len=20	at:put:	ArrayWrite BasicPrimitiveOperation	bool	5649
-Queens.som pos=2315 len=20	at:put:	ArrayWrite BasicPrimitiveOperation	bool	5250
-Queens.som pos=2315 len=20	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	10899
+Queens.som pos=2315 len=20	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	bool	5649
+Queens.som pos=2315 len=20	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	bool	5250
+Queens.som pos=2315 len=20	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	10899
 Queens.som pos=2321 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	10899
 Queens.som pos=2321 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	10899
 Queens.som pos=2325 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	10899

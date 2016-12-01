@@ -1,9 +1,9 @@
 Source Section	Operation	Category	Type	Invocations
 Fannkuch.som pos=2008 len=5	at:	ArrayRead BasicPrimitiveOperation	int	61
 Fannkuch.som pos=2008 len=5	at:	ArrayRead BasicPrimitiveOperation	TOTAL	61
-Fannkuch.som pos=2015 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	38
-Fannkuch.som pos=2015 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	23
-Fannkuch.som pos=2015 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	61
+Fannkuch.som pos=2015 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	38
+Fannkuch.som pos=2015 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	23
+Fannkuch.som pos=2015 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	61
 Fannkuch.som pos=2050 len=3	+	BasicPrimitiveOperation OpArithmetic	int	37
 Fannkuch.som pos=2050 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	37
 Fannkuch.som pos=2083 len=3	+	BasicPrimitiveOperation OpArithmetic	int	37
@@ -16,10 +16,10 @@ Fannkuch.som pos=2177 len=18	at:	ArrayRead BasicPrimitiveOperation	int	49
 Fannkuch.som pos=2177 len=18	at:	ArrayRead BasicPrimitiveOperation	TOTAL	49
 Fannkuch.som pos=2192 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	49
 Fannkuch.som pos=2192 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	49
-Fannkuch.som pos=2215 len=12	at:put:	ArrayWrite BasicPrimitiveOperation	int	49
-Fannkuch.som pos=2215 len=12	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	49
-Fannkuch.som pos=2247 len=25	at:put:	ArrayWrite BasicPrimitiveOperation	int	49
-Fannkuch.som pos=2247 len=25	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	49
+Fannkuch.som pos=2215 len=12	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	int	49
+Fannkuch.som pos=2215 len=12	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	49
+Fannkuch.som pos=2247 len=25	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	int	49
+Fannkuch.som pos=2247 len=25	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	49
 Fannkuch.som pos=2262 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	49
 Fannkuch.som pos=2262 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	49
 Fannkuch.som pos=2411 len=4	size	BasicPrimitiveOperation OpLength	arr	23
@@ -34,10 +34,10 @@ Fannkuch.som pos=2560 len=9	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgum
 Fannkuch.som pos=2560 len=9	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgument	TOTAL	59
 Fannkuch.som pos=2566 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	59
 Fannkuch.som pos=2566 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	59
-Fannkuch.som pos=2587 len=15	at:put:	ArrayWrite BasicPrimitiveOperation	int	39
-Fannkuch.som pos=2587 len=15	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	39
-Fannkuch.som pos=2626 len=41	at:put:	ArrayWrite BasicPrimitiveOperation	int	39
-Fannkuch.som pos=2626 len=41	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	39
+Fannkuch.som pos=2587 len=15	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	int	39
+Fannkuch.som pos=2587 len=15	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	39
+Fannkuch.som pos=2626 len=41	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	int	39
+Fannkuch.som pos=2626 len=41	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	39
 Fannkuch.som pos=2652 len=5	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgument	int	39
 Fannkuch.som pos=2652 len=5	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgument	TOTAL	39
 Fannkuch.som pos=2659 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	39
@@ -55,9 +55,9 @@ Harness.som pos=6326 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComp
 Harness.som pos=6405 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
 Harness.som pos=6481 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
 Harness.som pos=6615 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
-Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	107
-Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	262
-Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	369
+Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	107
+Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	262
+Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	369
 Kernel.som pos=8069 len=6	+	BasicPrimitiveOperation OpArithmetic	int	239
 Kernel.som pos=8069 len=6	+	BasicPrimitiveOperation OpArithmetic	TOTAL	239
 Kernel.som pos=8588 len=12	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	int	3
@@ -81,8 +81,8 @@ Kernel.som pos=16988 len=7	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgum
 Kernel.som pos=16988 len=7	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	23
 Kernel.som pos=16996 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	23
 Kernel.som pos=16996 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	23
-Kernel.som pos=17072 len=12	at:put:	ArrayWrite BasicPrimitiveOperation	int	95
-Kernel.som pos=17072 len=12	at:put:	ArrayWrite BasicPrimitiveOperation	TOTAL	95
+Kernel.som pos=17072 len=12	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	int	95
+Kernel.som pos=17072 len=12	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	95
 Kernel.som pos=17101 len=3	+	BasicPrimitiveOperation OpArithmetic	int	95
 Kernel.som pos=17101 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	95
 Kernel.som pos=17195 len=4	size	BasicPrimitiveOperation OpLength	arr	23
