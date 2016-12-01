@@ -99,6 +99,10 @@ public final class SNodeFactory {
 
   public static ExpressionNode createSequence(
       final List<ExpressionNode> expressions, final SourceSection source) {
+    for (ExpressionNode statement : expressions) {
+      statement.markAsStatement();
+    }
+
     if (expressions.size() == 0) {
       return new NilLiteralNode(source);
     } else if (expressions.size() == 1) {

@@ -4,7 +4,6 @@ import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate
 
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.Variable.Local;
@@ -67,8 +66,6 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     protected boolean isTaggedWith(final Class<?> tag) {
       if (tag == LocalVarRead.class) {
         return true;
-      } else if (tag == StatementTag.class) {
-        return isMarkedAsRootExpression();
       } else {
         return super.isTaggedWith(tag);
       }
@@ -152,8 +149,6 @@ public abstract class UninitializedVariableNode extends ContextualNode {
     protected boolean isTaggedWith(final Class<?> tag) {
       if (tag == LocalVarWrite.class) {
         return true;
-      } else if (tag == StatementTag.class) {
-        return isMarkedAsRootExpression();
       } else {
         return super.isTaggedWith(tag);
       }

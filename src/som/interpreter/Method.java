@@ -128,7 +128,6 @@ public final class Method extends Invokable {
   public SourceSection getRootNodeSource() {
     ExpressionNode root = SOMNode.unwrapIfNecessary(expressionOrSequence);
     assert root.isMarkedAsRootExpression();
-    assert root.assertIsStatement();
 
     return root.getSourceSection();
   }

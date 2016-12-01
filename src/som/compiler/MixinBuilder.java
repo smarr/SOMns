@@ -46,6 +46,7 @@ import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.IsValueCheckNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.objectstorage.InitializerFieldWrite;
 import som.primitives.NewObjectPrimNodeGen;
 import som.vm.Symbols;
 import som.vmobjects.SInvokable;
@@ -313,11 +314,14 @@ public final class MixinBuilder {
 
     if (init != null) {
       ExpressionNode self = initializer.getSelfRead(source);
-      slotAndInitExprs.add(slot.getInitializerWriteNode(self, init, source));
+      InitializerFieldWrite write = slot.getInitializerWriteNode(self, init, source);
+      write.markAsStatement();
+      slotAndInitExprs.add(write);
     }
   }
 
   public void addInitializerExpression(final ExpressionNode expression) {
+    expression.markAsStatement();
     slotAndInitExprs.add(expression);
   }
 

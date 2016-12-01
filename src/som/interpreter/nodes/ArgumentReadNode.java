@@ -2,7 +2,6 @@ package som.interpreter.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
-import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -56,8 +55,6 @@ public abstract class ArgumentReadNode {
         return true;
       } else if (tag == LocalArgRead.class) {
         return true;
-      } else if (tag == StatementTag.class) {
-        return isMarkedAsRootExpression();
       } else {
         return super.isTaggedWith(tag);
       }
@@ -167,8 +164,6 @@ public abstract class ArgumentReadNode {
         return true;
       } else if (tag == LocalArgRead.class) {
         return true;
-      } else if (tag == StatementTag.class) {
-        return isMarkedAsRootExpression();
       } else {
         return super.isTaggedWith(tag);
       }
