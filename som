@@ -274,7 +274,7 @@ if args.threads:
 if args.java_interpreter:
     flags += ['-Xint']
 if args.print_graal_options:
-    flags += ['-Dgraal.PrintFlags=true']
+    flags += ['-XX:+JVMCIPrintProperties']
 
 if args.java_properties:
     flags += ['-D' + property for property in args.java_properties]
