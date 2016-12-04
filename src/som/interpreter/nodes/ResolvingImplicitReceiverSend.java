@@ -20,9 +20,17 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
   private final MethodScope currentScope;
   private final MixinDefinitionId mixinId;
 
-  // this is only a helper field, used to handle the specialization race
+  /**
+   * A helper field used to make sure we specialize this node only once,
+   * because it gets removed, and races on the removal are very problematic.
+   */
   private PreevaluatedExpression replacedBy;
-  private OuterObjectRead        newReceiverNode;
+
+  /**
+   * In case this node becomes an outer send, we need to recalculate the
+   * receiver also when the specialization was racy.
+   */
+  private OuterObjectRead newReceiverNodeForOuterSend;
 
   public ResolvingImplicitReceiverSend(final SSymbol selector,
       final ExpressionNode[] arguments, final MethodScope currentScope,
@@ -63,31 +71,34 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
         doPreEvaluated(frame, args);
   }
 
-  protected PreevaluatedExpression specialize(final Object[] args) {
+  private PreevaluatedExpression specialize(final Object[] args) {
+    if (replacedBy != null) {
+      // already has been specialized
+      if (newReceiverNodeForOuterSend != null) {
+        // need to recalculate the real receiver for outer sends
+        args[0] = newReceiverNodeForOuterSend.executeEvaluated(args[0]);
+      }
+      return replacedBy;
+    }
     // first check whether it is an outer send
     // it it is, we get the context level of the outer send and rewrite to one
     MixinIdAndContextLevel result = currentScope.lookupSlotOrClass(selector);
-    if (result != null) {
-      if (replacedBy == null) {
-        assert result.contextLevel >= 0;
+    if (result != null && result.contextLevel > 0) {
+      newReceiverNodeForOuterSend = OuterObjectReadNodeGen.create(
+          result.contextLevel, mixinId, result.mixinId, sourceSection,
+          argumentNodes[0]);
+      ExpressionNode[] msgArgNodes = argumentNodes.clone();
+      msgArgNodes[0] = newReceiverNodeForOuterSend;
 
-        newReceiverNode = OuterObjectReadNodeGen.create(result.contextLevel,
-            mixinId, result.mixinId, sourceSection, argumentNodes[0]);
-        ExpressionNode[] msgArgNodes = argumentNodes.clone();
-        msgArgNodes[0] = newReceiverNode;
+      replacedBy = MessageSendNode.createMessageSend(selector, msgArgNodes,
+          getSourceSection());
 
-        replacedBy = MessageSendNode.createMessageSend(selector, msgArgNodes,
-            getSourceSection());
-
-        replace((ExpressionNode) replacedBy);
-      }
-      args[0] = newReceiverNode.executeEvaluated(args[0]);
+      replace((ExpressionNode) replacedBy);
+      args[0] = newReceiverNodeForOuterSend.executeEvaluated(args[0]);
     } else {
-      if (replacedBy == null) {
-        replacedBy = MessageSendNode.createMessageSend(selector, argumentNodes,
-            getSourceSection());
-        replace((ExpressionNode) replacedBy);
-      }
+      replacedBy = MessageSendNode.createMessageSend(selector, argumentNodes,
+          getSourceSection());
+      replace((ExpressionNode) replacedBy);
     }
     return replacedBy;
   }
