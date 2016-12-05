@@ -49,7 +49,6 @@ import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.OuterObjectRead;
 import som.interpreter.nodes.OuterObjectReadNodeGen;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.vm.constants.Nil;
@@ -455,7 +454,7 @@ public final class MethodBuilder {
     }
   }
 
-  public OuterObjectRead getOuterRead(final String outerName,
+  public ExpressionNode getOuterRead(final String outerName,
       final SourceSection source) throws MixinDefinitionError {
     MixinBuilder enclosing = getEnclosingMixinBuilder();
     MixinDefinitionId lexicalSelfMixinId = enclosing.getMixinId();
@@ -469,8 +468,12 @@ public final class MethodBuilder {
       }
     }
 
-    return OuterObjectReadNodeGen.create(ctxLevel, lexicalSelfMixinId,
-        enclosing.getMixinId(), source, getSelfRead(source));
+    if (ctxLevel == 0) {
+      return getSelfRead(source);
+    } else {
+      return OuterObjectReadNodeGen.create(ctxLevel, lexicalSelfMixinId,
+          enclosing.getMixinId(), source, getSelfRead(source));
+    }
   }
 
   /**
