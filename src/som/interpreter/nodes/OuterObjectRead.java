@@ -56,6 +56,7 @@ public abstract class OuterObjectRead
     this.mixinId = mixinId;
     this.enclosingMixinId = enclosingMixinId;
     this.enclosingObj = ValueProfile.createIdentityProfile();
+    assert contextLevel > 0 : "A context level of 0 should be handled as a self-send.";
   }
 
   public MixinDefinitionId getMixinId() {
@@ -84,14 +85,8 @@ public abstract class OuterObjectRead
     return lexicalClass;
   }
 
-  @Specialization(guards = "contextLevel == 0")
-  public final Object doForOuterIsDirectClass(final SObjectWithClass receiver) {
-    assert false;
-    return enclosingObj.profile(receiver);
-  }
-
   @Specialization(limit = "INLINE_CACHE_SIZE",
-      guards = {"contextLevel != 0", "receiver.getSOMClass() == rcvrClass"})
+      guards = {"receiver.getSOMClass() == rcvrClass"})
   public final Object doForFurtherOuter(final SObjectWithClass receiver,
       @Cached("receiver.getSOMClass()") final SClass rcvrClass,
       @Cached("getEnclosingClass(receiver)") final SClass lexicalClass) {
@@ -111,7 +106,7 @@ public abstract class OuterObjectRead
     return current.getInstanceFactory() == factory;
   }
 
-  @Specialization(guards = {"contextLevel != 0", "isSameEnclosingGroup(receiver, superclassIdx, factory)"},
+  @Specialization(guards = {"isSameEnclosingGroup(receiver, superclassIdx, factory)"},
       contains = "doForFurtherOuter")
   public final Object fixedLookup(final SObjectWithClass receiver,
       @Cached("getIdx(receiver)") final int superclassIdx,
@@ -120,7 +115,7 @@ public abstract class OuterObjectRead
     return getEnclosingObject(getEnclosingClassWithPotentialFailure(receiver, superclassIdx));
   }
 
-  @Specialization(guards = {"contextLevel != 0"}, contains = "fixedLookup")
+  @Specialization(contains = "fixedLookup")
   public final Object fallback(final SObjectWithClass receiver) {
     return getEnclosingObject(getEnclosingClass(receiver));
   }
@@ -155,60 +150,27 @@ public abstract class OuterObjectRead
     return KernelObj.kernel;
   }
 
-  /**
-   * Need to get outer scope of contextLevel == 0, which is self.
-   */
-  @Specialization(guards = {"contextLevel == 0"})
-  public SFarReference doFarReferenceDirect(final SFarReference receiver) {
-    assert false;
-    return receiver;
-  }
-
-  @Specialization(guards = "contextLevel != 0")
+  @Specialization
   public Object doBool(final boolean receiver) { return KernelObj.kernel; }
 
-  @Specialization(guards = "contextLevel != 0")
+  @Specialization
   public Object doLong(final long receiver) { return KernelObj.kernel; }
 
-  @Specialization(guards = "contextLevel != 0")
+  @Specialization
   public Object doString(final String receiver) { return KernelObj.kernel; }
 
-  @Specialization(guards = "contextLevel != 0")
+  @Specialization
   public Object doBigInteger(final BigInteger receiver) { return KernelObj.kernel; }
 
-  @Specialization(guards = "contextLevel != 0")
+  @Specialization
   public Object doDouble(final double receiver) { return KernelObj.kernel; }
 
-  @Specialization(guards = "contextLevel != 0")
+  @Specialization
   public Object doSSymbol(final SSymbol receiver) { return KernelObj.kernel; }
 
-  @Specialization(guards = "contextLevel != 0")
+  @Specialization
   public Object doSArray(final SArray receiver) { return KernelObj.kernel; }
 
-  @Specialization(guards = "contextLevel != 0")
+  @Specialization
   public Object doSBlock(final SBlock receiver) { return KernelObj.kernel; }
-
-  @Specialization(guards = "contextLevel == 0")
-  public boolean doBoolDirect(final boolean receiver) { assert false; return receiver; }
-
-  @Specialization(guards = "contextLevel == 0")
-  public long doLongDirect(final long receiver) { assert false; return receiver; }
-
-  @Specialization(guards = "contextLevel == 0")
-  public String doStringDirect(final String receiver) { assert false; return receiver; }
-
-  @Specialization(guards = "contextLevel == 0")
-  public BigInteger doBigIntegerDirect(final BigInteger receiver) { assert false; return receiver; }
-
-  @Specialization(guards = "contextLevel == 0")
-  public Double doDoubleDirect(final double receiver) { assert false; return receiver; }
-
-  @Specialization(guards = "contextLevel == 0")
-  public SSymbol doSSymbolDirect(final SSymbol receiver) { assert false; return receiver; }
-
-  @Specialization(guards = "contextLevel == 0")
-  public SArray doSArrayDirect(final SArray receiver) { assert false; return receiver; }
-
-  @Specialization(guards = "contextLevel == 0")
-  public SBlock doSBlockDirect(final SBlock receiver) { assert false; return receiver; }
 }
