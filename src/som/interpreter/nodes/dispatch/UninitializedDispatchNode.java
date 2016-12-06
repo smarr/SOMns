@@ -107,13 +107,12 @@ public final class UninitializedDispatchNode {
 
     @Override
     public final Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
+      TruffleCompiler.transferToInterpreterAndInvalidate("Initialize a dispatch node.");
       return specialize(frame, arguments).
           executeDispatch(frame, arguments);
     }
 
     private AbstractDispatchNode specialize(final VirtualFrame frame, final Object[] arguments) {
-      TruffleCompiler.transferToInterpreterAndInvalidate("Initialize a dispatch node.");
-
       // Determine position in dispatch node chain, i.e., size of inline cache
       Node i = this;
       int chainDepth = 0;
