@@ -6,10 +6,15 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.dispatch.BlockDispatchNode;
+import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.Primitive;
+import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 
 
@@ -21,7 +26,7 @@ public final class MutexPrimitives {
 
     @TruffleBoundary
     @Specialization
-    public ReentrantLock doLock(final ReentrantLock lock) {
+    public static final ReentrantLock lock(final ReentrantLock lock) {
       lock.lock();
       return lock;
     }
@@ -34,9 +39,28 @@ public final class MutexPrimitives {
 
     @TruffleBoundary
     @Specialization
-    public ReentrantLock doLock(final ReentrantLock lock) {
+    public static final ReentrantLock unlock(final ReentrantLock lock) {
       lock.unlock();
       return lock;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(selector = "critical:", receiverType = ReentrantLock.class)
+  public abstract static class CritialPrim extends BinaryExpressionNode {
+    public CritialPrim(final boolean ew, final SourceSection s) { super(ew, s); }
+
+    @Child protected BlockDispatchNode dispatchBody = BlockDispatchNodeGen.create();
+
+    @Specialization
+    public Object critical(final VirtualFrame frame,
+        final ReentrantLock lock, final SBlock block) {
+      LockPrim.lock(lock);
+      try {
+        return dispatchBody.executeDispatch(frame, new Object[] {block});
+      } finally {
+        UnlockPrim.unlock(lock);
+      }
     }
   }
 
