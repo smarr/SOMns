@@ -17,6 +17,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 import com.oracle.truffle.api.vm.PolyglotEngine.Instrument;
+import com.oracle.truffle.tools.Profiler;
 import com.oracle.truffle.tools.ProfilerInstrument;
 import com.oracle.truffle.tools.debug.shell.client.SimpleREPLClient;
 import com.oracle.truffle.tools.debug.shell.server.REPLServer;
@@ -47,6 +48,7 @@ public final class VM {
   @CompilationFinal private static VM vm;
   @CompilationFinal private static StructuralProbe structuralProbe;
   @CompilationFinal private static WebDebugger webDebugger;
+  private static Profiler truffleProfiler;
 
   public static WebDebugger getWebDebugger() {
     return webDebugger;
@@ -173,6 +175,9 @@ public final class VM {
    * exit. This method is expected to be called from main thread.
    */
   public void shutdownAndExit(final int errorCode) {
+    if (truffleProfiler != null) {
+      truffleProfiler.printHistograms(System.err);
+    }
     Actor.shutDownActorPool();
     engine.dispose();
     System.exit(errorCode);
@@ -299,8 +304,14 @@ public final class VM {
     Instrument profiler = instruments.get(ProfilerInstrument.ID);
     if (vmOptions.profilingEnabled && profiler == null) {
       VM.errorPrintln("Truffle profiler not available. Might be a class path issue");
-    } else if (profiler != null) {
+    } else {
       profiler.setEnabled(vmOptions.profilingEnabled);
+    }
+
+    if (vmOptions.profilingEnabled && profiler != null) {
+      truffleProfiler = Profiler.find(engine);
+      truffleProfiler.setCollecting(true);
+      truffleProfiler.setTiming(true);
     }
 
     Debugger debugger = null;
