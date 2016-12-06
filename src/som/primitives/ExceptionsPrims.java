@@ -91,7 +91,8 @@ public abstract class ExceptionsPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "exceptionDo:ensure:")
+  @Primitive(primitive = "exceptionDo:ensure:",
+             selector = "ensure:", receiverType = SBlock.class)
   public abstract static class EnsurePrim extends BinaryComplexOperation {
 
     @Child protected BlockDispatchNode dispatchBody    = BlockDispatchNodeGen.create();
