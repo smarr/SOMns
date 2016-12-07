@@ -261,4 +261,11 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
     ].
     ^ promisePair promise
   )
+
+  public after: milliseconds do: aBlock = (
+    | promisePair |
+    promisePair := createPromisePair.
+    promisePair promise whenResolved: aBlock.
+    vmMirror actorResolveProm: (promisePair resolver) after: milliseconds.
+  )
 )
