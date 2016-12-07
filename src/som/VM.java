@@ -3,7 +3,6 @@ package som;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -81,7 +80,6 @@ public final class VM {
 
   private int lastExitCode = 0;
   private volatile boolean shouldExit = false;
-  private volatile CompletableFuture<Object> vmMainCompletion = null;
   private final VMOptions options;
 
   @CompilationFinal
@@ -158,14 +156,6 @@ public final class VM {
     }
   }
 
-  public void setCompletionFuture(final CompletableFuture<Object> future) {
-    vmMainCompletion = future;
-  }
-
-  public static void setVMMainCompletion(final CompletableFuture<Object> future) {
-    vm.vmMainCompletion = future;
-  }
-
   public static boolean shouldExit() {
     return vm.shouldExit;
   }
@@ -178,32 +168,36 @@ public final class VM {
     return vm.options.args;
   }
 
-  public static void exit(final int errorCode) {
-    vm.exitVM(errorCode);
-  }
-
   /**
-   * To be called from {@link ObjectSystem}.
+   * Does minimal cleanup and disposes the polyglot engine, before doing a hard
+   * exit. This method is expected to be called from main thread.
    */
-  public void realExit(final int errorCode) {
+  public void shutdownAndExit(final int errorCode) {
     Actor.shutDownActorPool();
     engine.dispose();
     System.exit(errorCode);
   }
 
-  private void exitVM(final int errorCode) {
+  /**
+   * Request a shutdown and exit from the VM. This does not happen immediately.
+   * Instead, we instruct the main thread to do it, and merely kill the current
+   * thread.
+   *
+   * @param errorCode to be returned as exit code from the program
+   */
+  public void requestExit(final int errorCode) {
     TruffleCompiler.transferToInterpreter("exit");
     lastExitCode = errorCode;
     shouldExit = true;
+    objectSystem.releaseMainThread(errorCode);
 
-    vmMainCompletion.complete(errorCode);
     throw new ThreadDeath();
   }
 
   public static void errorExit(final String message) {
     TruffleCompiler.transferToInterpreter("errorExit");
     errorPrintln("Run-time Error: " + message);
-    exit(1);
+    vm.requestExit(1);
   }
 
   @TruffleBoundary
@@ -341,7 +335,7 @@ public final class VM {
     }
 
     engine.eval(SomLanguage.START);
-    vm.realExit(0);
+    vm.shutdownAndExit(0);
   }
 
   public MixinDefinition loadModule(final String filename) throws IOException {

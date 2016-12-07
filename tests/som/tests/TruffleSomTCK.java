@@ -2,7 +2,6 @@ package som.tests;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.util.concurrent.CompletableFuture;
 
 import org.junit.Ignore;
 import org.junit.Test;
@@ -42,9 +41,6 @@ public class TruffleSomTCK extends TruffleTCK {
 
     FindContextNode<VM> contextNode = SomLanguage.INSTANCE.createNewFindContextNode();
     VM vm = contextNode.executeFindContext();
-
-    CompletableFuture<Object> future = new CompletableFuture<>();
-    vm.setCompletionFuture(future);
 
     tck.getMixinDefinition().instantiateObject(tck, vm.getVmMirror());
     return engine;

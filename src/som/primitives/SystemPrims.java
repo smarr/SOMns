@@ -108,7 +108,7 @@ public final class SystemPrims {
 
     @Specialization
     public final Object doSObject(final long error) {
-      VM.exit((int) error);
+      VM.getVM().requestExit((int) error);
       return Nil.nilObject;
     }
   }

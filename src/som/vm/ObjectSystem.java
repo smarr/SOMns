@@ -62,6 +62,8 @@ public final class ObjectSystem {
 
   private final Primitives primitives;
 
+  private CompletableFuture<Object> mainThreadCompleted;
+
   public ObjectSystem(final SourcecodeCompiler compiler,
       final StructuralProbe probe, final String platformFilename,
       final String kernelFilename) throws IOException {
@@ -316,9 +318,9 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
         }
 
         if (promise.isErroredUnsync()) {
-          VM.getVM().realExit(1);
+          VM.getVM().shutdownAndExit(1);
         } else {
-          VM.getVM().realExit(0);
+          VM.getVM().shutdownAndExit(0);
         }
       }
 
@@ -334,12 +336,15 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
 
     assert !VM.shouldExit();
     VM.errorExit("VM seems to have exited prematurely. But the actor pool has been idle for " + emptyFJPool + " checks in a row.");
-    VM.getVM().realExit(1); // just in case it was disable for VM.errorExit
+    VM.getVM().shutdownAndExit(1); // just in case it was disable for VM.errorExit
+  }
+
+  public void releaseMainThread(final int errorCode) {
+    mainThreadCompleted.complete(errorCode);
   }
 
   public void executeApplication(final SObjectWithoutFields vmMirror, final Actor mainActor) {
-    CompletableFuture<Object> future = new CompletableFuture<>();
-    VM.setVMMainCompletion(future);
+    mainThreadCompleted = new CompletableFuture<>();
 
     Object platform = platformModule.instantiateObject(platformClass, vmMirror);
 
@@ -349,18 +354,19 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
 
     DirectMessage msg = new DirectMessage(0, mainActor, start,
         new Object[] {platform}, mainActor,
-        null, EventualSendNode.createOnReceiveCallTargetForVMMain(start, 1, source, future), false, false, false);
+        null, EventualSendNode.createOnReceiveCallTargetForVMMain(
+            start, 1, source, mainThreadCompleted), false, false, false);
     mainActor.send(msg);
 
     try {
-      Object result = future.get();
+      Object result = mainThreadCompleted.get();
 
       if (result instanceof Long || result instanceof Integer) {
         int exitCode = (result instanceof Long) ? (int) (long) result : (int) result;
         if (VM.isAvoidingExit()) {
           return;
         } else {
-          VM.getVM().realExit(exitCode);
+          VM.getVM().shutdownAndExit(exitCode);
         }
       } else if (result instanceof SPromise) {
         handlePromiseResult((SPromise) result);
@@ -371,7 +377,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     } catch (InterruptedException | ExecutionException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
-      VM.getVM().realExit(1);
+      VM.getVM().shutdownAndExit(1);
     }
   }
 

@@ -93,6 +93,6 @@ public class VMOptions {
     VM.println("  --profile              Enable the TruffleProfiler");
     VM.println("  --dynamic-metrics      Enable the DynamicMetrics tool");
     VM.println("  --coveralls REPO_TOKEN Enable the Coverage tool and reporting to Coveralls.io");
-    VM.exit(1);
+    VM.getVM().requestExit(1);
   }
 }
