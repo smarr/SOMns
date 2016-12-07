@@ -13,6 +13,7 @@ Method(AbstractConstraint>>#output)	false	0
 Method(AbstractConstraint>>#recalculate)	false	0
 Method(AbstractConstraint>>#removeFromGraph)	false	0
 Method(AbstractConstraint>>#satisfy:propagate:)	true	26
+Method(Actors>>#after:do:)	false	0
 Method(Actors>>#async:do:)	false	0
 Method(Actors>>#async:do:next:prevPromise:completionResolver:)	false	0
 Method(Actors>>#async:to:do:)	false	0
