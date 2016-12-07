@@ -9,6 +9,7 @@ public class VmSettings {
   public static final boolean ACTOR_TRACING;
   public static final boolean MEMORY_TRACING;
   public static final String TRACE_FILE;
+  public static final boolean DISABLE_TRACE_FILE;
   public static final boolean INSTRUMENTATION;
   public static final boolean DYNAMIC_METRICS;
   public static final boolean DNU_PRINT_STACK_TRACE;
@@ -30,6 +31,7 @@ public class VmSettings {
     ACTOR_TRACING   = getBool("som.actorTracing",   false);
     TRACE_FILE      = System.getProperty("som.traceFile", System.getProperty("user.dir") + "/traces/trace");
     MEMORY_TRACING = getBool("som.memoryTracing",   false);
+    DISABLE_TRACE_FILE = getBool("som.disableTraceFile", false);
 
     boolean dm = getBool("som.dynamicMetrics", false);
     DYNAMIC_METRICS = dm;
