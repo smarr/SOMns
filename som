@@ -71,7 +71,7 @@ tools.add_argument('-at', '--actor-tracing', help='enable tracing of actor opera
                     dest='actor_tracing', action='store_true', default=False)
 tools.add_argument('-mt', '--memory-tracing', help='enable tracing of memory usage and GC',
                     dest='memory_tracing', action='store_true', default=False)
-parser.add_argument('-tf', '--trace-file', help='Trace file destination, default: traces/trace',
+tools.add_argument('-tf', '--trace-file', help='Trace file destination, default: traces/trace',
                     dest='trace_file', default=BASE_DIR + '/traces/tracea')
 tools.add_argument('-TF', '--disable-trace-file', help='trace file wont be written to disk',
                     dest='disable_trace_file', action='store_true', default=False)
