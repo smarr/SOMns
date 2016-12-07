@@ -378,22 +378,27 @@ public class ActorExecutionTrace {
         while (true) {
           ByteBuffer b = ActorExecutionTrace.fullBuffers.take();
 
-          fos.getChannel().write(b);
-          b.rewind();
+          if (!VmSettings.DISABLE_TRACE_FILE) {
+            fos.getChannel().write(b);
+            b.rewind();
+          }
 
           if (front != null) {
-            synchronized (symbolsToWrite) {
-              front.sendSymbols(ActorExecutionTrace.symbolsToWrite);
-            }
-
             front.sendTracingData(b);
           }
 
           synchronized (symbolsToWrite) {
-            for (SSymbol s : symbolsToWrite) {
-              bw.write(s.getSymbolId() + ":" + s.getString());
-              bw.newLine();
+            if (front != null) {
+              front.sendSymbols(ActorExecutionTrace.symbolsToWrite);
             }
+
+            if (!VmSettings.DISABLE_TRACE_FILE) {
+              for (SSymbol s : symbolsToWrite) {
+                bw.write(s.getSymbolId() + ":" + s.getString());
+                bw.newLine();
+              }
+            }
+
             ActorExecutionTrace.symbolsToWrite.clear();
           }
 

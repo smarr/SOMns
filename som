@@ -73,6 +73,8 @@ tools.add_argument('-mt', '--memory-tracing', help='enable tracing of memory usa
                     dest='memory_tracing', action='store_true', default=False)
 parser.add_argument('-tf', '--trace-file', help='Trace file destination, default: traces/trace',
                     dest='trace_file', default=BASE_DIR + '/traces/tracea')
+tools.add_argument('-TF', '--disable-trace-file', help='trace file wont be written to disk',
+                    dest='disable_trace_file', action='store_true', default=False)
 tools.add_argument('--coveralls', nargs=1, help='determine code coverage and report to Coveralls with',
                     dest='coveralls_repo_token', default=False, metavar='coveralls-repo-token')
 
@@ -241,6 +243,8 @@ if args.trace_file:
     flags += ['-Dsom.traceFile=%s' % args.trace_file ]
 if args.memory_tracing:
     flags += ['-Dsom.memoryTracing=true']
+if args.disable_trace_file:
+    flags += ['-Dsom.disableTraceFile=true']
 
 if (args.truffle_profile or args.truffle_debugger or args.web_debugger or
     args.dynamic_metrics or args.coveralls_repo_token):
