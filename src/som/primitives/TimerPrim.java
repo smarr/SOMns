@@ -3,6 +3,7 @@ package som.primitives;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -22,10 +23,14 @@ public abstract class TimerPrim extends BinaryComplexOperation{
 
   @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
 
+  @CompilationFinal private static Timer timerThread;
+
   @Specialization
   public final Object doResolveAfter(final VirtualFrame frame, final SResolver resolver, final long timeout) {
-    Timer t = new Timer();
-    t.schedule(new TimerTask() {
+    if (timerThread == null) {
+      timerThread = new Timer();
+    }
+    timerThread.schedule(new TimerTask() {
       @Override
       public void run() {
         ResolvePromiseNode.resolve(wrapper, resolver.getPromise(), true,
