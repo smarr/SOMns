@@ -48,6 +48,7 @@ import som.primitives.Primitive.NoChild;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.StringPrimsFactory;
 import som.primitives.SystemPrimsFactory;
+import som.primitives.TimerPrimFactory;
 import som.primitives.UnequalsPrimFactory;
 import som.primitives.actors.ActorClassesFactory;
 import som.primitives.actors.CreateActorPrimFactory;
@@ -327,6 +328,7 @@ public class Primitives {
     allFactories.add(SubtractionPrimFactory.getInstance());
     allFactories.add(UnequalsPrimFactory.getInstance());
     allFactories.add(new WhileWithStaticBlocksNodeFactory());
+    allFactories.add(TimerPrimFactory.getInstance());
 
     allFactories.add(CreateActorPrimFactory.getInstance());
     allFactories.add(ResolvePromiseNodeFactory.getInstance());

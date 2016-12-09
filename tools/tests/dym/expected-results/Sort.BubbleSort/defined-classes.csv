@@ -1,5 +1,5 @@
 Class Name	Source Section	Methods Executed
-Actors	Actors.som pos=0 len=8552	1
+Actors	Actors.som pos=0 len=8781	1
 ArrayReadMixin	Kernel.som pos=14303 len=2151	2
 Array	Kernel.som pos=16460 len=2225	1
 Benchmark	Harness.som pos=1446 len=596	1

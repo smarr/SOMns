@@ -1,4 +1,5 @@
 Name	Executed	Execution Count
+Method(Actors>>#after:do:)	false	0
 Method(Actors>>#async:do:)	false	0
 Method(Actors>>#async:do:next:prevPromise:completionResolver:)	false	0
 Method(Actors>>#async:to:do:)	false	0

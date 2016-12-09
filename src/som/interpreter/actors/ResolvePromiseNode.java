@@ -18,6 +18,8 @@ import som.vm.NotYetImplementedException;
 @Instrumentable(factory = ResolvePromiseNodeWrapper.class)
 public abstract class ResolvePromiseNode extends TernaryExpressionNode {
 
+  @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
+
   protected ResolvePromiseNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
   protected ResolvePromiseNode(final ResolvePromiseNode node) { super(node); }
 
@@ -45,7 +47,7 @@ public abstract class ResolvePromiseNode extends TernaryExpressionNode {
 
     synchronized (promiseValue) {
       if (promiseValue.isResolvedUnsync()) {
-        normalResolution(frame, resolver, promiseValue.getValueUnsync(),
+        normalResolution(resolver, promiseValue.getValueUnsync(),
            isBreakpointOnPromiseResolution);
       } else if (promiseValue.isErroredUnsync()) {
         CompilerDirectives.transferToInterpreter();
@@ -65,20 +67,23 @@ public abstract class ResolvePromiseNode extends TernaryExpressionNode {
     return !(result instanceof SPromise);
   }
 
-  @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
-
   /**
    * Normal case, when the promise is resolved with a value that's not a promise.
    */
   @Specialization(guards = {"notAPromise(result)"})
-  public SResolver normalResolution(final VirtualFrame frame,
-      final SResolver resolver, final Object result,
+  public SResolver normalResolution(final SResolver resolver, final Object result,
       final boolean isBreakpointOnPromiseResolution) {
     SPromise promise = resolver.getPromise();
     Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-    Object wrapped = wrapper.execute(result, promise.owner, current);
 
-    SResolver.resolveAndTriggerListenersUnsynced(result, wrapped, promise, current, isBreakpointOnPromiseResolution);
+    resolve(wrapper, promise, result, current, isBreakpointOnPromiseResolution);
     return resolver;
+  }
+
+  public static void resolve(final WrapReferenceNode wrapper,
+      final SPromise promise, final Object result, final Actor current,
+      final boolean isBreakpointOnPromiseResolution) {
+    Object wrapped = wrapper.execute(result, promise.owner, current);
+    SResolver.resolveAndTriggerListenersUnsynced(result, wrapped, promise, current, isBreakpointOnPromiseResolution);
   }
 }

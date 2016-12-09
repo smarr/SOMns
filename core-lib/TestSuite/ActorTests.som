@@ -528,6 +528,34 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
     TEST_CONTEXT = ()
   )
 
+  public class TimeoutTest = AsyncTestContext ()(
+    public testAsyncTimeoutWorking = (
+      | p |
+      p := actors createPromisePair.
+      actors after: 50 do: [ :r|
+        p resolve: true.
+      ].
+      ^ (assert: p promise resolvedWith: true).
+    )
+
+    public testAsyncTimeoutOrder = (
+      | p done |
+      p := actors createPromisePair.
+      actors after: 50 do: [ :r|
+        assert: done.
+        p resolve: true.
+      ].
+
+      actors after: 25 do: [ :r|
+        done := true.
+      ].
+
+      ^ (assert: p promise resolvedWith: true).
+    )
+  ) : (
+    TEST_CONTEXT = ()
+  )
+
   public class RegressionTests = AsyncTestContext ()(
     (* This test is to identify issues in the OuterObjectRead node.
        It did not handle properly the different cases of outer scope
