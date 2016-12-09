@@ -8,8 +8,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.interpreter.actors.Actor;
-import som.interpreter.actors.SPromise;
+import som.interpreter.actors.ResolvePromiseNode;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.actors.WrapReferenceNode;
 import som.interpreter.actors.WrapReferenceNodeGen;
@@ -29,19 +28,10 @@ public abstract class TimerPrim extends BinaryComplexOperation{
     t.schedule(new TimerTask() {
       @Override
       public void run() {
-        resolvePromise(frame, resolver, true, false);
+        ResolvePromiseNode.resolve(wrapper, resolver.getPromise(), true,
+            resolver.getPromise().getOwner(), false);
       }
     }, timeout);
     return true;
-  }
-
-  protected final void resolvePromise(final VirtualFrame frame,
-      final SResolver resolver, final Object result,
-      final boolean isBreakpointOnPromiseResolution) {
-    SPromise promise = resolver.getPromise();
-    Actor current = promise.getOwner();
-    Object wrapped = wrapper.execute(result, promise.getOwner(), current);
-
-    SResolver.resolveAndTriggerListenersUnsynced(result, wrapped, promise, current, isBreakpointOnPromiseResolution);
   }
 }
