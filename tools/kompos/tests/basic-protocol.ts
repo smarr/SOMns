@@ -64,7 +64,7 @@ class HandleFirstSuspendEvent {
     this.firstSuspendCaptured = false;
     this.suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
       this.getSuspendEvent = (event: OnMessageEvent) => {
-        if (this.firstSuspendCaptured) { return; }    
+        if (this.firstSuspendCaptured) { return; }
         const data = JSON.parse(event.data);
         if (data.type === "suspendEvent") {
           this.firstSuspendCaptured = true;
@@ -225,7 +225,7 @@ describe('Basic Protocol', function() {
     let getSourceData: (event: OnMessageEvent) => void;
     let sourceP = new Promise<SourceMessage>((resolve, reject) => {
       getSourceData = (event: OnMessageEvent) => {
-        if (firstSourceCaptured) { return; }    
+        if (firstSourceCaptured) { return; }
         const data = JSON.parse(event.data);
         if (data.type === "source") {
           firstSourceCaptured = true;
@@ -304,7 +304,7 @@ describe('Basic Protocol', function() {
         expect(msg.topFrame.arguments[0]).to.equal("a PingPong");
         expect(msg.topFrame.slots['ping']).to.equal('a Nil');
       });
-    }));    
+    }));
   });
 
   describe('setting a source section sender breakpoint', () => {
@@ -322,7 +322,7 @@ describe('Basic Protocol', function() {
       return event.suspendP.then(msg => {
         expectStack(msg.stack, 2, "Ping>>#start", 16);
       });
-    }));    
+    }));
   });
 
   describe('setting a source section asynchronous method receiver breakpoint', () => {
@@ -462,9 +462,9 @@ describe('Basic Protocol', function() {
 
     let capturedEvents = 0;
     let getSuspendEvent: (event: OnMessageEvent) => void;
-    
+
     getSuspendEvent = (event: OnMessageEvent) => {
-      if (capturedEvents > numSuspends) { return; }    
+      if (capturedEvents > numSuspends) { return; }
       const data = JSON.parse(event.data);
       if (data.type === "suspendEvent") {
         resolves[capturedEvents](data);
@@ -509,7 +509,7 @@ describe('Basic Protocol', function() {
             // set another breakpoint, after stepping, and with connection
             const lbp = createLineBreakpointData(pingPongUri, 22, true);
             send(con.socket, {action: "updateBreakpoint", breakpoint: lbp});
-            send(con.socket, {action: "resume", suspendEvent: msgAfterStep.id});  
+            send(con.socket, {action: "resume", suspendEvent: msgAfterStep.id});
           });
         }),
         suspendPs[2].then(msgLineBP => {
@@ -524,7 +524,7 @@ describe('Basic Protocol', function() {
           connectionP.then(con => {
             const lbp22 = createLineBreakpointData(pingPongUri, 23, true);
             send(con.socket, {action: "updateBreakpoint", breakpoint: lbp22});
-            
+
             const lbp21 = createLineBreakpointData(pingPongUri, 22, false);
             send(con.socket, {action: "updateBreakpoint", breakpoint: lbp21});
             send(con.socket, {action: "resume", suspendEvent: msgAfterStep.id});
