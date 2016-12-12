@@ -72,6 +72,7 @@ class CDSuite usingPlatform: platform andHarness: harness = (
       numAircrafts =  250 ifTrue: [ ^ actualCollisions = 10830 ].
       numAircrafts =  100 ifTrue: [ ^ actualCollisions =  4305 ].
       numAircrafts =   10 ifTrue: [ ^ actualCollisions =   390 ].
+      numAircrafts =    2 ifTrue: [ ^ actualCollisions =    42 ].
 
       ('No verification result for ' + numAircrafts + ' found.') println.
       ('Result is: ' + actualCollisions) println.
@@ -304,7 +305,7 @@ class CDSuite usingPlatform: platform andHarness: harness = (
       ^ node value
     )
 
-    public forEach: block = (
+    public do: block = (
       | current |
       root isNil ifTrue: [ ^ self ].
       current := treeMinimum: root.
@@ -512,7 +513,7 @@ class CDSuite usingPlatform: platform andHarness: harness = (
       motions := Vector new.
       seen := RedBlackTree new.
 
-      frame forEach: [:aircraft |
+      frame do: [:aircraft |
         | oldPosition newPosition |
         oldPosition := state at: aircraft callsign put: aircraft position.
         newPosition := aircraft position.
@@ -526,14 +527,14 @@ class CDSuite usingPlatform: platform andHarness: harness = (
 
       (* Remove aircraft that are no longer present *)
       toRemove := Vector new.
-      state forEach: [:e |
+      state do: [:e |
         (seen at: e key) ifFalse: [ toRemove append: e key ] ].
 
-      toRemove forEach: [:e | state remove: e ].
+      toRemove do: [:e | state remove: e ].
 
       allReduced := reduceCollisionSet: motions.
       collisions := Vector new.
-      allReduced forEach: [:reduced |
+      allReduced do: [:reduced |
         1 to: reduced size do: [:i |
           | motion1 |
           motion1 := reduced at: i.
@@ -631,10 +632,10 @@ class CDSuite usingPlatform: platform andHarness: harness = (
     private reduceCollisionSet: motions = (
       | voxelMap result |
       voxelMap := RedBlackTree new.
-      motions forEach: [:motion | draw: motion on: voxelMap ].
+      motions do: [:motion | draw: motion on: voxelMap ].
 
       result := Vector new.
-      voxelMap forEach: [:e |
+      voxelMap do: [:e |
         e value size > 1 ifTrue: [ result append: e value ] ].
       ^ result
     )
