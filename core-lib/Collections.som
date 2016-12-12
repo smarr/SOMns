@@ -19,7 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
 class Collections usingKernel: kernel = Value (
-| private Array  = kernel Array. 
+| private Array  = kernel Array.
   private Pair   = kernel Pair.
   private Vector = kernel Vector.
   private initialSize = 10.
@@ -29,12 +29,11 @@ class Collections usingKernel: kernel = Value (
   public class Set new: size = (
   | public items ::= Vector new: size. |
   ) (
-
     public = otherSet = (
       self size = otherSet size ifFalse: [^ false ].
-      
+
       self do: [:item | (otherSet contains: item) ifFalse: [^ false]. ].
-      
+
       ^ true.
     )
 
@@ -42,12 +41,12 @@ class Collections usingKernel: kernel = Value (
       (self contains: anObject)
         ifFalse: [ items append: anObject ]
     )
-    
+
     public addAll: aCollection = (
       aCollection do: [:each |
         self add: each]
     )
-    
+
     public union: aCollection = (
       | new |
       new := Set new.
@@ -55,15 +54,15 @@ class Collections usingKernel: kernel = Value (
       new addAll: aCollection.
       ^ new
     )
-    
+
     public intersection: aCollection = (
       | new |
       new := Set new.
-      self do: [:it | 
+      self do: [:it |
           (aCollection contains: it) ifTrue: [ new add: it ]].
       ^ new
     )
-    
+
     public - aCollection = ( (* set difference *)
       | new |
       new := Set new.
@@ -71,12 +70,12 @@ class Collections usingKernel: kernel = Value (
           (aCollection contains: it) ifFalse: [ new add: it ]].
       ^ new
     )
-    
+
     public contains: anObject = (
       items do: [ :it | it = anObject ifTrue: [ ^ true ] ].
       ^ false
     )
-    
+
     public remove: anObject = (
       | newItems |
       newItems := Vector new.
@@ -86,27 +85,27 @@ class Collections usingKernel: kernel = Value (
           it = anObject ifFalse: [ newItems append: it ] ].
       items := newItems
     )
-    
+
     (* Sets do not have the notion of ordering, but
        for convenience we provide those accessors *)
     public first = (
       ^ items at: 1
     )
-    
+
     public isEmpty = (
       ^ items isEmpty
     )
-    
+
     (* Iteration *)
     public do: block = ( items do: block )
-    
+
     'Collection'
     public collect: block = ( | coll |
       coll := Vector new.
       self do: [ :e | coll append: (block value: e) ].
       ^coll
     )
-    
+
     'Printing'
     public println = (
       '(' print.
@@ -121,11 +120,11 @@ class Collections usingKernel: kernel = Value (
       result := result + ')'.
       ^ result
     )
-    
+
     public size = (
       ^ items size
     )
-    
+
     (* preserves capacity *)
     public removeAll = (
       items removeAll
@@ -133,7 +132,7 @@ class Collections usingKernel: kernel = Value (
   ) : (
     public new = ( ^ self new: initialSize )
   )
-  
+
   public class IdentitySet new: size = Set new: size ()(
     public contains: anObject = (
       items do: [ :it | it == anObject ifTrue: [ ^ true ] ].
@@ -164,11 +163,11 @@ class Collections usingKernel: kernel = Value (
       hash := key hashcode.
       ^ hash bitXor: (hash >>> 16)
     )
-    
+
     private bucketIdx: hash = (
       ^ 1 + ((buckets size - 1) & hash)
     )
-    
+
     private bucket: hash = (
       ^ buckets at: (bucketIdx: hash)
     )
@@ -176,12 +175,12 @@ class Collections usingKernel: kernel = Value (
     public at: aKey = (
       ^ at: aKey ifAbsent: nil
     )
-    
+
     public at: aKey ifAbsent: aBlock = (
       | hash e |
       hash := hash: aKey.
       e := bucket: hash.
-    
+
       [ e notNil ] whileTrue: [
         (e match: hash key: aKey)
           ifTrue: [ ^ e value ].
@@ -193,20 +192,20 @@ class Collections usingKernel: kernel = Value (
       | hash e |
       hash := hash: aKey.
       e := bucket: hash.
-    
+
       [ e notNil ] whileTrue: [
         (e match: hash key: aKey)
           ifTrue: [ ^ true ].
         e := e next ].
       ^ false
     )
-    
+
     public at: aKey put: aVal = (
       | hash i current |
       hash := hash: aKey.
       i := bucketIdx: hash.
       current := buckets at: i.
-      
+
       current isNil
         ifTrue: [
           buckets at: i put: (newEntry: aKey value: aVal hash: hash).
@@ -225,7 +224,7 @@ class Collections usingKernel: kernel = Value (
     private insertBucketEntry: key value: value hash: hash head: head = (
       | current |
       current := head.
-      
+
       [true] whileTrue: [
         (current match: hash key: key) ifTrue: [
           current value: value.
@@ -276,7 +275,7 @@ class Collections usingKernel: kernel = Value (
               ifFalse: [ hiTail next: current ].
             hiTail := current ].
         current := current next ].
-    
+
       loTail notNil ifTrue: [
         loTail next: nil.
         buckets at: i put: loHead ].
@@ -291,7 +290,7 @@ class Collections usingKernel: kernel = Value (
       buckets := Array new: buckets size.
       size_ := 0.
     )
-    
+
     public keys = (
       | keys |
       keys := Vector new: size_.
@@ -303,7 +302,7 @@ class Collections usingKernel: kernel = Value (
           current := current next ] ].
       ^ keys
     )
-    
+
     public do: block = (
       buckets do: [:b |
         | current |
@@ -327,7 +326,7 @@ class Collections usingKernel: kernel = Value (
   ) : (
     public new = ( ^ self new: initialCapacity )
   )
-  
+
   public class IdentityDictionary new: size = Dictionary new: size ()(
     protected class IdEntry new: hash key: key value: val next: next = Entry new: hash key: key value: val next: next (
     )(
@@ -335,7 +334,7 @@ class Collections usingKernel: kernel = Value (
         ^ hash = aHash and: [key == aKey]
       )
     )
-    
+
     protected newEntry: aKey value: value hash: hash = (
       ^ IdEntry new: hash key: aKey value: value next: nil
     )

@@ -24,10 +24,10 @@ class Kernel vmMirror: vmMirror = Object <: Value (
   private ValueSlot  = Value.
 |)(
   private class Top = ()()
-  
+
   public class Thing = Top ()(
     protected error: msg = ( vmMirror printNewline: 'ERROR: ' + msg. vmMirror exit: 1 )
-  
+
     'Error recovering'
     protected doesNotUnderstand: selector arguments: arguments = (
       (* vmMirror printStackTrace: nil.
@@ -35,30 +35,30 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       *)
       MessageNotUnderstood signalWith: self selector: selector arguments: arguments.
     )
-    
+
     protected escapedBlock: block = (
       error: 'Block has escaped and cannot be executed'
     )
-    
+
     'Abstract method support'
     protected subclassResponsibility = (
       error: 'This method is abstract and should be overridden'
     )
-    
+
     'Evaluating'
     public value = ( ^ self )
-    
+
     'Converting, Convenience'
     public , element = ( ^ (Vector new append: self) append: element )
     public hashcode  = ( ^ vmMirror objHashcode: self )
-    
+
     'Newspeak requirements'
     (* This works around restrictions by the absense of a global scope,
        we use inheritance instead. *)
     public Object = ( ^ ObjectSlot )
     public Value  = ( ^ ValueSlot  )
     public kernel = ( ^ outer Kernel )
-    
+
     'Nil'
     public isNil  = ( ^ false )
     public notNil = ( ^ true )
@@ -78,14 +78,14 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public == other = ( ^ vmMirror object: self identicalTo: other )
     public ~= other = ( ^ (self == other) not )
   )
-  
+
   public class Value = Thing ()
   (
     public =  other = ( ^ vmMirror value: self sameAs: other )
     public <> other = ( ^ (self = other) not )
     public copy = ( ^ self )
   )
-  
+
   (* Transfer objects are handled almost identically to normal objects.
      They are mutable. The main difference to normal objects is that they are
      passed by copy when send to other actors.
@@ -99,15 +99,15 @@ class Kernel vmMirror: vmMirror = Object <: Value (
      is the owner of the far-referenced object.
   *)
   public class TransferObject = Object ()()
-  
+
   public class Class = Object ()
   (
     'Allocation'
     public new = ( self error: 'never execute should be:'  (* ^ (vmMirror instantiate: self) initialize`new *) )
   )
-  
+
   public class Metaclass = Class ()()
-  
+
   public class Boolean = Value ()
   (
     'Conditional evaluation'
@@ -115,36 +115,36 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       self ifTrue:  [ ^ trueBlock value  ].
       self ifFalse: [ ^ falseBlock value ].
     )
-  
+
     'Logical operations'
     public || boolean = ( ^ self or: boolean  )
     public && boolean = ( ^ self and: boolean )
   )
-  
+
   public class True = Boolean ()
   (
     'Converting'
     public asString = ( ^ 'true' )
-  
+
     'Conditional evaluation'
     public ifTrue:  block = ( ^ block value )
     public ifFalse: block = ( ^ nil )
-  
+
     'Logical operations'
     public not        = ( ^ false )
     public or: block  = ( ^ true )
     public and: block = ( ^ block value )
   )
-  
+
   public class False = Boolean ()
   (
     'Converting'
     public asString = ( ^'false' )
-  
+
     'Conditional evaluation'
     public ifTrue:  block = ( ^ nil )
     public ifFalse: block = ( ^ block value )
-  
+
     'Logical operations'
     public not        = ( ^ true )
     public or: block  = ( ^ block value )
@@ -155,7 +155,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
   (
     'Converting'
     public asString = ( ^ 'nil' )
-    
+
     'Comparing'
     public isNil    = ( ^ true )
     public notNil   = ( ^ false )
@@ -166,7 +166,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public ifNotNil: aBlock = ( ^ self )
     public ifNil: goBlock ifNotNil: noGoBlock = ( ^ goBlock value )
   )
-  
+
   public class Integer = Value ()
   (
     'Arithmetic'
@@ -181,13 +181,13 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public sqrt        = ( ^ vmMirror intSqrt: self )
     public negated     = ( ^ 0 - self )
     public round       = ( ^ self ) (* added to be polymorphic with Double *)
-    
+
     'Bit operations'
     public & argument  = ( ^ vmMirror int: self bitAnd: argument )
     public << argument = ( ^ vmMirror int: self leftShift: argument )
     public >>> argument= ( ^ vmMirror int: self unsignedRightShift: argument )
     public bitXor: argument = ( ^ vmMirror int: self bitXor: argument )
-    
+
     'Comparing'
     public =  argument = ( ^ vmMirror int: self equals: argument )
     public ~= argument = ( ^ (self = argument) not )
@@ -197,39 +197,39 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public <= argument = ( ^ (self < argument) or: [ self = argument ] )
     public negative    = ( ^ self < 0 )
     public between: a and: b = ( ^ (self > a) and: [ self < b ] )
-    
+
     'Converting'
     public asString    = ( ^ vmMirror intAsString: self )
     public as32BitSignedValue   = ( ^ vmMirror intAs32BitSignedValue: self )   (* returns an int, with the value that a signed 32-bit integer would have *)
     public as32BitUnsignedValue = ( ^ vmMirror intAs32BitUnsignedValue: self ) (* returns an int, with the value that a unsigned 32-bit integer would have *)
     public hashcode    = ( ^ self )
-    
+
     'Iterating'
     public to: limit do: block = (
       self to: limit by: 1 do: block
     )
-    
+
     public to: limit by: step do: block = (
       | i |
       i := self.
       [ i <= limit ] whileTrue: [ block value: i. i := i + step ]
     )
-    
+
     public downTo: limit do: block = (
       self downTo: limit by: 1 do: block
     )
-    
+
     public downTo: limit by: step do: block = (
       | i |
       i := self.
       [ i >= limit ] whileTrue: [ block value: i. i := i - step ]
     )
-    
+
     'More Iterations'
     public timesRepeat: block = (
       1 to: self do: [ :i | block value ]
     )
-    
+
     'Range Creation'
     public  to: upper = (
       | range |
@@ -245,10 +245,10 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public max: otherInt = (
       self < otherInt ifTrue: [ ^ otherInt ] ifFalse: [ ^ self ]
     )
-  ) : (  
+  ) : (
     public fromString: aString = ( ^ vmMirror intFromString: aString )
   )
-  
+
   public class Double = Value ()
   (
     'Arithmetic'
@@ -265,7 +265,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public sqrt        = ( ^ vmMirror doubleSqrt: self )
     public negated     = ( ^ 0.0 - self )
     public round       = ( ^ vmMirror doubleRound: self )
-    
+
     'Comparing'
     public =  argument = ( ^ vmMirror double: self equals: argument )
     public <  argument = ( ^ vmMirror double: self lessThan: argument )
@@ -274,48 +274,48 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public <= argument = ( ^ (self < argument) or: [ self = argument ] )
     public negative    = ( ^ self < 0.0 )
     public between: a and: b = ( ^ (self > a) and: [ self < b ] )
-    
+
     'Converting'
     public asString    = ( ^ vmMirror doubleAsString: self )
     public asInteger   = ( ^ vmMirror doubleAsInteger: self )
-    
+
     'Iterating'
     public to: limit do: block = (
       | i |
       i := self.
       [ i <= limit ] whileTrue: [ block value: i. i := i + 1.0 ]
     )
-    
+
     public downTo: limit do: block = (
-      | i | 
+      | i |
       i := self.
       [ i >= limit ] whileTrue: [ block value: i. i := i - 1.0 ]
     )
-  ) : (  
+  ) : (
     public PositiveInfinity = ( ^ vmMirror doublePositiveInfinity: nil )
   )
-  
+
   public class String = Value ()
   (
     'Concatenate: returns a new string object'
     public concatenate: argument = ( ^ vmMirror string: self concat: argument )
     public + argument            = ( ^ self concatenate: argument asString )
-    
+
     'Converting'
     public asString = ( ^ self )
     public asSymbol = ( ^ vmMirror stringAsSymbol: self )
     public hashcode = ( ^ vmMirror stringHashcode: self )
-    
+
     'Info'
     public length = ( ^ vmMirror stringLength: self )
-    
+
     'Comparing'
     public = argument = ( ^ vmMirror string: self equals: argument )
-    
+
     (* substring: from 'start' to (and including) 'end'. *)
     private primSubstringFrom: start to: end = ( ^ vmMirror string: self
                                                      substringFrom: start to: end )
-    
+
     public substringFrom: start to: end = (
       ((end <= self length) && (start > 0) && (start <= end))
         ifTrue: [^ self primSubstringFrom: start to: end]
@@ -323,21 +323,21 @@ class Kernel vmMirror: vmMirror = Object <: Value (
           | idx |
           (end > self length) ifTrue: [idx := end].
           (start < 0) || (start > end) ifTrue: [idx := start].
-          
+
           IndexOutOfBounds signalWith: self index: idx.
         ]
     )
 
     public beginsWith: prefix = (
       self length < prefix length ifTrue: [ ^ false ].
-      
-      1 to: prefix length do: [:i | 
-        ((self charAt: i) = (prefix charAt: i)) ifFalse: [ ^ false ].  
+
+      1 to: prefix length do: [:i |
+        ((self charAt: i) = (prefix charAt: i)) ifFalse: [ ^ false ].
       ].
 
       ^ true
     )
-    
+
     public endsWith: suffix = (
       | l sufL |
       l := self length.
@@ -349,44 +349,43 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       ].
       ^ true
     )
-    
+
     public includes: aString = (
-      | l |    
+      | l |
       l := aString length.
       l > self length ifTrue: [ ^ false ].
       l = self length ifTrue: [
         ^ aString = self ].
-      
+
       1 to: self length - l + 1 do: [:i |
         (self primSubstringFrom: i to: i + l - 1) = aString ifTrue: [ ^ true ].
       ].
-      
+
       ^ false
     )
-    
+
     public indexOf: aString = (
       ^ self indexOf: aString startingAt: 1
     )
-    
+
     public indexOf: aString startingAt: start = (
       | l |
       l := aString length.
-      start + l > (self length + 1) ifTrue: [ ^ 0 ]. 
+      start + l > (self length + 1) ifTrue: [ ^ 0 ].
 
       start to: self length - l + 1 do: [:i |
         (self primSubstringFrom: i to: i + l - 1) = aString ifTrue: [ ^ i ].
       ].
-      
+
       ^ 0
     )
-    
+
     public split: split = (
       | start newStart result |
       self length < split length ifTrue: [ ^ Array new: self ].
       start := 1.
       result := Vector new.
-      
-      
+
       [start > 0] whileTrue: [
         newStart := self indexOf: split startingAt: start.
         newStart = 0
@@ -403,29 +402,29 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public asInteger = (
       ^ Integer fromString: self
     )
-    
+
     public charAt: argument = (
       ^ self substringFrom: argument to: argument
     )
-    
+
     'Printing'
     public print = ( vmMirror printString: self )
   )
-  
+
   public class Symbol = String ()
   (
     'Converting'
     public asString = ( ^ vmMirror symbolAsString: self )
     public asSymbol = ( ^ self )
-    
+
     'Printing'
     public print    = ( '#' print. super print )
   )
-  
+
   public class ArrayReadMixin = ()(
     public first = ( ^ at: 1 )
     public last  = ( ^ at: size )
-    
+
     'Iterating'
     public do: block            = ( self doIndexes: [ :i |
                                       block value: (self at: i) ] )
@@ -449,15 +448,15 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public select: aBlock = (
       | newCollection |
       newCollection := Vector new: self size.
-      self do: [:each | (aBlock value: each)  
+      self do: [:each | (aBlock value: each)
                           ifTrue: [newCollection append: each]].
       ^ newCollection
     )
-  
+
     public reject: aBlock = (
       ^ self select: [:element | (aBlock value: element) == false ]
     )
-  
+
     public union: aCollection = (
       | new |
       new := Set new.
@@ -465,7 +464,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       new addAll: aCollection.
       ^ new
     )
-    
+
     'Containment/inclusion check'
     public contains: element = ( self do: [ :e | e = element ifTrue: [ ^ true ] ].
                           ^ false )
@@ -473,14 +472,14 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       self doIndexes: [ :i | (self at: i) = element ifTrue: [ ^ i ]].
       ^ nil
     )
-  
+
     public lastIndexOf: element = (
       self size downTo: 1 do: [: i | (self at: i) = element ifTrue: [ ^ i ]].
       ^ nil
     )
-    
+
     'Collection'
-    public collect: aBlock = ( (* also known as 'map', we use it for 
+    public collect: aBlock = ( (* also known as 'map', we use it for
       ValueArray and Array, and both times create a Array, because we can't be
       sure that the block will return a Value *)
       | result |
@@ -489,7 +488,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       ^ result
     )
   )
-  
+
   public class Array = Object <: ArrayReadMixin ()
   (
     'Accessing'
@@ -508,20 +507,20 @@ class Kernel vmMirror: vmMirror = Object <: Value (
         i := i + 1 ].
       ^ result
     )
-  
+
     public copyFrom: start = ( ^ self copyFrom: start to: self size )
-    
+
     (* Copy range to other collection *)
     public copyFrom: start to: end to: collection = (
       start to: end do: [:i |
         collection at: i put: (self at: i)  (* TODO: look up bug??? self should not be necessary here *)
       ]
     )
-  
+
     public replaceFrom: start to: stop with: replacement startingAt: repStart = (
       (* This destructively replaces elements from start to stop in the
       receiver starting at index, repStart, in the sequenceable collection,
-      replacementCollection. Answer the receiver. No range checks are 
+      replacementCollection. Answer the receiver. No range checks are
       performed. *)
       | index repOff |
       repOff := repStart - start.
@@ -544,7 +543,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       arr at: 1 put: a.
       ^ arr
     )
-  
+
     public with: a with: b = (
       | arr |
       arr := self new: 2.
@@ -562,12 +561,12 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       ^ arr
     )
   )
-  
+
   public class TransferArray new: size = Array new: size <: TransferObject ()(
   ) : (
     public new: size withAll: block = ( ^ (self new: size) putAll: block )
   )
-  
+
   public class ValueArray new: size withAll: aBlock = Value <: ArrayReadMixin (
     (* Conceptually: 1 to: size do: [:i | at: i put: (aBlock value: i) ] *)
   )(
@@ -579,39 +578,39 @@ class Kernel vmMirror: vmMirror = Object <: Value (
   ):(
     public new: size withAll: aBlock = ( vmMirror valueArrayNew: size withAll: aBlock )
   )
-  
+
   public class Block = Object ()
   (
     'Evaluation'
     public value = ( ^ vmMirror blockValue: self )
-  
+
     'Looping'
-    public whileFalse: block = ( 
-      [ self value not ] whileTrue: block 
+    public whileFalse: block = (
+      [ self value not ] whileTrue: block
     )
-  
+
     public whileTrue: block = (
       self value ifFalse: [ ^ nil ].
       block value.
       self restart
     )
-    
+
     'Exception support'
     public on: exception do: aBlock = (
       ^ vmMirror exceptionDo: self catch: exception onException: aBlock
     )
-    
+
     public ensure: aBlock = (
       ^ vmMirror exceptionDo: self ensure: aBlock
     )
-  
+
     (* TODO: this feels still like old legacy, it's not how it works...
              on the other hand, seeing the #whileTrue: semantics is useful.
              so, replacing it directly with a primitive call isn't nice either *)
     'Restarting'
     public restart = ( ^ vmMirror blockRestart: self )
   )
-  
+
   protected class Block1 = Block ()()
   protected class Block2 = Block ()
   (
@@ -619,7 +618,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public value           = ( self value: nil )
     public value: argument = ( ^ vmMirror blockValue: self with: argument )
   )
-  
+
   protected class Block3 = Block ()
   (
     'Evaluating'
@@ -627,7 +626,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public value: arg             = ( self value: arg with: nil )
     public value: arg1 with: arg2 = ( ^ vmMirror blockValue: self with: arg1 with: arg2 )
   )
-  
+
   public class Pair withKey: aKey andValue: aValue = (
   | public key   ::= aKey.
     public value ::= aValue. |
@@ -636,7 +635,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     print = ( '[' print. key print. '=>' print. value print. ']' print )
     println = ( self print. '' println )
   )
-  
+
   public class Vector new: size = (
   | private firstIdx ::= 1.
     private lastIdx  ::= 1.
@@ -647,23 +646,23 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       self checkIndex: index.
       ^ storage at: index
     )
-    
+
     public at: index put: value = (
       self checkIndex: index.
       storage at: index put: value.
     )
-    
+
     public first = ( ^ isEmpty ifTrue: [nil] ifFalse: [storage at: firstIdx] )
-    
+
     'Iterating'
     public do: block = (
       firstIdx to: lastIdx - 1 do: [ :i | block value: (storage at: i) ]
     )
-    
+
     public doIndexes: block = (
       firstIdx to: lastIdx - 1 do: block
     )
-    
+
     public collect: aBlock = ( (* also known as 'map' *)
       | result |
       result := Vector new: self size.
@@ -671,18 +670,18 @@ class Kernel vmMirror: vmMirror = Object <: Value (
         result append: (aBlock value: (self at: i)) ].
       ^ result
     )
-    
+
     public select: aBlock = (
       | newCollection |
       newCollection := Vector new: self size.
-      self do: [:each | (aBlock value: each)  
+      self do: [:each | (aBlock value: each)
                           ifTrue: [newCollection append: each]].
       ^ newCollection
     )
 
     'Adding'
     public , element = ( ^ self append: element )
-    
+
     public append: element = (
       (lastIdx > storage size) ifTrue: [
         (* Need to expand capacity first *)
@@ -690,16 +689,16 @@ class Kernel vmMirror: vmMirror = Object <: Value (
         newStorage := Array new: 2 * storage size.
         storage doIndexes: [ :i | newStorage at: i put: (storage at: i) ].
         storage := newStorage. ].
-      
+
       storage at: lastIdx put: element.
       lastIdx := lastIdx + 1.
       ^ self
     )
-    
+
     public appendAll: collection = (
       collection do: [:e | append: e ]
     )
-    
+
     'Removing'
     public remove = (
       lastIdx > firstIdx
@@ -707,13 +706,13 @@ class Kernel vmMirror: vmMirror = Object <: Value (
         ifFalse: [
           EmptyCollectionException signalWith: self idx: lastIdx ]
     )
-    
+
     public remove: object = (
       | newArray newLast found |
       newArray := Array new: self capacity.
       newLast := 1.
       found := false.
-     
+
       self do: [ :it |
         it == object
           ifTrue:  [ found := true ]
@@ -722,32 +721,32 @@ class Kernel vmMirror: vmMirror = Object <: Value (
             newLast := newLast + 1.
           ]
       ].
-     
+
       storage := newArray.
       lastIdx := newLast.
       firstIdx := 1.
       ^ found
     )
-    
+
     (* Preserves capacity *)
     public removeAll = (
       storage := Array new: storage size.
     )
-   
+
     public contains: anObject = (
       ^ storage contains: anObject
     )
-    
+
     public anySatisfy: aBlock = (
       do: [:it | (aBlock value: it) ifTrue: [^ true]].
       ^ false
     )
-    
+
     public detect: aBlock ifNone: defaultBlock = (
       self do: [:e | (aBlock value: e) ifTrue: [ ^ e ]].
       	^ defaultBlock value
     )
-  
+
     'Printing'
     public println = (
       'Vector[' print.
@@ -756,19 +755,19 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       self do: [ :it | '(' print. it print. ')' print ].
       ']' println
     )
-    
+
     'Sizing'
     public isEmpty  = ( ^ lastIdx = firstIdx   )
     public size     = ( ^ lastIdx - firstIdx   )
     public capacity = ( ^ storage size )
-    
+
     'Conversion'
     public asArray = ( | arr |
       arr := Array new: self size.
       self doIndexes: [ :i | arr at: i put: (self at: i) ].
       ^arr
     )
-    
+
     checkIndex: index = (
       (firstIdx <= index) && (index < lastIdx)
         ifFalse: [
@@ -781,19 +780,19 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       firstIdx := firstIdx + 1.
       ^ storage at: firstIdx - 1
     )
-    
+
     sort: i to: j with: sortBlock = (
       (* Sort elements i through j of self to be non-descending according to
          sortBlock. *)
       | di dij dj tt ij k l n |
       sortBlock isNil ifTrue: [ ^ self defaultSort: i to: j ].
-      
+
       (* The prefix d means the data at that index. *)
       (n := j + 1  - i) <= 1 ifTrue: [ ^ self ]. (* Nothing to sort. *)
       (* Sort di,dj. *)
       di := storage at: i.
       dj := storage at: j.
-      
+
       (* i.e., should di precede dj? *)
       (sortBlock value: di with: dj) ifFalse: [
         storage swap: i with: j.
@@ -813,7 +812,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
           ifFalse: [ (* i.e. di should come after dij *)
             storage swap: i with: ij.
             dij := di].
-        
+
         n > 3 ifTrue: [
           (* More than three elements.
              Find k>i and l<j such that dk,dij,dl are in reverse order.
@@ -859,9 +858,9 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       newVector := self new: 1.
       newVector append: elem.
       ^ newVector
-    )  
+    )
   )
-  
+
   public class Exception = ()(
     (* Exception does not have any state on purpose.
        It is good practice to have distinct exceptions for separate issues.
@@ -878,13 +877,13 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       public index  = idx. |
     self signal
   )()
-  
+
   public class EmptyCollectionException signalWith: obj index: idx = Exception (
     | public target = obj.
       public index  = idx. |
     self signal
   )()
-  
+
   public class MessageNotUnderstood signalWith: obj selector: sel arguments: args = Exception (
     | public receiver  = obj.
       public selector  = sel.
@@ -898,10 +897,10 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
   (* Exception signaled when a Value is instantiated referring to a mutable object. *)
   public class NotAValue signalWith: aClass = Exception (
-    | public class = aClass. | 
+    | public class = aClass. |
     (* We can't refer here to the object that is instantiated, because we do not
        want to expose illegal objects.
-    
+
     WARNING: it is still possible that illegal objects escape, because
              initializers can do what ever they want, and we check afterwards. *)
     self signal.
@@ -910,7 +909,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       ^ 'NotAValue(' + (vmMirror mirrorAClassesName: class) + ')'
     )
   )
-  
+
   public class TransferObjectsCannotBeValues signalWith: aClass = Exception (
     | public class = aClass. |
     self signal.
@@ -919,12 +918,12 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       ^ 'TransferObjectsCannotBeValues(' + (vmMirror mirrorAClassesName: class) + ')'
     )
   )
-  
+
   (* Short cut from VM. Likely to be removed when optimized. *)
   private signalNotAValueWith: aClass = (
     NotAValue signalWith: aClass
   )
-  
+
   (* Short cut from VM. Likely to be removed when optimized. *)
   private signalTOCannotBeValues: aClass = (
     TransferObjectsCannotBeValues signalWith: aClass

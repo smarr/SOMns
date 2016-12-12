@@ -20,9 +20,9 @@ class Platform usingVmMirror: vmMirror = Value (
     arguments size < 1 ifTrue: [
       system error: 'No application specified for execution.'
     ].
-    
+
     app := system loadModule: (arguments at: 1).
-    
+
     [ errorCodeOrPromise := (app usingPlatform: self) main: arguments ]
       on: kernel Exception
       do: [:e | system error: e asString ].

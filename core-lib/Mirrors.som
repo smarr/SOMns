@@ -25,7 +25,7 @@ class Mirrors usingVmMirror: vmMirror = Value (
     (* obj is an instance, of which we want to reflect on its class *)
     | private obj = obj. |
   )(
-    (*:TODO: Not happy with the naming of the mirror methods yet, 
+    (*:TODO: Not happy with the naming of the mirror methods yet,
              they are not unambiguous, about whether they apply to the object,
              or to the object class *)
     public name       = ( ^ vmMirror mirrorAClassesName: obj  )
@@ -54,19 +54,19 @@ class Mirrors usingVmMirror: vmMirror = Value (
 
     (*TODO: change, this is not how it works, or should be done:
        public selectors  = ( ^ self methods collect: [:inv | inv signature ] ) *)
-    
+
     (*TODO:old
     public hasMethod: aSymbol = (
       self methods do: [ :m |
         m signature = aSymbol ifTrue: [ ^true ] ].
       ^ false
     )*)
-    
+
     public canUnderstand: aSymbol = (
       ^ vmMirror obj: obj respondsTo: aSymbol
     )
   )
-  
+
   private class ClassDefinitionMirror on: classDefHandle = (
     | private classDefHandle = classDefHandle. |
   )(
@@ -76,36 +76,36 @@ class Mirrors usingVmMirror: vmMirror = Value (
       methods := vmMirror classDefMethods: classDefHandle.
       ^ methods collect: [:m | MethodMirror reflecting: m ]
     )
-    
+
     public classDefinition = ( ^ self )
-    
+
     public nestedClassDefinitions = (
       | classes |
       classes := vmMirror classDefNestedClassDefinitions: classDefHandle.
       ^ classes collect: [:c | ClassDefinitionMirror on: c ]
     )
-    
+
     public hasFactoryMethod: aSelector = (
       ^ vmMirror classDef: classDefHandle hasFactoryMethod: aSelector
     )
 
     public factoryMethods = ( self notYetImplemented )
   )
-  
+
   public class ObjectMirror reflecting: obj = (
     | private obj = obj. |
   )(
     public className   = ( ^ vmMirror objClassName: obj  )
     public classMirror = ( ^ ClassMirror reflecting: obj )
-    
+
     public slotValue: name = ( ^ vmMirror slot: name on: obj )
     public slotValue: name put: val = ( ^ vmMirror slot: name on: obj put: val )
-    
+
     public perform: selector = ( ^ vmMirror obj: obj perform: selector )
     public perform: selector withArguments: args = (
       ^ vmMirror obj: obj perform: selector withArguments: args
     )
-    
+
     public respondsTo: selector = (
       | cls |
       cls := self classMirror.
@@ -119,23 +119,23 @@ class Mirrors usingVmMirror: vmMirror = Value (
               ifFalse: [ superCls := superCls superclass ] ].
           ^ false ]
     )
-    
+
     public isValue = ( ^ vmMirror objIsValue: obj )
   )
-  
+
   public class SlotMirror = ()(
   )
-  
+
   public class MethodMirror reflecting: mthd = (
   | private mthd = mthd. |
   )(
     public name = ( ^ vmMirror methodName: mthd )
     public holder = ( ^ vmMirror methodHolder:   mthd )
-    
+
     public invokeOn: obj with: args = ( ^ vmMirror method: mthd invokeOn: obj with: args )
-    
+
     'Debugging'
     public asString = ( ^self holder asString + '>>' + self signature asString )
-    
+
   )
 )
