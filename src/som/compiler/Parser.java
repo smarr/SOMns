@@ -172,9 +172,14 @@ public class Parser {
 
     ParseError(final String message, final Symbol expected, final Parser parser) {
       super(message);
-      this.sourceCoordinate = parser.getCoordinate();
+      if (parser.lexer == null) {
+        this.sourceCoordinate = new SourceCoordinate(0, 0, 0, 0);
+        this.rawBuffer        = "";
+      } else {
+        this.sourceCoordinate = parser.getCoordinate();
+        this.rawBuffer        = parser.lexer.getRawBuffer();
+      }
       this.text             = parser.text;
-      this.rawBuffer        = parser.lexer.getRawBuffer();
       this.fileName         = parser.source.getName();
       this.expected         = expected;
       this.found            = parser.sym;
