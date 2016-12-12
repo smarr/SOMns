@@ -50,9 +50,9 @@ String>>#$blockMethod@361@10:	7
 String>>#asInteger	3
 String>>#print	1
 ArrayReadMixin>>#doIndexes:	2730
-ArrayReadMixin>>#$blockMethod@433@44:	10920
+ArrayReadMixin>>#$blockMethod@432@44:	10920
 Array>>#putAll:	2730
-Array>>#$blockMethod@500@43:	10920
+Array>>#$blockMethod@499@43:	10920
 Array_class>>#new:withAll:	2730
 Block>>#on:do:	1
 Kernel>>#`define`cls	1

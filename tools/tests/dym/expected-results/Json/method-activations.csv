@@ -117,9 +117,9 @@ String>>#$blockMethod@361@10:	4
 String>>#asInteger	3
 String>>#print	1
 ArrayReadMixin>>#doIndexes:	159
-ArrayReadMixin>>#$blockMethod@433@44:	5174
+ArrayReadMixin>>#$blockMethod@432@44:	5174
 Array>>#putAll:	157
-Array>>#$blockMethod@500@43:	5024
+Array>>#$blockMethod@499@43:	5024
 Array_class>>#new:withAll:	157
 Block>>#on:do:	1
 Kernel>>#`define`cls	1
@@ -128,7 +128,7 @@ Kernel>>#`define`cls	1
 Vector_class>>#initializer`new:	867
 Vector>>#at:	6
 Vector>>#append:	3989
-Vector>>#$blockMethod@691@45:	150
+Vector>>#$blockMethod@690@45:	150
 Vector>>#size	599
 Vector>>#checkIndex:	6
 Vector_class>>#new	867

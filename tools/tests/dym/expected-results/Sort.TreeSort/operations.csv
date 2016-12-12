@@ -11,68 +11,68 @@ Harness.som pos=6326 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComp
 Harness.som pos=6405 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
 Harness.som pos=6481 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
 Harness.som pos=6615 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
-Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	9
-Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	6020
-Kernel.som pos=8022 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	6029
-Kernel.som pos=8069 len=6	+	BasicPrimitiveOperation OpArithmetic	int	6018
-Kernel.som pos=8069 len=6	+	BasicPrimitiveOperation OpArithmetic	TOTAL	6018
-Kernel.som pos=12597 len=13	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
-Kernel.som pos=12640 len=13	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
-Kernel.som pos=12782 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	4
-Kernel.som pos=12782 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	4
-Kernel.som pos=12786 len=3	-	BasicPrimitiveOperation OpArithmetic	int	4
-Kernel.som pos=12786 len=3	-	BasicPrimitiveOperation OpArithmetic	TOTAL	4
-Kernel.som pos=12791 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	str	3
-Kernel.som pos=12791 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	str	1
-Kernel.som pos=12791 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	4
-Kernel.som pos=13030 len=6	length	BasicPrimitiveOperation OpLength	str	1
-Kernel.som pos=13030 len=6	length	BasicPrimitiveOperation OpLength	TOTAL	1
-Kernel.som pos=13050 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	1
-Kernel.som pos=13050 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	1
-Kernel.som pos=13054 len=19	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	1
-Kernel.som pos=13054 len=19	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	1
-Kernel.som pos=13062 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument	str	1
-Kernel.som pos=13062 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument	TOTAL	1
-Kernel.som pos=13069 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	1
-Kernel.som pos=13069 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	1
-Kernel.som pos=13114 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument	str	1
-Kernel.som pos=13114 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument	TOTAL	1
-Kernel.som pos=13121 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	1
-Kernel.som pos=13121 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	1
-Kernel.som pos=13125 len=3	+	BasicPrimitiveOperation OpArithmetic	int	1
-Kernel.som pos=13125 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	1
-Kernel.som pos=13180 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	12
-Kernel.som pos=13180 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	12
-Kernel.som pos=13184 len=3	-	BasicPrimitiveOperation OpArithmetic	int	12
-Kernel.som pos=13184 len=3	-	BasicPrimitiveOperation OpArithmetic	TOTAL	12
-Kernel.som pos=13189 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	str	11
-Kernel.som pos=13189 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	str	1
-Kernel.som pos=13189 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	12
-Kernel.som pos=13331 len=14	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
-Kernel.som pos=13450 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	1
-Kernel.som pos=13450 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	1
-Kernel.som pos=13544 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	1
-Kernel.som pos=13544 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	1
-Kernel.som pos=14539 len=5	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgument	int	1999
-Kernel.som pos=14539 len=5	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgument	TOTAL	1999
-Kernel.som pos=14597 len=4	size	BasicPrimitiveOperation OpLength	arr	5
-Kernel.som pos=14597 len=4	size	BasicPrimitiveOperation OpLength	TOTAL	5
-Kernel.som pos=16849 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	int	1999
-Kernel.som pos=16849 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	TOTAL	1999
-Kernel.som pos=21172 len=9	at:	ArrayRead BasicPrimitiveOperation StatementTag	str	1
-Kernel.som pos=21172 len=9	at:	ArrayRead BasicPrimitiveOperation StatementTag	TOTAL	1
-Kernel.som pos=22177 len=14	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	1
-Kernel.som pos=22177 len=14	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	1
-Kernel.som pos=22187 len=4	size	BasicPrimitiveOperation OpLength PrimitiveArgument	arr	1
-Kernel.som pos=22187 len=4	size	BasicPrimitiveOperation OpLength PrimitiveArgument	TOTAL	1
-Kernel.som pos=22451 len=24	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	str	1
-Kernel.som pos=22451 len=24	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	1
-Kernel.som pos=22502 len=3	+	BasicPrimitiveOperation OpArithmetic	int	1
-Kernel.som pos=22502 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	1
-Kernel.som pos=24327 len=8	<=	BasicPrimitiveOperation OpComparison	int	1
-Kernel.som pos=24327 len=8	<=	BasicPrimitiveOperation OpComparison	TOTAL	1
-Kernel.som pos=24347 len=9	<	BasicPrimitiveOperation OpComparison	int	1
-Kernel.som pos=24347 len=9	<	BasicPrimitiveOperation OpComparison	TOTAL	1
+Kernel.som pos=7944 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	9
+Kernel.som pos=7944 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	6020
+Kernel.som pos=7944 len=8	<=	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	6029
+Kernel.som pos=7991 len=6	+	BasicPrimitiveOperation OpArithmetic	int	6018
+Kernel.som pos=7991 len=6	+	BasicPrimitiveOperation OpArithmetic	TOTAL	6018
+Kernel.som pos=12427 len=13	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Kernel.som pos=12470 len=13	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Kernel.som pos=12606 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	4
+Kernel.som pos=12606 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	4
+Kernel.som pos=12610 len=3	-	BasicPrimitiveOperation OpArithmetic	int	4
+Kernel.som pos=12610 len=3	-	BasicPrimitiveOperation OpArithmetic	TOTAL	4
+Kernel.som pos=12615 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	str	3
+Kernel.som pos=12615 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	str	1
+Kernel.som pos=12615 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	4
+Kernel.som pos=12840 len=6	length	BasicPrimitiveOperation OpLength	str	1
+Kernel.som pos=12840 len=6	length	BasicPrimitiveOperation OpLength	TOTAL	1
+Kernel.som pos=12860 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	1
+Kernel.som pos=12860 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	1
+Kernel.som pos=12864 len=19	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	1
+Kernel.som pos=12864 len=19	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	1
+Kernel.som pos=12872 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument	str	1
+Kernel.som pos=12872 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument	TOTAL	1
+Kernel.som pos=12879 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	1
+Kernel.som pos=12879 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	1
+Kernel.som pos=12923 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument	str	1
+Kernel.som pos=12923 len=6	length	BasicPrimitiveOperation OpLength PrimitiveArgument	TOTAL	1
+Kernel.som pos=12930 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	1
+Kernel.som pos=12930 len=3	-	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	1
+Kernel.som pos=12934 len=3	+	BasicPrimitiveOperation OpArithmetic	int	1
+Kernel.som pos=12934 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	1
+Kernel.som pos=12989 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	int	12
+Kernel.som pos=12989 len=3	+	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	12
+Kernel.som pos=12993 len=3	-	BasicPrimitiveOperation OpArithmetic	int	12
+Kernel.som pos=12993 len=3	-	BasicPrimitiveOperation OpArithmetic	TOTAL	12
+Kernel.som pos=12998 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	str	11
+Kernel.som pos=12998 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	str	1
+Kernel.som pos=12998 len=9	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	12
+Kernel.som pos=13130 len=14	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Kernel.som pos=13236 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	int	1
+Kernel.som pos=13236 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison StatementTag	TOTAL	1
+Kernel.som pos=13330 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	1
+Kernel.som pos=13330 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	1
+Kernel.som pos=14305 len=5	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgument	int	1999
+Kernel.som pos=14305 len=5	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgument	TOTAL	1999
+Kernel.som pos=14363 len=4	size	BasicPrimitiveOperation OpLength	arr	5
+Kernel.som pos=14363 len=4	size	BasicPrimitiveOperation OpLength	TOTAL	5
+Kernel.som pos=16596 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	int	1999
+Kernel.som pos=16596 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	TOTAL	1999
+Kernel.som pos=20878 len=9	at:	ArrayRead BasicPrimitiveOperation StatementTag	str	1
+Kernel.som pos=20878 len=9	at:	ArrayRead BasicPrimitiveOperation StatementTag	TOTAL	1
+Kernel.som pos=21853 len=14	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	1
+Kernel.som pos=21853 len=14	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	1
+Kernel.som pos=21863 len=4	size	BasicPrimitiveOperation OpLength PrimitiveArgument	arr	1
+Kernel.som pos=21863 len=4	size	BasicPrimitiveOperation OpLength PrimitiveArgument	TOTAL	1
+Kernel.som pos=22121 len=24	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	str	1
+Kernel.som pos=22121 len=24	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	1
+Kernel.som pos=22172 len=3	+	BasicPrimitiveOperation OpArithmetic	int	1
+Kernel.som pos=22172 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	1
+Kernel.som pos=23946 len=8	<=	BasicPrimitiveOperation OpComparison	int	1
+Kernel.som pos=23946 len=8	<=	BasicPrimitiveOperation OpComparison	TOTAL	1
+Kernel.som pos=23966 len=9	<	BasicPrimitiveOperation OpComparison	int	1
+Kernel.som pos=23966 len=9	<	BasicPrimitiveOperation OpComparison	TOTAL	1
 Platform.som pos=1041 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
 Sort.som pos=2345 len=5	at:	ArrayRead BasicPrimitiveOperation	int	1
 Sort.som pos=2345 len=5	at:	ArrayRead BasicPrimitiveOperation	TOTAL	1

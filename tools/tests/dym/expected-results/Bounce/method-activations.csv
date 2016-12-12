@@ -65,11 +65,11 @@ String>>#$blockMethod@361@10:	6
 String>>#asInteger	3
 String>>#print	1
 ArrayReadMixin>>#do:	50
-ArrayReadMixin>>#$blockMethod@431@44:	5000
+ArrayReadMixin>>#$blockMethod@430@44:	5000
 ArrayReadMixin>>#doIndexes:	51
-ArrayReadMixin>>#$blockMethod@433@44:	5100
+ArrayReadMixin>>#$blockMethod@432@44:	5100
 Array>>#putAll:	1
-Array>>#$blockMethod@500@43:	100
+Array>>#$blockMethod@499@43:	100
 Array_class>>#new:withAll:	1
 Block>>#on:do:	1
 Kernel>>#`define`cls	1

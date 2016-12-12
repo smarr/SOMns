@@ -46,9 +46,9 @@ String>>#$blockMethod@361@10:	8
 String>>#asInteger	3
 String>>#print	1
 ArrayReadMixin>>#doIndexes:	9
-ArrayReadMixin>>#$blockMethod@433@44:	38
+ArrayReadMixin>>#$blockMethod@432@44:	38
 Array>>#putAll:	9
-Array>>#$blockMethod@500@43:	38
+Array>>#$blockMethod@499@43:	38
 Array_class>>#new:withAll:	9
 Block>>#on:do:	1
 Kernel>>#`define`cls	1

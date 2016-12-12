@@ -15,8 +15,8 @@ Harness.som pos=6405 len=3	1	0	1
 Harness.som pos=6481 len=3	1	0	1
 Harness.som pos=6615 len=3	0	1	1
 Harness.som pos=7824 len=13	0	1	1
-Kernel.som pos=8022 len=8	5158	55	5213
-Kernel.som pos=12597 len=13	0	1	1
-Kernel.som pos=12640 len=13	0	1	1
-Kernel.som pos=12791 len=9	0	6	6
+Kernel.som pos=7944 len=8	5158	55	5213
+Kernel.som pos=12427 len=13	0	1	1
+Kernel.som pos=12470 len=13	0	1	1
+Kernel.som pos=12615 len=9	0	6	6
 Platform.som pos=1041 len=3	0	1	1

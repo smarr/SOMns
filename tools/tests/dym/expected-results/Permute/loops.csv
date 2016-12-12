@@ -1,9 +1,9 @@
 Source Section	Loop Activations	Num Iterations
-Kernel.som pos=8033 len=44	0	1
-Kernel.som pos=8033 len=44	6	1
-Kernel.som pos=8033 len=44	7	1
-Kernel.som pos=8033 len=44	TOTAL	3
-Kernel.som pos=8278 len=44	0	5500
-Kernel.som pos=8278 len=44	1	5
-Kernel.som pos=8278 len=44	2	12595
-Kernel.som pos=8278 len=44	TOTAL	18100
+Kernel.som pos=7955 len=44	0	1
+Kernel.som pos=7955 len=44	6	1
+Kernel.som pos=7955 len=44	7	1
+Kernel.som pos=7955 len=44	TOTAL	3
+Kernel.som pos=8192 len=44	0	5500
+Kernel.som pos=8192 len=44	1	5
+Kernel.som pos=8192 len=44	2	12595
+Kernel.som pos=8192 len=44	TOTAL	18100

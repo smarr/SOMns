@@ -65,13 +65,13 @@ String>>#$blockMethod@361@10:	8
 String>>#asInteger	3
 String>>#print	1
 ArrayReadMixin>>#doIndexes:	1
-ArrayReadMixin>>#$blockMethod@433@44:	4
+ArrayReadMixin>>#$blockMethod@432@44:	4
 ArrayReadMixin>>#from:to:do:	24
-ArrayReadMixin>>#$blockMethod@436@53:	96
+ArrayReadMixin>>#$blockMethod@435@53:	96
 Array>>#putAll:	1
-Array>>#$blockMethod@500@43:	4
+Array>>#$blockMethod@499@43:	4
 Array>>#copyFrom:to:	24
-Array>>#$blockMethod@507@15:	96
+Array>>#$blockMethod@506@15:	96
 Array>>#copyFrom:	24
 Array>>#copy	24
 Array_class>>#new:withAll:	1
