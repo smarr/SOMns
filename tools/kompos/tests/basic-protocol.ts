@@ -191,7 +191,7 @@ describe('Basic Project Setup', () => {
       const result = execSom(['dnu']);
       expect(result.output[1].toString()).to.equal('Stack Trace\n\
 \tPlatform>>#start                             Platform.som:27:7\n\
-\tBlock>>#on:do:                               Kernel.som:601:18\n\
+\tBlock>>#on:do:                               Kernel.som:600:18\n\
 \tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory:1:1\n\
 \tPlatform>>#$blockMethod@26@25                Platform.som:26:55\n\
 \tPingPongApp>>#main:                          pingpong.som:105:34\n\
@@ -203,7 +203,7 @@ ERROR: MessageNotUnderstood(Integer>>#foobar)\n');
       const result = execSom(['stack']);
       expect(result.output[1].toString()).to.equal('Stack Trace\n\
 \tPlatform>>#start                             Platform.som:27:7\n\
-\tBlock>>#on:do:                               Kernel.som:601:18\n\
+\tBlock>>#on:do:                               Kernel.som:600:18\n\
 \tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory:1:1\n\
 \tPlatform>>#$blockMethod@26@25                Platform.som:26:55\n\
 \tPingPongApp>>#main:                          pingpong.som:106:34\n\
