@@ -1,0 +1,11 @@
+class BlockInlining3 = () (
+  private class SomeClass = ()(
+    public method: arg = (
+      false whileFalse: [
+        | resrv |
+        [ resrv ] ].
+    )
+  )
+) : (
+  public test = ( ^ 33 )
+)

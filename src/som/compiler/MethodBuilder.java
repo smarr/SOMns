@@ -245,7 +245,8 @@ public final class MethodBuilder {
     Method truffleMethod = new Method(getMethodIdentifier(),
         sourceSection, definition.toArray(new SourceSection[0]),
         body, scope, (ExpressionNode) body.deepCopy(), blockMethod,
-        arguments.values().toArray(new Argument[0]));
+        arguments.values().toArray(new Argument[0]),
+        locals.values().toArray(new Local[0]));
     scope.setMethod(truffleMethod);
     return truffleMethod;
   }
@@ -272,13 +273,14 @@ public final class MethodBuilder {
     addArgument(arg, source);
   }
 
-  public void addLocalIfAbsent(final String local, final SourceSection source)
+  public Local addLocalIfAbsent(final String local, final SourceSection source)
       throws MethodDefinitionError {
-    if (locals.containsKey(local)) {
-      return;
+    Local l = locals.get(local);
+    if (l != null) {
+      return l;
     }
 
-    addLocal(local, source);
+    return addLocal(local, source);
   }
 
   public Local addLocal(final String local, final SourceSection source)

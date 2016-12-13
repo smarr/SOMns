@@ -20,12 +20,13 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
 
   public static ExpressionNode doInline(
       final ExpressionNode body, final MethodBuilder builder,
-      final Local[] blockArguments,
+      final Local[] blockArguments, final Local[] blockLocals,
       final int blockStartIdx) {
     ExpressionNode inlinedBody = NodeUtil.cloneNode(body);
 
     return NodeVisitorUtil.applyVisitor(inlinedBody,
-        new InlinerForLexicallyEmbeddedMethods(builder, blockArguments, blockStartIdx));
+        new InlinerForLexicallyEmbeddedMethods(builder, blockArguments,
+            blockLocals, blockStartIdx));
   }
 
   private final MethodBuilder builder;
@@ -33,10 +34,27 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
   private final int blockStartIdx;
 
   public InlinerForLexicallyEmbeddedMethods(final MethodBuilder builder,
-      final Local[] blockArguments, final int blockStartIdx) {
+      final Local[] blockArguments, final Local[] blockLocals,
+      final int blockStartIdx) {
     this.builder = builder;
     this.blockArguments = blockArguments;
     this.blockStartIdx  = blockStartIdx;
+
+    addLocalVarsToBuilder(builder, blockLocals);
+  }
+
+  /**
+   * Populate the builder with the local variables of the block to be embedded.
+   */
+  private void addLocalVarsToBuilder(final MethodBuilder builder,
+      final Local[] blockLocals) {
+    for (Local local : blockLocals) {
+      try {
+        builder.addLocal(getEmbeddedSlotId(local.getSlotIdentifier()), local.source);
+      } catch (MethodDefinitionError e) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 
   @Override
@@ -66,9 +84,8 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
   public FrameSlot addLocalSlot(final Object orgSlotId,
       final SourceSection source) {
     String id = getEmbeddedSlotId(orgSlotId);
-    assert builder.getEmbeddedLocal(id) == null;
     try {
-      return builder.addLocal(id, source).getSlot();
+      return builder.addLocalIfAbsent(id, source).getSlot();
     } catch (MethodDefinitionError e) {
       throw new RuntimeException(e);
     }
@@ -106,5 +123,10 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
       final int argumentIndex, final SourceSection source) {
     assert contextLevel > 0;
     return blockArguments[argumentIndex - 1].getReadNode(contextLevel, source);
+  }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + "[" + builder.getSignature() + "]";
   }
 }

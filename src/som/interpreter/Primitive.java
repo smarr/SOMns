@@ -8,6 +8,7 @@ import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
 import com.oracle.truffle.api.nodes.Node;
 
+import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
 import som.primitives.ObjectPrims.HaltPrim;
@@ -19,6 +20,11 @@ public final class Primitive extends Invokable {
       final FrameDescriptor frameDescriptor,
       final ExpressionNode uninitialized) {
     super(name, null, frameDescriptor, primitive, uninitialized);
+  }
+
+  @Override
+  protected Local[] getLocals() {
+    throw new UnsupportedOperationException("Primitive.getLocals() should never be called, because primitives are not expected to get inlined.");
   }
 
   @Override

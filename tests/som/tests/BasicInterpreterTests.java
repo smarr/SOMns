@@ -107,6 +107,11 @@ public class BasicInterpreterTests {
         {"BlockInlining", "testDeepDeepNestedFalse",                 43, Long.class, null },
         {"BlockInlining", "testToDoNestDoNestIfTrue",                 2, Long.class, null },
 
+        {"BlockInlining2", "test",                                   33, Long.class, null },
+        {"BlockInlining3", "test",                                   33, Long.class, null },
+        {"BlockInlining4", "test",                                   33, Long.class, null },
+        {"BlockInlining5", "test",                                   33, Long.class, null },
+
         {"Lookup", "testClassMethodsNotBlockingOuterMethods",        42, Long.class, UNSAFE_OM },
         {"Lookup", "testExplicitOuterInInitializer",                182, Long.class, UNSAFE_OM },
         {"Lookup", "testImplicitOuterInInitializer",                182, Long.class, UNSAFE_OM },

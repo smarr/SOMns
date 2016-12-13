@@ -1,0 +1,18 @@
+class BlockInlining2 = () (
+  public class SomeClass = ()(
+    public method: arg = (
+      critical: [
+        false whileFalse: [
+          | resrv |
+          critical: [
+            resrv := arg.
+            ^ resrv ] ] ].
+    )
+
+    private critical: block = (
+      ^ block value
+    )
+  )
+) : (
+  public test = ( ^ new SomeClass new method: 33 )
+)

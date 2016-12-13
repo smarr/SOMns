@@ -43,10 +43,13 @@ public abstract class Invokable extends RootNode {
 
   public abstract Invokable cloneWithNewLexicalContext(final MethodScope outerContext);
 
+  protected abstract Local[] getLocals();
+
   public ExpressionNode inline(final MethodBuilder builder,
-      final Local[] locals) {
+      final Local[] blockArgsTurnedLocals) {
     return InlinerForLexicallyEmbeddedMethods.doInline(uninitializedBody,
-        builder, locals, getSourceSection().getCharIndex());
+        builder, blockArgsTurnedLocals, getLocals(),
+        getSourceSection().getCharIndex());
   }
 
   @Override

@@ -28,6 +28,7 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.Variable.Argument;
+import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
@@ -39,24 +40,31 @@ public final class Method extends Invokable {
   private final SourceSection[] definition;
   private final boolean block;
   private final Argument[] arguments;
+  private final Local[] locals;
 
   public Method(final String name, final SourceSection sourceSection,
                 final SourceSection[] definition,
                 final ExpressionNode expressions,
                 final MethodScope currentLexicalScope,
                 final ExpressionNode uninitialized, final boolean block,
-                final Argument[] arguments) {
+                final Argument[] arguments, final Local[] locals) {
     super(name, sourceSection, currentLexicalScope.getFrameDescriptor(),
         expressions, uninitialized);
     this.definition = definition;
     this.block = block;
     this.currentMethodScope = currentLexicalScope;
     this.arguments = arguments;
+    this.locals = locals;
     expressions.markAsRootExpression();
   }
 
   public SourceSection[] getDefinition() {
     return definition;
+  }
+
+  @Override
+  protected Local[] getLocals() {
+    return locals;
   }
 
   @Override
@@ -73,7 +81,7 @@ public final class Method extends Invokable {
     ExpressionNode  inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(
         uninitializedBody, inlinedCurrentScope);
     Method clone = new Method(name, getSourceSection(), definition, inlinedBody,
-        inlinedCurrentScope, uninitializedBody, block, arguments);
+        inlinedCurrentScope, uninitializedBody, block, arguments, locals);
     inlinedCurrentScope.setMethod(clone);
     return clone;
   }
@@ -88,7 +96,7 @@ public final class Method extends Invokable {
     ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
 
     Method clone = new Method(name, getSourceSection(), definition, adaptedBody,
-        currentAdaptedScope, uninitAdaptedBody, block, arguments);
+        currentAdaptedScope, uninitAdaptedBody, block, arguments, locals);
     currentAdaptedScope.setMethod(clone);
     return clone;
   }
@@ -103,7 +111,7 @@ public final class Method extends Invokable {
     ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
 
     Method clone = new Method(name, getSourceSection(), definition,
-        adaptedBody, currentAdaptedScope, uninitAdaptedBody, block, arguments);
+        adaptedBody, currentAdaptedScope, uninitAdaptedBody, block, arguments, locals);
     currentAdaptedScope.setMethod(clone);
     return clone;
   }

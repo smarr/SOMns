@@ -1,0 +1,10 @@
+class BlockInlining5 = () () : (
+  private method = (
+    false whileFalse: [
+      [ | resrv |
+        resrv := 33.
+        [ [ ^ resrv ] value ] value ] value ].
+  )
+
+  public test = ( ^ method )
+)
