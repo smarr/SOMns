@@ -222,7 +222,7 @@ class Validation usingPlatform: platform andHarness: harness = Value (
     )
       
     public setupVerifiedRun: run = (
-      run problemSize: ''
+      run problemSize: '1000'
     )
   )
 
@@ -480,7 +480,7 @@ class Validation usingPlatform: platform andHarness: harness = Value (
     )
     
     public setupVerifiedRun: run = (
-      run problemSize: '20:10000'
+      run problemSize: '5:5'
     )
   )
 
@@ -533,14 +533,14 @@ class Validation usingPlatform: platform andHarness: harness = Value (
     )
   ) : (
     public newInstance: problemSize = ( ^ self new: problemSize asInteger )
-    public setupVerifiedRun: run = ( run problemSize: 10000 )
+    public setupVerifiedRun: run = ( run problemSize: 1000 )
   )
 
   public class Sequence new: limit = Benchmark <: Value (
   | private limit = limit. |
   )(
     
-    public class CountingActor new: completionRes = (
+    public class SequenceActor new: completionRes = (
     | private completionRes = completionRes.
       private last ::= nil. 
       private problems ::= 0.
@@ -575,7 +575,7 @@ class Validation usingPlatform: platform andHarness: harness = Value (
     public benchmark: abortP = (
       | counter producerA producerB disturb completionPP |
       completionPP := actors createPromisePair.
-      counter  := (actors createActorFromValue: CountingActor) <-: new: completionPP resolver.
+      counter  := (actors createActorFromValue: SequenceActor) <-: new: completionPP resolver.
 
       doA: counter lim: limit.    
       doB: counter lim: limit. 
