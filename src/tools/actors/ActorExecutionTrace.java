@@ -42,6 +42,10 @@ public class ActorExecutionTrace {
 
   private static final int BUFFER_POOL_SIZE = Runtime.getRuntime().availableProcessors() * 4;
   private static final int BUFFER_SIZE = 4096 * 1024;
+  private static final byte MESSAGE_BASE = (byte) 0x80;
+  private static final byte PROMISE_BIT = 0x40;
+  private static final byte TIMESTAMP_BIT = 0x20;
+  private static final byte PARAMETER_BIT = 0x10;
 
   private static final MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
   private static final List<java.lang.management.GarbageCollectorMXBean> gcbeans = ManagementFactory.getGarbageCollectorMXBeans();
@@ -55,6 +59,7 @@ public class ActorExecutionTrace {
   private static FrontendConnector front = null;
 
   private static Thread workerThread = new TraceWorkerThread();
+  private static final byte messageEventId;
 
   static {
     if (VmSettings.MEMORY_TRACING) {
@@ -66,6 +71,18 @@ public class ActorExecutionTrace {
         emptyBuffers.add(ByteBuffer.allocate(BUFFER_SIZE));
       }
     }
+
+    byte eventid = MESSAGE_BASE;
+
+    if (VmSettings.MESSAGE_TIMESTAMPS) {
+      eventid |= TIMESTAMP_BIT;
+    }
+
+    if (VmSettings.MESSAGE_PARAMETERS) {
+      eventid |= PARAMETER_BIT;
+    }
+
+    messageEventId = eventid;
   }
 
   public static void recordMainActor(final Actor mainActor,
@@ -275,6 +292,7 @@ public class ActorExecutionTrace {
       b.put(Events.Mailbox.id);
       b.putLong(m.getBasemessageId()); //base id for messages
       b.putLong(actor.getActorId()); //receiver of the messages
+
       int idx = 0;
 
       for (EventualMessage em : m) {
@@ -287,32 +305,36 @@ public class ActorExecutionTrace {
           b.putShort((short) idx);
         }
 
-        if (em instanceof PromiseSendMessage) {
-          b.put(Events.PromiseMessage.id);
+        if (em instanceof PromiseSendMessage && VmSettings.PROMISE_CREATION) {
+          b.put((byte) (messageEventId | PROMISE_BIT));
           b.putLong(((PromiseMessage) em).getPromise().getPromiseId());
         } else {
-          b.put(Events.BasicMessage.id);
+          b.put(messageEventId);
         }
 
         b.putLong(em.getSender().getActorId()); // sender
         b.putLong(em.getCausalMessageId());
         b.putShort(em.getSelector().getSymbolId());
-        b.putLong(m.getMessageExecutionStart(idx));
-        b.putLong(m.getMessageSendTime(idx));
 
-        Object[] args = em.getArgs();
-        b.put((byte) (args.length - 1)); //num paramaters
-
-        for (int i = 1; i < args.length; i++) {
-          //gonna need a 8 plus 1 byte for most parameter, boolean just use two identifiers.
-          if (args[i] instanceof SFarReference) {
-            Object o = ((SFarReference) args[i]).getValue();
-            writeParameter(o, b);
-          } else {
-            writeParameter(args[i], b);
-          }
+        if (VmSettings.MESSAGE_TIMESTAMPS) {
+          b.putLong(m.getMessageExecutionStart(idx));
+          b.putLong(m.getMessageSendTime(idx));
         }
 
+        if (VmSettings.MESSAGE_PARAMETERS) {
+          Object[] args = em.getArgs();
+          b.put((byte) (args.length - 1)); //num paramaters
+
+          for (int i = 1; i < args.length; i++) {
+            //gonna need a 8 plus 1 byte for most parameter, boolean just use two identifiers.
+            if (args[i] instanceof SFarReference) {
+              Object o = ((SFarReference) args[i]).getValue();
+              writeParameter(o, b);
+            } else {
+              writeParameter(args[i], b);
+            }
+          }
+        }
         idx++;
       }
     }
@@ -348,6 +370,7 @@ public class ActorExecutionTrace {
       } else {
         throw new RuntimeException("unexpected parameter type");
       }
+      //TODO add case for null/nil/exception, ask ctorresl about what type is used for the error handling stuff
     }
   }
 

@@ -1,5 +1,6 @@
 # Change Log
 
+
 ## [Unreleased]
 
  - Added basic support for shared-memory multithreading and fork/join
@@ -9,6 +10,9 @@
  - Turn writes to method arguments into errors. Before it was leading to 
    confusing setter sends and 'message not understood' errors.
  - Added Lee and Vacation benchmarks ([PR #78](https://github.com/smarr/SOMns/pull/78))
+
+ - Configuration flag for actor tracing, -atcfg=<config>
+   example: -atcfg=mt:mp:pc turns off message timestamps, message parameters and promises
 
 ## 0.1.0 - 2016-12-15
 
