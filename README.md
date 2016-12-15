@@ -68,8 +68,8 @@ Afterwards, the simple Hello World program is executed with:
 Information on previous authors are included in the AUTHORS file. This code is
 distributed under the MIT License. Please see the LICENSE file for details.
 
-Setup Development Environment with Eclipse
-------------------------------------------
+Setup Development Environment with Eclipse and VS Code
+------------------------------------------------------
 
 1. Install JDK 1.8 and Eclipse Mars (or later)
 
@@ -88,7 +88,8 @@ cd libs/truffle/
 
 5. Import SOMns project and the Truffle projects into Eclipse
 
-6. For debugging, create a run configuration with the Mandelbrot benchmark. 
+6. For debugging the interpreter, create a run configuration with the
+   Mandelbrot benchmark. 
    In option Run Configurations go to Java Application/SOMns and select tab
    arguments, enter:
 
@@ -102,6 +103,32 @@ For testing on the command line, the full command is
 `$ ./som -G core-lib/Benchmarks/Harness.som Mandelbrot 2 0 500`
 
 Additionally, there are JUnit tests and `ant test` for executing the test suite.
+
+To use VS Code as IDE and debugger for SOMns programs,
+it needs to be installed manually from: https://code.visualstudio.com/Download
+
+The [SOMns](https://marketplace.visualstudio.com/items?itemName=MetaConcProject.SOMns) support can then be installed via the Marketplace.
+
+### Instructions for Ubuntu
+
+```bash
+sudo add-apt-repository ppa:webupd8team/java
+curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
+sudo apt install oracle-java8-installer git ant npm nodejs
+
+git clone --recursive https://github.com/smarr/GraalBasic.git
+cd GraalBasic
+yes "n" | ./build.sh
+cd ..
+
+git clone https://github.com/smarr/SOMns.git
+cd SOMns
+ant       ## build SOMns
+ant tests ## run all tests
+
+cd libs/truffle
+../mx/mx eclipseinit ## Generate all Truffle Eclipse projects
+```
 
 Build Status
 ------------
