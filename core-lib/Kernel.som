@@ -162,6 +162,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     'Convenience'
     public == other = ( ^ vmMirror object: self identicalTo: other )
+    public ~= other = ( ^ (self == other) not )
     public ifNil: aBlock = ( ^ aBlock value )
     public ifNotNil: aBlock = ( ^ self )
     public ifNil: goBlock ifNotNil: noGoBlock = ( ^ goBlock value )
@@ -197,6 +198,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public <= argument = ( ^ (self < argument) or: [ self = argument ] )
     public negative    = ( ^ self < 0 )
     public between: a and: b = ( ^ (self > a) and: [ self < b ] )
+    public compareTo: other = ( ^ self < other ifTrue: [ - 1 ] ifFalse: [ self = other ifTrue: [ 0 ] ifFalse: [ 1 ] ] )
 
     'Converting'
     public asString    = ( ^ vmMirror intAsString: self )
