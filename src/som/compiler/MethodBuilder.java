@@ -406,13 +406,15 @@ public final class MethodBuilder {
   }
 
   public ExpressionNode getSetterSend(final SSymbol identifier,
-      final ExpressionNode exp, final SourceSection source) {
-    // TODO: we probably need here a sanity check and perhaps a parser error
-    //       if we try to assign to an argument
+      final ExpressionNode exp, final SourceSection source) throws MethodDefinitionError {
     // write directly to local variables (excluding arguments)
-    Local variable = getLocal(identifier.getString());
+    String varName = identifier.getString();
+    if (hasArgument(varName)) {
+      throw new MethodDefinitionError("Can't assign to argument: " + varName, source);
+    }
+    Local variable = getLocal(varName);
     if (variable != null) {
-      return getWriteNode(identifier.getString(), exp, source);
+      return getWriteNode(varName, exp, source);
     }
 
     // otherwise, it is a setter send.
@@ -420,6 +422,17 @@ public final class MethodBuilder {
         MixinBuilder.getSetterName(identifier),
         new ExpressionNode[] {getSelfRead(source), exp},
         getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(), source);
+  }
+
+  protected boolean hasArgument(final String varName) {
+    if (arguments.containsKey(varName)) {
+      return true;
+    }
+
+    if (outerBuilder != null) {
+      return outerBuilder.hasArgument(varName);
+    }
+    return false;
   }
 
   protected Local getLocal(final String varName) {

@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+ - Turn writes to method arguments into errors. Before it was leading to 
+   confusing setter sends and 'message not understood' errors.
+
 ## 0.1.0 - 2016-12-15
 
 This is the first tagged version. For previous changes, please refer to the
