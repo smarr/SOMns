@@ -189,25 +189,25 @@ describe('Basic Project Setup', () => {
   describe('SOMns stack trace', () => {
     it('should be correct for #doesNotUnderstand', () => {
       const result = execSom(['dnu']);
-      expect(result.output[1].toString()).to.equal('Stack Trace\n\
-\tPlatform>>#start                             Platform.som:27:7\n\
-\tBlock>>#on:do:                               Kernel.som:602:18\n\
-\tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory:1:1\n\
-\tPlatform>>#$blockMethod@26@25                Platform.som:26:55\n\
-\tPingPongApp>>#main:                          pingpong.som:105:34\n\
-\tPingPongApp>>#testDNU                        pingpong.som:89:7\n\
+      expect(result.output[1].toString().replace(/\d/g,'')).to.equal('Stack Trace\n\
+\tPlatform>>#start                             Platform.som::\n\
+\tBlock>>#on:do:                               Kernel.som::\n\
+\tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory::\n\
+\tPlatform>>#$blockMethod@@                Platform.som::\n\
+\tPingPongApp>>#main:                          pingpong.som::\n\
+\tPingPongApp>>#testDNU                        pingpong.som::\n\
 ERROR: MessageNotUnderstood(Integer>>#foobar)\n');
     });
 
     it('should be correct for `system printStackTrace`', () => {
       const result = execSom(['stack']);
-      expect(result.output[1].toString()).to.equal('Stack Trace\n\
-\tPlatform>>#start                             Platform.som:27:7\n\
-\tBlock>>#on:do:                               Kernel.som:602:18\n\
-\tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory:1:1\n\
-\tPlatform>>#$blockMethod@26@25                Platform.som:26:55\n\
-\tPingPongApp>>#main:                          pingpong.som:106:34\n\
-\tPingPongApp>>#testPrintStackTrace            pingpong.som:94:12\n');
+      expect(result.output[1].toString().replace(/\d/g,'')).to.equal('Stack Trace\n\
+\tPlatform>>#start                             Platform.som::\n\
+\tBlock>>#on:do:                               Kernel.som::\n\
+\tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory::\n\
+\tPlatform>>#$blockMethod@@                Platform.som::\n\
+\tPingPongApp>>#main:                          pingpong.som::\n\
+\tPingPongApp>>#testPrintStackTrace            pingpong.som::\n');
     });
   });
 });
