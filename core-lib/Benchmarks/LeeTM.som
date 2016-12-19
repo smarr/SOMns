@@ -36,16 +36,16 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
       dataModule := system loadModule: 'LeeTMData.som' nextTo: outer LeeTMSuite.
       fileId = 1 ifTrue: [
         str := dataModule mainboard.
-        gridSize := 600 ].
+        gridSize := 100 ].
       fileId = 2 ifTrue: [
         str := dataModule memboard.
-        gridSize := 600 ].
+        gridSize := 100 ].
       fileId = 3 ifTrue: [
         str := dataModule sparselong.
         gridSize := 600 ].
       fileId = 4 ifTrue: [
         str := dataModule sparseshort.
-        gridSize := 600 ].
+        gridSize := 100 ].
       fileId = 5 ifTrue: [
         str := dataModule test.
         gridSize := 10 ].
@@ -213,13 +213,16 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
           y0 := readInt + 1.
           x1 := readInt + 1.
           y1 := readInt + 1.
-          grid occupyLoX: x0 loY: y0 upX: x1 upY: y1 ].
+
+          (x0 < gridSize and: [ y0 < gridSize and: [ x1 < gridSize and: [ y1 < gridSize ]]]) ifTrue: [
+            grid occupyLoX: x0 loY: y0 upX: x1 upY: y1 ] ].
 
         c = 'P' ifTrue: [ (* pad *)
           | x0 y0 |
           x0 := readInt + 1.
           y0 := readInt + 1.
-          grid occupyLoX: x0 loY: y0 upX: x0 upY: y0 ].
+          (x0 < gridSize and: [ y0 < gridSize ]) ifTrue: [
+            grid occupyLoX: x0 loY: y0 upX: x0 upY: y0 ] ].
 
         c = 'J' ifTrue: [ (* join connection points *)
           | x0 y0 x1 y1 |
@@ -227,8 +230,9 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
           y0 := readInt + 1.
           x1 := readInt + 1.
           y1 := readInt + 1.
-          netNo := netNo + 1.
-          work next: (work enqueueX1: x0 y1: y0 x2: x1 y2: y1 n: netNo) ].
+          (x0 < gridSize and: [ y0 < gridSize and: [ x1 < gridSize and: [ y1 < gridSize ]]]) ifTrue: [
+            netNo := netNo + 1.
+            work next: (work enqueueX1: x0 y1: y0 x2: x1 y2: y1 n: netNo) ] ].
       ]
     )
 
@@ -517,13 +521,22 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
     )
 
     public sanityCheck: totalLaidTracks in: fileId = (
-      report.
-      fileId = 1 ifTrue: [ ^ totalLaidTracks = 1506 ].
-      fileId = 2 ifTrue: [ ^ totalLaidTracks = 3101 ].
-      fileId = 3 ifTrue: [ ^ totalLaidTracks =   29 ].
-      fileId = 4 ifTrue: [ ^ totalLaidTracks =  841 ].
+      (fileId = 1 and: [gridSize = 100]) ifTrue: [ ^ totalLaidTracks =    2 ].
+      (fileId = 1 and: [gridSize = 200]) ifTrue: [ ^ totalLaidTracks =  164 ].
+      (fileId = 1 and: [gridSize = 300]) ifTrue: [ ^ totalLaidTracks =  394 ].
+      (fileId = 1 and: [gridSize = 600]) ifTrue: [ ^ totalLaidTracks = 1506 ].
+      (fileId = 2 and: [gridSize = 100]) ifTrue: [ ^ totalLaidTracks =   12 ].
+      (fileId = 2 and: [gridSize = 200]) ifTrue: [ ^ totalLaidTracks =   78 ].
+      (fileId = 2 and: [gridSize = 600]) ifTrue: [ ^ totalLaidTracks = 3101 ].
+      (fileId = 3 and: [gridSize = 600]) ifTrue: [ ^ totalLaidTracks =   29 ].
+      (fileId = 4 and: [gridSize = 100]) ifTrue: [ ^ totalLaidTracks =   20 ].
+      (fileId = 4 and: [gridSize = 200]) ifTrue: [ ^ totalLaidTracks =   90 ].
+      (fileId = 4 and: [gridSize = 300]) ifTrue: [ ^ totalLaidTracks =  210 ].
+      (fileId = 4 and: [gridSize = 500]) ifTrue: [ ^ totalLaidTracks =  600 ].
+      (fileId = 4 and: [gridSize = 600]) ifTrue: [ ^ totalLaidTracks =  841 ].
       fileId = 5 ifTrue: [ ^ totalLaidTracks =    6 ].
 
+      report.
       ('No know result for fileId ' + fileId + ' totalLaidTracks: ' + totalLaidTracks) println.
       ^ false
     )
