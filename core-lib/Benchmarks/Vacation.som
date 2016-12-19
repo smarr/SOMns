@@ -9,12 +9,12 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
   private ActionMakeReservation    = 0.
   private ActionDeleteCustomer     = 1.
   private ActionUpdateTables       = 2.
-  private ParamDefaultClients      = 10.      (* number of clients *)
-  private ParamDefaultNumber       = 10.      (* number of user queries/transaction *)
-  private ParamDefaultQueries      = 90.      (* percentage of relations queried *)
-  private ParamDefaultRelations    = 1 << 16. (* number of possible relations *)
-  private ParamDefaultTransactions = 1 << 16. (* number of transactions *)
-  private ParamDefaultUser         = 80.      (* percentage of user transactions *)
+  private ParamDefaultClients      = 10. (* number of clients *)
+  private ParamDefaultNumber       = 10. (* number of user queries/transaction *)
+  private ParamDefaultQueries      = 90. (* percentage of relations queried *)
+  private ParamDefaultRelations    = 1.  (* number of possible relations. Usually in the order of 1<<16. *)
+  private ParamDefaultTransactions = 1.  (* number of transactions. Usually in the order of 1<<16. *)
+  private ParamDefaultUser         = 80. (* percentage of user transactions *)
   private ReservationCar           = 1.
   private ReservationFlight        = 2.
   private ReservationRoom          = 3.
@@ -23,20 +23,20 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
   private class Vacation = Benchmark ()(
     public innerBenchmarkLoop: problemSize = (
       | manager clients |
-      manager := initializeManager.
+      manager := initializeManager: problemSize.
       clients := initializeClients: manager for: 1 and: problemSize.
 
       (clients at: 1) run.
 
-      ^ checkTables: manager
+      ^ checkTables: manager problemSize: problemSize
     )
 
-    private initializeManager = (
+    private initializeManager: problemSize = (
       | random manager numRelations ids i |
       random  := Random new.
       manager := Manager new.
 
-      numRelations := ParamDefaultRelations.
+      numRelations := ParamDefaultRelations << problemSize.
 
       i := 0.
       ids := Array new: numRelations withAll: [
@@ -77,7 +77,7 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
       | numTransaction numRelation percentQuery clients numTransactionPerClient
         queryRange i |
       numTransaction := ParamDefaultTransactions << problemSize.
-      numRelation    := ParamDefaultRelations.
+      numRelation    := ParamDefaultRelations << problemSize.
       percentQuery   := ParamDefaultQueries.
 
       numTransactionPerClient := (numTransaction // numClients + 0.5) asInteger.
@@ -92,9 +92,9 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
       ^ clients
     )
 
-    private checkTables: manager = (
+    private checkTables: manager problemSize: problemSize = (
       | numRelation customers tables percentQuery queryRange maxCustomerId |
-      numRelation := ParamDefaultRelations.
+      numRelation := ParamDefaultRelations << problemSize.
       customers   := manager customers.
 
       tables := Array with: manager cars with: manager flights with: manager rooms.
