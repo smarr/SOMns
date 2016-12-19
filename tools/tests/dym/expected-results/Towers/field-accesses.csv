@@ -5,10 +5,10 @@ Kernel.som pos=2346 len=9	read	Value class	6
 Kernel.som pos=2346 len=9	read	ALL	6
 Kernel.som pos=2720 len=8	read	VmMirror	4
 Kernel.som pos=2720 len=8	read	ALL	4
-Kernel.som pos=8777 len=8	read	VmMirror	2
-Kernel.som pos=8777 len=8	read	ALL	2
-Kernel.som pos=11351 len=8	read	VmMirror	5
-Kernel.som pos=11351 len=8	read	ALL	5
+Kernel.som pos=8945 len=8	read	VmMirror	2
+Kernel.som pos=8945 len=8	read	ALL	2
+Kernel.som pos=11519 len=8	read	VmMirror	5
+Kernel.som pos=11519 len=8	read	ALL	5
 Towers.som pos=1381 len=5	read	Array	16409
 Towers.som pos=1381 len=5	read	ALL	16409
 Towers.som pos=1424 len=4	read	Integer	16153

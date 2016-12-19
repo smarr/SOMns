@@ -50,7 +50,7 @@ Run>>#runBenchmark	1
 Run>>#doWarmup:	1
 Run>>#measure:	1
 Run>>#doRuns:	1
-Run>>#$blockMethod@154@13:	1
+Run>>#$blockMethod@156@13:	1
 Run>>#reportBenchmark	1
 Run>>#print:run:	1
 Run>>#printTotal	1
@@ -70,15 +70,15 @@ Integer_class>>#fromString:	3
 String>>#asString	5
 String>>#primSubstringFrom:to:	11
 String>>#includes:	1
-String>>#$blockMethod@361@10:	11
+String>>#$blockMethod@363@10:	11
 String>>#asInteger	3
 String>>#print	1
 ArrayReadMixin>>#do:	2
-ArrayReadMixin>>#$blockMethod@430@44:	6000
+ArrayReadMixin>>#$blockMethod@432@44:	6000
 ArrayReadMixin>>#doIndexes:	10
-ArrayReadMixin>>#$blockMethod@432@44:	44916
+ArrayReadMixin>>#$blockMethod@434@44:	44916
 Array>>#putAll:	6
-Array>>#$blockMethod@499@43:	32916
+Array>>#$blockMethod@501@43:	32916
 Array_class>>#new:withAll:	6
 Block>>#value	3000
 Block>>#on:do:	1
@@ -87,7 +87,7 @@ Vector_class>>#new:	3000
 Kernel>>#`define`cls	1
 Vector_class>>#initializer`new:	3000
 Vector>>#do:	3000
-Vector>>#$blockMethod@659@48:	17916
+Vector>>#$blockMethod@661@48:	17916
 Vector>>#append:	17916
 Vector>>#size	3000
 Vector_class>>#new	3000

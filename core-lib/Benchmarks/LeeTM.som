@@ -1,0 +1,607 @@
+(* *)
+class LeeTMSuite usingPlatform: platform andHarness: harness = (
+| private Benchmark = harness Benchmark.
+  private Array     = platform kernel Array.
+  private Vector    = platform kernel Vector.
+  private system    = platform system.
+
+  private EMPTY      = 0.
+  private TEMP_EMPTY = 10000.
+  private OCC        = 5120.
+  private VIA        = 6000.
+  private BVIA       = 6001.
+  private TRACK      = 8192.
+  private MAX_WEIGHT = 1.
+
+  private dx = newDx.
+  private dy = newDy.
+|) (
+  class Lee = Benchmark (
+  | private data ::= nil.
+    private gridSize ::= 0.
+  |)(
+    public innerBenchmarkLoop: problemSize = (
+      | lr t m |
+      data isNil ifTrue: [ loadData: problemSize ].
+
+      lr := LeeRouter new: data gridSize: gridSize.
+      t := LeeThread new: lr.
+      t run.
+
+      ^ lr sanityCheck: t myLaidTracks in: problemSize.
+    )
+
+    private loadData: fileId = (
+      | dataModule str |
+      dataModule := system loadModule: 'LeeTMData.som' nextTo: outer LeeTMSuite.
+      fileId = 1 ifTrue: [
+        str := dataModule mainboard.
+        gridSize := 100 ].
+      fileId = 2 ifTrue: [
+        str := dataModule memboard.
+        gridSize := 100 ].
+      fileId = 3 ifTrue: [
+        str := dataModule sparselong.
+        gridSize := 600 ].
+      fileId = 4 ifTrue: [
+        str := dataModule sparseshort.
+        gridSize := 100 ].
+      fileId = 5 ifTrue: [
+        str := dataModule test.
+        gridSize := 10 ].
+
+      data := (str split: '\n') asArray.
+    )
+  )
+
+  class Frontier x: x y: y z: z dw: dw = (
+  | public x  ::= x.
+    public y  ::= y.
+    public z  ::= z.
+    public dw ::= dw.
+  |)()
+
+  class GridCell new: val = (
+  | public routeId ::= val. |
+  )()
+
+  class WorkQueue x1: x1 y1: y1 x2: x2 y2: y2 nn: nn = (
+  | public x1 ::= x1.
+    public y1 ::= y1.
+    public x2 ::= x2.
+    public y2 ::= y2.
+    public nn ::= nn.
+    public next ::= nil.
+  |)(
+    public enqueueX1: x1 y1: y1 x2: x2 y2: y2 n: n = (
+      | q |
+      q := WorkQueue x1: x1 y1: y1 x2: x2 y2: y2 nn: n.
+      q next: next.
+      ^ q
+    )
+
+    public dequeue = (
+      | q |
+      q := next.
+      next: next next.
+      ^ q
+    )
+
+    public lessXx1: xx1 yy1: yy1 xx2: xx2 yy2: yy2 = (
+      ^ (((x2 - x1) * (x2 - x1)) + ((y2 - y1) * (y2 - y1))) >
+        (((xx2 - xx1) * (xx2 - xx1)) + ((yy2 - yy1) * (yy2 - yy1)))
+    )
+
+    public pass = (
+      | done ent a |
+      done := true.
+      ent := self.
+      a := ent next.
+
+      [ a next isNil ] whileFalse: [
+        | b |
+        b := a next.
+
+        (a lessXx1: b x1 yy1: b y1 xx2: b x2 yy2: b y2) ifTrue: [
+          ent next: b.
+          a next: b next.
+          b next: a.
+          done := false ].
+
+        ent := a.
+        a := b.
+        b := b next.
+      ].
+
+      ^ done
+    )
+
+    public sort = (
+      [ pass ] whileFalse: [ ].
+    )
+  ) : (
+    public new = (
+      ^ self x1: 0 y1: 0 x2: 0 y2: 0 nn: 0
+    )
+  )
+
+  class Grid width: width height: height depth: depth = (
+  | private width  = width.
+    private height = height.
+    private depth  = depth.
+    private grid   = instantiateGrid.
+  |)(
+    public occupyLoX: loX loY: loY upX: upX upY: upY = (
+      loX to: upX do: [:x |
+        loY to: upY do: [:y |
+          1 to: depth do: [:z |
+            (((grid at: x) at: y) at: z) routeId: OCC
+      ] ] ]
+    )
+
+    private emptyX: x y: y z: z to: weight = (
+      (pointX: x y: y z: z) = EMPTY
+        ifTrue: [ pointX: x y: y z: z val: weight ]
+    )
+
+    public addWeights = (
+      1 to: MAX_WEIGHT do: [:i |
+        1 to: depth do: [:z |
+          2 to: width - 1 do: [:x |
+            2 to: height - 1 do: [:y |
+              | weight |
+              weight := pointX: x y: y z: z.
+              weight = OCC
+                ifTrue: [
+                  emptyX: x     y: y + 1 z: z to: MAX_WEIGHT.
+                  emptyX: x + 1 y: y     z: z to: MAX_WEIGHT.
+                  emptyX: x     y: y - 1 z: z to: MAX_WEIGHT.
+                  emptyX: x - 1 y: y     z: z to: MAX_WEIGHT ]
+                ifFalse: [
+                  emptyX: x     y: y + 1 z: z to: weight.
+                  emptyX: x + 1 y: y     z: z to: weight.
+                  emptyX: x     y: y - 1 z: z to: weight.
+                  emptyX: x - 1 y: y     z: z to: weight ]
+      ] ] ] ]
+    )
+
+    public pointX: x y: y z: z = (
+      ^ (((grid at: x) at: y) at: z) routeId
+    )
+
+    public pointX: x y: y z: z val: val = (
+      (((grid at: x) at: y) at: z) routeId: val
+    )
+
+    private instantiateGrid = (
+      ^ Array new: width withAll: [
+        Array new: height withAll: [
+          Array new: depth withAll: [ GridCell new: EMPTY ] ] ]
+    )
+  )
+
+  class LeeRouter new: data gridSize: size = (
+  | public gridSize  = size.
+    private grid     = Grid width: size height: size depth: 2.
+
+    private netNo      ::= 0.
+    private failures   ::= 0.
+    private numVias    ::= 0.
+    private forcedVias ::= 0.
+
+    private inputLine ::= nil.
+    private linePos   ::= 1.
+
+    private work      = WorkQueue new.
+  |
+    parseData: data.
+    grid addWeights.
+    work sort.
+  )(
+    private parseData: data = (
+      data do: [:line |
+        | c |
+        inputLine := line.
+        linePos   := 1.
+
+        c := readChar.
+        c = 'E' ifTrue: [ ^ self ].  (* end of file *)
+
+        c = 'C' ifTrue: [ (* chip bounding box *)
+          | x0 y0 x1 y1 |
+          x0 := readInt + 1.
+          y0 := readInt + 1.
+          x1 := readInt + 1.
+          y1 := readInt + 1.
+
+          (x0 < gridSize and: [ y0 < gridSize and: [ x1 < gridSize and: [ y1 < gridSize ]]]) ifTrue: [
+            grid occupyLoX: x0 loY: y0 upX: x1 upY: y1 ] ].
+
+        c = 'P' ifTrue: [ (* pad *)
+          | x0 y0 |
+          x0 := readInt + 1.
+          y0 := readInt + 1.
+          (x0 < gridSize and: [ y0 < gridSize ]) ifTrue: [
+            grid occupyLoX: x0 loY: y0 upX: x0 upY: y0 ] ].
+
+        c = 'J' ifTrue: [ (* join connection points *)
+          | x0 y0 x1 y1 |
+          x0 := readInt + 1.
+          y0 := readInt + 1.
+          x1 := readInt + 1.
+          y1 := readInt + 1.
+          (x0 < gridSize and: [ y0 < gridSize and: [ x1 < gridSize and: [ y1 < gridSize ]]]) ifTrue: [
+            netNo := netNo + 1.
+            work next: (work enqueueX1: x0 y1: y0 x2: x1 y2: y1 n: netNo) ] ].
+      ]
+    )
+
+    public nextTrack = (
+      work next notNil ifTrue: [
+        ^ work dequeue ].
+      ^ nil
+    )
+
+    public layNextTrack: q with: tempg = (
+      ^ connectXs: q x1 ys: q y1 xg: q x2 yg: q y2 netNo: q nn tempg: tempg
+    )
+
+    private readChar = (
+      | c |
+      [ ((inputLine charAt: linePos) = ' ') and: [
+        (inputLine charAt: linePos) = '\t' ] ] whileTrue: [
+        linePos := linePos + 1 ].
+
+      c := inputLine charAt: linePos.
+
+      linePos <= inputLine length ifTrue: [
+        linePos := linePos + 1 ].
+      ^ c
+    )
+
+    private readInt = (
+      | fpos |
+      [ (inputLine charAt: linePos) = ' ' or: [
+        (inputLine charAt: linePos) = '\t' ] ] whileTrue: [
+        linePos := linePos + 1 ].
+      fpos := linePos.
+
+      [ linePos <= inputLine length and: [
+        (inputLine charAt: linePos) <> ' ' and: [
+        (inputLine charAt: linePos) <> '\t' ] ] ] whileTrue: [
+        linePos := linePos + 1 ].
+      ^ (inputLine substringFrom: fpos to: linePos - 1) asInteger
+    )
+
+    public okX: x y: y = (
+      (* check that point is actually within the bounds of grid array *)
+      ^ x > 1 and: [ x < gridSize and: [ y > 1 and: [ y < gridSize ] ] ]
+    )
+
+    public expandFromX: x y: y toX: xGoal y: yGoal num: num tempg: tempg = (
+      (* this method should use Lee's expansion algorithm from
+        coordinate (x,y) to (xGoal, yGoal) for the num iterations
+        it should return true if the goal is found and false if it is not
+        reached within the number of iterations allowed. *)
+      | front tmpFront extraIterations reached0 reached1 tf |
+      front    := Vector new.
+      tmpFront := Vector new.
+      ((tempg at: x) at: y) at: 1 put: 1. (* set grid (x,y) as 1 *)
+      ((tempg at: x) at: y) at: 2 put: 1. (* set grid (x,y) as 1 *)
+
+      front append: (Frontier x: x y: y z: 1 dw: 0).
+      front append: (Frontier x: x y: y z: 2 dw: 0). (* we can start from either side *)
+
+      extraIterations := 50.
+      reached0 := false.
+      reached1 := false.
+
+      [ front isEmpty ] whileFalse: [
+        [ front isEmpty ] whileFalse: [
+          | weight prevVal f |
+          f := front first.
+          front removeFirst.
+          f dw > 0 ifTrue: [
+            tmpFront append: (Frontier x: f x y: f y z: f z dw: f dw - 1)
+          ] ifFalse: [
+            | reached |
+            expandTo: xGoal and: yGoal on: tempg and: tmpFront for: f to:  0 and:  1. (* looking north *)
+            expandTo: xGoal and: yGoal on: tempg and: tmpFront for: f to:  1 and:  0. (* looking easy  *)
+            expandTo: xGoal and: yGoal on: tempg and: tmpFront for: f to:  0 and: -1. (* looking south *)
+            expandTo: xGoal and: yGoal on: tempg and: tmpFront for: f to: -1 and:  0. (* looking west  *)
+
+            f z = 1
+              ifTrue:  [ expandOnZ: tempg with: tmpFront and: f to: 2 and: 1 ]
+              ifFalse: [ expandOnZ: tempg with: tmpFront and: f to: 1 and: 2 ].
+
+            (* must check if found goal, if so return true *)
+            reached0 := (((tempg at: xGoal) at: yGoal) at: 1) ~= TEMP_EMPTY.
+            reached1 := (((tempg at: xGoal) at: yGoal) at: 2) ~= TEMP_EMPTY.
+            ((reached0 and: [reached1 not]) or: [reached0 not and: reached1]) ifTrue: [
+              extraIterations := 100 ].
+
+            ((extraIterations = 0 and: [reached0 or: reached1]) or: [
+              reached0 and: reached1])
+                ifTrue: [
+                  (* if (xGoal, yGoal) can be found in time *)
+                  ^ true ]
+                ifFalse: [
+                  extraIterations := extraIterations - 1 ] ] ].
+
+        tf       := front.
+        front    := tmpFront.
+        tmpFront := tf ].
+      ^ false
+    )
+
+    private expandOnZ: tempg with: tmpFront and: f to: z1 and: z2 = (
+      | weight |
+      weight := (grid pointX: f x y: f y z: z1) + 1.
+      ((((tempg at: f x) at: f y) at: z1) >
+      (((tempg at: f x) at: f y) at: z2) and: [ weight < OCC ]) ifTrue: [
+        ((tempg at: f x) at: f y) at: z1 put: (((tempg at: f x) at: f y) at: z2).
+        tmpFront append: (Frontier x: f x y: f y z: z1 dw: 0) ]
+    )
+
+    private expandTo: xGoal and: yGoal on: tempg and: tmpFront for: f to: dirX and: dirY = (
+      | weight prevVal reached |
+      weight  := (grid pointX: f x + dirX y: f y + dirY z: f z) + 1.
+      prevVal := ((tempg at: f x + dirX) at: f y + dirY) at: f z.
+      reached := (f x + dirX) = xGoal and: [ (f y + dirY) = yGoal ].
+
+      (((prevVal > ((((tempg at: f x) at: f y) at: f z) + weight)) and: [
+        weight < OCC]) or: reached) ifTrue: [
+        (okX: f x + dirX y: f y + dirY) ifTrue: [
+          ((tempg at: f x + dirX) at: f y + dirY) at: f z put: (((tempg at: f x) at: f y) at: f z) + weight.
+          reached ifFalse: [
+            tmpFront append: (Frontier x: f x + dirX y: f y + dirY z: f z dw: 0) ] ] ].
+    )
+
+    private pathFromOtherSide: g x: x y: y z: z = (
+      | ok  zo sqval |
+      zo := 3 - z. (* other side *)
+      sqval := ((g at: x) at: y) at: zo.
+
+      (sqval = VIA or: [sqval = BVIA])
+        ifTrue: [ ^ false ].
+
+      ok := (((g at: x) at: y) at: zo) <= (((g at: x) at: y) at: z).
+      ok ifTrue: [
+        ok := (((g at: x - 1) at: y) at: zo) < sqval or: [
+              (((g at: x + 1) at: y) at: zo) < sqval or: [
+              (((g at: x) at: y - 1) at: zo) < sqval or: [
+              (((g at: x) at: y + 1) at: zo) < sqval ] ] ]
+      ].
+      ^ ok.
+    )
+
+    private tlengthX1: x1 y1: y1 x2: x2 y2: y2 = (
+      | sq |
+      sq := (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1).
+      ^ sq sqrt asInteger
+    )
+
+    private deviationX1: x1 y1: y1 x2: x2 y2: y2 = (
+      | xdiff ydiff |
+      xdiff := x2 - x1.
+      ydiff := y2 - y1.
+
+      xdiff < 0 ifTrue: [ xdiff := 0 - xdiff ].
+      ydiff < 0 ifTrue: [ ydiff := 0 - ydiff ].
+
+      xdiff < ydiff
+        ifTrue:  [ ^ xdiff ]
+        ifFalse: [ ^ ydiff ]
+    )
+
+    public backtrackFromX: xGoal y: yGoal x: xStart y: yStart no: trackNo tempg: tempg = (
+      (* this method should backtrack from the goal position (xGoal, yGoal)
+        back to the starting position (xStart, yStart) filling in the
+        grid array g with the specified track number trackNo (+ TRACK).
+
+        ***
+        CurrentPos = Goal
+        Loop
+        Find dir to start back from current position
+        Loop
+        Keep going in current dir and Fill in track (update currentPos)
+        Until box number increases in this current dir
+        Until back at starting point
+        *** *)
+      | zGoal distsofar tempX tempY tempZ lastdir |
+      distsofar := 0.
+      (xGoal - xStart) abs > (yGoal - yStart) abs
+        ifTrue: [ zGoal := 1 ] ifFalse: [ zGoal := 2 ].
+
+      (((tempg at: xGoal) at: yGoal) at: zGoal) = TEMP_EMPTY ifTrue: [
+        zGoal := 3 - zGoal (* the other side *) ].
+
+      tempY := yGoal.
+      tempX := xGoal.
+      tempZ := zGoal.
+      lastdir := -10.
+
+      [tempX ~= xStart or: [tempY ~= yStart]] whileTrue: [ (* PDL: until back *)
+        | advanced mind dir minSquare |
+        (* at starting point *)
+        advanced := false.
+        mind := 1.
+        dir  := 0.
+        minSquare := 100000.
+
+        (* PDL: Find dir to start back from *)
+        1 to: 4 do: [:d |
+          | p |
+          (* current position *)
+          p := ((tempg at: tempX + ((dx at: tempZ) at: d))
+                  at: tempY + ((dy at: tempZ) at: d)) at: tempZ.
+          (p < (((tempg at: tempX) at: tempY) at: tempZ) and: [ p ~= TEMP_EMPTY ])
+            ifTrue: [
+
+            p < minSquare ifTrue: [
+              minSquare := p.
+              mind := d.
+              dir := ((dx at: tempZ) at: d) * 2 + ((dy at: tempZ) at: d). (* hashed dir *)
+              lastdir < -2 ifTrue: [
+                lastdir := dir ].
+              advanced := true
+            ] ] ].
+
+        advanced ifTrue: [ distsofar := distsofar + 1 ].
+
+        ((pathFromOtherSide: tempg x: tempX y: tempY z: tempZ) and: [
+          (mind > 1 and: [ (* not preferred dir for this layer *)
+          distsofar > 15 and: [
+          (tlengthX1: tempX y1: tempY x2: xStart y2: yStart) > 15 ]]) or: [
+            advanced not and: [
+            (grid pointX: tempX y: tempY z: tempZ) ~= VIA and: [
+            (grid pointX: tempX y: tempY z: tempZ) ~= BVIA ]]]]) ifTrue: [
+          | tZ viat |
+          tZ := 3 - tempZ. (* 1 if 2, 2 if 1 *)
+          advanced
+            ifTrue:  [ viat := VIA ]
+            ifFalse: [ viat := BVIA ]. (* BVIA is nowhere else to go *)
+
+          (* mark via *)
+          ((tempg at: tempX) at: tempY) at: tempZ put: viat.
+          grid pointX: tempX y: tempY z: tempZ val: viat.
+
+          tempZ := tZ.
+          (* and the other side *)
+          ((tempg at: tempX) at: tempY) at: tempZ put: viat.
+          grid pointX: tempX y: tempY z: tempZ val: viat.
+
+          numVias := numVias + 1.
+          advanced ifFalse: [ forcedVias := forcedVias + 1 ].
+          distsofar := 0
+        ] ifFalse: [
+          (grid pointX: tempX y: tempY z: tempZ) < OCC ifTrue: [
+            (* PDL: fill in track unless connection point *)
+            grid pointX: tempX y: tempY z: tempZ val: TRACK ].
+
+          (* PDL: updating current position on x axis *)
+          tempX := tempX + ((dx at: tempZ) at: mind).
+          (* PDL: updating current position on y axis *)
+          tempY := tempY + ((dy at: tempZ) at: mind)
+        ].
+        lastdir := dir
+      ]
+    )
+
+    public connectXs: xs ys: ys xg: xg yg: yg netNo: netNo tempg: tempg = (
+      | found |
+      (* calls expandFrom and backtrackFrom to create connection
+        This is the only real change needed to make the program
+        transactional. Instead of using the grid 'in place' to do the expansion,
+        we take a copy but the backtrack writes to the original grid.
+        This is not a correctness issue. The transactions would still complete
+        eventually without it. However the expansion writes are only temporary
+        and do not logically conflict. There is a question as to whether a copy
+        is really necessary as a transaction will anyway create its own copy.
+        if we were then to distinguish between writes not to be committed
+        (expansion) and those to be committed (backtrack), we would not need an
+        explicit copy. Taking the copy is not really a computational(time)
+        overhead because it avoids the grid 'reset' phase needed if we do the
+        expansion in place. *)
+      tempg do: [:x | x do: [:y | y putAll: TEMP_EMPTY ] ].
+
+      (* call the expansion method to return found/not found boolean *)
+      found := expandFromX: xs y: ys toX: xg y: yg num: gridSize * 5 tempg: tempg.
+      found
+        ifTrue: [
+          backtrackFromX: xg y: yg x: xs y: ys no: netNo tempg: tempg ]
+        ifFalse: [
+          failures := failures + 1 ].
+      ^ found
+    )
+
+    public report = (
+      ('Total Tracks ' + netNo + ' Failures ' + failures + ' Vias ' + numVias +
+      ' Forced Vias ' + forcedVias) println.
+    )
+
+    public sanityCheck: totalLaidTracks in: fileId = (
+      (fileId = 1 and: [gridSize = 100]) ifTrue: [ ^ totalLaidTracks =    2 ].
+      (fileId = 1 and: [gridSize = 200]) ifTrue: [ ^ totalLaidTracks =  164 ].
+      (fileId = 1 and: [gridSize = 300]) ifTrue: [ ^ totalLaidTracks =  394 ].
+      (fileId = 1 and: [gridSize = 600]) ifTrue: [ ^ totalLaidTracks = 1506 ].
+      (fileId = 2 and: [gridSize = 100]) ifTrue: [ ^ totalLaidTracks =   12 ].
+      (fileId = 2 and: [gridSize = 200]) ifTrue: [ ^ totalLaidTracks =   78 ].
+      (fileId = 2 and: [gridSize = 600]) ifTrue: [ ^ totalLaidTracks = 3101 ].
+      (fileId = 3 and: [gridSize = 600]) ifTrue: [ ^ totalLaidTracks =   29 ].
+      (fileId = 4 and: [gridSize = 100]) ifTrue: [ ^ totalLaidTracks =   20 ].
+      (fileId = 4 and: [gridSize = 200]) ifTrue: [ ^ totalLaidTracks =   90 ].
+      (fileId = 4 and: [gridSize = 300]) ifTrue: [ ^ totalLaidTracks =  210 ].
+      (fileId = 4 and: [gridSize = 500]) ifTrue: [ ^ totalLaidTracks =  600 ].
+      (fileId = 4 and: [gridSize = 600]) ifTrue: [ ^ totalLaidTracks =  841 ].
+      fileId = 5 ifTrue: [ ^ totalLaidTracks =    6 ].
+
+      report.
+      ('No know result for fileId ' + fileId + ' totalLaidTracks: ' + totalLaidTracks) println.
+      ^ false
+    )
+  )
+
+  class LeeThread new: lt = (
+  | public  myLaidTracks ::= 0.
+    private lt = lt.
+    private tempg = instantiateGrid.
+  |)(
+    private instantiateGrid = (
+      ^ Array new: lt gridSize withAll: [
+        Array new: lt gridSize withAll: [
+          Array new: 2 withAll: [ GridCell new: EMPTY ] ] ]
+    )
+
+    public run = (
+      | finished |
+      finished := false.
+      [ finished ] whileFalse: [
+        | t |
+        t := lt nextTrack.
+        t isNil
+          ifTrue: [ finished := true ]
+          ifFalse: [
+            lt layNextTrack: t with: tempg.
+            updateStatistics ] ]
+    )
+
+    public updateStatistics = ( myLaidTracks := myLaidTracks + 1 )
+    public reset            = ( myLaidTracks := 0 )
+  )
+
+  private newDx = (
+    | arr1 arr2 |
+    arr1 := Array new: 4.
+    arr1 at: 1 put: -1.
+    arr1 at: 2 put:  1.
+    arr1 at: 3 put:  0.
+    arr1 at: 4 put:  0.
+
+    arr2 := Array new: 4.
+    arr2 at: 1 put:  0.
+    arr2 at: 2 put:  0.
+    arr2 at: 3 put: -1.
+    arr2 at: 4 put:  1.
+    ^ Array with: arr1 with: arr2
+  )
+
+  private newDy = (
+    | arr1 arr2 |
+    arr1 := Array new: 4.
+    arr1 at: 1 put:  0.
+    arr1 at: 2 put:  0.
+    arr1 at: 3 put: -1.
+    arr1 at: 4 put:  1.
+
+    arr2 := Array new: 4.
+    arr2 at: 1 put: -1.
+    arr2 at: 2 put:  1.
+    arr2 at: 3 put:  0.
+    arr2 at: 4 put:  0.
+    ^ Array with: arr1 with: arr2
+  )
+
+  public newInstance = ( ^ Lee new )
+  public setupVerifiedRun: run = ( run innerIterations: 5 numThreads: 1 )
+)

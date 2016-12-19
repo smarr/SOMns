@@ -1,0 +1,696 @@
+(* *)
+class VacationSuite usingPlatform: platform andHarness: harness = (
+| private Benchmark = harness Benchmark.
+  private Random    = harness Random.
+  private Array     = platform kernel Array.
+  private Vector    = platform kernel Vector.
+  private RedBlackTree = (platform system loadModule: 'RedBlackTree.som' nextTo: self) new RedBlackTree.
+
+  private ActionMakeReservation    = 0.
+  private ActionDeleteCustomer     = 1.
+  private ActionUpdateTables       = 2.
+  private ParamDefaultClients      = 10. (* number of clients *)
+  private ParamDefaultNumber       = 10. (* number of user queries/transaction *)
+  private ParamDefaultQueries      = 90. (* percentage of relations queried *)
+  private ParamDefaultRelations    = 1.  (* number of possible relations. Usually in the order of 1<<16. *)
+  private ParamDefaultTransactions = 1.  (* number of transactions. Usually in the order of 1<<16. *)
+  private ParamDefaultUser         = 80. (* percentage of user transactions *)
+  private ReservationCar           = 1.
+  private ReservationFlight        = 2.
+  private ReservationRoom          = 3.
+  private NumReservationType       = 3.
+|) (
+  private class Vacation = Benchmark ()(
+    public innerBenchmarkLoop: problemSize = (
+      | manager clients |
+      manager := initializeManager: problemSize.
+      clients := initializeClients: manager for: 1 and: problemSize.
+
+      (clients at: 1) run.
+
+      ^ checkTables: manager problemSize: problemSize
+    )
+
+    private initializeManager: problemSize = (
+      | random manager numRelations ids i |
+      random  := Random new.
+      manager := Manager new.
+
+      numRelations := ParamDefaultRelations << problemSize.
+
+      i := 0.
+      ids := Array new: numRelations withAll: [
+        i := i + 1.
+        i
+      ].
+
+      1 to: 4 do: [:t |
+        (* Shuffle ids *)
+        1 to: numRelations / 2 do: [:i |
+          | x y tmp |
+          x := random next % numRelations + 1.
+          y := random next % numRelations + 1.
+          tmp := ids at: x.
+          ids at: x put: (ids at: y).
+          ids at: y put: tmp ].
+
+        (* Populate table *)
+        1 to: numRelations do: [:i |
+          | id num price |
+          id := ids at: i.
+          num := random next % 5 + 1 * 100.
+          price := random next % 5 * 10 + 50.
+          t = ReservationCar ifTrue: [
+            manager addCar: id num: num price: price
+          ] ifFalse: [
+            t = ReservationFlight ifTrue: [
+              manager addFlight: id num: num price: price
+            ] ifFalse: [
+              t = ReservationRoom ifTrue: [
+                manager addRoom: id num: num price: price
+              ] ifFalse: [
+                manager addCustomer: id ] ] ] ] ].
+      ^ manager
+    )
+
+    private initializeClients: manager for: numClients and: problemSize = (
+      | numTransaction numRelation percentQuery clients numTransactionPerClient
+        queryRange i |
+      numTransaction := ParamDefaultTransactions << problemSize.
+      numRelation    := ParamDefaultRelations << problemSize.
+      percentQuery   := ParamDefaultQueries.
+
+      numTransactionPerClient := (numTransaction // numClients + 0.5) asInteger.
+      queryRange := (percentQuery // 100.0 * numRelation + 0.5) asInteger.
+
+      i := 0.
+      clients := Array new: numClients withAll: [
+        Client id: i mng: manager ops: numTransactionPerClient
+               queries: ParamDefaultNumber range: queryRange
+               percent: ParamDefaultUser ].
+
+      ^ clients
+    )
+
+    private checkTables: manager problemSize: problemSize = (
+      | numRelation customers tables percentQuery queryRange maxCustomerId |
+      numRelation := ParamDefaultRelations << problemSize.
+      customers   := manager customers.
+
+      tables := Array with: manager cars with: manager flights with: manager rooms.
+
+      (* Check for unique customer IDs *)
+      percentQuery  := ParamDefaultQueries.
+      queryRange    := (percentQuery // 100.0 * numRelation + 0.5) asInteger.
+      maxCustomerId := queryRange + 1.
+      1 to: maxCustomerId do: [:i |
+        (customers at: i) ~= nil ifTrue: [
+          (customers remove: i) == nil ifTrue: [
+            ^ false ] ] ].
+
+      (* Check reservation tables for consistency and unique ids *)
+      1 to: tables size do: [:t |
+        | table |
+        table := tables at: t.
+        1 to: numRelation do: [:i |
+          (table at: i) ~= nil ifTrue: [
+            t = ReservationCar ifTrue: [
+              (manager addCar: i num: 0 price: 0) ifFalse: [ ^ false ]
+            ] ifFalse: [
+              t = ReservationFlight ifTrue: [
+                (manager addFlight: i num: 0 price: 0) ifFalse: [ ^ false ]
+              ] ifFalse: [
+                t = ReservationRoom ifTrue: [
+                  (manager addRoom: i num: 0 price: 0) ifFalse: [ ^ false ]
+            ] ] ].
+
+            (table remove: i) == nil ifTrue: [ ^ false ] ] ] ].
+      ^ true
+    )
+  )
+
+  private class Manager = (
+  | public cars      = RedBlackTree new.
+    public rooms     = RedBlackTree new.
+    public flights   = RedBlackTree new.
+    public customers = RedBlackTree new.
+  |)(
+
+    (* If 'num' > 0 then add, if < 0 remove.
+       Adding 0 seats is error if does not exist.
+       If 'price' < 0, do not update price. *)
+    private addReservation: reservations id: id num: num price: price = (
+      | reservation |
+      reservation := reservations at: id.
+      reservation == nil
+        ifTrue: [
+          (* Create new reservation *)
+          (num < 1 and: [ price < 0 ]) ifTrue: [ ^ false ].
+          reservation := Reservation new: id num: num price: price.
+          reservations at: id put: reservation ]
+        ifFalse: [
+          (* Update existing reservation *)
+          (reservation addToTotal: num) ifFalse: [
+            ^ false ].
+          reservation getNumTotal = 0
+            ifTrue:  [ reservations remove: id ]
+            ifFalse: [ reservation updatePrice: price ] ].
+
+      ^ true
+    )
+
+    (* Add cars to a city.
+       Adding to an existing car overwrite the price if 'price' >= 0. *)
+    public addCar: carId num: numCars price: price = (
+      ^ addReservation: cars id: carId num: numCars price: price
+    )
+
+    (* Delete cars from a city.
+       Decreases available car count (those not allocated to a customer).
+       Fails if would make available car count negative.
+       If decreased to 0, deletes entire entry. *)
+    public deleteCar: carId num: numCar = (
+      (* -1 keeps old price *)
+      ^ addReservation: cars id: carId num: 0 - numCar price: -1.
+    )
+
+    (* Add rooms to a city.
+       Adding to an existing room overwrite the price if 'price' >= 0. *)
+    public addRoom: roomId num: numRoom price: price = (
+      ^ addReservation: rooms id: roomId num: numRoom price: price
+    )
+
+    (* Delete rooms from a city.
+       Decreases available room count (those not allocated to a customer).
+       Fails if would make available room count negative.
+       If decreased to 0, deletes entire entry. *)
+    public deleteRoom: roomId num: numRoom = (
+      (* -1 keeps old price *)
+      ^ addReservation: rooms id: roomId num: 0 - numRoom price: -1
+    )
+
+    (* Add seats to a flight.
+       Adding to an existing flight overwrite the price if 'price' >= 0 *)
+    public addFlight: flightId num: numSeat price: price = (
+      ^ addReservation: flights id: flightId num: numSeat price: price
+    )
+
+    (* Delete an entire flight.
+       Fails if customer has reservation on this flight. *)
+    public deleteFlight: flightId = (
+      | reservation |
+      reservation := flights at: flightId.
+
+      reservation == nil ifTrue: [ ^ false ].
+
+      (reservation getNumUsed > 0) ifTrue: [
+        (* somebody has a reservation *)
+        ^ false ].
+
+      (* -1 keeps old price *)
+      ^ addReservation: flights id: flightId num: 0 - reservation getNumTotal price: -1
+    )
+
+    (* If customer already exists, returns failure. *)
+    public addCustomer: customerId = (
+      | customer |
+      (customers contains: customerId)
+        ifTrue: [ ^ false ].
+
+      customer := Customer new: customerId.
+      customers at: customerId put: customer.
+
+      ^ true
+    )
+
+    (* Delete this customer and associated reservations.
+       If customer does not exist, returns success. *)
+    public deleteCustomer: customerId = (
+      | customer reservations reservationList it |
+      customer := customers at: customerId.
+
+      customer == nil ifTrue: [ ^ false ].
+
+      reservations := Array with: cars with: rooms with: flights.
+
+      (* Cancel this customer's reservations *)
+      reservationList := customer reservations.
+      it := reservationList head.
+      [ it next == nil ] whileFalse: [
+        | reservation table resrv |
+        it := it next.
+        reservation := it data.
+        table := reservations at: reservation type.
+        resrv := table at: reservation id.
+        resrv cancel ].
+
+      customers remove: customerId.
+      ^ true
+    )
+
+    (* returns numFree of a reservation, -1 if failure *)
+    public queryNumFree: table id: id = (
+      | numFree reservation |
+      numFree := -1.
+
+      reservation := table at: id.
+
+      reservation ~= nil ifTrue: [
+        numFree := reservation getNumFree ].
+
+      ^ numFree
+    )
+
+    (* returns price of a reservation, -1 if failure *)
+    public queryPrice: table id: id = (
+      | price reservation |
+      price := -1.
+      reservation := table at: id.
+
+      reservation ~= nil ifTrue: [
+        price := reservation getPrice ].
+
+      ^ price
+    )
+
+    (* returns the number of empty seats on a car,
+       returns -1 if the car does not exist *)
+    public queryCar: carId = (
+      ^ queryNumFree: cars id: carId
+    )
+
+    (* return the price of the car, returns -1 if the car does not exist *)
+    public queryCarPrice: carId = (
+      ^ queryPrice: cars id: carId
+    )
+
+    (* return the number of empty seats on a room,
+       returns -1 if the room does not exist *)
+    public queryRoom: roomId = (
+      ^ queryNumFree: rooms id: roomId
+    )
+
+    (* return the price of the room, returns -1 if the room does not exist *)
+    public queryRoomPrice: roomId = (
+      ^ queryPrice: rooms id: roomId
+    )
+
+    (* return the number of empty seats on a flight,
+       returns -1 if the flight does not exist *)
+    public queryFlight: flightId = (
+      ^ queryNumFree: flights id: flightId
+    )
+
+    (* return the price of the flight, returns -1 if the flight does not exist *)
+    public queryFlightPrice: flightId = (
+      ^ queryPrice: flights id: flightId
+    )
+
+    (* return the total price of all reservations held for a customer,
+       returns -1 if the customer does not exist *)
+    public queryCustomerBill: customerId = (
+      | bill customer |
+      bill := -1.
+      customer := customers at: customerId.
+
+      customer ~= nil ifTrue: [
+        bill := customer bill ].
+
+      ^ bill
+    )
+
+    (* Customer is not allowed to reserve same (type, id) multiple times. *)
+    public reserve: table csts: customers cId: customerId id: id type: type = (
+      | customer reservation |
+      customer := customers at: customerId.
+
+      customer == nil ifTrue: [ ^ false ].
+
+      reservation := table at: id.
+
+      reservation == nil ifTrue: [
+        ^ false ].
+
+      reservation makeReservation ifFalse: [
+        ^ false ].
+
+      (customer addReservationInfo: type id: id price: reservation getPrice) ifFalse: [
+        (* Undo previous successful reservation *)
+        reservation cancel.
+        ^ false ].
+
+      ^ true
+    )
+
+    (* returns failure if the car or customer does not exist *)
+    public reserveCar: customerId id: carId = (
+      ^ reserve: cars csts: customers cId: customerId
+             id: carId type: ReservationCar
+    )
+
+    (* returns failure if the car or customer does not exist *)
+    public reserveRoom: customerId id: roomId = (
+      ^ reserve: rooms csts: customers cId: customerId
+             id: roomId type: ReservationRoom
+    )
+
+    (* returns failure if the car or customer does not exist *)
+    public reserveFlight: customerId id: flightId = (
+      ^ reserve: flights csts: customers cId: customerId
+             id: flightId type: ReservationFlight
+    )
+  )
+
+  private class Client id: id mng: manager ops: numOperation
+          queries: numQueryPerTransaction range: queryRange percent: percentUser = (
+  | private id = id.
+    private manager = manager.
+    private random = Random new: id.
+    private numOperation = numOperation.
+    private numQueryPerTransaction = numQueryPerTransaction.
+    private queryRange = queryRange.
+    private percentUser = percentUser.
+  |)(
+    public selectAction: r with: percentUser = (
+      r < percentUser ifTrue: [ ^ ActionMakeReservation ].
+      r & 1 = 1       ifTrue: [ ^ ActionDeleteCustomer ].
+      ^ ActionUpdateTables
+    )
+
+    public run = (
+      | manager random numOperation numQueryPerTransaction queryRange
+        percentUser types ids ops prices |
+      manager := self manager.
+      random  := self random.
+
+      numOperation           := self numOperation.
+      numQueryPerTransaction := self numQueryPerTransaction.
+      queryRange             := self queryRange.
+      percentUser            := self percentUser.
+
+      types  := Array new: numQueryPerTransaction withAll: 0.
+      ids    := Array new: numQueryPerTransaction withAll: 0.
+      ops    := Array new: numQueryPerTransaction withAll: 0.
+      prices := Array new: numQueryPerTransaction withAll: 0.
+
+      1 to: numOperation do: [:i |
+        | r action numQuery customerId |
+        r := random next % 100.
+        action := selectAction: r with: percentUser.
+
+        action = ActionMakeReservation ifTrue: [
+          | maxPrices maxIds |
+          maxPrices := Array new: NumReservationType withAll: -1.
+          maxIds    := Array new: NumReservationType withAll: -1.
+
+          numQuery   := random next % numQueryPerTransaction + 1.
+          customerId := random next % queryRange + 1.
+
+          1 to: numQuery do: [:n |
+            types at: n put: random next % NumReservationType + 1.
+            ids at: n put:   random next % queryRange + 1 ].
+
+          atomicMethodOne: manager types: types ids: ids maxPrices: maxPrices
+                   maxIds: maxIds queries: numQuery customer: customerId isFound: false
+        ] ifFalse: [
+          action = ActionDeleteCustomer ifTrue: [
+            | customerId |
+            customerId := random next % queryRange + 1.
+            atomicMethodTwo: manager customer: customerId
+          ] ifFalse: [
+            action = ActionUpdateTables ifTrue: [
+              | numUpdate |
+              numUpdate := random next % numQueryPerTransaction + 1.
+              1 to: numUpdate do: [:n |
+                types at: n put: random next % NumReservationType + 1.
+                ids at: n put: random next % queryRange + 1.
+                ops at: n put: random next % 2.
+                (ops at: n) = 1 ifTrue: [
+                  prices at: n put: random next % 5 * 10 + 50 ] ].
+              atomicMethodThree: manager types: types ids: ids ops: ops
+                         prices: prices updates: numUpdate ] ] ].
+      ]
+    )
+
+    private atomicMethodThree: manager types: types ids: ids ops: ops
+                       prices: prices updates: numUpdates = (
+      1 to: numUpdates do: [:n |
+        | t id doAdd |
+        t     := types at: n.
+        id    := ids at: n.
+        doAdd := ops at: n.
+        doAdd = 1
+          ifTrue: [
+            | newPrice |
+            newPrice := prices at: n.
+            t = ReservationCar ifTrue: [
+              manager addCar: id num: 100 price: newPrice
+            ] ifFalse: [
+              t = ReservationFlight ifTrue: [
+                manager addFlight: id num: 100 price: newPrice
+              ] ifFalse: [
+                t = ReservationRoom ifTrue: [
+                  manager addRoom: id num: 100 price: newPrice ] ] ] ]
+          ifFalse: [ (* do delete *)
+            t = ReservationCar ifTrue: [
+              manager deleteCar: id num: 100
+            ] ifFalse: [
+              t = ReservationFlight ifTrue: [
+                manager deleteFlight: id
+              ] ifFalse: [
+                t = ReservationRoom ifTrue: [
+                  manager deleteRoom: id num: 100 ] ] ] ] ]
+    )
+
+    private atomicMethodTwo: manager customer: customerId = (
+      | bill |
+      bill := manager queryCustomerBill: customerId.
+      bill >= 0 ifTrue: [
+        manager deleteCustomer: customerId ]
+    )
+
+    private atomicMethodOne: manager types: types ids: ids maxPrices: maxPrices
+                     maxIds: maxIds queries: numQuery customer: customerId
+                    isFound: wasFound = (
+      | isFound |
+      isFound := wasFound.
+      1 to: numQuery do: [:n |
+        | t id price |
+        t     := types at: n.
+        id    := ids at: n.
+        price := -1.
+        t = ReservationCar ifTrue: [
+          (manager queryCar: id) >= 0 ifTrue: [
+            price := manager queryCarPrice: id ]
+        ] ifFalse: [
+          t = ReservationFlight ifTrue: [
+            (manager queryFlight: id) >= 0 ifTrue: [
+              price := manager queryFlightPrice: id ]
+          ] ifFalse: [
+            t = ReservationRoom ifTrue: [
+              (manager queryRoom: id) >= 0 ifTrue: [
+                price := manager queryRoomPrice: id ] ] ] ].
+
+        price > (maxPrices at: t) ifTrue: [
+          maxPrices at: t put: price.
+          maxIds at: t put: id.
+          isFound := true ] ].
+
+      isFound ifTrue: [
+        manager addCustomer: customerId ].
+
+      (maxIds at: ReservationCar) > 0 ifTrue: [
+        manager reserveCar: customerId id: (maxIds at: ReservationCar) ].
+
+      (maxIds at: ReservationFlight) > 0 ifTrue: [
+        manager reserveFlight: customerId id: (maxIds at: ReservationFlight) ].
+
+      (maxIds at: ReservationRoom) > 0 ifTrue: [
+        manager reserveRoom: customerId id: (maxIds at: ReservationRoom) ]
+    )
+  )
+
+  private class Customer new: id = (
+  | private id = id.
+    public reservations = List new.
+  |)(
+    public addReservationInfo: type id: id price: price = (
+      | reservation |
+      reservation := ReservationInfo new: type id: id price: price.
+      ^ reservations insert: reservation
+    )
+
+    public removeReservationInfo: type id: id = (
+      | findReservationInfo reservation |
+      findReservationInfo := ReservationInfo new: type id: id price: 0.
+      reservation         := reservations find: findReservationInfo.
+
+      reservation == nil ifTrue: [ ^ false ].
+
+      reservations remove: findReservationInfo.
+      ^ true
+    )
+
+    public bill = (
+      | bill it |
+      bill := 0.
+
+      it := reservations head.
+      [ it next == nil ] whileFalse: [
+        | reservation |
+        it := it next.
+        reservation := it data.
+        bill := bill + reservation price ].
+      ^ bill
+    )
+  )
+
+  private class List = (
+  | public  head = ListNode new: nil.
+    private size ::= 0.
+  |)(
+    public isEmpty = (
+      ^ head next == nil
+    )
+
+    private findPrevious: data = (
+      | prev node |
+      prev := head.
+      node := prev next.
+
+      [ node == nil ] whileFalse: [
+        (ReservationInfo compare: node data with: data) >= 0 ifTrue: [
+          ^ prev
+        ].
+        prev := node.
+        node := node next
+      ].
+      ^ prev
+    )
+
+    public find: data = (
+      | prev node |
+      prev := findPrevious: data.
+      node := prev next.
+
+      (node == nil or: [ (ReservationInfo compare: node data with: data) <> 0 ]) ifTrue: [
+        ^ nil
+      ].
+
+      ^ node data
+    )
+
+    public insert: data = (
+      | prev node curr |
+      prev := findPrevious: data.
+      node := ListNode new: data.
+      curr := prev next.
+
+      node next: curr.
+      prev next: node.
+      size := size + 1.
+
+      ^ true
+    )
+
+    public remove: data = (
+      | prev node |
+      prev := findPrevious: data.
+      node := prev next.
+
+      (node ~= nil and: [ (ReservationInfo compare: node data with: data) = 0 ]) ifTrue: [
+        prev next: node next.
+        node next: nil.
+        node := nil.
+        size := size - 1.
+
+        ^ true
+      ].
+      ^ false
+    )
+  )
+
+  private class ListNode new: data = (
+  | public data = data.
+    public next ::= nil.
+  |)()
+
+  private class Reservation new: id num: numTotal price: price = (
+  | private id = id.
+    private numUsed ::= 0.
+    private numFree ::= numTotal.
+    private numTotal ::= numTotal.
+    private price    ::= price.
+  |
+    checkReservation.
+  )(
+    public getNumUsed  = ( ^ numUsed )
+    public getNumFree  = ( ^ numFree )
+    public getNumTotal = ( ^ numTotal )
+    public getPrice    = ( ^ price )
+
+    (* Check if consistent.
+       TODO: unclear how this works, is that an STM thing? *)
+    public checkReservation = (
+      | numUsed numFree numTotal price |
+      numUsed  := self numUsed.
+      numFree  := self numFree.
+      numTotal := self numTotal.
+      price    := self price.
+    )
+
+    (* Adds if 'num' > 0, removes if 'num' < 0 *)
+    public addToTotal: num = (
+      numFree + num < 0 ifTrue: [ ^ false ].
+
+      numFree  := numFree + num.
+      numTotal := numTotal + num.
+      checkReservation.
+      ^ true
+    )
+
+    public makeReservation = (
+      numFree < 1 ifTrue: [ ^ false ].
+
+      numUsed := numUsed + 1.
+      numFree := numFree - 1.
+      checkReservation.
+      ^ true
+    )
+
+    public cancel = (
+      numUsed < 1 ifTrue: [ ^ false ].
+      numUsed := numUsed + 1.
+      numFree := numFree - 1.
+      checkReservation.
+      ^ true
+    )
+
+    (* Failure if 'price' < 0 *)
+    public updatePrice: newPrice = (
+      newPrice < 0 ifTrue: [ ^ false ].
+
+      price := newPrice.
+      checkReservation.
+      ^ true
+    )
+  )
+
+  private class ReservationInfo new: type id: id price: price = (
+  | public id    = id.
+    public type  = type.
+    public price = price.
+  |)() : (
+    (* returns -1 if A < B, 0 if A = B, 1 if A > B *)
+    public compare: a with: b = (
+      | typeDiff |
+      typeDiff := a type - b type.
+      ^ typeDiff <> 0
+          ifTrue:  [ typeDiff ]
+          ifFalse: [ a id - b id ]
+    )
+  )
+
+  public newInstance = ( ^ Vacation new )
+  public setupVerifiedRun: run = ( run innerIterations: 1 numThreads: 1 )
+)

@@ -160,6 +160,7 @@ Method(Integer>>#as32BitUnsignedValue)	false	0
 Method(Integer>>#asString)	true	1
 Method(Integer>>#between:and:)	false	0
 Method(Integer>>#bitXor:)	false	0
+Method(Integer>>#compareTo:)	false	0
 Method(Integer>>#downTo:by:do:)	false	0
 Method(Integer>>#downTo:do:)	false	0
 Method(Integer>>#fromString:)	true	3
@@ -196,6 +197,7 @@ Method(Nil>>#ifNil:ifNotNil:)	false	0
 Method(Nil>>#ifNotNil:)	false	0
 Method(Nil>>#isNil)	false	0
 Method(Nil>>#notNil)	false	0
+Method(Nil>>#~=)	false	0
 Method(NotAValue>>#asString)	false	0
 Method(ObjectMirror>>#classMirror)	false	0
 Method(ObjectMirror>>#className)	false	0
@@ -226,6 +228,7 @@ Method(Promise>>#on:do:)	false	0
 Method(Promise>>#onError:)	false	0
 Method(Promise>>#whenResolved:)	false	0
 Method(Promise>>#whenResolved:onError:)	false	0
+Method(Random>>#new)	false	0
 Method(Random>>#next)	false	0
 Method(Resolver>>#error:)	false	0
 Method(Resolver>>#resolve:)	false	0

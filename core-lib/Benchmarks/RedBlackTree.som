@@ -161,7 +161,7 @@ class RedBlackTree = ()(
 
         z left notNil ifTrue: [
           z left parent: y ].
-        x right notNil ifTrue: [
+        z right notNil ifTrue: [
           z right parent: y ].
 
         z parent notNil
@@ -182,6 +182,10 @@ class RedBlackTree = ()(
       node := findNode: key.
       node isNil ifTrue: [ ^ nil ].
       ^ node value
+    )
+
+    public contains: key = (
+      ^ (findNode: key) notNil
     )
 
     public do: block = (
@@ -288,7 +292,7 @@ class RedBlackTree = ()(
       x := anX.
       xParent := anXParent.
 
-      x ~= root and: [ x isNil or: [ x color = #black ]] whileTrue: [
+      [x ~= root and: [ x isNil or: [ x color = #black ]]] whileTrue: [
         x == xParent left
           ifTrue: [
             | w |
@@ -346,7 +350,7 @@ class RedBlackTree = ()(
                 x := xParent.
                 xParent := x parent ]
               ifFalse: [
-                w left isNil or: [ w left color = #black ] ifTrue: [
+                (w left isNil or: [ w left color = #black ]) ifTrue: [
                   (* Case 3 *)
                   w right color: #black.
                   w color: #red.
@@ -361,7 +365,7 @@ class RedBlackTree = ()(
 
                 rightRotate: xParent.
                 x := root.
-                xParent = x parent ] ] ].
+                xParent := x parent ] ] ].
 
       x notNil ifTrue: [ x color: #black ]
     )

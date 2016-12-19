@@ -2,7 +2,7 @@ Source Section	New Objects	Number of Fields	Class
 Actors.som pos=1084 len=43	1	8	Actors
 Collections.som pos=1089 len=19	1	9	Collections
 Harness.som pos=1085 len=23	1	7	Harness
-Harness.som pos=3894 len=0	1	8	Run
+Harness.som pos=3926 len=0	1	8	Run
 Json.som pos=114 len=43	1	16	JsonSuite
 Json.som pos=463 len=0	2	0	Json
 Json.som pos=26831 len=12	1	8	JsonParser
@@ -12,7 +12,7 @@ Json.som pos=39617 len=8	3	4	JsonLiteral
 Json.som pos=40243 len=12	712	1	JsonNumber
 Json.som pos=40838 len=0	157	3	JsonObject
 Json.som pos=44420 len=8	1351	1	JsonString
-Kernel.som pos=20671 len=9	867	3	Vector
+Kernel.som pos=20839 len=9	867	3	Vector
 Mirrors.som pos=1080 len=23	1	6	Mirrors
 Platform.som pos=15 len=23	1	5	Platform
 System.som pos=1084 len=23	1	1	System

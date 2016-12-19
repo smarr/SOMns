@@ -5,10 +5,10 @@ Kernel.som pos=2346 len=9	read	Value class	6
 Kernel.som pos=2346 len=9	read	ALL	6
 Kernel.som pos=2720 len=8	read	VmMirror	4
 Kernel.som pos=2720 len=8	read	ALL	4
-Kernel.som pos=8777 len=8	read	VmMirror	2
-Kernel.som pos=8777 len=8	read	ALL	2
-Kernel.som pos=11351 len=8	read	VmMirror	3
-Kernel.som pos=11351 len=8	read	ALL	3
+Kernel.som pos=8945 len=8	read	VmMirror	2
+Kernel.som pos=8945 len=8	read	ALL	2
+Kernel.som pos=11519 len=8	read	VmMirror	3
+Kernel.som pos=11519 len=8	read	ALL	3
 List.som pos=1971 len=4	read	ListElement	16805
 List.som pos=1971 len=4	read	Nil	1244
 List.som pos=1971 len=4	read	ALL	18049
