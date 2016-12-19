@@ -147,7 +147,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
                                                        <: Depth z: z
                                                        <: Colored color: c
       (| public origin = 0. |
-        x := x. y := y.
+        x: x. y: y.
       )(
         public sum = ( ^ x + y + z + origin )
       )
@@ -161,7 +161,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
                                                        <: Depth
                                                        <: Colored color: c
       (| public origin = 0. |
-        z := z.
+        z: z.
       )(
         public sum = ( ^ x + y + z + origin )
       )
