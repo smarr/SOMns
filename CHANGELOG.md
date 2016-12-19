@@ -4,6 +4,7 @@
 
  - Turn writes to method arguments into errors. Before it was leading to 
    confusing setter sends and 'message not understood' errors.
+ - Added Lee and Vacation benchmarks ([PR #78](https://github.com/smarr/SOMns/pull/78))
 
 ## 0.1.0 - 2016-12-15
 
