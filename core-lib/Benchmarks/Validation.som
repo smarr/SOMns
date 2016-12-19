@@ -548,13 +548,13 @@ class Validation usingPlatform: platform andHarness: harness = Value (
     |
     ) (
       public A = (
-        (last = 'A') ifTrue: [
+        last = 'A' ifTrue: [
           problems := problems + 1.
         ].
         last := 'A'.
         total := total + 1.
 
-        (total = (2 * limit)) ifTrue: [
+        total = (2 * limit) ifTrue: [
           completionRes resolve: problems = 0.
         ]
       )
@@ -587,7 +587,7 @@ class Validation usingPlatform: platform andHarness: harness = Value (
       actors after: 1 do: [ :r |
         counter <-: A.
         lim >= 0 ifTrue: [
-          doA: counter lim: (lim-1)
+          doA: counter lim: lim - 1
         ]
       ]
     )

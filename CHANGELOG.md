@@ -13,6 +13,8 @@
  - Configuration flag for actor tracing, -atcfg=<config>
    example: -atcfg=mt:mp:pc turns off message timestamps, message parameters and promises
 
+ - Added Validation benchmarks and a new Harness.
+
 ## 0.1.0 - 2016-12-15
 
 This is the first tagged version. For previous changes, please refer to the

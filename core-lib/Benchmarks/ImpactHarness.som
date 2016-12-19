@@ -118,13 +118,13 @@ class ImpactHarness usingPlatform: platform = Value (
         ] ].
         
         (bench benchmark: pp promise) whenResolved: [:benchResult |
-          (bench verifyResult: benchResult)
-            ifFalse: [ numFailed := numFailed + 1 ].
-
+          | success | 
+          success := (bench verifyResult: benchResult).
+          success ifFalse: [ numFailed := numFailed + 1 ].
             endTime := system ticks.
   
             runTime := endTime - startTime.
-            printAll ifTrue: [ self printRun: runTime ].
+            printAll ifTrue: [ self printRun: runTime success: success].
   
             total := total + runTime.
   
@@ -157,8 +157,8 @@ class ImpactHarness usingPlatform: platform = Value (
       out println.
     )
      
-    printRun: runTime = (
-      (name + ': iterations=1' + ' runtime: ' + runTime + 'us') println
+    printRun: runTime success: success= (
+      (name + ': iterations=1' + ' runtime: ' + runTime + 'us success: ' + success) println
     )
         
     public printTotal = (
