@@ -2,6 +2,9 @@ package som.interpreter.objectstorage;
 
 import java.lang.reflect.Field;
 
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.profiles.IntValueProfile;
+
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.objectstorage.FieldReadNode.ReadObjectFieldNode;
@@ -11,9 +14,6 @@ import som.interpreter.objectstorage.FieldReadNode.ReadUnwrittenFieldNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SObject;
 import sun.misc.Unsafe;
-
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.profiles.IntValueProfile;
 
 
 public abstract class StorageLocation {
@@ -124,7 +124,7 @@ public abstract class StorageLocation {
     @Override
     public void write(final SObject obj, final Object value) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
-      obj.writeUninitializedSlot(slot, value);
+      ObjectTransitionSafepoint.INSTANCE.writeUninitializedSlot(obj, slot, value);
     }
 
     @Override
@@ -241,7 +241,6 @@ public abstract class StorageLocation {
 
     @Override
     public final FieldReadNode getReadNode(final boolean isSet) {
-      assert layout.isValid();
       if (isSet) {
         return new ReadSetPrimitiveSlot(slot, layout);
       } else {
@@ -291,7 +290,7 @@ public abstract class StorageLocation {
       } else {
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
         assert value != Nil.nilObject;
-        obj.writeAndGeneralizeSlot(slot, value);
+        ObjectTransitionSafepoint.INSTANCE.writeAndGeneralizeSlot(obj, slot, value);
       }
     }
 
@@ -341,7 +340,7 @@ public abstract class StorageLocation {
         markAsSet(obj);
       } else {
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
-        obj.writeAndGeneralizeSlot(slot, value);
+        ObjectTransitionSafepoint.INSTANCE.writeAndGeneralizeSlot(obj, slot, value);
       }
     }
 
@@ -411,7 +410,7 @@ public abstract class StorageLocation {
       } else {
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
         assert value != Nil.nilObject;
-        obj.writeAndGeneralizeSlot(slot, value);
+        ObjectTransitionSafepoint.INSTANCE.writeAndGeneralizeSlot(obj, slot, value);
       }
     }
 
@@ -465,7 +464,7 @@ public abstract class StorageLocation {
       } else {
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
         assert value != Nil.nilObject;
-        obj.writeAndGeneralizeSlot(slot, value);
+        ObjectTransitionSafepoint.INSTANCE.writeAndGeneralizeSlot(obj, slot, value);
       }
     }
 

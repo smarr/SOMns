@@ -1,5 +1,8 @@
 package som.primitives;
 
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantLock;
+
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
@@ -48,5 +51,20 @@ public abstract class EqualsEqualsPrim extends ComparisonPrim {
   @Specialization(guards = "notFarReference(right)")
   public final boolean doFarRefAndObj(final SFarReference left, final Object right) {
     return false;
+  }
+
+  @Specialization
+  public final boolean doThread(final Thread left, final Object right) {
+    return left == right;
+  }
+
+  @Specialization
+  public final boolean doMutex(final ReentrantLock left, final Object right) {
+    return left == right;
+  }
+
+  @Specialization
+  public final boolean doCondition(final Condition left, final Object right) {
+    return left == right;
   }
 }

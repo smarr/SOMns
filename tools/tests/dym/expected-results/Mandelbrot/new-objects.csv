@@ -6,5 +6,6 @@ Harness.som pos=3926 len=0	1	8	Run
 Mandelbrot.som pos=2275 len=43	1	2	MandelbrotSuite
 Mandelbrot.som pos=2388 len=0	2	1	Mandelbrot
 Mirrors.som pos=1080 len=23	1	6	Mirrors
-Platform.som pos=15 len=23	1	5	Platform
+Platform.som pos=15 len=23	1	6	Platform
 System.som pos=1084 len=23	1	1	System
+Threading.som pos=1082 len=43	1	7	Threading

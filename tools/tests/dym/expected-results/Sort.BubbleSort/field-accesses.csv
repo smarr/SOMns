@@ -3,10 +3,10 @@ Harness.som pos=2143 len=4	read	Integer	259
 Harness.som pos=2143 len=4	read	ALL	259
 Harness.som pos=2182 len=4	read	Integer	259
 Harness.som pos=2182 len=4	read	ALL	259
-Kernel.som pos=2309 len=10	read	Object class	7
-Kernel.som pos=2309 len=10	read	ALL	7
-Kernel.som pos=2346 len=9	read	Value class	6
-Kernel.som pos=2346 len=9	read	ALL	6
+Kernel.som pos=2309 len=10	read	Object class	11
+Kernel.som pos=2309 len=10	read	ALL	11
+Kernel.som pos=2346 len=9	read	Value class	7
+Kernel.som pos=2346 len=9	read	ALL	7
 Kernel.som pos=2720 len=8	read	VmMirror	4
 Kernel.som pos=2720 len=8	read	ALL	4
 Kernel.som pos=8945 len=8	read	VmMirror	2

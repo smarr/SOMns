@@ -14,6 +14,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import som.VM;
 import som.VmSettings;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.IsValue;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray.STransferArray;
@@ -177,6 +178,8 @@ public class Actor {
 
     @Override
     public void run() {
+      ObjectTransitionSafepoint.INSTANCE.register();
+
       ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
       WebDebugger dbg = null;
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
@@ -186,8 +189,12 @@ public class Actor {
 
       t.currentlyExecutingActor = actor;
 
-      while (getCurrentMessagesOrCompleteExecution()) {
-        processCurrentMessages(t, dbg);
+      try {
+        while (getCurrentMessagesOrCompleteExecution()) {
+          processCurrentMessages(t, dbg);
+        }
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
       }
 
       t.currentlyExecutingActor = null;
@@ -334,7 +341,7 @@ public class Actor {
   /**
    * In case an actor processing thread terminates, provide some info.
    */
-  private static final class UncaughtExceptions implements UncaughtExceptionHandler {
+  public static final class UncaughtExceptions implements UncaughtExceptionHandler {
     @Override
     public void uncaughtException(final Thread t, final Throwable e) {
       if (e instanceof ThreadDeath) {

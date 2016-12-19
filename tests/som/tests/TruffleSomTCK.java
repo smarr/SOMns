@@ -3,6 +3,7 @@ package som.tests;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -15,10 +16,16 @@ import com.oracle.truffle.tck.TruffleTCK;
 import som.VM;
 import som.VMOptions;
 import som.interpreter.SomLanguage;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vmobjects.SClass;
 
 
 public class TruffleSomTCK extends TruffleTCK {
+
+  @After
+  public void uninitialize() {
+    ObjectTransitionSafepoint.reset();
+  }
 
   @Override
   protected PolyglotEngine prepareVM() throws Exception {
@@ -42,7 +49,9 @@ public class TruffleSomTCK extends TruffleTCK {
     FindContextNode<VM> contextNode = SomLanguage.INSTANCE.createNewFindContextNode();
     VM vm = contextNode.executeFindContext();
 
+    ObjectTransitionSafepoint.INSTANCE.register();
     tck.getMixinDefinition().instantiateObject(tck, vm.getVmMirror());
+    ObjectTransitionSafepoint.INSTANCE.unregister();
     return engine;
   }
 

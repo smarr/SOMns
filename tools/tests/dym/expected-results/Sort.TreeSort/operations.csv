@@ -73,7 +73,7 @@ Kernel.som pos=24114 len=8	<=	BasicPrimitiveOperation OpComparison	int	1
 Kernel.som pos=24114 len=8	<=	BasicPrimitiveOperation OpComparison	TOTAL	1
 Kernel.som pos=24134 len=9	<	BasicPrimitiveOperation OpComparison	int	1
 Kernel.som pos=24134 len=9	<	BasicPrimitiveOperation OpComparison	TOTAL	1
-Platform.som pos=1041 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Platform.som pos=1158 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
 Sort.som pos=2345 len=5	at:	ArrayRead BasicPrimitiveOperation	int	1
 Sort.som pos=2345 len=5	at:	ArrayRead BasicPrimitiveOperation	TOTAL	1
 Sort.som pos=2396 len=9	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	1989

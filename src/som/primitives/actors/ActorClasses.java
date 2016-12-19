@@ -69,8 +69,6 @@ public final class ActorClasses {
     }
   }
 
-
-
   @GenerateNodeFactory
   @Primitive(primitive = "actorsModule:")
   public abstract static class SetModulePrim extends UnaryExpressionNode {

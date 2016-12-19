@@ -20,7 +20,7 @@ Kernel.som pos=13404 len=3	2	0	2
 Kernel.som pos=13498 len=3	1	1	2
 Kernel.som pos=22021 len=14	0	2	2
 Kernel.som pos=24124 len=20	2	0	2
-Platform.som pos=1041 len=3	0	1	1
+Platform.som pos=1158 len=3	0	1	1
 Sort.som pos=1655 len=40	0	2	2
 Sort.som pos=1974 len=15	0	1596	1596
 Sort.som pos=2396 len=9	10	1590	1600

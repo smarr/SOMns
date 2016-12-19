@@ -12,6 +12,7 @@ import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 
@@ -27,13 +28,19 @@ public class SBlockInteropMessageResolution {
 
     public Object access(final VirtualFrame frame, final SBlock rcvr,
         final Object[] args) {
-      Object[] arguments = ValueConversion.convertToArgArray(convert, rcvr, args);
-      Object result = block.executeDispatch(frame, arguments);
+      ObjectTransitionSafepoint.INSTANCE.register();
 
-      if (result == Nil.nilObject) {
-        return null;
-      } else {
-        return result;
+      try {
+        Object[] arguments = ValueConversion.convertToArgArray(convert, rcvr, args);
+        Object result = block.executeDispatch(frame, arguments);
+
+        if (result == Nil.nilObject) {
+          return null;
+        } else {
+          return result;
+        }
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
       }
     }
   }

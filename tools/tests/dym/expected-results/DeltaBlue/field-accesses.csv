@@ -332,10 +332,10 @@ DeltaBlue.som pos=29867 len=12	read	Nil	2
 DeltaBlue.som pos=29867 len=12	read	ScaleConstraint	1
 DeltaBlue.som pos=29867 len=12	read	StayConstraint	1
 DeltaBlue.som pos=29867 len=12	read	ALL	9
-Kernel.som pos=2309 len=10	read	Object class	13
-Kernel.som pos=2309 len=10	read	ALL	13
-Kernel.som pos=2346 len=9	read	Value class	6
-Kernel.som pos=2346 len=9	read	ALL	6
+Kernel.som pos=2309 len=10	read	Object class	17
+Kernel.som pos=2309 len=10	read	ALL	17
+Kernel.som pos=2346 len=9	read	Value class	7
+Kernel.som pos=2346 len=9	read	ALL	7
 Kernel.som pos=2720 len=8	read	VmMirror	4
 Kernel.som pos=2720 len=8	read	ALL	4
 Kernel.som pos=8945 len=8	read	VmMirror	2

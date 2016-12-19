@@ -24,7 +24,7 @@ Kernel.som pos=14531 len=4	size	BasicPrimitiveOperation OpLength	arr	1
 Kernel.som pos=14531 len=4	size	BasicPrimitiveOperation OpLength	TOTAL	1
 Kernel.som pos=16764 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	bool	9999
 Kernel.som pos=16764 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	TOTAL	9999
-Platform.som pos=1041 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Platform.som pos=1158 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
 Sieve.som pos=1592 len=9	at:	ArrayRead BasicPrimitiveOperation ControlFlowCondition	bool	8660
 Sieve.som pos=1592 len=9	at:	ArrayRead BasicPrimitiveOperation ControlFlowCondition	bool	1337
 Sieve.som pos=1592 len=9	at:	ArrayRead BasicPrimitiveOperation ControlFlowCondition	TOTAL	9997

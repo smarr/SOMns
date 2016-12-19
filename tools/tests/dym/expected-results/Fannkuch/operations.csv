@@ -87,4 +87,4 @@ Kernel.som pos=17016 len=3	+	BasicPrimitiveOperation OpArithmetic	int	95
 Kernel.som pos=17016 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	95
 Kernel.som pos=17108 len=4	size	BasicPrimitiveOperation OpLength	arr	23
 Kernel.som pos=17108 len=4	size	BasicPrimitiveOperation OpLength	TOTAL	23
-Platform.som pos=1041 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Platform.som pos=1158 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0

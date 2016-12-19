@@ -14,6 +14,6 @@ Kernel.som pos=8112 len=8	20006	7	20013
 Kernel.som pos=12595 len=13	0	1	1
 Kernel.som pos=12638 len=13	0	1	1
 Kernel.som pos=12783 len=9	0	5	5
-Platform.som pos=1041 len=3	0	1	1
+Platform.som pos=1158 len=3	0	1	1
 Sieve.som pos=1592 len=9	1338	8660	9998
 Sieve.som pos=1723 len=7	22138	1338	23476

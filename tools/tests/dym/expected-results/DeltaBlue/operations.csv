@@ -265,4 +265,4 @@ Kernel.som pos=26701 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComp
 Kernel.som pos=26701 len=3	>	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	4
 Kernel.som pos=26774 len=3	-	BasicPrimitiveOperation OpArithmetic	int	2
 Kernel.som pos=26774 len=3	-	BasicPrimitiveOperation OpArithmetic	TOTAL	2
-Platform.som pos=1041 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Platform.som pos=1158 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0

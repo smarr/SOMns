@@ -23,7 +23,7 @@ Kernel.som pos=14531 len=4	size	BasicPrimitiveOperation OpLength	TOTAL	199
 Kernel.som pos=16764 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	int	400
 Kernel.som pos=16764 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	bool	1999
 Kernel.som pos=16764 len=22	at:put:	ArrayWrite BasicPrimitiveOperation RootTag StatementTag	TOTAL	2399
-Platform.som pos=1041 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Platform.som pos=1158 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
 Queens.som pos=1860 len=12	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	int	5649
 Queens.som pos=1860 len=12	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	5649
 Queens.som pos=1935 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	int	5599

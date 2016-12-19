@@ -1,0 +1,147 @@
+(* Copyright (c) 2016 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+class ThreadingTests usingPlatform: platform testFramework: minitest = (
+| private TestContext  = minitest TestContext.
+  private Array        = platform kernel Array.
+  private Condition    = platform threading Condition.
+  private Delay        = platform threading Delay.
+  private Mutex        = platform threading Mutex.
+  private Thread       = platform threading Thread.
+  private Task         = platform threading Task.
+|)(
+  public class BasicTest = TestContext ()(
+
+    public testDelayInterface = (
+      | d |
+      d := Delay forSeconds: 1.
+      self assert: 1000 equals: d duration.
+    
+      d := Delay forMilliseconds: 1.
+      self assert: 1    equals: d duration.
+    
+      (* This could change, perhaps to indicate interruption. *)
+      self assert: d is: d wait.
+    )
+
+    public testMutexInterface = (
+      | m r cond1 cond2 |
+      m := Mutex new.
+      r := m critical: [ #value ].
+      self assert: #value equals: r.
+    
+      self assert: false equals: m isLocked.
+      self assert: m     is:     m lock.
+      self assert: true  equals: m isLocked.
+      self assert: m     is:     m unlock.
+      self assert: false equals: m isLocked.
+    
+      cond1 := m newCondition.
+      cond2 := m newCondition.
+      self deny: cond1 == cond2.
+    )
+
+    public testSpawning = (
+      | thread |
+      thread := Thread spawn: [].
+    
+      self assert: '' equals: thread name.
+    
+      thread := Thread spawn: [:i | i ] with: (Array with: 1).
+      self assert: '' equals: thread name
+    )
+
+    public testThreadInterface = (
+      | thread thread2 executed |
+      executed := false.
+      thread := Thread spawn: [ executed := true ].
+      thread name: 'bar'.
+      self assert: 'bar'  equals: thread name.
+
+      thread == thread.
+
+      self assert: thread is: thread join.
+      self assert: executed.
+
+      self assert: Thread is: Thread yield.
+    
+      thread  := Thread current.
+      thread2 := Thread current.
+      self assert: thread is: thread2.
+      self deny: thread == nil. 
+    )
+
+    public testThreadCurrent = (
+      | thread subThreadCurrent |
+      thread := Thread spawn: [
+        subThreadCurrent := Thread current].
+      thread join.
+  
+      (* those two should be the same object *)
+      self assert: thread is: subThreadCurrent.
+      self deny: thread == Thread current.
+    )
+
+    public testConditionInterface = (
+      | m c t executed awaitResult1 |
+      executed := false.
+      m := Mutex new.
+      c := m newCondition.
+      
+      m critical: [ c signalOne ].
+      awaitResult1 := m critical: [ c await: 1 ].
+      
+      self deny: awaitResult1 description: 'Await times out'.
+      
+      (* This test is racy... remove and replace if it makes problems. *)
+      t := Thread spawn: [
+        m critical: [ c signalOne ].
+        executed := true ].
+
+      m critical: [ c await ].
+      t join.
+      self assert: executed
+    )
+
+    public testTaskInterface = (
+      | t1 t2 v1 v2 |
+      t1 := Task spawn: [ v1 := 1 ].
+      t2 := Task spawn: [ v2 := #foo ].
+
+      assert: 1 equals: t1 join.
+      assert: 1 equals: v1.
+
+      assert: #foo equals: t2 join.
+      assert: #foo equals: v2.
+    )
+
+    public testTaskInterfaceWithArgs = (
+      | t1 t2 v1 v2 |
+      t1 := Task spawn: [:a | v1 := a ] with: (Array with: 1).
+      t2 := Task spawn: [:b | v2 := b ] with: (Array with: #foo).
+
+      assert: 1 equals: t1 join.
+      assert: 1 equals: v1.
+
+      assert: #foo equals: t2 join.
+      assert: #foo equals: v2.
+    )
+  ) : ( TEST_CONTEXT = () )
+)

@@ -243,7 +243,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   public final Object updateObject(final SObject rcvr, final Object value) {
     // no invalidation, just moving to interpreter to avoid recursion in PE
     CompilerDirectives.transferToInterpreter();
-    rcvr.updateLayoutToMatchClass();
+    ObjectTransitionSafepoint.INSTANCE.transitionObject(rcvr);
     return executeEvaluated(rcvr, value);
   }
 

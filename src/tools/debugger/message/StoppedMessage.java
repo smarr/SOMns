@@ -1,6 +1,8 @@
 package tools.debugger.message;
 
 import som.interpreter.actors.Actor;
+import som.primitives.threading.ThreadPrimitives.SomThread;
+import som.vm.NotYetImplementedException;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.OutgoingMessage;
 
@@ -36,7 +38,8 @@ public final class StoppedMessage extends OutgoingMessage {
   }
 
   private enum ActivityType {
-    Actor("Actor");
+    Actor("Actor"),
+    Thread("Thread");
 
     private final String value;
 
@@ -53,9 +56,16 @@ public final class StoppedMessage extends OutgoingMessage {
       reason = Reason.breakpoint;
     }
 
-    assert suspension.getActivity() instanceof Actor : "TODO support threads";
+    ActivityType type;
+    if (suspension.getActivity() instanceof Actor) {
+      type = ActivityType.Actor;
+    } else if (suspension.getActivity() instanceof SomThread) {
+      type = ActivityType.Thread;
+    } else {
+      // need to support this type of activity first
+      throw new NotYetImplementedException();
+    }
 
-    return new StoppedMessage(reason, suspension.activityId,
-        ActivityType.Actor, ""); // TODO: look into additional details that can be provided as text
+    return new StoppedMessage(reason, suspension.activityId, type, ""); // TODO: look into additional details that can be provided as text
   }
 }

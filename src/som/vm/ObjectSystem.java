@@ -30,6 +30,7 @@ import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualSendNode;
 import som.interpreter.actors.SPromise;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.constants.Classes;
 import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
@@ -163,6 +164,7 @@ public final class ObjectSystem {
   }
 
   public SObjectWithoutFields initialize() {
+    ObjectTransitionSafepoint.INSTANCE.register();
     assert platformModule != null && kernelModule != null;
 
     // these classes need to be defined by the Kernel module
@@ -299,6 +301,8 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     initialized = true;
 
     platformClass = platformModule.instantiateModuleClass();
+
+    ObjectTransitionSafepoint.INSTANCE.unregister();
     return vmMirror;
   }
 
@@ -346,7 +350,9 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
   public void executeApplication(final SObjectWithoutFields vmMirror, final Actor mainActor) {
     mainThreadCompleted = new CompletableFuture<>();
 
+    ObjectTransitionSafepoint.INSTANCE.register();
     Object platform = platformModule.instantiateObject(platformClass, vmMirror);
+    ObjectTransitionSafepoint.INSTANCE.unregister();
 
     SourceSection source = SomLanguage.getSyntheticSource("",
         "ObjectSystem.executeApplication").createSection(1);
@@ -384,6 +390,11 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
   public Object execute(final String selector) {
     SInvokable method = (SInvokable) platformClass.getSOMClass().lookupMessage(
         Symbols.symbolFor(selector), AccessModifier.PUBLIC);
-    return method.invoke(platformClass);
+    try {
+      ObjectTransitionSafepoint.INSTANCE.register();
+      return method.invoke(platformClass);
+    } finally {
+      ObjectTransitionSafepoint.INSTANCE.unregister();
+    }
   }
 }

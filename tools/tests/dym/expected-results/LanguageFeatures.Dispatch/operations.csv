@@ -65,4 +65,4 @@ LanguageFeatures.som pos=9122 len=18	+	BasicPrimitiveOperation OpArithmetic	int	
 LanguageFeatures.som pos=9122 len=18	+	BasicPrimitiveOperation OpArithmetic	TOTAL	39999
 LanguageFeatures.som pos=9263 len=8	=	BasicPrimitiveOperation OpComparison RootTag StatementTag	int	1
 LanguageFeatures.som pos=9263 len=8	=	BasicPrimitiveOperation OpComparison RootTag StatementTag	TOTAL	1
-Platform.som pos=1041 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Platform.som pos=1158 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0

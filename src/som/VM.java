@@ -31,6 +31,7 @@ import som.interpreter.actors.Actor;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
+import som.primitives.threading.ThreadingModule;
 import som.vm.ObjectSystem;
 import som.vm.Primitives;
 import som.vm.constants.KernelObj;
@@ -364,6 +365,16 @@ public final class VM {
     SPromise.setPairClass(null);
     SPromise.setSOMClass(null);
     SResolver.setSOMClass(null);
+
+    ThreadingModule.ThreadingModule  = null;
+    ThreadingModule.ThreadClass      = null;
+    ThreadingModule.ThreadClassId    = null;
+    ThreadingModule.TaskClass        = null;
+    ThreadingModule.TaskClassId      = null;
+    ThreadingModule.MutexClass       = null;
+    ThreadingModule.MutexClassId     = null;
+    ThreadingModule.ConditionClass   = null;
+    ThreadingModule.ConditionClassId = null;
 
     KernelObj.indexOutOfBoundsClass = null;
   }
