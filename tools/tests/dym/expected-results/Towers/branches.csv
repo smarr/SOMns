@@ -15,7 +15,7 @@ Kernel.som pos=8349 len=8	28	2	30
 Kernel.som pos=12595 len=13	0	1	1
 Kernel.som pos=12638 len=13	0	1	1
 Kernel.som pos=12783 len=9	0	6	6
-Platform.som pos=1041 len=3	0	1	1
+Platform.som pos=1158 len=3	0	1	1
 Towers.som pos=1414 len=28	0	16410	16410
 Towers.som pos=1683 len=5	0	16382	16382
 Towers.som pos=2253 len=3	8192	8190	16382

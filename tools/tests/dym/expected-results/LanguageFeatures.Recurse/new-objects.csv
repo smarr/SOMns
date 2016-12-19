@@ -8,5 +8,6 @@ LanguageFeatures.som pos=1099 len=43	1	31	LanguageFeaturesSuite
 LanguageFeatures.som pos=6271 len=0	2	0	Recurse
 Mirrors.som pos=1080 len=23	1	6	Mirrors
 Mirrors.som pos=3475 len=15	1	1	ObjectMirror
-Platform.som pos=15 len=23	1	5	Platform
+Platform.som pos=15 len=23	1	6	Platform
 System.som pos=1084 len=23	1	1	System
+Threading.som pos=1082 len=43	1	7	Threading

@@ -7,5 +7,6 @@ Fannkuch.som pos=1771 len=9	1	3	Fannkuch
 Harness.som pos=1085 len=23	1	7	Harness
 Harness.som pos=3926 len=0	1	8	Run
 Mirrors.som pos=1080 len=23	1	6	Mirrors
-Platform.som pos=15 len=23	1	5	Platform
+Platform.som pos=15 len=23	1	6	Platform
 System.som pos=1084 len=23	1	1	System
+Threading.som pos=1082 len=43	1	7	Threading

@@ -167,4 +167,4 @@ NBody.som pos=4053 len=9	*	BasicPrimitiveOperation OpArithmetic PrimitiveArgumen
 NBody.som pos=4053 len=9	*	BasicPrimitiveOperation OpArithmetic PrimitiveArgument	TOTAL	7
 NBody.som pos=4063 len=9	*	BasicPrimitiveOperation OpArithmetic RootTag StatementTag	float	7
 NBody.som pos=4063 len=9	*	BasicPrimitiveOperation OpArithmetic RootTag StatementTag	TOTAL	7
-Platform.som pos=1041 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Platform.som pos=1158 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0

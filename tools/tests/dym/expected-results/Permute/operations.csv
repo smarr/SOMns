@@ -42,4 +42,4 @@ Permute.som pos=1823 len=5	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgume
 Permute.som pos=1823 len=5	at:	ArrayRead BasicPrimitiveOperation PrimitiveArgument	TOTAL	50389
 Permute.som pos=1841 len=14	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	ref	50389
 Permute.som pos=1841 len=14	at:put:	ArrayWrite BasicPrimitiveOperation StatementTag	TOTAL	50389
-Platform.som pos=1041 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Platform.som pos=1158 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0

@@ -24,4 +24,4 @@ List.som pos=1582 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpCompari
 List.som pos=1582 len=3	=	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	33
 List.som pos=1730 len=3	-	BasicPrimitiveOperation OpArithmetic	int	30
 List.som pos=1730 len=3	-	BasicPrimitiveOperation OpArithmetic	TOTAL	30
-Platform.som pos=1041 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Platform.som pos=1158 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0

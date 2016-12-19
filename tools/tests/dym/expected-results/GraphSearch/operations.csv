@@ -193,4 +193,4 @@ Kernel.som pos=22340 len=3	+	BasicPrimitiveOperation OpArithmetic	int	17915
 Kernel.som pos=22340 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	17915
 Kernel.som pos=23854 len=10	-	BasicPrimitiveOperation OpArithmetic RootTag StatementTag	int	2999
 Kernel.som pos=23854 len=10	-	BasicPrimitiveOperation OpArithmetic RootTag StatementTag	TOTAL	2999
-Platform.som pos=1041 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Platform.som pos=1158 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0

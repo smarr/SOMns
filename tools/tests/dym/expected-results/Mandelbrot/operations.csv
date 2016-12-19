@@ -84,4 +84,4 @@ Mandelbrot.som pos=4558 len=3	+	BasicPrimitiveOperation OpArithmetic	int	8
 Mandelbrot.som pos=4558 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	8
 Mandelbrot.som pos=4593 len=3	+	BasicPrimitiveOperation OpArithmetic	int	2
 Mandelbrot.som pos=4593 len=3	+	BasicPrimitiveOperation OpArithmetic	TOTAL	2
-Platform.som pos=1041 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Platform.som pos=1158 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0

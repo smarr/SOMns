@@ -135,10 +135,10 @@ Json.som pos=44074 len=5	read	HashIndexTable	2
 Json.som pos=44074 len=5	read	ALL	2
 Json.som pos=44121 len=5	read	Vector	2
 Json.som pos=44121 len=5	read	ALL	2
-Kernel.som pos=2309 len=10	read	Object class	9
-Kernel.som pos=2309 len=10	read	ALL	9
-Kernel.som pos=2346 len=9	read	Value class	6
-Kernel.som pos=2346 len=9	read	ALL	6
+Kernel.som pos=2309 len=10	read	Object class	13
+Kernel.som pos=2309 len=10	read	ALL	13
+Kernel.som pos=2346 len=9	read	Value class	7
+Kernel.som pos=2346 len=9	read	ALL	7
 Kernel.som pos=2720 len=8	read	VmMirror	4
 Kernel.som pos=2720 len=8	read	ALL	4
 Kernel.som pos=8945 len=8	read	VmMirror	2

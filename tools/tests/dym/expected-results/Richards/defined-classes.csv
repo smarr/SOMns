@@ -12,6 +12,8 @@ ClassDefinitionMirror	Mirrors.som pos=2686 len=759	0
 ClassMirror	Mirrors.som pos=1154 len=1528	0
 Class	Kernel.som pos=4000 len=168	0
 Collections	Collections.som pos=0 len=8990	1
+Condition	Threading.som pos=1520 len=476	0
+Delay	Threading.som pos=2002 len=316	0
 DeviceTaskDataRecord	Richards.som pos=9852 len=78	1
 Dictionary	Collections.som pos=3793 len=4718	0
 Double	Kernel.som pos=8986 len=1859	0
@@ -34,6 +36,7 @@ MessageNotUnderstood	Kernel.som pos=27713 len=335	0
 Metaclass	Kernel.som pos=4172 len=35	0
 MethodMirror	Mirrors.som pos=4504 len=379	0
 Mirrors	Mirrors.som pos=0 len=4883	1
+Mutex	Threading.som pos=2324 len=529	0
 Nil	Kernel.som pos=5247 len=461	0
 NotAValue	Kernel.som pos=28139 len=482	0
 ObjectMirror	Mirrors.som pos=3449 len=1014	0
@@ -41,7 +44,7 @@ Object	Kernel.som pos=2887 len=155	0
 Packet	Richards.som pos=10473 len=485	1
 Pair	Actors.som pos=3570 len=301	0
 Pair	Kernel.som pos=20566 len=249	0
-Platform	Platform.som pos=0 len=1347	2
+Platform	Platform.som pos=0 len=1464	2
 PromiseGroup	Actors.som pos=3875 len=1511	0
 Promise	Actors.som pos=2420 len=933	0
 RBObject	Richards.som pos=9402 len=328	1
@@ -58,7 +61,10 @@ Symbol	Kernel.som pos=14025 len=212	0
 System	System.som pos=0 len=2399	4
 TaskControlBlock	Richards.som pos=12451 len=1241	3
 TaskState	Richards.som pos=10964 len=1483	12
+Task	Threading.som pos=3764 len=285	0
 Thing	Kernel.som pos=1251 len=1632	6
+Thread	Threading.som pos=3004 len=637	0
+Threading	Threading.som pos=0 len=4049	1
 Top	Kernel.som pos=1223 len=24	0
 Transcript	Richards.som pos=9736 len=110	0
 TransferArray	Kernel.som pos=18593 len=163	0

@@ -212,4 +212,4 @@ Kernel.som pos=24114 len=8	<=	BasicPrimitiveOperation OpComparison	int	5
 Kernel.som pos=24114 len=8	<=	BasicPrimitiveOperation OpComparison	TOTAL	5
 Kernel.som pos=24134 len=9	<	BasicPrimitiveOperation OpComparison	int	5
 Kernel.som pos=24134 len=9	<	BasicPrimitiveOperation OpComparison	TOTAL	5
-Platform.som pos=1041 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0
+Platform.som pos=1158 len=3	<	BasicPrimitiveOperation ControlFlowCondition OpComparison	TOTAL	0

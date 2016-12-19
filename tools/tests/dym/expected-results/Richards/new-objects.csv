@@ -4,7 +4,7 @@ Collections.som pos=1089 len=19	1	9	Collections
 Harness.som pos=1085 len=23	1	7	Harness
 Harness.som pos=3926 len=0	1	8	Run
 Mirrors.som pos=1080 len=23	1	6	Mirrors
-Platform.som pos=15 len=23	1	5	Platform
+Platform.som pos=15 len=23	1	6	Platform
 Richards.som pos=24 len=43	1	24	RichardsBenchmark
 Richards.som pos=566 len=0	2	0	Richards
 Richards.som pos=742 len=0	1	8	RichardsBenchmarks
@@ -16,3 +16,4 @@ Richards.som pos=10980 len=0	6	3	TaskState
 Richards.som pos=12481 len=150	6	9	TaskControlBlock
 Richards.som pos=13725 len=6	1	2	WorkerTaskDataRecord
 System.som pos=1084 len=23	1	1	System
+Threading.som pos=1082 len=43	1	7	Threading
