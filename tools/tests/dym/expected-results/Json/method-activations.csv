@@ -22,7 +22,7 @@ Run>>#runBenchmark	1
 Run>>#doWarmup:	1
 Run>>#measure:	1
 Run>>#doRuns:	1
-Run>>#$blockMethod@154@13:	1
+Run>>#$blockMethod@156@13:	1
 Run>>#reportBenchmark	1
 Run>>#print:run:	1
 Run>>#printTotal	1
@@ -113,13 +113,13 @@ String>>#asString	5
 String>>#hashcode	601
 String>>#primSubstringFrom:to:	4
 String>>#includes:	1
-String>>#$blockMethod@361@10:	4
+String>>#$blockMethod@363@10:	4
 String>>#asInteger	3
 String>>#print	1
 ArrayReadMixin>>#doIndexes:	159
-ArrayReadMixin>>#$blockMethod@432@44:	5174
+ArrayReadMixin>>#$blockMethod@434@44:	5174
 Array>>#putAll:	157
-Array>>#$blockMethod@499@43:	5024
+Array>>#$blockMethod@501@43:	5024
 Array_class>>#new:withAll:	157
 Block>>#on:do:	1
 Kernel>>#`define`cls	1
@@ -128,7 +128,7 @@ Kernel>>#`define`cls	1
 Vector_class>>#initializer`new:	867
 Vector>>#at:	6
 Vector>>#append:	3989
-Vector>>#$blockMethod@690@45:	150
+Vector>>#$blockMethod@692@45:	150
 Vector>>#size	599
 Vector>>#checkIndex:	6
 Vector_class>>#new	867

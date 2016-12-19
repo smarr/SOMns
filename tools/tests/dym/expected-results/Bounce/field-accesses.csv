@@ -23,20 +23,20 @@ Bounce.som pos=2369 len=1	read	Integer	4999
 Bounce.som pos=2369 len=1	read	ALL	4999
 Bounce.som pos=2414 len=4	read	Integer	358
 Bounce.som pos=2414 len=4	read	ALL	358
-Harness.som pos=2138 len=4	read	Integer	399
-Harness.som pos=2138 len=4	read	ALL	399
-Harness.som pos=2177 len=4	read	Integer	399
-Harness.som pos=2177 len=4	read	ALL	399
+Harness.som pos=2143 len=4	read	Integer	399
+Harness.som pos=2143 len=4	read	ALL	399
+Harness.som pos=2182 len=4	read	Integer	399
+Harness.som pos=2182 len=4	read	ALL	399
 Kernel.som pos=2309 len=10	read	Object class	8
 Kernel.som pos=2309 len=10	read	ALL	8
 Kernel.som pos=2346 len=9	read	Value class	6
 Kernel.som pos=2346 len=9	read	ALL	6
 Kernel.som pos=2720 len=8	read	VmMirror	4
 Kernel.som pos=2720 len=8	read	ALL	4
-Kernel.som pos=8777 len=8	read	VmMirror	2
-Kernel.som pos=8777 len=8	read	ALL	2
-Kernel.som pos=11351 len=8	read	VmMirror	5
-Kernel.som pos=11351 len=8	read	ALL	5
+Kernel.som pos=8945 len=8	read	VmMirror	2
+Kernel.som pos=8945 len=8	read	ALL	2
+Kernel.som pos=11519 len=8	read	VmMirror	5
+Kernel.som pos=11519 len=8	read	ALL	5
 Bounce.som pos=2065 len=13	write	ALL	4999
 Bounce.som pos=2086 len=13	write	ALL	4999
 Bounce.som pos=2136 len=11	write	ALL	357
@@ -47,4 +47,4 @@ Bounce.som pos=2309 len=11	write	ALL	354
 Bounce.som pos=2322 len=20	write	ALL	354
 Bounce.som pos=2393 len=6	write	ALL	358
 Bounce.som pos=2406 len=16	write	ALL	358
-Harness.som pos=2128 len=39	write	ALL	399
+Harness.som pos=2133 len=39	write	ALL	399

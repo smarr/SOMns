@@ -23,7 +23,7 @@ Run>>#runBenchmark	1
 Run>>#doWarmup:	1
 Run>>#measure:	1
 Run>>#doRuns:	1
-Run>>#$blockMethod@154@13:	1
+Run>>#$blockMethod@156@13:	1
 Run>>#reportBenchmark	1
 Run>>#print:run:	1
 Run>>#printTotal	1
@@ -42,7 +42,7 @@ Integer_class>>#fromString:	3
 String>>#asString	5
 String>>#primSubstringFrom:to:	4
 String>>#includes:	1
-String>>#$blockMethod@361@10:	4
+String>>#$blockMethod@363@10:	4
 String>>#asInteger	3
 String>>#print	1
 Block>>#on:do:	1

@@ -2,8 +2,8 @@ Source Section	New Objects	Number of Fields	Class
 Actors.som pos=1084 len=43	1	8	Actors
 Collections.som pos=1089 len=19	1	9	Collections
 Harness.som pos=1085 len=23	1	7	Harness
-Harness.som pos=2068 len=0	2	1	Random
-Harness.som pos=3894 len=0	1	8	Run
+Harness.som pos=2064 len=9	2	1	Random
+Harness.som pos=3926 len=0	1	8	Run
 Mirrors.som pos=1080 len=23	1	6	Mirrors
 Platform.som pos=15 len=23	1	5	Platform
 Storage.som pos=1090 len=43	1	4	StorageSuite

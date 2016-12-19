@@ -22,7 +22,7 @@ Run>>#runBenchmark	1
 Run>>#doWarmup:	1
 Run>>#measure:	1
 Run>>#doRuns:	1
-Run>>#$blockMethod@154@13:	1
+Run>>#$blockMethod@156@13:	1
 Run>>#reportBenchmark	1
 Run>>#print:run:	1
 Run>>#printTotal	1
@@ -42,9 +42,9 @@ String>>#asString	5
 String>>#asSymbol	1
 String>>#primSubstringFrom:to:	43
 String>>#includes:	1
-String>>#$blockMethod@361@10:	17
+String>>#$blockMethod@363@10:	17
 String>>#indexOf:startingAt:	2
-String>>#$blockMethod@377@10:	24
+String>>#$blockMethod@379@10:	24
 String>>#split:	1
 String>>#asInteger	3
 String>>#print	1
