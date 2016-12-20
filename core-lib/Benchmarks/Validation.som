@@ -1,0 +1,611 @@
+class Validation usingPlatform: platform andHarness: harness = Value (
+| private Benchmark = harness Benchmark.
+  private actors    = platform actors.
+  private Array     = platform kernel Array.
+  private TransferArray= platform kernel TransferArray.
+  private ValueArray= platform kernel ValueArray.
+  private Vector    = platform kernel Vector.
+  private Dictionary= platform collections Dictionary.
+  private system    = platform system.
+|
+)(
+  (* A simple PRNG, to be as portable as possible. *)
+  public class Random new: seed = (
+    | private seed ::= seed.
+      private gotNextGaussian  ::= false.
+      private nextNextGaussian ::= 0.0. |
+  ) (
+    public next = (
+      seed := ((seed * 1309) + 13849) & 65535.
+      ^ seed
+    )
+    
+    (* Returns an integer within the range of [0, bound) *)
+    public next: bound = (
+      ^ next % bound
+    )
+    
+    (* Returns a double uniformly distributed in the range of [0.0, 1.0) *)
+    public nextDouble = (
+      ^ next // 65536
+    )
+    
+    public nextBoolean = (
+      ^ next < 32768
+    )
+    
+    (* Returns a double normally distributed with mean 0.0 
+       and standard deviation of 1.0 *)
+    public nextGaussian = (
+      | v1 v2 s multiplier |
+      gotNextGaussian ifTrue: [
+        gotNextGaussian := false.
+        ^ nextNextGaussian ].
+      
+      v1 := (2.0 * nextDouble) - 1.0.
+      v2 := (2.0 * nextDouble) - 1.0.
+      s  := (v1 * v1) + (v2 * v2).
+      
+      [s >= 1.0 or: [s = 0.0]] whileTrue: [
+        v1 := (2.0 * nextDouble) - 1.0.
+        v2 := (2.0 * nextDouble) - 1.0.
+        s  := (v1 * v1) + (v2 * v2).
+      ].
+      
+      multiplier := (-2.0 * s log // s) sqrt.
+      nextNextGaussian := v2 * multiplier.
+      gotNextGaussian := true.
+      ^ v1 * multiplier
+    )
+  ) : (
+    public new = (
+      ^ new: 74755
+    )
+  )
+
+  public class Messages rounds: numRounds = Benchmark <: Value (
+    | private numRounds = numRounds.
+    |
+  )(
+
+    public class A new = (
+    | private a2 = (actors createActorFromValue: Partner) <-: new.
+      private trips ::= 0.
+      private continue ::= true.
+    |
+    )(
+      public start = (
+        a2 <-: visit: self.
+      )
+
+      public return = (
+        trips := trips + 1.
+        (continue) ifTrue: [
+          a2 <-: visit: self.
+        ]
+      )
+
+      public stop: master = (
+        continue := false.
+        (*('Trips A: ' + trips) println.*)
+        master <-: done: trips.
+      )
+    )
+
+    public class B new = (
+    | private a2 = (actors createActorFromValue: Partner) <-: new.
+      private trips ::= 0.
+      private continue ::= true.
+    |
+    )(
+      public start = (
+        a2 <-: visit: self.
+      )
+
+      public return = (
+        trips := trips + 1.
+        (continue) ifTrue: [
+          a2 <-: visit: self p2: trips.
+        ]
+      )
+
+      public stop: master = (
+        continue := false.
+        (*('Trips B: ' + trips) println.*)
+        master <-: done: trips.
+      )
+    )
+
+    public class C new = (
+    | private a2 = (actors createActorFromValue: Partner) <-: new.
+      private trips ::= 0.
+      private continue ::= true.
+    |
+    )(
+      public start = (
+        a2 <-: visit: self.
+      )
+
+      public return = (
+        trips := trips + 1.
+        (continue) ifTrue: [
+          a2 <-: visit: self p2: trips p3: 'Hello' p4: 'asdfgh'.
+        ]
+      )
+
+      public stop: master = (
+        continue := false.
+        (*('Trips C: ' + trips) println.*)
+        master <-: done: trips.
+      )
+    )
+
+    public class Partner new = (
+    | |
+    )(
+      public visit: a1 = (
+        a1 <-: return
+      )
+
+      public visit: a1 p2: p2 = (
+        a1 <-: return
+      )
+
+      public visit: a1 p2: p2 p3: p3 p4: p4 = (
+        a1 <-: return
+      )
+    )
+
+    public class Remote new: master = (
+    | private master = master.
+    |
+    )(
+      public ping = (
+        master <-: pong.
+      )
+    )
+
+    public class Master new: resolver = (
+    | private a1 = (actors createActorFromValue: A) <-: new.
+      private b1 = (actors createActorFromValue: B) <-: new.
+      private c1 = (actors createActorFromValue: C) <-: new.
+      private resolver = resolver.
+      private count ::= 0.
+      private remote = (actors createActorFromValue: Remote) <-: new: self.
+      private d ::= 0.
+      private res ::= true.
+    |
+      remote <-: ping.
+      a1 <-: start.
+      b1 <-: start.
+      c1 <-: start.
+    )(
+
+      public done: trips = (
+        d := d + 1.
+        ((trips - numRounds) abs) > ((numRounds * 5) / 100) ifTrue: [
+          res := false
+        ].
+
+        (d = 3) ifTrue: [ resolver resolve: res ]
+      )
+
+      public pong = (
+        count := count + 1.
+        (count < numRounds) ifTrue:[
+          remote <-: ping.
+        ] ifFalse:[
+          a1 <-: stop: self.
+          b1 <-: stop: self.
+          c1 <-: stop: self
+        ]
+      )
+    )
+
+    (* benchmark & verification methods *)
+    public benchmark: abortP = (
+      | m completionPP |
+      completionPP := actors createPromisePair.
+      m := (actors createActorFromValue: Master) <-: new: completionPP resolver.
+      ^ completionPP promise
+    )
+
+
+    public verifyResult: result = (
+    ^(result)
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      ^ self rounds: (problem at: 1) asInteger
+    )
+      
+    public setupVerifiedRun: run = (
+      run problemSize: '1000'
+    )
+  )
+
+  public class DeadLock actors: numActors resPerActor: resPerA numRes: numRes = Benchmark <: Value (
+    | private numActors = numActors.
+      private resPerA = resPerA.
+      private numRes = numRes.
+    |
+  )(
+
+    public class Lock new: resolver = (
+      | private ressources = Array new: numRes withAll: false.
+        private waiting ::= actors createPromisePair.
+        private numwaiting ::= 0.
+        private numDone ::= 0.
+        private resolver = resolver.
+      |
+    )(
+
+      public getRessource: id for: sender = (
+      (ressources at: id) ifTrue: [
+          numwaiting := numwaiting + 1.
+          (waiting promise) whenResolved: [ :r|
+            (*('waiting for '+ id) println.*)
+            sender <-: retry: id.
+          ].
+
+          ((numwaiting + numDone) = numActors) ifTrue: [
+            resolver resolve: false.
+          ]
+        ]
+        ifFalse: [
+          (*('locked ' + id) println.*)
+          ressources at: id put: true.
+          sender <-: granted: id.
+        ]
+      )
+
+      public done: res = (
+        numDone := numDone + 1.
+        res doIndexes: [:id | 
+          ressources at: (res at: id) put: false.
+          (*('release '+ (res at: id)) println.*)
+        ].
+        
+        waiting resolve: true.
+        numwaiting := 0.
+        waiting := actors createPromisePair.
+        (numDone = numActors) ifTrue: [
+            resolver resolve: true.
+        ]      
+      )
+    )
+
+    public class Contender new: lock res: res = (
+      | private numGranted ::= 0.
+        private lock = lock.
+        private res = res.
+      |
+    )(
+      public granted: id = (
+        numGranted := numGranted + 1.
+        (numGranted = resPerA) ifTrue: [
+          lock <-: done: res.
+        ] ifFalse: [
+          lock <-: getRessource: (res at: (numGranted + 1)) for: self.
+        ]
+      )
+
+      public retry: id = (
+        (*('retry '+ id) println.*)
+        lock <-: getRessource: id for: self.
+      )
+
+      public start = (
+        lock <-: getRessource: (res at: 1) for: self.
+      )
+    )
+
+    (* benchmark & verification methods *)
+    public benchmark: abortP = (
+      | lock contenders random completionPP |
+      completionPP := actors createPromisePair.
+
+      lock := (actors createActorFromValue: Lock) <-: new: completionPP resolver.
+      random := Random new.
+
+      contenders := Array new: numActors.
+      contenders doIndexes: [:i |
+        | ct res |
+        res := TransferArray new: resPerA.
+        res doIndexes: [:j | 
+          |num|
+          num := ((random next: numRes) + 1).
+          [(res contains: num)] whileTrue: [
+            num := ((random next: numRes) + 1).
+          ].
+          res at: j put: num.
+          (*('' + num) println.*)
+        ].
+
+        ct := (actors createActorFromValue: Contender) <-: new: lock res: res.
+        contenders at: i put: ct.
+      ].
+        
+      contenders do: [:ct | ct <-: start ].
+      ^ completionPP promise
+    )
+
+
+    public verifyResult: isCorrect = (
+    ^ isCorrect
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      ^ self actors: (problem at: 1) asInteger resPerActor: (problem at: 2) asInteger numRes: (problem at: 3) asInteger
+    )
+      
+    public setupVerifiedRun: run = (
+      run problemSize: '4:2:3'
+    )
+  )
+
+
+  public class Philosophers new: numPhil rounds: numRounds = Benchmark (
+  | private numPhil   = numPhil.
+    private numRounds = numRounds.
+    private rand = Random new.
+  |)(
+    private class Counter = (
+    | private value ::= 0. |
+    )(
+      public inc: anInt = ( value := value + anInt. )
+      public get = ( ^ value )
+    )
+    
+    private class PhilosopherActor new: id rounds: rounds counter: aCounter arbitrator: arbitrator = (
+    | private localCounter ::= 0.
+      private roundsSoFar  ::= 0.
+      private id     = id.
+      private rounds = rounds.
+      private arbitrator = arbitrator.
+      private counter    = aCounter.
+    |)(
+      public denied = (
+        localCounter := localCounter + 1.
+        arbitrator <-: hungry: self id: id.
+      )
+      
+      public eat = (
+        roundsSoFar := roundsSoFar + 1.
+        localCounter > 0 ifTrue: [
+          counter <-: inc: localCounter.
+          localCounter := 0. ].
+        
+        arbitrator <-: done: id.
+        roundsSoFar < rounds
+          ifTrue:  [ self <-: start ]
+          ifFalse: [ arbitrator <-: exit ]
+      )
+      
+      public start = (
+        arbitrator <-: hungry: self id: id.
+      )
+    )
+    
+    private class ArbitratorActor new: numForks resolver: resolver = (
+    | private numForks = numForks.
+      private forks    = Array new: numForks withAll: false.
+      private numExitedPhilosophers ::= 0.
+      private resolver = resolver.
+      private abortion ::= false.
+    |)(
+      public hungry: philosopher id: leftForkId = (
+        | rightForkId |
+        rightForkId := 1 + ((rand next) % numForks).
+        
+        abortion ifTrue: [^ self].
+        ((forks at: leftForkId) or: [forks at: rightForkId])
+          ifTrue:  [ philosopher <-: denied ]
+          ifFalse: [
+            forks at: leftForkId  put: true.
+            forks at: rightForkId put: true.
+            philosopher <-: eat ]
+      )
+      
+      public done: leftForkId = (
+        | rightForkId |
+        rightForkId := 1 + ((rand next) % numForks).
+        
+        forks at: leftForkId  put: false.
+        forks at: rightForkId put: false.
+      )
+      
+      public exit = (
+        numExitedPhilosophers := numExitedPhilosophers + 1.
+  
+        numForks = numExitedPhilosophers ifTrue: [
+          | forksTaken |
+          forksTaken := 0.
+          forks do: [:f | f ifTrue: [ forksTaken := forksTaken + 1 ] ].
+
+          resolver resolve: 0 ]
+      )
+
+      public abort = (
+        abortion := true.
+        resolver resolve: 1.
+      )
+    )
+    
+    public benchmark: abortP = (
+      | counter completionPP arbitrator philosophers done|
+      counter := Counter new.
+      done := false.
+      completionPP := actors createPromisePair.
+ 
+      arbitrator := (actors createActorFromValue: ArbitratorActor) <-: new: numPhil resolver: completionPP resolver.
+      
+      completionPP promise whenResolved: [ :r|
+        done := true.
+      ].
+
+      abortP whenResolved: [ :r|
+        ((done not) and: (arbitrator notNil)) ifTrue:[
+          arbitrator <-: abort.
+          'Benchmark timed out' println.
+        ]
+      ].
+      
+      philosophers := Array new: numPhil.
+      philosophers doIndexes: [:i |
+        | ph |
+        ph := (actors createActorFromValue: PhilosopherActor) <-: new: i
+                        rounds: numRounds counter: counter arbitrator: arbitrator.
+        philosophers at: i put: ph ].
+
+      philosophers do: [:ph | ph <-: start ].
+
+      ^ completionPP promise
+    )
+
+    public verifyResult: result = (
+      ^ result = 0
+    )
+  ) : (
+    public newInstance: problemSize = (
+      | problem |
+      problem := problemSize split: ':'.
+      
+      ^ self new: (problem at: 1) asInteger
+          rounds: (problem at: 2) asInteger
+    )
+    
+    public setupVerifiedRun: run = (
+      run problemSize: '5:5'
+    )
+  )
+
+
+  public class Counting new: limit = Benchmark <: Value (
+  | private limit = limit. |
+  )(
+    public class ProducerActor new: counter resolver: completionRes = (
+    | private counter = counter.
+      private completionRes = completionRes.
+    |
+    )(
+      public increment = (
+        1 to: limit do: [:i |
+          counter <-: increment ].
+        
+        counter <-: requestCount: self.
+      )
+      
+      public count: cnt = (
+        completionRes resolve: cnt = limit
+      )
+    )
+    
+    public class CountingActor = (
+    | private count ::= 0. |
+    ) (
+      public increment = (
+        count := count + 1.
+      )
+      
+      public requestCount: requester = (
+        requester <-: count: count
+      )
+    )
+  
+    public benchmark: abortP = (
+      | counter producer disturb completionPP |
+      completionPP := actors createPromisePair.
+      counter  := (actors createActorFromValue: CountingActor) <-: new.
+      producer := (actors createActorFromValue: ProducerActor) <-: new: counter resolver: completionPP resolver.
+      producer <-: increment.
+      actors after: (limit / 3500) do: [ :r | counter <-: increment ].
+
+      ^ completionPP promise
+    )
+    
+    public verifyResult: isCorrect = (
+      ^ isCorrect
+    )
+  ) : (
+    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
+    public setupVerifiedRun: run = ( run problemSize: 1000 )
+  )
+
+  public class Sequence new: limit = Benchmark <: Value (
+  | private limit = limit. |
+  )(
+    
+    public class SequenceActor new: completionRes = (
+    | private completionRes = completionRes.
+      private last ::= nil. 
+      private problems ::= 0.
+      private total ::= 0.
+    |
+    ) (
+      public A = (
+        last = 'A' ifTrue: [
+          problems := problems + 1.
+        ].
+        last := 'A'.
+        total := total + 1.
+
+        total = (2 * limit) ifTrue: [
+          completionRes resolve: problems = 0.
+        ]
+      )
+
+      public B = (
+        (last = 'B') ifTrue: [
+          problems := problems + 1.
+        ].
+        last := 'B'.
+        total := total + 1.
+        
+        (total = (2 * limit)) ifTrue: [
+          completionRes resolve: (problems = 0).
+        ]
+      )
+    )
+  
+    public benchmark: abortP = (
+      | counter producerA producerB disturb completionPP |
+      completionPP := actors createPromisePair.
+      counter  := (actors createActorFromValue: SequenceActor) <-: new: completionPP resolver.
+
+      doA: counter lim: limit.    
+      doB: counter lim: limit. 
+
+      ^ completionPP promise
+    )
+
+    public doA: counter lim: lim = (
+      actors after: 1 do: [ :r |
+        counter <-: A.
+        lim >= 0 ifTrue: [
+          doA: counter lim: lim - 1
+        ]
+      ]
+    )
+
+    public doB: counter lim: lim = (
+      actors after: 1 do: [ :r |
+        counter <-: B.
+        lim > 0 ifTrue: [
+          doB: counter lim: (lim-1)
+        ]
+      ]
+    )
+    
+    public verifyResult: isCorrect = (
+      ^ isCorrect
+    )
+  ) : (
+    public newInstance: problemSize = ( ^ self new: problemSize asInteger )
+    public setupVerifiedRun: run = ( run problemSize: 100 )
+  )
+)
