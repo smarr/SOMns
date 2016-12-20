@@ -72,7 +72,7 @@ public class Actor {
   /** Is scheduled on the pool, and executes messages to this actor. */
   private final ExecAllMessages executor;
 
-  //used to collect absolute numbers from the threads
+  // used to collect absolute numbers from the threads
   private static long numCreatedMessages = 0;
   private static long numCreatedActors = 0;
   private static long numCreatedPromises = 0;
@@ -433,7 +433,7 @@ public class Actor {
         ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
         this.actorId = t.generateActorId();
       } else {
-        actorId = 0; //main actor
+        actorId = 0; // main actor
       }
     }
 

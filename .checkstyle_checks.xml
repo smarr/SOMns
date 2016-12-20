@@ -139,6 +139,11 @@
       <metadata name="com.atlassw.tools.eclipse.checkstyle.comment" value="Checks for whitespace before a comma."/>
       <metadata name="com.atlassw.tools.eclipse.checkstyle.customMessage" value="Illegal whitespace before a comma."/>
     </module>
+    <module name="RegexpSinglelineJava">
+      <metadata name="net.sf.eclipsecs.core.comment" value="needs a space after comment start"/>
+      <property name="format" value="[^:&quot;]//[^&quot;\s]"/>
+      <property name="message" value="needs a space after comment start"/>
+    </module>
   </module>
   <module name="RegexpHeader">
     <property name="severity" value="ignore"/>

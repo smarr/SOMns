@@ -1,5 +1,9 @@
 package som.primitives.arrays;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.VirtualFrame;
+
 import som.VM;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.primitives.ObjectPrims.IsValue;
@@ -9,10 +13,6 @@ import som.vm.constants.KernelObj;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
-
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public final class ArraySetAllStrategy {
@@ -28,7 +28,7 @@ public final class ArraySetAllStrategy {
   @TruffleBoundary
   private static Object signalNotAValue() {
     // TODO: this is a duplicated from IsValueCheckNode
-    //TODO: don't think this is a complete solution, we need to do something else here
+    // TODO: don't think this is a complete solution, we need to do something else here
     //       perhaps write the node, and then also use a send node...
     CompilerDirectives.transferToInterpreter();
     VM.thisMethodNeedsToBeOptimized("Should be optimized or on slowpath");

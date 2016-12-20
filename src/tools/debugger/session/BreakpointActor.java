@@ -238,13 +238,13 @@ public class BreakpointActor extends Actor {
     }
   }
 
-//TODO finish
+  // TODO finish
   public void updateInbox(final EventualMessage msg, final boolean addition) {
     if (addition) {
-      //messageAddedToActorEvent
+      // messageAddedToActorEvent
       logMessageAddedToMailbox(msg);
     } else {
-      //messageRemovedFromActorEvent
+      // messageRemovedFromActorEvent
       logMessageBeingExecuted(msg);
     }
   }

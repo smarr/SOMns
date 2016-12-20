@@ -1,6 +1,5 @@
 # Change Log
 
-
 ## [Unreleased]
 
  - Added basic support for shared-memory multithreading and fork/join

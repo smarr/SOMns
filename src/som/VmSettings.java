@@ -43,7 +43,7 @@ public class VmSettings {
     List<String> al = Arrays.asList(atConfig.split(":"));
     boolean filter = al.size() > 0 && !atConfig.isEmpty();
 
-    MESSAGE_TIMESTAMPS    =  !al.contains("mt") && filter;
+    MESSAGE_TIMESTAMPS    = !al.contains("mt") && filter;
     MESSAGE_PARAMETERS    = !al.contains("mp") && filter;
     PROMISE_CREATION      = !al.contains("pc") && filter;
     PROMISE_RESOLUTION    = PROMISE_CREATION && (!al.contains("pr")) && filter;

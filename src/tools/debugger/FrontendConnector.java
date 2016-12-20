@@ -85,7 +85,7 @@ public class FrontendConnector {
   private static final int BINARY_PORT = 7978;
   private static final int DEBUGGER_PORT = 8888;
 
-  private final ArrayList<Source> notReady = new ArrayList<>(); //TODO rename: toBeSend
+  private final ArrayList<Source> notReady = new ArrayList<>(); // TODO rename: toBeSend
 
   public FrontendConnector(final Breakpoints breakpoints,
       final Instrumenter instrumenter, final WebDebugger webDebugger,

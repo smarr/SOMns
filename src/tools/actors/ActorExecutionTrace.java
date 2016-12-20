@@ -53,7 +53,8 @@ public class ActorExecutionTrace {
   private static final ArrayBlockingQueue<ByteBuffer> emptyBuffers = new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
   private static final ArrayBlockingQueue<ByteBuffer> fullBuffers = new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
 
-  //contains symbols that need to be written to file/sent to debugger, e.g. actor type, message type
+  // contains symbols that need to be written to file/sent to debugger,
+  // e.g. actor type, message type
   private static final ArrayList<SSymbol> symbolsToWrite = new ArrayList<>();
 
   private static FrontendConnector front = null;
@@ -99,7 +100,7 @@ public class ActorExecutionTrace {
         @Override
         public void handleNotification(final Notification notification, final Object handback) {
           if (notification.getType().equals(GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION)) {
-            //get the information associated with this notification
+            // get the information associated with this notification
             GarbageCollectionNotificationInfo info = GarbageCollectionNotificationInfo.from((CompositeData) notification.getUserData());
             VM.println(Thread.currentThread().toString());
             VM.println(info.getGcAction() + ": - " + info.getGcInfo().getId() + " " + info.getGcName() + " (from " + info.getGcCause() + ") " + info.getGcInfo().getDuration() + " ms;");
@@ -151,8 +152,12 @@ public class ActorExecutionTrace {
     PromiseChained((byte) 4, 17),
     Mailbox((byte) 5, 17),
 
-    Thread((byte) 6, 9), //at the beginning of buffer, allows to track what was created/executed on which thread, really cheap solution, timestamp?
-    //for memory events another buffer is needed (the gc callback is on Thread[Service Thread,9,system])
+    // at the beginning of buffer, allows to track what was created/executed
+    // on which thread, really cheap solution, timestamp?
+    Thread((byte) 6, 9),
+
+    // for memory events another buffer is needed
+    // (the gc callback is on Thread[Service Thread,9,system])
     MailboxContd((byte) 7, 19),
     BasicMessage((byte) 8, 7),
     PromiseMessage((byte) 9, 7);
@@ -290,8 +295,8 @@ public class ActorExecutionTrace {
 
       ByteBuffer b = t.getThreadLocalBuffer();
       b.put(Events.Mailbox.id);
-      b.putLong(m.getBasemessageId()); //base id for messages
-      b.putLong(actor.getActorId()); //receiver of the messages
+      b.putLong(m.getBasemessageId()); // base id for messages
+      b.putLong(actor.getActorId());   // receiver of the messages
 
       int idx = 0;
 
@@ -301,7 +306,7 @@ public class ActorExecutionTrace {
           b = t.getThreadLocalBuffer();
           b.put(Events.MailboxContd.id);
           b.putLong(m.getBasemessageId());
-          b.putLong(actor.getActorId()); //receiver of the messages
+          b.putLong(actor.getActorId()); // receiver of the messages
           b.putShort((short) idx);
         }
 
@@ -323,10 +328,11 @@ public class ActorExecutionTrace {
 
         if (VmSettings.MESSAGE_PARAMETERS) {
           Object[] args = em.getArgs();
-          b.put((byte) (args.length - 1)); //num paramaters
+          b.put((byte) (args.length - 1)); // num paramaters
 
           for (int i = 1; i < args.length; i++) {
-            //gonna need a 8 plus 1 byte for most parameter, boolean just use two identifiers.
+            // will need a 8 plus 1 byte for most parameter,
+            // boolean just use two identifiers.
             if (args[i] instanceof SFarReference) {
               Object o = ((SFarReference) args[i]).getValue();
               writeParameter(o, b);
@@ -370,7 +376,8 @@ public class ActorExecutionTrace {
       } else {
         throw new RuntimeException("unexpected parameter type");
       }
-      //TODO add case for null/nil/exception, ask ctorresl about what type is used for the error handling stuff
+      // TODO add case for null/nil/exception,
+      // ask ctorresl about what type is used for the error handling stuff
     }
   }
 
