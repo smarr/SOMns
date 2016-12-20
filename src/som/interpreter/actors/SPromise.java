@@ -9,10 +9,10 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.sun.istack.internal.NotNull;
 
 import som.VmSettings;
+import som.interpreter.SomException;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.vm.NotYetImplementedException;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
@@ -139,9 +139,6 @@ public class SPromise extends SObjectWithClass {
 
   public synchronized void registerOnError(final PromiseMessage msg,
       final Actor current) {
-    if (resolutionState == Resolution.ERRORNOUS) {
-      scheduleCallbacksOnResolution(value, msg, current, false);
-    } else {
       if (resolutionState == Resolution.SUCCESSFUL) {
         // short cut on resolved, this promise will never error, so,
         // just return promise, don't use isSomehowResolved(), because the other
@@ -152,6 +149,14 @@ public class SPromise extends SObjectWithClass {
         onError = new ArrayList<>(1);
       }
       onError.add(msg);
+  }
+
+  public void scheduleOnErrorCallbacks(final Actor current, final SomException exception) {
+    if (onError != null) {
+      for (int i = 0; i < onError.size(); i++) {
+        PromiseMessage callbackOrMsg =  onError.get(i);
+        scheduleCallbacksOnResolution(exception.getSomObject(), callbackOrMsg, current, false);
+      }
     }
   }
 
@@ -328,8 +333,9 @@ public class SPromise extends SObjectWithClass {
       resolverClass = cls;
     }
 
-    public final void onError() {
-      throw new NotYetImplementedException(); // TODO: implement
+    public final void onError(final SomException exception) {
+      promise.resolutionState = Resolution.ERRORNOUS;
+      promise.scheduleOnErrorCallbacks(EventualMessage.getActorCurrentMessageIsExecutionOn(), exception);
     }
 
     public final boolean assertNotCompleted() {

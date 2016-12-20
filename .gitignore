@@ -14,3 +14,4 @@ newspeak
 tools/kompos/node_modules
 tools/kompos/out
 traces
+/npm-debug.log

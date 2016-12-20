@@ -9,6 +9,7 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 
 import som.VmSettings;
 import som.interpreter.SArguments;
+import som.interpreter.SomException;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vmobjects.SSymbol;
@@ -35,9 +36,12 @@ public class ReceivedMessage extends ReceivedRootNode {
       dbg.prepareSteppingAfterNextRootNode();
     }
 
-    Object result = onReceive.doPreEvaluated(frame, msg.args);
-
-    resolvePromise(frame, msg.resolver, result, msg.triggerPromiseResolutionBreakpoint);
+    try {
+      Object result = onReceive.doPreEvaluated(frame, msg.args);
+      resolvePromise(frame, msg.resolver, result, msg.triggerPromiseResolutionBreakpoint);
+    } catch (SomException exception) {
+      msg.getResolver().onError(exception);
+    }
     return null;
   }
 
@@ -85,9 +89,12 @@ public class ReceivedMessage extends ReceivedRootNode {
         dbg.prepareSteppingAfterNextRootNode();
       }
 
-      Object result = onReceive.call(frame, msg.args);
-
-      resolvePromise(frame, msg.resolver, result, msg.triggerPromiseResolutionBreakpoint);
+      try {
+        Object result = onReceive.call(frame, msg.args);
+        resolvePromise(frame, msg.resolver, result, msg.triggerPromiseResolutionBreakpoint);
+      } catch (SomException exception) {
+        msg.getResolver().onError(exception);
+      }
       return null;
     }
   }
