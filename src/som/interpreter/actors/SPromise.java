@@ -1,7 +1,6 @@
 package som.interpreter.actors;
 
 import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -33,7 +32,7 @@ public class SPromise extends SObjectWithClass {
   public static SPromise createPromise(final Actor owner) {
     if (VmSettings.DEBUG_MODE) {
       return new SDebugPromise(owner);
-    } else if (VmSettings.ACTOR_TRACING) {
+    } else if (VmSettings.PROMISE_CREATION) {
       return new STracingPromise(owner);
     } else {
       return new SPromise(owner);
@@ -88,7 +87,6 @@ public class SPromise extends SObjectWithClass {
   }
 
   public long getPromiseId() { return 0; }
-  public List<Long> getPromiseMessages() { return null; }
 
   public final Actor getOwner() {
     return owner;
@@ -206,7 +204,7 @@ public class SPromise extends SObjectWithClass {
   public final synchronized void addChainedPromise(@NotNull final SPromise remote) {
     assert remote != null;
     remote.resolutionState = Resolution.CHAINED;
-    if (VmSettings.ACTOR_TRACING) {
+    if (VmSettings.PROMISE_RESOLUTION) {
       ActorExecutionTrace.promiseChained(this.getPromiseId(), remote.getPromiseId());
     }
 
@@ -273,7 +271,6 @@ public class SPromise extends SObjectWithClass {
 
   protected static final class STracingPromise extends SPromise {
     protected final long promiseId;
-    protected final List<Long> promiseMessages = new ArrayList<>();
 
     protected STracingPromise(final Actor owner) {
       super(owner);
@@ -285,11 +282,6 @@ public class SPromise extends SObjectWithClass {
     @Override
     public long getPromiseId() {
       return promiseId;
-    }
-
-    @Override
-    public List<Long> getPromiseMessages() {
-      return promiseMessages;
     }
   }
 
@@ -387,7 +379,7 @@ public class SPromise extends SObjectWithClass {
         final Object wrapped, final SPromise p, final Actor current, final boolean isBreakpointOnPromiseResolution) {
       assert !(result instanceof SPromise);
 
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.PROMISE_RESOLUTION) {
         if (p.resolutionState != Resolution.CHAINED) {
           ActorExecutionTrace.promiseResolution(p.getPromiseId(), result);
         }

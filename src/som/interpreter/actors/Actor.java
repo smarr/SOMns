@@ -147,7 +147,7 @@ public class Actor {
   @TruffleBoundary
   public synchronized void send(final EventualMessage msg) {
     assert msg.getTarget() == this;
-    if (VmSettings.ACTOR_TRACING) {
+    if (VmSettings.MESSAGE_TIMESTAMPS) {
       mailbox.addMessageSendTime();
     }
     mailbox.append(msg);
@@ -215,7 +215,7 @@ public class Actor {
             dbg.prepareSteppingUntilNextRootNode();
           }
         }
-        if (VmSettings.ACTOR_TRACING) {
+        if (VmSettings.MESSAGE_TIMESTAMPS) {
           current.addMessageExecutionStart();
         }
         msg.execute();
