@@ -1,6 +1,10 @@
 #!/bin/bash
 ## Exit on first error
-set -e
+if [ "$1" != "update" ]
+then
+  # quit on first error
+  set -e
+fi
 
 ## Determine absolute path of script
 pushd `dirname $0` > /dev/null
@@ -9,14 +13,20 @@ popd > /dev/null
 
 SOM_DIR=$SCRIPT_PATH/../../..
 
+## create folder for new results
+mkdir -p $SCRIPT_PATH/results/
+
+## extract expected results
+tar xf $SCRIPT_PATH/expected-results.tar.bz2 -C $SCRIPT_PATH/
+
 function runBenchmark {
   BENCH=$1
-  HARNESS="$SOM_DIR/som -dm -Ddm.metrics=$SCRIPT_PATH/expected-results/$BENCH \
+  HARNESS="$SOM_DIR/som -dm -Ddm.metrics=$SCRIPT_PATH/results/$BENCH \
     -G $SOM_DIR/core-lib/Benchmarks/Harness.som"
   echo $HARNESS $@
   $HARNESS $@
   
-  git --no-pager diff --exit-code $SCRIPT_PATH/expected-results/$BENCH
+  diff -r $SCRIPT_PATH/expected-results/$BENCH $SCRIPT_PATH/results/$BENCH
 }
 
 runBenchmark LanguageFeatures.Fibonacci    1 0 2
@@ -45,3 +55,13 @@ runBenchmark Queens      1 0 5
 runBenchmark Storage     1 0 2
 runBenchmark Sieve       1 0 2
 runBenchmark Towers      1 0 2
+
+if [ "$1" = "update" ]
+then
+  ## move old results out of the way, and new results to expected folder
+  rm -Rf $SCRIPT_PATH/old-results
+  mv $SCRIPT_PATH/expected-results $SCRIPT_PATH/old-results
+  mv $SCRIPT_PATH/results $SCRIPT_PATH/expected-results
+  ## update the archive
+  tar cjf expected-results.tar.bz2 -C $SCRIPT_PATH expected-results
+fi

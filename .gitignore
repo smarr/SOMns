@@ -14,3 +14,5 @@ newspeak
 tools/kompos/node_modules
 tools/kompos/out
 traces
+/tools/tests/dym/old-results
+/tools/tests/dym/results
