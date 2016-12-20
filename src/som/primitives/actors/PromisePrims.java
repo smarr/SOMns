@@ -71,6 +71,8 @@ public final class PromisePrims {
     private static final SSymbol withAndFactory = Symbols.symbolFor("with:and:");
   }
 
+  // TODO: can we find another solution for megamorphics callers that
+  //       does not require node creation? Might need a generic received node.
   @TruffleBoundary
   public static RootCallTarget createReceived(final SBlock callback) {
     RootCallTarget target = callback.getMethod().getCallTarget();

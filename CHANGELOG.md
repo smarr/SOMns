@@ -6,8 +6,10 @@
    programming ([PR #52](https://github.com/smarr/SOMns/pull/52))
    - object model uses now a global safepoint to synchronize layout changes
    - array strategies are not safe yet
+
  - Turn writes to method arguments into errors. Before it was leading to 
    confusing setter sends and 'message not understood' errors.
+
  - Added Lee and Vacation benchmarks ([PR #78](https://github.com/smarr/SOMns/pull/78))
 
  - Configuration flag for actor tracing, -atcfg=<config>

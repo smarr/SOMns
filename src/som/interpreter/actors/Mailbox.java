@@ -30,7 +30,7 @@ public class Mailbox extends ObjectBuffer<EventualMessage>{
   }
 
   public static final class TracingMailbox extends Mailbox {
-    //TODO the timestamps are very expensive, hide behind feature flag.
+    // TODO the timestamps are very expensive, hide behind feature flag.
     long baseMessageId;
     long executionStart;
     final List<Long> messageExecutionStart = new ArrayList<>();
