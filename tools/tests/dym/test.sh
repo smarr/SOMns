@@ -63,5 +63,5 @@ then
   mv $SCRIPT_PATH/expected-results $SCRIPT_PATH/old-results
   mv $SCRIPT_PATH/results $SCRIPT_PATH/expected-results
   ## update the archive
-  tar cjf expected-results.tar.bz2 -C $SCRIPT_PATH expected-results
+  tar cjf $SCRIPT_PATH/expected-results.tar.bz2 -C $SCRIPT_PATH expected-results
 fi
