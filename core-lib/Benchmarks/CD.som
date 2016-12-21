@@ -63,7 +63,7 @@ class CDSuite usingPlatform: platform andHarness: harness = (
       ^ actualCollisions
     )
 
-    public innerBenchmarkLoop: innerIterations = (
+    public innerBenchmarkLoop: innerIterations numThreads: threads = (
       ^ verify: (benchmark: innerIterations) resultFor: innerIterations
     )
 

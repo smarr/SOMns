@@ -23,7 +23,7 @@ class Havlak usingPlatform: platform andHarness: harness = (
 |
 )(
   private class HavlakBenchmark = Benchmark ()(
-    public innerBenchmarkLoop: innerIterations = (
+    public innerBenchmarkLoop: innerIterations numThreads: threads = (
       ^ verifyResult:
          (LoopTesterApp new main: 50 * innerIterations
                             loop: 5 * innerIterations
