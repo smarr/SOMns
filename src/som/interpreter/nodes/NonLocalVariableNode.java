@@ -10,6 +10,7 @@ import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.compiler.Variable.Local;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.vm.constants.Nil;
@@ -21,11 +22,13 @@ import tools.dym.Tags.LocalVarWrite;
 public abstract class NonLocalVariableNode extends ContextualNode {
 
   protected final FrameSlot slot;
+  protected final Local var;
 
-  private NonLocalVariableNode(final int contextLevel, final FrameSlot slot,
+  private NonLocalVariableNode(final int contextLevel, final Local var,
       final SourceSection source) {
     super(contextLevel, source);
-    this.slot = slot;
+    this.slot = var.getSlot();
+    this.var  = var;
   }
 
   @Override
@@ -52,12 +55,12 @@ public abstract class NonLocalVariableNode extends ContextualNode {
   public abstract static class NonLocalVariableReadNode extends NonLocalVariableNode {
 
     public NonLocalVariableReadNode(final int contextLevel,
-        final FrameSlot slot, final SourceSection source) {
-      super(contextLevel, slot, source);
+        final Local var, final SourceSection source) {
+      super(contextLevel, var, source);
     }
 
     public NonLocalVariableReadNode(final NonLocalVariableReadNode node) {
-      this(node.contextLevel, node.slot, node.getSourceSection());
+      this(node.contextLevel, node.var, node.sourceSection);
     }
 
     @Specialization(guards = "isUninitialized(frame)")
@@ -121,12 +124,12 @@ public abstract class NonLocalVariableNode extends ContextualNode {
   public abstract static class NonLocalVariableWriteNode extends NonLocalVariableNode {
 
     public NonLocalVariableWriteNode(final int contextLevel,
-        final FrameSlot slot, final SourceSection source) {
-      super(contextLevel, slot, source);
+        final Local var, final SourceSection source) {
+      super(contextLevel, var, source);
     }
 
     public NonLocalVariableWriteNode(final NonLocalVariableWriteNode node) {
-      this(node.contextLevel, node.slot, node.getSourceSection());
+      this(node.contextLevel, node.var, node.sourceSection);
     }
 
     @Specialization(guards = "isBoolKind(frame)")

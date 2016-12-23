@@ -2,13 +2,13 @@ package som.interpreter;
 
 import java.util.List;
 
-import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable.Argument;
+import som.compiler.Variable.Internal;
 import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.actors.EventualSendNode;
@@ -21,8 +21,6 @@ import som.interpreter.nodes.ArgumentReadNode.NonLocalSuperReadNode;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InternalObjectArrayNode;
-import som.interpreter.nodes.LocalVariableNode.LocalVariableWriteNode;
-import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeGen;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.ResolvingImplicitReceiverSend;
@@ -45,7 +43,7 @@ import som.vmobjects.SSymbol;
 public final class SNodeFactory {
 
   public static CatchNonLocalReturnNode createCatchNonLocalReturn(
-      final ExpressionNode methodBody, final FrameSlot frameOnStackMarker) {
+      final ExpressionNode methodBody, final Internal frameOnStackMarker) {
     return new CatchNonLocalReturnNode(methodBody, frameOnStackMarker);
   }
 
@@ -62,27 +60,29 @@ public final class SNodeFactory {
   public static ExpressionNode createArgumentRead(final Argument variable,
       final int contextLevel, final SourceSection source) {
     if (contextLevel == 0) {
-      return new LocalArgumentReadNode(variable.index, source);
+      return new LocalArgumentReadNode(variable, source);
     } else {
-      return new NonLocalArgumentReadNode(variable.index, contextLevel, source);
+      return new NonLocalArgumentReadNode(variable, contextLevel, source);
     }
   }
 
-  public static ExpressionNode createSelfRead(final int contextLevel,
-      final MixinDefinitionId holderMixin, final SourceSection source) {
+  public static ExpressionNode createSelfRead(final Argument arg,
+      final int contextLevel, final MixinDefinitionId holderMixin,
+      final SourceSection source) {
     if (contextLevel == 0) {
-      return new LocalSelfReadNode(holderMixin, source);
+      return new LocalSelfReadNode(arg, holderMixin, source);
     } else {
-      return new NonLocalSelfReadNode(holderMixin, contextLevel, source);
+      return new NonLocalSelfReadNode(arg, holderMixin, contextLevel, source);
     }
   }
 
-  public static ExpressionNode createSuperRead(final int contextLevel,
-        final MixinDefinitionId holderMixin, final boolean classSide, final SourceSection source) {
+  public static ExpressionNode createSuperRead(final Argument arg,
+      final int contextLevel, final MixinDefinitionId holderMixin,
+      final boolean classSide, final SourceSection source) {
     if (contextLevel == 0) {
-      return new LocalSuperReadNode(holderMixin, classSide, source);
+      return new LocalSuperReadNode(arg, holderMixin, classSide, source);
     } else {
-      return new NonLocalSuperReadNode(contextLevel, holderMixin, classSide, source);
+      return new NonLocalSuperReadNode(arg, contextLevel, holderMixin, classSide, source);
     }
   }
 
@@ -90,11 +90,6 @@ public final class SNodeFactory {
         final int contextLevel,
         final ExpressionNode exp, final SourceSection source) {
     return new UninitializedVariableWriteNode(variable, contextLevel, exp, source);
-  }
-
-  public static LocalVariableWriteNode createLocalVariableWrite(
-      final FrameSlot varSlot, final ExpressionNode exp, final SourceSection source) {
-    return LocalVariableWriteNodeGen.create(varSlot, source, exp);
   }
 
   public static ExpressionNode createSequence(
@@ -138,9 +133,9 @@ public final class SNodeFactory {
   }
 
   public static ReturnNonLocalNode createNonLocalReturn(final ExpressionNode exp,
-      final FrameSlot markerSlot, final int contextLevel,
+      final Internal marker, final int contextLevel,
       final SourceSection source) {
-    return new ReturnNonLocalNode(exp, markerSlot, contextLevel, source);
+    return new ReturnNonLocalNode(exp, marker, contextLevel, source);
   }
 
   public static final class NotImplemented extends ExprWithTagsNode {

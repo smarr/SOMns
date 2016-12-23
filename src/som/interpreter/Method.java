@@ -21,41 +21,51 @@
  */
 package som.interpreter;
 
-import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.compiler.Variable.Argument;
-import som.compiler.Variable.Local;
+import som.compiler.MethodBuilder;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
+import som.vmobjects.SInvokable;
 
 
 public final class Method extends Invokable {
 
-  private final MethodScope currentMethodScope;
+  private final MethodScope methodScope;
   private final SourceSection[] definition;
   private final boolean block;
-  private final Argument[] arguments;
-  private final Local[] locals;
 
   public Method(final String name, final SourceSection sourceSection,
                 final SourceSection[] definition,
                 final ExpressionNode expressions,
-                final MethodScope currentLexicalScope,
-                final ExpressionNode uninitialized, final boolean block,
-                final Argument[] arguments, final Local[] locals) {
-    super(name, sourceSection, currentLexicalScope.getFrameDescriptor(),
+                final MethodScope methodScope,
+                final ExpressionNode uninitialized, final boolean block) {
+    super(name, sourceSection, methodScope.getFrameDescriptor(),
         expressions, uninitialized);
     this.definition = definition;
     this.block = block;
-    this.currentMethodScope = currentLexicalScope;
-    this.arguments = arguments;
-    this.locals = locals;
+    this.methodScope = methodScope;
+    assert methodScope.isFinalized();
     expressions.markAsRootExpression();
+  }
+
+  @Override
+  public boolean equals(final Object o) {
+    if (o == this) { return true; }
+    if (!(o instanceof Method)) { return false; }
+
+    Method m = (Method) o;
+
+    if (name.equals(m.name) && getSourceSection() == m.getSourceSection()) {
+      return true;
+    }
+
+    assert !getSourceSection().equals(m.getSourceSection()) : "If that triggers, something with the source sections is wrong.";
+    return false;
   }
 
   public SourceSection[] getDefinition() {
@@ -63,55 +73,55 @@ public final class Method extends Invokable {
   }
 
   @Override
-  protected Local[] getLocals() {
-    return locals;
-  }
-
-  @Override
   public String toString() {
     return "Method " + getName() + "\t@" + Integer.toHexString(hashCode());
   }
 
+  /**
+   * @param splitScope is the scope for the block, which has already been split.
+   */
   @Override
-  public Invokable cloneWithNewLexicalContext(final MethodScope outerMethodScope) {
-    FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
-    MethodScope     inlinedCurrentScope = new MethodScope(
-        inlinedFrameDescriptor, outerMethodScope,
-        null /* because we got an enclosing method anyway */);
+  public Invokable cloneWithNewLexicalContext(final MethodScope splitScope) {
+    assert methodScope != splitScope;
+    assert splitScope.isFinalized();
+
     ExpressionNode  inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(
-        uninitializedBody, inlinedCurrentScope);
+        uninitializedBody, splitScope);
     Method clone = new Method(name, getSourceSection(), definition, inlinedBody,
-        inlinedCurrentScope, uninitializedBody, block, arguments, locals);
-    inlinedCurrentScope.setMethod(clone);
+        splitScope, uninitializedBody, block);
+    splitScope.setMethod(clone);
     return clone;
+  }
+
+  @Override
+  public ExpressionNode inline(final MethodBuilder builder, final SInvokable outer) {
+    builder.mergeIntoScope(methodScope, outer);
+    return InlinerForLexicallyEmbeddedMethods.doInline(uninitializedBody, builder);
   }
 
   public Invokable cloneAndAdaptToEmbeddedOuterContext(
       final InlinerForLexicallyEmbeddedMethods inliner) {
-    MethodScope currentAdaptedScope = new MethodScope(
-        getFrameDescriptor().copy(), inliner.getCurrentMethodScope(),
-        null /* because we got an enclosing method anyway */);
+    MethodScope currentAdaptedScope = inliner.getScope(this);
+
     ExpressionNode adaptedBody = InlinerAdaptToEmbeddedOuterContext.doInline(
         uninitializedBody, inliner, currentAdaptedScope);
     ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
 
     Method clone = new Method(name, getSourceSection(), definition, adaptedBody,
-        currentAdaptedScope, uninitAdaptedBody, block, arguments, locals);
+        currentAdaptedScope, uninitAdaptedBody, block);
     currentAdaptedScope.setMethod(clone);
     return clone;
   }
 
   public Invokable cloneAndAdaptToSomeOuterContextBeingEmbedded(
       final InlinerAdaptToEmbeddedOuterContext inliner) {
-    MethodScope currentAdaptedScope = new MethodScope(
-        getFrameDescriptor().copy(), inliner.getCurrentMethodScope(),
-        null /* because we got an enclosing method anyway */);
+    MethodScope currentAdaptedScope = inliner.getScope(this);
     ExpressionNode adaptedBody = InlinerAdaptToEmbeddedOuterContext.doInline(
         uninitializedBody, inliner, currentAdaptedScope);
     ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
 
     Method clone = new Method(name, getSourceSection(), definition,
-        adaptedBody, currentAdaptedScope, uninitAdaptedBody, block, arguments, locals);
+        adaptedBody, currentAdaptedScope, uninitAdaptedBody, block);
     currentAdaptedScope.setMethod(clone);
     return clone;
   }
@@ -119,14 +129,14 @@ public final class Method extends Invokable {
   @Override
   public void propagateLoopCountThroughoutMethodScope(final long count) {
     assert count >= 0;
-    currentMethodScope.propagateLoopCountThroughoutMethodScope(count);
+    methodScope.propagateLoopCountThroughoutMethodScope(count);
     LoopNode.reportLoopCount(expressionOrSequence,
         (count > Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) count);
   }
 
   @Override
   public Node deepCopy() {
-    return cloneWithNewLexicalContext(currentMethodScope.getOuterMethodScopeOrNull());
+    return cloneWithNewLexicalContext(methodScope.getOuterMethodScopeOrNull());
   }
 
   public boolean isBlock() {
@@ -141,10 +151,6 @@ public final class Method extends Invokable {
   }
 
   public MethodScope getLexicalScope() {
-    return currentMethodScope;
-  }
-
-  public Argument[] getArguments() {
-    return arguments;
+    return methodScope;
   }
 }

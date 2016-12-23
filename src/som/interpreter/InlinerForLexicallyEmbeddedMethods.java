@@ -1,14 +1,14 @@
 package som.interpreter;
 
-import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
-import com.oracle.truffle.api.nodes.NodeVisitor;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MethodBuilder;
-import som.compiler.MethodBuilder.MethodDefinitionError;
+import som.compiler.Variable;
+import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
+import som.inlining.InliningVisitor;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
@@ -16,45 +16,21 @@ import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableRead
 import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWriteNode;
 
 
-public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
+public class InlinerForLexicallyEmbeddedMethods extends InliningVisitor {
 
   public static ExpressionNode doInline(
-      final ExpressionNode body, final MethodBuilder builder,
-      final Local[] blockArguments, final Local[] blockLocals,
-      final int blockStartIdx) {
+      final ExpressionNode body, final MethodBuilder builder) {
     ExpressionNode inlinedBody = NodeUtil.cloneNode(body);
 
     return NodeVisitorUtil.applyVisitor(inlinedBody,
-        new InlinerForLexicallyEmbeddedMethods(builder, blockArguments,
-            blockLocals, blockStartIdx));
+        new InlinerForLexicallyEmbeddedMethods(builder));
   }
 
   private final MethodBuilder builder;
-  private final Local[] blockArguments;
-  private final int blockStartIdx;
 
-  public InlinerForLexicallyEmbeddedMethods(final MethodBuilder builder,
-      final Local[] blockArguments, final Local[] blockLocals,
-      final int blockStartIdx) {
+  public InlinerForLexicallyEmbeddedMethods(final MethodBuilder builder) {
+    super(builder.getCurrentMethodScope());
     this.builder = builder;
-    this.blockArguments = blockArguments;
-    this.blockStartIdx  = blockStartIdx;
-
-    addLocalVarsToBuilder(builder, blockLocals);
-  }
-
-  /**
-   * Populate the builder with the local variables of the block to be embedded.
-   */
-  private void addLocalVarsToBuilder(final MethodBuilder builder,
-      final Local[] blockLocals) {
-    for (Local local : blockLocals) {
-      try {
-        builder.addLocal(getEmbeddedSlotId(local.getSlotIdentifier()), local.source);
-      } catch (MethodDefinitionError e) {
-        throw new RuntimeException(e);
-      }
-    }
   }
 
   @Override
@@ -65,64 +41,37 @@ public class InlinerForLexicallyEmbeddedMethods implements NodeVisitor {
     return true;
   }
 
-  public UninitializedVariableReadNode getLocalRead(final Object slotIdentifier, final SourceSection source) {
-    String inlinedId = getEmbeddedSlotId(slotIdentifier);
-    try {
-      builder.addLocalIfAbsent(inlinedId, source);
-      return (UninitializedVariableReadNode) builder.getReadNode(inlinedId, source);
-    } catch (MethodDefinitionError e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private String getEmbeddedSlotId(final Object slotIdentifier) {
-    String id = (String) slotIdentifier;
-    String inlinedId = id + ":" + blockStartIdx;
-    return inlinedId;
-  }
-
-  public FrameSlot addLocalSlot(final Object orgSlotId,
+  public UninitializedVariableReadNode getLocalRead(final Variable var,
       final SourceSection source) {
-    String id = getEmbeddedSlotId(orgSlotId);
-    try {
-      return builder.addLocalIfAbsent(id, source).getSlot();
-    } catch (MethodDefinitionError e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  public FrameSlot getLocalSlot(final Object orgSlotId) {
-    String id = getEmbeddedSlotId(orgSlotId);
-    Local var = builder.getEmbeddedLocal(id);
-    return var.getSlot();
+    return (UninitializedVariableReadNode) getSplitVar(var).getReadNode(0, source);
   }
 
   public MethodScope getCurrentMethodScope() {
     return builder.getCurrentMethodScope();
   }
 
-  public UninitializedVariableWriteNode getLocalWrite(final Object slotIdentifier,
-      final ExpressionNode valExp,
-      final SourceSection source) {
-    String inlinedId = getEmbeddedSlotId(slotIdentifier);
-    try {
-      builder.addLocalIfAbsent(inlinedId, source);
-      return (UninitializedVariableWriteNode) builder.getWriteNode(inlinedId,
-          valExp, source);
-    } catch (MethodDefinitionError e) {
-      throw new RuntimeException(e);
-    }
+  public MethodScope getScope(final Method method) {
+    MethodScope root = builder.getCurrentMethodScope();
+    assert root == scope;
+    return root.getScope(method);
   }
 
-  public ExpressionNode getReplacementForLocalArgument(final int argumentIndex,
+  public UninitializedVariableWriteNode getLocalWrite(final Local local,
+      final ExpressionNode valExpr,
       final SourceSection source) {
-    return blockArguments[argumentIndex - 1].getReadNode(0, source);
+    Local l = (Local) getSplitVar(local);
+    return (UninitializedVariableWriteNode) l.getWriteNode(0, valExpr, source);
   }
 
-  public ExpressionNode getReplacementForNonLocalArgument(final int contextLevel,
-      final int argumentIndex, final SourceSection source) {
+  public ExpressionNode getReplacementForLocalArgument(final Argument arg,
+      final SourceSection source) {
+    return getSplitVar(arg).getReadNode(0, source);
+  }
+
+  public ExpressionNode getReplacementForNonLocalArgument(final Argument arg,
+      final int contextLevel, final SourceSection source) {
     assert contextLevel > 0;
-    return blockArguments[argumentIndex - 1].getReadNode(contextLevel, source);
+    return getSplitVar(arg).getReadNode(contextLevel, source);
   }
 
   @Override

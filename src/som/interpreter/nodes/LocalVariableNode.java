@@ -22,14 +22,12 @@ import tools.dym.Tags.LocalVarWrite;
 
 public abstract class LocalVariableNode extends ExprWithTagsNode {
   protected final FrameSlot slot;
+  protected final Local var;
 
-  private LocalVariableNode(final FrameSlot slot, final SourceSection source) {
+  private LocalVariableNode(final Local var, final SourceSection source) {
     super(source);
-    this.slot = slot;
-  }
-
-  public final Object getSlotIdentifier() {
-    return slot.getIdentifier();
+    this.slot = var.getSlot();
+    this.var  = var;
   }
 
   @Override
@@ -61,18 +59,12 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
 
   public abstract static class LocalVariableReadNode extends LocalVariableNode {
 
-    public LocalVariableReadNode(final Local variable,
-        final SourceSection source) {
-      this(variable.getSlot(), source);
+    public LocalVariableReadNode(final Local variable, final SourceSection source) {
+      super(variable, source);
     }
 
     public LocalVariableReadNode(final LocalVariableReadNode node) {
-      this(node.slot, node.getSourceSection());
-    }
-
-    public LocalVariableReadNode(final FrameSlot slot,
-        final SourceSection source) {
-      super(slot, source);
+      this(node.var, node.sourceSection);
     }
 
     @Specialization(guards = "isUninitialized(frame)")
@@ -133,7 +125,7 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
 
     @Override
     public String toString() {
-      return this.getClass().getSimpleName() + "[" + (String) getSlotIdentifier() + "]";
+      return this.getClass().getSimpleName() + "[" + var.name + "]";
     }
   }
 
@@ -141,15 +133,11 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
   public abstract static class LocalVariableWriteNode extends LocalVariableNode {
 
     public LocalVariableWriteNode(final Local variable, final SourceSection source) {
-      super(variable.getSlot(), source);
+      super(variable, source);
     }
 
     public LocalVariableWriteNode(final LocalVariableWriteNode node) {
-      super(node.slot, node.getSourceSection());
-    }
-
-    public LocalVariableWriteNode(final FrameSlot slot, final SourceSection source) {
-      super(slot, source);
+      super(node.var, node.sourceSection);
     }
 
     public abstract ExpressionNode getExp();
@@ -223,7 +211,7 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
 
     @Override
     public String toString() {
-      return this.getClass().getSimpleName() + "[" + (String) getSlotIdentifier() + "]";
+      return this.getClass().getSimpleName() + "[" + var.name + "]";
     }
   }
 }

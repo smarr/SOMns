@@ -28,7 +28,6 @@ import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MethodBuilder;
-import som.compiler.Variable.Local;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
@@ -56,8 +55,7 @@ public abstract class LiteralNode extends ExprWithTagsNode
     return executeGeneric(frame);
   }
 
-  public ExpressionNode inline(final MethodBuilder builder,
-      final Local... blockArguments) {
+  public ExpressionNode inline(final MethodBuilder builder) {
     return this;
   }
 

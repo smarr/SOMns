@@ -80,6 +80,7 @@ import som.VmSettings;
 import som.compiler.Lexer.Peek;
 import som.compiler.MethodBuilder.MethodDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionError;
+import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
@@ -871,6 +872,7 @@ public class Parser {
       locals(builder);
       expect(Or, DelimiterClosingTag.class);
     }
+    builder.setVarsOnMethodScope();
     return blockBody(builder);
   }
 
@@ -1275,31 +1277,36 @@ public class Parser {
     } else if (numberOfArguments == 3) {
       if ("ifTrue:ifFalse:".equals(msgStr) &&
           arguments.get(1) instanceof LiteralNode && arguments.get(2) instanceof LiteralNode) {
+        LiteralNode blockOrVal = (LiteralNode) arguments.get(2);
         ExpressionNode condition = arguments.get(0);
         condition.markAsControlFlowCondition();
         ExpressionNode inlinedTrueNode  = ((LiteralNode) arguments.get(1)).inline(builder);
-        ExpressionNode inlinedFalseNode = ((LiteralNode) arguments.get(2)).inline(builder);
+        ExpressionNode inlinedFalseNode = blockOrVal.inline(builder);
         return new IfTrueIfFalseInlinedLiteralsNode(condition,
             inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2),
             source);
       } else if (!VmSettings.DYNAMIC_METRICS && "to:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
+        LiteralNode blockOrVal = (LiteralNode) arguments.get(2);
         try {
-          Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
-          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
+          ExpressionNode inlinedBody = blockOrVal.inline(builder);
           inlinedBody.markAsLoopBody();
-          return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
+
+          Local loopIdx = getLoopIdx(builder, blockOrVal, source);
+          return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx,
               arguments.get(2), source, arguments.get(0), arguments.get(1));
         } catch (MethodDefinitionError e) {
           throw new RuntimeException(e);
         }
       } else if (!VmSettings.DYNAMIC_METRICS && "downTo:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
+        LiteralNode blockOrVal = (LiteralNode) arguments.get(2);
         try {
-          Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
-          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
+          ExpressionNode inlinedBody = blockOrVal.inline(builder);
           inlinedBody.markAsLoopBody();
-          return IntDownToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
+
+          Local loopIdx = getLoopIdx(builder, blockOrVal, source);
+          return IntDownToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx,
               arguments.get(2), source, arguments.get(0), arguments.get(1));
         } catch (MethodDefinitionError e) {
           throw new RuntimeException(e);
@@ -1307,6 +1314,23 @@ public class Parser {
       }
     }
     return null;
+  }
+
+  private Local getLoopIdx(final MethodBuilder builder,
+      final LiteralNode blockOrVal, final SourceSection source)
+      throws MethodDefinitionError {
+    Local loopIdx;
+    if (blockOrVal instanceof BlockNode) {
+      Argument[] args = ((BlockNode) blockOrVal).getArguments();
+      assert args.length == 2;
+      loopIdx = builder.getLocal(args[1].getQualifiedName());
+    } else {
+      // if it is a literal, we still need a memory location for counting, so,
+      // add a synthetic local
+      loopIdx = builder.addLocalAndUpdateScope(
+          "!i:" + source.getStartLine() + ":" + source.getStartColumn(), source);
+    }
+    return loopIdx;
   }
 
   private ExpressionNode formula(final MethodBuilder builder)

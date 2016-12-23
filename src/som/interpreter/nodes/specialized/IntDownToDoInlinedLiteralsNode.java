@@ -9,6 +9,7 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.compiler.Variable.Local;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.ExpressionNode;
@@ -29,22 +30,22 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
   private final ExpressionNode bodyActualNode;
 
   private final FrameSlot loopIndex;
-  private final SourceSection loopIndexSource;
+  private final Local loopIndexVar;
 
   public abstract ExpressionNode getFrom();
   public abstract ExpressionNode getTo();
 
   public IntDownToDoInlinedLiteralsNode(final ExpressionNode body,
-      final FrameSlot loopIndex, final SourceSection loopIndexSource,
-      final ExpressionNode originalBody, final SourceSection sourceSection) {
+      final Local loopIndex, final ExpressionNode originalBody,
+      final SourceSection sourceSection) {
     super(sourceSection);
     this.body           = body;
-    this.loopIndex      = loopIndex;
-    this.loopIndexSource = loopIndexSource;
+    this.loopIndex      = loopIndex.getSlot();
+    this.loopIndexVar   = loopIndex;
     this.bodyActualNode = originalBody;
 
     // and, we can already tell the loop index that it is going to be long
-    loopIndex.setKind(FrameSlotKind.Long);
+    this.loopIndex.setKind(FrameSlotKind.Long);
   }
 
   @Override
@@ -99,19 +100,18 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
   @Override
   public void replaceWithLexicallyEmbeddedNode(
       final InlinerForLexicallyEmbeddedMethods inliner) {
+    Local var = (Local) inliner.getSplitVar(loopIndexVar);
     IntDownToDoInlinedLiteralsNode node = IntDownToDoInlinedLiteralsNodeGen.create(body,
-        inliner.addLocalSlot(loopIndex.getIdentifier(), loopIndexSource),
-        loopIndexSource, bodyActualNode, getSourceSection(), getFrom(), getTo());
+        var, bodyActualNode, sourceSection, getFrom(), getTo());
     replace(node);
-    // create loopIndex in new context...
   }
 
   @Override
   public void replaceWithIndependentCopyForInlining(
       final SplitterForLexicallyEmbeddedCode inliner) {
-    FrameSlot inlinedLoopIdx = inliner.getLocalFrameSlot(loopIndex.getIdentifier());
-    replace(IntDownToDoInlinedLiteralsNodeGen.create(body, inlinedLoopIdx,
-        loopIndexSource, bodyActualNode, getSourceSection(), getFrom(), getTo()));
+    Local var = (Local) inliner.getSplitVar(loopIndexVar);
+    replace(IntDownToDoInlinedLiteralsNodeGen.create(body, var, bodyActualNode,
+        sourceSection, getFrom(), getTo()));
   }
 
   @Override

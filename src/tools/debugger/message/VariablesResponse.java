@@ -5,10 +5,9 @@ import java.util.ArrayList;
 import java.util.Map.Entry;
 import java.util.Objects;
 
-import com.oracle.truffle.api.frame.FrameSlot;
-
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable.Argument;
+import som.compiler.Variable.Local;
 import som.interpreter.Types;
 import som.interpreter.objectstorage.StorageLocation;
 import som.vm.constants.Nil;
@@ -95,14 +94,16 @@ public final class VariablesResponse extends Response {
   private static ArrayList<Variable> createFromScope(final RuntimeScope scope,
       final Suspension suspension) {
     ArrayList<Variable> results = new ArrayList<>();
-    for (Argument a : scope.getArguments()) {
-      Object val = scope.getArgument(a.index);
-      results.add(createVariable(a.name, val, suspension));
-    }
-
-    for (FrameSlot slot : scope.getLocals()) {
-      Object val = scope.getLocal(slot);
-      results.add(createVariable((String) slot.getIdentifier(), val, suspension));
+    for (som.compiler.Variable v : scope.getVariables()) {
+      Object val;
+      if (v instanceof Argument) {
+        val = scope.getArgument(((Argument) v).index);
+      } else if (v instanceof Local) {
+        val = scope.getLocal(((Local) v).getSlot());
+      } else {
+        continue;
+      }
+      results.add(createVariable(v.name, val, suspension));
     }
     return results;
   }

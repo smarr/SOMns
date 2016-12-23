@@ -434,6 +434,8 @@ public final class MixinBuilder {
       source = mixinResolversSource;
     }
 
+    superclassAndMixinResolutionBuilder.setVarsOnMethodScope();
+
     assert superclassResolution != null;
     return superclassAndMixinResolutionBuilder.assembleInvokable(resolution,
         source);
@@ -453,6 +455,7 @@ public final class MixinBuilder {
     ExpressionNode initializedObject = SNodeFactory.createMessageSend(
         initializer.getSignature(), args, primaryFactorySource);
 
+    primaryFactoryMethod.setVarsOnMethodScope();
     return primaryFactoryMethod.assemble(initializedObject,
         AccessModifier.PUBLIC, Symbols.INITIALIZATION,
         primaryFactorySource);
@@ -488,6 +491,7 @@ public final class MixinBuilder {
     }
 
     ExpressionNode body = SNodeFactory.createSequence(allExprs, initializerSource);
+    initializer.setVarsOnMethodScope();
     return initializer.assembleInitializer(body, AccessModifier.PROTECTED,
         Symbols.INITIALIZATION, initializerSource);
   }

@@ -1,17 +1,19 @@
 package som.interpreter;
 
+import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeUtil;
+import com.oracle.truffle.api.source.SourceSection;
+
+import som.compiler.Variable;
+import som.inlining.InliningVisitor;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
 
-import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeUtil;
-import com.oracle.truffle.api.nodes.NodeVisitor;
 
-
-public final class SplitterForLexicallyEmbeddedCode implements NodeVisitor {
+public final class SplitterForLexicallyEmbeddedCode extends InliningVisitor {
 
   public static ExpressionNode doInline(
       final ExpressionNode body,
@@ -22,14 +24,15 @@ public final class SplitterForLexicallyEmbeddedCode implements NodeVisitor {
         new SplitterForLexicallyEmbeddedCode(inlinedCurrentScope));
   }
 
-  private final MethodScope inlinedCurrentScope;
-
-  private SplitterForLexicallyEmbeddedCode(final MethodScope inlinedCurrentScope) {
-    this.inlinedCurrentScope = inlinedCurrentScope;
+  private SplitterForLexicallyEmbeddedCode(final MethodScope scope) {
+    super(scope);
   }
 
-  public MethodScope getCurrentScope() {
-    return inlinedCurrentScope;
+  /**
+   * Get the already split scope for an embedded block.
+   */
+  public MethodScope getSplitScope(final SourceSection source) {
+    return scope.getEmbeddedScope(source);
   }
 
   @Override
@@ -39,21 +42,21 @@ public final class SplitterForLexicallyEmbeddedCode implements NodeVisitor {
     return true;
   }
 
-  public FrameSlot getLocalFrameSlot(final Object slotId) {
-    return inlinedCurrentScope.getFrameDescriptor().findFrameSlot(slotId);
+  public FrameSlot getLocalFrameSlot(final Variable var) {
+    return scope.getFrameDescriptor().findFrameSlot(var);
   }
 
-  public FrameSlot getFrameSlot(final ContextualNode node, final Object slotId) {
-    return getFrameSlot(slotId, node.getContextLevel());
+  public FrameSlot getFrameSlot(final ContextualNode node, final Variable var) {
+    return getFrameSlot(var, node.getContextLevel());
   }
 
-  public FrameSlot getFrameSlot(final Object slotId, int level) {
-    MethodScope ctx = inlinedCurrentScope;
+  public FrameSlot getFrameSlot(final Variable var, int level) {
+    MethodScope ctx = scope;
     while (level > 0) {
       ctx = ctx.getOuterMethodScope();
       level--;
     }
-    return ctx.getFrameDescriptor().findFrameSlot(slotId);
+    return ctx.getFrameDescriptor().findFrameSlot(var);
   }
 
   private void prepareBodyNode(final Node node) {

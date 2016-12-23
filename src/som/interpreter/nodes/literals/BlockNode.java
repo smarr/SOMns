@@ -1,11 +1,14 @@
 package som.interpreter.nodes.literals;
 
+import java.util.ArrayList;
+
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.AccessModifier;
 import som.compiler.MethodBuilder;
-import som.compiler.Variable.Local;
+import som.compiler.Variable;
+import som.compiler.Variable.Argument;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.Invokable;
@@ -51,6 +54,18 @@ public class BlockNode extends LiteralNode {
     return blockMethod;
   }
 
+  public Argument[] getArguments() {
+    Method method = (Method) blockMethod.getInvokable();
+    Variable[] variables = method.getLexicalScope().getVariables();
+    ArrayList<Argument> args = new ArrayList<>();
+    for (Variable v : variables) {
+      if (v instanceof Argument) {
+        args.add((Argument) v);
+      }
+    }
+    return args.toArray(new Argument[0]);
+  }
+
   @Override
   public SBlock executeSBlock(final VirtualFrame frame) {
     return new SBlock(blockMethod, null, blockClass);
@@ -62,9 +77,10 @@ public class BlockNode extends LiteralNode {
   }
 
   @Override
-  public void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
+  public void replaceWithIndependentCopyForInlining(
+      final SplitterForLexicallyEmbeddedCode inliner) {
     Invokable clonedInvokable = blockMethod.getInvokable().
-        cloneWithNewLexicalContext(inliner.getCurrentScope());
+        cloneWithNewLexicalContext(inliner.getSplitScope(sourceSection));
     replaceAdapted(clonedInvokable);
   }
 
@@ -96,11 +112,8 @@ public class BlockNode extends LiteralNode {
   }
 
   @Override
-  public ExpressionNode inline(final MethodBuilder builder,
-      final Local... blockArguments) {
-    // self doesn't need to be passed
-    assert blockMethod.getNumberOfArguments() - 1 == blockArguments.length;
-    return blockMethod.getInvokable().inline(builder, blockArguments);
+  public ExpressionNode inline(final MethodBuilder builder) {
+    return blockMethod.getInvokable().inline(builder, blockMethod);
   }
 
   public static final class BlockNodeWithContext extends BlockNode {
