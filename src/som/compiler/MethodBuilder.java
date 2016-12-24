@@ -319,31 +319,13 @@ public final class MethodBuilder {
     signature = sig;
   }
 
-  private void addArgument(final String arg, final SourceSection source) {
+  public void addArgument(final String arg, final SourceSection source) {
     if (("self".equals(arg) || "$blockSelf".equals(arg)) && arguments.size() > 0) {
       throw new IllegalStateException("The self argument always has to be the first argument of a method");
     }
 
     Argument argument = new Argument(arg, arguments.size(), source);
     arguments.put(arg, argument);
-  }
-
-  public void addArgumentIfAbsent(final String arg, final SourceSection source) {
-    if (arguments.containsKey(arg)) {
-      return;
-    }
-
-    addArgument(arg, source);
-  }
-
-  public Local addLocalIfAbsent(final String local, final SourceSection source)
-      throws MethodDefinitionError {
-    Local l = locals.get(local);
-    if (l != null) {
-      return l;
-    }
-
-    return addLocal(local, source);
   }
 
   public Local addLocal(final String name, final SourceSection source)

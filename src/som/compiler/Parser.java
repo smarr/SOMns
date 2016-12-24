@@ -318,7 +318,7 @@ public class Parser {
       messagePattern(primaryFactory);
     } else {
       // in the standard case, the primary factory method is #new
-      primaryFactory.addArgumentIfAbsent("self", getEmptySource());
+      primaryFactory.addArgument("self", getEmptySource());
       primaryFactory.setSignature(Symbols.NEW);
     }
     mxnBuilder.setupInitializerBasedOnPrimaryFactory(getSource(coord));
@@ -767,7 +767,7 @@ public class Parser {
   }
 
   private void messagePattern(final MethodBuilder builder) throws ParseError {
-    builder.addArgumentIfAbsent("self", getEmptySource());
+    builder.addArgument("self", getEmptySource());
     switch (sym) {
       case Identifier:
         unaryPattern(builder);
@@ -793,7 +793,7 @@ public class Parser {
     builder.addMethodDefinitionSource(getSource(coord));
 
     coord = getCoordinate();
-    builder.addArgumentIfAbsent(argument(), getSource(coord));
+    builder.addArgument(argument(), getSource(coord));
   }
 
   protected void keywordPattern(final MethodBuilder builder) throws ParseError {
@@ -804,7 +804,7 @@ public class Parser {
       builder.addMethodDefinitionSource(getSource(coord));
 
       coord = getCoordinate();
-      builder.addArgumentIfAbsent(argument(), getSource(coord));
+      builder.addArgument(argument(), getSource(coord));
     }
     while (sym == Keyword);
 
@@ -881,7 +881,7 @@ public class Parser {
       SourceCoordinate coord = getCoordinate();
       String id = identifier();
       SourceSection source = getSource(coord);
-      builder.addLocalIfAbsent(id, source);
+      builder.addLocal(id, source);
       VM.reportSyntaxElement(LocalVariableTag.class, source);
     }
   }
@@ -1471,7 +1471,7 @@ public class Parser {
     expect(NewBlock, DelimiterOpeningTag.class);
 
 
-    builder.addArgumentIfAbsent("$blockSelf", getEmptySource());
+    builder.addArgument("$blockSelf", getEmptySource());
 
     if (sym == Colon) {
       blockPattern(builder);
@@ -1503,7 +1503,7 @@ public class Parser {
     do {
       expect(Colon, KeywordTag.class);
       SourceCoordinate coord = getCoordinate();
-      builder.addArgumentIfAbsent(argument(), getSource(coord));
+      builder.addArgument(argument(), getSource(coord));
     }
     while (sym == Colon);
   }

@@ -234,7 +234,7 @@ public final class MixinBuilder {
     initializer.setSignature(getInitializerName(
         primaryFactoryMethod.getSignature()));
     for (Argument arg : primaryFactoryMethod.getArguments()) {
-      initializer.addArgumentIfAbsent(arg.name, arg.source);
+      initializer.addArgument(arg.name, arg.source);
     }
   }
 
@@ -409,7 +409,7 @@ public final class MixinBuilder {
     }
 
     // self is going to be the enclosing object
-    definitionMethod.addArgumentIfAbsent("self",
+    definitionMethod.addArgument("self",
         SomLanguage.getSyntheticSource("self read", "super-class-resolution").
         createSection(1));
     definitionMethod.setSignature(Symbols.DEF_CLASS);
