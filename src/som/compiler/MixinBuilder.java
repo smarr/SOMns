@@ -215,6 +215,10 @@ public final class MixinBuilder {
     return initializer;
   }
 
+  public void finalizeInitializer() {
+    initializer.finalizeMethodScope();
+  }
+
   /**
    * The method that is used to instantiate an object.
    * It instantiates the object, and then calls the initializer,
@@ -236,6 +240,7 @@ public final class MixinBuilder {
     for (Argument arg : primaryFactoryMethod.getArguments()) {
       initializer.addArgument(arg.name, arg.source);
     }
+    initializer.setVarsOnMethodScope();
   }
 
   public void setInitializerSource(final SourceSection sourceSection) {
@@ -435,6 +440,7 @@ public final class MixinBuilder {
     }
 
     superclassAndMixinResolutionBuilder.setVarsOnMethodScope();
+    superclassAndMixinResolutionBuilder.finalizeMethodScope();
 
     assert superclassResolution != null;
     return superclassAndMixinResolutionBuilder.assembleInvokable(resolution,
@@ -456,6 +462,7 @@ public final class MixinBuilder {
         initializer.getSignature(), args, primaryFactorySource);
 
     primaryFactoryMethod.setVarsOnMethodScope();
+    primaryFactoryMethod.finalizeMethodScope();
     return primaryFactoryMethod.assemble(initializedObject,
         AccessModifier.PUBLIC, Symbols.INITIALIZATION,
         primaryFactorySource);
@@ -491,7 +498,6 @@ public final class MixinBuilder {
     }
 
     ExpressionNode body = SNodeFactory.createSequence(allExprs, initializerSource);
-    initializer.setVarsOnMethodScope();
     return initializer.assembleInitializer(body, AccessModifier.PROTECTED,
         Symbols.INITIALIZATION, initializerSource);
   }

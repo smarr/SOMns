@@ -682,6 +682,8 @@ public final class MixinDefinition {
 
     Source source = SomLanguage.getSyntheticSource("self", "Thing>>" + init.getString());
     SourceSection ss = source.createSection(0, 4);
+    builder.setVarsOnMethodScope();
+    builder.finalizeMethodScope();
     SInvokable thingInitNew = builder.assembleInitializer(builder.getSelfRead(ss),
         AccessModifier.PROTECTED, Symbols.INITIALIZER, ss);
     instanceDispatchables.put(init, thingInitNew);

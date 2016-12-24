@@ -127,6 +127,7 @@ public abstract class LexicalScope {
 
     public void setVariables(final Variable[] variables) {
       assert variables != null : "variables are expected to be != null once set";
+      assert this.variables == null;
       this.variables = variables;
     }
 
@@ -218,6 +219,7 @@ public abstract class LexicalScope {
       }
       split.setVariables(newVars);
       split.finalizeScope();
+      split.setMethod(method);
 
       return split;
     }

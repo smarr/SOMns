@@ -281,13 +281,12 @@ public final class MethodBuilder {
     currentScope.setVariables(vars);
   }
 
-  private void finalizeMethodScope() {
+  public void finalizeMethodScope() {
     currentScope.finalizeScope();
   }
 
   public Method assembleInvokable(final ExpressionNode body,
       final SourceSection sourceSection) {
-    finalizeMethodScope();
     return assembleInvokable(body, currentScope, sourceSection);
   }
 

@@ -375,6 +375,7 @@ public class Parser {
       if (accept(Period, StatementSeparatorTag.class)) {
         // TODO: what else do we need to do here?
         mxnBuilder.setInitializerSource(getSource(initCoord));
+        mxnBuilder.finalizeInitializer();
         return;
       }
     }
@@ -506,6 +507,7 @@ public class Parser {
 
     mxnBuilder.setInitializerSource(getSource(coord));
     expect(EndTerm, null);
+    mxnBuilder.finalizeInitializer();
   }
 
   private void classComment(final MixinBuilder mxnBuilder) throws ParseError {
@@ -758,6 +760,7 @@ public class Parser {
         "Unexpected symbol %(found)s. Tried to parse method declaration and expect '=' between message pattern, and method body.",
         KeywordTag.class);
     ExpressionNode body = methodBlock(builder);
+    builder.finalizeMethodScope();
     SInvokable meth = builder.assemble(body, accessModifier, category, getSource(coord));
 
     if (structuralProbe != null) {
@@ -1028,6 +1031,7 @@ public class Parser {
         MethodBuilder bgenc = new MethodBuilder(builder);
 
         ExpressionNode blockBody = nestedBlock(bgenc);
+        bgenc.finalizeMethodScope();
 
         SInvokable blockMethod = bgenc.assemble(blockBody,
             AccessModifier.BLOCK_METHOD, null, lastMethodsSourceSection);
