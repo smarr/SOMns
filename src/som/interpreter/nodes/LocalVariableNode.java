@@ -1,6 +1,5 @@
 package som.interpreter.nodes;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -31,22 +30,15 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
   }
 
   @Override
-  public final void replaceWithLexicallyEmbeddedNode(
-      final InlinerForLexicallyEmbeddedMethods inliner) {
-    throw new RuntimeException("Normally, only uninitialized variable nodes should be encountered, because this is done at parse time");
-  }
+  public abstract void replaceWithLexicallyEmbeddedNode(
+      final InlinerForLexicallyEmbeddedMethods inliner);
 
   @Override
-  public final void replaceWithCopyAdaptedToEmbeddedOuterContext(
-      final InlinerAdaptToEmbeddedOuterContext inliner) {
-    throw new RuntimeException("Normally, only uninitialized variable nodes should be encountered, because this is done at parse time");
-  }
+  public abstract void replaceWithCopyAdaptedToEmbeddedOuterContext(
+      final InlinerAdaptToEmbeddedOuterContext inliner);
 
   @Override
-  public final void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
-    CompilerAsserts.neverPartOfCompilation("replaceWithIndependentCopyForInlining");
-    throw new RuntimeException("Should not be part of an uninitalized tree. And this should only be done with uninitialized trees.");
-  }
+  public abstract void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner);
 
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
@@ -126,6 +118,35 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
     @Override
     public String toString() {
       return this.getClass().getSimpleName() + "[" + var.name + "]";
+    }
+
+    @Override
+    public void replaceWithIndependentCopyForInlining(
+        final SplitterForLexicallyEmbeddedCode inliner) {
+      Local var = (Local) inliner.getSplitVar(this.var);
+      replace(var.getReadNode(0, sourceSection));
+    }
+
+    @Override
+    public void replaceWithLexicallyEmbeddedNode(
+        final InlinerForLexicallyEmbeddedMethods inliner) {
+      Local var = (Local) inliner.getSplitVar(this.var);
+      replace(var.getReadNode(0, sourceSection));
+    }
+
+    @Override
+    public void replaceWithCopyAdaptedToEmbeddedOuterContext(
+        final InlinerAdaptToEmbeddedOuterContext inliner) {
+      Local var = (Local) inliner.getSplitVar(this.var);
+
+      // if the context level is 1, the variable is in the outer context,
+      // which just got inlined, so, we need to adapt the slot id
+      if (inliner.appliesTo(0)) {
+        replace(var.getReadNode(0, sourceSection));
+      } else if (inliner.needToAdjustLevel(0)) {
+        assert false : "should never be taken";
+        replace(var.getReadNode(0 - 1, sourceSection));
+      }
     }
   }
 
@@ -212,6 +233,35 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
     @Override
     public String toString() {
       return this.getClass().getSimpleName() + "[" + var.name + "]";
+    }
+
+    @Override
+    public void replaceWithIndependentCopyForInlining(
+        final SplitterForLexicallyEmbeddedCode inliner) {
+      Local var = (Local) inliner.getSplitVar(this.var);
+      replace(var.getWriteNode(0, this.getExp(), sourceSection));
+    }
+
+    @Override
+    public void replaceWithLexicallyEmbeddedNode(
+        final InlinerForLexicallyEmbeddedMethods inliner) {
+      Local var = (Local) inliner.getSplitVar(this.var);
+      replace(var.getWriteNode(0, this.getExp(), sourceSection));
+    }
+
+    @Override
+    public void replaceWithCopyAdaptedToEmbeddedOuterContext(
+        final InlinerAdaptToEmbeddedOuterContext inliner) {
+      Local var = (Local) inliner.getSplitVar(this.var);
+
+      // if the context level is 1, the variable is in the outer context,
+      // which just got inlined, so, we need to adapt the slot id
+      if (inliner.appliesTo(0)) {
+        replace(var.getWriteNode(0, this.getExp(), sourceSection));
+      } else if (inliner.needToAdjustLevel(0)) {
+        assert false : " should never be taken ";
+        replace(var.getWriteNode(0 - 1, this.getExp(), sourceSection));
+      }
     }
   }
 }

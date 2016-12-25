@@ -1,10 +1,5 @@
 package som.compiler;
 
-import static som.interpreter.SNodeFactory.createArgumentRead;
-import static som.interpreter.SNodeFactory.createLocalVarRead;
-import static som.interpreter.SNodeFactory.createSelfRead;
-import static som.interpreter.SNodeFactory.createSuperRead;
-import static som.interpreter.SNodeFactory.createVariableWrite;
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -16,7 +11,17 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
+import som.interpreter.nodes.ArgumentReadNode.LocalSelfReadNode;
+import som.interpreter.nodes.ArgumentReadNode.LocalSuperReadNode;
+import som.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
+import som.interpreter.nodes.ArgumentReadNode.NonLocalSelfReadNode;
+import som.interpreter.nodes.ArgumentReadNode.NonLocalSuperReadNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableReadNodeGen;
+import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeGen;
+import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableReadNodeGen;
+import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableWriteNodeGen;
 import tools.SourceCoordinate;
 
 
@@ -88,14 +93,22 @@ public abstract class Variable {
         final MixinDefinitionId holderMixin,
         final SourceSection source) {
       assert this instanceof Argument;
-      return createSelfRead(this, contextLevel, holderMixin, source);
+      if (contextLevel == 0) {
+        return new LocalSelfReadNode(this, holderMixin, source);
+      } else {
+        return new NonLocalSelfReadNode(this, holderMixin, contextLevel, source);
+      }
     }
 
     public ExpressionNode getSuperReadNode(final int contextLevel,
         final MixinDefinitionId holderClass, final boolean classSide,
         final SourceSection source) {
       assert this instanceof Argument;
-      return createSuperRead(this, contextLevel, holderClass, classSide, source);
+      if (contextLevel == 0) {
+        return new LocalSuperReadNode(this, holderClass, classSide, source);
+      } else {
+        return new NonLocalSuperReadNode(this, contextLevel, holderClass, classSide, source);
+      }
     }
 
     @Override
@@ -118,7 +131,11 @@ public abstract class Variable {
     public ExpressionNode getReadNode(final int contextLevel,
         final SourceSection source) {
       transferToInterpreterAndInvalidate("Variable.getReadNode");
-      return createArgumentRead(this, contextLevel, source);
+      if (contextLevel == 0) {
+        return new LocalArgumentReadNode(this, source);
+      } else {
+        return new NonLocalArgumentReadNode(this, contextLevel, source);
+      }
     }
 
     @Override
@@ -147,7 +164,11 @@ public abstract class Variable {
     public ExpressionNode getReadNode(final int contextLevel,
         final SourceSection source) {
       transferToInterpreterAndInvalidate("Variable.getReadNode");
-      return createLocalVarRead(this, contextLevel, source);
+      if (contextLevel == 0) {
+        return LocalVariableReadNodeGen.create(this, source);
+      } else {
+        return NonLocalVariableReadNodeGen.create(contextLevel, this, source);
+      }
     }
 
     public FrameSlot getSlot() {
@@ -164,7 +185,12 @@ public abstract class Variable {
     public ExpressionNode getWriteNode(final int contextLevel,
         final ExpressionNode valueExpr, final SourceSection source) {
       transferToInterpreterAndInvalidate("Variable.getWriteNode");
-      return createVariableWrite(this, contextLevel, valueExpr, source);
+      if (contextLevel == 0) {
+        return LocalVariableWriteNodeGen.create(this, source, valueExpr);
+      } else {
+        return NonLocalVariableWriteNodeGen.create(
+            contextLevel, this, source, valueExpr);
+      }
     }
 
     @Override

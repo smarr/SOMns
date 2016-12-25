@@ -2,9 +2,7 @@ package som.interpreter;
 
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
-import com.oracle.truffle.api.source.SourceSection;
 
-import som.compiler.Variable.Argument;
 import som.inlining.InliningVisitor;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
@@ -75,11 +73,5 @@ public final class InlinerAdaptToEmbeddedOuterContext extends InliningVisitor {
       ((SOMNode) node).replaceWithCopyAdaptedToEmbeddedOuterContext(this);
     }
     return true;
-  }
-
-  public ExpressionNode getReplacementForBlockArgument(final Argument arg,
-      final SourceSection sourceSection) {
-    return outerInliner.getReplacementForNonLocalArgument(arg, contextLevel,
-        sourceSection);
   }
 }

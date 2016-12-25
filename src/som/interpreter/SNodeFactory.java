@@ -7,18 +7,9 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition.SlotDefinition;
-import som.compiler.Variable.Argument;
 import som.compiler.Variable.Internal;
-import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.actors.EventualSendNode;
-import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
-import som.interpreter.nodes.ArgumentReadNode.LocalSelfReadNode;
-import som.interpreter.nodes.ArgumentReadNode.LocalSuperReadNode;
-import som.interpreter.nodes.ArgumentReadNode.NonLocalArgumentReadNode;
-import som.interpreter.nodes.ArgumentReadNode.NonLocalSelfReadNode;
-import som.interpreter.nodes.ArgumentReadNode.NonLocalSuperReadNode;
-import som.interpreter.nodes.ContextualNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InternalObjectArrayNode;
 import som.interpreter.nodes.MessageSendNode;
@@ -27,8 +18,6 @@ import som.interpreter.nodes.ResolvingImplicitReceiverSend;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
 import som.interpreter.nodes.SequenceNode;
-import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableReadNode;
-import som.interpreter.nodes.UninitializedVariableNode.UninitializedVariableWriteNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.interpreter.nodes.literals.NilLiteralNode;
@@ -50,46 +39,6 @@ public final class SNodeFactory {
   public static InitializerFieldWrite createFieldWrite(final ExpressionNode self,
       final ExpressionNode exp, final SlotDefinition slot, final SourceSection source) {
     return InitializerFieldWriteNodeGen.create(slot, source, self, exp);
-  }
-
-  public static ContextualNode createLocalVarRead(final Local variable,
-      final int contextLevel, final SourceSection source) {
-    return new UninitializedVariableReadNode(variable, contextLevel, source);
-  }
-
-  public static ExpressionNode createArgumentRead(final Argument variable,
-      final int contextLevel, final SourceSection source) {
-    if (contextLevel == 0) {
-      return new LocalArgumentReadNode(variable, source);
-    } else {
-      return new NonLocalArgumentReadNode(variable, contextLevel, source);
-    }
-  }
-
-  public static ExpressionNode createSelfRead(final Argument arg,
-      final int contextLevel, final MixinDefinitionId holderMixin,
-      final SourceSection source) {
-    if (contextLevel == 0) {
-      return new LocalSelfReadNode(arg, holderMixin, source);
-    } else {
-      return new NonLocalSelfReadNode(arg, holderMixin, contextLevel, source);
-    }
-  }
-
-  public static ExpressionNode createSuperRead(final Argument arg,
-      final int contextLevel, final MixinDefinitionId holderMixin,
-      final boolean classSide, final SourceSection source) {
-    if (contextLevel == 0) {
-      return new LocalSuperReadNode(arg, holderMixin, classSide, source);
-    } else {
-      return new NonLocalSuperReadNode(arg, contextLevel, holderMixin, classSide, source);
-    }
-  }
-
-  public static ContextualNode createVariableWrite(final Local variable,
-        final int contextLevel,
-        final ExpressionNode exp, final SourceSection source) {
-    return new UninitializedVariableWriteNode(variable, contextLevel, exp, source);
   }
 
   public static ExpressionNode createSequence(

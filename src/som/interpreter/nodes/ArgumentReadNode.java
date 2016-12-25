@@ -6,6 +6,7 @@ import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.compiler.Variable;
 import som.compiler.Variable.Argument;
 import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
 import som.interpreter.InlinerForLexicallyEmbeddedMethods;
@@ -57,7 +58,8 @@ public abstract class ArgumentReadNode {
     @Override
     public void replaceWithLexicallyEmbeddedNode(
         final InlinerForLexicallyEmbeddedMethods inliner) {
-      replace(inliner.getReplacementForLocalArgument(arg, sourceSection));
+      Variable var = inliner.getSplitVar(arg);
+      replace(var.getReadNode(0, sourceSection));
     }
 
     @Override
@@ -160,8 +162,8 @@ public abstract class ArgumentReadNode {
       ExpressionNode node;
       if (inliner.appliesTo(contextLevel)) {
         assert !(this instanceof NonLocalSuperReadNode) && !(this instanceof NonLocalSelfReadNode);
-        node = inliner.getReplacementForBlockArgument(arg, sourceSection);
-        replace(node);
+        Variable var = inliner.getSplitVar(arg);
+        replace(var.getReadNode(argumentIndex, sourceSection));
       } else if (inliner.needToAdjustLevel(contextLevel)) {
         // in the other cases, we just need to adjust the context level
         node = createNonLocalNode();
