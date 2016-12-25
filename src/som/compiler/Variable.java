@@ -17,6 +17,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.nodes.ExpressionNode;
+import tools.SourceCoordinate;
 
 
 /**
@@ -33,7 +34,7 @@ public abstract class Variable {
 
   /** Gets the name including lexical location. */
   public String getQualifiedName() {
-    return name + ":" + source.getStartLine() + ":" + source.getStartColumn();
+    return name + SourceCoordinate.getLocationQualifier(source);
   }
 
   @Override

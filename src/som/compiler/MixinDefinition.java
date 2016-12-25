@@ -52,6 +52,7 @@ import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
+import tools.SourceCoordinate;
 
 
 /**
@@ -406,8 +407,7 @@ public final class MixinDefinition {
 
   @TruffleBoundary
   private void reportErrorAndExit(final String msgPart1, final String msgPart2) {
-    String line = sourceSection.getSource().getName() + ":" +
-        sourceSection.getStartLine() + ":" + sourceSection.getStartColumn();
+    String line = sourceSection.getSource().getName() + SourceCoordinate.getLocationQualifier(sourceSection);
     VM.errorExit(line + msgPart1 + name.getString() + msgPart2);
   }
 

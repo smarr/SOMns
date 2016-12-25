@@ -1332,7 +1332,7 @@ public class Parser {
       // if it is a literal, we still need a memory location for counting, so,
       // add a synthetic local
       loopIdx = builder.addLocalAndUpdateScope(
-          "!i:" + source.getStartLine() + ":" + source.getStartColumn(), source);
+          "!i" + SourceCoordinate.getLocationQualifier(source), source);
     }
     return loopIdx;
   }

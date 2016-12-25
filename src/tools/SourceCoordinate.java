@@ -118,4 +118,8 @@ public class SourceCoordinate {
       throw new RuntimeException(e);
     }
   }
+
+  public static String getLocationQualifier(final SourceSection section) {
+    return ":" + section.getStartLine() + ":" + section.getStartColumn();
+  }
 }

@@ -25,6 +25,7 @@ import som.vm.NotYetImplementedException;
 import som.vm.Primitives;
 import som.vm.Primitives.Specializer;
 import som.vmobjects.SSymbol;
+import tools.SourceCoordinate;
 import tools.dym.Tags.VirtualInvoke;
 
 
@@ -335,10 +336,9 @@ public final class MessageSendNode {
     @Override
     public String toString() {
       String file = "";
-      if (getSourceSection() != null) {
-        file = " " + getSourceSection().getSource().getName();
-        file += ":" + getSourceSection().getStartLine();
-        file += ":" + getSourceSection().getStartColumn();
+      if (sourceSection != null) {
+        file = " " + sourceSection.getSource().getName() +
+            SourceCoordinate.getLocationQualifier(sourceSection);
       }
 
       return "GMsgSend(" + selector.getString() + file + ")";
