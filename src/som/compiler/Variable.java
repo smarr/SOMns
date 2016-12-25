@@ -14,6 +14,7 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.nodes.ExpressionNode;
 
@@ -59,6 +60,12 @@ public abstract class Variable {
 
   public abstract Variable split(FrameDescriptor descriptor);
   public abstract Local splitToMergeIntoOuterScope(FrameDescriptor descriptor);
+
+  /** Access method for the debugger and tools. Not to be used in language. */
+  public abstract Object read(Frame frame);
+
+  /** Not meant to be shown in debugger or other tools. */
+  public boolean isInternal() { return false; }
 
   /**
    * Represents a parameter (argument) to a method activation.
@@ -112,6 +119,12 @@ public abstract class Variable {
       transferToInterpreterAndInvalidate("Variable.getReadNode");
       return createArgumentRead(this, contextLevel, source);
     }
+
+    @Override
+    public Object read(final Frame frame) {
+      VM.callerNeedsToBeOptimized("Not to be used outside of tools");
+      return frame.getArguments()[index];
+    }
   }
 
   /**
@@ -157,6 +170,12 @@ public abstract class Variable {
     public Local splitToMergeIntoOuterScope(final FrameDescriptor descriptor) {
       return split(descriptor);
     }
+
+    @Override
+    public Object read(final Frame frame) {
+      VM.callerNeedsToBeOptimized("Not to be used outside of tools");
+      return frame.getValue(slot);
+    }
   }
 
   /**
@@ -197,5 +216,13 @@ public abstract class Variable {
     public Local splitToMergeIntoOuterScope(final FrameDescriptor descriptor) {
       throw new UnsupportedOperationException();
     }
+
+    @Override
+    public Object read(final Frame frame) {
+      throw new UnsupportedOperationException("This is for reading language-level values. Think, we should not need this");
+    }
+
+    @Override
+    public boolean isInternal() { return true; }
   }
 }

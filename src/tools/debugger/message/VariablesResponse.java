@@ -6,8 +6,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 
 import som.compiler.MixinDefinition.SlotDefinition;
-import som.compiler.Variable.Argument;
-import som.compiler.Variable.Local;
 import som.interpreter.Types;
 import som.interpreter.objectstorage.StorageLocation;
 import som.vm.constants.Nil;
@@ -95,15 +93,10 @@ public final class VariablesResponse extends Response {
       final Suspension suspension) {
     ArrayList<Variable> results = new ArrayList<>();
     for (som.compiler.Variable v : scope.getVariables()) {
-      Object val;
-      if (v instanceof Argument) {
-        val = scope.getArgument(((Argument) v).index);
-      } else if (v instanceof Local) {
-        val = scope.getLocal(((Local) v).getSlot());
-      } else {
-        continue;
+      if (!v.isInternal()) {
+        Object val = scope.read(v);
+        results.add(createVariable(v.name, val, suspension));
       }
-      results.add(createVariable(v.name, val, suspension));
     }
     return results;
   }

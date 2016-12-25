@@ -1,6 +1,5 @@
 package tools.debugger.frontend;
 
-import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
 import som.compiler.Variable;
@@ -21,11 +20,7 @@ public class RuntimeScope {
     return lexicalScope.getVariables();
   }
 
-  public Object getArgument(final int idx) {
-    return frame.getArguments()[idx];
-  }
-
-  public Object getLocal(final FrameSlot slot) {
-    return frame.getValue(slot);
+  public Object read(final Variable var) {
+    return var.read(frame);
   }
 }
