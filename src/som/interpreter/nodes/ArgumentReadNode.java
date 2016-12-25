@@ -6,13 +6,10 @@ import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
-import som.compiler.Variable;
 import som.compiler.Variable.Argument;
-import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
-import som.interpreter.InlinerForLexicallyEmbeddedMethods;
+import som.inlining.InliningVisitor;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
-import som.vm.NotYetImplementedException;
 import tools.debugger.Tags.ArgumentTag;
 import tools.debugger.Tags.KeywordTag;
 import tools.dym.Tags.LocalArgRead;
@@ -56,13 +53,6 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public void replaceWithLexicallyEmbeddedNode(
-        final InlinerForLexicallyEmbeddedMethods inliner) {
-      Variable var = inliner.getSplitVar(arg);
-      replace(var.getReadNode(0, sourceSection));
-    }
-
-    @Override
     protected boolean isTaggedWith(final Class<?> tag) {
       if (tag == ArgumentTag.class) {
         return true;
@@ -76,6 +66,11 @@ public abstract class ArgumentReadNode {
     @Override
     public String toString() {
       return "LocalArg(" + argumentIndex + ")";
+    }
+
+    @Override
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      inliner.updateRead(arg, this, 0);
     }
   }
 
@@ -100,9 +95,8 @@ public abstract class ArgumentReadNode {
     @Override public String            toString()    { return "LocalSelf"; }
 
     @Override
-    public void replaceWithLexicallyEmbeddedNode(
-        final InlinerForLexicallyEmbeddedMethods inliner) {
-      throw new NotYetImplementedException();
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      inliner.updateSelfRead(arg, this, mixin, 0);
     }
 
     @Override
@@ -136,39 +130,8 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public final void replaceWithLexicallyEmbeddedNode(
-        final InlinerForLexicallyEmbeddedMethods inliner) {
-      ExpressionNode inlined;
-      if (contextLevel == 1) {
-        inlined = createLocalNode();
-      } else {
-        inlined = createNonLocalNode();
-      }
-      replace(inlined);
-    }
-
-    protected NonLocalArgumentReadNode createNonLocalNode() {
-      return new NonLocalArgumentReadNode(arg, contextLevel - 1, sourceSection);
-    }
-
-    protected LocalArgumentReadNode createLocalNode() {
-      return new LocalArgumentReadNode(arg, sourceSection);
-    }
-
-    @Override
-    public final void replaceWithCopyAdaptedToEmbeddedOuterContext(
-        final InlinerAdaptToEmbeddedOuterContext inliner) {
-      // this should be the access to a block argument
-      ExpressionNode node;
-      if (inliner.appliesTo(contextLevel)) {
-        assert !(this instanceof NonLocalSuperReadNode) && !(this instanceof NonLocalSelfReadNode);
-        Variable var = inliner.getSplitVar(arg);
-        replace(var.getReadNode(argumentIndex, sourceSection));
-      } else if (inliner.needToAdjustLevel(contextLevel)) {
-        // in the other cases, we just need to adjust the context level
-        node = createNonLocalNode();
-        replace(node);
-      }
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      inliner.updateRead(arg, this, contextLevel);
     }
 
     @Override
@@ -205,13 +168,8 @@ public abstract class ArgumentReadNode {
     @Override public String            toString()    { return "NonLocalSelf"; }
 
     @Override
-    protected NonLocalArgumentReadNode createNonLocalNode() {
-      return new NonLocalSelfReadNode(arg, mixin, contextLevel - 1, sourceSection);
-    }
-
-    @Override
-    protected LocalArgumentReadNode createLocalNode() {
-      return new LocalSelfReadNode(arg, mixin, sourceSection);
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      inliner.updateSelfRead(arg, this, mixin, contextLevel);
     }
 
     @Override
@@ -249,6 +207,11 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      inliner.updateSuperRead(arg, this, holderMixin, classSide, 0);
+    }
+
+    @Override
     protected boolean isTaggedWith(final Class<?> tag) {
       if (tag == KeywordTag.class) {
         return true;
@@ -278,14 +241,8 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    protected NonLocalArgumentReadNode createNonLocalNode() {
-      return new NonLocalSuperReadNode(arg, contextLevel - 1, holderMixin,
-          classSide, sourceSection);
-    }
-
-    @Override
-    protected LocalArgumentReadNode createLocalNode() {
-      return new LocalSuperReadNode(arg, holderMixin, classSide, sourceSection);
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      inliner.updateSuperRead(arg, this, holderMixin, classSide, contextLevel);
     }
 
     @Override

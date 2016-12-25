@@ -27,6 +27,7 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MethodBuilder;
+import som.inlining.InliningVisitor;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
@@ -77,53 +78,11 @@ public final class Method extends Invokable {
     return "Method " + getName() + "\t@" + Integer.toHexString(hashCode());
   }
 
-  /**
-   * @param splitScope is the scope for the block, which has already been split.
-   */
-  @Override
-  public Invokable cloneWithNewLexicalContext(final MethodScope splitScope) {
-    assert methodScope != splitScope;
-    assert splitScope.isFinalized();
-
-    ExpressionNode  inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(
-        uninitializedBody, splitScope);
-    Method clone = new Method(name, getSourceSection(), definition, inlinedBody,
-        splitScope, uninitializedBody, block);
-    splitScope.setMethod(clone);
-    return clone;
-  }
-
   @Override
   public ExpressionNode inline(final MethodBuilder builder, final SInvokable outer) {
     builder.mergeIntoScope(methodScope, outer);
-    return InlinerForLexicallyEmbeddedMethods.doInline(uninitializedBody, builder);
-  }
-
-  public Invokable cloneAndAdaptToEmbeddedOuterContext(
-      final InlinerForLexicallyEmbeddedMethods inliner) {
-    MethodScope currentAdaptedScope = inliner.getScope(this);
-
-    ExpressionNode adaptedBody = InlinerAdaptToEmbeddedOuterContext.doInline(
-        uninitializedBody, inliner, currentAdaptedScope);
-    ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
-
-    Method clone = new Method(name, getSourceSection(), definition, adaptedBody,
-        currentAdaptedScope, uninitAdaptedBody, block);
-    currentAdaptedScope.setMethod(clone);
-    return clone;
-  }
-
-  public Invokable cloneAndAdaptToSomeOuterContextBeingEmbedded(
-      final InlinerAdaptToEmbeddedOuterContext inliner) {
-    MethodScope currentAdaptedScope = inliner.getScope(this);
-    ExpressionNode adaptedBody = InlinerAdaptToEmbeddedOuterContext.doInline(
-        uninitializedBody, inliner, currentAdaptedScope);
-    ExpressionNode uninitAdaptedBody = NodeUtil.cloneNode(adaptedBody);
-
-    Method clone = new Method(name, getSourceSection(), definition,
-        adaptedBody, currentAdaptedScope, uninitAdaptedBody, block);
-    currentAdaptedScope.setMethod(clone);
-    return clone;
+    return InliningVisitor.doInline(
+        uninitializedBody, builder.getCurrentMethodScope(), 0);
   }
 
   @Override
@@ -134,9 +93,30 @@ public final class Method extends Invokable {
         (count > Integer.MAX_VALUE) ? Integer.MAX_VALUE : (int) count);
   }
 
+  public Method cloneAndAdaptAfterScopeChange(final MethodScope adaptedScope,
+      final int appliesTo, final boolean cloneAdaptedAsUninitialized) {
+    ExpressionNode adaptedBody = InliningVisitor.doInline(
+        uninitializedBody, adaptedScope, appliesTo);
+
+    ExpressionNode uninit;
+    if (cloneAdaptedAsUninitialized) {
+      uninit = NodeUtil.cloneNode(adaptedBody);
+    } else {
+      uninit = uninitializedBody;
+    }
+
+    Method clone = new Method(name, getSourceSection(), definition, adaptedBody,
+        adaptedScope, uninit, block);
+    adaptedScope.setMethod(clone);
+    return clone;
+  }
+
   @Override
   public Node deepCopy() {
-    return cloneWithNewLexicalContext(methodScope.getOuterMethodScopeOrNull());
+    MethodScope splitScope = methodScope.split();
+    assert methodScope != splitScope;
+    assert splitScope.isFinalized();
+    return cloneAndAdaptAfterScopeChange(splitScope, 0, false);
   }
 
   public boolean isBlock() {

@@ -11,9 +11,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.Variable.Local;
-import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
-import som.interpreter.InlinerForLexicallyEmbeddedMethods;
-import som.interpreter.SplitterForLexicallyEmbeddedCode;
+import som.inlining.InliningVisitor;
 import som.vm.constants.Nil;
 import tools.debugger.Tags.LocalVariableTag;
 import tools.dym.Tags.LocalVarRead;
@@ -31,14 +29,6 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     this.slot = var.getSlot();
     this.var  = var;
   }
-
-  @Override
-  public abstract void replaceWithLexicallyEmbeddedNode(
-      final InlinerForLexicallyEmbeddedMethods inliner);
-
-  @Override
-  public abstract void replaceWithCopyAdaptedToEmbeddedOuterContext(
-      final InlinerAdaptToEmbeddedOuterContext inliner);
 
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
@@ -117,35 +107,8 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     }
 
     @Override
-    public void replaceWithIndependentCopyForInlining(
-        final SplitterForLexicallyEmbeddedCode inliner) {
-      Local var = (Local) inliner.getSplitVar(this.var);
-      replace(var.getReadNode(contextLevel, sourceSection));
-    }
-
-    @Override
-    public void replaceWithLexicallyEmbeddedNode(
-        final InlinerForLexicallyEmbeddedMethods inliner) {
-      Local var = (Local) inliner.getSplitVar(this.var);
-      if (contextLevel == 0) {
-        replace(var.getReadNode(contextLevel, sourceSection));
-      } else {
-        replace(var.getReadNode(contextLevel - 1, sourceSection));
-      }
-    }
-
-    @Override
-    public void replaceWithCopyAdaptedToEmbeddedOuterContext(
-        final InlinerAdaptToEmbeddedOuterContext inliner) {
-      Local var = (Local) inliner.getSplitVar(this.var);
-
-      // if the context level is 1, the variable is in the outer context,
-      // which just got inlined, so, we need to adapt the slot id
-      if (inliner.appliesTo(contextLevel)) {
-        replace(var.getReadNode(contextLevel, sourceSection));
-      } else if (inliner.needToAdjustLevel(contextLevel)) {
-        replace(var.getReadNode(contextLevel - 1, sourceSection));
-      }
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      inliner.updateRead(var, this, contextLevel);
     }
   }
 
@@ -241,35 +204,8 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     }
 
     @Override
-    public void replaceWithIndependentCopyForInlining(
-        final SplitterForLexicallyEmbeddedCode inliner) {
-      Local var = (Local) inliner.getSplitVar(this.var);
-      replace(var.getWriteNode(contextLevel, this.getExp(), sourceSection));
-    }
-
-    @Override
-    public void replaceWithLexicallyEmbeddedNode(
-        final InlinerForLexicallyEmbeddedMethods inliner) {
-      Local var = (Local) inliner.getSplitVar(this.var);
-      if (contextLevel == 0) {
-        replace(var.getWriteNode(contextLevel, this.getExp(), sourceSection));
-      } else {
-        replace(var.getWriteNode(contextLevel - 1, this.getExp(), sourceSection));
-      }
-    }
-
-    @Override
-    public void replaceWithCopyAdaptedToEmbeddedOuterContext(
-        final InlinerAdaptToEmbeddedOuterContext inliner) {
-      Local var = (Local) inliner.getSplitVar(this.var);
-
-      // if the context level is 1, the variable is in the outer context,
-      // which just got inlined, so, we need to adapt the slot id
-      if (inliner.appliesTo(contextLevel)) {
-        replace(var.getWriteNode(contextLevel, this.getExp(), sourceSection));
-      } else if (inliner.needToAdjustLevel(contextLevel)) {
-        replace(var.getWriteNode(contextLevel - 1, this.getExp(), sourceSection));
-      }
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      inliner.updateWrite(var, this, getExp(), contextLevel);
     }
   }
 }

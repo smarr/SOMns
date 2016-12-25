@@ -11,9 +11,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.Variable.Local;
-import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
-import som.interpreter.InlinerForLexicallyEmbeddedMethods;
-import som.interpreter.SplitterForLexicallyEmbeddedCode;
+import som.inlining.InliningVisitor;
+import som.inlining.InliningVisitor.ScopeElement;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
@@ -107,29 +106,10 @@ public abstract class IntToDoInlinedLiteralsNode extends ExprWithTagsNode {
   }
 
   @Override
-  public void replaceWithLexicallyEmbeddedNode(
-      final InlinerForLexicallyEmbeddedMethods inliner) {
-    Local var = (Local) inliner.getSplitVar(loopIndexVar);
-    replace(IntToDoInlinedLiteralsNodeGen.create(body,
-        var, bodyActualNode, sourceSection, getFrom(), getTo()));
-  }
-
-  @Override
-  public void replaceWithIndependentCopyForInlining(
-      final SplitterForLexicallyEmbeddedCode inliner) {
-    Local var = (Local) inliner.getSplitVar(loopIndexVar);
-    replace(IntToDoInlinedLiteralsNodeGen.create(body, var,
-        bodyActualNode, sourceSection, getFrom(), getTo()));
-  }
-
-  @Override
-  public void replaceWithCopyAdaptedToEmbeddedOuterContext(
-      final InlinerAdaptToEmbeddedOuterContext inliner) {
-    // NOOP: This node has a FrameSlot, but it is local, so does not need to be updated.
-
-    Local var = (Local) inliner.getSplitVar(loopIndexVar);
-    replace(IntToDoInlinedLiteralsNodeGen.create(body, var,
-        bodyActualNode, sourceSection, getFrom(), getTo()));
+  public void replaceAfterScopeChange(final InliningVisitor inliner) {
+    ScopeElement se = inliner.getSplitVar(loopIndexVar);
+    replace(IntToDoInlinedLiteralsNodeGen.create(body, (Local) se.var, bodyActualNode,
+        sourceSection, getFrom(), getTo()));
   }
 
   @Override

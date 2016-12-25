@@ -9,11 +9,8 @@ import som.compiler.AccessModifier;
 import som.compiler.MethodBuilder;
 import som.compiler.Variable;
 import som.compiler.Variable.Argument;
-import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
-import som.interpreter.InlinerForLexicallyEmbeddedMethods;
-import som.interpreter.Invokable;
+import som.inlining.InliningVisitor;
 import som.interpreter.Method;
-import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
@@ -77,34 +74,14 @@ public class BlockNode extends LiteralNode {
   }
 
   @Override
-  public void replaceWithIndependentCopyForInlining(
-      final SplitterForLexicallyEmbeddedCode inliner) {
-    Invokable clonedInvokable = blockMethod.getInvokable().
-        cloneWithNewLexicalContext(inliner.getSplitScope(sourceSection));
-    replaceAdapted(clonedInvokable);
-  }
-
-  @Override
-  public void replaceWithLexicallyEmbeddedNode(
-      final InlinerForLexicallyEmbeddedMethods inliner) {
-    Invokable adapted = ((Method) blockMethod.getInvokable()).
-        cloneAndAdaptToEmbeddedOuterContext(inliner);
-    replaceAdapted(adapted);
-  }
-
-  @Override
-  public void replaceWithCopyAdaptedToEmbeddedOuterContext(
-      final InlinerAdaptToEmbeddedOuterContext inliner) {
-    Invokable adapted = ((Method) blockMethod.getInvokable()).
-        cloneAndAdaptToSomeOuterContextBeingEmbedded(inliner);
-    replaceAdapted(adapted);
-  }
-
-  private void replaceAdapted(final Invokable adaptedForContext) {
-    SInvokable adapted = new SInvokable(blockMethod.getSignature(),
+  public void replaceAfterScopeChange(final InliningVisitor inliner) {
+    Method blockIvk = (Method) blockMethod.getInvokable();
+    Method adapted = blockIvk.cloneAndAdaptAfterScopeChange(
+        inliner.getScope(blockIvk), inliner.contextLevel + 1, true);
+    SInvokable adaptedIvk = new SInvokable(blockMethod.getSignature(),
         AccessModifier.BLOCK_METHOD, Symbols.BLOCK_METHOD,
-        adaptedForContext, blockMethod.getEmbeddedBlocks());
-    replace(createNode(adapted));
+        adapted, blockMethod.getEmbeddedBlocks());
+    replace(createNode(adaptedIvk));
   }
 
   protected BlockNode createNode(final SInvokable adapted) {

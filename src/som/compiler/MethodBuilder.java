@@ -44,11 +44,11 @@ import som.compiler.ProgramDefinitionError.SemanticDefinitionError;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Internal;
 import som.compiler.Variable.Local;
+import som.inlining.InliningVisitor;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
-import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.OuterObjectReadNodeGen;
 import som.interpreter.nodes.ReturnNonLocalNode;
@@ -229,7 +229,7 @@ public final class MethodBuilder {
       final ExpressionNode body, final AccessModifier accessModifier,
       final SSymbol category, final SourceSection sourceSection) {
     MethodScope splitScope = currentScope.split();
-    ExpressionNode splitBody = SplitterForLexicallyEmbeddedCode.doInline(body, splitScope);
+    ExpressionNode splitBody = InliningVisitor.doInline(body, splitScope, 0);
     Method truffleMeth = assembleInvokable(splitBody, splitScope, sourceSection);
 
     // TODO: not sure whether it is safe to use the embeddedBlockMethods here,

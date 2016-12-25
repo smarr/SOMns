@@ -8,7 +8,6 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MethodBuilder;
-import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SInvokable;
 
@@ -40,8 +39,6 @@ public abstract class Invokable extends RootNode {
   public Object execute(final VirtualFrame frame) {
     return expressionOrSequence.executeGeneric(frame);
   }
-
-  public abstract Invokable cloneWithNewLexicalContext(final MethodScope outerContext);
 
   public abstract ExpressionNode inline(final MethodBuilder builder, SInvokable outer);
 

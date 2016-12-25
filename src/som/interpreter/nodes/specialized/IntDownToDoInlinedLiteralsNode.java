@@ -10,8 +10,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.Variable.Local;
-import som.interpreter.InlinerForLexicallyEmbeddedMethods;
-import som.interpreter.SplitterForLexicallyEmbeddedCode;
+import som.inlining.InliningVisitor;
+import som.inlining.InliningVisitor.ScopeElement;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
@@ -98,21 +98,13 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
   }
 
   @Override
-  public void replaceWithLexicallyEmbeddedNode(
-      final InlinerForLexicallyEmbeddedMethods inliner) {
-    Local var = (Local) inliner.getSplitVar(loopIndexVar);
-    IntDownToDoInlinedLiteralsNode node = IntDownToDoInlinedLiteralsNodeGen.create(body,
-        var, bodyActualNode, sourceSection, getFrom(), getTo());
+  public void replaceAfterScopeChange(final InliningVisitor inliner) {
+    ScopeElement se = inliner.getSplitVar(loopIndexVar);
+    IntDownToDoInlinedLiteralsNode node = IntDownToDoInlinedLiteralsNodeGen.create(
+        body, (Local) se.var, bodyActualNode, sourceSection, getFrom(), getTo());
     replace(node);
   }
 
-  @Override
-  public void replaceWithIndependentCopyForInlining(
-      final SplitterForLexicallyEmbeddedCode inliner) {
-    Local var = (Local) inliner.getSplitVar(loopIndexVar);
-    replace(IntDownToDoInlinedLiteralsNodeGen.create(body, var, bodyActualNode,
-        sourceSection, getFrom(), getTo()));
-  }
 
   @Override
   public boolean isResultUsed(final ExpressionNode child) {

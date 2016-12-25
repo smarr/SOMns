@@ -33,12 +33,11 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.AccessModifier;
 import som.compiler.Variable.Internal;
+import som.inlining.InliningVisitor;
+import som.inlining.InliningVisitor.ScopeElement;
 import som.interpreter.FrameOnStackMarker;
-import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
-import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.ReturnException;
 import som.interpreter.SArguments;
-import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.Types;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.Symbols;
@@ -104,41 +103,17 @@ public final class ReturnNonLocalNode extends ContextualNode {
   }
 
   @Override
-  public void replaceWithIndependentCopyForInlining(
-      final SplitterForLexicallyEmbeddedCode inliner) {
-    Internal var = (Internal) inliner.getSplitVar(onStackMarkerVar);
-    replace(new ReturnNonLocalNode(this, var));
-  }
+  public void replaceAfterScopeChange(final InliningVisitor inliner) {
+    ScopeElement se = inliner.getSplitVar(onStackMarkerVar);
 
-  @Override
-  public void replaceWithLexicallyEmbeddedNode(
-      final InlinerForLexicallyEmbeddedMethods inliner) {
-    Internal onStackMarker = (Internal) inliner.getSplitVar(onStackMarkerVar);
-    ExpressionNode inlined;
-    if (contextLevel == 1) {
-      inlined = new ReturnLocalNode(expression, onStackMarker, sourceSection);
-    } else {
-      inlined = new ReturnNonLocalNode(expression, onStackMarker,
-          contextLevel - 1, sourceSection);
-    }
-    replace(inlined);
-  }
-
-  @Override
-  public void replaceWithCopyAdaptedToEmbeddedOuterContext(
-      final InlinerAdaptToEmbeddedOuterContext inliner) {
-    // if the context level is 1, the variable is in the outer context,
-    // which just got inlined, so, we need to adapt the slot id
-    assert !inliner.appliesTo(contextLevel);
-    // this case should not happen, because the frame slot is at the root level
-    // so, anything that got embedded, has to be nested at least once
-
-    if (inliner.needToAdjustLevel(contextLevel)) {
-      Internal var = (Internal) inliner.getSplitVar(onStackMarkerVar);
-      ReturnNonLocalNode node = new ReturnNonLocalNode(
-          expression, var, contextLevel - 1, sourceSection);
+    if (se.var != onStackMarkerVar || se.contextLevel < contextLevel) {
+      ExpressionNode node;
+      if (se.contextLevel == 0) {
+        node = new ReturnLocalNode(expression, (Internal) se.var, sourceSection);
+      } else {
+        node = new ReturnNonLocalNode(expression, (Internal) se.var, se.contextLevel, sourceSection);
+      }
       replace(node);
-      return;
     }
   }
 
@@ -185,10 +160,11 @@ public final class ReturnNonLocalNode extends ContextualNode {
     }
 
     @Override
-    public void replaceWithIndependentCopyForInlining(
-        final SplitterForLexicallyEmbeddedCode inliner) {
-      Internal var = (Internal) inliner.getSplitVar(onStackMarkerVar);
-      replace(new ReturnLocalNode(expression, var, sourceSection));
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      ScopeElement se = inliner.getSplitVar(onStackMarkerVar);
+      if (se.var != onStackMarkerVar) {
+        replace(new ReturnLocalNode(expression, (Internal) se.var, sourceSection));
+      }
     }
   }
 
@@ -241,9 +217,11 @@ public final class ReturnNonLocalNode extends ContextualNode {
     }
 
     @Override
-    public void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
-      Internal var = (Internal) inliner.getSplitVar(frameOnStackMarkerVar);
-      replace(new CatchNonLocalReturnNode(methodBody, var));
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      ScopeElement se = inliner.getSplitVar(frameOnStackMarkerVar);
+      if (se.var != frameOnStackMarkerVar) {
+        replace(new CatchNonLocalReturnNode(methodBody, (Internal) se.var));
+      }
     }
   }
 }

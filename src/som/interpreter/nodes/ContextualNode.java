@@ -27,8 +27,6 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
-import som.interpreter.InlinerForLexicallyEmbeddedMethods;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vmobjects.SBlock;
@@ -63,12 +61,4 @@ public abstract class ContextualNode extends ExprWithTagsNode {
     // so, we record explicitly a class profile
     return frameType.profile(self.getContext());
   }
-
-  @Override
-  public abstract void replaceWithLexicallyEmbeddedNode(
-      final InlinerForLexicallyEmbeddedMethods inlinerForLexicallyEmbeddedMethods);
-
-  @Override
-  public abstract void replaceWithCopyAdaptedToEmbeddedOuterContext(
-      final InlinerAdaptToEmbeddedOuterContext inlinerAdaptToEmbeddedOuterContext);
 }
