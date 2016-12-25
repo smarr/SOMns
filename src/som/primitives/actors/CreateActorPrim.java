@@ -29,7 +29,6 @@ public abstract class CreateActorPrim extends BinaryComplexOperation {
     SFarReference ref = new SFarReference(actor, value);
 
     if (VmSettings.ACTOR_TRACING) {
-      Actor.traceActorsExceptMainOne(ref);
       ActorExecutionTrace.actorCreation(ref);
     }
     return ref;

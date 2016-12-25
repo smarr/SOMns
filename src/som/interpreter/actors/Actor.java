@@ -53,13 +53,6 @@ public class Actor {
     }
   }
 
-  public static void traceActorsExceptMainOne(final SFarReference actorFarRef) {
-    Thread current = Thread.currentThread();
-    if (current instanceof ActorProcessingThread) {
-      ActorProcessingThread t = (ActorProcessingThread) current;
-    }
-  }
-
   /** Used to shift the thread id to the 8 most significant bits. */
   private static final int THREAD_ID_SHIFT = 56;
 
