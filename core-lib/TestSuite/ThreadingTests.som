@@ -61,11 +61,11 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
     public testSpawning = (
       | thread |
       thread := Thread spawn: [].
-    
-      self assert: '' equals: thread name.
-    
+
+      self assert: (thread name beginsWith: 'Thread-').
+
       thread := Thread spawn: [:i | i ] with: (Array with: 1).
-      self assert: '' equals: thread name
+      self assert: (thread name beginsWith: 'Thread-')
     )
 
     public testThreadInterface = (
