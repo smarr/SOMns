@@ -285,7 +285,7 @@ public class Parser {
   }
 
   public MixinBuilder moduleDeclaration() throws ProgramDefinitionError {
-    comment();
+    comments();
     return classDeclaration(null, AccessModifier.PUBLIC);
   }
 
@@ -501,6 +501,7 @@ public class Parser {
       slotDeclarations(mxnBuilder);
     }
 
+    comments();
     if (sym != EndTerm) {
       initExprs(mxnBuilder);
     }
@@ -511,12 +512,22 @@ public class Parser {
   }
 
   private void classComment(final MixinBuilder mxnBuilder) throws ParseError {
-    mxnBuilder.setComment(comment());
+    mxnBuilder.setComment(comments());
+  }
+
+  private String comments() throws ParseError {
+    String comment = "";
+    while (sym == BeginComment) {
+      if (comment.length() > 0) {
+        comment += "\n";
+      }
+      comment += comment();
+    }
+
+    return comment;
   }
 
   private String comment() throws ParseError {
-    if (sym != BeginComment) { return ""; }
-
     SourceCoordinate coord = getCoordinate();
 
     expect(BeginComment, null);
@@ -527,7 +538,7 @@ public class Parser {
       getSymbolFromLexer();
 
       if (sym == BeginComment) {
-        comment += "(*" + comment() + "*)";
+        comment += "(*" + comments() + "*)";
       }
       if (sym == NONE) {
         throw new ParseError("Comment seems not to be closed", EndComment, this);
@@ -548,14 +559,14 @@ public class Parser {
       slotDefinition(mxnBuilder);
     }
 
-    comment();
+    comments();
 
     expect(Or, DelimiterClosingTag.class);
   }
 
   private void slotDefinition(final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
-    comment();
+    comments();
     if (sym == Or) { return; }
 
     SourceCoordinate coord = getCoordinate();
@@ -607,12 +618,12 @@ public class Parser {
 
   private void sideDeclaration(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
     expect(NewTerm, DelimiterOpeningTag.class);
-    comment();
+    comments();
 
     while (canAcceptIdentifierWithOptionalEarlierIdentifier(
         new String[]{"private", "protected", "public"}, "class")) {
       nestedClassDeclaration(mxnBuilder);
-      comment();
+      comments();
     }
 
     while (sym != EndTerm) {
@@ -641,9 +652,9 @@ public class Parser {
       categoryName = "";
     }
     while (sym != EndTerm && sym != STString) {
-      comment();
+      comments();
       methodDeclaration(mxnBuilder, symbolFor(categoryName));
-      comment();
+      comments();
     }
   }
 
@@ -870,7 +881,7 @@ public class Parser {
 
   private ExpressionNode blockContents(final MethodBuilder builder)
       throws ProgramDefinitionError {
-    comment();
+    comments();
     if (accept(Or, DelimiterOpeningTag.class)) {
       locals(builder);
       expect(Or, DelimiterClosingTag.class);
@@ -896,7 +907,7 @@ public class Parser {
     boolean sawPeriod = true;
 
     while (true) {
-      comment();
+      comments();
 
       if (accept(Exit, KeywordTag.class)) {
         if (!sawPeriod) {
@@ -939,7 +950,7 @@ public class Parser {
 
   private ExpressionNode expression(final MethodBuilder builder)
       throws ProgramDefinitionError {
-    comment();
+    comments();
     peekForNextSymbolFromLexer();
 
     if (nextSym == Assign) {
