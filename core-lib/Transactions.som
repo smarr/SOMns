@@ -1,0 +1,19 @@
+class Transactions usingVmMirror: vmMirror usingKernel: kernel = Value (
+| private vmMirror  = vmMirror.
+  private Exception = kernel Exception.
+|
+  (* vmMirror txRegisterTransaction: Transaction *)
+)(
+  public class Transaction = (
+    (* Can't be instantiated directly. *)
+    Exception signal
+  )() : (
+    (* Executes the given block atomically.
+       The execution of the block is retried until it succeeds without conflicts.
+       The result of the block is returned. *)
+    public atomic: block = (
+      (* ^ vmMirror txAtomic: block *)
+      ^ block value
+    )
+  )
+)

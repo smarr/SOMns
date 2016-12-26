@@ -94,6 +94,7 @@ class TestRunner usingPlatform: platform = (
                'ActorTests',
                'RegressionTests',
                'ThreadingTests',
+               'TransactionTests',
                'TransferObjectTests',
                'MinitestTests'.
 
