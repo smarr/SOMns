@@ -30,9 +30,7 @@ import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
-import som.interpreter.InlinerForLexicallyEmbeddedMethods;
-import som.interpreter.SplitterForLexicallyEmbeddedCode;
+import som.interpreter.InliningVisitor;
 import som.interpreter.Types;
 
 
@@ -52,14 +50,14 @@ public abstract class SOMNode extends Node {
   }
 
   /**
-   * This method is called by a visitor that adjusts a newly split copy of a
-   * block method to refer to the correct out lexical context, and for instance,
-   * to replace FrameSlot references by the correct and independent new outer
-   * lexical scope.
-   * @param inliner
+   * This method is called by a visitor to adjust nodes that access lexical
+   * elements such as locals or arguments. This is necessary after changes in
+   * the scope tree. This can be caused by method splitting to obtain
+   * independent copies, or inlining of blocks to adjust context levels.
+   *
+   * <p>When such changes occurred, all blocks within that tree need to be adjusted.
    */
-  public void replaceWithIndependentCopyForInlining(
-      final SplitterForLexicallyEmbeddedCode inliner) {
+  public void replaceAfterScopeChange(final InliningVisitor inliner) {
     // do nothing!
     // only a small subset of nodes needs to implement this method.
     // Most notably, nodes using FrameSlots, and block nodes with method
@@ -91,40 +89,6 @@ public abstract class SOMNode extends Node {
       }
     }
     return true;
-  }
-
-  /**
-   * This method is called by a visitor that adjusts a copy of a block method
-   * to be embedded into its outer method/block. Thus, it needs to adjust
-   * frame slots, which are now moved up to the outer method, and also
-   * trigger adaptation of methods lexically embedded/included in this copy.
-   * The actual adaptation of those methods is done by
-   * replaceWithCopyAdaptedToEmbeddedOuterContext();
-   * @param inliner
-   */
-  public void replaceWithLexicallyEmbeddedNode(
-      final InlinerForLexicallyEmbeddedMethods inliner) {
-    // do nothing!
-    // only a small subset of nodes needs to implement this method.
-    // Most notably, nodes using FrameSlots, and block nodes with method
-    // nodes.
-    assert assertNodeHasNoFrameSlots();
-  }
-
-  /**
-   * Adapt a copy of a method that is lexically enclosed in a block that
-   * just got embedded into its outer context.
-   * Thus, all frame slots need to be fixed up, as well as all embedded
-   * blocks.
-   * @param inliner
-   */
-  public void replaceWithCopyAdaptedToEmbeddedOuterContext(
-      final InlinerAdaptToEmbeddedOuterContext inliner) {
-    // do nothing!
-    // only a small subset of nodes needs to implement this method.
-    // Most notably, nodes using FrameSlots, and block nodes with method
-    // nodes.
-    assert assertNodeHasNoFrameSlots();
   }
 
   /**

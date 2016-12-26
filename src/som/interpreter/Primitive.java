@@ -7,11 +7,12 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeUtil;
 
-import som.compiler.Variable.Local;
-import som.interpreter.LexicalScope.MethodScope;
+import som.compiler.MethodBuilder;
 import som.interpreter.nodes.ExpressionNode;
 import som.primitives.ObjectPrims.HaltPrim;
+import som.vmobjects.SInvokable;
 
 
 public final class Primitive extends Invokable {
@@ -23,24 +24,18 @@ public final class Primitive extends Invokable {
   }
 
   @Override
-  protected Local[] getLocals() {
-    throw new UnsupportedOperationException("Primitive.getLocals() should never be called, because primitives are not expected to get inlined.");
-  }
-
-  @Override
-  public Invokable cloneWithNewLexicalContext(final MethodScope outerContext) {
-    assert outerContext == null;
-    FrameDescriptor inlinedFrameDescriptor = getFrameDescriptor().copy();
-    MethodScope  inlinedContext = new MethodScope(inlinedFrameDescriptor,
-        outerContext, null /* since we got an outer method scope, there won't be a direct class scope*/);
-    ExpressionNode  inlinedBody = SplitterForLexicallyEmbeddedCode.doInline(uninitializedBody,
-        inlinedContext);
-    return new Primitive(name, inlinedBody, inlinedFrameDescriptor, uninitializedBody);
+  public ExpressionNode inline(final MethodBuilder builder, final SInvokable outer) {
+    // Note for completeness: for primitives, we use eager specialization,
+    // which is essentially much simpler inlining
+    throw new UnsupportedOperationException(
+        "Primitives are currently not directly inlined. Only block methods are.");
   }
 
   @Override
   public Node deepCopy() {
-    return cloneWithNewLexicalContext(null);
+    assert getFrameDescriptor().getSize() == 0;
+    return new Primitive(name, NodeUtil.cloneNode(uninitializedBody),
+        getFrameDescriptor(), uninitializedBody);
   }
 
   @Override

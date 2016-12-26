@@ -21,17 +21,15 @@
  */
 package som.interpreter.nodes;
 
-import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
-import som.interpreter.InlinerForLexicallyEmbeddedMethods;
-import som.interpreter.SArguments;
-import som.interpreter.nodes.nary.ExprWithTagsNode;
-import som.vmobjects.SBlock;
-
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.SArguments;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
+import som.vmobjects.SBlock;
 
 
 public abstract class ContextualNode extends ExprWithTagsNode {
@@ -49,10 +47,6 @@ public abstract class ContextualNode extends ExprWithTagsNode {
     return contextLevel;
   }
 
-  public final boolean accessesOuterContext() {
-    return contextLevel > 0;
-  }
-
   @ExplodeLoop
   protected final MaterializedFrame determineContext(final VirtualFrame frame) {
     SBlock self = (SBlock) SArguments.rcvr(frame);
@@ -67,12 +61,4 @@ public abstract class ContextualNode extends ExprWithTagsNode {
     // so, we record explicitly a class profile
     return frameType.profile(self.getContext());
   }
-
-  @Override
-  public abstract void replaceWithLexicallyEmbeddedNode(
-      final InlinerForLexicallyEmbeddedMethods inlinerForLexicallyEmbeddedMethods);
-
-  @Override
-  public abstract void replaceWithCopyAdaptedToEmbeddedOuterContext(
-      final InlinerAdaptToEmbeddedOuterContext inlinerAdaptToEmbeddedOuterContext);
 }

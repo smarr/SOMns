@@ -80,6 +80,7 @@ import som.VmSettings;
 import som.compiler.Lexer.Peek;
 import som.compiler.MethodBuilder.MethodDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionError;
+import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
@@ -317,7 +318,7 @@ public class Parser {
       messagePattern(primaryFactory);
     } else {
       // in the standard case, the primary factory method is #new
-      primaryFactory.addArgumentIfAbsent("self", getEmptySource());
+      primaryFactory.addArgument("self", getEmptySource());
       primaryFactory.setSignature(Symbols.NEW);
     }
     mxnBuilder.setupInitializerBasedOnPrimaryFactory(getSource(coord));
@@ -374,6 +375,7 @@ public class Parser {
       if (accept(Period, StatementSeparatorTag.class)) {
         // TODO: what else do we need to do here?
         mxnBuilder.setInitializerSource(getSource(initCoord));
+        mxnBuilder.finalizeInitializer();
         return;
       }
     }
@@ -505,6 +507,7 @@ public class Parser {
 
     mxnBuilder.setInitializerSource(getSource(coord));
     expect(EndTerm, null);
+    mxnBuilder.finalizeInitializer();
   }
 
   private void classComment(final MixinBuilder mxnBuilder) throws ParseError {
@@ -757,6 +760,7 @@ public class Parser {
         "Unexpected symbol %(found)s. Tried to parse method declaration and expect '=' between message pattern, and method body.",
         KeywordTag.class);
     ExpressionNode body = methodBlock(builder);
+    builder.finalizeMethodScope();
     SInvokable meth = builder.assemble(body, accessModifier, category, getSource(coord));
 
     if (structuralProbe != null) {
@@ -766,7 +770,7 @@ public class Parser {
   }
 
   private void messagePattern(final MethodBuilder builder) throws ParseError {
-    builder.addArgumentIfAbsent("self", getEmptySource());
+    builder.addArgument("self", getEmptySource());
     switch (sym) {
       case Identifier:
         unaryPattern(builder);
@@ -792,7 +796,7 @@ public class Parser {
     builder.addMethodDefinitionSource(getSource(coord));
 
     coord = getCoordinate();
-    builder.addArgumentIfAbsent(argument(), getSource(coord));
+    builder.addArgument(argument(), getSource(coord));
   }
 
   protected void keywordPattern(final MethodBuilder builder) throws ParseError {
@@ -803,7 +807,7 @@ public class Parser {
       builder.addMethodDefinitionSource(getSource(coord));
 
       coord = getCoordinate();
-      builder.addArgumentIfAbsent(argument(), getSource(coord));
+      builder.addArgument(argument(), getSource(coord));
     }
     while (sym == Keyword);
 
@@ -871,6 +875,7 @@ public class Parser {
       locals(builder);
       expect(Or, DelimiterClosingTag.class);
     }
+    builder.setVarsOnMethodScope();
     return blockBody(builder);
   }
 
@@ -879,7 +884,7 @@ public class Parser {
       SourceCoordinate coord = getCoordinate();
       String id = identifier();
       SourceSection source = getSource(coord);
-      builder.addLocalIfAbsent(id, source);
+      builder.addLocal(id, source);
       VM.reportSyntaxElement(LocalVariableTag.class, source);
     }
   }
@@ -1026,6 +1031,7 @@ public class Parser {
         MethodBuilder bgenc = new MethodBuilder(builder);
 
         ExpressionNode blockBody = nestedBlock(bgenc);
+        bgenc.finalizeMethodScope();
 
         SInvokable blockMethod = bgenc.assemble(blockBody,
             AccessModifier.BLOCK_METHOD, null, lastMethodsSourceSection);
@@ -1275,31 +1281,36 @@ public class Parser {
     } else if (numberOfArguments == 3) {
       if ("ifTrue:ifFalse:".equals(msgStr) &&
           arguments.get(1) instanceof LiteralNode && arguments.get(2) instanceof LiteralNode) {
+        LiteralNode blockOrVal = (LiteralNode) arguments.get(2);
         ExpressionNode condition = arguments.get(0);
         condition.markAsControlFlowCondition();
         ExpressionNode inlinedTrueNode  = ((LiteralNode) arguments.get(1)).inline(builder);
-        ExpressionNode inlinedFalseNode = ((LiteralNode) arguments.get(2)).inline(builder);
+        ExpressionNode inlinedFalseNode = blockOrVal.inline(builder);
         return new IfTrueIfFalseInlinedLiteralsNode(condition,
             inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2),
             source);
       } else if (!VmSettings.DYNAMIC_METRICS && "to:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
+        LiteralNode blockOrVal = (LiteralNode) arguments.get(2);
         try {
-          Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
-          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
+          ExpressionNode inlinedBody = blockOrVal.inline(builder);
           inlinedBody.markAsLoopBody();
-          return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
+
+          Local loopIdx = getLoopIdx(builder, blockOrVal, source);
+          return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx,
               arguments.get(2), source, arguments.get(0), arguments.get(1));
         } catch (MethodDefinitionError e) {
           throw new RuntimeException(e);
         }
       } else if (!VmSettings.DYNAMIC_METRICS && "downTo:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
+        LiteralNode blockOrVal = (LiteralNode) arguments.get(2);
         try {
-          Local loopIdx = builder.addLocal("i:" + source.getCharIndex(), source);
-          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(2)).inline(builder, loopIdx);
+          ExpressionNode inlinedBody = blockOrVal.inline(builder);
           inlinedBody.markAsLoopBody();
-          return IntDownToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx.getSlot(), loopIdx.source,
+
+          Local loopIdx = getLoopIdx(builder, blockOrVal, source);
+          return IntDownToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx,
               arguments.get(2), source, arguments.get(0), arguments.get(1));
         } catch (MethodDefinitionError e) {
           throw new RuntimeException(e);
@@ -1307,6 +1318,23 @@ public class Parser {
       }
     }
     return null;
+  }
+
+  private Local getLoopIdx(final MethodBuilder builder,
+      final LiteralNode blockOrVal, final SourceSection source)
+      throws MethodDefinitionError {
+    Local loopIdx;
+    if (blockOrVal instanceof BlockNode) {
+      Argument[] args = ((BlockNode) blockOrVal).getArguments();
+      assert args.length == 2;
+      loopIdx = builder.getLocal(args[1].getQualifiedName());
+    } else {
+      // if it is a literal, we still need a memory location for counting, so,
+      // add a synthetic local
+      loopIdx = builder.addLocalAndUpdateScope(
+          "!i" + SourceCoordinate.getLocationQualifier(source), source);
+    }
+    return loopIdx;
   }
 
   private ExpressionNode formula(final MethodBuilder builder)
@@ -1447,7 +1475,7 @@ public class Parser {
     expect(NewBlock, DelimiterOpeningTag.class);
 
 
-    builder.addArgumentIfAbsent("$blockSelf", getEmptySource());
+    builder.addArgument("$blockSelf", getEmptySource());
 
     if (sym == Colon) {
       blockPattern(builder);
@@ -1479,7 +1507,7 @@ public class Parser {
     do {
       expect(Colon, KeywordTag.class);
       SourceCoordinate coord = getCoordinate();
-      builder.addArgumentIfAbsent(argument(), getSource(coord));
+      builder.addArgument(argument(), getSource(coord));
     }
     while (sym == Colon);
   }

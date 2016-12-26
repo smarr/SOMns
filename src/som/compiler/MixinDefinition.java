@@ -52,6 +52,7 @@ import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
+import tools.SourceCoordinate;
 
 
 /**
@@ -406,8 +407,7 @@ public final class MixinDefinition {
 
   @TruffleBoundary
   private void reportErrorAndExit(final String msgPart1, final String msgPart2) {
-    String line = sourceSection.getSource().getName() + ":" +
-        sourceSection.getStartLine() + ":" + sourceSection.getStartColumn();
+    String line = sourceSection.getSource().getName() + SourceCoordinate.getLocationQualifier(sourceSection);
     VM.errorExit(line + msgPart1 + name.getString() + msgPart2);
   }
 
@@ -676,12 +676,14 @@ public final class MixinDefinition {
     SSymbol init = MixinBuilder.getInitializerName(Symbols.NEW);
     MethodBuilder builder = new MethodBuilder(true);
     builder.setSignature(init);
-    builder.addArgumentIfAbsent("self",
+    builder.addArgument("self",
         SomLanguage.getSyntheticSource("self read", "super-class-resolution").
         createSection(1));
 
     Source source = SomLanguage.getSyntheticSource("self", "Thing>>" + init.getString());
     SourceSection ss = source.createSection(0, 4);
+    builder.setVarsOnMethodScope();
+    builder.finalizeMethodScope();
     SInvokable thingInitNew = builder.assembleInitializer(builder.getSelfRead(ss),
         AccessModifier.PROTECTED, Symbols.INITIALIZER, ss);
     instanceDispatchables.put(init, thingInitNew);

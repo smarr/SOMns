@@ -215,6 +215,10 @@ public final class MixinBuilder {
     return initializer;
   }
 
+  public void finalizeInitializer() {
+    initializer.finalizeMethodScope();
+  }
+
   /**
    * The method that is used to instantiate an object.
    * It instantiates the object, and then calls the initializer,
@@ -234,8 +238,9 @@ public final class MixinBuilder {
     initializer.setSignature(getInitializerName(
         primaryFactoryMethod.getSignature()));
     for (Argument arg : primaryFactoryMethod.getArguments()) {
-      initializer.addArgumentIfAbsent(arg.name, arg.source);
+      initializer.addArgument(arg.name, arg.source);
     }
+    initializer.setVarsOnMethodScope();
   }
 
   public void setInitializerSource(final SourceSection sourceSection) {
@@ -409,7 +414,7 @@ public final class MixinBuilder {
     }
 
     // self is going to be the enclosing object
-    definitionMethod.addArgumentIfAbsent("self",
+    definitionMethod.addArgument("self",
         SomLanguage.getSyntheticSource("self read", "super-class-resolution").
         createSection(1));
     definitionMethod.setSignature(Symbols.DEF_CLASS);
@@ -434,6 +439,9 @@ public final class MixinBuilder {
       source = mixinResolversSource;
     }
 
+    superclassAndMixinResolutionBuilder.setVarsOnMethodScope();
+    superclassAndMixinResolutionBuilder.finalizeMethodScope();
+
     assert superclassResolution != null;
     return superclassAndMixinResolutionBuilder.assembleInvokable(resolution,
         source);
@@ -453,6 +461,8 @@ public final class MixinBuilder {
     ExpressionNode initializedObject = SNodeFactory.createMessageSend(
         initializer.getSignature(), args, primaryFactorySource);
 
+    primaryFactoryMethod.setVarsOnMethodScope();
+    primaryFactoryMethod.finalizeMethodScope();
     return primaryFactoryMethod.assemble(initializedObject,
         AccessModifier.PUBLIC, Symbols.INITIALIZATION,
         primaryFactorySource);

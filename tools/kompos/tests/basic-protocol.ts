@@ -302,7 +302,7 @@ describe('Basic Protocol', function() {
         expect(msg.id).to.equal("se-0");
         expect(msg.sourceUri).to.equal(pingPongUri);
         expect(msg.topFrame.arguments[0]).to.equal("a PingPong");
-        expect(msg.topFrame.slots['ping']).to.equal('a Nil');
+        expect(msg.topFrame.slots['Local(ping)']).to.equal('a Nil');
       });
     }));
   });

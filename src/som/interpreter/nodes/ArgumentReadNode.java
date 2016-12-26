@@ -6,11 +6,10 @@ import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
-import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
-import som.interpreter.InlinerForLexicallyEmbeddedMethods;
+import som.compiler.Variable.Argument;
+import som.interpreter.InliningVisitor;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
-import som.vm.NotYetImplementedException;
 import tools.debugger.Tags.ArgumentTag;
 import tools.debugger.Tags.KeywordTag;
 import tools.dym.Tags.LocalArgRead;
@@ -21,32 +20,36 @@ public abstract class ArgumentReadNode {
   @Instrumentable(factory = LocalArgumentReadNodeWrapper.class)
   public static class LocalArgumentReadNode extends ExprWithTagsNode {
     protected final int argumentIndex;
+    protected final Argument arg;
 
-    public LocalArgumentReadNode(final int argumentIndex, final SourceSection source) {
+    public LocalArgumentReadNode(final Argument arg, final SourceSection source) {
       super(source);
-      assert argumentIndex > 0 ||
+      assert arg.index > 0 ||
         this instanceof LocalSelfReadNode ||
         this instanceof LocalSuperReadNode;
       assert source != null;
-      this.argumentIndex = argumentIndex;
+      this.argumentIndex = arg.index;
+      this.arg = arg;
     }
 
-    // For Wrapper use only
+    /** For Wrapper use only. */
     protected LocalArgumentReadNode(final LocalArgumentReadNode wrappedNode) {
       super(wrappedNode);
       this.argumentIndex = wrappedNode.argumentIndex;
+      this.arg = wrappedNode.arg;
+    }
+
+    /** For use in primitives only. */
+    public LocalArgumentReadNode(final boolean insidePrim, final int argIdx, final SourceSection source) {
+      super(source);
+      this.argumentIndex = argIdx;
+      this.arg = null;
+      assert insidePrim : "Only to be used for primitive nodes";
     }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       return SArguments.arg(frame, argumentIndex);
-    }
-
-    @Override
-    public void replaceWithLexicallyEmbeddedNode(
-        final InlinerForLexicallyEmbeddedMethods inliner) {
-      replace(inliner.getReplacementForLocalArgument(argumentIndex,
-          getSourceSection()));
     }
 
     @Override
@@ -64,6 +67,11 @@ public abstract class ArgumentReadNode {
     public String toString() {
       return "LocalArg(" + argumentIndex + ")";
     }
+
+    @Override
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      inliner.updateRead(arg, this, 0);
+    }
   }
 
   public static class LocalSelfReadNode extends LocalArgumentReadNode implements ISpecialSend {
@@ -71,9 +79,9 @@ public abstract class ArgumentReadNode {
     private final MixinDefinitionId mixin;
     private final ValueProfile rcvrClass = ValueProfile.createClassProfile();
 
-    public LocalSelfReadNode(final MixinDefinitionId mixin,
+    public LocalSelfReadNode(final Argument arg, final MixinDefinitionId mixin,
         final SourceSection source) {
-      super(0, source);
+      super(arg, source);
       this.mixin = mixin;
     }
 
@@ -87,9 +95,8 @@ public abstract class ArgumentReadNode {
     @Override public String            toString()    { return "LocalSelf"; }
 
     @Override
-    public void replaceWithLexicallyEmbeddedNode(
-        final InlinerForLexicallyEmbeddedMethods inliner) {
-      throw new NotYetImplementedException();
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      inliner.updateSelfRead(arg, this, mixin, 0);
     }
 
     @Override
@@ -104,15 +111,17 @@ public abstract class ArgumentReadNode {
 
   public static class NonLocalArgumentReadNode extends ContextualNode {
     protected final int argumentIndex;
+    protected final Argument arg;
 
-    public NonLocalArgumentReadNode(final int argumentIndex,
-        final int contextLevel, final SourceSection source) {
+    public NonLocalArgumentReadNode(final Argument arg, final int contextLevel,
+        final SourceSection source) {
       super(contextLevel, source);
       assert contextLevel > 0;
-      assert argumentIndex > 0 ||
+      assert arg.index > 0 ||
         this instanceof NonLocalSelfReadNode ||
         this instanceof NonLocalSuperReadNode;
-      this.argumentIndex = argumentIndex;
+      this.argumentIndex = arg.index;
+      this.arg = arg;
     }
 
     @Override
@@ -121,41 +130,8 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public final void replaceWithLexicallyEmbeddedNode(
-        final InlinerForLexicallyEmbeddedMethods inliner) {
-      ExpressionNode inlined;
-      if (contextLevel == 1) {
-        inlined = createLocalNode();
-      } else {
-        inlined = createNonLocalNode();
-      }
-      replace(inlined);
-    }
-
-    protected NonLocalArgumentReadNode createNonLocalNode() {
-      return new NonLocalArgumentReadNode(argumentIndex, contextLevel - 1,
-          getSourceSection());
-    }
-
-    protected LocalArgumentReadNode createLocalNode() {
-      return new LocalArgumentReadNode(argumentIndex, getSourceSection());
-    }
-
-    @Override
-    public final void replaceWithCopyAdaptedToEmbeddedOuterContext(
-        final InlinerAdaptToEmbeddedOuterContext inliner) {
-      // this should be the access to a block argument
-      if (inliner.appliesTo(contextLevel)) {
-        assert !(this instanceof NonLocalSuperReadNode) && !(this instanceof NonLocalSelfReadNode);
-        ExpressionNode node = inliner.getReplacementForBlockArgument(argumentIndex, getSourceSection());
-        replace(node);
-        return;
-      } else if (inliner.needToAdjustLevel(contextLevel)) {
-        // in the other cases, we just need to adjust the context level
-        NonLocalArgumentReadNode node = createNonLocalNode();
-        replace(node);
-        return;
-      }
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      inliner.updateRead(arg, this, contextLevel);
     }
 
     @Override
@@ -176,9 +152,9 @@ public abstract class ArgumentReadNode {
 
     private final ValueProfile rcvrClass = ValueProfile.createClassProfile();
 
-    public NonLocalSelfReadNode(final MixinDefinitionId mixin,
+    public NonLocalSelfReadNode(final Argument arg, final MixinDefinitionId mixin,
         final int contextLevel, final SourceSection source) {
-      super(0, contextLevel, source);
+      super(arg, contextLevel, source);
       this.mixin = mixin;
     }
 
@@ -192,14 +168,8 @@ public abstract class ArgumentReadNode {
     @Override public String            toString()    { return "NonLocalSelf"; }
 
     @Override
-    protected NonLocalArgumentReadNode createNonLocalNode() {
-      return new NonLocalSelfReadNode(mixin, contextLevel - 1,
-          getSourceSection());
-    }
-
-    @Override
-    protected LocalArgumentReadNode createLocalNode() {
-      return new LocalSelfReadNode(mixin, getSourceSection());
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      inliner.updateSelfRead(arg, this, mixin, contextLevel);
     }
 
     @Override
@@ -218,9 +188,10 @@ public abstract class ArgumentReadNode {
     private final MixinDefinitionId holderMixin;
     private final boolean classSide;
 
-    public LocalSuperReadNode(final MixinDefinitionId holderMixin,
-        final boolean classSide, final SourceSection source) {
-      super(SArguments.RCVR_IDX, source);
+    public LocalSuperReadNode(final Argument arg,
+        final MixinDefinitionId holderMixin, final boolean classSide,
+        final SourceSection source) {
+      super(arg, source);
       this.holderMixin = holderMixin;
       this.classSide   = classSide;
     }
@@ -233,6 +204,11 @@ public abstract class ArgumentReadNode {
     @Override
     public boolean isClassSide() {
       return classSide;
+    }
+
+    @Override
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      inliner.updateSuperRead(arg, this, holderMixin, classSide, 0);
     }
 
     @Override
@@ -251,10 +227,10 @@ public abstract class ArgumentReadNode {
     private final MixinDefinitionId holderMixin;
     private final boolean classSide;
 
-    public NonLocalSuperReadNode(final int contextLevel,
+    public NonLocalSuperReadNode(final Argument arg, final int contextLevel,
         final MixinDefinitionId holderMixin, final boolean classSide,
         final SourceSection source) {
-      super(SArguments.RCVR_IDX, contextLevel, source);
+      super(arg, contextLevel, source);
       this.holderMixin = holderMixin;
       this.classSide   = classSide;
     }
@@ -265,14 +241,8 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    protected NonLocalArgumentReadNode createNonLocalNode() {
-      return new NonLocalSuperReadNode(contextLevel - 1, holderMixin,
-          classSide, getSourceSection());
-    }
-
-    @Override
-    protected LocalArgumentReadNode createLocalNode() {
-      return new LocalSuperReadNode(holderMixin, classSide, getSourceSection());
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      inliner.updateSuperRead(arg, this, holderMixin, classSide, contextLevel);
     }
 
     @Override

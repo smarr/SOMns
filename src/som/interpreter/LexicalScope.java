@@ -1,13 +1,16 @@
 package som.interpreter;
 
+import java.util.Arrays;
 import java.util.HashMap;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
+import som.compiler.Variable;
 import som.interpreter.LexicalScope.MixinScope.MixinIdAndContextLevel;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SSymbol;
@@ -90,10 +93,28 @@ public abstract class LexicalScope {
     }
   }
 
+  /**
+   * MethodScope represents the lexical scope of a method or block.
+   * It is used on the one hand as identifier for this scope, and on
+   * the other hand, after construction is finalized, it also represents
+   * the variables in that scope and possibly embedded scopes.
+   */
   public static final class MethodScope extends LexicalScope {
-    private final FrameDescriptor frameDescriptor;
     private final MethodScope     outerMethod;
     private final MixinScope      outerMixin;
+
+    private final FrameDescriptor frameDescriptor;
+
+    @CompilationFinal
+    private MethodScope[] embeddedScopes;
+
+    /**
+     * All arguments, local and internal variables used in a method.
+     */
+    @CompilationFinal
+    private Variable[] variables;
+
+    @CompilationFinal private boolean finalized;
 
     @CompilationFinal private Method method;
 
@@ -104,10 +125,119 @@ public abstract class LexicalScope {
       this.outerMixin      = outerMixin;
     }
 
-    /** Create new and independent copy. */
+    public void setVariables(final Variable[] variables) {
+      assert variables != null : "variables are expected to be != null once set";
+      assert this.variables == null;
+      this.variables = variables;
+    }
+
+    public void addVariable(final Variable var) {
+      int length = variables.length;
+      variables = Arrays.copyOf(variables, length + 1);
+      variables[length] = var;
+    }
+
+    public void addEmbeddedScope(final MethodScope embeddedScope) {
+      assert embeddedScope.outerMethod == this;
+      int length;
+      if (embeddedScopes == null) {
+        length = 0;
+        embeddedScopes = new MethodScope[length + 1];
+      } else {
+        length = embeddedScopes.length;
+        embeddedScopes = Arrays.copyOf(embeddedScopes, length + 1);
+      }
+      embeddedScopes[length] = embeddedScope;
+    }
+
+    /**
+     * The given scope was just merged into this one. Now, we need to
+     * remove it from the embedded scopes.
+     */
+    public void removeMerged(final MethodScope scope) {
+      MethodScope[] remainingScopes = new MethodScope[embeddedScopes.length - 1];
+
+      int i = 0;
+      for (MethodScope s : embeddedScopes) {
+        if (s != scope) {
+          remainingScopes[i] = s;
+          i += 1;
+        }
+      }
+
+      embeddedScopes = remainingScopes;
+    }
+
+    public MethodScope getScope(final Method method) {
+      if (method.equals(this.method)) {
+        return this;
+      }
+
+      if (embeddedScopes == null) {
+        return null;
+      }
+
+      for (MethodScope m : embeddedScopes) {
+        MethodScope result = m.getScope(method);
+        if (result != null) { return result; }
+      }
+      return null;
+    }
+
+    public void finalizeScope() {
+      assert !isFinalized();
+      finalized = true;
+    }
+
+    public boolean isFinalized() {
+      return finalized;
+    }
+
+    public Variable[] getVariables() {
+      assert variables != null;
+      return variables;
+    }
+
+    public MethodScope[] getEmbeddedScopes() {
+      return embeddedScopes;
+    }
+
+    private MethodScope constructSplitScope(final MethodScope newOuter) {
+      FrameDescriptor desc = new FrameDescriptor(frameDescriptor.getDefaultValue());
+
+      Variable[] newVars = new Variable[variables.length];
+      for (int i = 0; i < variables.length; i += 1) {
+        newVars[i] = variables[i].split(desc);
+      }
+
+      MethodScope split = new MethodScope(desc, newOuter, outerMixin);
+
+      if (embeddedScopes != null) {
+        for (MethodScope s : embeddedScopes) {
+          split.addEmbeddedScope(s.constructSplitScope(split));
+        }
+      }
+      split.setVariables(newVars);
+      split.finalizeScope();
+      split.setMethod(method);
+
+      return split;
+    }
+
+    /** Split lexical scope. */
     public MethodScope split() {
-      FrameDescriptor splitDescriptor = frameDescriptor.copy();
-      return new MethodScope(splitDescriptor, outerMethod, outerMixin);
+      assert isFinalized();
+      return constructSplitScope(outerMethod);
+    }
+
+    /**
+     * Split lexical scope to adapt to new outer lexical scope.
+     * One of the outer scopes was inlined into its parent,
+     * or simply split itself.
+     */
+    public MethodScope split(final MethodScope newOuter) {
+      assert isFinalized();
+      return constructSplitScope(newOuter);
     }
 
     public FrameDescriptor getFrameDescriptor() {
@@ -144,7 +274,14 @@ public abstract class LexicalScope {
 
     @Override
     public String toString() {
-      return "MethodScope(" + frameDescriptor.toString() + ")";
+      String result = "MethodScope";
+      if (method != null) {
+        result += "(" + method.name + ")";
+      }
+      if (variables != null) {
+        result += Arrays.toString(variables);
+      }
+      return  result;
     }
 
     public MixinIdAndContextLevel lookupSlotOrClass(final SSymbol selector) {
@@ -161,6 +298,17 @@ public abstract class LexicalScope {
 
     public MixinScope getHolderScope() {
       return outerMixin;
+    }
+
+    public MethodScope getEmbeddedScope(final SourceSection source) {
+      assert embeddedScopes != null : "Something is wrong, trying to get embedded scope for leaf method";
+      for (MethodScope s : embeddedScopes) {
+        if (s.method.getSourceSection().equals(source)) {
+          return s;
+        }
+      }
+      // should never be reached
+      throw new IllegalStateException("Did not find the scope for the provided source section");
     }
   }
 }

@@ -43,6 +43,7 @@ import som.vmobjects.SArray;
 import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
+import tools.SourceCoordinate;
 
 
 public final class SystemPrims {
@@ -185,7 +186,7 @@ public final class SystemPrims {
               nodeSS = callNode.getEncapsulatingSourceSection();
             }
             if (nodeSS != null) {
-              location.add(nodeSS.getSource().getName() + ":" + nodeSS.getStartLine() + ":" + nodeSS.getStartColumn());
+              location.add(nodeSS.getSource().getName() + SourceCoordinate.getLocationQualifier(nodeSS));
             } else {
               location.add("");
             }

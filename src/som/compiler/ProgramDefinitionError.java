@@ -2,6 +2,8 @@ package som.compiler;
 
 import com.oracle.truffle.api.source.SourceSection;
 
+import tools.SourceCoordinate;
+
 public abstract class ProgramDefinitionError extends Exception {
   private static final long serialVersionUID = 318305400750674461L;
 
@@ -24,8 +26,8 @@ public abstract class ProgramDefinitionError extends Exception {
 
     @Override
     public String toString() {
-      return source.getSource().getName() + ":" + source.getStartLine() + ":" +
-            source.getStartColumn() + ":error: " + getMessage();
+      return source.getSource().getName() +
+          SourceCoordinate.getLocationQualifier(source) + ":error: " + getMessage();
     }
   }
 }

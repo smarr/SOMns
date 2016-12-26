@@ -210,7 +210,7 @@ public class Primitives {
     for (int i = 0; i < numArgs; i++) {
       // we do not pass the vmMirror, makes it easier to use the same primitives
       // as replacements on the node level
-      args[i] = new LocalArgumentReadNode(i + 1, s.createSection(1));
+      args[i] = new LocalArgumentReadNode(true, i + 1, s.createSection(1));
     }
 
     SourceSection source = s.createSection(1);

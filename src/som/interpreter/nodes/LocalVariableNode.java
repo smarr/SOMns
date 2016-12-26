@@ -1,6 +1,5 @@
 package som.interpreter.nodes;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
@@ -10,9 +9,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.Variable.Local;
-import som.interpreter.InlinerAdaptToEmbeddedOuterContext;
-import som.interpreter.InlinerForLexicallyEmbeddedMethods;
-import som.interpreter.SplitterForLexicallyEmbeddedCode;
+import som.interpreter.InliningVisitor;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
 import tools.debugger.Tags.LocalVariableTag;
@@ -22,32 +19,12 @@ import tools.dym.Tags.LocalVarWrite;
 
 public abstract class LocalVariableNode extends ExprWithTagsNode {
   protected final FrameSlot slot;
+  protected final Local var;
 
-  private LocalVariableNode(final FrameSlot slot, final SourceSection source) {
+  private LocalVariableNode(final Local var, final SourceSection source) {
     super(source);
-    this.slot = slot;
-  }
-
-  public final Object getSlotIdentifier() {
-    return slot.getIdentifier();
-  }
-
-  @Override
-  public final void replaceWithLexicallyEmbeddedNode(
-      final InlinerForLexicallyEmbeddedMethods inliner) {
-    throw new RuntimeException("Normally, only uninitialized variable nodes should be encountered, because this is done at parse time");
-  }
-
-  @Override
-  public final void replaceWithCopyAdaptedToEmbeddedOuterContext(
-      final InlinerAdaptToEmbeddedOuterContext inliner) {
-    throw new RuntimeException("Normally, only uninitialized variable nodes should be encountered, because this is done at parse time");
-  }
-
-  @Override
-  public final void replaceWithIndependentCopyForInlining(final SplitterForLexicallyEmbeddedCode inliner) {
-    CompilerAsserts.neverPartOfCompilation("replaceWithIndependentCopyForInlining");
-    throw new RuntimeException("Should not be part of an uninitalized tree. And this should only be done with uninitialized trees.");
+    this.slot = var.getSlot();
+    this.var  = var;
   }
 
   @Override
@@ -61,18 +38,12 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
 
   public abstract static class LocalVariableReadNode extends LocalVariableNode {
 
-    public LocalVariableReadNode(final Local variable,
-        final SourceSection source) {
-      this(variable.getSlot(), source);
+    public LocalVariableReadNode(final Local variable, final SourceSection source) {
+      super(variable, source);
     }
 
     public LocalVariableReadNode(final LocalVariableReadNode node) {
-      this(node.slot, node.getSourceSection());
-    }
-
-    public LocalVariableReadNode(final FrameSlot slot,
-        final SourceSection source) {
-      super(slot, source);
+      this(node.var, node.sourceSection);
     }
 
     @Specialization(guards = "isUninitialized(frame)")
@@ -133,7 +104,12 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
 
     @Override
     public String toString() {
-      return this.getClass().getSimpleName() + "[" + (String) getSlotIdentifier() + "]";
+      return this.getClass().getSimpleName() + "[" + var.name + "]";
+    }
+
+    @Override
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      inliner.updateRead(var, this, 0);
     }
   }
 
@@ -141,15 +117,11 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
   public abstract static class LocalVariableWriteNode extends LocalVariableNode {
 
     public LocalVariableWriteNode(final Local variable, final SourceSection source) {
-      super(variable.getSlot(), source);
+      super(variable, source);
     }
 
     public LocalVariableWriteNode(final LocalVariableWriteNode node) {
-      super(node.slot, node.getSourceSection());
-    }
-
-    public LocalVariableWriteNode(final FrameSlot slot, final SourceSection source) {
-      super(slot, source);
+      super(node.var, node.sourceSection);
     }
 
     public abstract ExpressionNode getExp();
@@ -223,7 +195,12 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
 
     @Override
     public String toString() {
-      return this.getClass().getSimpleName() + "[" + (String) getSlotIdentifier() + "]";
+      return this.getClass().getSimpleName() + "[" + var.name + "]";
+    }
+
+    @Override
+    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+      inliner.updateWrite(var, this, getExp(), 0);
     }
   }
 }

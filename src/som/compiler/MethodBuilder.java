@@ -33,7 +33,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.istack.internal.NotNull;
 
@@ -42,12 +42,13 @@ import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.ProgramDefinitionError.SemanticDefinitionError;
 import som.compiler.Variable.Argument;
+import som.compiler.Variable.Internal;
 import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.LexicalScope.MixinScope;
+import som.interpreter.InliningVisitor;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
-import som.interpreter.SplitterForLexicallyEmbeddedCode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.OuterObjectReadNodeGen;
 import som.interpreter.nodes.ReturnNonLocalNode;
@@ -74,8 +75,8 @@ public final class MethodBuilder {
   private final LinkedHashMap<String, Argument> arguments = new LinkedHashMap<>();
   private final LinkedHashMap<String, Local>    locals    = new LinkedHashMap<>();
 
-  private       FrameSlot     frameOnStackSlot;
-  private final MethodScope   currentScope;
+  private       Internal    frameOnStackVar;
+  private final MethodScope currentScope;
 
   private final List<SInvokable> embeddedBlockMethods;
 
@@ -123,8 +124,44 @@ public final class MethodBuilder {
     return arguments.values();
   }
 
+  /**
+   * Merge the given block scope into the current builder.
+   */
+  public void mergeIntoScope(final MethodScope scope, final SInvokable outer) {
+    for (Variable v : scope.getVariables()) {
+      Local l = v.splitToMergeIntoOuterScope(currentScope.getFrameDescriptor());
+      if (l != null) { // can happen for instance for the block self, which we omit
+        String name = l.getQualifiedName();
+        assert !locals.containsKey(name);
+        locals.put(name, l);
+        currentScope.addVariable(l);
+      }
+    }
+    SInvokable[]  embeddedBlocks = outer.getEmbeddedBlocks();
+    MethodScope[] embeddedScopes = scope.getEmbeddedScopes();
+
+    assert ((embeddedBlocks == null || embeddedBlocks.length == 0) &&
+            (embeddedScopes == null || embeddedScopes.length == 0)) ||
+          embeddedBlocks.length == embeddedScopes.length;
+
+    if (embeddedScopes != null) {
+      for (MethodScope e : embeddedScopes) {
+        currentScope.addEmbeddedScope(e.split(currentScope));
+      }
+
+      for (SInvokable i : embeddedBlocks) {
+        embeddedBlockMethods.add(i);
+      }
+    }
+
+    boolean removed = embeddedBlockMethods.remove(outer);
+    assert removed;
+    currentScope.removeMerged(scope);
+  }
+
   public void addEmbeddedBlockMethod(final SInvokable blockMethod) {
     embeddedBlockMethods.add(blockMethod);
+    currentScope.addEmbeddedScope(((Method) blockMethod.getInvokable()).getLexicalScope());
   }
 
   public MethodScope getCurrentMethodScope() {
@@ -137,17 +174,23 @@ public final class MethodBuilder {
 
   // Name for the frameOnStack slot,
   // starting with ! to make it a name that's not possible in Smalltalk
-  private static final String frameOnStackSlotName = "!frameOnStack";
+  private static final String FRAME_ON_STACK_SLOT_NAME = "!frameOnStack";
 
-  public FrameSlot getFrameOnStackMarkerSlot() {
+  public Internal getFrameOnStackMarkerVar() {
     if (outerBuilder != null) {
-      return outerBuilder.getFrameOnStackMarkerSlot();
+      return outerBuilder.getFrameOnStackMarkerVar();
     }
 
-    if (frameOnStackSlot == null) {
-      frameOnStackSlot = currentScope.getFrameDescriptor().addFrameSlot(frameOnStackSlotName);
+    if (frameOnStackVar == null) {
+      assert needsToCatchNonLocalReturn;
+
+      frameOnStackVar = new Internal(FRAME_ON_STACK_SLOT_NAME);
+      frameOnStackVar.init(
+          currentScope.getFrameDescriptor().addFrameSlot(
+              frameOnStackVar, FrameSlotKind.Object));
+      currentScope.addVariable(frameOnStackVar);
     }
-    return frameOnStackSlot;
+    return frameOnStackVar;
   }
 
   public void makeCatchNonLocalReturn() {
@@ -186,7 +229,7 @@ public final class MethodBuilder {
       final ExpressionNode body, final AccessModifier accessModifier,
       final SSymbol category, final SourceSection sourceSection) {
     MethodScope splitScope = currentScope.split();
-    ExpressionNode splitBody = SplitterForLexicallyEmbeddedCode.doInline(body, splitScope);
+    ExpressionNode splitBody = InliningVisitor.doInline(body, splitScope, 0);
     Method truffleMeth = assembleInvokable(splitBody, splitScope, sourceSection);
 
     // TODO: not sure whether it is safe to use the embeddedBlockMethods here,
@@ -223,6 +266,25 @@ public final class MethodBuilder {
     return meth;
   }
 
+  public void setVarsOnMethodScope() {
+    Variable[] vars = new Variable[arguments.size() + locals.size()];
+    int i = 0;
+    for (Argument a : arguments.values()) {
+      vars[i] = a;
+      i += 1;
+    }
+
+    for (Local l : locals.values()) {
+      vars[i] = l;
+      i += 1;
+    }
+    currentScope.setVariables(vars);
+  }
+
+  public void finalizeMethodScope() {
+    currentScope.finalizeScope();
+  }
+
   public Method assembleInvokable(final ExpressionNode body,
       final SourceSection sourceSection) {
     return assembleInvokable(body, currentScope, sourceSection);
@@ -239,14 +301,14 @@ public final class MethodBuilder {
   private Method assembleInvokable(ExpressionNode body, final MethodScope scope,
       final SourceSection sourceSection) {
     if (needsToCatchNonLocalReturn()) {
-      body = createCatchNonLocalReturn(body, getFrameOnStackMarkerSlot());
+      body = createCatchNonLocalReturn(body, getFrameOnStackMarkerVar());
     }
+
+    assert scope.isFinalized() : "Expect the scope to be finalized at this point";
 
     Method truffleMethod = new Method(getMethodIdentifier(),
         sourceSection, definition.toArray(new SourceSection[0]),
-        body, scope, (ExpressionNode) body.deepCopy(), blockMethod,
-        arguments.values().toArray(new Argument[0]),
-        locals.values().toArray(new Local[0]));
+        body, scope, (ExpressionNode) body.deepCopy(), blockMethod);
     scope.setMethod(truffleMethod);
     return truffleMethod;
   }
@@ -256,7 +318,7 @@ public final class MethodBuilder {
     signature = sig;
   }
 
-  private void addArgument(final String arg, final SourceSection source) {
+  public void addArgument(final String arg, final SourceSection source) {
     if (("self".equals(arg) || "$blockSelf".equals(arg)) && arguments.size() > 0) {
       throw new IllegalStateException("The self argument always has to be the first argument of a method");
     }
@@ -265,34 +327,22 @@ public final class MethodBuilder {
     arguments.put(arg, argument);
   }
 
-  public void addArgumentIfAbsent(final String arg, final SourceSection source) {
-    if (arguments.containsKey(arg)) {
-      return;
+  public Local addLocal(final String name, final SourceSection source)
+      throws MethodDefinitionError {
+    if (arguments.containsKey(name)) {
+      throw new MethodDefinitionError("Method already defines argument " + name + ". Can't define local variable with same name.", source);
     }
 
-    addArgument(arg, source);
+    Local l = new Local(name, source);
+    l.init(currentScope.getFrameDescriptor().addFrameSlot(l));
+    locals.put(name, l);
+    return l;
   }
 
-  public Local addLocalIfAbsent(final String local, final SourceSection source)
-      throws MethodDefinitionError {
-    Local l = locals.get(local);
-    if (l != null) {
-      return l;
-    }
-
-    return addLocal(local, source);
-  }
-
-  public Local addLocal(final String local, final SourceSection source)
-      throws MethodDefinitionError {
-    if (arguments.containsKey(local)) {
-      throw new MethodDefinitionError("Method already defines argument " + local + ". Can't define local variable with same name.", source);
-    }
-
-    Local l = new Local(
-        local, currentScope.getFrameDescriptor().addFrameSlot(local), source);
-    assert !locals.containsKey(local);
-    locals.put(local, l);
+  public Local addLocalAndUpdateScope(final String name,
+      final SourceSection source) throws MethodDefinitionError {
+    Local l = addLocal(name, source);
+    currentScope.addVariable(l);
     return l;
   }
 
@@ -319,7 +369,7 @@ public final class MethodBuilder {
       return 1 + outerBuilder.getContextLevel(varName);
     }
 
-    return 0;
+    throw new IllegalStateException("Didn't find variable.");
   }
 
   public Local getEmbeddedLocal(final String embeddedName) {
@@ -349,11 +399,14 @@ public final class MethodBuilder {
     return null;
   }
 
+  public Argument getSelf() {
+    return (Argument) getVariable("self");
+  }
+
   public ExpressionNode getSuperReadNode(@NotNull final SourceSection source) {
     assert source != null;
     MixinBuilder holder = getEnclosingMixinBuilder();
-    Variable self = getVariable("self");
-    return self.getSuperReadNode(getOuterSelfContextLevel(),
+    return getSelf().getSuperReadNode(getOuterSelfContextLevel(),
         holder.getMixinId(), holder.isClassSide(), source);
   }
 
@@ -361,8 +414,7 @@ public final class MethodBuilder {
     assert source != null;
     MixinBuilder holder = getEnclosingMixinBuilder();
     MixinDefinitionId mixinId = holder == null ? null : holder.getMixinId();
-    return getVariable("self").
-        getSelfReadNode(getContextLevel("self"), mixinId, source);
+    return getSelf().getSelfReadNode(getContextLevel("self"), mixinId, source);
   }
 
   public ExpressionNode getReadNode(final String variableName,
@@ -453,7 +505,7 @@ public final class MethodBuilder {
   public ReturnNonLocalNode getNonLocalReturn(final ExpressionNode expr,
       final SourceSection source) {
     makeCatchNonLocalReturn();
-    return createNonLocalReturn(expr, getFrameOnStackMarkerSlot(),
+    return createNonLocalReturn(expr, getFrameOnStackMarkerVar(),
         getOuterSelfContextLevel(), source);
   }
 
