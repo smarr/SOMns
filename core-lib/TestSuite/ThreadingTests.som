@@ -33,10 +33,10 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
       | d |
       d := Delay forSeconds: 1.
       self assert: 1000 equals: d duration.
-    
+
       d := Delay forMilliseconds: 1.
       self assert: 1    equals: d duration.
-    
+
       (* This could change, perhaps to indicate interruption. *)
       self assert: d is: d wait.
     )
@@ -46,13 +46,13 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
       m := Mutex new.
       r := m critical: [ #value ].
       self assert: #value equals: r.
-    
+
       self assert: false equals: m isLocked.
       self assert: m     is:     m lock.
       self assert: true  equals: m isLocked.
       self assert: m     is:     m unlock.
       self assert: false equals: m isLocked.
-    
+
       cond1 := m newCondition.
       cond2 := m newCondition.
       self deny: cond1 == cond2.
@@ -81,11 +81,11 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
       self assert: executed.
 
       self assert: Thread is: Thread yield.
-    
+
       thread  := Thread current.
       thread2 := Thread current.
       self assert: thread is: thread2.
-      self deny: thread == nil. 
+      self deny: thread == nil.
     )
 
     public testThreadCurrent = (
@@ -93,7 +93,7 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
       thread := Thread spawn: [
         subThreadCurrent := Thread current].
       thread join.
-  
+
       (* those two should be the same object *)
       self assert: thread is: subThreadCurrent.
       self deny: thread == Thread current.
@@ -104,12 +104,12 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
       executed := false.
       m := Mutex new.
       c := m newCondition.
-      
+
       m critical: [ c signalOne ].
       awaitResult1 := m critical: [ c await: 1 ].
-      
+
       self deny: awaitResult1 description: 'Await times out'.
-      
+
       (* This test is racy... remove and replace if it makes problems. *)
       t := Thread spawn: [
         m critical: [ c signalOne ].
