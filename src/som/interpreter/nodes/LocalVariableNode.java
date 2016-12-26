@@ -9,7 +9,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.Variable.Local;
-import som.inlining.InliningVisitor;
+import som.interpreter.InliningVisitor;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
 import tools.debugger.Tags.LocalVariableTag;

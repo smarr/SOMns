@@ -7,7 +7,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.Variable.Argument;
-import som.inlining.InliningVisitor;
+import som.interpreter.InliningVisitor;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import tools.debugger.Tags.ArgumentTag;

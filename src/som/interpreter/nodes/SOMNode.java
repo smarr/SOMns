@@ -30,7 +30,7 @@ import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.inlining.InliningVisitor;
+import som.interpreter.InliningVisitor;
 import som.interpreter.Types;
 
 

@@ -33,12 +33,12 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.AccessModifier;
 import som.compiler.Variable.Internal;
-import som.inlining.InliningVisitor;
-import som.inlining.InliningVisitor.ScopeElement;
 import som.interpreter.FrameOnStackMarker;
+import som.interpreter.InliningVisitor;
 import som.interpreter.ReturnException;
 import som.interpreter.SArguments;
 import som.interpreter.Types;
+import som.interpreter.InliningVisitor.ScopeElement;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.Symbols;
 import som.vmobjects.SBlock;

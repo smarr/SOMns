@@ -9,7 +9,7 @@ import som.compiler.AccessModifier;
 import som.compiler.MethodBuilder;
 import som.compiler.Variable;
 import som.compiler.Variable.Argument;
-import som.inlining.InliningVisitor;
+import som.interpreter.InliningVisitor;
 import som.interpreter.Method;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.Symbols;

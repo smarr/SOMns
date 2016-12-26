@@ -1,4 +1,4 @@
-package som.inlining;
+package som.interpreter;
 
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
@@ -9,8 +9,6 @@ import som.compiler.Variable;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.LexicalScope.MethodScope;
-import som.interpreter.Method;
-import som.interpreter.NodeVisitorUtil;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;

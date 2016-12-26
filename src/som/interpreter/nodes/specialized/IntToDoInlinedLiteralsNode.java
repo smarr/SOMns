@@ -11,8 +11,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.Variable.Local;
-import som.inlining.InliningVisitor;
-import som.inlining.InliningVisitor.ScopeElement;
+import som.interpreter.InliningVisitor;
+import som.interpreter.InliningVisitor.ScopeElement;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
