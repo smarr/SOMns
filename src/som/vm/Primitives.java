@@ -85,6 +85,7 @@ import som.primitives.threading.MutexPrimitivesFactory;
 import som.primitives.threading.TaskPrimitivesFactory;
 import som.primitives.threading.ThreadPrimitivesFactory;
 import som.primitives.threading.ThreadingModuleFactory;
+import som.primitives.transactions.AtomicPrimFactory;
 import som.vm.constants.KernelObjFactory;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -236,7 +237,7 @@ public class Primitives {
 
     Primitive primMethodNode = new Primitive(name, primNode,
         prim.getCurrentMethodScope().getFrameDescriptor(),
-        (ExpressionNode) primNode.deepCopy());
+        (ExpressionNode) primNode.deepCopy(), false);
     return new SInvokable(signature, AccessModifier.PUBLIC,
         primMethodNode, null);
   }
@@ -321,6 +322,7 @@ public class Primitives {
     allFactories.add(AdditionPrimFactory.getInstance());
     allFactories.add(AndMessageNodeFactory.getInstance());
     allFactories.add(AsStringPrimFactory.getInstance());
+    allFactories.add(AtomicPrimFactory.getInstance());
     allFactories.add(AtPrimFactory.getInstance());
     allFactories.add(AtPutPrimFactory.getInstance());
     allFactories.add(BitAndPrimFactory.getInstance());

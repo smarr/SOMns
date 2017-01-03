@@ -27,6 +27,7 @@ package som.vmobjects;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -52,6 +53,7 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
   private final SInvokable[]       embeddedBlocks;
 
   @CompilationFinal private MixinDefinition holder;
+  @CompilationFinal private RootCallTarget  atomicCallTarget;
 
   public SInvokable(final SSymbol signature,
       final AccessModifier accessModifier,
@@ -100,6 +102,18 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
 
   public final RootCallTarget getCallTarget() {
     return callTarget;
+  }
+
+  public final RootCallTarget getAtomicCallTarget() {
+    if (atomicCallTarget == null) {
+      synchronized (this) {
+        if (atomicCallTarget == null) {
+          Invokable atomicIvk = invokable.createAtomic();
+          atomicCallTarget = atomicIvk.createCallTarget();
+        }
+      }
+    }
+    return atomicCallTarget;
   }
 
   public final Invokable getInvokable() {
@@ -154,15 +168,18 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
 
   @Override
   public final AbstractDispatchNode getDispatchNode(final Object rcvr,
-      final Object firstArg, final AbstractDispatchNode next) {
+      final Object firstArg, final AbstractDispatchNode next, final boolean forAtomic) {
     assert next != null : "Pass the old node, just need the source section";
+
+    CallTarget ct = forAtomic ? getAtomicCallTarget() : callTarget;
+
     // In case it's a private method, it is directly linked and doesn't need guards
     if (accessModifier == AccessModifier.PRIVATE) {
-      return new LexicallyBoundDispatchNode(next.getSourceSection(), callTarget);
+      return new LexicallyBoundDispatchNode(next.getSourceSection(), ct);
     }
 
     DispatchGuard guard = DispatchGuard.create(rcvr);
-    return new CachedDispatchNode(callTarget, guard, next);
+    return new CachedDispatchNode(ct, guard, next);
   }
 
   @Override
