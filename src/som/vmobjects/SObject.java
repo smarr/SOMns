@@ -192,15 +192,13 @@ public abstract class SObject extends SObjectWithClass {
 
     // TODO: these tests should be compilation constant based on the object layout, check whether this needs to be optimized
     // we copy the content here, because we know they are all values
-    if (old.extensionPrimFields != emptyPrim) {
-      assert old.extensionPrimFields != null : "should always be initialized";
+    if (old.extensionPrimFields != null) {
       this.extensionPrimFields = old.extensionPrimFields.clone();
     }
 
     // do not want to copy the content for the obj extension array, because
     // transfer should handle each of them.
-    if (old.extensionObjFields != emptyObject) {
-      assert old.extensionObjFields != null : "should always be initialized";
+    if (old.extensionObjFields != null) {
       this.extensionObjFields = new Object[old.extensionObjFields.length];
     }
   }
@@ -252,23 +250,21 @@ public abstract class SObject extends SObjectWithClass {
     setLayoutInitially(value.getLayoutForInstances());
   }
 
-  private static final long[] emptyPrim = new long[0];
   private long[] getExtendedPrimStorage(final ObjectLayout layout) {
     int numExtFields = layout.getNumberOfUsedExtendedPrimStorageLocations();
     CompilerAsserts.partialEvaluationConstant(numExtFields);
     if (numExtFields == 0) {
-      return emptyPrim;
+      return null;
     } else {
       return new long[numExtFields];
     }
   }
 
-  private static final Object[] emptyObject = new Object[0];
   private Object[] getExtendedObjectStorage(final ObjectLayout layout) {
     int numExtFields = layout.getNumberOfUsedExtendedObjectStorageLocations();
     CompilerAsserts.partialEvaluationConstant(numExtFields);
     if (numExtFields == 0) {
-      return emptyObject;
+      return null;
     }
 
     Object[] storage = new Object[numExtFields];
