@@ -27,7 +27,6 @@ import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
-import som.interpreter.actors.Mailbox;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
@@ -46,6 +45,8 @@ public class ActorExecutionTrace {
   private static final byte PROMISE_BIT = 0x40;
   private static final byte TIMESTAMP_BIT = 0x20;
   private static final byte PARAMETER_BIT = 0x10;
+  private static final int MESSAGE_SIZE = 45;
+  private static final int PARAM_SIZE = 9;
 
   private static final MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
   private static final List<java.lang.management.GarbageCollectorMXBean> gcbeans = ManagementFactory.getGarbageCollectorMXBeans();
@@ -279,7 +280,9 @@ public class ActorExecutionTrace {
     }
   }
 
-  public static void mailboxExecuted(final Mailbox m, final Actor actor) {
+  public static void mailboxExecuted(final EventualMessage m,
+      final List<EventualMessage> moreCurrent, final long baseMessageId, final long sendTS,
+      final List<Long> moreSendTS, final long[] execTS, final Actor actor) {
     if (!VmSettings.ACTOR_TRACING) {
       return;
     }
@@ -295,57 +298,87 @@ public class ActorExecutionTrace {
 
       ByteBuffer b = t.getThreadLocalBuffer();
       b.put(Events.Mailbox.id);
-      b.putLong(m.getBasemessageId()); // base id for messages
+      b.putLong(baseMessageId); // base id for messages
       b.putLong(actor.getActorId());   // receiver of the messages
 
       int idx = 0;
 
-      for (EventualMessage em : m) {
-        if (b.remaining() < (45 + em.getArgs().length * 9)) {
-          swapBuffer(t);
-          b = t.getThreadLocalBuffer();
-          b.put(Events.MailboxContd.id);
-          b.putLong(m.getBasemessageId());
-          b.putLong(actor.getActorId()); // receiver of the messages
-          b.putShort((short) idx);
-        }
+      if (b.remaining() < (MESSAGE_SIZE + m.getArgs().length * PARAM_SIZE)) {
+        swapBuffer(t);
+        b = t.getThreadLocalBuffer();
+        b.put(Events.MailboxContd.id);
+        b.putLong(baseMessageId);
+        b.putLong(actor.getActorId()); // receiver of the messages
+        b.putShort((short) idx);
+      }
 
-        if (em instanceof PromiseSendMessage && VmSettings.PROMISE_CREATION) {
-          b.put((byte) (messageEventId | PROMISE_BIT));
-          b.putLong(((PromiseMessage) em).getPromise().getPromiseId());
-        } else {
-          b.put(messageEventId);
-        }
+      writeBasicMessage(m, b);
 
-        b.putLong(em.getSender().getActorId()); // sender
-        b.putLong(em.getCausalMessageId());
-        b.putShort(em.getSelector().getSymbolId());
+      if (VmSettings.MESSAGE_TIMESTAMPS) {
+        b.putLong(execTS[0]);
+        b.putLong(sendTS);
+      }
 
-        if (VmSettings.MESSAGE_TIMESTAMPS) {
-          b.putLong(m.getMessageExecutionStart(idx));
-          b.putLong(m.getMessageSendTime(idx));
-        }
+      if (VmSettings.MESSAGE_PARAMETERS) {
+        writeParameters(m.getArgs(), b);
+      }
+      idx++;
 
-        if (VmSettings.MESSAGE_PARAMETERS) {
-          Object[] args = em.getArgs();
-          b.put((byte) (args.length - 1)); // num paramaters
-
-          for (int i = 1; i < args.length; i++) {
-            // will need a 8 plus 1 byte for most parameter,
-            // boolean just use two identifiers.
-            if (args[i] instanceof SFarReference) {
-              Object o = ((SFarReference) args[i]).getValue();
-              writeParameter(o, b);
-            } else {
-              writeParameter(args[i], b);
-            }
+      if (moreCurrent != null) {
+        for (EventualMessage em : moreCurrent) {
+          if (b.remaining() < (MESSAGE_SIZE + em.getArgs().length * PARAM_SIZE)) {
+            swapBuffer(t);
+            b = t.getThreadLocalBuffer();
+            b.put(Events.MailboxContd.id);
+            b.putLong(baseMessageId);
+            b.putLong(actor.getActorId()); // receiver of the messages
+            b.putShort((short) idx);
           }
+
+          writeBasicMessage(em, b);
+
+          if (VmSettings.MESSAGE_TIMESTAMPS) {
+            b.putLong(execTS[idx]);
+            b.putLong(moreSendTS.get(idx - 1));
+          }
+
+          if (VmSettings.MESSAGE_PARAMETERS) {
+            writeParameters(em.getArgs(), b);
+          }
+          idx++;
         }
-        idx++;
       }
     }
 
     logMemoryUsage();
+  }
+
+  private static void writeBasicMessage(final EventualMessage em, final ByteBuffer b) {
+    if (em instanceof PromiseSendMessage && VmSettings.PROMISE_CREATION) {
+      b.put((byte) (messageEventId | PROMISE_BIT));
+      b.putLong(((PromiseMessage) em).getPromise().getPromiseId());
+    } else {
+      b.put(messageEventId);
+    }
+
+    b.putLong(em.getSender().getActorId()); // sender
+    b.putLong(em.getCausalMessageId());
+    b.putShort(em.getSelector().getSymbolId());
+  }
+
+  private static void writeParameters(final Object[] params, final ByteBuffer b) {
+    b.put((byte) (params.length - 1)); // num paramaters
+
+    for (int i = 1; i < params.length; i++) {
+      // will need a 8 plus 1 byte for most parameter,
+      // boolean just use two identifiers.
+      if (params[i] instanceof SFarReference) {
+        Object o = ((SFarReference) params[i]).getValue();
+        writeParameter(o, b);
+      } else {
+        writeParameter(params[i], b);
+      }
+    }
   }
 
   private static void writeParameter(final Object param, final ByteBuffer b) {

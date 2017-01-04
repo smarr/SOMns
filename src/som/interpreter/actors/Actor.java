@@ -3,6 +3,7 @@ package som.interpreter.actors;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
@@ -59,7 +60,11 @@ public class Actor implements Activity {
   private static final int THREAD_ID_SHIFT = 56;
 
   /** Buffer for incoming messages. */
-  private Mailbox mailbox = Mailbox.createNewMailbox(16);
+  private EventualMessage message;
+  private List<EventualMessage> moreMessages;
+
+  private long sendTimeStamp;
+  private List<Long> moreSendTimeStamps;
 
   /** Flag to indicate whether there is currently a F/J task executing. */
   private boolean isExecuting;
@@ -129,11 +134,6 @@ public class Actor implements Activity {
     return o;
   }
 
-  protected void logMessageAddedToMailbox(final EventualMessage msg) { }
-  protected void logMessageBeingExecuted(final EventualMessage msg) { }
-  protected void logNoTaskForActor() { }
-  public long getActorId() { return 0; }
-
   /**
    * Send the give message to the actor.
    *
@@ -142,10 +142,16 @@ public class Actor implements Activity {
   @TruffleBoundary
   public synchronized void send(final EventualMessage msg) {
     assert msg.getTarget() == this;
-    if (VmSettings.MESSAGE_TIMESTAMPS) {
-      mailbox.addMessageSendTime();
+
+    if (message == null) {
+      message = msg;
+      if (VmSettings.MESSAGE_TIMESTAMPS) {
+        sendTimeStamp = System.currentTimeMillis();
+      }
+    } else {
+      sendMoreMessages(msg);
     }
-    mailbox.append(msg);
+
     logMessageAddedToMailbox(msg);
 
     if (!isExecuting) {
@@ -154,10 +160,22 @@ public class Actor implements Activity {
     }
   }
 
-  public synchronized long sendAndGetId(final EventualMessage msg) {
-    send(msg);
-    return mailbox.getBasemessageId() + mailbox.size() - 1;
+  @TruffleBoundary
+  private void sendMoreMessages(final EventualMessage msg) {
+    if (moreMessages == null) {
+      moreMessages = new ArrayList<>(2);
+      moreSendTimeStamps = new ArrayList<>(2);
+    }
+    if (VmSettings.MESSAGE_TIMESTAMPS) {
+      moreSendTimeStamps.add(System.currentTimeMillis());
+    }
+    moreMessages.add(msg);
   }
+
+  protected void logMessageAddedToMailbox(final EventualMessage msg) { }
+  protected void logMessageBeingExecuted(final EventualMessage msg) { }
+  protected void logNoTaskForActor() { }
+  public long getActorId() { return 0; }
 
   /**
    * Is scheduled on the fork/join pool and executes messages for a specific
@@ -165,7 +183,13 @@ public class Actor implements Activity {
    */
   private static final class ExecAllMessages implements Runnable {
     private final Actor actor;
-    private Mailbox current;
+    private EventualMessage current;
+    private List<EventualMessage> moreCurrent;
+    private long baseMessageId;
+    private long sendTimeStamp;
+    private List<Long> moreSendTimeStamps;
+    private long[] executionTimeStamps;
+    private int size = 0;
 
     ExecAllMessages(final Actor actor) {
       this.actor = actor;
@@ -197,44 +221,74 @@ public class Actor implements Activity {
 
     private void processCurrentMessages(final ActorProcessingThread currentThread, final WebDebugger dbg) {
       if (VmSettings.ACTOR_TRACING) {
-        current.setExecutionStart(System.nanoTime());
-        current.setBaseMessageId(currentThread.generateMessageBaseId(current.size()));
-        currentThread.currentMessageId = current.getBasemessageId();
+        baseMessageId = currentThread.generateMessageBaseId(size);
+        currentThread.currentMessageId = baseMessageId;
       }
-      for (EventualMessage msg : current) {
-        actor.logMessageBeingExecuted(msg);
-        currentThread.currentMessage = msg;
 
-        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-          if (msg.isBreakpoint()) {
+      if (size > 0) {
+        actor.logMessageBeingExecuted(current);
+        currentThread.currentMessage = current;
+
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && current.isBreakpoint()) {
             dbg.prepareSteppingUntilNextRootNode();
-          }
         }
-        if (VmSettings.MESSAGE_TIMESTAMPS) {
-          current.addMessageExecutionStart();
-        }
-        msg.execute();
+
+        current.execute();
         if (VmSettings.ACTOR_TRACING) {
           currentThread.currentMessageId += 1;
         }
+
+        int i = 0;
+        if (size > 1) {
+          for (EventualMessage msg : moreCurrent) {
+            actor.logMessageBeingExecuted(msg);
+            currentThread.currentMessage = msg;
+
+            if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+              if (msg.isBreakpoint()) {
+                dbg.prepareSteppingUntilNextRootNode();
+              }
+            }
+            if (VmSettings.MESSAGE_TIMESTAMPS) {
+              executionTimeStamps[i] = System.currentTimeMillis();
+              i++;
+            }
+            msg.execute();
+            if (VmSettings.ACTOR_TRACING) {
+              currentThread.currentMessageId += 1;
+            }
+          }
+        }
       }
+
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.mailboxExecuted(current, actor);
+        ActorExecutionTrace.mailboxExecuted(current, moreCurrent, baseMessageId, sendTimeStamp, moreSendTimeStamps, executionTimeStamps, actor);
       }
     }
 
     private boolean getCurrentMessagesOrCompleteExecution() {
       synchronized (actor) {
         assert actor.isExecuting;
-        current = actor.mailbox;
-        if (current.isEmpty()) {
+        current = actor.message;
+        moreCurrent = actor.moreMessages;
+
+        if (current == null) {
           // complete execution after all messages are processed
           actor.isExecuting = false;
-
+          size = 0;
           return false;
+        } else {
+          size = 1 + ((moreCurrent == null) ? 0 : moreCurrent.size());
         }
 
-        actor.mailbox = Mailbox.createNewMailbox(actor.mailbox.size());
+        if (VmSettings.MESSAGE_TIMESTAMPS) {
+          executionTimeStamps = new long[size];
+          sendTimeStamp = actor.sendTimeStamp;
+          moreSendTimeStamps = actor.moreSendTimeStamps;
+        }
+
+        actor.message = null;
+        actor.moreMessages = null;
       }
 
       return true;
@@ -386,10 +440,6 @@ public class Actor implements Activity {
   @Override
   public String toString() {
     return "Actor";
-  }
-
-  public Mailbox getMailbox() {
-    return mailbox;
   }
 
   public static final class DebugActor extends Actor {

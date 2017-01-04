@@ -144,7 +144,7 @@ public class BreakpointActor extends Actor {
           updateInbox(msg, false);
 
           // add message in the queue of the actor
-          getMailbox().append(msg);
+          send(msg);
         } else if (isInStepReturn()) {
           updateInbox(msg, false);
 
@@ -153,8 +153,7 @@ public class BreakpointActor extends Actor {
           // TODO check if this is need it for this debugger
           installFutureBreakpoint(msg);
 
-          getMailbox().append(msg);
-
+          send(msg);
         } else {
           // here for all messages arriving to a paused actor
           pauseAndBuffer(msg, pausedState);
