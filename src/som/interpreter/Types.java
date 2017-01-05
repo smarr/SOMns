@@ -37,6 +37,7 @@ import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.threading.TaskPrimitives.SomForkJoinTask;
 import som.primitives.threading.ThreadingModule;
 import som.vm.constants.Classes;
+import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
@@ -99,6 +100,28 @@ public class Types {
 
     TruffleCompiler.transferToInterpreter("Should not be reachable");
     throw new RuntimeException("We got an object that should be covered by the above check: " + obj.toString());
+  }
+
+  /** Return String representation of obj to be used in debugger. */
+  public static String toDebuggerString(final Object obj) {
+    if (obj instanceof Boolean) {
+      if ((boolean) obj) {
+        return "true";
+      } else {
+        return "false";
+      }
+    }
+    if (obj == Nil.nilObject) {
+      return "nil";
+    }
+    if (obj instanceof String) {
+      return (String) obj;
+    }
+    if (obj instanceof SAbstractObject || obj instanceof Number || obj instanceof Thread) {
+      return obj.toString();
+    }
+
+    return "a " + getClassOf(obj).getName().getString();
   }
 
   public static int getNumberOfNamedSlots(final Object obj) {

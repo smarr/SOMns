@@ -3,7 +3,6 @@ package tools.debugger.message;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Map.Entry;
-import java.util.Objects;
 
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.Types;
@@ -111,6 +110,6 @@ public final class VariablesResponse extends Response {
     } else {
       id = 0;
     }
-    return new Variable(name, Objects.toString(val), id, named, indexed);
+    return new Variable(name, Types.toDebuggerString(val), id, named, indexed);
   }
 }
