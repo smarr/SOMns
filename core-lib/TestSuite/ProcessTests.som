@@ -1,0 +1,62 @@
+class ProcessTests usingPlatform: platform testFramework: minitest = Value (
+| private TestContext = minitest TestContext.
+  private NotAValue   = platform kernel NotAValue.
+  private Array       = platform kernel Array.
+  private processes = platform processes.
+  private Channel   = processes Channel.
+  private Process   = processes Process.
+|)(
+  private class DoneProcess new: c = Process (
+  | private c = c. |
+  )(
+    public run = ( c write: #done )
+  )
+
+  private class PassToNext new: in and: out = Process (
+  | private in  = in.
+    private out = out.
+  |)(
+    public run = ( out write: in read )
+  )
+
+  public class BasicTest = TestContext ()(
+
+    private class Mut = (
+    | public foo ::= 0. |
+    )(
+      public class Inner = Process ()(
+        public run = ()
+      )
+    )
+
+    public testProcessCreationAndChannelCommunication = (
+      | c |
+      c := Channel new.
+      processes spawn: DoneProcess with: (Array with: c out).
+      assert: c in read equals: #done.
+    )
+
+    public testProcessChain = (
+      | c1 c2 c3 |
+      c1 := Channel new.
+      c2 := Channel new.
+      c3 := Channel new.
+
+      processes spawn: PassToNext with: (Array with: c1 in with: c2 out).
+      processes spawn: PassToNext with: (Array with: c2 in with: c3 out).
+      c1 out write: 44.
+      assert: c3 in read equals: 44.
+    )
+
+    public testChannelAcceptsOnlyValues = (
+      | c |
+      c := Channel new.
+      should: [c out write: Object new] signal: NotAValue
+    )
+
+    public testProcessClassNeedsToBeValue = (
+      should: [processes spawn: Mut new Inner with: (Array new: 0)]
+      signal: NotAValue
+    )
+  ) : ( TEST_CONTEXT = () )
+)

@@ -27,6 +27,9 @@
    knowledge about the program, which might be unreliable, but should be good
    enough for tooling. (See [Issue #75](https://github.com/smarr/SOMns/issues/75) and [PR #88](https://github.com/smarr/SOMns/pull/88))
 
+ - Added basic Communicating Sequential Processes support.
+   See [PR #84](https://github.com/smarr/SOMns/pull/88).
+
 ## 0.1.0 - 2016-12-15
 
 This is the first tagged version. For previous changes, please refer to the

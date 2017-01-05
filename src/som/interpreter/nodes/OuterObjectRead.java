@@ -17,7 +17,11 @@ import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.objectstorage.ClassFactory;
+import som.interpreter.processes.SChannel;
+import som.interpreter.processes.SChannel.SChannelInput;
+import som.interpreter.processes.SChannel.SChannelOutput;
 import som.primitives.actors.ActorClasses;
+import som.primitives.processes.ChannelPrimitives;
 import som.primitives.threading.TaskPrimitives.SomForkJoinTask;
 import som.primitives.threading.ThreadingModule;
 import som.vm.constants.KernelObj;
@@ -28,7 +32,8 @@ import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 
 
-@ImportStatic({ActorClasses.class, ThreadingModule.class})
+@ImportStatic({ActorClasses.class, ThreadingModule.class,
+               ChannelPrimitives.class})
 @NodeChild(value = "receiver", type = ExpressionNode.class)
 public abstract class OuterObjectRead
     extends ExprWithTagsNode implements ISpecialSend {
@@ -202,6 +207,24 @@ public abstract class OuterObjectRead
     return ThreadingModule.ThreadingModule;
   }
 
+  @Specialization(guards = {"contextLevel == 1", "mixinId == ChannelId"})
+  public Object doChannel(final SChannel receiver) {
+    assert ChannelPrimitives.ProcessesModule != null;
+    return ChannelPrimitives.ProcessesModule;
+  }
+
+  @Specialization(guards = {"contextLevel == 1", "mixinId == InId"})
+  public Object doChannel(final SChannelInput receiver) {
+    assert ChannelPrimitives.ProcessesModule != null;
+    return ChannelPrimitives.ProcessesModule;
+  }
+
+  @Specialization(guards = {"contextLevel == 1", "mixinId == OutId"})
+  public Object doChannel(final SChannelOutput receiver) {
+    assert ChannelPrimitives.ProcessesModule != null;
+    return ChannelPrimitives.ProcessesModule;
+  }
+
   @Specialization(guards = {"contextLevel == 1", "mixinId != ThreadClassId"})
   public Object doThreadInKernelScope(final Thread receiver) {
     return KernelObj.kernel;
@@ -219,6 +242,21 @@ public abstract class OuterObjectRead
 
   @Specialization(guards = {"contextLevel == 1", "mixinId != TaskClassId"})
   public Object doTaskInKernelScope(final SomForkJoinTask receiver) {
+    return KernelObj.kernel;
+  }
+
+  @Specialization(guards = {"contextLevel == 1", "mixinId != ChannelId"})
+  public Object doChannelInKernelScope(final SChannel receiver) {
+    return KernelObj.kernel;
+  }
+
+  @Specialization(guards = {"contextLevel == 1", "mixinId != InId"})
+  public Object doChannelInKernelScope(final SChannelInput receiver) {
+    return KernelObj.kernel;
+  }
+
+  @Specialization(guards = {"contextLevel == 1", "mixinId != OutId"})
+  public Object doChannelInKernelScope(final SChannelOutput receiver) {
     return KernelObj.kernel;
   }
 }

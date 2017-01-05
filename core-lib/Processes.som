@@ -1,0 +1,79 @@
+(* The Processes module provides a basic implementation of
+   Communicating Sequential Processes, a programming model for message-passing
+   concurrency via channels. *)
+class Processes usingVmMirror: vmMirror = Value (
+| private vmMirror = vmMirror.
+|
+  vmMirror procClassChannel: Channel in: ChannelInput out: ChannelOutput.
+  vmMirror procModule: self.
+)(
+  (* In SOMns, Processes are a special kind of vat. This means they are not
+     first class. The only first-class element involved is the initial class
+     of the process, which is a subclass of `Process`.
+
+     Processes are completely isolated from other vats and it is not possible to
+     obtain a reference to the contained `Process` object, except if it is a
+     value.
+
+     To guarantee isolation, the class of the `Process` object's subclass that
+     is used to create a process is required to be a value. This means, the
+     outer scope cannot have any mutable state.
+
+     Processes are parameterized via their constructors, which are invoked
+     by a `processes spawn: MyProcess with: anArray`. Spawn creates execution
+     entity dedicated to the process and also creates the corresponding
+     `Process` object. *)
+  public class Process = ()(
+    (* The run method defines the behavior of the process.
+       It needs to customized by a process subclass. *)
+    public run = ( self subclassResponsibility )
+  )
+
+  (* A `Channel` connects `Process`es and enables them to communicate in a
+     coordinated fashion.
+
+     `Channel`s can transfer any kind of `Value` object, which means they do
+     not break the isolation of a process. *)
+  public class Channel = (
+    (* Shouldn't reach this code *)
+    Exception signal.
+  )(
+    public in  = ( ^ vmMirror procIn: self )
+    public out = ( ^ vmMirror procOut: self )
+  ) : (
+    public new = ( ^ vmMirror procChannelNew: self )
+  )
+
+  (* `ChannelInput` provides input to a process, thus, we can read for it.
+
+     It is itself a `Value`. While this might seem strange, but is consistent
+     with `actors Resolver` being a `Value`, too. It has the benefit of allowing
+     uniform handling with channels, and making channels only transmit values. *)
+  private class ChannelInput = Value ()(
+    (* Return a value from the channel. Block until a value is made available
+       via a `ChannelOutput`. *)
+    public read = ( ^ vmMirror procRead: self )
+  )
+
+  (* `ChannelOutput` captures output of a process, thus, we can write to it.
+
+     It is itself a `Value`. While this might seem strange, but is consistent
+     with `actors Resolver` being a `Value`, too. It has the benefit of allowing
+     uniform handling with channels, and making channels only transmit values. *)
+  private class ChannelOutput = Value ()(
+    (* Write a value to the channel. Block until the value is consumed from a
+       `ChannelInput`. *)
+    public write: val = ( ^ vmMirror procWrite: self val: val )
+  )
+
+  (* Spawn a new isolate process with the given class. *)
+  public spawn: aProcessClass = (
+    spawn: aProcessClass with: (Array new: 0)
+  )
+
+  (* Spawn a new isolated process with the given class and instantiate the
+     class with the given arguments. *)
+  public spawn: aProcessClass with: args = (
+    vmMirror procSpawn: aProcessClass with: args
+  )
+)
