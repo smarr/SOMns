@@ -135,6 +135,10 @@ public final class MixinDefinition {
     return name;
   }
 
+  public SSymbol getPrimaryFactorySelector() {
+    return primaryFactoryName;
+  }
+
   public boolean isModule() {
     return isModule;
   }
