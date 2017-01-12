@@ -157,7 +157,7 @@
 
     <target name="tests" depends="unit-tests,som-tests,dynamic-metrics-tests">
       <!-- submit coverage data -->
-      <java classname="som.VM" fork="true" failonerror="true">
+      <java classname="coveralls.Report" fork="true" failonerror="true">
           <classpath refid="project.classpath" />
           <arg value="${env.COVERALLS_REPO_TOKEN}" />
           <arg value="all.gcov" />
