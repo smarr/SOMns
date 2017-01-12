@@ -22,6 +22,7 @@ tar xf $SCRIPT_PATH/expected-results.tar.bz2 -C $SCRIPT_PATH/
 function runBenchmark {
   BENCH=$1
   HARNESS="$SOM_DIR/som -dm -Ddm.metrics=$SCRIPT_PATH/results/$BENCH \
+    --coverage $SOM_DIR/all.gcov \
     -G $SOM_DIR/core-lib/Benchmarks/Harness.som"
   echo $HARNESS $@
   $HARNESS $@

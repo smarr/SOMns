@@ -10,6 +10,6 @@ env:
     - TASK=checkstyle
     - TASK=kompos
 script:
-  - if [ "$TASK" = "tests" ];      then ant tests && ./som -G --coveralls "$COVERALLS_REPO_TOKEN" core-lib/TestSuite/TestRunner.som; fi
+  - if [ "$TASK" = "tests" ];      then ant tests; fi
   - if [ "$TASK" = "checkstyle" ]; then ant checkstyle; fi
   - if [ "$TASK" = "kompos" ]; then nvm install 6 && ant && cd tools/kompos && npm install && npm test; fi
