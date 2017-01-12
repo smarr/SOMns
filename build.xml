@@ -6,11 +6,13 @@
     <property name="kompos.dir"  value="tools/kompos" />
     <property name="truffle.dir" value="${lib.dir}/truffle" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
-    <property name="somns-deps.version" value="0.3.1" />
+    <property name="somns-deps.version" value="0.3.2" />
     <property name="checkstyle.version" value="6.17" />
 
     <property name="build.dir"   value="build"/>
     <property name="classes.dir" value="${build.dir}/classes"/>
+    
+    <property environment="env"/>
 
     <path id="project.classpath">
         <pathelement location="${classes.dir}" />
@@ -137,6 +139,8 @@
 
     <target name="som-tests" depends="compile">
       <exec executable="./som" failonerror="true">
+        <arg value="--coverage" />
+        <arg value="all.gcov" />
         <arg value="-G" />
         <arg value="core-lib/TestSuite/TestRunner.som" />
       </exec>
@@ -151,5 +155,12 @@
       <exec executable="tools/tests/dym/test.sh" failonerror="true"></exec>
     </target>
 
-    <target name="tests" depends="unit-tests,som-tests,dynamic-metrics-tests" />
+    <target name="tests" depends="unit-tests,som-tests,dynamic-metrics-tests">
+      <!-- submit coverage data -->
+      <java classname="coveralls.Report" fork="true" failonerror="true">
+          <classpath refid="project.classpath" />
+          <arg value="${env.COVERALLS_REPO_TOKEN}" />
+          <arg value="all.gcov" />
+      </java>
+    </target>
 </project>

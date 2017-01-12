@@ -19,7 +19,7 @@ public class VMOptions {
   @CompilationFinal public boolean profilingEnabled;
   @CompilationFinal public boolean dynamicMetricsEnabled;
   @CompilationFinal public boolean coverageEnabled;
-  @CompilationFinal public String  coverallsRepoToken;
+  @CompilationFinal public String  coverageFile;
 
   public VMOptions(final String[] args) {
     this.args = processVmArguments(args);
@@ -61,9 +61,9 @@ public class VMOptions {
         } else if (arguments[currentArg].equals("--dynamic-metrics")) {
           dynamicMetricsEnabled = true;
           currentArg += 1;
-        } else if (arguments[currentArg].equals("--coveralls")) {
+        } else if (arguments[currentArg].equals("--coverage")) {
           coverageEnabled = true;
-          coverallsRepoToken = arguments[currentArg + 1];
+          coverageFile = arguments[currentArg + 1];
           currentArg += 2;
         } else {
           parsedArgument = false;

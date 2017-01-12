@@ -333,9 +333,11 @@ public final class VM {
       Instrument coveralls = instruments.get(Coverage.ID);
       coveralls.setEnabled(true);
       Coverage cov = coveralls.lookup(Coverage.class);
-      cov.setRepoToken(vmOptions.coverallsRepoToken);
-      cov.setServiceName("travis-ci");
-      cov.includeTravisData(true);
+      try {
+        cov.setOutputFile(vmOptions.coverageFile);
+      } catch (IOException e) {
+        VM.errorPrint("Failed to setup coverage tracking: " + e.getMessage());
+      }
     }
 
     if (vmOptions.dynamicMetricsEnabled) {

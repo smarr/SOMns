@@ -77,8 +77,8 @@ tools.add_argument('-tf', '--trace-file', help='Trace file destination, default:
                     dest='trace_file', default=BASE_DIR + '/traces/tracea')
 tools.add_argument('-TF', '--disable-trace-file', help='trace file wont be written to disk',
                     dest='disable_trace_file', action='store_true', default=False)
-tools.add_argument('--coveralls', nargs=1, help='determine code coverage and report to Coveralls with',
-                    dest='coveralls_repo_token', default=False, metavar='coveralls-repo-token')
+tools.add_argument('--coverage', help='determine code coverage and store in given file',
+                   dest='coverage', default=None)
 
 
 parser.add_argument('-o', '--only', help='only compile give methods, comma separated list',
@@ -228,8 +228,8 @@ if args.truffle_profile:
     flags += ['-Dtruffle.profiling.enabled=true']
     SOM_ARGS += ['--profile']
 
-if args.coveralls_repo_token:
-    SOM_ARGS += ['--coveralls', args.coveralls_repo_token[0]]
+if args.coverage:
+    SOM_ARGS += ['--coverage', args.coverage]
 
 if args.truffle_debugger:
     SOM_ARGS += ['--debug']
@@ -251,7 +251,7 @@ if args.disable_trace_file:
     flags += ['-Dsom.disableTraceFile=true']
 
 if (args.truffle_profile or args.truffle_debugger or args.web_debugger or
-    args.dynamic_metrics or args.coveralls_repo_token):
+    args.dynamic_metrics or args.coverage):
     flags += ['-Dsom.instrumentation=true']
 
 if (args.truffle_debugger or args.web_debugger):
