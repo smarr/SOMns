@@ -10,7 +10,7 @@ public class VmSettings {
   public static final boolean DEBUG_MODE;
   public static final boolean ACTOR_TRACING;
   public static final boolean MEMORY_TRACING;
-  public static final String TRACE_FILE;
+  public static final String  TRACE_FILE;
   public static final boolean DISABLE_TRACE_FILE;
   public static final boolean INSTRUMENTATION;
   public static final boolean DYNAMIC_METRICS;
