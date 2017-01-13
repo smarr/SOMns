@@ -73,6 +73,11 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitive {
   }
 
   @Override
+  public void markAsStatement() {
+    primitive.markAsStatement();
+  }
+
+  @Override
   public String getOperation() {
     return selector.getString();
   }

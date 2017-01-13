@@ -68,6 +68,11 @@ public final class EagerUnaryPrimitiveNode extends EagerPrimitive {
   }
 
   @Override
+  public void markAsStatement() {
+    primitive.markAsStatement();
+  }
+
+  @Override
   public String getOperation() {
     return selector.getString();
   }
