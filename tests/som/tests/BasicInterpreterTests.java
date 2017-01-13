@@ -148,7 +148,7 @@ public class BasicInterpreterTests {
         {"ObjectCreation", "testImmutableRead",       3, Long.class, null },
         {"ObjectCreation", "testImmutableReadInner", 42, Long.class, null },
 
-        {"Parser", "testOuterInKeyword",   32 * 32 * 32, Long.class, null },
+        {"Parser", "testOuterInKeyword",   32 * 32 * 32, Long.class, UNSAFE_OM },
         {"Parser", "testOuterWithKeyword",        3 * 4, Long.class, null },
         {"Parser", "testOuterInheritancePrefix",     32, Long.class, null },
 
