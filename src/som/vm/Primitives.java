@@ -100,6 +100,16 @@ public class Primitives {
   }
 
   @SuppressWarnings("unchecked")
+  public Specializer<EagerlySpecializableNode> getParserSpecializer(final SSymbol selector,
+      final ExpressionNode[] argNodes) {
+    Specializer<? extends ExpressionNode> specializer = eagerPrimitives.get(selector);
+    if (specializer != null && specializer.inParser() && specializer.matches(null, argNodes)) {
+      return (Specializer<EagerlySpecializableNode>) specializer;
+    }
+    return null;
+  }
+
+  @SuppressWarnings("unchecked")
   public Specializer<EagerlySpecializableNode> getEagerSpecializer(final SSymbol selector,
       final Object[] arguments, final ExpressionNode[] argumentNodes) {
     Specializer<? extends ExpressionNode> specializer = eagerPrimitives.get(selector);
@@ -136,6 +146,10 @@ public class Primitives {
       }
     }
 
+    public boolean inParser() {
+      return prim.inParser();
+    }
+
     public boolean noWrapper() {
       return prim.noWrapper();
     }
@@ -145,7 +159,7 @@ public class Primitives {
         return false;
       }
 
-      if (prim.receiverType().length == 0) {
+      if (args == null || prim.receiverType().length == 0) {
         // no constraints, so, it matches
         return true;
       }
@@ -172,6 +186,7 @@ public class Primitives {
       int offset = 2;
 
       if (prim.requiresArguments()) {
+        assert arguments != null;
         ctorArgs[offset] = arguments;
         offset += 1;
       }

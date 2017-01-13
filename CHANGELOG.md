@@ -22,6 +22,10 @@
 
  - Make instrumentation more robust by defining number of arguments of an
    operation explicitly.
+  
+ - Add parse-time specialization of primitives. This enables very early 
+   knowledge about the program, which might be unreliable, but should be good
+   enough for tooling. (See [Issue #75](https://github.com/smarr/SOMns/issues/75) and [PR #88](https://github.com/smarr/SOMns/pull/88))
 
 ## 0.1.0 - 2016-12-15
 

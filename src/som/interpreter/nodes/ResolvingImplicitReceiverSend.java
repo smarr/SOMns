@@ -90,13 +90,13 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
       ExpressionNode[] msgArgNodes = argumentNodes.clone();
       msgArgNodes[0] = newReceiverNodeForOuterSend;
 
-      replacedBy = MessageSendNode.createMessageSend(selector, msgArgNodes,
+      replacedBy = (PreevaluatedExpression) MessageSendNode.createMessageSend(selector, msgArgNodes,
           getSourceSection());
 
       replace((ExpressionNode) replacedBy);
       args[0] = newReceiverNodeForOuterSend.executeEvaluated(args[0]);
     } else {
-      replacedBy = MessageSendNode.createMessageSend(selector, argumentNodes,
+      replacedBy = (PreevaluatedExpression) MessageSendNode.createMessageSend(selector, argumentNodes,
           getSourceSection());
       replace((ExpressionNode) replacedBy);
     }
