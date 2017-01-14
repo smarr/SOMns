@@ -83,7 +83,7 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
     }
 
     @Specialization(guards = {"isObject(frame)"},
-        contains = {"doBoolean", "doLong", "doDouble"},
+        replaces = {"doBoolean", "doLong", "doDouble"},
         rewriteOn = {FrameSlotTypeException.class})
     public final Object doObject(final VirtualFrame frame) throws FrameSlotTypeException {
       return frame.getObject(slot);
@@ -144,7 +144,7 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
       return expValue;
     }
 
-    @Specialization(contains = {"writeBoolean", "writeLong", "writeDouble"})
+    @Specialization(replaces = {"writeBoolean", "writeLong", "writeDouble"})
     public final Object writeGeneric(final VirtualFrame frame, final Object expValue) {
       slot.setKind(FrameSlotKind.Object);
       frame.setObject(slot, expValue);

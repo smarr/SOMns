@@ -52,7 +52,7 @@ public abstract class PutAllNode extends BinaryComplexOperation {
     return rcvr;
   }
 
-  @Specialization(guards = {"valueIsNil(nil)"}, contains = {"doPutNilInEmptyArray"})
+  @Specialization(guards = {"valueIsNil(nil)"}, replaces = {"doPutNilInEmptyArray"})
   public SMutableArray doPutNilInOtherArray(final SMutableArray rcvr, final SObjectWithClass nil,
       final long length) {
     rcvr.transitionToEmpty(length);

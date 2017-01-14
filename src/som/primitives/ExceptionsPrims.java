@@ -63,7 +63,7 @@ public abstract class ExceptionsPrims {
       }
     }
 
-    @Specialization(contains = "doException")
+    @Specialization(replaces = "doException")
     public final Object doExceptionUncached(final VirtualFrame frame, final SBlock body,
         final SClass exceptionClass, final SBlock exceptionHandler) {
       try {

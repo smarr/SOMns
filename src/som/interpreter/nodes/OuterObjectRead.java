@@ -111,7 +111,7 @@ public abstract class OuterObjectRead
   }
 
   @Specialization(guards = {"isSameEnclosingGroup(receiver, superclassIdx, factory)"},
-      contains = "doForFurtherOuter")
+      replaces = "doForFurtherOuter")
   public final Object fixedLookup(final SObjectWithClass receiver,
       @Cached("getIdx(receiver)") final int superclassIdx,
       @Cached("getEnclosingClass(receiver).getInstanceFactory()") final ClassFactory factory) {
@@ -119,7 +119,7 @@ public abstract class OuterObjectRead
     return getEnclosingObject(getEnclosingClassWithPotentialFailure(receiver, superclassIdx));
   }
 
-  @Specialization(contains = "fixedLookup")
+  @Specialization(replaces = "fixedLookup")
   public final Object fallback(final SObjectWithClass receiver) {
     return getEnclosingObject(getEnclosingClass(receiver));
   }

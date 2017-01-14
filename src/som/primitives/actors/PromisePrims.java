@@ -97,7 +97,7 @@ public final class PromisePrims {
       return whenResolved(promise, callback, blockCallTarget, registerNode);
     }
 
-    @Specialization(contains = "whenResolved")
+    @Specialization(replaces = "whenResolved")
     public final SPromise whenResolvedUncached(final SPromise promise, final SBlock callback) {
       return whenResolved(promise, callback, createReceived(callback), registerNode);
     }

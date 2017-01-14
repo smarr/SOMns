@@ -90,7 +90,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
     }
   }
 
-  @Specialization(contains = {"doIfTrueIfFalseWithInliningTwoBlocks"})
+  @Specialization(replaces = {"doIfTrueIfFalseWithInliningTwoBlocks"})
   public final Object doIfTrueIfFalse(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final SBlock falseBlock) {
     CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.10");
@@ -121,7 +121,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
     }
   }
 
-  @Specialization(contains = {"doIfTrueIfFalseWithInliningTrueValue"})
+  @Specialization(replaces = {"doIfTrueIfFalseWithInliningTrueValue"})
   public final Object doIfTrueIfFalseTrueValue(final VirtualFrame frame,
       final boolean receiver, final Object trueValue, final SBlock falseBlock) {
     if (condProf.profile(receiver)) {
@@ -132,7 +132,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
     }
   }
 
-  @Specialization(contains = {"doIfTrueIfFalseWithInliningFalseValue"})
+  @Specialization(replaces = {"doIfTrueIfFalseWithInliningFalseValue"})
   public final Object doIfTrueIfFalseFalseValue(final VirtualFrame frame,
       final boolean receiver, final SBlock trueBlock, final Object falseValue) {
     if (condProf.profile(receiver)) {

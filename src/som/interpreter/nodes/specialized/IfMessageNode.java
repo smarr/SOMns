@@ -58,7 +58,7 @@ public abstract class IfMessageNode extends BinaryComplexOperation {
     }
   }
 
-  @Specialization(contains = "cachedBlock")
+  @Specialization(replaces = "cachedBlock")
   public final Object fallback(final VirtualFrame frame, final boolean rcvr,
       final SBlock arg,
       @Cached("createIndirect()") final IndirectCallNode callNode) {

@@ -95,7 +95,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
       assumptions = {"isLatestLayout"},
       guards   = {"location != null",
                   "cachedLayout == rcvr.getObjectLayout()"},
-      contains = "longValueSet",
+      replaces = "longValueSet",
       limit = "LIMIT")
   public final long longValueSetOrUnset(final SImmutableObject rcvr, final long value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
@@ -126,7 +126,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
       assumptions = {"isLatestLayout"},
       guards   = {"location != null",
                   "cachedLayout == rcvr.getObjectLayout()"},
-      contains = "longValueSet",
+      replaces = "longValueSet",
       limit    = "LIMIT")
   public final long longValueSetOrUnset(final SMutableObject rcvr, final long value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
@@ -156,7 +156,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
       assumptions = {"isLatestLayout"},
       guards   = {"location != null",
                   "cachedLayout == rcvr.getObjectLayout()"},
-      contains = "doubleValueSet",
+      replaces = "doubleValueSet",
       limit    = "LIMIT")
   public final double doubleValueSetOrUnset(final SMutableObject rcvr, final double value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
@@ -186,7 +186,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
       assumptions = {"isLatestLayout"},
       guards   = {"location != null",
                   "cachedLayout == rcvr.getObjectLayout()"},
-      contains = "doubleValueSet",
+      replaces = "doubleValueSet",
       limit    = "LIMIT")
   public final double doubleValueSetOrUnset(final SImmutableObject rcvr, final double value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,

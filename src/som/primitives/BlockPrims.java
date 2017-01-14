@@ -93,7 +93,7 @@ public abstract class BlockPrims {
       return call.call(frame, new Object[] {receiver});
     }
 
-    @Specialization(contains = "doCachedBlock")
+    @Specialization(replaces = "doCachedBlock")
     public final Object doGeneric(final VirtualFrame frame,
         final SBlock receiver, @Cached("create()") final IndirectCallNode call) {
       return receiver.getMethod().invoke(call, frame, new Object[] {receiver});
@@ -124,7 +124,7 @@ public abstract class BlockPrims {
       return call.call(frame, new Object[] {receiver, arg});
     }
 
-    @Specialization(contains = "doCachedBlock")
+    @Specialization(replaces = "doCachedBlock")
     public final Object doGeneric(final VirtualFrame frame,
         final SBlock receiver, final Object arg,
         @Cached("create()") final IndirectCallNode call) {
@@ -156,7 +156,7 @@ public abstract class BlockPrims {
       return call.call(frame, new Object[] {receiver, arg1, arg2});
     }
 
-    @Specialization(contains = "doCachedBlock")
+    @Specialization(replaces = "doCachedBlock")
     public final Object doGeneric(final VirtualFrame frame,
         final SBlock receiver, final Object arg1, final Object arg2,
         @Cached("create()") final IndirectCallNode call) {
