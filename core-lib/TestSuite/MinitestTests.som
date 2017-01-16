@@ -72,27 +72,27 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
         public testDenyErrorBlock = (
           deny: [3 zork]
         )
-        
+
         public testDenyErrorExpression = (
           deny: 3 zork
         )
-        
+
         public testDenyFailBlock = (
           deny: [true]
         )
-        
+
         public testDenyFailExpression = (
           deny: true
         )
-        
+
         public testDenyFailWithDescription = (
           deny: true description: 'custom description'
         )
-        
+
         public testDenyPassBlock = (
           deny: [false]
         )
-        
+
         public testDenyPassExpression = (
           deny: false
         )
@@ -103,7 +103,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
       public class ResultCreationTestContext = TestContext (
         (* This helps test to see if TestContext was deferred to for the
            creation of the TestFailure and TestError result. *)
-      | private TestFailure = testFramework TestFailure.  
+      | private TestFailure = testFramework TestFailure.
         private TestError   = testFramework TestError.
       |
       ) (
@@ -118,7 +118,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
           public isSuccess = ( ^ true )
         )
 
-        'accessing'
+        (* accessing *)
         public createErrorResultFor: testCase exception: ex = (
           | exception |
           exception := TestException1 new.
@@ -129,7 +129,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
         public createFailureResultFor: testCase description: description = (
           ^ TestFailure case: testCase description: 'created here'
         )
-        
+
         public createSuccessResultFor: testCase = (
           ^CustomTestSuccess case: testCase.
         )
@@ -142,7 +142,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
           assert: true
         )
 
-        'tests'
+        (* tests *)
         public testErrorCreation = (
           assert: [1 zork]
         )
@@ -194,7 +194,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
       ) : (
         TEST_CONTEXT = ()
       )
-      
+
       class GenericException = Exception (
         | public messageText |
       )()
@@ -264,10 +264,10 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
 
     public testAsyncResultCreation = (
       tester := Tester testSuite: (catalog testSuiteNamed: 'ResultCreationTestContext').
-      ^ tester runAll whenResolved: [:r |  
+      ^ tester runAll whenResolved: [:r |
           assert: tester failures size equals: 1.
           assert: tester failures first description = 'created here'.
-  
+
           assert: tester errors size equals: 1.
           assert: tester errors first exception messageText = 'created here'.
 
@@ -296,7 +296,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
   )
 
   public class TestLifecycleTests = TestContext (
-    (* Tests to verify that test cases are collected and grouped into test 
+    (* Tests to verify that test cases are collected and grouped into test
        suites correctly across test contexts, and that test contexts and their
        enclosing shared state classes are instantiated the correct number of
        times. *)

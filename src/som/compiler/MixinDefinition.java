@@ -421,8 +421,7 @@ public final class MixinDefinition {
 
     return initializerBuilder.splitBodyAndAssembleInitializerAs(
         MixinBuilder.getInitializerName(primaryFactoryName, mixinId),
-        body, AccessModifier.PROTECTED, Symbols.INITIALIZER,
-        initializerSource);
+        body, AccessModifier.PROTECTED, initializerSource);
   }
 
   private void addSlots(final HashSet<SlotDefinition> instanceSlots,
@@ -684,8 +683,8 @@ public final class MixinDefinition {
     SourceSection ss = source.createSection(0, 4);
     builder.setVarsOnMethodScope();
     builder.finalizeMethodScope();
-    SInvokable thingInitNew = builder.assembleInitializer(builder.getSelfRead(ss),
-        AccessModifier.PROTECTED, Symbols.INITIALIZER, ss);
+    SInvokable thingInitNew = builder.assembleInitializer(
+        builder.getSelfRead(ss), AccessModifier.PROTECTED, ss);
     instanceDispatchables.put(init, thingInitNew);
   }
 

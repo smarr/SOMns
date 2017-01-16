@@ -46,7 +46,6 @@ import som.vm.constants.Classes;
 public class SInvokable extends SAbstractObject implements Dispatchable {
 
   private final AccessModifier     accessModifier;
-  private final SSymbol            category;
   private final Invokable          invokable;
   private final RootCallTarget     callTarget;
   private final SSymbol            signature;
@@ -55,11 +54,10 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
   @CompilationFinal private MixinDefinition holder;
 
   public SInvokable(final SSymbol signature,
-      final AccessModifier accessModifier, final SSymbol category,
+      final AccessModifier accessModifier,
       final Invokable invokable, final SInvokable[] embeddedBlocks) {
     this.signature = signature;
     this.accessModifier = accessModifier;
-    this.category = category;
 
     this.invokable   = invokable;
     this.callTarget  = invokable.createCallTarget();
@@ -69,9 +67,9 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
   public static class SInitializer extends SInvokable {
 
     public SInitializer(final SSymbol signature,
-        final AccessModifier accessModifier, final SSymbol category,
+        final AccessModifier accessModifier,
         final Invokable invokable, final SInvokable[] embeddedBlocks) {
-      super(signature, accessModifier, category, invokable, embeddedBlocks);
+      super(signature, accessModifier, invokable, embeddedBlocks);
     }
 
     @Override
@@ -148,10 +146,6 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
   @Override
   public final AccessModifier getAccessModifier() {
     return accessModifier;
-  }
-
-  public final SSymbol getCategory() {
-    return category;
   }
 
   public final SourceSection getSourceSection() {

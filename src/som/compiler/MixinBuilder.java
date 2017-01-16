@@ -464,8 +464,7 @@ public final class MixinBuilder {
     primaryFactoryMethod.setVarsOnMethodScope();
     primaryFactoryMethod.finalizeMethodScope();
     return primaryFactoryMethod.assemble(initializedObject,
-        AccessModifier.PUBLIC, Symbols.INITIALIZATION,
-        primaryFactorySource);
+        AccessModifier.PUBLIC, primaryFactorySource);
   }
 
   private static final SSymbol StandardInitializer = MixinBuilder.getInitializerName(Symbols.NEW);
@@ -499,7 +498,7 @@ public final class MixinBuilder {
 
     ExpressionNode body = SNodeFactory.createSequence(allExprs, initializerSource);
     return initializer.assembleInitializer(body, AccessModifier.PROTECTED,
-        Symbols.INITIALIZATION, initializerSource);
+        initializerSource);
   }
 
   protected List<ExpressionNode> createPrimaryFactoryArgumentRead(

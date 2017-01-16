@@ -44,9 +44,9 @@ import som.compiler.ProgramDefinitionError.SemanticDefinitionError;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Internal;
 import som.compiler.Variable.Local;
+import som.interpreter.InliningVisitor;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.LexicalScope.MixinScope;
-import som.interpreter.InliningVisitor;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
@@ -220,14 +220,14 @@ public final class MethodBuilder {
   }
 
   public SInitializer assembleInitializer(final ExpressionNode body,
-      final AccessModifier accessModifier, final SSymbol category,
+      final AccessModifier accessModifier,
       final SourceSection sourceSection) {
-    return assembleInitializerAs(signature, body, accessModifier, category, sourceSection);
+    return assembleInitializerAs(signature, body, accessModifier, sourceSection);
   }
 
   public SInitializer splitBodyAndAssembleInitializerAs(final SSymbol signature,
       final ExpressionNode body, final AccessModifier accessModifier,
-      final SSymbol category, final SourceSection sourceSection) {
+      final SourceSection sourceSection) {
     MethodScope splitScope = currentScope.split();
     ExpressionNode splitBody = InliningVisitor.doInline(body, splitScope, 0);
     Method truffleMeth = assembleInvokable(splitBody, splitScope, sourceSection);
@@ -236,7 +236,7 @@ public final class MethodBuilder {
     // because we just split the whole thing, those objects won't correspond to
     // the concrete block methods anymore, but might not matter, because they
     // are only used to do further splitting anyway
-    SInitializer meth = new SInitializer(signature, accessModifier, category,
+    SInitializer meth = new SInitializer(signature, accessModifier,
         truffleMeth, embeddedBlockMethods.toArray(new SInvokable[0]));
 
     // the method's holder field is to be set later on!
@@ -245,9 +245,9 @@ public final class MethodBuilder {
 
   public SInitializer assembleInitializerAs(final SSymbol signature,
       final ExpressionNode body, final AccessModifier accessModifier,
-      final SSymbol category, final SourceSection sourceSection) {
+      final SourceSection sourceSection) {
     Method truffleMethod = assembleInvokable(body, sourceSection);
-    SInitializer meth = new SInitializer(signature, accessModifier, category,
+    SInitializer meth = new SInitializer(signature, accessModifier,
         truffleMethod, embeddedBlockMethods.toArray(new SInvokable[0]));
 
     // the method's holder field is to be set later on!
@@ -255,10 +255,10 @@ public final class MethodBuilder {
   }
 
   public SInvokable assemble(final ExpressionNode body,
-      final AccessModifier accessModifier, final SSymbol category,
+      final AccessModifier accessModifier,
       final SourceSection sourceSection) {
     Method truffleMethod = assembleInvokable(body, sourceSection);
-    SInvokable meth = new SInvokable(signature, accessModifier, category,
+    SInvokable meth = new SInvokable(signature, accessModifier,
         truffleMethod, embeddedBlockMethods.toArray(new SInvokable[0]));
 
     VM.reportParsedRootNode(truffleMethod);

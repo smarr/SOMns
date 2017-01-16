@@ -12,7 +12,6 @@ import som.compiler.Variable.Argument;
 import som.interpreter.InliningVisitor;
 import som.interpreter.Method;
 import som.interpreter.nodes.ExpressionNode;
-import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
@@ -79,7 +78,7 @@ public class BlockNode extends LiteralNode {
     Method adapted = blockIvk.cloneAndAdaptAfterScopeChange(
         inliner.getScope(blockIvk), inliner.contextLevel + 1, true);
     SInvokable adaptedIvk = new SInvokable(blockMethod.getSignature(),
-        AccessModifier.BLOCK_METHOD, Symbols.BLOCK_METHOD,
+        AccessModifier.BLOCK_METHOD,
         adapted, blockMethod.getEmbeddedBlocks());
     replace(createNode(adaptedIvk));
   }

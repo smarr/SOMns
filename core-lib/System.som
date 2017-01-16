@@ -22,22 +22,22 @@ class System usingVmMirror: vmMirror = Value (
 | private vmMirror = vmMirror. |
   vmMirror systemModuleObject: self.
 )(
-  'Exiting'
+  (* Exiting *)
   public exit: error  = ( vmMirror exit: error )
   public exit         = ( self exit: 0 )
   public error: msg   = ( self printNewline: 'ERROR: ' + msg. self exit: 1 )
 
-  'VM'
+  (* VM *)
   public arguments    = ( ^ vmMirror vmArguments: nil )
   public loadModule: filename = ( ^ vmMirror load: filename )
   public loadModule: filename nextTo: moduleObj = ( ^ vmMirror load: filename nextTo: moduleObj )
 
-  'Printing'
+  (* Printing *)
   public printString: string = ( vmMirror printString: string )
   public printNewline: str   = ( vmMirror printNewline: str )
   public printStackTrace     = ( vmMirror printStackTrace: nil )
 
-  'Time'
+  (* Time *)
   public time  = ( ^ vmMirror systemTime: nil  )
   public ticks = ( ^ vmMirror systemTicks: nil ) (* returns the microseconds since start *)
 

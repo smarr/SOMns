@@ -99,14 +99,14 @@ class Collections usingKernel: kernel = Value (
     (* Iteration *)
     public do: block = ( items do: block )
 
-    'Collection'
+    (* Collection *)
     public collect: block = ( | coll |
       coll := Vector new.
       self do: [ :e | coll append: (block value: e) ].
       ^coll
     )
 
-    'Printing'
+    (* Printing *)
     public println = (
       '(' print.
       self do: [ :it | '(' print. it print. ')' print ].

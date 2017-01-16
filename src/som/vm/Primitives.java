@@ -221,7 +221,7 @@ public class Primitives {
     Primitive primMethodNode = new Primitive(name, primNode,
         prim.getCurrentMethodScope().getFrameDescriptor(),
         (ExpressionNode) primNode.deepCopy());
-    return new SInvokable(signature, AccessModifier.PUBLIC, null,
+    return new SInvokable(signature, AccessModifier.PUBLIC,
         primMethodNode, null);
   }
 

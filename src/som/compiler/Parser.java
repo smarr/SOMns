@@ -485,7 +485,9 @@ public class Parser {
     expect(NewTerm, null);
 
     while (sym != EndTerm) {
-      category(mxnBuilder);
+      comments();
+      methodDeclaration(mxnBuilder);
+      comments();
     }
 
     expect(EndTerm, null);
@@ -627,7 +629,9 @@ public class Parser {
     }
 
     while (sym != EndTerm) {
-      category(mxnBuilder);
+      comments();
+      methodDeclaration(mxnBuilder);
+      comments();
     }
 
     expect(EndTerm, DelimiterClosingTag.class);
@@ -638,24 +642,6 @@ public class Parser {
     AccessModifier accessModifier = accessModifier();
     MixinBuilder nestedCls = classDeclaration(mxnBuilder, accessModifier);
     mxnBuilder.addNestedMixin(nestedCls.assemble(getSource(coord)));
-  }
-
-  private void category(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
-    String categoryName;
-    // Newspeak-spec: this is not conform with Newspeak,
-    //                as the category is normally not optional
-    if (sym == STString) {
-      SourceCoordinate coord = getCoordinate();
-      categoryName = string();
-      VM.reportSyntaxElement(CommentTag.class, getSource(coord));
-    } else {
-      categoryName = "";
-    }
-    while (sym != EndTerm && sym != STString) {
-      comments();
-      methodDeclaration(mxnBuilder, symbolFor(categoryName));
-      comments();
-    }
   }
 
   private boolean symIn(final Symbol[] ss) {
@@ -758,8 +744,8 @@ public class Parser {
     return ss;
   }
 
-  private void methodDeclaration(final MixinBuilder mxnBuilder,
-      final SSymbol category) throws ProgramDefinitionError {
+  private void methodDeclaration(final MixinBuilder mxnBuilder)
+      throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
 
     AccessModifier accessModifier = accessModifier();
@@ -772,7 +758,7 @@ public class Parser {
         KeywordTag.class);
     ExpressionNode body = methodBlock(builder);
     builder.finalizeMethodScope();
-    SInvokable meth = builder.assemble(body, accessModifier, category, getSource(coord));
+    SInvokable meth = builder.assemble(body, accessModifier, getSource(coord));
 
     if (structuralProbe != null) {
       structuralProbe.recordNewMethod(meth);
@@ -1045,7 +1031,7 @@ public class Parser {
         bgenc.finalizeMethodScope();
 
         SInvokable blockMethod = bgenc.assemble(blockBody,
-            AccessModifier.BLOCK_METHOD, null, lastMethodsSourceSection);
+            AccessModifier.BLOCK_METHOD, lastMethodsSourceSection);
         builder.addEmbeddedBlockMethod(blockMethod);
 
         if (bgenc.requiresContext()) {

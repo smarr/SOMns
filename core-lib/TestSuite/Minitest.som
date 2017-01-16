@@ -109,8 +109,8 @@ the leaves are shared state classes. Instances of shared state classes are
 created once before running the entire batch of tests defined in all test
 contexts of the module. Instances of test contexts are created multiple times,
 once for each test method of a context.
-   
-RUNNING IT: TEST CONFIGURATIONS     
+
+RUNNING IT: TEST CONFIGURATIONS
 
 Like any Newspeak module, a test module expects the platform and other
 necessary information to be provided at the time an instance is created. That
@@ -332,13 +332,13 @@ OTHER DEALINGS IN THE SOFTWARE. *)
   private Vector             = platform kernel Vector.
   private Array              = platform kernel Array.
   private IdentitySet        = platform collections IdentitySet.
-  
+
   private ObjectMirror = platform mirrors ObjectMirror.
   private actors       = platform actors.
 |)(
   class TestCase env: testEnvironment selector: selector = (
     (* Represents a particular test (a method with the selector that begins with
-       'test') in a text context. This class, unlike SUnit's class by the same 
+       'test') in a text context. This class, unlike SUnit's class by the same
        name, is internal to the framework and is not intended to be subclassed
        or instantiated by framework users. See TestContext.
 
@@ -356,12 +356,12 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     |
   ) (
     public isAsync = ( ^ false )
-  
+
     public runUsing: tester = (
       ^ [self runUnsafeUsing: tester]
           on: Exception
-          do: [:ex | ^testContextInstance 
-            ifNil: [TestError case: self exception: ex] 
+          do: [:ex | ^testContextInstance
+            ifNil: [TestError case: self exception: ex]
             ifNotNil: [:it | it createErrorResultFor: self exception: ex]]
     )
 
@@ -383,7 +383,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     instantiateTestContextUsing: tester = (
       testContextInstance := environment createInstanceIn: (tester instanceFor: environment parent)
     )
-    
+
     sendTestMessage = (
       ^ (ObjectMirror reflecting: testContextInstance) perform: selector
     )
@@ -400,12 +400,12 @@ OTHER DEALINGS IN THE SOFTWARE. *)
         on: TestFailureException
         do: [:ex |
                (* testContextInstance should never be nil at this point, but just in case. *)
-               ^ testContextInstance 
+               ^ testContextInstance
                   ifNil: [TestFailure case: self description: ex messageText]
                   ifNotNil: [:it | it createFailureResultFor: self description: ex messageText]].
       ^ testSuccess
     )
-    
+
     public asString = (
       ^ 'TestCase(' + selector asString + ')'
     )
@@ -416,11 +416,11 @@ OTHER DEALINGS IN THE SOFTWARE. *)
             env: testEnvironment selector: selector
     )
   )
-  
+
   class AsyncTestCase env: testEnvironment selector: selector
     = TestCase env: testEnvironment selector: selector ()(
     public isAsync = ( ^ true )
-    
+
     public runUsing: tester = (
       | promisePair |
       instantiateTestContextUsing: tester.
@@ -435,22 +435,22 @@ OTHER DEALINGS IN THE SOFTWARE. *)
             cleanUp.
             promisePair resolve: testSuccess ].
           promise on: TestFailureException do: [:ex |
-            promisePair resolve: (testContextInstance 
+            promisePair resolve: (testContextInstance
               ifNil:    [ TestFailure case: self description: ex messageText]
               ifNotNil: [:it | it createFailureResultFor: self description: ex messageText])].
           promise on: Exception do: [:ex |
-            promisePair resolve: (testContextInstance 
+            promisePair resolve: (testContextInstance
               ifNil:    [ TestError case: self exception: ex ]
               ifNotNil: [:it | it createErrorResultFor: self exception: ex ])]
         ] on: TestFailureException
           do: [:ex |
             (* testContextInstance should never be nil at this point, but just in case. *)
-            promisePair resolve: (testContextInstance 
+            promisePair resolve: (testContextInstance
               ifNil:    [ TestFailure case: self description: ex messageText ]
               ifNotNil: [:it | it createFailureResultFor: self description: ex messageText ])]
       ] on: Exception
-        do: [:ex | 
-          promisePair resolve: (testContextInstance 
+        do: [:ex |
+          promisePair resolve: (testContextInstance
             ifNil:    [ TestError case: self exception: ex ]
             ifNotNil: [:it | it createErrorResultFor: self exception: ex ])].
       ^ promisePair promise
@@ -462,7 +462,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
   )
 
   public class TestCatalog forModule: testModule select: testClass test: testCaseSelector = (
-    (* A catalog of test suites defined by a given test module instance. A 
+    (* A catalog of test suites defined by a given test module instance. A
        catalog is created using the primary forModule: factory method. Each of
        test context classes of the module produces a TestSuite that lists all
        test methods in the class. The catalog can report the names of all test
@@ -481,31 +481,31 @@ OTHER DEALINGS IN THE SOFTWARE. *)
          from the test module. This class is internal to the TestCatalog
          implementation. *)
     )(
-      'accessing'
+      (* accessing *)
       public populate = (
-        (* Populate the testsByContextName dictionary of the enclosing 
+        (* Populate the testsByContextName dictionary of the enclosing
            TestCatalog instance with information extracted from the module. *)
         | moduleMirror moduleEnvironment |
         moduleEnvironment := TopLevelTestEnvironment module: testModule.
         moduleMirror := (ObjectMirror reflecting: testModule) classMirror.
-        
+
         testClass
           ifNil:    [populateWithAllIn: moduleEnvironment using: moduleMirror]
           ifNotNil: [populateSelected:  moduleEnvironment using: moduleMirror].
-        
+
         moduleEnvironment withAllNestedEnvironmentsDo: [:each |
             each hasTestCases ifTrue:
               [testsByContextName at: each name put: each testSuite]]
       )
-      
+
       populateWithAllIn: moduleEnvironment using: moduleMirror = (
-        moduleMirror classDefinition 
+        moduleMirror classDefinition
           nestedClassDefinitions do: [:each |
             examineClass: each under: moduleEnvironment].
       )
-      
+
       populateSelected: moduleEnvironment using: moduleMirror = (
-        moduleMirror classDefinition 
+        moduleMirror classDefinition
           nestedClassDefinitions do: [:each |
             each name = testClass ifTrue: [
               examineClass: each under: moduleEnvironment]]
@@ -527,7 +527,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
 
         mirror classDefinition nestedClassDefinitions do: [:each |
           examineClass: each under: thisEnvironment].
-          
+
         (* If after all the examination thisEnvironment ends up with no test
            cases, or child environments containing test cases, its class need
            not to be instantiated at runtime. In that case we can forget it
@@ -537,7 +537,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
           parentEnvironment addNestedEnvironment: thisEnvironment]
       )
 
-      'parameters'
+      (* parameters *)
       testContextMarkerSelector = (
         (* A class that has a class-side method with this selector is recognized
            by the Initializer as a test context class. (The class's superclass
@@ -553,7 +553,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       private isTestMethod: methodMirror = (
         | selector isTest |
         selector := methodMirror name.
-        
+
         isTest := (selector beginsWith: 'test') and: [(selector includes: ':') not].
         testCaseSelector ifNil: [ ^ isTest ].
         ^ (isTest and: [selector = testCaseSelector])
@@ -566,13 +566,13 @@ OTHER DEALINGS IN THE SOFTWARE. *)
         classMirror methods do:
           [:each |
           (isTestMethod: each) ifTrue:
-            [testCases append: 
+            [testCases append:
               (TestCase environment: environment selector: each name)]].
         ^testCases
       )
     )
 
-    'accessing'
+    (* accessing *)
     public allTests = (
       (* Returns a test suite containing all test cases defined in all test
          context classes of the catalogued module. *)
@@ -595,7 +595,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     public forModule: module = (
       ^ forModule: module select: nil test: nil
     )
-    
+
     public forModule: module select: testClass = (
       ^ forModule: module select: testClass test: nil
     )
@@ -620,7 +620,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
        cleanup behavior is required after running a test, a subclass may
        reimplement the #cleanUp method to define it. *)
   ) (
-    'accessing'
+    (* accessing *)
     public cleanUp = (
       (* Sent after a successful completion of a test, to clean up if simple
          garbage collection at some point in the future is not enough (which it
@@ -634,7 +634,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     public createErrorResultFor: testCase exception: ex = (
       ^TestError case: testCase exception: ex
     )
-  
+
     public createFailureResultFor: testCase description: description = (
       ^TestFailure case: testCase description: description
     )
@@ -647,7 +647,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       TestFailureException signal: messageText
     )
 
-    'testing'
+    (* testing *)
     assert: aBlockOrValue = (
       assert: aBlockOrValue description: 'Assertion failed'
     )
@@ -671,7 +671,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
 
     assert: anObject equals: expectedObject = (
       (* Succeed if anObject = anotherObject. Preferable to a simple
-         'assert: [a = b]' in a test method because in case of a failure the 
+         'assert: [a = b]' in a test method because in case of a failure the
          values compared are available for inspection as this method's
          arguments. *)
       assert: anObject = expectedObject descriptionBlock: [
@@ -745,7 +745,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       asYetUnimplemented
     )
   )
-  
+
   public class AsyncTestContext = TestContext <: Value ()(
     assert: promise resolvedWith: expectedResolution = (
       (* TODO: add timeout support *)
@@ -755,7 +755,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
           onError: [:actualResolution |
             failWithMessage: 'Promise broken with error: ' + actualResolution asString ]
     )
-  
+
     assert: promise resolvedWithObject: expectedResolution = (
       (* TODO: add timeout support *)
       ^ promise
@@ -802,7 +802,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       public classDeclarationMirror = mirror.
     |
   ) (
-    'accessing'
+    (* accessing *)
     public addNestedEnvironment: environment = (
       nestedEnvironments append: environment
     )
@@ -834,9 +834,9 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       ^TestSuite testCases: testCases
     )
 
-    'enumerating'
+    (* enumerating *)
     public parentEnvironmentsDo: aBlock = (
-      (* Evaluate a one-argument block with direct and indirect parents of this 
+      (* Evaluate a one-argument block with direct and indirect parents of this
          environment, starting with the direct one and proceeding up to the top
          level. *)
       parent withAllParentEnvironmentsDo: aBlock
@@ -857,7 +857,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       parent withAllParentEnvironmentsDo: aBlock
     )
 
-    'testing'
+    (* testing *)
     public hasTestCases = (
       (* True if the class represented by this environment defines any test methods. *)
       ^testCases isEmpty not
@@ -885,7 +885,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     public description = (
       ^ exception asString
     )
-    'testing'
+    (* testing *)
     public isError = (
       ^ true
     )
@@ -895,7 +895,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     (* Represents a failed assertion in a test case. *)
     | public description ::= text. |
   ) (
-    'testing'
+    (* testing *)
     public isFailure = (
       ^ true
     )
@@ -912,12 +912,12 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     (* The result of running a TestCase. An abstract class. *)
     | public testCase ::= testCase. |
   ) (
-    'accessing'
+    (* accessing *)
     public cleanUp = (
       testCase cleanUp
     )
 
-    'testing'
+    (* testing *)
     public isError = (
       ^false
     )
@@ -934,18 +934,18 @@ OTHER DEALINGS IN THE SOFTWARE. *)
   class TestSuccess case: testCase = TestResult case: testCase (
     (* Represents a successful run of a test case. *)
   ) (
-    'testing'
+    (* testing *)
     public isSuccess = (
       ^true
     )
   )
 
   class TestSuite testCases: testCases = (
-    (* A TestSuite is a collection of TestCases. TestSuites are usually obtained 
+    (* A TestSuite is a collection of TestCases. TestSuites are usually obtained
        from a TestCatalog created on an instance of a test module. *)
     | private testCases_slot = testCases. |
   ) (
-    'accessing'
+    (* accessing *)
     + another = (
       (* Returns a new TestSuite that contains TestCases of the receiver and the argument. *)
       ^TestSuite testCases: testCases, another testCases
@@ -986,7 +986,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       public errors
       public failures
       public successes
-      
+
       private testSuite_ = suite.
       private testCaseStream
       private testsPerformed
@@ -1002,7 +1002,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       'core instances'. *)
       | instancesByEnvironment ::= IdentityDictionary new. |
     ) (
-      'accessing'
+      (* accessing *)
       public cleanUpCoreInstances = (
         (* Send the #cleanUp message to all core instances able to understand that message. *)
         instancesByEnvironment do:
@@ -1039,7 +1039,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
           instance]
       )
 
-      'private'
+      (* private *)
       coreEnvironments = (
       (* The core of the environment tree are the environments between the roots of
       the class tree and its fringe. They have to be instantiated once before running
@@ -1071,7 +1071,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       )
     )
 
-    'accessing'
+    (* accessing *)
     public atEnd = (
       (* Returns true if all test cases in the test suite have been executed. *)
       ^testCaseStream atEnd
@@ -1118,16 +1118,16 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       testsPerformed := 0.
       instanceManager createCoreInstances.
     )
-    
+
     public runAllSynchronous = (
       testSuite testCases do: [:case |
         case isAsync ifFalse: [ executeSynchronous: case ] ]
     )
-    
+
     public runAllAsynchronous = (
       | asyncCases |
       asyncCases := testSuite testCases select: [:c | c isAsync ].
-      
+
       ^ actors async: asyncCases do: [:case |
           executeAsynchronous: case ]
     )
@@ -1149,7 +1149,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       result isSuccess ifTrue: [successes append: result].
       ^result
     )
-    
+
     public executeAsynchronous: case = (
       (* Execute one test case, add the result to the appropriate collection and
          return it. *)
@@ -1173,7 +1173,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     )
 
     public peekSelector= (
-      (* Returns the selector of the upcoming test case. 
+      (* Returns the selector of the upcoming test case.
          This message should only be sent if the #atEnd message returns false. *)
       ^ testCaseStream peek selector.
     )
@@ -1190,7 +1190,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
         ensure: [cleanUp]
     )
 
-    'private'
+    (* private *)
     public instanceFor: environment = (
       ^instanceManager ensureInstanceFor: environment
     )
@@ -1198,7 +1198,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
   ) : (
     testCatalogs: catalogs = (
       | suite |
-      (* Creating a new OrderedCollection is a hack that allows us to use 
+      (* Creating a new OrderedCollection is a hack that allows us to use
          #readStream in case testCases is translated to a Javascript Array *)
       suite := TestSuite testCases: OrderedCollection new.
       catalogs do: [:each | suite := suite ++ each allTests].
@@ -1208,7 +1208,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     public testModules: modules = (
       ^testCatalogs: (modules collect: [:each | TestCatalog forModule: each])
     )
-    
+
     public testCase: testCase = (
       | suite |
       suite := TestSuite testCases: (Array with: testCase).
@@ -1225,12 +1225,12 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       nestedEnvironments = Vector new.
     |
   ) (
-    'accessing'
+    (* accessing *)
     public addNestedEnvironment: environment = (
       nestedEnvironments append: environment
     )
 
-    'enumerating'
+    (* enumerating *)
     public parentEnvironmentsDo: aBlock = (
       (* No-op since this is the top level. *)
     )
@@ -1248,7 +1248,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       aBlock value: self
     )
 
-    'testing'
+    (* testing *)
     public hasTestCases = (
       (* A top-level test module instance cannot function as a test context
          because it cannot be created and discarded for each test run. *)

@@ -134,8 +134,7 @@ class Mirrors usingVmMirror: vmMirror = Value (
 
     public invokeOn: obj with: args = ( ^ vmMirror method: mthd invokeOn: obj with: args )
 
-    'Debugging'
+    (* Debugging *)
     public asString = ( ^self holder asString + '>>' + self signature asString )
-
   )
 )
