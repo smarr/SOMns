@@ -108,7 +108,7 @@ public final class ObjectSystem {
       loadedModules.put(uri, module);
       return module;
     } catch (ProgramDefinitionError e) {
-      VM.errorExit(e.getMessage());
+      VM.errorExit(e.toString());
       throw new IOException(e);
     }
   }
