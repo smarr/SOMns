@@ -41,7 +41,7 @@ public class VmSettings {
 
     String atConfig = System.getProperty("som.actorTracingCfg", "");
     List<String> al = Arrays.asList(atConfig.split(":"));
-    boolean filter = al.size() > 0 && !atConfig.isEmpty();
+    boolean filter = (al.size() > 0 && !atConfig.isEmpty()) || getBool("som.actorTracing",   false);
 
     MESSAGE_TIMESTAMPS    = !al.contains("mt") && filter;
     MESSAGE_PARAMETERS    = !al.contains("mp") && filter;
