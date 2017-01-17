@@ -21,7 +21,6 @@ import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
 import som.interpreter.nodes.nary.EagerlySpecializableNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
-import som.vm.NotYetImplementedException;
 import som.vm.Primitives;
 import som.vm.Primitives.Specializer;
 import som.vmobjects.SSymbol;
@@ -50,14 +49,28 @@ public final class MessageSendNode {
 
   public static GenericMessageSendNode createGeneric(final SSymbol selector,
       final ExpressionNode[] argumentNodes, final SourceSection source) {
-    if (argumentNodes != null &&
-        unwrapIfNecessary(argumentNodes[0]) instanceof ISpecialSend) {
-      throw new NotYetImplementedException();
-    } else {
-      return new GenericMessageSendNode(selector, argumentNodes,
-          UninitializedDispatchNode.createRcvrSend(source, selector, AccessModifier.PUBLIC),
-          source);
+    AbstractDispatchNode dispatch = null;
+
+    if (argumentNodes != null && argumentNodes.length > 0) {
+      ExpressionNode rcvrNode = unwrapIfNecessary(argumentNodes[0]);
+      rcvrNode.markAsVirtualInvokeReceiver();
+
+      if (unwrapIfNecessary(argumentNodes[0]) instanceof ISpecialSend) {
+        if (((ISpecialSend) rcvrNode).isSuperSend()) {
+          dispatch = UninitializedDispatchNode.createSuper(
+              source, selector, (ISuperReadNode) rcvrNode);
+        } else {
+          dispatch = UninitializedDispatchNode.createLexicallyBound(
+              source, selector, ((ISpecialSend) rcvrNode).getEnclosingMixinId());
+        }
+      }
     }
+
+    if (dispatch == null) {
+      dispatch = UninitializedDispatchNode.createRcvrSend(source, selector, AccessModifier.PUBLIC);
+    }
+
+    return new GenericMessageSendNode(selector, argumentNodes, dispatch, source);
   }
 
   public abstract static class AbstractMessageSendNode extends ExprWithTagsNode
@@ -164,17 +177,7 @@ public final class MessageSendNode {
       }
     }
 
-    protected PreevaluatedExpression makeSend() {
-      // first option is a super send, super sends are treated specially because
-      // the receiver class is lexically determined
-      if (isSpecialSend()) {
-        return makeSpecialSend();
-      }
-      return makeOrdenarySend();
-    }
-
-    protected abstract PreevaluatedExpression makeSpecialSend();
-    protected abstract GenericMessageSendNode makeOrdenarySend();
+    protected abstract PreevaluatedExpression makeSend();
 
     private PreevaluatedExpression makeEagerPrim(final EagerlySpecializableNode prim) {
       synchronized (getLock()) {
@@ -217,44 +220,13 @@ public final class MessageSendNode {
     }
 
     @Override
-    protected GenericMessageSendNode makeOrdenarySend() {
+    protected GenericMessageSendNode makeSend() {
       VM.insertInstrumentationWrapper(this);
-      ExpressionNode rcvr = unwrapIfNecessary(argumentNodes[0]);
-      rcvr.markAsVirtualInvokeReceiver();
-      GenericMessageSendNode send = new GenericMessageSendNode(selector,
-          argumentNodes,
-          UninitializedDispatchNode.createRcvrSend(
-              getSourceSection(), selector, AccessModifier.PUBLIC),
-          getSourceSection());
+      GenericMessageSendNode send = createGeneric(selector, argumentNodes, sourceSection);
       replace(send);
       VM.insertInstrumentationWrapper(send);
-      assert unwrapIfNecessary(argumentNodes[0]) == rcvr : "for some reason these are not the same anymore. race?";
       VM.insertInstrumentationWrapper(argumentNodes[0]);
       return send;
-    }
-
-    @Override
-    protected PreevaluatedExpression makeSpecialSend() {
-      VM.insertInstrumentationWrapper(this);
-
-      ISpecialSend rcvrNode = (ISpecialSend) unwrapIfNecessary(argumentNodes[0]);
-      ((ExpressionNode) rcvrNode).markAsVirtualInvokeReceiver();
-      AbstractDispatchNode dispatch;
-
-      if (rcvrNode.isSuperSend()) {
-        dispatch = UninitializedDispatchNode.createSuper(
-            getSourceSection(), selector, (ISuperReadNode) rcvrNode);
-      } else {
-        dispatch = UninitializedDispatchNode.createLexicallyBound(
-            getSourceSection(), selector, rcvrNode.getEnclosingMixinId());
-      }
-
-      GenericMessageSendNode node = new GenericMessageSendNode(selector,
-        argumentNodes, dispatch, getSourceSection());
-      replace(node);
-      VM.insertInstrumentationWrapper(node);
-      VM.insertInstrumentationWrapper(argumentNodes[0]);
-      return node;
     }
   }
 
@@ -271,20 +243,10 @@ public final class MessageSendNode {
     }
 
     @Override
-    protected GenericMessageSendNode makeOrdenarySend() {
+    protected GenericMessageSendNode makeSend() {
       // TODO: figure out what to do with reflective sends and how to instrument them.
-      GenericMessageSendNode send = new GenericMessageSendNode(selector,
-          argumentNodes,
-          UninitializedDispatchNode.createRcvrSend(
-              getSourceSection(), selector, AccessModifier.PUBLIC),
-          getSourceSection());
+      GenericMessageSendNode send = createGeneric(selector, argumentNodes, sourceSection);
       return replace(send);
-    }
-
-    @Override
-    protected PreevaluatedExpression makeSpecialSend() {
-      // should never be reached with isSuperSend() returning always false
-      throw new RuntimeException("A symbol send should never be a special send.");
     }
   }
 
