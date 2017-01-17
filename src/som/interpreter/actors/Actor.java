@@ -338,6 +338,9 @@ public class Actor implements Activity {
       threadId = threadIdGen.getAndIncrement();
       if (VmSettings.ACTOR_TRACING) {
         ActorExecutionTrace.swapBuffer(this);
+        nextActorId = (threadId << THREAD_ID_SHIFT) + 1;
+        nextMessageId = (threadId << THREAD_ID_SHIFT);
+        nextPromiseId = (threadId << THREAD_ID_SHIFT);
       }
     }
 
@@ -347,21 +350,17 @@ public class Actor implements Activity {
     }
 
     protected long generateActorId() {
-      long result = (threadId << THREAD_ID_SHIFT) | nextActorId;
-      nextActorId++;
-      return result;
+      return nextActorId++;
     }
 
     protected long generateMessageBaseId(final int numMessages) {
-      long result = (threadId << THREAD_ID_SHIFT) | nextMessageId;
+      long result = nextMessageId;
       nextMessageId += numMessages;
       return result;
     }
 
     protected long generatePromiseId() {
-      long result = (threadId << THREAD_ID_SHIFT) | nextPromiseId;
-      nextPromiseId++;
-      return result;
+      return nextPromiseId++;
     }
 
     public ByteBuffer getThreadLocalBuffer() {
@@ -379,12 +378,16 @@ public class Actor implements Activity {
     @Override
     protected void onTermination(final Throwable exception) {
       if (VmSettings.ACTOR_TRACING) {
+        long createdActors = nextActorId - 1 - (threadId << THREAD_ID_SHIFT);
+        long createdMessages = nextMessageId - (threadId << THREAD_ID_SHIFT);
+        long createdPromises = nextPromiseId - (threadId << THREAD_ID_SHIFT);
+
         ActorExecutionTrace.returnBuffer(this.tracingDataBuffer);
         this.tracingDataBuffer = null;
-        VM.printConcurrencyEntitiesReport("[Thread " + threadId + "]\tA#" + (nextActorId - 1) + "\t\tM#" + nextMessageId + "\t\tP#" + nextPromiseId);
-        numCreatedActors += nextActorId - 1;
-        numCreatedMessages += nextMessageId;
-        numCreatedPromises += nextPromiseId;
+        VM.printConcurrencyEntitiesReport("[Thread " + threadId + "]\tA#" + createdActors + "\t\tM#" + createdMessages + "\t\tP#" + createdPromises);
+        numCreatedActors += createdActors;
+        numCreatedMessages += createdMessages;
+        numCreatedPromises += createdPromises;
         numResolvedPromises += resolvedPromises;
       }
       threads.remove(this);
