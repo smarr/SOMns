@@ -32,6 +32,9 @@ public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
+      // XXX: this is the case when doing parse-time specialization
+      if (args == null) { return true; }
+
       return !VmSettings.DYNAMIC_METRICS && args[0] == Classes.valueArrayClass;
     }
   }

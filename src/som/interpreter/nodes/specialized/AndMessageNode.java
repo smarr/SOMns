@@ -44,6 +44,9 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
 
     @Override
     public final boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
+      // XXX: this is the case when doing parse-time specialization
+      if (args == null) { return true; }
+
       return args[0] instanceof Boolean &&
           (args[1] instanceof Boolean ||
               unwrapIfNecessary(argNodes[1]) instanceof BlockNode);
@@ -56,7 +59,7 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
       if (unwrapIfNecessary(argNodes[1]) instanceof BlockNode) {
         return fact.createNode(arguments[1], section, argNodes[0], argNodes[1]);
       } else {
-        assert arguments[1] instanceof Boolean;
+        assert arguments == null || arguments[1] instanceof Boolean;
         return boolFact.createNode(section, argNodes[0], argNodes[1]);
       }
     }

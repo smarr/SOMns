@@ -63,6 +63,9 @@ public abstract class DoublePrims  {
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodess) {
+      // XXX: this is the case when doing parse-time specialization
+      if (args == null) { return true; }
+
       return args[0] == Classes.doubleClass;
     }
   }
