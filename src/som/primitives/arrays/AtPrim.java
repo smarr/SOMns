@@ -8,7 +8,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.MessageSendNode;
-import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
+import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.primitives.Primitive;
 import som.vm.Symbols;
@@ -23,7 +23,7 @@ import tools.dym.Tags.ArrayRead;
 public abstract class AtPrim extends BinaryBasicOperation {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
-  @Child protected GenericMessageSendNode exception;
+  @Child protected AbstractMessageSendNode exception;
 
   protected AtPrim(final boolean eagWrap, final SourceSection source) {
     super(eagWrap, source);
