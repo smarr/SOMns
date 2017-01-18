@@ -12,8 +12,8 @@ import tools.dym.Tags.OpLength;
 
 
 @GenerateNodeFactory
-@Primitive(primitive = "arraySize:",    selector = "size",   receiverType = SArray.class)
-@Primitive(primitive = "stringLength:", selector = "length", receiverType = String.class)
+@Primitive(primitive = "arraySize:",    selector = "size",   receiverType = SArray.class, inParser = false)
+@Primitive(primitive = "stringLength:", selector = "length", receiverType = String.class, inParser = false)
 public abstract class SizeAndLengthPrim extends UnaryBasicOperation {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 

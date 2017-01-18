@@ -38,7 +38,7 @@ public abstract class DoublePrims  {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "doubleAsInteger:", selector = "asInteger",
+  @Primitive(primitive = "doubleAsInteger:", selector = "asInteger", inParser = false,
              receiverType = Double.class)
   public abstract static class AsIntPrim extends UnaryBasicOperation {
     public AsIntPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }

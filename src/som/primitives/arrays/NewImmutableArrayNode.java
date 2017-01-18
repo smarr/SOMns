@@ -24,7 +24,7 @@ import som.vmobjects.SClass;
 
 
 @GenerateNodeFactory
-@Primitive(selector = "new:withAll:",
+@Primitive(selector = "new:withAll:", inParser = false,
            specializer = NewImmutableArrayNode.IsValueArrayClass.class)
 public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
   public static class IsValueArrayClass extends Specializer<NewImmutableArrayNode> {

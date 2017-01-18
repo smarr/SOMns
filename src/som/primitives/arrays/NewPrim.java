@@ -18,7 +18,7 @@ import tools.dym.Tags.NewArray;
 
 
 @GenerateNodeFactory
-@Primitive(primitive = "array:new:", selector = "new:",
+@Primitive(primitive = "array:new:", selector = "new:", inParser = false,
            specializer = NewPrim.IsArrayClass.class)
 public abstract class NewPrim extends BinaryExpressionNode {
   public static class IsArrayClass extends Specializer<NewPrim> {
