@@ -83,6 +83,11 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitive {
   }
 
   @Override
+  public int getNumArguments() {
+    return 2;
+  }
+
+  @Override
   public Object executeGeneric(final VirtualFrame frame) {
     Object rcvr = receiver.executeGeneric(frame);
     Object arg  = argument.executeGeneric(frame);

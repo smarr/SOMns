@@ -204,17 +204,16 @@ public class DynamicMetrics extends TruffleInstrument {
     });
   }
 
-  private static int numberOfChildren(final Node node) {
-    int i = 0;
-    for (@SuppressWarnings("unused") Node child : node.getChildren()) {
-      i += 1;
-    }
-    return i;
-  }
-
   private static String getOperation(final Node node) {
     if (node instanceof OperationNode) {
       return ((OperationNode) node).getOperation();
+    }
+    throw new NotYetImplementedException();
+  }
+
+  private static int getNumArguments(final Node node) {
+    if (node instanceof OperationNode) {
+      return ((OperationNode) node).getNumArguments();
     }
     throw new NotYetImplementedException();
   }
@@ -225,14 +224,14 @@ public class DynamicMetrics extends TruffleInstrument {
     filters.tagIs(ComplexPrimitiveOperation.class, BasicPrimitiveOperation.class);
 
     ExecutionEventNodeFactory primExpFactory = (final EventContext ctx) -> {
-      int numSubExpr = numberOfChildren(ctx.getInstrumentedNode());
+      int numArgsAndResult = getNumArguments(ctx.getInstrumentedNode()) + 1;
       String operation = getOperation(ctx.getInstrumentedNode());
       Set<Class<?>> tags = instrumenter.queryTags(ctx.getInstrumentedNode());
 
       OperationProfile p = operationProfiles.computeIfAbsent(
         ctx.getInstrumentedSourceSection(),
         (final SourceSection src) -> new OperationProfile(
-            src, operation, tags, numSubExpr));
+            src, operation, tags, numArgsAndResult));
       return new OperationProfilingNode(p, ctx);
     };
 
