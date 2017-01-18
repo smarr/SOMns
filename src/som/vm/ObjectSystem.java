@@ -49,8 +49,8 @@ public final class ObjectSystem {
 
   private final Map<URI, MixinDefinition> loadedModules;
 
-  private final MixinDefinition platformModule;
-  private final MixinDefinition kernelModule;
+  @CompilationFinal private MixinDefinition platformModule;
+  @CompilationFinal private MixinDefinition kernelModule;
 
   @CompilationFinal
   private SClass platformClass;  // is only set after completion of initialize()
@@ -66,13 +66,16 @@ public final class ObjectSystem {
   private CompletableFuture<Object> mainThreadCompleted;
 
   public ObjectSystem(final SourcecodeCompiler compiler,
-      final StructuralProbe probe, final String platformFilename,
-      final String kernelFilename) throws IOException {
+      final StructuralProbe probe) {
     last = this;
     this.primitives = new Primitives();
-    this.compiler  = compiler;
+    this.compiler   = compiler;
     structuralProbe = probe;
-    loadedModules  = new LinkedHashMap<>();
+    loadedModules   = new LinkedHashMap<>();
+  }
+
+  public void loadKernelAndPlatform(final String platformFilename,
+      final String kernelFilename) throws IOException {
     platformModule = loadModule(platformFilename);
     kernelModule   = loadModule(kernelFilename);
   }

@@ -27,7 +27,7 @@ import tools.dym.Tags.BasicPrimitiveOperation;
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
 @Primitive(primitive = "array:at:put:", selector = "at:put:",
-           receiverType = SArray.class)
+           receiverType = SArray.class, inParser = false)
 public abstract class AtPutPrim extends TernaryExpressionNode {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 

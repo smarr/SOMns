@@ -38,7 +38,7 @@ public abstract class DoublePrims  {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "doubleAsInteger:", selector = "asInteger",
+  @Primitive(primitive = "doubleAsInteger:", selector = "asInteger", inParser = false,
              receiverType = Double.class)
   public abstract static class AsIntPrim extends UnaryBasicOperation {
     public AsIntPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
@@ -63,6 +63,9 @@ public abstract class DoublePrims  {
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodess) {
+      // XXX: this is the case when doing parse-time specialization
+      if (args == null) { return true; }
+
       return args[0] == Classes.doubleClass;
     }
   }

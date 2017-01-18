@@ -30,9 +30,24 @@ import tools.dym.Tags.VirtualInvoke;
 
 public final class MessageSendNode {
 
-  public static AbstractMessageSendNode createMessageSend(final SSymbol selector,
+  public static ExpressionNode createMessageSend(final SSymbol selector,
       final ExpressionNode[] arguments, final SourceSection source) {
-    return new UninitializedMessageSendNode(selector, arguments, source);
+    Primitives prims = VM.getVM().getPrimitives();
+    Specializer<EagerlySpecializableNode> specializer =
+        prims.getParserSpecializer(selector, arguments);
+    if (specializer != null) {
+      EagerlySpecializableNode newNode = specializer.create(null, arguments, source, !specializer.noWrapper());
+      for (ExpressionNode exp : arguments) {
+        unwrapIfNecessary(exp).markAsPrimitiveArgument();
+      }
+      if (specializer.noWrapper()) {
+        return newNode;
+      } else {
+        return newNode.wrapInEagerWrapper(newNode, selector, arguments);
+      }
+    } else {
+      return new UninitializedMessageSendNode(selector, arguments, source);
+    }
   }
 
   public static AbstractMessageSendNode adaptSymbol(final SSymbol newSelector,

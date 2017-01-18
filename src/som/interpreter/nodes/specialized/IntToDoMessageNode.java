@@ -22,7 +22,7 @@ import tools.dym.Tags.LoopNode;
 
 @GenerateNodeFactory
 @Primitive(selector = "to:do:", noWrapper = true, disabled = true,
-           specializer = ToDoSplzr.class)
+           specializer = ToDoSplzr.class, inParser = false)
 public abstract class IntToDoMessageNode extends TernaryExpressionNode {
   public static class ToDoSplzr extends Specializer<IntToDoMessageNode> {
     public ToDoSplzr(final Primitive prim, final NodeFactory<IntToDoMessageNode> fact) { super(prim, fact); }

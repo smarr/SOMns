@@ -43,6 +43,9 @@ public final class PromisePrims {
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
+      // XXX: this is the case when doing parse-time specialization
+      if (args == null) { return true; }
+
       return args[0] == ActorClasses.ActorModule;
     }
   }

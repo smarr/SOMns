@@ -13,7 +13,6 @@ import som.interpreter.actors.EventualSendNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InternalObjectArrayNode;
 import som.interpreter.nodes.MessageSendNode;
-import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.ResolvingImplicitReceiverSend;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
@@ -75,7 +74,7 @@ public final class SNodeFactory {
     }
   }
 
-  public static AbstractMessageSendNode createMessageSend(final SSymbol msg,
+  public static ExpressionNode createMessageSend(final SSymbol msg,
       final List<ExpressionNode> exprs, final SourceSection source) {
     return MessageSendNode.createMessageSend(msg,
         exprs.toArray(new ExpressionNode[0]), source);

@@ -24,7 +24,7 @@ import som.vmobjects.SClass;
 
 
 @GenerateNodeFactory
-@Primitive(selector = "new:withAll:",
+@Primitive(selector = "new:withAll:", inParser = false,
            specializer = NewImmutableArrayNode.IsValueArrayClass.class)
 public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
   public static class IsValueArrayClass extends Specializer<NewImmutableArrayNode> {
@@ -32,6 +32,9 @@ public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
+      // XXX: this is the case when doing parse-time specialization
+      if (args == null) { return true; }
+
       return !VmSettings.DYNAMIC_METRICS && args[0] == Classes.valueArrayClass;
     }
   }
@@ -45,7 +48,7 @@ public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
     return Classes.valueArrayClass == valueArrayClass;
   }
 
-  @Specialization
+  @Specialization(guards = "isValueArrayClass(valueArrayClass)")
   public SImmutableArray create(final VirtualFrame frame,
       final SClass valueArrayClass, final long size, final SBlock block) {
     if (size <= 0) {

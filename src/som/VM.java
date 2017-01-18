@@ -124,8 +124,8 @@ public final class VM {
 
     this.avoidExitForTesting = avoidExitForTesting;
     options = new VMOptions(args);
-    objectSystem = new ObjectSystem(new SourcecodeCompiler(), structuralProbe,
-        options.platformFile, options.kernelFile);
+    objectSystem = new ObjectSystem(new SourcecodeCompiler(), structuralProbe);
+    objectSystem.loadKernelAndPlatform(options.platformFile, options.kernelFile);
 
     if (options.showUsage) {
       VMOptions.printUsageAndExit();

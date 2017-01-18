@@ -22,6 +22,9 @@ public @interface Primitive {
   /** Selector for eager replacement. */
   String selector() default "";
 
+  /** Specialize already during parsing. */
+  boolean inParser() default true;
+
   /**
    * Expected type of receiver for eager replacement,
    * if given one of the types needs to match.
