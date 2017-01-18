@@ -15,6 +15,7 @@ import som.interpreter.Types;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
+import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
@@ -84,7 +85,7 @@ public final class ObjectPrims {
 
   @GenerateNodeFactory
   @Primitive(selector = "isNil", noWrapper = true)
-  public abstract static class IsNilNode extends UnaryBasicOperation {
+  public abstract static class IsNilNode extends UnaryBasicOperation implements OperationNode {
     public IsNilNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Override
@@ -100,11 +101,21 @@ public final class ObjectPrims {
     public final boolean isNil(final Object receiver) {
       return receiver == Nil.nilObject;
     }
+
+    @Override
+    public String getOperation() {
+      return "isNil";
+    }
+
+    @Override
+    public int getNumArguments() {
+      return 1;
+    }
   }
 
   @GenerateNodeFactory
   @Primitive(selector = "notNil", noWrapper = true)
-  public abstract static class NotNilNode extends UnaryBasicOperation {
+  public abstract static class NotNilNode extends UnaryBasicOperation implements OperationNode {
     public NotNilNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Override
@@ -119,6 +130,16 @@ public final class ObjectPrims {
     @Specialization
     public final boolean isNotNil(final Object receiver) {
       return receiver != Nil.nilObject;
+    }
+
+    @Override
+    public String getOperation() {
+      return "notNil";
+    }
+
+    @Override
+    public int getNumArguments() {
+      return 1;
     }
   }
 

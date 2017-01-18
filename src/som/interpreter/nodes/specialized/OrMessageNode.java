@@ -8,6 +8,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
@@ -74,7 +75,7 @@ public abstract class OrMessageNode extends BinaryComplexOperation {
   }
 
   @GenerateNodeFactory
-  public abstract static class OrBoolMessageNode extends BinaryBasicOperation {
+  public abstract static class OrBoolMessageNode extends BinaryBasicOperation implements OperationNode {
     public OrBoolMessageNode(final SourceSection source) { super(false, source); }
 
     @Override
@@ -90,6 +91,16 @@ public abstract class OrMessageNode extends BinaryComplexOperation {
     public final boolean doOr(final VirtualFrame frame, final boolean receiver,
         final boolean argument) {
       return receiver || argument;
+    }
+
+    @Override
+    public String getOperation() {
+      return "||";
+    }
+
+    @Override
+    public int getNumArguments() {
+      return 2;
     }
   }
 }
