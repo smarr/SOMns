@@ -16,6 +16,9 @@
    example: -atcfg=mt:mp:pc turns off message timestamps, message parameters and promises
 
  - Added Validation benchmarks and a new Harness.
+ 
+ - Simplified AST inlining and use objects to represent variable info to improve
+   details displayed in debugger ([PR #80](https://github.com/smarr/SOMns/pull/80)).
 
 ## 0.1.0 - 2016-12-15
 
