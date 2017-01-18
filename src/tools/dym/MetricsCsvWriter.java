@@ -236,6 +236,10 @@ public final class MetricsCsvWriter {
       }
       throw new NotYetImplementedException();
     } else if (tags.contains(OpComparison.class)) {
+      if (p.getNumArgsAndResult() == 2) {
+        return typeCategory(a.getArgType(1));
+      }
+
       String left  = typeCategory(a.getArgType(1));
       String right = typeCategory(a.getArgType(2));
       if (left.equals(right)) {
@@ -250,7 +254,7 @@ public final class MetricsCsvWriter {
       }
       throw new NotYetImplementedException();
     } else if (tags.contains(ArrayRead.class) || tags.contains(ArrayWrite.class)) {
-      assert a.argTypeIs(1, "Array");
+      assert a.argTypeIs(1, "Array") || a.argTypeIs(1, "ValueArray");
       assert a.argTypeIs(2, "Integer");
       if (tags.contains(ArrayRead.class)) {
         return typeCategory(a.getArgType(0));
@@ -263,6 +267,8 @@ public final class MetricsCsvWriter {
       return typeCategory(a.getArgType(1));
     } else if (tags.contains(StringAccess.class)) {
       return "str";
+    } else if (p.getOperation().equals("ticks")) {
+      return "int";
     }
     throw new NotYetImplementedException();
   }
