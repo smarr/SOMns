@@ -9,6 +9,7 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
@@ -104,7 +105,7 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
   }
 
   @GenerateNodeFactory
-  public abstract static class AndBoolMessageNode extends BinaryBasicOperation {
+  public abstract static class AndBoolMessageNode extends BinaryBasicOperation implements OperationNode {
     public AndBoolMessageNode(final SourceSection source) { super(false, source); }
 
     @Override
@@ -119,6 +120,16 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
     @Specialization
     public final boolean doAnd(final VirtualFrame frame, final boolean receiver, final boolean argument) {
       return receiver && argument;
+    }
+
+    @Override
+    public String getOperation() {
+      return "&&";
+    }
+
+    @Override
+    public int getNumArguments() {
+      return 2;
     }
   }
 }

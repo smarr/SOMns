@@ -115,11 +115,7 @@ public final class VM {
     // TODO: can I assert that it is locked?? helper on Node??
     if (VmSettings.INSTRUMENTATION) {
       assert node.getSourceSection() != null || (node instanceof WrapperNode) : "Node needs source section, or needs to be wrapper";
-      // TODO: a way to check whether the node needs actually wrapping?
-//      String[] tags = node.getSourceSection().getTags();
-//      if (tags != null && tags.length > 0) {
-        InstrumentationHandler.insertInstrumentationWrapper(node);
-//      }
+      InstrumentationHandler.insertInstrumentationWrapper(node);
     }
   }
 

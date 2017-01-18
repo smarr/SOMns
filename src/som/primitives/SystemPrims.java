@@ -32,6 +32,7 @@ import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
 import som.interpreter.Invokable;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -256,12 +257,22 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemTicks:", selector = "ticks",
              specializer = IsSystemModule.class, noWrapper = true)
-  public abstract static class TicksPrim extends UnaryBasicOperation {
+  public abstract static class TicksPrim extends UnaryBasicOperation implements OperationNode {
     public TicksPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
     public final long doSObject(final Object receiver) {
       return System.nanoTime() / 1000L - startMicroTime;
+    }
+
+    @Override
+    public String getOperation() {
+      return "ticks";
+    }
+
+    @Override
+    public int getNumArguments() {
+      return 1;
     }
   }
 

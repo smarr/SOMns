@@ -11,7 +11,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.MessageSendNode;
-import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
+import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.primitives.Primitive;
 import som.vm.Symbols;
@@ -31,7 +31,7 @@ import tools.dym.Tags.BasicPrimitiveOperation;
 public abstract class AtPutPrim extends TernaryExpressionNode {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
-  @Child protected GenericMessageSendNode exception;
+  @Child protected AbstractMessageSendNode exception;
 
   protected AtPutPrim(final boolean eagWrap, final SourceSection source) {
     super(eagWrap, source);

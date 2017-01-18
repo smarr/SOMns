@@ -16,13 +16,14 @@ public final class OperationProfile extends Counter {
   private final String operation;
   private final Set<Class<?>> tags;
   private final Deque<Object[]> argumentsForExecutions;
-  protected final int numSubexpressions;
+  protected final int numArgsAndResult;
   protected final Map<Arguments, Integer> argumentTypes;
 
   public OperationProfile(final SourceSection source,
-      @NotNull final String operation, final Set<Class<?>> tags, final int numSubexpressions) {
+      @NotNull final String operation, final Set<Class<?>> tags,
+      final int numArgsAndResult) {
     super(source);
-    this.numSubexpressions = numSubexpressions;
+    this.numArgsAndResult  = numArgsAndResult;
     this.operation         = operation;
     this.tags              = tags;
     argumentsForExecutions = new ArrayDeque<>();
@@ -36,7 +37,7 @@ public final class OperationProfile extends Counter {
   }
 
   public void enterMainNode() {
-    argumentsForExecutions.push(new Object[numSubexpressions]);
+    argumentsForExecutions.push(new Object[numArgsAndResult]);
   }
 
   public String getOperation() {
@@ -45,6 +46,10 @@ public final class OperationProfile extends Counter {
 
   public Set<Class<?>> getTags() {
     return tags;
+  }
+
+  public int getNumArgsAndResult() {
+    return numArgsAndResult;
   }
 
   public Map<Arguments, Integer> getArgumentTypes() {

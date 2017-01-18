@@ -20,6 +20,9 @@
  - Simplified AST inlining and use objects to represent variable info to improve
    details displayed in debugger ([PR #80](https://github.com/smarr/SOMns/pull/80)).
 
+ - Make instrumentation more robust by defining number of arguments of an
+   operation explicitly.
+
 ## 0.1.0 - 2016-12-15
 
 This is the first tagged version. For previous changes, please refer to the
