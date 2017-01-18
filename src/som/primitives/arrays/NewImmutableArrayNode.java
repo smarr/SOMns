@@ -48,7 +48,7 @@ public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
     return Classes.valueArrayClass == valueArrayClass;
   }
 
-  @Specialization
+  @Specialization(guards = "isValueArrayClass(valueArrayClass)")
   public SImmutableArray create(final VirtualFrame frame,
       final SClass valueArrayClass, final long size, final SBlock block) {
     if (size <= 0) {
