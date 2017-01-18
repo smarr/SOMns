@@ -147,7 +147,7 @@ public class Primitives {
     }
 
     public boolean inParser() {
-      return prim.inParser();
+      return prim.inParser() && !prim.requiresArguments();
     }
 
     public boolean noWrapper() {
