@@ -31,6 +31,7 @@ import som.interpreter.actors.Actor;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
+import som.primitives.processes.ChannelPrimitives;
 import som.primitives.threading.ThreadingModule;
 import som.vm.ObjectSystem;
 import som.vm.Primitives;
@@ -373,6 +374,8 @@ public final class VM {
     ThreadingModule.MutexClassId     = null;
     ThreadingModule.ConditionClass   = null;
     ThreadingModule.ConditionClassId = null;
+
+    ChannelPrimitives.resetClassReferences();
 
     KernelObj.indexOutOfBoundsClass = null;
   }
