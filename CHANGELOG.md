@@ -32,6 +32,8 @@
 
  - Added CSP version of PingPong benchmark.
 
+ - Added simple STM implementation. See `s.i.t.Transactions` and [PR #81](https://github.com/smarr/SOMns/pull/81) for details.
+
 ## 0.1.0 - 2016-12-15
 
 This is the first tagged version. For previous changes, please refer to the

@@ -192,6 +192,54 @@ public abstract class SArray extends SAbstractObject {
       super(storage, clazz);
     }
 
+    public SMutableArray shallowCopy() {
+      Object storageClone;
+      if (isEmptyType()) {
+        storageClone = storage;
+      } else if (isPartiallyEmptyType()) {
+        storageClone = ((PartiallyEmptyArray) storage).copy();
+      } else if (isBooleanType()) {
+        storageClone = ((boolean[]) storage).clone();
+      } else if (isDoubleType()) {
+        storageClone = ((double[]) storage).clone();
+      } else if (isLongType()) {
+        storageClone = ((long[]) storage).clone();
+      } else {
+        assert isObjectType();
+        storageClone = ((Object[]) storage).clone();
+      }
+
+      return new SMutableArray(storageClone, clazz);
+    }
+
+    public boolean txEquals(final SMutableArray a) {
+      if (storage.getClass() != a.storage.getClass()) {
+        // TODO: strictly speaking this isn't correct,
+        //       there could be long[].equals(Object[]) that is true
+        //       but, we are prone to ABA problems, so, I don't think this matters either
+        return false;
+      }
+
+      if (isEmptyType()) {
+        return true;
+      } else if (isPartiallyEmptyType()) {
+        return Arrays.equals(((PartiallyEmptyArray) storage).arr,  ((PartiallyEmptyArray) a.storage).arr);
+      } else if (isBooleanType()) {
+        return Arrays.equals((boolean[]) storage, (boolean[]) a.storage);
+      } else if (isDoubleType()) {
+        return Arrays.equals((double[]) storage,  (double[]) a.storage);
+      } else if (isLongType()) {
+        return Arrays.equals((long[]) storage,    (long[]) a.storage);
+      } else {
+        assert isObjectType();
+        return Arrays.equals((Object[]) storage,  (Object[]) a.storage);
+      }
+    }
+
+    public void txSet(final SMutableArray a) {
+      storage = a.storage;
+    }
+
     /**
      * For internal use only, specifically, for SClass.
      * There we now, it is either empty, or of OBJECT type.

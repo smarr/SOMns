@@ -41,6 +41,8 @@ import som.interpreter.objectstorage.FieldReadNode;
 import som.interpreter.objectstorage.FieldWriteNode;
 import som.interpreter.objectstorage.FieldWriteNode.AbstractFieldWriteNode;
 import som.interpreter.objectstorage.InitializerFieldWrite;
+import som.interpreter.transactions.CachedTxSlotRead;
+import som.interpreter.transactions.CachedTxSlotWrite;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
@@ -509,11 +511,17 @@ public final class MixinDefinition {
 
     @Override
     public AbstractDispatchNode getDispatchNode(final Object receiver,
-        final Object firstArg, final AbstractDispatchNode next) {
+        final Object firstArg, final AbstractDispatchNode next,
+        final boolean forAtomic) {
       SObject rcvr = (SObject) receiver;
       if (rcvr instanceof SMutableObject) {
-        return new CachedMutableSlotRead(getAccessType(),
-            createNode(rcvr), DispatchGuard.create(rcvr), next);
+        if (forAtomic && getAccessType() == SlotAccess.FIELD_READ) {
+          return new CachedTxSlotRead(getAccessType(),
+              createNode(rcvr), DispatchGuard.create(rcvr), next);
+        } else {
+          return new CachedMutableSlotRead(getAccessType(),
+              createNode(rcvr), DispatchGuard.create(rcvr), next);
+        }
       } else {
         assert rcvr instanceof SImmutableObject;
         return new CachedImmutableSlotRead(getAccessType(),
@@ -571,9 +579,14 @@ public final class MixinDefinition {
 
     @Override
     public AbstractDispatchNode getDispatchNode(final Object rcvr,
-        final Object firstArg, final AbstractDispatchNode next) {
-      return new CachedSlotWrite(createWriteNode((SObject) rcvr, firstArg),
-          DispatchGuard.create(rcvr), next);
+        final Object firstArg, final AbstractDispatchNode next, final boolean forAtomic) {
+      if (forAtomic) {
+        return new CachedTxSlotWrite(createWriteNode((SObject) rcvr, firstArg),
+            DispatchGuard.create(rcvr), next);
+      } else {
+        return new CachedSlotWrite(createWriteNode((SObject) rcvr, firstArg),
+            DispatchGuard.create(rcvr), next);
+      }
     }
 
     @Override

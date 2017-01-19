@@ -43,9 +43,10 @@ public final class Method extends Invokable {
                 final SourceSection[] definition,
                 final ExpressionNode expressions,
                 final MethodScope methodScope,
-                final ExpressionNode uninitialized, final boolean block) {
+                final ExpressionNode uninitialized, final boolean block,
+                final boolean isAtomic) {
     super(name, sourceSection, methodScope.getFrameDescriptor(),
-        expressions, uninitialized);
+        expressions, uninitialized, isAtomic);
     this.definition = definition;
     this.block = block;
     this.methodScope = methodScope;
@@ -105,7 +106,7 @@ public final class Method extends Invokable {
     }
 
     Method clone = new Method(name, getSourceSection(), definition, adaptedBody,
-        adaptedScope, uninit, block);
+        adaptedScope, uninit, block, isAtomic);
     adaptedScope.setMethod(clone);
     return clone;
   }
@@ -116,6 +117,20 @@ public final class Method extends Invokable {
     assert methodScope != splitScope;
     assert splitScope.isFinalized();
     return cloneAndAdaptAfterScopeChange(splitScope, 0, false);
+  }
+
+  @Override
+  public Invokable createAtomic() {
+    assert !isAtomic : "We should only ask non-atomic invokables for their atomic version";
+
+    MethodScope splitScope = methodScope.split();
+    ExpressionNode body = InliningVisitor.doInline(uninitializedBody, splitScope, 0);
+    ExpressionNode uninit = NodeUtil.cloneNode(body);
+
+    Method atomic = new Method(name, getSourceSection(), definition, body,
+        splitScope, uninit, block, true);
+    splitScope.setMethod(atomic);
+    return atomic;
   }
 
   public boolean isBlock() {

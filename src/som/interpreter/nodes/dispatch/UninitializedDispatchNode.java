@@ -5,11 +5,13 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.interpreter.Invokable;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.Types;
 import som.interpreter.nodes.ISuperReadNode;
@@ -89,9 +91,22 @@ public final class UninitializedDispatchNode {
         node = new CachedDnuNode(rcvrClass, selector,
             DispatchGuard.create(rcvr), newChainEnd);
       } else {
-        node = dispatchable.getDispatchNode(rcvr, firstArg, newChainEnd);
+        node = dispatchable.getDispatchNode(rcvr, firstArg, newChainEnd, forAtomic());
       }
       return node;
+    }
+
+    private boolean forAtomic() {
+      // TODO: seems a bit expensive,
+      //       might want to optimize for interpreter first iteration speed
+      RootNode root = getRootNode();
+      if (root instanceof Invokable) {
+        return ((Invokable) root).isAtomic();
+      } else {
+        // TODO: need to think about integration with actors, but, that's a
+        //       later research project
+        return false;
+      }
     }
 
     protected AbstractDispatchNode generalizeChain(

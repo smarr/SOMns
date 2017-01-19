@@ -1,0 +1,332 @@
+class TransactionTests usingPlatform: platform testFramework: minitest = (
+| private Array       = platform kernel Array.
+  private Exception   = platform kernel Exception.
+  private Dictionary  = platform collections Dictionary.
+  private Set         = platform collections Set.
+  private Transaction = platform transactions Transaction.
+  private TestContext = minitest TestContext.
+|)(
+  private class Hello  = (
+  | public a ::= #a.
+    public b ::= #b. |)()
+  private class Hello2 = Hello (
+  | public c ::= #c.
+    public d ::= #d. |)()
+  private class Hello3 = Hello2 (
+  | public e ::= #e.
+    public f ::= #f. |)(
+    public c    = ( ^ super c  )
+    public c: v = ( super c: v )
+  )
+
+  private class MutOuter = (
+  | public field ::= nil. |
+  )(
+    public class Inner = ()(
+      public get = ( ^ field )
+      public set: val = ( field := val )
+    )
+  )
+
+  public class BasicTests = TestContext (
+  | private value ::= false.
+  |)(
+    public testAccessor = (
+      assert: (Transaction atomic: [ value: true. value ])
+    )
+
+    public testAccessorRead = (
+      value: true.
+      assert: (Transaction atomic: [ value ])
+    )
+
+    public testAccessorWrite = (
+      Transaction atomic: [ value: true ].
+      assert: value
+    )
+
+    public testTemp = (
+      | v |
+      assert: (Transaction atomic: [ v := true. v ])
+    )
+
+    public testTempRead = (
+      | v |
+      v := true.
+      assert: (Transaction atomic: [ v ])
+    )
+
+    public testTempWrite = (
+      | v |
+      Transaction atomic: [ v := true ].
+      assert: v
+    )
+
+    public testBasicSelf = (
+      assert: (Transaction atomic: [ self ]) is: self
+    )
+
+    public testBasicSuper = (
+      assert: (Transaction atomic: [ super ]) is: self
+    )
+
+    public testFieldReads = (
+      | h |
+      h := Hello3 new.
+      assert: (Transaction atomic: [ h a ]) equals: #a.
+      assert: (Transaction atomic: [ h b ]) equals: #b.
+      assert: (Transaction atomic: [ h c ]) equals: #c.
+      assert: (Transaction atomic: [ h d ]) equals: #d.
+      assert: (Transaction atomic: [ h e ]) equals: #e.
+      assert: (Transaction atomic: [ h f ]) equals: #f.
+    )
+
+    public testFieldReadsMixedInherited = (
+      | h |
+      h := Hello2 new.
+      assert: (Transaction atomic: [ h a ]) equals: #a.
+      assert: (Transaction atomic: [ h b ]) equals: #b.
+      assert: (Transaction atomic: [ h c ]) equals: #c.
+      assert: (Transaction atomic: [ h d ]) equals: #d.
+    )
+
+    public testFieldWrite = (
+      | h |
+      h := Hello3 new.
+
+      Transaction atomic: [ h a: #A ].
+      assert: (Transaction atomic: [ h a ]) equals: #A.
+
+      Transaction atomic: [ h b: #B ].
+      assert: (Transaction atomic: [ h b ]) equals: #B.
+
+      Transaction atomic: [ h c: #C ].
+      assert: (Transaction atomic: [ h c ]) equals: #C.
+
+      Transaction atomic: [ h d: #D ].
+      assert: (Transaction atomic: [ h d ]) equals: #D.
+
+      Transaction atomic: [ h e: #E ].
+      assert: (Transaction atomic: [ h e ]) equals: #E.
+
+      Transaction atomic: [ h f: #F ].
+      assert: (Transaction atomic: [ h f ]) equals: #F.
+    )
+
+    public testFieldWriteMixedInherited = (
+      | h |
+      h := Hello2 new.
+
+      Transaction atomic: [ h a: #A ].
+      assert: (Transaction atomic: [ h a ]) equals: #A.
+
+      Transaction atomic: [ h b: #B ].
+      assert: (Transaction atomic: [ h b ]) equals: #B.
+
+      Transaction atomic: [ h c: #C ].
+      assert: (Transaction atomic: [ h c ]) equals: #C.
+
+      Transaction atomic: [ h d: #D ].
+      assert: (Transaction atomic: [ h d ]) equals: #D.
+    )
+
+    public testOuter = (
+      | h |
+      h := MutOuter new Inner new.
+      assert: (Transaction atomic: [ h set: #a. h get ]) equals: #a
+    )
+
+    public testOuterRead = (
+      | h |
+      h := MutOuter new Inner new.
+      h set: #a.
+      assert: (Transaction atomic: [ h get ]) equals: #a
+    )
+
+    public testOuterWrite = (
+      | h |
+      h := MutOuter new Inner new.
+      Transaction atomic: [ h set: #a ].
+      assert: h get equals: #a
+    )
+
+    public testInlinedAndOr = (
+      assert: (Transaction atomic: [ true  and: [ true  ] ]).
+      deny:   (Transaction atomic: [ false and: [ true  ] ]).
+      deny:   (Transaction atomic: [ true  and: [ false ] ]).
+      deny:   (Transaction atomic: [ false and: [ false ] ]).
+
+      assert: (Transaction atomic: [ true  or: [ true  ] ]).
+      assert: (Transaction atomic: [ false or: [ true  ] ]).
+      assert: (Transaction atomic: [ true  or: [ false ] ]).
+      deny:   (Transaction atomic: [ false or: [ false ] ]).
+    )
+
+    public testInlinedIfNil = (
+      assert: (Transaction atomic: [ nil  ifNil:    [ true  ] ]).
+      assert: (Transaction atomic: [ self ifNotNil: [ true  ] ]).
+    )
+
+    public testInlinedIfTrue = (
+      assert: (Transaction atomic: [ true  ifTrue:  [ true  ] ]).
+      assert: (Transaction atomic: [ false ifFalse: [ true  ] ]).
+      assert: (Transaction atomic: [ true  ifTrue:  [ true  ] ifFalse: [ false ] ]).
+      assert: (Transaction atomic: [ false ifTrue:  [ false ] ifFalse: [ true  ] ]).
+    )
+
+    public testInlinedToDo = (
+      | x |
+      x := 0.
+      Transaction atomic: [ 1 to: 10 do: [:i | x := x + i ] ].
+      assert: x equals: 55.
+
+      x := 0.
+      Transaction atomic: [ 1 to: 10 by: 2 do: [:i | x := x + i ] ].
+      assert: x equals: 25.
+    )
+
+    public testInlinedWhile = (
+      | i x |
+      i := 1. x := 0.
+      Transaction atomic: [ [ i <= 10 ] whileTrue: [ x := x + i. i := i + 1 ] ].
+      assert: x equals: 55.
+
+      i := 1. x := 0.
+      Transaction atomic: [ [ i > 10 ] whileFalse: [ x := x + i. i := i + 1 ] ].
+      assert: x equals: 55
+    )
+
+    public testArray = (
+      | array |
+      array := Array new: 1.
+      assert: (Transaction atomic: [ array at: 1 put: true. array at: 1 ]).
+    )
+
+    public testArrayRead = (
+      | array |
+      array := Array new: 1.
+      array at: 1 put: true.
+      assert: (Transaction atomic: [ array at: 1 ]).
+    )
+
+    public testArrayWrite = (
+      | array |
+      array := Array new: 1.
+      Transaction atomic: [ array at: 1 put: true ].
+      assert: (array at: 1).
+    )
+
+    public testNestedArrayReads = (
+      (* This is to test that the implementation handles nested array
+         expressions correctly *)
+      | arr1 arr2 arr3 r |
+      arr1 := Array new: 1 withAll: 0.
+      arr2 := Array new: 1 withAll: 0.
+      arr3 := Array new: 1 withAll: 0.
+
+      r := Transaction atomic: [
+        arr1 at: 1 put: 42.
+        arr2 at: 1 put: 1.
+        arr3 at: 1 put: 1.
+
+        arr1 at: (arr2 at: (arr3 at: 1)) ].
+
+      assert: r equals: 42.
+    )
+
+    public testCaughtException = (
+      | v |
+      v := 0.
+      Transaction atomic: [
+        [ v := 1. Exception signal ]
+          on: Exception
+          do: [ v := v + 1 ] ].
+      assert: v equals: 2.
+    )
+
+    (* TODO: What's the desired exception semantics. Should an exception abort it? *)
+    public testUncaughtException = (
+      | v |
+      v := 0.
+      [ Transaction atomic: [ v := 1. Exception signal ] ]
+        on: Exception
+        do: [ v := v + 1 ].
+      assert: v equals: 2.
+    )
+  ) : ( TEST_CONTEXT = () )
+
+  public class CollectionsTests = TestContext ()(
+    public testArrayLongTx = (
+      | arr |
+      Transaction atomic: [ arr := Array new: 10 withAll: 1. ].
+
+      Transaction atomic: [ 3 to: 10 do: [ :each |
+        arr at: each put: (arr at: each - 1) + (arr at: each - 2) ] ].
+
+      3 to: 10 do: [ :each |
+        assert: (arr at: each) - (arr at: each - 1) equals: (arr at: each - 2) ]
+    )
+
+    public testArrayShortTx = (
+      | arr |
+      Transaction atomic: [ arr := Array new: 10 withAll: 1. ].
+
+      3 to: 10 do: [ :each |
+        Transaction atomic: [
+          arr at: each put: (arr at: each - 1) + (arr at: each - 2) ] ].
+
+      3 to: 10 do: [ :each |
+        assert: (arr at: each) - (arr at: each - 1) equals: (arr at: each - 2) ]
+    )
+
+    public testDictionaryLongTx = (
+      | dict |
+      dict := Dictionary new.
+
+      Transaction atomic: [ 1 to: 10 do: [ :each |
+        dict at: each put: each ] ].
+
+      assert: dict size equals: 10.
+
+      1 to: 10 do: [ :each |
+        assert: (dict at: each) equals: each ]
+    )
+
+    public testDictionaryShortTx = (
+      | dict |
+      dict := Dictionary new.
+
+      1 to: 10 do: [ :each |
+        Transaction atomic: [ dict at: each put: each ] ].
+
+      assert: dict size equals: 10.
+
+      1 to: 10 do: [ :each |
+        assert: (dict at: each) equals: each ]
+    )
+
+    public testSetLongTx = (
+      | set |
+      set := Set new.
+
+      Transaction atomic: [ 1 to: 10 do: [ :each |
+        set add: each ] ].
+
+      assert: set size equals: 10.
+      1 to: 10 do: [ :each |
+        assert: (set contains: each) ]
+    )
+
+    public testSetShortTx = (
+      | set |
+      set := Set new.
+
+      1 to: 10 do: [ :each |
+        Transaction atomic: [ set add: each ] ].
+
+      assert: set size equals: 10.
+      1 to: 10 do: [ :each |
+        assert: (set contains: each) ]
+    )
+  ) : ( TEST_CONTEXT = () )
+)

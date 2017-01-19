@@ -105,11 +105,11 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
     }
   }
 
-  public static final class CachedSlotWrite extends AbstractDispatchNode {
+  public static class CachedSlotWrite extends AbstractDispatchNode {
     @Child protected AbstractDispatchNode   nextInCache;
     @Child protected AbstractFieldWriteNode write;
 
-    private final DispatchGuard             guard;
+    protected final DispatchGuard           guard;
 
     public CachedSlotWrite(final AbstractFieldWriteNode write,
         final DispatchGuard guard,
@@ -136,7 +136,7 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
     }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    protected final boolean isTaggedWith(final Class<?> tag) {
       if (tag == FieldWrite.class) {
         return true;
       } else {
@@ -145,7 +145,7 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
     }
 
     @Override
-    public int lengthOfDispatchChain() {
+    public final int lengthOfDispatchChain() {
       return 1 + nextInCache.lengthOfDispatchChain();
     }
   }

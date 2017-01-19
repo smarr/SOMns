@@ -19,8 +19,8 @@ public final class Primitive extends Invokable {
 
   public Primitive(final String name, final ExpressionNode primitive,
       final FrameDescriptor frameDescriptor,
-      final ExpressionNode uninitialized) {
-    super(name, null, frameDescriptor, primitive, uninitialized);
+      final ExpressionNode uninitialized, final boolean isAtomic) {
+    super(name, null, frameDescriptor, primitive, uninitialized, isAtomic);
   }
 
   @Override
@@ -35,7 +35,16 @@ public final class Primitive extends Invokable {
   public Node deepCopy() {
     assert getFrameDescriptor().getSize() == 0;
     return new Primitive(name, NodeUtil.cloneNode(uninitializedBody),
-        getFrameDescriptor(), uninitializedBody);
+        getFrameDescriptor(), uninitializedBody, isAtomic);
+  }
+
+  @Override
+  public Invokable createAtomic() {
+    assert !isAtomic : "We should only ask non-atomic invokables for their atomic version";
+    ExpressionNode atomic = NodeUtil.cloneNode(uninitializedBody);
+    ExpressionNode uninitAtomic = NodeUtil.cloneNode(atomic);
+
+    return new Primitive(name, atomic, getFrameDescriptor(), uninitAtomic, true);
   }
 
   @Override

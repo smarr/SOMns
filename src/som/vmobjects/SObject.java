@@ -160,18 +160,114 @@ public abstract class SObject extends SObjectWithClass {
     public SObject cloneBasics() {
       return new SMutableObject(this);
     }
+
+    public SMutableObject shallowCopy() {
+      SMutableObject copy = new SMutableObject(true);
+      copy.primField1 = primField1;
+      copy.primField2 = primField2;
+      copy.primField3 = primField3;
+      copy.primField4 = primField4;
+      copy.primField5 = primField5;
+
+      copy.classGroup = classGroup;
+      copy.clazz      = clazz;
+
+      copy.objectLayout     = objectLayout;
+      copy.primitiveUsedMap = primitiveUsedMap;
+
+      copy.field1 = field1;
+      copy.field2 = field2;
+      copy.field3 = field3;
+      copy.field4 = field4;
+      copy.field5 = field5;
+
+      if (extensionPrimFields != null) {
+        copy.extensionPrimFields = extensionPrimFields.clone();
+      }
+
+      if (extensionObjFields != null) {
+        copy.extensionObjFields = extensionObjFields.clone();
+      }
+
+      return copy;
+    }
+
+    public boolean txEquals(final SMutableObject o) {
+      // TODO: we actually need to take the object layout into account,
+      //       iff we want to ignore class slot stuff...
+      //       might be easier to just handle those
+      return
+          o.primField1 == primField1 &&
+          o.primField2 == primField2 &&
+          o.primField3 == primField3 &&
+          o.primField4 == primField4 &&
+          o.primField5 == primField5 &&
+
+          o.classGroup == classGroup && // TODO: should not be necessary
+          o.clazz      == clazz      && // TODO: should not be necessary
+
+          o.primitiveUsedMap == primitiveUsedMap && // TODO: necessary?
+          Arrays.equals(o.extensionPrimFields, extensionPrimFields) &&
+
+          txMutObjLocEquals(o);
+    }
+
+    private boolean txMutObjLocEquals(final SMutableObject o) {
+      HashMap<SlotDefinition, StorageLocation> oLocs = o.objectLayout.getStorageLocations();
+      HashMap<SlotDefinition, StorageLocation> locs  = objectLayout.getStorageLocations();
+
+      for (Entry<SlotDefinition, StorageLocation> e : locs.entrySet()) {
+        // need to ignore mutators and class slots
+        if (e.getKey().getClass() == SlotDefinition.class &&
+            e.getValue().read(this) != oLocs.get(e.getKey()).read(o)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    public void txSet(final SMutableObject wc) {
+      primField1 = wc.primField1;
+      primField2 = wc.primField2;
+      primField3 = wc.primField3;
+      primField4 = wc.primField4;
+      primField5 = wc.primField5;
+
+      classGroup = wc.classGroup;  // TODO: should not be necessary
+      clazz      = wc.clazz;       // TODO: should not be necessary
+
+      objectLayout = wc.objectLayout;
+      primitiveUsedMap = wc.primitiveUsedMap;
+      extensionPrimFields = wc.extensionPrimFields;
+
+      txSetMutObjLoc(wc);
+    }
+
+    /** Only set the mutable slots. */
+    private void txSetMutObjLoc(final SMutableObject wc) {
+      HashMap<SlotDefinition, StorageLocation> oLocs = wc.objectLayout.getStorageLocations();
+
+      for (Entry<SlotDefinition, StorageLocation> e : oLocs.entrySet()) {
+        // need to ignore mutators and class slots
+        if (e.getKey().getClass() == SlotDefinition.class) {
+          Object val = e.getValue().read(wc);
+          this.writeSlot(e.getKey(), val);
+        }
+      }
+    }
   }
+
 
   // TODO: if there is the possibility that we can hint that a read is from a
   //       final field, we should reconsider removing these and store them in
   //       normal object fields
-  @CompilationFinal(dimensions = 0) private long[]   extensionPrimFields;
-  @CompilationFinal(dimensions = 0) private Object[] extensionObjFields;
+  @CompilationFinal(dimensions = 0) protected long[]   extensionPrimFields;
+  @CompilationFinal(dimensions = 0) protected Object[] extensionObjFields;
 
   // we manage the layout entirely in the class, but need to keep a copy here
   // to know in case the layout changed that we can update the instances lazily
-  @CompilationFinal private ObjectLayout objectLayout;
-  private int primitiveUsedMap;
+  @CompilationFinal protected ObjectLayout objectLayout;
+  protected int primitiveUsedMap;
 
   public SObject(final SClass instanceClass, final ClassFactory factory, final ObjectLayout layout) {
     super(instanceClass, factory);

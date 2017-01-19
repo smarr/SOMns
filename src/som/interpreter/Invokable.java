@@ -15,6 +15,9 @@ import som.vmobjects.SInvokable;
 public abstract class Invokable extends RootNode {
   protected final String name;
 
+  /** Marks this invokable as being used in a transactional context. */
+  protected final boolean isAtomic;
+
   @Child protected ExpressionNode  expressionOrSequence;
 
   protected final ExpressionNode uninitializedBody;
@@ -23,11 +26,13 @@ public abstract class Invokable extends RootNode {
       final SourceSection sourceSection,
       final FrameDescriptor frameDescriptor,
       final ExpressionNode expressionOrSequence,
-      final ExpressionNode uninitialized) {
+      final ExpressionNode uninitialized,
+      final boolean isAtomic) {
     super(SomLanguage.class, sourceSection, frameDescriptor);
     this.name = name;
     this.expressionOrSequence = expressionOrSequence;
     this.uninitializedBody    = uninitialized;
+    this.isAtomic             = isAtomic;
   }
 
   @Override
@@ -35,12 +40,23 @@ public abstract class Invokable extends RootNode {
     return name;
   }
 
+  public final boolean isAtomic() {
+    return isAtomic;
+  }
+
   @Override
   public Object execute(final VirtualFrame frame) {
     return expressionOrSequence.executeGeneric(frame);
   }
 
+  /** Inline invokable into the lexical context of the given builder. */
   public abstract ExpressionNode inline(final MethodBuilder builder, SInvokable outer);
+
+  /**
+   * Create a version of the invokable that can be used in a
+   * transactional context.
+   */
+  public abstract Invokable createAtomic();
 
   @Override
   public final boolean isCloningAllowed() {
