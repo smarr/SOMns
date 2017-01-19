@@ -57,6 +57,7 @@ public class SomTests {
         {"SystemTests",      null },
         {"BenchmarkHarnessTests", null },
         {"ActorTests",       null },
+        {"ProcessTests",     null },
         {"RegressionTests",  null },
         {"ThreadingTests",   null },
         {"TransactionTests", null },

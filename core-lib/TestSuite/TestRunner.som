@@ -92,6 +92,7 @@ class TestRunner usingPlatform: platform = (
                'SystemTests',
                'BenchmarkHarnessTests',
                'ActorTests',
+               'ProcessTests',
                'RegressionTests',
                'ThreadingTests',
                'TransactionTests',
