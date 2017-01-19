@@ -5,6 +5,7 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
@@ -103,6 +104,7 @@ public abstract class ChannelPrimitives {
     }
 
     @Specialization
+    @TruffleBoundary
     public final Object spawn(final SClass procCls, final SArray args) {
       if (!isVal.executeEvaluated(procCls)) {
         KernelObj.signalException("signalNotAValueWith:", procCls);
