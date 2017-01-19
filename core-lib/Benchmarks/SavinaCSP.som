@@ -1,0 +1,63 @@
+class SavinaCSP usingPlatform: platform andHarness: harness = Value (
+| private Benchmark = harness Benchmark.
+  private processes = platform processes.
+  private Channel   = processes Channel.
+  private Process   = processes Process.
+  private Array     = platform kernel Array.
+|)(
+  (* === Savina Microbenchmarks === *)
+
+  public class PingPong new: numPings = Benchmark <: Value (
+  | private NumPings = numPings.
+  |)(
+    class Ping new: cnt with: toPong and: fromPong = Process (
+    | private pingsLeft ::= cnt.
+      private toPong    = toPong.
+      private fromPong  = fromPong.
+    |)(
+      public run = (
+        [ pingsLeft > 0 ] whileTrue: [
+          toPong write: #ping.
+          pingsLeft := pingsLeft - 1.
+          fromPong read.
+        ].
+        toPong write: #stop.
+      )
+    )
+
+    class Pong new: done with: toPing and: fromPing = Process (
+    | private pongCount ::= 0.
+      private done     = done.
+      private toPing   = toPing.
+      private fromPing = fromPing.
+    |)(
+      public run = (
+        | msg |
+        [ fromPing read = #ping ] whileTrue: [
+          toPing write: #pong.
+          pongCount := pongCount + 1.
+        ].
+        done write: pongCount.
+      )
+    )
+
+    public benchmark = (
+      | chDone chToPing chToPong |
+      chDone   := Channel new.
+      chToPing := Channel new.
+      chToPong := Channel new.
+
+      processes spawn: Ping with: (Array with: NumPings with: chToPong out with: chToPing in).
+      processes spawn: Pong with: (Array with: chDone out with: chToPing out with: chToPong in).
+
+      ^ chDone in read
+    )
+
+    public verifyResult: result = (
+      ^ result = NumPings
+    )
+  ) : (
+    public newInstance = ( ^ self new: 2000 )
+    public setupVerifiedRun: run = ( run problemSize )
+  )
+)

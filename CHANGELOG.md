@@ -30,6 +30,8 @@
  - Added basic Communicating Sequential Processes support.
    See [PR #84](https://github.com/smarr/SOMns/pull/88).
 
+ - Added CSP version of PingPong benchmark.
+
 ## 0.1.0 - 2016-12-15
 
 This is the first tagged version. For previous changes, please refer to the
