@@ -14,7 +14,7 @@ import com.oracle.truffle.api.vm.PolyglotEngine.Value;
 import com.oracle.truffle.tck.TruffleTCK;
 
 import som.VM;
-import som.VMOptions;
+import som.VmOptions;
 import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vmobjects.SClass;
@@ -34,8 +34,8 @@ public class TruffleSomTCK extends TruffleTCK {
 
   @Override
   protected PolyglotEngine prepareVM(final PolyglotEngine.Builder preparedBuilder) throws Exception {
-    String[] args = new String [] {"--kernel", VMOptions.STANDARD_KERNEL_FILE,
-        "--platform", VMOptions.STANDARD_PLATFORM_FILE};
+    String[] args = new String [] {"--kernel", VmOptions.STANDARD_KERNEL_FILE,
+        "--platform", VmOptions.STANDARD_PLATFORM_FILE};
     preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
     preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
 

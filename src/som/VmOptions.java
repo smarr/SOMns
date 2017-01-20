@@ -5,7 +5,7 @@ import java.util.Arrays;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
 
-public class VMOptions {
+public class VmOptions {
   public static final String STANDARD_PLATFORM_FILE = "core-lib/Platform.som";
   public static final String STANDARD_KERNEL_FILE   = "core-lib/Kernel.som";
 
@@ -21,7 +21,7 @@ public class VMOptions {
   @CompilationFinal public boolean coverageEnabled;
   @CompilationFinal public String  coverageFile;
 
-  public VMOptions(final String[] args) {
+  public VmOptions(final String[] args) {
     this.args = processVmArguments(args);
     showUsage = args.length == 0;
     if (!VmSettings.INSTRUMENTATION &&
@@ -83,9 +83,9 @@ public class VMOptions {
     VM.println("VM arguments, need to come before any application arguments:");
     VM.println("");
     VM.println("  --platform file-name   SOM Platform module to be loaded");
-    VM.println("                         file-name defaults to '" + VMOptions.STANDARD_PLATFORM_FILE + "'");
+    VM.println("                         file-name defaults to '" + VmOptions.STANDARD_PLATFORM_FILE + "'");
     VM.println("  --kernel file-name     SOM Kernel module to be loaded");
-    VM.println("                         file-name defaults to '" + VMOptions.STANDARD_KERNEL_FILE + "'");
+    VM.println("                         file-name defaults to '" + VmOptions.STANDARD_KERNEL_FILE + "'");
     VM.println("");
     VM.println("  --debug                Run in Truffle Debugger/REPL");
     VM.println("  --web-debug            Start web debugger");

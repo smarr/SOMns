@@ -84,7 +84,7 @@ public final class VM {
 
   private int lastExitCode = 0;
   private volatile boolean shouldExit = false;
-  private final VMOptions options;
+  private final VmOptions options;
 
   @CompilationFinal
   private SObjectWithoutFields vmMirror;
@@ -124,12 +124,12 @@ public final class VM {
     vm = this;
 
     this.avoidExitForTesting = avoidExitForTesting;
-    options = new VMOptions(args);
+    options = new VmOptions(args);
     objectSystem = new ObjectSystem(new SourcecodeCompiler(), structuralProbe);
     objectSystem.loadKernelAndPlatform(options.platformFile, options.kernelFile);
 
     if (options.showUsage) {
-      VMOptions.printUsageAndExit();
+      VmOptions.printUsageAndExit();
     }
   }
 
@@ -275,7 +275,7 @@ public final class VM {
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS,   args);
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, false);
-    VMOptions vmOptions = new VMOptions(args);
+    VmOptions vmOptions = new VmOptions(args);
 
     if (vmOptions.debuggerEnabled) {
       startDebugger(builder);
@@ -295,7 +295,7 @@ public final class VM {
 
 
   private static void startExecution(final Builder builder,
-      final VMOptions vmOptions) {
+      final VmOptions vmOptions) {
     engine = builder.build();
 
     Map<String, Instrument> instruments = engine.getInstruments();

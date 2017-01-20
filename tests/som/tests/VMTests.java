@@ -8,7 +8,7 @@ import static org.junit.Assert.assertTrue;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import som.VMOptions;
+import som.VmOptions;
 import som.VmSettings;
 
 
@@ -20,14 +20,14 @@ public class VMTests {
 
   @Test
   public void testProcessArgumentsNothing() {
-    VMOptions opts = new VMOptions(new String[0]);
-    assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
+    VmOptions opts = new VmOptions(new String[0]);
+    assertEquals(opts.platformFile, VmOptions.STANDARD_PLATFORM_FILE);
     assertArrayEquals(opts.args, new String[0]);
   }
 
   @Test
   public void testProcessArgumentsWithPlatformFile() {
-    VMOptions opts = new VMOptions(
+    VmOptions opts = new VmOptions(
         new String[] {"--platform", "foo.som"});
     assertEquals(opts.platformFile, "foo.som");
     assertArrayEquals(opts.args, new String[0]);
@@ -35,7 +35,7 @@ public class VMTests {
 
   @Test
   public void testProcessArgumentsWithKernelFile() {
-    VMOptions opts = new VMOptions(
+    VmOptions opts = new VmOptions(
         new String[] {"--kernel", "foo.som"});
     assertEquals(opts.kernelFile, "foo.som");
     assertArrayEquals(opts.args, new String[0]);
@@ -43,34 +43,34 @@ public class VMTests {
 
   @Test
   public void testProcessArgumentsWithAppFile() {
-    VMOptions opts = new VMOptions(
+    VmOptions opts = new VmOptions(
         new String[] {"app.som"});
-    assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
+    assertEquals(opts.platformFile, VmOptions.STANDARD_PLATFORM_FILE);
     assertArrayEquals(opts.args, new String[] {"app.som"});
   }
 
   @Test
   public void testProcessArgumentsWithAppFileAndArgs() {
-    VMOptions opts = new VMOptions(
+    VmOptions opts = new VmOptions(
         new String[] {"app.som", "Foo", "1", "2"});
-    assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
+    assertEquals(opts.platformFile, VmOptions.STANDARD_PLATFORM_FILE);
     assertArrayEquals(opts.args, new String[] {"app.som", "Foo", "1", "2"});
   }
 
   @Test
   public void testProfileFlag() {
-    VMOptions opts = new VMOptions(
+    VmOptions opts = new VmOptions(
         new String[] {"--profile"});
-    assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
+    assertEquals(opts.platformFile, VmOptions.STANDARD_PLATFORM_FILE);
     assertTrue(opts.profilingEnabled);
     assertArrayEquals(opts.args, new String[0]);
   }
 
   @Test
   public void testDebugFlag() {
-    VMOptions opts = new VMOptions(
+    VmOptions opts = new VmOptions(
         new String[] {"--debug"});
-    assertEquals(opts.platformFile, VMOptions.STANDARD_PLATFORM_FILE);
+    assertEquals(opts.platformFile, VmOptions.STANDARD_PLATFORM_FILE);
     assertTrue(opts.debuggerEnabled);
     assertFalse(opts.profilingEnabled);
     assertArrayEquals(opts.args, new String[0]);
