@@ -43,9 +43,9 @@ the specifications are as follows:
    category names are optional instead of being mandatory.
 
  - setter send syntax is still based on the classic Smalltalk `:=`
- 
+
  - local variables in methods do not yet support the full slotDeclartion style
- 
+
  - as in SOM method chains are not supported
 
  - as in SOM, blocks can only have 3 arguments (counting `self`)
@@ -57,9 +57,9 @@ To checkout the code:
 
     git clone https://github.com/smarr/SOMns.git
 
-Then, TruffleSOM can be build with Ant:
+Then, SOMns can be build with Ant:
 
-    ant jar
+    ant
 
 Afterwards, the simple Hello World program is executed with:
 
@@ -73,7 +73,7 @@ Setup Development Environment with Eclipse and VS Code
 
 1. Install JDK 1.8 and Eclipse Mars (or later)
 
-2. Download the project from Github  
+2. Download the project from Github
    `git clone https://github.com/smarr/SOMns`
 
 3. Run `ant` on the command line, or via Eclipse, to make sure that all
@@ -89,7 +89,7 @@ cd libs/truffle/
 5. Import SOMns project and the Truffle projects into Eclipse
 
 6. For debugging the interpreter, create a run configuration with the
-   Mandelbrot benchmark. 
+   Mandelbrot benchmark.
    In option Run Configurations go to Java Application/SOMns and select tab
    arguments, enter:
 
