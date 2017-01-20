@@ -11,7 +11,7 @@ pushd `dirname $0` > /dev/null
 SCRIPT_PATH=`pwd`
 popd > /dev/null
 
-SOM_DIR=$SCRIPT_PATH/../../..
+SOM_DIR=$SCRIPT_PATH/../..
 
 ## create folder for new results
 mkdir -p $SCRIPT_PATH/results/
