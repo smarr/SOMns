@@ -14,7 +14,6 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
-import som.VmSettings;
 import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.EventualSendNodeFactory.SendNodeGen;
@@ -27,6 +26,7 @@ import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.SOMNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
+import som.vm.VmSettings;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;

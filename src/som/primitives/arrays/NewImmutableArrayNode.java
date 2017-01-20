@@ -7,7 +7,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VmSettings;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
@@ -16,6 +15,7 @@ import som.interpreter.nodes.specialized.SomLoop;
 import som.primitives.ObjectPrims.IsValue;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
 import som.primitives.Primitive;
+import som.vm.VmSettings;
 import som.vm.Primitives.Specializer;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray.SImmutableArray;

@@ -35,6 +35,8 @@ import som.primitives.processes.ChannelPrimitives;
 import som.primitives.threading.ThreadingModule;
 import som.vm.ObjectSystem;
 import som.vm.Primitives;
+import som.vm.VmOptions;
+import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.actors.ActorExecutionTrace;

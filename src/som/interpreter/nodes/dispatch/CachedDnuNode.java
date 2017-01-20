@@ -8,12 +8,12 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 import som.VM;
-import som.VmSettings;
 import som.compiler.AccessModifier;
 import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.primitives.SystemPrims.PrintStackTracePrim;
 import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;

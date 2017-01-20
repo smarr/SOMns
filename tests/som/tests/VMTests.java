@@ -8,8 +8,8 @@ import static org.junit.Assert.assertTrue;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import som.VmOptions;
-import som.VmSettings;
+import som.vm.VmOptions;
+import som.vm.VmSettings;
 
 
 public class VMTests {

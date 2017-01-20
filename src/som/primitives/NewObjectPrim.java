@@ -6,12 +6,12 @@ import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VmSettings;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.nodes.ISpecialSend;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
+import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject.SImmutableObject;

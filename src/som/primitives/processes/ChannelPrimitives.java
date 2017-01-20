@@ -10,7 +10,6 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VmSettings;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.actors.Actor.UncaughtExceptions;
@@ -25,6 +24,7 @@ import som.primitives.Primitive;
 import som.primitives.arrays.ToArgumentsArrayNode;
 import som.primitives.arrays.ToArgumentsArrayNodeFactory;
 import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;

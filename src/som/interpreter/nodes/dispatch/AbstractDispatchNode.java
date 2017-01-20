@@ -5,8 +5,8 @@ import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VmSettings;
 import som.instrumentation.DispatchNodeWrapper;
+import som.vm.VmSettings;
 
 
 @Instrumentable(factory = DispatchNodeWrapper.class)

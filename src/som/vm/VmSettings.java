@@ -1,4 +1,4 @@
-package som;
+package som.vm;
 
 import java.util.Arrays;
 import java.util.List;

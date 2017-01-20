@@ -7,10 +7,10 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
-import som.VmSettings;
 import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.primitives.SystemPrims.PrintStackTracePrim;
+import som.vm.VmSettings;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;

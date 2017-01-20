@@ -7,7 +7,6 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VmSettings;
 import som.compiler.AccessModifier;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode;
@@ -17,6 +16,7 @@ import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.dispatch.GenericDispatchNode;
 import som.primitives.arrays.ToArgumentsArrayNode;
 import som.primitives.arrays.ToArgumentsArrayNodeFactory;
+import som.vm.VmSettings;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;

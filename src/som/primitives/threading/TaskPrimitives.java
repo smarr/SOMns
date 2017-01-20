@@ -9,13 +9,13 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VmSettings;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.Primitive;
 import som.primitives.arrays.ToArgumentsArrayNode;
 import som.primitives.arrays.ToArgumentsArrayNodeFactory;
+import som.vm.VmSettings;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 

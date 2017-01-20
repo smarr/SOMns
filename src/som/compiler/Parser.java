@@ -76,7 +76,6 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
-import som.VmSettings;
 import som.compiler.Lexer.Peek;
 import som.compiler.MethodBuilder.MethodDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionError;
@@ -105,6 +104,7 @@ import som.interpreter.nodes.specialized.IntTimesRepeatLiteralNodeGen;
 import som.interpreter.nodes.specialized.IntToDoInlinedLiteralsNodeGen;
 import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
 import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;

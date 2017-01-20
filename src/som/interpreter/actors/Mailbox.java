@@ -3,7 +3,7 @@ package som.interpreter.actors;
 import java.util.ArrayList;
 import java.util.List;
 
-import som.VmSettings;
+import som.vm.VmSettings;
 import tools.ObjectBuffer;
 
 public class Mailbox extends ObjectBuffer<EventualMessage>{

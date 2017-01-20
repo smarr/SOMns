@@ -7,10 +7,10 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
-import som.VmSettings;
 import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 
 

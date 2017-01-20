@@ -1,8 +1,10 @@
-package som;
+package som.vm;
 
 import java.util.Arrays;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+
+import som.VM;
 
 
 public class VmOptions {

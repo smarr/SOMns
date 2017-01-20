@@ -8,8 +8,8 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 import som.VM;
-import som.VmSettings;
 import som.instrumentation.InstrumentableDirectCallNode;
+import som.vm.VmSettings;
 
 
 public final class CachedDispatchNode extends AbstractDispatchNode {

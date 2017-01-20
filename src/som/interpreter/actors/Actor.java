@@ -13,9 +13,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import som.VM;
-import som.VmSettings;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.IsValue;
+import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;

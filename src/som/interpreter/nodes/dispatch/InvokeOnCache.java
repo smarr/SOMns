@@ -8,7 +8,7 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 
-import som.VmSettings;
+import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 
 

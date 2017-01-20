@@ -22,7 +22,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.sun.management.GarbageCollectionNotificationInfo;
 
 import som.VM;
-import som.VmSettings;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
@@ -33,6 +32,7 @@ import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.ObjectSystem;
+import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;

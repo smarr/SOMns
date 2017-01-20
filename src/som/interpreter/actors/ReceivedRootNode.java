@@ -8,8 +8,8 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
-import som.VmSettings;
 import som.interpreter.actors.SPromise.SResolver;
+import som.vm.VmSettings;
 import tools.debugger.WebDebugger;
 
 

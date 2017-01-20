@@ -5,7 +5,6 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VmSettings;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
@@ -13,6 +12,7 @@ import som.primitives.ObjectPrims.IsValue;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
 import som.primitives.Primitive;
 import som.primitives.actors.PromisePrims.IsActorModule;
+import som.vm.VmSettings;
 import tools.actors.ActorExecutionTrace;
 
 

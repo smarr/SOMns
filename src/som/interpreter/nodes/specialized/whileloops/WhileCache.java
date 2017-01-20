@@ -7,10 +7,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VmSettings;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
+import som.vm.VmSettings;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;

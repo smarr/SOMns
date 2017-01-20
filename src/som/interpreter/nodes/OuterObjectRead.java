@@ -12,7 +12,6 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VmSettings;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
@@ -24,6 +23,7 @@ import som.primitives.actors.ActorClasses;
 import som.primitives.processes.ChannelPrimitives;
 import som.primitives.threading.TaskPrimitives.SomForkJoinTask;
 import som.primitives.threading.ThreadingModule;
+import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;

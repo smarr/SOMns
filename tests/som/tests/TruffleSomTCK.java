@@ -14,9 +14,9 @@ import com.oracle.truffle.api.vm.PolyglotEngine.Value;
 import com.oracle.truffle.tck.TruffleTCK;
 
 import som.VM;
-import som.VmOptions;
 import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
+import som.vm.VmOptions;
 import som.vmobjects.SClass;
 
 

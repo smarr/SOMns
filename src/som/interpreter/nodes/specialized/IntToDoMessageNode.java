@@ -9,11 +9,11 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VmSettings;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.specialized.IntToDoMessageNode.ToDoSplzr;
 import som.primitives.Primitive;
+import som.vm.VmSettings;
 import som.vm.Primitives.Specializer;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;

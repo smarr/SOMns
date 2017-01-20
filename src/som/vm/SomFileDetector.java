@@ -1,4 +1,4 @@
-package som;
+package som.vm;
 
 import java.io.IOException;
 import java.nio.file.Path;

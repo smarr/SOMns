@@ -7,8 +7,8 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
-import som.VmSettings;
 import som.instrumentation.InstrumentableDirectCallNode;
+import som.vm.VmSettings;
 
 
 /**

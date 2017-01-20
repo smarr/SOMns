@@ -21,8 +21,8 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.net.httpserver.HttpServer;
 
-import som.VmSettings;
 import som.interpreter.actors.Actor;
+import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.SourceCoordinate.TaggedSourceCoordinate;
