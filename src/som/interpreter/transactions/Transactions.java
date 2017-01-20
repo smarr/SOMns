@@ -2,6 +2,8 @@ package som.interpreter.transactions;
 
 import java.util.IdentityHashMap;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SObject.SMutableObject;
 
@@ -186,12 +188,13 @@ public final class Transactions {
     }
   }
 
-
+  @TruffleBoundary
   public static SMutableObject workingCopy(final SMutableObject rcvr) {
     Transactions t = transactions.get();
     return t.getWorkingCopy(rcvr);
   }
 
+  @TruffleBoundary
   public static SMutableArray workingCopy(final SMutableArray rcvr) {
     Transactions t = transactions.get();
     return t.getWorkingCopy(rcvr);
