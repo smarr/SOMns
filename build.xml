@@ -55,7 +55,13 @@
             <arg value="build"/>
         </exec>
     </target>
-    
+
+    <target name="ideinit">
+        <exec executable="../mx/mx" dir="${truffle.dir}">
+            <arg value="eclipseinit"/>
+        </exec>
+    </target>
+
     <target name="libs" depends="truffle-libs" unless="skip.libs">
         <get src="https://dl.bintray.com/smarr/SOM/somns-deps-${somns-deps.version}.jar"
             usetimestamp="true"
