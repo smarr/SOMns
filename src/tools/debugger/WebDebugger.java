@@ -19,7 +19,6 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import gson.ClassHierarchyAdapterFactory;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.primitives.threading.ThreadPrimitives.SomThread;
 import tools.debugger.frontend.Suspension;

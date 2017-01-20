@@ -1,4 +1,4 @@
-package gson;
+package tools.debugger;
 
 import java.io.IOException;
 import java.util.LinkedHashMap;
