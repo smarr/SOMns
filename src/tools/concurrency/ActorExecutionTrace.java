@@ -10,6 +10,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.ArrayBlockingQueue;
 
@@ -35,6 +36,7 @@ import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
+import tools.ObjectBuffer;
 import tools.debugger.FrontendConnector;
 
 public class ActorExecutionTrace {
@@ -281,8 +283,8 @@ public class ActorExecutionTrace {
   }
 
   public static void mailboxExecuted(final EventualMessage m,
-      final List<EventualMessage> moreCurrent, final long baseMessageId, final long sendTS,
-      final List<Long> moreSendTS, final long[] execTS, final Actor actor) {
+      final ObjectBuffer<EventualMessage> moreCurrent, final long baseMessageId, final long sendTS,
+      final ObjectBuffer<Long> moreSendTS, final long[] execTS, final Actor actor) {
     if (!VmSettings.ACTOR_TRACING) {
       return;
     }
@@ -325,6 +327,11 @@ public class ActorExecutionTrace {
       idx++;
 
       if (moreCurrent != null) {
+        Iterator<Long> it = null;
+        if (VmSettings.MESSAGE_TIMESTAMPS) {
+          assert moreSendTS != null && moreCurrent.size() == moreSendTS.size();
+          it = moreSendTS.iterator();
+        }
         for (EventualMessage em : moreCurrent) {
           if (b.remaining() < (MESSAGE_SIZE + em.getArgs().length * PARAM_SIZE)) {
             swapBuffer(t);
@@ -339,7 +346,7 @@ public class ActorExecutionTrace {
 
           if (VmSettings.MESSAGE_TIMESTAMPS) {
             b.putLong(execTS[idx]);
-            b.putLong(moreSendTS.get(idx - 1));
+            b.putLong(it.next());
           }
 
           if (VmSettings.MESSAGE_PARAMETERS) {

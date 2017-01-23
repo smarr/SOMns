@@ -397,6 +397,7 @@ class Validation usingPlatform: platform andHarness: harness = Value (
       private numExitedPhilosophers ::= 0.
       private resolver = resolver.
       private abortion ::= false.
+      private resolved ::= false.
     |)(
       public hungry: philosopher id: leftForkId = (
         | rightForkId |
@@ -426,13 +427,16 @@ class Validation usingPlatform: platform andHarness: harness = Value (
           | forksTaken |
           forksTaken := 0.
           forks do: [:f | f ifTrue: [ forksTaken := forksTaken + 1 ] ].
-
-          resolver resolve: 0 ]
+          resolved ifFalse:[
+            resolved := true.
+            resolver resolve: 0]]
       )
 
       public abort = (
         abortion := true.
-        resolver resolve: 1.
+        resolved ifFalse:[
+          resolved := true.
+          resolver resolve: 1]
       )
     )
     
