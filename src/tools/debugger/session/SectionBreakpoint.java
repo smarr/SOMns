@@ -37,7 +37,7 @@ public abstract class SectionBreakpoint extends BreakpointInfo {
       return false;
     }
     SectionBreakpoint o = (SectionBreakpoint) obj;
-    return o.equals(this);
+    return coord.equals(o.coord);
   }
 
   @Override

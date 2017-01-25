@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2016 Stefan Marr
+ * Copyright (c) 2016-2017 Stefan Marr
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,17 +27,10 @@ import com.oracle.truffle.api.source.SourceSection;
 public abstract class Tags {
   private Tags() { }
 
-  public static Class<?>[] getAll() {
-    return new Class<?>[] {KeywordTag.class, LiteralTag.class, CommentTag.class,
-        IdentifierTag.class, ArgumentTag.class, LocalVariableTag.class,
-        StatementSeparatorTag.class, DelimiterOpeningTag.class,
-        DelimiterClosingTag.class};
-  }
-
   /**
    * Marks keywords or keyword-like language constructs.
    * Elements that are not preserved in the AST should reported via
-   * {@link Highlight#reportNonAstSyntax(Class, SourceSection)}.
+   * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
   public final class KeywordTag extends Tags {
     private KeywordTag() { }
@@ -53,7 +46,7 @@ public abstract class Tags {
   /**
    * Marks comments.
    * Elements that are not preserved in the AST should reported via
-   * {@link Highlight#reportNonAstSyntax(Class, SourceSection)}.
+   * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
   public final class CommentTag extends Tags {
     private CommentTag() { }
@@ -63,7 +56,7 @@ public abstract class Tags {
    * Marks identifiers. Currently only used for class names.
    * TODO: figure out whether this is really useful.
    * Elements that are not preserved in the AST should reported via
-   * {@link Highlight#reportNonAstSyntax(Class, SourceSection)}.
+   * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
   public final class IdentifierTag extends Tags {
     private IdentifierTag() { }
@@ -72,7 +65,7 @@ public abstract class Tags {
   /**
    * Marks formal and actual arguments.
    * Formal arguments that are not preserved in the AST should reported via
-   * {@link Highlight#reportNonAstSyntax(Class, SourceSection)}.
+   * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
   public final class ArgumentTag extends Tags {
     private ArgumentTag() { }
@@ -81,7 +74,7 @@ public abstract class Tags {
   /**
    * Marks local variables.
    * Variable declarations that are not part of the AST should be reported via
-   * {@link Highlight#reportNonAstSyntax(Class, SourceSection)}.
+   * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
   public final class LocalVariableTag extends Tags {
     private LocalVariableTag() { }
@@ -90,7 +83,7 @@ public abstract class Tags {
   /**
    * Marks line endings like ';', or '.'.
    * Elements that are not preserved in the AST should reported via
-   * {@link Highlight#reportNonAstSyntax(Class, SourceSection)}.
+   * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
   public final class StatementSeparatorTag extends Tags {
     private StatementSeparatorTag() { }
@@ -99,7 +92,7 @@ public abstract class Tags {
   /**
    * Marks opening delimiters such as parentheses.
    * Elements that are not preserved in the AST should reported via
-   * {@link Highlight#reportNonAstSyntax(Class, SourceSection)}.
+   * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
   public final class DelimiterOpeningTag extends Tags {
     private DelimiterOpeningTag() { }
@@ -108,7 +101,7 @@ public abstract class Tags {
   /**
    * Marks closing delimiters such as parentheses.
    * Elements that are not preserved in the AST should reported via
-   * {@link Highlight#reportNonAstSyntax(Class, SourceSection)}.
+   * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
   public final class DelimiterClosingTag extends Tags {
     private DelimiterClosingTag() { }

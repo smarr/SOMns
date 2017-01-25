@@ -62,7 +62,7 @@ class HandleFirstSuspendEvent {
 
   constructor() {
     this.firstSuspendCaptured = false;
-    this.suspendP = new Promise<SuspendEventMessage>((resolve, reject) => {
+    this.suspendP = new Promise<SuspendEventMessage>((resolve, _reject) => {
       this.getSuspendEvent = (event: OnMessageEvent) => {
         if (this.firstSuspendCaptured) { return; }
         const data = JSON.parse(event.data);
@@ -85,7 +85,7 @@ function closeConnection(connection: SomConnection, done: MochaDone) {
     return;
   }
   connection.somProc.kill();
-  connection.somProc.on('exit', code => {
+  connection.somProc.on('exit', _code => {
     connection.closed = true;
     // wait until process is shut down, to make sure all ports are closed
     done();
@@ -166,7 +166,7 @@ describe('Basic Project Setup', () => {
     it('should show help', done => {
       let sawOutput = false;
       const somProc = spawn(som, ['-h']);
-      somProc.stdout.on('data', (data) => { sawOutput = true; });
+      somProc.stdout.on('data', (_data) => { sawOutput = true; });
       somProc.on('exit', (code) => {
         expect(sawOutput).to.be.true;
         expect(code).to.equal(0);
@@ -223,7 +223,7 @@ describe('Basic Protocol', function() {
     // Capture first source message for testing
     let firstSourceCaptured = false;
     let getSourceData: (event: OnMessageEvent) => void;
-    let sourceP = new Promise<SourceMessage>((resolve, reject) => {
+    let sourceP = new Promise<SourceMessage>((resolve, _reject) => {
       getSourceData = (event: OnMessageEvent) => {
         if (firstSourceCaptured) { return; }
         const data = JSON.parse(event.data);
@@ -457,7 +457,7 @@ describe('Basic Protocol', function() {
     const numSuspends = 4;
     const resolves = [];
     for (let i = 0; i < numSuspends; i++) {
-      suspendPs.push(new Promise<SuspendEventMessage>((res, rej) => resolves.push(res)));
+      suspendPs.push(new Promise<SuspendEventMessage>((res, _rej) => resolves.push(res)));
     }
 
     let capturedEvents = 0;
@@ -487,7 +487,7 @@ describe('Basic Protocol', function() {
     }));
 
     it('should single stepping', onlyWithConnection(() => {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve, _reject) => {
         suspendPs[0].then(msg => {
           const step : StepMessage = {action: "stepInto", suspendEvent: msg.id};
           connectionP.then(con => {
@@ -519,7 +519,7 @@ describe('Basic Protocol', function() {
 
     it('should be possible to disable a line breakpoint',
         onlyWithConnection(() => {
-      return new Promise((resolve, reject) => {
+      return new Promise((resolve, _reject) => {
         suspendPs[2].then(msgAfterStep => {
           connectionP.then(con => {
             const lbp22 = createLineBreakpointData(pingPongUri, 23, true);

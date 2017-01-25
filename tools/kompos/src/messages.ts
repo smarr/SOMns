@@ -60,7 +60,7 @@ export interface SourceMessage {
 
 export interface SuspendEventMessage {
   type:     "suspendEvent";
-  
+
   /** id of SuspendEvent, to be recognized in backend. */
   id:        string;
   sourceUri: string;
@@ -70,7 +70,7 @@ export interface SuspendEventMessage {
 }
 
 export type StoppedReason = "step" | "breakpoint" | "exception" | "pause";
-export type ActivityType  = "Actor"; 
+export type ActivityType  = "Actor";
 
 export interface StoppedMessage {
   type: "StoppedEvent";
@@ -79,7 +79,7 @@ export interface StoppedMessage {
   activityId:        number;
   activityType:      ActivityType;
   text:              string;
-  allThreadsStopped: boolean; 
+  allThreadsStopped: boolean;
 }
 
 export interface UpdateSourceSections {
@@ -139,7 +139,7 @@ export function createSectionBreakpointData(sourceUri: string, line: number,
       startLine:   line,
       startColumn: column,
       charLength:  length }};
-    
+
   return breakpoint;
 }
 
@@ -161,7 +161,7 @@ interface UpdateBreakpoint {
   breakpoint: BreakpointData;
 }
 
-export type StepType = "stepInto" | "stepOver" | "return" | "resume" | "stop"; 
+export type StepType = "stepInto" | "stepOver" | "return" | "resume" | "stop";
 
 export interface StepMessage {
   action: StepType;
@@ -183,7 +183,7 @@ export interface StackTraceRequest {
 export interface StackFrame {
   /** Id for the frame, unique across all threads. */
   id: number;
-  
+
   /** Name of the frame, typically a method name. */
   name: string;
 
@@ -228,7 +228,7 @@ export interface Scope {
 
   /** If true, the number of variables in this scope is large or expensive to retrieve. */
   expensive: boolean;
-} 
+}
 
 export interface ScopesResponse {
   type: "ScopesResponse";
@@ -253,7 +253,7 @@ export interface VariablesResponse {
 export interface Variable {
   name: string;
   value: string;
-  
+
   /**
    * If variablesReference is > 0, the variable is structured and its
    * children can be retrieved by passing variablesReference to the

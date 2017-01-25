@@ -1,8 +1,7 @@
 /* jshint -W097 */
 'use strict';
 
-import {IdMap, SymbolMessage} from './messages';
-import {dbgLog} from './source';
+import {SymbolMessage} from './messages';
 import * as d3 from 'd3';
 import {HistoryData} from './history-data';
 
@@ -32,7 +31,7 @@ export function displayMessageHistory() {
   //  - links are always source < target; edge directions are set by 'left' and 'right'.
 
   nodes = data.getActorNodes();
-  
+
   links = data.getLinks() ;
 
   // init D3 force layout
@@ -59,7 +58,7 @@ export function displayMessageHistory() {
     .append('svg:path')
     .attr('d', 'M0,-5L10,0L0,5')
     .attr('fill', '#000');
-  
+
   svg.append('svg:defs').append('svg:marker')
     .attr('id', 'start-arrow')
     .attr('viewBox', '0 -5 10 10')
