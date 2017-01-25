@@ -162,6 +162,7 @@ export class Controller {
 
   resumeExecution() {
     if (!this.dbg.isSuspended()) { return; }
+    this.dbg.setResumed();
     this.vmConnection.sendDebuggerAction('resume', this.dbg.lastSuspendEventId);
     this.view.onContinueExecution();
   }
