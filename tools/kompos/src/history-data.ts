@@ -1,8 +1,8 @@
 /* jshint -W097 */
-'use strict';
+"use strict";
 
-import {IdMap} from './messages';
-import {dbgLog} from './source';
+import {IdMap} from "./messages";
+import {dbgLog} from "./source";
 
 var horizontalDistance = 100,
   verticalDistance = 100;
@@ -87,9 +87,9 @@ export class HistoryData {
       i++;
       switch(typ){
         case 1:
-          var aid = (data.getInt32(i+4) + ':' + data.getInt32(i));
+          var aid = (data.getInt32(i + 4) + ":" + data.getInt32(i));
           //8 byte causal message id
-          var type:number = data.getInt16(i+16); //type
+          var type: number = data.getInt16(i + 16); //type
           this.addActor(aid, this.strings[type]);
           i += 18;
           break;
@@ -111,7 +111,7 @@ export class HistoryData {
           break;
         case 5:
           //8 byte message base id
-          this.currentReceiver = (data.getInt32(i+12) + ':' + data.getInt32(i+8)); //receiver id
+          this.currentReceiver = (data.getInt32(i + 12) + ":" + data.getInt32(i + 8)); //receiver id
           i += 16;
           break;
         case 6:
@@ -121,17 +121,17 @@ export class HistoryData {
           break;
         case 7:
           //8 byte message base id
-          this.currentReceiver = (data.getInt32(i+12) + ':' + data.getInt32(i+8)); //receiver id
-          data.getInt16(i+16); //id offset
+          this.currentReceiver = (data.getInt32(i + 12) + ":" + data.getInt32(i + 8)); //receiver id
+          data.getInt16(i + 16); //id offset
           i += 18;
           break;
         case 8:
-          var sender = (data.getInt32(i+4) + ':' + data.getInt32(i)); //sender id
+          var sender = (data.getInt32(i + 4) + ":" + data.getInt32(i)); //sender id
           //8 byte causal message id
-          data.getInt16(i+16); //selector
+          data.getInt16(i + 16); //selector
           //8byte execution start
           //8byte send time
-          var numParam = data.getInt8(i+34);//parameter count
+          var numParam = data.getInt8(i + 34); //parameter count
           i += 35;
           for (var k = 0; k < numParam; k++) {
             i += readParameter(data, i);
@@ -140,12 +140,12 @@ export class HistoryData {
           break;
         case 9:
           //8 byte promise id
-          sender = (data.getInt32(i+12) + ':' + data.getInt32(i+8)); //sender id
+          sender = (data.getInt32(i + 12) + ":" + data.getInt32(i + 8)); //sender id
           //8 byte causal message id
-          data.getInt16(i+24); //selector
+          data.getInt16(i + 24); //selector
           //8byte execution start
           //8byte send time
-          numParam = data.getInt8(i+42);//parameter count
+          numParam = data.getInt8(i + 42); //parameter count
           i += 43;
           for (var k = 0; k < numParam; k++) {
             i += readParameter(data, i);
@@ -157,7 +157,7 @@ export class HistoryData {
   }
 }
 
-function readParameter(dv:DataView, offset:number): number {
+function readParameter(dv: DataView, offset: number): number {
   var paramType = dv.getInt8(offset);
   switch(paramType){
     case 0: //false

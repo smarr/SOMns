@@ -1,6 +1,6 @@
 import {Source, SourceCoordinate, AbstractBreakpointData, LineBreakpointData,
   SectionBreakpointData, SectionBreakpointType,
-  createLineBreakpointData, createSectionBreakpointData} from './messages';
+  createLineBreakpointData, createSectionBreakpointData} from "./messages";
 
 export type Breakpoint = LineBreakpoint | MessageBreakpoint;
 
@@ -19,7 +19,7 @@ abstract class AbstractBreakpoint<T extends AbstractBreakpointData> {
    * @return a unique id for the breakpoint, to be used in the view as HTML id
    */
   getId() {
-    return 'bp:';
+    return "bp:";
   }
 
   toggle() {
@@ -43,7 +43,7 @@ export class LineBreakpoint extends AbstractBreakpoint<LineBreakpointData> {
   }
 
   getId(): string {
-    return super.getId() + this.sourceId + ':' + this.data.line;
+    return super.getId() + this.sourceId + ":" + this.data.line;
   }
 }
 

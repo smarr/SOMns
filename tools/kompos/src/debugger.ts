@@ -1,11 +1,11 @@
 import {IdMap, Source, SourceCoordinate, SourceMessage, TaggedSourceCoordinate,
-  getSectionId} from './messages';
-import {Breakpoint} from './breakpoints';
+  getSectionId} from "./messages";
+import {Breakpoint} from "./breakpoints";
 
 export function isRelevant(sc: TaggedSourceCoordinate) {
   // use ExpressionBreakpoint tag, since it is implied by ChannelRead,
   // ChannelWrite, and EventualMessageSend
-  return -1 !== sc.tags.indexOf('ExpressionBreakpoint');
+  return -1 !== sc.tags.indexOf("ExpressionBreakpoint");
 }
 
 export class Debugger {
@@ -42,7 +42,7 @@ export class Debugger {
 
   getSourceId(uri: string): string {
     if (!(uri in this.uriToSourceId)) {
-      this.uriToSourceId[uri] = 's' + Object.keys(this.uriToSourceId).length;
+      this.uriToSourceId[uri] = "s" + Object.keys(this.uriToSourceId).length;
     }
     return this.uriToSourceId[uri];
   }

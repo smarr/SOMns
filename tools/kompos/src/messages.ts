@@ -13,7 +13,7 @@ export interface Source {
 }
 
 export function getSectionId(sourceId: string, section: SourceCoordinate) {
-  return sourceId + ':' + section.startLine + ':' + section.startColumn + ':' +
+  return sourceId + ":" + section.startLine + ":" + section.startColumn + ":" +
     section.charLength;
 }
 

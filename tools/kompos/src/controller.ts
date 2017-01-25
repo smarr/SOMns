@@ -1,15 +1,15 @@
 /* jshint -W097 */
 "use strict";
 
-import {Debugger}     from './debugger';
+import {Debugger}     from "./debugger";
 import {SourceMessage, SuspendEventMessage, SymbolMessage,
-  SectionBreakpointType} from './messages';
+  SectionBreakpointType} from "./messages";
 import {LineBreakpoint, MessageBreakpoint,
-  createLineBreakpoint, createMsgBreakpoint} from './breakpoints';
-import {dbgLog}       from './source';
-import {displayMessageHistory, resetLinks, updateStrings, updateData} from './visualizations';
-import {View}         from './view';
-import {VmConnection} from './vm-connection';
+  createLineBreakpoint, createMsgBreakpoint} from "./breakpoints";
+import {dbgLog}       from "./source";
+import {displayMessageHistory, resetLinks, updateStrings, updateData} from "./visualizations";
+import {View}         from "./view";
+import {VmConnection} from "./vm-connection";
 
 /**
  * The controller binds the domain model and the views, and mediates their
@@ -162,7 +162,7 @@ export class Controller {
   resumeExecution() {
     if (!this.dbg.isSuspended()) { return; }
     this.dbg.setResumed();
-    this.vmConnection.sendDebuggerAction('resume', this.dbg.lastSuspendEventId);
+    this.vmConnection.sendDebuggerAction("resume", this.dbg.lastSuspendEventId);
     this.view.onContinueExecution();
   }
 
@@ -179,20 +179,20 @@ export class Controller {
     if (!this.dbg.isSuspended()) { return; }
     this.dbg.setResumed();
     this.view.onContinueExecution();
-    this.vmConnection.sendDebuggerAction('stepInto', this.dbg.lastSuspendEventId);
+    this.vmConnection.sendDebuggerAction("stepInto", this.dbg.lastSuspendEventId);
   }
 
   stepOver() {
     if (!this.dbg.isSuspended()) { return; }
     this.dbg.setResumed();
     this.view.onContinueExecution();
-    this.vmConnection.sendDebuggerAction('stepOver', this.dbg.lastSuspendEventId);
+    this.vmConnection.sendDebuggerAction("stepOver", this.dbg.lastSuspendEventId);
   }
 
   returnFromExecution() {
     if (!this.dbg.isSuspended()) { return; }
     this.dbg.setResumed();
     this.view.onContinueExecution();
-    this.vmConnection.sendDebuggerAction('return', this.dbg.lastSuspendEventId);
+    this.vmConnection.sendDebuggerAction("return", this.dbg.lastSuspendEventId);
   }
 }

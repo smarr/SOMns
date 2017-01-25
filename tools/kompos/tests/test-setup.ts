@@ -1,15 +1,15 @@
-import { expect } from 'chai';
-import { ChildProcess, spawn, spawnSync, SpawnSyncReturns } from 'child_process';
-import { resolve } from 'path';
-import * as WebSocket from 'ws';
+import { expect } from "chai";
+import { ChildProcess, spawn, spawnSync, SpawnSyncReturns } from "child_process";
+import { resolve } from "path";
+import * as WebSocket from "ws";
 
 import {SuspendEventMessage, BreakpointData, Respond, SourceCoordinate,
-  FullSourceCoordinate, Frame} from '../src/messages';
+  FullSourceCoordinate, Frame} from "../src/messages";
 
 const DEBUGGER_PORT = 7977;
-const SOM_BASEPATH = '../../';
-export const SOM = SOM_BASEPATH + 'som';
-export const PING_PONG_URI = 'file:' + resolve('tests/pingpong.som');
+const SOM_BASEPATH = "../../";
+export const SOM = SOM_BASEPATH + "som";
+export const PING_PONG_URI = "file:" + resolve("tests/pingpong.som");
 
 const PRINT_SOM_OUTPUT = false;
 const PRINT_CMD_LINE   = false;
@@ -22,14 +22,14 @@ export function expectStack(stack: Frame[], length: number, methodName: string,
 }
 
 export function expectSourceCoordinate(section: SourceCoordinate) {
-  expect(section).to.have.property('charLength');
-  expect(section).to.have.property('startColumn');
-  expect(section).to.have.property('startLine');
+  expect(section).to.have.property("charLength");
+  expect(section).to.have.property("startColumn");
+  expect(section).to.have.property("startLine");
 }
 
 export function expectFullSourceCoordinate(section: FullSourceCoordinate) {
   expectSourceCoordinate(section);
-  expect(section).to.have.property('uri');
+  expect(section).to.have.property("uri");
 }
 
 export interface OnMessageEvent {
@@ -54,7 +54,7 @@ export function closeConnection(connection: SomConnection, done: MochaDone) {
     return;
   }
   connection.somProc.kill();
-  connection.somProc.on('exit', _code => {
+  connection.somProc.on("exit", _code => {
     connection.closed = true;
     // wait until process is shut down, to make sure all ports are closed
     done();
@@ -62,7 +62,7 @@ export function closeConnection(connection: SomConnection, done: MochaDone) {
 }
 
 export function execSom(extraArgs: string[]): SpawnSyncReturns<string> {
-  const args = ['-G', '-t1', '-dnu', 'tests/pingpong.som'].concat(extraArgs);
+  const args = ["-G", "-t1", "-dnu", "tests/pingpong.som"].concat(extraArgs);
   return spawnSync(SOM, args);
 }
 
@@ -94,32 +94,32 @@ export function send(socket: WebSocket, respond: Respond) {
 export function startSomAndConnect(onMessageHandler?: OnMessageHandler,
     initialBreakpoints?: BreakpointData[], extraArgs?: string[],
     triggerDebugger?: boolean, testFile?: string): Promise<SomConnection> {
-  if (!testFile) { testFile = 'tests/pingpong.som'; }
-  let args = ['-G', '-t1', '-wd', testFile];
-  if (triggerDebugger) { args = ['-d'].concat(args); };
+  if (!testFile) { testFile = "tests/pingpong.som"; }
+  let args = ["-G", "-t1", "-wd", testFile];
+  if (triggerDebugger) { args = ["-d"].concat(args); };
   if (extraArgs) { args = args.concat(extraArgs); }
   if (PRINT_CMD_LINE) {
-    console.log("[CMD]" + SOM + args.join(' '));
+    console.log("[CMD]" + SOM + args.join(" "));
   }
   const somProc = spawn(SOM, args);
   const promise = new Promise((resolve, reject) => {
     let connecting = false;
 
-    somProc.stderr.on('data', (data) => {
+    somProc.stderr.on("data", (data) => {
       if (PRINT_SOM_OUTPUT) {
         console.error(data.toString());
       }
     });
 
-    somProc.stdout.on('data', (data) => {
+    somProc.stdout.on("data", (data) => {
       const dataStr = data.toString();
       if (PRINT_SOM_OUTPUT) {
         console.log(dataStr);
       }
       if (dataStr.includes("Started HTTP Server") && !connecting) {
         connecting = true;
-        const socket = new WebSocket('ws://localhost:' + DEBUGGER_PORT);
-        socket.on('open', () => {
+        const socket = new WebSocket("ws://localhost:" + DEBUGGER_PORT);
+        socket.on("open", () => {
           if (initialBreakpoints) {
             send(socket, {action: "initialBreakpoints",
               breakpoints: initialBreakpoints, debuggerProtocol: false});
@@ -131,7 +131,7 @@ export function startSomAndConnect(onMessageHandler?: OnMessageHandler,
         }
       }
       if (dataStr.includes("Failed starting WebSocket and/or HTTP Server")) {
-        reject(new Error('SOMns failed to starting WebSocket and/or HTTP Server'));
+        reject(new Error("SOMns failed to starting WebSocket and/or HTTP Server"));
       }
     });
   });

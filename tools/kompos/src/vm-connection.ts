@@ -1,11 +1,11 @@
 /* jshint -W097 */
 "use strict";
 
-import * as WebSocket from 'ws';
+import * as WebSocket from "ws";
 
-import {Controller} from './controller';
-import {Message, Respond} from './messages';
-import {Breakpoint} from './breakpoints';
+import {Controller} from "./controller";
+import {Message, Respond} from "./messages";
+import {Breakpoint} from "./breakpoints";
 
 /**
  * Encapsulates the connection to the VM via a web socket and encodes
@@ -36,7 +36,7 @@ export class VmConnection {
 
     console.assert(this.binarySocket === null || this.binarySocket.readyState === WebSocket.CLOSED);
     this.binarySocket = new WebSocket("ws://localhost:7978");
-    (<any>this.binarySocket).binaryType = "arraybuffer"; //workaround, typescript dosn't recognize this property
+    (<any> this.binarySocket).binaryType = "arraybuffer"; //workaround, typescript dosn't recognize this property
 
 
     var controller = this.controller;

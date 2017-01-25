@@ -1,10 +1,10 @@
 /* jshint -W097 */
 "use strict";
 
-import {Controller} from './controller';
+import {Controller} from "./controller";
 import {Source, Method, SuspendEventMessage, IdMap, Frame, SourceCoordinate,
-  TaggedSourceCoordinate, getSectionId} from './messages';
-import {Breakpoint, MessageBreakpoint, LineBreakpoint} from './breakpoints';
+  TaggedSourceCoordinate, getSectionId} from "./messages";
+import {Breakpoint, MessageBreakpoint, LineBreakpoint} from "./breakpoints";
 
 declare var ctrl: Controller;
 
@@ -16,7 +16,7 @@ function splitAndKeepNewlineAsEmptyString(str) {
     line.push(str[i]);
     if (str[i] === "\n") {
       line.pop();
-      line.push('');
+      line.push("");
       result.push(line);
       line = new Array();
     }
@@ -121,7 +121,7 @@ constructor(section: SourceCoordinate, length: number) {
   }
 
   toString() {
-    return '</span>';
+    return "</span>";
   }
 
   length() {
@@ -191,7 +191,7 @@ function createLineNumbers(cnt: number) {
   var result = "<span class='ln' onclick='ctrl.onToggleLineBreakpoint(1, this);'>1</span>",
     i;
   for (i = 2; i <= cnt; i += 1) {
-    result = result + "\n<span class='ln' onclick='ctrl.onToggleLineBreakpoint("+ i +", this);'>" + i + "</span>";
+    result = result + "\n<span class='ln' onclick='ctrl.onToggleLineBreakpoint(" + i + ", this);'>" + i + "</span>";
   }
   return result;
 }
@@ -205,7 +205,7 @@ function ensureItIsAnnotation(arr: any[][], line: number, column: number) {
     c = column - 1;
 
   if (!(arr[l][c] instanceof Annotation)) {
-    console.assert(typeof arr[l][c] === 'string');
+    console.assert(typeof arr[l][c] === "string");
     arr[l][c] = new Annotation(arr[l][c]);
   }
   return arr[l][c];
@@ -360,8 +360,8 @@ function enableMethodBreakpointHover(fileNode) {
 }
 
 function showSource(source: Source, sourceId: string) {
-  var tabListEntry = <Element> document.getElementById('' + sourceId),
-    aElem = document.getElementById('a' + sourceId);
+  var tabListEntry = <Element> document.getElementById("" + sourceId),
+    aElem = document.getElementById("a" + sourceId);
   if (tabListEntry) {
     if (aElem.innerText !== source.name) {
       $(tabListEntry).remove();
@@ -390,7 +390,7 @@ function showSource(source: Source, sourceId: string) {
 
   // create tab pane
   var newFileElement = nodeFromTemplate("file");
-  newFileElement.setAttribute("id", '' + sourceId);
+  newFileElement.setAttribute("id", "" + sourceId);
   newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(annotationArray.length);
   var fileNode = newFileElement.getElementsByClassName("source-file")[0];
   fileNode.innerHTML = arrayToString(annotationArray);
@@ -454,7 +454,7 @@ export class View {
     for (sId in sources) {
       showSource(sources[sId], sId);
     }
-    $('.nav-tabs a[href="#' + sId + '"]').tab('show');
+    $('.nav-tabs a[href="#' + sId + '"]').tab("show");
   }
 
   displayUpdatedSourceSections(data, getSourceAndMethods) {
@@ -512,14 +512,14 @@ export class View {
     this.showSourceById(sourceId);
 
     // scroll to the statement
-    $('html, body').animate({
+    $("html, body").animate({
       scrollTop: $(ss).offset().top
     }, 300);
   }
 
   showSourceById(sourceId: string) {
     if (this.getActiveSourceId() !== sourceId) {
-      $(document.getElementById('a' + sourceId)).tab('show');
+      $(document.getElementById("a" + sourceId)).tab("show");
     }
   }
 
@@ -552,7 +552,7 @@ export class View {
     this.ensureBreakpointListEntry(breakpoint);
     var enabled = breakpoint.isEnabled();
 
-    breakpoint.checkbox.prop('checked', enabled);
+    breakpoint.checkbox.prop("checked", enabled);
     if (enabled) {
       highlightElem.addClass(highlightClass);
     } else {
