@@ -4,9 +4,8 @@
 import {Debugger}     from './debugger';
 import {SourceMessage, SuspendEventMessage, SymbolMessage,
   SectionBreakpointType} from './messages';
-import {LineBreakpoint, MessageBreakpoint, AsyncMethodRcvBreakpoint, PromiseBreakpoint,
-  createLineBreakpoint, createMsgBreakpoint,
-  createAsyncMethodRcvBreakpoint, createPromiseBreakpoint} from './breakpoints';
+import {LineBreakpoint, MessageBreakpoint,
+  createLineBreakpoint, createMsgBreakpoint} from './breakpoints';
 import {dbgLog}       from './source';
 import {displayMessageHistory, resetLinks, updateStrings, updateData} from './visualizations';
 import {View}         from './view';
@@ -72,10 +71,10 @@ export class Controller {
             this.view.updateSendBreakpoint(<MessageBreakpoint> bp);
             break;
           case "AsyncMessageReceiverBreakpoint":
-            this.view.updateAsyncMethodRcvBreakpoint(<AsyncMethodRcvBreakpoint> bp);
+            this.view.updateAsyncMethodRcvBreakpoint(<MessageBreakpoint> bp);
             break;
           case "PromiseResolverBreakpoint" || "PromiseResolutionBreakpoint":
-            this.view.updatePromiseBreakpoint(<PromiseBreakpoint> bp);
+            this.view.updatePromiseBreakpoint(<MessageBreakpoint> bp);
             break;
           default:
             console.error("Unsupported breakpoint type: " + JSON.stringify(bp.data));
@@ -144,9 +143,9 @@ export class Controller {
     var id = sectionId + ":async-rcv",
       sourceSection = this.dbg.getSection(sectionId),
       breakpoint    = this.toggleBreakpoint(id, function (source) {
-        return createAsyncMethodRcvBreakpoint(source, sourceSection, sectionId); });
+        return createMsgBreakpoint(source, sourceSection, sectionId, "AsyncMessageReceiverBreakpoint"); });
 
-    this.view.updateAsyncMethodRcvBreakpoint(<AsyncMethodRcvBreakpoint> breakpoint);
+    this.view.updateAsyncMethodRcvBreakpoint(<MessageBreakpoint> breakpoint);
   }
 
   onTogglePromiseBreakpoint(sectionId: string, type: SectionBreakpointType) {
@@ -155,9 +154,9 @@ export class Controller {
      let id = sectionId + ":" + type,
       sourceSection = this.dbg.getSection(sectionId),
       breakpoint    = this.toggleBreakpoint(id, function (source) {
-        return createPromiseBreakpoint(source, sourceSection, sectionId, type); });
+        return createMsgBreakpoint(source, sourceSection, sectionId, type); });
 
-    this.view.updatePromiseBreakpoint(<PromiseBreakpoint> breakpoint);
+    this.view.updatePromiseBreakpoint(<MessageBreakpoint> breakpoint);
   }
 
   resumeExecution() {

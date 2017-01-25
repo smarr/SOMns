@@ -4,8 +4,7 @@
 import {Controller} from './controller';
 import {Source, Method, SuspendEventMessage, IdMap, Frame, SourceCoordinate,
   TaggedSourceCoordinate, getSectionId} from './messages';
-import {Breakpoint, AsyncMethodRcvBreakpoint, MessageBreakpoint,
-  LineBreakpoint, PromiseBreakpoint} from './breakpoints';
+import {Breakpoint, MessageBreakpoint, LineBreakpoint} from './breakpoints';
 
 declare var ctrl: Controller;
 
@@ -535,7 +534,7 @@ export class View {
     this.updateBreakpoint(bp, $(bpSpan), "send-breakpoint-active");
   }
 
-  updateAsyncMethodRcvBreakpoint(bp: AsyncMethodRcvBreakpoint) {
+  updateAsyncMethodRcvBreakpoint(bp: MessageBreakpoint) {
     let i = 0,
       elem = null;
     while (elem = document.getElementById(
@@ -545,7 +544,7 @@ export class View {
     }
   }
 
-  updatePromiseBreakpoint(bp: PromiseBreakpoint) {
+  updatePromiseBreakpoint(bp: MessageBreakpoint) {
     var bpSpan = document.getElementById(bp.sectionId);
     this.updateBreakpoint(bp, $(bpSpan), "promise-breakpoint-active");
   }
