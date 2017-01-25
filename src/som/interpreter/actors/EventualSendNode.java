@@ -114,9 +114,9 @@ public class EventualSendNode extends ExprWithTagsNode {
 
     protected final SourceSection source;
 
-    protected final AbstractBreakpointNode messageReceiverBreakpoint;
-    protected final AbstractBreakpointNode promiseResolverBreakpoint;
-    protected final AbstractBreakpointNode promiseResolutionBreakpoint;
+    @Child protected AbstractBreakpointNode messageReceiverBreakpoint;
+    @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
+    @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
     protected SendNode(final SSymbol selector, final WrapReferenceNode[] wrapArgs,
         final RootCallTarget onReceive, final SourceSection source) {
