@@ -37,18 +37,18 @@ export class VmConnection {
     console.assert(this.binarySocket === null || this.binarySocket.readyState === WebSocket.CLOSED);
     this.binarySocket = new WebSocket("ws://localhost:7978");
     (<any>this.binarySocket).binaryType = "arraybuffer"; //workaround, typescript dosn't recognize this property
-    
+
 
     var controller = this.controller;
-    this.socket.onopen = function (e) {
+    this.socket.onopen = function () {
       controller.onConnect();
     };
 
-    this.socket.onclose = function (e) {
+    this.socket.onclose = function () {
       controller.onClose();
     };
 
-    this.socket.onerror = function (e) {
+    this.socket.onerror = function () {
       controller.onError();
     };
 

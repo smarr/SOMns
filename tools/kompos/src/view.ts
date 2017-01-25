@@ -28,14 +28,14 @@ function splitAndKeepNewlineAsEmptyString(str) {
 function sourceToArray(source: string): string[][] {
   let lines = splitAndKeepNewlineAsEmptyString(source);
   let arr = new Array(lines.length);
-  
+
   for (let i in lines) {
     let line = lines[i];
     arr[i] = new Array(line.length);
     for (let j = 0; j < line.length; j += 1) {
       arr[i][j] = line[j];
     }
-  }  
+  }
   return arr;
 }
 
@@ -75,7 +75,7 @@ class Begin extends SectionMarker {
     this.type    = Begin;
   }
 
-  toString() { 
+  toString() {
     return '<span id="' + this.sectionId + '" class="' + this.section.tags.join(" ") + '">';
   }
 
@@ -214,7 +214,7 @@ function ensureItIsAnnotation(arr: any[][], line: number, column: number) {
 
 /**
  * Determine line and column for `length` elements from given start location.
- * 
+ *
  * Arguments and results are 1-based.
  * Computation is zero-based.
  */
@@ -425,7 +425,7 @@ export class View {
 
   displayUpdatedSourceSections(data, getSourceAndMethods) {
     // update the source sections for the sourceId
-  
+
     var pane = document.getElementById(data.sourceId);
     var sourceFile = $(pane).find(".source-file");
 
@@ -466,7 +466,7 @@ export class View {
     for (var varName in data.topFrame.slots) {
       showVar(varName, data.topFrame.slots[varName], list);
     }
-    
+
     // highlight current node
     let ssId = getSectionId(sourceId, data.stack[0].sourceSection);
     let ss = document.getElementById(ssId);
