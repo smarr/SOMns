@@ -93,8 +93,9 @@ export function send(socket: WebSocket, respond: Respond) {
 
 export function startSomAndConnect(onMessageHandler?: OnMessageHandler,
     initialBreakpoints?: BreakpointData[], extraArgs?: string[],
-    triggerDebugger?: boolean): Promise<SomConnection> {
-  let args = ['-G', '-t1', '-wd', 'tests/pingpong.som'];
+    triggerDebugger?: boolean, testFile?: string): Promise<SomConnection> {
+  if (!testFile) { testFile = 'tests/pingpong.som'; }
+  let args = ['-G', '-t1', '-wd', testFile];
   if (triggerDebugger) { args = ['-d'].concat(args); };
   if (extraArgs) { args = args.concat(extraArgs); }
   if (PRINT_CMD_LINE) {

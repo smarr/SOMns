@@ -1,0 +1,29 @@
+class PingPongCSP usingPlatform: platform = Value (
+| Channel   = platform processes Channel.
+  Process   = platform processes Process.
+  processes = platform processes.
+  Array     = platform kernel Array.
+|)(
+  class Ping new: out and: in = Process (
+    | private out = out.
+      private in  = in.
+    |)(
+      public run = (
+        out write: #ping.
+        in read.
+      )
+    )
+
+    public main: args = (
+      | ch1 ch2 |
+      ch1 := Channel new.
+      ch2 := Channel new.
+
+      processes spawn: Ping with: (Array with: ch1 out with: ch2 in).
+      ch1 in read.
+      ch2 out write: #done.
+
+      ^ 0
+    )
+  )
+)
