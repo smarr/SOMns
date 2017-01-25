@@ -265,22 +265,22 @@ describe('Basic Protocol', function() {
     }));
   });
 
-   describe('setting a source section promise resolution breakpoint for chained resolution', () => {
-     const event = new HandleFirstSuspendEvent();
+  describe('setting a source section promise resolution breakpoint for chained resolution', () => {
+    const event = new HandleFirstSuspendEvent();
 
-     before('Start SOMns and Connect', () => {
-       const breakpoint = createSectionBreakpointData(PING_PONG_URI, 26, 20, 3,
-         "PromiseResolutionBreakpoint", true);
-       connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
-     });
+    before('Start SOMns and Connect', () => {
+      const breakpoint = createSectionBreakpointData(PING_PONG_URI, 26, 20, 3,
+        "PromiseResolutionBreakpoint", true);
+      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
+    });
 
-     after(closeConnectionAfterSuite);
+    after(closeConnectionAfterSuite);
 
-     it('should accept promise resolution breakpoint for chained resolution, and halt on expected source section', onlyWithConnection(() => {
-       return event.suspendP.then(msg => {
-         expectStack(msg.stack, 2, "Ping>>#$blockMethod@27@33:", 27);
-       });
-     }));
+    it('should accept promise resolution breakpoint for chained resolution, and halt on expected source section', onlyWithConnection(() => {
+      return event.suspendP.then(msg => {
+        expectStack(msg.stack, 2, "Ping>>#$blockMethod@27@33:", 27);
+      });
+    }));
   });
 
   describe('stepping', () => {
