@@ -45,6 +45,7 @@ import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.AsyncMessageReceiverBreakpoint;
 import tools.debugger.session.BreakpointInfo;
 import tools.debugger.session.Breakpoints;
+import tools.debugger.session.ChannelOppositeBreakpoint;
 import tools.debugger.session.LineBreakpoint;
 import tools.debugger.session.MessageReceiverBreakpoint;
 import tools.debugger.session.MessageSenderBreakpoint;
@@ -224,6 +225,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     breakpointAF.register(AsyncMessageReceiverBreakpoint.class);
     breakpointAF.register(PromiseResolutionBreakpoint.class);
     breakpointAF.register(PromiseResolverBreakpoint.class);
+    breakpointAF.register(ChannelOppositeBreakpoint.class);
 
     return new GsonBuilder().
         registerTypeAdapterFactory(outMsgAF).

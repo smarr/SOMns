@@ -32,6 +32,7 @@ import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.SourceCoordinate.FullSourceCoordinate;
 import tools.actors.Tags.EventualMessageSend;
+import tools.actors.Tags.ExpressionBreakpoint;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.nodes.BreakpointNodeGen;
 import tools.debugger.nodes.DisabledBreakpointNode;
@@ -289,7 +290,7 @@ public class EventualSendNode extends ExprWithTagsNode {
 
     @Override
     protected boolean isTaggedWith(final Class<?> tag) {
-      if (tag == EventualMessageSend.class) {
+      if (tag == EventualMessageSend.class || tag == ExpressionBreakpoint.class) {
         return true;
       }
       return super.isTaggedWith(tag);
