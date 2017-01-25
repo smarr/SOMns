@@ -2,8 +2,7 @@ import {Source, SourceCoordinate, AbstractBreakpointData, LineBreakpointData,
   SectionBreakpointData, SectionBreakpointType,
   createLineBreakpointData, createSectionBreakpointData} from './messages';
 
-export type Breakpoint = LineBreakpoint | MessageBreakpoint |
-  AsyncMethodRcvBreakpoint | PromiseBreakpoint;
+export type Breakpoint = LineBreakpoint | MessageBreakpoint;
 
 abstract class AbstractBreakpoint<T extends AbstractBreakpointData> {
   readonly data: T;
@@ -57,33 +56,7 @@ export class MessageBreakpoint extends AbstractBreakpoint<SectionBreakpointData>
   }
 
   getId(): string {
-    return super.getId() + this.sectionId;
-  }
-}
-
-export class AsyncMethodRcvBreakpoint extends AbstractBreakpoint<SectionBreakpointData> {
-  readonly sectionId: string;
-
-  constructor(data: SectionBreakpointData, source: Source, sectionId: string) {
-    super(data, source);
-    this.sectionId = sectionId;
-  }
-
-  getId(): string {
-    return super.getId() + this.sectionId + ":async-rcv";
-  }
-}
-
-export class PromiseBreakpoint extends AbstractBreakpoint<SectionBreakpointData> {
-  readonly sectionId: string;
-
-  constructor(data: SectionBreakpointData, source: Source, sectionId: string) {
-    super(data, source);
-    this.sectionId = sectionId;
-  }
-
-  getId(): string {
-    return super.getId() + this.sectionId + ":promise";
+    return super.getId() + this.data.type;
   }
 }
 
@@ -96,24 +69,6 @@ export function createLineBreakpoint(source: Source, sourceId: string,
 export function createMsgBreakpoint(source: Source,
     sourceSection: SourceCoordinate, sectionId: string,
     type: SectionBreakpointType) {
-  return new MessageBreakpoint(
-    createSectionBreakpointData(source.uri, sourceSection.startLine,
-      sourceSection.startColumn, sourceSection.charLength, type, false),
-    source, sectionId);
-}
-
-export function createAsyncMethodRcvBreakpoint(source: Source,
-    sourceSection: SourceCoordinate, sectionId: string) {
-  return new AsyncMethodRcvBreakpoint(
-    createSectionBreakpointData(source.uri, sourceSection.startLine,
-      sourceSection.startColumn, sourceSection.charLength,
-      "AsyncMessageReceiverBreakpoint", false),
-    source, sectionId);
-}
-
-export function createPromiseBreakpoint(source: Source,
-    sourceSection: SourceCoordinate, sectionId: string,
-    type: SectionBreakpointType) {  /** this can change if we need a specialized type for the promises */
   return new MessageBreakpoint(
     createSectionBreakpointData(source.uri, sourceSection.startLine,
       sourceSection.startColumn, sourceSection.charLength, type, false),

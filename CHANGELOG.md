@@ -33,6 +33,8 @@
  - Added CSP version of PingPong benchmark.
 
  - Added simple STM implementation. See `s.i.t.Transactions` and [PR #81](https://github.com/smarr/SOMns/pull/81) for details.
+ 
+ - Added breakpoints for channel operations in [PR #99](https://github.com/smarr/SOMns/pull/81).
 
 ## 0.1.0 - 2016-12-15
 

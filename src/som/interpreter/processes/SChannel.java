@@ -12,10 +12,19 @@ public class SChannel extends SAbstractObject {
   public final SChannelOutput out;
   public final SChannelInput  in;
 
+  /** Indicate that a breakpoint on the writer requested a suspension on read. */
+  private volatile boolean breakAfterRead;
+
+  /** Indicate that a breakpoint on the reader requested a suspension on write. */
+  private volatile boolean breakAfterWrite;
+
   public SChannel() {
+    breakAfterRead  = false;
+    breakAfterWrite = false;
+
     SynchronousQueue<Object> cell = new SynchronousQueue<>();
-    out = new SChannelOutput(cell);
-    in  = new SChannelInput(cell);
+    out = new SChannelOutput(cell, this);
+    in  = new SChannelInput(cell, this);
   }
 
   @Override
@@ -31,13 +40,25 @@ public class SChannel extends SAbstractObject {
 
   public static final class SChannelInput extends SAbstractObject {
     private final SynchronousQueue<Object> cell;
+    private final SChannel channel;
 
-    public SChannelInput(final SynchronousQueue<Object> cell) {
-      this.cell = cell;
+    public SChannelInput(final SynchronousQueue<Object> cell,
+        final SChannel channel) {
+      this.cell    = cell;
+      this.channel = channel;
     }
 
     public Object read() throws InterruptedException {
       return cell.take();
+    }
+
+    public Object readAndSuspendWriter(final boolean doSuspend) throws InterruptedException {
+      channel.breakAfterWrite = doSuspend;
+      return read();
+    }
+
+    public boolean shouldBreakAfterRead() {
+      return channel.breakAfterRead;
     }
 
     @Override
@@ -54,13 +75,25 @@ public class SChannel extends SAbstractObject {
 
   public static final class SChannelOutput extends SAbstractObject {
     private final SynchronousQueue<Object> cell;
+    private final SChannel channel;
 
-    public SChannelOutput(final SynchronousQueue<Object> cell) {
-      this.cell = cell;
+    public SChannelOutput(final SynchronousQueue<Object> cell, final SChannel channel) {
+      this.cell    = cell;
+      this.channel = channel;
     }
 
     public void write(final Object value) throws InterruptedException {
       cell.put(value);
+    }
+
+    public void writeAndSuspendReader(final Object value,
+        final boolean doSuspend) throws InterruptedException {
+      channel.breakAfterRead = doSuspend;
+      write(value);
+    }
+
+    public boolean shouldBreakAfterWrite() {
+      return channel.breakAfterWrite;
     }
 
     @Override

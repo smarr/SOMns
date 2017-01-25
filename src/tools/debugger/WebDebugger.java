@@ -20,6 +20,7 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.Actor.ActorProcessingThread;
+import som.primitives.processes.ChannelPrimitives.ProcessThread;
 import som.primitives.threading.ThreadPrimitives.SomThread;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.InitialBreakpointsMessage;
@@ -44,6 +45,7 @@ import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.AsyncMessageReceiverBreakpoint;
 import tools.debugger.session.BreakpointInfo;
 import tools.debugger.session.Breakpoints;
+import tools.debugger.session.ChannelOppositeBreakpoint;
 import tools.debugger.session.LineBreakpoint;
 import tools.debugger.session.MessageReceiverBreakpoint;
 import tools.debugger.session.MessageSenderBreakpoint;
@@ -135,6 +137,8 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
       current = ((ActorProcessingThread) thread).currentMessage.getTarget();
     } else if (thread instanceof SomThread) {
       current = thread;
+    } else if (thread instanceof ProcessThread) {
+      current = thread;
     } else {
       assert thread.getClass() == Thread.class : "Should support other thread subclasses explicitly";
       current = thread;
@@ -221,6 +225,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     breakpointAF.register(AsyncMessageReceiverBreakpoint.class);
     breakpointAF.register(PromiseResolutionBreakpoint.class);
     breakpointAF.register(PromiseResolverBreakpoint.class);
+    breakpointAF.register(ChannelOppositeBreakpoint.class);
 
     return new GsonBuilder().
         registerTypeAdapterFactory(outMsgAF).

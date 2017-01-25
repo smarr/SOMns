@@ -13,7 +13,7 @@ import som.primitives.ObjectPrimsFactory.IsValueFactory;
 import som.primitives.Primitive;
 import som.primitives.actors.PromisePrims.IsActorModule;
 import som.vm.VmSettings;
-import tools.actors.ActorExecutionTrace;
+import tools.concurrency.ActorExecutionTrace;
 
 
 @GenerateNodeFactory

@@ -15,7 +15,7 @@ import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 
 import som.interpreter.actors.ReceivedRootNode;
 import tools.SourceCoordinate.FullSourceCoordinate;
-import tools.actors.Tags.EventualMessageSend;
+import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.WebDebugger;
 
 
@@ -44,11 +44,15 @@ public class Breakpoints {
    */
   private final Map<FullSourceCoordinate, BreakpointEnabling<PromiseResolutionBreakpoint>> promiseResolutionBreakpoints;
 
+  /** Manually managed by us, instead of Truffle. */
+  private final Map<FullSourceCoordinate, BreakpointEnabling<ChannelOppositeBreakpoint>> channelOppositeBreakpoint;
+
   public Breakpoints(final Debugger debugger, final WebDebugger webDebugger) {
-    this.truffleBreakpoints = new HashMap<>();
-    this.receiverBreakpoints = new HashMap<>();
-    this.promiseResolverBreakpoints = new HashMap<>();
+    this.truffleBreakpoints           = new HashMap<>();
+    this.receiverBreakpoints          = new HashMap<>();
+    this.promiseResolverBreakpoints   = new HashMap<>();
     this.promiseResolutionBreakpoints = new HashMap<>();
+    this.channelOppositeBreakpoint    = new HashMap<>();
     this.debuggerSession = debugger.startSession(webDebugger);
   }
 
@@ -78,7 +82,7 @@ public class Breakpoints {
   }
 
   public synchronized void addOrUpdate(final MessageSenderBreakpoint bId) {
-    saveTruffleBasedBreakpoints(bId, EventualMessageSend.class);
+    saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class);
   }
 
   public synchronized void addOrUpdate(final AsyncMessageReceiverBreakpoint bId) {
@@ -96,6 +100,10 @@ public class Breakpoints {
 
   public synchronized void addOrUpdate(final PromiseResolutionBreakpoint bId) {
     saveBreakpoint(bId, promiseResolutionBreakpoints);
+  }
+
+  public synchronized void addOrUpdate(final ChannelOppositeBreakpoint bId) {
+    saveBreakpoint(bId, channelOppositeBreakpoint);
   }
 
   private Breakpoint saveTruffleBasedBreakpoints(final SectionBreakpoint bId, final Class<?> tag) {
@@ -156,4 +164,9 @@ public class Breakpoints {
         ss -> new BreakpointEnabling<>(new PromiseResolutionBreakpoint(false, section)));
   }
 
+  public synchronized BreakpointEnabling<ChannelOppositeBreakpoint> getOppositeBreakpoint(
+      final FullSourceCoordinate section) {
+    return channelOppositeBreakpoint.computeIfAbsent(section,
+        ss -> new BreakpointEnabling<>(new ChannelOppositeBreakpoint(false, section)));
+  }
 }

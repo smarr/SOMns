@@ -5,7 +5,9 @@
     "module": "amd",
     "moduleResolution": "node",
     "inlineSourceMap": true,
-    "allowJs": true
+    "allowJs": true,
+    "noUnusedLocals" : true,
+    "noUnusedParameters": true
   },
   "include": [
     "tests/**/*",

@@ -1,4 +1,4 @@
-package tools.actors;
+package tools.concurrency;
 
 import java.io.BufferedWriter;
 import java.io.File;

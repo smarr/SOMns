@@ -22,7 +22,10 @@ import som.compiler.MixinDefinition;
 import som.vm.NotYetImplementedException;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
-import tools.actors.Tags.EventualMessageSend;
+import tools.concurrency.Tags.ChannelRead;
+import tools.concurrency.Tags.ChannelWrite;
+import tools.concurrency.Tags.EventualMessageSend;
+import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.Tags.ArgumentTag;
 import tools.debugger.Tags.CommentTag;
 import tools.debugger.Tags.DelimiterClosingTag;
@@ -82,7 +85,8 @@ import tools.dym.Tags.VirtualInvokeReceiver;
   StringAccess.class, OpClosureApplication.class, OpArithmetic.class,
   OpComparison.class, OpLength.class,
 
-  EventualMessageSend.class
+  EventualMessageSend.class, ChannelRead.class, ChannelWrite.class,
+  ExpressionBreakpoint.class
 })
 public final class SomLanguage extends TruffleLanguage<VM> {
 
