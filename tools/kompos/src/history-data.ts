@@ -4,7 +4,7 @@
 import {IdMap} from "./messages";
 import {dbgLog} from "./source";
 
-var horizontalDistance = 100,
+const horizontalDistance = 100,
   verticalDistance = 100;
 
 export class HistoryData {
@@ -21,7 +21,7 @@ export class HistoryData {
 
   addActor(id: string, type: string) {
     hashAtInc(this.actorsPerType, type, 1);
-      var node = {
+      const node = {
         id: id,
         name: type,
         reflexive: false, // selfsends TODO what is this used for, maybe set to true when checking mailbox.
@@ -33,8 +33,7 @@ export class HistoryData {
   }
 
   addStrings(ids: number[], strings: string[]){
-    var i;
-    for (i = 0; i < ids.length; i++) {
+    for (let i = 0; i < ids.length; i++) {
       this.strings[ids[i].toString()] = strings[i];
     }
   }
@@ -81,15 +80,15 @@ export class HistoryData {
   }
 
   updateDataBin(data: DataView){
-    var i = 0;
+    let i = 0;
     while(i < data.byteLength){
-      var typ = data.getInt8(i);
+      const typ = data.getInt8(i);
       i++;
       switch(typ){
         case 1:
-          var aid = (data.getInt32(i + 4) + ":" + data.getInt32(i));
+          const aid = (data.getInt32(i + 4) + ":" + data.getInt32(i));
           // 8 byte causal message id
-          var type: number = data.getInt16(i + 16); // type
+          const type: number = data.getInt16(i + 16); // type
           this.addActor(aid, this.strings[type]);
           i += 18;
           break;
@@ -126,14 +125,14 @@ export class HistoryData {
           i += 18;
           break;
         case 8:
-          var sender = (data.getInt32(i + 4) + ":" + data.getInt32(i)); // sender id
+          let sender = (data.getInt32(i + 4) + ":" + data.getInt32(i)); // sender id
           // 8 byte causal message id
           data.getInt16(i + 16); // selector
           // 8byte execution start
           // 8byte send time
-          var numParam = data.getInt8(i + 34); // parameter count
+          let numParam = data.getInt8(i + 34); // parameter count
           i += 35;
-          for (var k = 0; k < numParam; k++) {
+          for (let k = 0; k < numParam; k++) {
             i += readParameter(data, i);
           }
           this.addMessage(sender, this.currentReceiver);
@@ -147,7 +146,7 @@ export class HistoryData {
           // 8byte send time
           numParam = data.getInt8(i + 42); // parameter count
           i += 43;
-          for (var k = 0; k < numParam; k++) {
+          for (let k = 0; k < numParam; k++) {
             i += readParameter(data, i);
           }
           this.addMessage(sender, this.currentReceiver);
@@ -158,7 +157,7 @@ export class HistoryData {
 }
 
 function readParameter(dv: DataView, offset: number): number {
-  var paramType = dv.getInt8(offset);
+  const paramType = dv.getInt8(offset);
   switch(paramType){
     case 0: // false
       return 1;
@@ -190,8 +189,8 @@ function hashAtInc(hash, idx: string, inc: number) {
 }
 
 function mapToArray(map) {
-  var arr = [];
-  for (var i in map) {
+  const arr = [];
+  for (const i in map) {
     arr.push(map[i]);
   }
   return arr;

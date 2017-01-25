@@ -5,11 +5,11 @@ import {SymbolMessage} from "./messages";
 import * as d3 from "d3";
 import {HistoryData} from "./history-data";
 
-var path, circle, nodes, links, force, colors;
-var data = new HistoryData();
+let path, circle, nodes, links, force, colors;
+let data = new HistoryData();
 
 // set up SVG for D3
-var width = 360,
+const width = 360,
   height  = 350;
 
 /**
@@ -19,7 +19,7 @@ export function displayMessageHistory() {
   colors = d3.scale.category10();
   $("#graph-canvas").empty();
 
-  var svg = d3.select("#graph-canvas")
+  const svg = d3.select("#graph-canvas")
     .append("svg")
     // .attr("oncontextmenu", "return false;")
     .attr("width", width)
@@ -93,7 +93,7 @@ export function updateData(dv: DataView){
 function tick() {
   // draw directed edges with proper padding from node centers
   path.attr("d", function(d) {
-    var deltaX = d.target.x - d.source.x,
+    const deltaX = d.target.x - d.source.x,
       deltaY = d.target.y - d.source.y,
       dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
       normX = deltaX / dist,
@@ -146,7 +146,7 @@ function restart() {
     .classed("reflexive", function(d) { return d.reflexive; });
 
   // add new nodes
-  var g = circle.enter().append("svg:g");
+  const g = circle.enter().append("svg:g");
 
   g.append("rect")
     .attr("rx", 6)
@@ -179,7 +179,7 @@ function restart() {
   force.start();
 
   // execute enough steps that the graph looks static
-  for (var i = 0; i < 1000; i++) {
+  for (let i = 0; i < 1000; i++) {
     force.tick();
   }
 //   force.stop();

@@ -41,7 +41,7 @@ export class Controller {
     resetLinks();
     this.dbg.setResumed();
     this.view.onConnect();
-    var bps = this.dbg.getEnabledBreakpoints();
+    const bps = this.dbg.getEnabledBreakpoints();
     dbgLog("Send breakpoints: " + bps.length);
     this.vmConnection.sendInitialBreakpoints(bps);
   }
@@ -60,8 +60,8 @@ export class Controller {
     this.view.displaySources(newSources);
 
     for (let source of msg.sources) {
-      var bps = this.dbg.getEnabledBreakpointsForSource(source.name);
-      for (var bp of bps) {
+      const bps = this.dbg.getEnabledBreakpointsForSource(source.name);
+      for (const bp of bps) {
         switch (bp.data.type) {
           case "LineBreakpoint":
             this.view.updateLineBreakpoint(<LineBreakpoint> bp);
@@ -105,8 +105,8 @@ export class Controller {
   }
 
   private toggleBreakpoint(key, newBp) {
-    var sourceId = this.view.getActiveSourceId();
-    var source   = this.dbg.getSource(sourceId);
+    const sourceId = this.view.getActiveSourceId();
+    const source   = this.dbg.getSource(sourceId);
 
     let breakpoint = this.dbg.getBreakpoint(source, key, newBp);
     breakpoint.toggle();
@@ -140,7 +140,7 @@ export class Controller {
   onToggleMethodAsyncRcvBreakpoint(sectionId: string) {
     dbgLog("async method rcv bp: " + sectionId);
 
-    var id = sectionId + ":async-rcv",
+    const id = sectionId + ":async-rcv",
       sourceSection = this.dbg.getSection(sectionId),
       breakpoint    = this.toggleBreakpoint(id, function (source) {
         return createMsgBreakpoint(source, sourceSection, sectionId, "AsyncMessageReceiverBreakpoint"); });

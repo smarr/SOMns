@@ -116,10 +116,10 @@ export class Debugger {
   }
 
   getEnabledBreakpointsForSource(sourceName: string): Breakpoint[] {
-    var bps = [];
-    var lines = this.breakpoints[sourceName];
-    for (var line in lines) {
-      var bp = lines[line];
+    const bps = [];
+    const lines = this.breakpoints[sourceName];
+    for (const line in lines) {
+      const bp = lines[line];
       if (bp.isEnabled()) {
         bps.push(bp);
       }

@@ -181,14 +181,14 @@ function arrayToString(arr: any[][]) {
 }
 
 function nodeFromTemplate(tplId: string) {
-  var tpl = document.getElementById(tplId),
+  const tpl = document.getElementById(tplId),
     result = <Element> tpl.cloneNode(true);
   result.removeAttribute("id");
   return result;
 }
 
 function createLineNumbers(cnt: number) {
-  var result = "<span class='ln' onclick='ctrl.onToggleLineBreakpoint(1, this);'>1</span>",
+  const result = "<span class='ln' onclick='ctrl.onToggleLineBreakpoint(1, this);'>1</span>",
     i;
   for (i = 2; i <= cnt; i += 1) {
     result = result + "\n<span class='ln' onclick='ctrl.onToggleLineBreakpoint(" + i + ", this);'>" + i + "</span>";
@@ -262,7 +262,7 @@ function annotateArray(arr: any[][], sourceId: string, sections: TaggedSourceCoo
 }
 
 function enableEventualSendClicks(fileNode) {
-  var sendOperator = fileNode.find(".EventualMessageSend");
+  const sendOperator = fileNode.find(".EventualMessageSend");
   sendOperator.attr({
     "data-toggle"    : "popover",
     "data-trigger"   : "click hover",
@@ -306,7 +306,7 @@ function enableChannelClicks(fileNode) {
 }
 
 function constructChannelBpMenu(fileNode, tag: string, tpl: string) {
-  var sendOperator = fileNode.find(tag);
+  const sendOperator = fileNode.find(tag);
   sendOperator.attr({
     "data-toggle"    : "popover",
     "data-trigger"   : "click hover",
@@ -360,7 +360,7 @@ function enableMethodBreakpointHover(fileNode) {
 }
 
 function showSource(source: Source, sourceId: string) {
-  var tabListEntry = <Element> document.getElementById("" + sourceId),
+  let tabListEntry = <Element> document.getElementById("" + sourceId),
     aElem = document.getElementById("a" + sourceId);
   if (tabListEntry) {
     if (aElem.innerText !== source.name) {
@@ -373,14 +373,14 @@ function showSource(source: Source, sourceId: string) {
     }
   }
 
-  var annotationArray = sourceToArray(source.sourceText);
+  const annotationArray = sourceToArray(source.sourceText);
   annotateArray(annotationArray, sourceId, source.sections, source.methods);
 
   tabListEntry = nodeFromTemplate("tab-list-entry");
 
   if (aElem === null) {
     // create the tab "header/handle"
-    var elem = $(tabListEntry).find("a");
+    const elem = $(tabListEntry).find("a");
     elem.attr("href", "#" + sourceId);
     elem.attr("id", "a" + sourceId);
     elem.text(source.name);
@@ -389,10 +389,10 @@ function showSource(source: Source, sourceId: string) {
   }
 
   // create tab pane
-  var newFileElement = nodeFromTemplate("file");
+  const newFileElement = nodeFromTemplate("file");
   newFileElement.setAttribute("id", "" + sourceId);
   newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(annotationArray.length);
-  var fileNode = newFileElement.getElementsByClassName("source-file")[0];
+  const fileNode = newFileElement.getElementsByClassName("source-file")[0];
   fileNode.innerHTML = arrayToString(annotationArray);
 
   // enable clicking on EventualSendNodes
@@ -400,13 +400,13 @@ function showSource(source: Source, sourceId: string) {
   enableChannelClicks($(fileNode));
   enableMethodBreakpointHover($(fileNode));
 
-  var files = document.getElementById("files");
+  const files = document.getElementById("files");
   files.appendChild(newFileElement);
 }
 
 function showVar(name: string, value: string, list: Element) {
-  var entry = nodeFromTemplate("frame-state-tpl");
-  var t = $(entry).find("th");
+  const entry = nodeFromTemplate("frame-state-tpl");
+  let t = $(entry).find("th");
   t.html(name);
   t = $(entry).find("td");
   t.html(value);
@@ -414,14 +414,14 @@ function showVar(name: string, value: string, list: Element) {
 }
 
 function showFrame(frame: Frame, i: number, list: Element) {
-  var stackEntry = frame.methodName;
+  let stackEntry = frame.methodName;
   if (frame.sourceSection) {
     stackEntry += ":" + frame.sourceSection.startLine + ":" + frame.sourceSection.startColumn;
   }
-  var entry = nodeFromTemplate("stack-frame-tpl");
+  const entry = nodeFromTemplate("stack-frame-tpl");
   entry.setAttribute("id", "frame-" + i);
 
-  var tds = $(entry).find("td");
+  const tds = $(entry).find("td");
   tds[0].innerHTML = stackEntry;
   list.appendChild(entry);
 }
@@ -460,18 +460,18 @@ export class View {
   displayUpdatedSourceSections(data, getSourceAndMethods) {
     // update the source sections for the sourceId
 
-    var pane = document.getElementById(data.sourceId);
-    var sourceFile = $(pane).find(".source-file");
+    const pane = document.getElementById(data.sourceId);
+    const sourceFile = $(pane).find(".source-file");
 
     // remove all spans
     sourceFile.find("span").replaceWith($(".html"));
 
     // apply new spans
-    var result = getSourceAndMethods(data.sourceId),
+    const result = getSourceAndMethods(data.sourceId),
       source   = result[0],
       methods  = result[1];
 
-    var annotationArray = sourceToArray(source.sourceText);
+    const annotationArray = sourceToArray(source.sourceText);
     annotateArray(annotationArray, source.id, data.sections, methods);
     sourceFile.html(arrayToString(annotationArray));
 
@@ -498,7 +498,7 @@ export class View {
 
     showVar("Arguments", data.topFrame.arguments.join(", "), list);
 
-    for (var varName in data.topFrame.slots) {
+    for (const varName in data.topFrame.slots) {
       showVar(varName, data.topFrame.slots[varName], list);
     }
 
@@ -543,14 +543,14 @@ export class View {
     breakpoint.checkbox = $(entry).find("input");
     breakpoint.checkbox.attr("id", bpId + "chk");
 
-    var list = document.getElementById("breakpoint-list");
+    const list = document.getElementById("breakpoint-list");
     list.appendChild(entry);
   }
 
   updateBreakpoint(breakpoint: Breakpoint, highlightElem: JQuery,
       highlightClass: string) {
     this.ensureBreakpointListEntry(breakpoint);
-    var enabled = breakpoint.isEnabled();
+    const enabled = breakpoint.isEnabled();
 
     breakpoint.checkbox.prop("checked", enabled);
     if (enabled) {
@@ -561,12 +561,12 @@ export class View {
   }
 
   updateLineBreakpoint(bp: LineBreakpoint) {
-    var lineNumSpan = $(bp.lineNumSpan);
+    const lineNumSpan = $(bp.lineNumSpan);
     this.updateBreakpoint(bp, lineNumSpan, "breakpoint-active");
   }
 
   updateSendBreakpoint(bp: MessageBreakpoint) {
-    var bpSpan = document.getElementById(bp.sectionId);
+    const bpSpan = document.getElementById(bp.sectionId);
     this.updateBreakpoint(bp, $(bpSpan), "send-breakpoint-active");
   }
 
@@ -581,7 +581,7 @@ export class View {
   }
 
   updatePromiseBreakpoint(bp: MessageBreakpoint) {
-    var bpSpan = document.getElementById(bp.sectionId);
+    const bpSpan = document.getElementById(bp.sectionId);
     this.updateBreakpoint(bp, $(bpSpan), "promise-breakpoint-active");
   }
 

@@ -38,7 +38,7 @@ export class VmConnection {
     this.binarySocket = new WebSocket("ws://localhost:7978");
     (<any> this.binarySocket).binaryType = "arraybuffer"; // workaround, typescript dosn't recognize this property
 
-    var controller = this.controller;
+    const controller = this.controller;
     this.socket.onopen = function () {
       controller.onConnect();
     };
@@ -52,7 +52,7 @@ export class VmConnection {
     };
 
     this.socket.onmessage = function (e) {
-      var data: Message = JSON.parse(e.data);
+      const data: Message = JSON.parse(e.data);
 
       switch (data.type) {
         case "source":
@@ -71,7 +71,7 @@ export class VmConnection {
     };
 
     this.binarySocket.onmessage = function (e) {
-      var data: DataView = new DataView(e.data);
+      const data: DataView = new DataView(e.data);
       controller.onTracingData(data);
     };
   }
