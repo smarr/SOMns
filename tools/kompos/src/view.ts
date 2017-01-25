@@ -272,7 +272,7 @@ function enableEventualSendClicks(fileNode) {
   });
 
   sendOperator.attr("data-content", function() {
-    let content = nodeFromTemplate("hover-menu");
+    let content = nodeFromTemplate("actor-bp-menu");
     // capture the source section id, and store it on the buttons
     $(content).find("button").attr("data-ss-id", this.id);
     return $(content).html();
@@ -297,6 +297,40 @@ function enableEventualSendClicks(fileNode) {
   $(document).on("click", ".bp-send-prom", function (e) {
     e.stopImmediatePropagation();
     ctrl.onTogglePromiseBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "PromiseResolverBreakpoint");
+  });
+}
+
+function enableChannelClicks(fileNode) {
+  constructChannelBpMenu(fileNode, ".ChannelRead",  "channel-read-bp-menu");
+  constructChannelBpMenu(fileNode, ".ChannelWrite", "channel-write-bp-menu");
+}
+
+function constructChannelBpMenu(fileNode, tag: string, tpl: string) {
+  var sendOperator = fileNode.find(tag);
+  sendOperator.attr({
+    "data-toggle"    : "popover",
+    "data-trigger"   : "click hover",
+    "title"          : "Breakpoints",
+    "data-html"      : "true",
+    "data-placement" : "auto top"
+  });
+
+  sendOperator.attr("data-content", function() {
+    let content = nodeFromTemplate(tpl);
+    // capture the source section id, and store it on the buttons
+    $(content).find("button").attr("data-ss-id", this.id);
+    return $(content).html();
+  });
+  sendOperator.popover();
+
+  $(document).on("click", ".bp-before", function (e) {
+    e.stopImmediatePropagation();
+    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "MessageSenderBreakpoint");
+  });
+
+  $(document).on("click", ".bp-after", function (e) {
+    e.stopImmediatePropagation();
+    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "ChannelOppositeBreakpoint");
   });
 }
 
@@ -363,6 +397,7 @@ function showSource(source: Source, sourceId: string) {
 
   // enable clicking on EventualSendNodes
   enableEventualSendClicks($(fileNode));
+  enableChannelClicks($(fileNode));
   enableMethodBreakpointHover($(fileNode));
 
   var files = document.getElementById("files");
@@ -442,6 +477,7 @@ export class View {
 
     // enable clicking on EventualSendNodes
     enableEventualSendClicks(sourceFile);
+    enableChannelClicks(sourceFile);
     enableMethodBreakpointHover(sourceFile);
   }
 

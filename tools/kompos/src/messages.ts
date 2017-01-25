@@ -101,8 +101,9 @@ export interface SymbolMessage {
 export type BreakpointData = LineBreakpointData | SectionBreakpointData;
 
 export type SectionBreakpointType = "MessageSenderBreakpoint" |
-  "MessageReceiverBreakpoint" | "AsyncMessageReceiverBreakpoint" | 
-  "PromiseResolverBreakpoint" | "PromiseResolutionBreakpoint" ;
+  "MessageReceiverBreakpoint" | "AsyncMessageReceiverBreakpoint" |
+  "PromiseResolverBreakpoint" | "PromiseResolutionBreakpoint" |
+  "ChannelOppositeBreakpoint";
 
 export interface AbstractBreakpointData {
   enabled:   boolean;

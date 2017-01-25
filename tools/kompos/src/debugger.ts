@@ -3,14 +3,16 @@ import {IdMap, Source, SourceCoordinate, SourceMessage, TaggedSourceCoordinate,
 import {Breakpoint} from './breakpoints';
 
 export function isRelevant(sc: TaggedSourceCoordinate) {
-  return -1 !== sc.tags.indexOf('EventualMessageSend');
+  // use ExpressionBreakpoint tag, since it is implied by ChannelRead,
+  // ChannelWrite, and EventualMessageSend
+  return -1 !== sc.tags.indexOf('ExpressionBreakpoint');
 }
 
 export class Debugger {
   public lastSuspendEventId?: string;
 
   private suspended: boolean;
-  
+
   /**
    * Mapping Source URIs to id used for easy access, and for short unique ids to
    * be used by {@link getSectionId}.
