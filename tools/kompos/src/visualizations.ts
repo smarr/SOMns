@@ -21,7 +21,7 @@ export function displayMessageHistory() {
 
   var svg = d3.select("#graph-canvas")
     .append("svg")
-    //.attr("oncontextmenu", "return false;")
+    // .attr("oncontextmenu", "return false;")
     .attr("width", width)
     .attr("height", height);
 
@@ -118,7 +118,7 @@ function restart() {
   path = path.data(links);
 
   // update existing links
-  path //.classed("selected", function(d) { return d === selected_link; })
+  path // .classed("selected", function(d) { return d === selected_link; })
     .style("marker-start", function(d) { return d.left ? "url(#start-arrow)" : ""; })
     .style("marker-end", function(d) { return d.right ? "url(#end-arrow)" : ""; });
 
