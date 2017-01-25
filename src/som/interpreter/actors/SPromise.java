@@ -17,7 +17,7 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
-import tools.actors.ActorExecutionTrace;
+import tools.concurrency.ActorExecutionTrace;
 
 
 public class SPromise extends SObjectWithClass {

@@ -28,7 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
-import tools.actors.ActorExecutionTrace;
+import tools.concurrency.ActorExecutionTrace;
 
 public final class SSymbol extends SAbstractObject {
   private final String string;

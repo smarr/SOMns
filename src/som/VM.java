@@ -39,7 +39,7 @@ import som.vm.VmOptions;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
-import tools.actors.ActorExecutionTrace;
+import tools.concurrency.ActorExecutionTrace;
 import tools.debugger.Tags;
 import tools.debugger.WebDebugger;
 import tools.dym.DynamicMetrics;

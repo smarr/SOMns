@@ -15,7 +15,7 @@ import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 
 import som.interpreter.actors.ReceivedRootNode;
 import tools.SourceCoordinate.FullSourceCoordinate;
-import tools.actors.Tags.ExpressionBreakpoint;
+import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.WebDebugger;
 
 

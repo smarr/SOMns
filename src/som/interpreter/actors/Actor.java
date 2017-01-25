@@ -20,7 +20,7 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
-import tools.actors.ActorExecutionTrace;
+import tools.concurrency.ActorExecutionTrace;
 import tools.debugger.WebDebugger;
 
 
