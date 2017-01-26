@@ -188,9 +188,8 @@ function nodeFromTemplate(tplId: string) {
 }
 
 function createLineNumbers(cnt: number) {
-  const result = "<span class='ln' onclick='ctrl.onToggleLineBreakpoint(1, this);'>1</span>",
-    i;
-  for (i = 2; i <= cnt; i += 1) {
+  let result = "<span class='ln' onclick='ctrl.onToggleLineBreakpoint(1, this);'>1</span>";
+  for (let i = 2; i <= cnt; i += 1) {
     result = result + "\n<span class='ln' onclick='ctrl.onToggleLineBreakpoint(" + i + ", this);'>" + i + "</span>";
   }
   return result;
