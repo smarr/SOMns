@@ -91,11 +91,11 @@ export class Controller {
       msg, this.dbg.getSourceId(msg.stack[0].sourceSection.uri));
   }
 
-  onSymbolMessage(msg: SymbolMessage){
+  onSymbolMessage(msg: SymbolMessage) {
     updateStrings(msg);
   }
 
-  onTracingData(data: DataView){
+  onTracingData(data: DataView) {
     updateData(data);
     displayMessageHistory();
   }

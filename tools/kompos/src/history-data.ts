@@ -15,7 +15,7 @@ export class HistoryData {
   private strings = {};
   private currentReceiver = "";
 
-  constructor(){
+  constructor() {
     this.addActor("0:0", "Platform"); // add main actor
   }
 
@@ -32,7 +32,7 @@ export class HistoryData {
       this.actors[id.toString()] = node;
   }
 
-  addStrings(ids: number[], strings: string[]){
+  addStrings(ids: number[], strings: string[]) {
     for (let i = 0; i < ids.length; i++) {
       this.strings[ids[i].toString()] = strings[i];
     }
@@ -79,12 +79,12 @@ export class HistoryData {
     return this.maxMessageCount;
   }
 
-  updateDataBin(data: DataView){
+  updateDataBin(data: DataView) {
     let i = 0;
-    while(i < data.byteLength){
+    while (i < data.byteLength) {
       const typ = data.getInt8(i);
       i++;
-      switch(typ){
+      switch (typ) {
         case 1:
           const aid = (data.getInt32(i + 4) + ":" + data.getInt32(i));
           // 8 byte causal message id
@@ -158,7 +158,7 @@ export class HistoryData {
 
 function readParameter(dv: DataView, offset: number): number {
   const paramType = dv.getInt8(offset);
-  switch(paramType){
+  switch (paramType) {
     case 0: // false
       return 1;
     case 1: // true

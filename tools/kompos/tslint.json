@@ -4,6 +4,8 @@
     "no-duplicate-variable": true,
     "no-trailing-whitespace": true,
     "no-var-keyword": true,
+    "one-line": [true, "check-catch", "check-finally", "check-else",
+      "check-open-brace", "check-whitespace"],
     "whitespace": [
       "check-branch",
       "check-decl",

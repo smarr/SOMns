@@ -85,7 +85,7 @@ export function updateStrings(msg: SymbolMessage) {
   data.addStrings(msg.ids, msg.symbols);
 }
 
-export function updateData(dv: DataView){
+export function updateData(dv: DataView) {
   data.updateDataBin(dv);
 }
 
