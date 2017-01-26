@@ -245,11 +245,11 @@ public final class MetricsCsvWriter {
       if (left.equals(right)) {
         return left;
       }
-      if (left.equals("ref") || right.equals("ref")) {
+      if ("ref".equals(left) || "ref".equals(right)) {
         return "ref";
       }
-      if (left.equals("float") && right.equals("int") ||
-          left.equals("int") && right.equals("float")) {
+      if ("float".equals(left) && "int".equals(right) ||
+          "int".equals(left) && "float".equals(right)) {
         return "float";
       }
       throw new NotYetImplementedException();

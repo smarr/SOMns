@@ -20,7 +20,7 @@ class WebResourceHandler implements HttpHandler {
     WebDebugger.log(rootFolder);
 
     String requestedFile = exchange.getRequestURI().toString();
-    if (requestedFile.equals("/")) {
+    if ("/".equals(requestedFile)) {
       requestedFile = "/index.html";
     }
 

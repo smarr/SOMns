@@ -1,7 +1,5 @@
 package som.vm;
 
-import static som.vm.constants.Classes.metaclassClass;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -162,7 +160,7 @@ public final class ObjectSystem {
     clazzClazz.initializeClass(Symbols.symbolFor(name + " class"), Classes.classClass);
 
     clazz.setClass(clazzClazz);
-    clazzClazz.setClass(metaclassClass);
+    clazzClazz.setClass(Classes.metaclassClass);
   }
 
   public SObjectWithoutFields initialize() {

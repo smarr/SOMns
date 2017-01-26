@@ -1,5 +1,6 @@
 package som.tests;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
@@ -28,12 +29,12 @@ public class TruffleSomTCK extends TruffleTCK {
   }
 
   @Override
-  protected PolyglotEngine prepareVM() throws Exception {
+  protected PolyglotEngine prepareVM() throws IOException {
     return prepareVM(PolyglotEngine.newBuilder());
   }
 
   @Override
-  protected PolyglotEngine prepareVM(final PolyglotEngine.Builder preparedBuilder) throws Exception {
+  protected PolyglotEngine prepareVM(final PolyglotEngine.Builder preparedBuilder) throws IOException {
     String[] args = new String [] {"--kernel", VmOptions.STANDARD_KERNEL_FILE,
         "--platform", VmOptions.STANDARD_PLATFORM_FILE};
     preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
@@ -133,180 +134,180 @@ public class TruffleSomTCK extends TruffleTCK {
   @Override
   @Test
   @Ignore("todo: remove override")
-  public void testCoExistanceOfMultipleLanguageInstances() throws Exception { }
+  public void testCoExistanceOfMultipleLanguageInstances() { }
 
   @Override
   @Test
   @Ignore("needs eval in language. don't want that")
-  public void testEvaluateSource() throws Exception { }
+  public void testEvaluateSource() { }
 
   @Override
   @Test
   @Ignore("needs support for code snippet parsing, don't have that yet")
-  public void multiplyTwoVariables() throws Exception { }
+  public void multiplyTwoVariables() { }
 
   @Override
   @Test
   @Ignore("todo: remove override")
-  public void testSumRealOfComplexNumbersA() throws Exception { }
+  public void testSumRealOfComplexNumbersA() { }
 
   @Override
   @Test
   @Ignore("todo: remove override")
-  public void testSumRealOfComplexNumbersB() throws Exception { }
+  public void testSumRealOfComplexNumbersB() { }
 
   @Override
   @Test
   @Ignore("todo: remove override")
-  public void testSumRealOfComplexNumbersAsStructuredDataRowBased() throws Exception { }
+  public void testSumRealOfComplexNumbersAsStructuredDataRowBased() { }
 
   @Override
   @Test
   @Ignore("todo: remove override")
-  public void testSumRealOfComplexNumbersAsStructuredDataColumnBased() throws Exception { }
+  public void testSumRealOfComplexNumbersAsStructuredDataColumnBased() { }
 
   @Override
   @Test
   @Ignore("todo: remove override")
-  public void testCopyComplexNumbersA() throws Exception {  }
+  public void testCopyComplexNumbersA() {  }
 
   @Override
   @Test
   @Ignore("todo: remove override")
-  public void testCopyComplexNumbersB() throws Exception { }
+  public void testCopyComplexNumbersB() { }
 
   @Override
   @Test
   @Ignore("todo: remove override")
-  public void testCopyStructuredComplexToComplexNumbersA() throws Exception { }
+  public void testCopyStructuredComplexToComplexNumbersA() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void timeOutTest() throws Exception { }
+  public void timeOutTest() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void addOneToAnArrayElement() throws Exception { }
+  public void addOneToAnArrayElement() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testRootNodeName() throws Exception { }
+  public void testRootNodeName() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testFunctionAddNumbers() throws Exception { }
+  public void testFunctionAddNumbers() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testReadValueFromForeign() throws Exception { }
+  public void testReadValueFromForeign() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testReadElementFromForeign() throws Exception { }
+  public void testReadElementFromForeign() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testWriteValueToForeign() throws Exception { }
+  public void testWriteValueToForeign() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testObjectWithValueAndAddProperty() throws Exception { }
+  public void testObjectWithValueAndAddProperty() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testIsExecutableOfForeign() throws Exception { }
+  public void testIsExecutableOfForeign() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testCallMethod() throws Exception { }
+  public void testCallMethod() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testHasSize() throws Exception { }
+  public void testHasSize() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testHasSizeOfForeign() throws Exception { }
+  public void testHasSizeOfForeign() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testGetSize() throws Exception { }
+  public void testGetSize() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testIsExecutable() throws Exception { }
+  public void testIsExecutable() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testWriteElementOfForeign() throws Exception { }
+  public void testWriteElementOfForeign() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testIsNullOfForeign() throws Exception { }
+  public void testIsNullOfForeign() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testReadFromObjectWithElement() throws Exception { }
+  public void testReadFromObjectWithElement() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testGetSizeOfForeign() throws Exception { }
+  public void testGetSizeOfForeign() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testIsNotNull() throws Exception { }
+  public void testIsNotNull() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testWriteToObjectWithValueProperty() throws Exception { }
+  public void testWriteToObjectWithValueProperty() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testReadFromObjectWithValueProperty() throws Exception { }
+  public void testReadFromObjectWithValueProperty() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testCallFunction() throws Exception { }
+  public void testCallFunction() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testWriteToObjectWithElement() throws Exception { }
+  public void testWriteToObjectWithElement() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testPropertiesInteropMessage() throws Exception { }
+  public void testPropertiesInteropMessage() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testMetaObject() throws Exception { }
+  public void testMetaObject() { }
 
   @Test
   @Override
   @Ignore("todo: remove override")
-  public void testValueWithSource() throws Exception { }
+  public void testValueWithSource() { }
 }

@@ -4,6 +4,10 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
 
+import com.oracle.truffle.api.Assumption;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.nodes.InvalidAssumptionException;
+
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.DoubleStorageLocation;
@@ -11,10 +15,6 @@ import som.interpreter.objectstorage.StorageLocation.LongStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.UnwrittenStorageLocation;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SObject;
-
-import com.oracle.truffle.api.Assumption;
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 
 public final class ObjectLayout {
@@ -170,7 +170,7 @@ public final class ObjectLayout {
   private String fieldsAndLocations() {
     String s = "";
     for (Entry<SlotDefinition, StorageLocation> e : storageLocations.entrySet()) {
-      if (!s.equals("")) {
+      if (!"".equals(s)) {
         s += ", ";
       }
 

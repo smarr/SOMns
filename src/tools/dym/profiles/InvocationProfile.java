@@ -52,7 +52,7 @@ public class InvocationProfile extends Counter {
   public static String argumentsMapToString(final Map<Arguments, Integer> args) {
     String result = "[";
     for (Entry<Arguments, Integer> e : args.entrySet()) {
-      if (!result.equals("[")) {
+      if (!"[".equals(result)) {
         result += "; ";
       }
       result += e.getKey().toString() + "=" + e.getValue();

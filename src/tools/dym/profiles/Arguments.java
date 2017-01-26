@@ -89,7 +89,7 @@ public final class Arguments {
   public String toString() {
     String result = "";
     for (ClassFactory c : argSomTypes) {
-      if (result.equals("")) {
+      if ("".equals(result)) {
         result = c.getClassName().getString();
       } else {
         result += ", " + c.getClassName().getString();
