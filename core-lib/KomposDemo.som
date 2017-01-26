@@ -3,6 +3,7 @@ class KomposDemo usingPlatform: platform = Value (
   private processes = platform processes.
 
   private Array     = platform kernel Array.
+  private Vector    = platform kernel Vector.
   private Channel   = processes Channel.
   private Process   = processes Process.
 |)(
@@ -221,23 +222,43 @@ class KomposDemo usingPlatform: platform = Value (
     )
   )
 
+(* Can't use a separate DataStoreProcess at the moment. Need to go back to our
+   original actor instead, because otherwise, we can't send messages.
+   (because we need an actor thread to send message)
+
+  private class DataStoreProcess new: dataIn store: dataActor = Process (
+  | private dataIn    = dataIn.
+    private dataActor = dataActor.
+  |)(
+    public run = (
+      | datum |
+      [ datum := dataIn read. datum notNil println. datum notNil ] whileTrue: [
+        'loop' println. 1 halt.
+        dataActor <-: data: datum. 'done '  println.]
+    )
+  ) *)
+
   class BlackHoleOut = Value ()(
     public write: v = ( v total println. )
   )
 
   (* Actor to hide the CSP-based implementation from the rest of the system. *)
-  class JsonInputActor new = (
-  | private stringOut ::= nil. |
-  )(
+  class JsonInputActor new: dataActor = (
+  | private dataActor = dataActor.
+    private stringOut ::= nil.
+    private dataIn ::= nil.
+  |)(
     (* Initializes the subsystem *)
     public start = (
-      | toTokenizer toObjectCtor |
+      | toTokenizer toObjectCtor toDataStore |
       toTokenizer  := Channel new.
       toObjectCtor := Channel new.
+      toDataStore  := Channel new.
       stringOut := toTokenizer out.
+      dataIn    := toDataStore in.
 
       processes spawn: JsonStreamTokenizer with: (Array with: toTokenizer in  with: toObjectCtor out).
-      processes spawn: DataFilterProcess   with: (Array with: toObjectCtor in with: BlackHoleOut new).
+      processes spawn: DataFilterProcess   with: (Array with: toObjectCtor in with: toDataStore out).
     )
 
     public stream: str = (
@@ -245,6 +266,8 @@ class KomposDemo usingPlatform: platform = Value (
          TODO: revise in nice language, future work.
        *)
       stringOut write: str.
+      (* this is blocking, too. *)
+      dataActor <-: data: dataIn read.
     )
   )
 
@@ -255,7 +278,7 @@ class KomposDemo usingPlatform: platform = Value (
     private jsonStreamInput = (
       | arr |
       arr := Array new: 10.
-      arr at:  1 put: '{"price": 10,"quantity": 87,"customer": "Medesign","address":"993 Kensington Walk, Cassel, Tennessee, 8882","item": "strawberry"}'.
+      arr at:  1 put: '{"price":10,"quantity": 87,"customer": "Medesign","address":"993 Kensington Walk, Cassel, Tennessee, 8882","item": "strawberry"}'.
       arr at:  2 put: '{"price": 5,"quantity": 83,"customer": "Gadtron","address": "652 Coffey Street, Oasis, Rhode Island, 8428","item": "apple"}'.
       arr at:  3 put: '{"price": 5,"quantity": 20,"customer": "Rooforia","address": "117 Holmes Lane, Innsbrook, Connecticut, 4261","item": "banana"}'.
       arr at:  4 put: '{"price": 4,"quantity": 18,"customer": "Sureplex","address": "586 Beacon Court, Durham, Louisiana, 1428","item": "apple"}'.
@@ -275,10 +298,20 @@ class KomposDemo usingPlatform: platform = Value (
     )
   )
 
+  class DataActor = (
+  | private data = Vector new: 10.
+  |)(
+    public data: aRelevantDatum = (
+      aRelevantDatum total println.
+      data append: aRelevantDatum.
+    )
+  )
+
   public main: args = (
-    | completionPP generator json |
+    | completionPP generator json data |
     completionPP := actors createPromisePair.
-    json := (actors createActorFromValue: JsonInputActor) <-: new.
+    data := (actors createActorFromValue: DataActor) <-: new.
+    json := (actors createActorFromValue: JsonInputActor) <-: new: data.
     json <-: start.
 
     generator := (actors createActorFromValue: InputGeneratorActor) <-: new: json.
