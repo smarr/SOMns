@@ -35,6 +35,7 @@ import static som.compiler.Symbol.Div;
 import static som.compiler.Symbol.Double;
 import static som.compiler.Symbol.EndBlock;
 import static som.compiler.Symbol.EndComment;
+import static som.compiler.Symbol.EndLiteralArray;
 import static som.compiler.Symbol.EndTerm;
 import static som.compiler.Symbol.Equal;
 import static som.compiler.Symbol.EventualSend;
@@ -50,6 +51,7 @@ import static som.compiler.Symbol.Mod;
 import static som.compiler.Symbol.More;
 import static som.compiler.Symbol.NONE;
 import static som.compiler.Symbol.NewBlock;
+import static som.compiler.Symbol.NewLiteralArray;
 import static som.compiler.Symbol.NewTerm;
 import static som.compiler.Symbol.Not;
 import static som.compiler.Symbol.OperatorSequence;
@@ -62,6 +64,7 @@ import static som.compiler.Symbol.STString;
 import static som.compiler.Symbol.SlotMutableAssign;
 import static som.compiler.Symbol.Star;
 import static som.interpreter.SNodeFactory.createImplicitReceiverSend;
+import static som.interpreter.SNodeFactory.createLiteralArray;
 import static som.interpreter.SNodeFactory.createMessageSend;
 import static som.interpreter.SNodeFactory.createSequence;
 import static som.vm.Symbols.symbolFor;
@@ -1040,6 +1043,9 @@ public class Parser {
           return new BlockNode(blockMethod, lastMethodsSourceSection);
         }
       }
+      case NewLiteralArray: {
+        return literalArray(builder);
+      }
       default: {
         if (symIn(literalSyms)) {
           return literal();
@@ -1442,6 +1448,31 @@ public class Parser {
     String s = string();
 
     return new StringLiteralNode(s, getSource(coord));
+  }
+
+  private LiteralNode literalArray(final MethodBuilder builder) throws ProgramDefinitionError {
+    SourceCoordinate coord = getCoordinate();
+    List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
+
+    expect(NewLiteralArray, DelimiterOpeningTag.class);
+
+    boolean sawPeriod = true;
+
+    while (true) {
+      comments();
+
+      if (sym == EndLiteralArray) {
+        expect(EndLiteralArray, DelimiterClosingTag.class);
+        return createLiteralArray(expressions, getSource(coord));
+      }
+
+      if (!sawPeriod) {
+        expect(Period, null);
+      }
+
+      expressions.add(expression(builder));
+      sawPeriod = accept(Period, StatementSeparatorTag.class);
+    }
   }
 
   private SSymbol selector() throws ParseError {

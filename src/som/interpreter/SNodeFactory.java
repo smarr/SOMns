@@ -17,8 +17,10 @@ import som.interpreter.nodes.ResolvingImplicitReceiverSend;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
 import som.interpreter.nodes.SequenceNode;
+import som.interpreter.nodes.literals.ArrayLiteralNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
+import som.interpreter.nodes.literals.LiteralNode;
 import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.objectstorage.InitializerFieldWrite;
@@ -52,6 +54,15 @@ public final class SNodeFactory {
       return expressions.get(0);
     }
     return new SequenceNode(expressions.toArray(new ExpressionNode[0]), source);
+  }
+
+  public static LiteralNode createLiteralArray(
+      final List<ExpressionNode> expressions, final SourceSection source) {
+    for (ExpressionNode statement : expressions) {
+      statement.markAsStatement();
+    }
+
+    return new ArrayLiteralNode(expressions.toArray(new ExpressionNode[0]), source);
   }
 
   public static BlockNode createBlockNode(final SInvokable blockMethod,
