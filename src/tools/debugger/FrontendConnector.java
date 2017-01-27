@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -22,12 +23,14 @@ import com.oracle.truffle.api.source.SourceSection;
 import com.sun.net.httpserver.HttpServer;
 
 import som.interpreter.actors.Actor;
+import som.primitives.processes.ChannelPrimitives;
+import som.vm.Activity;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.SourceCoordinate.TaggedSourceCoordinate;
-import tools.concurrency.ActorExecutionTrace;
 import tools.Tagging;
+import tools.concurrency.ActorExecutionTrace;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message;
 import tools.debugger.message.Message.OutgoingMessage;
@@ -38,6 +41,7 @@ import tools.debugger.message.StackTraceResponse;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SuspendedEventMessage;
 import tools.debugger.message.SymbolMessage;
+import tools.debugger.message.ThreadsResponse;
 import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.AsyncMessageReceiverBreakpoint;
 import tools.debugger.session.Breakpoints;
@@ -191,6 +195,47 @@ public class FrontendConnector {
       }
       notReady.clear();
     }
+  }
+//
+//  private ThreadGroup rootThreadGroup = null;
+//
+//  private ThreadGroup getRootThreadGroup() {
+//    if (rootThreadGroup != null) {
+//      return rootThreadGroup;
+//    }
+//
+//    ThreadGroup tg = Thread.currentThread().getThreadGroup();
+//    ThreadGroup ptg;
+//    while ((ptg = tg.getParent()) != null) {
+//      tg = ptg;
+//    }
+//    rootThreadGroup = tg;
+//    return tg;
+//  }
+//
+//  private void getAllThreads() {
+//    getRootThreadGroup().
+//  }
+
+  private final WeakHashMap<Activity, Integer> activities = new WeakHashMap<>();
+  private int activitiesIds = 0;
+
+  public synchronized void sendThreads(final int requestId) {
+    Set<Actor> actors = this.webDebugger.getSuspendedActors();
+    synchronized (actors) {
+      for (Actor a : actors) {
+        activities.computeIfAbsent(a, key -> { activitiesIds++; return activitiesIds; });
+      }
+    }
+
+    Set<ChannelPrimitives.Process> processes = ChannelPrimitives.getActiveProcesses();
+    synchronized (processes) {
+      for (ChannelPrimitives.Process p : processes) {
+        activities.computeIfAbsent(p, key -> { activitiesIds++; return activitiesIds; });
+      }
+    }
+
+    send(ThreadsResponse.create(activities, requestId));
   }
 
   public void sendLoadedSource(final Source source,

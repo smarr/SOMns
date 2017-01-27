@@ -15,6 +15,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import som.VM;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.IsValue;
+import som.vm.Activity;
 import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray.STransferArray;
@@ -41,7 +42,7 @@ import tools.debugger.WebDebugger;
  *    - grabs the current mailbox
  *    - and sequentially executes all messages
  */
-public class Actor {
+public class Actor implements Activity {
 
   public static Actor createActor() {
     if (VmSettings.DEBUG_MODE) {
@@ -369,6 +370,11 @@ public class Actor {
     for (ActorProcessingThread t: threads) {
       ActorExecutionTrace.swapBuffer(t);
     }
+  }
+
+  @Override
+  public String getName() {
+    return toString();
   }
 
   @Override

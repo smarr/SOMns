@@ -1,9 +1,11 @@
 package tools.debugger;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -19,6 +21,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.actors.Actor;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.primitives.processes.ChannelPrimitives.ProcessThread;
 import som.primitives.threading.ThreadPrimitives.SomThread;
@@ -39,6 +42,8 @@ import tools.debugger.message.StepMessage.Stop;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SuspendedEventMessage;
 import tools.debugger.message.SymbolMessage;
+import tools.debugger.message.ThreadsRequest;
+import tools.debugger.message.ThreadsResponse;
 import tools.debugger.message.UpdateBreakpoint;
 import tools.debugger.message.VariablesRequest;
 import tools.debugger.message.VariablesResponse;
@@ -130,11 +135,21 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     return suspension;
   }
 
+  private final Set<Actor> suspendedActors = Collections.newSetFromMap(new WeakHashMap<>());
+
+  Set<Actor> getSuspendedActors() {
+    return suspendedActors;
+  }
+
   private Suspension getSuspension() {
     Thread thread = Thread.currentThread();
     Object current;
     if (thread instanceof ActorProcessingThread) {
-      current = ((ActorProcessingThread) thread).currentMessage.getTarget();
+      Actor actor = ((ActorProcessingThread) thread).currentMessage.getTarget();
+      current = actor;
+      synchronized (suspendedActors) {
+        suspendedActors.add(actor);
+      }
     } else if (thread instanceof SomThread) {
       current = thread;
     } else if (thread instanceof ProcessThread) {
@@ -205,6 +220,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     outMsgAF.register("StackTraceResponse", StackTraceResponse.class);
     outMsgAF.register("ScopesResponse",     ScopesResponse.class);
     outMsgAF.register("VariablesResponse",  VariablesResponse.class);
+    outMsgAF.register("ThreadsResponse",    ThreadsResponse.class);
 
     ClassHierarchyAdapterFactory<IncommingMessage> inMsgAF = new ClassHierarchyAdapterFactory<>(IncommingMessage.class, "action");
     inMsgAF.register(INITIAL_BREAKPOINTS, InitialBreakpointsMessage.class);
@@ -217,6 +233,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     inMsgAF.register("StackTraceRequest", StackTraceRequest.class);
     inMsgAF.register("ScopesRequest",     ScopesRequest.class);
     inMsgAF.register("VariablesRequest",  VariablesRequest.class);
+    inMsgAF.register("ThreadsRequest",    ThreadsRequest.class);
 
     ClassHierarchyAdapterFactory<BreakpointInfo> breakpointAF = new ClassHierarchyAdapterFactory<>(BreakpointInfo.class, "type");
     breakpointAF.register(LineBreakpoint.class);
