@@ -26,7 +26,7 @@ function splitAndKeepNewlineAsEmptyString(str) {
 
 function sourceToArray(source: string): string[][] {
   let lines = splitAndKeepNewlineAsEmptyString(source);
-  let arr = new Array(lines.length);
+  let arr = new Array(lines.length + 1);  // +1 is to work around files not ending in newline
 
   for (let i in lines) {
     let line = lines[i];
@@ -35,6 +35,7 @@ function sourceToArray(source: string): string[][] {
       arr[i][j] = line[j];
     }
   }
+  arr[lines.length] = ""; // make sure the +1 line has a string
   return arr;
 }
 
