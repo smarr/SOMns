@@ -35,7 +35,7 @@ function sourceToArray(source: string): string[][] {
       arr[i][j] = line[j];
     }
   }
-  arr[lines.length] = ""; // make sure the +1 line has a string
+  arr[lines.length] = [""]; // make sure the +1 line has an array with an empty string
   return arr;
 }
 
