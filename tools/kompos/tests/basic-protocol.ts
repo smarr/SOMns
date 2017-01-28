@@ -131,7 +131,7 @@ describe("Basic Protocol", function() {
     it("should have a well structured suspended event", onlyWithConnection(() => {
       return event.suspendP.then(msg => {
         expectFullSourceCoordinate(msg.stack[0].sourceSection);
-        expect(msg.id).to.equal("se-0");
+        expect(msg.id).to.equal("se-1");
         expect(msg.sourceUri).to.equal(PING_PONG_URI);
         expect(msg.topFrame.arguments[0]).to.equal("a PingPong");
         expect(msg.topFrame.slots["Local(ping)"]).to.equal("a Nil");

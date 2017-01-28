@@ -22,9 +22,9 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.Actor;
-import som.interpreter.actors.Actor.ActorProcessingThread;
-import som.primitives.processes.ChannelPrimitives.ProcessThread;
-import som.primitives.threading.ThreadPrimitives.SomThread;
+import som.primitives.processes.ChannelPrimitives;
+import som.vm.Activity;
+import som.vm.ActivityThread;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.InitialBreakpointsMessage;
 import tools.debugger.message.Message.IncommingMessage;
@@ -76,8 +76,13 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   private final Map<Source, Set<RootNode>> rootNodes = new HashMap<>();
 
   private int nextActivityId = 0;
-  private final Map<Object, Suspension> activityToSuspension = new HashMap<>();
-  private final Map<Integer, Suspension> idToSuspension = new HashMap<>();
+  private final Map<Activity, Suspension> activityToSuspension = new HashMap<>();
+  private final Map<Integer, Suspension> idToSuspension      = new HashMap<>();
+  private final WeakHashMap<Activity, Integer> activities    = new WeakHashMap<>();
+
+  /** Actors that have been suspended at least once. */
+  private final Set<Actor> suspendedActors = Collections.newSetFromMap(new WeakHashMap<>());
+
 
   public void useDebuggerProtocol(final boolean debuggerProtocol) {
     this.debuggerProtocol = debuggerProtocol;
@@ -122,11 +127,30 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     return idToSuspension.get(activityId);
   }
 
-  private synchronized Suspension getSuspension(final Object activity) {
+  private int getActivityId(final Activity a) {
+    return activities.computeIfAbsent(a, key -> { nextActivityId++; return nextActivityId; });
+  }
+
+  synchronized Map<Activity, Integer> getAllActivities() {
+    synchronized (suspendedActors) {
+      for (Actor a : suspendedActors) {
+        getActivityId(a);
+      }
+    }
+
+    Set<ChannelPrimitives.Process> processes = ChannelPrimitives.getActiveProcesses();
+    synchronized (processes) {
+      for (ChannelPrimitives.Process p : processes) {
+        getActivityId(p);
+      }
+    }
+    return activities;
+  }
+
+  private synchronized Suspension getSuspension(final Activity activity) {
     Suspension suspension = activityToSuspension.get(activity);
     if (suspension == null) {
-      int id = nextActivityId;
-      nextActivityId += 1;
+      int id = getActivityId(activity);
       suspension = new Suspension(activity, id);
 
       activityToSuspension.put(activity, suspension);
@@ -135,28 +159,19 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     return suspension;
   }
 
-  private final Set<Actor> suspendedActors = Collections.newSetFromMap(new WeakHashMap<>());
-
-  Set<Actor> getSuspendedActors() {
-    return suspendedActors;
-  }
 
   private Suspension getSuspension() {
     Thread thread = Thread.currentThread();
-    Object current;
-    if (thread instanceof ActorProcessingThread) {
-      Actor actor = ((ActorProcessingThread) thread).currentMessage.getTarget();
-      current = actor;
-      synchronized (suspendedActors) {
-        suspendedActors.add(actor);
+    Activity current;
+    if (thread instanceof ActivityThread) {
+      current = ((ActivityThread) thread).getActivity();
+      if (current instanceof Actor) {
+        synchronized (suspendedActors) {
+          suspendedActors.add((Actor) current);
+        }
       }
-    } else if (thread instanceof SomThread) {
-      current = thread;
-    } else if (thread instanceof ProcessThread) {
-      current = thread;
     } else {
-      assert thread.getClass() == Thread.class : "Should support other thread subclasses explicitly";
-      current = thread;
+      throw new RuntimeException("Support for " + thread.getClass().getName() + " not yet implemented.");
     }
     return getSuspension(current);
   }

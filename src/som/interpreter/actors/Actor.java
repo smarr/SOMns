@@ -16,6 +16,7 @@ import som.VM;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.IsValue;
 import som.vm.Activity;
+import som.vm.ActivityThread;
 import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray.STransferArray;
@@ -266,7 +267,7 @@ public class Actor implements Activity {
     }
   }
 
-  public static final class ActorProcessingThread extends ForkJoinWorkerThread {
+  public static final class ActorProcessingThread extends ForkJoinWorkerThread implements ActivityThread {
     public EventualMessage currentMessage;
     private static AtomicInteger threadIdGen = new AtomicInteger(0);
     protected Actor currentlyExecutingActor;
@@ -284,6 +285,11 @@ public class Actor implements Activity {
       if (VmSettings.ACTOR_TRACING) {
         ActorExecutionTrace.swapBuffer(this);
       }
+    }
+
+    @Override
+    public Activity getActivity() {
+      return currentMessage.getTarget();
     }
 
     protected long generateActorId() {

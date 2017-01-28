@@ -28,6 +28,7 @@ import som.primitives.Primitive;
 import som.primitives.arrays.ToArgumentsArrayNode;
 import som.primitives.arrays.ToArgumentsArrayNodeFactory;
 import som.vm.Activity;
+import som.vm.ActivityThread;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
@@ -78,8 +79,16 @@ public abstract class ChannelPrimitives {
     }
   }
 
-  public static final class ProcessThread extends ForkJoinWorkerThread {
+  public static final class ProcessThread extends ForkJoinWorkerThread
+      implements ActivityThread {
+    private Process current;
+
     ProcessThread(final ForkJoinPool pool) { super(pool); }
+
+    @Override
+    public Activity getActivity() {
+      return current;
+    }
   }
 
   public static final class Process implements Activity, Runnable {
@@ -91,6 +100,8 @@ public abstract class ChannelPrimitives {
 
     @Override
     public void run() {
+      ((ProcessThread) Thread.currentThread()).current = this;
+
       synchronized (activeProcesses) {
         activeProcesses.add(this);
       }
