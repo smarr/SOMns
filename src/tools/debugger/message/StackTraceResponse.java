@@ -23,6 +23,15 @@ public final class StackTraceResponse extends Response {
     super(requestId);
     this.stackFrames = stackFrames;
     this.totalFrames = totalFrames;
+
+    boolean assertsOn = false;
+    assert assertsOn = true;
+
+    if (assertsOn) {
+      for (StackFrame sf : stackFrames) {
+        assert sf != null;
+      }
+    }
   }
 
   static class StackFrame {
@@ -75,11 +84,17 @@ public final class StackTraceResponse extends Response {
       skipFrames = startFrame;
     }
 
-    StackFrame[] arr = new StackFrame[Math.min(frames.size(), levels) - skipFrames];
+    int numFrames = levels;
+    if (numFrames == 0) { numFrames = Integer.MAX_VALUE; }
+    numFrames = Math.min(frames.size(), numFrames);
+    numFrames -= skipFrames;
 
-    for (int frameId = skipFrames; frameId < frames.size() && frameId < levels; frameId += 1) {
+    StackFrame[] arr = new StackFrame[numFrames];
+
+    for (int i = 0; i < numFrames; i += 1) {
+      int frameId = i + skipFrames;
       StackFrame f = createFrame(suspension, frameId, frames.get(frameId));
-      arr[frameId - skipFrames] = f;
+      arr[i] = f;
     }
 
     return new StackTraceResponse(arr, frames.size(), requestId);
