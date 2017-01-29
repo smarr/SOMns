@@ -150,11 +150,6 @@ export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
 export interface InitialBreakpointsResponds {
   action: "initialBreakpoints";
   breakpoints: BreakpointData[];
-
-  /**
-   * Use a VSCode-like debugger protocol.
-   */
-  debuggerProtocol: boolean;
 }
 
 interface UpdateBreakpoint {

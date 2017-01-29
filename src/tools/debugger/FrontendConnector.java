@@ -321,9 +321,8 @@ public class FrontendConnector {
     // Checkstyle: resume
   }
 
-  public void completeConnection(final WebSocket conn, final boolean debuggerProtocol) {
+  public void completeConnection(final WebSocket conn) {
     clientConnected.complete(conn);
-    webDebugger.useDebuggerProtocol(debuggerProtocol);
   }
 
   public void shutdown() {

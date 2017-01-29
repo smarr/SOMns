@@ -10,14 +10,8 @@ import tools.debugger.session.BreakpointInfo;
 public class InitialBreakpointsMessage extends IncommingMessage {
   private final BreakpointInfo[] breakpoints;
 
-  /**
-   * The client is using a protocol similar to VS code.
-   */
-  private final boolean debuggerProtocol;
-
   public InitialBreakpointsMessage(final BreakpointInfo[] breakpoints) {
     this.breakpoints = breakpoints;
-    this.debuggerProtocol = false;
   }
 
   public BreakpointInfo[] getBreakpoints() {
@@ -29,6 +23,6 @@ public class InitialBreakpointsMessage extends IncommingMessage {
     for (BreakpointInfo bp : breakpoints) {
       bp.registerOrUpdate(connector);
     }
-    connector.completeConnection(conn, debuggerProtocol);
+    connector.completeConnection(conn);
   }
 }

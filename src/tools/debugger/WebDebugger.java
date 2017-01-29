@@ -70,7 +70,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   private FrontendConnector connector;
   private Instrumenter      instrumenter;
   private Breakpoints       breakpoints;
-  private boolean debuggerProtocol;
 
   private final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags = new HashMap<>();
   private final Map<Source, Set<RootNode>> rootNodes = new HashMap<>();
@@ -82,11 +81,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   /** Actors that have been suspended at least once. */
   private final Set<Actor> suspendedActors = Collections.newSetFromMap(new WeakHashMap<>());
-
-
-  public void useDebuggerProtocol(final boolean debuggerProtocol) {
-    this.debuggerProtocol = debuggerProtocol;
-  }
 
   public void reportSyntaxElement(final Class<? extends Tags> type,
       final SourceSection source) {
@@ -181,11 +175,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     Suspension suspension = getSuspension();
     suspension.update(e);
 
-    if (debuggerProtocol) {
-      connector.sendStoppedMessage(suspension);
-    } else {
-      connector.sendSuspendedEvent(suspension);
-    }
+    connector.sendStoppedMessage(suspension);
     suspension.suspend();
   }
 
