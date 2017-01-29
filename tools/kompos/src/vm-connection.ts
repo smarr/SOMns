@@ -71,8 +71,8 @@ export class VmConnection {
         case "suspendEvent":
           controller.onExecutionSuspension(data);
           break;
-        case "symbolMessage":
           controller.onSymbolMessage(data);
+        case "SymbolMessage":
           break;
         default:
           controller.onUnknownMessage(data);

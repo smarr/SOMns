@@ -221,7 +221,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     outMsgAF.register("source",       SourceMessage.class);
     outMsgAF.register("suspendEvent", SuspendedEventMessage.class);
     outMsgAF.register("StoppedEvent", StoppedMessage.class);
-    outMsgAF.register("symbolMessage",      SymbolMessage.class);
+    outMsgAF.register("SymbolMessage",      SymbolMessage.class);
     outMsgAF.register("StackTraceResponse", StackTraceResponse.class);
     outMsgAF.register("ScopesResponse",     ScopesResponse.class);
     outMsgAF.register("VariablesResponse",  VariablesResponse.class);

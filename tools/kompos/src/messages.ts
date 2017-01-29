@@ -93,7 +93,7 @@ export interface SourceInfo {
 }
 
 export interface SymbolMessage {
-  type: "symbolMessage";
+  type: "SymbolMessage";
   symbols: string[];
   ids:   number[];
 }
