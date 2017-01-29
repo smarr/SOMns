@@ -40,7 +40,6 @@ import tools.debugger.message.StepMessage.StepInto;
 import tools.debugger.message.StepMessage.StepOver;
 import tools.debugger.message.StepMessage.Stop;
 import tools.debugger.message.StoppedMessage;
-import tools.debugger.message.SuspendedEventMessage;
 import tools.debugger.message.SymbolMessage;
 import tools.debugger.message.ThreadsRequest;
 import tools.debugger.message.ThreadsResponse;
@@ -108,13 +107,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   public void prepareSteppingAfterNextRootNode() {
     breakpoints.prepareSteppingAfterNextRootNode();
-  }
-
-  synchronized SuspendedEvent getSuspendedEvent(final int activityId) {
-    Suspension suspension = idToSuspension.get(activityId);
-    assert suspension != null;
-    assert suspension.getEvent() != null;
-    return suspension.getEvent();
   }
 
   Suspension getSuspension(final int activityId) {
@@ -219,7 +211,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   public static Gson createJsonProcessor() {
     ClassHierarchyAdapterFactory<OutgoingMessage> outMsgAF = new ClassHierarchyAdapterFactory<>(OutgoingMessage.class, "type");
     outMsgAF.register("source",       SourceMessage.class);
-    outMsgAF.register("suspendEvent", SuspendedEventMessage.class);
     outMsgAF.register("StoppedEvent", StoppedMessage.class);
     outMsgAF.register("SymbolMessage",      SymbolMessage.class);
     outMsgAF.register("StackTraceResponse", StackTraceResponse.class);
