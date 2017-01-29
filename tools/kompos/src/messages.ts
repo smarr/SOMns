@@ -200,8 +200,11 @@ export interface StackFrame {
   /** Optional, end line of the range covered by the stack frame. */
   endLine: number;
 
-  /** Optional end column of the range covered by the stack frame. */
+  /** Optional, end column of the range covered by the stack frame. */
   endColumn: number;
+
+  /** Optional, number of characters in the range */
+  length: number;
 }
 
 export interface StackTraceResponse {
