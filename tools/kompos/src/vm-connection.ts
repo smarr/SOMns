@@ -12,14 +12,14 @@ import {Breakpoint} from "./breakpoints";
  * the communication protocol, currently using JSON.
  */
 export class VmConnection {
-  private socket: WebSocket;
-  private binarySocket: WebSocket;
-  private controller: Controller;
+  private socket:                WebSocket;
+  private traceDataSocket:       WebSocket;
+  private controller:            Controller;
 
-  constructor() {
-    this.socket = null;
-    this.binarySocket = null;
-    this.controller = null;
+  constructor(useTraceData: boolean) {
+    this.socket          = null;
+    this.traceDataSocket = null;
+    this.controller      = null;
   }
 
   setController(controller: Controller) {
@@ -30,13 +30,23 @@ export class VmConnection {
     return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
   }
 
+  private connectTraceDataSocket() {
+    if (!this.useTraceData) { return; }
+
+    console.assert(this.traceDataSocket === null || this.traceDataSocket.readyState === WebSocket.CLOSED);
+    this.traceDataSocket = new WebSocket("ws://localhost:7978");
+    (<any> this.traceDataSocket).binaryType = "arraybuffer"; // workaround, typescript dosn't recognize this property
+
+    const controller = this.controller;
+    this.traceDataSocket.onmessage = function (e) {
+      const data: DataView = new DataView(e.data);
+      controller.onTracingData(data);
+    };
+  }
+
   connect() {
     console.assert(this.socket === null || this.socket.readyState === WebSocket.CLOSED);
     this.socket = new WebSocket("ws://localhost:7977");
-
-    console.assert(this.binarySocket === null || this.binarySocket.readyState === WebSocket.CLOSED);
-    this.binarySocket = new WebSocket("ws://localhost:7978");
-    (<any> this.binarySocket).binaryType = "arraybuffer"; // workaround, typescript dosn't recognize this property
 
     const controller = this.controller;
     this.socket.onopen = function () {
@@ -70,10 +80,7 @@ export class VmConnection {
       }
     };
 
-    this.binarySocket.onmessage = function (e) {
-      const data: DataView = new DataView(e.data);
-      controller.onTracingData(data);
-    };
+    this.connectTraceDataSocket();
   }
 
   disconnect() {
