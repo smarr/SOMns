@@ -4,12 +4,12 @@ import { expect } from "chai";
 import * as fs from "fs";
 import {X_OK} from "constants";
 
-import { SomConnection, closeConnection, SOM, OnMessageEvent, PING_PONG_URI,
-  expectStack, expectSourceCoordinate, expectFullSourceCoordinate,
-  HandleFirstSuspendEvent, startSomAndConnect, send } from "./test-setup";
+import { SOM, PING_PONG_URI, ControllerWithInitialBreakpoints,
+  TestConnection, HandleStoppedAndGetStackTrace,
+  expectStack, expectSourceCoordinate } from "./test-setup";
 
-import {SourceMessage, SuspendEventMessage,
-  StepMessage, createLineBreakpointData, createSectionBreakpointData} from "../src/messages";
+import { SourceMessage, createLineBreakpointData,
+  createSectionBreakpointData } from "../src/messages";
 
 let connectionPossible = false;
 function onlyWithConnection(fn) {
@@ -32,12 +32,12 @@ describe("Basic Project Setup", () => {
     });
 
     it("should be possible to connect", done => {
-      const connectionP = startSomAndConnect();
-      connectionP.then(connection => {
-        closeConnection(connection, done);
+      const conn = new TestConnection();
+      conn.fullyConnected.then(_ => {
+        conn.close(done);
         connectionPossible = true;
       });
-      connectionP.catch(reason => {
+      conn.fullyConnected.catch(reason => {
         done(reason);
       });
     });
@@ -45,29 +45,27 @@ describe("Basic Project Setup", () => {
 });
 
 describe("Basic Protocol", function() {
-  let connectionP: Promise<SomConnection> = null;
+  let conn: TestConnection;
+
   const closeConnectionAfterSuite = (done) => {
-    connectionP.then(c => { closeConnection(c, done); });
-    connectionP.catch(reason => done(reason));
+    conn.fullyConnected.then(_ => { conn.close(done); });
+    conn.fullyConnected.catch(reason => done(reason));
   };
 
   describe("source message", () => {
-    // Capture first source message for testing
-    let firstSourceCaptured = false;
-    let getSourceData: (event: OnMessageEvent) => void;
-    let sourceP = new Promise<SourceMessage>((resolve, _reject) => {
-      getSourceData = (event: OnMessageEvent) => {
-        if (firstSourceCaptured) { return; }
-        const data = JSON.parse(event.data);
-        if (data.type === "source") {
-          firstSourceCaptured = true;
-          resolve(data);
-        }
-      };
-    });
+    let sourceP: Promise<SourceMessage>;
 
     before("Start SOMns and Connect", () => {
-      connectionP = startSomAndConnect(getSourceData, []);
+      conn = new TestConnection();
+      const ctrl = new ControllerWithInitialBreakpoints([], conn);
+      let firstSourceCaptured = false;
+      sourceP = new Promise<SourceMessage>((resolve, _reject) => {
+        ctrl.onReceivedSource = (msg: SourceMessage) => {
+          if (firstSourceCaptured) { return; };
+          firstSourceCaptured = true;
+          resolve(msg);
+        };
+      });
     });
 
     after(closeConnectionAfterSuite);
@@ -112,221 +110,118 @@ describe("Basic Protocol", function() {
     }));
   });
 
-  describe("setting a line breakpoint", () => {
-    const event = new HandleFirstSuspendEvent();
+  const breakpointTests = [
+    {suite:       "setting a line breakpoint",
+     breakpoint:  createLineBreakpointData(PING_PONG_URI, 70, true),
+     test:        "should accept line breakpoint, and halt on expected line",
+     stackLength: 7,
+     topMethod:   "PingPong>>#benchmark",
+     line:        70},
 
-    before("Start SOMns and Connect", () => {
-      const breakpoint = createLineBreakpointData(PING_PONG_URI, 70, true);
-      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
+    {suite:       "setting a source section sender breakpoint",
+     breakpoint:  createSectionBreakpointData(PING_PONG_URI, 16, 14, 3, "MessageSenderBreakpoint", true),
+     test:        "should accept send breakpoint, and halt on expected source section",
+     stackLength: 2,
+     topMethod:   "Ping>>#start",
+     line:        16},
+
+    {suite:       "setting a source section asynchronous method receiver breakpoint",
+     breakpoint:  createSectionBreakpointData(PING_PONG_URI, 57, 9, 88, "AsyncMessageReceiverBreakpoint", true),
+     test:        "should accept async method receiver breakpoint, and halt on expected source section",
+     stackLength: 2,
+     topMethod:   "Pong>>#ping:",
+     line:        57},
+
+    {suite:       "setting a source section receiver breakpoint",
+     breakpoint:  createSectionBreakpointData(PING_PONG_URI, 16, 14, 3, "MessageReceiverBreakpoint", true),
+     test:        "should accept send breakpoint, and halt on expected source section",
+     stackLength: 2,
+     topMethod:   "Pong>>#ping:",
+     line:        57},
+
+     {suite:      "setting a source section promise resolver breakpoint for normal resolution",
+     breakpoint:  createSectionBreakpointData(PING_PONG_URI, 73, 17, 3, "PromiseResolverBreakpoint", true),
+     test:        "should accept promise resolver breakpoint, and halt on expected source section",
+     stackLength: 2,
+     topMethod:   "Ping>>#start",
+     line:        15},
+
+     {suite:      "setting a source section promise resolution breakpoint for normal resolution",
+     breakpoint:  createSectionBreakpointData(PING_PONG_URI, 73, 17, 3, "PromiseResolutionBreakpoint", true),
+     test:        "should accept promise resolution breakpoint, and halt on expected source section",
+     stackLength: 2,
+     topMethod:   "Thing>>#println",
+     line:        71},
+
+     {suite:      "setting a source section promise resolver breakpoint for null resolution",
+     breakpoint:  createSectionBreakpointData(PING_PONG_URI, 16, 14, 3, "PromiseResolverBreakpoint", true),
+     test:        "should accept promise resolver breakpoint for null resolution, and halt on expected source section",
+     stackLength: 2,
+     topMethod:   "Pong>>#ping:",
+     line:        57},
+
+     {suite:      "setting a source section promise resolver breakpoint for chained resolution",
+     breakpoint:  createSectionBreakpointData(PING_PONG_URI, 26, 20, 3, "PromiseResolverBreakpoint", true),
+     test:        "should accept promise resolver breakpoint for chained resolution, and halt on expected source section",
+     stackLength: 2,
+     topMethod:   "Ping>>#validate:",
+     line:        31},
+
+     {suite:      "setting a source section promise resolution breakpoint for chained resolution",
+     breakpoint:  createSectionBreakpointData(PING_PONG_URI, 26, 20, 3, "PromiseResolutionBreakpoint", true),
+     test:        "should accept promise resolution breakpoint for chained resolution, and halt on expected source section",
+     stackLength: 2,
+     topMethod:   "Ping>>#$blockMethod@27@33:",
+     line:        27}
+  ];
+
+  breakpointTests.forEach(desc => {
+    describe(desc.suite, () => {
+      let ctrl: HandleStoppedAndGetStackTrace;
+
+      before("Start SOMns and Connect", () => {
+        conn = new TestConnection();
+        ctrl = new HandleStoppedAndGetStackTrace([desc.breakpoint], conn);
+      });
+
+      after(closeConnectionAfterSuite);
+
+      it(desc.test, onlyWithConnection(() => {
+        return ctrl.stackP.then(msg => {
+          expectStack(msg.stackFrames, desc.stackLength, desc.topMethod, desc.line);
+        });
+      }));
     });
-
-    after(closeConnectionAfterSuite);
-
-    it("should accept line breakpoint, and halt on expected line", onlyWithConnection(() => {
-      return event.suspendP.then(msg => {
-        expectStack(msg.stack, 7, "PingPong>>#benchmark", 70);
-      });
-    }));
-
-    it("should have a well structured suspended event", onlyWithConnection(() => {
-      return event.suspendP.then(msg => {
-        expectFullSourceCoordinate(msg.stack[0].sourceSection);
-        expect(msg.id).to.equal("se-1");
-        expect(msg.sourceUri).to.equal(PING_PONG_URI);
-        expect(msg.topFrame.arguments[0]).to.equal("a PingPong");
-        expect(msg.topFrame.slots["Local(ping)"]).to.equal("a Nil");
-      });
-    }));
-  });
-
-  describe("setting a source section sender breakpoint", () => {
-    const event = new HandleFirstSuspendEvent();
-
-    before("Start SOMns and Connect", () => {
-      const breakpoint = createSectionBreakpointData(PING_PONG_URI, 16, 14, 3,
-        "MessageSenderBreakpoint", true);
-      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
-    });
-
-    after(closeConnectionAfterSuite);
-
-    it("should accept send breakpoint, and halt on expected source section", onlyWithConnection(() => {
-      return event.suspendP.then(msg => {
-        expectStack(msg.stack, 2, "Ping>>#start", 16);
-      });
-    }));
-  });
-
-  describe("setting a source section asynchronous method receiver breakpoint", () => {
-    const event = new HandleFirstSuspendEvent();
-
-    before("Start SOMns and Connect", () => {
-      const breakpoint = createSectionBreakpointData(PING_PONG_URI, 57, 9, 88,
-        "AsyncMessageReceiverBreakpoint", true);
-      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
-    });
-
-    after(closeConnectionAfterSuite);
-
-    it("should accept async method receiver breakpoint, and halt on expected source section", onlyWithConnection(() => {
-      return event.suspendP.then(msg => {
-        expectStack(msg.stack, 2, "Pong>>#ping:", 57);
-      });
-    }));
-  });
-
-  describe("setting a source section receiver breakpoint", () => {
-    const event = new HandleFirstSuspendEvent();
-
-    before("Start SOMns and Connect", () => {
-      const breakpoint = createSectionBreakpointData(PING_PONG_URI, 16, 14, 3,
-        "MessageReceiverBreakpoint", true);
-      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
-    });
-
-    after(closeConnectionAfterSuite);
-
-    it("should accept send breakpoint, and halt on expected source section", onlyWithConnection(() => {
-      return event.suspendP.then(msg => {
-        expectStack(msg.stack, 2, "Pong>>#ping:", 57);
-      });
-    }));
-  });
-
- describe("setting a source section promise resolver breakpoint for normal resolution", () => {
-    const event = new HandleFirstSuspendEvent();
-
-    before("Start SOMns and Connect", () => {
-      const breakpoint = createSectionBreakpointData(PING_PONG_URI, 73, 17, 3,
-        "PromiseResolverBreakpoint", true);
-      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
-    });
-
-    after(closeConnectionAfterSuite);
-
-    it("should accept promise resolver breakpoint, and halt on expected source section", onlyWithConnection(() => {
-      return event.suspendP.then(msg => {
-        expectStack(msg.stack, 2, "Ping>>#start", 15);
-      });
-    }));
-  });
-
-  describe("setting a source section promise resolution breakpoint for normal resolution", () => {
-    const event = new HandleFirstSuspendEvent();
-
-    before("Start SOMns and Connect", () => {
-      const breakpoint = createSectionBreakpointData(PING_PONG_URI, 73, 17, 3,
-        "PromiseResolutionBreakpoint", true);
-      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
-    });
-
-    after(closeConnectionAfterSuite);
-
-    it("should accept promise resolution breakpoint, and halt on expected source section", onlyWithConnection(() => {
-      return event.suspendP.then(msg => {
-        expectStack(msg.stack, 2, "Thing>>#println", 71);
-      });
-    }));
-  });
-
-  describe("setting a source section promise resolver breakpoint for null resolution", () => {
-    const event = new HandleFirstSuspendEvent();
-
-    before("Start SOMns and Connect", () => {
-      const breakpoint = createSectionBreakpointData(PING_PONG_URI, 16, 14, 3,
-        "PromiseResolverBreakpoint", true);
-      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
-    });
-
-    after(closeConnectionAfterSuite);
-
-    it("should accept promise resolver breakpoint for null resolution, and halt on expected source section", onlyWithConnection(() => {
-      return event.suspendP.then(msg => {
-        expectStack(msg.stack, 2, "Pong>>#ping:", 57);
-      });
-    }));
-  });
-
-  describe("setting a source section promise resolver breakpoint for chained resolution", () => {
-    const event = new HandleFirstSuspendEvent();
-
-    before("Start SOMns and Connect", () => {
-      const breakpoint = createSectionBreakpointData(PING_PONG_URI, 26, 20, 3,
-        "PromiseResolverBreakpoint", true);
-      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
-    });
-
-    after(closeConnectionAfterSuite);
-
-    it("should accept promise resolver breakpoint for chained resolution, and halt on expected source section", onlyWithConnection(() => {
-      return event.suspendP.then(msg => {
-        expectStack(msg.stack, 2, "Ping>>#validate:", 31);
-      });
-    }));
-  });
-
-  describe("setting a source section promise resolution breakpoint for chained resolution", () => {
-    const event = new HandleFirstSuspendEvent();
-
-    before("Start SOMns and Connect", () => {
-      const breakpoint = createSectionBreakpointData(PING_PONG_URI, 26, 20, 3,
-        "PromiseResolutionBreakpoint", true);
-      connectionP = startSomAndConnect(event.getSuspendEvent, [breakpoint]);
-    });
-
-    after(closeConnectionAfterSuite);
-
-    it("should accept promise resolution breakpoint for chained resolution, and halt on expected source section", onlyWithConnection(() => {
-      return event.suspendP.then(msg => {
-        expectStack(msg.stack, 2, "Ping>>#$blockMethod@27@33:", 27);
-      });
-    }));
   });
 
   describe("stepping", () => {
     // Capture suspended events
-    const suspendPs: Promise<SuspendEventMessage>[] = [];
-    const numSuspends = 4;
-    const resolves = [];
-    for (let i = 0; i < numSuspends; i++) {
-      suspendPs.push(new Promise<SuspendEventMessage>((res, _rej) => resolves.push(res)));
-    }
-
-    let capturedEvents = 0;
-    let getSuspendEvent: (event: OnMessageEvent) => void;
-
-    getSuspendEvent = (event: OnMessageEvent) => {
-      if (capturedEvents > numSuspends) { return; }
-      const data = JSON.parse(event.data);
-      if (data.type === "suspendEvent") {
-        resolves[capturedEvents](data);
-        capturedEvents += 1;
-      }
-    };
+    let ctrl: HandleStoppedAndGetStackTrace;
 
     before("Start SOMns and Connect", () => {
       const breakpoint = createSectionBreakpointData(PING_PONG_URI, 16, 14, 3,
         "MessageSenderBreakpoint", true);
-      connectionP = startSomAndConnect(getSuspendEvent, [breakpoint]);
+      conn = new TestConnection();
+      ctrl = new HandleStoppedAndGetStackTrace([breakpoint], conn, 4);
     });
 
     after(closeConnectionAfterSuite);
 
     it("should stop initially at breakpoint", onlyWithConnection(() => {
-      return suspendPs[0].then(msg => {
-        expectStack(msg.stack, 2, "Ping>>#start", 16);
+      return ctrl.stackP.then(msg => {
+        expectStack(msg.stackFrames, 2, "Ping>>#start", 16);
       });
     }));
 
     it("should single stepping", onlyWithConnection(() => {
       return new Promise((resolve, _reject) => {
-        suspendPs[0].then(msg => {
-          const step: StepMessage = {action: "stepInto", suspendEvent: msg.id};
-          connectionP.then(con => {
-            send(con.socket, step); });
+        ctrl.stackP.then(_ => {
+          conn.fullyConnected.then(_ => {
+            conn.sendDebuggerAction("stepInto", ctrl.stoppedActivities[0]);
+          });
 
-          const p = suspendPs[1].then(msgAfterStep => {
-            expectStack(msgAfterStep.stack, 2, "Ping>>#start", 17);
+          const p = ctrl.getStackP(1).then(msgAfterStep => {
+            expectStack(msgAfterStep.stackFrames, 2, "Ping>>#start", 17);
           });
           resolve(p);
         });
@@ -336,33 +231,33 @@ describe("Basic Protocol", function() {
     it("should be possible to dynamically activate line breakpoints",
         onlyWithConnection(() => {
       return Promise.all([
-        suspendPs[1].then(msgAfterStep => {
-          connectionP.then(con => {
+        ctrl.getStackP(1).then(_ => {
+          conn.fullyConnected.then(_ => {
             // set another breakpoint, after stepping, and with connection
             const lbp = createLineBreakpointData(PING_PONG_URI, 22, true);
-            send(con.socket, {action: "updateBreakpoint", breakpoint: lbp});
-            send(con.socket, {action: "resume", suspendEvent: msgAfterStep.id});
+            conn.updateBreakpoint(lbp);
+            conn.sendDebuggerAction("resume", ctrl.stoppedActivities[1]);
           });
         }),
-        suspendPs[2].then(msgLineBP => {
-          expectStack(msgLineBP.stack, 2, "Ping>>#ping", 22);
+        ctrl.getStackP(2).then(msgLineBP => {
+          expectStack(msgLineBP.stackFrames, 2, "Ping>>#ping", 22);
         })]);
     }));
 
     it("should be possible to disable a line breakpoint",
         onlyWithConnection(() => {
       return new Promise((resolve, _reject) => {
-        suspendPs[2].then(msgAfterStep => {
-          connectionP.then(con => {
+        ctrl.getStackP(2).then(_ => {
+          conn.fullyConnected.then(_ => {
             const lbp22 = createLineBreakpointData(PING_PONG_URI, 23, true);
-            send(con.socket, {action: "updateBreakpoint", breakpoint: lbp22});
+            conn.updateBreakpoint(lbp22);
 
             const lbp21 = createLineBreakpointData(PING_PONG_URI, 22, false);
-            send(con.socket, {action: "updateBreakpoint", breakpoint: lbp21});
-            send(con.socket, {action: "resume", suspendEvent: msgAfterStep.id});
+            conn.updateBreakpoint(lbp21);
+            conn.sendDebuggerAction("resume", ctrl.stoppedActivities[2]);
 
-            const p = suspendPs[3].then(msgLineBP => {
-              expectStack(msgLineBP.stack, 2, "Ping>>#ping", 23);
+            const p = ctrl.getStackP(3).then(msgLineBP => {
+              expectStack(msgLineBP.stackFrames, 2, "Ping>>#ping", 23);
             });
             resolve(p);
           });

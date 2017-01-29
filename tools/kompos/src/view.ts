@@ -2,8 +2,8 @@
 "use strict";
 
 import {Controller} from "./controller";
-import {Source, Method, SuspendEventMessage, IdMap, Frame, SourceCoordinate,
-  TaggedSourceCoordinate, getSectionId} from "./messages";
+import {Source, Method, IdMap, StackFrame, SourceCoordinate, StackTraceResponse,
+  TaggedSourceCoordinate, Scope, getSectionId} from "./messages";
 import {Breakpoint, MessageBreakpoint, LineBreakpoint} from "./breakpoints";
 
 declare var ctrl: Controller;
@@ -481,14 +481,13 @@ export class View {
     enableMethodBreakpointHover(sourceFile);
   }
 
-  displaySuspendEvent(data: SuspendEventMessage, sourceId: string) {
     let list = document.getElementById("stack-frames");
     while (list.lastChild) {
       list.removeChild(list.lastChild);
     }
 
-    for (let i = 0; i < data.stack.length; i++) {
-      showFrame(data.stack[i], i, list);
+    for (let i = 0; i < data.stackFrames.length; i++) {
+      showFrame(data.stackFrames[i], i, list);
     }
 
     list = document.getElementById("frame-state");

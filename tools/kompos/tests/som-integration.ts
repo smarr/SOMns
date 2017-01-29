@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import { spawn } from "child_process";
-import { SomConnection, closeConnection, SOM, execSom, HandleFirstSuspendEvent,
-  startSomAndConnect, expectStack } from "./test-setup";
+import { SOM, HandleStoppedAndGetStackTrace, TestConnection, execSom,
+  expectStack } from "./test-setup";
 
 
 describe("Command-line Behavior", function() {
@@ -44,25 +44,25 @@ ERROR: MessageNotUnderstood(Integer>>#foobar)\n");
 });
 
 describe("Language Debugger Integration", function() {
+  let conn: TestConnection;
+  let ctrl: HandleStoppedAndGetStackTrace;
 
-  let connectionP: Promise<SomConnection> = null;
   const closeConnectionAfterSuite = (done) => {
-    connectionP.then(c => { closeConnection(c, done); });
-    connectionP.catch(reason => done(reason));
+    conn.fullyConnected.then(_ => { conn.close(done); });
+    conn.fullyConnected.catch(reason => done(reason));
   };
 
   describe("execute `1 halt` and get suspended event", () => {
-    const event = new HandleFirstSuspendEvent();
-
     before("Start SOMns and Connect", () => {
-      connectionP = startSomAndConnect(event.getSuspendEvent, [], ["halt"]);
+      conn = new TestConnection(["halt"]);
+      ctrl = new HandleStoppedAndGetStackTrace([], conn);
     });
 
     after(closeConnectionAfterSuite);
 
     it("should halt on expected source section", () => {
-      return event.suspendP.then(msg => {
-        expectStack(msg.stack, 7, "PingPongApp>>#testHalt", 84);
+      return ctrl.stackP.then(msg => {
+        expectStack(msg.stackFrames, 7, "PingPongApp>>#testHalt", 84);
       });
     });
   });

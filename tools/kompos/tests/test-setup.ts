@@ -3,10 +3,11 @@ import { ChildProcess, spawn, spawnSync, SpawnSyncReturns } from "child_process"
 import { resolve } from "path";
 import * as WebSocket from "ws";
 
-import {SuspendEventMessage, BreakpointData, Respond, SourceCoordinate,
-  FullSourceCoordinate, Frame} from "../src/messages";
+import {Controller} from "../src/controller";
+import {BreakpointData, SourceCoordinate, StoppedMessage, StackTraceResponse,
+  FullSourceCoordinate, StackFrame} from "../src/messages";
+import {VmConnection} from "../src/vm-connection";
 
-const DEBUGGER_PORT = 7977;
 const SOM_BASEPATH = "../../";
 export const SOM = SOM_BASEPATH + "som";
 export const PING_PONG_URI = "file:" + resolve("tests/pingpong.som");
@@ -14,11 +15,12 @@ export const PING_PONG_URI = "file:" + resolve("tests/pingpong.som");
 const PRINT_SOM_OUTPUT = false;
 const PRINT_CMD_LINE   = false;
 
-export function expectStack(stack: Frame[], length: number, methodName: string,
+export function expectStack(stack: StackFrame[], length: number, methodName: string,
     startLine: number) {
   expect(stack).lengthOf(length);
-  expect(stack[0].methodName).to.equal(methodName);
-  expect(stack[0].sourceSection.startLine).to.equal(startLine);
+  expect(stack[0]).to.be.not.null;
+  expect(stack[0].name).to.equal(methodName);
+  expect(stack[0].line).to.equal(startLine);
 }
 
 export function expectSourceCoordinate(section: SourceCoordinate) {
@@ -42,23 +44,90 @@ export interface OnMessageHandler {
   (event: OnMessageEvent): void;
 }
 
-export interface SomConnection {
-  somProc: ChildProcess;
-  socket:  WebSocket;
-  closed:  boolean;
+export class TestConnection extends VmConnection {
+  private somProc: ChildProcess;
+  private closed:  boolean;
+  private connectionResolver;
+  public readonly fullyConnected: Promise<boolean>;
+
+  constructor(extraArgs?: string[], triggerDebugger?: boolean, testFile?: string) {
+    super(false);
+    this.closed = false;
+    this.startSom(extraArgs, triggerDebugger, testFile);
+    this.fullyConnected = this.initConnection();
+  }
+
+  private startSom(extraArgs?: string[], triggerDebugger?: boolean, testFile?: string) {
+    if (!testFile) { testFile = "tests/pingpong.som"; }
+    let args = ["-G", "-t1", "-wd", testFile];
+    if (triggerDebugger) { args = ["-d"].concat(args); };
+    if (extraArgs) { args = args.concat(extraArgs); }
+
+    if (PRINT_CMD_LINE) {
+      console.log("[CMD]" + SOM + " " + args.join(" "));
+    }
+
+    this.somProc = spawn(SOM, args);
+  }
+
+  protected onOpen() {
+    super.onOpen();
+    this.connectionResolver(true);
+  }
+
+  private initConnection(): Promise<boolean> {
+    const promise = new Promise((resolve, reject) => {
+      this.connectionResolver = resolve;
+      let connecting = false;
+
+      if (PRINT_SOM_OUTPUT) {
+        this.somProc.stderr.on("data", (data) => { console.error(data.toString()); });
+      }
+
+      this.somProc.stdout.on("data", (data) => {
+        const dataStr = data.toString();
+        if (PRINT_SOM_OUTPUT) {
+          console.log(dataStr);
+        }
+        if (dataStr.includes("Started HTTP Server") && !connecting) {
+          connecting = true;
+          this.connect();
+        }
+        if (dataStr.includes("Failed starting WebSocket and/or HTTP Server")) {
+          reject(new Error("SOMns failed to starting WebSocket and/or HTTP Server"));
+        }
+      });
+    });
+    return promise;
+  }
+
+  public close(done: MochaDone) {
+    if (this.closed) {
+      done();
+      return;
+    }
+
+    this.somProc.on("exit", _code => {
+      this.closed = true;
+      // wait until process is shut down, to make sure all ports are closed
+      done();
+    });
+    this.somProc.kill();
+  }
 }
 
-export function closeConnection(connection: SomConnection, done: MochaDone) {
-  if (connection.closed) {
-    done();
-    return;
+export class ControllerWithInitialBreakpoints extends Controller {
+  private initialBreakpoints: BreakpointData[];
+
+  constructor(initialBreakpoints: BreakpointData[], vmConnection: VmConnection) {
+    super(vmConnection);
+    this.initialBreakpoints = initialBreakpoints;
   }
-  connection.somProc.kill();
-  connection.somProc.on("exit", _code => {
-    connection.closed = true;
-    // wait until process is shut down, to make sure all ports are closed
-    done();
-  });
+
+  public onConnect() {
+    super.onConnect();
+    this.vmConnection.sendInitialBreakpoints(this.initialBreakpoints);
+  }
 }
 
 export function execSom(extraArgs: string[]): SpawnSyncReturns<string> {
@@ -66,74 +135,57 @@ export function execSom(extraArgs: string[]): SpawnSyncReturns<string> {
   return spawnSync(SOM, args);
 }
 
-export class HandleFirstSuspendEvent {
-  private firstSuspendCaptured: boolean;
-  public getSuspendEvent: (event: OnMessageEvent) => void;
+export class HandleStoppedAndGetStackTrace extends ControllerWithInitialBreakpoints {
+  private numStopped: number;
+  private readonly numOps: number;
+  public readonly stackP: Promise<StackTraceResponse>;
+  public readonly stackPs: Promise<StackTraceResponse>[];
+  private resolveStackP;
+  private readonly resolveStackPs;
+  public readonly stoppedActivities: number[];
 
-  public readonly suspendP: Promise<SuspendEventMessage>;
+  constructor(initialBreakpoints: BreakpointData[], vmConnection: VmConnection,
+      numOps: number = 1) {
+    super(initialBreakpoints, vmConnection);
 
-  constructor() {
-    this.firstSuspendCaptured = false;
-    this.suspendP = new Promise<SuspendEventMessage>((resolve, _reject) => {
-      this.getSuspendEvent = (event: OnMessageEvent) => {
-        if (this.firstSuspendCaptured) { return; }
-        const data = JSON.parse(event.data);
-        if (data.type === "suspendEvent") {
-          this.firstSuspendCaptured = true;
-          resolve(data);
-        }
-      };
+    this.numOps = numOps;
+    this.numStopped = 0;
+    this.stoppedActivities = [];
+
+    this.stackP = new Promise<StackTraceResponse>((resolve, _reject) => {
+      this.resolveStackP = resolve;
     });
+
+    if (numOps > 1) {
+      this.resolveStackPs = [];
+      this.stackPs = [];
+      for (let i = 1; i < numOps; i += 1) {
+        this.stackPs.push(new Promise<StackTraceResponse>((resolve, _reject) => {
+          this.resolveStackPs.push(resolve);
+        }));
+      }
+    }
   }
-}
 
-export function send(socket: WebSocket, respond: Respond) {
-  socket.send(JSON.stringify(respond));
-}
-
-export function startSomAndConnect(onMessageHandler?: OnMessageHandler,
-    initialBreakpoints?: BreakpointData[], extraArgs?: string[],
-    triggerDebugger?: boolean, testFile?: string): Promise<SomConnection> {
-  if (!testFile) { testFile = "tests/pingpong.som"; }
-  let args = ["-G", "-t1", "-wd", testFile];
-  if (triggerDebugger) { args = ["-d"].concat(args); };
-  if (extraArgs) { args = args.concat(extraArgs); }
-  if (PRINT_CMD_LINE) {
-    console.log("[CMD]" + SOM + args.join(" "));
+  public getStackP(idx: number) {
+    if (idx === 0) {
+      return this.stackP;
+    }
+    return this.stackPs[idx - 1];
   }
-  const somProc = spawn(SOM, args);
-  const promise = new Promise((resolve, reject) => {
-    let connecting = false;
 
-    somProc.stderr.on("data", (data) => {
-      if (PRINT_SOM_OUTPUT) {
-        console.error(data.toString());
-      }
-    });
+  public onStoppedEvent(msg: StoppedMessage) {
+    if (this.numStopped >= this.numOps) { return; }
+    this.stoppedActivities[this.numStopped] = msg.activityId;
+    this.numStopped += 1;
+    this.vmConnection.requestStackTrace(msg.activityId);
+  }
 
-    somProc.stdout.on("data", (data) => {
-      const dataStr = data.toString();
-      if (PRINT_SOM_OUTPUT) {
-        console.log(dataStr);
-      }
-      if (dataStr.includes("Started HTTP Server") && !connecting) {
-        connecting = true;
-        const socket = new WebSocket("ws://localhost:" + DEBUGGER_PORT);
-        socket.on("open", () => {
-          if (initialBreakpoints) {
-            send(socket, {action: "initialBreakpoints",
-              breakpoints: initialBreakpoints, debuggerProtocol: false});
-          }
-          resolve({somProc: somProc, socket: socket, closed: false});
-        });
-        if (onMessageHandler) {
-          socket.onmessage = onMessageHandler;
-        }
-      }
-      if (dataStr.includes("Failed starting WebSocket and/or HTTP Server")) {
-        reject(new Error("SOMns failed to starting WebSocket and/or HTTP Server"));
-      }
-    });
-  });
-  return promise;
+  public onStackTrace(msg: StackTraceResponse) {
+    if (this.numStopped === 1) {
+      this.resolveStackP(msg);
+      return;
+    }
+    this.resolveStackPs[this.numStopped - 2](msg);
+  }
 }
