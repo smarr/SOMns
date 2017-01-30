@@ -41,7 +41,7 @@ export interface Method {
 
 export type Message = SourceMessage |
   SymbolMessage | UpdateSourceSections | StoppedMessage |
-  StackTraceResponse | ScopesResponse | ThreadsResponse;
+  StackTraceResponse | ScopesResponse | ThreadsResponse | VariablesResponse;
 
 export interface SourceMessage {
   type:     "source";
@@ -242,6 +242,7 @@ export interface VariablesRequest {
 export interface VariablesResponse {
   type: "VariablesResponse";
   variables: Variable[];
+  variablesReference: number;
   requestId: number;
 }
 
