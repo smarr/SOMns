@@ -1456,22 +1456,20 @@ public class Parser {
 
     expect(NewLiteralArray, DelimiterOpeningTag.class);
 
-    boolean sawPeriod = true;
-
+    boolean needsSeparator = false;
     while (true) {
       comments();
-
       if (sym == EndLiteralArray) {
         expect(EndLiteralArray, DelimiterClosingTag.class);
         return createLiteralArray(expressions, getSource(coord));
       }
-
-      if (!sawPeriod) {
-        expect(Period, null);
+      if (needsSeparator) {
+        expect(Period,
+            "Could not parse statement. Expected a '.' but got '" + text + "'",
+            StatementSeparatorTag.class);
       }
-
       expressions.add(expression(builder));
-      sawPeriod = accept(Period, StatementSeparatorTag.class);
+      needsSeparator = !accept(Period, StatementSeparatorTag.class);
     }
   }
 
