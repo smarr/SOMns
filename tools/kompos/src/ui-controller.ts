@@ -4,7 +4,7 @@
 import {Controller}   from "./controller";
 import {Debugger}     from "./debugger";
 import {SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
-  SectionBreakpointType, ScopesResponse } from "./messages";
+  SectionBreakpointType, ScopesResponse, VariablesResponse } from "./messages";
 import {LineBreakpoint, MessageBreakpoint,
   createLineBreakpoint, createMsgBreakpoint} from "./breakpoints";
 import {dbgLog}       from "./source";
@@ -82,24 +82,28 @@ export class UiController extends Controller {
     }
   }
 
-  onStoppedEvent(msg: StoppedMessage) {
+  public onStoppedEvent(msg: StoppedMessage) {
     this.dbg.setSuspended(msg.activityId);
     this.vmConnection.requestActivityList();
     this.vmConnection.requestStackTrace(msg.activityId);
   }
 
-  onStackTrace(msg: StackTraceResponse) {
+  public onStackTrace(msg: StackTraceResponse) {
     this.vmConnection.requestScope(msg.stackFrames[0].id);
     this.view.switchDebuggerToSuspendedState();
     this.view.displayStackTrace(
       msg, this.dbg.getSourceId(msg.stackFrames[0].sourceUri));
   }
 
-  onScopes(msg: ScopesResponse) {
+  public onScopes(msg: ScopesResponse) {
     for (let s of msg.scopes) {
       this.vmConnection.requestVariables(s.variablesReference);
       this.view.displayScope(s);
     }
+  }
+
+  public onVariables(msg: VariablesResponse) {
+    this.view.displayVariables(msg.variablesReference, msg.variables);
   }
 
   onSymbolMessage(msg: SymbolMessage) {

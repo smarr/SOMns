@@ -91,6 +91,15 @@ export class VmConnection {
         case "StackTraceResponse":
           ctrl.onStackTrace(data);
           break;
+        case "ScopesResponse":
+          ctrl.onScopes(data);
+          break;
+        case "ThreadsResponse":
+          ctrl.onThreads(data);
+          break;
+        case "VariablesResponse":
+          ctrl.onVariables(data);
+          break;
         default:
           ctrl.onUnknownMessage(data);
           break;
