@@ -126,17 +126,17 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       | bobP r |
       bobP := (actors createActorFromValue: Bob) <-: meet: self.
       r := bobP whenResolved: [:bob |
-          (bob <-: answerNearRef) 
+          (bob <-: answerNearRef)
             whenResolved: [:bob2 | bob2 = bob ]].
       ^ assert: r resolvedWith: true.
     )
 
     public testAsyncTurnResultsInValue = (
       | bob |
-      bob := (actors createActorFromValue: Bob) <-: meet: self. 
+      bob := (actors createActorFromValue: Bob) <-: meet: self.
       ^ assert: (bob <-: answerValue) resolvedWith: 42.
     )
-    
+
     public testAsyncCellInstanceInActorIsFarRef = (
       | p |
       p := (actors createActorFromValue: Cell) <-: new: 4.
@@ -144,12 +144,12 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
         assert: (ObjectMirror reflecting: cellFRef) className equals: 'FarReference'
       ]
     )
-    
+
     public testAsyncCellPassedAsFarRef = (
       | cellLocal p promisePair |
       cellLocal := Cell new: 0.
       promisePair := actors createPromisePair.
-      
+
       p := (actors createActorFromValue: Cell) <-: new: cellLocal.
       p whenResolved: [:cellFRef |
         (cellFRef <-: valIsFarRef) whenResolved: [:isFRef |
@@ -173,14 +173,14 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       ].
       ^ promisePair promise
     )
-    
+
     public testIdentityOfFarRefs = (
       | pC1 pC2 c1 c2 pp |
       pp := actors createPromisePair.
-      
+
       pC1 := (actors createActorFromValue: Cell) <-: new: 4.
       pC2 := (actors createActorFromValue: Cell) <-: new: 5.
-      
+
       pC1 whenResolved: [:cellFRef |
         c1 := cellFRef.
         pC2 whenResolved: [:c2FRef |
@@ -191,21 +191,21 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       ].
       ^ pp promise
     )
-    
+
   ) : (
     TEST_CONTEXT = ()
   )
-  
+
   public class PromiseResolution = AsyncTestContext ()(
     public testAsyncWhenResolvedPromiseResolvesToBlockReturnValue = (
       | promisePair wrPromise assertPromise |
       promisePair := actors createPromisePair.
       wrPromise := promisePair promise whenResolved: [:v | v ].
-      
+
       assertPromise := wrPromise whenResolved: [:val |
         assert: val equals: 5.
       ].
-      
+
       promisePair resolve: 5.
       ^ assertPromise
     )
@@ -215,15 +215,15 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       (* Chained promises should be flattened *)
       promisePair1 := actors createPromisePair.
       promisePair2 := actors createPromisePair.
-      
+
       assertProm := promisePair1 promise whenResolved: [:r |
         assert: r equals: 500.
       ].
-      
+
       (* This should not yet resolve the promise, instead, it should
          essentially forward it to the 2nd promise and wait for its resolution. *)
       promisePair1 resolve: promisePair2 promise.
-      
+
       promisePair2 resolve: 500.
       ^ assertProm
     )
@@ -242,13 +242,13 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
     )
 (*  Currently not supported because SOMns's addition doesn't unwrap promises.
     Not sure this is essential/generally useful.
-    
+
     public testAsyncFibonacci = (
       | math result |
       math := (actors createActorFromValue: Math) <-: new.
       ^ assert: (math <-: fibonacci: 9) resolvedWith: 34
     )
-*) 
+*)
     public testAsyncFifo = (
       | recorder r1 r2 r3 r4 |
       recorder := (actors createActorFromValue: Recorder) <-: new.
@@ -262,13 +262,13 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       (assert: r2 resolvedWith: 2),
       (assert: r3 resolvedWith: 3),
       (assert: r4 resolvedWith: 4)
-    )  
+    )
 (*
     public testFifoFailstop = (
       | recorder recorderFork r1 r2 r3 r4 r5 |
       recorder := (actors createActorFromValue: Recorder) <-: new.
       recorderFork := recorder <-: yourself.
-              
+
       r1 := recorder <-: append: 'a'.
       r2 := recorder <-: append: 'b'.
       r3 := recorder <-: fail.
@@ -288,7 +288,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       tookTruePath := false.
 
       result := (math <-: isPositive: 9) <-: ifTrue: [tookTruePath := true. 7].
-      ^ result whenResolved: [:r | 
+      ^ result whenResolved: [:r |
         assert: r equals: 7.
         assert: tookTruePath.
       ]
@@ -334,9 +334,9 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
         | expected |
         expected := Vector new.
         expected, #a1, #a3, #a5, #a7, #b2, #b4, #b6, #b8, #a3a, #a3b, #a5a, #a5b, #a7a, #a7b, #b4a, #b4b, #b6a, #b6b, #b8a, #b8b.
-        
+
         assert: vec size equals: expected size.
-        
+
         vec doIndexes: [:i |
           assert: (vec at: i) equals: (expected at: i) ]
       ]
@@ -454,13 +454,13 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
   ) : (
     TEST_CONTEXT = ()
   )
-  
+
   public class Iteration = AsyncTestContext ()(
     public testAsyncCollectionDo = (
       | i arr prom |
       i := 0.
       arr := Array new: 5.
-      
+
       prom := actors async: arr do: [:e |
         | p |
         (* Block needs to return promise, because it is meant for things
@@ -470,31 +470,31 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
         i := i + 1.
         p promise
       ].
-      
+
       ^ prom whenResolved: [:r | assert: i equals: 5 ]
     )
-    
+
     public testAsyncToDo = (
       | v prom |
       v := Vector new.
-      
+
       prom := actors async: 1 to: 10 do: [:i |
         | p |
         p := actors createPromisePair.
         p resolve: i.
         v append: i.
         p promise ].
-      
+
       ^ prom whenResolved: [:r |
         assert: v size equals: 10.
         1 to: 10 do: [:i |
           assert: (v at: i) equals: i ] ]
     )
-    
+
     public testAsyncWhileTrue = (
       | cnt prom |
       cnt := 0.
-      
+
       prom := actors async: [cnt < 10] whileTrue: [
         | p |
         cnt := cnt + 1.
@@ -502,16 +502,16 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
         p resolve: cnt.
         p promise ].
 
-      ^ prom whenResolved: [:r | 
+      ^ prom whenResolved: [:r |
         assert: cnt equals: 10.
       ]
     )
-    
+
     public testAsyncWhileTrueCond = (
       | cnt prom cntCond |
       cnt := 0.
       cntCond := 0.
-      
+
       prom := actors async: [cntCond := cntCond + 1. cnt < 10] whileTrue: [
         | p |
         cnt := cnt + 1.
@@ -519,7 +519,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
         p resolve: cnt.
         p promise ].
 
-      ^ prom whenResolved: [:r | 
+      ^ prom whenResolved: [:r |
         assert: cnt equals: 10.
         assert: cntCond equals: 11.
       ]

@@ -18,39 +18,39 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       seed := ((seed * 1309) + 13849) & 65535.
       ^ seed
     )
-    
+
     (* Returns an integer within the range of [0, bound) *)
     public next: bound = (
       ^ next % bound
     )
-    
+
     (* Returns a double uniformly distributed in the range of [0.0, 1.0) *)
     public nextDouble = (
       ^ next // 65536
     )
-    
+
     public nextBoolean = (
       ^ next < 32768
     )
-    
-    (* Returns a double normally distributed with mean 0.0 
+
+    (* Returns a double normally distributed with mean 0.0
        and standard deviation of 1.0 *)
     public nextGaussian = (
       | v1 v2 s multiplier |
       gotNextGaussian ifTrue: [
         gotNextGaussian := false.
         ^ nextNextGaussian ].
-      
+
       v1 := (2.0 * nextDouble) - 1.0.
       v2 := (2.0 * nextDouble) - 1.0.
       s  := (v1 * v1) + (v2 * v2).
-      
+
       [s >= 1.0 or: [s = 0.0]] whileTrue: [
         v1 := (2.0 * nextDouble) - 1.0.
         v2 := (2.0 * nextDouble) - 1.0.
         s  := (v1 * v1) + (v2 * v2).
       ].
-      
+
       multiplier := (-2.0 * s log // s) sqrt.
       nextNextGaussian := v2 * multiplier.
       gotNextGaussian := true.
@@ -63,7 +63,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
   )
 
   (* === Savina Microbenchmarks === *)
-  
+
   public class PingPong new: numPings = Benchmark <: Value (
   | private NumPings = numPings.
   |
@@ -77,19 +77,19 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         pong <-: ping: self.
         pingsLeft := pingsLeft - 1.
       )
-    
+
       public ping = (
         pong <-: ping: self.
         pingsLeft := pingsLeft - 1.
       )
-    
+
       public pong: sender = (
         pingsLeft > 0
           ifTrue:  [ self <-: ping ]
           ifFalse: [ pong <-: stop ].
       )
     )
-  
+
     class Pong new: completionRes = (
     | private pongCount ::= 0.
       private completionRes = completionRes.
@@ -99,12 +99,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         sender <-: pong: self.
         pongCount := pongCount + 1.
       )
-    
+
       public stop = (
         completionRes resolve: pongCount
       )
     )
-    
+
     public benchmark = (
       | ping pong completionPP |
       completionPP := actors createPromisePair.
@@ -113,7 +113,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       ping <-: start.
       ^ completionPP promise
     )
-    
+
     public verifyResult: result = (
       ^ result = NumPings
     )
@@ -133,27 +133,27 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       public increment = (
         1 to: limit do: [:i |
           counter <-: increment ].
-        
+
         counter <-: requestCount: self.
       )
-      
+
       public count: cnt = (
         completionRes resolve: cnt = limit
       )
     )
-    
+
     public class CountingActor = (
     | private count ::= 0. |
     ) (
       public increment = (
         count := count + 1.
       )
-      
+
       public requestCount: requester = (
         requester <-: count: count
       )
     )
-  
+
     public benchmark = (
       | counter producer completionPP |
       completionPP := actors createPromisePair.
@@ -163,7 +163,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
 
       ^ completionPP promise
     )
-    
+
     public verifyResult: isCorrect = (
       ^ isCorrect
     )
@@ -186,22 +186,22 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         | sint res |
         sint := theta sin.
         res := sint * sint.
-        
+
         (* defeat dead code elimination *)
         res <= 0.0 ifTrue: [
           system error: 'Benchmark calculated unrealistic res value ' + res asString ]
       )
-     
+
       public process = (
         messagesProcessed := messagesProcessed + 1.
         self performComputation: 37.2.
-        
+
         messagesProcessed = numMessages ifTrue: [
           completionResolver resolve: messagesProcessed
         ]
       )
     )
-  
+
     public benchmark = (
       | benchActors promiseGroup |
       promiseGroup := nil.
@@ -213,13 +213,13 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           ifNotNil: [ promiseGroup := promiseGroup, promisePair promise ].
         (actors createActorFromValue: ThroughputActor) <-: new: promisePair resolver
       ].
-      
+
       numMessages timesRepeat: [
         benchActors do: [:a | a <-: process ] ].
-      
+
       ^ promiseGroup
     )
-    
+
     public verifyResult: result = (
       result do: [:n | n = numMessages ifFalse: [ ^ false ] ].
       ^ true
@@ -240,7 +240,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     class ForkJoinActor new: completionResolver = (
       completionResolver resolve: (performComputation: 37.2)
     )()
-    
+
     private performComputation: theta = (
       | sint res |
       sint := theta sin.
@@ -250,11 +250,11 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         system error: 'Benchmark calculated unrealistic res value ' + res asString ].
       ^ res
     )
-  
+
     public benchmark = (
       | promiseGroup |
       promiseGroup := nil.
-      
+
       numActors timesRepeat: [
         | promisePair |
         promisePair := actors createPromisePair.
@@ -265,7 +265,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       ].
       ^ promiseGroup
     )
-    
+
     public verifyResult: resultVector = (
       | expResult |
       expResult := performComputation: 37.2.
@@ -276,7 +276,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public newInstance: problemSize = ( ^ self new: problemSize asInteger )
     public setupVerifiedRun: run = ( run problemSize: 1 )
   )
-  
+
   public class ThreadRing new: numActors numPings: numPings = Benchmark <: Value(
   | private numActors = numActors.
     private numPings  = numPings.
@@ -295,7 +295,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           nextAct <-: exit: numActors - 1
         ]
       )
-      
+
       public exit: t = (
         t > 0 ifTrue: [
           nextAct <-: exit: t - 1
@@ -303,12 +303,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           completionRes resolve: id.
         ]
       )
-      
+
       public nextActor: actor = (
         nextAct := actor
       )
     )
-    
+
     public benchmark = (
       | threadActors completionPP |
       completionPP := actors createPromisePair.
@@ -318,7 +318,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         threadActor := (actors createActorFromValue: ThreadRingActor) <-: new: i resolver: completionPP resolver.
         threadActors at: i put: threadActor.
       ].
-      
+
       1 to: numActors do: [:i |
         | nextActor |
         nextActor := threadActors at: (i % numActors) + 1.
@@ -328,7 +328,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       (threadActors at: 1) <-: ping: numPings.
       ^ completionPP promise
     )
-    
+
     public verifyResult: result = (
       ^ result = 1
     )
@@ -341,11 +341,11 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
     public setupVerifiedRun: run = ( run problemSize: '30:300' )
   )
-  
+
   public class Chameneos meetings: numMeetings chameneos: numChameneos = Benchmark <: Value (
   | private numMeetings  = numMeetings.
     private numChameneos = numChameneos.
-    
+
     private red    = Red    new.
     private yellow = Yellow new.
     private blue   = Blue   new.
@@ -373,7 +373,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     class Faded = Value ()(
       public complement: other = ( ^ faded )
     )
-  
+
     class ChameneosMallActor new: completionRes = (
     | private waitingChameneo ::= nil.
       private sumMeetings     ::= 0.
@@ -404,7 +404,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         sumMeetings := sumMeetings + count.
         numFaded = numChameneos ifTrue: [ completionRes resolve: sumMeetings ]
       )
-      
+
       public meet: sender color: color = (
         n > 0 ifTrue: [
           waitingChameneo
@@ -419,7 +419,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ]
       )
     )
-    
+
     class ChameneosChameneoActor new: mall color: color = (
     | private mall       = mall.
       private color    ::= color.
@@ -438,26 +438,26 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         sender <-: change: color.
         mall   <-: meet: self color: color.
       )
-      
+
       public change: newColor = (
         color := newColor.
         meetings := meetings + 1.
         mall <-: meet: self color: newColor.
       )
-      
+
       public exit: sender = (
         color := faded.
         sender <-: meetingCount: meetings
       )
     )
-    
+
     public benchmark = (
       | mallActor completionPP |
       completionPP := actors createPromisePair.
       mallActor := (actors createActorFromValue: ChameneosMallActor) <-: new: completionPP resolver.
       ^ completionPP promise
     )
-    
+
     public verifyResult: sumMeetings = (
       ^ sumMeetings = (2 * numMeetings)
     )
@@ -470,7 +470,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
     public setupVerifiedRun: run = ( run problemSize: '100:200000' )
   )
-  
+
   (* Does not send the unnecessary exit messages because of using the promise
      for completion. *)
   public class BigContention numWorkers: numWorkers numMessages: numMessages = Benchmark <: Value (
@@ -493,7 +493,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       public pong: sender = (
         sender = expPinger ifFalse: [
           error: 'ERROR: expected: ' + expPinger asString + ' but received from ' + sender asString ].
-        
+
         numPings = numMessages
           ifTrue:  [ sinkActor <-: exit ]
           ifFalse: [
@@ -508,7 +508,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         (neighbors at: target) <-: ping: id
       )
     )
-    
+
     class SinkActor new: completionRes = (
       | private numMessages ::= 0.
         public  neighbors   ::= nil.
@@ -524,11 +524,11 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       | sinkActor bigActors unwrapPromise completionPP |
       completionPP := actors createPromisePair.
       sinkActor := (actors createActorFromValue: SinkActor) <-: new: completionPP resolver.
-      
+
       bigActors := TransferArray new: numWorkers.
       bigActors doIndexes: [:i |
         bigActors at: i put: ((actors createActorFromValue: BigActor) <-: new: i sink: sinkActor)].
-      
+
       (* we unwrap the promises here to avoid sending chained promises to all
          the actors. If the promise is not yet resolved (a race condition)
          they will end up chained, which is also expensive, especially since
@@ -545,7 +545,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
 
       ^ completionPP promise
     )
-    
+
     public verifyResult: result = (
       ^ result = numWorkers
     )
@@ -556,7 +556,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       ^ self numWorkers: (problem at: 1) asInteger
             numMessages: (problem at: 2) asInteger
     )
-    
+
     public setupVerifiedRun: run = (
       run problemSize: '20000:120'
     )
@@ -586,7 +586,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           worker <-: doWork.
         ]
       )
-      
+
       public endWork = (
         numWorkersTerminated := numWorkersTerminated + 1.
         numWorkersTerminated = numEntities ifTrue: [
@@ -594,7 +594,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ]
       )
     )
-    
+
     class Worker new: master dict: dictionary id: id = (
     | private messageCount ::= 0.
       private random = Random new: id + numMessages + writePercentage.
@@ -613,12 +613,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
               ifFalse: [ dictionary <-: read: self key: random next % dataLimit ] ]
           ifFalse: [ master <-: endWork ].
       )
-      
+
       public result: value = (
         self doWork
       )
     )
-    
+
     class DictionaryActor new: completionRes = (
     | private dataMap = self createDataMap: dataLimit.
       private completionRes = completionRes.
@@ -632,28 +632,28 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ].
         ^ dict
       )
-      
+
       public write: sender key: key value: val = (
         dataMap at: key put: val.
         sender <-: result: val
       )
-      
+
       public read: sender key: key = (
         sender <-: result: (dataMap at: key)
       )
-      
+
       public endWork = (
         completionRes resolve: dataMap size
       )
     )
-  
+
     public benchmark = (
       | master completionPP |
       completionPP := actors createPromisePair.
       master := (actors createActorFromValue: Master) <-: new: completionPP resolver.
       ^ completionPP promise
     )
-    
+
     public verifyResult: result = (
       ^ result = dataLimit
     )
@@ -665,7 +665,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
              numMessages: (problem at: 2) asInteger
          writePercentage: (problem at: 3) asInteger
     )
-    
+
     public setupVerifiedRun: run = (
       run problemSize: '100:100:50'
     )
@@ -694,7 +694,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ]
       )
     )
-    
+
     class Worker new: master sortedList: sortedList id: id = (
     | private master = master.
       private sortedList = sortedList.
@@ -723,12 +723,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
             master <-: endWork
           ]
       )
-      
+
       public result: val = (
         self doWork
       )
     )
-    
+
     class SortedList new: completionRes = (
     | private completionRes = completionRes.
       private dataList = SortedLinkedList new.
@@ -737,22 +737,22 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         dataList add: anInt.
         sender <-: result: anInt
       )
-      
+
       public contains: anInt sender: sender = (
         | result |
         result := dataList contains: anInt.
         sender <-: result: result.
       )
-      
+
       public size: sender = (
         sender <-: result: dataList size
       )
-      
+
       public endWork = (
         completionRes resolve: dataList size
       )
     )
-    
+
     class SortedLinkedList = (
     | private head ::= nil.
       private iterator ::= nil.
@@ -761,9 +761,9 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       | public item ::= i.
         public next ::= nil.
       |)()
-      
+
       public isEmpty = ( ^ head isNil )
-      
+
       public add: item = (
         | newNode after before |
         newNode := Node new: item.
@@ -775,19 +775,19 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           newNode next: head.
           head := newNode.
           ^ self ].
-        
+
         after  := head next.
         before := head.
-        
+
         [ after notNil and: [ item >= after item] ] whileTrue: [
           before := after.
           after  := after next.
         ].
-        
+
         newNode next: before next.
         before next: newNode.
       )
-      
+
       public contains: item = (
         | n |
         n := head.
@@ -797,7 +797,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ].
         ^ false
       )
-      
+
       public size = (
         | r n |
         r := 0.
@@ -809,14 +809,14 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ^ r
       )
     )
-  
+
     public benchmark = (
       | master completionPP |
       completionPP := actors createPromisePair.
       master := (actors createActorFromValue: Master) <-: new: completionPP resolver.
       ^ completionPP promise
     )
-    
+
     public verifyResult: result = (
       (numWorkers = 10 and: [numMessagesPerWorker =   20 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result =   18 ].
       (numWorkers = 10 and: [numMessagesPerWorker =  100 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result =  106 ].
@@ -826,7 +826,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       (numWorkers = 10 and: [numMessagesPerWorker = 1500 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result = 1496 ].
       (numWorkers = 20 and: [numMessagesPerWorker = 1000 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result = 1959 ].
       (numWorkers = 20 and: [numMessagesPerWorker = 2000 and: [writePercentage = 10 and: [sizePercentage = 1]]]) ifTrue: [ ^ result = 3956 ].
-      
+
       (* otherwise, warn that we don't know whether it is correct. *)
       ('---- result: ' + result asString + ' dont have a hardcoded verification result for this config yet') println.
       ^ false
@@ -840,7 +840,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
                writePercentage: (problem at: 3) asInteger
                 sizePercentage: (problem at: 4) asInteger
     )
-    
+
     public setupVerifiedRun: run = (
       run problemSize: '20:8000:10:1'
     )
@@ -857,7 +857,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     class Data new: datum from: sender = Value (
     | public datum  = datum.
       public sender = sender.|)()
-    
+
     class ManagerActor new: completionRes = (
     | private adjustedBufferSize = bufferSize - numProducers.
       private availableProducers = Vector new.
@@ -887,12 +887,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         availableConsumers isEmpty
           ifTrue:  [ pendingData append: (Data new: datum from: producer) ]
           ifFalse: [ availableConsumers removeFirst <-: data: datum from: producer ].
-        
+
         pendingData size >= adjustedBufferSize
           ifTrue:  [ availableProducers append: producer ]
           ifFalse: [ producer <-: produceData ]
       )
-      
+
       public consume: consumer = (
         pendingData isEmpty
           ifTrue: [
@@ -905,12 +905,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
             availableProducers isEmpty ifFalse: [
               availableProducers removeFirst <-: produceData ] ].
       )
-      
+
       public producerExit = (
         numTerminatedProducers := numTerminatedProducers + 1.
         tryExit
       )
-      
+
       private tryExit = (
         (numTerminatedProducers = numProducers and: [availableConsumers size = numConsumers])
           ifTrue: [
@@ -918,7 +918,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
             completionRes resolve: dataSum ].
       )
     )
-    
+
     class ProducerActor new: id manager: manager = (
     | private prodItem ::= 0.0.
       private itemsProduced ::= 0.
@@ -929,14 +929,14 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         manager <-: data: prodItem from: self.
         itemsProduced := itemsProduced + 1.
       )
-      
+
       public produceData = (
         itemsProduced < numItemsPerProducer
           ifTrue:  [ self prodData ]
           ifFalse: [ manager <-: producerExit ]
       )
     )
-    
+
     class ConsumerActor new: id manager: manager = (
     | private consItem ::= 0.0.
       private manager = manager.
@@ -944,20 +944,20 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       private consumeDataItem: dataToConsume = (
         consItem := processItem: consItem + dataToConsume cost: consCost.
       )
-      
+
       public data: datum from: sender = (
         consumeDataItem: datum.
         manager <-: consume: self
       )
-      
+
       public exit = ()
     )
-    
+
     private processItem: curTerm cost: cost = (
       | res random |
       res    := curTerm.
       random := Random new: cost.
-      
+
       cost > 0
         ifTrue: [
           cost timesRepeat: [
@@ -967,14 +967,14 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           res := res + (random nextDouble abs + 0.01) log ].
       ^ res
     )
-  
+
     public benchmark = (
       | manager completionPP |
       completionPP := actors createPromisePair.
       manager := (actors createActorFromValue: ManagerActor) <-: new: completionPP resolver.
       ^ completionPP promise
     )
-    
+
     public verifyResult: result = (
       (bufferSize = 40 and: [numProducers =  5 and: [numConsumers =  5 and: [numItemsPerProducer =  10]]]) ifTrue: [^ result round =     -654026].
       (bufferSize = 40 and: [numProducers = 10 and: [numConsumers = 10 and: [numItemsPerProducer =  60]]]) ifTrue: [^ result round =   -43522486].
@@ -992,13 +992,13 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public newInstance: problemSize = (
       | problem |
       problem := problemSize split: ':'.
-      
+
       ^ self bufferSize: (problem at: 1) asInteger
            numProducers: (problem at: 2) asInteger
            numConsumers: (problem at: 3) asInteger
     numItemsPerProducer: (problem at: 4) asInteger
     )
-    
+
     public setupVerifiedRun: run = (
       run problemSize: '50:40:40:1000'
     )
@@ -1014,7 +1014,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       public inc: anInt = ( value := value + anInt. )
       public get = ( ^ value )
     )
-    
+
     private class PhilosopherActor new: id rounds: rounds counter: aCounter arbitrator: arbitrator = (
     | private localCounter ::= 0.
       private roundsSoFar  ::= 0.
@@ -1027,24 +1027,24 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         localCounter := localCounter + 1.
         arbitrator <-: hungry: self id: id.
       )
-      
+
       public eat = (
         roundsSoFar := roundsSoFar + 1.
         localCounter > 0 ifTrue: [
           counter <-: inc: localCounter.
           localCounter := 0. ].
-        
+
         arbitrator <-: done: id.
         roundsSoFar < rounds
           ifTrue:  [ self <-: start ]
           ifFalse: [ arbitrator <-: exit ]
       )
-      
+
       public start = (
         arbitrator <-: hungry: self id: id.
       )
     )
-    
+
     private class ArbitratorActor new: numForks resolver: resolver = (
     | private numForks = numForks.
       private forks    = Array new: numForks withAll: false.
@@ -1054,7 +1054,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       public hungry: philosopher id: leftForkId = (
         | rightForkId |
         rightForkId := 1 + ((leftForkId + 1) % numForks).
-        
+
         ((forks at: leftForkId) or: [forks at: rightForkId])
           ifTrue:  [ philosopher <-: denied ]
           ifFalse: [
@@ -1062,18 +1062,18 @@ class Savina usingPlatform: platform andHarness: harness = Value (
             forks at: rightForkId put: true.
             philosopher <-: eat ]
       )
-      
+
       public done: leftForkId = (
         | rightForkId |
         rightForkId := 1 + ((leftForkId + 1) % numForks).
-        
+
         forks at: leftForkId  put: false.
         forks at: rightForkId put: false.
       )
-      
+
       public exit = (
         numExitedPhilosophers := numExitedPhilosophers + 1.
-  
+
         numForks = numExitedPhilosophers ifTrue: [
           | forksTaken |
           forksTaken := 0.
@@ -1082,12 +1082,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           resolver resolve: forksTaken ]
       )
     )
-    
+
     public benchmark = (
       | counter completionPP arbitrator philosophers |
       counter := Counter new.
       completionPP := actors createPromisePair.
-      
+
       arbitrator := (actors createActorFromValue: ArbitratorActor) <-: new: numPhil resolver: completionPP resolver.
       philosophers := Array new: numPhil.
       philosophers doIndexes: [:i |
@@ -1095,7 +1095,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ph := (actors createActorFromValue: PhilosopherActor) <-: new: i
                         rounds: numRounds counter: counter arbitrator: arbitrator.
         philosophers at: i put: ph ].
-      
+
       philosophers do: [:ph | ph <-: start ].
 
       ^ completionPP promise
@@ -1108,11 +1108,11 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public newInstance: problemSize = (
       | problem |
       problem := problemSize split: ':'.
-      
+
       ^ self new: (problem at: 1) asInteger
           rounds: (problem at: 2) asInteger
     )
-    
+
     public setupVerifiedRun: run = (
       run problemSize: '20:10000'
     )
@@ -1153,12 +1153,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
             barber <-: wait.
             barberAsleep := true ]
       )
-      
+
       public exit = ( barber <-: exit )
     )
 
     private class BarberActor new: resolver = (
-    | private random = Random new. 
+    | private random = Random new.
       private resolver = resolver.
     |)(
       public enter: customer in: room = (
@@ -1167,7 +1167,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         customer <-: done.
         room <-: next
       )
-      
+
       private busyWait: limit = (
         | test |
         test := 0.
@@ -1176,11 +1176,11 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           test := test + 1 ].
         ^ test
       )
-      
+
       public wait = ()
       public exit = ( resolver resolve: random next )
     )
-    
+
     private class CustomerFactoryActor new: numHaircuts room: room = (
     | private random = Random new.
       private numHaircuts = numHaircuts.
@@ -1193,7 +1193,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           sendCustomerToRoom.
           busyWait: (random next: avHaircutRate) + 10 ].
       )
-      
+
       private busyWait: limit = (
         | test |
         test := 0.
@@ -1202,39 +1202,39 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           test := test + 1 ].
         ^ test
       )
-      
+
       public returned: customer = (
         idGenerator := idGenerator + 1.
         sendCustomerToRoom: customer
       )
-      
+
       public done = (
         numHaircutsSoFar := numHaircutsSoFar + 1.
         numHaircutsSoFar = numHaircuts ifTrue: [
           room <-: exit ]
       )
-      
+
       private sendCustomerToRoom = (
         | customer |
         customer := (actors createActorFromValue: CustomerActor) <-: new: idGenerator factory: self.
         idGenerator := idGenerator + 1.
         sendCustomerToRoom: customer.
       )
-      
+
       private sendCustomerToRoom: customer = (
         room <-: enter: customer in: room
       )
     )
-    
+
     private class CustomerActor new: id factory: factoryActor = (
     | private factoryActor = factoryActor.
     |)(
-      public full = ( factoryActor <-: returned: self )      
+      public full = ( factoryActor <-: returned: self )
       public wait = ()
       public start= ()
       public done = ( factoryActor <-: done )
     )
-    
+
     public benchmark = (
       | barber room factoryActor completionPP  |
       completionPP := actors createPromisePair.
@@ -1242,7 +1242,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       barber := (actors createActorFromValue: BarberActor) <-: new: completionPP resolver.
       room   := (actors createActorFromValue: WaitingRoomActor) <-: new: waitingRoomSize barber: barber.
       factoryActor := (actors createActorFromValue: CustomerFactoryActor) <-: new: numHaircuts room: room.
-      
+
       factoryActor <-: start.
 
       ^ completionPP promise
@@ -1254,7 +1254,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       (numHaircuts = 2500 and: [avHaircutRate =  500]) ifTrue: [ ^ result = 16033 ].
       (numHaircuts = 2500 and: [avHaircutRate = 1000]) ifTrue: [ ^ result = 32109 ].
       (numHaircuts = 5000 and: [avHaircutRate = 1000]) ifTrue: [ ^ result = 32109 ].
-    
+
       ('no verification result for avHaircutRate: ' + avHaircutRate + ' result is: ' + result) println.
       ^ false
     )
@@ -1262,19 +1262,19 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public newInstance: problemSize = (
       | problem |
       problem := problemSize split: ':'.
-      
+
       ^ self numHaircuts: (problem at: 1) asInteger
          waitingRoomSize: (problem at: 2) asInteger
         avProductionRate: (problem at: 3) asInteger
            avHaircutRate: (problem at: 4) asInteger
     )
-    
+
     public setupVerifiedRun: run = (
       run problemSize: '5000:1000:1000:1000'
     )
   )
-  
   public class CigaretteSmokers rounds: rounds smokers: smokers = Benchmark (
+
   | private rounds  = rounds.
     private smokers = smokers.
   |)(
@@ -1282,39 +1282,39 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     | private numRounds  = numRounds.
       private numSmokers = numSmokers.
       private resolver   = resolver.
-      
+
       private smokers = Array new: numSmokers withAll: [ (actors createActorFromValue: SmokerActor) <-: new: self ].
       private random  = Random new.
       private roundsSoFar ::= 0.
       private smokersExited ::= numSmokers.
     |)(
       public start = ( notifyRandomSmoker )
-      
+
       public startedSmoking = (
         roundsSoFar := roundsSoFar + 1.
         roundsSoFar >= numRounds
           ifTrue:  [ requestSmokersToExit ]
           ifFalse: [ notifyRandomSmoker ]
       )
-      
+
       private notifyRandomSmoker = (
         | newSmokerIndex busyWaitPeriod |
         newSmokerIndex := 1 + (random next abs) % numSmokers.
         busyWaitPeriod := 10 + (random next: 1000).
         (smokers at: newSmokerIndex) <-: startSmoking: busyWaitPeriod
       )
-      
+
       private requestSmokersToExit = (
         smokers do: [:s | s <-: exit ]
       )
-      
+
       public exited = (
         smokersExited := smokersExited - 1.
         smokersExited = 0 ifTrue: [
           resolver resolve: random next ]
       )
     )
-    
+
     private class SmokerActor new: arbiterActor = (
     | private arbiterActor = arbiterActor.
       private random = Random new.
@@ -1323,7 +1323,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         arbiterActor <-: startedSmoking.
         busyWait: busyWaitPeriod
       )
-      
+
       private busyWait: limit = (
         | test |
         test := 0.
@@ -1332,12 +1332,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           test := test + 1 ].
         ^ test
       )
-      
+
       public exit = (
         arbiterActor <-: exited
       )
     )
-  
+
     public benchmark = (
       | arbiterActor completionPP  |
       completionPP := actors createPromisePair.
@@ -1359,11 +1359,11 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public newInstance: problemSize = (
       | problem |
       problem := problemSize split: ':'.
-      
+
       ^ self rounds: (problem at: 1) asInteger
             smokers: (problem at: 2) asInteger
     )
-    
+
     public setupVerifiedRun: run = (
       run problemSize: '1000:200'
     )
@@ -1378,7 +1378,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     class Master new: completionRes = (
     | private computers = Array new: numSeries.
       private workers   = Array new: numSeries.
-      
+
       private numWorkRequested ::= 0.
       private numWorkReceived  ::= 0.
       private termsSum         ::= 0.0.
@@ -1400,22 +1400,22 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       public start = (
         1 to: numTerms do: [:i |
           workers do: [:w | w <-: nextTerm ] ].
-        
+
         workers do: [:w |
           w <-: getTerm.
           numWorkRequested := numWorkRequested + 1 ]
       )
-      
+
       public result: term = (
         termsSum := termsSum + term.
         numWorkReceived := numWorkReceived + 1.
-        
+
         numWorkRequested = numWorkReceived ifTrue: [
           (* don't need to tell them to stop. will be GCed automatically. *)
           completionRes resolve: termsSum ]
       )
     )
-    
+
     class SeriesWorker new: id master: master rateComputer: computer startTerm: startTerm = (
     | private curTerm ::= startTerm.
       private master   = master.
@@ -1431,7 +1431,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
             computer <-: compute: self term: curTerm.
             waitingForReply := true ]
       )
-      
+
       public result: term = (
         waitingNextTerm > 0
           ifTrue: [
@@ -1460,7 +1460,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         sender <-: result: res
       )
     )
-  
+
     public benchmark = (
       | master completionPP |
       completionPP := actors createPromisePair.
@@ -1473,7 +1473,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       r := (result * 1000000) round.
       (numSeries = 10 and: [startRate = 3.46]) ifTrue: [ ^ r = 6387835 ].
       (numSeries = 20 and: [startRate = 3.46]) ifTrue: [ ^ r = 11022424 ].
-      
+
       ('---- result: ' + r asString + ' dont have a hardcoded verification result for this config yet') println.
       ^ false
     )
@@ -1481,12 +1481,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public newInstance: problemSize = (
       | problem |
       problem := problemSize split: ':'.
-      
+
       ^ self numTerms: (problem at: 1) asInteger
             numSeries: (problem at: 2) asInteger
             startRate: (problem at: 3) asInteger // 100
     )
-    
+
     public setupVerifiedRun: run = (
       run problemSize: '25000:10:346'
     )
@@ -1494,7 +1494,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
 
   public class BankTransaction numAccounts: acc numTransactions: tran = Benchmark (
   | private numAccounts     = acc.
-    private numTransactions = tran. 
+    private numTransactions = tran.
   |)(
     class Teller new: completionRes = (
     | private accounts = Array new: numAccounts.
@@ -1509,7 +1509,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       public start = (
         1 to: numTransactions do: [:i | generateWork ]
       )
-      
+
       public reply: amount = (
         transferredAmount := transferredAmount + amount.
         numCompletedBankings := numCompletedBankings + 1.
@@ -1524,12 +1524,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         loopId := randomGen next: numAccounts - srcAccountId.
         loopId = 0 ifTrue: [ loopId := loopId + 1 ].
         destAccountId := srcAccountId + loopId.
-        
+
         srcAccount  := accounts at: srcAccountId + 1.
         destAccount := accounts at: destAccountId + 1.
         amount := (randomGen nextDouble abs) * 1000.
 
-        srcAccount <-: credit: amount to: destAccount reply: self 
+        srcAccount <-: credit: amount to: destAccount reply: self
       )
     )
 
@@ -1550,11 +1550,11 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         balance := balance + amount.
         sender <-: reply: amount.
       )
-      
+
       private processCredit: amount to: destAccount reply: sender = (
         balance := balance - amount.
         destAccount <-: debit: amount from: self.
-    
+
         lastSender := sender.
       )
 
@@ -1567,7 +1567,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
             processCredit: amount to: destAccount reply: sender
           ]
       )
-      
+
       public reply: amount = (
         lastSender <-: reply: amount.
         requests isEmpty
@@ -1587,11 +1587,11 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       master <-: start.
       ^ completionPP promise
     )
-    
+
     public verifyResult: result = (
       | r |
       r := result round.
-      
+
       numTransactions =   1000 ifTrue: [ ^ r = 516215    ].
       numTransactions =  10000 ifTrue: [ ^ r = 4975454   ].
       numTransactions =  50000 ifTrue: [ ^ r = 25057792  ].
@@ -1605,20 +1605,20 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     public newInstance: problemSize = (
       | problem |
       problem := problemSize split: ':'.
-      
+
       ^ self numAccounts: (problem at: 1) asInteger
          numTransactions: (problem at: 2) asInteger
     )
-    
+
     public setupVerifiedRun: run = (
       run problemSize: '1000:50000'
     )
   )
-  
+
   (* === Savina Parallelism Benchmarks === *)
-  
+
   public class RadixSort numValues: numValues maxValue: maxValue seed: seed = Benchmark <: Value (
-  | private numValues = numValues. 
+  | private numValues = numValues.
     private maxValue  = maxValue.  (* Needs to be a power of 2, I think *)
     private seed      = seed.      (* Should probably be a prime number *)
   |
@@ -1634,11 +1634,11 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ]
       )
     )
-  
+
     class SortActor new: radix next: nextActor = (
     | private radix     = radix.
       private next      = nextActor.
-      
+
       private orderingArray = Array new: numValues withAll: 0.
       private valuesSoFar ::= 0.
       private j           ::= 1.
@@ -1646,7 +1646,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )(
       public value: current = (
         valuesSoFar := valuesSoFar + 1.
-        
+
         (current & radix) = 0
           ifTrue:  [
            next <-: value: current ]
@@ -1654,7 +1654,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
             orderingArray at: j put: current.
             j := j + 1
           ].
-        
+
         valuesSoFar = numValues ifTrue: [
           1 to: j - 1 do: [:i |
             next <-: value: (orderingArray at: i)
@@ -1662,7 +1662,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ]
       )
     )
-    
+
     class ValidationActor new: completionRes = (
     | private sumSoFar    ::=  0.
       private valuesSoFar ::=  0.
@@ -1674,16 +1674,16 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )(
       public value: val = (
         valuesSoFar := valuesSoFar + 1.
-        
+
         (val < prevValue and: [errorValue < 0]) ifTrue: [
           errorValue := val.
           errorIdx   := valuesSoFar.
           system error: 'ERROR: Value out of place: ' + errorValue + ' at index ' + errorIdx
         ].
-        
+
         prevValue := val.
         sumSoFar := sumSoFar + prevValue.
-        
+
         valuesSoFar = numValues ifTrue: [
           errorValue >= 0
             ifTrue:  [ system error: 'Value out of place: ' + errorValue + ' at index ' + errorIdx ].
@@ -1691,29 +1691,29 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ]
       )
     )
-  
+
     public benchmark = (
       | validationActor sourceActor radix nextActor completionPP |
       completionPP := actors createPromisePair.
       validationActor := (actors createActorFromValue: ValidationActor) <-: new: completionPP resolver.
       sourceActor     := (actors createActorFromValue: IntSourceActor)  <-: new.
-      
+
       radix := maxValue / 2.
       nextActor := validationActor.
-      
+
       [radix > 0] whileTrue: [
         | sortActor |
         sortActor := (actors createActorFromValue: SortActor) <-: new: radix next: nextActor.
-        
+
         radix := radix / 2.
         nextActor := sortActor
       ].
-      
+
       sourceActor <-: next: nextActor.
-      
+
       ^ completionPP promise
     )
-    
+
     public verifyResult: result = (
       (numValues =   100 and: [maxValue =   256 and: [seed = 74755]]) ifTrue: [ ^ result = 13606 ].
       (numValues = 10000 and: [maxValue = 65536 and: [seed = 74755]]) ifTrue: [ ^ result = 329373752 ].
@@ -1730,14 +1730,14 @@ class Savina usingPlatform: platform andHarness: harness = Value (
               maxValue: (problem at: 2) asInteger
                   seed: (problem at: 3) asInteger
     )
-    
+
     public setupVerifiedRun: run = (
       run problemSize: '100:256:74755'
     )
   )
-  
   public class FilterBank = Benchmark ()( todo = () )
-  
+
+
   public class Sieve new: limit local: numMaxLocalPrimes = Benchmark <: Value (
   | private limit = limit.
     private numMaxLocalPrimes = numMaxLocalPrimes.
@@ -1751,11 +1751,11 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           filterActor <-: filter: candidate.
           candidate := candidate + 2
         ].
-        
+
         filterActor <-: exit.
       )
     )
-    
+
     class PrimeFilterActor new: id initialPrime: initialPrime resolver: completionRes = (
     | private id = id.
       private initialPrime = initialPrime.
@@ -1778,7 +1778,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
               <-: new: id + 1 initialPrime: newPrim resolver: completionRes
           ]
       )
-      
+
       private isLocallyPrime: candidate = (
         1 to: availableLocalPrimes do: [:i |
           | remainder |
@@ -1787,7 +1787,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ].
         ^ true
       )
-      
+
       public filter: candidate = (
         (isLocallyPrime: candidate)
           ifTrue: [
@@ -1805,7 +1805,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           ifNotNil: [ nextFilterActor <-: exit ]
       )
     )
-   
+
     public benchmark = (
       | producerActor filterActor completionPP |
       completionPP := actors createPromisePair.
@@ -1813,17 +1813,17 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       filterActor   := (actors createActorFromValue: PrimeFilterActor)    <-: new: 1 initialPrime: 2 resolver: completionPP resolver.
 
       producerActor <-: produceNumbersFor: filterActor.
-      
+
       ^ completionPP promise
     )
-    
+
     public verifyResult: numberOfPrimes = (
       limit = 100    ifTrue: [ ^ numberOfPrimes =   25 ].
       limit = 1000   ifTrue: [ ^ numberOfPrimes =  168 ].
       limit = 10000  ifTrue: [ ^ numberOfPrimes = 1229 ].
       limit = 100000 ifTrue: [ ^ numberOfPrimes = 9592 ].
       (* otherwise, we don't know. *)
-      ^ true 
+      ^ true
     )
   ) : (
     public newInstance: problemSize = (
@@ -1832,12 +1832,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       ^ self new: (problem at: 1) asInteger
            local: (problem at: 2) asInteger
     )
-    
+
     public setupVerifiedRun: run = (
       run problemSize: '100000:64'
     )
   )
-  
+
   (* Compared to the Savina original benchmarks, this does not contain code for
      'urgent' nodes, which seemed broken in the original, at least I did not
      see that it was used. This version also uses explicit messages to
@@ -1872,12 +1872,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
              <-: parent: self root: self height: height id: size + 1 computation: computationSize.
           children at: i put: nodeActor.
         ].
-        
+
         size := size + numChildren.
-        
+
         children do: [:c | c <-: tryGeneratedChildren ]
       )
-      
+
       public shouldGenerateChildren: child height: childHeight = (
         size + numChildren <= maxNodes
           ifTrue: [
@@ -1888,7 +1888,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
               childComp := getNextNormal: avgCompSize with: stdevCompSize.
               child <-: generateChildren: size computation: childComp.
               size := size + numChildren.
-              
+
               childHeight + 1 > height ifTrue: [ height := childHeight + 1 ].
             ] ifFalse: [
               childHeight > height ifTrue: [ height := childHeight ] ] ]
@@ -1897,7 +1897,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
               startedTraversal := true.
               traverse ] ]
       )
-      
+
       public traversed: treeSize = (
         traversedChildren := traversedChildren + 1.
         subtreeSize := subtreeSize + treeSize.
@@ -1906,7 +1906,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           completionRes resolve: subtreeSize.
         ]
       )
-      
+
       public updateGrant: childId = (
         hasGrantChildren at: childId put: true
       )
@@ -1921,12 +1921,12 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ].
         ^ result
       )
-      
+
       private traverse = (
         children do: [:c | c <-: traverse ].
       )
     )
-    
+
     class NodeActor parent: parent root: root height: height id: id computation: compSize = (
     | private hasChildren ::= false.
       private traversedChildren ::= 0.
@@ -1934,7 +1934,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       private children = Array new: numChildren.
       private hasGrantChildren = Array new: numChildren withAll: false.
       private busyLoopRan = Random new.
-      
+
       private myParent   = parent.
       private myRoot     = root.
       private myHeight   = height.
@@ -1945,29 +1945,29 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         loop: avgCompSize / 50 with: busyLoopRan.
         myRoot <-: shouldGenerateChildren: self height: myHeight.
       )
-      
+
       public generateChildren: currentId computation: compSize = (
         | myArrayId childrenHeight idValue |
         myArrayId := myId % numChildren.
         myParent <-: updateGrant: myArrayId.
         childrenHeight := myHeight + 1.
         idValue := currentId.
-        
+
         1 to: numChildren do: [:i |
           | node |
           node := (actors createActorFromValue: NodeActor) <-: parent: self root: myRoot height: childrenHeight id: idValue + 1 computation: compSize.
           children at: i put: node.
         ].
-        
+
         hasChildren := true.
-        
+
         children do: [:c | c <-: tryGeneratedChildren ].
       )
 
       public updateGrant: childId = (
         hasGrantChildren at: childId put: true
       )
-      
+
       public traverse = (
         traversedChildren := 0.
         loop: myCompSize with: busyLoopRan.
@@ -1975,7 +1975,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           ifTrue:  [ children do: [:c | c <-: traverse ] ]
           ifFalse: [ myParent <-: traversed: 1 ].
       )
-      
+
       public traversed: treeSize = (
         subtreeSize := subtreeSize + treeSize.
         traversedChildren := traversedChildren + 1.
@@ -1993,7 +1993,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ^ result
       )
     )
-    
+
     public benchmark = (
       | rootActor completionPP |
       completionPP := actors createPromisePair.
@@ -2001,7 +2001,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       rootActor <-: generateTree.
       ^ completionPP promise
     )
-    
+
     public verifyResult: result = (
       ^ result = (maxNodes - numChildren)
     )
@@ -2014,7 +2014,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
          avgCompSize: (problem at: 3) asInteger
        stdevCompSize: (problem at: 4) asInteger
     )
-    
+
     public setupVerifiedRun: run = (
       run problemSize: '200000:10:500:100'
     )
@@ -2036,11 +2036,11 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       public result: result = (
         numTermsReceived := numTermsReceived + 1.
         resultArea := resultArea + result.
-        
+
         numTermsReceived = numWorkers ifTrue: [
           completionRes resolve: resultArea ]
       )
-      
+
       public work: l and: r and: h = (
         | workerRange |
         workerRange := (r - l) // numWorkers.
@@ -2052,7 +2052,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ]
       )
     )
-    
+
     class Worker new: master = (
     | private master = master.
     |)(
@@ -2060,22 +2060,22 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         | n accumArea |
         n := (r - l) // h.
         accumArea := 0.0.
-        
+
         0 to: n - 1 do: [:i |
           | lx rx ly ry area |
           lx := (i * h) + l.
           rx := lx + h.
-          
+
           ly := fx: lx.
           ry := fx: rx.
-          
+
           area := 0.5 * (ly + ry) * h.
           accumArea := accumArea + area.
         ].
-        
+
         master <-: result: accumArea
       )
-      
+
       private fx: x = (
         | a b c d r |
         a := ((x * x * x) - 1.0) sin.
@@ -2086,7 +2086,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ^ r
       )
     )
-    
+
     public benchmark = (
       | master completionPP |
       completionPP := actors createPromisePair.
@@ -2094,7 +2094,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       master <-: work: left and: right and: precision.
       ^ completionPP promise
     )
-    
+
     public verifyResult: result = (
       | r |
       r := (result * 100000000) round.
@@ -2103,7 +2103,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       (numWorkers = 100 and: [numPieces =   10000 and: [left = 1 and: [right = 5]]]) ifTrue: [ ^ r = 27108063 ].
       (numWorkers = 100 and: [numPieces =  100000 and: [left = 1 and: [right = 5]]]) ifTrue: [ ^ r = 27108075 ].
       (numWorkers = 100 and: [numPieces = 1000000 and: [left = 1 and: [right = 5]]]) ifTrue: [ ^ r = 27108075 ].
-    
+
       (* otherwise, warn that we don't know whether it is correct. *)
       ('---- result: ' + r asString + ' dont have a hardcoded verification result for this config yet') println.
       ^ false
@@ -2117,14 +2117,14 @@ class Savina usingPlatform: platform andHarness: harness = Value (
                    left: (problem at: 3) asInteger * 1.0
                   right: (problem at: 4) asInteger * 1.0
     )
-    
+
     public setupVerifiedRun: run = (
       run problemSize: '100:10000000:1:5'
     )
   )
-  
-  
   public class SuccessiveOverRelaxation = Benchmark ()( todo = ( USES_SHARED_ARRAYS ) )
+
+
 
   (* This benchmark uses originally shared grid nodes.
      The interesting property is that the updates are conceptually safe even
@@ -2132,15 +2132,15 @@ class Savina usingPlatform: platform andHarness: harness = Value (
      relationship. However, we actually need the information about whether we
      succeeded with the update to determine which actor should continue
      processing the updated node.
-  
+
      For this version, we will use Grid actors that actually hold the grid nodes
      to avoid sequentializing the access during the search phase.
-  
+
      Note further, that the #search:target: method is much more complex since
      it is needs to be fully asynchronous.
      The #initializeData method is also more complex. I unrolled the loop to
      avoid the complexity of having to handle the asynchronicity there as well.
-  
+
      Another critical difference is that we do not calculate the distance from
      root, because it is not used. And pretty annoying to implement properly
      synchronized. Which it isn't in the original code either.
@@ -2160,7 +2160,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       private neighbors = Vector new.
       public parentInPath ::= nil.
       public distanceFromRoot ::= 0.
-    | 
+    |
       clearParentAndDistance.
     )(
       public clearParentAndDistance = (
@@ -2175,11 +2175,11 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         neighbors append: node.
         ^ true
       )
-      
+
       public addNeighborsA: a b: b c: c d: d e: e f: f addA: addA addB: addB addC: addC addD: addD addE: addE addF: addF = (
         | addedNeighbor |
         addedNeighbor := false.
-  
+
         addA ifTrue: [ (addNeighbor: a) ifTrue: [ addedNeighbor := true ] ].
         addB ifTrue: [ (addNeighbor: b) ifTrue: [ addedNeighbor := true ] ].
         addC ifTrue: [ (addNeighbor: c) ifTrue: [ addedNeighbor := true ] ].
@@ -2188,25 +2188,25 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         (addedNeighbor not or: [addF])
           ifTrue: [ addNeighbor: f ].
       )
-      
+
       public numNeighbors = (
         ^ neighbors size
       )
-      
+
       public neighbor: id = (
         ^ neighbors at: id
       )
-      
+
       public setParent: node = (
         parentInPath == nil ifFalse: [ ^ false ].
-        
+
         parentInPath := node.
-        
+
         (* node could be a far reference here, not sure how to get this right:
            distanceFromRoot := node distanceFromRoot + (distanceFrom: node). *)
         ^ true
       )
-      
+
       private distanceFrom: node = (
         (* Not implemented!
          | iDiff jDiff kDiff |
@@ -2217,7 +2217,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ^ self
       )
     )
-  
+
     class Master new: completionRes = (
     | private workers = Array new: numWorkers withAll: [(actors createActorFromValue: Worker) <-: new: self].
       private numWorkersTerminated ::= 0.
@@ -2231,21 +2231,21 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       private originNode = (
         ^ allNodes at: 1
       )
-      
+
       private targetNode = (
         | axisVal targetId |
         axisVal := (0.8 * gridSize) round.
         targetId := (axisVal * gridSize * gridSize) + (axisVal * gridSize) + axisVal + 1.
         ^ allNodes at: targetId
       )
-      
+
       private sendWork: origin target: target = (
         | workerIdx |
         workerIdx := numWorkSent % numWorkers + 1.
         numWorkSent := numWorkSent + 1.
         (workers at: workerIdx) <-: work: origin target: target.
       )
-      
+
       private createGridNodes: gridActors = (
         | id gs1 |
         gs1 := gridSize - 1. (* for offset-based numbers *)
@@ -2253,29 +2253,29 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ^ actors async: 0 to: gs1 do: [:i |
           | gridActor |
           gridActor := gridActors at: (i / 3) + 1.
-          
+
           actors async: 0 to: gs1 do: [:j |
             actors async: 0 to: gs1 do: [:k |
               (gridActor <-: id: id i: i j: j k: k) whenResolved: [:gridNode |
                 allNodes at: id put: gridNode.
                 id := id + 1 ] ] ] ].
       )
-      
+
       private setNeighbors = (
         | random id gs1 g2 |
         gs1 := gridSize - 1. (* for offset-based numbers *)
         g2 := gridSize * gridSize.
-        
+
         random := Random new.
         id := 1.
-        
+
         (* We unrolled this loop to avoid having to rewrite it with #whenResolved callbacks.
            This is certainly not nice code, and not idiomatic either...
-        
+
         | iterCount neighborCount |
         iterCount     := 0.
         neighborCount := 0.
-        
+
          0 to: 1 do: [:i |
           0 to: 1 do: [:j |
             0 to: 1 do: [:k |
@@ -2290,10 +2290,10 @@ class Savina usingPlatform: platform andHarness: harness = Value (
                   newK := (gridSize - 1) min: (gridNode k + k).
                   newId := (gridSize * gridSize * newI) + (gridSize * newJ) + newK + 1.
                   newNode := allNodes at: newId.
-                
+
                   (gridNode addNeighbor: newNode)
                     ifTrue: [ neighborCount := neighborCount + 1 ] ] ] ] ] ] ]. *)
-        
+
         0 to: gs1 do: [:i |
           0 to: gs1 do: [:j |
             0 to: gs1 do: [:k |
@@ -2327,7 +2327,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       private initializeData = (
         | gridActors |
         gridActors := Array new: (gridSize / 3) + 1 withAll: [actors createActorFromValue: GridNode].
-        
+
         ^ (createGridNodes: gridActors) whenResolved: [:r |
           setNeighbors.
           allNodes do: [:gridNode |
@@ -2337,33 +2337,33 @@ class Savina usingPlatform: platform andHarness: harness = Value (
                either. *)
             gridNode <-: clearParentAndDistance ] ]
       )
-      
+
       public work: origin target: target = (
         sendWork: origin target: target
       )
-      
+
       public received = (
         numWorkCompleted := numWorkCompleted + 1.
         numWorkCompleted = numWorkSent ifTrue: [
           requestWorkersToStop ]
       )
-      
+
       public done = (
         requestWorkersToStop
       )
-      
+
       public stop = (
         numWorkersTerminated := numWorkersTerminated + 1.
         numWorkersTerminated = numWorkers ifTrue: [
           completionRes resolve: validate
         ]
       )
-      
+
       private validate = (
         | parentNode nextProm next loop |
         loop := actors createPromisePair.
         parentNode := targetNode.
-        
+
         nextProm := parentNode <-: parentInPath.
         nextProm whenResolved: [:next |
           | n |
@@ -2371,10 +2371,10 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           loop resolve: (actors async: [(n == nil) not] whileTrue: [
             parentNode := n.
             (parentNode <-: parentInPath) whenResolved: [:nn | n := nn] ]) ].
-        
+
         ^ loop promise whenResolved: [:r | parentNode == originNode]
       )
-      
+
       private requestWorkersToStop = (
         workers do: [:w | w <-: stop ]
       )
@@ -2387,7 +2387,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       private busyLoop = (
         1 to: 100 do: [:i | random next ]
       )
-    
+
       public work: origin target: target = (
         (search: origin target: target)
           whenResolved: [:r | master <-: received ]
@@ -2396,22 +2396,22 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       public stop = (
         master <-: stop
       )
-      
+
       private search: origin target: target = (
         | workQueue nodesProcessed continue outerLoopProm |
         workQueue := Vector new.
         workQueue append: origin.
         continue := true.
-        
+
         nodesProcessed := 0.
-        
+
         outerLoopProm := actors async: [
           workQueue isEmpty not and: [nodesProcessed < threshold and: continue]] whileTrue: [
           | loopNode numNeighbors outerIterationDone |
           outerIterationDone := actors createPromisePair.
           nodesProcessed := nodesProcessed + 1.
           busyLoop.
-          
+
           loopNode := workQueue removeFirst.
           (loopNode <-: numNeighbors) whenResolved: [:numNeighbors |
             | i whileCompletionPromise |
@@ -2420,7 +2420,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
             whileCompletionPromise := actors async: [i <= numNeighbors and: continue] whileTrue: [
               | iterationDone |
               iterationDone := actors createPromisePair.
-              
+
               (loopNode <-: neighbor: i) whenResolved: [:loopNeighbor |
                 (loopNeighbor <-: setParent: loopNode)
                   whenResolved: [:success |
@@ -2435,20 +2435,20 @@ class Savina usingPlatform: platform andHarness: harness = Value (
               iterationDone promise ].
             outerIterationDone resolve: whileCompletionPromise ].
           outerIterationDone promise ].
-        
+
         ^ outerLoopProm whenResolved: [:r |
           [workQueue isEmpty] whileFalse: [
             master <-: work: workQueue removeFirst target: target ] ]
       )
     )
-  
+
     public benchmark = (
       | completionPP |
       completionPP := actors createPromisePair.
       (actors createActorFromValue: Master) <-: new: completionPP resolver.
       ^ completionPP promise
     )
-    
+
     public verifyResult: aBool = (
       ^ aBool
     )
@@ -2459,7 +2459,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       ^ self numWorkers: (problem at: 1) asInteger
                gridSize: (problem at: 2) asInteger
     )
-    
+
     public setupVerifiedRun: run = (
       self todo.
       run problemSize: '100:100'
@@ -2481,7 +2481,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     |
       1 to: numWorkers do: [:i |
         workers at: i put: ((actors createActorFromValue: Worker) <-: new: self)].
-      
+
       send: (TransferArray new: 0) depth: 0
     )(
       private send: arr depth: depth = (
@@ -2490,15 +2490,15 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         messageCounter := messageCounter % numWorkers.
         numWorkSent := numWorkSent + 1.
       )
-      
+
       public work: arr depth: depth = (
         send: arr depth: depth
       )
-      
+
       public result = (
         resultCounter := resultCounter + 1.
       )
-      
+
       public done = (
         numWorkCompleted := numWorkCompleted + 1.
         numWorkCompleted = numWorkSent ifTrue: [
@@ -2506,7 +2506,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ]
       )
     )
-    
+
     public class Worker new: master = (
     | private master = master. |
     )(
@@ -2514,25 +2514,25 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         nqueensKernelPar: arr depth: depth.
         master <-: done
       )
-      
+
       private nqueensKernelPar: arr depth: depth = (
         size = depth ifTrue: [
           master <-: result.
           ^ self
         ].
-        
+
         depth >= threshold ifTrue: [
           nqueensKernelSeq: arr depth: depth.
           ^ self
         ].
-        
+
         distributeWork: arr depth: depth
       )
-      
+
       private distributeWork: arr depth: depth = (
         | newDepth |
         newDepth := depth + 1.
-      
+
         0 to: size - 1 do: [:i |
           | b |
           b := TransferArray new: newDepth withAll: 0.
@@ -2541,13 +2541,13 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           (board: b valid: newDepth) ifTrue: [
             master <-: work: b depth: newDepth ] ]
       )
-      
+
       private nqueensKernelSeq: arr depth: depth = (
         | b newDepth |
         size = depth ifTrue: [
           master <-: result.
           ^ self ].
-        
+
         newDepth := depth + 1.
         b := TransferArray new: newDepth.
         0 to: size - 1 do: [:i |
@@ -2556,7 +2556,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
           (board: b valid: newDepth) ifTrue: [
             nqueensKernelSeq: b depth: newDepth ] ]
       )
-      
+
       private board: arr valid: n = (
         1 to: n do: [:i |
           | p |
@@ -2568,14 +2568,14 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ^ true
       )
     )
-    
+
     public benchmark = (
       | master completionPP |
       completionPP := actors createPromisePair.
       master := (actors createActorFromValue: Master) <-: new: completionPP resolver.
       ^ completionPP promise
     )
-    
+
     public verifyResult: result = (
       size =  1 ifTrue: [ ^ result = 1           ].
       size =  2 ifTrue: [ ^ result = 0           ].
@@ -2609,7 +2609,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
                    size: (problem at: 2) asInteger
               threshold: (problem at: 3) asInteger
     )
-    
+
     public setupVerifiedRun: run = (
       run problemSize: '20:12:4'
     )
