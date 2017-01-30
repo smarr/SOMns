@@ -173,9 +173,7 @@ function restart() {
     .attr("width", 50)
     .attr("height", 25)
 
-    //   g.append("svg:circle")
     .attr("class", "node")
-    //     .attr("r", 12)
     .style("fill", function(d) {
       return colors(d.type);
     })
@@ -184,10 +182,13 @@ function restart() {
 
   // show node IDs
   g.append("svg:text")
-    .attr("x", 8)
-    .attr("y", 4)
+    .attr("x", 0)
+    .attr("dy", ".35em")
     .attr("class", "id")
     .text(function(d) { return d.name; });
+
+  // After rendering text, adapt rectangles
+  adaptRectSizeAndTextPostion();
 
   // remove old nodes
   circle.exit().remove();
@@ -200,4 +201,16 @@ function restart() {
     force.tick();
   }
 //   force.stop();
+}
+
+const PADDING = 15;
+
+function adaptRectSizeAndTextPostion() {
+  d3.selectAll("rect")
+    .attr("width", function() {
+      return this.parentNode.childNodes[1].getComputedTextLength() + PADDING;
+     })
+    .attr("x", function() {
+      return - (PADDING + this.parentNode.childNodes[1].getComputedTextLength()) / 2.0;
+    });
 }
