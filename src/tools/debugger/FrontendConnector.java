@@ -14,7 +14,6 @@ import java.util.concurrent.Future;
 import org.java_websocket.WebSocket;
 
 import com.google.gson.Gson;
-import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
@@ -26,8 +25,8 @@ import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.SourceCoordinate.TaggedSourceCoordinate;
-import tools.concurrency.ActorExecutionTrace;
 import tools.Tagging;
+import tools.concurrency.ActorExecutionTrace;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message;
 import tools.debugger.message.Message.OutgoingMessage;
@@ -36,8 +35,8 @@ import tools.debugger.message.SourceMessage;
 import tools.debugger.message.SourceMessage.SourceData;
 import tools.debugger.message.StackTraceResponse;
 import tools.debugger.message.StoppedMessage;
-import tools.debugger.message.SuspendedEventMessage;
 import tools.debugger.message.SymbolMessage;
+import tools.debugger.message.ThreadsResponse;
 import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.AsyncMessageReceiverBreakpoint;
 import tools.debugger.session.Breakpoints;
@@ -193,6 +192,12 @@ public class FrontendConnector {
     }
   }
 
+
+
+  public synchronized void sendThreads(final int requestId) {
+    send(ThreadsResponse.create(webDebugger.getAllActivities(), requestId));
+  }
+
   public void sendLoadedSource(final Source source,
       final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
       final Map<Source, Set<RootNode>> rootNodes) {
@@ -230,13 +235,6 @@ public class FrontendConnector {
     log("[DEBUGGER] Debugger connected.");
   }
 
-  public void sendSuspendedEvent(final Suspension suspension) {
-    sendTracingData();
-    send(SuspendedEventMessage.create(
-        suspension.getEvent(),
-        SUSPENDED_EVENT_ID_PREFIX + suspension.activityId));
-  }
-
   public void sendStackTrace(final int startFrame, final int levels,
       final Suspension suspension, final int requestId) {
     send(StackTraceResponse.create(startFrame, levels, suspension, requestId));
@@ -250,7 +248,6 @@ public class FrontendConnector {
   public void sendVariables(final int varRef, final int requestId, final Suspension suspension) {
     send(VariablesResponse.create(varRef, requestId, suspension));
   }
-  private static final String SUSPENDED_EVENT_ID_PREFIX = "se-";
 
   public void sendStoppedMessage(final Suspension suspension) {
     send(StoppedMessage.create(suspension));
@@ -294,18 +291,8 @@ public class FrontendConnector {
     return webDebugger.getSuspension(activityId);
   }
 
-  public Suspension getSuspension(final String suspendedEventId) {
-    int activityId = Integer.valueOf(suspendedEventId.substring(SUSPENDED_EVENT_ID_PREFIX.length()));
-    return webDebugger.getSuspension(activityId);
-  }
-
   public Suspension getSuspensionForGlobalId(final int globalId) {
     return webDebugger.getSuspension(Suspension.getActivityIdFromGlobalId(globalId));
-  }
-
-  public SuspendedEvent getSuspendedEvent(final String id) {
-    int activityId = Integer.valueOf(id.substring(SUSPENDED_EVENT_ID_PREFIX.length()));
-    return webDebugger.getSuspendedEvent(activityId);
   }
 
   static void log(final String str) {
@@ -314,9 +301,8 @@ public class FrontendConnector {
     // Checkstyle: resume
   }
 
-  public void completeConnection(final WebSocket conn, final boolean debuggerProtocol) {
+  public void completeConnection(final WebSocket conn) {
     clientConnected.complete(conn);
-    webDebugger.useDebuggerProtocol(debuggerProtocol);
   }
 
   public void shutdown() {

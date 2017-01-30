@@ -23,6 +23,15 @@ public final class StackTraceResponse extends Response {
     super(requestId);
     this.stackFrames = stackFrames;
     this.totalFrames = totalFrames;
+
+    boolean assertsOn = false;
+    assert assertsOn = true;
+
+    if (assertsOn) {
+      for (StackFrame sf : stackFrames) {
+        assert sf != null;
+      }
+    }
   }
 
   static class StackFrame {
@@ -49,8 +58,12 @@ public final class StackTraceResponse extends Response {
     /** An optional end column of the range covered by the stack frame. */
     private final int endColumn;
 
+    /** An optional number of characters in the range. */
+    private final int length;
+
     StackFrame(final int id, final String name, final String sourceUri,
-        final int line, final int column, final int endLine, final int endColumn) {
+        final int line, final int column, final int endLine,
+        final int endColumn, final int length) {
       this.id        = id;
       this.name      = name;
       this.sourceUri = sourceUri;
@@ -58,6 +71,7 @@ public final class StackTraceResponse extends Response {
       this.column    = column;
       this.endLine   = endLine;
       this.endColumn = endColumn;
+      this.length    = length;
     }
   }
 
@@ -70,11 +84,17 @@ public final class StackTraceResponse extends Response {
       skipFrames = startFrame;
     }
 
-    StackFrame[] arr = new StackFrame[Math.min(frames.size(), levels) - skipFrames];
+    int numFrames = levels;
+    if (numFrames == 0) { numFrames = Integer.MAX_VALUE; }
+    numFrames = Math.min(frames.size(), numFrames);
+    numFrames -= skipFrames;
 
-    for (int frameId = skipFrames; frameId < frames.size() && frameId < levels; frameId += 1) {
+    StackFrame[] arr = new StackFrame[numFrames];
+
+    for (int i = 0; i < numFrames; i += 1) {
+      int frameId = i + skipFrames;
       StackFrame f = createFrame(suspension, frameId, frames.get(frameId));
-      arr[frameId - skipFrames] = f;
+      arr[i] = f;
     }
 
     return new StackTraceResponse(arr, frames.size(), requestId);
@@ -95,19 +115,22 @@ public final class StackTraceResponse extends Response {
     int column;
     int endLine;
     int endColumn;
+    int length;
     if (ss != null) {
       sourceUri = ss.getSource().getURI().toString();
       line      = ss.getStartLine();
       column    = ss.getStartColumn();
       endLine   = ss.getEndLine();
       endColumn = ss.getEndColumn();
+      length    = ss.getCharLength();
     } else {
       sourceUri = null;
       line      = 0;
       column    = 0;
       endLine   = 0;
       endColumn = 0;
+      length    = 0;
     }
-    return new StackFrame(id, name, sourceUri, line, column, endLine, endColumn);
+    return new StackFrame(id, name, sourceUri, line, column, endLine, endColumn, length);
   }
 }

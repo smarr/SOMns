@@ -4,25 +4,30 @@
 import * as WebSocket from "ws";
 
 import {Controller} from "./controller";
-import {Message, Respond} from "./messages";
-import {Breakpoint} from "./breakpoints";
+import {Message, Respond, StepType, BreakpointData} from "./messages";
+
+const DBG_PORT   = 7977;
+const TRACE_PORT = 7978;
+const LOCAL_WS_URL = "ws://localhost";
 
 /**
  * Encapsulates the connection to the VM via a web socket and encodes
  * the communication protocol, currently using JSON.
  */
 export class VmConnection {
-  private socket: WebSocket;
-  private binarySocket: WebSocket;
-  private controller: Controller;
+  private socket:                WebSocket;
+  private traceDataSocket:       WebSocket;
+  private readonly useTraceData: boolean;
+  private controller:            Controller;
 
-  constructor() {
-    this.socket = null;
-    this.binarySocket = null;
-    this.controller = null;
+  constructor(useTraceData: boolean) {
+    this.socket          = null;
+    this.traceDataSocket = null;
+    this.controller      = null;
+    this.useTraceData    = useTraceData;
   }
 
-  setController(controller: Controller) {
+  public setController(controller: Controller) {
     this.controller = controller;
   }
 
@@ -30,75 +35,133 @@ export class VmConnection {
     return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
   }
 
-  connect() {
-    console.assert(this.socket === null || this.socket.readyState === WebSocket.CLOSED);
-    this.socket = new WebSocket("ws://localhost:7977");
+  private connectTraceDataSocket() {
+    if (!this.useTraceData) { return; }
 
-    console.assert(this.binarySocket === null || this.binarySocket.readyState === WebSocket.CLOSED);
-    this.binarySocket = new WebSocket("ws://localhost:7978");
-    (<any> this.binarySocket).binaryType = "arraybuffer"; // workaround, typescript dosn't recognize this property
+    console.assert(this.traceDataSocket === null || this.traceDataSocket.readyState === WebSocket.CLOSED);
+    this.traceDataSocket = new WebSocket(LOCAL_WS_URL + ":" + TRACE_PORT);
+    (<any> this.traceDataSocket).binaryType = "arraybuffer"; // workaround, typescript dosn't recognize this property
 
     const controller = this.controller;
-    this.socket.onopen = function () {
-      controller.onConnect();
+    this.traceDataSocket.onmessage = function (e) {
+      const data: DataView = new DataView(e.data);
+      controller.onTracingData(data);
+    };
+  }
+
+  protected onOpen() {
+    if (!this.controller) { return; }
+    this.controller.onConnect();
+  }
+
+  connect() {
+    console.assert(this.socket === null || this.socket.readyState === WebSocket.CLOSED);
+    this.socket = new WebSocket(LOCAL_WS_URL + ":" + DBG_PORT);
+    const ctrl = this.controller;
+
+    this.socket.onopen = () => {
+      this.onOpen();
     };
 
-    this.socket.onclose = function () {
-      controller.onClose();
+    this.socket.onclose = () => {
+      if (!ctrl) { return; }
+      ctrl.onClose();
     };
 
-    this.socket.onerror = function () {
-      controller.onError();
+    this.socket.onerror = () => {
+      if (!ctrl) { return; }
+      ctrl.onError();
     };
 
-    this.socket.onmessage = function (e) {
+    this.socket.onmessage = (e) => {
+      if (!ctrl) { return; }
+
       const data: Message = JSON.parse(e.data);
 
       switch (data.type) {
         case "source":
-          controller.onReceivedSource(data);
+          ctrl.onReceivedSource(data);
           break;
-        case "suspendEvent":
-          controller.onExecutionSuspension(data);
+        case "StoppedEvent":
+          ctrl.onStoppedEvent(data);
           break;
-        case "symbolMessage":
-          controller.onSymbolMessage(data);
+        case "SymbolMessage":
+          ctrl.onSymbolMessage(data);
+          break;
+        case "StackTraceResponse":
+          ctrl.onStackTrace(data);
+          break;
+        case "ScopesResponse":
+          ctrl.onScopes(data);
+          break;
+        case "ThreadsResponse":
+          ctrl.onThreads(data);
+          break;
+        case "VariablesResponse":
+          ctrl.onVariables(data);
           break;
         default:
-          controller.onUnknownMessage(data);
+          ctrl.onUnknownMessage(data);
           break;
       }
     };
 
-    this.binarySocket.onmessage = function (e) {
-      const data: DataView = new DataView(e.data);
-      controller.onTracingData(data);
-    };
+    this.connectTraceDataSocket();
   }
 
   disconnect() {
     console.assert(this.isConnected());
   }
 
-  sendInitialBreakpoints(breakpoints: Breakpoint[]) {
+  sendInitialBreakpoints(breakpoints: BreakpointData[]) {
     this.send({
       action: "initialBreakpoints",
-      breakpoints: breakpoints.map(b => b.data),
-      debuggerProtocol: false
+      breakpoints: breakpoints
     });
   }
 
-  updateBreakpoint(breakpoint: Breakpoint) {
+  updateBreakpoint(breakpoint: BreakpointData) {
     this.send({
       action: "updateBreakpoint",
-      breakpoint: breakpoint.data
+      breakpoint: breakpoint
     });
   };
 
-  sendDebuggerAction(action, lastSuspendEventId) {
+  sendDebuggerAction(action: StepType, activityId: number) {
     this.send({
       action: action,
-      suspendEvent: lastSuspendEventId});
+      activityId: activityId});
+  }
+
+  public requestActivityList() {
+    // requestId is currently only used in VS code adapter
+    this.send({action: "ThreadsRequest", requestId: 0});
+  }
+
+  public requestStackTrace(activityId: number) {
+    this.send({
+      action: "StackTraceRequest",
+      activityId: activityId,
+      startFrame: 0, // from the top
+      levels:     0, // request all
+      requestId:  0  // only used in VS code adapter currently
+    });
+  }
+
+  public requestScope(scopeId: number) {
+    this.send({
+      action:    "ScopesRequest",
+      frameId:   scopeId,
+      requestId: 0 // only used in VS code
+    });
+  }
+
+  public requestVariables(variablesReference: number) {
+    this.send({
+      action: "VariablesRequest",
+      variablesReference: variablesReference,
+      requestId: 0 // only used in VS code
+    });
   }
 
   private send(respond: Respond) {

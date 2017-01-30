@@ -11,6 +11,8 @@ import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.Primitive;
 import som.primitives.arrays.ToArgumentsArrayNode;
 import som.primitives.arrays.ToArgumentsArrayNodeFactory;
+import som.vm.Activity;
+import som.vm.ActivityThread;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
@@ -113,7 +115,8 @@ public final class ThreadPrimitives {
     }
   }
 
-  public static final class SomThread extends Thread {
+  public static final class SomThread extends Thread
+      implements Activity, ActivityThread {
     private final Object[] args;
     private final SBlock block;
 
@@ -130,6 +133,11 @@ public final class ThreadPrimitives {
       } finally {
         ObjectTransitionSafepoint.INSTANCE.unregister();
       }
+    }
+
+    @Override
+    public Activity getActivity() {
+      return this;
     }
   }
 }

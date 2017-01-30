@@ -2,8 +2,8 @@
 "use strict";
 
 import {Controller} from "./controller";
-import {Source, Method, SuspendEventMessage, IdMap, Frame, SourceCoordinate,
-  TaggedSourceCoordinate, getSectionId} from "./messages";
+import {Source, Method, IdMap, StackFrame, SourceCoordinate, StackTraceResponse,
+  TaggedSourceCoordinate, Scope, getSectionId, Variable} from "./messages";
 import {Breakpoint, MessageBreakpoint, LineBreakpoint} from "./breakpoints";
 
 declare var ctrl: Controller;
@@ -404,19 +404,10 @@ function showSource(source: Source, sourceId: string) {
   files.appendChild(newFileElement);
 }
 
-function showVar(name: string, value: string, list: Element) {
-  const entry = nodeFromTemplate("frame-state-tpl");
-  let t = $(entry).find("th");
-  t.html(name);
-  t = $(entry).find("td");
-  t.html(value);
-  list.appendChild(entry);
-}
-
-function showFrame(frame: Frame, i: number, list: Element) {
-  let stackEntry = frame.methodName;
-  if (frame.sourceSection) {
-    stackEntry += ":" + frame.sourceSection.startLine + ":" + frame.sourceSection.startColumn;
+function showFrame(frame: StackFrame, i: number, list: Element) {
+  let stackEntry = frame.name;
+  if (frame.line) {
+    stackEntry += ":" + frame.line + ":" + frame.column;
   }
   const entry = nodeFromTemplate("stack-frame-tpl");
   entry.setAttribute("id", "frame-" + i);
@@ -481,14 +472,47 @@ export class View {
     enableMethodBreakpointHover(sourceFile);
   }
 
-  displaySuspendEvent(data: SuspendEventMessage, sourceId: string) {
+  private getScopeId(varRef: number) {
+    return "scope:" + varRef;
+  }
+
+  public displayScope(s: Scope) {
+    const list = document.getElementById("frame-state");
+    const entry = nodeFromTemplate("scope-head-tpl");
+    entry.id = this.getScopeId(s.variablesReference);
+    let t = $(entry).find("th");
+    t.html(s.name);
+    list.appendChild(entry);
+  }
+
+  private createVarElement(name: string, value: string, varRef: number): Element {
+    const entry = nodeFromTemplate("frame-state-tpl");
+    entry.id = this.getScopeId(varRef);
+    let t = $(entry).find("th");
+    t.html(name);
+    t = $(entry).find("td");
+    t.html(value);
+    return entry;
+  }
+
+  public displayVariables(varRef: number, vars: Variable[]) {
+    const scopeEntry = document.getElementById(this.getScopeId(varRef));
+
+    for (const v of vars) {
+      scopeEntry.insertAdjacentElement(
+        "afterend",
+        this.createVarElement(v.name, v.value, v.variablesReference));
+    }
+  }
+
+  displayStackTrace(data: StackTraceResponse, sourceId: string) {
     let list = document.getElementById("stack-frames");
     while (list.lastChild) {
       list.removeChild(list.lastChild);
     }
 
-    for (let i = 0; i < data.stack.length; i++) {
-      showFrame(data.stack[i], i, list);
+    for (let i = 0; i < data.stackFrames.length; i++) {
+      showFrame(data.stackFrames[i], i, list);
     }
 
     list = document.getElementById("frame-state");
@@ -496,14 +520,13 @@ export class View {
       list.removeChild(list.lastChild);
     }
 
-    showVar("Arguments", data.topFrame.arguments.join(", "), list);
-
-    for (const varName in data.topFrame.slots) {
-      showVar(varName, data.topFrame.slots[varName], list);
-    }
+    const line = data.stackFrames[0].line,
+      column = data.stackFrames[0].column,
+      length = data.stackFrames[0].length;
 
     // highlight current node
-    let ssId = getSectionId(sourceId, data.stack[0].sourceSection);
+    let ssId = getSectionId(sourceId,
+                 {startLine: line, startColumn: column, charLength: length});
     let ss = document.getElementById(ssId);
     $(ss).addClass("DbgCurrentNode");
 

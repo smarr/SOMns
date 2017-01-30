@@ -9,7 +9,7 @@ export function isRelevant(sc: TaggedSourceCoordinate) {
 }
 
 export class Debugger {
-  public lastSuspendEventId?: string;
+  public activityId?: number;
 
   private suspended: boolean;
 
@@ -33,7 +33,6 @@ export class Debugger {
 
   constructor() {
     this.suspended = false;
-    this.lastSuspendEventId = null;
     this.uriToSourceId  = {};
     this.sources        = {};
     this.sections       = {};
@@ -127,10 +126,10 @@ export class Debugger {
     return bps;
   }
 
-  setSuspended(eventId) {
+  setSuspended(activityId: number) {
     console.assert(!this.suspended);
-    this.suspended = true;
-    this.lastSuspendEventId = eventId;
+    this.suspended  = true;
+    this.activityId = activityId;
   }
 
   setResumed() {

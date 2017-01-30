@@ -1,7 +1,7 @@
 package tools.debugger.message;
 
 import som.interpreter.actors.Actor;
-import som.primitives.processes.ChannelPrimitives.ProcessThread;
+import som.primitives.processes.ChannelPrimitives;
 import som.primitives.threading.ThreadPrimitives.SomThread;
 import som.vm.NotYetImplementedException;
 import tools.debugger.frontend.Suspension;
@@ -63,7 +63,7 @@ public final class StoppedMessage extends OutgoingMessage {
       type = ActivityType.Actor;
     } else if (suspension.getActivity() instanceof SomThread) {
       type = ActivityType.Thread;
-    } else if (suspension.getActivity() instanceof ProcessThread) {
+    } else if (suspension.getActivity() instanceof ChannelPrimitives.Process) {
       type = ActivityType.Process;
     } else {
       // need to support this type of activity first

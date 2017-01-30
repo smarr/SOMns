@@ -39,34 +39,13 @@ export interface Method {
   sourceSection: SourceCoordinate;
 }
 
-export interface Frame {
-  sourceSection: FullSourceCoordinate;
-  methodName: string;
-}
-
-export interface TopFrame {
-  arguments: string[];
-  slots:     IdMap<string>;
-}
-
-export type Message = SourceMessage | SuspendEventMessage |
+export type Message = SourceMessage |
   SymbolMessage | UpdateSourceSections | StoppedMessage |
-  StackTraceResponse | ScopesResponse;
+  StackTraceResponse | ScopesResponse | ThreadsResponse | VariablesResponse;
 
 export interface SourceMessage {
   type:     "source";
   sources:  Source[];
-}
-
-export interface SuspendEventMessage {
-  type:     "suspendEvent";
-
-  /** id of SuspendEvent, to be recognized in backend. */
-  id:        string;
-  sourceUri: string;
-
-  stack:    Frame[];
-  topFrame: TopFrame;
 }
 
 export type StoppedReason = "step" | "breakpoint" | "exception" | "pause";
@@ -93,7 +72,7 @@ export interface SourceInfo {
 }
 
 export interface SymbolMessage {
-  type: "symbolMessage";
+  type: "SymbolMessage";
   symbols: string[];
   ids:   number[];
 }
@@ -145,16 +124,12 @@ export function createSectionBreakpointData(sourceUri: string, line: number,
 }
 
 export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
-  StepMessage | StackTraceRequest | ScopesRequest | VariablesRequest;
+  StepMessage | StackTraceRequest | ScopesRequest | VariablesRequest |
+  ThreadsRequest;
 
 export interface InitialBreakpointsResponds {
   action: "initialBreakpoints";
   breakpoints: BreakpointData[];
-
-  /**
-   * Use a VSCode-like debugger protocol.
-   */
-  debuggerProtocol: boolean;
 }
 
 interface UpdateBreakpoint {
@@ -166,9 +141,25 @@ export type StepType = "stepInto" | "stepOver" | "return" | "resume" | "stop";
 
 export interface StepMessage {
   action: StepType;
-  // TODO: should be renamed to suspendEventId
-  /** Id of the corresponding suspend event. */
-  suspendEvent: string;
+
+  /** Id of the suspended activity. */
+  activityId: number;
+}
+
+export interface ThreadsRequest {
+  action:    "ThreadsRequest";
+  requestId: number;
+}
+
+export interface Thread {
+  id:   number;
+  name: string;
+}
+
+export interface ThreadsResponse {
+  type:      "ThreadsResponse";
+  requestId: number;
+  threads:   Thread[];
 }
 
 export interface StackTraceRequest {
@@ -200,8 +191,11 @@ export interface StackFrame {
   /** Optional, end line of the range covered by the stack frame. */
   endLine: number;
 
-  /** Optional end column of the range covered by the stack frame. */
+  /** Optional, end column of the range covered by the stack frame. */
   endColumn: number;
+
+  /** Optional, number of characters in the range */
+  length: number;
 }
 
 export interface StackTraceResponse {
@@ -248,6 +242,7 @@ export interface VariablesRequest {
 export interface VariablesResponse {
   type: "VariablesResponse";
   variables: Variable[];
+  variablesReference: number;
   requestId: number;
 }
 

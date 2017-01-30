@@ -116,11 +116,11 @@ public abstract class SObject extends SObjectWithClass {
     private long   primField4;
     private long   primField5;
 
-    @SuppressWarnings("unused")  private Object field1;
-    @SuppressWarnings("unused")  private Object field2;
-    @SuppressWarnings("unused")  private Object field3;
-    @SuppressWarnings("unused")  private Object field4;
-    @SuppressWarnings("unused")  private Object field5;
+    private Object field1;
+    private Object field2;
+    private Object field3;
+    private Object field4;
+    private Object field5;
 
     // this field exists because HotSpot reorders fields, and we need to keep
     // the layouts in sync to avoid having to manage different offsets for

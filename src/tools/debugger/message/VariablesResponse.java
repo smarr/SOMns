@@ -19,9 +19,12 @@ import tools.debugger.message.Message.Response;
 @SuppressWarnings("unused")
 public final class VariablesResponse extends Response {
   private final Variable[] variables;
+  private final int variablesReference;
 
-  private VariablesResponse(final int requestId, final Variable[] variables) {
+  private VariablesResponse(final int requestId, final int variablesReference,
+      final Variable[] variables) {
     super(requestId);
+    this.variablesReference = variablesReference;
     this.variables = variables;
   }
 
@@ -52,7 +55,7 @@ public final class VariablesResponse extends Response {
     } else {
       results = createFromObject(scopeOrObject, suspension);
     }
-    return new VariablesResponse(requestId, results.toArray(new Variable[0]));
+    return new VariablesResponse(requestId, varRef, results.toArray(new Variable[0]));
   }
 
   private static ArrayList<Variable> createFromObject(final Object obj,

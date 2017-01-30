@@ -5,24 +5,25 @@ import org.java_websocket.WebSocket;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 
 import tools.debugger.FrontendConnector;
+import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.IncommingMessage;
 
 public abstract class StepMessage extends IncommingMessage {
-  private final String suspendEvent;
+  private final int activityId;
 
   /**
    * Note: meant for serialization.
    */
   protected StepMessage() {
-    suspendEvent = null;
+    activityId = -1;
   }
 
   @Override
   public void process(final FrontendConnector connector, final WebSocket conn) {
-    SuspendedEvent event = connector.getSuspendedEvent(suspendEvent);
-    assert event != null : "didn't find SuspendEvent";
-    process(event);
-    connector.getSuspension(suspendEvent).resume();
+    Suspension susp = connector.getSuspension(activityId);
+    assert susp.getEvent() != null : "didn't find SuspendEvent";
+    process(susp.getEvent());
+    susp.resume();
   }
 
   public abstract void process(SuspendedEvent event);

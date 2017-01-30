@@ -1,5 +1,6 @@
 package som.primitives.processes;
 
+import java.util.HashSet;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
@@ -26,6 +27,8 @@ import som.primitives.ObjectPrims.IsValue;
 import som.primitives.Primitive;
 import som.primitives.arrays.ToArgumentsArrayNode;
 import som.primitives.arrays.ToArgumentsArrayNodeFactory;
+import som.vm.Activity;
+import som.vm.ActivityThread;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
@@ -63,6 +66,12 @@ public abstract class ChannelPrimitives {
     Out     = null; OutId     = null;
   }
 
+  private static final HashSet<Process> activeProcesses = new HashSet<>();
+
+  public static HashSet<Process> getActiveProcesses() {
+    return activeProcesses;
+  }
+
   private static final class ProcessThreadFactory implements ForkJoinWorkerThreadFactory {
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
@@ -70,11 +79,19 @@ public abstract class ChannelPrimitives {
     }
   }
 
-  public static final class ProcessThread extends ForkJoinWorkerThread {
+  public static final class ProcessThread extends ForkJoinWorkerThread
+      implements ActivityThread {
+    private Process current;
+
     ProcessThread(final ForkJoinPool pool) { super(pool); }
+
+    @Override
+    public Activity getActivity() {
+      return current;
+    }
   }
 
-  private static final class Process implements Runnable {
+  public static final class Process implements Activity, Runnable {
     private final SObjectWithClass obj;
 
     Process(final SObjectWithClass obj) {
@@ -83,9 +100,28 @@ public abstract class ChannelPrimitives {
 
     @Override
     public void run() {
-      SInvokable disp = (SInvokable) obj.getSOMClass().lookupMessage(
-          Symbols.symbolFor("run"), AccessModifier.PROTECTED);
-      disp.invoke(obj);
+      ((ProcessThread) Thread.currentThread()).current = this;
+
+      synchronized (activeProcesses) {
+        activeProcesses.add(this);
+      }
+
+      try {
+        SInvokable disp = (SInvokable) obj.getSOMClass().lookupMessage(
+            Symbols.symbolFor("run"), AccessModifier.PROTECTED);
+        disp.invoke(obj);
+      } catch (Throwable t) {
+        t.printStackTrace();
+      } finally {
+        synchronized (activeProcesses) {
+          activeProcesses.remove(this);
+        }
+      }
+    }
+
+    @Override
+    public String getName() {
+      return obj.getSOMClass().getName().getString();
     }
   }
 
