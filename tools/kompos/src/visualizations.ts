@@ -8,10 +8,6 @@ import {HistoryData} from "./history-data";
 let path, circle, nodes, links, force, colors;
 let data = new HistoryData();
 
-// set up SVG for D3
-const width = 360,
-  height  = 350;
-
 /**
  * @param {MessageHistory} msgHist
  */
@@ -26,8 +22,9 @@ export function displayMessageHistory() {
   let svg = d3.select("#graph-canvas")
     .append("svg")
     // .attr("oncontextmenu", "return false;")
-    .attr("width", width)
-    .attr("height", height)
+    .attr("width", canvas.width())
+    .attr("height", canvas.height())
+    .attr("style", "background: none;")
     .call(zoom);
 
   // set up initial nodes and links
@@ -43,7 +40,7 @@ export function displayMessageHistory() {
   force = d3.layout.force()
     .nodes(nodes)
     .links(links)
-    .size([width, height])
+    .size([canvas.width(), canvas.height()])
     .linkDistance(70)
     .charge(-500)
     .on("tick", tick);
