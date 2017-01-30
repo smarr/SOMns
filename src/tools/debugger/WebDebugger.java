@@ -109,10 +109,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     breakpoints.prepareSteppingAfterNextRootNode();
   }
 
-  Suspension getSuspension(final int activityId) {
-    return idToSuspension.get(activityId);
-  }
-
   private int getActivityId(final Activity a) {
     return activities.computeIfAbsent(a, key -> { nextActivityId++; return nextActivityId; });
   }
@@ -131,6 +127,10 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
       }
     }
     return activities;
+  }
+
+  Suspension getSuspension(final int activityId) {
+    return idToSuspension.get(activityId);
   }
 
   private synchronized Suspension getSuspension(final Activity activity) {
