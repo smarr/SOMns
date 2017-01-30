@@ -36,6 +36,9 @@
  
  - Added breakpoints for channel operations in [PR #99](https://github.com/smarr/SOMns/pull/81).
 
+ - Fixed isolation issue for actors. The test that an actor is only created
+   from a value was broken ([issue #101](https://github.com/smarr/SOMns/issues/101), [PR #102](https://github.com/smarr/SOMns/pull/102))
+
 ## 0.1.0 - 2016-12-15
 
 This is the first tagged version. For previous changes, please refer to the
