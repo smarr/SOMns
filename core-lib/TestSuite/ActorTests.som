@@ -3,6 +3,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
   private AsyncTestContext = minitest AsyncTestContext.
   private actors      = platform actors.
   private Exception   = platform kernel Exception.
+  private NotAValue   = platform kernel NotAValue.
   private Vector      = platform kernel Vector.
   private Array       = platform kernel Array.
   private ObjectMirror = platform mirrors ObjectMirror.
@@ -556,6 +557,18 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
     TEST_CONTEXT = ()
   )
 
+  private class MutableObject = (
+  | private foo ::= 0. |
+  )(
+    public class ImmutableObject = ()()
+  )
+
+  private class ImmutableObject = Value ()(
+    public class MutableObject = (
+    | private foo ::= 0. |
+    )()
+  )
+
   public class RegressionTests = AsyncTestContext ()(
     (* This test is to identify issues in the OuterObjectRead node.
        It did not handle properly the different cases of outer scope
@@ -565,6 +578,20 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       | ref |
       ref := (actors createActorFromValue: DeepChain).
       assert: ref asString println equals: 'instance of FarReference'.
+    )
+
+    public testRaiseNotAValueExceptionForActorCreation = (
+      | mut |
+      mut := MutableObject new.
+      should: [actors createActorFromValue: mut ImmutableObject] signal: NotAValue
+    )
+
+    public testShouldntRaiseNotAValueExceptionForActorCreation = (
+      | imm |
+      imm := ImmutableObject new.
+      shouldnt: [actors createActorFromValue: MutableObject] signal: NotAValue.
+      shouldnt: [actors createActorFromValue: ImmutableObject] signal: NotAValue.
+      shouldnt: [actors createActorFromValue: imm MutableObject] signal: NotAValue.
     )
   ) : (
     TEST_CONTEXT = ()
