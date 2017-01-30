@@ -1004,7 +1004,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
   )
 
-  public class Philosophers new: numPhil rounds: numRounds = Benchmark (
+  public class Philosophers new: numPhil rounds: numRounds = Benchmark <: Value (
   | private numPhil   = numPhil.
     private numRounds = numRounds.
   |)(
@@ -1118,7 +1118,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
   )
 
-  public class SleepingBarber numHaircuts: numHaircuts waitingRoomSize: waitingRoomSize avProductionRate: avProductionRate avHaircutRate: avHaircutRate = Benchmark (
+  public class SleepingBarber numHaircuts: numHaircuts waitingRoomSize: waitingRoomSize avProductionRate: avProductionRate avHaircutRate: avHaircutRate = Benchmark <: Value (
   | private numHaircuts      = numHaircuts.
     private waitingRoomSize  = waitingRoomSize.
     private avProductionRate = avProductionRate.
@@ -1273,8 +1273,8 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       run problemSize: '5000:1000:1000:1000'
     )
   )
-  public class CigaretteSmokers rounds: rounds smokers: smokers = Benchmark (
 
+  public class CigaretteSmokers rounds: rounds smokers: smokers = Benchmark <: Value (
   | private rounds  = rounds.
     private smokers = smokers.
   |)(
@@ -1369,7 +1369,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
   )
 
-  public class LogisticsMapSeries numTerms: terms numSeries: series startRate: rate = Benchmark (
+  public class LogisticsMapSeries numTerms: terms numSeries: series startRate: rate = Benchmark <: Value (
   | private numTerms  = terms.
     private numSeries = series.
     private startRate = rate.
@@ -1492,7 +1492,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
   )
 
-  public class BankTransaction numAccounts: acc numTransactions: tran = Benchmark (
+  public class BankTransaction numAccounts: acc numTransactions: tran = Benchmark <: Value (
   | private numAccounts     = acc.
     private numTransactions = tran.
   |)(
@@ -1735,8 +1735,8 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       run problemSize: '100:256:74755'
     )
   )
-  public class FilterBank = Benchmark ()( todo = () )
 
+  public class FilterBank = Benchmark <: Value ()( todo = () )
 
   public class Sieve new: limit local: numMaxLocalPrimes = Benchmark <: Value (
   | private limit = limit.
@@ -2122,9 +2122,9 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       run problemSize: '100:10000000:1:5'
     )
   )
-  public class SuccessiveOverRelaxation = Benchmark ()( todo = ( USES_SHARED_ARRAYS ) )
 
 
+  public class SuccessiveOverRelaxation = Benchmark <: Value ()( todo = ( USES_SHARED_ARRAYS ) )
 
   (* This benchmark uses originally shared grid nodes.
      The interesting property is that the updates are conceptually safe even
@@ -2466,7 +2466,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
   )
 
-  public class NQueens numWorkers: workers size: size threshold: threshold = Benchmark (
+  public class NQueens numWorkers: workers size: size threshold: threshold = Benchmark <: Value (
   | private numWorkers = workers.
     private size       = size.
     private threshold  = threshold.
