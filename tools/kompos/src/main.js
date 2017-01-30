@@ -15,6 +15,8 @@ requirejs(
   ['vm-connection', 'controller', 'ui-controller', 'debugger', 'view',
    'visualizations', 'breakpoints'],
   function(vmConn, cont, uiCont, d, vw) {
+    $("#graph-canvas").resizable({handleSelector: '#split-system-code', resizeWidth: false});
+
     var view = new vw.View(),
       vmConnection = new vmConn.VmConnection(true),
       dbg = new d.Debugger();

@@ -144,9 +144,36 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
     font: 10px sans-serif;
   }
 
+  #header  {padding-left: 3em; padding-top: 1ex}
+
+  #graph-canvas {
+    margin-top: 2em;
+    width: 100%;
+    height: 30%;
+  }
+
+  #split-system-code {
+    width: 100%;
+    height: 3px;
+    cursor: ns-resize;
+    background-color: #eeeeee
+  }
   </style>
 </head>
 <body>
+<nav class="navbar-fixed-top" id="header">
+  <span style="font-weight: bold">Program</span> <code>core-lib/Benchmarks/Harness.som SavinaCSP.PingPong 500 0 10</code>
+</nav>
+<div id="system-view">
+  <div id="logo-bg">
+  <img src="out/src/logo/kompos-name.png" />
+  <img src="out/src/logo/tangled-string.png" />
+  </div>
+  <div id="graph-canvas"></div>
+  <div id="split-system-code"></div>
+</div>
+<div id="code-views"></div>
+
 <div id="content">
 <ul id="tabs" class="nav nav-tabs" data-tabs="tabs"></ul>
 <div id="files" class="tab-content"></div>
@@ -201,7 +228,7 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
 </tbody>
 </table>
 
-<div id="graph-canvas"></div>
+
 <div id="debugger-log" class="panel-footer" style="font-size: 75%">
 </div>
 
