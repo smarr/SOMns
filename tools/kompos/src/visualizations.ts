@@ -19,11 +19,16 @@ export function displayMessageHistory() {
   colors = d3.scale.category10();
   $("#graph-canvas").empty();
 
-  const svg = d3.select("#graph-canvas")
+  let zoom = d3.behavior.zoom()
+    .scaleExtent([0.1, 10])
+    .on("zoom", zoomed);
+
+  let svg = d3.select("#graph-canvas")
     .append("svg")
     // .attr("oncontextmenu", "return false;")
     .attr("width", width)
-    .attr("height", height);
+    .attr("height", height)
+    .call(zoom);
 
   // set up initial nodes and links
   //  - nodes are known by "id", not by index in array.
@@ -89,6 +94,21 @@ export function updateData(dv: DataView) {
   data.updateDataBin(dv);
 }
 
+let zoomScale = 1;
+let zoomTransl = [0, 0];
+
+function zoomed() {
+  let zoomEvt: d3.ZoomEvent = <d3.ZoomEvent> d3.event;
+  zoomScale  = zoomEvt.scale;
+  zoomTransl = zoomEvt.translate;
+
+  circle.attr("transform", function (d) {
+    const x = zoomTransl[0] + d.x * zoomScale;
+    const y = zoomTransl[1] + d.y * zoomScale;
+    return "translate(" + x + "," + y + ")scale(" + zoomScale + ")"; });
+  path.attr("transform", "translate(" + zoomTransl + ")scale(" + zoomScale + ")");
+}
+
 // update force layout (called automatically each iteration)
 function tick() {
   // draw directed edges with proper padding from node centers
@@ -108,7 +128,7 @@ function tick() {
   });
 
   circle.attr("transform", function(d) {
-    return "translate(" + d.x + "," + d.y + ")";
+    return "translate(" + (zoomTransl[0] + d.x * zoomScale) + "," + (zoomTransl[1] + d.y * zoomScale) + ")scale(" + zoomScale + ")";
   });
 }
 
