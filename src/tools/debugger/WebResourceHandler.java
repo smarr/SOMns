@@ -17,7 +17,6 @@ class WebResourceHandler implements HttpHandler {
   public void handle(final HttpExchange exchange) throws IOException {
     WebDebugger.log("[REQ] " + exchange.getRequestURI().toString());
     String rootFolder = System.getProperty("som.tools") + "/kompos";
-    WebDebugger.log(rootFolder);
 
     String requestedFile = exchange.getRequestURI().getPath();
     if ("/".equals(requestedFile)) {
@@ -28,6 +27,13 @@ class WebResourceHandler implements HttpHandler {
         requestedFile.startsWith("/out/") ||
         "/index.html".equals(requestedFile)) {
       File f = new File(rootFolder + requestedFile);
+      if (requestedFile.endsWith(".css")) {
+        exchange.getResponseHeaders().set("Content-Type", "text/css");
+      } else if (requestedFile.endsWith(".html")) {
+        exchange.getResponseHeaders().set("Content-Type", "text/html");
+      } else if (requestedFile.endsWith(".js")) {
+        exchange.getResponseHeaders().set("Content-Type", "text/javascript");
+      }
       exchange.sendResponseHeaders(200, f.length());
       copy(f, exchange.getResponseBody());
       return;
