@@ -19,7 +19,7 @@ class WebResourceHandler implements HttpHandler {
     String rootFolder = System.getProperty("som.tools") + "/kompos";
     WebDebugger.log(rootFolder);
 
-    String requestedFile = exchange.getRequestURI().toString();
+    String requestedFile = exchange.getRequestURI().getPath();
     if ("/".equals(requestedFile)) {
       requestedFile = "/index.html";
     }
