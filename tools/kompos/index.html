@@ -201,8 +201,7 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
     width: 100%;
     margin-top: 2ex;
   }
-
-  .activity-scopes td {
+  .activity-scopes th, .activity-scopes td {
     padding: 0.1rem .2rem;
     font-size: 9px
   }
@@ -229,6 +228,10 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   .activity-state {
     margin:  0;
     padding: 0;
+  }
+  .trace-entry {
+    width: 100%;
+    clear: both;
   }
   .trace-location {
     float:right;
@@ -350,9 +353,9 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
       </div>
   </div></div>
 
-  <label id="stack-trace-elem-tpl" class="btn btn-sm btn-secondary" style="width: 100%; clear: both;">
+  <label id="stack-trace-elem-tpl" class="trace-entry btn btn-sm btn-secondary">
     <span class="trace-method">
-      <input type="radio" name="options" id="option2" autocomplete="off">
+      <input type="radio" name="options" autocomplete="off">
       <span class="trace-method-name"></span>
     </span>
     <span class="trace-location"></span>
@@ -377,7 +380,7 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
     <th scope="row">name</th><td></td>
   </tr>
   <tr id="frame-state-tpl">
-    <th scope="row">name</th>
+    <td>name</td>
     <td>value</td>
   </tr>
   </table>

@@ -102,7 +102,7 @@ export class UiController extends Controller {
   public onScopes(msg: ScopesResponse) {
     for (let s of msg.scopes) {
       this.vmConnection.requestVariables(s.variablesReference);
-      this.view.displayScope(s);
+      this.view.displayScope(msg.variablesReference, s);
     }
   }
 

@@ -478,25 +478,25 @@ export class View {
   }
 
   private getScopeId(varRef: number) {
-    return "scope:" + varRef;
+    return "scope-" + varRef;
   }
 
-  public displayScope(s: Scope) {
-    const list = document.getElementById("frame-state");
+  public displayScope(varRef: number, s: Scope) {
+    const list = $("#" + this.getScopeId(varRef)).find("tbody");
     const entry = nodeFromTemplate("scope-head-tpl");
     entry.id = this.getScopeId(s.variablesReference);
     let t = $(entry).find("th");
     t.html(s.name);
-    list.appendChild(entry);
+    list.append(entry);
   }
 
   private createVarElement(name: string, value: string, varRef: number): Element {
     const entry = nodeFromTemplate("frame-state-tpl");
     entry.id = this.getScopeId(varRef);
-    let t = $(entry).find("th");
-    t.html(name);
+    let t = $(entry).find("td");
+    t.get(0).innerHTML = name;
     t = $(entry).find("td");
-    t.html(value);
+    t.get(1).innerHTML = value;
     return entry;
   }
 
@@ -514,13 +514,17 @@ export class View {
     return "frame-" + frameId;
   }
 
-  private showFrame(frame: StackFrame, frameId: number, list: JQuery) {
+  private showFrame(frame: StackFrame, active: boolean, list: JQuery) {
     const fileNameStart = frame.sourceUri.lastIndexOf("/") + 1;
     const fileName = frame.sourceUri.substr(fileNameStart);
     const location = fileName + ":" + frame.line + ":" + frame.column;
 
     const entry = nodeFromTemplate("stack-trace-elem-tpl");
-    entry.id = this.getFrameId(frameId);
+    entry.id = this.getFrameId(frame.id);
+
+    if (active) {
+      $(entry).addClass("active");
+    }
 
     const name = $(entry).find(".trace-method-name");
     name.html(frame.name);
@@ -530,14 +534,17 @@ export class View {
     list.append(entry);
   }
 
-  public displayStackTrace(data: StackTraceResponse) {
+  public displayStackTrace(data: StackTraceResponse, requestedId: number) {
     const act = $("#" + this.getActivityId(data.activityId));
     const list = act.find(".activity-stack");
     list.html("");
 
     for (let i = 0; i < data.stackFrames.length; i++) {
-      this.showFrame(data.stackFrames[i], i, list);
+      this.showFrame(data.stackFrames[i],
+        data.stackFrames[i].id === requestedId, list);
     }
+    const scopes = act.find(".activity-scopes");
+    scopes.attr("id", this.getScopeId(requestedId));
   }
 
 
