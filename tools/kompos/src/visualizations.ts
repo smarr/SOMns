@@ -190,6 +190,9 @@ function restart() {
   // After rendering text, adapt rectangles
   adaptRectSizeAndTextPostion();
 
+  // Enable dragging of nodes
+  g.call(force.drag);
+
   // remove old nodes
   circle.exit().remove();
 
