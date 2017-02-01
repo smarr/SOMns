@@ -12,15 +12,18 @@ import tools.debugger.message.Message.Response;
 @SuppressWarnings("unused")
 public final class StackTraceResponse extends Response {
   private final StackFrame[] stackFrames;
+  private final int activityId;
 
   /**
    * Total number of frames available.
    */
   private final int totalFrames;
 
-  private StackTraceResponse(final StackFrame[] stackFrames,
-      final int totalFrames, final int requestId) {
+  private StackTraceResponse(final int activityId,
+      final StackFrame[] stackFrames, final int totalFrames,
+      final int requestId) {
     super(requestId);
+    this.activityId  = activityId;
     this.stackFrames = stackFrames;
     this.totalFrames = totalFrames;
 
@@ -97,7 +100,8 @@ public final class StackTraceResponse extends Response {
       arr[i] = f;
     }
 
-    return new StackTraceResponse(arr, frames.size(), requestId);
+    return new StackTraceResponse(suspension.activityId, arr, frames.size(),
+        requestId);
   }
 
   private static StackFrame createFrame(final Suspension suspension,

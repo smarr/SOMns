@@ -200,6 +200,7 @@ export interface StackFrame {
 
 export interface StackTraceResponse {
   type: "StackTraceResponse";
+  activityId:  number;
   stackFrames: StackFrame[];
   totalFrames: number;
   requestId:   number;
