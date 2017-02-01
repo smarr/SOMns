@@ -87,11 +87,16 @@ export class UiController extends Controller {
     this.dbg.setSuspended(msg.activityId);
   }
 
+  public onThreads(msg: ThreadsResponse) {
+    const newActivities = this.dbg.addActivities(msg.threads);
+    this.view.addActivities(newActivities);
+  }
+
   public onStackTrace(msg: StackTraceResponse) {
+    const requestedId = msg.stackFrames[0].id;
     this.vmConnection.requestScope(msg.stackFrames[0].id);
-    this.view.displayStackTrace(
-      msg, this.dbg.getSourceId(msg.stackFrames[0].sourceUri));
     this.view.switchActivityDebuggerToSuspendedState(msg.activityId);
+    this.view.displayStackTrace(msg, requestedId);
   }
 
   public onScopes(msg: ScopesResponse) {

@@ -404,19 +404,6 @@ function showSource(source: Source, sourceId: string) {
   files.appendChild(newFileElement);
 }
 
-function showFrame(frame: StackFrame, i: number, list: Element) {
-  let stackEntry = frame.name;
-  if (frame.line) {
-    stackEntry += ":" + frame.line + ":" + frame.column;
-  }
-  const entry = nodeFromTemplate("stack-frame-tpl");
-  entry.setAttribute("id", "frame-" + i);
-
-  const tds = $(entry).find("td");
-  tds[0].innerHTML = stackEntry;
-  list.appendChild(entry);
-}
-
 /**
  * The HTML View, which realizes all access to the DOM for displaying
  * data and reacting to events.
@@ -523,40 +510,40 @@ export class View {
     }
   }
 
-  displayStackTrace(data: StackTraceResponse, sourceId: string) {
-    let list = document.getElementById("stack-frames");
-    while (list.lastChild) {
-      list.removeChild(list.lastChild);
-    }
+  private getFrameId(frameId: number) {
+    return "frame-" + frameId;
+  }
+
+  private showFrame(frame: StackFrame, frameId: number, list: JQuery) {
+    const fileNameStart = frame.sourceUri.lastIndexOf("/") + 1;
+    const fileName = frame.sourceUri.substr(fileNameStart);
+    const location = fileName + ":" + frame.line + ":" + frame.column;
+
+    const entry = nodeFromTemplate("stack-trace-elem-tpl");
+    entry.id = this.getFrameId(frameId);
+
+    const name = $(entry).find(".trace-method-name");
+    name.html(frame.name);
+    const loc = $(entry).find(".trace-location");
+    loc.html(location);
+
+    list.append(entry);
+  }
+
+  public displayStackTrace(data: StackTraceResponse) {
+    const act = $("#" + this.getActivityId(data.activityId));
+    const list = act.find(".activity-stack");
+    list.html("");
 
     for (let i = 0; i < data.stackFrames.length; i++) {
-      showFrame(data.stackFrames[i], i, list);
+      this.showFrame(data.stackFrames[i], i, list);
     }
-
-    list = document.getElementById("frame-state");
-    while (list.lastChild) {
-      list.removeChild(list.lastChild);
-    }
-
-    const line = data.stackFrames[0].line,
-      column = data.stackFrames[0].column,
-      length = data.stackFrames[0].length;
-
-    // highlight current node
-    let ssId = getSectionId(sourceId,
-                 {startLine: line, startColumn: column, charLength: length});
-    let ss = document.getElementById(ssId);
-    $(ss).addClass("DbgCurrentNode");
-
-    this.currentDomNode   = ss;
-    this.currentSectionId = ssId;
-    this.showSourceById(sourceId);
-
-    // scroll to the statement
-    $("html, body").animate({
-      scrollTop: $(ss).offset().top
-    }, 300);
   }
+
+
+
+
+
 
   showSourceById(sourceId: string) {
     if (this.getActiveSourceId() !== sourceId) {
