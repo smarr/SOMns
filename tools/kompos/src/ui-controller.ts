@@ -37,7 +37,6 @@ export class UiController extends Controller {
   onConnect() {
     dbgLog("[WS] open");
     resetLinks();
-    this.dbg.setResumed();
     this.view.onConnect();
     const bps = this.dbg.getEnabledBreakpoints();
     dbgLog("Send breakpoints: " + bps.length);
@@ -83,16 +82,16 @@ export class UiController extends Controller {
   }
 
   public onStoppedEvent(msg: StoppedMessage) {
-    this.dbg.setSuspended(msg.activityId);
     this.vmConnection.requestActivityList();
     this.vmConnection.requestStackTrace(msg.activityId);
+    this.dbg.setSuspended(msg.activityId);
   }
 
   public onStackTrace(msg: StackTraceResponse) {
     this.vmConnection.requestScope(msg.stackFrames[0].id);
-    this.view.switchDebuggerToSuspendedState();
     this.view.displayStackTrace(
       msg, this.dbg.getSourceId(msg.stackFrames[0].sourceUri));
+    this.view.switchActivityDebuggerToSuspendedState(msg.activityId);
   }
 
   public onScopes(msg: ScopesResponse) {
@@ -174,40 +173,41 @@ export class UiController extends Controller {
     this.view.updatePromiseBreakpoint(<MessageBreakpoint> breakpoint);
   }
 
-  resumeExecution() {
-    if (!this.dbg.isSuspended()) { return; }
-    this.dbg.setResumed();
-    this.vmConnection.sendDebuggerAction("resume", this.dbg.activityId);
-    this.view.onContinueExecution();
+  resumeExecution(activityId: number) {
+    if (!this.dbg.isSuspended(activityId)) { return; }
+    this.dbg.setResumed(activityId);
+    this.vmConnection.sendDebuggerAction("resume", activityId);
+    this.view.onContinueExecution(activityId);
   }
 
-  pauseExecution() {
-    if (this.dbg.isSuspended()) { return; }
+  pauseExecution(activityId: number) {
+    if (this.dbg.isSuspended(activityId)) { return; }
     // TODO
   }
 
+  /** End program, typically terminating it completely. */
   stopExecution() {
     // TODO
   }
 
-  stepInto() {
-    if (!this.dbg.isSuspended()) { return; }
-    this.dbg.setResumed();
-    this.view.onContinueExecution();
-    this.vmConnection.sendDebuggerAction("stepInto", this.dbg.activityId);
+  stepInto(activityId: number) {
+    if (!this.dbg.isSuspended(activityId)) { return; }
+    this.dbg.setResumed(activityId);
+    this.view.onContinueExecution(activityId);
+    this.vmConnection.sendDebuggerAction("stepInto", activityId);
   }
 
-  stepOver() {
-    if (!this.dbg.isSuspended()) { return; }
-    this.dbg.setResumed();
-    this.view.onContinueExecution();
-    this.vmConnection.sendDebuggerAction("stepOver", this.dbg.activityId);
+  stepOver(activityId: number) {
+    if (!this.dbg.isSuspended(activityId)) { return; }
+    this.dbg.setResumed(activityId);
+    this.view.onContinueExecution(activityId);
+    this.vmConnection.sendDebuggerAction("stepOver", activityId);
   }
 
-  returnFromExecution() {
-    if (!this.dbg.isSuspended()) { return; }
-    this.dbg.setResumed();
-    this.view.onContinueExecution();
-    this.vmConnection.sendDebuggerAction("return", this.dbg.activityId);
+  returnFromExecution(activityId: number) {
+    if (!this.dbg.isSuspended(activityId)) { return; }
+    this.dbg.setResumed(activityId);
+    this.view.onContinueExecution(activityId);
+    this.vmConnection.sendDebuggerAction("return", activityId);
   }
 }

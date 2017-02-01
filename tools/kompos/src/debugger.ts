@@ -9,20 +9,21 @@ export function isRelevant(sc: TaggedSourceCoordinate) {
 }
 
 export class Debugger {
-  public activityId?: number;
+  private suspendedActivities: boolean[];
 
-  private suspended: boolean;
+  /** Current set of activities in the system. */
+  private activities: string[];
 
   /**
    * Mapping Source URIs to id used for easy access, and for short unique ids to
    * be used by {@link getSectionId}.
    */
-  private uriToSourceId:  IdMap<string>;
+  private uriToSourceId: IdMap<string>;
 
   /**
    * Array of sources, indexed by id from {@link getSourceId}.
    */
-  private sources:  IdMap<Source>;
+  private sources: IdMap<Source>;
 
   /**
    * All source sections relevant for the debugger, indexed by {@link getSectionId}.
@@ -32,7 +33,8 @@ export class Debugger {
   private breakpoints: IdMap<IdMap<Breakpoint>>;
 
   constructor() {
-    this.suspended = false;
+    this.suspendedActivities = [];
+    this.activities     = [];
     this.uriToSourceId  = {};
     this.sources        = {};
     this.sections       = {};
@@ -127,16 +129,15 @@ export class Debugger {
   }
 
   setSuspended(activityId: number) {
-    console.assert(!this.suspended);
-    this.suspended  = true;
-    this.activityId = activityId;
+    console.assert(!this.suspendedActivities[activityId]);
+    this.suspendedActivities[activityId] = true;
   }
 
-  setResumed() {
-    this.suspended = false;
+  setResumed(activityId: number) {
+    this.suspendedActivities[activityId] = false;
   }
 
-  isSuspended() {
-    return this.suspended;
+  isSuspended(activityId: number) {
+    return this.suspendedActivities[activityId];
   }
 }

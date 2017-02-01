@@ -424,12 +424,10 @@ function showFrame(frame: StackFrame, i: number, list: Element) {
 export class View {
   private currentSectionId?: string;
   private currentDomNode?;
-  private debuggerButtonJQNodes?;
 
   constructor() {
     this.currentSectionId = null;
     this.currentDomNode   = null;
-    this.debuggerButtonJQNodes = null;
   }
 
   onConnect() {
@@ -608,45 +606,41 @@ export class View {
     this.updateBreakpoint(bp, $(bpSpan), "promise-breakpoint-active");
   }
 
-  lazyFindDebuggerButtons() {
-    if (!this.debuggerButtonJQNodes) {
-      this.debuggerButtonJQNodes = {};
-      this.debuggerButtonJQNodes.resume = $(document.getElementById("dbg-btn-resume"));
-      this.debuggerButtonJQNodes.pause  = $(document.getElementById("dbg-btn-pause"));
-      this.debuggerButtonJQNodes.stop   = $(document.getElementById("dbg-btn-stop"));
-
-      this.debuggerButtonJQNodes.stepInto = $(document.getElementById("dbg-btn-step-into"));
-      this.debuggerButtonJQNodes.stepOver = $(document.getElementById("dbg-btn-step-over"));
-      this.debuggerButtonJQNodes.return   = $(document.getElementById("dbg-btn-return"));
-    }
+  findActivityDebuggerButtons(activityId: number) {
+    const id = this.getActivityId(activityId);
+    const act = $("#" + id);
+    return {
+      resume:   act.find(".act-resume"),
+      pause:    act.find(".act-pause"),
+      stepInto: act.find(".act-step-into"),
+      stepOver: act.find(".act-step-over"),
+      return:   act.find(".act-return")
+    };
   }
 
-  switchDebuggerToSuspendedState() {
-    this.lazyFindDebuggerButtons();
+  switchActivityDebuggerToSuspendedState(activityId: number) {
+    const btns = this.findActivityDebuggerButtons(activityId);
 
-    this.debuggerButtonJQNodes.resume.removeClass("disabled");
-    this.debuggerButtonJQNodes.pause.addClass("disabled");
-    this.debuggerButtonJQNodes.stop.removeClass("disabled");
+    btns.resume.removeClass("disabled");
+    btns.pause.addClass("disabled");
 
-    this.debuggerButtonJQNodes.stepInto.removeClass("disabled");
-    this.debuggerButtonJQNodes.stepOver.removeClass("disabled");
-    this.debuggerButtonJQNodes.return.removeClass("disabled");
+    btns.stepInto.removeClass("disabled");
+    btns.stepOver.removeClass("disabled");
+    btns.return.removeClass("disabled");
   }
 
-  switchDebuggerToResumedState() {
-    this.lazyFindDebuggerButtons();
+  switchActivityDebuggerToResumedState(activityId: number) {
+    const btns = this.findActivityDebuggerButtons(activityId);
 
-    this.debuggerButtonJQNodes.resume.addClass("disabled");
-    this.debuggerButtonJQNodes.pause.removeClass("disabled");
-    this.debuggerButtonJQNodes.stop.removeClass("disabled");
+    btns.resume.addClass("disabled");
+    btns.pause.removeClass("disabled");
 
-    this.debuggerButtonJQNodes.stepInto.addClass("disabled");
-    this.debuggerButtonJQNodes.stepOver.addClass("disabled");
-    this.debuggerButtonJQNodes.return.addClass("disabled");
+    btns.stepInto.addClass("disabled");
+    btns.stepOver.addClass("disabled");
+    btns.return.addClass("disabled");
   }
 
-  onContinueExecution() {
-    this.switchDebuggerToResumedState();
-    $(this.currentDomNode).removeClass("DbgCurrentNode");
+  onContinueExecution(activityId: number) {
+    this.switchActivityDebuggerToResumedState(activityId);
   }
 }
