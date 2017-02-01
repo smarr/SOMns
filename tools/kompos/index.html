@@ -254,16 +254,12 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   <div id="graph-canvas"></div>
   <div id="split-system-code"></div>
 </div>
-<div id="code-views"></div>
 
-<div id="content">
-<ul id="tabs" class="nav nav-tabs" data-tabs="tabs"></ul>
-<div id="files" class="tab-content"></div>
-</div>
+<div id="code-views" class="card-columns"></div>
 
-<div class="panel panel-default" data-spy="affix" style="background-color:rgba(255, 255, 255, 0.5);">
-<div id="debugger" class="panel-body">
-<div class="btn-toolbar" role="toolbar" aria-label="Debugger Controls">
+<div class="card system-status" data-spy="affix">
+<div id="debugger" class="card-body">
+<div class="btn-toolbar card-pane" role="toolbar" aria-label="Debugger Controls">
   <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
     <button id="dbg-connect-btn" type="button" class="btn btn-default" onclick="ctrl.toggleConnection();">Connecting</button>
   </div>
@@ -362,6 +358,7 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   </label>
 
   <li id="tab-list-entry" class="nav-item"><a class="nav-link" href="#tab-id" data-toggle="tab">Label</a></li>
+
   <div id="file" class="tab-pane code-pane">
     <div class="line-numbers"></div>
     <div class="source-file"></div>
