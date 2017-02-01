@@ -53,8 +53,8 @@ export class UiController extends Controller {
   }
 
   onReceivedSource(msg: SourceMessage) {
-    let newSources = this.dbg.addSources(msg);
-    this.view.displaySources(newSources);
+    this.dbg.addSources(msg);
+  }
 
     for (let source of msg.sources) {
       const bps = this.dbg.getEnabledBreakpointsForSource(source.name);
