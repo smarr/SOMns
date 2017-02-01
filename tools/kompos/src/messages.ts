@@ -228,6 +228,7 @@ export interface Scope {
 
 export interface ScopesResponse {
   type: "ScopesResponse";
+  variablesReference: number;
   scopes:    Scope[];
   requestId: number;
 }

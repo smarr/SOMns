@@ -18,9 +18,12 @@ import tools.debugger.message.Message.Response;
 @SuppressWarnings("unused")
 public final class ScopesResponse extends Response {
   private final Scope[] scopes;
+  private final int variablesReference;
 
-  private ScopesResponse(final Scope[] scopes, final int requestId) {
+  private ScopesResponse(final int frameId, final Scope[] scopes,
+      final int requestId) {
     super(requestId);
+    this.variablesReference = frameId;
     this.scopes = scopes;
   }
 
@@ -80,6 +83,6 @@ public final class ScopesResponse extends Response {
         " here. Means we need to add support";
     }
 
-    return new ScopesResponse(scopes.toArray(new Scope[0]), requestId);
+    return new ScopesResponse(frameId, scopes.toArray(new Scope[0]), requestId);
   }
 }
