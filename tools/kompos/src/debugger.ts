@@ -1,5 +1,5 @@
 import {IdMap, Source, SourceCoordinate, SourceMessage, TaggedSourceCoordinate,
-  getSectionId} from "./messages";
+  Thread, getSectionId} from "./messages";
 import {Breakpoint} from "./breakpoints";
 
 export function isRelevant(sc: TaggedSourceCoordinate) {
@@ -139,5 +139,18 @@ export class Debugger {
 
   isSuspended(activityId: number) {
     return this.suspendedActivities[activityId];
+  }
+
+  public addActivities(threads: Thread[]) {
+    const newActivities = [];
+    for (const t of threads) {
+      if (this.activities[t.id] === undefined) {
+        newActivities[t.id] = t.name;
+        this.activities[t.id] = t.name;
+      } else {
+        console.assert(this.activities[t.id] === t.name, "Don't expect names of activities to change over time");
+      }
+    }
+    return newActivities;
   }
 }
