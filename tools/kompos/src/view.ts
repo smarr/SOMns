@@ -470,6 +470,26 @@ export class View {
     enableMethodBreakpointHover(sourceFile);
   }
 
+  private getActivityId(id: number) {
+    return "act-" + id;
+  }
+
+  public displayActivity(name: string, id: number) {
+    const act = nodeFromTemplate("activity-tpl");
+    $(act).find(".activity-name").html(name);
+    act.id = this.getActivityId(id);
+
+    const codeView = document.getElementById("code-views");
+    codeView.appendChild(act);
+  }
+
+  public addActivities(activities: string[]) {
+    for (const id in activities) {
+      const activityName = activities[id];
+      this.displayActivity(activityName, parseInt(id));
+    }
+  }
+
   private getScopeId(varRef: number) {
     return "scope:" + varRef;
   }

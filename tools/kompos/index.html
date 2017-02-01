@@ -162,7 +162,80 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
     width: 100%;
     height: 3px;
     cursor: ns-resize;
-    background-color: #eeeeee
+    background-color: #eeeeee;
+  }
+  .activity { }
+  .code-pane {
+    max-height: 700px;
+    overflow: auto;
+  }
+  #code-views {
+    column-count: 2;
+  }
+  .activity-name, .nav-link.card-title.disabled {
+    color: #000;
+    font-weight: bold;
+    cursor: default;
+  }
+  label.btn {
+    margin-bottom: 0;
+    font-size: 8px;
+  }
+  label.btn span {
+    max-width: 90px;
+    overflow: hidden;
+  }
+  .activity-sources {
+    padding: 0;
+  }
+  .activity-stack {
+    font-size: 75%;
+    width: 100%;
+  }
+  .activity-stack label {
+    padding: 0.1rem .2rem;
+    overflow: hidden;
+  }
+
+  .activity-scopes {
+    width: 100%;
+    margin-top: 2ex;
+  }
+
+  .activity-scopes td {
+    padding: 0.1rem .2rem;
+    font-size: 9px
+  }
+  .activity .nav-link {
+    font-size: 0.75em;
+    padding: 0.1em 0.1em;
+  }
+  .activity-sources .card-header-tabs {
+    margin-left: 0;
+  }
+  .activity-actions {
+    font-size: 75%;
+    padding-top: 3ex;
+  }
+  .activity-actions button {
+    padding:0.3em;
+  }
+  .system-status {
+    background-color:rgba(255, 255, 255, 0.5);
+    position: absolute;
+    top: 4ex;
+    right: 1ex;
+  }
+  .activity-state {
+    margin:  0;
+    padding: 0;
+  }
+  .trace-location {
+    float:right;
+    font-size:5px;
+  }
+  .trace-method {
+    float:left;
   }
   </style>
 </head>
@@ -243,8 +316,50 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
 </div></div>
 
 <div id="templates">
-  <li id="tab-list-entry"><a href="#tab-id" data-toggle="tab">Label</a></li>
-  <div id="file" class="tab-pane">
+  <div id="activity-tpl" class="activity card container-fluid"><div class="row">
+      <div class="activity-sources col-9">
+        <ul class="activity-sources-list nav nav-tabs card-header-tabs">
+          <li class="nav-item"><a class="activity-name nav-link disabled card-title" href="#">Platform</a></li>
+        </ul>
+        <div class="activity-source tab-content"></div>
+      </div>
+
+      <div class="activity-state col-3">
+        <div class="activity-actions btn-toolbar" role="toolbar" aria-label="Debugger Controls">
+          <!-- TODO: still need the activity id somehow here in the onclick handler -->
+          <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
+            <button class="act-resume btn btn-default disabled" type="button" title="Resume Execution"
+                    onclick="ctrl.resumeExecution();"><i class="fa fa-play"></i></button>
+            <button class="act-pause btn btn-default" type="button" title="Pause Execution"
+                    onclick="ctrl.pauseExecution();"><i class="fa fa-pause"></i></button>
+          </div>
+
+          <div class="btn-group btn-group-xs" role="group" aria-label="Stepping">
+            <button class="act-step-into btn btn-default disabled" type="button" title="Step Into"
+                    onclick="ctrl.stepInto();"><i class="fa fa-share" style="transform: rotate(90deg);"></i></button>
+            <button class="act-step-over btn btn-default disabled" type="button" title="Step Over"
+                    onclick="ctrl.stepOver();"><i class="fa fa-share"></i></button>
+            <button class="act-return btn btn-default disabled" type="button" title="Return from Method"
+                    onclick="ctrl.returnFromExecution();"><i class="fa fa-reply" style="transform: scaleY(-1);"></i></button>
+          </div>
+        </div>
+
+        <div class="activity-stack btn-group-vertical stack" data-toggle="buttons"></div>
+
+        <table class="activity-scopes"><tbody></tbody></table>
+      </div>
+  </div></div>
+
+  <label id="stack-trace-elem-tpl" class="btn btn-sm btn-secondary" style="width: 100%; clear: both;">
+    <span class="trace-method">
+      <input type="radio" name="options" id="option2" autocomplete="off">
+      <span class="trace-method-name"></span>
+    </span>
+    <span class="trace-location"></span>
+  </label>
+
+  <li id="tab-list-entry" class="nav-item"><a class="nav-link" href="#tab-id" data-toggle="tab">Label</a></li>
+  <div id="file" class="tab-pane code-pane">
     <div class="line-numbers"></div>
     <div class="source-file"></div>
   </div>
@@ -254,12 +369,6 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
     <td>ShortName</td>
     <td>nn</td>
     <td><input type="checkbox" id="b-XX" value="on" checked="checked" onchange=""></td>
-  </tr>
-  </table>
-
-  <table>
-  <tr id="stack-frame-tpl">
-    <td>MethodName</td>
   </tr>
   </table>
 
