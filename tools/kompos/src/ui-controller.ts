@@ -97,6 +97,10 @@ export class UiController extends Controller {
     this.vmConnection.requestScope(msg.stackFrames[0].id);
     this.view.switchActivityDebuggerToSuspendedState(msg.activityId);
     this.view.displayStackTrace(msg, requestedId);
+
+    const sourceId = this.dbg.getSourceId(msg.stackFrames[0].sourceUri);
+    const source = this.dbg.getSource(sourceId);
+    this.view.displaySource(msg.activityId, source, sourceId);
   }
 
   public onScopes(msg: ScopesResponse) {
