@@ -359,51 +359,6 @@ function enableMethodBreakpointHover(fileNode) {
   });
 }
 
-function showSource(source: Source, sourceId: string) {
-  let tabListEntry = <Element> document.getElementById("" + sourceId),
-    aElem = document.getElementById("a" + sourceId);
-  if (tabListEntry) {
-    if (aElem.innerText !== source.name) {
-      $(tabListEntry).remove();
-      $(aElem).remove();
-      tabListEntry = null;
-      aElem = null;
-    } else {
-      return; // source is already there, so, I think, we don't need to update it
-    }
-  }
-
-  const annotationArray = sourceToArray(source.sourceText);
-  annotateArray(annotationArray, sourceId, source.sections, source.methods);
-
-  tabListEntry = nodeFromTemplate("tab-list-entry");
-
-  if (aElem === null) {
-    // create the tab "header/handle"
-    const elem = $(tabListEntry).find("a");
-    elem.attr("href", "#" + sourceId);
-    elem.attr("id", "a" + sourceId);
-    elem.text(source.name);
-    aElem = elem.get(0);
-    $("#tabs").append(tabListEntry);
-  }
-
-  // create tab pane
-  const newFileElement = nodeFromTemplate("file");
-  newFileElement.setAttribute("id", "" + sourceId);
-  newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(annotationArray.length);
-  const fileNode = newFileElement.getElementsByClassName("source-file")[0];
-  fileNode.innerHTML = arrayToString(annotationArray);
-
-  // enable clicking on EventualSendNodes
-  enableEventualSendClicks($(fileNode));
-  enableChannelClicks($(fileNode));
-  enableMethodBreakpointHover($(fileNode));
-
-  const files = document.getElementById("files");
-  files.appendChild(newFileElement);
-}
-
 /**
  * The HTML View, which realizes all access to the DOM for displaying
  * data and reacting to events.
@@ -425,12 +380,59 @@ export class View {
     $("#dbg-connect-btn").html("Reconnect");
   }
 
-  displaySources(sources: IdMap<Source>) {
-    let sId; // keep last id to show tab
-    for (sId in sources) {
-      showSource(sources[sId], sId);
+  public displaySource(activityId: number, source: Source, sourceId: string) {
+    const actId = this.getActivityId(activityId);
+    const container = $("#" + actId + " .activity-sources-list");
+
+    // we mark the tab header as well as the tab content with a class
+    // that contains the source id
+    let sourceElem = container.find("." + sourceId);
+
+    if (sourceElem.length !== 0) {
+      const aElem = sourceElem.find("a.activity-name");
+      // we got already something with the source id
+      // does it have the same name?
+      if (aElem.get(0).innerHTML !== source.name) {
+        // clear and remove tab header and tab content
+        sourceElem.html("");
+        sourceElem.remove();
+      } else {
+        return; // source is already there, so, I think, we don't need to update it
+      }
     }
-    $('.nav-tabs a[href="#' + sId + '"]').tab("show");
+
+    // show the source
+    const annotationArray = sourceToArray(source.sourceText);
+
+    // TODO: think this still need to be updated for multiple activities
+    annotateArray(annotationArray, sourceId, source.sections, source.methods);
+
+    const tabListEntry = nodeFromTemplate("tab-list-entry");
+    $(tabListEntry).addClass(sourceId);
+
+    // create the tab "header/handle"
+    const elem = $(tabListEntry).find("a");
+    const sourcePaneId = actId + sourceId;
+    elem.attr("href", "#" + sourcePaneId);
+    elem.text(source.name);
+    container.append(tabListEntry);
+
+    // create tab pane
+    const newFileElement = nodeFromTemplate("file");
+    newFileElement.setAttribute("id", "" + sourcePaneId);
+    newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(annotationArray.length);
+    const fileNode = newFileElement.getElementsByClassName("source-file")[0];
+    fileNode.innerHTML = arrayToString(annotationArray);
+
+    // enable clicking on EventualSendNodes
+    enableEventualSendClicks($(fileNode));
+    enableChannelClicks($(fileNode));
+    enableMethodBreakpointHover($(fileNode));
+
+    const sourceContainer = $("#" + actId + " .activity-source");
+    sourceContainer.append(newFileElement);
+
+    $('.nav-tabs a[href="#' + sourcePaneId + '"]').tab("show");
   }
 
   displayUpdatedSourceSections(data, getSourceAndMethods) {
