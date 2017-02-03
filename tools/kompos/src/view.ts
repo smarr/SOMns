@@ -435,30 +435,6 @@ export class View {
     $('.nav-tabs a[href="#' + sourcePaneId + '"]').tab("show");
   }
 
-  displayUpdatedSourceSections(data, getSourceAndMethods) {
-    // update the source sections for the sourceId
-
-    const pane = document.getElementById(data.sourceId);
-    const sourceFile = $(pane).find(".source-file");
-
-    // remove all spans
-    sourceFile.find("span").replaceWith($(".html"));
-
-    // apply new spans
-    const result = getSourceAndMethods(data.sourceId),
-      source   = result[0],
-      methods  = result[1];
-
-    const annotationArray = sourceToArray(source.sourceText);
-    annotateArray(annotationArray, source.id, data.sections, methods);
-    sourceFile.html(arrayToString(annotationArray));
-
-    // enable clicking on EventualSendNodes
-    enableEventualSendClicks(sourceFile);
-    enableChannelClicks(sourceFile);
-    enableMethodBreakpointHover(sourceFile);
-  }
-
   private readonly ACT_ID_PREFIX = "act-";
 
   private getActivityId(id: number) {
