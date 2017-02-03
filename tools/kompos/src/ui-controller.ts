@@ -4,7 +4,8 @@
 import {Controller}   from "./controller";
 import {Debugger}     from "./debugger";
 import {SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
-  SectionBreakpointType, ScopesResponse, VariablesResponse } from "./messages";
+  SectionBreakpointType, ScopesResponse, VariablesResponse,
+  ThreadsResponse } from "./messages";
 import {LineBreakpoint, MessageBreakpoint,
   createLineBreakpoint, createMsgBreakpoint} from "./breakpoints";
 import {dbgLog}       from "./source";
