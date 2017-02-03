@@ -459,14 +459,22 @@ export class View {
     enableMethodBreakpointHover(sourceFile);
   }
 
+  private readonly ACT_ID_PREFIX = "act-";
+
   private getActivityId(id: number) {
-    return "act-" + id;
+    return this.ACT_ID_PREFIX + id;
+  }
+
+  public getActivityIdFromView(actId: string) {
+    return parseInt(actId.substr(this.ACT_ID_PREFIX.length));
   }
 
   public displayActivity(name: string, id: number) {
     const act = nodeFromTemplate("activity-tpl");
     $(act).find(".activity-name").html(name);
-    act.id = this.getActivityId(id);
+    const actId = this.getActivityId(id);
+    act.id = actId;
+    $(act).find("button").attr("data-actId", actId);
 
     const codeView = document.getElementById("code-views");
     codeView.appendChild(act);

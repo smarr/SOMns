@@ -328,18 +328,18 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
           <!-- TODO: still need the activity id somehow here in the onclick handler -->
           <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
             <button class="act-resume btn btn-default disabled" type="button" title="Resume Execution"
-                    onclick="ctrl.resumeExecution();"><i class="fa fa-play"></i></button>
+                    onclick="ctrl.resumeExecution(getAttribute('data-actid'));"><i class="fa fa-play"></i></button>
             <button class="act-pause btn btn-default" type="button" title="Pause Execution"
-                    onclick="ctrl.pauseExecution();"><i class="fa fa-pause"></i></button>
+                    onclick="ctrl.pauseExecution(getAttribute('data-actid'));"><i class="fa fa-pause"></i></button>
           </div>
 
           <div class="btn-group btn-group-xs" role="group" aria-label="Stepping">
             <button class="act-step-into btn btn-default disabled" type="button" title="Step Into"
-                    onclick="ctrl.stepInto();"><i class="fa fa-share" style="transform: rotate(90deg);"></i></button>
+                    onclick="ctrl.stepInto(getAttribute('data-actid'));"><i class="fa fa-share" style="transform: rotate(90deg);"></i></button>
             <button class="act-step-over btn btn-default disabled" type="button" title="Step Over"
-                    onclick="ctrl.stepOver();"><i class="fa fa-share"></i></button>
+                    onclick="ctrl.stepOver(getAttribute('data-actid'));"><i class="fa fa-share"></i></button>
             <button class="act-return btn btn-default disabled" type="button" title="Return from Method"
-                    onclick="ctrl.returnFromExecution();"><i class="fa fa-reply" style="transform: scaleY(-1);"></i></button>
+                    onclick="ctrl.returnFromExecution(getAttribute('data-actid'));"><i class="fa fa-reply" style="transform: scaleY(-1);"></i></button>
           </div>
         </div>
 

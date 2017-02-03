@@ -182,14 +182,16 @@ export class UiController extends Controller {
     this.view.updatePromiseBreakpoint(<MessageBreakpoint> breakpoint);
   }
 
-  resumeExecution(activityId: number) {
+  resumeExecution(actId: string) {
+    const activityId = this.view.getActivityIdFromView(actId);
     if (!this.dbg.isSuspended(activityId)) { return; }
     this.dbg.setResumed(activityId);
     this.vmConnection.sendDebuggerAction("resume", activityId);
     this.view.onContinueExecution(activityId);
   }
 
-  pauseExecution(activityId: number) {
+  pauseExecution(actId: string) {
+    const activityId = this.view.getActivityIdFromView(actId);
     if (this.dbg.isSuspended(activityId)) { return; }
     // TODO
   }
@@ -199,21 +201,24 @@ export class UiController extends Controller {
     // TODO
   }
 
-  stepInto(activityId: number) {
+  stepInto(actId: string) {
+    const activityId = this.view.getActivityIdFromView(actId);
     if (!this.dbg.isSuspended(activityId)) { return; }
     this.dbg.setResumed(activityId);
     this.view.onContinueExecution(activityId);
     this.vmConnection.sendDebuggerAction("stepInto", activityId);
   }
 
-  stepOver(activityId: number) {
+  stepOver(actId: string) {
+    const activityId = this.view.getActivityIdFromView(actId);
     if (!this.dbg.isSuspended(activityId)) { return; }
     this.dbg.setResumed(activityId);
     this.view.onContinueExecution(activityId);
     this.vmConnection.sendDebuggerAction("stepOver", activityId);
   }
 
-  returnFromExecution(activityId: number) {
+  returnFromExecution(actId: string) {
+    const activityId = this.view.getActivityIdFromView(actId);
     if (!this.dbg.isSuspended(activityId)) { return; }
     this.dbg.setResumed(activityId);
     this.view.onContinueExecution(activityId);
