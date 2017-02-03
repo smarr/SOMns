@@ -389,7 +389,7 @@ export class View {
     let sourceElem = container.find("." + sourceId);
 
     if (sourceElem.length !== 0) {
-      const aElem = sourceElem.find("a.activity-name");
+      const aElem = sourceElem.find("a");
       // we got already something with the source id
       // does it have the same name?
       if (aElem.get(0).innerHTML !== source.name) {
@@ -544,21 +544,45 @@ export class View {
     list.append(entry);
   }
 
-  public displayStackTrace(data: StackTraceResponse, requestedId: number) {
+  public displayStackTrace(sourceId: string, data: StackTraceResponse, requestedId: number) {
     const act = $("#" + this.getActivityId(data.activityId));
     const list = act.find(".activity-stack");
-    list.html("");
+    list.html(""); // rest view
 
     for (let i = 0; i < data.stackFrames.length; i++) {
       this.showFrame(data.stackFrames[i],
         data.stackFrames[i].id === requestedId, list);
+      console.assert(data.stackFrames[i].id !== requestedId || i === 0, "We expect that the first frame is displayed.");
     }
     const scopes = act.find(".activity-scopes");
     scopes.attr("id", this.getScopeId(requestedId));
+    scopes.find("tbody").html(""); // rest view
+
+    this.highlightProgramPosition(sourceId, data.stackFrames[0]);
   }
 
+  private highlightProgramPosition(sourceId, frame: StackFrame) {
+    const line = frame.line,
+      column = frame.column,
+      length = frame.length;
 
+    // highlight current node
+    // TODO: still needs to be adapted to multi-activity system
+    let ssId = getSectionId(sourceId,
+                 {startLine: line, startColumn: column, charLength: length});
+    let ss = document.getElementById(ssId);
+    $(ss).addClass("DbgCurrentNode");
 
+    this.currentDomNode   = ss;
+    this.currentSectionId = ssId;
+    this.showSourceById(sourceId);
+
+    // scroll to the statement
+    $("html, body").animate({
+      scrollTop: $(ss).offset().top
+    }, 300);
+
+  }
 
 
 
