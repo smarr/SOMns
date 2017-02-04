@@ -10,7 +10,7 @@ import {LineBreakpoint, MessageBreakpoint,
   createLineBreakpoint, createMsgBreakpoint} from "./breakpoints";
 import {dbgLog}       from "./source";
 import {displayMessageHistory, resetLinks, updateStrings, updateData} from "./visualizations";
-import {View}         from "./view";
+import {View, getActivityIdFromView}         from "./view";
 import {VmConnection} from "./vm-connection";
 
 /**
@@ -185,7 +185,7 @@ export class UiController extends Controller {
   }
 
   resumeExecution(actId: string) {
-    const activityId = this.view.getActivityIdFromView(actId);
+    const activityId = getActivityIdFromView(actId);
     if (!this.dbg.isSuspended(activityId)) { return; }
     this.dbg.setResumed(activityId);
     this.vmConnection.sendDebuggerAction("resume", activityId);
@@ -193,7 +193,7 @@ export class UiController extends Controller {
   }
 
   pauseExecution(actId: string) {
-    const activityId = this.view.getActivityIdFromView(actId);
+    const activityId = getActivityIdFromView(actId);
     if (this.dbg.isSuspended(activityId)) { return; }
     // TODO
   }
@@ -204,7 +204,7 @@ export class UiController extends Controller {
   }
 
   stepInto(actId: string) {
-    const activityId = this.view.getActivityIdFromView(actId);
+    const activityId = getActivityIdFromView(actId);
     if (!this.dbg.isSuspended(activityId)) { return; }
     this.dbg.setResumed(activityId);
     this.view.onContinueExecution(activityId);
@@ -212,7 +212,7 @@ export class UiController extends Controller {
   }
 
   stepOver(actId: string) {
-    const activityId = this.view.getActivityIdFromView(actId);
+    const activityId = getActivityIdFromView(actId);
     if (!this.dbg.isSuspended(activityId)) { return; }
     this.dbg.setResumed(activityId);
     this.view.onContinueExecution(activityId);
@@ -220,7 +220,7 @@ export class UiController extends Controller {
   }
 
   returnFromExecution(actId: string) {
-    const activityId = this.view.getActivityIdFromView(actId);
+    const activityId = getActivityIdFromView(actId);
     if (!this.dbg.isSuspended(activityId)) { return; }
     this.dbg.setResumed(activityId);
     this.view.onContinueExecution(activityId);

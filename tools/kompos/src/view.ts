@@ -2,11 +2,25 @@
 "use strict";
 
 import {Controller} from "./controller";
-import {Source, Method, IdMap, StackFrame, SourceCoordinate, StackTraceResponse,
+import {Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
   TaggedSourceCoordinate, Scope, getSectionId, Variable} from "./messages";
 import {Breakpoint, MessageBreakpoint, LineBreakpoint} from "./breakpoints";
 
 declare var ctrl: Controller;
+
+const ACT_ID_PREFIX = "a";
+
+function getActivityId(id: number) {
+  return ACT_ID_PREFIX + id;
+}
+
+function getSectionIdForActivity(ssId: string, activityId: number) {
+  return getActivityId(activityId) + ssId;
+}
+
+export function getActivityIdFromView(actId: string) {
+  return parseInt(actId.substr(ACT_ID_PREFIX.length));
+}
 
 function splitAndKeepNewlineAsEmptyString(str) {
   let result = new Array();
@@ -39,8 +53,8 @@ function sourceToArray(source: string): string[][] {
   return arr;
 }
 
-function methodDeclIdToString(sectionId: string, idx: number) {
-  return "m:" + sectionId + ":" + idx;
+function methodDeclIdToString(sectionId: string, idx: number, activityId: number) {
+  return getActivityId(activityId) + "m-" + sectionId + "-" + idx;
 }
 
 function methodDeclIdToObj(id: string) {
@@ -66,17 +80,21 @@ abstract class SectionMarker {
 
 class Begin extends SectionMarker {
   private section: TaggedSourceCoordinate;
-  private sectionId?: string;
+  private sectionId: string;
+  private activityId: number;
 
-  constructor(section: TaggedSourceCoordinate, sectionId: string) {
+  constructor(section: TaggedSourceCoordinate, sectionId: string,
+      activityId: number) {
     super(Begin);
-    this.sectionId = sectionId;
+    this.sectionId  = sectionId;
+    this.activityId = activityId;
     this.section = section;
     this.type    = Begin;
   }
 
   toString() {
-    return '<span id="' + this.sectionId + '" class="' + this.section.tags.join(" ") + '">';
+    return '<span id="' + getSectionIdForActivity(this.sectionId, this.activityId)
+         + '" class="' + this.section.tags.join(" ") + '">';
   }
 
   length() {
@@ -87,16 +105,18 @@ class Begin extends SectionMarker {
 class BeginMethodDef extends SectionMarker {
   private method:   Method;
   private sourceId: string;
+  private activityId: number;
   private i:        number;
   private defPart:  SourceCoordinate;
 
-  constructor(method: Method, sourceId: string, i: number,
+  constructor(method: Method, sourceId: string, i: number, activityId: number,
       defPart: SourceCoordinate) {
     super(Begin);
     this.method   = method;
     this.sourceId = sourceId;
     this.i        = i;
     this.defPart  = defPart;
+    this.activityId = activityId;
   }
 
   length() {
@@ -106,7 +126,8 @@ class BeginMethodDef extends SectionMarker {
   toString() {
     let tags = "MethodDeclaration",
       id = methodDeclIdToString(
-        getSectionId(this.sourceId, this.method.sourceSection), this.i);
+        getSectionId(this.sourceId, this.method.sourceSection),
+        this.i, this.activityId);
     return '<span id="' + id + '" class="' + tags + '">';
   }
 }
@@ -236,14 +257,15 @@ function getCoord(arr: any[][], startLine: number, startColumn: number, length: 
   return {line: line + 1, column: column + 1};
 }
 
-function annotateArray(arr: any[][], sourceId: string, sections: TaggedSourceCoordinate[], methods: Method[]) {
+function annotateArray(arr: any[][], sourceId: string, activityId: number,
+    sections: TaggedSourceCoordinate[], methods: Method[]) {
   for (let s of sections) {
     let start = ensureItIsAnnotation(arr, s.startLine, s.startColumn),
         coord = getCoord(arr, s.startLine, s.startColumn, s.charLength),
           end = ensureItIsAnnotation(arr, coord.line, coord.column),
     sectionId = getSectionId(sourceId, s);
 
-    start.before.push(new Begin(s, sectionId));
+    start.before.push(new Begin(s, sectionId, activityId));
     end.before.push(new End(s, s.charLength));
   }
 
@@ -255,7 +277,8 @@ function annotateArray(arr: any[][], sourceId: string, sections: TaggedSourceCoo
         coord = getCoord(arr, defPart.startLine, defPart.startColumn, defPart.charLength),
         end   = ensureItIsAnnotation(arr, coord.line, coord.column);
 
-      start.before.push(new BeginMethodDef(meth, sourceId, parseInt(i), defPart));
+      start.before.push(new BeginMethodDef(meth, sourceId, parseInt(i),
+                                           activityId, defPart));
       end.before.push(new End(meth.sourceSection, defPart.charLength));
     }
   }
@@ -364,13 +387,7 @@ function enableMethodBreakpointHover(fileNode) {
  * data and reacting to events.
  */
 export class View {
-  private currentSectionId?: string;
-  private currentDomNode?;
-
-  constructor() {
-    this.currentSectionId = null;
-    this.currentDomNode   = null;
-  }
+  constructor() { }
 
   onConnect() {
     $("#dbg-connect-btn").html("Connected");
@@ -381,7 +398,7 @@ export class View {
   }
 
   public displaySource(activityId: number, source: Source, sourceId: string) {
-    const actId = this.getActivityId(activityId);
+    const actId = getActivityId(activityId);
     const container = $("#" + actId + " .activity-sources-list");
 
     // we mark the tab header as well as the tab content with a class
@@ -405,7 +422,8 @@ export class View {
     const annotationArray = sourceToArray(source.sourceText);
 
     // TODO: think this still need to be updated for multiple activities
-    annotateArray(annotationArray, sourceId, source.sections, source.methods);
+    annotateArray(annotationArray, sourceId, activityId, source.sections,
+      source.methods);
 
     const tabListEntry = nodeFromTemplate("tab-list-entry");
     $(tabListEntry).addClass(sourceId);
@@ -435,20 +453,10 @@ export class View {
     $('.nav-tabs a[href="#' + sourcePaneId + '"]').tab("show");
   }
 
-  private readonly ACT_ID_PREFIX = "act-";
-
-  private getActivityId(id: number) {
-    return this.ACT_ID_PREFIX + id;
-  }
-
-  public getActivityIdFromView(actId: string) {
-    return parseInt(actId.substr(this.ACT_ID_PREFIX.length));
-  }
-
   public displayActivity(name: string, id: number) {
     const act = nodeFromTemplate("activity-tpl");
     $(act).find(".activity-name").html(name);
-    const actId = this.getActivityId(id);
+    const actId = getActivityId(id);
     act.id = actId;
     $(act).find("button").attr("data-actId", actId);
 
@@ -521,7 +529,7 @@ export class View {
   }
 
   public displayStackTrace(sourceId: string, data: StackTraceResponse, requestedId: number) {
-    const act = $("#" + this.getActivityId(data.activityId));
+    const act = $("#" + getActivityId(data.activityId));
     const list = act.find(".activity-stack");
     list.html(""); // rest view
 
@@ -534,10 +542,11 @@ export class View {
     scopes.attr("id", this.getScopeId(requestedId));
     scopes.find("tbody").html(""); // rest view
 
-    this.highlightProgramPosition(sourceId, data.stackFrames[0]);
+    this.highlightProgramPosition(sourceId, data.activityId, data.stackFrames[0]);
   }
 
-  private highlightProgramPosition(sourceId, frame: StackFrame) {
+  private highlightProgramPosition(sourceId: string, activityId: number,
+      frame: StackFrame) {
     const line = frame.line,
       column = frame.column,
       length = frame.length;
@@ -546,12 +555,11 @@ export class View {
     // TODO: still needs to be adapted to multi-activity system
     let ssId = getSectionId(sourceId,
                  {startLine: line, startColumn: column, charLength: length});
-    let ss = document.getElementById(ssId);
+    let ss = document.getElementById(
+                        getSectionIdForActivity(ssId, activityId));
     $(ss).addClass("DbgCurrentNode");
 
-    this.currentDomNode   = ss;
-    this.currentSectionId = ssId;
-    this.showSourceById(sourceId);
+    this.showSourceById(sourceId, activityId);
 
     // scroll to the statement
     $("html, body").animate({
@@ -561,10 +569,9 @@ export class View {
   }
 
 
-
-  showSourceById(sourceId: string) {
+  showSourceById(sourceId: string, activityId: number) {
     if (this.getActiveSourceId() !== sourceId) {
-      $(document.getElementById("a" + sourceId)).tab("show");
+      $(document.getElementById(getActivityId(activityId) + sourceId)).tab("show");
     }
   }
 
@@ -631,7 +638,7 @@ export class View {
   }
 
   findActivityDebuggerButtons(activityId: number) {
-    const id = this.getActivityId(activityId);
+    const id = getActivityId(activityId);
     const act = $("#" + id);
     return {
       resume:   act.find(".act-resume"),
@@ -666,5 +673,9 @@ export class View {
 
   onContinueExecution(activityId: number) {
     this.switchActivityDebuggerToResumedState(activityId);
+
+    const id = getActivityId(activityId);
+    const highlightedNode = $("#" + id + " .DbgCurrentNode");
+    highlightedNode.removeClass("DbgCurrentNode");
   }
 }
