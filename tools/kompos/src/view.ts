@@ -410,10 +410,10 @@ export class View {
     let sourceElem = container.find("." + sourceId);
 
     if (sourceElem.length !== 0) {
-      const aElem = sourceElem.find("a");
+      const existingAElem = sourceElem.find("a");
       // we got already something with the source id
       // does it have the same name?
-      if (aElem.get(0).innerHTML !== source.name) {
+      if (existingAElem.get(0).innerHTML !== source.name) {
         // clear and remove tab header and tab content
         sourceElem.html("");
         sourceElem.remove();
@@ -433,10 +433,10 @@ export class View {
     $(tabListEntry).addClass(sourceId);
 
     // create the tab "header/handle"
-    const elem = $(tabListEntry).find("a");
+    const aElem = $(tabListEntry).find("a");
     const sourcePaneId = getSourceIdForActivity(sourceId, activityId);
-    elem.attr("href", "#" + sourcePaneId);
-    elem.text(source.name);
+    aElem.attr("href", "#" + sourcePaneId);
+    aElem.text(source.name);
     container.append(tabListEntry);
 
     // create tab pane
