@@ -25,6 +25,10 @@
     "@types/mocha":     "^2.2.39",
     "@types/node":      "^7.0.5",
     "@types/ws":        "^0.0.38",
+    "bootstrap":        "^3.3.7",
+    "d3":               "^3.5.17",
+    "font-awesome":     "^4.7.0",
+    "jquery":           "^2.2.4",
     "node-define":      "^0.1.1",
     "requirejs":        "^2.3.2",
     "ws":               "^1.1.1"

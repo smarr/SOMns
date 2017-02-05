@@ -1,6 +1,6 @@
 requirejs.config({
   paths: {
-    'd3': ['https://d3js.org/d3.v3'],
+    'd3': ['/out/src/libs/d3.v3'],
     'ws': ['ws-shim']
   },
   shim: {
