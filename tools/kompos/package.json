@@ -25,7 +25,7 @@
     "@types/mocha":     "^2.2.39",
     "@types/node":      "^7.0.5",
     "@types/ws":        "^0.0.38",
-    "bootstrap":        "^3.3.7",
+    "bootstrap":        "^4.0.0-alpha.6",
     "d3":               "^3.5.17",
     "font-awesome":     "^4.7.0",
     "jquery":           "^2.2.4",
@@ -41,7 +41,7 @@
   },
   "scripts": {
     "postinstall": "npm run compile",
-    "compile": "node ./node_modules/typescript/bin/tsc",
+    "compile": "node ./node_modules/typescript/bin/tsc && cp -R ./src/libs ./out/src/libs && cp -R ./src/logo ./out/src/logo",
     "lint":    "node_modules/tslint/bin/tslint -c tslint.json --project tsconfig.json",
     "watch":   "node ./node_modules/typescript/bin/tsc -w",
     "test":    "node ./node_modules/mocha/bin/mocha -r node-define -t 5000 -u bdd ./out/tests/"
