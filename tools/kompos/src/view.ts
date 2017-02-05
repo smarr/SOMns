@@ -22,6 +22,12 @@ function getSourceIdForActivity(sId: string, activityId: number) {
   return getActivityId(activityId) + sId;
 }
 
+function getSourceIdFrom(actAndSourceId: string) {
+  const i = actAndSourceId.indexOf("s");
+  console.assert(i > 0);
+  return actAndSourceId.substr(i);
+}
+
 export function getActivityIdFromView(actId: string) {
   return parseInt(actId.substr(ACT_ID_PREFIX.length));
 }
@@ -454,7 +460,7 @@ export class View {
     const sourceContainer = $("#" + actId + " .activity-source");
     sourceContainer.append(newFileElement);
 
-    $('.nav-tabs a[href="#' + sourcePaneId + '"]').tab("show");
+    aElem.tab("show");
   }
 
   public displayActivity(name: string, id: number) {
@@ -579,13 +585,16 @@ export class View {
 
 
   showSourceById(sourceId: string, activityId: number) {
-    if (this.getActiveSourceId() !== sourceId) {
-      $(document.getElementById(getActivityId(activityId) + sourceId)).tab("show");
+    if (this.getActiveSourceId(activityId) !== sourceId) {
+      const actId = getActivityId(activityId);
+      $("#" + actId + " .activity-sources-list li." + sourceId + " a").tab("show");
     }
   }
 
-  getActiveSourceId(): string {
-    return $(".tab-pane.active").attr("id");
+  getActiveSourceId(activityId: number): string {
+    const actId = getActivityId(activityId);
+    const actAndSourceId = $("#" + actId + " .tab-pane.active").attr("id");
+    return getSourceIdFrom(actAndSourceId);
   }
 
   ensureBreakpointListEntry(breakpoint: Breakpoint) {
