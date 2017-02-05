@@ -3,7 +3,11 @@
   <!-- Debugger Icons -->
   <link href="/node_modules/font-awesome/css/font-awesome.css" rel="stylesheet" />
   <link href="/node_modules/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />
+  <link href="/node_modules/bootstrap/dist/css/bootstrap-reboot.css" rel="stylesheet" />
+  <link href="/node_modules/tether/dist/css/tether.css" rel="stylesheet" />
   <script src="/node_modules/jquery/dist/jquery.js"></script>
+  <script src="/out/src/libs/jquery-resizable.js"></script>
+  <script src="/node_modules/tether/dist/js/tether.js"></script>
   <script src="/node_modules/bootstrap/dist/js/bootstrap.js"></script>
 
   <script data-main="/out/src/main.js" src="/node_modules/requirejs/require.js"></script>
@@ -172,6 +176,10 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   #code-views {
     column-count: 2;
   }
+  #debugger button {
+    font-size: 75%;
+    padding: 2px 6px 3px;
+  }
   .activity-name, .nav-link.card-title.disabled {
     color: #000;
     font-weight: bold;
@@ -218,6 +226,7 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   }
   .activity-actions button {
     padding:0.3em;
+    font-size: 75%;
   }
   .system-status {
     background-color:rgba(255, 255, 255, 0.5);
@@ -261,24 +270,24 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
 <div id="debugger" class="card-body">
 <div class="btn-toolbar card-pane" role="toolbar" aria-label="Debugger Controls">
   <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
-    <button id="dbg-connect-btn" type="button" class="btn btn-default" onclick="ctrl.toggleConnection();">Connecting</button>
+    <button id="dbg-connect-btn" type="button" class="btn btn-secondary btn-sm" onclick="ctrl.toggleConnection();">Connecting</button>
   </div>
 
   <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
-    <button id="dbg-btn-resume" type="button" class="btn btn-default disabled" title="Resume Execution"
+    <button id="dbg-btn-resume" type="button" class="btn btn-secondary btn-sm disabled" title="Resume Execution"
             onclick="ctrl.resumeExecution();"><i class="fa fa-play"></i></button>
-    <button id="dbg-btn-pause"  type="button" class="btn btn-default" title="Pause Execution"
+    <button id="dbg-btn-pause"  type="button" class="btn btn-secondary btn-sm" title="Pause Execution"
             onclick="ctrl.pauseExecution();"><i class="fa fa-pause"></i></button>
-    <button id="dbg-btn-stop"   type="button" class="btn btn-default" title="Stop Execution"
+    <button id="dbg-btn-stop"   type="button" class="btn btn-secondary btn-sm" title="Stop Execution"
             onclick="ctrl.stopExecution();"><i class="fa fa-stop"></i></button>
   </div>
 
   <div class="btn-group btn-group-xs" role="group" aria-label="Stepping">
-    <button id="dbg-btn-step-into" type="button" class="btn btn-default disabled" title="Step Into"
+    <button id="dbg-btn-step-into" type="button" class="btn btn-secondary btn-sm disabled" title="Step Into"
             onclick="ctrl.stepInto();"><i class="fa fa-share" style="transform: rotate(90deg);"></i></button>
-    <button id="dbg-btn-step-over" type="button" class="btn btn-default disabled" title="Step Over"
+    <button id="dbg-btn-step-over" type="button" class="btn btn-secondary btn-sm disabled" title="Step Over"
             onclick="ctrl.stepOver();"><i class="fa fa-share"></i></button>
-    <button id="dbg-btn-return"    type="button" class="btn btn-default disabled" title="Return from Method"
+    <button id="dbg-btn-return"    type="button" class="btn btn-secondary btn-sm disabled" title="Return from Method"
             onclick="ctrl.returnFromExecution();"><i class="fa fa-reply" style="transform: scaleY(-1);"></i></button>
   </div>
 </div>
@@ -327,18 +336,18 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
         <div class="activity-actions btn-toolbar" role="toolbar" aria-label="Debugger Controls">
           <!-- TODO: still need the activity id somehow here in the onclick handler -->
           <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
-            <button class="act-resume btn btn-default disabled" type="button" title="Resume Execution"
+            <button class="act-resume btn btn-secondary btn-sm disabled" type="button" title="Resume Execution"
                     onclick="ctrl.resumeExecution(getAttribute('data-actid'));"><i class="fa fa-play"></i></button>
-            <button class="act-pause btn btn-default" type="button" title="Pause Execution"
+            <button class="act-pause btn btn-secondary btn-sm" type="button" title="Pause Execution"
                     onclick="ctrl.pauseExecution(getAttribute('data-actid'));"><i class="fa fa-pause"></i></button>
           </div>
 
           <div class="btn-group btn-group-xs" role="group" aria-label="Stepping">
-            <button class="act-step-into btn btn-default disabled" type="button" title="Step Into"
+            <button class="act-step-into btn btn-secondary btn-sm disabled" type="button" title="Step Into"
                     onclick="ctrl.stepInto(getAttribute('data-actid'));"><i class="fa fa-share" style="transform: rotate(90deg);"></i></button>
-            <button class="act-step-over btn btn-default disabled" type="button" title="Step Over"
+            <button class="act-step-over btn btn-secondary btn-sm disabled" type="button" title="Step Over"
                     onclick="ctrl.stepOver(getAttribute('data-actid'));"><i class="fa fa-share"></i></button>
-            <button class="act-return btn btn-default disabled" type="button" title="Return from Method"
+            <button class="act-return btn btn-secondary btn-sm disabled" type="button" title="Return from Method"
                     onclick="ctrl.returnFromExecution(getAttribute('data-actid'));"><i class="fa fa-reply" style="transform: scaleY(-1);"></i></button>
           </div>
         </div>
@@ -383,24 +392,24 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   </table>
 
   <div id="method-breakpoints" class="dropdown-content">
-    <button class="btn btn-default btn-sm btn-block bp-async-rcv">Method async receive</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-async-rcv">Method async receive</button>
   </div>
 
   <div id="actor-bp-menu" class="dropdown-content">
-    <button class="btn btn-default btn-sm btn-block bp-send-msg">Message send</button>
-    <button class="btn btn-default btn-sm btn-block bp-rcv-msg">Message receive</button>
-    <button class="btn btn-default btn-sm btn-block bp-send-prom">Promise resolver</button>
-    <button class="btn btn-default btn-sm btn-block bp-rcv-prom">Promise resolution</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-send-msg">Message send</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-rcv-msg">Message receive</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-send-prom">Promise resolver</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-rcv-prom">Promise resolution</button>
   </div>
 
   <div id="channel-write-bp-menu" class="dropdown-content">
-    <button class="btn btn-default btn-sm btn-block bp-before">Before send</button>
-    <button class="btn btn-default btn-sm btn-block bp-after">After receive</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-before">Before send</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-after">After receive</button>
   </div>
 
   <div id="channel-read-bp-menu" class="dropdown-content">
-    <button class="btn btn-default btn-sm btn-block bp-before">Before receive</button>
-    <button class="btn btn-default btn-sm btn-block bp-after">After send</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-before">Before receive</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-after">After send</button>
   </div>
 </div>
 
