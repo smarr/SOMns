@@ -11,5 +11,5 @@ env:
     - TASK=kompos
 script:
   - if [ "$TASK" = "tests" ];      then ant tests; fi
-  - if [ "$TASK" = "checkstyle" ]; then ant checkstyle   && cd tools/kompos && nvm install 6 && npm install && npm run lint; fi
-  - if [ "$TASK" = "kompos" ]; then nvm install 6 && ant && cd tools/kompos && npm install && npm test; fi
+  - if [ "$TASK" = "checkstyle" ]; then ant checkstyle   && cd tools/kompos && nvm install 7 && npm install && npm run lint; fi
+  - if [ "$TASK" = "kompos" ]; then nvm install 7 && ant && cd tools/kompos && npm install && npm test; fi
