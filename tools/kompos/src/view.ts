@@ -18,6 +18,10 @@ function getSectionIdForActivity(ssId: string, activityId: number) {
   return getActivityId(activityId) + ssId;
 }
 
+function getSourceIdForActivity(sId: string, activityId: number) {
+  return getActivityId(activityId) + sId;
+}
+
 export function getActivityIdFromView(actId: string) {
   return parseInt(actId.substr(ACT_ID_PREFIX.length));
 }
@@ -430,14 +434,14 @@ export class View {
 
     // create the tab "header/handle"
     const elem = $(tabListEntry).find("a");
-    const sourcePaneId = actId + sourceId;
+    const sourcePaneId = getSourceIdForActivity(sourceId, activityId);
     elem.attr("href", "#" + sourcePaneId);
     elem.text(source.name);
     container.append(tabListEntry);
 
     // create tab pane
     const newFileElement = nodeFromTemplate("file");
-    newFileElement.setAttribute("id", "" + sourcePaneId);
+    newFileElement.setAttribute("id", sourcePaneId);
     newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(annotationArray.length);
     const fileNode = newFileElement.getElementsByClassName("source-file")[0];
     fileNode.innerHTML = arrayToString(annotationArray);
@@ -561,11 +565,16 @@ export class View {
 
     this.showSourceById(sourceId, activityId);
 
+    const sourcePaneId = getSectionIdForActivity(sourceId, activityId);
+
     // scroll to the statement
     $("html, body").animate({
-      scrollTop: $(ss).offset().top
+      scrollTop: $("#" + sourcePaneId).offset().top
     }, 300);
 
+    $("#" + sourcePaneId).animate({
+      scrollTop: $(ss).offset().top
+    }, 300);
   }
 
 
