@@ -124,33 +124,42 @@ export class HistoryData {
           data.getInt16(i + 16); // id offset
           i += 18;
           break;
-        case 8:
+
+        default:
+          if (! (typ & 0x80)) {
+            break;
+          }
+
+          if (typ & 0x40) {
+            // promise message
+            // var prom = (data.getInt32(i+4) + ':' + data.getInt32(i));
+            i += 8;
+          }
+
           let sender = (data.getInt32(i + 4) + ":" + data.getInt32(i)); // sender id
           // 8 byte causal message id
-          data.getInt16(i + 16); // selector
-          // 8byte execution start
-          // 8byte send time
-          let numParam = data.getInt8(i + 34); // parameter count
-          i += 35;
-          for (let k = 0; k < numParam; k++) {
-            i += readParameter(data, i);
+          // var sym = data.getInt16(i+8); //selector
+          i += 18;
+
+          if (typ & 0x20) {
+            // timestamp
+            // 8byte execution start
+            // 8byte send time
+
+            i += 16;
           }
-          this.addMessage(sender, this.currentReceiver);
-          break;
-        case 9:
-          // 8 byte promise id
-          sender = (data.getInt32(i + 12) + ":" + data.getInt32(i + 8)); // sender id
-          // 8 byte causal message id
-          data.getInt16(i + 24); // selector
-          // 8byte execution start
-          // 8byte send time
-          numParam = data.getInt8(i + 42); // parameter count
-          i += 43;
-          for (let k = 0; k < numParam; k++) {
-            i += readParameter(data, i);
+
+          if (typ & 0x10) {
+            // message parameters
+            let numParam = data.getInt8(i); // parameter count
+            i++;
+            let k;
+            for (k = 0; k < numParam; k++) {
+              i += readParameter(data, i);
+            }
           }
+
           this.addMessage(sender, this.currentReceiver);
-          break;
       }
     }
   }

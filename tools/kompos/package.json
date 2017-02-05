@@ -15,15 +15,15 @@
     "url": "https://github.com/smarr/SOMns.git"
   },
   "engines": {
-    "node": "^7.0.3"
+    "node": "^7.0.5"
   },
   "dependencies": {
     "@types/bootstrap": "^3.3.32",
     "@types/chai":      "^3.4.34",
     "@types/d3":        "^3.5.36",
-    "@types/jquery":    "^2.0.39",
-    "@types/mocha":     "^2.2.38",
-    "@types/node":      "^7.0.3",
+    "@types/jquery":    "^2.0.40",
+    "@types/mocha":     "^2.2.39",
+    "@types/node":      "^7.0.5",
     "@types/ws":        "^0.0.38",
     "node-define":      "^0.1.1",
     "requirejs":        "^2.3.2",
@@ -32,7 +32,7 @@
   "devDependencies": {
     "chai"      : "^3.5.0",
     "mocha"     : "^3.2.0",
-    "tslint"    : "^4.3.1",
+    "tslint"    : "^4.4.2",
     "typescript": "2.1.5"
   },
   "scripts": {
