@@ -29,6 +29,8 @@ import tools.debugger.frontend.Suspension;
 import tools.debugger.message.InitialBreakpointsMessage;
 import tools.debugger.message.Message.IncommingMessage;
 import tools.debugger.message.Message.OutgoingMessage;
+import tools.debugger.message.ProgramInfoRequest;
+import tools.debugger.message.ProgramInfoResponse;
 import tools.debugger.message.ScopesRequest;
 import tools.debugger.message.ScopesResponse;
 import tools.debugger.message.SourceMessage;
@@ -212,11 +214,12 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     ClassHierarchyAdapterFactory<OutgoingMessage> outMsgAF = new ClassHierarchyAdapterFactory<>(OutgoingMessage.class, "type");
     outMsgAF.register("source",       SourceMessage.class);
     outMsgAF.register("StoppedEvent", StoppedMessage.class);
-    outMsgAF.register("SymbolMessage",      SymbolMessage.class);
-    outMsgAF.register("StackTraceResponse", StackTraceResponse.class);
-    outMsgAF.register("ScopesResponse",     ScopesResponse.class);
-    outMsgAF.register("VariablesResponse",  VariablesResponse.class);
-    outMsgAF.register("ThreadsResponse",    ThreadsResponse.class);
+    outMsgAF.register("SymbolMessage",       SymbolMessage.class);
+    outMsgAF.register("StackTraceResponse",  StackTraceResponse.class);
+    outMsgAF.register("ScopesResponse",      ScopesResponse.class);
+    outMsgAF.register("VariablesResponse",   VariablesResponse.class);
+    outMsgAF.register("ThreadsResponse",     ThreadsResponse.class);
+    outMsgAF.register("ProgramInfoResponse", ProgramInfoResponse.class);
 
     ClassHierarchyAdapterFactory<IncommingMessage> inMsgAF = new ClassHierarchyAdapterFactory<>(IncommingMessage.class, "action");
     inMsgAF.register(INITIAL_BREAKPOINTS, InitialBreakpointsMessage.class);
@@ -230,6 +233,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     inMsgAF.register("ScopesRequest",     ScopesRequest.class);
     inMsgAF.register("VariablesRequest",  VariablesRequest.class);
     inMsgAF.register("ThreadsRequest",    ThreadsRequest.class);
+    inMsgAF.register("ProgramInfoRequest", ProgramInfoRequest.class);
 
     ClassHierarchyAdapterFactory<BreakpointInfo> breakpointAF = new ClassHierarchyAdapterFactory<>(BreakpointInfo.class, "type");
     breakpointAF.register(LineBreakpoint.class);

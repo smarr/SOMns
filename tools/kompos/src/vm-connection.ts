@@ -100,6 +100,9 @@ export class VmConnection {
         case "VariablesResponse":
           ctrl.onVariables(data);
           break;
+        case "ProgramInfoResponse":
+          ctrl.onProgramInfo(data);
+          break;
         default:
           ctrl.onUnknownMessage(data);
           break;
@@ -111,6 +114,10 @@ export class VmConnection {
 
   disconnect() {
     console.assert(this.isConnected());
+  }
+
+  public requestProgramInfo() {
+    this.send({action: "ProgramInfoRequest"});
   }
 
   sendInitialBreakpoints(breakpoints: BreakpointData[]) {

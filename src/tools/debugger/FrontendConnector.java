@@ -20,6 +20,7 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.net.httpserver.HttpServer;
 
+import som.VM;
 import som.interpreter.actors.Actor;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
@@ -30,6 +31,7 @@ import tools.concurrency.ActorExecutionTrace;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message;
 import tools.debugger.message.Message.OutgoingMessage;
+import tools.debugger.message.ProgramInfoResponse;
 import tools.debugger.message.ScopesResponse;
 import tools.debugger.message.SourceMessage;
 import tools.debugger.message.SourceMessage.SourceData;
@@ -257,6 +259,17 @@ public class FrontendConnector {
     if (VmSettings.ACTOR_TRACING) {
       Actor.forceSwapBuffers();
     }
+  }
+
+  public void sendProgramInfo() {
+    // this one is a problematic one, because it is racy with VM initialization
+    // let's wait for VM object being available
+    while (VM.getVM() == null) {
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) { }
+    }
+    send(ProgramInfoResponse.create(VM.getArguments()));
   }
 
   public void registerOrUpdate(final LineBreakpoint bp) {

@@ -4,7 +4,7 @@
 import {Controller}   from "./controller";
 import {Debugger}     from "./debugger";
 import {SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
-  SectionBreakpointType, ScopesResponse, VariablesResponse,
+  SectionBreakpointType, ScopesResponse, VariablesResponse, ProgramInfoResponse,
   ThreadsResponse } from "./messages";
 import {LineBreakpoint, MessageBreakpoint,
   createLineBreakpoint, createMsgBreakpoint} from "./breakpoints";
@@ -42,6 +42,7 @@ export class UiController extends Controller {
     const bps = this.dbg.getEnabledBreakpoints();
     dbgLog("Send breakpoints: " + bps.length);
     this.vmConnection.sendInitialBreakpoints(bps.map(b => b.data));
+    this.vmConnection.requestProgramInfo();
   }
 
   onClose() {
@@ -110,6 +111,10 @@ export class UiController extends Controller {
       this.vmConnection.requestVariables(s.variablesReference);
       this.view.displayScope(msg.variablesReference, s);
     }
+  }
+
+  public onProgramInfo(msg: ProgramInfoResponse) {
+    this.view.displayProgramArguments(msg.args);
   }
 
   public onVariables(msg: VariablesResponse) {

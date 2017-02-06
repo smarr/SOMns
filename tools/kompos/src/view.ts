@@ -481,6 +481,10 @@ export class View {
     }
   }
 
+  public displayProgramArguments(args: String[]) {
+    $("#program-args").text(args.join(" "));
+  }
+
   private getScopeId(varRef: number) {
     return "scope-" + varRef;
   }

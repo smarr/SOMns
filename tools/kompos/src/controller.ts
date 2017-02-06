@@ -1,5 +1,5 @@
 import { SourceMessage, StoppedMessage, SymbolMessage, SectionBreakpointType,
-  StackTraceResponse, ScopesResponse, ThreadsResponse,
+  StackTraceResponse, ScopesResponse, ThreadsResponse, ProgramInfoResponse,
   VariablesResponse } from "./messages";
 import { VmConnection } from "./vm-connection";
 
@@ -22,6 +22,7 @@ export class Controller {
   public onStackTrace(_msg: StackTraceResponse) {}
   public onScopes(_msg: ScopesResponse)         {}
   public onThreads(_msg: ThreadsResponse)       {}
+  public onProgramInfo(_msg: ProgramInfoResponse) {}
   public onVariables(_msg: VariablesResponse)   {}
   public onUnknownMessage(_msg: any) {}
 

@@ -39,7 +39,7 @@ export interface Method {
   sourceSection: SourceCoordinate;
 }
 
-export type Message = SourceMessage |
+export type Message = SourceMessage | ProgramInfoResponse |
   SymbolMessage | UpdateSourceSections | StoppedMessage |
   StackTraceResponse | ScopesResponse | ThreadsResponse | VariablesResponse;
 
@@ -125,11 +125,20 @@ export function createSectionBreakpointData(sourceUri: string, line: number,
 
 export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
   StepMessage | StackTraceRequest | ScopesRequest | VariablesRequest |
-  ThreadsRequest;
+  ThreadsRequest | ProgramInfoRequest;
 
 export interface InitialBreakpointsResponds {
   action: "initialBreakpoints";
   breakpoints: BreakpointData[];
+}
+
+export interface ProgramInfoRequest {
+  action: "ProgramInfoRequest";
+}
+
+export interface ProgramInfoResponse {
+  type: "ProgramInfoResponse";
+  args: String[];
 }
 
 interface UpdateBreakpoint {
