@@ -125,7 +125,7 @@ export function createSectionBreakpointData(sourceUri: string, line: number,
 
 export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
   StepMessage | StackTraceRequest | ScopesRequest | VariablesRequest |
-  ThreadsRequest | ProgramInfoRequest;
+  ThreadsRequest | ProgramInfoRequest | TraceDataRequest;
 
 export interface InitialBreakpointsResponds {
   action: "initialBreakpoints";
@@ -139,6 +139,10 @@ export interface ProgramInfoRequest {
 export interface ProgramInfoResponse {
   type: "ProgramInfoResponse";
   args: String[];
+}
+
+export interface TraceDataRequest {
+  action: "TraceDataRequest";
 }
 
 interface UpdateBreakpoint {

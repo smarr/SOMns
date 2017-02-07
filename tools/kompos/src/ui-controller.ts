@@ -84,6 +84,7 @@ export class UiController extends Controller {
   }
 
   public onStoppedEvent(msg: StoppedMessage) {
+    this.vmConnection.requestTraceData();
     this.vmConnection.requestActivityList();
     this.vmConnection.requestStackTrace(msg.activityId);
     this.dbg.setSuspended(msg.activityId);

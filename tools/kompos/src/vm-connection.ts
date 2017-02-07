@@ -120,6 +120,10 @@ export class VmConnection {
     this.send({action: "ProgramInfoRequest"});
   }
 
+  public requestTraceData() {
+    this.send({action: "TraceDataRequest"});
+  }
+
   sendInitialBreakpoints(breakpoints: BreakpointData[]) {
     this.send({
       action: "initialBreakpoints",

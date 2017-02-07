@@ -45,6 +45,7 @@ import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SymbolMessage;
 import tools.debugger.message.ThreadsRequest;
 import tools.debugger.message.ThreadsResponse;
+import tools.debugger.message.TraceDataRequest;
 import tools.debugger.message.UpdateBreakpoint;
 import tools.debugger.message.VariablesRequest;
 import tools.debugger.message.VariablesResponse;
@@ -234,6 +235,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     inMsgAF.register("VariablesRequest",  VariablesRequest.class);
     inMsgAF.register("ThreadsRequest",    ThreadsRequest.class);
     inMsgAF.register("ProgramInfoRequest", ProgramInfoRequest.class);
+    inMsgAF.register("TraceDataRequest",  TraceDataRequest.class);
 
     ClassHierarchyAdapterFactory<BreakpointInfo> breakpointAF = new ClassHierarchyAdapterFactory<>(BreakpointInfo.class, "type");
     breakpointAF.register(LineBreakpoint.class);
