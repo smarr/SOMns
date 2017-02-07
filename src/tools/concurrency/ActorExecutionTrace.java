@@ -440,7 +440,6 @@ public class ActorExecutionTrace {
   }
 
   /**
-   *
    * @param fc The FrontendConnector used to send data to the debugger.
    */
   public static void setFrontEnd(final FrontendConnector fc) {
@@ -462,7 +461,7 @@ public class ActorExecutionTrace {
     }
   }
 
-  private static class TraceWorkerThread extends Thread{
+  private static class TraceWorkerThread extends Thread {
     protected boolean cont = true;
 
     @Override
