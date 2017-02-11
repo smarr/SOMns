@@ -18,8 +18,9 @@ Source: https://github.com/RickStrahl/jquery-resizable/blob/998f129e20b2333b79eb
         return selector ? $(selector) : $el;
     }
 
-    if ($.fn.resizable)
+    if ($.fn.resizable) {
         return;
+    }
 
     $.fn.resizable = function fnResizable(options) {
         var opt = {
@@ -28,11 +29,11 @@ Source: https://github.com/RickStrahl/jquery-resizable/blob/998f129e20b2333b79eb
             // resize the width
             resizeWidth: true,
             // resize the height
-            resizeHeight: true,            
+            resizeHeight: true,
             // the side that the width resizing is relative to
             resizeWidthFrom: 'right',
             // the side that the height resizing is relative to
-            resizeHeightFrom: 'bottom',            
+            resizeHeightFrom: 'bottom',
             // hook into start drag operation (event passed)
             onDragStart: null,
             // hook into stop drag operation (event passed)
@@ -43,7 +44,9 @@ Source: https://github.com/RickStrahl/jquery-resizable/blob/998f129e20b2333b79eb
             // prevents browser level actions like forward back gestures
             touchActionNone: true
         };
-        if (typeof options == "object") opt = $.extend(opt, options);
+        if (typeof options == "object") {
+            opt = $.extend(opt, options);
+        }
 
         return this.each(function () {
             var startPos, startTransition;
@@ -61,29 +64,20 @@ Source: https://github.com/RickStrahl/jquery-resizable/blob/998f129e20b2333b79eb
             function noop(e) {
                 e.stopPropagation();
                 e.preventDefault();
-            };
+            }
 
-            function startDragging(e) {
-                startPos = getMousePos(e);
-                startPos.width = parseInt($el.width(), 10);
-                startPos.height = parseInt($el.height(), 10);
-
-                startTransition = $el.css("transition");
-                $el.css("transition", "none");
-
-                if (opt.onDragStart) {
-                    if (opt.onDragStart(e, $el, opt) === false)
-                        return;
+            function getMousePos(e) {
+                var pos = { x: 0, y: 0, width: 0, height: 0 };
+                if (typeof e.clientX === "number") {
+                    pos.x = e.clientX;
+                    pos.y = e.clientY;
+                } else if (e.originalEvent.touches) {
+                    pos.x = e.originalEvent.touches[0].clientX;
+                    pos.y = e.originalEvent.touches[0].clientY;
+                } else {
+                    return null;
                 }
-                opt.dragFunc = doDrag;
-
-                $(document).bind('mousemove.rsz', opt.dragFunc);
-                $(document).bind('mouseup.rsz', stopDragging);
-                if (window.Touch || navigator.maxTouchPoints) {
-                    $(document).bind('touchmove.rsz', opt.dragFunc);
-                    $(document).bind('touchend.rsz', stopDragging);
-                }
-                $(document).bind('selectstart.rsz', noop); // disable selection
+                return pos;
             }
 
             function doDrag(e) {
@@ -100,11 +94,13 @@ Source: https://github.com/RickStrahl/jquery-resizable/blob/998f129e20b2333b79eb
                     newHeight = startPos.height + pos.y - startPos.y;
 
                 if (!opt.onDrag || opt.onDrag(e, $el, newWidth, newHeight, opt) !== false) {
-                    if (opt.resizeHeight)
-                        $el.height(newHeight);                    
+                    if (opt.resizeHeight) {
+                        $el.height(newHeight);
+                    }
 
-                    if (opt.resizeWidth)
-                        $el.width(newWidth);                    
+                    if (opt.resizeWidth) {
+                        $el.width(newWidth);
+                    }
                 }
             }
 
@@ -130,18 +126,28 @@ Source: https://github.com/RickStrahl/jquery-resizable/blob/998f129e20b2333b79eb
                 return false;
             }
 
-            function getMousePos(e) {
-                var pos = { x: 0, y: 0, width: 0, height: 0 };
-                if (typeof e.clientX === "number") {
-                    pos.x = e.clientX;
-                    pos.y = e.clientY;
-                } else if (e.originalEvent.touches) {
-                    pos.x = e.originalEvent.touches[0].clientX;
-                    pos.y = e.originalEvent.touches[0].clientY;
-                } else
-                    return null;
+            function startDragging(e) {
+                startPos = getMousePos(e);
+                startPos.width = parseInt($el.width(), 10);
+                startPos.height = parseInt($el.height(), 10);
 
-                return pos;
+                startTransition = $el.css("transition");
+                $el.css("transition", "none");
+
+                if (opt.onDragStart) {
+                    if (opt.onDragStart(e, $el, opt) === false) {
+                        return;
+                    }
+                }
+                opt.dragFunc = doDrag;
+
+                $(document).bind('mousemove.rsz', opt.dragFunc);
+                $(document).bind('mouseup.rsz', stopDragging);
+                if (window.Touch || navigator.maxTouchPoints) {
+                    $(document).bind('touchmove.rsz', opt.dragFunc);
+                    $(document).bind('touchend.rsz', stopDragging);
+                }
+                $(document).bind('selectstart.rsz', noop); // disable selection
             }
         });
     };
