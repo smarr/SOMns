@@ -367,6 +367,7 @@ public class Actor implements Activity {
     protected void onTermination(final Throwable exception) {
       if (VmSettings.ACTOR_TRACING) {
         long createdActors   = nextActivityId - 1 - (threadId << TraceData.ACTIVITY_ID_BITS);
+        long createdMessages = nextMessageId - (threadId << TraceData.ACTIVITY_ID_BITS);
         long createdPromises = nextPromiseId - (threadId << TraceData.ACTIVITY_ID_BITS);
 
         ActorExecutionTrace.returnBuffer(this.tracingDataBuffer);

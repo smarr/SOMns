@@ -3,7 +3,7 @@
 
 import {Controller} from "./controller";
 import {Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
-  TaggedSourceCoordinate, Scope, getSectionId, Variable} from "./messages";
+  TaggedSourceCoordinate, Scope, getSectionId, Variable, Activity } from "./messages";
 import {Breakpoint, MessageBreakpoint, LineBreakpoint} from "./breakpoints";
 
 declare var ctrl: Controller;
@@ -474,10 +474,9 @@ export class View {
     codeView.appendChild(act);
   }
 
-  public addActivities(activities: string[]) {
-    for (const id in activities) {
-      const activityName = activities[id];
-      this.displayActivity(activityName, parseInt(id));
+  public addActivities(activities: Activity[]) {
+    for (const act of activities) {
+      this.displayActivity(act.name, act.id);
     }
   }
 

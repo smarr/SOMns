@@ -1,35 +1,40 @@
 /* jshint -W097 */
 "use strict";
 
-import {IdMap} from "./messages";
+import {Controller} from "./controller";
+import {IdMap, Activity} from "./messages";
 import {dbgLog} from "./source";
 
 const horizontalDistance = 100,
   verticalDistance = 100;
+
+const SHIFT_HIGH_INT = 4294967296;
+const MAX_SAFE_HIGH_BITS = 53 - 32;
+const MAX_SAFE_HIGH_VAL  = (1 << MAX_SAFE_HIGH_BITS) - 1;
+
 
 export class HistoryData {
   private actors = {};
   private actorsPerType: IdMap<number> = {};
   private messages: IdMap<IdMap<number>> = {};
   private maxMessageCount = 0;
-  private strings = {};
-  private currentReceiver = "";
+  private strings: IdMap<string> = {};
+  private currentReceiver = 0;
 
   constructor() {
-    this.addActor("0:0", "Platform"); // add main actor
   }
 
-  addActor(id: string, type: string) {
-    hashAtInc(this.actorsPerType, type, 1);
+  addActor(act: Activity) {
+    hashAtInc(this.actorsPerType, act.name, 1);
       const node = {
-        id: id,
-        name: type,
+        id: act.id,
+        name: act.name,
         reflexive: false, // selfsends TODO what is this used for, maybe set to true when checking mailbox.
-        x: horizontalDistance + horizontalDistance * this.actorsPerType[type],
+        x: horizontalDistance + horizontalDistance * this.actorsPerType[act.name],
         y: verticalDistance * Object.keys(this.actorsPerType).length,
-        type: type
+        type: act.name
       };
-      this.actors[id.toString()] = node;
+      this.actors[act.id.toString()] = node;
   }
 
   addStrings(ids: number[], strings: string[]) {
@@ -38,8 +43,7 @@ export class HistoryData {
     }
   }
 
-  addMessage(sender: string, target: string) {
-      if (target === "0:0") { return; };
+  addMessage(sender: number, target: number) {
 
       if (!this.messages.hasOwnProperty(sender.toString())) {
         this.messages[sender.toString()] = {};
@@ -79,19 +83,39 @@ export class HistoryData {
     return this.maxMessageCount;
   }
 
-  updateDataBin(data: DataView) {
+  /** Read a long within JS int range */
+  private readLong(d: DataView, offset: number) {
+    const high = d.getUint32(offset);
+    console.assert(high <= MAX_SAFE_HIGH_VAL);
+    return high * SHIFT_HIGH_INT + d.getUint32(offset + 4);
+  }
+
+  updateDataBin(data: DataView, controller: Controller) {
+    const newActivities: Activity[] = [];
     let i = 0;
     while (i < data.byteLength) {
       const typ = data.getInt8(i);
       i++;
       switch (typ) {
-        case 1:
-          const aid = (data.getInt32(i + 4) + ":" + data.getInt32(i));
+        case 1: {
+          const aid = this.readLong(data, i);
           // 8 byte causal message id
-          const type: number = data.getInt16(i + 16); // type
-          this.addActor(aid, this.strings[type]);
+          const nameId: number = data.getUint16(i + 16);
+          const actor: Activity = {id: aid, name: this.strings[nameId], type: "Actor"};
+          this.addActor(actor);
+          newActivities.push(actor);
           i += 18;
           break;
+        }
+        case 10: {
+          const aid = this.readLong(data, i);
+          // 8 byte causal message id
+          const nameId: number = data.getUint16(i + 16);
+          const proc: Activity = {id: aid, name: this.strings[nameId], type: "Process"};
+          newActivities.push(proc);
+          i += 18;
+          break;
+        }
         case 2:
           // 8 byte promise id
           // 8 byte causal message id
@@ -111,7 +135,7 @@ export class HistoryData {
         case 5:
           // 8 byte message base id
           // 4 byte mailboxno
-          this.currentReceiver = (data.getInt32(i + 16) + ":" + data.getInt32(i + 12)); // receiver id
+          this.currentReceiver = this.readLong(data, i + 12); // receiver id
           i += 20;
           break;
         case 6:
@@ -122,7 +146,7 @@ export class HistoryData {
         case 7:
           // 8 byte message base id
           // 4 byte mailboxno
-          this.currentReceiver = (data.getInt32(i + 16) + ":" + data.getInt32(i + 12)); // receiver id
+          this.currentReceiver = this.readLong(data, i + 12); // receiver id
           data.getInt32(i + 20); // id offset
           i += 24;
           break;
@@ -138,7 +162,7 @@ export class HistoryData {
             i += 8;
           }
 
-          let sender = (data.getInt32(i + 4) + ":" + data.getInt32(i)); // sender id
+          let sender = this.readLong(data, i); // sender id
           // 8 byte causal message id
           // var sym = data.getInt16(i+8); //selector
           i += 18;
@@ -164,6 +188,7 @@ export class HistoryData {
           this.addMessage(sender, this.currentReceiver);
       }
     }
+    controller.newActivities(newActivities);
   }
 }
 

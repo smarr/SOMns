@@ -4,6 +4,7 @@ import som.interpreter.actors.Actor;
 import som.primitives.processes.ChannelPrimitives;
 import som.primitives.threading.ThreadPrimitives.SomThread;
 import som.vm.NotYetImplementedException;
+import tools.TraceData;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.OutgoingMessage;
 
@@ -11,13 +12,14 @@ import tools.debugger.message.Message.OutgoingMessage;
 @SuppressWarnings("unused")
 public final class StoppedMessage extends OutgoingMessage {
   private String  reason;
-  private int     activityId;
+  private long    activityId;
   private String  activityType;
   private String  text;
   private boolean allThreadsStopped;
 
-  private StoppedMessage(final Reason reason, final int activityId,
+  private StoppedMessage(final Reason reason, final long activityId,
       final ActivityType type, final String text) {
+    assert TraceData.isWithinJSIntValueRange(activityId);
     this.reason     = reason.value;
     this.activityId = activityId;
     this.activityType = type.value;

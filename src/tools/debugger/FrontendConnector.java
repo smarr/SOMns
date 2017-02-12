@@ -27,6 +27,7 @@ import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
+import tools.TraceData;
 import tools.concurrency.ActorExecutionTrace;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message;
@@ -38,7 +39,6 @@ import tools.debugger.message.SourceMessage.SourceData;
 import tools.debugger.message.StackTraceResponse;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SymbolMessage;
-import tools.debugger.message.ThreadsResponse;
 import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.AsyncMessageReceiverBreakpoint;
 import tools.debugger.session.Breakpoints;
@@ -194,12 +194,6 @@ public class FrontendConnector {
     }
   }
 
-
-
-  public synchronized void sendThreads(final int requestId) {
-    send(ThreadsResponse.create(webDebugger.getAllActivities(), requestId));
-  }
-
   public void sendLoadedSource(final Source source,
       final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
       final Map<Source, Set<RootNode>> rootNodes) {
@@ -247,7 +241,7 @@ public class FrontendConnector {
     send(ScopesResponse.create(frameId, suspension, requestId));
   }
 
-  public void sendVariables(final int varRef, final int requestId, final Suspension suspension) {
+  public void sendVariables(final long varRef, final int requestId, final Suspension suspension) {
     send(VariablesResponse.create(varRef, requestId, suspension));
   }
 
@@ -300,12 +294,12 @@ public class FrontendConnector {
     breakpoints.addOrUpdate(bp);
   }
 
-  public Suspension getSuspension(final int activityId) {
+  public Suspension getSuspension(final long activityId) {
     return webDebugger.getSuspension(activityId);
   }
 
-  public Suspension getSuspensionForGlobalId(final int globalId) {
-    return webDebugger.getSuspension(Suspension.getActivityIdFromGlobalId(globalId));
+  public Suspension getSuspensionForGlobalId(final long globalId) {
+    return webDebugger.getSuspension(TraceData.getActivityIdFromGlobalValId(globalId));
   }
 
   static void log(final String str) {

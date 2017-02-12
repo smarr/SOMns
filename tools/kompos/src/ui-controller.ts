@@ -5,7 +5,7 @@ import {Controller}   from "./controller";
 import {Debugger}     from "./debugger";
 import {SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
   SectionBreakpointType, ScopesResponse, VariablesResponse, ProgramInfoResponse,
-  ThreadsResponse } from "./messages";
+  Activity } from "./messages";
 import {LineBreakpoint, MessageBreakpoint,
   createLineBreakpoint, createMsgBreakpoint} from "./breakpoints";
 import {dbgLog}       from "./source";
@@ -20,6 +20,9 @@ import {VmConnection} from "./vm-connection";
 export class UiController extends Controller {
   private dbg: Debugger;
   private view: View;
+
+  private actProm = {};
+  private actPromResolve = {};
 
   constructor(dbg, view, vmConnection: VmConnection) {
     super(vmConnection);
@@ -83,28 +86,47 @@ export class UiController extends Controller {
     }
   }
 
+  private ensureActivityPromise(actId: number) {
+    if (!this.actProm[actId]) {
+      this.actProm[actId] = new Promise((resolve, _reject) => {
+        this.actPromResolve[actId] = resolve;
+      });
+    }
+  }
+
   public onStoppedEvent(msg: StoppedMessage) {
     this.vmConnection.requestTraceData();
-    this.vmConnection.requestActivityList();
+    this.ensureActivityPromise(msg.activityId);
     this.vmConnection.requestStackTrace(msg.activityId);
     this.dbg.setSuspended(msg.activityId);
   }
 
-  public onThreads(msg: ThreadsResponse) {
-    const newActivities = this.dbg.addActivities(msg.threads);
+  public newActivities(newActivities: Activity[]) {
+    this.dbg.addActivities(newActivities);
     this.view.addActivities(newActivities);
+
+    for (const act of newActivities) {
+      this.ensureActivityPromise(act.id);
+      this.actPromResolve[act.id](act);
+    }
   }
 
   public onStackTrace(msg: StackTraceResponse) {
     const requestedId = msg.stackFrames[0].id;
-    this.vmConnection.requestScope(msg.stackFrames[0].id);
-    this.view.switchActivityDebuggerToSuspendedState(msg.activityId);
+    this.ensureActivityPromise(msg.activityId);
 
-    const sourceId = this.dbg.getSourceId(msg.stackFrames[0].sourceUri);
-    const source = this.dbg.getSource(sourceId);
+    this.actProm[msg.activityId].then(act => {
+      console.assert(act.id === msg.activityId);
+      this.vmConnection.requestScope(requestedId);
 
-    this.view.displaySource(msg.activityId, source, sourceId);
-    this.view.displayStackTrace(sourceId, msg, requestedId);
+      this.view.switchActivityDebuggerToSuspendedState(msg.activityId);
+
+      const sourceId = this.dbg.getSourceId(msg.stackFrames[0].sourceUri);
+      const source = this.dbg.getSource(sourceId);
+
+      this.view.displaySource(msg.activityId, source, sourceId);
+      this.view.displayStackTrace(sourceId, msg, requestedId);
+    });
   }
 
   public onScopes(msg: ScopesResponse) {
@@ -127,7 +149,7 @@ export class UiController extends Controller {
   }
 
   onTracingData(data: DataView) {
-    updateData(data);
+    updateData(data, this);
     displayMessageHistory();
   }
 

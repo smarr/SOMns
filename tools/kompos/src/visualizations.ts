@@ -1,6 +1,7 @@
 /* jshint -W097 */
 "use strict";
 
+import {Controller} from "./controller";
 import {SymbolMessage} from "./messages";
 import * as d3 from "d3";
 import {HistoryData} from "./history-data";
@@ -87,8 +88,8 @@ export function updateStrings(msg: SymbolMessage) {
   data.addStrings(msg.ids, msg.symbols);
 }
 
-export function updateData(dv: DataView) {
-  data.updateDataBin(dv);
+export function updateData(dv: DataView, controller: Controller) {
+  data.updateDataBin(dv, controller);
 }
 
 let zoomScale = 1;

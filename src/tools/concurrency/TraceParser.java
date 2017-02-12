@@ -35,6 +35,9 @@ public final class TraceParser {
   public static final byte BASIC_MESSAGE      = 8;
   public static final byte PROMISE_MESSAGE    = 9;
 
+  public static final byte PROCESS_CREATION   = 10;
+  public static final byte PROCESS_COMPLETION = 11;
+
   private final HashMap<Short, SSymbol> symbolMapping = new HashMap<>();
   private ByteBuffer b = ByteBuffer.allocate(ActorExecutionTrace.BUFFER_SIZE);
   private final HashMap<Long, ActorNode> mappedActors = new HashMap<>();

@@ -41,7 +41,7 @@ export interface Method {
 
 export type Message = SourceMessage | ProgramInfoResponse |
   SymbolMessage | UpdateSourceSections | StoppedMessage |
-  StackTraceResponse | ScopesResponse | ThreadsResponse | VariablesResponse;
+  StackTraceResponse | ScopesResponse | VariablesResponse;
 
 export interface SourceMessage {
   type:     "source";
@@ -49,7 +49,14 @@ export interface SourceMessage {
 }
 
 export type StoppedReason = "step" | "breakpoint" | "exception" | "pause";
-export type ActivityType  = "Actor";
+
+export type ActivityType  = "Actor" | "Process" | "Thread" | "Task";
+
+export interface Activity {
+  id: number;
+  name: string;
+  type: ActivityType;
+}
 
 export interface StoppedMessage {
   type: "StoppedEvent";
@@ -125,7 +132,7 @@ export function createSectionBreakpointData(sourceUri: string, line: number,
 
 export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
   StepMessage | StackTraceRequest | ScopesRequest | VariablesRequest |
-  ThreadsRequest | ProgramInfoRequest | TraceDataRequest;
+  ProgramInfoRequest | TraceDataRequest;
 
 export interface InitialBreakpointsResponds {
   action: "initialBreakpoints";
@@ -157,22 +164,6 @@ export interface StepMessage {
 
   /** Id of the suspended activity. */
   activityId: number;
-}
-
-export interface ThreadsRequest {
-  action:    "ThreadsRequest";
-  requestId: number;
-}
-
-export interface Thread {
-  id:   number;
-  name: string;
-}
-
-export interface ThreadsResponse {
-  type:      "ThreadsResponse";
-  requestId: number;
-  threads:   Thread[];
 }
 
 export interface StackTraceRequest {

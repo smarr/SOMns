@@ -22,7 +22,6 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.Actor;
-import som.primitives.processes.ChannelPrimitives;
 import som.vm.Activity;
 import som.vm.ActivityThread;
 import tools.debugger.frontend.Suspension;
@@ -43,8 +42,6 @@ import tools.debugger.message.StepMessage.StepOver;
 import tools.debugger.message.StepMessage.Stop;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SymbolMessage;
-import tools.debugger.message.ThreadsRequest;
-import tools.debugger.message.ThreadsResponse;
 import tools.debugger.message.TraceDataRequest;
 import tools.debugger.message.UpdateBreakpoint;
 import tools.debugger.message.VariablesRequest;
@@ -76,10 +73,8 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   private final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags = new HashMap<>();
   private final Map<Source, Set<RootNode>> rootNodes = new HashMap<>();
 
-  private int nextActivityId = 0;
   private final Map<Activity, Suspension> activityToSuspension = new HashMap<>();
-  private final Map<Integer, Suspension> idToSuspension      = new HashMap<>();
-  private final WeakHashMap<Activity, Integer> activities    = new WeakHashMap<>();
+  private final Map<Long, Suspension> idToSuspension           = new HashMap<>();
 
   /** Actors that have been suspended at least once. */
   private final Set<Actor> suspendedActors = Collections.newSetFromMap(new WeakHashMap<>());
@@ -112,34 +107,14 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     breakpoints.prepareSteppingAfterNextRootNode();
   }
 
-  private int getActivityId(final Activity a) {
-    return activities.computeIfAbsent(a, key -> { nextActivityId++; return nextActivityId; });
-  }
-
-  synchronized Map<Activity, Integer> getAllActivities() {
-    synchronized (suspendedActors) {
-      for (Actor a : suspendedActors) {
-        getActivityId(a);
-      }
-    }
-
-    Set<ChannelPrimitives.Process> processes = ChannelPrimitives.getActiveProcesses();
-    synchronized (processes) {
-      for (ChannelPrimitives.Process p : processes) {
-        getActivityId(p);
-      }
-    }
-    return activities;
-  }
-
-  Suspension getSuspension(final int activityId) {
+  Suspension getSuspension(final long activityId) {
     return idToSuspension.get(activityId);
   }
 
   private synchronized Suspension getSuspension(final Activity activity) {
     Suspension suspension = activityToSuspension.get(activity);
     if (suspension == null) {
-      int id = getActivityId(activity);
+      long id = activity.getId();
       suspension = new Suspension(activity, id);
 
       activityToSuspension.put(activity, suspension);
@@ -219,7 +194,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     outMsgAF.register("StackTraceResponse",  StackTraceResponse.class);
     outMsgAF.register("ScopesResponse",      ScopesResponse.class);
     outMsgAF.register("VariablesResponse",   VariablesResponse.class);
-    outMsgAF.register("ThreadsResponse",     ThreadsResponse.class);
     outMsgAF.register("ProgramInfoResponse", ProgramInfoResponse.class);
 
     ClassHierarchyAdapterFactory<IncommingMessage> inMsgAF = new ClassHierarchyAdapterFactory<>(IncommingMessage.class, "action");
@@ -233,7 +207,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     inMsgAF.register("StackTraceRequest", StackTraceRequest.class);
     inMsgAF.register("ScopesRequest",     ScopesRequest.class);
     inMsgAF.register("VariablesRequest",  VariablesRequest.class);
-    inMsgAF.register("ThreadsRequest",    ThreadsRequest.class);
     inMsgAF.register("ProgramInfoRequest", ProgramInfoRequest.class);
     inMsgAF.register("TraceDataRequest",  TraceDataRequest.class);
 

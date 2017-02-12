@@ -41,6 +41,7 @@ import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.SourceCoordinate.FullSourceCoordinate;
+import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.ExpressionBreakpoint;
@@ -97,7 +98,17 @@ public abstract class ChannelPrimitives {
     }
   }
 
-  public static final class Process implements Activity, Runnable {
+  private static Process create(final SObjectWithClass obj) {
+    if (VmSettings.ACTOR_TRACING) {
+      TracingProcess result = new TracingProcess(obj);
+      ActorExecutionTrace.processCreation(result);
+      return result;
+    } else {
+      return new Process(obj);
+    }
+  }
+
+  public static class Process implements Activity, Runnable {
     private final SObjectWithClass obj;
 
     Process(final SObjectWithClass obj) {
@@ -128,10 +139,38 @@ public abstract class ChannelPrimitives {
     @Override
     public long getId() { return 0; }
 
+    public SObjectWithClass getProcObject() {
+      return obj;
+    }
+
     @Override
     public String getName() {
       return obj.getSOMClass().getName().getString();
     }
+  }
+
+  public static class TracingProcess extends Process {
+    protected final long processId;
+
+    TracingProcess(final SObjectWithClass obj) {
+      super(obj);
+      assert Thread.currentThread() instanceof ProcessThread;
+      processId = ((ProcessThread) Thread.currentThread()).generateActivityId();
+    }
+
+    @Override
+    public void run() {
+      try {
+        super.run();
+      } finally {
+        if (VmSettings.ACTOR_TRACING) {
+          ActorExecutionTrace.processCompletion(this);
+        }
+      }
+    }
+
+    @Override
+    public long getId() { return processId; }
   }
 
   private static final ForkJoinPool processesPool = new ForkJoinPool(
@@ -171,7 +210,7 @@ public abstract class ChannelPrimitives {
       SInvokable disp = procCls.getMixinDefinition().getFactoryMethods().get(sel);
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(toArgs.executedEvaluated(args, procCls));
 
-      processesPool.submit(new Process(obj));
+      processesPool.submit(create(obj));
       return Nil.nilObject;
     }
   }

@@ -22,7 +22,7 @@ class ApplicationThreadStack {
    * direct access.
    */
   final ArrayList<Object> scopesAndObjects;
-  final HashMap<Object, Integer> scopesAndObjectsSet;
+  final HashMap<Object, Long> scopesAndObjectsSet;
 
   private final ArrayList<DebugStackFrame> stackFrames;
   private final SuspendedEvent event;
@@ -46,14 +46,14 @@ class ApplicationThreadStack {
     return stackFrames;
   }
 
-  int addScope(final MaterializedFrame frame,
+  long addScope(final MaterializedFrame frame,
       final MethodScope lexicalScope) {
     scopesAndObjects.add(new RuntimeScope(frame, lexicalScope));
     return getLastScopeOrVarId();
   }
 
-  int addObject(final Object obj) {
-    Integer idx = scopesAndObjectsSet.get(obj);
+  long addObject(final Object obj) {
+    Long idx = scopesAndObjectsSet.get(obj);
     if (idx == null) {
       scopesAndObjects.add(obj);
       idx = getLastScopeOrVarId();
@@ -68,7 +68,7 @@ class ApplicationThreadStack {
     return scopesAndObjects.get(localVarRef - 1);
   }
 
-  private int getLastScopeOrVarId() {
+  private long getLastScopeOrVarId() {
     // using size() means ids start with 1, which seems to be needed
     // otherwise, VS code ignores the top frame
     return suspension.getGlobalId(scopesAndObjects.size());
