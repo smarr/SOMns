@@ -25,6 +25,7 @@ class WebResourceHandler implements HttpHandler {
 
     if (requestedFile.startsWith("/node_modules/") ||
         requestedFile.startsWith("/out/") ||
+        requestedFile.startsWith("/src/") ||
         "/index.html".equals(requestedFile)) {
       File f = new File(rootFolder + requestedFile);
       if (requestedFile.endsWith(".css")) {
@@ -46,7 +47,7 @@ class WebResourceHandler implements HttpHandler {
         return;
     }
 
-    WebDebugger.log("[REQ] not yet implemented");
+    WebDebugger.log("[REQ] not yet implemented: " + exchange.getRequestURI().toString());
     throw new NotYetImplementedException();
   }
 
