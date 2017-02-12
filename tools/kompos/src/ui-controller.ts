@@ -190,7 +190,7 @@ export class UiController extends Controller {
     this.view.updateSendBreakpoint(<MessageBreakpoint> breakpoint);
   }
 
-  onToggleMethodAsyncRcvBreakpoint(sectionId: string) {
+  public onToggleMethodAsyncRcvBreakpoint(sectionId: string) {
     dbgLog("async method rcv bp: " + sectionId);
 
     const id = sectionId + ":async-rcv",
@@ -201,7 +201,7 @@ export class UiController extends Controller {
     this.view.updateAsyncMethodRcvBreakpoint(<MessageBreakpoint> breakpoint);
   }
 
-  onTogglePromiseBreakpoint(sectionId: string, type: SectionBreakpointType) {
+  public onTogglePromiseBreakpoint(sectionId: string, type: SectionBreakpointType) {
     dbgLog("promise breakpoint: " + type);
 
      let id = sectionId + ":" + type,
@@ -212,7 +212,7 @@ export class UiController extends Controller {
     this.view.updatePromiseBreakpoint(<MessageBreakpoint> breakpoint);
   }
 
-  resumeExecution(actId: string) {
+  public resumeExecution(actId: string) {
     const activityId = getActivityIdFromView(actId);
     if (!this.dbg.isSuspended(activityId)) { return; }
     this.dbg.setResumed(activityId);
@@ -220,7 +220,7 @@ export class UiController extends Controller {
     this.view.onContinueExecution(activityId);
   }
 
-  pauseExecution(actId: string) {
+  public pauseExecution(actId: string) {
     const activityId = getActivityIdFromView(actId);
     if (this.dbg.isSuspended(activityId)) { return; }
     // TODO
