@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -22,6 +23,7 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
+import tools.ObjectBuffer;
 import tools.concurrency.ActorExecutionTrace;
 import tools.debugger.WebDebugger;
 
@@ -57,9 +59,18 @@ public class Actor implements Activity {
 
   /** Used to shift the thread id to the 8 most significant bits. */
   private static final int THREAD_ID_SHIFT = 56;
+  private static final int MAILBOX_EXTENSION_SIZE = 8;
 
-  /** Buffer for incoming messages. */
-  private Mailbox mailbox = Mailbox.createNewMailbox(16);
+  /**
+   * Buffer for incoming messages.
+   * Optimized for cases where the mailbox contains only one message.
+   * Further messages are stored in moreMessages, which is initialized lazily.
+   */
+  private EventualMessage firstMessage;
+  private ObjectBuffer<EventualMessage> mailboxExtension;
+
+  private long firstMessageTimeStamp;
+  private ObjectBuffer<Long> mailboxExtensionTimeStamps;
 
   /** Flag to indicate whether there is currently a F/J task executing. */
   private boolean isExecuting;
@@ -129,11 +140,6 @@ public class Actor implements Activity {
     return o;
   }
 
-  protected void logMessageAddedToMailbox(final EventualMessage msg) { }
-  protected void logMessageBeingExecuted(final EventualMessage msg) { }
-  protected void logNoTaskForActor() { }
-  public long getActorId() { return 0; }
-
   /**
    * Send the give message to the actor.
    *
@@ -142,10 +148,16 @@ public class Actor implements Activity {
   @TruffleBoundary
   public synchronized void send(final EventualMessage msg) {
     assert msg.getTarget() == this;
-    if (VmSettings.MESSAGE_TIMESTAMPS) {
-      mailbox.addMessageSendTime();
+
+    if (firstMessage == null) {
+      firstMessage = msg;
+      if (VmSettings.MESSAGE_TIMESTAMPS) {
+        firstMessageTimeStamp = System.currentTimeMillis();
+      }
+    } else {
+      appendToMailbox(msg);
     }
-    mailbox.append(msg);
+
     logMessageAddedToMailbox(msg);
 
     if (!isExecuting) {
@@ -154,10 +166,22 @@ public class Actor implements Activity {
     }
   }
 
-  public synchronized long sendAndGetId(final EventualMessage msg) {
-    send(msg);
-    return mailbox.getBasemessageId() + mailbox.size() - 1;
+  @TruffleBoundary
+  private void appendToMailbox(final EventualMessage msg) {
+    if (mailboxExtension == null) {
+      mailboxExtension = new ObjectBuffer<>(MAILBOX_EXTENSION_SIZE);
+      mailboxExtensionTimeStamps = new ObjectBuffer<>(MAILBOX_EXTENSION_SIZE);
+    }
+    if (VmSettings.MESSAGE_TIMESTAMPS) {
+      mailboxExtensionTimeStamps.append(System.currentTimeMillis());
+    }
+    mailboxExtension.append(msg);
   }
+
+  protected void logMessageAddedToMailbox(final EventualMessage msg) { }
+  protected void logMessageBeingExecuted(final EventualMessage msg) { }
+  protected void logNoTaskForActor() { }
+  public long getActorId() { return 0; }
 
   /**
    * Is scheduled on the fork/join pool and executes messages for a specific
@@ -165,7 +189,13 @@ public class Actor implements Activity {
    */
   private static final class ExecAllMessages implements Runnable {
     private final Actor actor;
-    private Mailbox current;
+    private EventualMessage firstMessage;
+    private ObjectBuffer<EventualMessage> mailboxExtension;
+    private long baseMessageId;
+    private long firstMessageTimeStamp;
+    private ObjectBuffer<Long> mailboxExtensionTimeStamps;
+    private long[] executionTimeStamps;
+    private int size = 0;
 
     ExecAllMessages(final Actor actor) {
       this.actor = actor;
@@ -197,44 +227,74 @@ public class Actor implements Activity {
 
     private void processCurrentMessages(final ActorProcessingThread currentThread, final WebDebugger dbg) {
       if (VmSettings.ACTOR_TRACING) {
-        current.setExecutionStart(System.nanoTime());
-        current.setBaseMessageId(currentThread.generateMessageBaseId(current.size()));
-        currentThread.currentMessageId = current.getBasemessageId();
+        baseMessageId = currentThread.generateMessageBaseId(size);
+        currentThread.currentMessageId = baseMessageId;
       }
-      for (EventualMessage msg : current) {
-        actor.logMessageBeingExecuted(msg);
-        currentThread.currentMessage = msg;
 
-        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-          if (msg.isBreakpoint()) {
+      if (size > 0) {
+        actor.logMessageBeingExecuted(firstMessage);
+        currentThread.currentMessage = firstMessage;
+
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && firstMessage.isBreakpoint()) {
             dbg.prepareSteppingUntilNextRootNode();
-          }
         }
-        if (VmSettings.MESSAGE_TIMESTAMPS) {
-          current.addMessageExecutionStart();
-        }
-        msg.execute();
+
+        firstMessage.execute();
         if (VmSettings.ACTOR_TRACING) {
           currentThread.currentMessageId += 1;
         }
+
+        int i = 0;
+        if (size > 1) {
+          for (EventualMessage msg : mailboxExtension) {
+            actor.logMessageBeingExecuted(msg);
+            currentThread.currentMessage = msg;
+
+            if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+              if (msg.isBreakpoint()) {
+                dbg.prepareSteppingUntilNextRootNode();
+              }
+            }
+            if (VmSettings.MESSAGE_TIMESTAMPS) {
+              executionTimeStamps[i] = System.currentTimeMillis();
+              i++;
+            }
+            msg.execute();
+            if (VmSettings.ACTOR_TRACING) {
+              currentThread.currentMessageId += 1;
+            }
+          }
+        }
       }
+
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.mailboxExecuted(current, actor);
+        ActorExecutionTrace.mailboxExecuted(firstMessage, mailboxExtension, baseMessageId, firstMessageTimeStamp, mailboxExtensionTimeStamps, executionTimeStamps, actor);
       }
     }
 
     private boolean getCurrentMessagesOrCompleteExecution() {
       synchronized (actor) {
         assert actor.isExecuting;
-        current = actor.mailbox;
-        if (current.isEmpty()) {
+        firstMessage = actor.firstMessage;
+        mailboxExtension = actor.mailboxExtension;
+
+        if (firstMessage == null) {
           // complete execution after all messages are processed
           actor.isExecuting = false;
-
+          size = 0;
           return false;
+        } else {
+          size = 1 + ((mailboxExtension == null) ? 0 : mailboxExtension.size());
         }
 
-        actor.mailbox = Mailbox.createNewMailbox(actor.mailbox.size());
+        if (VmSettings.MESSAGE_TIMESTAMPS) {
+          executionTimeStamps = new long[size];
+          firstMessageTimeStamp = actor.firstMessageTimeStamp;
+          mailboxExtensionTimeStamps = actor.mailboxExtensionTimeStamps;
+        }
+
+        actor.firstMessage = null;
+        actor.mailboxExtension = null;
       }
 
       return true;
@@ -243,7 +303,11 @@ public class Actor implements Activity {
 
   @TruffleBoundary
   private void executeOnPool() {
-    actorPool.execute(executor);
+    try {
+      actorPool.execute(executor);
+    } catch (RejectedExecutionException e) {
+      throw new ThreadDeath();
+    }
   }
 
   /**
@@ -284,6 +348,9 @@ public class Actor implements Activity {
       threadId = threadIdGen.getAndIncrement();
       if (VmSettings.ACTOR_TRACING) {
         ActorExecutionTrace.swapBuffer(this);
+        nextActorId = (threadId << THREAD_ID_SHIFT) + 1;
+        nextMessageId = (threadId << THREAD_ID_SHIFT);
+        nextPromiseId = (threadId << THREAD_ID_SHIFT);
       }
     }
 
@@ -293,21 +360,17 @@ public class Actor implements Activity {
     }
 
     protected long generateActorId() {
-      long result = (threadId << THREAD_ID_SHIFT) | nextActorId;
-      nextActorId++;
-      return result;
+      return nextActorId++;
     }
 
     protected long generateMessageBaseId(final int numMessages) {
-      long result = (threadId << THREAD_ID_SHIFT) | nextMessageId;
+      long result = nextMessageId;
       nextMessageId += numMessages;
       return result;
     }
 
     protected long generatePromiseId() {
-      long result = (threadId << THREAD_ID_SHIFT) | nextPromiseId;
-      nextPromiseId++;
-      return result;
+      return nextPromiseId++;
     }
 
     public ByteBuffer getThreadLocalBuffer() {
@@ -325,12 +388,16 @@ public class Actor implements Activity {
     @Override
     protected void onTermination(final Throwable exception) {
       if (VmSettings.ACTOR_TRACING) {
+        long createdActors = nextActorId - 1 - (threadId << THREAD_ID_SHIFT);
+        long createdMessages = nextMessageId - (threadId << THREAD_ID_SHIFT);
+        long createdPromises = nextPromiseId - (threadId << THREAD_ID_SHIFT);
+
         ActorExecutionTrace.returnBuffer(this.tracingDataBuffer);
         this.tracingDataBuffer = null;
-        VM.printConcurrencyEntitiesReport("[Thread " + threadId + "]\tA#" + (nextActorId - 1) + "\t\tM#" + nextMessageId + "\t\tP#" + nextPromiseId);
-        numCreatedActors += nextActorId - 1;
-        numCreatedMessages += nextMessageId;
-        numCreatedPromises += nextPromiseId;
+        VM.printConcurrencyEntitiesReport("[Thread " + threadId + "]\tA#" + createdActors + "\t\tM#" + createdMessages + "\t\tP#" + createdPromises);
+        numCreatedActors += createdActors;
+        numCreatedMessages += createdMessages;
+        numCreatedPromises += createdPromises;
         numResolvedPromises += resolvedPromises;
       }
       threads.remove(this);
@@ -386,10 +453,6 @@ public class Actor implements Activity {
   @Override
   public String toString() {
     return "Actor";
-  }
-
-  public Mailbox getMailbox() {
-    return mailbox;
   }
 
   public static final class DebugActor extends Actor {
