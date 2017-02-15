@@ -110,8 +110,9 @@ export class HistoryData {
           break;
         case 5:
           // 8 byte message base id
-          this.currentReceiver = (data.getInt32(i + 12) + ":" + data.getInt32(i + 8)); // receiver id
-          i += 16;
+          // 4 byte mailboxno
+          this.currentReceiver = (data.getInt32(i + 16) + ":" + data.getInt32(i + 12)); // receiver id
+          i += 20;
           break;
         case 6:
           data.getInt8(i); // Thread
@@ -120,9 +121,10 @@ export class HistoryData {
           break;
         case 7:
           // 8 byte message base id
-          this.currentReceiver = (data.getInt32(i + 12) + ":" + data.getInt32(i + 8)); // receiver id
-          data.getInt16(i + 16); // id offset
-          i += 18;
+          // 4 byte mailboxno
+          this.currentReceiver = (data.getInt32(i + 16) + ":" + data.getInt32(i + 12)); // receiver id
+          data.getInt32(i + 20); // id offset
+          i += 24;
           break;
 
         default:

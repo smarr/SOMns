@@ -3,7 +3,10 @@ package som.interpreter.actors;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
@@ -14,6 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import som.VM;
+import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.IsValue;
 import som.vm.Activity;
@@ -25,6 +29,8 @@ import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.TraceParser;
+import tools.concurrency.TraceParser.Message;
 import tools.debugger.WebDebugger;
 
 
@@ -50,6 +56,8 @@ public class Actor implements Activity {
   public static Actor createActor() {
     if (VmSettings.DEBUG_MODE) {
       return new DebugActor();
+    } else if (VmSettings.REPLAY) {
+      return new ReplayActor();
     } else if (VmSettings.ACTOR_TRACING) {
       return new TracingActor();
     } else {
@@ -60,6 +68,7 @@ public class Actor implements Activity {
   /** Used to shift the thread id to the 8 most significant bits. */
   private static final int THREAD_ID_SHIFT = 56;
   private static final int MAILBOX_EXTENSION_SIZE = 8;
+  private static List<Actor> actorList;
 
   /**
    * Buffer for incoming messages.
@@ -86,6 +95,14 @@ public class Actor implements Activity {
 
   private static ArrayList<ActorProcessingThread> threads = new ArrayList<>();
 
+  static {
+    if (VmSettings.REPLAY && VmSettings.DEBUG_MODE) {
+      actorList = new ArrayList<>();
+    } else {
+      actorList = null;
+    }
+  }
+
   /**
    * Possible roles for an actor.
    */
@@ -98,6 +115,51 @@ public class Actor implements Activity {
     isExecuting = false;
     executor = new ExecAllMessages(this);
   }
+
+  public static void printMissingMessages() {
+    if (!(VmSettings.REPLAY && VmSettings.DEBUG_MODE)) {
+      return;
+    }
+
+    for (Actor a : actorList) {
+      if (a.getReplayExpectedMessages() != null && a.getReplayExpectedMessages().peek() != null) {
+        if (a.getReplayExpectedMessages().peek() instanceof TraceParser.PromiseMessage) {
+          VM.println(a.getName() + " [" + a.getReplayActorId() + "] expecting PromiseMessage " + a.getReplayExpectedMessages().peek().symbol + " from " + a.getReplayExpectedMessages().peek().sender + " PID " + ((TraceParser.PromiseMessage) a.getReplayExpectedMessages().peek()).pId);
+        } else {
+          VM.println(a.getName() + " [" + a.getReplayActorId() + "] expecting Message" + a.getReplayExpectedMessages().peek().symbol + " from " + a.getReplayExpectedMessages().peek().sender);
+        }
+
+        if (a.firstMessage != null) {
+          printMsg(a.firstMessage);
+
+          if (a.mailboxExtension != null) {
+            for (EventualMessage em : a.mailboxExtension) {
+              printMsg(em);
+            }
+          }
+        }
+
+        for (EventualMessage em : ((ReplayActor) a).leftovers) {
+          printMsg(em);
+        }
+      } else if (a.firstMessage != null || a.mailboxExtension != null) {
+
+        int n = a.firstMessage != null ?  1 : 0;
+        n += a.mailboxExtension != null ? a.mailboxExtension.size() : 0;
+
+        VM.println(a.getName() + " [" + a.getReplayActorId() + "] has " + n + " unexpected messages");
+      }
+    }
+  }
+
+  private static void printMsg(final EventualMessage msg) {
+    if (msg instanceof PromiseMessage) {
+      VM.println("\t" + "PromiseMessage " + msg.getSelector() + " from " + msg.getSender().getReplayActorId() + " PID " + ((PromiseMessage) msg).getPromise().getReplayPromiseId());
+    } else {
+      VM.println("\t" + "Message" + msg.getSelector() + " from " + msg.getSender().getReplayActorId());
+    }
+  }
+
 
   public final Object wrapForUse(final Object o, final Actor owner,
       final Map<SAbstractObject, SAbstractObject> transferedObjects) {
@@ -160,10 +222,37 @@ public class Actor implements Activity {
 
     logMessageAddedToMailbox(msg);
 
-    if (!isExecuting) {
+    // actor remains dormant until the expected message arrives
+    if ((!isExecuting) && replayCanProcess(msg)) {
       isExecuting = true;
       executeOnPool();
     }
+  }
+
+  private boolean replayCanProcess(final EventualMessage msg) {
+    if (!VmSettings.REPLAY) {
+      return true;
+    }
+
+    assert getReplayExpectedMessages() != null;
+
+    if (getReplayExpectedMessages().size() == 0) {
+      // actor no longer executes messages
+      return false;
+    }
+
+    Message other = getReplayExpectedMessages().peek();
+
+    // handle promise messages
+    if (other instanceof TraceParser.PromiseMessage) {
+      if (msg instanceof PromiseMessage) {
+        return ((PromiseMessage) msg).getPromise().getReplayPromiseId() == ((TraceParser.PromiseMessage) other).pId;
+      } else {
+        return false;
+      }
+    }
+
+    return msg.getSelector().equals(other.symbol) && msg.getSender().getReplayActorId() == other.sender;
   }
 
   @TruffleBoundary
@@ -182,6 +271,11 @@ public class Actor implements Activity {
   protected void logMessageBeingExecuted(final EventualMessage msg) { }
   protected void logNoTaskForActor() { }
   public long getActorId() { return 0; }
+  public long getReplayActorId() { return 0; }
+  public int getAndIncrementMailboxNumber() { return 0; }
+  protected Queue<Message> getReplayExpectedMessages() { return null; }
+  protected Queue<Long> getReplayPromiseIds() { return null; }
+  protected int addChild() { return 0; }
 
   /**
    * Is scheduled on the fork/join pool and executes messages for a specific
@@ -195,6 +289,7 @@ public class Actor implements Activity {
     private long firstMessageTimeStamp;
     private ObjectBuffer<Long> mailboxExtensionTimeStamps;
     private long[] executionTimeStamps;
+    private int currentMailboxNo;
     private int size = 0;
 
     ExecAllMessages(final Actor actor) {
@@ -216,7 +311,11 @@ public class Actor implements Activity {
 
       try {
         while (getCurrentMessagesOrCompleteExecution()) {
-          processCurrentMessages(t, dbg);
+          if (VmSettings.REPLAY) {
+            processCurrentMessagesReplay(t, dbg);
+          } else {
+            processCurrentMessages(t, dbg);
+          }
         }
       } finally {
         ObjectTransitionSafepoint.INSTANCE.unregister();
@@ -225,50 +324,111 @@ public class Actor implements Activity {
       t.currentlyExecutingActor = null;
     }
 
+    private void processCurrentMessagesReplay(final ActorProcessingThread currentThread, final WebDebugger dbg) {
+      assert actor instanceof ReplayActor;
+      assert (size > 0);
+
+      boolean cont = true;
+      Queue<EventualMessage> todo = new LinkedList<>();
+      List<EventualMessage> rem = ((ReplayActor) actor).leftovers;
+
+        if (actor.replayCanProcess(firstMessage)) {
+          todo.add(firstMessage);
+          if (actor.getReplayExpectedMessages().peek().createdPromises != null) {
+            actor.getReplayPromiseIds().addAll(actor.getReplayExpectedMessages().peek().createdPromises);
+          }
+          actor.getReplayExpectedMessages().remove();
+        } else {
+          rem.add(firstMessage);
+        }
+
+        if (mailboxExtension != null) {
+          for (EventualMessage msg: mailboxExtension) {
+            rem.add(msg);
+          }
+        }
+
+        while (cont) {
+          cont = false;
+          for (EventualMessage msg: rem) {
+            if (actor.replayCanProcess(msg)) {
+              todo.add(msg);
+              if (actor.getReplayExpectedMessages().peek().createdPromises != null) {
+                actor.getReplayPromiseIds().addAll(actor.getReplayExpectedMessages().peek().createdPromises);
+              }
+              actor.getReplayExpectedMessages().remove();
+              rem.remove(msg);
+              cont = true;
+              break;
+            }
+          }
+        }
+
+        baseMessageId = currentThread.generateMessageBaseId(todo.size());
+        currentThread.currentMessageId = baseMessageId;
+
+        for (EventualMessage msg : todo) {
+          actor.logMessageBeingExecuted(msg);
+          currentThread.currentMessage = msg;
+
+          if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+            if (msg.isBreakpoint()) {
+              dbg.prepareSteppingUntilNextRootNode();
+            }
+          }
+
+          msg.execute();
+          currentThread.currentMessageId += 1;
+        }
+
+        ActorExecutionTrace.mailboxExecutedReplay(todo, baseMessageId, currentMailboxNo, actor);
+    }
+
     private void processCurrentMessages(final ActorProcessingThread currentThread, final WebDebugger dbg) {
       if (VmSettings.ACTOR_TRACING) {
         baseMessageId = currentThread.generateMessageBaseId(size);
         currentThread.currentMessageId = baseMessageId;
       }
 
-      if (size > 0) {
-        actor.logMessageBeingExecuted(firstMessage);
-        currentThread.currentMessage = firstMessage;
+      assert (size > 0);
+      actor.logMessageBeingExecuted(firstMessage);
+      currentThread.currentMessage = firstMessage;
 
-        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && firstMessage.isBreakpoint()) {
-            dbg.prepareSteppingUntilNextRootNode();
-        }
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && firstMessage.isBreakpoint()) {
+        dbg.prepareSteppingUntilNextRootNode();
+      }
 
-        firstMessage.execute();
-        if (VmSettings.ACTOR_TRACING) {
-          currentThread.currentMessageId += 1;
-        }
+      firstMessage.execute();
 
-        int i = 0;
-        if (size > 1) {
-          for (EventualMessage msg : mailboxExtension) {
-            actor.logMessageBeingExecuted(msg);
-            currentThread.currentMessage = msg;
+      if (VmSettings.ACTOR_TRACING) {
+        currentThread.currentMessageId += 1;
+      }
 
-            if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-              if (msg.isBreakpoint()) {
-                dbg.prepareSteppingUntilNextRootNode();
-              }
+      int i = 0;
+      if (size > 1) {
+        for (EventualMessage msg : mailboxExtension) {
+          actor.logMessageBeingExecuted(msg);
+          currentThread.currentMessage = msg;
+
+          if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+            if (msg.isBreakpoint()) {
+              dbg.prepareSteppingUntilNextRootNode();
             }
-            if (VmSettings.MESSAGE_TIMESTAMPS) {
-              executionTimeStamps[i] = System.currentTimeMillis();
-              i++;
-            }
-            msg.execute();
-            if (VmSettings.ACTOR_TRACING) {
-              currentThread.currentMessageId += 1;
-            }
+          }
+          if (VmSettings.MESSAGE_TIMESTAMPS) {
+            executionTimeStamps[i] = System.currentTimeMillis();
+            i++;
+          }
+          msg.execute();
+          if (VmSettings.ACTOR_TRACING) {
+            currentThread.currentMessageId += 1;
           }
         }
       }
 
+
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.mailboxExecuted(firstMessage, mailboxExtension, baseMessageId, firstMessageTimeStamp, mailboxExtensionTimeStamps, executionTimeStamps, actor);
+        ActorExecutionTrace.mailboxExecuted(firstMessage, mailboxExtension, baseMessageId, currentMailboxNo, firstMessageTimeStamp, mailboxExtensionTimeStamps, executionTimeStamps, actor);
       }
     }
 
@@ -277,6 +437,7 @@ public class Actor implements Activity {
         assert actor.isExecuting;
         firstMessage = actor.firstMessage;
         mailboxExtension = actor.mailboxExtension;
+        currentMailboxNo = actor.getAndIncrementMailboxNumber();
 
         if (firstMessage == null) {
           // complete execution after all messages are processed
@@ -458,7 +619,6 @@ public class Actor implements Activity {
   public static final class DebugActor extends Actor {
     // TODO: remove this tracking, the new one should be more efficient
     private static final ArrayList<Actor> actors = new ArrayList<Actor>();
-
     private final boolean isMain;
     private final int id;
 
@@ -492,8 +652,9 @@ public class Actor implements Activity {
     }
   }
 
-  public static final class TracingActor extends Actor {
+  public static class TracingActor extends Actor {
     protected final long actorId;
+    protected int mailboxNumber;
 
     public TracingActor() {
       super();
@@ -506,8 +667,69 @@ public class Actor implements Activity {
     }
 
     @Override
+    public int getAndIncrementMailboxNumber() {
+      return mailboxNumber++;
+    }
+
+    @Override
     public long getActorId() {
       return actorId;
+    }
+  }
+
+  public static final class ReplayActor extends TracingActor{
+    protected int children;
+    protected final long replayId;
+    protected final Queue<Message> expectedMessages;
+    protected final ArrayList<EventualMessage> leftovers = new ArrayList<>();
+    protected final Queue<Long> replayPromiseIds;
+
+    @TruffleBoundary
+    public ReplayActor() {
+      super();
+      if (Thread.currentThread() instanceof ActorProcessingThread) {
+        ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
+        Actor parent = t.currentMessage.getTarget();
+        long parentId = parent.getReplayActorId();
+        int childNo = parent.addChild();
+
+        if (!TraceParser.isActorInTrace(parentId, childNo)) {
+          throw new AssertionError("Actor not supposed to exist!");
+        }
+
+        replayId = TraceParser.getReplayId(parentId, childNo);
+        expectedMessages = TraceParser.getExpectedMessages(replayId);
+
+      } else {
+        replayId = 0;
+        expectedMessages = TraceParser.getExpectedMessages(0L);
+
+      }
+      replayPromiseIds = new LinkedList<>();
+
+      if (VmSettings.DEBUG_MODE) {
+        synchronized (actorList) { actorList.add(this); }
+      }
+    }
+
+    @Override
+    public long getReplayActorId() {
+      return replayId;
+    }
+
+    @Override
+    protected int addChild() {
+      return children++;
+    }
+
+    @Override
+    protected Queue<Message> getReplayExpectedMessages() {
+      return expectedMessages;
+    }
+
+    @Override
+    protected Queue<Long> getReplayPromiseIds() {
+      return replayPromiseIds;
     }
   }
 }

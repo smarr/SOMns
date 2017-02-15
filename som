@@ -76,9 +76,11 @@ tools.add_argument('-atcfg', '--actor-tracing-cfg', help='Configuration string f
 tools.add_argument('-mt', '--memory-tracing', help='enable tracing of memory usage and GC',
                     dest='memory_tracing', action='store_true', default=False)
 tools.add_argument('-tf', '--trace-file', help='Trace file destination, default: traces/trace',
-                    dest='trace_file', default=BASE_DIR + '/traces/tracea')
+                    dest='trace_file', default=BASE_DIR + '/traces/trace')
 tools.add_argument('-TF', '--disable-trace-file', help='trace file wont be written to disk',
                     dest='disable_trace_file', action='store_true', default=False)
+tools.add_argument('-r', '--replay', help='execution of the programm is guided by an exisiting trace file',
+                    dest='replay', action='store_true', default=False)
 tools.add_argument('--coverage', help='determine code coverage and store in given file',
                    dest='coverage', default=None)
 
@@ -253,6 +255,8 @@ if args.memory_tracing:
     flags += ['-Dsom.memoryTracing=true']
 if args.disable_trace_file:
     flags += ['-Dsom.disableTraceFile=true']
+if args.replay:
+    flags += ['-Dsom.replay=true']
 
 if (args.truffle_profile or args.truffle_debugger or args.web_debugger or
     args.dynamic_metrics or args.coverage):

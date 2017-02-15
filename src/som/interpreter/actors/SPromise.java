@@ -32,6 +32,8 @@ public class SPromise extends SObjectWithClass {
   public static SPromise createPromise(final Actor owner) {
     if (VmSettings.DEBUG_MODE) {
       return new SDebugPromise(owner);
+    } else if (VmSettings.REPLAY) {
+      return new SReplayPromise(owner);
     } else if (VmSettings.PROMISE_CREATION) {
       return new STracingPromise(owner);
     } else {
@@ -87,6 +89,7 @@ public class SPromise extends SObjectWithClass {
   }
 
   public long getPromiseId() { return 0; }
+  public long getReplayPromiseId() { return 0; }
 
   public final Actor getOwner() {
     return owner;
@@ -269,7 +272,7 @@ public class SPromise extends SObjectWithClass {
     }
   }
 
-  protected static final class STracingPromise extends SPromise {
+  protected static class STracingPromise extends SPromise {
     protected final long promiseId;
 
     protected STracingPromise(final Actor owner) {
@@ -283,6 +286,21 @@ public class SPromise extends SObjectWithClass {
     public long getPromiseId() {
       return promiseId;
     }
+  }
+
+  protected static final class SReplayPromise extends STracingPromise {
+    protected final long replayId;
+
+    protected SReplayPromise(final Actor owner) {
+      super(owner);
+      Actor creator = EventualMessage.getActorCurrentMessageIsExecutionOn();
+
+      assert creator.getReplayPromiseIds() != null && creator.getReplayPromiseIds().size() > 0;
+      replayId = creator.getReplayPromiseIds().remove();
+    }
+
+    @Override
+    public long getReplayPromiseId() { return replayId; }
   }
 
   public static SResolver createResolver(final SPromise promise,

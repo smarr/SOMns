@@ -16,7 +16,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.TimeUnit;
 
 import javax.management.Notification;
 import javax.management.NotificationEmitter;
@@ -31,7 +33,6 @@ import som.interpreter.actors.Actor;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
@@ -46,13 +47,15 @@ import tools.debugger.FrontendConnector;
 public class ActorExecutionTrace {
 
   private static final int BUFFER_POOL_SIZE = Runtime.getRuntime().availableProcessors() * 4;
-  private static final int BUFFER_SIZE = 4096 * 1024;
+  static final int BUFFER_SIZE = 4096 * 1024;
   private static final byte MESSAGE_BASE = (byte) 0x80;
   private static final byte PROMISE_BIT = 0x40;
   private static final byte TIMESTAMP_BIT = 0x20;
   private static final byte PARAMETER_BIT = 0x10;
-  private static final int MESSAGE_SIZE = 45;
+  private static final int MESSAGE_SIZE = 45 + 16;
   private static final int PARAM_SIZE = 9;
+  private static final int TRACE_TIMEOUT = 500;
+  private static final int POLL_TIMEOUT = 10;
 
   private static final List<java.lang.management.GarbageCollectorMXBean> gcbeans = ManagementFactory.getGarbageCollectorMXBeans();
 
@@ -66,8 +69,7 @@ public class ActorExecutionTrace {
   private static FrontendConnector front = null;
 
   private static long collectedMemory = 0;
-
-  private static Thread workerThread = new TraceWorkerThread();
+  private static TraceWorkerThread workerThread = new TraceWorkerThread();
   private static final byte messageEventId;
 
   static {
@@ -173,7 +175,7 @@ public class ActorExecutionTrace {
     PromiseCreation((byte) 2, 17),
     PromiseResolution((byte) 3, 28),
     PromiseChained((byte) 4, 17),
-    Mailbox((byte) 5, 17),
+    Mailbox((byte) 5, 21),
 
     // at the beginning of buffer, allows to track what was created/executed
     // on which thread, really cheap solution, timestamp?
@@ -181,7 +183,7 @@ public class ActorExecutionTrace {
 
     // for memory events another buffer is needed
     // (the gc callback is on Thread[Service Thread,9,system])
-    MailboxContd((byte) 7, 19),
+    MailboxContd((byte) 7, 23),
     BasicMessage((byte) 8, 7),
     PromiseMessage((byte) 9, 7);
 
@@ -273,7 +275,6 @@ public class ActorExecutionTrace {
       b.put(Events.PromiseResolution.id);
       b.putLong(promiseId); // id of the promise
       b.putLong(t.getCurrentMessageId()); // resolving message
-
       writeParameter(value, b);
 
       t.resolvedPromises++;
@@ -303,7 +304,7 @@ public class ActorExecutionTrace {
   }
 
   public static void mailboxExecuted(final EventualMessage m,
-      final ObjectBuffer<EventualMessage> moreCurrent, final long baseMessageId, final long sendTS,
+      final ObjectBuffer<EventualMessage> moreCurrent, final long baseMessageId, final int mailboxNo, final long sendTS,
       final ObjectBuffer<Long> moreSendTS, final long[] execTS, final Actor actor) {
     if (!VmSettings.ACTOR_TRACING) {
       return;
@@ -321,6 +322,7 @@ public class ActorExecutionTrace {
       ByteBuffer b = t.getThreadLocalBuffer();
       b.put(Events.Mailbox.id);
       b.putLong(baseMessageId); // base id for messages
+      b.putInt(mailboxNo);
       b.putLong(actor.getActorId());   // receiver of the messages
 
       int idx = 0;
@@ -330,8 +332,9 @@ public class ActorExecutionTrace {
         b = t.getThreadLocalBuffer();
         b.put(Events.MailboxContd.id);
         b.putLong(baseMessageId);
+        b.putInt(mailboxNo);
         b.putLong(actor.getActorId()); // receiver of the messages
-        b.putShort((short) idx);
+        b.putInt(idx);
       }
 
       writeBasicMessage(m, b);
@@ -358,8 +361,9 @@ public class ActorExecutionTrace {
             b = t.getThreadLocalBuffer();
             b.put(Events.MailboxContd.id);
             b.putLong(baseMessageId);
+            b.putInt(mailboxNo);
             b.putLong(actor.getActorId()); // receiver of the messages
-            b.putShort((short) idx);
+            b.putInt(idx);
           }
 
           writeBasicMessage(em, b);
@@ -379,7 +383,7 @@ public class ActorExecutionTrace {
   }
 
   private static void writeBasicMessage(final EventualMessage em, final ByteBuffer b) {
-    if (em instanceof PromiseSendMessage && VmSettings.PROMISE_CREATION) {
+    if (em instanceof PromiseMessage && VmSettings.PROMISE_CREATION) {
       b.put((byte) (messageEventId | PROMISE_BIT));
       b.putLong(((PromiseMessage) em).getPromise().getPromiseId());
     } else {
@@ -388,6 +392,7 @@ public class ActorExecutionTrace {
 
     b.putLong(em.getSender().getActorId()); // sender
     b.putLong(em.getCausalMessageId());
+
     b.putShort(em.getSelector().getSymbolId());
   }
 
@@ -447,58 +452,145 @@ public class ActorExecutionTrace {
     front = fc;
   }
 
-  public static synchronized void logSymbol(final SSymbol symbol) {
-    symbolsToWrite.add(symbol);
+  public static void logSymbol(final SSymbol symbol) {
+    synchronized (symbolsToWrite) {
+      symbolsToWrite.add(symbol);
+    }
+  }
+
+  public static void waitForTrace() {
+    workerThread.cont = false;
+    try {
+      workerThread.join(TRACE_TIMEOUT);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private static class TraceWorkerThread extends Thread{
+    protected boolean cont = true;
+
     @Override
     public void run() {
+
       File f = new File(VmSettings.TRACE_FILE + ".trace");
       File sf = new File(VmSettings.TRACE_FILE + ".sym");
       f.getParentFile().mkdirs();
 
-      try (FileOutputStream fos = new FileOutputStream(f);
-          FileOutputStream sfos = new FileOutputStream(sf);
-          BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(sfos))) {
+      if (!VmSettings.DISABLE_TRACE_FILE) {
+        try (FileOutputStream fos = new FileOutputStream(f);
+            FileOutputStream sfos = new FileOutputStream(sf);
+            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(sfos))) {
 
+          while (cont || ActorExecutionTrace.fullBuffers.size() > 0) {
+            ByteBuffer b;
 
-        while (true) {
-          ByteBuffer b = ActorExecutionTrace.fullBuffers.take();
+            try {
+              b = ActorExecutionTrace.fullBuffers.poll(POLL_TIMEOUT, TimeUnit.MILLISECONDS);
+              if (b == null) {
+                continue;
+              }
+            } catch (InterruptedException e) {
+              continue;
+            }
 
-          if (!VmSettings.DISABLE_TRACE_FILE) {
+            synchronized (symbolsToWrite) {
+              if (front != null) {
+                front.sendSymbols(ActorExecutionTrace.symbolsToWrite);
+              }
+
+              for (SSymbol s : symbolsToWrite) {
+                bw.write(s.getSymbolId() + ":" + s.getString());
+                bw.newLine();
+              }
+              bw.flush();
+              ActorExecutionTrace.symbolsToWrite.clear();
+            }
+
             fos.getChannel().write(b);
+            fos.flush();
             b.rewind();
-          }
 
-          if (front != null) {
-            front.sendTracingData(b);
+            if (front != null) {
+              front.sendTracingData(b);
+            }
+
+            b.clear();
+            ActorExecutionTrace.emptyBuffers.add(b);
+          }
+        } catch (FileNotFoundException e) {
+          throw new RuntimeException(e);
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      } else {
+        while (cont || ActorExecutionTrace.fullBuffers.size() > 0) {
+          ByteBuffer b;
+
+          try {
+            b = ActorExecutionTrace.fullBuffers.poll(POLL_TIMEOUT, TimeUnit.MILLISECONDS);
+            if (b == null) {
+              continue;
+            }
+          } catch (InterruptedException e) {
+            continue;
           }
 
           synchronized (symbolsToWrite) {
             if (front != null) {
               front.sendSymbols(ActorExecutionTrace.symbolsToWrite);
             }
-
-            if (!VmSettings.DISABLE_TRACE_FILE) {
-              for (SSymbol s : symbolsToWrite) {
-                bw.write(s.getSymbolId() + ":" + s.getString());
-                bw.newLine();
-              }
-            }
-
             ActorExecutionTrace.symbolsToWrite.clear();
+          }
+
+          if (front != null) {
+            front.sendTracingData(b);
           }
 
           b.clear();
           ActorExecutionTrace.emptyBuffers.add(b);
         }
-      } catch (FileNotFoundException e) {
-        throw new RuntimeException(e);
-      } catch (IOException e) {
-        throw new RuntimeException(e);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
+      }
+    }
+  }
+
+  public static void mailboxExecutedReplay(final Queue<EventualMessage> todo,
+      final long baseMessageId, final int mailboxNo, final Actor actor) {
+    Thread current = Thread.currentThread();
+
+    if (current instanceof ActorProcessingThread) {
+      ActorProcessingThread t = (ActorProcessingThread) current;
+
+      if (t.getThreadLocalBuffer().remaining() < Events.Mailbox.size + 100 * 50) {
+        swapBuffer(t);
+      }
+
+      ByteBuffer b = t.getThreadLocalBuffer();
+      b.put(Events.Mailbox.id);
+      b.putLong(baseMessageId); // base id for messages
+      b.putInt(mailboxNo);
+      b.putLong(actor.getActorId());   // receiver of the messages
+
+      int idx = 0;
+
+      if (todo != null) {
+        for (EventualMessage em : todo) {
+          if (b.remaining() < (MESSAGE_SIZE + em.getArgs().length * PARAM_SIZE)) {
+            swapBuffer(t);
+            b = t.getThreadLocalBuffer();
+            b.put(Events.MailboxContd.id);
+            b.putLong(baseMessageId);
+            b.putLong(actor.getActorId()); // receiver of the messages
+            b.putInt(idx);
+          }
+
+          writeBasicMessage(em, b);
+
+          if (VmSettings.MESSAGE_PARAMETERS) {
+            writeParameters(em.getArgs(), b);
+          }
+          idx++;
+        }
       }
     }
   }
