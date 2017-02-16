@@ -9,6 +9,7 @@ import com.sun.istack.internal.NotNull;
 
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
+import som.interpreter.SomException;
 import som.vm.NotYetImplementedException;
 import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
@@ -326,8 +327,48 @@ public class SPromise extends SObjectWithClass {
       resolverClass = cls;
     }
 
-    public final void onError() {
-      throw new NotYetImplementedException(); // TODO: implement
+    public static void onError(final SomException exception, final Object wrapped, final SPromise p, final Actor current) {
+      //throw new NotYetImplementedException(); // SANDER
+
+      /* for trace
+      if (VmSettings.PROMISE_RESOLUTION) {
+        if (p.resolutionState != Resolution.CHAINED) {
+          ActorExecutionTrace.promiseResolution(p.getPromiseId(), result);
+        }
+      } */
+
+     synchronized (wrapped) {
+        synchronized (p) {
+          assert p.assertNotCompleted();
+          p.value = wrapped;
+          p.resolutionState = Resolution.ERRORNOUS;
+        }
+        boolean handled = false;
+        //execute all exceptionHandlers if the type of wrapped is equal to the exceptionClass the handler handles.
+        if (p.onException != null) {
+          for (int i = 0; i < p.onException.size(); i++) {
+            SClass exceptionClass = p.onException.get(i);
+            PromiseMessage handle = p.onExceptionCallbacks.get(i);
+            if (((SAbstractObject) wrapped).getSOMClass() == exceptionClass) {
+                handled = true;
+                p.scheduleCallbacksOnResolution(exception.getSomObject(), handle, current, false); //should I use exceptoin or wrapped verison of exception
+            }
+          }
+        }
+
+        //execute all errorHandlers
+        if (p.onError != null) {
+          handled = true;
+          for (int i = 0; i < p.onError.size(); i++) {
+            PromiseMessage handle = p.onError.get(i);
+            p.scheduleCallbacksOnResolution(exception.getSomObject(), handle, current, false);
+          }
+        }
+
+        if (!handled){
+          throw exception; //if no handlers handle exception, how do I notify the user of an actor erroring out
+        }
+      }
     }
 
     public final boolean assertNotCompleted() {

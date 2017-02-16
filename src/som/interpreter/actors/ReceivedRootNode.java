@@ -9,6 +9,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.actors.SPromise.SResolver;
+import som.interpreter.SomException;
 import som.vm.VmSettings;
 import tools.debugger.WebDebugger;
 
@@ -16,6 +17,7 @@ import tools.debugger.WebDebugger;
 public abstract class ReceivedRootNode extends RootNode {
 
   @Child protected ResolvePromiseNode resolve;
+  @Child protected RuinPromiseNode ruin;
 
   protected final WebDebugger dbg;
 
@@ -45,6 +47,22 @@ public abstract class ReceivedRootNode extends RootNode {
 
     // resolve promise
     resolve.executeEvaluated(frame, resolver, result, isBreakpointOnPromiseResolution);
+  }
+
+  protected final void ruinPromise(final VirtualFrame frame,
+      final SResolver resolver, final SomException exception) {
+    // lazy initialization of resolution node
+    if (ruin == null) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      if (resolver == null) {
+        System.out.println("nope");
+      } else {
+        this.ruin = insert(RuinPromiseNodeFactory.create(false, getSourceSection(), null, null));
+      }
+    }
+
+    // ruin promise
+    ruin.executeEvaluated(frame, resolver, exception);
   }
 
   /**
