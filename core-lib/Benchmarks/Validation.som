@@ -349,10 +349,9 @@ class Validation usingPlatform: platform andHarness: harness = Value (
   )
 
 
-  public class Philosophers new: numPhil rounds: numRounds = Benchmark (
+  public class Philosophers new: numPhil rounds: numRounds = Benchmark <: Value (
   | private numPhil   = numPhil.
     private numRounds = numRounds.
-    private rand = Random new.
   |)(
     private class Counter = (
     | private value ::= 0. |
@@ -398,6 +397,7 @@ class Validation usingPlatform: platform andHarness: harness = Value (
       private resolver = resolver.
       private abortion ::= false.
       private resolved ::= false.
+      private rand = Random new.
     |)(
       public hungry: philosopher id: leftForkId = (
         | rightForkId |

@@ -193,14 +193,18 @@ public final class VM {
       truffleProfiler.printHistograms(System.err);
     }
 
+    int code = errorCode;
+
     Actor.shutDownActorPool();
     ActorExecutionTrace.waitForTrace();
-    Actor.printMissingMessages();
+    if (Actor.printMissingMessages() && errorCode == 0) {
+      code = 1;
+    }
     engine.dispose();
     if (VmSettings.MEMORY_TRACING) {
       ActorExecutionTrace.reportPeakMemoryUsage();
     }
-    System.exit(errorCode);
+    System.exit(code);
   }
 
   /**

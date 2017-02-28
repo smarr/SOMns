@@ -162,7 +162,12 @@
       <exec executable="tests/dym/test.sh" failonerror="true"></exec>
     </target>
 
-    <target name="tests" depends="unit-tests,som-tests,dynamic-metrics-tests">
+    <target name="replay-tests" depends="compile">
+      <exec executable="echo" failonerror="true"></exec>
+      <exec executable="tests/replay/test.sh" failonerror="true"></exec>
+    </target>
+
+    <target name="tests" depends="unit-tests,som-tests,dynamic-metrics-tests,replay-tests">
       <!-- submit coverage data -->
       <java classname="coveralls.Report" fork="true" failonerror="true">
           <classpath refid="project.classpath" />

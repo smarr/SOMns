@@ -1,7 +1,6 @@
 package som.interpreter.actors;
 
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -30,9 +29,7 @@ public class SPromise extends SObjectWithClass {
   private boolean triggerResolutionBreakpointOnUnresolvedChainedPromise;
 
   public static SPromise createPromise(final Actor owner) {
-    if (VmSettings.DEBUG_MODE) {
-      return new SDebugPromise(owner);
-    } else if (VmSettings.REPLAY) {
+    if (VmSettings.REPLAY) {
       return new SReplayPromise(owner);
     } else if (VmSettings.PROMISE_CREATION) {
       return new STracingPromise(owner);
@@ -252,24 +249,6 @@ public class SPromise extends SObjectWithClass {
   /** Internal Helper, only to be used properly synchronized. */
   final Object getValueUnsync() {
     return value;
-  }
-
-  protected static final class SDebugPromise extends SPromise {
-    private static final AtomicInteger idGenerator = new AtomicInteger(0);
-
-    private final int id;
-
-    protected SDebugPromise(final Actor owner) {
-      super(owner);
-      id = idGenerator.getAndIncrement();
-    }
-
-    @Override
-    public String toString() {
-      String r = "Promise[" + owner.toString();
-      r += ", " + resolutionState.name();
-      return r + (value == null ? "" : ", " + value.toString()) + ", id:" + id + "]";
-    }
   }
 
   protected static class STracingPromise extends SPromise {

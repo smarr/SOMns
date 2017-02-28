@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+ - Added trace replay functionality ([PR #109](https://github.com/smarr/SOMns/pull/109))
+
 ## [0.2.0] - 2017-03-07 Extended Concurrency Support
 
 ### Concurrency Support

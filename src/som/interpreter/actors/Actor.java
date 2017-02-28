@@ -54,9 +54,7 @@ import tools.debugger.WebDebugger;
 public class Actor implements Activity {
 
   public static Actor createActor() {
-    if (VmSettings.DEBUG_MODE) {
-      return new DebugActor();
-    } else if (VmSettings.REPLAY) {
+    if (VmSettings.REPLAY) {
       return new ReplayActor();
     } else if (VmSettings.ACTOR_TRACING) {
       return new TracingActor();
@@ -116,13 +114,19 @@ public class Actor implements Activity {
     executor = new ExecAllMessages(this);
   }
 
-  public static void printMissingMessages() {
+  /**
+   * Prints a list of expected Messages and remaining mailbox content.
+   * @return true if there are actors expecting messages, false otherwise.
+   */
+  public static boolean printMissingMessages() {
     if (!(VmSettings.REPLAY && VmSettings.DEBUG_MODE)) {
-      return;
+      return false;
     }
 
+    boolean result = false;
     for (Actor a : actorList) {
       if (a.getReplayExpectedMessages() != null && a.getReplayExpectedMessages().peek() != null) {
+        result = true; // program did not execute all messages
         if (a.getReplayExpectedMessages().peek() instanceof TraceParser.PromiseMessage) {
           VM.println(a.getName() + " [" + a.getReplayActorId() + "] expecting PromiseMessage " + a.getReplayExpectedMessages().peek().symbol + " from " + a.getReplayExpectedMessages().peek().sender + " PID " + ((TraceParser.PromiseMessage) a.getReplayExpectedMessages().peek()).pId);
         } else {
@@ -131,7 +135,6 @@ public class Actor implements Activity {
 
         if (a.firstMessage != null) {
           printMsg(a.firstMessage);
-
           if (a.mailboxExtension != null) {
             for (EventualMessage em : a.mailboxExtension) {
               printMsg(em);
@@ -150,6 +153,7 @@ public class Actor implements Activity {
         VM.println(a.getName() + " [" + a.getReplayActorId() + "] has " + n + " unexpected messages");
       }
     }
+    return result;
   }
 
   private static void printMsg(final EventualMessage msg) {
@@ -614,42 +618,6 @@ public class Actor implements Activity {
   @Override
   public String toString() {
     return "Actor";
-  }
-
-  public static final class DebugActor extends Actor {
-    // TODO: remove this tracking, the new one should be more efficient
-    private static final ArrayList<Actor> actors = new ArrayList<Actor>();
-    private final boolean isMain;
-    private final int id;
-
-    public DebugActor() {
-      super();
-      isMain = false;
-      synchronized (actors) {
-        actors.add(this);
-        id = actors.size() - 1;
-      }
-    }
-
-    @Override
-    protected void logMessageAddedToMailbox(final EventualMessage msg) {
-      VM.errorPrintln(toString() + ": queued task " + msg.toString());
-    }
-
-    @Override
-    protected void logMessageBeingExecuted(final EventualMessage msg) {
-      VM.errorPrintln(toString() + ": execute task " + msg.toString());
-    }
-
-    @Override
-    protected void logNoTaskForActor() {
-      VM.errorPrintln(toString() + ": no task");
-    }
-
-    @Override
-    public String toString() {
-      return "Actor[" + (isMain ? "main" : id) + "]";
-    }
   }
 
   public static class TracingActor extends Actor {
