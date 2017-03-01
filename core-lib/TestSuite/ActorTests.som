@@ -23,6 +23,10 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       ^ n > 0 ifTrue:  [ self <-: nestedResolutionWithDepth: n - 1 ]
               ifFalse: [ 'done' ]
     )
+    public nestedRuinWithDepth: n with: exception = (
+      ^ n > 0 ifTrue:  [ self <-: nestedRuinWithDepth: n - 1 with: exception ]
+              ifFalse: [ 'done' ]
+    )
   )
 
   class Math = () (
@@ -593,6 +597,238 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       shouldnt: [actors createActorFromValue: ImmutableObject] signal: NotAValue.
       shouldnt: [actors createActorFromValue: imm MutableObject] signal: NotAValue.
     )
+  ) : (
+    TEST_CONTEXT = ()
+  )
+
+  public class PromiseRuin = AsyncTestContext (
+    | private Exception = kernel Exception. |
+    )(
+     private class TestException signal: explanation = Exception ( (* TODO better name*)
+        | public msg |
+        msg := explanation.
+        self signal.
+    )()  
+
+    private class GenericTestException1 new = Exception (
+        | public msg |
+        msg := 'test exception 1'.
+    )()
+
+
+    public testAsyncOnErrorPromiseRuinsToException = (
+      | promisePair wrPromise assertPromise exception|
+      promisePair := actors createPromisePair.
+      exception := GenericTestException1 new.
+      wrPromise := promisePair promise whenResolved: [:v | v] onError: [:ex| ex].
+
+      assertPromise := wrPromise whenResolved: [:v | assert: v msg equals: exception msg]. (* is this  (error being used as a value to resolve a promise) accepted behaviour?*)
+
+      promisePair ruin: exception.
+      ^ assertPromise
+    )
+
+    public testAsyncPromiseOfPromiseResolvesToException = (
+      | promisePair1 promisePair2 assertProm exception|
+      (* Chained promises should be flattened *)
+      promisePair1 := actors createPromisePair.
+      promisePair2 := actors createPromisePair.
+      exception := GenericTestException1 new.
+     
+
+      assertProm := promisePair1 promise 
+          whenResolved: [:r | r] 
+          onError: [:e | e msg println].
+
+      (* This should not yet resolve the promise, instead, it should
+         essentially forward it to the 2nd promise and wait for its resolution. *)
+      promisePair1 resolve: promisePair2 promise onError: [:e | e signal].
+
+      promisePair2 ruin: exception.
+      ^ assertProm
+    )
+
+    (*
+    public testAsyncDeeplyChainedResolution = (
+      (* A good implementation should handle this in constant rather than linear space. *)
+      | r |
+      r := (actors createActorFromValue: DeepChain) <-: new.
+      ^ assert: (r <-: nestedResolutionWithDepth: 10) resolvedWith: 'done'.
+    )
+
+    public testAsyncFifo = (
+      | recorder r1 r2 r3 r4 |
+      recorder := (actors createActorFromValue: Recorder) <-: new.
+      r1 := recorder <-: append: 'a'.
+      r2 := recorder <-: append: 'b'.
+      r3 := recorder <-: append: 'c'.
+      r4 := recorder <-: append: 'd'.
+
+    ^ (assert: (recorder <-: recording) resolvedWith: 'abcd'),
+      (assert: r1 resolvedWith: 1),
+      (assert: r2 resolvedWith: 2),
+      (assert: r3 resolvedWith: 3),
+      (assert: r4 resolvedWith: 4)
+    )
+
+    public testAsyncNestedResolutionOrder = (
+      | a b last x tmp |
+      a    := actors createPromisePair.
+      b    := actors createPromisePair.
+      last := actors createPromisePair.
+      x := Vector new.
+
+      a promise whenResolved: [:r | x append: 'a1'].
+      b promise whenResolved: [:r | x append: 'b2'].
+
+      tmp := a promise whenResolved: [:r | x append: 'a3'].
+      tmp whenResolved: [:r | x append: 'a3a'].
+      tmp whenResolved: [:r | x append: 'a3b'].
+
+      tmp := b promise whenResolved: [:r | x append: 'b4'].
+      tmp whenResolved: [:r | x append: 'b4a'].
+      tmp whenResolved: [:r | x append: 'b4b'].
+
+      b resolve: a promise.
+      tmp := a promise whenResolved: [:r | x append: 'a5'].
+      tmp whenResolved: [:r | x append: 'a5a'].
+      tmp whenResolved: [:r | x append: 'a5b'].
+
+      tmp := b promise whenResolved: [:r | x append: 'b6'].
+      tmp whenResolved: [:r | x append: 'b6a'].
+      tmp whenResolved: [:r | x append: 'b6b'].
+
+      tmp := a promise whenResolved: [:r | x append: 'a7'].
+      tmp whenResolved: [:r | x append: 'a7a'].
+      tmp whenResolved: [:r | x append: 'a7b'].
+
+      tmp := b promise whenResolved: [:r | x append: 'b8'].
+      tmp whenResolved: [:r | x append: 'b8a'].
+      tmp whenResolved: [:r | x append: 'b8b'. last resolve: x].
+      a resolve: nil.
+
+      ^ last promise whenResolved: [:vec |
+        | expected |
+        expected := Vector new.
+        expected, #a1, #a3, #a5, #a7, #b2, #b4, #b6, #b8, #a3a, #a3b, #a5a, #a5b, #a7a, #a7b, #b4a, #b4b, #b6a, #b6b, #b8a, #b8b.
+
+        assert: vec size equals: expected size.
+
+        vec doIndexes: [:i |
+          assert: (vec at: i) equals: (expected at: i) ]
+      ]
+    )
+
+    public testAsyncPingPong = (
+      | ping pong result |
+      ping := (actors createActorFromValue: Ping) <-: new.
+      pong := (actors createActorFromValue: Pong) <-: new.
+
+      ping <-: other: pong.
+      pong <-: other: ping.
+      ^ assert: (ping <-: start) resolvedWith: 55.
+    )
+(*
+    public testTurnResultsInException = (
+      | bob |
+      bob := (actors createActorFromValue: Bob) <-: meet: self.
+      assert: (bob <-: raiseException) smashedWith: Error.
+    )
+*)
+
+    (* Test promise chaining *)
+    public testAsyncFirstResolvedThenChainedThenRegistered123 = (
+      | pp ppChained |
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+
+      (* resolve 1 *)
+      pp resolver resolve: 11.
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+      (* register 3 *)
+      ^ ppChained promise whenResolved: [:v |
+        assert: v equals: 11 ]
+    )
+
+    public testAsyncFirstResolvedThenRegisteredThenChained132 = (
+      | pp ppChained resultProm |
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+
+      (* resolve 1 *)
+      pp resolver resolve: 11.
+      (* register 3 *)
+      resultProm := (ppChained promise whenResolved: [:v |
+        assert: v equals: 11 ]).
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+
+      ^ resultProm
+    )
+
+    public testAsyncFirstChainedThenResolvedThenRegistered213 = (
+      | pp ppChained |
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+      (* resolve 1 *)
+      pp resolver resolve: 11.
+      (* register 3 *)
+      ^ ppChained promise whenResolved: [:v |
+        assert: v equals: 11 ]
+    )
+
+    public testAsyncFirstChainedThenRegisteredThenResolved231 = (
+      | pp ppChained resultProm |
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+      (* register 3 *)
+      resultProm := ppChained promise whenResolved: [:v |
+        assert: v equals: 11 ].
+      (* resolve 1 *)
+      pp resolver resolve: 11.
+
+      ^ resultProm
+    )
+
+    public testAsyncFirstRegisteredThenResolvedThenChained312 = (
+      | pp ppChained resultProm |
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+
+      (* register 3 *)
+      resultProm := ppChained promise whenResolved: [:v |
+        assert: v equals: 11 ].
+      (* resolve 1 *)
+      pp resolver resolve: 11.
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+
+      ^ resultProm
+    )
+
+    public testAsyncFirstRegisteredThenChainedThenResolved321 = (
+      | pp ppChained resultProm |
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+
+      (* register 3 *)
+      resultProm := ppChained promise whenResolved: [:v |
+        assert: v equals: 11 ].
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+      (* resolve 1 *)
+      pp resolver resolve: 11.
+
+      ^ resultProm
+    ) *)
+    
   ) : (
     TEST_CONTEXT = ()
   )

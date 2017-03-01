@@ -141,7 +141,10 @@ public class SPromise extends SObjectWithClass {
 
   public synchronized void registerOnError(final PromiseMessage msg,
       final Actor current) {
-    if (resolutionState == Resolution.ERRORNOUS) {
+    if (resolutionState == Resolution.CHAINED) { //TODO is it possible a new handler is added to a chained promise?
+      throw new NotYetImplementedException();
+    } else {
+      if (resolutionState == Resolution.ERRORNOUS) {
       scheduleCallbacksOnResolution(value, msg, current, false);
     } else {
       if (resolutionState == Resolution.SUCCESSFUL) {
@@ -168,6 +171,9 @@ public class SPromise extends SObjectWithClass {
         block, resolver, blockCallTarget, false, false, false, promise);
 
     synchronized (this) {
+      if (resolutionState == Resolution.CHAINED) { //TODO is it possible a new handler is added to a chained promise?
+        throw new NotYetImplementedException();
+      } else {
       if (resolutionState == Resolution.ERRORNOUS) {
         if (value instanceof SAbstractObject) {
           if (((SAbstractObject) value).getSOMClass() == exceptionClass) {
@@ -327,23 +333,20 @@ public class SPromise extends SObjectWithClass {
       resolverClass = cls;
     }
 
-    public static void onError(final SomException exception, final Object wrapped, final SPromise p, final Actor current) {
-      //throw new NotYetImplementedException(); // SANDER
-
-      /* for trace
+    public static void onError(final SAbstractObject exception, final Object wrapped, final SPromise p, final Actor current) {
+      // for trace
       if (VmSettings.PROMISE_RESOLUTION) {
-        if (p.resolutionState != Resolution.CHAINED) {
-          ActorExecutionTrace.promiseResolution(p.getPromiseId(), result);
-        }
-      } */
+        ActorExecutionTrace.promiseRuin(p.getPromiseId(), exception);
+      }
 
-     synchronized (wrapped) {
+      boolean handled = false;
+
+      synchronized (wrapped) {
         synchronized (p) {
           assert p.assertNotCompleted();
           p.value = wrapped;
           p.resolutionState = Resolution.ERRORNOUS;
         }
-        boolean handled = false;
         //execute all exceptionHandlers if the type of wrapped is equal to the exceptionClass the handler handles.
         if (p.onException != null) {
           for (int i = 0; i < p.onException.size(); i++) {
@@ -351,24 +354,29 @@ public class SPromise extends SObjectWithClass {
             PromiseMessage handle = p.onExceptionCallbacks.get(i);
             if (((SAbstractObject) wrapped).getSOMClass() == exceptionClass) {
                 handled = true;
-                p.scheduleCallbacksOnResolution(exception.getSomObject(), handle, current, false); //should I use exceptoin or wrapped verison of exception
+                p.scheduleCallbacksOnResolution(exception, handle, current, false); //should I use exceptoin or wrapped verison of exception
             }
           }
         }
 
         //execute all errorHandlers
         if (p.onError != null) {
-          handled = true;
           for (int i = 0; i < p.onError.size(); i++) {
+            handled = true;
             PromiseMessage handle = p.onError.get(i);
-            p.scheduleCallbacksOnResolution(exception.getSomObject(), handle, current, false);
+            p.scheduleCallbacksOnResolution(exception, handle, current, false);
           }
         }
-
         if (!handled){
-          throw exception; //if no handlers handle exception, how do I notify the user of an actor erroring out
+          //if no handler handled the exception, rethrow it
+          System.out.println("not handled");
+          //throw new SomException(exception);
         }
       }
+    }
+
+    protected static void ruinChainedPromises(){
+
     }
 
     public final boolean assertNotCompleted() {

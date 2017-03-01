@@ -11,6 +11,8 @@ import som.VM;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.SomException;
 import som.vm.VmSettings;
+import som.vm.NotYetImplementedException;
+import som.vmobjects.SAbstractObject;
 import tools.debugger.WebDebugger;
 
 
@@ -50,12 +52,12 @@ public abstract class ReceivedRootNode extends RootNode {
   }
 
   protected final void ruinPromise(final VirtualFrame frame,
-      final SResolver resolver, final SomException exception) {
+      final SResolver resolver, final SAbstractObject exception) {
     // lazy initialization of resolution node
     if (ruin == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       if (resolver == null) {
-        System.out.println("nope");
+        throw new SomException(exception); //I'm ruining a promise without a resolver. No onError can be added so rethrow the exception
       } else {
         this.ruin = insert(RuinPromiseNodeFactory.create(false, getSourceSection(), null, null));
       }

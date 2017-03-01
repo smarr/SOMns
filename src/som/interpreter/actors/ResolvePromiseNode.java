@@ -12,7 +12,6 @@ import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.primitives.Primitive;
 import som.vm.NotYetImplementedException;
 
-
 @GenerateNodeFactory
 @Primitive(primitive = "actorsResolve:with:isBPResolution:")
 @Instrumentable(factory = ResolvePromiseNodeWrapper.class)

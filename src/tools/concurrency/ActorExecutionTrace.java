@@ -227,7 +227,10 @@ public class ActorExecutionTrace {
     ProcessCompletion(TraceData.PROCESS_COMPLETION,  9),
 
     TaskSpawn(TraceData.TASK_SPAWN, 19),
-    TaskJoin(TraceData.TASK_JOIN,   11);
+    TaskJoin(TraceData.TASK_JOIN,   11),
+
+    PromiseMessage((byte) 9, 7),
+    PromiseRuin((byte) 10, 9); 
 
     final byte id;
     final int size;
@@ -246,7 +249,7 @@ public class ActorExecutionTrace {
     Promise,
     Resolver,
     Object,
-    String;
+    String; 
 
     byte id() {
       return (byte) this.ordinal();
@@ -310,12 +313,37 @@ public class ActorExecutionTrace {
     t.resolvedPromises++;
   }
 
+  public static void promiseRuin(final long promiseId, final SAbstractObject value) {
+    if (!VmSettings.ACTOR_TRACING) {
+      return;
+    }
+
+    Thread current = Thread.currentThread();
+    String exception = value.toString();
+
+    if (current instanceof ActorProcessingThread) {
+      ActorProcessingThread t = (ActorProcessingThread) current;
+      if (t.getThreadLocalBuffer().remaining() < Events.PromiseRuin.size + exception.getBytes().length) {
+        swapBuffer(t);
+      }
+
+      ByteBuffer b = t.getThreadLocalBuffer();
+      b.put(Events.PromiseRuin.id);
+      b.putLong(promiseId); // id of the promise
+      //b.putLong(t.getCurrentMessageId()); // id of message ruining promise, TODO is this necessary?
+      //b.put(ParamTypes.Exception.id()); // is this necessairy, only an exception can ruin a promise
+      b.asCharBuffer().put(exception); //store text of exception, 
+      t.ruinedPromises++;
+    }
+  }
+
   public static void promiseChained(final long parent, final long child) {
     TracingActivityThread t = getThread();
     t.getBuffer().recordPromiseChained(parent, child);
     t.resolvedPromises++;
   }
 
+  //code duplication?
   public static void mailboxExecuted(final EventualMessage m,
       final ObjectBuffer<EventualMessage> moreCurrent, final long baseMessageId,
       final int mailboxNo, final long sendTS, final ObjectBuffer<Long> moreSendTS,

@@ -85,11 +85,8 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   )
 
   public class Resolver = Value ()( (* Object or Value? *)
-    public resolve: value = (
-       'calling resolve' println.
-       vmMirror actorsResolve: self with: value isBPResolution: false)
-    (*TODO* vmMirror actorsRuin: self with: value*)
-    public error:   value = ( vmMirror actorRuin: self with: value)
+    public resolve: value = (vmMirror actorsResolve: self with: value isBPResolution: false)
+    public error:   value = (vmMirror actorsRuin: self with: value)
   )
 
   class Pair with: promise and: resolver = (
