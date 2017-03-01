@@ -39,7 +39,7 @@ public final class TraceParser {
 
   private final HashMap<Short, SSymbol> symbolMapping = new HashMap<>();
   private ByteBuffer b = ByteBuffer.allocate(ActorExecutionTrace.BUFFER_SIZE);
-  private final HashMap<ActorNode, Long> mappedActors = new HashMap<>();
+  private final HashMap<Long, ActorNode> mappedActors = new HashMap<>();
   private final HashMap<Long, Queue<Message>> expectedMessages = new HashMap<>();
   private long currentReceiver;
   private long currentMessage;
@@ -50,7 +50,7 @@ public final class TraceParser {
 
   private static TraceParser parser;
 
-  public static Queue<Message> getExpectedMessages(final long replayId) {
+  public static synchronized Queue<Message> getExpectedMessages(final long replayId) {
     if (parser == null) {
       parser = new TraceParser();
       parser.parseTrace();
@@ -58,20 +58,13 @@ public final class TraceParser {
     return parser.expectedMessages.remove(replayId);
   }
 
-  public static long getReplayId(final long parentId, final int childNo) {
+  public static synchronized long getReplayId(final long parentId, final int childNo) {
     if (parser == null) {
       parser = new TraceParser();
       parser.parseTrace();
     }
-    return parser.mappedActors.get(new TraceParser.ActorNode(parentId, childNo));
-  }
-
-  public static boolean isActorInTrace(final long parentId, final int childNo) {
-    if (parser == null) {
-      parser = new TraceParser();
-      parser.parseTrace();
-    }
-    return parser.mappedActors.containsKey(new TraceParser.ActorNode(parentId, childNo));
+    assert parser.mappedActors.containsKey(parentId) : "Parent doesn't exist";
+    return parser.mappedActors.get(parentId).getChild(childNo).actorId;
   }
 
   private TraceParser() {
@@ -83,7 +76,6 @@ public final class TraceParser {
     File sf = new File(VmSettings.TRACE_FILE + ".sym");
     HashMap<Long, List<Long>> unmappedActors = new HashMap<>(); // maps message to created actors
     HashMap<Long, Queue<Long>> unmappedPromises = new HashMap<>(); // maps message to created promises
-    HashMap<Long, Integer> numChildren = new HashMap<>(); // maps actor id to #foundchildren
 
     VM.println("Parsing Trace ...");
 
@@ -168,12 +160,17 @@ public final class TraceParser {
             parsedMessages++;
             assert (type & MESSAGE_BIT) != 0;
             if (unmappedActors.containsKey(currentMessage)) {
+              // necessary as the receivers creation event hasn't been parsed yet
+              if (!mappedActors.containsKey(currentReceiver)) {
+                mappedActors.put(currentReceiver, new ActorNode(currentReceiver));
+              }
               for (long l : unmappedActors.remove(currentMessage)) {
-                if (!numChildren.containsKey(currentReceiver)) {
-                  numChildren.put(currentReceiver, 0);
+                if (!mappedActors.containsKey(l)) {
+                  mappedActors.put(l, new ActorNode(l));
                 }
-                mappedActors.put(new ActorNode(currentReceiver, numChildren.get(currentReceiver)), l);
-                numChildren.put(currentReceiver, numChildren.get(currentReceiver) + 1);
+                ActorNode an = mappedActors.get(l);
+                an.mailboxNo = currentMailbox;
+                mappedActors.get(currentReceiver).addChild(an);
               }
             }
             parseMessage(type, unmappedPromises.remove(currentMessage)); // messages
@@ -264,36 +261,42 @@ public final class TraceParser {
 
   private static class ActorNode implements Comparable<ActorNode> {
     final long actorId;
-    final int childNo;
+    int childNo;
+    int mailboxNo;
+    ArrayList<ActorNode> children;
 
-    ActorNode(final long actorId, final int childNo) {
+    ActorNode(final long actorId) {
       super();
       this.actorId = actorId;
-      this.childNo = childNo;
     }
 
     @Override
     public int compareTo(final ActorNode o) {
-      int i = Long.compare(actorId, o.actorId);
-      if (i != 0) {
-        i = Long.compare(childNo, o.childNo);
+      int i = Integer.compare(mailboxNo, o.mailboxNo);
+      if (i == 0) {
+        i = Integer.compare(childNo, o.childNo);
+      }
+      if (i == 0) {
+        i = Long.compare(actorId, o.actorId);
       }
 
       return i;
     }
 
-    @Override
-    public int hashCode() {
-      return (int) (actorId ^ childNo);
+    private void addChild(final ActorNode child) {
+      if (children == null) {
+        children = new ArrayList<>();
+      }
+
+      child.childNo = children.size();
+      children.add(child);
+      java.util.Collections.sort(children);
     }
 
-    @Override
-    public boolean equals(final Object obj) {
-      if (obj instanceof ActorNode) {
-        ActorNode an = (ActorNode) obj;
-        return (this.actorId == an.actorId && this.childNo == an.childNo);
-      }
-      return false;
+    protected ActorNode getChild(final int childNo) {
+      assert children != null : "Actor does not exist in trace!";
+      assert children.size() > childNo : "Actor does not exist in trace!";
+      return children.get(childNo);
     }
 
     @Override

@@ -385,6 +385,7 @@ public class Actor implements Activity {
           currentThread.currentMessageId += 1;
         }
 
+        currentThread.createdMessages += todo.size();
         ActorExecutionTrace.mailboxExecutedReplay(todo, baseMessageId, currentMailboxNo, actor);
     }
 
@@ -430,8 +431,8 @@ public class Actor implements Activity {
         }
       }
 
-
       if (VmSettings.ACTOR_TRACING) {
+        currentThread.createdMessages += size;
         ActorExecutionTrace.mailboxExecuted(firstMessage, mailboxExtension, baseMessageId, currentMailboxNo, firstMessageTimeStamp, mailboxExtensionTimeStamps, executionTimeStamps, actor);
       }
     }
@@ -504,6 +505,7 @@ public class Actor implements Activity {
     protected long nextActorId = 1;
     protected long nextMessageId;
     protected long nextPromiseId;
+    protected long createdMessages;
     protected long currentMessageId;
     protected ByteBuffer tracingDataBuffer;
     public long resolvedPromises;
@@ -554,8 +556,7 @@ public class Actor implements Activity {
     protected void onTermination(final Throwable exception) {
       if (VmSettings.ACTOR_TRACING) {
         long createdActors = nextActorId - 1 - (threadId << THREAD_ID_SHIFT);
-        long createdMessages = nextMessageId - (threadId << THREAD_ID_SHIFT);
-        long createdPromises = nextPromiseId - (threadId << THREAD_ID_SHIFT);
+        long createdPromises = nextPromiseId & 0x0FFFFFFFFFFFFFFL;
 
         ActorExecutionTrace.returnBuffer(this.tracingDataBuffer);
         this.tracingDataBuffer = null;
@@ -660,10 +661,6 @@ public class Actor implements Activity {
         Actor parent = t.currentMessage.getTarget();
         long parentId = parent.getReplayActorId();
         int childNo = parent.addChild();
-
-        if (!TraceParser.isActorInTrace(parentId, childNo)) {
-          throw new AssertionError("Actor not supposed to exist!");
-        }
 
         replayId = TraceParser.getReplayId(parentId, childNo);
         expectedMessages = TraceParser.getExpectedMessages(replayId);

@@ -339,7 +339,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     }
 
     assert !VM.shouldExit();
-
+    Actor.printMissingMessages();
     VM.errorExit("VM seems to have exited prematurely. But the actor pool has been idle for " + emptyFJPool + " checks in a row.");
     VM.getVM().shutdownAndExit(1); // just in case it was disable for VM.errorExit
   }

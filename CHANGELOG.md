@@ -3,6 +3,10 @@
 ## [Unreleased]
 
  - Added trace replay functionality ([PR #109](https://github.com/smarr/SOMns/pull/109))
+   - Added `-r` flag to enable replay
+
+ - Added `-vmd` flag to enable debug output
+ - Added `-J` flag for JVM flags, e.g. `-JXmx2g`
 
 ## [0.2.0] - 2017-03-07 Extended Concurrency Support
 
