@@ -1,7 +1,10 @@
 package som;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -10,6 +13,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.instrumentation.InstrumentationHandler;
+import com.oracle.truffle.api.nodes.GraphPrintVisitor;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
@@ -31,6 +35,7 @@ import som.interpreter.actors.Actor;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.primitives.processes.ChannelPrimitives;
 import som.primitives.threading.ThreadingModule;
 import som.vm.ObjectSystem;
@@ -38,6 +43,7 @@ import som.vm.Primitives;
 import som.vm.VmOptions;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.concurrency.ActorExecutionTrace;
 import tools.debugger.Tags;
@@ -122,6 +128,28 @@ public final class VM {
     }
   }
 
+  private static void outputAllTruffleMethodsToIGV() {
+    GraphPrintVisitor graphPrinter = new GraphPrintVisitor();
+
+    List<MixinDefinition> classes = new ArrayList<MixinDefinition>(structuralProbe.getClasses());
+    Collections.sort(classes, (final MixinDefinition a, final MixinDefinition b) -> a.getName().getString().compareTo(b.getName().getString()));
+
+    for (MixinDefinition mixin : classes) {
+      graphPrinter.beginGroup(mixin.getName().getString());
+
+      for (Dispatchable disp : mixin.getInstanceDispatchables().values()) {
+        if (disp instanceof SInvokable) {
+          SInvokable i = (SInvokable) disp;
+          graphPrinter.beginGraph(i.toString()).visit(i.getCallTarget().getRootNode());
+        }
+      }
+      graphPrinter.endGroup();
+    }
+
+    graphPrinter.printToNetwork(true);
+    graphPrinter.close();
+  }
+
   public VM(final String[] args, final boolean avoidExitForTesting) throws IOException {
     vm = this;
 
@@ -149,6 +177,7 @@ public final class VM {
   public static void reportParsedRootNode(final RootNode rootNode) {
     if (webDebugger != null) {
       webDebugger.reportRootNodeAfterParsing(rootNode);
+      outputAllTruffleMethodsToIGV();
     }
   }
 
