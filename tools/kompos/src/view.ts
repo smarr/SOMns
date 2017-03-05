@@ -429,7 +429,10 @@ export class View {
     $("#dbg-connect-btn").html("Reconnect");
   }
 
-  public displaySource(activityId: number, source: Source, sourceId: string) {
+  /**
+   * @returns true, if new source is displayed
+   */
+  public displaySource(activityId: number, source: Source, sourceId: string): boolean {
     const actId = getActivityId(activityId);
     const container = $("#" + actId + " .activity-sources-list");
 
@@ -446,7 +449,7 @@ export class View {
         sourceElem.html("");
         sourceElem.remove();
       } else {
-        return; // source is already there, so, I think, we don't need to update it
+        return false; // source is already there, so, I think, we don't need to update it
       }
     }
 
@@ -484,6 +487,7 @@ export class View {
     sourceContainer.append(newFileElement);
 
     aElem.tab("show");
+    return true;
   }
 
   public displayActivity(name: string, id: number) {

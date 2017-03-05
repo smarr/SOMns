@@ -59,9 +59,10 @@ export class UiController extends Controller {
 
   onReceivedSource(msg: SourceMessage) {
     this.dbg.addSource(msg);
+  }
 
-    const source = msg.source;
-    const bps = this.dbg.getEnabledBreakpointsForSource(source.name);
+  private ensureBreakpointsAreIndicated(sourceUri) {
+    const bps = this.dbg.getEnabledBreakpointsForSource(sourceUri);
     for (const bp of bps) {
       switch (bp.data.type) {
         case "LineBreakpoint":
@@ -122,8 +123,11 @@ export class UiController extends Controller {
       const sourceId = this.dbg.getSourceId(msg.stackFrames[0].sourceUri);
       const source = this.dbg.getSource(sourceId);
 
-      this.view.displaySource(msg.activityId, source, sourceId);
+      const newSource = this.view.displaySource(msg.activityId, source, sourceId);
       this.view.displayStackTrace(sourceId, msg, requestedId);
+      if (newSource) {
+        this.ensureBreakpointsAreIndicated(sourceId);
+      }
     });
   }
 
