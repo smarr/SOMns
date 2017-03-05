@@ -58,30 +58,28 @@ export class UiController extends Controller {
   }
 
   onReceivedSource(msg: SourceMessage) {
-    this.dbg.addSources(msg);
-  }
+    this.dbg.addSource(msg);
 
-    for (let source of msg.sources) {
-      const bps = this.dbg.getEnabledBreakpointsForSource(source.name);
-      for (const bp of bps) {
-        switch (bp.data.type) {
-          case "LineBreakpoint":
-            this.view.updateLineBreakpoint(<LineBreakpoint> bp);
-            break;
-          case "MessageSenderBreakpoint":
-          case "MessageReceiverBreakpoint":
-            this.view.updateSendBreakpoint(<MessageBreakpoint> bp);
-            break;
-          case "AsyncMessageReceiverBreakpoint":
-            this.view.updateAsyncMethodRcvBreakpoint(<MessageBreakpoint> bp);
-            break;
-          case "PromiseResolverBreakpoint" || "PromiseResolutionBreakpoint":
-            this.view.updatePromiseBreakpoint(<MessageBreakpoint> bp);
-            break;
-          default:
-            console.error("Unsupported breakpoint type: " + JSON.stringify(bp.data));
-            break;
-        }
+    const source = msg.source;
+    const bps = this.dbg.getEnabledBreakpointsForSource(source.name);
+    for (const bp of bps) {
+      switch (bp.data.type) {
+        case "LineBreakpoint":
+          this.view.updateLineBreakpoint(<LineBreakpoint> bp);
+          break;
+        case "MessageSenderBreakpoint":
+        case "MessageReceiverBreakpoint":
+          this.view.updateSendBreakpoint(<MessageBreakpoint> bp);
+          break;
+        case "AsyncMessageReceiverBreakpoint":
+          this.view.updateAsyncMethodRcvBreakpoint(<MessageBreakpoint> bp);
+          break;
+        case "PromiseResolverBreakpoint" || "PromiseResolutionBreakpoint":
+          this.view.updatePromiseBreakpoint(<MessageBreakpoint> bp);
+          break;
+        default:
+          console.error("Unsupported breakpoint type: " + JSON.stringify(bp.data));
+          break;
       }
     }
   }

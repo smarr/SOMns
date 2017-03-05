@@ -44,8 +44,8 @@ export type Message = SourceMessage | ProgramInfoResponse |
   StackTraceResponse | ScopesResponse | VariablesResponse;
 
 export interface SourceMessage {
-  type:     "source";
-  sources:  Source[];
+  type:   "source";
+  source: Source;
 }
 
 export type StoppedReason = "step" | "breakpoint" | "exception" | "pause";

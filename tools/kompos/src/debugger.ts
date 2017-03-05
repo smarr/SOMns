@@ -52,16 +52,13 @@ export class Debugger {
     return this.sources[id];
   }
 
-  addSources(msg: SourceMessage): IdMap<Source> {
-    let newSources = {};
-    for (let s of msg.sources) {
-      let id = this.getSourceId(s.uri);
-      this.sources[id] = s;
-      this.addSections(s);
-      this.addMethods(s);
-      newSources[id] = s;
-    }
-    return newSources;
+  addSource(msg: SourceMessage): Source {
+    const s = msg.source;
+    let id = this.getSourceId(s.uri);
+    this.sources[id] = s;
+    this.addSections(s);
+    this.addMethods(s);
+    return s;
   }
 
   getSection(id: string): SourceCoordinate {

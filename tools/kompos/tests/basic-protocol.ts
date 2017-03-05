@@ -72,39 +72,35 @@ describe("Basic Protocol", function() {
 
     it("should have sources", onlyWithConnection(() => {
       return sourceP.then(sourceMsg => {
-        for (let source of sourceMsg.sources) {
-          expect(source.mimeType).to.equal("application/x-newspeak-som-ns");
-          expect(source.name).to.equal("Platform.som");
-          expect(source).to.have.property("sourceText");
-          expect(source).to.have.property("uri");
-          return;
-        }
+        const source = sourceMsg.source;
+        expect(source.mimeType).to.equal("application/x-newspeak-som-ns");
+        expect(source.name).to.equal("Platform.som");
+        expect(source).to.have.property("sourceText");
+        expect(source).to.have.property("uri");
       });
     }));
 
     it("should have source sections", onlyWithConnection(() => {
       return sourceP.then(sourceMsg => {
-        for (let s of sourceMsg.sources) {
-          for (let ss of s.sections) {
-            expectSourceCoordinate(ss);
-            return;
-          }
+        const s = sourceMsg.source;
+        for (let ss of s.sections) {
+          expectSourceCoordinate(ss);
+          return;
         }
       });
     }));
 
     it("should have methods", onlyWithConnection(() => {
       return sourceP.then(sourceMsg => {
-        for (let s of sourceMsg.sources) {
-          for (let method of s.methods) {
-            expect(method).to.have.property("name");
-            expect(method).to.have.property("definition");
+        const s = sourceMsg.source;
+        for (let method of s.methods) {
+          expect(method).to.have.property("name");
+          expect(method).to.have.property("definition");
 
-            const def = method.definition[0];
-            expectSourceCoordinate(def);
-            expectSourceCoordinate(method.sourceSection);
-            return;
-          }
+          const def = method.definition[0];
+          expectSourceCoordinate(def);
+          expectSourceCoordinate(method.sourceSection);
+          return;
         }
       });
     }));

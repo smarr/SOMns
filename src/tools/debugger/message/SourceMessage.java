@@ -14,10 +14,10 @@ import tools.debugger.message.Message.OutgoingMessage;
 
 @SuppressWarnings("unused")
 public class SourceMessage extends OutgoingMessage {
-  private final SourceData[] sources;
+  private final SourceData source;
 
-  public SourceMessage(final SourceData[] sources) {
-    this.sources  = sources;
+  public SourceMessage(final SourceData source) {
+    this.source = source;
   }
 
   public static class SourceData {
