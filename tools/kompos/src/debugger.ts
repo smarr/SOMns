@@ -86,7 +86,7 @@ export class Debugger {
     }
   }
 
-  getBreakpoint(source, key, newBp): Breakpoint {
+  getBreakpoint(source: Source, key: any, newBp: () => Breakpoint): Breakpoint {
     let sId = this.getSourceId(source.uri);
     if (!this.breakpoints[sId]) {
       this.breakpoints[sId] = {};
@@ -94,7 +94,7 @@ export class Debugger {
 
     let bp: Breakpoint = this.breakpoints[sId][key];
     if (!bp) {
-      bp = newBp(source);
+      bp = newBp();
       this.breakpoints[sId][key] = bp;
     }
     return bp;

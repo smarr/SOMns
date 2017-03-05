@@ -14,6 +14,10 @@ function getActivityId(id: number) {
   return ACT_ID_PREFIX + id;
 }
 
+export function getLineId(line: number, sourceId: string) {
+  return sourceId + "ln" + line;
+}
+
 function getSectionIdForActivity(ssId: string, activityId: number) {
   return getActivityId(activityId) + ssId;
 }
@@ -22,10 +26,23 @@ function getSourceIdForActivity(sId: string, activityId: number) {
   return getActivityId(activityId) + sId;
 }
 
-function getSourceIdFrom(actAndSourceId: string) {
+export function getSourceIdFrom(actAndSourceId: string) {
+  const i = actAndSourceId.indexOf("s");
+  console.assert(i > 0);
+  console.assert(actAndSourceId.indexOf(":") === -1);
+  return actAndSourceId.substr(i);
+}
+
+export function getSectionIdFrom(actAndSourceId: string) {
   const i = actAndSourceId.indexOf("s");
   console.assert(i > 0);
   return actAndSourceId.substr(i);
+}
+
+export function getSourceIdFromSection(sectionId: string) {
+  const i = sectionId.indexOf(":");
+  console.assert(i > 1);
+  return sectionId.substr(0, i);
 }
 
 export function getActivityIdFromView(actId: string) {
@@ -68,13 +85,15 @@ function methodDeclIdToString(sectionId: string, idx: number, activityId: number
 }
 
 function methodDeclIdToObj(id: string) {
-  let arr = id.split(":");
+  console.assert(id.indexOf("-") !== -1);
+  const idComponents = id.split("-");
+  let arr = idComponents[1].split(":");
   return {
-    sourceId:    arr[1],
-    startLine:   parseInt(arr[2]),
-    startColumn: parseInt(arr[3]),
-    charLength:  parseInt(arr[4]),
-    idx:         arr[5]
+    sourceId:    arr[0],
+    startLine:   parseInt(arr[1]),
+    startColumn: parseInt(arr[2]),
+    charLength:  parseInt(arr[3]),
+    idx:         parseInt(idComponents[2])
   };
 }
 
@@ -104,7 +123,7 @@ class Begin extends SectionMarker {
 
   toString() {
     return '<span id="' + getSectionIdForActivity(this.sectionId, this.activityId)
-         + '" class="' + this.section.tags.join(" ") + '">';
+         + '" class="' + this.section.tags.join(" ") + " " + this.sectionId + '">';
   }
 
   length() {
@@ -134,11 +153,10 @@ class BeginMethodDef extends SectionMarker {
   }
 
   toString() {
-    let tags = "MethodDeclaration",
-      id = methodDeclIdToString(
-        getSectionId(this.sourceId, this.method.sourceSection),
-        this.i, this.activityId);
-    return '<span id="' + id + '" class="' + tags + '">';
+    const tags = "MethodDeclaration",
+      sectionId = getSectionId(this.sourceId, this.method.sourceSection),
+      id = methodDeclIdToString(sectionId, this.i, this.activityId);
+    return '<span id="' + id + '" class="' + tags + " " + sectionId + '">';
   }
 }
 
@@ -219,10 +237,11 @@ function nodeFromTemplate(tplId: string) {
   return result;
 }
 
-function createLineNumbers(cnt: number) {
-  let result = "<span class='ln' onclick='ctrl.onToggleLineBreakpoint(1, this);'>1</span>";
+function createLineNumbers(cnt: number, sourceId: string) {
+  let result = "<span class='ln ln1' onclick='ctrl.onToggleLineBreakpoint(1, this);'>1</span>";
   for (let i = 2; i <= cnt; i += 1) {
-    result = result + "\n<span class='ln' onclick='ctrl.onToggleLineBreakpoint(" + i + ", this);'>" + i + "</span>";
+    result = result + "\n<span class='ln " + getLineId(i, sourceId) +
+      "' onclick='ctrl.onToggleLineBreakpoint(" + i + ", this);'>" + i + "</span>";
   }
   return result;
 }
@@ -307,7 +326,7 @@ function enableEventualSendClicks(fileNode) {
   sendOperator.attr("data-content", function() {
     let content = nodeFromTemplate("actor-bp-menu");
     // capture the source section id, and store it on the buttons
-    $(content).find("button").attr("data-ss-id", this.id);
+    $(content).find("button").attr("data-ss-id", getSectionIdFrom(this.id));
     return $(content).html();
   });
   sendOperator.popover();
@@ -351,7 +370,7 @@ function constructChannelBpMenu(fileNode, tag: string, tpl: string) {
   sendOperator.attr("data-content", function() {
     let content = nodeFromTemplate(tpl);
     // capture the source section id, and store it on the buttons
-    $(content).find("button").attr("data-ss-id", this.id);
+    $(content).find("button").attr("data-ss-id", getSectionIdFrom(this.id));
     return $(content).html();
   });
   sendOperator.popover();
@@ -413,7 +432,7 @@ export class View {
 
     // we mark the tab header as well as the tab content with a class
     // that contains the source id
-    let sourceElem = container.find("." + sourceId);
+    let sourceElem = container.find("li." + sourceId);
 
     if (sourceElem.length !== 0) {
       const existingAElem = sourceElem.find("a");
@@ -448,8 +467,9 @@ export class View {
     // create tab pane
     const newFileElement = nodeFromTemplate("file");
     newFileElement.setAttribute("id", sourcePaneId);
-    newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(annotationArray.length);
+    newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(annotationArray.length, sourceId);
     const fileNode = newFileElement.getElementsByClassName("source-file")[0];
+    $(fileNode).addClass(sourceId);
     fileNode.innerHTML = arrayToString(annotationArray);
 
     // enable clicking on EventualSendNodes
@@ -605,13 +625,13 @@ export class View {
       return;
     }
 
-    let bpId = breakpoint.getId();
+    let bpId = breakpoint.getListEntryId();
     let entry = nodeFromTemplate("breakpoint-tpl");
     entry.setAttribute("id", bpId);
 
     let tds = $(entry).find("td");
     tds[0].innerHTML = breakpoint.source.name;
-    tds[1].innerHTML = breakpoint.getId();
+    tds[1].innerHTML = breakpoint.getListEntryId();
 
     breakpoint.checkbox = $(entry).find("input");
     breakpoint.checkbox.attr("id", bpId + "chk");
@@ -620,42 +640,34 @@ export class View {
     list.appendChild(entry);
   }
 
-  updateBreakpoint(breakpoint: Breakpoint, highlightElem: JQuery,
-      highlightClass: string) {
+  updateBreakpoint(breakpoint: Breakpoint, highlightClass: string) {
     this.ensureBreakpointListEntry(breakpoint);
     const enabled = breakpoint.isEnabled();
 
     breakpoint.checkbox.prop("checked", enabled);
+    const highlightElems = $(document.getElementsByClassName(
+      breakpoint.getSourceElementClass()));
     if (enabled) {
-      highlightElem.addClass(highlightClass);
+      highlightElems.addClass(highlightClass);
     } else {
-      highlightElem.removeClass(highlightClass);
+      highlightElems.removeClass(highlightClass);
     }
   }
 
   updateLineBreakpoint(bp: LineBreakpoint) {
-    const lineNumSpan = $(bp.lineNumSpan);
-    this.updateBreakpoint(bp, lineNumSpan, "breakpoint-active");
+    this.updateBreakpoint(bp, "breakpoint-active");
   }
 
   updateSendBreakpoint(bp: MessageBreakpoint) {
-    const bpSpan = document.getElementById(bp.sectionId);
-    this.updateBreakpoint(bp, $(bpSpan), "send-breakpoint-active");
+    this.updateBreakpoint(bp, "send-breakpoint-active");
   }
 
   updateAsyncMethodRcvBreakpoint(bp: MessageBreakpoint) {
-    let i = 0,
-      elem = null;
-    while (elem = document.getElementById(
-        methodDeclIdToString(bp.sectionId, i))) {
-      this.updateBreakpoint(bp, $(elem), "send-breakpoint-active");
-      i += 1;
-    }
+    this.updateBreakpoint(bp, "send-breakpoint-active");
   }
 
   updatePromiseBreakpoint(bp: MessageBreakpoint) {
-    const bpSpan = document.getElementById(bp.sectionId);
-    this.updateBreakpoint(bp, $(bpSpan), "promise-breakpoint-active");
+    this.updateBreakpoint(bp, "promise-breakpoint-active");
   }
 
   findActivityDebuggerButtons(activityId: number) {
