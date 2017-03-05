@@ -320,7 +320,8 @@ function enableEventualSendClicks(fileNode) {
     "data-trigger"   : "click hover",
     "title"          : "Breakpoints",
     "data-html"      : "true",
-    "data-placement" : "auto top"
+    "data-animation" : "false",
+    "data-placement" : "top"
   });
 
   sendOperator.attr("data-content", function() {
@@ -364,7 +365,8 @@ function constructChannelBpMenu(fileNode, tag: string, tpl: string) {
     "data-trigger"   : "click hover",
     "title"          : "Breakpoints",
     "data-html"      : "true",
-    "data-placement" : "auto top"
+    "data-animation" : "false",
+    "data-placement" : "top"
   });
 
   sendOperator.attr("data-content", function() {
@@ -394,7 +396,8 @@ function enableMethodBreakpointHover(fileNode) {
     "title"         : "Breakpoints",
     "animation"     : "false",
     "data-html"     : "true",
-    "data-placement": "auto top" });
+    "data-animation": "false",
+    "data-placement": "top" });
 
   methDecls.attr("data-content", function () {
     let idObj = methodDeclIdToObj(this.id);
