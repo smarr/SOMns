@@ -113,9 +113,9 @@ export class Debugger {
     return bps;
   }
 
-  getEnabledBreakpointsForSource(sourceName: string): Breakpoint[] {
+  public getEnabledBreakpointsForSource(sourceUri: string): Breakpoint[] {
     const bps = [];
-    const lines = this.breakpoints[sourceName];
+    const lines = this.breakpoints[sourceUri];
     for (const line in lines) {
       const bp = lines[line];
       if (bp.isEnabled()) {
