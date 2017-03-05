@@ -15,7 +15,6 @@ class WebResourceHandler implements HttpHandler {
 
   @Override
   public void handle(final HttpExchange exchange) throws IOException {
-    WebDebugger.log("[REQ] " + exchange.getRequestURI().toString());
     String rootFolder = System.getProperty("som.tools") + "/kompos";
 
     String requestedFile = exchange.getRequestURI().getPath();
