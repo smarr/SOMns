@@ -95,7 +95,7 @@ public class Suspension {
     submitTask(new SendStackTrace(startFrame, levels, frontend, this, requestId));
   }
 
-  public void sendScopes(final int frameId, final FrontendConnector frontend,
+  public void sendScopes(final long frameId, final FrontendConnector frontend,
       final int requestId) {
     frontend.sendScopes(frameId, this, requestId);
   }

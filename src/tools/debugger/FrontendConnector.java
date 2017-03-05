@@ -235,7 +235,7 @@ public class FrontendConnector {
     send(StackTraceResponse.create(startFrame, levels, suspension, requestId));
   }
 
-  public void sendScopes(final int frameId, final Suspension suspension,
+  public void sendScopes(final long frameId, final Suspension suspension,
       final int requestId) {
     send(ScopesResponse.create(frameId, suspension, requestId));
   }

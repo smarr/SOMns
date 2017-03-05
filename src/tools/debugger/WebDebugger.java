@@ -24,6 +24,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.interpreter.actors.Actor;
 import som.vm.Activity;
 import som.vm.ActivityThread;
+import tools.TraceData;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.InitialBreakpointsMessage;
 import tools.debugger.message.Message.IncommingMessage;
@@ -115,6 +116,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     Suspension suspension = activityToSuspension.get(activity);
     if (suspension == null) {
       long id = activity.getId();
+      assert TraceData.isWithinJSIntValueRange(id);
       suspension = new Suspension(activity, id);
 
       activityToSuspension.put(activity, suspension);

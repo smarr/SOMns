@@ -8,11 +8,11 @@ import tools.debugger.message.Message.Request;
 
 
 public final class ScopesRequest extends Request {
-  private final int frameId;
+  private final long frameId;
 
   ScopesRequest(final int requestId, final int frameId) {
     super(requestId);
-    this.frameId   = frameId;
+    this.frameId = frameId;
   }
 
   @Override
