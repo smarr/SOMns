@@ -8,13 +8,14 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
+import java.lang.management.MemoryUsage;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import javax.management.Notification;
@@ -53,11 +54,10 @@ public class ActorExecutionTrace {
   private static final int MESSAGE_SIZE = 45;
   private static final int PARAM_SIZE = 9;
 
-  private static final MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
   private static final List<java.lang.management.GarbageCollectorMXBean> gcbeans = ManagementFactory.getGarbageCollectorMXBeans();
 
   private static final ArrayBlockingQueue<ByteBuffer> emptyBuffers = new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
-  private static final ArrayBlockingQueue<ByteBuffer> fullBuffers = new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
+  private static final ArrayBlockingQueue<ByteBuffer> fullBuffers  = new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
 
   // contains symbols that need to be written to file/sent to debugger,
   // e.g. actor type, message type
@@ -101,16 +101,22 @@ public class ActorExecutionTrace {
     }
   }
 
+  private static long getTotal(final Map<String, MemoryUsage> map) {
+    return map.entrySet().stream().
+        mapToLong(usage -> usage.getValue().getUsed()).sum();
+  }
+
   public static void setUpGCMonitoring() {
     for (java.lang.management.GarbageCollectorMXBean bean : gcbeans) {
       NotificationEmitter emitter = (NotificationEmitter) bean;
       NotificationListener listener = new NotificationListener() {
         @Override
         public void handleNotification(final Notification notification, final Object handback) {
-          if (notification.getType().equals(GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION)) {
-            GarbageCollectionNotificationInfo info = GarbageCollectionNotificationInfo.from((CompositeData) notification.getUserData());
-            long after = info.getGcInfo().getMemoryUsageAfterGc().entrySet().stream().mapToLong(usage -> usage.getValue().getUsed()).sum();
-            long before = info.getGcInfo().getMemoryUsageBeforeGc().entrySet().stream().mapToLong(usage -> usage.getValue().getUsed()).sum();
+          if (GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION.equals(notification.getType())) {
+            GarbageCollectionNotificationInfo info = GarbageCollectionNotificationInfo.from(
+                (CompositeData) notification.getUserData());
+            long after  = getTotal(info.getGcInfo().getMemoryUsageAfterGc());
+            long before = getTotal(info.getGcInfo().getMemoryUsageBeforeGc());
             collectedMemory += before - after;
           }
         }
