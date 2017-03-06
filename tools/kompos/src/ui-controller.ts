@@ -118,12 +118,12 @@ export class UiController extends Controller {
   }
 
   public onStackTrace(msg: StackTraceResponse) {
-    const requestedId = msg.stackFrames[0].id;
+    const topFrameId = msg.stackFrames[0].id;
     this.ensureActivityPromise(msg.activityId);
 
     this.actProm[msg.activityId].then(act => {
       console.assert(act.id === msg.activityId);
-      this.vmConnection.requestScope(requestedId);
+      this.vmConnection.requestScope(topFrameId);
 
       this.view.switchActivityDebuggerToSuspendedState(msg.activityId);
 
@@ -131,7 +131,7 @@ export class UiController extends Controller {
       const source = this.dbg.getSource(sourceId);
 
       const newSource = this.view.displaySource(msg.activityId, source, sourceId);
-      this.view.displayStackTrace(sourceId, msg, requestedId);
+      this.view.displayStackTrace(sourceId, msg, topFrameId);
       if (newSource) {
         this.ensureBreakpointsAreIndicated(sourceId);
       }
