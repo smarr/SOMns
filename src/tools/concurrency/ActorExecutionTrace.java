@@ -6,12 +6,16 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
-import java.lang.management.MemoryMXBean;
+import java.lang.management.MemoryPoolMXBean;
+import java.lang.management.MemoryType;
+import java.lang.management.MemoryUsage;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 
 import javax.management.Notification;
@@ -50,17 +54,18 @@ public class ActorExecutionTrace {
   private static final int MESSAGE_SIZE = 45;
   private static final int PARAM_SIZE = 9;
 
-  private static final MemoryMXBean mbean = ManagementFactory.getMemoryMXBean();
   private static final List<java.lang.management.GarbageCollectorMXBean> gcbeans = ManagementFactory.getGarbageCollectorMXBeans();
 
   private static final ArrayBlockingQueue<ByteBuffer> emptyBuffers = new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
-  private static final ArrayBlockingQueue<ByteBuffer> fullBuffers = new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
+  private static final ArrayBlockingQueue<ByteBuffer> fullBuffers  = new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
 
   // contains symbols that need to be written to file/sent to debugger,
   // e.g. actor type, message type
   private static final ArrayList<SSymbol> symbolsToWrite = new ArrayList<>();
 
   private static FrontendConnector front = null;
+
+  private static long collectedMemory = 0;
 
   private static Thread workerThread = new TraceWorkerThread();
   private static final byte messageEventId;
@@ -96,32 +101,47 @@ public class ActorExecutionTrace {
     }
   }
 
+  private static long getTotal(final Map<String, MemoryUsage> map) {
+    return map.entrySet().stream().
+        mapToLong(usage -> usage.getValue().getUsed()).sum();
+  }
+
   public static void setUpGCMonitoring() {
     for (java.lang.management.GarbageCollectorMXBean bean : gcbeans) {
       NotificationEmitter emitter = (NotificationEmitter) bean;
       NotificationListener listener = new NotificationListener() {
         @Override
         public void handleNotification(final Notification notification, final Object handback) {
-          if (notification.getType().equals(GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION)) {
-            // get the information associated with this notification
-            GarbageCollectionNotificationInfo info = GarbageCollectionNotificationInfo.from((CompositeData) notification.getUserData());
-            VM.println(Thread.currentThread().toString());
-            VM.println(info.getGcAction() + ": - " + info.getGcInfo().getId() + " " + info.getGcName() + " (from " + info.getGcCause() + ") " + info.getGcInfo().getDuration() + " ms;");
-            VM.println("GcInfo MemoryUsageBeforeGc: " + info.getGcInfo().getMemoryUsageBeforeGc().entrySet().stream().filter(ent -> !ent.getKey().equals("Compressed Class Space") && !ent.getKey().equals("Code Cache")).mapToLong(usage -> usage.getValue().getUsed()).sum() / 1024 + " kB");
-            VM.println("GcInfo MemoryUsageAfterGc: " + info.getGcInfo().getMemoryUsageAfterGc().entrySet().stream().filter(ent -> !ent.getKey().equals("Compressed Class Space") && !ent.getKey().equals("Code Cache")).mapToLong(usage -> usage.getValue().getUsed()).sum() / 1024 + " kB");
+          if (GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION.equals(notification.getType())) {
+            GarbageCollectionNotificationInfo info = GarbageCollectionNotificationInfo.from(
+                (CompositeData) notification.getUserData());
+            long after  = getTotal(info.getGcInfo().getMemoryUsageAfterGc());
+            long before = getTotal(info.getGcInfo().getMemoryUsageBeforeGc());
+            collectedMemory += before - after;
           }
         }
       };
-
       emitter.addNotificationListener(listener, null, null);
     }
   }
 
-
-  public static void logMemoryUsage() {
-    if (VmSettings.MEMORY_TRACING) {
-      VM.println("Memory usage: " + mbean.getHeapMemoryUsage().getUsed() / 1024 + " kB");
+  public static void reportPeakMemoryUsage() {
+    List<MemoryPoolMXBean> pools = ManagementFactory.getMemoryPoolMXBeans();
+    long totalHeap = 0;
+    long totalNonHeap = 0;
+    long gcTime = 0;
+    for (MemoryPoolMXBean memoryPoolMXBean : pools) {
+      long peakUsed = memoryPoolMXBean.getPeakUsage().getUsed();
+      if (memoryPoolMXBean.getType() == MemoryType.HEAP) {
+        totalHeap += peakUsed;
+      } else if (memoryPoolMXBean.getType() == MemoryType.NON_HEAP) {
+        totalNonHeap += peakUsed;
+      }
     }
+    for (GarbageCollectorMXBean garbageCollectorMXBean : ManagementFactory.getGarbageCollectorMXBeans()) {
+      gcTime += garbageCollectorMXBean.getCollectionTime();
+    }
+    VM.println("[Memstat] Heap: " + totalHeap + "B\tNonHeap: " + totalNonHeap + "B\tCollected: " + collectedMemory + "B\tGC-Time: " + gcTime + "ms");
   }
 
   @TruffleBoundary
@@ -356,8 +376,6 @@ public class ActorExecutionTrace {
         }
       }
     }
-
-    logMemoryUsage();
   }
 
   private static void writeBasicMessage(final EventualMessage em, final ByteBuffer b) {

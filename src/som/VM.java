@@ -180,6 +180,9 @@ public final class VM {
     }
     Actor.shutDownActorPool();
     engine.dispose();
+    if (VmSettings.MEMORY_TRACING) {
+      ActorExecutionTrace.reportPeakMemoryUsage();
+    }
     System.exit(errorCode);
   }
 
