@@ -42,18 +42,17 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 import tools.ObjectBuffer;
+import tools.TraceData;
+import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.FrontendConnector;
 
 public class ActorExecutionTrace {
 
   private static final int BUFFER_POOL_SIZE = Runtime.getRuntime().availableProcessors() * 4;
   static final int BUFFER_SIZE = 4096 * 1024;
-  private static final byte MESSAGE_BASE = (byte) 0x80;
-  private static final byte PROMISE_BIT = 0x40;
-  private static final byte TIMESTAMP_BIT = 0x20;
-  private static final byte PARAMETER_BIT = 0x10;
-  private static final int MESSAGE_SIZE = 45 + 16;
-  private static final int PARAM_SIZE = 9;
+
+  private static final int MESSAGE_SIZE = 44; // max message size without parameters
+  private static final int PARAM_SIZE = 9; // max size for one parameter
   private static final int TRACE_TIMEOUT = 500;
   private static final int POLL_TIMEOUT = 10;
 
@@ -83,14 +82,14 @@ public class ActorExecutionTrace {
       }
     }
 
-    byte eventid = MESSAGE_BASE;
+    byte eventid = TraceData.MESSAGE_BASE;
 
     if (VmSettings.MESSAGE_TIMESTAMPS) {
-      eventid |= TIMESTAMP_BIT;
+      eventid |= TraceData.TIMESTAMP_BIT;
     }
 
     if (VmSettings.MESSAGE_PARAMETERS) {
-      eventid |= PARAMETER_BIT;
+      eventid |= TraceData.PARAMETER_BIT;
     }
 
     messageEventId = eventid;
@@ -230,7 +229,7 @@ public class ActorExecutionTrace {
 
       ByteBuffer b = t.getThreadLocalBuffer();
       b.put(Events.ActorCreation.id);
-      b.putLong(actor.getActor().getActorId()); // id of the created actor
+      b.putLong(((TracingActor) actor.getActor()).getActorId()); // id of the created actor
       b.putLong(t.getCurrentMessageId()); // causal message
       b.putShort(actorClass.getName().getSymbolId());
     }
@@ -310,6 +309,7 @@ public class ActorExecutionTrace {
       return;
     }
 
+    TracingActor ta = (TracingActor) actor;
     Thread current = Thread.currentThread();
 
     if (current instanceof ActorProcessingThread) {
@@ -323,7 +323,7 @@ public class ActorExecutionTrace {
       b.put(Events.Mailbox.id);
       b.putLong(baseMessageId); // base id for messages
       b.putInt(mailboxNo);
-      b.putLong(actor.getActorId());   // receiver of the messages
+      b.putLong(ta.getActorId());   // receiver of the messages
 
       int idx = 0;
 
@@ -333,7 +333,7 @@ public class ActorExecutionTrace {
         b.put(Events.MailboxContd.id);
         b.putLong(baseMessageId);
         b.putInt(mailboxNo);
-        b.putLong(actor.getActorId()); // receiver of the messages
+        b.putLong(ta.getActorId()); // receiver of the messages
         b.putInt(idx);
       }
 
@@ -362,7 +362,7 @@ public class ActorExecutionTrace {
             b.put(Events.MailboxContd.id);
             b.putLong(baseMessageId);
             b.putInt(mailboxNo);
-            b.putLong(actor.getActorId()); // receiver of the messages
+            b.putLong(ta.getActorId()); // receiver of the messages
             b.putInt(idx);
           }
 
@@ -384,13 +384,13 @@ public class ActorExecutionTrace {
 
   private static void writeBasicMessage(final EventualMessage em, final ByteBuffer b) {
     if (em instanceof PromiseMessage && VmSettings.PROMISE_CREATION) {
-      b.put((byte) (messageEventId | PROMISE_BIT));
+      b.put((byte) (messageEventId | TraceData.PROMISE_BIT));
       b.putLong(((PromiseMessage) em).getPromise().getPromiseId());
     } else {
       b.put(messageEventId);
     }
 
-    b.putLong(em.getSender().getActorId()); // sender
+    b.putLong(((TracingActor) em.getSender()).getActorId()); // sender
     b.putLong(em.getCausalMessageId());
 
     b.putShort(em.getSelector().getSymbolId());
@@ -557,6 +557,7 @@ public class ActorExecutionTrace {
   public static void mailboxExecutedReplay(final Queue<EventualMessage> todo,
       final long baseMessageId, final int mailboxNo, final Actor actor) {
     Thread current = Thread.currentThread();
+    TracingActor ta = (TracingActor) actor;
 
     if (current instanceof ActorProcessingThread) {
       ActorProcessingThread t = (ActorProcessingThread) current;
@@ -569,7 +570,7 @@ public class ActorExecutionTrace {
       b.put(Events.Mailbox.id);
       b.putLong(baseMessageId); // base id for messages
       b.putInt(mailboxNo);
-      b.putLong(actor.getActorId());   // receiver of the messages
+      b.putLong(ta.getActorId());   // receiver of the messages
 
       int idx = 0;
 
@@ -580,7 +581,7 @@ public class ActorExecutionTrace {
             b = t.getThreadLocalBuffer();
             b.put(Events.MailboxContd.id);
             b.putLong(baseMessageId);
-            b.putLong(actor.getActorId()); // receiver of the messages
+            b.putLong(ta.getActorId()); // receiver of the messages
             b.putInt(idx);
           }
 

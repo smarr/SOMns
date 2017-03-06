@@ -17,6 +17,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.TracingActors.ReplayActor;
 
 
 public class SPromise extends SObjectWithClass {
@@ -272,7 +273,7 @@ public class SPromise extends SObjectWithClass {
 
     protected SReplayPromise(final Actor owner) {
       super(owner);
-      Actor creator = EventualMessage.getActorCurrentMessageIsExecutionOn();
+      ReplayActor creator = (ReplayActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
 
       assert creator.getReplayPromiseIds() != null && creator.getReplayPromiseIds().size() > 0;
       replayId = creator.getReplayPromiseIds().remove();

@@ -284,7 +284,7 @@ public abstract class EventualMessage {
     }
   }
 
-  protected final void execute() {
+  public final void execute() {
     try {
       executeMessage();
     } catch (ThreadDeath t) {
