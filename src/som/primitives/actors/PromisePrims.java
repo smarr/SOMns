@@ -84,7 +84,7 @@ public final class PromisePrims {
 
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
-  @Primitive(primitive = "actorsWhen:resolved:", selector = "whenResolved:",
+  @Primitive(primitive = "actorsWhen:resolved:",
              receiverType = SPromise.class)
   public abstract static class WhenResolvedPrim extends BinaryComplexOperation {
     @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();

@@ -10,6 +10,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.primitives.Primitive;
+import som.interpreter.actors.RuinPromiseNode;
 import som.vm.NotYetImplementedException;
 
 @GenerateNodeFactory
@@ -18,6 +19,7 @@ import som.vm.NotYetImplementedException;
 public abstract class ResolvePromiseNode extends TernaryExpressionNode {
 
   @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
+  @Child protected RuinPromiseNode ruiner = RuinPromiseNodeFactory.create(false, getSourceSection(), null, null);
 
   protected ResolvePromiseNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
   protected ResolvePromiseNode(final ResolvePromiseNode node) { super(node); }
@@ -49,8 +51,8 @@ public abstract class ResolvePromiseNode extends TernaryExpressionNode {
         normalResolution(resolver, promiseValue.getValueUnsync(),
            isBreakpointOnPromiseResolution);
       } else if (promiseValue.isErroredUnsync()) {
-        CompilerDirectives.transferToInterpreter();
-        throw new NotYetImplementedException();
+          CompilerDirectives.transferToInterpreter();
+          ruiner.executeEvaluated(frame, resolver, promiseValue.getValueUnsync());        
       } else {
         synchronized (promiseToBeResolved) { // TODO: is this really deadlock free?
           promiseToBeResolved.setTriggerResolutionBreakpointOnUnresolvedChainedPromise(isBreakpointOnPromiseResolution);

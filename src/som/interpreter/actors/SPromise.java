@@ -141,11 +141,8 @@ public class SPromise extends SObjectWithClass {
 
   public synchronized void registerOnError(final PromiseMessage msg,
       final Actor current) {
-    if (resolutionState == Resolution.CHAINED) { //TODO is it possible a new handler is added to a chained promise?
-      throw new NotYetImplementedException();
-    } else {
-      if (resolutionState == Resolution.ERRORNOUS) {
-      scheduleCallbacksOnResolution(value, msg, current, false);
+    if (resolutionState == Resolution.ERRORNOUS) {
+        scheduleCallbacksOnResolution(value, msg, current, false);
     } else {
       if (resolutionState == Resolution.SUCCESSFUL) {
         // short cut on resolved, this promise will never error, so,
@@ -171,9 +168,6 @@ public class SPromise extends SObjectWithClass {
         block, resolver, blockCallTarget, false, false, false, promise);
 
     synchronized (this) {
-      if (resolutionState == Resolution.CHAINED) { //TODO is it possible a new handler is added to a chained promise?
-        throw new NotYetImplementedException();
-      } else {
       if (resolutionState == Resolution.ERRORNOUS) {
         if (value instanceof SAbstractObject) {
           if (((SAbstractObject) value).getSOMClass() == exceptionClass) {
@@ -191,8 +185,8 @@ public class SPromise extends SObjectWithClass {
         onException.add(exceptionClass);
         onExceptionCallbacks.add(msg);
       }
+      return promise;
     }
-    return promise;
   }
 
   protected final void scheduleCallbacksOnResolution(final Object result,
@@ -334,19 +328,31 @@ public class SPromise extends SObjectWithClass {
     }
 
     public static void onError(final SAbstractObject exception, final Object wrapped, final SPromise p, final Actor current) {
-      // for trace
+      // for trace  TODO fix tracing
       if (VmSettings.PROMISE_RESOLUTION) {
         ActorExecutionTrace.promiseRuin(p.getPromiseId(), exception);
       }
-
-      boolean handled = false;
-
       synchronized (wrapped) {
+       handleOrPasstoChain(exception, wrapped, p, current);
+      }
+    }
+
+    public static void handleOrPasstoChain(final SAbstractObject exception, final Object wrapped, final SPromise p, final Actor current){
+      if (!runHandlersUnsync(exception, wrapped, p, current)){
+          //if I did not handle the exception ask chain to handle
+          ruinChainedPromisesUnsynch(exception, p, current);
+      }
+    }
+
+    private static boolean runHandlersUnsync(final SAbstractObject exception, final Object wrapped, final SPromise p, final Actor current) {
         synchronized (p) {
           assert p.assertNotCompleted();
-          p.value = wrapped;
+          p.value = exception;
           p.resolutionState = Resolution.ERRORNOUS;
         }
+
+        boolean handled = false;
+        
         //execute all exceptionHandlers if the type of wrapped is equal to the exceptionClass the handler handles.
         if (p.onException != null) {
           for (int i = 0; i < p.onException.size(); i++) {
@@ -354,7 +360,7 @@ public class SPromise extends SObjectWithClass {
             PromiseMessage handle = p.onExceptionCallbacks.get(i);
             if (((SAbstractObject) wrapped).getSOMClass() == exceptionClass) {
                 handled = true;
-                p.scheduleCallbacksOnResolution(exception, handle, current, false); //should I use exceptoin or wrapped verison of exception
+                p.scheduleCallbacksOnResolution(exception, handle, current, false);
             }
           }
         }
@@ -367,16 +373,22 @@ public class SPromise extends SObjectWithClass {
             p.scheduleCallbacksOnResolution(exception, handle, current, false);
           }
         }
-        if (!handled){
-          //if no handler handled the exception, rethrow it
-          System.out.println("not handled");
-          //throw new SomException(exception);
-        }
-      }
+        return handled;
     }
 
-    protected static void ruinChainedPromises(){
-
+    protected static void ruinChainedPromisesUnsynch(final SAbstractObject exception, final SPromise promise, final Actor current){
+      if (promise.chainedPromise != null) {
+        Object wrapped = promise.chainedPromise.owner.wrapForUse(exception, current, null);
+        handleOrPasstoChain(exception, wrapped, promise.chainedPromise, current);
+        
+        if (promise.chainedPromiseExt != null) {
+          //multiple promises are chained to me, ruin all of them
+          for (SPromise p : promise.chainedPromiseExt) {
+            Object wrappedForP = p.owner.wrapForUse(exception, current, null);
+            handleOrPasstoChain(exception, wrappedForP, p, current);
+          }
+        } 
+      }
     }
 
     public final boolean assertNotCompleted() {

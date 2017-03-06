@@ -60,13 +60,13 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
 
   public class Promise = Object ()(
     (* all whenResolved blocks are executed. *)
-    public whenResolved: aBlock = ( ^ vmMirror actorsWhen: self resolved: aBlock )
+    public whenResolved: aBlock = ( ^ self whenResolved: aBlock onError: [:e | e signal])
 
     (* all ensure blocks are executed. *)
     public ensure: aBlock       = ( whenResolved: aBlock. onError: aBlock. )
 
     (* all onError blocks are executed. *)
-    public onError: errorBlock  = ( ^ vmMirror actorsFor: self onError: errorBlock )
+    public onError: errorBlock  = (^ vmMirror actorsFor: self onError: errorBlock )
 
     public whenResolved: aBlock onError: errorBlock = (
       ^ vmMirror actorsWhen: self resolved: aBlock onError: errorBlock
