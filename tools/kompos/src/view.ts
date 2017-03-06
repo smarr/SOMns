@@ -501,6 +501,10 @@ export class View {
     codeView.appendChild(act);
   }
 
+  public resetActivities() {
+    $(document.getElementById("code-views")).empty();
+  }
+
   public addActivities(activities: Activity[]) {
     for (const act of activities) {
       this.displayActivity(act.name, act.id);

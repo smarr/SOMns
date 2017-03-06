@@ -30,6 +30,11 @@ export class UiController extends Controller {
     this.view = view;
   }
 
+  private reset() {
+    this.actProm = {};
+    this.actPromResolve = {};
+  }
+
   toggleConnection() {
     if (this.vmConnection.isConnected()) {
       this.vmConnection.disconnect();
@@ -41,6 +46,8 @@ export class UiController extends Controller {
   onConnect() {
     dbgLog("[WS] open");
     resetLinks();
+    this.reset();
+    this.view.resetActivities();
     this.view.onConnect();
     const bps = this.dbg.getEnabledBreakpoints();
     dbgLog("Send breakpoints: " + bps.length);
