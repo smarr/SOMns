@@ -10,8 +10,8 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.instrumentation.InstrumentationHandler;
+import com.oracle.truffle.api.nodes.GraphPrintVisitor;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.vm.PolyglotEngine;
@@ -25,6 +25,7 @@ import com.oracle.truffle.tools.debug.shell.server.REPLServer;
 import coveralls.truffle.Coverage;
 import som.compiler.MixinDefinition;
 import som.compiler.SourcecodeCompiler;
+import som.interpreter.Method;
 import som.interpreter.SomLanguage;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.actors.Actor;
@@ -122,6 +123,15 @@ public final class VM {
     }
   }
 
+  private static void outputToIGV(final Method method) {
+    GraphPrintVisitor graphPrinter = new GraphPrintVisitor();
+
+    graphPrinter.beginGraph(method.toString()).visit(method);
+
+    graphPrinter.printToNetwork(true);
+    graphPrinter.close();
+  }
+
   public VM(final String[] args, final boolean avoidExitForTesting) throws IOException {
     vm = this;
 
@@ -146,9 +156,13 @@ public final class VM {
     }
   }
 
-  public static void reportParsedRootNode(final RootNode rootNode) {
+  public static void reportParsedRootNode(final Method rootNode) {
     if (webDebugger != null) {
       webDebugger.reportRootNodeAfterParsing(rootNode);
+    }
+
+    if (VmSettings.IGV_DUMP_AFTER_PARSING) {
+      outputToIGV(rootNode);
     }
   }
 

@@ -31,6 +31,8 @@ parser.add_argument('-dnu', '--stack-trace-on-dnu', help='Print a stack trace on
 explore = parser.add_argument_group('Explore', 'Investigate Execution')
 explore.add_argument('-i', '--igv', help='dump compilation details to IGV',
                     dest='igv', action='store_true', default=False)
+explore.add_argument('-im', '--igv-parsed-methods', help='dump methods after parsing to IGV',
+                    dest='igv_methods', action='store_true', default=False)
 explore.add_argument('-if', '--igv-to-file', help='dump compilation details to file to be loaded by IGV',
                     dest='igv_to_file', action='store_true', default=False)
 explore.add_argument('-io', '--igv-only', help='only dump named method, use of * allowed. Uses Invokable.toString()',
@@ -190,7 +192,7 @@ if sys.argv[0].endswith('debug'):
     args.perf_warnings = True
     args.background_compilation = False
 
-if args.only_igv:
+if args.only_igv or args.igv_methods:
     args.igv = True
 
 if not args.interpreter:
@@ -206,6 +208,8 @@ if  not args.interpreter and args.only_igv:
     flags += ['-Dgraal.MethodFilter=' + args.only_igv]
 if not args.interpreter and args.igv_to_file:
     flags += ['-Dgraal.PrintIdealGraphFile=true']
+if args.igv_methods:
+    flags += ['-Dsom.igvDumpAfterParsing=true']
 if args.low_level:
     flags += ['-XX:+UnlockDiagnosticVMOptions', '-XX:+LogCompilation',
               '-XX:+TraceDeoptimization']
