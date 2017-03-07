@@ -238,9 +238,9 @@ public class ActorExecutionTrace {
       swapBuffer(t);
     }
 
-    Object value = actor.getValue();
+    final Object value = actor.getValue();
     assert value instanceof SClass;
-    SClass actorClass = (SClass) value;
+    final SClass actorClass = (SClass) value;
 
     ByteBuffer b = t.getThreadLocalBuffer();
     assert b.order() == ByteOrder.BIG_ENDIAN;

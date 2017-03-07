@@ -7,7 +7,7 @@ www.west-wind.com
 Licensed under MIT License
 Source: https://github.com/RickStrahl/jquery-resizable/blob/998f129e20b2333b79eb1f3adcd70a3de4718e69/dist/jquery-resizable.js
 */
-(function($, undefined) {
+(function($) {
     function getHandle(selector, $el) {
         if (selector.trim()[0] === ">") {
             selector = selector.trim().replace(/^>\s*/, "");
@@ -53,14 +53,6 @@ Source: https://github.com/RickStrahl/jquery-resizable/blob/998f129e20b2333b79eb
 
             var $el = $(this);
 
-            var $handle = getHandle(opt.handleSelector, $el);
-
-            if (opt.touchActionNone)
-                $handle.css("touch-action", "none");
-
-            $el.addClass("resizable");
-            $handle.bind('mousedown.rsz touchstart.rsz', startDragging);
-
             function noop(e) {
                 e.stopPropagation();
                 e.preventDefault();
@@ -83,15 +75,17 @@ Source: https://github.com/RickStrahl/jquery-resizable/blob/998f129e20b2333b79eb
             function doDrag(e) {
                 var pos = getMousePos(e), newWidth, newHeight;
 
-                if (opt.resizeWidthFrom === 'left')
+                if (opt.resizeWidthFrom === 'left') {
                     newWidth = startPos.width - pos.x + startPos.x;
-                else
+                } else {
                     newWidth = startPos.width + pos.x - startPos.x;
+                }
 
-                if (opt.resizeHeightFrom === 'top')
+                if (opt.resizeHeightFrom === 'top') {
                     newHeight = startPos.height - pos.y + startPos.y;
-                else
+                } else {
                     newHeight = startPos.height + pos.y - startPos.y;
+                }
 
                 if (!opt.onDrag || opt.onDrag(e, $el, newWidth, newHeight, opt) !== false) {
                     if (opt.resizeHeight) {
@@ -120,8 +114,9 @@ Source: https://github.com/RickStrahl/jquery-resizable/blob/998f129e20b2333b79eb
                 // reset changed values
                 $el.css("transition", startTransition);
 
-                if (opt.onDragEnd)
+                if (opt.onDragEnd) {
                     opt.onDragEnd(e, $el, opt);
+                }
 
                 return false;
             }
@@ -149,6 +144,15 @@ Source: https://github.com/RickStrahl/jquery-resizable/blob/998f129e20b2333b79eb
                 }
                 $(document).bind('selectstart.rsz', noop); // disable selection
             }
+
+            var $handle = getHandle(opt.handleSelector, $el);
+
+            if (opt.touchActionNone) {
+                $handle.css("touch-action", "none");
+            }
+
+            $el.addClass("resizable");
+            $handle.bind('mousedown.rsz touchstart.rsz', startDragging);
         });
     };
-})(jQuery,undefined);
+}(jQuery));
