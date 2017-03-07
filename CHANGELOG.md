@@ -42,6 +42,9 @@
  - Optimize processing of common single messages by avoiding allocation and
    use of object buffer ([issue #90](https://github.com/smarr/SOMns/pull/90))
 
+ - Added option to show methods after parsing in IGV with
+   `-im`/`--igv-parsed-methods` ([issue #110](https://github.com/smarr/SOMns/pull/110))
+
 ## 0.1.0 - 2016-12-15
 
 This is the first tagged version. For previous changes, please refer to the
