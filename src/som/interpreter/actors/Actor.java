@@ -430,16 +430,16 @@ public class Actor implements Activity {
       new UncaughtExceptions(), true);
 
   public static final void shutDownActorPool() {
-      actorPool.shutdown();
-      try {
-        actorPool.awaitTermination(10, TimeUnit.SECONDS);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-      if (VmSettings.ACTOR_TRACING) {
-        VM.printConcurrencyEntitiesReport("[Total]\tA#" + numCreatedActors + "\t\tM#" + numCreatedMessages + "\t\tP#" + numCreatedPromises);
-        VM.printConcurrencyEntitiesReport("[Unresolved] " + (numCreatedPromises - numResolvedPromises));
-      }
+    actorPool.shutdown();
+    try {
+      actorPool.awaitTermination(10, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+    if (VmSettings.ACTOR_TRACING) {
+      VM.printConcurrencyEntitiesReport("[Total]\tA#" + numCreatedActors + "\t\tM#" + numCreatedMessages + "\t\tP#" + numCreatedPromises);
+      VM.printConcurrencyEntitiesReport("[Unresolved] " + (numCreatedPromises - numResolvedPromises));
+    }
   }
 
   public static final void forceSwapBuffers() {
