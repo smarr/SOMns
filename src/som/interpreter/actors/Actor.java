@@ -1,7 +1,6 @@
 package som.interpreter.actors;
 
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
@@ -9,7 +8,6 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -25,7 +23,9 @@ import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
+import tools.TraceData;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
@@ -60,8 +60,6 @@ public class Actor implements Activity {
     }
   }
 
-  /** Used to shift the thread id to the 8 most significant bits. */
-  private static final int THREAD_ID_SHIFT = 56;
   private static final int MAILBOX_EXTENSION_SIZE = 8;
 
   /**
@@ -143,6 +141,9 @@ public class Actor implements Activity {
     }
     return o;
   }
+
+  @Override
+  public long getId() { return 0; }
 
   /**
    * Send the give message to the actor.
@@ -332,39 +333,22 @@ public class Actor implements Activity {
     }
   }
 
-  public static final class ActorProcessingThread extends ForkJoinWorkerThread implements ActivityThread {
+  public static final class ActorProcessingThread extends TracingActivityThread
+      implements ActivityThread {
     public EventualMessage currentMessage;
-    private static AtomicInteger threadIdGen = new AtomicInteger(0);
+
     protected Actor currentlyExecutingActor;
-    protected final long threadId;
-    protected long nextActorId = 1;
-    protected long nextMessageId;
-    protected long nextPromiseId;
-    protected ByteBuffer tracingDataBuffer;
 
     // Used for tracing, accessed by the ExecAllMessages classes
-    public long createdMessages;
     public long currentMessageId;
-    public long resolvedPromises;
 
     protected ActorProcessingThread(final ForkJoinPool pool) {
       super(pool);
-      threadId = threadIdGen.getAndIncrement();
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.swapBuffer(this);
-        nextActorId = (threadId << THREAD_ID_SHIFT) + 1;
-        nextMessageId = (threadId << THREAD_ID_SHIFT);
-        nextPromiseId = (threadId << THREAD_ID_SHIFT);
-      }
     }
 
     @Override
     public Activity getActivity() {
       return currentMessage.getTarget();
-    }
-
-    public long generateActorId() {
-      return nextActorId++;
     }
 
     public long generateMessageBaseId(final int numMessages) {
@@ -373,18 +357,8 @@ public class Actor implements Activity {
       return result;
     }
 
-    protected long generatePromiseId() {
-      return nextPromiseId++;
-    }
 
-    public ByteBuffer getThreadLocalBuffer() {
-      return tracingDataBuffer;
-    }
-
-    public void setThreadLocalBuffer(final ByteBuffer threadLocalBuffer) {
-      this.tracingDataBuffer = threadLocalBuffer;
-    }
-
+    @Override
     public long getCurrentMessageId() {
       return currentMessageId;
     }
@@ -392,8 +366,8 @@ public class Actor implements Activity {
     @Override
     protected void onTermination(final Throwable exception) {
       if (VmSettings.ACTOR_TRACING) {
-        long createdActors = nextActorId - 1 - (threadId << THREAD_ID_SHIFT);
-        long createdPromises = nextPromiseId - (threadId << THREAD_ID_SHIFT);
+        long createdActors   = nextActivityId - 1 - (threadId << TraceData.ACTIVITY_ID_BITS);
+        long createdPromises = nextPromiseId - (threadId << TraceData.ACTIVITY_ID_BITS);
 
         ActorExecutionTrace.returnBuffer(this.tracingDataBuffer);
         this.tracingDataBuffer = null;
@@ -430,16 +404,16 @@ public class Actor implements Activity {
       new UncaughtExceptions(), true);
 
   public static final void shutDownActorPool() {
-      actorPool.shutdown();
-      try {
-        actorPool.awaitTermination(10, TimeUnit.SECONDS);
-      } catch (InterruptedException e) {
-        throw new RuntimeException(e);
-      }
-      if (VmSettings.ACTOR_TRACING) {
-        VM.printConcurrencyEntitiesReport("[Total]\tA#" + numCreatedActors + "\t\tM#" + numCreatedMessages + "\t\tP#" + numCreatedPromises);
-        VM.printConcurrencyEntitiesReport("[Unresolved] " + (numCreatedPromises - numResolvedPromises));
-      }
+    actorPool.shutdown();
+    try {
+      actorPool.awaitTermination(10, TimeUnit.SECONDS);
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+    if (VmSettings.ACTOR_TRACING) {
+      VM.printConcurrencyEntitiesReport("[Total]\tA#" + numCreatedActors + "\t\tM#" + numCreatedMessages + "\t\tP#" + numCreatedPromises);
+      VM.printConcurrencyEntitiesReport("[Unresolved] " + (numCreatedPromises - numResolvedPromises));
+    }
   }
 
   public static final void forceSwapBuffers() {

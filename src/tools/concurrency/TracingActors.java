@@ -24,7 +24,7 @@ public class TracingActors {
       super();
       if (Thread.currentThread() instanceof ActorProcessingThread) {
         ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
-        this.actorId = t.generateActorId();
+        this.actorId = t.generateActivityId();
       } else {
         actorId = 0; // main actor
       }
@@ -34,9 +34,8 @@ public class TracingActors {
       return mailboxNumber++;
     }
 
-    public long getActorId() {
-      return actorId;
-    }
+    @Override
+    public long getId() { return actorId; }
   }
 
   public static final class ReplayActor extends TracingActor{

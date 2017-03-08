@@ -30,12 +30,12 @@ import com.sun.management.GarbageCollectionNotificationInfo;
 
 import som.VM;
 import som.interpreter.actors.Actor;
-import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
+import som.primitives.TimerPrim;
 import som.vm.ObjectSystem;
 import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
@@ -146,7 +146,7 @@ public class ActorExecutionTrace {
   }
 
   @TruffleBoundary
-  public static synchronized void swapBuffer(final ActorProcessingThread t) throws IllegalStateException {
+  public static synchronized void swapBuffer(final TracingActivityThread t) throws IllegalStateException {
     returnBuffer(t.getThreadLocalBuffer());
 
     try {
@@ -195,7 +195,7 @@ public class ActorExecutionTrace {
     }
   };
 
-  protected enum ParamTypes{
+  protected enum ParamTypes {
     False,
     True,
     Long,
@@ -216,23 +216,22 @@ public class ActorExecutionTrace {
     }
 
     Thread current = Thread.currentThread();
+    assert current instanceof TracingActivityThread;
 
-    if (current instanceof ActorProcessingThread) {
-      ActorProcessingThread t = (ActorProcessingThread) current;
-      if (t.getThreadLocalBuffer().remaining() < Events.ActorCreation.size) {
-        swapBuffer(t);
-      }
-
-      Object value = actor.getValue();
-      assert value instanceof SClass;
-      SClass actorClass = (SClass) value;
-
-      ByteBuffer b = t.getThreadLocalBuffer();
-      b.put(Events.ActorCreation.id);
-      b.putLong(((TracingActor) actor.getActor()).getActorId()); // id of the created actor
-      b.putLong(t.getCurrentMessageId()); // causal message
-      b.putShort(actorClass.getName().getSymbolId());
+    TracingActivityThread t = (TracingActivityThread) current;
+    if (t.getThreadLocalBuffer().remaining() < Events.ActorCreation.size) {
+      swapBuffer(t);
     }
+
+    Object value = actor.getValue();
+    assert value instanceof SClass;
+    SClass actorClass = (SClass) value;
+
+    ByteBuffer b = t.getThreadLocalBuffer();
+    b.put(Events.ActorCreation.id);
+    b.putLong(actor.getActor().getId()); // id of the created actor
+    b.putLong(t.getCurrentMessageId()); // causal message
+    b.putShort(actorClass.getName().getSymbolId());
   }
 
   public static void promiseCreation(final long promiseId) {
@@ -241,19 +240,17 @@ public class ActorExecutionTrace {
     }
 
     Thread current = Thread.currentThread();
+    assert current instanceof TracingActivityThread;
+    TracingActivityThread t = (TracingActivityThread) current;
 
-    if (current instanceof ActorProcessingThread) {
-      ActorProcessingThread t = (ActorProcessingThread) current;
-
-      if (t.getThreadLocalBuffer().remaining() < Events.PromiseCreation.size) {
-        swapBuffer(t);
-      }
-
-      ByteBuffer b = t.getThreadLocalBuffer();
-      b.put(Events.PromiseCreation.id);
-      b.putLong(promiseId); // id of the created promise
-      b.putLong(t.getCurrentMessageId()); // causal message
+    if (t.getThreadLocalBuffer().remaining() < Events.PromiseCreation.size) {
+      swapBuffer(t);
     }
+
+    ByteBuffer b = t.getThreadLocalBuffer();
+    b.put(Events.PromiseCreation.id);
+    b.putLong(promiseId); // id of the created promise
+    b.putLong(t.getCurrentMessageId()); // causal message
   }
 
   public static void promiseResolution(final long promiseId, final Object value) {
@@ -262,22 +259,24 @@ public class ActorExecutionTrace {
     }
 
     Thread current = Thread.currentThread();
-
-    if (current instanceof ActorProcessingThread) {
-      ActorProcessingThread t = (ActorProcessingThread) current;
-
-      if (t.getThreadLocalBuffer().remaining() < Events.PromiseResolution.size) {
-        swapBuffer(t);
-      }
-
-      ByteBuffer b = t.getThreadLocalBuffer();
-      b.put(Events.PromiseResolution.id);
-      b.putLong(promiseId); // id of the promise
-      b.putLong(t.getCurrentMessageId()); // resolving message
-      writeParameter(value, b);
-
-      t.resolvedPromises++;
+    if (TimerPrim.isTimerThread(current)) {
+      return;
     }
+
+    assert current instanceof TracingActivityThread;
+    TracingActivityThread t = (TracingActivityThread) current;
+
+    if (t.getThreadLocalBuffer().remaining() < Events.PromiseResolution.size) {
+      swapBuffer(t);
+    }
+
+    ByteBuffer b = t.getThreadLocalBuffer();
+    b.put(Events.PromiseResolution.id);
+    b.putLong(promiseId); // id of the promise
+    b.putLong(t.getCurrentMessageId()); // resolving message
+    writeParameter(value, b);
+
+    t.resolvedPromises++;
   }
 
   public static void promiseChained(final long parent, final long child) {
@@ -286,20 +285,18 @@ public class ActorExecutionTrace {
     }
 
     Thread current = Thread.currentThread();
+    assert current instanceof TracingActivityThread;
+    TracingActivityThread t = (TracingActivityThread) current;
 
-    if (current instanceof ActorProcessingThread) {
-      ActorProcessingThread t = (ActorProcessingThread) current;
-
-      if (t.getThreadLocalBuffer().remaining() < Events.PromiseChained.size) {
-        swapBuffer(t);
-      }
-
-      ByteBuffer b = t.getThreadLocalBuffer();
-      b.put(Events.PromiseChained.id);
-      b.putLong(parent); // id of the parent
-      b.putLong(child); // id of the chained promise
-      t.resolvedPromises++;
+    if (t.getThreadLocalBuffer().remaining() < Events.PromiseChained.size) {
+      swapBuffer(t);
     }
+
+    ByteBuffer b = t.getThreadLocalBuffer();
+    b.put(Events.PromiseChained.id);
+    b.putLong(parent); // id of the parent
+    b.putLong(child); // id of the chained promise
+    t.resolvedPromises++;
   }
 
   public static void mailboxExecuted(final EventualMessage m,
@@ -311,73 +308,71 @@ public class ActorExecutionTrace {
 
     TracingActor ta = (TracingActor) actor;
     Thread current = Thread.currentThread();
+    assert current instanceof TracingActivityThread;
+    TracingActivityThread t = (TracingActivityThread) current;
 
-    if (current instanceof ActorProcessingThread) {
-      ActorProcessingThread t = (ActorProcessingThread) current;
+    if (t.getThreadLocalBuffer().remaining() < Events.Mailbox.size + 100 * 50) {
+      swapBuffer(t);
+    }
 
-      if (t.getThreadLocalBuffer().remaining() < Events.Mailbox.size + 100 * 50) {
-        swapBuffer(t);
-      }
+    ByteBuffer b = t.getThreadLocalBuffer();
+    b.put(Events.Mailbox.id);
+    b.putLong(baseMessageId); // base id for messages
+    b.putInt(mailboxNo);
+    b.putLong(ta.getId());   // receiver of the messages
 
-      ByteBuffer b = t.getThreadLocalBuffer();
-      b.put(Events.Mailbox.id);
-      b.putLong(baseMessageId); // base id for messages
+    int idx = 0;
+
+    if (b.remaining() < (MESSAGE_SIZE + m.getArgs().length * PARAM_SIZE)) {
+      swapBuffer(t);
+      b = t.getThreadLocalBuffer();
+      b.put(Events.MailboxContd.id);
+      b.putLong(baseMessageId);
       b.putInt(mailboxNo);
-      b.putLong(ta.getActorId());   // receiver of the messages
+      b.putLong(ta.getId()); // receiver of the messages
+      b.putInt(idx);
+    }
 
-      int idx = 0;
+    writeBasicMessage(m, b);
 
-      if (b.remaining() < (MESSAGE_SIZE + m.getArgs().length * PARAM_SIZE)) {
-        swapBuffer(t);
-        b = t.getThreadLocalBuffer();
-        b.put(Events.MailboxContd.id);
-        b.putLong(baseMessageId);
-        b.putInt(mailboxNo);
-        b.putLong(ta.getActorId()); // receiver of the messages
-        b.putInt(idx);
-      }
+    if (VmSettings.MESSAGE_TIMESTAMPS) {
+      b.putLong(execTS[0]);
+      b.putLong(sendTS);
+    }
 
-      writeBasicMessage(m, b);
+    if (VmSettings.MESSAGE_PARAMETERS) {
+      writeParameters(m.getArgs(), b);
+    }
+    idx++;
 
+    if (moreCurrent != null) {
+      Iterator<Long> it = null;
       if (VmSettings.MESSAGE_TIMESTAMPS) {
-        b.putLong(execTS[0]);
-        b.putLong(sendTS);
+        assert moreSendTS != null && moreCurrent.size() == moreSendTS.size();
+        it = moreSendTS.iterator();
       }
+      for (EventualMessage em : moreCurrent) {
+        if (b.remaining() < (MESSAGE_SIZE + em.getArgs().length * PARAM_SIZE)) {
+          swapBuffer(t);
+          b = t.getThreadLocalBuffer();
+          b.put(Events.MailboxContd.id);
+          b.putLong(baseMessageId);
+          b.putInt(mailboxNo);
+          b.putLong(ta.getId()); // receiver of the messages
+          b.putInt(idx);
+        }
 
-      if (VmSettings.MESSAGE_PARAMETERS) {
-        writeParameters(m.getArgs(), b);
-      }
-      idx++;
+        writeBasicMessage(em, b);
 
-      if (moreCurrent != null) {
-        Iterator<Long> it = null;
         if (VmSettings.MESSAGE_TIMESTAMPS) {
-          assert moreSendTS != null && moreCurrent.size() == moreSendTS.size();
-          it = moreSendTS.iterator();
+          b.putLong(execTS[idx]);
+          b.putLong(it.next());
         }
-        for (EventualMessage em : moreCurrent) {
-          if (b.remaining() < (MESSAGE_SIZE + em.getArgs().length * PARAM_SIZE)) {
-            swapBuffer(t);
-            b = t.getThreadLocalBuffer();
-            b.put(Events.MailboxContd.id);
-            b.putLong(baseMessageId);
-            b.putInt(mailboxNo);
-            b.putLong(ta.getActorId()); // receiver of the messages
-            b.putInt(idx);
-          }
 
-          writeBasicMessage(em, b);
-
-          if (VmSettings.MESSAGE_TIMESTAMPS) {
-            b.putLong(execTS[idx]);
-            b.putLong(it.next());
-          }
-
-          if (VmSettings.MESSAGE_PARAMETERS) {
-            writeParameters(em.getArgs(), b);
-          }
-          idx++;
+        if (VmSettings.MESSAGE_PARAMETERS) {
+          writeParameters(em.getArgs(), b);
         }
+        idx++;
       }
     }
   }
@@ -390,7 +385,7 @@ public class ActorExecutionTrace {
       b.put(messageEventId);
     }
 
-    b.putLong(((TracingActor) em.getSender()).getActorId()); // sender
+    b.putLong(em.getSender().getId()); // sender
     b.putLong(em.getCausalMessageId());
 
     b.putShort(em.getSelector().getSymbolId());
@@ -559,39 +554,38 @@ public class ActorExecutionTrace {
     Thread current = Thread.currentThread();
     TracingActor ta = (TracingActor) actor;
 
-    if (current instanceof ActorProcessingThread) {
-      ActorProcessingThread t = (ActorProcessingThread) current;
+    assert current instanceof TracingActivityThread;
+    TracingActivityThread t = (TracingActivityThread) current;
 
-      if (t.getThreadLocalBuffer().remaining() < Events.Mailbox.size + 100 * 50) {
-        swapBuffer(t);
-      }
+    if (t.getThreadLocalBuffer().remaining() < Events.Mailbox.size + 100 * 50) {
+      swapBuffer(t);
+    }
 
-      ByteBuffer b = t.getThreadLocalBuffer();
-      b.put(Events.Mailbox.id);
-      b.putLong(baseMessageId); // base id for messages
-      b.putInt(mailboxNo);
-      b.putLong(ta.getActorId());   // receiver of the messages
+    ByteBuffer b = t.getThreadLocalBuffer();
+    b.put(Events.Mailbox.id);
+    b.putLong(baseMessageId); // base id for messages
+    b.putInt(mailboxNo);
+    b.putLong(ta.getId());    // receiver of the messages
 
-      int idx = 0;
+    int idx = 0;
 
-      if (todo != null) {
-        for (EventualMessage em : todo) {
-          if (b.remaining() < (MESSAGE_SIZE + em.getArgs().length * PARAM_SIZE)) {
-            swapBuffer(t);
-            b = t.getThreadLocalBuffer();
-            b.put(Events.MailboxContd.id);
-            b.putLong(baseMessageId);
-            b.putLong(ta.getActorId()); // receiver of the messages
-            b.putInt(idx);
-          }
-
-          writeBasicMessage(em, b);
-
-          if (VmSettings.MESSAGE_PARAMETERS) {
-            writeParameters(em.getArgs(), b);
-          }
-          idx++;
+    if (todo != null) {
+      for (EventualMessage em : todo) {
+        if (b.remaining() < (MESSAGE_SIZE + em.getArgs().length * PARAM_SIZE)) {
+          swapBuffer(t);
+          b = t.getThreadLocalBuffer();
+          b.put(Events.MailboxContd.id);
+          b.putLong(baseMessageId);
+          b.putLong(ta.getId()); // receiver of the messages
+          b.putInt(idx);
         }
+
+        writeBasicMessage(em, b);
+
+        if (VmSettings.MESSAGE_PARAMETERS) {
+          writeParameters(em.getArgs(), b);
+        }
+        idx++;
       }
     }
   }

@@ -44,6 +44,7 @@ import tools.SourceCoordinate.FullSourceCoordinate;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.concurrency.TracingActivityThread;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.nodes.BreakpointNodeGen;
 import tools.debugger.nodes.DisabledBreakpointNode;
@@ -79,7 +80,7 @@ public abstract class ChannelPrimitives {
     }
   }
 
-  public static final class ProcessThread extends ForkJoinWorkerThread
+  public static final class ProcessThread extends TracingActivityThread
       implements ActivityThread {
     private Process current;
 
@@ -88,6 +89,11 @@ public abstract class ChannelPrimitives {
     @Override
     public Activity getActivity() {
       return current;
+    }
+
+    @Override
+    public long getCurrentMessageId() {
+      return -1;
     }
   }
 
@@ -118,6 +124,9 @@ public abstract class ChannelPrimitives {
         }
       }
     }
+
+    @Override
+    public long getId() { return 0; }
 
     @Override
     public String getName() {
