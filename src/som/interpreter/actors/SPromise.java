@@ -1,7 +1,6 @@
 package som.interpreter.actors;
 
 import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicInteger;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -18,6 +17,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.TracingActors.ReplayActor;
 
 
 public class SPromise extends SObjectWithClass {
@@ -30,8 +30,8 @@ public class SPromise extends SObjectWithClass {
   private boolean triggerResolutionBreakpointOnUnresolvedChainedPromise;
 
   public static SPromise createPromise(final Actor owner) {
-    if (VmSettings.DEBUG_MODE) {
-      return new SDebugPromise(owner);
+    if (VmSettings.REPLAY) {
+      return new SReplayPromise(owner);
     } else if (VmSettings.PROMISE_CREATION) {
       return new STracingPromise(owner);
     } else {
@@ -87,6 +87,7 @@ public class SPromise extends SObjectWithClass {
   }
 
   public long getPromiseId() { return 0; }
+  public long getReplayPromiseId() { return 0; }
 
   public final Actor getOwner() {
     return owner;
@@ -251,25 +252,7 @@ public class SPromise extends SObjectWithClass {
     return value;
   }
 
-  protected static final class SDebugPromise extends SPromise {
-    private static final AtomicInteger idGenerator = new AtomicInteger(0);
-
-    private final int id;
-
-    protected SDebugPromise(final Actor owner) {
-      super(owner);
-      id = idGenerator.getAndIncrement();
-    }
-
-    @Override
-    public String toString() {
-      String r = "Promise[" + owner.toString();
-      r += ", " + resolutionState.name();
-      return r + (value == null ? "" : ", " + value.toString()) + ", id:" + id + "]";
-    }
-  }
-
-  protected static final class STracingPromise extends SPromise {
+  protected static class STracingPromise extends SPromise {
     protected final long promiseId;
 
     protected STracingPromise(final Actor owner) {
@@ -283,6 +266,21 @@ public class SPromise extends SObjectWithClass {
     public long getPromiseId() {
       return promiseId;
     }
+  }
+
+  protected static final class SReplayPromise extends STracingPromise {
+    protected final long replayId;
+
+    protected SReplayPromise(final Actor owner) {
+      super(owner);
+      ReplayActor creator = (ReplayActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
+
+      assert creator.getReplayPromiseIds() != null && creator.getReplayPromiseIds().size() > 0;
+      replayId = creator.getReplayPromiseIds().remove();
+    }
+
+    @Override
+    public long getReplayPromiseId() { return replayId; }
   }
 
   public static SResolver createResolver(final SPromise promise,

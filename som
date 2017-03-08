@@ -27,6 +27,8 @@ parser.add_argument('-k', '--kernel', help='SOM Kernel file, default: core-lib/K
                     dest='som_kernel', default=BASE_DIR + '/core-lib/Kernel.som')
 parser.add_argument('-dnu', '--stack-trace-on-dnu', help='Print a stack trace on #doesNotUnderstand:',
                     dest='som_dnu', action='store_true', default=False)
+parser.add_argument('-vmd', '--vmdebug', help='enables debug mode (additional output)',
+                    dest='vmdebug', action='store_true', default=False)
 
 explore = parser.add_argument_group('Explore', 'Investigate Execution')
 explore.add_argument('-i', '--igv', help='dump compilation details to IGV',
@@ -76,9 +78,11 @@ tools.add_argument('-atcfg', '--actor-tracing-cfg', help='Configuration string f
 tools.add_argument('-mt', '--memory-tracing', help='enable tracing of memory usage and GC',
                     dest='memory_tracing', action='store_true', default=False)
 tools.add_argument('-tf', '--trace-file', help='Trace file destination, default: traces/trace',
-                    dest='trace_file', default=BASE_DIR + '/traces/tracea')
+                    dest='trace_file', default=BASE_DIR + '/traces/trace')
 tools.add_argument('-TF', '--disable-trace-file', help='trace file wont be written to disk',
                     dest='disable_trace_file', action='store_true', default=False)
+tools.add_argument('-r', '--replay', help='execution of the programm is guided by an exisiting trace file',
+                    dest='replay', action='store_true', default=False)
 tools.add_argument('--coverage', help='determine code coverage and store in given file',
                    dest='coverage', default=None)
 
@@ -107,7 +111,8 @@ parser.add_argument('-vv', '--verbose', action='store_true', default=False,
 parser.add_argument('--print-graal-options', action='store_true', default=False,
                     dest='print_graal_options', help="print all Graal options")
 
-
+parser.add_argument('-J', help="Java VM Argument prefix",
+                    dest="java_args", action='append')
 parser.add_argument('-D', help="define a Java property",
                     dest="java_properties", action='append')
 
@@ -242,6 +247,8 @@ if args.web_debugger:
 if args.dynamic_metrics:
     SOM_ARGS += ['--dynamic-metrics']
     flags += ['-Dsom.dynamicMetrics=true']
+if args.vmdebug:
+    flags += ['-Dsom.debugMode=true']
 
 if args.actor_tracing:
     flags += ['-Dsom.actorTracing=true']
@@ -253,6 +260,8 @@ if args.memory_tracing:
     flags += ['-Dsom.memoryTracing=true']
 if args.disable_trace_file:
     flags += ['-Dsom.disableTraceFile=true']
+if args.replay:
+    flags += ['-Dsom.replay=true']
 
 if (args.truffle_profile or args.truffle_debugger or args.web_debugger or
     args.dynamic_metrics or args.coverage):
@@ -297,6 +306,9 @@ if args.print_graal_options:
 
 if args.java_properties:
     flags += ['-D' + property for property in args.java_properties]
+
+if args.java_args:
+    JAVA_ARGS += ['-' + property for property in args.java_args]
 
 flags += ['-Dsom.tools=' + BASE_DIR + '/tools']
 

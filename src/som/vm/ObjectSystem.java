@@ -36,6 +36,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
+import tools.concurrency.TracingActors;
 import tools.language.StructuralProbe;
 
 
@@ -339,6 +340,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     }
 
     assert !VM.shouldExit();
+    TracingActors.ReplayActor.printMissingMessages();
     VM.errorExit("VM seems to have exited prematurely. But the actor pool has been idle for " + emptyFJPool + " checks in a row.");
     VM.getVM().shutdownAndExit(1); // just in case it was disable for VM.errorExit
   }

@@ -41,6 +41,7 @@ import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.TracingActors;
 import tools.debugger.Tags;
 import tools.debugger.WebDebugger;
 import tools.dym.DynamicMetrics;
@@ -192,12 +193,19 @@ public final class VM {
     if (truffleProfiler != null) {
       truffleProfiler.printHistograms(System.err);
     }
+
+    int code = errorCode;
+
     Actor.shutDownActorPool();
+    ActorExecutionTrace.waitForTrace();
+    if (TracingActors.ReplayActor.printMissingMessages() && errorCode == 0) {
+      code = 1;
+    }
     engine.dispose();
     if (VmSettings.MEMORY_TRACING) {
       ActorExecutionTrace.reportPeakMemoryUsage();
     }
-    System.exit(errorCode);
+    System.exit(code);
   }
 
   /**

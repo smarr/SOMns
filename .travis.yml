@@ -6,10 +6,14 @@ env:
   global:
     - secure: PrFbSr/qjhVXrpiOzrcEMUZrnjEWJmvx5DC9QdaAmnUKpG9/7mJBQVgNziVj+GWfW84WJpkOsQf+I2lx7/cQsWQKad/t8wtypl30wGesSTpAgl5fCiKLOBAbOghKXir+WIaxtcATPPffur9OLh3ogEcmIQbVi682YUKmA5zF11JZdpCR4QONc/u+DqB29FuHru/cFiesYP0Oz82A+M0UtMcYsurKIxdKMD4YK/uSG892PUrcZU6STXlukhgQuy3PitSWkYV2KGxXMVKzWGM7dJvRggN05r/S871pscuRwZ+Doxqr9b17B3umCHi3i4KXmNH+Esb0p1mvegs0iS/b7RyA5SENre+H24n3SOeXTa3wSpTnF90XxQrDEBbY5wV7lN7MJG+pHxkOvoZt6pS3f7x2VYR8Joa4J+Gf6IDvxZMiCd1v3N1kc9ygyvJmHf5wDmLMdupk0/frojApDXfJT6bqiVL3S0FqZpXSPGAsKYf8wfn30Xz/YUBsnfUQ/a21Zz52+OTqPbt32Hf1FGYIEJSkZJUN90Q8rHVJt9zPg37xKCDuf6bxlvT040KSzuuXtizLkOnHq2rhg4Oad/JTw3d4NzPoRVzUI9qDKPrA7RdUAjmrB04Z1f3g/I6w3h2B9JTSFAzBcMZ5NYZhIqE31GQukgStaqC98y32/zo9xFs=
   matrix:
-    - TASK=tests
+    - TASK=core-tests
     - TASK=checkstyle
-    - TASK=kompos
+    - TASK=kompos-tests
+    - TASK=replay1-tests
+    - TASK=replay2-tests
 script:
-  - if [ "$TASK" = "tests" ];      then ant tests; fi
-  - if [ "$TASK" = "checkstyle" ]; then ant checkstyle   && cd tools/kompos && nvm install 7 && npm install && npm run lint; fi
-  - if [ "$TASK" = "kompos" ]; then nvm install 7 && ant && cd tools/kompos && npm install && npm test; fi
+  - if [ "$TASK" = "core-tests" ]; then ant core-tests; fi
+  - if [ "$TASK" = "checkstyle" ]; then ant checkstyle && cd tools/kompos && nvm install 7 && npm install && npm run lint; fi
+  - if [ "$TASK" = "kompos-tests" ]; then nvm install 7 && ant && cd tools/kompos && npm install && npm test; fi
+  - if [ "$TASK" = "replay1-tests" ]; then ant compile && ./tests/replay/test.sh 1; fi
+  - if [ "$TASK" = "replay2-tests" ]; then ant compile && ./tests/replay/test.sh 2; fi
