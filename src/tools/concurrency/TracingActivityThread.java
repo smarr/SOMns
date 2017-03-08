@@ -34,6 +34,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     } else {
       threadId = 0;
     }
+    setName(getClass().getSimpleName() + "-" + threadId);
   }
 
   public long generateActivityId() {
