@@ -81,9 +81,10 @@ public class Actor implements Activity {
   protected ExecAllMessages executor;
 
   // used to collect absolute numbers from the threads
-  private static long numCreatedMessages = 0;
-  private static long numCreatedActors = 0;
-  private static long numCreatedPromises = 0;
+  private static Object statsLock = new Object();
+  private static long numCreatedMessages  = 0;
+  private static long numCreatedActors    = 0;
+  private static long numCreatedPromises  = 0;
   private static long numResolvedPromises = 0;
 
   private static ArrayList<ActorProcessingThread> threads = new ArrayList<>();
@@ -372,10 +373,13 @@ public class Actor implements Activity {
         ActorExecutionTrace.returnBuffer(this.tracingDataBuffer);
         this.tracingDataBuffer = null;
         VM.printConcurrencyEntitiesReport("[Thread " + threadId + "]\tA#" + createdActors + "\t\tM#" + createdMessages + "\t\tP#" + createdPromises);
-        numCreatedActors += createdActors;
-        numCreatedMessages += createdMessages;
-        numCreatedPromises += createdPromises;
-        numResolvedPromises += resolvedPromises;
+
+        synchronized (statsLock) {
+          numCreatedActors    += createdActors;
+          numCreatedMessages  += createdMessages;
+          numCreatedPromises  += createdPromises;
+          numResolvedPromises += resolvedPromises;
+        }
       }
       threads.remove(this);
       super.onTermination(exception);
@@ -411,8 +415,10 @@ public class Actor implements Activity {
       throw new RuntimeException(e);
     }
     if (VmSettings.ACTOR_TRACING) {
-      VM.printConcurrencyEntitiesReport("[Total]\tA#" + numCreatedActors + "\t\tM#" + numCreatedMessages + "\t\tP#" + numCreatedPromises);
-      VM.printConcurrencyEntitiesReport("[Unresolved] " + (numCreatedPromises - numResolvedPromises));
+      synchronized (statsLock) {
+        VM.printConcurrencyEntitiesReport("[Total]\tA#" + numCreatedActors + "\t\tM#" + numCreatedMessages + "\t\tP#" + numCreatedPromises);
+        VM.printConcurrencyEntitiesReport("[Unresolved] " + (numCreatedPromises - numResolvedPromises));
+      }
     }
   }
 
