@@ -18,19 +18,19 @@ import som.interpreter.nodes.nary.BinaryComplexOperation;
 @GenerateNodeFactory
 @Primitive(primitive = "actorResolveProm:after:")
 public abstract class TimerPrim extends BinaryComplexOperation{
+  @CompilationFinal private static Timer timer;
+
   protected TimerPrim(final BinaryComplexOperation node) { super(node); }
   protected TimerPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
   @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
 
-  @CompilationFinal private static Timer timerThread;
-
   @Specialization
   public final Object doResolveAfter(final VirtualFrame frame, final SResolver resolver, final long timeout) {
-    if (timerThread == null) {
-      timerThread = new Timer();
+    if (timer == null) {
+      timer = new Timer();
     }
-    timerThread.schedule(new TimerTask() {
+    timer.schedule(new TimerTask() {
       @Override
       public void run() {
         ResolvePromiseNode.resolve(wrapper, resolver.getPromise(), true,
@@ -38,5 +38,11 @@ public abstract class TimerPrim extends BinaryComplexOperation{
       }
     }, timeout);
     return true;
+  }
+
+  public static boolean isTimerThread(final Thread t) {
+    // Checkstyle: stop
+    return t.getClass().getName() == "java.util.TimerThread";
+    // Checkstyle: resume
   }
 }

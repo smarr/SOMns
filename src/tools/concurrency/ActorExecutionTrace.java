@@ -35,6 +35,7 @@ import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
+import som.primitives.TimerPrim;
 import som.vm.ObjectSystem;
 import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
@@ -258,6 +259,10 @@ public class ActorExecutionTrace {
     }
 
     Thread current = Thread.currentThread();
+    if (TimerPrim.isTimerThread(current)) {
+      return;
+    }
+
     assert current instanceof TracingActivityThread;
     TracingActivityThread t = (TracingActivityThread) current;
 
