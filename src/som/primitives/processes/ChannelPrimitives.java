@@ -154,8 +154,8 @@ public abstract class ChannelPrimitives {
 
     TracingProcess(final SObjectWithClass obj) {
       super(obj);
-      assert Thread.currentThread() instanceof ProcessThread;
-      processId = ((ProcessThread) Thread.currentThread()).generateActivityId();
+      assert Thread.currentThread() instanceof TracingActivityThread;
+      processId = ((TracingActivityThread) Thread.currentThread()).generateActivityId();
     }
 
     @Override
