@@ -38,7 +38,7 @@ public class TracingActors {
     public long getId() { return actorId; }
   }
 
-  public static final class ReplayActor extends TracingActor{
+  public static final class ReplayActor extends TracingActor {
     protected int children;
     protected final long replayId;
     protected final Queue<MessageRecord> expectedMessages;
@@ -54,8 +54,6 @@ public class TracingActors {
 
     @TruffleBoundary
     public ReplayActor() {
-      isExecuting = false;
-      this.executor = new ExecAllMessagesReplay(this);
       if (Thread.currentThread() instanceof ActorProcessingThread) {
         ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
         ReplayActor parent = (ReplayActor) t.currentMessage.getTarget();
@@ -75,6 +73,11 @@ public class TracingActors {
       if (VmSettings.DEBUG_MODE) {
         synchronized (actorList) { actorList.add(this); }
       }
+    }
+
+    @Override
+    protected ExecAllMessages createExecutor() {
+      return new ExecAllMessagesReplay(this);
     }
 
     @Override

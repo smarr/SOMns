@@ -9,7 +9,6 @@ import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import som.VM;
@@ -77,8 +76,7 @@ public class Actor implements Activity {
   protected boolean isExecuting;
 
   /** Is scheduled on the pool, and executes messages to this actor. */
-  @CompilationFinal
-  protected ExecAllMessages executor;
+  protected final ExecAllMessages executor;
 
   // used to collect absolute numbers from the threads
   private static long numCreatedMessages = 0;
@@ -98,7 +96,11 @@ public class Actor implements Activity {
 
   protected Actor() {
     isExecuting = false;
-    executor = new ExecAllMessages(this);
+    executor = createExecutor();
+  }
+
+  protected ExecAllMessages createExecutor() {
+    return new ExecAllMessages(this);
   }
 
   public final Object wrapForUse(final Object o, final Actor owner,
