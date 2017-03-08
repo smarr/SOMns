@@ -158,16 +158,22 @@
     </target>
 
     <target name="dynamic-metrics-tests" depends="compile">
-      <exec executable="echo" failonerror="true"></exec>
       <exec executable="tests/dym/test.sh" failonerror="true"></exec>
     </target>
 
     <target name="replay-tests" depends="compile">
-      <exec executable="echo" failonerror="true"></exec>
-      <exec executable="tests/replay/test.sh" failonerror="true"></exec>
+      <exec executable="tests/replay/test.sh" failonerror="true">
+          <arg value="1" />
+      </exec>
+      <exec executable="tests/replay/test.sh" failonerror="true">
+          <arg value="2" />
+      </exec>
+    </target>
+    
+    <target name="core-tests" depends="unit-tests,som-tests,dynamic-metrics-tests">
     </target>
 
-    <target name="tests" depends="unit-tests,som-tests,dynamic-metrics-tests,replay-tests">
+    <target name="tests" depends="core-tests,replay-tests">
       <!-- submit coverage data -->
       <java classname="coveralls.Report" fork="true" failonerror="true">
           <classpath refid="project.classpath" />
