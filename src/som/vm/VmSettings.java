@@ -38,6 +38,8 @@ public class VmSettings {
 
     FAIL_ON_MISSING_OPTIMIZATIONS = getBool("som.failOnMissingOptimization", false);
     DEBUG_MODE      = getBool("som.debugMode",      false);
+    TRUFFLE_DEBUGGER_ENABLED = getBool("som.truffleDebugger", false);
+
     TRACE_FILE      = System.getProperty("som.traceFile", System.getProperty("user.dir") + "/traces/trace");
     MEMORY_TRACING = getBool("som.memoryTracing",   false);
     REPLAY = getBool("som.replay", false);
@@ -52,14 +54,15 @@ public class VmSettings {
     PROMISE_CREATION      = !al.contains("pc") && filter;
     PROMISE_RESOLUTION    = PROMISE_CREATION && (!al.contains("pr")) && filter;
     PROMISE_RESOLVED_WITH = !al.contains("prw") && filter;
-    ACTOR_TRACING   = getBool("som.actorTracing",   false) || REPLAY || MESSAGE_TIMESTAMPS || MESSAGE_PARAMETERS || PROMISE_CREATION;
+
+    ACTOR_TRACING = TRUFFLE_DEBUGGER_ENABLED || getBool("som.actorTracing", false) ||
+                    REPLAY || MESSAGE_TIMESTAMPS || MESSAGE_PARAMETERS || PROMISE_CREATION;
 
     boolean dm = getBool("som.dynamicMetrics", false);
     DYNAMIC_METRICS = dm;
     INSTRUMENTATION = dm || getBool(INSTRUMENTATION_PROP, false);
 
     DNU_PRINT_STACK_TRACE = getBool("som.printStackTraceOnDNU", false);
-    TRUFFLE_DEBUGGER_ENABLED = getBool("som.truffleDebugger", false);
 
     IGV_DUMP_AFTER_PARSING = getBool("som.igvDumpAfterParsing", false);
   }

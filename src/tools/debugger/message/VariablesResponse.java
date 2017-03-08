@@ -11,6 +11,7 @@ import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.PartiallyEmptyArray;
 import som.vmobjects.SObject;
+import tools.TraceData;
 import tools.debugger.frontend.RuntimeScope;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.Response;
@@ -19,12 +20,13 @@ import tools.debugger.message.Message.Response;
 @SuppressWarnings("unused")
 public final class VariablesResponse extends Response {
   private final Variable[] variables;
-  private final int variablesReference;
+  private final long variablesReference;
 
-  private VariablesResponse(final int requestId, final int variablesReference,
+  private VariablesResponse(final int requestId, final long globalVarRef,
       final Variable[] variables) {
     super(requestId);
-    this.variablesReference = variablesReference;
+    assert TraceData.isWithinJSIntValueRange(globalVarRef);
+    this.variablesReference = globalVarRef;
     this.variables = variables;
   }
 
@@ -32,30 +34,31 @@ public final class VariablesResponse extends Response {
     private final String name;
     private final String value;
 
-    private final int variablesReference;
+    private final long variablesReference;
     private final int namedVariables;
     private final int indexedVariables;
 
-    Variable(final String name, final String value, final int varRef,
+    Variable(final String name, final String value, final long globalVarRef,
         final int named, final int indexed) {
+      assert TraceData.isWithinJSIntValueRange(globalVarRef);
       this.name = name;
       this.value = value;
-      this.variablesReference = varRef;
+      this.variablesReference = globalVarRef;
       this.namedVariables = named;
       this.indexedVariables = indexed;
     }
   }
 
-  public static VariablesResponse create(final int varRef, final int requestId,
+  public static VariablesResponse create(final long globalVarRef, final int requestId,
       final Suspension suspension) {
-    Object scopeOrObject = suspension.getScopeOrObject(varRef);
+    Object scopeOrObject = suspension.getScopeOrObject(globalVarRef);
     ArrayList<Variable> results;
     if (scopeOrObject instanceof RuntimeScope) {
       results = createFromScope((RuntimeScope) scopeOrObject, suspension);
     } else {
       results = createFromObject(scopeOrObject, suspension);
     }
-    return new VariablesResponse(requestId, varRef, results.toArray(new Variable[0]));
+    return new VariablesResponse(requestId, globalVarRef, results.toArray(new Variable[0]));
   }
 
   private static ArrayList<Variable> createFromObject(final Object obj,
@@ -107,7 +110,7 @@ public final class VariablesResponse extends Response {
       final Suspension suspension) {
     int named   = Types.getNumberOfNamedSlots(val);
     int indexed = Types.getNumberOfIndexedSlots(val);
-    int id;
+    long id;
     if (named + indexed > 0) {
       id = suspension.addObject(val);
     } else {

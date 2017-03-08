@@ -39,6 +39,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   public long generateActivityId() {
     long result = (threadId << TraceData.ACTIVITY_ID_BITS) | nextActivityId;
     nextActivityId++;
+    assert TraceData.isWithinJSIntValueRange(result);
     return result;
   }
 

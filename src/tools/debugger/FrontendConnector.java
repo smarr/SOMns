@@ -20,23 +20,25 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.net.httpserver.HttpServer;
 
+import som.VM;
 import som.interpreter.actors.Actor;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
+import tools.TraceData;
 import tools.concurrency.ActorExecutionTrace;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message;
 import tools.debugger.message.Message.OutgoingMessage;
+import tools.debugger.message.ProgramInfoResponse;
 import tools.debugger.message.ScopesResponse;
 import tools.debugger.message.SourceMessage;
 import tools.debugger.message.SourceMessage.SourceData;
 import tools.debugger.message.StackTraceResponse;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SymbolMessage;
-import tools.debugger.message.ThreadsResponse;
 import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.AsyncMessageReceiverBreakpoint;
 import tools.debugger.session.Breakpoints;
@@ -168,12 +170,11 @@ public class FrontendConnector {
   private void sendSource(final Source source,
       final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
       final Set<RootNode> rootNodes) {
-    SourceData[] sources = new SourceData[1];
-    sources[0] = new SourceData(source.getCode(), source.getMimeType(),
+    SourceData data = new SourceData(source.getCode(), source.getMimeType(),
         source.getName(), source.getURI().toString(),
         createSourceSections(source, loadedSourcesTags, instrumenter, rootNodes),
         SourceMessage.createMethodDefinitions(rootNodes));
-    send(new SourceMessage(sources));
+    send(new SourceMessage(data));
   }
 
   private void send(final Message msg) {
@@ -190,12 +191,6 @@ public class FrontendConnector {
       }
       notReady.clear();
     }
-  }
-
-
-
-  public synchronized void sendThreads(final int requestId) {
-    send(ThreadsResponse.create(webDebugger.getAllActivities(), requestId));
   }
 
   public void sendLoadedSource(final Source source,
@@ -240,12 +235,12 @@ public class FrontendConnector {
     send(StackTraceResponse.create(startFrame, levels, suspension, requestId));
   }
 
-  public void sendScopes(final int frameId, final Suspension suspension,
+  public void sendScopes(final long frameId, final Suspension suspension,
       final int requestId) {
     send(ScopesResponse.create(frameId, suspension, requestId));
   }
 
-  public void sendVariables(final int varRef, final int requestId, final Suspension suspension) {
+  public void sendVariables(final long varRef, final int requestId, final Suspension suspension) {
     send(VariablesResponse.create(varRef, requestId, suspension));
   }
 
@@ -257,6 +252,17 @@ public class FrontendConnector {
     if (VmSettings.ACTOR_TRACING) {
       Actor.forceSwapBuffers();
     }
+  }
+
+  public void sendProgramInfo() {
+    // this one is a problematic one, because it is racy with VM initialization
+    // let's wait for VM object being available
+    while (VM.getVM() == null) {
+      try {
+        Thread.sleep(100);
+      } catch (InterruptedException e) { }
+    }
+    send(ProgramInfoResponse.create(VM.getArguments()));
   }
 
   public void registerOrUpdate(final LineBreakpoint bp) {
@@ -287,12 +293,12 @@ public class FrontendConnector {
     breakpoints.addOrUpdate(bp);
   }
 
-  public Suspension getSuspension(final int activityId) {
+  public Suspension getSuspension(final long activityId) {
     return webDebugger.getSuspension(activityId);
   }
 
-  public Suspension getSuspensionForGlobalId(final int globalId) {
-    return webDebugger.getSuspension(Suspension.getActivityIdFromGlobalId(globalId));
+  public Suspension getSuspensionForGlobalId(final long globalId) {
+    return webDebugger.getSuspension(TraceData.getActivityIdFromGlobalValId(globalId));
   }
 
   static void log(final String str) {

@@ -35,6 +35,9 @@ public final class TraceParser {
   public static final byte BASIC_MESSAGE      = 8;
   public static final byte PROMISE_MESSAGE    = 9;
 
+  public static final byte PROCESS_CREATION   = 10;
+  public static final byte PROCESS_COMPLETION = 11;
+
   private final HashMap<Short, SSymbol> symbolMapping = new HashMap<>();
   private ByteBuffer b = ByteBuffer.allocate(ActorExecutionTrace.BUFFER_SIZE);
   private final HashMap<Long, ActorNode> mappedActors = new HashMap<>();
@@ -86,6 +89,7 @@ public final class TraceParser {
   }
 
   private void parseTrace() {
+    boolean readMainActor = false;
     File traceFile = new File(VmSettings.TRACE_FILE + ".trace");
 
     HashMap<Long, List<Long>> unmappedActors = new HashMap<>(); // maps message to created actors
@@ -111,10 +115,16 @@ public final class TraceParser {
           case ACTOR_CREATION:
             long id = b.getLong(); // actor id
             cause = b.getLong(); // causal
-            if (!unmappedActors.containsKey(cause)) {
-              unmappedActors.put(cause, new ArrayList<>());
+            if (id == 0) {
+              assert !readMainActor : "There should be only one main actor.";
+              readMainActor = true;
             }
-            unmappedActors.get(cause).add(id);
+            if (id != 0) {
+              if (!unmappedActors.containsKey(cause)) {
+                unmappedActors.put(cause, new ArrayList<>());
+              }
+              unmappedActors.get(cause).add(id);
+            }
             b.getShort(); // type
             parsedActors++;
             break;

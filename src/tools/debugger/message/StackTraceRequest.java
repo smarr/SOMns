@@ -2,13 +2,14 @@ package tools.debugger.message;
 
 import org.java_websocket.WebSocket;
 
+import tools.TraceData;
 import tools.debugger.FrontendConnector;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.Request;
 
 
 public class StackTraceRequest extends Request {
-  private int activityId;
+  private long activityId;
 
   /**
    * Index of the first frame to return.
@@ -20,9 +21,10 @@ public class StackTraceRequest extends Request {
    */
   private int levels;
 
-  public StackTraceRequest(final int activityId, final int startFrame,
+  public StackTraceRequest(final long activityId, final int startFrame,
       final int levels, final int requestId) {
     super(requestId);
+    assert TraceData.isWithinJSIntValueRange(activityId);
     this.activityId = activityId;
     this.startFrame = startFrame;
     this.levels     = levels;

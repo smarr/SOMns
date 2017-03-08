@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import com.oracle.truffle.api.debug.DebugStackFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import tools.TraceData;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.Response;
 
@@ -12,15 +13,19 @@ import tools.debugger.message.Message.Response;
 @SuppressWarnings("unused")
 public final class StackTraceResponse extends Response {
   private final StackFrame[] stackFrames;
+  private final long activityId;
 
   /**
    * Total number of frames available.
    */
   private final int totalFrames;
 
-  private StackTraceResponse(final StackFrame[] stackFrames,
-      final int totalFrames, final int requestId) {
+  private StackTraceResponse(final long activityId,
+      final StackFrame[] stackFrames, final int totalFrames,
+      final int requestId) {
     super(requestId);
+    assert TraceData.isWithinJSIntValueRange(activityId);
+    this.activityId  = activityId;
     this.stackFrames = stackFrames;
     this.totalFrames = totalFrames;
 
@@ -38,7 +43,7 @@ public final class StackTraceResponse extends Response {
     /**
      * Id for the frame, unique across all threads.
      */
-    private final int id;
+    private final long id;
 
     /** Name of the frame, typically a method name. */
     private final String name;
@@ -61,10 +66,11 @@ public final class StackTraceResponse extends Response {
     /** An optional number of characters in the range. */
     private final int length;
 
-    StackFrame(final int id, final String name, final String sourceUri,
+    StackFrame(final long globalId, final String name, final String sourceUri,
         final int line, final int column, final int endLine,
         final int endColumn, final int length) {
-      this.id        = id;
+      assert TraceData.isWithinJSIntValueRange(globalId);
+      this.id        = globalId;
       this.name      = name;
       this.sourceUri = sourceUri;
       this.line      = line;
@@ -97,12 +103,13 @@ public final class StackTraceResponse extends Response {
       arr[i] = f;
     }
 
-    return new StackTraceResponse(arr, frames.size(), requestId);
+    return new StackTraceResponse(suspension.activityId, arr, frames.size(),
+        requestId);
   }
 
   private static StackFrame createFrame(final Suspension suspension,
       final int frameId, final DebugStackFrame frame) {
-    int id = suspension.getGlobalId(frameId);
+    long id = suspension.getGlobalId(frameId);
 
     String name = frame.getName();
     if (name == null) {

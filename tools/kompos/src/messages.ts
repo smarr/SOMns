@@ -39,17 +39,24 @@ export interface Method {
   sourceSection: SourceCoordinate;
 }
 
-export type Message = SourceMessage |
+export type Message = SourceMessage | ProgramInfoResponse |
   SymbolMessage | UpdateSourceSections | StoppedMessage |
-  StackTraceResponse | ScopesResponse | ThreadsResponse | VariablesResponse;
+  StackTraceResponse | ScopesResponse | VariablesResponse;
 
 export interface SourceMessage {
-  type:     "source";
-  sources:  Source[];
+  type:   "source";
+  source: Source;
 }
 
 export type StoppedReason = "step" | "breakpoint" | "exception" | "pause";
-export type ActivityType  = "Actor";
+
+export type ActivityType  = "Actor" | "Process" | "Thread" | "Task";
+
+export interface Activity {
+  id: number;
+  name: string;
+  type: ActivityType;
+}
 
 export interface StoppedMessage {
   type: "StoppedEvent";
@@ -125,11 +132,24 @@ export function createSectionBreakpointData(sourceUri: string, line: number,
 
 export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
   StepMessage | StackTraceRequest | ScopesRequest | VariablesRequest |
-  ThreadsRequest;
+  ProgramInfoRequest | TraceDataRequest;
 
 export interface InitialBreakpointsResponds {
   action: "initialBreakpoints";
   breakpoints: BreakpointData[];
+}
+
+export interface ProgramInfoRequest {
+  action: "ProgramInfoRequest";
+}
+
+export interface ProgramInfoResponse {
+  type: "ProgramInfoResponse";
+  args: String[];
+}
+
+export interface TraceDataRequest {
+  action: "TraceDataRequest";
 }
 
 interface UpdateBreakpoint {
@@ -144,22 +164,6 @@ export interface StepMessage {
 
   /** Id of the suspended activity. */
   activityId: number;
-}
-
-export interface ThreadsRequest {
-  action:    "ThreadsRequest";
-  requestId: number;
-}
-
-export interface Thread {
-  id:   number;
-  name: string;
-}
-
-export interface ThreadsResponse {
-  type:      "ThreadsResponse";
-  requestId: number;
-  threads:   Thread[];
 }
 
 export interface StackTraceRequest {
@@ -200,6 +204,7 @@ export interface StackFrame {
 
 export interface StackTraceResponse {
   type: "StackTraceResponse";
+  activityId:  number;
   stackFrames: StackFrame[];
   totalFrames: number;
   requestId:   number;
@@ -227,6 +232,7 @@ export interface Scope {
 
 export interface ScopesResponse {
   type: "ScopesResponse";
+  variablesReference: number;
   scopes:    Scope[];
   requestId: number;
 }

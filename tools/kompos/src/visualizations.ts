@@ -1,23 +1,45 @@
 /* jshint -W097 */
 "use strict";
 
+import {Controller} from "./controller";
 import {SymbolMessage} from "./messages";
 import * as d3 from "d3";
 import {HistoryData} from "./history-data";
 
-let path, circle, nodes, links, force, colors;
-let data = new HistoryData();
+// Tango Color Scheme: http://emilis.info/other/extended_tango/
+const tangoColors = [
+  ["#2e3436", "#555753", "#888a85", "#babdb6", "#d3d7cf", "#ecf0eb", "#f7f8f5"],
+  ["#291e00", "#725000", "#c4a000", "#edd400", "#fce94f", "#fffc9c", "#feffd0"],
+  ["#301700", "#8c3700", "#ce5c00", "#f57900", "#fcaf3e", "#ffd797", "#fff0d7"],
+  ["#271700", "#503000", "#8f5902", "#c17d11", "#e9b96e", "#efd0a7", "#faf0d7"],
+  ["#173000", "#2a5703", "#4e9a06", "#73d216", "#8ae234", "#b7f774", "#e4ffc7"],
+  ["#00202a", "#0a3050", "#204a87", "#3465a4", "#729fcf", "#97c4f0", "#daeeff"],
+  ["#170720", "#371740", "#5c3566", "#75507b", "#ad7fa8", "#e0c0e4", "#fce0ff"],
+  ["#270000", "#600000", "#a40000", "#cc0000", "#ef2929", "#f78787", "#ffcccc"]];
 
-// set up SVG for D3
-const width = 360,
-  height  = 350;
+function getTangoLightToDarker() {
+  const result = [];
+  for (const column of [5, 4, 3]) {
+    for (const row of tangoColors) {
+      result.push(row[column]);
+    }
+  }
+  return result;
+}
+
+const tango = getTangoLightToDarker();
+
+let path, circle, nodes, links, force; // , colors
+let data = new HistoryData();
 
 /**
  * @param {MessageHistory} msgHist
  */
 export function displayMessageHistory() {
-  colors = d3.scale.category10();
-  $("#graph-canvas").empty();
+  const canvas = $("#graph-canvas");
+  // colors = d3.scale.category10();
+  // colors = d3.scale.ordinal().domain().range(tango)
+  canvas.empty();
 
   let zoom = d3.behavior.zoom()
     .scaleExtent([0.1, 10])
@@ -26,8 +48,9 @@ export function displayMessageHistory() {
   let svg = d3.select("#graph-canvas")
     .append("svg")
     // .attr("oncontextmenu", "return false;")
-    .attr("width", width)
-    .attr("height", height)
+    .attr("width", canvas.width())
+    .attr("height", canvas.height())
+    .attr("style", "background: none;")
     .call(zoom);
 
   // set up initial nodes and links
@@ -43,7 +66,7 @@ export function displayMessageHistory() {
   force = d3.layout.force()
     .nodes(nodes)
     .links(links)
-    .size([width, height])
+    .size([canvas.width(), canvas.height()])
     .linkDistance(70)
     .charge(-500)
     .on("tick", tick);
@@ -90,8 +113,8 @@ export function updateStrings(msg: SymbolMessage) {
   data.addStrings(msg.ids, msg.symbols);
 }
 
-export function updateData(dv: DataView) {
-  data.updateDataBin(dv);
+export function updateData(dv: DataView, controller: Controller) {
+  data.updateDataBin(dv, controller);
 }
 
 let zoomScale = 1;
@@ -160,8 +183,8 @@ function restart() {
 
   // update existing nodes (reflexive & selected visual states)
   circle.selectAll("circle")
-    .style("fill", function(d) {
-      return /*(d === selected_node) ? d3.rgb(colors(d.id)).brighter().toString() :*/ colors(d.id);
+    .style("fill", function(_, i) {
+      return tango[i]; // /*(d === selected_node) ? d3.rgb(colors(d.id)).brighter().toString() :*/ colors(d.id);
     })
     .classed("reflexive", function(d) { return d.reflexive; });
 
@@ -176,21 +199,25 @@ function restart() {
     .attr("width", 50)
     .attr("height", 25)
 
-    //   g.append("svg:circle")
     .attr("class", "node")
-    //     .attr("r", 12)
-    .style("fill", function(d) {
-      return colors(d.type);
+    .style("fill", function(_, i) {
+      return tango[i]; // colors(d.type);
     })
-    .style("stroke", function(d) { return d3.rgb(colors(d.id)).darker().toString(); })
+    .style("stroke", function(_, i) { return d3.rgb(tango[i]).darker().toString(); })  // colors(d.id)
     .classed("reflexive", function(d) { return d.reflexive; });
 
   // show node IDs
   g.append("svg:text")
-    .attr("x", 8)
-    .attr("y", 4)
+    .attr("x", 0)
+    .attr("dy", ".35em")
     .attr("class", "id")
     .text(function(d) { return d.name; });
+
+  // After rendering text, adapt rectangles
+  adaptRectSizeAndTextPostion();
+
+  // Enable dragging of nodes
+  g.call(force.drag);
 
   // remove old nodes
   circle.exit().remove();
@@ -203,4 +230,16 @@ function restart() {
     force.tick();
   }
 //   force.stop();
+}
+
+const PADDING = 15;
+
+function adaptRectSizeAndTextPostion() {
+  d3.selectAll("rect")
+    .attr("width", function() {
+      return this.parentNode.childNodes[1].getComputedTextLength() + PADDING;
+     })
+    .attr("x", function() {
+      return - (PADDING + this.parentNode.childNodes[1].getComputedTextLength()) / 2.0;
+    });
 }

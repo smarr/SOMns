@@ -1,5 +1,5 @@
 import { SourceMessage, StoppedMessage, SymbolMessage, SectionBreakpointType,
-  StackTraceResponse, ScopesResponse, ThreadsResponse,
+  StackTraceResponse, ScopesResponse, ProgramInfoResponse, Activity,
   VariablesResponse } from "./messages";
 import { VmConnection } from "./vm-connection";
 
@@ -12,6 +12,8 @@ export class Controller {
     this.vmConnection.setController(this);
   }
 
+  public newActivities(_newActivities: Activity[]) {}
+
   public onConnect() {}
   public onClose()   {}
   public onError()   {}
@@ -21,7 +23,7 @@ export class Controller {
   public onSymbolMessage(_msg:  SymbolMessage)  {}
   public onStackTrace(_msg: StackTraceResponse) {}
   public onScopes(_msg: ScopesResponse)         {}
-  public onThreads(_msg: ThreadsResponse)       {}
+  public onProgramInfo(_msg: ProgramInfoResponse) {}
   public onVariables(_msg: VariablesResponse)   {}
   public onUnknownMessage(_msg: any) {}
 

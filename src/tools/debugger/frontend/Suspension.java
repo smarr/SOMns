@@ -10,6 +10,7 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.HaltPrim;
+import tools.TraceData;
 import tools.debugger.FrontendConnector;
 import tools.debugger.frontend.ApplicationThreadTask.Resume;
 import tools.debugger.frontend.ApplicationThreadTask.SendStackTrace;
@@ -24,14 +25,14 @@ import tools.debugger.frontend.ApplicationThreadTask.SendStackTrace;
  * stack and obtain the relevant data for the debugger.
  */
 public class Suspension {
-  public final int activityId;
+  public final long activityId;
   private final Object activity;
   private final ArrayBlockingQueue<ApplicationThreadTask> tasks;
 
   private SuspendedEvent suspendedEvent;
   private ApplicationThreadStack stack;
 
-  public Suspension(final Object activity, final int activityId) {
+  public Suspension(final Object activity, final long activityId) {
     this.activity   = activity;
     this.activityId = activityId;
     this.tasks = new ArrayBlockingQueue<>(2);
@@ -46,12 +47,12 @@ public class Suspension {
     return stack.get();
   }
 
-  public synchronized int addScope(final MaterializedFrame frame,
+  public synchronized long addScope(final MaterializedFrame frame,
       final MethodScope lexicalScope) {
     return stack.addScope(frame, lexicalScope);
   }
 
-  public synchronized int addObject(final Object obj) {
+  public synchronized long addObject(final Object obj) {
     return stack.addObject(obj);
   }
 
@@ -59,31 +60,21 @@ public class Suspension {
     return suspendedEvent.getNode() instanceof HaltPrim;
   }
 
-  private static final int BITS_FOR_LOCAL_ID = 20;
-  private static final int LOCAL_ID_MASK = (1 << BITS_FOR_LOCAL_ID) - 1;
-
-  public int getGlobalId(final int localId) {
-    final int maxId = 1 << BITS_FOR_LOCAL_ID;
-    assert localId < maxId;
-    assert ((long) activityId << BITS_FOR_LOCAL_ID) < Integer.MAX_VALUE;
-    return (activityId << BITS_FOR_LOCAL_ID) + localId;
+  public long getGlobalId(final int localId) {
+    return TraceData.makeGlobalId(localId, activityId);
   }
 
-  private int getLocalId(final int globalId) {
-    assert (globalId >> BITS_FOR_LOCAL_ID) == activityId :
+  private int getLocalId(final long globalId) {
+    assert TraceData.getActivityIdFromGlobalValId(globalId) == activityId :
       "should be an id for current activity, otherwise, something is wrong";
-    return globalId & LOCAL_ID_MASK;
+    return TraceData.valIdFromGlobal(globalId);
   }
 
-  public static int getActivityIdFromGlobalId(final int globalId) {
-    return globalId >> BITS_FOR_LOCAL_ID;
-  }
-
-  public synchronized DebugStackFrame getFrame(final int globalId) {
+  public synchronized DebugStackFrame getFrame(final long globalId) {
     return stack.get().get(getLocalId(globalId));
   }
 
-  public synchronized Object getScopeOrObject(final int globalVarRef) {
+  public synchronized Object getScopeOrObject(final long globalVarRef) {
     return stack.getScopeOrObject(getLocalId(globalVarRef));
   }
 
@@ -104,12 +95,12 @@ public class Suspension {
     submitTask(new SendStackTrace(startFrame, levels, frontend, this, requestId));
   }
 
-  public void sendScopes(final int frameId, final FrontendConnector frontend,
+  public void sendScopes(final long frameId, final FrontendConnector frontend,
       final int requestId) {
     frontend.sendScopes(frameId, this, requestId);
   }
 
-  public void sendVariables(final int varRef, final FrontendConnector frontend, final int requestId) {
+  public void sendVariables(final long varRef, final FrontendConnector frontend, final int requestId) {
     frontend.sendVariables(varRef, requestId, this);
   }
 

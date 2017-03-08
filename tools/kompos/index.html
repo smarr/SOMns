@@ -3,7 +3,11 @@
   <!-- Debugger Icons -->
   <link href="/node_modules/font-awesome/css/font-awesome.css" rel="stylesheet" />
   <link href="/node_modules/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />
+  <link href="/node_modules/bootstrap/dist/css/bootstrap-reboot.css" rel="stylesheet" />
+  <link href="/node_modules/tether/dist/css/tether.css" rel="stylesheet" />
   <script src="/node_modules/jquery/dist/jquery.js"></script>
+  <script src="/out/src/libs/jquery-resizable.js"></script>
+  <script src="/node_modules/tether/dist/js/tether.js"></script>
   <script src="/node_modules/bootstrap/dist/js/bootstrap.js"></script>
 
   <script data-main="/out/src/main.js" src="/node_modules/requirejs/require.js"></script>
@@ -144,36 +148,146 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
     font: 10px sans-serif;
   }
 
+  #header  {padding-left: 3em; padding-top: 1ex}
+  #logo-bg {
+    padding-left: 1em;
+    padding-top: 1ex;
+    z-index: -10;
+    position: absolute;
+  }
+
+  #graph-canvas {
+    margin-top: 2em;
+    width: 100%;
+    height: 30%;
+  }
+
+  #split-system-code {
+    width: 100%;
+    height: 3px;
+    cursor: ns-resize;
+    background-color: #eeeeee;
+  }
+  .activity { }
+  .code-pane {
+    max-height: 700px;
+    overflow: auto;
+  }
+  #code-views {
+    column-count: 2;
+  }
+  #debugger button {
+    font-size: 75%;
+    padding: 2px 6px 3px;
+  }
+  .activity-name, .nav-link.card-title.disabled {
+    color: #000;
+    font-weight: bold;
+    cursor: default;
+  }
+  label.btn {
+    margin-bottom: 0;
+    font-size: 8px;
+  }
+  label.btn span {
+    max-width: 90px;
+    overflow: hidden;
+  }
+  .activity-sources {
+    padding: 0;
+  }
+  .activity-stack {
+    font-size: 75%;
+    width: 100%;
+  }
+  .activity-stack label {
+    padding: 0.1rem .2rem;
+    overflow: hidden;
+  }
+
+  .activity-scopes {
+    width: 100%;
+    margin-top: 2ex;
+  }
+  .activity-scopes th, .activity-scopes td {
+    padding: 0.1rem .2rem;
+    font-size: 9px
+  }
+  .activity .nav-link {
+    font-size: 0.75em;
+    padding: 0.1em 0.1em;
+  }
+  .activity-sources .card-header-tabs {
+    margin-left: 0;
+  }
+  .activity-actions {
+    font-size: 75%;
+    padding-top: 3ex;
+  }
+  .activity-actions button {
+    padding:0.3em;
+    font-size: 75%;
+  }
+  .system-status {
+    background-color:rgba(255, 255, 255, 0.5);
+    position: absolute;
+    top: 4ex;
+    right: 1ex;
+  }
+  .activity-state {
+    margin:  0;
+    padding: 0;
+  }
+  .trace-entry {
+    width: 100%;
+    clear: both;
+  }
+  .trace-location {
+    float:right;
+    font-size:5px;
+  }
+  .trace-method {
+    float:left;
+  }
   </style>
 </head>
 <body>
-<div id="content">
-<ul id="tabs" class="nav nav-tabs" data-tabs="tabs"></ul>
-<div id="files" class="tab-content"></div>
+<nav class="navbar-fixed-top" id="header">
+  <span style="font-weight: bold">Program</span> <code id="program-args"></code>
+</nav>
+<div id="system-view">
+  <div id="logo-bg">
+  <img src="out/src/logo/kompos-name.png" />
+  <img src="out/src/logo/tangled-string.png" />
+  </div>
+  <div id="graph-canvas"></div>
+  <div id="split-system-code"></div>
 </div>
 
-<div class="panel panel-default" data-spy="affix" style="background-color:rgba(255, 255, 255, 0.5);">
-<div id="debugger" class="panel-body">
-<div class="btn-toolbar" role="toolbar" aria-label="Debugger Controls">
+<div id="code-views" class="card-columns"></div>
+
+<div class="card system-status" data-spy="affix">
+<div id="debugger" class="card-body">
+<div class="btn-toolbar card-pane" role="toolbar" aria-label="Debugger Controls">
   <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
-    <button id="dbg-connect-btn" type="button" class="btn btn-default" onclick="ctrl.toggleConnection();">Connecting</button>
+    <button id="dbg-connect-btn" type="button" class="btn btn-secondary btn-sm" onclick="ctrl.toggleConnection();">Connecting</button>
   </div>
 
   <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
-    <button id="dbg-btn-resume" type="button" class="btn btn-default disabled" title="Resume Execution"
+    <button id="dbg-btn-resume" type="button" class="btn btn-secondary btn-sm disabled" title="Resume Execution"
             onclick="ctrl.resumeExecution();"><i class="fa fa-play"></i></button>
-    <button id="dbg-btn-pause"  type="button" class="btn btn-default" title="Pause Execution"
+    <button id="dbg-btn-pause"  type="button" class="btn btn-secondary btn-sm" title="Pause Execution"
             onclick="ctrl.pauseExecution();"><i class="fa fa-pause"></i></button>
-    <button id="dbg-btn-stop"   type="button" class="btn btn-default" title="Stop Execution"
+    <button id="dbg-btn-stop"   type="button" class="btn btn-secondary btn-sm" title="Stop Execution"
             onclick="ctrl.stopExecution();"><i class="fa fa-stop"></i></button>
   </div>
 
   <div class="btn-group btn-group-xs" role="group" aria-label="Stepping">
-    <button id="dbg-btn-step-into" type="button" class="btn btn-default disabled" title="Step Into"
+    <button id="dbg-btn-step-into" type="button" class="btn btn-secondary btn-sm disabled" title="Step Into"
             onclick="ctrl.stepInto();"><i class="fa fa-share" style="transform: rotate(90deg);"></i></button>
-    <button id="dbg-btn-step-over" type="button" class="btn btn-default disabled" title="Step Over"
+    <button id="dbg-btn-step-over" type="button" class="btn btn-secondary btn-sm disabled" title="Step Over"
             onclick="ctrl.stepOver();"><i class="fa fa-share"></i></button>
-    <button id="dbg-btn-return"    type="button" class="btn btn-default disabled" title="Return from Method"
+    <button id="dbg-btn-return"    type="button" class="btn btn-secondary btn-sm disabled" title="Return from Method"
             onclick="ctrl.returnFromExecution();"><i class="fa fa-reply" style="transform: scaleY(-1);"></i></button>
   </div>
 </div>
@@ -201,7 +315,7 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
 </tbody>
 </table>
 
-<div id="graph-canvas"></div>
+
 <div id="debugger-log" class="panel-footer" style="font-size: 75%">
 </div>
 
@@ -210,8 +324,51 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
 </div></div>
 
 <div id="templates">
-  <li id="tab-list-entry"><a href="#tab-id" data-toggle="tab">Label</a></li>
-  <div id="file" class="tab-pane">
+  <div id="activity-tpl" class="activity card container-fluid"><div class="row">
+      <div class="activity-sources col-9">
+        <ul class="activity-sources-list nav nav-tabs card-header-tabs">
+          <li class="nav-item"><a class="activity-name nav-link disabled card-title" href="#">Platform</a></li>
+        </ul>
+        <div class="activity-source tab-content"></div>
+      </div>
+
+      <div class="activity-state col-3">
+        <div class="activity-actions btn-toolbar" role="toolbar" aria-label="Debugger Controls">
+          <!-- TODO: still need the activity id somehow here in the onclick handler -->
+          <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
+            <button class="act-resume btn btn-secondary btn-sm disabled" type="button" title="Resume Execution"
+                    onclick="ctrl.resumeExecution(getAttribute('data-actid'));"><i class="fa fa-play"></i></button>
+            <button class="act-pause btn btn-secondary btn-sm" type="button" title="Pause Execution"
+                    onclick="ctrl.pauseExecution(getAttribute('data-actid'));"><i class="fa fa-pause"></i></button>
+          </div>
+
+          <div class="btn-group btn-group-xs" role="group" aria-label="Stepping">
+            <button class="act-step-into btn btn-secondary btn-sm disabled" type="button" title="Step Into"
+                    onclick="ctrl.stepInto(getAttribute('data-actid'));"><i class="fa fa-share" style="transform: rotate(90deg);"></i></button>
+            <button class="act-step-over btn btn-secondary btn-sm disabled" type="button" title="Step Over"
+                    onclick="ctrl.stepOver(getAttribute('data-actid'));"><i class="fa fa-share"></i></button>
+            <button class="act-return btn btn-secondary btn-sm disabled" type="button" title="Return from Method"
+                    onclick="ctrl.returnFromExecution(getAttribute('data-actid'));"><i class="fa fa-reply" style="transform: scaleY(-1);"></i></button>
+          </div>
+        </div>
+
+        <div class="activity-stack btn-group-vertical stack" data-toggle="buttons"></div>
+
+        <table class="activity-scopes"><tbody></tbody></table>
+      </div>
+  </div></div>
+
+  <label id="stack-trace-elem-tpl" class="trace-entry btn btn-sm btn-secondary">
+    <span class="trace-method">
+      <input type="radio" name="options" autocomplete="off">
+      <span class="trace-method-name"></span>
+    </span>
+    <span class="trace-location"></span>
+  </label>
+
+  <li id="tab-list-entry" class="nav-item"><a class="nav-link" href="#tab-id" data-toggle="tab">Label</a></li>
+
+  <div id="file" class="tab-pane code-pane">
     <div class="line-numbers"></div>
     <div class="source-file"></div>
   </div>
@@ -225,44 +382,36 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   </table>
 
   <table>
-  <tr id="stack-frame-tpl">
-    <td>MethodName</td>
-  </tr>
-  </table>
-
-  <table>
   <tr id="scope-head-tpl">
     <th scope="row">name</th><td></td>
   </tr>
   <tr id="frame-state-tpl">
-    <th scope="row">name</th>
+    <td>name</td>
     <td>value</td>
   </tr>
   </table>
 
   <div id="method-breakpoints" class="dropdown-content">
-    <button class="btn btn-default btn-sm btn-block bp-async-rcv">Method async receive</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-async-rcv">Method async receive</button>
   </div>
 
   <div id="actor-bp-menu" class="dropdown-content">
-    <button class="btn btn-default btn-sm btn-block bp-send-msg">Message send</button>
-    <button class="btn btn-default btn-sm btn-block bp-rcv-msg">Message receive</button>
-    <button class="btn btn-default btn-sm btn-block bp-send-prom">Promise resolver</button>
-    <button class="btn btn-default btn-sm btn-block bp-rcv-prom">Promise resolution</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-send-msg">Message send</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-rcv-msg">Message receive</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-send-prom">Promise resolver</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-rcv-prom">Promise resolution</button>
   </div>
 
   <div id="channel-write-bp-menu" class="dropdown-content">
-    <button class="btn btn-default btn-sm btn-block bp-before">Before send</button>
-    <button class="btn btn-default btn-sm btn-block bp-after">After receive</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-before">Before send</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-after">After receive</button>
   </div>
 
   <div id="channel-read-bp-menu" class="dropdown-content">
-    <button class="btn btn-default btn-sm btn-block bp-before">Before receive</button>
-    <button class="btn btn-default btn-sm btn-block bp-after">After send</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-before">Before receive</button>
+    <button class="btn btn-secondary btn-sm btn-block bp-after">After send</button>
   </div>
 </div>
-
-<!-- REM: https://github.com/earmbrust/bootstrap-window -->
 
 </body>
 </html>

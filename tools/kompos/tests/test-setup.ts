@@ -51,7 +51,7 @@ export class TestConnection extends VmConnection {
   public readonly fullyConnected: Promise<boolean>;
 
   constructor(extraArgs?: string[], triggerDebugger?: boolean, testFile?: string) {
-    super(false);
+    super(true);
     this.closed = false;
     this.startSom(extraArgs, triggerDebugger, testFile);
     this.fullyConnected = this.initConnection();

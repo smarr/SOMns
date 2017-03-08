@@ -1,5 +1,5 @@
 import {IdMap, Source, SourceCoordinate, SourceMessage, TaggedSourceCoordinate,
-  getSectionId} from "./messages";
+  Activity, getSectionId} from "./messages";
 import {Breakpoint} from "./breakpoints";
 
 export function isRelevant(sc: TaggedSourceCoordinate) {
@@ -9,20 +9,21 @@ export function isRelevant(sc: TaggedSourceCoordinate) {
 }
 
 export class Debugger {
-  public activityId?: number;
+  private suspendedActivities: boolean[];
 
-  private suspended: boolean;
+  /** Current set of activities in the system. */
+  private activities: Activity[];
 
   /**
    * Mapping Source URIs to id used for easy access, and for short unique ids to
    * be used by {@link getSectionId}.
    */
-  private uriToSourceId:  IdMap<string>;
+  private uriToSourceId: IdMap<string>;
 
   /**
    * Array of sources, indexed by id from {@link getSourceId}.
    */
-  private sources:  IdMap<Source>;
+  private sources: IdMap<Source>;
 
   /**
    * All source sections relevant for the debugger, indexed by {@link getSectionId}.
@@ -32,7 +33,8 @@ export class Debugger {
   private breakpoints: IdMap<IdMap<Breakpoint>>;
 
   constructor() {
-    this.suspended = false;
+    this.suspendedActivities = [];
+    this.activities     = [];
     this.uriToSourceId  = {};
     this.sources        = {};
     this.sections       = {};
@@ -50,16 +52,13 @@ export class Debugger {
     return this.sources[id];
   }
 
-  addSources(msg: SourceMessage): IdMap<Source> {
-    let newSources = {};
-    for (let s of msg.sources) {
-      let id = this.getSourceId(s.uri);
-      this.sources[id] = s;
-      this.addSections(s);
-      this.addMethods(s);
-      newSources[id] = s;
-    }
-    return newSources;
+  addSource(msg: SourceMessage): Source {
+    const s = msg.source;
+    let id = this.getSourceId(s.uri);
+    this.sources[id] = s;
+    this.addSections(s);
+    this.addMethods(s);
+    return s;
   }
 
   getSection(id: string): SourceCoordinate {
@@ -87,7 +86,7 @@ export class Debugger {
     }
   }
 
-  getBreakpoint(source, key, newBp): Breakpoint {
+  getBreakpoint(source: Source, key: any, newBp: () => Breakpoint): Breakpoint {
     let sId = this.getSourceId(source.uri);
     if (!this.breakpoints[sId]) {
       this.breakpoints[sId] = {};
@@ -95,7 +94,7 @@ export class Debugger {
 
     let bp: Breakpoint = this.breakpoints[sId][key];
     if (!bp) {
-      bp = newBp(source);
+      bp = newBp();
       this.breakpoints[sId][key] = bp;
     }
     return bp;
@@ -114,9 +113,9 @@ export class Debugger {
     return bps;
   }
 
-  getEnabledBreakpointsForSource(sourceName: string): Breakpoint[] {
+  public getEnabledBreakpointsForSource(sourceUri: string): Breakpoint[] {
     const bps = [];
-    const lines = this.breakpoints[sourceName];
+    const lines = this.breakpoints[sourceUri];
     for (const line in lines) {
       const bp = lines[line];
       if (bp.isEnabled()) {
@@ -127,16 +126,26 @@ export class Debugger {
   }
 
   setSuspended(activityId: number) {
-    console.assert(!this.suspended);
-    this.suspended  = true;
-    this.activityId = activityId;
+    console.assert(!this.suspendedActivities[activityId]);
+    this.suspendedActivities[activityId] = true;
   }
 
-  setResumed() {
-    this.suspended = false;
+  setResumed(activityId: number) {
+    this.suspendedActivities[activityId] = false;
   }
 
-  isSuspended() {
-    return this.suspended;
+  isSuspended(activityId: number) {
+    return this.suspendedActivities[activityId];
+  }
+
+  public addActivities(activities: Activity[]) {
+    for (const a of activities) {
+      if (this.activities[a.id] === undefined) {
+        this.activities[a.id] = a;
+      } else {
+        console.assert(this.activities[a.id].name === a.name,
+          "Don't expect names of activities to change over time");
+      }
+    }
   }
 }

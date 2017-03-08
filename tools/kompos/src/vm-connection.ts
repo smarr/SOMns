@@ -94,11 +94,11 @@ export class VmConnection {
         case "ScopesResponse":
           ctrl.onScopes(data);
           break;
-        case "ThreadsResponse":
-          ctrl.onThreads(data);
-          break;
         case "VariablesResponse":
           ctrl.onVariables(data);
+          break;
+        case "ProgramInfoResponse":
+          ctrl.onProgramInfo(data);
           break;
         default:
           ctrl.onUnknownMessage(data);
@@ -111,6 +111,14 @@ export class VmConnection {
 
   disconnect() {
     console.assert(this.isConnected());
+  }
+
+  public requestProgramInfo() {
+    this.send({action: "ProgramInfoRequest"});
+  }
+
+  public requestTraceData() {
+    this.send({action: "TraceDataRequest"});
   }
 
   sendInitialBreakpoints(breakpoints: BreakpointData[]) {
@@ -131,11 +139,6 @@ export class VmConnection {
     this.send({
       action: action,
       activityId: activityId});
-  }
-
-  public requestActivityList() {
-    // requestId is currently only used in VS code adapter
-    this.send({action: "ThreadsRequest", requestId: 0});
   }
 
   public requestStackTrace(activityId: number) {

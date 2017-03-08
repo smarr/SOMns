@@ -9,7 +9,7 @@ import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.IncommingMessage;
 
 public abstract class StepMessage extends IncommingMessage {
-  private final int activityId;
+  private final long activityId;
 
   /**
    * Note: meant for serialization.

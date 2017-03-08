@@ -11,6 +11,7 @@ import som.interpreter.Method;
 import som.interpreter.Primitive;
 import som.interpreter.SArguments;
 import som.vmobjects.SBlock;
+import tools.TraceData;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.Response;
 
@@ -18,9 +19,13 @@ import tools.debugger.message.Message.Response;
 @SuppressWarnings("unused")
 public final class ScopesResponse extends Response {
   private final Scope[] scopes;
+  private final long variablesReference;
 
-  private ScopesResponse(final Scope[] scopes, final int requestId) {
+  private ScopesResponse(final long globalFrameId, final Scope[] scopes,
+      final int requestId) {
     super(requestId);
+    assert TraceData.isWithinJSIntValueRange(globalFrameId);
+    this.variablesReference = globalFrameId;
     this.scopes = scopes;
   }
 
@@ -32,16 +37,17 @@ public final class ScopesResponse extends Response {
      * The variables of this scope can be retrieved by passing the value of
      * variablesReference to the VariablesRequest.
      */
-    private final int variablesReference;
+    private final long variablesReference;
 
     /** If true, the number of variables in this scope is large or expensive to retrieve. */
     private final boolean expensive;
 
 
-    private Scope(final String name, final int variableReference,
+    private Scope(final String name, final long globalVarRef,
         final boolean expensive) {
+      assert TraceData.isWithinJSIntValueRange(globalVarRef);
       this.name               = name;
-      this.variablesReference = variableReference;
+      this.variablesReference = globalVarRef;
       this.expensive          = expensive;
     }
   }
@@ -52,16 +58,16 @@ public final class ScopesResponse extends Response {
     if (outer != null) {
       assert rcvr instanceof SBlock;
       MaterializedFrame mFrame = ((SBlock) rcvr).getContext();
-      int scopeId = suspension.addScope(mFrame, outer);
-      scopes.add(new Scope(outer.getMethod().getName(), scopeId, false));
+      long globalScopeId = suspension.addScope(mFrame, outer);
+      scopes.add(new Scope(outer.getMethod().getName(), globalScopeId, false));
     }
   }
 
   private static final int SMALL_INITIAL_SIZE = 5;
 
-  public static ScopesResponse create(final int frameId, final Suspension suspension,
+  public static ScopesResponse create(final long globalFrameId, final Suspension suspension,
       final int requestId) {
-    DebugStackFrame frame = suspension.getFrame(frameId);
+    DebugStackFrame frame = suspension.getFrame(globalFrameId);
     ArrayList<Scope> scopes = new ArrayList<>(SMALL_INITIAL_SIZE);
     MaterializedFrame mFrame = frame.getFrame();
 
@@ -69,7 +75,7 @@ public final class ScopesResponse extends Response {
     if (invokable instanceof Method) {
       Method m = (Method) invokable;
       MethodScope scope = m.getLexicalScope();
-      int scopeId = suspension.addScope(mFrame, scope);
+      long scopeId = suspension.addScope(mFrame, scope);
       scopes.add(new Scope("Locals", scopeId, false));
 
       Object rcvr = mFrame.getArguments()[SArguments.RCVR_IDX];
@@ -80,6 +86,6 @@ public final class ScopesResponse extends Response {
         " here. Means we need to add support";
     }
 
-    return new ScopesResponse(scopes.toArray(new Scope[0]), requestId);
+    return new ScopesResponse(globalFrameId, scopes.toArray(new Scope[0]), requestId);
   }
 }

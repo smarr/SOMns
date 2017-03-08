@@ -2,6 +2,7 @@ package tools.debugger.message;
 
 import org.java_websocket.WebSocket;
 
+import tools.TraceData;
 import tools.debugger.FrontendConnector;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.Request;
@@ -9,10 +10,11 @@ import tools.debugger.message.Message.Request;
 
 public final class VariablesRequest extends Request {
 
-  private final int variablesReference;
+  private final long variablesReference;
 
-  VariablesRequest(final int requestId, final int variablesReference) {
+  VariablesRequest(final int requestId, final long variablesReference) {
     super(requestId);
+    assert TraceData.isWithinJSIntValueRange(variablesReference);
     this.variablesReference = variablesReference;
   }
 

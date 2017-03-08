@@ -19,29 +19,30 @@
   },
   "dependencies": {
     "@types/bootstrap": "^3.3.32",
-    "@types/chai":      "^3.4.34",
+    "@types/chai":      "^3.4.35",
     "@types/d3":        "^3.5.36",
     "@types/jquery":    "^2.0.40",
     "@types/mocha":     "^2.2.39",
     "@types/node":      "^7.0.5",
     "@types/ws":        "^0.0.38",
-    "bootstrap":        "^3.3.7",
+    "bootstrap":        "^4.0.0-alpha.6",
     "d3":               "^3.5.17",
     "font-awesome":     "^4.7.0",
     "jquery":           "^2.2.4",
     "node-define":      "^0.1.1",
-    "requirejs":        "^2.3.2",
-    "ws":               "^1.1.1"
+    "requirejs":        "^2.3.3",
+    "ws":               "^2.2.0"
   },
   "devDependencies": {
     "chai"      : "^3.5.0",
     "mocha"     : "^3.2.0",
-    "tslint"    : "^4.4.2",
-    "typescript": "2.1.5"
+    "tslint"    : "^4.5.1",
+    "typescript": "2.2.1"
   },
   "scripts": {
     "postinstall": "npm run compile",
-    "compile": "node ./node_modules/typescript/bin/tsc",
+    "copylibs": "cp -R ./src/libs ./out/src/libs && cp -R ./src/logo ./out/src/logo",
+    "compile": "node ./node_modules/typescript/bin/tsc && npm run copylibs",
     "lint":    "node_modules/tslint/bin/tslint -c tslint.json --project tsconfig.json",
     "watch":   "node ./node_modules/typescript/bin/tsc -w",
     "test":    "node ./node_modules/mocha/bin/mocha -r node-define -t 5000 -u bdd ./out/tests/"

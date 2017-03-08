@@ -2,11 +2,52 @@
 "use strict";
 
 import {Controller} from "./controller";
-import {Source, Method, IdMap, StackFrame, SourceCoordinate, StackTraceResponse,
-  TaggedSourceCoordinate, Scope, getSectionId, Variable} from "./messages";
+import {Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
+  TaggedSourceCoordinate, Scope, getSectionId, Variable, Activity } from "./messages";
 import {Breakpoint, MessageBreakpoint, LineBreakpoint} from "./breakpoints";
 
 declare var ctrl: Controller;
+
+const ACT_ID_PREFIX = "a";
+
+function getActivityId(id: number) {
+  return ACT_ID_PREFIX + id;
+}
+
+export function getLineId(line: number, sourceId: string) {
+  return sourceId + "ln" + line;
+}
+
+function getSectionIdForActivity(ssId: string, activityId: number) {
+  return getActivityId(activityId) + ssId;
+}
+
+function getSourceIdForActivity(sId: string, activityId: number) {
+  return getActivityId(activityId) + sId;
+}
+
+export function getSourceIdFrom(actAndSourceId: string) {
+  const i = actAndSourceId.indexOf("s");
+  console.assert(i > 0);
+  console.assert(actAndSourceId.indexOf(":") === -1);
+  return actAndSourceId.substr(i);
+}
+
+export function getSectionIdFrom(actAndSourceId: string) {
+  const i = actAndSourceId.indexOf("s");
+  console.assert(i > 0);
+  return actAndSourceId.substr(i);
+}
+
+export function getSourceIdFromSection(sectionId: string) {
+  const i = sectionId.indexOf(":");
+  console.assert(i > 1);
+  return sectionId.substr(0, i);
+}
+
+export function getActivityIdFromView(actId: string) {
+  return parseInt(actId.substr(ACT_ID_PREFIX.length));
+}
 
 function splitAndKeepNewlineAsEmptyString(str) {
   let result = new Array();
@@ -39,18 +80,20 @@ function sourceToArray(source: string): string[][] {
   return arr;
 }
 
-function methodDeclIdToString(sectionId: string, idx: number) {
-  return "m:" + sectionId + ":" + idx;
+function methodDeclIdToString(sectionId: string, idx: number, activityId: number) {
+  return getActivityId(activityId) + "m-" + sectionId + "-" + idx;
 }
 
 function methodDeclIdToObj(id: string) {
-  let arr = id.split(":");
+  console.assert(id.indexOf("-") !== -1);
+  const idComponents = id.split("-");
+  let arr = idComponents[1].split(":");
   return {
-    sourceId:    arr[1],
-    startLine:   parseInt(arr[2]),
-    startColumn: parseInt(arr[3]),
-    charLength:  parseInt(arr[4]),
-    idx:         arr[5]
+    sourceId:    arr[0],
+    startLine:   parseInt(arr[1]),
+    startColumn: parseInt(arr[2]),
+    charLength:  parseInt(arr[3]),
+    idx:         parseInt(idComponents[2])
   };
 }
 
@@ -66,17 +109,21 @@ abstract class SectionMarker {
 
 class Begin extends SectionMarker {
   private section: TaggedSourceCoordinate;
-  private sectionId?: string;
+  private sectionId: string;
+  private activityId: number;
 
-  constructor(section: TaggedSourceCoordinate, sectionId: string) {
+  constructor(section: TaggedSourceCoordinate, sectionId: string,
+      activityId: number) {
     super(Begin);
-    this.sectionId = sectionId;
+    this.sectionId  = sectionId;
+    this.activityId = activityId;
     this.section = section;
     this.type    = Begin;
   }
 
   toString() {
-    return '<span id="' + this.sectionId + '" class="' + this.section.tags.join(" ") + '">';
+    return '<span id="' + getSectionIdForActivity(this.sectionId, this.activityId)
+         + '" class="' + this.section.tags.join(" ") + " " + this.sectionId + '">';
   }
 
   length() {
@@ -87,16 +134,18 @@ class Begin extends SectionMarker {
 class BeginMethodDef extends SectionMarker {
   private method:   Method;
   private sourceId: string;
+  private activityId: number;
   private i:        number;
   private defPart:  SourceCoordinate;
 
-  constructor(method: Method, sourceId: string, i: number,
+  constructor(method: Method, sourceId: string, i: number, activityId: number,
       defPart: SourceCoordinate) {
     super(Begin);
     this.method   = method;
     this.sourceId = sourceId;
     this.i        = i;
     this.defPart  = defPart;
+    this.activityId = activityId;
   }
 
   length() {
@@ -104,10 +153,10 @@ class BeginMethodDef extends SectionMarker {
   }
 
   toString() {
-    let tags = "MethodDeclaration",
-      id = methodDeclIdToString(
-        getSectionId(this.sourceId, this.method.sourceSection), this.i);
-    return '<span id="' + id + '" class="' + tags + '">';
+    const tags = "MethodDeclaration",
+      sectionId = getSectionId(this.sourceId, this.method.sourceSection),
+      id = methodDeclIdToString(sectionId, this.i, this.activityId);
+    return '<span id="' + id + '" class="' + tags + " " + sectionId + '">';
   }
 }
 
@@ -188,10 +237,11 @@ function nodeFromTemplate(tplId: string) {
   return result;
 }
 
-function createLineNumbers(cnt: number) {
-  let result = "<span class='ln' onclick='ctrl.onToggleLineBreakpoint(1, this);'>1</span>";
+function createLineNumbers(cnt: number, sourceId: string) {
+  let result = "<span class='ln ln1' onclick='ctrl.onToggleLineBreakpoint(1, this);'>1</span>";
   for (let i = 2; i <= cnt; i += 1) {
-    result = result + "\n<span class='ln' onclick='ctrl.onToggleLineBreakpoint(" + i + ", this);'>" + i + "</span>";
+    result = result + "\n<span class='ln " + getLineId(i, sourceId) +
+      "' onclick='ctrl.onToggleLineBreakpoint(" + i + ", this);'>" + i + "</span>";
   }
   return result;
 }
@@ -236,14 +286,15 @@ function getCoord(arr: any[][], startLine: number, startColumn: number, length: 
   return {line: line + 1, column: column + 1};
 }
 
-function annotateArray(arr: any[][], sourceId: string, sections: TaggedSourceCoordinate[], methods: Method[]) {
+function annotateArray(arr: any[][], sourceId: string, activityId: number,
+    sections: TaggedSourceCoordinate[], methods: Method[]) {
   for (let s of sections) {
     let start = ensureItIsAnnotation(arr, s.startLine, s.startColumn),
         coord = getCoord(arr, s.startLine, s.startColumn, s.charLength),
           end = ensureItIsAnnotation(arr, coord.line, coord.column),
     sectionId = getSectionId(sourceId, s);
 
-    start.before.push(new Begin(s, sectionId));
+    start.before.push(new Begin(s, sectionId, activityId));
     end.before.push(new End(s, s.charLength));
   }
 
@@ -255,7 +306,8 @@ function annotateArray(arr: any[][], sourceId: string, sections: TaggedSourceCoo
         coord = getCoord(arr, defPart.startLine, defPart.startColumn, defPart.charLength),
         end   = ensureItIsAnnotation(arr, coord.line, coord.column);
 
-      start.before.push(new BeginMethodDef(meth, sourceId, parseInt(i), defPart));
+      start.before.push(new BeginMethodDef(meth, sourceId, parseInt(i),
+                                           activityId, defPart));
       end.before.push(new End(meth.sourceSection, defPart.charLength));
     }
   }
@@ -268,13 +320,14 @@ function enableEventualSendClicks(fileNode) {
     "data-trigger"   : "click hover",
     "title"          : "Breakpoints",
     "data-html"      : "true",
-    "data-placement" : "auto top"
+    "data-animation" : "false",
+    "data-placement" : "top"
   });
 
   sendOperator.attr("data-content", function() {
     let content = nodeFromTemplate("actor-bp-menu");
     // capture the source section id, and store it on the buttons
-    $(content).find("button").attr("data-ss-id", this.id);
+    $(content).find("button").attr("data-ss-id", getSectionIdFrom(this.id));
     return $(content).html();
   });
   sendOperator.popover();
@@ -312,13 +365,14 @@ function constructChannelBpMenu(fileNode, tag: string, tpl: string) {
     "data-trigger"   : "click hover",
     "title"          : "Breakpoints",
     "data-html"      : "true",
-    "data-placement" : "auto top"
+    "data-animation" : "false",
+    "data-placement" : "top"
   });
 
   sendOperator.attr("data-content", function() {
     let content = nodeFromTemplate(tpl);
     // capture the source section id, and store it on the buttons
-    $(content).find("button").attr("data-ss-id", this.id);
+    $(content).find("button").attr("data-ss-id", getSectionIdFrom(this.id));
     return $(content).html();
   });
   sendOperator.popover();
@@ -342,7 +396,8 @@ function enableMethodBreakpointHover(fileNode) {
     "title"         : "Breakpoints",
     "animation"     : "false",
     "data-html"     : "true",
-    "data-placement": "auto top" });
+    "data-animation": "false",
+    "data-placement": "top" });
 
   methDecls.attr("data-content", function () {
     let idObj = methodDeclIdToObj(this.id);
@@ -359,78 +414,12 @@ function enableMethodBreakpointHover(fileNode) {
   });
 }
 
-function showSource(source: Source, sourceId: string) {
-  let tabListEntry = <Element> document.getElementById("" + sourceId),
-    aElem = document.getElementById("a" + sourceId);
-  if (tabListEntry) {
-    if (aElem.innerText !== source.name) {
-      $(tabListEntry).remove();
-      $(aElem).remove();
-      tabListEntry = null;
-      aElem = null;
-    } else {
-      return; // source is already there, so, I think, we don't need to update it
-    }
-  }
-
-  const annotationArray = sourceToArray(source.sourceText);
-  annotateArray(annotationArray, sourceId, source.sections, source.methods);
-
-  tabListEntry = nodeFromTemplate("tab-list-entry");
-
-  if (aElem === null) {
-    // create the tab "header/handle"
-    const elem = $(tabListEntry).find("a");
-    elem.attr("href", "#" + sourceId);
-    elem.attr("id", "a" + sourceId);
-    elem.text(source.name);
-    aElem = elem.get(0);
-    $("#tabs").append(tabListEntry);
-  }
-
-  // create tab pane
-  const newFileElement = nodeFromTemplate("file");
-  newFileElement.setAttribute("id", "" + sourceId);
-  newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(annotationArray.length);
-  const fileNode = newFileElement.getElementsByClassName("source-file")[0];
-  fileNode.innerHTML = arrayToString(annotationArray);
-
-  // enable clicking on EventualSendNodes
-  enableEventualSendClicks($(fileNode));
-  enableChannelClicks($(fileNode));
-  enableMethodBreakpointHover($(fileNode));
-
-  const files = document.getElementById("files");
-  files.appendChild(newFileElement);
-}
-
-function showFrame(frame: StackFrame, i: number, list: Element) {
-  let stackEntry = frame.name;
-  if (frame.line) {
-    stackEntry += ":" + frame.line + ":" + frame.column;
-  }
-  const entry = nodeFromTemplate("stack-frame-tpl");
-  entry.setAttribute("id", "frame-" + i);
-
-  const tds = $(entry).find("td");
-  tds[0].innerHTML = stackEntry;
-  list.appendChild(entry);
-}
-
 /**
  * The HTML View, which realizes all access to the DOM for displaying
  * data and reacting to events.
  */
 export class View {
-  private currentSectionId?: string;
-  private currentDomNode?;
-  private debuggerButtonJQNodes?;
-
-  constructor() {
-    this.currentSectionId = null;
-    this.currentDomNode   = null;
-    this.debuggerButtonJQNodes = null;
-  }
+  constructor() { }
 
   onConnect() {
     $("#dbg-connect-btn").html("Connected");
@@ -440,58 +429,112 @@ export class View {
     $("#dbg-connect-btn").html("Reconnect");
   }
 
-  displaySources(sources: IdMap<Source>) {
-    let sId; // keep last id to show tab
-    for (sId in sources) {
-      showSource(sources[sId], sId);
+  /**
+   * @returns true, if new source is displayed
+   */
+  public displaySource(activityId: number, source: Source, sourceId: string): boolean {
+    const actId = getActivityId(activityId);
+    const container = $("#" + actId + " .activity-sources-list");
+
+    // we mark the tab header as well as the tab content with a class
+    // that contains the source id
+    let sourceElem = container.find("li." + sourceId);
+
+    if (sourceElem.length !== 0) {
+      const existingAElem = sourceElem.find("a");
+      // we got already something with the source id
+      // does it have the same name?
+      if (existingAElem.get(0).innerHTML !== source.name) {
+        // clear and remove tab header and tab content
+        sourceElem.html("");
+        sourceElem.remove();
+      } else {
+        return false; // source is already there, so, I think, we don't need to update it
+      }
     }
-    $('.nav-tabs a[href="#' + sId + '"]').tab("show");
-  }
 
-  displayUpdatedSourceSections(data, getSourceAndMethods) {
-    // update the source sections for the sourceId
-
-    const pane = document.getElementById(data.sourceId);
-    const sourceFile = $(pane).find(".source-file");
-
-    // remove all spans
-    sourceFile.find("span").replaceWith($(".html"));
-
-    // apply new spans
-    const result = getSourceAndMethods(data.sourceId),
-      source   = result[0],
-      methods  = result[1];
-
+    // show the source
     const annotationArray = sourceToArray(source.sourceText);
-    annotateArray(annotationArray, source.id, data.sections, methods);
-    sourceFile.html(arrayToString(annotationArray));
+
+    // TODO: think this still need to be updated for multiple activities
+    annotateArray(annotationArray, sourceId, activityId, source.sections,
+      source.methods);
+
+    const tabListEntry = nodeFromTemplate("tab-list-entry");
+    $(tabListEntry).addClass(sourceId);
+
+    // create the tab "header/handle"
+    const aElem = $(tabListEntry).find("a");
+    const sourcePaneId = getSourceIdForActivity(sourceId, activityId);
+    aElem.attr("href", "#" + sourcePaneId);
+    aElem.text(source.name);
+    container.append(tabListEntry);
+
+    // create tab pane
+    const newFileElement = nodeFromTemplate("file");
+    newFileElement.setAttribute("id", sourcePaneId);
+    newFileElement.getElementsByClassName("line-numbers")[0].innerHTML = createLineNumbers(annotationArray.length, sourceId);
+    const fileNode = newFileElement.getElementsByClassName("source-file")[0];
+    $(fileNode).addClass(sourceId);
+    fileNode.innerHTML = arrayToString(annotationArray);
 
     // enable clicking on EventualSendNodes
-    enableEventualSendClicks(sourceFile);
-    enableChannelClicks(sourceFile);
-    enableMethodBreakpointHover(sourceFile);
+    enableEventualSendClicks($(fileNode));
+    enableChannelClicks($(fileNode));
+    enableMethodBreakpointHover($(fileNode));
+
+    const sourceContainer = $("#" + actId + " .activity-source");
+    sourceContainer.append(newFileElement);
+
+    aElem.tab("show");
+    return true;
+  }
+
+  public displayActivity(name: string, id: number) {
+    const act = nodeFromTemplate("activity-tpl");
+    $(act).find(".activity-name").html(name);
+    const actId = getActivityId(id);
+    act.id = actId;
+    $(act).find("button").attr("data-actId", actId);
+
+    const codeView = document.getElementById("code-views");
+    codeView.appendChild(act);
+  }
+
+  public resetActivities() {
+    $(document.getElementById("code-views")).empty();
+  }
+
+  public addActivities(activities: Activity[]) {
+    for (const act of activities) {
+      this.displayActivity(act.name, act.id);
+    }
+  }
+
+  public displayProgramArguments(args: String[]) {
+    $("#program-args").text(args.join(" "));
   }
 
   private getScopeId(varRef: number) {
-    return "scope:" + varRef;
+    return "scope-" + varRef;
   }
 
-  public displayScope(s: Scope) {
-    const list = document.getElementById("frame-state");
+  public displayScope(varRef: number, s: Scope) {
+    const list = $("#" + this.getScopeId(varRef)).find("tbody");
     const entry = nodeFromTemplate("scope-head-tpl");
     entry.id = this.getScopeId(s.variablesReference);
     let t = $(entry).find("th");
     t.html(s.name);
-    list.appendChild(entry);
+    list.append(entry);
   }
 
   private createVarElement(name: string, value: string, varRef: number): Element {
     const entry = nodeFromTemplate("frame-state-tpl");
     entry.id = this.getScopeId(varRef);
-    let t = $(entry).find("th");
-    t.html(name);
+    let t = $(entry).find("td");
+    t.get(0).innerHTML = name;
     t = $(entry).find("td");
-    t.html(value);
+    t.get(1).innerHTML = value;
     return entry;
   }
 
@@ -505,49 +548,87 @@ export class View {
     }
   }
 
-  displayStackTrace(data: StackTraceResponse, sourceId: string) {
-    let list = document.getElementById("stack-frames");
-    while (list.lastChild) {
-      list.removeChild(list.lastChild);
+  private getFrameId(frameId: number) {
+    return "frame-" + frameId;
+  }
+
+  private showFrame(frame: StackFrame, active: boolean, list: JQuery) {
+    const fileNameStart = frame.sourceUri.lastIndexOf("/") + 1;
+    const fileName = frame.sourceUri.substr(fileNameStart);
+    const location = fileName + ":" + frame.line + ":" + frame.column;
+
+    const entry = nodeFromTemplate("stack-trace-elem-tpl");
+    entry.id = this.getFrameId(frame.id);
+
+    if (active) {
+      $(entry).addClass("active");
     }
+
+    const name = $(entry).find(".trace-method-name");
+    name.html(frame.name);
+    const loc = $(entry).find(".trace-location");
+    loc.html(location);
+
+    list.append(entry);
+  }
+
+  public displayStackTrace(sourceId: string, data: StackTraceResponse, requestedId: number) {
+    const act = $("#" + getActivityId(data.activityId));
+    const list = act.find(".activity-stack");
+    list.html(""); // rest view
 
     for (let i = 0; i < data.stackFrames.length; i++) {
-      showFrame(data.stackFrames[i], i, list);
+      this.showFrame(data.stackFrames[i],
+        data.stackFrames[i].id === requestedId, list);
+      console.assert(data.stackFrames[i].id !== requestedId || i === 0, "We expect that the first frame is displayed.");
     }
+    const scopes = act.find(".activity-scopes");
+    scopes.attr("id", this.getScopeId(requestedId));
+    scopes.find("tbody").html(""); // rest view
 
-    list = document.getElementById("frame-state");
-    while (list.lastChild) {
-      list.removeChild(list.lastChild);
-    }
+    this.highlightProgramPosition(sourceId, data.activityId, data.stackFrames[0]);
+  }
 
-    const line = data.stackFrames[0].line,
-      column = data.stackFrames[0].column,
-      length = data.stackFrames[0].length;
+  private highlightProgramPosition(sourceId: string, activityId: number,
+      frame: StackFrame) {
+    const line = frame.line,
+      column = frame.column,
+      length = frame.length;
 
     // highlight current node
+    // TODO: still needs to be adapted to multi-activity system
     let ssId = getSectionId(sourceId,
                  {startLine: line, startColumn: column, charLength: length});
-    let ss = document.getElementById(ssId);
+    let ss = document.getElementById(
+                        getSectionIdForActivity(ssId, activityId));
     $(ss).addClass("DbgCurrentNode");
 
-    this.currentDomNode   = ss;
-    this.currentSectionId = ssId;
-    this.showSourceById(sourceId);
+    this.showSourceById(sourceId, activityId);
+
+    const sourcePaneId = getSectionIdForActivity(sourceId, activityId);
 
     // scroll to the statement
     $("html, body").animate({
+      scrollTop: $("#" + sourcePaneId).offset().top
+    }, 300);
+
+    $("#" + sourcePaneId).animate({
       scrollTop: $(ss).offset().top
     }, 300);
   }
 
-  showSourceById(sourceId: string) {
-    if (this.getActiveSourceId() !== sourceId) {
-      $(document.getElementById("a" + sourceId)).tab("show");
+
+  showSourceById(sourceId: string, activityId: number) {
+    if (this.getActiveSourceId(activityId) !== sourceId) {
+      const actId = getActivityId(activityId);
+      $("#" + actId + " .activity-sources-list li." + sourceId + " a").tab("show");
     }
   }
 
-  getActiveSourceId(): string {
-    return $(".tab-pane.active").attr("id");
+  getActiveSourceId(activityId: number): string {
+    const actId = getActivityId(activityId);
+    const actAndSourceId = $("#" + actId + " .tab-pane.active").attr("id");
+    return getSourceIdFrom(actAndSourceId);
   }
 
   ensureBreakpointListEntry(breakpoint: Breakpoint) {
@@ -555,13 +636,13 @@ export class View {
       return;
     }
 
-    let bpId = breakpoint.getId();
+    let bpId = breakpoint.getListEntryId();
     let entry = nodeFromTemplate("breakpoint-tpl");
     entry.setAttribute("id", bpId);
 
     let tds = $(entry).find("td");
     tds[0].innerHTML = breakpoint.source.name;
-    tds[1].innerHTML = breakpoint.getId();
+    tds[1].innerHTML = breakpoint.getListEntryId();
 
     breakpoint.checkbox = $(entry).find("input");
     breakpoint.checkbox.attr("id", bpId + "chk");
@@ -570,83 +651,75 @@ export class View {
     list.appendChild(entry);
   }
 
-  updateBreakpoint(breakpoint: Breakpoint, highlightElem: JQuery,
-      highlightClass: string) {
+  updateBreakpoint(breakpoint: Breakpoint, highlightClass: string) {
     this.ensureBreakpointListEntry(breakpoint);
     const enabled = breakpoint.isEnabled();
 
     breakpoint.checkbox.prop("checked", enabled);
+    const highlightElems = $(document.getElementsByClassName(
+      breakpoint.getSourceElementClass()));
     if (enabled) {
-      highlightElem.addClass(highlightClass);
+      highlightElems.addClass(highlightClass);
     } else {
-      highlightElem.removeClass(highlightClass);
+      highlightElems.removeClass(highlightClass);
     }
   }
 
   updateLineBreakpoint(bp: LineBreakpoint) {
-    const lineNumSpan = $(bp.lineNumSpan);
-    this.updateBreakpoint(bp, lineNumSpan, "breakpoint-active");
+    this.updateBreakpoint(bp, "breakpoint-active");
   }
 
   updateSendBreakpoint(bp: MessageBreakpoint) {
-    const bpSpan = document.getElementById(bp.sectionId);
-    this.updateBreakpoint(bp, $(bpSpan), "send-breakpoint-active");
+    this.updateBreakpoint(bp, "send-breakpoint-active");
   }
 
   updateAsyncMethodRcvBreakpoint(bp: MessageBreakpoint) {
-    let i = 0,
-      elem = null;
-    while (elem = document.getElementById(
-        methodDeclIdToString(bp.sectionId, i))) {
-      this.updateBreakpoint(bp, $(elem), "send-breakpoint-active");
-      i += 1;
-    }
+    this.updateBreakpoint(bp, "send-breakpoint-active");
   }
 
   updatePromiseBreakpoint(bp: MessageBreakpoint) {
-    const bpSpan = document.getElementById(bp.sectionId);
-    this.updateBreakpoint(bp, $(bpSpan), "promise-breakpoint-active");
+    this.updateBreakpoint(bp, "promise-breakpoint-active");
   }
 
-  lazyFindDebuggerButtons() {
-    if (!this.debuggerButtonJQNodes) {
-      this.debuggerButtonJQNodes = {};
-      this.debuggerButtonJQNodes.resume = $(document.getElementById("dbg-btn-resume"));
-      this.debuggerButtonJQNodes.pause  = $(document.getElementById("dbg-btn-pause"));
-      this.debuggerButtonJQNodes.stop   = $(document.getElementById("dbg-btn-stop"));
-
-      this.debuggerButtonJQNodes.stepInto = $(document.getElementById("dbg-btn-step-into"));
-      this.debuggerButtonJQNodes.stepOver = $(document.getElementById("dbg-btn-step-over"));
-      this.debuggerButtonJQNodes.return   = $(document.getElementById("dbg-btn-return"));
-    }
+  findActivityDebuggerButtons(activityId: number) {
+    const id = getActivityId(activityId);
+    const act = $("#" + id);
+    return {
+      resume:   act.find(".act-resume"),
+      pause:    act.find(".act-pause"),
+      stepInto: act.find(".act-step-into"),
+      stepOver: act.find(".act-step-over"),
+      return:   act.find(".act-return")
+    };
   }
 
-  switchDebuggerToSuspendedState() {
-    this.lazyFindDebuggerButtons();
+  switchActivityDebuggerToSuspendedState(activityId: number) {
+    const btns = this.findActivityDebuggerButtons(activityId);
 
-    this.debuggerButtonJQNodes.resume.removeClass("disabled");
-    this.debuggerButtonJQNodes.pause.addClass("disabled");
-    this.debuggerButtonJQNodes.stop.removeClass("disabled");
+    btns.resume.removeClass("disabled");
+    btns.pause.addClass("disabled");
 
-    this.debuggerButtonJQNodes.stepInto.removeClass("disabled");
-    this.debuggerButtonJQNodes.stepOver.removeClass("disabled");
-    this.debuggerButtonJQNodes.return.removeClass("disabled");
+    btns.stepInto.removeClass("disabled");
+    btns.stepOver.removeClass("disabled");
+    btns.return.removeClass("disabled");
   }
 
-  switchDebuggerToResumedState() {
-    this.lazyFindDebuggerButtons();
+  switchActivityDebuggerToResumedState(activityId: number) {
+    const btns = this.findActivityDebuggerButtons(activityId);
 
-    this.debuggerButtonJQNodes.resume.addClass("disabled");
-    this.debuggerButtonJQNodes.pause.removeClass("disabled");
-    this.debuggerButtonJQNodes.stop.removeClass("disabled");
+    btns.resume.addClass("disabled");
+    btns.pause.removeClass("disabled");
 
-    this.debuggerButtonJQNodes.stepInto.addClass("disabled");
-    this.debuggerButtonJQNodes.stepOver.addClass("disabled");
-    this.debuggerButtonJQNodes.return.addClass("disabled");
+    btns.stepInto.addClass("disabled");
+    btns.stepOver.addClass("disabled");
+    btns.return.addClass("disabled");
   }
 
-  onContinueExecution() {
-    this.switchDebuggerToResumedState();
-    $(this.currentDomNode).removeClass("DbgCurrentNode");
+  onContinueExecution(activityId: number) {
+    this.switchActivityDebuggerToResumedState(activityId);
+
+    const id = getActivityId(activityId);
+    const highlightedNode = $("#" + id + " .DbgCurrentNode");
+    highlightedNode.removeClass("DbgCurrentNode");
   }
 }

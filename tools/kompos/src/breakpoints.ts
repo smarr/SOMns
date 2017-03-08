@@ -1,8 +1,13 @@
 import {Source, SourceCoordinate, AbstractBreakpointData, LineBreakpointData,
   SectionBreakpointData, SectionBreakpointType,
   createLineBreakpointData, createSectionBreakpointData} from "./messages";
+import {getLineId} from "./view";
 
 export type Breakpoint = LineBreakpoint | MessageBreakpoint;
+
+export function getBreakpointId(sectionId: string, bpType: SectionBreakpointType) {
+  return sectionId + "-" + bpType;
+}
 
 abstract class AbstractBreakpoint<T extends AbstractBreakpointData> {
   readonly data: T;
@@ -17,10 +22,13 @@ abstract class AbstractBreakpoint<T extends AbstractBreakpointData> {
 
   /**
    * @return a unique id for the breakpoint, to be used in the view as HTML id
+   *         for the entry in the list
    */
-  getId() {
-    return "bp:";
+  getListEntryId() {
+    return "bp-";
   }
+
+  abstract getSourceElementClass();
 
   toggle() {
     this.data.enabled = !this.data.enabled;
@@ -32,18 +40,19 @@ abstract class AbstractBreakpoint<T extends AbstractBreakpointData> {
 }
 
 export class LineBreakpoint extends AbstractBreakpoint<LineBreakpointData> {
-  readonly lineNumSpan: Element;
   readonly sourceId: string;
 
-  constructor(data: LineBreakpointData, source: Source, sourceId: string,
-      lineNumSpan: Element) {
+  constructor(data: LineBreakpointData, source: Source, sourceId: string) {
     super(data, source);
-    this.lineNumSpan = lineNumSpan;
-    this.sourceId    = sourceId;
+    this.sourceId = sourceId;
   }
 
-  getId(): string {
-    return super.getId() + this.sourceId + ":" + this.data.line;
+  public getListEntryId(): string {
+    return super.getListEntryId() + getLineId(this.data.line, this.sourceId);
+  }
+
+  public getSourceElementClass() {
+    return getLineId(this.data.line, this.sourceId);
   }
 }
 
@@ -55,15 +64,19 @@ export class MessageBreakpoint extends AbstractBreakpoint<SectionBreakpointData>
     this.sectionId = sectionId;
   }
 
-  getId(): string {
-    return super.getId() + this.data.type;
+  public getListEntryId(): string {
+    return super.getListEntryId() + getBreakpointId(this.sectionId, this.data.type);
+  }
+
+  public getSourceElementClass() {
+    return this.sectionId;
   }
 }
 
 export function createLineBreakpoint(source: Source, sourceId: string,
-    line: number, clickedSpan: Element) {
+    line: number) {
   return new LineBreakpoint(createLineBreakpointData(source.uri, line, false),
-    source, sourceId, clickedSpan);
+    source, sourceId);
 }
 
 export function createMsgBreakpoint(source: Source,
