@@ -7,7 +7,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.sun.istack.internal.NotNull;
 
-import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.vm.NotYetImplementedException;
@@ -17,6 +16,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.ReplayActor;
 
 
@@ -257,7 +257,7 @@ public class SPromise extends SObjectWithClass {
 
     protected STracingPromise(final Actor owner) {
       super(owner);
-      ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
+      TracingActivityThread t = (TracingActivityThread) Thread.currentThread();
       promiseId = t.generatePromiseId();
       ActorExecutionTrace.promiseCreation(promiseId);
     }
