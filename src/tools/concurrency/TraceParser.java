@@ -89,6 +89,7 @@ public final class TraceParser {
   }
 
   private void parseTrace() {
+    boolean readMainActor = false;
     File traceFile = new File(VmSettings.TRACE_FILE + ".trace");
 
     HashMap<Long, List<Long>> unmappedActors = new HashMap<>(); // maps message to created actors
@@ -114,10 +115,16 @@ public final class TraceParser {
           case ACTOR_CREATION:
             long id = b.getLong(); // actor id
             cause = b.getLong(); // causal
-            if (!unmappedActors.containsKey(cause)) {
-              unmappedActors.put(cause, new ArrayList<>());
+            if (id == 0) {
+              assert !readMainActor : "There should be only one main actor.";
+              readMainActor = true;
             }
-            unmappedActors.get(cause).add(id);
+            if (id != 0) {
+              if (!unmappedActors.containsKey(cause)) {
+                unmappedActors.put(cause, new ArrayList<>());
+              }
+              unmappedActors.get(cause).add(id);
+            }
             b.getShort(); // type
             parsedActors++;
             break;
