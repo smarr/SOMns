@@ -340,9 +340,11 @@ public class Actor implements Activity {
     protected long nextActorId = 1;
     protected long nextMessageId;
     protected long nextPromiseId;
+    protected ByteBuffer tracingDataBuffer;
+
+    // Used for tracing, accessed by the ExecAllMessages classes
     public long createdMessages;
     public long currentMessageId;
-    protected ByteBuffer tracingDataBuffer;
     public long resolvedPromises;
 
     protected ActorProcessingThread(final ForkJoinPool pool) {
