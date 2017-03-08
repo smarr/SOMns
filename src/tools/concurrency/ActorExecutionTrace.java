@@ -170,21 +170,21 @@ public class ActorExecutionTrace {
 
 
   protected enum Events {
-    ActorCreation((byte) 1, 19),
-    PromiseCreation((byte) 2, 17),
-    PromiseResolution((byte) 3, 28),
-    PromiseChained((byte) 4, 17),
-    Mailbox((byte) 5, 21),
+    ActorCreation(TraceParser.ACTOR_CREATION,         19),
+    PromiseCreation(TraceParser.PROMISE_CREATION,     17),
+    PromiseResolution(TraceParser.PROMISE_RESOLUTION, 28),
+    PromiseChained(TraceParser.PROMISE_CHAINED,       17),
+    Mailbox(TraceParser.MAILBOX,                      21),
 
     // at the beginning of buffer, allows to track what was created/executed
     // on which thread, really cheap solution, timestamp?
-    Thread((byte) 6, 9),
+    Thread(TraceParser.THREAD, 9),
 
     // for memory events another buffer is needed
     // (the gc callback is on Thread[Service Thread,9,system])
-    MailboxContd((byte) 7, 23),
-    BasicMessage((byte) 8, 7),
-    PromiseMessage((byte) 9, 7);
+    MailboxContd(TraceParser.MAILBOX_CONTD,     23),
+    BasicMessage(TraceParser.BASIC_MESSAGE,      7),
+    PromiseMessage(TraceParser.PROMISE_MESSAGE,  7);
 
     private final byte id;
     private final int size;

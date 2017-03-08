@@ -24,13 +24,16 @@ import tools.TraceData;
 
 
 public final class TraceParser {
-  private static final byte ACTOR_CREATION = 1;
-  private static final byte PROMISE_CREATION = 2;
-  private static final byte PROMISE_RESOLUTION = 3;
-  private static final byte PROMISE_CHAINED = 4;
-  private static final byte MAILBOX = 5;
-  private static final byte THREAD = 6;
-  private static final byte MAILBOX_CONTD = 7;
+  public static final byte ACTOR_CREATION     = 1;
+  public static final byte PROMISE_CREATION   = 2;
+  public static final byte PROMISE_RESOLUTION = 3;
+  public static final byte PROMISE_CHAINED    = 4;
+  public static final byte MAILBOX            = 5;
+  public static final byte THREAD             = 6;
+  public static final byte MAILBOX_CONTD      = 7;
+
+  public static final byte BASIC_MESSAGE      = 8;
+  public static final byte PROMISE_MESSAGE    = 9;
 
   private final HashMap<Short, SSymbol> symbolMapping = new HashMap<>();
   private ByteBuffer b = ByteBuffer.allocate(ActorExecutionTrace.BUFFER_SIZE);
