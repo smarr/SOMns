@@ -321,7 +321,7 @@ class KomposDemo usingPlatform: platform = Value (
     private reportActor = reportActor.
   |)(
     public data: aRelevantDatum = (
-      ('[DataActor] Rcvd datum. Total Value: ' +  aRelevantDatum total asString) println.
+      ('[DataActor     ] Rcvd datum. Total Value: ' +  aRelevantDatum total asString) println.
 
       data append: aRelevantDatum.
 
@@ -398,7 +398,7 @@ class KomposDemo usingPlatform: platform = Value (
 
     public report: arr = (
       | prefixSumCheck prefixSum |
-      '[ReportActor] report' println.
+      '\n\n\n[ReportActor] report' println.
 
       prefixSumCheck := calculatePrefixSum: arr.
       prefixSum      := calculateParallelPrefixSum: arr.
