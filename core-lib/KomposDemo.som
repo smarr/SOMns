@@ -4,9 +4,22 @@ class KomposDemo usingPlatform: platform = Value (
 
   private Array     = platform kernel Array.
   private Vector    = platform kernel Vector.
+  private Exception = platform kernel Exception.
+
   private Channel   = processes Channel.
   private Process   = processes Process.
 |)(
+  private class JsonParseError signalFor: str at: idx = Exception <: Value (
+  | public string = str.
+    public index  = idx.
+  |
+    signal
+  )(
+    public message = (
+      ^ 'JSON parse error. Unexpected character at ' + index + ' in "' + string + '".'.
+    )
+  )
+
   private class JsonToken new: val with: type = Value (
   | public value = val.
     public type  = type.
@@ -29,7 +42,7 @@ class KomposDemo usingPlatform: platform = Value (
     private str           ::= nil.
   |)(
     private error = (
-      self error: 'JSON parse error. Unexpected character at ' + index + ' in "' + str + '".'.
+      JsonParseError signalFor: str at: index
     )
 
     private startCapture = (
