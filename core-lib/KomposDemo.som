@@ -339,7 +339,9 @@ class KomposDemo usingPlatform: platform = Value (
     )
   )
 
-  class ReportActor new = ()(
+  class ReportActor new: resolver = (
+  | private resolver = resolver. |
+  )(
     private class TempTreeNode left: left right: right sum: sum low: low high: high = (
     | public left  = left.
       public right = right.
@@ -413,6 +415,9 @@ class KomposDemo usingPlatform: platform = Value (
 ___] |  | |___ |___ ___]    |__|  \\/  |___ |  \\     |  | |  | |___' println.
 
       printChart: prefixSum.
+
+      (* End Demo *)
+      resolver resolve: 0.
     )
 
     private printChart: data = (
@@ -464,13 +469,15 @@ ___] |  | |___ |___ ___]    |__|  \\/  |___ |  \\     |  | |  | |___' println.
     '' println.
 
     completionPP := actors createPromisePair.
-    report := (actors createActorFromValue: ReportActor) <-: new.
+    report := (actors createActorFromValue: ReportActor) <-: new: completionPP resolver.
     data   := (actors createActorFromValue: DataActor) <-: new: report.
     json   := (actors createActorFromValue: JsonInputActor) <-: new: data.
     json <-: start.
 
     generator := (actors createActorFromValue: InputGeneratorActor) <-: new: json.
     generator <-: start.
-    ^ completionPP promise
+    ^ completionPP promise whenResolved: [:r |
+        '\n\nEND DEMO' println.
+        r ].
   )
 )
