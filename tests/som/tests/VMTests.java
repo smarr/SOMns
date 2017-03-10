@@ -2,7 +2,6 @@ package som.tests;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.BeforeClass;
@@ -63,16 +62,6 @@ public class VMTests {
         new String[] {"--profile"});
     assertEquals(opts.platformFile, VmOptions.STANDARD_PLATFORM_FILE);
     assertTrue(opts.profilingEnabled);
-    assertArrayEquals(opts.args, new String[0]);
-  }
-
-  @Test
-  public void testDebugFlag() {
-    VmOptions opts = new VmOptions(
-        new String[] {"--debug"});
-    assertEquals(opts.platformFile, VmOptions.STANDARD_PLATFORM_FILE);
-    assertTrue(opts.debuggerEnabled);
-    assertFalse(opts.profilingEnabled);
     assertArrayEquals(opts.args, new String[0]);
   }
 }

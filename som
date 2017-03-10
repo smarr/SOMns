@@ -65,8 +65,6 @@ profile.add_argument('-tp', '--truffle-profile', help='enable Graal-level profil
                     
 
 tools = parser.add_argument_group('Tools', 'Additional Tools')
-tools.add_argument('-td', '--truffle-debugger', help='start Truffle debugger',
-                    dest='truffle_debugger', action='store_true', default=False)
 tools.add_argument('-wd', '--web-debugger', help='start Web debugger',
                     dest='web_debugger', action='store_true', default=False)
 tools.add_argument('-dm', '--dynamic-metrics', help='Capture Dynamic Metrics',
@@ -240,8 +238,6 @@ if args.truffle_profile:
 if args.coverage:
     SOM_ARGS += ['--coverage', args.coverage]
 
-if args.truffle_debugger:
-    SOM_ARGS += ['--debug']
 if args.web_debugger:
     SOM_ARGS += ['--web-debug']
 if args.dynamic_metrics:
@@ -263,11 +259,11 @@ if args.disable_trace_file:
 if args.replay:
     flags += ['-Dsom.replay=true']
 
-if (args.truffle_profile or args.truffle_debugger or args.web_debugger or
+if (args.truffle_profile or args.web_debugger or
     args.dynamic_metrics or args.coverage):
     flags += ['-Dsom.instrumentation=true']
 
-if (args.truffle_debugger or args.web_debugger):
+if args.web_debugger:
     flags += ['-Dsom.truffleDebugger=true']
 
 if not args.interpreter and args.perf_warnings:

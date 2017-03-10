@@ -7,6 +7,8 @@
 
  - Added `-vmd` flag to enable debug output
  - Added `-J` flag for JVM flags, e.g. `-JXmx2g`
+ - Removed Truffle Debug REPL support, i.e., the `-td` flag. Has been deprecated
+   in Truffle for a long time, and maintaining it seems not useful.
 
 ## [0.2.0] - 2017-03-07 Extended Concurrency Support
 

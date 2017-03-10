@@ -19,8 +19,6 @@ import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 import com.oracle.truffle.api.vm.PolyglotEngine.Instrument;
 import com.oracle.truffle.tools.Profiler;
 import com.oracle.truffle.tools.ProfilerInstrument;
-import com.oracle.truffle.tools.debug.shell.client.SimpleREPLClient;
-import com.oracle.truffle.tools.debug.shell.server.REPLServer;
 
 import coveralls.truffle.Coverage;
 import som.compiler.MixinDefinition;
@@ -304,22 +302,8 @@ public final class VM {
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, false);
     VmOptions vmOptions = new VmOptions(args);
 
-    if (vmOptions.debuggerEnabled) {
-      startDebugger(builder);
-    } else {
-      startExecution(builder, vmOptions);
-    }
+    startExecution(builder, vmOptions);
   }
-
-  private static void startDebugger(final Builder builder) {
-    SimpleREPLClient client = new SimpleREPLClient();
-    REPLServer server = new REPLServer(client, builder);
-    engine = server.getEngine();
-    Debugger.find(engine);
-    server.start();
-    client.start(server);
-  }
-
 
   private static void startExecution(final Builder builder,
       final VmOptions vmOptions) {

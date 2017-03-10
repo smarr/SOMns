@@ -16,7 +16,6 @@ public class VmOptions {
   public final String[] args;
   public final boolean showUsage;
 
-  @CompilationFinal public boolean debuggerEnabled;
   @CompilationFinal public boolean webDebuggerEnabled;
   @CompilationFinal public boolean profilingEnabled;
   @CompilationFinal public boolean dynamicMetricsEnabled;
@@ -27,7 +26,7 @@ public class VmOptions {
     this.args = processVmArguments(args);
     showUsage = args.length == 0;
     if (!VmSettings.INSTRUMENTATION &&
-        (debuggerEnabled || webDebuggerEnabled || profilingEnabled ||
+        (webDebuggerEnabled || profilingEnabled ||
         dynamicMetricsEnabled || coverageEnabled)) {
       throw new IllegalStateException(
           "Instrumentation is not enabled, but one of the tools is used. " +
@@ -51,9 +50,6 @@ public class VmOptions {
         } else if (arguments[currentArg].equals("--kernel")) {
           kernelFile = arguments[currentArg + 1];
           currentArg += 2;
-        } else if (arguments[currentArg].equals("--debug")) {
-          debuggerEnabled = true;
-          currentArg += 1;
         } else if (arguments[currentArg].equals("--web-debug")) {
           webDebuggerEnabled = true;
           currentArg += 1;
