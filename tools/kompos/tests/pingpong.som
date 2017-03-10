@@ -13,17 +13,16 @@ class PingPongApp usingPlatform: platform = Value (
     ) (
       public start = (
         'Ping>>start' println.
-        pong <-: ping: self.
-        pingsLeft := pingsLeft - 1.       
+        ping
       )
-    
-      public ping = ( 
+
+      public ping = (
       | p1 |
         'Ping>>ping' println.
         pong <-: ping: self.
         pingsLeft := pingsLeft - 1.
 
-        p1 := self <-: validate: pingsLeft.        
+        p1 := self <-: validate: pingsLeft.
         p1 whenResolved: [:v | v println. ].
       )
 
@@ -36,10 +35,10 @@ class PingPongApp usingPlatform: platform = Value (
         p2 := actors createPromisePair.
         r := p2 resolver.
         r resolve: ' ping value ' + pings.
-        
+
         ^ p2 promise
       )
-    
+
       public pong: sender = (
         'Ping>>pong' println.
         pingsLeft > 0
@@ -47,7 +46,7 @@ class PingPongApp usingPlatform: platform = Value (
           ifFalse: [ pong <-: stop ].
       )
     )
-  
+
     class Pong new: completionRes = (
     | private pongCount ::= 0.
       private completionRes = completionRes.
@@ -58,13 +57,13 @@ class PingPongApp usingPlatform: platform = Value (
         sender <-: pong: self.
         pongCount := pongCount + 1.
       )
-    
+
       public stop = (
         'Pong>>stop' println.
         completionRes resolve: pongCount
       )
     )
-    
+
     public benchmark = (
       | ping pong completionPP p |
       completionPP := actors createPromisePair.
@@ -100,7 +99,7 @@ class PingPongApp usingPlatform: platform = Value (
       ^ (PingPong new: 3) benchmark ].
     args size = 2 ifTrue: [
       | test |
-      test := args at: 2. 
+      test := args at: 2.
       test = 'halt'  ifTrue: [ ^ testHalt ].
       test = 'dnu'   ifTrue: [ ^ testDNU  ].
       test = 'stack' ifTrue: [ ^ testPrintStackTrace  ].
