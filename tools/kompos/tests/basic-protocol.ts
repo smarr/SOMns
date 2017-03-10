@@ -122,11 +122,11 @@ describe("Basic Protocol", function() {
      line:        22},
 
     {suite:       "setting a source section asynchronous method receiver breakpoint",
-     breakpoint:  createSectionBreakpointData(PING_PONG_URI, 56, 9, 88, "AsyncMessageReceiverBreakpoint", true),
+     breakpoint:  createSectionBreakpointData(PING_PONG_URI, 21, 9, 176, "AsyncMessageReceiverBreakpoint", true),
      test:        "should accept async method receiver breakpoint, and halt on expected source section",
      stackLength: 2,
-     topMethod:   "Pong>>#ping:",
-     line:        56},
+     topMethod:   "Ping>>#ping",
+     line:        21},
 
     {suite:       "setting a source section receiver breakpoint",
      breakpoint:  createSectionBreakpointData(PING_PONG_URI, 22, 14, 3, "MessageReceiverBreakpoint", true),
