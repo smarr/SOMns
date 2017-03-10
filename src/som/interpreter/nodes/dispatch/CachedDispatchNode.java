@@ -3,7 +3,6 @@ package som.interpreter.nodes.dispatch;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
@@ -33,17 +32,17 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
   }
 
   @Override
-  public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
+  public Object executeDispatch(final Object[] arguments) {
     try {
       if (guard.entryMatches(arguments[0])) {
         return cachedMethod.call(arguments);
       } else {
-        return nextInCache.executeDispatch(frame, arguments);
+        return nextInCache.executeDispatch(arguments);
       }
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       return replace(nextInCache).
-          executeDispatch(frame, arguments);
+          executeDispatch(arguments);
     }
   }
 

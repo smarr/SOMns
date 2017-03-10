@@ -1,6 +1,5 @@
 package som.interpreter.nodes.dispatch;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
@@ -34,6 +33,5 @@ public abstract class AbstractDispatchNode
     return sourceSection;
   }
 
-  public abstract Object executeDispatch(
-      final VirtualFrame frame, final Object[] arguments);
+  public abstract Object executeDispatch(final Object[] arguments);
 }

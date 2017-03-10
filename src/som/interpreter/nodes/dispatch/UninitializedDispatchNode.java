@@ -1,7 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.nodes.Node;
@@ -122,10 +121,10 @@ public final class UninitializedDispatchNode {
     }
 
     @Override
-    public final Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
+    public final Object executeDispatch(final Object[] arguments) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Initialize a dispatch node.");
-          executeDispatch(frame, arguments);
       return specialize(arguments).
+          executeDispatch(arguments);
     }
 
     private AbstractDispatchNode specialize(final Object[] arguments) {

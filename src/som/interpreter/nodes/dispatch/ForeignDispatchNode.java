@@ -1,6 +1,5 @@
 package som.interpreter.nodes.dispatch;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.interop.Message;
@@ -38,7 +37,7 @@ public final class ForeignDispatchNode extends AbstractDispatchNode {
   }
 
   @Override
-  public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
+  public Object executeDispatch(final Object[] arguments) {
     VM.thisMethodNeedsToBeOptimized("");
     Object rcvr = arguments[0];
     if (rcvr instanceof TruffleObject && !(rcvr instanceof SAbstractObject)) {
@@ -66,7 +65,7 @@ public final class ForeignDispatchNode extends AbstractDispatchNode {
         }
       }
     } else {
-      return nextInCache.executeDispatch(frame, arguments);
+      return nextInCache.executeDispatch(arguments);
     }
   }
 

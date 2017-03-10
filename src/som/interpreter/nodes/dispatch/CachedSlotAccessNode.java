@@ -1,7 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -42,19 +41,18 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
     }
 
     @Override
-    public Object executeDispatch(final VirtualFrame frame,
-        final Object[] arguments) {
+    public Object executeDispatch(final Object[] arguments) {
       try {
         // TODO: make sure this cast is always eliminated, otherwise, we need two versions mut/immut
         if (guard.entryMatches(arguments[0])) {
           return read(arguments[0]);
         } else {
-          return nextInCache.executeDispatch(frame, arguments);
+          return nextInCache.executeDispatch(arguments);
         }
       } catch (InvalidAssumptionException e) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
         return replace(nextInCache).
-            executeDispatch(frame, arguments);
+            executeDispatch(arguments);
       }
     }
 
@@ -121,17 +119,16 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
     }
 
     @Override
-    public Object executeDispatch(final VirtualFrame frame,
-        final Object[] arguments) {
+    public Object executeDispatch(final Object[] arguments) {
       try {
         if (guard.entryMatches(arguments[0])) {
           return write.write((SMutableObject) arguments[0], arguments[1]);
         } else {
-          return nextInCache.executeDispatch(frame, arguments);
+          return nextInCache.executeDispatch(arguments);
         }
       } catch (InvalidAssumptionException e) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
-        return replace(nextInCache).executeDispatch(frame, arguments);
+        return replace(nextInCache).executeDispatch(arguments);
       }
     }
 

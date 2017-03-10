@@ -2,7 +2,6 @@ package som.interpreter.nodes.dispatch;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -30,7 +29,7 @@ public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
   protected abstract Dispatchable doLookup(SClass rcvrClass);
 
   @Override
-  public final Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
+  public final Object executeDispatch(final Object[] arguments) {
     Object rcvr = arguments[0];
     SClass rcvrClass = Types.getClassOf(rcvr);
     Dispatchable method = doLookup(rcvrClass);

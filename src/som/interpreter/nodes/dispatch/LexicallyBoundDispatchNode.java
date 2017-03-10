@@ -2,7 +2,6 @@ package som.interpreter.nodes.dispatch;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -30,7 +29,7 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchNode {
   }
 
   @Override
-  public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
+  public Object executeDispatch(final Object[] arguments) {
     return cachedMethod.call(arguments);
   }
 
