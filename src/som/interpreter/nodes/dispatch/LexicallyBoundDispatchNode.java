@@ -31,7 +31,7 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchNode {
 
   @Override
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
-    return cachedMethod.call(frame, arguments);
+    return cachedMethod.call(arguments);
   }
 
   @Override

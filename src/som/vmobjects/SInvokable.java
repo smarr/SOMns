@@ -30,7 +30,6 @@ import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -139,13 +138,13 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     return getSignature().getNumberOfSignatureArguments();
   }
 
-  public final Object invoke(final Object... arguments) {
+  public final Object invoke(final Object[] arguments) {
     return callTarget.call(arguments);
   }
 
   @Override
-  public final Object invoke(final IndirectCallNode node, final VirtualFrame frame, final Object... arguments) {
-    return node.call(frame, callTarget, arguments);
+  public final Object invoke(final IndirectCallNode node, final Object[] arguments) {
+    return node.call(callTarget, arguments);
   }
 
   @Override

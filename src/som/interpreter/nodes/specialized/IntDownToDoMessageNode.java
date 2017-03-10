@@ -3,7 +3,6 @@ package som.interpreter.nodes.specialized;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -21,21 +20,21 @@ public abstract class IntDownToDoMessageNode extends IntToDoMessageNode {
 
   @Override
   @Specialization(guards = "block.getMethod() == blockMethod")
-  public final long doIntToDo(final VirtualFrame frame, final long receiver,
+  public final long doIntToDo(final long receiver,
       final long limit, final SBlock block,
       @Cached("block.getMethod()") final SInvokable blockMethod,
       @Cached("create(blockMethod)") final DirectCallNode valueSend) {
-    return IntToByDoMessageNode.doLoop(frame, valueSend, this, receiver,
+    return IntToByDoMessageNode.doLoop(valueSend, this, receiver,
         limit, -1, block);
   }
 
   @Override
   @Specialization(guards = "block.getMethod() == blockMethod")
-  public final long doIntToDo(final VirtualFrame frame, final long receiver,
+  public final long doIntToDo(final long receiver,
       final double dLimit, final SBlock block,
       @Cached("block.getMethod()") final SInvokable blockMethod,
       @Cached("create(blockMethod)") final DirectCallNode valueSend) {
-    return IntToByDoMessageNode.doLoop(frame, valueSend, this, receiver,
+    return IntToByDoMessageNode.doLoop(valueSend, this, receiver,
         (long) dLimit, -1, block);
   }
 }

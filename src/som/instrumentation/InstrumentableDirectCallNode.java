@@ -2,7 +2,6 @@ package som.instrumentation;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
@@ -43,8 +42,8 @@ public class InstrumentableDirectCallNode extends DirectCallNode {
   }
 
   @Override
-  public Object call(final VirtualFrame frame, final Object[] arguments) {
-    return callNode.call(frame, arguments);
+  public Object call(final Object[] arguments) {
+    return callNode.call(arguments);
   }
 
   @Override

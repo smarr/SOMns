@@ -30,7 +30,7 @@ public final class KernelObj {
     SInvokable disp = (SInvokable) KernelObj.kernel.getSOMClass().lookupPrivate(
         Symbols.symbolFor(selector),
         KernelObj.kernel.getSOMClass().getMixinDefinition().getMixinId());
-    return disp.invoke(KernelObj.kernel, rcvr.getSOMClass());
+    return disp.invoke(new Object[] {KernelObj.kernel, rcvr.getSOMClass()});
   }
 
   @GenerateNodeFactory

@@ -4,7 +4,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
@@ -49,26 +48,26 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode {
   }
 
   @Specialization(guards = "block.getMethod() == blockMethod")
-  public final long doIntToByDo(final VirtualFrame frame, final long receiver,
+  public final long doIntToByDo(final long receiver,
       final long limit, final long step, final SBlock block) {
-    return doLoop(frame, valueSend, this, receiver, limit, step, block);
+    return doLoop(valueSend, this, receiver, limit, step, block);
   }
 
   @Specialization(guards = "block.getMethod() == blockMethod")
-  public final long doIntToByDo(final VirtualFrame frame, final long receiver,
+  public final long doIntToByDo(final long receiver,
       final double limit, final long step, final SBlock block) {
-    return doLoop(frame, valueSend, this, receiver, (long) limit, step, block);
+    return doLoop(valueSend, this, receiver, (long) limit, step, block);
   }
 
-  public static long doLoop(final VirtualFrame frame, final DirectCallNode value,
+  public static long doLoop(final DirectCallNode value,
       final Node loopNode, final long receiver, final long limit, final long step,
       final SBlock block) {
     try {
       if (receiver <= limit) {
-        value.call(frame, new Object[] {block, receiver});
+        value.call(new Object[] {block, receiver});
       }
       for (long i = receiver + step; i <= limit; i += step) {
-        value.call(frame, new Object[] {block, i});
+        value.call(new Object[] {block, i});
         ObjectTransitionSafepoint.INSTANCE.checkAndPerformSafepoint();
       }
     } finally {

@@ -36,7 +36,7 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
     try {
       if (guard.entryMatches(arguments[0])) {
-        return cachedMethod.call(frame, arguments);
+        return cachedMethod.call(arguments);
       } else {
         return nextInCache.executeDispatch(frame, arguments);
       }

@@ -35,10 +35,10 @@ import som.compiler.AccessModifier;
 import som.compiler.Variable.Internal;
 import som.interpreter.FrameOnStackMarker;
 import som.interpreter.InliningVisitor;
+import som.interpreter.InliningVisitor.ScopeElement;
 import som.interpreter.ReturnException;
 import som.interpreter.SArguments;
 import som.interpreter.Types;
-import som.interpreter.InliningVisitor.ScopeElement;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.Symbols;
 import som.vmobjects.SBlock;
@@ -98,7 +98,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
       SInvokable invokable = (SInvokable) Types.getClassOf(self).lookupMessage(
           escapedBlock, AccessModifier.PROTECTED);
 
-      return invokable.invoke(call, frame, new Object[] {self, block});
+      return invokable.invoke(call, new Object[] {self, block});
     }
   }
 

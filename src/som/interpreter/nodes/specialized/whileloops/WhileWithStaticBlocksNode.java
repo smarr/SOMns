@@ -78,10 +78,9 @@ public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
   }
 
   @Override
-  protected Object doWhileConditionally(final VirtualFrame frame,
-      final SBlock loopCondition,
+  protected Object doWhileConditionally(final SBlock loopCondition,
       final SBlock loopBody) {
-    return doWhileUnconditionally(frame, loopCondition, loopBody);
+    return doWhileUnconditionally(loopCondition, loopBody);
   }
 
   public static final class WhileWithStaticBlocksNodeFactory implements NodeFactory<WhileWithStaticBlocksNode> {

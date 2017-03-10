@@ -86,17 +86,16 @@ public abstract class BlockPrims {
     }
 
     @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
-    public final Object doCachedBlock(final VirtualFrame frame,
-        final SBlock receiver,
+    public final Object doCachedBlock(final SBlock receiver,
         @Cached("createDirectCallNode(receiver, getSourceSection())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
-      return call.call(frame, new Object[] {receiver});
+      return call.call(new Object[] {receiver});
     }
 
     @Specialization(replaces = "doCachedBlock")
-    public final Object doGeneric(final VirtualFrame frame,
-        final SBlock receiver, @Cached("create()") final IndirectCallNode call) {
-      return receiver.getMethod().invoke(call, frame, new Object[] {receiver});
+    public final Object doGeneric(final SBlock receiver,
+        @Cached("create()") final IndirectCallNode call) {
+      return receiver.getMethod().invoke(call, new Object[] {receiver});
     }
   }
 
@@ -117,18 +116,16 @@ public abstract class BlockPrims {
     }
 
     @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
-    public final Object doCachedBlock(final VirtualFrame frame,
-        final SBlock receiver, final Object arg,
+    public final Object doCachedBlock(final SBlock receiver, final Object arg,
         @Cached("createDirectCallNode(receiver, getSourceSection())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
-      return call.call(frame, new Object[] {receiver, arg});
+      return call.call(new Object[] {receiver, arg});
     }
 
     @Specialization(replaces = "doCachedBlock")
-    public final Object doGeneric(final VirtualFrame frame,
-        final SBlock receiver, final Object arg,
+    public final Object doGeneric(final SBlock receiver, final Object arg,
         @Cached("create()") final IndirectCallNode call) {
-      return receiver.getMethod().invoke(call, frame, new Object[] {receiver, arg});
+      return receiver.getMethod().invoke(call, new Object[] {receiver, arg});
     }
   }
 
@@ -149,18 +146,17 @@ public abstract class BlockPrims {
     }
 
     @Specialization(guards = "cached == receiver.getMethod()", limit = "CHAIN_LENGTH")
-    public final Object doCachedBlock(final VirtualFrame frame,
-        final SBlock receiver, final Object arg1, final Object arg2,
+    public final Object doCachedBlock(final SBlock receiver, final Object arg1, final Object arg2,
         @Cached("createDirectCallNode(receiver, getSourceSection())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
-      return call.call(frame, new Object[] {receiver, arg1, arg2});
+      return call.call(new Object[] {receiver, arg1, arg2});
     }
 
     @Specialization(replaces = "doCachedBlock")
-    public final Object doGeneric(final VirtualFrame frame,
-        final SBlock receiver, final Object arg1, final Object arg2,
+    public final Object doGeneric(final SBlock receiver, final Object arg1,
+        final Object arg2,
         @Cached("create()") final IndirectCallNode call) {
-      return receiver.getMethod().invoke(call, frame, new Object[] {receiver, arg1, arg2});
+      return receiver.getMethod().invoke(call, new Object[] {receiver, arg1, arg2});
     }
   }
 

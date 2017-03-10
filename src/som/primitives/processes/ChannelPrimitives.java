@@ -126,7 +126,7 @@ public abstract class ChannelPrimitives {
       try {
         SInvokable disp = (SInvokable) obj.getSOMClass().lookupMessage(
             Symbols.symbolFor("run"), AccessModifier.PROTECTED);
-        disp.invoke(obj);
+        disp.invoke(new Object[] {obj});
       } catch (Throwable t) {
         t.printStackTrace();
       } finally {

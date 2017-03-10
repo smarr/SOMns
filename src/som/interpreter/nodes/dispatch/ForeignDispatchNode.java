@@ -44,13 +44,13 @@ public final class ForeignDispatchNode extends AbstractDispatchNode {
     if (rcvr instanceof TruffleObject && !(rcvr instanceof SAbstractObject)) {
       TruffleObject r = (TruffleObject) rcvr;
       try {
-        return ForeignAccess.sendInvoke(invoke, frame, r,
+        return ForeignAccess.sendInvoke(invoke, r,
             selector, SArguments.getPlainArgumentWithoutReceiver(arguments));
       } catch (UnsupportedTypeException | ArityException
           | UnknownIdentifierException | UnsupportedMessageException e) {
         if (read != null) {
           try {
-            return ForeignAccess.sendRead(read, frame, r, selector);
+            return ForeignAccess.sendRead(read, r, selector);
           } catch (UnknownIdentifierException
               | UnsupportedMessageException e1) {
             throw new RuntimeException(e1);
@@ -58,7 +58,7 @@ public final class ForeignDispatchNode extends AbstractDispatchNode {
         } else {
           assert write != null;
           try {
-            return ForeignAccess.sendWrite(write, frame, r, selector, arguments[1]);
+            return ForeignAccess.sendWrite(write, r, selector, arguments[1]);
           } catch (UnknownIdentifierException | UnsupportedTypeException
               | UnsupportedMessageException e1) {
             throw new RuntimeException(e1);

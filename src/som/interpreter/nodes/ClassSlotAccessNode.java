@@ -1,5 +1,11 @@
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.nodes.InvalidAssumptionException;
+
 import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
 import som.interpreter.objectstorage.FieldReadNode;
@@ -7,13 +13,6 @@ import som.interpreter.objectstorage.FieldWriteNode.AbstractFieldWriteNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
-
-import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 public final class ClassSlotAccessNode extends FieldReadNode {
   private final MixinDefinition mixinDef;
@@ -33,13 +32,13 @@ public final class ClassSlotAccessNode extends FieldReadNode {
   }
 
   @Override
-  public SClass read(final VirtualFrame frame, final SObject rcvr) {
+  public SClass read(final SObject rcvr) {
     // here we need to synchronize, because this is actually something that
     // can happen concurrently, and we only want a single instance of the
     // class object
     Object cachedValue;
     try {
-      cachedValue = read.read(frame, rcvr);
+      cachedValue = read.read(rcvr);
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreter();
       throw new RuntimeException("This should never happen");
@@ -51,7 +50,7 @@ public final class ClassSlotAccessNode extends FieldReadNode {
 
     synchronized (rcvr) {
       try {
-        cachedValue = read.read(frame, rcvr);
+        cachedValue = read.read(rcvr);
       } catch (InvalidAssumptionException e) {
         CompilerDirectives.transferToInterpreter();
         throw new RuntimeException("This should never happen");
@@ -59,7 +58,7 @@ public final class ClassSlotAccessNode extends FieldReadNode {
 
       // check whether cache is initialized with class object
       if (cachedValue == Nil.nilObject) {
-        SClass classObject = instantiateClassObject(frame, rcvr);
+        SClass classObject = instantiateClassObject(rcvr);
         write.write(rcvr, classObject);
         return classObject;
       } else {
@@ -76,15 +75,13 @@ public final class ClassSlotAccessNode extends FieldReadNode {
         invokable.createCallTarget()));
   }
 
-  private SClass instantiateClassObject(final VirtualFrame frame,
-      final SObject rcvr) {
+  private SClass instantiateClassObject(final SObject rcvr) {
     if (superclassAndMixinResolver == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       createResolverCallTargets();
     }
 
-    Object superclassAndMixins = superclassAndMixinResolver.call(frame,
-        new Object[] {rcvr});
+    Object superclassAndMixins = superclassAndMixinResolver.call(new Object[] {rcvr});
     SClass classObject = instantiation.execute(rcvr, superclassAndMixins);
     return classObject;
   }

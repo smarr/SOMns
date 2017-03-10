@@ -51,7 +51,7 @@ public class DirectCallNodeWrapper implements InstrumentableFactory<DirectCallNo
     public Object call(final VirtualFrame frame, final Object[] arguments) {
       try {
         probe.onEnter(frame);
-        Object returnValue = delegate.call(frame, arguments);
+        Object returnValue = delegate.call(arguments);
         probe.onReturnValue(frame, returnValue);
         return returnValue;
       } catch (Throwable t) {

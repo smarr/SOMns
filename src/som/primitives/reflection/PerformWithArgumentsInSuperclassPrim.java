@@ -1,18 +1,17 @@
 package som.primitives.reflection;
 
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
+
 import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
-
-import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 
 @GenerateNodeFactory
@@ -24,13 +23,11 @@ public abstract class PerformWithArgumentsInSuperclassPrim extends QuaternaryExp
   }
 
   @Specialization
-  public final Object doSAbstractObject(final VirtualFrame frame,
-      final Object receiver, final SSymbol selector,
+  public final Object doSAbstractObject(final Object receiver, final SSymbol selector,
       final Object[] argArr, final SClass clazz) {
     VM.thisMethodNeedsToBeOptimized("PerformWithArgumentsInSuperclassPrim.doSAbstractObject()");
     Dispatchable invokable = clazz.lookupMessage(selector, AccessModifier.PUBLIC);
-    return invokable.invoke(call, frame,
-        mergeReceiverWithArguments(receiver, argArr));
+    return invokable.invoke(call, mergeReceiverWithArguments(receiver, argArr));
   }
 
   // TODO: remove duplicated code, also in symbol dispatch, ideally removing by optimizing this implementation...

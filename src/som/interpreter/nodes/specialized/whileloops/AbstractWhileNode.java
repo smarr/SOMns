@@ -49,22 +49,22 @@ public abstract class AbstractWhileNode extends BinaryComplexOperation {
   @Override
   public final Object executeEvaluated(final VirtualFrame frame,
       final Object rcvr, final Object arg) {
-    return doWhileConditionally(frame, (SBlock) rcvr, (SBlock) arg);
+    return doWhileConditionally((SBlock) rcvr, (SBlock) arg);
   }
 
-  protected final Object doWhileUnconditionally(final VirtualFrame frame,
-      final SBlock loopCondition, final SBlock loopBody) {
+  protected final Object doWhileUnconditionally(final SBlock loopCondition,
+      final SBlock loopBody) {
     long iterationCount = 0;
 
     boolean loopConditionResult = (boolean) conditionValueSend.call(
-        frame, new Object[] {loopCondition});
+        new Object[] {loopCondition});
 
     try {
       // TODO: this is a simplification, we don't cover the case receiver isn't a boolean
       while (loopConditionResult == predicateBool) {
-        bodyValueSend.call(frame, new Object[] {loopBody});
+        bodyValueSend.call(new Object[] {loopBody});
         loopConditionResult = (boolean) conditionValueSend.call(
-            frame, new Object[] {loopCondition});
+            new Object[] {loopCondition});
 
         if (CompilerDirectives.inInterpreter()) { iterationCount++; }
         ObjectTransitionSafepoint.INSTANCE.checkAndPerformSafepoint();
@@ -77,8 +77,8 @@ public abstract class AbstractWhileNode extends BinaryComplexOperation {
     return Nil.nilObject;
   }
 
-  protected abstract Object doWhileConditionally(final VirtualFrame frame,
-      final SBlock loopCondition, final SBlock loopBody);
+  protected abstract Object doWhileConditionally(final SBlock loopCondition,
+      final SBlock loopBody);
 
   @Override
   public boolean isResultUsed(final ExpressionNode child) {

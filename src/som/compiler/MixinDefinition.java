@@ -12,7 +12,6 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.Source;
@@ -540,7 +539,7 @@ public final class MixinDefinition {
     }
 
     @Override
-    public Object invoke(final IndirectCallNode call, final VirtualFrame frame, final Object... arguments) {
+    public Object invoke(final IndirectCallNode call, final Object[] arguments) {
       VM.callerNeedsToBeOptimized("call without proper call cache. Find better way if this is performance critical.");
       assert arguments.length == 1;
       SObject rcvr = (SObject) arguments[0];
@@ -590,8 +589,7 @@ public final class MixinDefinition {
     }
 
     @Override
-    public Object invoke(final IndirectCallNode call, final VirtualFrame frame,
-        final Object... arguments) {
+    public Object invoke(final IndirectCallNode call, final Object[] arguments) {
       VM.callerNeedsToBeOptimized("call without proper call cache. Find better way if this is performance critical.");
       SObject rcvr = (SObject) arguments[0];
       rcvr.writeSlot(this, arguments[1]);
@@ -632,8 +630,7 @@ public final class MixinDefinition {
     }
 
     @Override
-    public Object invoke(final IndirectCallNode call, final VirtualFrame frame,
-        final Object... arguments) {
+    public Object invoke(final IndirectCallNode call, final Object[] arguments) {
       VM.callerNeedsToBeOptimized("this should not be on the compiled-code path");
       assert arguments.length == 1;
       SObject rcvr = (SObject) arguments[0];

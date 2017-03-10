@@ -1,6 +1,5 @@
 package som.interpreter.transactions;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
@@ -19,8 +18,8 @@ public final class CachedTxSlotRead extends CachedSlotRead {
   }
 
   @Override
-  protected Object read(final VirtualFrame frame, final Object rcvr) throws InvalidAssumptionException {
+  protected Object read(final Object rcvr) throws InvalidAssumptionException {
     SMutableObject workingCopy = Transactions.workingCopy((SMutableObject) rcvr);
-    return read.read(frame, workingCopy);
+    return read.read(workingCopy);
   }
 }

@@ -98,12 +98,11 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
   }
 
   @Specialization(guards = "isSameBlock(argument)")
-  public final boolean doAnd(final VirtualFrame frame, final boolean receiver,
-      final SBlock argument) {
+  public final boolean doAnd(final boolean receiver, final SBlock argument) {
     if (receiver == false) {
       return false;
     } else {
-      return (boolean) blockValueSend.call(frame, new Object[] {argument});
+      return (boolean) blockValueSend.call(new Object[] {argument});
     }
   }
 

@@ -1,23 +1,21 @@
 package som.interpreter.nodes.dispatch;
 
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
-
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
+
 
 public abstract class BlockDispatchNode extends Node {
 
-  public abstract Object executeDispatch(
-      final VirtualFrame frame, final Object[] arguments);
+  public abstract Object executeDispatch(final Object[] arguments);
 
   protected static final boolean isSameMethod(final Object[] arguments,
       final SInvokable cached) {
@@ -39,19 +37,19 @@ public abstract class BlockDispatchNode extends Node {
   }
 
   @Specialization(guards = "isSameMethod(arguments, cached)")
-  public Object activateBlock(final VirtualFrame frame, final Object[] arguments,
+  public Object activateBlock(final Object[] arguments,
       @Cached("getMethod(arguments)") final SInvokable cached,
       @Cached("createCallNode(arguments)") final DirectCallNode call) {
-    return call.call(frame, arguments);
+    return call.call(arguments);
   }
 
   @CompilationFinal protected IndirectCallNode indirect;
 
   @Fallback
-  public Object activateBlock(final VirtualFrame frame, final Object[] arguments) {
+  public Object activateBlock(final Object[] arguments) {
     if (indirect == null) {
       indirect = Truffle.getRuntime().createIndirectCallNode();
     }
-    return indirect.call(frame, getMethod(arguments).getCallTarget(), arguments);
+    return indirect.call(getMethod(arguments).getCallTarget(), arguments);
   }
 }

@@ -4,7 +4,6 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -65,12 +64,11 @@ public abstract class OrMessageNode extends BinaryComplexOperation {
   }
 
   @Specialization(guards = "isSameBlock(argument)")
-  public final boolean doOr(final VirtualFrame frame, final boolean receiver,
-      final SBlock argument) {
+  public final boolean doOr(final boolean receiver, final SBlock argument) {
     if (receiver) {
       return true;
     } else {
-      return (boolean) blockValueSend.call(frame, new Object[] {argument});
+      return (boolean) blockValueSend.call(new Object[] {argument});
     }
   }
 
@@ -88,8 +86,7 @@ public abstract class OrMessageNode extends BinaryComplexOperation {
     }
 
     @Specialization
-    public final boolean doOr(final VirtualFrame frame, final boolean receiver,
-        final boolean argument) {
+    public final boolean doOr(final boolean receiver, final boolean argument) {
       return receiver || argument;
     }
 

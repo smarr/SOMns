@@ -1,12 +1,12 @@
 package som.interpreter.nodes.specialized.whileloops;
 
-import som.vm.NotYetImplementedException;
-import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
-
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+
+import som.vm.NotYetImplementedException;
+import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
 
 
 public final class WhileWithDynamicBlocksNode extends AbstractWhileNode {
@@ -32,11 +32,10 @@ public final class WhileWithDynamicBlocksNode extends AbstractWhileNode {
   }
 
   @Override
-  protected Object doWhileConditionally(final VirtualFrame frame,
-      final SBlock loopCondition,
+  protected Object doWhileConditionally(final SBlock loopCondition,
       final SBlock loopBody) {
     assert loopCondition.getMethod() == conditionMethod;
     assert loopBody.getMethod()      == bodyMethod;
-    return doWhileUnconditionally(frame, loopCondition, loopBody);
+    return doWhileUnconditionally(loopCondition, loopBody);
   }
 }

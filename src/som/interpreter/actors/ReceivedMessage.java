@@ -85,7 +85,7 @@ public class ReceivedMessage extends ReceivedRootNode {
         dbg.prepareSteppingAfterNextRootNode();
       }
 
-      Object result = onReceive.call(frame, msg.args);
+      Object result = onReceive.call(msg.args);
 
       resolvePromise(frame, msg.resolver, result, msg.triggerPromiseResolutionBreakpoint);
       return null;

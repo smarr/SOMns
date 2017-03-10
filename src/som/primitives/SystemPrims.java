@@ -13,7 +13,6 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.impl.FindContextNode;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.ForeignAccess;
@@ -312,8 +311,7 @@ public final class SystemPrims {
     @Child protected ToSomConversion convert = ToSomConversionNodeGen.create(null);
 
     @Specialization
-    public final Object doApply(final VirtualFrame frame,
-        final TruffleObject fun, final SArray args) {
+    public final Object doApply(final TruffleObject fun, final SArray args) {
       Node execNode = Message.createExecute((int) size.executeEvaluated(args)).createNode();
 
       Object[] arguments;
@@ -331,7 +329,7 @@ public final class SystemPrims {
       }
 
       try {
-        Object result = ForeignAccess.sendExecute(execNode, frame, fun, arguments);
+        Object result = ForeignAccess.sendExecute(execNode, fun, arguments);
         return convert.executeEvaluated(result);
       } catch (UnsupportedTypeException | ArityException
           | UnsupportedMessageException e) {

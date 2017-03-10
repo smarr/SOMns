@@ -5,7 +5,6 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -13,8 +12,8 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.specialized.IntToDoMessageNode.ToDoSplzr;
 import som.primitives.Primitive;
-import som.vm.VmSettings;
 import som.vm.Primitives.Specializer;
+import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.dym.Tags.LoopNode;
@@ -52,20 +51,19 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode {
   }
 
   @Specialization(guards = "block.getMethod() == blockMethod")
-  public long doIntToDo(final VirtualFrame frame, final long receiver,
-      final long limit, final SBlock block,
+  public long doIntToDo(final long receiver, final long limit, final SBlock block,
       @Cached("block.getMethod()") final SInvokable blockMethod,
       @Cached("create(blockMethod)") final DirectCallNode valueSend) {
-    return IntToByDoMessageNode.doLoop(frame, valueSend, this, receiver,
+    return IntToByDoMessageNode.doLoop(valueSend, this, receiver,
         limit, 1, block);
   }
 
   @Specialization(guards = "block.getMethod() == blockMethod")
-  public long doIntToDo(final VirtualFrame frame, final long receiver,
-      final double dLimit, final SBlock block,
+  public long doIntToDo(final long receiver, final double dLimit,
+      final SBlock block,
       @Cached("block.getMethod()") final SInvokable blockMethod,
       @Cached("create(blockMethod)") final DirectCallNode valueSend) {
-    return IntToByDoMessageNode.doLoop(frame, valueSend, this, receiver,
+    return IntToByDoMessageNode.doLoop(valueSend, this, receiver,
         (long) dLimit, 1, block);
   }
 

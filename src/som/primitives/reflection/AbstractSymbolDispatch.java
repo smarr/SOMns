@@ -80,30 +80,30 @@ public abstract class AbstractSymbolDispatch extends Node {
   }
 
   @Specialization(replaces = "doCachedWithoutArgArr", guards = "argsArr == null")
-  public Object doUncached(final VirtualFrame frame,
-      final Object receiver, final SSymbol selector, final Object argsArr,
+  public Object doUncached(final Object receiver, final SSymbol selector,
+      final Object argsArr,
       @Cached("create()") final IndirectCallNode call) {
     SClass rcvrClass = Types.getClassOf(receiver);
     Dispatchable invokable = rcvrClass.lookupMessage(selector, AccessModifier.PUBLIC);
 
     Object[] arguments = {receiver};
     if (invokable != null) {
-      return invokable.invoke(call, frame, arguments);
+      return invokable.invoke(call, arguments);
     } else {
-      return GenericDispatchNode.performDnu(frame, arguments, receiver,
+      return GenericDispatchNode.performDnu(arguments, receiver,
           rcvrClass, selector, call);
     }
   }
 
   @Specialization(replaces = "doCached")
-  public Object doUncached(final VirtualFrame frame,
-      final Object receiver, final SSymbol selector, final SArray argsArr,
+  public Object doUncached(final Object receiver, final SSymbol selector,
+      final SArray argsArr,
       @Cached("create()") final IndirectCallNode call,
       @Cached("createArgArrayNode()") final ToArgumentsArrayNode toArgArray) {
     Dispatchable invokable = Types.getClassOf(receiver).lookupMessage(selector, AccessModifier.PUBLIC);
 
     Object[] arguments = toArgArray.executedEvaluated(argsArr, receiver);
 
-    return invokable.invoke(call, frame, arguments);
+    return invokable.invoke(call, arguments);
   }
 }

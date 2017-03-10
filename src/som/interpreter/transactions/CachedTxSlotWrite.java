@@ -1,7 +1,6 @@
 package som.interpreter.transactions;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
@@ -20,19 +19,18 @@ public final class CachedTxSlotWrite extends CachedSlotWrite {
   }
 
   @Override
-  public Object executeDispatch(final VirtualFrame frame,
-      final Object[] arguments) {
+  public Object executeDispatch(final Object[] arguments) {
     Object rcvr = arguments[0];
     try {
       if (guard.entryMatches(rcvr)) {
         SMutableObject workingCopy = Transactions.workingCopy((SMutableObject) rcvr);
         return write.write(workingCopy, arguments[1]);
       } else {
-        return nextInCache.executeDispatch(frame, arguments);
+        return nextInCache.executeDispatch(arguments);
       }
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      return replace(nextInCache).executeDispatch(frame, arguments);
+      return replace(nextInCache).executeDispatch(arguments);
     }
   }
 }

@@ -4,7 +4,6 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.profiles.ConditionProfile;
@@ -48,22 +47,21 @@ public abstract class IfMessageNode extends BinaryComplexOperation {
   }
 
   @Specialization(guards = {"arg.getMethod() == method"})
-  public final Object cachedBlock(final VirtualFrame frame, final boolean rcvr, final SBlock arg,
+  public final Object cachedBlock(final boolean rcvr, final SBlock arg,
       @Cached("arg.getMethod()") final SInvokable method,
       @Cached("createDirect(method)") final DirectCallNode callTarget) {
     if (condProf.profile(rcvr == expected)) {
-      return callTarget.call(frame, new Object[] {arg});
+      return callTarget.call(new Object[] {arg});
     } else {
       return Nil.nilObject;
     }
   }
 
   @Specialization(replaces = "cachedBlock")
-  public final Object fallback(final VirtualFrame frame, final boolean rcvr,
-      final SBlock arg,
+  public final Object fallback(final boolean rcvr, final SBlock arg,
       @Cached("createIndirect()") final IndirectCallNode callNode) {
     if (condProf.profile(rcvr == expected)) {
-      return callNode.call(frame, arg.getMethod().getCallTarget(), new Object[] {arg});
+      return callNode.call(arg.getMethod().getCallTarget(), new Object[] {arg});
     } else {
       return Nil.nilObject;
     }

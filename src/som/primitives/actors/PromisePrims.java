@@ -8,7 +8,6 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -64,11 +63,11 @@ public final class PromisePrims {
     public CreatePromisePairPrim(final boolean eagerWrapper, final SourceSection source) { super(eagerWrapper, source); }
 
     @Specialization
-    public final SImmutableObject createPromisePair(final VirtualFrame frame,
-        final Object nil, @Cached("create()") final DirectCallNode factory) {
+    public final SImmutableObject createPromisePair(final Object nil,
+        @Cached("create()") final DirectCallNode factory) {
       SPromise promise   = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
       SResolver resolver = SPromise.createResolver(promise, "ctorPPair");
-      return (SImmutableObject) factory.call(frame, new Object[] {SPromise.pairClass, promise, resolver});
+      return (SImmutableObject) factory.call(new Object[] {SPromise.pairClass, promise, resolver});
     }
 
     private static final SSymbol withAndFactory = Symbols.symbolFor("with:and:");

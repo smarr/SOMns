@@ -4,7 +4,6 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
@@ -45,18 +44,17 @@ public abstract class ExceptionsPrims {
     @Specialization(limit = "INLINE_CACHE_SIZE",
         guards = {"sameBlock(body, cachedBody)",
                   "sameBlock(exceptionHandler, cachedExceptionMethod)"})
-    public final Object doException(final VirtualFrame frame, final SBlock body,
+    public final Object doException(final SBlock body,
         final SClass exceptionClass, final SBlock exceptionHandler,
         @Cached("body.getMethod()") final SInvokable cachedBody,
         @Cached("createCallNode(body)") final DirectCallNode bodyCall,
         @Cached("exceptionHandler.getMethod()") final SInvokable cachedExceptionMethod,
         @Cached("createCallNode(exceptionHandler)") final DirectCallNode exceptionCall) {
       try {
-        return bodyCall.call(frame, new Object[] {body});
+        return bodyCall.call(new Object[] {body});
       } catch (SomException e) {
         if (e.getSomObject().getSOMClass().isKindOf(exceptionClass)) {
-          return exceptionCall.call(frame,
-              new Object[] {exceptionHandler, e.getSomObject()});
+          return exceptionCall.call(new Object[] {exceptionHandler, e.getSomObject()});
         } else {
           throw e;
         }
@@ -64,13 +62,13 @@ public abstract class ExceptionsPrims {
     }
 
     @Specialization(replaces = "doException")
-    public final Object doExceptionUncached(final VirtualFrame frame, final SBlock body,
+    public final Object doExceptionUncached(final SBlock body,
         final SClass exceptionClass, final SBlock exceptionHandler) {
       try {
-        return body.getMethod().invoke(indirect, frame, new Object[] {body});
+        return body.getMethod().invoke(indirect, new Object[] {body});
       } catch (SomException e) {
         if (e.getSomObject().getSOMClass().isKindOf(exceptionClass)) {
-          return exceptionHandler.getMethod().invoke(indirect, frame,
+          return exceptionHandler.getMethod().invoke(indirect,
               new Object[] {exceptionHandler, e.getSomObject()});
         } else {
           throw e;
@@ -101,13 +99,11 @@ public abstract class ExceptionsPrims {
     protected EnsurePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
-    public final Object doException(final VirtualFrame frame, final SBlock body,
-        final SBlock ensureHandler) {
+    public final Object doException(final SBlock body, final SBlock ensureHandler) {
       try {
-        return dispatchBody.executeDispatch(frame, new Object[] {body});
+        return dispatchBody.executeDispatch(new Object[] {body});
       } finally {
-        dispatchHandler.executeDispatch(frame,
-            new Object[] {ensureHandler});
+        dispatchHandler.executeDispatch(new Object[] {ensureHandler});
       }
     }
   }

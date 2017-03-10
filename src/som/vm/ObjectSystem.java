@@ -394,7 +394,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
         Symbols.symbolFor(selector), AccessModifier.PUBLIC);
     try {
       ObjectTransitionSafepoint.INSTANCE.register();
-      return method.invoke(platformClass);
+      return method.invoke(new Object[] {platformClass});
     } finally {
       ObjectTransitionSafepoint.INSTANCE.unregister();
     }

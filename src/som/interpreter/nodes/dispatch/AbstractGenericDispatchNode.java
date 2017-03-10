@@ -36,15 +36,15 @@ public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
     Dispatchable method = doLookup(rcvrClass);
 
     if (method != null) {
-      return method.invoke(call, frame, arguments);
+      return method.invoke(call, arguments);
     } else {
-      return performDnu(frame, arguments, rcvr, rcvrClass, selector, call);
+      return performDnu(arguments, rcvr, rcvrClass, selector, call);
     }
   }
 
-  public static Object performDnu(final VirtualFrame frame,
-      final Object[] arguments, final Object rcvr, final SClass rcvrClass,
-      final SSymbol selector, final IndirectCallNode call) {
+  public static Object performDnu(final Object[] arguments, final Object rcvr,
+      final SClass rcvrClass, final SSymbol selector,
+      final IndirectCallNode call) {
     if (VmSettings.DNU_PRINT_STACK_TRACE) {
       PrintStackTracePrim.printStackTrace(0, null);
       VM.errorPrintln("Lookup of " + selector + " failed in " + Types.getClassOf(rcvr).getName().getString());
@@ -54,7 +54,7 @@ public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
     SArray argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
     Object[] args = new Object[] {arguments[0], selector, argumentsArray};
     CallTarget target = CachedDnuNode.getDnu(rcvrClass, selector);
-    return call.call(frame, target, args);
+    return call.call(target, args);
   }
 
   @Override

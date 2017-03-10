@@ -47,7 +47,7 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
       try {
         // TODO: make sure this cast is always eliminated, otherwise, we need two versions mut/immut
         if (guard.entryMatches(arguments[0])) {
-          return read(frame, arguments[0]);
+          return read(arguments[0]);
         } else {
           return nextInCache.executeDispatch(frame, arguments);
         }
@@ -58,7 +58,7 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
       }
     }
 
-    protected abstract Object read(final VirtualFrame frame, final Object rcvr) throws InvalidAssumptionException;
+    protected abstract Object read(final Object rcvr) throws InvalidAssumptionException;
 
     @Override
     public int lengthOfDispatchChain() {
@@ -86,8 +86,8 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
     }
 
     @Override
-    protected Object read(final VirtualFrame frame, final Object rcvr) throws InvalidAssumptionException {
-      return read.read(frame, (SImmutableObject) rcvr);
+    protected Object read(final Object rcvr) throws InvalidAssumptionException {
+      return read.read((SImmutableObject) rcvr);
     }
   }
 
@@ -100,8 +100,8 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
     }
 
     @Override
-    protected Object read(final VirtualFrame frame, final Object rcvr) throws InvalidAssumptionException {
-      return read.read(frame, (SMutableObject) rcvr);
+    protected Object read(final Object rcvr) throws InvalidAssumptionException {
+      return read.read((SMutableObject) rcvr);
     }
   }
 

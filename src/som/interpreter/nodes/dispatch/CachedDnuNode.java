@@ -47,13 +47,13 @@ public final class CachedDnuNode extends AbstractDispatchNode {
       match = false;
     }
     if (match) {
-      return performDnu(frame, arguments, rcvr);
+      return performDnu(arguments, rcvr);
     } else {
       return nextInCache.executeDispatch(frame, arguments);
     }
   }
 
-  protected Object performDnu(final VirtualFrame frame, final Object[] arguments,
+  protected Object performDnu(final Object[] arguments,
       final Object rcvr) {
     if (VmSettings.DNU_PRINT_STACK_TRACE) {
       PrintStackTracePrim.printStackTrace(0, getSourceSection());
@@ -62,7 +62,7 @@ public final class CachedDnuNode extends AbstractDispatchNode {
 
     Object[] argsArr = new Object[] {
         rcvr, selector, SArguments.getArgumentsWithoutReceiver(arguments) };
-    return cachedMethod.call(frame, argsArr);
+    return cachedMethod.call(argsArr);
   }
 
   @TruffleBoundary
