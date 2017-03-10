@@ -2,7 +2,6 @@ package som.interpreter;
 
 import java.util.List;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
@@ -20,10 +19,8 @@ import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
 import som.interpreter.nodes.literals.NilLiteralNode;
-import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.objectstorage.InitializerFieldWrite;
 import som.interpreter.objectstorage.InitializerFieldWriteNodeGen;
-import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
@@ -84,25 +81,6 @@ public final class SNodeFactory {
       final Internal marker, final int contextLevel,
       final SourceSection source) {
     return new ReturnNonLocalNode(exp, marker, contextLevel, source);
-  }
-
-  public static final class NotImplemented extends ExprWithTagsNode {
-    private final String msg;
-
-    public NotImplemented(final String msg, final SourceSection source) {
-      super(source);
-      this.msg = msg;
-    }
-
-    @Override
-    public Object executeGeneric(final VirtualFrame frame) {
-      throw new NotYetImplementedException();
-    }
-
-    @Override
-    public String toString() {
-      return "Not Implemented: " + msg;
-    }
   }
 
   public static ExpressionNode createImplicitReceiverSend(
