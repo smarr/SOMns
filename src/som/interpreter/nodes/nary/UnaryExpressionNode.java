@@ -34,6 +34,7 @@ public abstract class UnaryExpressionNode extends EagerlySpecializableNode {
     return executeEvaluated(frame, arguments[0]);
   }
 
+  @Override
   public EagerPrimitive wrapInEagerWrapper(
       final EagerlySpecializableNode prim, final SSymbol selector,
       final ExpressionNode[] arguments) {

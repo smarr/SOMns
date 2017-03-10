@@ -61,10 +61,10 @@ public final class MethodPrims {
     }
 
     @Specialization
-    public final Object doInvoke(final VirtualFrame frame,
+    public final Object doInvoke(
         final SInvokable receiver, final Object target, final SArray somArr,
         final Object[] argArr) {
-      return callNode.executeDispatch(frame, receiver, argArr);
+      return callNode.executeDispatch(receiver, argArr);
     }
   }
 }

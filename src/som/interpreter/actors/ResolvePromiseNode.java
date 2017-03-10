@@ -40,7 +40,7 @@ public abstract class ResolvePromiseNode extends TernaryExpressionNode {
    * Handle the case that a promise is resolved with another promise, which is not itself.
    */
   @Specialization(guards = {"resolver.getPromise() != promiseValue"})
-  public SResolver chainedPromise(final VirtualFrame frame, final SResolver resolver, final SPromise promiseValue,
+  public SResolver chainedPromise(final SResolver resolver, final SPromise promiseValue,
       final boolean isBreakpointOnPromiseResolution) {
     assert resolver.assertNotCompleted();
     SPromise promiseToBeResolved = resolver.getPromise();

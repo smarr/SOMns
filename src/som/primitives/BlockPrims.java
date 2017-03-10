@@ -6,7 +6,6 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
@@ -164,9 +163,8 @@ public abstract class BlockPrims {
   public abstract static class ValueMorePrim extends QuaternaryExpressionNode {
     public ValueMorePrim() { super(null); }
     @Specialization
-    public final Object doSBlock(final VirtualFrame frame,
-        final SBlock receiver, final Object firstArg, final Object secondArg,
-        final Object thirdArg) {
+    public final Object doSBlock(final SBlock receiver, final Object firstArg,
+        final Object secondArg, final Object thirdArg) {
       CompilerDirectives.transferToInterpreter();
       throw new RuntimeException("This should never be called, because SOM Blocks have max. 2 arguments.");
     }

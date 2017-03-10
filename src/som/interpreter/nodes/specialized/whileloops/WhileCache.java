@@ -4,7 +4,6 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
@@ -56,8 +55,7 @@ public abstract class WhileCache extends BinaryComplexOperation {
   }
 
   @Specialization(replaces = "doCached")
-  public final Object doUncached(final VirtualFrame frame, final SBlock loopCondition,
-      final SBlock loopBody) {
+  public final Object doUncached(final SBlock loopCondition, final SBlock loopBody) {
     CompilerAsserts.neverPartOfCompilation("WhileCache.GenericDispatch"); // no caching, direct invokes, no loop count reporting...
 
     Object conditionResult = loopCondition.getMethod().invoke(new Object[] {loopCondition});
