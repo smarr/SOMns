@@ -49,8 +49,8 @@ import tools.debugger.FrontendConnector;
 
 public class ActorExecutionTrace {
 
-  private static final int BUFFER_POOL_SIZE = Runtime.getRuntime().availableProcessors() * 4;
   static final int BUFFER_SIZE = 4096 * 1024;
+  private static final int BUFFER_POOL_SIZE = VmSettings.NUM_THREADS * 4;
 
   private static final int MESSAGE_SIZE = 44; // max message size without parameters
   private static final int PARAM_SIZE = 9; // max size for one parameter
