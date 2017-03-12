@@ -56,6 +56,7 @@ export interface Activity {
   id: number;
   name: string;
   type: ActivityType;
+  causalMsg: number;
 }
 
 export interface StoppedMessage {

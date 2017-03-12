@@ -58,8 +58,15 @@ export interface ActivityNode {
   x:          number;
   y:          number;
   groupSize?: number;
-  left?:      number;
-  right?:     number;
+}
+
+export interface ActivityLink {
+  source: ActivityNode;
+  target: ActivityNode;
+  left:   boolean;
+  right:  boolean;
+  messageCount: number;
+  creation?: boolean;
 }
 
 export class HistoryData {
@@ -69,7 +76,8 @@ export class HistoryData {
   private msgs = {};
   private maxMessageCount = 0;
   private strings: IdMap<string> = {};
-  private currentReceiver = 0;
+
+  private currentReceiver = -1;
   private currentMsgId = undefined;
 
   constructor() {
@@ -103,10 +111,10 @@ export class HistoryData {
     this.msgs[msgId] = {sender: sender, target: target};
   }
 
-  getLinks() {
-    let links = [];
-    for (let sendId in this.messages) {
-      for (let rcvrId in this.messages[sendId]) {
+  getLinks(): ActivityLink[] {
+    const links: ActivityLink[] = [];
+    for (const sendId in this.messages) {
+      for (const rcvrId in this.messages[sendId]) {
         this.maxMessageCount = Math.max(this.maxMessageCount, this.messages[sendId][rcvrId]);
         if (this.activity[sendId] === undefined) {
           dbgLog("WAT? racy? unknown sendId: " + sendId);
@@ -123,6 +131,19 @@ export class HistoryData {
           messageCount: this.messages[sendId][rcvrId]
         });
       }
+    }
+
+    for (const i in this.activity) {
+      const a = this.activity[i];
+      const msg = this.msgs[a.activity.causalMsg];
+      if (msg === undefined) { continue; }
+      links.push({
+        source: this.activity[msg.target],
+        target: a,
+        left: false, right: true,
+        creation:     true,
+        messageCount: 1
+      });
     }
     return links;
   }
@@ -161,9 +182,12 @@ export class HistoryData {
   private readActivity(data: DataView, i: number, type: ActivityType,
       newActivities: Activity[]) {
     const aid = this.readLong(data, i);
-    // 8 byte causal message id
+    const causalMsg = this.readLong(data, i + 8);
     const nameId: number = data.getUint16(i + 16);
-    const actor: Activity = {id: aid, name: this.strings[nameId], type: type};
+    const actor: Activity = {
+      id: aid, type: type,
+      name: this.strings[nameId],
+      causalMsg: causalMsg};
     this.addActivity(actor);
     newActivities.push(actor);
     return 18;
