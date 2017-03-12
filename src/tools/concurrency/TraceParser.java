@@ -20,6 +20,7 @@ import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.TraceData;
+import tools.concurrency.ActorExecutionTrace.Events;
 
 
 
@@ -108,11 +109,14 @@ public final class TraceParser {
           channel.read(b);
           b.flip();
         }
+
+        final int start = b.position();
         byte type = b.get();
 
         long cause;
         switch (type) {
           case ACTOR_CREATION:
+
             long id = b.getLong(); // actor id
             cause = b.getLong(); // causal
             if (id == 0) {
@@ -127,12 +131,15 @@ public final class TraceParser {
             }
             b.getShort(); // type
             parsedActors++;
+            assert b.position() == start + Events.ActorCreation.size;
             break;
           case MAILBOX:
+
             currentMessage = b.getLong(); // base msg id
             currentMailbox = b.getInt(); // mailboxno
             currentReceiver = b.getLong(); // receiver
             msgNo = 0;
+            assert b.position() == start + Events.Mailbox.size;
             break;
           case MAILBOX_CONTD:
             currentMessage = b.getLong(); // base msg id
@@ -141,10 +148,12 @@ public final class TraceParser {
             int offset = b.getInt(); // offset
             currentMessage += offset;
             msgNo = offset;
+            assert b.position() == start + Events.MailboxContd.size;
             break;
           case PROMISE_CHAINED:
             b.getLong(); // parent
             b.getLong(); // child
+            assert b.position() == start + Events.PromiseChained.size;
             break;
           case PROMISE_CREATION:
             long pid  = b.getLong(); // promise id
@@ -153,18 +162,21 @@ public final class TraceParser {
               unmappedPromises.put(cause, new LinkedList<>());
             }
             unmappedPromises.get(cause).add(pid);
+            assert b.position() == start + Events.PromiseCreation.size;
             break;
           case PROMISE_RESOLUTION:
             b.getLong(); // promise id
             b.getLong(); // resolving msg
             parseParameter(); // param
+            assert b.position() <= start + Events.PromiseResolution.size;
             break;
           case THREAD:
             b.compact();
             channel.read(b);
             b.flip();
-            b.get(); // thread id
+            b.getLong(); // thread id
             b.getLong(); // time millis
+            assert (b.position() + 1) == Events.Thread.size;
             break;
           default:
             parsedMessages++;

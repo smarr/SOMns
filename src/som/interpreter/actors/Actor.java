@@ -1,7 +1,6 @@
 package som.interpreter.actors;
 
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
@@ -84,8 +83,6 @@ public class Actor implements Activity {
   private static long numCreatedActors    = 0;
   private static long numCreatedPromises  = 0;
   private static long numResolvedPromises = 0;
-
-  private static ArrayList<ActorProcessingThread> threads = new ArrayList<>();
 
   /**
    * Possible roles for an actor.
@@ -330,9 +327,7 @@ public class Actor implements Activity {
   private static final class ActorProcessingThreadFactor implements ForkJoinWorkerThreadFactory {
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
-      ActorProcessingThread t = new ActorProcessingThread(pool);
-      threads.add(t);
-      return t;
+      return new ActorProcessingThread(pool);
     }
   }
 
@@ -373,8 +368,6 @@ public class Actor implements Activity {
         long createdMessages = nextMessageId - (threadId << TraceData.ACTIVITY_ID_BITS);
         long createdPromises = nextPromiseId - (threadId << TraceData.ACTIVITY_ID_BITS);
 
-        ActorExecutionTrace.returnBuffer(this.tracingDataBuffer);
-        this.tracingDataBuffer = null;
         VM.printConcurrencyEntitiesReport("[Thread " + threadId + "]\tA#" + createdActors + "\t\tM#" + createdMessages + "\t\tP#" + createdPromises);
 
         synchronized (statsLock) {
@@ -384,7 +377,6 @@ public class Actor implements Activity {
           numResolvedPromises += resolvedPromises;
         }
       }
-      threads.remove(this);
       super.onTermination(exception);
     }
   }
@@ -422,12 +414,6 @@ public class Actor implements Activity {
         VM.printConcurrencyEntitiesReport("[Total]\tA#" + numCreatedActors + "\t\tM#" + numCreatedMessages + "\t\tP#" + numCreatedPromises);
         VM.printConcurrencyEntitiesReport("[Unresolved] " + (numCreatedPromises - numResolvedPromises));
       }
-    }
-  }
-
-  public static final void forceSwapBuffers() {
-    for (ActorProcessingThread t: threads) {
-      ActorExecutionTrace.swapBuffer(t);
     }
   }
 

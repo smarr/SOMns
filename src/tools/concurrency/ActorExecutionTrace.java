@@ -12,9 +12,8 @@ import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
 import java.lang.management.MemoryUsage;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
@@ -32,30 +31,46 @@ import com.sun.management.GarbageCollectionNotificationInfo;
 import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
-import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SFarReference;
-import som.interpreter.actors.SPromise;
-import som.interpreter.actors.SPromise.SResolver;
 import som.primitives.TimerPrim;
 import som.primitives.processes.ChannelPrimitives.TracingProcess;
 import som.vm.ObjectSystem;
 import som.vm.VmSettings;
-import som.vmobjects.SAbstractObject;
-import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 import tools.ObjectBuffer;
 import tools.TraceData;
 import tools.debugger.FrontendConnector;
 
+
+/**
+ * Tracing of the execution is done on a per-thread basis to minimize overhead
+ * at run-time.
+ *
+ * <p>To communicate detailed information about the system for debugging,
+ * TraceWorkerThreads will capture the available data periodically and send it
+ * to the debugger.
+ *
+ * <h4>Synchronization Strategy</h4>
+ * <p>During normal execution with tracing, we do not need any synchronization,
+ * because all operations on the buffers are initiated by the
+ * TracingActivityThreads themselves. Thus, everything is thread-local. The
+ * swapping of buffers is initiated from the TracingActivityThreads, too.
+ * It requires synchronization only on the data structure where the buffers
+ * are listed.
+ *
+ * <p>During execution with the debugger however, the periodic data requests
+ * cause higher synchronization requirements. Since this is about interactive
+ * debugging the cost of synchronization is likely acceptable, and will simply
+ * done on the buffer for all access.
+ */
 public class ActorExecutionTrace {
-
-  static final int BUFFER_SIZE = 4096 * 1024;
   private static final int BUFFER_POOL_SIZE = VmSettings.NUM_THREADS * 4;
+  static final int BUFFER_SIZE = 4096 * 1024;
 
-  private static final int MESSAGE_SIZE = 44; // max message size without parameters
-  private static final int PARAM_SIZE = 9; // max size for one parameter
+  static final int MESSAGE_SIZE = 44; // max message size without parameters
+  static final int PARAM_SIZE = 9; // max size for one parameter
   private static final int TRACE_TIMEOUT = 500;
-  private static final int POLL_TIMEOUT = 10;
+  private static final int POLL_TIMEOUT  = 50;
 
   private static final List<java.lang.management.GarbageCollectorMXBean> gcbeans = ManagementFactory.getGarbageCollectorMXBeans();
 
@@ -70,7 +85,7 @@ public class ActorExecutionTrace {
 
   private static long collectedMemory = 0;
   private static TraceWorkerThread workerThread = new TraceWorkerThread();
-  private static final byte messageEventId;
+  static final byte messageEventId;
 
   static {
     if (VmSettings.MEMORY_TRACING) {
@@ -140,18 +155,16 @@ public class ActorExecutionTrace {
   }
 
   @TruffleBoundary
-  public static synchronized void swapBuffer(final TracingActivityThread t) throws IllegalStateException {
-    returnBuffer(t.getThreadLocalBuffer());
-
+  static synchronized ByteBuffer getEmptyBuffer() {
     try {
-      t.setThreadLocalBuffer(emptyBuffers.take().put(Events.Thread.id).put((byte) t.getPoolIndex()).putLong(System.currentTimeMillis()));
+      return emptyBuffers.take();
     } catch (InterruptedException e) {
       throw new IllegalStateException("Failed to acquire a new Buffer!");
     }
   }
 
   @TruffleBoundary
-  public static synchronized void returnBuffer(final ByteBuffer b) {
+  static synchronized void returnBuffer(final ByteBuffer b) {
     if (b == null) {
       return;
     }
@@ -162,6 +175,36 @@ public class ActorExecutionTrace {
     fullBuffers.add(b);
   }
 
+  private static HashSet<TracingActivityThread> tracingThreads = new HashSet<>();
+
+  public static void registerThread(final TracingActivityThread t) {
+    synchronized (tracingThreads) {
+      boolean added = tracingThreads.add(t);
+      assert added;
+    }
+  }
+
+  public static void unregisterThread(final TracingActivityThread t) {
+    synchronized (tracingThreads) {
+      boolean removed = tracingThreads.remove(t);
+      assert removed;
+    }
+  }
+
+  public static final void forceSwapBuffers() {
+    assert VmSettings.TRUFFLE_DEBUGGER_ENABLED && VmSettings.ACTOR_TRACING;
+    TracingActivityThread[] result;
+    synchronized (tracingThreads) {
+      result = tracingThreads.toArray(new TracingActivityThread[0]);
+    }
+
+    for (TracingActivityThread t : result) {
+      TraceBuffer buffer = t.getBuffer();
+      synchronized (buffer) {
+        buffer.swapStorage();
+      }
+    }
+  }
 
   protected enum Events {
     ActorCreation(TraceParser.ACTOR_CREATION,         19),
@@ -172,19 +215,19 @@ public class ActorExecutionTrace {
 
     // at the beginning of buffer, allows to track what was created/executed
     // on which thread, really cheap solution, timestamp?
-    Thread(TraceParser.THREAD, 9),
+    Thread(TraceParser.THREAD, 17),
 
     // for memory events another buffer is needed
     // (the gc callback is on Thread[Service Thread,9,system])
-    MailboxContd(TraceParser.MAILBOX_CONTD,     23),
+    MailboxContd(TraceParser.MAILBOX_CONTD,     25),
     BasicMessage(TraceParser.BASIC_MESSAGE,      7),
     PromiseMessage(TraceParser.PROMISE_MESSAGE,  7),
 
     ProcessCreation(TraceParser.PROCESS_CREATION,     19),
     ProcessCompletion(TraceParser.PROCESS_COMPLETION,  9);
 
-    private final byte id;
-    private final int size;
+    final byte id;
+    final int size;
 
     Events(final byte id, final int size) {
       this.id = id;
@@ -209,105 +252,38 @@ public class ActorExecutionTrace {
 
   public static void recordMainActor(final Actor mainActor,
       final ObjectSystem objectSystem) {
-    if (!VmSettings.ACTOR_TRACING) {
-      return;
-    }
+    ByteBuffer storage = getEmptyBuffer();
+    TraceBuffer buffer = TraceBuffer.create();
+    buffer.init(storage, 0);
 
-    // don't take buffer from queue, just get reference for briefly
-    // adding main actor info
-    ByteBuffer b = emptyBuffers.element();
-    b.put(Events.ActorCreation.id);
-    b.putLong(mainActor.getId()); // id of the created actor
-    b.putLong(0); // causal message
-    b.putShort(objectSystem.getPlatformClass().getName().getSymbolId());
+    buffer.recordMainActor(mainActor, objectSystem);
+    buffer.returnBuffer();
 
     // start worker thread for trace processing
     workerThread.start();
   }
 
   public static void actorCreation(final SFarReference actor) {
-    if (!VmSettings.ACTOR_TRACING) {
-      return;
-    }
-
-    Thread current = Thread.currentThread();
-    assert current instanceof TracingActivityThread;
-
-    TracingActivityThread t = (TracingActivityThread) current;
-    if (t.getThreadLocalBuffer().remaining() < Events.ActorCreation.size) {
-      swapBuffer(t);
-    }
-
-    final Object value = actor.getValue();
-    assert value instanceof SClass;
-    final SClass actorClass = (SClass) value;
-
-    ByteBuffer b = t.getThreadLocalBuffer();
-    assert b.order() == ByteOrder.BIG_ENDIAN;
-    b.put(Events.ActorCreation.id);
-    b.putLong(actor.getActor().getId()); // id of the created actor
-    b.putLong(t.getCurrentMessageId()); // causal message
-    b.putShort(actorClass.getName().getSymbolId());
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordActorCreation(actor, t.getCurrentMessageId());
   }
 
   public static void processCreation(final TracingProcess proc) {
-    assert VmSettings.ACTOR_TRACING;
-
-    Thread current = Thread.currentThread();
-    assert current instanceof TracingActivityThread;
-
-    TracingActivityThread t = (TracingActivityThread) current;
-    if (t.getThreadLocalBuffer().remaining() < Events.ProcessCreation.size) {
-      swapBuffer(t);
-    }
-
-    ByteBuffer b = t.getThreadLocalBuffer();
-    b.put(Events.ProcessCreation.id);
-    b.putLong(proc.getId());
-    b.putLong(t.getCurrentMessageId()); // causal message
-    b.putShort(proc.getProcObject().getSOMClass().getName().getSymbolId());
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordProcessCreation(proc, t.getCurrentMessageId());
   }
 
   public static void processCompletion(final TracingProcess proc) {
-    assert VmSettings.ACTOR_TRACING;
-
-    Thread current = Thread.currentThread();
-    assert current instanceof TracingActivityThread;
-
-    TracingActivityThread t = (TracingActivityThread) current;
-    if (t.getThreadLocalBuffer().remaining() < Events.ProcessCompletion.size) {
-      swapBuffer(t);
-    }
-
-    ByteBuffer b = t.getThreadLocalBuffer();
-    b.put(Events.ProcessCompletion.id);
-    b.putLong(proc.getId());
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordProcessCompletion(proc);
   }
 
   public static void promiseCreation(final long promiseId) {
-    if (!VmSettings.ACTOR_TRACING) {
-      return;
-    }
-
-    Thread current = Thread.currentThread();
-    assert current instanceof TracingActivityThread;
-    TracingActivityThread t = (TracingActivityThread) current;
-
-    if (t.getThreadLocalBuffer().remaining() < Events.PromiseCreation.size) {
-      swapBuffer(t);
-    }
-
-    ByteBuffer b = t.getThreadLocalBuffer();
-    b.put(Events.PromiseCreation.id);
-    b.putLong(promiseId); // id of the created promise
-    b.putLong(t.getCurrentMessageId()); // causal message
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordPromiseCreation(promiseId, t.getCurrentMessageId());
   }
 
   public static void promiseResolution(final long promiseId, final Object value) {
-    if (!VmSettings.ACTOR_TRACING) {
-      return;
-    }
-
     Thread current = Thread.currentThread();
     if (TimerPrim.isTimerThread(current)) {
       return;
@@ -316,176 +292,30 @@ public class ActorExecutionTrace {
     assert current instanceof TracingActivityThread;
     TracingActivityThread t = (TracingActivityThread) current;
 
-    if (t.getThreadLocalBuffer().remaining() < Events.PromiseResolution.size) {
-      swapBuffer(t);
-    }
-
-    ByteBuffer b = t.getThreadLocalBuffer();
-    b.put(Events.PromiseResolution.id);
-    b.putLong(promiseId); // id of the promise
-    b.putLong(t.getCurrentMessageId()); // resolving message
-    writeParameter(value, b);
+    t.getBuffer().recordPromiseResolution(promiseId, value, t.getCurrentMessageId());
 
     t.resolvedPromises++;
   }
 
   public static void promiseChained(final long parent, final long child) {
-    if (!VmSettings.ACTOR_TRACING) {
-      return;
-    }
-
-    Thread current = Thread.currentThread();
-    assert current instanceof TracingActivityThread;
-    TracingActivityThread t = (TracingActivityThread) current;
-
-    if (t.getThreadLocalBuffer().remaining() < Events.PromiseChained.size) {
-      swapBuffer(t);
-    }
-
-    ByteBuffer b = t.getThreadLocalBuffer();
-    b.put(Events.PromiseChained.id);
-    b.putLong(parent); // id of the parent
-    b.putLong(child); // id of the chained promise
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordPromiseChained(parent, child);
     t.resolvedPromises++;
   }
 
   public static void mailboxExecuted(final EventualMessage m,
-      final ObjectBuffer<EventualMessage> moreCurrent, final long baseMessageId, final int mailboxNo, final long sendTS,
-      final ObjectBuffer<Long> moreSendTS, final long[] execTS, final Actor actor) {
-    if (!VmSettings.ACTOR_TRACING) {
-      return;
-    }
+      final ObjectBuffer<EventualMessage> moreCurrent, final long baseMessageId,
+      final int mailboxNo, final long sendTS, final ObjectBuffer<Long> moreSendTS,
+      final long[] execTS, final Actor receiver) {
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordMailboxExecuted(m, moreCurrent, baseMessageId,
+        mailboxNo, sendTS, moreSendTS, execTS, receiver);
+  }
 
+  private static TracingActivityThread getThread() {
     Thread current = Thread.currentThread();
     assert current instanceof TracingActivityThread;
-    TracingActivityThread t = (TracingActivityThread) current;
-
-    if (t.getThreadLocalBuffer().remaining() < Events.Mailbox.size + 100 * 50) {
-      swapBuffer(t);
-    }
-
-    ByteBuffer b = t.getThreadLocalBuffer();
-    b.put(Events.Mailbox.id);
-    b.putLong(baseMessageId); // base id for messages
-    b.putInt(mailboxNo);
-    b.putLong(actor.getId());   // receiver of the messages
-
-    int idx = 0;
-
-    if (b.remaining() < (MESSAGE_SIZE + m.getArgs().length * PARAM_SIZE)) {
-      swapBuffer(t);
-      b = t.getThreadLocalBuffer();
-      b.put(Events.MailboxContd.id);
-      b.putLong(baseMessageId);
-      b.putInt(mailboxNo);
-      b.putLong(actor.getId()); // receiver of the messages
-      b.putInt(idx);
-    }
-
-    writeBasicMessage(m, b);
-
-    if (VmSettings.MESSAGE_TIMESTAMPS) {
-      b.putLong(execTS[0]);
-      b.putLong(sendTS);
-    }
-
-    if (VmSettings.MESSAGE_PARAMETERS) {
-      writeParameters(m.getArgs(), b);
-    }
-    idx++;
-
-    if (moreCurrent != null) {
-      Iterator<Long> it = null;
-      if (VmSettings.MESSAGE_TIMESTAMPS) {
-        assert moreSendTS != null && moreCurrent.size() == moreSendTS.size();
-        it = moreSendTS.iterator();
-      }
-      for (EventualMessage em : moreCurrent) {
-        if (b.remaining() < (MESSAGE_SIZE + em.getArgs().length * PARAM_SIZE)) {
-          swapBuffer(t);
-          b = t.getThreadLocalBuffer();
-          b.put(Events.MailboxContd.id);
-          b.putLong(baseMessageId);
-          b.putInt(mailboxNo);
-          b.putLong(actor.getId()); // receiver of the messages
-          b.putInt(idx);
-        }
-
-        writeBasicMessage(em, b);
-
-        if (VmSettings.MESSAGE_TIMESTAMPS) {
-          b.putLong(execTS[idx]);
-          b.putLong(it.next());
-        }
-
-        if (VmSettings.MESSAGE_PARAMETERS) {
-          writeParameters(em.getArgs(), b);
-        }
-        idx++;
-      }
-    }
-  }
-
-  private static void writeBasicMessage(final EventualMessage em, final ByteBuffer b) {
-    if (em instanceof PromiseMessage && VmSettings.PROMISE_CREATION) {
-      b.put((byte) (messageEventId | TraceData.PROMISE_BIT));
-      b.putLong(((PromiseMessage) em).getPromise().getPromiseId());
-    } else {
-      b.put(messageEventId);
-    }
-
-    b.putLong(em.getSender().getId()); // sender
-    b.putLong(em.getCausalMessageId());
-
-    b.putShort(em.getSelector().getSymbolId());
-  }
-
-  private static void writeParameters(final Object[] params, final ByteBuffer b) {
-    b.put((byte) (params.length - 1)); // num paramaters
-
-    for (int i = 1; i < params.length; i++) {
-      // will need a 8 plus 1 byte for most parameter,
-      // boolean just use two identifiers.
-      if (params[i] instanceof SFarReference) {
-        Object o = ((SFarReference) params[i]).getValue();
-        writeParameter(o, b);
-      } else {
-        writeParameter(params[i], b);
-      }
-    }
-  }
-
-  private static void writeParameter(final Object param, final ByteBuffer b) {
-    if (param instanceof SPromise) {
-      b.put(ParamTypes.Promise.id());
-      b.putLong(((SPromise) param).getPromiseId());
-    } else if (param instanceof SResolver) {
-      b.put(ParamTypes.Resolver.id());
-      b.putLong(((SResolver) param).getPromise().getPromiseId());
-    } else if (param instanceof SAbstractObject) {
-      b.put(ParamTypes.Object.id());
-      b.putShort(((SAbstractObject) param).getSOMClass().getName().getSymbolId());
-    } else {
-      if (param instanceof Long) {
-        b.put(ParamTypes.Long.id());
-        b.putLong((Long) param);
-      } else if (param instanceof Double) {
-        b.put(ParamTypes.Double.id());
-        b.putDouble((Double) param);
-      } else if (param instanceof Boolean) {
-        if ((Boolean) param) {
-          b.put(ParamTypes.True.id());
-        } else {
-          b.put(ParamTypes.False.id());
-        }
-      } else if (param instanceof String) {
-        b.put(ParamTypes.String.id());
-      } else {
-        throw new RuntimeException("unexpected parameter type");
-      }
-      // TODO add case for null/nil/exception,
-      // ask ctorresl about what type is used for the error handling stuff
-    }
+    return (TracingActivityThread) current;
   }
 
   /**
@@ -598,42 +428,8 @@ public class ActorExecutionTrace {
   }
 
   public static void mailboxExecutedReplay(final Queue<EventualMessage> todo,
-      final long baseMessageId, final int mailboxNo, final Actor actor) {
-    Thread current = Thread.currentThread();
-
-    assert current instanceof TracingActivityThread;
-    TracingActivityThread t = (TracingActivityThread) current;
-
-    if (t.getThreadLocalBuffer().remaining() < Events.Mailbox.size + 100 * 50) {
-      swapBuffer(t);
-    }
-
-    ByteBuffer b = t.getThreadLocalBuffer();
-    b.put(Events.Mailbox.id);
-    b.putLong(baseMessageId); // base id for messages
-    b.putInt(mailboxNo);
-    b.putLong(actor.getId());    // receiver of the messages
-
-    int idx = 0;
-
-    if (todo != null) {
-      for (EventualMessage em : todo) {
-        if (b.remaining() < (MESSAGE_SIZE + em.getArgs().length * PARAM_SIZE)) {
-          swapBuffer(t);
-          b = t.getThreadLocalBuffer();
-          b.put(Events.MailboxContd.id);
-          b.putLong(baseMessageId);
-          b.putLong(actor.getId()); // receiver of the messages
-          b.putInt(idx);
-        }
-
-        writeBasicMessage(em, b);
-
-        if (VmSettings.MESSAGE_PARAMETERS) {
-          writeParameters(em.getArgs(), b);
-        }
-        idx++;
-      }
-    }
+      final long baseMessageId, final int mailboxNo, final Actor receiver) {
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordMailboxExecutedReplay(todo, baseMessageId, mailboxNo, receiver);
   }
 }

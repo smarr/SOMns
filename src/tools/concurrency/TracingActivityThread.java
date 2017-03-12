@@ -1,6 +1,5 @@
 package tools.concurrency;
 
-import java.nio.ByteBuffer;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -10,7 +9,7 @@ import tools.TraceData;
 
 
 public abstract class TracingActivityThread extends ForkJoinWorkerThread {
-  private static AtomicInteger threadIdGen = new AtomicInteger(0);
+  private static AtomicInteger threadIdGen = new AtomicInteger(1);
   protected final long threadId;
 
   protected long nextActivityId = 1;
@@ -22,17 +21,18 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   public long createdMessages;
   public long resolvedPromises;
 
-  protected ByteBuffer tracingDataBuffer;
+  protected final TraceBuffer traceBuffer;
 
   public TracingActivityThread(final ForkJoinPool pool) {
     super(pool);
     if (VmSettings.ACTOR_TRACING) {
-      ActorExecutionTrace.swapBuffer(this);
+      traceBuffer = TraceBuffer.create();
       threadId = threadIdGen.getAndIncrement();
       nextMessageId = (threadId << TraceData.ACTIVITY_ID_BITS);
       nextPromiseId = (threadId << TraceData.ACTIVITY_ID_BITS);
     } else {
       threadId = 0;
+      traceBuffer = null;
     }
     setName(getClass().getSimpleName() + "-" + threadId);
   }
@@ -48,21 +48,26 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     return nextPromiseId++;
   }
 
-  public final ByteBuffer getThreadLocalBuffer() {
-    return tracingDataBuffer;
-  }
-
-  public void setThreadLocalBuffer(final ByteBuffer threadLocalBuffer) {
-    this.tracingDataBuffer = threadLocalBuffer;
+  public final TraceBuffer getBuffer() {
+    return traceBuffer;
   }
 
   public abstract long getCurrentMessageId();
 
   @Override
+  protected void onStart() {
+    super.onStart();
+    if (VmSettings.ACTOR_TRACING) {
+      traceBuffer.init(ActorExecutionTrace.getEmptyBuffer(), threadId);
+      ActorExecutionTrace.registerThread(this);
+    }
+  }
+
+  @Override
   protected void onTermination(final Throwable exception) {
     if (VmSettings.ACTOR_TRACING) {
-      ActorExecutionTrace.returnBuffer(this.tracingDataBuffer);
-      this.tracingDataBuffer = null;
+      traceBuffer.returnBuffer();
+      ActorExecutionTrace.unregisterThread(this);
     }
     super.onTermination(exception);
   }
