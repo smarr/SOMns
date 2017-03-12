@@ -66,9 +66,11 @@ export class HistoryData {
   private activity: IdMap<ActivityNode> = {};
   private activityPerType: IdMap<number> = {};
   private messages: IdMap<IdMap<number>> = {};
+  private msgs = {};
   private maxMessageCount = 0;
   private strings: IdMap<string> = {};
   private currentReceiver = 0;
+  private currentMsgId = undefined;
 
   constructor() {
   }
@@ -90,13 +92,15 @@ export class HistoryData {
     }
   }
 
-  addMessage(sender: number, target: number) {
-    if (!this.messages.hasOwnProperty(sender.toString())) {
-      this.messages[sender.toString()] = {};
+  addMessage(sender: number, target: number, msgId: number) {
+    const senderId = sender.toString();
+    if (!this.messages.hasOwnProperty(senderId)) {
+      this.messages[senderId] = {};
     }
     if (sender !== target) {
-      hashAtInc(this.messages[sender.toString()], target.toString(), 1);
+      hashAtInc(this.messages[senderId], target.toString(), 1);
     }
+    this.msgs[msgId] = {sender: sender, target: target};
   }
 
   getLinks() {
@@ -203,6 +207,7 @@ export class HistoryData {
           console.assert(i === (start + TraceSize.PromiseChained));
           break;
         case Trace.Mailbox:
+          this.currentMsgId = this.readLong(data, i);
           this.currentReceiver = this.readLong(data, i + 12);
           i += 20;
           console.assert(i === (start + TraceSize.Mailbox));
@@ -212,6 +217,7 @@ export class HistoryData {
           console.assert(i === (start + TraceSize.Thread));
           break;
         case Trace.MailboxContd:
+          this.currentMsgId = this.readLong(data, i);
           this.currentReceiver = this.readLong(data, i + 12); // receiver id
           i += 24;
           console.assert(i === (start + TraceSize.MailboxContd));
@@ -263,7 +269,8 @@ export class HistoryData {
             }
           }
 
-          this.addMessage(sender, this.currentReceiver);
+          this.addMessage(sender, this.currentReceiver, this.currentMsgId);
+          this.currentMsgId += 1;
       }
     }
     controller.newActivities(newActivities);
