@@ -71,7 +71,7 @@ public class ActorExecutionTrace {
   static final int MESSAGE_SIZE = 44; // max message size without parameters
   static final int PARAM_SIZE = 9; // max size for one parameter
   private static final int TRACE_TIMEOUT = 500;
-  private static final int POLL_TIMEOUT  = 50;
+  private static final int POLL_TIMEOUT  = 100;
 
   private static final List<java.lang.management.GarbageCollectorMXBean> gcbeans = ManagementFactory.getGarbageCollectorMXBeans();
 
@@ -375,6 +375,10 @@ public class ActorExecutionTrace {
             try {
               b = ActorExecutionTrace.fullBuffers.poll(POLL_TIMEOUT, TimeUnit.MILLISECONDS);
               if (b == null) {
+                if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+                  // swap all non-empty buffers and try again
+                  ActorExecutionTrace.forceSwapBuffers();
+                }
                 continue;
               }
             } catch (InterruptedException e) {
