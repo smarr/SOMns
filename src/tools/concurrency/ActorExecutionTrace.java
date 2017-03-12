@@ -385,6 +385,13 @@ public class ActorExecutionTrace {
               continue;
             }
 
+            if (b.remaining() <= Events.Thread.size) {
+              // Ignore buffers that only contain the thread index
+              b.clear();
+              ActorExecutionTrace.emptyBuffers.add(b);
+              continue;
+            }
+
             synchronized (symbolsToWrite) {
               if (front != null) {
                 front.sendSymbols(ActorExecutionTrace.symbolsToWrite);
@@ -434,7 +441,7 @@ public class ActorExecutionTrace {
             ActorExecutionTrace.symbolsToWrite.clear();
           }
 
-          if (front != null) {
+          if (b.remaining() > Events.Thread.size && front != null) {
             front.sendTracingData(b);
           }
 
