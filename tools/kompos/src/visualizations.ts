@@ -4,7 +4,7 @@
 import {Controller} from "./controller";
 import {SymbolMessage, Activity} from "./messages";
 import * as d3 from "d3";
-import {HistoryData, ActivityNode} from "./history-data";
+import {HistoryData, ActivityNode, ActivityLink} from "./history-data";
 import {dbgLog} from "./source";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
@@ -30,7 +30,7 @@ function getTangoLightToDarker() {
 
 const tango = getTangoLightToDarker();
 
-let path, circle, nodes: ActivityNode[], links, force; // , colors
+let path, circle, nodes: ActivityNode[], links: ActivityLink[], force; // , colors
 let data = new HistoryData();
 
 /**
@@ -46,7 +46,7 @@ export function displayMessageHistory() {
     .scaleExtent([0.1, 10])
     .on("zoom", zoomed);
 
-  let svg = d3.select("#graph-canvas")
+  const svg = d3.select("#graph-canvas")
     .append("svg")
     // .attr("oncontextmenu", "return false;")
     .attr("width", canvas.width())
@@ -60,7 +60,7 @@ export function displayMessageHistory() {
   //  - links are always source < target; edge directions are set by "left" and "right".
 
   nodes = data.getActivityNodes();
-  links = data.getLinks() ;
+  links = data.getLinks();
 
   // init D3 force layout
   force = d3.layout.force()
@@ -76,33 +76,31 @@ export function displayMessageHistory() {
   });
 
   // define arrow markers for graph links
-  svg.append("svg:defs").append("svg:marker")
-    .attr("id", "end-arrow")
-    .attr("viewBox", "0 -5 10 10")
-    .attr("refX", 6)
-    .attr("markerWidth", 3)
-    .attr("markerHeight", 3)
-    .attr("orient", "auto")
-    .append("svg:path")
-    .attr("d", "M0,-5L10,0L0,5")
-    .attr("fill", "#000");
+  createArrowMarker(svg, "end-arrow",   6, "M0,-5L10,0L0,5",  "#000");
+  createArrowMarker(svg, "start-arrow", 4, "M10,-5L0,0L10,5", "#000");
 
-  svg.append("svg:defs").append("svg:marker")
-    .attr("id", "start-arrow")
-    .attr("viewBox", "0 -5 10 10")
-    .attr("refX", 4)
-    .attr("markerWidth", 3)
-    .attr("markerHeight", 3)
-    .attr("orient", "auto")
-    .append("svg:path")
-    .attr("d", "M10,-5L0,0L10,5")
-    .attr("fill", "#000");
+  createArrowMarker(svg, "end-arrow-creator",   6, "M0,-5L10,0L0,5",  "#aaa");
+  createArrowMarker(svg, "start-arrow-creator", 4, "M10,-5L0,0L10,5", "#aaa");
 
   // handles to link and node element groups
   path = svg.append("svg:g").selectAll("path");
   circle = svg.append("svg:g").selectAll("g");
 
   restart();
+}
+
+function createArrowMarker(svg: d3.Selection<any>, id: string, refX: number,
+    d: string, color: string) {
+  svg.append("svg:defs").append("svg:marker")
+    .attr("id", id)
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", refX)
+    .attr("markerWidth", 3)
+    .attr("markerHeight", 3)
+    .attr("orient", "auto")
+    .append("svg:path")
+    .attr("d", d)
+    .attr("fill", color);
 }
 
 export function resetLinks() {
@@ -155,6 +153,18 @@ function tick() {
   });
 }
 
+function selectStartMarker(d: ActivityLink) {
+  return d.left
+    ? (d.creation ? "url(#start-arrow-creator)" : "url(#start-arrow)")
+    : "";
+}
+
+function selectEndMarker(d: ActivityLink) {
+  return d.right
+    ? (d.creation ? "url(#end-arrow-creator)" : "url(#end-arrow)")
+    : "";
+}
+
 // update graph (called when needed)
 function restart() {
   // path (link) group
@@ -162,16 +172,19 @@ function restart() {
 
   // update existing links
   path // .classed("selected", function(d) { return d === selected_link; })
-    .style("marker-start", function(d: ActivityNode) {
-      return d.left ? "url(#start-arrow)" : ""; })
-    .style("marker-end",   function(d: ActivityNode) { return d.right ? "url(#end-arrow)" : ""; });
+    .style("marker-start", selectStartMarker)
+    .style("marker-end",   selectEndMarker);
 
   // add new links
   path.enter().append("svg:path")
-    .attr("class", "link")
+    .attr("class", function (d: ActivityLink) {
+      return d.creation
+        ? "creation-link"
+        : "link";
+    })
     // .classed("selected", function(d) { return d === selected_link; })
-    .style("marker-start", function(d: ActivityNode) { return d.left ? "url(#start-arrow)" : ""; })
-    .style("marker-end",   function(d: ActivityNode) { return d.right ? "url(#end-arrow)" : ""; });
+    .style("marker-start", selectStartMarker)
+    .style("marker-end",   selectEndMarker);
 
   // remove old links
   path.exit().remove();
