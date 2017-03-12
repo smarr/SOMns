@@ -4,7 +4,8 @@
 import {Controller} from "./controller";
 import {SymbolMessage} from "./messages";
 import * as d3 from "d3";
-import {HistoryData} from "./history-data";
+import {HistoryData, ActivityNode} from "./history-data";
+import {dbgLog} from "./source";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
 const tangoColors = [
@@ -29,7 +30,7 @@ function getTangoLightToDarker() {
 
 const tango = getTangoLightToDarker();
 
-let path, circle, nodes, links, force; // , colors
+let path, circle, nodes: ActivityNode[], links, force; // , colors
 let data = new HistoryData();
 
 /**
@@ -58,8 +59,7 @@ export function displayMessageHistory() {
   //  - reflexive edges are indicated on the node (as a bold black circle).
   //  - links are always source < target; edge directions are set by "left" and "right".
 
-  nodes = data.getActorNodes();
-
+  nodes = data.getActivityNodes();
   links = data.getLinks() ;
 
   // init D3 force layout
@@ -150,7 +150,7 @@ function tick() {
     return "M" + sourceX + "," + sourceY + "L" + targetX + "," + targetY;
   });
 
-  circle.attr("transform", function(d) {
+  circle.attr("transform", function(d: ActivityNode) {
     return "translate(" + (zoomTransl[0] + d.x * zoomScale) + "," + (zoomTransl[1] + d.y * zoomScale) + ")scale(" + zoomScale + ")";
   });
 }
@@ -162,31 +162,30 @@ function restart() {
 
   // update existing links
   path // .classed("selected", function(d) { return d === selected_link; })
-    .style("marker-start", function(d) { return d.left ? "url(#start-arrow)" : ""; })
-    .style("marker-end", function(d) { return d.right ? "url(#end-arrow)" : ""; });
-
+    .style("marker-start", function(d: ActivityNode) {
+      return d.left ? "url(#start-arrow)" : ""; })
+    .style("marker-end",   function(d: ActivityNode) { return d.right ? "url(#end-arrow)" : ""; });
 
   // add new links
   path.enter().append("svg:path")
     .attr("class", "link")
     // .classed("selected", function(d) { return d === selected_link; })
-    .style("marker-start", function(d) { return d.left ? "url(#start-arrow)" : ""; })
-    .style("marker-end", function(d) { return d.right ? "url(#end-arrow)" : ""; });
+    .style("marker-start", function(d: ActivityNode) { return d.left ? "url(#start-arrow)" : ""; })
+    .style("marker-end",   function(d: ActivityNode) { return d.right ? "url(#end-arrow)" : ""; });
 
   // remove old links
   path.exit().remove();
 
-
   // circle (node) group
   // NB: the function arg is crucial here! nodes are known by id, not by index!
-  circle = circle.data(nodes, function(d) { return d.id; });
+  circle = circle.data(nodes, function(d: ActivityNode) { return d.activity.id; });
 
   // update existing nodes (reflexive & selected visual states)
   circle.selectAll("circle")
     .style("fill", function(_, i) {
       return tango[i]; // /*(d === selected_node) ? d3.rgb(colors(d.id)).brighter().toString() :*/ colors(d.id);
     })
-    .classed("reflexive", function(d) { return d.reflexive; });
+    .classed("reflexive", function(d: ActivityNode) { return d.reflexive; });
 
   // add new nodes
   const g = circle.enter().append("svg:g");
@@ -204,14 +203,28 @@ function restart() {
       return tango[i]; // colors(d.type);
     })
     .style("stroke", function(_, i) { return d3.rgb(tango[i]).darker().toString(); })  // colors(d.id)
-    .classed("reflexive", function(d) { return d.reflexive; });
+    .classed("reflexive", function(d: ActivityNode) { return d.reflexive; });
 
   // show node IDs
   g.append("svg:text")
     .attr("x", 0)
     .attr("dy", ".35em")
     .attr("class", "id")
-    .text(function(d) { return d.name; });
+    .html(function(d: ActivityNode) {
+      switch (d.activity.type) {
+        case "Actor":
+          return "&#128257; " + d.activity.name;
+        case "Process":
+          return "&#10733;" + d.activity.name;
+        case "Thread":
+          return "&#11123;" + d.activity.name;
+        case "Task":
+          return "&#8623;" + d.activity.name;
+        default:
+          dbgLog(JSON.stringify(d));
+          break;
+      }
+    });
 
   // After rendering text, adapt rectangles
   adaptRectSizeAndTextPostion();

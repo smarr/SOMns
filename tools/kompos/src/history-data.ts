@@ -2,7 +2,7 @@
 "use strict";
 
 import {Controller} from "./controller";
-import {IdMap, Activity} from "./messages";
+import {IdMap, Activity, ActivityType} from "./messages";
 import {dbgLog} from "./source";
 
 const horizontalDistance = 100,
@@ -50,9 +50,18 @@ enum TraceSize {
   TaskJoin          = 11
 }
 
+export interface ActivityNode {
+  activity:  Activity;
+  reflexive: boolean;
+  x:         number;
+  y:         number;
+  left?:     number;
+  right?:    number;
+}
+
 export class HistoryData {
-  private actors = {};
-  private actorsPerType: IdMap<number> = {};
+  private activity: IdMap<ActivityNode> = {};
+  private activityPerType: IdMap<number> = {};
   private messages: IdMap<IdMap<number>> = {};
   private maxMessageCount = 0;
   private strings: IdMap<string> = {};
@@ -61,17 +70,15 @@ export class HistoryData {
   constructor() {
   }
 
-  addActor(act: Activity) {
-    hashAtInc(this.actorsPerType, act.name, 1);
+  addActivity(act: Activity) {
+    hashAtInc(this.activityPerType, act.name, 1);
       const node = {
-        id: act.id,
-        name: act.name,
+        activity: act,
         reflexive: false, // selfsends TODO what is this used for, maybe set to true when checking mailbox.
-        x: horizontalDistance + horizontalDistance * this.actorsPerType[act.name],
-        y: verticalDistance * Object.keys(this.actorsPerType).length,
-        type: act.name
+        x: horizontalDistance + horizontalDistance * this.activityPerType[act.name],
+        y: verticalDistance * Object.keys(this.activityPerType).length
       };
-      this.actors[act.id.toString()] = node;
+      this.activity[act.id.toString()] = node;
   }
 
   addStrings(ids: number[], strings: string[]) {
@@ -94,17 +101,17 @@ export class HistoryData {
     for (let sendId in this.messages) {
       for (let rcvrId in this.messages[sendId]) {
         this.maxMessageCount = Math.max(this.maxMessageCount, this.messages[sendId][rcvrId]);
-        if (this.actors[sendId] === undefined) {
+        if (this.activity[sendId] === undefined) {
           dbgLog("WAT? racy? unknown sendId: " + sendId);
           continue;
         }
-        if (this.actors[rcvrId] === undefined) {
+        if (this.activity[rcvrId] === undefined) {
           dbgLog("WAT? racy? unknown rcvrId: " + rcvrId);
           continue;
         }
         links.push({
-          source: this.actors[sendId],
-          target: this.actors[rcvrId],
+          source: this.activity[sendId],
+          target: this.activity[rcvrId],
           left: false, right: true,
           messageCount: this.messages[sendId][rcvrId]
         });
@@ -113,8 +120,8 @@ export class HistoryData {
     return links;
   }
 
-  getActorNodes() {
-    return mapToArray(this.actors);
+  getActivityNodes(): ActivityNode[] {
+    return mapToArray(this.activity);
   }
 
   getMaxMessageSends() {
@@ -128,6 +135,17 @@ export class HistoryData {
     return high * SHIFT_HIGH_INT + d.getUint32(offset + 4);
   }
 
+  private readActivity(data: DataView, i: number, type: ActivityType,
+      newActivities: Activity[]) {
+    const aid = this.readLong(data, i);
+    // 8 byte causal message id
+    const nameId: number = data.getUint16(i + 16);
+    const actor: Activity = {id: aid, name: this.strings[nameId], type: type};
+    this.addActivity(actor);
+    newActivities.push(actor);
+    return 18;
+  }
+
   updateDataBin(data: DataView, controller: Controller) {
     const newActivities: Activity[] = [];
     let i = 0;
@@ -137,34 +155,17 @@ export class HistoryData {
       i++;
       switch (typ) {
         case Trace.ActorCreation: {
-          const aid = this.readLong(data, i);
-          // 8 byte causal message id
-          const nameId: number = data.getUint16(i + 16);
-          const actor: Activity = {id: aid, name: this.strings[nameId], type: "Actor"};
-          this.addActor(actor);
-          newActivities.push(actor);
-          i += 18;
-
+          i += this.readActivity(data, i, "Actor", newActivities);
           console.assert(i === (start + TraceSize.ActorCreation));
           break;
         }
         case Trace.ProcessCreation: {
-          const aid = this.readLong(data, i);
-          // 8 byte causal message id
-          const nameId: number = data.getUint16(i + 16);
-          const proc: Activity = {id: aid, name: this.strings[nameId], type: "Process"};
-          newActivities.push(proc);
-          i += 18;
+          i += this.readActivity(data, i, "Process", newActivities);
           console.assert(i === (start + TraceSize.ProcessCreation));
           break;
         }
         case Trace.TaskSpawn: {
-          const aid = this.readLong(data, i);
-          // 8 byte causal message id
-          const nameId: number = data.getUint16(i + 16);
-          const proc: Activity = {id: aid, name: this.strings[nameId], type: "Task"};
-          newActivities.push(proc);
-          i += 18;
+          i += this.readActivity(data, i, "Task", newActivities);
           console.assert(i === (start + TraceSize.TaskSpawn));
           break;
         }
@@ -282,8 +283,8 @@ function hashAtInc(hash, idx: string, inc: number) {
   }
 }
 
-function mapToArray(map) {
-  const arr = [];
+function mapToArray(map: IdMap<ActivityNode>): ActivityNode[] {
+  const arr: ActivityNode[] = [];
   for (const i in map) {
     arr.push(map[i]);
   }
