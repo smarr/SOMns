@@ -60,7 +60,7 @@ public class TraceBuffer {
   }
 
   boolean swapStorage() {
-    if (storage.position() == 0) {
+    if (storage == null || storage.position() <= Events.Thread.size) {
       return false;
     }
     ActorExecutionTrace.returnBuffer(storage);
@@ -136,23 +136,19 @@ public class TraceBuffer {
     assert storage.position() == start + Events.ProcessCompletion.size;
   }
 
-  public void recordTaskSpawn(final SInvokable method) {
-    ensureSufficientSpace(Events.TaskSpawn.size);
-
-    final int start = storage.position();
-
-    storage.put(Events.TaskSpawn.id);
-    storage.putShort(method.getSignature().getSymbolId());
-
-    assert storage.position() == start + Events.TaskSpawn.size;
+  public void recordTaskSpawn(final SInvokable method, final long activityId,
+      final long causalMessageId) {
+    recordActivityCreation(Events.TaskSpawn, activityId, causalMessageId,
+        method.getSignature().getSymbolId());
   }
 
-  public void recordTaskJoin(final SInvokable method) {
+  public void recordTaskJoin(final SInvokable method, final long activityId) {
     ensureSufficientSpace(Events.TaskJoin.size);
 
     final int start = storage.position();
 
     storage.put(Events.TaskJoin.id);
+    storage.putLong(activityId);
     storage.putShort(method.getSignature().getSymbolId());
 
     assert storage.position() == start + Events.TaskJoin.size;

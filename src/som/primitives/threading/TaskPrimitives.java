@@ -18,6 +18,7 @@ import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.Primitive;
 import som.primitives.arrays.ToArgumentsArrayNode;
 import som.primitives.arrays.ToArgumentsArrayNodeFactory;
+import som.vm.Activity;
 import som.vm.VmSettings;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
@@ -26,28 +27,68 @@ import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.TracingActivityThread;
 
 public final class TaskPrimitives {
-  public static class SomForkJoinTask extends RecursiveTask<Object> {
+
+  public static SomForkJoinTask createTask(final Object[] argArray) {
+    if (VmSettings.ACTOR_TRACING) {
+      return new TracedForkJoinTask(argArray);
+    } else {
+      return new SomForkJoinTask(argArray);
+    }
+  }
+
+  public static class SomForkJoinTask extends RecursiveTask<Object> implements Activity {
     private static final long serialVersionUID = -2145613708553535622L;
 
     private final Object[] argArray;
 
-    SomForkJoinTask(final Object[] argArray) {
+    protected SomForkJoinTask(final Object[] argArray) {
       this.argArray = argArray;
       assert argArray[0] instanceof SBlock : "First argument of a block needs to be the block object";
     }
 
-    public SInvokable getMehtod() {
+    public final SInvokable getMehtod() {
       return ((SBlock) argArray[0]).getMethod();
     }
 
     @Override
-    protected Object compute() {
+    public final String getName() {
+      return getMehtod().toString();
+    }
+
+    @Override
+    public long getId() {
+      return 0;
+    }
+
+    @Override
+    protected final Object compute() {
       ObjectTransitionSafepoint.INSTANCE.register();
       try {
         return ((SBlock) argArray[0]).getMethod().getCallTarget().call(argArray);
       } finally {
         ObjectTransitionSafepoint.INSTANCE.unregister();
       }
+    }
+  }
+
+  private static class TracedForkJoinTask extends SomForkJoinTask {
+    private static final long serialVersionUID = -2763766745049695112L;
+
+    private final long id;
+
+    TracedForkJoinTask(final Object[] argArray) {
+      super(argArray);
+      if (Thread.currentThread() instanceof TracingActivityThread) {
+        TracingActivityThread t = (TracingActivityThread) Thread.currentThread();
+        this.id = t.generateActivityId();
+      } else {
+        this.id = 0; // main actor
+      }
+    }
+
+    @Override
+    public long getId() {
+      return id;
     }
   }
 
@@ -62,7 +103,7 @@ public final class TaskPrimitives {
       Object result = task.join();
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.taskJoin(task.getMehtod());
+        ActorExecutionTrace.taskJoin(task.getMehtod(), task.getId());
       }
       return result;
     }
@@ -76,11 +117,11 @@ public final class TaskPrimitives {
     @Specialization
     @TruffleBoundary
     public final SomForkJoinTask doSBlock(final SBlock block) {
-      SomForkJoinTask task = new SomForkJoinTask(new Object[] {block});
+      SomForkJoinTask task = createTask(new Object[] {block});
       forkJoinPool.execute(task);
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.taskSpawn(block.getMethod());
+        ActorExecutionTrace.taskSpawn(block.getMethod(), task.getId());
       }
       return task;
     }
@@ -96,7 +137,7 @@ public final class TaskPrimitives {
     @Specialization
     public SomForkJoinTask doSBlock(final SBlock block, final SArray somArgArr,
         final Object[] argArr) {
-      SomForkJoinTask task = new SomForkJoinTask(argArr);
+      SomForkJoinTask task = createTask(argArr);
       forkJoinPool.execute(task);
       return task;
     }

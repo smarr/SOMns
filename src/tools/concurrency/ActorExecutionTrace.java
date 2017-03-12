@@ -227,8 +227,8 @@ public class ActorExecutionTrace {
     ProcessCreation(TraceParser.PROCESS_CREATION,     19),
     ProcessCompletion(TraceParser.PROCESS_COMPLETION,  9),
 
-    TaskSpawn(TraceParser.TASK_SPAWN, 3),
-    TaskJoin(TraceParser.TASK_JOIN,   3);
+    TaskSpawn(TraceParser.TASK_SPAWN, 19),
+    TaskJoin(TraceParser.TASK_JOIN,   11);
 
     final byte id;
     final int size;
@@ -282,14 +282,14 @@ public class ActorExecutionTrace {
     t.getBuffer().recordProcessCompletion(proc);
   }
 
-  public static void taskSpawn(final SInvokable method) {
+  public static void taskSpawn(final SInvokable method, final long activityId) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordTaskSpawn(method);
+    t.getBuffer().recordTaskSpawn(method, activityId, t.getCurrentMessageId());
   }
 
-  public static void taskJoin(final SInvokable method) {
+  public static void taskJoin(final SInvokable method, final long activityId) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordTaskJoin(method);
+    t.getBuffer().recordTaskJoin(method, activityId);
   }
 
   public static void promiseCreation(final long promiseId) {
