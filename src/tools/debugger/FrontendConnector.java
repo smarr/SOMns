@@ -205,8 +205,8 @@ public class FrontendConnector {
     sendSource(source, loadedSourcesTags, rootNodes.get(source));
   }
 
-  public void sendSymbols(final ArrayList<SSymbol> symbolstowrite) {
-    send(new SymbolMessage(symbolstowrite));
+  public void sendSymbols(final ArrayList<SSymbol> symbolsToWrite) {
+    send(new SymbolMessage(symbolsToWrite));
   }
 
   public void sendTracingData(final ByteBuffer b) {
