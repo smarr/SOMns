@@ -12,6 +12,43 @@ const SHIFT_HIGH_INT = 4294967296;
 const MAX_SAFE_HIGH_BITS = 53 - 32;
 const MAX_SAFE_HIGH_VAL  = (1 << MAX_SAFE_HIGH_BITS) - 1;
 
+enum Trace {
+  ActorCreation     =  1,
+  PromiseCreation   =  2,
+  PromiseResolution =  3,
+  PromiseChained    =  4,
+  Mailbox           =  5,
+  Thread            =  6,
+  MailboxContd      =  7,
+
+  BasicMessage      =  8,
+  PromiseMessage    =  9,
+
+  ProcessCreation   = 10,
+  ProcessCompletion = 11,
+
+  TaskSpawn         = 12,
+  TaskJoin          = 13
+}
+
+enum TraceSize {
+  ActorCreation     = 19,
+  PromiseCreation   = 17,
+  PromiseResolution = 28,
+  PromiseChained    = 17,
+  Mailbox           = 21,
+  Thread            = 17,
+  MailboxContd      = 25,
+
+  BasicMessage      =  7,
+  PromiseMessage    =  7,
+
+  ProcessCreation   = 19,
+  ProcessCompletion =  9,
+
+  TaskSpawn         = 19,
+  TaskJoin          = 11
+}
 
 export class HistoryData {
   private actors = {};
@@ -44,7 +81,6 @@ export class HistoryData {
   }
 
   addMessage(sender: number, target: number) {
-
       if (!this.messages.hasOwnProperty(sender.toString())) {
         this.messages[sender.toString()] = {};
       }
@@ -94,10 +130,11 @@ export class HistoryData {
     const newActivities: Activity[] = [];
     let i = 0;
     while (i < data.byteLength) {
+      const start = i;
       const typ = data.getInt8(i);
       i++;
       switch (typ) {
-        case 1: {
+        case Trace.ActorCreation: {
           const aid = this.readLong(data, i);
           // 8 byte causal message id
           const nameId: number = data.getUint16(i + 16);
@@ -105,50 +142,69 @@ export class HistoryData {
           this.addActor(actor);
           newActivities.push(actor);
           i += 18;
+
+          console.assert(i === (start + TraceSize.ActorCreation));
           break;
         }
-        case 10: {
+        case Trace.ProcessCreation: {
           const aid = this.readLong(data, i);
           // 8 byte causal message id
           const nameId: number = data.getUint16(i + 16);
           const proc: Activity = {id: aid, name: this.strings[nameId], type: "Process"};
           newActivities.push(proc);
           i += 18;
+          console.assert(i === (start + TraceSize.ProcessCreation));
           break;
         }
-        case 2:
-          // 8 byte promise id
+        case Trace.TaskSpawn: {
+          const aid = this.readLong(data, i);
           // 8 byte causal message id
-          i += 16;
+          const nameId: number = data.getUint16(i + 16);
+          const proc: Activity = {id: aid, name: this.strings[nameId], type: "Task"};
+          newActivities.push(proc);
+          i += 18;
+          console.assert(i === (start + TraceSize.TaskSpawn));
           break;
-        case 3:
-          // 8 byte promise id
-          // 8 byte resolving message id
+        }
+
+        case Trace.PromiseCreation:
+          i += 16;
+          console.assert(i === (start + TraceSize.PromiseCreation));
+          break;
+        case Trace.PromiseResolution:
           i += 16;
           i += readParameter(data, i);
+          console.assert(i <= (start + TraceSize.PromiseResolution));
           break;
-        case 4:
-          // 8 byte promise id
-          // 8 byte chained promise id
+        case Trace.PromiseChained:
           i += 16;
+          console.assert(i === (start + TraceSize.PromiseChained));
           break;
-        case 5:
-          // 8 byte message base id
-          // 4 byte mailboxno
-          this.currentReceiver = this.readLong(data, i + 12); // receiver id
+        case Trace.Mailbox:
+          this.currentReceiver = this.readLong(data, i + 12);
           i += 20;
+          console.assert(i === (start + TraceSize.Mailbox));
           break;
-        case 6:
-          data.getInt8(i); // Thread
-          // 8 byte timestamp
-          i += 9;
+        case Trace.Thread:
+          i += 16;
+          console.assert(i === (start + TraceSize.Thread));
           break;
-        case 7:
-          // 8 byte message base id
-          // 4 byte mailboxno
+        case Trace.MailboxContd:
           this.currentReceiver = this.readLong(data, i + 12); // receiver id
-          data.getInt32(i + 20); // id offset
           i += 24;
+          console.assert(i === (start + TraceSize.MailboxContd));
+          break;
+        case Trace.PromiseMessage:
+          i += 6;
+          console.assert(i === (start + TraceSize.PromiseMessage));
+          break;
+        case Trace.ProcessCompletion:
+          i += 8;
+          console.assert(i === (start + TraceSize.ProcessCompletion));
+          break;
+        case Trace.TaskJoin:
+          i += 10;
+          console.assert(i === (start + TraceSize.TaskJoin));
           break;
 
         default:
