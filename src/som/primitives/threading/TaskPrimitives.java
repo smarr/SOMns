@@ -1,6 +1,8 @@
 package som.primitives.threading;
 
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
+import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveTask;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -9,6 +11,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.actors.Actor.UncaughtExceptions;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
@@ -20,6 +23,7 @@ import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.TracingActivityThread;
 
 public final class TaskPrimitives {
   public static class SomForkJoinTask extends RecursiveTask<Object> {
@@ -98,5 +102,25 @@ public final class TaskPrimitives {
     }
   }
 
-  private static final ForkJoinPool forkJoinPool = new ForkJoinPool(VmSettings.NUM_THREADS);
+  private static final class ForkJoinThreadFactor implements ForkJoinWorkerThreadFactory {
+    @Override
+    public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
+      return new ForkJoinThread(pool);
+    }
+  }
+
+  private static final class ForkJoinThread extends TracingActivityThread {
+    protected ForkJoinThread(final ForkJoinPool pool) {
+      super(pool);
+    }
+
+    @Override
+    public long getCurrentMessageId() {
+      return 0;
+    }
+  }
+
+  private static final ForkJoinPool forkJoinPool = new ForkJoinPool(
+      VmSettings.NUM_THREADS, new ForkJoinThreadFactor(),
+      new UncaughtExceptions(), false);
 }
