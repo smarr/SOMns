@@ -23,7 +23,6 @@ import tools.TraceData;
 import tools.concurrency.ActorExecutionTrace.Events;
 
 
-
 public final class TraceParser {
   public static final byte ACTOR_CREATION     = 1;
   public static final byte PROMISE_CREATION   = 2;
