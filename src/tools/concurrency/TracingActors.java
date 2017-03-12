@@ -22,11 +22,11 @@ public class TracingActors {
 
     public TracingActor() {
       super();
-      if (Thread.currentThread() instanceof ActorProcessingThread) {
-        ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
+      if (Thread.currentThread() instanceof TracingActivityThread) {
+        TracingActivityThread t = (TracingActivityThread) Thread.currentThread();
         this.actorId = t.generateActivityId();
       } else {
-        actorId = 0; // main actor
+        this.actorId = 0; // main actor
       }
     }
 
