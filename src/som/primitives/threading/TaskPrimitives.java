@@ -139,6 +139,10 @@ public final class TaskPrimitives {
         final Object[] argArr) {
       SomForkJoinTask task = createTask(argArr);
       forkJoinPool.execute(task);
+
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.taskSpawn(block.getMethod(), task.getId());
+      }
       return task;
     }
   }
