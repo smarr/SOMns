@@ -18,6 +18,8 @@ import som.primitives.arrays.ToArgumentsArrayNodeFactory;
 import som.vm.VmSettings;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
+import tools.concurrency.ActorExecutionTrace;
 
 public final class TaskPrimitives {
   public static class SomForkJoinTask extends RecursiveTask<Object> {
@@ -28,6 +30,10 @@ public final class TaskPrimitives {
     SomForkJoinTask(final Object[] argArray) {
       this.argArray = argArray;
       assert argArray[0] instanceof SBlock : "First argument of a block needs to be the block object";
+    }
+
+    public SInvokable getMehtod() {
+      return ((SBlock) argArray[0]).getMethod();
     }
 
     @Override
@@ -49,7 +55,12 @@ public final class TaskPrimitives {
     @Specialization
     @TruffleBoundary
     public final Object doTask(final SomForkJoinTask task) {
-      return task.join();
+      Object result = task.join();
+
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.taskJoin(task.getMehtod());
+      }
+      return result;
     }
   }
 
@@ -63,6 +74,10 @@ public final class TaskPrimitives {
     public final SomForkJoinTask doSBlock(final SBlock block) {
       SomForkJoinTask task = new SomForkJoinTask(new Object[] {block});
       forkJoinPool.execute(task);
+
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.taskSpawn(block.getMethod());
+      }
       return task;
     }
   }

@@ -17,6 +17,7 @@ import som.vm.ObjectSystem;
 import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
 import tools.ObjectBuffer;
 import tools.TraceData;
 import tools.concurrency.ActorExecutionTrace.Events;
@@ -133,6 +134,28 @@ public class TraceBuffer {
     storage.putLong(proc.getId());
 
     assert storage.position() == start + Events.ProcessCompletion.size;
+  }
+
+  public void recordTaskSpawn(final SInvokable method) {
+    ensureSufficientSpace(Events.TaskSpawn.size);
+
+    final int start = storage.position();
+
+    storage.put(Events.TaskSpawn.id);
+    storage.putShort(method.getSignature().getSymbolId());
+
+    assert storage.position() == start + Events.TaskSpawn.size;
+  }
+
+  public void recordTaskJoin(final SInvokable method) {
+    ensureSufficientSpace(Events.TaskJoin.size);
+
+    final int start = storage.position();
+
+    storage.put(Events.TaskJoin.id);
+    storage.putShort(method.getSignature().getSymbolId());
+
+    assert storage.position() == start + Events.TaskJoin.size;
   }
 
   public void recordPromiseCreation(final long promiseId,

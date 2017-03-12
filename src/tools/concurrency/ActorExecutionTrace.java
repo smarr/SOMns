@@ -36,6 +36,7 @@ import som.primitives.TimerPrim;
 import som.primitives.processes.ChannelPrimitives.TracingProcess;
 import som.vm.ObjectSystem;
 import som.vm.VmSettings;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.ObjectBuffer;
 import tools.TraceData;
@@ -224,7 +225,10 @@ public class ActorExecutionTrace {
     PromiseMessage(TraceParser.PROMISE_MESSAGE,  7),
 
     ProcessCreation(TraceParser.PROCESS_CREATION,     19),
-    ProcessCompletion(TraceParser.PROCESS_COMPLETION,  9);
+    ProcessCompletion(TraceParser.PROCESS_COMPLETION,  9),
+
+    TaskSpawn(TraceParser.TASK_SPAWN, 3),
+    TaskJoin(TraceParser.TASK_JOIN,   3);
 
     final byte id;
     final int size;
@@ -276,6 +280,16 @@ public class ActorExecutionTrace {
   public static void processCompletion(final TracingProcess proc) {
     TracingActivityThread t = getThread();
     t.getBuffer().recordProcessCompletion(proc);
+  }
+
+  public static void taskSpawn(final SInvokable method) {
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordTaskSpawn(method);
+  }
+
+  public static void taskJoin(final SInvokable method) {
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordTaskJoin(method);
   }
 
   public static void promiseCreation(final long promiseId) {
