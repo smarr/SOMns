@@ -2,7 +2,7 @@
 "use strict";
 
 import {Controller} from "./controller";
-import {SymbolMessage} from "./messages";
+import {SymbolMessage, Activity} from "./messages";
 import * as d3 from "d3";
 import {HistoryData, ActivityNode} from "./history-data";
 import {dbgLog} from "./source";
@@ -203,6 +203,7 @@ function restart() {
       return tango[i]; // colors(d.type);
     })
     .style("stroke", function(_, i) { return d3.rgb(tango[i]).darker().toString(); })  // colors(d.id)
+    .style("stroke-width", function(d: ActivityNode) { return (d.groupSize) ? Math.log(d.groupSize) * 3 : ""; })
     .classed("reflexive", function(d: ActivityNode) { return d.reflexive; });
 
   // show node IDs
@@ -211,19 +212,12 @@ function restart() {
     .attr("dy", ".35em")
     .attr("class", "id")
     .html(function(d: ActivityNode) {
-      switch (d.activity.type) {
-        case "Actor":
-          return "&#128257; " + d.activity.name;
-        case "Process":
-          return "&#10733;" + d.activity.name;
-        case "Thread":
-          return "&#11123;" + d.activity.name;
-        case "Task":
-          return "&#8623;" + d.activity.name;
-        default:
-          dbgLog(JSON.stringify(d));
-          break;
+      let label = getTypePrefix(d.activity) + d.activity.name;
+
+      if (d.groupSize) {
+        label += " (" + d.groupSize + ")";
       }
+      return label;
     });
 
   // After rendering text, adapt rectangles
@@ -246,6 +240,22 @@ function restart() {
 }
 
 const PADDING = 15;
+
+function getTypePrefix(act: Activity) {
+  switch (act.type) {
+    case "Actor":
+      return "&#128257; ";
+    case "Process":
+      return "&#10733;";
+    case "Thread":
+      return "&#11123;";
+    case "Task":
+      return "&#8623;";
+    default:
+      dbgLog(JSON.stringify(act));
+      break;
+  }
+}
 
 function adaptRectSizeAndTextPostion() {
   d3.selectAll("rect")

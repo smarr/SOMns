@@ -12,6 +12,8 @@ const SHIFT_HIGH_INT = 4294967296;
 const MAX_SAFE_HIGH_BITS = 53 - 32;
 const MAX_SAFE_HIGH_VAL  = (1 << MAX_SAFE_HIGH_BITS) - 1;
 
+const NUM_ACTIVITIES_STARTING_GROUP = 4;
+
 enum Trace {
   ActorCreation     =  1,
   PromiseCreation   =  2,
@@ -51,12 +53,13 @@ enum TraceSize {
 }
 
 export interface ActivityNode {
-  activity:  Activity;
-  reflexive: boolean;
-  x:         number;
-  y:         number;
-  left?:     number;
-  right?:    number;
+  activity:   Activity;
+  reflexive:  boolean;
+  x:          number;
+  y:          number;
+  groupSize?: number;
+  left?:      number;
+  right?:     number;
 }
 
 export class HistoryData {
@@ -121,7 +124,23 @@ export class HistoryData {
   }
 
   getActivityNodes(): ActivityNode[] {
-    return mapToArray(this.activity);
+    const groupStarted = {};
+
+    const arr: ActivityNode[] = [];
+    for (const i in this.activity) {
+      const a = this.activity[i];
+      const groupSize = this.activityPerType[a.activity.name];
+      if (groupSize > NUM_ACTIVITIES_STARTING_GROUP) {
+        if (!groupStarted[a.activity.name]) {
+          groupStarted[a.activity.name] = true;
+          arr.push(a);
+          a.groupSize = groupSize;
+        }
+      } else {
+        arr.push(a);
+      }
+    }
+    return arr;
   }
 
   getMaxMessageSends() {
@@ -283,10 +302,4 @@ function hashAtInc(hash, idx: string, inc: number) {
   }
 }
 
-function mapToArray(map: IdMap<ActivityNode>): ActivityNode[] {
-  const arr: ActivityNode[] = [];
-  for (const i in map) {
-    arr.push(map[i]);
-  }
-  return arr;
-}
+
