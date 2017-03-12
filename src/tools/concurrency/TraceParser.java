@@ -118,7 +118,6 @@ public final class TraceParser {
         long cause;
         switch (type) {
           case ACTOR_CREATION:
-
             long id = b.getLong(); // actor id
             cause = b.getLong(); // causal
             if (id == 0) {
@@ -136,7 +135,6 @@ public final class TraceParser {
             assert b.position() == start + Events.ActorCreation.size;
             break;
           case MAILBOX:
-
             currentMessage = b.getLong(); // base msg id
             currentMailbox = b.getInt(); // mailboxno
             currentReceiver = b.getLong(); // receiver

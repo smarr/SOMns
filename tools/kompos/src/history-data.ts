@@ -72,13 +72,13 @@ export class HistoryData {
 
   addActivity(act: Activity) {
     hashAtInc(this.activityPerType, act.name, 1);
-      const node = {
-        activity: act,
-        reflexive: false, // selfsends TODO what is this used for, maybe set to true when checking mailbox.
-        x: horizontalDistance + horizontalDistance * this.activityPerType[act.name],
-        y: verticalDistance * Object.keys(this.activityPerType).length
-      };
-      this.activity[act.id.toString()] = node;
+    const node = {
+      activity:  act,
+      reflexive: false, // selfsends TODO what is this used for, maybe set to true when checking mailbox.
+      x: horizontalDistance + horizontalDistance * this.activityPerType[act.name],
+      y: verticalDistance * Object.keys(this.activityPerType).length
+    };
+    this.activity[act.id.toString()] = node;
   }
 
   addStrings(ids: number[], strings: string[]) {
@@ -88,12 +88,12 @@ export class HistoryData {
   }
 
   addMessage(sender: number, target: number) {
-      if (!this.messages.hasOwnProperty(sender.toString())) {
-        this.messages[sender.toString()] = {};
-      }
-      if (sender !== target) {
-        hashAtInc(this.messages[sender.toString()], target.toString(), 1);
-      }
+    if (!this.messages.hasOwnProperty(sender.toString())) {
+      this.messages[sender.toString()] = {};
+    }
+    if (sender !== target) {
+      hashAtInc(this.messages[sender.toString()], target.toString(), 1);
+    }
   }
 
   getLinks() {

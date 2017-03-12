@@ -52,6 +52,7 @@ import tools.debugger.FrontendConnector;
  * to the debugger.
  *
  * <h4>Synchronization Strategy</h4>
+ *
  * <p>During normal execution with tracing, we do not need any synchronization,
  * because all operations on the buffers are initiated by the
  * TracingActivityThreads themselves. Thus, everything is thread-local. The
