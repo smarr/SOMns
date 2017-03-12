@@ -95,10 +95,12 @@ export class HistoryData {
       for (let rcvrId in this.messages[sendId]) {
         this.maxMessageCount = Math.max(this.maxMessageCount, this.messages[sendId][rcvrId]);
         if (this.actors[sendId] === undefined) {
-          dbgLog("WAT? unknown sendId: " + sendId);
+          dbgLog("WAT? racy? unknown sendId: " + sendId);
+          continue;
         }
         if (this.actors[rcvrId] === undefined) {
-          dbgLog("WAT? unknown rcvrId: " + rcvrId);
+          dbgLog("WAT? racy? unknown rcvrId: " + rcvrId);
+          continue;
         }
         links.push({
           source: this.actors[sendId],
