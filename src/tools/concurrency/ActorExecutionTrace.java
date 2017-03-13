@@ -222,8 +222,6 @@ public class ActorExecutionTrace {
     // for memory events another buffer is needed
     // (the gc callback is on Thread[Service Thread,9,system])
     MailboxContd(TraceData.MAILBOX_CONTD,     25),
-    BasicMessage(TraceData.BASIC_MESSAGE,      7),
-    PromiseMessage(TraceData.PROMISE_MESSAGE,  7),
 
     ProcessCreation(TraceData.PROCESS_CREATION,     19),
     ProcessCompletion(TraceData.PROCESS_COMPLETION,  9),
