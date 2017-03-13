@@ -25,7 +25,7 @@ describe("Stack trace output", () => {
 \tPlatform>>#start                             Platform.som::\n\
 \tBlock>>#on:do:                               Kernel.som::\n\
 \tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory::\n\
-\tPlatform>>#$blockMethod@@                Platform.som::\n\
+\tPlatform>>#λstart@@                      Platform.som::\n\
 \tPingPongApp>>#main:                          pingpong.som::\n\
 \tPingPongApp>>#testDNU                        pingpong.som::\n\
 ERROR: MessageNotUnderstood(Integer>>#foobar)\n");
@@ -37,7 +37,7 @@ ERROR: MessageNotUnderstood(Integer>>#foobar)\n");
 \tPlatform>>#start                             Platform.som::\n\
 \tBlock>>#on:do:                               Kernel.som::\n\
 \tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory::\n\
-\tPlatform>>#$blockMethod@@                Platform.som::\n\
+\tPlatform>>#λstart@@                      Platform.som::\n\
 \tPingPongApp>>#main:                          pingpong.som::\n\
 \tPingPongApp>>#testPrintStackTrace            pingpong.som::\n");
   });

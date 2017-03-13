@@ -20,23 +20,10 @@ import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.TraceData;
-
+import tools.concurrency.ActorExecutionTrace.Events;
 
 
 public final class TraceParser {
-  public static final byte ACTOR_CREATION     = 1;
-  public static final byte PROMISE_CREATION   = 2;
-  public static final byte PROMISE_RESOLUTION = 3;
-  public static final byte PROMISE_CHAINED    = 4;
-  public static final byte MAILBOX            = 5;
-  public static final byte THREAD             = 6;
-  public static final byte MAILBOX_CONTD      = 7;
-
-  public static final byte BASIC_MESSAGE      = 8;
-  public static final byte PROMISE_MESSAGE    = 9;
-
-  public static final byte PROCESS_CREATION   = 10;
-  public static final byte PROCESS_COMPLETION = 11;
 
   private final HashMap<Short, SSymbol> symbolMapping = new HashMap<>();
   private ByteBuffer b = ByteBuffer.allocate(ActorExecutionTrace.BUFFER_SIZE);
@@ -108,11 +95,13 @@ public final class TraceParser {
           channel.read(b);
           b.flip();
         }
+
+        final int start = b.position();
         byte type = b.get();
 
         long cause;
         switch (type) {
-          case ACTOR_CREATION:
+          case TraceData.ACTOR_CREATION:
             long id = b.getLong(); // actor id
             cause = b.getLong(); // causal
             if (id == 0) {
@@ -127,48 +116,55 @@ public final class TraceParser {
             }
             b.getShort(); // type
             parsedActors++;
+            assert b.position() == start + Events.ActorCreation.size;
             break;
-          case MAILBOX:
+          case TraceData.MAILBOX:
             currentMessage = b.getLong(); // base msg id
             currentMailbox = b.getInt(); // mailboxno
             currentReceiver = b.getLong(); // receiver
             msgNo = 0;
+            assert b.position() == start + Events.Mailbox.size;
             break;
-          case MAILBOX_CONTD:
+          case TraceData.MAILBOX_CONTD:
             currentMessage = b.getLong(); // base msg id
             currentMailbox = b.getInt(); // mailboxno
             currentReceiver = b.getLong(); // receiver
             int offset = b.getInt(); // offset
             currentMessage += offset;
             msgNo = offset;
+            assert b.position() == start + Events.MailboxContd.size;
             break;
-          case PROMISE_CHAINED:
+          case TraceData.PROMISE_CHAINED:
             b.getLong(); // parent
             b.getLong(); // child
+            assert b.position() == start + Events.PromiseChained.size;
             break;
-          case PROMISE_CREATION:
+          case TraceData.PROMISE_CREATION:
             long pid  = b.getLong(); // promise id
             cause = b.getLong(); // causal message
             if (!unmappedPromises.containsKey(cause)) {
               unmappedPromises.put(cause, new LinkedList<>());
             }
             unmappedPromises.get(cause).add(pid);
+            assert b.position() == start + Events.PromiseCreation.size;
             break;
-          case PROMISE_RESOLUTION:
+          case TraceData.PROMISE_RESOLUTION:
             b.getLong(); // promise id
             b.getLong(); // resolving msg
             parseParameter(); // param
+            assert b.position() <= start + Events.PromiseResolution.size;
             break;
-          case THREAD:
+          case TraceData.THREAD:
             b.compact();
             channel.read(b);
             b.flip();
-            b.get(); // thread id
+            b.getLong(); // thread id
             b.getLong(); // time millis
+            assert (b.position() + 1) == Events.Thread.size;
             break;
           default:
             parsedMessages++;
-            assert (type & TraceData.MESSAGE_BASE) != 0;
+            assert (type & TraceData.MESSAGE_BIT) != 0;
             if (unmappedActors.containsKey(currentMessage)) {
               // necessary as the receivers creation event hasn't been parsed yet
               if (!mappedActors.containsKey(currentReceiver)) {

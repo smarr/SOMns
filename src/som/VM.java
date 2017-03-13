@@ -285,7 +285,9 @@ public final class VM {
     mainActor = Actor.createActor();
     vmMirror  = objectSystem.initialize();
 
-    ActorExecutionTrace.recordMainActor(mainActor, objectSystem);
+    if (VmSettings.ACTOR_TRACING) {
+      ActorExecutionTrace.recordMainActor(mainActor, objectSystem);
+    }
   }
 
   public Object execute(final String selector) {

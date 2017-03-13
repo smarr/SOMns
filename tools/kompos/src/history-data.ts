@@ -2,7 +2,7 @@
 "use strict";
 
 import {Controller} from "./controller";
-import {IdMap, Activity} from "./messages";
+import {IdMap, Activity, ActivityType} from "./messages";
 import {dbgLog} from "./source";
 
 const horizontalDistance = 100,
@@ -12,29 +12,86 @@ const SHIFT_HIGH_INT = 4294967296;
 const MAX_SAFE_HIGH_BITS = 53 - 32;
 const MAX_SAFE_HIGH_VAL  = (1 << MAX_SAFE_HIGH_BITS) - 1;
 
+const NUM_ACTIVITIES_STARTING_GROUP = 4;
+
+enum Trace {
+  ActorCreation     =  1,
+  PromiseCreation   =  2,
+  PromiseResolution =  3,
+  PromiseChained    =  4,
+  Mailbox           =  5,
+  Thread            =  6,
+  MailboxContd      =  7,
+
+  BasicMessage      =  8,
+  PromiseMessage    =  9,
+
+  ProcessCreation   = 10,
+  ProcessCompletion = 11,
+
+  TaskSpawn         = 12,
+  TaskJoin          = 13
+}
+
+enum TraceSize {
+  ActorCreation     = 19,
+  PromiseCreation   = 17,
+  PromiseResolution = 28,
+  PromiseChained    = 17,
+  Mailbox           = 21,
+  Thread            = 17,
+  MailboxContd      = 25,
+
+  BasicMessage      =  7,
+  PromiseMessage    =  7,
+
+  ProcessCreation   = 19,
+  ProcessCompletion =  9,
+
+  TaskSpawn         = 19,
+  TaskJoin          = 11
+}
+
+export interface ActivityNode {
+  activity:   Activity;
+  reflexive:  boolean;
+  x:          number;
+  y:          number;
+  groupSize?: number;
+}
+
+export interface ActivityLink {
+  source: ActivityNode;
+  target: ActivityNode;
+  left:   boolean;
+  right:  boolean;
+  messageCount: number;
+  creation?: boolean;
+}
 
 export class HistoryData {
-  private actors = {};
-  private actorsPerType: IdMap<number> = {};
+  private activity: IdMap<ActivityNode> = {};
+  private activityPerType: IdMap<number> = {};
   private messages: IdMap<IdMap<number>> = {};
+  private msgs = {};
   private maxMessageCount = 0;
   private strings: IdMap<string> = {};
-  private currentReceiver = 0;
+
+  private currentReceiver = -1;
+  private currentMsgId = undefined;
 
   constructor() {
   }
 
-  addActor(act: Activity) {
-    hashAtInc(this.actorsPerType, act.name, 1);
-      const node = {
-        id: act.id,
-        name: act.name,
-        reflexive: false, // selfsends TODO what is this used for, maybe set to true when checking mailbox.
-        x: horizontalDistance + horizontalDistance * this.actorsPerType[act.name],
-        y: verticalDistance * Object.keys(this.actorsPerType).length,
-        type: act.name
-      };
-      this.actors[act.id.toString()] = node;
+  addActivity(act: Activity) {
+    hashAtInc(this.activityPerType, act.name, 1);
+    const node = {
+      activity:  act,
+      reflexive: false, // selfsends TODO what is this used for, maybe set to true when checking mailbox.
+      x: horizontalDistance + horizontalDistance * this.activityPerType[act.name],
+      y: verticalDistance * Object.keys(this.activityPerType).length
+    };
+    this.activity[act.id.toString()] = node;
   }
 
   addStrings(ids: number[], strings: string[]) {
@@ -43,40 +100,72 @@ export class HistoryData {
     }
   }
 
-  addMessage(sender: number, target: number) {
-
-      if (!this.messages.hasOwnProperty(sender.toString())) {
-        this.messages[sender.toString()] = {};
-      }
-      if (sender !== target) {
-        hashAtInc(this.messages[sender.toString()], target.toString(), 1);
-      }
+  addMessage(sender: number, target: number, msgId: number) {
+    const senderId = sender.toString();
+    if (!this.messages.hasOwnProperty(senderId)) {
+      this.messages[senderId] = {};
+    }
+    if (sender !== target) {
+      hashAtInc(this.messages[senderId], target.toString(), 1);
+    }
+    this.msgs[msgId] = {sender: sender, target: target};
   }
 
-  getLinks() {
-    let links = [];
-    for (let sendId in this.messages) {
-      for (let rcvrId in this.messages[sendId]) {
+  getLinks(): ActivityLink[] {
+    const links: ActivityLink[] = [];
+    for (const sendId in this.messages) {
+      for (const rcvrId in this.messages[sendId]) {
         this.maxMessageCount = Math.max(this.maxMessageCount, this.messages[sendId][rcvrId]);
-        if (this.actors[sendId] === undefined) {
-          dbgLog("WAT? unknown sendId: " + sendId);
+        if (this.activity[sendId] === undefined) {
+          dbgLog("WAT? racy? unknown sendId: " + sendId);
+          continue;
         }
-        if (this.actors[rcvrId] === undefined) {
-          dbgLog("WAT? unknown rcvrId: " + rcvrId);
+        if (this.activity[rcvrId] === undefined) {
+          dbgLog("WAT? racy? unknown rcvrId: " + rcvrId);
+          continue;
         }
         links.push({
-          source: this.actors[sendId],
-          target: this.actors[rcvrId],
+          source: this.activity[sendId],
+          target: this.activity[rcvrId],
           left: false, right: true,
           messageCount: this.messages[sendId][rcvrId]
         });
       }
     }
+
+    for (const i in this.activity) {
+      const a = this.activity[i];
+      const msg = this.msgs[a.activity.causalMsg];
+      if (msg === undefined) { continue; }
+      links.push({
+        source: this.activity[msg.target],
+        target: a,
+        left: false, right: true,
+        creation:     true,
+        messageCount: 1
+      });
+    }
     return links;
   }
 
-  getActorNodes() {
-    return mapToArray(this.actors);
+  getActivityNodes(): ActivityNode[] {
+    const groupStarted = {};
+
+    const arr: ActivityNode[] = [];
+    for (const i in this.activity) {
+      const a = this.activity[i];
+      const groupSize = this.activityPerType[a.activity.name];
+      if (groupSize > NUM_ACTIVITIES_STARTING_GROUP) {
+        if (!groupStarted[a.activity.name]) {
+          groupStarted[a.activity.name] = true;
+          arr.push(a);
+          a.groupSize = groupSize;
+        }
+      } else {
+        arr.push(a);
+      }
+    }
+    return arr;
   }
 
   getMaxMessageSends() {
@@ -90,65 +179,84 @@ export class HistoryData {
     return high * SHIFT_HIGH_INT + d.getUint32(offset + 4);
   }
 
+  private readActivity(data: DataView, i: number, type: ActivityType,
+      newActivities: Activity[]) {
+    const aid = this.readLong(data, i);
+    const causalMsg = this.readLong(data, i + 8);
+    const nameId: number = data.getUint16(i + 16);
+    const actor: Activity = {
+      id: aid, type: type,
+      name: this.strings[nameId],
+      causalMsg: causalMsg};
+    this.addActivity(actor);
+    newActivities.push(actor);
+    return 18;
+  }
+
   updateDataBin(data: DataView, controller: Controller) {
     const newActivities: Activity[] = [];
     let i = 0;
     while (i < data.byteLength) {
+      const start = i;
       const typ = data.getInt8(i);
       i++;
       switch (typ) {
-        case 1: {
-          const aid = this.readLong(data, i);
-          // 8 byte causal message id
-          const nameId: number = data.getUint16(i + 16);
-          const actor: Activity = {id: aid, name: this.strings[nameId], type: "Actor"};
-          this.addActor(actor);
-          newActivities.push(actor);
-          i += 18;
+        case Trace.ActorCreation: {
+          i += this.readActivity(data, i, "Actor", newActivities);
+          console.assert(i === (start + TraceSize.ActorCreation));
           break;
         }
-        case 10: {
-          const aid = this.readLong(data, i);
-          // 8 byte causal message id
-          const nameId: number = data.getUint16(i + 16);
-          const proc: Activity = {id: aid, name: this.strings[nameId], type: "Process"};
-          newActivities.push(proc);
-          i += 18;
+        case Trace.ProcessCreation: {
+          i += this.readActivity(data, i, "Process", newActivities);
+          console.assert(i === (start + TraceSize.ProcessCreation));
           break;
         }
-        case 2:
-          // 8 byte promise id
-          // 8 byte causal message id
+        case Trace.TaskSpawn: {
+          i += this.readActivity(data, i, "Task", newActivities);
+          console.assert(i === (start + TraceSize.TaskSpawn));
+          break;
+        }
+
+        case Trace.PromiseCreation:
           i += 16;
+          console.assert(i === (start + TraceSize.PromiseCreation));
           break;
-        case 3:
-          // 8 byte promise id
-          // 8 byte resolving message id
+        case Trace.PromiseResolution:
           i += 16;
           i += readParameter(data, i);
+          console.assert(i <= (start + TraceSize.PromiseResolution));
           break;
-        case 4:
-          // 8 byte promise id
-          // 8 byte chained promise id
+        case Trace.PromiseChained:
           i += 16;
+          console.assert(i === (start + TraceSize.PromiseChained));
           break;
-        case 5:
-          // 8 byte message base id
-          // 4 byte mailboxno
-          this.currentReceiver = this.readLong(data, i + 12); // receiver id
+        case Trace.Mailbox:
+          this.currentMsgId = this.readLong(data, i);
+          this.currentReceiver = this.readLong(data, i + 12);
           i += 20;
+          console.assert(i === (start + TraceSize.Mailbox));
           break;
-        case 6:
-          data.getInt8(i); // Thread
-          // 8 byte timestamp
-          i += 9;
+        case Trace.Thread:
+          i += 16;
+          console.assert(i === (start + TraceSize.Thread));
           break;
-        case 7:
-          // 8 byte message base id
-          // 4 byte mailboxno
+        case Trace.MailboxContd:
+          this.currentMsgId = this.readLong(data, i);
           this.currentReceiver = this.readLong(data, i + 12); // receiver id
-          data.getInt32(i + 20); // id offset
           i += 24;
+          console.assert(i === (start + TraceSize.MailboxContd));
+          break;
+        case Trace.PromiseMessage:
+          i += 6;
+          console.assert(i === (start + TraceSize.PromiseMessage));
+          break;
+        case Trace.ProcessCompletion:
+          i += 8;
+          console.assert(i === (start + TraceSize.ProcessCompletion));
+          break;
+        case Trace.TaskJoin:
+          i += 10;
+          console.assert(i === (start + TraceSize.TaskJoin));
           break;
 
         default:
@@ -185,7 +293,8 @@ export class HistoryData {
             }
           }
 
-          this.addMessage(sender, this.currentReceiver);
+          this.addMessage(sender, this.currentReceiver, this.currentMsgId);
+          this.currentMsgId += 1;
       }
     }
     controller.newActivities(newActivities);
@@ -224,10 +333,4 @@ function hashAtInc(hash, idx: string, inc: number) {
   }
 }
 
-function mapToArray(map) {
-  const arr = [];
-  for (const i in map) {
-    arr.push(map[i]);
-  }
-  return arr;
-}
+

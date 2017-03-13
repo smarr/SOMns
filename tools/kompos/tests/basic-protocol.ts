@@ -167,7 +167,7 @@ describe("Basic Protocol", function() {
      breakpoint:  createSectionBreakpointData(PING_PONG_URI, 25, 20, 3, "PromiseResolutionBreakpoint", true),
      test:        "should accept promise resolution breakpoint for chained resolution, and halt on expected source section",
      stackLength: 2,
-     topMethod:   "Ping>>#$blockMethod@26@33:",
+     topMethod:   "Ping>>#λping@26@33:",
      line:        26}
   ];
 

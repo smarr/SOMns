@@ -1467,6 +1467,10 @@ public class Parser {
     return s;
   }
 
+  private String stripColons(final String str) {
+    return str.replace(":", "");
+  }
+
   private ExpressionNode nestedBlock(final MethodBuilder builder) throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
     expect(NewBlock, DelimiterOpeningTag.class);
@@ -1478,8 +1482,11 @@ public class Parser {
       blockPattern(builder);
     }
 
+    String outerMethodName = stripColons(builder.getOuterBuilder().
+        getSignature().getString());
+
     // generate Block signature
-    String blockSig = "$blockMethod@" + lexer.getCurrentLineNumber() + "@" + lexer.getCurrentColumn();
+    String blockSig = "λ" + outerMethodName + "@" + lexer.getCurrentLineNumber() + "@" + lexer.getCurrentColumn();
     int argSize = builder.getNumberOfArguments();
     for (int i = 1; i < argSize; i++) {
       blockSig += ":";

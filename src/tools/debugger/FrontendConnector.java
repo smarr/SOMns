@@ -21,7 +21,6 @@ import com.oracle.truffle.api.source.SourceSection;
 import com.sun.net.httpserver.HttpServer;
 
 import som.VM;
-import som.interpreter.actors.Actor;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
@@ -206,8 +205,8 @@ public class FrontendConnector {
     sendSource(source, loadedSourcesTags, rootNodes.get(source));
   }
 
-  public void sendSymbols(final ArrayList<SSymbol> symbolstowrite) {
-    send(new SymbolMessage(symbolstowrite));
+  public void sendSymbols(final ArrayList<SSymbol> symbolsToWrite) {
+    send(new SymbolMessage(symbolsToWrite));
   }
 
   public void sendTracingData(final ByteBuffer b) {
@@ -250,7 +249,7 @@ public class FrontendConnector {
 
   public void sendTracingData() {
     if (VmSettings.ACTOR_TRACING) {
-      Actor.forceSwapBuffers();
+      ActorExecutionTrace.forceSwapBuffers();
     }
   }
 

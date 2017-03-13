@@ -5,7 +5,28 @@ package tools;
  * Characterize and document some of the trace data.
  */
 public class TraceData {
-  public static final byte MESSAGE_BASE  = (byte) 0x80;
+  /**
+   * EventIds for custom events must not exceed 7 bits (unsigned).
+   */
+  public static final byte ACTOR_CREATION     = 1;
+  public static final byte PROMISE_CREATION   = 2;
+  public static final byte PROMISE_RESOLUTION = 3;
+  public static final byte PROMISE_CHAINED    = 4;
+  public static final byte MAILBOX            = 5;
+  public static final byte THREAD             = 6;
+  public static final byte MAILBOX_CONTD      = 7;
+
+  public static final byte PROCESS_CREATION   = 10;
+  public static final byte PROCESS_COMPLETION = 11;
+
+  public static final byte TASK_SPAWN = 12;
+  public static final byte TASK_JOIN  = 13;
+
+  /**
+   * Messages use a different EventId system, the most significant bit is 1 to clearly distinguish it from custom Events.
+   * The other bits are used to encode what information is contained in that event.
+   */
+  public static final byte MESSAGE_BIT  = (byte) 0x80;
   public static final byte PROMISE_BIT   = 0x40;
   public static final byte TIMESTAMP_BIT = 0x20;
   public static final byte PARAMETER_BIT = 0x10;

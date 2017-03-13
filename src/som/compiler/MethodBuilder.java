@@ -509,6 +509,10 @@ public final class MethodBuilder {
         getOuterSelfContextLevel(), source);
   }
 
+  public MethodBuilder getOuterBuilder() {
+    return outerBuilder;
+  }
+
   public MixinBuilder getEnclosingMixinBuilder() {
     if (this.directOuterMixin == null) {
       if (outerBuilder == null) {
