@@ -13,7 +13,6 @@ import som.interpreter.SomException;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
-import som.vmobjects.SAbstractObject;
 
 
 public class ReceivedMessage extends ReceivedRootNode {
@@ -40,7 +39,7 @@ public class ReceivedMessage extends ReceivedRootNode {
     try {
       Object result = onReceive.doPreEvaluated(frame, msg.args);
       resolvePromise(frame, msg.resolver, result, msg.triggerPromiseResolutionBreakpoint);
-    } catch (SomException exception){
+    } catch (SomException exception) {
         ruinPromise(frame, msg.resolver, exception.getSomObject());
     }
     return null;
@@ -93,8 +92,8 @@ public class ReceivedMessage extends ReceivedRootNode {
       try {
         Object result = onReceive.call(msg.args);
         resolvePromise(frame, msg.resolver, result, msg.triggerPromiseResolutionBreakpoint);
-      } catch (SomException exception){
-          ruinPromise(frame, msg.resolver, exception.getSomObject());   
+      } catch (SomException exception) {
+          ruinPromise(frame, msg.resolver, exception.getSomObject());
       }
       return null;
     }

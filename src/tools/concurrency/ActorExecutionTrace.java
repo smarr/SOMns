@@ -230,7 +230,7 @@ public class ActorExecutionTrace {
     TaskJoin(TraceData.TASK_JOIN,   11),
 
     PromiseMessage((byte) 9, 7),
-    PromiseRuin((byte) 10, 9); 
+    PromiseRuin((byte) 10, 9);
 
     final byte id;
     final int size;
@@ -249,7 +249,7 @@ public class ActorExecutionTrace {
     Promise,
     Resolver,
     Object,
-    String; 
+    String;
 
     byte id() {
       return (byte) this.ordinal();
@@ -330,9 +330,7 @@ public class ActorExecutionTrace {
       ByteBuffer b = t.getThreadLocalBuffer();
       b.put(Events.PromiseRuin.id);
       b.putLong(promiseId); // id of the promise
-      //b.putLong(t.getCurrentMessageId()); // id of message ruining promise, TODO is this necessary?
-      //b.put(ParamTypes.Exception.id()); // is this necessairy, only an exception can ruin a promise
-      b.asCharBuffer().put(exception); //store text of exception, 
+      b.asCharBuffer().put(exception); // store text of exception, 
       t.ruinedPromises++;
     }
   }
@@ -343,7 +341,7 @@ public class ActorExecutionTrace {
     t.resolvedPromises++;
   }
 
-  //code duplication?
+  // code duplication?
   public static void mailboxExecuted(final EventualMessage m,
       final ObjectBuffer<EventualMessage> moreCurrent, final long baseMessageId,
       final int mailboxNo, final long sendTS, final ObjectBuffer<Long> moreSendTS,

@@ -9,7 +9,6 @@ import com.sun.istack.internal.NotNull;
 
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.interpreter.SomException;
 import som.vm.NotYetImplementedException;
 import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
@@ -333,13 +332,13 @@ public class SPromise extends SObjectWithClass {
         ActorExecutionTrace.promiseRuin(p.getPromiseId(), exception);
       }
       synchronized (wrapped) {
-       handleOrPasstoChain(exception, wrapped, p, current);
+        handleOrPasstoChain(exception, wrapped, p, current);
       }
     }
 
-    public static void handleOrPasstoChain(final SAbstractObject exception, final Object wrapped, final SPromise p, final Actor current){
-      if (!runHandlersUnsync(exception, wrapped, p, current)){
-          //if I did not handle the exception ask chain to handle
+    public static void handleOrPasstoChain(final SAbstractObject exception, final Object wrapped, final SPromise p, final Actor current) {
+      if (!runHandlersUnsync(exception, wrapped, p, current)) {
+          // if I did not handle the exception ask chain to handle
           ruinChainedPromisesUnsynch(exception, p, current);
       }
     }
@@ -352,8 +351,8 @@ public class SPromise extends SObjectWithClass {
         }
 
         boolean handled = false;
-        
-        //execute all exceptionHandlers if the type of wrapped is equal to the exceptionClass the handler handles.
+
+        // execute all exceptionHandlers if the type of wrapped is equal to the exceptionClass the handler handles.
         if (p.onException != null) {
           for (int i = 0; i < p.onException.size(); i++) {
             SClass exceptionClass = p.onException.get(i);
@@ -365,7 +364,7 @@ public class SPromise extends SObjectWithClass {
           }
         }
 
-        //execute all errorHandlers
+        // execute all errorHandlers
         if (p.onError != null) {
           for (int i = 0; i < p.onError.size(); i++) {
             handled = true;
@@ -376,18 +375,18 @@ public class SPromise extends SObjectWithClass {
         return handled;
     }
 
-    protected static void ruinChainedPromisesUnsynch(final SAbstractObject exception, final SPromise promise, final Actor current){
+    protected static void ruinChainedPromisesUnsynch(final SAbstractObject exception, final SPromise promise, final Actor current) {
       if (promise.chainedPromise != null) {
         Object wrapped = promise.chainedPromise.owner.wrapForUse(exception, current, null);
         handleOrPasstoChain(exception, wrapped, promise.chainedPromise, current);
-        
+
         if (promise.chainedPromiseExt != null) {
-          //multiple promises are chained to me, ruin all of them
+          // multiple promises are chained to me, ruin all of them
           for (SPromise p : promise.chainedPromiseExt) {
             Object wrappedForP = p.owner.wrapForUse(exception, current, null);
             handleOrPasstoChain(exception, wrappedForP, p, current);
           }
-        } 
+        }
       }
     }
 
