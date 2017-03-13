@@ -100,7 +100,7 @@ public class ActorExecutionTrace {
       }
     }
 
-    byte eventid = TraceData.MESSAGE_BASE;
+    byte eventid = TraceData.MESSAGE_BIT;
 
     if (VmSettings.MESSAGE_TIMESTAMPS) {
       eventid |= TraceData.TIMESTAMP_BIT;
@@ -209,27 +209,27 @@ public class ActorExecutionTrace {
   }
 
   protected enum Events {
-    ActorCreation(TraceParser.ACTOR_CREATION,         19),
-    PromiseCreation(TraceParser.PROMISE_CREATION,     17),
-    PromiseResolution(TraceParser.PROMISE_RESOLUTION, 28),
-    PromiseChained(TraceParser.PROMISE_CHAINED,       17),
-    Mailbox(TraceParser.MAILBOX,                      21),
+    ActorCreation(TraceData.ACTOR_CREATION,         19),
+    PromiseCreation(TraceData.PROMISE_CREATION,     17),
+    PromiseResolution(TraceData.PROMISE_RESOLUTION, 28),
+    PromiseChained(TraceData.PROMISE_CHAINED,       17),
+    Mailbox(TraceData.MAILBOX,                      21),
 
     // at the beginning of buffer, allows to track what was created/executed
     // on which thread, really cheap solution, timestamp?
-    Thread(TraceParser.THREAD, 17),
+    Thread(TraceData.THREAD, 17),
 
     // for memory events another buffer is needed
     // (the gc callback is on Thread[Service Thread,9,system])
-    MailboxContd(TraceParser.MAILBOX_CONTD,     25),
-    BasicMessage(TraceParser.BASIC_MESSAGE,      7),
-    PromiseMessage(TraceParser.PROMISE_MESSAGE,  7),
+    MailboxContd(TraceData.MAILBOX_CONTD,     25),
+    BasicMessage(TraceData.BASIC_MESSAGE,      7),
+    PromiseMessage(TraceData.PROMISE_MESSAGE,  7),
 
-    ProcessCreation(TraceParser.PROCESS_CREATION,     19),
-    ProcessCompletion(TraceParser.PROCESS_COMPLETION,  9),
+    ProcessCreation(TraceData.PROCESS_CREATION,     19),
+    ProcessCompletion(TraceData.PROCESS_COMPLETION,  9),
 
-    TaskSpawn(TraceParser.TASK_SPAWN, 19),
-    TaskJoin(TraceParser.TASK_JOIN,   11);
+    TaskSpawn(TraceData.TASK_SPAWN, 19),
+    TaskJoin(TraceData.TASK_JOIN,   11);
 
     final byte id;
     final int size;
