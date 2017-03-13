@@ -68,6 +68,18 @@ export class UiController extends Controller {
     this.dbg.addSource(msg);
   }
 
+  public toggleCodePane(actId: string, btnNode: Element) {
+    const btn = $(btnNode);
+    const isClosed = btn.hasClass("pane-closed");
+    if (isClosed) {
+      btn.removeClass("pane-closed");
+      btn.addClass("pane-opened");
+    } else {
+      btn.addClass("pane-closed");
+      btn.removeClass("pane-opened");
+    }
+  }
+
   private ensureBreakpointsAreIndicated(sourceUri) {
     const bps = this.dbg.getEnabledBreakpointsForSource(sourceUri);
     for (const bp of bps) {
