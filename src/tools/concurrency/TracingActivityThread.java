@@ -11,9 +11,7 @@ import tools.TraceData;
 public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   private static AtomicInteger threadIdGen = new AtomicInteger(1);
   protected final long threadId;
-
   protected long nextActivityId = 1;
-
   protected long nextMessageId;
   protected long nextPromiseId;
 
@@ -28,6 +26,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     if (VmSettings.ACTOR_TRACING) {
       traceBuffer = TraceBuffer.create();
       threadId = threadIdGen.getAndIncrement();
+      nextActivityId = 1 + (threadId << TraceData.ACTIVITY_ID_BITS);
       nextMessageId = (threadId << TraceData.ACTIVITY_ID_BITS);
       nextPromiseId = (threadId << TraceData.ACTIVITY_ID_BITS);
     } else {
@@ -38,7 +37,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   }
 
   public long generateActivityId() {
-    long result = (threadId << TraceData.ACTIVITY_ID_BITS) | nextActivityId;
+    long result = nextActivityId;
     nextActivityId++;
     assert TraceData.isWithinJSIntValueRange(result);
     return result;
