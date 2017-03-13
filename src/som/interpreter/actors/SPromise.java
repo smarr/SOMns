@@ -23,7 +23,7 @@ import tools.concurrency.TracingActors.ReplayActor;
 
 public class SPromise extends SObjectWithClass {
   private enum Resolution {
-    UNRESOLVED, ERRORNOUS, SUCCESSFUL, CHAINED
+    UNRESOLVED, ERRONEOUS, SUCCESSFUL, CHAINED
   }
 
   @CompilationFinal private static SClass promiseClass;
@@ -141,7 +141,7 @@ public class SPromise extends SObjectWithClass {
 
   public synchronized void registerOnError(final PromiseMessage msg,
       final Actor current) {
-    if (resolutionState == Resolution.ERRORNOUS) {
+    if (resolutionState == Resolution.ERRONEOUS) {
         scheduleCallbacksOnResolution(value, msg, current, false);
     } else {
       if (resolutionState == Resolution.SUCCESSFUL) {
@@ -168,7 +168,7 @@ public class SPromise extends SObjectWithClass {
         block, resolver, blockCallTarget, false, false, false, promise);
 
     synchronized (this) {
-      if (resolutionState == Resolution.ERRORNOUS) {
+      if (resolutionState == Resolution.ERRONEOUS) {
         if (value instanceof SAbstractObject) {
           if (((SAbstractObject) value).getSOMClass() == exceptionClass) {
             scheduleCallbacksOnResolution(value, msg, current, false);
@@ -226,10 +226,10 @@ public class SPromise extends SObjectWithClass {
   }
 
   /**
-   * @return true, if it has a valid value, either successful or errornous
+   * @return true, if it has a valid value, either successful or erroneous
    */
   public final synchronized boolean isCompleted() {
-    return resolutionState == Resolution.SUCCESSFUL || resolutionState == Resolution.ERRORNOUS;
+    return resolutionState == Resolution.SUCCESSFUL || resolutionState == Resolution.ERRONEOUS;
   }
 
   public final boolean assertNotCompleted() {
@@ -245,7 +245,7 @@ public class SPromise extends SObjectWithClass {
 
   /** Internal Helper, only to be used properly synchronized. */
   public final boolean isErroredUnsync() {
-    return resolutionState == Resolution.ERRORNOUS;
+    return resolutionState == Resolution.ERRONEOUS;
   }
 
   /** Internal Helper, only to be used properly synchronized. */
@@ -348,7 +348,7 @@ public class SPromise extends SObjectWithClass {
         synchronized (p) {
           assert p.assertNotCompleted();
           p.value = exception;
-          p.resolutionState = Resolution.ERRORNOUS;
+          p.resolutionState = Resolution.ERRONEOUS;
         }
 
         boolean handled = false;
