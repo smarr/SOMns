@@ -341,8 +341,6 @@ public class Actor implements Activity {
     public EventualMessage currentMessage;
 
     protected Actor currentlyExecutingActor;
-    public long resolvedPromises;
-    public long ruinedPromises;
 
     // Used for tracing, accessed by the ExecAllMessages classes
     public long currentMessageId;
@@ -382,7 +380,7 @@ public class Actor implements Activity {
           numCreatedMessages  += createdMessages;
           numCreatedPromises  += createdPromises;
           numResolvedPromises += resolvedPromises;
-          numRuinedPromises   += ruinedPromises;
+          numRuinedPromises   += erroredPromises;
         }
       }
       super.onTermination(exception);

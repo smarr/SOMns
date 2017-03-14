@@ -229,8 +229,7 @@ public class ActorExecutionTrace {
     TaskSpawn(TraceData.TASK_SPAWN, 19),
     TaskJoin(TraceData.TASK_JOIN,   11),
 
-    PromiseMessage((byte) 9, 7),
-    PromiseRuin((byte) 10, 9);
+    PromiseError(TraceData.PROMISE_ERROR, 28);
 
     final byte id;
     final int size;
@@ -309,30 +308,19 @@ public class ActorExecutionTrace {
     TracingActivityThread t = (TracingActivityThread) current;
 
     t.getBuffer().recordPromiseResolution(promiseId, value, t.getCurrentMessageId());
-
     t.resolvedPromises++;
   }
 
-  public static void promiseRuin(final long promiseId, final SAbstractObject value) {
-    if (!VmSettings.ACTOR_TRACING) {
+  public static void promiseError(final long promiseId, final Object value) {
+    Thread current = Thread.currentThread();
+    if (TimerPrim.isTimerThread(current)) {
       return;
     }
 
-    Thread current = Thread.currentThread();
-    String exception = value.toString();
-
-    if (current instanceof ActorProcessingThread) {
-      ActorProcessingThread t = (ActorProcessingThread) current;
-      if (t.getThreadLocalBuffer().remaining() < Events.PromiseRuin.size + exception.getBytes().length) {
-        swapBuffer(t);
-      }
-
-      ByteBuffer b = t.getThreadLocalBuffer();
-      b.put(Events.PromiseRuin.id);
-      b.putLong(promiseId); // id of the promise
-      b.asCharBuffer().put(exception); // store text of exception, 
-      t.ruinedPromises++;
-    }
+    assert current instanceof TracingActivityThread;
+    TracingActivityThread t = (TracingActivityThread) current;
+    t.getBuffer().recordPromiseError(promiseId, value, t.getCurrentMessageId());
+    t.erroredPromises++;
   }
 
   public static void promiseChained(final long parent, final long child) {

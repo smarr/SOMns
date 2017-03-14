@@ -18,6 +18,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   // Used for tracing, accessed by the ExecAllMessages classes
   public long createdMessages;
   public long resolvedPromises;
+  public long erroredPromises;
 
   protected final TraceBuffer traceBuffer;
 

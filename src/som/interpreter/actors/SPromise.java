@@ -9,7 +9,6 @@ import com.sun.istack.internal.NotNull;
 
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.vm.NotYetImplementedException;
 import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
@@ -329,7 +328,7 @@ public class SPromise extends SObjectWithClass {
     public static void onError(final SAbstractObject exception, final Object wrapped, final SPromise p, final Actor current) {
       // for trace  TODO fix tracing
       if (VmSettings.PROMISE_RESOLUTION) {
-        ActorExecutionTrace.promiseRuin(p.getPromiseId(), exception);
+        ActorExecutionTrace.promiseError(p.getPromiseId(), exception);
       }
       synchronized (wrapped) {
         handleOrPasstoChain(exception, wrapped, p, current);
