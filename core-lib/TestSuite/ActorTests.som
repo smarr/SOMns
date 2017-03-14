@@ -277,25 +277,24 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       (assert: r3 resolvedWith: 3),
       (assert: r4 resolvedWith: 4)
     )
-(*
+
     public testFifoFailstop = (
       | recorder recorderFork r1 r2 r3 r4 r5 |
       recorder := (actors createActorFromValue: Recorder) <-: new.
-      recorderFork := recorder <-: yourself.
 
       r1 := recorder <-: append: 'a'.
       r2 := recorder <-: append: 'b'.
       r3 := recorder <-: fail.
       r4 := recorder <-: append: 'c'.
       r5 := recorder <-: append: 'd'.
-      assert: r3 smashedWith: Error. (* Do this first because our asserts are blocking and we need to register the error handler before the next turn. *)
-      assert: (recorderFork <-: recording) resolvedWith: 'abcd'.
+      assert: (recorder <-: recording) resolvedWith: 'abcd'.
       assert: r1 resolvedWith: 1.
       assert: r2 resolvedWith: 2.
-      assert: r4 smashedWith: Error.
-      assert: r5 smashedWith: Error.
+      assert: r3 erroredWith: Exception.
+      assert: r4 erroredWith: Exception.
+      assert: r5 erroredWith: Exception.
     )
-*)
+
     public testAsyncIfTrue = (
       | math tookTruePath result |
       math := (actors createActorFromValue: Math) <-: new.
@@ -365,13 +364,12 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       pong <-: other: ping.
       ^ assert: (ping <-: start) resolvedWith: 55.
     )
-(*
+
     public testTurnResultsInException = (
       | bob |
       bob := (actors createActorFromValue: Bob) <-: meet: self.
-      assert: (bob <-: raiseException) smashedWith: Error.
+      assert: (bob <-: raiseException) erroredWith: Exception.
     )
-*)
 
     (* Test promise chaining *)
     public testAsyncFirstResolvedThenChainedThenRegistered123 = (
