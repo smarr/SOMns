@@ -30,6 +30,7 @@ public final class CachedDnuNode extends AbstractDispatchNode {
       final DispatchGuard guard,
       final AbstractDispatchNode nextInCache) {
     super(nextInCache.getSourceSection());
+    this.nextInCache  = nextInCache;
     this.cachedMethod = Truffle.getRuntime().createDirectCallNode(
         getDnu(rcvrClass, selector));
     this.selector = selector;
