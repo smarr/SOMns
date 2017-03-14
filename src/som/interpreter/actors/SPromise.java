@@ -10,7 +10,6 @@ import com.sun.istack.internal.NotNull;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.vm.VmSettings;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
@@ -288,58 +287,6 @@ public class SPromise extends SObjectWithClass {
     public static void setSOMClass(final SClass cls) {
       assert resolverClass == null || cls == null;
       resolverClass = cls;
-    }
-
-    public static void onError(final SAbstractObject exception, final Object wrapped, final SPromise p, final Actor current) {
-      // for trace  TODO fix tracing
-      if (VmSettings.PROMISE_RESOLUTION) {
-        ActorExecutionTrace.promiseError(p.getPromiseId(), exception);
-      }
-      synchronized (wrapped) {
-        handleOrPasstoChain(exception, wrapped, p, current);
-      }
-    }
-
-    public static void handleOrPasstoChain(final SAbstractObject exception, final Object wrapped, final SPromise p, final Actor current) {
-      if (!runHandlersUnsync(exception, wrapped, p, current)) {
-          // if I did not handle the exception ask chain to handle
-          ruinChainedPromisesUnsynch(exception, p, current);
-      }
-    }
-
-    private static boolean runHandlersUnsync(final SAbstractObject exception, final Object wrapped, final SPromise p, final Actor current) {
-        synchronized (p) {
-          assert p.assertNotCompleted();
-          p.value = exception;
-          p.resolutionState = Resolution.ERRONEOUS;
-        }
-
-        boolean handled = false;
-
-        // execute all errorHandlers
-        if (p.onError != null) {
-          for (int i = 0; i < p.onError.size(); i++) {
-            handled = true;
-            PromiseMessage handle = p.onError.get(i);
-            p.scheduleCallbacksOnResolution(exception, handle, current, false);
-          }
-        }
-        return handled;
-    }
-
-    protected static void ruinChainedPromisesUnsynch(final SAbstractObject exception, final SPromise promise, final Actor current) {
-      if (promise.chainedPromise != null) {
-        Object wrapped = promise.chainedPromise.owner.wrapForUse(exception, current, null);
-        handleOrPasstoChain(exception, wrapped, promise.chainedPromise, current);
-
-        if (promise.chainedPromiseExt != null) {
-          // multiple promises are chained to me, ruin all of them
-          for (SPromise p : promise.chainedPromiseExt) {
-            Object wrappedForP = p.owner.wrapForUse(exception, current, null);
-            handleOrPasstoChain(exception, wrappedForP, p, current);
-          }
-        }
-      }
     }
 
     public final boolean assertNotCompleted() {
