@@ -21,7 +21,6 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -117,15 +116,6 @@ public final class PromisePrims {
       registerNode.register(rcvr, msg, current);
 
       return promise;
-    }
-  }
-
-  // TODO: should we add this for the literal case? which should be very common?
-  public abstract static class WhenResolvedLiteralBlockNode extends BinaryComplexOperation {
-    @SuppressWarnings("unused") private final RootCallTarget blockCallTarget;
-    public WhenResolvedLiteralBlockNode(final SourceSection source, final BlockNode blockNode) {
-      super(false, source);
-      blockCallTarget = blockNode.getBlockMethod().getCallTarget();
     }
   }
 
