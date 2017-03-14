@@ -29,7 +29,6 @@ import som.primitives.Primitive;
 import som.vm.Primitives.Specializer;
 import som.vm.Symbols;
 import som.vmobjects.SBlock;
-import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SSymbol;
@@ -144,22 +143,6 @@ public final class PromisePrims {
         @Cached("createReceived(callback)") final RootCallTarget blockCallTarget) {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
       return promise.onError(callback, blockCallTarget, current);
-    }
-  }
-
-  @GenerateNodeFactory
-  @ImportStatic(PromisePrims.class)
-  @Primitive(primitive = "actorsFor:on:do:")
-  public abstract static class OnExceptionDoPrim extends TernaryExpressionNode {
-    public OnExceptionDoPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-
-    @Specialization(guards = "blockMethod == callback.getMethod()")
-    public final SPromise onExceptionDo(final SPromise promise,
-        final SClass exceptionClass, final SBlock callback,
-        @Cached("callback.getMethod()") final SInvokable blockMethod,
-        @Cached("createReceived(callback)") final RootCallTarget blockCallTarget) {
-      Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-      return promise.onException(exceptionClass, callback, blockCallTarget, current);
     }
   }
 

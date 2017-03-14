@@ -52,9 +52,6 @@ public class SPromise extends SObjectWithClass {
   protected ArrayList<PromiseMessage> whenResolvedExt;
   protected ArrayList<PromiseMessage> onError;
 
-  protected ArrayList<SClass>         onException;
-  protected ArrayList<PromiseMessage> onExceptionCallbacks;
-
   protected SPromise chainedPromise;
   protected ArrayList<SPromise>  chainedPromiseExt;
 
@@ -152,38 +149,6 @@ public class SPromise extends SObjectWithClass {
         onError = new ArrayList<>(1);
       }
       onError.add(msg);
-    }
-  }
-
-  public final SPromise onException(final SClass exceptionClass,
-      final SBlock block, final RootCallTarget blockCallTarget, final Actor current) {
-    assert block.getMethod().getNumberOfArguments() == 2;
-
-    SPromise  promise  = createPromise(current);
-    SResolver resolver = createResolver(promise, "oEx:class:block");
-
-    PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), owner,
-        block, resolver, blockCallTarget, false, false, false, promise);
-
-    synchronized (this) {
-      if (resolutionState == Resolution.ERRONEOUS) {
-        if (value instanceof SAbstractObject) {
-          if (((SAbstractObject) value).getSOMClass() == exceptionClass) {
-            scheduleCallbacksOnResolution(value, msg, current, false);
-          }
-        }
-      } else {
-        if (resolutionState == Resolution.SUCCESSFUL) { // short cut, this promise will never error, so, just return promise
-          return promise;
-        }
-        if (onException == null) {
-          onException          = new ArrayList<>(1);
-          onExceptionCallbacks = new ArrayList<>(1);
-        }
-        onException.add(exceptionClass);
-        onExceptionCallbacks.add(msg);
-      }
-      return promise;
     }
   }
 
@@ -350,18 +315,6 @@ public class SPromise extends SObjectWithClass {
         }
 
         boolean handled = false;
-
-        // execute all exceptionHandlers if the type of wrapped is equal to the exceptionClass the handler handles.
-        if (p.onException != null) {
-          for (int i = 0; i < p.onException.size(); i++) {
-            SClass exceptionClass = p.onException.get(i);
-            PromiseMessage handle = p.onExceptionCallbacks.get(i);
-            if (((SAbstractObject) wrapped).getSOMClass() == exceptionClass) {
-                handled = true;
-                p.scheduleCallbacksOnResolution(exception, handle, current, false);
-            }
-          }
-        }
 
         // execute all errorHandlers
         if (p.onError != null) {
