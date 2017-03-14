@@ -59,18 +59,19 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   )
 
   public class Promise = Object ()(
-    (* all whenResolved blocks are executed. *)
-    public whenResolved: aBlock = ( ^ self whenResolved: aBlock onError: [:e | e signal])
-
-    (* all ensure blocks are executed. *)
-    public ensure: aBlock       = ( whenResolved: aBlock. onError: aBlock. )
-
-    (* all onError blocks are executed. *)
-    public onError: errorBlock  = (^ vmMirror actorsFor: self onError: errorBlock )
-
+    (* register block for success and error case *)
     public whenResolved: aBlock onError: errorBlock = (
       ^ vmMirror actorsWhen: self resolved: aBlock onError: errorBlock
     )
+
+    (* register block for success case, on error signal exception *)
+    public whenResolved: aBlock = ( ^ whenResolved: aBlock onError: [:e | e signal ] )
+
+    (* register block for error case, don't add handler for success case *)
+    public onError: errorBlock  = ( ^ vmMirror actorsFor: self onError: errorBlock )
+
+    (* register block for success and error case *)
+    public ensure: aBlock       = ( ^ whenResolved: aBlock onError: aBlock )
 
     public , other = (
       ^ (PromiseGroup for: self), other.
@@ -92,8 +93,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
       resolver resolve: value.
     )
 
-    (*added*)
-    public ruin: exception = (
+    public error: exception = (
       resolver error: exception.
     )
   )
@@ -113,10 +113,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
     public ensure: aBlock       = ( ^ all ensure: aBlock )
     public onError: errorBlock  = ( ^ all onError: errorBlock )
     public whenResolved: aBlock onError: errorBlock = (
-      ^ all whenResolved resolved: aBlock onError: errorBlock
-    )
-    public on: exception do: errorBlock = (
-      ^ all on: exception do: errorBlock
+      ^ all whenResolved: aBlock onError: errorBlock
     )
 
     all = (
