@@ -10,10 +10,10 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
   private errorTestMessage = 'test exception 1'.
 |
 )(
-    private class GenericTestException1 new = Exception (
-        | public msg |
-        msg := errorTestMessage.
-    )()
+  private class GenericTestException1 new = Exception (
+  | public msg |
+    msg := errorTestMessage.
+  )()
 
   class Bob meet: a = (
     | private alice = a. |
@@ -609,8 +609,8 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
   )
 
   public class PromiseErrored = AsyncTestContext (
-    | private Exception = kernel Exception. aliceValue = 10. bobValue = 20.|
-    )(
+  | private Exception = kernel Exception. aliceValue = 10. bobValue = 20.|
+  )(
      private class NoExceptionReceivedException signal = Exception (
         | public msg |
         msg := 'received value, expected exception'.
@@ -630,13 +630,13 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       alice := a.
       exception := GenericTestException1 new.
     )(
-      public send = ( ^ a <-: method )
-      public sendFailing = ( ^ a <-: methodFailing )
+      public send = ( ^ alice <-: method )
+      public sendFailing = ( ^ alice <-: methodFailing )
       public sendFailingAndHandle = (
-        promise := a <-: methodFailing.
+        promise := alice <-: methodFailing.
         ^ promise
             whenResolved: [:v | NoExceptionReceivedException signal ]
-                 onError: [:e | bobValue (* ???? *) ]
+                 onError: [:e | bobValue ]
       )
     )
 
@@ -711,13 +711,14 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
        b := Bob new: a.
        messagePromise := b <-: send.
        assertPromise := messagePromise
-           whenResolved: [:v | assert v equals: aliceValue ]
+           whenResolved: [:v | assert: v equals: aliceValue ]
                 onError: [:e | e signal ].
         ^ assertPromise
     )
 
     public testChainedExceptionIsCaught = (
       | a b messagePromise assertPromise |
+      a := Alice new.
       b := Bob new: a.
       messagePromise := b <-: sendFailing.
       assertPromise := messagePromise
@@ -728,6 +729,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
 
     public testChainedAndHandleExceptionIsNotCaught = (
       | a b messagePromise assertPromise |
+      a := Alice new.
       b := Bob new: a.
       messagePromise := b <-: sendFailingAndHandle.
       assertPromise := messagePromise
@@ -759,7 +761,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       (* resolve 1 *)
       pp resolver error: exception.
       (* register 3 *)
-      assertPromise:= (ppChained promise onError: [:v | assert: v msg equals: errorTestMessage ]).
+      assertPromise := (ppChained promise onError: [:v | assert: v msg equals: errorTestMessage ]).
       (* chain 2 *)
       ppChained resolver resolve: pp promise.
       ^ assertPromise
@@ -788,7 +790,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       (* chain 2 *)
       ppChained resolver resolve: pp promise.
       (* register 3 *)
-      assertPromise:= ppChained promise onError: [:v | assert: v msg equals: errorTestMessage ].
+      assertPromise := ppChained promise onError: [:v | assert: v msg equals: errorTestMessage ].
       (* resolve 1 *)
       pp resolver error: exception.
       ^ assertPromise
@@ -801,7 +803,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       exception := GenericTestException1 new.
 
       (* register 3 *)
-      assertPromise:= ppChained promise onError: [:v | assert: v msg equals: errorTestMessage ].
+      assertPromise := ppChained promise onError: [:v | assert: v msg equals: errorTestMessage ].
       (* resolve 1 *)
       pp resolver error: exception.
       (* chain 2 *)
@@ -817,7 +819,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       exception := GenericTestException1 new.
 
       (* register 3 *)
-      assertPromise:= ppChained promise onError: [:v | assert: v msg equals: errorTestMessage ].
+      assertPromise := ppChained promise onError: [:v | assert: v msg equals: errorTestMessage ].
       (* chain 2 *)
       ppChained resolver resolve: pp promise.
       (* resolve 1 *)
