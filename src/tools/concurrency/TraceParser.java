@@ -154,6 +154,12 @@ public final class TraceParser {
             parseParameter(); // param
             assert b.position() <= start + Events.PromiseResolution.size;
             break;
+          case TraceData.PROMISE_ERROR:
+            b.getLong(); // promise id
+            b.getLong(); // resolving msg
+            parseParameter(); // param
+            assert b.position() <= start + Events.PromiseError.size;
+            break;
           case TraceData.THREAD:
             b.compact();
             channel.read(b);

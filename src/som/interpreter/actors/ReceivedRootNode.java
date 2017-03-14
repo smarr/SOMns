@@ -9,16 +9,14 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.actors.SPromise.SResolver;
-import som.interpreter.SomException;
 import som.vm.VmSettings;
-import som.vmobjects.SAbstractObject;
 import tools.debugger.WebDebugger;
 
 
 public abstract class ReceivedRootNode extends RootNode {
 
-  @Child protected ResolvePromiseNode resolve;
-  @Child protected RuinPromiseNode ruin;
+  @Child protected AbstractPromiseResolutionNode resolve;
+  @Child protected AbstractPromiseResolutionNode error;
 
   protected final WebDebugger dbg;
 
@@ -50,26 +48,27 @@ public abstract class ReceivedRootNode extends RootNode {
     resolve.executeEvaluated(frame, resolver, result, isBreakpointOnPromiseResolution);
   }
 
-  protected final void ruinPromise(final VirtualFrame frame,
-      final SResolver resolver, final SAbstractObject exception) {
+  protected final void errorPromise(final VirtualFrame frame,
+      final SResolver resolver, final Object exception,
+      final boolean isBreakpointOnPromiseResolution) {
     // lazy initialization of resolution node
-    if (ruin == null) {
+    if (error == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       if (resolver == null) {
-        throw new SomException(exception); // I'm ruining a promise without a resolver. No onError can be added so rethrow the exception
+        this.error = insert(new NullResolver(getSourceSection()));
       } else {
-        this.ruin = insert(RuinPromiseNodeFactory.create(false, getSourceSection(), null, null));
+        this.error = insert(ErrorPromiseNodeFactory.create(false, getSourceSection(), null, null, null));
       }
     }
 
-    // ruin promise
-    ruin.executeEvaluated(frame, resolver, exception);
+    // error promise
+    error.executeEvaluated(frame, resolver, exception, isBreakpointOnPromiseResolution);
   }
 
   /**
    * Promise resolver for the case that the actual promise has been optimized out.
    */
-  public final class NullResolver extends ResolvePromiseNode {
+  public final class NullResolver extends AbstractPromiseResolutionNode {
     public NullResolver(final SourceSection source) {
       super(false, source);
     }

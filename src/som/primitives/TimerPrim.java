@@ -10,6 +10,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.ResolvePromiseNode;
+import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.actors.WrapReferenceNode;
 import som.interpreter.actors.WrapReferenceNodeGen;
@@ -33,7 +34,8 @@ public abstract class TimerPrim extends BinaryComplexOperation{
     timer.schedule(new TimerTask() {
       @Override
       public void run() {
-        ResolvePromiseNode.resolve(wrapper, resolver.getPromise(), true,
+        ResolvePromiseNode.resolve(Resolution.SUCCESSFUL, wrapper,
+            resolver.getPromise(), true,
             resolver.getPromise().getOwner(), false);
       }
     }, timeout);
