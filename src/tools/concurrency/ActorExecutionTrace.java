@@ -211,7 +211,7 @@ public class ActorExecutionTrace {
 
   protected enum Events {
     ActorCreation(TraceData.ACTOR_CREATION,         19),
-    ActorCreationWithOrigin(TraceData.ACTOR_CREATION_ORIGIN,         27),
+    ActivityOrigin(TraceData.ACTIVITY_ORIGIN,        9),
     PromiseCreation(TraceData.PROMISE_CREATION,     17),
     PromiseResolution(TraceData.PROMISE_RESOLUTION, 28),
     PromiseChained(TraceData.PROMISE_CHAINED,       17),
@@ -231,10 +231,7 @@ public class ActorExecutionTrace {
     TaskSpawn(TraceData.TASK_SPAWN, 19),
     TaskJoin(TraceData.TASK_JOIN,   11),
 
-    PromiseError(TraceData.PROMISE_ERROR, 28),
-
-    TaskSpawnOrigin(TraceData.TASK_SPAWN_ORIGIN, 27),
-    ProcessCreationOrigin(TraceData.PROCESS_CREATION_ORIGIN, 27);
+    PromiseError(TraceData.PROMISE_ERROR, 28);
 
     final byte id;
     final int size;
@@ -273,24 +270,14 @@ public class ActorExecutionTrace {
     workerThread.start();
   }
 
-  public static void actorCreation(final SFarReference actor) {
+  public static void actorCreation(final SFarReference actor, final SourceSection section) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordActorCreation(actor, t.getCurrentMessageId());
+    t.getBuffer().recordActorCreation(actor, t.getCurrentMessageId(), section);
   }
 
-  public static void actorCreationWithOrigin(final SFarReference actor, final SourceSection origin) {
+  public static void processCreation(final TracingProcess proc, final SourceSection section) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordActorCreationWithOrigin(actor, t.getCurrentMessageId(), origin);
-  }
-
-  public static void processCreation(final TracingProcess proc) {
-    TracingActivityThread t = getThread();
-    t.getBuffer().recordProcessCreation(proc, t.getCurrentMessageId());
-  }
-
-  public static void processCreationWithOrigin(final TracingProcess proc, final SourceSection origin) {
-    TracingActivityThread t = getThread();
-    t.getBuffer().recordProcessCreationWithOrigin(proc, t.getCurrentMessageId(), origin);
+    t.getBuffer().recordProcessCreation(proc, t.getCurrentMessageId(), section);
   }
 
   public static void processCompletion(final TracingProcess proc) {
@@ -298,14 +285,10 @@ public class ActorExecutionTrace {
     t.getBuffer().recordProcessCompletion(proc);
   }
 
-  public static void taskSpawn(final SInvokable method, final long activityId) {
+  public static void taskSpawn(final SInvokable method, final long activityId,
+      final SourceSection section) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordTaskSpawn(method, activityId, t.getCurrentMessageId());
-  }
-
-  public static void taskSpawnWithOrigin(final SInvokable method, final long activityId, final SourceSection origin) {
-    TracingActivityThread t = getThread();
-    t.getBuffer().recordTaskSpawnWithOrigin(method, activityId, t.getCurrentMessageId(), origin);
+    t.getBuffer().recordTaskSpawn(method, activityId, t.getCurrentMessageId(), section);
   }
 
   public static void taskJoin(final SInvokable method, final long activityId) {

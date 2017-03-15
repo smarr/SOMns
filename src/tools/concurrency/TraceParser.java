@@ -118,27 +118,12 @@ public final class TraceParser {
             parsedActors++;
             assert b.position() == start + Events.ActorCreation.size;
             break;
-          case TraceData.ACTOR_CREATION_ORIGIN:
-            id = b.getLong(); // actor id
-            cause = b.getLong(); // causal
-            if (id == 0) {
-              assert !readMainActor : "There should be only one main actor.";
-              readMainActor = true;
-            }
-            if (id != 0) {
-              if (!unmappedActors.containsKey(cause)) {
-                unmappedActors.put(cause, new ArrayList<>());
-              }
-              unmappedActors.get(cause).add(id);
-            }
-            b.getShort(); // type
-
+          case TraceData.ACTIVITY_ORIGIN:
             b.getShort(); // file
             b.getShort(); // startline
             b.getShort(); // startcol
             b.getShort(); // charlen
-            parsedActors++;
-            assert b.position() == start + Events.ActorCreationWithOrigin.size;
+            assert b.position() == start + Events.ActivityOrigin.size;
             break;
           case TraceData.MAILBOX:
             currentMessage = b.getLong(); // base msg id

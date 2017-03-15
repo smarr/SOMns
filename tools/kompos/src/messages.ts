@@ -57,6 +57,7 @@ export interface Activity {
   name: string;
   type: ActivityType;
   causalMsg: number;
+  origin?: FullSourceCoordinate;
 }
 
 export interface StoppedMessage {

@@ -101,12 +101,7 @@ public abstract class ChannelPrimitives {
   private static Process create(final SObjectWithClass obj, final SourceSection origin) {
     if (VmSettings.ACTOR_TRACING) {
       TracingProcess result = new TracingProcess(obj);
-
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        ActorExecutionTrace.processCreationWithOrigin(result, origin);
-      } else {
-        ActorExecutionTrace.processCreation(result);
-      }
+      ActorExecutionTrace.processCreation(result, origin);
       return result;
     } else {
       return new Process(obj);

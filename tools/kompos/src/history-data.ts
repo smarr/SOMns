@@ -2,7 +2,7 @@
 "use strict";
 
 import {Controller} from "./controller";
-import {IdMap, Activity, ActivityWithOrigin, ActivityType} from "./messages";
+import {IdMap, Activity, ActivityType} from "./messages";
 import {dbgLog} from "./source";
 
 const horizontalDistance = 100,
@@ -22,18 +22,14 @@ enum Trace {
   Mailbox           =  5,
   Thread            =  6,
   MailboxContd      =  7,
-
-  ActorCreationOrigin      =  8,
+  ActivityOrigin    =  8,
   PromiseMessage    =  9,
 
   ProcessCreation   = 10,
   ProcessCompletion = 11,
 
   TaskSpawn         = 12,
-  TaskJoin          = 13,
-
-  ProcessCreationOrigin =14,
-  TaskSpawnOrigin   = 15
+  TaskJoin          = 13
 }
 
 enum TraceSize {
@@ -45,16 +41,14 @@ enum TraceSize {
   Thread            = 17,
   MailboxContd      = 25,
 
-  ActorCreationOrigin      =  27,
+  ActivityOrigin    =  9,
   PromiseMessage    =  7,
 
   ProcessCreation   = 19,
   ProcessCompletion =  9,
 
   TaskSpawn         = 19,
-  TaskJoin          = 11,
-  ProcessCreationOrigin = 27,
-  TaskSpawnOrigin   = 27
+  TaskJoin          = 11
 }
 
 export interface ActivityNode {
@@ -192,32 +186,24 @@ export class HistoryData {
     const actor: Activity = {
       id: aid, type: type,
       name: this.strings[nameId],
-      causalMsg: causalMsg};
+      causalMsg: causalMsg,
+      origin: this.readActivityOrigin(data, i + 18)};
     this.addActivity(actor);
     newActivities.push(actor);
-    return 18;
+    return TraceSize.ActorCreation + TraceSize.ActivityOrigin - 1; // type tag of ActorCreation already covered
   }
 
-  private readActivityWithOrigin(data: DataView, i: number, type: ActivityType,
-      newActivities: Activity[]) {
-    const aid = this.readLong(data, i);
-    const causalMsg = this.readLong(data, i + 8);
-    const nameId: number = data.getUint16(i + 16);
-    const fileId: number = data.getUint16(i + 18);
-    const startLine: number = data.getUint16(i + 20);
-    const startCol: number = data.getUint16(i + 22);
-    const charLen: number = data.getUint16(i + 24);
-    const actor: ActivityWithOrigin = {
-      id: aid, type: type,
-      name: this.strings[nameId],
-      causalMsg: causalMsg,
-      file: this.strings[fileId],
-      startLine: startLine,
-      startCol: startCol,
-      charLen: charLen};
-    this.addActivity(actor);
-    newActivities.push(actor);
-    return 26;
+  private readActivityOrigin(data: DataView, i: number) {
+    console.assert(data.getInt8(i) === Trace.ActivityOrigin);
+    const fileId:    number = data.getUint16(i + 1);
+    const startLine: number = data.getUint16(i + 3);
+    const startCol:  number = data.getUint16(i + 5);
+    const charLen:   number = data.getUint16(i + 7);
+    return {
+      uri: this.strings[fileId],
+      charLength:  charLen,
+      startLine:   startLine,
+      startColumn: startCol};
   }
 
   updateDataBin(data: DataView, controller: Controller) {
@@ -230,12 +216,7 @@ export class HistoryData {
       switch (typ) {
         case Trace.ActorCreation: {
           i += this.readActivity(data, i, "Actor", newActivities);
-          console.assert(i === (start + TraceSize.ActorCreation));
-          break;
-        }
-        case Trace.ActorCreationOrigin: {
-          i += this.readActivityWithOrigin(data, i, "Actor", newActivities);
-          console.assert(i === (start + TraceSize.ActorCreationOrigin));
+          console.assert(i === (start + TraceSize.ActorCreation + TraceSize.ActivityOrigin));
           break;
         }
         case Trace.ProcessCreation: {
@@ -243,19 +224,9 @@ export class HistoryData {
           console.assert(i === (start + TraceSize.ProcessCreation));
           break;
         }
-        case Trace.ProcessCreationOrigin: {
-          i += this.readActivityWithOrigin(data, i, "Process", newActivities);
-          console.assert(i === (start + TraceSize.ProcessCreationOrigin));
-          break;
-        }
         case Trace.TaskSpawn: {
           i += this.readActivity(data, i, "Task", newActivities);
           console.assert(i === (start + TraceSize.TaskSpawn));
-          break;
-        }
-        case Trace.TaskSpawnOrigin: {
-          i += this.readActivityWithOrigin(data, i, "Task", newActivities);
-          console.assert(i === (start + TraceSize.TaskSpawnOrigin));
           break;
         }
 
