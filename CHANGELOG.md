@@ -2,6 +2,9 @@
 
 ## [Unreleased]
 
+ - Revised design of promises and implemented erroring/breaking of promises
+   ([PR #118](https://github.com/smarr/SOMns/pull/118))
+
  - Added trace replay functionality ([PR #109](https://github.com/smarr/SOMns/pull/109))
    - Added `-r` flag to enable replay
 
