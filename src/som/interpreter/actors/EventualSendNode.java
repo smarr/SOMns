@@ -223,7 +223,7 @@ public class EventualSendNode extends ExprWithTagsNode {
       Actor owner = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
       SPromise  result   = SPromise.createPromise(owner);
-      SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
+      SResolver resolver = SPromise.createResolver(result);
 
       sendDirectMessage(args, owner, resolver);
 
@@ -235,7 +235,7 @@ public class EventualSendNode extends ExprWithTagsNode {
         @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
       SPromise rcvr = (SPromise) args[0];
       SPromise  promise  = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
-      SResolver resolver = SPromise.createResolver(promise, "eventualSendToPromise:", selector);
+      SResolver resolver = SPromise.createResolver(promise);
 
       sendPromiseMessage(args, rcvr, resolver, registerNode);
       return promise;
@@ -245,7 +245,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final SPromise toNearRefWithResultPromise(final Object[] args) {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
       SPromise  result   = SPromise.createPromise(current);
-      SResolver resolver = SPromise.createResolver(result, "eventualSend:", selector);
+      SResolver resolver = SPromise.createResolver(result);
 
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessageId(),
           current, selector, args, current,

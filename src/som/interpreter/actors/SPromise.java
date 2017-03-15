@@ -238,36 +238,27 @@ public class SPromise extends SObjectWithClass {
     public long getReplayPromiseId() { return replayId; }
   }
 
-  public static SResolver createResolver(final SPromise promise,
-      final String debugNote, final Object extraObj) {
-    return createResolver(promise, debugNote + extraObj.toString());
+  public static SResolver createResolver(final SPromise promise) {
+    return new SResolver(promise);
   }
 
-  public static SResolver createResolver(final SPromise promise, final String debugNote) {
-    if (VmSettings.DEBUG_MODE) {
-      return new SDebugResolver(promise, debugNote);
-    } else {
-      return new SResolver(promise);
-    }
-  }
-
-  public static class SResolver extends SObjectWithClass {
+  public static final class SResolver extends SObjectWithClass {
     @CompilationFinal private static SClass resolverClass;
 
     protected final SPromise promise;
 
-    protected SResolver(final SPromise promise) {
+    private SResolver(final SPromise promise) {
       super(resolverClass, resolverClass.getInstanceFactory());
       this.promise = promise;
       assert resolverClass != null;
     }
 
-    public final SPromise getPromise() {
+    public SPromise getPromise() {
       return promise;
     }
 
     @Override
-    public final boolean isValue() {
+    public boolean isValue() {
       return true;
     }
 
@@ -281,7 +272,7 @@ public class SPromise extends SObjectWithClass {
       resolverClass = cls;
     }
 
-    public final boolean assertNotCompleted() {
+    public boolean assertNotCompleted() {
       return promise.assertNotCompleted();
     }
 
@@ -408,19 +399,6 @@ public class SPromise extends SObjectWithClass {
     }
   }
 
-  public static final class SDebugResolver extends SResolver {
-    private final String debugNote;
-
-    private SDebugResolver(final SPromise promise, final String debugNote) {
-      super(promise);
-      this.debugNote = debugNote;
-    }
-
-    @Override
-    public String toString() {
-      return "Resolver[" + debugNote + "|" + promise.toString() + "]";
-    }
-  }
 
   @CompilationFinal public static SClass pairClass;
   public static void setPairClass(final SClass cls) {

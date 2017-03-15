@@ -65,7 +65,7 @@ public final class PromisePrims {
     public final SImmutableObject createPromisePair(final Object nil,
         @Cached("create()") final DirectCallNode factory) {
       SPromise promise   = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn());
-      SResolver resolver = SPromise.createResolver(promise, "ctorPPair");
+      SResolver resolver = SPromise.createResolver(promise);
       return (SImmutableObject) factory.call(new Object[] {SPromise.pairClass, promise, resolver});
     }
 
@@ -110,7 +110,7 @@ public final class PromisePrims {
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
       SPromise  promise  = SPromise.createPromise(current);
-      SResolver resolver = SPromise.createResolver(promise, "wR:block");
+      SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
           block, resolver, blockCallTarget, false, false, false, promise);
@@ -149,7 +149,7 @@ public final class PromisePrims {
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
       SPromise  promise  = SPromise.createPromise(current);
-      SResolver resolver = SPromise.createResolver(promise, "onE:block");
+      SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
           block, resolver, blockCallTarget, false, false, false, promise);
@@ -196,7 +196,7 @@ public final class PromisePrims {
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
       SPromise  promise  = SPromise.createPromise(current);
-      SResolver resolver = SPromise.createResolver(promise, "wROE:block:block");
+      SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage onResolved = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), resolved, resolver, resolverTarget, false, false, false, rcvr);
       PromiseCallbackMessage onError    = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), error,    resolver, errorTarget,    false, false, false, rcvr);
