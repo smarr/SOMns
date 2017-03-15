@@ -121,7 +121,11 @@ public final class TaskPrimitives {
       forkJoinPool.execute(task);
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.taskSpawn(block.getMethod(), task.getId());
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+          ActorExecutionTrace.taskSpawnWithOrigin(block.getMethod(), task.getId(), sourceSection);
+        } else {
+          ActorExecutionTrace.taskSpawn(block.getMethod(), task.getId());
+        }
       }
       return task;
     }
@@ -141,7 +145,11 @@ public final class TaskPrimitives {
       forkJoinPool.execute(task);
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.taskSpawn(block.getMethod(), task.getId());
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+          ActorExecutionTrace.taskSpawnWithOrigin(block.getMethod(), task.getId(), sourceSection);
+        } else {
+          ActorExecutionTrace.taskSpawn(block.getMethod(), task.getId());
+        }
       }
       return task;
     }

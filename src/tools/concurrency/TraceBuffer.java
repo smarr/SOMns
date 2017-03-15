@@ -5,6 +5,8 @@ import java.nio.ByteOrder;
 import java.util.Iterator;
 import java.util.Queue;
 
+import com.oracle.truffle.api.source.SourceSection;
+
 import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
@@ -14,6 +16,7 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.primitives.processes.ChannelPrimitives.TracingProcess;
 import som.vm.ObjectSystem;
+import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
@@ -104,11 +107,27 @@ public class TraceBuffer {
         currentMessageId, actorClass.getName().getSymbolId());
   }
 
+  public void recordActorCreationWithOrigin(final SFarReference actor, final long currentMessageId,
+      final SourceSection origin) {
+    final Object value = actor.getValue();
+    assert value instanceof SClass;
+    final SClass actorClass = (SClass) value;
+
+    recordActivityCreationWithOrigin(Events.ActorCreationWithOrigin, actor.getActor().getId(),
+        currentMessageId, actorClass.getName().getSymbolId(), origin);
+  }
+
   public final void recordProcessCreation(final TracingProcess proc,
       final long currentMessageId) {
     recordActivityCreation(Events.ProcessCreation, proc.getId(),
         currentMessageId,
         proc.getProcObject().getSOMClass().getName().getSymbolId());
+  }
+
+  public final void recordProcessCreationWithOrigin(final TracingProcess proc,
+      final long currentMessageId, final SourceSection origin) {
+    recordActivityCreationWithOrigin(Events.ProcessCreationOrigin, proc.getId(),
+        currentMessageId, proc.getProcObject().getSOMClass().getName().getSymbolId(), origin);
   }
 
   protected void recordActivityCreation(final Events event,
@@ -122,6 +141,24 @@ public class TraceBuffer {
     storage.putLong(causalMessageId);
     storage.putShort(symbolId);
 
+    assert storage.position() == start + event.size;
+  }
+
+  private void recordActivityCreationWithOrigin(final Events event, final long activityId,
+      final long causalMessageId, final short symbolId, final SourceSection origin) {
+    ensureSufficientSpace(event.size);
+
+    final int start = storage.position();
+
+    storage.put(event.id);
+    storage.putLong(activityId);
+    storage.putLong(causalMessageId);
+    storage.putShort(symbolId);
+    VM.println(origin.getSource().getURI().toString());
+    storage.putShort(Symbols.symbolFor(origin.getSource().getURI().toString()).getSymbolId());
+    storage.putShort((short) origin.getStartLine());
+    storage.putShort((short) origin.getStartColumn());
+    storage.putShort((short) origin.getCharLength());
     assert storage.position() == start + event.size;
   }
 
@@ -140,6 +177,12 @@ public class TraceBuffer {
       final long causalMessageId) {
     recordActivityCreation(Events.TaskSpawn, activityId, causalMessageId,
         method.getSignature().getSymbolId());
+  }
+
+  public void recordTaskSpawnWithOrigin(final SInvokable method, final long activityId,
+      final long causalMessageId, final SourceSection origin) {
+    recordActivityCreationWithOrigin(Events.TaskSpawnOrigin, activityId, causalMessageId,
+        method.getSignature().getSymbolId(), origin);
   }
 
   public void recordTaskJoin(final SInvokable method, final long activityId) {

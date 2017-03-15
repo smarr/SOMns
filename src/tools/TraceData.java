@@ -16,6 +16,8 @@ public class TraceData {
   public static final byte THREAD             = 6;
   public static final byte MAILBOX_CONTD      = 7;
 
+  public static final byte ACTOR_CREATION_ORIGIN     = 8;
+
   public static final byte PROCESS_CREATION   = 10;
   public static final byte PROCESS_COMPLETION = 11;
 
@@ -23,6 +25,9 @@ public class TraceData {
   public static final byte TASK_JOIN  = 13;
 
   public static final byte PROMISE_ERROR = 14;
+
+  public static final byte PROCESS_CREATION_ORIGIN   = 14;
+  public static final byte TASK_SPAWN_ORIGIN = 15;
 
   /**
    * Messages use a different EventId system, the most significant bit is 1 to clearly distinguish it from custom Events.

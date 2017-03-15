@@ -26,6 +26,7 @@ import javax.management.NotificationListener;
 import javax.management.openmbean.CompositeData;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.source.SourceSection;
 import com.sun.management.GarbageCollectionNotificationInfo;
 
 import som.VM;
@@ -210,6 +211,7 @@ public class ActorExecutionTrace {
 
   protected enum Events {
     ActorCreation(TraceData.ACTOR_CREATION,         19),
+    ActorCreationWithOrigin(TraceData.ACTOR_CREATION_ORIGIN,         27),
     PromiseCreation(TraceData.PROMISE_CREATION,     17),
     PromiseResolution(TraceData.PROMISE_RESOLUTION, 28),
     PromiseChained(TraceData.PROMISE_CHAINED,       17),
@@ -229,7 +231,10 @@ public class ActorExecutionTrace {
     TaskSpawn(TraceData.TASK_SPAWN, 19),
     TaskJoin(TraceData.TASK_JOIN,   11),
 
-    PromiseError(TraceData.PROMISE_ERROR, 28);
+    PromiseError(TraceData.PROMISE_ERROR, 28),
+
+    TaskSpawnOrigin(TraceData.TASK_SPAWN_ORIGIN, 27),
+    ProcessCreationOrigin(TraceData.PROCESS_CREATION_ORIGIN, 27);
 
     final byte id;
     final int size;
@@ -273,9 +278,19 @@ public class ActorExecutionTrace {
     t.getBuffer().recordActorCreation(actor, t.getCurrentMessageId());
   }
 
+  public static void actorCreationWithOrigin(final SFarReference actor, final SourceSection origin) {
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordActorCreationWithOrigin(actor, t.getCurrentMessageId(), origin);
+  }
+
   public static void processCreation(final TracingProcess proc) {
     TracingActivityThread t = getThread();
     t.getBuffer().recordProcessCreation(proc, t.getCurrentMessageId());
+  }
+
+  public static void processCreationWithOrigin(final TracingProcess proc, final SourceSection origin) {
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordProcessCreationWithOrigin(proc, t.getCurrentMessageId(), origin);
   }
 
   public static void processCompletion(final TracingProcess proc) {
@@ -286,6 +301,11 @@ public class ActorExecutionTrace {
   public static void taskSpawn(final SInvokable method, final long activityId) {
     TracingActivityThread t = getThread();
     t.getBuffer().recordTaskSpawn(method, activityId, t.getCurrentMessageId());
+  }
+
+  public static void taskSpawnWithOrigin(final SInvokable method, final long activityId, final SourceSection origin) {
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordTaskSpawnWithOrigin(method, activityId, t.getCurrentMessageId(), origin);
   }
 
   public static void taskJoin(final SInvokable method, final long activityId) {

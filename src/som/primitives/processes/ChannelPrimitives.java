@@ -98,10 +98,15 @@ public abstract class ChannelPrimitives {
     }
   }
 
-  private static Process create(final SObjectWithClass obj) {
+  private static Process create(final SObjectWithClass obj, final SourceSection origin) {
     if (VmSettings.ACTOR_TRACING) {
       TracingProcess result = new TracingProcess(obj);
-      ActorExecutionTrace.processCreation(result);
+
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+        ActorExecutionTrace.processCreationWithOrigin(result, origin);
+      } else {
+        ActorExecutionTrace.processCreation(result);
+      }
       return result;
     } else {
       return new Process(obj);
@@ -210,7 +215,7 @@ public abstract class ChannelPrimitives {
       SInvokable disp = procCls.getMixinDefinition().getFactoryMethods().get(sel);
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(toArgs.executedEvaluated(args, procCls));
 
-      processesPool.submit(create(obj));
+      processesPool.submit(create(obj, sourceSection));
       return Nil.nilObject;
     }
   }
