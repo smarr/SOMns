@@ -236,38 +236,41 @@ public class Actor implements Activity {
         currentThread.currentMessageId = baseMessageId;
       }
 
-      assert (size > 0);
-      currentThread.currentMessage = firstMessage;
+      assert size > 0;
 
-      handleBreakPoints(firstMessage, dbg);
+      try {
+        execute(firstMessage, currentThread, dbg, -1);
 
-      firstMessage.execute();
-
-      if (VmSettings.ACTOR_TRACING) {
-        currentThread.currentMessageId += 1;
-      }
-
-      int i = 0;
-      if (size > 1) {
-        for (EventualMessage msg : mailboxExtension) {
-          currentThread.currentMessage = msg;
-          handleBreakPoints(msg, dbg);
-
-          if (VmSettings.MESSAGE_TIMESTAMPS) {
-            executionTimeStamps[i] = System.currentTimeMillis();
-            i++;
-          }
-
-          msg.execute();
-          if (VmSettings.ACTOR_TRACING) {
-            currentThread.currentMessageId += 1;
+        if (size > 1) {
+          int i = 0;
+          for (EventualMessage msg : mailboxExtension) {
+            execute(msg, currentThread, dbg, i);
           }
         }
+      } finally {
+        if (VmSettings.ACTOR_TRACING) {
+          currentThread.createdMessages += size;
+          ActorExecutionTrace.mailboxExecuted(firstMessage, mailboxExtension, baseMessageId, currentMailboxNo, firstMessageTimeStamp, mailboxExtensionTimeStamps, executionTimeStamps, actor);
+        }
+      }
+    }
+
+    private void execute(final EventualMessage msg,
+        final ActorProcessingThread currentThread, final WebDebugger dbg, int i) {
+      currentThread.currentMessage = msg;
+      handleBreakPoints(msg, dbg);
+
+      if (i >= 0 && VmSettings.MESSAGE_TIMESTAMPS) {
+        executionTimeStamps[i] = System.currentTimeMillis();
+        i++;
       }
 
-      if (VmSettings.ACTOR_TRACING) {
-        currentThread.createdMessages += size;
-        ActorExecutionTrace.mailboxExecuted(firstMessage, mailboxExtension, baseMessageId, currentMailboxNo, firstMessageTimeStamp, mailboxExtensionTimeStamps, executionTimeStamps, actor);
+      try {
+        msg.execute();
+      } finally {
+        if (VmSettings.ACTOR_TRACING) {
+          currentThread.currentMessageId += 1;
+        }
       }
     }
 
@@ -281,6 +284,7 @@ public class Actor implements Activity {
         }
 
         if (firstMessage == null) {
+          assert mailboxExtension == null;
           // complete execution after all messages are processed
           actor.isExecuting = false;
           size = 0;
