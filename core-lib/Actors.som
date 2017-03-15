@@ -59,25 +59,19 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   )
 
   public class Promise = Object ()(
-    (* all whenResolved blocks are executed. *)
-    public whenResolved: aBlock = ( ^ vmMirror actorsWhen: self resolved: aBlock )
-
-    (* all ensure blocks are executed. *)
-    public ensure: aBlock       = ( whenResolved: aBlock. onError: aBlock. )
-
-    (* all onError blocks are executed. *)
-    public onError: errorBlock  = ( ^ vmMirror actorsFor: self onError: errorBlock )
-
+    (* register block for success and error case *)
     public whenResolved: aBlock onError: errorBlock = (
       ^ vmMirror actorsWhen: self resolved: aBlock onError: errorBlock
     )
 
-    (* similar to exception handlers, only the first matching on:do: is executed.
-       registration order determines search order.
-       This seems to be also what the Bluebird JS lib is doing. *)
-    public on: exception do: errorBlock = (
-      vmMirror actorsFor: self on: exception do: errorBlock
-    )
+    (* register block for success case, on error signal exception *)
+    public whenResolved: aBlock = ( ^ whenResolved: aBlock onError: [:e | e signal ] )
+
+    (* register block for error case, don't add handler for success case *)
+    public onError: errorBlock  = ( ^ vmMirror actorsFor: self onError: errorBlock )
+
+    (* register block for success and error case *)
+    public ensure: aBlock       = ( ^ whenResolved: aBlock onError: aBlock )
 
     public , other = (
       ^ (PromiseGroup for: self), other.
@@ -85,8 +79,8 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   )
 
   public class Resolver = Value ()( (* Object or Value? *)
-    public resolve: value = ( vmMirror actorsResolve: self with: value isBPResolution: false)
-    public error:   value = ( self notYetImplemented )
+    public resolve: value = ( vmMirror actorsResolve: self with: value isBPResolution: false )
+    public error:   value = ( vmMirror actorsError:   self with: value isBPResolution: false )
   )
 
   class Pair with: promise and: resolver = (
@@ -97,6 +91,10 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   )(
     public resolve: value = (
       resolver resolve: value.
+    )
+
+    public error: exception = (
+      resolver error: exception.
     )
   )
 
@@ -115,10 +113,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
     public ensure: aBlock       = ( ^ all ensure: aBlock )
     public onError: errorBlock  = ( ^ all onError: errorBlock )
     public whenResolved: aBlock onError: errorBlock = (
-      ^ all whenResolved resolved: aBlock onError: errorBlock
-    )
-    public on: exception do: errorBlock = (
-      ^ all on: exception do: errorBlock
+      ^ all whenResolved: aBlock onError: errorBlock
     )
 
     all = (

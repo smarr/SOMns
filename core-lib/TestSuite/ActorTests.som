@@ -7,21 +7,34 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
   private Vector      = platform kernel Vector.
   private Array       = platform kernel Array.
   private ObjectMirror = platform mirrors ObjectMirror.
+  private errorTestMessage = 'test exception 1'.
 |
 )(
+  private class GenericTestException1 new = Exception (
+  | public msg |
+    msg := errorTestMessage.
+  )()
+
   class Bob meet: a = (
     | private alice = a. |
   ) (
     public answerFarRef   = ( ^ alice        )
     public answerNearRef  = ( ^ self         )
     public answerValue    = ( ^ 42           )
-    public raiseException = ( ^ Error signal )
+    public raiseException = ( ^ Exception signal )
   )
 
-  class DeepChain = () (
+  class DeepChain = (
+    |exception|
+  ) (
     public nestedResolutionWithDepth: n = (
       ^ n > 0 ifTrue:  [ self <-: nestedResolutionWithDepth: n - 1 ]
               ifFalse: [ 'done' ]
+    )
+    public nestedErrorWithDepth: n with: msg = (
+      ^ n > 0 ifTrue:  [ self <-: nestedErrorWithDepth: n - 1 with: exception ]
+              ifFalse: [ exception := GenericTestException1 new.
+                         exception signal. ]
     )
   )
 
@@ -212,12 +225,12 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
     )
 
     public testAsyncPromiseOfPromiseResolvesToFinalValue = (
-      | promisePair1 promisePair2 assertProm |
+      | promisePair1 promisePair2 assertPromise |
       (* Chained promises should be flattened *)
       promisePair1 := actors createPromisePair.
       promisePair2 := actors createPromisePair.
 
-      assertProm := promisePair1 promise whenResolved: [:r |
+      assertPromise := promisePair1 promise whenResolved: [:r |
         assert: r equals: 500.
       ].
 
@@ -226,7 +239,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       promisePair1 resolve: promisePair2 promise.
 
       promisePair2 resolve: 500.
-      ^ assertProm
+      ^ assertPromise
     )
 
     public testAsyncDeeplyChainedResolution = (
@@ -264,25 +277,24 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       (assert: r3 resolvedWith: 3),
       (assert: r4 resolvedWith: 4)
     )
-(*
+
     public testFifoFailstop = (
       | recorder recorderFork r1 r2 r3 r4 r5 |
       recorder := (actors createActorFromValue: Recorder) <-: new.
-      recorderFork := recorder <-: yourself.
 
       r1 := recorder <-: append: 'a'.
       r2 := recorder <-: append: 'b'.
       r3 := recorder <-: fail.
       r4 := recorder <-: append: 'c'.
       r5 := recorder <-: append: 'd'.
-      assert: r3 smashedWith: Error. (* Do this first because our asserts are blocking and we need to register the error handler before the next turn. *)
-      assert: (recorderFork <-: recording) resolvedWith: 'abcd'.
+      assert: (recorder <-: recording) resolvedWith: 'abcd'.
       assert: r1 resolvedWith: 1.
       assert: r2 resolvedWith: 2.
-      assert: r4 smashedWith: Error.
-      assert: r5 smashedWith: Error.
+      assert: r3 erroredWith: Exception.
+      assert: r4 erroredWith: Exception.
+      assert: r5 erroredWith: Exception.
     )
-*)
+
     public testAsyncIfTrue = (
       | math tookTruePath result |
       math := (actors createActorFromValue: Math) <-: new.
@@ -352,13 +364,12 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       pong <-: other: ping.
       ^ assert: (ping <-: start) resolvedWith: 55.
     )
-(*
+
     public testTurnResultsInException = (
       | bob |
       bob := (actors createActorFromValue: Bob) <-: meet: self.
-      assert: (bob <-: raiseException) smashedWith: Error.
+      assert: (bob <-: raiseException) erroredWith: Exception.
     )
-*)
 
     (* Test promise chaining *)
     public testAsyncFirstResolvedThenChainedThenRegistered123 = (
@@ -593,6 +604,230 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       shouldnt: [actors createActorFromValue: ImmutableObject] signal: NotAValue.
       shouldnt: [actors createActorFromValue: imm MutableObject] signal: NotAValue.
     )
+  ) : (
+    TEST_CONTEXT = ()
+  )
+
+  public class PromiseErrored = AsyncTestContext (
+  | private Exception = kernel Exception. aliceValue = 10. bobValue = 20.|
+  )(
+     private class NoExceptionReceivedException signal = Exception (
+        | public msg |
+        msg := 'received value, expected exception'.
+        self signal.
+    )()
+
+    private class Alice new = (
+    | exception |
+      exception := GenericTestException1 new.
+    )(
+      public method =        ( ^ aliceValue )
+      public methodFailing = ( exception signal )
+    )
+
+    private class Bob new: a = (
+    | exception alice promise |
+      alice := a.
+      exception := GenericTestException1 new.
+    )(
+      public send = ( ^ alice <-: method )
+      public sendFailing = ( ^ alice <-: methodFailing )
+      public sendFailingAndHandle = (
+        promise := alice <-: methodFailing.
+        ^ promise
+            whenResolved: [:v | NoExceptionReceivedException signal ]
+                 onError: [:e | bobValue ]
+      )
+    )
+
+    public testAsyncOnErrorPromiseErrorsToException = (
+      | promisePair wrPromise assertPromise exception |
+      promisePair := actors createPromisePair.
+      exception := GenericTestException1 new.
+      wrPromise := promisePair promise
+        whenResolved: [ :v | NoExceptionReceivedException signal ]
+        onError: [ :ex | ex ].
+
+      assertPromise := wrPromise whenResolved: [:v | assert: v msg equals: exception msg ].
+
+      promisePair error: exception.
+      ^ assertPromise
+    )
+
+    public testAsyncPromiseOfPromiseResolvesToException = (
+      | promisePair1 promisePair2 assertPromise exception|
+      (* Chained promises should be flattened *)
+      promisePair1 := actors createPromisePair.
+      promisePair2 := actors createPromisePair.
+      exception := GenericTestException1 new.
+
+
+      assertPromise := promisePair1 promise
+          whenResolved: [:v | NoExceptionReceivedException signal]
+          onError: [:e | assert: e msg equals: exception msg].
+
+      (* This should not yet resolve the promise, instead, it should
+         essentially forward it to the 2nd promise and wait for its resolution. *)
+      promisePair1 resolve: promisePair2 promise.
+      promisePair2 error: exception.
+      ^ assertPromise
+    )
+
+    public testAsyncDeeplyChainedErroring = (
+      (* A good implementation should handle this in constant rather than linear space. *)
+      | r sendPromise assertPromise tempPromise|
+      r := (actors createActorFromValue: DeepChain) <-: new.
+      sendPromise := r <-: nestedErrorWithDepth: 10 with: errorTestMessage.
+      tempPromise := sendPromise
+        whenResolved: [:v | NoExceptionReceivedException signal ]
+             onError: [:e | e <-: msg ].
+      assertPromise := tempPromise whenResolved: [:v | assert: v equals: errorTestMessage ].
+      ^ assertPromise.
+    )
+
+    public testCorrectMessageIsNotCaught = (
+      | a messagePromise assertPromise |
+      a := Alice new.
+      messagePromise := a<-:method.
+      assertPromise := messagePromise
+        whenResolved: [:v | assert: v equals: aliceValue ]
+             onError: [:e | e signal ].
+      ^ assertPromise
+    )
+
+    public testExceptionIsCaught = (
+      | a messagePromise assertPromise |
+      a := Alice new.
+      messagePromise := a <-: methodFailing.
+      assertPromise := messagePromise
+          whenResolved: [:v | NoExceptionReceivedException signal ]
+               onError: [:e | assert: e msg equals: errorTestMessage ].
+      ^ assertPromise
+    )
+
+     public testCorrectChainedMessageIsNotCaught = (
+       | a b messagePromise assertPromise |
+       a := Alice new.
+       b := Bob new: a.
+       messagePromise := b <-: send.
+       assertPromise := messagePromise
+           whenResolved: [:v | assert: v equals: aliceValue ]
+                onError: [:e | e signal ].
+        ^ assertPromise
+    )
+
+    public testChainedExceptionIsCaught = (
+      | a b messagePromise assertPromise |
+      a := Alice new.
+      b := Bob new: a.
+      messagePromise := b <-: sendFailing.
+      assertPromise := messagePromise
+          whenResolved: [:v | NoExceptionReceivedException signal ]
+               onError: [:e | assert: e msg equals: errorTestMessage ].
+      ^ assertPromise
+    )
+
+    public testChainedAndHandleExceptionIsNotCaught = (
+      | a b messagePromise assertPromise |
+      a := Alice new.
+      b := Bob new: a.
+      messagePromise := b <-: sendFailingAndHandle.
+      assertPromise := messagePromise
+          whenResolved: [:v | assert: v equals: bobValue ]
+               onError: [:e | e signal ].
+      ^ assertPromise
+    )
+
+    public testAsyncFirstErroredThenChainedThenRegistered123 = (
+      | pp ppChained exception |
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+      exception := GenericTestException1 new.
+
+      (* resolve 1 *)
+      pp resolver error: exception.
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+      (* register 3 *)
+      ^ pp promise onError: [:v | assert: v msg equals: errorTestMessage ]
+    )
+
+    public testAsyncFirstErroredThenRegisteredThenChained132 = (
+      | pp ppChained assertPromise exception |
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+      exception := GenericTestException1 new.
+
+      (* resolve 1 *)
+      pp resolver error: exception.
+      (* register 3 *)
+      assertPromise := (ppChained promise onError: [:v | assert: v msg equals: errorTestMessage ]).
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+      ^ assertPromise
+    )
+
+    public testAsyncFirstChainedThenErroredThenRegistered213 = (
+      | pp ppChained exception|
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+      exception := GenericTestException1 new.
+
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+      (* resolve 1 *)
+      pp resolver error: exception.
+      (* register 3 *)
+      ^ ppChained promise onError: [:v | assert: v msg equals: errorTestMessage ]
+    )
+
+    public testAsyncFirstChainedThenRegisteredThenErrored231 = (
+      | pp ppChained assertPromise exception |
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+      exception := GenericTestException1 new.
+
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+      (* register 3 *)
+      assertPromise := ppChained promise onError: [:v | assert: v msg equals: errorTestMessage ].
+      (* resolve 1 *)
+      pp resolver error: exception.
+      ^ assertPromise
+    )
+
+    public testAsyncFirstRegisteredThenErroredThenChained312 = (
+      | pp ppChained assertPromise exception|
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+      exception := GenericTestException1 new.
+
+      (* register 3 *)
+      assertPromise := ppChained promise onError: [:v | assert: v msg equals: errorTestMessage ].
+      (* resolve 1 *)
+      pp resolver error: exception.
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+
+      ^ assertPromise
+    )
+
+    public testAsyncFirstRegisteredThenChainedThenErrored321 = (
+      | pp ppChained assertPromise exception|
+      pp           := actors createPromisePair.
+      ppChained    := actors createPromisePair.
+      exception := GenericTestException1 new.
+
+      (* register 3 *)
+      assertPromise := ppChained promise onError: [:v | assert: v msg equals: errorTestMessage ].
+      (* chain 2 *)
+      ppChained resolver resolve: pp promise.
+      (* resolve 1 *)
+      pp resolver error: exception.
+
+      ^ assertPromise
+    )
+
   ) : (
     TEST_CONTEXT = ()
   )

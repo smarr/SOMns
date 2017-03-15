@@ -334,6 +334,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
   private IdentitySet        = platform collections IdentitySet.
 
   private ObjectMirror = platform mirrors ObjectMirror.
+  private ClassMirror  = platform mirrors ClassMirror.
   private actors       = platform actors.
 |)(
   class TestCase env: testEnvironment selector: selector = (
@@ -427,21 +428,27 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       promisePair := actors createPromisePair.
       [[| promise testSuccess |
           promise := sendTestMessage.
-          promise whenResolved: [:r |
-            (* At this point the test has been successful, so create the TestSuccess before it is removed. *)
-            testSuccess := testContextInstance createSuccessResultFor: self.
-            (* Clean up immediately after a successful test. This makes the test context instance
-            immediately garbage-collectable, which is an important property for large test suites. *)
-            cleanUp.
-            promisePair resolve: testSuccess ].
-          promise on: TestFailureException do: [:ex |
-            promisePair resolve: (testContextInstance
-              ifNil:    [ TestFailure case: self description: ex messageText]
-              ifNotNil: [:it | it createFailureResultFor: self description: ex messageText])].
-          promise on: Exception do: [:ex |
-            promisePair resolve: (testContextInstance
-              ifNil:    [ TestError case: self exception: ex ]
-              ifNotNil: [:it | it createErrorResultFor: self exception: ex ])]
+          promise
+            whenResolved: [:r |
+              (* At this point the test has been successful, so create the TestSuccess before it is removed. *)
+              testSuccess := testContextInstance createSuccessResultFor: self.
+              (* Clean up immediately after a successful test. This makes the test context instance
+              immediately garbage-collectable, which is an important property for large test suites. *)
+              cleanUp.
+              promisePair resolve: testSuccess ]
+            onError: [:e |
+              | exClass |
+              exClass := (ClassMirror reflecting: e) classObject.
+              exClass == TestFailureException ifTrue: [
+                promisePair resolve: (testContextInstance
+                  ifNil:    [ TestFailure case: self description: ex messageText]
+                  ifNotNil: [:it | it createFailureResultFor: self description: ex messageText])
+              ] ifFalse: [
+                promisePair resolve: (testContextInstance
+                  ifNil:    [ TestError case: self exception: ex ]
+                  ifNotNil: [:it | it createErrorResultFor: self exception: ex ])
+              ]
+            ]
         ] on: TestFailureException
           do: [:ex |
             (* testContextInstance should never be nil at this point, but just in case. *)
@@ -643,7 +650,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       ^TestSuccess case: testCase
     )
 
-    private failWithMessage: messageText = (
+    protected failWithMessage: messageText = (
       TestFailureException signal: messageText
     )
 
@@ -766,18 +773,24 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     )
 
     assert: promise erroredWith: expectedErrorClass = (
-      | state actualResolution |
+(*      | state actualResolution |
       state := #unresolved.
 
       (withTimeout: promise inMSecs: 300)
         whenResolved: [:r | state := #resolved. actualResolution := r ]
-        catch:        [:e | state := #error.    actualResolution := e ].
+        onError:      [:e | state := #error.    actualResolution := e ].
 
       state = #resolved
         ifTrue: [ ^ failWithMessage: 'Promise resolved with: ', actualResolution printString ].
       state = #error
-        ifTrue: [ ^ assert: actualResolution class equals: expectedErrorClass ].
-      failWithMessage: 'Invalid state blocking on a promise: ', state.
+        ifTrue: [ ^ assert: (ClassMirror reflecting: actualResolution) classObject is: expectedErrorClass ].
+      failWithMessage: 'Invalid state blocking on a promise: ', state.*)
+
+      ^ promise
+          whenResolved: [:actualResolution |
+            failWithMessage: 'Promise succeeded unexpectedly with: ' + actualResolution asString ]
+          onError: [:actualResolution |
+            assert: (ClassMirror reflecting: actualResolution) classObject is: expectedErrorClass ]
     )
   )
 

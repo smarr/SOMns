@@ -227,7 +227,9 @@ public class ActorExecutionTrace {
     ProcessCompletion(TraceData.PROCESS_COMPLETION,  9),
 
     TaskSpawn(TraceData.TASK_SPAWN, 19),
-    TaskJoin(TraceData.TASK_JOIN,   11);
+    TaskJoin(TraceData.TASK_JOIN,   11),
+
+    PromiseError(TraceData.PROMISE_ERROR, 28);
 
     final byte id;
     final int size;
@@ -306,8 +308,19 @@ public class ActorExecutionTrace {
     TracingActivityThread t = (TracingActivityThread) current;
 
     t.getBuffer().recordPromiseResolution(promiseId, value, t.getCurrentMessageId());
-
     t.resolvedPromises++;
+  }
+
+  public static void promiseError(final long promiseId, final Object value) {
+    Thread current = Thread.currentThread();
+    if (TimerPrim.isTimerThread(current)) {
+      return;
+    }
+
+    assert current instanceof TracingActivityThread;
+    TracingActivityThread t = (TracingActivityThread) current;
+    t.getBuffer().recordPromiseError(promiseId, value, t.getCurrentMessageId());
+    t.erroredPromises++;
   }
 
   public static void promiseChained(final long parent, final long child) {
@@ -316,6 +329,7 @@ public class ActorExecutionTrace {
     t.resolvedPromises++;
   }
 
+  // code duplication?
   public static void mailboxExecuted(final EventualMessage m,
       final ObjectBuffer<EventualMessage> moreCurrent, final long baseMessageId,
       final int mailboxNo, final long sendTS, final ObjectBuffer<Long> moreSendTS,

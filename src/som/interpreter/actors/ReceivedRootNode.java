@@ -15,7 +15,8 @@ import tools.debugger.WebDebugger;
 
 public abstract class ReceivedRootNode extends RootNode {
 
-  @Child protected ResolvePromiseNode resolve;
+  @Child protected AbstractPromiseResolutionNode resolve;
+  @Child protected AbstractPromiseResolutionNode error;
 
   protected final WebDebugger dbg;
 
@@ -47,10 +48,27 @@ public abstract class ReceivedRootNode extends RootNode {
     resolve.executeEvaluated(frame, resolver, result, isBreakpointOnPromiseResolution);
   }
 
+  protected final void errorPromise(final VirtualFrame frame,
+      final SResolver resolver, final Object exception,
+      final boolean isBreakpointOnPromiseResolution) {
+    // lazy initialization of resolution node
+    if (error == null) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      if (resolver == null) {
+        this.error = insert(new NullResolver(getSourceSection()));
+      } else {
+        this.error = insert(ErrorPromiseNodeFactory.create(false, getSourceSection(), null, null, null));
+      }
+    }
+
+    // error promise
+    error.executeEvaluated(frame, resolver, exception, isBreakpointOnPromiseResolution);
+  }
+
   /**
    * Promise resolver for the case that the actual promise has been optimized out.
    */
-  public final class NullResolver extends ResolvePromiseNode {
+  public final class NullResolver extends AbstractPromiseResolutionNode {
     public NullResolver(final SourceSection source) {
       super(false, source);
     }

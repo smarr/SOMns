@@ -16,12 +16,12 @@ import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
+import som.interpreter.actors.RegisterOnPromiseNode.RegisterOnError;
 import som.interpreter.actors.RegisterOnPromiseNode.RegisterWhenResolved;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -29,7 +29,6 @@ import som.primitives.Primitive;
 import som.vm.Primitives.Specializer;
 import som.vm.Symbols;
 import som.vmobjects.SBlock;
-import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SSymbol;
@@ -84,7 +83,7 @@ public final class PromisePrims {
 
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
-  @Primitive(primitive = "actorsWhen:resolved:", selector = "whenResolved:",
+  @Primitive(primitive = "actorsWhen:resolved:",
              receiverType = SPromise.class)
   public abstract static class WhenResolvedPrim extends BinaryComplexOperation {
     @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();
@@ -96,15 +95,15 @@ public final class PromisePrims {
         final SBlock callback,
         @Cached("callback.getMethod()") final SInvokable blockMethod,
         @Cached("createReceived(callback)") final RootCallTarget blockCallTarget) {
-      return whenResolved(promise, callback, blockCallTarget, registerNode);
+      return registerWhenResolved(promise, callback, blockCallTarget, registerNode);
     }
 
     @Specialization(replaces = "whenResolved")
     public final SPromise whenResolvedUncached(final SPromise promise, final SBlock callback) {
-      return whenResolved(promise, callback, createReceived(callback), registerNode);
+      return registerWhenResolved(promise, callback, createReceived(callback), registerNode);
     }
 
-    protected static final SPromise whenResolved(final SPromise rcvr,
+    protected static final SPromise registerWhenResolved(final SPromise rcvr,
         final SBlock block, final RootCallTarget blockCallTarget,
         final RegisterWhenResolved registerNode) {
       assert block.getMethod().getNumberOfArguments() == 2;
@@ -121,45 +120,42 @@ public final class PromisePrims {
     }
   }
 
-  // TODO: should we add this for the literal case? which should be very common?
-  public abstract static class WhenResolvedLiteralBlockNode extends BinaryComplexOperation {
-    @SuppressWarnings("unused") private final RootCallTarget blockCallTarget;
-    public WhenResolvedLiteralBlockNode(final SourceSection source, final BlockNode blockNode) {
-      super(false, source);
-      blockCallTarget = blockNode.getBlockMethod().getCallTarget();
-    }
-  }
-
   // TODO: should I add a literal version of OnErrorPrim??
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
   @Primitive(primitive = "actorsFor:onError:")
   public abstract static class OnErrorPrim extends BinaryComplexOperation {
+    @Child protected RegisterOnError registerNode = new RegisterOnError();
+
     protected OnErrorPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
-    @Specialization(guards = "blockMethod == callback.getMethod()")
+    @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
     public final SPromise onError(final SPromise promise,
         final SBlock callback,
         @Cached("callback.getMethod()") final SInvokable blockMethod,
         @Cached("createReceived(callback)") final RootCallTarget blockCallTarget) {
-      Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-      return promise.onError(callback, blockCallTarget, current);
+      return registerOnError(promise, callback, blockCallTarget, registerNode);
     }
-  }
 
-  @GenerateNodeFactory
-  @ImportStatic(PromisePrims.class)
-  @Primitive(primitive = "actorsFor:on:do:")
-  public abstract static class OnExceptionDoPrim extends TernaryExpressionNode {
-    public OnExceptionDoPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    @Specialization(replaces = "onError")
+    public final SPromise whenResolvedUncached(final SPromise promise, final SBlock callback) {
+      return registerOnError(promise, callback, createReceived(callback), registerNode);
+    }
 
-    @Specialization(guards = "blockMethod == callback.getMethod()")
-    public final SPromise onExceptionDo(final SPromise promise,
-        final SClass exceptionClass, final SBlock callback,
-        @Cached("callback.getMethod()") final SInvokable blockMethod,
-        @Cached("createReceived(callback)") final RootCallTarget blockCallTarget) {
+    protected static final SPromise registerOnError(final SPromise rcvr,
+        final SBlock block, final RootCallTarget blockCallTarget,
+        final RegisterOnError registerNode) {
+      assert block.getMethod().getNumberOfArguments() == 2;
+
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-      return promise.onException(exceptionClass, callback, blockCallTarget, current);
+      SPromise  promise  = SPromise.createPromise(current);
+      SResolver resolver = SPromise.createResolver(promise, "onE:block");
+
+      PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
+          block, resolver, blockCallTarget, false, false, false, promise);
+      registerNode.register(rcvr, msg, current);
+
+      return promise;
     }
   }
 
@@ -167,7 +163,8 @@ public final class PromisePrims {
   @ImportStatic(PromisePrims.class)
   @Primitive(primitive = "actorsWhen:resolved:onError:")
   public abstract static class WhenResolvedOnErrorPrim extends TernaryExpressionNode {
-    @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();
+    @Child protected RegisterWhenResolved registerWhenResolved = new RegisterWhenResolved();
+    @Child protected RegisterOnError registerOnError = new RegisterOnError();
 
     public WhenResolvedOnErrorPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
@@ -178,27 +175,35 @@ public final class PromisePrims {
         @Cached("createReceived(resolved)") final RootCallTarget resolvedTarget,
         @Cached("error.getMethod()") final SInvokable errorMethod,
         @Cached("createReceived(error)") final RootCallTarget errorTarget) {
-      return whenResolvedOrError(promise, resolved, error, resolvedTarget,
-          errorTarget, registerNode);
+      return registerWhenResolvedOrError(promise, resolved, error, resolvedTarget,
+          errorTarget, registerWhenResolved, registerOnError);
     }
 
-    protected static final SPromise whenResolvedOrError(final SPromise rcvr,
+    @Specialization(replaces = "whenResolvedOnError")
+    public final SPromise whenResolvedOnErrorUncached(final SPromise promise,
+        final SBlock resolved, final SBlock error) {
+      return registerWhenResolvedOrError(promise, resolved, error, createReceived(resolved),
+          createReceived(error), registerWhenResolved, registerOnError);
+    }
+
+    protected static final SPromise registerWhenResolvedOrError(final SPromise rcvr,
         final SBlock resolved, final SBlock error,
         final RootCallTarget resolverTarget, final RootCallTarget errorTarget,
-        final RegisterWhenResolved registerNode) {
+        final RegisterWhenResolved registerWhenResolved,
+        final RegisterOnError registerOnError) {
       assert resolved.getMethod().getNumberOfArguments() == 2;
-      assert error.getMethod().getNumberOfArguments() == 2;
+      assert error.getMethod().getNumberOfArguments()    == 2;
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
       SPromise  promise  = SPromise.createPromise(current);
       SResolver resolver = SPromise.createResolver(promise, "wROE:block:block");
 
       PromiseCallbackMessage onResolved = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), resolved, resolver, resolverTarget, false, false, false, rcvr);
-      PromiseCallbackMessage onError    = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), error, resolver, errorTarget, false, false, false, rcvr);
+      PromiseCallbackMessage onError    = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), error,    resolver, errorTarget,    false, false, false, rcvr);
 
       synchronized (rcvr) {
-        registerNode.register(rcvr, onResolved, current);
-        rcvr.registerOnError(onError, current);
+        registerWhenResolved.register(rcvr, onResolved, current);
+        registerOnError.register(rcvr, onError, current);
       }
       return promise;
     }

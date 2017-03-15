@@ -167,18 +167,28 @@ public class TraceBuffer {
     assert storage.position() == start + Events.PromiseCreation.size;
   }
 
-  public void recordPromiseResolution(final long promiseId, final Object value,
-      final long resolvingMessageId) {
-    ensureSufficientSpace(Events.PromiseResolution.size);
+  protected void recordPromiseResolution(final Events type, final long promiseId,
+      final Object value, final long resolvingMessageId) {
+    ensureSufficientSpace(type.size);
 
     final int start = storage.position();
 
-    storage.put(Events.PromiseResolution.id);
+    storage.put(type.id);
     storage.putLong(promiseId);
     storage.putLong(resolvingMessageId);
     writeParameter(value);
 
-    assert storage.position() <= start + Events.PromiseResolution.size;
+    assert storage.position() <= start + type.size;
+  }
+
+  public void recordPromiseResolution(final long promiseId, final Object value,
+      final long resolvingMessageId) {
+    recordPromiseResolution(Events.PromiseResolution, promiseId, value, resolvingMessageId);
+  }
+
+  public void recordPromiseError(final long promiseId, final Object value,
+      final long resolvingMessageId) {
+    recordPromiseResolution(Events.PromiseError, promiseId, value, resolvingMessageId);
   }
 
   public void recordPromiseChained(final long parentId, final long childId) {
@@ -372,8 +382,9 @@ public class TraceBuffer {
     }
 
     @Override
-    public synchronized void recordPromiseResolution(final long promiseId, final Object value, final long resolvingMessageId) {
-      super.recordPromiseResolution(promiseId, value, resolvingMessageId);
+    protected synchronized void recordPromiseResolution(final Events type, final long promiseId,
+        final Object value, final long resolvingMessageId) {
+      super.recordPromiseResolution(type, promiseId, value, resolvingMessageId);
     }
 
     @Override

@@ -14,6 +14,7 @@ import som.compiler.AccessModifier;
 import som.compiler.MethodBuilder;
 import som.interpreter.Primitive;
 import som.interpreter.SomLanguage;
+import som.interpreter.actors.ErrorPromiseNodeFactory;
 import som.interpreter.actors.ResolvePromiseNodeFactory;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
@@ -363,7 +364,7 @@ public class Primitives {
 
     allFactories.add(CreateActorPrimFactory.getInstance());
     allFactories.add(ResolvePromiseNodeFactory.getInstance());
-
+    allFactories.add(ErrorPromiseNodeFactory.getInstance());
     return allFactories;
   }
 }
