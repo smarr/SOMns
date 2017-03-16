@@ -210,7 +210,8 @@ function restart() {
     .attr("y", -12.5)
     .attr("width", 50)
     .attr("height", 25)
-
+    .on("mouseover", function (e: ActivityNode) { return ctrl.overActivity(e, this); })
+    .on("mouseout",  function (e: ActivityNode) { return ctrl.outActivity(e, this); })
     .attr("class", "node")
     .style("fill", function(_, i) {
       return tango[i]; // colors(d.type);

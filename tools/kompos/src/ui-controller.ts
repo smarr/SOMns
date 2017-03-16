@@ -3,6 +3,7 @@
 
 import {Controller}   from "./controller";
 import {Debugger}     from "./debugger";
+import {ActivityNode} from "./history-data";
 import {SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
   SectionBreakpointType, ScopesResponse, VariablesResponse, ProgramInfoResponse,
   Activity, Source } from "./messages";
@@ -66,6 +67,14 @@ export class UiController extends Controller {
 
   onReceivedSource(msg: SourceMessage) {
     this.dbg.addSource(msg);
+  }
+
+  public overActivity(act: ActivityNode, rect: SVGRectElement) {
+    this.view.overActivity(act, rect);
+  }
+
+  public outActivity(act: ActivityNode, rect: SVGRectElement) {
+    this.view.outActivity(act, rect);
   }
 
   public toggleCodePane(actId: string) {

@@ -1,7 +1,10 @@
 /* jshint -W097 */
 "use strict";
 
-import {Controller} from "./controller";
+import * as d3 from "d3";
+
+import {Controller}   from "./controller";
+import {ActivityNode} from "./history-data";
 import {Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
   TaggedSourceCoordinate, Scope, getSectionId, Variable, Activity } from "./messages";
 import {Breakpoint, MessageBreakpoint, LineBreakpoint} from "./breakpoints";
@@ -462,6 +465,25 @@ export class View {
       btn.addClass("pane-opened");
       pane.removeClass("pane-closed");
     }
+  }
+
+  public overActivity(act: ActivityNode, rect: SVGRectElement) {
+    let strokeWidth = $(rect).attr("data-stw");
+    if (strokeWidth === undefined) {
+      strokeWidth = d3.select(rect).style("stroke-width");
+      $(rect).attr("data-stw", strokeWidth);
+    }
+    d3.select(rect).style("stroke-width", (parseInt(strokeWidth) * 2) + "px");
+
+    $(document.getElementById(getActivityId(act.activity.id))).addClass("activity-highlight");
+  }
+
+  public outActivity(act: ActivityNode, rect: SVGRectElement) {
+    let strokeWidth = $(rect).attr("data-stw");
+    if (strokeWidth !== undefined) {
+      d3.select(rect).style("stroke-width", strokeWidth);
+    }
+    $(document.getElementById(getActivityId(act.activity.id))).removeClass("activity-highlight");
   }
 
   /**
