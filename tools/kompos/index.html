@@ -247,6 +247,9 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   .pane-closed .pane-opened {
     display: none;
   }
+  .activity-source.pane-closed {
+    display: none;
+  }
 
   .system-status {
     background-color:rgba(255, 255, 255, 0.5);
@@ -370,9 +373,9 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
             <button class="act-return btn btn-secondary btn-sm disabled" type="button" title="Return from Method"
                     onclick="ctrl.returnFromExecution(getAttribute('data-actid'));"><i class="fa fa-reply" style="transform: scaleY(-1);"></i></button>
           </div>
-          <div class="activity-fold">
+          <div class="btn-group btn-group-xs activity-fold" role="group" aria-label="Stepping">
             <button class="btn btn-secondary pane-closed"
-              onclick="ctrl.toggleCodePane(getAttribute('data-actid'), this);">
+              onclick="ctrl.toggleCodePane(getAttribute('data-actid'));">
               <span class="pane-opened">&#9660;</span><span class="pane-closed">&#9664;</span>
             </button>
           </div>

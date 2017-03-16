@@ -429,11 +429,48 @@ export class View {
     $("#dbg-connect-btn").html("Reconnect");
   }
 
+  private getCodePaneExpander(actId: string) {
+    return $("#" + actId + " .activity-fold button");
+  }
+
+  private getCodePane(actId: string) {
+    return $("#" + actId + " .activity-source");
+  }
+
+  public isCodePaneExpanded(actId: string) {
+    const btn = this.getCodePaneExpander(actId);
+    return btn.hasClass("pane-opened");
+  }
+
+  public markCodePaneClosed(actId: string) {
+    const btn = this.getCodePaneExpander(actId);
+    const pane = this.getCodePane(actId);
+    const isClosed = btn.hasClass("pane-closed");
+    if (!isClosed) {
+      btn.addClass("pane-closed");
+      btn.removeClass("pane-opened");
+      pane.addClass("pane-closed");
+    }
+  }
+
+  private markCodePaneExpanded(actId: string) {
+    const btn = this.getCodePaneExpander(actId);
+    const pane = this.getCodePane(actId);
+    const isClosed = btn.hasClass("pane-closed");
+    if (isClosed) {
+      btn.removeClass("pane-closed");
+      btn.addClass("pane-opened");
+      pane.removeClass("pane-closed");
+    }
+  }
+
   /**
    * @returns true, if new source is displayed
    */
   public displaySource(activityId: number, source: Source, sourceId: string): boolean {
     const actId = getActivityId(activityId);
+    this.markCodePaneExpanded(actId);
+
     const container = $("#" + actId + " .activity-sources-list");
 
     // we mark the tab header as well as the tab content with a class
