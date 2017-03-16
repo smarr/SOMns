@@ -16,6 +16,8 @@ public class TraceData {
   public static final byte THREAD             = 6;
   public static final byte MAILBOX_CONTD      = 7;
 
+  public static final byte ACTIVITY_ORIGIN    = 8;
+
   public static final byte PROCESS_CREATION   = 10;
   public static final byte PROCESS_COMPLETION = 11;
 
@@ -32,7 +34,6 @@ public class TraceData {
   public static final byte PROMISE_BIT   = 0x40;
   public static final byte TIMESTAMP_BIT = 0x20;
   public static final byte PARAMETER_BIT = 0x10;
-
 
   public static final long ACTIVITY_ID_BITS = 30;
   public static final long THREAD_ID_BITS   = 10;

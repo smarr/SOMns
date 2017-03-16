@@ -148,4 +148,8 @@ export class Debugger {
       }
     }
   }
+
+  public getActivity(actId): Activity {
+    return this.activities[actId];
+  }
 }

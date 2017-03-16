@@ -15,6 +15,8 @@
  - Updated to Truffle 0.24+patches, from pre-0.22+patches
  - Visualize all types of activities in system view ([PR #116](https://github.com/smarr/SOMns/pull/116))
  - Block methods are named based on outer method's name
+ - Enable display of code for unsuspended activities, i.e., activities not
+   hitting a breakpoint
 
 ## [0.2.0] - 2017-03-07 Extended Concurrency Support
 

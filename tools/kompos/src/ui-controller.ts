@@ -68,6 +68,22 @@ export class UiController extends Controller {
     this.dbg.addSource(msg);
   }
 
+  public toggleCodePane(actId: string) {
+    const expanded = this.view.isCodePaneExpanded(actId);
+
+    if (expanded) {
+      this.view.markCodePaneClosed(actId);
+    } else {
+      const aId      = getActivityIdFromView(actId);
+      const activity = this.dbg.getActivity(aId);
+      const sId      = this.dbg.getSourceId(activity.origin.uri);
+      const source   = this.dbg.getSource(sId);
+
+      console.assert(aId === activity.id);
+      this.view.displaySource(aId, source, sId);
+    }
+  }
+
   private ensureBreakpointsAreIndicated(sourceUri) {
     const bps = this.dbg.getEnabledBreakpointsForSource(sourceUri);
     for (const bp of bps) {

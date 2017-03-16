@@ -118,6 +118,13 @@ public final class TraceParser {
             parsedActors++;
             assert b.position() == start + Events.ActorCreation.size;
             break;
+          case TraceData.ACTIVITY_ORIGIN:
+            b.getShort(); // file
+            b.getShort(); // startline
+            b.getShort(); // startcol
+            b.getShort(); // charlen
+            assert b.position() == start + Events.ActivityOrigin.size;
+            break;
           case TraceData.MAILBOX:
             currentMessage = b.getLong(); // base msg id
             currentMailbox = b.getInt(); // mailboxno

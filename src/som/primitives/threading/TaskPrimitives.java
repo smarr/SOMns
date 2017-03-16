@@ -121,7 +121,7 @@ public final class TaskPrimitives {
       forkJoinPool.execute(task);
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.taskSpawn(block.getMethod(), task.getId());
+        ActorExecutionTrace.taskSpawn(block.getMethod(), task.getId(), sourceSection);
       }
       return task;
     }
@@ -141,7 +141,7 @@ public final class TaskPrimitives {
       forkJoinPool.execute(task);
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.taskSpawn(block.getMethod(), task.getId());
+        ActorExecutionTrace.taskSpawn(block.getMethod(), task.getId(), sourceSection);
       }
       return task;
     }

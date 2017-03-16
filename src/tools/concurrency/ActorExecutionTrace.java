@@ -26,6 +26,7 @@ import javax.management.NotificationListener;
 import javax.management.openmbean.CompositeData;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.source.SourceSection;
 import com.sun.management.GarbageCollectionNotificationInfo;
 
 import som.VM;
@@ -210,6 +211,7 @@ public class ActorExecutionTrace {
 
   protected enum Events {
     ActorCreation(TraceData.ACTOR_CREATION,         19),
+    ActivityOrigin(TraceData.ACTIVITY_ORIGIN,        9),
     PromiseCreation(TraceData.PROMISE_CREATION,     17),
     PromiseResolution(TraceData.PROMISE_RESOLUTION, 28),
     PromiseChained(TraceData.PROMISE_CHAINED,       17),
@@ -268,14 +270,14 @@ public class ActorExecutionTrace {
     workerThread.start();
   }
 
-  public static void actorCreation(final SFarReference actor) {
+  public static void actorCreation(final SFarReference actor, final SourceSection section) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordActorCreation(actor, t.getCurrentMessageId());
+    t.getBuffer().recordActorCreation(actor, t.getCurrentMessageId(), section);
   }
 
-  public static void processCreation(final TracingProcess proc) {
+  public static void processCreation(final TracingProcess proc, final SourceSection section) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordProcessCreation(proc, t.getCurrentMessageId());
+    t.getBuffer().recordProcessCreation(proc, t.getCurrentMessageId(), section);
   }
 
   public static void processCompletion(final TracingProcess proc) {
@@ -283,9 +285,10 @@ public class ActorExecutionTrace {
     t.getBuffer().recordProcessCompletion(proc);
   }
 
-  public static void taskSpawn(final SInvokable method, final long activityId) {
+  public static void taskSpawn(final SInvokable method, final long activityId,
+      final SourceSection section) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordTaskSpawn(method, activityId, t.getCurrentMessageId());
+    t.getBuffer().recordTaskSpawn(method, activityId, t.getCurrentMessageId(), section);
   }
 
   public static void taskJoin(final SInvokable method, final long activityId) {

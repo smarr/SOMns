@@ -22,8 +22,7 @@ enum Trace {
   Mailbox           =  5,
   Thread            =  6,
   MailboxContd      =  7,
-
-  BasicMessage      =  8,
+  ActivityOrigin    =  8,
   PromiseMessage    =  9,
 
   ProcessCreation   = 10,
@@ -42,7 +41,7 @@ enum TraceSize {
   Thread            = 17,
   MailboxContd      = 25,
 
-  BasicMessage      =  7,
+  ActivityOrigin    =  9,
   PromiseMessage    =  7,
 
   ProcessCreation   = 19,
@@ -187,10 +186,24 @@ export class HistoryData {
     const actor: Activity = {
       id: aid, type: type,
       name: this.strings[nameId],
-      causalMsg: causalMsg};
+      causalMsg: causalMsg,
+      origin: this.readActivityOrigin(data, i + 18)};
     this.addActivity(actor);
     newActivities.push(actor);
-    return 18;
+    return TraceSize.ActorCreation + TraceSize.ActivityOrigin - 1; // type tag of ActorCreation already covered
+  }
+
+  private readActivityOrigin(data: DataView, i: number) {
+    console.assert(data.getInt8(i) === Trace.ActivityOrigin);
+    const fileId:    number = data.getUint16(i + 1);
+    const startLine: number = data.getUint16(i + 3);
+    const startCol:  number = data.getUint16(i + 5);
+    const charLen:   number = data.getUint16(i + 7);
+    return {
+      uri: this.strings[fileId],
+      charLength:  charLen,
+      startLine:   startLine,
+      startColumn: startCol};
   }
 
   updateDataBin(data: DataView, controller: Controller) {
@@ -203,7 +216,7 @@ export class HistoryData {
       switch (typ) {
         case Trace.ActorCreation: {
           i += this.readActivity(data, i, "Actor", newActivities);
-          console.assert(i === (start + TraceSize.ActorCreation));
+          console.assert(i === (start + TraceSize.ActorCreation + TraceSize.ActivityOrigin));
           break;
         }
         case Trace.ProcessCreation: {
