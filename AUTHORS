@@ -5,8 +5,14 @@ SOMns
 
 SOMns is derived from TruffleSOM, which is derived from SOM.
 
-It is implemented by Stefan Marr and includes contributions by:
+It is implemented and currently maintained by Stefan Marr.
+It includes contributions by (no particular order)
+
  - Carmen Torres Lopez, Software Languages Lab, Vrije Universiteit Brussel
+
+ - Sander Lenaerts, Software Languages Lab, Vrije Universiteit Brussel
+
+ - Dominik Aumayr, Institute for System Software, Johannes Kepler University Linz
 
 TruffleSOM
 ==========
