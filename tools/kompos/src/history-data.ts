@@ -184,10 +184,12 @@ export class HistoryData {
     const causalMsg = this.readLong(data, i + 8);
     const nameId: number = data.getUint16(i + 16);
     const actor: Activity = {
-      id: aid, type: type,
-      name: this.strings[nameId],
+      id: aid,
+      type:      type,
+      name:      this.strings[nameId],
       causalMsg: causalMsg,
-      origin: this.readActivityOrigin(data, i + 18)};
+      running:   true,
+      origin:    this.readActivityOrigin(data, i + 18)};
     this.addActivity(actor);
     newActivities.push(actor);
     return TraceSize.ActorCreation + TraceSize.ActivityOrigin - 1; // type tag of ActorCreation already covered

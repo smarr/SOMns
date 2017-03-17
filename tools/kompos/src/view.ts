@@ -676,7 +676,6 @@ export class View {
     }, 300);
   }
 
-
   showSourceById(sourceId: string, activityId: number) {
     if (this.getActiveSourceId(activityId) !== sourceId) {
       const actId = getActivityId(activityId);
@@ -752,8 +751,8 @@ export class View {
     };
   }
 
-  switchActivityDebuggerToSuspendedState(activityId: number) {
-    const btns = this.findActivityDebuggerButtons(activityId);
+  public switchActivityDebuggerToSuspendedState(act: Activity) {
+    const btns = this.findActivityDebuggerButtons(act.id);
 
     btns.resume.removeClass("disabled");
     btns.pause.addClass("disabled");
@@ -763,8 +762,8 @@ export class View {
     btns.return.removeClass("disabled");
   }
 
-  switchActivityDebuggerToResumedState(activityId: number) {
-    const btns = this.findActivityDebuggerButtons(activityId);
+  public switchActivityDebuggerToResumedState(act: Activity) {
+    const btns = this.findActivityDebuggerButtons(act.id);
 
     btns.resume.addClass("disabled");
     btns.pause.removeClass("disabled");
@@ -774,10 +773,10 @@ export class View {
     btns.return.addClass("disabled");
   }
 
-  onContinueExecution(activityId: number) {
-    this.switchActivityDebuggerToResumedState(activityId);
+  public onContinueExecution(act: Activity) {
+    this.switchActivityDebuggerToResumedState(act);
 
-    const id = getActivityId(activityId);
+    const id = getActivityId(act.id);
     const highlightedNode = $("#" + id + " .DbgCurrentNode");
     highlightedNode.removeClass("DbgCurrentNode");
   }
