@@ -6,6 +6,7 @@ import {SymbolMessage, Activity} from "./messages";
 import * as d3 from "d3";
 import {HistoryData, ActivityNode, ActivityLink} from "./history-data";
 import {dbgLog} from "./source";
+import {getActivityRectId} from "./view";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
 const tangoColors = [
@@ -203,6 +204,8 @@ function restart() {
   // add new nodes
   const g = circle.enter().append("svg:g");
 
+  g.attr("id", function (e: ActivityNode) { return getActivityRectId(e.activity.id); });
+
   g.append("rect")
     .attr("rx", 6)
     .attr("ry", 6)
@@ -210,8 +213,8 @@ function restart() {
     .attr("y", -12.5)
     .attr("width", 50)
     .attr("height", 25)
-    .on("mouseover", function (e: ActivityNode) { return ctrl.overActivity(e, this); })
-    .on("mouseout",  function (e: ActivityNode) { return ctrl.outActivity(e, this); })
+    .on("mouseover", function(e: ActivityNode) { return ctrl.overActivity(e, this); })
+    .on("mouseout",  function(e: ActivityNode) { return ctrl.outActivity(e, this); })
     .attr("class", "node")
     .style("fill", function(_, i) {
       return tango[i]; // colors(d.type);
@@ -233,6 +236,14 @@ function restart() {
       }
       return label;
     });
+
+  g.append("svg:text")
+    .attr("x", 10)
+    .attr("dy", "-.35em")
+    .attr("class", function(e: ActivityNode) {
+      return "activity-pause" + (e.activity.running ? " running" : "");
+    })
+    .html("&#xf04c;");
 
   // After rendering text, adapt rectangles
   adaptRectSizeAndTextPostion();
@@ -277,6 +288,8 @@ function adaptRectSizeAndTextPostion() {
       return this.parentNode.childNodes[1].getComputedTextLength() + PADDING;
      })
     .attr("x", function() {
-      return - (PADDING + this.parentNode.childNodes[1].getComputedTextLength()) / 2.0;
+      const width = this.parentNode.childNodes[1].getComputedTextLength();
+      d3.select(this.parentNode.childNodes[2]).attr("x", (width / 2.0) + 3.0);
+      return - (PADDING + width) / 2.0;
     });
 }

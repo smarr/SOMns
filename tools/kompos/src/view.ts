@@ -11,10 +11,15 @@ import {Breakpoint, MessageBreakpoint, LineBreakpoint} from "./breakpoints";
 
 declare var ctrl: Controller;
 
-const ACT_ID_PREFIX = "a";
+const ACT_ID_PREFIX   = "a";
+const ACT_RECT_PREFIX = "RA";
 
-function getActivityId(id: number) {
+function getActivityId(id: number): string {
   return ACT_ID_PREFIX + id;
+}
+
+export function getActivityRectId(id: number): string {
+  return ACT_RECT_PREFIX + id;
 }
 
 export function getLineId(line: number, sourceId: string) {
@@ -752,6 +757,11 @@ export class View {
   }
 
   public switchActivityDebuggerToSuspendedState(act: Activity) {
+    // mark paused in system view
+    const markedNode = $(
+      "#" + getActivityRectId(act.id) + " " + "text.activity-pause");
+    markedNode.removeClass("running");
+
     const btns = this.findActivityDebuggerButtons(act.id);
 
     btns.resume.removeClass("disabled");
@@ -763,6 +773,11 @@ export class View {
   }
 
   public switchActivityDebuggerToResumedState(act: Activity) {
+    // mark resume in system view
+    const markedNode = $(
+      "#" + getActivityRectId(act.id) + " " + "text.activity-pause");
+    markedNode.addClass("running");
+
     const btns = this.findActivityDebuggerButtons(act.id);
 
     btns.resume.addClass("disabled");
