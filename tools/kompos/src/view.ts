@@ -14,12 +14,24 @@ declare var ctrl: Controller;
 const ACT_ID_PREFIX   = "a";
 const ACT_RECT_PREFIX = "RA";
 
-function getActivityId(id: number): string {
+const ACT_GROUP_ID_PREFIX   = "ag";
+const ACT_GROUP_RECT_PREFIX = "RAG";
+
+
+export function getActivityId(id: number): string {
   return ACT_ID_PREFIX + id;
 }
 
 export function getActivityRectId(id: number): string {
   return ACT_RECT_PREFIX + id;
+}
+
+export function getActivityGroupId(id: number): string {
+  return ACT_GROUP_ID_PREFIX + id;
+}
+
+export function getActivityGroupRectId(id: number): string {
+  return ACT_GROUP_RECT_PREFIX + id;
 }
 
 export function getLineId(line: number, sourceId: string) {
@@ -480,7 +492,7 @@ export class View {
     }
     d3.select(rect).style("stroke-width", (parseInt(strokeWidth) * 2) + "px");
 
-    $(document.getElementById(getActivityId(act.activity.id))).addClass("activity-highlight");
+    $(act.getQueryForCodePane()).addClass("activity-highlight");
   }
 
   public outActivity(act: ActivityNode, rect: SVGRectElement) {
@@ -488,7 +500,7 @@ export class View {
     if (strokeWidth !== undefined) {
       d3.select(rect).style("stroke-width", strokeWidth);
     }
-    $(document.getElementById(getActivityId(act.activity.id))).removeClass("activity-highlight");
+    $(act.getQueryForCodePane()).removeClass("activity-highlight");
   }
 
   /**
@@ -556,7 +568,7 @@ export class View {
 
   private displayActivity(activity: Activity) {
     const act = nodeFromTemplate("activity-tpl");
-    $(act).find(".activity-name").html(name);
+    $(act).find(".activity-name").html(activity.name);
     const actId = getActivityId(activity.id);
     act.id = actId;
     $(act).find("button").attr("data-actId", actId);

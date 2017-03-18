@@ -2,11 +2,9 @@
 "use strict";
 
 import {Controller} from "./controller";
-import {SymbolMessage, Activity} from "./messages";
+import {SymbolMessage, ActivityType} from "./messages";
 import * as d3 from "d3";
 import {HistoryData, ActivityNode, ActivityLink} from "./history-data";
-import {dbgLog} from "./source";
-import {getActivityRectId} from "./view";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
 const tangoColors = [
@@ -192,7 +190,7 @@ function restart() {
 
   // circle (node) group
   // NB: the function arg is crucial here! nodes are known by id, not by index!
-  circle = circle.data(nodes, function(d: ActivityNode) { return d.activity.id; });
+  circle = circle.data(nodes, function(a: ActivityNode) { return a.getDataId(); });
 
   // update existing nodes (reflexive & selected visual states)
   circle.selectAll("circle")
@@ -204,7 +202,7 @@ function restart() {
   // add new nodes
   const g = circle.enter().append("svg:g");
 
-  g.attr("id", function (e: ActivityNode) { return getActivityRectId(e.activity.id); });
+  g.attr("id", function (a: ActivityNode) { return a.getSystemViewId(); });
 
   g.append("rect")
     .attr("rx", 6)
@@ -220,7 +218,7 @@ function restart() {
       return tango[i]; // colors(d.type);
     })
     .style("stroke", function(_, i) { return d3.rgb(tango[i]).darker().toString(); })  // colors(d.id)
-    .style("stroke-width", function(d: ActivityNode) { return (d.groupSize) ? Math.log(d.groupSize) * 3 : ""; })
+    .style("stroke-width", function(a: ActivityNode) { return (a.getGroupSize() > 1) ? Math.log(a.getGroupSize()) * 3 : ""; })
     .classed("reflexive", function(d: ActivityNode) { return d.reflexive; });
 
   // show node IDs
@@ -228,11 +226,11 @@ function restart() {
     .attr("x", 0)
     .attr("dy", ".35em")
     .attr("class", "id")
-    .html(function(d: ActivityNode) {
-      let label = getTypePrefix(d.activity) + d.activity.name;
+    .html(function(a: ActivityNode) {
+      let label = getTypePrefix(a.getType()) + a.getName();
 
-      if (d.groupSize) {
-        label += " (" + d.groupSize + ")";
+      if (a.getGroupSize() > 1) {
+        label += " (" + a.getGroupSize() + ")";
       }
       return label;
     });
@@ -240,8 +238,8 @@ function restart() {
   g.append("svg:text")
     .attr("x", 10)
     .attr("dy", "-.35em")
-    .attr("class", function(e: ActivityNode) {
-      return "activity-pause" + (e.activity.running ? " running" : "");
+    .attr("class", function(a: ActivityNode) {
+      return "activity-pause" + (a.isRunning() ? " running" : "");
     })
     .html("&#xf04c;");
 
@@ -266,8 +264,8 @@ function restart() {
 
 const PADDING = 15;
 
-function getTypePrefix(act: Activity) {
-  switch (act.type) {
+function getTypePrefix(type: ActivityType) {
+  switch (type) {
     case "Actor":
       return "&#128257; ";
     case "Process":
@@ -277,8 +275,8 @@ function getTypePrefix(act: Activity) {
     case "Task":
       return "&#8623;";
     default:
-      dbgLog(JSON.stringify(act));
-      break;
+      console.warn("getTypePrefix misses support for " + type);
+      return null;
   }
 }
 
