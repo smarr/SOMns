@@ -89,7 +89,7 @@ export class UiController extends Controller {
       const source   = this.dbg.getSource(sId);
 
       console.assert(aId === activity.id);
-      this.view.displaySource(aId, source, sId);
+      this.view.displaySource(activity, source, sId);
     }
   }
 
@@ -156,8 +156,8 @@ export class UiController extends Controller {
       const sourceId = this.dbg.getSourceId(msg.stackFrames[0].sourceUri);
       const source = this.dbg.getSource(sourceId);
 
-      const newSource = this.view.displaySource(msg.activityId, source, sourceId);
-      this.view.displayStackTrace(sourceId, msg, topFrameId);
+      const newSource = this.view.displaySource(act, source, sourceId);
+      this.view.displayStackTrace(sourceId, msg, topFrameId, act);
       if (newSource) {
         this.ensureBreakpointsAreIndicated(sourceId);
       }
@@ -256,7 +256,7 @@ export class UiController extends Controller {
 
     if (act.running) { return; }
     act.running = true;
-    this.vmConnection.sendDebuggerAction("resume", activityId);
+    this.vmConnection.sendDebuggerAction("resume", act);
     this.view.onContinueExecution(act);
   }
 
@@ -278,7 +278,7 @@ export class UiController extends Controller {
     if (act.running) { return; }
     act.running = true;
     this.view.onContinueExecution(act);
-    this.vmConnection.sendDebuggerAction("stepInto", activityId);
+    this.vmConnection.sendDebuggerAction("stepInto", act);
   }
 
   stepOver(actId: string) {
@@ -287,7 +287,7 @@ export class UiController extends Controller {
     if (act.running) { return; }
     act.running = true;
     this.view.onContinueExecution(act);
-    this.vmConnection.sendDebuggerAction("stepOver", activityId);
+    this.vmConnection.sendDebuggerAction("stepOver", act);
   }
 
   returnFromExecution(actId: string) {
@@ -296,6 +296,6 @@ export class UiController extends Controller {
     if (act.running) { return; }
     act.running = true;
     this.view.onContinueExecution(act);
-    this.vmConnection.sendDebuggerAction("return", activityId);
+    this.vmConnection.sendDebuggerAction("return", act);
   }
 }

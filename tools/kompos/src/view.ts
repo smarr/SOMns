@@ -494,8 +494,8 @@ export class View {
   /**
    * @returns true, if new source is displayed
    */
-  public displaySource(activityId: number, source: Source, sourceId: string): boolean {
-    const actId = getActivityId(activityId);
+  public displaySource(activity: Activity, source: Source, sourceId: string): boolean {
+    const actId = getActivityId(activity.id);
     this.markCodePaneExpanded(actId);
 
     const container = $("#" + actId + " .activity-sources-list");
@@ -521,7 +521,7 @@ export class View {
     const annotationArray = sourceToArray(source.sourceText);
 
     // TODO: think this still need to be updated for multiple activities
-    annotateArray(annotationArray, sourceId, activityId, source.sections,
+    annotateArray(annotationArray, sourceId, activity.id, source.sections,
       source.methods);
 
     const tabListEntry = nodeFromTemplate("tab-list-entry");
@@ -529,7 +529,7 @@ export class View {
 
     // create the tab "header/handle"
     const aElem = $(tabListEntry).find("a");
-    const sourcePaneId = getSourceIdForActivity(sourceId, activityId);
+    const sourcePaneId = getSourceIdForActivity(sourceId, activity.id);
     aElem.attr("href", "#" + sourcePaneId);
     aElem.text(source.name);
     container.append(tabListEntry);
@@ -554,10 +554,10 @@ export class View {
     return true;
   }
 
-  public displayActivity(name: string, id: number) {
+  private displayActivity(activity: Activity) {
     const act = nodeFromTemplate("activity-tpl");
     $(act).find(".activity-name").html(name);
-    const actId = getActivityId(id);
+    const actId = getActivityId(activity.id);
     act.id = actId;
     $(act).find("button").attr("data-actId", actId);
 
@@ -571,7 +571,7 @@ export class View {
 
   public addActivities(activities: Activity[]) {
     for (const act of activities) {
-      this.displayActivity(act.name, act.id);
+      this.displayActivity(act);
     }
   }
 
@@ -636,7 +636,8 @@ export class View {
     list.append(entry);
   }
 
-  public displayStackTrace(sourceId: string, data: StackTraceResponse, requestedId: number) {
+  public displayStackTrace(sourceId: string, data: StackTraceResponse,
+      requestedId: number, activity: Activity) {
     const act = $("#" + getActivityId(data.activityId));
     const list = act.find(".activity-stack");
     list.html(""); // rest view
@@ -650,10 +651,10 @@ export class View {
     scopes.attr("id", this.getScopeId(requestedId));
     scopes.find("tbody").html(""); // rest view
 
-    this.highlightProgramPosition(sourceId, data.activityId, data.stackFrames[0]);
+    this.highlightProgramPosition(sourceId, activity, data.stackFrames[0]);
   }
 
-  private highlightProgramPosition(sourceId: string, activityId: number,
+  private highlightProgramPosition(sourceId: string, activity: Activity,
       frame: StackFrame) {
     const line = frame.line,
       column = frame.column,
@@ -664,12 +665,12 @@ export class View {
     let ssId = getSectionId(sourceId,
                  {startLine: line, startColumn: column, charLength: length});
     let ss = document.getElementById(
-                        getSectionIdForActivity(ssId, activityId));
+                        getSectionIdForActivity(ssId, activity.id));
     $(ss).addClass("DbgCurrentNode");
 
-    this.showSourceById(sourceId, activityId);
+    this.showSourceById(sourceId, activity);
 
-    const sourcePaneId = getSectionIdForActivity(sourceId, activityId);
+    const sourcePaneId = getSectionIdForActivity(sourceId, activity.id);
 
     // scroll to the statement
     $("html, body").animate({
@@ -681,15 +682,15 @@ export class View {
     }, 300);
   }
 
-  showSourceById(sourceId: string, activityId: number) {
-    if (this.getActiveSourceId(activityId) !== sourceId) {
-      const actId = getActivityId(activityId);
+  showSourceById(sourceId: string, activity: Activity) {
+    if (this.getActiveSourceId(activity) !== sourceId) {
+      const actId = getActivityId(activity.id);
       $("#" + actId + " .activity-sources-list li." + sourceId + " a").tab("show");
     }
   }
 
-  getActiveSourceId(activityId: number): string {
-    const actId = getActivityId(activityId);
+  getActiveSourceId(activity: Activity): string {
+    const actId = getActivityId(activity.id);
     const actAndSourceId = $("#" + actId + " .tab-pane.active").attr("id");
     return getSourceIdFrom(actAndSourceId);
   }
@@ -744,8 +745,8 @@ export class View {
     this.updateBreakpoint(bp, "promise-breakpoint-active");
   }
 
-  findActivityDebuggerButtons(activityId: number) {
-    const id = getActivityId(activityId);
+  private findActivityDebuggerButtons(activity: Activity) {
+    const id = getActivityId(activity.id);
     const act = $("#" + id);
     return {
       resume:   act.find(".act-resume"),
@@ -762,7 +763,7 @@ export class View {
       "#" + getActivityRectId(act.id) + " " + "text.activity-pause");
     markedNode.removeClass("running");
 
-    const btns = this.findActivityDebuggerButtons(act.id);
+    const btns = this.findActivityDebuggerButtons(act);
 
     btns.resume.removeClass("disabled");
     btns.pause.addClass("disabled");
@@ -778,7 +779,7 @@ export class View {
       "#" + getActivityRectId(act.id) + " " + "text.activity-pause");
     markedNode.addClass("running");
 
-    const btns = this.findActivityDebuggerButtons(act.id);
+    const btns = this.findActivityDebuggerButtons(act);
 
     btns.resume.addClass("disabled");
     btns.pause.removeClass("disabled");

@@ -5,7 +5,7 @@ import * as WebSocket from "ws";
 
 import {Controller} from "../src/controller";
 import {BreakpointData, SourceCoordinate, StoppedMessage, StackTraceResponse,
-  FullSourceCoordinate, StackFrame} from "../src/messages";
+  FullSourceCoordinate, StackFrame, Activity} from "../src/messages";
 import {VmConnection} from "../src/vm-connection";
 
 const SOM_BASEPATH = "../../";
@@ -142,7 +142,7 @@ export class HandleStoppedAndGetStackTrace extends ControllerWithInitialBreakpoi
   public readonly stackPs: Promise<StackTraceResponse>[];
   private resolveStackP;
   private readonly resolveStackPs;
-  public readonly stoppedActivities: number[];
+  public readonly stoppedActivities: Activity[];
 
   constructor(initialBreakpoints: BreakpointData[], vmConnection: VmConnection,
       numOps: number = 1) {
@@ -176,7 +176,10 @@ export class HandleStoppedAndGetStackTrace extends ControllerWithInitialBreakpoi
 
   public onStoppedEvent(msg: StoppedMessage) {
     if (this.numStopped >= this.numOps) { return; }
-    this.stoppedActivities[this.numStopped] = msg.activityId;
+    // don't need more than a dummy activity at the moment, just id is enough
+    const activity: Activity = {id: msg.activityId,
+      name: "dummy", type: "Actor", causalMsg: 0, running: false};
+    this.stoppedActivities[this.numStopped] = activity;
     this.numStopped += 1;
     this.vmConnection.requestStackTrace(msg.activityId);
   }
