@@ -10,9 +10,9 @@ export function getBreakpointId(sectionId: string, bpType: SectionBreakpointType
 }
 
 abstract class AbstractBreakpoint<T extends AbstractBreakpointData> {
-  readonly data: T;
-  checkbox: any;
-  readonly source: Source;
+  public readonly data: T;
+  public checkbox: any;
+  public readonly source: Source;
 
   constructor(data: T, source: Source) {
     this.data     = data;
@@ -24,23 +24,23 @@ abstract class AbstractBreakpoint<T extends AbstractBreakpointData> {
    * @return a unique id for the breakpoint, to be used in the view as HTML id
    *         for the entry in the list
    */
-  getListEntryId() {
+  public getListEntryId() {
     return "bp-";
   }
 
-  abstract getSourceElementClass();
+  public abstract getSourceElementClass();
 
-  toggle() {
+  public toggle() {
     this.data.enabled = !this.data.enabled;
   }
 
-  isEnabled() {
+  public isEnabled() {
     return this.data.enabled;
   }
 }
 
 export class LineBreakpoint extends AbstractBreakpoint<LineBreakpointData> {
-  readonly sourceId: string;
+  private readonly sourceId: string;
 
   constructor(data: LineBreakpointData, source: Source, sourceId: string) {
     super(data, source);
@@ -57,7 +57,7 @@ export class LineBreakpoint extends AbstractBreakpoint<LineBreakpointData> {
 }
 
 export class MessageBreakpoint extends AbstractBreakpoint<SectionBreakpointData> {
-  readonly sectionId: string;
+  private readonly sectionId: string;
 
   constructor(data: SectionBreakpointData, source: Source, sectionId: string) {
     super(data, source);

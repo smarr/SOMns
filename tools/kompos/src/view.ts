@@ -112,7 +112,7 @@ abstract class SectionMarker {
     this.type = type;
   }
 
-  abstract length(): number;
+  public abstract length(): number;
 }
 
 class Begin extends SectionMarker {
@@ -129,12 +129,12 @@ class Begin extends SectionMarker {
     this.type    = Begin;
   }
 
-  toString() {
+  public toString() {
     return '<span id="' + getSectionIdForActivity(this.sectionId, this.activityId)
          + '" class="' + this.section.tags.join(" ") + " " + this.sectionId + '">';
   }
 
-  length() {
+  public length() {
     return this.section.charLength;
   }
 }
@@ -156,11 +156,11 @@ class BeginMethodDef extends SectionMarker {
     this.activityId = activityId;
   }
 
-  length() {
+  public length() {
     return this.defPart.charLength;
   }
 
-  toString() {
+  public toString() {
     const tags = "MethodDeclaration",
       sectionId = getSectionId(this.sourceId, this.method.sourceSection),
       id = methodDeclIdToString(sectionId, this.i, this.activityId);
@@ -178,11 +178,11 @@ constructor(section: SourceCoordinate, length: number) {
     this.len     = length;
   }
 
-  toString() {
+  public toString() {
     return "</span>";
   }
 
-  length() {
+  public length() {
     return this.len;
   }
 }
@@ -198,7 +198,7 @@ class Annotation {
     this.after  = [];
   }
 
-  toString() {
+  public toString() {
     this.before.sort(function (a, b) {
       if (a.type !== b.type) {
         if (a.type === Begin) {
@@ -429,11 +429,11 @@ function enableMethodBreakpointHover(fileNode) {
 export class View {
   constructor() { }
 
-  onConnect() {
+  public onConnect() {
     $("#dbg-connect-btn").html("Connected");
   }
 
-  onClose() {
+  public onClose() {
     $("#dbg-connect-btn").html("Reconnect");
   }
 
@@ -682,20 +682,20 @@ export class View {
     }, 300);
   }
 
-  showSourceById(sourceId: string, activity: Activity) {
+  private showSourceById(sourceId: string, activity: Activity) {
     if (this.getActiveSourceId(activity) !== sourceId) {
       const actId = getActivityId(activity.id);
       $("#" + actId + " .activity-sources-list li." + sourceId + " a").tab("show");
     }
   }
 
-  getActiveSourceId(activity: Activity): string {
+  private getActiveSourceId(activity: Activity): string {
     const actId = getActivityId(activity.id);
     const actAndSourceId = $("#" + actId + " .tab-pane.active").attr("id");
     return getSourceIdFrom(actAndSourceId);
   }
 
-  ensureBreakpointListEntry(breakpoint: Breakpoint) {
+  private ensureBreakpointListEntry(breakpoint: Breakpoint) {
     if (breakpoint.checkbox !== null) {
       return;
     }
@@ -715,7 +715,7 @@ export class View {
     list.appendChild(entry);
   }
 
-  updateBreakpoint(breakpoint: Breakpoint, highlightClass: string) {
+  private updateBreakpoint(breakpoint: Breakpoint, highlightClass: string) {
     this.ensureBreakpointListEntry(breakpoint);
     const enabled = breakpoint.isEnabled();
 
@@ -729,19 +729,19 @@ export class View {
     }
   }
 
-  updateLineBreakpoint(bp: LineBreakpoint) {
+  public updateLineBreakpoint(bp: LineBreakpoint) {
     this.updateBreakpoint(bp, "breakpoint-active");
   }
 
-  updateSendBreakpoint(bp: MessageBreakpoint) {
+  public updateSendBreakpoint(bp: MessageBreakpoint) {
     this.updateBreakpoint(bp, "send-breakpoint-active");
   }
 
-  updateAsyncMethodRcvBreakpoint(bp: MessageBreakpoint) {
+  public updateAsyncMethodRcvBreakpoint(bp: MessageBreakpoint) {
     this.updateBreakpoint(bp, "send-breakpoint-active");
   }
 
-  updatePromiseBreakpoint(bp: MessageBreakpoint) {
+  public updatePromiseBreakpoint(bp: MessageBreakpoint) {
     this.updateBreakpoint(bp, "promise-breakpoint-active");
   }
 

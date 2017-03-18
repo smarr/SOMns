@@ -32,6 +32,9 @@
     "comment-format": [true, "check-space"],
     "class-name": true,
     "semicolon": ["always"],
+    "member-access": [
+      true
+    ],
     "triple-equals": true
   }
 }

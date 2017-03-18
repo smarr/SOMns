@@ -82,7 +82,7 @@ export class HistoryData {
   constructor() {
   }
 
-  addActivity(act: Activity) {
+  private addActivity(act: Activity) {
     hashAtInc(this.activityPerType, act.name, 1);
     const node = {
       activity:  act,
@@ -93,13 +93,13 @@ export class HistoryData {
     this.activity[act.id.toString()] = node;
   }
 
-  addStrings(ids: number[], strings: string[]) {
+  public addStrings(ids: number[], strings: string[]) {
     for (let i = 0; i < ids.length; i++) {
       this.strings[ids[i].toString()] = strings[i];
     }
   }
 
-  addMessage(sender: number, target: number, msgId: number) {
+  private addMessage(sender: number, target: number, msgId: number) {
     const senderId = sender.toString();
     if (!this.messages.hasOwnProperty(senderId)) {
       this.messages[senderId] = {};
@@ -110,7 +110,7 @@ export class HistoryData {
     this.msgs[msgId] = {sender: sender, target: target};
   }
 
-  getLinks(): ActivityLink[] {
+  public getLinks(): ActivityLink[] {
     const links: ActivityLink[] = [];
     for (const sendId in this.messages) {
       for (const rcvrId in this.messages[sendId]) {
@@ -147,7 +147,7 @@ export class HistoryData {
     return links;
   }
 
-  getActivityNodes(): ActivityNode[] {
+  public getActivityNodes(): ActivityNode[] {
     const groupStarted = {};
 
     const arr: ActivityNode[] = [];
@@ -167,7 +167,7 @@ export class HistoryData {
     return arr;
   }
 
-  getMaxMessageSends() {
+  public getMaxMessageSends() {
     return this.maxMessageCount;
   }
 
@@ -208,7 +208,7 @@ export class HistoryData {
       startColumn: startCol};
   }
 
-  updateDataBin(data: DataView, controller: Controller) {
+  public updateDataBin(data: DataView, controller: Controller) {
     const newActivities: Activity[] = [];
     let i = 0;
     while (i < data.byteLength) {

@@ -36,7 +36,7 @@ export class UiController extends Controller {
     this.actPromResolve = {};
   }
 
-  toggleConnection() {
+  public toggleConnection() {
     if (this.vmConnection.isConnected()) {
       this.vmConnection.disconnect();
     } else {
@@ -44,7 +44,7 @@ export class UiController extends Controller {
     }
   }
 
-  onConnect() {
+  public onConnect() {
     dbgLog("[WS] open");
     resetLinks();
     this.reset();
@@ -56,16 +56,16 @@ export class UiController extends Controller {
     this.vmConnection.requestProgramInfo();
   }
 
-  onClose() {
+  public onClose() {
     dbgLog("[WS] close");
     this.view.onClose();
   }
 
-  onError() {
+  public onError() {
     dbgLog("[WS] error");
   }
 
-  onReceivedSource(msg: SourceMessage) {
+  public onReceivedSource(msg: SourceMessage) {
     this.dbg.addSource(msg);
   }
 
@@ -179,16 +179,16 @@ export class UiController extends Controller {
     this.view.displayVariables(msg.variablesReference, msg.variables);
   }
 
-  onSymbolMessage(msg: SymbolMessage) {
+  public onSymbolMessage(msg: SymbolMessage) {
     updateStrings(msg);
   }
 
-  onTracingData(data: DataView) {
+  public onTracingData(data: DataView) {
     updateData(data, this);
     displayMessageHistory();
   }
 
-  onUnknownMessage(msg: any) {
+  public onUnknownMessage(msg: any) {
     dbgLog("[WS] unknown message of type:" + msg.type);
   }
 
@@ -200,7 +200,7 @@ export class UiController extends Controller {
     return breakpoint;
   }
 
-  onToggleLineBreakpoint(line: number, clickedSpan: Element) {
+  public onToggleLineBreakpoint(line: number, clickedSpan: Element) {
     dbgLog("updateBreakpoint");
     const parent     = <Element> clickedSpan.parentNode.parentNode;
     const sourceId   = getSourceIdFrom(parent.id);
@@ -211,7 +211,7 @@ export class UiController extends Controller {
     this.view.updateLineBreakpoint(<LineBreakpoint> breakpoint);
   }
 
-  onToggleSendBreakpoint(sectionId: string, type: SectionBreakpointType) {
+  public onToggleSendBreakpoint(sectionId: string, type: SectionBreakpointType) {
     dbgLog("send-op breakpoint: " + type);
 
     const id = getBreakpointId(sectionId, type),
@@ -268,11 +268,11 @@ export class UiController extends Controller {
   }
 
   /** End program, typically terminating it completely. */
-  stopExecution() {
+  public stopExecution() {
     // TODO
   }
 
-  stepInto(actId: string) {
+  public stepInto(actId: string) {
     const activityId = getActivityIdFromView(actId);
     const act = this.dbg.getActivity(activityId);
     if (act.running) { return; }
@@ -281,7 +281,7 @@ export class UiController extends Controller {
     this.vmConnection.sendDebuggerAction("stepInto", act);
   }
 
-  stepOver(actId: string) {
+  public stepOver(actId: string) {
     const activityId = getActivityIdFromView(actId);
     const act = this.dbg.getActivity(activityId);
     if (act.running) { return; }
@@ -290,7 +290,7 @@ export class UiController extends Controller {
     this.vmConnection.sendDebuggerAction("stepOver", act);
   }
 
-  returnFromExecution(actId: string) {
+  public returnFromExecution(actId: string) {
     const activityId = getActivityIdFromView(actId);
     const act = this.dbg.getActivity(activityId);
     if (act.running) { return; }
