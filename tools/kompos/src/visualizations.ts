@@ -281,6 +281,30 @@ function getTypePrefix(type: ActivityType) {
   }
 }
 
+function createChannelBody(g, x: number, y: number) {
+  return g.append("rect")
+    .attr("x", x + 5)
+    .attr("y", y + 1)
+    .attr("width", 20)
+    .attr("height", 8);
+}
+
+function createChannelEnd(g, x: number, y: number) {
+  return g.append("path")
+    .attr("d", `M ${x} ${y} L ${x + 6} ${y} L ${x + 10} ${y + 5} L ${x + 6} ${y + 10} L ${x} ${y + 10} L ${x + 4} ${y + 5} Z`)
+    .attr("stroke", "black")
+    .attr("stroke-linecap", "round")
+    .attr("stroke-linejoin", "round")
+    .attr("stroke-width", 1)
+    .attr("fill", "#f3f3f3");
+}
+
+function createChannel(g, x: number, y: number) {
+  createChannelBody(g, x, y);
+  createChannelEnd(g, x, y);
+  createChannelEnd(g, x + 20, y);
+}
+
 function adaptRectSizeAndTextPostion() {
   d3.selectAll("rect")
     .attr("width", function() {
