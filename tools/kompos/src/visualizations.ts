@@ -132,7 +132,7 @@ function zoomed() {
 // update force layout (called automatically each iteration)
 function tick() {
   // draw directed edges with proper padding from node centers
-  path.attr("d", function(d) {
+  path.attr("d", function(d: ActivityLink) {
     const deltaX = d.target.x - d.source.x,
       deltaY = d.target.y - d.source.y,
       dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
@@ -144,6 +144,7 @@ function tick() {
       sourceY = d.source.y + (sourcePadding * normY),
       targetX = d.target.x - (targetPadding * normX),
       targetY = d.target.y - (targetPadding * normY);
+      console.assert(!Number.isNaN(sourceX));
     return "M" + sourceX + "," + sourceY + "L" + targetX + "," + targetY;
   });
 
