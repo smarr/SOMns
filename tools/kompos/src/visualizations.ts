@@ -193,13 +193,6 @@ function restart() {
   // NB: the function arg is crucial here! nodes are known by id, not by index!
   circle = circle.data(nodes, function(a: ActivityNode) { return a.getDataId(); });
 
-  // update existing nodes (reflexive & selected visual states)
-  circle.selectAll("circle")
-    .style("fill", function(_, i) {
-      return tango[i]; // /*(d === selected_node) ? d3.rgb(colors(d.id)).brighter().toString() :*/ colors(d.id);
-    })
-    .classed("reflexive", function(d: ActivityNode) { return d.reflexive; });
-
   // add new nodes
   const g = circle.enter().append("svg:g");
 
