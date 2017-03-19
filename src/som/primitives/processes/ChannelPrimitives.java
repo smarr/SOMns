@@ -28,7 +28,6 @@ import som.primitives.Primitive;
 import som.primitives.arrays.ToArgumentsArrayNode;
 import som.primitives.arrays.ToArgumentsArrayNodeFactory;
 import som.vm.Activity;
-import som.vm.ActivityThread;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
@@ -81,8 +80,7 @@ public abstract class ChannelPrimitives {
     }
   }
 
-  public static final class ProcessThread extends TracingActivityThread
-      implements ActivityThread {
+  public static final class ProcessThread extends TracingActivityThread {
     private Process current;
 
     ProcessThread(final ForkJoinPool pool) { super(pool); }
