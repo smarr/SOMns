@@ -3,7 +3,8 @@
 
 import {SymbolMessage, Activity, ActivityType} from "./messages";
 import * as d3 from "d3";
-import {HistoryData, ActivityNode, ActivityLink} from "./history-data";
+import {HistoryData, ActivityNode, EntityLink,
+  ChannelNode} from "./history-data";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
 const TANGO_SCHEME = [
@@ -30,11 +31,13 @@ const TANGO_COLORS = getTangoLightToDarker();
 
 export class SystemVisualization {
   private data: HistoryData;
-  private nodes: ActivityNode[];
-  private links: ActivityLink[];
+  private activities: ActivityNode[];
+  private channels:   ChannelNode[];
+  private links: EntityLink[];
 
   private activityNodes: d3.selection.Update<ActivityNode>;
-  private activityLinks: d3.selection.Update<ActivityLink>;
+  private channelNodes:  d3.selection.Update<ChannelNode>;
+  private entityLinks: d3.selection.Update<EntityLink>;
 
   private zoomScale = 1;
   private zoomTransl = [0, 0];
@@ -79,19 +82,22 @@ export class SystemVisualization {
     //  - reflexive edges are indicated on the node (as a bold black circle).
     //  - links are always source < target; edge directions are set by "left" and "right".
 
-    this.nodes = this.data.getActivityNodes();
+    this.activities = this.data.getActivityNodes();
+    this.channels = this.data.getChannelNodes();
     this.links = this.data.getLinks();
+
+    const allEntities = this.activities.concat(<any[]> this.channels);
 
     // init D3 force layout
     const forceLayout = d3.layout.force()
-      .nodes(this.nodes)
+      .nodes(allEntities)
       .links(this.links)
       .size([canvas.width(), canvas.height()])
       .linkDistance(70)
       .charge(-500)
       .on("tick", () => this.forceLayoutUpdateIteration());
 
-    forceLayout.linkStrength((link: ActivityLink) => {
+    forceLayout.linkStrength((link: EntityLink) => {
       return link.messageCount / this.data.getMaxMessageSends();
     });
 
@@ -114,12 +120,16 @@ export class SystemVisualization {
       const x = this.zoomTransl[0] + d.x * this.zoomScale;
       const y = this.zoomTransl[1] + d.y * this.zoomScale;
       return "translate(" + x + "," + y + ")scale(" + this.zoomScale + ")"; });
-    this.activityLinks.attr("transform", "translate(" + this.zoomTransl + ")scale(" + this.zoomScale + ")");
+    this.channelNodes.attr("transform", (d: ChannelNode) => {
+      const x = this.zoomTransl[0] + d.x * this.zoomScale;
+      const y = this.zoomTransl[1] + d.y * this.zoomScale;
+      return "translate(" + x + "," + y + ")scale(" + this.zoomScale + ")"; });
+    this.entityLinks.attr("transform", "translate(" + this.zoomTransl + ")scale(" + this.zoomScale + ")");
   }
 
   private forceLayoutUpdateIteration() {
     // draw directed edges with proper padding from node centers
-    this.activityLinks.attr("d", (d: ActivityLink) => {
+    this.entityLinks.attr("d", (d: EntityLink) => {
       const deltaX = d.target.x - d.source.x,
         deltaY = d.target.y - d.source.y,
         dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
@@ -139,27 +149,34 @@ export class SystemVisualization {
       return "translate(" + (this.zoomTransl[0] + d.x * this.zoomScale)
         + "," + (this.zoomTransl[1] + d.y * this.zoomScale) + ")scale(" + this.zoomScale + ")";
     });
+    this.channelNodes.attr("transform", (d: ChannelNode) => {
+      return "translate(" + (this.zoomTransl[0] + d.x * this.zoomScale)
+        + "," + (this.zoomTransl[1] + d.y * this.zoomScale) + ")scale(" + this.zoomScale + ")";
+    });
   }
 
   private renderSystemView(forceLayout:
       d3.layout.Force<d3.layout.force.Link<d3.layout.force.Node>, d3.layout.force.Node>,
       svg: d3.Selection<any>) {
     // handles to link and node element groups
-    this.activityLinks = svg.append("svg:g")
+    this.entityLinks = svg.append("svg:g")
       .selectAll("path")
       .data(this.links);
     this.activityNodes = svg.append("svg:g")
       .selectAll("g")
       // nodes are known by id, not by index
-      .data(this.nodes, (a: ActivityNode) => { return a.getDataId(); });
+      .data(this.activities, (a: ActivityNode) => { return a.getDataId(); });
+    this.channelNodes = svg.append("svg:g")
+      .selectAll("g")
+      .data(this.channels, (c: ChannelNode) => { return c.getDataId(); });
 
-    this.activityLinks // .classed("selected", function(d) { return d === selected_link; })
+    this.entityLinks // .classed("selected", function(d) { return d === selected_link; })
       .style("marker-start", selectStartMarker)
       .style("marker-end",   selectEndMarker);
 
     // add new links
-    this.activityLinks.enter().append("svg:path")
-      .attr("class", (d: ActivityLink) => {
+    this.entityLinks.enter().append("svg:path")
+      .attr("class", (d: EntityLink) => {
         return d.creation
           ? "creation-link"
           : "link";
@@ -169,21 +186,24 @@ export class SystemVisualization {
       .style("marker-end",   selectEndMarker);
 
     // remove old links
-    this.activityLinks.exit().remove();
+    this.entityLinks.exit().remove();
 
     // add new nodes
-    const g = this.activityNodes.enter().append("svg:g");
+    const actG = this.activityNodes.enter().append("svg:g");
+    const chG  = this.channelNodes.enter().append("svg:g");
 
-    createActivity(g);
+    createActivity(actG);
+    createChannel(chG);
 
     // After rendering text, adapt rectangles
-    adaptRectSizeAndTextPostion();
+    this.adaptRectSizeAndTextPostion();
 
     // Enable dragging of nodes
-    g.call(forceLayout.drag);
+    actG.call(forceLayout.drag);
 
     // remove old nodes
     this.activityNodes.exit().remove();
+    this.channelNodes.exit().remove();
 
     // set the graph in motion
     forceLayout.start();
@@ -193,6 +213,18 @@ export class SystemVisualization {
       forceLayout.tick();
     }
     // force.stop();
+  }
+
+  private adaptRectSizeAndTextPostion() {
+    this.activityNodes.selectAll("rect")
+      .attr("width", function() {
+        return this.parentNode.childNodes[1].getComputedTextLength() + PADDING;
+      })
+      .attr("x", function() {
+        const width = this.parentNode.childNodes[1].getComputedTextLength();
+        d3.select(this.parentNode.childNodes[2]).attr("x", (width / 2.0) + 3.0);
+        return - (PADDING + width) / 2.0;
+      });
   }
 }
 
@@ -210,13 +242,13 @@ function createArrowMarker(svg: d3.Selection<any>, id: string, refX: number,
     .attr("fill", color);
 }
 
-function selectStartMarker(d: ActivityLink) {
+function selectStartMarker(d: EntityLink) {
   return d.left
     ? (d.creation ? "url(#start-arrow-creator)" : "url(#start-arrow)")
     : "";
 }
 
-function selectEndMarker(d: ActivityLink) {
+function selectEndMarker(d: EntityLink) {
   return d.right
     ? (d.creation ? "url(#end-arrow-creator)" : "url(#end-arrow)")
     : "";
@@ -310,20 +342,12 @@ function createChannelEnd(g, x: number, y: number) {
     .attr("fill", "#f3f3f3");
 }
 
-function createChannel(g, x: number, y: number) {
+function createChannel(g) {
+  const x = 0, y = 0;
+  g.attr("id", function (a: ChannelNode) { return a.getSystemViewId(); });
+
   createChannelBody(g, x, y);
   createChannelEnd(g, x, y);
   createChannelEnd(g, x + 20, y);
 }
 
-function adaptRectSizeAndTextPostion() {
-  d3.selectAll("rect")
-    .attr("width", function() {
-      return this.parentNode.childNodes[1].getComputedTextLength() + PADDING;
-     })
-    .attr("x", function() {
-      const width = this.parentNode.childNodes[1].getComputedTextLength();
-      d3.select(this.parentNode.childNodes[2]).attr("x", (width / 2.0) + 3.0);
-      return - (PADDING + width) / 2.0;
-    });
-}

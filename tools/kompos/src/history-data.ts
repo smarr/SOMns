@@ -3,7 +3,7 @@
 
 import {IdMap, Activity, ActivityType, Channel,
   FullSourceCoordinate} from "./messages";
-import {getActivityId, getActivityRectId,
+import {getActivityId, getActivityRectId, getChannelId, getChannelVizId,
   getActivityGroupId, getActivityGroupRectId} from "./view";
 
 const horizontalDistance = 100,
@@ -76,23 +76,30 @@ enum ParamTypes {
   String   = 7
 }
 
-export abstract class ActivityNode {
-  public reflexive:  boolean;
+export abstract class EntityNode {
   public x:          number;
   public y:          number;
 
-  constructor(reflexive: boolean, x: number, y: number) {
-    this.reflexive = reflexive;
+  constructor(x: number, y: number) {
     this.x = x;
     this.y = y;
+  }
+
+  public abstract getDataId(): string;
+  public abstract getSystemViewId(): string;
+}
+
+export abstract class ActivityNode extends EntityNode {
+  public reflexive:  boolean;
+
+  constructor(reflexive: boolean, x: number, y: number) {
+    super(x, y);
+    this.reflexive = reflexive;
   }
 
   public abstract getGroupSize(): number;
   public abstract isRunning(): boolean;
   public abstract getName(): string;
-
-  public abstract getDataId(): string;
-  public abstract getSystemViewId(): string;
 
   public abstract getQueryForCodePane(): string;
   public abstract getType(): ActivityType;
@@ -148,9 +155,21 @@ class GroupNode extends ActivityNode {
   public getType() { return this.group.activities[0].type; }
 }
 
-export interface ActivityLink {
-  source: ActivityNode;
-  target: ActivityNode;
+export class ChannelNode extends EntityNode {
+  public readonly channel: Channel;
+
+  constructor(channel: Channel, x: number, y: number) {
+    super(x, y);
+    this.channel = channel;
+  }
+
+  public getDataId() { return getChannelId(this.channel.id); }
+  public getSystemViewId() { return getChannelVizId(this.channel.id); }
+}
+
+export interface EntityLink {
+  source: EntityNode;
+  target: EntityNode;
   left:   boolean;
   right:  boolean;
   messageCount: number;
@@ -165,7 +184,7 @@ interface ActivityGroup {
 
 export class HistoryData {
   private activity: IdMap<ActivityNodeImpl> = {};
-  private channels: IdMap<Channel> = {};
+  private channels: IdMap<ChannelNode> = {};
   private activitiesPerType: IdMap<ActivityGroup> = {};
   private messages: IdMap<IdMap<number>> = {};
   private msgs = {};
@@ -193,7 +212,9 @@ export class HistoryData {
   }
 
   private addChannel(actId: number, channelId: number, section: FullSourceCoordinate) {
-    this.channels[channelId] = {id: channelId, creatorActivityId: actId, origin: section};
+    const channel = {id: channelId, creatorActivityId: actId, origin: section};
+    this.channels[channelId] = new ChannelNode(
+      channel, horizontalDistance * Object.keys(this.channels).length, 0);
   }
 
   public addStrings(ids: number[], strings: string[]) {
@@ -242,8 +263,7 @@ export class HistoryData {
       }
   }
 
-  public getLinks(): ActivityLink[] {
-    const links: ActivityLink[] = [];
+  private collectActivityLinks(links: EntityLink[]) {
     const normalMsgMap = {};
     for (const sendId in this.messages) {
       for (const rcvrId in this.messages[sendId]) {
@@ -264,7 +284,9 @@ export class HistoryData {
           this.messages[sendId][rcvrId]);
       }
     }
+  }
 
+  private collectActivityCreationLinks(links: EntityLink[]) {
     // get links for creation of entities
     const createMessages = {};
     for (const i in this.activity) {
@@ -281,6 +303,31 @@ export class HistoryData {
       const target = this.getActivityOrGroupIfAvailable(i);
       this.accumulateMessageCounts(createMessages, links, creator, target, true, 1);
     }
+  }
+
+  private collectChannelCreationLinks(links: EntityLink[]) {
+    for (const i in this.channels) {
+      const c = this.channels[i];
+
+      const creator = this.getActivityOrGroupIfAvailable(c.channel.creatorActivityId.toString());
+      console.assert(creator);
+      const msgLink: EntityLink = {
+        source: creator, target: c,
+        left: false, right: true,
+        creation: true,
+        messageCount: 1
+      };
+
+      links.push(msgLink);
+    }
+  }
+
+  public getLinks(): EntityLink[] {
+    const links: EntityLink[] = [];
+    this.collectActivityLinks(links);
+    this.collectActivityCreationLinks(links);
+    this.collectChannelCreationLinks(links);
+
     return links;
   }
 
@@ -307,6 +354,14 @@ export class HistoryData {
       }
     }
     return arr;
+  }
+
+  public getChannelNodes(): ChannelNode[] {
+    const result = [];
+    for (const i in this.channels) {
+      result.push(this.channels[i]);
+    }
+    return result;
   }
 
   public getMaxMessageSends() {

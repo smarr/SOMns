@@ -19,6 +19,8 @@ const ACT_RECT_PREFIX = "RA";
 const ACT_GROUP_ID_PREFIX   = "ag";
 const ACT_GROUP_RECT_PREFIX = "RAG";
 
+const CH_ID_PREFIX  = "c";
+const CH_VIZ_PREFIX = "VC";
 
 export function getActivityId(id: number): string {
   return ACT_ID_PREFIX + id;
@@ -34,6 +36,14 @@ export function getActivityGroupId(id: number): string {
 
 export function getActivityGroupRectId(id: number): string {
   return ACT_GROUP_RECT_PREFIX + id;
+}
+
+export function getChannelId(id: number): string {
+  return CH_ID_PREFIX + id;
+}
+
+export function getChannelVizId(id: number): string {
+  return CH_VIZ_PREFIX + id;
 }
 
 export function getLineId(line: number, sourceId: string) {
