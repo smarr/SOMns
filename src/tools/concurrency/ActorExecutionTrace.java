@@ -33,6 +33,7 @@ import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
+import som.interpreter.processes.SChannel;
 import som.primitives.TimerPrim;
 import som.primitives.processes.ChannelPrimitives.TracingProcess;
 import som.vm.ObjectSystem;
@@ -231,7 +232,9 @@ public class ActorExecutionTrace {
     TaskSpawn(TraceData.TASK_SPAWN, 19),
     TaskJoin(TraceData.TASK_JOIN,   11),
 
-    PromiseError(TraceData.PROMISE_ERROR, 28);
+    PromiseError(TraceData.PROMISE_ERROR, 28),
+
+    ChannelCreation(TraceData.CHANNEL_CREATION, 25);
 
     final byte id;
     final int size;
@@ -340,6 +343,13 @@ public class ActorExecutionTrace {
     TracingActivityThread t = getThread();
     t.getBuffer().recordMailboxExecuted(m, moreCurrent, baseMessageId,
         mailboxNo, sendTS, moreSendTS, execTS, receiver);
+  }
+
+  public static void channelCreation(final SChannel channel,
+      final SourceSection section) {
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordChannelCreation(t.getActivity().getId(),
+        ((TracingChannel) channel).getId(), section);
   }
 
   private static TracingActivityThread getThread() {

@@ -26,6 +26,8 @@ public class TraceData {
 
   public static final byte PROMISE_ERROR = 14;
 
+  public static final byte CHANNEL_CREATION = 15;
+
   /**
    * Messages use a different EventId system, the most significant bit is 1 to clearly distinguish it from custom Events.
    * The other bits are used to encode what information is contained in that event.

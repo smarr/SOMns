@@ -61,6 +61,12 @@ export interface Activity {
   origin?: FullSourceCoordinate;
 }
 
+export interface Channel {
+  id: number;
+  creatorActivityId: number;
+  origin?: FullSourceCoordinate;
+}
+
 export interface StoppedMessage {
   type: "StoppedEvent";
 

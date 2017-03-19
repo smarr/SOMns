@@ -328,8 +328,13 @@ public abstract class ChannelPrimitives {
     public ChannelNewPrim(final boolean eagerlyWrapped, final SourceSection source) { super(eagerlyWrapped, source); }
 
     @Specialization
-    public static final SChannel newChannel(final Object module) {
-      return new SChannel();
+    public final SChannel newChannel(final Object module) {
+      SChannel result = SChannel.create();
+
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.channelCreation(result, sourceSection);
+      }
+      return result;
     }
   }
 

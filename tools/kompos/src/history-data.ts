@@ -2,7 +2,8 @@
 "use strict";
 
 import {Controller} from "./controller";
-import {IdMap, Activity, ActivityType} from "./messages";
+import {IdMap, Activity, ActivityType, Channel,
+  FullSourceCoordinate} from "./messages";
 import {getActivityId, getActivityRectId,
   getActivityGroupId, getActivityGroupRectId} from "./view";
 
@@ -30,7 +31,11 @@ enum Trace {
   ProcessCompletion = 11,
 
   TaskSpawn         = 12,
-  TaskJoin          = 13
+  TaskJoin          = 13,
+
+  PromiseError      = 14,
+
+  ChannelCreation   = 15
 }
 
 enum TraceSize {
@@ -49,7 +54,11 @@ enum TraceSize {
   ProcessCompletion =  9,
 
   TaskSpawn         = 19,
-  TaskJoin          = 11
+  TaskJoin          = 11,
+
+  PromiseError      = 28,
+
+  ChannelCreation   = 25
 }
 
 export abstract class ActivityNode {
@@ -141,6 +150,7 @@ interface ActivityGroup {
 
 export class HistoryData {
   private activity: IdMap<ActivityNodeImpl> = {};
+  private channels: IdMap<Channel> = {};
   private activitiesPerType: IdMap<ActivityGroup> = {};
   private messages: IdMap<IdMap<number>> = {};
   private msgs = {};
@@ -165,6 +175,10 @@ export class HistoryData {
       horizontalDistance + horizontalDistance * this.activitiesPerType[act.name].activities.length,
       verticalDistance * numGroups);
     this.activity[act.id.toString()] = node;
+  }
+
+  private addChannel(actId: number, channelId: number, section: FullSourceCoordinate) {
+    this.channels[channelId] = {id: channelId, creatorActivityId: actId, origin: section};
   }
 
   public addStrings(ids: number[], strings: string[]) {
@@ -308,12 +322,19 @@ export class HistoryData {
     return TraceSize.ActorCreation + TraceSize.ActivityOrigin - 1; // type tag of ActorCreation already covered
   }
 
-  private readActivityOrigin(data: DataView, i: number) {
-    console.assert(data.getInt8(i) === Trace.ActivityOrigin);
-    const fileId:    number = data.getUint16(i + 1);
-    const startLine: number = data.getUint16(i + 3);
-    const startCol:  number = data.getUint16(i + 5);
-    const charLen:   number = data.getUint16(i + 7);
+  private readChannelCreation(data: DataView, i: number) {
+    const aId = this.readLong(data, i);
+    const cId = this.readLong(data, i + 8);
+    const section = this.readSourceSection(data, i + 16);
+    this.addChannel(aId, cId, section);
+    return TraceSize.ChannelCreation - 1; // type tag already read
+  }
+
+  private readSourceSection(data: DataView, i: number): FullSourceCoordinate {
+    const fileId:    number = data.getUint16(i);
+    const startLine: number = data.getUint16(i + 2);
+    const startCol:  number = data.getUint16(i + 4);
+    const charLen:   number = data.getUint16(i + 6);
     return {
       uri: this.strings[fileId],
       charLength:  charLen,
@@ -321,14 +342,19 @@ export class HistoryData {
       startColumn: startCol};
   }
 
+  private readActivityOrigin(data: DataView, i: number): FullSourceCoordinate {
+    console.assert(data.getInt8(i) === Trace.ActivityOrigin);
+    return this.readSourceSection(data, i + 1);
+  }
+
   public updateDataBin(data: DataView, controller: Controller) {
     const newActivities: Activity[] = [];
     let i = 0;
     while (i < data.byteLength) {
       const start = i;
-      const typ = data.getInt8(i);
+      const msgType = data.getInt8(i);
       i++;
-      switch (typ) {
+      switch (msgType) {
         case Trace.ActorCreation: {
           i += this.readActivity(data, i, "Actor", newActivities);
           console.assert(i === (start + TraceSize.ActorCreation + TraceSize.ActivityOrigin));
@@ -342,6 +368,11 @@ export class HistoryData {
         case Trace.TaskSpawn: {
           i += this.readActivity(data, i, "Task", newActivities);
           console.assert(i === (start + TraceSize.TaskSpawn + TraceSize.ActivityOrigin));
+          break;
+        }
+        case Trace.ChannelCreation: {
+          i += this.readChannelCreation(data, i);
+          console.assert(i === (start + TraceSize.ChannelCreation));
           break;
         }
 
@@ -388,11 +419,11 @@ export class HistoryData {
           break;
 
         default:
-          if (! (typ & 0x80)) {
+          if (!(msgType & 0x80)) {
             break;
           }
 
-          if (typ & 0x40) {
+          if (msgType & 0x40) {
             // promise message
             // var prom = (data.getInt32(i+4) + ':' + data.getInt32(i));
             i += 8;
@@ -403,7 +434,7 @@ export class HistoryData {
           // var sym = data.getInt16(i+8); //selector
           i += 18;
 
-          if (typ & 0x20) {
+          if (msgType & 0x20) {
             // timestamp
             // 8byte execution start
             // 8byte send time
@@ -411,7 +442,7 @@ export class HistoryData {
             i += 16;
           }
 
-          if (typ & 0x10) {
+          if (msgType & 0x10) {
             // message parameters
             let numParam = data.getInt8(i); // parameter count
             i++;

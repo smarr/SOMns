@@ -3,11 +3,21 @@ package som.interpreter.processes;
 import java.util.concurrent.SynchronousQueue;
 
 import som.primitives.processes.ChannelPrimitives;
+import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
+import tools.concurrency.TracingChannel;
 
 
 public class SChannel extends SAbstractObject {
+
+  public static SChannel create() {
+    if (VmSettings.ACTOR_TRACING) {
+      return new TracingChannel();
+    } else {
+      return new SChannel();
+    }
+  }
 
   public final SChannelOutput out;
   public final SChannelInput  in;
@@ -18,7 +28,7 @@ public class SChannel extends SAbstractObject {
   /** Indicate that a breakpoint on the reader requested a suspension on write. */
   private volatile boolean breakAfterWrite;
 
-  public SChannel() {
+  protected SChannel() {
     breakAfterRead  = false;
     breakAfterWrite = false;
 

@@ -127,11 +127,15 @@ public class TraceBuffer {
     final int start = storage.position();
 
     storage.put(Events.ActivityOrigin.id);
+    writeSourceSection(origin);
+    assert storage.position() == start + Events.ActivityOrigin.size;
+  }
+
+  private void writeSourceSection(final SourceSection origin) {
     storage.putShort(Symbols.symbolFor(origin.getSource().getURI().toString()).getSymbolId());
     storage.putShort((short) origin.getStartLine());
     storage.putShort((short) origin.getStartColumn());
     storage.putShort((short) origin.getCharLength());
-    assert storage.position() == start + Events.ActivityOrigin.size;
   }
 
   public final void recordProcessCreation(final TracingProcess proc,
@@ -160,6 +164,19 @@ public class TraceBuffer {
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
       recordActivityOrigin(sourceSection);
     }
+  }
+
+  public void recordChannelCreation(final long activityId, final long channelId,
+      final SourceSection section) {
+    ensureSufficientSpace(Events.ChannelCreation.size);
+    final int start = storage.position();
+
+    storage.put(Events.ChannelCreation.id);
+    storage.putLong(activityId);
+    storage.putLong(channelId);
+    writeSourceSection(section);
+    assert storage.position() == start + Events.ChannelCreation.size;
+    swapStorage();
   }
 
   public void recordProcessCompletion(final TracingProcess proc) {
@@ -444,6 +461,12 @@ public class TraceBuffer {
     public synchronized void recordMailboxExecutedReplay(final Queue<EventualMessage> todo,
         final long baseMessageId, final int mailboxNo, final Actor receiver) {
       super.recordMailboxExecutedReplay(todo, baseMessageId, mailboxNo, receiver);
+    }
+
+    @Override
+    public synchronized void recordChannelCreation(final long activityId,
+        final long channelId, final SourceSection section) {
+      super.recordChannelCreation(activityId, channelId, section);
     }
   }
 }
