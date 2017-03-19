@@ -4,7 +4,7 @@
 import * as WebSocket from "ws";
 
 import {Controller} from "./controller";
-import {Message, Respond, StepType, BreakpointData} from "./messages";
+import {Activity, Message, Respond, StepType, BreakpointData} from "./messages";
 
 const DBG_PORT   = 7977;
 const TRACE_PORT = 7978;
@@ -31,7 +31,7 @@ export class VmConnection {
     this.controller = controller;
   }
 
-  isConnected() {
+  public isConnected() {
     return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
   }
 
@@ -54,7 +54,7 @@ export class VmConnection {
     this.controller.onConnect();
   }
 
-  connect() {
+  public connect() {
     console.assert(this.socket === null || this.socket.readyState === WebSocket.CLOSED);
     this.socket = new WebSocket(LOCAL_WS_URL + ":" + DBG_PORT);
     const ctrl = this.controller;
@@ -109,7 +109,7 @@ export class VmConnection {
     this.connectTraceDataSocket();
   }
 
-  disconnect() {
+  public disconnect() {
     console.assert(this.isConnected());
   }
 
@@ -121,24 +121,24 @@ export class VmConnection {
     this.send({action: "TraceDataRequest"});
   }
 
-  sendInitialBreakpoints(breakpoints: BreakpointData[]) {
+  public sendInitialBreakpoints(breakpoints: BreakpointData[]) {
     this.send({
       action: "initialBreakpoints",
       breakpoints: breakpoints
     });
   }
 
-  updateBreakpoint(breakpoint: BreakpointData) {
+  public updateBreakpoint(breakpoint: BreakpointData) {
     this.send({
       action: "updateBreakpoint",
       breakpoint: breakpoint
     });
   };
 
-  sendDebuggerAction(action: StepType, activityId: number) {
+  public sendDebuggerAction(action: StepType, activity: Activity) {
     this.send({
       action: action,
-      activityId: activityId});
+      activityId: activity.id});
   }
 
   public requestStackTrace(activityId: number) {

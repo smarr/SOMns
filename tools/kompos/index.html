@@ -217,7 +217,9 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
     padding: 0.1rem .2rem;
     overflow: hidden;
   }
-
+  .activity-highlight {
+    background-color: #eee;
+  }
   .activity-scopes {
     width: 100%;
     margin-top: 2ex;
@@ -240,6 +242,13 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   .activity-actions button {
     padding:0.3em;
     font-size: 75%;
+  }
+  .activity-pause {
+    font-family: 'FontAwesome';
+    font-size: 10px;
+  }
+  .activity-pause.running {
+    display: none;
   }
   .pane-opened .pane-closed {
     display: none;

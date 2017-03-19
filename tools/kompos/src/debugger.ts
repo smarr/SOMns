@@ -9,7 +9,6 @@ export function isRelevant(sc: TaggedSourceCoordinate) {
 }
 
 export class Debugger {
-  private suspendedActivities: boolean[];
 
   /** Current set of activities in the system. */
   private activities: Activity[];
@@ -33,7 +32,6 @@ export class Debugger {
   private breakpoints: IdMap<IdMap<Breakpoint>>;
 
   constructor() {
-    this.suspendedActivities = [];
     this.activities     = [];
     this.uriToSourceId  = {};
     this.sources        = {};
@@ -41,18 +39,18 @@ export class Debugger {
     this.breakpoints    = {};
   }
 
-  getSourceId(uri: string): string {
+  public getSourceId(uri: string): string {
     if (!(uri in this.uriToSourceId)) {
       this.uriToSourceId[uri] = "s" + Object.keys(this.uriToSourceId).length;
     }
     return this.uriToSourceId[uri];
   }
 
-  getSource(id: string): Source {
+  public getSource(id: string): Source {
     return this.sources[id];
   }
 
-  addSource(msg: SourceMessage): Source {
+  public addSource(msg: SourceMessage): Source {
     const s = msg.source;
     let id = this.getSourceId(s.uri);
     this.sources[id] = s;
@@ -61,7 +59,7 @@ export class Debugger {
     return s;
   }
 
-  getSection(id: string): SourceCoordinate {
+  public getSection(id: string): SourceCoordinate {
     return this.sections[id];
   }
 
@@ -86,7 +84,7 @@ export class Debugger {
     }
   }
 
-  getBreakpoint(source: Source, key: any, newBp: () => Breakpoint): Breakpoint {
+  public getBreakpoint(source: Source, key: any, newBp: () => Breakpoint): Breakpoint {
     let sId = this.getSourceId(source.uri);
     if (!this.breakpoints[sId]) {
       this.breakpoints[sId] = {};
@@ -100,7 +98,7 @@ export class Debugger {
     return bp;
   }
 
-  getEnabledBreakpoints(): Breakpoint[] {
+  public getEnabledBreakpoints(): Breakpoint[] {
     let bps = [];
     for (let sId in this.breakpoints) {
       for (let key in this.breakpoints[sId]) {
@@ -123,19 +121,6 @@ export class Debugger {
       }
     }
     return bps;
-  }
-
-  setSuspended(activityId: number) {
-    console.assert(!this.suspendedActivities[activityId]);
-    this.suspendedActivities[activityId] = true;
-  }
-
-  setResumed(activityId: number) {
-    this.suspendedActivities[activityId] = false;
-  }
-
-  isSuspended(activityId: number) {
-    return this.suspendedActivities[activityId];
   }
 
   public addActivities(activities: Activity[]) {

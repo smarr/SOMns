@@ -3,7 +3,8 @@
 
 import {Controller} from "./controller";
 import {IdMap, Activity, ActivityType} from "./messages";
-import {dbgLog} from "./source";
+import {getActivityId, getActivityRectId,
+  getActivityGroupId, getActivityGroupRectId} from "./view";
 
 const horizontalDistance = 100,
   verticalDistance = 100;
@@ -51,12 +52,76 @@ enum TraceSize {
   TaskJoin          = 11
 }
 
-export interface ActivityNode {
-  activity:   Activity;
-  reflexive:  boolean;
-  x:          number;
-  y:          number;
-  groupSize?: number;
+export abstract class ActivityNode {
+  public reflexive:  boolean;
+  public x:          number;
+  public y:          number;
+
+  constructor(reflexive: boolean, x: number, y: number) {
+    this.reflexive = reflexive;
+    this.x = x;
+    this.y = y;
+  }
+
+  public abstract getGroupSize(): number;
+  public abstract isRunning(): boolean;
+  public abstract getName(): string;
+
+  public abstract getDataId(): string;
+  public abstract getSystemViewId(): string;
+
+  public abstract getQueryForCodePane(): string;
+  public abstract getType(): ActivityType;
+}
+
+class ActivityNodeImpl extends ActivityNode {
+  private activity: Activity;
+  constructor(activity: Activity, reflexive: boolean, x: number, y: number) {
+    super(reflexive, x, y);
+    this.activity = activity;
+  }
+
+  public getGroupSize() { return 1; }
+  public isRunning() { return this.activity.running; }
+  public getCausalMessage() { return this.activity.causalMsg; }
+  public getName() { return this.activity.name; }
+
+  public getDataId()       { return getActivityId(this.activity.id); }
+  public getSystemViewId() { return getActivityRectId(this.activity.id); }
+
+  public getQueryForCodePane() { return "#" + getActivityId(this.activity.id); }
+
+  public getType() { return this.activity.type; }
+}
+
+class GroupNode extends ActivityNode {
+  private group: ActivityGroup;
+
+  constructor(group: ActivityGroup, reflexive: boolean, x: number, y: number) {
+    super(reflexive, x, y);
+    this.group = group;
+  }
+
+  public getGroupSize() { return this.group.activities.length; }
+  public isRunning() {
+    console.warn("GroupNode.isRunning() not yet implemented");
+    return true;
+  }
+  public getName() { return this.group.activities[0].name; }
+
+  public getDataId()       { return getActivityGroupId(this.group.id); }
+  public getSystemViewId() { return getActivityGroupRectId(this.group.id); }
+
+  public getQueryForCodePane() {
+    let result = "";
+    for (const act of this.group.activities) {
+      if (result !== "") { result += ","; }
+      result += "#" + getActivityId(act.id);
+    }
+    return result;
+  }
+
+  public getType() { return this.group.activities[0].type; }
 }
 
 export interface ActivityLink {
@@ -68,9 +133,15 @@ export interface ActivityLink {
   creation?: boolean;
 }
 
+interface ActivityGroup {
+  id:         number;
+  activities: Activity[];
+  groupNode?: GroupNode;
+}
+
 export class HistoryData {
-  private activity: IdMap<ActivityNode> = {};
-  private activityPerType: IdMap<number> = {};
+  private activity: IdMap<ActivityNodeImpl> = {};
+  private activitiesPerType: IdMap<ActivityGroup> = {};
   private messages: IdMap<IdMap<number>> = {};
   private msgs = {};
   private maxMessageCount = 0;
@@ -82,24 +153,27 @@ export class HistoryData {
   constructor() {
   }
 
-  addActivity(act: Activity) {
-    hashAtInc(this.activityPerType, act.name, 1);
-    const node = {
-      activity:  act,
-      reflexive: false, // selfsends TODO what is this used for, maybe set to true when checking mailbox.
-      x: horizontalDistance + horizontalDistance * this.activityPerType[act.name],
-      y: verticalDistance * Object.keys(this.activityPerType).length
-    };
+  private addActivity(act: Activity) {
+    const numGroups = Object.keys(this.activitiesPerType).length;
+    if (!this.activitiesPerType[act.name]) {
+      this.activitiesPerType[act.name] = {id: numGroups, activities: []};
+    }
+    this.activitiesPerType[act.name].activities.push(act);
+
+    const node = new ActivityNodeImpl(act,
+      false, // selfsends TODO what is this used for, maybe set to true when checking mailbox.
+      horizontalDistance + horizontalDistance * this.activitiesPerType[act.name].activities.length,
+      verticalDistance * numGroups);
     this.activity[act.id.toString()] = node;
   }
 
-  addStrings(ids: number[], strings: string[]) {
+  public addStrings(ids: number[], strings: string[]) {
     for (let i = 0; i < ids.length; i++) {
       this.strings[ids[i].toString()] = strings[i];
     }
   }
 
-  addMessage(sender: number, target: number, msgId: number) {
+  private addMessage(sender: number, target: number, msgId: number) {
     const senderId = sender.toString();
     if (!this.messages.hasOwnProperty(senderId)) {
       this.messages[senderId] = {};
@@ -110,55 +184,94 @@ export class HistoryData {
     this.msgs[msgId] = {sender: sender, target: target};
   }
 
-  getLinks(): ActivityLink[] {
+  private getActivityOrGroupIfAvailable(actId: string): ActivityNode {
+    const node = this.activity[actId];
+    if (node === undefined) {
+      return null;
+    }
+    const group = this.activitiesPerType[node.getName()];
+    if (group.groupNode) {
+      return group.groupNode;
+    }
+    return node;
+  }
+
+  private accumulateMessageCounts(msgMap, links, source: ActivityNode,
+      target: ActivityNode, creation: boolean, msgCount: number) {
+    const createMsgId = source.getDataId() + ":" + target.getDataId();
+      if (!msgMap[createMsgId]) {
+        const msgLink = {
+          source: source, target: target,
+          left: false, right: true,
+          creation: creation,
+          messageCount: msgCount
+        };
+        links.push(msgLink);
+        msgMap[createMsgId] = msgLink;
+      } else {
+        msgMap[createMsgId].messageCount += msgCount;
+      }
+  }
+
+  public getLinks(): ActivityLink[] {
     const links: ActivityLink[] = [];
+    const normalMsgMap = {};
     for (const sendId in this.messages) {
       for (const rcvrId in this.messages[sendId]) {
         this.maxMessageCount = Math.max(this.maxMessageCount, this.messages[sendId][rcvrId]);
-        if (this.activity[sendId] === undefined) {
-          dbgLog("WAT? racy? unknown sendId: " + sendId);
+        const sender = this.getActivityOrGroupIfAvailable(sendId);
+        if (sender === null) {
+          // this is a data race, so, might not be available yet
           continue;
         }
-        if (this.activity[rcvrId] === undefined) {
-          dbgLog("WAT? racy? unknown rcvrId: " + rcvrId);
+
+        const rcvr = this.getActivityOrGroupIfAvailable(rcvrId);
+        if (rcvr === null) {
+          // this is a data race, so, might not be available yet
           continue;
         }
-        links.push({
-          source: this.activity[sendId],
-          target: this.activity[rcvrId],
-          left: false, right: true,
-          messageCount: this.messages[sendId][rcvrId]
-        });
+
+        this.accumulateMessageCounts(normalMsgMap, links, sender, rcvr, false,
+          this.messages[sendId][rcvrId]);
       }
     }
 
+    // get links for creation of entities
+    const createMessages = {};
     for (const i in this.activity) {
       const a = this.activity[i];
-      const msg = this.msgs[a.activity.causalMsg];
+      const msg = this.msgs[a.getCausalMessage()];
       if (msg === undefined) { continue; }
-      links.push({
-        source: this.activity[msg.target],
-        target: a,
-        left: false, right: true,
-        creation:     true,
-        messageCount: 1
-      });
+
+      const creator = this.getActivityOrGroupIfAvailable(msg.target);
+      if (creator === null) {
+        // this is a data race, so, might not be available yet
+        continue;
+      }
+
+      const target = this.getActivityOrGroupIfAvailable(i);
+      this.accumulateMessageCounts(createMessages, links, creator, target, true, 1);
     }
     return links;
   }
 
-  getActivityNodes(): ActivityNode[] {
+  public getActivityNodes(): ActivityNode[] {
     const groupStarted = {};
 
     const arr: ActivityNode[] = [];
     for (const i in this.activity) {
       const a = this.activity[i];
-      const groupSize = this.activityPerType[a.activity.name];
-      if (groupSize > NUM_ACTIVITIES_STARTING_GROUP) {
-        if (!groupStarted[a.activity.name]) {
-          groupStarted[a.activity.name] = true;
-          arr.push(a);
-          a.groupSize = groupSize;
+      const name = a.getName();
+      const group = this.activitiesPerType[name];
+      if (group.activities.length > NUM_ACTIVITIES_STARTING_GROUP) {
+        if (!groupStarted[name]) {
+          groupStarted[name] = true;
+          const groupNode = new GroupNode(group,
+            false, // todo reflexive
+            horizontalDistance + horizontalDistance * group.activities.length,
+            verticalDistance * Object.keys(this.activitiesPerType).length);
+          group.groupNode = groupNode;
+          arr.push(groupNode);
         }
       } else {
         arr.push(a);
@@ -167,7 +280,7 @@ export class HistoryData {
     return arr;
   }
 
-  getMaxMessageSends() {
+  public getMaxMessageSends() {
     return this.maxMessageCount;
   }
 
@@ -184,10 +297,12 @@ export class HistoryData {
     const causalMsg = this.readLong(data, i + 8);
     const nameId: number = data.getUint16(i + 16);
     const actor: Activity = {
-      id: aid, type: type,
-      name: this.strings[nameId],
+      id: aid,
+      type:      type,
+      name:      this.strings[nameId],
       causalMsg: causalMsg,
-      origin: this.readActivityOrigin(data, i + 18)};
+      running:   true,
+      origin:    this.readActivityOrigin(data, i + 18)};
     this.addActivity(actor);
     newActivities.push(actor);
     return TraceSize.ActorCreation + TraceSize.ActivityOrigin - 1; // type tag of ActorCreation already covered
@@ -206,7 +321,7 @@ export class HistoryData {
       startColumn: startCol};
   }
 
-  updateDataBin(data: DataView, controller: Controller) {
+  public updateDataBin(data: DataView, controller: Controller) {
     const newActivities: Activity[] = [];
     let i = 0;
     while (i < data.byteLength) {
@@ -221,12 +336,12 @@ export class HistoryData {
         }
         case Trace.ProcessCreation: {
           i += this.readActivity(data, i, "Process", newActivities);
-          console.assert(i === (start + TraceSize.ProcessCreation));
+          console.assert(i === (start + TraceSize.ProcessCreation + TraceSize.ActivityOrigin));
           break;
         }
         case Trace.TaskSpawn: {
           i += this.readActivity(data, i, "Task", newActivities);
-          console.assert(i === (start + TraceSize.TaskSpawn));
+          console.assert(i === (start + TraceSize.TaskSpawn + TraceSize.ActivityOrigin));
           break;
         }
 

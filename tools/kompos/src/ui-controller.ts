@@ -3,6 +3,7 @@
 
 import {Controller}   from "./controller";
 import {Debugger}     from "./debugger";
+import {ActivityNode} from "./history-data";
 import {SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
   SectionBreakpointType, ScopesResponse, VariablesResponse, ProgramInfoResponse,
   Activity, Source } from "./messages";
@@ -35,7 +36,7 @@ export class UiController extends Controller {
     this.actPromResolve = {};
   }
 
-  toggleConnection() {
+  public toggleConnection() {
     if (this.vmConnection.isConnected()) {
       this.vmConnection.disconnect();
     } else {
@@ -43,7 +44,7 @@ export class UiController extends Controller {
     }
   }
 
-  onConnect() {
+  public onConnect() {
     dbgLog("[WS] open");
     resetLinks();
     this.reset();
@@ -55,17 +56,25 @@ export class UiController extends Controller {
     this.vmConnection.requestProgramInfo();
   }
 
-  onClose() {
+  public onClose() {
     dbgLog("[WS] close");
     this.view.onClose();
   }
 
-  onError() {
+  public onError() {
     dbgLog("[WS] error");
   }
 
-  onReceivedSource(msg: SourceMessage) {
+  public onReceivedSource(msg: SourceMessage) {
     this.dbg.addSource(msg);
+  }
+
+  public overActivity(act: ActivityNode, rect: SVGRectElement) {
+    this.view.overActivity(act, rect);
+  }
+
+  public outActivity(act: ActivityNode, rect: SVGRectElement) {
+    this.view.outActivity(act, rect);
   }
 
   public toggleCodePane(actId: string) {
@@ -80,7 +89,7 @@ export class UiController extends Controller {
       const source   = this.dbg.getSource(sId);
 
       console.assert(aId === activity.id);
-      this.view.displaySource(aId, source, sId);
+      this.view.displaySource(activity, source, sId);
     }
   }
 
@@ -120,7 +129,6 @@ export class UiController extends Controller {
     this.vmConnection.requestTraceData();
     this.ensureActivityPromise(msg.activityId);
     this.vmConnection.requestStackTrace(msg.activityId);
-    this.dbg.setSuspended(msg.activityId);
   }
 
   public newActivities(newActivities: Activity[]) {
@@ -137,17 +145,19 @@ export class UiController extends Controller {
     const topFrameId = msg.stackFrames[0].id;
     this.ensureActivityPromise(msg.activityId);
 
-    this.actProm[msg.activityId].then(act => {
+    this.actProm[msg.activityId].then((act: Activity) => {
+      this.dbg.getActivity(msg.activityId).running = false;
+
       console.assert(act.id === msg.activityId);
       this.vmConnection.requestScope(topFrameId);
 
-      this.view.switchActivityDebuggerToSuspendedState(msg.activityId);
+      this.view.switchActivityDebuggerToSuspendedState(act);
 
       const sourceId = this.dbg.getSourceId(msg.stackFrames[0].sourceUri);
       const source = this.dbg.getSource(sourceId);
 
-      const newSource = this.view.displaySource(msg.activityId, source, sourceId);
-      this.view.displayStackTrace(sourceId, msg, topFrameId);
+      const newSource = this.view.displaySource(act, source, sourceId);
+      this.view.displayStackTrace(sourceId, msg, topFrameId, act);
       if (newSource) {
         this.ensureBreakpointsAreIndicated(sourceId);
       }
@@ -169,16 +179,16 @@ export class UiController extends Controller {
     this.view.displayVariables(msg.variablesReference, msg.variables);
   }
 
-  onSymbolMessage(msg: SymbolMessage) {
+  public onSymbolMessage(msg: SymbolMessage) {
     updateStrings(msg);
   }
 
-  onTracingData(data: DataView) {
+  public onTracingData(data: DataView) {
     updateData(data, this);
     displayMessageHistory();
   }
 
-  onUnknownMessage(msg: any) {
+  public onUnknownMessage(msg: any) {
     dbgLog("[WS] unknown message of type:" + msg.type);
   }
 
@@ -190,7 +200,7 @@ export class UiController extends Controller {
     return breakpoint;
   }
 
-  onToggleLineBreakpoint(line: number, clickedSpan: Element) {
+  public onToggleLineBreakpoint(line: number, clickedSpan: Element) {
     dbgLog("updateBreakpoint");
     const parent     = <Element> clickedSpan.parentNode.parentNode;
     const sourceId   = getSourceIdFrom(parent.id);
@@ -201,7 +211,7 @@ export class UiController extends Controller {
     this.view.updateLineBreakpoint(<LineBreakpoint> breakpoint);
   }
 
-  onToggleSendBreakpoint(sectionId: string, type: SectionBreakpointType) {
+  public onToggleSendBreakpoint(sectionId: string, type: SectionBreakpointType) {
     dbgLog("send-op breakpoint: " + type);
 
     const id = getBreakpointId(sectionId, type),
@@ -242,44 +252,50 @@ export class UiController extends Controller {
 
   public resumeExecution(actId: string) {
     const activityId = getActivityIdFromView(actId);
-    if (!this.dbg.isSuspended(activityId)) { return; }
-    this.dbg.setResumed(activityId);
-    this.vmConnection.sendDebuggerAction("resume", activityId);
-    this.view.onContinueExecution(activityId);
+    const act = this.dbg.getActivity(activityId);
+
+    if (act.running) { return; }
+    act.running = true;
+    this.vmConnection.sendDebuggerAction("resume", act);
+    this.view.onContinueExecution(act);
   }
 
   public pauseExecution(actId: string) {
     const activityId = getActivityIdFromView(actId);
-    if (this.dbg.isSuspended(activityId)) { return; }
-    // TODO
+    const act = this.dbg.getActivity(activityId);
+    if (!act.running) { return; }
+    console.assert(false, "TODO");
   }
 
   /** End program, typically terminating it completely. */
-  stopExecution() {
+  public stopExecution() {
     // TODO
   }
 
-  stepInto(actId: string) {
+  public stepInto(actId: string) {
     const activityId = getActivityIdFromView(actId);
-    if (!this.dbg.isSuspended(activityId)) { return; }
-    this.dbg.setResumed(activityId);
-    this.view.onContinueExecution(activityId);
-    this.vmConnection.sendDebuggerAction("stepInto", activityId);
+    const act = this.dbg.getActivity(activityId);
+    if (act.running) { return; }
+    act.running = true;
+    this.view.onContinueExecution(act);
+    this.vmConnection.sendDebuggerAction("stepInto", act);
   }
 
-  stepOver(actId: string) {
+  public stepOver(actId: string) {
     const activityId = getActivityIdFromView(actId);
-    if (!this.dbg.isSuspended(activityId)) { return; }
-    this.dbg.setResumed(activityId);
-    this.view.onContinueExecution(activityId);
-    this.vmConnection.sendDebuggerAction("stepOver", activityId);
+    const act = this.dbg.getActivity(activityId);
+    if (act.running) { return; }
+    act.running = true;
+    this.view.onContinueExecution(act);
+    this.vmConnection.sendDebuggerAction("stepOver", act);
   }
 
-  returnFromExecution(actId: string) {
+  public returnFromExecution(actId: string) {
     const activityId = getActivityIdFromView(actId);
-    if (!this.dbg.isSuspended(activityId)) { return; }
-    this.dbg.setResumed(activityId);
-    this.view.onContinueExecution(activityId);
-    this.vmConnection.sendDebuggerAction("return", activityId);
+    const act = this.dbg.getActivity(activityId);
+    if (act.running) { return; }
+    act.running = true;
+    this.view.onContinueExecution(act);
+    this.vmConnection.sendDebuggerAction("return", act);
   }
 }

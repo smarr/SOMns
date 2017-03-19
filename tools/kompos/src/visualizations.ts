@@ -2,10 +2,9 @@
 "use strict";
 
 import {Controller} from "./controller";
-import {SymbolMessage, Activity} from "./messages";
+import {SymbolMessage, ActivityType} from "./messages";
 import * as d3 from "d3";
 import {HistoryData, ActivityNode, ActivityLink} from "./history-data";
-import {dbgLog} from "./source";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
 const tangoColors = [
@@ -133,7 +132,7 @@ function zoomed() {
 // update force layout (called automatically each iteration)
 function tick() {
   // draw directed edges with proper padding from node centers
-  path.attr("d", function(d) {
+  path.attr("d", function(d: ActivityLink) {
     const deltaX = d.target.x - d.source.x,
       deltaY = d.target.y - d.source.y,
       dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
@@ -145,6 +144,7 @@ function tick() {
       sourceY = d.source.y + (sourcePadding * normY),
       targetX = d.target.x - (targetPadding * normX),
       targetY = d.target.y - (targetPadding * normY);
+      console.assert(!Number.isNaN(sourceX));
     return "M" + sourceX + "," + sourceY + "L" + targetX + "," + targetY;
   });
 
@@ -191,7 +191,7 @@ function restart() {
 
   // circle (node) group
   // NB: the function arg is crucial here! nodes are known by id, not by index!
-  circle = circle.data(nodes, function(d: ActivityNode) { return d.activity.id; });
+  circle = circle.data(nodes, function(a: ActivityNode) { return a.getDataId(); });
 
   // update existing nodes (reflexive & selected visual states)
   circle.selectAll("circle")
@@ -203,6 +203,8 @@ function restart() {
   // add new nodes
   const g = circle.enter().append("svg:g");
 
+  g.attr("id", function (a: ActivityNode) { return a.getSystemViewId(); });
+
   g.append("rect")
     .attr("rx", 6)
     .attr("ry", 6)
@@ -210,13 +212,14 @@ function restart() {
     .attr("y", -12.5)
     .attr("width", 50)
     .attr("height", 25)
-
+    .on("mouseover", function(e: ActivityNode) { return ctrl.overActivity(e, this); })
+    .on("mouseout",  function(e: ActivityNode) { return ctrl.outActivity(e, this); })
     .attr("class", "node")
     .style("fill", function(_, i) {
       return tango[i]; // colors(d.type);
     })
     .style("stroke", function(_, i) { return d3.rgb(tango[i]).darker().toString(); })  // colors(d.id)
-    .style("stroke-width", function(d: ActivityNode) { return (d.groupSize) ? Math.log(d.groupSize) * 3 : ""; })
+    .style("stroke-width", function(a: ActivityNode) { return (a.getGroupSize() > 1) ? Math.log(a.getGroupSize()) * 3 : ""; })
     .classed("reflexive", function(d: ActivityNode) { return d.reflexive; });
 
   // show node IDs
@@ -224,14 +227,22 @@ function restart() {
     .attr("x", 0)
     .attr("dy", ".35em")
     .attr("class", "id")
-    .html(function(d: ActivityNode) {
-      let label = getTypePrefix(d.activity) + d.activity.name;
+    .html(function(a: ActivityNode) {
+      let label = getTypePrefix(a.getType()) + a.getName();
 
-      if (d.groupSize) {
-        label += " (" + d.groupSize + ")";
+      if (a.getGroupSize() > 1) {
+        label += " (" + a.getGroupSize() + ")";
       }
       return label;
     });
+
+  g.append("svg:text")
+    .attr("x", 10)
+    .attr("dy", "-.35em")
+    .attr("class", function(a: ActivityNode) {
+      return "activity-pause" + (a.isRunning() ? " running" : "");
+    })
+    .html("&#xf04c;");
 
   // After rendering text, adapt rectangles
   adaptRectSizeAndTextPostion();
@@ -254,8 +265,8 @@ function restart() {
 
 const PADDING = 15;
 
-function getTypePrefix(act: Activity) {
-  switch (act.type) {
+function getTypePrefix(type: ActivityType) {
+  switch (type) {
     case "Actor":
       return "&#128257; ";
     case "Process":
@@ -265,8 +276,8 @@ function getTypePrefix(act: Activity) {
     case "Task":
       return "&#8623;";
     default:
-      dbgLog(JSON.stringify(act));
-      break;
+      console.warn("getTypePrefix misses support for " + type);
+      return null;
   }
 }
 
@@ -276,6 +287,8 @@ function adaptRectSizeAndTextPostion() {
       return this.parentNode.childNodes[1].getComputedTextLength() + PADDING;
      })
     .attr("x", function() {
-      return - (PADDING + this.parentNode.childNodes[1].getComputedTextLength()) / 2.0;
+      const width = this.parentNode.childNodes[1].getComputedTextLength();
+      d3.select(this.parentNode.childNodes[2]).attr("x", (width / 2.0) + 3.0);
+      return - (PADDING + width) / 2.0;
     });
 }
