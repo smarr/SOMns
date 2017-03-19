@@ -7,6 +7,8 @@ import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import tools.concurrency.TracingChannel;
+import tools.concurrency.TracingChannel.TracingChannelInput;
+import tools.concurrency.TracingChannel.TracingChannelOutput;
 
 
 public class SChannel extends SAbstractObject {
@@ -33,8 +35,9 @@ public class SChannel extends SAbstractObject {
     breakAfterWrite = false;
 
     SynchronousQueue<Object> cell = new SynchronousQueue<>();
-    out = new SChannelOutput(cell, this);
-    in  = new SChannelInput(cell, this);
+
+    out = SChannelOutput.create(cell, this);
+    in  = SChannelInput.create(cell, this);
   }
 
   @Override
@@ -48,9 +51,18 @@ public class SChannel extends SAbstractObject {
     return false;
   }
 
-  public static final class SChannelInput extends SAbstractObject {
+  public static class SChannelInput extends SAbstractObject {
+    public static SChannelInput create(final SynchronousQueue<Object> cell,
+        final SChannel channel) {
+      if (VmSettings.ACTOR_TRACING) {
+        return new TracingChannelInput(cell, channel);
+      } else {
+        return new SChannelInput(cell, channel);
+      }
+    }
+
     private final SynchronousQueue<Object> cell;
-    private final SChannel channel;
+    protected final SChannel channel;
 
     public SChannelInput(final SynchronousQueue<Object> cell,
         final SChannel channel) {
@@ -62,32 +74,41 @@ public class SChannel extends SAbstractObject {
       return cell.take();
     }
 
-    public Object readAndSuspendWriter(final boolean doSuspend) throws InterruptedException {
+    public final Object readAndSuspendWriter(final boolean doSuspend) throws InterruptedException {
       channel.breakAfterWrite = doSuspend;
       return read();
     }
 
-    public boolean shouldBreakAfterRead() {
+    public final boolean shouldBreakAfterRead() {
       return channel.breakAfterRead;
     }
 
     @Override
-    public SClass getSOMClass() {
+    public final SClass getSOMClass() {
       assert ChannelPrimitives.In != null;
       return ChannelPrimitives.In;
     }
 
     @Override
-    public boolean isValue() {
+    public final boolean isValue() {
       return true;
     }
   }
 
-  public static final class SChannelOutput extends SAbstractObject {
-    private final SynchronousQueue<Object> cell;
-    private final SChannel channel;
+  public static class SChannelOutput extends SAbstractObject {
+    public static SChannelOutput create(final SynchronousQueue<Object> cell,
+        final SChannel channel) {
+      if (VmSettings.ACTOR_TRACING) {
+        return new TracingChannelOutput(cell, channel);
+      } else {
+        return new SChannelOutput(cell, channel);
+      }
+    }
 
-    public SChannelOutput(final SynchronousQueue<Object> cell, final SChannel channel) {
+    private final SynchronousQueue<Object> cell;
+    protected final SChannel channel;
+
+    protected SChannelOutput(final SynchronousQueue<Object> cell, final SChannel channel) {
       this.cell    = cell;
       this.channel = channel;
     }
@@ -96,24 +117,24 @@ public class SChannel extends SAbstractObject {
       cell.put(value);
     }
 
-    public void writeAndSuspendReader(final Object value,
+    public final void writeAndSuspendReader(final Object value,
         final boolean doSuspend) throws InterruptedException {
       channel.breakAfterRead = doSuspend;
       write(value);
     }
 
-    public boolean shouldBreakAfterWrite() {
+    public final boolean shouldBreakAfterWrite() {
       return channel.breakAfterWrite;
     }
 
     @Override
-    public SClass getSOMClass() {
+    public final SClass getSOMClass() {
       assert ChannelPrimitives.Out != null;
       return ChannelPrimitives.Out;
     }
 
     @Override
-    public boolean isValue() {
+    public final boolean isValue() {
       return true;
     }
   }

@@ -257,6 +257,22 @@ public class TraceBuffer {
     assert storage.position() == start + Events.PromiseChained.size;
   }
 
+  public void recordChannelMessage(final long channelId, final long sender,
+      final long receiver, final Object value) {
+    ensureSufficientSpace(Events.ChannelMessage.size);
+
+    final int start = storage.position();
+
+    storage.put(Events.ChannelMessage.id);
+    storage.putLong(channelId);
+    storage.putLong(sender);
+    storage.putLong(receiver);
+
+    writeParameter(value);
+
+    assert storage.position() <= start + Events.ChannelMessage.size;
+  }
+
   private void recordMailbox(final long baseMessageId, final int mailboxNo,
       final Actor receiver) {
     final int start = storage.position();

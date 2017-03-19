@@ -39,7 +39,8 @@ enum Trace {
 
   PromiseError      = 14,
 
-  ChannelCreation   = 15
+  ChannelCreation   = 15,
+  ChannelMessage    = 16
 }
 
 enum TraceSize {
@@ -62,7 +63,8 @@ enum TraceSize {
 
   PromiseError      = 28,
 
-  ChannelCreation   = 25
+  ChannelCreation   = 25,
+  ChannelMessage    = 34
 }
 
 enum ParamTypes {
@@ -157,6 +159,7 @@ class GroupNode extends ActivityNode {
 
 export class ChannelNode extends EntityNode {
   public readonly channel: Channel;
+  public messages?: number[][];
 
   constructor(channel: Channel, x: number, y: number) {
     super(x, y);
@@ -221,6 +224,20 @@ export class HistoryData {
     for (let i = 0; i < ids.length; i++) {
       this.strings[ids[i].toString()] = strings[i];
     }
+  }
+
+  private addChannelMessage(channelId: number, sender: number, rcvr: number) {
+    let msgs = this.channels[channelId].messages;
+    if (msgs === undefined) {
+      msgs = [];
+      this.channels[channelId].messages = msgs;
+    }
+
+    if (msgs[sender] === undefined) {
+      msgs[sender] = [];
+    }
+
+    hashAtInc(msgs[sender], rcvr.toString(), 1);
   }
 
   private addMessage(sender: number, target: number, msgId: number) {
@@ -310,7 +327,8 @@ export class HistoryData {
       const c = this.channels[i];
 
       const creator = this.getActivityOrGroupIfAvailable(c.channel.creatorActivityId.toString());
-      console.assert(creator);
+      if (!creator) { continue; /* There is a race with activity definition. */ }
+
       const msgLink: EntityLink = {
         source: creator, target: c,
         left: false, right: true,
@@ -322,11 +340,44 @@ export class HistoryData {
     }
   }
 
+  private collectChannelMessages(links: EntityLink[]) {
+    for (const i in this.channels) {
+      const c = this.channels[i];
+
+      for (const sender in c.messages) {
+        const rcvrs = c.messages[sender];
+        for (const rcvr in rcvrs) {
+          const source = this.getActivityOrGroupIfAvailable(sender.toString());
+          const target = this.getActivityOrGroupIfAvailable(rcvr.toString());
+          if (!source || !target) { continue; /* There is a race with activity definition. */ }
+
+          const toChannel: EntityLink = {
+            source: source, target: c,
+            left: false, right: true,
+            creation: false,
+            messageCount: rcvrs[rcvr]
+          };
+
+          const fromChannel: EntityLink = {
+            source: c, target: target,
+            left: false, right: true,
+            creation: false,
+            messageCount: rcvrs[rcvr]
+          };
+
+          links.push(toChannel);
+          links.push(fromChannel);
+        }
+      }
+    }
+  }
+
   public getLinks(): EntityLink[] {
     const links: EntityLink[] = [];
     this.collectActivityLinks(links);
     this.collectActivityCreationLinks(links);
     this.collectChannelCreationLinks(links);
+    this.collectChannelMessages(links);
 
     return links;
   }
@@ -417,6 +468,15 @@ export class HistoryData {
     return this.readSourceSection(data, i + 1);
   }
 
+  private readChannelMessage(data: DataView, i: number) {
+    const channelId = this.readLong(data, i);
+    const sender    = this.readLong(data, i +  8);
+    const rcvr      = this.readLong(data, i + 16);
+    const offset    = readParameter(data, i + 24);
+    this.addChannelMessage(channelId, sender, rcvr);
+    return offset + 24;
+  }
+
   private readMessage(data: DataView, msgType: number, i: number): number {
     if ((msgType & PROMISE_BIT) > 0) {
       // promise message
@@ -486,6 +546,11 @@ export class HistoryData {
         case Trace.ChannelCreation: {
           i += this.readChannelCreation(data, i);
           console.assert(i === (start + TraceSize.ChannelCreation));
+          break;
+        }
+        case Trace.ChannelMessage: {
+          i += this.readChannelMessage(data, i);
+          console.assert(i <= (start + TraceSize.ChannelMessage));
           break;
         }
 

@@ -235,7 +235,8 @@ public class ActorExecutionTrace {
 
     PromiseError(TraceData.PROMISE_ERROR, 28),
 
-    ChannelCreation(TraceData.CHANNEL_CREATION, 25);
+    ChannelCreation(TraceData.CHANNEL_CREATION, 25),
+    ChannelMessage(TraceData.CHANNEL_MESSAGE,   34);
 
     final byte id;
     final int size;
@@ -334,6 +335,12 @@ public class ActorExecutionTrace {
     TracingActivityThread t = getThread();
     t.getBuffer().recordPromiseChained(parent, child);
     t.resolvedPromises++;
+  }
+
+  public static void channelMessage(final long channelId, final long sender,
+      final long rcvr, final Object value) {
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordChannelMessage(channelId, sender, rcvr, value);
   }
 
   // code duplication?
