@@ -16,6 +16,11 @@ const MAX_SAFE_HIGH_VAL  = (1 << MAX_SAFE_HIGH_BITS) - 1;
 
 const NUM_ACTIVITIES_STARTING_GROUP = 4;
 
+const MESSAGE_BIT   = 0x80;
+const PROMISE_BIT   = 0x40;
+const TIMESTAMP_BIT = 0x20;
+const PARAMETER_BIT = 0x10;
+
 enum Trace {
   ActorCreation     =  1,
   PromiseCreation   =  2,
@@ -59,6 +64,17 @@ enum TraceSize {
   PromiseError      = 28,
 
   ChannelCreation   = 25
+}
+
+enum ParamTypes {
+  False    = 0,
+  True     = 1,
+  Long     = 2,
+  Double   = 3,
+  Promise  = 4,
+  Resolver = 5,
+  Object   = 6,
+  String   = 7
 }
 
 export abstract class ActivityNode {
@@ -347,6 +363,40 @@ export class HistoryData {
     return this.readSourceSection(data, i + 1);
   }
 
+  private readMessage(data: DataView, msgType: number, i: number): number {
+    if ((msgType & PROMISE_BIT) > 0) {
+      // promise message
+      // var prom = (data.getInt32(i+4) + ':' + data.getInt32(i));
+      i += 8;
+    }
+
+    const sender = this.readLong(data, i); // sender id
+    // 8 byte causal message id
+    // var sym = data.getInt16(i+8); //selector
+    i += 18;
+
+    if ((msgType & TIMESTAMP_BIT) > 0) {
+      // timestamp
+      // 8byte execution start
+      // 8byte send time
+
+      i += 16;
+    }
+
+    if ((msgType & PARAMETER_BIT) > 0) {
+      // message parameters
+      const numParam = data.getInt8(i); // parameter count
+      i++;
+      for (let k = 0; k < numParam; k++) {
+        i += readParameter(data, i);
+      }
+    }
+
+    this.addMessage(sender, this.currentReceiver, this.currentMsgId);
+    this.currentMsgId += 1;
+    return i;
+  }
+
   public updateDataBin(data: DataView, controller: Controller) {
     const newActivities: Activity[] = [];
     let i = 0;
@@ -419,41 +469,9 @@ export class HistoryData {
           break;
 
         default:
-          if (!(msgType & 0x80)) {
-            break;
-          }
-
-          if (msgType & 0x40) {
-            // promise message
-            // var prom = (data.getInt32(i+4) + ':' + data.getInt32(i));
-            i += 8;
-          }
-
-          let sender = this.readLong(data, i); // sender id
-          // 8 byte causal message id
-          // var sym = data.getInt16(i+8); //selector
-          i += 18;
-
-          if (msgType & 0x20) {
-            // timestamp
-            // 8byte execution start
-            // 8byte send time
-
-            i += 16;
-          }
-
-          if (msgType & 0x10) {
-            // message parameters
-            let numParam = data.getInt8(i); // parameter count
-            i++;
-            let k;
-            for (k = 0; k < numParam; k++) {
-              i += readParameter(data, i);
-            }
-          }
-
-          this.addMessage(sender, this.currentReceiver, this.currentMsgId);
-          this.currentMsgId += 1;
+          console.assert((msgType & MESSAGE_BIT) !== 0, "msgType was expected to be > 0x80, but was " + msgType);
+          i = this.readMessage(data, msgType, i); // doesn't return an offset, but the absolute index
+          break;
       }
     }
     controller.newActivities(newActivities);
@@ -463,23 +481,24 @@ export class HistoryData {
 function readParameter(dv: DataView, offset: number): number {
   const paramType = dv.getInt8(offset);
   switch (paramType) {
-    case 0: // false
+    case ParamTypes.False:
       return 1;
-    case 1: // true
+    case ParamTypes.True:
       return 1;
-    case 2: // long
+    case ParamTypes.Long:
       return 9;
-    case 3: // double
+    case ParamTypes.Double:
       return 9;
-    case 4: // promise (promise id)
+    case ParamTypes.Promise:
       return 9;
-    case 5: // resolver (promise id)
+    case ParamTypes.Resolver:
       return 9;
-    case 6: // Object Type
+    case ParamTypes.Object:
       return 3;
-    case 7: // String
+    case ParamTypes.String:
       return 1;
     default:
+      console.warn("readParameter default case. NOT YET IMPLEMENTED???");
       return 1;
   }
 }
