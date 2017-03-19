@@ -397,6 +397,12 @@ export class HistoryData {
     return i;
   }
 
+  private readPromiseResolution(data: DataView, i: number) {
+    i += 16;
+    i += readParameter(data, i);
+    return i;
+  }
+
   public updateDataBin(data: DataView, controller: Controller) {
     const newActivities: Activity[] = [];
     let i = 0;
@@ -431,13 +437,16 @@ export class HistoryData {
           console.assert(i === (start + TraceSize.PromiseCreation));
           break;
         case Trace.PromiseResolution:
-          i += 16;
-          i += readParameter(data, i);
+          i += this.readPromiseResolution(data, i);
           console.assert(i <= (start + TraceSize.PromiseResolution));
           break;
         case Trace.PromiseChained:
           i += 16;
           console.assert(i === (start + TraceSize.PromiseChained));
+          break;
+        case Trace.PromiseError:
+          i += this.readPromiseResolution(data, i);
+          console.assert(i <= (start + TraceSize.PromiseError));
           break;
         case Trace.Mailbox:
           this.currentMsgId = this.readLong(data, i);
