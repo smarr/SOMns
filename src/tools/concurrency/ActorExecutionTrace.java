@@ -89,7 +89,8 @@ public class ActorExecutionTrace {
 
   private static long collectedMemory = 0;
   private static TraceWorkerThread workerThread = new TraceWorkerThread();
-  static final byte messageEventId;
+
+  static final byte MESSAGE_EVENT_ID;
 
   static {
     if (VmSettings.MEMORY_TRACING) {
@@ -112,7 +113,7 @@ public class ActorExecutionTrace {
       eventid |= TraceData.PARAMETER_BIT;
     }
 
-    messageEventId = eventid;
+    MESSAGE_EVENT_ID = eventid;
   }
 
   private static long getTotal(final Map<String, MemoryUsage> map) {

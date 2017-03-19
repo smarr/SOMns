@@ -290,16 +290,8 @@ public class TraceBuffer {
         m.getArgs().length * ActorExecutionTrace.PARAM_SIZE);
 
     recordMailbox(baseMessageId, mailboxNo, receiver);
-    writeBasicMessage(m);
+    writeMessage(m, sendTS, VmSettings.MESSAGE_TIMESTAMPS ? execTS[0] : 0);
 
-    if (VmSettings.MESSAGE_TIMESTAMPS) {
-      storage.putLong(execTS[0]);
-      storage.putLong(sendTS);
-    }
-
-    if (VmSettings.MESSAGE_PARAMETERS) {
-      writeParameters(m.getArgs());
-    }
     int idx = 0;
 
     if (moreCurrent != null) {
@@ -314,32 +306,35 @@ public class TraceBuffer {
           recordMailboxContinuation(baseMessageId, mailboxNo, receiver, idx);
         }
 
-        writeBasicMessage(em);
-
-        if (VmSettings.MESSAGE_TIMESTAMPS) {
-          storage.putLong(execTS[idx]);
-          storage.putLong(it.next());
-        }
-
-        if (VmSettings.MESSAGE_PARAMETERS) {
-          writeParameters(em.getArgs());
-        }
+        writeMessage(em,
+            VmSettings.MESSAGE_TIMESTAMPS ? it.next()   : 0,
+            VmSettings.MESSAGE_TIMESTAMPS ? execTS[idx] : 0);
         idx++;
       }
     }
   }
 
-  private void writeBasicMessage(final EventualMessage em) {
+  private void writeMessage(final EventualMessage em, final long sendTS,
+      final long execTS) {
     if (em instanceof PromiseMessage && VmSettings.PROMISE_CREATION) {
-      storage.put((byte) (ActorExecutionTrace.messageEventId | TraceData.PROMISE_BIT));
+      storage.put((byte) (ActorExecutionTrace.MESSAGE_EVENT_ID | TraceData.PROMISE_BIT));
       storage.putLong(((PromiseMessage) em).getPromise().getPromiseId());
     } else {
-      storage.put(ActorExecutionTrace.messageEventId);
+      storage.put(ActorExecutionTrace.MESSAGE_EVENT_ID);
     }
 
     storage.putLong(em.getSender().getId());
     storage.putLong(em.getCausalMessageId());
     storage.putShort(em.getSelector().getSymbolId());
+
+    if (VmSettings.MESSAGE_TIMESTAMPS) {
+      storage.putLong(execTS);
+      storage.putLong(sendTS);
+    }
+
+    if (VmSettings.MESSAGE_PARAMETERS) {
+      writeParameters(em.getArgs());
+    }
   }
 
   private void writeParameters(final Object[] params) {
@@ -369,27 +364,25 @@ public class TraceBuffer {
     } else if (param instanceof SAbstractObject) {
       storage.put(ParamTypes.Object.id());
       storage.putShort(((SAbstractObject) param).getSOMClass().getName().getSymbolId());
-    } else {
-      if (param instanceof Long) {
-        storage.put(ParamTypes.Long.id());
-        storage.putLong((Long) param);
-      } else if (param instanceof Double) {
-        storage.put(ParamTypes.Double.id());
-        storage.putDouble((Double) param);
-      } else if (param instanceof Boolean) {
-        if ((Boolean) param) {
-          storage.put(ParamTypes.True.id());
-        } else {
-          storage.put(ParamTypes.False.id());
-        }
-      } else if (param instanceof String) {
-        storage.put(ParamTypes.String.id());
+    } else if (param instanceof Long) {
+      storage.put(ParamTypes.Long.id());
+      storage.putLong((Long) param);
+    } else if (param instanceof Double) {
+      storage.put(ParamTypes.Double.id());
+      storage.putDouble((Double) param);
+    } else if (param instanceof Boolean) {
+      if ((Boolean) param) {
+        storage.put(ParamTypes.True.id());
       } else {
-        throw new RuntimeException("unexpected parameter type");
+        storage.put(ParamTypes.False.id());
       }
-      // TODO add case for null/nil/exception,
-      // ask ctorresl about what type is used for the error handling stuff
+    } else if (param instanceof String) {
+      storage.put(ParamTypes.String.id());
+    } else {
+      throw new RuntimeException("unexpected parameter type");
     }
+    // TODO add case for null/nil/exception,
+    // ask ctorresl about what type is used for the error handling stuff
   }
 
   public void recordMailboxExecutedReplay(final Queue<EventualMessage> todo,
@@ -406,7 +399,7 @@ public class TraceBuffer {
           recordMailboxContinuation(baseMessageId, mailboxNo, receiver, idx);
         }
 
-        writeBasicMessage(em);
+        writeMessage(em, 0, 0);
 
         if (VmSettings.MESSAGE_PARAMETERS) {
           writeParameters(em.getArgs());
