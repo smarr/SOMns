@@ -1,7 +1,6 @@
 /* jshint -W097 */
 "use strict";
 
-import {Controller} from "./controller";
 import {IdMap, Activity, ActivityType, Channel,
   FullSourceCoordinate} from "./messages";
 import {getActivityId, getActivityRectId,
@@ -403,7 +402,7 @@ export class HistoryData {
     return i;
   }
 
-  public updateDataBin(data: DataView, controller: Controller) {
+  public updateDataBin(data: DataView): Activity[] {
     const newActivities: Activity[] = [];
     let i = 0;
     let prevMessage = -1;
@@ -487,7 +486,7 @@ export class HistoryData {
           break;
       }
     }
-    controller.newActivities(newActivities);
+    return newActivities;
   }
 }
 

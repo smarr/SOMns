@@ -1,13 +1,12 @@
 /* jshint -W097 */
 "use strict";
 
-import {Controller} from "./controller";
-import {SymbolMessage, ActivityType} from "./messages";
+import {SymbolMessage, Activity, ActivityType} from "./messages";
 import * as d3 from "d3";
 import {HistoryData, ActivityNode, ActivityLink} from "./history-data";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
-const tangoColors = [
+const TANGO_SCHEME = [
   ["#2e3436", "#555753", "#888a85", "#babdb6", "#d3d7cf", "#ecf0eb", "#f7f8f5"],
   ["#291e00", "#725000", "#c4a000", "#edd400", "#fce94f", "#fffc9c", "#feffd0"],
   ["#301700", "#8c3700", "#ce5c00", "#f57900", "#fcaf3e", "#ffd797", "#fff0d7"],
@@ -20,73 +19,90 @@ const tangoColors = [
 function getTangoLightToDarker() {
   const result = [];
   for (const column of [5, 4, 3]) {
-    for (const row of tangoColors) {
+    for (const row of TANGO_SCHEME) {
       result.push(row[column]);
     }
   }
   return result;
 }
 
-const tango = getTangoLightToDarker();
+const TANGO_COLORS = getTangoLightToDarker();
 
-let path, circle, nodes: ActivityNode[], links: ActivityLink[], force; // , colors
-let data = new HistoryData();
+export class SystemVisualization {
+  private data: HistoryData;
 
-/**
- * @param {MessageHistory} msgHist
- */
-export function displayMessageHistory() {
-  const canvas = $("#graph-canvas");
-  // colors = d3.scale.category10();
-  // colors = d3.scale.ordinal().domain().range(tango)
-  canvas.empty();
+  constructor() {
+    this.data = new HistoryData();
+  }
 
-  let zoom = d3.behavior.zoom()
-    .scaleExtent([0.1, 10])
-    .on("zoom", zoomed);
+  public reset() {
+    this.data = new HistoryData();
+  }
 
-  const svg = d3.select("#graph-canvas")
-    .append("svg")
-    // .attr("oncontextmenu", "return false;")
-    .attr("width", canvas.width())
-    .attr("height", canvas.height())
-    .attr("style", "background: none;")
-    .call(zoom);
+  public updateStringData(msg: SymbolMessage) {
+    this.data.addStrings(msg.ids, msg.symbols);
+  }
 
-  // set up initial nodes and links
-  //  - nodes are known by "id", not by index in array.
-  //  - reflexive edges are indicated on the node (as a bold black circle).
-  //  - links are always source < target; edge directions are set by "left" and "right".
+  public updateData(dv: DataView): Activity[] {
+    return this.data.updateDataBin(dv);
+  }
 
-  nodes = data.getActivityNodes();
-  links = data.getLinks();
+  public display() {
+    const canvas = $("#graph-canvas");
+    // colors = d3.scale.category10();
+    // colors = d3.scale.ordinal().domain().range(tango)
+    canvas.empty();
 
-  // init D3 force layout
-  force = d3.layout.force()
-    .nodes(nodes)
-    .links(links)
-    .size([canvas.width(), canvas.height()])
-    .linkDistance(70)
-    .charge(-500)
-    .on("tick", tick);
+    let zoom = d3.behavior.zoom()
+      .scaleExtent([0.1, 10])
+      .on("zoom", zoomed);
 
-  force.linkStrength(function(link) {
-    return link.messageCount / data.getMaxMessageSends();
-  });
+    const svg = d3.select("#graph-canvas")
+      .append("svg")
+      // .attr("oncontextmenu", "return false;")
+      .attr("width", canvas.width())
+      .attr("height", canvas.height())
+      .attr("style", "background: none;")
+      .call(zoom);
 
-  // define arrow markers for graph links
-  createArrowMarker(svg, "end-arrow",   6, "M0,-5L10,0L0,5",  "#000");
-  createArrowMarker(svg, "start-arrow", 4, "M10,-5L0,0L10,5", "#000");
+    // set up initial nodes and links
+    //  - nodes are known by "id", not by index in array.
+    //  - reflexive edges are indicated on the node (as a bold black circle).
+    //  - links are always source < target; edge directions are set by "left" and "right".
 
-  createArrowMarker(svg, "end-arrow-creator",   6, "M0,-5L10,0L0,5",  "#aaa");
-  createArrowMarker(svg, "start-arrow-creator", 4, "M10,-5L0,0L10,5", "#aaa");
+    nodes = this.data.getActivityNodes();
+    links = this.data.getLinks();
 
-  // handles to link and node element groups
-  path = svg.append("svg:g").selectAll("path");
-  circle = svg.append("svg:g").selectAll("g");
+    // init D3 force layout
+    force = d3.layout.force()
+      .nodes(nodes)
+      .links(links)
+      .size([canvas.width(), canvas.height()])
+      .linkDistance(70)
+      .charge(-500)
+      .on("tick", tick);
 
-  restart();
+    force.linkStrength(function(link) {
+      return link.messageCount / this.data.getMaxMessageSends();
+    });
+
+    // define arrow markers for graph links
+    createArrowMarker(svg, "end-arrow",   6, "M0,-5L10,0L0,5",  "#000");
+    createArrowMarker(svg, "start-arrow", 4, "M10,-5L0,0L10,5", "#000");
+
+    createArrowMarker(svg, "end-arrow-creator",   6, "M0,-5L10,0L0,5",  "#aaa");
+    createArrowMarker(svg, "start-arrow-creator", 4, "M10,-5L0,0L10,5", "#aaa");
+
+    // handles to link and node element groups
+    path = svg.append("svg:g").selectAll("path");
+    circle = svg.append("svg:g").selectAll("g");
+
+    restart();
+  }
+
 }
+
+let path, circle, nodes: ActivityNode[], links: ActivityLink[], force;
 
 function createArrowMarker(svg: d3.Selection<any>, id: string, refX: number,
     d: string, color: string) {
@@ -100,18 +116,6 @@ function createArrowMarker(svg: d3.Selection<any>, id: string, refX: number,
     .append("svg:path")
     .attr("d", d)
     .attr("fill", color);
-}
-
-export function resetLinks() {
-  data = new HistoryData();
-}
-
-export function updateStrings(msg: SymbolMessage) {
-  data.addStrings(msg.ids, msg.symbols);
-}
-
-export function updateData(dv: DataView, controller: Controller) {
-  data.updateDataBin(dv, controller);
 }
 
 let zoomScale = 1;
@@ -209,9 +213,9 @@ function restart() {
     .on("mouseout",  function(e: ActivityNode) { return ctrl.outActivity(e, this); })
     .attr("class", "node")
     .style("fill", function(_, i) {
-      return tango[i]; // colors(d.type);
+      return TANGO_COLORS[i]; // colors(d.type);
     })
-    .style("stroke", function(_, i) { return d3.rgb(tango[i]).darker().toString(); })  // colors(d.id)
+    .style("stroke", function(_, i) { return d3.rgb(TANGO_COLORS[i]).darker().toString(); })  // colors(d.id)
     .style("stroke-width", function(a: ActivityNode) { return (a.getGroupSize() > 1) ? Math.log(a.getGroupSize()) * 3 : ""; })
     .classed("reflexive", function(d: ActivityNode) { return d.reflexive; });
 
