@@ -30,6 +30,15 @@ const TANGO_COLORS = getTangoLightToDarker();
 
 export class SystemVisualization {
   private data: HistoryData;
+  private nodes: ActivityNode[];
+  private links: ActivityLink[];
+
+  private activityNodes: d3.selection.Update<ActivityNode>;
+  private activityLinks: d3.selection.Update<ActivityLink>;
+
+  private zoomScale = 1;
+  private zoomTransl = [0, 0];
+
 
   constructor() {
     this.data = new HistoryData();
@@ -53,9 +62,9 @@ export class SystemVisualization {
     // colors = d3.scale.ordinal().domain().range(tango)
     canvas.empty();
 
-    let zoom = d3.behavior.zoom()
+    const zoom = d3.behavior.zoom()
       .scaleExtent([0.1, 10])
-      .on("zoom", zoomed);
+      .on("zoom", () => this.zoomed());
 
     const svg = d3.select("#graph-canvas")
       .append("svg")
@@ -70,19 +79,19 @@ export class SystemVisualization {
     //  - reflexive edges are indicated on the node (as a bold black circle).
     //  - links are always source < target; edge directions are set by "left" and "right".
 
-    nodes = this.data.getActivityNodes();
-    links = this.data.getLinks();
+    this.nodes = this.data.getActivityNodes();
+    this.links = this.data.getLinks();
 
     // init D3 force layout
-    force = d3.layout.force()
-      .nodes(nodes)
-      .links(links)
+    const forceLayout = d3.layout.force()
+      .nodes(this.nodes)
+      .links(this.links)
       .size([canvas.width(), canvas.height()])
       .linkDistance(70)
       .charge(-500)
-      .on("tick", tick);
+      .on("tick", () => this.forceLayoutUpdateIteration());
 
-    force.linkStrength(function(link) {
+    forceLayout.linkStrength((link: ActivityLink) => {
       return link.messageCount / this.data.getMaxMessageSends();
     });
 
@@ -93,16 +102,99 @@ export class SystemVisualization {
     createArrowMarker(svg, "end-arrow-creator",   6, "M0,-5L10,0L0,5",  "#aaa");
     createArrowMarker(svg, "start-arrow-creator", 4, "M10,-5L0,0L10,5", "#aaa");
 
-    // handles to link and node element groups
-    path = svg.append("svg:g").selectAll("path");
-    circle = svg.append("svg:g").selectAll("g");
-
-    restart();
+    this.renderSystemView(forceLayout, svg);
   }
 
-}
+  private zoomed() {
+    const zoomEvt: d3.ZoomEvent = <d3.ZoomEvent> d3.event;
+    this.zoomScale  = zoomEvt.scale;
+    this.zoomTransl = zoomEvt.translate;
 
-let path, circle, nodes: ActivityNode[], links: ActivityLink[], force;
+    this.activityNodes.attr("transform", (d: ActivityNode) => {
+      const x = this.zoomTransl[0] + d.x * this.zoomScale;
+      const y = this.zoomTransl[1] + d.y * this.zoomScale;
+      return "translate(" + x + "," + y + ")scale(" + this.zoomScale + ")"; });
+    this.activityLinks.attr("transform", "translate(" + this.zoomTransl + ")scale(" + this.zoomScale + ")");
+  }
+
+  private forceLayoutUpdateIteration() {
+    // draw directed edges with proper padding from node centers
+    this.activityLinks.attr("d", (d: ActivityLink) => {
+      const deltaX = d.target.x - d.source.x,
+        deltaY = d.target.y - d.source.y,
+        dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
+        normX = deltaX / dist,
+        normY = deltaY / dist,
+        sourcePadding = d.left ? 17 : 12,
+        targetPadding = d.right ? 17 : 12,
+        sourceX = d.source.x + (sourcePadding * normX),
+        sourceY = d.source.y + (sourcePadding * normY),
+        targetX = d.target.x - (targetPadding * normX),
+        targetY = d.target.y - (targetPadding * normY);
+        console.assert(!Number.isNaN(sourceX));
+      return "M" + sourceX + "," + sourceY + "L" + targetX + "," + targetY;
+    });
+
+    this.activityNodes.attr("transform", (d: ActivityNode) => {
+      return "translate(" + (this.zoomTransl[0] + d.x * this.zoomScale)
+        + "," + (this.zoomTransl[1] + d.y * this.zoomScale) + ")scale(" + this.zoomScale + ")";
+    });
+  }
+
+  private renderSystemView(forceLayout:
+      d3.layout.Force<d3.layout.force.Link<d3.layout.force.Node>, d3.layout.force.Node>,
+      svg: d3.Selection<any>) {
+    // handles to link and node element groups
+    this.activityLinks = svg.append("svg:g")
+      .selectAll("path")
+      .data(this.links);
+    this.activityNodes = svg.append("svg:g")
+      .selectAll("g")
+      // nodes are known by id, not by index
+      .data(this.nodes, (a: ActivityNode) => { return a.getDataId(); });
+
+    this.activityLinks // .classed("selected", function(d) { return d === selected_link; })
+      .style("marker-start", selectStartMarker)
+      .style("marker-end",   selectEndMarker);
+
+    // add new links
+    this.activityLinks.enter().append("svg:path")
+      .attr("class", (d: ActivityLink) => {
+        return d.creation
+          ? "creation-link"
+          : "link";
+      })
+      // .classed("selected", function(d) { return d === selected_link; })
+      .style("marker-start", selectStartMarker)
+      .style("marker-end",   selectEndMarker);
+
+    // remove old links
+    this.activityLinks.exit().remove();
+
+    // add new nodes
+    const g = this.activityNodes.enter().append("svg:g");
+
+    createActivity(g);
+
+    // After rendering text, adapt rectangles
+    adaptRectSizeAndTextPostion();
+
+    // Enable dragging of nodes
+    g.call(forceLayout.drag);
+
+    // remove old nodes
+    this.activityNodes.exit().remove();
+
+    // set the graph in motion
+    forceLayout.start();
+
+    // execute enough steps that the graph looks static
+    for (let i = 0; i < 1000; i++) {
+      forceLayout.tick();
+    }
+    // force.stop();
+  }
+}
 
 function createArrowMarker(svg: d3.Selection<any>, id: string, refX: number,
     d: string, color: string) {
@@ -118,45 +210,6 @@ function createArrowMarker(svg: d3.Selection<any>, id: string, refX: number,
     .attr("fill", color);
 }
 
-let zoomScale = 1;
-let zoomTransl = [0, 0];
-
-function zoomed() {
-  let zoomEvt: d3.ZoomEvent = <d3.ZoomEvent> d3.event;
-  zoomScale  = zoomEvt.scale;
-  zoomTransl = zoomEvt.translate;
-
-  circle.attr("transform", function (d) {
-    const x = zoomTransl[0] + d.x * zoomScale;
-    const y = zoomTransl[1] + d.y * zoomScale;
-    return "translate(" + x + "," + y + ")scale(" + zoomScale + ")"; });
-  path.attr("transform", "translate(" + zoomTransl + ")scale(" + zoomScale + ")");
-}
-
-// update force layout (called automatically each iteration)
-function tick() {
-  // draw directed edges with proper padding from node centers
-  path.attr("d", function(d: ActivityLink) {
-    const deltaX = d.target.x - d.source.x,
-      deltaY = d.target.y - d.source.y,
-      dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
-      normX = deltaX / dist,
-      normY = deltaY / dist,
-      sourcePadding = d.left ? 17 : 12,
-      targetPadding = d.right ? 17 : 12,
-      sourceX = d.source.x + (sourcePadding * normX),
-      sourceY = d.source.y + (sourcePadding * normY),
-      targetX = d.target.x - (targetPadding * normX),
-      targetY = d.target.y - (targetPadding * normY);
-      console.assert(!Number.isNaN(sourceX));
-    return "M" + sourceX + "," + sourceY + "L" + targetX + "," + targetY;
-  });
-
-  circle.attr("transform", function(d: ActivityNode) {
-    return "translate(" + (zoomTransl[0] + d.x * zoomScale) + "," + (zoomTransl[1] + d.y * zoomScale) + ")scale(" + zoomScale + ")";
-  });
-}
-
 function selectStartMarker(d: ActivityLink) {
   return d.left
     ? (d.creation ? "url(#start-arrow-creator)" : "url(#start-arrow)")
@@ -167,58 +220,6 @@ function selectEndMarker(d: ActivityLink) {
   return d.right
     ? (d.creation ? "url(#end-arrow-creator)" : "url(#end-arrow)")
     : "";
-}
-
-// update graph (called when needed)
-function restart() {
-  // path (link) group
-  path = path.data(links);
-
-  // update existing links
-  path // .classed("selected", function(d) { return d === selected_link; })
-    .style("marker-start", selectStartMarker)
-    .style("marker-end",   selectEndMarker);
-
-  // add new links
-  path.enter().append("svg:path")
-    .attr("class", function (d: ActivityLink) {
-      return d.creation
-        ? "creation-link"
-        : "link";
-    })
-    // .classed("selected", function(d) { return d === selected_link; })
-    .style("marker-start", selectStartMarker)
-    .style("marker-end",   selectEndMarker);
-
-  // remove old links
-  path.exit().remove();
-
-  // circle (node) group
-  // NB: the function arg is crucial here! nodes are known by id, not by index!
-  circle = circle.data(nodes, function(a: ActivityNode) { return a.getDataId(); });
-
-  // add new nodes
-  const g = circle.enter().append("svg:g");
-
-  createActivity(g);
-
-  // After rendering text, adapt rectangles
-  adaptRectSizeAndTextPostion();
-
-  // Enable dragging of nodes
-  g.call(force.drag);
-
-  // remove old nodes
-  circle.exit().remove();
-
-  // set the graph in motion
-  force.start();
-
-  // execute enough steps that the graph looks static
-  for (let i = 0; i < 1000; i++) {
-    force.tick();
-  }
-//   force.stop();
 }
 
 function createActivity(g) {
