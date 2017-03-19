@@ -317,7 +317,7 @@ export class HistoryData {
   /** Read a long within JS int range */
   private readLong(d: DataView, offset: number) {
     const high = d.getUint32(offset);
-    console.assert(high <= MAX_SAFE_HIGH_VAL);
+    console.assert(high <= MAX_SAFE_HIGH_VAL, "expected 53bit, but read high int as: " + high);
     return high * SHIFT_HIGH_INT + d.getUint32(offset + 4);
   }
 
@@ -406,9 +406,12 @@ export class HistoryData {
   public updateDataBin(data: DataView, controller: Controller) {
     const newActivities: Activity[] = [];
     let i = 0;
+    let prevMessage = -1;
+    let msgType = -1;
     while (i < data.byteLength) {
       const start = i;
-      const msgType = data.getInt8(i);
+      prevMessage = msgType;
+      msgType = data.getUint8(i);
       i++;
       switch (msgType) {
         case Trace.ActorCreation: {
@@ -478,7 +481,8 @@ export class HistoryData {
           break;
 
         default:
-          console.assert((msgType & MESSAGE_BIT) !== 0, "msgType was expected to be > 0x80, but was " + msgType);
+          console.assert((msgType & MESSAGE_BIT) !== 0,
+            "msgType was expected to be > 0x80, but was " + msgType + ". Previous msg was: " + prevMessage);
           i = this.readMessage(data, msgType, i); // doesn't return an offset, but the absolute index
           break;
       }
