@@ -200,46 +200,7 @@ function restart() {
   // add new nodes
   const g = circle.enter().append("svg:g");
 
-  g.attr("id", function (a: ActivityNode) { return a.getSystemViewId(); });
-
-  g.append("rect")
-    .attr("rx", 6)
-    .attr("ry", 6)
-    .attr("x", -12.5)
-    .attr("y", -12.5)
-    .attr("width", 50)
-    .attr("height", 25)
-    .on("mouseover", function(e: ActivityNode) { return ctrl.overActivity(e, this); })
-    .on("mouseout",  function(e: ActivityNode) { return ctrl.outActivity(e, this); })
-    .attr("class", "node")
-    .style("fill", function(_, i) {
-      return TANGO_COLORS[i]; // colors(d.type);
-    })
-    .style("stroke", function(_, i) { return d3.rgb(TANGO_COLORS[i]).darker().toString(); })  // colors(d.id)
-    .style("stroke-width", function(a: ActivityNode) { return (a.getGroupSize() > 1) ? Math.log(a.getGroupSize()) * 3 : ""; })
-    .classed("reflexive", function(d: ActivityNode) { return d.reflexive; });
-
-  // show node IDs
-  g.append("svg:text")
-    .attr("x", 0)
-    .attr("dy", ".35em")
-    .attr("class", "id")
-    .html(function(a: ActivityNode) {
-      let label = getTypePrefix(a.getType()) + a.getName();
-
-      if (a.getGroupSize() > 1) {
-        label += " (" + a.getGroupSize() + ")";
-      }
-      return label;
-    });
-
-  g.append("svg:text")
-    .attr("x", 10)
-    .attr("dy", "-.35em")
-    .attr("class", function(a: ActivityNode) {
-      return "activity-pause" + (a.isRunning() ? " running" : "");
-    })
-    .html("&#xf04c;");
+  createActivity(g);
 
   // After rendering text, adapt rectangles
   adaptRectSizeAndTextPostion();
@@ -258,6 +219,58 @@ function restart() {
     force.tick();
   }
 //   force.stop();
+}
+
+function createActivity(g) {
+  g.attr("id", function (a: ActivityNode) { return a.getSystemViewId(); });
+
+  createActivityRectangle(g);
+  createActivityLabel(g);
+  createActivityStatusIndicator(g);
+}
+
+function createActivityRectangle(g) {
+  g.append("rect")
+    .attr("rx", 6)
+    .attr("ry", 6)
+    .attr("x", -12.5)
+    .attr("y", -12.5)
+    .attr("width", 50)
+    .attr("height", 25)
+    .on("mouseover", function(a: ActivityNode) { return ctrl.overActivity(a, this); })
+    .on("mouseout",  function(a: ActivityNode) { return ctrl.outActivity(a, this); })
+    .attr("class", "node")
+    .style("fill", function(_, i) {
+      return TANGO_COLORS[i];
+    })
+    .style("stroke", function(_, i) { return d3.rgb(TANGO_COLORS[i]).darker().toString(); })
+    .style("stroke-width", function(a: ActivityNode) { return (a.getGroupSize() > 1) ? Math.log(a.getGroupSize()) * 3 : ""; })
+    .classed("reflexive", function(a: ActivityNode) { return a.reflexive; });
+}
+
+function createActivityLabel(g) {
+  g.append("svg:text")
+    .attr("x", 0)
+    .attr("dy", ".35em")
+    .attr("class", "id")
+    .html(function(a: ActivityNode) {
+      let label = getTypePrefix(a.getType()) + a.getName();
+
+      if (a.getGroupSize() > 1) {
+        label += " (" + a.getGroupSize() + ")";
+      }
+      return label;
+    });
+}
+
+function createActivityStatusIndicator(g) {
+  g.append("svg:text")
+    .attr("x", 10)
+    .attr("dy", "-.35em")
+    .attr("class", function(a: ActivityNode) {
+      return "activity-pause" + (a.isRunning() ? " running" : "");
+    })
+    .html("&#xf04c;");
 }
 
 const PADDING = 15;
