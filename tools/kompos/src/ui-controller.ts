@@ -10,7 +10,6 @@ import {SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
 import {LineBreakpoint, MessageBreakpoint, getBreakpointId,
   createLineBreakpoint, createMsgBreakpoint} from "./breakpoints";
 import {dbgLog}       from "./source";
-import {displayMessageHistory, resetLinks, updateStrings, updateData} from "./visualizations";
 import {View, getActivityIdFromView, getSourceIdFrom, getSourceIdFromSection} from "./view";
 import {VmConnection} from "./vm-connection";
 
@@ -32,6 +31,7 @@ export class UiController extends Controller {
   }
 
   private reset() {
+    this.view.reset();
     this.actProm = {};
     this.actPromResolve = {};
   }
@@ -46,9 +46,7 @@ export class UiController extends Controller {
 
   public onConnect() {
     dbgLog("[WS] open");
-    resetLinks();
     this.reset();
-    this.view.resetActivities();
     this.view.onConnect();
     const bps = this.dbg.getEnabledBreakpoints();
     dbgLog("Send breakpoints: " + bps.length);
@@ -180,12 +178,12 @@ export class UiController extends Controller {
   }
 
   public onSymbolMessage(msg: SymbolMessage) {
-    updateStrings(msg);
+    this.view.updateStringData(msg);
   }
 
   public onTracingData(data: DataView) {
-    updateData(data, this);
-    displayMessageHistory();
+    this.newActivities(this.view.updateTraceData(data));
+    this.view.displaySystemView();
   }
 
   public onUnknownMessage(msg: any) {

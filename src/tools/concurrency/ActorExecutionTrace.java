@@ -33,6 +33,7 @@ import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
+import som.interpreter.processes.SChannel;
 import som.primitives.TimerPrim;
 import som.primitives.processes.ChannelPrimitives.TracingProcess;
 import som.vm.ObjectSystem;
@@ -88,7 +89,8 @@ public class ActorExecutionTrace {
 
   private static long collectedMemory = 0;
   private static TraceWorkerThread workerThread = new TraceWorkerThread();
-  static final byte messageEventId;
+
+  static final byte MESSAGE_EVENT_ID;
 
   static {
     if (VmSettings.MEMORY_TRACING) {
@@ -111,7 +113,7 @@ public class ActorExecutionTrace {
       eventid |= TraceData.PARAMETER_BIT;
     }
 
-    messageEventId = eventid;
+    MESSAGE_EVENT_ID = eventid;
   }
 
   private static long getTotal(final Map<String, MemoryUsage> map) {
@@ -231,7 +233,10 @@ public class ActorExecutionTrace {
     TaskSpawn(TraceData.TASK_SPAWN, 19),
     TaskJoin(TraceData.TASK_JOIN,   11),
 
-    PromiseError(TraceData.PROMISE_ERROR, 28);
+    PromiseError(TraceData.PROMISE_ERROR, 28),
+
+    ChannelCreation(TraceData.CHANNEL_CREATION, 25),
+    ChannelMessage(TraceData.CHANNEL_MESSAGE,   34);
 
     final byte id;
     final int size;
@@ -332,6 +337,12 @@ public class ActorExecutionTrace {
     t.resolvedPromises++;
   }
 
+  public static void channelMessage(final long channelId, final long sender,
+      final long rcvr, final Object value) {
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordChannelMessage(channelId, sender, rcvr, value);
+  }
+
   // code duplication?
   public static void mailboxExecuted(final EventualMessage m,
       final ObjectBuffer<EventualMessage> moreCurrent, final long baseMessageId,
@@ -340,6 +351,13 @@ public class ActorExecutionTrace {
     TracingActivityThread t = getThread();
     t.getBuffer().recordMailboxExecuted(m, moreCurrent, baseMessageId,
         mailboxNo, sendTS, moreSendTS, execTS, receiver);
+  }
+
+  public static void channelCreation(final SChannel channel,
+      final SourceSection section) {
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordChannelCreation(t.getActivity().getId(),
+        ((TracingChannel) channel).getId(), section);
   }
 
   private static TracingActivityThread getThread() {

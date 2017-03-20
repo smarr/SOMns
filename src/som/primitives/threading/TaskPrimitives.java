@@ -163,6 +163,11 @@ public final class TaskPrimitives {
     public long getCurrentMessageId() {
       return 0;
     }
+
+    @Override
+    public Activity getActivity() {
+      return null;
+    }
   }
 
   private static final ForkJoinPool forkJoinPool = new ForkJoinPool(

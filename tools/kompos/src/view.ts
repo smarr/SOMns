@@ -6,8 +6,10 @@ import * as d3 from "d3";
 import {Controller}   from "./controller";
 import {ActivityNode} from "./history-data";
 import {Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
-  TaggedSourceCoordinate, Scope, getSectionId, Variable, Activity } from "./messages";
+  TaggedSourceCoordinate, Scope, getSectionId, Variable, Activity,
+  SymbolMessage } from "./messages";
 import {Breakpoint, MessageBreakpoint, LineBreakpoint} from "./breakpoints";
+import {SystemVisualization} from "./visualizations";
 
 declare var ctrl: Controller;
 
@@ -17,6 +19,8 @@ const ACT_RECT_PREFIX = "RA";
 const ACT_GROUP_ID_PREFIX   = "ag";
 const ACT_GROUP_RECT_PREFIX = "RAG";
 
+const CH_ID_PREFIX  = "c";
+const CH_VIZ_PREFIX = "VC";
 
 export function getActivityId(id: number): string {
   return ACT_ID_PREFIX + id;
@@ -32,6 +36,14 @@ export function getActivityGroupId(id: number): string {
 
 export function getActivityGroupRectId(id: number): string {
   return ACT_GROUP_RECT_PREFIX + id;
+}
+
+export function getChannelId(id: number): string {
+  return CH_ID_PREFIX + id;
+}
+
+export function getChannelVizId(id: number): string {
+  return CH_VIZ_PREFIX + id;
 }
 
 export function getLineId(line: number, sourceId: string) {
@@ -439,7 +451,23 @@ function enableMethodBreakpointHover(fileNode) {
  * data and reacting to events.
  */
 export class View {
-  constructor() { }
+  private systemViz: SystemVisualization;
+
+  constructor() {
+    this.systemViz = new SystemVisualization();
+  }
+
+  public displaySystemView() {
+    this.systemViz.display();
+  }
+
+  public updateStringData(msg: SymbolMessage) {
+    this.systemViz.updateStringData(msg);
+  }
+
+  public updateTraceData(data: DataView): Activity[] {
+    return this.systemViz.updateData(data);
+  }
 
   public onConnect() {
     $("#dbg-connect-btn").html("Connected");
@@ -577,7 +605,12 @@ export class View {
     codeView.appendChild(act);
   }
 
-  public resetActivities() {
+  public reset() {
+    this.resetActivities();
+    this.systemViz.reset();
+  }
+
+  private resetActivities() {
     $(document.getElementById("code-views")).empty();
   }
 

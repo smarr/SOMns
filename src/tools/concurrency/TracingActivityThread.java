@@ -4,11 +4,13 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import som.vm.ActivityThread;
 import som.vm.VmSettings;
 import tools.TraceData;
 
 
-public abstract class TracingActivityThread extends ForkJoinWorkerThread {
+public abstract class TracingActivityThread extends ForkJoinWorkerThread
+    implements ActivityThread {
   private static AtomicInteger threadIdGen = new AtomicInteger(1);
   protected final long threadId;
   protected long nextActivityId = 1;
