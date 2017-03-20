@@ -78,13 +78,46 @@ enum ParamTypes {
   String   = 7
 }
 
-export abstract class EntityNode {
-  public x:          number;
-  public y:          number;
+export abstract class NodeImpl implements  d3.layout.force.Node {
+  public index?: number;
+  public px?: number;
+  public py?: number;
+  public fixed?: boolean;
+  public weight?: number;
+
+  private _x: number;
+  private _y: number;
 
   constructor(x: number, y: number) {
-    this.x = x;
-    this.y = y;
+    this._x = x;
+    this._y = y;
+  }
+
+  public get x(): number    { return this._x; }
+  public set x(val: number) {
+    if (val > 5000) {
+      val = 5000;
+    } else if (val < -5000) {
+      val = -5000;
+    }
+    this._x = val;
+  }
+
+  public get y(): number    { return this._y; }
+  public set y(val: number) {
+    if (val > 5000) {
+      val = 5000;
+    } else if (val < -5000) {
+      val = -5000;
+    }
+    this._y = val;
+  }
+}
+
+export abstract class EntityNode extends NodeImpl {
+
+  constructor(x: number, y: number) {
+    super(x, y);
   }
 
   public abstract getDataId(): string;
@@ -170,9 +203,7 @@ export class ChannelNode extends EntityNode {
   public getSystemViewId() { return getChannelVizId(this.channel.id); }
 }
 
-export interface EntityLink {
-  source: EntityNode;
-  target: EntityNode;
+export interface EntityLink extends d3.layout.force.Link<EntityNode> {
   left:   boolean;
   right:  boolean;
   messageCount: number;
