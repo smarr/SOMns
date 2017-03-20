@@ -119,12 +119,12 @@ export class SystemVisualization {
     this.activityNodes.attr("transform", (d: ActivityNode) => {
       const x = this.zoomTransl[0] + d.x * this.zoomScale;
       const y = this.zoomTransl[1] + d.y * this.zoomScale;
-      return "translate(" + x + "," + y + ")scale(" + this.zoomScale + ")"; });
+      return `translate(${x},${y})scale(${this.zoomScale})`; });
     this.channelNodes.attr("transform", (d: ChannelNode) => {
       const x = this.zoomTransl[0] + d.x * this.zoomScale;
       const y = this.zoomTransl[1] + d.y * this.zoomScale;
-      return "translate(" + x + "," + y + ")scale(" + this.zoomScale + ")"; });
-    this.entityLinks.attr("transform", "translate(" + this.zoomTransl + ")scale(" + this.zoomScale + ")");
+      return `translate(${x},${y})scale(${this.zoomScale})`; });
+    this.entityLinks.attr("transform", `translate(${this.zoomTransl[0]},${this.zoomTransl[1]})scale(${this.zoomScale})`);
   }
 
   private forceLayoutUpdateIteration() {
@@ -141,17 +141,18 @@ export class SystemVisualization {
         sourceY = d.source.y + (sourcePadding * normY),
         targetX = d.target.x - (targetPadding * normX),
         targetY = d.target.y - (targetPadding * normY);
-        console.assert(!Number.isNaN(sourceX));
-      return "M" + sourceX + "," + sourceY + "L" + targetX + "," + targetY;
+      return `M${sourceX},${sourceY}L${targetX},${targetY}`;
     });
 
     this.activityNodes.attr("transform", (d: ActivityNode) => {
-      return "translate(" + (this.zoomTransl[0] + d.x * this.zoomScale)
-        + "," + (this.zoomTransl[1] + d.y * this.zoomScale) + ")scale(" + this.zoomScale + ")";
+      const x = this.zoomTransl[0] + d.x * this.zoomScale;
+      const y = this.zoomTransl[1] + d.y * this.zoomScale;
+      return `translate(${x},${y})scale(${this.zoomScale})`;
     });
     this.channelNodes.attr("transform", (d: ChannelNode) => {
-      return "translate(" + (this.zoomTransl[0] + d.x * this.zoomScale)
-        + "," + (this.zoomTransl[1] + d.y * this.zoomScale) + ")scale(" + this.zoomScale + ")";
+      const x = this.zoomTransl[0] + d.x * this.zoomScale;
+      const y = this.zoomTransl[1] + d.y * this.zoomScale;
+      return `translate(${x},${y})scale(${this.zoomScale})`;
     });
   }
 
