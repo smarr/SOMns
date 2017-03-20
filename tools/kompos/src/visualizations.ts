@@ -201,6 +201,7 @@ export class SystemVisualization {
 
     // Enable dragging of nodes
     actG.call(forceLayout.drag);
+    chG.call(forceLayout.drag);
 
     // remove old nodes
     this.activityNodes.exit().remove();
@@ -213,7 +214,7 @@ export class SystemVisualization {
     for (let i = 0; i < 1000; i++) {
       forceLayout.tick();
     }
-    // force.stop();
+    forceLayout.stop();
   }
 
   private adaptRectSizeAndTextPostion() {
