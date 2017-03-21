@@ -82,7 +82,8 @@ class TestRunner usingPlatform: platform = (
 
   runAllKnownModules = (
     | modules allSuccessful allTestsDonePromise |
-    modules := 'LanguageTests',
+    modules := 'ReflectionTests',
+               'LanguageTests',
                'MixinTests',
                'CollectionTests',
                'DoubleTests',

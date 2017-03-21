@@ -6,6 +6,7 @@ import java.util.Arrays;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
@@ -13,10 +14,12 @@ import som.compiler.MixinDefinition;
 import som.interpreter.Types;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.reflection.AbstractSymbolDispatch;
 import som.primitives.reflection.AbstractSymbolDispatchNodeGen;
 import som.vm.constants.Classes;
+import som.vmobjects.SArray;
 import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SClass;
@@ -78,6 +81,27 @@ public abstract class MirrorPrims {
     public final Object doPerform(final VirtualFrame frame, final Object rcvr,
         final SSymbol selector) {
       return dispatch.executeDispatch(frame, rcvr, selector, null);
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "obj:perform:withArguments:")
+  public abstract static class PerformWithArgumentsPrim extends TernaryExpressionNode {
+    @Child protected AbstractSymbolDispatch dispatch;
+    public PerformWithArgumentsPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+      dispatch = AbstractSymbolDispatchNodeGen.create(source);
+    }
+
+    @Specialization
+    public final Object doPerform(final VirtualFrame frame, final Object rcvr,
+        final SSymbol selector, final SArray  argsArr) {
+      return dispatch.executeDispatch(frame, rcvr, selector, argsArr);
+    }
+
+    @Override
+    public NodeCost getCost() {
+      return dispatch.getCost();
     }
   }
 
