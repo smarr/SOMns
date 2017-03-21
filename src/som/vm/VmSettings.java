@@ -21,12 +21,14 @@ public class VmSettings {
   public static final boolean PROMISE_RESOLUTION;
   public static final boolean PROMISE_RESOLVED_WITH;
   public static final boolean REPLAY;
-
+  public static final boolean ENABLE_ASSERTIONS;
   public static final boolean TRUFFLE_DEBUGGER_ENABLED;
 
   public static final boolean IGV_DUMP_AFTER_PARSING;
 
   public static final String INSTRUMENTATION_PROP = "som.instrumentation";
+
+
 
   static {
     String prop = System.getProperty("som.threads");
@@ -44,6 +46,7 @@ public class VmSettings {
     MEMORY_TRACING = getBool("som.memoryTracing",   false);
     REPLAY = getBool("som.replay", false);
     DISABLE_TRACE_FILE = getBool("som.disableTraceFile", false) || REPLAY;
+    ENABLE_ASSERTIONS = getBool("som.enableAssertions", false);
 
     String atConfig = System.getProperty("som.actorTracingCfg", "");
     List<String> al = Arrays.asList(atConfig.split(":"));
@@ -56,7 +59,7 @@ public class VmSettings {
     PROMISE_RESOLVED_WITH = !al.contains("prw") && filter;
 
     ACTOR_TRACING = TRUFFLE_DEBUGGER_ENABLED || getBool("som.actorTracing", false) ||
-                    REPLAY || MESSAGE_TIMESTAMPS || MESSAGE_PARAMETERS || PROMISE_CREATION;
+                    REPLAY || MESSAGE_TIMESTAMPS || MESSAGE_PARAMETERS || PROMISE_CREATION || ENABLE_ASSERTIONS;
 
     boolean dm = getBool("som.dynamicMetrics", false);
     DYNAMIC_METRICS = dm;

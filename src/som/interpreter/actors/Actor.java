@@ -1,5 +1,6 @@
 package som.interpreter.actors;
 
+import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
@@ -265,6 +266,10 @@ public class Actor implements Activity {
       if (VmSettings.ACTOR_TRACING) {
         TracingActor.handleBreakpointsAndStepping(msg, dbg, actor);
       }
+      if (VmSettings.ENABLE_ASSERTIONS) {
+        ((TracingActor) actor).checkReceiveHooks(msg);
+        ((TracingActor) actor).checkAssertions(msg);
+      }
 
       if (i >= 0 && VmSettings.MESSAGE_TIMESTAMPS) {
         executionTimeStamps[i] = System.currentTimeMillis();
@@ -378,6 +383,10 @@ public class Actor implements Activity {
         }
       }
       super.onTermination(exception);
+    }
+
+    public Actor getCurrentlyExecutingActor() {
+      return this.currentlyExecutingActor;
     }
   }
 

@@ -83,6 +83,8 @@ tools.add_argument('-r', '--replay', help='execution of the programm is guided b
                     dest='replay', action='store_true', default=False)
 tools.add_argument('--coverage', help='determine code coverage and store in given file',
                    dest='coverage', default=None)
+tools.add_argument('-ea', '--enable-assertions', help='enable assertions',
+                    dest='enable_assertions', action='store_true', default=False)
 
 
 parser.add_argument('-o', '--only', help='only compile give methods, comma separated list',
@@ -258,6 +260,8 @@ if args.disable_trace_file:
     flags += ['-Dsom.disableTraceFile=true']
 if args.replay:
     flags += ['-Dsom.replay=true']
+if args.enable_assertions:
+    flags += ['-Dsom.enableAssertions=true']
 
 if (args.truffle_profile or args.web_debugger or
     args.dynamic_metrics or args.coverage):

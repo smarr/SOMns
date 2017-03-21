@@ -37,6 +37,7 @@ import tools.debugger.SteppingStrategy;
 import tools.debugger.SteppingStrategy.ReturnFromTurnToPromiseResolution;
 import tools.debugger.SteppingStrategy.ToMessageReceiver;
 import tools.debugger.SteppingStrategy.ToPromiseResolution;
+import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
@@ -193,6 +194,9 @@ public class EventualSendNode extends ExprWithTagsNode {
           owner, resolver, onReceive,
           hasMessageReceiverBreakpoint(resolver), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
 
+      if (VmSettings.ENABLE_ASSERTIONS) {
+        ((TracingActor) owner).checkSendHooks(msg);
+      }
       target.send(msg, actorPool);
     }
 
@@ -205,6 +209,9 @@ public class EventualSendNode extends ExprWithTagsNode {
           rcvr.getOwner(), resolver, onReceive,
           hasMessageReceiverBreakpoint(resolver), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
 
+      if (VmSettings.ENABLE_ASSERTIONS) {
+        ((TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn()).checkSendHooks(msg);
+      }
       registerNode.register(rcvr, msg, rcvr.getOwner());
     }
 
@@ -277,6 +284,9 @@ public class EventualSendNode extends ExprWithTagsNode {
           resolver, onReceive,
           hasMessageReceiverBreakpoint(resolver), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
 
+      if (VmSettings.ENABLE_ASSERTIONS) {
+        ((TracingActor) current).checkSendHooks(msg);
+      }
       current.send(msg, actorPool);
 
       return result;
@@ -307,6 +317,9 @@ public class EventualSendNode extends ExprWithTagsNode {
           null, onReceive,
           hasMessageReceiverBreakpoint(null), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
 
+      if (VmSettings.ENABLE_ASSERTIONS) {
+        ((TracingActor) current).checkSendHooks(msg);
+      }
       current.send(msg, actorPool);
       return Nil.nilObject;
     }

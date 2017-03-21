@@ -1,6 +1,7 @@
 package tools.concurrency;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -9,6 +10,7 @@ import java.util.concurrent.ForkJoinPool;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import som.VM;
+import som.interpreter.SArguments;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
@@ -16,6 +18,8 @@ import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.SPromise.SReplayPromise;
 import som.vm.VmSettings;
+import som.vmobjects.SBlock;
+import som.vmobjects.SSymbol;
 import tools.concurrency.TraceParser.MessageRecord;
 import tools.debugger.WebDebugger;
 
@@ -25,6 +29,12 @@ public class TracingActors {
     protected int mailboxNumber;
     /** Flag that indicates if a step-to-next-turn action has been made in the previous message. */
     protected boolean stepToNextTurn;
+
+    private SSymbol actorType = null;
+
+    private List<Assertion> activeAssertions;
+    private HashMap<SSymbol, SBlock> sendHooks;
+    private HashMap<SSymbol, SBlock> receiveHooks;
 
     public TracingActor(final VM vm) {
       super(vm);
@@ -71,6 +81,88 @@ public class TracingActors {
           dbg.prepareSteppingUntilNextRootNode();
       }
    }
+    public SSymbol getActorType() {
+      return actorType;
+    }
+
+    public void setActorType(final SSymbol actorType) {
+      this.actorType = actorType;
+    }
+
+    public void addAssertion(final Assertion a) {
+      if (activeAssertions == null) {
+        activeAssertions = new ArrayList<>();
+      }
+      activeAssertions.add(a);
+    }
+
+    @TruffleBoundary
+    public void addSendHook(final SSymbol msg, final SBlock block) {
+      if (sendHooks == null) {
+        sendHooks = new HashMap<>();
+      }
+      sendHooks.put(msg, block);
+    }
+
+    @TruffleBoundary
+    public void addReceiveHook(final SSymbol msg, final SBlock block) {
+      if (receiveHooks == null) {
+        receiveHooks = new HashMap<>();
+      }
+      receiveHooks.put(msg, block);
+    }
+
+    public void checkAssertions(final EventualMessage msg) {
+      if (activeAssertions == null || activeAssertions.size() == 0) {
+        return;
+      }
+
+      List<Assertion> temp = activeAssertions;
+
+      activeAssertions = new ArrayList<>();
+
+
+      for (Assertion a : temp) {
+        a.evaluate(this, msg);
+      }
+    }
+
+    @TruffleBoundary
+    public void checkSendHooks(final EventualMessage msg) {
+      if (sendHooks != null) {
+        if (sendHooks.containsKey(msg.getSelector())) {
+          SBlock block = sendHooks.get(msg.getSelector());
+          sendHooks.clear();
+          if (receiveHooks != null) {
+            receiveHooks.clear();
+          }
+
+          if (block.getMethod().getNumberOfArguments() > 0) {
+            block.getMethod().invoke(new Object[] {block, SArguments.getArgumentsWithoutReceiver(msg.getArgs())});
+          } else {
+            block.getMethod().invoke(new Object[] {block});
+          }
+        } else if (sendHooks.size() > 0) {
+          throw new AssertionError("sending Message: " + msg.getSelector() + " violates the message protocol!");
+        }
+      }
+    }
+
+    @TruffleBoundary
+    public void checkReceiveHooks(final EventualMessage msg) {
+      if (receiveHooks != null) {
+        if (receiveHooks.containsKey(msg.getSelector())) {
+          SBlock block = receiveHooks.get(msg.getSelector());
+          receiveHooks.clear();
+          if (sendHooks != null) {
+            sendHooks.clear();
+          }
+          block.getMethod().invoke(new Object[] {block, SArguments.getArgumentsWithoutReceiver(msg.getArgs())});
+        } else  if (receiveHooks.size() > 0) {
+          throw new AssertionError("receiving Message: " + msg.getSelector() + " violates the message protocol!");
+        }
+      }
+    }
   }
 
   public static final class ReplayActor extends TracingActor {

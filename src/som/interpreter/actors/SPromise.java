@@ -58,6 +58,7 @@ public class SPromise extends SObjectWithClass {
 
   protected Object  value;
   protected Resolution resolutionState;
+  protected boolean resultUsed;
 
   // the owner of this promise, on which all call backs are scheduled
   protected final Actor owner;
@@ -120,6 +121,10 @@ public class SPromise extends SObjectWithClass {
     return false;
   }
 
+  public boolean isResultUsed() {
+    return resultUsed;
+  }
+
   public long getPromiseId() { return 0; }
 
   public final Actor getOwner() {
@@ -152,6 +157,9 @@ public class SPromise extends SObjectWithClass {
   final void registerWhenResolvedUnsynced(final PromiseMessage msg) {
     if (whenResolved == null) {
       whenResolved = msg;
+      if (VmSettings.ENABLE_ASSERTIONS) {
+        resultUsed = true;
+      }
     } else {
       registerMoreWhenResolved(msg);
     }
@@ -199,6 +207,10 @@ public class SPromise extends SObjectWithClass {
   public final synchronized void addChainedPromise(@NotNull final SPromise remote) {
     assert remote != null;
     remote.resolutionState = Resolution.CHAINED;
+    if (VmSettings.ENABLE_ASSERTIONS) {
+      resultUsed = true;
+    }
+
     if (VmSettings.PROMISE_RESOLUTION) {
       ActorExecutionTrace.promiseChained(this.getPromiseId(), remote.getPromiseId());
     }
@@ -252,6 +264,9 @@ public class SPromise extends SObjectWithClass {
 
   /** Internal Helper, only to be used properly synchronized. */
   final Object getValueUnsync() {
+    if (VmSettings.ENABLE_ASSERTIONS) {
+      resultUsed = true;
+    }
     return value;
   }
 
