@@ -3,9 +3,10 @@
 
 import { ActivityType, EntityDef } from "./messages";
 import * as d3 from "d3";
-import { TraceDataUpdate } from "./execution-data";
+import { TraceDataUpdate, Activity } from "./execution-data";
 import { ActivityNode, EntityLink, SystemViewData, PassiveEntityNode } from "./system-view";
 import { KomposMetaModel } from "./meta-model";
+import { ProtocolOverview } from "./protocol";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
 const TANGO_SCHEME = [
@@ -31,6 +32,7 @@ export class SystemVisualization {
   private activities:      ActivityNode[];
   private passiveEntities: PassiveEntityNode[];
   private links: EntityLink[];
+  private protocol: ProtocolOverview;
 
   private activityNodes: d3.selection.Update<ActivityNode>;
   private entityNodes:  d3.selection.Update<PassiveEntityNode>;
@@ -43,6 +45,7 @@ export class SystemVisualization {
 
   constructor() {
     this.data = new SystemViewData();
+    this.protocol = new ProtocolOverview(this.data);
   }
 
   public updateTraceData(data: TraceDataUpdate) {
@@ -52,14 +55,22 @@ export class SystemVisualization {
   public setCapabilities(metaModel: KomposMetaModel) {
     this.metaModel = metaModel;
     this.data.setMetaModel(metaModel);
+    this.protocol = new ProtocolOverview(this.data);
   }
 
   public reset() {
     this.data.reset();
   }
 
+  public updateData(dv: DataView): Activity[] {
+    var tuples = this.data.updateDataBin(dv);
+    this.protocol.newActivities(tuples[0]);
+    this.protocol.newMessages(tuples[1]);
+    return tuples[0];
+  }
+
   public display() {
-    const canvas = $("#graph-canvas");
+    const canvas = $("#overview-canvas");
     // colors = d3.scale.category10();
     // colors = d3.scale.ordinal().domain().range(tango)
     canvas.empty();
@@ -68,7 +79,7 @@ export class SystemVisualization {
       .scaleExtent([0.1, 10])
       .on("zoom", () => this.zoomed());
 
-    const svg = d3.select("#graph-canvas")
+    const svg = d3.select("#overview-canvas")
       .append("svg")
       // .attr("oncontextmenu", "return false;")
       .attr("width", canvas.width())
@@ -140,7 +151,7 @@ export class SystemVisualization {
         sourceY = d.source.y + (sourcePadding * normY),
         targetX = d.target.x - (targetPadding * normX),
         targetY = d.target.y - (targetPadding * normY);
-      return `M${sourceX},${sourceY}L${targetX},${targetY}`;
+        return `M${sourceX},${sourceY}L${targetX},${targetY}`;
     });
 
     this.activityNodes.attr("transform", (d: ActivityNode) => {
@@ -212,7 +223,7 @@ export class SystemVisualization {
     forceLayout.start();
 
     // execute enough steps that the graph looks static
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 1000 ; i++) {
       forceLayout.tick();
     }
     forceLayout.stop();

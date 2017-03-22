@@ -73,6 +73,10 @@ export function getActivityIdFromView(actId: string) {
   return parseInt(actId.substr(ENT_ID_PREFIX.length));
 }
 
+export function getFullMethodName(activity: Activity, methodName: string) {
+  return activity.name + ">>#" + methodName;
+}
+
 function splitAndKeepNewlineAsEmptyString(str) {
   let result = new Array();
   let line = new Array();
@@ -479,6 +483,12 @@ export class View {
 
     aElem.tab("show");
     return true;
+  }
+
+  public toggleHighlightMethod(sourceId: string, activity: Activity, source: SourceCoordinate, highlight: boolean) {
+    const methodDeclId = methodDeclIdToString(getSectionId(sourceId, source), 0, activity.id);
+    var ss = document.getElementById(methodDeclId)
+    ss.style.backgroundColor = (highlight ? "#FDFF47" : "#FFFFFF");
   }
 
   private getBreakpointTypesPerTag(breakpointTypes: BreakpointType[]) {

@@ -164,10 +164,23 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
     position: absolute;
   }
 
-  #graph-canvas {
+  #graphs-canvas {
     margin-top: 2em;
     width: 100%;
     height: 30%;
+  }
+
+  #overview-canvas {
+    width: 50%;
+    height: 100%;
+    float:left;
+  }
+
+  #protocol-canvas {
+    width: 50%;
+    height: 100%;
+    float: left;
+    overflow: scroll;
   }
 
   #split-system-code {
@@ -295,10 +308,13 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
 </nav>
 <div id="system-view">
   <div id="logo-bg">
-  <img src="out/src/logo/kompos-name.png" />
-  <img src="out/src/logo/tangled-string.png" />
+    <img src="out/src/logo/kompos-name.png" />
+    <img src="out/src/logo/tangled-string.png" />
   </div>
-  <div id="graph-canvas"></div>
+  <div id="graphs-canvas">
+    <div id="overview-canvas"></div>
+    <div id="protocol-canvas"></div>
+  </div>
   <div id="split-system-code"></div>
 </div>
 
