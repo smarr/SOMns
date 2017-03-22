@@ -11,7 +11,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
@@ -29,20 +28,16 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.Primitive;
 import som.vm.Primitives.Specializer;
 import som.vm.Symbols;
-import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
-import tools.SourceCoordinate.FullSourceCoordinate;
 import tools.concurrency.Tags.CreatePromisePair;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.Tags.OnError;
 import tools.concurrency.Tags.WhenResolved;
 import tools.concurrency.Tags.WhenResolvedOnError;
 import tools.debugger.nodes.AbstractBreakpointNode;
-import tools.debugger.nodes.DisabledBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
 
@@ -75,15 +70,8 @@ public final class PromisePrims {
 
     public CreatePromisePairPrim(final boolean eagerWrapper, final SourceSection source) {
       super(eagerWrapper, source);
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        Breakpoints breakpointCatalog = VM.getWebDebugger().getBreakpoints();
-        FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
-        this.promiseResolverBreakpoint = createBreakpointNode(source, breakpointCatalog.getPromiseResolverBreakpoint(sourceCoord));
-        this.promiseResolutionBreakpoint = createBreakpointNode(source, breakpointCatalog.getPromiseResolutionBreakpoint(sourceCoord));
-      } else {
-        this.promiseResolverBreakpoint   = insert(new DisabledBreakpointNode());
-        this.promiseResolutionBreakpoint = insert(new DisabledBreakpointNode());
-      }
+      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source));
+      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source));
     }
 
     @Specialization
@@ -125,15 +113,8 @@ public final class PromisePrims {
 
     protected WhenResolvedPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        Breakpoints breakpointCatalog = VM.getWebDebugger().getBreakpoints();
-        FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
-        this.promiseResolverBreakpoint = createBreakpointNode(source, breakpointCatalog.getPromiseResolverBreakpoint(sourceCoord));
-        this.promiseResolutionBreakpoint = createBreakpointNode(source, breakpointCatalog.getPromiseResolutionBreakpoint(sourceCoord));
-      } else {
-        this.promiseResolverBreakpoint   = insert(new DisabledBreakpointNode());
-        this.promiseResolutionBreakpoint = insert(new DisabledBreakpointNode());
-      }
+      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source));
+      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source));
     }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
@@ -185,15 +166,8 @@ public final class PromisePrims {
 
     protected OnErrorPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        Breakpoints breakpointCatalog = VM.getWebDebugger().getBreakpoints();
-        FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
-        this.promiseResolverBreakpoint = createBreakpointNode(source, breakpointCatalog.getPromiseResolverBreakpoint(sourceCoord));
-        this.promiseResolutionBreakpoint = createBreakpointNode(source, breakpointCatalog.getPromiseResolutionBreakpoint(sourceCoord));
-      } else {
-        this.promiseResolverBreakpoint   = insert(new DisabledBreakpointNode());
-        this.promiseResolutionBreakpoint = insert(new DisabledBreakpointNode());
-      }
+      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source));
+      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source));
     }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
@@ -245,15 +219,8 @@ public final class PromisePrims {
 
     public WhenResolvedOnErrorPrim(final boolean eagWrap, final SourceSection source) {
       super(eagWrap, source);
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        Breakpoints breakpointCatalog = VM.getWebDebugger().getBreakpoints();
-        FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
-        this.promiseResolverBreakpoint = createBreakpointNode(source, breakpointCatalog.getPromiseResolverBreakpoint(sourceCoord));
-        this.promiseResolutionBreakpoint = createBreakpointNode(source, breakpointCatalog.getPromiseResolutionBreakpoint(sourceCoord));
-      } else {
-        this.promiseResolverBreakpoint   = insert(new DisabledBreakpointNode());
-        this.promiseResolutionBreakpoint = insert(new DisabledBreakpointNode());
-      }
+      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source));
+      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source));
     }
 
     @Specialization(guards = {"resolvedMethod == resolved.getMethod()", "errorMethod == error.getMethod()"})

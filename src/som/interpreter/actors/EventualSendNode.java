@@ -13,7 +13,6 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VM;
 import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.EventualSendNodeFactory.SendNodeGen;
@@ -26,19 +25,12 @@ import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.SOMNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
-import som.vm.VmSettings;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
-import tools.SourceCoordinate.FullSourceCoordinate;
 import tools.concurrency.Tags.EventualMessageSend;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.nodes.AbstractBreakpointNode;
-import tools.debugger.nodes.BreakpointNodeGen;
-import tools.debugger.nodes.DisabledBreakpointNode;
-import tools.debugger.session.BreakpointEnabling;
 import tools.debugger.session.Breakpoints;
-import tools.debugger.session.SectionBreakpoint;
 
 
 @Instrumentable(factory = EventualSendNodeWrapper.class)
@@ -133,16 +125,10 @@ public class EventualSendNode extends ExprWithTagsNode {
         this.messageReceiverBreakpoint = null;
         this.promiseResolverBreakpoint = null;
         this.promiseResolutionBreakpoint = null;
-      } else if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        Breakpoints breakpointCatalog = VM.getWebDebugger().getBreakpoints();
-        FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
-        this.messageReceiverBreakpoint   = insert(BreakpointNodeGen.create(breakpointCatalog.getReceiverBreakpoint(sourceCoord)));
-        this.promiseResolverBreakpoint   = insert(BreakpointNodeGen.create(breakpointCatalog.getPromiseResolverBreakpoint(sourceCoord)));
-        this.promiseResolutionBreakpoint = insert(BreakpointNodeGen.create(breakpointCatalog.getPromiseResolutionBreakpoint(sourceCoord)));
       } else {
-        this.messageReceiverBreakpoint   = insert(new DisabledBreakpointNode());
-        this.promiseResolverBreakpoint   = insert(new DisabledBreakpointNode());
-        this.promiseResolutionBreakpoint = insert(new DisabledBreakpointNode());
+        this.messageReceiverBreakpoint   = insert(Breakpoints.createReceiver(source));
+        this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source));
+        this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source));
       }
     }
 
@@ -289,17 +275,6 @@ public class EventualSendNode extends ExprWithTagsNode {
         return true;
       }
       return super.isTaggedWith(tag);
-    }
-
-    public <T extends SectionBreakpoint> AbstractBreakpointNode createAbstractBreakpointNode(final SourceSection source, final BreakpointEnabling<T> bkp) {
-      AbstractBreakpointNode node;
-
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        node = insert(BreakpointNodeGen.create(bkp));
-      } else {
-        node = insert(new DisabledBreakpointNode());
-      }
-      return node;
     }
   }
 }

@@ -11,6 +11,7 @@ import tools.debugger.session.BreakpointEnabling;
  * It has two possible states, enable or disable.
  */
 public abstract class BreakpointNode extends AbstractBreakpointNode {
+
   protected final BreakpointEnabling<?> breakpoint;
 
   protected BreakpointNode(final BreakpointEnabling<?> breakpoint) {
