@@ -94,6 +94,24 @@ export class UiController extends Controller {
     }
   }
 
+  public toggleHighlightMethod(actId: string, shortName: string, highlight: boolean) {
+    const aId      = getActivityIdFromView(actId);
+    const activity = this.dbg.getActivity(aId);
+    const sId      = this.dbg.getSourceId(activity.origin.uri);
+    const source: Source   = this.dbg.getSource(sId);
+    console.assert(aId === activity.id);
+    const methods: Method[] = source.methods;
+    const fullName = getFullMethodName(activity, shortName);
+    const method: Method = methods.find(method => method.name === fullName);
+
+    if(highlight){
+      this.view.displaySource(activity, source, sId); // if source is already displayed, will return false
+    } else {
+      this.view.markCodePaneClosed(actId);
+    }
+    this.view.toggleHighlightMethod(sId, activity, method.sourceSection, highlight);
+  }
+
   private ensureBreakpointsAreIndicated(sourceUri) {
     const bps = this.dbg.getEnabledBreakpointsForSource(sourceUri);
     for (const bp of bps) {
