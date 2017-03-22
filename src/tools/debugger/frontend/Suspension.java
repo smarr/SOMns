@@ -57,16 +57,17 @@ public class Suspension {
     return stack.addObject(obj);
   }
 
-  public synchronized boolean isHaltPrimitive() {
-    return suspendedEvent.getNode() instanceof HaltPrim;
-  }
-
-  public synchronized boolean isSuspendExecutionNode() {
-    return suspendedEvent.getNode() instanceof SuspendExecutionNode;
-  }
-
-  public int skipFrames() {
-    return ((SuspendExecutionNode) suspendedEvent.getNode()).getSkipFrames();
+  /**
+   * Get skipping frame count for the case when it is a HaltPrimitive of a SuspendExecutionNode.
+   */
+  public synchronized int getFrameSkipCount() {
+    int skipFrames = 0;
+    if (suspendedEvent.getNode() instanceof HaltPrim) {
+      return Suspension.FRAMES_SKIPPED_FOR_HALT;
+    } else if (suspendedEvent.getNode() instanceof SuspendExecutionNode) {
+      skipFrames = ((SuspendExecutionNode) suspendedEvent.getNode()).getSkipFrames();
+    }
+    return skipFrames;
   }
 
   public long getGlobalId(final int localId) {
@@ -140,19 +141,6 @@ public class Suspension {
     }
 
     ObjectTransitionSafepoint.INSTANCE.register();
-  }
-
-  /**
-   * Get skipping frame count for the case when it is a HaltPrimitive of a SuspendExecutionNode.
-   */
-  public int getFrameSkipCount() {
-    int skipFrames = 0;
-    if (isHaltPrimitive()) {
-      skipFrames = Suspension.FRAMES_SKIPPED_FOR_HALT;
-    } else if (isSuspendExecutionNode()) {
-      skipFrames = skipFrames();
-    }
-    return skipFrames;
   }
 
   public Object getActivity() { return activity; }
