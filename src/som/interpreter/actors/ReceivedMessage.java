@@ -31,17 +31,13 @@ public class ReceivedMessage extends ReceivedRootNode {
   @Override
   public Object execute(final VirtualFrame frame) {
     EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
-    boolean promiseResolverBreakpoint = false;
     boolean promiseResolutionBreakpoint = false;
 
     if (msg.getResolver() != null) {
-      promiseResolverBreakpoint = msg.getResolver().getPromise().isTriggerPromiseResolverBreakpoint();
       promiseResolutionBreakpoint = msg.getResolver().getPromise().isTriggerPromiseResolutionBreakpoint();
-    } else {
-      promiseResolverBreakpoint = msg.triggerPromiseNullResolutionBreakpoint;
     }
 
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && promiseResolverBreakpoint) {
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isTriggerPromiseResolverBreakpoint()) {
       dbg.prepareSteppingAfterNextRootNode();
     }
 
@@ -72,14 +68,8 @@ public class ReceivedMessage extends ReceivedRootNode {
     @Override
     public Object execute(final VirtualFrame frame) {
       EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
-      boolean promiseResolverBreakpoint = false;
-      if (msg.getResolver() != null) {
-        promiseResolverBreakpoint = msg.getResolver().getPromise().isTriggerPromiseResolverBreakpoint();
-      } else {
-        promiseResolverBreakpoint = msg.triggerPromiseNullResolutionBreakpoint;
-      }
 
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && promiseResolverBreakpoint) {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isTriggerPromiseResolverBreakpoint()) {
         dbg.prepareSteppingAfterNextRootNode();
       }
 
@@ -100,16 +90,13 @@ public class ReceivedMessage extends ReceivedRootNode {
     @Override
     public Object execute(final VirtualFrame frame) {
       EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
-      boolean promiseResolverBreakpoint = false;
       boolean promiseResolutionBreakpoint = false;
+
       if (msg.getResolver() != null) {
-        promiseResolverBreakpoint = msg.getResolver().getPromise().isTriggerPromiseResolverBreakpoint();
         promiseResolutionBreakpoint = msg.getResolver().getPromise().isTriggerPromiseResolutionBreakpoint();
-      } else {
-        promiseResolverBreakpoint = msg.triggerPromiseNullResolutionBreakpoint;
       }
 
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && promiseResolverBreakpoint) {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isTriggerPromiseResolverBreakpoint()) {
         dbg.prepareSteppingAfterNextRootNode();
       }
 

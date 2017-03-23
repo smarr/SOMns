@@ -24,7 +24,8 @@ public abstract class ResolvePromiseNode extends AbstractPromiseResolutionNode {
       final boolean isBreakpointOnPromiseResolution) {
     boolean breakpointOnResolution = isBreakpointOnPromiseResolution;
     SPromise promise = resolver.getPromise();
-    if (promise.isExplicitPromise() && promise.isTriggerPromiseResolverBreakpoint()) {
+
+    if (promise.isExplicitPromise() && promise.isTriggerExplicitPromiseResolverBreakpoint()) {
       haltNode.executeEvaluated(frame, result);
     }
     if (promise.isExplicitPromise() && promise.isTriggerPromiseResolutionBreakpoint()) {

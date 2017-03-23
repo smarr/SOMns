@@ -22,14 +22,14 @@ public class SPromise extends SObjectWithClass {
 
   @CompilationFinal private static SClass promiseClass;
 
-  public static SPromise createPromise(final Actor owner, final boolean triggerPromiseResolverBreakpoint,
-      final boolean triggerPromiseResolutionBreakpoint, final boolean explicitPromise) {
+  public static SPromise createPromise(final Actor owner,
+      final boolean triggerPromiseResolutionBreakpoint, final boolean triggerExplicitPromiseResolverBreakpoint, final boolean explicitPromise) {
     if (VmSettings.REPLAY) {
-      return new SReplayPromise(owner, triggerPromiseResolverBreakpoint, triggerPromiseResolutionBreakpoint, explicitPromise);
+      return new SReplayPromise(owner, triggerPromiseResolutionBreakpoint, triggerExplicitPromiseResolverBreakpoint, explicitPromise);
     } else if (VmSettings.PROMISE_CREATION) {
-      return new STracingPromise(owner, triggerPromiseResolverBreakpoint, triggerPromiseResolutionBreakpoint, explicitPromise);
+      return new STracingPromise(owner, triggerPromiseResolutionBreakpoint, triggerExplicitPromiseResolverBreakpoint, explicitPromise);
     } else {
-      return new SPromise(owner, triggerPromiseResolverBreakpoint, triggerPromiseResolutionBreakpoint, explicitPromise);
+      return new SPromise(owner, triggerPromiseResolutionBreakpoint, triggerExplicitPromiseResolverBreakpoint, explicitPromise);
     }
   }
 
@@ -56,19 +56,37 @@ public class SPromise extends SObjectWithClass {
 
   // the owner of this promise, on which all call backs are scheduled
   protected final Actor owner;
-
+  /**
+   * Indicates the case when a chained promise is unresolved and it has
+   * a promise resolution breakpoint.
+   * It is not final because its value can be updated when resolving chained promises.
+   */
   private boolean triggerResolutionBreakpointOnUnresolvedChainedPromise;
-  private final boolean triggerPromiseResolverBreakpoint;
+  /**
+   * Indicates the case when a promise (implicit or explicit) has a promise
+   * resolution breakpoint.
+   */
   private final boolean triggerPromiseResolutionBreakpoint;
+  /**
+   * Indicates the case when the promise is created explicitly with
+   * createPromisePair primitive, because there is no EventualMessage created
+   * where this flag can be set.
+   */
+  private final boolean triggerExplicitPromiseResolverBreakpoint;
+  /**
+   * Indicates the case when the promise is explicitly created, with the
+   * createPromisePair primitive.
+   */
   private final boolean explicitPromise;
 
-  protected SPromise(@NotNull final Actor owner, final boolean triggerPromiseResolverBreakpoint,
-      final boolean triggerPromiseResolutionBreakpoint, final boolean explicitPromise) {
+  protected SPromise(@NotNull final Actor owner, final boolean triggerPromiseResolutionBreakpoint,
+      final boolean triggerExplicitPromiseResolverBreakpoint,
+      final boolean explicitPromise) {
     super(promiseClass, promiseClass.getInstanceFactory());
     assert owner != null;
     this.owner = owner;
-    this.triggerPromiseResolverBreakpoint = triggerPromiseResolverBreakpoint;
     this.triggerPromiseResolutionBreakpoint = triggerPromiseResolutionBreakpoint;
+    this.triggerExplicitPromiseResolverBreakpoint = triggerExplicitPromiseResolverBreakpoint;
     this.explicitPromise = explicitPromise;
 
     resolutionState = Resolution.UNRESOLVED;
@@ -100,7 +118,7 @@ public class SPromise extends SObjectWithClass {
   }
 
   public final synchronized SPromise getChainedPromiseFor(final Actor target) {
-    SPromise remote = SPromise.createPromise(target, triggerPromiseResolverBreakpoint, triggerPromiseResolutionBreakpoint, explicitPromise);
+    SPromise remote = SPromise.createPromise(target, triggerPromiseResolutionBreakpoint, triggerExplicitPromiseResolverBreakpoint, explicitPromise);
     if (isCompleted()) {
       remote.value = value;
       remote.resolutionState = resolutionState;
@@ -215,10 +233,6 @@ public class SPromise extends SObjectWithClass {
     return value;
   }
 
-  public boolean isTriggerPromiseResolverBreakpoint() {
-    return triggerPromiseResolverBreakpoint;
-  }
-
   public boolean isTriggerPromiseResolutionBreakpoint() {
     return triggerPromiseResolutionBreakpoint;
   }
@@ -230,9 +244,10 @@ public class SPromise extends SObjectWithClass {
   protected static class STracingPromise extends SPromise {
     protected final long promiseId;
 
-    protected STracingPromise(final Actor owner, final boolean triggerPromiseResolverBreakpoint,
-        final boolean triggerPromiseResolutionBreakpoint, final boolean explicitPromise) {
-      super(owner, triggerPromiseResolverBreakpoint, triggerPromiseResolutionBreakpoint, explicitPromise);
+    protected STracingPromise(final Actor owner,
+        final boolean triggerPromiseResolutionBreakpoint, final boolean triggerExplicitPromiseResolverBreakpoint,
+        final boolean explicitPromise) {
+      super(owner, triggerPromiseResolutionBreakpoint, triggerExplicitPromiseResolverBreakpoint, explicitPromise);
       TracingActivityThread t = (TracingActivityThread) Thread.currentThread();
       promiseId = t.generatePromiseId();
       ActorExecutionTrace.promiseCreation(promiseId);
@@ -247,9 +262,10 @@ public class SPromise extends SObjectWithClass {
   protected static final class SReplayPromise extends STracingPromise {
     protected final long replayId;
 
-    protected SReplayPromise(final Actor owner, final boolean triggerPromiseResolverBreakpoint,
-        final boolean triggerPromiseResolutionBreakpoint, final boolean explicitPromise) {
-      super(owner, triggerPromiseResolverBreakpoint, triggerPromiseResolutionBreakpoint, explicitPromise);
+    protected SReplayPromise(final Actor owner,
+        final boolean triggerPromiseResolutionBreakpoint, final boolean triggerExplicitPromiseResolverBreakpoint,
+        final boolean explicitPromise) {
+      super(owner, triggerPromiseResolutionBreakpoint, triggerExplicitPromiseResolverBreakpoint, explicitPromise);
       ReplayActor creator = (ReplayActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
 
       assert creator.getReplayPromiseIds() != null && creator.getReplayPromiseIds().size() > 0;
@@ -435,5 +451,9 @@ public class SPromise extends SObjectWithClass {
   void setTriggerResolutionBreakpointOnUnresolvedChainedPromise(
       final boolean triggerResolutionBreakpointOnUnresolvedChainedPromise) {
     this.triggerResolutionBreakpointOnUnresolvedChainedPromise = triggerResolutionBreakpointOnUnresolvedChainedPromise;
+  }
+
+  boolean isTriggerExplicitPromiseResolverBreakpoint() {
+    return triggerExplicitPromiseResolverBreakpoint;
   }
 }

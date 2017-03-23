@@ -58,7 +58,7 @@ public class Suspension {
   }
 
   /**
-   * Get skipping frame count for the case when it is a HaltPrimitive of a SuspendExecutionNode.
+   * Get skipping frame count for the case when it is a HaltPrimitive or a SuspendExecutionNode.
    */
   public synchronized int getFrameSkipCount() {
     int skipFrames = 0;

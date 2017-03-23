@@ -206,7 +206,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final SPromise toFarRefWithResultPromise(final Object[] args) {
       Actor owner = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      SPromise  result   = SPromise.createPromise(owner, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false);
+      SPromise  result   = SPromise.createPromise(owner, promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false, false);
       SResolver resolver = SPromise.createResolver(result);
 
       sendDirectMessage(args, owner, resolver);
@@ -218,7 +218,8 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final SPromise toPromiseWithResultPromise(final Object[] args,
         @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
       SPromise rcvr = (SPromise) args[0];
-      SPromise  promise  = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn(), promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false);
+
+      SPromise  promise  = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn(), promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false, false);
       SResolver resolver = SPromise.createResolver(promise);
 
       sendPromiseMessage(args, rcvr, resolver, registerNode);
@@ -229,7 +230,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final SPromise toNearRefWithResultPromise(final Object[] args) {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      SPromise  result   = SPromise.createPromise(current, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false);
+      SPromise  result   = SPromise.createPromise(current, promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false, false);
       SResolver resolver = SPromise.createResolver(result);
 
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessageId(),
