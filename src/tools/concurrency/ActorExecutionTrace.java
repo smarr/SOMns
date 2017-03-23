@@ -43,6 +43,7 @@ import som.vmobjects.SSymbol;
 import tools.ObjectBuffer;
 import tools.TraceData;
 import tools.debugger.FrontendConnector;
+import tools.debugger.PrimitiveCallOrigin;
 
 
 /**
@@ -281,8 +282,19 @@ public class ActorExecutionTrace {
   }
 
   public static void processCreation(final TracingProcess proc, final SourceSection section) {
+    SourceSection s = getPrimitiveCaller(section);
     TracingActivityThread t = getThread();
-    t.getBuffer().recordProcessCreation(proc, t.getCurrentMessageId(), section);
+    t.getBuffer().recordProcessCreation(proc, t.getCurrentMessageId(), s);
+  }
+
+  private static SourceSection getPrimitiveCaller(final SourceSection section) {
+    SourceSection s;
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && section.getSource().isInternal()) {
+      s = PrimitiveCallOrigin.getCaller();
+    } else {
+      s = section;
+    }
+    return s;
   }
 
   public static void processCompletion(final TracingProcess proc) {
@@ -292,8 +304,9 @@ public class ActorExecutionTrace {
 
   public static void taskSpawn(final SInvokable method, final long activityId,
       final SourceSection section) {
+    SourceSection s = getPrimitiveCaller(section);
     TracingActivityThread t = getThread();
-    t.getBuffer().recordTaskSpawn(method, activityId, t.getCurrentMessageId(), section);
+    t.getBuffer().recordTaskSpawn(method, activityId, t.getCurrentMessageId(), s);
   }
 
   public static void taskJoin(final SInvokable method, final long activityId) {
@@ -355,9 +368,11 @@ public class ActorExecutionTrace {
 
   public static void channelCreation(final SChannel channel,
       final SourceSection section) {
+    SourceSection s = getPrimitiveCaller(section);
+
     TracingActivityThread t = getThread();
     t.getBuffer().recordChannelCreation(t.getActivity().getId(),
-        ((TracingChannel) channel).getId(), section);
+        ((TracingChannel) channel).getId(), s);
   }
 
   private static TracingActivityThread getThread() {

@@ -23,6 +23,7 @@ import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import tools.ObjectBuffer;
+import tools.SourceCoordinate;
 import tools.TraceData;
 import tools.concurrency.ActorExecutionTrace.Events;
 import tools.concurrency.ActorExecutionTrace.ParamTypes;
@@ -132,7 +133,9 @@ public class TraceBuffer {
   }
 
   private void writeSourceSection(final SourceSection origin) {
-    storage.putShort(Symbols.symbolFor(origin.getSource().getURI().toString()).getSymbolId());
+    assert !origin.getSource().isInternal() :
+      "Need special handling to ensure we see user code reported to trace/debugger";
+    storage.putShort(SourceCoordinate.getURI(origin.getSource()).getSymbolId());
     storage.putShort((short) origin.getStartLine());
     storage.putShort((short) origin.getStartColumn());
     storage.putShort((short) origin.getCharLength());
