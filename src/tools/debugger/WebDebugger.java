@@ -24,6 +24,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.interpreter.actors.Actor;
 import som.vm.Activity;
 import som.vm.ActivityThread;
+import tools.SourceCoordinate;
 import tools.TraceData;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.InitialBreakpointsMessage;
@@ -89,6 +90,8 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   }
 
   public void reportLoadedSource(final Source source) {
+    // register source URI as symbol to make sure it's send to the debugger
+    SourceCoordinate.getURI(source);
     connector.sendLoadedSource(source, loadedSourcesTags, rootNodes);
   }
 

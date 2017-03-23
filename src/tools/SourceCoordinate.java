@@ -5,8 +5,11 @@ import java.net.URISyntaxException;
 import java.util.Objects;
 import java.util.Set;
 
+import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.vm.Symbols;
+import som.vmobjects.SSymbol;
 import tools.debugger.Tags;
 
 /**
@@ -121,5 +124,9 @@ public class SourceCoordinate {
 
   public static String getLocationQualifier(final SourceSection section) {
     return ":" + section.getStartLine() + ":" + section.getStartColumn();
+  }
+
+  public static SSymbol getURI(final Source source) {
+    return Symbols.symbolFor(source.getURI().toString());
   }
 }
