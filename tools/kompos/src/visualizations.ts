@@ -17,17 +17,21 @@ const TANGO_SCHEME = [
   ["#170720", "#371740", "#5c3566", "#75507b", "#ad7fa8", "#e0c0e4", "#fce0ff"],
   ["#270000", "#600000", "#a40000", "#cc0000", "#ef2929", "#f78787", "#ffcccc"]];
 
-function getTangoLightToDarker() {
-  const result = [];
-  for (const column of [5, 4, 3]) {
-    for (const row of TANGO_SCHEME) {
-      result.push(row[column]);
-    }
+function getTangoColors(actType: ActivityType) {
+  let row;
+  switch (actType) {
+    case "Actor":   row = 4; break;
+    case "Process": row = 5; break;
+    case "Task":    row = 1; break;
+    case "Thread":  row = 8; break;
   }
-  return result;
+
+  return TANGO_SCHEME[row];
 }
 
-const TANGO_COLORS = getTangoLightToDarker();
+function getLightTangoColor(actType: ActivityType, actId: number) {
+  return getTangoColors(actType)[3 + (actId % 3)];
+}
 
 export class SystemVisualization {
   private data: HistoryData;
@@ -275,10 +279,12 @@ function createActivityRectangle(g) {
     .on("mouseover", function(a: ActivityNode) { return ctrl.overActivity(a, this); })
     .on("mouseout",  function(a: ActivityNode) { return ctrl.outActivity(a, this); })
     .attr("class", "node")
-    .style("fill", function(_, i) {
-      return TANGO_COLORS[i];
+    .style("fill", function(a: ActivityNode, i) {
+      return getLightTangoColor(a.getType(), i);
     })
-    .style("stroke", function(_, i) { return d3.rgb(TANGO_COLORS[i]).darker().toString(); })
+    .style("stroke", function(a: ActivityNode, i) {
+      return d3.rgb(getLightTangoColor(a.getType(), i)).darker().toString();
+    })
     .style("stroke-width", function(a: ActivityNode) { return (a.getGroupSize() > 1) ? Math.log(a.getGroupSize()) * 3 : ""; })
     .classed("reflexive", function(a: ActivityNode) { return a.reflexive; });
 }
