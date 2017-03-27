@@ -9,10 +9,15 @@ import som.interpreter.SArguments;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
+import som.interpreter.actors.ResolvePromiseNode;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
+import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
+import som.interpreter.actors.WrapReferenceNode;
+import som.interpreter.actors.WrapReferenceNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.vm.VmSettings;
@@ -30,109 +35,33 @@ public class AssertionPrims {
 
   @GenerateNodeFactory
   @ImportStatic(Nil.class)
-  @Primitive(primitive = "assertNext:msg:")
-  public abstract static class AssertNextPrim extends BinaryComplexOperation{
+  @Primitive(primitive = "assertNext:res:")
+  public abstract static class AssertNextPrim extends BinaryExpressionNode{
 
     protected AssertNextPrim(final boolean eagerlyWrapped, final SourceSection source) {
       super(eagerlyWrapped, source);
     }
 
-    @Specialization (guards = "valueIsNil(msg)")
-    public final Object doSBlock(final SBlock statement, final Object msg) {
-      addAssertion(new NextAssertion(statement));
-      return Nil.nilObject;
-    }
-
     @Specialization
-    public final Object doSBlockWithMessage(final SBlock statement, final String msg) {
-      addAssertion(new NextAssertion(statement, msg));
+    public final Object doSBlock(final SBlock statement, final SResolver resolver) {
+      addAssertion(new NextAssertion(statement, resolver));
       return Nil.nilObject;
     }
   }
 
   @GenerateNodeFactory
   @ImportStatic(Nil.class)
-  @Primitive(primitive = "assertNow:msg:")
-  public abstract static class AssertNowPrim extends BinaryComplexOperation{
-
-    protected AssertNowPrim(final boolean eagerlyWrapped, final SourceSection source) {
-      super(eagerlyWrapped, source);
-    }
-
-    @Specialization (guards = "valueIsNil(msg)")
-    public final Object doBool(final boolean bool, final Object msg) {
-      if (!VmSettings.ENABLE_ASSERTIONS) {
-        return Nil.nilObject;
-      }
-
-      if (!bool) {
-          throw new AssertionError();
-      }
-
-      return Nil.nilObject;
-    }
-
-    @Specialization
-    public final Object doBool(final boolean bool, final String msg) {
-      if (!VmSettings.ENABLE_ASSERTIONS) {
-        return Nil.nilObject;
-      }
-
-      if (!bool) {
-          throw new AssertionError(msg);
-      }
-
-      return Nil.nilObject;
-    }
-
-    @Specialization (guards = "valueIsNil(msg)")
-    public final Object doSBlock(final SBlock statement, final Object msg) {
-      if (!VmSettings.ENABLE_ASSERTIONS) {
-        return Nil.nilObject;
-      }
-
-      if (!(boolean) statement.getMethod().invoke(new Object[] {statement})) {
-          throw new AssertionError();
-      }
-
-      return Nil.nilObject;
-    }
-
-    @Specialization
-    public final Object doSBlockWithMessage(final SBlock statement, final String msg) {
-      if (!VmSettings.ENABLE_ASSERTIONS) {
-        return Nil.nilObject;
-      }
-
-      if (!(boolean) statement.getMethod().invoke(new Object[] {statement})) {
-          throw new AssertionError(msg);
-      }
-
-      return Nil.nilObject;
-    }
-  }
-
-  @GenerateNodeFactory
-  @ImportStatic(Nil.class)
-  @Primitive(primitive = "assertFuture:msg:")
-  public abstract static class AssertFuturePrim extends BinaryComplexOperation{
+  @Primitive(primitive = "assertFuture:res:")
+  public abstract static class AssertFuturePrim extends BinaryExpressionNode{
 
     protected AssertFuturePrim(final boolean eagerlyWrapped, final SourceSection source) {
       super(eagerlyWrapped, source);
     }
 
-    @Specialization(guards = "valueIsNil(msg)")
-    public final Object doSBlock(final SBlock statement, final Object msg) {
-      if (VmSettings.ENABLE_ASSERTIONS) {
-        addAssertion(new FutureAssertion(statement));
-      }
-      return Nil.nilObject;
-    }
-
     @Specialization
-    public final Object doSBlockWithMessage(final SBlock statement, final String msg) {
+    public final Object doSBlock(final SBlock statement, final SResolver resolver) {
       if (VmSettings.ENABLE_ASSERTIONS) {
-        addAssertion(new FutureAssertion(statement, msg));
+        addAssertion(new FutureAssertion(statement, resolver));
       }
       return Nil.nilObject;
     }
@@ -140,66 +69,48 @@ public class AssertionPrims {
 
   @GenerateNodeFactory
   @ImportStatic(Nil.class)
-  @Primitive(primitive = "assertGlobally:msg:")
-  public abstract static class AssertGloballyPrim extends BinaryComplexOperation{
+  @Primitive(primitive = "assertGlobally:res:")
+  public abstract static class AssertGloballyPrim extends BinaryExpressionNode{
 
     protected AssertGloballyPrim(final boolean eagerlyWrapped, final SourceSection source) {
       super(eagerlyWrapped, source);
     }
 
-    @Specialization(guards = "valueIsNil(msg)")
-    public final Object doSBlock(final SBlock statement, final Object msg) {
-      addAssertion(new GloballyAssertion(statement));
-      return Nil.nilObject;
-    }
-
     @Specialization
-    public final Object doSBlockWithMessage(final SBlock statement, final String msg) {
-      addAssertion(new GloballyAssertion(statement, msg));
+    public final Object doSBlock(final SBlock statement, final SResolver resolver) {
+      addAssertion(new GloballyAssertion(statement, resolver));
       return Nil.nilObject;
     }
   }
 
   @GenerateNodeFactory
   @ImportStatic(Nil.class)
-  @Primitive(primitive = "assert:until:msg:")
+  @Primitive(primitive = "assert:until:res:")
   public abstract static class AssertUntilPrim extends TernaryExpressionNode{
 
     protected AssertUntilPrim(final boolean eagerlyWrapped, final SourceSection source) {
       super(eagerlyWrapped, source);
     }
 
-    @Specialization(guards = "valueIsNil(msg)")
-    public final Object doSBlock(final SBlock statement, final SBlock until, final Object msg) {
-      addAssertion(new UntilAssertion(statement, until));
-      return Nil.nilObject;
-    }
-
     @Specialization
-    public final Object doSBlockWithMessage(final SBlock statement, final SBlock until, final String msg) {
-      addAssertion(new UntilAssertion(statement, until, msg));
+    public final Object doSBlock(final SBlock statement, final SBlock until, final SResolver resolver) {
+      addAssertion(new UntilAssertion(statement, resolver, until));
       return Nil.nilObject;
     }
   }
 
   @GenerateNodeFactory
   @ImportStatic(Nil.class)
-  @Primitive(primitive = "assert:release:msg:")
+  @Primitive(primitive = "assert:release:res:")
   public abstract static class AssertReleasePrim extends TernaryExpressionNode{
 
     protected AssertReleasePrim(final boolean eagerlyWrapped, final SourceSection source) {
       super(eagerlyWrapped, source);
     }
 
-    @Specialization(guards = "valueIsNil(msg)")
-    public final Object doSBlock(final SBlock statement, final SBlock release, final Object msg) {
-      addAssertion(new Assertion.ReleaseAssertion(statement, release));
-      return Nil.nilObject;
-    }
-
     @Specialization
-    public final Object doSBlockWithMessage(final SBlock statement, final SBlock release, final String msg) {
-      addAssertion(new Assertion.ReleaseAssertion(statement, release, msg));
+    public final Object doSBlock(final SBlock statement, final SBlock release, final SResolver resolver) {
+      addAssertion(new Assertion.ReleaseAssertion(statement, resolver, release));
       return Nil.nilObject;
     }
   }
@@ -336,27 +247,31 @@ public class AssertionPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "assertResultUsed:")
   public abstract static class IsResultUsedPrim extends UnaryBasicOperation{
+    @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
 
     protected IsResultUsedPrim(final boolean eagerlyWrapped, final SourceSection source) {
       super(eagerlyWrapped, source);
     }
 
     @Specialization
-    public final Object dovoid(final Object receiver) {
+    public final Object dovoid(final SResolver resolver) {
       if (!VmSettings.ENABLE_ASSERTIONS) {
         return Nil.nilObject;
       }
 
       assert Thread.currentThread() instanceof ActorProcessingThread;
       EventualMessage current = EventualMessage.getCurrentExecutingMessage();
+
       if (current.getResolver() == null) {
-        throw new AssertionError("Message result is unused");
+        ResolvePromiseNode.resolve(Resolution.SUCCESSFUL, wrapper,
+            resolver.getPromise(), true,
+            resolver.getPromise().getOwner(), false);
       }
 
       if (!current.getResolver().getPromise().isResultUsed()) {
-        getCurrentTracingActor().addAssertion(new Assertion.ResultUsedAssertion(current.getResolver().getPromise(), "Message result is unused"));
+        getCurrentTracingActor().addAssertion(new Assertion.ResultUsedAssertion(current.getResolver().getPromise(), resolver));
       }
-      return null;
+      return Nil.nilObject;
     }
   }
 

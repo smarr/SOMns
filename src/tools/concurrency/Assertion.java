@@ -3,23 +3,27 @@ package tools.concurrency;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.oracle.truffle.api.nodes.Node.Child;
+
 import som.interpreter.actors.EventualMessage;
+import som.interpreter.actors.ResolvePromiseNode;
 import som.interpreter.actors.SPromise;
+import som.interpreter.actors.SPromise.Resolution;
+import som.interpreter.actors.SPromise.SResolver;
+import som.interpreter.actors.WrapReferenceNode;
+import som.interpreter.actors.WrapReferenceNodeGen;
 import som.vmobjects.SBlock;
 import tools.concurrency.TracingActors.TracingActor;
 
 public class Assertion {
   SBlock statement;
-  String message;
+  SResolver result;
 
-  public Assertion(final SBlock statement) {
-    super();
-    this.statement = statement;
-  }
+  @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
 
-  public Assertion(final SBlock statement, final String msg) {
+  public Assertion(final SBlock statement, final SResolver result) {
     super();
-    this.message = msg;
+    this.result = result;
     this.statement = statement;
   }
 
@@ -31,24 +35,16 @@ public class Assertion {
   }
 
   protected void throwError() {
-    if (message == null) {
-      throw new AssertionError(statement.toString());
-    } else {
-      throw new AssertionError(message);
-    }
+    ResolvePromiseNode.resolve(Resolution.SUCCESSFUL, wrapper,
+        result.getPromise(), true,
+        result.getPromise().getOwner(), false);
   }
-
 
   public static class UntilAssertion extends Assertion{
     SBlock until;
 
-    public UntilAssertion(final SBlock statement, final SBlock until) {
-      super(statement);
-      this.until = until;
-    }
-
-    public UntilAssertion(final SBlock statement, final SBlock until, final String msg) {
-      super(statement, msg);
+    public UntilAssertion(final SBlock statement, final SResolver result, final SBlock until) {
+      super(statement, result);
       this.until = until;
     }
 
@@ -69,13 +65,8 @@ public class Assertion {
   public static class ReleaseAssertion extends Assertion{
     SBlock release;
 
-    public ReleaseAssertion(final SBlock statement, final SBlock release) {
-      super(statement);
-      this.release = release;
-    }
-
-    public ReleaseAssertion(final SBlock statement, final SBlock release, final String msg) {
-      super(statement, msg);
+    public ReleaseAssertion(final SBlock statement, final SResolver result, final SBlock release) {
+      super(statement, result);
       this.release = release;
     }
 
@@ -94,27 +85,17 @@ public class Assertion {
   }
 
   public static class NextAssertion extends Assertion{
-    public NextAssertion(final SBlock statement) {
-      super(statement);
-    }
 
-    public NextAssertion(final SBlock statement, final String msg) {
-      super(statement, msg);
+    public NextAssertion(final SBlock statement, final SResolver result) {
+      super(statement, result);
     }
   }
 
   public static class FutureAssertion extends Assertion{
     protected static Set<FutureAssertion> futureAssertions = new HashSet<>();
 
-    public FutureAssertion(final SBlock statement) {
-      super(statement);
-      synchronized (futureAssertions) {
-        futureAssertions.add(this);
-      }
-    }
-
-    public FutureAssertion(final SBlock statement, final String msg) {
-      super(statement, msg);
+    public FutureAssertion(final SBlock statement, final SResolver result) {
+      super(statement, result);
       synchronized (futureAssertions) {
         futureAssertions.add(this);
       }
@@ -149,12 +130,9 @@ public class Assertion {
   }
 
   public static class GloballyAssertion extends Assertion{
-    public GloballyAssertion(final SBlock statement) {
-      super(statement);
-    }
 
-    public GloballyAssertion(final SBlock statement, final String msg) {
-      super(statement, msg);
+    public GloballyAssertion(final SBlock statement, final SResolver result) {
+      super(statement, result);
     }
 
     @Override
@@ -171,13 +149,8 @@ public class Assertion {
   public static class ResultUsedAssertion extends FutureAssertion{
     final SPromise checkedPromise;
 
-    public ResultUsedAssertion(final SPromise statement) {
-      super(null);
-      this.checkedPromise = statement;
-    }
-
-    public ResultUsedAssertion(final SPromise statement, final String msg) {
-      super(null, msg);
+    public ResultUsedAssertion(final SPromise statement, final SResolver result) {
+      super(null, result);
       this.checkedPromise = statement;
     }
 

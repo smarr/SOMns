@@ -38,6 +38,10 @@ public class SPromise extends SObjectWithClass {
     }
   }
 
+  public static SPromise createUntracedPromise(final Actor owner) {
+    return new SPromise(owner);
+  }
+
 
   // THREAD-SAFETY: these fields are subject to race conditions and should only
   //                be accessed when under the SPromise(this) lock

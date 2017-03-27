@@ -37,7 +37,6 @@ import som.primitives.AsStringPrimFactory;
 import som.primitives.AssertionPrimsFactory.AssertFuturePrimFactory;
 import som.primitives.AssertionPrimsFactory.AssertGloballyPrimFactory;
 import som.primitives.AssertionPrimsFactory.AssertNextPrimFactory;
-import som.primitives.AssertionPrimsFactory.AssertNowPrimFactory;
 import som.primitives.AssertionPrimsFactory.AssertReleasePrimFactory;
 import som.primitives.AssertionPrimsFactory.AssertUntilPrimFactory;
 import som.primitives.AssertionPrimsFactory.GetMessageArgumentsPrimFactory;
@@ -409,7 +408,6 @@ public class Primitives {
     allFactories.add(AssertGloballyPrimFactory.getInstance());
     allFactories.add(AssertUntilPrimFactory.getInstance());
     allFactories.add(AssertReleasePrimFactory.getInstance());
-    allFactories.add(AssertNowPrimFactory.getInstance());
     allFactories.add(IsPromiseResolvedPrimFactory.getInstance());
     allFactories.add(OnReceivePrimFactory.getInstance());
     allFactories.add(OnSendPrimFactory.getInstance());

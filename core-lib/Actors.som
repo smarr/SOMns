@@ -308,54 +308,87 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel usingPlatform: platform
   )
 
   public assertResultUsed = (
-    ^vmMirror assertResultUsed: self.
+    | pp |
+    pp := createPromisePair.
+    vmMirror assertResultUsed: (pp resolver).
+    pp promise onError:[
+      signalAssertionError: 'Result Unused'
+    ]
   )
 
   public assert: aBlock = (
-    vmMirror assertNow: aBlock msg: nil.
+    assert: aBlock msg: ''.
   )
 
   public assert: aBlock msg: msg = (
-    vmMirror assertNow: aBlock msg: msg.
+    aBlock value ifFalse:[
+      signalAssertionError: msg
+    ]
   )
 
   public assertNext: aBlock = (
-    vmMirror assertNext: aBlock msg: nil.
+    assertNext: aBlock msg: ''.
   )
 
   public assertNext: aBlock msg: msg = (
-    vmMirror assertNext: aBlock msg: msg.
+    | pp |
+    pp := createPromisePair.
+    vmMirror assertNext: aBlock msg: msg res: (pp resolver).
+    pp promise onError:[
+      signalAssertionError: msg
+    ]
   )
 
   public assertFuture: aBlock = (
-    vmMirror assertFuture: aBlock msg: nil.
+    
+    assertFuture: aBlock msg: ''.
   )
 
   public assertFuture: aBlock msg: msg = (
-    vmMirror assertFuture: aBlock msg: msg.
+    | pp |
+    pp := createPromisePair.
+    vmMirror assertFuture: aBlock msg: msg res: (pp resolver).
+    pp promise onError:[
+      signalAssertionError: msg
+    ]
   )
 
   public assertGlobally: aBlock = (
-    vmMirror assertGlobally: aBlock msg: nil.
+    assertGlobally: aBlock msg: ''.
   )
 
   public assertGlobally: aBlock msg: msg= (
-    vmMirror assertGlobally: aBlock msg: msg.
+    | pp |
+    pp := createPromisePair.
+    vmMirror assertGlobally: aBlock msg: msg res: (pp resolver).
+    pp promise onError:[
+      signalAssertionError: msg
+    ]
   )
 
   public assert: aBlock until: anotherBlock = (
-    vmMirror assert: aBlock until: anotherBlock msg: nil.
+    assert: aBlock until: anotherBlock msg: ''.
   )
 
    public assert: aBlock until: anotherBlock msg: msg = (
-    vmMirror assert: aBlock until: anotherBlock msg: msg.
+    | pp |
+    pp := createPromisePair.
+    vmMirror assert: aBlock until: anotherBlock msg: msg res: (pp resolver).
+    pp promise onError:[
+      signalAssertionError: msg
+    ]
   )
 
   public assert: aBlock release: anotherBlock = (
-    vmMirror assert: aBlock release: anotherBlock msg: nil.
+    assert: aBlock release: anotherBlock msg: ''.
   )
 
   public assert: aBlock release: anotherBlock msg: msg = (
-    vmMirror assert: aBlock release: anotherBlock msg: msg.
+    | pp |
+    pp := createPromisePair.
+    vmMirror assert: aBlock release: anotherBlock msg: msg res: (pp resolver).
+    pp promise onError:[
+      signalAssertionError: msg
+    ]
   )
 )
