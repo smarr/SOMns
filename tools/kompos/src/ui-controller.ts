@@ -102,10 +102,12 @@ export class UiController extends Controller {
         case "MessageReceiverBreakpoint":
           this.view.updateSendBreakpoint(<MessageBreakpoint> bp);
           break;
-        case "AsyncMessageReceiverBreakpoint":
+        case "AsyncMessageBeforeExecutionBreakpoint":
+        case "AsyncMessageAfterExecutionBreakpoint":
           this.view.updateAsyncMethodRcvBreakpoint(<MessageBreakpoint> bp);
           break;
-        case "PromiseResolverBreakpoint" || "PromiseResolutionBreakpoint":
+        case "PromiseResolverBreakpoint":
+        case "PromiseResolutionBreakpoint":
           this.view.updatePromiseBreakpoint(<MessageBreakpoint> bp);
           break;
         default:
@@ -222,15 +224,15 @@ export class UiController extends Controller {
     this.view.updateSendBreakpoint(<MessageBreakpoint> breakpoint);
   }
 
-  public onToggleMethodAsyncRcvBreakpoint(sectionId: string) {
+  public onToggleMethodAsyncRcvBreakpoint(sectionId: string, type: SectionBreakpointType) {
     dbgLog("async method rcv bp: " + sectionId);
 
-    const id = getBreakpointId(sectionId, "AsyncMessageReceiverBreakpoint"),
+    const id = getBreakpointId(sectionId, type),
       sourceSection = this.dbg.getSection(sectionId),
       sourceId      = getSourceIdFromSection(sectionId),
       source        = this.dbg.getSource(sourceId),
       breakpoint    = this.toggleBreakpoint(id, source, function () {
-        return createMsgBreakpoint(source, sourceSection, sectionId, "AsyncMessageReceiverBreakpoint"); });
+        return createMsgBreakpoint(source, sourceSection, sectionId, type); });
 
     this.view.updateAsyncMethodRcvBreakpoint(<MessageBreakpoint> breakpoint);
   }

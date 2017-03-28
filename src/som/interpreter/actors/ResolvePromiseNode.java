@@ -2,6 +2,7 @@ package som.interpreter.actors;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.SPromise.Resolution;
@@ -19,9 +20,19 @@ public abstract class ResolvePromiseNode extends AbstractPromiseResolutionNode {
    * Normal case, when the promise is resolved with a value that's not a promise.
    */
   @Specialization(guards = {"notAPromise(result)"})
-  public SResolver normalResolution(final SResolver resolver, final Object result,
+  public SResolver normalResolution(final VirtualFrame frame, final SResolver resolver, final Object result,
       final boolean isBreakpointOnPromiseResolution) {
-    resolvePromise(Resolution.SUCCESSFUL, resolver, result, isBreakpointOnPromiseResolution);
+    boolean breakpointOnResolution = isBreakpointOnPromiseResolution;
+    SPromise promise = resolver.getPromise();
+
+    if (promise.isExplicitPromise() && promise.isTriggerExplicitPromiseResolverBreakpoint()) {
+      haltNode.executeEvaluated(frame, result);
+    }
+    if (promise.isExplicitPromise() && promise.isTriggerPromiseResolutionBreakpoint()) {
+      breakpointOnResolution = promise.isTriggerPromiseResolutionBreakpoint();
+    }
+
+    resolvePromise(Resolution.SUCCESSFUL, resolver, result, breakpointOnResolution);
     return resolver;
   }
 }

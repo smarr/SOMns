@@ -12,7 +12,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.actors.Actor.UncaughtExceptions;
@@ -38,16 +37,12 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
-import tools.SourceCoordinate.FullSourceCoordinate;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActivityThread;
 import tools.debugger.nodes.AbstractBreakpointNode;
-import tools.debugger.nodes.BreakpointNodeGen;
-import tools.debugger.nodes.DisabledBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
 
@@ -225,14 +220,7 @@ public abstract class ChannelPrimitives {
     public ReadPrim(final boolean eagerlyWrapped, final SourceSection source) {
       super(eagerlyWrapped, source);
       haltNode = SuspendExecutionNodeGen.create(false, sourceSection, null);
-
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        Breakpoints bpCatalog = VM.getWebDebugger().getBreakpoints();
-        FullSourceCoordinate coord = SourceCoordinate.create(source);
-        this.afterWrite = insert(BreakpointNodeGen.create(bpCatalog.getOppositeBreakpoint(coord)));
-      } else {
-        this.afterWrite = insert(new DisabledBreakpointNode());
-      }
+      afterWrite = insert(Breakpoints.createOpposite(source));
     }
 
     @Specialization
@@ -271,17 +259,9 @@ public abstract class ChannelPrimitives {
 
     public WritePrim(final boolean eagerlyWrapped, final SourceSection source) {
       super(eagerlyWrapped, source);
-      isVal = IsValue.createSubNode();
-
-      haltNode = SuspendExecutionNodeGen.create(false, sourceSection, null);
-
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        Breakpoints bpCatalog = VM.getWebDebugger().getBreakpoints();
-        FullSourceCoordinate coord = SourceCoordinate.create(source);
-        this.afterRead = insert(BreakpointNodeGen.create(bpCatalog.getOppositeBreakpoint(coord)));
-      } else {
-        this.afterRead = insert(new DisabledBreakpointNode());
-      }
+      isVal     = IsValue.createSubNode();
+      haltNode  = SuspendExecutionNodeGen.create(false, sourceSection, null);
+      afterRead = insert(Breakpoints.createOpposite(source));
     }
 
     @Specialization

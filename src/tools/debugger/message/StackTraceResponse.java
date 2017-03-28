@@ -84,8 +84,8 @@ public final class StackTraceResponse extends Response {
   public static StackTraceResponse create(final int startFrame, final int levels,
       final Suspension suspension, final int requestId) {
     ArrayList<DebugStackFrame> frames = suspension.getStackFrames();
+    int skipFrames = suspension.getFrameSkipCount();
 
-    int skipFrames = suspension.isHaltPrimitive() ? Suspension.FRAMES_SKIPPED_FOR_HALT : 0;
     if (startFrame > skipFrames) {
       skipFrames = startFrame;
     }

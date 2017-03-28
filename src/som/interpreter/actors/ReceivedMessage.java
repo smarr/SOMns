@@ -31,17 +31,22 @@ public class ReceivedMessage extends ReceivedRootNode {
   @Override
   public Object execute(final VirtualFrame frame) {
     EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
+    boolean promiseResolutionBreakpoint = false;
 
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.triggerPromiseResolverBreakpoint) {
+    if (msg.getResolver() != null) {
+      promiseResolutionBreakpoint = msg.getResolver().getPromise().isTriggerPromiseResolutionBreakpoint();
+    }
+
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isTriggerPromiseResolverBreakpoint()) {
       dbg.prepareSteppingAfterNextRootNode();
     }
 
     try {
       Object result = onReceive.doPreEvaluated(frame, msg.args);
-      resolvePromise(frame, msg.resolver, result, msg.triggerPromiseResolutionBreakpoint);
+      resolvePromise(frame, msg.resolver, result, promiseResolutionBreakpoint);
     } catch (SomException exception) {
         errorPromise(frame, msg.resolver, exception.getSomObject(),
-            msg.triggerPromiseResolutionBreakpoint);
+            promiseResolutionBreakpoint);
     }
     return null;
   }
@@ -64,7 +69,7 @@ public class ReceivedMessage extends ReceivedRootNode {
     public Object execute(final VirtualFrame frame) {
       EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
 
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.triggerPromiseResolverBreakpoint) {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isTriggerPromiseResolverBreakpoint()) {
         dbg.prepareSteppingAfterNextRootNode();
       }
 
@@ -85,17 +90,22 @@ public class ReceivedMessage extends ReceivedRootNode {
     @Override
     public Object execute(final VirtualFrame frame) {
       EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
+      boolean promiseResolutionBreakpoint = false;
 
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.triggerPromiseResolverBreakpoint) {
+      if (msg.getResolver() != null) {
+        promiseResolutionBreakpoint = msg.getResolver().getPromise().isTriggerPromiseResolutionBreakpoint();
+      }
+
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isTriggerPromiseResolverBreakpoint()) {
         dbg.prepareSteppingAfterNextRootNode();
       }
 
       try {
         Object result = onReceive.call(msg.args);
-        resolvePromise(frame, msg.resolver, result, msg.triggerPromiseResolutionBreakpoint);
+        resolvePromise(frame, msg.resolver, result, promiseResolutionBreakpoint);
       } catch (SomException exception) {
           errorPromise(frame, msg.resolver, exception.getSomObject(),
-              msg.triggerPromiseResolutionBreakpoint);
+              promiseResolutionBreakpoint);
       }
       return null;
     }

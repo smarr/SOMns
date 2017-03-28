@@ -45,6 +45,9 @@ public abstract class RegisterOnPromiseNode {
       // used to group setting the promise resolution state and processing the
       // message.
       synchronized (promiseValue) {
+        if (promise.isTriggerPromiseResolutionBreakpoint()) {
+          msg.setIsMessageReceiverBreakpoint(true);
+        }
         schedule.execute(promise, msg, current);
       }
     }

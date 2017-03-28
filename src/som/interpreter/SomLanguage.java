@@ -24,8 +24,12 @@ import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
+import tools.concurrency.Tags.CreatePromisePair;
 import tools.concurrency.Tags.EventualMessageSend;
 import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.concurrency.Tags.OnError;
+import tools.concurrency.Tags.WhenResolved;
+import tools.concurrency.Tags.WhenResolvedOnError;
 import tools.debugger.Tags.ArgumentTag;
 import tools.debugger.Tags.CommentTag;
 import tools.debugger.Tags.DelimiterClosingTag;
@@ -86,7 +90,8 @@ import tools.dym.Tags.VirtualInvokeReceiver;
   OpComparison.class, OpLength.class,
 
   EventualMessageSend.class, ChannelRead.class, ChannelWrite.class,
-  ExpressionBreakpoint.class
+  ExpressionBreakpoint.class,  CreatePromisePair.class,  WhenResolved.class,
+  WhenResolvedOnError.class, OnError.class
 })
 public final class SomLanguage extends TruffleLanguage<VM> {
 

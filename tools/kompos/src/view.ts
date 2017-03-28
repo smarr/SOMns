@@ -345,8 +345,8 @@ function annotateArray(arr: any[][], sourceId: string, activityId: number,
   }
 }
 
-function enableEventualSendClicks(fileNode) {
-  const sendOperator = fileNode.find(".EventualMessageSend");
+function enableMenu(fileNode, tag: string, tpl: string, getId = null) {
+  const sendOperator = fileNode.find(tag);
   sendOperator.attr({
     "data-toggle"    : "popover",
     "data-trigger"   : "click hover",
@@ -356,13 +356,23 @@ function enableEventualSendClicks(fileNode) {
     "data-placement" : "top"
   });
 
+  if (getId === null) {
+    getId = function (that) {
+      return getSectionIdFrom(that.id);
+    };
+  }
+
   sendOperator.attr("data-content", function() {
-    let content = nodeFromTemplate("actor-bp-menu");
+    const content = nodeFromTemplate(tpl);
     // capture the source section id, and store it on the buttons
-    $(content).find("button").attr("data-ss-id", getSectionIdFrom(this.id));
+    $(content).find("button").attr("data-ss-id", getId(this));
     return $(content).html();
   });
   sendOperator.popover();
+}
+
+function enableEventualSendClicks(fileNode) {
+  enableMenu(fileNode, ".EventualMessageSend", "actor-bp-menu");
 
   $(document).on("click", ".bp-rcv-msg", function (e) {
     e.stopImmediatePropagation();
@@ -391,23 +401,7 @@ function enableChannelClicks(fileNode) {
 }
 
 function constructChannelBpMenu(fileNode, tag: string, tpl: string) {
-  const sendOperator = fileNode.find(tag);
-  sendOperator.attr({
-    "data-toggle"    : "popover",
-    "data-trigger"   : "click hover",
-    "title"          : "Breakpoints",
-    "data-html"      : "true",
-    "data-animation" : "false",
-    "data-placement" : "top"
-  });
-
-  sendOperator.attr("data-content", function() {
-    let content = nodeFromTemplate(tpl);
-    // capture the source section id, and store it on the buttons
-    $(content).find("button").attr("data-ss-id", getSectionIdFrom(this.id));
-    return $(content).html();
-  });
-  sendOperator.popover();
+  enableMenu(fileNode, tag, tpl);
 
   $(document).on("click", ".bp-before", function (e) {
     e.stopImmediatePropagation();
@@ -420,29 +414,53 @@ function constructChannelBpMenu(fileNode, tag: string, tpl: string) {
   });
 }
 
-function enableMethodBreakpointHover(fileNode) {
-  let methDecls = fileNode.find(".MethodDeclaration");
-  methDecls.attr({
-    "data-toggle"   : "popover",
-    "data-trigger"  : "click hover",
-    "title"         : "Breakpoints",
-    "animation"     : "false",
-    "data-html"     : "true",
-    "data-animation": "false",
-    "data-placement": "top" });
+function enableCreatePromisePairClicks(fileNode) {
+  enableMenu(fileNode, ".CreatePromisePair", "promise-bp-menu");
+  enablePromiseBreakpointMenuItems();
+}
 
-  methDecls.attr("data-content", function () {
-    let idObj = methodDeclIdToObj(this.id);
-    let content = nodeFromTemplate("method-breakpoints");
-    $(content).find("button").attr("data-ss-id", getSectionId(idObj.sourceId, idObj));
-    return $(content).html();
+function enableWhenResolvedClicks(fileNode) {
+  enableMenu(fileNode, ".WhenResolved", "promise-bp-menu");
+  enablePromiseBreakpointMenuItems();
+}
+
+function enableWhenResolvedOnErrorClicks(fileNode) {
+  enableMenu(fileNode, ".WhenResolvedOnError", "promise-bp-menu");
+  enablePromiseBreakpointMenuItems();
+}
+
+function enableOnErrorClicks(fileNode) {
+  enableMenu(fileNode, ".OnError", "promise-bp-menu");
+  enablePromiseBreakpointMenuItems();
+}
+
+function enablePromiseBreakpointMenuItems() {
+  $(document).on("click", ".bp-rcv-prom", function (e) {
+    e.stopImmediatePropagation();
+    ctrl.onTogglePromiseBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "PromiseResolutionBreakpoint");
   });
 
-  methDecls.popover();
+  $(document).on("click", ".bp-send-prom", function (e) {
+    e.stopImmediatePropagation();
+    ctrl.onTogglePromiseBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "PromiseResolverBreakpoint");
+  });
+}
+
+function enableMethodBreakpointHover(fileNode) {
+  enableMenu(fileNode, ".MethodDeclaration", "method-breakpoints",
+    function(that) {
+      const idObj = methodDeclIdToObj(that.id);
+      return getSectionId(idObj.sourceId, idObj);
+    });
 
   $(document).on("click", ".bp-async-rcv", function (e) {
     e.stopImmediatePropagation();
-    ctrl.onToggleMethodAsyncRcvBreakpoint(e.currentTarget.attributes["data-ss-id"].value);
+    ctrl.onToggleMethodAsyncRcvBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "AsyncMessageBeforeExecutionBreakpoint");
+  });
+
+  $(document).on("click", ".bp-async-rcv-after", function (e) {
+    e.stopImmediatePropagation();
+    ctrl.onToggleMethodAsyncRcvBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "AsyncMessageAfterExecutionBreakpoint");
   });
 }
 
@@ -586,6 +604,10 @@ export class View {
     enableEventualSendClicks($(fileNode));
     enableChannelClicks($(fileNode));
     enableMethodBreakpointHover($(fileNode));
+    enableCreatePromisePairClicks($(fileNode));
+	  enableWhenResolvedClicks($(fileNode));
+    enableWhenResolvedOnErrorClicks($(fileNode));
+    enableOnErrorClicks($(fileNode));
 
     const sourceContainer = $("#" + actId + " .activity-source");
     sourceContainer.append(newFileElement);

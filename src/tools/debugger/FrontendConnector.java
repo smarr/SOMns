@@ -39,7 +39,8 @@ import tools.debugger.message.StackTraceResponse;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SymbolMessage;
 import tools.debugger.message.VariablesResponse;
-import tools.debugger.session.AsyncMessageReceiverBreakpoint;
+import tools.debugger.session.AsyncMessageAfterExecutionBreakpoint;
+import tools.debugger.session.AsyncMessageBeforeExecutionBreakpoint;
 import tools.debugger.session.Breakpoints;
 import tools.debugger.session.ChannelOppositeBreakpoint;
 import tools.debugger.session.LineBreakpoint;
@@ -276,7 +277,11 @@ public class FrontendConnector {
     breakpoints.addOrUpdate(bp);
   }
 
-  public void registerOrUpdate(final AsyncMessageReceiverBreakpoint bp) {
+  public void registerOrUpdate(final AsyncMessageBeforeExecutionBreakpoint bp) {
+    breakpoints.addOrUpdate(bp);
+  }
+
+  public void registerOrUpdate(final AsyncMessageAfterExecutionBreakpoint bp) {
     breakpoints.addOrUpdate(bp);
   }
 
