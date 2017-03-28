@@ -71,7 +71,6 @@ public abstract class AbstractPromiseResolutionNode extends TernaryExpressionNod
             breakpointOnResolution);
       } else {
         synchronized (promiseToBeResolved) { // TODO: is this really deadlock free?
-          // TODO: check this condition.
           if (promiseValue.isTriggerPromiseResolutionBreakpoint() && !breakpointOnResolution) {
             breakpointOnResolution = promiseValue.isTriggerPromiseResolutionBreakpoint();
           }
