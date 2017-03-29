@@ -28,8 +28,8 @@ public abstract class BinaryExpressionNode extends EagerlySpecializableNode {
     super(wrappedNode);
   }
 
-  public abstract Object executeEvaluated(final VirtualFrame frame,
-      final Object receiver, Object argument);
+  public abstract Object executeEvaluated(VirtualFrame frame, Object receiver,
+      Object argument);
 
   @Override
   public final Object doPreEvaluated(final VirtualFrame frame,

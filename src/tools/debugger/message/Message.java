@@ -6,7 +6,7 @@ import tools.debugger.FrontendConnector;
 
 public abstract class Message {
   public abstract static class IncommingMessage extends Message {
-    public abstract void process(final FrontendConnector connector, final WebSocket conn);
+    public abstract void process(FrontendConnector connector, WebSocket conn);
   }
 
   /**

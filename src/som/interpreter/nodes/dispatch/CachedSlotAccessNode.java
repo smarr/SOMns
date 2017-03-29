@@ -56,7 +56,7 @@ public abstract class CachedSlotAccessNode extends AbstractDispatchNode {
       }
     }
 
-    protected abstract Object read(final Object rcvr) throws InvalidAssumptionException;
+    protected abstract Object read(Object rcvr) throws InvalidAssumptionException;
 
     @Override
     public int lengthOfDispatchChain() {

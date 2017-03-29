@@ -1,13 +1,13 @@
 package som.interpreter.actors;
 
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.Node;
+
 import som.VM;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
-
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.nodes.Node;
 
 
 /**
@@ -20,7 +20,7 @@ public abstract class SchedulePromiseHandlerNode extends Node {
     return WrapReferenceNodeGen.create();
   }
 
-  public abstract void execute(final SPromise promise, final PromiseMessage msg, final Actor current);
+  public abstract void execute(SPromise promise, PromiseMessage msg, Actor current);
 
   @Specialization
   public final void schedule(final SPromise promise,

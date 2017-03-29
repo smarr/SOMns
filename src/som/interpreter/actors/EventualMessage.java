@@ -156,7 +156,7 @@ public abstract class EventualMessage {
       this.originalSender = originalSender;
     }
 
-    public abstract void resolve(final Object rcvr, final Actor target, final Actor sendingActor);
+    public abstract void resolve(Object rcvr, Actor target, Actor sendingActor);
 
     @Override
     public final Actor getSender() {

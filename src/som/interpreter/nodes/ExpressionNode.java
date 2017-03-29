@@ -75,7 +75,7 @@ public abstract class ExpressionNode extends SOMNode {
 
   public void markAsStatement()  { throw new UnsupportedOperationException(); }
 
-  public abstract Object executeGeneric(final VirtualFrame frame);
+  public abstract Object executeGeneric(VirtualFrame frame);
 
   @Override
   public ExpressionNode getFirstMethodBodyNode() { return this; }

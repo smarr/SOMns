@@ -51,8 +51,8 @@ public final class MethodPrims {
     }
     public InvokeOnPrim(final InvokeOnPrim node) { this(node.sourceSection); }
 
-    public abstract Object executeEvaluated(final VirtualFrame frame,
-        final SInvokable receiver, final Object target, final SArray somArr);
+    public abstract Object executeEvaluated(VirtualFrame frame,
+        SInvokable receiver, Object target, SArray somArr);
 
     @Override
     public final Object doPreEvaluated(final VirtualFrame frame,

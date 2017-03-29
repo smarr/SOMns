@@ -15,7 +15,7 @@ import som.vmobjects.SInvokable;
 
 public abstract class BlockDispatchNode extends Node {
 
-  public abstract Object executeDispatch(final Object[] arguments);
+  public abstract Object executeDispatch(Object[] arguments);
 
   protected static final boolean isSameMethod(final Object[] arguments,
       final SInvokable cached) {
