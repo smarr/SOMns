@@ -11,7 +11,9 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
+import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
+import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.SPromise.SReplayPromise;
 import som.vm.VmSettings;
 import tools.concurrency.TraceParser.MessageRecord;
@@ -21,6 +23,8 @@ public class TracingActors {
   public static class TracingActor extends Actor {
     protected long actorId;
     protected int mailboxNumber;
+    /** Flag that indicates if a step-to-next-turn action has been made in the previous message. */
+    protected boolean stepToNextTurn;
 
     public TracingActor(final VM vm) {
       super(vm);
@@ -38,6 +42,35 @@ public class TracingActors {
 
     @Override
     public long getId() { return actorId; }
+
+    public boolean isStepToNextTurn() {
+      return stepToNextTurn;
+    }
+
+    @Override
+    public void setStepToNextTurn(final boolean stepToNextTurn) {
+      this.stepToNextTurn = stepToNextTurn;
+    }
+
+    public static void handleBreakpointsAndStepping(final EventualMessage msg, final WebDebugger dbg, final Actor actor) {
+      if (!VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+        return;
+      }
+
+      if (msg.isMessageReceiverBreakpointSet() || ((TracingActor) actor).isStepToNextTurn()) {
+        dbg.prepareSteppingUntilNextRootNode();
+        if (((TracingActor) actor).isStepToNextTurn()) { // reset flag
+          actor.setStepToNextTurn(false);
+        }
+      }
+
+      // check if a step-return-from-turn-to-promise-resolution has been triggered
+      if (msg instanceof PromiseSendMessage && ((PromiseSendMessage) msg).getPromise().isTriggerStopBeforeExecuteCallback()) {
+          dbg.prepareSteppingUntilNextRootNode();
+      } else if (msg instanceof PromiseCallbackMessage && ((PromiseCallbackMessage) msg).getPromiseRegisteredOn().isTriggerStopBeforeExecuteCallback()) {
+          dbg.prepareSteppingUntilNextRootNode();
+      }
+   }
   }
 
   public static final class ReplayActor extends TracingActor {
@@ -242,7 +275,7 @@ public class TracingActors {
 
         for (EventualMessage msg : todo) {
           currentThread.currentMessage = msg;
-          handleBreakPoints(firstMessage, dbg);
+          handleBreakpointsAndStepping(firstMessage, dbg, a);
           msg.execute();
           currentThread.currentMessageId += 1;
         }

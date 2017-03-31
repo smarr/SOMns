@@ -19,6 +19,8 @@ public abstract class ResolvePromiseNode extends AbstractPromiseResolutionNode {
 
   /**
    * Normal case, when the promise is resolved with a value that's not a promise.
+   * Here we need to distinguish the explicit promises to ask directly to the promise
+   * if a promise resolution breakpoint was set.
    */
   @Specialization(guards = {"notAPromise(result)"})
   public SResolver normalResolution(final VirtualFrame frame, final SResolver resolver, final Object result,

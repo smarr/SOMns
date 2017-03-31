@@ -148,6 +148,7 @@ public class Suspension {
         SteppingStrategy strategy = activityThread.getSteppingStrategy();
         if (!continueWaiting && strategy != null) {
           strategy.handleResumeExecution(activity);
+          strategy.handleMessageToNextTurn(activity);
         }
 
       } catch (InterruptedException e) { /* Just continue waiting */ }

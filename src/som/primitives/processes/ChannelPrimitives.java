@@ -119,6 +119,13 @@ public abstract class ChannelPrimitives {
     public String getName() {
       return obj.getSOMClass().getName().getString();
     }
+
+    @Override
+    public void setStepToNextTurn(final boolean val) {
+      throw new UnsupportedOperationException(
+          "Step to next turn is not supported " +
+          "for processes. This code should never be reached.");
+    }
   }
 
   public static class TracingProcess extends Process {

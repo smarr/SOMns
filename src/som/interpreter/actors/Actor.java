@@ -187,12 +187,6 @@ public class Actor implements Activity {
     mailboxExtension.append(msg);
   }
 
-  protected static void handleBreakPoints(final EventualMessage msg, final WebDebugger dbg) {
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isMessageReceiverBreakpointSet()) {
-      dbg.prepareSteppingUntilNextRootNode();
-    }
-  }
-
   /**
    * Is scheduled on the fork/join pool and executes messages for a specific
    * actor.
@@ -268,7 +262,9 @@ public class Actor implements Activity {
     private void execute(final EventualMessage msg,
         final ActorProcessingThread currentThread, final WebDebugger dbg, final int i) {
       currentThread.currentMessage = msg;
-      handleBreakPoints(msg, dbg);
+      if (VmSettings.ACTOR_TRACING) {
+        TracingActor.handleBreakpointsAndStepping(msg, dbg, actor);
+      }
 
       if (i >= 0 && VmSettings.MESSAGE_TIMESTAMPS) {
         executionTimeStamps[i] = System.currentTimeMillis();
@@ -325,6 +321,8 @@ public class Actor implements Activity {
     }
   }
 
+  @Override
+  public void setStepToNextTurn(final boolean val) {  }
 
   public static final class ActorProcessingThreadFactory implements ForkJoinWorkerThreadFactory {
     @Override

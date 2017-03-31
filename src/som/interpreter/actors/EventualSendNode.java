@@ -10,6 +10,7 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
@@ -32,6 +33,10 @@ import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 import tools.concurrency.Tags.EventualMessageSend;
 import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.debugger.SteppingStrategy;
+import tools.debugger.SteppingStrategy.ReturnFromTurnToPromiseResolution;
+import tools.debugger.SteppingStrategy.ToMessageReceiver;
+import tools.debugger.SteppingStrategy.ToPromiseResolution;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
@@ -186,7 +191,8 @@ public class EventualSendNode extends ExprWithTagsNode {
       DirectMessage msg = new DirectMessage(
           EventualMessage.getCurrentExecutingMessageId(), target, selector, args,
           owner, resolver, onReceive,
-          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
+          hasMessageReceiverBreakpoint(resolver), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
+
       target.send(msg, actorPool);
     }
 
@@ -197,8 +203,34 @@ public class EventualSendNode extends ExprWithTagsNode {
       PromiseSendMessage msg = new PromiseSendMessage(
           EventualMessage.getCurrentExecutingMessageId(), selector, args,
           rcvr.getOwner(), resolver, onReceive,
-          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
+          hasMessageReceiverBreakpoint(resolver), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
+
       registerNode.register(rcvr, msg, rcvr.getOwner());
+    }
+
+    /**
+     * Check if any stepping strategy has been set and updates the corresponding breakpoint flag.
+     * If the strategy ToMessageReceiver is active, the flag messageReceiverBreakpoint is updated.
+     * If the strategy ToPromiseResolution is active, the flag promiseResolutionBreakpoint is updated.
+     * If the strategy ReturnFromTurnToPromiseResolution is active, the flag triggerStopBeforeExecuteCallback
+     * of the promise of the causal message is updated.
+     * Returns the flag of the message receiver breakpoint.
+     */
+    private boolean hasMessageReceiverBreakpoint(final SResolver resolver) {
+      boolean stepReceiver = SteppingStrategy.isEnabled(ToMessageReceiver.class);
+      boolean stepResolution = SteppingStrategy.isEnabled(ToPromiseResolution.class);
+      boolean stepReturnFromTurn = SteppingStrategy.isEnabled(ReturnFromTurnToPromiseResolution.class);
+
+      boolean msgRcvrBkp = messageReceiverBreakpoint.executeCheckIsSetAndEnabled() || stepReceiver;
+      if (resolver != null && !resolver.getPromise().isTriggerPromiseResolutionBreakpoint() && stepResolution) {
+        resolver.getPromise().setTriggerPromiseResolutionBreakpoint(stepResolution);
+      }
+      EventualMessage causalMsg = EventualMessage.getCurrentExecutingMessage();
+      if (causalMsg.getResolver() != null && stepReturnFromTurn) {
+        causalMsg.getResolver().getPromise().setTriggerStopBeforeExecuteCallback(stepReturnFromTurn);
+      }
+
+      return msgRcvrBkp;
     }
 
     protected RegisterWhenResolved createRegisterNode() {
@@ -226,7 +258,6 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final SPromise toPromiseWithResultPromise(final Object[] args,
         @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
       SPromise rcvr = (SPromise) args[0];
-
       SPromise  promise  = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn(), promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false, false);
       SResolver resolver = SPromise.createResolver(promise);
 
@@ -244,7 +275,8 @@ public class EventualSendNode extends ExprWithTagsNode {
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessageId(),
           current, selector, args, current,
           resolver, onReceive,
-          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
+          hasMessageReceiverBreakpoint(resolver), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
+
       current.send(msg, actorPool);
 
       return result;
@@ -273,14 +305,15 @@ public class EventualSendNode extends ExprWithTagsNode {
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessageId(),
           current, selector, args, current,
           null, onReceive,
-          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
+          hasMessageReceiverBreakpoint(null), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
+
       current.send(msg, actorPool);
       return Nil.nilObject;
     }
 
     @Override
     protected boolean isTaggedWith(final Class<?> tag) {
-      if (tag == EventualMessageSend.class || tag == ExpressionBreakpoint.class) {
+      if (tag == EventualMessageSend.class || tag == ExpressionBreakpoint.class || tag == StatementTag.class) {
         return true;
       }
       return super.isTaggedWith(tag);
