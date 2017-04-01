@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import com.oracle.truffle.api.debug.DebugStackFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.actors.ReceivedRootNode;
 import tools.TraceData;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.Response;
@@ -85,6 +86,8 @@ public final class StackTraceResponse extends Response {
       final Suspension suspension, final int requestId) {
     ArrayList<DebugStackFrame> frames = suspension.getStackFrames();
     int skipFrames = suspension.getFrameSkipCount();
+    DebugStackFrame lastFrame = frames.get(frames.size() - 1);
+    final boolean ignoreLast = lastFrame.getRootNode() instanceof ReceivedRootNode;
 
     if (startFrame > skipFrames) {
       skipFrames = startFrame;
@@ -94,11 +97,13 @@ public final class StackTraceResponse extends Response {
     if (numFrames == 0) { numFrames = Integer.MAX_VALUE; }
     numFrames = Math.min(frames.size(), numFrames);
     numFrames -= skipFrames;
+    if (ignoreLast) { numFrames -= 1; }
 
     StackFrame[] arr = new StackFrame[numFrames];
 
     for (int i = 0; i < numFrames; i += 1) {
       int frameId = i + skipFrames;
+      assert !(frames.get(frameId).getRootNode() instanceof ReceivedRootNode) : "This should have been skipped in the code above";
       StackFrame f = createFrame(suspension, frameId, frames.get(frameId));
       arr[i] = f;
     }

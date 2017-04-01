@@ -10,6 +10,7 @@ import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.Method;
 import som.interpreter.Primitive;
 import som.interpreter.SArguments;
+import som.interpreter.actors.ReceivedRootNode;
 import som.vmobjects.SBlock;
 import tools.TraceData;
 import tools.debugger.frontend.Suspension;
@@ -80,6 +81,9 @@ public final class ScopesResponse extends Response {
 
       Object rcvr = mFrame.getArguments()[SArguments.RCVR_IDX];
       addScopes(scopes, scope, rcvr, suspension);
+    } else if (invokable instanceof ReceivedRootNode) {
+      // NOOP, no scopes here
+      assert false : "This should not be reached. This scope should never get an id";
     } else {
       assert invokable instanceof Primitive :
         "Got a " + invokable.getClass().getSimpleName() +
