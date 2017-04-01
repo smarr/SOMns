@@ -33,5 +33,5 @@ public abstract class AbstractDispatchNode
     return sourceSection;
   }
 
-  public abstract Object executeDispatch(final Object[] arguments);
+  public abstract Object executeDispatch(Object[] arguments);
 }

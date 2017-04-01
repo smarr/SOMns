@@ -50,7 +50,7 @@ public abstract class Invokable extends RootNode {
   }
 
   /** Inline invokable into the lexical context of the given builder. */
-  public abstract ExpressionNode inline(final MethodBuilder builder, SInvokable outer);
+  public abstract ExpressionNode inline(MethodBuilder builder, SInvokable outer);
 
   /**
    * Create a version of the invokable that can be used in a
@@ -67,5 +67,5 @@ public abstract class Invokable extends RootNode {
     return Truffle.getRuntime().createCallTarget(this);
   }
 
-  public abstract void propagateLoopCountThroughoutMethodScope(final long count);
+  public abstract void propagateLoopCountThroughoutMethodScope(long count);
 }

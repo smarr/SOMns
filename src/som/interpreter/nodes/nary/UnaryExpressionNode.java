@@ -25,8 +25,7 @@ public abstract class UnaryExpressionNode extends EagerlySpecializableNode {
     super(wrappedNode);
   }
 
-  public abstract Object executeEvaluated(final VirtualFrame frame,
-      final Object receiver);
+  public abstract Object executeEvaluated(VirtualFrame frame, Object receiver);
 
   @Override
   public final Object doPreEvaluated(final VirtualFrame frame,

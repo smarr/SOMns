@@ -12,6 +12,7 @@ import {Breakpoint, MessageBreakpoint, LineBreakpoint} from "./breakpoints";
 import {SystemVisualization} from "./visualizations";
 
 declare var ctrl: Controller;
+declare var zenscroll: any;
 
 const ACT_ID_PREFIX   = "a";
 const ACT_RECT_PREFIX = "RA";
@@ -738,15 +739,13 @@ export class View {
     this.showSourceById(sourceId, activity);
 
     const sourcePaneId = getSectionIdForActivity(sourceId, activity.id);
+    const sourcePaneElem = document.getElementById(sourcePaneId);
 
-    // scroll to the statement
-    $("html, body").animate({
-      scrollTop: $("#" + sourcePaneId).offset().top
-    }, 300);
+    const defaultDuration = 100;
+    const edgeOffset      = 30;
 
-    $("#" + sourcePaneId).animate({
-      scrollTop: $(ss).offset().top
-    }, 300);
+    const scroller = zenscroll.createScroller(sourcePaneElem, defaultDuration, edgeOffset);
+    scroller.center(ss);
   }
 
   private showSourceById(sourceId: string, activity: Activity) {

@@ -1,16 +1,16 @@
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.Node;
+
 import som.compiler.MixinDefinition;
 import som.interpreter.objectstorage.ClassFactory;
 import som.vm.constants.Classes;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
-
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Fallback;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.nodes.Node;
 
 
 public abstract class ClassInstantiationNode extends Node {
@@ -21,8 +21,7 @@ public abstract class ClassInstantiationNode extends Node {
     this.mixinDef = mixinDef;
   }
 
-  public abstract SClass execute(final SObjectWithClass outerObj,
-      final Object superclassAndMixins);
+  public abstract SClass execute(SObjectWithClass outerObj, Object superclassAndMixins);
 
   protected final ClassFactory createClassFactory(final Object superclassAndMixins) {
     return mixinDef.createClassFactory(superclassAndMixins, false, false, false);

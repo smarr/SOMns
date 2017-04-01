@@ -77,8 +77,8 @@ public abstract class AbstractWhileNode extends BinaryComplexOperation {
     return Nil.nilObject;
   }
 
-  protected abstract Object doWhileConditionally(final SBlock loopCondition,
-      final SBlock loopBody);
+  protected abstract Object doWhileConditionally(SBlock loopCondition,
+      SBlock loopBody);
 
   @Override
   public boolean isResultUsed(final ExpressionNode child) {

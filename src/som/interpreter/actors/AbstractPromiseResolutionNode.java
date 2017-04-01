@@ -30,9 +30,8 @@ public abstract class AbstractPromiseResolutionNode extends TernaryExpressionNod
     VM.insertInstrumentationWrapper(haltNode);
   }
 
-  public abstract Object executeEvaluated(final VirtualFrame frame,
-      final SResolver receiver, Object argument,
-      final boolean isBreakpointOnPromiseResolution);
+  public abstract Object executeEvaluated(VirtualFrame frame,
+      SResolver receiver, Object argument, boolean isBreakpointOnPromiseResolution);
 
   /**
    * To avoid cycles in the promise chain, do nothing when a promise is resolved with itself.

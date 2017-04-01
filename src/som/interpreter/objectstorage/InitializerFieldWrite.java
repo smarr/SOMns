@@ -237,7 +237,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
     return value;
   }
 
-  public abstract Object executeEvaluated(final SObject rcvr, final Object value);
+  public abstract Object executeEvaluated(SObject rcvr, Object value);
 
   @Specialization(guards = {"!rcvr.getObjectLayout().isValid()"})
   public final Object updateObject(final SObject rcvr, final Object value) {

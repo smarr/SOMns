@@ -29,8 +29,8 @@ public abstract class TernaryExpressionNode extends EagerlySpecializableNode {
     super(wrappedNode);
   }
 
-  public abstract Object executeEvaluated(final VirtualFrame frame,
-      final Object receiver, final Object firstArg, final Object secondArg);
+  public abstract Object executeEvaluated(VirtualFrame frame, Object receiver,
+      Object firstArg, Object secondArg);
 
   @Override
   public final Object doPreEvaluated(final VirtualFrame frame,

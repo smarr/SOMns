@@ -29,9 +29,8 @@ public abstract class QuaternaryExpressionNode extends EagerlySpecializableNode 
     super(wrappedNode);
   }
 
-  public abstract Object executeEvaluated(final VirtualFrame frame,
-      final Object receiver, final Object firstArg, final Object secondArg,
-      final Object thirdArg);
+  public abstract Object executeEvaluated(VirtualFrame frame, Object receiver,
+      Object firstArg, Object secondArg, Object thirdArg);
 
   @Override
   public final Object doPreEvaluated(final VirtualFrame frame,

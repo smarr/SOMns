@@ -61,8 +61,7 @@ public abstract class Variable {
     return false;
   }
 
-  public abstract ExpressionNode getReadNode(final int contextLevel,
-      final SourceSection source);
+  public abstract ExpressionNode getReadNode(int contextLevel, SourceSection source);
 
   public abstract Variable split(FrameDescriptor descriptor);
   public abstract Local splitToMergeIntoOuterScope(FrameDescriptor descriptor);

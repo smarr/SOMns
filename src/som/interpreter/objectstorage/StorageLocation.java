@@ -41,15 +41,15 @@ public abstract class StorageLocation {
   public interface LongStorageLocation {
     boolean isSet(SObject obj, IntValueProfile primMarkProfile);
     void markAsSet(SObject obj);
-    long readLongSet(final SObject obj);
-    void writeLongSet(final SObject obj, final long value);
+    long readLongSet(SObject obj);
+    void writeLongSet(SObject obj, long value);
   }
 
   public interface DoubleStorageLocation {
     boolean isSet(SObject obj, IntValueProfile primMarkProfile);
     void markAsSet(SObject obj);
-    double readDoubleSet(final SObject obj);
-    void   writeDoubleSet(final SObject obj, final double value);
+    double readDoubleSet(SObject obj);
+    void   writeDoubleSet(SObject obj, double value);
   }
 
   public static StorageLocation createForLong(final ObjectLayout layout,
