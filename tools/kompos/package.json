@@ -31,7 +31,8 @@
     "jquery":           "^2.2.4",
     "node-define":      "^0.1.1",
     "requirejs":        "^2.3.3",
-    "ws":               "^2.2.0"
+    "ws":               "^2.2.0",
+    "zenscroll":        "^4.0.0"
   },
   "devDependencies": {
     "chai"      : "^3.5.0",
