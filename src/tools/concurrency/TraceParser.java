@@ -204,6 +204,7 @@ public final class TraceParser {
     }
 
     assert unmappedActors.isEmpty();
+    assert unmappedPromises.isEmpty();
 
     VM.println("Trace with " + parsedMessages + " Messages and " + parsedActors + " Actors sucessfully parsed!");
   }
