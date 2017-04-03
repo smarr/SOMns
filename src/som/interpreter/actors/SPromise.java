@@ -107,7 +107,6 @@ public class SPromise extends SObjectWithClass {
   }
 
   public long getPromiseId() { return 0; }
-  public long getReplayPromiseId() { return 0; }
 
   public final Actor getOwner() {
     return owner;
@@ -244,7 +243,7 @@ public class SPromise extends SObjectWithClass {
   }
 
   protected static class STracingPromise extends SPromise {
-    protected final long promiseId;
+    protected long promiseId;
 
     protected STracingPromise(final Actor owner,
         final boolean triggerPromiseResolutionBreakpoint, final boolean triggerExplicitPromiseResolverBreakpoint,
@@ -262,8 +261,6 @@ public class SPromise extends SObjectWithClass {
   }
 
   protected static final class SReplayPromise extends STracingPromise {
-    protected final long replayId;
-
     protected SReplayPromise(final Actor owner,
         final boolean triggerPromiseResolutionBreakpoint, final boolean triggerExplicitPromiseResolverBreakpoint,
         final boolean explicitPromise) {
@@ -271,11 +268,8 @@ public class SPromise extends SObjectWithClass {
       ReplayActor creator = (ReplayActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
 
       assert creator.getReplayPromiseIds() != null && creator.getReplayPromiseIds().size() > 0;
-      replayId = creator.getReplayPromiseIds().remove();
+      promiseId = creator.getReplayPromiseIds().remove();
     }
-
-    @Override
-    public long getReplayPromiseId() { return replayId; }
   }
 
   public static SResolver createResolver(final SPromise promise) {

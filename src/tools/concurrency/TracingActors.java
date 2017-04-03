@@ -18,7 +18,7 @@ import tools.debugger.WebDebugger;
 
 public class TracingActors {
   public static class TracingActor extends Actor {
-    protected final long actorId;
+    protected long actorId;
     protected int mailboxNumber;
 
     public TracingActor(final VM vm) {
@@ -41,7 +41,6 @@ public class TracingActors {
 
   public static final class ReplayActor extends TracingActor {
     protected int children;
-    protected final long replayId;
     protected final Queue<MessageRecord> expectedMessages;
     protected final ArrayList<EventualMessage> leftovers = new ArrayList<>();
     protected final Queue<Long> replayPromiseIds;
@@ -59,16 +58,14 @@ public class TracingActors {
       if (Thread.currentThread() instanceof ActorProcessingThread) {
         ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
         ReplayActor parent = (ReplayActor) t.currentMessage.getTarget();
-        long parentId = parent.getReplayActorId();
+        long parentId = parent.getId();
         int childNo = parent.addChild();
 
-        replayId = TraceParser.getReplayId(parentId, childNo);
-        expectedMessages = TraceParser.getExpectedMessages(replayId);
+        actorId = TraceParser.getReplayId(parentId, childNo);
+        expectedMessages = TraceParser.getExpectedMessages(actorId);
 
       } else {
-        replayId = 0;
         expectedMessages = TraceParser.getExpectedMessages(0L);
-
       }
       replayPromiseIds = new LinkedList<>();
 
@@ -115,9 +112,9 @@ public class TracingActors {
         if (ra.expectedMessages != null && ra.expectedMessages.peek() != null) {
           result = true; // program did not execute all messages
           if (ra.expectedMessages.peek() instanceof TraceParser.PromiseMessageRecord) {
-            VM.println(a.getName() + " [" + ra.getReplayActorId() + "] expecting PromiseMessage " + ra.expectedMessages.peek().symbol + " from " + ra.expectedMessages.peek().sender + " PID " + ((TraceParser.PromiseMessageRecord) ra.expectedMessages.peek()).pId);
+            VM.println(a.getName() + " [" + ra.getId() + "] expecting PromiseMessage " + ra.expectedMessages.peek().symbol + " from " + ra.expectedMessages.peek().sender + " PID " + ((TraceParser.PromiseMessageRecord) ra.expectedMessages.peek()).pId);
           } else {
-            VM.println(a.getName() + " [" + ra.getReplayActorId() + "] expecting Message" + ra.expectedMessages.peek().symbol + " from " + ra.expectedMessages.peek().sender);
+            VM.println(a.getName() + " [" + ra.getId() + "] expecting Message" + ra.expectedMessages.peek().symbol + " from " + ra.expectedMessages.peek().sender);
           }
 
           if (a.firstMessage != null) {
@@ -137,7 +134,7 @@ public class TracingActors {
           int n = a.firstMessage != null ?  1 : 0;
           n += a.mailboxExtension != null ? a.mailboxExtension.size() : 0;
 
-          VM.println(a.getName() + " [" + a.getReplayActorId() + "] has " + n + " unexpected messages");
+          VM.println(a.getName() + " [" + a.getId() + "] has " + n + " unexpected messages");
         }
       }
       return result;
@@ -145,9 +142,9 @@ public class TracingActors {
 
     private static void printMsg(final EventualMessage msg) {
       if (msg instanceof PromiseMessage) {
-        VM.println("\t" + "PromiseMessage " + msg.getSelector() + " from " + ((ReplayActor) msg.getSender()).getReplayActorId() + " PID " + ((PromiseMessage) msg).getPromise().getReplayPromiseId());
+        VM.println("\t" + "PromiseMessage " + msg.getSelector() + " from " + msg.getSender().getId() + " PID " + ((PromiseMessage) msg).getPromise().getPromiseId());
       } else {
-        VM.println("\t" + "Message" + msg.getSelector() + " from " + ((ReplayActor) msg.getSender()).getReplayActorId());
+        VM.println("\t" + "Message" + msg.getSelector() + " from " + msg.getSender().getId());
       }
     }
 
@@ -168,18 +165,14 @@ public class TracingActors {
       // handle promise messages
       if (other instanceof TraceParser.PromiseMessageRecord) {
         if (msg instanceof PromiseMessage) {
-          return ((PromiseMessage) msg).getPromise().getReplayPromiseId() == ((TraceParser.PromiseMessageRecord) other).pId;
+          return ((PromiseMessage) msg).getPromise().getPromiseId() == ((TraceParser.PromiseMessageRecord) other).pId;
         } else {
           return false;
         }
       }
 
       assert msg.getSelector() == other.symbol || !msg.getSelector().equals(other.symbol);
-      return msg.getSelector() == other.symbol && ((ReplayActor) msg.getSender()).getReplayActorId() == other.sender;
-    }
-
-    public long getReplayActorId() {
-      return replayId;
+      return msg.getSelector() == other.symbol && msg.getSender().getId() == other.sender;
     }
 
     protected int addChild() {
