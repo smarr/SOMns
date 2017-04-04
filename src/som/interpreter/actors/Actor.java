@@ -10,6 +10,7 @@ import java.util.concurrent.RejectedExecutionException;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import som.VM;
+import som.interpreter.actors.EventualMessage.UntracedMessage;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.IsValue;
 import som.vm.Activity;
@@ -266,7 +267,7 @@ public class Actor implements Activity {
       if (VmSettings.ACTOR_TRACING) {
         TracingActor.handleBreakpointsAndStepping(msg, dbg, actor);
       }
-      if (VmSettings.ENABLE_ASSERTIONS) {
+      if (VmSettings.ENABLE_ASSERTIONS && ! (msg instanceof UntracedMessage)) {
         ((TracingActor) actor).checkReceiveHooks(msg);
         ((TracingActor) actor).checkAssertions(msg);
       }

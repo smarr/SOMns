@@ -170,6 +170,10 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel usingPlatform: platform
     ^ vmMirror actorsCreatePromisePair: nil.
   )
 
+  private createUntracedPromisePair = (
+    ^ vmMirror actorsCreateUntracedPromisePair: nil.
+  )
+
   public createActorFromValue: aValue = (
     ^ vmMirror actors: nil createFromValue: aValue
   )
@@ -309,10 +313,12 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel usingPlatform: platform
 
   public assertResultUsed = (
     | pp |
-    pp := createPromisePair.
+    pp := createUntracedPromisePair.
     vmMirror assertResultUsed: (pp resolver).
-    pp promise onError:[
-      signalAssertionError: 'Result Unused'
+    pp promise whenResolved:[ :r |
+      r ifFalse: [
+        signalAssertionError: 'Result Unused'
+      ]
     ]
   )
 
@@ -332,10 +338,12 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel usingPlatform: platform
 
   public assertNext: aBlock msg: msg = (
     | pp |
-    pp := createPromisePair.
-    vmMirror assertNext: aBlock msg: msg res: (pp resolver).
-    pp promise onError:[
-      signalAssertionError: msg
+    pp := createUntracedPromisePair.
+    vmMirror assertNext: aBlock res: (pp resolver).
+    pp promise whenResolved:[ :r |
+      r ifFalse: [
+        signalAssertionError: msg
+      ]
     ]
   )
 
@@ -346,10 +354,12 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel usingPlatform: platform
 
   public assertFuture: aBlock msg: msg = (
     | pp |
-    pp := createPromisePair.
-    vmMirror assertFuture: aBlock msg: msg res: (pp resolver).
-    pp promise onError:[
-      signalAssertionError: msg
+    pp := createUntracedPromisePair.
+    vmMirror assertFuture: aBlock res: (pp resolver).
+    pp promise whenResolved:[ :r |
+      r ifFalse: [
+        signalAssertionError: msg
+      ]
     ]
   )
 
@@ -359,10 +369,12 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel usingPlatform: platform
 
   public assertGlobally: aBlock msg: msg= (
     | pp |
-    pp := createPromisePair.
-    vmMirror assertGlobally: aBlock msg: msg res: (pp resolver).
-    pp promise onError:[
-      signalAssertionError: msg
+    pp := createUntracedPromisePair.
+    vmMirror assertGlobally: aBlock res: (pp resolver).
+    pp promise whenResolved:[ :r |
+      r ifFalse: [
+        signalAssertionError: msg
+      ]
     ]
   )
 
@@ -370,12 +382,14 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel usingPlatform: platform
     assert: aBlock until: anotherBlock msg: ''.
   )
 
-   public assert: aBlock until: anotherBlock msg: msg = (
+  public assert: aBlock until: anotherBlock msg: msg = (
     | pp |
-    pp := createPromisePair.
-    vmMirror assert: aBlock until: anotherBlock msg: msg res: (pp resolver).
-    pp promise onError:[
-      signalAssertionError: msg
+    pp := createUntracedPromisePair.
+    vmMirror assert: aBlock until: anotherBlock res: (pp resolver).
+    pp promise whenResolved:[ :r |
+      r ifFalse: [
+        signalAssertionError: msg
+      ]
     ]
   )
 
@@ -385,10 +399,12 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel usingPlatform: platform
 
   public assert: aBlock release: anotherBlock msg: msg = (
     | pp |
-    pp := createPromisePair.
-    vmMirror assert: aBlock release: anotherBlock msg: msg res: (pp resolver).
-    pp promise onError:[
-      signalAssertionError: msg
+    pp := createUntracedPromisePair.
+    vmMirror assert: aBlock release: anotherBlock res: (pp resolver).
+    pp promise whenResolved:[ :r |
+      r ifFalse: [
+        signalAssertionError: msg
+      ]
     ]
   )
 )

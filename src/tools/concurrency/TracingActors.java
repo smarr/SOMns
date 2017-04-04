@@ -11,12 +11,14 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import som.VM;
 import som.interpreter.SArguments;
+import som.interpreter.SomException;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.SPromise.SReplayPromise;
+import som.interpreter.actors.EventualMessage.UntracedMessage;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
@@ -121,9 +123,13 @@ public class TracingActors {
 
       activeAssertions = new ArrayList<>();
 
-
-      for (Assertion a : temp) {
-        a.evaluate(this, msg);
+      try {
+        for (Assertion a : temp) {
+          a.evaluate(this, msg);
+        }
+      } catch (SomException t) {
+        t.printStackTrace();
+        VM.errorExit("EventualMessage failed with Exception.");
       }
     }
 
@@ -138,9 +144,9 @@ public class TracingActors {
           }
 
           if (block.getMethod().getNumberOfArguments() > 0) {
-            block.getMethod().invoke(new Object[] {block, SArguments.getArgumentsWithoutReceiver(msg.getArgs())});
+            invokeBlock(block, msg.getArgs());
           } else {
-            block.getMethod().invoke(new Object[] {block});
+            invokeBlock(block);
           }
         } else if (sendHooks.size() > 0) {
           throw new AssertionError("sending Message: " + msg.getSelector() + " violates the message protocol!");
@@ -157,11 +163,30 @@ public class TracingActors {
           if (sendHooks != null) {
             sendHooks.clear();
           }
-          block.getMethod().invoke(new Object[] {block, SArguments.getArgumentsWithoutReceiver(msg.getArgs())});
+          invokeBlock(block, msg.getArgs());
         } else  if (receiveHooks.size() > 0) {
           throw new AssertionError("receiving Message: " + msg.getSelector() + " violates the message protocol!");
         }
       }
+    }
+  }
+
+
+  private static void invokeBlock(final SBlock block, final Object[] args){
+    try {
+      block.getMethod().invoke(new Object[] {block, SArguments.getArgumentsWithoutReceiver(args)});
+    } catch (SomException t) {
+      t.printStackTrace();
+      VM.errorExit("EventualMessage failed with Exception.");
+    }
+  }
+
+  private static void invokeBlock(final SBlock block){
+    try {
+      block.getMethod().invoke(new Object[] {block});
+    } catch (SomException t) {
+      t.printStackTrace();
+      VM.errorExit("EventualMessage failed with Exception.");
     }
   }
 
@@ -273,7 +298,7 @@ public class TracingActors {
     }
 
     protected boolean replayCanProcess(final EventualMessage msg) {
-      if (!VmSettings.REPLAY) {
+      if (!VmSettings.REPLAY || msg instanceof UntracedMessage) {
         return true;
       }
 
@@ -325,7 +350,9 @@ public class TracingActors {
 
         if (a.replayCanProcess(firstMessage)) {
           todo.add(firstMessage);
-          removeFirstExpectedMessage(a);
+          if (!(firstMessage instanceof UntracedMessage)) {
+            removeFirstExpectedMessage(a);
+          }
         } else {
           postponedMsgs.add(firstMessage);
         }
@@ -342,7 +369,9 @@ public class TracingActors {
           for (EventualMessage msg : postponedMsgs) {
             if (a.replayCanProcess(msg)) {
               todo.add(msg);
-              removeFirstExpectedMessage(a);
+              if (!(msg instanceof UntracedMessage)) {
+                removeFirstExpectedMessage(a);
+              }
               postponedMsgs.remove(msg);
               foundNextMessage = true;
               break;
@@ -368,6 +397,10 @@ public class TracingActors {
         for (EventualMessage msg : todo) {
           currentThread.currentMessage = msg;
           handleBreakpointsAndStepping(firstMessage, dbg, a);
+          if (!(msg instanceof UntracedMessage)) {
+            ((TracingActor) actor).checkReceiveHooks(msg);
+            ((TracingActor) actor).checkAssertions(msg);
+          }
           msg.execute();
           currentThread.currentMessageId += 1;
         }

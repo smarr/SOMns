@@ -9,6 +9,7 @@ import com.sun.istack.internal.NotNull;
 
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.primitives.TimerPrim;
+import som.interpreter.actors.EventualMessage.UntracedMessage;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
@@ -38,8 +39,9 @@ public class SPromise extends SObjectWithClass {
     }
   }
 
-  public static SPromise createUntracedPromise(final Actor owner) {
-    return new SPromise(owner);
+  public static SPromise createUntracedPromise(final Actor owner,
+      final boolean triggerPromiseResolutionBreakpoint, final boolean triggerExplicitPromiseResolverBreakpoint, final boolean explicitPromise) {
+    return new SPromise(owner, triggerPromiseResolutionBreakpoint, triggerExplicitPromiseResolverBreakpoint, explicitPromise);
   }
 
 
@@ -159,13 +161,24 @@ public class SPromise extends SObjectWithClass {
   }
 
   final void registerWhenResolvedUnsynced(final PromiseMessage msg) {
-    if (whenResolved == null) {
-      whenResolved = msg;
-      if (VmSettings.ENABLE_ASSERTIONS) {
-        resultUsed = true;
+    if (VmSettings.ENABLE_ASSERTIONS && !(this instanceof STracingPromise)) {
+      if (whenResolved == null) {
+        whenResolved = new UntracedMessage(msg);
+        if (VmSettings.ENABLE_ASSERTIONS) {
+          resultUsed = true;
+        }
+      } else {
+        registerMoreWhenResolved(new UntracedMessage(msg));
       }
     } else {
-      registerMoreWhenResolved(msg);
+      if (whenResolved == null) {
+        whenResolved = msg;
+        if (VmSettings.ENABLE_ASSERTIONS) {
+          resultUsed = true;
+        }
+      } else {
+        registerMoreWhenResolved(msg);
+      }
     }
   }
 
@@ -178,10 +191,18 @@ public class SPromise extends SObjectWithClass {
   }
 
   final void registerOnErrorUnsynced(final PromiseMessage msg) {
-    if (onError == null) {
-      onError = msg;
+    if (VmSettings.ENABLE_ASSERTIONS && !(this instanceof STracingPromise)) {
+      if (onError == null) {
+        onError = new UntracedMessage(msg);
+      } else {
+        registerMoreOnError(new UntracedMessage(msg));
+      }
     } else {
-      registerMoreOnError(msg);
+      if (onError == null) {
+        onError = msg;
+      } else {
+        registerMoreOnError(msg);
+      }
     }
   }
 

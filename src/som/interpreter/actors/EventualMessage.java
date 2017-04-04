@@ -347,4 +347,34 @@ public abstract class EventualMessage {
   public void setIsMessageReceiverBreakpoint(final boolean triggerBreakpoint) {
     this.triggerMessageReceiverBreakpoint = triggerBreakpoint;
   }
+
+  public static final class UntracedMessage extends PromiseMessage {
+    public UntracedMessage(final PromiseMessage msg) {
+      super(msg.causalMessageId, msg.args, msg.originalSender, msg.resolver, msg.onReceive,
+          msg.triggerMessageReceiverBreakpoint, msg.triggerPromiseResolverBreakpoint);
+      this.msg = msg;
+    }
+
+    PromiseMessage msg;
+
+    @Override
+    public Actor getTarget() {
+      return msg.getTarget();
+    }
+
+    @Override
+    public SSymbol getSelector() {
+      return msg.getSelector();
+    }
+
+    @Override
+    public void resolve(final Object rcvr, final Actor target, final Actor sendingActor) {
+      msg.resolve(rcvr, target, sendingActor);
+    }
+
+    @Override
+    public SPromise getPromise() {
+      return msg.getPromise();
+    }
+  }
 }

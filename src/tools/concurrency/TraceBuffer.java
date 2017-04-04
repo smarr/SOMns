@@ -11,6 +11,7 @@ import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
+import som.interpreter.actors.EventualMessage.UntracedMessage;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
@@ -341,6 +342,11 @@ public class TraceBuffer {
 
   private void writeMessage(final EventualMessage em, final long sendTS,
       final long execTS) {
+
+    if (em instanceof UntracedMessage) {
+      return;
+    }
+
     if (em instanceof PromiseMessage && VmSettings.PROMISE_CREATION) {
       storage.put((byte) (ActorExecutionTrace.MESSAGE_EVENT_ID | TraceData.PROMISE_BIT));
       storage.putLong(((PromiseMessage) em).getPromise().getPromiseId());

@@ -3,6 +3,7 @@ package tools.concurrency;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.Node.Child;
 
 import som.interpreter.actors.EventualMessage;
@@ -19,22 +20,32 @@ public class Assertion {
   SBlock statement;
   SResolver result;
 
-  @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
+  @Child protected WrapReferenceNode wrapper;
 
   public Assertion(final SBlock statement, final SResolver result) {
     super();
     this.result = result;
     this.statement = statement;
+    CompilerDirectives.transferToInterpreter();
+    wrapper = WrapReferenceNodeGen.create();
   }
 
   public void evaluate(final TracingActor actor, final EventualMessage msg) {
     boolean result = (boolean) statement.getMethod().invoke(new Object[] {statement});
     if (!result) {
-      throwError();
+      fail();
+    } else {
+      success();
     }
   }
 
-  protected void throwError() {
+  protected void fail() {
+    ResolvePromiseNode.resolve(Resolution.SUCCESSFUL, wrapper,
+        result.getPromise(), false,
+        result.getPromise().getOwner(), false);
+  }
+
+  protected void success() {
     ResolvePromiseNode.resolve(Resolution.SUCCESSFUL, wrapper,
         result.getPromise(), true,
         result.getPromise().getOwner(), false);
@@ -54,10 +65,12 @@ public class Assertion {
       if (!result) {
         boolean result2 = (boolean) statement.getMethod().invoke(new Object[] {statement});
         if (!result2) {
-          throwError();
+          fail();
         } else {
           actor.addAssertion(this);
         }
+      } else {
+        success();
       }
     }
   }
@@ -74,12 +87,14 @@ public class Assertion {
     public void evaluate(final TracingActor actor, final EventualMessage msg) {
       boolean result = (boolean) release.getMethod().invoke(new Object[] {release});
       if (!result) {
-        throwError();
+        fail();
       }
 
       boolean result2 = (boolean) statement.getMethod().invoke(new Object[] {statement});
       if (!result2) {
         actor.addAssertion(this);
+      } else {
+        success();
       }
     }
   }
@@ -108,6 +123,7 @@ public class Assertion {
         synchronized (futureAssertions) {
           futureAssertions.remove(this);
         }
+        success();
       } else {
         actor.addAssertion(this);
       }
@@ -115,8 +131,10 @@ public class Assertion {
 
     public void finalCheck() {
       boolean result = (boolean) statement.getMethod().invoke(new Object[] {statement});
-      if (!result) {
-        throwError();
+      if (result) {
+        success();
+      } else {
+        fail();
       }
     }
 
@@ -135,11 +153,15 @@ public class Assertion {
       super(statement, result);
     }
 
+    // TODO success on termination?, is this necessary
+    // would have to be done like the future assertions, i.e. keep a list/set of all the Global stuff
+    // only get's removed if a check fails
+
     @Override
     public void evaluate(final TracingActor actor, final EventualMessage msg) {
       boolean result = (boolean) statement.getMethod().invoke(new Object[] {statement});
       if (!result) {
-        throwError();
+        fail();
       } else {
         actor.addAssertion(this);
       }
@@ -161,6 +183,7 @@ public class Assertion {
           synchronized (futureAssertions) {
             futureAssertions.remove(this);
           }
+          success();
         } else {
           actor.addAssertion(this);
         }
@@ -171,7 +194,7 @@ public class Assertion {
     public void finalCheck() {
       synchronized (checkedPromise) {
         if (!checkedPromise.isResultUsed()) {
-          throwError();
+          fail();
         }
       }
     }

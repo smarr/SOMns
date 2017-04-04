@@ -22,6 +22,7 @@ import som.interpreter.actors.RegisterOnPromiseNode.RegisterOnError;
 import som.interpreter.actors.RegisterOnPromiseNode.RegisterWhenResolved;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
+import som.interpreter.actors.SPromise.STracingPromise;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
@@ -30,6 +31,7 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.Primitive;
 import som.vm.Primitives.Specializer;
 import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
@@ -97,6 +99,30 @@ public final class PromisePrims {
 
   }
 
+  @GenerateNodeFactory
+  @Primitive(primitive = "actorsCreateUntracedPromisePair:", selector = "createUntracedPromisePair",
+             specializer = IsActorModule.class, noWrapper = true)
+  public abstract static class CreateUntracedPromisePairPrim extends UnaryExpressionNode {
+
+    protected static final DirectCallNode create() {
+      Dispatchable disp = SPromise.pairClass.getSOMClass().lookupMessage(
+          withAndFactory, AccessModifier.PUBLIC);
+      return Truffle.getRuntime().createDirectCallNode(((SInvokable) disp).getCallTarget());
+    }
+
+    public CreateUntracedPromisePairPrim(final boolean eagerWrapper, final SourceSection source) { super(eagerWrapper, source); }
+
+    @Specialization
+    public final SImmutableObject createPromisePair(final Object nil,
+        @Cached("create()") final DirectCallNode factory) {
+      SPromise promise   = SPromise.createUntracedPromise(EventualMessage.getActorCurrentMessageIsExecutionOn(), false, false, false);
+      SResolver resolver = SPromise.createResolver(promise);
+      return (SImmutableObject) factory.call(new Object[] {SPromise.pairClass, promise, resolver});
+    }
+
+    private static final SSymbol withAndFactory = Symbols.symbolFor("with:and:");
+  }
+
   // TODO: can we find another solution for megamorphics callers that
   //       does not require node creation? Might need a generic received node.
   @TruffleBoundary
@@ -143,8 +169,12 @@ public final class PromisePrims {
       assert block.getMethod().getNumberOfArguments() == 2;
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-
-      SPromise  promise  = SPromise.createPromise(current, SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), false, false);
+      SPromise  promise;
+      if (VmSettings.ACTOR_TRACING && !(rcvr instanceof STracingPromise)) {
+        promise  = SPromise.createUntracedPromise(current, SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), false, false);
+      } else {
+        promise  = SPromise.createPromise(current, SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), false, false);
+      }
       SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage pcm = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
@@ -199,8 +229,12 @@ public final class PromisePrims {
       assert block.getMethod().getNumberOfArguments() == 2;
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-
-      SPromise  promise  = SPromise.createPromise(current, SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), false, false);
+      SPromise  promise;
+      if (VmSettings.ACTOR_TRACING && !(rcvr instanceof STracingPromise)) {
+        promise  = SPromise.createUntracedPromise(current, SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), false, false);
+      } else {
+        promise  = SPromise.createPromise(current, SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), false, false);
+      }
       SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
@@ -264,8 +298,12 @@ public final class PromisePrims {
       assert error.getMethod().getNumberOfArguments()    == 2;
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
-
-      SPromise  promise  = SPromise.createPromise(current, SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), false, false);
+      SPromise  promise;
+      if (VmSettings.ACTOR_TRACING && !(rcvr instanceof STracingPromise)) {
+        promise  = SPromise.createUntracedPromise(current, SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), false, false);
+      } else {
+        promise  = SPromise.createPromise(current, SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), false, false);
+      }
       SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage onResolved = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), resolved, resolver, resolverTarget, false, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promise, rcvr);
