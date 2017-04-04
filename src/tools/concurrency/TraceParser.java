@@ -282,6 +282,7 @@ public final class TraceParser {
     final long actorId;
     int childNo;
     int mailboxNo;
+    boolean sorted = false;
     ArrayList<ActorNode> children;
 
     ActorNode(final long actorId) {
@@ -309,10 +310,14 @@ public final class TraceParser {
 
       child.childNo = children.size();
       children.add(child);
-      java.util.Collections.sort(children);
     }
 
     protected ActorNode getChild(final int childNo) {
+      if (!sorted) {
+        java.util.Collections.sort(children);
+        sorted = true;
+      }
+
       assert children != null : "Actor does not exist in trace!";
       assert children.size() > childNo : "Actor does not exist in trace!";
       return children.get(childNo);
