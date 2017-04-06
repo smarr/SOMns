@@ -53,6 +53,9 @@ the specifications are as follows:
 Obtaining and Running SOMns
 ---------------------------
 
+This is a brief guide, a more comprehensive overview is available here:
+[Getting Started Guide](http://som-st.github.io/somns/getting-started/).
+
 To checkout the code:
 
     git clone https://github.com/smarr/SOMns.git
