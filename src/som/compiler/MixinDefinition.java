@@ -668,9 +668,8 @@ public final class MixinDefinition {
     return nestedMixinDefinitions.get(Symbols.symbolFor(string));
   }
 
-  public MixinDefinition[] getNestedMixinDefinitions() {
-    return nestedMixinDefinitions.values().toArray(
-        new MixinDefinition[nestedMixinDefinitions.size()]);
+  public Object[] getNestedMixinDefinitions() {
+    return nestedMixinDefinitions.values().toArray(new Object[0]);
   }
 
   public AccessModifier getAccessModifier() {
