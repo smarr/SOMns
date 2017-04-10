@@ -35,9 +35,10 @@ public class TruffleSomTCK extends TruffleTCK {
 
   @Override
   protected PolyglotEngine prepareVM(final PolyglotEngine.Builder preparedBuilder) throws IOException {
-    String[] args = new String [] {"--kernel", VmOptions.STANDARD_KERNEL_FILE,
-        "--platform", VmOptions.STANDARD_PLATFORM_FILE};
-    preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
+    VmOptions options = new VmOptions(new String [] {
+        "--kernel", VmOptions.STANDARD_KERNEL_FILE,
+        "--platform", VmOptions.STANDARD_PLATFORM_FILE});
+    preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OPTIONS, options);
     preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
 
     InputStream in = getClass().getResourceAsStream("TruffleSomTCK.som");

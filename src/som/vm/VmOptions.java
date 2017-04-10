@@ -13,7 +13,7 @@ public class VmOptions {
 
   public String   platformFile = STANDARD_PLATFORM_FILE;
   public String   kernelFile   = STANDARD_KERNEL_FILE;
-  public final String[] args;
+  public final Object[] args;
   public final boolean showUsage;
 
   @CompilationFinal public boolean webDebuggerEnabled;
@@ -34,7 +34,7 @@ public class VmOptions {
     }
   }
 
-  private String[] processVmArguments(final String[] arguments) {
+  private Object[] processVmArguments(final String[] arguments) {
     int currentArg = 0;
 
     // parse optional --platform and --kernel, need to be the first arguments
@@ -71,9 +71,9 @@ public class VmOptions {
 
     // store remaining arguments
     if (currentArg < arguments.length) {
-      return Arrays.copyOfRange(arguments, currentArg, arguments.length);
+      return Arrays.copyOfRange(arguments, currentArg, arguments.length, Object[].class);
     } else {
-      return new String[0];
+      return new Object[0];
     }
   }
 
