@@ -12,6 +12,7 @@ import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
+import som.interpreter.actors.SPromise.SReplayPromise;
 import som.vm.VmSettings;
 import tools.concurrency.TraceParser.MessageRecord;
 import tools.debugger.WebDebugger;
@@ -43,7 +44,6 @@ public class TracingActors {
     protected int children;
     protected final Queue<MessageRecord> expectedMessages;
     protected final ArrayList<EventualMessage> leftovers = new ArrayList<>();
-    protected final Queue<Long> replayPromiseIds;
     private static List<ReplayActor> actorList;
 
     static {
@@ -67,7 +67,6 @@ public class TracingActors {
       } else {
         expectedMessages = TraceParser.getExpectedMessages(0L);
       }
-      replayPromiseIds = new LinkedList<>();
 
       if (VmSettings.DEBUG_MODE) {
         synchronized (actorList) { actorList.add(this); }
@@ -165,7 +164,9 @@ public class TracingActors {
       // handle promise messages
       if (other instanceof TraceParser.PromiseMessageRecord) {
         if (msg instanceof PromiseMessage) {
-          return ((PromiseMessage) msg).getPromise().getPromiseId() == ((TraceParser.PromiseMessageRecord) other).pId;
+          if (((SReplayPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor() != ((TraceParser.PromiseMessageRecord) other).pId) {
+            return false;
+          }
         } else {
           return false;
         }
@@ -179,15 +180,8 @@ public class TracingActors {
       return children++;
     }
 
-    public Queue<Long> getReplayPromiseIds() {
-      return replayPromiseIds;
-    }
-
     private static void removeFirstExpectedMessage(final ReplayActor a) {
       MessageRecord first = a.expectedMessages.peek();
-      if (first.createdPromises != null) {
-        a.replayPromiseIds.addAll(first.createdPromises);
-      }
       MessageRecord removed = a.expectedMessages.remove();
       assert first == removed;
     }

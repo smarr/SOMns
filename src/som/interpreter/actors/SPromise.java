@@ -13,7 +13,6 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.TracingActivityThread;
-import tools.concurrency.TracingActors.ReplayActor;
 
 
 public class SPromise extends SObjectWithClass {
@@ -122,6 +121,13 @@ public class SPromise extends SObjectWithClass {
     if (isCompleted()) {
       remote.value = value;
       remote.resolutionState = resolutionState;
+
+      if (VmSettings.PROMISE_RESOLUTION) {
+        ActorExecutionTrace.promiseChained(this.getPromiseId(), remote.getPromiseId());
+      }
+      if (VmSettings.REPLAY) {
+        ((SReplayPromise) remote).resolvingActor = ((SReplayPromise) this).resolvingActor;
+      }
     } else {
       addChainedPromise(remote);
     }
@@ -260,15 +266,20 @@ public class SPromise extends SObjectWithClass {
     }
   }
 
-  protected static final class SReplayPromise extends STracingPromise {
+  public static final class SReplayPromise extends STracingPromise {
     protected SReplayPromise(final Actor owner,
-        final boolean triggerPromiseResolutionBreakpoint, final boolean triggerExplicitPromiseResolverBreakpoint,
+        final boolean triggerPromiseResolutionBreakpoint,
+        final boolean triggerExplicitPromiseResolverBreakpoint,
         final boolean explicitPromise) {
-      super(owner, triggerPromiseResolutionBreakpoint, triggerExplicitPromiseResolverBreakpoint, explicitPromise);
-      ReplayActor creator = (ReplayActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
+      super(owner, triggerPromiseResolutionBreakpoint,
+          triggerExplicitPromiseResolverBreakpoint, explicitPromise);
+    }
 
-      assert creator.getReplayPromiseIds() != null && creator.getReplayPromiseIds().size() > 0;
-      promiseId = creator.getReplayPromiseIds().remove();
+    protected long resolvingActor;
+
+
+    public long getResolvingActor() {
+      return resolvingActor;
     }
   }
 
@@ -363,9 +374,13 @@ public class SPromise extends SObjectWithClass {
       assert !(result instanceof SPromise);
 
       if (VmSettings.PROMISE_RESOLUTION) {
-        if (p.resolutionState == Resolution.SUCCESSFUL) {
+        if (VmSettings.REPLAY) {
+          ((SReplayPromise) p).resolvingActor = current.getId();
+        }
+
+        if (type == Resolution.SUCCESSFUL && p.resolutionState != Resolution.CHAINED) {
           ActorExecutionTrace.promiseResolution(p.getPromiseId(), result);
-        } else if (p.resolutionState == Resolution.ERRONEOUS) {
+        } else if (type == Resolution.ERRONEOUS) {
           ActorExecutionTrace.promiseError(p.getPromiseId(), result);
         }
       }
