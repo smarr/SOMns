@@ -38,6 +38,7 @@ import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 
 import som.VM;
 import som.interpreter.SomLanguage;
+import som.vm.VmOptions;
 
 
 @RunWith(Parameterized.class)
@@ -78,12 +79,12 @@ public class SomTests {
   public void testSomeTest() throws IOException {
     Assume.assumeTrue(ignoreReason, ignoreReason == null);
 
-    String[] args = new String[] {
+    VmOptions options = new VmOptions(new String[] {
         "core-lib/TestSuite/TestRunner.som",
-        "core-lib/TestSuite/" + testName + ".som"};
+        "core-lib/TestSuite/" + testName + ".som"});
 
     Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OPTIONS, options);
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
     PolyglotEngine engine = builder.build();
     VM.setEngine(engine);

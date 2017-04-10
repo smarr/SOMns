@@ -80,10 +80,10 @@ public abstract class SArray extends SAbstractObject {
     return storage instanceof PartiallyEmptyArray;
   }
 
-  public boolean isObjectType()  { return storage instanceof Object[]; }
-  public boolean isLongType()    { return storage instanceof long[];   }
-  public boolean isDoubleType()  { return storage instanceof double[]; }
-  public boolean isBooleanType() { return storage instanceof boolean[]; }
+  public boolean isObjectType()  { return storage.getClass() == Object[].class; }
+  public boolean isLongType()    { return storage.getClass() == long[].class;   }
+  public boolean isDoubleType()  { return storage.getClass() == double[].class; }
+  public boolean isBooleanType() { return storage.getClass() == boolean[].class; }
 
   public boolean isSomePrimitiveType() {
     return isLongType() || isDoubleType() || isBooleanType();

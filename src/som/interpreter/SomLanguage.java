@@ -20,6 +20,7 @@ import com.oracle.truffle.api.source.Source;
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.vm.NotYetImplementedException;
+import som.vm.VmOptions;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import tools.concurrency.Tags.ChannelRead;
@@ -96,7 +97,7 @@ import tools.dym.Tags.VirtualInvokeReceiver;
 public final class SomLanguage extends TruffleLanguage<VM> {
 
   public static final String MIME_TYPE = "application/x-newspeak-som-ns";
-  public static final String CMD_ARGS  = "command-line-arguments";
+  public static final String VM_OPTIONS = "vm-options";
   public static final String AVOID_EXIT = "avoid-exit";
   public static final String FILE_EXTENSION = "som";
   public static final String DOT_FILE_EXTENSION = "." + FILE_EXTENSION;
@@ -136,7 +137,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   protected VM createContext(final Env env) {
     VM vm;
     try {
-      vm = new VM((String[]) env.getConfig().get(CMD_ARGS),
+      vm = new VM((VmOptions) env.getConfig().get(VM_OPTIONS),
           (boolean) env.getConfig().get(AVOID_EXIT));
     } catch (IOException e) {
       throw new RuntimeException("Failed accessing kernel or platform code of SOMns.", e);

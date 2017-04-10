@@ -40,6 +40,7 @@ import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 import som.VM;
 import som.interpreter.SomLanguage;
 import som.interpreter.Types;
+import som.vm.VmOptions;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
@@ -247,7 +248,7 @@ public class BasicInterpreterTests {
 
   protected VM getInitializedVM() throws IOException {
     Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, getVMArguments());
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OPTIONS, getVMArguments());
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
     PolyglotEngine engine = builder.build();
 
@@ -258,10 +259,10 @@ public class BasicInterpreterTests {
     return VM.getVM();
   }
 
-  protected String[] getVMArguments() {
-    return new String[] {
+  protected VmOptions getVMArguments() {
+    return new VmOptions(new String[] {
         "--platform",
-        "core-lib/TestSuite/BasicInterpreterTests/" + testClass + ".som" };
+        "core-lib/TestSuite/BasicInterpreterTests/" + testClass + ".som" });
   }
 
   @Override

@@ -131,11 +131,11 @@ public final class VM {
     graphPrinter.close();
   }
 
-  public VM(final String[] args, final boolean avoidExitForTesting) throws IOException {
+  public VM(final VmOptions vmOptions, final boolean avoidExitForTesting) throws IOException {
     vm = this;
 
     this.avoidExitForTesting = avoidExitForTesting;
-    options = new VmOptions(args);
+    options = vmOptions;
     objectSystem = new ObjectSystem(new SourcecodeCompiler(), structuralProbe);
     objectSystem.loadKernelAndPlatform(options.platformFile, options.kernelFile);
 
@@ -144,8 +144,8 @@ public final class VM {
     }
   }
 
-  public VM(final String[] args) throws IOException {
-    this(args, false);
+  public VM(final VmOptions vmOptions) throws IOException {
+    this(vmOptions, false);
   }
 
   public static void reportSyntaxElement(final Class<? extends Tags> type,
@@ -179,7 +179,7 @@ public final class VM {
     return lastExitCode;
   }
 
-  public static String[] getArguments() {
+  public static Object[] getArguments() {
     return vm.options.args;
   }
 
@@ -299,10 +299,11 @@ public final class VM {
   }
 
   public static void main(final String[] args) {
-    Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS,   args);
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, false);
     VmOptions vmOptions = new VmOptions(args);
+    Builder builder = PolyglotEngine.newBuilder();
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OPTIONS,   vmOptions);
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, false);
+
 
     startExecution(builder, vmOptions);
   }

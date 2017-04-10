@@ -19,6 +19,7 @@ import com.oracle.truffle.tools.ProfilerInstrument;
 
 import som.VM;
 import som.interpreter.SomLanguage;
+import som.vm.VmOptions;
 
 
 public class SomPolyglotTests {
@@ -36,10 +37,10 @@ public class SomPolyglotTests {
 
   @Test
   public void startEngineWithCommandLineParametersForHelloWorld() throws IOException {
-    String[] args = new String[] {"core-lib/Hello.som"};
+    VmOptions options = new VmOptions(new String[] {"core-lib/Hello.som"});
 
     Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OPTIONS, options);
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
     PolyglotEngine vm = builder.build();
     VM.setEngine(vm);
@@ -51,8 +52,9 @@ public class SomPolyglotTests {
   @Test
   public void startEngineForTesting() throws IOException {
     Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, new String[] {
-        "--platform", "core-lib/TestSuite/BasicInterpreterTests/Arrays.som"});
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OPTIONS,
+        new VmOptions(new String[] {
+            "--platform", "core-lib/TestSuite/BasicInterpreterTests/Arrays.som"}));
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
     PolyglotEngine engine = builder.build();
     VM.setEngine(engine);
@@ -68,10 +70,10 @@ public class SomPolyglotTests {
 
   @Test
   public void executeHelloWorldWithTruffleProfiler() throws IOException {
-    String[] args = new String[] {"core-lib/Hello.som"};
+    VmOptions options = new VmOptions(new String[] {"core-lib/Hello.som"});
 
     Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OPTIONS, options);
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
     PolyglotEngine vm = builder.build();
     VM.setEngine(vm);
@@ -91,10 +93,10 @@ public class SomPolyglotTests {
 
   @Test
   public void executeHelloWorldWithoutTruffleProfiler() throws IOException {
-    String[] args = new String[] {"core-lib/Hello.som"};
+    VmOptions options = new VmOptions(new String[] {"core-lib/Hello.som"});
 
     Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.CMD_ARGS, args);
+    builder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OPTIONS, options);
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
     PolyglotEngine vm = builder.build();
     VM.setEngine(vm);

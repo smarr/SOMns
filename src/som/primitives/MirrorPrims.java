@@ -1,6 +1,7 @@
 package som.primitives;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -58,7 +59,8 @@ public abstract class MirrorPrims {
     @Specialization
     public final SImmutableArray getMethod(final Object rcvr) {
       VM.thisMethodNeedsToBeOptimized("Uses Types.getClassOf, so, should be specialized in performance cirtical code");
-      SInvokable[] invokables = Types.getClassOf(rcvr).getMethods();
+      SInvokable[] is = Types.getClassOf(rcvr).getMethods();
+      Object[] invokables = Arrays.copyOf(is, is.length, Object[].class);
       return new SImmutableArray(invokables, Classes.valueArrayClass);
     }
   }
@@ -99,7 +101,7 @@ public abstract class MirrorPrims {
     public final Object getClassDefinition(final Object mixinHandle) {
       assert mixinHandle instanceof MixinDefinition;
       MixinDefinition def = (MixinDefinition) mixinHandle;
-      MixinDefinition[] nested = def.getNestedMixinDefinitions();
+      Object[] nested = def.getNestedMixinDefinitions();
       return new SImmutableArray(nested, Classes.valueArrayClass);
     }
   }
@@ -133,7 +135,7 @@ public abstract class MirrorPrims {
           methods.add((SInvokable) disp);
         }
       }
-      return new SImmutableArray(methods.toArray(new SInvokable[methods.size()]),
+      return new SImmutableArray(methods.toArray(new Object[0]),
           Classes.valueArrayClass);
     }
   }

@@ -179,7 +179,7 @@ public final class MixinDefinition {
   // TODO: do we need to specialize this guard?
   @ExplodeLoop
   public static boolean sameSuperAndMixins(final Object superclassAndMixins, final Object cached) {
-    if (!(cached instanceof Object[])) {
+    if (cached.getClass() != Object[].class) {
       assert cached instanceof SClass;
       assert superclassAndMixins instanceof SClass;
 
@@ -189,7 +189,7 @@ public final class MixinDefinition {
       return result;
     }
 
-    if (!(superclassAndMixins instanceof Object[])) {
+    if (superclassAndMixins != Object[].class) {
       return false;
     }
 
@@ -668,9 +668,8 @@ public final class MixinDefinition {
     return nestedMixinDefinitions.get(Symbols.symbolFor(string));
   }
 
-  public MixinDefinition[] getNestedMixinDefinitions() {
-    return nestedMixinDefinitions.values().toArray(
-        new MixinDefinition[nestedMixinDefinitions.size()]);
+  public Object[] getNestedMixinDefinitions() {
+    return nestedMixinDefinitions.values().toArray(new Object[0]);
   }
 
   public AccessModifier getAccessModifier() {
