@@ -58,7 +58,7 @@ import tools.language.StructuralProbe;
  * MixinBuilders are used by the parser to accumulate all information to create
  * a {@link MixinDefinition}.
  */
-public final class MixinBuilder {
+public final class MixinBuilder extends LexicalBuilder {
   // TODO: if performance critical, optimize mixin builder by initializing structures lazily
 
   /** The method that is used to resolve the superclass at runtime. */
@@ -100,8 +100,6 @@ public final class MixinBuilder {
   private final MixinScope instanceScope;
   private final MixinScope classScope;
 
-  private final MixinBuilder outerBuilder;
-
   private final MixinDefinitionId mixinId;
 
   private final StructuralProbe structuralProbe;
@@ -131,23 +129,24 @@ public final class MixinBuilder {
     }
   };
 
-  public MixinBuilder(final MixinBuilder outerBuilder,
+  public MixinBuilder(final LexicalBuilder outerBuilder,
       final AccessModifier accessModifier, final SSymbol name,
       final SourceSection nameSection,
       final StructuralProbe structuralProbe,
       final SomLanguage language) {
+    super(outerBuilder);
+
     this.name         = name;
     this.nameSection  = nameSection;
     this.mixinId      = new MixinDefinitionId(name);
 
     this.classSide    = false;
-    this.outerBuilder = outerBuilder;
     this.language     = language;
 
     // classes can only be defined on the instance side,
     // so, both time the instance scope
-    this.instanceScope = new MixinScope(outerBuilder != null ? outerBuilder.getInstanceScope() : null);
-    this.classScope    = new MixinScope(outerBuilder != null ? outerBuilder.getInstanceScope() : null);
+    this.instanceScope = new MixinScope(getOuterSelf() != null ? getOuterSelf().getInstanceScope() : null);
+    this.classScope = new MixinScope(getOuterSelf() != null ? getOuterSelf().getInstanceScope() : null);
 
     this.initializer          = new MethodBuilder(this, this.instanceScope);
     this.primaryFactoryMethod = new MethodBuilder(this, this.classScope);
@@ -173,16 +172,12 @@ public final class MixinBuilder {
     return instanceScope;
   }
 
-  public MixinBuilder getOuterBuilder() {
-    return outerBuilder;
-  }
-
   public SSymbol getName() {
     return name;
   }
 
   public boolean isModule() {
-    return outerBuilder == null;
+    return getContextualSelf() == null;
   }
 
   public AccessModifier getAccessModifier() {
@@ -393,10 +388,10 @@ public final class MixinBuilder {
   }
 
   private boolean outerScopeIsImmutable() {
-    if (outerBuilder == null) {
+    if (getOuterSelf() == null) {
       return true;
     }
-    return outerBuilder.allSlotsAreImmutable && outerBuilder.outerScopeIsImmutable();
+    return getOuterSelf().allSlotsAreImmutable && getOuterSelf().outerScopeIsImmutable();
   }
 
   private void setHolders(final MixinDefinition clsDef) {
@@ -414,11 +409,12 @@ public final class MixinBuilder {
 
   private MethodBuilder createSuperclassResolutionBuilder() {
     MethodBuilder definitionMethod;
-    if (outerBuilder == null) {
+    if (isModule()) {
       definitionMethod = new MethodBuilder(true, language);
     } else {
-      definitionMethod = new MethodBuilder(outerBuilder,
-          outerBuilder.getInstanceScope());
+      MixinBuilder mixinBuilder = getOuterSelf();
+      definitionMethod = new MethodBuilder(mixinBuilder,
+          mixinBuilder.getInstanceScope());
     }
 
     // self is going to be the enclosing object

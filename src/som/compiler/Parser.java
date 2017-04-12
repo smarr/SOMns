@@ -1230,7 +1230,7 @@ public class Parser {
       assert !eventualSend;
       return createImplicitReceiverSend(msg, args,
           builder.getCurrentMethodScope(),
-          builder.getEnclosingMixinBuilder().getMixinId(), source, language.getVM());
+          builder.getOuterSelf().getMixinId(), source, language.getVM());
     }
   }
 
@@ -1486,7 +1486,10 @@ public class Parser {
       blockPattern(builder);
     }
 
-    String outerMethodName = stripColons(builder.getOuterBuilder().
+    if (builder.getNextMethod() == null) {
+      throw new java.lang.NullPointerException("The outer context of a block should never be null");
+    }
+    String outerMethodName = stripColons(builder.getNextMethod().
         getSignature().getString());
 
     // generate Block signature

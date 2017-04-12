@@ -58,10 +58,8 @@ import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SSymbol;
 
 
-public final class MethodBuilder {
+public final class MethodBuilder extends LexicalBuilder {
 
-  private final MixinBuilder  directOuterMixin; // to get to an indirect outer, use outerBuilder
-  private final MethodBuilder outerBuilder;
   private final boolean       blockMethod;
 
   private final SomLanguage language;
@@ -83,31 +81,29 @@ public final class MethodBuilder {
   private final List<SInvokable> embeddedBlockMethods;
 
 
-  public MethodBuilder(final MixinBuilder holder, final MixinScope clsScope) {
-    this(holder, clsScope, null, false, holder.getLanguage());
+  public MethodBuilder(final MixinBuilder outerBuilder, final MixinScope clsScope) {
+    this(outerBuilder, clsScope, false, outerBuilder.getLanguage());
   }
 
   public MethodBuilder(final boolean withoutContext, final SomLanguage language) {
-    this(null, null, null, false, language);
+    this(null, null, false, language);
     assert withoutContext;
   }
 
   public MethodBuilder(final MethodBuilder outerBuilder) {
-    this(outerBuilder.directOuterMixin, outerBuilder.getHolderScope(),
-        outerBuilder, true, outerBuilder.language);
+    this(outerBuilder, outerBuilder.getHolderScope(), true, outerBuilder.language);
   }
 
-  private MethodBuilder(final MixinBuilder holder, final MixinScope clsScope,
-      final MethodBuilder outerBuilder, final boolean isBlockMethod,
-      final SomLanguage language) {
-    this.directOuterMixin = holder;
-    this.outerBuilder = outerBuilder;
+  private MethodBuilder(final LexicalBuilder outerBuilder, final MixinScope clsScope,
+      final boolean isBlockMethod, final SomLanguage language) {
+    super(outerBuilder);
     this.blockMethod  = isBlockMethod;
     this.language     = language;
 
-    MethodScope outer = (outerBuilder != null)
-        ? outerBuilder.getCurrentMethodScope()
-        : null;
+    MethodScope outer = null;
+    if (getNextMethod() != null) {
+      outer = getNextMethod().getCurrentMethodScope();
+    }
     assert Nil.nilObject != null : "Nil.nilObject not yet initialized";
     this.currentScope   = new MethodScope(new FrameDescriptor(Nil.nilObject), outer, clsScope);
 
@@ -186,8 +182,8 @@ public final class MethodBuilder {
   private static final String FRAME_ON_STACK_SLOT_NAME = "!frameOnStack";
 
   public Internal getFrameOnStackMarkerVar() {
-    if (outerBuilder != null) {
-      return outerBuilder.getFrameOnStackMarkerVar();
+    if (getNextMethod() != null) {
+      return getNextMethod().getFrameOnStackMarkerVar();
     }
 
     if (frameOnStackVar == null) {
@@ -215,17 +211,17 @@ public final class MethodBuilder {
   }
 
   private MethodBuilder markOuterContextsToRequireContextAndGetRootContext() {
-    MethodBuilder ctx = outerBuilder;
-    while (ctx.outerBuilder != null) {
+    MethodBuilder ctx = getNextMethod();
+    while (ctx.getNextMethod() != null) {
       ctx.throwsNonLocalReturn = true;
-      ctx = ctx.outerBuilder;
+      ctx = ctx.getNextMethod();
     }
     return ctx;
   }
 
   public boolean needsToCatchNonLocalReturn() {
     // only the most outer method needs to catch
-    return needsToCatchNonLocalReturn && outerBuilder == null;
+    return needsToCatchNonLocalReturn && getContextualSelf() instanceof MixinBuilder;
   }
 
   public SInitializer assembleInitializer(final ExpressionNode body,
@@ -300,7 +296,7 @@ public final class MethodBuilder {
   }
 
   private String getMethodIdentifier() {
-    MixinBuilder holder = getEnclosingMixinBuilder();
+    MixinBuilder holder = getOuterSelf();
     String cls = holder != null && holder.isClassSide() ? "_class" : "";
     String name = holder == null ? "_unknown_" : holder.getName().getString();
 
@@ -360,13 +356,7 @@ public final class MethodBuilder {
   }
 
   private int getOuterSelfContextLevel() {
-    int level = 0;
-    MethodBuilder ctx = outerBuilder;
-    while (ctx != null) {
-      ctx = ctx.outerBuilder;
-      level++;
-    }
-    return level;
+    return countLevelsToNextMixin();
   }
 
   private int getContextLevel(final String varName) {
@@ -374,8 +364,10 @@ public final class MethodBuilder {
       return 0;
     }
 
-    if (outerBuilder != null) {
-      return 1 + outerBuilder.getContextLevel(varName);
+    MethodBuilder nextMethod = getNextMethod();
+    if (nextMethod != null) {
+      //return countLevelsToNextMethod() + nextMethod.getContextLevel(varName);
+      return 1 + nextMethod.getContextLevel(varName);
     }
 
     throw new IllegalStateException("Didn't find variable.");
@@ -398,8 +390,8 @@ public final class MethodBuilder {
       return arguments.get(varName);
     }
 
-    if (outerBuilder != null) {
-      Variable outerVar = outerBuilder.getVariable(varName);
+    if (getNextMethod() != null) {
+      Variable outerVar = getNextMethod().getVariable(varName);
       if (outerVar != null) {
         accessesVariablesOfOuterScope = true;
       }
@@ -414,14 +406,14 @@ public final class MethodBuilder {
 
   public ExpressionNode getSuperReadNode(@NotNull final SourceSection source) {
     assert source != null;
-    MixinBuilder holder = getEnclosingMixinBuilder();
+    MixinBuilder holder = getOuterSelf();
     return getSelf().getSuperReadNode(getOuterSelfContextLevel(),
         holder.getMixinId(), holder.isClassSide(), source);
   }
 
   public ExpressionNode getSelfRead(@NotNull final SourceSection source) {
     assert source != null;
-    MixinBuilder holder = getEnclosingMixinBuilder();
+    MixinBuilder holder = getOuterSelf();
     MixinDefinitionId mixinId = holder == null ? null : holder.getMixinId();
     return getSelf().getSelfReadNode(getContextLevel("self"), mixinId, source);
   }
@@ -455,7 +447,7 @@ public final class MethodBuilder {
       return getReadNode(selector.getString(), source);
     }
 
-    if (getEnclosingMixinBuilder() == null) {
+    if (getOuterSelf() == null) {
       // this is normally only for the inheritance clauses for modules the case
       return SNodeFactory.createMessageSend(selector,
           new ExpressionNode[] {getSelfRead(source)}, false, source, null, language);
@@ -463,7 +455,7 @@ public final class MethodBuilder {
       // otherwise, it is an implicit receiver send
       return SNodeFactory.createImplicitReceiverSend(selector,
           new ExpressionNode[] {getSelfRead(source)},
-          getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(),
+          getCurrentMethodScope(), getOuterSelf().getMixinId(),
           source, language.getVM());
     }
   }
@@ -484,7 +476,7 @@ public final class MethodBuilder {
     return SNodeFactory.createImplicitReceiverSend(
         MixinBuilder.getSetterName(identifier),
         new ExpressionNode[] {getSelfRead(source), exp},
-        getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(),
+        getCurrentMethodScope(), getOuterSelf().getMixinId(),
         source, language.getVM());
   }
 
@@ -493,8 +485,8 @@ public final class MethodBuilder {
       return true;
     }
 
-    if (outerBuilder != null) {
-      return outerBuilder.hasArgument(varName);
+    if (getNextMethod() != null) {
+      return getNextMethod().hasArgument(varName);
     }
     return false;
   }
@@ -504,8 +496,8 @@ public final class MethodBuilder {
       return locals.get(varName);
     }
 
-    if (outerBuilder != null) {
-      Local outerLocal = outerBuilder.getLocal(varName);
+    if (getNextMethod() != null) {
+      Local outerLocal = getNextMethod().getLocal(varName);
       if (outerLocal != null) {
         accessesVariablesOfOuterScope = true;
       }
@@ -521,30 +513,14 @@ public final class MethodBuilder {
         getOuterSelfContextLevel(), source);
   }
 
-  public MethodBuilder getOuterBuilder() {
-    return outerBuilder;
-  }
-
-  public MixinBuilder getEnclosingMixinBuilder() {
-    if (this.directOuterMixin == null) {
-      if (outerBuilder == null) {
-        return null;
-      } else {
-        return outerBuilder.getEnclosingMixinBuilder();
-      }
-    } else {
-      return directOuterMixin;
-    }
-  }
-
   public ExpressionNode getOuterRead(final String outerName,
       final SourceSection source) throws MixinDefinitionError {
-    MixinBuilder enclosing = getEnclosingMixinBuilder();
+    MixinBuilder enclosing = getOuterSelf();
     MixinDefinitionId lexicalSelfMixinId = enclosing.getMixinId();
     int ctxLevel = 0;
     while (!outerName.equals(enclosing.getName().getString())) {
       ctxLevel++;
-      enclosing = enclosing.getOuterBuilder();
+      enclosing = enclosing.getOuterSelf();
       if (enclosing == null) {
         throw new MixinDefinitionError("Outer send `outer " + outerName
             + "` could not be resolved", source);
@@ -577,7 +553,7 @@ public final class MethodBuilder {
 
   @Override
   public String toString() {
-    return "MethodBuilder(" + getEnclosingMixinBuilder().getName().getString() +
+    return "MethodBuilder(" + getOuterSelf().getName().getString() +
         ">>" + signature.toString() + ")";
   }
 }
