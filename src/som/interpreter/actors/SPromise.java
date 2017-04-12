@@ -8,6 +8,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.sun.istack.internal.NotNull;
 
 import som.interpreter.actors.EventualMessage.PromiseMessage;
+import som.primitives.TimerPrim;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
@@ -121,12 +122,12 @@ public class SPromise extends SObjectWithClass {
     if (isCompleted()) {
       remote.value = value;
       remote.resolutionState = resolutionState;
+      if (VmSettings.REPLAY) {
+        ((SReplayPromise) remote).resolvingActor = ((SReplayPromise) this).resolvingActor;
+      }
 
       if (VmSettings.PROMISE_RESOLUTION) {
         ActorExecutionTrace.promiseChained(this.getPromiseId(), remote.getPromiseId());
-      }
-      if (VmSettings.REPLAY) {
-        ((SReplayPromise) remote).resolvingActor = ((SReplayPromise) this).resolvingActor;
       }
     } else {
       addChainedPromise(remote);
@@ -277,8 +278,8 @@ public class SPromise extends SObjectWithClass {
 
     protected long resolvingActor;
 
-
     public long getResolvingActor() {
+      assert isCompleted();
       return resolvingActor;
     }
   }
@@ -375,7 +376,12 @@ public class SPromise extends SObjectWithClass {
 
       if (VmSettings.PROMISE_RESOLUTION) {
         if (VmSettings.REPLAY) {
-          ((SReplayPromise) p).resolvingActor = current.getId();
+          // Promises resolved by the TimerPrim will appear as if they have been resolved by the main actor.
+          if (TimerPrim.isTimerThread(Thread.currentThread())) {
+            ((SReplayPromise) p).resolvingActor = 0;
+          } else {
+            ((SReplayPromise) p).resolvingActor = EventualMessage.getActorCurrentMessageIsExecutionOn().getId();
+          }
         }
 
         if (type == Resolution.SUCCESSFUL && p.resolutionState != Resolution.CHAINED) {

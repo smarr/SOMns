@@ -146,7 +146,7 @@ public final class PromisePrims {
       SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage pcm = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
-          block, resolver, blockCallTarget, false, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promise);
+          block, resolver, blockCallTarget, false, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), rcvr);
       registerNode.register(rcvr, pcm, current);
 
       return promise;

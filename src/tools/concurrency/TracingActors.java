@@ -141,7 +141,7 @@ public class TracingActors {
 
     private static void printMsg(final EventualMessage msg) {
       if (msg instanceof PromiseMessage) {
-        VM.println("\t" + "PromiseMessage " + msg.getSelector() + " from " + msg.getSender().getId() + " PID " + ((PromiseMessage) msg).getPromise().getPromiseId());
+        VM.println("\t" + "PromiseMessage " + msg.getSelector() + " from " + msg.getSender().getId() + " PID " + ((SReplayPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
       } else {
         VM.println("\t" + "Message" + msg.getSelector() + " from " + msg.getSender().getId());
       }

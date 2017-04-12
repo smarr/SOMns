@@ -102,6 +102,7 @@ public final class TraceParser {
         byte type = b.get();
 
         long cause;
+        long promise;
         switch (type) {
           case TraceData.ACTOR_CREATION:
             long id = b.getLong(); // actor id
@@ -150,30 +151,30 @@ public final class TraceParser {
             assert b.position() == start + Events.PromiseChained.size;
             break;
           case TraceData.PROMISE_CREATION:
-            long pid  = b.getLong(); // promise id
+            promise  = b.getLong(); // promise id
             cause = b.getLong(); // causal message
             assert b.position() == start + Events.PromiseCreation.size;
             break;
           case TraceData.PROMISE_RESOLUTION:
-            long resolvedPromise = b.getLong(); // promise id
-            long resolvingMsg = b.getLong(); // resolving msg
-            if (!resolvedPromises.containsKey(resolvingMsg)) {
-              resolvedPromises.put(resolvingMsg, new ArrayList<>());
+            promise = b.getLong(); // promise id
+            cause = b.getLong(); // resolving msg
+            if (!resolvedPromises.containsKey(cause)) {
+              resolvedPromises.put(cause, new ArrayList<>());
             }
 
-            resolvedPromises.get(resolvingMsg).add(resolvedPromise);
+            resolvedPromises.get(cause).add(promise);
             parseParameter(); // param
             assert b.position() <= start + Events.PromiseResolution.size;
             break;
           case TraceData.PROMISE_ERROR:
-            long resolvedPromise2 = b.getLong(); // promise id
-            long resolvingMsg2 = b.getLong(); // resolving msg
-            if (!resolvedPromises.containsKey(resolvingMsg2)) {
-              resolvedPromises.put(resolvingMsg2, new ArrayList<>());
+            promise = b.getLong(); // promise id
+            cause = b.getLong(); // resolving msg
+            if (!resolvedPromises.containsKey(cause)) {
+              resolvedPromises.put(cause, new ArrayList<>());
             }
             VM.println("ERROR");
 
-            resolvedPromises.get(resolvingMsg2).add(resolvedPromise2);
+            resolvedPromises.get(cause).add(promise);
             parseParameter(); // param
             assert b.position() <= start + Events.PromiseError.size;
             break;
@@ -197,13 +198,13 @@ public final class TraceParser {
                 if (!mappedActors.containsKey(l)) {
                   mappedActors.put(l, new ActorNode(l));
                 }
-                ActorNode an = mappedActors.get(l);
-                an.mailboxNo = currentMailbox;
-                mappedActors.get(currentReceiver).addChild(an);
+                ActorNode node = mappedActors.get(l);
+                node.mailboxNo = currentMailbox;
+                mappedActors.get(currentReceiver).addChild(node);
               }
             } if (resolvedPromises.containsKey(currentMessage)) {
-              for (long promise : resolvedPromises.get(currentMessage)) {
-                promiseResolvers.put(promise, currentReceiver);
+              for (long prom : resolvedPromises.get(currentMessage)) {
+                promiseResolvers.put(prom, currentReceiver);
               }
             }
 
@@ -224,8 +225,13 @@ public final class TraceParser {
         pid = chainedPromises.get(pid);
       }
 
-      assert promiseResolvers.containsKey(pid);
-      pmr.pId = promiseResolvers.get(pid);
+      if (!promiseResolvers.containsKey(pid)) {
+        /* Promise resolutions done by the TimerPrim aren't included in the trace file,
+           pretend they were resolved by the main actor */
+        pmr.pId = 0;
+      } else {
+        pmr.pId = promiseResolvers.get(pid);
+      }
     }
 
     assert unmappedActors.isEmpty();
@@ -235,7 +241,6 @@ public final class TraceParser {
 
   private void parseMessage(final byte type, final ArrayList<PromiseMessageRecord> records) {
     long promid = 0;
-    long resolvingActor;
     // promise msg
     if ((type & TraceData.PROMISE_BIT) > 0) {
       promid = b.getLong(); // promise

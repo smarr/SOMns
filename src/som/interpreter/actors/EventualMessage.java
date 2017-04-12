@@ -259,7 +259,7 @@ public abstract class EventualMessage {
 
     @Override
     public SSymbol getSelector() {
-      return VALUE_SELECTOR;
+      return ((SBlock) args[0]).getMethod().getSignature();
     }
 
     @Override
