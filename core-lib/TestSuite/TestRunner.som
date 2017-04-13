@@ -100,8 +100,6 @@ class TestRunner usingPlatform: platform = (
                'TransferObjectTests',
                'MinitestTests'.
 
-               (* 'ReflectionTests', *)
-
     allSuccessful := true.
     allTestsDonePromise := actors async: modules do: [:m |
       | testModule |
