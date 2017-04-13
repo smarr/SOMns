@@ -19,16 +19,23 @@ public abstract class ReceivedRootNode extends RootNode {
   @Child protected AbstractPromiseResolutionNode error;
 
   protected final WebDebugger dbg;
+  private final SourceSection sourceSection;
 
-  protected ReceivedRootNode(final Class<? extends TruffleLanguage<?>> language,
+  protected ReceivedRootNode(final TruffleLanguage<?> language,
       final SourceSection sourceSection, final FrameDescriptor frameDescriptor) {
-    super(language, sourceSection, frameDescriptor);
+    super(language, frameDescriptor);
     assert sourceSection != null;
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
       this.dbg = VM.getWebDebugger();
     } else {
       this.dbg = null;
     }
+    this.sourceSection = sourceSection;
+  }
+
+  @Override
+  public SourceSection getSourceSection() {
+    return sourceSection;
   }
 
   protected final void resolvePromise(final VirtualFrame frame,

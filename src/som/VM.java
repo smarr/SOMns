@@ -131,12 +131,13 @@ public final class VM {
     graphPrinter.close();
   }
 
-  public VM(final VmOptions vmOptions, final boolean avoidExitForTesting) throws IOException {
+  public VM(final VmOptions vmOptions, final boolean avoidExitForTesting,
+      final SomLanguage lang) throws IOException {
     vm = this;
 
     this.avoidExitForTesting = avoidExitForTesting;
     options = vmOptions;
-    objectSystem = new ObjectSystem(new SourcecodeCompiler(), structuralProbe);
+    objectSystem = new ObjectSystem(new SourcecodeCompiler(lang), structuralProbe);
     objectSystem.loadKernelAndPlatform(options.platformFile, options.kernelFile);
 
     if (options.showUsage) {
@@ -144,8 +145,8 @@ public final class VM {
     }
   }
 
-  public VM(final VmOptions vmOptions) throws IOException {
-    this(vmOptions, false);
+  public VM(final VmOptions vmOptions, final SomLanguage lang) throws IOException {
+    this(vmOptions, false, lang);
   }
 
   public static void reportSyntaxElement(final Class<? extends Tags> type,

@@ -106,6 +106,8 @@ public final class MixinBuilder {
 
   private final StructuralProbe structuralProbe;
 
+  private final SomLanguage language;
+
   /**
    * A unique id to identify the mixin definition. Having the Id distinct from
    * the actual definition allows us to make the definition immutable and
@@ -132,13 +134,15 @@ public final class MixinBuilder {
   public MixinBuilder(final MixinBuilder outerBuilder,
       final AccessModifier accessModifier, final SSymbol name,
       final SourceSection nameSection,
-      final StructuralProbe structuralProbe) {
+      final StructuralProbe structuralProbe,
+      final SomLanguage language) {
     this.name         = name;
     this.nameSection  = nameSection;
     this.mixinId      = new MixinDefinitionId(name);
 
     this.classSide    = false;
     this.outerBuilder = outerBuilder;
+    this.language     = language;
 
     // classes can only be defined on the instance side,
     // so, both time the instance scope
@@ -159,6 +163,10 @@ public final class MixinBuilder {
     MixinDefinitionError(final String message, final SourceSection source) {
       super(message, source);
     }
+  }
+
+  public SomLanguage getLanguage() {
+    return language;
   }
 
   public MixinScope getInstanceScope() {
@@ -407,7 +415,7 @@ public final class MixinBuilder {
   private MethodBuilder createSuperclassResolutionBuilder() {
     MethodBuilder definitionMethod;
     if (outerBuilder == null) {
-      definitionMethod = new MethodBuilder(true);
+      definitionMethod = new MethodBuilder(true, language);
     } else {
       definitionMethod = new MethodBuilder(outerBuilder,
           outerBuilder.getInstanceScope());
@@ -520,7 +528,7 @@ public final class MixinBuilder {
     ExpressionNode superNode = initializer.getSuperReadNode(source);
     SSymbol init = getInitializerName(Symbols.NEW);
     ExpressionNode superFactorySend = SNodeFactory.createMessageSend(
-        init, new ExpressionNode[] {superNode}, false, source, null);
+        init, new ExpressionNode[] {superNode}, false, source, null, language);
     return superFactorySend;
   }
 

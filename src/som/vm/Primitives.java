@@ -95,10 +95,10 @@ public class Primitives {
   private HashMap<SSymbol, Dispatchable> vmMirrorPrimitives;
   private HashMap<SSymbol, Specializer<? extends ExpressionNode>>  eagerPrimitives;
 
-  public Primitives() {
+  public Primitives(final SomLanguage lang) {
     vmMirrorPrimitives = new HashMap<>();
     eagerPrimitives    = new HashMap<>();
-    initialize();
+    initialize(lang);
   }
 
   @SuppressWarnings("unchecked")
@@ -211,7 +211,7 @@ public class Primitives {
   }
 
   private static SInvokable constructVmMirrorPrimitive(final SSymbol signature,
-      final Specializer<? extends ExpressionNode> specializer) {
+      final Specializer<? extends ExpressionNode> specializer, final SomLanguage lang) {
     CompilerAsserts.neverPartOfCompilation("This is only executed during bootstrapping.");
     assert signature.getNumberOfSignatureArguments() > 1 :
       "Primitives should have the vmMirror as receiver, " +
@@ -221,7 +221,7 @@ public class Primitives {
     final int numArgs = signature.getNumberOfSignatureArguments() - 1;
 
     Source s = SomLanguage.getSyntheticSource("primitive", specializer.fact.getClass().getSimpleName());
-    MethodBuilder prim = new MethodBuilder(true);
+    MethodBuilder prim = new MethodBuilder(true, lang);
     ExpressionNode[] args = new ExpressionNode[numArgs];
 
     for (int i = 0; i < numArgs; i++) {
@@ -237,7 +237,7 @@ public class Primitives {
 
     Primitive primMethodNode = new Primitive(name, primNode,
         prim.getCurrentMethodScope().getFrameDescriptor(),
-        (ExpressionNode) primNode.deepCopy(), false);
+        (ExpressionNode) primNode.deepCopy(), false, lang);
     return new SInvokable(signature, AccessModifier.PUBLIC,
         primMethodNode, null);
   }
@@ -253,7 +253,7 @@ public class Primitives {
    * Setup the lookup data structures for vm primitive registration as well as
    * eager primitive replacement.
    */
-  private void initialize() {
+  private void initialize(final SomLanguage lang) {
     List<NodeFactory<? extends ExpressionNode>> primFacts = getFactories();
     for (NodeFactory<? extends ExpressionNode> primFact : primFacts) {
       som.primitives.Primitive[] prims = getPrimitiveAnnotation(primFact);
@@ -266,7 +266,7 @@ public class Primitives {
             SSymbol signature = Symbols.symbolFor(vmMirrorName);
             assert !vmMirrorPrimitives.containsKey(signature) : "clash of vmMirrorPrimitive names";
             vmMirrorPrimitives.put(signature,
-                constructVmMirrorPrimitive(signature, specializer));
+                constructVmMirrorPrimitive(signature, specializer, lang));
           }
 
           if (!("".equals(prim.selector()))) {

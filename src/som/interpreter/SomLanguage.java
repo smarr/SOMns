@@ -112,8 +112,8 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
     private final SClass moduleClass;
 
-    ParseResult(final SClass moduleClass) {
-      super(SomLanguage.class, null, null);
+    ParseResult(final TruffleLanguage<?> language, final SClass moduleClass) {
+      super(language, null);
       this.moduleClass = moduleClass;
     }
 
@@ -123,22 +123,12 @@ public final class SomLanguage extends TruffleLanguage<VM> {
     }
   }
 
-  /**
-   * Do not instantiate, use {@link INSTANCE} instead.
-   */
-  private SomLanguage() { }
-
-  @SuppressWarnings("unchecked")
-  public FindContextNode<VM> createNewFindContextNode() {
-    return (FindContextNode<VM>) super.createFindContextNode();
-  }
-
   @Override
   protected VM createContext(final Env env) {
     VM vm;
     try {
       vm = new VM((VmOptions) env.getConfig().get(VM_OPTIONS),
-          (boolean) env.getConfig().get(AVOID_EXIT));
+          (boolean) env.getConfig().get(AVOID_EXIT), this);
     } catch (IOException e) {
       throw new RuntimeException("Failed accessing kernel or platform code of SOMns.", e);
     }
@@ -153,10 +143,9 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
     private final FindContextNode<VM> contextNode;
 
-    @SuppressWarnings("unchecked")
-    protected StartInterpretation(final Node findContextNode) {
-      super(SomLanguage.class, null, null);
       contextNode = (FindContextNode<VM>) findContextNode;
+    protected StartInterpretation(final SomLanguage lang, final ContextReference<VM> context) {
+      super(lang, null);
     }
 
     @Override
@@ -168,7 +157,8 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   }
 
   private CallTarget createStartCallTarget() {
-    return Truffle.getRuntime().createCallTarget(new StartInterpretation(createFindContextNode()));
+    return Truffle.getRuntime().createCallTarget(
+        new StartInterpretation(this, getContextReference()));
   }
 
   @Override
@@ -181,7 +171,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
     VM vm = createNewFindContextNode().executeFindContext();
     try {
       MixinDefinition moduleDef = vm.loadModule(code);
-      ParseResult result = new ParseResult(moduleDef.instantiateModuleClass());
+      ParseResult result = new ParseResult(this, moduleDef.instantiateModuleClass());
       return Truffle.getRuntime().createCallTarget(result);
     } catch (ThreadDeath t) {
       throw new IOException(t);

@@ -14,6 +14,7 @@ import som.vmobjects.SInvokable;
 
 public abstract class Invokable extends RootNode {
   protected final String name;
+  private final SourceSection sourceSection;
 
   /** Marks this invokable as being used in a transactional context. */
   protected final boolean isAtomic;
@@ -27,12 +28,13 @@ public abstract class Invokable extends RootNode {
       final FrameDescriptor frameDescriptor,
       final ExpressionNode expressionOrSequence,
       final ExpressionNode uninitialized,
-      final boolean isAtomic) {
-    super(SomLanguage.class, sourceSection, frameDescriptor);
+      final boolean isAtomic, final SomLanguage lang) {
+    super(lang, frameDescriptor);
     this.name = name;
     this.expressionOrSequence = expressionOrSequence;
     this.uninitializedBody    = uninitialized;
     this.isAtomic             = isAtomic;
+    this.sourceSection        = sourceSection;
   }
 
   @Override
@@ -65,6 +67,11 @@ public abstract class Invokable extends RootNode {
 
   public final RootCallTarget createCallTarget() {
     return Truffle.getRuntime().createCallTarget(this);
+  }
+
+  @Override
+  public SourceSection getSourceSection() {
+    return sourceSection;
   }
 
   public abstract void propagateLoopCountThroughoutMethodScope(long count);

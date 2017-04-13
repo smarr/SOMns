@@ -13,6 +13,7 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.SomLanguage;
 import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.EventualSendNodeFactory.SendNodeGen;
@@ -40,11 +41,12 @@ public class EventualSendNode extends ExprWithTagsNode {
 
   public EventualSendNode(final SSymbol selector, final int numArgs,
       final InternalObjectArrayNode arguments, final SourceSection source,
-      final SourceSection sendOperator) {
+      final SourceSection sendOperator, final SomLanguage lang) {
     super(source);
     this.arguments = arguments;
     this.send = SendNodeGen.create(selector, createArgWrapper(numArgs),
-        createOnReceiveCallTarget(selector, numArgs, source), sendOperator);
+        createOnReceiveCallTarget(selector, numArgs, source, lang),
+        sendOperator);
   }
 
   /**
@@ -61,19 +63,20 @@ public class EventualSendNode extends ExprWithTagsNode {
   }
 
   private static RootCallTarget createOnReceiveCallTarget(final SSymbol selector,
-      final int numArgs, final SourceSection source) {
+      final int numArgs, final SourceSection source, final SomLanguage lang) {
 
     AbstractMessageSendNode invoke = MessageSendNode.createGeneric(selector, null, source);
-    ReceivedMessage receivedMsg = new ReceivedMessage(invoke, selector);
+    ReceivedMessage receivedMsg = new ReceivedMessage(invoke, selector, lang);
 
     return Truffle.getRuntime().createCallTarget(receivedMsg);
   }
 
   public static RootCallTarget createOnReceiveCallTargetForVMMain(final SSymbol selector,
-      final int numArgs, final SourceSection source, final CompletableFuture<Object> future) {
+      final int numArgs, final SourceSection source,
+      final CompletableFuture<Object> future, final SomLanguage lang) {
 
     AbstractMessageSendNode invoke = MessageSendNode.createGeneric(selector, null, source);
-    ReceivedMessage receivedMsg = new ReceivedMessageForVMMain(invoke, selector, future);
+    ReceivedMessage receivedMsg = new ReceivedMessageForVMMain(invoke, selector, future, lang);
 
     return Truffle.getRuntime().createCallTarget(receivedMsg);
   }

@@ -62,10 +62,11 @@ public final class SNodeFactory {
 
   public static ExpressionNode createMessageSend(final SSymbol msg,
       final ExpressionNode[] exprs, final boolean eventualSend,
-      final SourceSection source, final SourceSection sendOperator) {
+      final SourceSection source, final SourceSection sendOperator,
+      final SomLanguage lang) {
     if (eventualSend) {
       return new EventualSendNode(msg, exprs.length,
-          new InternalObjectArrayNode(exprs, source), source, sendOperator);
+          new InternalObjectArrayNode(exprs, source), source, sendOperator, lang);
     } else {
       return MessageSendNode.createMessageSend(msg, exprs, source);
     }

@@ -44,9 +44,10 @@ public final class Method extends Invokable {
                 final ExpressionNode expressions,
                 final MethodScope methodScope,
                 final ExpressionNode uninitialized, final boolean block,
-                final boolean isAtomic) {
+                final boolean isAtomic,
+                final SomLanguage lang) {
     super(name, sourceSection, methodScope.getFrameDescriptor(),
-        expressions, uninitialized, isAtomic);
+        expressions, uninitialized, isAtomic, lang);
     this.definition = definition;
     this.block = block;
     this.methodScope = methodScope;
@@ -106,7 +107,7 @@ public final class Method extends Invokable {
     }
 
     Method clone = new Method(name, getSourceSection(), definition, adaptedBody,
-        adaptedScope, uninit, block, isAtomic);
+        adaptedScope, uninit, block, isAtomic, getLanguage(SomLanguage.class));
     adaptedScope.setMethod(clone);
     return clone;
   }
@@ -128,7 +129,7 @@ public final class Method extends Invokable {
     ExpressionNode uninit = NodeUtil.cloneNode(body);
 
     Method atomic = new Method(name, getSourceSection(), definition, body,
-        splitScope, uninit, block, true);
+        splitScope, uninit, block, true, getLanguage(SomLanguage.class));
     splitScope.setMethod(atomic);
     return atomic;
   }

@@ -66,7 +66,7 @@ public final class ObjectSystem {
   public ObjectSystem(final SourcecodeCompiler compiler,
       final StructuralProbe probe) {
     last = this;
-    this.primitives = new Primitives();
+    this.primitives = new Primitives(compiler.getLanguage());
     this.compiler   = compiler;
     structuralProbe = probe;
     loadedModules   = new LinkedHashMap<>();
@@ -363,7 +363,8 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     DirectMessage msg = new DirectMessage(0, mainActor, start,
         new Object[] {platform}, mainActor,
         null, EventualSendNode.createOnReceiveCallTargetForVMMain(
-            start, 1, source, mainThreadCompleted), false, false);
+            start, 1, source, mainThreadCompleted, compiler.getLanguage()),
+        false, false);
     mainActor.send(msg);
 
     try {

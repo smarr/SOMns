@@ -81,7 +81,7 @@ import som.compiler.MethodBuilder.MethodDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
-import som.interpreter.SNodeFactory;
+import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNode;
@@ -125,6 +125,8 @@ public class Parser {
 
   private final Lexer               lexer;
   private final Source              source;
+
+  private final SomLanguage         language;
 
   private Symbol                    sym;
   private String                    text;
@@ -258,8 +260,9 @@ public class Parser {
   }
 
   public Parser(final Reader reader, final long fileSize, final Source source,
-      final StructuralProbe structuralProbe) throws ParseError {
+      final StructuralProbe structuralProbe, final SomLanguage language) throws ParseError {
     this.source = source;
+    this.language = language;
 
     sym = NONE;
     nextSym = NONE;
@@ -306,7 +309,7 @@ public class Parser {
     SourceSection nameSS = getSource(coord);
 
     MixinBuilder mxnBuilder = new MixinBuilder(outerBuilder, accessModifier,
-        symbolFor(mixinName), nameSS, structuralProbe);
+        symbolFor(mixinName), nameSS, structuralProbe, language);
 
     MethodBuilder primaryFactory = mxnBuilder.getPrimaryFactoryMethodBuilder();
     coord = getCoordinate();
@@ -347,7 +350,7 @@ public class Parser {
     MethodBuilder def = mxnBuilder.getClassInstantiationMethodBuilder();
     ExpressionNode selfRead = def.getSelfRead(source);
     ExpressionNode superClass = createMessageSend(Symbols.OBJECT,
-        new ExpressionNode[] {selfRead}, false, source, null);
+        new ExpressionNode[] {selfRead}, false, source, null, language);
     mxnBuilder.setSuperClassResolution(superClass);
 
     mxnBuilder.setSuperclassFactorySend(
@@ -404,9 +407,9 @@ public class Parser {
     } else {
       uniqueInitName = MixinBuilder.getInitializerName(Symbols.NEW, mixinId);
       mixinFactorySend = (AbstractUninitializedMessageSendNode)
-          SNodeFactory.createMessageSend(uniqueInitName,
+          createMessageSend(uniqueInitName,
               new ExpressionNode[] {mxnBuilder.getInitializerMethodBuilder().getSelfRead(getSource(coord))},
-              false, getSource(coord), null);
+              false, getSource(coord), null, language);
     }
 
     mxnBuilder.addMixinFactorySend(mixinFactorySend);
@@ -1134,7 +1137,7 @@ public class Parser {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
     return createMessageSend(selector, new ExpressionNode[] {receiver},
-        eventualSend, getSource(coord), sendOperator);
+        eventualSend, getSource(coord), sendOperator, language);
   }
 
   private ExpressionNode tryInliningBinaryMessage(final MethodBuilder builder,
@@ -1164,7 +1167,7 @@ public class Parser {
       }
     }
     return createMessageSend(msg, new ExpressionNode[] {receiver, operand},
-        eventualSend, getSource(coord), sendOperator);
+        eventualSend, getSource(coord), sendOperator, language);
   }
 
   private ExpressionNode binaryOperand(final MethodBuilder builder) throws ProgramDefinitionError {
@@ -1221,7 +1224,8 @@ public class Parser {
     SourceSection source = getSource(coord);
     ExpressionNode[] args = arguments.toArray(new ExpressionNode[0]);
     if (explicitRcvr) {
-      return createMessageSend(msg, args, eventualSend, source, sendOperator);
+      return createMessageSend(
+          msg, args, eventualSend, source, sendOperator, language);
     } else {
       assert !eventualSend;
       return createImplicitReceiverSend(msg, args,
