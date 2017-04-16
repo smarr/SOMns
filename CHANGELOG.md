@@ -1,8 +1,10 @@
 # Change Log
 
-## [Unreleased]
+## [Unreleased] - [Work in Progress][v4]
 
-## [0.3.0] - 2017-04-06 <Programming>'17 Demo
+  - 
+
+## [0.3.0] - [2017-04-06 &lt;Programming&gt;'17 Demo][v3]
 
 ### Features for the Demo
 
@@ -30,7 +32,7 @@
 
  - Added `-vmd` flag to enable debug output
 
-## [0.2.0] - 2017-03-07 Extended Concurrency Support
+## [0.2.0] - [2017-03-07 Extended Concurrency Support][v2]
 
 ### Concurrency Support
 
@@ -79,14 +81,17 @@
  - Added option to show methods after parsing in IGV with
    `-im`/`--igv-parsed-methods` ([issue #110](https://github.com/smarr/SOMns/pull/110))
 
-## [0.1.0] - 2016-12-15
+## [0.1.0] - [2016-12-15][v1]
 
 This is the first tagged version. For previous changes, please refer to the
 [pull requests][OldPRs] from around that time.
 
-
-[Unreleased]: https://github.com/smarr/SOMns-vscode/compare/v0.3.0...HEAD
-[0.3.0]:      https://github.com/smarr/SOMns-vscode/compare/v0.2.0...v0.3.0
-[0.2.0]:      https://github.com/smarr/SOMns-vscode/compare/v0.1.0...v0.2.0
+[v4]: https://github.com/smarr/SOMns/milestone/5?closed=1
+[v3]: https://github.com/smarr/SOMns/milestone/3?closed=1
+[v2]: https://github.com/smarr/SOMns/milestone/2?closed=1
+[v1]: https://github.com/smarr/SOMns/milestone/1?closed=1
+[Unreleased]: https://github.com/smarr/SOMns/compare/v0.3.0...HEAD
+[0.3.0]:      https://github.com/smarr/SOMns/compare/v0.2.0...v0.3.0
+[0.2.0]:      https://github.com/smarr/SOMns/compare/v0.1.0...v0.2.0
 [0.1.0]:      https://github.com/smarr/SOMns/releases/tag/v0.1.0
 [OldPRs]:    https://github.com/smarr/SOMns/pulls?utf8=%E2%9C%93&q=is%3Apr%20is%3Aclosed%20created%3A2010-01-01..2016-12-15%20
