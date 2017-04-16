@@ -15,6 +15,7 @@ import som.interpreter.Invokable;
 public class InvocationProfile extends Counter {
 
   private final Invokable method;
+
   private final Map<Arguments, Integer> argumentTypes;
 
   public InvocationProfile(final SourceSection source, final Invokable method) {

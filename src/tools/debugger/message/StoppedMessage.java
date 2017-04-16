@@ -47,6 +47,7 @@ public final class StoppedMessage extends OutgoingMessage {
 
     ActivityType type = suspension.getActivity().getType();
 
-    return new StoppedMessage(reason, suspension.activityId, type, ""); // TODO: look into additional details that can be provided as text
+    // TODO: look into additional details that can be provided as text
+    return new StoppedMessage(reason, suspension.activityId, type, "");
   }
 }

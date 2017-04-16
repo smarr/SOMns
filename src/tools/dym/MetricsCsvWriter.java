@@ -47,7 +47,10 @@ public final class MetricsCsvWriter {
 
   private final Map<String, Map<SourceSection, ? extends JsonSerializable>> data;
   private final String metricsFolder;
-  private final StructuralProbe structuralProbe; // TODO: not sure, we should probably not depend on the probe here
+
+  // TODO: not sure, we should probably not depend on the probe here
+  private final StructuralProbe structuralProbe;
+
   private final int maxStackHeight;
   private final List<SourceSection> allStatements;
 

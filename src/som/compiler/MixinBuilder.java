@@ -65,6 +65,7 @@ public final class MixinBuilder {
   /** The method that is used to resolve the superclass at runtime. */
   private final MethodBuilder superclassAndMixinResolutionBuilder;
   private ExpressionNode superclassResolution;
+
   private final ArrayList<ExpressionNode> mixinResolvers = new ArrayList<>();
   private SourceSection mixinResolversSource;
 
@@ -81,11 +82,14 @@ public final class MixinBuilder {
 
   private final SSymbol name;
   private final SourceSection nameSection;
+
   @SuppressWarnings("unused") private String mixinComment;
 
   private final HashMap<SSymbol, SlotDefinition> slots = new HashMap<>();
   private final LinkedHashMap<SSymbol, Dispatchable> dispatchables = new LinkedHashMap<>();
+
   private final HashMap<SSymbol, SInvokable> factoryMethods = new HashMap<SSymbol, SInvokable>();
+
   private boolean allSlotsAreImmutable = true;
 
   private final LinkedHashMap<SSymbol, MixinDefinition> embeddedMixins = new LinkedHashMap<>();
@@ -94,6 +98,7 @@ public final class MixinBuilder {
 
   private ExpressionNode superclassFactorySend;
   private boolean   isSimpleNewSuperFactoySend;
+
   private final ArrayList<ExpressionNode> mixinFactorySends = new ArrayList<>();
 
   private final AccessModifier accessModifier;

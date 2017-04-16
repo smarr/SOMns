@@ -899,7 +899,7 @@ public class Parser {
   protected SSymbol binarySelector() throws ParseError {
     String s = text;
 
-    // Checkstyle: stop
+    // Checkstyle: stop   @formatter:off
     if (accept(Or, null)) {
     } else if (accept(Comma, null)) {
     } else if (accept(Minus, null)) {
@@ -910,7 +910,7 @@ public class Parser {
       throw new ParseError("Unexpected symbol. Expected binary operator, "
           + "but found %(found)s", Symbol.NONE, this);
     }
-    // Checkstyle: resume
+    // Checkstyle: resume   @formatter:on
 
     return symbolFor(s);
   }

@@ -22,6 +22,7 @@ abstract class ApplicationThreadTask {
     private final int startFrame;
     private final int levels;
     private final int requestId;
+
     private final FrontendConnector frontend;
     private final Suspension suspension;
 

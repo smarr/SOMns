@@ -11,6 +11,7 @@ import com.oracle.truffle.api.source.SourceSection;
 public class LoopProfile extends Counter {
 
   private int currentIterations;
+
   private final Map<Integer, Integer> loopIterations;
 
   public LoopProfile(final SourceSection source) {

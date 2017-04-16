@@ -24,9 +24,10 @@ public final class Arguments {
   }
 
   private static Class<?>[] getJavaTypes(final Object[] args) {
+    // remove the <?> because of checkstyle issue
     return Arrays.stream(args).
         map(e -> e.getClass()).
-        toArray(Class[]::new);  // remove the <?> because of checkstyle issue
+        toArray(Class[]::new);
   }
 
   private static ClassFactory[] getSomTypes(final Object[] args) {

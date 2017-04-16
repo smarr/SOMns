@@ -259,6 +259,7 @@ public final class Lexer {
 
     char current = currentChar();
     switch (current) {
+      // @formatter:off
       case 't': state.text.append("\t"); break;
       case 'b': state.text.append("\b"); break;
       case 'n': state.text.append("\n"); break;
@@ -266,6 +267,7 @@ public final class Lexer {
       case 'f': state.text.append("\f"); break;
       case '\'': state.text.append('\''); break;
       case '\\': state.text.append("\\"); break;
+      // @formatter:on
     }
     state.incPtr();
   }

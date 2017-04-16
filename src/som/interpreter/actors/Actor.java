@@ -38,12 +38,12 @@ import tools.debugger.entities.DynamicScopeType;
  * - each actor should only have at max. one active task
  *
  * algorithmic sketch
- *  - enqueue message in actor queue
- *  - execution is done by a special ExecAllMessages task
- *    - this task is submitted to the f/j pool
- *    - once it is executing, it goes to the actor,
- *    - grabs the current mailbox
- *    - and sequentially executes all messages
+ * - enqueue message in actor queue
+ * - execution is done by a special ExecAllMessages task
+ * + - this task is submitted to the f/j pool
+ * + - once it is executing, it goes to the actor,
+ * + - grabs the current mailbox
+ * + - and sequentially executes all messages
  */
 public class Actor implements Activity {
 

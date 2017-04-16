@@ -63,17 +63,20 @@ import som.vmobjects.SSymbol;
 
 public final class MethodBuilder {
 
-  private final MixinBuilder  directOuterMixin; // to get to an indirect outer, use outerBuilder
+  /** To get to an indirect outer, use outerBuilder. */
+  private final MixinBuilder  directOuterMixin;
   private final MethodBuilder outerBuilder;
   private final boolean       blockMethod;
 
   private final SomLanguage language;
 
   private SSymbol signature;
+
   private final List<SourceSection> definition = new ArrayList<>(3);
 
   private boolean needsToCatchNonLocalReturn;
-  private boolean throwsNonLocalReturn;       // does directly or indirectly a non-local return
+  /** Method includes a non-local return, directly or indirectly. */
+  private boolean throwsNonLocalReturn;
 
   private boolean accessesVariablesOfOuterScope;
   private boolean accessesLocalOfOuterScope;

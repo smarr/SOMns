@@ -151,7 +151,8 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
       return expValue;
     }
 
-    protected final boolean isBoolKind(final boolean expValue) { // uses expValue to make sure guard is not converted to assertion
+    // uses expValue to make sure guard is not converted to assertion
+    protected final boolean isBoolKind(final boolean expValue) {
       if (slot.getKind() == FrameSlotKind.Boolean) {
         return true;
       }
@@ -162,7 +163,8 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
       return false;
     }
 
-    protected final boolean isLongKind(final long expValue) { // uses expValue to make sure guard is not converted to assertion
+    // uses expValue to make sure guard is not converted to assertion
+    protected final boolean isLongKind(final long expValue) {
       if (slot.getKind() == FrameSlotKind.Long) {
         return true;
       }
@@ -173,7 +175,8 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
       return false;
     }
 
-    protected final boolean isDoubleKind(final double expValue) { // uses expValue to make sure guard is not converted to assertion
+    // uses expValue to make sure guard is not converted to assertion
+    protected final boolean isDoubleKind(final double expValue) {
       if (slot.getKind() == FrameSlotKind.Double) {
         return true;
       }
