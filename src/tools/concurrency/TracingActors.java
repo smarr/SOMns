@@ -2,6 +2,7 @@ package tools.concurrency;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -95,6 +96,7 @@ public class TracingActors {
       if (activeAssertions == null) {
         activeAssertions = new ArrayList<>();
       }
+
       activeAssertions.add(a);
     }
 
@@ -114,27 +116,23 @@ public class TracingActors {
       receiveHooks.put(msg, block);
     }
 
-    public void checkAssertions(final EventualMessage msg) {
+    public void checkAssertions(final EventualMessage msg, final VM vm) {
       if (activeAssertions == null || activeAssertions.size() == 0) {
         return;
       }
 
-      List<Assertion> temp = activeAssertions;
-
-      activeAssertions = new ArrayList<>();
-
-      try {
-        for (Assertion a : temp) {
-          a.evaluate(this, msg);
+      // safe way for iterating and removing elements, for each caused concurrent modification exception for no reason.
+      Iterator<Assertion> iter = activeAssertions.iterator();
+      while (iter.hasNext()){
+        Assertion a = iter.next();
+        if (!a.evaluate(this, msg, vm.getActorPool())) {
+          iter.remove();
         }
-      } catch (SomException t) {
-        t.printStackTrace();
-        VM.errorExit("EventualMessage failed with Exception.");
       }
     }
 
     @TruffleBoundary
-    public void checkSendHooks(final EventualMessage msg) {
+    public void checkSendHooks(final EventualMessage msg, final VM vm) {
       if (sendHooks != null) {
         if (sendHooks.containsKey(msg.getSelector())) {
           SBlock block = sendHooks.get(msg.getSelector());
@@ -144,9 +142,9 @@ public class TracingActors {
           }
 
           if (block.getMethod().getNumberOfArguments() > 0) {
-            invokeBlock(block, msg.getArgs());
+            invokeBlock(block, msg.getArgs(), vm);
           } else {
-            invokeBlock(block);
+            invokeBlock(block, vm);
           }
         } else if (sendHooks.size() > 0) {
           throw new AssertionError("sending Message: " + msg.getSelector() + " violates the message protocol!");
@@ -155,7 +153,7 @@ public class TracingActors {
     }
 
     @TruffleBoundary
-    public void checkReceiveHooks(final EventualMessage msg) {
+    public void checkReceiveHooks(final EventualMessage msg, final VM vm) {
       if (receiveHooks != null) {
         if (receiveHooks.containsKey(msg.getSelector())) {
           SBlock block = receiveHooks.get(msg.getSelector());
@@ -163,32 +161,35 @@ public class TracingActors {
           if (sendHooks != null) {
             sendHooks.clear();
           }
-          invokeBlock(block, msg.getArgs());
+          invokeBlock(block, msg.getArgs(), vm);
         } else  if (receiveHooks.size() > 0) {
           throw new AssertionError("receiving Message: " + msg.getSelector() + " violates the message protocol!");
         }
       }
     }
-  }
 
+    private void invokeBlock(final SBlock block, final Object[] args, final VM vm) {
+      try {
+        block.getMethod().invoke(new Object[] {block, SArguments.getArgumentsWithoutReceiver(args)});
+      } catch (SomException t) {
+        t.printStackTrace();
 
-  private static void invokeBlock(final SBlock block, final Object[] args){
-    try {
-      block.getMethod().invoke(new Object[] {block, SArguments.getArgumentsWithoutReceiver(args)});
-    } catch (SomException t) {
-      t.printStackTrace();
-      VM.errorExit("EventualMessage failed with Exception.");
+        vm.errorExit("EventualMessage failed with Exception.");
+      }
+    }
+
+    private void invokeBlock(final SBlock block, final VM vm) {
+      try {
+        block.getMethod().invoke(new Object[] {block});
+      } catch (SomException t) {
+        t.printStackTrace();
+        vm.errorExit("EventualMessage failed with Exception.");
+      }
     }
   }
 
-  private static void invokeBlock(final SBlock block){
-    try {
-      block.getMethod().invoke(new Object[] {block});
-    } catch (SomException t) {
-      t.printStackTrace();
-      VM.errorExit("EventualMessage failed with Exception.");
-    }
-  }
+
+
 
   public static final class ReplayActor extends TracingActor {
     protected int children;
@@ -398,10 +399,13 @@ public class TracingActors {
           currentThread.currentMessage = msg;
           handleBreakpointsAndStepping(firstMessage, dbg, a);
           if (!(msg instanceof UntracedMessage)) {
-            ((TracingActor) actor).checkReceiveHooks(msg);
-            ((TracingActor) actor).checkAssertions(msg);
+            ((TracingActor) actor).checkReceiveHooks(msg, vm);
           }
           msg.execute();
+          if (!(msg instanceof UntracedMessage)) {
+            ((TracingActor) actor).checkAssertions(msg, vm);
+          }
+
           currentThread.currentMessageId += 1;
         }
 

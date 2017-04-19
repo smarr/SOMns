@@ -2,10 +2,12 @@ package tools.concurrency;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.Node.Child;
 
+import som.interpreter.SomLanguage;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.ResolvePromiseNode;
 import som.interpreter.actors.SPromise;
@@ -30,28 +32,33 @@ public class Assertion {
     wrapper = WrapReferenceNodeGen.create();
   }
 
-  public void evaluate(final TracingActor actor, final EventualMessage msg) {
+
+  /***
+   * @return returns a boolean indicating whether the Assertion should be checked again next time.
+   */
+  public boolean evaluate(final TracingActor actor, final EventualMessage msg, final ForkJoinPool actorPool) {
     boolean result = (boolean) statement.getMethod().invoke(new Object[] {statement});
     if (!result) {
-      fail();
+      fail(actorPool);
     } else {
-      success();
+      success(actorPool);
     }
+    return false;
   }
 
-  protected void fail() {
+  protected void fail(final ForkJoinPool actorPool) {
     ResolvePromiseNode.resolve(Resolution.SUCCESSFUL, wrapper,
         result.getPromise(), false,
-        result.getPromise().getOwner(), false);
+        result.getPromise().getOwner(), actorPool, false);
   }
 
-  protected void success() {
+  protected void success(final ForkJoinPool actorPool) {
     ResolvePromiseNode.resolve(Resolution.SUCCESSFUL, wrapper,
         result.getPromise(), true,
-        result.getPromise().getOwner(), false);
+        result.getPromise().getOwner(), actorPool, false);
   }
 
-  public static class UntilAssertion extends Assertion{
+  public static class UntilAssertion extends Assertion {
     SBlock until;
 
     public UntilAssertion(final SBlock statement, final SResolver result, final SBlock until) {
@@ -60,18 +67,19 @@ public class Assertion {
     }
 
     @Override
-    public void evaluate(final TracingActor actor, final EventualMessage msg) {
+    public boolean evaluate(final TracingActor actor, final EventualMessage msg, final ForkJoinPool actorPool) {
       boolean result = (boolean) until.getMethod().invoke(new Object[] {until});
       if (!result) {
         boolean result2 = (boolean) statement.getMethod().invoke(new Object[] {statement});
         if (!result2) {
-          fail();
+          fail(actorPool);
         } else {
-          actor.addAssertion(this);
+          return true;
         }
       } else {
-        success();
+        success(actorPool);
       }
+      return false;
     }
   }
 
@@ -84,25 +92,39 @@ public class Assertion {
     }
 
     @Override
-    public void evaluate(final TracingActor actor, final EventualMessage msg) {
+    public boolean evaluate(final TracingActor actor, final EventualMessage msg, final ForkJoinPool actorPool) {
       boolean result = (boolean) release.getMethod().invoke(new Object[] {release});
       if (!result) {
-        fail();
+        fail(actorPool);
+        return false;
       }
 
       boolean result2 = (boolean) statement.getMethod().invoke(new Object[] {statement});
       if (!result2) {
-        actor.addAssertion(this);
+        return true;
       } else {
-        success();
+        success(actorPool);
       }
+      return false;
     }
   }
 
   public static class NextAssertion extends Assertion{
+    boolean dormant = true;
 
     public NextAssertion(final SBlock statement, final SResolver result) {
       super(statement, result);
+    }
+
+    @Override
+    public boolean evaluate(final TracingActor actor, final EventualMessage msg,
+        final ForkJoinPool actorPool) {
+
+      if (dormant) {
+        dormant = false;
+        return true;
+      }
+      return super.evaluate(actor, msg, actorPool);
     }
   }
 
@@ -117,31 +139,28 @@ public class Assertion {
     }
 
     @Override
-    public void evaluate(final TracingActor actor, final EventualMessage msg) {
+    public boolean evaluate(final TracingActor actor, final EventualMessage msg, final ForkJoinPool actorPool) {
       boolean result = (boolean) statement.getMethod().invoke(new Object[] {statement});
+
       if (result) {
         synchronized (futureAssertions) {
           futureAssertions.remove(this);
         }
-        success();
+        success(actorPool);
       } else {
-        actor.addAssertion(this);
+        return true;
       }
-    }
-
-    public void finalCheck() {
-      boolean result = (boolean) statement.getMethod().invoke(new Object[] {statement});
-      if (result) {
-        success();
-      } else {
-        fail();
-      }
+      return false;
     }
 
     public static void checkFutureAssertions() {
       if (futureAssertions.size() > 0) {
         for (FutureAssertion fa: futureAssertions) {
-          fa.finalCheck();
+          if (fa instanceof ResultUsedAssertion) {
+            ((ResultUsedAssertion) fa).finalCheck();
+          } else {
+            fa.fail(fa.statement.getMethod().getCallTarget().getRootNode().getLanguage(SomLanguage.class).getVM().getActorPool());
+          }
         }
       }
     }
@@ -158,13 +177,14 @@ public class Assertion {
     // only get's removed if a check fails
 
     @Override
-    public void evaluate(final TracingActor actor, final EventualMessage msg) {
+    public boolean evaluate(final TracingActor actor, final EventualMessage msg, final ForkJoinPool actorPool) {
       boolean result = (boolean) statement.getMethod().invoke(new Object[] {statement});
       if (!result) {
-        fail();
+        fail(actorPool);
       } else {
-        actor.addAssertion(this);
+        return true;
       }
+      return false;
     }
   }
 
@@ -177,24 +197,24 @@ public class Assertion {
     }
 
     @Override
-    public void evaluate(final TracingActor actor, final EventualMessage msg) {
+    public boolean evaluate(final TracingActor actor, final EventualMessage msg, final ForkJoinPool actorPool) {
       synchronized (checkedPromise) {
         if (checkedPromise.isResultUsed()) {
           synchronized (futureAssertions) {
             futureAssertions.remove(this);
           }
-          success();
+          success(actorPool);
         } else {
-          actor.addAssertion(this);
+          return true;
         }
       }
+      return false;
     }
 
-    @Override
     public void finalCheck() {
       synchronized (checkedPromise) {
         if (!checkedPromise.isResultUsed()) {
-          fail();
+          fail(checkedPromise.getSOMClass().getMethods()[0].getInvokable().getRootNode().getLanguage(SomLanguage.class).getVM().getActorPool());
         }
       }
     }

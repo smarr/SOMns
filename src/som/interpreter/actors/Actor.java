@@ -267,9 +267,8 @@ public class Actor implements Activity {
       if (VmSettings.ACTOR_TRACING) {
         TracingActor.handleBreakpointsAndStepping(msg, dbg, actor);
       }
-      if (VmSettings.ENABLE_ASSERTIONS && ! (msg instanceof UntracedMessage)) {
-        ((TracingActor) actor).checkReceiveHooks(msg);
-        ((TracingActor) actor).checkAssertions(msg);
+      if (VmSettings.ENABLE_ASSERTIONS && !(msg instanceof UntracedMessage)) {
+        ((TracingActor) actor).checkReceiveHooks(msg, vm);
       }
 
       if (i >= 0 && VmSettings.MESSAGE_TIMESTAMPS) {
@@ -278,6 +277,10 @@ public class Actor implements Activity {
 
       try {
         msg.execute();
+
+        if (VmSettings.ENABLE_ASSERTIONS && !(msg instanceof UntracedMessage)) {
+          ((TracingActor) actor).checkAssertions(msg, vm);
+        }
       } finally {
         if (VmSettings.ACTOR_TRACING) {
           currentThread.currentMessageId += 1;

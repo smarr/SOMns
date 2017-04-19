@@ -196,7 +196,7 @@ public class EventualSendNode extends ExprWithTagsNode {
           hasMessageReceiverBreakpoint(resolver), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
 
       if (VmSettings.ENABLE_ASSERTIONS) {
-        ((TracingActor) owner).checkSendHooks(msg);
+        ((TracingActor) owner).checkSendHooks(msg, this.getRootNode().getLanguage(SomLanguage.class).getVM());
       }
       target.send(msg, actorPool);
     }
@@ -211,7 +211,7 @@ public class EventualSendNode extends ExprWithTagsNode {
           hasMessageReceiverBreakpoint(resolver), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
 
       if (VmSettings.ENABLE_ASSERTIONS) {
-        ((TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn()).checkSendHooks(msg);
+        ((TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn()).checkSendHooks(msg, this.getRootNode().getLanguage(SomLanguage.class).getVM());
       }
       registerNode.register(rcvr, msg, rcvr.getOwner());
     }
@@ -286,7 +286,7 @@ public class EventualSendNode extends ExprWithTagsNode {
           hasMessageReceiverBreakpoint(resolver), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
 
       if (VmSettings.ENABLE_ASSERTIONS) {
-        ((TracingActor) current).checkSendHooks(msg);
+        ((TracingActor) current).checkSendHooks(msg, this.getRootNode().getLanguage(SomLanguage.class).getVM());
       }
       current.send(msg, actorPool);
 
@@ -319,7 +319,7 @@ public class EventualSendNode extends ExprWithTagsNode {
           hasMessageReceiverBreakpoint(null), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
 
       if (VmSettings.ENABLE_ASSERTIONS) {
-        ((TracingActor) current).checkSendHooks(msg);
+        ((TracingActor) current).checkSendHooks(msg, this.getRootNode().getLanguage(SomLanguage.class).getVM());
       }
       current.send(msg, actorPool);
       return Nil.nilObject;

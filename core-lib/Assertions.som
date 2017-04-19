@@ -20,160 +20,284 @@ THE SOFTWARE.
 *)
 class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: platform = Value (
 | private vmMirror  = vmMirror.
+  private moduleClass = moduleClass.
   private Exception = kernel Exception.
   private Vector    = kernel Vector.
+  private system    = platform system.
   private ObjectMirror  = platform mirrors ObjectMirror.
 |
 )(
-  public class MessageProtocol = (
-    (ObjectMirror reflecting: self) perform: #start
+
+  public class ValueAssertions = Assertions <: Value(
   )(
-    public start  = (self subclassResponsibility)
-
-    onSend: message do: aBlock = (
-      vmMirror onSend: message do: aBlock.
-    )
-
-    onReceive: message do: aBlock = (
-      vmMirror onReceive: message do: aBlock.
+    public getClass = (
+      ^ Assertions.
     )
   )
 
-  public class AssertionError signalWith: amessage = Exception (
-    | public message = amessage. |
-    self signal.
-  )(
-    public asString = (
-      ^ 'AssertionError(' + message + ')'
+  public class Assertions = ()(
+
+    public class MessageProtocol = Assertions (
+      (ObjectMirror reflecting: self) perform: #start
+    )(
+      public start  = (self subclassResponsibility)
+
+      onSend: message do: aBlock = (
+        vmMirror onSend: message do: aBlock.
+      )
+
+      onReceive: message do: aBlock = (
+        vmMirror onReceive: message do: aBlock.
+      )
     )
-  )
 
-  public isMessage: msg = (
-    ^vmMirror isMessage: msg.
-  )
+    public isMessage: msg = (
+      ^vmMirror isMessage: msg.
+    )
 
-  public isSender: actor = (
-    ^vmMirror isSender: actor.
-  )
+    public isSender: actor = (
+      ^vmMirror isSender: actor.
+    )
 
-  public getMessage = (
-    ^vmMirror getMessage: self.
-  )
+    public getMessage = (
+      ^vmMirror getMessage: self.
+    )
 
-  public getMessageArgs = (
+    public getMessageArgs = (
       ^vmMirror getMessageArguments: self.
-  )
+    )
 
-  public getSender = (
-    ^vmMirror getSender: self.
-  )
+    public getSender = (
+      ^vmMirror getSender: self.
+    )
 
-  public isPromiseMsg = (
-    ^vmMirror isPromiseMessage: self.
-  )
+    public isPromiseMsg = (
+      ^vmMirror isPromiseMessage: self.
+    )
 
-  public isPromiseComplete: aPromise = (
-    ^vmMirror isPromiseComplete: aPromise.
-  )
+    public isPromiseComplete: aPromise = (
+      ^vmMirror isPromiseComplete: aPromise.
+    )
 
-  public assertResultUsed = (
-    | pp |
-    pp := createUntracedPromisePair.
-    vmMirror assertResultUsed: (pp resolver).
-    pp promise whenResolved:[ :r |
-      r ifFalse: [
-        signalAssertionError: 'Result Unused'
+    public isResultUsed = (
+      | pp |
+      pp := createUntracedPromisePair.
+      vmMirror isResultUsed: (pp resolver).
+      ^ pp promise
+    )
+
+    public assert: aBlock = (
+      assert: aBlock msg: 'Assertion failed'.
+    )
+
+    public assert: aBlock msg: msg = (
+      assert: aBlock handler: [ 
+        system error: msg. 
+      ].
+    )
+
+    public assert: aBlock handler: anotherBlock = (
+      | val |
+      (vmMirror AssertionsEnabled: self) ifFalse: [^ nil].
+      val := aBlock value.
+
+      (isPromise: val) ifTrue: [
+        val whenResolved: [ :r | r ifFalse: anotherBlock]
+      ] ifFalse: [ 
+        val ifFalse: anotherBlock
       ]
-    ]
-  )
+    )
 
-  public assert: aBlock = (
-    assert: aBlock msg: ''.
-  )
+    public next: aBlock = (
+      | pp |
+      pp := createUntracedPromisePair.
+      vmMirror assertNext: aBlock res: (pp resolver).
+      ^ pp promise
+    )
 
-  public assert: aBlock msg: msg = (
-    aBlock value ifFalse:[
-      signalAssertionError: msg
-    ]
-  )
+    public future: aBlock = (
+      | pp |
+      pp := createUntracedPromisePair.
+      vmMirror assertFuture: aBlock res: (pp resolver).
+      ^ pp promise
+    )
 
-  public assertNext: aBlock = (
-    assertNext: aBlock msg: ''.
-  )
+    public globally: aBlock = (
+      | pp |
+      pp := createUntracedPromisePair.
+      vmMirror assertGlobally: aBlock res: (pp resolver).
+      ^ pp promise
+    )
 
-  public assertNext: aBlock msg: msg = (
-    | pp |
+    public holds: aBlock until: anotherBlock = (
+      | pp |
+      pp := createUntracedPromisePair.
+      vmMirror assert: aBlock until: anotherBlock res: (pp resolver).
+      ^ pp promise
+    )
+
+    (* TODO find a better name for this method *)
+    public assert: aBlock release: anotherBlock = (
+      | pp |
+      pp := createUntracedPromisePair.
+      vmMirror assert: aBlock release: anotherBlock res: (pp resolver).
+      ^ pp promise
+    )
+
+
+    promise: a and: b = (
+    | pp aval bval done |
+    done := false.
     pp := createUntracedPromisePair.
-    vmMirror assertNext: aBlock res: (pp resolver).
-    pp promise whenResolved:[ :r |
-      r ifFalse: [
-        signalAssertionError: msg
-      ]
-    ]
-  )
-
-  public assertFuture: aBlock = (
+    aval := a value.
+    bval := b value.
     
-    assertFuture: aBlock msg: ''.
-  )
-
-  public assertFuture: aBlock msg: msg = (
-    | pp |
-    pp := createUntracedPromisePair.
-    vmMirror assertFuture: aBlock res: (pp resolver).
-    pp promise whenResolved:[ :r |
-      r ifFalse: [
-        signalAssertionError: msg
+    (isPromise: aval) ifTrue: [
+      aval whenResolved: [:r | aval := r
+        done ifFalse: [
+          aval ifFalse: [
+            pp resolve: false.
+            done := true.
+          ] ifTrue: [
+            (isPromise: bval) ifFalse:[
+              pp resolve: (aval and: bval).
+              done := true.    
+            ]
+          ]
+        ]
       ]
-    ]
-  )
-
-  public assertGlobally: aBlock = (
-    assertGlobally: aBlock msg: ''.
-  )
-
-  public assertGlobally: aBlock msg: msg= (
-    | pp |
-    pp := createUntracedPromisePair.
-    vmMirror assertGlobally: aBlock res: (pp resolver).
-    pp promise whenResolved:[ :r |
-      r ifFalse: [
-        signalAssertionError: msg
+    ].
+    
+    (isPromise: bval) ifTrue: [
+      bval whenResolved: [:r | bval := r
+        done ifFalse: [
+          bval ifFalse: [
+            pp resolve: false.
+            done := true.
+          ] ifTrue: [
+            (isPromise: aval) ifFalse:[
+              pp resolve: (aval and: bval).
+              done := true.    
+            ]
+          ]
+        ]
       ]
-    ]
-  )
+    ].
 
-  public assert: aBlock until: anotherBlock = (
-    assert: aBlock until: anotherBlock msg: ''.
-  )
+    ((isPromise: aval) or: (isPromise: bval)) ifFalse:[
+      pp resolve: (aval and: bval).
+    ].
 
-  public assert: aBlock until: anotherBlock msg: msg = (
-    | pp |
+    ^ pp promise
+    )
+
+    promise: a or: b = (
+    | pp aval bval done |
+    done := false.
     pp := createUntracedPromisePair.
-    vmMirror assert: aBlock until: anotherBlock res: (pp resolver).
-    pp promise whenResolved:[ :r |
-      r ifFalse: [
-        signalAssertionError: msg
+    aval := a value.
+    bval := b value.
+    
+    (isPromise: aval) ifTrue: [
+      aval whenResolved: [:r | aval := r
+        done ifFalse: [
+          aval ifTrue: [
+            pp resolve: true.
+            done := true.
+          ] ifFalse: [
+            (isPromise: bval) ifFalse:[
+              pp resolve: (aval or: bval).
+              done := true.    
+            ]
+          ]
+        ]
       ]
-    ]
-  )
+    ].
+    
+    (isPromise: bval) ifTrue: [
+      bval whenResolved: [:r | bval := r
+        done ifFalse: [
+          bval ifTrue: [
+            pp resolve: true.
+            done := true.
+          ] ifFalse: [
+            (isPromise: aval) ifFalse:[
+              pp resolve: (aval or: bval).
+              done := true.    
+            ]
+          ]
+        ]
+      ]
+    ].
 
-  public assert: aBlock release: anotherBlock = (
-    assert: aBlock release: anotherBlock msg: ''.
-  )
+    ((isPromise: aval) or: (isPromise: bval)) ifFalse:[
+      pp resolve: (aval or: bval).
+    ].
 
-  public assert: aBlock release: anotherBlock msg: msg = (
-    | pp |
+    ^ pp promise
+    )
+
+    promise: a implies: b = (
+    | pp aval bval done |
+    done := false.
     pp := createUntracedPromisePair.
-    vmMirror assert: aBlock release: anotherBlock res: (pp resolver).
-    pp promise whenResolved:[ :r |
-      r ifFalse: [
-        signalAssertionError: msg
+    aval := a value.
+    bval := b value.
+    
+    (isPromise: aval) ifTrue: [
+      aval whenResolved: [:r | aval := r
+        done ifFalse: [
+          aval ifFalse: [
+            pp resolve: true.
+            done := true.
+          ] ifTrue: [
+            (isPromise: bval) ifFalse:[
+              pp resolve: bval.
+              done := true.    
+            ]
+          ]
+        ]
       ]
-    ]
-  )
+    ].
+    
+    (isPromise: bval) ifTrue: [
+      bval whenResolved: [:r | bval := r
+        done ifFalse: [
+          (isPromise: aval) ifFalse:[
+            pp resolve: ((aval and: bval) or: (aval not)).
+            done := true.    
+          ]
+        ]
+      ]
+    ].
 
-  private signalAssertionError: message = (
-    AssertionError signalWith: message
+    ((isPromise: aval) or: (isPromise: bval)) ifFalse:[
+      pp resolve: ((aval and: bval) or: (aval not)).
+    ].
+
+    ^ pp promise
+    )
+
+    not: a = (
+    | pp aval |  
+    pp := createUntracedPromisePair.
+    aval := a value.
+
+    (isPromise: aval) ifTrue: [
+      aval whenResolved: [:r | pp resolve: (r not)]
+    ] ifFalse: [
+      pp resolve: (aval not)
+    ].
+    
+    ^ pp promise
+    )
+
+    public isPromise: obj = (
+      ^ (ObjectMirror reflecting: obj) className = 'Promise'
+    )
+    
+    public class = (
+      ^ moduleClass.
+    )
   )
 )

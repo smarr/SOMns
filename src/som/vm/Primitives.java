@@ -34,21 +34,7 @@ import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.Wh
 import som.primitives.ActivityJoinFactory;
 import som.primitives.ActivitySpawnFactory;
 import som.primitives.AsStringPrimFactory;
-import som.primitives.AssertionPrimsFactory.AssertFuturePrimFactory;
-import som.primitives.AssertionPrimsFactory.AssertGloballyPrimFactory;
-import som.primitives.AssertionPrimsFactory.AssertNextPrimFactory;
-import som.primitives.AssertionPrimsFactory.AssertReleasePrimFactory;
-import som.primitives.AssertionPrimsFactory.AssertUntilPrimFactory;
-import som.primitives.AssertionPrimsFactory.GetMessageArgumentsPrimFactory;
-import som.primitives.AssertionPrimsFactory.GetMessagePrimFactory;
-import som.primitives.AssertionPrimsFactory.GetSenderPrimFactory;
-import som.primitives.AssertionPrimsFactory.IsMessagePrimFactory;
-import som.primitives.AssertionPrimsFactory.IsPromiseMsgPrimFactory;
-import som.primitives.AssertionPrimsFactory.IsPromiseResolvedPrimFactory;
-import som.primitives.AssertionPrimsFactory.IsResultUsedPrimFactory;
-import som.primitives.AssertionPrimsFactory.IsSenderPrimFactory;
-import som.primitives.AssertionPrimsFactory.OnReceivePrimFactory;
-import som.primitives.AssertionPrimsFactory.OnSendPrimFactory;
+import som.primitives.AssertionPrimsFactory;
 import som.primitives.BlockPrimsFactory;
 import som.primitives.ClassPrimsFactory;
 import som.primitives.CosPrimFactory;
@@ -353,6 +339,7 @@ public class Primitives {
     allFactories.addAll(ActivityJoinFactory.getFactories());
     allFactories.addAll(ThreadPrimitivesFactory.getFactories());
     allFactories.addAll(ChannelPrimitivesFactory.getFactories());
+    allFactories.addAll(AssertionPrimsFactory.getFactories());
 
     allFactories.add(AdditionPrimFactory.getInstance());
     allFactories.add(AndMessageNodeFactory.getInstance());
@@ -396,21 +383,6 @@ public class Primitives {
     allFactories.add(UnequalsPrimFactory.getInstance());
     allFactories.add(new WhileWithStaticBlocksNodeFactory());
     allFactories.add(TimerPrimFactory.getInstance());
-    allFactories.add(AssertFuturePrimFactory.getInstance());
-    allFactories.add(AssertNextPrimFactory.getInstance());
-    allFactories.add(IsMessagePrimFactory.getInstance());
-    allFactories.add(IsSenderPrimFactory.getInstance());
-    allFactories.add(GetMessagePrimFactory.getInstance());
-    allFactories.add(GetSenderPrimFactory.getInstance());
-    allFactories.add(GetMessageArgumentsPrimFactory.getInstance());
-    allFactories.add(IsPromiseMsgPrimFactory.getInstance());
-    allFactories.add(IsResultUsedPrimFactory.getInstance());
-    allFactories.add(AssertGloballyPrimFactory.getInstance());
-    allFactories.add(AssertUntilPrimFactory.getInstance());
-    allFactories.add(AssertReleasePrimFactory.getInstance());
-    allFactories.add(IsPromiseResolvedPrimFactory.getInstance());
-    allFactories.add(OnReceivePrimFactory.getInstance());
-    allFactories.add(OnSendPrimFactory.getInstance());
 
     allFactories.add(CreateActorPrimFactory.getInstance());
     allFactories.add(ResolvePromiseNodeFactory.getInstance());

@@ -1,0 +1,257 @@
+
+class Tests usingPlatform: platform = Value (
+  | private actors = platform actors.
+  private Array     = platform kernel Array.
+  private system = platform system.
+  private Assertions = platform assertions.
+  private AssertionsClass = Assertions getClass.
+  private platform = platform.
+  private ObjectMirror = platform mirrors ObjectMirror.
+  private Exception      = platform kernel Exception.
+  |
+)(
+  class TestFailureException signal: msg = Exception (
+    (* An exception thrown when an assertion fails inside a test.
+       The description of the failure is the exception's message text. *)
+    | public messageText = msg. |
+    self signal.
+  ) ()
+
+  class ResultUsed = AssertionsClass ()(
+    public foo = (
+      assert: isResultUsed.
+      ^ true.
+    )
+  )
+
+  class PromiseMessage = AssertionsClass ()(
+    public foo = (
+      assert: isPromiseMsg.
+    )
+  )
+
+  class Ping = ()(
+    public ping: pong = (
+      pong <-: pong.
+    )
+  )
+
+  class Next = AssertionsClass (| |
+    assert: (next: [isMessage: #pong ]).
+  )(
+    public pong = (
+    )
+
+    public ping = (
+    )
+  )
+
+  class Future = AssertionsClass (
+    |cnt ::= 0.|
+    assert: (future: [ (cnt >= 2) ]).
+  )
+  (
+    public foo = (
+      cnt := cnt +1.
+    )
+  )
+
+  class Globally = AssertionsClass (
+    |cnt ::= 0.|
+    assert: (globally: [ (cnt < 3) ]).
+  )
+  (
+    public foo = (
+      cnt := cnt +1.
+    )
+  )
+
+  class Until = AssertionsClass (
+    |cnt ::= 0. done ::= false.|
+    assert: (holds: [ (cnt < 2) ] until: [ done ])
+  )
+  (
+    public foo = (
+      cnt := cnt +1.
+    )
+
+    public bar = (
+      cnt := cnt +1.
+      done := true.
+    )
+  )
+
+  class Release = AssertionsClass (
+    |cnt ::= 0. done ::= false.|
+    assert: (assert: [ done ] release: [ (cnt <= 2)  ])
+  )
+  (
+    public foo = (
+      cnt := cnt +1.
+    )
+
+    public bar = (
+      cnt := cnt +1.
+      done := true.
+    )
+  )
+
+  public main: args = (
+    | pp |
+    (ObjectMirror reflecting: self) perform: ((args at: 2) asSymbol).
+    pp := actors createPromisePair.
+    actors after: 10 do: [ :r | pp resolve: 0].
+    ^ pp promise.
+  )
+
+  public testIsMessage= (
+    Assertions assert: (Assertions isMessage: #start).
+  )
+
+  public testIsMessage2 = (
+    Assertions assert: (Assertions isMessage: #sstart).
+  )
+
+  public testIsSender = (
+    Assertions assert: (Assertions isSender: #main).
+  )
+
+  public testIsSender2 = (
+    Assertions assert: (Assertions isSender: #mmain).
+  )
+
+  public testGetMessage = (
+    Assertions assert: (Assertions getMessage = #start).
+  )
+  public testGetMessage2 = (
+    Assertions assert: (Assertions getMessage = #sstart).
+  )
+
+  public testGetMessageArgs = (
+    Assertions getMessageArgs.
+  )
+
+  public testGetSender = (
+    (* TODO *)
+  )
+
+  public testIsPromiseMsg = (
+    | a |
+    a := (actors createActorFromValue: PromiseMessage) <-: new.
+    a <-: foo
+  )
+
+  public testIsPromiseMsg2 = (
+    Assertions assert: (Assertions isPromiseMsg).
+  )
+
+  public testIsPromiseComplete = (
+    |pair|
+    pair := actors createPromisePair.
+    Assertions assert: (Assertions isPromiseComplete: (pair promise)) not.
+    (pair resolver) resolve: 5.
+    Assertions assert: (Assertions isPromiseComplete: (pair promise)).
+  )
+
+  public testAssertResultUsed = (
+    |actor i res |
+    res := actors createPromisePair.
+    actor := (actors createActorFromValue: ResultUsed) <-: new.
+    (actor <-: foo) whenResolved: [:r |
+      r ifTrue: [
+        i := 0.
+        res resolve: 0.
+      ]
+    ].
+    ^ (res promise)
+  )
+
+  public testAssertResultUsed2 = (
+    |actor|
+    actor := (actors createActorFromValue: ResultUsed) <-: new.
+    [(actor <-: foo)] value. 
+  )
+
+  public testAssert1 = (
+    Assertions assert: true.
+    Assertions assert: [true].
+  )
+
+  public testAssert2 = (
+    Assertions assert: false.
+  )
+
+  public testAssertNext = (
+    |actor p|
+    actor := (actors createActorFromValue: Next) <-: new.
+    p := (actors createActorFromValue: Ping) <-: new.
+    p <-: ping: actor.
+  )
+
+  public testAssertNext2 = (
+    |actor p|
+    actor := (actors createActorFromValue: Next) <-: new.
+    actor <-: ping.
+  )
+
+  public testAssertFuture = (
+    |actor|
+    actor := (actors createActorFromValue: Future) <-: new.
+    actor <-: foo.
+    actor <-: foo.
+  )
+
+  public testAssertFuture2 = (
+    |actor|
+    actor := (actors createActorFromValue: Future) <-: new.
+    actor <-: foo.
+  )
+
+  public testAssertGlobally = (
+    |actor|
+    actor := (actors createActorFromValue: Globally) <-: new.
+    actor <-: foo.
+    actor <-: foo.
+  )
+
+  public testAssertGlobally2 = (
+    |actor|
+    actor := (actors createActorFromValue: Globally) <-: new.
+    actor <-: foo.
+    actor <-: foo.
+    actor <-: foo.
+  )
+
+  public testAssertUntil = (
+    |actor|
+    actor := (actors createActorFromValue: Until) <-: new.
+    actor <-: foo.
+    actor <-: bar.
+    actor <-: foo.
+  )
+
+  public testAssertUntil2 = (
+    |actor|
+    actor := (actors createActorFromValue: Until) <-: new.
+    actor <-: foo.
+    actor <-: foo.
+    actor <-: bar.
+  )
+
+  public testAssertRelease = (
+    |actor|
+    actor := (actors createActorFromValue: Release) <-: new.
+    actor <-: foo.
+    actor <-: bar.
+    actor <-: foo.
+  )
+
+  public testAssertRelease2 = (
+    |actor|
+    actor := (actors createActorFromValue: Release) <-: new.
+    actor <-: foo.
+    actor <-: foo.
+    actor <-: foo.
+    actor <-: bar.
+  )
+)

@@ -8,8 +8,8 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.sun.istack.internal.NotNull;
 
 import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.primitives.TimerPrim;
 import som.interpreter.actors.EventualMessage.UntracedMessage;
+import som.primitives.TimerPrim;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
@@ -303,7 +303,7 @@ public class SPromise extends SObjectWithClass {
     return explicitPromise;
   }
 
-  protected static class STracingPromise extends SPromise {
+  public static class STracingPromise extends SPromise {
     protected long promiseId;
 
     protected STracingPromise(final Actor owner,
@@ -428,7 +428,7 @@ public class SPromise extends SObjectWithClass {
         final boolean isBreakpointOnPromiseResolution) {
       assert !(result instanceof SPromise);
 
-      if (VmSettings.PROMISE_RESOLUTION) {
+      if (VmSettings.PROMISE_RESOLUTION && p instanceof STracingPromise) {
         if (VmSettings.REPLAY) {
           // Promises resolved by the TimerPrim will appear as if they have been resolved by the main actor.
           if (TimerPrim.isTimerThread(Thread.currentThread())) {

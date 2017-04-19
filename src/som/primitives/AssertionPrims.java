@@ -6,6 +6,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.SArguments;
+import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
@@ -245,7 +246,7 @@ public class AssertionPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "assertResultUsed:")
+  @Primitive(primitive = "isResultUsed:")
   public abstract static class IsResultUsedPrim extends UnaryBasicOperation{
     @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
 
@@ -264,14 +265,29 @@ public class AssertionPrims {
 
       if (current.getResolver() == null) {
         ResolvePromiseNode.resolve(Resolution.SUCCESSFUL, wrapper,
+            resolver.getPromise(), false,
+            resolver.getPromise().getOwner(), this.getRootNode().getLanguage(SomLanguage.class).getVM().getActorPool(), false);
+      } else if (current.getResolver().getPromise().isResultUsed()) {
+        ResolvePromiseNode.resolve(Resolution.SUCCESSFUL, wrapper,
             resolver.getPromise(), true,
-            resolver.getPromise().getOwner(), false);
-      }
-
-      if (!current.getResolver().getPromise().isResultUsed()) {
+            resolver.getPromise().getOwner(), this.getRootNode().getLanguage(SomLanguage.class).getVM().getActorPool(), false);
+      } else {
         getCurrentTracingActor().addAssertion(new Assertion.ResultUsedAssertion(current.getResolver().getPromise(), resolver));
       }
       return Nil.nilObject;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "AssertionsEnabled:")
+  public abstract static class AssertionsEnabledPrim extends UnaryBasicOperation{
+    protected AssertionsEnabledPrim(final boolean eagerlyWrapped, final SourceSection source) {
+      super(eagerlyWrapped, source);
+    }
+
+    @Specialization
+    public final Object dovoid(final Object o) {
+      return VmSettings.ENABLE_ASSERTIONS;
     }
   }
 
