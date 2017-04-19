@@ -1,0 +1,179 @@
+(* Copyright (c) 2015-2016 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: platform = Value (
+| private vmMirror  = vmMirror.
+  private Exception = kernel Exception.
+  private Vector    = kernel Vector.
+  private ObjectMirror  = platform mirrors ObjectMirror.
+|
+)(
+  public class MessageProtocol = (
+    (ObjectMirror reflecting: self) perform: #start
+  )(
+    public start  = (self subclassResponsibility)
+
+    onSend: message do: aBlock = (
+      vmMirror onSend: message do: aBlock.
+    )
+
+    onReceive: message do: aBlock = (
+      vmMirror onReceive: message do: aBlock.
+    )
+  )
+
+  public class AssertionError signalWith: amessage = Exception (
+    | public message = amessage. |
+    self signal.
+  )(
+    public asString = (
+      ^ 'AssertionError(' + message + ')'
+    )
+  )
+
+  public isMessage: msg = (
+    ^vmMirror isMessage: msg.
+  )
+
+  public isSender: actor = (
+    ^vmMirror isSender: actor.
+  )
+
+  public getMessage = (
+    ^vmMirror getMessage: self.
+  )
+
+  public getMessageArgs = (
+      ^vmMirror getMessageArguments: self.
+  )
+
+  public getSender = (
+    ^vmMirror getSender: self.
+  )
+
+  public isPromiseMsg = (
+    ^vmMirror isPromiseMessage: self.
+  )
+
+  public isPromiseComplete: aPromise = (
+    ^vmMirror isPromiseComplete: aPromise.
+  )
+
+  public assertResultUsed = (
+    | pp |
+    pp := createUntracedPromisePair.
+    vmMirror assertResultUsed: (pp resolver).
+    pp promise whenResolved:[ :r |
+      r ifFalse: [
+        signalAssertionError: 'Result Unused'
+      ]
+    ]
+  )
+
+  public assert: aBlock = (
+    assert: aBlock msg: ''.
+  )
+
+  public assert: aBlock msg: msg = (
+    aBlock value ifFalse:[
+      signalAssertionError: msg
+    ]
+  )
+
+  public assertNext: aBlock = (
+    assertNext: aBlock msg: ''.
+  )
+
+  public assertNext: aBlock msg: msg = (
+    | pp |
+    pp := createUntracedPromisePair.
+    vmMirror assertNext: aBlock res: (pp resolver).
+    pp promise whenResolved:[ :r |
+      r ifFalse: [
+        signalAssertionError: msg
+      ]
+    ]
+  )
+
+  public assertFuture: aBlock = (
+    
+    assertFuture: aBlock msg: ''.
+  )
+
+  public assertFuture: aBlock msg: msg = (
+    | pp |
+    pp := createUntracedPromisePair.
+    vmMirror assertFuture: aBlock res: (pp resolver).
+    pp promise whenResolved:[ :r |
+      r ifFalse: [
+        signalAssertionError: msg
+      ]
+    ]
+  )
+
+  public assertGlobally: aBlock = (
+    assertGlobally: aBlock msg: ''.
+  )
+
+  public assertGlobally: aBlock msg: msg= (
+    | pp |
+    pp := createUntracedPromisePair.
+    vmMirror assertGlobally: aBlock res: (pp resolver).
+    pp promise whenResolved:[ :r |
+      r ifFalse: [
+        signalAssertionError: msg
+      ]
+    ]
+  )
+
+  public assert: aBlock until: anotherBlock = (
+    assert: aBlock until: anotherBlock msg: ''.
+  )
+
+  public assert: aBlock until: anotherBlock msg: msg = (
+    | pp |
+    pp := createUntracedPromisePair.
+    vmMirror assert: aBlock until: anotherBlock res: (pp resolver).
+    pp promise whenResolved:[ :r |
+      r ifFalse: [
+        signalAssertionError: msg
+      ]
+    ]
+  )
+
+  public assert: aBlock release: anotherBlock = (
+    assert: aBlock release: anotherBlock msg: ''.
+  )
+
+  public assert: aBlock release: anotherBlock msg: msg = (
+    | pp |
+    pp := createUntracedPromisePair.
+    vmMirror assert: aBlock release: anotherBlock res: (pp resolver).
+    pp promise whenResolved:[ :r |
+      r ifFalse: [
+        signalAssertionError: msg
+      ]
+    ]
+  )
+
+  private signalAssertionError: message = (
+    AssertionError signalWith: message
+  )
+)

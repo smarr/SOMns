@@ -45,8 +45,8 @@ import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.concurrency.ActorExecutionTrace;
-import tools.concurrency.TracingActors;
 import tools.concurrency.Assertion.FutureAssertion;
+import tools.concurrency.TracingActors;
 import tools.debugger.Tags;
 import tools.debugger.WebDebugger;
 import tools.debugger.session.Breakpoints;
@@ -254,7 +254,9 @@ public final class VM {
     if (TracingActors.ReplayActor.printMissingMessages() && errorCode == 0) {
       code = 1;
     }
-    FutureAssertion.checkFutureAssertions();
+    if(lastExitCode == 0) {
+      FutureAssertion.checkFutureAssertions();
+    }
     engine.dispose();
     if (VmSettings.MEMORY_TRACING) {
       ActorExecutionTrace.reportPeakMemoryUsage();
