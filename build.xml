@@ -173,12 +173,15 @@
     <target name="core-tests" depends="unit-tests,som-tests,dynamic-metrics-tests">
     </target>
 
-    <target name="tests" depends="core-tests,replay-tests">
-      <!-- submit coverage data -->
-      <java classname="coveralls.Report" fork="true" failonerror="true">
-          <classpath refid="project.classpath" />
-          <arg value="${env.COVERALLS_REPO_TOKEN}" />
-          <arg value="all.gcov" />
-      </java>
+    <target name="coverage">
+        <!-- submit coverage data -->
+        <java classname="coveralls.Report" fork="true" failonerror="true">
+            <classpath refid="project.classpath" />
+            <arg value="${env.COVERALLS_REPO_TOKEN}" />
+            <arg value="all.gcov" />
+        </java>
+    </target>
+
+    <target name="tests" depends="core-tests,replay-tests,coverage">
     </target>
 </project>

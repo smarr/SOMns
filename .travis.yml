@@ -12,7 +12,7 @@ env:
     - TASK=replay1-tests
     - TASK=replay2-tests
 script:
-  - if [ "$TASK" = "core-tests" ]; then ant core-tests; fi
+  - if [ "$TASK" = "core-tests" ]; then ant core-tests && ant coverage; fi
   - if [ "$TASK" = "checkstyle" ]; then ant checkstyle && cd tools/kompos && nvm install 7 && npm install && npm run lint; fi
   - if [ "$TASK" = "kompos-tests" ]; then nvm install 7 && ant && cd tools/kompos && npm install && npm test; fi
   - if [ "$TASK" = "replay1-tests" ]; then ant compile && ./tests/replay/test.sh 1; fi
