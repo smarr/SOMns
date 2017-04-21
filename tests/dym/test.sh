@@ -20,7 +20,6 @@ mkdir -p $SCRIPT_PATH/results/
 tar xf $SCRIPT_PATH/expected-results.tar.bz2 -C $SCRIPT_PATH/
 
 function runBenchmark {
-  rm -f $SOM_DIR/all.gcov
   BENCH=$1
   HARNESS="$SOM_DIR/som -dm -Ddm.metrics=$SCRIPT_PATH/results/$BENCH \
     --coverage $SOM_DIR/all.gcov \

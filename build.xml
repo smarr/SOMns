@@ -145,6 +145,7 @@
     </target>
 
     <target name="som-tests" depends="compile">
+      <delete file="all.gcov" /> <!-- delete old coverage data, this should be the first task generating coverage data -->
       <exec executable="./som" failonerror="true">
         <arg value="--coverage" />
         <arg value="all.gcov" />
