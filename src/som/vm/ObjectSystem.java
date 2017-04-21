@@ -63,13 +63,16 @@ public final class ObjectSystem {
 
   private CompletableFuture<Object> mainThreadCompleted;
 
+  private final VM vm;
+
   public ObjectSystem(final SourcecodeCompiler compiler,
-      final StructuralProbe probe) {
     last = this;
+      final StructuralProbe probe, final VM vm) {
     this.primitives = new Primitives(compiler.getLanguage());
     this.compiler   = compiler;
     structuralProbe = probe;
     loadedModules   = new LinkedHashMap<>();
+    this.vm         = vm;
   }
 
   public void loadKernelAndPlatform(final String platformFilename,
@@ -109,7 +112,7 @@ public final class ObjectSystem {
       loadedModules.put(uri, module);
       return module;
     } catch (ProgramDefinitionError e) {
-      VM.errorExit(e.toString());
+      vm.errorExit(e.toString());
       throw new IOException(e);
     }
   }
@@ -314,18 +317,18 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     slot.setValueDuringBootstrap(obj, value);
   }
 
-  private static void handlePromiseResult(final SPromise promise) {
+  private void handlePromiseResult(final SPromise promise) {
     int emptyFJPool = 0;
     while (emptyFJPool < 120) {
-      if (promise.isCompleted() || VM.shouldExit()) {
-        if (VM.isAvoidingExit()) {
+      if (promise.isCompleted() || vm.shouldExit()) {
+        if (vm.isAvoidingExit()) {
           return;
         }
 
         if (promise.isErroredUnsync()) {
-          VM.getVM().shutdownAndExit(1);
+          vm.shutdownAndExit(1);
         } else {
-          VM.getVM().shutdownAndExit(0);
+          vm.shutdownAndExit(0);
         }
       }
 
@@ -339,10 +342,10 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
       }
     }
 
-    assert !VM.shouldExit();
+    assert !vm.shouldExit();
     TracingActors.ReplayActor.printMissingMessages();
-    VM.errorExit("VM seems to have exited prematurely. But the actor pool has been idle for " + emptyFJPool + " checks in a row.");
-    VM.getVM().shutdownAndExit(1); // just in case it was disable for VM.errorExit
+    vm.errorExit("VM seems to have exited prematurely. But the actor pool has been idle for " + emptyFJPool + " checks in a row.");
+    vm.shutdownAndExit(1); // just in case it was disable for VM.errorExit
   }
 
   public void releaseMainThread(final int errorCode) {
@@ -372,21 +375,21 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
 
       if (result instanceof Long || result instanceof Integer) {
         int exitCode = (result instanceof Long) ? (int) (long) result : (int) result;
-        if (VM.isAvoidingExit()) {
+        if (vm.isAvoidingExit()) {
           return;
         } else {
-          VM.getVM().shutdownAndExit(exitCode);
+          vm.shutdownAndExit(exitCode);
         }
       } else if (result instanceof SPromise) {
         handlePromiseResult((SPromise) result);
         return;
       } else {
-        VM.errorExit("The application's #main: method returned a " + result.toString() + ", but it needs to return a Promise or Integer as return value.");
+        vm.errorExit("The application's #main: method returned a " + result.toString() + ", but it needs to return a Promise or Integer as return value.");
       }
     } catch (InterruptedException | ExecutionException e) {
       // TODO Auto-generated catch block
       e.printStackTrace();
-      VM.getVM().shutdownAndExit(1);
+      vm.shutdownAndExit(1);
     }
   }
 

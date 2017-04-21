@@ -16,7 +16,8 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
-import com.oracle.truffle.api.vm.PolyglotEngine.Instrument;
+import com.oracle.truffle.api.vm.PolyglotEngine.Value;
+import com.oracle.truffle.api.vm.PolyglotRuntime.Instrument;
 import com.oracle.truffle.tools.Profiler;
 import com.oracle.truffle.tools.ProfilerInstrument;
 
@@ -32,6 +33,7 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.primitives.processes.ChannelPrimitives;
 import som.primitives.threading.ThreadingModule;
+import som.tests.BasicInterpreterTests;
 import som.vm.ObjectSystem;
 import som.vm.Primitives;
 import som.vm.VmOptions;
@@ -48,13 +50,13 @@ import tools.language.StructuralProbe;
 
 public final class VM {
 
-  @CompilationFinal private static PolyglotEngine engine;
-  @CompilationFinal private static VM vm;
-  @CompilationFinal private static StructuralProbe structuralProbe;
-  @CompilationFinal private static WebDebugger webDebugger;
+  @CompilationFinal private PolyglotEngine engine;
+
+  @CompilationFinal private StructuralProbe structuralProbe;
+  @CompilationFinal private WebDebugger webDebugger;
   private static Profiler truffleProfiler;
 
-  public static WebDebugger getWebDebugger() {
+  public WebDebugger getWebDebugger() {
     return webDebugger;
   }
 
@@ -70,14 +72,7 @@ public final class VM {
     return exports.get(name);
   }
 
-  /**
-   * @return last VM instance, for tests only
-   */
-  public static VM getVM() {
-    return vm;
-  }
-
-  public static void setEngine(final PolyglotEngine e) {
+  public void setEngine(final PolyglotEngine e) {
     engine = e;
   }
 
@@ -133,11 +128,9 @@ public final class VM {
 
   public VM(final VmOptions vmOptions, final boolean avoidExitForTesting,
       final SomLanguage lang) throws IOException {
-    vm = this;
-
     this.avoidExitForTesting = avoidExitForTesting;
     options = vmOptions;
-    objectSystem = new ObjectSystem(new SourcecodeCompiler(lang), structuralProbe);
+    objectSystem = new ObjectSystem(new SourcecodeCompiler(lang), structuralProbe, this);
     objectSystem.loadKernelAndPlatform(options.platformFile, options.kernelFile);
 
     if (options.showUsage) {
@@ -145,18 +138,14 @@ public final class VM {
     }
   }
 
-  public VM(final VmOptions vmOptions, final SomLanguage lang) throws IOException {
-    this(vmOptions, false, lang);
-  }
-
-  public static void reportSyntaxElement(final Class<? extends Tags> type,
+  public void reportSyntaxElement(final Class<? extends Tags> type,
       final SourceSection source) {
     if (webDebugger != null) {
       webDebugger.reportSyntaxElement(type, source);
     }
   }
 
-  public static void reportParsedRootNode(final Method rootNode) {
+  public void reportParsedRootNode(final Method rootNode) {
     if (webDebugger != null) {
       webDebugger.reportRootNodeAfterParsing(rootNode);
     }
@@ -166,22 +155,22 @@ public final class VM {
     }
   }
 
-  public static void reportLoadedSource(final Source source) {
+  public void reportLoadedSource(final Source source) {
     if (webDebugger != null) {
       webDebugger.reportLoadedSource(source);
     }
   }
 
-  public static boolean shouldExit() {
-    return vm.shouldExit;
+  public boolean shouldExit() {
+    return shouldExit;
   }
 
   public int lastExitCode() {
     return lastExitCode;
   }
 
-  public static Object[] getArguments() {
-    return vm.options.args;
+  public Object[] getArguments() {
+    return options.args;
   }
 
   /**
@@ -275,8 +264,8 @@ public final class VM {
     // Checkstyle: resume
   }
 
-  public static boolean isAvoidingExit() {
-    return vm.avoidExitForTesting;
+  public boolean isAvoidingExit() {
+    return avoidExitForTesting;
   }
 
   public void initalize() {
@@ -304,7 +293,6 @@ public final class VM {
     Builder builder = PolyglotEngine.newBuilder();
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OPTIONS,   vmOptions);
     builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, false);
-
 
     startExecution(builder, vmOptions);
   }
