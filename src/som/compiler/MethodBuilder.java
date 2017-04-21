@@ -37,7 +37,6 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.istack.internal.NotNull;
 
-import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.ProgramDefinitionError.SemanticDefinitionError;
@@ -271,7 +270,7 @@ public final class MethodBuilder {
     SInvokable meth = new SInvokable(signature, accessModifier,
         truffleMethod, embeddedBlockMethods.toArray(new SInvokable[0]));
 
-    VM.reportParsedRootNode(truffleMethod);
+    language.getVM().reportParsedRootNode(truffleMethod);
     // the method's holder field is to be set later on!
     return meth;
   }
@@ -464,7 +463,8 @@ public final class MethodBuilder {
       // otherwise, it is an implicit receiver send
       return SNodeFactory.createImplicitReceiverSend(selector,
           new ExpressionNode[] {getSelfRead(source)},
-          getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(), source);
+          getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(),
+          source, language.getVM());
     }
   }
 
@@ -484,7 +484,8 @@ public final class MethodBuilder {
     return SNodeFactory.createImplicitReceiverSend(
         MixinBuilder.getSetterName(identifier),
         new ExpressionNode[] {getSelfRead(source), exp},
-        getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(), source);
+        getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(),
+        source, language.getVM());
   }
 
   protected boolean hasArgument(final String varName) {

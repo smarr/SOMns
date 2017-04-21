@@ -31,8 +31,8 @@ import tools.dym.Tags.VirtualInvoke;
 public final class MessageSendNode {
 
   public static ExpressionNode createMessageSend(final SSymbol selector,
-      final ExpressionNode[] arguments, final SourceSection source) {
-    Primitives prims = VM.getVM().getPrimitives();
+      final ExpressionNode[] arguments, final SourceSection source, final VM vm) {
+    Primitives prims = vm.getPrimitives();
     Specializer<EagerlySpecializableNode> specializer =
         prims.getParserSpecializer(selector, arguments);
     if (specializer != null) {
@@ -46,20 +46,20 @@ public final class MessageSendNode {
         return newNode.wrapInEagerWrapper(newNode, selector, arguments);
       }
     } else {
-      return new UninitializedMessageSendNode(selector, arguments, source);
+      return new UninitializedMessageSendNode(selector, arguments, source, vm);
     }
   }
 
   public static AbstractMessageSendNode adaptSymbol(final SSymbol newSelector,
-      final AbstractMessageSendNode node) {
+      final AbstractMessageSendNode node, final VM vm) {
     assert node instanceof UninitializedMessageSendNode;
     return new UninitializedMessageSendNode(newSelector, node.argumentNodes,
-        node.getSourceSection());
+        node.getSourceSection(), vm);
   }
 
   public static AbstractMessageSendNode createForPerformNodes(
-      final SSymbol selector, final SourceSection source) {
-    return new UninitializedSymbolSendNode(selector, source);
+      final SSymbol selector, final SourceSection source, final VM vm) {
+    return new UninitializedSymbolSendNode(selector, source, vm);
   }
 
   public static GenericMessageSendNode createGeneric(final SSymbol selector,
@@ -138,12 +138,14 @@ public final class MessageSendNode {
       extends AbstractMessageSendNode {
 
     protected final SSymbol selector;
+    protected final VM vm;
 
     protected AbstractUninitializedMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments,
-        final SourceSection source) {
+        final SourceSection source, final VM vm) {
       super(arguments, source);
       this.selector = selector;
+      this.vm       = vm;
     }
 
     @Override
@@ -174,7 +176,7 @@ public final class MessageSendNode {
     private PreevaluatedExpression specialize(final Object[] arguments) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Specialize Message Node");
 
-      Primitives prims = VM.getVM().getPrimitives();
+      Primitives prims = vm.getPrimitives();
 
       Specializer<EagerlySpecializableNode> specializer = prims.getEagerSpecializer(selector,
           arguments, argumentNodes);
@@ -223,15 +225,15 @@ public final class MessageSendNode {
 
     protected UninitializedMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments,
-        final SourceSection source) {
-      super(selector, arguments, source);
+        final SourceSection source, final VM vm) {
+      super(selector, arguments, source, vm);
     }
 
     /**
      * For wrapper use only.
      */
     protected UninitializedMessageSendNode(final UninitializedMessageSendNode wrappedNode) {
-      super(wrappedNode.selector, null, null);
+      super(wrappedNode.selector, null, null, null);
     }
 
     @Override
@@ -248,8 +250,9 @@ public final class MessageSendNode {
   private static final class UninitializedSymbolSendNode
     extends AbstractUninitializedMessageSendNode {
 
-    protected UninitializedSymbolSendNode(final SSymbol selector, final SourceSection source) {
-      super(selector, new ExpressionNode[0], source);
+    protected UninitializedSymbolSendNode(final SSymbol selector,
+        final SourceSection source, final VM vm) {
+      super(selector, new ExpressionNode[0], source, vm);
     }
 
     @Override

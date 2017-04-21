@@ -26,7 +26,6 @@ package som.compiler;
 
 import com.oracle.truffle.api.source.Source;
 
-import som.VM;
 import som.interpreter.SomLanguage;
 import tools.SourceCoordinate;
 import tools.language.StructuralProbe;
@@ -56,7 +55,7 @@ public class SourcecodeCompiler {
     SourceCoordinate coord = parser.getCoordinate();
     MixinBuilder mxnBuilder = parser.moduleDeclaration();
     MixinDefinition result = mxnBuilder.assemble(parser.getSource(coord));
-    VM.reportLoadedSource(source);
+    language.getVM().reportLoadedSource(source);
     return result;
   }
 }

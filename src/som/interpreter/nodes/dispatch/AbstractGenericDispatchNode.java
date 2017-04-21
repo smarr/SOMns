@@ -7,6 +7,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.SArguments;
+import som.interpreter.SomLanguage;
 import som.interpreter.Types;
 import som.primitives.SystemPrims.PrintStackTracePrim;
 import som.vm.VmSettings;
@@ -52,7 +53,8 @@ public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
     // Won't use DNU caching here, because it is already a megamorphic node
     SArray argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
     Object[] args = new Object[] {arguments[0], selector, argumentsArray};
-    CallTarget target = CachedDnuNode.getDnu(rcvrClass, selector);
+    CallTarget target = CachedDnuNode.getDnu(rcvrClass, selector,
+        call.getRootNode().getLanguage(SomLanguage.class).getVM());
     return call.call(target, args);
   }
 

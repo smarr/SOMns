@@ -75,7 +75,6 @@ import java.util.Set;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VM;
 import som.compiler.Lexer.Peek;
 import som.compiler.MethodBuilder.MethodDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionError;
@@ -403,7 +402,7 @@ public class Parser {
       uniqueInitName = MixinBuilder.getInitializerName(
           mixinFactorySend.getSelector(), mixinId);
       mixinFactorySend = (AbstractUninitializedMessageSendNode) MessageSendNode.adaptSymbol(
-          uniqueInitName, mixinFactorySend);
+          uniqueInitName, mixinFactorySend, language.getVM());
     } else {
       uniqueInitName = MixinBuilder.getInitializerName(Symbols.NEW, mixinId);
       mixinFactorySend = (AbstractUninitializedMessageSendNode)
@@ -438,7 +437,8 @@ public class Parser {
       mxnBuilder.setSuperclassFactorySend(
           MessageSendNode.adaptSymbol(
               initializerName,
-              (AbstractUninitializedMessageSendNode) superFactorySend), false);
+              (AbstractUninitializedMessageSendNode) superFactorySend,
+              language.getVM()), false);
     } else {
       mxnBuilder.setSuperclassFactorySend(
           mxnBuilder.createStandardSuperFactorySend(
@@ -550,7 +550,7 @@ public class Parser {
       }
     }
     expect(EndComment, null);
-    VM.reportSyntaxElement(CommentTag.class, getSource(coord));
+    language.getVM().reportSyntaxElement(CommentTag.class, getSource(coord));
     return comment;
   }
 
@@ -685,7 +685,7 @@ public class Parser {
       SourceCoordinate coord = tag == null ? null : getCoordinate();
       getSymbolFromLexer();
       if (tag != null) {
-        VM.reportSyntaxElement(tag, getSource(coord));
+        language.getVM().reportSyntaxElement(tag, getSource(coord));
       }
       return true;
     }
@@ -697,7 +697,7 @@ public class Parser {
       SourceCoordinate coord = tag == null ? null : getCoordinate();
       getSymbolFromLexer();
       if (tag != null) {
-        VM.reportSyntaxElement(tag, getSource(coord));
+        language.getVM().reportSyntaxElement(tag, getSource(coord));
       }
       return true;
     }
@@ -864,7 +864,7 @@ public class Parser {
   private String argument() throws ParseError {
     SourceCoordinate coord = getCoordinate();
     String id = identifier();
-    VM.reportSyntaxElement(ArgumentTag.class, getSource(coord));
+    language.getVM().reportSyntaxElement(ArgumentTag.class, getSource(coord));
     return id;
   }
 
@@ -885,7 +885,7 @@ public class Parser {
       String id = identifier();
       SourceSection source = getSource(coord);
       builder.addLocal(id, source);
-      VM.reportSyntaxElement(LocalVariableTag.class, source);
+      language.getVM().reportSyntaxElement(LocalVariableTag.class, source);
     }
   }
 
@@ -1230,7 +1230,7 @@ public class Parser {
       assert !eventualSend;
       return createImplicitReceiverSend(msg, args,
           builder.getCurrentMethodScope(),
-          builder.getEnclosingMixinBuilder().getMixinId(), source);
+          builder.getEnclosingMixinBuilder().getMixinId(), source, language.getVM());
     }
   }
 

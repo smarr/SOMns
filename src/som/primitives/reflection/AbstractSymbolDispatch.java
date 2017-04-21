@@ -8,6 +8,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.AccessModifier;
+import som.interpreter.SomLanguage;
 import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
@@ -49,7 +50,8 @@ public abstract class AbstractSymbolDispatch extends Node {
 
   public final AbstractMessageSendNode createForPerformNodes(
       final SSymbol selector) {
-    return MessageSendNode.createForPerformNodes(selector, getSourceSection());
+    return MessageSendNode.createForPerformNodes(selector, sourceSection,
+        getRootNode().getLanguage(SomLanguage.class).getVM());
   }
 
   public static final ToArgumentsArrayNode createArgArrayNode() {

@@ -413,7 +413,7 @@ public final class MixinDefinition {
   @TruffleBoundary
   private void reportErrorAndExit(final String msgPart1, final String msgPart2) {
     String line = sourceSection.getSource().getName() + SourceCoordinate.getLocationQualifier(sourceSection);
-    VM.errorExit(line + msgPart1 + name.getString() + msgPart2);
+    initializerBuilder.getLanguage().getVM().errorExit(line + msgPart1 + name.getString() + msgPart2);
   }
 
   private SInitializer assembleMixinInitializer(final int mixinId) {

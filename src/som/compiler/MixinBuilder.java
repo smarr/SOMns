@@ -467,7 +467,7 @@ public final class MixinBuilder {
     // This is a bet on initializer methods being constructed well,
     // so that they return self
     ExpressionNode initializedObject = SNodeFactory.createMessageSend(
-        initializer.getSignature(), args, primaryFactorySource);
+        initializer.getSignature(), args, primaryFactorySource, language.getVM());
 
     primaryFactoryMethod.setVarsOnMethodScope();
     primaryFactoryMethod.finalizeMethodScope();

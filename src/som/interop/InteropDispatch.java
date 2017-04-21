@@ -9,6 +9,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.SomLanguage;
 import som.interpreter.Types;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
@@ -45,7 +46,7 @@ public abstract class InteropDispatch extends Node {
     return null;
   }
 
-  protected static AbstractMessageSendNode createSend(final String selector, final Object[] args) {
+  protected AbstractMessageSendNode createSend(final String selector, final Object[] args) {
     SClass cls = Types.getClassOf(args[0]);
     SSymbol firstFit = lookupWithPrefix(selector, cls, args.length);
 
@@ -54,7 +55,8 @@ public abstract class InteropDispatch extends Node {
     dummyNodes[0] = new DummyExpr();
 
 //    return MessageSendNode.createMessageSend(firstFit, dummyNodes, null);
-    return MessageSendNode.createForPerformNodes(firstFit, null);
+    return MessageSendNode.createForPerformNodes(firstFit, null,
+        getRootNode().getLanguage(SomLanguage.class).getVM());
   }
 
   @Specialization(guards = {"selector == cachedSelector"},
