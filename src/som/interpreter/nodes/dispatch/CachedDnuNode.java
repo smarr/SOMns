@@ -9,7 +9,6 @@ import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.SArguments;
-import som.interpreter.SomLanguage;
 import som.interpreter.Types;
 import som.primitives.SystemPrims.PrintStackTracePrim;
 import som.vm.Symbols;
@@ -28,12 +27,12 @@ public final class CachedDnuNode extends AbstractDispatchNode {
   private final SSymbol       selector;
 
   public CachedDnuNode(final SClass rcvrClass, final SSymbol selector,
-      final DispatchGuard guard,
+      final DispatchGuard guard, final VM vm,
       final AbstractDispatchNode nextInCache) {
     super(nextInCache.getSourceSection());
     this.nextInCache  = nextInCache;
     this.cachedMethod = Truffle.getRuntime().createDirectCallNode(
-        getDnu(rcvrClass, selector, getRootNode().getLanguage(SomLanguage.class).getVM()));
+        getDnu(rcvrClass, selector, vm));
     this.selector = selector;
     this.guard    = guard;
   }
