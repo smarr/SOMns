@@ -6,6 +6,7 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
@@ -27,7 +28,7 @@ import som.vmobjects.SClass;
            specializer = NewImmutableArrayNode.IsValueArrayClass.class)
 public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
   public static class IsValueArrayClass extends Specializer<NewImmutableArrayNode> {
-    public IsValueArrayClass(final Primitive prim, final NodeFactory<NewImmutableArrayNode> fact) { super(prim, fact); }
+    public IsValueArrayClass(final Primitive prim, final NodeFactory<NewImmutableArrayNode> fact, final VM vm) { super(prim, fact, vm); }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {

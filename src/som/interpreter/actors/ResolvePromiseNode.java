@@ -5,15 +5,16 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.primitives.Primitive;
 
 @GenerateNodeFactory
-@Primitive(primitive = "actorsResolve:with:isBPResolution:")
+@Primitive(primitive = "actorsResolve:with:isBPResolution:", requiresContext = true)
 public abstract class ResolvePromiseNode extends AbstractPromiseResolutionNode {
 
-  protected ResolvePromiseNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected ResolvePromiseNode(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source, vm.getActorPool()); }
   protected ResolvePromiseNode(final ResolvePromiseNode node) { super(node); }
 
   /**

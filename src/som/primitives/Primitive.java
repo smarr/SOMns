@@ -45,6 +45,9 @@ public @interface Primitive {
   /** Pass array of evaluated arguments to node constructor. */
   boolean requiresArguments() default false;
 
+  /** Pass VM object, i.e., execution context to node constructor. */
+  boolean requiresContext() default false;
+
   /** Disabled for Dynamic Metrics. */
   boolean disabled() default false;
 

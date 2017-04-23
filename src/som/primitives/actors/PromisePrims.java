@@ -11,6 +11,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
@@ -44,7 +45,7 @@ import tools.debugger.session.Breakpoints;
 public final class PromisePrims {
 
   public static class IsActorModule extends Specializer<ExpressionNode> {
-    public IsActorModule(final Primitive prim, final NodeFactory<ExpressionNode> fact) { super(prim, fact); }
+    public IsActorModule(final Primitive prim, final NodeFactory<ExpressionNode> fact, final VM vm) { super(prim, fact, vm); }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
@@ -57,7 +58,7 @@ public final class PromisePrims {
 
   @GenerateNodeFactory
   @Primitive(primitive = "actorsCreatePromisePair:", selector = "createPromisePair",
-             specializer = IsActorModule.class, noWrapper = true)
+             specializer = IsActorModule.class, noWrapper = true, requiresContext = true)
   public abstract static class CreatePromisePairPrim extends UnaryExpressionNode {
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
@@ -68,10 +69,10 @@ public final class PromisePrims {
       return Truffle.getRuntime().createDirectCallNode(((SInvokable) disp).getCallTarget());
     }
 
-    public CreatePromisePairPrim(final boolean eagerWrapper, final SourceSection source) {
+    public CreatePromisePairPrim(final boolean eagerWrapper, final SourceSection source, final VM vm) {
       super(eagerWrapper, source);
-      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source));
-      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source));
+      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source, vm));
+      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source, vm));
     }
 
     @Specialization
@@ -106,16 +107,19 @@ public final class PromisePrims {
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
   @Primitive(primitive = "actorsWhen:resolved:", selector = "whenResolved:",
-             receiverType = SPromise.class)
+             receiverType = SPromise.class, requiresContext = true)
   public abstract static class WhenResolvedPrim extends BinaryComplexOperation {
-    @Child protected RegisterWhenResolved registerNode = new RegisterWhenResolved();
+    @Child protected RegisterWhenResolved registerNode;
+
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
-    protected WhenResolvedPrim(final boolean eagWrap, final SourceSection source) {
+    protected WhenResolvedPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
       super(eagWrap, source);
-      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source));
-      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source));
+      this.registerNode = new RegisterWhenResolved(vm.getActorPool());
+
+      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source, vm));
+      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source, vm));
     }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
@@ -160,16 +164,18 @@ public final class PromisePrims {
   // TODO: should I add a literal version of OnErrorPrim??
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
-  @Primitive(primitive = "actorsFor:onError:", selector = "onError:")
+  @Primitive(primitive = "actorsFor:onError:", selector = "onError:", requiresContext = true)
   public abstract static class OnErrorPrim extends BinaryComplexOperation {
-    @Child protected RegisterOnError registerNode = new RegisterOnError();
+    @Child protected RegisterOnError registerNode;
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
-    protected OnErrorPrim(final boolean eagWrap, final SourceSection source) {
+    protected OnErrorPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
       super(eagWrap, source);
-      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source));
-      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source));
+      this.registerNode = new RegisterOnError(vm.getActorPool());
+
+      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source, vm));
+      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source, vm));
     }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
@@ -213,17 +219,20 @@ public final class PromisePrims {
 
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
-  @Primitive(primitive = "actorsWhen:resolved:onError:", selector = "whenResolved:onError:")
+  @Primitive(primitive = "actorsWhen:resolved:onError:", selector = "whenResolved:onError:", requiresContext = true)
   public abstract static class WhenResolvedOnErrorPrim extends TernaryExpressionNode {
-    @Child protected RegisterWhenResolved registerWhenResolved = new RegisterWhenResolved();
-    @Child protected RegisterOnError registerOnError = new RegisterOnError();
+    @Child protected RegisterWhenResolved registerWhenResolved;
+    @Child protected RegisterOnError      registerOnError;
+
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
-    public WhenResolvedOnErrorPrim(final boolean eagWrap, final SourceSection source) {
+    public WhenResolvedOnErrorPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
       super(eagWrap, source);
-      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source));
-      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source));
+      this.registerWhenResolved = new RegisterWhenResolved(vm.getActorPool());
+      this.registerOnError      = new RegisterOnError(vm.getActorPool());
+      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source, vm));
+      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source, vm));
     }
 
     @Specialization(guards = {"resolvedMethod == resolved.getMethod()", "errorMethod == error.getMethod()"})

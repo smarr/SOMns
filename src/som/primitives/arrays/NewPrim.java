@@ -5,6 +5,7 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.primitives.Primitive;
@@ -22,7 +23,7 @@ import tools.dym.Tags.NewArray;
            specializer = NewPrim.IsArrayClass.class)
 public abstract class NewPrim extends BinaryExpressionNode {
   public static class IsArrayClass extends Specializer<NewPrim> {
-    public IsArrayClass(final Primitive prim, final NodeFactory<NewPrim> fact) { super(prim, fact); }
+    public IsArrayClass(final Primitive prim, final NodeFactory<NewPrim> fact, final VM vm) { super(prim, fact, vm); }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {

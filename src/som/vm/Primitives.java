@@ -93,10 +93,12 @@ import som.vmobjects.SSymbol;
 
 
 public class Primitives {
+  private final VM vm;
   private HashMap<SSymbol, Dispatchable> vmMirrorPrimitives;
-  private HashMap<SSymbol, Specializer<? extends ExpressionNode>>  eagerPrimitives;
+  private final HashMap<SSymbol, Specializer<? extends ExpressionNode>>  eagerPrimitives;
 
   public Primitives(final SomLanguage lang) {
+    vm = lang.getVM();
     vmMirrorPrimitives = new HashMap<>();
     eagerPrimitives    = new HashMap<>();
     initialize(lang);
@@ -127,14 +129,16 @@ public class Primitives {
    * it is to be instantiated.
    */
   public static class Specializer<T> {
+    protected final VM vm;
     protected final som.primitives.Primitive prim;
     protected final NodeFactory<T> fact;
     private final NodeFactory<? extends ExpressionNode> extraChildFactory;
 
     @SuppressWarnings("unchecked")
-    public Specializer(final som.primitives.Primitive prim, final NodeFactory<T> fact) {
+    public Specializer(final som.primitives.Primitive prim, final NodeFactory<T> fact, final VM vm) {
       this.prim = prim;
       this.fact = fact;
+      this.vm   = vm;
 
       if (prim.extraChild() == NoChild.class) {
         extraChildFactory = null;
@@ -175,18 +179,28 @@ public class Primitives {
       return false;
     }
 
+    private int numberOfNodeConstructorArguments(final ExpressionNode[] argNodes) {
+      return argNodes.length + 2 +
+          (extraChildFactory != null ? 1 : 0) +
+          (prim.requiresArguments() ? 1 : 0) +
+          (prim.requiresContext() ? 1 : 0);
+    }
+
     public T create(final Object[] arguments,
         final ExpressionNode[] argNodes, final SourceSection section,
         final boolean eagerWrapper) {
       assert arguments == null || arguments.length == argNodes.length;
-      int numArgs = argNodes.length + 2 +
-          (extraChildFactory != null ? 1 : 0) +
-          (prim.requiresArguments() ? 1 : 0);
+      int numArgs = numberOfNodeConstructorArguments(argNodes);
 
       Object[] ctorArgs = new Object[numArgs];
       ctorArgs[0] = eagerWrapper;
       ctorArgs[1] = section;
       int offset = 2;
+
+      if (prim.requiresContext()) {
+        ctorArgs[offset] = vm;
+        offset += 1;
+      }
 
       if (prim.requiresArguments()) {
         assert arguments != null;
@@ -195,12 +209,15 @@ public class Primitives {
       }
 
       for (int i = 0; i < argNodes.length; i += 1) {
-        ctorArgs[i + offset] = eagerWrapper ? null : argNodes[i];
+        ctorArgs[offset] = eagerWrapper ? null : argNodes[i];
+        offset += 1;
       }
 
       if (extraChildFactory != null) {
-        ctorArgs[ctorArgs.length - 1] = extraChildFactory.createNode(false, null, null);
+        ctorArgs[offset] = extraChildFactory.createNode(false, null, null);
+        offset += 1;
       }
+
       return fact.createNode(ctorArgs);
     }
   }
@@ -284,8 +301,8 @@ public class Primitives {
   private <T> Specializer<T> getSpecializer(final som.primitives.Primitive prim, final NodeFactory<T> factory) {
     try {
       return prim.specializer().
-          getConstructor(som.primitives.Primitive.class, NodeFactory.class).
-          newInstance(prim, factory);
+          getConstructor(som.primitives.Primitive.class, NodeFactory.class, VM.class).
+          newInstance(prim, factory, vm);
     } catch (InstantiationException | IllegalAccessException |
         IllegalArgumentException | InvocationTargetException |
         NoSuchMethodException | SecurityException e) {

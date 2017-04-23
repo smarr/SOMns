@@ -11,7 +11,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.interpreter.actors.Actor.UncaughtExceptions;
+import som.VM;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
@@ -110,9 +110,14 @@ public final class TaskPrimitives {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "threadingTaskSpawn:")
+  @Primitive(primitive = "threadingTaskSpawn:", requiresContext = true)
   public abstract static class SpawnPrim extends UnaryExpressionNode {
-    public SpawnPrim(final boolean ew, final SourceSection s) { super(ew, s); }
+    private final ForkJoinPool forkJoinPool;
+
+    public SpawnPrim(final boolean ew, final SourceSection s, final VM vm) {
+      super(ew, s);
+      this.forkJoinPool = vm.getForkJoinPool();
+    }
 
     @Specialization
     @TruffleBoundary
@@ -130,9 +135,14 @@ public final class TaskPrimitives {
   @GenerateNodeFactory
   @NodeChild(value = "argArr", type = ToArgumentsArrayNode.class,
     executeWith = {"argument", "receiver"})
-  @Primitive(primitive = "threadingTaskSpawn:with:", extraChild = ToArgumentsArrayNodeFactory.class)
+  @Primitive(primitive = "threadingTaskSpawn:with:", extraChild = ToArgumentsArrayNodeFactory.class, requiresContext = true)
   public abstract static class SpawnWithPrim extends BinaryExpressionNode {
-    public SpawnWithPrim(final boolean ew, final SourceSection s) { super(ew, s); }
+    private final ForkJoinPool forkJoinPool;
+
+    public SpawnWithPrim(final boolean ew, final SourceSection s, final VM vm) {
+      super(ew, s);
+      this.forkJoinPool = vm.getForkJoinPool();
+    }
 
     @Specialization
     public SomForkJoinTask doSBlock(final SBlock block, final SArray somArgArr,
