@@ -2,7 +2,7 @@
 
 ## [Unreleased] - [Work in Progress][v4]
 
-  - 
+  - Updated to Truffle 0.25
 
 ## [0.3.0] - [2017-04-06 &lt;Programming&gt;'17 Demo][v3]
 

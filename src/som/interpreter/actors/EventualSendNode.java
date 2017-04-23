@@ -1,6 +1,7 @@
 package som.interpreter.actors;
 
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.RootCallTarget;
@@ -13,6 +14,8 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
+import som.interpreter.SomLanguage;
 import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.EventualSendNodeFactory.SendNodeGen;
@@ -40,11 +43,12 @@ public class EventualSendNode extends ExprWithTagsNode {
 
   public EventualSendNode(final SSymbol selector, final int numArgs,
       final InternalObjectArrayNode arguments, final SourceSection source,
-      final SourceSection sendOperator) {
+      final SourceSection sendOperator, final SomLanguage lang) {
     super(source);
     this.arguments = arguments;
     this.send = SendNodeGen.create(selector, createArgWrapper(numArgs),
-        createOnReceiveCallTarget(selector, numArgs, source), sendOperator);
+        createOnReceiveCallTarget(selector, source, lang),
+        sendOperator, lang.getVM());
   }
 
   /**
@@ -61,19 +65,20 @@ public class EventualSendNode extends ExprWithTagsNode {
   }
 
   private static RootCallTarget createOnReceiveCallTarget(final SSymbol selector,
-      final int numArgs, final SourceSection source) {
+      final SourceSection source, final SomLanguage lang) {
 
     AbstractMessageSendNode invoke = MessageSendNode.createGeneric(selector, null, source);
-    ReceivedMessage receivedMsg = new ReceivedMessage(invoke, selector);
+    ReceivedMessage receivedMsg = new ReceivedMessage(invoke, selector, lang);
 
     return Truffle.getRuntime().createCallTarget(receivedMsg);
   }
 
   public static RootCallTarget createOnReceiveCallTargetForVMMain(final SSymbol selector,
-      final int numArgs, final SourceSection source, final CompletableFuture<Object> future) {
+      final int numArgs, final SourceSection source,
+      final CompletableFuture<Object> future, final SomLanguage lang) {
 
     AbstractMessageSendNode invoke = MessageSendNode.createGeneric(selector, null, source);
-    ReceivedMessage receivedMsg = new ReceivedMessageForVMMain(invoke, selector, future);
+    ReceivedMessage receivedMsg = new ReceivedMessageForVMMain(invoke, selector, future, lang);
 
     return Truffle.getRuntime().createCallTarget(receivedMsg);
   }
@@ -108,13 +113,14 @@ public class EventualSendNode extends ExprWithTagsNode {
     protected final RootCallTarget onReceive;
 
     protected final SourceSection source;
+    protected final ForkJoinPool actorPool;
 
     @Child protected AbstractBreakpointNode messageReceiverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
     protected SendNode(final SSymbol selector, final WrapReferenceNode[] wrapArgs,
-        final RootCallTarget onReceive, final SourceSection source) {
+        final RootCallTarget onReceive, final SourceSection source, final VM vm) {
       this.selector = selector;
       this.wrapArgs = wrapArgs;
       this.onReceive = onReceive;
@@ -125,10 +131,12 @@ public class EventualSendNode extends ExprWithTagsNode {
         this.messageReceiverBreakpoint = null;
         this.promiseResolverBreakpoint = null;
         this.promiseResolutionBreakpoint = null;
+        this.actorPool = null;
       } else {
-        this.messageReceiverBreakpoint   = insert(Breakpoints.createReceiver(source));
-        this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source));
-        this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source));
+        this.actorPool = vm.getActorPool();
+        this.messageReceiverBreakpoint   = insert(Breakpoints.createReceiver(source, vm));
+        this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source, vm));
+        this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source, vm));
       }
     }
 
@@ -136,7 +144,7 @@ public class EventualSendNode extends ExprWithTagsNode {
      * Use for wrapping node only.
      */
     protected SendNode(final SendNode wrappedNode) {
-      this(null, null, null, null);
+      this(null, null, null, null, null);
     }
 
     public abstract Object execute(VirtualFrame frame, Object[] args);
@@ -179,7 +187,7 @@ public class EventualSendNode extends ExprWithTagsNode {
           EventualMessage.getCurrentExecutingMessageId(), target, selector, args,
           owner, resolver, onReceive,
           messageReceiverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
-      target.send(msg);
+      target.send(msg, actorPool);
     }
 
     protected void sendPromiseMessage(final Object[] args, final SPromise rcvr,
@@ -193,8 +201,8 @@ public class EventualSendNode extends ExprWithTagsNode {
       registerNode.register(rcvr, msg, rcvr.getOwner());
     }
 
-    protected static RegisterWhenResolved createRegisterNode() {
-      return new RegisterWhenResolved();
+    protected RegisterWhenResolved createRegisterNode() {
+      return new RegisterWhenResolved(actorPool);
     }
 
     @Override
@@ -237,7 +245,7 @@ public class EventualSendNode extends ExprWithTagsNode {
           current, selector, args, current,
           resolver, onReceive,
           messageReceiverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
-      current.send(msg);
+      current.send(msg, actorPool);
 
       return result;
     }
@@ -266,7 +274,7 @@ public class EventualSendNode extends ExprWithTagsNode {
           current, selector, args, current,
           null, onReceive,
           messageReceiverBreakpoint.executeCheckIsSetAndEnabled(), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
-      current.send(msg);
+      current.send(msg, actorPool);
       return Nil.nilObject;
     }
 

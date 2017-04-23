@@ -92,7 +92,8 @@ import tools.language.StructuralProbe;
  *   - designed for single-threaded use only
  *   - designed for use in interpreted mode only
  */
-@Registration(id = DynamicMetrics.ID)
+@Registration(name = "DynamicMetrics", id = DynamicMetrics.ID, version = "0.1",
+  services = {StructuralProbe.class})
 public class DynamicMetrics extends TruffleInstrument {
 
   public static final String ID = "dym-dynamic-metrics";

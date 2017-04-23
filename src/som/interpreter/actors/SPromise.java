@@ -1,6 +1,7 @@
 package som.interpreter.actors;
 
 import java.util.ArrayList;
+import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -161,7 +162,8 @@ public class SPromise extends SObjectWithClass {
   }
 
   protected final void scheduleCallbacksOnResolution(final Object result,
-      final PromiseMessage msg, final Actor current, final boolean isBreakpointOnPromiseResolution) {
+      final PromiseMessage msg, final Actor current,
+      final ForkJoinPool actorPool, final boolean isBreakpointOnPromiseResolution) {
     // when a promise is resolved, we need to schedule all the
     // #whenResolved:/#onError:/... callbacks msgs as well as all eventual send
     // msgs to the promise
@@ -171,7 +173,7 @@ public class SPromise extends SObjectWithClass {
 
     // update the message flag for the message breakpoint at receiver side
     msg.setIsMessageReceiverBreakpoint(isBreakpointOnPromiseResolution);
-    msg.getTarget().send(msg);
+    msg.getTarget().send(msg, actorPool);
   }
 
   public final synchronized void addChainedPromise(@NotNull final SPromise remote) {
@@ -322,6 +324,7 @@ public class SPromise extends SObjectWithClass {
     @TruffleBoundary
     protected static void resolveChainedPromisesUnsync(final Resolution type,
         final SPromise promise, final Object result, final Actor current,
+        final ForkJoinPool actorPool,
         final boolean isBreakpointOnPromiseResolution) {
       // TODO: we should change the implementation of chained promises to
       //       always move all the handlers to the other promise, then we
@@ -331,10 +334,10 @@ public class SPromise extends SObjectWithClass {
       if (promise.chainedPromise != null) {
         Object wrapped = promise.chainedPromise.owner.wrapForUse(result, current, null);
         resolveAndTriggerListenersUnsynced(type, result, wrapped,
-            promise.chainedPromise, current,
+            promise.chainedPromise, current, actorPool,
             promise.chainedPromise.isTriggerResolutionBreakpointOnUnresolvedChainedPromise());
         resolveMoreChainedPromisesUnsynced(type, promise, result, current,
-            isBreakpointOnPromiseResolution);
+            actorPool, isBreakpointOnPromiseResolution);
       }
     }
     /**
@@ -343,13 +346,13 @@ public class SPromise extends SObjectWithClass {
     @TruffleBoundary
     private static void resolveMoreChainedPromisesUnsynced(final Resolution type,
         final SPromise promise, final Object result, final Actor current,
-        final boolean isBreakpointOnPromiseResolution) {
+        final ForkJoinPool actorPool, final boolean isBreakpointOnPromiseResolution) {
       if (promise.chainedPromiseExt != null) {
 
         for (SPromise p : promise.chainedPromiseExt) {
           Object wrapped = p.owner.wrapForUse(result, current, null);
           resolveAndTriggerListenersUnsynced(type, result, wrapped, p, current,
-              isBreakpointOnPromiseResolution);
+              actorPool, isBreakpointOnPromiseResolution);
         }
       }
     }
@@ -361,7 +364,8 @@ public class SPromise extends SObjectWithClass {
      */
     protected static void resolveAndTriggerListenersUnsynced(final Resolution type,
         final Object result, final Object wrapped, final SPromise p,
-        final Actor current, final boolean isBreakpointOnPromiseResolution) {
+        final Actor current, final ForkJoinPool actorPool,
+        final boolean isBreakpointOnPromiseResolution) {
       assert !(result instanceof SPromise);
 
       if (VmSettings.PROMISE_RESOLUTION) {
@@ -389,12 +393,12 @@ public class SPromise extends SObjectWithClass {
         }
 
         if (type == Resolution.SUCCESSFUL) {
-          scheduleAllWhenResolvedUnsync(p, result, current, isBreakpointOnPromiseResolution);
+          scheduleAllWhenResolvedUnsync(p, result, current, actorPool, isBreakpointOnPromiseResolution);
         } else {
           assert type == Resolution.ERRONEOUS;
-          scheduleAllOnErrorUnsync(p, result, current, isBreakpointOnPromiseResolution);
+          scheduleAllOnErrorUnsync(p, result, current, actorPool, isBreakpointOnPromiseResolution);
         }
-        resolveChainedPromisesUnsync(type, p, result, current, isBreakpointOnPromiseResolution);
+        resolveChainedPromisesUnsync(type, p, result, current, actorPool, isBreakpointOnPromiseResolution);
       }
     }
 
@@ -402,11 +406,14 @@ public class SPromise extends SObjectWithClass {
      * Schedule all whenResolved callbacks for the promise.
      */
     protected static void scheduleAllWhenResolvedUnsync(final SPromise promise,
-        final Object result, final Actor current, final boolean isBreakpointOnPromiseResolution) {
+        final Object result, final Actor current,
+        final ForkJoinPool actorPool,
+        final boolean isBreakpointOnPromiseResolution) {
       if (promise.whenResolved != null) {
-        promise.scheduleCallbacksOnResolution(result, promise.whenResolved, current, isBreakpointOnPromiseResolution);
+        promise.scheduleCallbacksOnResolution(result, promise.whenResolved,
+            current, actorPool, isBreakpointOnPromiseResolution);
         scheduleExtensions(promise, promise.whenResolvedExt, result, current,
-            isBreakpointOnPromiseResolution);
+            actorPool, isBreakpointOnPromiseResolution);
       }
     }
 
@@ -416,11 +423,14 @@ public class SPromise extends SObjectWithClass {
     @TruffleBoundary
     private static void scheduleExtensions(final SPromise promise,
         final ArrayList<PromiseMessage> extension,
-        final Object result, final Actor current, final boolean isBreakpointOnPromiseResolution) {
+        final Object result, final Actor current,
+        final ForkJoinPool actorPool,
+        final boolean isBreakpointOnPromiseResolution) {
       if (extension != null) {
         for (int i = 0; i < extension.size(); i++) {
           PromiseMessage callbackOrMsg = extension.get(i);
-          promise.scheduleCallbacksOnResolution(result, callbackOrMsg, current, isBreakpointOnPromiseResolution);
+          promise.scheduleCallbacksOnResolution(result, callbackOrMsg, current,
+              actorPool, isBreakpointOnPromiseResolution);
         }
       }
     }
@@ -429,10 +439,13 @@ public class SPromise extends SObjectWithClass {
      * Schedule all onError callbacks for the promise.
      */
     protected static void scheduleAllOnErrorUnsync(final SPromise promise,
-        final Object result, final Actor current, final boolean isBreakpointOnPromiseResolution) {
+        final Object result, final Actor current,
+        final ForkJoinPool actorPool, final boolean isBreakpointOnPromiseResolution) {
       if (promise.onError != null) {
-        promise.scheduleCallbacksOnResolution(result, promise.onError, current, isBreakpointOnPromiseResolution);
-        scheduleExtensions(promise, promise.onErrorExt, result, current, isBreakpointOnPromiseResolution);
+        promise.scheduleCallbacksOnResolution(result, promise.onError, current,
+            actorPool, isBreakpointOnPromiseResolution);
+        scheduleExtensions(promise, promise.onErrorExt, result, current,
+            actorPool, isBreakpointOnPromiseResolution);
       }
     }
   }

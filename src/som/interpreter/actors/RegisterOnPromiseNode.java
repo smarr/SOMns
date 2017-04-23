@@ -1,5 +1,7 @@
 package som.interpreter.actors;
 
+import java.util.concurrent.ForkJoinPool;
+
 import com.oracle.truffle.api.nodes.Node;
 
 import som.interpreter.actors.EventualMessage.PromiseMessage;
@@ -8,7 +10,11 @@ import som.interpreter.actors.EventualMessage.PromiseMessage;
 public abstract class RegisterOnPromiseNode {
 
   public static final class RegisterWhenResolved extends Node {
-    @Child protected SchedulePromiseHandlerNode schedule = SchedulePromiseHandlerNodeGen.create();
+    @Child protected SchedulePromiseHandlerNode schedule;
+
+    public RegisterWhenResolved(final ForkJoinPool actorPool) {
+      schedule = SchedulePromiseHandlerNodeGen.create(actorPool);
+    }
 
     public void register(final SPromise promise, final PromiseMessage msg,
         final Actor current) {
@@ -54,7 +60,11 @@ public abstract class RegisterOnPromiseNode {
   }
 
   public static final class RegisterOnError extends Node {
-    @Child protected SchedulePromiseHandlerNode schedule = SchedulePromiseHandlerNodeGen.create();
+    @Child protected SchedulePromiseHandlerNode schedule;
+
+    public RegisterOnError(final ForkJoinPool actorPool) {
+      this.schedule = SchedulePromiseHandlerNodeGen.create(actorPool);
+    }
 
     public void register(final SPromise promise, final PromiseMessage msg,
         final Actor current) {

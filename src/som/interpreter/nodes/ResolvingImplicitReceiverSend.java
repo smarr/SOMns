@@ -5,6 +5,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.LexicalScope.MethodScope;
@@ -19,6 +20,7 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
   private final SSymbol     selector;
   private final MethodScope currentScope;
   private final MixinDefinitionId mixinId;
+  private final VM vm;
 
   /**
    * A helper field used to make sure we specialize this node only once,
@@ -34,11 +36,12 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
 
   public ResolvingImplicitReceiverSend(final SSymbol selector,
       final ExpressionNode[] arguments, final MethodScope currentScope,
-      final MixinDefinitionId mixinId, final SourceSection source) {
+      final MixinDefinitionId mixinId, final SourceSection source, final VM vm) {
     super(arguments, source);
     this.selector     = selector;
     this.currentScope = currentScope;
     this.mixinId      = mixinId;
+    this.vm           = vm;
   }
 
   /**
@@ -49,6 +52,7 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
     this.selector     = wrappedNode.selector;
     this.currentScope = wrappedNode.currentScope;
     this.mixinId      = wrappedNode.mixinId;
+    this.vm           = wrappedNode.vm;
   }
 
   @Override
@@ -91,13 +95,13 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
       msgArgNodes[0] = newReceiverNodeForOuterSend;
 
       replacedBy = (PreevaluatedExpression) MessageSendNode.createMessageSend(selector, msgArgNodes,
-          getSourceSection());
+          getSourceSection(), vm);
 
       replace((ExpressionNode) replacedBy);
       args[0] = newReceiverNodeForOuterSend.executeEvaluated(args[0]);
     } else {
       replacedBy = (PreevaluatedExpression) MessageSendNode.createMessageSend(selector, argumentNodes,
-          getSourceSection());
+          getSourceSection(), vm);
       replace((ExpressionNode) replacedBy);
     }
     return replacedBy;

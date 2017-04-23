@@ -26,16 +26,27 @@ package som.compiler;
 
 import com.oracle.truffle.api.source.Source;
 
-import som.VM;
+import som.interpreter.SomLanguage;
 import tools.SourceCoordinate;
 import tools.language.StructuralProbe;
 
 public class SourcecodeCompiler {
 
+  protected final SomLanguage language;
+
+  public SourcecodeCompiler(final SomLanguage language) {
+    this.language = language;
+  }
+
+  public final SomLanguage getLanguage() {
+    return language;
+  }
+
   public MixinDefinition compileModule(final Source source,
-      final StructuralProbe structuralProbe) throws ProgramDefinitionError {
+      final StructuralProbe structuralProbe)
+          throws ProgramDefinitionError {
     Parser parser = new Parser(
-        source.getReader(), source.getLength(), source, structuralProbe);
+        source.getReader(), source.getLength(), source, structuralProbe, language);
     return compile(parser, source);
   }
 
@@ -44,7 +55,7 @@ public class SourcecodeCompiler {
     SourceCoordinate coord = parser.getCoordinate();
     MixinBuilder mxnBuilder = parser.moduleDeclaration();
     MixinDefinition result = mxnBuilder.assemble(parser.getSource(coord));
-    VM.reportLoadedSource(source);
+    language.getVM().reportLoadedSource(source);
     return result;
   }
 }

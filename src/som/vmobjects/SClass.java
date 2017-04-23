@@ -41,7 +41,6 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
-import som.vm.ObjectSystem;
 import som.vm.constants.Classes;
 
 
@@ -82,9 +81,9 @@ public final class SClass extends SObjectWithClass {
   }
 
   public ClassFactory getInstanceFactory() {
-    assert classGroup != null               || !ObjectSystem.isInitialized();
-    assert instanceClassGroup != null       || !ObjectSystem.isInitialized();
-    assert classGroup != instanceClassGroup || !ObjectSystem.isInitialized();
+//    assert classGroup != null               || !ObjectSystem.isInitialized();
+//    assert instanceClassGroup != null       || !ObjectSystem.isInitialized();
+//    assert classGroup != instanceClassGroup || !ObjectSystem.isInitialized();
     return instanceClassGroup;
   }
 
@@ -142,7 +141,7 @@ public final class SClass extends SObjectWithClass {
     this.isTransferObject = isTransferObject;
     this.isArray          = isArray;
     this.instanceClassGroup = classFactory;
-    assert instanceClassGroup != null || !ObjectSystem.isInitialized();
+//    assert instanceClassGroup != null || !ObjectSystem.isInitialized();
   }
 
   private boolean isBasedOn(final MixinDefinitionId mixinId) {

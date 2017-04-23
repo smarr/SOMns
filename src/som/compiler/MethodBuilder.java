@@ -37,7 +37,6 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.istack.internal.NotNull;
 
-import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.ProgramDefinitionError.SemanticDefinitionError;
@@ -49,6 +48,7 @@ import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
+import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.OuterObjectReadNodeGen;
 import som.interpreter.nodes.ReturnNonLocalNode;
@@ -63,6 +63,8 @@ public final class MethodBuilder {
   private final MixinBuilder  directOuterMixin; // to get to an indirect outer, use outerBuilder
   private final MethodBuilder outerBuilder;
   private final boolean       blockMethod;
+
+  private final SomLanguage language;
 
   private SSymbol signature;
   private final List<SourceSection> definition = new ArrayList<>(3);
@@ -82,23 +84,26 @@ public final class MethodBuilder {
 
 
   public MethodBuilder(final MixinBuilder holder, final MixinScope clsScope) {
-    this(holder, clsScope, null, false);
+    this(holder, clsScope, null, false, holder.getLanguage());
   }
 
-  public MethodBuilder(final boolean withoutContext) {
-    this(null, null, null, false);
+  public MethodBuilder(final boolean withoutContext, final SomLanguage language) {
+    this(null, null, null, false, language);
     assert withoutContext;
   }
 
   public MethodBuilder(final MethodBuilder outerBuilder) {
-    this(outerBuilder.directOuterMixin, outerBuilder.getHolderScope(), outerBuilder, true);
+    this(outerBuilder.directOuterMixin, outerBuilder.getHolderScope(),
+        outerBuilder, true, outerBuilder.language);
   }
 
   private MethodBuilder(final MixinBuilder holder, final MixinScope clsScope,
-      final MethodBuilder outerBuilder, final boolean isBlockMethod) {
+      final MethodBuilder outerBuilder, final boolean isBlockMethod,
+      final SomLanguage language) {
     this.directOuterMixin = holder;
     this.outerBuilder = outerBuilder;
     this.blockMethod  = isBlockMethod;
+    this.language     = language;
 
     MethodScope outer = (outerBuilder != null)
         ? outerBuilder.getCurrentMethodScope()
@@ -118,6 +123,10 @@ public final class MethodBuilder {
     MethodDefinitionError(final String message, final SourceSection source) {
       super(message, source);
     }
+  }
+
+  public SomLanguage getLanguage() {
+    return language;
   }
 
   public Collection<Argument> getArguments() {
@@ -261,7 +270,7 @@ public final class MethodBuilder {
     SInvokable meth = new SInvokable(signature, accessModifier,
         truffleMethod, embeddedBlockMethods.toArray(new SInvokable[0]));
 
-    VM.reportParsedRootNode(truffleMethod);
+    language.getVM().reportParsedRootNode(truffleMethod);
     // the method's holder field is to be set later on!
     return meth;
   }
@@ -308,7 +317,7 @@ public final class MethodBuilder {
 
     Method truffleMethod = new Method(getMethodIdentifier(),
         sourceSection, definition.toArray(new SourceSection[0]),
-        body, scope, (ExpressionNode) body.deepCopy(), blockMethod, false);
+        body, scope, (ExpressionNode) body.deepCopy(), blockMethod, false, language);
     scope.setMethod(truffleMethod);
     return truffleMethod;
   }
@@ -448,12 +457,14 @@ public final class MethodBuilder {
 
     if (getEnclosingMixinBuilder() == null) {
       // this is normally only for the inheritance clauses for modules the case
-      return SNodeFactory.createMessageSend(selector, new ExpressionNode[] {getSelfRead(source)}, false, source, null);
+      return SNodeFactory.createMessageSend(selector,
+          new ExpressionNode[] {getSelfRead(source)}, false, source, null, language);
     } else {
       // otherwise, it is an implicit receiver send
       return SNodeFactory.createImplicitReceiverSend(selector,
           new ExpressionNode[] {getSelfRead(source)},
-          getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(), source);
+          getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(),
+          source, language.getVM());
     }
   }
 
@@ -473,7 +484,8 @@ public final class MethodBuilder {
     return SNodeFactory.createImplicitReceiverSend(
         MixinBuilder.getSetterName(identifier),
         new ExpressionNode[] {getSelfRead(source), exp},
-        getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(), source);
+        getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(),
+        source, language.getVM());
   }
 
   protected boolean hasArgument(final String varName) {

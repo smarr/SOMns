@@ -13,7 +13,6 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
-import com.oracle.truffle.api.impl.FindContextNode;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.interop.Message;
@@ -29,7 +28,6 @@ import som.compiler.MixinDefinition;
 import som.interop.ValueConversion.ToSomConversion;
 import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
 import som.interpreter.Invokable;
-import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
@@ -74,42 +72,40 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "load:")
+  @Primitive(primitive = "load:", requiresContext = true)
   public abstract static class LoadPrim extends UnaryExpressionNode {
-    @Child protected FindContextNode<VM> findContext = SomLanguage.INSTANCE.createNewFindContextNode();
-
-    protected LoadPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    private final VM vm;
+    protected LoadPrim(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source); this.vm = vm; }
 
     @Specialization
     public final Object doSObject(final String moduleName) {
-      return loadModule(findContext.executeFindContext(), moduleName);
+      return loadModule(vm, moduleName);
     }
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "load:nextTo:")
+  @Primitive(primitive = "load:nextTo:", requiresContext = true)
   public abstract static class LoadNextToPrim extends BinaryComplexOperation {
-    @Child protected FindContextNode<VM> findContext = SomLanguage.INSTANCE.createNewFindContextNode();
-
-    protected LoadNextToPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    private final VM vm;
+    protected LoadNextToPrim(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source); this.vm = vm; }
 
     @Specialization
     public final Object load(final String filename, final SObjectWithClass moduleObj) {
       String path = moduleObj.getSOMClass().getMixinDefinition().getSourceSection().getSource().getPath();
       File file = new File(path);
-      return loadModule(findContext.executeFindContext(),
-          file.getParent() + File.separator + filename);
+      return loadModule(vm, file.getParent() + File.separator + filename);
     }
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "exit:")
+  @Primitive(primitive = "exit:", requiresContext = true)
   public abstract static class ExitPrim extends UnaryExpressionNode {
-    public ExitPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    private final VM vm;
+    public ExitPrim(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source); this.vm = vm; }
 
     @Specialization
     public final Object doSObject(final long error) {
-      VM.getVM().requestExit((int) error);
+      vm.requestExit((int) error);
       return Nil.nilObject;
     }
   }
@@ -211,13 +207,15 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "vmArguments:")
+  @Primitive(primitive = "vmArguments:", requiresContext = true)
   public abstract static class VMArgumentsPrim extends UnaryExpressionNode {
-    public VMArgumentsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    private final VM vm;
+    public VMArgumentsPrim(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source); this.vm = vm; }
 
     @Specialization
     public final SImmutableArray getArguments(final Object receiver) {
-      return new SImmutableArray(VM.getArguments(), Classes.valueArrayClass);
+      return new SImmutableArray(vm.getArguments(),
+          Classes.valueArrayClass);
     }
   }
 
@@ -245,7 +243,7 @@ public final class SystemPrims {
   }
 
   public static class IsSystemModule extends Specializer<ExpressionNode> {
-    public IsSystemModule(final Primitive prim, final NodeFactory<ExpressionNode> fact) { super(prim, fact); }
+    public IsSystemModule(final Primitive prim, final NodeFactory<ExpressionNode> fact, final VM vm) { super(prim, fact, vm); }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
@@ -278,18 +276,13 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "systemExport:as:")
+  @Primitive(primitive = "systemExport:as:", requiresContext = true)
   public abstract static class ExportAsPrim extends BinaryComplexOperation {
-    @Child protected FindContextNode<VM> findContext;
-
-    protected ExportAsPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-      findContext = SomLanguage.INSTANCE.createNewFindContextNode();
-    }
+    private final VM vm;
+    protected ExportAsPrim(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source); this.vm = vm; }
 
     @Specialization
     public final boolean doString(final Object obj, final String name) {
-      VM vm = findContext.executeFindContext();
       vm.registerExport(name, obj);
       return true;
     }

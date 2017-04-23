@@ -3,25 +3,21 @@ package som.interpreter;
 import java.io.IOException;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.debug.DebuggerTags.AlwaysHalt;
-import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.impl.FindContextNode;
 import com.oracle.truffle.api.instrumentation.ProvidedTags;
 import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.vm.NotYetImplementedException;
-import som.vm.VmOptions;
-import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
@@ -97,12 +93,11 @@ import tools.dym.Tags.VirtualInvokeReceiver;
 public final class SomLanguage extends TruffleLanguage<VM> {
 
   public static final String MIME_TYPE = "application/x-newspeak-som-ns";
-  public static final String VM_OPTIONS = "vm-options";
-  public static final String AVOID_EXIT = "avoid-exit";
+  public static final String VM_OBJECT = "vm-object";
   public static final String FILE_EXTENSION = "som";
   public static final String DOT_FILE_EXTENSION = "." + FILE_EXTENSION;
 
-  public static final SomLanguage INSTANCE = new SomLanguage();
+  @CompilationFinal private VM vm;
 
   public static Source getSyntheticSource(final String text, final String name) {
     return Source.newBuilder(text).internal().name(name).mimeType(SomLanguage.MIME_TYPE).build();
@@ -112,8 +107,8 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
     private final SClass moduleClass;
 
-    ParseResult(final SClass moduleClass) {
-      super(SomLanguage.class, null, null);
+    ParseResult(final TruffleLanguage<?> language, final SClass moduleClass) {
+      super(language, null);
       this.moduleClass = moduleClass;
     }
 
@@ -123,26 +118,23 @@ public final class SomLanguage extends TruffleLanguage<VM> {
     }
   }
 
-  /**
-   * Do not instantiate, use {@link INSTANCE} instead.
-   */
-  private SomLanguage() { }
-
-  @SuppressWarnings("unchecked")
-  public FindContextNode<VM> createNewFindContextNode() {
-    return (FindContextNode<VM>) super.createFindContextNode();
-  }
-
   @Override
   protected VM createContext(final Env env) {
-    VM vm;
+    vm = (VM) env.getConfig().get(VM_OBJECT);
     try {
-      vm = new VM((VmOptions) env.getConfig().get(VM_OPTIONS),
-          (boolean) env.getConfig().get(AVOID_EXIT));
+      vm.initalize(this);
     } catch (IOException e) {
       throw new RuntimeException("Failed accessing kernel or platform code of SOMns.", e);
     }
-    vm.initalize();
+    return vm;
+  }
+
+  @Override
+  protected void disposeContext(final VM context) {
+    assert vm == context;
+  }
+
+  public VM getVM() {
     return vm;
   }
 
@@ -151,37 +143,39 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
   private static class StartInterpretation extends RootNode {
 
-    private final FindContextNode<VM> contextNode;
+    private final VM vm;
 
-    @SuppressWarnings("unchecked")
-    protected StartInterpretation(final Node findContextNode) {
-      super(SomLanguage.class, null, null);
-      contextNode = (FindContextNode<VM>) findContextNode;
+    protected StartInterpretation(final SomLanguage lang) {
+      super(lang, null);
+      this.vm = lang.getVM();
     }
 
     @Override
     public Object execute(final VirtualFrame frame) {
-      VM vm = contextNode.executeFindContext();
-      vm.execute();
-      return Nil.nilObject;
+      String selector = vm.getTestSelector();
+      if (selector == null) {
+        vm.execute();
+        return vm.lastExitCode();
+      } else {
+        return vm.execute(selector);
+      }
     }
   }
 
   private CallTarget createStartCallTarget() {
-    return Truffle.getRuntime().createCallTarget(new StartInterpretation(createFindContextNode()));
+    return Truffle.getRuntime().createCallTarget(new StartInterpretation(this));
   }
 
   @Override
-  protected CallTarget parse(final Source code, final Node context,
-      final String... argumentNames) throws IOException {
+  protected CallTarget parse(final ParsingRequest request) throws IOException {
+    Source code = request.getSource();
     if (code == START || (code.getLength() == 0 && code.getName().equals("START"))) {
       return createStartCallTarget();
     }
 
-    VM vm = createNewFindContextNode().executeFindContext();
     try {
       MixinDefinition moduleDef = vm.loadModule(code);
-      ParseResult result = new ParseResult(moduleDef.instantiateModuleClass());
+      ParseResult result = new ParseResult(this, moduleDef.instantiateModuleClass());
       return Truffle.getRuntime().createCallTarget(result);
     } catch (ThreadDeath t) {
       throw new IOException(t);
@@ -201,12 +195,6 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
   @Override
   protected boolean isObjectOfLanguage(final Object object) {
-    throw new NotYetImplementedException();
-  }
-
-  @Override
-  protected Object evalInContext(final Source source, final Node node,
-      final MaterializedFrame mFrame) throws IOException {
     throw new NotYetImplementedException();
   }
 }

@@ -8,6 +8,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.interpreter.Invokable;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
@@ -30,8 +31,8 @@ import tools.dym.Tags.ArrayRead;
            inParser = false, specializer = TxAtPrim.class)
 public abstract class AtPrim extends BinaryBasicOperation {
   protected static final class TxAtPrim extends Specializer<BinaryBasicOperation> {
-    public TxAtPrim(final Primitive prim, final NodeFactory<BinaryBasicOperation> fact) {
-      super(prim, fact);
+    public TxAtPrim(final Primitive prim, final NodeFactory<BinaryBasicOperation> fact, final VM vm) {
+      super(prim, fact, vm);
     }
 
     @Override

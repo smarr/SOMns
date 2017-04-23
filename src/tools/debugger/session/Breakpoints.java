@@ -183,41 +183,37 @@ public class Breakpoints {
         ss -> new BreakpointEnabling<>(new ChannelOppositeBreakpoint(false, section)));
   }
 
-  public static AbstractBreakpointNode createPromiseResolver(final SourceSection source) {
+  public static AbstractBreakpointNode createPromiseResolver(final SourceSection source, final VM vm) {
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
       FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
-      Breakpoints breakpointCatalog = VM.getWebDebugger().getBreakpoints();
-      return BreakpointNodeGen.create(breakpointCatalog.getPromiseResolverBreakpoint(sourceCoord));
+      return BreakpointNodeGen.create(vm.getBreakpoints().getPromiseResolverBreakpoint(sourceCoord));
     } else {
       return new DisabledBreakpointNode();
     }
   }
 
-  public static AbstractBreakpointNode createPromiseResolution(final SourceSection source) {
+  public static AbstractBreakpointNode createPromiseResolution(final SourceSection source, final VM vm) {
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
       FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
-      Breakpoints breakpointCatalog = VM.getWebDebugger().getBreakpoints();
-      return BreakpointNodeGen.create(breakpointCatalog.getPromiseResolutionBreakpoint(sourceCoord));
+      return BreakpointNodeGen.create(vm.getBreakpoints().getPromiseResolutionBreakpoint(sourceCoord));
     } else {
       return new DisabledBreakpointNode();
     }
   }
 
-  public static AbstractBreakpointNode createReceiver(final SourceSection source) {
+  public static AbstractBreakpointNode createReceiver(final SourceSection source, final VM vm) {
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
       FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
-      Breakpoints breakpointCatalog = VM.getWebDebugger().getBreakpoints();
-      return BreakpointNodeGen.create(breakpointCatalog.getReceiverBreakpoint(sourceCoord));
+      return BreakpointNodeGen.create(vm.getBreakpoints().getReceiverBreakpoint(sourceCoord));
     } else {
       return new DisabledBreakpointNode();
     }
   }
 
-  public static AbstractBreakpointNode createOpposite(final SourceSection source) {
+  public static AbstractBreakpointNode createOpposite(final SourceSection source, final VM vm) {
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
       FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
-      Breakpoints breakpointCatalog = VM.getWebDebugger().getBreakpoints();
-      return BreakpointNodeGen.create(breakpointCatalog.getOppositeBreakpoint(sourceCoord));
+      return BreakpointNodeGen.create(vm.getBreakpoints().getOppositeBreakpoint(sourceCoord));
     } else {
       return new DisabledBreakpointNode();
     }

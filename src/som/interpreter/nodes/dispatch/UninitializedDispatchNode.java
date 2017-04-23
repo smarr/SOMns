@@ -11,6 +11,7 @@ import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.Invokable;
+import som.interpreter.SomLanguage;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.Types;
 import som.interpreter.nodes.ISuperReadNode;
@@ -88,7 +89,7 @@ public final class UninitializedDispatchNode {
       AbstractDispatchNode node;
       if (dispatchable == null) {
         node = new CachedDnuNode(rcvrClass, selector,
-            DispatchGuard.create(rcvr), newChainEnd);
+            DispatchGuard.create(rcvr), getRootNode().getLanguage(SomLanguage.class).getVM(), newChainEnd);
       } else {
         node = dispatchable.getDispatchNode(rcvr, firstArg, newChainEnd, forAtomic());
       }

@@ -7,7 +7,6 @@ import com.oracle.truffle.api.interop.TruffleObject;
 
 import som.interop.SObjectInteropMessageResolutionForeign;
 import som.interpreter.objectstorage.ClassFactory;
-import som.vm.ObjectSystem;
 
 
 public abstract class SObjectWithClass extends SAbstractObject implements TruffleObject {
@@ -43,7 +42,7 @@ public abstract class SObjectWithClass extends SAbstractObject implements Truffl
     assert value != null;
     clazz      = value;
     classGroup = value.getInstanceFactory();
-    assert classGroup != null || !ObjectSystem.isInitialized();
+//    assert classGroup != null || !ObjectSystem.isInitialized();
   }
 
   public void setClassGroup(final ClassFactory factory) {
@@ -53,7 +52,7 @@ public abstract class SObjectWithClass extends SAbstractObject implements Truffl
 
   @Override
   public ForeignAccess getForeignAccess() {
-    return SObjectInteropMessageResolutionForeign.createAccess();
+    return SObjectInteropMessageResolutionForeign.ACCESS;
   }
 
   public static final class SObjectWithoutFields extends SObjectWithClass {

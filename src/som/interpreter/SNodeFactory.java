@@ -4,6 +4,7 @@ import java.util.List;
 
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable.Internal;
@@ -62,19 +63,20 @@ public final class SNodeFactory {
 
   public static ExpressionNode createMessageSend(final SSymbol msg,
       final ExpressionNode[] exprs, final boolean eventualSend,
-      final SourceSection source, final SourceSection sendOperator) {
+      final SourceSection source, final SourceSection sendOperator,
+      final SomLanguage lang) {
     if (eventualSend) {
       return new EventualSendNode(msg, exprs.length,
-          new InternalObjectArrayNode(exprs, source), source, sendOperator);
+          new InternalObjectArrayNode(exprs, source), source, sendOperator, lang);
     } else {
-      return MessageSendNode.createMessageSend(msg, exprs, source);
+      return MessageSendNode.createMessageSend(msg, exprs, source, lang.getVM());
     }
   }
 
   public static ExpressionNode createMessageSend(final SSymbol msg,
-      final List<ExpressionNode> exprs, final SourceSection source) {
+      final List<ExpressionNode> exprs, final SourceSection source, final VM vm) {
     return MessageSendNode.createMessageSend(msg,
-        exprs.toArray(new ExpressionNode[0]), source);
+        exprs.toArray(new ExpressionNode[0]), source, vm);
   }
 
   public static ReturnNonLocalNode createNonLocalReturn(final ExpressionNode exp,
@@ -86,10 +88,10 @@ public final class SNodeFactory {
   public static ExpressionNode createImplicitReceiverSend(
       final SSymbol selector, final ExpressionNode[] arguments,
       final MethodScope currentScope, final MixinDefinitionId mixinDefId,
-      final SourceSection source) {
+      final SourceSection source, final VM vm) {
     assert mixinDefId != null;
     return new ResolvingImplicitReceiverSend(selector, arguments,
-        currentScope, mixinDefId, source);
+        currentScope, mixinDefId, source, vm);
   }
 
   public static ExpressionNode createInternalObjectArray(

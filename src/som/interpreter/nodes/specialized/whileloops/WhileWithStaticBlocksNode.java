@@ -7,6 +7,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileFalseSplzr;
@@ -23,9 +24,9 @@ public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
   public abstract static class WhileSplzr extends Specializer<WhileWithStaticBlocksNode> {
     private final boolean whileTrueOrFalse;
     protected WhileSplzr(final Primitive prim,
-        final NodeFactory<WhileWithStaticBlocksNode> fact,
+        final NodeFactory<WhileWithStaticBlocksNode> fact, final VM vm,
         final boolean whileTrueOrFalse) {
-      super(prim, fact);
+      super(prim, fact, vm);
       this.whileTrueOrFalse = whileTrueOrFalse;
     }
 
@@ -51,12 +52,12 @@ public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
 
   public static final class WhileTrueSplzr extends WhileSplzr {
     public WhileTrueSplzr(final Primitive prim,
-        final NodeFactory<WhileWithStaticBlocksNode> fact) { super(prim, fact, true); }
+        final NodeFactory<WhileWithStaticBlocksNode> fact, final VM vm) { super(prim, fact, vm, true); }
   }
 
   public static final class WhileFalseSplzr extends WhileSplzr {
     public WhileFalseSplzr(final Primitive prim,
-        final NodeFactory<WhileWithStaticBlocksNode> fact) { super(prim, fact, false); }
+        final NodeFactory<WhileWithStaticBlocksNode> fact, final VM vm) { super(prim, fact, vm, false); }
   }
 
   @Child protected BlockNode receiver;

@@ -4,6 +4,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
@@ -18,18 +19,21 @@ import tools.concurrency.ActorExecutionTrace;
 
 @GenerateNodeFactory
 @Primitive(primitive = "actors:createFromValue:", selector  = "createActorFromValue:",
-           specializer = IsActorModule.class)
+           specializer = IsActorModule.class, requiresContext = true)
 public abstract class CreateActorPrim extends BinaryComplexOperation {
+  private final VM vm;
+
   @Child protected IsValue isValue;
 
-  protected CreateActorPrim(final boolean eagWrap, final SourceSection source) {
+  protected CreateActorPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
     super(eagWrap, source);
+    this.vm = vm;
     isValue = IsValueNodeGen.createSubNode();
   }
 
   @Specialization(guards = "isValue.executeEvaluated(argument)")
   public final SFarReference createActor(final Object receiver, final Object argument) {
-    Actor actor = Actor.createActor();
+    Actor actor = Actor.createActor(vm);
     SFarReference ref = new SFarReference(actor, argument);
 
     if (VmSettings.ACTOR_TRACING) {

@@ -75,6 +75,6 @@ public final class SBlock extends SAbstractObject implements TruffleObject {
 
   @Override
   public ForeignAccess getForeignAccess() {
-    return SBlockInteropMessageResolutionForeign.createAccess();
+    return SBlockInteropMessageResolutionForeign.ACCESS;
   }
 }

@@ -14,7 +14,12 @@ public class VmOptions {
   public String   platformFile = STANDARD_PLATFORM_FILE;
   public String   kernelFile   = STANDARD_KERNEL_FILE;
   public final Object[] args;
-  public final boolean showUsage;
+  private final boolean showUsage;
+
+  /**
+   * Used in {@link som.tests.BasicInterpreterTests} to identify which basic test method to invoke.
+   */
+  public final String testSelector;
 
   @CompilationFinal public boolean webDebuggerEnabled;
   @CompilationFinal public boolean profilingEnabled;
@@ -23,6 +28,11 @@ public class VmOptions {
   @CompilationFinal public String  coverageFile;
 
   public VmOptions(final String[] args) {
+    this(args, null);
+  }
+
+  public VmOptions(final String[] args, final String testSelector) {
+    this.testSelector = testSelector;
     this.args = processVmArguments(args);
     showUsage = args.length == 0;
     if (!VmSettings.INSTRUMENTATION &&
@@ -77,7 +87,9 @@ public class VmOptions {
     }
   }
 
-  public static void printUsageAndExit() {
+  public boolean configUsable() {
+    if (!showUsage) { return true; }
+
     VM.println("VM arguments, need to come before any application arguments:");
     VM.println("");
     VM.println("  --platform file-name   SOM Platform module to be loaded");
@@ -91,6 +103,6 @@ public class VmOptions {
     VM.println("  --profile              Enable the TruffleProfiler");
     VM.println("  --dynamic-metrics      Enable the DynamicMetrics tool");
     VM.println("  --coveralls REPO_TOKEN Enable the Coverage tool and reporting to Coveralls.io");
-    VM.getVM().requestExit(1);
+    return false;
   }
 }

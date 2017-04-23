@@ -12,9 +12,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
-import som.interpreter.actors.Actor.UncaughtExceptions;
 import som.interpreter.actors.SuspendExecutionNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -68,7 +68,7 @@ public abstract class ChannelPrimitives {
     return activeProcesses;
   }
 
-  private static final class ProcessThreadFactory implements ForkJoinWorkerThreadFactory {
+  public static final class ProcessThreadFactory implements ForkJoinWorkerThreadFactory {
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
       return new ProcessThread(pool);
@@ -166,9 +166,6 @@ public abstract class ChannelPrimitives {
     public long getId() { return processId; }
   }
 
-  private static final ForkJoinPool processesPool = new ForkJoinPool(
-      VmSettings.NUM_THREADS, new ProcessThreadFactory(), new UncaughtExceptions(), true);
-
   @Primitive(primitive = "procOut:")
   @GenerateNodeFactory
   public abstract static class OutPrim extends UnaryExpressionNode {
@@ -180,16 +177,19 @@ public abstract class ChannelPrimitives {
     }
   }
 
-  @Primitive(primitive = "procSpawn:with:")
+  @Primitive(primitive = "procSpawn:with:", requiresContext = true)
   @GenerateNodeFactory
   public abstract static class SpawnProcess extends BinaryComplexOperation {
+    private final ForkJoinPool processesPool;
+
     @Child protected ToArgumentsArrayNode toArgs;
     @Child protected IsValue isVal;
 
-    public SpawnProcess(final boolean eagerlyWrapped, final SourceSection source) {
+    public SpawnProcess(final boolean eagerlyWrapped, final SourceSection source, final VM vm) {
       super(eagerlyWrapped, source);
       toArgs = ToArgumentsArrayNodeFactory.create(null, null);
       isVal  = IsValue.createSubNode();
+      processesPool = vm.getProcessPool();
     }
 
     @Specialization
@@ -208,7 +208,7 @@ public abstract class ChannelPrimitives {
     }
   }
 
-  @Primitive(primitive = "procRead:", selector = "read")
+  @Primitive(primitive = "procRead:", selector = "read", requiresContext = true)
   @GenerateNodeFactory
   public abstract static class ReadPrim extends UnaryExpressionNode {
     /** Halt execution when triggered by breakpoint on write end. */
@@ -217,10 +217,10 @@ public abstract class ChannelPrimitives {
     /** Breakpoint info for triggering suspension after write. */
     @Child protected AbstractBreakpointNode afterWrite;
 
-    public ReadPrim(final boolean eagerlyWrapped, final SourceSection source) {
+    public ReadPrim(final boolean eagerlyWrapped, final SourceSection source, final VM vm) {
       super(eagerlyWrapped, source);
       haltNode = SuspendExecutionNodeGen.create(false, sourceSection, null);
-      afterWrite = insert(Breakpoints.createOpposite(source));
+      afterWrite = insert(Breakpoints.createOpposite(source, vm));
     }
 
     @Specialization
@@ -246,7 +246,7 @@ public abstract class ChannelPrimitives {
     }
   }
 
-  @Primitive(primitive = "procWrite:val:", selector = "write:")
+  @Primitive(primitive = "procWrite:val:", selector = "write:", requiresContext = true)
   @GenerateNodeFactory
   public abstract static class WritePrim extends BinaryComplexOperation {
     @Child protected IsValue isVal;
@@ -257,11 +257,11 @@ public abstract class ChannelPrimitives {
     /** Breakpoint info for triggering suspension after read. */
     @Child protected AbstractBreakpointNode afterRead;
 
-    public WritePrim(final boolean eagerlyWrapped, final SourceSection source) {
+    public WritePrim(final boolean eagerlyWrapped, final SourceSection source, final VM vm) {
       super(eagerlyWrapped, source);
       isVal     = IsValue.createSubNode();
       haltNode  = SuspendExecutionNodeGen.create(false, sourceSection, null);
-      afterRead = insert(Breakpoints.createOpposite(source));
+      afterRead = insert(Breakpoints.createOpposite(source, vm));
     }
 
     @Specialization

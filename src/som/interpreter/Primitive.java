@@ -19,8 +19,9 @@ public final class Primitive extends Invokable {
 
   public Primitive(final String name, final ExpressionNode primitive,
       final FrameDescriptor frameDescriptor,
-      final ExpressionNode uninitialized, final boolean isAtomic) {
-    super(name, null, frameDescriptor, primitive, uninitialized, isAtomic);
+      final ExpressionNode uninitialized, final boolean isAtomic,
+      final SomLanguage lang) {
+    super(name, null, frameDescriptor, primitive, uninitialized, isAtomic, lang);
   }
 
   @Override
@@ -35,7 +36,8 @@ public final class Primitive extends Invokable {
   public Node deepCopy() {
     assert getFrameDescriptor().getSize() == 0;
     return new Primitive(name, NodeUtil.cloneNode(uninitializedBody),
-        getFrameDescriptor(), uninitializedBody, isAtomic);
+        getFrameDescriptor(), uninitializedBody, isAtomic,
+        getLanguage(SomLanguage.class));
   }
 
   @Override
@@ -44,7 +46,8 @@ public final class Primitive extends Invokable {
     ExpressionNode atomic = NodeUtil.cloneNode(uninitializedBody);
     ExpressionNode uninitAtomic = NodeUtil.cloneNode(atomic);
 
-    return new Primitive(name, atomic, getFrameDescriptor(), uninitAtomic, true);
+    return new Primitive(name, atomic, getFrameDescriptor(), uninitAtomic, true,
+        getLanguage(SomLanguage.class));
   }
 
   @Override

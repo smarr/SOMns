@@ -1,13 +1,13 @@
 package som.interpreter.actors;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
+import som.interpreter.SomLanguage;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.VmSettings;
 import tools.debugger.WebDebugger;
@@ -18,17 +18,26 @@ public abstract class ReceivedRootNode extends RootNode {
   @Child protected AbstractPromiseResolutionNode resolve;
   @Child protected AbstractPromiseResolutionNode error;
 
+  private final VM vm;
   protected final WebDebugger dbg;
+  private final SourceSection sourceSection;
 
-  protected ReceivedRootNode(final Class<? extends TruffleLanguage<?>> language,
+  protected ReceivedRootNode(final SomLanguage language,
       final SourceSection sourceSection, final FrameDescriptor frameDescriptor) {
-    super(language, sourceSection, frameDescriptor);
+    super(language, frameDescriptor);
     assert sourceSection != null;
+    this.vm = language.getVM();
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      this.dbg = VM.getWebDebugger();
+      this.dbg = vm.getWebDebugger();
     } else {
       this.dbg = null;
     }
+    this.sourceSection = sourceSection;
+  }
+
+  @Override
+  public SourceSection getSourceSection() {
+    return sourceSection;
   }
 
   protected final void resolvePromise(final VirtualFrame frame,
@@ -40,7 +49,7 @@ public abstract class ReceivedRootNode extends RootNode {
       if (resolver == null) {
         this.resolve = insert(new NullResolver(getSourceSection()));
       } else {
-        this.resolve = insert(ResolvePromiseNodeFactory.create(false, getSourceSection(), null, null, null));
+        this.resolve = insert(ResolvePromiseNodeFactory.create(false, sourceSection, vm, null, null, null));
       }
     }
 
@@ -57,7 +66,7 @@ public abstract class ReceivedRootNode extends RootNode {
       if (resolver == null) {
         this.error = insert(new NullResolver(getSourceSection()));
       } else {
-        this.error = insert(ErrorPromiseNodeFactory.create(false, getSourceSection(), null, null, null));
+        this.error = insert(ErrorPromiseNodeFactory.create(false, sourceSection, vm, null, null, null));
       }
     }
 
@@ -70,7 +79,7 @@ public abstract class ReceivedRootNode extends RootNode {
    */
   public final class NullResolver extends AbstractPromiseResolutionNode {
     public NullResolver(final SourceSection source) {
-      super(false, source);
+      super(false, source, null);
     }
 
     @Override

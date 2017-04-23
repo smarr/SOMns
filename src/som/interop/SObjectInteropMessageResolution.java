@@ -7,6 +7,7 @@ import com.oracle.truffle.api.interop.Resolve;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.nodes.Node;
 
+import som.VM;
 import som.interop.ValueConversion.ToSomConversion;
 import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
 import som.interpreter.SomLanguage;
@@ -14,25 +15,26 @@ import som.vm.constants.Nil;
 import som.vmobjects.SObjectWithClass;
 
 
-@MessageResolution(receiverType = SObjectWithClass.class, language = SomLanguage.class)
+@MessageResolution(receiverType = SObjectWithClass.class)
 public class SObjectInteropMessageResolution {
 
   @Resolve(message = "INVOKE")
   public abstract static class SObjectInvokeNode extends Node {
-    @Child protected InteropDispatch dispatch = InteropDispatchNodeGen.create();
+    @Child protected InteropDispatch dispatch;
     @Child protected ToSomConversion convert = ToSomConversionNodeGen.create(null);
 
     protected Object access(final VirtualFrame frame, final SObjectWithClass rcvr,
         final String name, final Object[] args) {
+      if (dispatch == null) {
+        // TODO: this is a bad hack. Ideally, we can pass the VM in somewhat more direct and robustly
+        VM vm = rcvr.getSOMClass().getMethods()[0].getInvokable().getRootNode().getLanguage(SomLanguage.class).getVM();
+        dispatch = InteropDispatchNodeGen.create(vm);
+      }
+
       Object[] arguments = ValueConversion.convertToArgArray(convert, rcvr, args);
 
       Object result = dispatch.executeDispatch(frame, name, arguments);
-
-      if (result == Nil.nilObject) {
-        return null;
-      } else {
-        return result;
-      }
+      return result;
     }
   }
 
@@ -42,21 +44,30 @@ public class SObjectInteropMessageResolution {
     //       because it should be a precise lookup. But, for simplicity
     //       we reuse this for now
 
-    @Child protected InteropDispatch dispatch = InteropDispatchNodeGen.create();
+    @Child protected InteropDispatch dispatch;
     @Child protected ToSomConversion convert = ToSomConversionNodeGen.create(null);
+
 
     protected Object access(final VirtualFrame frame, final SObjectWithClass rcvr,
         final String name, final Object value) {
+      if (dispatch == null) {
+        // TODO: this is a bad hack. Ideally, we can pass the VM in somewhat more direct and robustly
+        VM vm = rcvr.getSOMClass().getMethods()[0].getInvokable().getRootNode().getLanguage(SomLanguage.class).getVM();
+        dispatch = InteropDispatchNodeGen.create(vm);
+      }
+
       Object[] arguments = {rcvr, convert.executeEvaluated(value)};
 
       String setterName = name + ":";
       Object result = dispatch.executeDispatch(frame, setterName, arguments);
+      return result;
+    }
+  }
 
-      if (result == Nil.nilObject) {
-        return null;
-      } else {
-        return result;
-      }
+  @Resolve(message = "IS_NULL")
+  public abstract static class SObjectIsNilNode extends Node {
+    public Object access(final SObjectWithClass rcvr) {
+      return rcvr == Nil.nilObject;
     }
   }
 

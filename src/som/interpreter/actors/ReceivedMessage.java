@@ -21,8 +21,9 @@ public class ReceivedMessage extends ReceivedRootNode {
 
   private final SSymbol selector;
 
-  public ReceivedMessage(final AbstractMessageSendNode onReceive, final SSymbol selector) {
-    super(SomLanguage.class, onReceive.getSourceSection(), null);
+  public ReceivedMessage(final AbstractMessageSendNode onReceive,
+      final SSymbol selector, final SomLanguage lang) {
+    super(lang, onReceive.getSourceSection(), null);
     this.onReceive = onReceive;
     this.selector  = selector;
     assert onReceive.getSourceSection() != null;
@@ -60,8 +61,9 @@ public class ReceivedMessage extends ReceivedRootNode {
     private final CompletableFuture<Object> future;
 
     public ReceivedMessageForVMMain(final AbstractMessageSendNode onReceive,
-        final SSymbol selector, final CompletableFuture<Object> future) {
-      super(onReceive, selector);
+        final SSymbol selector, final CompletableFuture<Object> future,
+        final SomLanguage lang) {
+      super(onReceive, selector, lang);
       this.future = future;
     }
 
@@ -83,7 +85,8 @@ public class ReceivedMessage extends ReceivedRootNode {
     @Child protected DirectCallNode onReceive;
 
     public ReceivedCallback(final RootCallTarget onReceive) {
-      super(SomLanguage.class, onReceive.getRootNode().getSourceSection(), null);
+      super(onReceive.getRootNode().getLanguage(SomLanguage.class),
+          onReceive.getRootNode().getSourceSection(), null);
       this.onReceive = Truffle.getRuntime().createDirectCallNode(onReceive);
     }
 
