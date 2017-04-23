@@ -53,7 +53,7 @@ public abstract class SObjectWithClass extends SAbstractObject implements Truffl
 
   @Override
   public ForeignAccess getForeignAccess() {
-    return SObjectInteropMessageResolutionForeign.createAccess();
+    return SObjectInteropMessageResolutionForeign.ACCESS;
   }
 
   public static final class SObjectWithoutFields extends SObjectWithClass {
