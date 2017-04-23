@@ -55,11 +55,7 @@ import tools.language.StructuralProbe;
 
 public final class VM {
 
-  // TODO: reorder field
-
   @CompilationFinal private PolyglotEngine engine;
-
-  // Truffle Instruments
 
   @CompilationFinal private StructuralProbe structuralProbe;
   @CompilationFinal private WebDebugger webDebugger;
@@ -68,6 +64,29 @@ public final class VM {
   private final ForkJoinPool actorPool;
   private final ForkJoinPool forkJoinPool;
   private final ForkJoinPool processesPool;
+
+
+  private final boolean avoidExitForTesting;
+  @CompilationFinal private ObjectSystem objectSystem;
+
+  private int lastExitCode = 0;
+  private volatile boolean shouldExit = false;
+  private final VmOptions options;
+
+  @CompilationFinal private SObjectWithoutFields vmMirror;
+  @CompilationFinal private Actor mainActor;
+
+  public VM(final VmOptions vmOptions, final boolean avoidExitForTesting) {
+    this.avoidExitForTesting = avoidExitForTesting;
+    options = vmOptions;
+
+    actorPool = new ForkJoinPool(VmSettings.NUM_THREADS,
+        new ActorProcessingThreadFactory(), new UncaughtExceptions(), true);
+    processesPool = new ForkJoinPool(VmSettings.NUM_THREADS,
+        new ProcessThreadFactory(), new UncaughtExceptions(), true);
+    forkJoinPool = new ForkJoinPool(VmSettings.NUM_THREADS,
+        new ForkJoinThreadFactor(), new UncaughtExceptions(), false);
+  }
 
   public WebDebugger getWebDebugger() {
     return webDebugger;
@@ -88,22 +107,6 @@ public final class VM {
   public Object getExport(final String name) {
     return exports.get(name);
   }
-
-  public void setEngine(final PolyglotEngine e) {
-    engine = e;
-  }
-
-  private final boolean avoidExitForTesting;
-  @CompilationFinal private ObjectSystem objectSystem;
-
-  private int lastExitCode = 0;
-  private volatile boolean shouldExit = false;
-  private final VmOptions options;
-
-  @CompilationFinal
-  private SObjectWithoutFields vmMirror;
-  @CompilationFinal
-  private Actor mainActor;
 
   public SObjectWithoutFields getVmMirror() {
     return vmMirror;
@@ -148,18 +151,6 @@ public final class VM {
 
     graphPrinter.printToNetwork(true);
     graphPrinter.close();
-  }
-
-  public VM(final VmOptions vmOptions, final boolean avoidExitForTesting) {
-    this.avoidExitForTesting = avoidExitForTesting;
-    options = vmOptions;
-
-    actorPool = new ForkJoinPool(VmSettings.NUM_THREADS,
-        new ActorProcessingThreadFactory(), new UncaughtExceptions(), true);
-    processesPool = new ForkJoinPool(VmSettings.NUM_THREADS,
-        new ProcessThreadFactory(), new UncaughtExceptions(), true);
-    forkJoinPool = new ForkJoinPool(VmSettings.NUM_THREADS,
-        new ForkJoinThreadFactor(), new UncaughtExceptions(), false);
   }
 
   public ForkJoinPool getActorPool() {
