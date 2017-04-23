@@ -42,8 +42,6 @@ import tools.language.StructuralProbe;
 
 public final class ObjectSystem {
 
-  @CompilationFinal
-  private static ObjectSystem last;
 
   private final Map<URI, MixinDefinition> loadedModules;
 
@@ -66,7 +64,6 @@ public final class ObjectSystem {
   private final VM vm;
 
   public ObjectSystem(final SourcecodeCompiler compiler,
-    last = this;
       final StructuralProbe probe, final VM vm) {
     this.primitives = new Primitives(compiler.getLanguage());
     this.compiler   = compiler;
