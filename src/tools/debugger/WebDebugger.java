@@ -9,6 +9,7 @@ import java.util.WeakHashMap;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.DebuggerSession.SteppingLocation;
 import com.oracle.truffle.api.debug.SuspendedCallback;
@@ -21,6 +22,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.interpreter.actors.Actor;
 import som.vm.Activity;
 import som.vm.ActivityThread;
@@ -64,7 +66,7 @@ import tools.debugger.session.PromiseResolverBreakpoint;
  * The WebDebugger connects the Truffle debugging facilities with a HTML5
  * application using WebSockets and JSON.
  */
-@Registration(id = WebDebugger.ID)
+@Registration(id = WebDebugger.ID, name = "WebDebugger", version = "0.1", services = {WebDebugger.class})
 public class WebDebugger extends TruffleInstrument implements SuspendedCallback {
 
   public static final String ID = "web-debugger";
@@ -72,6 +74,8 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   private FrontendConnector connector;
   private Instrumenter      instrumenter;
   private Breakpoints       breakpoints;
+
+  @CompilationFinal VM vm;
 
   private final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags = new HashMap<>();
   private final Map<Source, Set<RootNode>> rootNodes = new HashMap<>();
@@ -177,7 +181,9 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     env.registerService(this);
   }
 
-  public void startServer(final Debugger dbg) {
+  public void startServer(final Debugger dbg, final VM vm) {
+    assert vm != null;
+    this.vm = vm;
     breakpoints = new Breakpoints(dbg, this);
     connector = new FrontendConnector(breakpoints, instrumenter, this,
         createJsonProcessor());

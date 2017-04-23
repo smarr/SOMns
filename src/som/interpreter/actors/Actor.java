@@ -1,12 +1,10 @@
 package som.interpreter.actors;
 
-import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.TimeUnit;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
@@ -48,13 +46,13 @@ import tools.debugger.WebDebugger;
  */
 public class Actor implements Activity {
 
-  public static Actor createActor() {
+  public static Actor createActor(final VM vm) {
     if (VmSettings.REPLAY) {
-      return new ReplayActor();
+      return new ReplayActor(vm);
     } else if (VmSettings.ACTOR_TRACING) {
-      return new TracingActor();
+      return new TracingActor(vm);
     } else {
-      return new Actor();
+      return new Actor(vm);
     }
   }
 
@@ -93,13 +91,13 @@ public class Actor implements Activity {
     RECEIVER
   }
 
-  protected Actor() {
+  protected Actor(final VM vm) {
     isExecuting = false;
-    executor = createExecutor();
+    executor = createExecutor(vm);
   }
 
-  protected ExecAllMessages createExecutor() {
-    return new ExecAllMessages(this);
+  protected ExecAllMessages createExecutor(final VM vm) {
+    return new ExecAllMessages(this, vm);
   }
 
   public final Object wrapForUse(final Object o, final Actor owner,
@@ -152,7 +150,7 @@ public class Actor implements Activity {
    * This is the main method to be used in this API.
    */
   @TruffleBoundary
-  public synchronized void send(final EventualMessage msg) {
+  public synchronized void send(final EventualMessage msg, final ForkJoinPool actorPool) {
     assert msg.getTarget() == this;
 
     if (firstMessage == null) {
@@ -166,7 +164,7 @@ public class Actor implements Activity {
 
     if (!isExecuting) {
       isExecuting = true;
-      executeOnPool();
+      execute(actorPool);
     }
   }
 
@@ -194,6 +192,8 @@ public class Actor implements Activity {
    */
   public static class ExecAllMessages implements Runnable {
     protected final Actor actor;
+    protected final VM vm;
+
     protected EventualMessage firstMessage;
     protected ObjectBuffer<EventualMessage> mailboxExtension;
     protected long baseMessageId;
@@ -203,8 +203,9 @@ public class Actor implements Activity {
     protected int currentMailboxNo;
     protected int size = 0;
 
-    protected ExecAllMessages(final Actor actor) {
+    protected ExecAllMessages(final Actor actor, final VM vm) {
       this.actor = actor;
+      this.vm = vm;
     }
 
     @Override
@@ -214,7 +215,7 @@ public class Actor implements Activity {
       ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
       WebDebugger dbg = null;
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        dbg = VM.getWebDebugger();
+        dbg = vm.getWebDebugger();
         assert dbg != null;
       }
 
@@ -309,7 +310,7 @@ public class Actor implements Activity {
   }
 
   @TruffleBoundary
-  protected void executeOnPool() {
+  protected void execute(final ForkJoinPool actorPool) {
     try {
       actorPool.execute(executor);
     } catch (RejectedExecutionException e) {
@@ -317,19 +318,8 @@ public class Actor implements Activity {
     }
   }
 
-  /**
-   * @return true, if there are no scheduled submissions,
-   *         and no active threads in the pool, false otherwise.
-   *         This is only best effort, it does not look at the actor's
-   *         message queues.
-   */
-  public static boolean isPoolIdle() {
-    // TODO: this is not working when a thread blocks, then it seems
-    //       not to be considered running
-    return actorPool.isQuiescent();
-  }
 
-  private static final class ActorProcessingThreadFactor implements ForkJoinWorkerThreadFactory {
+  public static final class ActorProcessingThreadFactory implements ForkJoinWorkerThreadFactory {
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
       return new ActorProcessingThread(pool);
@@ -387,34 +377,7 @@ public class Actor implements Activity {
     }
   }
 
-  /**
-   * In case an actor processing thread terminates, provide some info.
-   */
-  public static final class UncaughtExceptions implements UncaughtExceptionHandler {
-    @Override
-    public void uncaughtException(final Thread t, final Throwable e) {
-      if (e instanceof ThreadDeath) {
-        // Ignore those, we already signaled an error
-        return;
-      }
-      ActorProcessingThread thread = (ActorProcessingThread) t;
-      VM.errorPrintln("Processing of eventual message failed for actor: "
-          + thread.currentlyExecutingActor.toString());
-      e.printStackTrace();
-    }
-  }
-
-  private static final ForkJoinPool actorPool = new ForkJoinPool(
-      VmSettings.NUM_THREADS, new ActorProcessingThreadFactor(),
-      new UncaughtExceptions(), true);
-
-  public static final void shutDownActorPool() {
-    actorPool.shutdown();
-    try {
-      actorPool.awaitTermination(10, TimeUnit.SECONDS);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
-    }
+  public static final void reportStats() {
     if (VmSettings.ACTOR_TRACING) {
       synchronized (statsLock) {
         VM.printConcurrencyEntitiesReport("[Total]\tA#" + numCreatedActors + "\t\tM#" + numCreatedMessages + "\t\tP#" + numCreatedPromises);

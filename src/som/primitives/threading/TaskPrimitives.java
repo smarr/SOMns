@@ -147,7 +147,7 @@ public final class TaskPrimitives {
     }
   }
 
-  private static final class ForkJoinThreadFactor implements ForkJoinWorkerThreadFactory {
+  public static final class ForkJoinThreadFactor implements ForkJoinWorkerThreadFactory {
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
       return new ForkJoinThread(pool);
@@ -169,8 +169,4 @@ public final class TaskPrimitives {
       return null;
     }
   }
-
-  private static final ForkJoinPool forkJoinPool = new ForkJoinPool(
-      VmSettings.NUM_THREADS, new ForkJoinThreadFactor(),
-      new UncaughtExceptions(), false);
 }

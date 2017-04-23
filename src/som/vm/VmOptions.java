@@ -77,7 +77,9 @@ public class VmOptions {
     }
   }
 
-  public static void printUsageAndExit() {
+  public boolean configUsable() {
+    if (!showUsage) { return true; }
+
     VM.println("VM arguments, need to come before any application arguments:");
     VM.println("");
     VM.println("  --platform file-name   SOM Platform module to be loaded");
@@ -91,6 +93,6 @@ public class VmOptions {
     VM.println("  --profile              Enable the TruffleProfiler");
     VM.println("  --dynamic-metrics      Enable the DynamicMetrics tool");
     VM.println("  --coveralls REPO_TOKEN Enable the Coverage tool and reporting to Coveralls.io");
-    VM.getVM().requestExit(1);
+    return false;
   }
 }

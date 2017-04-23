@@ -81,8 +81,8 @@ public final class ObjectSystem {
     kernelModule   = loadModule(kernelFilename);
   }
 
-  public static boolean isInitialized() {
-    return last.initialized;
+  public boolean isInitialized() {
+    return initialized;
   }
 
   public Primitives getPrimitives() {
@@ -335,7 +335,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
       try { Thread.sleep(500); } catch (InterruptedException e) { }
 
       // never timeout when debugging
-      if (Actor.isPoolIdle() && !VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      if (vm.isPoolIdle() && !VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
         emptyFJPool++;
       } else {
         emptyFJPool = 0;
@@ -368,7 +368,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
         null, EventualSendNode.createOnReceiveCallTargetForVMMain(
             start, 1, source, mainThreadCompleted, compiler.getLanguage()),
         false, false);
-    mainActor.send(msg);
+    mainActor.send(msg, vm.getActorPool());
 
     try {
       Object result = mainThreadCompleted.get();

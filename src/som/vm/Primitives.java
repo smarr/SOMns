@@ -10,6 +10,7 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MethodBuilder;
 import som.interpreter.Primitive;

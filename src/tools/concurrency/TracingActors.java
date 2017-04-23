@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
+import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
@@ -20,8 +21,8 @@ public class TracingActors {
     protected final long actorId;
     protected int mailboxNumber;
 
-    public TracingActor() {
-      super();
+    public TracingActor(final VM vm) {
+      super(vm);
       if (Thread.currentThread() instanceof TracingActivityThread) {
         TracingActivityThread t = (TracingActivityThread) Thread.currentThread();
         this.actorId = t.generateActivityId();
@@ -53,7 +54,8 @@ public class TracingActors {
     }
 
     @TruffleBoundary
-    public ReplayActor() {
+    public ReplayActor(final VM vm) {
+      super(vm);
       if (Thread.currentThread() instanceof ActorProcessingThread) {
         ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
         ReplayActor parent = (ReplayActor) t.currentMessage.getTarget();
@@ -76,13 +78,13 @@ public class TracingActors {
     }
 
     @Override
-    protected ExecAllMessages createExecutor() {
-      return new ExecAllMessagesReplay(this);
+    protected ExecAllMessages createExecutor(final VM vm) {
+      return new ExecAllMessagesReplay(this, vm);
     }
 
     @Override
     @TruffleBoundary
-    public synchronized void send(final EventualMessage msg) {
+    public synchronized void send(final EventualMessage msg, final ForkJoinPool actorPool) {
       assert msg.getTarget() == this;
 
       if (firstMessage == null) {
@@ -94,7 +96,7 @@ public class TracingActors {
       // actor remains dormant until the expected message arrives
       if ((!this.isExecuting) && this.replayCanProcess(msg)) {
         isExecuting = true;
-        executeOnPool();
+        execute(actorPool);
       }
     }
 
@@ -198,8 +200,8 @@ public class TracingActors {
     }
 
     private static class ExecAllMessagesReplay extends ExecAllMessages {
-      ExecAllMessagesReplay(final Actor actor) {
-        super(actor);
+      ExecAllMessagesReplay(final Actor actor, final VM vm) {
+        super(actor, vm);
       }
 
       private Queue<EventualMessage> determineNextMessages(final List<EventualMessage> postponedMsgs) {

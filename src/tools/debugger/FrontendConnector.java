@@ -20,7 +20,6 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.net.httpserver.HttpServer;
 
-import som.VM;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
@@ -255,14 +254,7 @@ public class FrontendConnector {
   }
 
   public void sendProgramInfo() {
-    // this one is a problematic one, because it is racy with VM initialization
-    // let's wait for VM object being available
-    while (VM.getVM() == null) {
-      try {
-        Thread.sleep(100);
-      } catch (InterruptedException e) { }
-    }
-    send(ProgramInfoResponse.create(VM.getArguments()));
+    send(ProgramInfoResponse.create(webDebugger.vm.getArguments()));
   }
 
   public void registerOrUpdate(final LineBreakpoint bp) {

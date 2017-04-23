@@ -1,5 +1,7 @@
 package som.interpreter.actors;
 
+import java.util.concurrent.ForkJoinPool;
+
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
@@ -20,6 +22,12 @@ public abstract class SchedulePromiseHandlerNode extends Node {
     return WrapReferenceNodeGen.create();
   }
 
+  private final ForkJoinPool actorPool;
+
+  protected SchedulePromiseHandlerNode(final ForkJoinPool actorPool) {
+    this.actorPool = actorPool;
+  }
+
   public abstract void execute(SPromise promise, PromiseMessage msg, Actor current);
 
   @Specialization
@@ -30,7 +38,7 @@ public abstract class SchedulePromiseHandlerNode extends Node {
 
     msg.args[PromiseMessage.PROMISE_VALUE_IDX] = wrapper.execute(
         promise.getValueUnsync(), msg.originalSender, current);
-    msg.originalSender.send(msg);
+    msg.originalSender.send(msg, actorPool);
   }
 
   @Specialization
@@ -67,6 +75,6 @@ public abstract class SchedulePromiseHandlerNode extends Node {
     msg.target      = finalTarget; // for sends to far references, we need to adjust the target
     msg.finalSender = current;
 
-    finalTarget.send(msg);
+    finalTarget.send(msg, actorPool);
   }
 }

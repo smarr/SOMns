@@ -12,9 +12,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
-import som.interpreter.actors.Actor.UncaughtExceptions;
 import som.interpreter.actors.SuspendExecutionNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -68,7 +68,7 @@ public abstract class ChannelPrimitives {
     return activeProcesses;
   }
 
-  private static final class ProcessThreadFactory implements ForkJoinWorkerThreadFactory {
+  public static final class ProcessThreadFactory implements ForkJoinWorkerThreadFactory {
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
       return new ProcessThread(pool);
@@ -165,9 +165,6 @@ public abstract class ChannelPrimitives {
     @Override
     public long getId() { return processId; }
   }
-
-  private static final ForkJoinPool processesPool = new ForkJoinPool(
-      VmSettings.NUM_THREADS, new ProcessThreadFactory(), new UncaughtExceptions(), true);
 
   @Primitive(primitive = "procOut:")
   @GenerateNodeFactory

@@ -1,5 +1,7 @@
 package som.interpreter.actors;
 
+import java.util.concurrent.ForkJoinPool;
+
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
@@ -14,18 +16,21 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 
 @Instrumentable(factory = AbstractPromiseResolutionNodeWrapper.class)
 public abstract class AbstractPromiseResolutionNode extends TernaryExpressionNode {
+  private final ForkJoinPool actorPool;
 
   @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
   @Child protected UnaryExpressionNode haltNode;
 
-  protected AbstractPromiseResolutionNode(final boolean eagWrap, final SourceSection source) {
+  protected AbstractPromiseResolutionNode(final boolean eagWrap, final SourceSection source, final ForkJoinPool actorPool) {
     super(eagWrap, source);
+    this.actorPool = actorPool;
     haltNode = insert(SuspendExecutionNodeGen.create(false, source, 2, null));
     VM.insertInstrumentationWrapper(haltNode);
   }
 
   protected AbstractPromiseResolutionNode(final AbstractPromiseResolutionNode node) {
     super(node);
+    this.actorPool = node.actorPool;
     haltNode = insert(SuspendExecutionNodeGen.create(false, node.getSourceSection(), 2, null));
     VM.insertInstrumentationWrapper(haltNode);
   }
@@ -86,16 +91,17 @@ public abstract class AbstractPromiseResolutionNode extends TernaryExpressionNod
     SPromise promise = resolver.getPromise();
     Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-    resolve(type, wrapper, promise, result, current,
+    resolve(type, wrapper, promise, result, current, actorPool,
         isBreakpointOnPromiseResolution);
   }
 
   public static void resolve(final Resolution type,
       final WrapReferenceNode wrapper,
       final SPromise promise, final Object result, final Actor current,
+      final ForkJoinPool actorPool,
       final boolean isBreakpointOnPromiseResolution) {
     Object wrapped = wrapper.execute(result, promise.owner, current);
     SResolver.resolveAndTriggerListenersUnsynced(type, result, wrapped, promise,
-        current, isBreakpointOnPromiseResolution);
+        current, actorPool, isBreakpointOnPromiseResolution);
   }
 }
