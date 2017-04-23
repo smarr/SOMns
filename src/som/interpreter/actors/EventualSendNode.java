@@ -47,7 +47,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     super(source);
     this.arguments = arguments;
     this.send = SendNodeGen.create(selector, createArgWrapper(numArgs),
-        createOnReceiveCallTarget(selector, numArgs, source, lang),
+        createOnReceiveCallTarget(selector, source, lang),
         sendOperator, lang.getVM());
   }
 
@@ -65,7 +65,7 @@ public class EventualSendNode extends ExprWithTagsNode {
   }
 
   private static RootCallTarget createOnReceiveCallTarget(final SSymbol selector,
-      final int numArgs, final SourceSection source, final SomLanguage lang) {
+      final SourceSection source, final SomLanguage lang) {
 
     AbstractMessageSendNode invoke = MessageSendNode.createGeneric(selector, null, source);
     ReceivedMessage receivedMsg = new ReceivedMessage(invoke, selector, lang);
