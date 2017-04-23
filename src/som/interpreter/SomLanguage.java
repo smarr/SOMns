@@ -197,10 +197,4 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   protected boolean isObjectOfLanguage(final Object object) {
     throw new NotYetImplementedException();
   }
-
-  @Override
-  protected Object evalInContext(final Source source, final Node node,
-      final MaterializedFrame mFrame) throws IOException {
-    throw new NotYetImplementedException();
-  }
 }
