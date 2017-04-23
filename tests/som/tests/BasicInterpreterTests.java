@@ -34,8 +34,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
+import com.oracle.truffle.api.vm.PolyglotEngine.Value;
 
 import som.VM;
 import som.interpreter.SomLanguage;
@@ -91,7 +93,7 @@ public class BasicInterpreterTests {
         {"Arrays", "testArrayCreation", "Array", Object.class, null },
         {"Arrays", "testEmptyToInts", 3, Long.class, null },
         {"Arrays", "testPutAllInt",   5, Long.class, null },
-        {"Arrays", "testPutAllNil",   "Nil", Object.class, null },
+        {"Arrays", "testPutAllNil",   null, Object.class, null },
         {"Arrays", "testNewWithAll",   1, Long.class, null },
 
         {"BlockInlining", "testNoInlining",                           1, Long.class, null },
@@ -215,6 +217,11 @@ public class BasicInterpreterTests {
     }
 
     if (resultType == Object.class) {
+      // The Truffle Interop returns `a Nil` as `null`, but wrapped
+      // the following test is a little general, but 'good enough' for now
+      if (expectedResult == null && actualResult instanceof TruffleObject) {
+        return;
+      }
       String objClassName = Types.getClassOf(actualResult).getName().getString();
       assertEquals(expectedResult, objClassName);
       return;
@@ -224,21 +231,31 @@ public class BasicInterpreterTests {
 
   @Test
   public void testBasicInterpreterBehavior() throws IOException {
-    VM vm = getInitializedVM();
+    PolyglotEngine engine = getInitializedVm();
 
-    Object actualResult = vm.execute(testSelector);
-    assertEqualsSOMValue(expectedResult, actualResult);
+    try {
+      Value actualResult = engine.eval(SomLanguage.START);
+      assertEqualsSOMValue(expectedResult, actualResult.as(Object.class));
+    } finally {
+      engine.dispose();
+      VM.resetClassReferences(true);
+    }
   }
 
   @Test
   public void testInParallel() throws InterruptedException, IOException {
     Assume.assumeTrue(ignoreForParallelExecutionReason, ignoreForParallelExecutionReason == null);
-    VM vm = getInitializedVM();
+    PolyglotEngine engine = getInitializedVm();
 
-    ParallelHelper.executeNTimesInParallel(() -> {
-      Object actualResult = vm.execute(testSelector);
-      assertEqualsSOMValue(expectedResult, actualResult);
-    });
+    try {
+      ParallelHelper.executeNTimesInParallel(() -> {
+        Value actualResult = engine.eval(SomLanguage.START);
+        assertEqualsSOMValue(expectedResult, actualResult.as(Object.class));
+      });
+    } finally {
+      engine.dispose();
+      VM.resetClassReferences(true);
+    }
   }
 
   @After
@@ -246,23 +263,20 @@ public class BasicInterpreterTests {
     VM.resetClassReferences(true);
   }
 
-  protected VM getInitializedVM() throws IOException {
-    Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OPTIONS, getVMArguments());
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
+  protected PolyglotEngine getInitializedVm() throws IOException {
+    VM vm = new VM(getVmArguments(), true);
+    Builder builder = vm.createPolyglotBuilder();
     PolyglotEngine engine = builder.build();
 
-    engine.getInstruments().values().forEach(i -> i.setEnabled(false));
-
-    // Trigger initialization of SOMns
-    assert null == engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject();
-    return VM.getVM();
+    engine.getRuntime().getInstruments().values().forEach(i -> i.setEnabled(false));
+    return engine;
   }
 
-  protected VmOptions getVMArguments() {
+  protected VmOptions getVmArguments() {
     return new VmOptions(new String[] {
         "--platform",
-        "core-lib/TestSuite/BasicInterpreterTests/" + testClass + ".som" });
+        "core-lib/TestSuite/BasicInterpreterTests/" + testClass + ".som" },
+        testSelector);
   }
 
   @Override

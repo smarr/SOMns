@@ -38,7 +38,6 @@ import som.primitives.processes.ChannelPrimitives;
 import som.primitives.processes.ChannelPrimitives.ProcessThreadFactory;
 import som.primitives.threading.TaskPrimitives.ForkJoinThreadFactor;
 import som.primitives.threading.ThreadingModule;
-import som.tests.BasicInterpreterTests;
 import som.vm.ObjectSystem;
 import som.vm.Primitives;
 import som.vm.VmOptions;
@@ -108,6 +107,13 @@ public final class VM {
 
   public SObjectWithoutFields getVmMirror() {
     return vmMirror;
+  }
+
+  /**
+   * Used in {@link som.tests.BasicInterpreterTests} to identify which basic test method to invoke.
+   */
+  public String getTestSelector() {
+    return options.testSelector;
   }
 
   public Primitives getPrimitives() {

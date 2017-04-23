@@ -26,7 +26,6 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.junit.After;
 import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -35,6 +34,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
+import com.oracle.truffle.api.vm.PolyglotEngine.Value;
 
 import som.VM;
 import som.interpreter.SomLanguage;
@@ -80,29 +80,21 @@ public class SomTests {
   public void testSomeTest() throws IOException {
     Assume.assumeTrue(ignoreReason, ignoreReason == null);
 
-    VmOptions options = new VmOptions(new String[] {
+    VM vm = new VM(new VmOptions(new String[] {
         "core-lib/TestSuite/TestRunner.som",
-        "core-lib/TestSuite/" + testName + ".som"});
+        "core-lib/TestSuite/" + testName + ".som"}), true);
 
-    Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OPTIONS, options);
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
+    Builder builder = vm.createPolyglotBuilder();
     PolyglotEngine engine = builder.build();
-    VM.setEngine(engine);
 
-    engine.getInstruments().values().forEach(i -> i.setEnabled(false));
+    engine.getRuntime().getInstruments().values().forEach(i -> i.setEnabled(false));
 
-    // Trigger initialization
-    engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject();
-    VM vm = VM.getVM();
-
-    vm.execute();
-
-    assertEquals(0, vm.lastExitCode());
-  }
-
-  @After
-  public void resetVM() {
-    VM.resetClassReferences(true);
+    try {
+      Value v = engine.eval(SomLanguage.START);
+      assertEquals(0, (int) v.as(Integer.class));
+    } finally {
+      engine.dispose();
+      VM.resetClassReferences(true);
+    }
   }
 }

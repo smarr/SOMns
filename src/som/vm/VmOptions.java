@@ -14,7 +14,12 @@ public class VmOptions {
   public String   platformFile = STANDARD_PLATFORM_FILE;
   public String   kernelFile   = STANDARD_KERNEL_FILE;
   public final Object[] args;
-  public final boolean showUsage;
+  private final boolean showUsage;
+
+  /**
+   * Used in {@link som.tests.BasicInterpreterTests} to identify which basic test method to invoke.
+   */
+  public final String testSelector;
 
   @CompilationFinal public boolean webDebuggerEnabled;
   @CompilationFinal public boolean profilingEnabled;
@@ -23,6 +28,11 @@ public class VmOptions {
   @CompilationFinal public String  coverageFile;
 
   public VmOptions(final String[] args) {
+    this(args, null);
+  }
+
+  public VmOptions(final String[] args, final String testSelector) {
+    this.testSelector = testSelector;
     this.args = processVmArguments(args);
     showUsage = args.length == 0;
     if (!VmSettings.INSTRUMENTATION &&

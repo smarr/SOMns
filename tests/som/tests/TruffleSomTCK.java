@@ -8,7 +8,6 @@ import org.junit.After;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.oracle.truffle.api.impl.FindContextNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Value;
@@ -35,21 +34,19 @@ public class TruffleSomTCK extends TruffleTCK {
 
   @Override
   protected PolyglotEngine prepareVM(final PolyglotEngine.Builder preparedBuilder) throws IOException {
-    VmOptions options = new VmOptions(new String [] {
+
+    VM vm = new VM(new VmOptions(new String [] {
         "--kernel", VmOptions.STANDARD_KERNEL_FILE,
-        "--platform", VmOptions.STANDARD_PLATFORM_FILE});
-    preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OPTIONS, options);
-    preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.AVOID_EXIT, true);
+        "--platform", VmOptions.STANDARD_PLATFORM_FILE}), true);
+    preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OBJECT, vm);
 
     InputStream in = getClass().getResourceAsStream("TruffleSomTCK.som");
     Source source = Source.newBuilder(new InputStreamReader(in)).mimeType(
         mimeType()).name("TruffleSomTCK.som").build();
     PolyglotEngine engine = preparedBuilder.build();
+
     Value tckModule = engine.eval(source);
     SClass tck = tckModule.as(SClass.class);
-
-    FindContextNode<VM> contextNode = SomLanguage.INSTANCE.createNewFindContextNode();
-    VM vm = contextNode.executeFindContext();
 
     ObjectTransitionSafepoint.INSTANCE.register();
     tck.getMixinDefinition().instantiateObject(tck, vm.getVmMirror());
