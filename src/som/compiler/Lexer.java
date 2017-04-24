@@ -164,6 +164,10 @@ public final class Lexer {
       match(Symbol.NewBlock);
     } else if (currentChar() == ']') {
       match(Symbol.EndBlock);
+    } else if (currentChar() == '{') {
+      match(Symbol.NewLiteralArray);
+    } else if (currentChar() == '}') {
+      match(Symbol.EndLiteralArray);
     } else if (currentChar() == ':') {
       if (nextChar() == '=') {
         state.incPtr(2);
