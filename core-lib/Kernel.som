@@ -592,9 +592,9 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     )
 
     public whileTrue: block = (
-      self value ifFalse: [ ^ nil ].
+      value ifFalse: [ ^ nil ].
       block value.
-      self restart
+      ^ whileTrue: block
     )
 
     (* Exception support *)
@@ -605,12 +605,6 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public ensure: aBlock = (
       ^ vmMirror exceptionDo: self ensure: aBlock
     )
-
-    (* TODO: this feels still like old legacy, it's not how it works...
-             on the other hand, seeing the #whileTrue: semantics is useful.
-             so, replacing it directly with a primitive call isn't nice either *)
-    (* Restarting *)
-    public restart = ( ^ vmMirror blockRestart: self )
   )
 
   protected class Block1 = Block ()()

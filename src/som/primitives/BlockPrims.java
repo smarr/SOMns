@@ -19,7 +19,6 @@ import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.VmSettings;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.dym.Tags.OpClosureApplication;
@@ -46,21 +45,6 @@ public abstract class BlockPrims {
 
   public static final IndirectCallNode create() {
     return Truffle.getRuntime().createIndirectCallNode();
-  }
-
-  @GenerateNodeFactory
-  @Primitive(primitive = "blockRestart:")
-  public abstract static class RestartPrim extends UnaryExpressionNode {
-    public RestartPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-
-    @Specialization
-    public SAbstractObject doSBlock(final SBlock receiver) {
-      CompilerDirectives.transferToInterpreter();
-      // TruffleSOM intrinsifies #whileTrue: and #whileFalse:
-      throw new RuntimeException("This primitive is not supported anymore! "
-          + "Something went wrong with the intrinsification of "
-          + "#whileTrue:/#whileFalse:?");
-    }
   }
 
   @GenerateNodeFactory
