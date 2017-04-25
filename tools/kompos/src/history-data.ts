@@ -6,6 +6,9 @@ import {IdMap, Activity, ActivityType, Channel,
 import {getActivityId, getActivityRectId, getChannelId, getChannelVizId,
   getActivityGroupId, getActivityGroupRectId} from "./view";
 
+// TODO: this needs to be removed, only during transition period
+import {EntityId, ActivityId} from "../tests/somns-support";
+
 const horizontalDistance = 100,
   verticalDistance = 100;
 
@@ -560,17 +563,20 @@ export class HistoryData {
       i++;
       switch (msgType) {
         case Trace.ActorCreation: {
-          i += this.readActivity(data, i, "Actor", newActivities);
+          // TODO: remove hack ActivityId
+          i += this.readActivity(data, i, <number> ActivityId.ACTOR, newActivities);
           console.assert(i === (start + TraceSize.ActorCreation + TraceSize.ActivityOrigin));
           break;
         }
         case Trace.ProcessCreation: {
-          i += this.readActivity(data, i, "Process", newActivities);
+          // TODO: remove hack ActivityId
+          i += this.readActivity(data, i, <number> ActivityId.PROCESS, newActivities);
           console.assert(i === (start + TraceSize.ProcessCreation + TraceSize.ActivityOrigin));
           break;
         }
         case Trace.TaskSpawn: {
-          i += this.readActivity(data, i, "Task", newActivities);
+          // TODO: remove hack ActivityId
+          i += this.readActivity(data, i, <number> ActivityId.TASK, newActivities);
           console.assert(i === (start + TraceSize.TaskSpawn + TraceSize.ActivityOrigin));
           break;
         }
