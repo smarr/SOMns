@@ -1,7 +1,7 @@
 /* jshint -W097 */
 "use strict";
 
-import {IdMap, Activity, ActivityType, Channel,
+import {IdMap, Activity, ActivityType, Entity,
   FullSourceCoordinate} from "./messages";
 import {getActivityId, getActivityRectId, getChannelId, getChannelVizId,
   getActivityGroupId, getActivityGroupRectId} from "./view";
@@ -152,7 +152,7 @@ class ActivityNodeImpl extends ActivityNode {
 
   public getGroupSize() { return 1; }
   public isRunning() { return this.activity.running; }
-  public getCausalMessage() { return this.activity.causalMsg; }
+  public getCreationScope() { return this.activity.creationScope; }
   public getName() { return this.activity.name; }
 
   public getDataId()       { return getActivityId(this.activity.id); }
@@ -194,10 +194,10 @@ class GroupNode extends ActivityNode {
 }
 
 export class ChannelNode extends EntityNode {
-  public readonly channel: Channel;
+  public readonly channel: Entity;
   public messages?: number[][];
 
-  constructor(channel: Channel, x: number, y: number) {
+  constructor(channel: Entity, x: number, y: number) {
     super(x, y);
     this.channel = channel;
   }
@@ -342,7 +342,7 @@ export class HistoryData {
     const createMessages = {};
     for (const i in this.activity) {
       const a = this.activity[i];
-      const msg = this.msgs[a.getCausalMessage()];
+      const msg = this.msgs[a.getCreationScope()];
       if (msg === undefined) { continue; }
 
       const creator = this.getActivityOrGroupIfAvailable(msg.target);
@@ -360,7 +360,7 @@ export class HistoryData {
     for (const i in this.channels) {
       const c = this.channels[i];
 
-      const creator = this.getActivityOrGroupIfAvailable(c.channel.creatorActivityId.toString());
+      const creator = this.getActivityOrGroupIfAvailable(c.channel.creationScope.toString());
       if (!creator) { continue; /* There is a race with activity definition. */ }
 
       const msgLink: EntityLink = {
@@ -469,7 +469,7 @@ export class HistoryData {
       id: aid,
       type:      type,
       name:      this.strings[nameId],
-      causalMsg: causalMsg,
+      creationScope: causalMsg,
       running:   true,
       origin:    this.readActivityOrigin(data, i + 18)};
     this.addActivity(actor);

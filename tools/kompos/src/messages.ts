@@ -50,21 +50,27 @@ export interface SourceMessage {
 
 export type StoppedReason = "step" | "breakpoint" | "exception" | "pause";
 
-export type ActivityType  = "Actor" | "Process" | "Thread" | "Task";
+/** The different types of active entities supported by the system. */
+export enum ActivityType {}
 
-export interface Activity {
-  id: number;
-  name: string;
-  type: ActivityType;
-  causalMsg: number;
-  running: boolean;
+/** The different kind of concurrency related entities, active, as well as
+    passive, which are supported by the system. */
+export enum EntityType {}
+
+export interface EntityProperties {
+  id:      number;
   origin?: FullSourceCoordinate;
+  creationScope: number;  /// was causal message
 }
 
-export interface Channel {
-  id: number;
-  creatorActivityId: number;
-  origin?: FullSourceCoordinate;
+export interface Entity extends EntityProperties {
+  type:    EntityType;
+}
+
+export interface Activity extends EntityProperties {
+  name:    string;
+  type:    ActivityType;
+  running: boolean;
 }
 
 export interface StoppedMessage {
