@@ -121,9 +121,9 @@ export class VmConnection {
     this.send({action: "TraceDataRequest"});
   }
 
-  public sendInitialBreakpoints(breakpoints: BreakpointData[]) {
+  public sendInitializeConnection(breakpoints: BreakpointData[]) {
     this.send({
-      action: "initialBreakpoints",
+      action: "InitializeConnection",
       breakpoints: breakpoints
     });
   }

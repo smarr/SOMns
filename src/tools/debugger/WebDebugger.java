@@ -29,7 +29,8 @@ import som.vm.ActivityThread;
 import tools.SourceCoordinate;
 import tools.TraceData;
 import tools.debugger.frontend.Suspension;
-import tools.debugger.message.InitialBreakpointsMessage;
+import tools.debugger.message.InitializationResponse;
+import tools.debugger.message.InitializeConnection;
 import tools.debugger.message.Message.IncommingMessage;
 import tools.debugger.message.Message.OutgoingMessage;
 import tools.debugger.message.ProgramInfoRequest;
@@ -195,7 +196,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   }
 
   // TODO: to be removed
-  private static final String INITIAL_BREAKPOINTS = "initialBreakpoints";
   private static final String UPDATE_BREAKPOINT   = "updateBreakpoint";
 
   public static Gson createJsonProcessor() {
@@ -206,11 +206,12 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     outMsgAF.register("ScopesResponse",      ScopesResponse.class);
     outMsgAF.register("VariablesResponse",   VariablesResponse.class);
     outMsgAF.register("ProgramInfoResponse", ProgramInfoResponse.class);
+    outMsgAF.register(InitializationResponse.class);
     outMsgAF.register(StoppedMessage.class);
 
     ClassHierarchyAdapterFactory<IncommingMessage> inMsgAF = new ClassHierarchyAdapterFactory<>(IncommingMessage.class, "action");
-    inMsgAF.register(INITIAL_BREAKPOINTS, InitialBreakpointsMessage.class);
     inMsgAF.register(UPDATE_BREAKPOINT,   UpdateBreakpoint.class);
+    inMsgAF.register(InitializeConnection.class);
     inMsgAF.register("stepInto", StepInto.class);
     inMsgAF.register("stepOver", StepOver.class);
     inMsgAF.register("return",   Return.class);

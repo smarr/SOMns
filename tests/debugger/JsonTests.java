@@ -16,7 +16,7 @@ import com.google.gson.Gson;
 import tools.SourceCoordinate;
 import tools.SourceCoordinate.FullSourceCoordinate;
 import tools.debugger.WebDebugger;
-import tools.debugger.message.InitialBreakpointsMessage;
+import tools.debugger.message.InitializeConnection;
 import tools.debugger.message.Message.IncommingMessage;
 import tools.debugger.message.UpdateBreakpoint;
 import tools.debugger.session.AsyncMessageBeforeExecutionBreakpoint;
@@ -127,11 +127,11 @@ public class JsonTests {
     assertEquals(ASYNC_MSG_RCV_BP, result);
   }
 
-  private static final String EMPTY_INITAL_BP = "{\"breakpoints\":[],\"action\":\"initialBreakpoints\"}";
+  private static final String EMPTY_INITAL_BP = "{\"breakpoints\":[],\"action\":\"InitializeConnection\"}";
 
   @Test
   public void initialBreakpointsMessageEmptySerialize() {
-    InitialBreakpointsMessage result = new InitialBreakpointsMessage(new BreakpointInfo[0]);
+    InitializeConnection result = new InitializeConnection(new BreakpointInfo[0]);
     String json = gson.toJson(result, IncommingMessage.class);
     assertEquals(EMPTY_INITAL_BP, json);
   }
@@ -139,19 +139,19 @@ public class JsonTests {
   @Test
   public void initialBreakpointsMessageEmptyDeserialize() {
     IncommingMessage result = gson.fromJson(EMPTY_INITAL_BP, IncommingMessage.class);
-    assertThat(result, new IsInstanceOf(InitialBreakpointsMessage.class));
+    assertThat(result, new IsInstanceOf(InitializeConnection.class));
     assertArrayEquals(new BreakpointInfo[0],
-        ((InitialBreakpointsMessage) result).getBreakpoints());
+        ((InitializeConnection) result).getBreakpoints());
   }
 
-  private static final String INITIAL_NON_EMPTY_BREAKPOINT_MSG = "{\"action\":\"initialBreakpoints\",\"breakpoints\":" +
+  private static final String INITIAL_NON_EMPTY_BREAKPOINT_MSG = "{\"action\":\"InitializeConnection\",\"breakpoints\":" +
       "[" + ASYNC_MSG_RCV_BP + "," + MSG_RCV_BP + "," + MSG_SND_BP + "," + LINE_BP + "]}";
 
   @Test
   public void initialBreakpointsMessageWithBreakPointsDeserialize() {
     IncommingMessage result = gson.fromJson(
         INITIAL_NON_EMPTY_BREAKPOINT_MSG, IncommingMessage.class);
-    InitialBreakpointsMessage r = (InitialBreakpointsMessage) result;
+    InitializeConnection r = (InitializeConnection) result;
     BreakpointInfo[] bps = r.getBreakpoints();
     assertThat(bps[0], new IsInstanceOf(AsyncMessageBeforeExecutionBreakpoint.class));
     assertThat(bps[1], new IsInstanceOf(MessageReceiverBreakpoint.class));

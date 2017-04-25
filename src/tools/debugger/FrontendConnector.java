@@ -27,7 +27,10 @@ import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
 import tools.TraceData;
 import tools.concurrency.ActorExecutionTrace;
+import tools.debugger.entities.ActivityType;
+import tools.debugger.entities.EntityType;
 import tools.debugger.frontend.Suspension;
+import tools.debugger.message.InitializationResponse;
 import tools.debugger.message.Message;
 import tools.debugger.message.Message.OutgoingMessage;
 import tools.debugger.message.ProgramInfoResponse;
@@ -305,6 +308,7 @@ public class FrontendConnector {
 
   public void completeConnection(final WebSocket conn) {
     clientConnected.complete(conn);
+    send(InitializationResponse.create(EntityType.values(), ActivityType.values()));
   }
 
   public void shutdown() {

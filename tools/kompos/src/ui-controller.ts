@@ -50,7 +50,7 @@ export class UiController extends Controller {
     this.view.onConnect();
     const bps = this.dbg.getEnabledBreakpoints();
     dbgLog("Send breakpoints: " + bps.length);
-    this.vmConnection.sendInitialBreakpoints(bps.map(b => b.data));
+    this.vmConnection.sendInitializeConnection(bps.map(b => b.data));
     this.vmConnection.requestProgramInfo();
   }
 

@@ -140,13 +140,23 @@ export function createSectionBreakpointData(sourceUri: string, line: number,
   return breakpoint;
 }
 
-export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
+export type Respond = InitializeConnection | UpdateBreakpoint |
   StepMessage | StackTraceRequest | ScopesRequest | VariablesRequest |
   ProgramInfoRequest | TraceDataRequest;
 
-export interface InitialBreakpointsResponds {
-  action: "initialBreakpoints";
+export interface InitializeConnection {
+  action: "InitializeConnection";
   breakpoints: BreakpointData[];
+}
+
+export interface ServerCapabilities {
+  activityTypes: ActivityType[];
+  entityTypes:   EntityType[];
+}
+
+export interface InitializationResponse {
+  type: "InitializationResponse";
+  capabilities: ServerCapabilities;
 }
 
 export interface ProgramInfoRequest {

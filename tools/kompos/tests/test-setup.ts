@@ -126,7 +126,7 @@ export class ControllerWithInitialBreakpoints extends Controller {
 
   public onConnect() {
     super.onConnect();
-    this.vmConnection.sendInitialBreakpoints(this.initialBreakpoints);
+    this.vmConnection.sendInitializeConnection(this.initialBreakpoints);
   }
 }
 
