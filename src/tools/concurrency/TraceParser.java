@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.PriorityQueue;
@@ -172,7 +173,6 @@ public final class TraceParser {
             if (!resolvedPromises.containsKey(cause)) {
               resolvedPromises.put(cause, new ArrayList<>());
             }
-            VM.println("ERROR");
 
             resolvedPromises.get(cause).add(promise);
             parseParameter(); // param
@@ -346,7 +346,7 @@ public final class TraceParser {
 
     protected ActorNode getChild(final int childNo) {
       if (!sorted) {
-        java.util.Collections.sort(children);
+        Collections.sort(children);
         sorted = true;
       }
 
