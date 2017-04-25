@@ -9,8 +9,8 @@ import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
@@ -80,7 +80,10 @@ public final class TraceParser {
     File traceFile = new File(VmSettings.TRACE_FILE + ".trace");
 
     HashMap<Long, List<Long>> unmappedActors = new HashMap<>(); // maps message to created actors
-    HashMap<Long, Queue<Long>> unmappedPromises = new HashMap<>(); // maps message to created promises
+    HashMap<Long, Long> chainedPromises = new HashMap<>();
+    HashMap<Long, List<Long>> resolvedPromises = new HashMap<>();
+    HashMap<Long, Long> promiseResolvers = new HashMap<>();
+    ArrayList<PromiseMessageRecord> records = new ArrayList<>();
 
     VM.println("Parsing Trace ...");
     parseSymbols();
@@ -100,6 +103,7 @@ public final class TraceParser {
         byte type = b.get();
 
         long cause;
+        long promise;
         switch (type) {
           case TraceData.ACTOR_CREATION:
             long id = b.getLong(); // actor id
@@ -142,28 +146,35 @@ public final class TraceParser {
             assert b.position() == start + Events.MailboxContd.size;
             break;
           case TraceData.PROMISE_CHAINED:
-            b.getLong(); // parent
-            b.getLong(); // child
+            long chainParent = b.getLong(); // parent
+            long chainChild = b.getLong(); // child
+            chainedPromises.put(chainChild, chainParent);
             assert b.position() == start + Events.PromiseChained.size;
             break;
           case TraceData.PROMISE_CREATION:
-            long pid  = b.getLong(); // promise id
+            promise  = b.getLong(); // promise id
             cause = b.getLong(); // causal message
-            if (!unmappedPromises.containsKey(cause)) {
-              unmappedPromises.put(cause, new LinkedList<>());
-            }
-            unmappedPromises.get(cause).add(pid);
             assert b.position() == start + Events.PromiseCreation.size;
             break;
           case TraceData.PROMISE_RESOLUTION:
-            b.getLong(); // promise id
-            b.getLong(); // resolving msg
+            promise = b.getLong(); // promise id
+            cause = b.getLong(); // resolving msg
+            if (!resolvedPromises.containsKey(cause)) {
+              resolvedPromises.put(cause, new ArrayList<>());
+            }
+
+            resolvedPromises.get(cause).add(promise);
             parseParameter(); // param
             assert b.position() <= start + Events.PromiseResolution.size;
             break;
           case TraceData.PROMISE_ERROR:
-            b.getLong(); // promise id
-            b.getLong(); // resolving msg
+            promise = b.getLong(); // promise id
+            cause = b.getLong(); // resolving msg
+            if (!resolvedPromises.containsKey(cause)) {
+              resolvedPromises.put(cause, new ArrayList<>());
+            }
+
+            resolvedPromises.get(cause).add(promise);
             parseParameter(); // param
             assert b.position() <= start + Events.PromiseError.size;
             break;
@@ -187,12 +198,17 @@ public final class TraceParser {
                 if (!mappedActors.containsKey(l)) {
                   mappedActors.put(l, new ActorNode(l));
                 }
-                ActorNode an = mappedActors.get(l);
-                an.mailboxNo = currentMailbox;
-                mappedActors.get(currentReceiver).addChild(an);
+                ActorNode node = mappedActors.get(l);
+                node.mailboxNo = currentMailbox;
+                mappedActors.get(currentReceiver).addChild(node);
+              }
+            } if (resolvedPromises.containsKey(currentMessage)) {
+              for (long prom : resolvedPromises.get(currentMessage)) {
+                promiseResolvers.put(prom, currentReceiver);
               }
             }
-            parseMessage(type, unmappedPromises.remove(currentMessage)); // messages
+
+            parseMessage(type, records); // messages
             break;
         }
       }
@@ -203,12 +219,27 @@ public final class TraceParser {
       throw new RuntimeException(e);
     }
 
+    for (PromiseMessageRecord pmr : records) {
+      long pid = pmr.pId;
+      while (chainedPromises.containsKey(pid)) {
+        pid = chainedPromises.get(pid);
+      }
+
+      if (!promiseResolvers.containsKey(pid)) {
+        /* Promise resolutions done by the TimerPrim aren't included in the trace file,
+           pretend they were resolved by the main actor */
+        pmr.pId = 0;
+      } else {
+        pmr.pId = promiseResolvers.get(pid);
+      }
+    }
+
     assert unmappedActors.isEmpty();
 
     VM.println("Trace with " + parsedMessages + " Messages and " + parsedActors + " Actors sucessfully parsed!");
   }
 
-  private void parseMessage(final byte type, final Queue<Long> createdPromises) {
+  private void parseMessage(final byte type, final ArrayList<PromiseMessageRecord> records) {
     long promid = 0;
     // promise msg
     if ((type & TraceData.PROMISE_BIT) > 0) {
@@ -224,9 +255,11 @@ public final class TraceParser {
     }
 
     if ((type & TraceData.PROMISE_BIT) > 0) {
-      expectedMessages.get(currentReceiver).add(new PromiseMessageRecord(sender, symbolMapping.get(sym), promid, currentMailbox, msgNo, createdPromises));
+      PromiseMessageRecord record = new PromiseMessageRecord(sender, symbolMapping.get(sym), promid, currentMailbox, msgNo);
+      records.add(record);
+      expectedMessages.get(currentReceiver).add(record);
     } else {
-      expectedMessages.get(currentReceiver).add(new MessageRecord(sender, symbolMapping.get(sym), currentMailbox, msgNo, createdPromises));
+      expectedMessages.get(currentReceiver).add(new MessageRecord(sender, symbolMapping.get(sym), currentMailbox, msgNo));
     }
 
     // timestamp
@@ -281,6 +314,7 @@ public final class TraceParser {
     final long actorId;
     int childNo;
     int mailboxNo;
+    boolean sorted = false;
     ArrayList<ActorNode> children;
 
     ActorNode(final long actorId) {
@@ -308,10 +342,14 @@ public final class TraceParser {
 
       child.childNo = children.size();
       children.add(child);
-      java.util.Collections.sort(children);
     }
 
     protected ActorNode getChild(final int childNo) {
+      if (!sorted) {
+        Collections.sort(children);
+        sorted = true;
+      }
+
       assert children != null : "Actor does not exist in trace!";
       assert children.size() > childNo : "Actor does not exist in trace!";
       return children.get(childNo);
@@ -328,15 +366,13 @@ public final class TraceParser {
     public final SSymbol symbol;
     public final int mailboxNo;
     public final int messageNo;
-    public final Queue<Long> createdPromises;
 
-    public MessageRecord(final long sender, final SSymbol symbol, final int mb, final int no, final Queue<Long> createdPromises) {
+    public MessageRecord(final long sender, final SSymbol symbol, final int mb, final int no) {
       super();
       this.sender = sender;
       this.symbol = symbol;
       this.mailboxNo = mb;
       this.messageNo = no;
-      this.createdPromises = createdPromises;
     }
 
     @Override
@@ -350,10 +386,10 @@ public final class TraceParser {
   }
 
   public static class PromiseMessageRecord extends MessageRecord{
-    public final long pId;
+    public long pId;
 
-    public PromiseMessageRecord(final long sender, final SSymbol symbol, final long pId, final int mb, final int no, final Queue<Long> createdPromises) {
-      super(sender, symbol, mb, no, createdPromises);
+    public PromiseMessageRecord(final long sender, final SSymbol symbol, final long pId, final int mb, final int no) {
+      super(sender, symbol, mb, no);
       this.pId = pId;
     }
   }

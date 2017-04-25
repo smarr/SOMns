@@ -311,7 +311,7 @@ public class TraceBuffer {
     recordMailbox(baseMessageId, mailboxNo, receiver);
     writeMessage(m, sendTS, VmSettings.MESSAGE_TIMESTAMPS ? execTS[0] : 0);
 
-    int idx = 0;
+    int idx = 1;
 
     if (moreCurrent != null) {
       Iterator<Long> it = null;

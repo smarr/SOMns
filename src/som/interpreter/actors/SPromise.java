@@ -8,12 +8,12 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.sun.istack.internal.NotNull;
 
 import som.interpreter.actors.EventualMessage.PromiseMessage;
+import som.primitives.TimerPrim;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.TracingActivityThread;
-import tools.concurrency.TracingActors.ReplayActor;
 
 
 public class SPromise extends SObjectWithClass {
@@ -107,7 +107,6 @@ public class SPromise extends SObjectWithClass {
   }
 
   public long getPromiseId() { return 0; }
-  public long getReplayPromiseId() { return 0; }
 
   public final Actor getOwner() {
     return owner;
@@ -123,6 +122,13 @@ public class SPromise extends SObjectWithClass {
     if (isCompleted()) {
       remote.value = value;
       remote.resolutionState = resolutionState;
+      if (VmSettings.REPLAY) {
+        ((SReplayPromise) remote).resolvingActor = ((SReplayPromise) this).resolvingActor;
+      }
+
+      if (VmSettings.PROMISE_RESOLUTION) {
+        ActorExecutionTrace.promiseChained(this.getPromiseId(), remote.getPromiseId());
+      }
     } else {
       addChainedPromise(remote);
     }
@@ -244,7 +250,7 @@ public class SPromise extends SObjectWithClass {
   }
 
   protected static class STracingPromise extends SPromise {
-    protected final long promiseId;
+    protected long promiseId;
 
     protected STracingPromise(final Actor owner,
         final boolean triggerPromiseResolutionBreakpoint, final boolean triggerExplicitPromiseResolverBreakpoint,
@@ -261,21 +267,21 @@ public class SPromise extends SObjectWithClass {
     }
   }
 
-  protected static final class SReplayPromise extends STracingPromise {
-    protected final long replayId;
-
+  public static final class SReplayPromise extends STracingPromise {
     protected SReplayPromise(final Actor owner,
-        final boolean triggerPromiseResolutionBreakpoint, final boolean triggerExplicitPromiseResolverBreakpoint,
+        final boolean triggerPromiseResolutionBreakpoint,
+        final boolean triggerExplicitPromiseResolverBreakpoint,
         final boolean explicitPromise) {
-      super(owner, triggerPromiseResolutionBreakpoint, triggerExplicitPromiseResolverBreakpoint, explicitPromise);
-      ReplayActor creator = (ReplayActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
-
-      assert creator.getReplayPromiseIds() != null && creator.getReplayPromiseIds().size() > 0;
-      replayId = creator.getReplayPromiseIds().remove();
+      super(owner, triggerPromiseResolutionBreakpoint,
+          triggerExplicitPromiseResolverBreakpoint, explicitPromise);
     }
 
-    @Override
-    public long getReplayPromiseId() { return replayId; }
+    protected long resolvingActor;
+
+    public long getResolvingActor() {
+      assert isCompleted();
+      return resolvingActor;
+    }
   }
 
   public static SResolver createResolver(final SPromise promise) {
@@ -369,9 +375,18 @@ public class SPromise extends SObjectWithClass {
       assert !(result instanceof SPromise);
 
       if (VmSettings.PROMISE_RESOLUTION) {
-        if (p.resolutionState == Resolution.SUCCESSFUL) {
+        if (VmSettings.REPLAY) {
+          // Promises resolved by the TimerPrim will appear as if they have been resolved by the main actor.
+          if (TimerPrim.isTimerThread(Thread.currentThread())) {
+            ((SReplayPromise) p).resolvingActor = 0;
+          } else {
+            ((SReplayPromise) p).resolvingActor = EventualMessage.getActorCurrentMessageIsExecutionOn().getId();
+          }
+        }
+
+        if (type == Resolution.SUCCESSFUL && p.resolutionState != Resolution.CHAINED) {
           ActorExecutionTrace.promiseResolution(p.getPromiseId(), result);
-        } else if (p.resolutionState == Resolution.ERRONEOUS) {
+        } else if (type == Resolution.ERRONEOUS) {
           ActorExecutionTrace.promiseError(p.getPromiseId(), result);
         }
       }
