@@ -195,33 +195,30 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     return breakpoints;
   }
 
-  // TODO: to be removed
-  private static final String UPDATE_BREAKPOINT   = "updateBreakpoint";
-
   public static Gson createJsonProcessor() {
     ClassHierarchyAdapterFactory<OutgoingMessage> outMsgAF = new ClassHierarchyAdapterFactory<>(OutgoingMessage.class, "type");
     outMsgAF.register("source",       SourceMessage.class);
-    outMsgAF.register("SymbolMessage",       SymbolMessage.class);
-    outMsgAF.register("StackTraceResponse",  StackTraceResponse.class);
-    outMsgAF.register("ScopesResponse",      ScopesResponse.class);
-    outMsgAF.register("VariablesResponse",   VariablesResponse.class);
-    outMsgAF.register("ProgramInfoResponse", ProgramInfoResponse.class);
     outMsgAF.register(InitializationResponse.class);
     outMsgAF.register(StoppedMessage.class);
+    outMsgAF.register(SymbolMessage.class);
+    outMsgAF.register(StackTraceResponse.class);
+    outMsgAF.register(ScopesResponse.class);
+    outMsgAF.register(VariablesResponse.class);
+    outMsgAF.register(ProgramInfoResponse.class);
 
     ClassHierarchyAdapterFactory<IncommingMessage> inMsgAF = new ClassHierarchyAdapterFactory<>(IncommingMessage.class, "action");
-    inMsgAF.register(UPDATE_BREAKPOINT,   UpdateBreakpoint.class);
     inMsgAF.register(InitializeConnection.class);
+    inMsgAF.register("updateBreakpoint",   UpdateBreakpoint.class);
     inMsgAF.register("stepInto", StepInto.class);
     inMsgAF.register("stepOver", StepOver.class);
     inMsgAF.register("return",   Return.class);
     inMsgAF.register("resume",   Resume.class);
     inMsgAF.register("stop",     Stop.class);
-    inMsgAF.register("StackTraceRequest", StackTraceRequest.class);
-    inMsgAF.register("ScopesRequest",     ScopesRequest.class);
-    inMsgAF.register("VariablesRequest",  VariablesRequest.class);
-    inMsgAF.register("ProgramInfoRequest", ProgramInfoRequest.class);
-    inMsgAF.register("TraceDataRequest",  TraceDataRequest.class);
+    inMsgAF.register(StackTraceRequest.class);
+    inMsgAF.register(ScopesRequest.class);
+    inMsgAF.register(VariablesRequest.class);
+    inMsgAF.register(ProgramInfoRequest.class);
+    inMsgAF.register(TraceDataRequest.class);
 
     ClassHierarchyAdapterFactory<BreakpointInfo> breakpointAF = new ClassHierarchyAdapterFactory<>(BreakpointInfo.class, "type");
     breakpointAF.register(LineBreakpoint.class);
