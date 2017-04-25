@@ -1037,7 +1037,7 @@ public class Parser {
             AccessModifier.BLOCK_METHOD, lastMethodsSourceSection);
         builder.addEmbeddedBlockMethod(blockMethod);
 
-        if (bgenc.requiresContext()) {
+        if (bgenc.requiresContext() || VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
           return new BlockNodeWithContext(blockMethod, lastMethodsSourceSection);
         } else {
           return new BlockNode(blockMethod, lastMethodsSourceSection);
