@@ -40,7 +40,7 @@ export class VmConnection {
 
     console.assert(this.traceDataSocket === null || this.traceDataSocket.readyState === WebSocket.CLOSED);
     this.traceDataSocket = new WebSocket(LOCAL_WS_URL + ":" + TRACE_PORT);
-    (<any> this.traceDataSocket).binaryType = "arraybuffer"; // workaround, typescript dosn't recognize this property
+    (<any> this.traceDataSocket).binaryType = "arraybuffer"; // workaround, typescript doesn't recognize this property
 
     const controller = this.controller;
     this.traceDataSocket.onmessage = function (e) {

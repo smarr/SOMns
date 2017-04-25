@@ -239,14 +239,14 @@ export class HistoryData {
     this.activitiesPerType[act.name].activities.push(act);
 
     const node = new ActivityNodeImpl(act,
-      false, // selfsends TODO what is this used for, maybe set to true when checking mailbox.
+      false, // self-sends TODO what is this used for, maybe set to true when checking mailbox.
       horizontalDistance + horizontalDistance * this.activitiesPerType[act.name].activities.length,
       verticalDistance * numGroups);
     this.activity[act.id.toString()] = node;
   }
 
   private addChannel(actId: number, channelId: number, section: FullSourceCoordinate) {
-    const channel = {id: channelId, creatorActivityId: actId, origin: section};
+    const channel = {id: channelId, creationScope: actId, origin: section, type: <number> EntityId.CHANNEL};
     this.channels[channelId] = new ChannelNode(
       channel, horizontalDistance * Object.keys(this.channels).length, 0);
   }

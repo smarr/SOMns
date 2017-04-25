@@ -201,7 +201,7 @@ export class SystemVisualization {
     createChannel(chG);
 
     // After rendering text, adapt rectangles
-    this.adaptRectSizeAndTextPostion();
+    this.adaptRectSizeAndTextPosition();
 
     // Enable dragging of nodes
     actG.call(forceLayout.drag);
@@ -221,7 +221,7 @@ export class SystemVisualization {
     forceLayout.stop();
   }
 
-  private adaptRectSizeAndTextPostion() {
+  private adaptRectSizeAndTextPosition() {
     this.activityNodes.selectAll("rect")
       .attr("width", function() {
         return this.parentNode.childNodes[1].getComputedTextLength() + PADDING;
