@@ -174,7 +174,7 @@ export class HandleStoppedAndGetStackTrace extends ControllerWithInitialBreakpoi
     return this.stackPs[idx - 1];
   }
 
-  public onStoppedEvent(msg: StoppedMessage) {
+  public onStoppedMessage(msg: StoppedMessage) {
     if (this.numStopped >= this.numOps) { return; }
     // don't need more than a dummy activity at the moment, just id is enough
     const activity: Activity = {id: msg.activityId,

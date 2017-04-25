@@ -82,8 +82,8 @@ export class VmConnection {
         case "source":
           ctrl.onReceivedSource(data);
           break;
-        case "StoppedEvent":
-          ctrl.onStoppedEvent(data);
+        case "StoppedMessage":
+          ctrl.onStoppedMessage(data);
           break;
         case "SymbolMessage":
           ctrl.onSymbolMessage(data);

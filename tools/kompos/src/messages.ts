@@ -68,7 +68,7 @@ export interface Channel {
 }
 
 export interface StoppedMessage {
-  type: "StoppedEvent";
+  type: "StoppedMessage";
 
   reason:            StoppedReason;
   activityId:        number;

@@ -201,12 +201,12 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   public static Gson createJsonProcessor() {
     ClassHierarchyAdapterFactory<OutgoingMessage> outMsgAF = new ClassHierarchyAdapterFactory<>(OutgoingMessage.class, "type");
     outMsgAF.register("source",       SourceMessage.class);
-    outMsgAF.register("StoppedEvent", StoppedMessage.class);
     outMsgAF.register("SymbolMessage",       SymbolMessage.class);
     outMsgAF.register("StackTraceResponse",  StackTraceResponse.class);
     outMsgAF.register("ScopesResponse",      ScopesResponse.class);
     outMsgAF.register("VariablesResponse",   VariablesResponse.class);
     outMsgAF.register("ProgramInfoResponse", ProgramInfoResponse.class);
+    outMsgAF.register(StoppedMessage.class);
 
     ClassHierarchyAdapterFactory<IncommingMessage> inMsgAF = new ClassHierarchyAdapterFactory<>(IncommingMessage.class, "action");
     inMsgAF.register(INITIAL_BREAKPOINTS, InitialBreakpointsMessage.class);

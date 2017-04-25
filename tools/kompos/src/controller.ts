@@ -19,7 +19,7 @@ export class Controller {
   public onError()   {}
 
   public onReceivedSource(_msg: SourceMessage)  {}
-  public onStoppedEvent(_msg:   StoppedMessage) {}
+  public onStoppedMessage(_msg: StoppedMessage) {}
   public onSymbolMessage(_msg:  SymbolMessage)  {}
   public onStackTrace(_msg: StackTraceResponse) {}
   public onScopes(_msg: ScopesResponse)         {}

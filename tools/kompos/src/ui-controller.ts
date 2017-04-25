@@ -125,7 +125,7 @@ export class UiController extends Controller {
     }
   }
 
-  public onStoppedEvent(msg: StoppedMessage) {
+  public onStoppedMessage(msg: StoppedMessage) {
     this.vmConnection.requestTraceData();
     this.ensureActivityPromise(msg.activityId);
     this.vmConnection.requestStackTrace(msg.activityId);
