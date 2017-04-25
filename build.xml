@@ -43,7 +43,7 @@
     </target>
     <target name="truffle" depends="check-truffle-available"
             unless="truffle.present">
-      <exec executable="git">
+      <exec executable="git" failonerror="true">
         <arg value="submodule" />
         <arg value="update" />
         <arg value="--init" />
@@ -51,14 +51,14 @@
     </target>
 
     <target name="truffle-libs" unless="skip.libs" depends="truffle">
-        <exec executable="../mx/mx" dir="${truffle.dir}">
+        <exec executable="../mx/mx" dir="${truffle.dir}" failonerror="true">
             <arg value="build"/>
             <arg value="--no-native"/>
         </exec>
     </target>
 
     <target name="ideinit">
-        <exec executable="../mx/mx" dir="${truffle.dir}">
+        <exec executable="../mx/mx" dir="${truffle.dir}" failonerror="true">
             <arg value="eclipseinit"/>
         </exec>
     </target>
@@ -107,7 +107,7 @@
     </target>
 
     <target name="kompos" description="Build Kompos">
-        <exec executable="npm" dir="${kompos.dir}">
+        <exec executable="npm" dir="${kompos.dir}" failonerror="true">
             <arg value="--quiet"/>
             <arg value="install"/>
         </exec>
