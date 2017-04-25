@@ -79,7 +79,7 @@ public final class ScopesResponse extends Response {
       long scopeId = suspension.addScope(mFrame, scope);
       scopes.add(new Scope("Locals", scopeId, false));
 
-      Object rcvr = mFrame.getArguments()[SArguments.RCVR_IDX];
+      Object rcvr = SArguments.rcvr(mFrame);
       addScopes(scopes, scope, rcvr, suspension);
     } else if (invokable instanceof ReceivedRootNode) {
       // NOOP, no scopes here
