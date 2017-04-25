@@ -53,6 +53,7 @@
     <target name="truffle-libs" unless="skip.libs" depends="truffle">
         <exec executable="../mx/mx" dir="${truffle.dir}">
             <arg value="build"/>
+            <arg value="--no-native"/>
         </exec>
     </target>
 
