@@ -42,6 +42,7 @@ import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActivityThread;
+import tools.debugger.entities.BreakpointType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
@@ -220,7 +221,8 @@ public abstract class ChannelPrimitives {
     public ReadPrim(final boolean eagerlyWrapped, final SourceSection source, final VM vm) {
       super(eagerlyWrapped, source);
       haltNode = SuspendExecutionNodeGen.create(false, sourceSection, null);
-      afterWrite = insert(Breakpoints.createOpposite(source, vm));
+      afterWrite = insert(Breakpoints.createOpposite(
+          source, vm, BreakpointType.CHANNEL_AFTER_SEND));
     }
 
     @Specialization
@@ -261,7 +263,8 @@ public abstract class ChannelPrimitives {
       super(eagerlyWrapped, source);
       isVal     = IsValue.createSubNode();
       haltNode  = SuspendExecutionNodeGen.create(false, sourceSection, null);
-      afterRead = insert(Breakpoints.createOpposite(source, vm));
+      afterRead = insert(Breakpoints.createOpposite(
+          source, vm, BreakpointType.CHANNEL_AFTER_RCV));
     }
 
     @Specialization

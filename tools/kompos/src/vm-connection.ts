@@ -100,6 +100,8 @@ export class VmConnection {
         case "ProgramInfoResponse":
           ctrl.onProgramInfo(data);
           break;
+        case "InitializationResponse":
+          ctrl.onInitializationResponse(data);
         default:
           ctrl.onUnknownMessage(data);
           break;

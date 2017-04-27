@@ -1,5 +1,5 @@
 import {IdMap, Source, SourceCoordinate, SourceMessage, TaggedSourceCoordinate,
-  Activity, getSectionId} from "./messages";
+  Activity, ServerCapabilities, getSectionId} from "./messages";
 import {Breakpoint} from "./breakpoints";
 
 export function isRelevant(sc: TaggedSourceCoordinate) {
@@ -10,6 +10,8 @@ export function isRelevant(sc: TaggedSourceCoordinate) {
 }
 
 export class Debugger {
+
+  private serverCapabilities?: ServerCapabilities;
 
   /** Current set of activities in the system. */
   private activities: Activity[];
@@ -38,6 +40,10 @@ export class Debugger {
     this.sources        = {};
     this.sections       = {};
     this.breakpoints    = {};
+  }
+
+  public setCapabilities(capabilities: ServerCapabilities) {
+    this.serverCapabilities = capabilities;
   }
 
   public getSourceId(uri: string): string {

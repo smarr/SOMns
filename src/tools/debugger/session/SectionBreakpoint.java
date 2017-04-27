@@ -1,14 +1,19 @@
 package tools.debugger.session;
 
 import tools.SourceCoordinate.FullSourceCoordinate;
+import tools.debugger.FrontendConnector;
+import tools.debugger.entities.BreakpointType;
 
 
-public abstract class SectionBreakpoint extends BreakpointInfo {
+public final class SectionBreakpoint extends BreakpointInfo {
   protected final FullSourceCoordinate coord;
+  protected final BreakpointType bpType;
 
-  public SectionBreakpoint(final boolean enabled, final FullSourceCoordinate coord) {
+  public SectionBreakpoint(final boolean enabled,
+      final FullSourceCoordinate coord, final BreakpointType type) {
     super(enabled);
-    this.coord = coord;
+    this.coord  = coord;
+    this.bpType = type;
   }
 
   /**
@@ -17,10 +22,20 @@ public abstract class SectionBreakpoint extends BreakpointInfo {
   protected SectionBreakpoint() {
     super();
     this.coord = null;
+    this.bpType  = null;
   }
 
   public FullSourceCoordinate getCoordinate() {
     return coord;
+  }
+
+  public BreakpointType getType() {
+    return bpType;
+  }
+
+  @Override
+  public void registerOrUpdate(final FrontendConnector frontend) {
+    bpType.registerOrUpdate(frontend.getBreakpoints(), this);
   }
 
   @Override

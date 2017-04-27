@@ -1,6 +1,7 @@
 import { resolve } from "path";
 import { HandleStoppedAndGetStackTrace, TestConnection, expectStack } from "./test-setup";
 import {createSectionBreakpointData} from "../src/messages";
+import {BreakpointType} from "./somns-support";
 
 const CSP_FILE = resolve("tests/pingpong-csp.som");
 const CSP_URI  = "file:" + CSP_FILE;
@@ -18,7 +19,7 @@ describe("Setting CSP Breakpoints", () => {
 
     before("Start SOMns and Connect", () => {
       const breakpoint = createSectionBreakpointData(CSP_URI, 13, 12, 4,
-        "MessageSenderBreakpoint", true);
+        BreakpointType.CHANNEL_BEFORE_RCV, true);
       conn = new TestConnection(["halt"], null, CSP_FILE);
       ctrl = new HandleStoppedAndGetStackTrace([breakpoint], conn);
     });
@@ -36,7 +37,7 @@ describe("Setting CSP Breakpoints", () => {
 
     before("Start SOMns and Connect", () => {
       const breakpoint = createSectionBreakpointData(CSP_URI, 13, 12, 4,
-        "ChannelOppositeBreakpoint", true);
+        BreakpointType.CHANNEL_AFTER_SEND, true);
       conn = new TestConnection(["halt"], null, CSP_FILE);
       ctrl = new HandleStoppedAndGetStackTrace([breakpoint], conn);
     });
@@ -53,7 +54,7 @@ describe("Setting CSP Breakpoints", () => {
   describe("Setting Before Write Breakpoint", () => {
     before("Start SOMns and Connect", () => {
       const breakpoint = createSectionBreakpointData(CSP_URI, 12, 13, 12,
-        "MessageSenderBreakpoint", true);
+        BreakpointType.CHANNEL_BEFORE_SEND, true);
       conn = new TestConnection(["halt"], null, CSP_FILE);
       ctrl = new HandleStoppedAndGetStackTrace([breakpoint], conn);
     });
@@ -71,7 +72,7 @@ describe("Setting CSP Breakpoints", () => {
 
     before("Start SOMns and Connect", () => {
       const breakpoint = createSectionBreakpointData(CSP_URI, 12, 13, 12,
-        "ChannelOppositeBreakpoint", true);
+        BreakpointType.CHANNEL_AFTER_RCV, true);
       conn = new TestConnection(["halt"], null, CSP_FILE);
       ctrl = new HandleStoppedAndGetStackTrace([breakpoint], conn);
     });

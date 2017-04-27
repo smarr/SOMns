@@ -51,16 +51,10 @@ import tools.debugger.message.TraceDataRequest;
 import tools.debugger.message.UpdateBreakpoint;
 import tools.debugger.message.VariablesRequest;
 import tools.debugger.message.VariablesResponse;
-import tools.debugger.session.AsyncMessageAfterExecutionBreakpoint;
-import tools.debugger.session.AsyncMessageBeforeExecutionBreakpoint;
 import tools.debugger.session.BreakpointInfo;
 import tools.debugger.session.Breakpoints;
-import tools.debugger.session.ChannelOppositeBreakpoint;
 import tools.debugger.session.LineBreakpoint;
-import tools.debugger.session.MessageReceiverBreakpoint;
-import tools.debugger.session.MessageSenderBreakpoint;
-import tools.debugger.session.PromiseResolutionBreakpoint;
-import tools.debugger.session.PromiseResolverBreakpoint;
+import tools.debugger.session.SectionBreakpoint;
 
 
 /**
@@ -222,13 +216,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
     ClassHierarchyAdapterFactory<BreakpointInfo> breakpointAF = new ClassHierarchyAdapterFactory<>(BreakpointInfo.class, "type");
     breakpointAF.register(LineBreakpoint.class);
-    breakpointAF.register(MessageSenderBreakpoint.class);
-    breakpointAF.register(MessageReceiverBreakpoint.class);
-    breakpointAF.register(AsyncMessageBeforeExecutionBreakpoint.class);
-    breakpointAF.register(AsyncMessageAfterExecutionBreakpoint.class);
-    breakpointAF.register(PromiseResolutionBreakpoint.class);
-    breakpointAF.register(PromiseResolverBreakpoint.class);
-    breakpointAF.register(ChannelOppositeBreakpoint.class);
+    breakpointAF.register(SectionBreakpoint.class);
 
     return new GsonBuilder().
         registerTypeAdapterFactory(outMsgAF).

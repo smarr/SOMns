@@ -39,7 +39,7 @@ export interface Method {
   sourceSection: SourceCoordinate;
 }
 
-export type Message = SourceMessage | ProgramInfoResponse |
+export type Message = SourceMessage | InitializationResponse | ProgramInfoResponse |
   SymbolMessage | UpdateSourceSections | StoppedMessage |
   StackTraceResponse | ScopesResponse | VariablesResponse;
 
@@ -101,12 +101,6 @@ export interface SymbolMessage {
 
 export type BreakpointData = LineBreakpointData | SectionBreakpointData;
 
-export type SectionBreakpointType = "MessageSenderBreakpoint" |
-  "MessageReceiverBreakpoint" | "AsyncMessageBeforeExecutionBreakpoint" |
-  "AsyncMessageAfterExecutionBreakpoint" |
-  "PromiseResolverBreakpoint" | "PromiseResolutionBreakpoint" |
-  "ChannelOppositeBreakpoint";
-
 export interface AbstractBreakpointData {
   enabled:   boolean;
 }
@@ -118,8 +112,9 @@ export interface LineBreakpointData extends AbstractBreakpointData {
 }
 
 export interface SectionBreakpointData extends AbstractBreakpointData {
-  type:  SectionBreakpointType;
-  coord: FullSourceCoordinate;
+  type:  "SectionBreakpoint";
+  coord: FullSourceCoordinate;  /** Source section to which breakpoint is applied. */
+  bpType: string;               /** Name of the specific breakpoint type. */
 }
 
 export function createLineBreakpointData(sourceUri: string, line: number,
@@ -132,11 +127,12 @@ export function createLineBreakpointData(sourceUri: string, line: number,
 }
 
 export function createSectionBreakpointData(sourceUri: string, line: number,
-    column: number, length: number, type: SectionBreakpointType,
+    column: number, length: number, type: string,
     enabled: boolean) {
   let breakpoint: SectionBreakpointData = {
-    type: type,
+    type: "SectionBreakpoint",
     enabled: enabled,
+    bpType: type,
     coord: {
       uri:         sourceUri,
       startLine:   line,
@@ -155,9 +151,16 @@ export interface InitializeConnection {
   breakpoints: BreakpointData[];
 }
 
+export interface BreakpointType {
+  name:         string;    /** Identifier used for communication. */
+  label:        string;    /** Label to use for display purposes. */
+  applicableTo: string[];  /** Set of source section tags, for which the breakpoint is applicable. */
+}
+
 export interface ServerCapabilities {
-  activityTypes: ActivityType[];
-  entityTypes:   EntityType[];
+  activityTypes:   ActivityType[];
+  entityTypes:     EntityType[];
+  breakpointTypes: BreakpointType[];
 }
 
 export interface InitializationResponse {

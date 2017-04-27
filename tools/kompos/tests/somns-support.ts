@@ -20,3 +20,18 @@ export enum ActivityId {
   TASK    = 6,
   THREAD  = 7
 }
+
+export namespace BreakpointType {
+  export const MSG_SENDER   = "msgSenderBP";
+  export const MSG_RECEIVER = "msgReceiverBP";
+
+  export const ASYNC_MSG_BEFORE_EXEC = "asyncMsgBeforeExecBP";
+  export const ASYNC_MSG_AFTER_EXEC  = "asyncMsgAfterExecBP";
+  export const PROMISE_RESOLVER      = "promiseResolverBP";
+  export const PROMISE_RESOLUTION    = "promiseResolutionBP";
+
+  export const CHANNEL_BEFORE_SEND = "channelBeforeSendBP";
+  export const CHANNEL_AFTER_RCV   = "channelAfterRcvBP";
+  export const CHANNEL_BEFORE_RCV  = "channelBeforeRcvBP";
+  export const CHANNEL_AFTER_SEND  = "channelAfterSendBP";
+}

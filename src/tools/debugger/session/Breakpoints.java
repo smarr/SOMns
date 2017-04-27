@@ -21,6 +21,7 @@ import tools.SourceCoordinate;
 import tools.SourceCoordinate.FullSourceCoordinate;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.WebDebugger;
+import tools.debugger.entities.BreakpointType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.nodes.BreakpointNodeGen;
 import tools.debugger.nodes.DisabledBreakpointNode;
@@ -38,21 +39,21 @@ public class Breakpoints {
   /**
    * MessageReceiverBreakpoints, manually managed by us (instead of Truffle).
    */
-  private final Map<FullSourceCoordinate, BreakpointEnabling<MessageReceiverBreakpoint>> receiverBreakpoints;
+  private final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> receiverBreakpoints;
 
 
   /**
    * PromiseResolverBreakpoint, manually managed by us (instead of Truffle).
    */
-  private final Map<FullSourceCoordinate, BreakpointEnabling<PromiseResolverBreakpoint>> promiseResolverBreakpoints;
+  private final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> promiseResolverBreakpoints;
 
   /**
    * PromiseResolutionBreakpoint, manually managed by us (instead of Truffle).
    */
-  private final Map<FullSourceCoordinate, BreakpointEnabling<PromiseResolutionBreakpoint>> promiseResolutionBreakpoints;
+  private final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> promiseResolutionBreakpoints;
 
   /** Manually managed by us, instead of Truffle. */
-  private final Map<FullSourceCoordinate, BreakpointEnabling<ChannelOppositeBreakpoint>> channelOppositeBreakpoint;
+  private final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> channelOppositeBreakpoint;
 
   public Breakpoints(final Debugger debugger, final WebDebugger webDebugger) {
     this.truffleBreakpoints           = new HashMap<>();
@@ -88,33 +89,33 @@ public class Breakpoints {
     bp.setEnabled(bId.isEnabled());
   }
 
-  public synchronized void addOrUpdate(final MessageSenderBreakpoint bId) {
+  public synchronized void addOrUpdateMessageSender(final SectionBreakpoint bId) {
     saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class, null);
   }
 
-  public synchronized void addOrUpdate(final AsyncMessageBeforeExecutionBreakpoint bId) {
+  public synchronized void addOrUpdateMessageReceiver(final SectionBreakpoint bId) {
+    saveBreakpoint(bId, receiverBreakpoints);
+  }
+
+  public synchronized void addOrUpdateAsyncBefore(final SectionBreakpoint bId) {
     Breakpoint bp = saveTruffleBasedBreakpoints(bId, RootTag.class, null);
     bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
   }
 
-  public synchronized void addOrUpdate(final AsyncMessageAfterExecutionBreakpoint bId) {
+  public synchronized void addOrUpdateAsyncAfter(final SectionBreakpoint bId) {
     Breakpoint bp = saveTruffleBasedBreakpoints(bId, RootTag.class, SteppingLocation.AFTER_STATEMENT);
     bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
   }
 
-  public synchronized void addOrUpdate(final MessageReceiverBreakpoint bId) {
-    saveBreakpoint(bId, receiverBreakpoints);
-  }
-
-  public synchronized void addOrUpdate(final PromiseResolverBreakpoint bId) {
+  public synchronized void addOrUpdatePromiseResolver(final SectionBreakpoint bId) {
     saveBreakpoint(bId, promiseResolverBreakpoints);
   }
 
-  public synchronized void addOrUpdate(final PromiseResolutionBreakpoint bId) {
+  public synchronized void addOrUpdatePromiseResolution(final SectionBreakpoint bId) {
     saveBreakpoint(bId, promiseResolutionBreakpoints);
   }
 
-  public synchronized void addOrUpdate(final ChannelOppositeBreakpoint bId) {
+  public synchronized void addOrUpdateChannelOpposite(final SectionBreakpoint bId) {
     saveBreakpoint(bId, channelOppositeBreakpoint);
   }
 
@@ -135,12 +136,12 @@ public class Breakpoints {
     return bp;
   }
 
-  private <T extends SectionBreakpoint> void saveBreakpoint(final T bId,
-      final Map<FullSourceCoordinate, BreakpointEnabling<T>> breakpoints) {
+  private void saveBreakpoint(final SectionBreakpoint bId,
+      final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> breakpoints) {
     FullSourceCoordinate coord = bId.getCoordinate();
-    BreakpointEnabling<T> existingBP = breakpoints.get(coord);
+    BreakpointEnabling<SectionBreakpoint> existingBP = breakpoints.get(coord);
     if (existingBP == null) {
-      existingBP = new BreakpointEnabling<T>(bId);
+      existingBP = new BreakpointEnabling<SectionBreakpoint>(bId);
       breakpoints.put(coord, existingBP);
     } else {
       existingBP.setEnabled(bId.isEnabled());
@@ -159,28 +160,31 @@ public class Breakpoints {
     }
   }
 
- public synchronized BreakpointEnabling<MessageReceiverBreakpoint> getReceiverBreakpoint(
+ public synchronized BreakpointEnabling<SectionBreakpoint> getReceiverBreakpoint(
       final FullSourceCoordinate section) {
     return receiverBreakpoints.computeIfAbsent(section,
-        ss -> new BreakpointEnabling<>(new MessageReceiverBreakpoint(false, section)));
+        ss -> new BreakpointEnabling<SectionBreakpoint>(
+            new SectionBreakpoint(false, section, BreakpointType.MSG_RECEIVER)));
   }
 
-  public synchronized BreakpointEnabling<PromiseResolverBreakpoint> getPromiseResolverBreakpoint(
+  public synchronized BreakpointEnabling<SectionBreakpoint> getPromiseResolverBreakpoint(
       final FullSourceCoordinate section) {
     return promiseResolverBreakpoints.computeIfAbsent(section,
-        ss -> new BreakpointEnabling<>(new PromiseResolverBreakpoint(false, section)));
+        ss -> new BreakpointEnabling<>(
+            new SectionBreakpoint(false, section, BreakpointType.PROMISE_RESOLVER)));
   }
 
-  public synchronized BreakpointEnabling<PromiseResolutionBreakpoint> getPromiseResolutionBreakpoint(
+  public synchronized BreakpointEnabling<SectionBreakpoint> getPromiseResolutionBreakpoint(
       final FullSourceCoordinate section) {
     return promiseResolutionBreakpoints.computeIfAbsent(section,
-        ss -> new BreakpointEnabling<>(new PromiseResolutionBreakpoint(false, section)));
+        ss -> new BreakpointEnabling<>(
+            new SectionBreakpoint(false, section, BreakpointType.PROMISE_RESOLUTION)));
   }
 
-  public synchronized BreakpointEnabling<ChannelOppositeBreakpoint> getOppositeBreakpoint(
-      final FullSourceCoordinate section) {
+  public synchronized BreakpointEnabling<SectionBreakpoint> getOppositeBreakpoint(
+      final FullSourceCoordinate section, final BreakpointType type) {
     return channelOppositeBreakpoint.computeIfAbsent(section,
-        ss -> new BreakpointEnabling<>(new ChannelOppositeBreakpoint(false, section)));
+        ss -> new BreakpointEnabling<>(new SectionBreakpoint(false, section, type)));
   }
 
   public static AbstractBreakpointNode createPromiseResolver(final SourceSection source, final VM vm) {
@@ -210,10 +214,11 @@ public class Breakpoints {
     }
   }
 
-  public static AbstractBreakpointNode createOpposite(final SourceSection source, final VM vm) {
+  public static AbstractBreakpointNode createOpposite(final SourceSection source,
+      final VM vm, final BreakpointType type) {
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
       FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
-      return BreakpointNodeGen.create(vm.getBreakpoints().getOppositeBreakpoint(sourceCoord));
+      return BreakpointNodeGen.create(vm.getBreakpoints().getOppositeBreakpoint(sourceCoord, type));
     } else {
       return new DisabledBreakpointNode();
     }

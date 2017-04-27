@@ -1,4 +1,4 @@
-import { SourceMessage, StoppedMessage, SymbolMessage, SectionBreakpointType,
+import { SourceMessage, StoppedMessage, SymbolMessage, InitializationResponse,
   StackTraceResponse, ScopesResponse, ProgramInfoResponse, Activity,
   VariablesResponse } from "./messages";
 import { VmConnection } from "./vm-connection";
@@ -24,12 +24,11 @@ export class Controller {
   public onStackTrace(_msg: StackTraceResponse) {}
   public onScopes(_msg: ScopesResponse)         {}
   public onProgramInfo(_msg: ProgramInfoResponse) {}
+  public onInitializationResponse(_msg: InitializationResponse) {}
   public onVariables(_msg: VariablesResponse)   {}
   public onUnknownMessage(_msg: any) {}
 
   public onTracingData(_data: DataView) {}
 
-  public onToggleSendBreakpoint(_sectionId: string, _type: SectionBreakpointType) {}
-  public onToggleMethodAsyncRcvBreakpoint(_sectionId: string, _type: SectionBreakpointType) {}
-  public onTogglePromiseBreakpoint(_sectionId: string, _type: SectionBreakpointType) {}
+  public onToggleSectionBreakpoint(_sectionId: string, _type: string) {}
 }
