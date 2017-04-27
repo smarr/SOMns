@@ -34,7 +34,6 @@ enum Trace {
   TaskSpawn         = 13,
   TaskJoin          = 14,
   ImplThread        = 21,
-  PromiseMessage    =  9,
 
   PromiseResolution = 33,
   PromiseChained    = 34,
@@ -58,7 +57,6 @@ enum TraceSize {
   MailboxContd      = 25,
 
   ActivityOrigin    =  9,
-  PromiseMessage    =  7,
 
   ProcessCreation   = 19,
   ProcessCompletion =  9,
@@ -624,10 +622,6 @@ export class HistoryData {
           this.currentReceiver = this.readLong(data, i + 12); // receiver id
           i += 24;
           console.assert(i === (start + TraceSize.MailboxContd));
-          break;
-        case Trace.PromiseMessage:
-          i += 6;
-          console.assert(i === (start + TraceSize.PromiseMessage));
           break;
         case Trace.ProcessCompletion:
           i += 8;
