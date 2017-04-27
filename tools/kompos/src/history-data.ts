@@ -24,26 +24,28 @@ const TIMESTAMP_BIT = 0x20;
 const PARAMETER_BIT = 0x10;
 
 enum Trace {
-  ActorCreation     =  1,
-  PromiseCreation   =  2,
-  PromiseResolution =  3,
-  PromiseChained    =  4,
-  Mailbox           =  5,
-  MailboxContd      =  7,
-  ActivityOrigin    =  8,
+  ProcessCreation   =  1,
+  ProcessCompletion =  2,
+  ChannelCreation   =  3,
+  ActorCreation     =  7,
+
+  PromiseCreation   =  9,
+
+  TaskSpawn         = 13,
+  TaskJoin          = 14,
   ImplThread        = 21,
   PromiseMessage    =  9,
 
-  ProcessCreation   = 10,
-  ProcessCompletion = 11,
+  PromiseResolution = 33,
+  PromiseChained    = 34,
+  PromiseError      = 35,
 
-  TaskSpawn         = 12,
-  TaskJoin          = 13,
+  Mailbox           = 40,
+  MailboxContd      = 41,
 
-  PromiseError      = 14,
+  ActivityOrigin    = 50,
 
-  ChannelCreation   = 15,
-  ChannelMessage    = 16
+  ChannelMessage    = 60
 }
 
 enum TraceSize {
@@ -52,7 +54,7 @@ enum TraceSize {
   PromiseResolution = 28,
   PromiseChained    = 17,
   Mailbox           = 21,
-  Thread            = 17,
+  ImplThread        = 17,
   MailboxContd      = 25,
 
   ActivityOrigin    =  9,

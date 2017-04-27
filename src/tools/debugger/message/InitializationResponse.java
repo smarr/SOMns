@@ -16,10 +16,14 @@ public final class InitializationResponse extends OutgoingMessage {
 
   private static final class Type {
     private final byte id;
+    private final byte creation;
+    private final byte completion;
     private final String label;
 
-    private Type(final byte id, final String label) {
+    private Type(final byte id, final String label, final byte creation, final byte completion) {
       this.id    = id;
+      this.completion = completion;
+      this.creation = creation;
       this.label = label;
     }
   }
@@ -41,7 +45,6 @@ public final class InitializationResponse extends OutgoingMessage {
     }
   }
 
-
   private static final class ServerCapabilities {
     private final Type[] activityTypes;
     private final Type[] entityTypes;
@@ -56,13 +59,13 @@ public final class InitializationResponse extends OutgoingMessage {
 
       int i = 0;
       for (EntityType e : supportedEntities) {
-        entityTypes[i] = new Type(e.id, e.name);
+        entityTypes[i] = new Type(e.id, e.name, e.creation, e.completion);
         i += 1;
       }
 
       i = 0;
       for (ActivityType e : supportedActivities) {
-        activityTypes[i] = new Type(e.getId(), e.getName());
+        activityTypes[i] = new Type(e.getId(), e.getName(), e.getCreation(), e.getCompletion());
         i += 1;
       }
 
