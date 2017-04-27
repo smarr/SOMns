@@ -360,6 +360,7 @@ export class View {
 
   public setCapabilities(capabilities: ServerCapabilities) {
     this.serverCapabilities = capabilities;
+    this.systemViz.setCapabilities(capabilities);
   }
 
   public displaySystemView() {

@@ -7,11 +7,12 @@ export enum EntityId {
   CHANNEL = 2,
   MESSAGE = 3,
   ACTOR   = 4,
-  TURN    = 5,
-  TASK    = 6,
-  THREAD  = 7,
-  LOCK    = 8,
-  TRANSACTION = 9
+  PROMISE = 5,
+  TURN    = 6,
+  TASK    = 7,
+  THREAD  = 8,
+  LOCK    = 9,
+  TRANSACTION = 10
 }
 
 export enum ActivityId {

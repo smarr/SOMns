@@ -2,12 +2,12 @@
 "use strict";
 
 import {IdMap, Activity, ActivityType, Entity,
-  FullSourceCoordinate} from "./messages";
+  FullSourceCoordinate, ServerCapabilities} from "./messages";
 import {getActivityId, getActivityRectId, getChannelId, getChannelVizId,
   getActivityGroupId, getActivityGroupRectId} from "./view";
 
 // TODO: this needs to be removed, only during transition period
-import {EntityId, ActivityId} from "../tests/somns-support";
+import {EntityId} from "../tests/somns-support";
 
 const horizontalDistance = 100,
   verticalDistance = 100;
@@ -24,14 +24,11 @@ const TIMESTAMP_BIT = 0x20;
 const PARAMETER_BIT = 0x10;
 
 enum Trace {
-  ProcessCreation   =  1,
   ProcessCompletion =  2,
   ChannelCreation   =  3,
-  ActorCreation     =  7,
 
   PromiseCreation   =  9,
 
-  TaskSpawn         = 13,
   TaskJoin          = 14,
   ImplThread        = 21,
 
@@ -48,7 +45,8 @@ enum Trace {
 }
 
 enum TraceSize {
-  ActorCreation     = 19,
+  ActivityCreation  = 19,
+
   PromiseCreation   = 17,
   PromiseResolution = 28,
   PromiseChained    = 17,
@@ -58,10 +56,8 @@ enum TraceSize {
 
   ActivityOrigin    =  9,
 
-  ProcessCreation   = 19,
   ProcessCompletion =  9,
 
-  TaskSpawn         = 19,
   TaskJoin          = 11,
 
   PromiseError      = 28,
@@ -230,8 +226,27 @@ export class HistoryData {
 
   private currentReceiver = -1;
   private currentMsgId = undefined;
+  private serverCapabilities: ServerCapabilities;
+  private parseTable;
 
   constructor() {
+  }
+
+  private createTraceParserTable(capabilities: ServerCapabilities) {
+    const readAct = (data: DataView, i: number, type: number, newActivities: Activity[]) => {
+      return this.readActivity(data, i, type, newActivities);
+    };
+
+    const parseTable = [];
+    for (const actT of capabilities.activityTypes) {
+      parseTable[actT.creation] = readAct;
+    }
+    return parseTable;
+  }
+
+  public setCapabilities(capabilities: ServerCapabilities) {
+    this.serverCapabilities = capabilities;
+    this.parseTable = this.createTraceParserTable(capabilities);
   }
 
   private addActivity(act: Activity) {
@@ -465,16 +480,16 @@ export class HistoryData {
     const aid = this.readLong(data, i);
     const causalMsg = this.readLong(data, i + 8);
     const nameId: number = data.getUint16(i + 16);
-    const actor: Activity = {
+    const activity: Activity = {
       id: aid,
       type:      type,
       name:      this.strings[nameId],
       creationScope: causalMsg,
       running:   true,
       origin:    this.readActivityOrigin(data, i + 18)};
-    this.addActivity(actor);
-    newActivities.push(actor);
-    return TraceSize.ActorCreation + TraceSize.ActivityOrigin - 1; // type tag of ActorCreation already covered
+    this.addActivity(activity);
+    newActivities.push(activity);
+    return TraceSize.ActivityCreation + TraceSize.ActivityOrigin - 1; // type tag of ActivityCreation already covered
   }
 
   private readChannelCreation(data: DataView, i: number) {
@@ -561,25 +576,11 @@ export class HistoryData {
       prevMessage = msgType;
       msgType = data.getUint8(i);
       i++;
-      switch (msgType) {
-        case Trace.ActorCreation: {
-          // TODO: remove hack ActivityId
-          i += this.readActivity(data, i, <number> ActivityId.ACTOR, newActivities);
-          console.assert(i === (start + TraceSize.ActorCreation + TraceSize.ActivityOrigin));
-          break;
-        }
-        case Trace.ProcessCreation: {
-          // TODO: remove hack ActivityId
-          i += this.readActivity(data, i, <number> ActivityId.PROCESS, newActivities);
-          console.assert(i === (start + TraceSize.ProcessCreation + TraceSize.ActivityOrigin));
-          break;
-        }
-        case Trace.TaskSpawn: {
-          // TODO: remove hack ActivityId
-          i += this.readActivity(data, i, <number> ActivityId.TASK, newActivities);
-          console.assert(i === (start + TraceSize.TaskSpawn + TraceSize.ActivityOrigin));
-          break;
-        }
+
+      if (this.parseTable[msgType]) {
+        i += this.parseTable[msgType](data, i, msgType, newActivities);
+      } else {
+        switch (msgType) {
         case Trace.ChannelCreation: {
           i += this.readChannelCreation(data, i);
           console.assert(i === (start + TraceSize.ChannelCreation));
@@ -637,6 +638,7 @@ export class HistoryData {
             "msgType was expected to be > 0x80, but was " + msgType + ". Previous msg was: " + prevMessage);
           i = this.readMessage(data, msgType, i); // doesn't return an offset, but the absolute index
           break;
+      }
       }
     }
     return newActivities;

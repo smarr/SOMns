@@ -1,7 +1,7 @@
 /* jshint -W097 */
 "use strict";
 
-import {SymbolMessage, Activity, ActivityType} from "./messages";
+import {SymbolMessage, Activity, ActivityType, ServerCapabilities} from "./messages";
 import * as d3 from "d3";
 import {HistoryData, ActivityNode, EntityLink,
   ChannelNode} from "./history-data";
@@ -21,7 +21,7 @@ const TANGO_SCHEME = [
   ["#270000", "#600000", "#a40000", "#cc0000", "#ef2929", "#f78787", "#ffcccc"]];
 
 function getTangoColors(actType: ActivityType) {
-  return TANGO_SCHEME[actType];
+  return TANGO_SCHEME[actType % 8];
 }
 
 function getLightTangoColor(actType: ActivityType, actId: number) {
@@ -41,13 +41,22 @@ export class SystemVisualization {
   private zoomScale = 1;
   private zoomTransl = [0, 0];
 
+  private serverCapabilities?: ServerCapabilities;
 
   constructor() {
     this.data = new HistoryData();
   }
 
+  public setCapabilities(capabilities: ServerCapabilities) {
+    this.serverCapabilities = capabilities;
+    this.data.setCapabilities(capabilities);
+  }
+
   public reset() {
     this.data = new HistoryData();
+    if (this.serverCapabilities) {
+      this.data.setCapabilities(this.serverCapabilities);
+    }
   }
 
   public updateStringData(msg: SymbolMessage) {

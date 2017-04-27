@@ -157,9 +157,16 @@ export interface BreakpointType {
   applicableTo: string[];  /** Set of source section tags, for which the breakpoint is applicable. */
 }
 
+export interface EntityDef {
+  id:         number;
+  creation:   number;
+  completion: number;
+  label:      string;
+}
+
 export interface ServerCapabilities {
-  activityTypes:   ActivityType[];
-  entityTypes:     EntityType[];
+  activityTypes:   EntityDef[];
+  entityTypes:     EntityDef[];
   breakpointTypes: BreakpointType[];
 }
 
