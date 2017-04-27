@@ -346,24 +346,6 @@ function annotateArray(arr: any[][], sourceId: string, activityId: number,
   }
 }
 
-function enableMethodBreakpointHover(fileNode) {
-  enableMenu(fileNode, ".MethodDeclaration", "method-breakpoints",
-    function(that) {
-      const idObj = methodDeclIdToObj(that.id);
-      return getSectionId(idObj.sourceId, idObj);
-    });
-
-  $(document).on("click", ".bp-async-rcv", function (e) {
-    e.stopImmediatePropagation();
-    ctrl.onToggleMethodAsyncRcvBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "AsyncMessageBeforeExecutionBreakpoint");
-  });
-
-  $(document).on("click", ".bp-async-rcv-after", function (e) {
-    e.stopImmediatePropagation();
-    ctrl.onToggleMethodAsyncRcvBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "AsyncMessageAfterExecutionBreakpoint");
-  });
-}
-
 /**
  * The HTML View, which realizes all access to the DOM for displaying
  * data and reacting to events.
@@ -505,7 +487,6 @@ export class View {
     $(fileNode).addClass(sourceId);
     fileNode.innerHTML = arrayToString(annotationArray);
 
-    enableMethodBreakpointHover($(fileNode));
     this.enableBreakpointMenuItems($(fileNode));
 
     const sourceContainer = $("#" + actId + " .activity-source");
@@ -559,7 +540,7 @@ export class View {
     });
   }
 
-  private enableBreakpointMenu(fileNode, tag: string, menu: Element, getId = null) {
+  private enableBreakpointMenu(fileNode, tag: string, menu: Element) {
     const sourceSection = fileNode.find("." + tag);
     sourceSection.attr({
       "data-toggle"    : "popover",
@@ -570,7 +551,16 @@ export class View {
       "data-placement" : "top"
     });
 
-    if (getId === null) {
+    let getId;
+    // NOTE: For MethodDeclaration breakpoints, we have special handling,
+    // but that's arguably a structural thing, and not really a concurrency issue
+    // so, the debugger having the notion of a MethodDeclaration seems to be ok
+    if (tag === "MethodDeclaration") {
+      getId = function(that) {
+        const idObj = methodDeclIdToObj(that.id);
+        return getSectionId(idObj.sourceId, idObj);
+      };
+    } else {
       getId = function (that) {
         return getSectionIdFrom(that.id);
       };
