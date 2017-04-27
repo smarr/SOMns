@@ -65,7 +65,7 @@ public class TraceBuffer {
   }
 
   boolean swapStorage() {
-    if (storage == null || storage.position() <= Events.Thread.size) {
+    if (storage == null || storage.position() <= Events.ImplThread.size) {
       return false;
     }
     ActorExecutionTrace.returnBuffer(storage);
@@ -77,11 +77,11 @@ public class TraceBuffer {
     final int start = storage.position();
     assert start == 0;
 
-    storage.put(Events.Thread.id);
+    storage.put(Events.ImplThread.id);
     storage.putLong(threadId);
     storage.putLong(System.currentTimeMillis());
 
-    assert storage.position() == start + Events.Thread.size;
+    assert storage.position() == start + Events.ImplThread.size;
   }
 
   protected boolean ensureSufficientSpace(final int requiredSpace) {

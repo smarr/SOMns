@@ -29,9 +29,9 @@ enum Trace {
   PromiseResolution =  3,
   PromiseChained    =  4,
   Mailbox           =  5,
-  Thread            =  6,
   MailboxContd      =  7,
   ActivityOrigin    =  8,
+  ImplThread        = 21,
   PromiseMessage    =  9,
 
   ProcessCreation   = 10,
@@ -613,9 +613,9 @@ export class HistoryData {
           i += 20;
           console.assert(i === (start + TraceSize.Mailbox));
           break;
-        case Trace.Thread:
+        case Trace.ImplThread:
           i += 16;
-          console.assert(i === (start + TraceSize.Thread));
+          console.assert(i === (start + TraceSize.ImplThread));
           break;
         case Trace.MailboxContd:
           this.currentMsgId = this.readLong(data, i);

@@ -222,10 +222,10 @@ public class ActorExecutionTrace {
 
     // at the beginning of buffer, allows to track what was created/executed
     // on which thread, really cheap solution, timestamp?
-    Thread(TraceData.THREAD, 17),
+    ImplThread(TraceData.IMPL_THREAD, 17),
 
     // for memory events another buffer is needed
-    // (the gc callback is on Thread[Service Thread,9,system])
+    // (the gc callback is on ImplThread[Service ImplThread,9,system])
     MailboxContd(TraceData.MAILBOX_CONTD,     25),
 
     ProcessCreation(TraceData.PROCESS_CREATION,     19),
@@ -434,7 +434,7 @@ public class ActorExecutionTrace {
               continue;
             }
 
-            if (b.remaining() <= Events.Thread.size) {
+            if (b.remaining() <= Events.ImplThread.size) {
               // Ignore buffers that only contain the thread index
               b.clear();
               ActorExecutionTrace.emptyBuffers.add(b);
@@ -490,7 +490,7 @@ public class ActorExecutionTrace {
             ActorExecutionTrace.symbolsToWrite.clear();
           }
 
-          if (b.remaining() > Events.Thread.size && front != null) {
+          if (b.remaining() > Events.ImplThread.size && front != null) {
             front.sendTracingData(b);
           }
 

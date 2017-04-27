@@ -13,13 +13,13 @@ public class TraceData {
   public static final byte PROMISE_RESOLUTION = 3;
   public static final byte PROMISE_CHAINED    = 4;
   public static final byte MAILBOX            = 5;
-  public static final byte THREAD             = 6;
   public static final byte MAILBOX_CONTD      = 7;
 
   public static final byte ACTIVITY_ORIGIN    = 8;
 
   public static final byte PROCESS_CREATION   = 10;
   public static final byte PROCESS_COMPLETION = 11;
+  public static final byte IMPL_THREAD        = 21;
 
   public static final byte TASK_SPAWN = 12;
   public static final byte TASK_JOIN  = 13;
