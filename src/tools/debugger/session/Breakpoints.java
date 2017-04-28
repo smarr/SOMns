@@ -89,7 +89,7 @@ public class Breakpoints {
     bp.setEnabled(bId.isEnabled());
   }
 
-  public synchronized void addOrUpdateMessageSender(final SectionBreakpoint bId) {
+  public synchronized void addOrUpdateBeforeExpression(final SectionBreakpoint bId) {
     saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class, null);
   }
 

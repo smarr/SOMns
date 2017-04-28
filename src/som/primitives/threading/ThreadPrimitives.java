@@ -1,7 +1,6 @@
 package som.primitives.threading;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -9,12 +8,9 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.Primitive;
-import som.primitives.arrays.ToArgumentsArrayNode;
-import som.primitives.arrays.ToArgumentsArrayNodeFactory;
 import som.vm.Activity;
 import som.vm.ActivityThread;
 import som.vm.constants.Nil;
-import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 
@@ -64,35 +60,6 @@ public final class ThreadPrimitives {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "threadingThreadSpawn:")
-  public abstract static class SpawnPrim extends UnaryExpressionNode {
-    public SpawnPrim(final boolean ew, final SourceSection s) { super(ew, s); }
-
-    @Specialization
-    public final Thread doSBlock(final SBlock block) {
-      SomThread thread = new SomThread(block, block);
-      thread.start();
-      return thread;
-    }
-  }
-
-  @GenerateNodeFactory
-  @NodeChild(value = "argArr", type = ToArgumentsArrayNode.class,
-    executeWith = {"argument", "receiver"})
-  @Primitive(primitive = "threadingThreadSpawn:with:", extraChild = ToArgumentsArrayNodeFactory.class)
-  public abstract static class SpawnWithPrim extends BinaryExpressionNode {
-    public SpawnWithPrim(final boolean ew, final SourceSection s) { super(ew, s); }
-
-    @Specialization
-    public Thread doSBlock(final SBlock block, final SArray somArgArr,
-        final Object[] argArr) {
-      SomThread thread = new SomThread(block, argArr);
-      thread.start();
-      return thread;
-    }
-  }
-
-  @GenerateNodeFactory
   @Primitive(primitive = "threadingCurrent:")
   public abstract static class CurrentPrim extends UnaryExpressionNode {
     public CurrentPrim(final boolean ew, final SourceSection s) { super(ew, s); }
@@ -120,7 +87,7 @@ public final class ThreadPrimitives {
     private final Object[] args;
     private final SBlock block;
 
-    SomThread(final SBlock block, final Object... args) {
+    public SomThread(final SBlock block, final Object... args) {
       this.block = block;
       this.args  = args;
     }

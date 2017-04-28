@@ -19,11 +19,11 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
 class Threading usingVmMirror: vmMirror usingKernel: kernel = Value (
-| private vmMirror  = vmMirror. 
+| private vmMirror  = vmMirror.
   private Exception = kernel Exception.
 |
   (* the easiest way to get to this reference in the VM.
-     And, yes, looks dirty, but is rather ok. They are Values after all.*) 
+     And, yes, looks dirty, but is rather ok. They are Values after all.*)
   vmMirror threadingRegisterCondition: Condition mutex:  Mutex.
   vmMirror threadingRegisterThread:    Thread    task:   Task.
   vmMirror threadingRegisterModule:    self
@@ -32,15 +32,15 @@ class Threading usingVmMirror: vmMirror usingKernel: kernel = Value (
     public signalOne = (
       ^ vmMirror threadingSignalOne: self
     )
-    
+
     public signalAll = (
       ^ vmMirror threadingSignalAll: self
     )
-    
+
     public await = (
       ^ vmMirror threadingAwait: self
     )
-    
+
     public await: timeoutMilliseconds = (
       ^ vmMirror threadingAwait: self for: timeoutMilliseconds
     )
@@ -48,19 +48,19 @@ class Threading usingVmMirror: vmMirror usingKernel: kernel = Value (
     (* Condition variables are created from mutexes only. *)
     public new = ( Exception signal )
   )
-  
+
   public class Delay forMilliseconds: duration = (
   | private durationInMilliseconds = duration. |
   )(
     public duration = ( ^ durationInMilliseconds )
-    
+
     public wait = ( vmMirror threadingWait: durationInMilliseconds )
   ) : (
     public forSeconds: anInt = (
       ^ forMilliseconds: anInt * 1000
     )
   )
-  
+
   public class Mutex = (
     Exception signal.
   )(
@@ -71,16 +71,16 @@ class Threading usingVmMirror: vmMirror usingKernel: kernel = Value (
         ensure: [ self unlock ].
       ^ value
     )
-    
+
     public lock     = ( ^ vmMirror threadingLock:     self )
     public unlock   = ( ^ vmMirror threadingUnlock:   self )
     public isLocked = ( ^ vmMirror threadingIsLocked: self )
-    
+
     public newCondition = ( ^ vmMirror threadingConditionFor: self )
   ) : (
     public new = ( ^ vmMirror threadingMutexNew: self )
   )
-  
+
   (* A Thread is a concurrently running entity mapped directly on an
      operating system thread. A Thread is more heavy-weight than a Task. *)
   public class Thread = ()(
@@ -90,19 +90,19 @@ class Threading usingVmMirror: vmMirror usingKernel: kernel = Value (
   ) : (
     (* #new is not supported, use #spawn*. *)
     public new = ( Exception signal )
-  
+
     public spawn: aBlock = (
-      ^ vmMirror threadingThreadSpawn: aBlock
+      ^ vmMirror threading: self threadSpawn: aBlock
     )
-    
+
     public spawn: aBlock with: args = (
-      ^ vmMirror threadingThreadSpawn: aBlock with: args
+      ^ vmMirror threading: self threadSpawn: aBlock with: args
     )
-    
+
     public current = ( ^ vmMirror threadingCurrent: self )
     public yield   = ( ^ vmMirror threadingYieldCurrent: self )
   )
-  
+
   (* A Task is a concurrently running entity more light-weight than a Thread
      and scheduled on a thread pool. *)
   public class Task = ()(
@@ -111,11 +111,11 @@ class Threading usingVmMirror: vmMirror usingKernel: kernel = Value (
     )
   ) : (
     public spawn: aBlock = (
-      ^ vmMirror threadingTaskSpawn: aBlock
+      ^ vmMirror threading: self taskSpawn: aBlock
     )
-  
+
     public spawn: aBlock with: args = (
-      ^ vmMirror threadingTaskSpawn: aBlock with: args
+      ^ vmMirror threading: self taskSpawn: aBlock with: args
     )
   )
 )

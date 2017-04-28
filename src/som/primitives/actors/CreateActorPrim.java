@@ -15,6 +15,8 @@ import som.primitives.actors.PromisePrims.IsActorModule;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.Tags.ActivityCreation;
+import tools.concurrency.Tags.ExpressionBreakpoint;
 
 
 @GenerateNodeFactory
@@ -45,5 +47,13 @@ public abstract class CreateActorPrim extends BinaryComplexOperation {
   @Specialization(guards = "!isValue.executeEvaluated(argument)")
   public final Object throwNotAValueException(final Object receiver, final Object argument) {
     return KernelObj.signalException("signalNotAValueWith:", argument);
+  }
+
+  @Override
+  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    if (tag == ActivityCreation.class || tag == ExpressionBreakpoint.class) {
+      return true;
+    }
+    return super.isTaggedWith(tag);
   }
 }

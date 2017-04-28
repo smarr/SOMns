@@ -3,6 +3,7 @@ package tools.debugger.entities;
 import com.google.gson.annotations.SerializedName;
 
 import tools.concurrency.Tags;
+import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.CreatePromisePair;
@@ -22,7 +23,7 @@ public enum BreakpointType {
       new Class[] {EventualMessageSend.class}) {
     @Override
     public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
-      bps.addOrUpdateMessageSender(bpInfo);
+      bps.addOrUpdateBeforeExpression(bpInfo);
     }
   },
 
@@ -90,7 +91,7 @@ public enum BreakpointType {
       new Class[] {ChannelWrite.class}) {
     @Override
     public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
-      bps.addOrUpdateMessageSender(bpInfo);
+      bps.addOrUpdateBeforeExpression(bpInfo);
     }
   },
 
@@ -108,7 +109,7 @@ public enum BreakpointType {
       new Class[] {ChannelRead.class}) {
     @Override
     public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
-      bps.addOrUpdateMessageSender(bpInfo);
+      bps.addOrUpdateBeforeExpression(bpInfo);
     }
   },
 
@@ -118,6 +119,15 @@ public enum BreakpointType {
     @Override
     public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
       bps.addOrUpdateChannelOpposite(bpInfo);
+    }
+  },
+
+  @SerializedName("activityCreationBP")
+  ACTIVITY_CREATION("activityCreationBP", "Before creation",
+      new Class[] {ActivityCreation.class}) {
+    @Override
+    public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
+      bps.addOrUpdateBeforeExpression(bpInfo);
     }
   };
 
