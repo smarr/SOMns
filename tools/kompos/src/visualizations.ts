@@ -1,10 +1,13 @@
 /* jshint -W097 */
 "use strict";
 
-import {SymbolMessage, Activity, ActivityType} from "./messages";
+import {SymbolMessage, Activity, ActivityType, ServerCapabilities} from "./messages";
 import * as d3 from "d3";
 import {HistoryData, ActivityNode, EntityLink,
   ChannelNode} from "./history-data";
+
+// TODO needs to be removed
+import {ActivityId} from "../tests/somns-support";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
 const TANGO_SCHEME = [
@@ -18,15 +21,7 @@ const TANGO_SCHEME = [
   ["#270000", "#600000", "#a40000", "#cc0000", "#ef2929", "#f78787", "#ffcccc"]];
 
 function getTangoColors(actType: ActivityType) {
-  let row;
-  switch (actType) {
-    case "Actor":   row = 4; break;
-    case "Process": row = 5; break;
-    case "Task":    row = 1; break;
-    case "Thread":  row = 8; break;
-  }
-
-  return TANGO_SCHEME[row];
+  return TANGO_SCHEME[actType % 8];
 }
 
 function getLightTangoColor(actType: ActivityType, actId: number) {
@@ -46,13 +41,22 @@ export class SystemVisualization {
   private zoomScale = 1;
   private zoomTransl = [0, 0];
 
+  private serverCapabilities?: ServerCapabilities;
 
   constructor() {
     this.data = new HistoryData();
   }
 
+  public setCapabilities(capabilities: ServerCapabilities) {
+    this.serverCapabilities = capabilities;
+    this.data.setCapabilities(capabilities);
+  }
+
   public reset() {
     this.data = new HistoryData();
+    if (this.serverCapabilities) {
+      this.data.setCapabilities(this.serverCapabilities);
+    }
   }
 
   public updateStringData(msg: SymbolMessage) {
@@ -201,7 +205,7 @@ export class SystemVisualization {
     createChannel(chG);
 
     // After rendering text, adapt rectangles
-    this.adaptRectSizeAndTextPostion();
+    this.adaptRectSizeAndTextPosition();
 
     // Enable dragging of nodes
     actG.call(forceLayout.drag);
@@ -221,7 +225,7 @@ export class SystemVisualization {
     forceLayout.stop();
   }
 
-  private adaptRectSizeAndTextPostion() {
+  private adaptRectSizeAndTextPosition() {
     this.activityNodes.selectAll("rect")
       .attr("width", function() {
         return this.parentNode.childNodes[1].getComputedTextLength() + PADDING;
@@ -318,13 +322,14 @@ const PADDING = 15;
 
 function getTypePrefix(type: ActivityType) {
   switch (type) {
-    case "Actor":
+    // REMOVE the hacks
+    case <number> ActivityId.ACTOR:
       return "&#128257; ";
-    case "Process":
+    case <number> ActivityId.PROCESS:
       return "&#10733;";
-    case "Thread":
+    case <number> ActivityId.THREAD:
       return "&#11123;";
-    case "Task":
+    case <number> ActivityId.TASK:
       return "&#8623;";
     default:
       console.warn("getTypePrefix misses support for " + type);

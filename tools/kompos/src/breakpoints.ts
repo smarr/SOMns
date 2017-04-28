@@ -1,11 +1,11 @@
 import {Source, SourceCoordinate, AbstractBreakpointData, LineBreakpointData,
-  SectionBreakpointData, SectionBreakpointType,
+  SectionBreakpointData,
   createLineBreakpointData, createSectionBreakpointData} from "./messages";
 import {getLineId} from "./view";
 
-export type Breakpoint = LineBreakpoint | MessageBreakpoint;
+export type Breakpoint = LineBreakpoint | SectionBreakpoint;
 
-export function getBreakpointId(sectionId: string, bpType: SectionBreakpointType) {
+export function getBreakpointId(sectionId: string, bpType: string) {
   return sectionId + "-" + bpType;
 }
 
@@ -56,7 +56,7 @@ export class LineBreakpoint extends AbstractBreakpoint<LineBreakpointData> {
   }
 }
 
-export class MessageBreakpoint extends AbstractBreakpoint<SectionBreakpointData> {
+export class SectionBreakpoint extends AbstractBreakpoint<SectionBreakpointData> {
   private readonly sectionId: string;
 
   constructor(data: SectionBreakpointData, source: Source, sectionId: string) {
@@ -79,10 +79,9 @@ export function createLineBreakpoint(source: Source, sourceId: string,
     source, sourceId);
 }
 
-export function createMsgBreakpoint(source: Source,
-    sourceSection: SourceCoordinate, sectionId: string,
-    type: SectionBreakpointType) {
-  return new MessageBreakpoint(
+export function createSectionBreakpoint(source: Source,
+    sourceSection: SourceCoordinate, sectionId: string, type: string) {
+  return new SectionBreakpoint(
     createSectionBreakpointData(source.uri, sourceSection.startLine,
       sourceSection.startColumn, sourceSection.charLength, type, false),
     source, sectionId);

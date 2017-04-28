@@ -1,5 +1,6 @@
 package tools;
 
+import tools.debugger.entities.EntityType;
 
 /**
  * Characterize and document some of the trace data.
@@ -7,27 +8,33 @@ package tools;
 public class TraceData {
   /**
    * EventIds for custom events must not exceed 7 bits (unsigned).
+   * The following values are derived from {@link EntityType}.
    */
-  public static final byte ACTOR_CREATION     = 1;
-  public static final byte PROMISE_CREATION   = 2;
-  public static final byte PROMISE_RESOLUTION = 3;
-  public static final byte PROMISE_CHAINED    = 4;
-  public static final byte MAILBOX            = 5;
-  public static final byte THREAD             = 6;
-  public static final byte MAILBOX_CONTD      = 7;
+  public static final byte PROCESS_CREATION   = 1;
+  public static final byte PROCESS_COMPLETION = 2;
+  public static final byte CHANNEL_CREATION   = 3;
+  public static final byte ACTOR_CREATION     = 7;
 
-  public static final byte ACTIVITY_ORIGIN    = 8;
+  public static final byte PROMISE_CREATION   = 9;
 
-  public static final byte PROCESS_CREATION   = 10;
-  public static final byte PROCESS_COMPLETION = 11;
+  public static final byte TASK_SPAWN         = 13;
+  public static final byte TASK_JOIN          = 14;
+  public static final byte THREAD             = 15;
+  public static final byte IMPL_THREAD        = 21;
 
-  public static final byte TASK_SPAWN = 12;
-  public static final byte TASK_JOIN  = 13;
+  // Note, the following constants are manually defined, based on the assumption
+  // that EntityType creation/completion is not > 32
 
-  public static final byte PROMISE_ERROR = 14;
+  public static final byte PROMISE_RESOLUTION = 33;
+  public static final byte PROMISE_CHAINED    = 34;
+  public static final byte PROMISE_ERROR      = 35;
 
-  public static final byte CHANNEL_CREATION = 15;
-  public static final byte CHANNEL_MESSAGE  = 16;
+  public static final byte MAILBOX            = 40;
+  public static final byte MAILBOX_CONTD      = 41;
+
+  public static final byte ACTIVITY_ORIGIN    = 50;
+
+  public static final byte CHANNEL_MESSAGE    = 60;
 
   /**
    * Messages use a different EventId system, the most significant bit is 1 to clearly distinguish it from custom Events.

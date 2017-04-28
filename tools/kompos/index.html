@@ -54,7 +54,7 @@
 
   .breakpoint-active { background-color: #a40000; }
 
-  .send-breakpoint-active { border: 2px solid #f00; }
+  .section-breakpoint-active { border: 2px solid #f00; }
 
   .table>tbody>tr>td, .table>tbody>tr>th {padding:0; border:0}
 
@@ -430,32 +430,8 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   </tr>
   </table>
 
-  <div id="method-breakpoints" class="dropdown-content">
-    <button class="btn btn-secondary btn-sm btn-block bp-async-rcv">Method async before execution</button>
-    <button class="btn btn-secondary btn-sm btn-block bp-async-rcv-after">Method async after execution</button>
-  </div>
-
-  <div id="actor-bp-menu" class="dropdown-content">
-    <button class="btn btn-secondary btn-sm btn-block bp-send-msg">Message send</button>
-    <button class="btn btn-secondary btn-sm btn-block bp-rcv-msg">Message receive</button>
-    <button class="btn btn-secondary btn-sm btn-block bp-send-prom">Promise resolver</button>
-    <button class="btn btn-secondary btn-sm btn-block bp-rcv-prom">Promise resolution</button>
-  </div>
-
-  <div id="channel-write-bp-menu" class="dropdown-content">
-    <button class="btn btn-secondary btn-sm btn-block bp-before">Before send</button>
-    <button class="btn btn-secondary btn-sm btn-block bp-after">After receive</button>
-  </div>
-
-  <div id="channel-read-bp-menu" class="dropdown-content">
-    <button class="btn btn-secondary btn-sm btn-block bp-before">Before receive</button>
-    <button class="btn btn-secondary btn-sm btn-block bp-after">After send</button>
-  </div>
-
-  <div id="promise-bp-menu" class="dropdown-content">
-    <button class="btn btn-secondary btn-sm btn-block bp-send-prom">Promise resolver</button>
-    <button class="btn btn-secondary btn-sm btn-block bp-rcv-prom">Promise resolution</button>
-  </div>
+  <div id="bp-menu" class="dropdown-content"></div>
+  <button id="bp-menu-btn" class="btn btn-secondary btn-sm btn-block bp-btn"></button>
 </div>
 
 <!-- REM: https://github.com/earmbrust/bootstrap-window -->

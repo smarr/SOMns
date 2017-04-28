@@ -1,10 +1,13 @@
 /* jshint -W097 */
 "use strict";
 
-import {IdMap, Activity, ActivityType, Channel,
-  FullSourceCoordinate} from "./messages";
+import {IdMap, Activity, ActivityType, Entity,
+  FullSourceCoordinate, ServerCapabilities} from "./messages";
 import {getActivityId, getActivityRectId, getChannelId, getChannelVizId,
   getActivityGroupId, getActivityGroupRectId} from "./view";
+
+// TODO: this needs to be removed, only during transition period
+import {EntityId} from "../tests/somns-support";
 
 const horizontalDistance = 100,
   verticalDistance = 100;
@@ -21,44 +24,40 @@ const TIMESTAMP_BIT = 0x20;
 const PARAMETER_BIT = 0x10;
 
 enum Trace {
-  ActorCreation     =  1,
-  PromiseCreation   =  2,
-  PromiseResolution =  3,
-  PromiseChained    =  4,
-  Mailbox           =  5,
-  Thread            =  6,
-  MailboxContd      =  7,
-  ActivityOrigin    =  8,
-  PromiseMessage    =  9,
+  ProcessCompletion =  2,
+  ChannelCreation   =  3,
 
-  ProcessCreation   = 10,
-  ProcessCompletion = 11,
+  PromiseCreation   =  9,
 
-  TaskSpawn         = 12,
-  TaskJoin          = 13,
+  TaskJoin          = 14,
+  ImplThread        = 21,
 
-  PromiseError      = 14,
+  PromiseResolution = 33,
+  PromiseChained    = 34,
+  PromiseError      = 35,
 
-  ChannelCreation   = 15,
-  ChannelMessage    = 16
+  Mailbox           = 40,
+  MailboxContd      = 41,
+
+  ActivityOrigin    = 50,
+
+  ChannelMessage    = 60
 }
 
 enum TraceSize {
-  ActorCreation     = 19,
+  ActivityCreation  = 19,
+
   PromiseCreation   = 17,
   PromiseResolution = 28,
   PromiseChained    = 17,
   Mailbox           = 21,
-  Thread            = 17,
+  ImplThread        = 17,
   MailboxContd      = 25,
 
   ActivityOrigin    =  9,
-  PromiseMessage    =  7,
 
-  ProcessCreation   = 19,
   ProcessCompletion =  9,
 
-  TaskSpawn         = 19,
   TaskJoin          = 11,
 
   PromiseError      = 28,
@@ -149,7 +148,7 @@ class ActivityNodeImpl extends ActivityNode {
 
   public getGroupSize() { return 1; }
   public isRunning() { return this.activity.running; }
-  public getCausalMessage() { return this.activity.causalMsg; }
+  public getCreationScope() { return this.activity.creationScope; }
   public getName() { return this.activity.name; }
 
   public getDataId()       { return getActivityId(this.activity.id); }
@@ -191,10 +190,10 @@ class GroupNode extends ActivityNode {
 }
 
 export class ChannelNode extends EntityNode {
-  public readonly channel: Channel;
+  public readonly channel: Entity;
   public messages?: number[][];
 
-  constructor(channel: Channel, x: number, y: number) {
+  constructor(channel: Entity, x: number, y: number) {
     super(x, y);
     this.channel = channel;
   }
@@ -227,8 +226,27 @@ export class HistoryData {
 
   private currentReceiver = -1;
   private currentMsgId = undefined;
+  private serverCapabilities: ServerCapabilities;
+  private parseTable;
 
   constructor() {
+  }
+
+  private createTraceParserTable(capabilities: ServerCapabilities) {
+    const readAct = (data: DataView, i: number, type: number, newActivities: Activity[]) => {
+      return this.readActivity(data, i, type, newActivities);
+    };
+
+    const parseTable = [];
+    for (const actT of capabilities.activityTypes) {
+      parseTable[actT.creation] = readAct;
+    }
+    return parseTable;
+  }
+
+  public setCapabilities(capabilities: ServerCapabilities) {
+    this.serverCapabilities = capabilities;
+    this.parseTable = this.createTraceParserTable(capabilities);
   }
 
   private addActivity(act: Activity) {
@@ -239,14 +257,14 @@ export class HistoryData {
     this.activitiesPerType[act.name].activities.push(act);
 
     const node = new ActivityNodeImpl(act,
-      false, // selfsends TODO what is this used for, maybe set to true when checking mailbox.
+      false, // self-sends TODO what is this used for, maybe set to true when checking mailbox.
       horizontalDistance + horizontalDistance * this.activitiesPerType[act.name].activities.length,
       verticalDistance * numGroups);
     this.activity[act.id.toString()] = node;
   }
 
   private addChannel(actId: number, channelId: number, section: FullSourceCoordinate) {
-    const channel = {id: channelId, creatorActivityId: actId, origin: section};
+    const channel = {id: channelId, creationScope: actId, origin: section, type: <number> EntityId.CHANNEL};
     this.channels[channelId] = new ChannelNode(
       channel, horizontalDistance * Object.keys(this.channels).length, 0);
   }
@@ -339,7 +357,7 @@ export class HistoryData {
     const createMessages = {};
     for (const i in this.activity) {
       const a = this.activity[i];
-      const msg = this.msgs[a.getCausalMessage()];
+      const msg = this.msgs[a.getCreationScope()];
       if (msg === undefined) { continue; }
 
       const creator = this.getActivityOrGroupIfAvailable(msg.target);
@@ -357,7 +375,7 @@ export class HistoryData {
     for (const i in this.channels) {
       const c = this.channels[i];
 
-      const creator = this.getActivityOrGroupIfAvailable(c.channel.creatorActivityId.toString());
+      const creator = this.getActivityOrGroupIfAvailable(c.channel.creationScope.toString());
       if (!creator) { continue; /* There is a race with activity definition. */ }
 
       const msgLink: EntityLink = {
@@ -462,16 +480,16 @@ export class HistoryData {
     const aid = this.readLong(data, i);
     const causalMsg = this.readLong(data, i + 8);
     const nameId: number = data.getUint16(i + 16);
-    const actor: Activity = {
+    const activity: Activity = {
       id: aid,
       type:      type,
       name:      this.strings[nameId],
-      causalMsg: causalMsg,
+      creationScope: causalMsg,
       running:   true,
       origin:    this.readActivityOrigin(data, i + 18)};
-    this.addActivity(actor);
-    newActivities.push(actor);
-    return TraceSize.ActorCreation + TraceSize.ActivityOrigin - 1; // type tag of ActorCreation already covered
+    this.addActivity(activity);
+    newActivities.push(activity);
+    return TraceSize.ActivityCreation + TraceSize.ActivityOrigin - 1; // type tag of ActivityCreation already covered
   }
 
   private readChannelCreation(data: DataView, i: number) {
@@ -558,22 +576,11 @@ export class HistoryData {
       prevMessage = msgType;
       msgType = data.getUint8(i);
       i++;
-      switch (msgType) {
-        case Trace.ActorCreation: {
-          i += this.readActivity(data, i, "Actor", newActivities);
-          console.assert(i === (start + TraceSize.ActorCreation + TraceSize.ActivityOrigin));
-          break;
-        }
-        case Trace.ProcessCreation: {
-          i += this.readActivity(data, i, "Process", newActivities);
-          console.assert(i === (start + TraceSize.ProcessCreation + TraceSize.ActivityOrigin));
-          break;
-        }
-        case Trace.TaskSpawn: {
-          i += this.readActivity(data, i, "Task", newActivities);
-          console.assert(i === (start + TraceSize.TaskSpawn + TraceSize.ActivityOrigin));
-          break;
-        }
+
+      if (this.parseTable[msgType]) {
+        i += this.parseTable[msgType](data, i, msgType, newActivities);
+      } else {
+        switch (msgType) {
         case Trace.ChannelCreation: {
           i += this.readChannelCreation(data, i);
           console.assert(i === (start + TraceSize.ChannelCreation));
@@ -607,19 +614,15 @@ export class HistoryData {
           i += 20;
           console.assert(i === (start + TraceSize.Mailbox));
           break;
-        case Trace.Thread:
+        case Trace.ImplThread:
           i += 16;
-          console.assert(i === (start + TraceSize.Thread));
+          console.assert(i === (start + TraceSize.ImplThread));
           break;
         case Trace.MailboxContd:
           this.currentMsgId = this.readLong(data, i);
           this.currentReceiver = this.readLong(data, i + 12); // receiver id
           i += 24;
           console.assert(i === (start + TraceSize.MailboxContd));
-          break;
-        case Trace.PromiseMessage:
-          i += 6;
-          console.assert(i === (start + TraceSize.PromiseMessage));
           break;
         case Trace.ProcessCompletion:
           i += 8;
@@ -635,6 +638,7 @@ export class HistoryData {
             "msgType was expected to be > 0x80, but was " + msgType + ". Previous msg was: " + prevMessage);
           i = this.readMessage(data, msgType, i); // doesn't return an offset, but the absolute index
           break;
+      }
       }
     }
     return newActivities;

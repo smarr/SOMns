@@ -7,10 +7,10 @@ import tools.debugger.message.Message.IncommingMessage;
 import tools.debugger.session.BreakpointInfo;
 
 
-public class InitialBreakpointsMessage extends IncommingMessage {
+public class InitializeConnection extends IncommingMessage {
   private final BreakpointInfo[] breakpoints;
 
-  public InitialBreakpointsMessage(final BreakpointInfo[] breakpoints) {
+  public InitializeConnection(final BreakpointInfo[] breakpoints) {
     this.breakpoints = breakpoints;
   }
 

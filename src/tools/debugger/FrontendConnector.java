@@ -27,7 +27,11 @@ import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
 import tools.TraceData;
 import tools.concurrency.ActorExecutionTrace;
+import tools.debugger.entities.ActivityType;
+import tools.debugger.entities.BreakpointType;
+import tools.debugger.entities.EntityType;
 import tools.debugger.frontend.Suspension;
+import tools.debugger.message.InitializationResponse;
 import tools.debugger.message.Message;
 import tools.debugger.message.Message.OutgoingMessage;
 import tools.debugger.message.ProgramInfoResponse;
@@ -38,15 +42,8 @@ import tools.debugger.message.StackTraceResponse;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SymbolMessage;
 import tools.debugger.message.VariablesResponse;
-import tools.debugger.session.AsyncMessageAfterExecutionBreakpoint;
-import tools.debugger.session.AsyncMessageBeforeExecutionBreakpoint;
 import tools.debugger.session.Breakpoints;
-import tools.debugger.session.ChannelOppositeBreakpoint;
 import tools.debugger.session.LineBreakpoint;
-import tools.debugger.session.MessageReceiverBreakpoint;
-import tools.debugger.session.MessageSenderBreakpoint;
-import tools.debugger.session.PromiseResolutionBreakpoint;
-import tools.debugger.session.PromiseResolverBreakpoint;
 
 /**
  * Connect the debugger to the UI front-end.
@@ -115,6 +112,10 @@ public class FrontendConnector {
     }
     // now we continue execution, but we wait for the future in the execution
     // event
+  }
+
+  public Breakpoints getBreakpoints() {
+    return breakpoints;
   }
 
   private WebSocketHandler initializeWebSocket(final int port,
@@ -261,34 +262,6 @@ public class FrontendConnector {
     breakpoints.addOrUpdate(bp);
   }
 
-  public void registerOrUpdate(final MessageSenderBreakpoint bp) {
-    breakpoints.addOrUpdate(bp);
-  }
-
-  public void registerOrUpdate(final MessageReceiverBreakpoint bp) {
-    breakpoints.addOrUpdate(bp);
-  }
-
-  public void registerOrUpdate(final AsyncMessageBeforeExecutionBreakpoint bp) {
-    breakpoints.addOrUpdate(bp);
-  }
-
-  public void registerOrUpdate(final AsyncMessageAfterExecutionBreakpoint bp) {
-    breakpoints.addOrUpdate(bp);
-  }
-
-  public void registerOrUpdate(final PromiseResolutionBreakpoint bp) {
-    breakpoints.addOrUpdate(bp);
-  }
-
-  public void registerOrUpdate(final PromiseResolverBreakpoint bp) {
-    breakpoints.addOrUpdate(bp);
-  }
-
-  public void registerOrUpdate(final ChannelOppositeBreakpoint bp) {
-    breakpoints.addOrUpdate(bp);
-  }
-
   public Suspension getSuspension(final long activityId) {
     return webDebugger.getSuspension(activityId);
   }
@@ -305,6 +278,8 @@ public class FrontendConnector {
 
   public void completeConnection(final WebSocket conn) {
     clientConnected.complete(conn);
+    send(InitializationResponse.create(EntityType.values(),
+        ActivityType.values(), BreakpointType.values()));
   }
 
   public void shutdown() {

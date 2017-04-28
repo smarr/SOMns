@@ -7,8 +7,8 @@ import {Controller}   from "./controller";
 import {ActivityNode} from "./history-data";
 import {Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
   TaggedSourceCoordinate, Scope, getSectionId, Variable, Activity,
-  SymbolMessage } from "./messages";
-import {Breakpoint, MessageBreakpoint, LineBreakpoint} from "./breakpoints";
+  SymbolMessage, ServerCapabilities, BreakpointType } from "./messages";
+import {Breakpoint, SectionBreakpoint, LineBreakpoint} from "./breakpoints";
 import {SystemVisualization} from "./visualizations";
 
 declare var ctrl: Controller;
@@ -346,134 +346,21 @@ function annotateArray(arr: any[][], sourceId: string, activityId: number,
   }
 }
 
-function enableMenu(fileNode, tag: string, tpl: string, getId = null) {
-  const sendOperator = fileNode.find(tag);
-  sendOperator.attr({
-    "data-toggle"    : "popover",
-    "data-trigger"   : "click hover",
-    "title"          : "Breakpoints",
-    "data-html"      : "true",
-    "data-animation" : "false",
-    "data-placement" : "top"
-  });
-
-  if (getId === null) {
-    getId = function (that) {
-      return getSectionIdFrom(that.id);
-    };
-  }
-
-  sendOperator.attr("data-content", function() {
-    const content = nodeFromTemplate(tpl);
-    // capture the source section id, and store it on the buttons
-    $(content).find("button").attr("data-ss-id", getId(this));
-    return $(content).html();
-  });
-  sendOperator.popover();
-}
-
-function enableEventualSendClicks(fileNode) {
-  enableMenu(fileNode, ".EventualMessageSend", "actor-bp-menu");
-
-  $(document).on("click", ".bp-rcv-msg", function (e) {
-    e.stopImmediatePropagation();
-    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "MessageReceiverBreakpoint");
-  });
-
-  $(document).on("click", ".bp-send-msg", function (e) {
-    e.stopImmediatePropagation();
-    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "MessageSenderBreakpoint");
-  });
-
-  $(document).on("click", ".bp-rcv-prom", function (e) {
-    e.stopImmediatePropagation();
-    ctrl.onTogglePromiseBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "PromiseResolutionBreakpoint");
-  });
-
-  $(document).on("click", ".bp-send-prom", function (e) {
-    e.stopImmediatePropagation();
-    ctrl.onTogglePromiseBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "PromiseResolverBreakpoint");
-  });
-}
-
-function enableChannelClicks(fileNode) {
-  constructChannelBpMenu(fileNode, ".ChannelRead",  "channel-read-bp-menu");
-  constructChannelBpMenu(fileNode, ".ChannelWrite", "channel-write-bp-menu");
-}
-
-function constructChannelBpMenu(fileNode, tag: string, tpl: string) {
-  enableMenu(fileNode, tag, tpl);
-
-  $(document).on("click", ".bp-before", function (e) {
-    e.stopImmediatePropagation();
-    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "MessageSenderBreakpoint");
-  });
-
-  $(document).on("click", ".bp-after", function (e) {
-    e.stopImmediatePropagation();
-    ctrl.onToggleSendBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "ChannelOppositeBreakpoint");
-  });
-}
-
-function enableCreatePromisePairClicks(fileNode) {
-  enableMenu(fileNode, ".CreatePromisePair", "promise-bp-menu");
-  enablePromiseBreakpointMenuItems();
-}
-
-function enableWhenResolvedClicks(fileNode) {
-  enableMenu(fileNode, ".WhenResolved", "promise-bp-menu");
-  enablePromiseBreakpointMenuItems();
-}
-
-function enableWhenResolvedOnErrorClicks(fileNode) {
-  enableMenu(fileNode, ".WhenResolvedOnError", "promise-bp-menu");
-  enablePromiseBreakpointMenuItems();
-}
-
-function enableOnErrorClicks(fileNode) {
-  enableMenu(fileNode, ".OnError", "promise-bp-menu");
-  enablePromiseBreakpointMenuItems();
-}
-
-function enablePromiseBreakpointMenuItems() {
-  $(document).on("click", ".bp-rcv-prom", function (e) {
-    e.stopImmediatePropagation();
-    ctrl.onTogglePromiseBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "PromiseResolutionBreakpoint");
-  });
-
-  $(document).on("click", ".bp-send-prom", function (e) {
-    e.stopImmediatePropagation();
-    ctrl.onTogglePromiseBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "PromiseResolverBreakpoint");
-  });
-}
-
-function enableMethodBreakpointHover(fileNode) {
-  enableMenu(fileNode, ".MethodDeclaration", "method-breakpoints",
-    function(that) {
-      const idObj = methodDeclIdToObj(that.id);
-      return getSectionId(idObj.sourceId, idObj);
-    });
-
-  $(document).on("click", ".bp-async-rcv", function (e) {
-    e.stopImmediatePropagation();
-    ctrl.onToggleMethodAsyncRcvBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "AsyncMessageBeforeExecutionBreakpoint");
-  });
-
-  $(document).on("click", ".bp-async-rcv-after", function (e) {
-    e.stopImmediatePropagation();
-    ctrl.onToggleMethodAsyncRcvBreakpoint(e.currentTarget.attributes["data-ss-id"].value, "AsyncMessageAfterExecutionBreakpoint");
-  });
-}
-
 /**
  * The HTML View, which realizes all access to the DOM for displaying
  * data and reacting to events.
  */
 export class View {
   private systemViz: SystemVisualization;
+  private serverCapabilities?: ServerCapabilities;
 
   constructor() {
     this.systemViz = new SystemVisualization();
+  }
+
+  public setCapabilities(capabilities: ServerCapabilities) {
+    this.serverCapabilities = capabilities;
+    this.systemViz.setCapabilities(capabilities);
   }
 
   public displaySystemView() {
@@ -601,20 +488,92 @@ export class View {
     $(fileNode).addClass(sourceId);
     fileNode.innerHTML = arrayToString(annotationArray);
 
-    // enable clicking on EventualSendNodes
-    enableEventualSendClicks($(fileNode));
-    enableChannelClicks($(fileNode));
-    enableMethodBreakpointHover($(fileNode));
-    enableCreatePromisePairClicks($(fileNode));
-	  enableWhenResolvedClicks($(fileNode));
-    enableWhenResolvedOnErrorClicks($(fileNode));
-    enableOnErrorClicks($(fileNode));
+    this.enableBreakpointMenuItems($(fileNode));
 
     const sourceContainer = $("#" + actId + " .activity-source");
     sourceContainer.append(newFileElement);
 
     aElem.tab("show");
     return true;
+  }
+
+  private getBreakpointTypesPerTag(breakpointTypes: BreakpointType[]) {
+    const result = {};
+    for (const bpT of breakpointTypes) {
+      for (const tag of bpT.applicableTo) {
+        if (!result.hasOwnProperty(tag)) {
+          result[tag] = [];
+        }
+        result[tag].push(bpT);
+      }
+    }
+    return result;
+  }
+
+  private enableBreakpointMenuItems(fileNode) {
+    console.assert(this.serverCapabilities, "connection should be properly initialized");
+    const typesPerTag = this.getBreakpointTypesPerTag(this.serverCapabilities.breakpointTypes);
+
+    for (const tag in typesPerTag) {
+      const menu    = nodeFromTemplate("bp-menu");
+      const bpTypes = typesPerTag[tag];
+
+      for (const bpT of <BreakpointType[]> bpTypes) {
+        // assemble menu
+        const bpBtn = nodeFromTemplate("bp-menu-btn");
+        $(bpBtn).addClass(bpT.name);
+        $(bpBtn).attr("data-bp-type", bpT.name);
+        $(bpBtn).text(bpT.label);
+
+        menu.appendChild(bpBtn);
+      }
+
+      this.enableBreakpointMenu(fileNode, tag, menu);
+    }
+    this.enableBreakpointMenuButtons();
+  }
+
+  private enableBreakpointMenuButtons() {
+    $(document).on("click", ".bp-btn", function (e) {
+      e.stopImmediatePropagation();
+      ctrl.onToggleSectionBreakpoint(e.currentTarget.attributes["data-ss-id"].value,
+        e.currentTarget.attributes["data-bp-type"].value);
+    });
+  }
+
+  private enableBreakpointMenu(fileNode, tag: string, menu: Element) {
+    const sourceSection = fileNode.find("." + tag);
+    sourceSection.attr({
+      "data-toggle"    : "popover",
+      "data-trigger"   : "click hover",
+      "title"          : "Breakpoints",
+      "data-html"      : "true",
+      "data-animation" : "false",
+      "data-placement" : "top"
+    });
+
+    let getId;
+    // NOTE: For MethodDeclaration breakpoints, we have special handling,
+    // but that's arguably a structural thing, and not really a concurrency issue
+    // so, the debugger having the notion of a MethodDeclaration seems to be ok
+    if (tag === "MethodDeclaration") {
+      getId = function(that) {
+        const idObj = methodDeclIdToObj(that.id);
+        return getSectionId(idObj.sourceId, idObj);
+      };
+    } else {
+      getId = function (that) {
+        return getSectionIdFrom(that.id);
+      };
+    }
+
+    sourceSection.attr("data-content", function() {
+      const content = $(menu).clone(true);
+      // capture the source section id, and store it on the buttons
+      $(content).find("button").attr("data-ss-id", getId(this));
+      return $(content).html();
+    });
+    sourceSection.popover();
   }
 
   private displayActivity(activity: Activity) {
@@ -799,16 +758,8 @@ export class View {
     this.updateBreakpoint(bp, "breakpoint-active");
   }
 
-  public updateSendBreakpoint(bp: MessageBreakpoint) {
-    this.updateBreakpoint(bp, "send-breakpoint-active");
-  }
-
-  public updateAsyncMethodRcvBreakpoint(bp: MessageBreakpoint) {
-    this.updateBreakpoint(bp, "send-breakpoint-active");
-  }
-
-  public updatePromiseBreakpoint(bp: MessageBreakpoint) {
-    this.updateBreakpoint(bp, "promise-breakpoint-active");
+  public updateSectionBreakpoint(bp: SectionBreakpoint) {
+    this.updateBreakpoint(bp, "section-breakpoint-active");
   }
 
   private findActivityDebuggerButtons(activity: Activity) {

@@ -178,13 +178,13 @@ public final class TraceParser {
             parseParameter(); // param
             assert b.position() <= start + Events.PromiseError.size;
             break;
-          case TraceData.THREAD:
+          case TraceData.IMPL_THREAD:
             b.compact();
             channel.read(b);
             b.flip();
             b.getLong(); // thread id
             b.getLong(); // time millis
-            assert (b.position() + 1) == Events.Thread.size;
+            assert (b.position() + 1) == Events.ImplThread.size;
             break;
           default:
             parsedMessages++;

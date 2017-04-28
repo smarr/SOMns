@@ -39,7 +39,7 @@ export interface Method {
   sourceSection: SourceCoordinate;
 }
 
-export type Message = SourceMessage | ProgramInfoResponse |
+export type Message = SourceMessage | InitializationResponse | ProgramInfoResponse |
   SymbolMessage | UpdateSourceSections | StoppedMessage |
   StackTraceResponse | ScopesResponse | VariablesResponse;
 
@@ -50,25 +50,31 @@ export interface SourceMessage {
 
 export type StoppedReason = "step" | "breakpoint" | "exception" | "pause";
 
-export type ActivityType  = "Actor" | "Process" | "Thread" | "Task";
+/** The different types of active entities supported by the system. */
+export enum ActivityType {}
 
-export interface Activity {
-  id: number;
-  name: string;
-  type: ActivityType;
-  causalMsg: number;
-  running: boolean;
+/** The different kind of concurrency related entities, active, as well as
+    passive, which are supported by the system. */
+export enum EntityType {}
+
+export interface EntityProperties {
+  id:      number;
   origin?: FullSourceCoordinate;
+  creationScope: number;  /// was causal message
 }
 
-export interface Channel {
-  id: number;
-  creatorActivityId: number;
-  origin?: FullSourceCoordinate;
+export interface Entity extends EntityProperties {
+  type:    EntityType;
+}
+
+export interface Activity extends EntityProperties {
+  name:    string;
+  type:    ActivityType;
+  running: boolean;
 }
 
 export interface StoppedMessage {
-  type: "StoppedEvent";
+  type: "StoppedMessage";
 
   reason:            StoppedReason;
   activityId:        number;
@@ -95,12 +101,6 @@ export interface SymbolMessage {
 
 export type BreakpointData = LineBreakpointData | SectionBreakpointData;
 
-export type SectionBreakpointType = "MessageSenderBreakpoint" |
-  "MessageReceiverBreakpoint" | "AsyncMessageBeforeExecutionBreakpoint" |
-  "AsyncMessageAfterExecutionBreakpoint" |
-  "PromiseResolverBreakpoint" | "PromiseResolutionBreakpoint" |
-  "ChannelOppositeBreakpoint";
-
 export interface AbstractBreakpointData {
   enabled:   boolean;
 }
@@ -112,8 +112,9 @@ export interface LineBreakpointData extends AbstractBreakpointData {
 }
 
 export interface SectionBreakpointData extends AbstractBreakpointData {
-  type:  SectionBreakpointType;
-  coord: FullSourceCoordinate;
+  type:  "SectionBreakpoint";
+  coord: FullSourceCoordinate;  /** Source section to which breakpoint is applied. */
+  bpType: string;               /** Name of the specific breakpoint type. */
 }
 
 export function createLineBreakpointData(sourceUri: string, line: number,
@@ -126,11 +127,12 @@ export function createLineBreakpointData(sourceUri: string, line: number,
 }
 
 export function createSectionBreakpointData(sourceUri: string, line: number,
-    column: number, length: number, type: SectionBreakpointType,
+    column: number, length: number, type: string,
     enabled: boolean) {
   let breakpoint: SectionBreakpointData = {
-    type: type,
+    type: "SectionBreakpoint",
     enabled: enabled,
+    bpType: type,
     coord: {
       uri:         sourceUri,
       startLine:   line,
@@ -140,13 +142,37 @@ export function createSectionBreakpointData(sourceUri: string, line: number,
   return breakpoint;
 }
 
-export type Respond = InitialBreakpointsResponds | UpdateBreakpoint |
+export type Respond = InitializeConnection | UpdateBreakpoint |
   StepMessage | StackTraceRequest | ScopesRequest | VariablesRequest |
   ProgramInfoRequest | TraceDataRequest;
 
-export interface InitialBreakpointsResponds {
-  action: "initialBreakpoints";
+export interface InitializeConnection {
+  action: "InitializeConnection";
   breakpoints: BreakpointData[];
+}
+
+export interface BreakpointType {
+  name:         string;    /** Identifier used for communication. */
+  label:        string;    /** Label to use for display purposes. */
+  applicableTo: string[];  /** Set of source section tags, for which the breakpoint is applicable. */
+}
+
+export interface EntityDef {
+  id:         number;
+  creation:   number;
+  completion: number;
+  label:      string;
+}
+
+export interface ServerCapabilities {
+  activityTypes:   EntityDef[];
+  entityTypes:     EntityDef[];
+  breakpointTypes: BreakpointType[];
+}
+
+export interface InitializationResponse {
+  type: "InitializationResponse";
+  capabilities: ServerCapabilities;
 }
 
 export interface ProgramInfoRequest {

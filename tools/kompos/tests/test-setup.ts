@@ -7,6 +7,7 @@ import {Controller} from "../src/controller";
 import {BreakpointData, SourceCoordinate, StoppedMessage, StackTraceResponse,
   FullSourceCoordinate, StackFrame, Activity} from "../src/messages";
 import {VmConnection} from "../src/vm-connection";
+import {ActivityId} from "./somns-support";
 
 const SOM_BASEPATH = "../../";
 export const SOM = SOM_BASEPATH + "som";
@@ -126,7 +127,7 @@ export class ControllerWithInitialBreakpoints extends Controller {
 
   public onConnect() {
     super.onConnect();
-    this.vmConnection.sendInitialBreakpoints(this.initialBreakpoints);
+    this.vmConnection.sendInitializeConnection(this.initialBreakpoints);
   }
 }
 
@@ -174,11 +175,11 @@ export class HandleStoppedAndGetStackTrace extends ControllerWithInitialBreakpoi
     return this.stackPs[idx - 1];
   }
 
-  public onStoppedEvent(msg: StoppedMessage) {
+  public onStoppedMessage(msg: StoppedMessage) {
     if (this.numStopped >= this.numOps) { return; }
     // don't need more than a dummy activity at the moment, just id is enough
     const activity: Activity = {id: msg.activityId,
-      name: "dummy", type: "Actor", causalMsg: 0, running: false};
+      name: "dummy", type: <number> ActivityId.ACTOR, creationScope: 0, running: false};
     this.stoppedActivities[this.numStopped] = activity;
     this.numStopped += 1;
     this.vmConnection.requestStackTrace(msg.activityId);

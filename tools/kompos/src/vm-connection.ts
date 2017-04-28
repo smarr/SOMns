@@ -40,7 +40,7 @@ export class VmConnection {
 
     console.assert(this.traceDataSocket === null || this.traceDataSocket.readyState === WebSocket.CLOSED);
     this.traceDataSocket = new WebSocket(LOCAL_WS_URL + ":" + TRACE_PORT);
-    (<any> this.traceDataSocket).binaryType = "arraybuffer"; // workaround, typescript dosn't recognize this property
+    (<any> this.traceDataSocket).binaryType = "arraybuffer"; // workaround, typescript doesn't recognize this property
 
     const controller = this.controller;
     this.traceDataSocket.onmessage = function (e) {
@@ -82,8 +82,8 @@ export class VmConnection {
         case "source":
           ctrl.onReceivedSource(data);
           break;
-        case "StoppedEvent":
-          ctrl.onStoppedEvent(data);
+        case "StoppedMessage":
+          ctrl.onStoppedMessage(data);
           break;
         case "SymbolMessage":
           ctrl.onSymbolMessage(data);
@@ -100,6 +100,8 @@ export class VmConnection {
         case "ProgramInfoResponse":
           ctrl.onProgramInfo(data);
           break;
+        case "InitializationResponse":
+          ctrl.onInitializationResponse(data);
         default:
           ctrl.onUnknownMessage(data);
           break;
@@ -121,9 +123,9 @@ export class VmConnection {
     this.send({action: "TraceDataRequest"});
   }
 
-  public sendInitialBreakpoints(breakpoints: BreakpointData[]) {
+  public sendInitializeConnection(breakpoints: BreakpointData[]) {
     this.send({
-      action: "initialBreakpoints",
+      action: "InitializeConnection",
       breakpoints: breakpoints
     });
   }

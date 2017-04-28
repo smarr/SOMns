@@ -5,10 +5,10 @@ import {Controller}   from "./controller";
 import {Debugger}     from "./debugger";
 import {ActivityNode} from "./history-data";
 import {SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
-  SectionBreakpointType, ScopesResponse, VariablesResponse, ProgramInfoResponse,
+  ScopesResponse, VariablesResponse, ProgramInfoResponse, InitializationResponse,
   Activity, Source } from "./messages";
-import {LineBreakpoint, MessageBreakpoint, getBreakpointId,
-  createLineBreakpoint, createMsgBreakpoint} from "./breakpoints";
+import {LineBreakpoint, SectionBreakpoint, getBreakpointId,
+  createLineBreakpoint, createSectionBreakpoint} from "./breakpoints";
 import {dbgLog}       from "./source";
 import {View, getActivityIdFromView, getSourceIdFrom, getSourceIdFromSection} from "./view";
 import {VmConnection} from "./vm-connection";
@@ -50,7 +50,7 @@ export class UiController extends Controller {
     this.view.onConnect();
     const bps = this.dbg.getEnabledBreakpoints();
     dbgLog("Send breakpoints: " + bps.length);
-    this.vmConnection.sendInitialBreakpoints(bps.map(b => b.data));
+    this.vmConnection.sendInitializeConnection(bps.map(b => b.data));
     this.vmConnection.requestProgramInfo();
   }
 
@@ -94,25 +94,10 @@ export class UiController extends Controller {
   private ensureBreakpointsAreIndicated(sourceUri) {
     const bps = this.dbg.getEnabledBreakpointsForSource(sourceUri);
     for (const bp of bps) {
-      switch (bp.data.type) {
-        case "LineBreakpoint":
-          this.view.updateLineBreakpoint(<LineBreakpoint> bp);
-          break;
-        case "MessageSenderBreakpoint":
-        case "MessageReceiverBreakpoint":
-          this.view.updateSendBreakpoint(<MessageBreakpoint> bp);
-          break;
-        case "AsyncMessageBeforeExecutionBreakpoint":
-        case "AsyncMessageAfterExecutionBreakpoint":
-          this.view.updateAsyncMethodRcvBreakpoint(<MessageBreakpoint> bp);
-          break;
-        case "PromiseResolverBreakpoint":
-        case "PromiseResolutionBreakpoint":
-          this.view.updatePromiseBreakpoint(<MessageBreakpoint> bp);
-          break;
-        default:
-          console.error("Unsupported breakpoint type: " + JSON.stringify(bp.data));
-          break;
+      if (bp.data.type === "LineBreakpoint") {
+        this.view.updateLineBreakpoint(<LineBreakpoint> bp);
+      } else {
+        this.view.updateSectionBreakpoint(<SectionBreakpoint> bp);
       }
     }
   }
@@ -125,7 +110,7 @@ export class UiController extends Controller {
     }
   }
 
-  public onStoppedEvent(msg: StoppedMessage) {
+  public onStoppedMessage(msg: StoppedMessage) {
     this.vmConnection.requestTraceData();
     this.ensureActivityPromise(msg.activityId);
     this.vmConnection.requestStackTrace(msg.activityId);
@@ -175,6 +160,11 @@ export class UiController extends Controller {
     this.view.displayProgramArguments(msg.args);
   }
 
+  public onInitializationResponse(msg: InitializationResponse) {
+    this.dbg.setCapabilities(msg.capabilities);
+    this.view.setCapabilities(msg.capabilities);
+  }
+
   public onVariables(msg: VariablesResponse) {
     this.view.displayVariables(msg.variablesReference, msg.variables);
   }
@@ -211,43 +201,17 @@ export class UiController extends Controller {
     this.view.updateLineBreakpoint(<LineBreakpoint> breakpoint);
   }
 
-  public onToggleSendBreakpoint(sectionId: string, type: SectionBreakpointType) {
-    dbgLog("send-op breakpoint: " + type);
+  public onToggleSectionBreakpoint(sectionId: string, type: string) {
+    dbgLog("section breakpoint: " + type);
 
     const id = getBreakpointId(sectionId, type),
       sourceSection = this.dbg.getSection(sectionId),
       sourceId      = getSourceIdFromSection(sectionId),
       source        = this.dbg.getSource(sourceId),
       breakpoint    = this.toggleBreakpoint(id, source, function () {
-        return createMsgBreakpoint(source, sourceSection, sectionId, type); });
+        return createSectionBreakpoint(source, sourceSection, sectionId, type); });
 
-    this.view.updateSendBreakpoint(<MessageBreakpoint> breakpoint);
-  }
-
-  public onToggleMethodAsyncRcvBreakpoint(sectionId: string, type: SectionBreakpointType) {
-    dbgLog("async method rcv bp: " + sectionId);
-
-    const id = getBreakpointId(sectionId, type),
-      sourceSection = this.dbg.getSection(sectionId),
-      sourceId      = getSourceIdFromSection(sectionId),
-      source        = this.dbg.getSource(sourceId),
-      breakpoint    = this.toggleBreakpoint(id, source, function () {
-        return createMsgBreakpoint(source, sourceSection, sectionId, type); });
-
-    this.view.updateAsyncMethodRcvBreakpoint(<MessageBreakpoint> breakpoint);
-  }
-
-  public onTogglePromiseBreakpoint(sectionId: string, type: SectionBreakpointType) {
-    dbgLog("promise breakpoint: " + type);
-
-     let id = getBreakpointId(sectionId, type),
-      sourceSection = this.dbg.getSection(sectionId),
-      sourceId      = getSourceIdFromSection(sectionId),
-      source        = this.dbg.getSource(sourceId),
-      breakpoint    = this.toggleBreakpoint(id, source, function () {
-        return createMsgBreakpoint(source, sourceSection, sectionId, type); });
-
-    this.view.updatePromiseBreakpoint(<MessageBreakpoint> breakpoint);
+    this.view.updateSectionBreakpoint(<SectionBreakpoint> breakpoint);
   }
 
   public resumeExecution(actId: string) {

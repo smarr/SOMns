@@ -10,14 +10,14 @@
   },
   "tasks": [
     {
-      "taskName": "watch",
-      "isWatching": true,
+      "taskName": "continuous compilation",
+      "isBackground": true,
       "args": ["run", "watch"],
       "problemMatcher": "$tsc-watch"
     },
     {
       "taskName": "test",
-      "isWatching": false,
+      "isBackground": false,
       "args": []
     }
   ]

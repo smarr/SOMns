@@ -43,4 +43,10 @@ public abstract class Tags {
   public final class OnError extends Tags {
     private OnError() { }
   }
+
+  /** Marks the source section of a method's prototype, i.e., declaration.
+      NOTE: Special Tag, applied automatically be front-end. */
+  public final class MethodDeclaration extends Tags {
+    private MethodDeclaration() { }
+  }
 }
