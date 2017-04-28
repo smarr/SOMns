@@ -6,7 +6,6 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -24,19 +23,14 @@ import som.interpreter.processes.SChannel.SChannelInput;
 import som.interpreter.processes.SChannel.SChannelOutput;
 import som.primitives.ObjectPrims.IsValue;
 import som.primitives.Primitive;
-import som.primitives.arrays.ToArgumentsArrayNode;
-import som.primitives.arrays.ToArgumentsArrayNodeFactory;
 import som.vm.Activity;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
-import som.vm.constants.Nil;
-import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObjectWithClass;
-import som.vmobjects.SSymbol;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
@@ -92,20 +86,10 @@ public abstract class ChannelPrimitives {
     }
   }
 
-  private static Process create(final SObjectWithClass obj, final SourceSection origin) {
-    if (VmSettings.ACTOR_TRACING) {
-      TracingProcess result = new TracingProcess(obj);
-      ActorExecutionTrace.processCreation(result, origin);
-      return result;
-    } else {
-      return new Process(obj);
-    }
-  }
-
   public static class Process implements Activity, Runnable {
     private final SObjectWithClass obj;
 
-    Process(final SObjectWithClass obj) {
+    public Process(final SObjectWithClass obj) {
       this.obj = obj;
     }
 
@@ -146,7 +130,7 @@ public abstract class ChannelPrimitives {
   public static class TracingProcess extends Process {
     protected final long processId;
 
-    TracingProcess(final SObjectWithClass obj) {
+    public TracingProcess(final SObjectWithClass obj) {
       super(obj);
       assert Thread.currentThread() instanceof TracingActivityThread;
       processId = ((TracingActivityThread) Thread.currentThread()).generateActivityId();
@@ -175,37 +159,6 @@ public abstract class ChannelPrimitives {
     @Specialization
     public static final SChannelOutput getOut(final SChannel channel) {
       return channel.out;
-    }
-  }
-
-  @Primitive(primitive = "procSpawn:with:", requiresContext = true)
-  @GenerateNodeFactory
-  public abstract static class SpawnProcess extends BinaryComplexOperation {
-    private final ForkJoinPool processesPool;
-
-    @Child protected ToArgumentsArrayNode toArgs;
-    @Child protected IsValue isVal;
-
-    public SpawnProcess(final boolean eagerlyWrapped, final SourceSection source, final VM vm) {
-      super(eagerlyWrapped, source);
-      toArgs = ToArgumentsArrayNodeFactory.create(null, null);
-      isVal  = IsValue.createSubNode();
-      processesPool = vm.getProcessPool();
-    }
-
-    @Specialization
-    @TruffleBoundary
-    public final Object spawn(final SClass procCls, final SArray args) {
-      if (!isVal.executeEvaluated(procCls)) {
-        KernelObj.signalException("signalNotAValueWith:", procCls);
-      }
-
-      SSymbol sel = procCls.getMixinDefinition().getPrimaryFactorySelector();
-      SInvokable disp = procCls.getMixinDefinition().getFactoryMethods().get(sel);
-      SObjectWithClass obj = (SObjectWithClass) disp.invoke(toArgs.executedEvaluated(args, procCls));
-
-      processesPool.submit(create(obj, sourceSection));
-      return Nil.nilObject;
     }
   }
 

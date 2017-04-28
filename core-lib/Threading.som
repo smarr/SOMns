@@ -92,11 +92,11 @@ class Threading usingVmMirror: vmMirror usingKernel: kernel = Value (
     public new = ( Exception signal )
   
     public spawn: aBlock = (
-      ^ vmMirror threadingThreadSpawn: aBlock
+      ^ vmMirror threading: self threadSpawn: aBlock
     )
     
     public spawn: aBlock with: args = (
-      ^ vmMirror threadingThreadSpawn: aBlock with: args
+      ^ vmMirror threading: self threadSpawn: aBlock with: args
     )
     
     public current = ( ^ vmMirror threadingCurrent: self )
@@ -111,11 +111,11 @@ class Threading usingVmMirror: vmMirror usingKernel: kernel = Value (
     )
   ) : (
     public spawn: aBlock = (
-      ^ vmMirror threadingTaskSpawn: aBlock
+      ^ vmMirror threading: self taskSpawn: aBlock
     )
   
     public spawn: aBlock with: args = (
-      ^ vmMirror threadingTaskSpawn: aBlock with: args
+      ^ vmMirror threading: self taskSpawn: aBlock with: args
     )
   )
 )

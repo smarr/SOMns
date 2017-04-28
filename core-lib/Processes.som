@@ -74,6 +74,6 @@ class Processes usingVmMirror: vmMirror = Value (
   (* Spawn a new isolated process with the given class and instantiate the
      class with the given arguments. *)
   public spawn: aProcessClass with: args = (
-    vmMirror procSpawn: aProcessClass with: args
+    vmMirror proc: self spawn: aProcessClass with: args
   )
 )
