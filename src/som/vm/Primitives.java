@@ -31,6 +31,7 @@ import som.interpreter.nodes.specialized.NotMessageNodeFactory;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory;
 import som.interpreter.nodes.specialized.whileloops.WhilePrimitiveNodeFactory;
 import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileWithStaticBlocksNodeFactory;
+import som.primitives.ActivityJoinFactory;
 import som.primitives.ActivitySpawnFactory;
 import som.primitives.AsStringPrimFactory;
 import som.primitives.BlockPrimsFactory;
@@ -84,7 +85,6 @@ import som.primitives.processes.ChannelPrimitivesFactory;
 import som.primitives.threading.ConditionPrimitivesFactory;
 import som.primitives.threading.DelayPrimitivesFactory;
 import som.primitives.threading.MutexPrimitivesFactory;
-import som.primitives.threading.TaskPrimitivesFactory;
 import som.primitives.threading.ThreadPrimitivesFactory;
 import som.primitives.threading.ThreadingModuleFactory;
 import som.primitives.transactions.AtomicPrimFactory;
@@ -335,7 +335,7 @@ public class Primitives {
     allFactories.addAll(ConditionPrimitivesFactory.getFactories());
     allFactories.addAll(DelayPrimitivesFactory.getFactories());
     allFactories.addAll(MutexPrimitivesFactory.getFactories());
-    allFactories.addAll(TaskPrimitivesFactory.getFactories());
+    allFactories.addAll(ActivityJoinFactory.getFactories());
     allFactories.addAll(ThreadPrimitivesFactory.getFactories());
     allFactories.addAll(ChannelPrimitivesFactory.getFactories());
 

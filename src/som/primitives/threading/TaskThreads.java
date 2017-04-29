@@ -5,24 +5,13 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveTask;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
-
-import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
-import som.primitives.Primitive;
 import som.vm.Activity;
-import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
-import tools.concurrency.ActorExecutionTrace;
-import tools.concurrency.Tags.ActivityJoin;
-import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActivityThread;
 
-public final class TaskPrimitives {
+public final class TaskThreads {
 
   public static class SomForkJoinTask extends RecursiveTask<Object> implements Activity {
     private static final long serialVersionUID = -2145613708553535622L;
@@ -77,31 +66,6 @@ public final class TaskPrimitives {
     @Override
     public long getId() {
       return id;
-    }
-  }
-
-  @GenerateNodeFactory
-  @Primitive(primitive = "threadingTaskJoin:", selector = "join")
-  public abstract static class JoinPrim extends UnaryExpressionNode {
-    public JoinPrim(final boolean ew, final SourceSection s) { super(ew, s); }
-
-    @Specialization
-    @TruffleBoundary
-    public final Object doTask(final SomForkJoinTask task) {
-      Object result = task.join();
-
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.taskJoin(task.getMehtod(), task.getId());
-      }
-      return result;
-    }
-
-    @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-      if (tag == ActivityJoin.class || tag == ExpressionBreakpoint.class) {
-        return true;
-      }
-      return super.isTaggedWith(tag);
     }
   }
 

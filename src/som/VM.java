@@ -36,7 +36,7 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.primitives.processes.ChannelPrimitives;
 import som.primitives.processes.ChannelPrimitives.ProcessThreadFactory;
-import som.primitives.threading.TaskPrimitives.ForkJoinThreadFactor;
+import som.primitives.threading.TaskThreads.ForkJoinThreadFactor;
 import som.primitives.threading.ThreadingModule;
 import som.vm.ObjectSystem;
 import som.vm.Primitives;

@@ -34,7 +34,7 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.nodes.DummyParent;
 import som.primitives.SizeAndLengthPrim;
 import som.primitives.SizeAndLengthPrimFactory;
-import som.primitives.threading.TaskPrimitives.SomForkJoinTask;
+import som.primitives.threading.TaskThreads.SomForkJoinTask;
 import som.primitives.threading.ThreadingModule;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
