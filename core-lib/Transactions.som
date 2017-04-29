@@ -12,7 +12,7 @@ class Transactions usingVmMirror: vmMirror usingKernel: kernel = Value (
        The execution of the block is retried until it succeeds without conflicts.
        The result of the block is returned. *)
     public atomic: block = (
-      ^ vmMirror txAtomic: block
+      ^ vmMirror tx: self atomic: block
     )
   )
 )

@@ -49,6 +49,26 @@ public abstract class Tags {
     private ActivityCreation() { }
   }
 
+  /** Marks the join operation of an activity. */
+  public final class ActivityJoin extends Tags {
+    private ActivityJoin() { }
+  }
+
+  /** Marks the transactional operation. */
+  public final class Atomic extends Tags {
+    private Atomic() { }
+  }
+
+  /** Marks the locking operation. */
+  public final class AcquireLock extends Tags {
+    private AcquireLock() { }
+  }
+
+  /** Marks the release operation. */
+  public final class ReleaseLock extends Tags {
+    private ReleaseLock() { }
+  }
+
   /** Marks the source section of a method's prototype, i.e., declaration.
       NOTE: Special Tag, applied automatically be front-end. */
   public final class MethodDeclaration extends Tags {

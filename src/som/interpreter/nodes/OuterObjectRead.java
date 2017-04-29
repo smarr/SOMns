@@ -21,7 +21,7 @@ import som.interpreter.processes.SChannel.SChannelInput;
 import som.interpreter.processes.SChannel.SChannelOutput;
 import som.primitives.actors.ActorClasses;
 import som.primitives.processes.ChannelPrimitives;
-import som.primitives.threading.TaskPrimitives.SomForkJoinTask;
+import som.primitives.threading.TaskThreads.SomForkJoinTask;
 import som.primitives.threading.ThreadingModule;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;

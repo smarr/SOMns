@@ -44,22 +44,6 @@ public final class ThreadPrimitives {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "threadingThreadJoin:")
-  public abstract static class JoinPrim extends UnaryExpressionNode {
-    public JoinPrim(final boolean ew, final SourceSection s) { super(ew, s); }
-
-    @Specialization
-    public final Object doThread(final Thread thread) {
-      try {
-        thread.join();
-      } catch (InterruptedException e) {
-        /* ignore for the moment */
-      }
-      return thread;
-    }
-  }
-
-  @GenerateNodeFactory
   @Primitive(primitive = "threadingCurrent:")
   public abstract static class CurrentPrim extends UnaryExpressionNode {
     public CurrentPrim(final boolean ew, final SourceSection s) { super(ew, s); }

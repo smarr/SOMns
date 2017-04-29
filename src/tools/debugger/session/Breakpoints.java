@@ -53,14 +53,17 @@ public class Breakpoints {
   private final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> promiseResolutionBreakpoints;
 
   /** Manually managed by us, instead of Truffle. */
-  private final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> channelOppositeBreakpoint;
+  private final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> channelOppositeBreakpoints;
+
+  private final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> beforeCommitBreakpoints;
 
   public Breakpoints(final Debugger debugger, final WebDebugger webDebugger) {
     this.truffleBreakpoints           = new HashMap<>();
     this.receiverBreakpoints          = new HashMap<>();
     this.promiseResolverBreakpoints   = new HashMap<>();
     this.promiseResolutionBreakpoints = new HashMap<>();
-    this.channelOppositeBreakpoint    = new HashMap<>();
+    this.channelOppositeBreakpoints   = new HashMap<>();
+    this.beforeCommitBreakpoints      = new HashMap<>();
     this.debuggerSession = debugger.startSession(webDebugger);
   }
 
@@ -93,6 +96,11 @@ public class Breakpoints {
     saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class, null);
   }
 
+  public synchronized void addOrUpdateAfterExpression(final SectionBreakpoint bId) {
+    // TODO: does this work???
+    saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class, SteppingLocation.AFTER_STATEMENT);
+  }
+
   public synchronized void addOrUpdateMessageReceiver(final SectionBreakpoint bId) {
     saveBreakpoint(bId, receiverBreakpoints);
   }
@@ -116,7 +124,11 @@ public class Breakpoints {
   }
 
   public synchronized void addOrUpdateChannelOpposite(final SectionBreakpoint bId) {
-    saveBreakpoint(bId, channelOppositeBreakpoint);
+    saveBreakpoint(bId, channelOppositeBreakpoints);
+  }
+
+  public synchronized void addOrUpdateBeforeCommit(final SectionBreakpoint bId) {
+    saveBreakpoint(bId, beforeCommitBreakpoints);
   }
 
   private Breakpoint saveTruffleBasedBreakpoints(final SectionBreakpoint bId, final Class<?> tag, final SteppingLocation sl) {
@@ -183,8 +195,14 @@ public class Breakpoints {
 
   public synchronized BreakpointEnabling<SectionBreakpoint> getOppositeBreakpoint(
       final FullSourceCoordinate section, final BreakpointType type) {
-    return channelOppositeBreakpoint.computeIfAbsent(section,
+    return channelOppositeBreakpoints.computeIfAbsent(section,
         ss -> new BreakpointEnabling<>(new SectionBreakpoint(false, section, type)));
+  }
+
+  public synchronized BreakpointEnabling<SectionBreakpoint> getBeforeCommitBreakpoint(
+      final FullSourceCoordinate section) {
+    return beforeCommitBreakpoints.computeIfAbsent(section,
+        ss -> new BreakpointEnabling<>(new SectionBreakpoint(false, section, BreakpointType.ATOMIC_BEFORE_COMMIT)));
   }
 
   public static AbstractBreakpointNode createPromiseResolver(final SourceSection source, final VM vm) {
@@ -219,6 +237,16 @@ public class Breakpoints {
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
       FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
       return BreakpointNodeGen.create(vm.getBreakpoints().getOppositeBreakpoint(sourceCoord, type));
+    } else {
+      return new DisabledBreakpointNode();
+    }
+  }
+
+  public static AbstractBreakpointNode createBeforeCommit(
+      final SourceSection source, final VM vm) {
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
+      return BreakpointNodeGen.create(vm.getBreakpoints().getBeforeCommitBreakpoint(sourceCoord));
     } else {
       return new DisabledBreakpointNode();
     }

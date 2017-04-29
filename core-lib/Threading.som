@@ -105,11 +105,16 @@ class Threading usingVmMirror: vmMirror usingKernel: kernel = Value (
 
   (* A Task is a concurrently running entity more light-weight than a Thread
      and scheduled on a thread pool. *)
-  public class Task = ()(
+  public class Task = (
+    Exception signal.
+  )(
     public join = (
       ^ vmMirror threadingTaskJoin: self
     )
   ) : (
+    (* #new is not supported, use #spawn*. *)
+    public new = ( Exception signal )
+
     public spawn: aBlock = (
       ^ vmMirror threading: self taskSpawn: aBlock
     )
