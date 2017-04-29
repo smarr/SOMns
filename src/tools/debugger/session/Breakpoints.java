@@ -53,7 +53,7 @@ public class Breakpoints {
   private final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> promiseResolutionBreakpoints;
 
   /** Manually managed by us, instead of Truffle. */
-  private final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> channelOppositeBreakpoint;
+  private final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> channelOppositeBreakpoints;
 
   private final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> beforeCommitBreakpoints;
 
@@ -62,7 +62,7 @@ public class Breakpoints {
     this.receiverBreakpoints          = new HashMap<>();
     this.promiseResolverBreakpoints   = new HashMap<>();
     this.promiseResolutionBreakpoints = new HashMap<>();
-    this.channelOppositeBreakpoint    = new HashMap<>();
+    this.channelOppositeBreakpoints   = new HashMap<>();
     this.beforeCommitBreakpoints      = new HashMap<>();
     this.debuggerSession = debugger.startSession(webDebugger);
   }
@@ -124,7 +124,7 @@ public class Breakpoints {
   }
 
   public synchronized void addOrUpdateChannelOpposite(final SectionBreakpoint bId) {
-    saveBreakpoint(bId, channelOppositeBreakpoint);
+    saveBreakpoint(bId, channelOppositeBreakpoints);
   }
 
   public synchronized void addOrUpdateBeforeCommit(final SectionBreakpoint bId) {
@@ -195,7 +195,7 @@ public class Breakpoints {
 
   public synchronized BreakpointEnabling<SectionBreakpoint> getOppositeBreakpoint(
       final FullSourceCoordinate section, final BreakpointType type) {
-    return channelOppositeBreakpoint.computeIfAbsent(section,
+    return channelOppositeBreakpoints.computeIfAbsent(section,
         ss -> new BreakpointEnabling<>(new SectionBreakpoint(false, section, type)));
   }
 

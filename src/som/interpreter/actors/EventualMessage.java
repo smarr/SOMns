@@ -324,7 +324,7 @@ public abstract class EventualMessage {
    * before the computed value is used to resolve the promise.
    */
   public boolean isTriggerPromiseResolverBreakpoint() {
-    return this.triggerPromiseResolverBreakpoint;
+    return triggerPromiseResolverBreakpoint;
   }
 
   /**
