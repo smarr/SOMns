@@ -15,11 +15,14 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.Primitive;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
+import tools.concurrency.Tags.AcquireLock;
+import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.concurrency.Tags.ReleaseLock;
 
 
 public final class MutexPrimitives {
   @GenerateNodeFactory
-  @Primitive(primitive = "threadingLock:")
+  @Primitive(primitive = "threadingLock:", selector = "lock")
   public abstract static class LockPrim extends UnaryExpressionNode {
     public LockPrim(final boolean ew, final SourceSection s) { super(ew, s); }
 
@@ -29,10 +32,19 @@ public final class MutexPrimitives {
       lock.lock();
       return lock;
     }
+
+    @Override
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+      if (tag == AcquireLock.class || tag == ExpressionBreakpoint.class) {
+        return true;
+      } else {
+        return super.isTaggedWithIgnoringEagerness(tag);
+      }
+    }
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "threadingUnlock:")
+  @Primitive(primitive = "threadingUnlock:", selector = "unlock")
   public abstract static class UnlockPrim extends UnaryExpressionNode {
     public UnlockPrim(final boolean ew, final SourceSection s) { super(ew, s); }
 
@@ -41,6 +53,15 @@ public final class MutexPrimitives {
     public static final ReentrantLock unlock(final ReentrantLock lock) {
       lock.unlock();
       return lock;
+    }
+
+    @Override
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+      if (tag == ReleaseLock.class || tag == ExpressionBreakpoint.class) {
+        return true;
+      } else {
+        return super.isTaggedWithIgnoringEagerness(tag);
+      }
     }
   }
 

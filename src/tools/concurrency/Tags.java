@@ -59,6 +59,16 @@ public abstract class Tags {
     private Atomic() { }
   }
 
+  /** Marks the locking operation. */
+  public final class AcquireLock extends Tags {
+    private AcquireLock() { }
+  }
+
+  /** Marks the release operation. */
+  public final class ReleaseLock extends Tags {
+    private ReleaseLock() { }
+  }
+
   /** Marks the source section of a method's prototype, i.e., declaration.
       NOTE: Special Tag, applied automatically be front-end. */
   public final class MethodDeclaration extends Tags {
