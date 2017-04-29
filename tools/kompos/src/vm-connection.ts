@@ -102,6 +102,7 @@ export class VmConnection {
           break;
         case "InitializationResponse":
           ctrl.onInitializationResponse(data);
+          break;
         default:
           ctrl.onUnknownMessage(data);
           break;
