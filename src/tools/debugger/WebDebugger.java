@@ -40,11 +40,7 @@ import tools.debugger.message.ScopesResponse;
 import tools.debugger.message.SourceMessage;
 import tools.debugger.message.StackTraceRequest;
 import tools.debugger.message.StackTraceResponse;
-import tools.debugger.message.StepMessage.Resume;
-import tools.debugger.message.StepMessage.Return;
-import tools.debugger.message.StepMessage.StepInto;
-import tools.debugger.message.StepMessage.StepOver;
-import tools.debugger.message.StepMessage.Stop;
+import tools.debugger.message.StepMessage;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SymbolMessage;
 import tools.debugger.message.TraceDataRequest;
@@ -191,7 +187,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   public static Gson createJsonProcessor() {
     ClassHierarchyAdapterFactory<OutgoingMessage> outMsgAF = new ClassHierarchyAdapterFactory<>(OutgoingMessage.class, "type");
-    outMsgAF.register("source",       SourceMessage.class);
+    outMsgAF.register("source", SourceMessage.class);
     outMsgAF.register(InitializationResponse.class);
     outMsgAF.register(StoppedMessage.class);
     outMsgAF.register(SymbolMessage.class);
@@ -202,12 +198,8 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
     ClassHierarchyAdapterFactory<IncommingMessage> inMsgAF = new ClassHierarchyAdapterFactory<>(IncommingMessage.class, "action");
     inMsgAF.register(InitializeConnection.class);
-    inMsgAF.register("updateBreakpoint",   UpdateBreakpoint.class);
-    inMsgAF.register("stepInto", StepInto.class);
-    inMsgAF.register("stepOver", StepOver.class);
-    inMsgAF.register("return",   Return.class);
-    inMsgAF.register("resume",   Resume.class);
-    inMsgAF.register("stop",     Stop.class);
+    inMsgAF.register("updateBreakpoint", UpdateBreakpoint.class);
+    inMsgAF.register(StepMessage.class);
     inMsgAF.register(StackTraceRequest.class);
     inMsgAF.register(ScopesRequest.class);
     inMsgAF.register(VariablesRequest.class);

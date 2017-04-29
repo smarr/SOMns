@@ -193,13 +193,14 @@ interface UpdateBreakpoint {
   breakpoint: BreakpointData;
 }
 
-export type StepType = "stepInto" | "stepOver" | "return" | "resume" | "stop";
-
 export interface StepMessage {
-  action: StepType;
+  action: "StepMessage";
 
   /** Id of the suspended activity. */
   activityId: number;
+
+  /** Name of the stepping operation requested. */
+  step: string;
 }
 
 export interface StackTraceRequest {

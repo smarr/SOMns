@@ -13,6 +13,9 @@ import {dbgLog}       from "./source";
 import {View, getActivityIdFromView, getSourceIdFrom, getSourceIdFromSection} from "./view";
 import {VmConnection} from "./vm-connection";
 
+// TODO: remove
+import {SteppingType} from "../tests/somns-support";
+
 /**
  * The controller binds the domain model and the views, and mediates their
  * interaction.
@@ -220,7 +223,7 @@ export class UiController extends Controller {
 
     if (act.running) { return; }
     act.running = true;
-    this.vmConnection.sendDebuggerAction("resume", act);
+    this.vmConnection.sendDebuggerAction(SteppingType.RESUME, act);
     this.view.onContinueExecution(act);
   }
 
@@ -242,7 +245,7 @@ export class UiController extends Controller {
     if (act.running) { return; }
     act.running = true;
     this.view.onContinueExecution(act);
-    this.vmConnection.sendDebuggerAction("stepInto", act);
+    this.vmConnection.sendDebuggerAction(SteppingType.STEP_INTO, act);
   }
 
   public stepOver(actId: string) {
@@ -251,7 +254,7 @@ export class UiController extends Controller {
     if (act.running) { return; }
     act.running = true;
     this.view.onContinueExecution(act);
-    this.vmConnection.sendDebuggerAction("stepOver", act);
+    this.vmConnection.sendDebuggerAction(SteppingType.STEP_OVER, act);
   }
 
   public returnFromExecution(actId: string) {
@@ -260,6 +263,6 @@ export class UiController extends Controller {
     if (act.running) { return; }
     act.running = true;
     this.view.onContinueExecution(act);
-    this.vmConnection.sendDebuggerAction("return", act);
+    this.vmConnection.sendDebuggerAction(SteppingType.RETURN, act);
   }
 }

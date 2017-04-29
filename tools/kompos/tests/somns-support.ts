@@ -36,3 +36,11 @@ export namespace BreakpointType {
   export const CHANNEL_BEFORE_RCV  = "channelBeforeRcvBP";
   export const CHANNEL_AFTER_SEND  = "channelAfterSendBP";
 }
+
+export namespace SteppingType {
+  export const STEP_INTO = "stepInto";
+  export const STEP_OVER = "stepOver";
+  export const RETURN    = "return";
+  export const RESUME    = "resume";
+  export const STOP      = "stop";
+}
