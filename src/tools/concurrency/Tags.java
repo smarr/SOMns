@@ -54,6 +54,11 @@ public abstract class Tags {
     private ActivityJoin() { }
   }
 
+  /** Marks the transactional operation. */
+  public final class Atomic extends Tags {
+    private Atomic() { }
+  }
+
   /** Marks the source section of a method's prototype, i.e., declaration.
       NOTE: Special Tag, applied automatically be front-end. */
   public final class MethodDeclaration extends Tags {

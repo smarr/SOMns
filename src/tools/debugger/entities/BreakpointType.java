@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import tools.concurrency.Tags;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ActivityJoin;
+import tools.concurrency.Tags.Atomic;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.CreatePromisePair;
@@ -144,6 +145,33 @@ public enum BreakpointType {
   @SerializedName("activityAfterJoinBP")
   ACTIVITY_AFTER_JOIN("activityAfterJoinBP", "After join",
       new Class[] {ActivityJoin.class}) {
+    @Override
+    public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
+      bps.addOrUpdateAfterExpression(bpInfo);
+    }
+  },
+
+  @SerializedName("atomicBeforeBP")
+  ATOMIC_BEFORE("atomicBeforeBP", "Before start",
+      new Class[] {Atomic.class}) {
+    @Override
+    public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
+      bps.addOrUpdateBeforeExpression(bpInfo);
+    }
+  },
+
+  @SerializedName("atomicBeforeCommitBP")
+  ATOMIC_BEFORE_COMMIT("atomicBeforeCommitBP", "Before commit",
+      new Class[] {Atomic.class}) {
+    @Override
+    public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
+      bps.addOrUpdateBeforeCommit(bpInfo);
+    }
+  },
+
+  @SerializedName("atomicAfterCommitBP")
+  ATOMIC_AFTER_COMMIT("atomicAfterCommitBP", "After commit",
+      new Class[] {Atomic.class}) {
     @Override
     public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
       bps.addOrUpdateAfterExpression(bpInfo);
