@@ -20,6 +20,7 @@ import som.compiler.MixinDefinition;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SClass;
 import tools.concurrency.Tags.ActivityCreation;
+import tools.concurrency.Tags.ActivityJoin;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.CreatePromisePair;
@@ -89,7 +90,8 @@ import tools.dym.Tags.VirtualInvokeReceiver;
 
   EventualMessageSend.class, ChannelRead.class, ChannelWrite.class,
   ExpressionBreakpoint.class, CreatePromisePair.class, WhenResolved.class,
-  WhenResolvedOnError.class, OnError.class, ActivityCreation.class
+  WhenResolvedOnError.class, OnError.class, ActivityCreation.class,
+  ActivityJoin.class
 })
 public final class SomLanguage extends TruffleLanguage<VM> {
 

@@ -18,6 +18,8 @@ import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.Tags.ActivityJoin;
+import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActivityThread;
 
 public final class TaskPrimitives {
@@ -79,7 +81,7 @@ public final class TaskPrimitives {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "threadingTaskJoin:")
+  @Primitive(primitive = "threadingTaskJoin:", selector = "join")
   public abstract static class JoinPrim extends UnaryExpressionNode {
     public JoinPrim(final boolean ew, final SourceSection s) { super(ew, s); }
 
@@ -92,6 +94,14 @@ public final class TaskPrimitives {
         ActorExecutionTrace.taskJoin(task.getMehtod(), task.getId());
       }
       return result;
+    }
+
+    @Override
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+      if (tag == ActivityJoin.class || tag == ExpressionBreakpoint.class) {
+        return true;
+      }
+      return super.isTaggedWith(tag);
     }
   }
 

@@ -49,6 +49,11 @@ public abstract class Tags {
     private ActivityCreation() { }
   }
 
+  /** Marks the join operation of an activity. */
+  public final class ActivityJoin extends Tags {
+    private ActivityJoin() { }
+  }
+
   /** Marks the source section of a method's prototype, i.e., declaration.
       NOTE: Special Tag, applied automatically be front-end. */
   public final class MethodDeclaration extends Tags {

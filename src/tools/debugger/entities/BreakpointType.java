@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName;
 
 import tools.concurrency.Tags;
 import tools.concurrency.Tags.ActivityCreation;
+import tools.concurrency.Tags.ActivityJoin;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.CreatePromisePair;
@@ -128,6 +129,24 @@ public enum BreakpointType {
     @Override
     public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
       bps.addOrUpdateBeforeExpression(bpInfo);
+    }
+  },
+
+  @SerializedName("activityBeforeJoinBP")
+  ACTIVITY_BEFORE_JOIN("activityBeforeJoinBP", "Before join",
+      new Class[] {ActivityJoin.class}) {
+    @Override
+    public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
+      bps.addOrUpdateBeforeExpression(bpInfo);
+    }
+  },
+
+  @SerializedName("activityAfterJoinBP")
+  ACTIVITY_AFTER_JOIN("activityAfterJoinBP", "After join",
+      new Class[] {ActivityJoin.class}) {
+    @Override
+    public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
+      bps.addOrUpdateAfterExpression(bpInfo);
     }
   };
 

@@ -93,6 +93,11 @@ public class Breakpoints {
     saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class, null);
   }
 
+  public synchronized void addOrUpdateAfterExpression(final SectionBreakpoint bId) {
+    // TODO: does this work???
+    saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class, SteppingLocation.AFTER_STATEMENT);
+  }
+
   public synchronized void addOrUpdateMessageReceiver(final SectionBreakpoint bId) {
     saveBreakpoint(bId, receiverBreakpoints);
   }
