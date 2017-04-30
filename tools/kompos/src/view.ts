@@ -7,7 +7,7 @@ import {Controller}   from "./controller";
 import {ActivityNode} from "./history-data";
 import {Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
   TaggedSourceCoordinate, Scope, getSectionId, Variable, Activity,
-  SymbolMessage, ServerCapabilities, BreakpointType } from "./messages";
+  SymbolMessage, ServerCapabilities, BreakpointType, SteppingType } from "./messages";
 import {Breakpoint, SectionBreakpoint, LineBreakpoint} from "./breakpoints";
 import {SystemVisualization} from "./visualizations";
 
@@ -264,8 +264,9 @@ function arrayToString(arr: any[][]) {
 }
 
 function nodeFromTemplate(tplId: string) {
-  const tpl = document.getElementById(tplId),
-    result = <Element> tpl.cloneNode(true);
+  const tpl = document.getElementById(tplId);
+  console.assert(tpl, "nodeFromTemplate failed for: " + tplId);
+  const result = <Element> tpl.cloneNode(true);
   result.removeAttribute("id");
   return result;
 }
@@ -576,12 +577,36 @@ export class View {
     sourceSection.popover();
   }
 
+  private createSteppingButtons(actId: string, stepBtns: JQuery) {
+    let group = "";
+    let groupElem = null;
+
+    for (const step of this.serverCapabilities.steppingTypes) {
+      if (group !== step.group) {
+        group = step.group;
+        groupElem = nodeFromTemplate("debugger-step-btn-group");
+        groupElem.setAttribute("aria-label", group);
+        stepBtns.append(groupElem);
+      }
+
+      const stepElem = nodeFromTemplate("debugger-step-btn");
+      $(stepElem).empty();
+      stepElem.setAttribute("title", step.label);
+      stepElem.setAttribute("data-actid", actId);
+      stepElem.setAttribute("data-step", step.name);
+      stepElem.appendChild(nodeFromTemplate("icon-" + step.icon));
+      groupElem.appendChild(stepElem);
+    }
+  }
+
   private displayActivity(activity: Activity) {
     const act = nodeFromTemplate("activity-tpl");
     $(act).find(".activity-name").html(activity.name);
+
     const actId = getActivityId(activity.id);
     act.id = actId;
-    $(act).find("button").attr("data-actId", actId);
+    this.createSteppingButtons(actId, $(act).find(".debugger-button-groups"));
+    $(act).find("button.pane-closed").attr("data-actid", actId);
 
     const codeView = document.getElementById("code-views");
     codeView.appendChild(act);
@@ -664,7 +689,8 @@ export class View {
   }
 
   public displayStackTrace(sourceId: string, data: StackTraceResponse,
-      requestedId: number, activity: Activity) {
+      requestedId: number, activity: Activity, ssId: string,
+      section: TaggedSourceCoordinate) {
     const act = $("#" + getActivityId(data.activityId));
     const list = act.find(".activity-stack");
     list.html(""); // rest view
@@ -678,19 +704,39 @@ export class View {
     scopes.attr("id", this.getScopeId(requestedId));
     scopes.find("tbody").html(""); // rest view
 
-    this.highlightProgramPosition(sourceId, activity, data.stackFrames[0]);
+    this.highlightProgramPosition(sourceId, activity, ssId);
+    this.adjustSteppingButtons(act, section);
+  }
+
+  private hasCommonElements(a: string[], b: string[]) {
+    for (const s of a) {
+      for (const t of b) {
+        if (s === t) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private isSteppingApplicable(section: TaggedSourceCoordinate, step: SteppingType) {
+    if (step.applicableTo) {
+      return this.hasCommonElements(section.tags, step.applicableTo);
+    } else {
+      return true;
+    }
+  }
+
+  private adjustSteppingButtons(act: JQuery, section: TaggedSourceCoordinate) {
+    for (const step of this.serverCapabilities.steppingTypes) {
+      const enabled = this.isSteppingApplicable(section, step);
+      act.find("button[data-step=" + step.name + " ]").prop("disabled", !enabled);
+    }
   }
 
   private highlightProgramPosition(sourceId: string, activity: Activity,
-      frame: StackFrame) {
-    const line = frame.line,
-      column = frame.column,
-      length = frame.length;
+      ssId: string) {
 
-    // highlight current node
-    // TODO: still needs to be adapted to multi-activity system
-    let ssId = getSectionId(sourceId,
-                 {startLine: line, startColumn: column, charLength: length});
     let ss = document.getElementById(
                         getSectionIdForActivity(ssId, activity.id));
     $(ss).addClass("DbgCurrentNode");
@@ -762,48 +808,23 @@ export class View {
     this.updateBreakpoint(bp, "section-breakpoint-active");
   }
 
-  private findActivityDebuggerButtons(activity: Activity) {
-    const id = getActivityId(activity.id);
-    const act = $("#" + id);
-    return {
-      resume:   act.find(".act-resume"),
-      pause:    act.find(".act-pause"),
-      stepInto: act.find(".act-step-into"),
-      stepOver: act.find(".act-step-over"),
-      return:   act.find(".act-return")
-    };
-  }
-
   public switchActivityDebuggerToSuspendedState(act: Activity) {
     // mark paused in system view
     const markedNode = $(
       "#" + getActivityRectId(act.id) + " " + "text.activity-pause");
     markedNode.removeClass("running");
-
-    const btns = this.findActivityDebuggerButtons(act);
-
-    btns.resume.removeClass("disabled");
-    btns.pause.addClass("disabled");
-
-    btns.stepInto.removeClass("disabled");
-    btns.stepOver.removeClass("disabled");
-    btns.return.removeClass("disabled");
   }
 
-  public switchActivityDebuggerToResumedState(act: Activity) {
+  private switchActivityDebuggerToResumedState(act: Activity) {
     // mark resume in system view
     const markedNode = $(
       "#" + getActivityRectId(act.id) + " " + "text.activity-pause");
     markedNode.addClass("running");
 
-    const btns = this.findActivityDebuggerButtons(act);
-
-    btns.resume.addClass("disabled");
-    btns.pause.removeClass("disabled");
-
-    btns.stepInto.addClass("disabled");
-    btns.stepOver.addClass("disabled");
-    btns.return.addClass("disabled");
+    // TODO: at some point, we might want to reconsider enabling the pause button
+    const id = getActivityId(act.id);
+    const actE = $("#" + id);
+    actE.find("button[data-step]").prop("disabled", true);
   }
 
   public onContinueExecution(act: Activity) {

@@ -348,22 +348,7 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
 
       <div class="activity-state col-3">
         <div class="activity-actions btn-toolbar" role="toolbar" aria-label="Debugger Controls">
-          <!-- TODO: still need the activity id somehow here in the onclick handler -->
-          <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
-            <button class="act-resume btn btn-secondary btn-sm disabled" type="button" title="Resume Execution"
-                    onclick="ctrl.resumeExecution(getAttribute('data-actid'));"><i class="fa fa-play"></i></button>
-            <button class="act-pause btn btn-secondary btn-sm" type="button" title="Pause Execution"
-                    onclick="ctrl.pauseExecution(getAttribute('data-actid'));"><i class="fa fa-pause"></i></button>
-          </div>
-
-          <div class="btn-group btn-group-xs" role="group" aria-label="Stepping">
-            <button class="act-step-into btn btn-secondary btn-sm disabled" type="button" title="Step Into"
-                    onclick="ctrl.stepInto(getAttribute('data-actid'));"><i class="fa fa-share" style="transform: rotate(90deg);"></i></button>
-            <button class="act-step-over btn btn-secondary btn-sm disabled" type="button" title="Step Over"
-                    onclick="ctrl.stepOver(getAttribute('data-actid'));"><i class="fa fa-share"></i></button>
-            <button class="act-return btn btn-secondary btn-sm disabled" type="button" title="Return from Method"
-                    onclick="ctrl.returnFromExecution(getAttribute('data-actid'));"><i class="fa fa-reply" style="transform: scaleY(-1);"></i></button>
-          </div>
+          <div class="debugger-button-groups"></div>
           <div class="btn-group btn-group-xs activity-fold" role="group" aria-label="Stepping">
             <button class="btn btn-secondary pane-closed"
               onclick="ctrl.toggleCodePane(getAttribute('data-actid'));">
@@ -413,6 +398,22 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
 
   <div id="bp-menu" class="dropdown-content"></div>
   <button id="bp-menu-btn" class="btn btn-secondary btn-sm btn-block bp-btn"></button>
+
+  <div id="debugger-button-icons">
+    <i id="icon-play"        class="fa fa-play"></i>
+    <i id="icon-pause"       class="fa fa-pause"></i>
+    <i id="icon-stop"        class="fa fa-stop"></i>
+    <i id="icon-arrow-down"  class="fa fa-share" style="transform: rotate(90deg);"></i>
+    <i id="icon-arrow-right" class="fa fa-share"></i>
+    <i id="icon-arrow-left"  class="fa fa-reply" style="transform: scaleY(-1);"></i>
+  </div>
+
+  <div id="debugger-step-btn-group"
+    class="btn-group btn-group-xs" role="group" aria-label="LABEL"></div>
+  <button id="debugger-step-btn"
+    class="act-resume btn btn-secondary btn-sm" type="button" disabled="disabled"
+    title="TITLE" data-actid="ACTID" data-step="STEPID"
+    onclick="ctrl.step(getAttribute('data-actid'), getAttribute('data-step'));">LABEL</button>
 </div>
 
 <!-- REM: https://github.com/earmbrust/bootstrap-window -->
