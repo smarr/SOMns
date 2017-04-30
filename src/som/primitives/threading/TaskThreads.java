@@ -10,6 +10,7 @@ import som.vm.Activity;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.concurrency.TracingActivityThread;
+import tools.debugger.entities.ActivityType;
 
 public final class TaskThreads {
 
@@ -22,6 +23,9 @@ public final class TaskThreads {
       this.argArray = argArray;
       assert argArray[0] instanceof SBlock : "First argument of a block needs to be the block object";
     }
+
+    @Override
+    public ActivityType getType() { return ActivityType.TASK; }
 
     public final SInvokable getMehtod() {
       return ((SBlock) argArray[0]).getMethod();

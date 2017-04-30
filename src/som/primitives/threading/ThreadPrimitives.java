@@ -13,6 +13,7 @@ import som.vm.ActivityThread;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
+import tools.debugger.entities.ActivityType;
 
 public final class ThreadPrimitives {
   @GenerateNodeFactory
@@ -75,6 +76,9 @@ public final class ThreadPrimitives {
       this.block = block;
       this.args  = args;
     }
+
+    @Override
+    public ActivityType getType() { return ActivityType.THREAD; }
 
     @Override
     public void run() {

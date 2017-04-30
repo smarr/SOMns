@@ -25,6 +25,7 @@ import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
+import tools.debugger.entities.ActivityType;
 
 
 /**
@@ -95,6 +96,9 @@ public class Actor implements Activity {
     isExecuting = false;
     executor = createExecutor(vm);
   }
+
+  @Override
+  public ActivityType getType() { return ActivityType.ACTOR; }
 
   protected ExecAllMessages createExecutor(final VM vm) {
     return new ExecAllMessages(this, vm);

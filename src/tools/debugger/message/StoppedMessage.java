@@ -1,10 +1,7 @@
 package tools.debugger.message;
 
-import som.interpreter.actors.Actor;
-import som.primitives.processes.ChannelPrimitives;
-import som.primitives.threading.ThreadPrimitives.SomThread;
-import som.vm.NotYetImplementedException;
 import tools.TraceData;
+import tools.debugger.entities.ActivityType;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.OutgoingMessage;
 
@@ -13,7 +10,7 @@ import tools.debugger.message.Message.OutgoingMessage;
 public final class StoppedMessage extends OutgoingMessage {
   private String  reason;
   private long    activityId;
-  private String  activityType;
+  private byte    activityType;
   private String  text;
   private boolean allThreadsStopped;
 
@@ -22,7 +19,7 @@ public final class StoppedMessage extends OutgoingMessage {
     assert TraceData.isWithinJSIntValueRange(activityId);
     this.reason     = reason.value;
     this.activityId = activityId;
-    this.activityType = type.value;
+    this.activityType = type.getId();
     this.text       = text;
     this.allThreadsStopped = false;
   }
@@ -40,18 +37,6 @@ public final class StoppedMessage extends OutgoingMessage {
     }
   }
 
-  private enum ActivityType {
-    Actor("Actor"),
-    Thread("Thread"),
-    Process("Process");
-
-    private final String value;
-
-    ActivityType(final String value) {
-      this.value = value;
-    }
-  }
-
   public static StoppedMessage create(final Suspension suspension) {
     Reason reason;
     if (suspension.getEvent().getBreakpoints().isEmpty()) {
@@ -60,17 +45,7 @@ public final class StoppedMessage extends OutgoingMessage {
       reason = Reason.breakpoint;
     }
 
-    ActivityType type;
-    if (suspension.getActivity() instanceof Actor) {
-      type = ActivityType.Actor;
-    } else if (suspension.getActivity() instanceof SomThread) {
-      type = ActivityType.Thread;
-    } else if (suspension.getActivity() instanceof ChannelPrimitives.Process) {
-      type = ActivityType.Process;
-    } else {
-      // need to support this type of activity first
-      throw new NotYetImplementedException();
-    }
+    ActivityType type = suspension.getActivity().getType();
 
     return new StoppedMessage(reason, suspension.activityId, type, ""); // TODO: look into additional details that can be provided as text
   }

@@ -36,6 +36,7 @@ import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActivityThread;
+import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
@@ -92,6 +93,9 @@ public abstract class ChannelPrimitives {
     public Process(final SObjectWithClass obj) {
       this.obj = obj;
     }
+
+    @Override
+    public ActivityType getType() { return ActivityType.PROCESS; }
 
     @Override
     public void run() {
