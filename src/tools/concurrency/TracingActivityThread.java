@@ -8,6 +8,7 @@ import som.vm.Activity;
 import som.vm.ActivityThread;
 import som.vm.VmSettings;
 import tools.TraceData;
+import tools.debugger.SteppingStrategy;
 
 
 public abstract class TracingActivityThread extends ForkJoinWorkerThread
@@ -24,6 +25,8 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread
   public long erroredPromises;
 
   protected final TraceBuffer traceBuffer;
+
+  protected SteppingStrategy steppingStrategy;
 
   public TracingActivityThread(final ForkJoinPool pool) {
     super(pool);
@@ -42,6 +45,16 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread
 
   @Override
   public abstract Activity getActivity();
+
+  @Override
+  public SteppingStrategy getSteppingStrategy() {
+    return this.steppingStrategy;
+  }
+
+  @Override
+  public void setSteppingStrategy(final SteppingStrategy strategy) {
+    this.steppingStrategy = strategy;
+  }
 
   public long generateActivityId() {
     long result = nextActivityId;

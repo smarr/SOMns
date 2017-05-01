@@ -13,6 +13,7 @@ import som.vm.ActivityThread;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
+import tools.debugger.SteppingStrategy;
 import tools.debugger.entities.ActivityType;
 
 public final class ThreadPrimitives {
@@ -72,9 +73,21 @@ public final class ThreadPrimitives {
     private final Object[] args;
     private final SBlock block;
 
+    protected SteppingStrategy steppingStrategy;
+
     public SomThread(final SBlock block, final Object... args) {
       this.block = block;
       this.args  = args;
+    }
+
+    @Override
+    public SteppingStrategy getSteppingStrategy() {
+      return steppingStrategy;
+    }
+
+    @Override
+    public void setSteppingStrategy(final SteppingStrategy strategy) {
+      this.steppingStrategy = strategy;
     }
 
     @Override
