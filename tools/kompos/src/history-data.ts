@@ -485,6 +485,8 @@ export class HistoryData {
     const causalMsg = this.readLong(data, i + 8);
     const nameId: number = data.getUint16(i + 16);
 
+    console.assert(this.strings[nameId], "Symbol table not yet initialized by backend. Doesn't contain string for " + nameId);
+
     const activity: Activity = {
       id: aid,
       type:      this.creationIdToActivityType[msgType],
@@ -510,6 +512,8 @@ export class HistoryData {
     const startLine: number = data.getUint16(i + 2);
     const startCol:  number = data.getUint16(i + 4);
     const charLen:   number = data.getUint16(i + 6);
+
+    console.assert(this.strings[fileId], "Symbol table not yet initialized by backend. Doesn't contain string for " + fileId);
     return {
       uri: this.strings[fileId],
       charLength:  charLen,
@@ -572,6 +576,8 @@ export class HistoryData {
   }
 
   public updateDataBin(data: DataView): Activity[] {
+    console.assert(this.strings, "Symbol table not yet initialized by backend.");
+
     const newActivities: Activity[] = [];
     let i = 0;
     let prevMessage = -1;

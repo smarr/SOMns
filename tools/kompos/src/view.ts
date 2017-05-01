@@ -373,6 +373,7 @@ export class View {
   }
 
   public updateTraceData(data: DataView): Activity[] {
+    console.assert(this.serverCapabilities, "Connection not yet completely established, but got trace data");
     return this.systemViz.updateData(data);
   }
 
