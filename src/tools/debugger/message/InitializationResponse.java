@@ -1,5 +1,6 @@
 package tools.debugger.message;
 
+import tools.concurrency.Tags;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.EntityType;
@@ -20,13 +21,29 @@ public final class InitializationResponse extends OutgoingMessage {
     private final byte creation;
     private final byte completion;
     private final String label;
+    private final String marker;
 
-    private Type(final byte id, final String label, final byte creation, final byte completion) {
+    private Type(final byte id, final String label, final byte creation, final byte completion,
+        final String marker) {
       this.id    = id;
       this.completion = completion;
       this.creation = creation;
       this.label = label;
+      this.marker = marker;
     }
+  }
+
+  private static String[] tagsToStrings(final Class<? extends Tags>[] tags) {
+    if (tags == null) {
+      return null;
+    }
+
+    String[] result = new String[tags.length];
+
+    for (int i = 0; i < tags.length; i += 1) {
+      result[i] = tags[i].getSimpleName();
+    }
+    return result;
   }
 
   private static final class BreakpointData {
@@ -37,12 +54,7 @@ public final class InitializationResponse extends OutgoingMessage {
     private BreakpointData(final BreakpointType bp) {
       this.name = bp.name;
       this.label = bp.label;
-
-      this.applicableTo = new String[bp.applicableTo.length];
-
-      for (int i = 0; i < bp.applicableTo.length; i += 1) {
-        applicableTo[i] = bp.applicableTo[i].getSimpleName();
-      }
+      this.applicableTo = tagsToStrings(bp.applicableTo);
     }
   }
 
@@ -58,16 +70,7 @@ public final class InitializationResponse extends OutgoingMessage {
       this.label = type.label;
       this.group = type.group.label;
       this.icon  = type.icon;
-
-      if (type.applicableTo == null) {
-          this.applicableTo = null;
-      } else {
-        this.applicableTo = new String[type.applicableTo.length];
-
-        for (int i = 0; i < type.applicableTo.length; i += 1) {
-          applicableTo[i] = type.applicableTo[i].getSimpleName();
-        }
-      }
+      this.applicableTo = tagsToStrings(type.applicableTo);
     }
   }
 
@@ -88,13 +91,14 @@ public final class InitializationResponse extends OutgoingMessage {
 
       int i = 0;
       for (EntityType e : supportedEntities) {
-        entityTypes[i] = new Type(e.id, e.name, e.creation, e.completion);
+        entityTypes[i] = new Type(e.id, e.name, e.creation, e.completion, null);
         i += 1;
       }
 
       i = 0;
       for (ActivityType e : supportedActivities) {
-        activityTypes[i] = new Type(e.getId(), e.getName(), e.getCreation(), e.getCompletion());
+        activityTypes[i] = new Type(
+            e.getId(), e.getName(), e.getCreation(), e.getCompletion(), e.getMarker());
         i += 1;
       }
 

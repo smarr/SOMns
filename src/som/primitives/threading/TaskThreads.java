@@ -27,13 +27,13 @@ public final class TaskThreads {
     @Override
     public ActivityType getType() { return ActivityType.TASK; }
 
-    public final SInvokable getMehtod() {
+    public final SInvokable getMethod() {
       return ((SBlock) argArray[0]).getMethod();
     }
 
     @Override
     public final String getName() {
-      return getMehtod().toString();
+      return getMethod().toString();
     }
 
     @Override
