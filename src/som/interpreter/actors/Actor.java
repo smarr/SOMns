@@ -184,7 +184,7 @@ public class Actor implements Activity {
   }
 
   protected static void handleBreakPoints(final EventualMessage msg, final WebDebugger dbg) {
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isBreakpoint()) {
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isMessageReceiverBreakpointSet()) {
       dbg.prepareSteppingUntilNextRootNode();
     }
   }

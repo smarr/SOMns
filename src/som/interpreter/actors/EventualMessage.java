@@ -323,7 +323,7 @@ public abstract class EventualMessage {
    * Indicates that execution should stop and yield to the debugger,
    * before the computed value is used to resolve the promise.
    */
-  public boolean isTriggerPromiseResolverBreakpoint() {
+  public boolean isPromiseResolverBreakpointSet() {
     return triggerPromiseResolverBreakpoint;
   }
 
@@ -331,7 +331,7 @@ public abstract class EventualMessage {
    * Indicates that execution should stop and yield to the debugger,
    * before the message is processed.
    */
-  public boolean isBreakpoint() {
+  public boolean isMessageReceiverBreakpointSet() {
     return triggerMessageReceiverBreakpoint;
   }
 
