@@ -89,7 +89,7 @@ public final class UninitializedDispatchNode {
       AbstractDispatchNode node;
       if (dispatchable == null) {
         node = new CachedDnuNode(rcvrClass, selector,
-            DispatchGuard.create(rcvr), getRootNode().getLanguage(SomLanguage.class).getVM(), newChainEnd);
+            DispatchGuard.create(rcvr), SomLanguage.getVM(getRootNode()), newChainEnd);
       } else {
         node = dispatchable.getDispatchNode(rcvr, firstArg, newChainEnd, forAtomic());
       }
