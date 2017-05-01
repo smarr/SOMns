@@ -1,13 +1,11 @@
 /* jshint -W097 */
 "use strict";
 
-import {SymbolMessage, Activity, ActivityType, ServerCapabilities} from "./messages";
+import {SymbolMessage, Activity, ActivityType, ServerCapabilities,
+  EntityDef} from "./messages";
 import * as d3 from "d3";
 import {HistoryData, ActivityNode, EntityLink,
   ChannelNode} from "./history-data";
-
-// TODO needs to be removed
-import {ActivityId} from "../tests/somns-support";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
 const TANGO_SCHEME = [
@@ -201,7 +199,7 @@ export class SystemVisualization {
     const actG = this.activityNodes.enter().append("svg:g");
     const chG  = this.channelNodes.enter().append("svg:g");
 
-    createActivity(actG);
+    createActivity(actG, this.serverCapabilities.activityTypes);
     createChannel(chG);
 
     // After rendering text, adapt rectangles
@@ -264,11 +262,11 @@ function selectEndMarker(d: EntityLink) {
     : "";
 }
 
-function createActivity(g) {
+function createActivity(g, activityTypes: EntityDef[]) {
   g.attr("id", function (a: ActivityNode) { return a.getSystemViewId(); });
 
   createActivityRectangle(g);
-  createActivityLabel(g);
+  createActivityLabel(g, activityTypes);
   createActivityStatusIndicator(g);
 }
 
@@ -293,13 +291,13 @@ function createActivityRectangle(g) {
     .classed("reflexive", function(a: ActivityNode) { return a.reflexive; });
 }
 
-function createActivityLabel(g) {
+function createActivityLabel(g, activityTypes: EntityDef[]) {
   g.append("svg:text")
     .attr("x", 0)
     .attr("dy", ".35em")
     .attr("class", "id")
     .html(function(a: ActivityNode) {
-      let label = getTypePrefix(a.getType()) + a.getName();
+      let label = getTypePrefix(a.getType(), activityTypes) + " " + a.getName();
 
       if (a.getGroupSize() > 1) {
         label += " (" + a.getGroupSize() + ")";
@@ -320,20 +318,11 @@ function createActivityStatusIndicator(g) {
 
 const PADDING = 15;
 
-function getTypePrefix(type: ActivityType) {
-  switch (type) {
-    // REMOVE the hacks
-    case <number> ActivityId.ACTOR:
-      return "&#128257; ";
-    case <number> ActivityId.PROCESS:
-      return "&#10733;";
-    case <number> ActivityId.THREAD:
-      return "&#11123;";
-    case <number> ActivityId.TASK:
-      return "&#8623;";
-    default:
-      console.warn("getTypePrefix misses support for " + type);
-      return null;
+function getTypePrefix(type: ActivityType, activityTypes: EntityDef[]) {
+  for (const t of activityTypes) {
+    if (t.id === type) {
+      return t.marker;
+    }
   }
 }
 

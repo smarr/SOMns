@@ -170,6 +170,7 @@ export interface EntityDef {
   creation:   number;
   completion: number;
   label:      string;
+  marker?:    string;
 }
 
 export interface ServerCapabilities {

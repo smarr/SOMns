@@ -21,12 +21,15 @@ public final class InitializationResponse extends OutgoingMessage {
     private final byte creation;
     private final byte completion;
     private final String label;
+    private final String marker;
 
-    private Type(final byte id, final String label, final byte creation, final byte completion) {
+    private Type(final byte id, final String label, final byte creation, final byte completion,
+        final String marker) {
       this.id    = id;
       this.completion = completion;
       this.creation = creation;
       this.label = label;
+      this.marker = marker;
     }
   }
 
@@ -88,13 +91,14 @@ public final class InitializationResponse extends OutgoingMessage {
 
       int i = 0;
       for (EntityType e : supportedEntities) {
-        entityTypes[i] = new Type(e.id, e.name, e.creation, e.completion);
+        entityTypes[i] = new Type(e.id, e.name, e.creation, e.completion, null);
         i += 1;
       }
 
       i = 0;
       for (ActivityType e : supportedActivities) {
-        activityTypes[i] = new Type(e.getId(), e.getName(), e.getCreation(), e.getCompletion());
+        activityTypes[i] = new Type(
+            e.getId(), e.getName(), e.getCreation(), e.getCompletion(), e.getMarker());
         i += 1;
       }
 
