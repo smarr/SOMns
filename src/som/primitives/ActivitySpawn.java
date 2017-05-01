@@ -23,6 +23,7 @@ import som.primitives.threading.TaskThreads.SomForkJoinTask;
 import som.primitives.threading.TaskThreads.TracedForkJoinTask;
 import som.primitives.threading.ThreadPrimitives.SomThread;
 import som.primitives.threading.ThreadingModule;
+import som.vm.ActivityThread;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
@@ -36,6 +37,7 @@ import som.vmobjects.SSymbol;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.debugger.SteppingStrategy;
 
 public abstract class ActivitySpawn {
 
@@ -47,18 +49,31 @@ public abstract class ActivitySpawn {
     }
   }
 
-  private static Process createProcess(final SObjectWithClass obj, final SourceSection origin) {
+  private static Process createProcess(final SObjectWithClass obj,
+      final SourceSection origin, final boolean stopOnRoot) {
     if (VmSettings.ACTOR_TRACING) {
-      TracingProcess result = new TracingProcess(obj);
+      TracingProcess result = new TracingProcess(obj, stopOnRoot);
       ActorExecutionTrace.processCreation(result, origin);
       return result;
     } else {
-      return new Process(obj);
+      return new Process(obj, stopOnRoot);
     }
   }
 
   public static IsValue createIsValue() {
     return IsValue.createSubNode();
+  }
+
+  public static boolean stopOnRoot() {
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      SteppingStrategy strategy = ActivityThread.steppingStrategy();
+      if (strategy == null) {
+        return false;
+      }
+      return strategy.handleSpawn();
+    } else {
+      return false;
+    }
   }
 
   @GenerateNodeFactory
@@ -107,7 +122,7 @@ public abstract class ActivitySpawn {
       SInvokable disp = procCls.getMixinDefinition().getFactoryMethods().get(sel);
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(new Object[] {procCls});
 
-      processesPool.submit(createProcess(obj, sourceSection));
+      processesPool.submit(createProcess(obj, sourceSection, stopOnRoot()));
       return Nil.nilObject;
     }
 
@@ -175,7 +190,7 @@ public abstract class ActivitySpawn {
       SInvokable disp = procCls.getMixinDefinition().getFactoryMethods().get(sel);
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(argArr);
 
-      processesPool.submit(createProcess(obj, sourceSection));
+      processesPool.submit(createProcess(obj, sourceSection, stopOnRoot()));
       return Nil.nilObject;
     }
 

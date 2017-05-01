@@ -13,6 +13,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.interpreter.SomLanguage;
 import som.interpreter.actors.SuspendExecutionNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -35,6 +36,7 @@ import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActivityThread;
+import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.nodes.AbstractBreakpointNode;
@@ -82,9 +84,11 @@ public abstract class ChannelPrimitives {
 
   public static class Process implements Activity, Runnable {
     private final SObjectWithClass obj;
+    private final boolean stopOnRootNode;
 
-    public Process(final SObjectWithClass obj) {
+    public Process(final SObjectWithClass obj, final boolean stopOnRootNode) {
       this.obj = obj;
+      this.stopOnRootNode = stopOnRootNode;
     }
 
     @Override
@@ -97,6 +101,11 @@ public abstract class ChannelPrimitives {
       try {
         SInvokable disp = (SInvokable) obj.getSOMClass().lookupMessage(
             Symbols.symbolFor("run"), AccessModifier.PROTECTED);
+
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRootNode) {
+          WebDebugger dbg = SomLanguage.getVM(disp.getInvokable()).getWebDebugger();
+          dbg.prepareSteppingUntilNextRootNode();
+        }
         disp.invoke(new Object[] {obj});
       } catch (Throwable t) {
         t.printStackTrace();
@@ -119,8 +128,8 @@ public abstract class ChannelPrimitives {
   public static class TracingProcess extends Process {
     protected final long processId;
 
-    public TracingProcess(final SObjectWithClass obj) {
-      super(obj);
+    public TracingProcess(final SObjectWithClass obj, final boolean stopOnRootNode) {
+      super(obj, stopOnRootNode);
       assert Thread.currentThread() instanceof TracingActivityThread;
       processId = ((TracingActivityThread) Thread.currentThread()).generateActivityId();
     }

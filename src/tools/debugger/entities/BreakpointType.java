@@ -135,6 +135,9 @@ public enum BreakpointType {
     }
   },
 
+  // TODO: there is need for an ACTIVITY_CREATION_ROOT_NODE or some such breakpoint.
+  //       I am using it for the stepping already.
+
   @SerializedName("activityBeforeJoinBP")
   ACTIVITY_BEFORE_JOIN("activityBeforeJoinBP", "Before join",
       new Class[] {ActivityJoin.class}) {
