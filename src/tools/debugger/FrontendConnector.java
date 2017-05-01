@@ -30,6 +30,7 @@ import tools.concurrency.ActorExecutionTrace;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.EntityType;
+import tools.debugger.entities.SteppingType;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.InitializationResponse;
 import tools.debugger.message.Message;
@@ -279,7 +280,7 @@ public class FrontendConnector {
   public void completeConnection(final WebSocket conn) {
     clientConnected.complete(conn);
     send(InitializationResponse.create(EntityType.values(),
-        ActivityType.values(), BreakpointType.values()));
+        ActivityType.values(), BreakpointType.values(), SteppingType.values()));
   }
 
   public void shutdown() {

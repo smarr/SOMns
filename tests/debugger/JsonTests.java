@@ -20,6 +20,7 @@ import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.EntityType;
+import tools.debugger.entities.SteppingType;
 import tools.debugger.message.InitializationResponse;
 import tools.debugger.message.InitializeConnection;
 import tools.debugger.message.Message.IncommingMessage;
@@ -173,7 +174,9 @@ public class JsonTests {
   @Test
   public void initializeResponseSerialize() {
     String result = gson.toJson(InitializationResponse.create(
-        EntityType.values(), ActivityType.values(), BreakpointType.values()), OutgoingMessage.class);
+        EntityType.values(), ActivityType.values(), BreakpointType.values(),
+        SteppingType.values()),
+      OutgoingMessage.class);
     // This test is only doing a very basic sanity check
     assertTrue(1000 < result.length());
   }

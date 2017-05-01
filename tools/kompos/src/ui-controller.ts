@@ -141,8 +141,11 @@ export class UiController extends Controller {
       const sourceId = this.dbg.getSourceId(msg.stackFrames[0].sourceUri);
       const source = this.dbg.getSource(sourceId);
 
+      const ssId = this.dbg.getSectionIdFromFrame(sourceId, msg.stackFrames[0]);
+      const section = this.dbg.getSection(ssId);
+
       const newSource = this.view.displaySource(act, source, sourceId);
-      this.view.displayStackTrace(sourceId, msg, topFrameId, act);
+      this.view.displayStackTrace(sourceId, msg, topFrameId, act, ssId, section);
       if (newSource) {
         this.ensureBreakpointsAreIndicated(sourceId);
       }
@@ -214,52 +217,16 @@ export class UiController extends Controller {
     this.view.updateSectionBreakpoint(<SectionBreakpoint> breakpoint);
   }
 
-  public resumeExecution(actId: string) {
+  public step(actId: string, step: string) {
     const activityId = getActivityIdFromView(actId);
     const act = this.dbg.getActivity(activityId);
 
+    // Note: in general, we assume that all stepping operations lead to a
+    // running activity. However, some operations, might discontinue execution
+    // completely. These need extra support/interaction with the back-end/interpreter.
     if (act.running) { return; }
     act.running = true;
-    this.vmConnection.sendDebuggerAction("resume", act);
+    this.vmConnection.sendDebuggerAction(step, act);
     this.view.onContinueExecution(act);
-  }
-
-  public pauseExecution(actId: string) {
-    const activityId = getActivityIdFromView(actId);
-    const act = this.dbg.getActivity(activityId);
-    if (!act.running) { return; }
-    console.assert(false, "TODO");
-  }
-
-  /** End program, typically terminating it completely. */
-  public stopExecution() {
-    // TODO
-  }
-
-  public stepInto(actId: string) {
-    const activityId = getActivityIdFromView(actId);
-    const act = this.dbg.getActivity(activityId);
-    if (act.running) { return; }
-    act.running = true;
-    this.view.onContinueExecution(act);
-    this.vmConnection.sendDebuggerAction("stepInto", act);
-  }
-
-  public stepOver(actId: string) {
-    const activityId = getActivityIdFromView(actId);
-    const act = this.dbg.getActivity(activityId);
-    if (act.running) { return; }
-    act.running = true;
-    this.view.onContinueExecution(act);
-    this.vmConnection.sendDebuggerAction("stepOver", act);
-  }
-
-  public returnFromExecution(actId: string) {
-    const activityId = getActivityIdFromView(actId);
-    const act = this.dbg.getActivity(activityId);
-    if (act.running) { return; }
-    act.running = true;
-    this.view.onContinueExecution(act);
-    this.vmConnection.sendDebuggerAction("return", act);
   }
 }

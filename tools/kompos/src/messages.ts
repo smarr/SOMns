@@ -157,6 +157,14 @@ export interface BreakpointType {
   applicableTo: string[];  /** Set of source section tags, for which the breakpoint is applicable. */
 }
 
+export interface SteppingType {
+  name:  string;    /** Identifier used for communication. */
+  label: string;    /** Label to use for display purposes. */
+  group: string;    /** Group Label. */
+  icon:  string;    /** Id of an icon known by the frontend. */
+  applicableTo?: string[]; /** The source section tags this stepping operation applies to. If empty, it applies unconditionally. */
+}
+
 export interface EntityDef {
   id:         number;
   creation:   number;
@@ -168,6 +176,7 @@ export interface ServerCapabilities {
   activityTypes:   EntityDef[];
   entityTypes:     EntityDef[];
   breakpointTypes: BreakpointType[];
+  steppingTypes:   SteppingType[];
 }
 
 export interface InitializationResponse {
@@ -193,13 +202,14 @@ interface UpdateBreakpoint {
   breakpoint: BreakpointData;
 }
 
-export type StepType = "stepInto" | "stepOver" | "return" | "resume" | "stop";
-
 export interface StepMessage {
-  action: StepType;
+  action: "StepMessage";
 
   /** Id of the suspended activity. */
   activityId: number;
+
+  /** Name of the stepping operation requested. */
+  step: string;
 }
 
 export interface StackTraceRequest {

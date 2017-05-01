@@ -11,6 +11,7 @@ import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.actors.SuspendExecutionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.HaltPrim;
+import som.vm.Activity;
 import tools.TraceData;
 import tools.debugger.FrontendConnector;
 import tools.debugger.frontend.ApplicationThreadTask.Resume;
@@ -27,13 +28,13 @@ import tools.debugger.frontend.ApplicationThreadTask.SendStackTrace;
  */
 public class Suspension {
   public final long activityId;
-  private final Object activity;
+  private final Activity activity;
   private final ArrayBlockingQueue<ApplicationThreadTask> tasks;
 
   private SuspendedEvent suspendedEvent;
   private ApplicationThreadStack stack;
 
-  public Suspension(final Object activity, final long activityId) {
+  public Suspension(final Activity activity, final long activityId) {
     this.activity   = activity;
     this.activityId = activityId;
     this.tasks = new ArrayBlockingQueue<>(2);
@@ -143,6 +144,6 @@ public class Suspension {
     ObjectTransitionSafepoint.INSTANCE.register();
   }
 
-  public Object getActivity() { return activity; }
+  public Activity getActivity() { return activity; }
   public synchronized SuspendedEvent getEvent() { return suspendedEvent; }
 }

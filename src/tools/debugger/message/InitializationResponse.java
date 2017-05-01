@@ -3,6 +3,7 @@ package tools.debugger.message;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.EntityType;
+import tools.debugger.entities.SteppingType;
 import tools.debugger.message.Message.OutgoingMessage;
 
 
@@ -45,17 +46,45 @@ public final class InitializationResponse extends OutgoingMessage {
     }
   }
 
+  private static final class SteppingData {
+    private final String name;
+    private final String label;
+    private final String group;
+    private final String icon;
+    private final String[] applicableTo;
+
+    private SteppingData(final SteppingType type) {
+      this.name = type.name;
+      this.label = type.label;
+      this.group = type.group.label;
+      this.icon  = type.icon;
+
+      if (type.applicableTo == null) {
+          this.applicableTo = null;
+      } else {
+        this.applicableTo = new String[type.applicableTo.length];
+
+        for (int i = 0; i < type.applicableTo.length; i += 1) {
+          applicableTo[i] = type.applicableTo[i].getSimpleName();
+        }
+      }
+    }
+  }
+
   private static final class ServerCapabilities {
     private final Type[] activityTypes;
     private final Type[] entityTypes;
     private final BreakpointData[] breakpointTypes;
+    private final SteppingData[] steppingTypes;
 
     private ServerCapabilities(final EntityType[] supportedEntities,
         final ActivityType[] supportedActivities,
-        final BreakpointType[] supportedBreakpoints) {
+        final BreakpointType[] supportedBreakpoints,
+        final SteppingType[] supportedSteps) {
       activityTypes   = new Type[supportedActivities.length];
       entityTypes     = new Type[supportedEntities.length];
       breakpointTypes = new BreakpointData[supportedBreakpoints.length];
+      steppingTypes   = new SteppingData[supportedSteps.length];
 
       int i = 0;
       for (EntityType e : supportedEntities) {
@@ -74,12 +103,19 @@ public final class InitializationResponse extends OutgoingMessage {
         breakpointTypes[i] = new BreakpointData(e);
         i += 1;
       }
+
+      i = 0;
+      for (SteppingType e : supportedSteps) {
+        steppingTypes[i] = new SteppingData(e);
+        i += 1;
+      }
     }
   }
 
   public static InitializationResponse create(final EntityType[] supportedEntities,
-      final ActivityType[] supportedActivities, final BreakpointType[] supportedBreakpoints) {
+      final ActivityType[] supportedActivities, final BreakpointType[] supportedBreakpoints,
+      final SteppingType[] supportedSteps) {
     return new InitializationResponse(new ServerCapabilities(supportedEntities,
-        supportedActivities, supportedBreakpoints));
+        supportedActivities, supportedBreakpoints, supportedSteps));
   }
 }

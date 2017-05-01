@@ -10,7 +10,7 @@ import { SOM, PING_PONG_URI, ControllerWithInitialBreakpoints,
 
 import { SourceMessage, createLineBreakpointData,
   createSectionBreakpointData } from "../src/messages";
-import { BreakpointType as BT } from "./somns-support";
+import { BreakpointType as BT, SteppingType as ST } from "./somns-support";
 
 let connectionPossible = false;
 function onlyWithConnection(fn) {
@@ -291,7 +291,7 @@ describe("Basic Protocol", function() {
       return new Promise((resolve, _reject) => {
         ctrl.stackP.then(_ => {
           conn.fullyConnected.then(_ => {
-            conn.sendDebuggerAction("stepInto", ctrl.stoppedActivities[0]);
+            conn.sendDebuggerAction(ST.STEP_INTO, ctrl.stoppedActivities[0]);
           });
 
           const p = ctrl.getStackP(1).then(msgAfterStep => {
@@ -310,7 +310,7 @@ describe("Basic Protocol", function() {
             // set another breakpoint, after stepping, and with connection
             const lbp = createLineBreakpointData(PING_PONG_URI, 22, true);
             conn.updateBreakpoint(lbp);
-            conn.sendDebuggerAction("resume", ctrl.stoppedActivities[1]);
+            conn.sendDebuggerAction(ST.RESUME, ctrl.stoppedActivities[1]);
           });
         }),
         ctrl.getStackP(2).then(msgLineBP => {
@@ -328,7 +328,7 @@ describe("Basic Protocol", function() {
 
             const lbp22 = createLineBreakpointData(PING_PONG_URI, 22, false);
             conn.updateBreakpoint(lbp22);
-            conn.sendDebuggerAction("resume", ctrl.stoppedActivities[2]);
+            conn.sendDebuggerAction(ST.RESUME, ctrl.stoppedActivities[2]);
 
             const p = ctrl.getStackP(3).then(msgLineBP => {
               expectStack(msgLineBP.stackFrames, 1, "Ping>>#ping", 23);

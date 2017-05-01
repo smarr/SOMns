@@ -1,4 +1,4 @@
-import {IdMap, Source, SourceCoordinate, SourceMessage, TaggedSourceCoordinate,
+import {IdMap, Source, StackFrame, SourceMessage, TaggedSourceCoordinate,
   Activity, ServerCapabilities, getSectionId} from "./messages";
 import {Breakpoint} from "./breakpoints";
 
@@ -29,7 +29,7 @@ export class Debugger {
   /**
    * All source sections relevant for the debugger, indexed by {@link getSectionId}.
    */
-  private sections: IdMap<SourceCoordinate>;
+  private sections: IdMap<TaggedSourceCoordinate>;
 
   private breakpoints: IdMap<IdMap<Breakpoint>>;
 
@@ -56,6 +56,15 @@ export class Debugger {
     return this.sources[id];
   }
 
+  public getSectionIdFromFrame(sourceId: string, frame: StackFrame) {
+    const line = frame.line,
+      column = frame.column,
+      length = frame.length;
+
+    return getSectionId(sourceId,
+                 {startLine: line, startColumn: column, charLength: length});
+  }
+
   public addSource(msg: SourceMessage): Source {
     const s = msg.source;
     let id = this.getSourceId(s.uri);
@@ -65,7 +74,7 @@ export class Debugger {
     return s;
   }
 
-  public getSection(id: string): SourceCoordinate {
+  public getSection(id: string): TaggedSourceCoordinate {
     return this.sections[id];
   }
 
@@ -85,7 +94,7 @@ export class Debugger {
     for (let meth of s.methods) {
       let ssId = getSectionId(sId, meth.sourceSection);
       if (!(ssId in this.sections)) {
-        this.sections[ssId] = meth.sourceSection;
+        this.sections[ssId] = <any> meth.sourceSection;
       }
     }
   }

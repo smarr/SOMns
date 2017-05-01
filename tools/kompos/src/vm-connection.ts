@@ -4,7 +4,7 @@
 import * as WebSocket from "ws";
 
 import {Controller} from "./controller";
-import {Activity, Message, Respond, StepType, BreakpointData} from "./messages";
+import {Activity, Message, Respond, BreakpointData} from "./messages";
 
 const DBG_PORT   = 7977;
 const TRACE_PORT = 7978;
@@ -138,9 +138,10 @@ export class VmConnection {
     });
   };
 
-  public sendDebuggerAction(action: StepType, activity: Activity) {
+  public sendDebuggerAction(step: string, activity: Activity) {
     this.send({
-      action: action,
+      action: "StepMessage",
+      step:   step,
       activityId: activity.id});
   }
 
