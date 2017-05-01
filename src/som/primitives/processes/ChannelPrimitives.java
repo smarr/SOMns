@@ -1,6 +1,5 @@
 package som.primitives.processes;
 
-import java.util.HashSet;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
@@ -58,12 +57,6 @@ public abstract class ChannelPrimitives {
     Out     = null; OutId     = null;
   }
 
-  private static final HashSet<Process> activeProcesses = new HashSet<>();
-
-  public static HashSet<Process> getActiveProcesses() {
-    return activeProcesses;
-  }
-
   public static final class ProcessThreadFactory implements ForkJoinWorkerThreadFactory {
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
@@ -101,20 +94,12 @@ public abstract class ChannelPrimitives {
     public void run() {
       ((ProcessThread) Thread.currentThread()).current = this;
 
-      synchronized (activeProcesses) {
-        activeProcesses.add(this);
-      }
-
       try {
         SInvokable disp = (SInvokable) obj.getSOMClass().lookupMessage(
             Symbols.symbolFor("run"), AccessModifier.PROTECTED);
         disp.invoke(new Object[] {obj});
       } catch (Throwable t) {
         t.printStackTrace();
-      } finally {
-        synchronized (activeProcesses) {
-          activeProcesses.remove(this);
-        }
       }
     }
 
