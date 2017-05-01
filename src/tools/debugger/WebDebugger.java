@@ -111,12 +111,13 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     return idToSuspension.get(activityId);
   }
 
-  private synchronized Suspension getSuspension(final Activity activity) {
+  private synchronized Suspension getSuspension(final Activity activity,
+      final ActivityThread activityThread) {
     Suspension suspension = activityToSuspension.get(activity);
     if (suspension == null) {
       long id = activity.getId();
       assert TraceData.isWithinJSIntValueRange(id);
-      suspension = new Suspension(activity, id);
+      suspension = new Suspension(activityThread, activity, id);
 
       activityToSuspension.put(activity, suspension);
       idToSuspension.put(id, suspension);
@@ -128,8 +129,10 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   private Suspension getSuspension() {
     Thread thread = Thread.currentThread();
     Activity current;
+    ActivityThread activityThread;
     if (thread instanceof ActivityThread) {
-      current = ((ActivityThread) thread).getActivity();
+      activityThread = (ActivityThread) thread;
+      current = activityThread.getActivity();
       if (current instanceof Actor) {
         synchronized (suspendedActors) {
           suspendedActors.add((Actor) current);
@@ -138,7 +141,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     } else {
       throw new RuntimeException("Support for " + thread.getClass().getName() + " not yet implemented.");
     }
-    return getSuspension(current);
+    return getSuspension(current, activityThread);
   }
 
   @Override

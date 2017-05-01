@@ -4,6 +4,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import som.vm.Activity;
 import som.vm.ActivityThread;
 import som.vm.VmSettings;
 import tools.TraceData;
@@ -38,6 +39,9 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread
     }
     setName(getClass().getSimpleName() + "-" + threadId);
   }
+
+  @Override
+  public abstract Activity getActivity();
 
   public long generateActivityId() {
     long result = nextActivityId;

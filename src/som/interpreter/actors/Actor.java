@@ -12,7 +12,6 @@ import som.VM;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.IsValue;
 import som.vm.Activity;
-import som.vm.ActivityThread;
 import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray.STransferArray;
@@ -330,8 +329,7 @@ public class Actor implements Activity {
     }
   }
 
-  public static final class ActorProcessingThread extends TracingActivityThread
-      implements ActivityThread {
+  public static final class ActorProcessingThread extends TracingActivityThread {
     public EventualMessage currentMessage;
 
     protected Actor currentlyExecutingActor;
