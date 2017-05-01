@@ -26,7 +26,7 @@ public class ActivityJoin {
       Object result = task.join();
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.taskJoin(task.getMehtod(), task.getId());
+        ActorExecutionTrace.taskJoin(task.getMethod(), task.getId());
       }
       return result;
     }
