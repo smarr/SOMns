@@ -228,25 +228,29 @@ export class HistoryData {
   private currentMsgId = undefined;
   private serverCapabilities: ServerCapabilities;
   private parseTable;
+  private creationIdToActivityType: ActivityType[];
 
   constructor() {
   }
 
-  private createTraceParserTable(capabilities: ServerCapabilities) {
-    const readAct = (data: DataView, i: number, type: number, newActivities: Activity[]) => {
-      return this.readActivity(data, i, type, newActivities);
+  private createTraceParseMetaData(capabilities: ServerCapabilities) {
+    const readAct = (data: DataView, i: number, msgType: number, newActivities: Activity[]) => {
+      return this.readActivity(data, i, msgType, newActivities);
     };
 
     const parseTable = [];
+    const creationId = [];
     for (const actT of capabilities.activityTypes) {
       parseTable[actT.creation] = readAct;
+      creationId[actT.creation] = actT.id;
     }
-    return parseTable;
+    this.parseTable = parseTable;
+    this.creationIdToActivityType = creationId;
   }
 
   public setCapabilities(capabilities: ServerCapabilities) {
     this.serverCapabilities = capabilities;
-    this.parseTable = this.createTraceParserTable(capabilities);
+    this.createTraceParseMetaData(capabilities);
   }
 
   private addActivity(act: Activity) {
@@ -475,14 +479,15 @@ export class HistoryData {
     return high * SHIFT_HIGH_INT + d.getUint32(offset + 4);
   }
 
-  private readActivity(data: DataView, i: number, type: ActivityType,
+  private readActivity(data: DataView, i: number, msgType: number,
       newActivities: Activity[]) {
     const aid = this.readLong(data, i);
     const causalMsg = this.readLong(data, i + 8);
     const nameId: number = data.getUint16(i + 16);
+
     const activity: Activity = {
       id: aid,
-      type:      type,
+      type:      this.creationIdToActivityType[msgType],
       name:      this.strings[nameId],
       creationScope: causalMsg,
       running:   true,
