@@ -135,8 +135,14 @@ public enum BreakpointType {
     }
   },
 
-  // TODO: there is need for an ACTIVITY_CREATION_ROOT_NODE or some such breakpoint.
-  //       I am using it for the stepping already.
+  @SerializedName("activityOnExecBP")
+  ACTIVITY_ON_EXEC("activityOnExecBP", "On execution",
+      new Class[] {ActivityCreation.class}) {
+    @Override
+    public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
+      bps.addOrUpdateActivityOnExec(bpInfo);
+    }
+  },
 
   @SerializedName("activityBeforeJoinBP")
   ACTIVITY_BEFORE_JOIN("activityBeforeJoinBP", "Before join",

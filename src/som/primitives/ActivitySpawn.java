@@ -38,6 +38,8 @@ import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.SteppingStrategy;
+import tools.debugger.nodes.AbstractBreakpointNode;
+import tools.debugger.session.Breakpoints;
 
 public abstract class ActivitySpawn {
 
@@ -85,10 +87,14 @@ public abstract class ActivitySpawn {
     private final ForkJoinPool forkJoinPool;
     private final ForkJoinPool processesPool;
 
+    /** Breakpoint info for triggering suspension on first execution of code in activity. */
+    @Child protected AbstractBreakpointNode onExec;
+
     public SpawnPrim(final boolean ew, final SourceSection s, final VM vm) {
       super(ew, s);
       this.forkJoinPool  = vm.getForkJoinPool();
       this.processesPool = vm.getProcessPool();
+      this.onExec = insert(Breakpoints.createOnExec(s, vm));
     }
 
     @Specialization(guards = "clazz == TaskClass")
@@ -122,7 +128,8 @@ public abstract class ActivitySpawn {
       SInvokable disp = procCls.getMixinDefinition().getFactoryMethods().get(sel);
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(new Object[] {procCls});
 
-      processesPool.submit(createProcess(obj, sourceSection, stopOnRoot()));
+      processesPool.submit(createProcess(obj, sourceSection,
+          onExec.executeCheckIsSetAndEnabled() || stopOnRoot()));
       return Nil.nilObject;
     }
 
@@ -151,10 +158,14 @@ public abstract class ActivitySpawn {
     private final ForkJoinPool forkJoinPool;
     private final ForkJoinPool processesPool;
 
+    /** Breakpoint info for triggering suspension on first execution of code in activity. */
+    @Child protected AbstractBreakpointNode onExec;
+
     public SpawnWithPrim(final boolean ew, final SourceSection s, final VM vm) {
       super(ew, s);
       this.forkJoinPool  = vm.getForkJoinPool();
       this.processesPool = vm.getProcessPool();
+      this.onExec = insert(Breakpoints.createOnExec(s, vm));
     }
 
     @Specialization(guards = "clazz == TaskClass")
@@ -190,7 +201,8 @@ public abstract class ActivitySpawn {
       SInvokable disp = procCls.getMixinDefinition().getFactoryMethods().get(sel);
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(argArr);
 
-      processesPool.submit(createProcess(obj, sourceSection, stopOnRoot()));
+      processesPool.submit(createProcess(obj, sourceSection,
+          onExec.executeCheckIsSetAndEnabled() || stopOnRoot()));
       return Nil.nilObject;
     }
 
