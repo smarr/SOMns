@@ -24,6 +24,7 @@ import som.interpreter.processes.SChannel.SChannelOutput;
 import som.primitives.ObjectPrims.IsValue;
 import som.primitives.Primitive;
 import som.vm.Activity;
+import som.vm.ActivityThread;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
@@ -36,6 +37,7 @@ import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActivityThread;
+import tools.debugger.SteppingStrategy;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
@@ -179,13 +181,25 @@ public abstract class ChannelPrimitives {
     @Specialization
     public final Object read(final VirtualFrame frame, final SChannelInput in) {
       try {
-        Object result = in.readAndSuspendWriter(afterWrite.executeCheckIsSetAndEnabled());
+        Object result = in.readAndSuspendWriter(afterWrite.executeCheckIsSetAndEnabled() || stopOnWrite());
         if (in.shouldBreakAfterRead()) {
           haltNode.executeEvaluated(frame, result);
         }
         return result;
       } catch (InterruptedException e) {
         throw new RuntimeException(e);
+      }
+    }
+
+    private static boolean stopOnWrite() {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+        SteppingStrategy strategy = ActivityThread.steppingStrategy();
+        if (strategy == null) {
+          return false;
+        }
+        return strategy.handleChannelMessage();
+      } else {
+        return false;
       }
     }
 
@@ -225,7 +239,7 @@ public abstract class ChannelPrimitives {
         KernelObj.signalException("signalNotAValueWith:", val);
       }
       try {
-        out.writeAndSuspendReader(val, afterRead.executeCheckIsSetAndEnabled());
+        out.writeAndSuspendReader(val, afterRead.executeCheckIsSetAndEnabled() || stopOnRead());
         if (out.shouldBreakAfterWrite()) {
           haltNode.executeEvaluated(frame, val);
         }
@@ -241,6 +255,18 @@ public abstract class ChannelPrimitives {
         return true;
       } else {
         return super.isTaggedWithIgnoringEagerness(tag);
+      }
+    }
+
+    private static boolean stopOnRead() {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+        SteppingStrategy strategy = ActivityThread.steppingStrategy();
+        if (strategy == null) {
+          return false;
+        }
+        return strategy.handleChannelMessage();
+      } else {
+        return false;
       }
     }
   }

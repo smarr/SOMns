@@ -8,6 +8,7 @@ import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.debugger.SteppingStrategy.IntoSpawn;
+import tools.debugger.SteppingStrategy.ToChannelOpposite;
 import tools.debugger.frontend.Suspension;
 
 
@@ -77,7 +78,8 @@ public enum SteppingType {
   STEP_TO_CHANNEL_RCVR("stepToChannelRcvr", "Step to Receiver", Group.PROCESS_STEPPING, "arrow-right", new Class[] {ChannelWrite.class}) {
     @Override
     public void process(final Suspension susp) {
-      throw new NotYetImplementedException();
+      susp.getEvent().prepareStepOver(1);
+      susp.getActivityThread().setSteppingStrategy(new ToChannelOpposite());
     }
   },
 
@@ -85,7 +87,8 @@ public enum SteppingType {
   STEP_TO_CHANNEL_SENDER("stepToChannelSender", "Step to Sender", Group.PROCESS_STEPPING, "arrow-left", new Class[] {ChannelRead.class}) {
     @Override
     public void process(final Suspension susp) {
-      throw new NotYetImplementedException();
+      susp.getEvent().prepareStepInto(1);
+      susp.getActivityThread().setSteppingStrategy(new ToChannelOpposite());
     }
   },
 
