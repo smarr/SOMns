@@ -65,8 +65,8 @@ public enum SteppingType {
     }
   },
 
-  @SerializedName("stepIntoProc")
-  STEP_INTO_PROCESS("stepIntoProc", "Step into Process", Group.PROCESS_STEPPING, "arrow-down", new Class[] {ActivityCreation.class}) {
+  @SerializedName("stepIntoActivity")
+  STEP_INTO_ACTIVITY("stepIntoActivity", "Step into Activity", Group.ACTIVITY_STEPPING, "arrow-down", new Class[] {ActivityCreation.class}) {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareStepOver(1);
@@ -101,6 +101,7 @@ public enum SteppingType {
   public enum Group {
     BASIC_CONTROLS("Basic Controls"),
     LOCAL_STEPPING("Local Stepping"),
+    ACTIVITY_STEPPING("Activity Stepping"),
     ACTOR_STEPPING("Actor Stepping"),
     PROCESS_STEPPING("Process Stepping");
 
