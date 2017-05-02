@@ -669,9 +669,14 @@ export class View {
   }
 
   private showFrame(frame: StackFrame, active: boolean, list: JQuery) {
-    const fileNameStart = frame.sourceUri.lastIndexOf("/") + 1;
-    const fileName = frame.sourceUri.substr(fileNameStart);
-    const location = fileName + ":" + frame.line + ":" + frame.column;
+    let location;
+    if (frame.sourceUri) {
+      const fileNameStart = frame.sourceUri.lastIndexOf("/") + 1;
+      const fileName = frame.sourceUri.substr(fileNameStart);
+      location = fileName + ":" + frame.line + ":" + frame.column;
+    } else {
+      location = "vmMirror";
+    }
 
     const entry = nodeFromTemplate("stack-trace-elem-tpl");
     entry.id = this.getFrameId(frame.id);
