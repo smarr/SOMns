@@ -141,10 +141,11 @@ export class UiController extends Controller {
       const sourceId = this.dbg.getSourceId(msg.stackFrames[0].sourceUri);
       const source = this.dbg.getSource(sourceId);
 
+      const newSource = this.view.displaySource(act, source, sourceId);
+
       const ssId = this.dbg.getSectionIdFromFrame(sourceId, msg.stackFrames[0]);
       const section = this.dbg.getSection(ssId);
 
-      const newSource = this.view.displaySource(act, source, sourceId);
       this.view.displayStackTrace(sourceId, msg, topFrameId, act, ssId, section);
       if (newSource) {
         this.ensureBreakpointsAreIndicated(sourceId);

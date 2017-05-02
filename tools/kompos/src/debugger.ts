@@ -2,12 +2,6 @@ import {IdMap, Source, StackFrame, SourceMessage, TaggedSourceCoordinate,
   Activity, ServerCapabilities, getSectionId} from "./messages";
 import {Breakpoint} from "./breakpoints";
 
-export function isRelevant(sc: TaggedSourceCoordinate) {
-  // ExpressionBreakpoint tag implies there is some kind of breakpoint there
-  // the specific kind is handled dynamically at run time
-  return -1 !== sc.tags.indexOf("ExpressionBreakpoint");
-}
-
 export class Debugger {
 
   private serverCapabilities?: ServerCapabilities;
@@ -81,11 +75,8 @@ export class Debugger {
   private addSections(s: Source) {
     let sId = this.getSourceId(s.uri);
     for (let sc of s.sections) {
-      // Filter out all non-relevant source sections
-      if (isRelevant(sc)) {
-        let id = getSectionId(sId, sc);
-        this.sections[id] = sc;
-      }
+      let id = getSectionId(sId, sc);
+      this.sections[id] = sc;
     }
   }
 
