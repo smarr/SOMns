@@ -1,11 +1,9 @@
 package tools.debugger;
 
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.WeakHashMap;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -23,7 +21,6 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
-import som.interpreter.actors.Actor;
 import som.vm.Activity;
 import som.vm.ActivityThread;
 import tools.SourceCoordinate;
@@ -73,9 +70,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   private final Map<Activity, Suspension> activityToSuspension = new HashMap<>();
   private final Map<Long, Suspension> idToSuspension           = new HashMap<>();
-
-  /** Actors that have been suspended at least once. */
-  private final Set<Actor> suspendedActors = Collections.newSetFromMap(new WeakHashMap<>());
 
   public void reportSyntaxElement(final Class<? extends Tags> type,
       final SourceSection source) {
@@ -133,11 +127,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     if (thread instanceof ActivityThread) {
       activityThread = (ActivityThread) thread;
       current = activityThread.getActivity();
-      if (current instanceof Actor) {
-        synchronized (suspendedActors) {
-          suspendedActors.add((Actor) current);
-        }
-      }
     } else {
       throw new RuntimeException("Support for " + thread.getClass().getName() + " not yet implemented.");
     }
