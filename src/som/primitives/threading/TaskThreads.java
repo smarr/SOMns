@@ -5,8 +5,11 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveTask;
 
+import com.oracle.truffle.api.RootCallTarget;
+
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.Activity;
+import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.concurrency.TracingActivityThread;
@@ -45,7 +48,12 @@ public final class TaskThreads {
     protected final Object compute() {
       ObjectTransitionSafepoint.INSTANCE.register();
       try {
-        return ((SBlock) argArray[0]).getMethod().getCallTarget().call(argArray);
+        RootCallTarget target = ((SBlock) argArray[0]).getMethod().getCallTarget();
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRoot) {
+          ForkJoinThread thread = (ForkJoinThread) Thread.currentThread();
+          thread.task = this;
+        }
+        return target.call(argArray);
       } finally {
         ObjectTransitionSafepoint.INSTANCE.unregister();
       }
@@ -81,6 +89,8 @@ public final class TaskThreads {
   }
 
   private static final class ForkJoinThread extends TracingActivityThread {
+    private SomForkJoinTask task;
+
     protected ForkJoinThread(final ForkJoinPool pool) {
       super(pool);
     }
@@ -92,7 +102,7 @@ public final class TaskThreads {
 
     @Override
     public Activity getActivity() {
-      return null;
+      return task;
     }
   }
 }
