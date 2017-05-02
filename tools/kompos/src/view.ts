@@ -714,6 +714,9 @@ export class View {
   }
 
   private hasCommonElements(a: string[], b: string[]) {
+    if (!Array.isArray(a) || !Array.isArray(b)) {
+      return false;
+    }
     for (const s of a) {
       for (const t of b) {
         if (s === t) {
@@ -726,7 +729,9 @@ export class View {
 
   private isSteppingApplicable(section: TaggedSourceCoordinate, step: SteppingType) {
     if (step.applicableTo) {
-      return this.hasCommonElements(section.tags, step.applicableTo);
+      // there can be cases where we don't actually have source section. TODO: fix this
+      const tags = section ? section.tags : [];
+      return this.hasCommonElements(tags, step.applicableTo);
     } else {
       return true;
     }
@@ -742,20 +747,22 @@ export class View {
   private highlightProgramPosition(sourceId: string, activity: Activity,
       ssId: string) {
 
-    let ss = document.getElementById(
-                        getSectionIdForActivity(ssId, activity.id));
-    $(ss).addClass("DbgCurrentNode");
-
     this.showSourceById(sourceId, activity);
 
-    const sourcePaneId = getSectionIdForActivity(sourceId, activity.id);
-    const sourcePaneElem = document.getElementById(sourcePaneId);
+    const ss = document.getElementById(
+                        getSectionIdForActivity(ssId, activity.id));
+    if (ss) { // there can be cases where we don't actually have source section. TODO: fix this
+      $(ss).addClass("DbgCurrentNode");
 
-    const defaultDuration = 100;
-    const edgeOffset      = 30;
+      const sourcePaneId = getSectionIdForActivity(sourceId, activity.id);
+      const sourcePaneElem = document.getElementById(sourcePaneId);
 
-    const scroller = zenscroll.createScroller(sourcePaneElem, defaultDuration, edgeOffset);
-    scroller.center(ss);
+      const defaultDuration = 100;
+      const edgeOffset      = 30;
+
+      const scroller = zenscroll.createScroller(sourcePaneElem, defaultDuration, edgeOffset);
+      scroller.center(ss);
+    }
   }
 
   private showSourceById(sourceId: string, activity: Activity) {
