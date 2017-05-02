@@ -100,7 +100,6 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
       | val |
       (vmMirror AssertionsEnabled: self) ifFalse: [^ nil].
       val := aBlock value.
-
       (isPromise: val) ifTrue: [
         val whenResolved: [ :r | r ifFalse: anotherBlock]
       ] ifFalse: [ 
@@ -145,7 +144,7 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
     )
 
 
-    promise: a and: b = (
+    public promise: a and: b = (
     | pp aval bval done |
     done := false.
     pp := createUntracedPromisePair.
@@ -153,33 +152,33 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
     bval := b value.
     
     (isPromise: aval) ifTrue: [
-      aval whenResolved: [:r | aval := r
+      aval whenResolved: [:r | aval := r.
         done ifFalse: [
-          aval ifFalse: [
-            pp resolve: false.
-            done := true.
-          ] ifTrue: [
+          aval ifTrue: [
             (isPromise: bval) ifFalse:[
               pp resolve: (aval and: bval).
               done := true.    
             ]
-          ]
+          ] ifFalse: [
+            pp resolve: false.
+            done := true.
+          ] 
         ]
       ]
     ].
     
     (isPromise: bval) ifTrue: [
-      bval whenResolved: [:r | bval := r
+      bval whenResolved: [:r | bval := r.
         done ifFalse: [
-          bval ifFalse: [
-            pp resolve: false.
-            done := true.
-          ] ifTrue: [
+          bval ifTrue: [
             (isPromise: aval) ifFalse:[
               pp resolve: (aval and: bval).
               done := true.    
             ]
-          ]
+          ] ifFalse: [
+            pp resolve: false.
+            done := true.
+          ] 
         ]
       ]
     ].
@@ -191,7 +190,7 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
     ^ pp promise
     )
 
-    promise: a or: b = (
+    public promise: a or: b = (
     | pp aval bval done |
     done := false.
     pp := createUntracedPromisePair.
@@ -199,7 +198,7 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
     bval := b value.
     
     (isPromise: aval) ifTrue: [
-      aval whenResolved: [:r | aval := r
+      aval whenResolved: [:r | aval := r.
         done ifFalse: [
           aval ifTrue: [
             pp resolve: true.
@@ -215,7 +214,7 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
     ].
     
     (isPromise: bval) ifTrue: [
-      bval whenResolved: [:r | bval := r
+      bval whenResolved: [:r | bval := r.
         done ifFalse: [
           bval ifTrue: [
             pp resolve: true.
@@ -237,7 +236,7 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
     ^ pp promise
     )
 
-    promise: a implies: b = (
+    public promise: a implies: b = (
     | pp aval bval done |
     done := false.
     pp := createUntracedPromisePair.
@@ -245,7 +244,7 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
     bval := b value.
     
     (isPromise: aval) ifTrue: [
-      aval whenResolved: [:r | aval := r
+      aval whenResolved: [:r | aval := r.
         done ifFalse: [
           aval ifFalse: [
             pp resolve: true.
@@ -261,7 +260,7 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
     ].
     
     (isPromise: bval) ifTrue: [
-      bval whenResolved: [:r | bval := r
+      bval whenResolved: [:r | bval := r.
         done ifFalse: [
           (isPromise: aval) ifFalse:[
             pp resolve: ((aval and: bval) or: (aval not)).
@@ -278,7 +277,7 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
     ^ pp promise
     )
 
-    not: a = (
+    public not: a = (
     | pp aval |  
     pp := createUntracedPromisePair.
     aval := a value.

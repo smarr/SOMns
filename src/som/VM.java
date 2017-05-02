@@ -245,7 +245,7 @@ public final class VM {
       truffleProfiler.printHistograms(System.err);
     }
 
-    if (lastExitCode == 0 || errorCode == 0) {
+    if (VmSettings.ENABLE_ASSERTIONS && (lastExitCode == 0 || errorCode == 0)) {
       FutureAssertion.checkFutureAssertions();
     }
 
@@ -255,19 +255,17 @@ public final class VM {
     ActorExecutionTrace.waitForTrace();
 
     int code = errorCode;
-    if(lastExitCode != 0 && code == 0){
+    if (lastExitCode != 0 && code == 0) {
       code = lastExitCode;
     }
 
     if (TracingActors.ReplayActor.printMissingMessages() && errorCode == 0) {
       code = 1;
     }
-
     engine.dispose();
     if (VmSettings.MEMORY_TRACING) {
       ActorExecutionTrace.reportPeakMemoryUsage();
     }
-
     System.exit(code);
   }
 

@@ -192,6 +192,6 @@
         </java>
     </target>
 
-    <target name="tests" depends="core-tests,replay-tests,coverage">
+    <target name="tests" depends="core-tests,replay-tests, actor-assertion-tests,coverage">
     </target>
 </project>

@@ -43,6 +43,14 @@ declare -a PassEA=(
 	"testAssertGlobally"
 	"testAssertUntil"
 	"testAssertRelease"
+	"testAnd"
+	"testAnd2"
+	"testOr"
+	"testOr2"
+	"testImplies"
+	"testImplies2"
+	"testNot"
+	"testNot2"
 )
 
 declare -a FailEA=(

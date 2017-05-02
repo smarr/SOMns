@@ -1,6 +1,5 @@
 package som.interpreter.actors;
 
-import java.lang.Thread.UncaughtExceptionHandler;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;

@@ -28,8 +28,6 @@ public class VmSettings {
 
   public static final String INSTRUMENTATION_PROP = "som.instrumentation";
 
-
-
   static {
     String prop = System.getProperty("som.threads");
     if (prop == null) {

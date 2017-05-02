@@ -254,4 +254,240 @@ class Tests usingPlatform: platform = Value (
     actor <-: foo.
     actor <-: bar.
   )
+
+  public testAnd = (
+    | pp1 pp2 |
+    pp1 := actors createPromisePair.
+    pp2 := actors createPromisePair. 
+
+    Assertions assert: (Assertions promise: (pp1 promise) and: (pp2 promise)).
+    Assertions assert: (Assertions promise: (pp2 promise) and: (pp1 promise)).
+
+    pp1 resolve: true.
+
+    Assertions assert: (Assertions promise: (pp1 promise) and: (pp2 promise)).
+    Assertions assert: (Assertions promise: (pp2 promise) and: (pp1 promise)).
+
+    pp2 resolve: true.
+
+    Assertions assert: (Assertions promise: (pp1 promise) and: (pp2 promise)).
+    Assertions assert: (Assertions promise: (pp2 promise) and: (pp1 promise)).
+  )
+
+  (* all have to fail *)
+  public testAnd2 = (
+    | pp1 pp2 result |
+    result := 0.
+
+    pp1 := actors createPromisePair.
+    pp2 := actors createPromisePair. 
+
+    Assertions assert: (Assertions promise: (pp1 promise) and: (pp2 promise)) handler: [result := result +1].
+    Assertions assert: (Assertions promise: (pp2 promise) and: (pp1 promise)) handler: [result := result +1].
+
+    pp1 resolve: true.
+
+    Assertions assert: (Assertions promise: (pp1 promise) and: (pp2 promise)) handler: [result := result +1].
+    Assertions assert: (Assertions promise: (pp2 promise) and: (pp1 promise)) handler: [result := result +1].
+
+    pp2 resolve: false.
+
+    Assertions assert: (Assertions promise: (pp1 promise) and: (pp2 promise)) handler: [result := result +1].
+    Assertions assert: (Assertions promise: (pp2 promise) and: (pp1 promise)) handler: [result := result +1].
+
+    pp1 := actors createPromisePair.
+    pp2 := actors createPromisePair. 
+
+    Assertions assert: (Assertions promise: (pp1 promise) and: (pp2 promise)) handler: [result := result +1].
+    Assertions assert: (Assertions promise: (pp2 promise) and: (pp1 promise)) handler: [result := result +1].
+
+    pp1 resolve: false.
+
+    Assertions assert: (Assertions promise: (pp1 promise) and: (pp2 promise)) handler: [result := result +1].
+    Assertions assert: (Assertions promise: (pp2 promise) and: (pp1 promise)) handler: [result := result +1].
+
+    pp2 resolve: true.
+
+    Assertions assert: (Assertions promise: (pp1 promise) and: (pp2 promise)) handler: [result := result +1].
+    Assertions assert: (Assertions promise: (pp2 promise) and: (pp1 promise)) handler: [result := result +1].
+
+    pp1 := actors createPromisePair.
+    pp2 := actors createPromisePair. 
+
+    Assertions assert: (Assertions promise: (pp1 promise) and: (pp2 promise)) handler: [result := result +1].
+    Assertions assert: (Assertions promise: (pp2 promise) and: (pp1 promise)) handler: [result := result +1].
+
+    pp1 resolve: false.
+
+    Assertions assert: (Assertions promise: (pp1 promise) and: (pp2 promise)) handler: [result := result +1].
+    Assertions assert: (Assertions promise: (pp2 promise) and: (pp1 promise)) handler: [result := result +1].
+
+    pp2 resolve: false.
+
+    Assertions assert: (Assertions promise: (pp1 promise) and: (pp2 promise)) handler: [result := result +1].
+    Assertions assert: (Assertions promise: (pp2 promise) and: (pp1 promise)) handler: [result := result +1].
+
+    actors after: 5 do: [ :r | Assertions assert: result = 18].
+  )
+
+  public testOr = (
+    | pp1 pp2 |
+
+    pp1 := actors createPromisePair.
+    pp2 := actors createPromisePair. 
+
+    Assertions assert: (Assertions promise: (pp1 promise) or: (pp2 promise)).
+    Assertions assert: (Assertions promise: (pp2 promise) or: (pp1 promise)).
+
+    pp1 resolve: true.
+
+    Assertions assert: (Assertions promise: (pp1 promise) or: (pp2 promise)).
+    Assertions assert: (Assertions promise: (pp2 promise) or: (pp1 promise)).
+
+    pp2 resolve: false.
+
+    Assertions assert: (Assertions promise: (pp1 promise) or: (pp2 promise)).
+    Assertions assert: (Assertions promise: (pp2 promise) or: (pp1 promise)).
+
+    pp1 := actors createPromisePair.
+    pp2 := actors createPromisePair. 
+
+    Assertions assert: (Assertions promise: (pp1 promise) or: (pp2 promise)).
+    Assertions assert: (Assertions promise: (pp2 promise) or: (pp1 promise)).
+
+    pp1 resolve: false.
+
+    Assertions assert: (Assertions promise: (pp1 promise) or: (pp2 promise)).
+    Assertions assert: (Assertions promise: (pp2 promise) or: (pp1 promise)).
+
+    pp2 resolve: true.
+
+    Assertions assert: (Assertions promise: (pp1 promise) or: (pp2 promise)).
+    Assertions assert: (Assertions promise: (pp2 promise) or: (pp1 promise)).
+
+    pp1 := actors createPromisePair.
+    pp2 := actors createPromisePair. 
+
+    Assertions assert: (Assertions promise: (pp1 promise) or: (pp2 promise)).
+    Assertions assert: (Assertions promise: (pp2 promise) or: (pp1 promise)).
+
+    pp1 resolve: true.
+
+    Assertions assert: (Assertions promise: (pp1 promise) or: (pp2 promise)).
+    Assertions assert: (Assertions promise: (pp2 promise) or: (pp1 promise)).
+
+    pp2 resolve: true.
+
+    Assertions assert: (Assertions promise: (pp1 promise) or: (pp2 promise)).
+    Assertions assert: (Assertions promise: (pp2 promise) or: (pp1 promise)).
+  )
+
+  public testOr2 = (
+    | pp1 pp2 result |
+    result := 0.
+    pp1 := actors createPromisePair.
+    pp2 := actors createPromisePair. 
+
+    Assertions assert: (Assertions promise: (pp1 promise) or: (pp2 promise)) handler: [result := result +1].
+    Assertions assert: (Assertions promise: (pp2 promise) or: (pp1 promise)) handler: [result := result +1].
+
+    pp1 resolve: false.
+
+    Assertions assert: (Assertions promise: (pp1 promise) or: (pp2 promise)) handler: [result := result +1].
+    Assertions assert: (Assertions promise: (pp2 promise) or: (pp1 promise)) handler: [result := result +1].
+
+    pp2 resolve: false.
+
+    Assertions assert: (Assertions promise: (pp1 promise) or: (pp2 promise)) handler: [result := result +1].
+    Assertions assert: (Assertions promise: (pp2 promise) or: (pp1 promise)) handler: [result := result +1].
+
+    actors after: 5 do: [ :r | Assertions assert: result = 6].
+  )
+  
+  public testNot = (
+    | pp |
+    pp := actors createPromisePair.
+
+    Assertions assert: (Assertions not: (pp promise)).
+
+    pp resolve: false.
+
+    Assertions assert: (Assertions not: (pp promise)).
+  )
+
+  public testNot2 = (
+    | pp result |
+    result := 0.
+    pp := actors createPromisePair.
+
+    Assertions assert: (Assertions not: (pp promise)) handler: [result := result +1].
+
+    pp resolve: true.
+
+    Assertions assert: (Assertions not: (pp promise)) handler: [result := result +1].
+
+    actors after: 5 do: [ :r | Assertions assert: result = 2].
+  )
+  
+  public testImplies = (
+    | pp1 pp2 |
+
+    pp1 := actors createPromisePair.
+    pp2 := actors createPromisePair. 
+
+    Assertions assert: (Assertions promise: (pp1 promise) implies: (pp2 promise)).
+
+    pp1 resolve: true.
+
+    Assertions assert: (Assertions promise: (pp1 promise) implies: (pp2 promise)).
+
+    pp2 resolve: true.
+
+    Assertions assert: (Assertions promise: (pp1 promise) implies: (pp2 promise)).
+
+    pp1 := actors createPromisePair.
+    pp2 := actors createPromisePair. 
+
+    Assertions assert: (Assertions promise: (pp1 promise) implies: (pp2 promise)).
+
+    pp1 resolve: false.
+
+    Assertions assert: (Assertions promise: (pp1 promise) implies: (pp2 promise)).
+
+    pp2 resolve: true.
+
+    Assertions assert: (Assertions promise: (pp1 promise) implies: (pp2 promise)).
+
+    pp1 := actors createPromisePair.
+    pp2 := actors createPromisePair. 
+
+    Assertions assert: (Assertions promise: (pp1 promise) implies: (pp2 promise)).
+
+    pp1 resolve: false.
+
+    Assertions assert: (Assertions promise: (pp1 promise) implies: (pp2 promise)).
+
+    pp2 resolve: false.
+
+    Assertions assert: (Assertions promise: (pp1 promise) implies: (pp2 promise)).
+  )
+
+  public testImplies2 = (
+    | pp1 pp2 result|
+    result := 0.
+    pp1 := actors createPromisePair.
+    pp2 := actors createPromisePair. 
+
+    Assertions assert: (Assertions promise: (pp1 promise) implies: (pp2 promise)) handler: [result := result +1].
+
+    pp1 resolve: true.
+
+    Assertions assert: (Assertions promise: (pp1 promise) implies: (pp2 promise)) handler: [result := result +1].
+
+    pp2 resolve: false.
+
+    Assertions assert: (Assertions promise: (pp1 promise) implies: (pp2 promise)) handler: [result := result +1].
+
+    actors after: 5 do: [ :r | Assertions assert: result = 3].
+  )
 )

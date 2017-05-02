@@ -17,9 +17,8 @@ import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.interpreter.actors.EventualMessage.PromiseSendMessage;
-import som.interpreter.actors.SPromise.SReplayPromise;
 import som.interpreter.actors.EventualMessage.UntracedMessage;
+import som.interpreter.actors.SPromise.SReplayPromise;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
@@ -123,7 +122,7 @@ public class TracingActors {
 
       // safe way for iterating and removing elements, for each caused concurrent modification exception for no reason.
       Iterator<Assertion> iter = activeAssertions.iterator();
-      while (iter.hasNext()){
+      while (iter.hasNext()) {
         Assertion a = iter.next();
         if (!a.evaluate(this, msg, vm.getActorPool())) {
           iter.remove();
@@ -187,9 +186,6 @@ public class TracingActors {
       }
     }
   }
-
-
-
 
   public static final class ReplayActor extends TracingActor {
     protected int children;
