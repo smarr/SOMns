@@ -8,6 +8,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
@@ -137,7 +138,9 @@ public abstract class ActivitySpawn {
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-      if (tag == ActivityCreation.class || tag == ExpressionBreakpoint.class) {
+      if (tag == ActivityCreation.class ||
+          tag == ExpressionBreakpoint.class ||
+          tag == StatementTag.class) {
         return true;
       }
       return super.isTaggedWith(tag);
@@ -210,7 +213,9 @@ public abstract class ActivitySpawn {
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-      if (tag == ActivityCreation.class || tag == ExpressionBreakpoint.class) {
+      if (tag == ActivityCreation.class ||
+          tag == ExpressionBreakpoint.class ||
+          tag == StatementTag.class) {
         return true;
       }
       return super.isTaggedWith(tag);
