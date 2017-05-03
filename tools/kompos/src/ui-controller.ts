@@ -45,7 +45,6 @@ export class UiController extends Controller {
   }
 
   public onConnect() {
-    dbgLog("[WS] open");
     this.reset();
     this.view.onConnect();
     const bps = this.dbg.getEnabledBreakpoints();
@@ -55,7 +54,6 @@ export class UiController extends Controller {
   }
 
   public onClose() {
-    dbgLog("[WS] close");
     this.view.onClose();
   }
 
