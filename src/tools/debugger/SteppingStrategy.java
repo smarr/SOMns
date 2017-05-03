@@ -16,6 +16,8 @@ public abstract class SteppingStrategy {
 
   public void handleResumeExecution(final Activity activity) { }
 
+  // TODO: can we get rid of the code doing the checking for those stepping things,
+  //       and integrate it into the breakpoint checking nodes?
   // TODO: can I convert that into a simple location enum, or even Tag check???
   public static final class IntoSpawn extends SteppingStrategy {
     @Override
