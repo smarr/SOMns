@@ -20,7 +20,7 @@ import tools.debugger.session.Breakpoints;
 import tools.debugger.session.SectionBreakpoint;
 
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "rawtypes"})
 public enum BreakpointType {
   @SerializedName("msgSenderBP")
   MSG_SENDER("msgSenderBP", "Message send",

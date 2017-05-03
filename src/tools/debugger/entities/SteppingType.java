@@ -14,7 +14,7 @@ import tools.debugger.frontend.Suspension;
 
 
 // TODO: stepping, is that the right name?
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "rawtypes"})
 public enum SteppingType {
 
   @SerializedName("resume")
