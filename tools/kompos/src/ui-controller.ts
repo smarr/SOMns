@@ -127,16 +127,22 @@ export class UiController extends Controller {
   }
 
   public onStackTrace(msg: StackTraceResponse) {
-    const topFrameId = msg.stackFrames[0].id;
     this.ensureActivityPromise(msg.activityId);
 
     this.actProm[msg.activityId].then((act: Activity) => {
       this.dbg.getActivity(msg.activityId).running = false;
 
       console.assert(act.id === msg.activityId);
-      this.vmConnection.requestScope(topFrameId);
 
       this.view.switchActivityDebuggerToSuspendedState(act);
+
+      // Can happen when the application is exiting, or perhaps the activity
+      if (msg.stackFrames.length < 1) {
+        return;
+      }
+
+      const topFrameId = msg.stackFrames[0].id;
+      this.vmConnection.requestScope(topFrameId);
 
       const sourceId = this.dbg.getSourceId(msg.stackFrames[0].sourceUri);
       const source = this.dbg.getSource(sourceId);
