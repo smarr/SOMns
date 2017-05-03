@@ -10,6 +10,7 @@ import som.VM;
 import som.interpreter.actors.SuspendExecutionNodeGen;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.threading.TaskThreads.SomForkJoinTask;
+import som.primitives.threading.ThreadPrimitives.SomThread;
 import som.vm.VmSettings;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.Tags.ExpressionBreakpoint;
@@ -53,9 +54,13 @@ public class ActivityJoin {
     }
 
     @Specialization
-    public final Object doThread(final Thread thread) {
+    public final Object doThread(final VirtualFrame frame, final SomThread thread) {
       try {
         thread.join();
+
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && thread.stopOnJoin()) {
+          haltNode.executeEvaluated(frame, thread);
+        }
       } catch (InterruptedException e) {
         /* ignore for the moment */
       }
