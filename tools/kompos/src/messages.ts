@@ -162,7 +162,8 @@ export interface SteppingType {
   label: string;    /** Label to use for display purposes. */
   group: string;    /** Group Label. */
   icon:  string;    /** Id of an icon known by the frontend. */
-  applicableTo?: string[]; /** The source section tags this stepping operation applies to. If empty, it applies unconditionally. */
+  applicableTo?: string[];  /** The source section tags this stepping operation applies to. If empty, it applies unconditionally. */
+  forActivities?: ActivityType[]; /** Ids of the activities this stepping operation applies to. If empty, it applies unconditionally. */
 }
 
 export interface EntityDef {

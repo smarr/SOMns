@@ -114,6 +114,7 @@ public enum SteppingType {
   public final String label;
   public final Group  group;
   public final String icon;
+  public final ActivityType[] forActivities;
 
   /** Tag to identify the source sections at which this step operation makes sense.
       If no tags are given, it is assumed the operation is always valid. */
@@ -121,11 +122,17 @@ public enum SteppingType {
 
   SteppingType(final String name, final String label, final Group group, final String icon,
       final Class<? extends Tags>[] applicableTo) {
+    this(name, label, group, icon, applicableTo, null);
+  }
+
+  SteppingType(final String name, final String label, final Group group, final String icon,
+      final Class<? extends Tags>[] applicableTo, final ActivityType[] forActivities) {
     this.name  = name;
     this.label = label;
     this.group = group;
     this.icon  = icon;
-    this.applicableTo = applicableTo;
+    this.applicableTo  = applicableTo;
+    this.forActivities = forActivities;
   }
 
   public abstract void process(Suspension susp);
