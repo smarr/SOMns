@@ -278,24 +278,25 @@ public class FrontendConnector {
   }
 
   public void completeConnection(final WebSocket conn) {
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> closeAllSockets()));
+
     clientConnected.complete(conn);
     send(InitializationResponse.create(EntityType.values(),
         ActivityType.values(), BreakpointType.values(), SteppingType.values()));
   }
 
-  public void shutdown() {
-    int delaySec = 5;
-    contentServer.stop(delaySec);
+  private void closeAllSockets() {
+    final int delay = 0;
+    contentServer.stop(delay);
 
     sender.close();
     if (binarySender != null) {
       binarySender.close();
     }
     try {
-      int delayMsec = 1000;
-      receiver.stop(delayMsec);
+      receiver.stop(delay);
       if (binarySender != null) {
-        binaryHandler.stop(delayMsec);
+        binaryHandler.stop(delay);
       }
     } catch (InterruptedException e) { }
   }

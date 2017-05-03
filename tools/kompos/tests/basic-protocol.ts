@@ -60,7 +60,8 @@ describe("Basic Protocol", function() {
       conn = new TestConnection();
       const ctrl = new ControllerWithInitialBreakpoints([], conn);
       let firstSourceCaptured = false;
-      sourceP = new Promise<SourceMessage>((resolve, _reject) => {
+      sourceP = new Promise<SourceMessage>((resolve, reject) => {
+        conn.fullyConnected.catch(reject);
         ctrl.onReceivedSource = (msg: SourceMessage) => {
           if (firstSourceCaptured) { return; };
           firstSourceCaptured = true;
@@ -255,7 +256,7 @@ describe("Basic Protocol", function() {
 
       before("Start SOMns and Connect", () => {
         conn = new TestConnection();
-        ctrl = new HandleStoppedAndGetStackTrace([desc.breakpoint], conn);
+        ctrl = new HandleStoppedAndGetStackTrace([desc.breakpoint], conn, conn.fullyConnected);
       });
 
       after(closeConnectionAfterSuite);
@@ -276,7 +277,7 @@ describe("Basic Protocol", function() {
       const breakpoint = createSectionBreakpointData(PING_PONG_URI, 23, 14, 3,
         BT.MSG_SENDER, true);
       conn = new TestConnection();
-      ctrl = new HandleStoppedAndGetStackTrace([breakpoint], conn, 4);
+      ctrl = new HandleStoppedAndGetStackTrace([breakpoint], conn, conn.fullyConnected, 4);
     });
 
     after(closeConnectionAfterSuite);
