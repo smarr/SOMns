@@ -64,6 +64,7 @@ public final class InitializationResponse extends OutgoingMessage {
     private final String group;
     private final String icon;
     private final String[] applicableTo;
+    private final byte[] forActivities;
 
     private SteppingData(final SteppingType type) {
       this.name = type.name;
@@ -71,6 +72,18 @@ public final class InitializationResponse extends OutgoingMessage {
       this.group = type.group.label;
       this.icon  = type.icon;
       this.applicableTo = tagsToStrings(type.applicableTo);
+
+      if (type.forActivities != null) {
+        this.forActivities = new byte[type.forActivities.length];
+
+        int i = 0;
+        for (ActivityType t : type.forActivities) {
+          this.forActivities[i] = t.getId();
+          i += 1;
+        }
+      } else {
+        this.forActivities = null;
+      }
     }
   }
 

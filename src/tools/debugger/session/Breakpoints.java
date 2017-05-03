@@ -54,6 +54,7 @@ public class Breakpoints {
 
   /** Manually managed by us, instead of Truffle. */
   private final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> channelOppositeBreakpoints;
+  private final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> onExecutionBreakpoints;
 
   private final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> beforeCommitBreakpoints;
 
@@ -63,6 +64,7 @@ public class Breakpoints {
     this.promiseResolverBreakpoints   = new HashMap<>();
     this.promiseResolutionBreakpoints = new HashMap<>();
     this.channelOppositeBreakpoints   = new HashMap<>();
+    this.onExecutionBreakpoints       = new HashMap<>();
     this.beforeCommitBreakpoints      = new HashMap<>();
     this.debuggerSession = debugger.startSession(webDebugger);
   }
@@ -125,6 +127,10 @@ public class Breakpoints {
 
   public synchronized void addOrUpdateChannelOpposite(final SectionBreakpoint bId) {
     saveBreakpoint(bId, channelOppositeBreakpoints);
+  }
+
+  public synchronized void addOrUpdateActivityOnExec(final SectionBreakpoint bId) {
+    saveBreakpoint(bId, onExecutionBreakpoints);
   }
 
   public synchronized void addOrUpdateBeforeCommit(final SectionBreakpoint bId) {
@@ -199,6 +205,12 @@ public class Breakpoints {
         ss -> new BreakpointEnabling<>(new SectionBreakpoint(false, section, type)));
   }
 
+  public synchronized BreakpointEnabling<SectionBreakpoint> getOnExecBreakpoint(
+      final FullSourceCoordinate section) {
+    return onExecutionBreakpoints.computeIfAbsent(section,
+        ss -> new BreakpointEnabling<>(new SectionBreakpoint(false, section, BreakpointType.ACTIVITY_ON_EXEC)));
+  }
+
   public synchronized BreakpointEnabling<SectionBreakpoint> getBeforeCommitBreakpoint(
       final FullSourceCoordinate section) {
     return beforeCommitBreakpoints.computeIfAbsent(section,
@@ -237,6 +249,16 @@ public class Breakpoints {
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
       FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
       return BreakpointNodeGen.create(vm.getBreakpoints().getOppositeBreakpoint(sourceCoord, type));
+    } else {
+      return new DisabledBreakpointNode();
+    }
+  }
+
+  public static AbstractBreakpointNode createOnExec(final SourceSection source,
+      final VM vm) {
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
+      return BreakpointNodeGen.create(vm.getBreakpoints().getOnExecBreakpoint(sourceCoord));
     } else {
       return new DisabledBreakpointNode();
     }

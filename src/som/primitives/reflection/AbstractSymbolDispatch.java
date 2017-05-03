@@ -51,7 +51,7 @@ public abstract class AbstractSymbolDispatch extends Node {
   public final AbstractMessageSendNode createForPerformNodes(
       final SSymbol selector) {
     return MessageSendNode.createForPerformNodes(selector, sourceSection,
-        getRootNode().getLanguage(SomLanguage.class).getVM());
+        SomLanguage.getVM(getRootNode()));
   }
 
   public static final ToArgumentsArrayNode createArgArrayNode() {

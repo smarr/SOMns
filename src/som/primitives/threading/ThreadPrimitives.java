@@ -1,18 +1,23 @@
 package som.primitives.threading;
 
+import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.SomLanguage;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.Primitive;
 import som.vm.Activity;
 import som.vm.ActivityThread;
+import som.vm.VmSettings;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
+import tools.debugger.SteppingStrategy;
+import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 
 public final class ThreadPrimitives {
@@ -71,20 +76,45 @@ public final class ThreadPrimitives {
       implements Activity, ActivityThread {
     private final Object[] args;
     private final SBlock block;
+    private final boolean stopOnRoot;
+    private boolean stopOnJoin;
 
-    public SomThread(final SBlock block, final Object... args) {
+    protected SteppingStrategy steppingStrategy;
+
+    public SomThread(final boolean stopOnRoot, final SBlock block, final Object... args) {
+      this.stopOnRoot = stopOnRoot;
       this.block = block;
       this.args  = args;
     }
 
     @Override
+    public SteppingStrategy getSteppingStrategy() {
+      return steppingStrategy;
+    }
+
+    @Override
+    public void setSteppingStrategy(final SteppingStrategy strategy) {
+      this.steppingStrategy = strategy;
+    }
+
+    @Override
     public ActivityType getType() { return ActivityType.THREAD; }
+
+    public boolean stopOnJoin() { return stopOnJoin; }
+
+    @Override
+    public void setStepToJoin(final boolean val) { stopOnJoin = val; }
 
     @Override
     public void run() {
       ObjectTransitionSafepoint.INSTANCE.register();
       try {
-        block.getMethod().getCallTarget().call(args);
+        RootCallTarget target = block.getMethod().getCallTarget();
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRoot) {
+          WebDebugger dbg = SomLanguage.getVM(target.getRootNode()).getWebDebugger();
+          dbg.prepareSteppingUntilNextRootNode();
+        }
+        target.call(args);
       } finally {
         ObjectTransitionSafepoint.INSTANCE.unregister();
       }

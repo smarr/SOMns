@@ -20,7 +20,7 @@ import tools.debugger.session.Breakpoints;
 import tools.debugger.session.SectionBreakpoint;
 
 
-@SuppressWarnings("unchecked")
+@SuppressWarnings({"unchecked", "rawtypes"})
 public enum BreakpointType {
   @SerializedName("msgSenderBP")
   MSG_SENDER("msgSenderBP", "Message send",
@@ -132,6 +132,15 @@ public enum BreakpointType {
     @Override
     public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
       bps.addOrUpdateBeforeExpression(bpInfo);
+    }
+  },
+
+  @SerializedName("activityOnExecBP")
+  ACTIVITY_ON_EXEC("activityOnExecBP", "On execution",
+      new Class[] {ActivityCreation.class}) {
+    @Override
+    public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
+      bps.addOrUpdateActivityOnExec(bpInfo);
     }
   },
 

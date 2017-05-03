@@ -6,7 +6,7 @@ import * as d3 from "d3";
 import {Controller}   from "./controller";
 import {ActivityNode} from "./history-data";
 import {Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
-  TaggedSourceCoordinate, Scope, getSectionId, Variable, Activity,
+  TaggedSourceCoordinate, Scope, getSectionId, Variable, Activity, ActivityType,
   SymbolMessage, ServerCapabilities, BreakpointType, SteppingType } from "./messages";
 import {Breakpoint, SectionBreakpoint, LineBreakpoint} from "./breakpoints";
 import {SystemVisualization} from "./visualizations";
@@ -710,7 +710,7 @@ export class View {
     scopes.find("tbody").html(""); // rest view
 
     this.highlightProgramPosition(sourceId, activity, ssId);
-    this.adjustSteppingButtons(act, section);
+    this.adjustSteppingButtons(act, section, activity.type);
   }
 
   private hasCommonElements(a: string[], b: string[]) {
@@ -727,7 +727,21 @@ export class View {
     return false;
   }
 
-  private isSteppingApplicable(section: TaggedSourceCoordinate, step: SteppingType) {
+  private isSteppingApplicable(section: TaggedSourceCoordinate,
+      step: SteppingType, activityType: ActivityType) {
+    if (step.forActivities) {
+      let matches = false;
+      for (const actT of step.forActivities) {
+        if (actT === activityType) {
+          matches = true;
+          break;
+        }
+      }
+
+      // if the stepping is not supported for this activity, just return
+      if (!matches) { return false; }
+    }
+
     if (step.applicableTo) {
       // there can be cases where we don't actually have source section. TODO: fix this
       const tags = section ? section.tags : [];
@@ -737,9 +751,10 @@ export class View {
     }
   }
 
-  private adjustSteppingButtons(act: JQuery, section: TaggedSourceCoordinate) {
+  private adjustSteppingButtons(act: JQuery, section: TaggedSourceCoordinate,
+      activityType: ActivityType) {
     for (const step of this.serverCapabilities.steppingTypes) {
-      const enabled = this.isSteppingApplicable(section, step);
+      const enabled = this.isSteppingApplicable(section, step, activityType);
       act.find("button[data-step=" + step.name + " ]").prop("disabled", !enabled);
     }
   }

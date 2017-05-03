@@ -4,9 +4,11 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import som.vm.Activity;
 import som.vm.ActivityThread;
 import som.vm.VmSettings;
 import tools.TraceData;
+import tools.debugger.SteppingStrategy;
 
 
 public abstract class TracingActivityThread extends ForkJoinWorkerThread
@@ -24,6 +26,8 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread
 
   protected final TraceBuffer traceBuffer;
 
+  protected SteppingStrategy steppingStrategy;
+
   public TracingActivityThread(final ForkJoinPool pool) {
     super(pool);
     if (VmSettings.ACTOR_TRACING) {
@@ -37,6 +41,19 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread
       traceBuffer = null;
     }
     setName(getClass().getSimpleName() + "-" + threadId);
+  }
+
+  @Override
+  public abstract Activity getActivity();
+
+  @Override
+  public SteppingStrategy getSteppingStrategy() {
+    return this.steppingStrategy;
+  }
+
+  @Override
+  public void setSteppingStrategy(final SteppingStrategy strategy) {
+    this.steppingStrategy = strategy;
   }
 
   public long generateActivityId() {

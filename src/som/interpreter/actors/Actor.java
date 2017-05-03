@@ -12,7 +12,6 @@ import som.VM;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.IsValue;
 import som.vm.Activity;
-import som.vm.ActivityThread;
 import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray.STransferArray;
@@ -148,6 +147,13 @@ public class Actor implements Activity {
   @Override
   public long getId() { return 0; }
 
+  @Override
+  public void setStepToJoin(final boolean val) {
+    throw new UnsupportedOperationException(
+        "Return from activity, and step to join are not supported " +
+        "for event-loop actors. This code should never be reached.");
+  }
+
   /**
    * Send the give message to the actor.
    *
@@ -185,7 +191,7 @@ public class Actor implements Activity {
   }
 
   protected static void handleBreakPoints(final EventualMessage msg, final WebDebugger dbg) {
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isBreakpoint()) {
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isMessageReceiverBreakpointSet()) {
       dbg.prepareSteppingUntilNextRootNode();
     }
   }
@@ -330,8 +336,7 @@ public class Actor implements Activity {
     }
   }
 
-  public static final class ActorProcessingThread extends TracingActivityThread
-      implements ActivityThread {
+  public static final class ActorProcessingThread extends TracingActivityThread {
     public EventualMessage currentMessage;
 
     protected Actor currentlyExecutingActor;

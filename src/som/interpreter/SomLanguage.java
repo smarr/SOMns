@@ -3,6 +3,7 @@ package som.interpreter;
 import java.io.IOException;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
@@ -142,6 +143,11 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
   public VM getVM() {
     return vm;
+  }
+
+  public static VM getVM(final RootNode root) {
+    CompilerAsserts.neverPartOfCompilation("This is a simple hack to get the VM object, and should never be on the fast path");
+    return root.getLanguage(SomLanguage.class).getVM();
   }
 
   // Marker source used to start execution with command line arguments

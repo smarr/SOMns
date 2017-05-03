@@ -38,7 +38,7 @@ public class ReceivedMessage extends ReceivedRootNode {
       promiseResolutionBreakpoint = msg.getResolver().getPromise().isTriggerPromiseResolutionBreakpoint();
     }
 
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isTriggerPromiseResolverBreakpoint()) {
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isPromiseResolverBreakpointSet()) {
       dbg.prepareSteppingAfterNextRootNode();
     }
 
@@ -71,7 +71,7 @@ public class ReceivedMessage extends ReceivedRootNode {
     public Object execute(final VirtualFrame frame) {
       EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
 
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isTriggerPromiseResolverBreakpoint()) {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isPromiseResolverBreakpointSet()) {
         dbg.prepareSteppingAfterNextRootNode();
       }
 
@@ -99,7 +99,7 @@ public class ReceivedMessage extends ReceivedRootNode {
         promiseResolutionBreakpoint = msg.getResolver().getPromise().isTriggerPromiseResolutionBreakpoint();
       }
 
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isTriggerPromiseResolverBreakpoint()) {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.isPromiseResolverBreakpointSet()) {
         dbg.prepareSteppingAfterNextRootNode();
       }
 

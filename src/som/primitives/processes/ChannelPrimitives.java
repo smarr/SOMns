@@ -1,6 +1,5 @@
 package som.primitives.processes;
 
-import java.util.HashSet;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
@@ -14,6 +13,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.interpreter.SomLanguage;
 import som.interpreter.actors.SuspendExecutionNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -24,6 +24,7 @@ import som.interpreter.processes.SChannel.SChannelOutput;
 import som.primitives.ObjectPrims.IsValue;
 import som.primitives.Primitive;
 import som.vm.Activity;
+import som.vm.ActivityThread;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
@@ -36,6 +37,8 @@ import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActivityThread;
+import tools.debugger.SteppingStrategy;
+import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.nodes.AbstractBreakpointNode;
@@ -56,12 +59,6 @@ public abstract class ChannelPrimitives {
     Channel = null; ChannelId = null;
     In      = null; InId      = null;
     Out     = null; OutId     = null;
-  }
-
-  private static final HashSet<Process> activeProcesses = new HashSet<>();
-
-  public static HashSet<Process> getActiveProcesses() {
-    return activeProcesses;
   }
 
   public static final class ProcessThreadFactory implements ForkJoinWorkerThreadFactory {
@@ -89,9 +86,12 @@ public abstract class ChannelPrimitives {
 
   public static class Process implements Activity, Runnable {
     private final SObjectWithClass obj;
+    private final boolean stopOnRootNode;
+    private boolean stopOnJoin;
 
-    public Process(final SObjectWithClass obj) {
+    public Process(final SObjectWithClass obj, final boolean stopOnRootNode) {
       this.obj = obj;
+      this.stopOnRootNode = stopOnRootNode;
     }
 
     @Override
@@ -101,25 +101,25 @@ public abstract class ChannelPrimitives {
     public void run() {
       ((ProcessThread) Thread.currentThread()).current = this;
 
-      synchronized (activeProcesses) {
-        activeProcesses.add(this);
-      }
-
       try {
         SInvokable disp = (SInvokable) obj.getSOMClass().lookupMessage(
             Symbols.symbolFor("run"), AccessModifier.PROTECTED);
+
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRootNode) {
+          WebDebugger dbg = SomLanguage.getVM(disp.getInvokable()).getWebDebugger();
+          dbg.prepareSteppingUntilNextRootNode();
+        }
         disp.invoke(new Object[] {obj});
       } catch (Throwable t) {
         t.printStackTrace();
-      } finally {
-        synchronized (activeProcesses) {
-          activeProcesses.remove(this);
-        }
       }
     }
 
     @Override
     public long getId() { return 0; }
+
+    @Override
+    public void setStepToJoin(final boolean val) { stopOnJoin = val; }
 
     public SObjectWithClass getProcObject() {
       return obj;
@@ -134,8 +134,8 @@ public abstract class ChannelPrimitives {
   public static class TracingProcess extends Process {
     protected final long processId;
 
-    public TracingProcess(final SObjectWithClass obj) {
-      super(obj);
+    public TracingProcess(final SObjectWithClass obj, final boolean stopOnRootNode) {
+      super(obj, stopOnRootNode);
       assert Thread.currentThread() instanceof TracingActivityThread;
       processId = ((TracingActivityThread) Thread.currentThread()).generateActivityId();
     }
@@ -185,13 +185,25 @@ public abstract class ChannelPrimitives {
     @Specialization
     public final Object read(final VirtualFrame frame, final SChannelInput in) {
       try {
-        Object result = in.readAndSuspendWriter(afterWrite.executeCheckIsSetAndEnabled());
+        Object result = in.readAndSuspendWriter(afterWrite.executeCheckIsSetAndEnabled() || stopOnWrite());
         if (in.shouldBreakAfterRead()) {
           haltNode.executeEvaluated(frame, result);
         }
         return result;
       } catch (InterruptedException e) {
         throw new RuntimeException(e);
+      }
+    }
+
+    private static boolean stopOnWrite() {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+        SteppingStrategy strategy = ActivityThread.steppingStrategy();
+        if (strategy == null) {
+          return false;
+        }
+        return strategy.handleChannelMessage();
+      } else {
+        return false;
       }
     }
 
@@ -231,7 +243,7 @@ public abstract class ChannelPrimitives {
         KernelObj.signalException("signalNotAValueWith:", val);
       }
       try {
-        out.writeAndSuspendReader(val, afterRead.executeCheckIsSetAndEnabled());
+        out.writeAndSuspendReader(val, afterRead.executeCheckIsSetAndEnabled() || stopOnRead());
         if (out.shouldBreakAfterWrite()) {
           haltNode.executeEvaluated(frame, val);
         }
@@ -247,6 +259,18 @@ public abstract class ChannelPrimitives {
         return true;
       } else {
         return super.isTaggedWithIgnoringEagerness(tag);
+      }
+    }
+
+    private static boolean stopOnRead() {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+        SteppingStrategy strategy = ActivityThread.steppingStrategy();
+        if (strategy == null) {
+          return false;
+        }
+        return strategy.handleChannelMessage();
+      } else {
+        return false;
       }
     }
   }

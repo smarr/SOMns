@@ -54,7 +54,7 @@ public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
     SArray argumentsArray = SArguments.getArgumentsWithoutReceiver(arguments);
     Object[] args = new Object[] {arguments[0], selector, argumentsArray};
     CallTarget target = CachedDnuNode.getDnu(rcvrClass, selector,
-        call.getRootNode().getLanguage(SomLanguage.class).getVM());
+        SomLanguage.getVM(call.getRootNode()));
     return call.call(target, args);
   }
 

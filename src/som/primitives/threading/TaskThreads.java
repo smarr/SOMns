@@ -5,11 +5,16 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveTask;
 
+import com.oracle.truffle.api.RootCallTarget;
+
+import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.Activity;
+import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.concurrency.TracingActivityThread;
+import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 
 public final class TaskThreads {
@@ -18,9 +23,12 @@ public final class TaskThreads {
     private static final long serialVersionUID = -2145613708553535622L;
 
     private final Object[] argArray;
+    private final boolean stopOnRoot;
+    private boolean stopOnJoin;
 
-    public SomForkJoinTask(final Object[] argArray) {
-      this.argArray = argArray;
+    public SomForkJoinTask(final Object[] argArray, final boolean stopOnRoot) {
+      this.argArray   = argArray;
+      this.stopOnRoot = stopOnRoot;
       assert argArray[0] instanceof SBlock : "First argument of a block needs to be the block object";
     }
 
@@ -29,6 +37,10 @@ public final class TaskThreads {
 
     public final SInvokable getMethod() {
       return ((SBlock) argArray[0]).getMethod();
+    }
+
+    public boolean stopOnJoin() {
+      return stopOnJoin;
     }
 
     @Override
@@ -42,10 +54,20 @@ public final class TaskThreads {
     }
 
     @Override
+    public void setStepToJoin(final boolean val) { stopOnJoin = val; }
+
+    @Override
     protected final Object compute() {
       ObjectTransitionSafepoint.INSTANCE.register();
       try {
-        return ((SBlock) argArray[0]).getMethod().getCallTarget().call(argArray);
+        RootCallTarget target = ((SBlock) argArray[0]).getMethod().getCallTarget();
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRoot) {
+          WebDebugger dbg = SomLanguage.getVM(target.getRootNode()).getWebDebugger();
+          dbg.prepareSteppingUntilNextRootNode();
+          ForkJoinThread thread = (ForkJoinThread) Thread.currentThread();
+          thread.task = this;
+        }
+        return target.call(argArray);
       } finally {
         ObjectTransitionSafepoint.INSTANCE.unregister();
       }
@@ -57,8 +79,8 @@ public final class TaskThreads {
 
     private final long id;
 
-    public TracedForkJoinTask(final Object[] argArray) {
-      super(argArray);
+    public TracedForkJoinTask(final Object[] argArray, final boolean stopOnRoot) {
+      super(argArray, stopOnRoot);
       if (Thread.currentThread() instanceof TracingActivityThread) {
         TracingActivityThread t = (TracingActivityThread) Thread.currentThread();
         this.id = t.generateActivityId();
@@ -81,6 +103,8 @@ public final class TaskThreads {
   }
 
   private static final class ForkJoinThread extends TracingActivityThread {
+    private SomForkJoinTask task;
+
     protected ForkJoinThread(final ForkJoinPool pool) {
       super(pool);
     }
@@ -92,7 +116,7 @@ public final class TaskThreads {
 
     @Override
     public Activity getActivity() {
-      return null;
+      return task;
     }
   }
 }

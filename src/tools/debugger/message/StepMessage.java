@@ -23,8 +23,7 @@ public class StepMessage extends IncommingMessage {
   @Override
   public void process(final FrontendConnector connector, final WebSocket conn) {
     Suspension susp = connector.getSuspension(activityId);
-    assert susp.getEvent() != null : "didn't find SuspendEvent";
-    step.process(susp.getEvent());
+    step.process(susp);
     susp.resume();
   }
 }

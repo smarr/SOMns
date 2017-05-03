@@ -6,4 +6,6 @@ public interface Activity {
   String getName();
   long getId();
   ActivityType getType();
+
+  void setStepToJoin(boolean val);
 }
