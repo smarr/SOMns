@@ -222,7 +222,7 @@ public class ActorExecutionTrace {
 
     // at the beginning of buffer, allows to track what was created/executed
     // on which thread, really cheap solution, timestamp?
-    ImplThread(TraceData.IMPL_THREAD, 17),
+    ImplThread(TraceData.IMPL_THREAD, 21),
 
     // for memory events another buffer is needed
     // (the gc callback is on ImplThread[Service ImplThread,9,system])
@@ -405,7 +405,12 @@ public class ActorExecutionTrace {
 
   private static class TraceWorkerThread extends Thread {
     protected boolean cont = true;
+    private int msgNumber = 0;
 
+    /* Important Note:
+     * Empty Symbol messages are sent intentionally, the web-debugger depends on it.
+     * The debugger processes trace data only after a symbol message arrives.
+     * */
     @Override
     public void run() {
 
@@ -441,9 +446,10 @@ public class ActorExecutionTrace {
               continue;
             }
 
+            b.putInt(1, msgNumber); // replace placeholder
             synchronized (symbolsToWrite) {
               if (front != null) {
-                front.sendSymbols(ActorExecutionTrace.symbolsToWrite);
+                front.sendSymbols(ActorExecutionTrace.symbolsToWrite, msgNumber);
               }
 
               for (SSymbol s : symbolsToWrite) {
@@ -459,9 +465,11 @@ public class ActorExecutionTrace {
             b.rewind();
 
             if (front != null) {
+
               front.sendTracingData(b);
             }
 
+            msgNumber++;
             b.clear();
             ActorExecutionTrace.emptyBuffers.add(b);
           }
@@ -485,15 +493,17 @@ public class ActorExecutionTrace {
 
           synchronized (symbolsToWrite) {
             if (front != null) {
-              front.sendSymbols(ActorExecutionTrace.symbolsToWrite);
+              front.sendSymbols(ActorExecutionTrace.symbolsToWrite, msgNumber);
             }
             ActorExecutionTrace.symbolsToWrite.clear();
           }
 
           if (b.remaining() > Events.ImplThread.size && front != null) {
+            b.putInt(1, msgNumber); // replace placeholder
             front.sendTracingData(b);
           }
 
+          msgNumber++;
           b.clear();
           ActorExecutionTrace.emptyBuffers.add(b);
         }

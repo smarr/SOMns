@@ -78,6 +78,7 @@ public class TraceBuffer {
     assert start == 0;
 
     storage.put(Events.ImplThread.id);
+    storage.putInt(0); // placeholder for symbol message id
     storage.putLong(threadId);
     storage.putLong(System.currentTimeMillis());
 

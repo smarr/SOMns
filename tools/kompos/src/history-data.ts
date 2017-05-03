@@ -51,7 +51,7 @@ enum TraceSize {
   PromiseResolution = 28,
   PromiseChained    = 17,
   Mailbox           = 21,
-  ImplThread        = 17,
+  ImplThread        = 21,
   MailboxContd      = 25,
 
   ActivityOrigin    =  9,
@@ -626,7 +626,7 @@ export class HistoryData {
           console.assert(i === (start + TraceSize.Mailbox));
           break;
         case Trace.ImplThread:
-          i += 16;
+          i += 20;
           console.assert(i === (start + TraceSize.ImplThread));
           break;
         case Trace.MailboxContd:
