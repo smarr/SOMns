@@ -72,10 +72,13 @@ public final class ThreadPrimitives {
       implements Activity, ActivityThread {
     private final Object[] args;
     private final SBlock block;
+    private final boolean stopOnRoot;
+    private boolean stopOnJoin;
 
     protected SteppingStrategy steppingStrategy;
 
-    public SomThread(final SBlock block, final Object... args) {
+    public SomThread(final boolean stopOnRoot, final SBlock block, final Object... args) {
+      this.stopOnRoot = stopOnRoot;
       this.block = block;
       this.args  = args;
     }
@@ -92,6 +95,9 @@ public final class ThreadPrimitives {
 
     @Override
     public ActivityType getType() { return ActivityType.THREAD; }
+
+    @Override
+    public void setStepToJoin(final boolean val) { stopOnJoin = val; }
 
     @Override
     public void run() {

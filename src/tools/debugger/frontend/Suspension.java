@@ -15,6 +15,7 @@ import som.vm.Activity;
 import som.vm.ActivityThread;
 import tools.TraceData;
 import tools.debugger.FrontendConnector;
+import tools.debugger.SteppingStrategy;
 import tools.debugger.frontend.ApplicationThreadTask.Resume;
 import tools.debugger.frontend.ApplicationThreadTask.SendStackTrace;
 
@@ -138,6 +139,11 @@ public class Suspension {
     while (continueWaiting) {
       try {
         continueWaiting = tasks.take().execute();
+        SteppingStrategy strategy = activityThread.getSteppingStrategy();
+        if (strategy != null) {
+          strategy.handleResumeExecution(activity);
+        }
+
       } catch (InterruptedException e) { /* Just continue waiting */ }
     }
     synchronized (this) {

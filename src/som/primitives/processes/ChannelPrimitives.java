@@ -87,6 +87,7 @@ public abstract class ChannelPrimitives {
   public static class Process implements Activity, Runnable {
     private final SObjectWithClass obj;
     private final boolean stopOnRootNode;
+    private boolean stopOnJoin;
 
     public Process(final SObjectWithClass obj, final boolean stopOnRootNode) {
       this.obj = obj;
@@ -116,6 +117,9 @@ public abstract class ChannelPrimitives {
 
     @Override
     public long getId() { return 0; }
+
+    @Override
+    public void setStepToJoin(final boolean val) { stopOnJoin = val; }
 
     public SObjectWithClass getProcObject() {
       return obj;

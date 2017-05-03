@@ -24,6 +24,7 @@ public final class TaskThreads {
 
     private final Object[] argArray;
     private final boolean stopOnRoot;
+    private boolean stopOnJoin;
 
     public SomForkJoinTask(final Object[] argArray, final boolean stopOnRoot) {
       this.argArray   = argArray;
@@ -38,6 +39,10 @@ public final class TaskThreads {
       return ((SBlock) argArray[0]).getMethod();
     }
 
+    public boolean stopOnJoin() {
+      return stopOnJoin;
+    }
+
     @Override
     public final String getName() {
       return getMethod().toString();
@@ -47,6 +52,9 @@ public final class TaskThreads {
     public long getId() {
       return 0;
     }
+
+    @Override
+    public void setStepToJoin(final boolean val) { stopOnJoin = val; }
 
     @Override
     protected final Object compute() {

@@ -8,6 +8,7 @@ import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.debugger.SteppingStrategy.IntoSpawn;
+import tools.debugger.SteppingStrategy.ReturnFromActivity;
 import tools.debugger.SteppingStrategy.ToChannelOpposite;
 import tools.debugger.frontend.Suspension;
 
@@ -73,6 +74,17 @@ public enum SteppingType {
       susp.getActivityThread().setSteppingStrategy(new IntoSpawn());
     }
   },
+
+  @SerializedName("returnFromActivity")
+  RETURN_FROM_ACTIVITY("returnFromActivity", "Return from Activity", Group.ACTIVITY_STEPPING, "arrow-left",
+      null, new ActivityType[] {ActivityType.PROCESS, ActivityType.TASK, ActivityType.THREAD}) {
+    @Override
+    public void process(final Suspension susp) {
+      susp.getEvent().prepareContinue();
+      susp.getActivityThread().setSteppingStrategy(new ReturnFromActivity());
+    }
+  },
+
 
   @SerializedName("stepToChannelRcvr")
   STEP_TO_CHANNEL_RCVR("stepToChannelRcvr", "Step to Receiver", Group.PROCESS_STEPPING, "arrow-right", new Class[] {ChannelWrite.class}) {
