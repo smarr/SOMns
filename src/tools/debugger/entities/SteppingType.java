@@ -46,7 +46,9 @@ public enum SteppingType {
   STEP_INTO("stepInto", "Step Into", Group.LOCAL_STEPPING, "arrow-down", null) {
     @Override
     public void process(final Suspension susp) {
+      startHandleFrameSkip(susp);
       susp.getEvent().prepareStepInto(1);
+      completeHandleFrameSkip(susp);
     }
   },
 
@@ -54,7 +56,9 @@ public enum SteppingType {
   STEP_OVER("stepOver", "Step Over", Group.LOCAL_STEPPING, "arrow-right", null) {
     @Override
     public void process(final Suspension susp) {
+      startHandleFrameSkip(susp);
       susp.getEvent().prepareStepOver(1);
+      completeHandleFrameSkip(susp);
     }
   },
 
@@ -62,7 +66,9 @@ public enum SteppingType {
   STEP_RETURN("return", "Return from Method", Group.LOCAL_STEPPING, "arrow-left", null) {
     @Override
     public void process(final Suspension susp) {
+      startHandleFrameSkip(susp);
       susp.getEvent().prepareStepOut();
+      completeHandleFrameSkip(susp);
     }
   },
 
@@ -105,7 +111,9 @@ public enum SteppingType {
   },
 
 
-  STEP_TO_RECEIVER_MESSAGE("todo",   "todo", Group.ACTOR_STEPPING, "arrow-right", null) { @Override public void process(final Suspension susp) { /* TODO */ } },
+  STEP_TO_RECEIVER_MESSAGE("todo",   "todo", Group.ACTOR_STEPPING, "arrow-right", null) {
+    @Override public void process(final Suspension susp) { }
+  },
   STEP_TO_PROMISE_RESOLUTION("todo", "todo", Group.ACTOR_STEPPING, "arrow-right", null) { @Override public void process(final Suspension susp) { /* TODO */ } },
   STEP_TO_NEXT_MESSAGE("todo",       "todo", Group.ACTOR_STEPPING, "arrow-right", null) { @Override public void process(final Suspension susp) { /* TODO */ } },
   STEP_RETURN_TO_PROMISE_RESOLUTION("todo", "todo", Group.ACTOR_STEPPING, "arrow-right", null) { @Override public void process(final Suspension susp) { /* TODO */ } };
@@ -122,10 +130,26 @@ public enum SteppingType {
     Group(final String label) { this.label = label; }
   }
 
+  private static void startHandleFrameSkip(final Suspension susp) {
+    if (susp.getFrameSkipCount() > 0) {
+      susp.getEvent().startComposedStepping();
+      for (int i = 0; i < susp.getFrameSkipCount(); i += 1) {
+        susp.getEvent().prepareStepOut();
+      }
+    }
+  }
+
+  private static void completeHandleFrameSkip(final Suspension susp) {
+    if (susp.getFrameSkipCount() > 0) {
+      susp.getEvent().prepareComposedStepping();
+    }
+  }
+
   public final String name;
   public final String label;
   public final Group  group;
   public final String icon;
+
   public final ActivityType[] forActivities;
 
   /** Tag to identify the source sections at which this step operation makes sense.

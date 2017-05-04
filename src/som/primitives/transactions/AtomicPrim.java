@@ -2,6 +2,7 @@ package som.primitives.transactions;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
@@ -56,7 +57,9 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-    if (tag == Atomic.class || tag == ExpressionBreakpoint.class) {
+    if (tag == Atomic.class ||
+        tag == ExpressionBreakpoint.class ||
+        tag == StatementTag.class) {
       return true;
     }
     return super.isTaggedWith(tag);

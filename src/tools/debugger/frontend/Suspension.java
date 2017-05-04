@@ -140,7 +140,7 @@ public class Suspension {
       try {
         continueWaiting = tasks.take().execute();
         SteppingStrategy strategy = activityThread.getSteppingStrategy();
-        if (strategy != null) {
+        if (!continueWaiting && strategy != null) {
           strategy.handleResumeExecution(activity);
         }
 
