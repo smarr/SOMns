@@ -61,21 +61,22 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
     public testSpawning = (
       | thread |
       thread := Thread spawn: [].
-
-      self assert: (thread name beginsWith: 'Thread-').
+      self assert: (thread name beginsWith: 'Thread(').
 
       thread := Thread spawn: [:i | i ] with: (Array with: 1).
-      self assert: (thread name beginsWith: 'Thread-')
+      thread name println.
+      self assert: (thread name beginsWith: 'Thread(')
     )
 
     public testThreadInterface = (
       | thread thread2 executed |
       executed := false.
-      thread := Thread spawn: [ executed := true ].
+      thread := Thread spawn: [
+        executed := true.
+        Thread current
+      ].
       thread name: 'bar'.
       self assert: 'bar'  equals: thread name.
-
-      thread == thread.
 
       self assert: thread is: thread join.
       self assert: executed.
@@ -85,7 +86,7 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
       thread  := Thread current.
       thread2 := Thread current.
       self assert: thread is: thread2.
-      self deny: thread == nil.
+      self assert: thread == nil.
     )
 
     public testThreadCurrent = (

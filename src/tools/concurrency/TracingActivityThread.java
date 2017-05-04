@@ -13,7 +13,7 @@ import tools.debugger.SteppingStrategy;
 
 public abstract class TracingActivityThread extends ForkJoinWorkerThread
     implements ActivityThread {
-  private static AtomicInteger threadIdGen = new AtomicInteger(1);
+  public static AtomicInteger threadIdGen = new AtomicInteger(1);
   protected final long threadId;
   protected long nextActivityId = 1;
   protected long nextMessageId;

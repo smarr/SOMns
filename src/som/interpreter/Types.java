@@ -35,6 +35,7 @@ import som.interpreter.nodes.DummyParent;
 import som.primitives.SizeAndLengthPrim;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.threading.TaskThreads.SomForkJoinTask;
+import som.primitives.threading.TaskThreads.SomThreadTask;
 import som.primitives.threading.ThreadingModule;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
@@ -84,7 +85,7 @@ public class Types {
       return Classes.stringClass;
     } else if (obj instanceof Double) {
       return Classes.doubleClass;
-    } else if (obj instanceof Thread) {
+    } else if (obj instanceof SomThreadTask) {
       assert ThreadingModule.ThreadClass != null;
       return ThreadingModule.ThreadClass;
     } else if (obj instanceof ReentrantLock) {

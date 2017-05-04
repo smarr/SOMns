@@ -21,8 +21,9 @@ import som.primitives.processes.ChannelPrimitives;
 import som.primitives.processes.ChannelPrimitives.Process;
 import som.primitives.processes.ChannelPrimitives.TracingProcess;
 import som.primitives.threading.TaskThreads.SomForkJoinTask;
+import som.primitives.threading.TaskThreads.SomThreadTask;
 import som.primitives.threading.TaskThreads.TracedForkJoinTask;
-import som.primitives.threading.ThreadPrimitives.SomThread;
+import som.primitives.threading.TaskThreads.TracedThreadTask;
 import som.primitives.threading.ThreadingModule;
 import som.vm.ActivityThread;
 import som.vm.VmSettings;
@@ -45,12 +46,27 @@ import tools.debugger.session.Breakpoints;
 public abstract class ActivitySpawn {
 
   private static SomForkJoinTask createTask(final Object[] argArray,
-      final boolean stopOnRoot) {
+      final boolean stopOnRoot, final SBlock block, final SourceSection section) {
+    SomForkJoinTask task;
     if (VmSettings.ACTOR_TRACING) {
-      return new TracedForkJoinTask(argArray, stopOnRoot);
+      task = new TracedForkJoinTask(argArray, stopOnRoot);
+      ActorExecutionTrace.taskSpawn(block.getMethod(), task.getId(), section);
     } else {
-      return new SomForkJoinTask(argArray, stopOnRoot);
+      task = new SomForkJoinTask(argArray, stopOnRoot);
     }
+    return task;
+  }
+
+  private static SomThreadTask createThread(final Object[] argArray,
+      final boolean stopOnRoot, final SBlock block, final SourceSection section) {
+    SomThreadTask thread;
+    if (VmSettings.ACTOR_TRACING) {
+      thread = new TracedThreadTask(argArray, stopOnRoot);
+      ActorExecutionTrace.threadSpawn(block.getMethod(), thread.getId(), section);
+    } else {
+      thread = new SomThreadTask(argArray, stopOnRoot);
+    }
+    return thread;
   }
 
   private static Process createProcess(final SObjectWithClass obj,
@@ -88,6 +104,7 @@ public abstract class ActivitySpawn {
   public abstract static class SpawnPrim extends BinaryComplexOperation {
     private final ForkJoinPool forkJoinPool;
     private final ForkJoinPool processesPool;
+    private final ForkJoinPool threadPool;
 
     /** Breakpoint info for triggering suspension on first execution of code in activity. */
     @Child protected AbstractBreakpointNode onExec;
@@ -96,26 +113,24 @@ public abstract class ActivitySpawn {
       super(ew, s);
       this.forkJoinPool  = vm.getForkJoinPool();
       this.processesPool = vm.getProcessPool();
+      this.threadPool    = vm.getThreadPool();
       this.onExec = insert(Breakpoints.createOnExec(s, vm));
     }
 
     @Specialization(guards = "clazz == TaskClass")
     @TruffleBoundary
     public final SomForkJoinTask spawnTask(final SClass clazz, final SBlock block) {
-      SomForkJoinTask task = createTask(new Object[] {block}, onExec.executeCheckIsSetAndEnabled() || stopOnRoot());
+      SomForkJoinTask task = createTask(new Object[] {block},
+          onExec.executeCheckIsSetAndEnabled() || stopOnRoot(), block, sourceSection);
       forkJoinPool.execute(task);
-
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.taskSpawn(block.getMethod(), task.getId(), sourceSection);
-      }
       return task;
     }
 
     @Specialization(guards = "clazz == ThreadClass")
-    public final Thread spawnThread(final SClass clazz, final SBlock block) {
-      SomThread thread = new SomThread(onExec.executeCheckIsSetAndEnabled() || stopOnRoot(),
-          block, block);
-      thread.start();
+    public final SomThreadTask spawnThread(final SClass clazz, final SBlock block) {
+      SomThreadTask thread = createThread(new Object[] {block},
+          onExec.executeCheckIsSetAndEnabled() || stopOnRoot(), block, sourceSection);
+      threadPool.execute(thread);
       return thread;
     }
 
@@ -162,6 +177,7 @@ public abstract class ActivitySpawn {
   public abstract static class SpawnWithPrim extends TernaryExpressionNode {
     private final ForkJoinPool forkJoinPool;
     private final ForkJoinPool processesPool;
+    private final ForkJoinPool threadPool;
 
     /** Breakpoint info for triggering suspension on first execution of code in activity. */
     @Child protected AbstractBreakpointNode onExec;
@@ -170,26 +186,25 @@ public abstract class ActivitySpawn {
       super(ew, s);
       this.forkJoinPool  = vm.getForkJoinPool();
       this.processesPool = vm.getProcessPool();
+      this.threadPool    = vm.getThreadPool();
       this.onExec = insert(Breakpoints.createOnExec(s, vm));
     }
 
     @Specialization(guards = "clazz == TaskClass")
     public SomForkJoinTask spawnTask(final SClass clazz, final SBlock block,
         final SArray somArgArr, final Object[] argArr) {
-      SomForkJoinTask task = createTask(argArr, onExec.executeCheckIsSetAndEnabled() || stopOnRoot());
+      SomForkJoinTask task = createTask(argArr,
+          onExec.executeCheckIsSetAndEnabled() || stopOnRoot(), block, sourceSection);
       forkJoinPool.execute(task);
-
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.taskSpawn(block.getMethod(), task.getId(), sourceSection);
-      }
       return task;
     }
 
     @Specialization(guards = "clazz == ThreadClass")
-    public Thread spawnThread(final SClass clazz, final SBlock block,
+    public SomThreadTask spawnThread(final SClass clazz, final SBlock block,
         final SArray somArgArr, final Object[] argArr) {
-      SomThread thread = new SomThread(onExec.executeCheckIsSetAndEnabled() || stopOnRoot(), block, argArr);
-      thread.start();
+      SomThreadTask thread = createThread(argArr,
+          onExec.executeCheckIsSetAndEnabled() || stopOnRoot(), block, sourceSection);
+      threadPool.execute(thread);
       return thread;
     }
 

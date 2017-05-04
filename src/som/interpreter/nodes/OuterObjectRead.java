@@ -22,6 +22,7 @@ import som.interpreter.processes.SChannel.SChannelOutput;
 import som.primitives.actors.ActorClasses;
 import som.primitives.processes.ChannelPrimitives;
 import som.primitives.threading.TaskThreads.SomForkJoinTask;
+import som.primitives.threading.TaskThreads.SomThreadTask;
 import som.primitives.threading.ThreadingModule;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
@@ -184,7 +185,7 @@ public abstract class OuterObjectRead
   public Object doSBlock(final SBlock receiver) { return KernelObj.kernel; }
 
   @Specialization(guards = {"contextLevel == 1", "mixinId == ThreadClassId"})
-  public Object doThread(final Thread receiver) {
+  public Object doThread(final SomThreadTask receiver) {
     assert ThreadingModule.ThreadingModule != null;
     return ThreadingModule.ThreadingModule;
   }
@@ -226,7 +227,7 @@ public abstract class OuterObjectRead
   }
 
   @Specialization(guards = {"contextLevel == 1", "mixinId != ThreadClassId"})
-  public Object doThreadInKernelScope(final Thread receiver) {
+  public Object doThreadInKernelScope(final SomThreadTask receiver) {
     return KernelObj.kernel;
   }
 
