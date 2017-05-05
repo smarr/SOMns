@@ -9,12 +9,14 @@ import som.VM;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.transactions.Transactions;
 import som.primitives.Primitive;
+import som.vm.ActivityThread;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import tools.concurrency.Tags.Atomic;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActivityThread;
+import tools.debugger.SteppingStrategy;
 import tools.debugger.entities.EntityType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
@@ -39,7 +41,7 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
       try {
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
           TracingActivityThread.currentThread().enterConcurrentScope(EntityType.TRANSACTION);
-          if (beforeCommit.executeCheckIsSetAndEnabled()) {
+          if (beforeCommit.executeCheckIsSetAndEnabled() || stopOnTx()) {
             vm.getWebDebugger().prepareSteppingAfterNextRootNode();
           }
         }
@@ -61,6 +63,18 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
           TracingActivityThread.currentThread().leaveConcurrentScope(EntityType.TRANSACTION);
         }
       }
+    }
+  }
+
+  private static boolean stopOnTx() {
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      SteppingStrategy strategy = ActivityThread.steppingStrategy();
+      if (strategy == null) {
+        return false;
+      }
+      return strategy.handleTx();
+    } else {
+      return false;
     }
   }
 

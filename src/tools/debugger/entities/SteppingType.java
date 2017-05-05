@@ -10,6 +10,7 @@ import tools.concurrency.Tags.ChannelWrite;
 import tools.debugger.SteppingStrategy.IntoSpawn;
 import tools.debugger.SteppingStrategy.ReturnFromActivity;
 import tools.debugger.SteppingStrategy.ToChannelOpposite;
+import tools.debugger.SteppingStrategy.ToNextTransaction;
 import tools.debugger.frontend.Suspension;
 
 
@@ -110,6 +111,15 @@ public enum SteppingType {
     }
   },
 
+  @SerializedName("stepToNextTx")
+  STEP_TO_NEXT_TX("stepToNextTx", "Step to next Transaction", Group.ACTIVITY_STEPPING, "arrow-right", null, null) {
+    @Override
+    public void process(final Suspension susp) {
+      susp.getEvent().prepareContinue();
+      susp.getActivityThread().setSteppingStrategy(new ToNextTransaction());
+    }
+  },
+
 
   STEP_TO_RECEIVER_MESSAGE("todo",   "todo", Group.ACTOR_STEPPING, "arrow-right", null) {
     @Override public void process(final Suspension susp) { }
@@ -123,7 +133,8 @@ public enum SteppingType {
     LOCAL_STEPPING("Local Stepping"),
     ACTIVITY_STEPPING("Activity Stepping"),
     ACTOR_STEPPING("Actor Stepping"),
-    PROCESS_STEPPING("Process Stepping");
+    PROCESS_STEPPING("Process Stepping"),
+    TX_STEPPING("Transaction Stepping");
 
     public final String label;
 

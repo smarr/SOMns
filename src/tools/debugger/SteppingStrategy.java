@@ -13,6 +13,7 @@ public abstract class SteppingStrategy {
   /** Return true if the spawned activity should stop on its root node. */
   public boolean handleSpawn() { return false; }
   public boolean handleChannelMessage() { return false; }
+  public boolean handleTx() { return false; }
 
   public void handleResumeExecution(final Activity activity) { }
 
@@ -41,6 +42,15 @@ public abstract class SteppingStrategy {
       if (consumed) { return; } else { consumed = true; }
 
       activity.setStepToJoin(true);
+    }
+  }
+
+  public static final class ToNextTransaction extends SteppingStrategy {
+    @Override
+    public boolean handleTx() {
+      if (consumed) { return false; } else { consumed = true; }
+
+      return true;
     }
   }
 }
