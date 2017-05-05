@@ -14,6 +14,8 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import tools.concurrency.Tags.Atomic;
 import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.concurrency.TracingActivityThread;
+import tools.debugger.entities.EntityType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
@@ -35,8 +37,11 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
     while (true) {
       Transactions tx = Transactions.startTransaction();
       try {
-        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && beforeCommit.executeCheckIsSetAndEnabled()) {
-          vm.getWebDebugger().prepareSteppingAfterNextRootNode();
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+          TracingActivityThread.currentThread().enterConcurrentScope(EntityType.TRANSACTION);
+          if (beforeCommit.executeCheckIsSetAndEnabled()) {
+            vm.getWebDebugger().prepareSteppingAfterNextRootNode();
+          }
         }
 
         Object result = block.getMethod().getAtomicCallTarget().call(new Object[] {block});
@@ -50,6 +55,10 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
           // TODO: still need to make sure that we don't have
           //       a working copy as value in `t`, I think, or do I?
           throw t;
+        }
+      } finally {
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+          TracingActivityThread.currentThread().leaveConcurrentScope(EntityType.TRANSACTION);
         }
       }
     }
