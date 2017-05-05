@@ -14,6 +14,7 @@ import som.primitives.ObjectPrims.HaltPrim;
 import som.vm.Activity;
 import som.vm.ActivityThread;
 import tools.TraceData;
+import tools.concurrency.TracingActivityThread;
 import tools.debugger.FrontendConnector;
 import tools.debugger.SteppingStrategy;
 import tools.debugger.entities.EntityType;
@@ -32,13 +33,13 @@ import tools.debugger.frontend.ApplicationThreadTask.SendStackTrace;
 public class Suspension {
   public final long activityId;
   private final Activity activity;
-  private final ActivityThread activityThread;
+  private final TracingActivityThread activityThread;
   private final ArrayBlockingQueue<ApplicationThreadTask> tasks;
 
   private SuspendedEvent suspendedEvent;
   private ApplicationThreadStack stack;
 
-  public Suspension(final ActivityThread activityThread,
+  public Suspension(final TracingActivityThread activityThread,
       final Activity activity, final long activityId) {
     this.activityThread = activityThread;
     this.activity   = activity;
