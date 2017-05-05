@@ -36,4 +36,14 @@ public enum EntityType {
     this.creation   = (byte) creation;
     this.completion = (byte) completion;
   }
+
+  public static byte[] getIds(final EntityType[] entities) {
+    if (entities == null) { return null; }
+
+    byte[] entityIds = new byte[entities.length];
+    for (int i = 0; i < entities.length; i += 1) {
+      entityIds[i] = entities[i].id;
+    }
+    return entityIds;
+  }
 }

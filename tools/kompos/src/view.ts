@@ -7,7 +7,8 @@ import {Controller}   from "./controller";
 import {ActivityNode} from "./history-data";
 import {Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
   TaggedSourceCoordinate, Scope, getSectionId, Variable, Activity, ActivityType,
-  SymbolMessage, ServerCapabilities, BreakpointType, SteppingType } from "./messages";
+  SymbolMessage, ServerCapabilities, BreakpointType, SteppingType,
+  EntityType } from "./messages";
 import {Breakpoint, SectionBreakpoint, LineBreakpoint} from "./breakpoints";
 import {SystemVisualization} from "./visualizations";
 
@@ -710,7 +711,7 @@ export class View {
     scopes.find("tbody").html(""); // rest view
 
     this.highlightProgramPosition(sourceId, activity, ssId);
-    this.adjustSteppingButtons(act, section, activity.type);
+    this.adjustSteppingButtons(act, section, activity.type, data.concurrentEntityScopes);
   }
 
   private hasCommonElements(a: string[], b: string[]) {
@@ -728,7 +729,25 @@ export class View {
   }
 
   private isSteppingApplicable(section: TaggedSourceCoordinate,
-      step: SteppingType, activityType: ActivityType) {
+      step: SteppingType, activityType: ActivityType,
+      concurrentEntityScopes: EntityType[]) {
+    if (step.inScope) {
+      if (!concurrentEntityScopes) {
+        return false;
+      }
+
+      let matches = false;
+      for (const entT of step.inScope) {
+        if (concurrentEntityScopes.indexOf(entT) > -1) {
+          matches = true;
+          break;
+        }
+      }
+
+      // if the stepping is not supported for this activity, just return
+      if (!matches) { return false; }
+    }
+
     if (step.forActivities) {
       let matches = false;
       for (const actT of step.forActivities) {
@@ -752,9 +771,10 @@ export class View {
   }
 
   private adjustSteppingButtons(act: JQuery, section: TaggedSourceCoordinate,
-      activityType: ActivityType) {
+      activityType: ActivityType, concurrentEntityScopes: EntityType[]) {
     for (const step of this.serverCapabilities.steppingTypes) {
-      const enabled = this.isSteppingApplicable(section, step, activityType);
+      const enabled = this.isSteppingApplicable(
+        section, step, activityType, concurrentEntityScopes);
       act.find("button[data-step=" + step.name + " ]").prop("disabled", !enabled);
     }
   }

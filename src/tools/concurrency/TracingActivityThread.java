@@ -1,5 +1,6 @@
 package tools.concurrency;
 
+import java.util.ArrayList;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -9,6 +10,7 @@ import som.vm.ActivityThread;
 import som.vm.VmSettings;
 import tools.TraceData;
 import tools.debugger.SteppingStrategy;
+import tools.debugger.entities.EntityType;
 
 
 public abstract class TracingActivityThread extends ForkJoinWorkerThread
@@ -27,6 +29,18 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread
   protected final TraceBuffer traceBuffer;
 
   protected SteppingStrategy steppingStrategy;
+
+  protected ConcurrentEntityScope topEntity;
+
+  private static class ConcurrentEntityScope {
+    private final EntityType type;
+    private final ConcurrentEntityScope next;
+
+    ConcurrentEntityScope(final EntityType type, final ConcurrentEntityScope next) {
+      this.type = type;
+      this.next = next;
+    }
+  }
 
   public TracingActivityThread(final ForkJoinPool pool) {
     super(pool);
@@ -54,6 +68,31 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread
   @Override
   public void setSteppingStrategy(final SteppingStrategy strategy) {
     this.steppingStrategy = strategy;
+  }
+
+  public void enterConcurrentScope(final EntityType type) {
+    topEntity = new ConcurrentEntityScope(type, topEntity);
+  }
+
+  public void leaveConcurrentScope(final EntityType type) {
+    assert topEntity.type == type;
+    topEntity = topEntity.next;
+  }
+
+  public EntityType[] getConcurrentEntityScopes() {
+    if (topEntity == null) {
+      return null;
+    }
+
+    ArrayList<EntityType> list = new ArrayList<>();
+
+    ConcurrentEntityScope current = topEntity;
+
+    while (current != null) {
+      list.add(current.type);
+      current = current.next;
+    }
+    return list.toArray(new EntityType[0]);
   }
 
   public long generateActivityId() {
@@ -89,5 +128,9 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread
       ActorExecutionTrace.unregisterThread(this);
     }
     super.onTermination(exception);
+  }
+
+  public static TracingActivityThread currentThread() {
+    return (TracingActivityThread) Thread.currentThread();
   }
 }

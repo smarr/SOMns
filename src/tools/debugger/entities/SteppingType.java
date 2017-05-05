@@ -156,19 +156,29 @@ public enum SteppingType {
       If no tags are given, it is assumed the operation is always valid. */
   public final Class<? extends Tags>[] applicableTo;
 
+  /** Stepping operation is only available when in the dynamic scope of the given entity.
+      If no entity types are given, it is assumed the operation is always valid. */
+  public final EntityType[] inScope;
+
   SteppingType(final String name, final String label, final Group group, final String icon,
       final Class<? extends Tags>[] applicableTo) {
-    this(name, label, group, icon, applicableTo, null);
+    this(name, label, group, icon, applicableTo, null, null);
   }
 
   SteppingType(final String name, final String label, final Group group, final String icon,
       final Class<? extends Tags>[] applicableTo, final ActivityType[] forActivities) {
+    this(name, label, group, icon, applicableTo, forActivities, null);
+  }
+
+  SteppingType(final String name, final String label, final Group group, final String icon,
+      final Class<? extends Tags>[] applicableTo, final ActivityType[] forActivities, final EntityType[] inScope) {
     this.name  = name;
     this.label = label;
     this.group = group;
     this.icon  = icon;
     this.applicableTo  = applicableTo;
     this.forActivities = forActivities;
+    this.inScope = inScope;
   }
 
   public abstract void process(Suspension susp);

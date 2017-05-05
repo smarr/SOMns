@@ -164,6 +164,7 @@ export interface SteppingType {
   icon:  string;    /** Id of an icon known by the frontend. */
   applicableTo?: string[];  /** The source section tags this stepping operation applies to. If empty, it applies unconditionally. */
   forActivities?: ActivityType[]; /** Ids of the activities this stepping operation applies to. If empty, it applies unconditionally. */
+  inScope: EntityType[]; /** Ids of the entities, which need to be in dynamic scope so this stepping type applies. If empty, it applies unconditionally. */
 }
 
 export interface EntityDef {
@@ -256,6 +257,7 @@ export interface StackTraceResponse {
   stackFrames: StackFrame[];
   totalFrames: number;
   requestId:   number;
+  concurrentEntityScopes?: EntityType[];
 }
 
 export interface ScopesRequest {

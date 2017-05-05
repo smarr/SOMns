@@ -7,6 +7,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.ReceivedRootNode;
 import tools.TraceData;
+import tools.debugger.entities.EntityType;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.Response;
 
@@ -14,6 +15,10 @@ import tools.debugger.message.Message.Response;
 @SuppressWarnings("unused")
 public final class StackTraceResponse extends Response {
   private final StackFrame[] stackFrames;
+
+  // TODO: we should perhaps move that into the stack frames to have more precise info
+  //       but that would make tracking more difficult
+  private final byte[] concurrentEntityScopes;
   private final long activityId;
 
   /**
@@ -23,12 +28,13 @@ public final class StackTraceResponse extends Response {
 
   private StackTraceResponse(final long activityId,
       final StackFrame[] stackFrames, final int totalFrames,
-      final int requestId) {
+      final int requestId, final byte[] concurrentEntityScopes) {
     super(requestId);
     assert TraceData.isWithinJSIntValueRange(activityId);
     this.activityId  = activityId;
     this.stackFrames = stackFrames;
     this.totalFrames = totalFrames;
+    this.concurrentEntityScopes = concurrentEntityScopes;
 
     boolean assertsOn = false;
     assert assertsOn = true;
@@ -108,8 +114,10 @@ public final class StackTraceResponse extends Response {
       arr[i] = f;
     }
 
+    EntityType[] concEntityScopes = suspension.getCurrentEntityScopes();
+
     return new StackTraceResponse(suspension.activityId, arr, frames.size(),
-        requestId);
+        requestId, EntityType.getIds(concEntityScopes));
   }
 
   private static StackFrame createFrame(final Suspension suspension,

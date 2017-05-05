@@ -16,6 +16,7 @@ import som.vm.ActivityThread;
 import tools.TraceData;
 import tools.debugger.FrontendConnector;
 import tools.debugger.SteppingStrategy;
+import tools.debugger.entities.EntityType;
 import tools.debugger.frontend.ApplicationThreadTask.Resume;
 import tools.debugger.frontend.ApplicationThreadTask.SendStackTrace;
 
@@ -52,6 +53,10 @@ public class Suspension {
 
   public synchronized ArrayList<DebugStackFrame> getStackFrames() {
     return stack.get();
+  }
+
+  public EntityType[] getCurrentEntityScopes() {
+    return activityThread.getConcurrentEntityScopes();
   }
 
   public synchronized long addScope(final MaterializedFrame frame,
