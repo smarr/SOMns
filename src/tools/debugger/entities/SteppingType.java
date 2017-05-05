@@ -7,9 +7,11 @@ import tools.concurrency.Tags;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
+import tools.debugger.SteppingStrategy.AfterCommit;
 import tools.debugger.SteppingStrategy.IntoSpawn;
 import tools.debugger.SteppingStrategy.ReturnFromActivity;
 import tools.debugger.SteppingStrategy.ToChannelOpposite;
+import tools.debugger.SteppingStrategy.ToNextCommit;
 import tools.debugger.SteppingStrategy.ToNextTransaction;
 import tools.debugger.frontend.Suspension;
 
@@ -120,6 +122,26 @@ public enum SteppingType {
     }
   },
 
+  @SerializedName("stepToCommit")
+  STEP_TO_COMMIT("stepToCommit", "Step to Commit", Group.TX_STEPPING, "arrow-right",
+      null, null, new EntityType[] {EntityType.TRANSACTION}) {
+    @Override
+    public void process(final Suspension susp) {
+      susp.getEvent().prepareContinue();
+      susp.getActivityThread().setSteppingStrategy(new ToNextCommit());
+
+    }
+  },
+
+  @SerializedName("stepAfterCommit")
+  STEP_AFTER_COMMIT("stepAfterCommit", "Complete Transaction", Group.TX_STEPPING, "arrow-left",
+      null, null, new EntityType[] {EntityType.TRANSACTION}) {
+    @Override
+    public void process(final Suspension susp) {
+      susp.getEvent().prepareContinue();
+      susp.getActivityThread().setSteppingStrategy(new AfterCommit());
+    }
+  },
 
   STEP_TO_RECEIVER_MESSAGE("todo",   "todo", Group.ACTOR_STEPPING, "arrow-right", null) {
     @Override public void process(final Suspension susp) { }

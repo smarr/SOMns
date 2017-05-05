@@ -2,11 +2,14 @@ package som.primitives.transactions;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
+import som.interpreter.actors.SuspendExecutionNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.transactions.Transactions;
 import som.primitives.Primitive;
 import som.vm.ActivityThread;
@@ -26,34 +29,58 @@ import tools.debugger.session.Breakpoints;
 @Primitive(primitive = "tx:atomic:", requiresContext = true, selector = "atomic:")
 public abstract class AtomicPrim extends BinaryComplexOperation {
   private final VM vm;
+
   @Child protected AbstractBreakpointNode beforeCommit;
+  @Child protected UnaryExpressionNode    haltNode;
 
   protected AtomicPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
     super(eagWrap, source);
     this.vm = vm;
     beforeCommit = insert(Breakpoints.createBeforeCommit(source, vm));
+    haltNode = SuspendExecutionNodeGen.create(false, sourceSection, null);
   }
 
   @Specialization
-  public final Object atomic(final SClass clazz, final SBlock block) {
+  public final Object atomic(final VirtualFrame frame, final SClass clazz, final SBlock block) {
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnTx()) {
+      haltNode.executeEvaluated(frame, block);
+    }
+
     while (true) {
       Transactions tx = Transactions.startTransaction();
       try {
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
           TracingActivityThread.currentThread().enterConcurrentScope(EntityType.TRANSACTION);
-          if (beforeCommit.executeCheckIsSetAndEnabled() || stopOnTx()) {
+          if (beforeCommit.executeCheckIsSetAndEnabled()) {
             vm.getWebDebugger().prepareSteppingAfterNextRootNode();
           }
         }
 
         Object result = block.getMethod().getAtomicCallTarget().call(new Object[] {block});
+
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnCommit()) {
+          haltNode.executeEvaluated(frame, result);
+        }
+
         if (tx.commit()) {
+          if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopAfterCommit()) {
+            haltNode.executeEvaluated(frame, result);
+          }
+
           // TODO: still need to make sure that we don't have
           //       a working copy as `result`, I think, or do I?
           return result;
         }
       } catch (Throwable t) {
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnCommit()) {
+          haltNode.executeEvaluated(frame, t);
+        }
+
         if (tx.commit()) {
+          if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopAfterCommit()) {
+            haltNode.executeEvaluated(frame, t);
+          }
+
           // TODO: still need to make sure that we don't have
           //       a working copy as value in `t`, I think, or do I?
           throw t;
@@ -73,6 +100,30 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
         return false;
       }
       return strategy.handleTx();
+    } else {
+      return false;
+    }
+  }
+
+  private static boolean stopOnCommit() {
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      SteppingStrategy strategy = ActivityThread.steppingStrategy();
+      if (strategy == null) {
+        return false;
+      }
+      return strategy.handleTxCommit();
+    } else {
+      return false;
+    }
+  }
+
+  private static boolean stopAfterCommit() {
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      SteppingStrategy strategy = ActivityThread.steppingStrategy();
+      if (strategy == null) {
+        return false;
+      }
+      return strategy.handleTxAfterCommit();
     } else {
       return false;
     }
