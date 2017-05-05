@@ -78,9 +78,13 @@ export class TestConnection extends VmConnection {
 
   private initConnection(): Promise<boolean> {
     const promise = new Promise((resolve, reject) => {
+      const msgPortRe   = /.*Message Handler:\s+(\d+)/m;
+      const tracePortRe = /.*Trace Handler:\s+(\d+)/m;
       this.connectionResolver = resolve;
       let connecting = false;
       let errOut = "";
+      let msgPort = 0;
+      let tracePort = 0;
 
       this.somProc.on("exit", (code, signal) => {
         if (code !== 0) {
@@ -105,9 +109,20 @@ export class TestConnection extends VmConnection {
         if (PRINT_SOM_OUTPUT) {
           console.log(dataStr);
         }
+
+        let m = dataStr.match(msgPortRe);
+        if (m) {
+          msgPort = parseInt(m[1]);
+        }
+        m = dataStr.match(tracePortRe);
+        if (m) {
+          tracePort = parseInt(m[1]);
+        }
+
         if (dataStr.includes("Started HTTP Server") && !connecting) {
           connecting = true;
-          this.connect();
+          console.assert(msgPort > 0 && tracePort > 0);
+          this.connectWebSockets(msgPort, tracePort);
         }
         if (dataStr.includes("Failed starting WebSocket and/or HTTP Server")) {
           this.somProc.stderr.on("close", () => {

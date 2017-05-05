@@ -1,6 +1,7 @@
 package tools.debugger;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -9,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.function.Function;
 
 import org.java_websocket.WebSocket;
 
@@ -27,6 +28,8 @@ import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
 import tools.TraceData;
 import tools.concurrency.ActorExecutionTrace;
+import tools.debugger.WebSocketHandler.MessageHandler;
+import tools.debugger.WebSocketHandler.TraceHandler;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.EntityType;
@@ -64,8 +67,8 @@ public class FrontendConnector {
   /**
    * Receives requests from the client.
    */
-  private final WebSocketHandler receiver;
-  private final BinaryWebSocketHandler binaryHandler;
+  private final MessageHandler receiver;
+  private final TraceHandler binaryHandler;
 
   /**
    * Sends requests to the client.
@@ -80,9 +83,10 @@ public class FrontendConnector {
   private CompletableFuture<WebSocket> clientConnected;
 
   private final Gson gson;
-  private static final int MESSAGE_PORT = 7977;
-  private static final int BINARY_PORT = 7978;
-  private static final int DEBUGGER_PORT = 8888;
+  private static final int MESSAGE_PORT   = 7977;
+  private static final int BINARY_PORT    = 7978;
+  private static final int DEBUGGER_PORT  = 8888;
+  private static final int EPHEMERAL_PORT = 0;
 
   private final ArrayList<Source> notReady = new ArrayList<>(); // TODO rename: toBeSend
 
@@ -98,15 +102,16 @@ public class FrontendConnector {
 
     try {
       log("[DEBUGGER] Initialize HTTP and WebSocket Server for Debugger");
-      receiver = initializeWebSocket(MESSAGE_PORT, clientConnected);
-      log("[DEBUGGER] Started WebSocket Server");
+      receiver = initializeWebSocket(MESSAGE_PORT, port -> new MessageHandler(port, this, gson));
+      binaryHandler = initializeWebSocket(BINARY_PORT, port -> new TraceHandler(port));
+      log("[DEBUGGER] Started WebSocket Servers");
+      log("[DEBUGGER]   Message Handler: " + receiver.getPort());
+      log("[DEBUGGER]   Trace Handler:   " + binaryHandler.getPort());
 
-      binaryHandler = new BinaryWebSocketHandler(new InetSocketAddress(BINARY_PORT));
-      binaryHandler.start();
-
-      contentServer = initializeHttpServer(DEBUGGER_PORT);
+      contentServer = initializeHttpServer(DEBUGGER_PORT,
+          receiver.getPort(), binaryHandler.getPort());
       log("[DEBUGGER] Started HTTP Server");
-      log("[DEBUGGER]   URL: http://localhost:" + DEBUGGER_PORT + "/index.html");
+      log("[DEBUGGER]   URL: http://localhost:" + contentServer.getAddress().getPort() + "/index.html");
     } catch (IOException e) {
       log("Failed starting WebSocket and/or HTTP Server");
       throw new RuntimeException(e);
@@ -119,21 +124,47 @@ public class FrontendConnector {
     return breakpoints;
   }
 
-  private WebSocketHandler initializeWebSocket(final int port,
-      final Future<WebSocket> clientConnected) {
-    InetSocketAddress address = new InetSocketAddress(port);
-    WebSocketHandler server = new WebSocketHandler(address, this, gson);
+  private <T extends WebSocketHandler> T tryInitializingWebSocket(final T server) throws Throwable {
     server.start();
+    try {
+      server.awaitStartup();
+    } catch (ExecutionException e) {
+      throw e.getCause();
+    }
     return server;
   }
 
-  private HttpServer initializeHttpServer(final int port) throws IOException {
+  private <T extends WebSocketHandler> T initializeWebSocket(final int port, final Function<Integer, T> ctor) {
+    try {
+      return tryInitializingWebSocket(ctor.apply(port));
+    } catch (BindException e) {
+      try {
+        return tryInitializingWebSocket(ctor.apply(EPHEMERAL_PORT));
+      } catch (Throwable e1) {
+        throw new RuntimeException(e);
+      }
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private HttpServer tryInitializingHttpServer(final int port,
+      final int debuggerPort, final int tracePort) throws IOException {
     InetSocketAddress address = new InetSocketAddress(port);
     HttpServer httpServer = HttpServer.create(address, 0);
-    httpServer.createContext("/", new WebResourceHandler());
+    httpServer.createContext("/", new WebResourceHandler(debuggerPort, tracePort));
     httpServer.setExecutor(null);
     httpServer.start();
     return httpServer;
+  }
+
+  private HttpServer initializeHttpServer(final int port,
+      final int debuggerPort, final int tracePort) throws IOException {
+    try {
+      return tryInitializingHttpServer(port, debuggerPort, tracePort);
+    } catch (BindException e) {
+      return tryInitializingHttpServer(EPHEMERAL_PORT, debuggerPort, tracePort);
+    }
   }
 
   private void ensureConnectionIsAvailable() {

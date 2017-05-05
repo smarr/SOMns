@@ -6,8 +6,6 @@ import * as WebSocket from "ws";
 import {Controller} from "./controller";
 import {Activity, Message, Respond, BreakpointData} from "./messages";
 
-const DBG_PORT   = 7977;
-const TRACE_PORT = 7978;
 const LOCAL_WS_URL = "ws://localhost";
 
 /**
@@ -35,11 +33,11 @@ export class VmConnection {
     return this.socket !== null && this.socket.readyState === WebSocket.OPEN;
   }
 
-  private connectTraceDataSocket() {
+  private connectTraceDataSocket(tracePort: number) {
     if (!this.useTraceData) { return; }
 
     console.assert(this.traceDataSocket === null || this.traceDataSocket.readyState === WebSocket.CLOSED);
-    this.traceDataSocket = new WebSocket(LOCAL_WS_URL + ":" + TRACE_PORT);
+    this.traceDataSocket = new WebSocket(LOCAL_WS_URL + ":" + tracePort);
     (<any> this.traceDataSocket).binaryType = "arraybuffer"; // workaround, typescript doesn't recognize this property
 
     const controller = this.controller;
@@ -55,8 +53,15 @@ export class VmConnection {
   }
 
   public connect() {
+    $.getJSON("ports.json", data => {
+      console.log(data);
+      this.connectWebSockets(data.dbgPort, data.tracePort);
+    });
+  }
+
+  protected connectWebSockets(dbgPort: number, tracePort: number) {
     console.assert(this.socket === null || this.socket.readyState === WebSocket.CLOSED);
-    this.socket = new WebSocket(LOCAL_WS_URL + ":" + DBG_PORT);
+    this.socket = new WebSocket(LOCAL_WS_URL + ":" + dbgPort);
     const ctrl = this.controller;
 
     this.socket.onopen = () => {
@@ -109,7 +114,7 @@ export class VmConnection {
       }
     };
 
-    this.connectTraceDataSocket();
+    this.connectTraceDataSocket(tracePort);
   }
 
   public disconnect() {
