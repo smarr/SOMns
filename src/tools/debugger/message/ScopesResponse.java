@@ -55,7 +55,7 @@ public final class ScopesResponse extends Response {
 
   private static void addScopes(final ArrayList<Scope> scopes,
       final MethodScope method, final Object rcvr, final Suspension suspension) {
-    MethodScope outer = method.getOuterMethodScopeOrNull();
+    MethodScope outer = method.getNextMethodScope();
     if (outer != null) {
       assert rcvr instanceof SBlock;
       MaterializedFrame mFrame = ((SBlock) rcvr).getContext();

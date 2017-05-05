@@ -18,24 +18,54 @@ import som.vmobjects.SSymbol;
 
 public abstract class LexicalScope {
 
+  private final LexicalScope outer;
+
+  public LexicalScope(final LexicalScope outer) {
+    this.outer = outer;
+  }
+
+  public LexicalScope getContextualScope() {
+    return outer;
+  }
+
+  public MixinScope getOuterScope() {
+    LexicalScope next = getContextualScope();
+    while (!(next instanceof MixinScope)) {
+      if (next == null) {
+        return null;
+      }
+
+      next = next.getContextualScope();
+    }
+    return (MixinScope) next;
+  }
+
+  public MethodScope getNextMethodScope() {
+    LexicalScope next = getContextualScope();
+    while (!(next instanceof MethodScope)) {
+      if (next == null) {
+        return null;
+      }
+
+      next = next.getContextualScope();
+    }
+    return (MethodScope) next;
+  }
+
+  public MixinDefinition getOuterMixin() {
+    return getOuterScope().mixinDefinition;
+  }
+
   // TODO: figure out whether we can use this lexical scope also for the
   //       super sends. seems like we currently have two similar ways to solve
   //       similar problems, instead of a single one
   public static final class MixinScope extends LexicalScope {
-    private final MixinScope outerMixin;
     private HashMap<SSymbol, Dispatchable> slotsClassesAndMethods;
 
     @CompilationFinal private MixinDefinition mixinDefinition;
 
-    public MixinScope(final MixinScope outerMixin) {
-      this.outerMixin = outerMixin;
-    }
-
-    public MixinDefinition getOuter() {
-      if (outerMixin != null) {
-        return outerMixin.mixinDefinition;
-      }
-      return null;
+    public MixinScope(final LexicalScope contextualScope) {
+      super(contextualScope);
     }
 
     public HashMap<SSymbol, Dispatchable> getDispatchables() {
@@ -75,8 +105,8 @@ public abstract class LexicalScope {
         return new MixinIdAndContextLevel(mixinDefinition.getMixinId(), contextLevel);
       }
 
-      if (outerMixin != null) {
-        return outerMixin.lookupSlotOrClass(selector, contextLevel + 1);
+      if (getOuterScope() != null) {
+        return getOuterScope().lookupSlotOrClass(selector, contextLevel + 1);
       }
       return null;
     }
@@ -100,9 +130,6 @@ public abstract class LexicalScope {
    * the variables in that scope and possibly embedded scopes.
    */
   public static final class MethodScope extends LexicalScope {
-    private final MethodScope     outerMethod;
-    private final MixinScope      outerMixin;
-
     private final FrameDescriptor frameDescriptor;
 
     @CompilationFinal
@@ -118,11 +145,9 @@ public abstract class LexicalScope {
 
     @CompilationFinal private Method method;
 
-    public MethodScope(final FrameDescriptor frameDescriptor,
-        final MethodScope outerMethod, final MixinScope outerMixin) {
+    public MethodScope(final FrameDescriptor frameDescriptor, final LexicalScope contextualScope) {
+      super(contextualScope);
       this.frameDescriptor = frameDescriptor;
-      this.outerMethod     = outerMethod;
-      this.outerMixin      = outerMixin;
     }
 
     public void setVariables(final Variable[] variables) {
@@ -138,7 +163,7 @@ public abstract class LexicalScope {
     }
 
     public void addEmbeddedScope(final MethodScope embeddedScope) {
-      assert embeddedScope.outerMethod == this;
+      assert embeddedScope.getContextualScope() == this;
       int length;
       if (embeddedScopes == null) {
         length = 0;
@@ -210,7 +235,7 @@ public abstract class LexicalScope {
         newVars[i] = variables[i].split(desc);
       }
 
-      MethodScope split = new MethodScope(desc, newOuter, outerMixin);
+      MethodScope split = new MethodScope(desc, newOuter);
 
       if (embeddedScopes != null) {
         for (MethodScope s : embeddedScopes) {
@@ -227,7 +252,7 @@ public abstract class LexicalScope {
     /** Split lexical scope. */
     public MethodScope split() {
       assert isFinalized();
-      return constructSplitScope(outerMethod);
+      return constructSplitScope(getNextMethodScope());
     }
 
     /**
@@ -244,18 +269,9 @@ public abstract class LexicalScope {
       return frameDescriptor;
     }
 
-    public MethodScope getOuterMethodScopeOrNull() {
-      return outerMethod;
-    }
-
-    public MethodScope getOuterMethodScope() {
-      assert outerMethod != null;
-      return outerMethod;
-    }
-
     public void propagateLoopCountThroughoutMethodScope(final long count) {
-      if (outerMethod != null) {
-        outerMethod.method.propagateLoopCountThroughoutMethodScope(count);
+      if (getNextMethodScope() != null) {
+        getNextMethodScope().method.propagateLoopCountThroughoutMethodScope(count);
       }
     }
 
@@ -285,19 +301,7 @@ public abstract class LexicalScope {
     }
 
     public MixinIdAndContextLevel lookupSlotOrClass(final SSymbol selector) {
-      return getEnclosingMixin().lookupSlotOrClass(selector, 0);
-    }
-
-    public MixinScope getEnclosingMixin() {
-      if (outerMethod == null) {
-        return outerMixin;
-      } else {
-        return outerMethod.getEnclosingMixin();
-      }
-    }
-
-    public MixinScope getHolderScope() {
-      return outerMixin;
+      return getOuterScope().lookupSlotOrClass(selector, 0);
     }
 
     public MethodScope getEmbeddedScope(final SourceSection source) {

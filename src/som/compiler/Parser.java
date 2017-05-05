@@ -752,8 +752,7 @@ public class Parser {
     SourceCoordinate coord = getCoordinate();
 
     AccessModifier accessModifier = accessModifier();
-    MethodBuilder builder = new MethodBuilder(
-        mxnBuilder, mxnBuilder.getScopeForCurrentParserPosition());
+    MethodBuilder builder = new MethodBuilder(mxnBuilder);
 
     messagePattern(builder);
     expect(Equal,

@@ -44,8 +44,8 @@ import som.compiler.Variable.Argument;
 import som.compiler.Variable.Internal;
 import som.compiler.Variable.Local;
 import som.interpreter.InliningVisitor;
+import som.interpreter.LexicalScope;
 import som.interpreter.LexicalScope.MethodScope;
-import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
@@ -81,31 +81,28 @@ public final class MethodBuilder extends LexicalBuilder {
   private final List<SInvokable> embeddedBlockMethods;
 
 
-  public MethodBuilder(final MixinBuilder outerBuilder, final MixinScope clsScope) {
-    this(outerBuilder, clsScope, false, outerBuilder.getLanguage());
+  public MethodBuilder(final MixinBuilder outerBuilder) {
+    this(outerBuilder, false, outerBuilder.getLanguage());
   }
 
   public MethodBuilder(final boolean withoutContext, final SomLanguage language) {
-    this(null, null, false, language);
+    this(null, false, language);
     assert withoutContext;
   }
 
   public MethodBuilder(final MethodBuilder outerBuilder) {
-    this(outerBuilder, outerBuilder.getHolderScope(), true, outerBuilder.language);
+    this(outerBuilder, true, outerBuilder.language);
   }
 
-  private MethodBuilder(final LexicalBuilder outerBuilder, final MixinScope clsScope,
-      final boolean isBlockMethod, final SomLanguage language) {
+  private MethodBuilder(final LexicalBuilder outerBuilder, final boolean isBlockMethod,
+      final SomLanguage language) {
     super(outerBuilder);
     this.blockMethod  = isBlockMethod;
     this.language     = language;
 
-    MethodScope outer = null;
-    if (getNextMethod() != null) {
-      outer = getNextMethod().getCurrentMethodScope();
-    }
     assert Nil.nilObject != null : "Nil.nilObject not yet initialized";
-    this.currentScope   = new MethodScope(new FrameDescriptor(Nil.nilObject), outer, clsScope);
+    this.currentScope = new MethodScope(new FrameDescriptor(Nil.nilObject),
+        getContextualSelf() == null ? null : getContextualSelf().getScope());
 
     accessesVariablesOfOuterScope = false;
     throwsNonLocalReturn          = false;
@@ -119,6 +116,11 @@ public final class MethodBuilder extends LexicalBuilder {
     MethodDefinitionError(final String message, final SourceSection source) {
       super(message, source);
     }
+  }
+
+  @Override
+  public LexicalScope getScope() {
+    return currentScope;
   }
 
   public SomLanguage getLanguage() {
@@ -171,10 +173,6 @@ public final class MethodBuilder extends LexicalBuilder {
 
   public MethodScope getCurrentMethodScope() {
     return currentScope;
-  }
-
-  public MixinScope getHolderScope() {
-    return currentScope.getHolderScope();
   }
 
   // Name for the frameOnStack slot,
@@ -366,8 +364,8 @@ public final class MethodBuilder extends LexicalBuilder {
 
     MethodBuilder nextMethod = getNextMethod();
     if (nextMethod != null) {
-      //return countLevelsToNextMethod() + nextMethod.getContextLevel(varName);
-      return 1 + nextMethod.getContextLevel(varName);
+      int nLevels = countLevelsToNextMethod();
+      return nLevels + nextMethod.getContextLevel(varName);
     }
 
     throw new IllegalStateException("Didn't find variable.");

@@ -145,8 +145,8 @@ public final class MixinDefinition {
   }
 
   public MixinDefinition getOuter() {
-    assert instanceScope.getOuter() == classScope.getOuter() : "Inconsistent outer scope?";
-    return instanceScope.getOuter();
+    assert instanceScope.getOuterMixin() == classScope.getOuterMixin() : "Inconsistent outer scope?";
+    return instanceScope.getOuterMixin();
   }
 
   // TODO: does this really have to be an invokable?

@@ -54,7 +54,7 @@ public final class InliningVisitor implements NodeVisitor {
         return new ScopeElement(v, lvl);
       }
     }
-    MethodScope outer = scope.getOuterMethodScopeOrNull();
+    MethodScope outer = scope.getNextMethodScope();
     if (outer == null) {
       throw new IllegalStateException("Couldn't find var: " + var.toString());
     } else {

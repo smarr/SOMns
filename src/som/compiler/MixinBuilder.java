@@ -148,8 +148,8 @@ public final class MixinBuilder extends LexicalBuilder {
     this.instanceScope = new MixinScope(getOuterSelf() != null ? getOuterSelf().getInstanceScope() : null);
     this.classScope = new MixinScope(getOuterSelf() != null ? getOuterSelf().getInstanceScope() : null);
 
-    this.initializer          = new MethodBuilder(this, this.instanceScope);
-    this.primaryFactoryMethod = new MethodBuilder(this, this.classScope);
+    this.initializer          = new MethodBuilder(this);
+    this.primaryFactoryMethod = new MethodBuilder(this);
     this.superclassAndMixinResolutionBuilder = createSuperclassResolutionBuilder();
 
     this.accessModifier = accessModifier;
@@ -337,7 +337,8 @@ public final class MixinBuilder extends LexicalBuilder {
     return classSide;
   }
 
-  public MixinScope getScopeForCurrentParserPosition() {
+  @Override
+  public MixinScope getScope() {
     if (classSide) {
       return classScope;
     } else {
@@ -413,8 +414,7 @@ public final class MixinBuilder extends LexicalBuilder {
       definitionMethod = new MethodBuilder(true, language);
     } else {
       MixinBuilder mixinBuilder = getOuterSelf();
-      definitionMethod = new MethodBuilder(mixinBuilder,
-          mixinBuilder.getInstanceScope());
+      definitionMethod = new MethodBuilder(mixinBuilder);
     }
 
     // self is going to be the enclosing object
