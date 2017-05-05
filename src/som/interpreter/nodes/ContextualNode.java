@@ -29,7 +29,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
-import som.vmobjects.SBlock;
+import som.vmobjects.SObjectWithContext;
 
 
 public abstract class ContextualNode extends ExprWithTagsNode {
@@ -49,16 +49,16 @@ public abstract class ContextualNode extends ExprWithTagsNode {
 
   @ExplodeLoop
   protected final MaterializedFrame determineContext(final VirtualFrame frame) {
-    SBlock self = (SBlock) SArguments.rcvr(frame);
+    SObjectWithContext contextualSelf = (SObjectWithContext) SArguments.rcvr(frame);
     int i = contextLevel - 1;
 
     while (i > 0) {
-      self = (SBlock) self.getOuterSelf();
+      contextualSelf = (SObjectWithContext) contextualSelf.getContextualSelf();
       i--;
     }
 
     // Graal needs help here to see that this is always a MaterializedFrame
     // so, we record explicitly a class profile
-    return frameType.profile(self.getContext());
+    return frameType.profile(contextualSelf.getContext());
   }
 }

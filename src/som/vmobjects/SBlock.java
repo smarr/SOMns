@@ -32,7 +32,7 @@ import som.interop.SBlockInteropMessageResolutionForeign;
 import som.interpreter.SArguments;
 
 
-public final class SBlock extends SAbstractObject implements TruffleObject {
+public final class SBlock extends SAbstractObject implements TruffleObject, SObjectWithContext {
 
   private final SInvokable        method;
   private final MaterializedFrame context;
@@ -49,12 +49,14 @@ public final class SBlock extends SAbstractObject implements TruffleObject {
     return method;
   }
 
+  @Override
   public MaterializedFrame getContext() {
     assert context != null;
     return context;
   }
 
-  public Object getOuterSelf() {
+  @Override
+  public Object getContextualSelf() {
     return SArguments.rcvr(getContext());
   }
 
@@ -78,3 +80,4 @@ public final class SBlock extends SAbstractObject implements TruffleObject {
     return SBlockInteropMessageResolutionForeign.ACCESS;
   }
 }
+
