@@ -46,6 +46,6 @@
     "compile": "node ./node_modules/typescript/bin/tsc && npm run copylibs",
     "lint":    "node_modules/tslint/bin/tslint -c tslint.json --project tsconfig.json",
     "watch":   "node ./node_modules/typescript/bin/tsc -w",
-    "test":    "node ./node_modules/mocha/bin/mocha -r node-define -t 5000 -u bdd ./out/tests/"
+    "test":    "node ./node_modules/mocha/bin/mocha -r node-define -t 10000 -u bdd ./out/tests/"
   }
 }
