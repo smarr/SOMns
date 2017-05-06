@@ -44,14 +44,14 @@ public class TraceBuffer {
 
   protected TraceBuffer() { }
 
-  void init(final ByteBuffer storage, final long threadId) {
+  public void init(final ByteBuffer storage, final long threadId) {
     this.storage = storage;
     this.threadId = threadId;
     assert storage.order() == ByteOrder.BIG_ENDIAN;
     recordThreadId();
   }
 
-  void returnBuffer() {
+  public void returnBuffer() {
     ActorExecutionTrace.returnBuffer(storage);
     storage = null;
   }
@@ -196,6 +196,12 @@ public class TraceBuffer {
   public void recordTaskSpawn(final SInvokable method, final long activityId,
       final long causalMessageId, final SourceSection section) {
     recordActivityCreation(Events.TaskSpawn, activityId, causalMessageId,
+        method.getSignature().getSymbolId(), section);
+  }
+
+  public void recordThreadSpawn(final SInvokable method, final long activityId,
+      final long causalMessageId, final SourceSection section) {
+    recordActivityCreation(Events.ThreadSpawn, activityId, causalMessageId,
         method.getSignature().getSymbolId(), section);
   }
 

@@ -7,9 +7,12 @@ import tools.concurrency.Tags;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
+import tools.debugger.SteppingStrategy.AfterCommit;
 import tools.debugger.SteppingStrategy.IntoSpawn;
 import tools.debugger.SteppingStrategy.ReturnFromActivity;
 import tools.debugger.SteppingStrategy.ToChannelOpposite;
+import tools.debugger.SteppingStrategy.ToNextCommit;
+import tools.debugger.SteppingStrategy.ToNextTransaction;
 import tools.debugger.frontend.Suspension;
 
 
@@ -110,6 +113,35 @@ public enum SteppingType {
     }
   },
 
+  @SerializedName("stepToNextTx")
+  STEP_TO_NEXT_TX("stepToNextTx", "Step to next Transaction", Group.ACTIVITY_STEPPING, "arrow-right", null, null) {
+    @Override
+    public void process(final Suspension susp) {
+      susp.getEvent().prepareContinue();
+      susp.getActivityThread().setSteppingStrategy(new ToNextTransaction());
+    }
+  },
+
+  @SerializedName("stepToCommit")
+  STEP_TO_COMMIT("stepToCommit", "Step to Commit", Group.TX_STEPPING, "arrow-right",
+      null, null, new EntityType[] {EntityType.TRANSACTION}) {
+    @Override
+    public void process(final Suspension susp) {
+      susp.getEvent().prepareContinue();
+      susp.getActivityThread().setSteppingStrategy(new ToNextCommit());
+
+    }
+  },
+
+  @SerializedName("stepAfterCommit")
+  STEP_AFTER_COMMIT("stepAfterCommit", "Complete Transaction", Group.TX_STEPPING, "arrow-left",
+      null, null, new EntityType[] {EntityType.TRANSACTION}) {
+    @Override
+    public void process(final Suspension susp) {
+      susp.getEvent().prepareContinue();
+      susp.getActivityThread().setSteppingStrategy(new AfterCommit());
+    }
+  },
 
   STEP_TO_RECEIVER_MESSAGE("todo",   "todo", Group.ACTOR_STEPPING, "arrow-right", null) {
     @Override public void process(final Suspension susp) { }
@@ -123,7 +155,8 @@ public enum SteppingType {
     LOCAL_STEPPING("Local Stepping"),
     ACTIVITY_STEPPING("Activity Stepping"),
     ACTOR_STEPPING("Actor Stepping"),
-    PROCESS_STEPPING("Process Stepping");
+    PROCESS_STEPPING("Process Stepping"),
+    TX_STEPPING("Transaction Stepping");
 
     public final String label;
 
@@ -156,19 +189,29 @@ public enum SteppingType {
       If no tags are given, it is assumed the operation is always valid. */
   public final Class<? extends Tags>[] applicableTo;
 
+  /** Stepping operation is only available when in the dynamic scope of the given entity.
+      If no entity types are given, it is assumed the operation is always valid. */
+  public final EntityType[] inScope;
+
   SteppingType(final String name, final String label, final Group group, final String icon,
       final Class<? extends Tags>[] applicableTo) {
-    this(name, label, group, icon, applicableTo, null);
+    this(name, label, group, icon, applicableTo, null, null);
   }
 
   SteppingType(final String name, final String label, final Group group, final String icon,
       final Class<? extends Tags>[] applicableTo, final ActivityType[] forActivities) {
+    this(name, label, group, icon, applicableTo, forActivities, null);
+  }
+
+  SteppingType(final String name, final String label, final Group group, final String icon,
+      final Class<? extends Tags>[] applicableTo, final ActivityType[] forActivities, final EntityType[] inScope) {
     this.name  = name;
     this.label = label;
     this.group = group;
     this.icon  = icon;
     this.applicableTo  = applicableTo;
     this.forActivities = forActivities;
+    this.inScope = inScope;
   }
 
   public abstract void process(Suspension susp);

@@ -10,7 +10,7 @@ public enum EntityType {
   PROMISE("promise", 5, TraceData.PROMISE_CREATION, 10),
   TURN("turn",       6, 11, 12),
   TASK("task",       7, TraceData.TASK_SPAWN, TraceData.TASK_JOIN),
-  THREAD("thread",   8, TraceData.THREAD, 16),
+  THREAD("thread",   8, TraceData.THREAD_SPAWN, TraceData.THREAD_JOIN),
   LOCK("lock",       9, 17, 18),
   TRANSACTION("transaction", 10, 19, 20),
 
@@ -35,5 +35,15 @@ public enum EntityType {
     this.id   = (byte) id;
     this.creation   = (byte) creation;
     this.completion = (byte) completion;
+  }
+
+  public static byte[] getIds(final EntityType[] entities) {
+    if (entities == null) { return null; }
+
+    byte[] entityIds = new byte[entities.length];
+    for (int i = 0; i < entities.length; i += 1) {
+      entityIds[i] = entities[i].id;
+    }
+    return entityIds;
   }
 }

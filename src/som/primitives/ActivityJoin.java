@@ -9,8 +9,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VM;
 import som.interpreter.actors.SuspendExecutionNodeGen;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.primitives.threading.TaskThreads.SomForkJoinTask;
-import som.primitives.threading.ThreadPrimitives.SomThread;
+import som.primitives.threading.TaskThreads.SomTaskOrThread;
 import som.vm.VmSettings;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.Tags.ExpressionBreakpoint;
@@ -35,12 +34,12 @@ public class ActivityJoin {
     }
 
     @TruffleBoundary
-    private static Object doJoin(final SomForkJoinTask task) {
+    private static Object doJoin(final SomTaskOrThread task) {
       return task.join();
     }
 
     @Specialization
-    public final Object doTask(final VirtualFrame frame, final SomForkJoinTask task) {
+    public final Object doTask(final VirtualFrame frame, final SomTaskOrThread task) {
       Object result = doJoin(task);
 
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && task.stopOnJoin()) {
@@ -51,20 +50,6 @@ public class ActivityJoin {
         ActorExecutionTrace.taskJoin(task.getMethod(), task.getId());
       }
       return result;
-    }
-
-    @Specialization
-    public final Object doThread(final VirtualFrame frame, final SomThread thread) {
-      try {
-        thread.join();
-
-        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && thread.stopOnJoin()) {
-          haltNode.executeEvaluated(frame, thread);
-        }
-      } catch (InterruptedException e) {
-        /* ignore for the moment */
-      }
-      return thread;
     }
 
     @Override

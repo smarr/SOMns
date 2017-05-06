@@ -19,7 +19,8 @@ public class TraceData {
 
   public static final byte TASK_SPAWN         = 13;
   public static final byte TASK_JOIN          = 14;
-  public static final byte THREAD             = 15;
+  public static final byte THREAD_SPAWN       = 15;
+  public static final byte THREAD_JOIN        = 16;
   public static final byte IMPL_THREAD        = 21;
 
   // Note, the following constants are manually defined, based on the assumption

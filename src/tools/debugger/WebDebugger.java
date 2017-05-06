@@ -22,9 +22,9 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.vm.Activity;
-import som.vm.ActivityThread;
 import tools.SourceCoordinate;
 import tools.TraceData;
+import tools.concurrency.TracingActivityThread;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.InitializationResponse;
 import tools.debugger.message.InitializeConnection;
@@ -106,7 +106,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   }
 
   private synchronized Suspension getSuspension(final Activity activity,
-      final ActivityThread activityThread) {
+      final TracingActivityThread activityThread) {
     Suspension suspension = activityToSuspension.get(activity);
     if (suspension == null) {
       long id = activity.getId();
@@ -123,9 +123,9 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   private Suspension getSuspension() {
     Thread thread = Thread.currentThread();
     Activity current;
-    ActivityThread activityThread;
-    if (thread instanceof ActivityThread) {
-      activityThread = (ActivityThread) thread;
+    TracingActivityThread activityThread;
+    if (thread instanceof TracingActivityThread) {
+      activityThread = (TracingActivityThread) thread;
       current = activityThread.getActivity();
     } else {
       throw new RuntimeException("Support for " + thread.getClass().getName() + " not yet implemented.");

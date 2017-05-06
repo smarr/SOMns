@@ -36,7 +36,7 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.primitives.processes.ChannelPrimitives;
 import som.primitives.processes.ChannelPrimitives.ProcessThreadFactory;
-import som.primitives.threading.TaskThreads.ForkJoinThreadFactor;
+import som.primitives.threading.TaskThreads.ForkJoinThreadFactory;
 import som.primitives.threading.ThreadingModule;
 import som.vm.ObjectSystem;
 import som.vm.Primitives;
@@ -64,6 +64,7 @@ public final class VM {
   private final ForkJoinPool actorPool;
   private final ForkJoinPool forkJoinPool;
   private final ForkJoinPool processesPool;
+  private final ForkJoinPool threadPool;
 
 
   private final boolean avoidExitForTesting;
@@ -76,6 +77,8 @@ public final class VM {
   @CompilationFinal private SObjectWithoutFields vmMirror;
   @CompilationFinal private Actor mainActor;
 
+  private static final int MAX_THREADS = 0x7fff;
+
   public VM(final VmOptions vmOptions, final boolean avoidExitForTesting) {
     this.avoidExitForTesting = avoidExitForTesting;
     options = vmOptions;
@@ -85,7 +88,9 @@ public final class VM {
     processesPool = new ForkJoinPool(VmSettings.NUM_THREADS,
         new ProcessThreadFactory(), new UncaughtExceptions(), true);
     forkJoinPool = new ForkJoinPool(VmSettings.NUM_THREADS,
-        new ForkJoinThreadFactor(), new UncaughtExceptions(), false);
+        new ForkJoinThreadFactory(), new UncaughtExceptions(), false);
+    threadPool = new ForkJoinPool(MAX_THREADS,
+        new ForkJoinThreadFactory(), new UncaughtExceptions(), false);
   }
 
   public WebDebugger getWebDebugger() {
@@ -165,6 +170,10 @@ public final class VM {
     return forkJoinPool;
   }
 
+  public ForkJoinPool getThreadPool() {
+    return threadPool;
+  }
+
   /**
    * @return true, if there are no scheduled submissions,
    *         and no active threads in the pool, false otherwise.
@@ -175,7 +184,7 @@ public final class VM {
     // TODO: this is not working when a thread blocks, then it seems
     //       not to be considered running
     return actorPool.isQuiescent() && processesPool.isQuiescent()
-        && forkJoinPool.isQuiescent();
+        && forkJoinPool.isQuiescent() && threadPool.isQuiescent();
   }
 
   public void reportSyntaxElement(final Class<? extends Tags> type,
@@ -214,7 +223,7 @@ public final class VM {
   }
 
   private void shutdownPools() {
-    ForkJoinPool[] pools = new ForkJoinPool[] {actorPool, processesPool, forkJoinPool};
+    ForkJoinPool[] pools = new ForkJoinPool[] {actorPool, processesPool, forkJoinPool, threadPool};
 
     for (ForkJoinPool pool : pools) {
       pool.shutdown();

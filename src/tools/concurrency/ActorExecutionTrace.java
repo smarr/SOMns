@@ -161,7 +161,7 @@ public class ActorExecutionTrace {
   }
 
   @TruffleBoundary
-  static synchronized ByteBuffer getEmptyBuffer() {
+  public static synchronized ByteBuffer getEmptyBuffer() {
     try {
       return emptyBuffers.take();
     } catch (InterruptedException e) {
@@ -233,6 +233,9 @@ public class ActorExecutionTrace {
 
     TaskSpawn(TraceData.TASK_SPAWN, 19),
     TaskJoin(TraceData.TASK_JOIN,   11),
+
+    ThreadSpawn(TraceData.THREAD_SPAWN, 19),
+    ThreadJoin(TraceData.THREAD_JOIN,   11),
 
     PromiseError(TraceData.PROMISE_ERROR, 28),
 
@@ -307,6 +310,13 @@ public class ActorExecutionTrace {
     SourceSection s = getPrimitiveCaller(section);
     TracingActivityThread t = getThread();
     t.getBuffer().recordTaskSpawn(method, activityId, t.getCurrentMessageId(), s);
+  }
+
+  public static void threadSpawn(final SInvokable method, final long activityId,
+      final SourceSection section) {
+    SourceSection s = getPrimitiveCaller(section);
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordThreadSpawn(method, activityId, t.getCurrentMessageId(), s);
   }
 
   public static void taskJoin(final SInvokable method, final long activityId) {
