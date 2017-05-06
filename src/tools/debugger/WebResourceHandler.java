@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
 
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -12,6 +13,13 @@ import com.sun.net.httpserver.HttpHandler;
 import som.vm.NotYetImplementedException;
 
 class WebResourceHandler implements HttpHandler {
+  private final int debuggerPort;
+  private final int tracePort;
+
+  WebResourceHandler(final int debuggerPort, final int tracePort) {
+    this.debuggerPort = debuggerPort;
+    this.tracePort    = tracePort;
+  }
 
   @Override
   public void handle(final HttpExchange exchange) throws IOException {
@@ -36,10 +44,17 @@ class WebResourceHandler implements HttpHandler {
       }
       exchange.sendResponseHeaders(200, f.length());
       copy(f, exchange.getResponseBody());
+      exchange.close();
       return;
     }
 
     switch (requestedFile) {
+      case "/ports.json":
+        String jsonPorts = "{\"dbgPort\":" + debuggerPort + ",\"tracePort\":" + tracePort + "\"}";
+        exchange.sendResponseHeaders(200, jsonPorts.length());
+        exchange.getResponseBody().write(jsonPorts.getBytes(Charset.forName("UTF-8")));
+        exchange.close();
+        return;
       case "/favicon.ico":
         exchange.sendResponseHeaders(404, 0);
         exchange.close();

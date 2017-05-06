@@ -78,24 +78,59 @@ export class TestConnection extends VmConnection {
 
   private initConnection(): Promise<boolean> {
     const promise = new Promise((resolve, reject) => {
+      const msgPortRe   = /.*Message Handler:\s+(\d+)/m;
+      const tracePortRe = /.*Trace Handler:\s+(\d+)/m;
       this.connectionResolver = resolve;
       let connecting = false;
+      let errOut = "";
+      let msgPort = 0;
+      let tracePort = 0;
 
-      if (PRINT_SOM_OUTPUT) {
-        this.somProc.stderr.on("data", (data) => { console.error(data.toString()); });
-      }
+      this.somProc.on("exit", (code, signal) => {
+        if (code !== 0) {
+          this.somProc.stderr.on("close", () => {
+            this.somProc.on("exit", (_code, _signal) => {
+              reject(new Error("Process exited with code: " + code + " Signal: " + signal + " StdErr: " + errOut));
+            });
+          });
+        }
+      });
+
+      this.somProc.stderr.on("data", data => {
+        const dataStr = data.toString();
+        if (PRINT_SOM_OUTPUT) {
+          console.error(dataStr);
+        }
+        errOut += dataStr;
+      });
 
       this.somProc.stdout.on("data", (data) => {
         const dataStr = data.toString();
         if (PRINT_SOM_OUTPUT) {
           console.log(dataStr);
         }
+
+        let m = dataStr.match(msgPortRe);
+        if (m) {
+          msgPort = parseInt(m[1]);
+        }
+        m = dataStr.match(tracePortRe);
+        if (m) {
+          tracePort = parseInt(m[1]);
+        }
+
         if (dataStr.includes("Started HTTP Server") && !connecting) {
           connecting = true;
-          this.connect();
+          console.assert(msgPort > 0 && tracePort > 0);
+          this.connectWebSockets(msgPort, tracePort);
         }
         if (dataStr.includes("Failed starting WebSocket and/or HTTP Server")) {
-          reject(new Error("SOMns failed to starting WebSocket and/or HTTP Server"));
+          this.somProc.stderr.on("close", () => {
+            this.somProc.on("exit", (_code, _signal) => {
+              reject(new Error("SOMns failed to starting WebSocket and/or HTTP Server. StdOut: " + dataStr + " StdErr: " + errOut));
+            });
+          });
+          this.somProc.kill();
         }
       });
     });
@@ -146,23 +181,25 @@ export class HandleStoppedAndGetStackTrace extends ControllerWithInitialBreakpoi
   public readonly stoppedActivities: Activity[];
 
   constructor(initialBreakpoints: BreakpointData[], vmConnection: VmConnection,
-      numOps: number = 1) {
+      connectionP: Promise<boolean>, numOps: number = 1) {
     super(initialBreakpoints, vmConnection);
 
     this.numOps = numOps;
     this.numStopped = 0;
     this.stoppedActivities = [];
 
-    this.stackP = new Promise<StackTraceResponse>((resolve, _reject) => {
+    this.stackP = new Promise<StackTraceResponse>((resolve, reject) => {
       this.resolveStackP = resolve;
+      connectionP.catch(reject);
     });
 
     if (numOps > 1) {
       this.resolveStackPs = [];
       this.stackPs = [];
       for (let i = 1; i < numOps; i += 1) {
-        this.stackPs.push(new Promise<StackTraceResponse>((resolve, _reject) => {
+        this.stackPs.push(new Promise<StackTraceResponse>((resolve, reject) => {
           this.resolveStackPs.push(resolve);
+          connectionP.catch(reject);
         }));
       }
     }

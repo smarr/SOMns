@@ -20,7 +20,7 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.profiles"/>
 	<classpathentry kind="src" path="/com.oracle.truffle.tools"/>
 	<classpathentry kind="src" path="/com.oracle.truffle.tools.debug.shell"/>
-	<classpathentry kind="lib" path="libs/somns-deps-dev.jar"/>
-	<classpathentry kind="lib" path="libs/somns-deps.jar"/>
+	<classpathentry kind="lib" path="libs/somns-deps-dev.jar" sourcepath="libs/somns-deps-source.jar"/>
+	<classpathentry kind="lib" path="libs/somns-deps.jar" sourcepath="libs/somns-deps-source.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

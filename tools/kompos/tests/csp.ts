@@ -21,7 +21,7 @@ describe("Setting CSP Breakpoints", () => {
       const breakpoint = createSectionBreakpointData(CSP_URI, 13, 12, 4,
         BreakpointType.CHANNEL_BEFORE_RCV, true);
       conn = new TestConnection(["halt"], null, CSP_FILE);
-      ctrl = new HandleStoppedAndGetStackTrace([breakpoint], conn);
+      ctrl = new HandleStoppedAndGetStackTrace([breakpoint], conn, conn.fullyConnected);
     });
 
     after(closeConnectionAfterSuite);
@@ -39,7 +39,7 @@ describe("Setting CSP Breakpoints", () => {
       const breakpoint = createSectionBreakpointData(CSP_URI, 13, 12, 4,
         BreakpointType.CHANNEL_AFTER_SEND, true);
       conn = new TestConnection(["halt"], null, CSP_FILE);
-      ctrl = new HandleStoppedAndGetStackTrace([breakpoint], conn);
+      ctrl = new HandleStoppedAndGetStackTrace([breakpoint], conn, conn.fullyConnected);
     });
 
     after(closeConnectionAfterSuite);
@@ -56,7 +56,7 @@ describe("Setting CSP Breakpoints", () => {
       const breakpoint = createSectionBreakpointData(CSP_URI, 12, 13, 12,
         BreakpointType.CHANNEL_BEFORE_SEND, true);
       conn = new TestConnection(["halt"], null, CSP_FILE);
-      ctrl = new HandleStoppedAndGetStackTrace([breakpoint], conn);
+      ctrl = new HandleStoppedAndGetStackTrace([breakpoint], conn, conn.fullyConnected);
     });
 
     after(closeConnectionAfterSuite);
@@ -74,7 +74,7 @@ describe("Setting CSP Breakpoints", () => {
       const breakpoint = createSectionBreakpointData(CSP_URI, 12, 13, 12,
         BreakpointType.CHANNEL_AFTER_RCV, true);
       conn = new TestConnection(["halt"], null, CSP_FILE);
-      ctrl = new HandleStoppedAndGetStackTrace([breakpoint], conn);
+      ctrl = new HandleStoppedAndGetStackTrace([breakpoint], conn, conn.fullyConnected);
     });
 
     after(closeConnectionAfterSuite);

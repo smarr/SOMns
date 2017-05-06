@@ -6,7 +6,7 @@
     <property name="kompos.dir"  value="tools/kompos" />
     <property name="truffle.dir" value="${lib.dir}/truffle" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
-    <property name="somns-deps.version" value="0.3.2" />
+    <property name="somns-deps.version" value="0.3.3" />
     <property name="checkstyle.version" value="7.6.1" />
 
     <property name="build.dir"   value="build"/>
@@ -57,7 +57,7 @@
         </exec>
     </target>
 
-    <target name="ideinit">
+    <target name="ideinit" depends="source">
         <exec executable="../mx/mx" dir="${truffle.dir}" failonerror="true">
             <arg value="eclipseinit"/>
         </exec>
@@ -70,6 +70,12 @@
         <get src="https://dl.bintray.com/smarr/SOM/somns-deps-dev-${somns-deps.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/somns-deps-dev.jar" />
+    </target>
+
+    <target name="source" description="Download Source Jars for development">
+        <get src="https://dl.bintray.com/smarr/SOM/somns-deps-source-${somns-deps.version}.jar"
+            usetimestamp="true"
+            dest="${lib.dir}/somns-deps-source.jar" />
     </target>
 
     <target name="checkstyle-jar">

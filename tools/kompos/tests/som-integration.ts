@@ -55,7 +55,7 @@ describe("Language Debugger Integration", function() {
   describe("execute `1 halt` and get suspended event", () => {
     before("Start SOMns and Connect", () => {
       conn = new TestConnection(["halt"]);
-      ctrl = new HandleStoppedAndGetStackTrace([], conn);
+      ctrl = new HandleStoppedAndGetStackTrace([], conn, conn.fullyConnected);
     });
 
     after(closeConnectionAfterSuite);

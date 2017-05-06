@@ -155,7 +155,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   @Override
   protected void onDispose(final Env env) {
-    connector.shutdown();
+    /* NOOP: we close sockets with a VM shutdown hook */
   }
 
   @Override

@@ -1,6 +1,7 @@
 package tools.debugger;
 
 import java.io.IOException;
+import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -9,7 +10,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
+import java.util.function.Function;
 
 import org.java_websocket.WebSocket;
 
@@ -27,6 +28,8 @@ import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
 import tools.TraceData;
 import tools.concurrency.ActorExecutionTrace;
+import tools.debugger.WebSocketHandler.MessageHandler;
+import tools.debugger.WebSocketHandler.TraceHandler;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.EntityType;
@@ -64,15 +67,15 @@ public class FrontendConnector {
   /**
    * Receives requests from the client.
    */
-  private final WebSocketHandler receiver;
-  private final BinaryWebSocketHandler binaryHandler;
+  private final MessageHandler messageHandler;
+  private final TraceHandler   traceHandler;
 
   /**
    * Sends requests to the client.
    */
-  private WebSocket sender;
+  private WebSocket messageSocket;
 
-  private WebSocket binarySender;
+  private WebSocket traceSocket;
 
   /**
    * Future to await the client's connection.
@@ -81,10 +84,11 @@ public class FrontendConnector {
 
   private final Gson gson;
   private static final int MESSAGE_PORT = 7977;
-  private static final int BINARY_PORT = 7978;
-  private static final int DEBUGGER_PORT = 8888;
+  private static final int TRACE_PORT   = 7978;
+  private static final int HTTP_PORT    = 8888;
+  private static final int EPHEMERAL_PORT = 0;
 
-  private final ArrayList<Source> notReady = new ArrayList<>(); // TODO rename: toBeSend
+  private final ArrayList<Source> sourceToBeSent = new ArrayList<>();
 
   public FrontendConnector(final Breakpoints breakpoints,
       final Instrumenter instrumenter, final WebDebugger webDebugger,
@@ -98,15 +102,16 @@ public class FrontendConnector {
 
     try {
       log("[DEBUGGER] Initialize HTTP and WebSocket Server for Debugger");
-      receiver = initializeWebSocket(MESSAGE_PORT, clientConnected);
-      log("[DEBUGGER] Started WebSocket Server");
+      messageHandler = initializeWebSocket(MESSAGE_PORT, port -> new MessageHandler(port, this, gson));
+      traceHandler = initializeWebSocket(TRACE_PORT, port -> new TraceHandler(port));
+      log("[DEBUGGER] Started WebSocket Servers");
+      log("[DEBUGGER]   Message Handler: " + messageHandler.getPort());
+      log("[DEBUGGER]   Trace Handler:   " + traceHandler.getPort());
 
-      binaryHandler = new BinaryWebSocketHandler(new InetSocketAddress(BINARY_PORT));
-      binaryHandler.start();
-
-      contentServer = initializeHttpServer(DEBUGGER_PORT);
+      contentServer = initializeHttpServer(HTTP_PORT,
+          messageHandler.getPort(), traceHandler.getPort());
       log("[DEBUGGER] Started HTTP Server");
-      log("[DEBUGGER]   URL: http://localhost:" + DEBUGGER_PORT + "/index.html");
+      log("[DEBUGGER]   URL: http://localhost:" + contentServer.getAddress().getPort() + "/index.html");
     } catch (IOException e) {
       log("Failed starting WebSocket and/or HTTP Server");
       throw new RuntimeException(e);
@@ -119,27 +124,53 @@ public class FrontendConnector {
     return breakpoints;
   }
 
-  private WebSocketHandler initializeWebSocket(final int port,
-      final Future<WebSocket> clientConnected) {
-    InetSocketAddress address = new InetSocketAddress(port);
-    WebSocketHandler server = new WebSocketHandler(address, this, gson);
+  private <T extends WebSocketHandler> T tryInitializingWebSocket(final T server) throws Throwable {
     server.start();
+    try {
+      server.awaitStartup();
+    } catch (ExecutionException e) {
+      throw e.getCause();
+    }
     return server;
   }
 
-  private HttpServer initializeHttpServer(final int port) throws IOException {
+  private <T extends WebSocketHandler> T initializeWebSocket(final int port, final Function<Integer, T> ctor) {
+    try {
+      return tryInitializingWebSocket(ctor.apply(port));
+    } catch (BindException e) {
+      try {
+        return tryInitializingWebSocket(ctor.apply(EPHEMERAL_PORT));
+      } catch (Throwable e1) {
+        throw new RuntimeException(e);
+      }
+    } catch (Throwable e) {
+      throw new RuntimeException(e);
+    }
+  }
+
+  private HttpServer tryInitializingHttpServer(final int port,
+      final int debuggerPort, final int tracePort) throws IOException {
     InetSocketAddress address = new InetSocketAddress(port);
     HttpServer httpServer = HttpServer.create(address, 0);
-    httpServer.createContext("/", new WebResourceHandler());
+    httpServer.createContext("/", new WebResourceHandler(debuggerPort, tracePort));
     httpServer.setExecutor(null);
     httpServer.start();
     return httpServer;
   }
 
+  private HttpServer initializeHttpServer(final int port,
+      final int debuggerPort, final int tracePort) throws IOException {
+    try {
+      return tryInitializingHttpServer(port, debuggerPort, tracePort);
+    } catch (BindException e) {
+      return tryInitializingHttpServer(EPHEMERAL_PORT, debuggerPort, tracePort);
+    }
+  }
+
   private void ensureConnectionIsAvailable() {
-    assert receiver != null;
-    assert sender != null;
-    assert sender.isOpen();
+    assert messageHandler != null;
+    assert messageSocket != null;
+    assert messageSocket.isOpen();
   }
 
   // TODO: simplify, way to convoluted
@@ -180,25 +211,25 @@ public class FrontendConnector {
 
   private void send(final Message msg) {
     ensureConnectionIsAvailable();
-    sender.send(gson.toJson(msg, OutgoingMessage.class));
+    messageSocket.send(gson.toJson(msg, OutgoingMessage.class));
   }
 
   private void sendBufferedSources(
       final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
       final Map<Source, Set<RootNode>> rootNodes) {
-    if (!notReady.isEmpty()) {
-      for (Source s : notReady) {
+    if (!sourceToBeSent.isEmpty()) {
+      for (Source s : sourceToBeSent) {
         sendSource(s, loadedSourcesTags, rootNodes.get(s));
       }
-      notReady.clear();
+      sourceToBeSent.clear();
     }
   }
 
   public void sendLoadedSource(final Source source,
       final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
       final Map<Source, Set<RootNode>> rootNodes) {
-    if (receiver == null || sender == null) {
-      notReady.add(source);
+    if (messageHandler == null || messageSocket == null) {
+      sourceToBeSent.add(source);
       return;
     }
 
@@ -212,18 +243,19 @@ public class FrontendConnector {
   }
 
   public void sendTracingData(final ByteBuffer b) {
-    binarySender.send(b);
+    traceSocket.send(b);
   }
 
   public void awaitClient() {
+    assert VmSettings.ACTOR_TRACING && VmSettings.TRUFFLE_DEBUGGER_ENABLED;
     assert clientConnected != null;
-    assert binaryHandler.getConnection() != null;
+    assert messageSocket == null && traceSocket == null;
+    assert traceHandler.getConnection() != null;
+
     log("[DEBUGGER] Waiting for debugger to connect.");
     try {
-      sender = clientConnected.get();
-      if (VmSettings.ACTOR_TRACING) {
-        binarySender = binaryHandler.getConnection().get();
-      }
+      messageSocket = clientConnected.get();
+      traceSocket = traceHandler.getConnection().get();
     } catch (InterruptedException | ExecutionException ex) {
       throw new RuntimeException(ex);
     }
@@ -278,25 +310,24 @@ public class FrontendConnector {
   }
 
   public void completeConnection(final WebSocket conn) {
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> closeAllSockets()));
+
     clientConnected.complete(conn);
     send(InitializationResponse.create(EntityType.values(),
         ActivityType.values(), BreakpointType.values(), SteppingType.values()));
   }
 
-  public void shutdown() {
-    int delaySec = 5;
-    contentServer.stop(delaySec);
+  private void closeAllSockets() {
+    final int delay = 0;
+    contentServer.stop(delay);
 
-    sender.close();
-    if (binarySender != null) {
-      binarySender.close();
+    messageSocket.close();
+    if (traceSocket != null) {
+      traceSocket.close();
     }
     try {
-      int delayMsec = 1000;
-      receiver.stop(delayMsec);
-      if (binarySender != null) {
-        binaryHandler.stop(delayMsec);
-      }
+      messageHandler.stop(delay);
+      traceHandler.stop(delay);
     } catch (InterruptedException e) { }
   }
 }
