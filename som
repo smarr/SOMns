@@ -49,6 +49,8 @@ explore.add_argument('-f', '--fail-on-missing-optimizations', help='fail executi
                     dest='fail_missing_opts', action='store_true', default=False)
 explore.add_argument('-v', '--visual-vm', help='connect to VisualVM for profiling',
                     dest='visual_vm', action='store_true', default=False)
+explore.add_argument('-pv', '--post-parsed-visitor', help='Replaces Task and Spawn with Sequential version',
+                    dest='post_visitor', action='store_true', default=False)
 
 
 profile = parser.add_argument_group('Profile', 'Profile Execution')
@@ -299,6 +301,9 @@ if args.java_interpreter:
     flags += ['-Xint']
 if args.print_graal_options:
     flags += ['-XX:+JVMCIPrintProperties']
+if args.post_visitor:
+	flags += ['-Dsom.postVisitor=true']
+	
 
 if args.java_properties:
     flags += ['-D' + property for property in args.java_properties]

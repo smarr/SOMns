@@ -48,38 +48,37 @@ import som.interpreter.InliningVisitor;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
+import som.interpreter.PostParsedVisitor;
 import som.interpreter.SNodeFactory;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.OuterObjectReadNodeGen;
 import som.interpreter.nodes.ReturnNonLocalNode;
+import som.vm.VmSettings;
 import som.vm.constants.Nil;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SSymbol;
 
-
 public final class MethodBuilder {
 
-  private final MixinBuilder  directOuterMixin; // to get to an indirect outer, use outerBuilder
-  private final MethodBuilder outerBuilder;
-  private final boolean       blockMethod;
+  private final MixinBuilder                    directOuterMixin;                  // to get to an indirect outer, use outerBuilder
+  private final MethodBuilder                   outerBuilder;
+  private final boolean                         blockMethod;
 
-  private SSymbol signature;
-  private final List<SourceSection> definition = new ArrayList<>(3);
+  private SSymbol                               signature;
+  private final List<SourceSection>             definition = new ArrayList<>(3);
 
-  private boolean needsToCatchNonLocalReturn;
-  private boolean throwsNonLocalReturn;       // does directly or indirectly a non-local return
+  private boolean                               needsToCatchNonLocalReturn;
+  private boolean                               throwsNonLocalReturn;              // does directly or indirectly a non-local return
+  private boolean                               accessesVariablesOfOuterScope;
 
-  private boolean accessesVariablesOfOuterScope;
+  private final LinkedHashMap<String, Argument> arguments  = new LinkedHashMap<>();
+  private final LinkedHashMap<String, Local>    locals     = new LinkedHashMap<>();
 
-  private final LinkedHashMap<String, Argument> arguments = new LinkedHashMap<>();
-  private final LinkedHashMap<String, Local>    locals    = new LinkedHashMap<>();
+  private Internal                              frameOnStackVar;
+  private final MethodScope                     currentScope;
 
-  private       Internal    frameOnStackVar;
-  private final MethodScope currentScope;
-
-  private final List<SInvokable> embeddedBlockMethods;
-
+  private final List<SInvokable>                embeddedBlockMethods;
 
   public MethodBuilder(final MixinBuilder holder, final MixinScope clsScope) {
     this(holder, clsScope, null, false);
@@ -91,28 +90,30 @@ public final class MethodBuilder {
   }
 
   public MethodBuilder(final MethodBuilder outerBuilder) {
-    this(outerBuilder.directOuterMixin, outerBuilder.getHolderScope(), outerBuilder, true);
+    this(outerBuilder.directOuterMixin, outerBuilder.getHolderScope(),
+        outerBuilder, true);
   }
 
   private MethodBuilder(final MixinBuilder holder, final MixinScope clsScope,
       final MethodBuilder outerBuilder, final boolean isBlockMethod) {
     this.directOuterMixin = holder;
     this.outerBuilder = outerBuilder;
-    this.blockMethod  = isBlockMethod;
+    this.blockMethod = isBlockMethod;
 
     MethodScope outer = (outerBuilder != null)
-        ? outerBuilder.getCurrentMethodScope()
-        : null;
+        ? outerBuilder.getCurrentMethodScope() : null;
     assert Nil.nilObject != null : "Nil.nilObject not yet initialized";
-    this.currentScope   = new MethodScope(new FrameDescriptor(Nil.nilObject), outer, clsScope);
+    this.currentScope = new MethodScope(new FrameDescriptor(Nil.nilObject),
+        outer, clsScope);
 
     accessesVariablesOfOuterScope = false;
-    throwsNonLocalReturn          = false;
-    needsToCatchNonLocalReturn    = false;
+    throwsNonLocalReturn = false;
+    needsToCatchNonLocalReturn = false;
     embeddedBlockMethods = new ArrayList<SInvokable>();
   }
 
   public static class MethodDefinitionError extends SemanticDefinitionError {
+
     private static final long serialVersionUID = 3901992766649011815L;
 
     MethodDefinitionError(final String message, final SourceSection source) {
@@ -130,19 +131,20 @@ public final class MethodBuilder {
   public void mergeIntoScope(final MethodScope scope, final SInvokable outer) {
     for (Variable v : scope.getVariables()) {
       Local l = v.splitToMergeIntoOuterScope(currentScope.getFrameDescriptor());
-      if (l != null) { // can happen for instance for the block self, which we omit
+      if (l != null) { // can happen for instance for the block self, which we
+                       // omit
         String name = l.getQualifiedName();
         assert !locals.containsKey(name);
         locals.put(name, l);
         currentScope.addVariable(l);
       }
     }
-    SInvokable[]  embeddedBlocks = outer.getEmbeddedBlocks();
+    SInvokable[] embeddedBlocks = outer.getEmbeddedBlocks();
     MethodScope[] embeddedScopes = scope.getEmbeddedScopes();
 
-    assert ((embeddedBlocks == null || embeddedBlocks.length == 0) &&
-            (embeddedScopes == null || embeddedScopes.length == 0)) ||
-          embeddedBlocks.length == embeddedScopes.length;
+    assert ((embeddedBlocks == null || embeddedBlocks.length == 0)
+        && (embeddedScopes == null || embeddedScopes.length == 0))
+        || embeddedBlocks.length == embeddedScopes.length;
 
     if (embeddedScopes != null) {
       for (MethodScope e : embeddedScopes) {
@@ -161,7 +163,8 @@ public final class MethodBuilder {
 
   public void addEmbeddedBlockMethod(final SInvokable blockMethod) {
     embeddedBlockMethods.add(blockMethod);
-    currentScope.addEmbeddedScope(((Method) blockMethod.getInvokable()).getLexicalScope());
+    currentScope.addEmbeddedScope(
+        ((Method) blockMethod.getInvokable()).getLexicalScope());
   }
 
   public MethodScope getCurrentMethodScope() {
@@ -185,9 +188,8 @@ public final class MethodBuilder {
       assert needsToCatchNonLocalReturn;
 
       frameOnStackVar = new Internal(FRAME_ON_STACK_SLOT_NAME);
-      frameOnStackVar.init(
-          currentScope.getFrameDescriptor().addFrameSlot(
-              frameOnStackVar, FrameSlotKind.Object));
+      frameOnStackVar.init(currentScope.getFrameDescriptor()
+          .addFrameSlot(frameOnStackVar, FrameSlotKind.Object));
       currentScope.addVariable(frameOnStackVar);
     }
     return frameOnStackVar;
@@ -220,9 +222,9 @@ public final class MethodBuilder {
   }
 
   public SInitializer assembleInitializer(final ExpressionNode body,
-      final AccessModifier accessModifier,
-      final SourceSection sourceSection) {
-    return assembleInitializerAs(signature, body, accessModifier, sourceSection);
+      final AccessModifier accessModifier, final SourceSection sourceSection) {
+    return assembleInitializerAs(signature, body, accessModifier,
+        sourceSection);
   }
 
   public SInitializer splitBodyAndAssembleInitializerAs(final SSymbol signature,
@@ -230,14 +232,15 @@ public final class MethodBuilder {
       final SourceSection sourceSection) {
     MethodScope splitScope = currentScope.split();
     ExpressionNode splitBody = InliningVisitor.doInline(body, splitScope, 0);
-    Method truffleMeth = assembleInvokable(splitBody, splitScope, sourceSection);
+    Method truffleMeth = assembleInvokable(splitBody, splitScope,
+        sourceSection);
 
     // TODO: not sure whether it is safe to use the embeddedBlockMethods here,
     // because we just split the whole thing, those objects won't correspond to
     // the concrete block methods anymore, but might not matter, because they
     // are only used to do further splitting anyway
-    SInitializer meth = new SInitializer(signature, accessModifier,
-        truffleMeth, embeddedBlockMethods.toArray(new SInvokable[0]));
+    SInitializer meth = new SInitializer(signature, accessModifier, truffleMeth,
+        embeddedBlockMethods.toArray(new SInvokable[0]));
 
     // the method's holder field is to be set later on!
     return meth;
@@ -255,11 +258,23 @@ public final class MethodBuilder {
   }
 
   public SInvokable assemble(final ExpressionNode body,
-      final AccessModifier accessModifier,
-      final SourceSection sourceSection) {
-    Method truffleMethod = assembleInvokable(body, sourceSection);
-    SInvokable meth = new SInvokable(signature, accessModifier,
-        truffleMethod, embeddedBlockMethods.toArray(new SInvokable[0]));
+      final AccessModifier accessModifier, final SourceSection sourceSection) {
+
+    Method truffleMethod;
+
+    if (VmSettings.POST_PARSED_VISITOR) {
+      MethodScope splitScope = currentScope.split();
+      ExpressionNode splitBody = PostParsedVisitor.doInline(body, splitScope,
+          0);
+      truffleMethod = assembleInvokable(splitBody, sourceSection);
+    }
+
+    else {
+      truffleMethod = assembleInvokable(body, sourceSection);
+    }
+
+    SInvokable meth = new SInvokable(signature, accessModifier, truffleMethod,
+        embeddedBlockMethods.toArray(new SInvokable[0]));
 
     VM.reportParsedRootNode(truffleMethod);
     // the method's holder field is to be set later on!
@@ -304,11 +319,12 @@ public final class MethodBuilder {
       body = createCatchNonLocalReturn(body, getFrameOnStackMarkerVar());
     }
 
-    assert scope.isFinalized() : "Expect the scope to be finalized at this point";
+    assert scope
+        .isFinalized() : "Expect the scope to be finalized at this point";
 
-    Method truffleMethod = new Method(getMethodIdentifier(),
-        sourceSection, definition.toArray(new SourceSection[0]),
-        body, scope, (ExpressionNode) body.deepCopy(), blockMethod, false);
+    Method truffleMethod = new Method(getMethodIdentifier(), sourceSection,
+        definition.toArray(new SourceSection[0]), body, scope,
+        (ExpressionNode) body.deepCopy(), blockMethod, false);
     scope.setMethod(truffleMethod);
     return truffleMethod;
   }
@@ -319,8 +335,10 @@ public final class MethodBuilder {
   }
 
   public void addArgument(final String arg, final SourceSection source) {
-    if (("self".equals(arg) || "$blockSelf".equals(arg)) && arguments.size() > 0) {
-      throw new IllegalStateException("The self argument always has to be the first argument of a method");
+    if (("self".equals(arg) || "$blockSelf".equals(arg))
+        && arguments.size() > 0) {
+      throw new IllegalStateException(
+          "The self argument always has to be the first argument of a method");
     }
 
     Argument argument = new Argument(arg, arguments.size(), source);
@@ -330,7 +348,8 @@ public final class MethodBuilder {
   public Local addLocal(final String name, final SourceSection source)
       throws MethodDefinitionError {
     if (arguments.containsKey(name)) {
-      throw new MethodDefinitionError("Method already defines argument " + name + ". Can't define local variable with same name.", source);
+      throw new MethodDefinitionError("Method already defines argument " + name
+          + ". Can't define local variable with same name.", source);
     }
 
     Local l = new Local(name, source);
@@ -377,8 +396,8 @@ public final class MethodBuilder {
   }
 
   /**
-   * A variable is either an argument or a temporary in the lexical scope
-   * of methods (only in methods).
+   * A variable is either an argument or a temporary in the lexical scope of
+   * methods (only in methods).
    */
   protected Variable getVariable(final String varName) {
     if (locals.containsKey(varName)) {
@@ -427,7 +446,8 @@ public final class MethodBuilder {
   public ExpressionNode getWriteNode(final String variableName,
       final ExpressionNode valExpr, final SourceSection source) {
     Local variable = getLocal(variableName);
-    return variable.getWriteNode(getContextLevel(variableName), valExpr, source);
+    return variable.getWriteNode(getContextLevel(variableName), valExpr,
+        source);
   }
 
   public ExpressionNode getImplicitReceiverSend(final SSymbol selector,
@@ -448,21 +468,24 @@ public final class MethodBuilder {
 
     if (getEnclosingMixinBuilder() == null) {
       // this is normally only for the inheritance clauses for modules the case
-      return SNodeFactory.createMessageSend(selector, new ExpressionNode[] {getSelfRead(source)}, false, source, null);
+      return SNodeFactory.createMessageSend(selector,
+          new ExpressionNode[] { getSelfRead(source) }, false, source, null);
     } else {
       // otherwise, it is an implicit receiver send
       return SNodeFactory.createImplicitReceiverSend(selector,
-          new ExpressionNode[] {getSelfRead(source)},
-          getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(), source);
+          new ExpressionNode[] { getSelfRead(source) }, getCurrentMethodScope(),
+          getEnclosingMixinBuilder().getMixinId(), source);
     }
   }
 
   public ExpressionNode getSetterSend(final SSymbol identifier,
-      final ExpressionNode exp, final SourceSection source) throws MethodDefinitionError {
+      final ExpressionNode exp, final SourceSection source)
+      throws MethodDefinitionError {
     // write directly to local variables (excluding arguments)
     String varName = identifier.getString();
     if (hasArgument(varName)) {
-      throw new MethodDefinitionError("Can't assign to argument: " + varName, source);
+      throw new MethodDefinitionError("Can't assign to argument: " + varName,
+          source);
     }
     Local variable = getLocal(varName);
     if (variable != null) {
@@ -472,8 +495,9 @@ public final class MethodBuilder {
     // otherwise, it is a setter send.
     return SNodeFactory.createImplicitReceiverSend(
         MixinBuilder.getSetterName(identifier),
-        new ExpressionNode[] {getSelfRead(source), exp},
-        getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(), source);
+        new ExpressionNode[] { getSelfRead(source), exp },
+        getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(),
+        source);
   }
 
   protected boolean hasArgument(final String varName) {
@@ -534,8 +558,9 @@ public final class MethodBuilder {
       ctxLevel++;
       enclosing = enclosing.getOuterBuilder();
       if (enclosing == null) {
-        throw new MixinDefinitionError("Outer send `outer " + outerName
-            + "` could not be resolved", source);
+        throw new MixinDefinitionError(
+            "Outer send `outer " + outerName + "` could not be resolved",
+            source);
       }
     }
 
@@ -548,8 +573,8 @@ public final class MethodBuilder {
   }
 
   /**
-   * @return number of explicit arguments,
-   *         i.e., excluding the implicit 'self' argument
+   * @return number of explicit arguments, i.e., excluding the implicit 'self'
+   *         argument
    */
   public int getNumberOfArguments() {
     return arguments.size();
@@ -565,7 +590,7 @@ public final class MethodBuilder {
 
   @Override
   public String toString() {
-    return "MethodBuilder(" + getEnclosingMixinBuilder().getName().getString() +
-        ">>" + signature.toString() + ")";
+    return "MethodBuilder(" + getEnclosingMixinBuilder().getName().getString()
+        + ">>" + signature.toString() + ")";
   }
 }

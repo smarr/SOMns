@@ -25,6 +25,7 @@ public class VmSettings {
   public static final boolean TRUFFLE_DEBUGGER_ENABLED;
 
   public static final boolean IGV_DUMP_AFTER_PARSING;
+  public static final boolean POST_PARSED_VISITOR;
 
   public static final String INSTRUMENTATION_PROP = "som.instrumentation";
 
@@ -65,6 +66,8 @@ public class VmSettings {
     DNU_PRINT_STACK_TRACE = getBool("som.printStackTraceOnDNU", false);
 
     IGV_DUMP_AFTER_PARSING = getBool("som.igvDumpAfterParsing", false);
+
+    POST_PARSED_VISITOR = getBool("som.postVisitor", false);
   }
 
   private static boolean getBool(final String prop, final boolean defaultVal) {

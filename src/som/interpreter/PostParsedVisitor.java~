@@ -1,0 +1,41 @@
+package som.interpreter;
+
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeUtil;
+import com.oracle.truffle.api.nodes.NodeVisitor;
+
+import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.compiler.Variable;
+import som.compiler.Variable.Argument;
+import som.compiler.Variable.Local;
+import som.interpreter.LexicalScope.MethodScope;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.SOMNode;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
+
+
+public final class PostParsedVisitor implements NodeVisitor {
+
+  public static ExpressionNode doInline(
+      final ExpressionNode body,
+      final MethodScope inlinedCurrentScope, final int appliesTo) {
+    ExpressionNode inlinedBody = NodeUtil.cloneNode(body);
+
+    return NodeVisitorUtil.applyVisitor(inlinedBody,
+        new PostParsedVisitor(inlinedCurrentScope, appliesTo));
+  }
+  
+  @Override
+  public boolean visit(final Node node) {
+    if (node instanceof SOMNode) {
+      ((SOMNode) node).replaceAfterScopeChange(this);
+    }
+    return true;
+  }
+ 
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + "[" + scope.getMethod().getName() + "]";
+  }
+}

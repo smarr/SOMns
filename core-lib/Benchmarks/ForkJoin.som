@@ -13,14 +13,18 @@ class ForkJoinBenchmarks usingPlatform: platform andHarness: harness = (
     )
 
     public fib: n = (
-      | a b ta tb |
+      | a b ta tb c d|
       n <= 2 ifTrue: [ ^ 1 ].
 
+(*      c := [fib: n-1].
+      d := [fib: n-2]. *)
+      
       ta := Task spawn: [ fib: n - 1 ].
       tb := Task spawn: [ fib: n - 2 ].
 
       a := ta join.
-      b := tb join.
+      b := tb join. 
+	
       ^ a + b
     )
 
