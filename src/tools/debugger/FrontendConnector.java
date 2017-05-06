@@ -67,15 +67,15 @@ public class FrontendConnector {
   /**
    * Receives requests from the client.
    */
-  private final MessageHandler receiver;
-  private final TraceHandler binaryHandler;
+  private final MessageHandler messageHandler;
+  private final TraceHandler   traceHandler;
 
   /**
    * Sends requests to the client.
    */
-  private WebSocket sender;
+  private WebSocket messageSocket;
 
-  private WebSocket binarySender;
+  private WebSocket traceSocket;
 
   /**
    * Future to await the client's connection.
@@ -83,12 +83,12 @@ public class FrontendConnector {
   private CompletableFuture<WebSocket> clientConnected;
 
   private final Gson gson;
-  private static final int MESSAGE_PORT   = 7977;
-  private static final int BINARY_PORT    = 7978;
-  private static final int DEBUGGER_PORT  = 8888;
+  private static final int MESSAGE_PORT = 7977;
+  private static final int TRACE_PORT   = 7978;
+  private static final int HTTP_PORT    = 8888;
   private static final int EPHEMERAL_PORT = 0;
 
-  private final ArrayList<Source> notReady = new ArrayList<>(); // TODO rename: toBeSend
+  private final ArrayList<Source> sourceToBeSent = new ArrayList<>();
 
   public FrontendConnector(final Breakpoints breakpoints,
       final Instrumenter instrumenter, final WebDebugger webDebugger,
@@ -102,14 +102,14 @@ public class FrontendConnector {
 
     try {
       log("[DEBUGGER] Initialize HTTP and WebSocket Server for Debugger");
-      receiver = initializeWebSocket(MESSAGE_PORT, port -> new MessageHandler(port, this, gson));
-      binaryHandler = initializeWebSocket(BINARY_PORT, port -> new TraceHandler(port));
+      messageHandler = initializeWebSocket(MESSAGE_PORT, port -> new MessageHandler(port, this, gson));
+      traceHandler = initializeWebSocket(TRACE_PORT, port -> new TraceHandler(port));
       log("[DEBUGGER] Started WebSocket Servers");
-      log("[DEBUGGER]   Message Handler: " + receiver.getPort());
-      log("[DEBUGGER]   Trace Handler:   " + binaryHandler.getPort());
+      log("[DEBUGGER]   Message Handler: " + messageHandler.getPort());
+      log("[DEBUGGER]   Trace Handler:   " + traceHandler.getPort());
 
-      contentServer = initializeHttpServer(DEBUGGER_PORT,
-          receiver.getPort(), binaryHandler.getPort());
+      contentServer = initializeHttpServer(HTTP_PORT,
+          messageHandler.getPort(), traceHandler.getPort());
       log("[DEBUGGER] Started HTTP Server");
       log("[DEBUGGER]   URL: http://localhost:" + contentServer.getAddress().getPort() + "/index.html");
     } catch (IOException e) {
@@ -168,9 +168,9 @@ public class FrontendConnector {
   }
 
   private void ensureConnectionIsAvailable() {
-    assert receiver != null;
-    assert sender != null;
-    assert sender.isOpen();
+    assert messageHandler != null;
+    assert messageSocket != null;
+    assert messageSocket.isOpen();
   }
 
   // TODO: simplify, way to convoluted
@@ -211,25 +211,25 @@ public class FrontendConnector {
 
   private void send(final Message msg) {
     ensureConnectionIsAvailable();
-    sender.send(gson.toJson(msg, OutgoingMessage.class));
+    messageSocket.send(gson.toJson(msg, OutgoingMessage.class));
   }
 
   private void sendBufferedSources(
       final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
       final Map<Source, Set<RootNode>> rootNodes) {
-    if (!notReady.isEmpty()) {
-      for (Source s : notReady) {
+    if (!sourceToBeSent.isEmpty()) {
+      for (Source s : sourceToBeSent) {
         sendSource(s, loadedSourcesTags, rootNodes.get(s));
       }
-      notReady.clear();
+      sourceToBeSent.clear();
     }
   }
 
   public void sendLoadedSource(final Source source,
       final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
       final Map<Source, Set<RootNode>> rootNodes) {
-    if (receiver == null || sender == null) {
-      notReady.add(source);
+    if (messageHandler == null || messageSocket == null) {
+      sourceToBeSent.add(source);
       return;
     }
 
@@ -243,18 +243,19 @@ public class FrontendConnector {
   }
 
   public void sendTracingData(final ByteBuffer b) {
-    binarySender.send(b);
+    traceSocket.send(b);
   }
 
   public void awaitClient() {
+    assert VmSettings.ACTOR_TRACING && VmSettings.TRUFFLE_DEBUGGER_ENABLED;
     assert clientConnected != null;
-    assert binaryHandler.getConnection() != null;
+    assert messageSocket == null && traceSocket == null;
+    assert traceHandler.getConnection() != null;
+
     log("[DEBUGGER] Waiting for debugger to connect.");
     try {
-      sender = clientConnected.get();
-      if (VmSettings.ACTOR_TRACING) {
-        binarySender = binaryHandler.getConnection().get();
-      }
+      messageSocket = clientConnected.get();
+      traceSocket = traceHandler.getConnection().get();
     } catch (InterruptedException | ExecutionException ex) {
       throw new RuntimeException(ex);
     }
@@ -320,15 +321,13 @@ public class FrontendConnector {
     final int delay = 0;
     contentServer.stop(delay);
 
-    sender.close();
-    if (binarySender != null) {
-      binarySender.close();
+    messageSocket.close();
+    if (traceSocket != null) {
+      traceSocket.close();
     }
     try {
-      receiver.stop(delay);
-      if (binarySender != null) {
-        binaryHandler.stop(delay);
-      }
+      messageHandler.stop(delay);
+      traceHandler.stop(delay);
     } catch (InterruptedException e) { }
   }
 }
