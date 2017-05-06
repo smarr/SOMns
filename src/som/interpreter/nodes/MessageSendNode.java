@@ -2,8 +2,12 @@ package som.interpreter.nodes;
 
 import static som.interpreter.nodes.SOMNode.unwrapIfNecessary;
 
+import java.lang.reflect.Field;
+import java.util.Arrays;
+
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
@@ -15,6 +19,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.instrumentation.MessageSendNodeWrapper;
+import som.interpreter.PostParsedVisitor;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.DispatchChain.Cost;
@@ -138,12 +143,14 @@ public final class MessageSendNode {
       extends AbstractMessageSendNode {
 
     protected final SSymbol selector;
+    protected final ExpressionNode[] arguments;
 
     protected AbstractUninitializedMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments,
         final SourceSection source) {
       super(arguments, source);
       this.selector = selector;
+      this.arguments = arguments;
     }
 
     @Override
@@ -155,6 +162,9 @@ public final class MessageSendNode {
       return selector;
     }
 
+    public ExpressionNode[] getArguments(){
+      return arguments;
+    }
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       // This is a branch never taken, none of the code here should be compiled.
@@ -214,6 +224,37 @@ public final class MessageSendNode {
       }
 
       return result;
+    }
+
+    public void replaceAfterScopeChange(final PostParsedVisitor postParsedVisitor) {
+      assert assertNodeHasNoFrameSlots();
+
+    }
+
+    private static <T> T[] concatArrays(final T[] first, final T[] second) {
+      T[] result = Arrays.copyOf(first, first.length + second.length);
+      System.arraycopy(second, 0, result, first.length, second.length);
+      return result;
+    }
+
+    private static Field[] getAllFields(final Class<? extends Object> clazz) {
+      Field[] declaredFields = clazz.getDeclaredFields();
+      if (clazz.getSuperclass() != null) {
+        return concatArrays(getAllFields(clazz.getSuperclass()), declaredFields);
+      }
+      return declaredFields;
+    }
+
+    private boolean assertNodeHasNoFrameSlots() {
+      if (this.getClass().desiredAssertionStatus()) {
+        for (Field f : getAllFields(getClass())) {
+          assert f.getType() != FrameSlot.class;
+          if (f.getType() == FrameSlot.class) {
+            return false;
+          }
+        }
+      }
+      return true;
     }
   }
 
