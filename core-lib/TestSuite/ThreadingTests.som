@@ -64,7 +64,6 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
       self assert: (thread name beginsWith: 'Thread(').
 
       thread := Thread spawn: [:i | i ] with: (Array with: 1).
-      thread name println.
       self assert: (thread name beginsWith: 'Thread(')
     )
 
