@@ -50,7 +50,7 @@ class WebResourceHandler implements HttpHandler {
 
     switch (requestedFile) {
       case "/ports.json":
-        String jsonPorts = "{\"dbgPort\":" + debuggerPort + ",\"tracePort\":" + tracePort + "\"}";
+        String jsonPorts = "{\"dbgPort\":" + debuggerPort + ",\"tracePort\":" + tracePort + "}";
         exchange.sendResponseHeaders(200, jsonPorts.length());
         exchange.getResponseBody().write(jsonPorts.getBytes(Charset.forName("UTF-8")));
         exchange.close();
