@@ -475,6 +475,14 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       ^ nil
     )
 
+    public hasSome: aBlock = ( self do: [ :e | (aBlock value: e) ifTrue: [ ^ true] ].
+      ^ false)
+
+    public indexOfSome: aBlock = (
+      self doIndexes: [ :i | (aBlock value: (self at: i)) ifTrue: [ ^ i ]].
+      ^ nil
+    )
+
     public lastIndexOf: element = (
       self size downTo: 1 do: [: i | (self at: i) = element ifTrue: [ ^ i ]].
       ^ nil
@@ -731,6 +739,18 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     public contains: anObject = (
       ^ storage contains: anObject
+    )
+
+    public indexOf: anObject = (
+      ^ storage indexOf: anObject
+    )
+
+    public hasSome: aBlock = (
+      ^ (storage hasSome: aBlock).
+    )
+
+    public indexOfSome: aBlock = (
+      ^ (storage indexOfSome: aBlock).
     )
 
     public anySatisfy: aBlock = (
