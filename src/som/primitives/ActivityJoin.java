@@ -26,7 +26,7 @@ public class ActivityJoin {
     public JoinPrim(final boolean ew, final SourceSection s) {
       super(ew, s);
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        haltNode = insert(SuspendExecutionNodeGen.create(false, s, 2, null));
+        haltNode = insert(SuspendExecutionNodeGen.create(false, s, 0, null));
         VM.insertInstrumentationWrapper(haltNode);
       } else {
         haltNode = null;
