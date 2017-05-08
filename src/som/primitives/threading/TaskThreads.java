@@ -165,7 +165,7 @@ public final class TaskThreads {
 
     @Override
     public long getCurrentMessageId() {
-      return -1;
+      return 0;
     }
 
     @Override

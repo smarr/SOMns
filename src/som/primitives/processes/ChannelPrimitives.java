@@ -80,7 +80,7 @@ public abstract class ChannelPrimitives {
 
     @Override
     public long getCurrentMessageId() {
-      return -1;
+      return 0;
     }
   }
 
