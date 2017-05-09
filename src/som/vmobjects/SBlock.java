@@ -54,6 +54,10 @@ public final class SBlock extends SAbstractObject implements TruffleObject {
     return context;
   }
 
+  public boolean hasContext() {
+    return context != null;
+  }
+
   public Object getOuterSelf() {
     return SArguments.rcvr(getContext());
   }

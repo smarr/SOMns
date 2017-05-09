@@ -7,6 +7,7 @@ import java.util.concurrent.ForkJoinPool;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.Node.Child;
 
+import som.VM;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.ResolvePromiseNode;
@@ -15,10 +16,14 @@ import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.actors.WrapReferenceNode;
 import som.interpreter.actors.WrapReferenceNodeGen;
+import som.vm.Symbols;
 import som.vmobjects.SBlock;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SObject.SImmutableObject;
 import tools.concurrency.TracingActors.TracingActor;
 
 public class Assertion {
+  static SImmutableObject assertionModule;
   SBlock statement;
   SResolver result;
 
@@ -30,6 +35,10 @@ public class Assertion {
     this.statement = statement;
     CompilerDirectives.transferToInterpreter();
     wrapper = WrapReferenceNodeGen.create();
+  }
+
+  public static void setAssertionModule(final SImmutableObject assertionClass) {
+    Assertion.assertionModule = assertionClass;
   }
 
 
@@ -56,6 +65,34 @@ public class Assertion {
     ResolvePromiseNode.resolve(Resolution.SUCCESSFUL, wrapper,
         result.getPromise(), true,
         result.getPromise().getOwner(), actorPool, false);
+  }
+
+  public static class RemoteAssertion extends Assertion {
+    final Object target;
+    public RemoteAssertion(final SBlock statement, final SResolver result, final Object target) {
+      super(statement, result);
+      this.target = target;
+    }
+
+    @Override
+    public boolean evaluate(final TracingActor actor, final EventualMessage msg, final ForkJoinPool actorPool) {
+      boolean result = (boolean) statement.getMethod().invoke(new Object[] {statement, createWrapper(target)});
+      if (!result) {
+        fail(actorPool);
+      } else {
+        success(actorPool);
+      }
+      return false;
+    }
+
+    private Object createWrapper(final Object target) {
+      CompilerDirectives.transferToInterpreter();
+      VM.thisMethodNeedsToBeOptimized("Should be optimized or on slowpath");
+      SInvokable disp = (SInvokable) assertionModule.getSOMClass().lookupPrivate(
+          Symbols.symbolFor("instantiateRemoteAssertion:"),
+          assertionModule.getSOMClass().getMixinDefinition().getMixinId());
+      return disp.invoke(new Object[] {assertionModule, target});
+    }
   }
 
   public static class UntilAssertion extends Assertion {

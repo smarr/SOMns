@@ -26,6 +26,9 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
   private system    = platform system.
   private ObjectMirror  = platform mirrors ObjectMirror.
 |
+
+  vmMirror setAssertionModule: self.
+
 )(
 
   public class ValueAssertions = Assertions <: Value(
@@ -105,6 +108,26 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
       ] ifFalse: [ 
         val ifFalse: anotherBlock
       ]
+    )
+
+    public assert: aBlock on: anotherActor = (
+      assert: aBlock on: anotherActor msg: 'Assertion failed'.
+    )
+
+    public assert: aBlock on: anotherActor msg: msg = (
+      assert: aBlock on: anotherActor handler: [ 
+        system error: msg. 
+      ].
+    )
+
+    public assert: aBlock on: anotherActor handler: anotherBlock = (
+      | pp |
+      (vmMirror AssertionsEnabled: self) ifFalse: [^ nil].
+
+      pp := createUntracedPromisePair.
+      vmMirror assert: aBlock on: anotherActor res: (pp resolver).
+
+      pp promise whenResolved: [ :r | r ifFalse: anotherBlock]
     )
 
     public next: aBlock = (
@@ -298,5 +321,21 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
     public class = (
       ^ moduleClass.
     )
+  )
+
+  public class RemoteAssertion new: target = Assertions (
+    | target = target. |
+  )(
+    public perform: selector = (
+      ^ (ObjectMirror reflecting: target) perform: selector.
+    )
+
+    public self = (
+      ^ target.
+    )
+  )
+
+  public instantiateRemoteAssertion: target = (
+    ^ RemoteAssertion new: target.
   )
 )

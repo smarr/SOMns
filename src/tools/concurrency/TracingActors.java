@@ -92,11 +92,13 @@ public class TracingActors {
     }
 
     public void addAssertion(final Assertion a) {
-      if (activeAssertions == null) {
-        activeAssertions = new ArrayList<>();
-      }
+      synchronized (this) {
+        if (activeAssertions == null) {
+          activeAssertions = new ArrayList<>();
+        }
 
-      activeAssertions.add(a);
+        activeAssertions.add(a);
+      }
     }
 
     @TruffleBoundary
@@ -116,16 +118,18 @@ public class TracingActors {
     }
 
     public void checkAssertions(final EventualMessage msg, final VM vm) {
-      if (activeAssertions == null || activeAssertions.size() == 0) {
-        return;
-      }
+      synchronized (this) {
+        if (activeAssertions == null || activeAssertions.size() == 0) {
+          return;
+        }
 
-      // safe way for iterating and removing elements, for each caused concurrent modification exception for no reason.
-      Iterator<Assertion> iter = activeAssertions.iterator();
-      while (iter.hasNext()) {
-        Assertion a = iter.next();
-        if (!a.evaluate(this, msg, vm.getActorPool())) {
-          iter.remove();
+        // safe way for iterating and removing elements, for each caused concurrent modification exception for no reason.
+        Iterator<Assertion> iter = activeAssertions.iterator();
+        while (iter.hasNext()) {
+          Assertion a = iter.next();
+          if (!a.evaluate(this, msg, vm.getActorPool())) {
+            iter.remove();
+          }
         }
       }
     }

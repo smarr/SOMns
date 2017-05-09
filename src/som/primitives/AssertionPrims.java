@@ -21,14 +21,17 @@ import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.VmSettings;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
+import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SSymbol;
 import tools.concurrency.Assertion;
 import tools.concurrency.Assertion.FutureAssertion;
 import tools.concurrency.Assertion.GloballyAssertion;
 import tools.concurrency.Assertion.NextAssertion;
+import tools.concurrency.Assertion.RemoteAssertion;
 import tools.concurrency.Assertion.UntilAssertion;
 import tools.concurrency.TracingActors.TracingActor;
 
@@ -45,7 +48,7 @@ public class AssertionPrims {
 
     @Specialization
     public final Object doSBlock(final SBlock statement, final SResolver resolver) {
-      addAssertion(new NextAssertion(statement, resolver));
+      addAssertion(getCurrentTracingActor(), new NextAssertion(statement, resolver));
       return Nil.nilObject;
     }
   }
@@ -62,7 +65,7 @@ public class AssertionPrims {
     @Specialization
     public final Object doSBlock(final SBlock statement, final SResolver resolver) {
       if (VmSettings.ENABLE_ASSERTIONS) {
-        addAssertion(new FutureAssertion(statement, resolver));
+        addAssertion(getCurrentTracingActor(), new FutureAssertion(statement, resolver));
       }
       return Nil.nilObject;
     }
@@ -79,7 +82,7 @@ public class AssertionPrims {
 
     @Specialization
     public final Object doSBlock(final SBlock statement, final SResolver resolver) {
-      addAssertion(new GloballyAssertion(statement, resolver));
+      addAssertion(getCurrentTracingActor(), new GloballyAssertion(statement, resolver));
       return Nil.nilObject;
     }
   }
@@ -95,7 +98,7 @@ public class AssertionPrims {
 
     @Specialization
     public final Object doSBlock(final SBlock statement, final SBlock until, final SResolver resolver) {
-      addAssertion(new UntilAssertion(statement, resolver, until));
+      addAssertion(getCurrentTracingActor(), new UntilAssertion(statement, resolver, until));
       return Nil.nilObject;
     }
   }
@@ -111,7 +114,25 @@ public class AssertionPrims {
 
     @Specialization
     public final Object doSBlock(final SBlock statement, final SBlock release, final SResolver resolver) {
-      addAssertion(new Assertion.ReleaseAssertion(statement, resolver, release));
+      addAssertion(getCurrentTracingActor(), new Assertion.ReleaseAssertion(statement, resolver, release));
+      return Nil.nilObject;
+    }
+  }
+
+  @GenerateNodeFactory
+  @ImportStatic(Nil.class)
+  @Primitive(primitive = "assert:on:res:")
+  public abstract static class AssertOnPrim extends TernaryExpressionNode{
+
+    protected AssertOnPrim(final boolean eagerlyWrapped, final SourceSection source) {
+      super(eagerlyWrapped, source);
+    }
+
+    @Specialization
+    public final Object doSBlock(final SBlock statement, final SFarReference target, final SResolver resolver) {
+      assert !statement.hasContext() : "assert:on: only supports blocks without context!";
+
+      addAssertion((TracingActor) target.getActor(), new RemoteAssertion(statement, resolver, target.getValue()));
       return Nil.nilObject;
     }
   }
@@ -331,12 +352,27 @@ public class AssertionPrims {
     }
   }
 
-  private static void addAssertion(final Assertion assertion) {
+  @GenerateNodeFactory
+  @Primitive(primitive = "setAssertionModule:")
+  public abstract static class SetAssertionModulePrim extends UnaryExpressionNode{
+
+    protected SetAssertionModulePrim(final boolean eagerlyWrapped, final SourceSection source) {
+      super(eagerlyWrapped, source);
+    }
+
+    @Specialization
+    public final Object doSBlock(final SImmutableObject assertionClass) {
+      Assertion.setAssertionModule(assertionClass);
+      return null;
+    }
+  }
+
+  private static void addAssertion(final TracingActor target, final Assertion assertion) {
     if (!VmSettings.ENABLE_ASSERTIONS) {
       return;
     }
 
-    getCurrentTracingActor().addAssertion(assertion);
+    target.addAssertion(assertion);
   }
 
   private static TracingActor getCurrentTracingActor() {
