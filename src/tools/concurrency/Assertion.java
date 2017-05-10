@@ -141,16 +141,23 @@ public class Assertion {
 
   public static class ReleaseAssertion extends Assertion{
     SBlock release;
+    protected static Set<ReleaseAssertion> releaseAssertions = new HashSet<>();
 
     public ReleaseAssertion(final SBlock statement, final SResolver result, final SBlock release) {
       super(statement, result);
       this.release = release;
+      synchronized (releaseAssertions) {
+        releaseAssertions.add(this);
+      }
     }
 
     @Override
     public boolean evaluate(final TracingActor actor, final EventualMessage msg, final ForkJoinPool actorPool) {
       boolean result = (boolean) release.getMethod().invoke(new Object[] {release});
       if (!result) {
+        synchronized (releaseAssertions) {
+          releaseAssertions.remove(this);
+        }
         fail(actorPool);
         return false;
       }
@@ -159,9 +166,18 @@ public class Assertion {
       if (!result2) {
         return true;
       } else {
+        synchronized (releaseAssertions) {
+          releaseAssertions.remove(this);
+        }
         success(actorPool);
       }
       return false;
+    }
+
+    protected static void checkReleaseAssertions() {
+      for (ReleaseAssertion ra : ReleaseAssertion.releaseAssertions) {
+        ra.success(ra.statement.getMethod().getCallTarget().getRootNode().getLanguage(SomLanguage.class).getVM().getActorPool());
+      }
     }
   }
 
@@ -209,7 +225,7 @@ public class Assertion {
       return false;
     }
 
-    public static void checkFutureAssertions() {
+    protected static void checkFutureAssertions() {
       if (futureAssertions.size() > 0) {
         for (FutureAssertion fa: futureAssertions) {
           if (fa instanceof ResultUsedAssertion) {
@@ -223,24 +239,32 @@ public class Assertion {
   }
 
   public static class GloballyAssertion extends Assertion{
-
+    protected static Set<GloballyAssertion> globalAssertions = new HashSet<>();
     public GloballyAssertion(final SBlock statement, final SResolver result) {
       super(statement, result);
+      synchronized (globalAssertions) {
+        globalAssertions.add(this);
+      }
     }
-
-    // TODO success on termination?, is this necessary
-    // would have to be done like the future assertions, i.e. keep a list/set of all the Global stuff
-    // only get's removed if a check fails
 
     @Override
     public boolean evaluate(final TracingActor actor, final EventualMessage msg, final ForkJoinPool actorPool) {
       boolean result = (boolean) statement.getMethod().invoke(new Object[] {statement});
       if (!result) {
+        synchronized (globalAssertions) {
+          globalAssertions.remove(this);
+        }
         fail(actorPool);
       } else {
         return true;
       }
       return false;
+    }
+
+    protected static void checkGlobalAssertions() {
+      for (GloballyAssertion ga : GloballyAssertion.globalAssertions) {
+        ga.success(ga.statement.getMethod().getCallTarget().getRootNode().getLanguage(SomLanguage.class).getVM().getActorPool());
+      }
     }
   }
 
@@ -267,12 +291,18 @@ public class Assertion {
       return false;
     }
 
-    public void finalCheck() {
+    protected void finalCheck() {
       synchronized (checkedPromise) {
         if (!checkedPromise.isResultUsed()) {
           fail(checkedPromise.getSOMClass().getMethods()[0].getInvokable().getRootNode().getLanguage(SomLanguage.class).getVM().getActorPool());
         }
       }
     }
+  }
+
+  public static void finalizeAssertions() {
+    FutureAssertion.checkFutureAssertions();
+    GloballyAssertion.checkGlobalAssertions();
+    ReleaseAssertion.checkReleaseAssertions();
   }
 }

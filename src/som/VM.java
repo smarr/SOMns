@@ -45,7 +45,7 @@ import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.concurrency.ActorExecutionTrace;
-import tools.concurrency.Assertion.FutureAssertion;
+import tools.concurrency.Assertion;
 import tools.concurrency.TracingActors;
 import tools.debugger.Tags;
 import tools.debugger.WebDebugger;
@@ -246,7 +246,7 @@ public final class VM {
     }
 
     if (VmSettings.ENABLE_ASSERTIONS && (lastExitCode == 0 || errorCode == 0)) {
-      FutureAssertion.checkFutureAssertions();
+      Assertion.finalizeAssertions();;
     }
 
     shutdownPools();

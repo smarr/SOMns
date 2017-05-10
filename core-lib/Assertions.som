@@ -269,15 +269,15 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
     (isPromise: aval) ifTrue: [
       aval whenResolved: [:r | aval := r.
         done ifFalse: [
-          aval ifFalse: [
-            pp resolve: true.
-            done := true.
-          ] ifTrue: [
+          aval ifTrue: [
             (isPromise: bval) ifFalse:[
               pp resolve: bval.
               done := true.    
             ]
-          ]
+          ] ifFalse: [
+            pp resolve: true.
+            done := true.
+          ] 
         ]
       ]
     ].
