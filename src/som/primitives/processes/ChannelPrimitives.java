@@ -86,16 +86,15 @@ public abstract class ChannelPrimitives {
 
   public static class Process implements Activity, Runnable {
     private final SObjectWithClass obj;
-    private final boolean stopOnRootNode;
-    private boolean stopOnJoin;
 
-    public Process(final SObjectWithClass obj, final boolean stopOnRootNode) {
+    public Process(final SObjectWithClass obj) {
       this.obj = obj;
-      this.stopOnRootNode = stopOnRootNode;
     }
 
     @Override
     public ActivityType getType() { return ActivityType.PROCESS; }
+
+    protected void beforeExec(final SInvokable disp) { }
 
     @Override
     public void run() {
@@ -105,21 +104,12 @@ public abstract class ChannelPrimitives {
         SInvokable disp = (SInvokable) obj.getSOMClass().lookupMessage(
             Symbols.symbolFor("run"), AccessModifier.PROTECTED);
 
-        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRootNode) {
-          WebDebugger dbg = SomLanguage.getVM(disp.getInvokable()).getWebDebugger();
-          dbg.prepareSteppingUntilNextRootNode();
-        }
+        beforeExec(disp);
         disp.invoke(new Object[] {obj});
       } catch (Throwable t) {
         t.printStackTrace();
       }
     }
-
-    @Override
-    public long getId() { return 0; }
-
-    @Override
-    public void setStepToJoin(final boolean val) { stopOnJoin = val; }
 
     public SObjectWithClass getProcObject() {
       return obj;
@@ -134,10 +124,22 @@ public abstract class ChannelPrimitives {
   public static class TracingProcess extends Process {
     protected final long processId;
 
+    private final boolean stopOnRootNode;
+    private boolean stopOnJoin;
+
     public TracingProcess(final SObjectWithClass obj, final boolean stopOnRootNode) {
-      super(obj, stopOnRootNode);
+      super(obj);
       assert Thread.currentThread() instanceof TracingActivityThread;
+      this.stopOnRootNode = stopOnRootNode;
       processId = ((TracingActivityThread) Thread.currentThread()).generateActivityId();
+    }
+
+    @Override
+    protected void beforeExec(final SInvokable disp) {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRootNode) {
+        WebDebugger dbg = SomLanguage.getVM(disp.getInvokable()).getWebDebugger();
+        dbg.prepareSteppingUntilNextRootNode();
+      }
     }
 
     @Override
@@ -153,6 +155,9 @@ public abstract class ChannelPrimitives {
 
     @Override
     public long getId() { return processId; }
+
+    @Override
+    public void setStepToJoin(final boolean val) { stopOnJoin = val; }
   }
 
   @Primitive(primitive = "procOut:")

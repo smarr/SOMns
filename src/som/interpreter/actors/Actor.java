@@ -145,9 +145,6 @@ public class Actor implements Activity {
   }
 
   @Override
-  public long getId() { return 0; }
-
-  @Override
   public void setStepToJoin(final boolean val) {
     throw new UnsupportedOperationException(
         "Return from activity, and step to join are not supported " +

@@ -24,7 +24,6 @@ public final class TaskThreads {
 
     protected final Object[] argArray;
     protected final boolean stopOnRoot;
-    protected boolean stopOnJoin;
 
     public SomTaskOrThread(final Object[] argArray, final boolean stopOnRoot) {
       this.argArray   = argArray;
@@ -36,17 +35,7 @@ public final class TaskThreads {
       return ((SBlock) argArray[0]).getMethod();
     }
 
-    public final boolean stopOnJoin() {
-      return stopOnJoin;
-    }
-
-    @Override
-    public long getId() {
-      return 0;
-    }
-
-    @Override
-    public void setStepToJoin(final boolean val) { stopOnJoin = val; }
+    public boolean stopOnJoin() { return false; }
 
     @Override
     protected final Object compute() {
@@ -87,6 +76,7 @@ public final class TaskThreads {
     private static final long serialVersionUID = -2763766745049695112L;
 
     private final long id;
+    protected boolean stopOnJoin;
 
     public TracedForkJoinTask(final Object[] argArray, final boolean stopOnRoot) {
       super(argArray, stopOnRoot);
@@ -97,6 +87,14 @@ public final class TaskThreads {
         this.id = 0; // main actor
       }
     }
+
+    @Override
+    public final boolean stopOnJoin() {
+      return stopOnJoin;
+    }
+
+    @Override
+    public void setStepToJoin(final boolean val) { stopOnJoin = val; }
 
     @Override
     public long getId() {
@@ -132,6 +130,7 @@ public final class TaskThreads {
     private static final long serialVersionUID = -7527703048413603761L;
 
     private final long id;
+    protected boolean stopOnJoin;
 
     public TracedThreadTask(final Object[] argArray, final boolean stopOnRoot) {
       super(argArray, stopOnRoot);
@@ -142,6 +141,14 @@ public final class TaskThreads {
         this.id = 0; // main actor
       }
     }
+
+    @Override
+    public final boolean stopOnJoin() {
+      return stopOnJoin;
+    }
+
+    @Override
+    public void setStepToJoin(final boolean val) { stopOnJoin = val; }
 
     @Override
     public long getId() {
