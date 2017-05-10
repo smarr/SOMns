@@ -17,6 +17,7 @@ import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
+import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.EventualMessage.UntracedMessage;
 import som.interpreter.actors.SPromise.SReplayPromise;
 import som.vm.VmSettings;

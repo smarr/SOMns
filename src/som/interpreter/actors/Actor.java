@@ -379,7 +379,7 @@ public class Actor implements Activity {
 
         synchronized (statsLock) {
           numCreatedActors    += createdActors;
-          numCreatedMessages  += createdMessages;
+          numCreatedMessages  += createdMessages - skippedMessages;
           numCreatedPromises  += createdPromises;
           numResolvedPromises += resolvedPromises;
           numRuinedPromises   += erroredPromises;

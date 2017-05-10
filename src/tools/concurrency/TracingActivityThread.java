@@ -21,6 +21,8 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread
   protected long nextMessageId;
   protected long nextPromiseId;
 
+  public long skippedMessages = 0;
+
   // Used for tracing, accessed by the ExecAllMessages classes
   public long createdMessages;
   public long resolvedPromises;

@@ -344,6 +344,7 @@ public class TraceBuffer {
       final long execTS) {
 
     if (em instanceof UntracedMessage) {
+      ((TracingActivityThread) Thread.currentThread()).skippedMessages++;
       return;
     }
 

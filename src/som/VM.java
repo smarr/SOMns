@@ -246,7 +246,7 @@ public final class VM {
     }
 
     if (VmSettings.ENABLE_ASSERTIONS && (lastExitCode == 0 || errorCode == 0)) {
-      Assertion.finalizeAssertions();;
+      Assertion.finalizeAssertions();
     }
 
     shutdownPools();
