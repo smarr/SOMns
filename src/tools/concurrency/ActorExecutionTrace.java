@@ -276,10 +276,9 @@ public class ActorExecutionTrace {
         name.getSymbolId(), section, t.getActivity());
   }
 
-  private static SourceSection getPrimitiveCaller(final SourceSection section) {
+  public static SourceSection getPrimitiveCaller(final SourceSection section) {
     SourceSection s;
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && section.getSource().isInternal()) {
-      assert false;
       s = PrimitiveCallOrigin.getCaller();
     } else {
       s = section;
