@@ -21,6 +21,7 @@ import tools.debugger.WebDebugger;
 
 public class TracingActors {
   public static class TracingActor extends Actor {
+    // TODO: fix this code so that actorId can be final again... (adapt constructor of ReplayActor)
     protected long actorId;
     private int traceBufferId;
     private int nextMessageId;

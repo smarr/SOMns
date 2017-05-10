@@ -264,6 +264,7 @@ public class SPromise extends SObjectWithClass {
     return triggerPromiseResolutionBreakpoint;
   }
 
+  // TODO: can we get rid of this?
   public boolean isExplicitPromise() {
     return explicitPromise;
   }

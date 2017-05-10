@@ -61,6 +61,7 @@ import tools.debugger.PrimitiveCallOrigin;
  * debugging the cost of synchronization is likely acceptable, and will simply
  * done on the buffer for all access.
  */
+// TODO: needs to be renamed and cleaned up.
 public class ActorExecutionTrace {
   private static final int BUFFER_POOL_SIZE = VmSettings.NUM_THREADS * 4;
   static final int BUFFER_SIZE = 4096 * 1024;

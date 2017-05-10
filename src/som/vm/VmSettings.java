@@ -6,6 +6,8 @@ import java.util.List;
 public class VmSettings {
   public static final int NUM_THREADS;
 
+
+  // TODO: revise naming of flags
   public static final boolean FAIL_ON_MISSING_OPTIMIZATIONS;
   public static final boolean DEBUG_MODE;
   public static final boolean ACTOR_TRACING;
