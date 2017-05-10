@@ -157,16 +157,6 @@ public final class TraceParser {
             assert b.position() == start + Events.PromiseCreation.size;
             break;
           case TraceData.PROMISE_RESOLUTION:
-            promise = b.getLong(); // promise id
-            cause = b.getLong(); // resolving msg
-            if (!resolvedPromises.containsKey(cause)) {
-              resolvedPromises.put(cause, new ArrayList<>());
-            }
-
-            resolvedPromises.get(cause).add(promise);
-            parseParameter(); // param
-            assert b.position() <= start + Events.PromiseResolution.size;
-            break;
           case TraceData.PROMISE_ERROR:
             promise = b.getLong(); // promise id
             cause = b.getLong(); // resolving msg
@@ -176,7 +166,7 @@ public final class TraceParser {
 
             resolvedPromises.get(cause).add(promise);
             parseParameter(); // param
-            assert b.position() <= start + Events.PromiseError.size;
+            assert b.position() <= start + Events.PromiseResolution.size;
             break;
           case TraceData.IMPL_THREAD:
             b.compact();
