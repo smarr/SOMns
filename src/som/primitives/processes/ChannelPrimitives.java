@@ -296,7 +296,7 @@ public abstract class ChannelPrimitives {
 
       if (VmSettings.ACTOR_TRACING) {
         ActorExecutionTrace.entityCreation(Events.ChannelCreation,
-            result.getId(), sourceSection);
+            result.getId(), ActorExecutionTrace.getPrimitiveCaller(sourceSection));
       }
       return result;
     }
