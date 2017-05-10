@@ -179,6 +179,10 @@
           <arg value="2" />
       </exec>
     </target>
+
+    <target name="actor-assertion-tests" depends="compile">
+      <exec executable="tests/actor-assertions/test.sh" failonerror="true"></exec>
+    </target>
     
     <target name="core-tests" depends="unit-tests,som-tests,dynamic-metrics-tests">
     </target>
