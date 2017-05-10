@@ -106,10 +106,6 @@ public class ActorExecutionTrace {
 
     byte eventid = TraceData.MESSAGE_BIT;
 
-    if (VmSettings.MESSAGE_TIMESTAMPS) {
-      eventid |= TraceData.TIMESTAMP_BIT;
-    }
-
     if (VmSettings.MESSAGE_PARAMETERS) {
       eventid |= TraceData.PARAMETER_BIT;
     }
