@@ -35,6 +35,7 @@ public class TracingActors {
     private SSymbol actorType = null;
 
     private List<Assertion> activeAssertions;
+    private List<Assertion> nextAssertions;
     private HashMap<SSymbol, SBlock> sendHooks;
     private HashMap<SSymbol, SBlock> receiveHooks;
 
@@ -95,6 +96,7 @@ public class TracingActors {
       synchronized (this) {
         if (activeAssertions == null) {
           activeAssertions = new ArrayList<>();
+          nextAssertions = new ArrayList<>();
         }
 
         activeAssertions.add(a);
@@ -123,14 +125,20 @@ public class TracingActors {
           return;
         }
 
+        List<Assertion> helper = activeAssertions;
+        activeAssertions = nextAssertions;
+        nextAssertions = helper;
+
         // safe way for iterating and removing elements, for each caused concurrent modification exception for no reason.
-        Iterator<Assertion> iter = activeAssertions.iterator();
+        Iterator<Assertion> iter = helper.iterator();
         while (iter.hasNext()) {
           Assertion a = iter.next();
           if (!a.evaluate(this, msg, vm.getActorPool())) {
             iter.remove();
           }
         }
+        activeAssertions.addAll(helper);
+        helper.clear();
       }
     }
 
