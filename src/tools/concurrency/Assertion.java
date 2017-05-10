@@ -46,12 +46,20 @@ public class Assertion {
    * @return returns a boolean indicating whether the Assertion should be checked again next time.
    */
   public boolean evaluate(final TracingActor actor, final EventualMessage msg, final ForkJoinPool actorPool) {
-    boolean result = (boolean) statement.getMethod().invoke(new Object[] {statement});
-    if (!result) {
-      fail(actorPool);
+
+    Object o = statement.getMethod().invoke(new Object[] {statement});
+
+    if (o instanceof SPromise) {
+      promise((SPromise) o);
     } else {
-      success(actorPool);
+      boolean result = (boolean) o;
+      if (!result) {
+        fail(actorPool);
+      } else {
+        success(actorPool);
+      }
     }
+
     return false;
   }
 
@@ -67,6 +75,10 @@ public class Assertion {
         result.getPromise().getOwner(), actorPool, false);
   }
 
+  protected void promise(final SPromise result) {
+    result.addChainedPromise(this.result.getPromise());
+  }
+
   public static class RemoteAssertion extends Assertion {
     final Object target;
     public RemoteAssertion(final SBlock statement, final SResolver result, final Object target) {
@@ -76,12 +88,19 @@ public class Assertion {
 
     @Override
     public boolean evaluate(final TracingActor actor, final EventualMessage msg, final ForkJoinPool actorPool) {
-      boolean result = (boolean) statement.getMethod().invoke(new Object[] {statement, createWrapper(target)});
-      if (!result) {
-        fail(actorPool);
+      Object o = statement.getMethod().invoke(new Object[] {statement, createWrapper(target)});
+
+      if (o instanceof SPromise) {
+        promise((SPromise) o);
       } else {
-        success(actorPool);
+        boolean result = (boolean) o;
+        if (!result) {
+          fail(actorPool);
+        } else {
+          success(actorPool);
+        }
       }
+
       return false;
     }
 
