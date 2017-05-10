@@ -214,11 +214,12 @@ public class ActorExecutionTrace {
 
     ChannelCreation(TraceData.CHANNEL_CREATION, 9),
 
-    ChannelSend(TraceData.CHANNEL_MESSAGE_SEND,   9),
+    ChannelSend(TraceData.CHANNEL_MESSAGE_SEND, 17),
+    ActorSend(TraceData.ACTOR_MSG_SEND,         17),
+
     ChannelReceive(TraceData.CHANNEL_MESSAGE_RCV, 9),
     TaskJoin(TraceData.TASK_JOIN,             9),
     ThreadJoin(TraceData.THREAD_JOIN,         9),
-    ActorSend(TraceData.ACTOR_MSG_SEND,       9),
 
 
     // TODO: revise!!!
