@@ -191,8 +191,7 @@ public class Actor implements Activity {
 
     protected EventualMessage firstMessage;
     protected ObjectBuffer<EventualMessage> mailboxExtension;
-    protected long baseMessageId;
-    protected int currentMailboxNo;
+
     protected int size = 0;
 
     protected ExecAllMessages(final Actor actor, final VM vm) {
@@ -225,11 +224,6 @@ public class Actor implements Activity {
     }
 
     protected void processCurrentMessages(final ActorProcessingThread currentThread, final WebDebugger dbg) {
-      if (VmSettings.ACTOR_TRACING) {
-        baseMessageId = currentThread.generateMessageBaseId(size);
-        currentThread.currentMessageId = baseMessageId;
-      }
-
       assert size > 0;
 
       try {
@@ -261,7 +255,6 @@ public class Actor implements Activity {
         msg.execute();
       } finally {
         if (VmSettings.ACTOR_TRACING) {
-          currentThread.currentMessageId += 1;
         }
       }
     }
@@ -271,9 +264,6 @@ public class Actor implements Activity {
         assert actor.isExecuting;
         firstMessage = actor.firstMessage;
         mailboxExtension = actor.mailboxExtension;
-        if (actor instanceof TracingActor) {
-          currentMailboxNo = ((TracingActor) actor).getAndIncrementMailboxNumber();
-        }
 
         if (firstMessage == null) {
           assert mailboxExtension == null;
@@ -317,9 +307,6 @@ public class Actor implements Activity {
 
     protected Actor currentlyExecutingActor;
 
-    // Used for tracing, accessed by the ExecAllMessages classes
-    public long currentMessageId;
-
     protected ActorProcessingThread(final ForkJoinPool pool) {
       super(pool);
     }
@@ -327,18 +314,6 @@ public class Actor implements Activity {
     @Override
     public Activity getActivity() {
       return currentMessage.getTarget();
-    }
-
-    public long generateMessageBaseId(final int numMessages) {
-      long result = nextMessageId;
-      nextMessageId += numMessages;
-      return result;
-    }
-
-
-    @Override
-    public long getCurrentMessageId() {
-      return currentMessageId;
     }
 
     @Override

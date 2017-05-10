@@ -108,8 +108,6 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     return traceBuffer;
   }
 
-  public abstract long getCurrentMessageId();
-
   @Override
   protected void onStart() {
     super.onStart();

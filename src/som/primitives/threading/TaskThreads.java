@@ -178,11 +178,6 @@ public final class TaskThreads {
     }
 
     @Override
-    public long getCurrentMessageId() {
-      return 0;
-    }
-
-    @Override
     public Activity getActivity() {
       return task;
     }

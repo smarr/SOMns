@@ -360,7 +360,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
         "ObjectSystem.executeApplication").createSection(1);
     SSymbol start = Symbols.symbolFor("start");
 
-    DirectMessage msg = new DirectMessage(0, mainActor, start,
+    DirectMessage msg = new DirectMessage(mainActor, start,
         new Object[] {platform}, mainActor,
         null, EventualSendNode.createOnReceiveCallTargetForVMMain(
             start, 1, source, mainThreadCompleted, compiler.getLanguage()),
