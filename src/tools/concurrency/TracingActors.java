@@ -22,7 +22,7 @@ import tools.debugger.WebDebugger;
 public class TracingActors {
   public static class TracingActor extends Actor {
     protected long actorId;
-    protected int mailboxNumber;
+
     /** Flag that indicates if a step-to-next-turn action has been made in the previous message. */
     protected boolean stepToNextTurn;
 
@@ -34,10 +34,6 @@ public class TracingActors {
       } else {
         this.actorId = 0; // main actor
       }
-    }
-
-    public int getAndIncrementMailboxNumber() {
-      return mailboxNumber++;
     }
 
     @Override
@@ -270,18 +266,13 @@ public class TracingActors {
         final ReplayActor a = (ReplayActor) actor;
         Queue<EventualMessage> todo = determineNextMessages(a.leftovers);
 
-        baseMessageId = currentThread.generateMessageBaseId(todo.size());
-        currentThread.currentMessageId = baseMessageId;
-
         for (EventualMessage msg : todo) {
           currentThread.currentMessage = msg;
           handleBreakpointsAndStepping(firstMessage, dbg, a);
           msg.execute();
-          currentThread.currentMessageId += 1;
         }
 
         currentThread.createdMessages += todo.size();
-        ActorExecutionTrace.mailboxExecutedReplay(todo, baseMessageId, currentMailboxNo, actor);
       }
     }
   }

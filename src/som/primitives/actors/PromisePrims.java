@@ -209,8 +209,9 @@ public final class PromisePrims {
           promiseResolutionBreakpoint.executeShouldHalt(), false, false);
       SResolver resolver = SPromise.createResolver(promise);
 
-      PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
-          block, resolver, blockCallTarget, false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
+      PromiseCallbackMessage msg = new PromiseCallbackMessage(rcvr.getOwner(),
+          block, resolver, blockCallTarget, false,
+          promiseResolverBreakpoint.executeShouldHalt(), rcvr);
       registerNode.register(rcvr, msg, current);
 
       return promise;
@@ -275,8 +276,8 @@ public final class PromisePrims {
           promiseResolutionBreakpoint.executeShouldHalt(), false, false);
       SResolver resolver = SPromise.createResolver(promise);
 
-      PromiseCallbackMessage onResolved = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), resolved, resolver, resolverTarget, false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
-      PromiseCallbackMessage onError    = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), error,    resolver, errorTarget,    false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
+      PromiseCallbackMessage onResolved = new PromiseCallbackMessage(rcvr.getOwner(), resolved, resolver, resolverTarget, false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
+      PromiseCallbackMessage onError    = new PromiseCallbackMessage(rcvr.getOwner(), error,    resolver, errorTarget,    false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
 
       synchronized (rcvr) {
         registerWhenResolved.register(rcvr, onResolved, current);

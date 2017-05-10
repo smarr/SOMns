@@ -76,11 +76,6 @@ public abstract class ChannelPrimitives {
     public Activity getActivity() {
       return current;
     }
-
-    @Override
-    public long getCurrentMessageId() {
-      return 0;
-    }
   }
 
   public static class Process implements Activity, Runnable {
