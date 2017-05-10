@@ -356,9 +356,17 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     Object platform = platformModule.instantiateObject(platformClass, vmMirror);
     ObjectTransitionSafepoint.INSTANCE.unregister();
 
-    SourceSection source = SomLanguage.getSyntheticSource("",
-        "ObjectSystem.executeApplication").createSection(1);
     SSymbol start = Symbols.symbolFor("start");
+    SourceSection source;
+
+    try {
+      // might fail if module doesn't have a #start method
+      SInvokable disp = (SInvokable) platformModule.getInstanceDispatchables().get(start);
+      source = disp.getSourceSection();
+    } catch (Exception e) {
+      source = SomLanguage.getSyntheticSource("",
+          "ObjectSystem.executeApplication").createSection(1);
+    }
 
     DirectMessage msg = new DirectMessage(mainActor, start,
         new Object[] {platform}, mainActor,
