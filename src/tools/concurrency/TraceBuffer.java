@@ -321,10 +321,6 @@ public class TraceBuffer {
 
     if (moreCurrent != null) {
       Iterator<Long> it = null;
-      if (VmSettings.MESSAGE_TIMESTAMPS) {
-        assert moreSendTS != null && moreCurrent.size() == moreSendTS.size();
-        it = moreSendTS.iterator();
-      }
       for (EventualMessage em : moreCurrent) {
         if (ensureSufficientSpace(ActorExecutionTrace.MESSAGE_SIZE +
             em.getArgs().length * ActorExecutionTrace.PARAM_SIZE)) {
@@ -352,9 +348,6 @@ public class TraceBuffer {
     storage.putLong(em.getCausalMessageId());
     storage.putShort(em.getSelector().getSymbolId());
 
-    if (VmSettings.MESSAGE_TIMESTAMPS) {
-      storage.putLong(execTS);
-      storage.putLong(sendTS);
     }
 
     if (VmSettings.MESSAGE_PARAMETERS) {

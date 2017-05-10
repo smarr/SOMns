@@ -162,9 +162,6 @@ public class Actor implements Activity {
 
     if (firstMessage == null) {
       firstMessage = msg;
-      if (VmSettings.MESSAGE_TIMESTAMPS) {
-        firstMessageTimeStamp = System.currentTimeMillis();
-      }
     } else {
       appendToMailbox(msg);
     }
@@ -181,9 +178,6 @@ public class Actor implements Activity {
       mailboxExtension = new ObjectBuffer<>(MAILBOX_EXTENSION_SIZE);
       mailboxExtensionTimeStamps = new ObjectBuffer<>(MAILBOX_EXTENSION_SIZE);
     }
-    if (VmSettings.MESSAGE_TIMESTAMPS) {
-      mailboxExtensionTimeStamps.append(System.currentTimeMillis());
-    }
     mailboxExtension.append(msg);
   }
 
@@ -198,9 +192,6 @@ public class Actor implements Activity {
     protected EventualMessage firstMessage;
     protected ObjectBuffer<EventualMessage> mailboxExtension;
     protected long baseMessageId;
-    protected long firstMessageTimeStamp;
-    protected ObjectBuffer<Long> mailboxExtensionTimeStamps;
-    protected long[] executionTimeStamps;
     protected int currentMailboxNo;
     protected int size = 0;
 
@@ -266,10 +257,6 @@ public class Actor implements Activity {
         TracingActor.handleBreakpointsAndStepping(msg, dbg, actor);
       }
 
-      if (i >= 0 && VmSettings.MESSAGE_TIMESTAMPS) {
-        executionTimeStamps[i] = System.currentTimeMillis();
-      }
-
       try {
         msg.execute();
       } finally {
@@ -296,12 +283,6 @@ public class Actor implements Activity {
           return false;
         } else {
           size = 1 + ((mailboxExtension == null) ? 0 : mailboxExtension.size());
-        }
-
-        if (VmSettings.MESSAGE_TIMESTAMPS) {
-          executionTimeStamps = new long[size];
-          firstMessageTimeStamp = actor.firstMessageTimeStamp;
-          mailboxExtensionTimeStamps = actor.mailboxExtensionTimeStamps;
         }
 
         actor.firstMessage = null;
