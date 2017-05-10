@@ -125,7 +125,14 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
       (vmMirror AssertionsEnabled: self) ifFalse: [^ nil].
 
       pp := createUntracedPromisePair.
-      vmMirror assert: aBlock on: anotherActor res: (pp resolver).
+
+      (isPromise: anotherActor) ifTrue: [
+        anotherActor whenResolved: [ :r |
+          vmMirror assert: aBlock on: r res: (pp resolver).
+        ]
+      ] ifFalse: [
+        vmMirror assert: aBlock on: anotherActor res: (pp resolver).
+      ].
 
       pp promise whenResolved: [ :r | r ifFalse: anotherBlock]
     )
