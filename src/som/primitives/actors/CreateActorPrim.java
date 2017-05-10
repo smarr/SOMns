@@ -41,8 +41,8 @@ public abstract class CreateActorPrim extends BinaryComplexOperation {
     SFarReference ref = new SFarReference(actor, argument);
 
     if (VmSettings.ACTOR_TRACING) {
-      assert receiver instanceof SClass;
-      final SClass actorClass = (SClass) receiver;
+      assert argument instanceof SClass;
+      final SClass actorClass = (SClass) argument;
       ActorExecutionTrace.activityCreation(Events.ActorCreation, actor.getId(),
           actorClass.getName(), sourceSection);
     }
