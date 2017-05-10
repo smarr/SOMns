@@ -20,6 +20,7 @@ import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
 import tools.TraceData;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.ActorExecutionTrace.Events;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
@@ -157,7 +158,13 @@ public class Actor implements Activity {
    * This is the main method to be used in this API.
    */
   @TruffleBoundary
-  public synchronized void send(final EventualMessage msg, final ForkJoinPool actorPool) {
+  public synchronized void send(final EventualMessage msg,
+      final ForkJoinPool actorPool) {
+    if (VmSettings.ACTOR_TRACING) {
+      ActorExecutionTrace.sendOperation(
+          Events.ActorSend, msg.getMessageId(), getId());
+    }
+
     assert msg.getTarget() == this;
 
     if (firstMessage == null) {
@@ -239,7 +246,6 @@ public class Actor implements Activity {
       } finally {
         if (VmSettings.ACTOR_TRACING) {
           currentThread.createdMessages += size;
-          ActorExecutionTrace.mailboxExecuted(firstMessage, mailboxExtension, baseMessageId, currentMailboxNo, firstMessageTimeStamp, mailboxExtensionTimeStamps, executionTimeStamps, actor);
         }
       }
     }
@@ -252,9 +258,14 @@ public class Actor implements Activity {
       }
 
       try {
+        if (VmSettings.ACTOR_TRACING) {
+          ActorExecutionTrace.scopeStart(
+              Events.TurnStart, msg.getMessageId(), msg.getTargetSourceSection());
+        }
         msg.execute();
       } finally {
         if (VmSettings.ACTOR_TRACING) {
+          ActorExecutionTrace.scopeEnd(Events.TurnEnd);
         }
       }
     }

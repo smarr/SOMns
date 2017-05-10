@@ -5,19 +5,21 @@ import tools.TraceData;
 public enum EntityType {
   PROCESS("process", 1, TraceData.PROCESS_CREATION, TraceData.PROCESS_COMPLETION),
   CHANNEL("channel", 2, TraceData.CHANNEL_CREATION, 4),
-  MESSAGE("message", 3, 5, 6),
+  CH_MSG("ch-msg",   3, TraceData.CHANNEL_MESSAGE_SEND, TraceData.CHANNEL_MESSAGE_RCV),
   ACTOR("actor",     4, TraceData.ACTOR_CREATION,   8),
   PROMISE("promise", 5, TraceData.PROMISE_CREATION, 10),
-  TURN("turn",       6, 11, 12),
-  TASK("task",       7, TraceData.TASK_SPAWN, TraceData.TASK_JOIN),
-  THREAD("thread",   8, TraceData.THREAD_SPAWN, TraceData.THREAD_JOIN),
-  LOCK("lock",       9, 17, 18),
-  TRANSACTION("transaction", 10, 19, 20),
+  ACT_MSG("act-msg", 6, TraceData.ACTOR_MSG_SEND, 12),
+  TURN("turn",       7, TraceData.TURN_START, TraceData.TURN_END),
+  TASK("task",       8, TraceData.TASK_SPAWN, TraceData.TASK_JOIN),
+  THREAD("thread",   9, TraceData.THREAD_SPAWN, TraceData.THREAD_JOIN),
+  LOCK("lock",       10, 19, 20),
+  TRANSACTION("transaction", 11, TraceData.TRANSACTION_START, TraceData.TRANSACTION_END),
+  MONITOR("monitor", 12, TraceData.MONITOR_START, TraceData.MONITOR_END),
 
   /** Is used for implementation-level threads, for instance in actor or
       fork/join pools. They are relevant to understand scheduling order etc,
       but they are not part of the language semantics */
-  IMPL_THREAD("implThread",  11, TraceData.IMPL_THREAD, 22);
+  IMPL_THREAD("implThread",  13, TraceData.IMPL_THREAD, TraceData.IMPL_THREAD_CURRENT_ACTIVITY);
 
   // REM: if we wrap here over 32, make sure TraceData constants are updated
 

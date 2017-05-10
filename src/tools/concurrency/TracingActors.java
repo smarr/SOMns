@@ -22,6 +22,8 @@ import tools.debugger.WebDebugger;
 public class TracingActors {
   public static class TracingActor extends Actor {
     protected long actorId;
+    private int traceBufferId;
+    private int nextMessageId;
 
     /** Flag that indicates if a step-to-next-turn action has been made in the previous message. */
     protected boolean stepToNextTurn;
@@ -37,7 +39,21 @@ public class TracingActors {
     }
 
     @Override
-    public long getId() { return actorId; }
+    public int getNextTraceBufferId() {
+      int result = traceBufferId;
+      traceBufferId += 1;
+      return result;
+    }
+      
+    @Override
+    public int getNextMessageId() {
+      int result = nextMessageId;
+      nextMessageId += 1;
+      return result;
+    }
+      
+    @Override
+    public final long getId() { return actorId; }
 
     public boolean isStepToNextTurn() {
       return stepToNextTurn;

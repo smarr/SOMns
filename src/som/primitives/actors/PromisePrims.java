@@ -84,7 +84,8 @@ public final class PromisePrims {
       SPromise promise   = SPromise.createPromise(
           EventualMessage.getActorCurrentMessageIsExecutionOn(),
           promiseResolutionBreakpoint.executeShouldHalt(),
-          promiseResolverBreakpoint.executeShouldHalt(), true);
+          promiseResolverBreakpoint.executeShouldHalt(), true,
+          sourceSection);
       SResolver resolver = SPromise.createResolver(promise);
       return (SImmutableObject) factory.call(new Object[] {SPromise.pairClass, promise, resolver});
     }
@@ -149,10 +150,11 @@ public final class PromisePrims {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
       SPromise  promise  = SPromise.createPromise(current,
-          promiseResolutionBreakpoint.executeShouldHalt(), false, false);
+          promiseResolutionBreakpoint.executeShouldHalt(),
+          false, false, sourceSection);
       SResolver resolver = SPromise.createResolver(promise);
 
-      PromiseCallbackMessage pcm = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
+      PromiseCallbackMessage pcm = new PromiseCallbackMessage(rcvr.getOwner(),
           block, resolver, blockCallTarget, false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
       registerNode.register(rcvr, pcm, current);
 
@@ -206,7 +208,8 @@ public final class PromisePrims {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
       SPromise  promise  = SPromise.createPromise(current,
-          promiseResolutionBreakpoint.executeShouldHalt(), false, false);
+          promiseResolutionBreakpoint.executeShouldHalt(),
+          false, false, sourceSection);
       SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage msg = new PromiseCallbackMessage(rcvr.getOwner(),
@@ -273,7 +276,8 @@ public final class PromisePrims {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
       SPromise  promise  = SPromise.createPromise(current,
-          promiseResolutionBreakpoint.executeShouldHalt(), false, false);
+          promiseResolutionBreakpoint.executeShouldHalt(), false,
+          false, sourceSection);
       SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage onResolved = new PromiseCallbackMessage(rcvr.getOwner(), resolved, resolver, resolverTarget, false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
