@@ -164,7 +164,16 @@ public class Actor implements Activity {
       ActorExecutionTrace.sendOperation(
           Events.ActorSend, msg.getMessageId(), getId());
     }
+    doSend(msg, actorPool);
+  }
 
+  public synchronized void sendInitialStartMessage(final EventualMessage msg,
+      final ForkJoinPool pool) {
+    doSend(msg, pool);
+  }
+
+  private void doSend(final EventualMessage msg,
+      final ForkJoinPool actorPool) {
     assert msg.getTarget() == this;
 
     if (firstMessage == null) {

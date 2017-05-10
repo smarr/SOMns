@@ -365,7 +365,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
         null, EventualSendNode.createOnReceiveCallTargetForVMMain(
             start, 1, source, mainThreadCompleted, compiler.getLanguage()),
         false, false);
-    mainActor.send(msg, vm.getActorPool());
+    mainActor.sendInitialStartMessage(msg, vm.getActorPool());
 
     try {
       Object result = mainThreadCompleted.get();
