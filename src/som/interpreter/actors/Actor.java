@@ -251,7 +251,8 @@ public class Actor implements Activity {
     }
 
     private void execute(final EventualMessage msg,
-        final ActorProcessingThread currentThread, final WebDebugger dbg, final int i) {
+        final ActorProcessingThread currentThread, final WebDebugger dbg,
+        final int i) {
       currentThread.currentMessage = msg;
       if (VmSettings.ACTOR_TRACING) {
         TracingActor.handleBreakpointsAndStepping(msg, dbg, actor);
