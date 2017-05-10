@@ -10,18 +10,35 @@ public class TraceData {
    * EventIds for custom events must not exceed 7 bits (unsigned).
    * The following values are derived from {@link EntityType}.
    */
-  public static final byte PROCESS_CREATION   = 1;
-  public static final byte PROCESS_COMPLETION = 2;
-  public static final byte CHANNEL_CREATION   = 3;
-  public static final byte ACTOR_CREATION     = 7;
+  public static final byte PROCESS_CREATION     = 1;
+  public static final byte PROCESS_COMPLETION   = 2;
+  public static final byte CHANNEL_CREATION     = 3;
 
+  public static final byte CHANNEL_MESSAGE_SEND = 5;
+  public static final byte CHANNEL_MESSAGE_RCV  = 6;
+
+  public static final byte ACTOR_CREATION     = 7;
   public static final byte PROMISE_CREATION   = 9;
 
-  public static final byte TASK_SPAWN         = 13;
-  public static final byte TASK_JOIN          = 14;
-  public static final byte THREAD_SPAWN       = 15;
-  public static final byte THREAD_JOIN        = 16;
-  public static final byte IMPL_THREAD        = 21;
+  public static final byte ACTOR_MSG_SEND     = 11;
+
+  public static final byte TURN_START         = 13;
+  public static final byte TURN_END           = 14;
+
+  public static final byte TASK_SPAWN         = 15;
+  public static final byte TASK_JOIN          = 16;
+  public static final byte THREAD_SPAWN       = 17;
+  public static final byte THREAD_JOIN        = 18;
+
+  public static final byte TRANSACTION_START  = 21;
+  public static final byte TRANSACTION_END    = 22;
+  public static final byte MONITOR_START      = 23;
+  public static final byte MONITOR_END        = 24;
+
+  public static final byte IMPL_THREAD        = 25;
+
+  /** Marks the trace entry to encode currently executing activity. */
+  public static final byte IMPL_THREAD_CURRENT_ACTIVITY = 26;
 
   // Note, the following constants are manually defined, based on the assumption
   // that EntityType creation/completion is not > 32
@@ -30,20 +47,6 @@ public class TraceData {
   public static final byte PROMISE_CHAINED    = 34;
   public static final byte PROMISE_ERROR      = 35;
 
-  public static final byte MAILBOX            = 40;
-  public static final byte MAILBOX_CONTD      = 41;
-
-  public static final byte ACTIVITY_ORIGIN    = 50;
-
-  public static final byte CHANNEL_MESSAGE    = 60;
-
-  /**
-   * Messages use a different EventId system, the most significant bit is 1 to clearly distinguish it from custom Events.
-   * The other bits are used to encode what information is contained in that event.
-   */
-  public static final byte MESSAGE_BIT  = (byte) 0x80;
-  public static final byte PROMISE_BIT   = 0x40;
-  public static final byte PARAMETER_BIT = 0x10;
 
   public static final long ACTIVITY_ID_BITS = 30;
   public static final long THREAD_ID_BITS   = 10;

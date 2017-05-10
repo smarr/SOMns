@@ -46,6 +46,10 @@ public class SChannel extends SAbstractObject {
     return ChannelPrimitives.Channel;
   }
 
+  public long getId() {
+    throw new UnsupportedOperationException("Should never be called.");
+  }
+
   @Override
   public boolean isValue() {
     return false;

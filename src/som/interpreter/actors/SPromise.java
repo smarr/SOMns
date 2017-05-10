@@ -5,6 +5,7 @@ import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.source.SourceSection;
 import com.sun.istack.internal.NotNull;
 
 import som.interpreter.actors.EventualMessage.PromiseMessage;
@@ -13,6 +14,7 @@ import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.ActorExecutionTrace.Events;
 import tools.concurrency.TracingActivityThread;
 
 
@@ -24,13 +26,18 @@ public class SPromise extends SObjectWithClass {
   @CompilationFinal private static SClass promiseClass;
 
   public static SPromise createPromise(final Actor owner,
-      final boolean triggerPromiseResolutionBreakpoint, final boolean triggerExplicitPromiseResolverBreakpoint, final boolean explicitPromise) {
+      final boolean triggerPromiseResolutionBreakpoint,
+      final boolean triggerExplicitPromiseResolverBreakpoint,
+      final boolean explicitPromise, final SourceSection section) {
     if (VmSettings.REPLAY) {
-      return new SReplayPromise(owner, triggerPromiseResolutionBreakpoint, triggerExplicitPromiseResolverBreakpoint, explicitPromise);
+      return new SReplayPromise(owner, triggerPromiseResolutionBreakpoint,
+          triggerExplicitPromiseResolverBreakpoint, explicitPromise, section);
     } else if (VmSettings.PROMISE_CREATION) {
-      return new STracingPromise(owner, triggerPromiseResolutionBreakpoint, triggerExplicitPromiseResolverBreakpoint, explicitPromise);
+      return new STracingPromise(owner, triggerPromiseResolutionBreakpoint,
+          triggerExplicitPromiseResolverBreakpoint, explicitPromise, section);
     } else {
-      return new SPromise(owner, triggerPromiseResolutionBreakpoint, triggerExplicitPromiseResolverBreakpoint, explicitPromise);
+      return new SPromise(owner, triggerPromiseResolutionBreakpoint,
+          triggerExplicitPromiseResolverBreakpoint, explicitPromise);
     }
   }
 
@@ -128,7 +135,9 @@ public class SPromise extends SObjectWithClass {
   }
 
   public final synchronized SPromise getChainedPromiseFor(final Actor target) {
-    SPromise remote = SPromise.createPromise(target, triggerPromiseResolutionBreakpoint, triggerExplicitPromiseResolverBreakpoint, explicitPromise);
+    SPromise remote = SPromise.createPromise(target,
+        triggerPromiseResolutionBreakpoint,
+        triggerExplicitPromiseResolverBreakpoint, explicitPromise, null);
     if (isCompleted()) {
       remote.value = value;
       remote.resolutionState = resolutionState;
@@ -263,12 +272,14 @@ public class SPromise extends SObjectWithClass {
     protected long promiseId;
 
     protected STracingPromise(final Actor owner,
-        final boolean triggerPromiseResolutionBreakpoint, final boolean triggerExplicitPromiseResolverBreakpoint,
-        final boolean explicitPromise) {
-      super(owner, triggerPromiseResolutionBreakpoint, triggerExplicitPromiseResolverBreakpoint, explicitPromise);
+        final boolean triggerPromiseResolutionBreakpoint,
+        final boolean triggerExplicitPromiseResolverBreakpoint,
+        final boolean explicitPromise, final SourceSection section) {
+      super(owner, triggerPromiseResolutionBreakpoint,
+          triggerExplicitPromiseResolverBreakpoint, explicitPromise);
       TracingActivityThread t = (TracingActivityThread) Thread.currentThread();
       promiseId = t.generatePromiseId();
-      ActorExecutionTrace.promiseCreation(promiseId);
+      ActorExecutionTrace.entityCreation(Events.ProcessCreation, promiseId, section);
     }
 
     @Override
@@ -281,9 +292,9 @@ public class SPromise extends SObjectWithClass {
     protected SReplayPromise(final Actor owner,
         final boolean triggerPromiseResolutionBreakpoint,
         final boolean triggerExplicitPromiseResolverBreakpoint,
-        final boolean explicitPromise) {
+        final boolean explicitPromise, final SourceSection section) {
       super(owner, triggerPromiseResolutionBreakpoint,
-          triggerExplicitPromiseResolverBreakpoint, explicitPromise);
+          triggerExplicitPromiseResolverBreakpoint, explicitPromise, section);
     }
 
     protected long resolvingActor;

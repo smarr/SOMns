@@ -38,6 +38,19 @@ public final class TaskThreads {
     public boolean stopOnJoin() { return false; }
 
     @Override
+    public final int getNextMessageId() {
+      throw new UnsupportedOperationException(
+          "Currently, it is not supported to send actor messages from " +
+          "non-actor activities, because, we have no way to handle promise " +
+          "resolution");
+    }
+
+    @Override
+    public int getNextTraceBufferId() {
+      throw new UnsupportedOperationException("Should never be executed");
+    }
+
+    @Override
     protected final Object compute() {
       ObjectTransitionSafepoint.INSTANCE.register();
       try {
@@ -85,6 +98,8 @@ public final class TaskThreads {
     private final long id;
     protected boolean stopOnJoin;
 
+    private int nextTraceBufferId;
+
     public TracedForkJoinTask(final Object[] argArray, final boolean stopOnRoot) {
       super(argArray, stopOnRoot);
       if (Thread.currentThread() instanceof TracingActivityThread) {
@@ -102,6 +117,13 @@ public final class TaskThreads {
 
     @Override
     public void setStepToJoin(final boolean val) { stopOnJoin = val; }
+
+    @Override
+    public int getNextTraceBufferId() {
+      int result = nextTraceBufferId;
+      nextTraceBufferId += 1;
+      return result;
+    }
 
     @Override
     public long getId() {
@@ -139,6 +161,8 @@ public final class TaskThreads {
     private final long id;
     protected boolean stopOnJoin;
 
+    private int nextTraceBufferId;
+
     public TracedThreadTask(final Object[] argArray, final boolean stopOnRoot) {
       super(argArray, stopOnRoot);
       if (Thread.currentThread() instanceof TracingActivityThread) {
@@ -156,6 +180,13 @@ public final class TaskThreads {
 
     @Override
     public void setStepToJoin(final boolean val) { stopOnJoin = val; }
+
+    @Override
+    public int getNextTraceBufferId() {
+      int result = nextTraceBufferId;
+      nextTraceBufferId += 1;
+      return result;
+    }
 
     @Override
     public long getId() {

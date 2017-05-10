@@ -33,6 +33,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.ActorExecutionTrace.Events;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.ExpressionBreakpoint;
@@ -108,6 +109,14 @@ public abstract class ChannelPrimitives {
       }
     }
 
+    @Override
+    public final int getNextMessageId() {
+      throw new UnsupportedOperationException(
+          "Currently, it is not supported to send actor messages from " +
+          "non-actor activities, because, we have no way to handle promise " +
+          "resolution");
+    }
+
     public SObjectWithClass getProcObject() {
       return obj;
     }
@@ -127,6 +136,7 @@ public abstract class ChannelPrimitives {
 
   public static class TracingProcess extends Process {
     protected final long processId;
+    private int nextTraceBufferId;
 
     private final boolean stopOnRootNode;
     private boolean stopOnJoin;
@@ -138,6 +148,13 @@ public abstract class ChannelPrimitives {
       processId = ((TracingActivityThread) Thread.currentThread()).generateActivityId();
     }
 
+    @Override
+    public int getNextTraceBufferId() {
+      int result = nextTraceBufferId;
+      nextTraceBufferId += 1;
+      return result;
+    }
+      
     @Override
     protected void beforeExec(final SInvokable disp) {
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRootNode) {
@@ -151,9 +168,8 @@ public abstract class ChannelPrimitives {
       try {
         super.run();
       } finally {
-        if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.processCompletion(this);
-        }
+        assert VmSettings.ACTOR_TRACING;
+        ActorExecutionTrace.activityCompletion(Events.ProcessCompletion);
       }
     }
 
@@ -279,7 +295,8 @@ public abstract class ChannelPrimitives {
       SChannel result = SChannel.create();
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.channelCreation(result, sourceSection);
+        ActorExecutionTrace.entityCreation(Events.ChannelCreation,
+            result.getId(), sourceSection);
       }
       return result;
     }
