@@ -262,12 +262,6 @@ public final class TraceParser {
       expectedMessages.get(currentReceiver).add(new MessageRecord(sender, symbolMapping.get(sym), currentMailbox, msgNo));
     }
 
-    // timestamp
-    if ((type & TraceData.TIMESTAMP_BIT) > 0) {
-      b.getLong();
-      b.getLong();
-    }
-
     // params
     if ((type & TraceData.PARAMETER_BIT) > 0) {
       byte numParam = b.get();
