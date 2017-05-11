@@ -80,7 +80,10 @@ public final class PromisePrims {
     public final SImmutableObject createPromisePair(final Object nil,
         @Cached("create()") final DirectCallNode factory) {
 
-      SPromise promise   = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn(), SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), true);
+      SPromise promise   = SPromise.createPromise(
+          EventualMessage.getActorCurrentMessageIsExecutionOn(),
+          promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(),
+          promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), true);
       SResolver resolver = SPromise.createResolver(promise);
       return (SImmutableObject) factory.call(new Object[] {SPromise.pairClass, promise, resolver});
     }
@@ -144,7 +147,8 @@ public final class PromisePrims {
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      SPromise  promise  = SPromise.createPromise(current, SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), false, false);
+      SPromise  promise  = SPromise.createPromise(current,
+          promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false, false);
       SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage pcm = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
@@ -200,7 +204,8 @@ public final class PromisePrims {
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      SPromise  promise  = SPromise.createPromise(current, SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), false, false);
+      SPromise  promise  = SPromise.createPromise(current,
+          promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false, false);
       SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
@@ -265,7 +270,8 @@ public final class PromisePrims {
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      SPromise  promise  = SPromise.createPromise(current, SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), false, false);
+      SPromise  promise  = SPromise.createPromise(current,
+          promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false, false);
       SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage onResolved = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), resolved, resolver, resolverTarget, false, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), rcvr);

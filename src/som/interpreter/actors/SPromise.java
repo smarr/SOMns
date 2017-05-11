@@ -14,10 +14,6 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.TracingActivityThread;
-import tools.debugger.SteppingStrategy;
-import tools.debugger.SteppingStrategy.ReturnFromTurnToPromiseResolution;
-import tools.debugger.SteppingStrategy.ToPromiseResolution;
-import tools.debugger.nodes.AbstractBreakpointNode;
 
 
 public class SPromise extends SObjectWithClass {
@@ -511,25 +507,4 @@ public class SPromise extends SObjectWithClass {
   public boolean isTriggerStopBeforeExecuteCallback() {
     return triggerStopBeforeExecuteCallback;
   }
-
-  /**
-   * Checks if any stepping strategy has been set and updates the corresponding breakpoint flag.
-   * If the strategy ToPromiseResolution is active, the flag promiseResolutionBreakpoint is updated.
-   * If the strategy ReturnFromTurnToPromiseResolution is active, the flag triggerStopBeforeExecuteCallback
-   * of the promise of the causal message is updated.
-   * Returns the flag of the promise resolution breakpoint.
-   */
-  public static boolean hasPromiseResolutionBreakpoint(final AbstractBreakpointNode promiseResolutionBreakpoint) {
-    boolean stepResolution = SteppingStrategy.isEnabled(ToPromiseResolution.class);
-    boolean promiseResolutionBkp = promiseResolutionBreakpoint.executeCheckIsSetAndEnabled() || stepResolution;
-
-    boolean stepReturnFromTurn = SteppingStrategy.isEnabled(ReturnFromTurnToPromiseResolution.class);
-    EventualMessage causalMsg = EventualMessage.getCurrentExecutingMessage();
-    if (causalMsg.getResolver() != null && stepReturnFromTurn) {
-      causalMsg.getResolver().getPromise().setTriggerStopBeforeExecuteCallback(stepReturnFromTurn);
-    }
-
-    return promiseResolutionBkp;
-  }
-
 }

@@ -33,10 +33,6 @@ import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 import tools.concurrency.Tags.EventualMessageSend;
 import tools.concurrency.Tags.ExpressionBreakpoint;
-import tools.debugger.SteppingStrategy;
-import tools.debugger.SteppingStrategy.ReturnFromTurnToPromiseResolution;
-import tools.debugger.SteppingStrategy.ToMessageReceiver;
-import tools.debugger.SteppingStrategy.ToPromiseResolution;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
@@ -191,7 +187,8 @@ public class EventualSendNode extends ExprWithTagsNode {
       DirectMessage msg = new DirectMessage(
           EventualMessage.getCurrentExecutingMessageId(), target, selector, args,
           owner, resolver, onReceive,
-          hasMessageReceiverBreakpoint(resolver), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
+          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(),
+          promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
 
       target.send(msg, actorPool);
     }
@@ -203,34 +200,10 @@ public class EventualSendNode extends ExprWithTagsNode {
       PromiseSendMessage msg = new PromiseSendMessage(
           EventualMessage.getCurrentExecutingMessageId(), selector, args,
           rcvr.getOwner(), resolver, onReceive,
-          hasMessageReceiverBreakpoint(resolver), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
+          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(),
+          promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
 
       registerNode.register(rcvr, msg, rcvr.getOwner());
-    }
-
-    /**
-     * Check if any stepping strategy has been set and updates the corresponding breakpoint flag.
-     * If the strategy ToMessageReceiver is active, the flag messageReceiverBreakpoint is updated.
-     * If the strategy ToPromiseResolution is active, the flag promiseResolutionBreakpoint is updated.
-     * If the strategy ReturnFromTurnToPromiseResolution is active, the flag triggerStopBeforeExecuteCallback
-     * of the promise of the causal message is updated.
-     * Returns the flag of the message receiver breakpoint.
-     */
-    private boolean hasMessageReceiverBreakpoint(final SResolver resolver) {
-      boolean stepReceiver = SteppingStrategy.isEnabled(ToMessageReceiver.class);
-      boolean stepResolution = SteppingStrategy.isEnabled(ToPromiseResolution.class);
-      boolean stepReturnFromTurn = SteppingStrategy.isEnabled(ReturnFromTurnToPromiseResolution.class);
-
-      boolean msgRcvrBkp = messageReceiverBreakpoint.executeCheckIsSetAndEnabled() || stepReceiver;
-      if (resolver != null && !resolver.getPromise().isTriggerPromiseResolutionBreakpoint() && stepResolution) {
-        resolver.getPromise().setTriggerPromiseResolutionBreakpoint(stepResolution);
-      }
-      EventualMessage causalMsg = EventualMessage.getCurrentExecutingMessage();
-      if (causalMsg.getResolver() != null && stepReturnFromTurn) {
-        causalMsg.getResolver().getPromise().setTriggerStopBeforeExecuteCallback(stepReturnFromTurn);
-      }
-
-      return msgRcvrBkp;
     }
 
     protected RegisterWhenResolved createRegisterNode() {
@@ -275,7 +248,8 @@ public class EventualSendNode extends ExprWithTagsNode {
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessageId(),
           current, selector, args, current,
           resolver, onReceive,
-          hasMessageReceiverBreakpoint(resolver), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
+          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(),
+          promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
 
       current.send(msg, actorPool);
 
@@ -305,7 +279,8 @@ public class EventualSendNode extends ExprWithTagsNode {
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessageId(),
           current, selector, args, current,
           null, onReceive,
-          hasMessageReceiverBreakpoint(null), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
+          messageReceiverBreakpoint.executeCheckIsSetAndEnabled(),
+          promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
 
       current.send(msg, actorPool);
       return Nil.nilObject;
