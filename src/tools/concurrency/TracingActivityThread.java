@@ -99,6 +99,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread
     long result = nextActivityId;
     nextActivityId++;
     assert TraceData.isWithinJSIntValueRange(result);
+    assert result != -1 : "-1 is not a valid activity id";
     return result;
   }
 

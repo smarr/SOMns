@@ -76,7 +76,7 @@ public abstract class ActivitySpawn {
       ActorExecutionTrace.processCreation(result, origin);
       return result;
     } else {
-      return new Process(obj, stopOnRoot);
+      return new Process(obj);
     }
   }
 
