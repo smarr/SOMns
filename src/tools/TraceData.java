@@ -12,28 +12,31 @@ public class TraceData {
    */
   public static final byte PROCESS_CREATION     = 1;
   public static final byte PROCESS_COMPLETION   = 2;
+  public static final byte ACTOR_CREATION       = 7;
+  public static final byte TASK_SPAWN           = 15;
+  public static final byte THREAD_SPAWN         = 17;
+
+  public static final byte TURN_START         = 13;
+  public static final byte TURN_END           = 14;
+  public static final byte TRANSACTION_START  = 21;
+  public static final byte TRANSACTION_END    = 22;
+  public static final byte MONITOR_ENTER      = 23;
+  public static final byte MONITOR_EXIT       = 24;
+
   public static final byte CHANNEL_CREATION     = 3;
+
+
 
   public static final byte CHANNEL_MESSAGE_SEND = 5;
   public static final byte CHANNEL_MESSAGE_RCV  = 6;
 
-  public static final byte ACTOR_CREATION     = 7;
-  public static final byte PROMISE_CREATION   = 9;
 
   public static final byte ACTOR_MSG_SEND     = 11;
 
-  public static final byte TURN_START         = 13;
-  public static final byte TURN_END           = 14;
 
-  public static final byte TASK_SPAWN         = 15;
   public static final byte TASK_JOIN          = 16;
-  public static final byte THREAD_SPAWN       = 17;
   public static final byte THREAD_JOIN        = 18;
 
-  public static final byte TRANSACTION_START  = 21;
-  public static final byte TRANSACTION_END    = 22;
-  public static final byte MONITOR_START      = 23;
-  public static final byte MONITOR_END        = 24;
 
   public static final byte IMPL_THREAD        = 25;
 

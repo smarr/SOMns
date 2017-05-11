@@ -196,23 +196,6 @@ public class ActorExecutionTrace {
     ImplThread(TraceData.IMPL_THREAD, 9),
     ImplThreadCurrentActivity(TraceData.IMPL_THREAD_CURRENT_ACTIVITY, 13),
 
-    // Activity Creations
-    ActorCreation(TraceData.ACTOR_CREATION,     11),
-    ProcessCreation(TraceData.PROCESS_CREATION, 11),
-    TaskSpawn(TraceData.TASK_SPAWN,             11),
-    ThreadSpawn(TraceData.THREAD_SPAWN,         11),
-
-    TurnStart(TraceData.TURN_START,               9),
-    MonitorStart(TraceData.MONITOR_START,         9),
-    TransactionStart(TraceData.TRANSACTION_START, 9),
-
-    TurnEnd(TraceData.TURN_END,               1),
-    MonitorEnd(TraceData.MONITOR_END,         1),
-    TransactionEnd(TraceData.TRANSACTION_END, 1),
-
-    ProcessCompletion(TraceData.PROCESS_COMPLETION, 1),
-
-    ChannelCreation(TraceData.CHANNEL_CREATION, 9),
 
     ChannelSend(TraceData.CHANNEL_MESSAGE_SEND, 17),
     ActorSend(TraceData.ACTOR_MSG_SEND,         17),
@@ -224,7 +207,6 @@ public class ActorExecutionTrace {
 
     // TODO: revise!!!
 
-    PromiseCreation(TraceData.PROMISE_CREATION,     17),
     PromiseResolution(TraceData.PROMISE_RESOLUTION, 28),
     PromiseChained(TraceData.PROMISE_CHAINED,       17),
     PromiseError(TraceData.PROMISE_ERROR, 28);
