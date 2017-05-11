@@ -151,6 +151,18 @@ public enum SteppingType {
     }
   },
 
+  @SerializedName("stepToPromiseResolver")
+  STEP_TO_PROMISE_RESOLVER("stepToPromiseResolver", "Step to Promise Resolver",
+      Group.ACTOR_STEPPING, "msg-white",
+      new Class[] {EventualMessageSend.class, CreatePromisePair.class,
+          WhenResolved.class, WhenResolvedOnError.class, OnError.class}) {
+    @Override
+    public void process(final Suspension susp) {
+      susp.getEvent().prepareStepOver(1);
+      susp.getActivityThread().setSteppingStrategy(this);
+    }
+  },
+
   @SerializedName("stepToPromiseResolution")
   STEP_TO_PROMISE_RESOLUTION("stepToPromiseResolution", "Step to Promise Resolution",
       Group.ACTOR_STEPPING, "msg-white",
