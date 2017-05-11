@@ -4,10 +4,12 @@
     <property name="src_gen.dir" value="src_gen"/>
     <property name="lib.dir"     value="libs" />
     <property name="kompos.dir"  value="tools/kompos" />
-    <property name="truffle.dir" value="${lib.dir}/truffle" />
+    <property name="truffle.dir" value="${lib.dir}/truffle/truffle" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
     <property name="somns-deps.version" value="0.3.3" />
     <property name="checkstyle.version" value="7.6.1" />
+    
+    <property name="mx.cmd" value="../../mx/mx" />
 
     <property name="build.dir"   value="build"/>
     <property name="classes.dir" value="${build.dir}/classes"/>
@@ -31,7 +33,7 @@
     </target>
     
     <target name="clobber" description="Do clean, and also clean truffle build" depends="clean">
-        <exec executable="../mx/mx" dir="${truffle.dir}">
+        <exec executable="${mx.cmd}" dir="${truffle.dir}">
             <arg value="clean"/>
         </exec>
         <delete dir="${kompos.dir}/out"/>
@@ -51,14 +53,14 @@
     </target>
 
     <target name="truffle-libs" unless="skip.libs" depends="truffle">
-        <exec executable="../mx/mx" dir="${truffle.dir}" failonerror="true">
+        <exec executable="${mx.cmd}" dir="${truffle.dir}" failonerror="true">
             <arg value="build"/>
             <arg value="--no-native"/>
         </exec>
     </target>
 
     <target name="ideinit" depends="source">
-        <exec executable="../mx/mx" dir="${truffle.dir}" failonerror="true">
+        <exec executable="${mx.cmd}" dir="${truffle.dir}" failonerror="true">
             <arg value="eclipseinit"/>
         </exec>
     </target>

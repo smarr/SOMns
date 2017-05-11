@@ -318,4 +318,9 @@ public class TruffleSomTCK extends TruffleTCK {
   @Override
   @Ignore("todo: remove override")
   public void testNullCanBeCastToAnything() throws Exception { }
+
+  @Test
+  @Override
+  @Ignore("todo: remove override")
+  public void testObjectWithKeyInfoAttributes() throws Exception { }
 }

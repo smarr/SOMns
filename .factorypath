@@ -1,4 +1,4 @@
 <factorypath>
-    <factorypathentry kind="WKSPJAR" id="/SOMns/libs/truffle/mxbuild/dists/truffle-api.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="WKSPJAR" id="/SOMns/libs/truffle/mxbuild/dists/truffle-dsl-processor.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="WKSPJAR" id="/TRUFFLE_API/truffle-api.jar" enabled="true" runInBatchMode="false"/>
+    <factorypathentry kind="WKSPJAR" id="/TRUFFLE_DSL_PROCESSOR/truffle-dsl-processor.jar" enabled="true" runInBatchMode="false"/>
 </factorypath>
