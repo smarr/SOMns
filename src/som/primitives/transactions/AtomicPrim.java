@@ -19,6 +19,7 @@ import som.vmobjects.SClass;
 import tools.concurrency.Tags.Atomic;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActivityThread;
+import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.EntityType;
 import tools.debugger.entities.SteppingType;
 import tools.debugger.nodes.AbstractBreakpointNode;
@@ -36,7 +37,7 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
   protected AtomicPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
     super(eagWrap, source);
     this.vm = vm;
-    beforeCommit = insert(Breakpoints.createBeforeCommit(source, vm));
+    beforeCommit = insert(Breakpoints.create(source, BreakpointType.ATOMIC_BEFORE_COMMIT, vm));
     haltNode = SuspendExecutionNodeGen.create(false, sourceSection, null);
   }
 
@@ -52,6 +53,8 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
       try {
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
           TracingActivityThread.currentThread().enterConcurrentScope(EntityType.TRANSACTION);
+
+          // TODO: here we are using a different approach for stepping, and for breakpointing, should unify
           if (beforeCommit.executeCheckIsSetAndEnabled()) {
             vm.getWebDebugger().prepareSteppingAfterNextRootNode();
           }

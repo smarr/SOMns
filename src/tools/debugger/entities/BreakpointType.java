@@ -33,12 +33,7 @@ public enum BreakpointType {
 
   @SerializedName("msgReceiverBP")
   MSG_RECEIVER("msgReceiverBP", "Message receive",
-      new Class[] {EventualMessageSend.class}) {
-    @Override
-    public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
-      bps.addOrUpdateMessageReceiver(bpInfo);
-    }
-  },
+      new Class[] {EventualMessageSend.class}, SteppingType.STEP_TO_MESSAGE_RECEIVER),
 
   /**
    * Breakpoint on the RootTag node of a method, to halt before its execution, if the method was activated
@@ -73,22 +68,14 @@ public enum BreakpointType {
   @SerializedName("promiseResolverBP")
   PROMISE_RESOLVER("promiseResolverBP", "Promise resolver",
       new Class[] {EventualMessageSend.class, WhenResolved.class,
-          WhenResolvedOnError.class, OnError.class, CreatePromisePair.class}) {
-    @Override
-    public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
-      bps.addOrUpdatePromiseResolver(bpInfo);
-    }
-  },
+          WhenResolvedOnError.class, OnError.class, CreatePromisePair.class},
+      SteppingType.STEP_TO_PROMISE_RESOLVER),
 
   @SerializedName("promiseResolutionBP")
   PROMISE_RESOLUTION("promiseResolutionBP", "Promise resolution",
       new Class[] {EventualMessageSend.class, WhenResolved.class,
-          WhenResolvedOnError.class, OnError.class, CreatePromisePair.class}) {
-    @Override
-    public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
-      bps.addOrUpdatePromiseResolution(bpInfo);
-    }
-  },
+          WhenResolvedOnError.class, OnError.class, CreatePromisePair.class},
+      SteppingType.STEP_TO_PROMISE_RESOLUTION),
 
   @SerializedName("channelBeforeSendBP")
   CHANNEL_BEFORE_SEND("channelBeforeSendBP", "Before send",
@@ -101,12 +88,7 @@ public enum BreakpointType {
 
   @SerializedName("channelAfterRcvBP")
   CHANNEL_AFTER_RCV("channelAfterRcvBP", "After receive",
-      new Class[] {ChannelWrite.class}) {
-    @Override
-    public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
-      bps.addOrUpdateChannelOpposite(bpInfo, SteppingType.STEP_TO_CHANNEL_RCVR);
-    }
-  },
+      new Class[] {ChannelWrite.class}, SteppingType.STEP_TO_CHANNEL_RCVR),
 
   @SerializedName("channelBeforeRcvBP")
   CHANNEL_BEFORE_RCV("channelBeforeRcvBP", "Before receive",
@@ -119,12 +101,7 @@ public enum BreakpointType {
 
   @SerializedName("channelAfterSendBP")
   CHANNEL_AFTER_SEND("channelAfterSendBP", "After send",
-      new Class[] {ChannelRead.class}) {
-    @Override
-    public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
-      bps.addOrUpdateChannelOpposite(bpInfo, SteppingType.STEP_TO_CHANNEL_SENDER);
-    }
-  },
+      new Class[] {ChannelRead.class}, SteppingType.STEP_TO_CHANNEL_SENDER),
 
   @SerializedName("activityCreationBP")
   ACTIVITY_CREATION("activityCreationBP", "Before creation",
@@ -137,12 +114,7 @@ public enum BreakpointType {
 
   @SerializedName("activityOnExecBP")
   ACTIVITY_ON_EXEC("activityOnExecBP", "On execution",
-      new Class[] {ActivityCreation.class}) {
-    @Override
-    public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
-      bps.addOrUpdateActivityOnExec(bpInfo);
-    }
-  },
+      new Class[] {ActivityCreation.class}, SteppingType.STEP_INTO_ACTIVITY),
 
   @SerializedName("activityBeforeJoinBP")
   ACTIVITY_BEFORE_JOIN("activityBeforeJoinBP", "Before join",
@@ -173,12 +145,7 @@ public enum BreakpointType {
 
   @SerializedName("atomicBeforeCommitBP")
   ATOMIC_BEFORE_COMMIT("atomicBeforeCommitBP", "Before commit",
-      new Class[] {Atomic.class}) {
-    @Override
-    public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
-      bps.addOrUpdateBeforeCommit(bpInfo);
-    }
-  },
+      new Class[] {Atomic.class}, SteppingType.STEP_TO_COMMIT),
 
   @SerializedName("atomicAfterCommitBP")
   ATOMIC_AFTER_COMMIT("atomicAfterCommitBP", "After commit",
@@ -233,11 +200,23 @@ public enum BreakpointType {
       tags is on a specific section. */
   public final Class<? extends Tags>[] applicableTo;
 
-  BreakpointType(final String name, final String label, final Class<? extends Tags>[] applicableTo) {
+  public final SteppingType steppingType;
+
+  BreakpointType(final String name, final String label,
+      final Class<? extends Tags>[] applicableTo) {
+    this(name, label, applicableTo, null);
+  }
+
+  BreakpointType(final String name, final String label,
+      final Class<? extends Tags>[] applicableTo, final SteppingType steppingType) {
     this.name         = name;
     this.label        = label;
     this.applicableTo = applicableTo;
+    this.steppingType = steppingType;
   }
 
-  public abstract void registerOrUpdate(Breakpoints bps, SectionBreakpoint bpInfo);
+  public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
+    assert steppingType != null;
+    bps.addOrUpdate(bpInfo);
+  }
 }

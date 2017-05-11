@@ -1,5 +1,7 @@
 package tools.debugger.session;
 
+import java.util.Objects;
+
 import tools.SourceCoordinate.FullSourceCoordinate;
 import tools.debugger.FrontendConnector;
 import tools.debugger.entities.BreakpointType;
@@ -14,6 +16,11 @@ public final class SectionBreakpoint extends BreakpointInfo {
     super(enabled);
     this.coord  = coord;
     this.bpType = type;
+  }
+
+  public SectionBreakpoint(final FullSourceCoordinate coord,
+      final BreakpointType type) {
+    this(false, coord, type);
   }
 
   /**
@@ -40,7 +47,7 @@ public final class SectionBreakpoint extends BreakpointInfo {
 
   @Override
   public int hashCode() {
-    return coord.hashCode();
+    return Objects.hash(coord, bpType);
   }
 
   @Override
@@ -48,11 +55,11 @@ public final class SectionBreakpoint extends BreakpointInfo {
     if (obj == this) {
       return true;
     }
-    if (!(obj instanceof SectionBreakpoint)) {
+    if (obj == null) {
       return false;
     }
     SectionBreakpoint o = (SectionBreakpoint) obj;
-    return coord.equals(o.coord);
+    return coord.equals(o.coord) && o.bpType == bpType;
   }
 
   @Override

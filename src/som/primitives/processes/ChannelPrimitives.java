@@ -40,7 +40,6 @@ import tools.concurrency.TracingActivityThread;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
-import tools.debugger.entities.SteppingType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
@@ -193,8 +192,7 @@ public abstract class ChannelPrimitives {
     public ReadPrim(final boolean eagerlyWrapped, final SourceSection source, final VM vm) {
       super(eagerlyWrapped, source);
       haltNode = SuspendExecutionNodeGen.create(false, sourceSection, null);
-      afterWrite = insert(Breakpoints.createOpposite(
-          source, vm, BreakpointType.CHANNEL_AFTER_SEND, SteppingType.STEP_TO_CHANNEL_SENDER));
+      afterWrite = insert(Breakpoints.create(source, BreakpointType.CHANNEL_AFTER_SEND, vm));
     }
 
     @Specialization
@@ -235,8 +233,7 @@ public abstract class ChannelPrimitives {
       super(eagerlyWrapped, source);
       isVal     = IsValue.createSubNode();
       haltNode  = SuspendExecutionNodeGen.create(false, sourceSection, null);
-      afterRead = insert(Breakpoints.createOpposite(
-          source, vm, BreakpointType.CHANNEL_AFTER_RCV, SteppingType.STEP_TO_CHANNEL_RCVR));
+      afterRead = insert(Breakpoints.create(source, BreakpointType.CHANNEL_AFTER_RCV, vm));
     }
 
     @Specialization

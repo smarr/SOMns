@@ -39,6 +39,7 @@ import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.Tags.OnError;
 import tools.concurrency.Tags.WhenResolved;
 import tools.concurrency.Tags.WhenResolvedOnError;
+import tools.debugger.entities.BreakpointType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
@@ -72,8 +73,8 @@ public final class PromisePrims {
 
     public CreatePromisePairPrim(final boolean eagerWrapper, final SourceSection source, final VM vm) {
       super(eagerWrapper, source);
-      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source, vm));
-      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source, vm));
+      this.promiseResolverBreakpoint   = insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLVER, vm));
+      this.promiseResolutionBreakpoint = insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLUTION, vm));
     }
 
     @Specialization
@@ -123,8 +124,8 @@ public final class PromisePrims {
       super(eagWrap, source);
       this.registerNode = new RegisterWhenResolved(vm.getActorPool());
 
-      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source, vm));
-      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source, vm));
+      this.promiseResolverBreakpoint   = insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLVER, vm));
+      this.promiseResolutionBreakpoint = insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLUTION, vm));
     }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
@@ -180,8 +181,8 @@ public final class PromisePrims {
       super(eagWrap, source);
       this.registerNode = new RegisterOnError(vm.getActorPool());
 
-      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source, vm));
-      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source, vm));
+      this.promiseResolverBreakpoint   = insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLVER, vm));
+      this.promiseResolutionBreakpoint = insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLUTION, vm));
     }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
@@ -238,8 +239,8 @@ public final class PromisePrims {
       super(eagWrap, source);
       this.registerWhenResolved = new RegisterWhenResolved(vm.getActorPool());
       this.registerOnError      = new RegisterOnError(vm.getActorPool());
-      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source, vm));
-      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source, vm));
+      this.promiseResolverBreakpoint   = insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLVER, vm));
+      this.promiseResolutionBreakpoint = insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLUTION, vm));
     }
 
     @Specialization(guards = {"resolvedMethod == resolved.getMethod()", "errorMethod == error.getMethod()"})

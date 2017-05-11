@@ -12,16 +12,13 @@ import tools.debugger.entities.SteppingType;
  * <p>This class is used for breakpoints that are not managed by the Truffle
  * framework directly.
  */
-public class BreakpointEnabling<T extends BreakpointInfo> {
-  private final SteppingType steppingType;
+public class BreakpointEnabling {
   private boolean   enabled;
   private transient Assumption unchanged;
 
-  @SuppressWarnings("unused")
-  private T breakpointInfo;
+  private SectionBreakpoint breakpointInfo;
 
-  BreakpointEnabling(final T breakpointInfo, final SteppingType type) {
-    this.steppingType = type;
+  BreakpointEnabling(final SectionBreakpoint breakpointInfo) {
     this.unchanged = Truffle.getRuntime().createAssumption("unchanged breakpoint");
     this.enabled = breakpointInfo.isEnabled();
     this.breakpointInfo = breakpointInfo;
@@ -47,7 +44,7 @@ public class BreakpointEnabling<T extends BreakpointInfo> {
   }
 
   public SteppingType getSteppingType() {
-    return steppingType;
+    return breakpointInfo.bpType.steppingType;
   }
 
   public Assumption getAssumption() {

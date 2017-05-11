@@ -38,6 +38,7 @@ import som.vmobjects.SSymbol;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.debugger.entities.BreakpointType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
@@ -101,7 +102,7 @@ public abstract class ActivitySpawn {
       this.forkJoinPool  = vm.getForkJoinPool();
       this.processesPool = vm.getProcessPool();
       this.threadPool    = vm.getThreadPool();
-      this.onExec = insert(Breakpoints.createOnExec(s, vm));
+      this.onExec = insert(Breakpoints.create(s, BreakpointType.ACTIVITY_ON_EXEC, vm));
     }
 
     @Specialization(guards = "clazz == TaskClass")
@@ -174,7 +175,7 @@ public abstract class ActivitySpawn {
       this.forkJoinPool  = vm.getForkJoinPool();
       this.processesPool = vm.getProcessPool();
       this.threadPool    = vm.getThreadPool();
-      this.onExec = insert(Breakpoints.createOnExec(s, vm));
+      this.onExec = insert(Breakpoints.create(s, BreakpointType.ACTIVITY_ON_EXEC, vm));
     }
 
     @Specialization(guards = "clazz == TaskClass")

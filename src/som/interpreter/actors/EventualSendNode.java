@@ -33,6 +33,7 @@ import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 import tools.concurrency.Tags.EventualMessageSend;
 import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.debugger.entities.BreakpointType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
@@ -135,9 +136,9 @@ public class EventualSendNode extends ExprWithTagsNode {
         this.actorPool = null;
       } else {
         this.actorPool = vm.getActorPool();
-        this.messageReceiverBreakpoint   = insert(Breakpoints.createReceiver(source, vm));
-        this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source, vm));
-        this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source, vm));
+        this.messageReceiverBreakpoint   = insert(Breakpoints.create(source, BreakpointType.MSG_RECEIVER, vm));
+        this.promiseResolverBreakpoint   = insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLVER, vm));
+        this.promiseResolutionBreakpoint = insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLUTION, vm));
       }
     }
 

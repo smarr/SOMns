@@ -13,9 +13,9 @@ import tools.debugger.session.BreakpointEnabling;
  */
 public abstract class BreakpointNode extends AbstractBreakpointNode {
 
-  protected final BreakpointEnabling<?> breakpoint;
+  protected final BreakpointEnabling breakpoint;
 
-  protected BreakpointNode(final BreakpointEnabling<?> breakpoint) {
+  protected BreakpointNode(final BreakpointEnabling breakpoint) {
     this.breakpoint = breakpoint;
   }
 
