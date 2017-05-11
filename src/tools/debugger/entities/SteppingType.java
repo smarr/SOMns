@@ -1,15 +1,17 @@
 package tools.debugger.entities;
 
 import com.google.gson.annotations.SerializedName;
-import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 
 import som.vm.NotYetImplementedException;
 import tools.concurrency.Tags;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
+import tools.concurrency.Tags.CreatePromisePair;
 import tools.concurrency.Tags.EventualMessageSend;
-import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.concurrency.Tags.OnError;
+import tools.concurrency.Tags.WhenResolved;
+import tools.concurrency.Tags.WhenResolvedOnError;
 import tools.debugger.SteppingStrategy.AfterCommit;
 import tools.debugger.SteppingStrategy.IntoSpawn;
 import tools.debugger.SteppingStrategy.ReturnFromActivity;
@@ -159,7 +161,10 @@ public enum SteppingType {
     },
 
   @SerializedName("stepToPromiseResolution")
-  STEP_TO_PROMISE_RESOLUTION("stepToPromiseResolution", "Step to Promise Resolution", Group.ACTOR_STEPPING, "msg-white", new Class[] {ExpressionBreakpoint.class}, new ActivityType[] {ActivityType.ACTOR}) {
+  STEP_TO_PROMISE_RESOLUTION("stepToPromiseResolution", "Step to Promise Resolution",
+      Group.ACTOR_STEPPING, "msg-white",
+      new Class[] {EventualMessageSend.class, CreatePromisePair.class,
+          WhenResolved.class, WhenResolvedOnError.class, OnError.class}) {
       @Override public void process(final Suspension susp) {
        susp.getEvent().prepareStepOver(1);
        susp.getActivityThread().setSteppingStrategy(new ToPromiseResolution());
@@ -174,8 +179,10 @@ public enum SteppingType {
     }
   },
 
-  @SerializedName("stepReturnFromTurnToPromiseResolution")
-  STEP_RETURN_FROM_TURN_TO_PROMISE_RESOLUTION("stepReturnFromTurnToPromiseResolution", "Step Return From Turn to Promise Resolution", Group.ACTOR_STEPPING, "msg-embedded", new Class[] {StatementTag.class}, new ActivityType[] {ActivityType.ACTOR}) {
+  @SerializedName("returnFromTurnToPromiseResolution")
+  RETURN_FROM_TURN_TO_PROMISE_RESOLUTION("returnFromTurnToPromiseResolution",
+      "Return from Turn to Promise Resolution", Group.ACTOR_STEPPING, "msg-embedded",
+      null, new ActivityType[] {ActivityType.ACTOR}) {
     @Override public void process(final Suspension susp) {
       susp.getEvent().prepareStepOver(1);
       susp.getActivityThread().setSteppingStrategy(new ReturnFromTurnToPromiseResolution());
