@@ -18,7 +18,5 @@ public enum ActivityType {
   public String getName() { return type.name; }
 
   public byte getId() { return type.id; }
-  public byte getCreation()   { return type.creation; }
-  public byte getCompletion() { return type.completion; }
   public String getMarker() { return marker; }
 }
