@@ -54,6 +54,13 @@ public final class TaskThreads {
         ObjectTransitionSafepoint.INSTANCE.unregister();
       }
     }
+
+    @Override
+    public void setStepToNextTurn(final boolean val) {
+      throw new UnsupportedOperationException(
+          "Step to next turn is not supported " +
+          "for threads. This code should never be reached.");
+    }
   }
 
   public static class SomForkJoinTask extends SomTaskOrThread {

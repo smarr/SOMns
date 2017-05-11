@@ -8,6 +8,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -79,7 +80,7 @@ public final class PromisePrims {
     public final SImmutableObject createPromisePair(final Object nil,
         @Cached("create()") final DirectCallNode factory) {
 
-      SPromise promise   = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn(), promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), true);
+      SPromise promise   = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn(), SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), true);
       SResolver resolver = SPromise.createResolver(promise);
       return (SImmutableObject) factory.call(new Object[] {SPromise.pairClass, promise, resolver});
     }
@@ -88,11 +89,12 @@ public final class PromisePrims {
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-      if (tag == CreatePromisePair.class || tag == ExpressionBreakpoint.class) {
+      if (tag == CreatePromisePair.class || tag == ExpressionBreakpoint.class || tag == StatementTag.class) {
         return true;
       }
       return super.isTaggedWithIgnoringEagerness(tag);
     }
+
   }
 
   // TODO: can we find another solution for megamorphics callers that
@@ -142,11 +144,11 @@ public final class PromisePrims {
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      SPromise  promise  = SPromise.createPromise(current, promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false, false);
+      SPromise  promise  = SPromise.createPromise(current, SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), false, false);
       SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage pcm = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
-          block, resolver, blockCallTarget, false, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), rcvr);
+          block, resolver, blockCallTarget, false, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promise, rcvr);
       registerNode.register(rcvr, pcm, current);
 
       return promise;
@@ -154,7 +156,7 @@ public final class PromisePrims {
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-      if (tag == WhenResolved.class || tag == ExpressionBreakpoint.class) {
+      if (tag == WhenResolved.class || tag == ExpressionBreakpoint.class || tag == StatementTag.class) {
         return true;
       }
       return super.isTaggedWithIgnoringEagerness(tag);
@@ -198,11 +200,11 @@ public final class PromisePrims {
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      SPromise  promise  = SPromise.createPromise(current, promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false, false);
+      SPromise  promise  = SPromise.createPromise(current, SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), false, false);
       SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
-          block, resolver, blockCallTarget, false, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promise);
+          block, resolver, blockCallTarget, false, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promise, rcvr);
       registerNode.register(rcvr, msg, current);
 
       return promise;
@@ -210,7 +212,7 @@ public final class PromisePrims {
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-      if (tag == OnError.class || tag == ExpressionBreakpoint.class) {
+      if (tag == OnError.class || tag == ExpressionBreakpoint.class || tag == StatementTag.class) {
         return true;
       }
       return super.isTaggedWithIgnoringEagerness(tag);
@@ -263,11 +265,11 @@ public final class PromisePrims {
 
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      SPromise  promise  = SPromise.createPromise(current, promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false, false);
+      SPromise  promise  = SPromise.createPromise(current, SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), false, false);
       SResolver resolver = SPromise.createResolver(promise);
 
-      PromiseCallbackMessage onResolved = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), resolved, resolver, resolverTarget, false, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), rcvr);
-      PromiseCallbackMessage onError    = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), error,    resolver, errorTarget,    false, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), rcvr);
+      PromiseCallbackMessage onResolved = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), resolved, resolver, resolverTarget, false, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promise, rcvr);
+      PromiseCallbackMessage onError    = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), error,    resolver, errorTarget,    false, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(),  promise, rcvr);
 
       synchronized (rcvr) {
         registerWhenResolved.register(rcvr, onResolved, current);
@@ -278,10 +280,11 @@ public final class PromisePrims {
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-      if (tag == WhenResolvedOnError.class || tag == ExpressionBreakpoint.class) {
+      if (tag == WhenResolvedOnError.class || tag == ExpressionBreakpoint.class || tag == StatementTag.class) {
         return true;
       }
       return super.isTaggedWithIgnoringEagerness(tag);
     }
+
   }
 }

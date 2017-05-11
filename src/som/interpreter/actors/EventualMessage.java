@@ -9,14 +9,11 @@ import som.VM;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.SPromise.SResolver;
-import som.vm.Symbols;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 
 
 public abstract class EventualMessage {
-  private static final SSymbol VALUE_SELECTOR = Symbols.symbolFor("value:");
-
   protected final Object[]  args;
   protected final SResolver resolver;
   protected final RootCallTarget onReceive;
@@ -233,13 +230,18 @@ public abstract class EventualMessage {
   /** The callback message to be send after a promise is resolved. */
   public static final class PromiseCallbackMessage extends PromiseMessage {
     protected final SPromise promise;
+    /**
+     * The promise on which this callback is registered on.
+     */
+    protected final SPromise promiseRegisteredOn;
 
     public PromiseCallbackMessage(final long causalMessageId, final Actor owner, final SBlock callback,
         final SResolver resolver, final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint,
-        final boolean triggerPromiseResolverBreakpoint, final SPromise parent) {
+        final boolean triggerPromiseResolverBreakpoint, final SPromise parent, final SPromise promiseRegisteredOn) {
       super(causalMessageId, new Object[] {callback, null}, owner, resolver, onReceive,
           triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
       this.promise = parent;
+      this.promiseRegisteredOn = promiseRegisteredOn;
     }
 
     @Override
@@ -276,6 +278,10 @@ public abstract class EventualMessage {
     @Override
     public SPromise getPromise() {
       return promise;
+    }
+
+    public SPromise getPromiseRegisteredOn() {
+      return promiseRegisteredOn;
     }
   }
 

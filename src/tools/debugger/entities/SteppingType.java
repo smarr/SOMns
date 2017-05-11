@@ -7,12 +7,21 @@ import tools.concurrency.Tags;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
+import tools.concurrency.Tags.CreatePromisePair;
+import tools.concurrency.Tags.EventualMessageSend;
+import tools.concurrency.Tags.OnError;
+import tools.concurrency.Tags.WhenResolved;
+import tools.concurrency.Tags.WhenResolvedOnError;
 import tools.debugger.SteppingStrategy.AfterCommit;
 import tools.debugger.SteppingStrategy.IntoSpawn;
 import tools.debugger.SteppingStrategy.ReturnFromActivity;
+import tools.debugger.SteppingStrategy.ReturnFromTurnToPromiseResolution;
 import tools.debugger.SteppingStrategy.ToChannelOpposite;
+import tools.debugger.SteppingStrategy.ToMessageReceiver;
 import tools.debugger.SteppingStrategy.ToNextCommit;
 import tools.debugger.SteppingStrategy.ToNextTransaction;
+import tools.debugger.SteppingStrategy.ToNextTurn;
+import tools.debugger.SteppingStrategy.ToPromiseResolution;
 import tools.debugger.frontend.Suspension;
 
 
@@ -143,12 +152,42 @@ public enum SteppingType {
     }
   },
 
-  STEP_TO_RECEIVER_MESSAGE("todo",   "todo", Group.ACTOR_STEPPING, "arrow-right", null) {
-    @Override public void process(final Suspension susp) { }
+  @SerializedName("stepToMessageRcvr")
+  STEP_TO_RECEIVER_MESSAGE("stepToMessageRcvr", "Step to Msg Receiver", Group.ACTOR_STEPPING, "msg-open", new Class[] {EventualMessageSend.class}) {
+    @Override public void process(final Suspension susp) {
+      susp.getEvent().prepareStepOver(1);
+      susp.getActivityThread().setSteppingStrategy(new ToMessageReceiver());
+      }
+    },
+
+  @SerializedName("stepToPromiseResolution")
+  STEP_TO_PROMISE_RESOLUTION("stepToPromiseResolution", "Step to Promise Resolution",
+      Group.ACTOR_STEPPING, "msg-white",
+      new Class[] {EventualMessageSend.class, CreatePromisePair.class,
+          WhenResolved.class, WhenResolvedOnError.class, OnError.class}) {
+      @Override public void process(final Suspension susp) {
+       susp.getEvent().prepareStepOver(1);
+       susp.getActivityThread().setSteppingStrategy(new ToPromiseResolution());
+    }
   },
-  STEP_TO_PROMISE_RESOLUTION("todo", "todo", Group.ACTOR_STEPPING, "arrow-right", null) { @Override public void process(final Suspension susp) { /* TODO */ } },
-  STEP_TO_NEXT_MESSAGE("todo",       "todo", Group.ACTOR_STEPPING, "arrow-right", null) { @Override public void process(final Suspension susp) { /* TODO */ } },
-  STEP_RETURN_TO_PROMISE_RESOLUTION("todo", "todo", Group.ACTOR_STEPPING, "arrow-right", null) { @Override public void process(final Suspension susp) { /* TODO */ } };
+
+  @SerializedName("stepToNextTurn")
+  STEP_TO_NEXT_TURN("stepToNextTurn", "Step to Next Turn", Group.ACTOR_STEPPING, "msg-close", null, new ActivityType[] {ActivityType.ACTOR}) {
+    @Override public void process(final Suspension susp) {
+      susp.getEvent().prepareStepOver(1);
+      susp.getActivityThread().setSteppingStrategy(new ToNextTurn());
+    }
+  },
+
+  @SerializedName("returnFromTurnToPromiseResolution")
+  RETURN_FROM_TURN_TO_PROMISE_RESOLUTION("returnFromTurnToPromiseResolution",
+      "Return from Turn to Promise Resolution", Group.ACTOR_STEPPING, "msg-embedded",
+      null, new ActivityType[] {ActivityType.ACTOR}) {
+    @Override public void process(final Suspension susp) {
+      susp.getEvent().prepareStepOver(1);
+      susp.getActivityThread().setSteppingStrategy(new ReturnFromTurnToPromiseResolution());
+    }
+  };
 
   public enum Group {
     BASIC_CONTROLS("Basic Controls"),

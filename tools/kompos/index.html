@@ -282,6 +282,11 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   .trace-method {
     float:left;
   }
+  .log-scroll {
+    overflow-y:scroll;
+    height:100px;
+    padding: 1rem;
+  }
   </style>
 </head>
 <body>
@@ -330,7 +335,7 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
 </tbody>
 </table>
 
-<div id="debugger-log" class="panel-footer" style="font-size: 75%">
+<div id="debugger-log" class="panel-footer log-scroll" style="font-size: 75%">
 </div>
 
 <!-- Unicode Icons: incompletely supported
@@ -356,7 +361,6 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
             </button>
           </div>
         </div>
-
         <div class="activity-stack btn-group-vertical stack" data-toggle="buttons"></div>
 
         <table class="activity-scopes"><tbody></tbody></table>
@@ -400,12 +404,16 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   <button id="bp-menu-btn" class="btn btn-secondary btn-sm btn-block bp-btn"></button>
 
   <div id="debugger-button-icons">
-    <i id="icon-play"        class="fa fa-play"></i>
-    <i id="icon-pause"       class="fa fa-pause"></i>
-    <i id="icon-stop"        class="fa fa-stop"></i>
-    <i id="icon-arrow-down"  class="fa fa-share" style="transform: rotate(90deg);"></i>
-    <i id="icon-arrow-right" class="fa fa-share"></i>
-    <i id="icon-arrow-left"  class="fa fa-reply" style="transform: scaleY(-1);"></i>
+    <i id="icon-play"         class="fa fa-play"></i>
+    <i id="icon-pause"        class="fa fa-pause"></i>
+    <i id="icon-stop"         class="fa fa-stop"></i>
+    <i id="icon-arrow-down"   class="fa fa-share" style="transform: rotate(90deg);"></i>
+    <i id="icon-arrow-right"  class="fa fa-share"></i>
+    <i id="icon-arrow-left"   class="fa fa-reply" style="transform: scaleY(-1);"></i>
+    <i id="icon-msg-open"     class="fa fa-envelope-open"></i>
+    <i id="icon-msg-close"    class="fa fa-envelope"></i>
+    <i id="icon-msg-white"    class="fa fa-envelope-o"></i>
+    <i id="icon-msg-embedded" class="fa fa-envelope-square"></i>
   </div>
 
   <div id="debugger-step-btn-group"

@@ -17,6 +17,5 @@ traces
 /tests/dym/old-results
 /tests/dym/results
 /tests/dym/expected-results
-/npm-debug.log
-/tools/kompos/npm-debug.log
+npm-debug.log*
 /.metadata
