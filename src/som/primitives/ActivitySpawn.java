@@ -25,7 +25,6 @@ import som.primitives.threading.TaskThreads.SomThreadTask;
 import som.primitives.threading.TaskThreads.TracedForkJoinTask;
 import som.primitives.threading.TaskThreads.TracedThreadTask;
 import som.primitives.threading.ThreadingModule;
-import som.vm.ActivityThread;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
@@ -39,9 +38,9 @@ import som.vmobjects.SSymbol;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ExpressionBreakpoint;
-import tools.debugger.SteppingStrategy;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
+
 
 public abstract class ActivitySpawn {
 
@@ -84,18 +83,6 @@ public abstract class ActivitySpawn {
     return IsValue.createSubNode();
   }
 
-  public static boolean stopOnRoot() {
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      SteppingStrategy strategy = ActivityThread.steppingStrategy();
-      if (strategy == null) {
-        return false;
-      }
-      return strategy.handleSpawn();
-    } else {
-      return false;
-    }
-  }
-
   @GenerateNodeFactory
   @ImportStatic({ThreadingModule.class, ChannelPrimitives.class, ActivitySpawn.class})
   @Primitive(primitive = "threading:threadSpawn:", requiresContext = true)
@@ -121,7 +108,7 @@ public abstract class ActivitySpawn {
     @TruffleBoundary
     public final SomForkJoinTask spawnTask(final SClass clazz, final SBlock block) {
       SomForkJoinTask task = createTask(new Object[] {block},
-          onExec.executeCheckIsSetAndEnabled() || stopOnRoot(), block, sourceSection);
+          onExec.executeCheckIsSetAndEnabled(), block, sourceSection);
       forkJoinPool.execute(task);
       return task;
     }
@@ -129,7 +116,7 @@ public abstract class ActivitySpawn {
     @Specialization(guards = "clazz == ThreadClass")
     public final SomThreadTask spawnThread(final SClass clazz, final SBlock block) {
       SomThreadTask thread = createThread(new Object[] {block},
-          onExec.executeCheckIsSetAndEnabled() || stopOnRoot(), block, sourceSection);
+          onExec.executeCheckIsSetAndEnabled(), block, sourceSection);
       threadPool.execute(thread);
       return thread;
     }
@@ -147,7 +134,7 @@ public abstract class ActivitySpawn {
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(new Object[] {procCls});
 
       processesPool.submit(createProcess(obj, sourceSection,
-          onExec.executeCheckIsSetAndEnabled() || stopOnRoot()));
+          onExec.executeCheckIsSetAndEnabled()));
       return Nil.nilObject;
     }
 
@@ -194,7 +181,7 @@ public abstract class ActivitySpawn {
     public SomForkJoinTask spawnTask(final SClass clazz, final SBlock block,
         final SArray somArgArr, final Object[] argArr) {
       SomForkJoinTask task = createTask(argArr,
-          onExec.executeCheckIsSetAndEnabled() || stopOnRoot(), block, sourceSection);
+          onExec.executeCheckIsSetAndEnabled(), block, sourceSection);
       forkJoinPool.execute(task);
       return task;
     }
@@ -203,7 +190,7 @@ public abstract class ActivitySpawn {
     public SomThreadTask spawnThread(final SClass clazz, final SBlock block,
         final SArray somArgArr, final Object[] argArr) {
       SomThreadTask thread = createThread(argArr,
-          onExec.executeCheckIsSetAndEnabled() || stopOnRoot(), block, sourceSection);
+          onExec.executeCheckIsSetAndEnabled(), block, sourceSection);
       threadPool.execute(thread);
       return thread;
     }
@@ -222,7 +209,7 @@ public abstract class ActivitySpawn {
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(argArr);
 
       processesPool.submit(createProcess(obj, sourceSection,
-          onExec.executeCheckIsSetAndEnabled() || stopOnRoot()));
+          onExec.executeCheckIsSetAndEnabled()));
       return Nil.nilObject;
     }
 
