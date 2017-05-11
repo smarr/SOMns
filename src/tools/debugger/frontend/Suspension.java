@@ -8,6 +8,9 @@ import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
 import som.interpreter.LexicalScope.MethodScope;
+import som.interpreter.actors.Actor;
+import som.interpreter.actors.EventualMessage;
+import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.actors.SuspendExecutionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.HaltPrim;
@@ -151,6 +154,13 @@ public class Suspension {
             activity.setStepToJoin(true);
           } else if (activityThread.isStepping(SteppingType.STEP_TO_NEXT_TURN)) {
             activity.setStepToNextTurn(true);
+          } else if (activityThread.isStepping(SteppingType.RETURN_FROM_TURN_TO_PROMISE_RESOLUTION)) {
+            assert activity instanceof Actor;
+            EventualMessage turnMessage = EventualMessage.getCurrentExecutingMessage();
+            SResolver resolver = turnMessage.getResolver();
+            if (resolver != null) {
+              resolver.getPromise().setTriggerStopBeforeExecuteCallback(true);
+            }
           }
         }
       } catch (InterruptedException e) { /* Just continue waiting */ }
