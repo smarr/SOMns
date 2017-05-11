@@ -16,8 +16,8 @@ import som.vm.ActivityThread;
 import tools.TraceData;
 import tools.concurrency.TracingActivityThread;
 import tools.debugger.FrontendConnector;
-import tools.debugger.SteppingStrategy;
 import tools.debugger.entities.EntityType;
+import tools.debugger.entities.SteppingType;
 import tools.debugger.frontend.ApplicationThreadTask.Resume;
 import tools.debugger.frontend.ApplicationThreadTask.SendStackTrace;
 
@@ -145,12 +145,14 @@ public class Suspension {
     while (continueWaiting) {
       try {
         continueWaiting = tasks.take().execute();
-        SteppingStrategy strategy = activityThread.getSteppingStrategy();
-        if (!continueWaiting && strategy != null) {
-          strategy.handleResumeExecution(activity);
-          strategy.handleMessageToNextTurn(activity);
-        }
 
+        if (!continueWaiting) {
+          if (activityThread.isStepping(SteppingType.RETURN_FROM_ACTIVITY)) {
+            activity.setStepToJoin(true);
+          } else if (activityThread.isStepping(SteppingType.STEP_TO_NEXT_TURN)) {
+            activity.setStepToNextTurn(true);
+          }
+        }
       } catch (InterruptedException e) { /* Just continue waiting */ }
     }
     synchronized (this) {
