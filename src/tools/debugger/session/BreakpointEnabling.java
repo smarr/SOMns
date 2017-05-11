@@ -3,6 +3,8 @@ package tools.debugger.session;
 import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.Truffle;
 
+import tools.debugger.entities.SteppingType;
+
 /**
  * BreakpointEnabling represents the interpreter data for optimized testing
  * whether a breakpoint is active or not (enabled/disabled).
@@ -11,13 +13,15 @@ import com.oracle.truffle.api.Truffle;
  * framework directly.
  */
 public class BreakpointEnabling<T extends BreakpointInfo> {
+  private final SteppingType steppingType;
   private boolean   enabled;
   private transient Assumption unchanged;
 
   @SuppressWarnings("unused")
   private T breakpointInfo;
 
-  BreakpointEnabling(final T breakpointInfo) {
+  BreakpointEnabling(final T breakpointInfo, final SteppingType type) {
+    this.steppingType = type;
     this.unchanged = Truffle.getRuntime().createAssumption("unchanged breakpoint");
     this.enabled = breakpointInfo.isEnabled();
     this.breakpointInfo = breakpointInfo;
@@ -40,6 +44,10 @@ public class BreakpointEnabling<T extends BreakpointInfo> {
    */
   public boolean isDisabled() {
     return !isEnabled();
+  }
+
+  public SteppingType getSteppingType() {
+    return steppingType;
   }
 
   public Assumption getAssumption() {

@@ -104,7 +104,7 @@ public enum BreakpointType {
       new Class[] {ChannelWrite.class}) {
     @Override
     public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
-      bps.addOrUpdateChannelOpposite(bpInfo);
+      bps.addOrUpdateChannelOpposite(bpInfo, SteppingType.STEP_TO_CHANNEL_RCVR);
     }
   },
 
@@ -122,7 +122,7 @@ public enum BreakpointType {
       new Class[] {ChannelRead.class}) {
     @Override
     public void registerOrUpdate(final Breakpoints bps, final SectionBreakpoint bpInfo) {
-      bps.addOrUpdateChannelOpposite(bpInfo);
+      bps.addOrUpdateChannelOpposite(bpInfo, SteppingType.STEP_TO_CHANNEL_SENDER);
     }
   },
 

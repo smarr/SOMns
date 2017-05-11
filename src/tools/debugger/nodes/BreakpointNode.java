@@ -4,6 +4,7 @@ import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import som.vm.ActivityThread;
 import tools.debugger.session.BreakpointEnabling;
 
 /**
@@ -21,7 +22,7 @@ public abstract class BreakpointNode extends AbstractBreakpointNode {
   @Specialization(assumptions = "bpUnchanged", guards = "breakpoint.isDisabled()")
   public final boolean breakpointDisabled(
       @Cached("breakpoint.getAssumption()") final Assumption bpUnchanged) {
-    return false;
+    return ActivityThread.isSteppingType(breakpoint.getSteppingType());
   }
 
   @Specialization(assumptions = {"bpUnchanged"}, guards = {"breakpoint.isEnabled()"})

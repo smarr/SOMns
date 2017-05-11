@@ -22,6 +22,7 @@ import tools.SourceCoordinate.FullSourceCoordinate;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.BreakpointType;
+import tools.debugger.entities.SteppingType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.nodes.BreakpointNodeGen;
 import tools.debugger.nodes.DisabledBreakpointNode;
@@ -104,7 +105,7 @@ public class Breakpoints {
   }
 
   public synchronized void addOrUpdateMessageReceiver(final SectionBreakpoint bId) {
-    saveBreakpoint(bId, receiverBreakpoints);
+    saveBreakpoint(bId, receiverBreakpoints, SteppingType.STEP_TO_MESSAGE_RECEIVER);
   }
 
   public synchronized void addOrUpdateAsyncBefore(final SectionBreakpoint bId) {
@@ -118,23 +119,24 @@ public class Breakpoints {
   }
 
   public synchronized void addOrUpdatePromiseResolver(final SectionBreakpoint bId) {
-    saveBreakpoint(bId, promiseResolverBreakpoints);
+    saveBreakpoint(bId, promiseResolverBreakpoints, SteppingType.STEP_TO_PROMISE_RESOLVER);
   }
 
   public synchronized void addOrUpdatePromiseResolution(final SectionBreakpoint bId) {
-    saveBreakpoint(bId, promiseResolutionBreakpoints);
+    saveBreakpoint(bId, promiseResolutionBreakpoints, SteppingType.STEP_TO_PROMISE_RESOLUTION);
   }
 
-  public synchronized void addOrUpdateChannelOpposite(final SectionBreakpoint bId) {
-    saveBreakpoint(bId, channelOppositeBreakpoints);
+  public synchronized void addOrUpdateChannelOpposite(final SectionBreakpoint bId,
+      final SteppingType type) {
+    saveBreakpoint(bId, channelOppositeBreakpoints, type);
   }
 
   public synchronized void addOrUpdateActivityOnExec(final SectionBreakpoint bId) {
-    saveBreakpoint(bId, onExecutionBreakpoints);
+    saveBreakpoint(bId, onExecutionBreakpoints, SteppingType.STEP_INTO_ACTIVITY);
   }
 
   public synchronized void addOrUpdateBeforeCommit(final SectionBreakpoint bId) {
-    saveBreakpoint(bId, beforeCommitBreakpoints);
+    saveBreakpoint(bId, beforeCommitBreakpoints, SteppingType.STEP_TO_COMMIT);
   }
 
   private Breakpoint saveTruffleBasedBreakpoints(final SectionBreakpoint bId, final Class<?> tag, final SteppingLocation sl) {
@@ -155,11 +157,12 @@ public class Breakpoints {
   }
 
   private void saveBreakpoint(final SectionBreakpoint bId,
-      final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> breakpoints) {
+      final Map<FullSourceCoordinate, BreakpointEnabling<SectionBreakpoint>> breakpoints,
+      final SteppingType type) {
     FullSourceCoordinate coord = bId.getCoordinate();
     BreakpointEnabling<SectionBreakpoint> existingBP = breakpoints.get(coord);
     if (existingBP == null) {
-      existingBP = new BreakpointEnabling<SectionBreakpoint>(bId);
+      existingBP = new BreakpointEnabling<SectionBreakpoint>(bId, type);
       breakpoints.put(coord, existingBP);
     } else {
       existingBP.setEnabled(bId.isEnabled());
@@ -182,39 +185,44 @@ public class Breakpoints {
       final FullSourceCoordinate section) {
     return receiverBreakpoints.computeIfAbsent(section,
         ss -> new BreakpointEnabling<SectionBreakpoint>(
-            new SectionBreakpoint(false, section, BreakpointType.MSG_RECEIVER)));
+            new SectionBreakpoint(false, section, BreakpointType.MSG_RECEIVER),
+            SteppingType.STEP_TO_MESSAGE_RECEIVER));
   }
 
   public synchronized BreakpointEnabling<SectionBreakpoint> getPromiseResolverBreakpoint(
       final FullSourceCoordinate section) {
     return promiseResolverBreakpoints.computeIfAbsent(section,
         ss -> new BreakpointEnabling<>(
-            new SectionBreakpoint(false, section, BreakpointType.PROMISE_RESOLVER)));
+            new SectionBreakpoint(false, section, BreakpointType.PROMISE_RESOLVER),
+            SteppingType.STEP_TO_PROMISE_RESOLVER));
   }
 
   public synchronized BreakpointEnabling<SectionBreakpoint> getPromiseResolutionBreakpoint(
       final FullSourceCoordinate section) {
     return promiseResolutionBreakpoints.computeIfAbsent(section,
         ss -> new BreakpointEnabling<>(
-            new SectionBreakpoint(false, section, BreakpointType.PROMISE_RESOLUTION)));
+            new SectionBreakpoint(false, section, BreakpointType.PROMISE_RESOLUTION),
+            SteppingType.STEP_TO_PROMISE_RESOLUTION));
   }
 
   public synchronized BreakpointEnabling<SectionBreakpoint> getOppositeBreakpoint(
-      final FullSourceCoordinate section, final BreakpointType type) {
+      final FullSourceCoordinate section, final BreakpointType bType, final SteppingType sType) {
     return channelOppositeBreakpoints.computeIfAbsent(section,
-        ss -> new BreakpointEnabling<>(new SectionBreakpoint(false, section, type)));
+        ss -> new BreakpointEnabling<>(new SectionBreakpoint(false, section, bType), sType));
   }
 
   public synchronized BreakpointEnabling<SectionBreakpoint> getOnExecBreakpoint(
       final FullSourceCoordinate section) {
     return onExecutionBreakpoints.computeIfAbsent(section,
-        ss -> new BreakpointEnabling<>(new SectionBreakpoint(false, section, BreakpointType.ACTIVITY_ON_EXEC)));
+        ss -> new BreakpointEnabling<>(new SectionBreakpoint(false, section, BreakpointType.ACTIVITY_ON_EXEC),
+            SteppingType.STEP_INTO_ACTIVITY));
   }
 
   public synchronized BreakpointEnabling<SectionBreakpoint> getBeforeCommitBreakpoint(
       final FullSourceCoordinate section) {
     return beforeCommitBreakpoints.computeIfAbsent(section,
-        ss -> new BreakpointEnabling<>(new SectionBreakpoint(false, section, BreakpointType.ATOMIC_BEFORE_COMMIT)));
+        ss -> new BreakpointEnabling<>(new SectionBreakpoint(false, section, BreakpointType.ATOMIC_BEFORE_COMMIT),
+            SteppingType.STEP_TO_COMMIT));
   }
 
   public static AbstractBreakpointNode createPromiseResolver(final SourceSection source, final VM vm) {
@@ -245,10 +253,11 @@ public class Breakpoints {
   }
 
   public static AbstractBreakpointNode createOpposite(final SourceSection source,
-      final VM vm, final BreakpointType type) {
+      final VM vm, final BreakpointType bType, final SteppingType sType) {
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
       FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
-      return BreakpointNodeGen.create(vm.getBreakpoints().getOppositeBreakpoint(sourceCoord, type));
+      return BreakpointNodeGen.create(
+          vm.getBreakpoints().getOppositeBreakpoint(sourceCoord, bType, sType));
     } else {
       return new DisabledBreakpointNode();
     }

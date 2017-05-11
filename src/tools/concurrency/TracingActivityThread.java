@@ -11,6 +11,7 @@ import som.vm.VmSettings;
 import tools.TraceData;
 import tools.debugger.SteppingStrategy;
 import tools.debugger.entities.EntityType;
+import tools.debugger.entities.SteppingType;
 
 
 public abstract class TracingActivityThread extends ForkJoinWorkerThread
@@ -61,13 +62,14 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread
   public abstract Activity getActivity();
 
   @Override
-  public SteppingStrategy getSteppingStrategy() {
-    return this.steppingStrategy;
+  public boolean isStepping(final SteppingType type) {
+    if (steppingStrategy == null) { return false; }
+    return steppingStrategy.is(type);
   }
 
   @Override
-  public void setSteppingStrategy(final SteppingStrategy strategy) {
-    this.steppingStrategy = strategy;
+  public void setSteppingStrategy(final SteppingType type) {
+    this.steppingStrategy = new SteppingStrategy(type);
   }
 
   public void enterConcurrentScope(final EntityType type) {
