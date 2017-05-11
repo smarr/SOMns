@@ -67,7 +67,7 @@ public class SPromise extends SObjectWithClass {
    * Indicates the case when a promise (implicit or explicit) has a promise
    * resolution breakpoint.
    */
-  private boolean triggerPromiseResolutionBreakpoint;
+  private final boolean triggerPromiseResolutionBreakpoint;
   /**
    * Indicates the case when the promise is created explicitly with
    * createPromisePair primitive, because there is no EventualMessage created
@@ -493,10 +493,6 @@ public class SPromise extends SObjectWithClass {
 
   boolean isTriggerExplicitPromiseResolverBreakpoint() {
     return triggerExplicitPromiseResolverBreakpoint;
-  }
-
-  public void setTriggerPromiseResolutionBreakpoint(final boolean triggerPromiseResolutionBreakpoint) {
-    this.triggerPromiseResolutionBreakpoint = triggerPromiseResolutionBreakpoint;
   }
 
   public void setTriggerStopBeforeExecuteCallback(
