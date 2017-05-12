@@ -1,6 +1,7 @@
 stages:
   - build-and-test
   - benchmark
+  - full-test
 
 variables:
   PYTHONUNBUFFERED: "true"
@@ -14,8 +15,13 @@ build_and_test_job:
   stage: build-and-test
   tags: [benchmarks, infinity]
   script:
-    - ant compile
-    - ant tests
+    - timeout 5m ant unit-tests som-tests
+
+full_test_job:
+  stage: full-test
+  tags: [benchmarks, infinity]
+  script:
+    - timeout 10m ant dynamic-metrics-tests replay-tests
     - cd tools/kompos && npm install && npm test
 
 benchmark_savina_job:
