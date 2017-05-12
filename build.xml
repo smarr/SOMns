@@ -3,6 +3,7 @@
     <property name="src.dir"     value="src"/>
     <property name="src_gen.dir" value="src_gen"/>
     <property name="lib.dir"     value="libs" />
+    <property name="unit.dir"    value="tests/java" />
     <property name="kompos.dir"  value="tools/kompos" />
     <property name="truffle.dir" value="${lib.dir}/truffle/truffle" />
     <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
@@ -18,7 +19,7 @@
 
     <path id="project.classpath">
         <pathelement location="${classes.dir}" />
-        <pathelement location="tests/" />
+        <pathelement location="${unit.dir}" />
         <pathelement location="${lib.dir}/somns-deps-dev.jar" />
         <pathelement location="${lib.dir}/somns-deps.jar" />
         <pathelement location="${truffle.build}/truffle-api.jar" />
@@ -109,7 +110,7 @@
           <compilerarg line="-s ${src_gen.dir}" />
           <compilerarg line="-Xlint:all" />
         </javac>
-        <javac includeantruntime="false" srcdir="tests/" destdir="${classes.dir}" debug="true">
+        <javac includeantruntime="false" srcdir="${unit.dir}" destdir="${classes.dir}" debug="true">
           <classpath refid="project.classpath" />
         </javac>
     </target>
@@ -135,10 +136,9 @@
             <jvmarg value="-esa" />
             <classpath refid="project.classpath" />
             <batchtest fork="yes" filtertrace="false">
-              <fileset dir="tests">
+              <fileset dir="${unit.dir}">
                   <include name="**/*Test*.java"/>
                   <include name="**/*TCK.java"/>
-                  <exclude name="dym"/>
               </fileset>
             </batchtest>
             <formatter type="brief" usefile="false"/>
