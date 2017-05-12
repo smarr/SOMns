@@ -19,13 +19,13 @@ public abstract class BreakpointNode extends AbstractBreakpointNode {
     this.breakpoint = breakpoint;
   }
 
-  @Specialization(assumptions = "bpUnchanged", guards = "breakpoint.isDisabled()")
+  @Specialization(assumptions = "bpUnchanged", guards = "!breakpoint.guardedEnabled()")
   public final boolean breakpointDisabled(
       @Cached("breakpoint.getAssumption()") final Assumption bpUnchanged) {
     return ActivityThread.isSteppingType(breakpoint.getSteppingType());
   }
 
-  @Specialization(assumptions = {"bpUnchanged"}, guards = {"breakpoint.isEnabled()"})
+  @Specialization(assumptions = "bpUnchanged", guards = "breakpoint.guardedEnabled()")
   public final boolean breakpointEnabled(
       @Cached("breakpoint.getAssumption()") final Assumption bpUnchanged) {
     return true;

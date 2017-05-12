@@ -8,5 +8,5 @@ import com.oracle.truffle.api.nodes.Node;
  *
  */
 public abstract class AbstractBreakpointNode extends Node {
-  public abstract boolean executeCheckIsSetAndEnabled();
+  public abstract boolean executeShouldHalt();
 }

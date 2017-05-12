@@ -6,7 +6,7 @@ package tools.debugger.nodes;
  */
 public final class DisabledBreakpointNode extends AbstractBreakpointNode {
   @Override
-  public boolean executeCheckIsSetAndEnabled() {
+  public boolean executeShouldHalt() {
     return false;
   }
 }

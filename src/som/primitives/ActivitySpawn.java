@@ -109,7 +109,7 @@ public abstract class ActivitySpawn {
     @TruffleBoundary
     public final SomForkJoinTask spawnTask(final SClass clazz, final SBlock block) {
       SomForkJoinTask task = createTask(new Object[] {block},
-          onExec.executeCheckIsSetAndEnabled(), block, sourceSection);
+          onExec.executeShouldHalt(), block, sourceSection);
       forkJoinPool.execute(task);
       return task;
     }
@@ -117,7 +117,7 @@ public abstract class ActivitySpawn {
     @Specialization(guards = "clazz == ThreadClass")
     public final SomThreadTask spawnThread(final SClass clazz, final SBlock block) {
       SomThreadTask thread = createThread(new Object[] {block},
-          onExec.executeCheckIsSetAndEnabled(), block, sourceSection);
+          onExec.executeShouldHalt(), block, sourceSection);
       threadPool.execute(thread);
       return thread;
     }
@@ -135,7 +135,7 @@ public abstract class ActivitySpawn {
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(new Object[] {procCls});
 
       processesPool.submit(createProcess(obj, sourceSection,
-          onExec.executeCheckIsSetAndEnabled()));
+          onExec.executeShouldHalt()));
       return Nil.nilObject;
     }
 
@@ -182,7 +182,7 @@ public abstract class ActivitySpawn {
     public SomForkJoinTask spawnTask(final SClass clazz, final SBlock block,
         final SArray somArgArr, final Object[] argArr) {
       SomForkJoinTask task = createTask(argArr,
-          onExec.executeCheckIsSetAndEnabled(), block, sourceSection);
+          onExec.executeShouldHalt(), block, sourceSection);
       forkJoinPool.execute(task);
       return task;
     }
@@ -191,7 +191,7 @@ public abstract class ActivitySpawn {
     public SomThreadTask spawnThread(final SClass clazz, final SBlock block,
         final SArray somArgArr, final Object[] argArr) {
       SomThreadTask thread = createThread(argArr,
-          onExec.executeCheckIsSetAndEnabled(), block, sourceSection);
+          onExec.executeShouldHalt(), block, sourceSection);
       threadPool.execute(thread);
       return thread;
     }
@@ -210,7 +210,7 @@ public abstract class ActivitySpawn {
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(argArr);
 
       processesPool.submit(createProcess(obj, sourceSection,
-          onExec.executeCheckIsSetAndEnabled()));
+          onExec.executeShouldHalt()));
       return Nil.nilObject;
     }
 

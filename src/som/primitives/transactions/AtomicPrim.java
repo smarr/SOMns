@@ -55,7 +55,7 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
           TracingActivityThread.currentThread().enterConcurrentScope(EntityType.TRANSACTION);
 
           // TODO: here we are using a different approach for stepping, and for breakpointing, should unify
-          if (beforeCommit.executeCheckIsSetAndEnabled()) {
+          if (beforeCommit.executeShouldHalt()) {
             vm.getWebDebugger().prepareSteppingAfterNextRootNode();
           }
         }

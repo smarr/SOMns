@@ -198,7 +198,7 @@ public abstract class ChannelPrimitives {
     @Specialization
     public final Object read(final VirtualFrame frame, final SChannelInput in) {
       try {
-        Object result = in.readAndSuspendWriter(afterWrite.executeCheckIsSetAndEnabled());
+        Object result = in.readAndSuspendWriter(afterWrite.executeShouldHalt());
         if (in.shouldBreakAfterRead()) {
           haltNode.executeEvaluated(frame, result);
         }
@@ -243,7 +243,7 @@ public abstract class ChannelPrimitives {
         KernelObj.signalException("signalNotAValueWith:", val);
       }
       try {
-        out.writeAndSuspendReader(val, afterRead.executeCheckIsSetAndEnabled());
+        out.writeAndSuspendReader(val, afterRead.executeShouldHalt());
         if (out.shouldBreakAfterWrite()) {
           haltNode.executeEvaluated(frame, val);
         }
