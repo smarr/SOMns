@@ -18,6 +18,7 @@ import som.interpreter.actors.SuspendExecutionNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.interpreter.processes.SChannel;
 import som.interpreter.processes.SChannel.SChannelInput;
 import som.interpreter.processes.SChannel.SChannelOutput;
@@ -99,6 +100,7 @@ public abstract class ChannelPrimitives {
     @Override
     public void run() {
       ((ProcessThread) Thread.currentThread()).current = this;
+      ObjectTransitionSafepoint.INSTANCE.register();
 
       try {
         SInvokable disp = (SInvokable) obj.getSOMClass().lookupMessage(
@@ -108,6 +110,8 @@ public abstract class ChannelPrimitives {
         disp.invoke(new Object[] {obj});
       } catch (Throwable t) {
         t.printStackTrace();
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
       }
     }
 
