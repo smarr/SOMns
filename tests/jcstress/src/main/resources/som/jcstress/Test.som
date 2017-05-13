@@ -1,0 +1,18 @@
+class Test = ()(
+  public class Obj = (
+  | public a
+    public b
+  |)() : (
+    public write: obj a: val = (
+      obj a: val.
+      ^ obj a
+    )
+
+    public write: obj b: val = (
+      obj b: val.
+      ^ obj b
+    )
+  )
+) : (
+  public objClass = ( ^ self new Obj )
+)
