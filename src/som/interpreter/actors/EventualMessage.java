@@ -229,19 +229,17 @@ public abstract class EventualMessage {
 
   /** The callback message to be send after a promise is resolved. */
   public static final class PromiseCallbackMessage extends PromiseMessage {
-    protected final SPromise promise;
     /**
      * The promise on which this callback is registered on.
      */
-    protected final SPromise promiseRegisteredOn;
+    protected final SPromise promise;
 
     public PromiseCallbackMessage(final long causalMessageId, final Actor owner, final SBlock callback,
         final SResolver resolver, final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint,
-        final boolean triggerPromiseResolverBreakpoint, final SPromise parent, final SPromise promiseRegisteredOn) {
+        final boolean triggerPromiseResolverBreakpoint, final SPromise promiseRegisteredOn) {
       super(causalMessageId, new Object[] {callback, null}, owner, resolver, onReceive,
           triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
-      this.promise = parent;
-      this.promiseRegisteredOn = promiseRegisteredOn;
+      this.promise = promiseRegisteredOn;
     }
 
     @Override
@@ -278,10 +276,6 @@ public abstract class EventualMessage {
     @Override
     public SPromise getPromise() {
       return promise;
-    }
-
-    public SPromise getPromiseRegisteredOn() {
-      return promiseRegisteredOn;
     }
   }
 
