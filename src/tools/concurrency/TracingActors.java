@@ -67,7 +67,7 @@ public class TracingActors {
       // check if a step-return-from-turn-to-promise-resolution has been triggered
       if (msg instanceof PromiseSendMessage && ((PromiseSendMessage) msg).getPromise().isTriggerStopBeforeExecuteCallback()) {
           dbg.prepareSteppingUntilNextRootNode();
-      } else if (msg instanceof PromiseCallbackMessage && ((PromiseCallbackMessage) msg).getPromiseRegisteredOn().isTriggerStopBeforeExecuteCallback()) {
+      } else if (msg instanceof PromiseCallbackMessage && ((PromiseCallbackMessage) msg).getPromise().isTriggerStopBeforeExecuteCallback()) {
           dbg.prepareSteppingUntilNextRootNode();
       }
    }
