@@ -12,7 +12,6 @@ import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.transactions.Transactions;
 import som.primitives.Primitive;
-import som.vm.ActivityThread;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
@@ -44,7 +43,7 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
   @Specialization
   public final Object atomic(final VirtualFrame frame, final SClass clazz, final SBlock block) {
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
-        ActivityThread.isSteppingType(SteppingType.STEP_TO_NEXT_TX)) {
+        SteppingType.STEP_TO_NEXT_TX.isSet()) {
       haltNode.executeEvaluated(frame, block);
     }
 
@@ -63,13 +62,13 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
         Object result = block.getMethod().getAtomicCallTarget().call(new Object[] {block});
 
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
-            ActivityThread.isSteppingType(SteppingType.STEP_TO_COMMIT)) {
+            SteppingType.STEP_TO_COMMIT.isSet()) {
           haltNode.executeEvaluated(frame, result);
         }
 
         if (tx.commit()) {
           if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
-              ActivityThread.isSteppingType(SteppingType.STEP_AFTER_COMMIT)) {
+              SteppingType.STEP_AFTER_COMMIT.isSet()) {
             haltNode.executeEvaluated(frame, result);
           }
 
@@ -79,13 +78,13 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
         }
       } catch (Throwable t) {
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
-            ActivityThread.isSteppingType(SteppingType.STEP_TO_COMMIT)) {
+            SteppingType.STEP_TO_COMMIT.isSet()) {
           haltNode.executeEvaluated(frame, t);
         }
 
         if (tx.commit()) {
           if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
-              ActivityThread.isSteppingType(SteppingType.STEP_AFTER_COMMIT)) {
+              SteppingType.STEP_AFTER_COMMIT.isSet()) {
             haltNode.executeEvaluated(frame, t);
           }
 

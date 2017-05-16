@@ -12,6 +12,7 @@ import tools.concurrency.Tags.EventualMessageSend;
 import tools.concurrency.Tags.OnError;
 import tools.concurrency.Tags.WhenResolved;
 import tools.concurrency.Tags.WhenResolvedOnError;
+import tools.concurrency.TracingActivityThread;
 import tools.debugger.frontend.Suspension;
 
 
@@ -260,4 +261,8 @@ public enum SteppingType {
   }
 
   public abstract void process(Suspension susp);
+
+  public boolean isSet() {
+    return ((TracingActivityThread) Thread.currentThread()).isStepping(this);
+  }
 }

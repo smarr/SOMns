@@ -15,7 +15,6 @@ import som.interpreter.actors.SuspendExecutionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.HaltPrim;
 import som.vm.Activity;
-import som.vm.ActivityThread;
 import tools.TraceData;
 import tools.concurrency.TracingActivityThread;
 import tools.debugger.FrontendConnector;
@@ -173,7 +172,7 @@ public class Suspension {
     ObjectTransitionSafepoint.INSTANCE.register();
   }
 
-  public ActivityThread getActivityThread() { return activityThread; }
+  public TracingActivityThread getActivityThread() { return activityThread; }
   public Activity getActivity() { return activity; }
   public synchronized SuspendedEvent getEvent() { return suspendedEvent; }
 }
