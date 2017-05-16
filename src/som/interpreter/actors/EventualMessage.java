@@ -277,7 +277,7 @@ public abstract class EventualMessage {
 
     @Override
     public SPromise getPromise() {
-      return promise;
+      return promiseRegisteredOn;
     }
 
     public SPromise getPromiseRegisteredOn() {
@@ -375,6 +375,10 @@ public abstract class EventualMessage {
     @Override
     public SPromise getPromise() {
       return msg.getPromise();
+    }
+
+    public PromiseMessage unwrap() {
+      return msg;
     }
   }
 }

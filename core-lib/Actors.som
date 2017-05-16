@@ -156,10 +156,6 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel usingPlatform: platform
     ^ vmMirror actorsCreatePromisePair: nil.
   )
 
-  private createUntracedPromisePair = (
-    ^ vmMirror actorsCreateUntracedPromisePair: nil.
-  )
-
   public createActorFromValue: aValue = (
     ^ vmMirror actors: nil createFromValue: aValue
   )

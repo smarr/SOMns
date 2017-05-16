@@ -17,6 +17,7 @@ import som.compiler.AccessModifier;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
+import som.interpreter.actors.EventualMessage.UntracedMessage;
 import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.RegisterOnPromiseNode.RegisterOnError;
 import som.interpreter.actors.RegisterOnPromiseNode.RegisterWhenResolved;
@@ -180,6 +181,63 @@ public final class PromisePrims {
       PromiseCallbackMessage pcm = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
           block, resolver, blockCallTarget, false, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promise, rcvr);
       registerNode.register(rcvr, pcm, current);
+
+      return promise;
+    }
+
+    @Override
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+      if (tag == WhenResolved.class || tag == ExpressionBreakpoint.class || tag == StatementTag.class) {
+        return true;
+      }
+      return super.isTaggedWithIgnoringEagerness(tag);
+    }
+  }
+
+  @GenerateNodeFactory
+  @ImportStatic(PromisePrims.class)
+  @Primitive(primitive = "actorsUntracedWhen:resolved:", selector = "untracedWhenResolved:",
+             receiverType = SPromise.class, requiresContext = true)
+  public abstract static class UntracedWhenResolvedPrim extends BinaryComplexOperation {
+    @Child protected RegisterWhenResolved registerNode;
+
+    @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
+    @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
+
+    protected UntracedWhenResolvedPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
+      super(eagWrap, source);
+      this.registerNode = new RegisterWhenResolved(vm.getActorPool());
+
+      this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source, vm));
+      this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source, vm));
+    }
+
+    @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
+    public final SPromise whenResolved(final SPromise promise,
+        final SBlock callback,
+        @Cached("callback.getMethod()") final SInvokable blockMethod,
+        @Cached("createReceived(callback)") final RootCallTarget blockCallTarget) {
+      return registerWhenResolved(promise, callback, blockCallTarget, registerNode);
+    }
+
+    @Specialization(replaces = "whenResolved")
+    public final SPromise whenResolvedUncached(final SPromise promise, final SBlock callback) {
+      return registerWhenResolved(promise, callback, createReceived(callback), registerNode);
+    }
+
+    protected final SPromise registerWhenResolved(final SPromise rcvr,
+        final SBlock block, final RootCallTarget blockCallTarget,
+        final RegisterWhenResolved registerNode) {
+      assert block.getMethod().getNumberOfArguments() == 2;
+
+      Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
+      SPromise  promise = SPromise.createUntracedPromise(current, SPromise.hasPromiseResolutionBreakpoint(promiseResolutionBreakpoint), false, false);
+      SResolver resolver = SPromise.createResolver(promise);
+
+      PromiseCallbackMessage pcm = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
+          block, resolver, blockCallTarget, false, promiseResolverBreakpoint.executeCheckIsSetAndEnabled(), promise, rcvr);
+
+      registerNode.register(rcvr, new UntracedMessage(pcm), current);
 
       return promise;
     }

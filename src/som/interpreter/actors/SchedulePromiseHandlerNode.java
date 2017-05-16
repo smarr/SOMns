@@ -10,6 +10,7 @@ import som.VM;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
+import som.interpreter.actors.EventualMessage.UntracedMessage;
 
 
 /**
@@ -29,6 +30,49 @@ public abstract class SchedulePromiseHandlerNode extends Node {
   }
 
   public abstract void execute(SPromise promise, PromiseMessage msg, Actor current);
+
+  @Specialization
+  public final void schedule(final SPromise promise,
+      final UntracedMessage msg, final Actor current,
+      @Cached("createWrapper()") final WrapReferenceNode wrapper) {
+    assert promise.getOwner() != null;
+    if (msg.unwrap() instanceof PromiseCallbackMessage) {
+      PromiseCallbackMessage pcall = (PromiseCallbackMessage) msg.unwrap();
+      pcall.args[PromiseMessage.PROMISE_VALUE_IDX] = wrapper.execute(
+          promise.getValueUnsync(), msg.originalSender, current);
+      pcall.originalSender.send(msg, actorPool);
+    } else {
+      PromiseSendMessage psend = (PromiseSendMessage) msg.unwrap();
+      Actor finalTarget = promise.getOwner();
+
+      Object receiver = wrapper.execute(promise.getValueUnsync(),
+          finalTarget, current);
+      assert !(receiver instanceof SPromise) : "TODO: handle this case as well?? Is it possible? didn't think about it";
+
+      // TODO: might want to handle that in a specialization
+      if (receiver instanceof SFarReference) {
+        // now we are about to send a message to a far reference, so, it
+        // is better to just redirect the message back to the current actor
+        finalTarget   = ((SFarReference) receiver).getActor();
+        receiver = ((SFarReference) receiver).getValue();
+      }
+
+      psend.args[PromiseMessage.PROMISE_RCVR_IDX] = receiver;
+
+      assert !(receiver instanceof SFarReference) : "this should not happen, because we need to redirect messages to the other actor, and normally we just unwrapped this";
+      assert !(receiver instanceof SPromise);
+
+      // TODO: break that out into nodes
+      for (int i = 1; i < msg.args.length; i++) {
+        psend.args[i] = finalTarget.wrapForUse(psend.args[i], psend.originalSender, null);
+      }
+
+      psend.target      = finalTarget; // for sends to far references, we need to adjust the target
+      psend.finalSender = current;
+
+      finalTarget.send(msg, actorPool);
+    }
+  }
 
   @Specialization
   public final void schedule(final SPromise promise,
