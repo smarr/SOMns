@@ -255,8 +255,11 @@ class Tests usingPlatform: platform = Value (
     actor <-: bar.
   )
 
+  (* all have to fail *)
   public testAnd = (
-    | pp1 pp2 |
+    | pp1 pp2 result |
+    result := 0.
+
     pp1 := actors createPromisePair.
     pp2 := actors createPromisePair. 
 
@@ -272,12 +275,6 @@ class Tests usingPlatform: platform = Value (
 
     Assertions assert: (Assertions promise: (pp1 promise) and: (pp2 promise)).
     Assertions assert: (Assertions promise: (pp2 promise) and: (pp1 promise)).
-  )
-
-  (* all have to fail *)
-  public testAnd2 = (
-    | pp1 pp2 result |
-    result := 0.
 
     pp1 := actors createPromisePair.
     pp2 := actors createPromisePair. 
@@ -331,7 +328,8 @@ class Tests usingPlatform: platform = Value (
   )
 
   public testOr = (
-    | pp1 pp2 |
+    | pp1 pp2 result |
+    result := 0.
 
     pp1 := actors createPromisePair.
     pp2 := actors createPromisePair. 
@@ -380,11 +378,7 @@ class Tests usingPlatform: platform = Value (
 
     Assertions assert: (Assertions promise: (pp1 promise) or: (pp2 promise)).
     Assertions assert: (Assertions promise: (pp2 promise) or: (pp1 promise)).
-  )
 
-  public testOr2 = (
-    | pp1 pp2 result |
-    result := 0.
     pp1 := actors createPromisePair.
     pp2 := actors createPromisePair. 
 
@@ -405,19 +399,16 @@ class Tests usingPlatform: platform = Value (
   )
   
   public testNot = (
-    | pp |
+    | pp result |
     pp := actors createPromisePair.
+    result := 0.
 
     Assertions assert: (Assertions not: (pp promise)).
 
     pp resolve: false.
 
     Assertions assert: (Assertions not: (pp promise)).
-  )
 
-  public testNot2 = (
-    | pp result |
-    result := 0.
     pp := actors createPromisePair.
 
     Assertions assert: (Assertions not: (pp promise)) handler: [result := result +1].

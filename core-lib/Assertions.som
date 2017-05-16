@@ -41,6 +41,7 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
   public class Assertions = ()(
 
     public class MessageProtocol = Assertions (
+      (vmMirror AssertionsEnabled: self) ifFalse: [^ nil].
       start.
     )(
       public start  = (self subclassResponsibility)
@@ -52,6 +53,10 @@ class Assertions usingVmMirror: vmMirror usingKernel: kernel usingPlatform: plat
       onReceive: message do: aBlock = (
         vmMirror onReceive: message do: aBlock.
       )
+    )
+
+    public withProtocol: aProtocol = (
+      aProtocol new.
     )
 
     public isMessage: msg = (
