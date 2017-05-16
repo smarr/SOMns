@@ -12,16 +12,7 @@ import tools.concurrency.Tags.EventualMessageSend;
 import tools.concurrency.Tags.OnError;
 import tools.concurrency.Tags.WhenResolved;
 import tools.concurrency.Tags.WhenResolvedOnError;
-import tools.debugger.SteppingStrategy.AfterCommit;
-import tools.debugger.SteppingStrategy.IntoSpawn;
-import tools.debugger.SteppingStrategy.ReturnFromActivity;
-import tools.debugger.SteppingStrategy.ReturnFromTurnToPromiseResolution;
-import tools.debugger.SteppingStrategy.ToChannelOpposite;
-import tools.debugger.SteppingStrategy.ToMessageReceiver;
-import tools.debugger.SteppingStrategy.ToNextCommit;
-import tools.debugger.SteppingStrategy.ToNextTransaction;
-import tools.debugger.SteppingStrategy.ToNextTurn;
-import tools.debugger.SteppingStrategy.ToPromiseResolution;
+import tools.concurrency.TracingActivityThread;
 import tools.debugger.frontend.Suspension;
 
 
@@ -89,7 +80,7 @@ public enum SteppingType {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareStepOver(1);
-      susp.getActivityThread().setSteppingStrategy(new IntoSpawn());
+      susp.getActivityThread().setSteppingStrategy(this);
     }
   },
 
@@ -99,7 +90,7 @@ public enum SteppingType {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareContinue();
-      susp.getActivityThread().setSteppingStrategy(new ReturnFromActivity());
+      susp.getActivityThread().setSteppingStrategy(this);
     }
   },
 
@@ -109,7 +100,7 @@ public enum SteppingType {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareStepOver(1);
-      susp.getActivityThread().setSteppingStrategy(new ToChannelOpposite());
+      susp.getActivityThread().setSteppingStrategy(this);
     }
   },
 
@@ -118,7 +109,7 @@ public enum SteppingType {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareStepInto(1);
-      susp.getActivityThread().setSteppingStrategy(new ToChannelOpposite());
+      susp.getActivityThread().setSteppingStrategy(this);
     }
   },
 
@@ -127,7 +118,7 @@ public enum SteppingType {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareContinue();
-      susp.getActivityThread().setSteppingStrategy(new ToNextTransaction());
+      susp.getActivityThread().setSteppingStrategy(this);
     }
   },
 
@@ -137,8 +128,7 @@ public enum SteppingType {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareContinue();
-      susp.getActivityThread().setSteppingStrategy(new ToNextCommit());
-
+      susp.getActivityThread().setSteppingStrategy(this);
     }
   },
 
@@ -148,34 +138,51 @@ public enum SteppingType {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareContinue();
-      susp.getActivityThread().setSteppingStrategy(new AfterCommit());
+      susp.getActivityThread().setSteppingStrategy(this);
     }
   },
 
   @SerializedName("stepToMessageRcvr")
-  STEP_TO_RECEIVER_MESSAGE("stepToMessageRcvr", "Step to Msg Receiver", Group.ACTOR_STEPPING, "msg-open", new Class[] {EventualMessageSend.class}) {
-    @Override public void process(final Suspension susp) {
+  STEP_TO_MESSAGE_RECEIVER("stepToMessageRcvr", "Step to Msg Receiver",
+      Group.ACTOR_STEPPING, "msg-open", new Class[] {EventualMessageSend.class}) {
+    @Override
+    public void process(final Suspension susp) {
       susp.getEvent().prepareStepOver(1);
-      susp.getActivityThread().setSteppingStrategy(new ToMessageReceiver());
-      }
-    },
+      susp.getActivityThread().setSteppingStrategy(this);
+    }
+  },
+
+  @SerializedName("stepToPromiseResolver")
+  STEP_TO_PROMISE_RESOLVER("stepToPromiseResolver", "Step to Promise Resolver",
+      Group.ACTOR_STEPPING, "msg-white",
+      new Class[] {EventualMessageSend.class, CreatePromisePair.class,
+          WhenResolved.class, WhenResolvedOnError.class, OnError.class}) {
+    @Override
+    public void process(final Suspension susp) {
+      susp.getEvent().prepareStepOver(1);
+      susp.getActivityThread().setSteppingStrategy(this);
+    }
+  },
 
   @SerializedName("stepToPromiseResolution")
   STEP_TO_PROMISE_RESOLUTION("stepToPromiseResolution", "Step to Promise Resolution",
       Group.ACTOR_STEPPING, "msg-white",
       new Class[] {EventualMessageSend.class, CreatePromisePair.class,
           WhenResolved.class, WhenResolvedOnError.class, OnError.class}) {
-      @Override public void process(final Suspension susp) {
-       susp.getEvent().prepareStepOver(1);
-       susp.getActivityThread().setSteppingStrategy(new ToPromiseResolution());
+    @Override
+    public void process(final Suspension susp) {
+      susp.getEvent().prepareStepOver(1);
+      susp.getActivityThread().setSteppingStrategy(this);
     }
   },
 
   @SerializedName("stepToNextTurn")
-  STEP_TO_NEXT_TURN("stepToNextTurn", "Step to Next Turn", Group.ACTOR_STEPPING, "msg-close", null, new ActivityType[] {ActivityType.ACTOR}) {
-    @Override public void process(final Suspension susp) {
+  STEP_TO_NEXT_TURN("stepToNextTurn", "Step to Next Turn",
+      Group.ACTOR_STEPPING, "msg-close", null, new ActivityType[] {ActivityType.ACTOR}) {
+    @Override
+    public void process(final Suspension susp) {
       susp.getEvent().prepareStepOver(1);
-      susp.getActivityThread().setSteppingStrategy(new ToNextTurn());
+      susp.getActivityThread().setSteppingStrategy(this);
     }
   },
 
@@ -185,7 +192,7 @@ public enum SteppingType {
       null, new ActivityType[] {ActivityType.ACTOR}) {
     @Override public void process(final Suspension susp) {
       susp.getEvent().prepareStepOver(1);
-      susp.getActivityThread().setSteppingStrategy(new ReturnFromTurnToPromiseResolution());
+      susp.getActivityThread().setSteppingStrategy(this);
     }
   };
 
@@ -254,4 +261,8 @@ public enum SteppingType {
   }
 
   public abstract void process(Suspension susp);
+
+  public boolean isSet() {
+    return ((TracingActivityThread) Thread.currentThread()).isStepping(this);
+  }
 }

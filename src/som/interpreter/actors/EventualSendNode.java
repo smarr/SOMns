@@ -33,10 +33,7 @@ import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 import tools.concurrency.Tags.EventualMessageSend;
 import tools.concurrency.Tags.ExpressionBreakpoint;
-import tools.debugger.SteppingStrategy;
-import tools.debugger.SteppingStrategy.ReturnFromTurnToPromiseResolution;
-import tools.debugger.SteppingStrategy.ToMessageReceiver;
-import tools.debugger.SteppingStrategy.ToPromiseResolution;
+import tools.debugger.entities.BreakpointType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
@@ -139,9 +136,9 @@ public class EventualSendNode extends ExprWithTagsNode {
         this.actorPool = null;
       } else {
         this.actorPool = vm.getActorPool();
-        this.messageReceiverBreakpoint   = insert(Breakpoints.createReceiver(source, vm));
-        this.promiseResolverBreakpoint   = insert(Breakpoints.createPromiseResolver(source, vm));
-        this.promiseResolutionBreakpoint = insert(Breakpoints.createPromiseResolution(source, vm));
+        this.messageReceiverBreakpoint   = insert(Breakpoints.create(source, BreakpointType.MSG_RECEIVER, vm));
+        this.promiseResolverBreakpoint   = insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLVER, vm));
+        this.promiseResolutionBreakpoint = insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLUTION, vm));
       }
     }
 
@@ -191,7 +188,8 @@ public class EventualSendNode extends ExprWithTagsNode {
       DirectMessage msg = new DirectMessage(
           EventualMessage.getCurrentExecutingMessageId(), target, selector, args,
           owner, resolver, onReceive,
-          hasMessageReceiverBreakpoint(resolver), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
+          messageReceiverBreakpoint.executeShouldHalt(),
+          promiseResolverBreakpoint.executeShouldHalt());
 
       target.send(msg, actorPool);
     }
@@ -203,34 +201,10 @@ public class EventualSendNode extends ExprWithTagsNode {
       PromiseSendMessage msg = new PromiseSendMessage(
           EventualMessage.getCurrentExecutingMessageId(), selector, args,
           rcvr.getOwner(), resolver, onReceive,
-          hasMessageReceiverBreakpoint(resolver), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
+          messageReceiverBreakpoint.executeShouldHalt(),
+          promiseResolverBreakpoint.executeShouldHalt());
 
       registerNode.register(rcvr, msg, rcvr.getOwner());
-    }
-
-    /**
-     * Check if any stepping strategy has been set and updates the corresponding breakpoint flag.
-     * If the strategy ToMessageReceiver is active, the flag messageReceiverBreakpoint is updated.
-     * If the strategy ToPromiseResolution is active, the flag promiseResolutionBreakpoint is updated.
-     * If the strategy ReturnFromTurnToPromiseResolution is active, the flag triggerStopBeforeExecuteCallback
-     * of the promise of the causal message is updated.
-     * Returns the flag of the message receiver breakpoint.
-     */
-    private boolean hasMessageReceiverBreakpoint(final SResolver resolver) {
-      boolean stepReceiver = SteppingStrategy.isEnabled(ToMessageReceiver.class);
-      boolean stepResolution = SteppingStrategy.isEnabled(ToPromiseResolution.class);
-      boolean stepReturnFromTurn = SteppingStrategy.isEnabled(ReturnFromTurnToPromiseResolution.class);
-
-      boolean msgRcvrBkp = messageReceiverBreakpoint.executeCheckIsSetAndEnabled() || stepReceiver;
-      if (resolver != null && !resolver.getPromise().isTriggerPromiseResolutionBreakpoint() && stepResolution) {
-        resolver.getPromise().setTriggerPromiseResolutionBreakpoint(stepResolution);
-      }
-      EventualMessage causalMsg = EventualMessage.getCurrentExecutingMessage();
-      if (causalMsg.getResolver() != null && stepReturnFromTurn) {
-        causalMsg.getResolver().getPromise().setTriggerStopBeforeExecuteCallback(stepReturnFromTurn);
-      }
-
-      return msgRcvrBkp;
     }
 
     protected RegisterWhenResolved createRegisterNode() {
@@ -246,7 +220,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final SPromise toFarRefWithResultPromise(final Object[] args) {
       Actor owner = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      SPromise  result   = SPromise.createPromise(owner, promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false, false);
+      SPromise  result   = SPromise.createPromise(owner, promiseResolutionBreakpoint.executeShouldHalt(), false, false);
       SResolver resolver = SPromise.createResolver(result);
 
       sendDirectMessage(args, owner, resolver);
@@ -258,7 +232,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final SPromise toPromiseWithResultPromise(final Object[] args,
         @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
       SPromise rcvr = (SPromise) args[0];
-      SPromise  promise  = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn(), promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false, false);
+      SPromise  promise  = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn(), promiseResolutionBreakpoint.executeShouldHalt(), false, false);
       SResolver resolver = SPromise.createResolver(promise);
 
       sendPromiseMessage(args, rcvr, resolver, registerNode);
@@ -269,13 +243,14 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final SPromise toNearRefWithResultPromise(final Object[] args) {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      SPromise  result   = SPromise.createPromise(current, promiseResolutionBreakpoint.executeCheckIsSetAndEnabled(), false, false);
+      SPromise  result   = SPromise.createPromise(current, promiseResolutionBreakpoint.executeShouldHalt(), false, false);
       SResolver resolver = SPromise.createResolver(result);
 
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessageId(),
           current, selector, args, current,
           resolver, onReceive,
-          hasMessageReceiverBreakpoint(resolver), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
+          messageReceiverBreakpoint.executeShouldHalt(),
+          promiseResolverBreakpoint.executeShouldHalt());
 
       current.send(msg, actorPool);
 
@@ -305,7 +280,8 @@ public class EventualSendNode extends ExprWithTagsNode {
       DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessageId(),
           current, selector, args, current,
           null, onReceive,
-          hasMessageReceiverBreakpoint(null), promiseResolverBreakpoint.executeCheckIsSetAndEnabled());
+          messageReceiverBreakpoint.executeShouldHalt(),
+          promiseResolverBreakpoint.executeShouldHalt());
 
       current.send(msg, actorPool);
       return Nil.nilObject;

@@ -25,7 +25,6 @@ import som.interpreter.processes.SChannel.SChannelOutput;
 import som.primitives.ObjectPrims.IsValue;
 import som.primitives.Primitive;
 import som.vm.Activity;
-import som.vm.ActivityThread;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
@@ -38,7 +37,6 @@ import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActivityThread;
-import tools.debugger.SteppingStrategy;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
@@ -194,32 +192,19 @@ public abstract class ChannelPrimitives {
     public ReadPrim(final boolean eagerlyWrapped, final SourceSection source, final VM vm) {
       super(eagerlyWrapped, source);
       haltNode = SuspendExecutionNodeGen.create(false, sourceSection, null);
-      afterWrite = insert(Breakpoints.createOpposite(
-          source, vm, BreakpointType.CHANNEL_AFTER_SEND));
+      afterWrite = insert(Breakpoints.create(source, BreakpointType.CHANNEL_AFTER_SEND, vm));
     }
 
     @Specialization
     public final Object read(final VirtualFrame frame, final SChannelInput in) {
       try {
-        Object result = in.readAndSuspendWriter(afterWrite.executeCheckIsSetAndEnabled() || stopOnWrite());
+        Object result = in.readAndSuspendWriter(afterWrite.executeShouldHalt());
         if (in.shouldBreakAfterRead()) {
           haltNode.executeEvaluated(frame, result);
         }
         return result;
       } catch (InterruptedException e) {
         throw new RuntimeException(e);
-      }
-    }
-
-    private static boolean stopOnWrite() {
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        SteppingStrategy strategy = ActivityThread.steppingStrategy();
-        if (strategy == null) {
-          return false;
-        }
-        return strategy.handleChannelMessage();
-      } else {
-        return false;
       }
     }
 
@@ -248,8 +233,7 @@ public abstract class ChannelPrimitives {
       super(eagerlyWrapped, source);
       isVal     = IsValue.createSubNode();
       haltNode  = SuspendExecutionNodeGen.create(false, sourceSection, null);
-      afterRead = insert(Breakpoints.createOpposite(
-          source, vm, BreakpointType.CHANNEL_AFTER_RCV));
+      afterRead = insert(Breakpoints.create(source, BreakpointType.CHANNEL_AFTER_RCV, vm));
     }
 
     @Specialization
@@ -259,7 +243,7 @@ public abstract class ChannelPrimitives {
         KernelObj.signalException("signalNotAValueWith:", val);
       }
       try {
-        out.writeAndSuspendReader(val, afterRead.executeCheckIsSetAndEnabled() || stopOnRead());
+        out.writeAndSuspendReader(val, afterRead.executeShouldHalt());
         if (out.shouldBreakAfterWrite()) {
           haltNode.executeEvaluated(frame, val);
         }
@@ -275,18 +259,6 @@ public abstract class ChannelPrimitives {
         return true;
       } else {
         return super.isTaggedWithIgnoringEagerness(tag);
-      }
-    }
-
-    private static boolean stopOnRead() {
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        SteppingStrategy strategy = ActivityThread.steppingStrategy();
-        if (strategy == null) {
-          return false;
-        }
-        return strategy.handleChannelMessage();
-      } else {
-        return false;
       }
     }
   }

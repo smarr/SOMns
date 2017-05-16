@@ -12,19 +12,19 @@ import tools.debugger.session.BreakpointEnabling;
  */
 public abstract class BreakpointNode extends AbstractBreakpointNode {
 
-  protected final BreakpointEnabling<?> breakpoint;
+  protected final BreakpointEnabling breakpoint;
 
-  protected BreakpointNode(final BreakpointEnabling<?> breakpoint) {
+  protected BreakpointNode(final BreakpointEnabling breakpoint) {
     this.breakpoint = breakpoint;
   }
 
-  @Specialization(assumptions = "bpUnchanged", guards = "breakpoint.isDisabled()")
+  @Specialization(assumptions = "bpUnchanged", guards = "!breakpoint.guardedEnabled()")
   public final boolean breakpointDisabled(
       @Cached("breakpoint.getAssumption()") final Assumption bpUnchanged) {
-    return false;
+    return breakpoint.getSteppingType().isSet();
   }
 
-  @Specialization(assumptions = {"bpUnchanged"}, guards = {"breakpoint.isEnabled()"})
+  @Specialization(assumptions = "bpUnchanged", guards = "breakpoint.guardedEnabled()")
   public final boolean breakpointEnabled(
       @Cached("breakpoint.getAssumption()") final Assumption bpUnchanged) {
     return true;

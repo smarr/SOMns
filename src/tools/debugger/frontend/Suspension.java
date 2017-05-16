@@ -8,16 +8,18 @@ import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
 import som.interpreter.LexicalScope.MethodScope;
+import som.interpreter.actors.Actor;
+import som.interpreter.actors.EventualMessage;
+import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.actors.SuspendExecutionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.HaltPrim;
 import som.vm.Activity;
-import som.vm.ActivityThread;
 import tools.TraceData;
 import tools.concurrency.TracingActivityThread;
 import tools.debugger.FrontendConnector;
-import tools.debugger.SteppingStrategy;
 import tools.debugger.entities.EntityType;
+import tools.debugger.entities.SteppingType;
 import tools.debugger.frontend.ApplicationThreadTask.Resume;
 import tools.debugger.frontend.ApplicationThreadTask.SendStackTrace;
 
@@ -145,12 +147,21 @@ public class Suspension {
     while (continueWaiting) {
       try {
         continueWaiting = tasks.take().execute();
-        SteppingStrategy strategy = activityThread.getSteppingStrategy();
-        if (!continueWaiting && strategy != null) {
-          strategy.handleResumeExecution(activity);
-          strategy.handleMessageToNextTurn(activity);
-        }
 
+        if (!continueWaiting) {
+          if (activityThread.isStepping(SteppingType.RETURN_FROM_ACTIVITY)) {
+            activity.setStepToJoin(true);
+          } else if (activityThread.isStepping(SteppingType.STEP_TO_NEXT_TURN)) {
+            activity.setStepToNextTurn(true);
+          } else if (activityThread.isStepping(SteppingType.RETURN_FROM_TURN_TO_PROMISE_RESOLUTION)) {
+            assert activity instanceof Actor;
+            EventualMessage turnMessage = EventualMessage.getCurrentExecutingMessage();
+            SResolver resolver = turnMessage.getResolver();
+            if (resolver != null) {
+              resolver.getPromise().setTriggerStopBeforeExecuteCallback(true);
+            }
+          }
+        }
       } catch (InterruptedException e) { /* Just continue waiting */ }
     }
     synchronized (this) {
@@ -161,7 +172,7 @@ public class Suspension {
     ObjectTransitionSafepoint.INSTANCE.register();
   }
 
-  public ActivityThread getActivityThread() { return activityThread; }
+  public TracingActivityThread getActivityThread() { return activityThread; }
   public Activity getActivity() { return activity; }
   public synchronized SuspendedEvent getEvent() { return suspendedEvent; }
 }

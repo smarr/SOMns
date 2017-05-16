@@ -12,15 +12,15 @@ import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.transactions.Transactions;
 import som.primitives.Primitive;
-import som.vm.ActivityThread;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import tools.concurrency.Tags.Atomic;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActivityThread;
-import tools.debugger.SteppingStrategy;
+import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.EntityType;
+import tools.debugger.entities.SteppingType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
@@ -36,13 +36,14 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
   protected AtomicPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
     super(eagWrap, source);
     this.vm = vm;
-    beforeCommit = insert(Breakpoints.createBeforeCommit(source, vm));
+    beforeCommit = insert(Breakpoints.create(source, BreakpointType.ATOMIC_BEFORE_COMMIT, vm));
     haltNode = SuspendExecutionNodeGen.create(false, sourceSection, null);
   }
 
   @Specialization
   public final Object atomic(final VirtualFrame frame, final SClass clazz, final SBlock block) {
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnTx()) {
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
+        SteppingType.STEP_TO_NEXT_TX.isSet()) {
       haltNode.executeEvaluated(frame, block);
     }
 
@@ -51,19 +52,23 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
       try {
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
           TracingActivityThread.currentThread().enterConcurrentScope(EntityType.TRANSACTION);
-          if (beforeCommit.executeCheckIsSetAndEnabled()) {
+
+          // TODO: here we are using a different approach for stepping, and for breakpointing, should unify
+          if (beforeCommit.executeShouldHalt()) {
             vm.getWebDebugger().prepareSteppingAfterNextRootNode();
           }
         }
 
         Object result = block.getMethod().getAtomicCallTarget().call(new Object[] {block});
 
-        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnCommit()) {
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
+            SteppingType.STEP_TO_COMMIT.isSet()) {
           haltNode.executeEvaluated(frame, result);
         }
 
         if (tx.commit()) {
-          if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopAfterCommit()) {
+          if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
+              SteppingType.STEP_AFTER_COMMIT.isSet()) {
             haltNode.executeEvaluated(frame, result);
           }
 
@@ -72,12 +77,14 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
           return result;
         }
       } catch (Throwable t) {
-        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnCommit()) {
+        if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
+            SteppingType.STEP_TO_COMMIT.isSet()) {
           haltNode.executeEvaluated(frame, t);
         }
 
         if (tx.commit()) {
-          if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopAfterCommit()) {
+          if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
+              SteppingType.STEP_AFTER_COMMIT.isSet()) {
             haltNode.executeEvaluated(frame, t);
           }
 
@@ -93,41 +100,6 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
     }
   }
 
-  private static boolean stopOnTx() {
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      SteppingStrategy strategy = ActivityThread.steppingStrategy();
-      if (strategy == null) {
-        return false;
-      }
-      return strategy.handleTx();
-    } else {
-      return false;
-    }
-  }
-
-  private static boolean stopOnCommit() {
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      SteppingStrategy strategy = ActivityThread.steppingStrategy();
-      if (strategy == null) {
-        return false;
-      }
-      return strategy.handleTxCommit();
-    } else {
-      return false;
-    }
-  }
-
-  private static boolean stopAfterCommit() {
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      SteppingStrategy strategy = ActivityThread.steppingStrategy();
-      if (strategy == null) {
-        return false;
-      }
-      return strategy.handleTxAfterCommit();
-    } else {
-      return false;
-    }
-  }
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

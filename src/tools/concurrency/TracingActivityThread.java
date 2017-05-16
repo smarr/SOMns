@@ -6,15 +6,14 @@ import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import som.vm.Activity;
-import som.vm.ActivityThread;
 import som.vm.VmSettings;
 import tools.TraceData;
 import tools.debugger.SteppingStrategy;
 import tools.debugger.entities.EntityType;
+import tools.debugger.entities.SteppingType;
 
 
-public abstract class TracingActivityThread extends ForkJoinWorkerThread
-    implements ActivityThread {
+public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   public static AtomicInteger threadIdGen = new AtomicInteger(1);
   protected final long threadId;
   protected long nextActivityId = 1;
@@ -57,17 +56,15 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread
     setName(getClass().getSimpleName() + "-" + threadId);
   }
 
-  @Override
   public abstract Activity getActivity();
 
-  @Override
-  public SteppingStrategy getSteppingStrategy() {
-    return this.steppingStrategy;
+  public final boolean isStepping(final SteppingType type) {
+    if (steppingStrategy == null) { return false; }
+    return steppingStrategy.is(type);
   }
 
-  @Override
-  public void setSteppingStrategy(final SteppingStrategy strategy) {
-    this.steppingStrategy = strategy;
+  public final void setSteppingStrategy(final SteppingType type) {
+    this.steppingStrategy = new SteppingStrategy(type);
   }
 
   public void enterConcurrentScope(final EntityType type) {
