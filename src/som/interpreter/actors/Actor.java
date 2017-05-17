@@ -20,12 +20,13 @@ import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
 import tools.TraceData;
 import tools.concurrency.ActorExecutionTrace;
-import tools.concurrency.ActorExecutionTrace.Events;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
+import tools.debugger.entities.TraceSemantics.DynamicScope;
+import tools.debugger.entities.TraceSemantics.SendOp;
 
 
 /**
@@ -162,7 +163,7 @@ public class Actor implements Activity {
       final ForkJoinPool actorPool) {
     if (VmSettings.ACTOR_TRACING) {
       ActorExecutionTrace.sendOperation(
-          Events.ActorSend, msg.getMessageId(), getId());
+          SendOp.ACTOR_MSG, msg.getMessageId(), getId());
     }
     doSend(msg, actorPool);
   }
@@ -269,13 +270,13 @@ public class Actor implements Activity {
 
       try {
         if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.scopeStart(
-              Events.TurnStart, msg.getMessageId(), msg.getTargetSourceSection());
+          ActorExecutionTrace.scopeStart(DynamicScope.TURN, msg.getMessageId(),
+              msg.getTargetSourceSection());
         }
         msg.execute();
       } finally {
         if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.scopeEnd(Events.TurnEnd);
+          ActorExecutionTrace.scopeEnd(DynamicScope.TURN);
         }
       }
     }

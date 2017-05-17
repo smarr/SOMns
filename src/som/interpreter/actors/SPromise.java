@@ -14,8 +14,8 @@ import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.ActorExecutionTrace;
-import tools.concurrency.ActorExecutionTrace.Events;
 import tools.concurrency.TracingActivityThread;
+import tools.debugger.entities.TraceSemantics.PassiveEntity;
 
 
 public class SPromise extends SObjectWithClass {
@@ -280,7 +280,7 @@ public class SPromise extends SObjectWithClass {
           triggerExplicitPromiseResolverBreakpoint, explicitPromise);
       TracingActivityThread t = (TracingActivityThread) Thread.currentThread();
       promiseId = t.generatePromiseId();
-      ActorExecutionTrace.entityCreation(Events.ProcessCreation, promiseId, section);
+      ActorExecutionTrace.passiveEntityCreation(PassiveEntity.PROMISE, promiseId, section);
     }
 
     @Override
@@ -486,7 +486,6 @@ public class SPromise extends SObjectWithClass {
       }
     }
   }
-
 
   @CompilationFinal public static SClass pairClass;
   public static void setPairClass(final SClass cls) {

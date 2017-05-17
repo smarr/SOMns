@@ -3,7 +3,8 @@ package tools.concurrency;
 import java.util.concurrent.SynchronousQueue;
 
 import som.interpreter.processes.SChannel;
-import tools.concurrency.ActorExecutionTrace.Events;
+import tools.debugger.entities.TraceSemantics.ReceiveOp;
+import tools.debugger.entities.TraceSemantics.SendOp;
 
 public final class TracingChannel extends SChannel {
   protected final long channelId;
@@ -39,7 +40,7 @@ public final class TracingChannel extends SChannel {
       try {
         return super.read();
       } finally {
-        ActorExecutionTrace.receiveOperation(Events.ChannelReceive, current.channelId);
+        ActorExecutionTrace.receiveOperation(ReceiveOp.CHANNEL_RCV, current.channelId);
       }
     }
   }
@@ -60,7 +61,7 @@ public final class TracingChannel extends SChannel {
         super.write(value);
       } finally {
         ActorExecutionTrace.sendOperation(
-            Events.ChannelSend, current.messageId, current.channelId);
+            SendOp.CHANNEL_SEND, current.messageId, current.channelId);
       }
     }
   }

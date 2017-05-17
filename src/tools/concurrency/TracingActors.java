@@ -45,14 +45,14 @@ public class TracingActors {
       traceBufferId += 1;
       return result;
     }
-      
+
     @Override
     public int getNextMessageId() {
       int result = nextMessageId;
       nextMessageId += 1;
       return result;
     }
-      
+
     @Override
     public final long getId() { return actorId; }
 
