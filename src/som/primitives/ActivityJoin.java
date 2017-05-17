@@ -12,8 +12,8 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.threading.TaskThreads.SomTaskOrThread;
 import som.vm.VmSettings;
 import tools.concurrency.ActorExecutionTrace;
-import tools.concurrency.ActorExecutionTrace.Events;
 import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.debugger.entities.TraceSemantics.ReceiveOp;
 
 
 public class ActivityJoin {
@@ -48,7 +48,7 @@ public class ActivityJoin {
       }
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.receiveOperation(Events.TaskJoin, task.getId());
+        ActorExecutionTrace.receiveOperation(ReceiveOp.TASK_JOIN, task.getId());
       }
       return result;
     }

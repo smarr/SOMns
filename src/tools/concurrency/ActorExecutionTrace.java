@@ -34,9 +34,14 @@ import som.primitives.TimerPrim;
 import som.vm.ObjectSystem;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
-import tools.TraceData;
 import tools.debugger.FrontendConnector;
 import tools.debugger.PrimitiveCallOrigin;
+import tools.debugger.entities.TraceSemantics.ActivityDef;
+import tools.debugger.entities.TraceSemantics.DynamicScope;
+import tools.debugger.entities.TraceSemantics.Implementation;
+import tools.debugger.entities.TraceSemantics.PassiveEntity;
+import tools.debugger.entities.TraceSemantics.ReceiveOp;
+import tools.debugger.entities.TraceSemantics.SendOp;
 
 
 /**
@@ -192,52 +197,6 @@ public class ActorExecutionTrace {
     }
   }
 
-  public enum Events {
-    ImplThread(TraceData.IMPL_THREAD, 9),
-    ImplThreadCurrentActivity(TraceData.IMPL_THREAD_CURRENT_ACTIVITY, 13),
-
-
-    ChannelSend(TraceData.CHANNEL_MESSAGE_SEND, 17),
-    ActorSend(TraceData.ACTOR_MSG_SEND,         17),
-
-    ChannelReceive(TraceData.CHANNEL_MESSAGE_RCV, 9),
-    TaskJoin(TraceData.TASK_JOIN,             9),
-    ThreadJoin(TraceData.THREAD_JOIN,         9),
-
-
-    // TODO: revise!!!
-
-    PromiseResolution(TraceData.PROMISE_RESOLUTION, 28),
-    PromiseChained(TraceData.PROMISE_CHAINED,       17),
-    PromiseError(TraceData.PROMISE_ERROR, 28);
-
-
-
-
-    final byte id;
-    final int size;
-
-    Events(final byte id, final int size) {
-      this.id = id;
-      this.size = size;
-    }
-  };
-
-  protected enum ParamTypes {
-    False,
-    True,
-    Long,
-    Double,
-    Promise,
-    Resolver,
-    Object,
-    String;
-
-    byte id() {
-      return (byte) this.ordinal();
-    }
-  }
-
   public static void recordMainActor(final Actor mainActor,
       final ObjectSystem objectSystem) {
     ByteBuffer storage = getEmptyBuffer();
@@ -251,10 +210,10 @@ public class ActorExecutionTrace {
     workerThread.start();
   }
 
-  public static void activityCreation(final Events event, final long activityId,
+  public static void activityCreation(final ActivityDef entity, final long activityId,
       final SSymbol name, final SourceSection section) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordActivityCreation(event, activityId,
+    t.getBuffer().recordActivityCreation(entity, activityId,
         name.getSymbolId(), section, t.getActivity());
   }
 
@@ -268,20 +227,20 @@ public class ActorExecutionTrace {
     return s;
   }
 
-  public static void activityCompletion(final Events event) {
+  public static void activityCompletion(final ActivityDef event) {
     TracingActivityThread t = getThread();
     t.getBuffer().recordActivityCompletion(event, t.getActivity());
   }
 
-  public static void scopeStart(final Events event, final long scopeId,
+  public static void scopeStart(final DynamicScope entity, final long scopeId,
       final SourceSection section) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordScopeStart(event, scopeId, section, t.getActivity());
+    t.getBuffer().recordScopeStart(entity, scopeId, section, t.getActivity());
   }
 
-  public static void scopeEnd(final Events event) {
+  public static void scopeEnd(final DynamicScope entity) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordScopeEnd(event, t.getActivity());
+    t.getBuffer().recordScopeEnd(entity, t.getActivity());
   }
 
   public static void promiseResolution(final long promiseId, final Object value) {
@@ -293,7 +252,7 @@ public class ActorExecutionTrace {
     assert current instanceof TracingActivityThread;
     TracingActivityThread t = (TracingActivityThread) current;
 
-    t.getBuffer().recordSendOperation(Events.PromiseResolution, 0, promiseId, t.getActivity());
+    t.getBuffer().recordSendOperation(SendOp.PROMISE_RESOLUTION, 0, promiseId, t.getActivity());
     t.resolvedPromises++;
   }
 
@@ -305,7 +264,7 @@ public class ActorExecutionTrace {
 
     assert current instanceof TracingActivityThread;
     TracingActivityThread t = (TracingActivityThread) current;
-    t.getBuffer().recordSendOperation(Events.PromiseError, 0, promiseId, t.getActivity());
+    t.getBuffer().recordSendOperation(SendOp.PROMISE_RESOLUTION, 0, promiseId, t.getActivity());
     t.erroredPromises++;
   }
 
@@ -316,25 +275,25 @@ public class ActorExecutionTrace {
   public static void promiseChained(final long promiseValueId, final long promiseId) {
     TracingActivityThread t = getThread();
     t.getBuffer().recordSendOperation(
-        Events.PromiseError, promiseValueId, promiseId, t.getActivity());
+        SendOp.PROMISE_RESOLUTION, promiseValueId, promiseId, t.getActivity());
     t.resolvedPromises++;
   }
 
-  public static void sendOperation(final Events event, final long entityId,
+  public static void sendOperation(final SendOp op, final long entityId,
       final long targetId) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordSendOperation(event, entityId, targetId, t.getActivity());
+    t.getBuffer().recordSendOperation(op, entityId, targetId, t.getActivity());
   }
 
-  public static void receiveOperation(final Events event, final long sourceId) {
+  public static void receiveOperation(final ReceiveOp op, final long sourceId) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordReceiveOperation(event, sourceId, t.getActivity());
+    t.getBuffer().recordReceiveOperation(op, sourceId, t.getActivity());
   }
 
-  public static void entityCreation(final Events event, final long entityId,
-      final SourceSection section) {
+  public static void passiveEntityCreation(final PassiveEntity entity,
+      final long entityId, final SourceSection section) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordEntityCreation(event, entityId, section, t.getActivity());
+    t.getBuffer().recordPassiveEntityCreation(entity, entityId, section, t.getActivity());
   }
 
   private static TracingActivityThread getThread() {
@@ -396,7 +355,8 @@ public class ActorExecutionTrace {
               continue;
             }
 
-            if (b.remaining() <= Events.ImplThread.size) {
+            // TODO: should I also check to ignore current activity?
+            if (b.remaining() <= Implementation.IMPL_THREAD.getSize()) {
               // Ignore buffers that only contain the thread index
               b.clear();
               ActorExecutionTrace.emptyBuffers.add(b);
@@ -452,7 +412,8 @@ public class ActorExecutionTrace {
             ActorExecutionTrace.symbolsToWrite.clear();
           }
 
-          if (b.remaining() > Events.ImplThread.size && front != null) {
+          // TODO: should I also check to ignore current activity?
+          if (b.remaining() > Implementation.IMPL_THREAD.getSize() && front != null) {
             front.sendTracingData(b);
           }
 

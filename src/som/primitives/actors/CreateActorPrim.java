@@ -16,9 +16,9 @@ import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SClass;
 import tools.concurrency.ActorExecutionTrace;
-import tools.concurrency.ActorExecutionTrace.Events;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.debugger.entities.TraceSemantics.ActivityDef;
 
 
 @GenerateNodeFactory
@@ -43,7 +43,7 @@ public abstract class CreateActorPrim extends BinaryComplexOperation {
     if (VmSettings.ACTOR_TRACING) {
       assert argument instanceof SClass;
       final SClass actorClass = (SClass) argument;
-      ActorExecutionTrace.activityCreation(Events.ActorCreation, actor.getId(),
+      ActorExecutionTrace.activityCreation(ActivityDef.ACTOR, actor.getId(),
           actorClass.getName(), sourceSection);
     }
     return ref;

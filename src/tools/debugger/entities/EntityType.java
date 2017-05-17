@@ -19,8 +19,6 @@ public enum EntityType {
       but they are not part of the language semantics */
   IMPL_THREAD("implThread",  13);
 
-  // REM: if we wrap here over 32, make sure TraceData constants are updated
-
   public final String name;
   public final byte   id;
 

@@ -33,7 +33,6 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.ActorExecutionTrace;
-import tools.concurrency.ActorExecutionTrace.Events;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.ExpressionBreakpoint;
@@ -41,6 +40,8 @@ import tools.concurrency.TracingActivityThread;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
+import tools.debugger.entities.TraceSemantics.ActivityDef;
+import tools.debugger.entities.TraceSemantics.PassiveEntity;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
@@ -154,7 +155,7 @@ public abstract class ChannelPrimitives {
       nextTraceBufferId += 1;
       return result;
     }
-      
+
     @Override
     protected void beforeExec(final SInvokable disp) {
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRootNode) {
@@ -169,7 +170,7 @@ public abstract class ChannelPrimitives {
         super.run();
       } finally {
         assert VmSettings.ACTOR_TRACING;
-        ActorExecutionTrace.activityCompletion(Events.ProcessCompletion);
+        ActorExecutionTrace.activityCompletion(ActivityDef.PROCESS);
       }
     }
 
@@ -295,7 +296,7 @@ public abstract class ChannelPrimitives {
       SChannel result = SChannel.create();
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.entityCreation(Events.ChannelCreation,
+        ActorExecutionTrace.passiveEntityCreation(PassiveEntity.CHANNEL,
             result.getId(), ActorExecutionTrace.getPrimitiveCaller(sourceSection));
       }
       return result;
