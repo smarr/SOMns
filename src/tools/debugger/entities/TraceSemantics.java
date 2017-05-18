@@ -1,15 +1,43 @@
 package tools.debugger.entities;
 
 import som.vm.VmSettings;
-import tools.TraceData;
+
 
 public class TraceSemantics {
 
+  // Define Marker Constants, are used by Trace Parser
+  public static final byte PROCESS_CREATION   = 1;
+  public static final byte PROCESS_COMPLETION = 2;
+  public static final byte ACTOR_CREATION     = 3;
+  public static final byte TASK_SPAWN         = 4;
+  public static final byte THREAD_SPAWN       = 5;
+
+  public static final byte TURN_START        =  6;
+  public static final byte TURN_END          =  7;
+  public static final byte MONITOR_ENTER     =  8;
+  public static final byte MONITOR_EXIT      =  9;
+  public static final byte TRANSACTION_START = 10;
+  public static final byte TRANSACTION_END   = 11;
+
+  public static final byte CHANNEL_CREATION = 12;
+  public static final byte PROMISE_CREATION = 13;
+
+  public static final byte ACTOR_MSG_SEND     = 14;
+  public static final byte CHANNEL_MSG_SEND   = 15;
+  public static final byte PROMISE_RESOLUTION = 16;
+
+  public static final byte CHANNEL_MSG_RCV = 17;
+  public static final byte TASK_JOIN       = 18;
+  public static final byte THREAD_JOIN     = 19;
+
+  public static final byte IMPL_THREAD = 20;
+  public static final byte IMPL_THREAD_CURRENT_ACTIVITY = 21;
+
   public enum ActivityDef {
-    PROCESS(EntityType.PROCESS, TraceData.PROCESS_CREATION, TraceData.PROCESS_COMPLETION),
-    ACTOR(EntityType.ACTOR,     TraceData.ACTOR_CREATION),
-    TASK(EntityType.TASK,       TraceData.TASK_SPAWN),
-    THREAD(EntityType.THREAD,   TraceData.THREAD_SPAWN);
+    PROCESS(EntityType.PROCESS, PROCESS_CREATION, PROCESS_COMPLETION),
+    ACTOR(EntityType.ACTOR,     ACTOR_CREATION),
+    TASK(EntityType.TASK,       TASK_SPAWN),
+    THREAD(EntityType.THREAD,   THREAD_SPAWN);
 
     private final EntityType type;
     private final byte creationMarker;
@@ -35,9 +63,9 @@ public class TraceSemantics {
   }
 
   public enum DynamicScope {
-    TURN(EntityType.ACT_MSG,            TraceData.TURN_START,        TraceData.TURN_END),
-    MONITOR(EntityType.MONITOR,         TraceData.MONITOR_ENTER,     TraceData.MONITOR_EXIT),
-    TRANSACTION(EntityType.TRANSACTION, TraceData.TRANSACTION_START, TraceData.TRANSACTION_END);
+    TURN(EntityType.ACT_MSG,            TURN_START,        TURN_END),
+    MONITOR(EntityType.MONITOR,         MONITOR_ENTER,     MONITOR_EXIT),
+    TRANSACTION(EntityType.TRANSACTION, TRANSACTION_START, TRANSACTION_END);
 
     private final EntityType type;
     private final byte startMarker;
@@ -58,10 +86,10 @@ public class TraceSemantics {
   }
 
   public enum PassiveEntity {
-    CHANNEL(EntityType.CHANNEL, TraceData.CHANNEL_CREATION),
+    CHANNEL(EntityType.CHANNEL, CHANNEL_CREATION),
     CHANNEL_MSG(EntityType.CH_MSG),
     ACTOR_MSG(EntityType.ACT_MSG),
-    PROMISE(EntityType.PROMISE, TraceData.PROMISE_CREATION);
+    PROMISE(EntityType.PROMISE, PROMISE_CREATION);
 
     private final EntityType type;
     private final byte creationMarker;
@@ -81,9 +109,9 @@ public class TraceSemantics {
   }
 
   public enum SendOp {
-    ACTOR_MSG(TraceData.ACTOR_MSG_SEND,          EntityType.ACT_MSG, EntityType.ACTOR),
-    CHANNEL_SEND(TraceData.CHANNEL_MESSAGE_SEND, EntityType.CH_MSG,  EntityType.CHANNEL),
-    PROMISE_RESOLUTION(TraceData.PROMISE_RESOLUTION, EntityType.PROMISE, EntityType.PROMISE);
+    ACTOR_MSG(ACTOR_MSG_SEND,      EntityType.ACT_MSG, EntityType.ACTOR),
+    CHANNEL_SEND(CHANNEL_MSG_SEND, EntityType.CH_MSG,  EntityType.CHANNEL),
+    PROMISE_RESOLUTION(TraceSemantics.PROMISE_RESOLUTION, EntityType.PROMISE, EntityType.PROMISE);
 
     private final byte id;
     private final EntityType entity;
@@ -102,9 +130,9 @@ public class TraceSemantics {
   }
 
   public enum ReceiveOp {
-    CHANNEL_RCV(TraceData.CHANNEL_MESSAGE_RCV, EntityType.CHANNEL),
-    TASK_JOIN(TraceData.TASK_JOIN,             EntityType.TASK),
-    THREAD_JOIN(TraceData.THREAD_JOIN,         EntityType.THREAD);
+    CHANNEL_RCV(CHANNEL_MSG_RCV, EntityType.CHANNEL),
+    TASK_JOIN(TraceSemantics.TASK_JOIN,     EntityType.TASK),
+    THREAD_JOIN(TraceSemantics.THREAD_JOIN, EntityType.THREAD);
 
     private final byte id;
     private final EntityType source;
@@ -120,8 +148,8 @@ public class TraceSemantics {
   }
 
   public enum Implementation {
-    IMPL_THREAD(TraceData.IMPL_THREAD, 9),
-    IMPL_CURRENT_ACTIVITY(TraceData.IMPL_THREAD_CURRENT_ACTIVITY, 13);
+    IMPL_THREAD(TraceSemantics.IMPL_THREAD, 9),
+    IMPL_CURRENT_ACTIVITY(TraceSemantics.IMPL_THREAD_CURRENT_ACTIVITY, 13);
 
     private final byte id;
     private final int  size;
