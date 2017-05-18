@@ -19,12 +19,6 @@ public interface Activity {
     throw new UnsupportedOperationException("Should never be called");
   }
 
-  /** The id for the next actor message.
-      For non-tracing activities, the id is 0. */
-  default int getNextMessageId() {
-    return 0;
-  }
-
   /** Set the flag that indicates a breakpoint on joining activity.
       Does nothing for non-tracing activities, i.e., when debugging is disabled. */
   default void setStepToJoin(final boolean val) { }

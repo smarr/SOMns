@@ -38,14 +38,6 @@ public final class TaskThreads {
     public boolean stopOnJoin() { return false; }
 
     @Override
-    public final int getNextMessageId() {
-      throw new UnsupportedOperationException(
-          "Currently, it is not supported to send actor messages from " +
-          "non-actor activities, because, we have no way to handle promise " +
-          "resolution");
-    }
-
-    @Override
     public int getNextTraceBufferId() {
       throw new UnsupportedOperationException("Should never be executed");
     }
@@ -102,12 +94,7 @@ public final class TaskThreads {
 
     public TracedForkJoinTask(final Object[] argArray, final boolean stopOnRoot) {
       super(argArray, stopOnRoot);
-      if (Thread.currentThread() instanceof TracingActivityThread) {
-        TracingActivityThread t = TracingActivityThread.currentThread();
-        this.id = t.generateActivityId();
-      } else {
-        this.id = 0; // main actor
-      }
+      this.id = TracingActivityThread.newEntityId();
     }
 
     @Override
@@ -165,12 +152,7 @@ public final class TaskThreads {
 
     public TracedThreadTask(final Object[] argArray, final boolean stopOnRoot) {
       super(argArray, stopOnRoot);
-      if (Thread.currentThread() instanceof TracingActivityThread) {
-        TracingActivityThread t = TracingActivityThread.currentThread();
-        this.id = t.generateActivityId();
-      } else {
-        this.id = 0; // main actor
-      }
+      this.id = TracingActivityThread.newEntityId();
     }
 
     @Override

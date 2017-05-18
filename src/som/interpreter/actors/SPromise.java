@@ -270,7 +270,7 @@ public class SPromise extends SObjectWithClass {
   }
 
   protected static class STracingPromise extends SPromise {
-    protected long promiseId;
+    protected final long promiseId;
 
     protected STracingPromise(final Actor owner,
         final boolean triggerPromiseResolutionBreakpoint,
@@ -278,8 +278,7 @@ public class SPromise extends SObjectWithClass {
         final boolean explicitPromise, final SourceSection section) {
       super(owner, triggerPromiseResolutionBreakpoint,
           triggerExplicitPromiseResolverBreakpoint, explicitPromise);
-      TracingActivityThread t = (TracingActivityThread) Thread.currentThread();
-      promiseId = t.generatePromiseId();
+      promiseId = TracingActivityThread.newEntityId();
       ActorExecutionTrace.passiveEntityCreation(PassiveEntityType.PROMISE, promiseId, section);
     }
 

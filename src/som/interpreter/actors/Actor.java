@@ -79,11 +79,7 @@ public class Actor implements Activity {
 
   // used to collect absolute numbers from the threads
   private static Object statsLock = new Object();
-  private static long numCreatedMessages  = 0;
-  private static long numCreatedActors    = 0;
-  private static long numCreatedPromises  = 0;
-  private static long numResolvedPromises = 0;
-  private static long numRuinedPromises = 0;
+  private static long numCreatedEntities = 0;
 
   /**
    * Possible roles for an actor.
@@ -341,18 +337,12 @@ public class Actor implements Activity {
     @Override
     protected void onTermination(final Throwable exception) {
       if (VmSettings.ACTOR_TRACING) {
-        long createdActors   = nextActivityId - 1 - (threadId << TraceData.ACTIVITY_ID_BITS);
-        long createdMessages = nextMessageId - (threadId << TraceData.ACTIVITY_ID_BITS);
-        long createdPromises = nextPromiseId - (threadId << TraceData.ACTIVITY_ID_BITS);
+        long createdEntities = nextEntityId - 1 - (threadId << TraceData.ENTITY_ID_BITS);
 
-        VM.printConcurrencyEntitiesReport("[Thread " + threadId + "]\tA#" + createdActors + "\t\tM#" + createdMessages + "\t\tP#" + createdPromises);
+        VM.printConcurrencyEntitiesReport("[Thread " + threadId + "]\tE#" + createdEntities);
 
         synchronized (statsLock) {
-          numCreatedActors    += createdActors;
-          numCreatedMessages  += createdMessages;
-          numCreatedPromises  += createdPromises;
-          numResolvedPromises += resolvedPromises;
-          numRuinedPromises   += erroredPromises;
+          numCreatedEntities += createdEntities;
         }
       }
       super.onTermination(exception);
@@ -362,8 +352,7 @@ public class Actor implements Activity {
   public static final void reportStats() {
     if (VmSettings.ACTOR_TRACING) {
       synchronized (statsLock) {
-        VM.printConcurrencyEntitiesReport("[Total]\tA#" + numCreatedActors + "\t\tM#" + numCreatedMessages + "\t\tP#" + numCreatedPromises);
-        VM.printConcurrencyEntitiesReport("[Unresolved] " + (numCreatedPromises - numResolvedPromises - numRuinedPromises));
+        VM.printConcurrencyEntitiesReport("[Total]\tE#" + numCreatedEntities);
       }
     }
   }

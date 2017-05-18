@@ -11,21 +11,13 @@ public final class TracingChannel extends SChannel {
   protected int messageId;
 
   public TracingChannel() {
-    Thread current = Thread.currentThread();
-    assert current instanceof TracingActivityThread;
-    channelId = currentThread().generateActivityId();
+    channelId = TracingActivityThread.newEntityId();
     messageId = 0;
   }
 
   @Override
   public long getId() {
     return channelId;
-  }
-
-  private static TracingActivityThread currentThread() {
-    Thread current = Thread.currentThread();
-    assert current instanceof TracingActivityThread;
-    return (TracingActivityThread) current;
   }
 
   public static final class TracingChannelInput extends SChannelInput {
@@ -44,7 +36,6 @@ public final class TracingChannel extends SChannel {
       }
     }
   }
-
 
   public static final class TracingChannelOutput extends SChannelOutput {
     public TracingChannelOutput(final SynchronousQueue<Object> cell,
