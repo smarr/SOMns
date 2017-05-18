@@ -24,32 +24,19 @@ public class TracingActors {
     // TODO: fix this code so that actorId can be final again... (adapt constructor of ReplayActor)
     protected long actorId;
     private int traceBufferId;
-    private int nextMessageId;
 
     /** Flag that indicates if a step-to-next-turn action has been made in the previous message. */
     protected boolean stepToNextTurn;
 
     public TracingActor(final VM vm) {
       super(vm);
-      if (Thread.currentThread() instanceof TracingActivityThread) {
-        TracingActivityThread t = (TracingActivityThread) Thread.currentThread();
-        this.actorId = t.generateActivityId();
-      } else {
-        this.actorId = 0; // main actor
-      }
+      this.actorId = TracingActivityThread.newEntityId();
     }
 
     @Override
     public int getNextTraceBufferId() {
       int result = traceBufferId;
       traceBufferId += 1;
-      return result;
-    }
-
-    @Override
-    public int getNextMessageId() {
-      int result = nextMessageId;
-      nextMessageId += 1;
       return result;
     }
 

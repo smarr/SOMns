@@ -11,13 +11,14 @@ import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
+import tools.concurrency.TracingActivityThread;
 
 
 public abstract class EventualMessage {
   protected final Object[]  args;
   protected final SResolver resolver;
   protected final RootCallTarget onReceive;
-  protected final int messageId;
+  protected final long messageId;
 
   /**
     * Indicates the case when an asynchronous message has a receiver breakpoint.
@@ -34,14 +35,13 @@ public abstract class EventualMessage {
   protected EventualMessage(final Object[] args,
       final SResolver resolver, final RootCallTarget onReceive,
       final boolean triggerMessageReceiverBreakpoint,
-      final boolean triggerPromiseResolverBreakpoint,
-      final int messageId) {
+      final boolean triggerPromiseResolverBreakpoint) {
     this.args     = args;
     this.resolver = resolver;
     this.onReceive = onReceive;
     this.triggerMessageReceiverBreakpoint = triggerMessageReceiverBreakpoint;
     this.triggerPromiseResolverBreakpoint = triggerPromiseResolverBreakpoint;
-    this.messageId = messageId;
+    this.messageId = TracingActivityThread.newEntityId();
     assert onReceive.getRootNode() instanceof ReceivedMessage || onReceive.getRootNode() instanceof ReceivedCallback;
   }
 
@@ -52,7 +52,7 @@ public abstract class EventualMessage {
     return resolver;
   }
 
-  public final int getMessageId() {
+  public final long getMessageId() {
     return messageId;
   }
 
@@ -78,7 +78,7 @@ public abstract class EventualMessage {
         final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint,
         final boolean triggerPromiseResolverBreakpoint) {
       super(arguments, resolver, onReceive, triggerMessageReceiverBreakpoint,
-          triggerPromiseResolverBreakpoint, sender.getNextMessageId());
+          triggerPromiseResolverBreakpoint);
       this.selector = selector;
       this.sender   = sender;
       this.target   = target;
@@ -156,7 +156,7 @@ public abstract class EventualMessage {
         final boolean triggerMessageReceiverBreakpoint,
         final boolean triggerPromiseResolverBreakpoint) {
       super(arguments, resolver, onReceive, triggerMessageReceiverBreakpoint,
-          triggerPromiseResolverBreakpoint, originalSender.getNextMessageId());
+          triggerPromiseResolverBreakpoint);
       this.originalSender = originalSender;
     }
 

@@ -109,14 +109,6 @@ public abstract class ChannelPrimitives {
       }
     }
 
-    @Override
-    public final int getNextMessageId() {
-      throw new UnsupportedOperationException(
-          "Currently, it is not supported to send actor messages from " +
-          "non-actor activities, because, we have no way to handle promise " +
-          "resolution");
-    }
-
     public SObjectWithClass getProcObject() {
       return obj;
     }
@@ -143,9 +135,8 @@ public abstract class ChannelPrimitives {
 
     public TracingProcess(final SObjectWithClass obj, final boolean stopOnRootNode) {
       super(obj);
-      assert Thread.currentThread() instanceof TracingActivityThread;
       this.stopOnRootNode = stopOnRootNode;
-      processId = ((TracingActivityThread) Thread.currentThread()).generateActivityId();
+      processId = TracingActivityThread.newEntityId();
     }
 
     @Override
