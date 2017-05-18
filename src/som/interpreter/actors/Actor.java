@@ -25,8 +25,8 @@ import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
-import tools.debugger.entities.TraceSemantics.DynamicScope;
-import tools.debugger.entities.TraceSemantics.SendOp;
+import tools.debugger.entities.DynamicScopeType;
+import tools.debugger.entities.SendOp;
 
 
 /**
@@ -270,13 +270,13 @@ public class Actor implements Activity {
 
       try {
         if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.scopeStart(DynamicScope.TURN, msg.getMessageId(),
+          ActorExecutionTrace.scopeStart(DynamicScopeType.TURN, msg.getMessageId(),
               msg.getTargetSourceSection());
         }
         msg.execute();
       } finally {
         if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.scopeEnd(DynamicScope.TURN);
+          ActorExecutionTrace.scopeEnd(DynamicScopeType.TURN);
         }
       }
     }

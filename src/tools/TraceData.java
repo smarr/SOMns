@@ -1,10 +1,13 @@
 package tools;
 
+import som.vm.VmSettings;
 
 /**
  * Characterize and document some of the trace data.
  */
 public class TraceData {
+
+  public static final int SOURCE_SECTION_SIZE = VmSettings.TRUFFLE_DEBUGGER_ENABLED ? 8 : 0;
 
   public static final long ACTIVITY_ID_BITS = 30;
   public static final long THREAD_ID_BITS   = 10;

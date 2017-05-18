@@ -13,7 +13,7 @@ import som.primitives.threading.TaskThreads.SomTaskOrThread;
 import som.vm.VmSettings;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.Tags.ExpressionBreakpoint;
-import tools.debugger.entities.TraceSemantics.ReceiveOp;
+import tools.debugger.entities.ReceiveOp;
 
 
 public class ActivityJoin {

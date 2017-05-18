@@ -36,12 +36,12 @@ import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.debugger.FrontendConnector;
 import tools.debugger.PrimitiveCallOrigin;
-import tools.debugger.entities.TraceSemantics.ActivityDef;
-import tools.debugger.entities.TraceSemantics.DynamicScope;
-import tools.debugger.entities.TraceSemantics.Implementation;
-import tools.debugger.entities.TraceSemantics.PassiveEntity;
-import tools.debugger.entities.TraceSemantics.ReceiveOp;
-import tools.debugger.entities.TraceSemantics.SendOp;
+import tools.debugger.entities.ActivityType;
+import tools.debugger.entities.DynamicScopeType;
+import tools.debugger.entities.Implementation;
+import tools.debugger.entities.PassiveEntityType;
+import tools.debugger.entities.ReceiveOp;
+import tools.debugger.entities.SendOp;
 
 
 /**
@@ -210,7 +210,7 @@ public class ActorExecutionTrace {
     workerThread.start();
   }
 
-  public static void activityCreation(final ActivityDef entity, final long activityId,
+  public static void activityCreation(final ActivityType entity, final long activityId,
       final SSymbol name, final SourceSection section) {
     TracingActivityThread t = getThread();
     t.getBuffer().recordActivityCreation(entity, activityId,
@@ -227,18 +227,18 @@ public class ActorExecutionTrace {
     return s;
   }
 
-  public static void activityCompletion(final ActivityDef event) {
+  public static void activityCompletion(final ActivityType event) {
     TracingActivityThread t = getThread();
     t.getBuffer().recordActivityCompletion(event, t.getActivity());
   }
 
-  public static void scopeStart(final DynamicScope entity, final long scopeId,
+  public static void scopeStart(final DynamicScopeType entity, final long scopeId,
       final SourceSection section) {
     TracingActivityThread t = getThread();
     t.getBuffer().recordScopeStart(entity, scopeId, section, t.getActivity());
   }
 
-  public static void scopeEnd(final DynamicScope entity) {
+  public static void scopeEnd(final DynamicScopeType entity) {
     TracingActivityThread t = getThread();
     t.getBuffer().recordScopeEnd(entity, t.getActivity());
   }
@@ -290,7 +290,7 @@ public class ActorExecutionTrace {
     t.getBuffer().recordReceiveOperation(op, sourceId, t.getActivity());
   }
 
-  public static void passiveEntityCreation(final PassiveEntity entity,
+  public static void passiveEntityCreation(final PassiveEntityType entity,
       final long entityId, final SourceSection section) {
     TracingActivityThread t = getThread();
     t.getBuffer().recordPassiveEntityCreation(entity, entityId, section, t.getActivity());

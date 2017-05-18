@@ -13,13 +13,13 @@ import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import tools.SourceCoordinate;
-import tools.debugger.entities.TraceSemantics;
-import tools.debugger.entities.TraceSemantics.ActivityDef;
-import tools.debugger.entities.TraceSemantics.DynamicScope;
-import tools.debugger.entities.TraceSemantics.Implementation;
-import tools.debugger.entities.TraceSemantics.PassiveEntity;
-import tools.debugger.entities.TraceSemantics.ReceiveOp;
-import tools.debugger.entities.TraceSemantics.SendOp;
+import tools.debugger.entities.ActivityType;
+import tools.debugger.entities.DynamicScopeType;
+import tools.debugger.entities.Implementation;
+import tools.debugger.entities.PassiveEntityType;
+import tools.debugger.entities.ReceiveOp;
+import tools.debugger.entities.SendOp;
+
 
 public class TraceBuffer {
 
@@ -117,7 +117,7 @@ public class TraceBuffer {
       section = null;
     }
 
-    recordActivityCreation(ActivityDef.ACTOR, mainActor.getId(),
+    recordActivityCreation(ActivityType.ACTOR, mainActor.getId(),
         objectSystem.getPlatformClass().getName().getSymbolId(), section, mainActor);
   }
 
@@ -131,7 +131,7 @@ public class TraceBuffer {
     storage.putShort((short) origin.getCharLength());
   }
 
-  public void recordActivityCreation(final ActivityDef entity, final long activityId,
+  public void recordActivityCreation(final ActivityType entity, final long activityId,
       final short symbolId, final SourceSection sourceSection, final Activity current) {
     int requiredSpace = entity.getCreationSize();
     ensureSufficientSpace(requiredSpace, current);
@@ -148,7 +148,7 @@ public class TraceBuffer {
     assert storage.position() == start + requiredSpace;
   }
 
-  public void recordActivityCompletion(final ActivityDef entity, final Activity current) {
+  public void recordActivityCompletion(final ActivityType entity, final Activity current) {
     int requireSize = entity.getCompletionSize();
     ensureSufficientSpace(requireSize, current);
 
@@ -172,13 +172,13 @@ public class TraceBuffer {
     assert storage.position() == start + eventSize;
   }
 
-  public void recordScopeStart(final DynamicScope entity, final long scopeId,
+  public void recordScopeStart(final DynamicScopeType entity, final long scopeId,
       final SourceSection section, final Activity current) {
     recordEventWithIdAndSource(entity.getStartMarker(), entity.getStartSize(),
         scopeId, section, current);
   }
 
-  public void recordScopeEnd(final DynamicScope entity, final Activity current) {
+  public void recordScopeEnd(final DynamicScopeType entity, final Activity current) {
     int requiredSpace = entity.getEndSize();
     ensureSufficientSpace(requiredSpace, current);
 
@@ -188,7 +188,7 @@ public class TraceBuffer {
     assert storage.position() == start + requiredSpace;
   }
 
-  public void recordPassiveEntityCreation(final PassiveEntity entity,
+  public void recordPassiveEntityCreation(final PassiveEntityType entity,
       final long entityId, final SourceSection section, final Activity current) {
     recordEventWithIdAndSource(entity.getCreationMarker(),
         entity.getCreationSize(), entityId, section, current);
@@ -223,34 +223,34 @@ public class TraceBuffer {
     protected SyncedTraceBuffer() { super(); }
 
     @Override
-    public synchronized void recordActivityCreation(final ActivityDef entity,
+    public synchronized void recordActivityCreation(final ActivityType entity,
         final long activityId, final short symbolId,
         final SourceSection section, final Activity current) {
       super.recordActivityCreation(entity, activityId, symbolId, section, current);
     }
 
     @Override
-    public synchronized void recordScopeStart(final DynamicScope entity,
+    public synchronized void recordScopeStart(final DynamicScopeType entity,
         final long scopeId, final SourceSection section, final Activity current) {
       super.recordScopeStart(entity, scopeId, section, current);
     }
 
     @Override
-    public synchronized void recordScopeEnd(final DynamicScope entity,
+    public synchronized void recordScopeEnd(final DynamicScopeType entity,
         final Activity current) {
       super.recordScopeEnd(entity, current);
     }
 
     @Override
-    public synchronized void recordPassiveEntityCreation(final PassiveEntity entity,
+    public synchronized void recordPassiveEntityCreation(final PassiveEntityType entity,
         final long entityId, final SourceSection section, final Activity current) {
       super.recordPassiveEntityCreation(entity, entityId, section, current);
     }
 
     @Override
-    public synchronized void recordActivityCompletion(final ActivityDef enttiy,
+    public synchronized void recordActivityCompletion(final ActivityType entity,
         final Activity current) {
-      super.recordActivityCompletion(enttiy, current);
+      super.recordActivityCompletion(entity, current);
     }
 
     @Override

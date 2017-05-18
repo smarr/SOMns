@@ -15,7 +15,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.TracingActivityThread;
-import tools.debugger.entities.TraceSemantics.PassiveEntity;
+import tools.debugger.entities.PassiveEntityType;
 
 
 public class SPromise extends SObjectWithClass {
@@ -280,7 +280,7 @@ public class SPromise extends SObjectWithClass {
           triggerExplicitPromiseResolverBreakpoint, explicitPromise);
       TracingActivityThread t = (TracingActivityThread) Thread.currentThread();
       promiseId = t.generatePromiseId();
-      ActorExecutionTrace.passiveEntityCreation(PassiveEntity.PROMISE, promiseId, section);
+      ActorExecutionTrace.passiveEntityCreation(PassiveEntityType.PROMISE, promiseId, section);
     }
 
     @Override
