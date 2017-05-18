@@ -18,7 +18,9 @@ public enum DynamicScopeType {
     this.endMarker   = endMarker;
   }
 
-  public byte getId()          { return type.id; }
+  public byte getId()     { return type.id; }
+  public String getName() { return type.name; }
+
   public byte getStartMarker() { return startMarker; }
   public byte getEndMarker()   { return endMarker;   }
 
