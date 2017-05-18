@@ -3,8 +3,8 @@ package tools.concurrency;
 import java.util.concurrent.SynchronousQueue;
 
 import som.interpreter.processes.SChannel;
-import tools.debugger.entities.TraceSemantics.ReceiveOp;
-import tools.debugger.entities.TraceSemantics.SendOp;
+import tools.debugger.entities.ReceiveOp;
+import tools.debugger.entities.SendOp;
 
 public final class TracingChannel extends SChannel {
   protected final long channelId;
