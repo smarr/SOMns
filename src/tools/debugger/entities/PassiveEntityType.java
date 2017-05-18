@@ -21,7 +21,9 @@ public enum PassiveEntityType {
     this.creationMarker = (byte) creationMarker;
   }
 
-  public byte getId()          { return type.id; }
+  public byte getId()     { return type.id; }
+  public String getName() { return type.name; }
+
   public byte getCreationMarker() { return creationMarker; }
   public int getCreationSize() { return 9 + TraceData.SOURCE_SECTION_SIZE; }
 }
