@@ -5,9 +5,10 @@ import * as WebSocket from "ws";
 
 import {Controller} from "../src/controller";
 import {BreakpointData, SourceCoordinate, StoppedMessage, StackTraceResponse,
-  FullSourceCoordinate, StackFrame, Activity} from "../src/messages";
+  FullSourceCoordinate, StackFrame} from "../src/messages";
 import {VmConnection} from "../src/vm-connection";
 import {ActivityId} from "./somns-support";
+import { Activity } from "../src/execution-data";
 
 const SOM_BASEPATH = "../../";
 export const SOM = SOM_BASEPATH + "som";

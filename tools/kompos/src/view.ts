@@ -6,10 +6,11 @@ import * as d3 from "d3";
 import {Controller}   from "./controller";
 import {ActivityNode} from "./history-data";
 import {Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
-  TaggedSourceCoordinate, Scope, getSectionId, Variable, Activity, ActivityType,
+  TaggedSourceCoordinate, Scope, getSectionId, Variable, ActivityType,
   ServerCapabilities, BreakpointType, SteppingType, EntityType } from "./messages";
 import {Breakpoint, SectionBreakpoint, LineBreakpoint} from "./breakpoints";
 import {SystemVisualization} from "./visualizations";
+import {Activity} from "./execution-data";
 
 declare var ctrl: Controller;
 declare var zenscroll: any;

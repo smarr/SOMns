@@ -1,11 +1,11 @@
 /* jshint -W097 */
 "use strict";
 
-import {Activity, ActivityType, ServerCapabilities,
-  EntityDef} from "./messages";
+import {ActivityType, ServerCapabilities, EntityDef} from "./messages";
 import * as d3 from "d3";
 import {HistoryData, ActivityNode, EntityLink,
   ChannelNode} from "./history-data";
+import {Activity} from "./execution-data";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
 const TANGO_SCHEME = [

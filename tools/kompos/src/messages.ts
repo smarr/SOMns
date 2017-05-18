@@ -59,28 +59,7 @@ export enum PassiveEntityType {}
 /** The different kind of dynamic scopes supported by the system. */
 export enum DynamicScopeType {}
 
-export interface EntityProperties {
-  id:      number;
-  origin?: FullSourceCoordinate;
-  creationScope?:   DynamicScope;
-  creationActivity: Activity;
-}
-
-export interface PassiveEntity extends EntityProperties {
-  type: PassiveEntityType;
-}
-
-export interface Activity extends EntityProperties {
-  type:      ActivityType;
-  name:      string;
-  running:   boolean;
-  completed: boolean;
-}
-
-export interface DynamicScope extends EntityProperties {
-  type: DynamicScopeType;
-  active: boolean;
-}
+export type EntityType = ActivityType | PassiveEntityType | DynamicScopeType;
 
 export interface StoppedMessage {
   type: "StoppedMessage";

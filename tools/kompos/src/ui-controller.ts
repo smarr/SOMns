@@ -6,13 +6,13 @@ import {Debugger}     from "./debugger";
 import {ActivityNode} from "./history-data";
 import {SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
   ScopesResponse, VariablesResponse, ProgramInfoResponse, InitializationResponse,
-  Activity, Source } from "./messages";
+  Source } from "./messages";
 import {LineBreakpoint, SectionBreakpoint, getBreakpointId,
   createLineBreakpoint, createSectionBreakpoint} from "./breakpoints";
 import {dbgLog}       from "./source";
 import {View, getActivityIdFromView, getSourceIdFrom, getSourceIdFromSection} from "./view";
 import {VmConnection} from "./vm-connection";
-import {ExecutionData} from "./execution-data";
+import {Activity, ExecutionData} from "./execution-data";
 
 /**
  * The controller binds the domain model and the views, and mediates their

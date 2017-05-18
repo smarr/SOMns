@@ -1,5 +1,5 @@
-import { ServerCapabilities, EntityDef, ActivityType } from "./messages";
-import { ExecutionData, RawSourceCoordinate, RawActivity } from "./execution-data";
+import { ServerCapabilities, EntityDef, ActivityType, EntityType, DynamicScopeType, PassiveEntityType } from "./messages";
+import { ExecutionData, RawSourceCoordinate, RawActivity, RawScope, RawPassiveEntity } from "./execution-data";
 
 enum TraceRecords {
   ActivityCreation,
@@ -38,48 +38,48 @@ const MAX_SAFE_HIGH_VAL  = (1 << MAX_SAFE_HIGH_BITS) - 1;
 
 export class TraceParser {
   private readonly parseTable: TraceRecords[];
-  private readonly activityType: ActivityType[];
+  private readonly typeCreation: EntityType[];
   private readonly serverCapabilities: ServerCapabilities;
   private readonly execData: ExecutionData;
 
   constructor(serverCapabilities: ServerCapabilities, execData: ExecutionData) {
     this.serverCapabilities = serverCapabilities;
-    this.parseTable   = this.createParseTable();
-    this.activityType = this.createActivityMap();
+    this.parseTable   = [];
+    this.typeCreation = [];
+    this.initMetaData();
     this.execData = execData;
   }
 
-  private setInTable(parseTable: TraceRecords[], entities:  EntityDef[],
+  private setInTable(entities:  EntityDef[],
       creation: TraceRecords, completion: TraceRecords) {
     for (const entityType of entities) {
       if (entityType.creation) {
-        parseTable[entityType.creation] = creation;
+        this.parseTable[entityType.creation]   = creation;
+        this.typeCreation[entityType.creation] = entityType.id;
       }
 
       if (entityType.completion) {
-        parseTable[entityType.completion] = completion;
+        this.parseTable[entityType.completion] = completion;
       }
     }
   }
 
-  private setOpsInTable(parseTable: TraceRecords[], ops, op: TraceRecords) {
+  private setOpsInTable(ops, op: TraceRecords) {
     for (const opType of ops) {
-      parseTable[opType.marker] = op;
+      this.parseTable[opType.marker] = op;
     }
   }
 
-  private createParseTable() {
-    const parseTable = [];
-
-    this.setInTable(parseTable, this.serverCapabilities.activities,
+  private initMetaData() {
+    this.setInTable(this.serverCapabilities.activities,
       TraceRecords.ActivityCreation, TraceRecords.ActivityCompletion);
-    this.setInTable(parseTable, this.serverCapabilities.dynamicScopes,
+    this.setInTable(this.serverCapabilities.dynamicScopes,
       TraceRecords.DynamicScopeStart, TraceRecords.DynamicScopeEnd);
-    this.setInTable(parseTable, this.serverCapabilities.passiveEntities,
+    this.setInTable(this.serverCapabilities.passiveEntities,
       TraceRecords.PassiveEntityCreation, TraceRecords.PassiveEntityCompletion);
 
-    this.setOpsInTable(parseTable, this.serverCapabilities.sendOps, TraceRecords.SendOp);
-    this.setOpsInTable(parseTable, this.serverCapabilities.receiveOps, TraceRecords.ReceiveOp);
+    this.setOpsInTable(this.serverCapabilities.sendOps, TraceRecords.SendOp);
+    this.setOpsInTable(this.serverCapabilities.receiveOps, TraceRecords.ReceiveOp);
 
     console.assert(this.serverCapabilities.activityParseData.creationSize       === RECORD_SIZE.ActivityCreation);
     console.assert(this.serverCapabilities.activityParseData.completionSize     === RECORD_SIZE.ActivityCompletion);
@@ -95,20 +95,8 @@ export class TraceParser {
     console.assert(this.serverCapabilities.implementationData[1].marker === IMPL_THREAD_CURRENT_ACTIVITY_MARKER);
     console.assert(this.serverCapabilities.implementationData[1].size === RECORD_SIZE.ImplThreadCurrentActivity);
 
-    parseTable[IMPL_THREAD_MARKER] = TraceRecords.ImplThread;
-    parseTable[IMPL_THREAD_CURRENT_ACTIVITY_MARKER] = TraceRecords.ImplThreadCurrentActivity;
-
-    return parseTable;
-  }
-
-  private createActivityMap() {
-    const result: ActivityType[] = [];
-    for (const actT of this.serverCapabilities.activities) {
-      if (actT.creation) {
-        result[actT.creation] = actT.id;
-      }
-    }
-    return result;
+    this.parseTable[IMPL_THREAD_MARKER] = TraceRecords.ImplThread;
+    this.parseTable[IMPL_THREAD_CURRENT_ACTIVITY_MARKER] = TraceRecords.ImplThreadCurrentActivity;
   }
 
   /** Read a long within JS int range */
@@ -132,10 +120,57 @@ export class TraceParser {
     const activityId = this.readLong(data, i + 1);
     const symbolId   = data.getUint16(i + 9);
     const sourceSection = this.readSourceSection(data, i + 11);
+
     this.execData.addRawActivity(new RawActivity(
-      this.activityType[marker], activityId, symbolId, sourceSection,
-      currentActivityId, currentScopeId));
+      <ActivityType> this.typeCreation[marker], activityId, symbolId,
+      sourceSection, currentActivityId, currentScopeId));
+
     return i + RECORD_SIZE.ActivityCreation;
+  }
+
+  private readScopeStart(i: number, data: DataView,
+      currentActivityId: number, currentScopeId: number) {
+    const marker = data.getUint8(i);
+    const id = this.readLong(data, i + 1);
+    const source = this.readSourceSection(data, i + 9);
+
+    this.execData.addRawScope(new RawScope(
+      <DynamicScopeType> this.typeCreation[marker], id, source,
+      currentActivityId, currentScopeId));
+
+    return i + RECORD_SIZE.DynamicScopeStart;
+  }
+
+  private readEntityCreation(i: number, data: DataView,
+      currentActivityId: number, currentScopeId: number) {
+    const marker = data.getUint8(i);
+    const id = this.readLong(data, i + 1);
+    const source = this.readSourceSection(data, i + 9);
+
+    this.execData.addRawPassiveEntity(new RawPassiveEntity(
+      <PassiveEntityType> this.typeCreation[marker], id, source,
+      currentActivityId, currentScopeId));
+
+    return i + RECORD_SIZE.PassiveEntityCreation;
+  }
+
+  private readSendOp(i: number, data: DataView,
+      currentActivityId: number, currentScopeId: number) {
+    const marker = data.getUint8(i);
+    const entityId = this.readLong(data, i + 1);
+    const targetId = this.readLong(data, i + 9);
+
+    this.execData.addRawSendOp(new RawSendOp(
+      <SendOpType> this.sendOps[marker], entityId, targetId, currentActivityId,
+      currentScopeId));
+
+    return i + RECORD_SIZE.SendOp;
+  }
+
+  private readReceiveOp(i: number, data: DataView,
+      currentActivityId: number, currentScopeId: number) {
+
+    return i + RECORD_SIZE.ReceiveOp;
   }
 
   public parseTrace(data: DataView) {
@@ -147,6 +182,8 @@ export class TraceParser {
     let currentImplThreadId = null;
     let currentThreadLocalBufferId = null;
 
+    let prevMarker = null;
+
     while (i < data.byteLength) {
       const marker = data.getUint8(i);
       switch (this.parseTable[marker]) {
@@ -156,17 +193,23 @@ export class TraceParser {
         case TraceRecords.ActivityCompletion:
           throw new Error("Not Yet Implemented");
         case TraceRecords.DynamicScopeStart:
-          throw new Error("Not Yet Implemented");
+          i += this.readScopeStart(i, data, currentActivityId, currentScopeId);
+          break;
         case TraceRecords.DynamicScopeEnd:
           throw new Error("Not Yet Implemented");
         case TraceRecords.PassiveEntityCreation:
-          throw new Error("Not Yet Implemented");
+          i += this.readEntityCreation(i, data, currentActivityId, currentScopeId);
+          break;
         case TraceRecords.PassiveEntityCompletion:
           throw new Error("Not Yet Implemented");
         case TraceRecords.SendOp:
-          throw new Error("Not Yet Implemented");
+          i += this.readSendOp(
+            i, data, currentActivityId, currentActivityId, currentScopeId);
+          break;
         case TraceRecords.ReceiveOp:
-          throw new Error("Not Yet Implemented");
+          i += this.readReceiveOp(
+            i, data, currentActivityId, currentActivityId, currentScopeId);
+          break;
         case TraceRecords.ImplThread: {
           currentImplThreadId = this.readLong(data, i + 1);
           i += RECORD_SIZE.ImplThread;
@@ -179,8 +222,9 @@ export class TraceParser {
           break;
         }
         default:
-          throw new Error("Unexpected marker in trace: " + marker);
+          throw new Error("Unexpected marker in trace: " + marker + " prev: " + prevMarker);
       }
+      prevMarker = marker;
     }
   }
 }
