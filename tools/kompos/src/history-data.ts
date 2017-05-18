@@ -12,70 +12,8 @@ import {EntityId} from "../tests/somns-support";
 const horizontalDistance = 100,
   verticalDistance = 100;
 
-const SHIFT_HIGH_INT = 4294967296;
-const MAX_SAFE_HIGH_BITS = 53 - 32;
-const MAX_SAFE_HIGH_VAL  = (1 << MAX_SAFE_HIGH_BITS) - 1;
 
 const NUM_ACTIVITIES_STARTING_GROUP = 4;
-
-const MESSAGE_BIT   = 0x80;
-const PROMISE_BIT   = 0x40;
-const TIMESTAMP_BIT = 0x20;
-const PARAMETER_BIT = 0x10;
-
-enum Trace {
-  ProcessCompletion =  2,
-  ChannelCreation   =  3,
-
-  PromiseCreation   =  9,
-
-  TaskJoin          = 14,
-  ImplThread        = 21,
-
-  PromiseResolution = 33,
-  PromiseChained    = 34,
-  PromiseError      = 35,
-
-  Mailbox           = 40,
-  MailboxContd      = 41,
-
-  ActivityOrigin    = 50,
-
-  ChannelMessage    = 60
-}
-
-enum TraceSize {
-  ActivityCreation  = 19,
-
-  PromiseCreation   = 17,
-  PromiseResolution = 28,
-  PromiseChained    = 17,
-  Mailbox           = 21,
-  ImplThread        = 17,
-  MailboxContd      = 25,
-
-  ActivityOrigin    =  9,
-
-  ProcessCompletion =  9,
-
-  TaskJoin          = 11,
-
-  PromiseError      = 28,
-
-  ChannelCreation   = 25,
-  ChannelMessage    = 34
-}
-
-enum ParamTypes {
-  False    = 0,
-  True     = 1,
-  Long     = 2,
-  Double   = 3,
-  Promise  = 4,
-  Resolver = 5,
-  Object   = 6,
-  String   = 7
-}
 
 export abstract class NodeImpl implements  d3.layout.force.Node {
   public index?: number;
@@ -222,7 +160,6 @@ export class HistoryData {
   private messages: IdMap<IdMap<number>> = {};
   private msgs = {};
   private maxMessageCount = 0;
-  private strings: IdMap<string> = {};
 
   private currentReceiver = -1;
   private currentMsgId = undefined;
@@ -240,7 +177,7 @@ export class HistoryData {
 
     const parseTable = [];
     const creationId = [];
-    for (const actT of capabilities.activityTypes) {
+    for (const actT of capabilities.activities) {
       parseTable[actT.creation] = readAct;
       creationId[actT.creation] = actT.id;
     }
@@ -271,12 +208,6 @@ export class HistoryData {
     const channel = {id: channelId, creationScope: actId, origin: section, type: <number> EntityId.CHANNEL};
     this.channels[channelId] = new ChannelNode(
       channel, horizontalDistance * Object.keys(this.channels).length, 0);
-  }
-
-  public addStrings(ids: number[], strings: string[]) {
-    for (let i = 0; i < ids.length; i++) {
-      this.strings[ids[i].toString()] = strings[i];
-    }
   }
 
   private addChannelMessage(channelId: number, sender: number, rcvr: number) {
@@ -472,12 +403,6 @@ export class HistoryData {
     return this.maxMessageCount;
   }
 
-  /** Read a long within JS int range */
-  private readLong(d: DataView, offset: number) {
-    const high = d.getUint32(offset);
-    console.assert(high <= MAX_SAFE_HIGH_VAL, "expected 53bit, but read high int as: " + high);
-    return high * SHIFT_HIGH_INT + d.getUint32(offset + 4);
-  }
 
   private readActivity(data: DataView, i: number, msgType: number,
       newActivities: Activity[]) {
@@ -505,17 +430,6 @@ export class HistoryData {
     return TraceSize.ChannelCreation - 1; // type tag already read
   }
 
-  private readSourceSection(data: DataView, i: number): FullSourceCoordinate {
-    const fileId:    number = data.getUint16(i);
-    const startLine: number = data.getUint16(i + 2);
-    const startCol:  number = data.getUint16(i + 4);
-    const charLen:   number = data.getUint16(i + 6);
-    return {
-      uri: this.strings[fileId],
-      charLength:  charLen,
-      startLine:   startLine,
-      startColumn: startCol};
-  }
 
   private readActivityOrigin(data: DataView, i: number): FullSourceCoordinate {
     console.assert(data.getInt8(i) === Trace.ActivityOrigin);

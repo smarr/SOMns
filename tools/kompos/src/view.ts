@@ -7,8 +7,7 @@ import {Controller}   from "./controller";
 import {ActivityNode} from "./history-data";
 import {Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
   TaggedSourceCoordinate, Scope, getSectionId, Variable, Activity, ActivityType,
-  SymbolMessage, ServerCapabilities, BreakpointType, SteppingType,
-  EntityType } from "./messages";
+  ServerCapabilities, BreakpointType, SteppingType, EntityType } from "./messages";
 import {Breakpoint, SectionBreakpoint, LineBreakpoint} from "./breakpoints";
 import {SystemVisualization} from "./visualizations";
 
@@ -367,10 +366,6 @@ export class View {
 
   public displaySystemView() {
     this.systemViz.display();
-  }
-
-  public updateStringData(msg: SymbolMessage) {
-    this.systemViz.updateStringData(msg);
   }
 
   public updateTraceData(data: DataView): Activity[] {

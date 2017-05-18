@@ -53,24 +53,33 @@ export type StoppedReason = "step" | "breakpoint" | "exception" | "pause";
 /** The different types of active entities supported by the system. */
 export enum ActivityType {}
 
-/** The different kind of concurrency related entities, active, as well as
-    passive, which are supported by the system. */
-export enum EntityType {}
+/** The different kind of passive entities supported by the system. */
+export enum PassiveEntityType {}
+
+/** The different kind of dynamic scopes supported by the system. */
+export enum DynamicScopeType {}
 
 export interface EntityProperties {
   id:      number;
   origin?: FullSourceCoordinate;
-  creationScope: number;  /// was causal message
+  creationScope?:   DynamicScope;
+  creationActivity: Activity;
 }
 
-export interface Entity extends EntityProperties {
-  type:    EntityType;
+export interface PassiveEntity extends EntityProperties {
+  type: PassiveEntityType;
 }
 
 export interface Activity extends EntityProperties {
-  name:    string;
-  type:    ActivityType;
-  running: boolean;
+  type:      ActivityType;
+  name:      string;
+  running:   boolean;
+  completed: boolean;
+}
+
+export interface DynamicScope extends EntityProperties {
+  type: DynamicScopeType;
+  active: boolean;
 }
 
 export interface StoppedMessage {
@@ -168,16 +177,50 @@ export interface SteppingType {
 }
 
 export interface EntityDef {
-  id:         number;
-  creation:   number;
-  completion: number;
-  label:      string;
-  marker?:    string;
+  id:          number;
+  label:       string;
+
+  creation?:   number;
+  completion?: number;
+  marker?:     string;
+}
+
+export interface ParseDef {
+  creationSize?:   number;
+  completionSize?: number;
+}
+
+export interface SendDef {
+  marker: number;
+  entity: EntityType;
+  target: EntityType;
+}
+
+export interface ReceiveDef {
+  marker: number;
+  source: EntityType;
+}
+
+export interface ImplData {
+  marker: number;
+  size:   number;
 }
 
 export interface ServerCapabilities {
-  activityTypes:   EntityDef[];
-  entityTypes:     EntityDef[];
+  activities:      EntityDef[];
+  passiveEntities: EntityDef[];
+  dynamicScopes:   EntityDef[];
+
+  sendOps:    SendDef[];
+  receiveOps: ReceiveDef[];
+
+  activityParseData:      ParseDef;
+  passiveEntityParseData: ParseDef;
+  dynamicScopeParseData:  ParseDef;
+  sendReceiveParseData:   ParseDef;
+
+  implementationData: ImplData[];
+
   breakpointTypes: BreakpointType[];
   steppingTypes:   SteppingType[];
 }
