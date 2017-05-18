@@ -1,7 +1,8 @@
 import { SourceMessage, StoppedMessage, SymbolMessage, InitializationResponse,
-  StackTraceResponse, ScopesResponse, ProgramInfoResponse, Activity,
+  StackTraceResponse, ScopesResponse, ProgramInfoResponse,
   VariablesResponse } from "./messages";
 import { VmConnection } from "./vm-connection";
+import { Activity } from "./execution-data";
 
 /** A basic controller, providing an interface, but not providing any behavior. */
 export class Controller {

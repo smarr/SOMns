@@ -1,11 +1,11 @@
 /* jshint -W097 */
 "use strict";
 
-import {SymbolMessage, Activity, ActivityType, ServerCapabilities,
-  EntityDef} from "./messages";
+import {ActivityType, ServerCapabilities, EntityDef} from "./messages";
 import * as d3 from "d3";
 import {HistoryData, ActivityNode, EntityLink,
   ChannelNode} from "./history-data";
+import {Activity} from "./execution-data";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
 const TANGO_SCHEME = [
@@ -55,10 +55,6 @@ export class SystemVisualization {
     if (this.serverCapabilities) {
       this.data.setCapabilities(this.serverCapabilities);
     }
-  }
-
-  public updateStringData(msg: SymbolMessage) {
-    this.data.addStrings(msg.ids, msg.symbols);
   }
 
   public updateData(dv: DataView): Activity[] {
@@ -199,7 +195,7 @@ export class SystemVisualization {
     const actG = this.activityNodes.enter().append("svg:g");
     const chG  = this.channelNodes.enter().append("svg:g");
 
-    createActivity(actG, this.serverCapabilities.activityTypes);
+    createActivity(actG, this.serverCapabilities.activities);
     createChannel(chG);
 
     // After rendering text, adapt rectangles

@@ -4,7 +4,8 @@
 import * as WebSocket from "ws";
 
 import {Controller} from "./controller";
-import {Activity, Message, Respond, BreakpointData} from "./messages";
+import {Message, Respond, BreakpointData} from "./messages";
+import {Activity} from "./execution-data";
 
 const LOCAL_WS_URL = "ws://localhost";
 

@@ -1,6 +1,7 @@
-import {IdMap, Source, StackFrame, SourceMessage, TaggedSourceCoordinate,
-  Activity, ServerCapabilities, getSectionId} from "./messages";
-import {Breakpoint} from "./breakpoints";
+import { IdMap, Source, StackFrame, SourceMessage, TaggedSourceCoordinate,
+  ServerCapabilities, getSectionId } from "./messages";
+import { Breakpoint } from "./breakpoints";
+import { Activity } from "./execution-data";
 
 export class Debugger {
 

@@ -6,12 +6,13 @@ import {Debugger}     from "./debugger";
 import {ActivityNode} from "./history-data";
 import {SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
   ScopesResponse, VariablesResponse, ProgramInfoResponse, InitializationResponse,
-  Activity, Source } from "./messages";
+  Source } from "./messages";
 import {LineBreakpoint, SectionBreakpoint, getBreakpointId,
   createLineBreakpoint, createSectionBreakpoint} from "./breakpoints";
 import {dbgLog}       from "./source";
 import {View, getActivityIdFromView, getSourceIdFrom, getSourceIdFromSection} from "./view";
 import {VmConnection} from "./vm-connection";
+import {Activity, ExecutionData} from "./execution-data";
 
 /**
  * The controller binds the domain model and the views, and mediates their
@@ -20,6 +21,7 @@ import {VmConnection} from "./vm-connection";
 export class UiController extends Controller {
   private dbg: Debugger;
   private view: View;
+  private data: ExecutionData;
 
   private actProm = {};
   private actPromResolve = {};
@@ -28,6 +30,7 @@ export class UiController extends Controller {
     super(vmConnection);
     this.dbg = dbg;
     this.view = view;
+    this.data = new ExecutionData();
   }
 
   private reset() {
@@ -169,6 +172,7 @@ export class UiController extends Controller {
   }
 
   public onInitializationResponse(msg: InitializationResponse) {
+    this.data.setCapabilities(msg.capabilities);
     this.dbg.setCapabilities(msg.capabilities);
     this.view.setCapabilities(msg.capabilities);
   }
@@ -178,11 +182,13 @@ export class UiController extends Controller {
   }
 
   public onSymbolMessage(msg: SymbolMessage) {
-    this.view.updateStringData(msg);
+    this.data.addSymbols(msg);
   }
 
   public onTracingData(data: DataView) {
-    this.newActivities(this.view.updateTraceData(data));
+    this.data.updateTraceData(data);
+    this.newActivities(this.data.getNewActivitiesSinceLastUpdate());
+
     this.view.displaySystemView();
   }
 
