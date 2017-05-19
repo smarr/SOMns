@@ -225,6 +225,10 @@ public class Actor implements Activity {
 
       t.currentlyExecutingActor = actor;
 
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.currentActivity(actor);
+      }
+
       try {
         while (getCurrentMessagesOrCompleteExecution()) {
           processCurrentMessages(t, dbg);
@@ -260,7 +264,7 @@ public class Actor implements Activity {
         final ActorProcessingThread currentThread, final WebDebugger dbg,
         final int i) {
       currentThread.currentMessage = msg;
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
         TracingActor.handleBreakpointsAndStepping(msg, dbg, actor);
       }
 

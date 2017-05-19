@@ -31,6 +31,7 @@ import com.sun.management.GarbageCollectionNotificationInfo;
 import som.VM;
 import som.interpreter.actors.Actor;
 import som.primitives.TimerPrim;
+import som.vm.Activity;
 import som.vm.ObjectSystem;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
@@ -210,6 +211,11 @@ public class ActorExecutionTrace {
     workerThread.start();
   }
 
+  public static void currentActivity(final Activity current) {
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordCurrentActivity(current);
+  }
+
   public static void activityCreation(final ActivityType entity, final long activityId,
       final SSymbol name, final SourceSection section) {
     TracingActivityThread t = getThread();
@@ -355,8 +361,8 @@ public class ActorExecutionTrace {
               continue;
             }
 
-            // TODO: should I also check to ignore current activity?
-            if (b.remaining() <= Implementation.IMPL_THREAD.getSize()) {
+            if (b.remaining() <= Implementation.IMPL_THREAD.getSize() +
+                                 Implementation.IMPL_CURRENT_ACTIVITY.getSize()) {
               // Ignore buffers that only contain the thread index
               b.clear();
               ActorExecutionTrace.emptyBuffers.add(b);
@@ -412,8 +418,8 @@ public class ActorExecutionTrace {
             ActorExecutionTrace.symbolsToWrite.clear();
           }
 
-          // TODO: should I also check to ignore current activity?
-          if (b.remaining() > Implementation.IMPL_THREAD.getSize() && front != null) {
+          if (b.remaining() > (Implementation.IMPL_THREAD.getSize() +
+                               Implementation.IMPL_CURRENT_ACTIVITY.getSize()) && front != null) {
             front.sendTracingData(b);
           }
 
