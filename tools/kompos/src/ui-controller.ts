@@ -83,7 +83,7 @@ export class UiController extends Controller {
       this.view.markCodePaneClosed(actId);
     } else {
       const aId      = getActivityIdFromView(actId);
-      const activity = this.dbg.getActivity(aId);
+      const activity = this.data.getActivity(aId);
       const sId      = this.dbg.getSourceId(activity.origin.uri);
       const source   = this.dbg.getSource(sId);
 
@@ -118,7 +118,6 @@ export class UiController extends Controller {
   }
 
   public newActivities(newActivities: Activity[]) {
-    this.dbg.addActivities(newActivities);
     this.view.addActivities(newActivities);
 
     for (const act of newActivities) {
@@ -131,7 +130,7 @@ export class UiController extends Controller {
     this.ensureActivityPromise(msg.activityId);
 
     this.actProm[msg.activityId].then((act: Activity) => {
-      this.dbg.getActivity(msg.activityId).running = false;
+      this.data.getActivity(msg.activityId).running = false;
 
       console.assert(act.id === msg.activityId);
 
@@ -230,7 +229,7 @@ export class UiController extends Controller {
 
   public step(actId: string, step: string) {
     const activityId = getActivityIdFromView(actId);
-    const act = this.dbg.getActivity(activityId);
+    const act = this.data.getActivity(activityId);
 
     // Note: in general, we assume that all stepping operations lead to a
     // running activity. However, some operations, might discontinue execution
