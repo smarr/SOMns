@@ -1,4 +1,4 @@
-import { ServerCapabilities, SymbolMessage, FullSourceCoordinate, ActivityType, PassiveEntityType, DynamicScopeType } from "./messages";
+import { ServerCapabilities, SymbolMessage, FullSourceCoordinate, ActivityType, PassiveEntityType, DynamicScopeType, SendOpType, ReceiveOpType } from "./messages";
 import { TraceParser } from "./trace-parser";
 
 
@@ -23,6 +23,17 @@ export interface Activity extends EntityProperties {
 export interface DynamicScope extends EntityProperties {
   type: DynamicScopeType;
   active: boolean;
+}
+
+export interface SendOp extends EntityProperties {
+  type: SendOpType;
+  entity: Activity | PassiveEntity | DynamicScope;
+  target: Activity | PassiveEntity | DynamicScope;
+}
+
+export interface ReceiveOp extends EntityProperties {
+  type: ReceiveOpType;
+  source: Activity | PassiveEntity | DynamicScope;
 }
 
 /** Some raw data, which is only available partially and contains ids that need
@@ -84,6 +95,21 @@ export abstract class RawEntity extends RawData {
       return data.getScope(this.creationScope);
     }
   }
+
+  protected resolveEntity(data: ExecutionData, entityId: number): Activity | PassiveEntity | DynamicScope {
+    let entity: Activity | PassiveEntity | DynamicScope = data.getActivity(entityId);
+    if (entity !== undefined) {
+      return entity;
+    }
+
+    entity = data.getScope(entityId);
+    if (entity !== undefined) {
+      return entity;
+    }
+
+    return data.getPassiveEntity(entityId);
+  }
+
 }
 
 export class RawActivity extends RawEntity {
@@ -220,6 +246,86 @@ export class RawPassiveEntity extends RawEntity {
   }
 }
 
+export class RawSendOp extends RawEntity {
+  private readonly type: SendOpType;
+  private readonly entityId: number;
+  private readonly targetId: number;
+
+  constructor(type: SendOpType, entityId: number, targetId: number,
+      creationActivity: number, creationScope: number) {
+    super(creationActivity, creationScope);
+    this.type = type;
+    this.entityId = entityId;
+    this.targetId = targetId;
+  }
+
+  public resolve(data: ExecutionData): SendOp | false {
+    const creationActivity = this.resolveCreationActivity(data);
+    if (creationActivity === undefined) {
+      return false;
+    }
+
+    const creationScope = this.resolveCreationScope(data);
+    if (creationScope === undefined) {
+      return false;
+    }
+
+    const entity = this.resolveEntity(data, this.entityId);
+    if (entity === undefined) {
+      return false;
+    }
+
+    const target = this.resolveEntity(data, this.targetId);
+    if (target === undefined) {
+      return false;
+    }
+    return {
+      id: null,
+      type: this.type,
+      entity: entity,
+      target: target,
+      creationActivity: creationActivity,
+      creationScope: creationScope
+    };
+  }
+}
+
+export class RawReceiveOp extends RawEntity {
+  private readonly type: ReceiveOpType;
+  private readonly sourceId: number;
+
+  constructor(type: ReceiveOpType, sourceId: number, creationActivity: number,
+      creationScope: number) {
+    super(creationActivity, creationScope);
+    this.type = type;
+    this.sourceId = sourceId;
+  }
+
+  public resolve(data: ExecutionData): ReceiveOp | false {
+    const creationActivity = this.resolveCreationActivity(data);
+    if (creationActivity === undefined) {
+      return false;
+    }
+
+    const creationScope = this.resolveCreationScope(data);
+    if (creationScope === undefined) {
+      return false;
+    }
+
+    const entity = this.resolveEntity(data, this.sourceId);
+    if (entity === undefined) {
+      return false;
+    }
+    return {
+      id: null,
+      type: this.type,
+      source: entity,
+      creationActivity: creationActivity,
+      creationScope: creationScope
+    };
+  }
+}
+
 /** Maintains all data about the programs execution.
     It is also the place where partial data gets resolved once missing pieces
     are found. */
@@ -231,12 +337,17 @@ export class ExecutionData {
   private rawActivities:      RawActivity[];
   private rawScopes:          RawScope[];
   private rawPassiveEntities: RawPassiveEntity[];
+  private rawSends:           RawSendOp[];
+  private rawReceives:        RawReceiveOp[];
 
   private newActivities: Activity[];
 
   private activities:      Activity[];
   private scopes:          DynamicScope[];
   private passiveEntities: PassiveEntity[];
+
+  private endedScopes: number[];
+  private completedActivities: number[];
 
   constructor() {
     this.symbols = [];
@@ -248,6 +359,13 @@ export class ExecutionData {
     this.rawScopes = [];
     this.rawActivities = [];
     this.rawPassiveEntities = [];
+    this.rawSends = [];
+    this.rawReceives = [];
+
+    this.endedScopes = [];
+    this.completedActivities = [];
+
+    this.newActivities = [];
   }
 
   public getSymbol(id: number) {
@@ -261,6 +379,10 @@ export class ExecutionData {
   /** @param id is a global unique id, unique for all types of activities. */
   public getActivity(id: number): Activity {
     return this.activities[id];
+  }
+
+  public getPassiveEntity(id: number): PassiveEntity {
+    return this.passiveEntities[id];
   }
 
   public setCapabilities(capabilities: ServerCapabilities) {
@@ -283,27 +405,44 @@ export class ExecutionData {
     this.rawActivities.push(activity);
   }
 
+  public completeActivity(activityId: number) {
+    this.completedActivities.push(activityId);
+  }
+
   public addRawScope(scope: RawScope) {
     this.rawScopes.push(scope);
+  }
+
+  public endScope(scopeId: number) {
+    this.endedScopes.push(scopeId);
   }
 
   public addRawPassiveEntity(entity: RawPassiveEntity) {
     this.rawPassiveEntities.push(entity);
   }
 
+  public addRawSendOp(send: RawSendOp) {
+    this.rawSends.push(send);
+  }
+
+  public addRawReceiveOp(receive: RawReceiveOp) {
+    this.rawReceives.push(receive);
+  }
+
   public getNewActivitiesSinceLastUpdate(): Activity[] {
-    return this.newActivities;
+    const result = this.newActivities;
+    this.newActivities = [];
+    return result;
   }
 
   private resolveData() {
-    this.newActivities = [];
     for (const i in this.rawActivities) {
       const a = this.rawActivities[i].resolve(this);
       if (a !== false) {
         delete this.rawActivities[i];
         console.assert(this.activities[a.id] === undefined);
         this.activities[a.id] = a;
-        this.newActivities[a.id] = a;
+        this.newActivities.push(a);
       }
     }
 
@@ -320,6 +459,22 @@ export class ExecutionData {
       if (e !== false) {
         delete this.rawPassiveEntities[i];
         this.passiveEntities[e.id] = e;
+      }
+    }
+
+    for (const i in this.endedScopes) {
+      const sId = this.endedScopes[i];
+      if (this.scopes[sId]) {
+        delete this.endedScopes[i];
+        this.scopes[sId].active = false;
+      }
+    }
+
+    for (const i in this.completedActivities) {
+      const aId = this.completedActivities[i];
+      if (this.activities[aId]) {
+        delete this.completedActivities[i];
+        this.activities[aId].completed = true;
       }
     }
   }

@@ -59,7 +59,14 @@ export enum PassiveEntityType {}
 /** The different kind of dynamic scopes supported by the system. */
 export enum DynamicScopeType {}
 
-export type EntityType = ActivityType | PassiveEntityType | DynamicScopeType;
+/** The kinds of send operations supported by the system. */
+export enum SendOpType {}
+
+/** The kinds of receive operations supported by the system. */
+export enum ReceiveOpType {}
+
+export type EntityType = ActivityType | PassiveEntityType | DynamicScopeType |
+                         SendOpType | ReceiveOpType;
 
 export interface StoppedMessage {
   type: "StoppedMessage";
