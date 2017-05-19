@@ -39,13 +39,16 @@ public class TraceBuffer {
   private long implThreadId;
 
   /** Id of the last activity that was running on this buffer. */
-  private long lastActivityId;
+  private Activity lastActivity;
 
-  protected TraceBuffer() { }
+  protected TraceBuffer() {
+    lastActivity = null;
+  }
 
   public void init(final ByteBuffer storage, final long implThreadId) {
     this.storage = storage;
     this.implThreadId = implThreadId;
+    this.lastActivity = null;
     assert storage.order() == ByteOrder.BIG_ENDIAN;
     recordThreadId();
   }
@@ -84,6 +87,12 @@ public class TraceBuffer {
   }
 
   public void recordCurrentActivity(final Activity current) {
+    if (current == lastActivity) {
+      return;
+    }
+
+    lastActivity = current;
+
     final int start = storage.position();
 
     storage.put(Implementation.IMPL_CURRENT_ACTIVITY.getId());

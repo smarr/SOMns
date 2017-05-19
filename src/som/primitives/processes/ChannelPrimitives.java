@@ -152,6 +152,8 @@ public abstract class ChannelPrimitives {
         WebDebugger dbg = SomLanguage.getVM(disp.getInvokable()).getWebDebugger();
         dbg.prepareSteppingUntilNextRootNode();
       }
+
+      ActorExecutionTrace.currentActivity(this);
     }
 
     @Override
