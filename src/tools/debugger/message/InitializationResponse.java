@@ -61,23 +61,23 @@ public final class InitializationResponse extends OutgoingMessage {
 
   private static final class ReceiveDef {
     private final byte marker;
-    private final EntityType source;
+    private final byte source;
 
     ReceiveDef(final byte marker, final EntityType source) {
       this.marker = marker;
-      this.source = source;
+      this.source = source.id;
     }
   }
 
   private static final class SendDef {
     private final byte marker;
-    private final EntityType entity;
-    private final EntityType target;
+    private final byte entity;
+    private final byte target;
 
     SendDef(final byte marker, final EntityType entity, final EntityType target) {
       this.marker = marker;
-      this.entity = entity;
-      this.target = target;
+      this.entity = entity.id;
+      this.target = target.id;
     }
   }
 
