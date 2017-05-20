@@ -1,11 +1,9 @@
 import { IdMap, Source, StackFrame, SourceMessage, TaggedSourceCoordinate,
-  ServerCapabilities, getSectionId } from "./messages";
+  getSectionId } from "./messages";
 import { Breakpoint } from "./breakpoints";
 
 
 export class Debugger {
-
-  private serverCapabilities?: ServerCapabilities;
 
   /**
    * Mapping Source URIs to id used for easy access, and for short unique ids to
@@ -30,10 +28,6 @@ export class Debugger {
     this.sources        = {};
     this.sections       = {};
     this.breakpoints    = {};
-  }
-
-  public setCapabilities(capabilities: ServerCapabilities) {
-    this.serverCapabilities = capabilities;
   }
 
   public getSourceId(uri: string): string {
