@@ -1,5 +1,8 @@
-import { ServerCapabilities, EntityDef, ActivityType, EntityType, DynamicScopeType, PassiveEntityType, SendOpType, ReceiveOpType } from "./messages";
-import { ExecutionData, RawSourceCoordinate, RawActivity, RawScope, RawPassiveEntity, RawSendOp, RawReceiveOp } from "./execution-data";
+import { EntityDef, ActivityType, EntityType, DynamicScopeType,
+  PassiveEntityType, SendOpType, ReceiveOpType } from "./messages";
+import { ExecutionData, RawSourceCoordinate, RawActivity, RawScope,
+  RawPassiveEntity, RawSendOp, RawReceiveOp } from "./execution-data";
+import { KomposMetaModel } from "./meta-model";
 
 enum TraceRecords {
   ActivityCreation,
@@ -41,11 +44,11 @@ export class TraceParser {
   private readonly typeCreation: EntityType[];
   private readonly sendOps:    SendOpType[];
   private readonly receiveOps: ReceiveOpType[];
-  private readonly serverCapabilities: ServerCapabilities;
+  private readonly metaModel: KomposMetaModel;
   private readonly execData: ExecutionData;
 
-  constructor(serverCapabilities: ServerCapabilities, execData: ExecutionData) {
-    this.serverCapabilities = serverCapabilities;
+  constructor(metaModel: KomposMetaModel, execData: ExecutionData) {
+    this.metaModel    = metaModel;
     this.parseTable   = [];
     this.typeCreation = [];
     this.sendOps      = [];
@@ -77,29 +80,29 @@ export class TraceParser {
   }
 
   private initMetaData() {
-    this.setInTable(this.serverCapabilities.activities,
+    this.setInTable(this.metaModel.serverCapabilities.activities,
       TraceRecords.ActivityCreation, TraceRecords.ActivityCompletion);
-    this.setInTable(this.serverCapabilities.dynamicScopes,
+    this.setInTable(this.metaModel.serverCapabilities.dynamicScopes,
       TraceRecords.DynamicScopeStart, TraceRecords.DynamicScopeEnd);
-    this.setInTable(this.serverCapabilities.passiveEntities,
+    this.setInTable(this.metaModel.serverCapabilities.passiveEntities,
       TraceRecords.PassiveEntityCreation, TraceRecords.PassiveEntityCompletion);
 
-    this.setOpsInTable(this.serverCapabilities.sendOps, TraceRecords.SendOp, this.sendOps);
-    this.setOpsInTable(this.serverCapabilities.receiveOps, TraceRecords.ReceiveOp, this.receiveOps);
+    this.setOpsInTable(this.metaModel.serverCapabilities.sendOps, TraceRecords.SendOp, this.sendOps);
+    this.setOpsInTable(this.metaModel.serverCapabilities.receiveOps, TraceRecords.ReceiveOp, this.receiveOps);
 
-    console.assert(this.serverCapabilities.activityParseData.creationSize       === RECORD_SIZE.ActivityCreation);
-    console.assert(this.serverCapabilities.activityParseData.completionSize     === RECORD_SIZE.ActivityCompletion);
-    console.assert(this.serverCapabilities.passiveEntityParseData.creationSize  === RECORD_SIZE.PassiveEntityCreation);
-    console.assert(this.serverCapabilities.passiveEntityParseData.completionSize === RECORD_SIZE.PassiveEntityCompletion);
-    console.assert(this.serverCapabilities.dynamicScopeParseData.creationSize   === RECORD_SIZE.DynamicScopeStart);
-    console.assert(this.serverCapabilities.dynamicScopeParseData.completionSize === RECORD_SIZE.DynamicScopeEnd);
-    console.assert(this.serverCapabilities.sendReceiveParseData.creationSize    === RECORD_SIZE.SendOp);
-    console.assert(this.serverCapabilities.sendReceiveParseData.completionSize  === RECORD_SIZE.ReceiveOp);
+    console.assert(this.metaModel.serverCapabilities.activityParseData.creationSize       === RECORD_SIZE.ActivityCreation);
+    console.assert(this.metaModel.serverCapabilities.activityParseData.completionSize     === RECORD_SIZE.ActivityCompletion);
+    console.assert(this.metaModel.serverCapabilities.passiveEntityParseData.creationSize  === RECORD_SIZE.PassiveEntityCreation);
+    console.assert(this.metaModel.serverCapabilities.passiveEntityParseData.completionSize === RECORD_SIZE.PassiveEntityCompletion);
+    console.assert(this.metaModel.serverCapabilities.dynamicScopeParseData.creationSize   === RECORD_SIZE.DynamicScopeStart);
+    console.assert(this.metaModel.serverCapabilities.dynamicScopeParseData.completionSize === RECORD_SIZE.DynamicScopeEnd);
+    console.assert(this.metaModel.serverCapabilities.sendReceiveParseData.creationSize    === RECORD_SIZE.SendOp);
+    console.assert(this.metaModel.serverCapabilities.sendReceiveParseData.completionSize  === RECORD_SIZE.ReceiveOp);
 
-    console.assert(this.serverCapabilities.implementationData[0].marker === IMPL_THREAD_MARKER);
-    console.assert(this.serverCapabilities.implementationData[0].size === RECORD_SIZE.ImplThread);
-    console.assert(this.serverCapabilities.implementationData[1].marker === IMPL_THREAD_CURRENT_ACTIVITY_MARKER);
-    console.assert(this.serverCapabilities.implementationData[1].size === RECORD_SIZE.ImplThreadCurrentActivity);
+    console.assert(this.metaModel.serverCapabilities.implementationData[0].marker === IMPL_THREAD_MARKER);
+    console.assert(this.metaModel.serverCapabilities.implementationData[0].size === RECORD_SIZE.ImplThread);
+    console.assert(this.metaModel.serverCapabilities.implementationData[1].marker === IMPL_THREAD_CURRENT_ACTIVITY_MARKER);
+    console.assert(this.metaModel.serverCapabilities.implementationData[1].size === RECORD_SIZE.ImplThreadCurrentActivity);
 
     this.parseTable[IMPL_THREAD_MARKER] = TraceRecords.ImplThread;
     this.parseTable[IMPL_THREAD_CURRENT_ACTIVITY_MARKER] = TraceRecords.ImplThreadCurrentActivity;

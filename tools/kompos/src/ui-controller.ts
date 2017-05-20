@@ -13,6 +13,7 @@ import {dbgLog}       from "./source";
 import {View, getActivityIdFromView, getSourceIdFrom, getSourceIdFromSection} from "./view";
 import {VmConnection} from "./vm-connection";
 import {Activity, ExecutionData} from "./execution-data";
+import { KomposMetaModel } from "./meta-model";
 
 /**
  * The controller binds the domain model and the views, and mediates their
@@ -171,9 +172,10 @@ export class UiController extends Controller {
   }
 
   public onInitializationResponse(msg: InitializationResponse) {
-    this.data.setCapabilities(msg.capabilities);
-    this.dbg.setCapabilities(msg.capabilities);
-    this.view.setCapabilities(msg.capabilities);
+    const metaModel = new KomposMetaModel(msg.capabilities);
+
+    this.data.setCapabilities(metaModel);
+    this.view.setCapabilities(metaModel);
   }
 
   public onVariables(msg: VariablesResponse) {
