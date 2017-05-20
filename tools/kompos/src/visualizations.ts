@@ -63,7 +63,7 @@ export class SystemVisualization {
   }
 
   public updateData(dv: DataView): Activity[] {
-    var tuples = this.data.updateDataBin(dv);
+    const tuples = this.data.updateDataBin(dv);
     this.protocol.newActivities(tuples[0]);
     this.protocol.newMessages(tuples[1]);
     return tuples[0];
