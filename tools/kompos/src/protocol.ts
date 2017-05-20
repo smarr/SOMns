@@ -1,10 +1,11 @@
 /*  This file gives an overview of the messages send between different actors.
 */
 import * as d3 from "d3";
-import {Activity, IdMap} from "./messages";
-import {HistoryData} from "./history-data";
-import {dbgLog} from "./source";
-import {getActivityId} from "./view";
+import { IdMap } from "./messages";
+import { dbgLog } from "./source";
+import { getEntityId } from "./view";
+import { Activity, TraceDataUpdate } from "./execution-data";
+import { KomposMetaModel } from "./meta-model";
 
 const actorStart = 20;      // height at which actor headings are created
 const actorHeight = 30;     // height of actor headings
@@ -216,7 +217,7 @@ class TurnNode {
   //   shift other turns downwards to prevent overlap
   public enlarge() {
     this.highlightOn();
-    ctrl.toggleHighlightMethod(getActivityId(this.actor.getActivityId()),
+    ctrl.toggleHighlightMethod(getEntityId(this.actor.getActivityId()),
       this.incoming.getText(), true); //  hight source section
 
     const growSize = this.outgoing.length * messageSpacing;
@@ -235,7 +236,7 @@ class TurnNode {
   public shrink() {
     this.highlightOff();
     ctrl.toggleHighlightMethod(
-      getActivityId(this.actor.getActivityId()), this.incoming.getText(), false);
+      getEntityId(this.actor.getActivityId()), this.incoming.getText(), false);
     this.visualization.attr("ry", turnRadius);
     this.visualization.attr("cy", this.y);
     this.actor.transpose(this.count, 0);
