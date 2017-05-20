@@ -3,9 +3,8 @@
 
 import { ActivityType, EntityDef } from "./messages";
 import * as d3 from "d3";
-import {HistoryData, ActivityNode, EntityLink,
-  ChannelNode} from "./history-data";
-import {Activity} from "./execution-data";
+import { TraceDataUpdate } from "./execution-data";
+import { ActivityNode, EntityLink, SystemViewData, PassiveEntityNode } from "./system-view";
 import { KomposMetaModel } from "./meta-model";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
@@ -28,13 +27,13 @@ function getLightTangoColor(actType: ActivityType, actId: number) {
 }
 
 export class SystemVisualization {
-  private data: HistoryData;
-  private activities: ActivityNode[];
-  private channels:   ChannelNode[];
+  private data: SystemViewData;
+  private activities:      ActivityNode[];
+  private passiveEntities: PassiveEntityNode[];
   private links: EntityLink[];
 
   private activityNodes: d3.selection.Update<ActivityNode>;
-  private channelNodes:  d3.selection.Update<ChannelNode>;
+  private entityNodes:  d3.selection.Update<PassiveEntityNode>;
   private entityLinks: d3.selection.Update<EntityLink>;
 
   private zoomScale = 1;
@@ -43,7 +42,7 @@ export class SystemVisualization {
   private metaModel: KomposMetaModel;
 
   constructor() {
-    this.data = new HistoryData();
+    this.data = new SystemViewData();
   }
 
   public updateTraceData(data: TraceDataUpdate) {
@@ -83,10 +82,10 @@ export class SystemVisualization {
     //  - links are always source < target; edge directions are set by "left" and "right".
 
     this.activities = this.data.getActivityNodes();
-    this.channels = this.data.getChannelNodes();
+    this.passiveEntities = this.data.getEntityNodes();
     this.links = this.data.getLinks();
 
-    const allEntities = this.activities.concat(<any[]> this.channels);
+    const allEntities = this.activities.concat(<any[]> this.passiveEntities);
 
     // init D3 force layout
     const forceLayout = d3.layout.force()
@@ -120,7 +119,7 @@ export class SystemVisualization {
       const x = this.zoomTransl[0] + d.x * this.zoomScale;
       const y = this.zoomTransl[1] + d.y * this.zoomScale;
       return `translate(${x},${y})scale(${this.zoomScale})`; });
-    this.channelNodes.attr("transform", (d: ChannelNode) => {
+    this.entityNodes.attr("transform", (d: PassiveEntityNode) => {
       const x = this.zoomTransl[0] + d.x * this.zoomScale;
       const y = this.zoomTransl[1] + d.y * this.zoomScale;
       return `translate(${x},${y})scale(${this.zoomScale})`; });
@@ -149,7 +148,8 @@ export class SystemVisualization {
       const y = this.zoomTransl[1] + d.y * this.zoomScale;
       return `translate(${x},${y})scale(${this.zoomScale})`;
     });
-    this.channelNodes.attr("transform", (d: ChannelNode) => {
+
+    this.entityNodes.attr("transform", (d: PassiveEntityNode) => {
       const x = this.zoomTransl[0] + d.x * this.zoomScale;
       const y = this.zoomTransl[1] + d.y * this.zoomScale;
       return `translate(${x},${y})scale(${this.zoomScale})`;
@@ -167,9 +167,10 @@ export class SystemVisualization {
       .selectAll("g")
       // nodes are known by id, not by index
       .data(this.activities, (a: ActivityNode) => { return a.getDataId(); });
-    this.channelNodes = svg.append("svg:g")
+
+    this.entityNodes = svg.append("svg:g")
       .selectAll("g")
-      .data(this.channels, (c: ChannelNode) => { return c.getDataId(); });
+      .data(this.passiveEntities, (c: PassiveEntityNode) => { return c.getDataId(); });
 
     this.entityLinks // .classed("selected", function(d) { return d === selected_link; })
       .style("marker-start", selectStartMarker)
@@ -191,21 +192,21 @@ export class SystemVisualization {
 
     // add new nodes
     const actG = this.activityNodes.enter().append("svg:g");
-    const chG  = this.channelNodes.enter().append("svg:g");
+    const peG  = this.entityNodes.enter().append("svg:g");
 
-    createActivity(actG, this.serverCapabilities.activities);
-    createChannel(chG);
+    createActivity(actG, this.metaModel.serverCapabilities.activities);
+    createChannel(peG);
 
     // After rendering text, adapt rectangles
     this.adaptRectSizeAndTextPosition();
 
     // Enable dragging of nodes
     actG.call(forceLayout.drag);
-    chG.call(forceLayout.drag);
+    peG.call(forceLayout.drag);
 
     // remove old nodes
     this.activityNodes.exit().remove();
-    this.channelNodes.exit().remove();
+    this.entityNodes.exit().remove();
 
     // set the graph in motion
     forceLayout.start();
@@ -340,7 +341,7 @@ function createChannelEnd(g, x: number, y: number) {
 
 function createChannel(g) {
   const x = 0, y = 0;
-  g.attr("id", function (a: ChannelNode) { return a.getSystemViewId(); });
+  g.attr("id", function (a: PassiveEntityNode) { return a.getSystemViewId(); });
 
   createChannelBody(g, x, y);
   createChannelEnd(g, x, y);
