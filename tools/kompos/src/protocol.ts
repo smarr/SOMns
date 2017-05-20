@@ -499,6 +499,21 @@ export class ProtocolOverview {
   public newActivities(newActivities: Activity[]) {
   private numActors: number;
 
+  public constructor() {
+    const canvas = $("#protocol-canvas");
+    canvas.empty(); // after every restart the canvas needs to be redrawn in case a different program is running on the backend
+
+    svgContainer = d3.select("#protocol-canvas")
+      .append("svg")
+      .attr("width", 1000)
+      .attr("height", 1000)
+      .attr("style", "background: none;");
+
+    defs = svgContainer.append("defs");
+    this.actors = {};
+    this.numActors = 0;
+  }
+
     for (const act of newActivities) {
       if (act.type === 4 /* Actor */) {
         const actor = new ActorHeading(act, this.numActors);
@@ -518,21 +533,6 @@ export class ProtocolOverview {
       const message = this.data.getName(newMessage.symbol);
       new Message(senderActor, targetActor, message, newMessage);
     }
-  }
-
-  public constructor(data: HistoryData) {
-    const canvas = $("#protocol-canvas");
-    canvas.empty(); // after every restart the canvas needs to be redrawn in case a different program is running on the backend
-
-    svgContainer = d3.select("#protocol-canvas")
-      .append("svg")
-      .attr("width", 1000)
-      .attr("height", 1000)
-      .attr("style", "background: none;");
-
-    defs = svgContainer.append("defs");
-      this.actors = {};
-      this.data = data;
   }
 
   // ensure only one node chain can be highlighted at the same time
