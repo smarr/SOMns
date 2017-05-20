@@ -47,7 +47,6 @@ export interface MessageEvent {
 // one collection group: turns and messages
 //   to hide an actor the other group and all incoming messages are set to hidden
 class ActorHeading {
-  public static actorCount:  number = 0;
   private turns:              TurnNode[];
   private activity:           Activity;
   public  x:                  number;
@@ -56,12 +55,12 @@ class ActorHeading {
   private visibility:         boolean;
   private container:          d3.Selection<SVGElement>;
 
-  constructor(activity: Activity) {
+  constructor(activity: Activity, num: number) {
     this.turns = [];
     this.activity = activity;
-    this.x = 50 + ActorHeading.actorCount++ * actorSpacing;
+    this.x = 50 + num * actorSpacing;
     this.y = actorStart;
-    this.color = color[ActorHeading.actorCount % color.length];
+    this.color = color[num % color.length];
     this.visibility = true;
     this.draw();
   }
@@ -497,11 +496,14 @@ export class ProtocolOverview {
   private static highlighted:       TurnNode;
 
   public newActivities(newActivities: Activity[]) {
+  private numActors: number;
+
     for (const act of newActivities) {
       if (act.type === 4 /* Actor */) {
-        const actor = new ActorHeading(act);
+        const actor = new ActorHeading(act, this.numActors);
         dbgLog("new activity: " + act.id + " " + act.name);
         this.actors[act.id] = actor;
+        this.numActors += 1;
       }
     }
   }
@@ -528,7 +530,6 @@ export class ProtocolOverview {
       .attr("style", "background: none;");
 
     defs = svgContainer.append("defs");
-      ActorHeading.actorCount = 0;
       this.actors = {};
       this.data = data;
   }
