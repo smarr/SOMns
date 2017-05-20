@@ -12,6 +12,7 @@ import { SystemVisualization } from "./visualizations";
 import { Activity, TraceDataUpdate } from "./execution-data";
 import { ActivityNode } from "./system-view";
 import { KomposMetaModel } from "./meta-model";
+import { ProtocolOverview } from "./protocol";
 
 declare var ctrl: Controller;
 declare var zenscroll: any;
@@ -347,16 +348,19 @@ function annotateArray(arr: any[][], sourceId: string, activityId: number,
  * data and reacting to events.
  */
 export class View {
-  private systemViz: SystemVisualization;
+  private readonly systemViz: SystemVisualization;
+  private readonly protocolViz: ProtocolOverview;
   private metaModel: KomposMetaModel;
 
   constructor() {
     this.systemViz = new SystemVisualization();
+    this.protocolViz = new ProtocolOverview();
   }
 
   public setCapabilities(metaModel: KomposMetaModel) {
     this.metaModel = metaModel;
     this.systemViz.setCapabilities(metaModel);
+    this.protocolViz.setMetaModel(metaModel);
   }
 
   public displaySystemView() {
@@ -608,6 +612,7 @@ export class View {
   public reset() {
     this.resetActivities();
     this.systemViz.reset();
+    this.protocolViz.reset();
   }
 
   private resetActivities() {
@@ -616,6 +621,8 @@ export class View {
 
   public updateTraceData(data: TraceDataUpdate) {
     this.systemViz.updateTraceData(data);
+    this.protocolViz.updateTraceData(data);
+
     for (const act of data.activities) {
       this.displayActivity(act);
     }
