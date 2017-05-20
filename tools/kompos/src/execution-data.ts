@@ -341,6 +341,8 @@ export class ExecutionData {
   private activities:      Activity[];
   private scopes:          DynamicScope[];
   private passiveEntities: PassiveEntity[];
+  private sendOps:         SendOp[];
+  private receiveOps:      ReceiveOp[];
 
   private endedScopes: number[];
   private completedActivities: number[];
@@ -351,6 +353,8 @@ export class ExecutionData {
     this.activities = [];
     this.scopes     = [];
     this.passiveEntities = [];
+    this.sendOps = [];
+    this.receiveOps = [];
 
     this.rawScopes = [];
     this.rawActivities = [];
@@ -463,6 +467,20 @@ export class ExecutionData {
       if (e !== false) {
         delete this.rawPassiveEntities[i];
         this.passiveEntities[e.id] = e;
+
+    for (const i in this.rawSends) {
+      const s = this.rawSends[i].resolve(this);
+      if (s !== false) {
+        delete this.rawSends[i];
+        this.sendOps.push(s);
+      }
+    }
+
+    for (const i in this.rawReceives) {
+      const r = this.rawReceives[i].resolve(this);
+      if (r !== false) {
+        delete this.rawReceives[i];
+        this.receiveOps.push(r);
       }
     }
 
