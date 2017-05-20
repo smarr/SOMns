@@ -484,7 +484,7 @@ export class ProtocolOverview {
 
   public newActivities(newActivities: Activity[]) {
     for(const act of newActivities){
-      if(act.type === "Actor"){
+      if(act.type === 4 /* Actor */){
         var actor = new ActorHeading(act);
         dbgLog("new activity: " + act.id + " " + act.name);
         this.actors[act.id] = actor;
