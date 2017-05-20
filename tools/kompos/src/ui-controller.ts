@@ -1,15 +1,15 @@
 /* jshint -W097 */
 "use strict";
 
-import {Controller}   from "./controller";
-import {Debugger}     from "./debugger";
-import {SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
+import { Controller }   from "./controller";
+import { Debugger }     from "./debugger";
+import { SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
   ScopesResponse, VariablesResponse, ProgramInfoResponse, InitializationResponse,
-  Source } from "./messages";
-import {LineBreakpoint, SectionBreakpoint, getBreakpointId,
-  createLineBreakpoint, createSectionBreakpoint} from "./breakpoints";
-import {dbgLog}       from "./source";
-import {View, getActivityIdFromView, getSourceIdFrom, getSourceIdFromSection} from "./view";
+  Source, Method } from "./messages";
+import { LineBreakpoint, SectionBreakpoint, getBreakpointId,
+  createLineBreakpoint, createSectionBreakpoint } from "./breakpoints";
+import { dbgLog }       from "./source";
+import { View, getActivityIdFromView, getSourceIdFrom, getSourceIdFromSection, getFullMethodName } from "./view";
 import { VmConnection } from "./vm-connection";
 import { Activity, ExecutionData, TraceDataUpdate } from "./execution-data";
 import { ActivityNode } from "./system-view";
@@ -96,7 +96,7 @@ export class UiController extends Controller {
 
   public toggleHighlightMethod(actId: string, shortName: string, highlight: boolean) {
     const aId      = getActivityIdFromView(actId);
-    const activity = this.dbg.getActivity(aId);
+    const activity = this.data.getActivity(aId);
     const sId      = this.dbg.getSourceId(activity.origin.uri);
     const source: Source   = this.dbg.getSource(sId);
     console.assert(aId === activity.id);
