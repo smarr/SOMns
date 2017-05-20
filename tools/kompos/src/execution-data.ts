@@ -322,6 +322,24 @@ export class RawReceiveOp extends RawEntity {
   }
 }
 
+export class TraceDataUpdate {
+  public readonly activities:      Activity[];
+  public readonly scopes:          DynamicScope[];
+  public readonly passiveEntities: PassiveEntity[];
+
+  public readonly sendOps:    SendOp[];
+  public readonly receiveOps: ReceiveOp[];
+
+  constructor() {
+    this.activities = [];
+    this.scopes     = [];
+    this.passiveEntities = [];
+
+    this.sendOps    = [];
+    this.receiveOps = [];
+  }
+}
+
 /** Maintains all data about the programs execution.
     It is also the place where partial data gets resolved once missing pieces
     are found. */
@@ -336,7 +354,7 @@ export class ExecutionData {
   private rawSends:           RawSendOp[];
   private rawReceives:        RawReceiveOp[];
 
-  private newActivities: Activity[];
+  private newData: TraceDataUpdate;
 
   private activities:      Activity[];
   private scopes:          DynamicScope[];
@@ -365,7 +383,7 @@ export class ExecutionData {
     this.endedScopes = [];
     this.completedActivities = [];
 
-    this.newActivities = [];
+    this.newData = new TraceDataUpdate();
   }
 
   public getSendOpModel(marker: number) {
@@ -438,9 +456,9 @@ export class ExecutionData {
     this.rawReceives.push(receive);
   }
 
-  public getNewActivitiesSinceLastUpdate(): Activity[] {
-    const result = this.newActivities;
-    this.newActivities = [];
+  public getNewestDataSinceLastUpdate(): TraceDataUpdate {
+    const result = this.newData;
+    this.newData = new TraceDataUpdate();
     return result;
   }
 
@@ -451,7 +469,7 @@ export class ExecutionData {
         delete this.rawActivities[i];
         console.assert(this.activities[a.id] === undefined);
         this.activities[a.id] = a;
-        this.newActivities.push(a);
+        this.newData.activities.push(a);
       }
     }
 
@@ -460,6 +478,7 @@ export class ExecutionData {
       if (s !== false) {
         delete this.rawScopes[i];
         this.scopes[s.id] = s;
+        this.newData.scopes.push(s);
       }
     }
 
@@ -468,12 +487,16 @@ export class ExecutionData {
       if (e !== false) {
         delete this.rawPassiveEntities[i];
         this.passiveEntities[e.id] = e;
+        this.newData.passiveEntities.push(e);
+      }
+    }
 
     for (const i in this.rawSends) {
       const s = this.rawSends[i].resolve(this);
       if (s !== false) {
         delete this.rawSends[i];
         this.sendOps.push(s);
+        this.newData.sendOps.push(s);
       }
     }
 
@@ -482,6 +505,7 @@ export class ExecutionData {
       if (r !== false) {
         delete this.rawReceives[i];
         this.receiveOps.push(r);
+        this.newData.receiveOps.push(r);
       }
     }
 
