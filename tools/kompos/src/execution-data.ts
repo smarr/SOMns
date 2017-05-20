@@ -1,5 +1,7 @@
-import { ServerCapabilities, SymbolMessage, FullSourceCoordinate, ActivityType, PassiveEntityType, DynamicScopeType, SendOpType, ReceiveOpType } from "./messages";
+import { SymbolMessage, FullSourceCoordinate, ActivityType, PassiveEntityType,
+  DynamicScopeType, SendOpType, ReceiveOpType } from "./messages";
 import { TraceParser } from "./trace-parser";
+import { KomposMetaModel, EntityRefType } from "./meta-model";
 
 
 export interface EntityProperties {
@@ -330,7 +332,7 @@ export class RawReceiveOp extends RawEntity {
     It is also the place where partial data gets resolved once missing pieces
     are found. */
 export class ExecutionData {
-  private serverCapabilities: ServerCapabilities;
+  private metaModel: KomposMetaModel;
   private traceParser?: TraceParser;
   private readonly symbols: string[];
 
@@ -385,9 +387,9 @@ export class ExecutionData {
     return this.passiveEntities[id];
   }
 
-  public setCapabilities(capabilities: ServerCapabilities) {
-    this.serverCapabilities = capabilities;
-    this.traceParser = new TraceParser(capabilities, this);
+  public setCapabilities(metaModel: KomposMetaModel) {
+    this.metaModel = metaModel;
+    this.traceParser = new TraceParser(metaModel, this);
   }
 
   public updateTraceData(data: DataView) {

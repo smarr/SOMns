@@ -1,11 +1,12 @@
 /* jshint -W097 */
 "use strict";
 
-import {ActivityType, ServerCapabilities, EntityDef} from "./messages";
+import { ActivityType, EntityDef } from "./messages";
 import * as d3 from "d3";
 import {HistoryData, ActivityNode, EntityLink,
   ChannelNode} from "./history-data";
 import {Activity} from "./execution-data";
+import { KomposMetaModel } from "./meta-model";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
 const TANGO_SCHEME = [
@@ -39,26 +40,23 @@ export class SystemVisualization {
   private zoomScale = 1;
   private zoomTransl = [0, 0];
 
-  private serverCapabilities?: ServerCapabilities;
+  private metaModel: KomposMetaModel;
 
   constructor() {
     this.data = new HistoryData();
   }
 
-  public setCapabilities(capabilities: ServerCapabilities) {
-    this.serverCapabilities = capabilities;
-    this.data.setCapabilities(capabilities);
+  public updateTraceData(data: TraceDataUpdate) {
+    this.data.updateTraceData(data);
+  }
+
+  public setCapabilities(metaModel: KomposMetaModel) {
+    this.metaModel = metaModel;
+    this.data.setMetaModel(metaModel);
   }
 
   public reset() {
-    this.data = new HistoryData();
-    if (this.serverCapabilities) {
-      this.data.setCapabilities(this.serverCapabilities);
-    }
-  }
-
-  public updateData(dv: DataView): Activity[] {
-    return this.data.updateDataBin(dv);
+    this.data.reset();
   }
 
   public display() {

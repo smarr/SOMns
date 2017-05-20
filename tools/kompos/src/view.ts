@@ -7,10 +7,11 @@ import {Controller}   from "./controller";
 import {ActivityNode} from "./history-data";
 import {Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
   TaggedSourceCoordinate, Scope, getSectionId, Variable, ActivityType,
-  ServerCapabilities, BreakpointType, SteppingType, EntityType } from "./messages";
 import {Breakpoint, SectionBreakpoint, LineBreakpoint} from "./breakpoints";
 import {SystemVisualization} from "./visualizations";
 import {Activity} from "./execution-data";
+  BreakpointType, SteppingType, EntityType } from "./messages";
+import { KomposMetaModel } from "./meta-model";
 
 declare var ctrl: Controller;
 declare var zenscroll: any;
@@ -354,15 +355,15 @@ function annotateArray(arr: any[][], sourceId: string, activityId: number,
  */
 export class View {
   private systemViz: SystemVisualization;
-  private serverCapabilities?: ServerCapabilities;
+  private metaModel: KomposMetaModel;
 
   constructor() {
     this.systemViz = new SystemVisualization();
   }
 
-  public setCapabilities(capabilities: ServerCapabilities) {
-    this.serverCapabilities = capabilities;
-    this.systemViz.setCapabilities(capabilities);
+  public setCapabilities(metaModel: KomposMetaModel) {
+    this.metaModel = metaModel;
+    this.systemViz.setCapabilities(metaModel);
   }
 
   public displaySystemView() {
@@ -509,8 +510,8 @@ export class View {
   }
 
   private enableBreakpointMenuItems(fileNode) {
-    console.assert(this.serverCapabilities, "connection should be properly initialized");
-    const typesPerTag = this.getBreakpointTypesPerTag(this.serverCapabilities.breakpointTypes);
+    console.assert(this.metaModel, "connection should be properly initialized");
+    const typesPerTag = this.getBreakpointTypesPerTag(this.metaModel.serverCapabilities.breakpointTypes);
 
     for (const tag in typesPerTag) {
       const menu    = nodeFromTemplate("bp-menu");
@@ -578,7 +579,7 @@ export class View {
     let group = "";
     let groupElem = null;
 
-    for (const step of this.serverCapabilities.steppingTypes) {
+    for (const step of this.metaModel.serverCapabilities.steppingTypes) {
       if (group !== step.group) {
         group = step.group;
         groupElem = nodeFromTemplate("debugger-step-btn-group");
@@ -768,7 +769,7 @@ export class View {
 
   private adjustSteppingButtons(act: JQuery, section: TaggedSourceCoordinate,
       activityType: ActivityType, concurrentEntityScopes: EntityType[]) {
-    for (const step of this.serverCapabilities.steppingTypes) {
+    for (const step of this.metaModel.serverCapabilities.steppingTypes) {
       const enabled = this.isSteppingApplicable(
         section, step, activityType, concurrentEntityScopes);
       act.find("button[data-step=" + step.name + " ]").prop("disabled", !enabled);
