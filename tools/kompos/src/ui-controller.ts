@@ -27,11 +27,11 @@ export class UiController extends Controller {
   private actProm = {};
   private actPromResolve = {};
 
-  constructor(dbg, view, vmConnection: VmConnection) {
+  constructor(vmConnection: VmConnection) {
     super(vmConnection);
-    this.dbg = dbg;
-    this.view = view;
+    this.dbg  = new Debugger();
     this.data = new ExecutionData();
+    this.view = new View();
   }
 
   private reset() {
