@@ -58,19 +58,22 @@ export class KomposMetaModel {
   private getKind(entityTypeId: number): EntityRefType {
     for (const act of this.serverCapabilities.activities) {
       if (act.id === entityTypeId) {
-        return act.creation !== 0 ? EntityRefType.Activity : EntityRefType.None;
+        return (act.creation !== 0 && act.creation !== undefined) ?
+               EntityRefType.Activity : EntityRefType.None;
       }
     }
 
     for (const ent of this.serverCapabilities.passiveEntities) {
       if (ent.id === entityTypeId) {
-        return ent.creation !== 0 ? EntityRefType.PassiveEntity : EntityRefType.None;
+        return (ent.creation !== 0 && ent.creation !== undefined) ?
+                EntityRefType.PassiveEntity : EntityRefType.None;
       }
     }
 
     for (const s of this.serverCapabilities.dynamicScopes) {
       if (s.id === entityTypeId) {
-        return s.creation !== 0 ? EntityRefType.DynamicScope : EntityRefType.None;
+        return (s.creation !== 0 && s.creation !== undefined) ?
+               EntityRefType.DynamicScope : EntityRefType.None;
       }
     }
     throw new Error("Did not find the definition for entityTypeId: " + entityTypeId);
