@@ -3,7 +3,6 @@
 
 import {Controller}   from "./controller";
 import {Debugger}     from "./debugger";
-import {ActivityNode} from "./history-data";
 import {SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
   ScopesResponse, VariablesResponse, ProgramInfoResponse, InitializationResponse,
   Source } from "./messages";
@@ -11,8 +10,9 @@ import {LineBreakpoint, SectionBreakpoint, getBreakpointId,
   createLineBreakpoint, createSectionBreakpoint} from "./breakpoints";
 import {dbgLog}       from "./source";
 import {View, getActivityIdFromView, getSourceIdFrom, getSourceIdFromSection} from "./view";
-import {VmConnection} from "./vm-connection";
-import {Activity, ExecutionData} from "./execution-data";
+import { VmConnection } from "./vm-connection";
+import { Activity, ExecutionData, TraceDataUpdate } from "./execution-data";
+import { ActivityNode } from "./system-view";
 import { KomposMetaModel } from "./meta-model";
 
 /**
@@ -35,6 +35,7 @@ export class UiController extends Controller {
   }
 
   private reset() {
+    this.data.reset();
     this.view.reset();
     this.actProm = {};
     this.actPromResolve = {};
@@ -118,10 +119,10 @@ export class UiController extends Controller {
     this.vmConnection.requestStackTrace(msg.activityId);
   }
 
-  public newActivities(newActivities: Activity[]) {
-    this.view.addActivities(newActivities);
+  public updateTraceData(data: TraceDataUpdate) {
+    this.view.updateTraceData(data);
 
-    for (const act of newActivities) {
+    for (const act of data.activities) {
       this.ensureActivityPromise(act.id);
       this.actPromResolve[act.id](act);
     }
@@ -184,11 +185,14 @@ export class UiController extends Controller {
 
   public onSymbolMessage(msg: SymbolMessage) {
     this.data.addSymbols(msg);
+    this.updateTraceData(this.data.getNewestDataSinceLastUpdate());
+
+    this.view.displaySystemView();
   }
 
   public onTracingData(data: DataView) {
     this.data.updateTraceData(data);
-    this.newActivities(this.data.getNewActivitiesSinceLastUpdate());
+    this.updateTraceData(this.data.getNewestDataSinceLastUpdate());
 
     this.view.displaySystemView();
   }
