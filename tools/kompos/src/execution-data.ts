@@ -29,13 +29,13 @@ export interface DynamicScope extends EntityProperties {
 
 export interface SendOp extends EntityProperties {
   type: SendOpType;
-  entity: Activity | PassiveEntity | DynamicScope;
-  target: Activity | PassiveEntity | DynamicScope;
+  entity: Activity | PassiveEntity | DynamicScope | number;
+  target: Activity | PassiveEntity | DynamicScope | number;
 }
 
 export interface ReceiveOp extends EntityProperties {
   type: ReceiveOpType;
-  source: Activity | PassiveEntity | DynamicScope;
+  source: Activity | PassiveEntity | DynamicScope | number;
 }
 
 /** Some raw data, which is only available partially and contains ids that need
@@ -98,20 +98,15 @@ export abstract class RawEntity extends RawData {
     }
   }
 
-  protected resolveEntity(data: ExecutionData, entityId: number): Activity | PassiveEntity | DynamicScope {
-    let entity: Activity | PassiveEntity | DynamicScope = data.getActivity(entityId);
-    if (entity !== undefined) {
-      return entity;
+  protected resolveEntity(data: ExecutionData, entityId: number,
+      type: EntityRefType): Activity | PassiveEntity | DynamicScope | number {
+    switch (type) {
+      case EntityRefType.None:          return entityId;
+      case EntityRefType.Activity:      return data.getActivity(entityId);
+      case EntityRefType.DynamicScope:  return data.getScope(entityId);
+      case EntityRefType.PassiveEntity: return data.getPassiveEntity(entityId);
     }
-
-    entity = data.getScope(entityId);
-    if (entity !== undefined) {
-      return entity;
-    }
-
-    return data.getPassiveEntity(entityId);
   }
-
 }
 
 export class RawActivity extends RawEntity {
@@ -271,13 +266,12 @@ export class RawSendOp extends RawEntity {
     if (creationScope === undefined) {
       return false;
     }
-
-    const entity = this.resolveEntity(data, this.entityId);
+    const entity = this.resolveEntity(data, this.entityId, data.getSendOpModel(this.type).entity);
     if (entity === undefined) {
       return false;
     }
 
-    const target = this.resolveEntity(data, this.targetId);
+    const target = this.resolveEntity(data, this.targetId, data.getSendOpModel(this.type).target);
     if (target === undefined) {
       return false;
     }
@@ -314,7 +308,7 @@ export class RawReceiveOp extends RawEntity {
       return false;
     }
 
-    const entity = this.resolveEntity(data, this.sourceId);
+    const entity = this.resolveEntity(data, this.sourceId, data.getReceiveOpModel(this.type).source);
     if (entity === undefined) {
       return false;
     }
@@ -368,6 +362,14 @@ export class ExecutionData {
     this.completedActivities = [];
 
     this.newActivities = [];
+  }
+
+  public getSendOpModel(marker: number) {
+    return this.metaModel.sendOps[marker];
+  }
+
+  public getReceiveOpModel(marker: number) {
+    return this.metaModel.receiveOps[marker];
   }
 
   public getSymbol(id: number) {
