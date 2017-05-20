@@ -407,6 +407,7 @@ export class ExecutionData {
     for (let i = 0; i < msg.ids.length; i++) {
       this.symbols[msg.ids[i]] = msg.symbols[i];
     }
+    this.resolveData();
   }
 
   public addRawActivity(activity: RawActivity) {
