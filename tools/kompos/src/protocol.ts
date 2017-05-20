@@ -4,7 +4,7 @@ import * as d3 from "d3";
 import { IdMap } from "./messages";
 import { dbgLog } from "./source";
 import { getEntityId } from "./view";
-import { Activity, TraceDataUpdate } from "./execution-data";
+import { Activity, TraceDataUpdate, SendOp } from "./execution-data";
 import { KomposMetaModel } from "./meta-model";
 
 const actorStart = 20;      // height at which actor headings are created
@@ -34,14 +34,6 @@ const lineGenerator: any =
     .x(function(d) { return d[0]; })
     .y(function(d) { return d[1]; })
     .interpolate("linear");
-
-// Interfaces for easy typing
-export interface MessageEvent {
-  id:        number;
-  sender:    number;
-  receiver:  number;
-  symbol:    number;
-}
 
 // each actor has their own svg group.
 // one heading group: the square, the text field and the other group.
@@ -305,20 +297,12 @@ class TurnNode {
 }
 
 class EmptyMessage {
-  protected data:             MessageEvent;
   public highlightOn() {}
   public highlightOff() {}
   public changeVisibility(_visible: boolean) {}
   public getText() { return "42"; }
   public shiftAtSender(_yShift: number) {}
   public shiftAtTarget(_yShift: number) {}
-
-  constructor () {
-    this.data = {id: -1,
-                 sender: -1,
-                 receiver:  0,
-                 symbol:    -1};
-  }
 }
 
 // message represent a message send between two actors
@@ -340,13 +324,13 @@ class Message extends EmptyMessage {
   private visualization: d3.Selection<SVGElement>;
   private anchor:        d3.Selection<SVGElement>;
 
+  private readonly sendOp: SendOp;
 
   constructor(senderActor: ActorHeading, targetActor: ActorHeading,
-      text: string, data: MessageEvent) {
+      sendOp: SendOp, senderTurn: TurnNode) {
     super();
-    this.text = text;
-    this.data = data;
-    this.sender = senderActor.getLastTurn();
+    this.sendOp = sendOp;
+    this.sender = senderTurn;
     this.target = new TurnNode(targetActor, this);
 
     this.messageToSelf = senderActor === targetActor;
@@ -355,6 +339,7 @@ class Message extends EmptyMessage {
     this.targetShift = 0;
     this.visibility = "inherit";
     this.draw();
+    this.text = "TODO";
   }
 
   public getText() {
@@ -367,10 +352,10 @@ class Message extends EmptyMessage {
 
   private draw() {
     if (this.messageToSelf) {
-        this.drawMessageToSelf();
-      } else {
-        this.drawMessageToOther();
-      }
+      this.drawMessageToSelf();
+    } else {
+      this.drawMessageToOther();
+    }
   }
 
   // remove the visualization and create a new one
@@ -538,15 +523,17 @@ export class ProtocolOverview {
     }
   }
 
-  private newMessages(newMessages: MessageEvent[]) {
-    for (const newMessage of newMessages){
-      const senderActor = this.actors[newMessage.sender];
-      const targetActor = this.actors[newMessage.receiver];
-      console.assert(senderActor !== undefined);
-      console.assert(targetActor !== undefined);
+  private newMessages(newMessages: SendOp[]) {
+    for (const msg of newMessages) {
+      if (!this.metaModel.isActorMessage(msg)) {
+        // ignore all non-actor message sends
+        continue;
+      }
 
-      const message = this.data.getName(newMessage.symbol);
-      new Message(senderActor, targetActor, message, newMessage);
+      const senderActor = this.actors[msg.creationActivity.id];
+      const targetActor = this.actors[(<Activity> msg.target).id];
+
+      new Message(senderActor, targetActor, msg, senderActor.getLastTurn());
     }
   }
 
