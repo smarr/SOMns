@@ -492,11 +492,10 @@ class Message extends EmptyMessage {
 // this is the main class of the file, it stores all actors currently in use
 // only one turn can be highlighted at a time
 export class ProtocolOverview {
-  private actors:                   IdMap<ActorHeading>;
-  private data:                     HistoryData;
-  private static highlighted:       TurnNode;
+  private static highlighted: TurnNode;
+  private actors:             IdMap<ActorHeading>;
 
-  public newActivities(newActivities: Activity[]) {
+  private metaModel: KomposMetaModel;
   private numActors: number;
 
   public constructor() {
@@ -514,8 +513,23 @@ export class ProtocolOverview {
     this.numActors = 0;
   }
 
+  public reset() {
+    this.numActors = 0;
+    this.actors = {};
+  }
+
+  public setMetaModel(metaModel: KomposMetaModel) {
+    this.metaModel = metaModel;
+  }
+
+  public updateTraceData(data: TraceDataUpdate) {
+    this.newActivities(data.activities);
+    this.newMessages(data.sendOps);
+  }
+
+  private newActivities(newActivities: Activity[]) {
     for (const act of newActivities) {
-      if (act.type === 4 /* Actor */) {
+      if (this.metaModel.isActor(act)) {
         const actor = new ActorHeading(act, this.numActors);
         dbgLog("new activity: " + act.id + " " + act.name);
         this.actors[act.id] = actor;
@@ -524,12 +538,13 @@ export class ProtocolOverview {
     }
   }
 
-  public newMessages(newMessages: MessageEvent[]) {
+  private newMessages(newMessages: MessageEvent[]) {
     for (const newMessage of newMessages){
       const senderActor = this.actors[newMessage.sender];
       const targetActor = this.actors[newMessage.receiver];
       console.assert(senderActor !== undefined);
       console.assert(targetActor !== undefined);
+
       const message = this.data.getName(newMessage.symbol);
       new Message(senderActor, targetActor, message, newMessage);
     }

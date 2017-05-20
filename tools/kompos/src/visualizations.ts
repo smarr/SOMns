@@ -3,10 +3,9 @@
 
 import { ActivityType, EntityDef } from "./messages";
 import * as d3 from "d3";
-import { TraceDataUpdate, Activity } from "./execution-data";
+import { TraceDataUpdate } from "./execution-data";
 import { ActivityNode, EntityLink, SystemViewData, PassiveEntityNode } from "./system-view";
 import { KomposMetaModel } from "./meta-model";
-import { ProtocolOverview } from "./protocol";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
 const TANGO_SCHEME = [
@@ -28,11 +27,11 @@ function getLightTangoColor(actType: ActivityType, actId: number) {
 }
 
 export class SystemVisualization {
-  private data: SystemViewData;
+  private readonly data: SystemViewData;
+
   private activities:      ActivityNode[];
   private passiveEntities: PassiveEntityNode[];
   private links: EntityLink[];
-  private protocol: ProtocolOverview;
 
   private activityNodes: d3.selection.Update<ActivityNode>;
   private entityNodes:  d3.selection.Update<PassiveEntityNode>;
@@ -45,7 +44,6 @@ export class SystemVisualization {
 
   constructor() {
     this.data = new SystemViewData();
-    this.protocol = new ProtocolOverview(this.data);
   }
 
   public updateTraceData(data: TraceDataUpdate) {
@@ -55,18 +53,10 @@ export class SystemVisualization {
   public setCapabilities(metaModel: KomposMetaModel) {
     this.metaModel = metaModel;
     this.data.setMetaModel(metaModel);
-    this.protocol = new ProtocolOverview(this.data);
   }
 
   public reset() {
     this.data.reset();
-  }
-
-  public updateData(dv: DataView): Activity[] {
-    const tuples = this.data.updateDataBin(dv);
-    this.protocol.newActivities(tuples[0]);
-    this.protocol.newMessages(tuples[1]);
-    return tuples[0];
   }
 
   public display() {
