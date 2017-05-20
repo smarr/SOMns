@@ -1,4 +1,5 @@
 import { ServerCapabilities, SendDef, ReceiveDef } from "./messages";
+import { Activity } from "./execution-data";
 
 class SendOpModel {
   public readonly sendOp: SendDef;
@@ -34,6 +35,8 @@ export class KomposMetaModel {
   public readonly sendOps:    SendOpModel[];
   public readonly receiveOps: ReceiveOpModel[];
 
+  private actorTag:  number;
+
   constructor(serverCapabilities: ServerCapabilities) {
     this.serverCapabilities = serverCapabilities;
     this.sendOps = [];
@@ -43,6 +46,12 @@ export class KomposMetaModel {
   }
 
   private extractMetaModel() {
+    for (const actT of this.serverCapabilities.activities) {
+      if (actT.label === "actor") {
+        this.actorTag = actT.id;
+      }
+    }
+
     for (const sendOp of this.serverCapabilities.sendOps) {
       const entityType = this.getKind(sendOp.entity);
       const targetType = this.getKind(sendOp.target);
@@ -77,6 +86,10 @@ export class KomposMetaModel {
       }
     }
     throw new Error("Did not find the definition for entityTypeId: " + entityTypeId);
+  }
+
+  public isActor(activity: Activity) {
+    return activity.type === this.actorTag;
   }
 }
 
