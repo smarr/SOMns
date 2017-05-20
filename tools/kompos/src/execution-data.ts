@@ -386,6 +386,14 @@ export class ExecutionData {
     this.newData = new TraceDataUpdate();
   }
 
+  public reset() {
+    this.symbols.length = 0;
+    this.activities.length = 0;
+    this.scopes.length = 0;
+    this.passiveEntities.length = 0;
+    this.newData = new TraceDataUpdate();
+  }
+
   public getSendOpModel(marker: number) {
     return this.metaModel.sendOps[marker];
   }
