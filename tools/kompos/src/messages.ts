@@ -180,6 +180,9 @@ export interface SendDef {
   marker: number;
   entity: EntityType;
   target: EntityType;
+
+  /** To be used for identification. */
+  label: string;
 }
 
 export interface ReceiveDef {
