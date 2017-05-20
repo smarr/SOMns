@@ -195,7 +195,7 @@ export class TraceParser {
     let currentActivityId = null;
     let currentScopeId = null;
     let currentImplThreadId = null;
-    let currentThreadLocalBufferId = null;
+    let currentActivityBufferId = null;
 
     let prevMarker = null;
 
@@ -234,7 +234,7 @@ export class TraceParser {
         }
         case TraceRecords.ImplThreadCurrentActivity: {
           currentActivityId = this.readLong(data, i + 1);
-          currentThreadLocalBufferId = data.getUint32(i + 9);
+          currentActivityBufferId = data.getUint32(i + 9);
           i += RECORD_SIZE.ImplThreadCurrentActivity;
           break;
         }
