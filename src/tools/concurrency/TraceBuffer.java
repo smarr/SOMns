@@ -67,7 +67,9 @@ public class TraceBuffer {
   }
 
   boolean swapStorage(final Activity current) {
-    if (storage == null || storage.position() <= Implementation.IMPL_THREAD.getSize()) {
+    if (storage == null ||
+        storage.position() <= (Implementation.IMPL_THREAD.getSize() +
+                               Implementation.IMPL_CURRENT_ACTIVITY.getSize())) {
       return false;
     }
     ActorExecutionTrace.returnBuffer(storage);
