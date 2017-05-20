@@ -1,5 +1,5 @@
 import { ServerCapabilities, SendDef, ReceiveDef } from "./messages";
-import { Activity } from "./execution-data";
+import { Activity, SendOp } from "./execution-data";
 
 class SendOpModel {
   public readonly sendOp: SendDef;
@@ -35,7 +35,8 @@ export class KomposMetaModel {
   public readonly sendOps:    SendOpModel[];
   public readonly receiveOps: ReceiveOpModel[];
 
-  private actorTag:  number;
+  private actorTag:        number;
+  private actorMessageTag: number;
 
   constructor(serverCapabilities: ServerCapabilities) {
     this.serverCapabilities = serverCapabilities;
@@ -49,6 +50,12 @@ export class KomposMetaModel {
     for (const actT of this.serverCapabilities.activities) {
       if (actT.label === "actor") {
         this.actorTag = actT.id;
+      }
+    }
+
+    for (const sendOpT of this.serverCapabilities.sendOps) {
+      if (sendOpT.label === "ACTOR_MSG") {
+        this.actorMessageTag = sendOpT.marker;
       }
     }
 
@@ -90,6 +97,10 @@ export class KomposMetaModel {
 
   public isActor(activity: Activity) {
     return activity.type === this.actorTag;
+  }
+
+  public isActorMessage(sendOp: SendOp) {
+    return sendOp.type === this.actorMessageTag;
   }
 }
 
