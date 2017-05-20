@@ -487,7 +487,7 @@ export class View {
 
   public toggleHighlightMethod(sourceId: string, activity: Activity, source: SourceCoordinate, highlight: boolean) {
     const methodDeclId = methodDeclIdToString(getSectionId(sourceId, source), 0, activity.id);
-    var ss = document.getElementById(methodDeclId)
+    const ss = document.getElementById(methodDeclId);
     ss.style.backgroundColor = (highlight ? "#FDFF47" : "#FFFFFF");
   }
 

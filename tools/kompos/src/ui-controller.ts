@@ -104,7 +104,7 @@ export class UiController extends Controller {
     const fullName = getFullMethodName(activity, shortName);
     const method: Method = methods.find(method => method.name === fullName);
 
-    if(highlight){
+    if (highlight) {
       this.view.displaySource(activity, source, sId); // if source is already displayed, will return false
     } else {
       this.view.markCodePaneClosed(actId);
