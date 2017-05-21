@@ -104,6 +104,11 @@ export class UiController extends Controller {
     const fullName = getFullMethodName(activity, shortName);
     const method: Method = methods.find(method => method.name === fullName);
 
+    if (!method) {
+      console.error("Method could not be found. This needs to be fixed by actually using DynamicScope info, instead of SendOps for the ProcessView");
+      return;
+    }
+
     if (highlight) {
       this.view.displaySource(activity, source, sId); // if source is already displayed, will return false
     }
