@@ -270,7 +270,7 @@ class TurnNode {
       .style("stroke-width", noHighlightWidth)
       .style("stroke", this.actor.getColor())
       .on("click", function(){
-        ProtocolOverview.changeHighlight(turn);
+        ProcessView.changeHighlight(turn);
       });
 
     /*add popover, a on hover/click menu with the name of the message causing
@@ -476,7 +476,7 @@ class Message extends EmptyMessage {
 
 // this is the main class of the file, it stores all actors currently in use
 // only one turn can be highlighted at a time
-export class ProtocolOverview {
+export class ProcessView {
   private static highlighted: TurnNode;
   private actors:             IdMap<ActorHeading>;
 
@@ -539,16 +539,16 @@ export class ProtocolOverview {
 
   // ensure only one node chain can be highlighted at the same time
   public static changeHighlight(turn: TurnNode) {
-    if (ProtocolOverview.highlighted) {
-      ProtocolOverview.highlighted.shrink();
-      if (turn === ProtocolOverview.highlighted) {
-        ProtocolOverview.highlighted = null;
+    if (ProcessView.highlighted) {
+      ProcessView.highlighted.shrink();
+      if (turn === ProcessView.highlighted) {
+        ProcessView.highlighted = null;
         return;
       } else {
-        ProtocolOverview.highlighted.hidePopup();
+        ProcessView.highlighted.hidePopup();
       }
     }
     turn.enlarge();
-    ProtocolOverview.highlighted = turn;
+    ProcessView.highlighted = turn;
   }
 }

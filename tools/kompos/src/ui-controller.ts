@@ -12,7 +12,7 @@ import { dbgLog }       from "./source";
 import { View, getActivityIdFromView, getSourceIdFrom, getSourceIdFromSection, getFullMethodName } from "./view";
 import { VmConnection } from "./vm-connection";
 import { Activity, ExecutionData, TraceDataUpdate } from "./execution-data";
-import { ActivityNode } from "./system-view";
+import { ActivityNode } from "./system-view-data";
 import { KomposMetaModel } from "./meta-model";
 
 /**
