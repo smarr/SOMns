@@ -10,9 +10,9 @@ import { Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
 import { Breakpoint, SectionBreakpoint, LineBreakpoint } from "./breakpoints";
 import { SystemVisualization } from "./visualizations";
 import { Activity, TraceDataUpdate } from "./execution-data";
-import { ActivityNode } from "./system-view";
+import { ActivityNode } from "./system-view-data";
 import { KomposMetaModel } from "./meta-model";
-import { ProtocolOverview } from "./protocol";
+import { ProcessView } from "./process-view";
 
 declare var ctrl: Controller;
 declare var zenscroll: any;
@@ -349,12 +349,12 @@ function annotateArray(arr: any[][], sourceId: string, activityId: number,
  */
 export class View {
   private readonly systemViz: SystemVisualization;
-  private readonly protocolViz: ProtocolOverview;
+  private readonly protocolViz: ProcessView;
   private metaModel: KomposMetaModel;
 
   constructor() {
     this.systemViz = new SystemVisualization();
-    this.protocolViz = new ProtocolOverview();
+    this.protocolViz = new ProcessView();
   }
 
   public setCapabilities(metaModel: KomposMetaModel) {

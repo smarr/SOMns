@@ -4,7 +4,7 @@
 import { ActivityType, EntityDef } from "./messages";
 import * as d3 from "d3";
 import { TraceDataUpdate } from "./execution-data";
-import { ActivityNode, EntityLink, SystemViewData, PassiveEntityNode } from "./system-view";
+import { ActivityNode, EntityLink, SystemViewData, PassiveEntityNode } from "./system-view-data";
 import { KomposMetaModel } from "./meta-model";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
