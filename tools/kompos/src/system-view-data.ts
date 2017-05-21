@@ -57,7 +57,7 @@ export abstract class EntityNode extends NodeImpl {
 }
 
 export abstract class ActivityNode extends EntityNode {
-  public reflexive:  boolean;
+  public readonly reflexive:  boolean;
 
   constructor(reflexive: boolean, x: number, y: number) {
     super(x, y);
@@ -70,6 +70,8 @@ export abstract class ActivityNode extends EntityNode {
 
   public abstract getQueryForCodePane(): string;
   public abstract getType(): ActivityType;
+
+  public abstract getActivityId(): number;
 
   public getEntityType() { return EntityRefType.Activity; }
 }
@@ -92,6 +94,8 @@ class ActivityNodeImpl extends ActivityNode {
   public getQueryForCodePane() { return "#" + getEntityId(this.activity.id); }
 
   public getType() { return this.activity.type; }
+
+  public getActivityId() { return this.activity.id; }
 }
 
 class GroupNode extends ActivityNode {
@@ -122,6 +126,8 @@ class GroupNode extends ActivityNode {
   }
 
   public getType() { return this.group.activities[0].type; }
+
+  public getActivityId() { return this.group.activities[0].id; }
 }
 
 export class PassiveEntityNode extends EntityNode {
