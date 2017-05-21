@@ -106,8 +106,6 @@ export class UiController extends Controller {
 
     if (highlight) {
       this.view.displaySource(activity, source, sId); // if source is already displayed, will return false
-    } else {
-      this.view.markCodePaneClosed(actId);
     }
     this.view.toggleHighlightMethod(sId, activity, method.sourceSection, highlight);
   }
