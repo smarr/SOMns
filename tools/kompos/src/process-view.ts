@@ -40,11 +40,12 @@ const lineGenerator: any =
     one collection group: turns and messages
     to hide an actor the other group and all incoming messages are set to hidden */
 class ActorHeading {
-  private turns:              TurnNode[];
-  private activity:           Activity;
-  public  x:                  number;
-  private y:                  number;
-  private color:              string;
+  private readonly turns:     TurnNode[];
+  private readonly activity:  Activity;
+  public  readonly x:         number;
+  private readonly y:         number;
+  public  readonly color:     string;
+
   private visibility:         boolean;
   private container:          d3.Selection<SVGElement>;
 
@@ -55,7 +56,6 @@ class ActorHeading {
     this.y = actorStart;
     this.color = color[num % color.length];
     this.visibility = true;
-    this.draw();
   }
 
   public addTurn(turn: TurnNode) {
@@ -65,7 +65,7 @@ class ActorHeading {
 
   public getLastTurn() {
     if (this.turns.length === 0) {
-      return (new TurnNode(this, new EmptyMessage()));
+      return new TurnNode(this, new EmptyMessage());
     } else {
       return this.turns[this.turns.length - 1];
     }
@@ -73,10 +73,6 @@ class ActorHeading {
 
   public getContainer() {
     return this.container;
-  }
-
-  public getColor() {
-    return this.color;
   }
 
   public getName() {
@@ -111,8 +107,7 @@ class ActorHeading {
     }
   }
 
-  private draw() {
-    const actor = this;
+  public draw() {
     const actorHeading = svgContainer.append("g");
     this.container = actorHeading.append("g");
 
@@ -131,8 +126,8 @@ class ActorHeading {
       .attr("width", actorWidth)
       .style("fill", this.color)
       .style("opacity", opacity)
-      .on("click", function(){
-        actor.changeVisibility();
+      .on("click", () => {
+        this.changeVisibility();
       });
   }
 }
@@ -140,13 +135,13 @@ class ActorHeading {
 /** A turn happens every time an actor processes a message.
    Turns store their incoming message and each outgoing message. */
 class TurnNode {
-  private actor:          ActorHeading;
-  private incoming:       EmptyMessage;
-  private outgoing:       Message[];
-  private count:          number;
-  public x:              number;
-  public y:              number;
-  private visualization:  d3.Selection<SVGElement>;
+  private readonly actor: ActorHeading;
+  private readonly incoming: EmptyMessage;
+  private readonly outgoing: Message[];
+  private readonly count: number;
+  public  readonly x:     number;
+  public  readonly y:     number;
+  private readonly visualization:  d3.Selection<SVGElement>;
   private popover:        JQuery;
 
   constructor(actor: ActorHeading, message: EmptyMessage) {
@@ -169,7 +164,7 @@ class TurnNode {
   }
 
   public getColor() {
-    return this.actor.getColor();
+    return this.actor.color;
   }
 
   private getId() {
@@ -261,10 +256,10 @@ class TurnNode {
       .attr("cy", this.y)
       .attr("rx", turnRadius)
       .attr("ry", turnRadius)
-      .style("fill", this.actor.getColor())
+      .style("fill", this.actor.color)
       .style("opacity", opacity)
       .style("stroke-width", noHighlightWidth)
-      .style("stroke", this.actor.getColor())
+      .style("stroke", this.actor.color)
       .on("click", function(){
         ProcessView.changeHighlight(turn);
       });
@@ -515,6 +510,7 @@ export class ProcessView {
         dbgLog("new activity: " + act.id + " " + act.name);
         this.actors[act.id] = actor;
         this.numActors += 1;
+        actor.draw();
       }
     }
   }
