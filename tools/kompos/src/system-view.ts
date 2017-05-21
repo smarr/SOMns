@@ -222,10 +222,10 @@ export class SystemView {
   private adaptRectSizeAndTextPosition() {
     this.activityNodes.selectAll("rect")
       .attr("width", function() {
-        return this.parentNode.childNodes[1].getComputedTextLength() + PADDING;
+        return this.nextSibling.getComputedTextLength() + PADDING;
       })
       .attr("x", function() {
-        const width = this.parentNode.childNodes[1].getComputedTextLength();
+        const width = this.nextSibling.getComputedTextLength();
         d3.select(this.parentNode.childNodes[2]).attr("x", (width / 2.0) + 3.0);
         return - (PADDING + width) / 2.0;
       });
@@ -312,7 +312,7 @@ function createActivityStatusIndicator(g) {
     .html("&#xf04c;");
 }
 
-const PADDING = 15;
+export const PADDING = 15;
 
 function createChannelBody(g, x: number, y: number) {
   return g.append("rect")

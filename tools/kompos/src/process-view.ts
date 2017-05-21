@@ -6,11 +6,10 @@ import { dbgLog } from "./source";
 import { getEntityId } from "./view";
 import { Activity, TraceDataUpdate, SendOp } from "./execution-data";
 import { KomposMetaModel } from "./meta-model";
-import { getLightTangoColor } from "./system-view";
+import { getLightTangoColor, PADDING } from "./system-view";
 
 const actorStart = 20;      // height at which actor headings are created
 const actorHeight = 30;     // height of actor headings
-const actorWidth = 60;      // width of actor headings
 const actorSpacing = 100;   // space between actors (width)
 
 const turnRadius = 20;      // radius of turns
@@ -103,11 +102,9 @@ class ActorHeading {
     this.container = actorHeading.append("g");
 
     actorHeading.append("rect")
-      .attr("x", this.x)
       .attr("y", this.y)
       .attr("rx", 5)
       .attr("height", actorHeight)
-      .attr("width", actorWidth)
       .style("fill", this.color)
       .style("stroke", d3.rgb(this.color).darker().toString())
       .on("click", () => {
@@ -115,7 +112,7 @@ class ActorHeading {
       });
 
     actorHeading.append("text")
-      .attr("x", this.x + actorWidth / 2)
+      .attr("x", this.x)
       .attr("y", this.y + actorHeight / 2)
       .attr("font-size", "20px")
       .attr("text-anchor", "middle")
@@ -123,6 +120,16 @@ class ActorHeading {
         metaModel.getActivityDef(this.activity).marker +
         " " + this.activity.name);
 
+    const that = this;
+    // center position after text was rendered, and we can determine its width
+    actorHeading.selectAll("rect")
+      .attr("width", function() {
+        return this.nextSibling.getComputedTextLength() + PADDING;
+      })
+      .attr("x", function() {
+        const width = this.nextSibling.getComputedTextLength();
+        return that.x - (PADDING + width) / 2.0;
+      });
   }
 }
 
@@ -143,7 +150,7 @@ class TurnNode {
     this.incoming = message; // possible no message
     this.outgoing = [];
     this.count = this.actor.addTurn(this);
-    this.x = actor.x + (actorWidth / 2);
+    this.x = actor.x;
     this.y = actorStart + actorHeight + this.count * turnSpacing;
     this.visualization = this.draw();
   }
