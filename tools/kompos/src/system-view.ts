@@ -26,7 +26,7 @@ function getLightTangoColor(actType: ActivityType, actId: number) {
   return getTangoColors(actType)[3 + (actId % 3)];
 }
 
-export class SystemVisualization {
+export class SystemView {
   private readonly data: SystemViewData;
 
   private activities:      ActivityNode[];

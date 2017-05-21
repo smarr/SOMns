@@ -8,7 +8,7 @@ import { Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
   TaggedSourceCoordinate, Scope, getSectionId, Variable, ActivityType,
   BreakpointType, SteppingType, EntityType } from "./messages";
 import { Breakpoint, SectionBreakpoint, LineBreakpoint } from "./breakpoints";
-import { SystemVisualization } from "./visualizations";
+import { SystemView } from "./system-view";
 import { Activity, TraceDataUpdate } from "./execution-data";
 import { ActivityNode } from "./system-view-data";
 import { KomposMetaModel } from "./meta-model";
@@ -348,23 +348,23 @@ function annotateArray(arr: any[][], sourceId: string, activityId: number,
  * data and reacting to events.
  */
 export class View {
-  private readonly systemViz: SystemVisualization;
-  private readonly protocolViz: ProcessView;
+  private readonly systemView:   SystemView;
+  private readonly protocolView: ProcessView;
   private metaModel: KomposMetaModel;
 
   constructor() {
-    this.systemViz = new SystemVisualization();
-    this.protocolViz = new ProcessView();
+    this.systemView   = new SystemView();
+    this.protocolView = new ProcessView();
   }
 
   public setCapabilities(metaModel: KomposMetaModel) {
     this.metaModel = metaModel;
-    this.systemViz.setCapabilities(metaModel);
-    this.protocolViz.setMetaModel(metaModel);
+    this.systemView.setCapabilities(metaModel);
+    this.protocolView.setMetaModel(metaModel);
   }
 
   public displaySystemView() {
-    this.systemViz.display();
+    this.systemView.display();
   }
 
   public onConnect() {
@@ -611,8 +611,8 @@ export class View {
 
   public reset() {
     this.resetActivities();
-    this.systemViz.reset();
-    this.protocolViz.reset();
+    this.systemView.reset();
+    this.protocolView.reset();
   }
 
   private resetActivities() {
@@ -620,8 +620,8 @@ export class View {
   }
 
   public updateTraceData(data: TraceDataUpdate) {
-    this.systemViz.updateTraceData(data);
-    this.protocolViz.updateTraceData(data);
+    this.systemView.updateTraceData(data);
+    this.protocolView.updateTraceData(data);
 
     for (const act of data.activities) {
       this.displayActivity(act);
