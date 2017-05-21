@@ -35,10 +35,10 @@ const lineGenerator: any =
     .y(function(d) { return d[1]; })
     .interpolate("linear");
 
-// each actor has their own svg group.
-// one heading group: the square, the text field and the other group.
-// one collection group: turns and messages
-//   to hide an actor the other group and all incoming messages are set to hidden
+/** each actor has their own svg group.
+    one heading group: the square, the text field and the other group.
+    one collection group: turns and messages
+    to hide an actor the other group and all incoming messages are set to hidden */
 class ActorHeading {
   private turns:              TurnNode[];
   private activity:           Activity;
@@ -58,13 +58,11 @@ class ActorHeading {
     this.draw();
   }
 
-  // add new turn to the actor, increases turnCount and adds turn to list of turns
   public addTurn(turn: TurnNode) {
     this.turns.push(turn);
     return this.turns.length;
   }
 
-  // if no turn was created create turn without origin
   public getLastTurn() {
     if (this.turns.length === 0) {
       return (new TurnNode(this, new EmptyMessage()));
@@ -139,8 +137,8 @@ class ActorHeading {
   }
 }
 
-// A turn happens every time an actor processes a message.
-// Turns store their incoming message and each outgoing message
+/** A turn happens every time an actor processes a message.
+   Turns store their incoming message and each outgoing message. */
 class TurnNode {
   private actor:          ActorHeading;
   private incoming:       EmptyMessage;
@@ -180,33 +178,31 @@ class TurnNode {
 
   // -----------visualization------------
 
-  // highlight this turn.
-  //  make the circle border bigger and black
-  //  highlight the incoming message
+  /** highlight this turn.
+      make the circle border bigger and black
+      highlight the incoming message. */
   public highlightOn() {
     this.visualization.style("stroke-width", highlightedWidth)
                       .style("stroke", "black");
     this.incoming.highlightOn();
   }
 
-  // remove highlight from this turn
-  //   make the circle border regular and color based on actor
-  //   remove the highlight from the incoming message
+  /** remove highlight from this turn */
   public highlightOff() {
     this.visualization.style("stroke-width", noHighlightWidth)
                       .style("stroke", this.getColor());
     this.incoming.highlightOff();
   }
 
-  // the turn itself is made invisible by the group, only the incoming arc
-  // needs to be made invisible
+  /** the turn itself is made invisible by the group, only the incoming arc
+      needs to be made invisible */
   public changeVisibility(visible: boolean) {
     this.incoming.changeVisibility(visible);
   }
 
-  // enlarge this turn
-  //   every message receives own exit point from this turn
-  //   shift other turns downwards to prevent overlap
+  /** enlarge this turn
+      every message receives own exit point from this turn
+      shift other turns downwards to prevent overlap. */
   public enlarge() {
     this.highlightOn();
     ctrl.toggleHighlightMethod(getEntityId(this.actor.getActivityId()),
@@ -223,8 +219,8 @@ class TurnNode {
     }
   }
 
-  // shrink this turn
-  //   every message starts from the center of the node
+  /** shrink this turn
+      every message starts from the center of the node. */
   public shrink() {
     this.highlightOff();
     ctrl.toggleHighlightMethod(
@@ -239,7 +235,7 @@ class TurnNode {
     }
   }
 
-  // move this turn with the give yShift vertically
+  /** move this turn with the give yShift vertically. */
   public transpose(yShift: number) {
     this.visualization.attr("transform", "translate(0," + yShift + ")");
     this.incoming.shiftAtTarget(yShift);
@@ -248,9 +244,9 @@ class TurnNode {
     }
   }
 
-  // only one node can be highlighted at a time.
-  // If the user highlights another node,
-  // remove the popover of the previously highlighted node
+  /** only one node can be highlighted at a time.
+      If the user highlights another node,
+      remove the popover of the previously highlighted node. */
   public hidePopup() {
     this.popover.popover("hide");
   }
@@ -305,12 +301,12 @@ class EmptyMessage {
   public shiftAtTarget(_yShift: number) {}
 }
 
-// message represent a message send between two actors
-// messages go from a turn to another turn
-// normally a message goes from the center of a turn to the center of a turn.
-// this can change if the turns shift or are enlarged
-// when undoing a shift the original shift is unknown, so we shift back to the old position
-// message can be shifted at both sender and receiver
+/** message represent a message send between two actors
+    messages go from a turn to another turn
+    normally a message goes from the center of a turn to the center of a turn.
+    this can change if the turns shift or are enlarged
+    when undoing a shift the original shift is unknown, so we shift back to the old position
+    message can be shifted at both sender and receiver. */
 class Message extends EmptyMessage {
   private text:          string;
   private sender:        TurnNode;
@@ -358,8 +354,8 @@ class Message extends EmptyMessage {
     }
   }
 
-  // remove the visualization and create a new one
-  // if the anchor where not defined yet the remove doesn't do anything
+  /** remove the visualization and create a new one
+      if the anchor where not defined yet the remove doesn't do anything. */
   private redraw() {
     this.visualization.remove();
     this.draw();
@@ -375,9 +371,9 @@ class Message extends EmptyMessage {
     this.sender.highlightOff();
   }
 
-  // standard visibility is inherit
-  // this allows message going from and to a hidden turn to stay hidden
-  // if either party becomes visible
+  /** standard visibility is inherit
+      this allows message going from and to a hidden turn to stay hidden
+      if either party becomes visible. */
   public changeVisibility(visible: boolean) {
     if (visible) {
       this.visibility = "inherit";
@@ -474,8 +470,8 @@ class Message extends EmptyMessage {
   }
 }
 
-// this is the main class of the file, it stores all actors currently in use
-// only one turn can be highlighted at a time
+/** The ProcessView stores all actors currently in use.
+    Only one turn can be highlighted at a time. */
 export class ProcessView {
   private static highlighted: TurnNode;
   private actors:             IdMap<ActorHeading>;
@@ -537,7 +533,7 @@ export class ProcessView {
     }
   }
 
-  // ensure only one node chain can be highlighted at the same time
+  /** Ensure only one node chain can be highlighted at the same time. */
   public static changeHighlight(turn: TurnNode) {
     if (ProcessView.highlighted) {
       ProcessView.highlighted.shrink();
