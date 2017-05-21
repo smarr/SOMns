@@ -22,8 +22,8 @@ function getTangoColors(actType: ActivityType) {
   return TANGO_SCHEME[actType % 8];
 }
 
-function getLightTangoColor(actType: ActivityType, actId: number) {
-  return getTangoColors(actType)[3 + (actId % 3)];
+export function getLightTangoColor(actType: ActivityType, actId: number) {
+  return getTangoColors(actType)[3 + (actId % 4)];
 }
 
 export class SystemView {
@@ -277,11 +277,11 @@ function createActivityRectangle(g) {
     .on("mouseover", function(a: ActivityNode) { return ctrl.overActivity(a, this); })
     .on("mouseout",  function(a: ActivityNode) { return ctrl.outActivity(a, this); })
     .attr("class", "node")
-    .style("fill", function(a: ActivityNode, i) {
-      return getLightTangoColor(a.getType(), i);
+    .style("fill", function(a: ActivityNode) {
+      return getLightTangoColor(a.getType(), a.getActivityId());
     })
-    .style("stroke", function(a: ActivityNode, i) {
-      return d3.rgb(getLightTangoColor(a.getType(), i)).darker().toString();
+    .style("stroke", function(a: ActivityNode) {
+      return d3.rgb(getLightTangoColor(a.getType(), a.getActivityId())).darker().toString();
     })
     .style("stroke-width", function(a: ActivityNode) { return (a.getGroupSize() > 1) ? Math.log(a.getGroupSize()) * 3 : ""; })
     .classed("reflexive", function(a: ActivityNode) { return a.reflexive; });

@@ -6,6 +6,7 @@ import { dbgLog } from "./source";
 import { getEntityId } from "./view";
 import { Activity, TraceDataUpdate, SendOp } from "./execution-data";
 import { KomposMetaModel } from "./meta-model";
+import { getLightTangoColor } from "./system-view";
 
 const actorStart = 20;      // height at which actor headings are created
 const actorHeight = 30;     // height of actor headings
@@ -19,15 +20,9 @@ const markerSize = 10;       // size of markers (arrows and squares of enlarged 
 
 const noHighlightWidth = 2; // width of turn borders when not highlighted
 const highlightedWidth = 5; // width of turn borders when highlighted
-const opacity = 0.5;
 
 let svgContainer; // global canvas, stores actor <g> elements
 let defs;         // global container to store all markers
-
-let color = ["#3366cc", "#dc3912", "#ff9900", "#109618", "#990099", "#0099c6",
-             "#dd4477", "#66aa00", "#b82e2e", "#316395", "#994499", "#22aa99",
-             "#aaaa11", "#6633cc", "#e67300", "#8b0707", "#651067", "#329262",
-             "#5574a6", "#3b3eac"];
 
 const lineGenerator: any =
   d3.svg.line()
@@ -54,7 +49,7 @@ class ActorHeading {
     this.activity = activity;
     this.x = 50 + num * actorSpacing;
     this.y = actorStart;
-    this.color = color[num % color.length];
+    this.color = getLightTangoColor(activity.type, activity.id);
     this.visibility = true;
   }
 
@@ -107,6 +102,18 @@ class ActorHeading {
     const actorHeading = svgContainer.append("g");
     this.container = actorHeading.append("g");
 
+    actorHeading.append("rect")
+      .attr("x", this.x)
+      .attr("y", this.y)
+      .attr("rx", 5)
+      .attr("height", actorHeight)
+      .attr("width", actorWidth)
+      .style("fill", this.color)
+      .style("stroke", d3.rgb(this.color).darker().toString())
+      .on("click", () => {
+        this.changeVisibility();
+      });
+
     actorHeading.append("text")
       .attr("x", this.x + actorWidth / 2)
       .attr("y", this.y + actorHeight / 2)
@@ -116,17 +123,6 @@ class ActorHeading {
         metaModel.getActivityDef(this.activity).marker +
         " " + this.activity.name);
 
-    actorHeading.append("rect")
-      .attr("x", this.x)
-      .attr("y", this.y)
-      .attr("rx", 5)
-      .attr("height", actorHeight)
-      .attr("width", actorWidth)
-      .style("fill", this.color)
-      .style("opacity", opacity)
-      .on("click", () => {
-        this.changeVisibility();
-      });
   }
 }
 
@@ -183,7 +179,7 @@ class TurnNode {
   /** remove highlight from this turn */
   public highlightOff() {
     this.visualization.style("stroke-width", noHighlightWidth)
-                      .style("stroke", this.getColor());
+                      .style("stroke", d3.rgb(this.getColor()).darker().toString());
     this.incoming.highlightOff();
   }
 
@@ -255,9 +251,8 @@ class TurnNode {
       .attr("rx", turnRadius)
       .attr("ry", turnRadius)
       .style("fill", this.actor.color)
-      .style("opacity", opacity)
       .style("stroke-width", noHighlightWidth)
-      .style("stroke", this.actor.color)
+      .style("stroke", d3.rgb(this.actor.color).darker().toString())
       .on("click", function(){
         ProcessView.changeHighlight(turn);
       });
@@ -446,7 +441,7 @@ class Message extends EmptyMessage {
       this.sender.getContainer().append("path")
         .attr("d", lineGenerator(lineData))
         .style("fill", "none")
-        .style("stroke", this.getColor())
+        .style("stroke", d3.rgb(this.getColor()).darker().toString())
         .style("visibility", this.visibility);
   }
 
@@ -458,7 +453,7 @@ class Message extends EmptyMessage {
         .attr("y1", this.sender.y + this.senderShift)
         .attr("x2", this.target.x)
         .attr("y2", this.target.y + this.targetShift)
-        .style("stroke", this.sender.getColor())
+        .style("stroke", d3.rgb(this.sender.getColor()).darker().toString())
         .style("visibility", this.visibility);
   }
 }
