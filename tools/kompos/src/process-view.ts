@@ -75,10 +75,6 @@ class ActorHeading {
     return this.container;
   }
 
-  public getName() {
-    return this.activity.name;
-  }
-
   public getActivityId() {
     return this.activity.id;
   }
@@ -107,7 +103,7 @@ class ActorHeading {
     }
   }
 
-  public draw() {
+  public draw(metaModel: KomposMetaModel) {
     const actorHeading = svgContainer.append("g");
     this.container = actorHeading.append("g");
 
@@ -116,7 +112,9 @@ class ActorHeading {
       .attr("y", this.y + actorHeight / 2)
       .attr("font-size", "20px")
       .attr("text-anchor", "middle")
-      .text(this.activity.name);
+      .html(
+        metaModel.getActivityDef(this.activity).marker +
+        " " + this.activity.name);
 
     actorHeading.append("rect")
       .attr("x", this.x)
@@ -510,7 +508,7 @@ export class ProcessView {
         dbgLog("new activity: " + act.id + " " + act.name);
         this.actors[act.id] = actor;
         this.numActors += 1;
-        actor.draw();
+        actor.draw(this.metaModel);
       }
     }
   }
