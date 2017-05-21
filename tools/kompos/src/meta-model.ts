@@ -1,4 +1,4 @@
-import { ServerCapabilities, SendDef, ReceiveDef } from "./messages";
+import { ServerCapabilities, SendDef, ReceiveDef, EntityDef, ActivityType } from "./messages";
 import { Activity, SendOp } from "./execution-data";
 
 class SendOpModel {
@@ -38,16 +38,20 @@ export class KomposMetaModel {
   private actorTag:        number;
   private actorMessageTag: number;
 
+  private readonly activityTypeMap: EntityDef[];
+
   constructor(serverCapabilities: ServerCapabilities) {
     this.serverCapabilities = serverCapabilities;
     this.sendOps = [];
     this.receiveOps = [];
+    this.activityTypeMap = [];
 
     this.extractMetaModel();
   }
 
   private extractMetaModel() {
     for (const actT of this.serverCapabilities.activities) {
+      this.activityTypeMap[actT.id] = actT;
       if (actT.label === "actor") {
         this.actorTag = actT.id;
       }
@@ -101,6 +105,14 @@ export class KomposMetaModel {
 
   public isActorMessage(sendOp: SendOp) {
     return sendOp.type === this.actorMessageTag;
+  }
+
+  public getActivityDef(activity: Activity): EntityDef {
+    return this.activityTypeMap[activity.type];
+  }
+
+  public getActivityDefFromType(type: ActivityType) {
+    return this.activityTypeMap[type];
   }
 }
 

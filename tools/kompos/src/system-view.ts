@@ -1,7 +1,7 @@
 /* jshint -W097 */
 "use strict";
 
-import { ActivityType, EntityDef } from "./messages";
+import { ActivityType } from "./messages";
 import * as d3 from "d3";
 import { TraceDataUpdate } from "./execution-data";
 import { ActivityNode, EntityLink, SystemViewData, PassiveEntityNode } from "./system-view-data";
@@ -195,7 +195,7 @@ export class SystemView {
     const actG = this.activityNodes.enter().append("svg:g");
     const peG  = this.entityNodes.enter().append("svg:g");
 
-    createActivity(actG, this.metaModel.serverCapabilities.activities);
+    createActivity(actG, this.metaModel);
     createChannel(peG);
 
     // After rendering text, adapt rectangles
@@ -258,11 +258,11 @@ function selectEndMarker(d: EntityLink) {
     : "";
 }
 
-function createActivity(g, activityTypes: EntityDef[]) {
+function createActivity(g, metaModel: KomposMetaModel) {
   g.attr("id", function (a: ActivityNode) { return a.getSystemViewId(); });
 
   createActivityRectangle(g);
-  createActivityLabel(g, activityTypes);
+  createActivityLabel(g, metaModel);
   createActivityStatusIndicator(g);
 }
 
@@ -287,13 +287,13 @@ function createActivityRectangle(g) {
     .classed("reflexive", function(a: ActivityNode) { return a.reflexive; });
 }
 
-function createActivityLabel(g, activityTypes: EntityDef[]) {
+function createActivityLabel(g, metaModel: KomposMetaModel) {
   g.append("svg:text")
     .attr("x", 0)
     .attr("dy", ".35em")
     .attr("class", "id")
     .html(function(a: ActivityNode) {
-      let label = getTypePrefix(a.getType(), activityTypes) + " " + a.getName();
+      let label = metaModel.getActivityDefFromType(a.getType()).marker + " " + a.getName();
 
       if (a.getGroupSize() > 1) {
         label += " (" + a.getGroupSize() + ")";
@@ -313,14 +313,6 @@ function createActivityStatusIndicator(g) {
 }
 
 const PADDING = 15;
-
-function getTypePrefix(type: ActivityType, activityTypes: EntityDef[]) {
-  for (const t of activityTypes) {
-    if (t.id === type) {
-      return t.marker;
-    }
-  }
-}
 
 function createChannelBody(g, x: number, y: number) {
   return g.append("rect")
