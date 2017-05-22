@@ -1,4 +1,5 @@
-import { ServerCapabilities, SendDef, ReceiveDef } from "./messages";
+import { ServerCapabilities, SendDef, ReceiveDef, EntityDef, ActivityType } from "./messages";
+import { Activity, SendOp } from "./execution-data";
 
 class SendOpModel {
   public readonly sendOp: SendDef;
@@ -34,15 +35,34 @@ export class KomposMetaModel {
   public readonly sendOps:    SendOpModel[];
   public readonly receiveOps: ReceiveOpModel[];
 
+  private actorTag:        number;
+  private actorMessageTag: number;
+
+  private readonly activityTypeMap: EntityDef[];
+
   constructor(serverCapabilities: ServerCapabilities) {
     this.serverCapabilities = serverCapabilities;
     this.sendOps = [];
     this.receiveOps = [];
+    this.activityTypeMap = [];
 
     this.extractMetaModel();
   }
 
   private extractMetaModel() {
+    for (const actT of this.serverCapabilities.activities) {
+      this.activityTypeMap[actT.id] = actT;
+      if (actT.label === "actor") {
+        this.actorTag = actT.id;
+      }
+    }
+
+    for (const sendOpT of this.serverCapabilities.sendOps) {
+      if (sendOpT.label === "ACTOR_MSG") {
+        this.actorMessageTag = sendOpT.marker;
+      }
+    }
+
     for (const sendOp of this.serverCapabilities.sendOps) {
       const entityType = this.getKind(sendOp.entity);
       const targetType = this.getKind(sendOp.target);
@@ -77,6 +97,22 @@ export class KomposMetaModel {
       }
     }
     throw new Error("Did not find the definition for entityTypeId: " + entityTypeId);
+  }
+
+  public isActor(activity: Activity) {
+    return activity.type === this.actorTag;
+  }
+
+  public isActorMessage(sendOp: SendOp) {
+    return sendOp.type === this.actorMessageTag;
+  }
+
+  public getActivityDef(activity: Activity): EntityDef {
+    return this.activityTypeMap[activity.type];
+  }
+
+  public getActivityDefFromType(type: ActivityType) {
+    return this.activityTypeMap[type];
   }
 }
 

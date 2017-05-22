@@ -73,11 +73,14 @@ public final class InitializationResponse extends OutgoingMessage {
     private final byte marker;
     private final byte entity;
     private final byte target;
+    private final String label;
 
-    SendDef(final byte marker, final EntityType entity, final EntityType target) {
+    SendDef(final byte marker, final EntityType entity, final EntityType target,
+        final String label) {
       this.marker = marker;
       this.entity = entity.id;
       this.target = target.id;
+      this.label = label;
     }
   }
 
@@ -194,7 +197,8 @@ public final class InitializationResponse extends OutgoingMessage {
     final SendDef[] result = new SendDef[ops.length];
 
     for (int i = 0; i < ops.length; i += 1) {
-      result[i] = new SendDef(ops[i].getId(), ops[i].getEntity(), ops[i].getTarget());
+      result[i] = new SendDef(ops[i].getId(), ops[i].getEntity(),
+          ops[i].getTarget(), ops[i].name());
     }
     return result;
   }

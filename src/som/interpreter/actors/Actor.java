@@ -335,6 +335,9 @@ public class Actor implements Activity {
 
     @Override
     public Activity getActivity() {
+      if (currentMessage == null) {
+        return null;
+      }
       return currentMessage.getTarget();
     }
 

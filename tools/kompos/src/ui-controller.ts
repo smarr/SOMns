@@ -1,18 +1,18 @@
 /* jshint -W097 */
 "use strict";
 
-import {Controller}   from "./controller";
-import {Debugger}     from "./debugger";
-import {SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
+import { Controller }   from "./controller";
+import { Debugger }     from "./debugger";
+import { SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
   ScopesResponse, VariablesResponse, ProgramInfoResponse, InitializationResponse,
-  Source } from "./messages";
-import {LineBreakpoint, SectionBreakpoint, getBreakpointId,
-  createLineBreakpoint, createSectionBreakpoint} from "./breakpoints";
-import {dbgLog}       from "./source";
-import {View, getActivityIdFromView, getSourceIdFrom, getSourceIdFromSection} from "./view";
+  Source, Method } from "./messages";
+import { LineBreakpoint, SectionBreakpoint, getBreakpointId,
+  createLineBreakpoint, createSectionBreakpoint } from "./breakpoints";
+import { dbgLog }       from "./source";
+import { View, getActivityIdFromView, getSourceIdFrom, getSourceIdFromSection, getFullMethodName } from "./view";
 import { VmConnection } from "./vm-connection";
 import { Activity, ExecutionData, TraceDataUpdate } from "./execution-data";
-import { ActivityNode } from "./system-view";
+import { ActivityNode } from "./system-view-data";
 import { KomposMetaModel } from "./meta-model";
 
 /**
@@ -92,6 +92,27 @@ export class UiController extends Controller {
       console.assert(aId === activity.id);
       this.view.displaySource(activity, source, sId);
     }
+  }
+
+  public toggleHighlightMethod(actId: string, shortName: string, highlight: boolean) {
+    const aId      = getActivityIdFromView(actId);
+    const activity = this.data.getActivity(aId);
+    const sId      = this.dbg.getSourceId(activity.origin.uri);
+    const source: Source   = this.dbg.getSource(sId);
+    console.assert(aId === activity.id);
+    const methods: Method[] = source.methods;
+    const fullName = getFullMethodName(activity, shortName);
+    const method: Method = methods.find(method => method.name === fullName);
+
+    if (!method) {
+      console.error("Method could not be found. This needs to be fixed by actually using DynamicScope info, instead of SendOps for the ProcessView");
+      return;
+    }
+
+    if (highlight) {
+      this.view.displaySource(activity, source, sId); // if source is already displayed, will return false
+    }
+    this.view.toggleHighlightMethod(sId, activity, method.sourceSection, highlight);
   }
 
   private ensureBreakpointsAreIndicated(sourceUri) {

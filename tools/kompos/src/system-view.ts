@@ -1,403 +1,343 @@
-import { ActivityType, IdMap } from "./messages";
-import { Activity, PassiveEntity, TraceDataUpdate, SendOp, ReceiveOp, DynamicScope } from "./execution-data";
-import { getEntityId, getEntityGroupId, getEntityGroupVizId, getEntityVizId } from "./view";
-import { KomposMetaModel, EntityRefType } from "./meta-model";
+/* jshint -W097 */
+"use strict";
 
-const NUM_ACTIVITIES_STARTING_GROUP = 4;
+import { ActivityType } from "./messages";
+import * as d3 from "d3";
+import { TraceDataUpdate } from "./execution-data";
+import { ActivityNode, EntityLink, SystemViewData, PassiveEntityNode } from "./system-view-data";
+import { KomposMetaModel } from "./meta-model";
 
-const HORIZONTAL_DISTANCE = 100;
-const VERTICAL_DISTANCE   = 100;
+// Tango Color Scheme: http://emilis.info/other/extended_tango/
+const TANGO_SCHEME = [
+  ["#2e3436", "#555753", "#888a85", "#babdb6", "#d3d7cf", "#ecf0eb", "#f7f8f5"],
+  ["#291e00", "#725000", "#c4a000", "#edd400", "#fce94f", "#fffc9c", "#feffd0"],
+  ["#301700", "#8c3700", "#ce5c00", "#f57900", "#fcaf3e", "#ffd797", "#fff0d7"],
+  ["#271700", "#503000", "#8f5902", "#c17d11", "#e9b96e", "#efd0a7", "#faf0d7"],
+  ["#173000", "#2a5703", "#4e9a06", "#73d216", "#8ae234", "#b7f774", "#e4ffc7"],
+  ["#00202a", "#0a3050", "#204a87", "#3465a4", "#729fcf", "#97c4f0", "#daeeff"],
+  ["#170720", "#371740", "#5c3566", "#75507b", "#ad7fa8", "#e0c0e4", "#fce0ff"],
+  ["#270000", "#600000", "#a40000", "#cc0000", "#ef2929", "#f78787", "#ffcccc"]];
 
-export abstract class NodeImpl implements d3.layout.force.Node {
-  public index?: number;
-  public px?: number;
-  public py?: number;
-  public fixed?: boolean;
-  public weight?: number;
-
-  private _x: number;
-  private _y: number;
-
-  constructor(x: number, y: number) {
-    this._x = x;
-    this._y = y;
-  }
-
-  public get x(): number    { return this._x; }
-  public set x(val: number) {
-    if (val > 5000) {
-      val = 5000;
-    } else if (val < -5000) {
-      val = -5000;
-    }
-    this._x = val;
-  }
-
-  public get y(): number    { return this._y; }
-  public set y(val: number) {
-    if (val > 5000) {
-      val = 5000;
-    } else if (val < -5000) {
-      val = -5000;
-    }
-    this._y = val;
-  }
+function getTangoColors(actType: ActivityType) {
+  return TANGO_SCHEME[actType % 8];
 }
 
-export abstract class EntityNode extends NodeImpl {
-
-  constructor(x: number, y: number) {
-    super(x, y);
-  }
-
-  public abstract getDataId(): string;
-  public abstract getSystemViewId(): string;
-
-  public abstract getEntityType(): EntityRefType;
+export function getLightTangoColor(actType: ActivityType, actId: number) {
+  return getTangoColors(actType)[3 + (actId % 4)];
 }
 
-export abstract class ActivityNode extends EntityNode {
-  public reflexive:  boolean;
+export class SystemView {
+  private readonly data: SystemViewData;
 
-  constructor(reflexive: boolean, x: number, y: number) {
-    super(x, y);
-    this.reflexive = reflexive;
-  }
+  private activities:      ActivityNode[];
+  private passiveEntities: PassiveEntityNode[];
+  private links: EntityLink[];
 
-  public abstract getGroupSize(): number;
-  public abstract isRunning(): boolean;
-  public abstract getName(): string;
+  private activityNodes: d3.selection.Update<ActivityNode>;
+  private entityNodes:  d3.selection.Update<PassiveEntityNode>;
+  private entityLinks: d3.selection.Update<EntityLink>;
 
-  public abstract getQueryForCodePane(): string;
-  public abstract getType(): ActivityType;
+  private zoomScale = 1;
+  private zoomTransl = [0, 0];
 
-  public getEntityType() { return EntityRefType.Activity; }
-}
-
-class ActivityNodeImpl extends ActivityNode {
-  public readonly activity: Activity;
-  constructor(activity: Activity, reflexive: boolean, x: number, y: number) {
-    super(reflexive, x, y);
-    this.activity = activity;
-  }
-
-  public getGroupSize() { return 1; }
-  public isRunning() { return this.activity.running; }
-  public getCreationScope() { return this.activity.creationScope; }
-  public getName() { return this.activity.name; }
-
-  public getDataId()       { return getEntityId(this.activity.id); }
-  public getSystemViewId() { return getEntityVizId(this.activity.id); }
-
-  public getQueryForCodePane() { return "#" + getEntityId(this.activity.id); }
-
-  public getType() { return this.activity.type; }
-}
-
-class GroupNode extends ActivityNode {
-  private group: ActivityGroup;
-
-  constructor(group: ActivityGroup, reflexive: boolean, x: number, y: number) {
-    super(reflexive, x, y);
-    this.group = group;
-  }
-
-  public getGroupSize() { return this.group.activities.length; }
-  public isRunning() {
-    console.warn("GroupNode.isRunning() not yet implemented");
-    return true;
-  }
-  public getName() { return this.group.activities[0].name; }
-
-  public getDataId()       { return getEntityGroupId(this.group.id); }
-  public getSystemViewId() { return getEntityGroupVizId(this.group.id); }
-
-  public getQueryForCodePane() {
-    let result = "";
-    for (const act of this.group.activities) {
-      if (result !== "") { result += ","; }
-      result += "#" + getEntityId(act.id);
-    }
-    return result;
-  }
-
-  public getType() { return this.group.activities[0].type; }
-}
-
-export class PassiveEntityNode extends EntityNode {
-  public readonly entity: PassiveEntity;
-  public messages?: number[][];
-
-  constructor(entity: PassiveEntity, x: number, y: number) {
-    super(x, y);
-    this.entity = entity;
-  }
-
-  public getDataId() { return getEntityId(this.entity.id); }
-  public getSystemViewId() { return getEntityVizId(this.entity.id); }
-
-  public getEntityType() { return EntityRefType.PassiveEntity; }
-}
-
-export interface EntityLink extends d3.layout.force.Link<EntityNode> {
-  left:   boolean;
-  right:  boolean;
-  messageCount: number;
-  creation?: boolean;
-}
-
-interface ActivityGroup {
-  id:         number;
-  activities: Activity[];
-  groupNode?: GroupNode;
-}
-
-type SourceTargetMap = Map<EntityNode, Map<EntityNode, number>>;
-
-function sourceTargetInc(map: SourceTargetMap, source: EntityNode,
-    target: EntityNode, inc = 1) {
-  let s = map.get(source);
-  if (s === undefined) {
-    s = new Map();
-    map.set(source, s);
-  }
-
-  let t = s.get(target);
-  if (t === undefined) {
-    t = 0;
-  }
-  t += inc;
-  s.set(target, t);
-}
-
-export class SystemViewData {
   private metaModel: KomposMetaModel;
 
-  private activities: IdMap<ActivityNodeImpl>;
-  private activitiesPerType: IdMap<ActivityGroup>;
-
-  private passiveEntities: IdMap<PassiveEntityNode>;
-
-  private messages: SourceTargetMap;
-
-  private maxMessageCount;
-
   constructor() {
-    this.reset();
-  }
-
-  public setMetaModel(metaModel: KomposMetaModel) {
-    this.metaModel = metaModel;
-  }
-
-  public reset() {
-    this.activities = {};
-    this.activitiesPerType = {};
-    this.passiveEntities = {};
-
-    this.maxMessageCount = 0;
-
-    this.messages = new Map();
+    this.data = new SystemViewData();
   }
 
   public updateTraceData(data: TraceDataUpdate) {
-    console.assert(this.metaModel !== undefined, "Meta Model not yet initialized. Is there a race?");
-    for (const act of data.activities) {
-      this.addActivity(act);
-    }
-
-    for (const e of data.passiveEntities) {
-      this.addPassiveEntity(e);
-    }
-
-    for (const send of data.sendOps) {
-      this.addMessage(send);
-    }
-
-    for (const rcv of data.receiveOps) {
-      this.addMessageRcv(rcv);
-    }
+    this.data.updateTraceData(data);
   }
 
-  private addActivity(act: Activity) {
-    const numGroups = Object.keys(this.activitiesPerType).length;
-    if (!this.activitiesPerType[act.name]) {
-      this.activitiesPerType[act.name] = {id: numGroups, activities: []};
+  public setCapabilities(metaModel: KomposMetaModel) {
+    this.metaModel = metaModel;
+    this.data.setMetaModel(metaModel);
+  }
+
+  public reset() {
+    this.data.reset();
+  }
+
+  public display() {
+    const canvas = $("#overview-canvas");
+    // colors = d3.scale.category10();
+    // colors = d3.scale.ordinal().domain().range(tango)
+    canvas.empty();
+
+    const zoom = d3.behavior.zoom()
+      .scaleExtent([0.1, 10])
+      .on("zoom", () => this.zoomed());
+
+    const svg = d3.select("#overview-canvas")
+      .append("svg")
+      // .attr("oncontextmenu", "return false;")
+      .attr("width", canvas.width())
+      .attr("height", canvas.height())
+      .attr("style", "background: none;")
+      .call(zoom);
+
+    // set up initial nodes and links
+    //  - nodes are known by "id", not by index in array.
+    //  - reflexive edges are indicated on the node (as a bold black circle).
+    //  - links are always source < target; edge directions are set by "left" and "right".
+
+    this.activities = this.data.getActivityNodes();
+    this.passiveEntities = this.data.getEntityNodes();
+    this.links = this.data.getLinks();
+
+    const allEntities = this.activities.concat(<any[]> this.passiveEntities);
+
+    // init D3 force layout
+    const forceLayout = d3.layout.force()
+      .nodes(allEntities)
+      .links(this.links)
+      .size([canvas.width(), canvas.height()])
+      .linkDistance(70)
+      .charge(-500)
+      .on("tick", () => this.forceLayoutUpdateIteration());
+
+    forceLayout.linkStrength((link: EntityLink) => {
+      return link.messageCount / this.data.getMaxMessageSends();
+    });
+
+    // define arrow markers for graph links
+    createArrowMarker(svg, "end-arrow",   6, "M0,-5L10,0L0,5",  "#000");
+    createArrowMarker(svg, "start-arrow", 4, "M10,-5L0,0L10,5", "#000");
+
+    createArrowMarker(svg, "end-arrow-creator",   6, "M0,-5L10,0L0,5",  "#aaa");
+    createArrowMarker(svg, "start-arrow-creator", 4, "M10,-5L0,0L10,5", "#aaa");
+
+    this.renderSystemView(forceLayout, svg);
+  }
+
+  private zoomed() {
+    const zoomEvt: d3.ZoomEvent = <d3.ZoomEvent> d3.event;
+    this.zoomScale  = zoomEvt.scale;
+    this.zoomTransl = zoomEvt.translate;
+
+    this.activityNodes.attr("transform", (d: ActivityNode) => {
+      const x = this.zoomTransl[0] + d.x * this.zoomScale;
+      const y = this.zoomTransl[1] + d.y * this.zoomScale;
+      return `translate(${x},${y})scale(${this.zoomScale})`; });
+    this.entityNodes.attr("transform", (d: PassiveEntityNode) => {
+      const x = this.zoomTransl[0] + d.x * this.zoomScale;
+      const y = this.zoomTransl[1] + d.y * this.zoomScale;
+      return `translate(${x},${y})scale(${this.zoomScale})`; });
+    this.entityLinks.attr("transform", `translate(${this.zoomTransl[0]},${this.zoomTransl[1]})scale(${this.zoomScale})`);
+  }
+
+  private forceLayoutUpdateIteration() {
+    // draw directed edges with proper padding from node centers
+    this.entityLinks.attr("d", (d: EntityLink) => {
+      const deltaX = d.target.x - d.source.x,
+        deltaY = d.target.y - d.source.y,
+        dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
+        normX = deltaX / dist,
+        normY = deltaY / dist,
+        sourcePadding = d.left ? 17 : 12,
+        targetPadding = d.right ? 17 : 12,
+        sourceX = d.source.x + (sourcePadding * normX),
+        sourceY = d.source.y + (sourcePadding * normY),
+        targetX = d.target.x - (targetPadding * normX),
+        targetY = d.target.y - (targetPadding * normY);
+        return `M${sourceX},${sourceY}L${targetX},${targetY}`;
+    });
+
+    this.activityNodes.attr("transform", (d: ActivityNode) => {
+      const x = this.zoomTransl[0] + d.x * this.zoomScale;
+      const y = this.zoomTransl[1] + d.y * this.zoomScale;
+      return `translate(${x},${y})scale(${this.zoomScale})`;
+    });
+
+    this.entityNodes.attr("transform", (d: PassiveEntityNode) => {
+      const x = this.zoomTransl[0] + d.x * this.zoomScale;
+      const y = this.zoomTransl[1] + d.y * this.zoomScale;
+      return `translate(${x},${y})scale(${this.zoomScale})`;
+    });
+  }
+
+  private renderSystemView(forceLayout:
+      d3.layout.Force<d3.layout.force.Link<d3.layout.force.Node>, d3.layout.force.Node>,
+      svg: d3.Selection<any>) {
+    // handles to link and node element groups
+    this.entityLinks = svg.append("svg:g")
+      .selectAll("path")
+      .data(this.links);
+    this.activityNodes = svg.append("svg:g")
+      .selectAll("g")
+      // nodes are known by id, not by index
+      .data(this.activities, (a: ActivityNode) => { return a.getDataId(); });
+
+    this.entityNodes = svg.append("svg:g")
+      .selectAll("g")
+      .data(this.passiveEntities, (c: PassiveEntityNode) => { return c.getDataId(); });
+
+    this.entityLinks // .classed("selected", function(d) { return d === selected_link; })
+      .style("marker-start", selectStartMarker)
+      .style("marker-end",   selectEndMarker);
+
+    // add new links
+    this.entityLinks.enter().append("svg:path")
+      .attr("class", (d: EntityLink) => {
+        return d.creation
+          ? "creation-link"
+          : "link";
+      })
+      // .classed("selected", function(d) { return d === selected_link; })
+      .style("marker-start", selectStartMarker)
+      .style("marker-end",   selectEndMarker);
+
+    // remove old links
+    this.entityLinks.exit().remove();
+
+    // add new nodes
+    const actG = this.activityNodes.enter().append("svg:g");
+    const peG  = this.entityNodes.enter().append("svg:g");
+
+    createActivity(actG, this.metaModel);
+    createChannel(peG);
+
+    // After rendering text, adapt rectangles
+    this.adaptRectSizeAndTextPosition();
+
+    // Enable dragging of nodes
+    actG.call(forceLayout.drag);
+    peG.call(forceLayout.drag);
+
+    // remove old nodes
+    this.activityNodes.exit().remove();
+    this.entityNodes.exit().remove();
+
+    // set the graph in motion
+    forceLayout.start();
+
+    // execute enough steps that the graph looks static
+    for (let i = 0; i < 1000 ; i++) {
+      forceLayout.tick();
     }
-    this.activitiesPerType[act.name].activities.push(act);
-
-    const node = new ActivityNodeImpl(act,
-      false, // self-sends TODO what is this used for, maybe set to true when checking mailbox.
-      HORIZONTAL_DISTANCE + HORIZONTAL_DISTANCE * this.activitiesPerType[act.name].activities.length,
-      VERTICAL_DISTANCE * numGroups);
-    this.activities[act.id.toString()] = node;
+    forceLayout.stop();
   }
 
-  private getGroupOrActivity(id: number): ActivityNode {
-    const node = this.activities[id];
-    console.assert(node !== undefined);
-
-    const group = this.activitiesPerType[node.getName()];
-    if (group.groupNode) {
-      return group.groupNode;
-    }
-    return node;
-  }
-
-  private getNode(type: EntityRefType, entity: number | Activity | DynamicScope | PassiveEntity) {
-    switch (type) {
-      case EntityRefType.Activity:
-        return this.activities[(<Activity> entity).id];
-      case EntityRefType.PassiveEntity:
-        return this.passiveEntities[(<PassiveEntity> entity).id];
-    }
-  }
-
-  private addMessage(sendOp: SendOp) {
-    const source = this.activities[sendOp.creationActivity.id];
-    const target = this.getNode(this.metaModel.sendOps[sendOp.type].target, sendOp.target);
-
-    sourceTargetInc(this.messages, source, target);
-  }
-
-  private addMessageRcv(rcvOp: ReceiveOp) {
-    const target = this.activities[rcvOp.creationActivity.id];
-    const source = this.getNode(this.metaModel.receiveOps[rcvOp.type].source, rcvOp.source);
-    sourceTargetInc(this.messages, source, target);
-  }
-
-  private addPassiveEntity(passiveEntity: PassiveEntity) {
-    this.passiveEntities[passiveEntity.id] = new PassiveEntityNode(
-      passiveEntity, HORIZONTAL_DISTANCE * Object.keys(this.passiveEntities).length, 0);
-  }
-
-  public getMaxMessageSends() {
-    return this.maxMessageCount;
-  }
-
-  public getActivityNodes(): ActivityNode[] {
-    const groupStarted = {};
-
-    const arr: ActivityNode[] = [];
-    for (const i in this.activities) {
-      const a = this.activities[i];
-      const name = a.getName();
-      const group = this.activitiesPerType[name];
-      if (group.activities.length > NUM_ACTIVITIES_STARTING_GROUP) {
-        if (!groupStarted[name]) {
-          groupStarted[name] = true;
-          const groupNode = new GroupNode(group,
-            false, // todo reflexive
-            HORIZONTAL_DISTANCE + HORIZONTAL_DISTANCE * group.activities.length,
-            VERTICAL_DISTANCE * Object.keys(this.activitiesPerType).length);
-          group.groupNode = groupNode;
-          arr.push(groupNode);
-        }
-      } else {
-        arr.push(a);
-      }
-    }
-    return arr;
-  }
-
-  public getEntityNodes(): PassiveEntityNode[] {
-    const result = [];
-    for (const i in this.passiveEntities) {
-      result.push(this.passiveEntities[i]);
-    }
-    return result;
-  }
-
-  private collectMessageLinks(links: EntityLink[]) {
-    const messages: SourceTargetMap = new Map();
-
-    // first, consider groups for links
-    for (const [source, m] of this.messages) {
-      for (const [target, cnt] of m) {
-        this.maxMessageCount = Math.max(this.maxMessageCount, cnt);
-
-        let sender;
-        switch (source.getEntityType()) {
-          case EntityRefType.Activity:
-            sender = this.getGroupOrActivity((<ActivityNodeImpl> source).activity.id);
-            break;
-          case EntityRefType.PassiveEntity:
-            sender = source;
-            break;
-        }
-
-
-        let receiver;
-        switch (target.getEntityType()) {
-          case EntityRefType.Activity:
-            receiver = this.getGroupOrActivity((<ActivityNodeImpl> target).activity.id);
-            break;
-          case EntityRefType.PassiveEntity:
-            receiver = target;
-            break;
-        }
-
-        sourceTargetInc(messages, sender, receiver, cnt);
-      }
-    }
-
-    // then, populate the list of links
-    for (const [source, m] of messages) {
-      for (const [target, cnt] of m) {
-        links.push({
-            source: source, target: target,
-            left: false, right: true,
-            creation: false,
-            messageCount: cnt
-          });
-      }
-    }
-  }
-
-  private collectCreationLinks(links: EntityLink[]) {
-    const connections: SourceTargetMap = new Map();
-
-    for (const i in this.activities) {
-      const act = this.activities[i];
-      if (act.activity.creationActivity === null) {
-        // ignore first activity, it is created ex nihilo
-        continue;
-      }
-
-      const target = this.getGroupOrActivity(act.activity.id);
-      const source = this.getGroupOrActivity(act.activity.creationActivity.id);
-
-      sourceTargetInc(connections, source, target);
-    }
-
-    for (const i in this.passiveEntities) {
-      const e = this.passiveEntities[i];
-      const source = this.getGroupOrActivity(e.entity.creationActivity.id);
-
-      sourceTargetInc(connections, source, e);
-    }
-
-    for (const [source, m] of connections) {
-      for (const [target, cnt] of m) {
-        links.push(this.creationLink(source, target, cnt));
-      }
-    }
-  }
-
-  private creationLink(source: EntityNode, target: EntityNode, cnt: number): EntityLink {
-    return {
-      source: source, target: target,
-      left: false, right: true,
-      creation: true,
-      messageCount: cnt
-    };
-  }
-
-  public getLinks(): EntityLink[] {
-    const links: EntityLink[] = [];
-    this.collectMessageLinks(links);
-    this.collectCreationLinks(links);
-
-    return links;
+  private adaptRectSizeAndTextPosition() {
+    this.activityNodes.selectAll("rect")
+      .attr("width", function() {
+        return this.nextSibling.getComputedTextLength() + PADDING;
+      })
+      .attr("x", function() {
+        const width = this.nextSibling.getComputedTextLength();
+        d3.select(this.parentNode.childNodes[2]).attr("x", (width / 2.0) + 3.0);
+        return - (PADDING + width) / 2.0;
+      });
   }
 }
+
+function createArrowMarker(svg: d3.Selection<any>, id: string, refX: number,
+    d: string, color: string) {
+  svg.append("svg:defs").append("svg:marker")
+    .attr("id", id)
+    .attr("viewBox", "0 -5 10 10")
+    .attr("refX", refX)
+    .attr("markerWidth", 3)
+    .attr("markerHeight", 3)
+    .attr("orient", "auto")
+    .append("svg:path")
+    .attr("d", d)
+    .attr("fill", color);
+}
+
+function selectStartMarker(d: EntityLink) {
+  return d.left
+    ? (d.creation ? "url(#start-arrow-creator)" : "url(#start-arrow)")
+    : "";
+}
+
+function selectEndMarker(d: EntityLink) {
+  return d.right
+    ? (d.creation ? "url(#end-arrow-creator)" : "url(#end-arrow)")
+    : "";
+}
+
+function createActivity(g, metaModel: KomposMetaModel) {
+  g.attr("id", function (a: ActivityNode) { return a.getSystemViewId(); });
+
+  createActivityRectangle(g);
+  createActivityLabel(g, metaModel);
+  createActivityStatusIndicator(g);
+}
+
+function createActivityRectangle(g) {
+  g.append("rect")
+    .attr("rx", 6)
+    .attr("ry", 6)
+    .attr("x", -12.5)
+    .attr("y", -12.5)
+    .attr("width", 50)
+    .attr("height", 25)
+    .on("mouseover", function(a: ActivityNode) { return ctrl.overActivity(a, this); })
+    .on("mouseout",  function(a: ActivityNode) { return ctrl.outActivity(a, this); })
+    .attr("class", "node")
+    .style("fill", function(a: ActivityNode) {
+      return getLightTangoColor(a.getType(), a.getActivityId());
+    })
+    .style("stroke", function(a: ActivityNode) {
+      return d3.rgb(getLightTangoColor(a.getType(), a.getActivityId())).darker().toString();
+    })
+    .style("stroke-width", function(a: ActivityNode) { return (a.getGroupSize() > 1) ? Math.log(a.getGroupSize()) * 3 : ""; })
+    .classed("reflexive", function(a: ActivityNode) { return a.reflexive; });
+}
+
+function createActivityLabel(g, metaModel: KomposMetaModel) {
+  g.append("svg:text")
+    .attr("x", 0)
+    .attr("dy", ".35em")
+    .attr("class", "id")
+    .html(function(a: ActivityNode) {
+      let label = metaModel.getActivityDefFromType(a.getType()).marker + " " + a.getName();
+
+      if (a.getGroupSize() > 1) {
+        label += " (" + a.getGroupSize() + ")";
+      }
+      return label;
+    });
+}
+
+function createActivityStatusIndicator(g) {
+  g.append("svg:text")
+    .attr("x", 10)
+    .attr("dy", "-.35em")
+    .attr("class", function(a: ActivityNode) {
+      return "activity-pause" + (a.isRunning() ? " running" : "");
+    })
+    .html("&#xf04c;");
+}
+
+export const PADDING = 15;
+
+function createChannelBody(g, x: number, y: number) {
+  return g.append("rect")
+    .attr("x", x + 5)
+    .attr("y", y + 1)
+    .attr("width", 20)
+    .attr("height", 8);
+}
+
+function createChannelEnd(g, x: number, y: number) {
+  return g.append("path")
+    .attr("d", `M ${x} ${y} L ${x + 6} ${y} L ${x + 10} ${y + 5} L ${x + 6} ${y + 10} L ${x} ${y + 10} L ${x + 4} ${y + 5} Z`)
+    .attr("stroke", "black")
+    .attr("stroke-linecap", "round")
+    .attr("stroke-linejoin", "round")
+    .attr("stroke-width", 1)
+    .attr("fill", "#f3f3f3");
+}
+
+function createChannel(g) {
+  const x = 0, y = 0;
+  g.attr("id", function (a: PassiveEntityNode) { return a.getSystemViewId(); });
+
+  createChannelBody(g, x, y);
+  createChannelEnd(g, x, y);
+  createChannelEnd(g, x + 20, y);
+}
+

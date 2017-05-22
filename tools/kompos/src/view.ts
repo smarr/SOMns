@@ -8,10 +8,11 @@ import { Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
   TaggedSourceCoordinate, Scope, getSectionId, Variable, ActivityType,
   BreakpointType, SteppingType, EntityType } from "./messages";
 import { Breakpoint, SectionBreakpoint, LineBreakpoint } from "./breakpoints";
-import { SystemVisualization } from "./visualizations";
+import { SystemView } from "./system-view";
 import { Activity, TraceDataUpdate } from "./execution-data";
-import { ActivityNode } from "./system-view";
+import { ActivityNode } from "./system-view-data";
 import { KomposMetaModel } from "./meta-model";
+import { ProcessView } from "./process-view";
 
 declare var ctrl: Controller;
 declare var zenscroll: any;
@@ -71,6 +72,10 @@ export function getSourceIdFromSection(sectionId: string) {
 
 export function getActivityIdFromView(actId: string) {
   return parseInt(actId.substr(ENT_ID_PREFIX.length));
+}
+
+export function getFullMethodName(activity: Activity, methodName: string) {
+  return activity.name + ">>#" + methodName;
 }
 
 function splitAndKeepNewlineAsEmptyString(str) {
@@ -343,20 +348,23 @@ function annotateArray(arr: any[][], sourceId: string, activityId: number,
  * data and reacting to events.
  */
 export class View {
-  private systemViz: SystemVisualization;
+  private readonly systemView:   SystemView;
+  private readonly protocolView: ProcessView;
   private metaModel: KomposMetaModel;
 
   constructor() {
-    this.systemViz = new SystemVisualization();
+    this.systemView   = new SystemView();
+    this.protocolView = new ProcessView();
   }
 
   public setCapabilities(metaModel: KomposMetaModel) {
     this.metaModel = metaModel;
-    this.systemViz.setCapabilities(metaModel);
+    this.systemView.setCapabilities(metaModel);
+    this.protocolView.setMetaModel(metaModel);
   }
 
   public displaySystemView() {
-    this.systemViz.display();
+    this.systemView.display();
   }
 
   public onConnect() {
@@ -481,6 +489,17 @@ export class View {
     return true;
   }
 
+  public toggleHighlightMethod(sourceId: string, activity: Activity, source: SourceCoordinate, highlight: boolean) {
+    const methodDeclId = methodDeclIdToString(getSectionId(sourceId, source), 0, activity.id);
+    const ss = document.getElementById(methodDeclId);
+
+    if (highlight) {
+      $(ss).addClass("method-highlight");
+    } else {
+      $(ss).removeClass("method-highlight");
+    }
+  }
+
   private getBreakpointTypesPerTag(breakpointTypes: BreakpointType[]) {
     const result = {};
     for (const bpT of breakpointTypes) {
@@ -597,7 +616,8 @@ export class View {
 
   public reset() {
     this.resetActivities();
-    this.systemViz.reset();
+    this.systemView.reset();
+    this.protocolView.reset();
   }
 
   private resetActivities() {
@@ -605,7 +625,9 @@ export class View {
   }
 
   public updateTraceData(data: TraceDataUpdate) {
-    this.systemViz.updateTraceData(data);
+    this.systemView.updateTraceData(data);
+    this.protocolView.updateTraceData(data);
+
     for (const act of data.activities) {
       this.displayActivity(act);
     }
