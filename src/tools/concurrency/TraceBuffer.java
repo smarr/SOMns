@@ -89,7 +89,7 @@ public class TraceBuffer {
   }
 
   public void recordCurrentActivity(final Activity current) {
-    if (current == lastActivity) {
+    if (current == lastActivity || current == null) {
       return;
     }
 
