@@ -164,10 +164,14 @@ export interface SteppingType {
 
 export interface EntityDef {
   id:          number;
+
+  /** Name of the entity type. */
   label:       string;
 
   creation?:   number;
   completion?: number;
+
+  /** Icon name. */
   marker?:     string;
 }
 
