@@ -146,7 +146,7 @@ public class SPromise extends SObjectWithClass {
       }
 
       if (VmSettings.PROMISE_RESOLUTION) {
-        ActorExecutionTrace.promiseChained(this.getPromiseId(), remote.getPromiseId());
+        ActorExecutionTrace.promiseChained(getPromiseId(), remote.getPromiseId());
       }
     } else {
       addChainedPromise(remote);
