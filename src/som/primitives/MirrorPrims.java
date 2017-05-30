@@ -3,27 +3,33 @@ package som.primitives;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.compiler.MixinDefinition;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.Types;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.objectstorage.FieldReadNode;
 import som.primitives.reflection.AbstractSymbolDispatch;
 import som.primitives.reflection.AbstractSymbolDispatchNodeGen;
+import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 
@@ -175,6 +181,41 @@ public abstract class MirrorPrims {
       assert mixinHandle instanceof MixinDefinition;
       MixinDefinition def = (MixinDefinition) mixinHandle;
       return def.getFactoryMethods().containsKey(selector);
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "slot:on:")
+  public abstract static class SlotOnPrim extends BinaryComplexOperation {
+    protected SlotOnPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+
+    @Specialization
+    public final Object readField(final SSymbol selector, final SObject rcvr, @Cached("cachedNode(selector, rcvr)") final FieldReadNode frn) {
+
+      try {
+        return frn.read(rcvr);
+      } catch (InvalidAssumptionException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    @Specialization
+    public final Object readField(final String selector, final SObject rcvr, @Cached("cachedNode(selector, rcvr)") final FieldReadNode frn) {
+      try {
+        return frn.read(rcvr);
+      } catch (InvalidAssumptionException e) {
+        throw new RuntimeException(e);
+      }
+    }
+
+    protected FieldReadNode cachedNode(final SSymbol selector, final SObject rcvr) {
+      SlotDefinition slot = (SlotDefinition) Types.getClassOf(rcvr).getMixinDefinition().getInstanceDispatchables().get(selector);
+      return FieldReadNode.createRead(slot, rcvr);
+    }
+
+    protected FieldReadNode cachedNode(final String selector, final SObject rcvr) {
+      SlotDefinition slot = (SlotDefinition) Types.getClassOf(rcvr).getMixinDefinition().getInstanceDispatchables().get(Symbols.symbolFor(selector));
+      return FieldReadNode.createRead(slot, rcvr);
     }
   }
 }
