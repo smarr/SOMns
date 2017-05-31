@@ -30,16 +30,19 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.Primitive;
 import som.vm.Primitives.Specializer;
 import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SSymbol;
+import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.Tags.CreatePromisePair;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.Tags.OnError;
 import tools.concurrency.Tags.WhenResolved;
 import tools.concurrency.Tags.WhenResolvedOnError;
 import tools.debugger.entities.BreakpointType;
+import tools.debugger.entities.SendOp;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
@@ -156,6 +159,9 @@ public final class PromisePrims {
 
       PromiseCallbackMessage pcm = new PromiseCallbackMessage(rcvr.getOwner(),
           block, resolver, blockCallTarget, false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, pcm.getMessageId(), rcvr.getPromiseId());
+      }
       registerNode.register(rcvr, pcm, current);
 
       return promise;
@@ -215,6 +221,9 @@ public final class PromisePrims {
       PromiseCallbackMessage msg = new PromiseCallbackMessage(rcvr.getOwner(),
           block, resolver, blockCallTarget, false,
           promiseResolverBreakpoint.executeShouldHalt(), rcvr);
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(), promise.getPromiseId());
+      }
       registerNode.register(rcvr, msg, current);
 
       return promise;
@@ -282,6 +291,11 @@ public final class PromisePrims {
 
       PromiseCallbackMessage onResolved = new PromiseCallbackMessage(rcvr.getOwner(), resolved, resolver, resolverTarget, false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
       PromiseCallbackMessage onError    = new PromiseCallbackMessage(rcvr.getOwner(), error,    resolver, errorTarget,    false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
+
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, onResolved.getMessageId(), promise.getPromiseId());
+        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, onError.getMessageId(), promise.getPromiseId());
+      }
 
       synchronized (rcvr) {
         registerWhenResolved.register(rcvr, onResolved, current);

@@ -11,7 +11,6 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
@@ -19,7 +18,6 @@ import som.VM;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
-import tools.TraceData;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.DynamicScopeType;
 import tools.debugger.entities.Implementation;
@@ -49,6 +47,9 @@ public final class TraceParser {
   private final HashMap<Long, ActorNode> mappedActors = new HashMap<>();
   private final HashMap<Long, Queue<MessageRecord>> expectedMessages = new HashMap<>();
 
+  private long scopeId = -1;
+  private long activityId = -1;
+  private int traceBufferId = -1;
 
   private long parsedMessages = 0;
   private long parsedActors = 0;
@@ -80,7 +81,7 @@ public final class TraceParser {
   }
 
   private TraceRecord[] createParseTable() {
-    TraceRecord[] result = new TraceRecord[Marker.IMPL_THREAD_CURRENT_ACTIVITY + 1];
+    TraceRecord[] result = new TraceRecord[Marker.PROMISE_MSG_SEND + 1];
 
     for (ActivityType t : ActivityType.values()) {
       if (t.getCreationMarker() != 0) {
@@ -147,11 +148,14 @@ public final class TraceParser {
     boolean readMainActor = false;
     File traceFile = new File(VmSettings.TRACE_FILE + ".trace");
 
-    HashMap<Long, List<Long>> unmappedActors = new HashMap<>(); // maps message to created actors
     HashMap<Long, Long> chainedPromises = new HashMap<>();
-    HashMap<Long, List<Long>> resolvedPromises = new HashMap<>();
     HashMap<Long, Long> promiseResolvers = new HashMap<>();
     ArrayList<PromiseMessageRecord> records = new ArrayList<>();
+    HashMap<Long, UnsentMessage> unsentMessages = new HashMap<>();
+
+    HashMap<Long, Long> messagePromise = new HashMap<>();
+    HashMap<Long, Long> messageSender = new HashMap<>();
+    int msgNo = 0;
 
     VM.println("Parsing Trace ...");
     parseSymbols();
@@ -176,24 +180,28 @@ public final class TraceParser {
           case ACTIVITY_CREATION: {
             assert type == ActivityType.ACTOR.getCreationMarker() : "Only supporting actors at the moment";
 
-            long activityId = b.getLong();
+            long newActivityId = b.getLong();
             short symbolId  = b.getShort();
 
             if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
               readSourceSection(b);
             }
 
-            if (activityId == 0) {
+            if (newActivityId == 0) {
               assert !readMainActor : "There should be only one main actor.";
               readMainActor = true;
             }
-            if (activityId != 0) {
-              if (!unmappedActors.containsKey(causalMsgId)) {
-                unmappedActors.put(causalMsgId, new ArrayList<>());
-              }
-              unmappedActors.get(causalMsgId).add(activityId);
+
+            if (!mappedActors.containsKey(activityId)) {
+              mappedActors.put(activityId, new ActorNode(activityId));
             }
-            b.getShort(); // type
+
+            if (!mappedActors.containsKey(newActivityId)) {
+              ActorNode node = new ActorNode(newActivityId);
+              mappedActors.put(newActivityId, new ActorNode(newActivityId));
+              node.mailboxNo = traceBufferId;
+              mappedActors.get(activityId).addChild(node);
+            }
             parsedActors++;
 
             assert b.position() == start + ActivityType.ACTOR.getCreationSize();
@@ -203,32 +211,84 @@ public final class TraceParser {
             assert b.position() == start + ActivityType.ACTOR.getCompletionSize();
             break;
           case DYNAMIC_SCOPE_START:
+            scopeId = b.getLong();
+            if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+              readSourceSection(b);
+            }
+
+            // VM.println("R" + scopeId);
+
+            if (!expectedMessages.containsKey(activityId)) {
+              expectedMessages.put(activityId, new PriorityQueue<>());
+            }
+
+            if (!messageSender.containsKey(scopeId)) {
+              // message not yet sent
+
+              unsentMessages.put(scopeId, new UnsentMessage(activityId, msgNo, traceBufferId)); // add receiver
+              msgNo++;
+              break;
+            }
+
+            long sender = messageSender.remove(scopeId);
+
+            if (messagePromise.containsKey(scopeId)) {
+              // Promise Message
+              long promise = messagePromise.get(scopeId);
+              PromiseMessageRecord record = new PromiseMessageRecord(sender, promise, traceBufferId, msgNo);
+              records.add(record);
+              expectedMessages.get(activityId).add(record);
+            } else {
+              // Regular Message
+
+              expectedMessages.get(activityId).add(new MessageRecord(sender, traceBufferId, msgNo));
+            }
+            msgNo++;
             assert b.position() == start + DynamicScopeType.TRANSACTION.getStartSize();
             break;
           case DYNAMIC_SCOPE_END:
+            scopeId = -1;
             assert b.position() == start + DynamicScopeType.TRANSACTION.getEndSize();
             break;
           case SEND_OP:
             long entityId = b.getLong();
             long targetId = b.getLong();
+
+
             if (type == Marker.PROMISE_RESOLUTION) {
               if (entityId != 0) {
-                // TODO: figure out correct order here, don't know which is child and which is parent
-                chainedPromises.put(entityId, targetId);
+                // VM.println("" + entityId + " chained " + targetId);
+                chainedPromises.put(targetId, entityId);
               } else {
-                if (!resolvedPromises.containsKey(causalMsgId)) {
-                  resolvedPromises.put(causalMsgId, new ArrayList<>());
-                }
-
-                resolvedPromises.get(causalMsgId).add(targetId);
+                // VM.println("" + targetId + " resolved by " + activityId);
+                promiseResolvers.put(targetId, activityId);
               }
             } else if (type == Marker.ACTOR_MSG_SEND) {
-              parsedMessages++;
-            }
+              // VM.println("S" + entityId + "   " + (type == Marker.PROMISE_MSG_SEND));
+              if (unsentMessages.containsKey(entityId)) {
+                UnsentMessage um = unsentMessages.remove(entityId);
+                expectedMessages.get(um.activityId).add(new MessageRecord(activityId, um.tracebufferId, um.msgNo));
+              } else {
+                messageSender.put(entityId, activityId);
+              }
+            } else if (type == Marker.PROMISE_MSG_SEND) {
+              // VM.println("S" + entityId + "   " + (type == Marker.PROMISE_MSG_SEND));
+              if (unsentMessages.containsKey(entityId)) {
+                UnsentMessage um = unsentMessages.remove(entityId);
+                PromiseMessageRecord record = new PromiseMessageRecord(activityId, targetId, um.tracebufferId, um.msgNo);
+                records.add(record);
+                expectedMessages.get(um.activityId).add(record);
+              } else {
+                messageSender.put(entityId, activityId);
+                messagePromise.put(entityId, targetId);
+              }
 
+            }
+            parsedMessages++;
             assert b.position() == start + SendOp.ACTOR_MSG.getSize();
             break;
           case RECEIVE_OP:
+            b.getLong();
             assert b.position() == start + ReceiveOp.CHANNEL_RCV.getSize();
             break;
           case IMPL_THREAD:
@@ -236,41 +296,24 @@ public final class TraceParser {
             channel.read(b);
             b.flip();
             b.getLong(); // thread id
-            assert b.position() == start + Implementation.IMPL_THREAD.getSize();
+            assert b.position() == Implementation.IMPL_THREAD.getSize() - 1;
             break;
           case IMPL_THREAD_CURRENT_ACTIVTITY: {
+            activityId = b.getLong();
+            traceBufferId = b.getInt();
+            msgNo = 0;
             assert b.position() == start + Implementation.IMPL_CURRENT_ACTIVITY.getSize();
-            long activityId = b.getLong();
-            int traceBufferId = b.getInt();
             break;
           }
-
-
-
-          default:
-
-            assert (type & TraceData.MESSAGE_BIT) != 0;
-            if (unmappedActors.containsKey(currentMessage)) {
-              // necessary as the receivers creation event hasn't been parsed yet
-              if (!mappedActors.containsKey(currentReceiver)) {
-                mappedActors.put(currentReceiver, new ActorNode(currentReceiver));
-              }
-              for (long l : unmappedActors.remove(currentMessage)) {
-                if (!mappedActors.containsKey(l)) {
-                  mappedActors.put(l, new ActorNode(l));
-                }
-                ActorNode node = mappedActors.get(l);
-                node.mailboxNo = currentMailbox;
-                mappedActors.get(currentReceiver).addChild(node);
-              }
-            } if (resolvedPromises.containsKey(currentMessage)) {
-              for (long prom : resolvedPromises.get(currentMessage)) {
-                promiseResolvers.put(prom, currentReceiver);
-              }
-            }
-
-            parseMessage(type, records); // messages
-            break;
+          case PASSIVE_ENTITY_CREATION: {
+           b.getLong();
+           if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+             readSourceSection(b);
+           }
+           assert b.position() == start + PassiveEntityType.PROMISE.getCreationSize();
+           break;
+          }
+          default: assert false;
         }
       }
 
@@ -295,32 +338,27 @@ public final class TraceParser {
       }
     }
 
-    assert unmappedActors.isEmpty();
+    /*
+    VM.println("unhandled" + messageSender.size());
+    for (long l : messageSender.keySet()) {
+      VM.println("" + l);
+    }*/
+
+    assert unsentMessages.isEmpty();
 
     VM.println("Trace with " + parsedMessages + " Messages and " + parsedActors + " Actors sucessfully parsed!");
   }
 
-  private void parseMessage(final byte type, final ArrayList<PromiseMessageRecord> records) {
-    long promid = 0;
-    // promise msg
-    if ((type & TraceData.PROMISE_BIT) > 0) {
-      promid = b.getLong(); // promise
-    }
+  private static class UnsentMessage {
+    int msgNo;
+    int tracebufferId;
+    long activityId;
 
-    long sender = b.getLong(); // sender
-    b.getLong(); // causal message
-    short sym = b.getShort(); // selector
-
-    if (!expectedMessages.containsKey(currentReceiver)) {
-      expectedMessages.put(currentReceiver, new PriorityQueue<>());
-    }
-
-    if ((type & TraceData.PROMISE_BIT) > 0) {
-      PromiseMessageRecord record = new PromiseMessageRecord(sender, symbolMapping.get(sym), promid, currentMailbox, msgNo);
-      records.add(record);
-      expectedMessages.get(currentReceiver).add(record);
-    } else {
-      expectedMessages.get(currentReceiver).add(new MessageRecord(sender, symbolMapping.get(sym), currentMailbox, msgNo));
+    public UnsentMessage(final long activityId, final int msgNo, final int tracebufferId) {
+      super();
+      this.activityId = activityId;
+      this.msgNo = msgNo;
+      this.tracebufferId = tracebufferId;
     }
   }
 
@@ -377,14 +415,12 @@ public final class TraceParser {
 
   public static class MessageRecord implements Comparable<MessageRecord> {
     public final long sender;
-    public final SSymbol symbol;
     public final int mailboxNo;
     public final int messageNo;
 
-    public MessageRecord(final long sender, final SSymbol symbol, final int mb, final int no) {
+    public MessageRecord(final long sender, final int mb, final int no) {
       super();
       this.sender = sender;
-      this.symbol = symbol;
       this.mailboxNo = mb;
       this.messageNo = no;
     }
@@ -402,8 +438,8 @@ public final class TraceParser {
   public static class PromiseMessageRecord extends MessageRecord{
     public long pId;
 
-    public PromiseMessageRecord(final long sender, final SSymbol symbol, final long pId, final int mb, final int no) {
-      super(sender, symbol, mb, no);
+    public PromiseMessageRecord(final long sender, final long pId, final int mb, final int no) {
+      super(sender, mb, no);
       this.pId = pId;
     }
   }

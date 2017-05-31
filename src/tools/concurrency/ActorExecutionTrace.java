@@ -205,6 +205,7 @@ public class ActorExecutionTrace {
     buffer.init(storage, 0);
     buffer.recordCurrentActivity(mainActor);
     buffer.recordMainActor(mainActor, objectSystem);
+    buffer.recordSendOperation(SendOp.ACTOR_MSG, 0, mainActor.getId(), mainActor);
     buffer.returnBuffer();
 
     // start worker thread for trace processing

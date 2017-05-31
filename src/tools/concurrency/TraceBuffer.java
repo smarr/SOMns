@@ -3,6 +3,7 @@ package tools.concurrency;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.Actor;
@@ -93,6 +94,8 @@ public class TraceBuffer {
       return;
     }
 
+    ensureSufficientSpace(Implementation.IMPL_CURRENT_ACTIVITY.getSize(), current);
+
     lastActivity = current;
 
     final int start = storage.position();
@@ -104,6 +107,7 @@ public class TraceBuffer {
     assert storage.position() == start + Implementation.IMPL_CURRENT_ACTIVITY.getSize();
   }
 
+  @TruffleBoundary
   protected boolean ensureSufficientSpace(final int requiredSpace,
       final Activity current) {
     if (storage.remaining() < requiredSpace) {
@@ -134,6 +138,16 @@ public class TraceBuffer {
 
   /** REM: Ensure it is in sync with {@link TraceSemantics#SOURCE_SECTION_SIZE}. */
   private void writeSourceSection(final SourceSection origin) {
+    /* TODO: make sure there is always a sourcesection
+     * right now promises created by getChainedPromiseFor have no sourceSection and
+     * caused a Nullpointer exception in this method.
+     * The following if is a workaround.
+     * */
+    if (origin == null) {
+      storage.putLong(0);
+      return;
+    }
+
     assert !origin.getSource().isInternal() :
       "Need special handling to ensure we see user code reported to trace/debugger";
     storage.putShort(SourceCoordinate.getURI(origin.getSource()).getSymbolId());
@@ -148,6 +162,8 @@ public class TraceBuffer {
     ensureSufficientSpace(requiredSpace, current);
 
     final int start = storage.position();
+
+    assert entity.getCreationMarker() != 0;
 
     storage.put(entity.getCreationMarker());
     storage.putLong(activityId);

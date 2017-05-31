@@ -144,9 +144,9 @@ public class TracingActors {
         if (ra.expectedMessages != null && ra.expectedMessages.peek() != null) {
           result = true; // program did not execute all messages
           if (ra.expectedMessages.peek() instanceof TraceParser.PromiseMessageRecord) {
-            VM.println(a.getName() + " [" + ra.getId() + "] expecting PromiseMessage " + ra.expectedMessages.peek().symbol + " from " + ra.expectedMessages.peek().sender + " PID " + ((TraceParser.PromiseMessageRecord) ra.expectedMessages.peek()).pId);
+            VM.println(a.getName() + " [" + ra.getId() + "] expecting PromiseMessage from " + ra.expectedMessages.peek().sender + " PID " + ((TraceParser.PromiseMessageRecord) ra.expectedMessages.peek()).pId);
           } else {
-            VM.println(a.getName() + " [" + ra.getId() + "] expecting Message" + ra.expectedMessages.peek().symbol + " from " + ra.expectedMessages.peek().sender);
+            VM.println(a.getName() + " [" + ra.getId() + "] expecting Messagefrom " + ra.expectedMessages.peek().sender);
           }
 
           if (a.firstMessage != null) {
@@ -174,7 +174,7 @@ public class TracingActors {
 
     private static void printMsg(final EventualMessage msg) {
       if (msg instanceof PromiseMessage) {
-        VM.println("\t" + "PromiseMessage " + msg.getSelector() + " from " + msg.getSender().getId() + " PID " + ((SReplayPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
+        VM.println("\t" + "PromiseMessage " + msg.getMessageId() + " " + msg.getSelector() + " from " + msg.getSender().getId() + " PID " + ((SReplayPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
       } else {
         VM.println("\t" + "Message" + msg.getSelector() + " from " + msg.getSender().getId());
       }
@@ -205,8 +205,7 @@ public class TracingActors {
         }
       }
 
-      assert msg.getSelector() == other.symbol || !msg.getSelector().equals(other.symbol);
-      return msg.getSelector() == other.symbol && msg.getSender().getId() == other.sender;
+      return msg.getSender().getId() == other.sender;
     }
 
     protected int addChild() {

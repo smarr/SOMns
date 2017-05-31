@@ -26,7 +26,6 @@ import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.DynamicScopeType;
-import tools.debugger.entities.SendOp;
 
 
 /**
@@ -157,10 +156,6 @@ public class Actor implements Activity {
   @TruffleBoundary
   public synchronized void send(final EventualMessage msg,
       final ForkJoinPool actorPool) {
-    if (VmSettings.ACTOR_TRACING) {
-      ActorExecutionTrace.sendOperation(
-          SendOp.ACTOR_MSG, msg.getMessageId(), getId());
-    }
     doSend(msg, actorPool);
   }
 

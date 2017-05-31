@@ -1,7 +1,7 @@
 package tools.debugger.entities;
 
+import som.vm.VmSettings;
 import tools.TraceData;
-
 
 public enum ActivityType {
   PROCESS(EntityType.PROCESS, "&#10733;",  Marker.PROCESS_CREATION, Marker.PROCESS_COMPLETION),
@@ -37,6 +37,8 @@ public enum ActivityType {
   public byte getCreationMarker()   { return creationMarker; }
   public byte getCompletionMarker() { return completionMarker; }
 
-  public int getCreationSize()   { return 11 + TraceData.SOURCE_SECTION_SIZE; }
+  public int getCreationSize()   {
+    return VmSettings.TRUFFLE_DEBUGGER_ENABLED ? (11 + TraceData.SOURCE_SECTION_SIZE) : 11;
+  }
   public int getCompletionSize() { return 1; }
 }
