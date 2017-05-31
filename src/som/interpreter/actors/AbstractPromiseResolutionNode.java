@@ -12,6 +12,8 @@ import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vm.VmSettings;
+import tools.concurrency.ActorExecutionTrace;
 
 
 @Instrumentable(factory = AbstractPromiseResolutionNodeWrapper.class)
@@ -67,6 +69,10 @@ public abstract class AbstractPromiseResolutionNode extends TernaryExpressionNod
       final boolean isBreakpointOnPromiseResolution) {
     assert resolver.assertNotCompleted();
     SPromise promiseToBeResolved = resolver.getPromise();
+    if (VmSettings.PROMISE_RESOLUTION) {
+      ActorExecutionTrace.promiseChained(promiseValue.getPromiseId(), promiseToBeResolved.getPromiseId());
+    }
+
     boolean breakpointOnResolution = isBreakpointOnPromiseResolution;
     synchronized (promiseValue) {
       Resolution state = promiseValue.getResolutionStateUnsync();

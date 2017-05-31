@@ -26,7 +26,6 @@ import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.DynamicScopeType;
-import tools.debugger.entities.SendOp;
 
 
 /**
@@ -157,10 +156,6 @@ public class Actor implements Activity {
   @TruffleBoundary
   public synchronized void send(final EventualMessage msg,
       final ForkJoinPool actorPool) {
-    if (VmSettings.ACTOR_TRACING) {
-      ActorExecutionTrace.sendOperation(
-          SendOp.ACTOR_MSG, msg.getMessageId(), getId());
-    }
     doSend(msg, actorPool);
   }
 
@@ -244,13 +239,11 @@ public class Actor implements Activity {
       assert size > 0;
 
       try {
-        execute(firstMessage, currentThread, dbg, -1);
+        execute(firstMessage, currentThread, dbg);
 
         if (size > 1) {
-          int i = 0;
           for (EventualMessage msg : mailboxExtension) {
-            execute(msg, currentThread, dbg, i);
-            i++;
+            execute(msg, currentThread, dbg);
           }
         }
       } finally {
@@ -261,8 +254,7 @@ public class Actor implements Activity {
     }
 
     private void execute(final EventualMessage msg,
-        final ActorProcessingThread currentThread, final WebDebugger dbg,
-        final int i) {
+        final ActorProcessingThread currentThread, final WebDebugger dbg) {
       currentThread.currentMessage = msg;
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
         TracingActor.handleBreakpointsAndStepping(msg, dbg, actor);
@@ -291,6 +283,9 @@ public class Actor implements Activity {
           assert mailboxExtension == null;
           // complete execution after all messages are processed
           actor.isExecuting = false;
+          if (VmSettings.ACTOR_TRACING) {
+            ActorExecutionTrace.clearCurrentActivity(actor);
+          }
           size = 0;
           return false;
         } else {

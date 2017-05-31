@@ -3,6 +3,7 @@ package tools.debugger.entities;
 
 public enum SendOp {
   ACTOR_MSG(Marker.ACTOR_MSG_SEND,      EntityType.ACT_MSG, EntityType.ACTOR),
+  PROMISE_MSG(Marker.PROMISE_MSG_SEND, EntityType.ACT_MSG, EntityType.PROMISE),
   CHANNEL_SEND(Marker.CHANNEL_MSG_SEND, EntityType.CH_MSG,  EntityType.CHANNEL),
   PROMISE_RESOLUTION(Marker.PROMISE_RESOLUTION, EntityType.PROMISE, EntityType.PROMISE);
 

@@ -205,6 +205,7 @@ public class ActorExecutionTrace {
     buffer.init(storage, 0);
     buffer.recordCurrentActivity(mainActor);
     buffer.recordMainActor(mainActor, objectSystem);
+    buffer.recordSendOperation(SendOp.ACTOR_MSG, 0, mainActor.getId(), mainActor);
     buffer.returnBuffer();
 
     // start worker thread for trace processing
@@ -214,6 +215,11 @@ public class ActorExecutionTrace {
   public static void currentActivity(final Activity current) {
     TracingActivityThread t = getThread();
     t.getBuffer().recordCurrentActivity(current);
+  }
+
+  public static void clearCurrentActivity(final Activity current) {
+    TracingActivityThread t = getThread();
+    t.getBuffer().resetLastActivity();
   }
 
   public static void activityCreation(final ActivityType entity, final long activityId,
@@ -275,6 +281,8 @@ public class ActorExecutionTrace {
   }
 
   /**
+   * Record chaining of promises.
+   *
    * @param promiseValueId, the promise that is used to resolve another promise
    * @param promiseId, the promise that is being resolved
    */
