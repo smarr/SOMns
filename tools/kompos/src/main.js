@@ -13,8 +13,8 @@ var ctrl;
 
 requirejs(
   ['vm-connection', 'controller', 'ui-controller', 'debugger', 'view',
-   'visualizations', 'breakpoints'],
-  function(vmConn, cont, uiCont, d, vw) {
+   'breakpoints'],
+  function(vmConn, cont, uiCont, d, vw, bps) {
     $("#graph-canvas").resizable({handleSelector: '#split-system-code', resizeWidth: false});
 
     var vmConnection = new vmConn.VmConnection(true);
