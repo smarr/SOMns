@@ -82,10 +82,7 @@ public final class Lexer {
     private SourceCoordinate    startCoord;
 
     int incPtr() {
-      int cur = bufPointer;
-      bufPointer += 1;
-      lastNonWhiteCharIdx = charsRead + bufPointer;
-      return cur;
+      return incPtr(1);
     }
 
     int incPtr(final int val) {
