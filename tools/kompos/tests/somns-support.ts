@@ -35,6 +35,21 @@ export namespace BreakpointType {
   export const CHANNEL_AFTER_RCV   = "channelAfterRcvBP";
   export const CHANNEL_BEFORE_RCV  = "channelBeforeRcvBP";
   export const CHANNEL_AFTER_SEND  = "channelAfterSendBP";
+
+  export const ACTIVITY_CREATION    = "activityCreationBP";
+  export const ACTIVITY_ON_EXEC     = "activityOnExecBP";
+  export const ACTIVITY_BEFORE_JOIN = "activityBeforeJoinBP";
+  export const ACTIVITY_AFTER_JOIN  = "activityAfterJoinBP";
+
+  export const ATOMIC_BEFORE        = "atomicBeforeBP";
+  export const ATOMIC_BEFORE_COMMIT = "atomicBeforeCommitBP";
+  export const ATOMIC_AFTER_COMMIT  = "atomicAfterCommitBP";
+
+  export const LOCK_BEFORE = "lockBeforeBP";
+  export const LOCK_AFTER  = "lockAfterBP";
+
+  export const UNLOCK_BEFORE = "unlockBeforeBP";
+  export const UNLOCK_AFTER  = "unlockAfterBP";
 }
 
 export namespace SteppingType {
