@@ -110,12 +110,15 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
 
       self deny: awaitResult1 description: 'Await times out'.
 
-      (* This test is racy... remove and replace if it makes problems. *)
       t := Thread spawn: [
-        m critical: [ c signalOne ].
-        executed := true ].
+        m critical: [
+          c signalOne.
+          executed := true.
+      ] ].
 
-      m critical: [ c await ].
+      m critical: [
+        [ executed ] whileFalse: [ c await ] ].
+
       t join.
       self assert: executed
     )
