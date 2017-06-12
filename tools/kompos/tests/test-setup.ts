@@ -22,7 +22,7 @@ export function expectStack(stack: StackFrame[], length: number, methodName: str
   expect(stack[0]).to.be.not.null;
   expect(stack[0].name).to.equal(methodName);
   expect(stack[0].line).to.equal(startLine);
-  expect(stack).lengthOf(length);
+  return expect(stack).lengthOf(length);
 }
 
 export function expectSourceCoordinate(section: SourceCoordinate) {
@@ -204,11 +204,11 @@ export class HandleStoppedAndGetStackTrace extends ControllerWithInitialBreakpoi
       name: "dummy", type: <number> ActivityId.ACTOR, creationScope: null,
       creationActivity: null, running: false};
     this.stoppedActivities[this.numStopped] = activity;
+    this.vmConnection.requestStackTrace(msg.activityId, this.numStopped);
     this.numStopped += 1;
-    this.vmConnection.requestStackTrace(msg.activityId);
   }
 
   public onStackTrace(msg: StackTraceResponse) {
-    this.resolveStackPs[this.numStopped - 1](msg);
+    this.resolveStackPs[msg.requestId](msg);
   }
 }
