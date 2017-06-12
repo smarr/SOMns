@@ -175,9 +175,7 @@ export function execSom(extraArgs: string[]): SpawnSyncReturns<string> {
 export class HandleStoppedAndGetStackTrace extends ControllerWithInitialBreakpoints {
   private numStopped: number;
   private readonly numOps: number;
-  public readonly stackP: Promise<StackTraceResponse>;
   public readonly stackPs: Promise<StackTraceResponse>[];
-  private resolveStackP;
   private readonly resolveStackPs;
   public readonly stoppedActivities: Activity[];
 
@@ -189,28 +187,14 @@ export class HandleStoppedAndGetStackTrace extends ControllerWithInitialBreakpoi
     this.numStopped = 0;
     this.stoppedActivities = [];
 
-    this.stackP = new Promise<StackTraceResponse>((resolve, reject) => {
-      this.resolveStackP = resolve;
-      connectionP.catch(reject);
-    });
-
-    if (numOps > 1) {
-      this.resolveStackPs = [];
-      this.stackPs = [];
-      for (let i = 1; i < numOps; i += 1) {
-        this.stackPs.push(new Promise<StackTraceResponse>((resolve, reject) => {
-          this.resolveStackPs.push(resolve);
-          connectionP.catch(reject);
-        }));
-      }
+    this.resolveStackPs = [];
+    this.stackPs = [];
+    for (let i = 0; i < numOps; i += 1) {
+      this.stackPs.push(new Promise<StackTraceResponse>((resolve, reject) => {
+        this.resolveStackPs.push(resolve);
+        connectionP.catch(reject);
+      }));
     }
-  }
-
-  public getStackP(idx: number) {
-    if (idx === 0) {
-      return this.stackP;
-    }
-    return this.stackPs[idx - 1];
   }
 
   public onStoppedMessage(msg: StoppedMessage) {
@@ -225,10 +209,6 @@ export class HandleStoppedAndGetStackTrace extends ControllerWithInitialBreakpoi
   }
 
   public onStackTrace(msg: StackTraceResponse) {
-    if (this.numStopped === 1) {
-      this.resolveStackP(msg);
-      return;
-    }
-    this.resolveStackPs[this.numStopped - 2](msg);
+    this.resolveStackPs[this.numStopped - 1](msg);
   }
 }

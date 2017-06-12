@@ -61,7 +61,7 @@ describe("Language Debugger Integration", function() {
     after(closeConnectionAfterSuite);
 
     it("should halt on expected source section", () => {
-      return ctrl.stackP.then(msg => {
+      return ctrl.stackPs[0].then(msg => {
         expectStack(msg.stackFrames, 6, "PingPongApp>>#testHalt", 106);
       });
     });

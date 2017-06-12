@@ -27,7 +27,7 @@ describe("Setting CSP Breakpoints", () => {
     after(closeConnectionAfterSuite);
 
     it("should break on #read", () => {
-      return ctrl.stackP.then(msg => {
+      return ctrl.stackPs[0].then(msg => {
         expectStack(msg.stackFrames, 1, "Ping>>#run", 13);
       });
     });
@@ -45,7 +45,7 @@ describe("Setting CSP Breakpoints", () => {
     after(closeConnectionAfterSuite);
 
     it("should break after #write:", () => {
-      return ctrl.stackP.then(msg => {
+      return ctrl.stackPs[0].then(msg => {
         expectStack(msg.stackFrames, 5, "PingPongCSP>>#main:", 24);
       });
     });
@@ -62,7 +62,7 @@ describe("Setting CSP Breakpoints", () => {
     after(closeConnectionAfterSuite);
 
     it("should break on #write:", () => {
-      return ctrl.stackP.then(msg => {
+      return ctrl.stackPs[0].then(msg => {
         expectStack(msg.stackFrames, 1, "Ping>>#run", 12);
       });
     });
@@ -80,7 +80,7 @@ describe("Setting CSP Breakpoints", () => {
     after(closeConnectionAfterSuite);
 
     it("should break after #read", () => {
-      return ctrl.stackP.then(msg => {
+      return ctrl.stackPs[0].then(msg => {
         expectStack(msg.stackFrames, 5, "PingPongCSP>>#main:", 23);
       });
     });

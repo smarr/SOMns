@@ -240,7 +240,7 @@ describe("Basic Protocol", function() {
           after(closeConnectionAfterSuite);
 
           it(testDesc.test, onlyWithConnection(() => {
-            return ctrl.stackP.then(msg => {
+            return ctrl.stackPs[0].then(msg => {
               expectStack(msg.stackFrames, testDesc.stackLength, testDesc.topMethod, testDesc.line);
             });
           }));
@@ -263,19 +263,19 @@ describe("Basic Protocol", function() {
     after(closeConnectionAfterSuite);
 
     it("should stop initially at breakpoint", onlyWithConnection(() => {
-      return ctrl.stackP.then(msg => {
+      return ctrl.stackPs[0].then(msg => {
         expectStack(msg.stackFrames, 2, "Ping>>#ping", 23);
       });
     }));
 
     it("should single stepping", onlyWithConnection(() => {
       return new Promise((resolve, _reject) => {
-        ctrl.stackP.then(_ => {
+        ctrl.stackPs[0].then(_ => {
           conn.fullyConnected.then(_ => {
             conn.sendDebuggerAction(ST.STEP_INTO, ctrl.stoppedActivities[0]);
           });
 
-          const p = ctrl.getStackP(1).then(msgAfterStep => {
+          const p = ctrl.stackPs[1].then(msgAfterStep => {
             expectStack(msgAfterStep.stackFrames, 2, "Ping>>#ping", 24);
           });
           resolve(p);
@@ -286,7 +286,7 @@ describe("Basic Protocol", function() {
     it("should be possible to dynamically activate line breakpoints",
         onlyWithConnection(() => {
       return Promise.all([
-        ctrl.getStackP(1).then(_ => {
+        ctrl.stackPs[1].then(_ => {
           conn.fullyConnected.then(_ => {
             // set another breakpoint, after stepping, and with connection
             const lbp = createLineBreakpointData(PING_PONG_URI, 22, true);
@@ -294,7 +294,7 @@ describe("Basic Protocol", function() {
             conn.sendDebuggerAction(ST.RESUME, ctrl.stoppedActivities[1]);
           });
         }),
-        ctrl.getStackP(2).then(msgLineBP => {
+        ctrl.stackPs[2].then(msgLineBP => {
           expectStack(msgLineBP.stackFrames, 1, "Ping>>#ping", 22);
         })]);
     }));
@@ -302,7 +302,7 @@ describe("Basic Protocol", function() {
     it("should be possible to disable a line breakpoint",
         onlyWithConnection(() => {
       return new Promise((resolve, _reject) => {
-        ctrl.getStackP(2).then(_ => {
+        ctrl.stackPs[2].then(_ => {
           conn.fullyConnected.then(_ => {
             const lbp23 = createLineBreakpointData(PING_PONG_URI, 23, true);
             conn.updateBreakpoint(lbp23);
@@ -311,7 +311,7 @@ describe("Basic Protocol", function() {
             conn.updateBreakpoint(lbp22);
             conn.sendDebuggerAction(ST.RESUME, ctrl.stoppedActivities[2]);
 
-            const p = ctrl.getStackP(3).then(msgLineBP => {
+            const p = ctrl.stackPs[3].then(msgLineBP => {
               expectStack(msgLineBP.stackFrames, 1, "Ping>>#ping", 23);
             });
             resolve(p);
