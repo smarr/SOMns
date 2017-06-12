@@ -18,10 +18,10 @@ const PRINT_CMD_LINE   = false;
 
 export function expectStack(stack: StackFrame[], length: number, methodName: string,
     startLine: number) {
-  expect(stack).lengthOf(length);
   expect(stack[0]).to.be.not.null;
   expect(stack[0].name).to.equal(methodName);
   expect(stack[0].line).to.equal(startLine);
+  expect(stack).lengthOf(length);
 }
 
 export function expectSourceCoordinate(section: SourceCoordinate) {
