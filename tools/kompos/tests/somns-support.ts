@@ -57,5 +57,21 @@ export namespace SteppingType {
   export const STEP_OVER = "stepOver";
   export const RETURN    = "return";
   export const RESUME    = "resume";
+  export const PAUSE     = "pause";
   export const STOP      = "stop";
+
+  export const STEP_INTO_ACTIVITY   = "stepIntoActivity";
+  export const RETURN_FROM_ACTIVITY = "returnFromActivity";
+
+  export const STEP_TO_CHANNEL_RCVR   = "stepToChannelRcvr";
+  export const STEP_TO_CHANNEL_SENDER = "stepToChannelSender";
+
+  export const STEP_TO_NEXT_TX   = "stepToNextTx";
+  export const STEP_TO_COMMIT    = "stepToCommit";
+  export const STEP_AFTER_COMMIT = "stepAfterCommit";
+
+  export const STEP_TO_MESSAGE_RECEIVER = "stepToMessageRcvr";
+  export const STEP_TO_PROMISE_RESOLVER = "stepToPromiseResolver";
+  export const STEP_TO_NEXT_TURN        = "stepToNextTurn";
+  export const RETURN_FROM_TURN_TO_PROMISE_RESOLUTION = "returnFromTurnToPromiseResolution";
 }
