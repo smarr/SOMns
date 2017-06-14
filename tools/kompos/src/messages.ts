@@ -97,6 +97,7 @@ export interface SymbolMessage {
   type: "SymbolMessage";
   symbols: string[];
   ids:   number[];
+  msgNumber: number;
 }
 
 export type BreakpointData = LineBreakpointData | SectionBreakpointData;

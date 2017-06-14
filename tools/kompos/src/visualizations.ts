@@ -302,6 +302,12 @@ function createActivityLabel(g, activityTypes: EntityDef[]) {
       if (a.getGroupSize() > 1) {
         label += " (" + a.getGroupSize() + ")";
       }
+      console.assert(label.indexOf("undefined") < 0);
+      if (!(label.indexOf("undefined") < 0)) {
+        console.log(a);
+        debugger;
+      }
+
       return label;
     });
 }

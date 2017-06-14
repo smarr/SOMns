@@ -182,6 +182,7 @@ public final class TraceParser {
             b.compact();
             channel.read(b);
             b.flip();
+            b.getInt();
             b.getLong(); // thread id
             b.getLong(); // time millis
             assert (b.position() + 1) == Events.ImplThread.size;

@@ -12,10 +12,12 @@ import tools.debugger.message.Message.OutgoingMessage;
 public class SymbolMessage extends OutgoingMessage {
   private final String[] symbols;
   private final int[]    ids;
+  private final int msgNumber;
 
-  public SymbolMessage(final ArrayList<SSymbol> symbols) {
+  public SymbolMessage(final ArrayList<SSymbol> symbols, final int msgNumber) {
     this.symbols = new String[symbols.size()];
     this.ids = new int[symbols.size()];
+    this.msgNumber = msgNumber;
     int i = 0;
 
     for (SSymbol s : symbols) {

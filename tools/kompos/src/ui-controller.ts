@@ -4,7 +4,7 @@
 import {Controller}   from "./controller";
 import {Debugger}     from "./debugger";
 import {ActivityNode} from "./history-data";
-import {SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
+import {IdMap, SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
   ScopesResponse, VariablesResponse, ProgramInfoResponse, InitializationResponse,
   Activity, Source } from "./messages";
 import {LineBreakpoint, SectionBreakpoint, getBreakpointId,
@@ -23,6 +23,8 @@ export class UiController extends Controller {
 
   private actProm = {};
   private actPromResolve = {};
+  private traceData: IdMap<DataView> = {};
+  private receivedSymbols: number[] = [];
 
   constructor(dbg, view, vmConnection: VmConnection) {
     super(vmConnection);
@@ -179,11 +181,22 @@ export class UiController extends Controller {
 
   public onSymbolMessage(msg: SymbolMessage) {
     this.view.updateStringData(msg);
+    this.receivedSymbols.push(msg.msgNumber);
+
+    if(this.traceData[msg.msgNumber]){
+      this.onTracingData(this.traceData[msg.msgNumber]);
+    }
   }
 
   public onTracingData(data: DataView) {
-    this.newActivities(this.view.updateTraceData(data));
-    this.view.displaySystemView();
+    let requirement: number = data.getInt32(1);
+
+    if (this.receivedSymbols.indexOf(requirement) >= 0){
+      this.newActivities(this.view.updateTraceData(data));
+      this.view.displaySystemView();
+    } else {
+      this.traceData[requirement] = data;
+    }
   }
 
   public onUnknownMessage(msg: any) {
