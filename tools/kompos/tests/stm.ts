@@ -3,7 +3,7 @@ import { resolve } from "path";
 
 import { BreakpointType, SteppingType } from "./somns-support";
 import { TestConnection, HandleStoppedAndGetStackTrace, expectStack } from "./test-setup";
-import { createSectionBreakpointData } from "../src/messages";
+import { createSectionBreakpointData, StackTraceResponse } from "../src/messages";
 
 const STM_FILE = resolve("tests/stm.som");
 const STM_URI  = "file:" + STM_FILE;
@@ -65,8 +65,8 @@ describe("Setting STM Breakpoints", () => {
 
   let postponedAct = null;
 
-  it("should stop before commit, 1st time, and single step", () => {
-    return ctrl.stackPs[2].then(msg => {
+  it("should stop before commit, two times, and single step", () => {
+    const handler = function(msg: StackTraceResponse) {
       if (msg.activityId === 0) {
         conn.sendDebuggerAction(SteppingType.STEP_INTO, ctrl.stoppedActivities[msg.requestId]);
       } else {
@@ -75,38 +75,37 @@ describe("Setting STM Breakpoints", () => {
 
       const exp = (msg.activityId === 0 ? thread1 : thread2)[1];
       return expectStack(msg.stackFrames, exp.s, exp.n, exp.l);
+    };
+
+    const p1 = ctrl.stackPs[2].then(msg => {
+      return handler(msg);
     });
+    const p2 = ctrl.stackPs[3].then(msg => {
+      return handler(msg);
+    });
+    return Promise.all([p1, p2]);
   });
 
-  it("should stop before commit, 2nd time, and single step", () => {
-    return ctrl.stackPs[3].then(msg => {
+  it("1st thread should stop before next operation, 2nd thread should retry transaction", () => {
+    const handle = function(msg: StackTraceResponse) {
       if (msg.activityId === 0) {
-        conn.sendDebuggerAction(SteppingType.STEP_INTO, ctrl.stoppedActivities[msg.requestId]);
+        console.assert(postponedAct !== null);
+        conn.sendDebuggerAction(SteppingType.STEP_INTO, postponedAct);
+
+        const exp = thread1[2];
+        return expectStack(msg.stackFrames, exp.s, exp.n, exp.l);
       } else {
-        postponedAct = ctrl.stoppedActivities[msg.requestId];
+        const exp = thread2[2];
+        return expectStack(msg.stackFrames, exp.s, exp.n, exp.l);
       }
+    };
 
-      const exp = (msg.activityId === 0 ? thread1 : thread2)[1];
-      return expectStack(msg.stackFrames, exp.s, exp.n, exp.l);
+    const p1 = ctrl.stackPs[4].then(msg => {
+      return handle(msg);
     });
-  });
-
-  it("1st thread should stop before next operation", () => {
-    return ctrl.stackPs[4].then(msg => {
-      console.assert(msg.activityId === 0);
-      console.assert(postponedAct !== null);
-      conn.sendDebuggerAction(SteppingType.STEP_INTO, postponedAct);
-
-      const exp = thread1[2];
-      return expectStack(msg.stackFrames, exp.s, exp.n, exp.l);
+    const p2 = ctrl.stackPs[5].then(msg => {
+      return handle(msg);
     });
+    return Promise.all([p1, p2]);
   });
-
-  it("2nd thread should retry transaction", () => {
-    return ctrl.stackPs[5].then(msg => {
-      const exp = (msg.activityId === 0 ? thread1 : thread2)[2];
-      return expectStack(msg.stackFrames, exp.s, exp.n, exp.l);
-    });
-  });
-
 });
