@@ -2,6 +2,9 @@
 # quit on first error
 set -e
 
+echo "######## REPLAY TESTS ARE DISABLED #########"
+exit 0
+
 if [ "$1" = "1" ]
 then
   declare -a Savina=(
@@ -37,7 +40,7 @@ else
     "Philosophers 100 0 5:5 25"
     "DeadLock 100 0 4:2:3"
     "Messages 100 0 1000"
-    "Sequence 100 0 100"
+    #"Sequence 100 0 100"
   )
 fi
 

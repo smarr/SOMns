@@ -6,6 +6,8 @@ import java.util.List;
 public class VmSettings {
   public static final int NUM_THREADS;
 
+
+  // TODO: revise naming of flags
   public static final boolean FAIL_ON_MISSING_OPTIMIZATIONS;
   public static final boolean DEBUG_MODE;
   public static final boolean ACTOR_TRACING;
@@ -15,7 +17,6 @@ public class VmSettings {
   public static final boolean INSTRUMENTATION;
   public static final boolean DYNAMIC_METRICS;
   public static final boolean DNU_PRINT_STACK_TRACE;
-  public static final boolean MESSAGE_TIMESTAMPS;
   public static final boolean MESSAGE_PARAMETERS;
   public static final boolean PROMISE_CREATION;
   public static final boolean PROMISE_RESOLUTION;
@@ -49,14 +50,13 @@ public class VmSettings {
     List<String> al = Arrays.asList(atConfig.split(":"));
     boolean filter = (al.size() > 0 && !atConfig.isEmpty()) || getBool("som.actorTracing",   false);
 
-    MESSAGE_TIMESTAMPS    = !al.contains("mt") && filter && !REPLAY;
     MESSAGE_PARAMETERS    = !al.contains("mp") && filter;
     PROMISE_CREATION      = !al.contains("pc") && filter;
     PROMISE_RESOLUTION    = PROMISE_CREATION && (!al.contains("pr")) && filter;
     PROMISE_RESOLVED_WITH = !al.contains("prw") && filter;
 
     ACTOR_TRACING = TRUFFLE_DEBUGGER_ENABLED || getBool("som.actorTracing", false) ||
-                    REPLAY || MESSAGE_TIMESTAMPS || MESSAGE_PARAMETERS || PROMISE_CREATION;
+                    REPLAY || MESSAGE_PARAMETERS || PROMISE_CREATION;
 
     boolean dm = getBool("som.dynamicMetrics", false);
     DYNAMIC_METRICS = dm;

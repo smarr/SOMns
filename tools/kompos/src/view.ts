@@ -3,49 +3,40 @@
 
 import * as d3 from "d3";
 
-import {Controller}   from "./controller";
-import {ActivityNode} from "./history-data";
-import {Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
-  TaggedSourceCoordinate, Scope, getSectionId, Variable, Activity, ActivityType,
-  SymbolMessage, ServerCapabilities, BreakpointType, SteppingType,
-  EntityType } from "./messages";
-import {Breakpoint, SectionBreakpoint, LineBreakpoint} from "./breakpoints";
-import {SystemVisualization} from "./visualizations";
+import { Controller }   from "./controller";
+import { Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
+  TaggedSourceCoordinate, Scope, getSectionId, Variable, ActivityType,
+  BreakpointType, SteppingType, EntityType } from "./messages";
+import { Breakpoint, SectionBreakpoint, LineBreakpoint } from "./breakpoints";
+import { SystemView } from "./system-view";
+import { Activity, TraceDataUpdate } from "./execution-data";
+import { ActivityNode } from "./system-view-data";
+import { KomposMetaModel } from "./meta-model";
+import { ProcessView } from "./process-view";
 
 declare var ctrl: Controller;
 declare var zenscroll: any;
 
-const ACT_ID_PREFIX   = "a";
-const ACT_RECT_PREFIX = "RA";
+const ENT_ID_PREFIX  = "e";
+const ENT_VIZ_PREFIX = "EV";
 
-const ACT_GROUP_ID_PREFIX   = "ag";
-const ACT_GROUP_RECT_PREFIX = "RAG";
+const ENT_GROUP_ID_PREFIX  = "eg";
+const ENT_GROUP_VIZ_PREFIX = "EVG";
 
-const CH_ID_PREFIX  = "c";
-const CH_VIZ_PREFIX = "VC";
-
-export function getActivityId(id: number): string {
-  return ACT_ID_PREFIX + id;
+export function getEntityId(id: number): string {
+  return ENT_ID_PREFIX + id;
 }
 
-export function getActivityRectId(id: number): string {
-  return ACT_RECT_PREFIX + id;
+export function getEntityVizId(id: number): string {
+  return ENT_VIZ_PREFIX + id;
 }
 
-export function getActivityGroupId(id: number): string {
-  return ACT_GROUP_ID_PREFIX + id;
+export function getEntityGroupId(id: number): string {
+  return ENT_GROUP_ID_PREFIX + id;
 }
 
-export function getActivityGroupRectId(id: number): string {
-  return ACT_GROUP_RECT_PREFIX + id;
-}
-
-export function getChannelId(id: number): string {
-  return CH_ID_PREFIX + id;
-}
-
-export function getChannelVizId(id: number): string {
-  return CH_VIZ_PREFIX + id;
+export function getEntityGroupVizId(id: number): string {
+  return ENT_GROUP_VIZ_PREFIX + id;
 }
 
 export function getLineId(line: number, sourceId: string) {
@@ -53,11 +44,11 @@ export function getLineId(line: number, sourceId: string) {
 }
 
 function getSectionIdForActivity(ssId: string, activityId: number) {
-  return getActivityId(activityId) + ssId;
+  return getEntityId(activityId) + ssId;
 }
 
 function getSourceIdForActivity(sId: string, activityId: number) {
-  return getActivityId(activityId) + sId;
+  return getEntityId(activityId) + sId;
 }
 
 export function getSourceIdFrom(actAndSourceId: string) {
@@ -80,7 +71,11 @@ export function getSourceIdFromSection(sectionId: string) {
 }
 
 export function getActivityIdFromView(actId: string) {
-  return parseInt(actId.substr(ACT_ID_PREFIX.length));
+  return parseInt(actId.substr(ENT_ID_PREFIX.length));
+}
+
+export function getFullMethodName(activity: Activity, methodName: string) {
+  return activity.name + ">>#" + methodName;
 }
 
 function splitAndKeepNewlineAsEmptyString(str) {
@@ -115,7 +110,7 @@ function sourceToArray(source: string): string[][] {
 }
 
 function methodDeclIdToString(sectionId: string, idx: number, activityId: number) {
-  return getActivityId(activityId) + "m-" + sectionId + "-" + idx;
+  return getEntityId(activityId) + "m-" + sectionId + "-" + idx;
 }
 
 function methodDeclIdToObj(id: string) {
@@ -353,28 +348,23 @@ function annotateArray(arr: any[][], sourceId: string, activityId: number,
  * data and reacting to events.
  */
 export class View {
-  private systemViz: SystemVisualization;
-  private serverCapabilities?: ServerCapabilities;
+  private readonly systemView:   SystemView;
+  private readonly protocolView: ProcessView;
+  private metaModel: KomposMetaModel;
 
   constructor() {
-    this.systemViz = new SystemVisualization();
+    this.systemView   = new SystemView();
+    this.protocolView = new ProcessView();
   }
 
-  public setCapabilities(capabilities: ServerCapabilities) {
-    this.serverCapabilities = capabilities;
-    this.systemViz.setCapabilities(capabilities);
+  public setCapabilities(metaModel: KomposMetaModel) {
+    this.metaModel = metaModel;
+    this.systemView.setCapabilities(metaModel);
+    this.protocolView.setMetaModel(metaModel);
   }
 
   public displaySystemView() {
-    this.systemViz.display();
-  }
-
-  public updateStringData(msg: SymbolMessage) {
-    this.systemViz.updateStringData(msg);
-  }
-
-  public updateTraceData(data: DataView): Activity[] {
-    return this.systemViz.updateData(data);
+    this.systemView.display();
   }
 
   public onConnect() {
@@ -443,7 +433,7 @@ export class View {
    * @returns true, if new source is displayed
    */
   public displaySource(activity: Activity, source: Source, sourceId: string): boolean {
-    const actId = getActivityId(activity.id);
+    const actId = getEntityId(activity.id);
     this.markCodePaneExpanded(actId);
 
     const container = $("#" + actId + " .activity-sources-list");
@@ -499,6 +489,17 @@ export class View {
     return true;
   }
 
+  public toggleHighlightMethod(sourceId: string, activity: Activity, source: SourceCoordinate, highlight: boolean) {
+    const methodDeclId = methodDeclIdToString(getSectionId(sourceId, source), 0, activity.id);
+    const ss = document.getElementById(methodDeclId);
+
+    if (highlight) {
+      $(ss).addClass("method-highlight");
+    } else {
+      $(ss).removeClass("method-highlight");
+    }
+  }
+
   private getBreakpointTypesPerTag(breakpointTypes: BreakpointType[]) {
     const result = {};
     for (const bpT of breakpointTypes) {
@@ -513,8 +514,8 @@ export class View {
   }
 
   private enableBreakpointMenuItems(fileNode) {
-    console.assert(this.serverCapabilities, "connection should be properly initialized");
-    const typesPerTag = this.getBreakpointTypesPerTag(this.serverCapabilities.breakpointTypes);
+    console.assert(this.metaModel, "connection should be properly initialized");
+    const typesPerTag = this.getBreakpointTypesPerTag(this.metaModel.serverCapabilities.breakpointTypes);
 
     for (const tag in typesPerTag) {
       const menu    = nodeFromTemplate("bp-menu");
@@ -582,7 +583,7 @@ export class View {
     let group = "";
     let groupElem = null;
 
-    for (const step of this.serverCapabilities.steppingTypes) {
+    for (const step of this.metaModel.serverCapabilities.steppingTypes) {
       if (group !== step.group) {
         group = step.group;
         groupElem = nodeFromTemplate("debugger-step-btn-group");
@@ -604,7 +605,7 @@ export class View {
     const act = nodeFromTemplate("activity-tpl");
     $(act).find(".activity-name").html(activity.name);
 
-    const actId = getActivityId(activity.id);
+    const actId = getEntityId(activity.id);
     act.id = actId;
     this.createSteppingButtons(actId, $(act).find(".debugger-button-groups"));
     $(act).find("button.pane-closed").attr("data-actid", actId);
@@ -615,15 +616,19 @@ export class View {
 
   public reset() {
     this.resetActivities();
-    this.systemViz.reset();
+    this.systemView.reset();
+    this.protocolView.reset();
   }
 
   private resetActivities() {
     $(document.getElementById("code-views")).empty();
   }
 
-  public addActivities(activities: Activity[]) {
-    for (const act of activities) {
+  public updateTraceData(data: TraceDataUpdate) {
+    this.systemView.updateTraceData(data);
+    this.protocolView.updateTraceData(data);
+
+    for (const act of data.activities) {
       this.displayActivity(act);
     }
   }
@@ -697,7 +702,7 @@ export class View {
   public displayStackTrace(sourceId: string, data: StackTraceResponse,
       requestedId: number, activity: Activity, ssId: string,
       section: TaggedSourceCoordinate) {
-    const act = $("#" + getActivityId(data.activityId));
+    const act = $("#" + getEntityId(data.activityId));
     const list = act.find(".activity-stack");
     list.html(""); // rest view
 
@@ -772,7 +777,7 @@ export class View {
 
   private adjustSteppingButtons(act: JQuery, section: TaggedSourceCoordinate,
       activityType: ActivityType, concurrentEntityScopes: EntityType[]) {
-    for (const step of this.serverCapabilities.steppingTypes) {
+    for (const step of this.metaModel.serverCapabilities.steppingTypes) {
       const enabled = this.isSteppingApplicable(
         section, step, activityType, concurrentEntityScopes);
       act.find("button[data-step=" + step.name + " ]").prop("disabled", !enabled);
@@ -802,13 +807,13 @@ export class View {
 
   private showSourceById(sourceId: string, activity: Activity) {
     if (this.getActiveSourceId(activity) !== sourceId) {
-      const actId = getActivityId(activity.id);
+      const actId = getEntityId(activity.id);
       $("#" + actId + " .activity-sources-list li." + sourceId + " a").tab("show");
     }
   }
 
   private getActiveSourceId(activity: Activity): string {
-    const actId = getActivityId(activity.id);
+    const actId = getEntityId(activity.id);
     const actAndSourceId = $("#" + actId + " .tab-pane.active").attr("id");
     return getSourceIdFrom(actAndSourceId);
   }
@@ -858,18 +863,18 @@ export class View {
   public switchActivityDebuggerToSuspendedState(act: Activity) {
     // mark paused in system view
     const markedNode = $(
-      "#" + getActivityRectId(act.id) + " " + "text.activity-pause");
+      "#" + getEntityVizId(act.id) + " " + "text.activity-pause");
     markedNode.removeClass("running");
   }
 
   private switchActivityDebuggerToResumedState(act: Activity) {
     // mark resume in system view
     const markedNode = $(
-      "#" + getActivityRectId(act.id) + " " + "text.activity-pause");
+      "#" + getEntityVizId(act.id) + " " + "text.activity-pause");
     markedNode.addClass("running");
 
     // TODO: at some point, we might want to reconsider enabling the pause button
-    const id = getActivityId(act.id);
+    const id = getEntityId(act.id);
     const actE = $("#" + id);
     actE.find("button[data-step]").prop("disabled", true);
   }
@@ -877,7 +882,7 @@ export class View {
   public onContinueExecution(act: Activity) {
     this.switchActivityDebuggerToResumedState(act);
 
-    const id = getActivityId(act.id);
+    const id = getEntityId(act.id);
     const highlightedNode = $("#" + id + " .DbgCurrentNode");
     highlightedNode.removeClass("DbgCurrentNode");
   }

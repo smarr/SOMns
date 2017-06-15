@@ -4,7 +4,8 @@
 import * as WebSocket from "ws";
 
 import {Controller} from "./controller";
-import {Activity, Message, Respond, BreakpointData} from "./messages";
+import {Message, Respond, BreakpointData} from "./messages";
+import {Activity} from "./execution-data";
 
 const LOCAL_WS_URL = "ws://localhost";
 
@@ -150,13 +151,13 @@ export class VmConnection {
       activityId: activity.id});
   }
 
-  public requestStackTrace(activityId: number) {
+  public requestStackTrace(activityId: number, requestId: number = 0) {
     this.send({
       action: "StackTraceRequest",
       activityId: activityId,
       startFrame: 0, // from the top
       levels:     0, // request all
-      requestId:  0  // only used in VS code adapter currently
+      requestId:  requestId
     });
   }
 

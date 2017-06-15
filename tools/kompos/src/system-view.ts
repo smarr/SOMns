@@ -1,11 +1,11 @@
 /* jshint -W097 */
 "use strict";
 
-import {SymbolMessage, Activity, ActivityType, ServerCapabilities,
-  EntityDef} from "./messages";
+import { ActivityType } from "./messages";
 import * as d3 from "d3";
-import {HistoryData, ActivityNode, EntityLink,
-  ChannelNode} from "./history-data";
+import { TraceDataUpdate } from "./execution-data";
+import { ActivityNode, EntityLink, SystemViewData, PassiveEntityNode } from "./system-view-data";
+import { KomposMetaModel } from "./meta-model";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
 const TANGO_SCHEME = [
@@ -22,51 +22,45 @@ function getTangoColors(actType: ActivityType) {
   return TANGO_SCHEME[actType % 8];
 }
 
-function getLightTangoColor(actType: ActivityType, actId: number) {
-  return getTangoColors(actType)[3 + (actId % 3)];
+export function getLightTangoColor(actType: ActivityType, actId: number) {
+  return getTangoColors(actType)[3 + (actId % 4)];
 }
 
-export class SystemVisualization {
-  private data: HistoryData;
-  private activities: ActivityNode[];
-  private channels:   ChannelNode[];
+export class SystemView {
+  private readonly data: SystemViewData;
+
+  private activities:      ActivityNode[];
+  private passiveEntities: PassiveEntityNode[];
   private links: EntityLink[];
 
   private activityNodes: d3.selection.Update<ActivityNode>;
-  private channelNodes:  d3.selection.Update<ChannelNode>;
+  private entityNodes:  d3.selection.Update<PassiveEntityNode>;
   private entityLinks: d3.selection.Update<EntityLink>;
 
   private zoomScale = 1;
   private zoomTransl = [0, 0];
 
-  private serverCapabilities?: ServerCapabilities;
+  private metaModel: KomposMetaModel;
 
   constructor() {
-    this.data = new HistoryData();
+    this.data = new SystemViewData();
   }
 
-  public setCapabilities(capabilities: ServerCapabilities) {
-    this.serverCapabilities = capabilities;
-    this.data.setCapabilities(capabilities);
+  public updateTraceData(data: TraceDataUpdate) {
+    this.data.updateTraceData(data);
+  }
+
+  public setCapabilities(metaModel: KomposMetaModel) {
+    this.metaModel = metaModel;
+    this.data.setMetaModel(metaModel);
   }
 
   public reset() {
-    this.data = new HistoryData();
-    if (this.serverCapabilities) {
-      this.data.setCapabilities(this.serverCapabilities);
-    }
-  }
-
-  public updateStringData(msg: SymbolMessage) {
-    this.data.addStrings(msg.ids, msg.symbols);
-  }
-
-  public updateData(dv: DataView): Activity[] {
-    return this.data.updateDataBin(dv);
+    this.data.reset();
   }
 
   public display() {
-    const canvas = $("#graph-canvas");
+    const canvas = $("#overview-canvas");
     // colors = d3.scale.category10();
     // colors = d3.scale.ordinal().domain().range(tango)
     canvas.empty();
@@ -75,7 +69,7 @@ export class SystemVisualization {
       .scaleExtent([0.1, 10])
       .on("zoom", () => this.zoomed());
 
-    const svg = d3.select("#graph-canvas")
+    const svg = d3.select("#overview-canvas")
       .append("svg")
       // .attr("oncontextmenu", "return false;")
       .attr("width", canvas.width())
@@ -89,10 +83,10 @@ export class SystemVisualization {
     //  - links are always source < target; edge directions are set by "left" and "right".
 
     this.activities = this.data.getActivityNodes();
-    this.channels = this.data.getChannelNodes();
+    this.passiveEntities = this.data.getEntityNodes();
     this.links = this.data.getLinks();
 
-    const allEntities = this.activities.concat(<any[]> this.channels);
+    const allEntities = this.activities.concat(<any[]> this.passiveEntities);
 
     // init D3 force layout
     const forceLayout = d3.layout.force()
@@ -126,7 +120,7 @@ export class SystemVisualization {
       const x = this.zoomTransl[0] + d.x * this.zoomScale;
       const y = this.zoomTransl[1] + d.y * this.zoomScale;
       return `translate(${x},${y})scale(${this.zoomScale})`; });
-    this.channelNodes.attr("transform", (d: ChannelNode) => {
+    this.entityNodes.attr("transform", (d: PassiveEntityNode) => {
       const x = this.zoomTransl[0] + d.x * this.zoomScale;
       const y = this.zoomTransl[1] + d.y * this.zoomScale;
       return `translate(${x},${y})scale(${this.zoomScale})`; });
@@ -147,7 +141,7 @@ export class SystemVisualization {
         sourceY = d.source.y + (sourcePadding * normY),
         targetX = d.target.x - (targetPadding * normX),
         targetY = d.target.y - (targetPadding * normY);
-      return `M${sourceX},${sourceY}L${targetX},${targetY}`;
+        return `M${sourceX},${sourceY}L${targetX},${targetY}`;
     });
 
     this.activityNodes.attr("transform", (d: ActivityNode) => {
@@ -155,7 +149,8 @@ export class SystemVisualization {
       const y = this.zoomTransl[1] + d.y * this.zoomScale;
       return `translate(${x},${y})scale(${this.zoomScale})`;
     });
-    this.channelNodes.attr("transform", (d: ChannelNode) => {
+
+    this.entityNodes.attr("transform", (d: PassiveEntityNode) => {
       const x = this.zoomTransl[0] + d.x * this.zoomScale;
       const y = this.zoomTransl[1] + d.y * this.zoomScale;
       return `translate(${x},${y})scale(${this.zoomScale})`;
@@ -173,9 +168,10 @@ export class SystemVisualization {
       .selectAll("g")
       // nodes are known by id, not by index
       .data(this.activities, (a: ActivityNode) => { return a.getDataId(); });
-    this.channelNodes = svg.append("svg:g")
+
+    this.entityNodes = svg.append("svg:g")
       .selectAll("g")
-      .data(this.channels, (c: ChannelNode) => { return c.getDataId(); });
+      .data(this.passiveEntities, (c: PassiveEntityNode) => { return c.getDataId(); });
 
     this.entityLinks // .classed("selected", function(d) { return d === selected_link; })
       .style("marker-start", selectStartMarker)
@@ -197,27 +193,27 @@ export class SystemVisualization {
 
     // add new nodes
     const actG = this.activityNodes.enter().append("svg:g");
-    const chG  = this.channelNodes.enter().append("svg:g");
+    const peG  = this.entityNodes.enter().append("svg:g");
 
-    createActivity(actG, this.serverCapabilities.activityTypes);
-    createChannel(chG);
+    createActivity(actG, this.metaModel);
+    createChannel(peG);
 
     // After rendering text, adapt rectangles
     this.adaptRectSizeAndTextPosition();
 
     // Enable dragging of nodes
     actG.call(forceLayout.drag);
-    chG.call(forceLayout.drag);
+    peG.call(forceLayout.drag);
 
     // remove old nodes
     this.activityNodes.exit().remove();
-    this.channelNodes.exit().remove();
+    this.entityNodes.exit().remove();
 
     // set the graph in motion
     forceLayout.start();
 
     // execute enough steps that the graph looks static
-    for (let i = 0; i < 1000; i++) {
+    for (let i = 0; i < 1000 ; i++) {
       forceLayout.tick();
     }
     forceLayout.stop();
@@ -226,10 +222,10 @@ export class SystemVisualization {
   private adaptRectSizeAndTextPosition() {
     this.activityNodes.selectAll("rect")
       .attr("width", function() {
-        return this.parentNode.childNodes[1].getComputedTextLength() + PADDING;
+        return this.nextSibling.getComputedTextLength() + PADDING;
       })
       .attr("x", function() {
-        const width = this.parentNode.childNodes[1].getComputedTextLength();
+        const width = this.nextSibling.getComputedTextLength();
         d3.select(this.parentNode.childNodes[2]).attr("x", (width / 2.0) + 3.0);
         return - (PADDING + width) / 2.0;
       });
@@ -262,11 +258,11 @@ function selectEndMarker(d: EntityLink) {
     : "";
 }
 
-function createActivity(g, activityTypes: EntityDef[]) {
+function createActivity(g, metaModel: KomposMetaModel) {
   g.attr("id", function (a: ActivityNode) { return a.getSystemViewId(); });
 
   createActivityRectangle(g);
-  createActivityLabel(g, activityTypes);
+  createActivityLabel(g, metaModel);
   createActivityStatusIndicator(g);
 }
 
@@ -281,23 +277,23 @@ function createActivityRectangle(g) {
     .on("mouseover", function(a: ActivityNode) { return ctrl.overActivity(a, this); })
     .on("mouseout",  function(a: ActivityNode) { return ctrl.outActivity(a, this); })
     .attr("class", "node")
-    .style("fill", function(a: ActivityNode, i) {
-      return getLightTangoColor(a.getType(), i);
+    .style("fill", function(a: ActivityNode) {
+      return getLightTangoColor(a.getType(), a.getActivityId());
     })
-    .style("stroke", function(a: ActivityNode, i) {
-      return d3.rgb(getLightTangoColor(a.getType(), i)).darker().toString();
+    .style("stroke", function(a: ActivityNode) {
+      return d3.rgb(getLightTangoColor(a.getType(), a.getActivityId())).darker().toString();
     })
     .style("stroke-width", function(a: ActivityNode) { return (a.getGroupSize() > 1) ? Math.log(a.getGroupSize()) * 3 : ""; })
     .classed("reflexive", function(a: ActivityNode) { return a.reflexive; });
 }
 
-function createActivityLabel(g, activityTypes: EntityDef[]) {
+function createActivityLabel(g, metaModel: KomposMetaModel) {
   g.append("svg:text")
     .attr("x", 0)
     .attr("dy", ".35em")
     .attr("class", "id")
     .html(function(a: ActivityNode) {
-      let label = getTypePrefix(a.getType(), activityTypes) + " " + a.getName();
+      let label = metaModel.getActivityDefFromType(a.getType()).marker + " " + a.getName();
 
       if (a.getGroupSize() > 1) {
         label += " (" + a.getGroupSize() + ")";
@@ -316,15 +312,7 @@ function createActivityStatusIndicator(g) {
     .html("&#xf04c;");
 }
 
-const PADDING = 15;
-
-function getTypePrefix(type: ActivityType, activityTypes: EntityDef[]) {
-  for (const t of activityTypes) {
-    if (t.id === type) {
-      return t.marker;
-    }
-  }
-}
+export const PADDING = 15;
 
 function createChannelBody(g, x: number, y: number) {
   return g.append("rect")
@@ -346,7 +334,7 @@ function createChannelEnd(g, x: number, y: number) {
 
 function createChannel(g) {
   const x = 0, y = 0;
-  g.attr("id", function (a: ChannelNode) { return a.getSystemViewId(); });
+  g.attr("id", function (a: PassiveEntityNode) { return a.getSystemViewId(); });
 
   createChannelBody(g, x, y);
   createChannelEnd(g, x, y);

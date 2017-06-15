@@ -13,6 +13,7 @@ import som.primitives.threading.TaskThreads.SomTaskOrThread;
 import som.vm.VmSettings;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.debugger.entities.ReceiveOp;
 
 
 public class ActivityJoin {
@@ -47,7 +48,7 @@ public class ActivityJoin {
       }
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.taskJoin(task.getMethod(), task.getId());
+        ActorExecutionTrace.receiveOperation(ReceiveOp.TASK_JOIN, task.getId());
       }
       return result;
     }

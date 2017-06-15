@@ -1,0 +1,47 @@
+class STM usingPlatform: platform = Value (
+| private Thread = platform threading Thread.
+  private tx = platform transactions Transaction.
+|)(
+
+  private class MyObj = (
+  |  public field ::= 0. |
+  )()
+
+  private doCount: o = (
+    tx atomic: [
+      | cnt |
+      cnt := o field.
+      o field: cnt + 1.
+    ].
+
+    o field println.
+
+    tx atomic: [
+      | cnt |
+      cnt := o field.
+      o field: cnt + 1.
+    ].
+
+    o field println.
+
+    tx atomic: [
+      | cnt |
+      cnt := o field.
+      o field: cnt + 1.
+    ].
+
+    o field println.
+  )
+
+  public main: args = (
+    | o |
+    'STM example\n' println.
+    o := MyObj new.
+
+    Thread spawn: [ doCount: o ].
+
+    doCount: o.
+
+    ^ 0
+  )
+)

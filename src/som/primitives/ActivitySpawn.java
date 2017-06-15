@@ -38,6 +38,7 @@ import som.vmobjects.SSymbol;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
@@ -50,7 +51,8 @@ public abstract class ActivitySpawn {
     SomForkJoinTask task;
     if (VmSettings.ACTOR_TRACING) {
       task = new TracedForkJoinTask(argArray, stopOnRoot);
-      ActorExecutionTrace.taskSpawn(block.getMethod(), task.getId(), section);
+      ActorExecutionTrace.activityCreation(ActivityType.TASK, task.getId(),
+          block.getMethod().getSignature(), section);
     } else {
       task = new SomForkJoinTask(argArray, stopOnRoot);
     }
@@ -62,7 +64,8 @@ public abstract class ActivitySpawn {
     SomThreadTask thread;
     if (VmSettings.ACTOR_TRACING) {
       thread = new TracedThreadTask(argArray, stopOnRoot);
-      ActorExecutionTrace.threadSpawn(block.getMethod(), thread.getId(), section);
+      ActorExecutionTrace.activityCreation(ActivityType.THREAD, thread.getId(),
+          block.getMethod().getSignature(), section);
     } else {
       thread = new SomThreadTask(argArray, stopOnRoot);
     }
@@ -73,7 +76,8 @@ public abstract class ActivitySpawn {
       final SourceSection origin, final boolean stopOnRoot) {
     if (VmSettings.ACTOR_TRACING) {
       TracingProcess result = new TracingProcess(obj, stopOnRoot);
-      ActorExecutionTrace.processCreation(result, origin);
+      ActorExecutionTrace.activityCreation(ActivityType.PROCESS,
+          result.getId(), result.getProcObject().getSOMClass().getName(), origin);
       return result;
     } else {
       return new Process(obj);

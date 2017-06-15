@@ -25,6 +25,7 @@ import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
+import tools.debugger.entities.DynamicScopeType;
 
 
 /**
@@ -77,11 +78,7 @@ public class Actor implements Activity {
 
   // used to collect absolute numbers from the threads
   private static Object statsLock = new Object();
-  private static long numCreatedMessages  = 0;
-  private static long numCreatedActors    = 0;
-  private static long numCreatedPromises  = 0;
-  private static long numResolvedPromises = 0;
-  private static long numRuinedPromises = 0;
+  private static long numCreatedEntities = 0;
 
   /**
    * Possible roles for an actor.
@@ -157,14 +154,22 @@ public class Actor implements Activity {
    * This is the main method to be used in this API.
    */
   @TruffleBoundary
-  public synchronized void send(final EventualMessage msg, final ForkJoinPool actorPool) {
+  public synchronized void send(final EventualMessage msg,
+      final ForkJoinPool actorPool) {
+    doSend(msg, actorPool);
+  }
+
+  public synchronized void sendInitialStartMessage(final EventualMessage msg,
+      final ForkJoinPool pool) {
+    doSend(msg, pool);
+  }
+
+  private void doSend(final EventualMessage msg,
+      final ForkJoinPool actorPool) {
     assert msg.getTarget() == this;
 
     if (firstMessage == null) {
       firstMessage = msg;
-      if (VmSettings.MESSAGE_TIMESTAMPS) {
-        firstMessageTimeStamp = System.currentTimeMillis();
-      }
     } else {
       appendToMailbox(msg);
     }
@@ -181,9 +186,6 @@ public class Actor implements Activity {
       mailboxExtension = new ObjectBuffer<>(MAILBOX_EXTENSION_SIZE);
       mailboxExtensionTimeStamps = new ObjectBuffer<>(MAILBOX_EXTENSION_SIZE);
     }
-    if (VmSettings.MESSAGE_TIMESTAMPS) {
-      mailboxExtensionTimeStamps.append(System.currentTimeMillis());
-    }
     mailboxExtension.append(msg);
   }
 
@@ -197,11 +199,7 @@ public class Actor implements Activity {
 
     protected EventualMessage firstMessage;
     protected ObjectBuffer<EventualMessage> mailboxExtension;
-    protected long baseMessageId;
-    protected long firstMessageTimeStamp;
-    protected ObjectBuffer<Long> mailboxExtensionTimeStamps;
-    protected long[] executionTimeStamps;
-    protected int currentMailboxNo;
+
     protected int size = 0;
 
     protected ExecAllMessages(final Actor actor, final VM vm) {
@@ -222,6 +220,10 @@ public class Actor implements Activity {
 
       t.currentlyExecutingActor = actor;
 
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.currentActivity(actor);
+      }
+
       try {
         while (getCurrentMessagesOrCompleteExecution()) {
           processCurrentMessages(t, dbg);
@@ -234,47 +236,39 @@ public class Actor implements Activity {
     }
 
     protected void processCurrentMessages(final ActorProcessingThread currentThread, final WebDebugger dbg) {
-      if (VmSettings.ACTOR_TRACING) {
-        baseMessageId = currentThread.generateMessageBaseId(size);
-        currentThread.currentMessageId = baseMessageId;
-      }
-
       assert size > 0;
 
       try {
-        execute(firstMessage, currentThread, dbg, -1);
+        execute(firstMessage, currentThread, dbg);
 
         if (size > 1) {
-          int i = 0;
           for (EventualMessage msg : mailboxExtension) {
-            execute(msg, currentThread, dbg, i);
-            i++;
+            execute(msg, currentThread, dbg);
           }
         }
       } finally {
         if (VmSettings.ACTOR_TRACING) {
           currentThread.createdMessages += size;
-          ActorExecutionTrace.mailboxExecuted(firstMessage, mailboxExtension, baseMessageId, currentMailboxNo, firstMessageTimeStamp, mailboxExtensionTimeStamps, executionTimeStamps, actor);
         }
       }
     }
 
     private void execute(final EventualMessage msg,
-        final ActorProcessingThread currentThread, final WebDebugger dbg, final int i) {
+        final ActorProcessingThread currentThread, final WebDebugger dbg) {
       currentThread.currentMessage = msg;
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
         TracingActor.handleBreakpointsAndStepping(msg, dbg, actor);
       }
 
-      if (i >= 0 && VmSettings.MESSAGE_TIMESTAMPS) {
-        executionTimeStamps[i] = System.currentTimeMillis();
-      }
-
       try {
+        if (VmSettings.ACTOR_TRACING) {
+          ActorExecutionTrace.scopeStart(DynamicScopeType.TURN, msg.getMessageId(),
+              msg.getTargetSourceSection());
+        }
         msg.execute();
       } finally {
         if (VmSettings.ACTOR_TRACING) {
-          currentThread.currentMessageId += 1;
+          ActorExecutionTrace.scopeEnd(DynamicScopeType.TURN);
         }
       }
     }
@@ -284,24 +278,18 @@ public class Actor implements Activity {
         assert actor.isExecuting;
         firstMessage = actor.firstMessage;
         mailboxExtension = actor.mailboxExtension;
-        if (actor instanceof TracingActor) {
-          currentMailboxNo = ((TracingActor) actor).getAndIncrementMailboxNumber();
-        }
 
         if (firstMessage == null) {
           assert mailboxExtension == null;
           // complete execution after all messages are processed
           actor.isExecuting = false;
+          if (VmSettings.ACTOR_TRACING) {
+            ActorExecutionTrace.clearCurrentActivity(actor);
+          }
           size = 0;
           return false;
         } else {
           size = 1 + ((mailboxExtension == null) ? 0 : mailboxExtension.size());
-        }
-
-        if (VmSettings.MESSAGE_TIMESTAMPS) {
-          executionTimeStamps = new long[size];
-          firstMessageTimeStamp = actor.firstMessageTimeStamp;
-          mailboxExtensionTimeStamps = actor.mailboxExtensionTimeStamps;
         }
 
         actor.firstMessage = null;
@@ -336,45 +324,27 @@ public class Actor implements Activity {
 
     protected Actor currentlyExecutingActor;
 
-    // Used for tracing, accessed by the ExecAllMessages classes
-    public long currentMessageId;
-
     protected ActorProcessingThread(final ForkJoinPool pool) {
       super(pool);
     }
 
     @Override
     public Activity getActivity() {
+      if (currentMessage == null) {
+        return null;
+      }
       return currentMessage.getTarget();
-    }
-
-    public long generateMessageBaseId(final int numMessages) {
-      long result = nextMessageId;
-      nextMessageId += numMessages;
-      return result;
-    }
-
-
-    @Override
-    public long getCurrentMessageId() {
-      return currentMessageId;
     }
 
     @Override
     protected void onTermination(final Throwable exception) {
       if (VmSettings.ACTOR_TRACING) {
-        long createdActors   = nextActivityId - 1 - (threadId << TraceData.ACTIVITY_ID_BITS);
-        long createdMessages = nextMessageId - (threadId << TraceData.ACTIVITY_ID_BITS);
-        long createdPromises = nextPromiseId - (threadId << TraceData.ACTIVITY_ID_BITS);
+        long createdEntities = nextEntityId - 1 - (threadId << TraceData.ENTITY_ID_BITS);
 
-        VM.printConcurrencyEntitiesReport("[Thread " + threadId + "]\tA#" + createdActors + "\t\tM#" + createdMessages + "\t\tP#" + createdPromises);
+        VM.printConcurrencyEntitiesReport("[Thread " + threadId + "]\tE#" + createdEntities);
 
         synchronized (statsLock) {
-          numCreatedActors    += createdActors;
-          numCreatedMessages  += createdMessages;
-          numCreatedPromises  += createdPromises;
-          numResolvedPromises += resolvedPromises;
-          numRuinedPromises   += erroredPromises;
+          numCreatedEntities += createdEntities;
         }
       }
       super.onTermination(exception);
@@ -384,8 +354,7 @@ public class Actor implements Activity {
   public static final void reportStats() {
     if (VmSettings.ACTOR_TRACING) {
       synchronized (statsLock) {
-        VM.printConcurrencyEntitiesReport("[Total]\tA#" + numCreatedActors + "\t\tM#" + numCreatedMessages + "\t\tP#" + numCreatedPromises);
-        VM.printConcurrencyEntitiesReport("[Unresolved] " + (numCreatedPromises - numResolvedPromises - numRuinedPromises));
+        VM.printConcurrencyEntitiesReport("[Total]\tE#" + numCreatedEntities);
       }
     }
   }

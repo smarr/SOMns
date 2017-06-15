@@ -30,16 +30,19 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.Primitive;
 import som.vm.Primitives.Specializer;
 import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SSymbol;
+import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.Tags.CreatePromisePair;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.Tags.OnError;
 import tools.concurrency.Tags.WhenResolved;
 import tools.concurrency.Tags.WhenResolvedOnError;
 import tools.debugger.entities.BreakpointType;
+import tools.debugger.entities.SendOp;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
@@ -84,7 +87,8 @@ public final class PromisePrims {
       SPromise promise   = SPromise.createPromise(
           EventualMessage.getActorCurrentMessageIsExecutionOn(),
           promiseResolutionBreakpoint.executeShouldHalt(),
-          promiseResolverBreakpoint.executeShouldHalt(), true);
+          promiseResolverBreakpoint.executeShouldHalt(), true,
+          sourceSection);
       SResolver resolver = SPromise.createResolver(promise);
       return (SImmutableObject) factory.call(new Object[] {SPromise.pairClass, promise, resolver});
     }
@@ -149,11 +153,15 @@ public final class PromisePrims {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
       SPromise  promise  = SPromise.createPromise(current,
-          promiseResolutionBreakpoint.executeShouldHalt(), false, false);
+          promiseResolutionBreakpoint.executeShouldHalt(),
+          false, false, sourceSection);
       SResolver resolver = SPromise.createResolver(promise);
 
-      PromiseCallbackMessage pcm = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
+      PromiseCallbackMessage pcm = new PromiseCallbackMessage(rcvr.getOwner(),
           block, resolver, blockCallTarget, false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, pcm.getMessageId(), rcvr.getPromiseId());
+      }
       registerNode.register(rcvr, pcm, current);
 
       return promise;
@@ -206,11 +214,16 @@ public final class PromisePrims {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
       SPromise  promise  = SPromise.createPromise(current,
-          promiseResolutionBreakpoint.executeShouldHalt(), false, false);
+          promiseResolutionBreakpoint.executeShouldHalt(),
+          false, false, sourceSection);
       SResolver resolver = SPromise.createResolver(promise);
 
-      PromiseCallbackMessage msg = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(),
-          block, resolver, blockCallTarget, false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
+      PromiseCallbackMessage msg = new PromiseCallbackMessage(rcvr.getOwner(),
+          block, resolver, blockCallTarget, false,
+          promiseResolverBreakpoint.executeShouldHalt(), rcvr);
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(), promise.getPromiseId());
+      }
       registerNode.register(rcvr, msg, current);
 
       return promise;
@@ -272,11 +285,17 @@ public final class PromisePrims {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
       SPromise  promise  = SPromise.createPromise(current,
-          promiseResolutionBreakpoint.executeShouldHalt(), false, false);
+          promiseResolutionBreakpoint.executeShouldHalt(), false,
+          false, sourceSection);
       SResolver resolver = SPromise.createResolver(promise);
 
-      PromiseCallbackMessage onResolved = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), resolved, resolver, resolverTarget, false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
-      PromiseCallbackMessage onError    = new PromiseCallbackMessage(EventualMessage.getCurrentExecutingMessageId(), rcvr.getOwner(), error,    resolver, errorTarget,    false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
+      PromiseCallbackMessage onResolved = new PromiseCallbackMessage(rcvr.getOwner(), resolved, resolver, resolverTarget, false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
+      PromiseCallbackMessage onError    = new PromiseCallbackMessage(rcvr.getOwner(), error,    resolver, errorTarget,    false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
+
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, onResolved.getMessageId(), rcvr.getPromiseId());
+        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, onError.getMessageId(), rcvr.getPromiseId());
+      }
 
       synchronized (rcvr) {
         registerWhenResolved.register(rcvr, onResolved, current);

@@ -29,11 +29,14 @@ import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.SOMNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
+import som.vm.VmSettings;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
+import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.Tags.EventualMessageSend;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.entities.BreakpointType;
+import tools.debugger.entities.SendOp;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
@@ -185,12 +188,14 @@ public class EventualSendNode extends ExprWithTagsNode {
       assert !(args[0] instanceof SFarReference) : "This should not happen for this specialization, but it is handled in determineTargetAndWrapArguments(.)";
       assert !(args[0] instanceof SPromise) : "Should not happen either, but just to be sure";
 
-      DirectMessage msg = new DirectMessage(
-          EventualMessage.getCurrentExecutingMessageId(), target, selector, args,
+      DirectMessage msg = new DirectMessage(target, selector, args,
           owner, resolver, onReceive,
           messageReceiverBreakpoint.executeShouldHalt(),
           promiseResolverBreakpoint.executeShouldHalt());
 
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(), target.getId());
+      }
       target.send(msg, actorPool);
     }
 
@@ -198,12 +203,14 @@ public class EventualSendNode extends ExprWithTagsNode {
         final SResolver resolver, final RegisterWhenResolved registerNode) {
       assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
 
-      PromiseSendMessage msg = new PromiseSendMessage(
-          EventualMessage.getCurrentExecutingMessageId(), selector, args,
+      PromiseSendMessage msg = new PromiseSendMessage(selector, args,
           rcvr.getOwner(), resolver, onReceive,
           messageReceiverBreakpoint.executeShouldHalt(),
           promiseResolverBreakpoint.executeShouldHalt());
 
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(), rcvr.getPromiseId());
+      }
       registerNode.register(rcvr, msg, rcvr.getOwner());
     }
 
@@ -220,7 +227,8 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final SPromise toFarRefWithResultPromise(final Object[] args) {
       Actor owner = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      SPromise  result   = SPromise.createPromise(owner, promiseResolutionBreakpoint.executeShouldHalt(), false, false);
+      SPromise  result   = SPromise.createPromise(owner,
+          promiseResolutionBreakpoint.executeShouldHalt(), false, false, source);
       SResolver resolver = SPromise.createResolver(result);
 
       sendDirectMessage(args, owner, resolver);
@@ -232,7 +240,10 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final SPromise toPromiseWithResultPromise(final Object[] args,
         @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
       SPromise rcvr = (SPromise) args[0];
-      SPromise  promise  = SPromise.createPromise(EventualMessage.getActorCurrentMessageIsExecutionOn(), promiseResolutionBreakpoint.executeShouldHalt(), false, false);
+
+      SPromise  promise  = SPromise.createPromise(
+          EventualMessage.getActorCurrentMessageIsExecutionOn(),
+          promiseResolutionBreakpoint.executeShouldHalt(), false, false, source);
       SResolver resolver = SPromise.createResolver(promise);
 
       sendPromiseMessage(args, rcvr, resolver, registerNode);
@@ -243,15 +254,19 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final SPromise toNearRefWithResultPromise(final Object[] args) {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      SPromise  result   = SPromise.createPromise(current, promiseResolutionBreakpoint.executeShouldHalt(), false, false);
+      SPromise  result   = SPromise.createPromise(current,
+          promiseResolutionBreakpoint.executeShouldHalt(),
+          false, false, source);
       SResolver resolver = SPromise.createResolver(result);
 
-      DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessageId(),
-          current, selector, args, current,
+      DirectMessage msg = new DirectMessage(current, selector, args, current,
           resolver, onReceive,
           messageReceiverBreakpoint.executeShouldHalt(),
           promiseResolverBreakpoint.executeShouldHalt());
 
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(), current.getId());
+      }
       current.send(msg, actorPool);
 
       return result;
@@ -277,12 +292,14 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final Object toNearRefWithoutResultPromise(final Object[] args) {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      DirectMessage msg = new DirectMessage(EventualMessage.getCurrentExecutingMessageId(),
-          current, selector, args, current,
+      DirectMessage msg = new DirectMessage(current, selector, args, current,
           null, onReceive,
           messageReceiverBreakpoint.executeShouldHalt(),
           promiseResolverBreakpoint.executeShouldHalt());
 
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(), current.getId());
+      }
       current.send(msg, actorPool);
       return Nil.nilObject;
     }

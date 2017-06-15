@@ -21,27 +21,27 @@ import tools.debugger.WebDebugger;
 
 public class TracingActors {
   public static class TracingActor extends Actor {
+    // TODO: fix this code so that actorId can be final again... (adapt constructor of ReplayActor)
     protected long actorId;
-    protected int mailboxNumber;
+    private int traceBufferId;
+
     /** Flag that indicates if a step-to-next-turn action has been made in the previous message. */
     protected boolean stepToNextTurn;
 
     public TracingActor(final VM vm) {
       super(vm);
-      if (Thread.currentThread() instanceof TracingActivityThread) {
-        TracingActivityThread t = (TracingActivityThread) Thread.currentThread();
-        this.actorId = t.generateActivityId();
-      } else {
-        this.actorId = 0; // main actor
-      }
-    }
-
-    public int getAndIncrementMailboxNumber() {
-      return mailboxNumber++;
+      this.actorId = TracingActivityThread.newEntityId();
     }
 
     @Override
-    public long getId() { return actorId; }
+    public int getNextTraceBufferId() {
+      int result = traceBufferId;
+      traceBufferId += 1;
+      return result;
+    }
+
+    @Override
+    public final long getId() { return actorId; }
 
     public boolean isStepToNextTurn() {
       return stepToNextTurn;
@@ -144,9 +144,9 @@ public class TracingActors {
         if (ra.expectedMessages != null && ra.expectedMessages.peek() != null) {
           result = true; // program did not execute all messages
           if (ra.expectedMessages.peek() instanceof TraceParser.PromiseMessageRecord) {
-            VM.println(a.getName() + " [" + ra.getId() + "] expecting PromiseMessage " + ra.expectedMessages.peek().symbol + " from " + ra.expectedMessages.peek().sender + " PID " + ((TraceParser.PromiseMessageRecord) ra.expectedMessages.peek()).pId);
+            VM.println(a.getName() + " [" + ra.getId() + "] expecting PromiseMessage from " + ra.expectedMessages.peek().sender + " PID " + ((TraceParser.PromiseMessageRecord) ra.expectedMessages.peek()).pId);
           } else {
-            VM.println(a.getName() + " [" + ra.getId() + "] expecting Message" + ra.expectedMessages.peek().symbol + " from " + ra.expectedMessages.peek().sender);
+            VM.println(a.getName() + " [" + ra.getId() + "] expecting Messagefrom " + ra.expectedMessages.peek().sender);
           }
 
           if (a.firstMessage != null) {
@@ -174,7 +174,7 @@ public class TracingActors {
 
     private static void printMsg(final EventualMessage msg) {
       if (msg instanceof PromiseMessage) {
-        VM.println("\t" + "PromiseMessage " + msg.getSelector() + " from " + msg.getSender().getId() + " PID " + ((SReplayPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
+        VM.println("\t" + "PromiseMessage " + msg.getMessageId() + " " + msg.getSelector() + " from " + msg.getSender().getId() + " PID " + ((SReplayPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
       } else {
         VM.println("\t" + "Message" + msg.getSelector() + " from " + msg.getSender().getId());
       }
@@ -205,8 +205,7 @@ public class TracingActors {
         }
       }
 
-      assert msg.getSelector() == other.symbol || !msg.getSelector().equals(other.symbol);
-      return msg.getSelector() == other.symbol && msg.getSender().getId() == other.sender;
+      return msg.getSender().getId() == other.sender;
     }
 
     protected int addChild() {
@@ -270,18 +269,13 @@ public class TracingActors {
         final ReplayActor a = (ReplayActor) actor;
         Queue<EventualMessage> todo = determineNextMessages(a.leftovers);
 
-        baseMessageId = currentThread.generateMessageBaseId(todo.size());
-        currentThread.currentMessageId = baseMessageId;
-
         for (EventualMessage msg : todo) {
           currentThread.currentMessage = msg;
           handleBreakpointsAndStepping(firstMessage, dbg, a);
           msg.execute();
-          currentThread.currentMessageId += 1;
         }
 
         currentThread.createdMessages += todo.size();
-        ActorExecutionTrace.mailboxExecutedReplay(todo, baseMessageId, currentMailboxNo, actor);
       }
     }
   }

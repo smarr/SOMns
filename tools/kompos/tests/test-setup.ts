@@ -5,9 +5,10 @@ import * as WebSocket from "ws";
 
 import {Controller} from "../src/controller";
 import {BreakpointData, SourceCoordinate, StoppedMessage, StackTraceResponse,
-  FullSourceCoordinate, StackFrame, Activity} from "../src/messages";
+  FullSourceCoordinate, StackFrame} from "../src/messages";
 import {VmConnection} from "../src/vm-connection";
 import {ActivityId} from "./somns-support";
+import { Activity } from "../src/execution-data";
 
 const SOM_BASEPATH = "../../";
 export const SOM = SOM_BASEPATH + "som";
@@ -21,7 +22,7 @@ export function expectStack(stack: StackFrame[], length: number, methodName: str
   expect(stack[0]).to.be.not.null;
   expect(stack[0].name).to.equal(methodName);
   expect(stack[0].line).to.equal(startLine);
-  expect(stack).lengthOf(length);
+  return expect(stack).lengthOf(length);
 }
 
 export function expectSourceCoordinate(section: SourceCoordinate) {
@@ -174,9 +175,7 @@ export function execSom(extraArgs: string[]): SpawnSyncReturns<string> {
 export class HandleStoppedAndGetStackTrace extends ControllerWithInitialBreakpoints {
   private numStopped: number;
   private readonly numOps: number;
-  public readonly stackP: Promise<StackTraceResponse>;
   public readonly stackPs: Promise<StackTraceResponse>[];
-  private resolveStackP;
   private readonly resolveStackPs;
   public readonly stoppedActivities: Activity[];
 
@@ -188,45 +187,28 @@ export class HandleStoppedAndGetStackTrace extends ControllerWithInitialBreakpoi
     this.numStopped = 0;
     this.stoppedActivities = [];
 
-    this.stackP = new Promise<StackTraceResponse>((resolve, reject) => {
-      this.resolveStackP = resolve;
-      connectionP.catch(reject);
-    });
-
-    if (numOps > 1) {
-      this.resolveStackPs = [];
-      this.stackPs = [];
-      for (let i = 1; i < numOps; i += 1) {
-        this.stackPs.push(new Promise<StackTraceResponse>((resolve, reject) => {
-          this.resolveStackPs.push(resolve);
-          connectionP.catch(reject);
-        }));
-      }
+    this.resolveStackPs = [];
+    this.stackPs = [];
+    for (let i = 0; i < numOps; i += 1) {
+      this.stackPs.push(new Promise<StackTraceResponse>((resolve, reject) => {
+        this.resolveStackPs.push(resolve);
+        connectionP.catch(reject);
+      }));
     }
-  }
-
-  public getStackP(idx: number) {
-    if (idx === 0) {
-      return this.stackP;
-    }
-    return this.stackPs[idx - 1];
   }
 
   public onStoppedMessage(msg: StoppedMessage) {
     if (this.numStopped >= this.numOps) { return; }
     // don't need more than a dummy activity at the moment, just id is enough
-    const activity: Activity = {id: msg.activityId,
-      name: "dummy", type: <number> ActivityId.ACTOR, creationScope: 0, running: false};
+    const activity: Activity = {id: msg.activityId, completed: false,
+      name: "dummy", type: <number> ActivityId.ACTOR, creationScope: null,
+      creationActivity: null, running: false};
     this.stoppedActivities[this.numStopped] = activity;
+    this.vmConnection.requestStackTrace(msg.activityId, this.numStopped);
     this.numStopped += 1;
-    this.vmConnection.requestStackTrace(msg.activityId);
   }
 
   public onStackTrace(msg: StackTraceResponse) {
-    if (this.numStopped === 1) {
-      this.resolveStackP(msg);
-      return;
-    }
-    this.resolveStackPs[this.numStopped - 2](msg);
+    this.resolveStackPs[msg.requestId](msg);
   }
 }

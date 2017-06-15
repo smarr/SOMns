@@ -1,17 +1,19 @@
 /* jshint -W097 */
 "use strict";
 
-import {Controller}   from "./controller";
-import {Debugger}     from "./debugger";
-import {ActivityNode} from "./history-data";
-import {SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
+import { Controller }   from "./controller";
+import { Debugger }     from "./debugger";
+import { SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
   ScopesResponse, VariablesResponse, ProgramInfoResponse, InitializationResponse,
-  Activity, Source } from "./messages";
-import {LineBreakpoint, SectionBreakpoint, getBreakpointId,
-  createLineBreakpoint, createSectionBreakpoint} from "./breakpoints";
-import {dbgLog}       from "./source";
-import {View, getActivityIdFromView, getSourceIdFrom, getSourceIdFromSection} from "./view";
-import {VmConnection} from "./vm-connection";
+  Source, Method } from "./messages";
+import { LineBreakpoint, SectionBreakpoint, getBreakpointId,
+  createLineBreakpoint, createSectionBreakpoint } from "./breakpoints";
+import { dbgLog }       from "./source";
+import { View, getActivityIdFromView, getSourceIdFrom, getSourceIdFromSection, getFullMethodName } from "./view";
+import { VmConnection } from "./vm-connection";
+import { Activity, ExecutionData, TraceDataUpdate } from "./execution-data";
+import { ActivityNode } from "./system-view-data";
+import { KomposMetaModel } from "./meta-model";
 
 /**
  * The controller binds the domain model and the views, and mediates their
@@ -20,17 +22,20 @@ import {VmConnection} from "./vm-connection";
 export class UiController extends Controller {
   private dbg: Debugger;
   private view: View;
+  private data: ExecutionData;
 
   private actProm = {};
   private actPromResolve = {};
 
-  constructor(dbg, view, vmConnection: VmConnection) {
+  constructor(vmConnection: VmConnection) {
     super(vmConnection);
-    this.dbg = dbg;
-    this.view = view;
+    this.dbg  = new Debugger();
+    this.data = new ExecutionData();
+    this.view = new View();
   }
 
   private reset() {
+    this.data.reset();
     this.view.reset();
     this.actProm = {};
     this.actPromResolve = {};
@@ -80,13 +85,34 @@ export class UiController extends Controller {
       this.view.markCodePaneClosed(actId);
     } else {
       const aId      = getActivityIdFromView(actId);
-      const activity = this.dbg.getActivity(aId);
+      const activity = this.data.getActivity(aId);
       const sId      = this.dbg.getSourceId(activity.origin.uri);
       const source   = this.dbg.getSource(sId);
 
       console.assert(aId === activity.id);
       this.view.displaySource(activity, source, sId);
     }
+  }
+
+  public toggleHighlightMethod(actId: string, shortName: string, highlight: boolean) {
+    const aId      = getActivityIdFromView(actId);
+    const activity = this.data.getActivity(aId);
+    const sId      = this.dbg.getSourceId(activity.origin.uri);
+    const source: Source   = this.dbg.getSource(sId);
+    console.assert(aId === activity.id);
+    const methods: Method[] = source.methods;
+    const fullName = getFullMethodName(activity, shortName);
+    const method: Method = methods.find(method => method.name === fullName);
+
+    if (!method) {
+      console.error("Method could not be found. This needs to be fixed by actually using DynamicScope info, instead of SendOps for the ProcessView");
+      return;
+    }
+
+    if (highlight) {
+      this.view.displaySource(activity, source, sId); // if source is already displayed, will return false
+    }
+    this.view.toggleHighlightMethod(sId, activity, method.sourceSection, highlight);
   }
 
   private ensureBreakpointsAreIndicated(sourceUri) {
@@ -114,11 +140,10 @@ export class UiController extends Controller {
     this.vmConnection.requestStackTrace(msg.activityId);
   }
 
-  public newActivities(newActivities: Activity[]) {
-    this.dbg.addActivities(newActivities);
-    this.view.addActivities(newActivities);
+  public updateTraceData(data: TraceDataUpdate) {
+    this.view.updateTraceData(data);
 
-    for (const act of newActivities) {
+    for (const act of data.activities) {
       this.ensureActivityPromise(act.id);
       this.actPromResolve[act.id](act);
     }
@@ -128,7 +153,7 @@ export class UiController extends Controller {
     this.ensureActivityPromise(msg.activityId);
 
     this.actProm[msg.activityId].then((act: Activity) => {
-      this.dbg.getActivity(msg.activityId).running = false;
+      this.data.getActivity(msg.activityId).running = false;
 
       console.assert(act.id === msg.activityId);
 
@@ -169,8 +194,10 @@ export class UiController extends Controller {
   }
 
   public onInitializationResponse(msg: InitializationResponse) {
-    this.dbg.setCapabilities(msg.capabilities);
-    this.view.setCapabilities(msg.capabilities);
+    const metaModel = new KomposMetaModel(msg.capabilities);
+
+    this.data.setCapabilities(metaModel);
+    this.view.setCapabilities(metaModel);
   }
 
   public onVariables(msg: VariablesResponse) {
@@ -178,11 +205,16 @@ export class UiController extends Controller {
   }
 
   public onSymbolMessage(msg: SymbolMessage) {
-    this.view.updateStringData(msg);
+    this.data.addSymbols(msg);
+    this.updateTraceData(this.data.getNewestDataSinceLastUpdate());
+
+    this.view.displaySystemView();
   }
 
   public onTracingData(data: DataView) {
-    this.newActivities(this.view.updateTraceData(data));
+    this.data.updateTraceData(data);
+    this.updateTraceData(this.data.getNewestDataSinceLastUpdate());
+
     this.view.displaySystemView();
   }
 
@@ -224,7 +256,7 @@ export class UiController extends Controller {
 
   public step(actId: string, step: string) {
     const activityId = getActivityIdFromView(actId);
-    const act = this.dbg.getActivity(activityId);
+    const act = this.data.getActivity(activityId);
 
     // Note: in general, we assume that all stepping operations lead to a
     // running activity. However, some operations, might discontinue execution

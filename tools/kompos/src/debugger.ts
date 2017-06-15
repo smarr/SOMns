@@ -1,13 +1,9 @@
-import {IdMap, Source, StackFrame, SourceMessage, TaggedSourceCoordinate,
-  Activity, ServerCapabilities, getSectionId} from "./messages";
-import {Breakpoint} from "./breakpoints";
+import { IdMap, Source, StackFrame, SourceMessage, TaggedSourceCoordinate,
+  getSectionId } from "./messages";
+import { Breakpoint } from "./breakpoints";
+
 
 export class Debugger {
-
-  private serverCapabilities?: ServerCapabilities;
-
-  /** Current set of activities in the system. */
-  private activities: Activity[];
 
   /**
    * Mapping Source URIs to id used for easy access, and for short unique ids to
@@ -28,15 +24,10 @@ export class Debugger {
   private breakpoints: IdMap<IdMap<Breakpoint>>;
 
   constructor() {
-    this.activities     = [];
     this.uriToSourceId  = {};
     this.sources        = {};
     this.sections       = {};
     this.breakpoints    = {};
-  }
-
-  public setCapabilities(capabilities: ServerCapabilities) {
-    this.serverCapabilities = capabilities;
   }
 
   public getSourceId(uri: string): string {
@@ -127,20 +118,5 @@ export class Debugger {
       }
     }
     return bps;
-  }
-
-  public addActivities(activities: Activity[]) {
-    for (const a of activities) {
-      if (this.activities[a.id] === undefined) {
-        this.activities[a.id] = a;
-      } else {
-        console.assert(this.activities[a.id].name === a.name,
-          "Don't expect names of activities to change over time");
-      }
-    }
-  }
-
-  public getActivity(actId): Activity {
-    return this.activities[actId];
   }
 }

@@ -1,24 +1,44 @@
 package tools.debugger.entities;
 
+import som.vm.VmSettings;
+import tools.TraceData;
+
 public enum ActivityType {
-  PROCESS(EntityType.PROCESS, "&#10733;"),
-  ACTOR(EntityType.ACTOR,     "&#128257;"),
-  TASK(EntityType.TASK,       "&#8623;"),
-  THREAD(EntityType.THREAD,   "&#11123;");
+  PROCESS(EntityType.PROCESS, "&#10733;",  Marker.PROCESS_CREATION, Marker.PROCESS_COMPLETION),
+  ACTOR(EntityType.ACTOR,     "&#128257;", Marker.ACTOR_CREATION),
+  TASK(EntityType.TASK,       "&#8623;",   Marker.TASK_SPAWN),
+  THREAD(EntityType.THREAD,   "&#11123;",  Marker.THREAD_SPAWN);
 
   private final EntityType type;
-  private final String marker;
+  private final String icon;
 
-  ActivityType(final EntityType type, final String marker) {
+  private final byte creationMarker;
+  private final byte completionMarker;
+
+  ActivityType(final EntityType type, final String icon,
+      final byte creationMarker, final byte completionMarker) {
     this.type = type;
-    this.marker = marker;
+    this.icon = icon;
+    this.creationMarker   = creationMarker;
+    this.completionMarker = completionMarker;
+  }
+
+  ActivityType(final EntityType type, final String icon,
+      final byte creationMarker) {
+    this(type, icon, creationMarker, (byte) 0);
   }
 
   public EntityType getType() { return type; }
   public String getName() { return type.name; }
 
   public byte getId() { return type.id; }
-  public byte getCreation()   { return type.creation; }
-  public byte getCompletion() { return type.completion; }
-  public String getMarker() { return marker; }
+  public String getIcon() { return icon; }
+
+  public byte getCreationMarker()   { return creationMarker; }
+  public byte getCompletionMarker() { return completionMarker; }
+
+  public int getCreationSize()   {
+    return VmSettings.TRUFFLE_DEBUGGER_ENABLED ? (11 + TraceData.SOURCE_SECTION_SIZE) : 11;
+  }
+  public int getCompletionSize() { return 1; }
 }

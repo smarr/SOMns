@@ -13,6 +13,7 @@ import som.vm.Activity;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
+import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
@@ -38,6 +39,11 @@ public final class TaskThreads {
     public boolean stopOnJoin() { return false; }
 
     @Override
+    public int getNextTraceBufferId() {
+      throw new UnsupportedOperationException("Should never be executed");
+    }
+
+    @Override
     protected final Object compute() {
       ObjectTransitionSafepoint.INSTANCE.register();
       try {
@@ -45,6 +51,9 @@ public final class TaskThreads {
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRoot) {
           WebDebugger dbg = SomLanguage.getVM(target.getRootNode()).getWebDebugger();
           dbg.prepareSteppingUntilNextRootNode();
+        }
+        if (VmSettings.ACTOR_TRACING) {
+          ActorExecutionTrace.currentActivity(this);
         }
 
         ForkJoinThread thread = (ForkJoinThread) Thread.currentThread();
@@ -85,14 +94,11 @@ public final class TaskThreads {
     private final long id;
     protected boolean stopOnJoin;
 
+    private int nextTraceBufferId;
+
     public TracedForkJoinTask(final Object[] argArray, final boolean stopOnRoot) {
       super(argArray, stopOnRoot);
-      if (Thread.currentThread() instanceof TracingActivityThread) {
-        TracingActivityThread t = TracingActivityThread.currentThread();
-        this.id = t.generateActivityId();
-      } else {
-        this.id = 0; // main actor
-      }
+      this.id = TracingActivityThread.newEntityId();
     }
 
     @Override
@@ -102,6 +108,13 @@ public final class TaskThreads {
 
     @Override
     public void setStepToJoin(final boolean val) { stopOnJoin = val; }
+
+    @Override
+    public int getNextTraceBufferId() {
+      int result = nextTraceBufferId;
+      nextTraceBufferId += 1;
+      return result;
+    }
 
     @Override
     public long getId() {
@@ -139,14 +152,11 @@ public final class TaskThreads {
     private final long id;
     protected boolean stopOnJoin;
 
+    private int nextTraceBufferId;
+
     public TracedThreadTask(final Object[] argArray, final boolean stopOnRoot) {
       super(argArray, stopOnRoot);
-      if (Thread.currentThread() instanceof TracingActivityThread) {
-        TracingActivityThread t = TracingActivityThread.currentThread();
-        this.id = t.generateActivityId();
-      } else {
-        this.id = 0; // main actor
-      }
+      this.id = TracingActivityThread.newEntityId();
     }
 
     @Override
@@ -156,6 +166,13 @@ public final class TaskThreads {
 
     @Override
     public void setStepToJoin(final boolean val) { stopOnJoin = val; }
+
+    @Override
+    public int getNextTraceBufferId() {
+      int result = nextTraceBufferId;
+      nextTraceBufferId += 1;
+      return result;
+    }
 
     @Override
     public long getId() {
@@ -175,11 +192,6 @@ public final class TaskThreads {
 
     protected ForkJoinThread(final ForkJoinPool pool) {
       super(pool);
-    }
-
-    @Override
-    public long getCurrentMessageId() {
-      return 0;
     }
 
     @Override

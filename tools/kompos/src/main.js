@@ -13,13 +13,11 @@ var ctrl;
 
 requirejs(
   ['vm-connection', 'controller', 'ui-controller', 'debugger', 'view',
-   'visualizations', 'breakpoints'],
-  function(vmConn, cont, uiCont, d, vw) {
+   'breakpoints'],
+  function(vmConn, cont, uiCont, d, vw, bps) {
     $("#graph-canvas").resizable({handleSelector: '#split-system-code', resizeWidth: false});
 
-    var view = new vw.View(),
-      vmConnection = new vmConn.VmConnection(true),
-      dbg = new d.Debugger();
-    ctrl = new uiCont.UiController(dbg, view, vmConnection);
+    var vmConnection = new vmConn.VmConnection(true);
+    ctrl = new uiCont.UiController(vmConnection);
     ctrl.toggleConnection();
   });

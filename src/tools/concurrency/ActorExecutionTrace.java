@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Queue;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
@@ -31,19 +30,19 @@ import com.sun.management.GarbageCollectionNotificationInfo;
 
 import som.VM;
 import som.interpreter.actors.Actor;
-import som.interpreter.actors.EventualMessage;
-import som.interpreter.actors.SFarReference;
-import som.interpreter.processes.SChannel;
 import som.primitives.TimerPrim;
-import som.primitives.processes.ChannelPrimitives.TracingProcess;
+import som.vm.Activity;
 import som.vm.ObjectSystem;
 import som.vm.VmSettings;
-import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.ObjectBuffer;
-import tools.TraceData;
 import tools.debugger.FrontendConnector;
 import tools.debugger.PrimitiveCallOrigin;
+import tools.debugger.entities.ActivityType;
+import tools.debugger.entities.DynamicScopeType;
+import tools.debugger.entities.Implementation;
+import tools.debugger.entities.PassiveEntityType;
+import tools.debugger.entities.ReceiveOp;
+import tools.debugger.entities.SendOp;
 
 
 /**
@@ -68,6 +67,7 @@ import tools.debugger.PrimitiveCallOrigin;
  * debugging the cost of synchronization is likely acceptable, and will simply
  * done on the buffer for all access.
  */
+// TODO: needs to be renamed and cleaned up.
 public class ActorExecutionTrace {
   private static final int BUFFER_POOL_SIZE = VmSettings.NUM_THREADS * 4;
   static final int BUFFER_SIZE = 4096 * 1024;
@@ -91,8 +91,6 @@ public class ActorExecutionTrace {
   private static long collectedMemory = 0;
   private static TraceWorkerThread workerThread = new TraceWorkerThread();
 
-  static final byte MESSAGE_EVENT_ID;
-
   static {
     if (VmSettings.MEMORY_TRACING) {
       setUpGCMonitoring();
@@ -103,18 +101,6 @@ public class ActorExecutionTrace {
         emptyBuffers.add(ByteBuffer.allocate(BUFFER_SIZE));
       }
     }
-
-    byte eventid = TraceData.MESSAGE_BIT;
-
-    if (VmSettings.MESSAGE_TIMESTAMPS) {
-      eventid |= TraceData.TIMESTAMP_BIT;
-    }
-
-    if (VmSettings.MESSAGE_PARAMETERS) {
-      eventid |= TraceData.PARAMETER_BIT;
-    }
-
-    MESSAGE_EVENT_ID = eventid;
   }
 
   private static long getTotal(final Map<String, MemoryUsage> map) {
@@ -207,62 +193,8 @@ public class ActorExecutionTrace {
     for (TracingActivityThread t : result) {
       TraceBuffer buffer = t.getBuffer();
       synchronized (buffer) {
-        buffer.swapStorage();
+        buffer.swapStorage(t.getActivity());
       }
-    }
-  }
-
-  protected enum Events {
-    ActorCreation(TraceData.ACTOR_CREATION,         19),
-    ActivityOrigin(TraceData.ACTIVITY_ORIGIN,        9),
-    PromiseCreation(TraceData.PROMISE_CREATION,     17),
-    PromiseResolution(TraceData.PROMISE_RESOLUTION, 28),
-    PromiseChained(TraceData.PROMISE_CHAINED,       17),
-    Mailbox(TraceData.MAILBOX,                      21),
-
-    // at the beginning of buffer, allows to track what was created/executed
-    // on which thread, really cheap solution, timestamp?
-    ImplThread(TraceData.IMPL_THREAD, 17),
-
-    // for memory events another buffer is needed
-    // (the gc callback is on ImplThread[Service ImplThread,9,system])
-    MailboxContd(TraceData.MAILBOX_CONTD,     25),
-
-    ProcessCreation(TraceData.PROCESS_CREATION,     19),
-    ProcessCompletion(TraceData.PROCESS_COMPLETION,  9),
-
-    TaskSpawn(TraceData.TASK_SPAWN, 19),
-    TaskJoin(TraceData.TASK_JOIN,   11),
-
-    ThreadSpawn(TraceData.THREAD_SPAWN, 19),
-    ThreadJoin(TraceData.THREAD_JOIN,   11),
-
-    PromiseError(TraceData.PROMISE_ERROR, 28),
-
-    ChannelCreation(TraceData.CHANNEL_CREATION, 25),
-    ChannelMessage(TraceData.CHANNEL_MESSAGE,   34);
-
-    final byte id;
-    final int size;
-
-    Events(final byte id, final int size) {
-      this.id = id;
-      this.size = size;
-    }
-  };
-
-  protected enum ParamTypes {
-    False,
-    True,
-    Long,
-    Double,
-    Promise,
-    Resolver,
-    Object,
-    String;
-
-    byte id() {
-      return (byte) this.ordinal();
     }
   }
 
@@ -271,26 +203,33 @@ public class ActorExecutionTrace {
     ByteBuffer storage = getEmptyBuffer();
     TraceBuffer buffer = TraceBuffer.create();
     buffer.init(storage, 0);
-
+    buffer.recordCurrentActivity(mainActor);
     buffer.recordMainActor(mainActor, objectSystem);
+    buffer.recordSendOperation(SendOp.ACTOR_MSG, 0, mainActor.getId(), mainActor);
     buffer.returnBuffer();
 
     // start worker thread for trace processing
     workerThread.start();
   }
 
-  public static void actorCreation(final SFarReference actor, final SourceSection section) {
+  public static void currentActivity(final Activity current) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordActorCreation(actor, t.getCurrentMessageId(), section);
+    t.getBuffer().recordCurrentActivity(current);
   }
 
-  public static void processCreation(final TracingProcess proc, final SourceSection section) {
-    SourceSection s = getPrimitiveCaller(section);
+  public static void clearCurrentActivity(final Activity current) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordProcessCreation(proc, t.getCurrentMessageId(), s);
+    t.getBuffer().resetLastActivity();
   }
 
-  private static SourceSection getPrimitiveCaller(final SourceSection section) {
+  public static void activityCreation(final ActivityType entity, final long activityId,
+      final SSymbol name, final SourceSection section) {
+    TracingActivityThread t = getThread();
+    t.getBuffer().recordActivityCreation(entity, activityId,
+        name.getSymbolId(), section, t.getActivity());
+  }
+
+  public static SourceSection getPrimitiveCaller(final SourceSection section) {
     SourceSection s;
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && section.getSource().isInternal()) {
       s = PrimitiveCallOrigin.getCaller();
@@ -300,33 +239,20 @@ public class ActorExecutionTrace {
     return s;
   }
 
-  public static void processCompletion(final TracingProcess proc) {
+  public static void activityCompletion(final ActivityType event) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordProcessCompletion(proc);
+    t.getBuffer().recordActivityCompletion(event, t.getActivity());
   }
 
-  public static void taskSpawn(final SInvokable method, final long activityId,
+  public static void scopeStart(final DynamicScopeType entity, final long scopeId,
       final SourceSection section) {
-    SourceSection s = getPrimitiveCaller(section);
     TracingActivityThread t = getThread();
-    t.getBuffer().recordTaskSpawn(method, activityId, t.getCurrentMessageId(), s);
+    t.getBuffer().recordScopeStart(entity, scopeId, section, t.getActivity());
   }
 
-  public static void threadSpawn(final SInvokable method, final long activityId,
-      final SourceSection section) {
-    SourceSection s = getPrimitiveCaller(section);
+  public static void scopeEnd(final DynamicScopeType entity) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordThreadSpawn(method, activityId, t.getCurrentMessageId(), s);
-  }
-
-  public static void taskJoin(final SInvokable method, final long activityId) {
-    TracingActivityThread t = getThread();
-    t.getBuffer().recordTaskJoin(method, activityId);
-  }
-
-  public static void promiseCreation(final long promiseId) {
-    TracingActivityThread t = getThread();
-    t.getBuffer().recordPromiseCreation(promiseId, t.getCurrentMessageId());
+    t.getBuffer().recordScopeEnd(entity, t.getActivity());
   }
 
   public static void promiseResolution(final long promiseId, final Object value) {
@@ -338,7 +264,7 @@ public class ActorExecutionTrace {
     assert current instanceof TracingActivityThread;
     TracingActivityThread t = (TracingActivityThread) current;
 
-    t.getBuffer().recordPromiseResolution(promiseId, value, t.getCurrentMessageId());
+    t.getBuffer().recordSendOperation(SendOp.PROMISE_RESOLUTION, 0, promiseId, t.getActivity());
     t.resolvedPromises++;
   }
 
@@ -350,39 +276,38 @@ public class ActorExecutionTrace {
 
     assert current instanceof TracingActivityThread;
     TracingActivityThread t = (TracingActivityThread) current;
-    t.getBuffer().recordPromiseError(promiseId, value, t.getCurrentMessageId());
+    t.getBuffer().recordSendOperation(SendOp.PROMISE_RESOLUTION, 0, promiseId, t.getActivity());
     t.erroredPromises++;
   }
 
-  public static void promiseChained(final long parent, final long child) {
+  /**
+   * Record chaining of promises.
+   *
+   * @param promiseValueId, the promise that is used to resolve another promise
+   * @param promiseId, the promise that is being resolved
+   */
+  public static void promiseChained(final long promiseValueId, final long promiseId) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordPromiseChained(parent, child);
+    t.getBuffer().recordSendOperation(
+        SendOp.PROMISE_RESOLUTION, promiseValueId, promiseId, t.getActivity());
     t.resolvedPromises++;
   }
 
-  public static void channelMessage(final long channelId, final long sender,
-      final long rcvr, final Object value) {
+  public static void sendOperation(final SendOp op, final long entityId,
+      final long targetId) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordChannelMessage(channelId, sender, rcvr, value);
+    t.getBuffer().recordSendOperation(op, entityId, targetId, t.getActivity());
   }
 
-  // code duplication?
-  public static void mailboxExecuted(final EventualMessage m,
-      final ObjectBuffer<EventualMessage> moreCurrent, final long baseMessageId,
-      final int mailboxNo, final long sendTS, final ObjectBuffer<Long> moreSendTS,
-      final long[] execTS, final Actor receiver) {
+  public static void receiveOperation(final ReceiveOp op, final long sourceId) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordMailboxExecuted(m, moreCurrent, baseMessageId,
-        mailboxNo, sendTS, moreSendTS, execTS, receiver);
+    t.getBuffer().recordReceiveOperation(op, sourceId, t.getActivity());
   }
 
-  public static void channelCreation(final SChannel channel,
-      final SourceSection section) {
-    SourceSection s = getPrimitiveCaller(section);
-
+  public static void passiveEntityCreation(final PassiveEntityType entity,
+      final long entityId, final SourceSection section) {
     TracingActivityThread t = getThread();
-    t.getBuffer().recordChannelCreation(t.getActivity().getId(),
-        ((TracingChannel) channel).getId(), s);
+    t.getBuffer().recordPassiveEntityCreation(entity, entityId, section, t.getActivity());
   }
 
   private static TracingActivityThread getThread() {
@@ -444,7 +369,8 @@ public class ActorExecutionTrace {
               continue;
             }
 
-            if (b.remaining() <= Events.ImplThread.size) {
+            if (b.remaining() <= Implementation.IMPL_THREAD.getSize() +
+                                 Implementation.IMPL_CURRENT_ACTIVITY.getSize()) {
               // Ignore buffers that only contain the thread index
               b.clear();
               ActorExecutionTrace.emptyBuffers.add(b);
@@ -500,7 +426,8 @@ public class ActorExecutionTrace {
             ActorExecutionTrace.symbolsToWrite.clear();
           }
 
-          if (b.remaining() > Events.ImplThread.size && front != null) {
+          if (b.remaining() > (Implementation.IMPL_THREAD.getSize() +
+                               Implementation.IMPL_CURRENT_ACTIVITY.getSize()) && front != null) {
             front.sendTracingData(b);
           }
 
@@ -509,11 +436,5 @@ public class ActorExecutionTrace {
         }
       }
     }
-  }
-
-  public static void mailboxExecutedReplay(final Queue<EventualMessage> todo,
-      final long baseMessageId, final int mailboxNo, final Actor receiver) {
-    TracingActivityThread t = getThread();
-    t.getBuffer().recordMailboxExecutedReplay(todo, baseMessageId, mailboxNo, receiver);
   }
 }

@@ -16,9 +16,7 @@ import tools.debugger.entities.SteppingType;
 public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   public static AtomicInteger threadIdGen = new AtomicInteger(1);
   protected final long threadId;
-  protected long nextActivityId = 1;
-  protected long nextMessageId;
-  protected long nextPromiseId;
+  protected long nextEntityId;
 
   // Used for tracing, accessed by the ExecAllMessages classes
   public long createdMessages;
@@ -46,11 +44,10 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     if (VmSettings.ACTOR_TRACING) {
       traceBuffer = TraceBuffer.create();
       threadId = threadIdGen.getAndIncrement();
-      nextActivityId = 1 + (threadId << TraceData.ACTIVITY_ID_BITS);
-      nextMessageId = (threadId << TraceData.ACTIVITY_ID_BITS);
-      nextPromiseId = (threadId << TraceData.ACTIVITY_ID_BITS);
+      nextEntityId = 1 + (threadId << TraceData.ENTITY_ID_BITS);
     } else {
       threadId = 0;
+      nextEntityId = 0;
       traceBuffer = null;
     }
     setName(getClass().getSimpleName() + "-" + threadId);
@@ -92,23 +89,20 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     return list.toArray(new EntityType[0]);
   }
 
-  public long generateActivityId() {
-    long result = nextActivityId;
-    nextActivityId++;
+  /**
+   * Generates a unique id, for all types of entities.
+   */
+  private long generateEntityId() {
+    long result = nextEntityId;
+    nextEntityId++;
     assert TraceData.isWithinJSIntValueRange(result);
-    assert result != -1 : "-1 is not a valid activity id";
+    assert result != -1 : "-1 is not a valid entity id";
     return result;
-  }
-
-  public long generatePromiseId() {
-    return nextPromiseId++;
   }
 
   public final TraceBuffer getBuffer() {
     return traceBuffer;
   }
-
-  public abstract long getCurrentMessageId();
 
   @Override
   protected void onStart() {
@@ -130,5 +124,14 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
 
   public static TracingActivityThread currentThread() {
     return (TracingActivityThread) Thread.currentThread();
+  }
+
+  public static long newEntityId() {
+    if (VmSettings.ACTOR_TRACING && Thread.currentThread() instanceof TracingActivityThread) {
+      TracingActivityThread t = TracingActivityThread.currentThread();
+      return t.generateEntityId();
+    } else {
+      return 0; // main actor
+    }
   }
 }

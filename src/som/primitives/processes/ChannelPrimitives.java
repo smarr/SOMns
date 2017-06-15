@@ -40,6 +40,7 @@ import tools.concurrency.TracingActivityThread;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
+import tools.debugger.entities.PassiveEntityType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
@@ -75,11 +76,6 @@ public abstract class ChannelPrimitives {
     @Override
     public Activity getActivity() {
       return current;
-    }
-
-    @Override
-    public long getCurrentMessageId() {
-      return 0;
     }
   }
 
@@ -132,15 +128,22 @@ public abstract class ChannelPrimitives {
 
   public static class TracingProcess extends Process {
     protected final long processId;
+    private int nextTraceBufferId;
 
     private final boolean stopOnRootNode;
     private boolean stopOnJoin;
 
     public TracingProcess(final SObjectWithClass obj, final boolean stopOnRootNode) {
       super(obj);
-      assert Thread.currentThread() instanceof TracingActivityThread;
       this.stopOnRootNode = stopOnRootNode;
-      processId = ((TracingActivityThread) Thread.currentThread()).generateActivityId();
+      processId = TracingActivityThread.newEntityId();
+    }
+
+    @Override
+    public int getNextTraceBufferId() {
+      int result = nextTraceBufferId;
+      nextTraceBufferId += 1;
+      return result;
     }
 
     @Override
@@ -149,6 +152,8 @@ public abstract class ChannelPrimitives {
         WebDebugger dbg = SomLanguage.getVM(disp.getInvokable()).getWebDebugger();
         dbg.prepareSteppingUntilNextRootNode();
       }
+
+      ActorExecutionTrace.currentActivity(this);
     }
 
     @Override
@@ -156,9 +161,8 @@ public abstract class ChannelPrimitives {
       try {
         super.run();
       } finally {
-        if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.processCompletion(this);
-        }
+        assert VmSettings.ACTOR_TRACING;
+        ActorExecutionTrace.activityCompletion(ActivityType.PROCESS);
       }
     }
 
@@ -284,7 +288,8 @@ public abstract class ChannelPrimitives {
       SChannel result = SChannel.create();
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.channelCreation(result, sourceSection);
+        ActorExecutionTrace.passiveEntityCreation(PassiveEntityType.CHANNEL,
+            result.getId(), ActorExecutionTrace.getPrimitiveCaller(sourceSection));
       }
       return result;
     }
