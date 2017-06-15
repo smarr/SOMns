@@ -62,7 +62,7 @@ To checkout the code:
 
 Then, SOMns can be build with Ant:
 
-    ant
+    ant compile
 
 Afterwards, the simple Hello World program is executed with:
 
@@ -79,15 +79,10 @@ Setup Development Environment with Eclipse and VS Code
 2. Download the project from Github
    `git clone https://github.com/smarr/SOMns`
 
-3. Run `ant` on the command line, or via Eclipse, to make sure that all
+3. Run `ant compile` on the command line, or via Eclipse, to make sure that all
    libraries are loaded and available.
 
-4. Create Truffle Eclipse projects with Truffle's mx build tool:
-
-```bash
-cd libs/truffle/
-../mx/mx eclipseinit
-```
+4. Create Truffle Eclipse projects with `ant ideinit`.
 
 5. Import SOMns project and the Truffle projects into Eclipse
 
@@ -103,7 +98,7 @@ cd libs/truffle/
      `-ea -esa`
 
 For testing on the command line, the full command is
-`$ ./som -G core-lib/Benchmarks/Harness.som Mandelbrot 2 0 500`
+`./som -G core-lib/Benchmarks/Harness.som Mandelbrot 2 0 500`
 
 Additionally, there are JUnit tests and `ant test` for executing the test suite.
 
@@ -129,8 +124,7 @@ cd SOMns
 ant       ## build SOMns
 ant tests ## run all tests
 
-cd libs/truffle
-../mx/mx eclipseinit ## Generate all Truffle Eclipse projects
+ant ideinit ## Generate all Truffle Eclipse projects
 ```
 
 Build Status
