@@ -138,12 +138,18 @@ Academic Work
 SOMns is designed as platform for research on concurrent programming models,
 and their interactions. Here, we collect related papers:
 
- - [Optimizing Communicating Event-Loop Languages with
-    Truffle](http://stefan-marr.de/2015/10/optimizing-communicating-event-loop-languages-with-truffle/),
-    Stefan Marr, Hanspeter Mössenböck; Presentation at the AGERE!’15 Workshop, co-located with SPLASH’15.
+ - [Kómpos: A Platform for Debugging Complex Concurrent Applications](http://stefan-marr.de/downloads/progdemo-marr-et-al-kompos-a-platform-for-debugging-complex-concurrent-applications.pdf),
+   S. Marr, C. Torres Lopez, D. Aumayr, E. Gonzalez Boix, H. Mössenböck; Demonstration at the &lt;Programming&gt;'17 conference.
+
+ - [Toward Virtual Machine Adaption Rather than Reimplementation: Adapting SOMns for Grace](http://stefan-marr.de/downloads/morevms17-roberts-et-al-toward-virtual-machine-adaption.pdf),
+   R. Roberts, S. Marr, M. Homer, J. Noble;
+   Presentation at the MoreVMs'17 workshop at the &lt;Programming&gt;'17 conference.
+
+ - [Optimizing Communicating Event-Loop Languages with Truffle](http://stefan-marr.de/2015/10/optimizing-communicating-event-loop-languages-with-truffle/),
+    S. Marr, H. Mössenböck; Presentation at the AGERE!’15 Workshop, co-located with SPLASH’15.
 
  - [Cross-Language Compiler Benchmarking: Are We Fast Yet?](http://stefan-marr.de/papers/dls-marr-et-al-cross-language-compiler-benchmarking-are-we-fast-yet/)
-    Stefan Marr, Benoit Daloze, Hanspeter Mössenböck at the 12th Symposium on
+    S. Marr, B. Daloze, H. Mössenböck at the 12th Symposium on
     Dynamic Languages co-located with SPLASH'16.
 
  [SOM]: http://som-st.github.io/
