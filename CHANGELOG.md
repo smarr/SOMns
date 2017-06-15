@@ -1,10 +1,34 @@
 # Change Log
 
-## [Unreleased] - [Work in Progress][v4]
+## [Unreleased] - [Concurrency-Agnostic Debugger][v4]
 
-  - Updated to Truffle 0.25
-  - Fixed trace replay ([PR #127](https://github.com/smarr/SOMns/pull/127))
+This release introduces concurrency-agnostic debugging based on Kómpos.
+It is realized by using a debugger protocol that abstracts from concurrency 
+concepts and instead uses a uniform representation and meta data that instructs
+Kómpos how to understand and visualize breakpoints, stepping operations, and
+data visualization
 
+  - introduced a uniform trace format ([PR #155](https://github.com/smarr/SOMns/pull/155))
+  - added process view
+  - refactor handling of breakpoints and stepping in interpreter and Kómpos
+  - added advanced stepping operations and breakpoints for STM, fork/join, actors, CSP, threads and locks
+
+### Other Enhancements
+
+  - Switch to unified Truffle+Graal repo [PR #149](https://github.com/smarr/SOMns/pull/149) 
+
+  - Updated to Truffle 0.25 [PR #132](https://github.com/smarr/SOMns/pull/132)
+
+  - Use precise array type check [PR #128](https://github.com/smarr/SOMns/pull/128)
+
+  - Make Kómpos tests more robust, include more info in failures, and use ephemeral ports if necessary [PR #144](https://github.com/smarr/SOMns/pull/144)
+
+  - Fix various single stepping issues [PR #143](https://github.com/smarr/SOMns/pull/143)
+
+  - Fix `#perform:withArguments:` primitive [PR #130](https://github.com/smarr/SOMns/pull/130)
+
+  - Make sure that `./som` without arguments does something useful [PR #156](https://github.com/smarr/SOMns/issues/156)
+  
 ## [0.3.0] - [2017-04-06 &lt;Programming&gt;'17 Demo][v3]
 
 ### Features for the Demo
