@@ -116,6 +116,11 @@ parser.add_argument('-D', help="define a Java property",
 
 parser.add_argument('args', nargs=argparse.REMAINDER,
                     help='arguments passed to SOMns')
+
+if len(sys.argv) < 2:
+    parser.print_help()
+    sys.exit(1)
+
 args = parser.parse_args()
 
 JAVA_BIN  = '/product/bin/java'
