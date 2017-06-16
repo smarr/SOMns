@@ -46,7 +46,7 @@ public class SourcecodeCompiler {
       final StructuralProbe structuralProbe)
           throws ProgramDefinitionError {
     Parser parser = new Parser(
-        source.getReader(), source.getLength(), source, structuralProbe, language);
+        source.getCode(), source.getLength(), source, structuralProbe, language);
     return compile(parser, source);
   }
 

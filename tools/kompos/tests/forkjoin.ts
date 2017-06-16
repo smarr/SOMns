@@ -55,7 +55,7 @@ describe("Setting Fork/Join Breakpoints", () => {
 
   it("should step into activity, and stop next line", () => {
     const main  = {s: 6, n: "ForkJoin>>#cnt:",   l: 13};
-    const child = {s: 1, n: "ForkJoin>>#λcnt@10@26", l: 10};
+    const child = {s: 1, n: "ForkJoin>>#λcnt@9@25", l: 10};
 
     const handler = function(msg: StackTraceResponse) {
       if (msg.activityId === 0) {

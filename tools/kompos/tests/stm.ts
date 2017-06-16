@@ -32,14 +32,14 @@ describe("Setting STM Breakpoints", () => {
   const thread1 = [
     {s: 6, n: "STM>>#doCount:", l: 11},
     // line 13 is ok, because the bp uses source section of whole block
-    {s: 7, n: "STM>>#λdoCount@12@8", l: 13},
+    {s: 7, n: "STM>>#λdoCount@11@16", l: 13},
     {s: 6, n: "STM>>#doCount:", l: 17},
   ];
 
   const thread2 = [
     {s: 2, n: "STM>>#doCount:", l: 11},
-    {s: 3, n: "STM>>#λdoCount@12@8", l: 13},
-    {s: 3, n: "STM>>#λdoCount@12@8", l: 13},
+    {s: 3, n: "STM>>#λdoCount@11@16", l: 13},
+    {s: 3, n: "STM>>#λdoCount@11@16", l: 13},
   ];
 
   let actId = 0;

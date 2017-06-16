@@ -66,7 +66,6 @@ import static som.interpreter.SNodeFactory.createMessageSend;
 import static som.interpreter.SNodeFactory.createSequence;
 import static som.vm.Symbols.symbolFor;
 
-import java.io.Reader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -179,7 +178,7 @@ public class Parser {
         this.rawBuffer        = "";
       } else {
         this.sourceCoordinate = parser.getCoordinate();
-        this.rawBuffer        = parser.lexer.getRawBuffer();
+        this.rawBuffer        = new String(parser.lexer.getCurrentLine());
       }
       this.text             = parser.text;
       this.fileName         = parser.source.getName();
@@ -258,7 +257,7 @@ public class Parser {
     }
   }
 
-  public Parser(final Reader reader, final long fileSize, final Source source,
+  public Parser(final String content, final long fileSize, final Source source,
       final StructuralProbe structuralProbe, final SomLanguage language) throws ParseError {
     this.source = source;
     this.language = language;
@@ -270,7 +269,7 @@ public class Parser {
       throw new ParseError("Provided file is empty.", NONE, this);
     }
 
-    lexer = new Lexer(reader, fileSize);
+    lexer = new Lexer(content, fileSize);
 
     getSymbolFromLexer();
 
@@ -1490,7 +1489,7 @@ public class Parser {
         getSignature().getString());
 
     // generate Block signature
-    String blockSig = "λ" + outerMethodName + "@" + lexer.getCurrentLineNumber() + "@" + lexer.getCurrentColumn();
+    String blockSig = "λ" + outerMethodName + "@" + coord.startLine + "@" + coord.startColumn;
     int argSize = builder.getNumberOfArguments();
     for (int i = 1; i < argSize; i++) {
       blockSig += ":";
