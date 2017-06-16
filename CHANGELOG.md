@@ -21,7 +21,7 @@ data visualization
 
   - Use precise array type check [PR #128](https://github.com/smarr/SOMns/pull/128)
 
-  - Make Kómpos tests more robust, include more info in failures, and use ephemeral ports if necessary [PR #144](https://github.com/smarr/SOMns/pull/144)
+  - Make Kómpos tests more robust, include more info on failures, and use ephemeral ports if necessary [PR #144](https://github.com/smarr/SOMns/pull/144)
 
   - Fix various single stepping issues [PR #143](https://github.com/smarr/SOMns/pull/143)
 
