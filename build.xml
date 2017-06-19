@@ -49,10 +49,7 @@
     </target>
     <target name="truffle" depends="check-truffle-available"
             unless="truffle.present">
-      <exec executable="git" failonerror="true">
-        <arg value="submodule" />
-        <arg value="update" />
-        <arg value="--init" />
+      <exec executable="./.gitloadmodules" failonerror="true">
       </exec>
     </target>
 

@@ -1,0 +1,3 @@
+#!/bin/sh
+git submodule update --init libs/mx      || git submodule update --init --depth 100 libs/mx
+git submodule update --init libs/truffle || git submodule update --init --no-recommend-shallow libs/truffle
