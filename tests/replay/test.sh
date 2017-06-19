@@ -2,9 +2,6 @@
 # quit on first error
 set -e
 
-echo "######## REPLAY TESTS ARE DISABLED #########"
-exit 0
-
 if [ "$1" = "1" ]
 then
   declare -a Savina=(
