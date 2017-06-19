@@ -138,15 +138,14 @@ public class SPromise extends SObjectWithClass {
     SPromise remote = SPromise.createPromise(target,
         triggerPromiseResolutionBreakpoint,
         triggerExplicitPromiseResolverBreakpoint, explicitPromise, null);
+    if (VmSettings.PROMISE_RESOLUTION) {
+      ActorExecutionTrace.promiseChained(getPromiseId(), remote.getPromiseId());
+    }
     if (isCompleted()) {
       remote.value = value;
       remote.resolutionState = resolutionState;
       if (VmSettings.REPLAY) {
         ((SReplayPromise) remote).resolvingActor = ((SReplayPromise) this).resolvingActor;
-      }
-
-      if (VmSettings.PROMISE_RESOLUTION) {
-        ActorExecutionTrace.promiseChained(getPromiseId(), remote.getPromiseId());
       }
     } else {
       addChainedPromise(remote);
