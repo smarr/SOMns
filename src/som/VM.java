@@ -140,12 +140,17 @@ public final class VM {
     }
   }
 
+  private static final Object dynamicInstrumentationLock = new Object();
+
   public static void insertInstrumentationWrapper(final Node node) {
+
     // TODO: make thread-safe!!!
     // TODO: can I assert that it is locked?? helper on Node??
     if (VmSettings.INSTRUMENTATION) {
       assert node.getSourceSection() != null || (node instanceof WrapperNode) : "Node needs source section, or needs to be wrapper";
-      InstrumentationHandler.insertInstrumentationWrapper(node);
+      synchronized (dynamicInstrumentationLock) {
+        InstrumentationHandler.insertInstrumentationWrapper(node);
+      }
     }
   }
 
