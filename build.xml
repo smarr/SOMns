@@ -33,10 +33,13 @@
         <delete dir="${src_gen.dir}"/>
     </target>
     
-    <target name="clobber" description="Do clean, and also clean truffle build" depends="clean">
+    <target name="clean-truffle" depends="check-truffle-available" if="truffle.present">
         <exec executable="${mx.cmd}" dir="${truffle.dir}">
             <arg value="clean"/>
         </exec>
+    </target>
+    
+    <target name="clobber" description="Do clean, and also clean truffle build" depends="clean,clean-truffle">
         <delete dir="${kompos.dir}/out"/>
         <delete dir="${kompos.dir}/node_modules"/>
     </target>
