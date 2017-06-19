@@ -222,7 +222,7 @@ public final class PromisePrims {
           block, resolver, blockCallTarget, false,
           promiseResolverBreakpoint.executeShouldHalt(), rcvr);
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(), promise.getPromiseId());
+        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(), rcvr.getPromiseId());
       }
       registerNode.register(rcvr, msg, current);
 
