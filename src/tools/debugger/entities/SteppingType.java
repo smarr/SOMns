@@ -1,6 +1,7 @@
 package tools.debugger.entities;
 
 import com.google.gson.annotations.SerializedName;
+import com.oracle.truffle.api.debug.SuspendedEvent;
 
 import som.vm.NotYetImplementedException;
 import tools.concurrency.Tags;
@@ -49,9 +50,8 @@ public enum SteppingType {
   STEP_INTO("stepInto", "Step Into", Group.LOCAL_STEPPING, "arrow-down", null) {
     @Override
     public void process(final Suspension susp) {
-      startHandleFrameSkip(susp);
+      handleFrameSkip(susp);
       susp.getEvent().prepareStepInto(1);
-      completeHandleFrameSkip(susp);
     }
   },
 
@@ -59,9 +59,8 @@ public enum SteppingType {
   STEP_OVER("stepOver", "Step Over", Group.LOCAL_STEPPING, "arrow-right", null) {
     @Override
     public void process(final Suspension susp) {
-      startHandleFrameSkip(susp);
+      handleFrameSkip(susp);
       susp.getEvent().prepareStepOver(1);
-      completeHandleFrameSkip(susp);
     }
   },
 
@@ -69,9 +68,8 @@ public enum SteppingType {
   STEP_RETURN("return", "Return from Method", Group.LOCAL_STEPPING, "arrow-left", null) {
     @Override
     public void process(final Suspension susp) {
-      startHandleFrameSkip(susp);
-      susp.getEvent().prepareStepOut();
-      completeHandleFrameSkip(susp);
+      handleFrameSkip(susp);
+      susp.getEvent().prepareStepOut(1);
     }
   },
 
@@ -209,18 +207,12 @@ public enum SteppingType {
     Group(final String label) { this.label = label; }
   }
 
-  private static void startHandleFrameSkip(final Suspension susp) {
+  private static void handleFrameSkip(final Suspension susp) {
     if (susp.getFrameSkipCount() > 0) {
-      susp.getEvent().startComposedStepping();
+      SuspendedEvent event = susp.getEvent();
       for (int i = 0; i < susp.getFrameSkipCount(); i += 1) {
-        susp.getEvent().prepareStepOut();
+        event.prepareStepOut(1);
       }
-    }
-  }
-
-  private static void completeHandleFrameSkip(final Suspension susp) {
-    if (susp.getFrameSkipCount() > 0) {
-      susp.getEvent().prepareComposedStepping();
     }
   }
 
