@@ -1,6 +1,10 @@
 # Change Log
 
-## [Unreleased] - [Concurrency-Agnostic Debugger][v4]
+## [Unreleased] \(0.5.0\) [v5]
+
+ -
+
+## [0.4.0] - [Concurrency-Agnostic Debugger][v4]
 
 This release introduces concurrency-agnostic debugging based on Kómpos.
 It is realized by using a debugger protocol that abstracts from concurrency 
@@ -111,11 +115,13 @@ data visualization
 This is the first tagged version. For previous changes, please refer to the
 [pull requests][OldPRs] from around that time.
 
+[v5]: https://github.com/smarr/SOMns/milestone/6?closed=1
 [v4]: https://github.com/smarr/SOMns/milestone/5?closed=1
 [v3]: https://github.com/smarr/SOMns/milestone/3?closed=1
 [v2]: https://github.com/smarr/SOMns/milestone/2?closed=1
 [v1]: https://github.com/smarr/SOMns/milestone/1?closed=1
-[Unreleased]: https://github.com/smarr/SOMns/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/smarr/SOMns/compare/v0.4.0...HEAD
+[0.4.0]:      https://github.com/smarr/SOMns/compare/v0.3.0...v0.4.0
 [0.3.0]:      https://github.com/smarr/SOMns/compare/v0.2.0...v0.3.0
 [0.2.0]:      https://github.com/smarr/SOMns/compare/v0.1.0...v0.2.0
 [0.1.0]:      https://github.com/smarr/SOMns/releases/tag/v0.1.0
