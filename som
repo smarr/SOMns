@@ -169,7 +169,6 @@ else:
 BOOT_CLASSPATH = ('-Xbootclasspath/a:'
              + BASE_DIR + '/build/classes:'
              + BASE_DIR + '/libs/truffle/sdk/mxbuild/dists/graal-sdk.jar:'
-             + BASE_DIR + '/libs/truffle/sdk/mxbuild/dists/word-api.jar:'
              + BASE_DIR + '/libs/truffle/truffle/mxbuild/dists/truffle-api.jar:'
              + BASE_DIR + '/libs/truffle/truffle/mxbuild/dists/truffle-debug.jar:'
              + BASE_DIR + '/libs/somns-deps.jar')
