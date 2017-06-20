@@ -557,21 +557,19 @@ describe("Basic Protocol", function() {
         });
       }));
 
-      suite.forEach((testDesc, index) => {
-        describe("should", () => {
+      describe("should", () => {
+        suite.forEach((testDesc, index) => {
           if (index > 0) { // evaluate all stepping data except the first one that corresponds to the breakpoint
             it(testDesc.test, onlyWithConnection(() => {
-              return new Promise((resolve, _reject) => {
-                ctrl.stackPs[0].then(_ => {
-                  conn.fullyConnected.then(_ => {
-                    conn.sendDebuggerAction(testDesc.type, ctrl.stoppedActivities[0]);
-                  });
+              ctrl.stackPs[testDesc.stackIndex - 1].then(_ => {
+                conn.sendDebuggerAction(testDesc.type, ctrl.stoppedActivities[0]);
+              });
 
-                  const p =  ctrl.stackPs[testDesc.stackIndex].then(msgAfterStep => {
-                    expectStack(msgAfterStep.stackFrames, testDesc.length, testDesc.methodName, testDesc.line);
-                  });
-                  resolve(p);
+              return new Promise((resolve, _reject) => {
+                const p = ctrl.stackPs[testDesc.stackIndex].then(msgAfterStep => {
+                  expectStack(msgAfterStep.stackFrames, testDesc.length, testDesc.methodName, testDesc.line);
                 });
+                resolve(p);
               });
             }));
           }
