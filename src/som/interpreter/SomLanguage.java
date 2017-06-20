@@ -70,7 +70,8 @@ import tools.dym.Tags.VirtualInvoke;
 import tools.dym.Tags.VirtualInvokeReceiver;
 
 
-@TruffleLanguage.Registration(name = "SOMns", version = "0.1.0",
+@TruffleLanguage.Registration(id = "SOMns", name = "SOMns", version = "0.1.0",
+                              interactive = false, internal = false,
                               mimeType = "application/x-newspeak-som-ns")
 @ProvidedTags({
   RootTag.class, StatementTag.class, CallTag.class,
