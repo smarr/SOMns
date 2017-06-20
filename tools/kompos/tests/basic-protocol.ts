@@ -110,18 +110,18 @@ describe("Basic Protocol", function() {
 
   const breakpointTests = {
     "setting a line breakpoint":
-      [{test:        "accept line breakpoint, and halt on expected line",
-        breakpoint:  createLineBreakpointData(PING_PONG_URI, 92, true),
-        stackLength: 6,
-        topMethod:   "PingPong>>#benchmark",
-        line:        92}],
+    [{test:        "accept line breakpoint, and halt on expected line",
+      breakpoint:  createLineBreakpointData(PING_PONG_URI, 92, true),
+      stackLength: 6,
+      topMethod:   "PingPong>>#benchmark",
+      line:        92}],
 
     "setting a source section sender breakpoint":
-      [{test:        "accept send breakpoint, and halt on expected source section",
-        breakpoint:  createSectionBreakpointData(PING_PONG_URI, 23, 14, 3, BT.MSG_SENDER, true),
-        stackLength: 2,
-        topMethod:   "Ping>>#ping",
-        line:        23}],
+    [{test:        "accept send breakpoint, and halt on expected source section",
+      breakpoint:  createSectionBreakpointData(PING_PONG_URI, 23, 14, 3, BT.MSG_SENDER, true),
+      stackLength: 2,
+      topMethod:   "Ping>>#ping",
+      line:        23}],
 
     "setting a source section asynchronous method before execution breakpoint":
     [{test:        "accept async method before execution breakpoint, and halt on expected source section",
@@ -249,7 +249,7 @@ describe("Basic Protocol", function() {
     });
   }
 
-  describe("stepping", () => {
+  describe("single stepping", () => {
     // Capture suspended events
     let ctrl: HandleStoppedAndGetStackTrace;
 

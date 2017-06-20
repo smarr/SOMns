@@ -72,6 +72,7 @@ export namespace SteppingType {
 
   export const STEP_TO_MESSAGE_RECEIVER = "stepToMessageRcvr";
   export const STEP_TO_PROMISE_RESOLVER = "stepToPromiseResolver";
+  export const STEP_TO_PROMISE_RESOLUTION = "stepToPromiseResolution";
   export const STEP_TO_NEXT_TURN        = "stepToNextTurn";
   export const RETURN_FROM_TURN_TO_PROMISE_RESOLUTION = "returnFromTurnToPromiseResolution";
 }
