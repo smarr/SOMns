@@ -1,8 +1,8 @@
 [submodule "libs/truffle"]
 	path = libs/truffle
 	url = https://github.com/smarr/Truffle.git
-	shallow = true
+	shallow = false
 [submodule "libs/mx"]
 	path = libs/mx
 	url = https://github.com/smarr/mx.git
-	shallow = true
+	shallow = false
