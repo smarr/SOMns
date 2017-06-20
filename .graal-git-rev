@@ -1,9 +1,0 @@
-#!/bin/sh
-# This version is used with the following version of the Graal repo:
-#  https://github.com/smarr/GraalBasic.git
-
-SCRIPT=`head -n 6 .graal-git-rev; echo ''; echo '# current revision'; echo ' '`
-echo "${SCRIPT}GIT-REV="`git --git-dir ../graal/graal-core/.git rev-parse HEAD` > .graal-git-rev; exit 0
-
-# current revision
- GIT-REV=11ec1deb54c9b2aa2c3ded338e4115ca7b15e120
