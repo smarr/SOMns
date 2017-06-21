@@ -440,9 +440,7 @@ public abstract class StorageLocation {
 
     @Override
     public double readDoubleSet(final SObject obj) {
-      long[] arr = obj.getExtendedPrimFields();
-      return unsafe.getDouble(arr,
-          (long) Unsafe.ARRAY_DOUBLE_BASE_OFFSET + Unsafe.ARRAY_DOUBLE_INDEX_SCALE * extensionIndex);
+      return Double.longBitsToDouble(obj.getExtendedPrimFields()[extensionIndex]);
     }
 
     @Override
@@ -471,9 +469,8 @@ public abstract class StorageLocation {
     @Override
     public void writeDoubleSet(final SObject obj, final double value) {
       final long[] arr = obj.getExtendedPrimFields();
-      unsafe.putDouble(arr,
-          (long) Unsafe.ARRAY_DOUBLE_BASE_OFFSET + Unsafe.ARRAY_DOUBLE_INDEX_SCALE * this.extensionIndex,
-          value);
+      long val = Double.doubleToRawLongBits(value);
+      arr[extensionIndex] = val;
     }
   }
 }
