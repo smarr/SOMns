@@ -188,7 +188,7 @@ else:
 
 if not args.interpreter:
     flags += ['-server', '-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI',
-              '-Djvmci.Compiler=graal']
+              '-Djvmci.Compiler=graal', '-XX:-UseJVMCICompiler']
 
 if args.som_dnu:
     flags += ['-Dsom.printStackTraceOnDNU=true']
