@@ -24,7 +24,6 @@
 
 package som.vmobjects;
 
-import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -33,13 +32,12 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.profiles.IntValueProfile;
 
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.interpreter.objectstorage.StorageLocation;
-import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
+import som.interpreter.objectstorage.StorageLocation.ObjectStorageLocation;
 import som.vm.constants.Nil;
 
 public abstract class SObject extends SObjectWithClass {
@@ -267,7 +265,7 @@ public abstract class SObject extends SObjectWithClass {
   // we manage the layout entirely in the class, but need to keep a copy here
   // to know in case the layout changed that we can update the instances lazily
   @CompilationFinal protected ObjectLayout objectLayout;
-  protected int primitiveUsedMap;
+  public int primitiveUsedMap;
 
   public SObject(final SClass instanceClass, final ClassFactory factory, final ObjectLayout layout) {
     super(instanceClass, factory);
@@ -305,18 +303,6 @@ public abstract class SObject extends SObjectWithClass {
    * either. This method is used for cloning transfer objects.
    */
   public abstract SObject cloneBasics();
-
-  public boolean isPrimitiveSet(final int mask) {
-    return (primitiveUsedMap & mask) != 0;
-  }
-
-  public boolean isPrimitiveSet(final int mask, final IntValueProfile markProfile) {
-    return (markProfile.profile(primitiveUsedMap) & mask) != 0;
-  }
-
-  public void markPrimAsSet(final int mask) {
-    primitiveUsedMap |= mask;
-  }
 
   private void setLayoutInitially(final ObjectLayout layout) {
     CompilerAsserts.partialEvaluationConstant(layout);
@@ -368,8 +354,6 @@ public abstract class SObject extends SObjectWithClass {
     return storage;
   }
 
-  private static final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
-
   @ExplodeLoop
   private HashMap<SlotDefinition, Object> getAllFields() {
     assert objectLayout != null;
@@ -378,7 +362,7 @@ public abstract class SObject extends SObjectWithClass {
     HashMap<SlotDefinition, Object> fieldValues = new HashMap<>((int) (locations.size() / 0.75f));
 
     for (Entry<SlotDefinition, StorageLocation> loc : locations.entrySet()) {
-      if (loc.getValue().isSet(this, primMarkProfile)) {
+      if (loc.getValue().isSet(this)) {
         fieldValues.put(loc.getKey(), loc.getValue().read(this));
       } else {
         fieldValues.put(loc.getKey(), null);
@@ -397,7 +381,7 @@ public abstract class SObject extends SObjectWithClass {
     for (Entry<SlotDefinition, Object> entry : fieldValues.entrySet()) {
       if (entry.getValue() != null) {
         writeSlot(entry.getKey(), entry.getValue());
-      } else if (getLocation(entry.getKey()) instanceof AbstractObjectStorageLocation) {
+      } else if (getLocation(entry.getKey()) instanceof ObjectStorageLocation) {
         writeSlot(entry.getKey(), Nil.nilObject);
       }
     }
@@ -453,21 +437,6 @@ public abstract class SObject extends SObjectWithClass {
     setLayoutAndTransferFields();
   }
 
-  private static final long FIRST_OBJECT_FIELD_OFFSET = getFirstObjectFieldOffset();
-  private static final long FIRST_PRIM_FIELD_OFFSET   = getFirstPrimFieldOffset();
-  private static final long OBJECT_FIELD_LENGTH = getObjectFieldLength();
-  private static final long PRIM_FIELD_LENGTH   = getPrimFieldLength();
-
-  public static long getObjectFieldOffset(final int fieldIndex) {
-    assert 0 <= fieldIndex && fieldIndex < NUM_OBJECT_FIELDS;
-    return FIRST_OBJECT_FIELD_OFFSET + fieldIndex * OBJECT_FIELD_LENGTH;
-  }
-
-  public static long getPrimitiveFieldOffset(final int fieldIndex) {
-    assert 0 <= fieldIndex && fieldIndex < NUM_PRIMITIVE_FIELDS;
-    return FIRST_PRIM_FIELD_OFFSET + fieldIndex * PRIM_FIELD_LENGTH;
-  }
-
   public static int getPrimitiveFieldMask(final int fieldIndex) {
     assert 0 <= fieldIndex && fieldIndex < 32; // this limits the number of object fields for the moment...
     return 1 << fieldIndex;
@@ -507,60 +476,5 @@ public abstract class SObject extends SObjectWithClass {
 
     StorageLocation location = getLocation(slot);
     location.write(this, value);
-  }
-
-  private static long getFirstObjectFieldOffset() {
-    CompilerAsserts.neverPartOfCompilation("SObject.getFirstObjectFieldOffset()");
-    try {
-      final Field firstField = SMutableObject.class.getDeclaredField("field1");
-      return StorageLocation.getFieldOffset(firstField);
-    } catch (NoSuchFieldException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static long getFirstPrimFieldOffset() {
-    CompilerAsserts.neverPartOfCompilation("SObject.getFirstPrimFieldOffset()");
-    try {
-      final Field firstField = SMutableObject.class.getDeclaredField("primField1");
-      return StorageLocation.getFieldOffset(firstField);
-    } catch (NoSuchFieldException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static long getObjectFieldLength() {
-    CompilerAsserts.neverPartOfCompilation("getObjectFieldLength()");
-
-    try {
-      long dist = getFieldDistance("field1", "field2");
-      // this can go wrong if the VM rearranges fields to fill holes in the
-      // memory layout of the object structure
-      assert dist == 4 || dist == 8 : "We expect these fields to be adjecent and either 32 or 64bit appart.";
-      return dist;
-    } catch (NoSuchFieldException | IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static long getPrimFieldLength() {
-    CompilerAsserts.neverPartOfCompilation("getPrimFieldLength()");
-
-    try {
-      long dist = getFieldDistance("primField1", "primField2");
-      // this can go wrong if the VM rearranges fields to fill holes in the
-      // memory layout of the object structure
-      assert dist == 8 : "We expect these fields to be adjecent and 64bit appart.";
-      return dist;
-    } catch (NoSuchFieldException | IllegalAccessException e) {
-      throw new RuntimeException(e);
-    }
-  }
-
-  private static long getFieldDistance(final String field1, final String field2) throws NoSuchFieldException,
-      IllegalAccessException {
-    final Field firstField  = SMutableObject.class.getDeclaredField(field1);
-    final Field secondField = SMutableObject.class.getDeclaredField(field2);
-    return StorageLocation.getFieldOffset(secondField) - StorageLocation.getFieldOffset(firstField);
   }
 }

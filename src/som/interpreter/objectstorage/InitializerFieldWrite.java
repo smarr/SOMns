@@ -14,15 +14,22 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
-import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
+import som.interpreter.objectstorage.StorageAccessor.AbstractObjectAccessor;
+import som.interpreter.objectstorage.StorageAccessor.AbstractPrimitiveAccessor;
 import som.interpreter.objectstorage.StorageLocation.DoubleStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.LongStorageLocation;
+import som.interpreter.objectstorage.StorageLocation.ObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.UnwrittenStorageLocation;
 import som.vmobjects.SObject;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 
 
+/**
+ * Object initializer assignments are not handled as message sends.
+ * Instead, we have do a direct write to avoid ambiguity that could be
+ * introduced by a dynamic lookup.
+ */
 @NodeChildren({
   @NodeChild(value = "self",  type = ExpressionNode.class),
   @NodeChild(value = "value", type = ExpressionNode.class)})
@@ -37,26 +44,34 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
     this.slot = slot;
   }
 
-  protected final LongStorageLocation getLongLocation(final ObjectLayout cachedLayout) {
+  protected final AbstractPrimitiveAccessor getLongAccessor(final ObjectLayout cachedLayout) {
     StorageLocation loc = cachedLayout.getStorageLocation(slot);
     if (loc instanceof LongStorageLocation) {
-      return (LongStorageLocation) loc;
+      return (AbstractPrimitiveAccessor) loc.getAccessor();
     }
     return null;
   }
 
-  protected final DoubleStorageLocation getDoubleLocation(final ObjectLayout cachedLayout) {
+  protected final AbstractPrimitiveAccessor getDoubleAccessor(final ObjectLayout cachedLayout) {
     StorageLocation loc = cachedLayout.getStorageLocation(slot);
     if (loc instanceof DoubleStorageLocation) {
-      return (DoubleStorageLocation) cachedLayout.getStorageLocation(slot);
+      return (AbstractPrimitiveAccessor) loc.getAccessor();
     }
     return null;
   }
 
-  protected final AbstractObjectStorageLocation getObjectLocation(final ObjectLayout cachedLayout) {
+  protected final AbstractObjectAccessor getObjectAccessor(final ObjectLayout cachedLayout) {
     StorageLocation loc = cachedLayout.getStorageLocation(slot);
-    if (loc instanceof AbstractObjectStorageLocation) {
-      return (AbstractObjectStorageLocation) cachedLayout.getStorageLocation(slot);
+    if (loc instanceof ObjectStorageLocation) {
+      return (AbstractObjectAccessor) loc.getAccessor();
+    }
+    return null;
+  }
+
+  protected final StorageLocation getUnwritten(final ObjectLayout cachedLayout) {
+    StorageLocation loc = cachedLayout.getStorageLocation(slot);
+    if (loc instanceof UnwrittenStorageLocation) {
+      return loc;
     }
     return null;
   }
@@ -78,148 +93,152 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   @Specialization(
       assumptions = {"isLatestLayout"},
       guards = {
-          "location != null",
+          "accessor != null",
           "cachedLayout == rcvr.getObjectLayout()",
-          "location.isSet(rcvr, primMarkProfile)"},
+          "accessor.isPrimitiveSet(rcvr, primMarkProfile)"},
       limit = "LIMIT")
   public final long longValueSet(final SImmutableObject rcvr, final long value,
       @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
-      @Cached("getLongLocation(cachedLayout)") final LongStorageLocation location) {
-    location.writeLongSet(rcvr, value);
+      @Cached("getLongAccessor(cachedLayout)") final AbstractPrimitiveAccessor accessor) {
+    accessor.write(rcvr, value);
     return value;
   }
 
   @Specialization(
       assumptions = {"isLatestLayout"},
-      guards   = {"location != null",
+      guards   = {"accessor != null",
                   "cachedLayout == rcvr.getObjectLayout()"},
       replaces = "longValueSet",
       limit = "LIMIT")
   public final long longValueSetOrUnset(final SImmutableObject rcvr, final long value,
+      @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
-      @Cached("getLongLocation(cachedLayout)") final LongStorageLocation location) {
-    location.writeLongSet(rcvr, value);
-    location.markAsSet(rcvr);
+      @Cached("getLongAccessor(cachedLayout)") final AbstractPrimitiveAccessor accessor) {
+    accessor.write(rcvr, value);
+    accessor.markPrimAsSet(rcvr, primMarkProfile);
     return value;
   }
 
   @Specialization(
       assumptions = {"isLatestLayout"},
       guards = {
-          "location != null",
+          "accessor != null",
           "cachedLayout == rcvr.getObjectLayout()",
-          "location.isSet(rcvr, primMarkProfile)"},
+          "accessor.isPrimitiveSet(rcvr, primMarkProfile)"},
       limit = "LIMIT")
   public final long longValueSet(final SMutableObject rcvr, final long value,
       @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
-      @Cached("getLongLocation(cachedLayout)") final LongStorageLocation location) {
-    location.writeLongSet(rcvr, value);
+      @Cached("getLongAccessor(cachedLayout)") final AbstractPrimitiveAccessor accessor) {
+    accessor.write(rcvr, value);
     return value;
   }
 
   @Specialization(
       assumptions = {"isLatestLayout"},
-      guards   = {"location != null",
+      guards   = {"accessor != null",
                   "cachedLayout == rcvr.getObjectLayout()"},
       replaces = "longValueSet",
       limit    = "LIMIT")
   public final long longValueSetOrUnset(final SMutableObject rcvr, final long value,
+      @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
-      @Cached("getLongLocation(cachedLayout)") final LongStorageLocation location) {
-    location.writeLongSet(rcvr, value);
-    location.markAsSet(rcvr);
+      @Cached("getLongAccessor(cachedLayout)") final AbstractPrimitiveAccessor accessor) {
+    accessor.write(rcvr, value);
+    accessor.markPrimAsSet(rcvr, primMarkProfile);
     return value;
   }
 
   @Specialization(
       assumptions = {"isLatestLayout"},
-      guards = {"location != null",
+      guards = {"accessor != null",
                 "cachedLayout == rcvr.getObjectLayout()",
-                "location.isSet(rcvr, primMarkProfile)"},
+                "accessor.isPrimitiveSet(rcvr, primMarkProfile)"},
       limit  = "LIMIT")
   public final double doubleValueSet(final SMutableObject rcvr, final double value,
       @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
-      @Cached("getDoubleLocation(cachedLayout)") final DoubleStorageLocation location) {
-    location.writeDoubleSet(rcvr, value);
+      @Cached("getDoubleAccessor(cachedLayout)") final AbstractPrimitiveAccessor accessor) {
+    accessor.write(rcvr, value);
     return value;
   }
 
   @Specialization(
       assumptions = {"isLatestLayout"},
-      guards   = {"location != null",
+      guards   = {"accessor != null",
                   "cachedLayout == rcvr.getObjectLayout()"},
       replaces = "doubleValueSet",
       limit    = "LIMIT")
   public final double doubleValueSetOrUnset(final SMutableObject rcvr, final double value,
+      @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
-      @Cached("getDoubleLocation(cachedLayout)") final DoubleStorageLocation location) {
-    location.writeDoubleSet(rcvr, value);
-    location.markAsSet(rcvr);
+      @Cached("getDoubleAccessor(cachedLayout)") final AbstractPrimitiveAccessor accessor) {
+    accessor.write(rcvr, value);
+    accessor.markPrimAsSet(rcvr, primMarkProfile);
     return value;
   }
 
   @Specialization(
       assumptions = {"isLatestLayout"},
-      guards = {"location != null",
+      guards = {"accessor != null",
                 "cachedLayout == rcvr.getObjectLayout()",
-                "location.isSet(rcvr, primMarkProfile)"},
+                "accessor.isPrimitiveSet(rcvr, primMarkProfile)"},
       limit  = "LIMIT")
   public final double doubleValueSet(final SImmutableObject rcvr, final double value,
       @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
-      @Cached("getDoubleLocation(cachedLayout)") final DoubleStorageLocation location) {
-    location.writeDoubleSet(rcvr, value);
+      @Cached("getDoubleAccessor(cachedLayout)") final AbstractPrimitiveAccessor accessor) {
+    accessor.write(rcvr, value);
     return value;
   }
 
   @Specialization(
       assumptions = {"isLatestLayout"},
-      guards   = {"location != null",
+      guards   = {"accessor != null",
                   "cachedLayout == rcvr.getObjectLayout()"},
       replaces = "doubleValueSet",
       limit    = "LIMIT")
   public final double doubleValueSetOrUnset(final SImmutableObject rcvr, final double value,
+      @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
-      @Cached("getDoubleLocation(cachedLayout)") final DoubleStorageLocation location) {
-    location.writeDoubleSet(rcvr, value);
-    location.markAsSet(rcvr);
+      @Cached("getDoubleAccessor(cachedLayout)") final AbstractPrimitiveAccessor accessor) {
+    accessor.write(rcvr, value);
+    accessor.markPrimAsSet(rcvr, primMarkProfile);
     return value;
   }
 
   @Specialization(
       assumptions = {"isLatestLayout"},
-      guards   = {"location != null",
+      guards   = {"accessor != null",
                   "cachedLayout == rcvr.getObjectLayout()"},
       limit    = "LIMIT")
   public final Object objectValue(final SImmutableObject rcvr, final Object value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
-      @Cached("getObjectLocation(cachedLayout)") final AbstractObjectStorageLocation location) {
-    location.write(rcvr, value);
+      @Cached("getObjectAccessor(cachedLayout)") final AbstractObjectAccessor accessor) {
+    accessor.write(rcvr, value);
     return value;
   }
 
   @Specialization(
       assumptions = {"isLatestLayout"},
-      guards   = {"location != null",
+      guards   = {"accessor != null",
                   "cachedLayout == rcvr.getObjectLayout()"},
       limit    = "LIMIT")
   public final Object objectValue(final SMutableObject rcvr, final Object value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
-      @Cached("getObjectLocation(cachedLayout)") final AbstractObjectStorageLocation location) {
-    location.write(rcvr, value);
+      @Cached("getObjectAccessor(cachedLayout)") final AbstractObjectAccessor accessor) {
+    accessor.write(rcvr, value);
     return value;
   }
 
@@ -228,12 +247,12 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
       guards   = {"location != null",
                   "cachedLayout == rcvr.getObjectLayout()"},
       limit    = "LIMIT")
-  public final Object unwrittenOrGeneralizingValue(final SObject rcvr, final Object value,
+  public final Object unwritten(final SObject rcvr, final Object value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
       @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
-      @Cached("getUnwrittenOrPrimitiveLocation(cachedLayout)") final StorageLocation location) {
+      @Cached("getUnwritten(cachedLayout)") final StorageLocation location) {
     CompilerAsserts.neverPartOfCompilation("should never be part of a compiled AST.");
-    rcvr.writeSlot(slot, value);
+    ObjectTransitionSafepoint.INSTANCE.writeUninitializedSlot(rcvr, slot, value);
     return value;
   }
 

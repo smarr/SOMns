@@ -25,21 +25,19 @@ import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ClassInstantiationNode;
-import som.interpreter.nodes.ClassSlotAccessNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
-import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedImmutableSlotRead;
-import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedMutableSlotRead;
-import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotWrite;
-import som.interpreter.nodes.dispatch.CachedSlotAccessNode.SlotAccess;
+import som.interpreter.nodes.dispatch.CachedSlotRead;
+import som.interpreter.nodes.dispatch.CachedSlotRead.SlotAccess;
+import som.interpreter.nodes.dispatch.CachedSlotWrite;
+import som.interpreter.nodes.dispatch.ClassSlotAccessNode;
 import som.interpreter.nodes.dispatch.DispatchGuard;
+import som.interpreter.nodes.dispatch.DispatchGuard.CheckSObject;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.objectstorage.ClassFactory;
-import som.interpreter.objectstorage.FieldReadNode;
-import som.interpreter.objectstorage.FieldWriteNode;
-import som.interpreter.objectstorage.FieldWriteNode.AbstractFieldWriteNode;
 import som.interpreter.objectstorage.InitializerFieldWrite;
+import som.interpreter.objectstorage.StorageLocation;
 import som.interpreter.transactions.CachedTxSlotRead;
 import som.interpreter.transactions.CachedTxSlotWrite;
 import som.vm.Symbols;
@@ -49,7 +47,6 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SObject;
-import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
@@ -513,18 +510,17 @@ public final class MixinDefinition {
         final Object firstArg, final AbstractDispatchNode next,
         final boolean forAtomic) {
       SObject rcvr = (SObject) receiver;
-      if (rcvr instanceof SMutableObject) {
-        if (forAtomic && getAccessType() == SlotAccess.FIELD_READ) {
-          return new CachedTxSlotRead(getAccessType(),
-              createNode(rcvr), DispatchGuard.create(rcvr), next);
-        } else {
-          return new CachedMutableSlotRead(getAccessType(),
-              createNode(rcvr), DispatchGuard.create(rcvr), next);
-        }
+      StorageLocation loc = rcvr.getObjectLayout().getStorageLocation(this);
+      boolean isSet = loc.isSet(rcvr);
+
+      CachedSlotRead read = createNode(loc, DispatchGuard.createSObjectCheck(rcvr), next, isSet);
+
+      if (forAtomic && rcvr instanceof SMutableObject &&
+          getAccessType() == SlotAccess.FIELD_READ) {
+        return new CachedTxSlotRead(getAccessType(), read,
+            DispatchGuard.createSObjectCheck(rcvr), next);
       } else {
-        assert rcvr instanceof SImmutableObject;
-        return new CachedImmutableSlotRead(getAccessType(),
-            createNode(rcvr), DispatchGuard.create(rcvr), next);
+        return read;
       }
     }
 
@@ -546,8 +542,10 @@ public final class MixinDefinition {
       return rcvr.readSlot(this);
     }
 
-    protected FieldReadNode createNode(final SObject rcvr) {
-      return FieldReadNode.createRead(this, rcvr);
+    protected CachedSlotRead createNode(final StorageLocation loc,
+        final CheckSObject guard, final AbstractDispatchNode next,
+        final boolean isSet) {
+      return loc.getReadNode(getAccessType(), guard, next, isSet);
     }
 
     protected SlotAccess getAccessType() {
@@ -577,14 +575,18 @@ public final class MixinDefinition {
     }
 
     @Override
-    public AbstractDispatchNode getDispatchNode(final Object rcvr,
+    public AbstractDispatchNode getDispatchNode(final Object receiver,
         final Object firstArg, final AbstractDispatchNode next, final boolean forAtomic) {
+      SObject rcvr = (SObject) receiver;
+      StorageLocation loc = rcvr.getObjectLayout().getStorageLocation(mainSlot);
+      boolean isSet = loc.isSet(rcvr);
+      CachedSlotWrite write = loc.getWriteNode(mainSlot, DispatchGuard.createSObjectCheck(rcvr), next, isSet);
+
       if (forAtomic) {
-        return new CachedTxSlotWrite(createWriteNode((SObject) rcvr, firstArg),
-            DispatchGuard.create(rcvr), next);
+        return new CachedTxSlotWrite(write,
+            DispatchGuard.createSObjectCheck(rcvr), next);
       } else {
-        return new CachedSlotWrite(createWriteNode((SObject) rcvr, firstArg),
-            DispatchGuard.create(rcvr), next);
+        return write;
       }
     }
 
@@ -594,11 +596,6 @@ public final class MixinDefinition {
       SObject rcvr = (SObject) arguments[0];
       rcvr.writeSlot(this, arguments[1]);
       return rcvr;
-    }
-
-    protected AbstractFieldWriteNode createWriteNode(final SObject rcvr,
-        final Object firstArg) {
-      return FieldWriteNode.createWrite(mainSlot, rcvr, firstArg);
     }
   }
 
@@ -617,10 +614,14 @@ public final class MixinDefinition {
     }
 
     @Override
-    protected FieldReadNode createNode(final SObject rcvr) {
+    protected CachedSlotRead createNode(final StorageLocation loc,
+        final CheckSObject guard, final AbstractDispatchNode next,
+        final boolean isSet) {
+      CachedSlotRead read = super.createNode(loc, guard, next, isSet);
+      CachedSlotWrite write = loc.getWriteNode(this, guard, next, isSet);
+
       ClassSlotAccessNode node = new ClassSlotAccessNode(mixinDefinition,
-          FieldReadNode.createRead(this, rcvr),
-          FieldWriteNode.createWriteObject(this, rcvr));
+          read, write);
       return node;
     }
 

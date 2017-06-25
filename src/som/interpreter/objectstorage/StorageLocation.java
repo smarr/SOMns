@@ -1,82 +1,55 @@
 package som.interpreter.objectstorage;
 
-import java.lang.reflect.Field;
-
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.profiles.IntValueProfile;
 
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.TruffleCompiler;
-import som.interpreter.objectstorage.FieldReadNode.ReadObjectFieldNode;
-import som.interpreter.objectstorage.FieldReadNode.ReadSetOrUnsetPrimitiveSlot;
-import som.interpreter.objectstorage.FieldReadNode.ReadSetPrimitiveSlot;
-import som.interpreter.objectstorage.FieldReadNode.ReadUnwrittenFieldNode;
+import som.interpreter.nodes.dispatch.AbstractDispatchNode;
+import som.interpreter.nodes.dispatch.CachedSlotRead;
+import som.interpreter.nodes.dispatch.CachedSlotRead.DoubleSlotReadSet;
+import som.interpreter.nodes.dispatch.CachedSlotRead.DoubleSlotReadSetOrUnset;
+import som.interpreter.nodes.dispatch.CachedSlotRead.LongSlotReadSet;
+import som.interpreter.nodes.dispatch.CachedSlotRead.LongSlotReadSetOrUnset;
+import som.interpreter.nodes.dispatch.CachedSlotRead.ObjectSlotRead;
+import som.interpreter.nodes.dispatch.CachedSlotRead.SlotAccess;
+import som.interpreter.nodes.dispatch.CachedSlotRead.UnwrittenSlotRead;
+import som.interpreter.nodes.dispatch.CachedSlotWrite;
+import som.interpreter.nodes.dispatch.CachedSlotWrite.DoubleSlotWriteSet;
+import som.interpreter.nodes.dispatch.CachedSlotWrite.DoubleSlotWriteSetOrUnset;
+import som.interpreter.nodes.dispatch.CachedSlotWrite.LongSlotWriteSet;
+import som.interpreter.nodes.dispatch.CachedSlotWrite.LongSlotWriteSetOrUnset;
+import som.interpreter.nodes.dispatch.CachedSlotWrite.ObjectSlotWrite;
+import som.interpreter.nodes.dispatch.CachedSlotWrite.UnwrittenSlotWrite;
+import som.interpreter.nodes.dispatch.DispatchGuard.CheckSObject;
+import som.interpreter.objectstorage.StorageAccessor.AbstractObjectAccessor;
+import som.interpreter.objectstorage.StorageAccessor.AbstractPrimitiveAccessor;
 import som.vm.constants.Nil;
 import som.vmobjects.SObject;
-import sun.misc.Unsafe;
 
 
+/**
+ * A <code>StorageLocation</code> represents the element of an
+ * {@link ObjectLayout} that binds a {@link SlotDefinition slot} to a specific
+ * memory location within an object.
+ *
+ * <p><code>StorageLocation</code> provides the node factories as well as slow
+ * path accessor to read/write a slot.
+ */
 public abstract class StorageLocation {
-  private static Unsafe loadUnsafe() {
-    try {
-      return Unsafe.getUnsafe();
-    } catch (SecurityException e) {
-      // can fail, is ok, just to the fallback below
-    }
-    try {
-      Field theUnsafeInstance = Unsafe.class.getDeclaredField("theUnsafe");
-      theUnsafeInstance.setAccessible(true);
-      return (Unsafe) theUnsafeInstance.get(Unsafe.class);
-    } catch (Exception e) {
-      throw new RuntimeException("exception while trying to get Unsafe.theUnsafe via reflection:", e);
-    }
-  }
-
-  private static final Unsafe unsafe = loadUnsafe();
-
-  public static long getFieldOffset(final Field field) {
-    return unsafe.objectFieldOffset(field);
-  }
-
-  public interface LongStorageLocation {
-    boolean isSet(SObject obj, IntValueProfile primMarkProfile);
-    void markAsSet(SObject obj);
-    long readLongSet(SObject obj);
-    void writeLongSet(SObject obj, long value);
-  }
-
-  public interface DoubleStorageLocation {
-    boolean isSet(SObject obj, IntValueProfile primMarkProfile);
-    void markAsSet(SObject obj);
-    double readDoubleSet(SObject obj);
-    void   writeDoubleSet(SObject obj, double value);
-  }
 
   public static StorageLocation createForLong(final ObjectLayout layout,
       final SlotDefinition slot, final int primFieldIndex) {
-    if (primFieldIndex < SObject.NUM_PRIMITIVE_FIELDS) {
-      return new LongDirectStoreLocation(layout, slot, primFieldIndex);
-    } else {
-      return new LongArrayStoreLocation(layout, slot, primFieldIndex);
-    }
+    return new LongStorageLocation(layout, slot, primFieldIndex);
   }
 
   public static StorageLocation createForDouble(final ObjectLayout layout,
       final SlotDefinition slot, final int primFieldIndex) {
-    if (primFieldIndex < SObject.NUM_PRIMITIVE_FIELDS) {
-      return new DoubleDirectStoreLocation(layout, slot, primFieldIndex);
-    } else {
-      return new DoubleArrayStoreLocation(layout, slot, primFieldIndex);
-    }
+    return new DoubleStorageLocation(layout, slot, primFieldIndex);
   }
 
   public static StorageLocation createForObject(final ObjectLayout layout,
       final SlotDefinition slot, final int objFieldIndex) {
-    if (objFieldIndex < SObject.NUM_PRIMITIVE_FIELDS) {
-      return new ObjectDirectStorageLocation(layout, slot, objFieldIndex);
-    } else {
-      return new ObjectArrayStorageLocation(layout, slot, objFieldIndex);
-    }
+    return new ObjectStorageLocation(layout, slot, objFieldIndex);
   }
 
   protected final ObjectLayout layout;
@@ -87,27 +60,43 @@ public abstract class StorageLocation {
     this.slot   = slot;
   }
 
-  public abstract boolean isSet(SObject obj, IntValueProfile primMarkProfile);
-
   /**
    * @return true, if it is an object location, false otherwise.
    */
   public abstract boolean isObjectLocation();
 
-  public abstract Object read(SObject obj);
-  public abstract void   write(SObject obj, Object value);
+  public abstract CachedSlotRead getReadNode(SlotAccess type, CheckSObject guard,
+      AbstractDispatchNode nextInCache, boolean isSet);
 
-  public abstract FieldReadNode getReadNode(boolean isSet);
+  public abstract CachedSlotWrite getWriteNode(SlotDefinition slot,
+      CheckSObject guard, AbstractDispatchNode next, boolean isSet);
+
+  public abstract StorageAccessor getAccessor();
+
+  /**
+   * Slow-path accessor to slot.
+   */
+  public abstract Object read(SObject obj);
+
+  /**
+   * Slow-path accessor to slot.
+   */
+  public abstract void write(SObject obj, Object value);
+
+  /**
+   * Test whether the object slot has been set.
+   * Unset slots return false, object slots always return true, because `nil`
+   * is considered a set value.
+   *
+   * <p>Slow-path accessor to slot.
+   */
+  public abstract boolean isSet(SObject obj);
 
   public static final class UnwrittenStorageLocation extends StorageLocation {
 
-    public UnwrittenStorageLocation(final ObjectLayout layout, final SlotDefinition slot) {
+    public UnwrittenStorageLocation(final ObjectLayout layout,
+        final SlotDefinition slot) {
       super(layout, slot);
-    }
-
-    @Override
-    public boolean isSet(final SObject obj, final IntValueProfile primMarkProfile) {
-      return false;
     }
 
     @Override
@@ -116,11 +105,30 @@ public abstract class StorageLocation {
     }
 
     @Override
+    public CachedSlotRead getReadNode(final SlotAccess type, final CheckSObject guard,
+        final AbstractDispatchNode nextInCache, final boolean isSet) {
+      return new UnwrittenSlotRead(type, guard, nextInCache);
+    }
+
+    @Override
+    public CachedSlotWrite getWriteNode(final SlotDefinition slot,
+        final CheckSObject guard, final AbstractDispatchNode next,
+        final boolean isSet) {
+      return new UnwrittenSlotWrite(slot, guard, next);
+    }
+
+    /**
+     * Slow-path accessor to slot.
+     */
+    @Override
     public Object read(final SObject obj) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
       return Nil.nilObject;
     }
 
+    /**
+     * Slow-path accessor to slot.
+     */
     @Override
     public void write(final SObject obj, final Object value) {
       CompilerAsserts.neverPartOfCompilation("StorageLocation");
@@ -128,94 +136,87 @@ public abstract class StorageLocation {
     }
 
     @Override
-    public FieldReadNode getReadNode(final boolean isSet) {
-      return new ReadUnwrittenFieldNode(slot);
-    }
-  }
-
-  public abstract static class AbstractObjectStorageLocation extends StorageLocation {
-    public AbstractObjectStorageLocation(final ObjectLayout layout, final SlotDefinition slot) {
-      super(layout, slot);
+    public boolean isSet(final SObject obj) {
+      return false;
     }
 
     @Override
-    public final boolean isObjectLocation() {
-      return true;
-    }
-
-    @Override
-    public final FieldReadNode getReadNode(final boolean isSet) {
-      return new ReadObjectFieldNode(slot, layout);
+    public StorageAccessor getAccessor() {
+      throw new IllegalStateException("I suppose this should not happen? There's no storage location here");
     }
   }
 
-  public static final class ObjectDirectStorageLocation
-      extends AbstractObjectStorageLocation {
-    private final long fieldOffset;
-    public ObjectDirectStorageLocation(final ObjectLayout layout, final SlotDefinition slot,
+  public static final class ObjectStorageLocation extends StorageLocation {
+    private final AbstractObjectAccessor accessor;
+
+    public ObjectStorageLocation(final ObjectLayout layout, final SlotDefinition slot,
         final int objFieldIdx) {
       super(layout, slot);
-      fieldOffset = SObject.getObjectFieldOffset(objFieldIdx);
+      this.accessor = StorageAccessor.getObjectAccessor(objFieldIdx);
     }
 
     @Override
-    public boolean isSet(final SObject obj, final IntValueProfile primMarkProfile) {
-      assert read(obj) != null;
+    public boolean isObjectLocation() {
+      return true;
+    }
+
+    /**
+     * Slow-path accessor to slot.
+     */
+    @Override
+    public CachedSlotRead getReadNode(final SlotAccess type,
+        final CheckSObject guard, final AbstractDispatchNode nextInCache,
+        final boolean isSet) {
+      return new ObjectSlotRead(accessor, type, guard, nextInCache);
+    }
+
+    @Override
+    public CachedSlotWrite getWriteNode(final SlotDefinition slot,
+        final CheckSObject guard, final AbstractDispatchNode next,
+        final boolean isSet) {
+      return new ObjectSlotWrite(accessor, guard, next);
+    }
+
+    /**
+     * Slow-path accessor to slot.
+     */
+    @Override
+    public Object read(final SObject obj) {
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
+      return accessor.read(obj);
+    }
+
+    /**
+     * Slow-path accessor to slot.
+     */
+    @Override
+    public void write(final SObject obj, final Object value) {
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
+      accessor.write(obj, value);
+    }
+
+    /**
+     * Slow-path accessor to slot.
+     */
+    @Override
+    public boolean isSet(final SObject obj) {
+      assert read(obj) != null : "null is not a valid value for an object slot, it needs to be initialized with nil.";
       return true;
     }
 
     @Override
-    public Object read(final SObject obj) {
-      return unsafe.getObject(obj, fieldOffset);
-    }
-
-    @Override
-    public void write(final SObject obj, final Object value) {
-      assert value != null;
-      unsafe.putObject(obj, fieldOffset, value);
-    }
-  }
-
-  public static final class ObjectArrayStorageLocation extends AbstractObjectStorageLocation {
-    private final int extensionIndex;
-    public ObjectArrayStorageLocation(final ObjectLayout layout,
-        final SlotDefinition slot, final int objFieldIdx) {
-      super(layout, slot);
-      extensionIndex = objFieldIdx - SObject.NUM_OBJECT_FIELDS;
-    }
-
-    @Override
-    public boolean isSet(final SObject obj, final IntValueProfile primMarkProfile) {
-      assert read(obj) != null;
-      return true;
-    }
-
-    @Override
-    public Object read(final SObject obj) {
-      Object[] arr = obj.getExtensionObjFields();
-      return arr[extensionIndex];
-    }
-
-    @Override
-    public void write(final SObject obj, final Object value) {
-      assert value != null;
-      Object[] arr = obj.getExtensionObjFields();
-      arr[extensionIndex] = value;
+    public StorageAccessor getAccessor() {
+      return accessor;
     }
   }
 
   public abstract static class PrimitiveStorageLocation extends StorageLocation {
-    protected final int mask;
+    protected final AbstractPrimitiveAccessor accessor;
 
     protected PrimitiveStorageLocation(final ObjectLayout layout,
         final SlotDefinition slot, final int primField) {
       super(layout, slot);
-      mask = SObject.getPrimitiveFieldMask(primField);
-    }
-
-    @Override
-    public final boolean isSet(final SObject obj, final IntValueProfile primMarkProfile) {
-      return obj.isPrimitiveSet(mask, primMarkProfile);
+      accessor = StorageAccessor.getPrimitiveAccessor(primField);
     }
 
     @Override
@@ -223,254 +224,133 @@ public abstract class StorageLocation {
       return false;
     }
 
-    public final void markAsSet(final SObject obj) {
-      obj.markPrimAsSet(mask);
+    @Override
+    public StorageAccessor getAccessor() {
+      return accessor;
     }
 
-    public abstract Object readSet(SObject obj);
-    public abstract void   writeSet(SObject obj, Object value);
+    /**
+     * Slow-path accessor to slot.
+     */
+    @Override
+    public final boolean isSet(final SObject obj) {
+      return accessor.isPrimitiveSet(obj);
+    }
   }
 
-  public abstract static class PrimitiveDirectStoreLocation extends PrimitiveStorageLocation {
-    protected final long offset;
-    public PrimitiveDirectStoreLocation(final ObjectLayout layout,
+  public static final class LongStorageLocation extends PrimitiveStorageLocation {
+
+    protected LongStorageLocation(final ObjectLayout layout,
         final SlotDefinition slot, final int primField) {
       super(layout, slot, primField);
-      offset = SObject.getPrimitiveFieldOffset(primField);
     }
 
     @Override
-    public final FieldReadNode getReadNode(final boolean isSet) {
+    public CachedSlotRead getReadNode(final SlotAccess type,
+        final CheckSObject guard, final AbstractDispatchNode nextInCache,
+        final boolean isSet) {
       if (isSet) {
-        return new ReadSetPrimitiveSlot(slot, layout);
+        return new LongSlotReadSet(accessor, type, guard, nextInCache);
       } else {
-        return new ReadSetOrUnsetPrimitiveSlot(slot, layout);
+        return new LongSlotReadSetOrUnset(accessor, type, guard, nextInCache);
       }
-    }
-  }
-
-  public static final class DoubleDirectStoreLocation extends PrimitiveDirectStoreLocation
-      implements DoubleStorageLocation {
-    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
-    public DoubleDirectStoreLocation(final ObjectLayout layout,
-        final SlotDefinition slot, final int primField) {
-      super(layout, slot, primField);
     }
 
     @Override
+    public CachedSlotWrite getWriteNode(final SlotDefinition slot,
+        final CheckSObject guard, final AbstractDispatchNode next,
+        final boolean isSet) {
+      if (isSet) {
+        return new LongSlotWriteSet(slot, accessor, guard, next);
+      } else {
+        return new LongSlotWriteSetOrUnset(slot, accessor, guard, next);
+      }
+    }
+
+
+    /**
+     * Slow-path accessor to slot.
+     */
+    @Override
     public Object read(final SObject obj) {
-      if (isSet(obj, primMarkProfile)) {
-        return readDoubleSet(obj);
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
+      if (isSet(obj)) {
+        return accessor.readLong(obj);
       } else {
         return Nil.nilObject;
       }
     }
 
-    @Override
-    public double readDoubleSet(final SObject obj) {
-      return unsafe.getDouble(obj, offset);
-    }
-
-    @Override
-    public Object readSet(final SObject obj) {
-      return readDoubleSet(obj);
-    }
-
-    @Override
-    public void writeSet(final SObject obj, final Object value) {
-      writeDoubleSet(obj, (double) value);
-    }
-
+    /**
+     * Slow-path accessor to slot.
+     */
     @Override
     public void write(final SObject obj, final Object value) {
-      assert value != null;
-      if (value instanceof Double) {
-        writeDoubleSet(obj, (double) value);
-        markAsSet(obj);
-      } else {
-        TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized read node");
-        assert value != Nil.nilObject;
-        ObjectTransitionSafepoint.INSTANCE.writeAndGeneralizeSlot(obj, slot, value);
-      }
-    }
-
-    @Override
-    public void writeDoubleSet(final SObject obj, final double value) {
-      unsafe.putDouble(obj, offset, value);
-    }
-  }
-
-  public static final class LongDirectStoreLocation extends PrimitiveDirectStoreLocation
-      implements LongStorageLocation {
-    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
-    public LongDirectStoreLocation(final ObjectLayout layout,
-        final SlotDefinition slot, final int primField) {
-      super(layout, slot, primField);
-    }
-
-    @Override
-    public Object read(final SObject obj) {
-      if (isSet(obj, primMarkProfile)) {
-        return readLongSet(obj);
-      } else {
-        return Nil.nilObject;
-      }
-    }
-
-    @Override
-    public long readLongSet(final SObject obj) {
-      return unsafe.getLong(obj, offset);
-    }
-
-    @Override
-    public Object readSet(final SObject obj) {
-      return readLongSet(obj);
-    }
-
-    @Override
-    public void writeSet(final SObject obj, final Object value) {
-      writeLongSet(obj, (long) value);
-    }
-
-    @Override
-    public void write(final SObject obj, final Object value) {
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
       assert value != null;
       if (value instanceof Long) {
-        writeLongSet(obj, (long) value);
-        markAsSet(obj);
+        accessor.write(obj, (long) value);
+        accessor.markPrimAsSet(obj);
       } else {
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
         ObjectTransitionSafepoint.INSTANCE.writeAndGeneralizeSlot(obj, slot, value);
       }
     }
-
-    @Override
-    public void writeLongSet(final SObject obj, final long value) {
-      unsafe.putLong(obj, offset, value);
-    }
   }
 
-  public abstract static class PrimitiveArrayStoreLocation extends PrimitiveStorageLocation {
-    protected final int extensionIndex;
-    public PrimitiveArrayStoreLocation(final ObjectLayout layout,
+  public static final class DoubleStorageLocation extends PrimitiveStorageLocation {
+
+    protected DoubleStorageLocation(final ObjectLayout layout,
         final SlotDefinition slot, final int primField) {
       super(layout, slot, primField);
-      extensionIndex = primField - SObject.NUM_PRIMITIVE_FIELDS;
-      assert extensionIndex >= 0;
     }
 
     @Override
-    public FieldReadNode getReadNode(final boolean isSet) {
+    public CachedSlotRead getReadNode(final SlotAccess type,
+        final CheckSObject guard, final AbstractDispatchNode nextInCache,
+        final boolean isSet) {
       if (isSet) {
-        return new ReadSetPrimitiveSlot(slot, layout);
+        return new DoubleSlotReadSet(accessor, type, guard, nextInCache);
       } else {
-        return new ReadSetOrUnsetPrimitiveSlot(slot, layout);
+        return new DoubleSlotReadSetOrUnset(accessor, type, guard, nextInCache);
       }
-    }
-  }
-
-  public static final class LongArrayStoreLocation extends PrimitiveArrayStoreLocation
-      implements LongStorageLocation {
-    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
-    public LongArrayStoreLocation(final ObjectLayout layout,
-        final SlotDefinition slot, final int primField) {
-      super(layout, slot, primField);
     }
 
     @Override
+    public CachedSlotWrite getWriteNode(final SlotDefinition slot,
+        final CheckSObject guard, final AbstractDispatchNode next,
+        final boolean isSet) {
+      if (isSet) {
+        return new DoubleSlotWriteSet(slot, accessor, guard, next);
+      } else {
+        return new DoubleSlotWriteSetOrUnset(slot, accessor, guard, next);
+      }
+    }
+
+    /**
+     * Slow-path accessor to slot.
+     */
+    @Override
     public Object read(final SObject obj) {
-      if (isSet(obj, primMarkProfile)) {
-        return readLongSet(obj);
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
+      if (isSet(obj)) {
+        return accessor.readDouble(obj);
       } else {
         return Nil.nilObject;
       }
     }
 
     @Override
-    public long readLongSet(final SObject obj) {
-      return obj.getExtendedPrimFields()[extensionIndex];
-    }
-
-    @Override
-    public Object readSet(final SObject obj) {
-      return readLongSet(obj);
-    }
-
-    @Override
-    public void writeSet(final SObject obj, final Object value) {
-      writeLongSet(obj, (long) value);
-    }
-
-    @Override
     public void write(final SObject obj, final Object value) {
-      assert value != null;
-      if (value instanceof Long) {
-        writeLongSet(obj, (long) value);
-        markAsSet(obj);
-      } else {
-        TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
-        assert value != Nil.nilObject;
-        ObjectTransitionSafepoint.INSTANCE.writeAndGeneralizeSlot(obj, slot, value);
-      }
-    }
-
-    @Override
-    public void writeLongSet(final SObject obj, final long value) {
-      obj.getExtendedPrimFields()[extensionIndex] = value;
-    }
-  }
-
-  public static final class DoubleArrayStoreLocation extends PrimitiveArrayStoreLocation
-      implements DoubleStorageLocation {
-    public DoubleArrayStoreLocation(final ObjectLayout layout,
-        final SlotDefinition slot, final int primField) {
-      super(layout, slot, primField);
-    }
-
-    private final IntValueProfile primMarkProfile = IntValueProfile.createIdentityProfile();
-
-    @Override
-    public Object read(final SObject obj) {
-      if (isSet(obj, primMarkProfile)) {
-        return readDoubleSet(obj);
-      } else {
-        return Nil.nilObject;
-      }
-    }
-
-    @Override
-    public double readDoubleSet(final SObject obj) {
-      return Double.longBitsToDouble(obj.getExtendedPrimFields()[extensionIndex]);
-    }
-
-    @Override
-    public Object readSet(final SObject obj) {
-      return readDoubleSet(obj);
-    }
-
-    @Override
-    public void writeSet(final SObject obj, final Object value) {
-      writeDoubleSet(obj, (double) value);
-    }
-
-    @Override
-    public void write(final SObject obj, final Object value) {
+      CompilerAsserts.neverPartOfCompilation("StorageLocation");
       assert value != null;
       if (value instanceof Double) {
-        writeDoubleSet(obj, (double) value);
-        markAsSet(obj);
+        accessor.write(obj, (double) value);
+        accessor.markPrimAsSet(obj);
       } else {
-        TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
         assert value != Nil.nilObject;
         ObjectTransitionSafepoint.INSTANCE.writeAndGeneralizeSlot(obj, slot, value);
       }
-    }
-
-    @Override
-    public void writeDoubleSet(final SObject obj, final double value) {
-      final long[] arr = obj.getExtendedPrimFields();
-      long val = Double.doubleToRawLongBits(value);
-      arr[extensionIndex] = val;
     }
   }
 }
