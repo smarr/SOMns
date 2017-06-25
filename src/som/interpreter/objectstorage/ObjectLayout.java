@@ -118,7 +118,6 @@ public final class ObjectLayout {
     if (type == Object.class) {
       return this;
     } else {
-      assert type != Object.class;
       return cloneWithChanged(slot, Object.class);
     }
   }
@@ -135,6 +134,12 @@ public final class ObjectLayout {
     if (currentType == specType) {
       return this;
     } else {
+      // It can happen that two threads try to initialize the field to different types
+      // This is handled here by ensuring that we generalize it when necessary.
+      if ((currentType == Long.class && specType == Double.class)
+          || (currentType == Double.class && specType == Long.class)) {
+        specType = Object.class;
+      }
       assert currentType == null;
       return cloneWithChanged(slot, specType);
     }

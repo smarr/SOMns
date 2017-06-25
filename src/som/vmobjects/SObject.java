@@ -37,7 +37,10 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.interpreter.objectstorage.StorageLocation;
+import som.interpreter.objectstorage.StorageLocation.DoubleStorageLocation;
+import som.interpreter.objectstorage.StorageLocation.LongStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.ObjectStorageLocation;
+import som.interpreter.objectstorage.StorageLocation.UnwrittenStorageLocation;
 import som.vm.constants.Nil;
 
 public abstract class SObject extends SObjectWithClass {
@@ -422,19 +425,45 @@ public abstract class SObject extends SObjectWithClass {
     setAllFields(fieldValues);
   }
 
-  protected final void updateLayoutWithInitializedField(final SlotDefinition slot, final Class<?> type) {
-    // TODO: this method does not yet support two threads arriving at the given slot/object at the same time
-    //       the second thread likely needs to start over completely again
-    ObjectLayout layout = classGroup.updateInstanceLayoutWithInitializedField(slot, type);
-    assert objectLayout != layout;
-    setLayoutAndTransferFields();
+  /**
+   * Since this operation is racy with other initializations of the field, we
+   * first check whether the slot is unwritten. If that is the case, the slot
+   * is initialized. Otherwise, we check whether the field needs to be
+   * generalized.
+   *
+   * <p><strong>Note:</strong> This method is expected to be called while
+   * holding a lock on <code>this</code>.
+   */
+  protected final void updateLayoutWithInitializedField(
+      final SlotDefinition slot, final Class<?> type) {
+    StorageLocation loc = objectLayout.getStorageLocation(slot);
+    if (loc instanceof UnwrittenStorageLocation) {
+      ObjectLayout layout = classGroup.updateInstanceLayoutWithInitializedField(slot, type);
+      assert objectLayout != layout;
+      setLayoutAndTransferFields();
+    } else if ((type == Long.class && !(loc instanceof LongStorageLocation)) ||
+        (type == Double.class && !(loc instanceof DoubleStorageLocation))) {
+      updateLayoutWithGeneralizedField(slot);
+    }
   }
 
+  /**
+   * Since this operation is racy with other generalizations of the field, we
+   * first check whether the slot is not already using an
+   * {@link ObjectStorageLocation}. If it is using one, another generalization
+   * happened already, and we don't need to do it anymore.
+   *
+   * <p><strong>Note:</strong> This method is expected to be called while
+   * holding a lock on <code>this</code>.
+   */
   protected final void updateLayoutWithGeneralizedField(final SlotDefinition slot) {
-    ObjectLayout layout = classGroup.updateInstanceLayoutWithGeneralizedField(slot);
+    StorageLocation loc = objectLayout.getStorageLocation(slot);
+    if (!(loc instanceof ObjectStorageLocation)) {
+      ObjectLayout layout = classGroup.updateInstanceLayoutWithGeneralizedField(slot);
 
-    assert objectLayout != layout;
-    setLayoutAndTransferFields();
+      assert objectLayout != layout;
+      setLayoutAndTransferFields();
+    }
   }
 
   public static int getPrimitiveFieldMask(final int fieldIndex) {
