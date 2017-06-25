@@ -40,6 +40,14 @@ benchmark_job:
     - ant compile
     - export EXP=`if [[ "$CI_BUILD_REF_NAME" = "master" ]]; then echo "SOMns"; else echo "SOMns-exp"; fi`; rebench -d --without-nice -c --commit-id="$CI_BUILD_REF" --environment="Infinity Ubuntu" --project=SOMns --branch=master codespeed.conf $EXP
 
+benchmark_interp_job:
+  stage: benchmark
+  tags: [benchmarks, infinity]
+  allow_failure: true
+  script:
+    - ant compile
+    - export EXP=`if [[ "$CI_BUILD_REF_NAME" = "master" ]]; then echo "SOMns-interp"; else echo "SOMns-interp-exp"; fi`; rebench -d --without-nice -c --commit-id="$CI_BUILD_REF" --environment="Infinity Ubuntu" --project=SOMns --branch=master codespeed.conf $EXP
+
 benchmark_nightly_job:
   stage: benchmark
   tags: [benchmarks, infinity]
