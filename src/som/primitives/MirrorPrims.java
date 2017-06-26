@@ -3,6 +3,7 @@ package som.primitives;
 import java.util.ArrayList;
 import java.util.Arrays;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -36,6 +37,7 @@ public abstract class MirrorPrims {
     public NestedClassesPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
+    @TruffleBoundary
     public final SMutableArray getNestedClasses(final SObjectWithClass rcvr) {
       SClass[] classes = rcvr.getSOMClass().getNestedClasses(rcvr);
       return new SMutableArray(classes, Classes.arrayClass);
@@ -48,6 +50,7 @@ public abstract class MirrorPrims {
     protected RespondsToPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
+    @TruffleBoundary
     public final boolean objectResondsTo(final Object rcvr, final SSymbol selector) {
       VM.thisMethodNeedsToBeOptimized("Uses Types.getClassOf, so, should be specialized in performance cirtical code");
       return Types.getClassOf(rcvr).canUnderstand(selector);
@@ -60,6 +63,7 @@ public abstract class MirrorPrims {
     public MethodsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
+    @TruffleBoundary
     public final SImmutableArray getMethod(final Object rcvr) {
       VM.thisMethodNeedsToBeOptimized("Uses Types.getClassOf, so, should be specialized in performance cirtical code");
       SInvokable[] is = Types.getClassOf(rcvr).getMethods();
@@ -122,6 +126,7 @@ public abstract class MirrorPrims {
     public NestedClassDefinitionsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
+    @TruffleBoundary
     public final Object getClassDefinition(final Object mixinHandle) {
       assert mixinHandle instanceof MixinDefinition;
       MixinDefinition def = (MixinDefinition) mixinHandle;
@@ -149,6 +154,7 @@ public abstract class MirrorPrims {
     public ClassDefMethodsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
+    @TruffleBoundary
     public final SImmutableArray getName(final Object mixinHandle) {
       assert mixinHandle instanceof MixinDefinition;
       MixinDefinition def = (MixinDefinition) mixinHandle;
@@ -170,6 +176,7 @@ public abstract class MirrorPrims {
     protected ClassDefHasFactoryMethodPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
 
     @Specialization
+    @TruffleBoundary
     public final boolean hasFactoryMethod(final Object mixinHandle,
         final SSymbol selector) {
       assert mixinHandle instanceof MixinDefinition;

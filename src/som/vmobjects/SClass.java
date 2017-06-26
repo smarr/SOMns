@@ -30,6 +30,7 @@ import java.util.HashSet;
 import java.util.Map;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 import som.VM;
@@ -193,6 +194,7 @@ public final class SClass extends SObjectWithClass {
     return dispatchables.containsKey(selector);
   }
 
+  @TruffleBoundary
   public SInvokable[] getMethods() {
     ArrayList<SInvokable> methods = new ArrayList<SInvokable>();
     for (Dispatchable disp : dispatchables.values()) {
@@ -203,6 +205,7 @@ public final class SClass extends SObjectWithClass {
     return methods.toArray(new SInvokable[methods.size()]);
   }
 
+  @TruffleBoundary
   public SClass[] getNestedClasses(final SObjectWithClass instance) {
     VM.thisMethodNeedsToBeOptimized("Not optimized, we do unrecorded invokes here");
     ArrayList<SClass> classes = new ArrayList<SClass>();

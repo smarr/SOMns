@@ -1,5 +1,6 @@
 package som.primitives.reflection;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -82,6 +83,7 @@ public abstract class AbstractSymbolDispatch extends Node {
   }
 
   @Specialization(replaces = "doCachedWithoutArgArr", guards = "argsArr == null")
+  @TruffleBoundary
   public Object doUncached(final Object receiver, final SSymbol selector,
       final Object argsArr,
       @Cached("create()") final IndirectCallNode call) {
@@ -98,6 +100,7 @@ public abstract class AbstractSymbolDispatch extends Node {
   }
 
   @Specialization(replaces = "doCached")
+  @TruffleBoundary
   public Object doUncached(final Object receiver, final SSymbol selector,
       final SArray argsArr,
       @Cached("create()") final IndirectCallNode call,
