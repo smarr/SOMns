@@ -10,6 +10,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -349,6 +350,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     mainThreadCompleted.complete(errorCode);
   }
 
+  @TruffleBoundary
   public void executeApplication(final SObjectWithoutFields vmMirror, final Actor mainActor) {
     mainThreadCompleted = new CompletableFuture<>();
 
@@ -398,6 +400,7 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     }
   }
 
+  @TruffleBoundary
   public Object execute(final String selector) {
     SInvokable method = (SInvokable) platformClass.getSOMClass().lookupMessage(
         Symbols.symbolFor(selector), AccessModifier.PUBLIC);
