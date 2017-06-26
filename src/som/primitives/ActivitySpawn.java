@@ -119,6 +119,7 @@ public abstract class ActivitySpawn {
     }
 
     @Specialization(guards = "clazz == ThreadClass")
+    @TruffleBoundary
     public final SomThreadTask spawnThread(final SClass clazz, final SBlock block) {
       SomThreadTask thread = createThread(new Object[] {block},
           onExec.executeShouldHalt(), block, sourceSection);
@@ -183,6 +184,7 @@ public abstract class ActivitySpawn {
     }
 
     @Specialization(guards = "clazz == TaskClass")
+    @TruffleBoundary
     public SomForkJoinTask spawnTask(final SClass clazz, final SBlock block,
         final SArray somArgArr, final Object[] argArr) {
       SomForkJoinTask task = createTask(argArr,
@@ -192,6 +194,7 @@ public abstract class ActivitySpawn {
     }
 
     @Specialization(guards = "clazz == ThreadClass")
+    @TruffleBoundary
     public SomThreadTask spawnThread(final SClass clazz, final SBlock block,
         final SArray somArgArr, final Object[] argArr) {
       SomThreadTask thread = createThread(argArr,

@@ -2,6 +2,8 @@ package som.interpreter.processes;
 
 import java.util.concurrent.SynchronousQueue;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+
 import som.primitives.processes.ChannelPrimitives;
 import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
@@ -74,6 +76,7 @@ public class SChannel extends SAbstractObject {
       this.channel = channel;
     }
 
+    @TruffleBoundary
     public Object read() throws InterruptedException {
       return cell.take();
     }
@@ -117,6 +120,7 @@ public class SChannel extends SAbstractObject {
       this.channel = channel;
     }
 
+    @TruffleBoundary
     public void write(final Object value) throws InterruptedException {
       cell.put(value);
     }

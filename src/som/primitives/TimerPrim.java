@@ -5,9 +5,9 @@ import java.util.TimerTask;
 import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
@@ -34,7 +34,8 @@ public abstract class TimerPrim extends BinaryComplexOperation{
   @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
 
   @Specialization
-  public final Object doResolveAfter(final VirtualFrame frame, final SResolver resolver, final long timeout) {
+  @TruffleBoundary
+  public final Object doResolveAfter(final SResolver resolver, final long timeout) {
     if (timer == null) {
       timer = new Timer();
     }

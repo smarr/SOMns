@@ -89,6 +89,7 @@ public final class MutexPrimitives {
     public IsLockedPrim(final boolean ew, final SourceSection s) { super(ew, s); }
 
     @Specialization
+    @TruffleBoundary
     public boolean doLock(final ReentrantLock lock) {
       return lock.isLocked();
     }
@@ -100,6 +101,7 @@ public final class MutexPrimitives {
     public ConditionForPrim(final boolean ew, final SourceSection s) { super(ew, s); }
 
     @Specialization
+    @TruffleBoundary
     public Condition doLock(final ReentrantLock lock) {
       return lock.newCondition();
     }
@@ -112,6 +114,7 @@ public final class MutexPrimitives {
 
     // TODO: should I guard this on the mutex class?
     @Specialization
+    @TruffleBoundary
     public final ReentrantLock doSClass(final SClass clazz) {
       return new ReentrantLock();
     }
