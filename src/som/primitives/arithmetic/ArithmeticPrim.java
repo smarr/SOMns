@@ -2,6 +2,7 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.nary.BinaryBasicOperation;
@@ -20,6 +21,7 @@ public abstract class ArithmeticPrim extends BinaryBasicOperation {
     }
   }
 
+  @TruffleBoundary
   protected static final Number reduceToLongIfPossible(final BigInteger result) {
     if (result.bitLength() > Long.SIZE - 1) {
       return result;

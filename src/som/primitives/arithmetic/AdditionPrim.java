@@ -26,11 +26,13 @@ public abstract class AdditionPrim extends ArithmeticPrim {
   }
 
   @Specialization
+  @TruffleBoundary
   public final BigInteger doLongWithOverflow(final long left, final long argument) {
     return BigInteger.valueOf(left).add(BigInteger.valueOf(argument));
   }
 
   @Specialization
+  @TruffleBoundary
   public final Object doBigInteger(final BigInteger left, final BigInteger right) {
     BigInteger result = left.add(right);
     return reduceToLongIfPossible(result);
@@ -60,6 +62,7 @@ public abstract class AdditionPrim extends ArithmeticPrim {
   }
 
   @Specialization
+  @TruffleBoundary
   public final Object doLong(final long left, final BigInteger argument) {
     return doBigInteger(BigInteger.valueOf(left), argument);
   }
@@ -70,6 +73,7 @@ public abstract class AdditionPrim extends ArithmeticPrim {
   }
 
   @Specialization
+  @TruffleBoundary
   public final Object doBigInteger(final BigInteger left, final long right) {
     return doBigInteger(left, BigInteger.valueOf(right));
   }

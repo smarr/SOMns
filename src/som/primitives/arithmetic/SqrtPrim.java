@@ -2,6 +2,7 @@ package som.primitives.arithmetic;
 
 import java.math.BigInteger;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
@@ -33,6 +34,7 @@ public abstract class SqrtPrim extends UnaryBasicOperation {
   }
 
   @Specialization
+  @TruffleBoundary
   public final double doBigInteger(final BigInteger receiver) {
     return Math.sqrt(receiver.doubleValue());
   }
