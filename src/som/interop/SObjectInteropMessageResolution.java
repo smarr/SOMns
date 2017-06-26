@@ -1,5 +1,6 @@
 package som.interop;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.CanResolve;
 import com.oracle.truffle.api.interop.MessageResolution;
@@ -20,16 +21,22 @@ public class SObjectInteropMessageResolution {
 
   @Resolve(message = "INVOKE")
   public abstract static class SObjectInvokeNode extends Node {
-    @Child protected InteropDispatch dispatch;
-    @Child protected ToSomConversion convert = ToSomConversionNodeGen.create(null);
 
-    protected Object access(final VirtualFrame frame, final SObjectWithClass rcvr,
-        final String name, final Object[] args) {
+    @Child protected ToSomConversion convert = ToSomConversionNodeGen.create(null);
+    @Child protected InteropDispatch dispatch;
+
+    @TruffleBoundary
+    protected final void ensureDispatch(final SObjectWithClass rcvr) {
       if (dispatch == null) {
         // TODO: this is a bad hack. Ideally, we can pass the VM in somewhat more direct and robustly
         VM vm = rcvr.getSOMClass().getMethods()[0].getInvokable().getRootNode().getLanguage(SomLanguage.class).getVM();
         dispatch = InteropDispatchNodeGen.create(vm);
       }
+    }
+
+    protected Object access(final VirtualFrame frame, final SObjectWithClass rcvr,
+        final String name, final Object[] args) {
+      ensureDispatch(rcvr);
 
       Object[] arguments = ValueConversion.convertToArgArray(convert, rcvr, args);
 
@@ -44,17 +51,21 @@ public class SObjectInteropMessageResolution {
     //       because it should be a precise lookup. But, for simplicity
     //       we reuse this for now
 
-    @Child protected InteropDispatch dispatch;
     @Child protected ToSomConversion convert = ToSomConversionNodeGen.create(null);
+    @Child protected InteropDispatch dispatch;
 
-
-    protected Object access(final VirtualFrame frame, final SObjectWithClass rcvr,
-        final String name, final Object value) {
+    @TruffleBoundary
+    protected final void ensureDispatch(final SObjectWithClass rcvr) {
       if (dispatch == null) {
         // TODO: this is a bad hack. Ideally, we can pass the VM in somewhat more direct and robustly
         VM vm = rcvr.getSOMClass().getMethods()[0].getInvokable().getRootNode().getLanguage(SomLanguage.class).getVM();
         dispatch = InteropDispatchNodeGen.create(vm);
       }
+    }
+
+    protected Object access(final VirtualFrame frame, final SObjectWithClass rcvr,
+        final String name, final Object value) {
+      ensureDispatch(rcvr);
 
       Object[] arguments = {rcvr, convert.executeEvaluated(value)};
 
