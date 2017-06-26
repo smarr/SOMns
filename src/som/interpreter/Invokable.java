@@ -47,7 +47,7 @@ public abstract class Invokable extends RootNode {
   }
 
   @Override
-  public Object execute(final VirtualFrame frame) {
+  public final Object execute(final VirtualFrame frame) {
     return expressionOrSequence.executeGeneric(frame);
   }
 
