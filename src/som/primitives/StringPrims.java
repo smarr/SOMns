@@ -1,5 +1,6 @@
 package som.primitives;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.BranchProfile;
@@ -33,21 +34,25 @@ public class StringPrims {
     }
 
     @Specialization
+    @TruffleBoundary
     public final String doString(final String receiver, final String argument) {
       return receiver + argument;
     }
 
     @Specialization
+    @TruffleBoundary
     public final String doString(final String receiver, final SSymbol argument) {
       return receiver + argument.getString();
     }
 
     @Specialization
+    @TruffleBoundary
     public final String doSSymbol(final SSymbol receiver, final String argument) {
       return receiver.getString() + argument;
     }
 
     @Specialization
+    @TruffleBoundary
     public final String doSSymbol(final SSymbol receiver, final SSymbol argument) {
       return receiver.getString() + argument.getString();
     }

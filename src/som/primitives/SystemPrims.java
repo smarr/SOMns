@@ -107,6 +107,7 @@ public final class SystemPrims {
     public ExitPrim(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source); this.vm = vm; }
 
     @Specialization
+    @TruffleBoundary
     public final Object doSObject(final long error) {
       vm.requestExit((int) error);
       return Nil.nilObject;
