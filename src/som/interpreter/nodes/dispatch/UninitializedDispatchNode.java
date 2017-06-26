@@ -1,5 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
+import java.util.concurrent.locks.Lock;
+
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.interop.TruffleObject;
@@ -162,8 +164,12 @@ public final class UninitializedDispatchNode {
       }
 
       // we modify a dispatch chain here, so, better grab the root node before we do anything
-      synchronized (getLock()) {
+      Lock lock = getLock();
+      try {
+        lock.lock();
         return specialize(arguments, chainDepth, first);
+      } finally {
+        lock.unlock();
       }
     }
 

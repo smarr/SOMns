@@ -1,5 +1,7 @@
 package som.interpreter.nodes;
 
+import java.util.concurrent.locks.Lock;
+
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
@@ -68,8 +70,12 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
     // tracks its replacement nodes to avoid re-specialization in case of
     // re-execution
     PreevaluatedExpression newNode;
-    synchronized (getLock()) {
-       newNode = specialize(args);
+    Lock lock = getLock();
+    try {
+      lock.lock();
+      newNode = specialize(args);
+    } finally {
+      lock.unlock();
     }
     return newNode.
         doPreEvaluated(frame, args);
