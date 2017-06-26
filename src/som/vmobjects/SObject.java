@@ -391,7 +391,7 @@ public abstract class SObject extends SObjectWithClass {
   }
 
   public final boolean isLayoutCurrent() {
-    return objectLayout == clazz.getLayoutForInstances();
+    return objectLayout == clazz.getLayoutForInstances() && objectLayout.isValid();
   }
 
   public final synchronized boolean updateLayoutToMatchClass() {
