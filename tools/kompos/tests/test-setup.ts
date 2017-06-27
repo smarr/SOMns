@@ -80,7 +80,7 @@ export class TestConnection extends VmConnection {
   }
 
   private initConnection(): Promise<boolean> {
-    const promise = new Promise((resolve, reject) => {
+    const promise = new Promise<boolean>((resolve, reject) => {
       const msgPortRe = /.*Message Handler:\s+(\d+)/m;
       const tracePortRe = /.*Trace Handler:\s+(\d+)/m;
       this.connectionResolver = resolve;

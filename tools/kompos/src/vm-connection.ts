@@ -43,7 +43,7 @@ export class VmConnection {
 
     const controller = this.controller;
     this.traceDataSocket.onmessage = function(e) {
-      const data: DataView = new DataView(e.data);
+      const data: DataView = new DataView(<ArrayBuffer> e.data);
       controller.onTracingData(data);
     };
   }
@@ -82,7 +82,7 @@ export class VmConnection {
     this.socket.onmessage = (e) => {
       if (!ctrl) { return; }
 
-      const data: Message = JSON.parse(e.data);
+      const data: Message = JSON.parse(<string> e.data);
 
       switch (data.type) {
         case "source":
