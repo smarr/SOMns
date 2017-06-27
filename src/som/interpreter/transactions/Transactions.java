@@ -106,7 +106,6 @@ public final class Transactions {
     }
   }
 
-
   private void start() {
     objects = new IdentityHashMap<>();
     arrays  = new IdentityHashMap<>();
@@ -138,6 +137,7 @@ public final class Transactions {
         }
       };
 
+  @TruffleBoundary
   public static Transactions startTransaction() {
     Transactions t = transactions.get();
     t.start();
@@ -147,6 +147,7 @@ public final class Transactions {
   /**
    * @return true on success, otherwise false.
    */
+  @TruffleBoundary
   public boolean commit() {
     synchronized (globalCommitLock) {
       if (hasConflicts()) {

@@ -4,6 +4,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -208,6 +209,7 @@ public abstract class ChannelPrimitives {
         }
         return result;
       } catch (InterruptedException e) {
+        CompilerDirectives.transferToInterpreter();
         throw new RuntimeException(e);
       }
     }
@@ -252,6 +254,7 @@ public abstract class ChannelPrimitives {
           haltNode.executeEvaluated(frame, val);
         }
       } catch (InterruptedException e) {
+        CompilerDirectives.transferToInterpreter();
         throw new RuntimeException(e);
       }
       return val;

@@ -29,6 +29,7 @@ import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
@@ -103,6 +104,7 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     return callTarget;
   }
 
+  @TruffleBoundary
   public final RootCallTarget getAtomicCallTarget() {
     if (atomicCallTarget == null) {
       synchronized (this) {

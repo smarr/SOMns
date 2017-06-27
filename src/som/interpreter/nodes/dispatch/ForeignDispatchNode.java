@@ -1,5 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.interop.Message;
@@ -37,6 +38,8 @@ public final class ForeignDispatchNode extends AbstractDispatchNode {
   }
 
   @Override
+  @TruffleBoundary
+  // TODO: needs to be optimized for compilation
   public Object executeDispatch(final Object[] arguments) {
     VM.thisMethodNeedsToBeOptimized("");
     Object rcvr = arguments[0];

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -78,6 +79,7 @@ public final class SystemPrims {
     protected LoadPrim(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source); this.vm = vm; }
 
     @Specialization
+    @TruffleBoundary
     public final Object doSObject(final String moduleName) {
       return loadModule(vm, moduleName);
     }
@@ -90,6 +92,7 @@ public final class SystemPrims {
     protected LoadNextToPrim(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source); this.vm = vm; }
 
     @Specialization
+    @TruffleBoundary
     public final Object load(final String filename, final SObjectWithClass moduleObj) {
       String path = moduleObj.getSOMClass().getMixinDefinition().getSourceSection().getSource().getPath();
       File file = new File(path);
@@ -104,6 +107,7 @@ public final class SystemPrims {
     public ExitPrim(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source); this.vm = vm; }
 
     @Specialization
+    @TruffleBoundary
     public final Object doSObject(final long error) {
       vm.requestExit((int) error);
       return Nil.nilObject;
@@ -150,6 +154,7 @@ public final class SystemPrims {
       return receiver;
     }
 
+    @TruffleBoundary
     public static void printStackTrace(final int skipDnuFrames, final SourceSection topNode) {
       ArrayList<String> method   = new ArrayList<String>();
       ArrayList<String> location = new ArrayList<String>();

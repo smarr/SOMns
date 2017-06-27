@@ -103,12 +103,14 @@ public final class VM {
 
   private final Map<String, Object> exports = new HashMap<>();
 
+  @TruffleBoundary
   public boolean registerExport(final String name, final Object value) {
     boolean wasExportedAlready = exports.containsKey(name);
     exports.put(name, value);
     return wasExportedAlready;
   }
 
+  @TruffleBoundary
   public Object getExport(final String name) {
     return exports.get(name);
   }
@@ -244,6 +246,7 @@ public final class VM {
    * Does minimal cleanup and disposes the polyglot engine, before doing a hard
    * exit. This method is expected to be called from main thread.
    */
+  @TruffleBoundary
   public void shutdownAndExit(final int errorCode) {
     if (truffleProfiler != null) {
       truffleProfiler.printHistograms(System.err);

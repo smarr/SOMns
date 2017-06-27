@@ -1,5 +1,6 @@
 package tools.dym.nodes;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.EventContext;
@@ -20,6 +21,7 @@ public class LateClosureTargetNode extends ExecutionEventNode {
     this.factory = factory;
   }
 
+  @TruffleBoundary
   private ExecutionEventNode specialize() {
     ExecutionEventNode parent = ctx.findParentEventNode(factory);
     InstrumentableBlockApplyNode disp = (InstrumentableBlockApplyNode) ctx.getInstrumentedNode();

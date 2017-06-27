@@ -29,6 +29,7 @@ public abstract class HashPrim extends UnaryExpressionNode {
   }
 
   @Specialization
+  @TruffleBoundary
   public final long doSAbstractObject(final SAbstractObject receiver) {
     return receiver.hashCode();
   }

@@ -42,6 +42,7 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
 
   @Specialization
   public final Object atomic(final VirtualFrame frame, final SClass clazz, final SBlock block) {
+    // TODO: needs to be optimized for compilation
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
         SteppingType.STEP_TO_NEXT_TX.isSet()) {
       haltNode.executeEvaluated(frame, block);

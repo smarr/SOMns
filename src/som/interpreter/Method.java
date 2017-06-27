@@ -21,6 +21,7 @@
  */
 package som.interpreter;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
@@ -121,6 +122,7 @@ public final class Method extends Invokable {
   }
 
   @Override
+  @TruffleBoundary
   public Invokable createAtomic() {
     assert !isAtomic : "We should only ask non-atomic invokables for their atomic version";
 

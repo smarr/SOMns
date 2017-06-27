@@ -3,6 +3,7 @@ package som.primitives.threading;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.source.SourceSection;
@@ -19,6 +20,7 @@ public final class ConditionPrimitives {
     public SignalOnePrim(final boolean ew, final SourceSection s) { super(ew, s); }
 
     @Specialization
+    @TruffleBoundary
     public final Condition doCondition(final Condition cond) {
       cond.signal();
       return cond;
@@ -31,6 +33,7 @@ public final class ConditionPrimitives {
     public SignalAllPrim(final boolean ew, final SourceSection s) { super(ew, s); }
 
     @Specialization
+    @TruffleBoundary
     public final Condition doCondition(final Condition cond) {
       cond.signalAll();
       return cond;
@@ -43,6 +46,7 @@ public final class ConditionPrimitives {
     public AwaitPrim(final boolean ew, final SourceSection s) { super(ew, s); }
 
     @Specialization
+    @TruffleBoundary
     public final Condition doCondition(final Condition cond) {
       try {
         cond.await();
@@ -59,6 +63,7 @@ public final class ConditionPrimitives {
     public AwaitForPrim(final boolean ew, final SourceSection s) { super(ew, s); }
 
     @Specialization
+    @TruffleBoundary
     public final boolean doCondition(final Condition cond, final long milliseconds) {
       try {
         return cond.await(milliseconds, TimeUnit.MILLISECONDS);
