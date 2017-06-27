@@ -1,7 +1,11 @@
-import { EntityDef, ActivityType, EntityType, DynamicScopeType,
-  PassiveEntityType, SendOpType, ReceiveOpType } from "./messages";
-import { ExecutionData, RawSourceCoordinate, RawActivity, RawScope,
-  RawPassiveEntity, RawSendOp, RawReceiveOp } from "./execution-data";
+import {
+  EntityDef, ActivityType, EntityType, DynamicScopeType,
+  PassiveEntityType, SendOpType, ReceiveOpType
+} from "./messages";
+import {
+  ExecutionData, RawSourceCoordinate, RawActivity, RawScope,
+  RawPassiveEntity, RawSendOp, RawReceiveOp
+} from "./execution-data";
 import { KomposMetaModel } from "./meta-model";
 
 enum TraceRecords {
@@ -23,46 +27,46 @@ const IMPL_THREAD_MARKER = 20;
 const IMPL_THREAD_CURRENT_ACTIVITY_MARKER = 21;
 
 const RECORD_SIZE = {
-  ActivityCreation   : 11 + SOURCE_SECTION_SIZE,
-  ActivityCompletion : 1,
-  DynamicScopeStart  : 9 + SOURCE_SECTION_SIZE,
-  DynamicScopeEnd    : 1,
-  PassiveEntityCreation   : 9 + SOURCE_SECTION_SIZE,
-  PassiveEntityCompletion : undefined,
-  SendOp     : 17,
-  ReceiveOp  : 9,
-  ImplThread : 9,
+  ActivityCreation: 11 + SOURCE_SECTION_SIZE,
+  ActivityCompletion: 1,
+  DynamicScopeStart: 9 + SOURCE_SECTION_SIZE,
+  DynamicScopeEnd: 1,
+  PassiveEntityCreation: 9 + SOURCE_SECTION_SIZE,
+  PassiveEntityCompletion: undefined,
+  SendOp: 17,
+  ReceiveOp: 9,
+  ImplThread: 9,
   ImplThreadCurrentActivity: 13
 };
 
 const SHIFT_HIGH_INT = 4294967296;
 const MAX_SAFE_HIGH_BITS = 53 - 32;
-const MAX_SAFE_HIGH_VAL  = (1 << MAX_SAFE_HIGH_BITS) - 1;
+const MAX_SAFE_HIGH_VAL = (1 << MAX_SAFE_HIGH_BITS) - 1;
 
 export class TraceParser {
   private readonly parseTable: TraceRecords[];
   private readonly typeCreation: EntityType[];
-  private readonly sendOps:    SendOpType[];
+  private readonly sendOps: SendOpType[];
   private readonly receiveOps: ReceiveOpType[];
   private readonly metaModel: KomposMetaModel;
   private readonly execData: ExecutionData;
 
   constructor(metaModel: KomposMetaModel, execData: ExecutionData) {
-    this.metaModel    = metaModel;
-    this.parseTable   = [];
+    this.metaModel = metaModel;
+    this.parseTable = [];
     this.typeCreation = [];
-    this.sendOps      = [];
-    this.receiveOps   = [];
+    this.sendOps = [];
+    this.receiveOps = [];
 
     this.initMetaData();
     this.execData = execData;
   }
 
-  private setInTable(entities:  EntityDef[],
-      creation: TraceRecords, completion: TraceRecords) {
+  private setInTable(entities: EntityDef[],
+    creation: TraceRecords, completion: TraceRecords) {
     for (const entityType of entities) {
       if (entityType.creation) {
-        this.parseTable[entityType.creation]   = creation;
+        this.parseTable[entityType.creation] = creation;
         this.typeCreation[entityType.creation] = entityType.id;
       }
 
@@ -90,14 +94,14 @@ export class TraceParser {
     this.setOpsInTable(this.metaModel.serverCapabilities.sendOps, TraceRecords.SendOp, this.sendOps);
     this.setOpsInTable(this.metaModel.serverCapabilities.receiveOps, TraceRecords.ReceiveOp, this.receiveOps);
 
-    console.assert(this.metaModel.serverCapabilities.activityParseData.creationSize       === RECORD_SIZE.ActivityCreation);
-    console.assert(this.metaModel.serverCapabilities.activityParseData.completionSize     === RECORD_SIZE.ActivityCompletion);
-    console.assert(this.metaModel.serverCapabilities.passiveEntityParseData.creationSize  === RECORD_SIZE.PassiveEntityCreation);
+    console.assert(this.metaModel.serverCapabilities.activityParseData.creationSize === RECORD_SIZE.ActivityCreation);
+    console.assert(this.metaModel.serverCapabilities.activityParseData.completionSize === RECORD_SIZE.ActivityCompletion);
+    console.assert(this.metaModel.serverCapabilities.passiveEntityParseData.creationSize === RECORD_SIZE.PassiveEntityCreation);
     console.assert(this.metaModel.serverCapabilities.passiveEntityParseData.completionSize === RECORD_SIZE.PassiveEntityCompletion);
-    console.assert(this.metaModel.serverCapabilities.dynamicScopeParseData.creationSize   === RECORD_SIZE.DynamicScopeStart);
+    console.assert(this.metaModel.serverCapabilities.dynamicScopeParseData.creationSize === RECORD_SIZE.DynamicScopeStart);
     console.assert(this.metaModel.serverCapabilities.dynamicScopeParseData.completionSize === RECORD_SIZE.DynamicScopeEnd);
-    console.assert(this.metaModel.serverCapabilities.sendReceiveParseData.creationSize    === RECORD_SIZE.SendOp);
-    console.assert(this.metaModel.serverCapabilities.sendReceiveParseData.completionSize  === RECORD_SIZE.ReceiveOp);
+    console.assert(this.metaModel.serverCapabilities.sendReceiveParseData.creationSize === RECORD_SIZE.SendOp);
+    console.assert(this.metaModel.serverCapabilities.sendReceiveParseData.completionSize === RECORD_SIZE.ReceiveOp);
 
     console.assert(this.metaModel.serverCapabilities.implementationData[0].marker === IMPL_THREAD_MARKER);
     console.assert(this.metaModel.serverCapabilities.implementationData[0].size === RECORD_SIZE.ImplThread);
@@ -116,18 +120,18 @@ export class TraceParser {
   }
 
   private readSourceSection(data: DataView, i: number): RawSourceCoordinate {
-    const fileId:    number = data.getUint16(i);
+    const fileId: number = data.getUint16(i);
     const startLine: number = data.getUint16(i + 2);
-    const startCol:  number = data.getUint16(i + 4);
-    const charLen:   number = data.getUint16(i + 6);
+    const startCol: number = data.getUint16(i + 4);
+    const charLen: number = data.getUint16(i + 6);
     return new RawSourceCoordinate(fileId, charLen, startLine, startCol);
   }
 
   private readActivityCreation(i: number, data: DataView,
-      currentActivityId: number, currentScopeId: number) {
+    currentActivityId: number, currentScopeId: number) {
     const marker = data.getUint8(i);
     const activityId = this.readLong(data, i + 1);
-    const symbolId   = data.getUint16(i + 9);
+    const symbolId = data.getUint16(i + 9);
     const sourceSection = this.readSourceSection(data, i + 11);
 
     this.execData.addRawActivity(new RawActivity(
@@ -138,7 +142,7 @@ export class TraceParser {
   }
 
   private readScopeStart(i: number, data: DataView,
-      currentActivityId: number, currentScopeId: number) {
+    currentActivityId: number, currentScopeId: number) {
     const marker = data.getUint8(i);
     const id = this.readLong(data, i + 1);
     const source = this.readSourceSection(data, i + 9);
@@ -151,7 +155,7 @@ export class TraceParser {
   }
 
   private readEntityCreation(i: number, data: DataView,
-      currentActivityId: number, currentScopeId: number) {
+    currentActivityId: number, currentScopeId: number) {
     const marker = data.getUint8(i);
     const id = this.readLong(data, i + 1);
     const source = this.readSourceSection(data, i + 9);
@@ -164,7 +168,7 @@ export class TraceParser {
   }
 
   private readSendOp(i: number, data: DataView,
-      currentActivityId: number, currentScopeId: number) {
+    currentActivityId: number, currentScopeId: number) {
     const marker = data.getUint8(i);
     const entityId = this.readLong(data, i + 1);
     const targetId = this.readLong(data, i + 9);
@@ -177,7 +181,7 @@ export class TraceParser {
   }
 
   private readReceiveOp(i: number, data: DataView,
-      currentActivityId: number, currentScopeId: number) {
+    currentActivityId: number, currentScopeId: number) {
     const marker = data.getUint8(i);
     const sourceId = this.readLong(data, i + 1);
 

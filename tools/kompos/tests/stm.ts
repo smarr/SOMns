@@ -6,7 +6,7 @@ import { TestConnection, HandleStoppedAndGetStackTrace, expectStack } from "./te
 import { createSectionBreakpointData, StackTraceResponse } from "../src/messages";
 
 const STM_FILE = resolve("tests/stm.som");
-const STM_URI  = "file:" + STM_FILE;
+const STM_URI = "file:" + STM_FILE;
 
 describe("Setting STM Breakpoints", () => {
   let conn: TestConnection;
@@ -30,16 +30,16 @@ describe("Setting STM Breakpoints", () => {
   after(closeConnectionAfterSuite);
 
   const thread1 = [
-    {s: 6, n: "STM>>#doCount:", l: 11},
+    { s: 6, n: "STM>>#doCount:", l: 11 },
     // line 13 is ok, because the bp uses source section of whole block
-    {s: 7, n: "STM>>#λdoCount@11@16", l: 13},
-    {s: 6, n: "STM>>#doCount:", l: 17},
+    { s: 7, n: "STM>>#λdoCount@11@16", l: 13 },
+    { s: 6, n: "STM>>#doCount:", l: 17 },
   ];
 
   const thread2 = [
-    {s: 2, n: "STM>>#doCount:", l: 11},
-    {s: 3, n: "STM>>#λdoCount@11@16", l: 13},
-    {s: 3, n: "STM>>#λdoCount@11@16", l: 13},
+    { s: 2, n: "STM>>#doCount:", l: 11 },
+    { s: 3, n: "STM>>#λdoCount@11@16", l: 13 },
+    { s: 3, n: "STM>>#λdoCount@11@16", l: 13 },
   ];
 
   let actId = 0;

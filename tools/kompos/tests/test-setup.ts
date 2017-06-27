@@ -3,11 +3,13 @@ import { ChildProcess, spawn, spawnSync, SpawnSyncReturns } from "child_process"
 import { resolve } from "path";
 import * as WebSocket from "ws";
 
-import {Controller} from "../src/controller";
-import {BreakpointData, SourceCoordinate, StoppedMessage, StackTraceResponse,
-  FullSourceCoordinate, StackFrame} from "../src/messages";
-import {VmConnection} from "../src/vm-connection";
-import {ActivityId} from "./somns-support";
+import { Controller } from "../src/controller";
+import {
+  BreakpointData, SourceCoordinate, StoppedMessage, StackTraceResponse,
+  FullSourceCoordinate, StackFrame
+} from "../src/messages";
+import { VmConnection } from "../src/vm-connection";
+import { ActivityId } from "./somns-support";
 import { Activity } from "../src/execution-data";
 
 const SOM_BASEPATH = "../../";
@@ -15,10 +17,10 @@ export const SOM = SOM_BASEPATH + "som";
 export const PING_PONG_URI = "file:" + resolve("tests/pingpong.som");
 
 const PRINT_SOM_OUTPUT = false;
-const PRINT_CMD_LINE   = false;
+const PRINT_CMD_LINE = false;
 
 export function expectStack(stack: StackFrame[], length: number, methodName: string,
-    startLine: number) {
+  startLine: number) {
   expect(stack[0]).to.be.not.null;
   expect(stack[0].name).to.equal(methodName);
   expect(stack[0].line).to.equal(startLine);
@@ -37,8 +39,8 @@ export function expectFullSourceCoordinate(section: FullSourceCoordinate) {
 }
 
 export interface OnMessageEvent {
-  data:   any;
-  type:   string;
+  data: any;
+  type: string;
   target: WebSocket;
 }
 
@@ -48,7 +50,7 @@ export interface OnMessageHandler {
 
 export class TestConnection extends VmConnection {
   private somProc: ChildProcess;
-  private closed:  boolean;
+  private closed: boolean;
   private connectionResolver;
   public readonly fullyConnected: Promise<boolean>;
 
@@ -79,7 +81,7 @@ export class TestConnection extends VmConnection {
 
   private initConnection(): Promise<boolean> {
     const promise = new Promise((resolve, reject) => {
-      const msgPortRe   = /.*Message Handler:\s+(\d+)/m;
+      const msgPortRe = /.*Message Handler:\s+(\d+)/m;
       const tracePortRe = /.*Trace Handler:\s+(\d+)/m;
       this.connectionResolver = resolve;
       let connecting = false;
@@ -180,7 +182,7 @@ export class HandleStoppedAndGetStackTrace extends ControllerWithInitialBreakpoi
   public readonly stoppedActivities: Activity[];
 
   constructor(initialBreakpoints: BreakpointData[], vmConnection: VmConnection,
-      connectionP: Promise<boolean>, numOps: number = 1) {
+    connectionP: Promise<boolean>, numOps: number = 1) {
     super(initialBreakpoints, vmConnection);
 
     this.numOps = numOps;
@@ -200,9 +202,11 @@ export class HandleStoppedAndGetStackTrace extends ControllerWithInitialBreakpoi
   public onStoppedMessage(msg: StoppedMessage) {
     if (this.numStopped >= this.numOps) { return; }
     // don't need more than a dummy activity at the moment, just id is enough
-    const activity: Activity = {id: msg.activityId, completed: false,
+    const activity: Activity = {
+      id: msg.activityId, completed: false,
       name: "dummy", type: <number> ActivityId.ACTOR, creationScope: null,
-      creationActivity: null, running: false};
+      creationActivity: null, running: false
+    };
     this.stoppedActivities[this.numStopped] = activity;
     this.vmConnection.requestStackTrace(msg.activityId, this.numStopped);
     this.numStopped += 1;

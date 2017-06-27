@@ -1,10 +1,10 @@
 import { resolve } from "path";
 import { HandleStoppedAndGetStackTrace, TestConnection, expectStack } from "./test-setup";
-import {createSectionBreakpointData} from "../src/messages";
-import {BreakpointType} from "./somns-support";
+import { createSectionBreakpointData } from "../src/messages";
+import { BreakpointType } from "./somns-support";
 
 const CSP_FILE = resolve("tests/pingpong-csp.som");
-const CSP_URI  = "file:" + CSP_FILE;
+const CSP_URI = "file:" + CSP_FILE;
 
 describe("Setting CSP Breakpoints", () => {
   let conn: TestConnection;

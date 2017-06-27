@@ -29,12 +29,12 @@ export function getLightTangoColor(actType: ActivityType, actId: number) {
 export class SystemView {
   private readonly data: SystemViewData;
 
-  private activities:      ActivityNode[];
+  private activities: ActivityNode[];
   private passiveEntities: PassiveEntityNode[];
   private links: EntityLink[];
 
   private activityNodes: d3.selection.Update<ActivityNode>;
-  private entityNodes:  d3.selection.Update<PassiveEntityNode>;
+  private entityNodes: d3.selection.Update<PassiveEntityNode>;
   private entityLinks: d3.selection.Update<EntityLink>;
 
   private zoomScale = 1;
@@ -102,10 +102,10 @@ export class SystemView {
     });
 
     // define arrow markers for graph links
-    createArrowMarker(svg, "end-arrow",   6, "M0,-5L10,0L0,5",  "#000");
+    createArrowMarker(svg, "end-arrow", 6, "M0,-5L10,0L0,5", "#000");
     createArrowMarker(svg, "start-arrow", 4, "M10,-5L0,0L10,5", "#000");
 
-    createArrowMarker(svg, "end-arrow-creator",   6, "M0,-5L10,0L0,5",  "#aaa");
+    createArrowMarker(svg, "end-arrow-creator", 6, "M0,-5L10,0L0,5", "#aaa");
     createArrowMarker(svg, "start-arrow-creator", 4, "M10,-5L0,0L10,5", "#aaa");
 
     this.renderSystemView(forceLayout, svg);
@@ -113,17 +113,19 @@ export class SystemView {
 
   private zoomed() {
     const zoomEvt: d3.ZoomEvent = <d3.ZoomEvent> d3.event;
-    this.zoomScale  = zoomEvt.scale;
+    this.zoomScale = zoomEvt.scale;
     this.zoomTransl = zoomEvt.translate;
 
     this.activityNodes.attr("transform", (d: ActivityNode) => {
       const x = this.zoomTransl[0] + d.x * this.zoomScale;
       const y = this.zoomTransl[1] + d.y * this.zoomScale;
-      return `translate(${x},${y})scale(${this.zoomScale})`; });
+      return `translate(${x},${y})scale(${this.zoomScale})`;
+    });
     this.entityNodes.attr("transform", (d: PassiveEntityNode) => {
       const x = this.zoomTransl[0] + d.x * this.zoomScale;
       const y = this.zoomTransl[1] + d.y * this.zoomScale;
-      return `translate(${x},${y})scale(${this.zoomScale})`; });
+      return `translate(${x},${y})scale(${this.zoomScale})`;
+    });
     this.entityLinks.attr("transform", `translate(${this.zoomTransl[0]},${this.zoomTransl[1]})scale(${this.zoomScale})`);
   }
 
@@ -141,7 +143,7 @@ export class SystemView {
         sourceY = d.source.y + (sourcePadding * normY),
         targetX = d.target.x - (targetPadding * normX),
         targetY = d.target.y - (targetPadding * normY);
-        return `M${sourceX},${sourceY}L${targetX},${targetY}`;
+      return `M${sourceX},${sourceY}L${targetX},${targetY}`;
     });
 
     this.activityNodes.attr("transform", (d: ActivityNode) => {
@@ -158,8 +160,8 @@ export class SystemView {
   }
 
   private renderSystemView(forceLayout:
-      d3.layout.Force<d3.layout.force.Link<d3.layout.force.Node>, d3.layout.force.Node>,
-      svg: d3.Selection<any>) {
+    d3.layout.Force<d3.layout.force.Link<d3.layout.force.Node>, d3.layout.force.Node>,
+    svg: d3.Selection<any>) {
     // handles to link and node element groups
     this.entityLinks = svg.append("svg:g")
       .selectAll("path")
@@ -175,7 +177,7 @@ export class SystemView {
 
     this.entityLinks // .classed("selected", function(d) { return d === selected_link; })
       .style("marker-start", selectStartMarker)
-      .style("marker-end",   selectEndMarker);
+      .style("marker-end", selectEndMarker);
 
     // add new links
     this.entityLinks.enter().append("svg:path")
@@ -186,14 +188,14 @@ export class SystemView {
       })
       // .classed("selected", function(d) { return d === selected_link; })
       .style("marker-start", selectStartMarker)
-      .style("marker-end",   selectEndMarker);
+      .style("marker-end", selectEndMarker);
 
     // remove old links
     this.entityLinks.exit().remove();
 
     // add new nodes
     const actG = this.activityNodes.enter().append("svg:g");
-    const peG  = this.entityNodes.enter().append("svg:g");
+    const peG = this.entityNodes.enter().append("svg:g");
 
     createActivity(actG, this.metaModel);
     createChannel(peG);
@@ -213,7 +215,7 @@ export class SystemView {
     forceLayout.start();
 
     // execute enough steps that the graph looks static
-    for (let i = 0; i < 1000 ; i++) {
+    for (let i = 0; i < 1000; i++) {
       forceLayout.tick();
     }
     forceLayout.stop();
@@ -233,7 +235,7 @@ export class SystemView {
 }
 
 function createArrowMarker(svg: d3.Selection<any>, id: string, refX: number,
-    d: string, color: string) {
+  d: string, color: string) {
   svg.append("svg:defs").append("svg:marker")
     .attr("id", id)
     .attr("viewBox", "0 -5 10 10")
@@ -259,7 +261,7 @@ function selectEndMarker(d: EntityLink) {
 }
 
 function createActivity(g, metaModel: KomposMetaModel) {
-  g.attr("id", function (a: ActivityNode) { return a.getSystemViewId(); });
+  g.attr("id", function(a: ActivityNode) { return a.getSystemViewId(); });
 
   createActivityRectangle(g);
   createActivityLabel(g, metaModel);
@@ -275,7 +277,7 @@ function createActivityRectangle(g) {
     .attr("width", 50)
     .attr("height", 25)
     .on("mouseover", function(a: ActivityNode) { return ctrl.overActivity(a, this); })
-    .on("mouseout",  function(a: ActivityNode) { return ctrl.outActivity(a, this); })
+    .on("mouseout", function(a: ActivityNode) { return ctrl.outActivity(a, this); })
     .attr("class", "node")
     .style("fill", function(a: ActivityNode) {
       return getLightTangoColor(a.getType(), a.getActivityId());
@@ -334,7 +336,7 @@ function createChannelEnd(g, x: number, y: number) {
 
 function createChannel(g) {
   const x = 0, y = 0;
-  g.attr("id", function (a: PassiveEntityNode) { return a.getSystemViewId(); });
+  g.attr("id", function(a: PassiveEntityNode) { return a.getSystemViewId(); });
 
   createChannelBody(g, x, y);
   createChannelEnd(g, x, y);

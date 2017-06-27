@@ -3,10 +3,12 @@
 
 import * as d3 from "d3";
 
-import { Controller }   from "./controller";
-import { Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
+import { Controller } from "./controller";
+import {
+  Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
   TaggedSourceCoordinate, Scope, getSectionId, Variable, ActivityType,
-  BreakpointType, SteppingType, EntityType } from "./messages";
+  BreakpointType, SteppingType, EntityType
+} from "./messages";
 import { Breakpoint, SectionBreakpoint, LineBreakpoint } from "./breakpoints";
 import { SystemView } from "./system-view";
 import { Activity, TraceDataUpdate } from "./execution-data";
@@ -17,10 +19,10 @@ import { ProcessView } from "./process-view";
 declare var ctrl: Controller;
 declare var zenscroll: any;
 
-const ENT_ID_PREFIX  = "e";
+const ENT_ID_PREFIX = "e";
 const ENT_VIZ_PREFIX = "EV";
 
-const ENT_GROUP_ID_PREFIX  = "eg";
+const ENT_GROUP_ID_PREFIX = "eg";
 const ENT_GROUP_VIZ_PREFIX = "EVG";
 
 export function getEntityId(id: number): string {
@@ -118,11 +120,11 @@ function methodDeclIdToObj(id: string) {
   const idComponents = id.split("-");
   let arr = idComponents[1].split(":");
   return {
-    sourceId:    arr[0],
-    startLine:   parseInt(arr[1]),
+    sourceId: arr[0],
+    startLine: parseInt(arr[1]),
     startColumn: parseInt(arr[2]),
-    charLength:  parseInt(arr[3]),
-    idx:         parseInt(idComponents[2])
+    charLength: parseInt(arr[3]),
+    idx: parseInt(idComponents[2])
   };
 }
 
@@ -142,17 +144,17 @@ class Begin extends SectionMarker {
   private activityId: number;
 
   constructor(section: TaggedSourceCoordinate, sectionId: string,
-      activityId: number) {
+    activityId: number) {
     super(Begin);
-    this.sectionId  = sectionId;
+    this.sectionId = sectionId;
     this.activityId = activityId;
     this.section = section;
-    this.type    = Begin;
+    this.type = Begin;
   }
 
   public toString() {
     return '<span id="' + getSectionIdForActivity(this.sectionId, this.activityId)
-         + '" class="' + this.section.tags.join(" ") + " " + this.sectionId + '">';
+      + '" class="' + this.section.tags.join(" ") + " " + this.sectionId + '">';
   }
 
   public length() {
@@ -161,19 +163,19 @@ class Begin extends SectionMarker {
 }
 
 class BeginMethodDef extends SectionMarker {
-  private method:   Method;
+  private method: Method;
   private sourceId: string;
   private activityId: number;
-  private i:        number;
-  private defPart:  SourceCoordinate;
+  private i: number;
+  private defPart: SourceCoordinate;
 
   constructor(method: Method, sourceId: string, i: number, activityId: number,
-      defPart: SourceCoordinate) {
+    defPart: SourceCoordinate) {
     super(Begin);
-    this.method   = method;
+    this.method = method;
     this.sourceId = sourceId;
-    this.i        = i;
-    this.defPart  = defPart;
+    this.i = i;
+    this.defPart = defPart;
     this.activityId = activityId;
   }
 
@@ -191,12 +193,12 @@ class BeginMethodDef extends SectionMarker {
 
 class End extends SectionMarker {
   private section: SourceCoordinate;
-  private len:     number;
+  private len: number;
 
-constructor(section: SourceCoordinate, length: number) {
+  constructor(section: SourceCoordinate, length: number) {
     super(End);
     this.section = section;
-    this.len     = length;
+    this.len = length;
   }
 
   public toString() {
@@ -211,16 +213,16 @@ constructor(section: SourceCoordinate, length: number) {
 class Annotation {
   private char: string;
   private before: SectionMarker[];
-  private after:  SectionMarker[];
+  private after: SectionMarker[];
 
   constructor(char: string) {
-    this.char   = char;
+    this.char = char;
     this.before = [];
-    this.after  = [];
+    this.after = [];
   }
 
   public toString() {
-    this.before.sort(function (a, b) {
+    this.before.sort(function(a, b) {
       if (a.type !== b.type) {
         if (a.type === Begin) {
           return -1;
@@ -299,30 +301,30 @@ function ensureItIsAnnotation(arr: any[][], line: number, column: number) {
  */
 function getCoord(arr: any[][], startLine: number, startColumn: number, length: number) {
   let remaining = length,
-    line   = startLine - 1,
+    line = startLine - 1,
     column = startColumn - 1;
 
   while (remaining > 0) {
     while (column < arr[line].length && remaining > 0) {
-      column    += 1;
+      column += 1;
       remaining -= 1;
     }
     if (column === arr[line].length) {
-      line      += 1;
-      column    =  0;
+      line += 1;
+      column = 0;
       remaining -= 1; // the newline character
     }
   }
-  return {line: line + 1, column: column + 1};
+  return { line: line + 1, column: column + 1 };
 }
 
 function annotateArray(arr: any[][], sourceId: string, activityId: number,
-    sections: TaggedSourceCoordinate[], methods: Method[]) {
+  sections: TaggedSourceCoordinate[], methods: Method[]) {
   for (let s of sections) {
     let start = ensureItIsAnnotation(arr, s.startLine, s.startColumn),
-        coord = getCoord(arr, s.startLine, s.startColumn, s.charLength),
-          end = ensureItIsAnnotation(arr, coord.line, coord.column),
-    sectionId = getSectionId(sourceId, s);
+      coord = getCoord(arr, s.startLine, s.startColumn, s.charLength),
+      end = ensureItIsAnnotation(arr, coord.line, coord.column),
+      sectionId = getSectionId(sourceId, s);
 
     start.before.push(new Begin(s, sectionId, activityId));
     end.before.push(new End(s, s.charLength));
@@ -334,10 +336,10 @@ function annotateArray(arr: any[][], sourceId: string, activityId: number,
       let defPart = meth.definition[i],
         start = ensureItIsAnnotation(arr, defPart.startLine, defPart.startColumn),
         coord = getCoord(arr, defPart.startLine, defPart.startColumn, defPart.charLength),
-        end   = ensureItIsAnnotation(arr, coord.line, coord.column);
+        end = ensureItIsAnnotation(arr, coord.line, coord.column);
 
       start.before.push(new BeginMethodDef(meth, sourceId, parseInt(i),
-                                           activityId, defPart));
+        activityId, defPart));
       end.before.push(new End(meth.sourceSection, defPart.charLength));
     }
   }
@@ -348,12 +350,12 @@ function annotateArray(arr: any[][], sourceId: string, activityId: number,
  * data and reacting to events.
  */
 export class View {
-  private readonly systemView:   SystemView;
+  private readonly systemView: SystemView;
   private readonly protocolView: ProcessView;
   private metaModel: KomposMetaModel;
 
   constructor() {
-    this.systemView   = new SystemView();
+    this.systemView = new SystemView();
     this.protocolView = new ProcessView();
   }
 
@@ -518,7 +520,7 @@ export class View {
     const typesPerTag = this.getBreakpointTypesPerTag(this.metaModel.serverCapabilities.breakpointTypes);
 
     for (const tag in typesPerTag) {
-      const menu    = nodeFromTemplate("bp-menu");
+      const menu = nodeFromTemplate("bp-menu");
       const bpTypes = typesPerTag[tag];
 
       for (const bpT of <BreakpointType[]> bpTypes) {
@@ -537,7 +539,7 @@ export class View {
   }
 
   private enableBreakpointMenuButtons() {
-    $(document).on("click", ".bp-btn", function (e) {
+    $(document).on("click", ".bp-btn", function(e) {
       e.stopImmediatePropagation();
       ctrl.onToggleSectionBreakpoint(e.currentTarget.attributes["data-ss-id"].value,
         e.currentTarget.attributes["data-bp-type"].value);
@@ -547,12 +549,12 @@ export class View {
   private enableBreakpointMenu(fileNode, tag: string, menu: Element) {
     const sourceSection = fileNode.find("." + tag);
     sourceSection.attr({
-      "data-toggle"    : "popover",
-      "data-trigger"   : "click hover",
-      "title"          : "Breakpoints",
-      "data-html"      : "true",
-      "data-animation" : "false",
-      "data-placement" : "top"
+      "data-toggle": "popover",
+      "data-trigger": "click hover",
+      "title": "Breakpoints",
+      "data-html": "true",
+      "data-animation": "false",
+      "data-placement": "top"
     });
 
     let getId;
@@ -565,7 +567,7 @@ export class View {
         return getSectionId(idObj.sourceId, idObj);
       };
     } else {
-      getId = function (that) {
+      getId = function(that) {
         return getSectionIdFrom(that.id);
       };
     }
@@ -700,8 +702,8 @@ export class View {
   }
 
   public displayStackTrace(sourceId: string, data: StackTraceResponse,
-      requestedId: number, activity: Activity, ssId: string,
-      section: TaggedSourceCoordinate) {
+    requestedId: number, activity: Activity, ssId: string,
+    section: TaggedSourceCoordinate) {
     const act = $("#" + getEntityId(data.activityId));
     const list = act.find(".activity-stack");
     list.html(""); // rest view
@@ -734,8 +736,8 @@ export class View {
   }
 
   private isSteppingApplicable(section: TaggedSourceCoordinate,
-      step: SteppingType, activityType: ActivityType,
-      concurrentEntityScopes: EntityType[]) {
+    step: SteppingType, activityType: ActivityType,
+    concurrentEntityScopes: EntityType[]) {
     if (step.inScope) {
       if (!concurrentEntityScopes) {
         return false;
@@ -776,7 +778,7 @@ export class View {
   }
 
   private adjustSteppingButtons(act: JQuery, section: TaggedSourceCoordinate,
-      activityType: ActivityType, concurrentEntityScopes: EntityType[]) {
+    activityType: ActivityType, concurrentEntityScopes: EntityType[]) {
     for (const step of this.metaModel.serverCapabilities.steppingTypes) {
       const enabled = this.isSteppingApplicable(
         section, step, activityType, concurrentEntityScopes);
@@ -785,12 +787,12 @@ export class View {
   }
 
   private highlightProgramPosition(sourceId: string, activity: Activity,
-      ssId: string) {
+    ssId: string) {
 
     this.showSourceById(sourceId, activity);
 
     const ss = document.getElementById(
-                        getSectionIdForActivity(ssId, activity.id));
+      getSectionIdForActivity(ssId, activity.id));
     if (ss) { // there can be cases where we don't actually have source section. TODO: fix this
       $(ss).addClass("DbgCurrentNode");
 
@@ -798,7 +800,7 @@ export class View {
       const sourcePaneElem = document.getElementById(sourcePaneId);
 
       const defaultDuration = 100;
-      const edgeOffset      = 30;
+      const edgeOffset = 30;
 
       const scroller = zenscroll.createScroller(sourcePaneElem, defaultDuration, edgeOffset);
       scroller.center(ss);

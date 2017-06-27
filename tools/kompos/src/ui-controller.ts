@@ -1,14 +1,18 @@
 /* jshint -W097 */
 "use strict";
 
-import { Controller }   from "./controller";
-import { Debugger }     from "./debugger";
-import { SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
+import { Controller } from "./controller";
+import { Debugger } from "./debugger";
+import {
+  SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
   ScopesResponse, VariablesResponse, ProgramInfoResponse, InitializationResponse,
-  Source, Method } from "./messages";
-import { LineBreakpoint, SectionBreakpoint, getBreakpointId,
-  createLineBreakpoint, createSectionBreakpoint } from "./breakpoints";
-import { dbgLog }       from "./source";
+  Source, Method
+} from "./messages";
+import {
+  LineBreakpoint, SectionBreakpoint, getBreakpointId,
+  createLineBreakpoint, createSectionBreakpoint
+} from "./breakpoints";
+import { dbgLog } from "./source";
 import { View, getActivityIdFromView, getSourceIdFrom, getSourceIdFromSection, getFullMethodName } from "./view";
 import { VmConnection } from "./vm-connection";
 import { Activity, ExecutionData, TraceDataUpdate } from "./execution-data";
@@ -29,7 +33,7 @@ export class UiController extends Controller {
 
   constructor(vmConnection: VmConnection) {
     super(vmConnection);
-    this.dbg  = new Debugger();
+    this.dbg = new Debugger();
     this.data = new ExecutionData();
     this.view = new View();
   }
@@ -84,10 +88,10 @@ export class UiController extends Controller {
     if (expanded) {
       this.view.markCodePaneClosed(actId);
     } else {
-      const aId      = getActivityIdFromView(actId);
+      const aId = getActivityIdFromView(actId);
       const activity = this.data.getActivity(aId);
-      const sId      = this.dbg.getSourceId(activity.origin.uri);
-      const source   = this.dbg.getSource(sId);
+      const sId = this.dbg.getSourceId(activity.origin.uri);
+      const source = this.dbg.getSource(sId);
 
       console.assert(aId === activity.id);
       this.view.displaySource(activity, source, sId);
@@ -95,10 +99,10 @@ export class UiController extends Controller {
   }
 
   public toggleHighlightMethod(actId: string, shortName: string, highlight: boolean) {
-    const aId      = getActivityIdFromView(actId);
+    const aId = getActivityIdFromView(actId);
     const activity = this.data.getActivity(aId);
-    const sId      = this.dbg.getSourceId(activity.origin.uri);
-    const source: Source   = this.dbg.getSource(sId);
+    const sId = this.dbg.getSourceId(activity.origin.uri);
+    const source: Source = this.dbg.getSource(sId);
     console.assert(aId === activity.id);
     const methods: Method[] = source.methods;
     const fullName = getFullMethodName(activity, shortName);
@@ -232,11 +236,11 @@ export class UiController extends Controller {
 
   public onToggleLineBreakpoint(line: number, clickedSpan: Element) {
     dbgLog("updateBreakpoint");
-    const parent     = <Element> clickedSpan.parentNode.parentNode;
-    const sourceId   = getSourceIdFrom(parent.id);
-    const source     = this.dbg.getSource(sourceId);
+    const parent = <Element> clickedSpan.parentNode.parentNode;
+    const sourceId = getSourceIdFrom(parent.id);
+    const source = this.dbg.getSource(sourceId);
     const breakpoint = this.toggleBreakpoint(line, source,
-        function () { return createLineBreakpoint(source, sourceId, line); });
+      function() { return createLineBreakpoint(source, sourceId, line); });
 
     this.view.updateLineBreakpoint(<LineBreakpoint> breakpoint);
   }
@@ -246,10 +250,11 @@ export class UiController extends Controller {
 
     const id = getBreakpointId(sectionId, type),
       sourceSection = this.dbg.getSection(sectionId),
-      sourceId      = getSourceIdFromSection(sectionId),
-      source        = this.dbg.getSource(sourceId),
-      breakpoint    = this.toggleBreakpoint(id, source, function () {
-        return createSectionBreakpoint(source, sourceSection, sectionId, type); });
+      sourceId = getSourceIdFromSection(sectionId),
+      source = this.dbg.getSource(sourceId),
+      breakpoint = this.toggleBreakpoint(id, source, function() {
+        return createSectionBreakpoint(source, sourceSection, sectionId, type);
+      });
 
     this.view.updateSectionBreakpoint(<SectionBreakpoint> breakpoint);
   }
