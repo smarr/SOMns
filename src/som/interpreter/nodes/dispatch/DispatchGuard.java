@@ -1,13 +1,14 @@
 package som.interpreter.nodes.dispatch;
 
+import com.oracle.truffle.api.nodes.InvalidAssumptionException;
+
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.vmobjects.SClass;
+import som.vmobjects.SObject;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
-
-import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 
 public abstract class DispatchGuard {
@@ -41,6 +42,15 @@ public abstract class DispatchGuard {
     }
 
     return new CheckClass(obj.getClass());
+  }
+
+  public static CheckSObject createSObjectCheck(final SObject obj) {
+    if (obj instanceof SMutableObject) {
+      return new CheckSMutableObject(((SMutableObject) obj).getObjectLayout());
+    }
+
+    assert obj instanceof SImmutableObject;
+    return new CheckSImmutableObject(((SImmutableObject) obj).getObjectLayout());
   }
 
   private static final class CheckClass extends DispatchGuard {
@@ -101,7 +111,11 @@ public abstract class DispatchGuard {
     }
   }
 
-  private static final class CheckSMutableObject extends DispatchGuard {
+  public abstract static class CheckSObject extends DispatchGuard {
+    public abstract SObject cast(Object obj);
+  }
+
+  private static final class CheckSMutableObject extends CheckSObject {
 
     private final ObjectLayout expected;
 
@@ -115,9 +129,14 @@ public abstract class DispatchGuard {
       return obj instanceof SMutableObject &&
           ((SMutableObject) obj).getObjectLayout() == expected;
     }
+
+    @Override
+    public SObject cast(final Object obj) {
+      return (SMutableObject) obj;
+    }
   }
 
-  private static final class CheckSImmutableObject extends DispatchGuard {
+  private static final class CheckSImmutableObject extends CheckSObject {
 
     private final ObjectLayout expected;
 
@@ -130,6 +149,11 @@ public abstract class DispatchGuard {
       expected.checkIsLatest();
       return obj instanceof SImmutableObject &&
           ((SImmutableObject) obj).getObjectLayout() == expected;
+    }
+
+    @Override
+    public SObject cast(final Object obj) {
+      return (SImmutableObject) obj;
     }
   }
 }

@@ -1,36 +1,24 @@
 package som.interpreter.transactions;
 
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.nodes.InvalidAssumptionException;
-
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
-import som.interpreter.nodes.dispatch.CachedSlotAccessNode.CachedSlotWrite;
-import som.interpreter.nodes.dispatch.DispatchGuard;
-import som.interpreter.objectstorage.FieldWriteNode.AbstractFieldWriteNode;
+import som.interpreter.nodes.dispatch.CachedSlotWrite;
+import som.interpreter.nodes.dispatch.DispatchGuard.CheckSObject;
+import som.vmobjects.SObject;
 import som.vmobjects.SObject.SMutableObject;
 
 
 public final class CachedTxSlotWrite extends CachedSlotWrite {
-  public CachedTxSlotWrite(final AbstractFieldWriteNode write,
-      final DispatchGuard guard,
-      final AbstractDispatchNode nextInCache) {
-    super(write, guard, nextInCache);
+  @Child protected CachedSlotWrite write;
 
+  public CachedTxSlotWrite(final CachedSlotWrite write,
+      final CheckSObject guard, final AbstractDispatchNode nextInCache) {
+    super(guard, nextInCache);
+    this.write = write;
   }
 
   @Override
-  public Object executeDispatch(final Object[] arguments) {
-    Object rcvr = arguments[0];
-    try {
-      if (guard.entryMatches(rcvr)) {
-        SMutableObject workingCopy = Transactions.workingCopy((SMutableObject) rcvr);
-        return write.write(workingCopy, arguments[1]);
-      } else {
-        return nextInCache.executeDispatch(arguments);
-      }
-    } catch (InvalidAssumptionException e) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-      return replace(nextInCache).executeDispatch(arguments);
-    }
+  public void doWrite(final SObject obj, final Object value) {
+    SMutableObject workingCopy = Transactions.workingCopy((SMutableObject) obj);
+    write.doWrite(workingCopy, value);
   }
 }

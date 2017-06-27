@@ -9,9 +9,9 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 import som.compiler.MixinDefinition.SlotDefinition;
-import som.interpreter.objectstorage.StorageLocation.AbstractObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.DoubleStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.LongStorageLocation;
+import som.interpreter.objectstorage.StorageLocation.ObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.UnwrittenStorageLocation;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SObject;
@@ -118,7 +118,6 @@ public final class ObjectLayout {
     if (type == Object.class) {
       return this;
     } else {
-      assert type != Object.class;
       return cloneWithChanged(slot, Object.class);
     }
   }
@@ -135,6 +134,12 @@ public final class ObjectLayout {
     if (currentType == specType) {
       return this;
     } else {
+      // It can happen that two threads try to initialize the field to different types
+      // This is handled here by ensuring that we generalize it when necessary.
+      if ((currentType == Long.class && specType == Double.class)
+          || (currentType == Double.class && specType == Long.class)) {
+        specType = Object.class;
+      }
       assert currentType == null;
       return cloneWithChanged(slot, specType);
     }
@@ -182,7 +187,7 @@ public final class ObjectLayout {
         type = "long";
       } else if (loc instanceof DoubleStorageLocation) {
         type = "double";
-      } else if (loc instanceof AbstractObjectStorageLocation) {
+      } else if (loc instanceof ObjectStorageLocation) {
         type = "object";
       } else {
         throw new NotYetImplementedException(); // should not be reached

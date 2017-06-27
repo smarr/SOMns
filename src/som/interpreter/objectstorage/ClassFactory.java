@@ -3,7 +3,7 @@ package som.interpreter.objectstorage;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerAsserts;
 
 import som.VM;
 import som.compiler.MixinDefinition;
@@ -49,9 +49,7 @@ public final class ClassFactory {
 
   private final boolean hasOnlyImmutableFields;
 
-  // TODO: does it make sense to make it compilation final?
-  //       think, it should only be accessed on the slow path
-  private ObjectLayout instanceLayout;
+  private volatile ObjectLayout instanceLayout;
 
   private final ClassFactory classClassFactory;
 
@@ -125,10 +123,10 @@ public final class ClassFactory {
 
   public synchronized ObjectLayout updateInstanceLayoutWithInitializedField(
       final SlotDefinition slot, final Class<?> type) {
+    CompilerAsserts.neverPartOfCompilation("update instance layout with init field in class factory");
     ObjectLayout updated = instanceLayout.withInitializedField(slot, type);
 
     if (updated != instanceLayout) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
       instanceLayout = updated;
     }
     return instanceLayout;
@@ -136,10 +134,10 @@ public final class ClassFactory {
 
   public synchronized ObjectLayout updateInstanceLayoutWithGeneralizedField(
       final SlotDefinition slot) {
+    CompilerAsserts.neverPartOfCompilation("update instance layout with generalized field in class factory");
     ObjectLayout updated = instanceLayout.withGeneralizedField(slot);
 
     if (updated != instanceLayout) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
       instanceLayout = updated;
     }
     return instanceLayout;
