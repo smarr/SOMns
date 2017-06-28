@@ -19,6 +19,11 @@
       "taskName": "test",
       "isBackground": false,
       "args": []
+    },
+    {
+      "taskName": "format",
+      "isBackground": false,
+      "args": ["run", "format"]
     }
   ]
 }
