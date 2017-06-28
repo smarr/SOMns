@@ -1,7 +1,9 @@
-import {Source, SourceCoordinate, AbstractBreakpointData, LineBreakpointData,
+import {
+  Source, SourceCoordinate, AbstractBreakpointData, LineBreakpointData,
   SectionBreakpointData,
-  createLineBreakpointData, createSectionBreakpointData} from "./messages";
-import {getLineId} from "./view";
+  createLineBreakpointData, createSectionBreakpointData
+} from "./messages";
+import { getLineId } from "./view";
 
 export type Breakpoint = LineBreakpoint | SectionBreakpoint;
 
@@ -15,9 +17,9 @@ abstract class AbstractBreakpoint<T extends AbstractBreakpointData> {
   public readonly source: Source;
 
   constructor(data: T, source: Source) {
-    this.data     = data;
+    this.data = data;
     this.checkbox = null;
-    this.source   = source;
+    this.source = source;
   }
 
   /**
@@ -74,13 +76,13 @@ export class SectionBreakpoint extends AbstractBreakpoint<SectionBreakpointData>
 }
 
 export function createLineBreakpoint(source: Source, sourceId: string,
-    line: number) {
+  line: number) {
   return new LineBreakpoint(createLineBreakpointData(source.uri, line, false),
     source, sourceId);
 }
 
 export function createSectionBreakpoint(source: Source,
-    sourceSection: SourceCoordinate, sectionId: string, type: string) {
+  sourceSection: SourceCoordinate, sectionId: string, type: string) {
   return new SectionBreakpoint(
     createSectionBreakpointData(source.uri, sourceSection.startLine,
       sourceSection.startColumn, sourceSection.charLength, type, false),

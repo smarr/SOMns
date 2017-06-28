@@ -3,9 +3,9 @@
 
 import * as WebSocket from "ws";
 
-import {Controller} from "./controller";
-import {Message, Respond, BreakpointData} from "./messages";
-import {Activity} from "./execution-data";
+import { Controller } from "./controller";
+import { Message, Respond, BreakpointData } from "./messages";
+import { Activity } from "./execution-data";
 
 const LOCAL_WS_URL = "ws://localhost";
 
@@ -14,16 +14,16 @@ const LOCAL_WS_URL = "ws://localhost";
  * the communication protocol, currently using JSON.
  */
 export class VmConnection {
-  private socket:                WebSocket;
-  private traceDataSocket:       WebSocket;
+  private socket: WebSocket;
+  private traceDataSocket: WebSocket;
   private readonly useTraceData: boolean;
-  private controller:            Controller;
+  private controller: Controller;
 
   constructor(useTraceData: boolean) {
-    this.socket          = null;
+    this.socket = null;
     this.traceDataSocket = null;
-    this.controller      = null;
-    this.useTraceData    = useTraceData;
+    this.controller = null;
+    this.useTraceData = useTraceData;
   }
 
   public setController(controller: Controller) {
@@ -42,8 +42,8 @@ export class VmConnection {
     (<any> this.traceDataSocket).binaryType = "arraybuffer"; // workaround, typescript doesn't recognize this property
 
     const controller = this.controller;
-    this.traceDataSocket.onmessage = function (e) {
-      const data: DataView = new DataView(e.data);
+    this.traceDataSocket.onmessage = function(e) {
+      const data: DataView = new DataView(<ArrayBuffer> e.data);
       controller.onTracingData(data);
     };
   }
@@ -82,7 +82,7 @@ export class VmConnection {
     this.socket.onmessage = (e) => {
       if (!ctrl) { return; }
 
-      const data: Message = JSON.parse(e.data);
+      const data: Message = JSON.parse(<string> e.data);
 
       switch (data.type) {
         case "source":
@@ -123,11 +123,11 @@ export class VmConnection {
   }
 
   public requestProgramInfo() {
-    this.send({action: "ProgramInfoRequest"});
+    this.send({ action: "ProgramInfoRequest" });
   }
 
   public requestTraceData() {
-    this.send({action: "TraceDataRequest"});
+    this.send({ action: "TraceDataRequest" });
   }
 
   public sendInitializeConnection(breakpoints: BreakpointData[]) {
@@ -147,8 +147,9 @@ export class VmConnection {
   public sendDebuggerAction(step: string, activity: Activity) {
     this.send({
       action: "StepMessage",
-      step:   step,
-      activityId: activity.id});
+      step: step,
+      activityId: activity.id
+    });
   }
 
   public requestStackTrace(activityId: number, requestId: number = 0) {
@@ -156,15 +157,15 @@ export class VmConnection {
       action: "StackTraceRequest",
       activityId: activityId,
       startFrame: 0, // from the top
-      levels:     0, // request all
-      requestId:  requestId
+      levels: 0, // request all
+      requestId: requestId
     });
   }
 
   public requestScope(scopeId: number) {
     this.send({
-      action:    "ScopesRequest",
-      frameId:   scopeId,
+      action: "ScopesRequest",
+      frameId: scopeId,
       requestId: 0 // only used in VS code
     });
   }

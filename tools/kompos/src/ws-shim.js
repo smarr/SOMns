@@ -1,3 +1,3 @@
-define("ws", function () {
+define("ws", function() {
   return WebSocket;
 });

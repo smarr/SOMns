@@ -4,5 +4,27 @@
     "**/.git": true,
     "**/node_modules": true,
     "**/out": true
-  }
+  },
+  // Columns at which to show vertical rulers
+  "editor.rulers": [
+    80
+  ],
+  // The number of spaces a tab is equal to.
+  "editor.tabSize": 2,
+  "files.trimTrailingWhitespace": true
+  // Don't enable VS code autoformat, because it uses currently outdated tsfmt
+  // "editor.formatOnSave": true,
+  // "typescript.format.insertSpaceAfterCommaDelimiter": true,
+  // "typescript.format.insertSpaceAfterSemicolonInForStatements": true,
+  // "typescript.format.insertSpaceBeforeAndAfterBinaryOperators": true,
+  // "typescript.format.insertSpaceAfterKeywordsInControlFlowStatements": true,
+  // "typescript.format.insertSpaceAfterFunctionKeywordForAnonymousFunctions": false,
+  // "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyParenthesis": false,
+  // "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBrackets": false,
+  // "typescript.format.insertSpaceAfterOpeningAndBeforeClosingNonemptyBraces": true,
+  // "typescript.format.insertSpaceAfterOpeningAndBeforeClosingTemplateStringBraces": false,
+  // "typescript.format.insertSpaceAfterOpeningAndBeforeClosingJsxExpressionBraces": false,
+  // "typescript.format.insertSpaceBeforeFunctionParenthesis": false,
+  // "typescript.format.placeOpenBraceOnNewLineForFunctions": false,
+  // "typescript.format.placeOpenBraceOnNewLineForControlBlocks": false
 }

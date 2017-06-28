@@ -1,7 +1,9 @@
 import { expect } from "chai";
 import { spawn } from "child_process";
-import { SOM, HandleStoppedAndGetStackTrace, TestConnection, execSom,
-  expectStack } from "./test-setup";
+import {
+  SOM, HandleStoppedAndGetStackTrace, TestConnection, execSom,
+  expectStack
+} from "./test-setup";
 
 
 describe("Command-line Behavior", function() {

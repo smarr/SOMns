@@ -32,10 +32,10 @@ export const enum EntityRefType {
 
 export class KomposMetaModel {
   public readonly serverCapabilities: ServerCapabilities;
-  public readonly sendOps:    SendOpModel[];
+  public readonly sendOps: SendOpModel[];
   public readonly receiveOps: ReceiveOpModel[];
 
-  private actorTag:        number;
+  private actorTag: number;
   private actorMessageTag: number;
 
   private readonly activityTypeMap: EntityDef[];
@@ -79,21 +79,21 @@ export class KomposMetaModel {
     for (const act of this.serverCapabilities.activities) {
       if (act.id === entityTypeId) {
         return (act.creation !== 0 && act.creation !== undefined) ?
-               EntityRefType.Activity : EntityRefType.None;
+          EntityRefType.Activity : EntityRefType.None;
       }
     }
 
     for (const ent of this.serverCapabilities.passiveEntities) {
       if (ent.id === entityTypeId) {
         return (ent.creation !== 0 && ent.creation !== undefined) ?
-                EntityRefType.PassiveEntity : EntityRefType.None;
+          EntityRefType.PassiveEntity : EntityRefType.None;
       }
     }
 
     for (const s of this.serverCapabilities.dynamicScopes) {
       if (s.id === entityTypeId) {
         return (s.creation !== 0 && s.creation !== undefined) ?
-               EntityRefType.DynamicScope : EntityRefType.None;
+          EntityRefType.DynamicScope : EntityRefType.None;
       }
     }
     throw new Error("Did not find the definition for entityTypeId: " + entityTypeId);

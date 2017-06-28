@@ -6,7 +6,7 @@ import { KomposMetaModel, EntityRefType } from "./meta-model";
 const NUM_ACTIVITIES_STARTING_GROUP = 4;
 
 const HORIZONTAL_DISTANCE = 100;
-const VERTICAL_DISTANCE   = 100;
+const VERTICAL_DISTANCE = 100;
 
 export abstract class NodeImpl implements d3.layout.force.Node {
   public index?: number;
@@ -23,7 +23,7 @@ export abstract class NodeImpl implements d3.layout.force.Node {
     this._y = y;
   }
 
-  public get x(): number    { return this._x; }
+  public get x(): number { return this._x; }
   public set x(val: number) {
     if (val > 5000) {
       val = 5000;
@@ -33,7 +33,7 @@ export abstract class NodeImpl implements d3.layout.force.Node {
     this._x = val;
   }
 
-  public get y(): number    { return this._y; }
+  public get y(): number { return this._y; }
   public set y(val: number) {
     if (val > 5000) {
       val = 5000;
@@ -57,7 +57,7 @@ export abstract class EntityNode extends NodeImpl {
 }
 
 export abstract class ActivityNode extends EntityNode {
-  public readonly reflexive:  boolean;
+  public readonly reflexive: boolean;
 
   constructor(reflexive: boolean, x: number, y: number) {
     super(x, y);
@@ -88,7 +88,7 @@ class ActivityNodeImpl extends ActivityNode {
   public getCreationScope() { return this.activity.creationScope; }
   public getName() { return this.activity.name; }
 
-  public getDataId()       { return getEntityId(this.activity.id); }
+  public getDataId() { return getEntityId(this.activity.id); }
   public getSystemViewId() { return getEntityVizId(this.activity.id); }
 
   public getQueryForCodePane() { return "#" + getEntityId(this.activity.id); }
@@ -113,7 +113,7 @@ class GroupNode extends ActivityNode {
   }
   public getName() { return this.group.activities[0].name; }
 
-  public getDataId()       { return getEntityGroupId(this.group.id); }
+  public getDataId() { return getEntityGroupId(this.group.id); }
   public getSystemViewId() { return getEntityGroupVizId(this.group.id); }
 
   public getQueryForCodePane() {
@@ -146,14 +146,14 @@ export class PassiveEntityNode extends EntityNode {
 }
 
 export interface EntityLink extends d3.layout.force.Link<EntityNode> {
-  left:   boolean;
-  right:  boolean;
+  left: boolean;
+  right: boolean;
   messageCount: number;
   creation?: boolean;
 }
 
 interface ActivityGroup {
-  id:         number;
+  id: number;
   activities: Activity[];
   groupNode?: GroupNode;
 }
@@ -161,7 +161,7 @@ interface ActivityGroup {
 type SourceTargetMap = Map<EntityNode, Map<EntityNode, number>>;
 
 function sourceTargetInc(map: SourceTargetMap, source: EntityNode,
-    target: EntityNode, inc = 1) {
+  target: EntityNode, inc = 1) {
   let s = map.get(source);
   if (s === undefined) {
     s = new Map();
@@ -228,7 +228,7 @@ export class SystemViewData {
   private addActivity(act: Activity) {
     const numGroups = Object.keys(this.activitiesPerType).length;
     if (!this.activitiesPerType[act.name]) {
-      this.activitiesPerType[act.name] = {id: numGroups, activities: []};
+      this.activitiesPerType[act.name] = { id: numGroups, activities: [] };
     }
     this.activitiesPerType[act.name].activities.push(act);
 
@@ -351,11 +351,11 @@ export class SystemViewData {
     for (const [source, m] of messages) {
       for (const [target, cnt] of m) {
         links.push({
-            source: source, target: target,
-            left: false, right: true,
-            creation: false,
-            messageCount: cnt
-          });
+          source: source, target: target,
+          left: false, right: true,
+          creation: false,
+          messageCount: cnt
+        });
       }
     }
   }

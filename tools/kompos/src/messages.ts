@@ -5,11 +5,11 @@ export interface IdMap<T> {
 
 export interface Source {
   sourceText: string;
-  mimeType:   string;
-  name:       string;
-  uri:        string;
-  sections:   TaggedSourceCoordinate[];
-  methods:    Method[];
+  mimeType: string;
+  name: string;
+  uri: string;
+  sections: TaggedSourceCoordinate[];
+  methods: Method[];
 }
 
 export function getSectionId(sourceId: string, section: SourceCoordinate) {
@@ -19,9 +19,9 @@ export function getSectionId(sourceId: string, section: SourceCoordinate) {
 
 // TODO: rename
 export interface SourceCoordinate {
-  charLength:       number;
-  startLine:        number;
-  startColumn:      number;
+  charLength: number;
+  startLine: number;
+  startColumn: number;
 }
 
 // TODO: rename
@@ -34,8 +34,8 @@ export interface TaggedSourceCoordinate extends SourceCoordinate {
 }
 
 export interface Method {
-  name:          string;
-  definition:    SourceCoordinate[];
+  name: string;
+  definition: SourceCoordinate[];
   sourceSection: SourceCoordinate;
 }
 
@@ -44,37 +44,37 @@ export type Message = SourceMessage | InitializationResponse | ProgramInfoRespon
   StackTraceResponse | ScopesResponse | VariablesResponse;
 
 export interface SourceMessage {
-  type:   "source";
+  type: "source";
   source: Source;
 }
 
 export type StoppedReason = "step" | "breakpoint" | "exception" | "pause";
 
 /** The different types of active entities supported by the system. */
-export enum ActivityType {}
+export enum ActivityType { }
 
 /** The different kind of passive entities supported by the system. */
-export enum PassiveEntityType {}
+export enum PassiveEntityType { }
 
 /** The different kind of dynamic scopes supported by the system. */
-export enum DynamicScopeType {}
+export enum DynamicScopeType { }
 
 /** The kinds of send operations supported by the system. */
-export enum SendOpType {}
+export enum SendOpType { }
 
 /** The kinds of receive operations supported by the system. */
-export enum ReceiveOpType {}
+export enum ReceiveOpType { }
 
 export type EntityType = ActivityType | PassiveEntityType | DynamicScopeType |
-                         SendOpType | ReceiveOpType;
+  SendOpType | ReceiveOpType;
 
 export interface StoppedMessage {
   type: "StoppedMessage";
 
-  reason:            StoppedReason;
-  activityId:        number;
-  activityType:      ActivityType;
-  text:              string;
+  reason: StoppedReason;
+  activityId: number;
+  activityType: ActivityType;
+  text: string;
   allThreadsStopped: boolean;
 }
 
@@ -85,54 +85,57 @@ export interface UpdateSourceSections {
 
 export interface SourceInfo {
   sourceUri: string;
-  sections:  TaggedSourceCoordinate[];
+  sections: TaggedSourceCoordinate[];
 }
 
 export interface SymbolMessage {
   type: "SymbolMessage";
   symbols: string[];
-  ids:   number[];
+  ids: number[];
 }
 
 export type BreakpointData = LineBreakpointData | SectionBreakpointData;
 
 export interface AbstractBreakpointData {
-  enabled:   boolean;
+  enabled: boolean;
 }
 
 export interface LineBreakpointData extends AbstractBreakpointData {
   type: "LineBreakpoint";
   sourceUri: string;
-  line:      number;
+  line: number;
 }
 
 export interface SectionBreakpointData extends AbstractBreakpointData {
-  type:  "SectionBreakpoint";
+  type: "SectionBreakpoint";
   coord: FullSourceCoordinate;  /** Source section to which breakpoint is applied. */
   bpType: string;               /** Name of the specific breakpoint type. */
 }
 
 export function createLineBreakpointData(sourceUri: string, line: number,
-    enabled: boolean): LineBreakpointData {
+  enabled: boolean): LineBreakpointData {
   return {
     type: "LineBreakpoint",
-    line:      line,
+    line: line,
     sourceUri: sourceUri,
-    enabled:   enabled};
+    enabled: enabled
+  };
 }
 
 export function createSectionBreakpointData(sourceUri: string, line: number,
-    column: number, length: number, type: string,
-    enabled: boolean) {
+  column: number, length: number, type: string,
+  enabled: boolean) {
   let breakpoint: SectionBreakpointData = {
     type: "SectionBreakpoint",
     enabled: enabled,
     bpType: type,
     coord: {
-      uri:         sourceUri,
-      startLine:   line,
+      uri: sourceUri,
+      startLine: line,
       startColumn: column,
-      charLength:  length }};
+      charLength: length
+    }
+  };
 
   return breakpoint;
 }
@@ -147,36 +150,36 @@ export interface InitializeConnection {
 }
 
 export interface BreakpointType {
-  name:         string;    /** Identifier used for communication. */
-  label:        string;    /** Label to use for display purposes. */
+  name: string;    /** Identifier used for communication. */
+  label: string;    /** Label to use for display purposes. */
   applicableTo: string[];  /** Set of source section tags, for which the breakpoint is applicable. */
 }
 
 export interface SteppingType {
-  name:  string;    /** Identifier used for communication. */
+  name: string;    /** Identifier used for communication. */
   label: string;    /** Label to use for display purposes. */
   group: string;    /** Group Label. */
-  icon:  string;    /** Id of an icon known by the frontend. */
+  icon: string;    /** Id of an icon known by the frontend. */
   applicableTo?: string[];  /** The source section tags this stepping operation applies to. If empty, it applies unconditionally. */
   forActivities?: ActivityType[]; /** Ids of the activities this stepping operation applies to. If empty, it applies unconditionally. */
   inScope: EntityType[]; /** Ids of the entities, which need to be in dynamic scope so this stepping type applies. If empty, it applies unconditionally. */
 }
 
 export interface EntityDef {
-  id:          number;
+  id: number;
 
   /** Name of the entity type. */
-  label:       string;
+  label: string;
 
-  creation?:   number;
+  creation?: number;
   completion?: number;
 
   /** Icon name. */
-  marker?:     string;
+  marker?: string;
 }
 
 export interface ParseDef {
-  creationSize?:   number;
+  creationSize?: number;
   completionSize?: number;
 }
 
@@ -196,26 +199,26 @@ export interface ReceiveDef {
 
 export interface ImplData {
   marker: number;
-  size:   number;
+  size: number;
 }
 
 export interface ServerCapabilities {
-  activities:      EntityDef[];
+  activities: EntityDef[];
   passiveEntities: EntityDef[];
-  dynamicScopes:   EntityDef[];
+  dynamicScopes: EntityDef[];
 
-  sendOps:    SendDef[];
+  sendOps: SendDef[];
   receiveOps: ReceiveDef[];
 
-  activityParseData:      ParseDef;
+  activityParseData: ParseDef;
   passiveEntityParseData: ParseDef;
-  dynamicScopeParseData:  ParseDef;
-  sendReceiveParseData:   ParseDef;
+  dynamicScopeParseData: ParseDef;
+  sendReceiveParseData: ParseDef;
 
   implementationData: ImplData[];
 
   breakpointTypes: BreakpointType[];
-  steppingTypes:   SteppingType[];
+  steppingTypes: SteppingType[];
 }
 
 export interface InitializationResponse {
@@ -256,9 +259,9 @@ export interface StackTraceRequest {
 
   activityId: number;
   startFrame: number;
-  levels:     number;
+  levels: number;
 
-  requestId:  number;
+  requestId: number;
 }
 
 export interface StackFrame {
@@ -289,17 +292,17 @@ export interface StackFrame {
 
 export interface StackTraceResponse {
   type: "StackTraceResponse";
-  activityId:  number;
+  activityId: number;
   stackFrames: StackFrame[];
   totalFrames: number;
-  requestId:   number;
+  requestId: number;
   concurrentEntityScopes?: EntityType[];
 }
 
 export interface ScopesRequest {
   action: "ScopesRequest";
   requestId: number;
-  frameId:   number;
+  frameId: number;
 }
 
 export interface Scope {
@@ -319,7 +322,7 @@ export interface Scope {
 export interface ScopesResponse {
   type: "ScopesResponse";
   variablesReference: number;
-  scopes:    Scope[];
+  scopes: Scope[];
   requestId: number;
 }
 

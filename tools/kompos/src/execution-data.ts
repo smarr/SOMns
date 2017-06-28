@@ -1,13 +1,15 @@
-import { SymbolMessage, FullSourceCoordinate, ActivityType, PassiveEntityType,
-  DynamicScopeType, SendOpType, ReceiveOpType } from "./messages";
+import {
+  SymbolMessage, FullSourceCoordinate, ActivityType, PassiveEntityType,
+  DynamicScopeType, SendOpType, ReceiveOpType
+} from "./messages";
 import { TraceParser } from "./trace-parser";
 import { KomposMetaModel, EntityRefType } from "./meta-model";
 
 
 export interface EntityProperties {
-  id:      number;
+  id: number;
   origin?: FullSourceCoordinate;
-  creationScope?:   DynamicScope;
+  creationScope?: DynamicScope;
   creationActivity: Activity;
 }
 
@@ -16,9 +18,9 @@ export interface PassiveEntity extends EntityProperties {
 }
 
 export interface Activity extends EntityProperties {
-  type:      ActivityType;
-  name:      string;
-  running:   boolean;
+  type: ActivityType;
+  name: string;
+  running: boolean;
   completed: boolean;
 }
 
@@ -46,17 +48,17 @@ abstract class RawData {
 }
 
 export class RawSourceCoordinate extends RawData {
-  private fileUriId:  number;  // needs to be looked up in the string id table
+  private fileUriId: number;  // needs to be looked up in the string id table
   private charLength: number;
-  private startLine:   number;
+  private startLine: number;
   private startColumn: number;
 
   constructor(fileUriId: number, charLength: number, startLine: number,
-      startColumn: number) {
+    startColumn: number) {
     super();
-    this.fileUriId   = fileUriId;
-    this.charLength  = charLength;
-    this.startLine   = startLine;
+    this.fileUriId = fileUriId;
+    this.charLength = charLength;
+    this.startLine = startLine;
     this.startColumn = startColumn;
   }
 
@@ -64,9 +66,9 @@ export class RawSourceCoordinate extends RawData {
     const uri = data.getSymbol(this.fileUriId);
     if (uri === undefined) { return false; }
     return {
-      uri:         uri,
-      charLength:  this.charLength,
-      startLine:   this.startLine,
+      uri: uri,
+      charLength: this.charLength,
+      startLine: this.startLine,
       startColumn: this.startColumn
     };
   }
@@ -79,7 +81,7 @@ export abstract class RawEntity extends RawData {
   constructor(creationActivity: number, creationScope: number) {
     super();
     this.creationActivity = creationActivity;
-    this.creationScope    = creationScope;
+    this.creationScope = creationScope;
   }
 
   protected resolveCreationActivity(data: ExecutionData) {
@@ -99,11 +101,11 @@ export abstract class RawEntity extends RawData {
   }
 
   protected resolveEntity(data: ExecutionData, entityId: number,
-      type: EntityRefType): Activity | PassiveEntity | DynamicScope | number {
+    type: EntityRefType): Activity | PassiveEntity | DynamicScope | number {
     switch (type) {
-      case EntityRefType.None:          return entityId;
-      case EntityRefType.Activity:      return data.getActivity(entityId);
-      case EntityRefType.DynamicScope:  return data.getScope(entityId);
+      case EntityRefType.None: return entityId;
+      case EntityRefType.Activity: return data.getActivity(entityId);
+      case EntityRefType.DynamicScope: return data.getScope(entityId);
       case EntityRefType.PassiveEntity: return data.getPassiveEntity(entityId);
     }
   }
@@ -112,16 +114,16 @@ export abstract class RawEntity extends RawData {
 export class RawActivity extends RawEntity {
   private type: ActivityType;
   private activityId: number;
-  private symbolId:  number;
+  private symbolId: number;
   private sourceSection: RawSourceCoordinate;
 
   constructor(type: ActivityType, activityId: number, symbolId: number,
-      sourceSection: RawSourceCoordinate, creationActivity: number,
-      creationScope: number) {
+    sourceSection: RawSourceCoordinate, creationActivity: number,
+    creationScope: number) {
     super(creationActivity, creationScope);
     this.type = type;
     this.activityId = activityId;
-    this.symbolId   = symbolId;
+    this.symbolId = symbolId;
     this.sourceSection = sourceSection;
   }
 
@@ -150,7 +152,7 @@ export class RawActivity extends RawEntity {
     }
 
     return {
-      id:  this.activityId,
+      id: this.activityId,
       name: name,
       running: true,
       type: this.type,
@@ -168,8 +170,8 @@ export class RawScope extends RawEntity {
   private sourceSection: RawSourceCoordinate;
 
   constructor(type: DynamicScopeType, scopeId: number,
-      sourceSection: RawSourceCoordinate, creationActivity: number,
-      creationScope: number) {
+    sourceSection: RawSourceCoordinate, creationActivity: number,
+    creationScope: number) {
     super(creationActivity, creationScope);
     this.type = type;
     this.scopeId = scopeId;
@@ -209,8 +211,8 @@ export class RawPassiveEntity extends RawEntity {
   private sourceSection: RawSourceCoordinate;
 
   constructor(type: PassiveEntityType, entityId: number,
-      sourceSection: RawSourceCoordinate, creationActivity: number,
-      creationScope: number) {
+    sourceSection: RawSourceCoordinate, creationActivity: number,
+    creationScope: number) {
     super(creationActivity, creationScope);
     this.type = type;
     this.entityId = entityId;
@@ -249,7 +251,7 @@ export class RawSendOp extends RawEntity {
   private readonly targetId: number;
 
   constructor(type: SendOpType, entityId: number, targetId: number,
-      creationActivity: number, creationScope: number) {
+    creationActivity: number, creationScope: number) {
     super(creationActivity, creationScope);
     this.type = type;
     this.entityId = entityId;
@@ -291,7 +293,7 @@ export class RawReceiveOp extends RawEntity {
   private readonly sourceId: number;
 
   constructor(type: ReceiveOpType, sourceId: number, creationActivity: number,
-      creationScope: number) {
+    creationScope: number) {
     super(creationActivity, creationScope);
     this.type = type;
     this.sourceId = sourceId;
@@ -323,19 +325,19 @@ export class RawReceiveOp extends RawEntity {
 }
 
 export class TraceDataUpdate {
-  public readonly activities:      Activity[];
-  public readonly scopes:          DynamicScope[];
+  public readonly activities: Activity[];
+  public readonly scopes: DynamicScope[];
   public readonly passiveEntities: PassiveEntity[];
 
-  public readonly sendOps:    SendOp[];
+  public readonly sendOps: SendOp[];
   public readonly receiveOps: ReceiveOp[];
 
   constructor() {
     this.activities = [];
-    this.scopes     = [];
+    this.scopes = [];
     this.passiveEntities = [];
 
-    this.sendOps    = [];
+    this.sendOps = [];
     this.receiveOps = [];
   }
 }
@@ -348,19 +350,19 @@ export class ExecutionData {
   private traceParser?: TraceParser;
   private readonly symbols: string[];
 
-  private rawActivities:      RawActivity[];
-  private rawScopes:          RawScope[];
+  private rawActivities: RawActivity[];
+  private rawScopes: RawScope[];
   private rawPassiveEntities: RawPassiveEntity[];
-  private rawSends:           RawSendOp[];
-  private rawReceives:        RawReceiveOp[];
+  private rawSends: RawSendOp[];
+  private rawReceives: RawReceiveOp[];
 
   private newData: TraceDataUpdate;
 
-  private activities:      Activity[];
-  private scopes:          DynamicScope[];
+  private activities: Activity[];
+  private scopes: DynamicScope[];
   private passiveEntities: PassiveEntity[];
-  private sendOps:         SendOp[];
-  private receiveOps:      ReceiveOp[];
+  private sendOps: SendOp[];
+  private receiveOps: ReceiveOp[];
 
   private endedScopes: number[];
   private completedActivities: number[];
@@ -369,7 +371,7 @@ export class ExecutionData {
     this.symbols = [];
 
     this.activities = [];
-    this.scopes     = [];
+    this.scopes = [];
     this.passiveEntities = [];
     this.sendOps = [];
     this.receiveOps = [];

@@ -34,14 +34,14 @@ const lineGenerator: any =
     one collection group: turns and messages
     to hide an actor the other group and all incoming messages are set to hidden */
 class ActorHeading {
-  private readonly turns:     TurnNode[];
-  private readonly activity:  Activity;
-  public  readonly x:         number;
-  private readonly y:         number;
-  public  readonly color:     string;
+  private readonly turns: TurnNode[];
+  private readonly activity: Activity;
+  public readonly x: number;
+  private readonly y: number;
+  public readonly color: string;
 
-  private visibility:         boolean;
-  private container:          d3.Selection<SVGElement>;
+  private visibility: boolean;
+  private container: d3.Selection<SVGElement>;
 
   constructor(activity: Activity, num: number) {
     this.turns = [];
@@ -117,8 +117,8 @@ class ActorHeading {
       .attr("font-size", "20px")
       .attr("text-anchor", "middle")
       .html(
-        metaModel.getActivityDef(this.activity).marker +
-        " " + this.activity.name);
+      metaModel.getActivityDef(this.activity).marker +
+      " " + this.activity.name);
 
     const that = this;
     // center position after text was rendered, and we can determine its width
@@ -140,10 +140,10 @@ class TurnNode {
   private readonly incoming: EmptyMessage;
   private readonly outgoing: Message[];
   private readonly count: number;
-  public  readonly x:     number;
-  public  readonly y:     number;
-  private readonly visualization:  d3.Selection<SVGElement>;
-  private popover:        JQuery;
+  public readonly x: number;
+  public readonly y: number;
+  private readonly visualization: d3.Selection<SVGElement>;
+  private popover: JQuery;
 
   constructor(actor: ActorHeading, message: EmptyMessage) {
     this.actor = actor;
@@ -179,14 +179,14 @@ class TurnNode {
       highlight the incoming message. */
   public highlightOn() {
     this.visualization.style("stroke-width", highlightedWidth)
-                      .style("stroke", "black");
+      .style("stroke", "black");
     this.incoming.highlightOn();
   }
 
   /** remove highlight from this turn */
   public highlightOff() {
     this.visualization.style("stroke-width", noHighlightWidth)
-                      .style("stroke", d3.rgb(this.getColor()).darker().toString());
+      .style("stroke", d3.rgb(this.getColor()).darker().toString());
     this.incoming.highlightOff();
   }
 
@@ -260,7 +260,7 @@ class TurnNode {
       .style("fill", this.actor.color)
       .style("stroke-width", noHighlightWidth)
       .style("stroke", d3.rgb(this.actor.color).darker().toString())
-      .on("click", function(){
+      .on("click", function() {
         ProcessView.changeHighlight(turn);
       });
 
@@ -270,13 +270,14 @@ class TurnNode {
         one to do full restore
     */
     circle.attr({
-      "data-toggle"   : "popover",
-      "data-trigger"  : "click",
-      "title"         : this.incoming.getText(),
-      "animation"     : "false",
-      "data-html"     : "true",
+      "data-toggle": "popover",
+      "data-trigger": "click",
+      "title": this.incoming.getText(),
+      "animation": "false",
+      "data-html": "true",
       "data-animation": "false",
-      "data-placement": "top" });
+      "data-placement": "top"
+    });
 
     // popover is a css element and has a different dom then svg,
     // popover requires jQuery select to pass typechecking
@@ -288,12 +289,12 @@ class TurnNode {
 }
 
 class EmptyMessage {
-  public highlightOn() {}
-  public highlightOff() {}
-  public changeVisibility(_visible: boolean) {}
+  public highlightOn() { }
+  public highlightOff() { }
+  public changeVisibility(_visible: boolean) { }
   public getText() { return "42"; }
-  public shiftAtSender(_yShift: number) {}
-  public shiftAtTarget(_yShift: number) {}
+  public shiftAtSender(_yShift: number) { }
+  public shiftAtTarget(_yShift: number) { }
 }
 
 /** message represent a message send between two actors
@@ -303,22 +304,22 @@ class EmptyMessage {
     when undoing a shift the original shift is unknown, so we shift back to the old position
     message can be shifted at both sender and receiver. */
 class Message extends EmptyMessage {
-  private text:          string;
-  private sender:        TurnNode;
-  private target:        TurnNode;
+  private text: string;
+  private sender: TurnNode;
+  private target: TurnNode;
   private messageToSelf: boolean; // is both the sender and receiver the same object
 
-  private order:         number;  // indicates order of message sends inside tur
-  private senderShift:   number;
-  private targetShift:   number;
-  private visibility:    string;
+  private order: number;  // indicates order of message sends inside tur
+  private senderShift: number;
+  private targetShift: number;
+  private visibility: string;
   private visualization: d3.Selection<SVGElement>;
-  private anchor:        d3.Selection<SVGElement>;
+  private anchor: d3.Selection<SVGElement>;
 
   private readonly sendOp: SendOp;
 
   constructor(senderActor: ActorHeading, targetActor: ActorHeading,
-      sendOp: SendOp, senderTurn: TurnNode) {
+    sendOp: SendOp, senderTurn: TurnNode) {
     super();
     this.sendOp = sendOp;
     this.sender = senderTurn;
@@ -440,10 +441,10 @@ class Message extends EmptyMessage {
   private drawMessageToSelf() {
     this.createMessageArrow();
     const lineData: [number, number][] = [
-      [ this.sender.x , this.sender.y + this.senderShift],
-      [ this.sender.x + turnRadius * 1.5 , this.sender.y + this.senderShift],
-      [ this.target.x + turnRadius * 1.5 , this.target.y + this.targetShift],
-      [ this.target.x , this.target.y + this.targetShift]];
+      [this.sender.x, this.sender.y + this.senderShift],
+      [this.sender.x + turnRadius * 1.5, this.sender.y + this.senderShift],
+      [this.target.x + turnRadius * 1.5, this.target.y + this.targetShift],
+      [this.target.x, this.target.y + this.targetShift]];
     this.visualization =
       this.sender.getContainer().append("path")
         .attr("d", lineGenerator(lineData))
@@ -469,7 +470,7 @@ class Message extends EmptyMessage {
     Only one turn can be highlighted at a time. */
 export class ProcessView {
   private static highlighted: TurnNode;
-  private actors:             IdMap<ActorHeading>;
+  private actors: IdMap<ActorHeading>;
 
   private metaModel: KomposMetaModel;
   private numActors: number;

@@ -6,7 +6,7 @@ import { TestConnection, HandleStoppedAndGetStackTrace, expectStack } from "./te
 import { createSectionBreakpointData, createLineBreakpointData, StackTraceResponse } from "../src/messages";
 
 const FJ_FILE = resolve("tests/forkjoin.som");
-const FJ_URI  = "file:" + FJ_FILE;
+const FJ_URI = "file:" + FJ_FILE;
 
 describe("Setting Fork/Join Breakpoints", () => {
   let conn: TestConnection;
@@ -18,7 +18,7 @@ describe("Setting Fork/Join Breakpoints", () => {
   };
 
   const beforeBp = createSectionBreakpointData(FJ_URI, 9, 18, 83,
-      BreakpointType.ACTIVITY_CREATION, true);
+    BreakpointType.ACTIVITY_CREATION, true);
 
   before("Start SOMns and Connect", () => {
     const lBp = createLineBreakpointData(FJ_URI, 22, true);
@@ -54,8 +54,8 @@ describe("Setting Fork/Join Breakpoints", () => {
   });
 
   it("should step into activity, and stop next line", () => {
-    const main  = {s: 6, n: "ForkJoin>>#cnt:",   l: 13};
-    const child = {s: 1, n: "ForkJoin>>#λcnt@9@25", l: 10};
+    const main = { s: 6, n: "ForkJoin>>#cnt:", l: 13 };
+    const child = { s: 1, n: "ForkJoin>>#λcnt@9@25", l: 10 };
 
     const handler = function(msg: StackTraceResponse) {
       if (msg.activityId === 0) {
