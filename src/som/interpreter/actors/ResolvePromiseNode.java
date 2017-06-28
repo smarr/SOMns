@@ -28,14 +28,12 @@ public abstract class ResolvePromiseNode extends AbstractPromiseResolutionNode {
       final boolean haltOnResolver, final boolean haltOnResolution) {
     SPromise promise = resolver.getPromise();
 
-    if (promise.isExplicitPromise() && promise.isTriggerExplicitPromiseResolverBreakpoint()) {
+    if (haltOnResolver || promise.getHaltOnResolver()) {
       haltNode.executeEvaluated(frame, result);
     }
-    if (promise.isExplicitPromise() && promise.isTriggerPromiseResolutionBreakpoint()) {
-      breakpointOnResolution = promise.isTriggerPromiseResolutionBreakpoint();
-    }
 
-    resolvePromise(Resolution.SUCCESSFUL, resolver, result, breakpointOnResolution);
+    resolvePromise(Resolution.SUCCESSFUL, resolver, result,
+        haltOnResolution || promise.getHaltOnResolution());
     return resolver;
   }
 }

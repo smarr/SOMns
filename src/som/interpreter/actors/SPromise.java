@@ -57,50 +57,26 @@ public class SPromise extends SObjectWithClass {
   protected Object  value;
   protected Resolution resolutionState;
 
-  // the owner of this promise, on which all call backs are scheduled
+  /** The owner of this promise, on which all call backs are scheduled. */
   protected final Actor owner;
-  /**
-   * Indicates the case when a chained promise is unresolved and it has
-   * a promise resolution breakpoint.
-   * It is not final because its value can be updated when resolving chained promises.
-   */
-  private boolean triggerResolutionBreakpointOnUnresolvedChainedPromise;
-  /**
-   * Indicates the case when a promise (implicit or explicit) has a promise
-   * resolution breakpoint.
-   */
-  private final boolean triggerPromiseResolutionBreakpoint;
-  /**
-   * Indicates the case when the promise is created explicitly with
-   * createPromisePair primitive, because there is no EventualMessage created
-   * where this flag can be set.
-   */
-  private final boolean triggerExplicitPromiseResolverBreakpoint;
-  /**
-   * Indicates the case when the promise is explicitly created, with the
-   * createPromisePair primitive.
-   * This flag is needed specifically for the promise resolution breakpoint
-   * on explicit promises. In this case we cannot ask to the message like in the implicit
-   * promises (in ReceivedMessage) because there is no EventualMessage created for explicit promises.
-   * Instead we ask directly to the promise if a promise resolution breakpoint
-   * was set (in ResolvePromiseNode).
-   */
-  private final boolean explicitPromise;
-  /**
-   * Indicates to stop before the callback of the promise is executed
-   * when the user made a step-return-from-turn-to-promise-resolution.
-   */
-  private boolean triggerStopBeforeExecuteCallback;
 
-  protected SPromise(@NotNull final Actor owner, final boolean triggerPromiseResolutionBreakpoint,
-      final boolean triggerExplicitPromiseResolverBreakpoint,
-      final boolean explicitPromise) {
+  /**
+   * Trigger breakpoint at the point where the promise is resolved with a value.
+   */
+  private final boolean haltOnResolver;
+
+  /**
+   * Trigger a breakpoint when executing a resolution callback.
+   */
+  private boolean haltOnResolution;
+
+  protected SPromise(@NotNull final Actor owner, final boolean haltOnResolver,
+      final boolean haltOnResolution) {
     super(promiseClass, promiseClass.getInstanceFactory());
     assert owner != null;
     this.owner = owner;
-    this.triggerPromiseResolutionBreakpoint = triggerPromiseResolutionBreakpoint;
-    this.triggerExplicitPromiseResolverBreakpoint = triggerExplicitPromiseResolverBreakpoint;
-    this.explicitPromise = explicitPromise;
+    this.haltOnResolver = haltOnResolver;
+    this.haltOnResolution = haltOnResolution;
 
     resolutionState = Resolution.UNRESOLVED;
     assert promiseClass != null;
@@ -130,9 +106,8 @@ public class SPromise extends SObjectWithClass {
   }
 
   public final synchronized SPromise getChainedPromiseFor(final Actor target) {
-    SPromise remote = SPromise.createPromise(target,
-        triggerPromiseResolutionBreakpoint,
-        triggerExplicitPromiseResolverBreakpoint, explicitPromise, null);
+    SPromise remote = SPromise.createPromise(target, haltOnResolver,
+        haltOnResolution, null);
     if (VmSettings.PROMISE_RESOLUTION) {
       ActorExecutionTrace.promiseChained(getPromiseId(), remote.getPromiseId());
     }
@@ -190,8 +165,11 @@ public class SPromise extends SObjectWithClass {
     assert owner != null;
     msg.resolve(result, owner, current);
 
-    // update the message flag for the message breakpoint at receiver side
-    msg.setIsMessageReceiverBreakpoint(isBreakpointOnPromiseResolution);
+    // if the promise had a haltOnResolution,
+    // the message needs to break on receive
+    if (haltOnResolution) {
+      msg.enableHaltOnReceive();
+    }
     msg.getTarget().send(msg, actorPool);
   }
 
@@ -250,26 +228,15 @@ public class SPromise extends SObjectWithClass {
     return value;
   }
 
-  public boolean isTriggerPromiseResolutionBreakpoint() {
-    return triggerPromiseResolutionBreakpoint;
-  }
-
-  // TODO: can we get rid of this?
-  public boolean isExplicitPromise() {
-    return explicitPromise;
-  }
-
   protected static class STracingPromise extends SPromise {
     protected final long promiseId;
 
-    protected STracingPromise(final Actor owner,
-        final boolean triggerPromiseResolutionBreakpoint,
-        final boolean triggerExplicitPromiseResolverBreakpoint,
-        final boolean explicitPromise, final SourceSection section) {
-      super(owner, triggerPromiseResolutionBreakpoint,
-          triggerExplicitPromiseResolverBreakpoint, explicitPromise);
+    protected STracingPromise(final Actor owner, final boolean haltOnResolver,
+        final boolean haltOnResolution, final SourceSection section) {
+      super(owner, haltOnResolver, haltOnResolution);
       promiseId = TracingActivityThread.newEntityId();
-      ActorExecutionTrace.passiveEntityCreation(PassiveEntityType.PROMISE, promiseId, section);
+      ActorExecutionTrace.passiveEntityCreation(
+          PassiveEntityType.PROMISE, promiseId, section);
     }
 
     @Override
@@ -279,12 +246,9 @@ public class SPromise extends SObjectWithClass {
   }
 
   public static final class SReplayPromise extends STracingPromise {
-    protected SReplayPromise(final Actor owner,
-        final boolean triggerPromiseResolutionBreakpoint,
-        final boolean triggerExplicitPromiseResolverBreakpoint,
-        final boolean explicitPromise, final SourceSection section) {
-      super(owner, triggerPromiseResolutionBreakpoint,
-          triggerExplicitPromiseResolverBreakpoint, explicitPromise, section);
+    protected SReplayPromise(final Actor owner, final boolean haltOnResolver,
+        final boolean haltOnResolution, final SourceSection section) {
+      super(owner, haltOnResolver, haltOnResolution, section);
     }
 
     protected long resolvingActor;
@@ -479,25 +443,15 @@ public class SPromise extends SObjectWithClass {
     pairClass = cls;
   }
 
-  boolean isTriggerResolutionBreakpointOnUnresolvedChainedPromise() {
-    return triggerResolutionBreakpointOnUnresolvedChainedPromise;
+  boolean getHaltOnResolver() {
+    return haltOnResolver;
   }
 
-  void setTriggerResolutionBreakpointOnUnresolvedChainedPromise(
-      final boolean triggerResolutionBreakpointOnUnresolvedChainedPromise) {
-    this.triggerResolutionBreakpointOnUnresolvedChainedPromise = triggerResolutionBreakpointOnUnresolvedChainedPromise;
+  boolean getHaltOnResolution() {
+    return haltOnResolution;
   }
 
-  boolean isTriggerExplicitPromiseResolverBreakpoint() {
-    return triggerExplicitPromiseResolverBreakpoint;
-  }
-
-  public void setTriggerStopBeforeExecuteCallback(
-      final boolean triggerStopBeforeExecuteCallback) {
-    this.triggerStopBeforeExecuteCallback = triggerStopBeforeExecuteCallback;
-  }
-
-  public boolean isTriggerStopBeforeExecuteCallback() {
-    return triggerStopBeforeExecuteCallback;
+  public void enableHaltOnResolution() {
+    haltOnResolution = true;
   }
 }

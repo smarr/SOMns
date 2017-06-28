@@ -79,8 +79,8 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   )
 
   public class Resolver = Value ()( (* Object or Value? *)
-    public resolve: value = ( vmMirror actorsResolve: self with: value isBPResolution: false )
-    public error:   value = ( vmMirror actorsError:   self with: value isBPResolution: false )
+    public resolve: value = ( vmMirror actorsResolve: self with: value isBPResolver: false isBPResolution: false )
+    public error:   value = ( vmMirror actorsError:   self with: value isBPResolver: false isBPResolution: false )
   )
 
   class Pair with: promise and: resolver = (

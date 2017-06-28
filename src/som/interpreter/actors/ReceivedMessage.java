@@ -32,10 +32,10 @@ public class ReceivedMessage extends ReceivedRootNode {
   @Override
   public Object execute(final VirtualFrame frame) {
     EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
-    boolean haltOnResolver   = msg.haltOnResolver;
-    boolean haltOnResolution = msg.haltOnResolution();
+    boolean haltOnResolver   = msg.getHaltOnResolver();
+    boolean haltOnResolution = msg.getHaltOnResolution();
 
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.haltOnResolver()) {
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && haltOnResolver) {
       dbg.prepareSteppingAfterNextRootNode();
     }
 
@@ -68,7 +68,7 @@ public class ReceivedMessage extends ReceivedRootNode {
     public Object execute(final VirtualFrame frame) {
       EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
 
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.haltOnResolver()) {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.getHaltOnResolver()) {
         dbg.prepareSteppingAfterNextRootNode();
       }
 
@@ -90,10 +90,10 @@ public class ReceivedMessage extends ReceivedRootNode {
     @Override
     public Object execute(final VirtualFrame frame) {
       EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
-      boolean haltOnResolver   = msg.haltOnResolver;
-      boolean haltOnResolution = msg.haltOnResolution();
+      boolean haltOnResolver   = msg.getHaltOnResolver();
+      boolean haltOnResolution = msg.getHaltOnResolution();
 
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.haltOnResolver()) {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && haltOnResolver) {
         dbg.prepareSteppingAfterNextRootNode();
       }
 

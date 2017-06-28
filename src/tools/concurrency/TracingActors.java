@@ -11,9 +11,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
-import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.SPromise.SReplayPromise;
 import som.vm.VmSettings;
 import tools.concurrency.TraceParser.MessageRecord;
@@ -57,7 +55,7 @@ public class TracingActors {
         return;
       }
 
-      if (msg.haltOnReceive() || ((TracingActor) actor).isStepToNextTurn()) {
+      if (msg.getHaltOnReceive() || ((TracingActor) actor).isStepToNextTurn()) {
         dbg.prepareSteppingUntilNextRootNode();
         if (((TracingActor) actor).isStepToNextTurn()) { // reset flag
           actor.setStepToNextTurn(false);
@@ -65,10 +63,8 @@ public class TracingActors {
       }
 
       // check if a step-return-from-turn-to-promise-resolution has been triggered
-      if (msg instanceof PromiseSendMessage && ((PromiseSendMessage) msg).getPromise().isTriggerStopBeforeExecuteCallback()) {
-          dbg.prepareSteppingUntilNextRootNode();
-      } else if (msg instanceof PromiseCallbackMessage && ((PromiseCallbackMessage) msg).getPromise().isTriggerStopBeforeExecuteCallback()) {
-          dbg.prepareSteppingUntilNextRootNode();
+      if (msg.getHaltOnPromiseMessageResolution()) {
+        dbg.prepareSteppingUntilNextRootNode();
       }
    }
   }

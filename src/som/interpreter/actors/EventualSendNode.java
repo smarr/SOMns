@@ -228,7 +228,7 @@ public class EventualSendNode extends ExprWithTagsNode {
       Actor owner = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
       SPromise  result   = SPromise.createPromise(owner,
-          promiseResolutionBreakpoint.executeShouldHalt(), false, false, source);
+          false, promiseResolutionBreakpoint.executeShouldHalt(), source);
       SResolver resolver = SPromise.createResolver(result);
 
       sendDirectMessage(args, owner, resolver);
@@ -243,7 +243,7 @@ public class EventualSendNode extends ExprWithTagsNode {
 
       SPromise  promise  = SPromise.createPromise(
           EventualMessage.getActorCurrentMessageIsExecutionOn(),
-          promiseResolutionBreakpoint.executeShouldHalt(), false, false, source);
+          false, promiseResolutionBreakpoint.executeShouldHalt(), source);
       SResolver resolver = SPromise.createResolver(promise);
 
       sendPromiseMessage(args, rcvr, resolver, registerNode);
@@ -255,8 +255,7 @@ public class EventualSendNode extends ExprWithTagsNode {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
       SPromise  result   = SPromise.createPromise(current,
-          promiseResolutionBreakpoint.executeShouldHalt(),
-          false, false, source);
+          false, promiseResolutionBreakpoint.executeShouldHalt(), source);
       SResolver resolver = SPromise.createResolver(result);
 
       DirectMessage msg = new DirectMessage(current, selector, args, current,

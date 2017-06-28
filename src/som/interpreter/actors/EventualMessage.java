@@ -31,7 +31,7 @@ public abstract class EventualMessage {
    * Indicates that the implicit promise, corresponding to this message,
    * has a promise resolver breakpoint.
    */
-  protected final boolean haltOnResolver;
+  private final boolean haltOnResolver;
 
   protected EventualMessage(final Object[] args,
       final SResolver resolver, final RootCallTarget onReceive,
@@ -106,6 +106,9 @@ public abstract class EventualMessage {
     }
 
     @Override
+    public boolean getHaltOnPromiseMessageResolution() { return false; }
+
+    @Override
     public String toString() {
       String t = target.toString();
       return "DirectMsg(" + selector.toString() + ", "
@@ -169,6 +172,11 @@ public abstract class EventualMessage {
     }
 
     public abstract SPromise getPromise();
+
+    @Override
+    public boolean getHaltOnPromiseMessageResolution() {
+      return getPromise().getHaltOnResolution();
+    }
   }
 
   /**
@@ -323,24 +331,40 @@ public abstract class EventualMessage {
 
   /**
    * Indicates that execution should stop and yield to the debugger,
-   * before the computed value is used to resolve the promise.
+   * before the message is processed.
    */
-  public boolean isPromiseResolverBreakpointSet() {
-    return triggerPromiseResolverBreakpoint;
+  public boolean getHaltOnReceive() {
+    return haltOnReceive;
+  }
+
+  /**
+   * Sets the flag for the message receiver breakpoint.
+   */
+  void enableHaltOnReceive() {
+    haltOnReceive = true;
   }
 
   /**
    * Indicates that execution should stop and yield to the debugger,
-   * before the message is processed.
+   * before the computed value is used to resolve the promise.
    */
-  public boolean isMessageReceiverBreakpointSet() {
-    return triggerMessageReceiverBreakpoint;
+  boolean getHaltOnResolver() {
+    return haltOnResolver;
   }
 
   /**
-   * Updates the value of the flag for the message receiver breakpoint.
+   * Indicates that a resolution breakpoint is set.
    */
-  public void setIsMessageReceiverBreakpoint(final boolean triggerBreakpoint) {
-    this.triggerMessageReceiverBreakpoint = triggerBreakpoint;
+  boolean getHaltOnResolution() {
+    if (resolver == null) {
+      return false;
+    }
+    return resolver.getPromise().getHaltOnResolution();
   }
+
+  /**
+   * Indicates that the message is a promise message and a resolution breakpoint
+   * is set.
+   */
+  public abstract boolean getHaltOnPromiseMessageResolution();
 }

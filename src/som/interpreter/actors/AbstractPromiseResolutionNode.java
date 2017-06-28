@@ -10,14 +10,14 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VM;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.VmSettings;
 import tools.concurrency.ActorExecutionTrace;
 
 
 @Instrumentable(factory = AbstractPromiseResolutionNodeWrapper.class)
-public abstract class AbstractPromiseResolutionNode extends TernaryExpressionNode {
+public abstract class AbstractPromiseResolutionNode extends QuaternaryExpressionNode {
   private final ForkJoinPool actorPool;
 
   @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
@@ -38,14 +38,16 @@ public abstract class AbstractPromiseResolutionNode extends TernaryExpressionNod
   }
 
   public abstract Object executeEvaluated(VirtualFrame frame,
-      SResolver receiver, Object argument, boolean isBreakpointOnPromiseResolution);
+      SResolver receiver, Object argument, boolean haltOnResolver,
+      boolean haltOnResolution);
 
   /**
    * To avoid cycles in the promise chain, do nothing when a promise is resolved with itself.
    */
   @Specialization(guards = {"resolver.getPromise() == result"})
-  public SResolver selfResolution(final SResolver resolver, final SPromise result,
-      final boolean isBreakpointOnPromiseResolution) {
+  public SResolver selfResolution(final SResolver resolver,
+      final SPromise result, final boolean haltOnResolver,
+      final boolean haltOnResolution) {
     return resolver;
   }
 
@@ -55,8 +57,8 @@ public abstract class AbstractPromiseResolutionNode extends TernaryExpressionNod
   @Specialization(guards = {"resolver.getPromise() != promiseValue"})
   public SResolver chainedPromise(final VirtualFrame frame,
       final SResolver resolver, final SPromise promiseValue,
-      final boolean isBreakpointOnPromiseResolution) {
-    chainPromise(resolver, promiseValue, isBreakpointOnPromiseResolution);
+      final boolean haltOnResolver, final boolean haltOnResolution) {
+    chainPromise(resolver, promiseValue, haltOnResolver, haltOnResolution);
     return resolver;
   }
 
@@ -74,7 +76,6 @@ public abstract class AbstractPromiseResolutionNode extends TernaryExpressionNod
           promiseValue.getPromiseId(), promiseToBeResolved.getPromiseId());
     }
 
-    boolean breakpointOnResolution = isBreakpointOnPromiseResolution;
     synchronized (promiseValue) {
       Resolution state = promiseValue.getResolutionStateUnsync();
       if (SPromise.isCompleted(state)) {
@@ -82,10 +83,9 @@ public abstract class AbstractPromiseResolutionNode extends TernaryExpressionNod
             haltOnResolution);
       } else {
         synchronized (promiseToBeResolved) { // TODO: is this really deadlock free?
-          if (promiseValue.isTriggerPromiseResolutionBreakpoint() && !breakpointOnResolution) {
-            breakpointOnResolution = promiseValue.isTriggerPromiseResolutionBreakpoint();
+          if (haltOnResolution || promiseValue.getHaltOnResolution()) {
+            promiseToBeResolved.enableHaltOnResolution();
           }
-          promiseToBeResolved.setTriggerResolutionBreakpointOnUnresolvedChainedPromise(breakpointOnResolution);
           promiseValue.addChainedPromise(promiseToBeResolved);
         }
       }
