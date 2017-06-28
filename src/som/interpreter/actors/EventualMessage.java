@@ -21,26 +21,26 @@ public abstract class EventualMessage {
   protected final long messageId;
 
   /**
-    * Indicates the case when an asynchronous message has a receiver breakpoint.
-    * It is not final because its value can be updated in order that other breakpoints
+    * Indicates the case that an asynchronous message has a receiver breakpoint.
+    * It is not final because its value can be updated so that other breakpoints
     * can reuse the stepping strategy implemented for message receiver breakpoints.
     */
-  protected boolean triggerMessageReceiverBreakpoint;
+  protected boolean haltOnReceive;
+
   /**
-   * Indicates the case when an implicit promise has a promise resolver breakpoint
-   * (with or without resolver).
+   * Indicates that the implicit promise, corresponding to this message,
+   * has a promise resolver breakpoint.
    */
-  protected final boolean triggerPromiseResolverBreakpoint;
+  protected final boolean haltOnResolver;
 
   protected EventualMessage(final Object[] args,
       final SResolver resolver, final RootCallTarget onReceive,
-      final boolean triggerMessageReceiverBreakpoint,
-      final boolean triggerPromiseResolverBreakpoint) {
+      final boolean haltOnReceive, final boolean haltOnResolver) {
     this.args     = args;
     this.resolver = resolver;
     this.onReceive = onReceive;
-    this.triggerMessageReceiverBreakpoint = triggerMessageReceiverBreakpoint;
-    this.triggerPromiseResolverBreakpoint = triggerPromiseResolverBreakpoint;
+    this.haltOnReceive = haltOnReceive;
+    this.haltOnResolver = haltOnResolver;
     this.messageId = TracingActivityThread.newEntityId();
     assert onReceive.getRootNode() instanceof ReceivedMessage || onReceive.getRootNode() instanceof ReceivedCallback;
   }

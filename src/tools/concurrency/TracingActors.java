@@ -57,7 +57,7 @@ public class TracingActors {
         return;
       }
 
-      if (msg.isMessageReceiverBreakpointSet() || ((TracingActor) actor).isStepToNextTurn()) {
+      if (msg.haltOnReceive() || ((TracingActor) actor).isStepToNextTurn()) {
         dbg.prepareSteppingUntilNextRootNode();
         if (((TracingActor) actor).isStepToNextTurn()) { // reset flag
           actor.setStepToNextTurn(false);

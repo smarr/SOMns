@@ -11,7 +11,7 @@ import som.primitives.Primitive;
 
 
 @GenerateNodeFactory
-@Primitive(primitive = "actorsError:with:isBPResolution:", requiresContext = true)
+@Primitive(primitive = "actorsError:with:isBPResolver:isBPResolution:", requiresContext = true)
 public abstract class ErrorPromiseNode extends AbstractPromiseResolutionNode {
 
   protected ErrorPromiseNode(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source, vm.getActorPool());  }
@@ -22,8 +22,8 @@ public abstract class ErrorPromiseNode extends AbstractPromiseResolutionNode {
    */
   @Specialization(guards = {"notAPromise(result)"})
   public SResolver standardError(final SResolver resolver, final Object result,
-      final boolean isBreakpointOnPromiseResolution) {
-    resolvePromise(Resolution.ERRONEOUS, resolver, result, isBreakpointOnPromiseResolution);
+      final boolean haltOnResolver, final boolean haltOnResolution) {
+    resolvePromise(Resolution.ERRONEOUS, resolver, result, haltOnResolution);
     return resolver;
   }
 }

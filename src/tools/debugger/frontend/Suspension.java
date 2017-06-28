@@ -158,7 +158,7 @@ public class Suspension {
             EventualMessage turnMessage = EventualMessage.getCurrentExecutingMessage();
             SResolver resolver = turnMessage.getResolver();
             if (resolver != null) {
-              resolver.getPromise().setTriggerStopBeforeExecuteCallback(true);
+              resolver.getPromise().enableHaltOnResolution();
             }
           }
         }

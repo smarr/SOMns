@@ -65,12 +65,13 @@ public abstract class AbstractPromiseResolutionNode extends TernaryExpressionNod
   }
 
   protected void chainPromise(final SResolver resolver,
-      final SPromise promiseValue,
-      final boolean isBreakpointOnPromiseResolution) {
+      final SPromise promiseValue, final boolean haltOnResolver,
+      final boolean haltOnResolution) {
     assert resolver.assertNotCompleted();
     SPromise promiseToBeResolved = resolver.getPromise();
     if (VmSettings.PROMISE_RESOLUTION) {
-      ActorExecutionTrace.promiseChained(promiseValue.getPromiseId(), promiseToBeResolved.getPromiseId());
+      ActorExecutionTrace.promiseChained(
+          promiseValue.getPromiseId(), promiseToBeResolved.getPromiseId());
     }
 
     boolean breakpointOnResolution = isBreakpointOnPromiseResolution;
@@ -78,7 +79,7 @@ public abstract class AbstractPromiseResolutionNode extends TernaryExpressionNod
       Resolution state = promiseValue.getResolutionStateUnsync();
       if (SPromise.isCompleted(state)) {
         resolvePromise(state, resolver, promiseValue.getValueUnsync(),
-            breakpointOnResolution);
+            haltOnResolution);
       } else {
         synchronized (promiseToBeResolved) { // TODO: is this really deadlock free?
           if (promiseValue.isTriggerPromiseResolutionBreakpoint() && !breakpointOnResolution) {
@@ -93,21 +94,19 @@ public abstract class AbstractPromiseResolutionNode extends TernaryExpressionNod
 
   protected void resolvePromise(final Resolution type,
       final SResolver resolver, final Object result,
-      final boolean isBreakpointOnPromiseResolution) {
+      final boolean haltOnResolution) {
     SPromise promise = resolver.getPromise();
     Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-    resolve(type, wrapper, promise, result, current, actorPool,
-        isBreakpointOnPromiseResolution);
+    resolve(type, wrapper, promise, result, current, actorPool, haltOnResolution);
   }
 
   public static void resolve(final Resolution type,
-      final WrapReferenceNode wrapper,
-      final SPromise promise, final Object result, final Actor current,
-      final ForkJoinPool actorPool,
-      final boolean isBreakpointOnPromiseResolution) {
+      final WrapReferenceNode wrapper, final SPromise promise,
+      final Object result, final Actor current, final ForkJoinPool actorPool,
+      final boolean haltOnResolution) {
     Object wrapped = wrapper.execute(result, promise.owner, current);
     SResolver.resolveAndTriggerListenersUnsynced(type, result, wrapped, promise,
-        current, actorPool, isBreakpointOnPromiseResolution);
+        current, actorPool, haltOnResolution);
   }
 }
