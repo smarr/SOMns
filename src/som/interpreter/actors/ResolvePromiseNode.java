@@ -11,7 +11,7 @@ import som.interpreter.actors.SPromise.SResolver;
 import som.primitives.Primitive;
 
 @GenerateNodeFactory
-@Primitive(primitive = "actorsResolve:with:isBPResolution:", requiresContext = true)
+@Primitive(primitive = "actorsResolve:with:isBPResolver:isBPResolution:", requiresContext = true)
 public abstract class ResolvePromiseNode extends AbstractPromiseResolutionNode {
 
   protected ResolvePromiseNode(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source, vm.getActorPool()); }
@@ -23,19 +23,17 @@ public abstract class ResolvePromiseNode extends AbstractPromiseResolutionNode {
    * if a promise resolution breakpoint was set.
    */
   @Specialization(guards = {"notAPromise(result)"})
-  public SResolver normalResolution(final VirtualFrame frame, final SResolver resolver, final Object result,
-      final boolean isBreakpointOnPromiseResolution) {
-    boolean breakpointOnResolution = isBreakpointOnPromiseResolution;
+  public SResolver normalResolution(final VirtualFrame frame,
+      final SResolver resolver, final Object result,
+      final boolean haltOnResolver, final boolean haltOnResolution) {
     SPromise promise = resolver.getPromise();
 
-    if (promise.isExplicitPromise() && promise.isTriggerExplicitPromiseResolverBreakpoint()) {
+    if (haltOnResolver || promise.getHaltOnResolver()) {
       haltNode.executeEvaluated(frame, result);
     }
-    if (promise.isExplicitPromise() && promise.isTriggerPromiseResolutionBreakpoint()) {
-      breakpointOnResolution = promise.isTriggerPromiseResolutionBreakpoint();
-    }
 
-    resolvePromise(Resolution.SUCCESSFUL, resolver, result, breakpointOnResolution);
+    resolvePromise(Resolution.SUCCESSFUL, resolver, result,
+        haltOnResolution || promise.getHaltOnResolution());
     return resolver;
   }
 }

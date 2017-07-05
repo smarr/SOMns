@@ -26,21 +26,16 @@ public class SPromise extends SObjectWithClass {
   @CompilationFinal private static SClass promiseClass;
 
   public static SPromise createPromise(final Actor owner,
-      final boolean triggerPromiseResolutionBreakpoint,
-      final boolean triggerExplicitPromiseResolverBreakpoint,
-      final boolean explicitPromise, final SourceSection section) {
+      final boolean haltOnResolver, final boolean haltOnResolution,
+      final SourceSection section) {
     if (VmSettings.REPLAY) {
-      return new SReplayPromise(owner, triggerPromiseResolutionBreakpoint,
-          triggerExplicitPromiseResolverBreakpoint, explicitPromise, section);
+      return new SReplayPromise(owner, haltOnResolver, haltOnResolution, section);
     } else if (VmSettings.PROMISE_CREATION) {
-      return new STracingPromise(owner, triggerPromiseResolutionBreakpoint,
-          triggerExplicitPromiseResolverBreakpoint, explicitPromise, section);
+      return new STracingPromise(owner, haltOnResolver, haltOnResolution, section);
     } else {
-      return new SPromise(owner, triggerPromiseResolutionBreakpoint,
-          triggerExplicitPromiseResolverBreakpoint, explicitPromise);
+      return new SPromise(owner, haltOnResolver, haltOnResolution);
     }
   }
-
 
   // THREAD-SAFETY: these fields are subject to race conditions and should only
   //                be accessed when under the SPromise(this) lock
@@ -62,50 +57,26 @@ public class SPromise extends SObjectWithClass {
   protected Object  value;
   protected Resolution resolutionState;
 
-  // the owner of this promise, on which all call backs are scheduled
+  /** The owner of this promise, on which all call backs are scheduled. */
   protected final Actor owner;
-  /**
-   * Indicates the case when a chained promise is unresolved and it has
-   * a promise resolution breakpoint.
-   * It is not final because its value can be updated when resolving chained promises.
-   */
-  private boolean triggerResolutionBreakpointOnUnresolvedChainedPromise;
-  /**
-   * Indicates the case when a promise (implicit or explicit) has a promise
-   * resolution breakpoint.
-   */
-  private final boolean triggerPromiseResolutionBreakpoint;
-  /**
-   * Indicates the case when the promise is created explicitly with
-   * createPromisePair primitive, because there is no EventualMessage created
-   * where this flag can be set.
-   */
-  private final boolean triggerExplicitPromiseResolverBreakpoint;
-  /**
-   * Indicates the case when the promise is explicitly created, with the
-   * createPromisePair primitive.
-   * This flag is needed specifically for the promise resolution breakpoint
-   * on explicit promises. In this case we cannot ask to the message like in the implicit
-   * promises (in ReceivedMessage) because there is no EventualMessage created for explicit promises.
-   * Instead we ask directly to the promise if a promise resolution breakpoint
-   * was set (in ResolvePromiseNode).
-   */
-  private final boolean explicitPromise;
-  /**
-   * Indicates to stop before the callback of the promise is executed
-   * when the user made a step-return-from-turn-to-promise-resolution.
-   */
-  private boolean triggerStopBeforeExecuteCallback;
 
-  protected SPromise(@NotNull final Actor owner, final boolean triggerPromiseResolutionBreakpoint,
-      final boolean triggerExplicitPromiseResolverBreakpoint,
-      final boolean explicitPromise) {
+  /**
+   * Trigger breakpoint at the point where the promise is resolved with a value.
+   */
+  private final boolean haltOnResolver;
+
+  /**
+   * Trigger a breakpoint when executing a resolution callback.
+   */
+  private boolean haltOnResolution;
+
+  protected SPromise(@NotNull final Actor owner, final boolean haltOnResolver,
+      final boolean haltOnResolution) {
     super(promiseClass, promiseClass.getInstanceFactory());
     assert owner != null;
     this.owner = owner;
-    this.triggerPromiseResolutionBreakpoint = triggerPromiseResolutionBreakpoint;
-    this.triggerExplicitPromiseResolverBreakpoint = triggerExplicitPromiseResolverBreakpoint;
-    this.explicitPromise = explicitPromise;
+    this.haltOnResolver = haltOnResolver;
+    this.haltOnResolution = haltOnResolution;
 
     resolutionState = Resolution.UNRESOLVED;
     assert promiseClass != null;
@@ -135,9 +106,8 @@ public class SPromise extends SObjectWithClass {
   }
 
   public final synchronized SPromise getChainedPromiseFor(final Actor target) {
-    SPromise remote = SPromise.createPromise(target,
-        triggerPromiseResolutionBreakpoint,
-        triggerExplicitPromiseResolverBreakpoint, explicitPromise, null);
+    SPromise remote = SPromise.createPromise(target, haltOnResolver,
+        haltOnResolution, null);
     if (VmSettings.PROMISE_RESOLUTION) {
       ActorExecutionTrace.promiseChained(getPromiseId(), remote.getPromiseId());
     }
@@ -187,7 +157,7 @@ public class SPromise extends SObjectWithClass {
 
   protected final void scheduleCallbacksOnResolution(final Object result,
       final PromiseMessage msg, final Actor current,
-      final ForkJoinPool actorPool, final boolean isBreakpointOnPromiseResolution) {
+      final ForkJoinPool actorPool, final boolean haltOnResolution) {
     // when a promise is resolved, we need to schedule all the
     // #whenResolved:/#onError:/... callbacks msgs as well as all eventual send
     // msgs to the promise
@@ -195,8 +165,11 @@ public class SPromise extends SObjectWithClass {
     assert owner != null;
     msg.resolve(result, owner, current);
 
-    // update the message flag for the message breakpoint at receiver side
-    msg.setIsMessageReceiverBreakpoint(isBreakpointOnPromiseResolution);
+    // if the promise had a haltOnResolution,
+    // the message needs to break on receive
+    if (haltOnResolution) {
+      msg.enableHaltOnReceive();
+    }
     msg.getTarget().send(msg, actorPool);
   }
 
@@ -255,26 +228,15 @@ public class SPromise extends SObjectWithClass {
     return value;
   }
 
-  public boolean isTriggerPromiseResolutionBreakpoint() {
-    return triggerPromiseResolutionBreakpoint;
-  }
-
-  // TODO: can we get rid of this?
-  public boolean isExplicitPromise() {
-    return explicitPromise;
-  }
-
   protected static class STracingPromise extends SPromise {
     protected final long promiseId;
 
-    protected STracingPromise(final Actor owner,
-        final boolean triggerPromiseResolutionBreakpoint,
-        final boolean triggerExplicitPromiseResolverBreakpoint,
-        final boolean explicitPromise, final SourceSection section) {
-      super(owner, triggerPromiseResolutionBreakpoint,
-          triggerExplicitPromiseResolverBreakpoint, explicitPromise);
+    protected STracingPromise(final Actor owner, final boolean haltOnResolver,
+        final boolean haltOnResolution, final SourceSection section) {
+      super(owner, haltOnResolver, haltOnResolution);
       promiseId = TracingActivityThread.newEntityId();
-      ActorExecutionTrace.passiveEntityCreation(PassiveEntityType.PROMISE, promiseId, section);
+      ActorExecutionTrace.passiveEntityCreation(
+          PassiveEntityType.PROMISE, promiseId, section);
     }
 
     @Override
@@ -284,12 +246,9 @@ public class SPromise extends SObjectWithClass {
   }
 
   public static final class SReplayPromise extends STracingPromise {
-    protected SReplayPromise(final Actor owner,
-        final boolean triggerPromiseResolutionBreakpoint,
-        final boolean triggerExplicitPromiseResolverBreakpoint,
-        final boolean explicitPromise, final SourceSection section) {
-      super(owner, triggerPromiseResolutionBreakpoint,
-          triggerExplicitPromiseResolverBreakpoint, explicitPromise, section);
+    protected SReplayPromise(final Actor owner, final boolean haltOnResolver,
+        final boolean haltOnResolution, final SourceSection section) {
+      super(owner, haltOnResolver, haltOnResolution, section);
     }
 
     protected long resolvingActor;
@@ -346,8 +305,7 @@ public class SPromise extends SObjectWithClass {
     @TruffleBoundary
     protected static void resolveChainedPromisesUnsync(final Resolution type,
         final SPromise promise, final Object result, final Actor current,
-        final ForkJoinPool actorPool,
-        final boolean isBreakpointOnPromiseResolution) {
+        final ForkJoinPool actorPool, final boolean haltOnResolution) {
       // TODO: we should change the implementation of chained promises to
       //       always move all the handlers to the other promise, then we
       //       don't need to worry about traversing the chain, which can
@@ -357,9 +315,9 @@ public class SPromise extends SObjectWithClass {
         Object wrapped = promise.chainedPromise.owner.wrapForUse(result, current, null);
         resolveAndTriggerListenersUnsynced(type, result, wrapped,
             promise.chainedPromise, current, actorPool,
-            promise.chainedPromise.isTriggerResolutionBreakpointOnUnresolvedChainedPromise());
+            promise.chainedPromise.haltOnResolution);
         resolveMoreChainedPromisesUnsynced(type, promise, result, current,
-            actorPool, isBreakpointOnPromiseResolution);
+            actorPool, haltOnResolution);
       }
     }
     /**
@@ -368,13 +326,13 @@ public class SPromise extends SObjectWithClass {
     @TruffleBoundary
     private static void resolveMoreChainedPromisesUnsynced(final Resolution type,
         final SPromise promise, final Object result, final Actor current,
-        final ForkJoinPool actorPool, final boolean isBreakpointOnPromiseResolution) {
+        final ForkJoinPool actorPool, final boolean haltOnResolution) {
       if (promise.chainedPromiseExt != null) {
 
         for (SPromise p : promise.chainedPromiseExt) {
           Object wrapped = p.owner.wrapForUse(result, current, null);
           resolveAndTriggerListenersUnsynced(type, result, wrapped, p, current,
-              actorPool, isBreakpointOnPromiseResolution);
+              actorPool, haltOnResolution);
         }
       }
     }
@@ -387,7 +345,7 @@ public class SPromise extends SObjectWithClass {
     protected static void resolveAndTriggerListenersUnsynced(final Resolution type,
         final Object result, final Object wrapped, final SPromise p,
         final Actor current, final ForkJoinPool actorPool,
-        final boolean isBreakpointOnPromiseResolution) {
+        final boolean haltOnResolution) {
       assert !(result instanceof SPromise);
 
       if (VmSettings.PROMISE_RESOLUTION) {
@@ -424,12 +382,12 @@ public class SPromise extends SObjectWithClass {
         }
 
         if (type == Resolution.SUCCESSFUL) {
-          scheduleAllWhenResolvedUnsync(p, result, current, actorPool, isBreakpointOnPromiseResolution);
+          scheduleAllWhenResolvedUnsync(p, result, current, actorPool, haltOnResolution);
         } else {
           assert type == Resolution.ERRONEOUS;
-          scheduleAllOnErrorUnsync(p, result, current, actorPool, isBreakpointOnPromiseResolution);
+          scheduleAllOnErrorUnsync(p, result, current, actorPool, haltOnResolution);
         }
-        resolveChainedPromisesUnsync(type, p, result, current, actorPool, isBreakpointOnPromiseResolution);
+        resolveChainedPromisesUnsync(type, p, result, current, actorPool, haltOnResolution);
       }
     }
 
@@ -438,13 +396,12 @@ public class SPromise extends SObjectWithClass {
      */
     protected static void scheduleAllWhenResolvedUnsync(final SPromise promise,
         final Object result, final Actor current,
-        final ForkJoinPool actorPool,
-        final boolean isBreakpointOnPromiseResolution) {
+        final ForkJoinPool actorPool, final boolean haltOnResolution) {
       if (promise.whenResolved != null) {
         promise.scheduleCallbacksOnResolution(result, promise.whenResolved,
-            current, actorPool, isBreakpointOnPromiseResolution);
+            current, actorPool, haltOnResolution);
         scheduleExtensions(promise, promise.whenResolvedExt, result, current,
-            actorPool, isBreakpointOnPromiseResolution);
+            actorPool, haltOnResolution);
       }
     }
 
@@ -455,13 +412,12 @@ public class SPromise extends SObjectWithClass {
     private static void scheduleExtensions(final SPromise promise,
         final ArrayList<PromiseMessage> extension,
         final Object result, final Actor current,
-        final ForkJoinPool actorPool,
-        final boolean isBreakpointOnPromiseResolution) {
+        final ForkJoinPool actorPool, final boolean haltOnResolution) {
       if (extension != null) {
         for (int i = 0; i < extension.size(); i++) {
           PromiseMessage callbackOrMsg = extension.get(i);
           promise.scheduleCallbacksOnResolution(result, callbackOrMsg, current,
-              actorPool, isBreakpointOnPromiseResolution);
+              actorPool, haltOnResolution);
         }
       }
     }
@@ -471,12 +427,12 @@ public class SPromise extends SObjectWithClass {
      */
     protected static void scheduleAllOnErrorUnsync(final SPromise promise,
         final Object result, final Actor current,
-        final ForkJoinPool actorPool, final boolean isBreakpointOnPromiseResolution) {
+        final ForkJoinPool actorPool, final boolean haltOnResolution) {
       if (promise.onError != null) {
         promise.scheduleCallbacksOnResolution(result, promise.onError, current,
-            actorPool, isBreakpointOnPromiseResolution);
+            actorPool, haltOnResolution);
         scheduleExtensions(promise, promise.onErrorExt, result, current,
-            actorPool, isBreakpointOnPromiseResolution);
+            actorPool, haltOnResolution);
       }
     }
   }
@@ -487,25 +443,15 @@ public class SPromise extends SObjectWithClass {
     pairClass = cls;
   }
 
-  boolean isTriggerResolutionBreakpointOnUnresolvedChainedPromise() {
-    return triggerResolutionBreakpointOnUnresolvedChainedPromise;
+  boolean getHaltOnResolver() {
+    return haltOnResolver;
   }
 
-  void setTriggerResolutionBreakpointOnUnresolvedChainedPromise(
-      final boolean triggerResolutionBreakpointOnUnresolvedChainedPromise) {
-    this.triggerResolutionBreakpointOnUnresolvedChainedPromise = triggerResolutionBreakpointOnUnresolvedChainedPromise;
+  boolean getHaltOnResolution() {
+    return haltOnResolution;
   }
 
-  boolean isTriggerExplicitPromiseResolverBreakpoint() {
-    return triggerExplicitPromiseResolverBreakpoint;
-  }
-
-  public void setTriggerStopBeforeExecuteCallback(
-      final boolean triggerStopBeforeExecuteCallback) {
-    this.triggerStopBeforeExecuteCallback = triggerStopBeforeExecuteCallback;
-  }
-
-  public boolean isTriggerStopBeforeExecuteCallback() {
-    return triggerStopBeforeExecuteCallback;
+  public void enableHaltOnResolution() {
+    haltOnResolution = true;
   }
 }

@@ -42,36 +42,36 @@ public abstract class ReceivedRootNode extends RootNode {
 
   protected final void resolvePromise(final VirtualFrame frame,
       final SResolver resolver, final Object result,
-      final boolean isBreakpointOnPromiseResolution) {
+      final boolean haltOnResolver, final boolean haltOnResolution) {
     // lazy initialization of resolution node
     if (resolve == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       if (resolver == null) {
-        this.resolve = insert(new NullResolver(getSourceSection()));
+        this.resolve = insert(new NullResolver(sourceSection));
       } else {
-        this.resolve = insert(ResolvePromiseNodeFactory.create(false, sourceSection, vm, null, null, null));
+        this.resolve = insert(ResolvePromiseNodeFactory.create(false, sourceSection, vm, null, null, null, null));
       }
     }
 
     // resolve promise
-    resolve.executeEvaluated(frame, resolver, result, isBreakpointOnPromiseResolution);
+    resolve.executeEvaluated(frame, resolver, result, haltOnResolver, haltOnResolution);
   }
 
   protected final void errorPromise(final VirtualFrame frame,
       final SResolver resolver, final Object exception,
-      final boolean isBreakpointOnPromiseResolution) {
+      final boolean haltOnResolver, final boolean haltOnResolution) {
     // lazy initialization of resolution node
     if (error == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       if (resolver == null) {
         this.error = insert(new NullResolver(getSourceSection()));
       } else {
-        this.error = insert(ErrorPromiseNodeFactory.create(false, sourceSection, vm, null, null, null));
+        this.error = insert(ErrorPromiseNodeFactory.create(false, sourceSection, vm, null, null, null, null));
       }
     }
 
     // error promise
-    error.executeEvaluated(frame, resolver, exception, isBreakpointOnPromiseResolution);
+    error.executeEvaluated(frame, resolver, exception, haltOnResolver, haltOnResolution);
   }
 
   /**
@@ -85,16 +85,14 @@ public abstract class ReceivedRootNode extends RootNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
         final SResolver receiver, final Object argument,
-        final boolean isBreakpointOnPromiseResolution) {
+        final boolean haltOnResolver, final boolean haltOnResolution) {
       assert receiver == null;
-      /* TODO: add a tag to the send node to disable or remove the button
-       * if (isBreakpointOnResolutionAtRcvr) {} */
       return null;
     }
 
     @Override
-    public Object executeEvaluated(final VirtualFrame frame, final Object receiver,
-        final Object argument, final Object isBreakpointOnPromiseResolution) {
+    public Object executeEvaluated(final VirtualFrame frame, final Object rcvr,
+        final Object firstArg, final Object secondArg, final Object thirdArg) {
       return null;
     }
 
