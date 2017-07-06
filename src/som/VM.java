@@ -70,6 +70,8 @@ public final class VM {
   private final boolean avoidExitForTesting;
   @CompilationFinal private ObjectSystem objectSystem;
 
+  @CompilationFinal private SomLanguage language;
+
   private int lastExitCode = 0;
   private volatile boolean shouldExit = false;
   private final VmOptions options;
@@ -91,6 +93,19 @@ public final class VM {
         new ForkJoinThreadFactory(), new UncaughtExceptions(), false);
     threadPool = new ForkJoinPool(MAX_THREADS,
         new ForkJoinThreadFactory(), new UncaughtExceptions(), false);
+  }
+
+  /**
+   * Used by language server.
+   */
+  public VM(final VmOptions vmOptions) {
+    this.avoidExitForTesting = true;
+    this.options = vmOptions;
+
+    actorPool     = null;
+    processesPool = null;
+    forkJoinPool  = null;
+    threadPool    = null;
   }
 
   public WebDebugger getWebDebugger() {
@@ -117,6 +132,13 @@ public final class VM {
 
   public SObjectWithoutFields getVmMirror() {
     return vmMirror;
+  }
+
+  /**
+   * Used by language server.
+   */
+  public SomLanguage getLanguage() {
+    return language;
   }
 
   /**
@@ -354,6 +376,8 @@ public final class VM {
     if (VmSettings.ACTOR_TRACING) {
       ActorExecutionTrace.recordMainActor(mainActor, objectSystem);
     }
+
+    language = lang;
   }
 
   public Object execute(final String selector) {
