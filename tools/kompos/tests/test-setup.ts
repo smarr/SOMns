@@ -11,6 +11,7 @@ import {
 import { VmConnection } from "../src/vm-connection";
 import { ActivityId } from "./somns-support";
 import { Activity } from "../src/execution-data";
+import { determinePorts } from "../src/launch-connector";
 
 const SOM_BASEPATH = "../../";
 export const SOM = SOM_BASEPATH + "som";
@@ -81,13 +82,9 @@ export class TestConnection extends VmConnection {
 
   private initConnection(): Promise<boolean> {
     const promise = new Promise<boolean>((resolve, reject) => {
-      const msgPortRe = /.*Message Handler:\s+(\d+)/m;
-      const tracePortRe = /.*Trace Handler:\s+(\d+)/m;
       this.connectionResolver = resolve;
       let connecting = false;
       let errOut = "";
-      let msgPort = 0;
-      let tracePort = 0;
 
       this.somProc.on("exit", (code, signal) => {
         if (code !== 0) {
@@ -107,25 +104,18 @@ export class TestConnection extends VmConnection {
         errOut += dataStr;
       });
 
+      const ports = { msg: 0, trace: 0 };
       this.somProc.stdout.on("data", (data) => {
         const dataStr = data.toString();
         if (PRINT_SOM_OUTPUT) {
           console.log(dataStr);
         }
-
-        let m = dataStr.match(msgPortRe);
-        if (m) {
-          msgPort = parseInt(m[1]);
-        }
-        m = dataStr.match(tracePortRe);
-        if (m) {
-          tracePort = parseInt(m[1]);
-        }
+        determinePorts(dataStr, ports);
 
         if (dataStr.includes("Started HTTP Server") && !connecting) {
           connecting = true;
-          console.assert(msgPort > 0 && tracePort > 0);
-          this.connectWebSockets(msgPort, tracePort);
+          console.assert(ports.msg > 0 && ports.trace > 0);
+          this.connectWebSockets(ports.msg, ports.trace);
         }
         if (dataStr.includes("Failed starting WebSocket and/or HTTP Server")) {
           this.somProc.stderr.on("close", () => {
