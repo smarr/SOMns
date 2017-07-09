@@ -33,6 +33,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.InliningVisitor;
 import som.interpreter.Types;
+import tools.dym.Tags;
 
 
 @TypeSystemReference(Types.class)
@@ -113,6 +114,15 @@ public abstract class SOMNode extends Node {
       return parent.getParent();
     } else {
       return parent;
+    }
+  }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == Tags.AnyNode.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
     }
   }
 }
