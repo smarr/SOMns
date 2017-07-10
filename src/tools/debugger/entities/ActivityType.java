@@ -7,7 +7,7 @@ public enum ActivityType {
   PROCESS(EntityType.PROCESS, "&#10733;",  Marker.PROCESS_CREATION, Marker.PROCESS_COMPLETION),
   ACTOR(EntityType.ACTOR,     "&#128257;", Marker.ACTOR_CREATION),
   TASK(EntityType.TASK,       "&#8623;",   Marker.TASK_SPAWN),
-  THREAD(EntityType.THREAD,   "&#11123;",  Marker.THREAD_SPAWN);
+  THREAD(EntityType.THREAD,   "&#10515;",  Marker.THREAD_SPAWN);
 
   private final EntityType type;
   private final String icon;
