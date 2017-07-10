@@ -54,6 +54,7 @@ public class SomTests {
         {"IntegerTests",     null },
 
         {"StringTests",      null },
+        {"ArrayLiteralTests", null },
         {"SymbolTests",      null },
         {"SystemTests",      null },
         {"BenchmarkHarnessTests", null },
