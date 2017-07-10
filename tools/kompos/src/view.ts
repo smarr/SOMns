@@ -614,6 +614,7 @@ export class View {
 
     const codeView = document.getElementById("code-views");
     codeView.appendChild(act);
+    codeView.appendChild(nodeFromTemplate("card-wrapper"));
   }
 
   public reset() {
