@@ -1,0 +1,53 @@
+class ActorDemo usingPlatform: platform = Value (
+| private actors = platform actors. |
+)(
+
+  class Result = ()(
+    public get = (
+      'get' println.
+      ^ 42
+    )
+  )
+
+  public woResolver = (
+    | p |
+    p := (actors createActorFromValue: Result) <-: new.
+    p <-: get.
+    'after get send, sequential' println.
+    ^ 0
+  )
+
+  public wResolverNoCallback = (
+    | p p2 |
+    p := (actors createActorFromValue: Result) <-: new.
+    p2 := p <-: get.
+    'after get send, sequential' println.
+    ^ 0
+  )
+
+  public wResolverAndCallback = (
+    | p p2 |
+    p := (actors createActorFromValue: Result) <-: new.
+    p2 := p <-: get.
+    p2 whenResolved: [:r |
+      'after get async' println.
+      r println.
+      5
+    ].
+    'after get send, sequential' println.
+    ^ 0
+  )
+
+  public main: args = (
+    | completionPP |
+    completionPP := actors createPromisePair.
+
+    1 halt.
+
+    woResolver.
+    wResolverNoCallback.
+    wResolverAndCallback.
+
+    ^ completionPP promise
+  )
+)

@@ -1,0 +1,28 @@
+class ForkJoinDemo usingPlatform: platform = Value (
+| private Task = platform threading Task.
+|)(
+
+  public cnt: n = (
+    | result task |
+    n < 1 ifTrue: [ ^ 0 ].
+
+    task := Task spawn: [
+                  'cnt: ' print. n println.
+                  cnt: n - 1 ].
+
+    result := task join.
+
+    ^ result
+  )
+
+
+  public main: args = (
+    'Count down example\n' println.
+
+    1 halt.
+
+    cnt: 2.
+
+    ^ 0
+  )
+)
