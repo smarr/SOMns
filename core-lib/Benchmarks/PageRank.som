@@ -16,8 +16,8 @@ class PageRankSuite usingPlatform: platform andHarness: harness = (
     generateRandomPagesN: n outLinks: outLinks divisor: divisor with: random  = (
       | pages |
       (* matrix cell i,j means link from j->i *)
-      pages := Array new: n * n withAll: 0.
-    
+      pages:: Array new: n * n withAll: 0.
+
       0 to: n - 1 do: [:i |
         outLinks at: i + 1 put: 0.
 
@@ -31,9 +31,9 @@ class PageRankSuite usingPlatform: platform andHarness: harness = (
       (* the case with no outlinks is afunctioned *)
       (outLinks at: i + 1) = 0 ifTrue: [
           | k |
-          k := random next abs % n.
+          k:: random next abs % n.
           [i = k] whileTrue: [
-            k := random next abs % n.
+            k:: random next abs % n.
           ].
 
           pages at: (i * n + k) + 1 put: 1.
@@ -46,8 +46,8 @@ class PageRankSuite usingPlatform: platform andHarness: harness = (
     mapPageRanks: pages pageRanks: pageRanks maps: maps outLinks: outLinks n: n = (
       0 to: n - 1 do: [:i |
         | outboundRank |
-        outboundRank := (pageRanks at: i + 1) // (outLinks at: i + 1).
-      
+        outboundRank:: (pageRanks at: i + 1) // (outLinks at: i + 1).
+
         0 to: n - 1 do: [:j |
           maps at: (i * n + j) + 1
               put: ((pages at: (i * n + j) + 1) = 0
@@ -59,19 +59,19 @@ class PageRankSuite usingPlatform: platform andHarness: harness = (
 
     reducePageRanks: pageRanks maps: maps n: n = (
       | dif |
-      dif := 0.0.
+      dif:: 0.0.
 
       0 to: n - 1 do: [:j |
         | oldRank newRank |
-        oldRank := pageRanks at: j + 1.
-        newRank := 0.0.
-      
+        oldRank:: pageRanks at: j + 1.
+        newRank:: 0.0.
+
         0 to: n - 1 do: [:i |
-          newRank := newRank + (maps at: (i * n + j) + 1)
+          newRank:: newRank + (maps at: (i * n + j) + 1)
         ].
 
-        newRank := ((1 - DFactor) // n) + (DFactor * newRank).
-        dif := (newRank - oldRank) abs > dif
+        newRank:: ((1 - DFactor) // n) + (DFactor * newRank).
+        dif:: (newRank - oldRank) abs > dif
                  ifTrue: [(newRank - oldRank) abs] ifFalse: [ dif ].
         pageRanks at: j + 1 put: newRank
       ].
@@ -80,53 +80,53 @@ class PageRankSuite usingPlatform: platform andHarness: harness = (
 
     public innerBenchmarkLoop: innerIterations numThreads: threads = (
       | random |
-      random := JenkinsRandom new: 49734321.
+      random:: JenkinsRandom new: 49734321.
       (* standard for verification
-       n := 5000
-       iter    := 10.
-       thresh  := 0.00000001.
-       divisor := 100000. *)
+       n:: 5000
+       iter::    10.
+       thresh::  0.00000001.
+       divisor:: 100000. *)
       ^ self verify: (self runPageRankN: innerIterations iter: 10 thresh: 0.00000001 divisor: 100000 with: random)
              inner:  innerIterations.
     )
 
     runPageRankN: n iter: iter thresh: thresh divisor: divisor with: random = (
       | nbLinks maxDiff pageRanks maps outLinks t pages |
-      maxDiff   := Double PositiveInfinity.
-      pageRanks := Array new: n     withAll: 1.0 // n.
-      maps      := Array new: n * n withAll: 0.0.
-      outLinks  := Array new: n     withAll: 0.
+      maxDiff::   Double PositiveInfinity.
+      pageRanks:: Array new: n     withAll: 1.0 // n.
+      maps::      Array new: n * n withAll: 0.0.
+      outLinks::  Array new: n     withAll: 0.
 
-      pages := self generateRandomPagesN: n outLinks: outLinks divisor: divisor with: random.
+      pages:: self generateRandomPagesN: n outLinks: outLinks divisor: divisor with: random.
 
-      nbLinks := 0.
+      nbLinks:: 0.
       0 to: n - 1 do: [:i |
         1 to: n do: [:j |
-          nbLinks := nbLinks + (pages at: i * n + j)
+          nbLinks:: nbLinks + (pages at: i * n + j)
         ]
       ].
 
-      t := 1.
+      t:: 1.
       [t <= iter and: [maxDiff >= thresh]] whileTrue: [
         self mapPageRanks: pages pageRanks: pageRanks maps: maps outLinks: outLinks n: n.
-        maxDiff := self reducePageRanks: pageRanks maps: maps n: n.
-        t := t + 1
+        maxDiff:: self reducePageRanks: pageRanks maps: maps n: n.
+        t:: t + 1
       ].
-    
+
       ^ pageRanks
     )
-  
+
     verify: pageRanks inner: innerIterations = (
       (* and: [iter = 10 and: [thresh = 0.00000001 and: [divisor = 100000]]] *)
-      innerIterations = 5000 
+      innerIterations = 5000
         ifTrue: [
           | expected |
-          expected := expectedPageRanks.
+          expected:: expectedPageRanks.
           pageRanks size = expected size ifFalse: [
             self error: 'Invalid size of page_ranks array'
           ].
-      
-          pageRanks doIndexes: [:i | 
+
+          pageRanks doIndexes: [:i |
             (pageRanks at: i) = (expected at: i) ifFalse: [
               self error: 'ERROR: page_ranks[' + i asString + ']=' +
                           (pageRanks at: i) + ' differs from the expected value: ' +
@@ -138,12 +138,12 @@ class PageRankSuite usingPlatform: platform andHarness: harness = (
         ].
       ^ true
     )
-  
+
     checkBasedOnFirstResult: pageRanks inner: innerIterations = (
       pageRanks size = innerIterations ifFalse: [ ^ false ].
 
       firstResult == nil ifTrue: [
-        firstResult := pageRanks.
+        firstResult:: pageRanks.
         ^ true
       ] ifFalse: [
         1 to: innerIterations do: [:i |
@@ -152,14 +152,14 @@ class PageRankSuite usingPlatform: platform andHarness: harness = (
           ]
         ]
       ].
-    
+
       ^ true
     )
   )
 
   createExpectedPageRanks = (
     | expected |
-    expected := Vector new: 5000.
+    expected:: Vector new: 5000.
     expected,
        0.00005550000000000001, 0.000030000000000000004, 0.000030000000000000004,
        0.00009885000000000002, 0.000030000000000000004, 0.00005550000000000001,
@@ -1848,7 +1848,7 @@ class PageRankSuite usingPlatform: platform andHarness: harness = (
        0.000030000000000000004.
     ^ expected asArray.
   )
-  
+
   public newInstance = ( ^ PageRank new )
-  public setupVerifiedRun: run = ( run innerIterations: 5000 )  
+  public setupVerifiedRun: run = ( run innerIterations: 5000 )
 )

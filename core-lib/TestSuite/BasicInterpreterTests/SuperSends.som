@@ -59,9 +59,9 @@ class SuperSends = ()(
   (* assert 44 *)
   public testSuperClassClause1A = (
     | o superklass superInstance |
-    o := self new TestSuperClassClause1 new.
-		superklass := o SuperHierarchy.
-		superInstance := superklass new.
+    o:: self new TestSuperClassClause1 new.
+		superklass:: o SuperHierarchy.
+		superInstance:: superklass new.
     superInstance Inner1 == superInstance Inner1 ifFalse: [ ^ #error ].
     ^ (superInstance Inner1 new: 2) foo
   )
@@ -69,9 +69,9 @@ class SuperSends = ()(
   (* assert 88 *)
   public testSuperClassClause1B = (
     | o subklass subInstance |
-    o := self new TestSuperClassClause1 new.
-    subklass := o SubHierarchy.
-  	subInstance := subklass new.
+    o:: self new TestSuperClassClause1 new.
+    subklass:: o SubHierarchy.
+  	subInstance:: subklass new.
     subInstance Inner1 == subInstance Inner1 ifFalse: [ ^ #error ].
     ^ (subInstance Inner1 new: 2) foo
   )
@@ -79,8 +79,8 @@ class SuperSends = ()(
   (* assert 44 *)
   public testSuperClassClause2A = (
     | innerklass innerInstance |
-  	innerklass := self new TestSuperClassClause2 new InnerHierarchy.
-  	innerInstance := innerklass new.
+  	innerklass:: self new TestSuperClassClause2 new InnerHierarchy.
+  	innerInstance:: innerklass new.
     innerInstance Inner1 == innerInstance Inner1 ifFalse: [ ^ #error ].
     ^ (innerInstance Inner1 new: 2) foo
   )
@@ -88,10 +88,10 @@ class SuperSends = ()(
   (* assert 88 *)
   public testSuperClassClause2B = (
 		| innerklass innerInstance innerInnerklass innerInnerInstance |
-		innerklass := self new TestSuperClassClause2 new InnerHierarchy.
-		innerInstance := innerklass new.
-		innerInnerklass := innerInstance InnerInnerHierarchy.
-		innerInnerInstance := innerInnerklass new.
+		innerklass:: self new TestSuperClassClause2 new InnerHierarchy.
+		innerInstance:: innerklass new.
+		innerInnerklass:: innerInstance InnerInnerHierarchy.
+		innerInnerInstance:: innerInnerklass new.
     innerInnerInstance Inner1 == innerInnerInstance Inner1 ifFalse: [ ^ #error ].
     ^ (innerInnerInstance Inner1 new: 2) foo
 	)
@@ -99,14 +99,14 @@ class SuperSends = ()(
   (* assert 44 *)
   public testSuperClassClause3A = (
     | innerklass0 |
-    innerklass0 := self new TestSuperClassClause3 new Inner0.
+    innerklass0:: self new TestSuperClassClause3 new Inner0.
     ^ (innerklass0 new: 2) foo
   )
   
   (* assert 88 *)
   public testSuperClassClause3B = (
     | innerklass1 |
-    innerklass1 := self new TestSuperClassClause3 new Inner1.
+    innerklass1:: self new TestSuperClassClause3 new Inner1.
     ^ (innerklass1 new: 2) foo
   )
   

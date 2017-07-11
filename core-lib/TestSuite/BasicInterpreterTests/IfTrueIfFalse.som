@@ -32,10 +32,10 @@ class IfTrueIfFalse = ()():(
     
     public test3 = (
         | i a |
-        i := 4.
+        i:: 4.
         [ i > 0 ] whileTrue: [
-            a := self resolve: 4.
-            i := i - 1.
+            a:: self resolve: 4.
+            i:: i - 1.
         ].
         ^ 4
     )

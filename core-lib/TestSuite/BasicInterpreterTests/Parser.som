@@ -18,7 +18,7 @@ class Parser = ()(
 ) : (
   public testOuterInKeyword = (
     | r |
-    r := self new A new foo.
+    r:: self new A new foo.
     ^ r a * r b * r c
   )
   

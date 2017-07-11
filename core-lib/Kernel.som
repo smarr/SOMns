@@ -213,8 +213,8 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     public to: limit by: step do: block = (
       | i |
-      i := self.
-      [ i <= limit ] whileTrue: [ block value: i. i := i + step ]
+      i:: self.
+      [ i <= limit ] whileTrue: [ block value: i. i:: i + step ]
     )
 
     public downTo: limit do: block = (
@@ -223,8 +223,8 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     public downTo: limit by: step do: block = (
       | i |
-      i := self.
-      [ i >= limit ] whileTrue: [ block value: i. i := i - step ]
+      i:: self.
+      [ i >= limit ] whileTrue: [ block value: i. i:: i - step ]
     )
 
     (* More Iterations *)
@@ -235,7 +235,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     (* Range Creation *)
     public  to: upper = (
       | range |
-      range := Array new: upper - self + 1.
+      range:: Array new: upper - self + 1.
       self to: upper do: [ :i | range at: i put: i ].
       ^ range
     )
@@ -284,14 +284,14 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     (* Iterating *)
     public to: limit do: block = (
       | i |
-      i := self.
-      [ i <= limit ] whileTrue: [ block value: i. i := i + 1.0 ]
+      i:: self.
+      [ i <= limit ] whileTrue: [ block value: i. i:: i + 1.0 ]
     )
 
     public downTo: limit do: block = (
       | i |
-      i := self.
-      [ i >= limit ] whileTrue: [ block value: i. i := i - 1.0 ]
+      i:: self.
+      [ i >= limit ] whileTrue: [ block value: i. i:: i - 1.0 ]
     )
   ) : (
     public PositiveInfinity = ( ^ vmMirror doublePositiveInfinity: nil )
@@ -323,8 +323,8 @@ class Kernel vmMirror: vmMirror = Object <: Value (
         ifTrue: [^ self primSubstringFrom: start to: end]
         ifFalse: [
           | idx |
-          (end > self length) ifTrue: [idx := end].
-          (start < 0) || (start > end) ifTrue: [idx := start].
+          (end > self length) ifTrue: [idx:: end].
+          (start < 0) || (start > end) ifTrue: [idx:: start].
 
           IndexOutOfBounds signalWith: self index: idx.
         ]
@@ -342,8 +342,8 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     public endsWith: suffix = (
       | l sufL |
-      l := self length.
-      sufL := suffix length.
+      l:: self length.
+      sufL:: suffix length.
       l < sufL ifTrue: [ ^ false ].
 
       1 to: sufL do: [:i |
@@ -354,7 +354,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     public includes: aString = (
       | l |
-      l := aString length.
+      l:: aString length.
       l > self length ifTrue: [ ^ false ].
       l = self length ifTrue: [
         ^ aString = self ].
@@ -372,7 +372,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     public indexOf: aString startingAt: start = (
       | l |
-      l := aString length.
+      l:: aString length.
       start + l > (self length + 1) ifTrue: [ ^ 0 ].
 
       start to: self length - l + 1 do: [:i |
@@ -385,18 +385,18 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public split: split = (
       | start newStart result |
       self length < split length ifTrue: [ ^ Array new: self ].
-      start := 1.
-      result := Vector new.
+      start:: 1.
+      result:: Vector new.
 
       [start > 0] whileTrue: [
-        newStart := self indexOf: split startingAt: start.
+        newStart:: self indexOf: split startingAt: start.
         newStart = 0
           ifTrue: [
             result append: (self primSubstringFrom: start to: self length).
             ^ result ]
           ifFalse: [
             result append: (self primSubstringFrom: start to: newStart - 1).
-            start := newStart + split length. ].
+            start:: newStart + split length. ].
       ].
       ^ result
     )
@@ -437,8 +437,8 @@ class Kernel vmMirror: vmMirror = Object <: Value (
                                                block value: (self at: i) ] )
 
     public inject: sub into: aBlock = ( | next |
-      next := sub.
-      self do: [ :e | next := aBlock value: next with: e ].
+      next:: sub.
+      self do: [ :e | next:: aBlock value: next with: e ].
       ^ next
     )
 
@@ -449,7 +449,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     (* Filter *)
     public select: aBlock = (
       | newCollection |
-      newCollection := Vector new: self size.
+      newCollection:: Vector new: self size.
       self do: [:each | (aBlock value: each)
                           ifTrue: [newCollection append: each]].
       ^ newCollection
@@ -461,7 +461,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     public union: aCollection = (
       | new |
-      new := Set new.
+      new:: Set new.
       new addAll: self.
       new addAll: aCollection.
       ^ new
@@ -485,7 +485,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       ValueArray and Array, and both times create a Array, because we can't be
       sure that the block will return a Value *)
       | result |
-      result := Array new: self size.
+      result:: Array new: self size.
       self doIndexes: [ :i | result at: i put: (aBlock value: (self at: i)) ].
       ^ result
     )
@@ -502,11 +502,11 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     (* Copying (inclusively) *)
     public copyFrom: start to: end = ( | result i |
-      result := Array new: end - start + 1.
-      i := 1.
+      result:: Array new: end - start + 1.
+      i:: 1.
       self from: start to: end do: [ :e |
         result at: i put: e.
-        i := i + 1 ].
+        i:: i + 1 ].
       ^ result
     )
 
@@ -525,9 +525,9 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       replacementCollection. Answer the receiver. No range checks are
       performed. *)
       | index repOff |
-      repOff := repStart - start.
-      index := start - 1.
-      [(index := index + 1) <= stop]
+      repOff:: repStart - start.
+      index:: start - 1.
+      [(index:: index + 1) <= stop]
         whileTrue: [self at: index put: (replacement at: repOff + index)]
     )
 
@@ -541,14 +541,14 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     (* Convenience *)
     public with: a = (
       | arr |
-      arr := self new: 1.
+      arr:: self new: 1.
       arr at: 1 put: a.
       ^ arr
     )
 
     public with: a with: b = (
       | arr |
-      arr := self new: 2.
+      arr:: self new: 2.
       arr at: 1 put: a.
       arr at: 2 put: b.
       ^ arr
@@ -556,7 +556,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     public with: a with: b with: c = (
       | arr |
-      arr := self new: 3.
+      arr:: self new: 3.
       arr at: 1 put: a.
       arr at: 2 put: b.
       arr at: 3 put: c.
@@ -661,7 +661,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     public collect: aBlock = ( (* also known as 'map' *)
       | result |
-      result := Vector new: self size.
+      result:: Vector new: self size.
       self doIndexes: [ :i |
         result append: (aBlock value: (self at: i)) ].
       ^ result
@@ -669,7 +669,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     public select: aBlock = (
       | newCollection |
-      newCollection := Vector new: self size.
+      newCollection:: Vector new: self size.
       self do: [:each | (aBlock value: each)
                           ifTrue: [newCollection append: each]].
       ^ newCollection
@@ -682,12 +682,12 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       (lastIdx > storage size) ifTrue: [
         (* Need to expand capacity first *)
         | newStorage |
-        newStorage := Array new: 2 * storage size.
+        newStorage:: Array new: 2 * storage size.
         storage doIndexes: [ :i | newStorage at: i put: (storage at: i) ].
-        storage := newStorage. ].
+        storage:: newStorage. ].
 
       storage at: lastIdx put: element.
-      lastIdx := lastIdx + 1.
+      lastIdx:: lastIdx + 1.
       ^ self
     )
 
@@ -698,35 +698,35 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     (* Removing *)
     public remove = (
       lastIdx > firstIdx
-        ifTrue:  [ lastIdx := lastIdx - 1. ^storage at: lastIdx ]
+        ifTrue:  [ lastIdx:: lastIdx - 1. ^storage at: lastIdx ]
         ifFalse: [
           EmptyCollectionException signalWith: self idx: lastIdx ]
     )
 
     public remove: object = (
       | newArray newLast found |
-      newArray := Array new: self capacity.
-      newLast := 1.
-      found := false.
+      newArray:: Array new: self capacity.
+      newLast:: 1.
+      found:: false.
 
       self do: [ :it |
         it == object
-          ifTrue:  [ found := true ]
+          ifTrue:  [ found:: true ]
           ifFalse: [
             newArray at: newLast put: it.
-            newLast := newLast + 1.
+            newLast:: newLast + 1.
           ]
       ].
 
-      storage := newArray.
-      lastIdx := newLast.
-      firstIdx := 1.
+      storage:: newArray.
+      lastIdx:: newLast.
+      firstIdx:: 1.
       ^ found
     )
 
     (* Preserves capacity *)
     public removeAll = (
-      storage := Array new: storage size.
+      storage:: Array new: storage size.
     )
 
     public contains: anObject = (
@@ -759,7 +759,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     (* Conversion *)
     public asArray = ( | arr |
-      arr := Array new: self size.
+      arr:: Array new: self size.
       self doIndexes: [ :i | arr at: i put: (self at: i) ].
       ^arr
     )
@@ -773,7 +773,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     public removeFirst = (
       self isEmpty ifTrue: [ self error: 'Vector is empty' ].
-      firstIdx := firstIdx + 1.
+      firstIdx:: firstIdx + 1.
       ^ storage at: firstIdx - 1
     )
 
@@ -784,40 +784,40 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       sortBlock isNil ifTrue: [ ^ self defaultSort: i to: j ].
 
       (* The prefix d means the data at that index. *)
-      (n := j + 1  - i) <= 1 ifTrue: [ ^ self ]. (* Nothing to sort. *)
+      (n:: j + 1  - i) <= 1 ifTrue: [ ^ self ]. (* Nothing to sort. *)
       (* Sort di,dj. *)
-      di := storage at: i.
-      dj := storage at: j.
+      di:: storage at: i.
+      dj:: storage at: j.
 
       (* i.e., should di precede dj? *)
       (sortBlock value: di with: dj) ifFalse: [
         storage swap: i with: j.
-        tt := di.
-        di := dj.
-        dj := tt
+        tt:: di.
+        di:: dj.
+        dj:: tt
       ].
 
       n > 2 ifTrue: [ (* More than two elements. *)
-        ij := (i + j) / 2.  (* ij is the midpoint of i and j. *)
-        dij := storage at: ij.  (* Sort di,dij,dj.  Make dij be their median. *)
+        ij:: (i + j) / 2.  (* ij is the midpoint of i and j. *)
+        dij:: storage at: ij.  (* Sort di,dij,dj.  Make dij be their median. *)
         (sortBlock value: di with: dij)
           ifTrue: [ (* i.e. should di precede dij? *)
             (sortBlock value: dij with: dj) ifFalse: [ (* i.e., should dij precede dj? *)
               storage swap: j with: ij.
-              dij := dj]]
+              dij:: dj]]
           ifFalse: [ (* i.e. di should come after dij *)
             storage swap: i with: ij.
-            dij := di].
+            dij:: di].
 
         n > 3 ifTrue: [
           (* More than three elements.
              Find k>i and l<j such that dk,dij,dl are in reverse order.
              Swap k and l.  Repeat this procedure until k and l pass each other. *)
-          k := i.
-          l := j.
-          [ [l := l - 1.  k <= l and: [sortBlock value: dij with: (storage at: l)]]
+          k:: i.
+          l:: j.
+          [ [l:: l - 1.  k <= l and: [sortBlock value: dij with: (storage at: l)]]
               whileTrue.  (* i.e. while dl succeeds dij *)
-            [k := k + 1.  k <= l and: [sortBlock value: (storage at: k) with: dij]]
+            [k:: k + 1.  k <= l and: [sortBlock value: (storage at: k) with: dij]]
               whileTrue.  (* i.e. while dij succeeds dk *)
             k <= l]
               whileTrue:
@@ -851,7 +851,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     public with: elem = (
       | newVector |
-      newVector := self new: 1.
+      newVector:: self new: 1.
       newVector append: elem.
       ^ newVector
     )

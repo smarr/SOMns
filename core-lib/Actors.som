@@ -119,30 +119,30 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
     all = (
       (lazyAll == nil) ifTrue: [
         | promisePair counter results |
-        counter := 0.
-        promisePair := createPromisePair.
-        results := Vector new.
+        counter:: 0.
+        promisePair:: createPromisePair.
+        results:: Vector new.
 
         do: [ :p |
-          counter := counter + 1.
+          counter:: counter + 1.
           p whenResolved: [:r |
             results append: r.
-            ((counter := counter - 1) = 0) ifTrue: [ promisePair resolve: results. ].
+            ((counter:: counter - 1) = 0) ifTrue: [ promisePair resolve: results. ].
           ] onError: [ :ex |
             promisePair error: ex.
           ].
         ].
-        lazyAll := promisePair promise
+        lazyAll:: promisePair promise
       ].
       ^ lazyAll
     )
 
     do: block = (
       | it |
-      it := self.
+      it:: self.
       [ it == nil ] whileFalse: [
         block value: it promise.
-        it := it previous.
+        it:: it previous.
       ].
     )
   ) : (
@@ -166,7 +166,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
       i <= collection size
         ifTrue: [
           | promise |
-          promise := aBlock value: (collection at: i).
+          promise:: aBlock value: (collection at: i).
           async: collection do: aBlock next: i + 1 prevPromise: promise completionResolver: resolver ]
         ifFalse: [
           resolver resolve: collection ] ]
@@ -175,11 +175,11 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   (* Iteration is done sequential but asynchronous. *)
   public async: collection do: aBlockReturningAPromise = (
     | promisePair |
-    promisePair := createPromisePair.
+    promisePair:: createPromisePair.
 
     collection size > 0 ifTrue: [
       | first |
-      first := aBlockReturningAPromise value: (collection at: 1).
+      first:: aBlockReturningAPromise value: (collection at: 1).
 
       async:                collection
         do:                 aBlockReturningAPromise
@@ -198,7 +198,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
     prev whenResolved: [:res |
       intStart <= intEnd ifTrue: [
         | prom |
-        prom := aBlock value: intStart.
+        prom:: aBlock value: intStart.
         async: intStart + 1 to: intEnd
            do: aBlock
            prevPromise: prom
@@ -212,11 +212,11 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   (* Iteration is done sequential but asynchronous. *)
   public async: intStart to: intEnd do: aBlockReturningAPromise = (
     | promisePair |
-    promisePair := createPromisePair.
+    promisePair:: createPromisePair.
 
     intStart <= intEnd ifTrue: [
       | first |
-      first := aBlockReturningAPromise value: intStart.
+      first:: aBlockReturningAPromise value: intStart.
 
       async: intStart + 1 to: intEnd
          do: aBlockReturningAPromise
@@ -232,7 +232,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
     prev whenResolved: [:res |
       conditionBlock value ifTrue: [
         | current |
-        current := bodyBlockReturningAPromise value.
+        current:: bodyBlockReturningAPromise value.
         async: conditionBlock whileTrue: bodyBlockReturningAPromise prevPromise: current completionResolver: resolver
       ] ifFalse: [
         resolver resolve: nil
@@ -242,11 +242,11 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
 
   public async: conditionBlock whileTrue: bodyBlockReturningAPromise = (
     | promisePair |
-    promisePair := createPromisePair.
+    promisePair:: createPromisePair.
 
     conditionBlock value ifTrue: [
       | prevPromise |
-      prevPromise := bodyBlockReturningAPromise value.
+      prevPromise:: bodyBlockReturningAPromise value.
       async: conditionBlock
         whileTrue: bodyBlockReturningAPromise
         prevPromise: prevPromise
@@ -259,7 +259,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
 
   public after: milliseconds do: aBlock = (
     | promisePair |
-    promisePair := createPromisePair.
+    promisePair:: createPromisePair.
     promisePair promise whenResolved: aBlock.
     vmMirror actorResolveProm: (promisePair resolver) after: milliseconds.
   )

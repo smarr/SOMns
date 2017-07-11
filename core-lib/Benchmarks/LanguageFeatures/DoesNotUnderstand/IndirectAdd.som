@@ -2,8 +2,8 @@ IndirectAdd = Benchmark (
     | delegate calc |
     
     initialize = (
-        calc := Calculator new.
-        delegate := CalculatorDelegate new: calc
+        calc:: Calculator new.
+        delegate:: CalculatorDelegate new: calc
     )
 
     benchmark = (

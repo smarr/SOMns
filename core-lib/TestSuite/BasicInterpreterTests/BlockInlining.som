@@ -22,23 +22,23 @@ class BlockInlining = ()() : (
 
     public testNoInlining = (
       | a block |
-      a := 1.
-      block := [ a ].
+      a:: 1.
+      block:: [ a ].
       ^ block value
     )
     
     public testOneLevelInlining = (
       | a |
-      a := 1.
+      a:: 1.
       ^ true ifTrue: [ a ] ifFalse: [ 42 ]
     )
     
     private oneLevelInliningWithLocalShadow: bool = (
       | a |
-      a := 1.
+      a:: 1.
       ^ bool
           ifTrue: [ | a |
-            a := 2.
+            a:: 2.
             a 
           ] ifFalse: [ a (* that is outer a *) ]
     )
@@ -53,12 +53,12 @@ class BlockInlining = ()() : (
     
     private deepNestedInlinedIf: bool = (
       | block  a block2 |
-      a := 1.
-      block := [ (* not inlined *)
-        a := a + 1.
-        block2 := [ (* not inlined *)
-          bool ifTrue: [ ^ a := a + 1.]
-               ifFalse:[ |a| a := 42. a ]
+      a:: 1.
+      block:: [ (* not inlined *)
+        a:: a + 1.
+        block2:: [ (* not inlined *)
+          bool ifTrue: [ ^ a:: a + 1.]
+               ifFalse:[ |a| a:: 42. a ]
         ].
         block2 value
       ].
@@ -70,13 +70,13 @@ class BlockInlining = ()() : (
     
     private blockNestedInIf: bool = (
       | a |
-      a := 1.
+      a:: 1.
       bool ifTrue: [
         | block |
-        block := [ a := a + 1 ].
+        block:: [ a:: a + 1 ].
         block value
       ] ifFalse: [
-        a := 42.
+        a:: 42.
       ].
       ^ a
     )
@@ -86,23 +86,23 @@ class BlockInlining = ()() : (
     
     private deepNestedBlocksInInlinedIf: bool = (
       | block a block2 block3 |
-      a := 1.
-      block := [ (* not inlined *)
-        a := a + 1.
-        block2 := [ (* not inlined *)
-          bool ifTrue: [ a := a + 1. (* inlined *)
-            block3 := [ |block4|
-              a := a + 1.
-              block4 := [ (* not inlined *)
-                a := a + 1.
+      a:: 1.
+      block:: [ (* not inlined *)
+        a:: a + 1.
+        block2:: [ (* not inlined *)
+          bool ifTrue: [ a:: a + 1. (* inlined *)
+            block3:: [ |block4|
+              a:: a + 1.
+              block4:: [ (* not inlined *)
+                a:: a + 1.
                 a
               ].
               block4 value
             ].
             block3 value
           ] ifFalse:[ |a block4| (* inlined *)
-            a := 42.
-            block4 := [ ^ a := a + 1 ]. (* not inlined *)
+            a:: 42.
+            block4:: [ ^ a:: a + 1 ]. (* not inlined *)
             block4 value
           ]
         ].
@@ -116,32 +116,32 @@ class BlockInlining = ()() : (
     
     private deepDeepNested: bool = (
       | block a block2 block3 |
-      a := 1.
-      block := [ (* not inlined *)
-        a := a + 1.
-        block2 := [ (* not inlined *)
-          bool ifTrue: [ a := a + 1. (* inlined *)
-            block3 := [ |block4|
-              a := a + 1.
-              block4 := [ (* not inlined *)
-                a := a + 1.
+      a:: 1.
+      block:: [ (* not inlined *)
+        a:: a + 1.
+        block2:: [ (* not inlined *)
+          bool ifTrue: [ a:: a + 1. (* inlined *)
+            block3:: [ |block4|
+              a:: a + 1.
+              block4:: [ (* not inlined *)
+                a:: a + 1.
                 
                 
-                  block := [ (* not inlined *)
-                    a := a + 1.
-                    block2 := [ (* not inlined *)
-                      bool ifTrue: [ a := a + 1. (* inlined *)
-                        block3 := [ |block4|
-                          a := a + 1.
-                          block4 := [ (* not inlined *)
-                            a := a + 1.
+                  block:: [ (* not inlined *)
+                    a:: a + 1.
+                    block2:: [ (* not inlined *)
+                      bool ifTrue: [ a:: a + 1. (* inlined *)
+                        block3:: [ |block4|
+                          a:: a + 1.
+                          block4:: [ (* not inlined *)
+                            a:: a + 1.
                             a
                           ].
                           block4 value
                         ].
                         block3 value
-                      ] ifFalse:[ |a block4| a := 42. (* inlined *)
-                        block4 := [^ a := a + 1]. (* not inlined *)
+                      ] ifFalse:[ |a block4| a:: 42. (* inlined *)
+                        block4:: [^ a:: a + 1]. (* not inlined *)
                         block4 value
                       ]
                     ].
@@ -154,8 +154,8 @@ class BlockInlining = ()() : (
               block4 value
             ].
             block3 value
-          ] ifFalse:[ |a block4| a := 42. (* inlined *)
-            block4 := [^ a := a + 1]. (* not inlined *)
+          ] ifFalse:[ |a block4| a:: 42. (* inlined *)
+            block4:: [^ a:: a + 1]. (* not inlined *)
             block4 value
           ]
         ].
@@ -170,12 +170,12 @@ class BlockInlining = ()() : (
     public testToDoNestDoNestIfTrue = (
       (* from the bounce benchmark *)
       | balls bounces |
-      balls := kernel Array new: 1 withAll: true.
-      bounces := 0.
+      balls:: kernel Array new: 1 withAll: true.
+      bounces:: 0.
       
       1 to: 2 do: [ :i |
           balls do: [ :ball |
-              ball ifTrue: [ bounces := bounces + 1 ] ] ].
+              ball ifTrue: [ bounces:: bounces + 1 ] ] ].
 
       ^ bounces
     )

@@ -37,26 +37,26 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
 
     public testEqualityAndIdentity = (
       | a b |
-      a := 42.
-      b := 42.
+      a:: 42.
+      b:: 42.
     
       self assert: a = b.  (* Integers are equal based on their value *)
 
       (* Sometimes it can be hard to implement efficiently, but it SHOULD really
        be true for all values of integers. *)
-      a := 1 << 30.  b := 1 << 30.
+      a:: 1 << 30.  b:: 1 << 30.
       self assert: a equals: b.
     
-      a := 1 << 32.  b := 1 << 32.
+      a:: 1 << 32.  b:: 1 << 32.
       self assert: a equals: b.
     
-      a := 1 << 60.  b := 1 << 60.
+      a:: 1 << 60.  b:: 1 << 60.
       self assert: a equals: b.
     
-      a := 1 << 70.  b := 1 << 70.
+      a:: 1 << 70.  b:: 1 << 70.
       self assert: a equals: b.
     
-      a := 1 << 100.  b := 1 << 100.
+      a:: 1 << 100.  b:: 1 << 100.
       self assert: a equals: b.
     )
     
@@ -69,42 +69,42 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
       self assert: #Integer equals: (ObjectMirror reflecting:  1073741824) className.
     
       (* Let's test for size behavior and corresponding class *)
-      i := 1 << 30.
+      i:: 1 << 30.
       self assert: #Integer equals: (ObjectMirror reflecting: i) className.
       self assert: i > 0 description: 'should not overflow'.
       self assert: '1073741824' equals: i asString.
     
-      i := 1 << 32.
+      i:: 1 << 32.
       self assert: #Integer equals: (ObjectMirror reflecting: i) className.
       self assert: i > 0 description: 'should not overflow'.
       self assert: '4294967296' equals: i asString.
     
-      i := 1 << 60.
+      i:: 1 << 60.
       self assert: #Integer equals: (ObjectMirror reflecting: i) className.
       self assert: i > 0 description: 'should not overflow'.
       self assert: '1152921504606846976' equals: i asString.
     
-      i := 1 << 70.
+      i:: 1 << 70.
       self assert: #Integer equals: (ObjectMirror reflecting: i) className.
       self assert: i > 0 description: 'should not overflow'.
       self assert: '1180591620717411303424' equals: i asString.
     
-      i := -1 << 30.
+      i:: -1 << 30.
       self assert: #Integer equals: (ObjectMirror reflecting: i) className.
       self assert: i < 0 description: 'should not underflow'.
       self assert: '-1073741824' equals: i asString.
     
-      i := -1 << 32.
+      i:: -1 << 32.
       self assert: #Integer equals: (ObjectMirror reflecting: i) className.
       self assert: i < 0 description: 'should not underflow'.
       self assert: '-4294967296' equals: i asString.
     
-      i := -1 << 60.
+      i:: -1 << 60.
       self assert: #Integer equals: (ObjectMirror reflecting: i) className.
       self assert: i < 0 description: 'should not underflow'.
       self assert: '-1152921504606846976' equals: i asString.
     
-      i := -1 << 70.
+      i:: -1 << 70.
       self assert: #Integer equals: (ObjectMirror reflecting: i) className.
       self assert: i < 0 description: 'should not underflow'.
       self assert: '-1180591620717411303424' equals: i asString.
@@ -275,7 +275,7 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
     
     public testToByDo = (
       | v |
-      v := Vector new.
+      v:: Vector new.
       0 to: 10 by: 2 do: [:i |
         v append: i ].
       
@@ -290,7 +290,7 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
     
     public testDownToByDo = (
       | v |
-      v := Vector new.
+      v:: Vector new.
       10 downTo: 0 by: 2 do: [:i |
         v append: i ].
 

@@ -36,7 +36,7 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
     
     public testCreateTOAndLexicalContextIsMutable = (
       | m |
-      m := Mutable new.
+      m:: Mutable new.
       should: [m T] signal: NotAValue.
     )
     
@@ -62,7 +62,7 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
   | private obj ::= nil. |
   )(
     public getNewObj = (
-      obj := Object new.
+      obj:: Object new.
       ^ obj
     )
   
@@ -108,17 +108,17 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
 
     public testAsyncPassWithNumberValues = (
       | a t |
-      a := (actors createActorFromValue: Receiver) <-: new.
-      t := Transfer3 a: 1 b: 2 c: 3.
+      a:: (actors createActorFromValue: Receiver) <-: new.
+      t:: Transfer3 a: 1 b: 2 c: 3.
       ^ assert: (a <-: is123Values: t) resolvedWith: 9.
     )
     
    public testAsyncPassWithSimpleValues = (
       | v1 v2 a t |
-      v1 := SimpleValue val: 42.
-      v2 := SimpleValue val: 42.
-      a := (actors createActorFromValue: Receiver) <-: new.
-      t := Transfer3 a: v1 b: v2 c: v1.
+      v1:: SimpleValue val: 42.
+      v2:: SimpleValue val: 42.
+      a:: (actors createActorFromValue: Receiver) <-: new.
+      t:: Transfer3 a: v1 b: v2 c: v1.
       
       deny: v1 = v2 description: 'it is unexpected for this test that #= does deep equality'.
       
@@ -127,21 +127,21 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
     
     public testAsyncPassObjRef = (
       | a t o1 o2 |
-      o1 := Object new.
-      o2 := Object new.
+      o1:: Object new.
+      o2:: Object new.
       deny: o1 == o2 description: 'these need to be two different objects'.
 
-      a := (actors createActorFromValue: Receiver) <-: new.
-      t := Transfer3 a: o1 b: o2 c: o1.
+      a:: (actors createActorFromValue: Receiver) <-: new.
+      t:: Transfer3 a: o1 b: o2 c: o1.
       ^ assert: (a <-: gotFarRefs: t) resolvedWith: true.
     )
     
     public testAsyncPassMixed = (
       | t pp a |
-      pp := actors createPromisePair.
-      a := (actors createActorFromValue: Receiver) <-: new.
+      pp:: actors createPromisePair.
+      a:: (actors createActorFromValue: Receiver) <-: new.
       (a <-: getNewObj) whenResolved: [:objFR |
-        t := Transfer3 a: (SimpleValue val: 33) b: Object new c: objFR.
+        t:: Transfer3 a: (SimpleValue val: 33) b: Object new c: objFR.
         pp resolve: (assert: ( a <-: gotMixed: t ) resolvedWith: true)
       ].
 
@@ -158,12 +158,12 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
       (isFarRef: t b) ifTrue:  [^ false].
       (isFarRef: t c) ifFalse: [^ false].
       
-      t2 := t b.
+      t2:: t b.
       t2 a = 2 ifFalse: [^ false].
       (isFarRef: t2 b) ifTrue:  [^ false].
       (isFarRef: t2 c) ifFalse: [^ false].
       
-      t3 := t2 b.
+      t3:: t2 b.
       t3 a = 3 ifFalse: [^ false].
       (isFarRef: t3 b) ifTrue:  [^ false].
       (isFarRef: t3 c) ifFalse: [^ false].
@@ -196,28 +196,28 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
 
     public testAsyncNestedTObjects = (
       | t1 t2 t3 a |
-      t1 := Transfer3 a: 1 b: nil c: Object new.
-      t2 := Transfer3 a: 2 b: nil c: Object new.
-      t3 := Transfer3 a: 3 b: nil c: Object new.
+      t1:: Transfer3 a: 1 b: nil c: Object new.
+      t2:: Transfer3 a: 2 b: nil c: Object new.
+      t3:: Transfer3 a: 3 b: nil c: Object new.
       t1 b: t2.
       t2 b: t3.
       
-      a := (actors createActorFromValue: CplxReceiver) <-: new.
+      a:: (actors createActorFromValue: CplxReceiver) <-: new.
       ^ assert: (a <-: nestedTransferObjects: t1) resolvedWith: true
     )
     
     public testRecursiveStructure = (
       | t1 t2 t3 a |
-      t1 := Transfer3 a: 1 b: nil c: Object new.
-      t2 := Transfer3 a: 2 b: nil c: Object new.
-      t3 := Transfer3 a: 3 b: nil c: Object new.
+      t1:: Transfer3 a: 1 b: nil c: Object new.
+      t2:: Transfer3 a: 2 b: nil c: Object new.
+      t3:: Transfer3 a: 3 b: nil c: Object new.
       t1 a: t1.
       
       t1 b: t2.
       t2 b: t3.
       t3 b: t1.
       
-      a := (actors createActorFromValue: CplxReceiver) <-: new.
+      a:: (actors createActorFromValue: CplxReceiver) <-: new.
       ^ assert: (a <-: simpleRecursiveStructure: t1) resolvedWith: true
     )
   ) : (
@@ -231,16 +231,16 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
     
     public countFarRefs: tarr = (
       | cnt |
-      cnt := 0.
+      cnt:: 0.
       
-      tarr do: [:f | (isFarRef: f) ifTrue: [ cnt := cnt + 1 ]].
+      tarr do: [:f | (isFarRef: f) ifTrue: [ cnt:: cnt + 1 ]].
       
       ^ cnt
     )
     
     public checkArrWithValuesAndLoops: tarr = (
       | t |
-      t := tarr at: 1.
+      t:: tarr at: 1.
       (isFarRef: t) ifTrue: [ ^ false ].
       
       (isFarRef: (tarr at: 2)) ifFalse: [ ^ false ].
@@ -262,32 +262,32 @@ class TransferObjectTests usingPlatform: platform testFramework: minitest = Valu
   public class TransferArrayTest = AsyncTestContext ()(
     public testAsyncTArrWithValues = (
       | tarr a |
-      tarr := TransferArray new: 10.
+      tarr:: TransferArray new: 10.
       tarr doIndexes: [:i | tarr at: i put: i * 2 ].
-      a := (actors createActorFromValue: ArrayRcvr) <-: new.
+      a:: (actors createActorFromValue: ArrayRcvr) <-: new.
       ^ assert: (a <-: addAllValues: tarr) resolvedWith: 110
     )
     
     public testAsyncTArrObjectTurnsFarRef = (
       | tarr a |
-      tarr := TransferArray new: 10.
+      tarr:: TransferArray new: 10.
       tarr doIndexes: [:i | tarr at: i put: Object new ].
 
-      a := (actors createActorFromValue: ArrayRcvr) <-: new.
+      a:: (actors createActorFromValue: ArrayRcvr) <-: new.
       ^ assert: (a <-: countFarRefs: tarr) resolvedWith: 10
     )
     
     public testAsyncTArrWithValuesAndLoops = (
       | t a tarr |
-      tarr := TransferArray new: 10.
-      t := Transfer3 a: tarr b: 5 c: Object new.
+      tarr:: TransferArray new: 10.
+      t:: Transfer3 a: tarr b: 5 c: Object new.
       
       tarr at: 1 put: t.
       tarr at: 2 put: Object new.
       tarr at: 3 put: 4.
       tarr at: 4 put: tarr.
       
-      a := (actors createActorFromValue: ArrayRcvr) <-: new.
+      a:: (actors createActorFromValue: ArrayRcvr) <-: new.
       ^ assert: (a <-: checkArrWithValuesAndLoops: tarr) resolvedWith: true
     )
   ) : (

@@ -53,7 +53,7 @@ class Harness usingPlatform: platform = Value (
     | seed ::= seed. |
   ) (
     public next = (
-      seed := ((seed * 1309) + 13849) & 65535.
+      seed:: ((seed * 1309) + 13849) & 65535.
       ^ seed
     )
   ) : (
@@ -67,22 +67,22 @@ class Harness usingPlatform: platform = Value (
     public next = (
       (* Original version, with complete set of conversions. *)
 
-         seed := ((seed       + 2127912214)       + (seed as32BitUnsignedValue  << 12) as32BitSignedValue) as32BitSignedValue.
-         seed := ((seed bitXor: 3345072700) bitXor: (seed as32BitUnsignedValue >>> 19)) as32BitSignedValue.
-         seed := ((seed       +  374761393)       + (seed as32BitUnsignedValue  <<  5) as32BitSignedValue) as32BitSignedValue.
-         seed := ((seed       + 3550635116) bitXor: (seed as32BitUnsignedValue  <<  9) as32BitSignedValue) as32BitSignedValue.
-         seed := ((seed       + 4251993797)       + (seed as32BitUnsignedValue  <<  3) as32BitSignedValue) as32BitSignedValue.
-         seed := ((seed bitXor: 3042594569) bitXor: (seed as32BitUnsignedValue >>> 16)) as32BitSignedValue.
+         seed:: ((seed       + 2127912214)       + (seed as32BitUnsignedValue  << 12) as32BitSignedValue) as32BitSignedValue.
+         seed:: ((seed bitXor: 3345072700) bitXor: (seed as32BitUnsignedValue >>> 19)) as32BitSignedValue.
+         seed:: ((seed       +  374761393)       + (seed as32BitUnsignedValue  <<  5) as32BitSignedValue) as32BitSignedValue.
+         seed:: ((seed       + 3550635116) bitXor: (seed as32BitUnsignedValue  <<  9) as32BitSignedValue) as32BitSignedValue.
+         seed:: ((seed       + 4251993797)       + (seed as32BitUnsignedValue  <<  3) as32BitSignedValue) as32BitSignedValue.
+         seed:: ((seed bitXor: 3042594569) bitXor: (seed as32BitUnsignedValue >>> 16)) as32BitSignedValue.
 
       (*   Optimized version, without semantically unnecessary conversions.
 
 
-      seed := ((seed       + 2127912214)       + (seed  << 12)) as32BitSignedValue. (* 0x7ed55d16 *)
-      seed := ((seed bitXor: 3345072700) bitXor: (seed >>> 19)).                    (* 0xc761c23c *)
-      seed := ((seed       +  374761393)       + (seed  <<  5)).                    (* 0x165667B1 *)
-      seed := ((seed       + 3550635116) bitXor: (seed  <<  9)).                    (* 0xd3a2646c *)
-      seed := ((seed       + 4251993797)       + (seed  <<  3)) as32BitSignedValue. (* 0xfd7046c5 *)
-      seed := ((seed bitXor: 3042594569) bitXor: (seed >>> 16)) as32BitSignedValue. (* 0xb55a4f09 *)
+      seed:: ((seed       + 2127912214)       + (seed  << 12)) as32BitSignedValue. (* 0x7ed55d16 *)
+      seed:: ((seed bitXor: 3345072700) bitXor: (seed >>> 19)).                    (* 0xc761c23c *)
+      seed:: ((seed       +  374761393)       + (seed  <<  5)).                    (* 0x165667B1 *)
+      seed:: ((seed       + 3550635116) bitXor: (seed  <<  9)).                    (* 0xd3a2646c *)
+      seed:: ((seed       + 4251993797)       + (seed  <<  3)) as32BitSignedValue. (* 0xfd7046c5 *)
+      seed:: ((seed bitXor: 3042594569) bitXor: (seed >>> 16)) as32BitSignedValue. (* 0xb55a4f09 *)
       *)
       ^ seed
     )
@@ -103,7 +103,7 @@ class Harness usingPlatform: platform = Value (
 
     public runBenchmark = (
       | result warmupBench |
-      warmupBench := benchmarkSuite newInstance.
+      warmupBench:: benchmarkSuite newInstance.
 
       ('Starting ' + name + ' benchmark ... ') print.
 
@@ -120,36 +120,36 @@ class Harness usingPlatform: platform = Value (
         '' println.
         ^ self].
 
-      numIterationsTmp := numIterations.
-      printAllTmp      := printAll.
-      maxRuntimeTmp    := maxRuntime.
+      numIterationsTmp:: numIterations.
+      printAllTmp::      printAll.
+      maxRuntimeTmp::    maxRuntime.
 
-      numIterations := warmUp.
-      printAll      := false.
-      maxRuntime    := 0.
+      numIterations:: warmUp.
+      printAll::      false.
+      maxRuntime::    0.
 
       ' warmup ...' print.
       self doRuns: bench.
 
-      numIterations := numIterationsTmp.
-      printAll      := printAllTmp.
-      maxRuntime    := maxRuntimeTmp.
+      numIterations:: numIterationsTmp.
+      printAll::      printAllTmp.
+      maxRuntime::    maxRuntimeTmp.
 
       ' completed.' println.
-      total := 0.
+      total:: 0.
     )
 
     private measure: bench = (
       | startTime endTime runTime |
-      startTime := system ticks.
+      startTime:: system ticks.
       (bench innerBenchmarkLoop: innerIterations numThreads: numThreads) ifFalse: [
         self error: 'Benchmark failed with incorrect result'. ].
-      endTime := system ticks.
+      endTime:: system ticks.
 
-      runTime := endTime - startTime.
+      runTime:: endTime - startTime.
       printAll ifTrue: [ self print: bench run: runTime ].
 
-      total := total + runTime.
+      total:: total + runTime.
     )
 
     doRuns: bench = (
@@ -158,7 +158,7 @@ class Harness usingPlatform: platform = Value (
 
         maxRuntime > 0 ifTrue: [
           total > maxRuntime ifTrue: [
-            numIterations := i.
+            numIterations:: i.
             ^ self ]].
         ].
     )
@@ -197,7 +197,7 @@ class Harness usingPlatform: platform = Value (
     | run |
     args size < 2 ifTrue: [ self printUsage. ^ 1 ].
 
-    run := Run new.
+    run:: Run new.
     self processArguments: args for: run.
 
     run runBenchmark.
@@ -218,8 +218,8 @@ class Harness usingPlatform: platform = Value (
 
   loadModule: className = (
     | file cls |
-    file := className + '.som'.
-    cls := system loadModule: file nextTo: self.
+    file:: className + '.som'.
+    cls:: system loadModule: file nextTo: self.
     cls ifNil: [
         self error: 'Failed loading benchmark: ' + className ].
     ^ cls usingPlatform: platform andHarness: self.
@@ -230,8 +230,8 @@ class Harness usingPlatform: platform = Value (
     (className includes: '.')
       ifFalse: [ ^ self loadModule: className ].
 
-    nested := className split: '.'.
-    module := self loadModule: (nested at: 1).
+    nested:: className split: '.'.
+    module:: self loadModule: (nested at: 1).
     ^ (ObjectMirror reflecting: module) perform: (nested at: 2) asSymbol
   )
 )

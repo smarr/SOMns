@@ -33,14 +33,14 @@ class AsyncHarness usingPlatform: platform = Value (
 
     (* Needs to return a promise. *)
     public benchmark  = ( self subclassResponsibility )
-    
+
     (* Needs to return a boolean *)
     public verifyResult: result = ( self subclassResponsibility )
 
     assert: expected equals: value = (
       expected = value ifFalse: [
-        self error: 'Expected value (' + expected asString + 
-                    ') differs from actual (' + value asString + 
+        self error: 'Expected value (' + expected asString +
+                    ') differs from actual (' + value asString +
                     ') benchmark result.'
       ].
       ^ true
@@ -59,7 +59,7 @@ class AsyncHarness usingPlatform: platform = Value (
       public name            ::= nil.
     |
   )(
-    
+
     public runBenchmark = (
       | result |
 
@@ -68,58 +68,58 @@ class AsyncHarness usingPlatform: platform = Value (
       ^ self doWarmup whenResolved: [:r |
           self doRuns whenResolved: [:result |
             self reportBenchmark: result.
-            total := total + result.
+            total:: total + result.
             '' println ] ]
     )
-    
+
     doWarmup = (
       | numIterationsTmp printAllTmp maxRuntimeTmp |
       warmUp = 0 ifTrue: [
         | pp |
-        pp := actors createPromisePair.
+        pp:: actors createPromisePair.
         pp resolve: self.
         '' println.
         ^ pp promise ].
 
-      numIterationsTmp := numIterations.
-      printAllTmp      := printAll.
-      maxRuntimeTmp    := maxRuntime.
+      numIterationsTmp:: numIterations.
+      printAllTmp::      printAll.
+      maxRuntimeTmp::    maxRuntime.
 
-      numIterations := warmUp.
-      printAll      := false.
-      maxRuntime    := nil.
+      numIterations:: warmUp.
+      printAll::      false.
+      maxRuntime::    nil.
 
       ' warmup ...' print.
       ^ self doRuns whenResolved: [:r |
-        numIterations := numIterationsTmp.
-        printAll      := printAllTmp.
-        maxRuntime    := maxRuntimeTmp.
+        numIterations:: numIterationsTmp.
+        printAll::      printAllTmp.
+        maxRuntime::    maxRuntimeTmp.
 
         ' completed.' println
       ]
     )
-    
+
     doRuns = (
       | total outerLoopP resultPP |
-      total := 0.
-      resultPP := actors createPromisePair.
-  
-      outerLoopP := actors async: 1 to: numIterations do: [:i |
+      total:: 0.
+      resultPP:: actors createPromisePair.
+
+      outerLoopP:: actors async: 1 to: numIterations do: [:i |
         | startTime endTime runTime bench |
-        bench := benchmarkSuite newInstance: problemSize.
-        startTime := system ticks.
-        
+        bench:: benchmarkSuite newInstance: problemSize.
+        startTime:: system ticks.
+
         bench benchmark whenResolved: [:benchResult |
           (bench verifyResult: benchResult)
             ifFalse: [ self error: 'Benchmark failed with incorrect result' ].
 
-            endTime := system ticks.
-  
-            runTime := endTime - startTime.
+            endTime:: system ticks.
+
+            runTime:: endTime - startTime.
             printAll ifTrue: [ self printRun: runTime ].
-  
-            total := total + runTime.
-  
+
+            total:: total + runTime.
+
             maxRuntime ifNotNil: [
               total > maxRuntime ifTrue: [
                 resultPP resolve: total ] ] ].
@@ -131,25 +131,25 @@ class AsyncHarness usingPlatform: platform = Value (
 
       ^ resultPP promise
     )
-    
+
     reportBenchmark: result = (
       | out |
-      out :=  name.
-      out := out + ': iterations='.
-      out := out + numIterations.
-      out := out + ' average: '.
-      out := out + (result / numIterations * numThreads).
-      out := out + 'us'.
-      out := out + ' total: '.
-      out := out + result.
-      out := out + 'us\n'.
+      out::  name.
+      out:: out + ': iterations='.
+      out:: out + numIterations.
+      out:: out + ' average: '.
+      out:: out + (result / numIterations * numThreads).
+      out:: out + 'us'.
+      out:: out + ' total: '.
+      out:: out + result.
+      out:: out + 'us\n'.
       out println.
     )
-     
+
     printRun: runTime = (
       (name + ': iterations=1' + ' runtime: ' + runTime + 'us') println
     )
-        
+
     public printTotal = (
       ('Total Runtime: ' + total asString + 'us') println.
     )
@@ -173,8 +173,8 @@ class AsyncHarness usingPlatform: platform = Value (
   public main: args = (
     | run |
     args size < 2 ifTrue: [ self printUsage. ^ 1 ].
-    
-    run := Run new.
+
+    run:: Run new.
     self processArguments: args for: run.
 
     ^ run runBenchmark ensure: [:r |
@@ -197,8 +197,8 @@ class AsyncHarness usingPlatform: platform = Value (
 
   loadModule: className = (
     | file cls |
-    file := className + '.som'.
-    cls := system loadModule: file nextTo: self.
+    file:: className + '.som'.
+    cls:: system loadModule: file nextTo: self.
     cls ifNil: [
         self error: 'Failed loading benchmark: ' + className ].
     ^ cls usingPlatform: platform andHarness: self.
@@ -208,9 +208,9 @@ class AsyncHarness usingPlatform: platform = Value (
     | file module nested |
     (className includes: '.')
       ifFalse: [ ^ self loadModule: className ].
-    
-    nested := className split: '.'.
-    module := self loadModule: (nested at: 1).
+
+    nested:: className split: '.'.
+    module:: self loadModule: (nested at: 1).
     ^ (ObjectMirror reflecting: module) perform: (nested at: 2) asSymbol
   )
 )

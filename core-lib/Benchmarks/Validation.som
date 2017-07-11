@@ -16,45 +16,45 @@ class Validation usingPlatform: platform andHarness: harness = Value (
       private nextNextGaussian ::= 0.0. |
   ) (
     public next = (
-      seed := ((seed * 1309) + 13849) & 65535.
+      seed:: ((seed * 1309) + 13849) & 65535.
       ^ seed
     )
-    
+
     (* Returns an integer within the range of [0, bound) *)
     public next: bound = (
       ^ next % bound
     )
-    
+
     (* Returns a double uniformly distributed in the range of [0.0, 1.0) *)
     public nextDouble = (
       ^ next // 65536
     )
-    
+
     public nextBoolean = (
       ^ next < 32768
     )
-    
-    (* Returns a double normally distributed with mean 0.0 
+
+    (* Returns a double normally distributed with mean 0.0
        and standard deviation of 1.0 *)
     public nextGaussian = (
       | v1 v2 s multiplier |
       gotNextGaussian ifTrue: [
-        gotNextGaussian := false.
+        gotNextGaussian:: false.
         ^ nextNextGaussian ].
-      
-      v1 := (2.0 * nextDouble) - 1.0.
-      v2 := (2.0 * nextDouble) - 1.0.
-      s  := (v1 * v1) + (v2 * v2).
-      
+
+      v1:: (2.0 * nextDouble) - 1.0.
+      v2:: (2.0 * nextDouble) - 1.0.
+      s::  (v1 * v1) + (v2 * v2).
+
       [s >= 1.0 or: [s = 0.0]] whileTrue: [
-        v1 := (2.0 * nextDouble) - 1.0.
-        v2 := (2.0 * nextDouble) - 1.0.
-        s  := (v1 * v1) + (v2 * v2).
+        v1:: (2.0 * nextDouble) - 1.0.
+        v2:: (2.0 * nextDouble) - 1.0.
+        s::  (v1 * v1) + (v2 * v2).
       ].
-      
-      multiplier := (-2.0 * s log // s) sqrt.
-      nextNextGaussian := v2 * multiplier.
-      gotNextGaussian := true.
+
+      multiplier:: (-2.0 * s log // s) sqrt.
+      nextNextGaussian:: v2 * multiplier.
+      gotNextGaussian:: true.
       ^ v1 * multiplier
     )
   ) : (
@@ -79,14 +79,14 @@ class Validation usingPlatform: platform andHarness: harness = Value (
       )
 
       public return = (
-        trips := trips + 1.
+        trips:: trips + 1.
         (continue) ifTrue: [
           a2 <-: visit: self.
         ]
       )
 
       public stop: master = (
-        continue := false.
+        continue:: false.
         (*('Trips A: ' + trips) println.*)
         master <-: done: trips.
       )
@@ -103,14 +103,14 @@ class Validation usingPlatform: platform andHarness: harness = Value (
       )
 
       public return = (
-        trips := trips + 1.
+        trips:: trips + 1.
         (continue) ifTrue: [
           a2 <-: visit: self p2: trips.
         ]
       )
 
       public stop: master = (
-        continue := false.
+        continue:: false.
         (*('Trips B: ' + trips) println.*)
         master <-: done: trips.
       )
@@ -127,14 +127,14 @@ class Validation usingPlatform: platform andHarness: harness = Value (
       )
 
       public return = (
-        trips := trips + 1.
+        trips:: trips + 1.
         (continue) ifTrue: [
           a2 <-: visit: self p2: trips p3: 'Hello' p4: 'asdfgh'.
         ]
       )
 
       public stop: master = (
-        continue := false.
+        continue:: false.
         (*('Trips C: ' + trips) println.*)
         master <-: done: trips.
       )
@@ -182,16 +182,16 @@ class Validation usingPlatform: platform andHarness: harness = Value (
     )(
 
       public done: trips = (
-        d := d + 1.
+        d:: d + 1.
         ((trips - numRounds) abs) > ((numRounds * 5) / 100) ifTrue: [
-          res := false
+          res:: false
         ].
 
         (d = 3) ifTrue: [ resolver resolve: res ]
       )
 
       public pong = (
-        count := count + 1.
+        count:: count + 1.
         (count < numRounds) ifTrue:[
           remote <-: ping.
         ] ifFalse:[
@@ -205,8 +205,8 @@ class Validation usingPlatform: platform andHarness: harness = Value (
     (* benchmark & verification methods *)
     public benchmark: abortP = (
       | m completionPP |
-      completionPP := actors createPromisePair.
-      m := (actors createActorFromValue: Master) <-: new: completionPP resolver.
+      completionPP:: actors createPromisePair.
+      m:: (actors createActorFromValue: Master) <-: new: completionPP resolver.
       ^ completionPP promise
     )
 
@@ -217,10 +217,10 @@ class Validation usingPlatform: platform andHarness: harness = Value (
   ) : (
     public newInstance: problemSize = (
       | problem |
-      problem := problemSize split: ':'.
+      problem:: problemSize split: ':'.
       ^ self rounds: (problem at: 1) asInteger
     )
-      
+
     public setupVerifiedRun: run = (
       run problemSize: '1000'
     )
@@ -244,7 +244,7 @@ class Validation usingPlatform: platform andHarness: harness = Value (
 
       public getRessource: id for: sender = (
       (ressources at: id) ifTrue: [
-          numwaiting := numwaiting + 1.
+          numwaiting:: numwaiting + 1.
           (waiting promise) whenResolved: [ :r|
             (*('waiting for '+ id) println.*)
             sender <-: retry: id.
@@ -262,18 +262,18 @@ class Validation usingPlatform: platform andHarness: harness = Value (
       )
 
       public done: res = (
-        numDone := numDone + 1.
-        res doIndexes: [:id | 
+        numDone:: numDone + 1.
+        res doIndexes: [:id |
           ressources at: (res at: id) put: false.
           (*('release '+ (res at: id)) println.*)
         ].
-        
+
         waiting resolve: true.
-        numwaiting := 0.
-        waiting := actors createPromisePair.
+        numwaiting:: 0.
+        waiting:: actors createPromisePair.
         (numDone = numActors) ifTrue: [
             resolver resolve: true.
-        ]      
+        ]
       )
     )
 
@@ -284,7 +284,7 @@ class Validation usingPlatform: platform andHarness: harness = Value (
       |
     )(
       public granted: id = (
-        numGranted := numGranted + 1.
+        numGranted:: numGranted + 1.
         (numGranted = resPerA) ifTrue: [
           lock <-: done: res.
         ] ifFalse: [
@@ -305,29 +305,29 @@ class Validation usingPlatform: platform andHarness: harness = Value (
     (* benchmark & verification methods *)
     public benchmark: abortP = (
       | lock contenders random completionPP |
-      completionPP := actors createPromisePair.
+      completionPP:: actors createPromisePair.
 
-      lock := (actors createActorFromValue: Lock) <-: new: completionPP resolver.
-      random := Random new.
+      lock:: (actors createActorFromValue: Lock) <-: new: completionPP resolver.
+      random:: Random new.
 
-      contenders := Array new: numActors.
+      contenders:: Array new: numActors.
       contenders doIndexes: [:i |
         | ct res |
-        res := TransferArray new: resPerA.
-        res doIndexes: [:j | 
+        res:: TransferArray new: resPerA.
+        res doIndexes: [:j |
           |num|
-          num := ((random next: numRes) + 1).
+          num:: ((random next: numRes) + 1).
           [(res contains: num)] whileTrue: [
-            num := ((random next: numRes) + 1).
+            num:: ((random next: numRes) + 1).
           ].
           res at: j put: num.
           (*('' + num) println.*)
         ].
 
-        ct := (actors createActorFromValue: Contender) <-: new: lock res: res.
+        ct:: (actors createActorFromValue: Contender) <-: new: lock res: res.
         contenders at: i put: ct.
       ].
-        
+
       contenders do: [:ct | ct <-: start ].
       ^ completionPP promise
     )
@@ -339,10 +339,10 @@ class Validation usingPlatform: platform andHarness: harness = Value (
   ) : (
     public newInstance: problemSize = (
       | problem |
-      problem := problemSize split: ':'.
+      problem:: problemSize split: ':'.
       ^ self actors: (problem at: 1) asInteger resPerActor: (problem at: 2) asInteger numRes: (problem at: 3) asInteger
     )
-      
+
     public setupVerifiedRun: run = (
       run problemSize: '4:2:3'
     )
@@ -356,10 +356,10 @@ class Validation usingPlatform: platform andHarness: harness = Value (
     private class Counter = (
     | private value ::= 0. |
     )(
-      public inc: anInt = ( value := value + anInt. )
+      public inc: anInt = ( value:: value + anInt. )
       public get = ( ^ value )
     )
-    
+
     private class PhilosopherActor new: id rounds: rounds counter: aCounter arbitrator: arbitrator = (
     | private localCounter ::= 0.
       private roundsSoFar  ::= 0.
@@ -369,27 +369,27 @@ class Validation usingPlatform: platform andHarness: harness = Value (
       private counter    = aCounter.
     |)(
       public denied = (
-        localCounter := localCounter + 1.
+        localCounter:: localCounter + 1.
         arbitrator <-: hungry: self id: id.
       )
-      
+
       public eat = (
-        roundsSoFar := roundsSoFar + 1.
+        roundsSoFar:: roundsSoFar + 1.
         localCounter > 0 ifTrue: [
           counter <-: inc: localCounter.
-          localCounter := 0. ].
-        
+          localCounter:: 0. ].
+
         arbitrator <-: done: id.
         roundsSoFar < rounds
           ifTrue:  [ self <-: start ]
           ifFalse: [ arbitrator <-: exit ]
       )
-      
+
       public start = (
         arbitrator <-: hungry: self id: id.
       )
     )
-    
+
     private class ArbitratorActor new: numForks resolver: resolver = (
     | private numForks = numForks.
       private forks    = Array new: numForks withAll: false.
@@ -401,8 +401,8 @@ class Validation usingPlatform: platform andHarness: harness = Value (
     |)(
       public hungry: philosopher id: leftForkId = (
         | rightForkId |
-        rightForkId := 1 + ((rand next) % numForks).
-        
+        rightForkId:: 1 + ((rand next) % numForks).
+
         abortion ifTrue: [^ self].
         ((forks at: leftForkId) or: [forks at: rightForkId])
           ifTrue:  [ philosopher <-: denied ]
@@ -411,45 +411,45 @@ class Validation usingPlatform: platform andHarness: harness = Value (
             forks at: rightForkId put: true.
             philosopher <-: eat ]
       )
-      
+
       public done: leftForkId = (
         | rightForkId |
-        rightForkId := 1 + ((rand next) % numForks).
-        
+        rightForkId:: 1 + ((rand next) % numForks).
+
         forks at: leftForkId  put: false.
         forks at: rightForkId put: false.
       )
-      
+
       public exit = (
-        numExitedPhilosophers := numExitedPhilosophers + 1.
-  
+        numExitedPhilosophers:: numExitedPhilosophers + 1.
+
         numForks = numExitedPhilosophers ifTrue: [
           | forksTaken |
-          forksTaken := 0.
-          forks do: [:f | f ifTrue: [ forksTaken := forksTaken + 1 ] ].
+          forksTaken:: 0.
+          forks do: [:f | f ifTrue: [ forksTaken:: forksTaken + 1 ] ].
           resolved ifFalse:[
-            resolved := true.
+            resolved:: true.
             resolver resolve: 0]]
       )
 
       public abort = (
-        abortion := true.
+        abortion:: true.
         resolved ifFalse:[
-          resolved := true.
+          resolved:: true.
           resolver resolve: 1]
       )
     )
-    
+
     public benchmark: abortP = (
       | counter completionPP arbitrator philosophers done|
-      counter := Counter new.
-      done := false.
-      completionPP := actors createPromisePair.
- 
-      arbitrator := (actors createActorFromValue: ArbitratorActor) <-: new: numPhil resolver: completionPP resolver.
-      
+      counter:: Counter new.
+      done:: false.
+      completionPP:: actors createPromisePair.
+
+      arbitrator:: (actors createActorFromValue: ArbitratorActor) <-: new: numPhil resolver: completionPP resolver.
+
       completionPP promise whenResolved: [ :r|
-        done := true.
+        done:: true.
       ].
 
       abortP whenResolved: [ :r|
@@ -458,11 +458,11 @@ class Validation usingPlatform: platform andHarness: harness = Value (
           'Benchmark timed out' println.
         ]
       ].
-      
-      philosophers := Array new: numPhil.
+
+      philosophers:: Array new: numPhil.
       philosophers doIndexes: [:i |
         | ph |
-        ph := (actors createActorFromValue: PhilosopherActor) <-: new: i
+        ph:: (actors createActorFromValue: PhilosopherActor) <-: new: i
                         rounds: numRounds counter: counter arbitrator: arbitrator.
         philosophers at: i put: ph ].
 
@@ -477,12 +477,12 @@ class Validation usingPlatform: platform andHarness: harness = Value (
   ) : (
     public newInstance: problemSize = (
       | problem |
-      problem := problemSize split: ':'.
-      
+      problem:: problemSize split: ':'.
+
       ^ self new: (problem at: 1) asInteger
           rounds: (problem at: 2) asInteger
     )
-    
+
     public setupVerifiedRun: run = (
       run problemSize: '5:5'
     )
@@ -500,38 +500,38 @@ class Validation usingPlatform: platform andHarness: harness = Value (
       public increment = (
         1 to: limit do: [:i |
           counter <-: increment ].
-        
+
         counter <-: requestCount: self.
       )
-      
+
       public count: cnt = (
         completionRes resolve: cnt = limit
       )
     )
-    
+
     public class CountingActor = (
     | private count ::= 0. |
     ) (
       public increment = (
-        count := count + 1.
+        count:: count + 1.
       )
-      
+
       public requestCount: requester = (
         requester <-: count: count
       )
     )
-  
+
     public benchmark: abortP = (
       | counter producer disturb completionPP |
-      completionPP := actors createPromisePair.
-      counter  := (actors createActorFromValue: CountingActor) <-: new.
-      producer := (actors createActorFromValue: ProducerActor) <-: new: counter resolver: completionPP resolver.
+      completionPP:: actors createPromisePair.
+      counter::  (actors createActorFromValue: CountingActor) <-: new.
+      producer:: (actors createActorFromValue: ProducerActor) <-: new: counter resolver: completionPP resolver.
       producer <-: increment.
       actors after: (limit / 3500) do: [ :r | counter <-: increment ].
 
       ^ completionPP promise
     )
-    
+
     public verifyResult: isCorrect = (
       ^ isCorrect
     )
@@ -543,20 +543,20 @@ class Validation usingPlatform: platform andHarness: harness = Value (
   public class Sequence new: limit = Benchmark <: Value (
   | private limit = limit. |
   )(
-    
+
     public class SequenceActor new: completionRes = (
     | private completionRes = completionRes.
-      private last ::= nil. 
+      private last ::= nil.
       private problems ::= 0.
       private total ::= 0.
     |
     ) (
       public A = (
         last = 'A' ifTrue: [
-          problems := problems + 1.
+          problems:: problems + 1.
         ].
-        last := 'A'.
-        total := total + 1.
+        last:: 'A'.
+        total:: total + 1.
 
         total = (2 * limit) ifTrue: [
           completionRes resolve: problems = 0.
@@ -565,24 +565,24 @@ class Validation usingPlatform: platform andHarness: harness = Value (
 
       public B = (
         (last = 'B') ifTrue: [
-          problems := problems + 1.
+          problems:: problems + 1.
         ].
-        last := 'B'.
-        total := total + 1.
-        
+        last:: 'B'.
+        total:: total + 1.
+
         (total = (2 * limit)) ifTrue: [
           completionRes resolve: (problems = 0).
         ]
       )
     )
-  
+
     public benchmark: abortP = (
       | counter producerA producerB disturb completionPP |
-      completionPP := actors createPromisePair.
-      counter  := (actors createActorFromValue: SequenceActor) <-: new: completionPP resolver.
+      completionPP:: actors createPromisePair.
+      counter::  (actors createActorFromValue: SequenceActor) <-: new: completionPP resolver.
 
-      doA: counter lim: limit.    
-      doB: counter lim: limit. 
+      doA: counter lim: limit.
+      doB: counter lim: limit.
 
       ^ completionPP promise
     )
@@ -604,7 +604,7 @@ class Validation usingPlatform: platform andHarness: harness = Value (
         ]
       ]
     )
-    
+
     public verifyResult: isCorrect = (
       ^ isCorrect
     )

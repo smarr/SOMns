@@ -21,25 +21,25 @@ class PingPongApp usingPlatform: platform = Value (
       | p1 p2 |
         'Ping>>ping' println.
         pong <-: ping: self.
-        pingsLeft := pingsLeft - 1.
+        pingsLeft:: pingsLeft - 1.
 
-        p1 := self <-: validate: pingsLeft.
-        p2 := p1 whenResolved: [:v | v println. ].
+        p1:: self <-: validate: pingsLeft.
+        p2:: p1 whenResolved: [:v | v println. ].
         p2 <-: println.
       )
 
       public validate: pings = (
       | p3 p4 |
-        p3 := self <-: validNumber: pings.
-        p4 := p3 whenResolved: [:v | ('-Resolved: ' + v) println. ] onError: [:e| ('-Error: ' + e) println ].
+        p3:: self <-: validNumber: pings.
+        p4:: p3 whenResolved: [:v | ('-Resolved: ' + v) println. ] onError: [:e| ('-Error: ' + e) println ].
         p4 <-: println.
         ^ p4
        )
 
       public validNumber: pings = (
       | p5 r |
-        p5 := actors createPromisePair.
-        r := p5 resolver.
+        p5:: actors createPromisePair.
+        r:: p5 resolver.
         (pings = 2)
         ifTrue: [
           (' ping last value ' + pings) println.
@@ -68,14 +68,14 @@ class PingPongApp usingPlatform: platform = Value (
       public ping: sender = (
         'Pong>>ping' println.
         sender <-: pong: self.
-        pongCount := pongCount + 1.
+        pongCount:: pongCount + 1.
       )
 
       public stop = (
       | p6 p7 |
         'Pong>>stop' println.
-         p6 := self <-: endWithException.
-         p7 := p6 onError: [:e| ('-Error stopping: ' + e) println. ].
+         p6:: self <-: endWithException.
+         p7:: p6 onError: [:e| ('-Error stopping: ' + e) println. ].
          p7 <-: println.
          completionRes resolve: pongCount
       )
@@ -89,10 +89,10 @@ class PingPongApp usingPlatform: platform = Value (
 
     public benchmark = (
       | ping pong completionPP p |
-      completionPP := actors createPromisePair.
-      pong := (actors createActorFromValue: Pong) <-: new: completionPP resolver.
-      ping := (actors createActorFromValue: Ping) <-: new: NumPings with: pong.
-      p := ping <-: start.
+      completionPP:: actors createPromisePair.
+      pong:: (actors createActorFromValue: Pong) <-: new: completionPP resolver.
+      ping:: (actors createActorFromValue: Ping) <-: new: NumPings with: pong.
+      p:: ping <-: start.
       p <-: println.
       ^ completionPP promise whenResolved: [:r |
          ('Done with: ' + r asString) println. ]
@@ -122,7 +122,7 @@ class PingPongApp usingPlatform: platform = Value (
       ^ (PingPong new: 3) benchmark ].
     args size = 2 ifTrue: [
       | test |
-      test := args at: 2.
+      test:: args at: 2.
       test = 'halt'  ifTrue: [ ^ testHalt ].
       test = 'dnu'   ifTrue: [ ^ testDNU  ].
       test = 'stack' ifTrue: [ ^ testPrintStackTrace  ].

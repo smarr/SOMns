@@ -50,17 +50,17 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
   
     public testDo = (
       | j |
-      j := 1.
+      j:: 1.
     
       a do: [:i |
         self assert: (a at: j) equals: i.
-        j := j + 1.
+        j:: j + 1.
       ]
     )
   
     public testSumAndAverage = (
       | arr |
-      arr := Array new: 3.
+      arr:: Array new: 3.
       1 to: 3 do: [ :i | arr at: i put: i ].
     
       self assert: 6 equals: arr sum.
@@ -69,15 +69,15 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
   
     public testCopyFrom = (
       | arr b |
-      arr := Array new: 5.
+      arr:: Array new: 5.
       1 to: 5 do: [ :i | arr at: i put: i ].
 
-      b := arr copyFrom: 2 to: 4.
+      b:: arr copyFrom: 2 to: 4.
       self assert: 2 equals: (b at: 1).
       self assert: 3 equals: (b at: 2).
       self assert: 4 equals: (b at: 3).
     
-      b := arr copyFrom: 3.
+      b:: arr copyFrom: 3.
       self assert: 3 equals: (b at: 1).
       self assert: 4 equals: (b at: 2).
       self assert: 5 equals: (b at: 3).
@@ -85,7 +85,7 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
   
     public testIndexOf = (
       | arr |
-      arr := Array new: 6.
+      arr:: Array new: 6.
       arr at: 1 put: #one.
       arr at: 2 put: #two.
       arr at: 3 put: #three.
@@ -104,7 +104,7 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
   
     public testLastIndexOf = (
       | arr |
-      arr := Array new: 6.
+      arr:: Array new: 6.
       arr at: 1 put: #one.
       arr at: 2 put: #two.
       arr at: 3 put: #three.
@@ -123,28 +123,28 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
   
     public testNewWithAll = (
       | arr |
-      arr := Array new: 5 withAll: [1].
+      arr:: Array new: 5 withAll: [1].
       1 to: 5 do: [:i | self assert: 1 equals: (arr at: i)].
     
-      arr := Array new: 5 withAll: 1.
+      arr:: Array new: 5 withAll: 1.
       1 to: 5 do: [:i | self assert: 1 equals: (arr at: i)].
     )
   
     public testPutAllIntAndObjects = (
       | arr o |
-      arr := Array new: 5 withAll: 5.
+      arr:: Array new: 5 withAll: 5.
       self assert: 5 equals: (arr at: 3).
       arr at: 3 put: nil.
       self assert: nil equals: (arr at: 3).
     
-      o := Object new.
+      o:: Object new.
       arr at: 2 put: o.
       self assert: o is: (arr at: 2).
     )
 
     private arrayTypeSpecializations = (
       | types |
-      types := Array new: 6.
+      types:: Array new: 6.
       types at: 1 put: nil.
       types at: 2 put: 55.
       types at: 3 put: 3.3.
@@ -156,11 +156,11 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
 
     public testAtIndexOutOfBounds = (
       | types |
-      types := arrayTypeSpecializations.
+      types:: arrayTypeSpecializations.
 
       types do: [:initVal |
         | arr |
-        arr := Array new: 5 withAll: initVal.
+        arr:: Array new: 5 withAll: initVal.
         arr at: 1. (* shouldn't throw *)
 
         should: [ arr at: 0 ] signal: IndexOutOfBounds.
@@ -170,11 +170,11 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
 
     public testAtPutIndexOutOfBounds = (
       | types |
-      types := arrayTypeSpecializations.
+      types:: arrayTypeSpecializations.
 
       types do: [:initVal |
         | arr |
-        arr := Array new: 5 withAll: initVal.
+        arr:: Array new: 5 withAll: initVal.
         arr at: 1. (* shouldn't throw *)
 
         should: [ arr at: 0 put: initVal ] signal: IndexOutOfBounds.
@@ -201,18 +201,18 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
 
     public testBasicMyArray = (
       | arr |
-      arr := MyArray new: 10.
+      arr:: MyArray new: 10.
       assert: arr size equals: 10.
       assert: #MyArray equals: (ObjectMirror reflecting: arr) className.
     )
     
     public testCopyMyArray = (
       | arr cpy |
-      arr := MyArray new: 2.
+      arr:: MyArray new: 2.
       arr at: 1 put: 11.
       arr at: 2 put: 22.
       
-      cpy := arr copy.
+      cpy:: arr copy.
       assert: #MyArray equals: (ObjectMirror reflecting: arr) className.
       deny: cpy == arr.
       assert: 11 equals: (cpy at: 1).
@@ -221,7 +221,7 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
     
     public testCustomMethods = (
       | arr |
-      arr := CustomMethodsArray new: 3.
+      arr:: CustomMethodsArray new: 3.
       arr at: 1 put: 33.
       arr at: 2 put: 17.
       
@@ -231,7 +231,7 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
     public testDEACTIVATEDCustomFields = (
       | arr |
       (*
-      arr := CustomFieldsArray new: 10.
+      arr:: CustomFieldsArray new: 10.
       assert: 0    equals: arr foo.
       assert: #bar equals: arr bar.
 
@@ -250,15 +250,15 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
   public class SetTest = TestContext ()(
     public testBasics = (
       | a b t |
-      a := Set new.
-      b := Set new.
+      a:: Set new.
+      b:: Set new.
 
       a add: #a.
       b add: #b.
 
       self deny: a = b.
 
-      t := Set new.
+      t:: Set new.
       t add: #a.
 
       self deny: a == t.        (* different objects *)
@@ -267,11 +267,11 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
     
     public testAddAll = (
       | a v |
-      a := Set new.
+      a:: Set new.
       a add: #a.
       a add: #b.
       
-      v := Vector new: 4.
+      v:: Vector new: 4.
       v append: #c.
       v append: #a.
       v append: #b.
@@ -288,14 +288,14 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
     
     public testUnion = (
       | a b c |
-      a := Set new.
-      b := Set new.
+      a:: Set new.
+      b:: Set new.
       a add: #a.
       a add: #b.
       b add: #c.
       b add: #b.
       
-      c := a union: b.
+      c:: a union: b.
 
       self deny: c == a.
       self deny: c == b.
@@ -331,10 +331,10 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
   
     public testDo = (
       | j |
-      j := 1.
+      j:: 1.
       a do: [:i |
         self assert: i equals: (a at: j).
-        j := j + 1.
+        j:: j + 1.
       ].
     )
     
@@ -347,10 +347,10 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
     
     public testSelect = (
       | v result |
-      v := Vector new.
+      v:: Vector new.
       v append: #t. v append: 5. v append: 55. v append: #t.
       
-      result := v select: [:e | e = #t ].
+      result:: v select: [:e | e = #t ].
       
       assert: result size    equals: 2.
       assert: (result at: 1) equals: #t.
@@ -359,10 +359,10 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
     
     public testCollect = (
       | v result |
-      v := Vector new.
+      v:: Vector new.
       1 to: 5 do: [:i | v append: i ].
       
-      result := v collect: [:e | e * 2 ].
+      result:: v collect: [:e | e * 2 ].
 
       assert: result size equals: 5.
       1 to: 5 do: [:i |
@@ -372,7 +372,7 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
     
     public testRemoveAllPreservesCapacity = (
       | v |
-      v := Vector new: 5.
+      v:: Vector new: 5.
       self assert: 5 equals: v capacity.
       v removeAll.
       self assert: 5 equals: v capacity.
@@ -382,7 +382,7 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
   public class DictionaryTest = TestContext ()(
     public testAtAndAtPut = (
       | dict |
-      dict := Dictionary new.
+      dict:: Dictionary new.
       self assert: (dict at: #ff) equals: nil.
       
       dict at: #ff put: 33.
@@ -394,7 +394,7 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
     
     public testContainsKey = (
       | dict |
-      dict := Dictionary new.
+      dict:: Dictionary new.
       
       self deny: (dict containsKey: #ff).
       dict at: #ff put: 0.
@@ -403,7 +403,7 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
     
     public testKeysAndValues = (
       | dict |
-      dict := Dictionary new.
+      dict:: Dictionary new.
       self assert: dict keys size   equals: 0.
       self assert: dict values size equals: 0.
       
@@ -417,7 +417,7 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
     
     public testRemoveAll = (
       | dict |
-      dict := Dictionary new.
+      dict:: Dictionary new.
       
       self assert: dict size equals: 0 description: 'Empty after creation'.
 
@@ -433,8 +433,8 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
     
     public testIdentDictAtAndAtPut = (
       | dict o |
-      dict := IdentityDictionary new.
-      o := Object new.
+      dict:: IdentityDictionary new.
+      o:: Object new.
       self assert: (dict at: o) equals: nil.
       
       dict at: o put: 33.
@@ -446,8 +446,8 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
     
     public testIdentDictContainsKey = (
       | dict o |
-      dict := IdentityDictionary new.
-      o := Object new.
+      dict:: IdentityDictionary new.
+      o:: Object new.
       
       self deny: (dict containsKey: o).
       dict at: o put: 0.
@@ -456,7 +456,7 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
     
     public testLargerDict = (
       | dict |
-      dict := Dictionary new.
+      dict:: Dictionary new.
       1 to: 100000 do: [:i |
         dict at: i put: i ].
       

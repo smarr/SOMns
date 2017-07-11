@@ -30,7 +30,7 @@ class ReflectionTest usingPlatform: platform testFramework: minitest = (
 ) (
   public class FactoryMethodTest = TestContext ()(
     public class ReflectionTarget = (| num ::= 0. |)(
-      public set: val = (num := val)
+      public set: val = (num:: val)
       public get = (^ num)
     )
 
@@ -42,7 +42,7 @@ class ReflectionTest usingPlatform: platform testFramework: minitest = (
 
     (*public testMethods = (
       | o |
-      o := ReflectionTarget new.
+      o:: ReflectionTarget new.
       (ObjectMirror reflecting: o) classMirror methods doIndexes: [ :i |
         ('' + ((ObjectMirror reflecting: o) classMirror methods) at: i) println.
       ]
@@ -53,11 +53,11 @@ class ReflectionTest usingPlatform: platform testFramework: minitest = (
 
     public testPerform = (
       | o mirrorO mirror23 |
-      mirror23 := ObjectMirror reflecting: 23.
+      mirror23:: ObjectMirror reflecting: 23.
       self assert: (mirror23 perform: #between:and: withArguments: (Array with: 22 with: 24)).
 
-      o := ReflectionTarget new.
-      mirrorO := ObjectMirror reflecting: o.
+      o:: ReflectionTarget new.
+      mirrorO:: ObjectMirror reflecting: o.
       assert: (mirrorO perform: #get) equals: 0.
       mirrorO perform: #set: withArguments: (Array with: 5).
 

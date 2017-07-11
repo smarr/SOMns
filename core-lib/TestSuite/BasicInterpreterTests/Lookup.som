@@ -28,7 +28,7 @@ class Lookup = ()(
     method: arg = ( ^ arg )
     public bar = (
       | s |
-      ^ method: (s := 42)
+      ^ method: (s:: 42)
     )
   )
   
@@ -128,7 +128,7 @@ class Lookup = ()(
   (* assert 91 *)
   public testNesting1 = (
     | o |
-    o := self new TestNesting new NS2Test12 s: Object.
+    o:: self new TestNesting new NS2Test12 s: Object.
     o Inner1 == o Inner1 ifFalse: [ ^ #error ].
     ^ o Inner1 new foo
   )
@@ -136,8 +136,8 @@ class Lookup = ()(
   (* assert 182 *)
   public testNesting2 = (
     | o p |
-    o := self new TestNesting new NS2Test12 s: Object.
-    p := o Inner1 new.
+    o:: self new TestNesting new NS2Test12 s: Object.
+    p:: o Inner1 new.
     p Inner11 == p Inner11 ifFalse: [ ^ #error ].
     ^ p Inner11 new bar
   )
@@ -145,25 +145,25 @@ class Lookup = ()(
   (* assert 364 *)
   public testNesting3 = (
     | o p q |
-    o := self new TestNesting new NS2Test12 s: Object.
-    p := o Inner1 new.
-    q := p Inner11 new.
+    o:: self new TestNesting new NS2Test12 s: Object.
+    p:: o Inner1 new.
+    q:: p Inner11 new.
     q Inner111 == q Inner111 ifFalse: [ ^ #error ].
     ^ q Inner111 new baz
   )
   
   public testInner18 = (
     | o1 o2 o1i1 o1i2 o2i1 o2i2 innerKlass11 innerKlass12 innerKlass21 innerKlass22 |
-    o1 := self new TestInner18 s: Object.
-    o2 := self new TestInner18 s: o1 Inner1.
-    o1i1 := o1 Inner1 new.
-    o1i2 := o1 Inner2 new.
-    o2i1 := o2 Inner1 new.
-    o2i2 := o2 Inner2 new.
-    innerKlass11 := o1 Inner1.
-    innerKlass12 := o1 Inner2.
-    innerKlass21 := o2 Inner1.
-    innerKlass22 := o2 Inner2.
+    o1:: self new TestInner18 s: Object.
+    o2:: self new TestInner18 s: o1 Inner1.
+    o1i1:: o1 Inner1 new.
+    o1i2:: o1 Inner2 new.
+    o2i1:: o2 Inner1 new.
+    o2i2:: o2 Inner2 new.
+    innerKlass11:: o1 Inner1.
+    innerKlass12:: o1 Inner2.
+    innerKlass21:: o2 Inner1.
+    innerKlass22:: o2 Inner2.
 
     o1 Inner1 == o1i1 i1 ifFalse: [ ^ 'Assertion failed: o1 Inner1 = o1i1 i1' ].
     o1 Inner1 == o1i2 i1 ifFalse: [ ^ 'Assertion failed: o1 Inner1 = o1i2 i1' ].

@@ -22,16 +22,16 @@ class CompilerSimplification = (| aField |)(
   class ParserTest = (| mutableField ::= 3. |)() (* Just an example for the parser *)
   
   getField = (^ aField)
-  setField: val = ( aField := val )
+  setField: val = ( aField:: val )
   
   public testSetField  = (
-      aField := #bar.
+      aField:: #bar.
       self setField: #foo.
       ^ aField
   )
   
   public testGetField = (
-      aField := 40.
+      aField:: 40.
       ^ self getField
   )
 ) : (

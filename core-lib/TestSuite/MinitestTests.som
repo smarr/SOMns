@@ -121,7 +121,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
         (* accessing *)
         public createErrorResultFor: testCase exception: ex = (
           | exception |
-          exception := TestException1 new.
+          exception:: TestException1 new.
           exception messageText: 'created here'.
           ^ TestError case: testCase exception: exception
         )
@@ -213,7 +213,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
     )
 
     public testAsyncAssertEquals = (
-      tester := Tester testSuite: (catalog testSuiteNamed: 'AssertEqualsTestContext').
+      tester:: Tester testSuite: (catalog testSuiteNamed: 'AssertEqualsTestContext').
       ^ tester runAll whenResolved: [:r |
           assert: tester errors size equals: 0.
           assert: tester failures size equals: 2.
@@ -227,7 +227,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
     )
 
     public testAsyncAsserts = (
-      tester := Tester testSuite: (catalog testSuiteNamed: 'AssertTestContext').
+      tester:: Tester testSuite: (catalog testSuiteNamed: 'AssertTestContext').
       ^ tester runAll whenResolved: [:r |
           assert: tester errors size equals: 2.
           assert: tester errors containsSelector: #testAssertErrorBlock.
@@ -245,7 +245,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
     )
 
     public testAsyncDenials = (
-      tester := Tester testSuite: (catalog testSuiteNamed: 'DenyTestContext').
+      tester:: Tester testSuite: (catalog testSuiteNamed: 'DenyTestContext').
       ^ tester runAll whenResolved: [:r |
           assert: tester errors size equals: 2.
           assert: tester errors containsSelector: #testDenyErrorBlock.
@@ -263,7 +263,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
     )
 
     public testAsyncResultCreation = (
-      tester := Tester testSuite: (catalog testSuiteNamed: 'ResultCreationTestContext').
+      tester:: Tester testSuite: (catalog testSuiteNamed: 'ResultCreationTestContext').
       ^ tester runAll whenResolved: [:r |
           assert: tester failures size equals: 1.
           assert: tester failures first description = 'created here'.
@@ -277,7 +277,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
     )
 
     public testAsyncShouldShouldnt = (
-      tester := Tester testSuite: (catalog testSuiteNamed: 'ShouldShouldntTestContext').
+      tester:: Tester testSuite: (catalog testSuiteNamed: 'ShouldShouldntTestContext').
       ^ tester runAll whenResolved: [:r |
           assert: tester errors size equals: 0.
           assert: tester failures size equals: 2. '4.'.
@@ -393,7 +393,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
 
     public testInstantiationCounts = (
       | tester |
-      tester := Tester testSuite: catalog allTests.
+      tester:: Tester testSuite: catalog allTests.
       ^ tester runAll whenResolved: [:r |
           assert: guineaPig DirectlyNestedTestContextInstantiationCount equals: 3.
           assert: guineaPig OuterSharedStateClassInstantiationCount equals: 1.
@@ -404,7 +404,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
 
     public testAsyncSharedStateCleanUp = (
       | tester |
-      tester := Tester testSuite: catalog allTests.
+      tester:: Tester testSuite: catalog allTests.
       ^ tester runAll whenResolved: [:r |
           assert: guineaPig OuterSharedStateCleanedUp description: 'Outer state not cleaned up'.
           assert: guineaPig InnerSharedStateCleanedUp description: 'Inner state not cleaned up'.

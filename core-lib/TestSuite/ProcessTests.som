@@ -31,16 +31,16 @@ class ProcessTests usingPlatform: platform testFramework: minitest = Value (
 
     public testProcessCreationAndChannelCommunication = (
       | c |
-      c := Channel new.
+      c:: Channel new.
       processes spawn: DoneProcess with: (Array with: c out).
       assert: c in read equals: #done.
     )
 
     public testProcessChain = (
       | c1 c2 c3 |
-      c1 := Channel new.
-      c2 := Channel new.
-      c3 := Channel new.
+      c1:: Channel new.
+      c2:: Channel new.
+      c3:: Channel new.
 
       processes spawn: PassToNext with: (Array with: c1 in with: c2 out).
       processes spawn: PassToNext with: (Array with: c2 in with: c3 out).
@@ -50,7 +50,7 @@ class ProcessTests usingPlatform: platform testFramework: minitest = Value (
 
     public testChannelAcceptsOnlyValues = (
       | c |
-      c := Channel new.
+      c:: Channel new.
       should: [c out write: Object new] signal: NotAValue
     )
 

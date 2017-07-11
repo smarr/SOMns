@@ -25,8 +25,8 @@ class StringTests usingPlatform: platform testFramework: minitest = (
 
     public testEquality = (
       | str1 str2 |
-      str1 := 'foo'.
-      str2 := 'bar'.
+      str1:: 'foo'.
+      str2:: 'bar'.
     
       self assert: str1 = str1.
       self assert: str1 = 'foo'.
@@ -42,7 +42,7 @@ class StringTests usingPlatform: platform testFramework: minitest = (
   
     public testCharAt = (
       | str |
-      str := 'foobar'.
+      str:: 'foobar'.
       self assert: 'f' equals: (str charAt: 1).
       self assert: 'o' equals: (str charAt: 2).
       self assert: 'o' equals: (str charAt: 3).
@@ -53,7 +53,7 @@ class StringTests usingPlatform: platform testFramework: minitest = (
   
     public testPrimSubstringFrom = (
       | str |
-      str := 'foobar'.
+      str:: 'foobar'.
       self assert: 'foo'    equals: (str substringFrom: 1 to: 3).
       self assert: 'bar'    equals: (str substringFrom: 4 to: 6).
       self assert: 'foobar' equals: (str substringFrom: 1 to: 6).
@@ -85,23 +85,23 @@ class StringTests usingPlatform: platform testFramework: minitest = (
     
     public testSplit = (
       | r |
-      r := 'foo.bar' split: '.'.
+      r:: 'foo.bar' split: '.'.
       assert: 2     equals: r size.
       assert: 'foo' equals: (r at: 1).
       assert: 'bar' equals: (r at: 2).
       
-      r := 'foo..bar' split: '.'.
+      r:: 'foo..bar' split: '.'.
       assert: 3     equals: r size.
       assert: 'foo' equals: (r at: 1).
       assert: ''    equals: (r at: 2).
       assert: 'bar' equals: (r at: 3).
       
-      r := 'foo..bar' split: '..'.
+      r:: 'foo..bar' split: '..'.
       assert: 2     equals: r size.
       assert: 'foo' equals: (r at: 1).
       assert: 'bar' equals: (r at: 2).
       
-      r := 'foo' split: 'bar'.
+      r:: 'foo' split: 'bar'.
       assert: 1     equals: r size.
       assert: 'foo' equals: (r at: 1).
     )
@@ -134,7 +134,7 @@ class StringTests usingPlatform: platform testFramework: minitest = (
 
     public testMultLineStringPreserveNewlines = (
       | str |
-      str := '123
+      str:: '123
 567'.
       assert: '\n' equals: (str charAt: 4).
       assert: 7 equals: str length.
@@ -187,11 +187,11 @@ class StringTests usingPlatform: platform testFramework: minitest = (
       self assert: 'ssdf aksdf; kasd;fk a;dfk a;dfk a;d' hashcode
            equals: 'ssdf aksdf; kasd;fk a;dfk a;dfk a;d' hashcode.
     
-      str := 'foo' + 'bar'.
-      str := str + str.
+      str:: 'foo' + 'bar'.
+      str:: str + str.
       self assert: 'foobarfoobar' hashcode equals: str hashcode.
     
-      str := 'dfadf fgsfg sfg sdfg sfg sfg' + '345243n 24n5 kwertlw erltnwrtln'.
+      str:: 'dfadf fgsfg sfg sdfg sfg sfg' + '345243n 24n5 kwertlw erltnwrtln'.
       self assert: 'dfadf fgsfg sfg sdfg sfg sfg345243n 24n5 kwertlw erltnwrtln' hashcode
            equals: str hashcode.
     )

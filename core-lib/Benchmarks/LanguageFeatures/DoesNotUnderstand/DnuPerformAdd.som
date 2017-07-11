@@ -2,7 +2,7 @@ DnuPerformAdd = Benchmark (
     | calc |
     
     initialize = (
-        calc := CalculatorDnuPerform new.
+        calc:: CalculatorDnuPerform new.
     )
 
     benchmark = (

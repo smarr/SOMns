@@ -67,39 +67,39 @@ class AllBenchmarks usingPlatform: platform = (
       (run: 'WhileLoop'            in: 'LanguageFeatures' numIter: 10),
       (run: 'WhileLoopPoly'        in: 'LanguageFeatures' numIter: 10),
       (run: 'VectorRead'           in: 'LanguageFeatures' numIter: 10),
-      
+
       (run: 'Dispatch'             in: 'LanguageFeatures' numIter: 10),
       (run: 'DispatchNoArg'        in: 'LanguageFeatures' numIter: 10),
       (run: 'DispatchPerformNoArg' in: 'LanguageFeatures' numIter: 10),
-    
+
       (run: 'PageRank'    numIter:  1),
       (run: 'GraphSearch' numIter:  1)
   )
-  
+
   loadModule: name = (
     | file cls |
-    file  := name + '.som'.
-    cls   := system loadModule: file nextTo: self.
+    file:: name + '.som'.
+    cls:: system loadModule: file nextTo: self.
     ^ cls usingPlatform: platform andHarness: harness.
   )
 
   run: name in: moduleName numIter: numIter = (
     | suite cls |
-    suite := self loadModule: moduleName.
-    cls := (ObjectMirror reflecting: suite) perform: name asSymbol.
-    
+    suite:: self loadModule: moduleName.
+    cls:: (ObjectMirror reflecting: suite) perform: name asSymbol.
+
     ^ self createRun: cls named: name numIter: numIter
   )
 
   run: name numIter: numIter = (
     | suite run |
-    suite := self loadModule: name.
+    suite:: self loadModule: name.
     ^ self createRun: suite named: name numIter: numIter.
   )
-  
+
   createRun: bench named: name numIter: numIter = (
     | run |
-    run := NoReportingRun new.
+    run:: NoReportingRun new.
     run name: name.
     run benchmarkSuite: bench.
     run numIterations: numIter.
@@ -107,7 +107,7 @@ class AllBenchmarks usingPlatform: platform = (
     bench setupVerifiedRun: run.
     ^ run
   )
-  
+
   runAll = (
     all do: [:run |
       run runBenchmark.
@@ -122,10 +122,10 @@ class AllBenchmarks usingPlatform: platform = (
     ('   Iterations: ' + run numIterations + ' (elapsed time ' + (run total // 1000) round
         + ' ms)') println.
     ('   AVERAGE: ' + ((run total // run numIterations) // 1000) round + ' ms') println.
-    
-    summedAverages := summedAverages + (run total // run numIterations).
+
+    summedAverages:: summedAverages + (run total // run numIterations).
   )
-    
+
   printTotal = (
     ('\nSummed Average Runtime: ' + (summedAverages // 1000) round asString + ' ms') println.
   )
