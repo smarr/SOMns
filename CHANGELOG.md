@@ -2,7 +2,7 @@
 
 ## [Unreleased] \(0.5.0\) [v5]
 
- -
+ - Implement Newspeak setter send syntax and remove old assignment syntax
 
 ## [0.4.0] - [Concurrency-Agnostic Debugger][v4]
 
