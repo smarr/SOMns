@@ -26,7 +26,6 @@
 package som.compiler;
 
 import static som.compiler.Symbol.And;
-import static som.compiler.Symbol.Assign;
 import static som.compiler.Symbol.At;
 import static som.compiler.Symbol.BeginComment;
 import static som.compiler.Symbol.Colon;
@@ -860,6 +859,13 @@ public class Parser {
     return s;
   }
 
+  protected String setterKeyword() throws ParseError {
+    String s = text;
+    expect(Symbol.SetterKeyword, null);
+
+    return s;
+  }
+
   private String argument() throws ParseError {
     SourceCoordinate coord = getCoordinate();
     String id = identifier();
@@ -941,45 +947,33 @@ public class Parser {
     comments();
     peekForNextSymbolFromLexer();
 
-    if (nextSym == Assign) {
-      return assignation(builder);
+    if (sym == Symbol.SetterKeyword) {
+      return setterSends(builder);
     } else {
       return evaluation(builder);
     }
   }
 
-  private ExpressionNode assignation(final MethodBuilder builder)
-      throws ProgramDefinitionError {
-    return assignments(builder);
-  }
-
-  protected ExpressionNode assignments(final MethodBuilder builder)
+  protected ExpressionNode setterSends(final MethodBuilder builder)
       throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
 
-    if (sym != Identifier) {
-      throw new ParseError("Assignments should always target variables or" +
-                           " fields, but found instead a %(found)s",
-                           Identifier, this);
+    if (sym != Symbol.SetterKeyword) {
+      throw new ParseError("Expected setter send, but found instead a %(found)s",
+          Symbol.SetterKeyword, this);
     }
-    SSymbol identifier = assignment();
+    SSymbol setter = symbolFor(setterKeyword());
 
     peekForNextSymbolFromLexer();
 
     ExpressionNode value;
-    if (nextSym == Assign) {
-      value = assignments(builder);
+    if (sym == Symbol.SetterKeyword) {
+      value = setterSends(builder);
     } else {
       value = evaluation(builder);
     }
 
-    return builder.getSetterSend(identifier, value, getSource(coord));
-  }
-
-  protected SSymbol assignment() throws ParseError {
-    SSymbol id = symbolFor(identifier());
-    expect(Assign, KeywordTag.class);
-    return id;
+    return builder.getSetterSend(setter, value, getSource(coord));
   }
 
   private ExpressionNode evaluation(final MethodBuilder builder)
