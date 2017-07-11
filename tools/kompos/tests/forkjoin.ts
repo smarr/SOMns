@@ -17,7 +17,7 @@ describe("Setting Fork/Join Breakpoints", () => {
     conn.fullyConnected.catch(reason => done(reason));
   };
 
-  const beforeBp = createSectionBreakpointData(FJ_URI, 9, 18, 83,
+  const beforeBp = createSectionBreakpointData(FJ_URI, 9, 17, 83,
     BreakpointType.ACTIVITY_CREATION, true);
 
   before("Start SOMns and Connect", () => {
@@ -55,7 +55,7 @@ describe("Setting Fork/Join Breakpoints", () => {
 
   it("should step into activity, and stop next line", () => {
     const main = { s: 6, n: "ForkJoin>>#cnt:", l: 13 };
-    const child = { s: 1, n: "ForkJoin>>#λcnt@9@25", l: 10 };
+    const child = { s: 1, n: "ForkJoin>>#λcnt@9@24", l: 10 };
 
     const handler = function(msg: StackTraceResponse) {
       if (msg.activityId === 0) {

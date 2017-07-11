@@ -13,7 +13,7 @@ describe("Actor Stepping", () => {
   const steppingTests = {
     "stepping to message receiver":
     [{
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 26, 20, 3, BT.MSG_SENDER, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 26, 19, 3, BT.MSG_SENDER, true),
       stopLine: 26,
       stopMethod: "Ping>>#ping",
       numOp: 4,
@@ -38,7 +38,7 @@ describe("Actor Stepping", () => {
 
     "stepping to promise resolution":
     [{
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 33, 20, 3, BT.MSG_SENDER, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 33, 19, 3, BT.MSG_SENDER, true),
       stopLine: 33,
       stopMethod: "Ping>>#validate:",
       numOp: 4,
@@ -56,14 +56,14 @@ describe("Actor Stepping", () => {
       test: "resume after step to promise resolution",
       type: ST.RESUME,
       length: 1,
-      methodName: "Ping>>#λvalidate@34@78:",
+      methodName: "Ping>>#λvalidate@34@77:",
       line: 34,
       stackIndex: 2
     }],
 
     "returning from turn to promise resolution":
     [{
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 33, 20, 3, BT.MSG_SENDER, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 33, 19, 3, BT.MSG_SENDER, true),
       stopLine: 33,
       stopMethod: "Ping>>#validate:",
       numOp: 4,
@@ -81,7 +81,7 @@ describe("Actor Stepping", () => {
       test: "resume after returning from turn",
       type: ST.RESUME,
       length: 1,
-      methodName: "Ping>>#λping@27@32:",
+      methodName: "Ping>>#λping@27@31:",
       line: 27,
       stackIndex: 2
     }],
@@ -113,7 +113,7 @@ describe("Actor Stepping", () => {
 
     "stepping to promise resolver":
     [{
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 26, 20, 3, BT.MSG_SENDER, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 26, 19, 3, BT.MSG_SENDER, true),
       stopLine: 26,
       stopMethod: "Ping>>#ping",
       numOp: 4,
@@ -197,7 +197,7 @@ describe("Actor Stepping", () => {
       test: "should resume after step to promise resolution",
       type: ST.RESUME,
       length: 1,
-      methodName: "Ping>>#λping@27@32:",
+      methodName: "Ping>>#λping@27@31:",
       line: 27,
       stackIndex: 3
     },
@@ -238,7 +238,7 @@ describe("Actor Stepping", () => {
       test: "resume after step to promise resolution",
       type: ST.RESUME,
       length: 1,
-      methodName: "Ping>>#λvalidate@34@78:",
+      methodName: "Ping>>#λvalidate@34@77:",
       line: 34,
       stackIndex: 3
     },
@@ -279,7 +279,7 @@ describe("Actor Stepping", () => {
       test: "resume after step to promise resolution",
       type: ST.RESUME,
       length: 1,
-      methodName: "Pong>>#λstop@78@28:",
+      methodName: "Pong>>#λstop@78@27:",
       line: 78,
       stackIndex: 3
     },

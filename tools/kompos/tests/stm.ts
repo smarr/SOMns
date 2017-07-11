@@ -18,9 +18,9 @@ describe("Setting STM Breakpoints", () => {
   };
 
   before("Start SOMns and Connect", () => {
-    const beforeBp = createSectionBreakpointData(STM_URI, 11, 8, 75,
+    const beforeBp = createSectionBreakpointData(STM_URI, 11, 8, 74,
       BreakpointType.ATOMIC_BEFORE, true);
-    const commitBp = createSectionBreakpointData(STM_URI, 11, 8, 75,
+    const commitBp = createSectionBreakpointData(STM_URI, 11, 8, 74,
       BreakpointType.ATOMIC_BEFORE_COMMIT, true);
     conn = new TestConnection(null, null, STM_FILE);
     ctrl = new HandleStoppedAndGetStackTrace(
