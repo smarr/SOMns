@@ -2,7 +2,7 @@ DirectAdd = Benchmark (
     | calc |
     
     initialize = (
-        calc := Calculator new.
+        calc:: Calculator new.
     )
 
     benchmark = (

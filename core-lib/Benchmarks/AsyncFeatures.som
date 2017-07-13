@@ -10,7 +10,7 @@ class AsyncFeatures usingPlatform: platform andHarness: harness = (
   |
   )(
     public count = (
-      cnt := cnt + 1.
+      cnt:: cnt + 1.
       cnt = iterations
         ifTrue:  [ completionPP resolve: cnt ]
         ifFalse: [ self <-: count. self ]
@@ -34,7 +34,7 @@ class AsyncFeatures usingPlatform: platform andHarness: harness = (
     private cnt ::= 0. |
   )(
     public count = (
-      cnt := cnt + 1.
+      cnt:: cnt + 1.
       cnt = iterations
         ifTrue:  [ completionRes resolve: cnt ]
         ifFalse: [ self <-: count. self ]
@@ -62,7 +62,7 @@ class AsyncFeatures usingPlatform: platform andHarness: harness = (
   )(
     public benchmark = (
       | completionPP |
-      completionPP := actors createPromisePair.
+      completionPP:: actors createPromisePair.
       (E new: iterations resolver: completionPP resolver) <-: count.
       ^ completionPP promise
     )
@@ -82,7 +82,7 @@ class AsyncFeatures usingPlatform: platform andHarness: harness = (
   |
   )(
     public rcv: a1 a2: a2 = (
-      cnt := cnt + 1.
+      cnt:: cnt + 1.
       cnt = iterations
         ifTrue:  [ completionPP resolve: cnt ]
         ifFalse: [ self <-: rcv: a1 a2: a2. self ]
@@ -108,7 +108,7 @@ class AsyncFeatures usingPlatform: platform andHarness: harness = (
   |
   )(
     public rcv: a1 a2: a2 a3: a3 a4: a4 a5: a5 = (
-      cnt := cnt + 1.
+      cnt:: cnt + 1.
       cnt = iterations
         ifTrue:  [ completionPP resolve: cnt ]
         ifFalse: [ self <-: rcv: a1 a2: a2 a3: obj a4: a4 a5: a5. self ]
@@ -134,7 +134,7 @@ class AsyncFeatures usingPlatform: platform andHarness: harness = (
   |
   )(
     public rcv: a1 a2: a2 a3: a3 a4: a4 a5: a5 a6: a6 a7: a7 a8: a8 a9: a9 a0: a0 = (
-      cnt := cnt + 1.
+      cnt:: cnt + 1.
       cnt = iterations
         ifTrue:  [ completionPP resolve: cnt ]
         ifFalse: [ self <-: rcv: a1 a2: a2 a3: obj
@@ -161,14 +161,14 @@ class AsyncFeatures usingPlatform: platform andHarness: harness = (
     public getSelf = ( ^ self )
 
     public count = (
-      cnt := cnt + 1.
+      cnt:: cnt + 1.
       cnt = iterations ifTrue: [
         completionPP resolve: cnt ]
     )
 
     public benchmark = (
       | prom |
-      prom := self <-: getSelf.
+      prom:: self <-: getSelf.
       1 to: iterations do: [:i |
         prom <-: count ].
       ^ completionPP promise
@@ -191,9 +191,9 @@ class AsyncFeatures usingPlatform: platform andHarness: harness = (
     
     public count = (
       | p |
-      p := self <-: getSelf.
+      p:: self <-: getSelf.
       p whenResolved: [:s |
-        cnt := cnt + 1.
+        cnt:: cnt + 1.
         cnt = iterations
           ifTrue:  [ completionPP resolve: cnt ]
           ifFalse: [ self count ]
@@ -221,14 +221,14 @@ class AsyncFeatures usingPlatform: platform andHarness: harness = (
     public getSelf = ( ^ self )
 
     public count = (
-      cnt := cnt + 1.
+      cnt:: cnt + 1.
       cnt = iterations ifTrue: [
         completionPP resolve: cnt ]
     )
 
     public benchmark = (
       | prom |
-      prom := self <-: getSelf.
+      prom:: self <-: getSelf.
       1 to: iterations do: [:i |
         prom whenResolved: [:s | self count ] ].
       ^ completionPP promise
@@ -255,11 +255,11 @@ class AsyncFeatures usingPlatform: platform andHarness: harness = (
   )(
     public calculate: a and: b = (
       | r |
-      r := a * b + b + b - a.
-      r := r * r.
-      r := r - (a * a * b).
+      r:: a * b + b + b - a.
+      r:: r * r.
+      r:: r - (a * a * b).
 
-      cnt := cnt + 1.
+      cnt:: cnt + 1.
       cnt = iterations
         ifTrue:  [ completionPP resolve: cnt ].
       

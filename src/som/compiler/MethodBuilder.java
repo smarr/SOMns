@@ -52,6 +52,7 @@ import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.OuterObjectReadNodeGen;
 import som.interpreter.nodes.ReturnNonLocalNode;
+import som.vm.Symbols;
 import som.vm.constants.Nil;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SInitializer;
@@ -468,10 +469,13 @@ public final class MethodBuilder {
     }
   }
 
-  public ExpressionNode getSetterSend(final SSymbol identifier,
+  public ExpressionNode getSetterSend(final SSymbol setter,
       final ExpressionNode exp, final SourceSection source) throws MethodDefinitionError {
     // write directly to local variables (excluding arguments)
-    String varName = identifier.getString();
+    String setterSend = setter.getString();
+    String setterName = setterSend.substring(0, setterSend.length() - 1);
+    String varName    = setterName.substring(0, setterName.length() - 1);
+
     if (hasArgument(varName)) {
       throw new MethodDefinitionError("Can't assign to argument: " + varName, source);
     }
@@ -482,7 +486,7 @@ public final class MethodBuilder {
 
     // otherwise, it is a setter send.
     return SNodeFactory.createImplicitReceiverSend(
-        MixinBuilder.getSetterName(identifier),
+        Symbols.symbolFor(setterName),
         new ExpressionNode[] {getSelfRead(source), exp},
         getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(),
         source, language.getVM());

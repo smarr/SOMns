@@ -33,7 +33,7 @@ class FannkuchSuite usingPlatform: platform andHarness: harness = (
   class FannkuchBenchmark = Benchmark ()(
     public innerBenchmarkLoop: innerIterations numThreads: threads = (
       | result |
-      result := (Fannkuch new: innerIterations) maxPfannkuchen.
+      result:: (Fannkuch new: innerIterations) maxPfannkuchen.
       ^ result = (expectedResults at: innerIterations)
     )
   )
@@ -46,14 +46,14 @@ class FannkuchSuite usingPlatform: platform andHarness: harness = (
   )(
     pfannkuchen: anArray = (
       | first complement a b k |
-      k := 0.
-      [ (first := anArray at: 1) = 1 ] whileFalse: [
-        k := k + 1.
-        complement := first + 1.
+      k:: 0.
+      [ (first:: anArray at: 1) = 1 ] whileFalse: [
+        k:: k + 1.
+        complement:: first + 1.
 
         1 to: first / 2 do: [ :i |
-          a := anArray at: i.
-          b := anArray at: complement - i.
+          a:: anArray at: i.
+          b:: anArray at: complement - i.
           anArray at: i put: b.
           anArray at: complement - i put: a.
         ]
@@ -66,12 +66,12 @@ class FannkuchSuite usingPlatform: platform andHarness: harness = (
       (* Generate the next permutation. *)
       2 to: perm size do: [ :r |
         (* Rotate the first r items to the left. *)
-        temp := perm at: 1.
+        temp:: perm at: 1.
         1 to: r - 1 do: [ :i | perm at: i put: (perm at: i + 1) ].
         perm at: r put: temp.
 
         timesRotated at: r put: ((timesRotated at: r) + 1) % r.
-        remainder := timesRotated at: r.
+        remainder:: timesRotated at: r.
         remainder = 0 ifFalse: [ ^ self ].
 
         (* After r rotations, the first r items are in their original positions.
@@ -79,21 +79,21 @@ class FannkuchSuite usingPlatform: platform andHarness: harness = (
       ].
 
       (* We are past the final permutation. *)
-      atEnd := true.
+      atEnd:: true.
     )
 
     public maxPfannkuchen = (
       | max permutation |
-      max := 0.
+      max:: 0.
       [atEnd] whileFalse: [
-        permutation := self next.
-        max := max max: (self pfannkuchen: permutation)].
+        permutation:: self next.
+        max:: max max: (self pfannkuchen: permutation)].
       ^ max
     )
 
     next = (
       | result |
-      result := perm copy.
+      result:: perm copy.
       self makeNext.
       ^ result
     )
@@ -101,7 +101,7 @@ class FannkuchSuite usingPlatform: platform andHarness: harness = (
   
   private createExpectedResults = (
     | results |
-    results := Array new: 12.
+    results:: Array new: 12.
     results at:  1 put:  0.
     results at:  2 put:  1.
     results at:  3 put:  2.

@@ -2,7 +2,7 @@ CalculatorDelegate = (
     | target |
     
     initializeWith: aCalculator = (
-        target := aCalculator
+        target:: aCalculator
     )
     
     inc: aSymbol = (
@@ -13,7 +13,7 @@ CalculatorDelegate = (
     
     new: a = (
         | calc |
-        calc := self new.
+        calc:: self new.
         calc initializeWith: a.
         ^ calc
     )

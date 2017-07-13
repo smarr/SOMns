@@ -25,7 +25,7 @@ class Arrays = ()() : (
 
   public testEmptyToInts = (
     | arr |
-    arr := kernel Array new: 5.
+    arr:: kernel Array new: 5.
     (arr at: 1) ifNotNil: [self error: 'should be initialized to nil'].
     
     1 to: 5 do: [:i |
@@ -40,14 +40,14 @@ class Arrays = ()() : (
   
   public testPutAllInt = (
     | arr |
-    arr := kernel Array new: 5.
+    arr:: kernel Array new: 5.
     arr putAll: 5.
     ^ arr at: 3
   )
 
   public testPutAllNil = (
     | arr |
-    arr := kernel Array new: 5.
+    arr:: kernel Array new: 5.
     (arr at: 4) ifNotNil: [self error: 'should be initialized to nil'].
     
     arr putAll: 5.
@@ -60,9 +60,9 @@ class Arrays = ()() : (
   
   public testPutAllBlock = (
     | arr b cnt |
-    cnt := 0.
-    b := [cnt := cnt + 1. cnt].
-    arr := kernel Array new: 5.
+    cnt:: 0.
+    b:: [cnt:: cnt + 1. cnt].
+    arr:: kernel Array new: 5.
     arr putAll: b.
     
     1 to: 5 do: [:i|
@@ -74,7 +74,7 @@ class Arrays = ()() : (
   
   public testNewWithAll = (
     | arr |
-    arr := kernel Array new: 5 withAll: [1].
+    arr:: kernel Array new: 5 withAll: [1].
     1 to: 5 do: [:i | (arr at: i) = 1 ifFalse: [self error: 'wrong result']].
     ^ arr at: 3
   )

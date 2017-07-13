@@ -5,7 +5,7 @@ class BlockInlining2 = () (
         false whileFalse: [
           | resrv |
           critical: [
-            resrv := arg.
+            resrv:: arg.
             ^ resrv ] ] ].
     )
 

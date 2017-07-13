@@ -43,8 +43,8 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public testWithoutInitSend = (
       | sample p |
-      sample := MAWithoutAnInitSend new.
-      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      sample:: MAWithoutAnInitSend new.
+      p:: sample ColoredPoint x: 3 y: 4 color: 'red'.
       assert: p x is: nil.
       assert: p y is: nil.
       assert: p color equals: 'red'.
@@ -56,8 +56,8 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public testWithUnaryInitSend = (
       | sample p |
-      sample := MAWithUnaryInitSend new.
-      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      sample:: MAWithUnaryInitSend new.
+      p:: sample ColoredPoint x: 3 y: 4 color: 'red'.
       assert: p x is: nil.
       assert: p y is: nil.
       assert: p color equals: 'red'.
@@ -69,8 +69,8 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public testWithKeywordInitSend = (
       | sample p |
-      sample := MAWithKeywordInitSend new.
-      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      sample:: MAWithKeywordInitSend new.
+      p:: sample ColoredPoint x: 3 y: 4 color: 'red'.
       assert: p x      equals: 3.
       assert: p y      equals: 4.
       assert: p color  equals: 'red'.
@@ -78,8 +78,8 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public testWithoutSendAtSecondApplication = (
       | sample p |
-      sample := MAWithoutInitSendAtSecondApplication new.
-      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      sample:: MAWithoutInitSendAtSecondApplication new.
+      p:: sample ColoredPoint x: 3 y: 4 color: 'red'.
       assert: p x equals: 3.
       assert: p y equals: 4.
       assert: p color is: nil.
@@ -89,8 +89,8 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public testUnarySendAtSecondApplication = (
       | sample p |
-      sample := MAUnarySendAtSecondApplication new.
-      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      sample:: MAUnarySendAtSecondApplication new.
+      p:: sample ColoredPoint x: 3 y: 4 color: 'red'.
       assert: p x equals: 3.
       assert: p y equals: 4.
       assert: p color is: nil.
@@ -100,8 +100,8 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public testMixinWithBody = (
       | sample m |
-      sample := MAWithClassBody new.
-      m := sample M new.
+      sample:: MAWithClassBody new.
+      m:: sample M new.
       assert: m x is: nil.
       assert: m y is: nil.
       assert: m z is: nil.
@@ -175,7 +175,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
                                                        <: Depth z: z
                                                        <: Colored
       (| public origin = 0. |
-        color := c.
+        color:: c.
       )(
         public sum = ( ^ x + y + z + origin )
       )
@@ -183,8 +183,8 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public testAccessSuperSlots = (
       | sample p |
-      sample := AccessSuperSlots new.
-      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      sample:: AccessSuperSlots new.
+      p:: sample ColoredPoint x: 3 y: 4 color: 'red'.
       assert: p x equals: 3.
       assert: p y equals: 4.
       assert: p z equals: 0.
@@ -194,8 +194,8 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public testNonConflictingMixins = (
       | sample p |
-      sample := NonConflicting new.
-      p := sample ColoredPoint x: 3 y: 4 color: 'red'.
+      sample:: NonConflicting new.
+      p:: sample ColoredPoint x: 3 y: 4 color: 'red'.
       assert: p x equals: 3.
       assert: p y equals: 4.
       assert: p a equals: 3.
@@ -205,8 +205,8 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public testNonConflictingMixinsWithBody = (
       | sample p |
-      sample := NonConflicting new.
-      p := sample ColoredPointZ x: 3 y: 4 z: 5 color: 'red'.
+      sample:: NonConflicting new.
+      p:: sample ColoredPointZ x: 3 y: 4 z: 5 color: 'red'.
       assert: p x equals: 3.
       assert: p y equals: 4.
       assert: p z equals: 5.
@@ -217,8 +217,8 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public testInitSetters = (
       | sample p |
-      sample := InitSetters new.
-      p := sample ColoredPoint x: 3 y: 4 z: 5 color: 'red'.
+      sample:: InitSetters new.
+      p:: sample ColoredPoint x: 3 y: 4 z: 5 color: 'red'.
       assert: p x equals: 3.
       assert: p y equals: 4.
       assert: p z equals: 5.
@@ -229,8 +229,8 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public testInitSetterForMixin = (
       | sample p |
-      sample := InitSetterForMixin new.
-      p := sample ColoredPoint x: 3 y: 4 z: 5 color: 'red'.
+      sample:: InitSetterForMixin new.
+      p:: sample ColoredPoint x: 3 y: 4 z: 5 color: 'red'.
       assert: p x equals: 3.
       assert: p y equals: 4.
       assert: p z equals: 5.
@@ -241,8 +241,8 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public testInitSetterForMixin2 = (
       | sample p |
-      sample := InitSetterForMixin2 new.
-      p := sample ColoredPoint x: 3 y: 4 z: 5 color: 'red'.
+      sample:: InitSetterForMixin2 new.
+      p:: sample ColoredPoint x: 3 y: 4 z: 5 color: 'red'.
       assert: p x equals: 3.
       assert: p y equals: 4.
       assert: p z equals: 5.
@@ -270,7 +270,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public testPrimaryRenamed = (
       | s m |
-      s := PrimaryRenamed new.
+      s:: PrimaryRenamed new.
       should: [s M new]
       signal: MessageNotUnderstood
       description: 'The primary factory method has to be used directly and explicitly currently.'
@@ -278,7 +278,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public testUseOfFactoryMethod = (
       | s m |
-      s := UseFactoryMethod new.
+      s:: UseFactoryMethod new.
       should: [s M new]
       signal: MessageNotUnderstood
       description: 'The use of an arbitrary factory method is not supported. SOMns currently only supports the use of the primary factory method.'
@@ -286,10 +286,10 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
   ) : ( TEST_CONTEXT = () )
 
   public class ConflictHandling = TestContext ()(
-    class X  = (| public x |)( public setX: val = ( x := val. ) )
+    class X  = (| public x |)( public setX: val = ( x:: val. ) )
     class X2 = (| public x |)()
-    class Y  = (| public y |)( public foo = ( y := 4. ))
-    class Y2 = (| public y |)( public foo = ( y := 8. ))
+    class Y  = (| public y |)( public foo = ( y:: 4. ))
+    class Y2 = (| public y |)( public foo = ( y:: 8. ))
 
     class ConflictingSlots = Object <: X <: X2 ()()
 
@@ -304,13 +304,13 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
     )
 
     class Initializer2 = ()(
-      class X  = (| public x | x := 5. )()
-      class X2 = (| public x | x := 6. )()
+      class X  = (| public x | x:: 5. )()
+      class X2 = (| public x | x:: 6. )()
       public class C = Object <: X <: X2.
     )
 
     class Initializer3 = ()(
-      class X  = (| public c ::= 0. public x ::= cnt. |)( private cnt = ( c := c + 1. ^ c ) )
+      class X  = (| public c ::= 0. public x ::= cnt. |)( private cnt = ( c:: c + 1. ^ c ) )
       class X2 = (| public x ::= cnt. |)()
       public class C = Object <: X <: X2.
     )
@@ -323,7 +323,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public testConflictingSlots = (
       | c |
-      c := ConflictingSlots new.
+      c:: ConflictingSlots new.
       assert: c x is: nil.
       c x: 4.
       assert: c x equals: 4.
@@ -348,7 +348,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
              assertion failing on looking up a write location...*)
     public DEACTIVATEDtestConflictingSlotsImmutable = (
       | c |
-      c := ConflictingSlotsImmutable new.
+      c:: ConflictingSlotsImmutable new.
       assert: c x is: nil.
 
       c x: 4.  (* this should give a DNU *)
@@ -360,7 +360,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public DEACTIVATEDtestConflictingMethods = (
       | c |
-      c := ConflictingMethods new.
+      c:: ConflictingMethods new.
       assert: c y is: nil.
       c foo.
       assert: c y equals: 8.
@@ -368,29 +368,29 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
     public DEACTIVATEDtestInitializer1 = (
       | i c |
-      i := Initializer1 new.
-      c := i C new.
+      i:: Initializer1 new.
+      c:: i C new.
       assert: c x equals: 4.
     )
 
     public DEACTIVATEDtestInitializer2 = (
       | i c |
-      i := Initializer2 new.
-      c := i C new.
+      i:: Initializer2 new.
+      c:: i C new.
       assert: c x equals: 6.
     )
 
     public DEACTIVATEDtestInitializer3 = (
       | i c |
-      i := Initializer3 new.
-      c := i C new.
+      i:: Initializer3 new.
+      c:: i C new.
       assert: c c equals: 2.
     )
 
     public testMixinsAreNotTraits = (
       | m x |
-      m := MixinsAreNotTraits new.
-      x := m XXX new.
+      m:: MixinsAreNotTraits new.
+      x:: m XXX new.
 
       should: [ x x ] signal: MessageNotUnderstood description: '#x is only defined in X not in XX, which is mixed into XXX.'
     )

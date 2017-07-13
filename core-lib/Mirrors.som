@@ -36,19 +36,19 @@ class Mirrors usingVmMirror: vmMirror = Value (
 
     public classDefinition = (
       | classDefHandle |
-      classDefHandle := vmMirror classDefinition: classObject.
+      classDefHandle:: vmMirror classDefinition: classObject.
       ^ ClassDefinitionMirror on: classDefHandle
     )
 
     public methods = (
       | methods |
-      methods := vmMirror objMethods: obj.
+      methods:: vmMirror objMethods: obj.
       ^ methods collect: [:m | MethodMirror reflecting: m ]
     )
 
     public nestedClasses = (
       | classes |
-      classes := vmMirror objNestedClasses: obj.
+      classes:: vmMirror objNestedClasses: obj.
       ^ classes collect: [:c | ClassMirror reflecting: c ]
     )
 
@@ -73,7 +73,7 @@ class Mirrors usingVmMirror: vmMirror = Value (
     public name = ( ^ vmMirror classDefName: classDefHandle )
     public methods = (
       | methods |
-      methods := vmMirror classDefMethods: classDefHandle.
+      methods:: vmMirror classDefMethods: classDefHandle.
       ^ methods collect: [:m | MethodMirror reflecting: m ]
     )
 
@@ -81,7 +81,7 @@ class Mirrors usingVmMirror: vmMirror = Value (
 
     public nestedClassDefinitions = (
       | classes |
-      classes := vmMirror classDefNestedClassDefinitions: classDefHandle.
+      classes:: vmMirror classDefNestedClassDefinitions: classDefHandle.
       ^ classes collect: [:c | ClassDefinitionMirror on: c ]
     )
 
@@ -108,15 +108,15 @@ class Mirrors usingVmMirror: vmMirror = Value (
 
     public respondsTo: selector = (
       | cls |
-      cls := self classMirror.
+      cls:: self classMirror.
       (cls hasMethod: selector)
         ifTrue:  [ ^ true ]
         ifFalse: [ | superCls |
-          superCls := cls superclass.
+          superCls:: cls superclass.
           [ superCls isNil ] whileFalse: [
             (superCls hasMethod: selector)
               ifTrue:  [ ^ true ]
-              ifFalse: [ superCls := superCls superclass ] ].
+              ifFalse: [ superCls:: superCls superclass ] ].
           ^ false ]
     )
 

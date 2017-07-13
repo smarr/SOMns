@@ -42,8 +42,6 @@ the specifications are as follows:
  - the file syntax is adapted to be more practical. This includes that
    category names are optional instead of being mandatory.
 
- - setter send syntax is still based on the classic Smalltalk `:=`
-
  - local variables in methods do not yet support the full slotDeclartion style
 
  - as in SOM method chains are not supported

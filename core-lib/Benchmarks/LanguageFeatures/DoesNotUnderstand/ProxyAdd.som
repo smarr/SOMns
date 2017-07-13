@@ -2,8 +2,8 @@ ProxyAdd = Benchmark (
     | proxy calc |
     
     initialize = (
-        calc := Calculator new.
-        proxy := Proxy new: calc
+        calc:: Calculator new.
+        proxy:: Proxy new: calc
     )
 
     benchmark = (

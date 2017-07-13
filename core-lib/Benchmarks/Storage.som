@@ -29,8 +29,8 @@ class StorageSuite usingPlatform: platform andHarness: harness = (
   ) (
     benchmark = (
       | random |
-      random := Random new.
-      count := 0.
+      random:: Random new.
+      count:: 0.
       self buildTreeDepth: 7 with: random.
       ^ count
     )
@@ -40,7 +40,7 @@ class StorageSuite usingPlatform: platform andHarness: harness = (
     )
     
     buildTreeDepth: depth with: random = (
-      count := count + 1.
+      count:: count + 1.
       ^(depth = 1) 
           ifTrue:  [ Array new: random next % 10 + 1 ]
           ifFalse: [

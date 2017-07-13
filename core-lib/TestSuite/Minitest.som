@@ -378,11 +378,11 @@ OTHER DEALINGS IN THE SOFTWARE. *)
          in test context instance cleanup are ok. *)
       testContextInstance isNil ifFalse:
         [testContextInstance cleanUp.
-        testContextInstance := nil]
+        testContextInstance:: nil]
     )
 
     instantiateTestContextUsing: tester = (
-      testContextInstance := environment createInstanceIn: (tester instanceFor: environment parent)
+      testContextInstance:: environment createInstanceIn: (tester instanceFor: environment parent)
     )
 
     sendTestMessage = (
@@ -394,7 +394,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       instantiateTestContextUsing: tester.
       [sendTestMessage.
       (* At this point the test has been successful, so create the TestSuccess before it is removed. *)
-      testSuccess := testContextInstance createSuccessResultFor: self.
+      testSuccess:: testContextInstance createSuccessResultFor: self.
       (* Clean up immediately after a successful test. This makes the test context instance
       immediately garbage-collectable, which is an important property for large test suites. *)
       cleanUp]
@@ -425,20 +425,20 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     public runUsing: tester = (
       | promisePair |
       instantiateTestContextUsing: tester.
-      promisePair := actors createPromisePair.
+      promisePair:: actors createPromisePair.
       [[| promise testSuccess |
-          promise := sendTestMessage.
+          promise:: sendTestMessage.
           promise
             whenResolved: [:r |
               (* At this point the test has been successful, so create the TestSuccess before it is removed. *)
-              testSuccess := testContextInstance createSuccessResultFor: self.
+              testSuccess:: testContextInstance createSuccessResultFor: self.
               (* Clean up immediately after a successful test. This makes the test context instance
               immediately garbage-collectable, which is an important property for large test suites. *)
               cleanUp.
               promisePair resolve: testSuccess ]
             onError: [:e |
               | exClass |
-              exClass := (ClassMirror reflecting: e) classObject.
+              exClass:: (ClassMirror reflecting: e) classObject.
               exClass == TestFailureException ifTrue: [
                 promisePair resolve: (testContextInstance
                   ifNil:    [ TestFailure case: self description: ex messageText]
@@ -493,8 +493,8 @@ OTHER DEALINGS IN THE SOFTWARE. *)
         (* Populate the testsByContextName dictionary of the enclosing
            TestCatalog instance with information extracted from the module. *)
         | moduleMirror moduleEnvironment |
-        moduleEnvironment := TopLevelTestEnvironment module: testModule.
-        moduleMirror := (ObjectMirror reflecting: testModule) classMirror.
+        moduleEnvironment:: TopLevelTestEnvironment module: testModule.
+        moduleMirror:: (ObjectMirror reflecting: testModule) classMirror.
 
         testClass
           ifNil:    [populateWithAllIn: moduleEnvironment using: moduleMirror]
@@ -522,7 +522,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
         (* Examine the given class. If it is a test context, create a test suite
            listing its test cases and add it to the catalog. *)
         | thisEnvironment |
-        thisEnvironment := TestEnvironment parent: parentEnvironment classDeclarationMirror: mirror.
+        thisEnvironment:: TestEnvironment parent: parentEnvironment classDeclarationMirror: mirror.
 
         (isTestContext: mirror) ifTrue: [
           thisEnvironment testCases: (testCasesIn: mirror environment: thisEnvironment).
@@ -559,9 +559,9 @@ OTHER DEALINGS IN THE SOFTWARE. *)
 
       private isTestMethod: methodMirror = (
         | selector isTest |
-        selector := methodMirror name.
+        selector:: methodMirror name.
 
-        isTest := (selector beginsWith: 'test') and: [(selector includes: ':') not].
+        isTest:: (selector beginsWith: 'test') and: [(selector includes: ':') not].
         testCaseSelector ifNil: [ ^ isTest ].
         ^ (isTest and: [selector = testCaseSelector])
       )
@@ -569,7 +569,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       private testCasesIn: classMirror environment: environment = (
         (* Return a collection of TestCases describing test methods in the given class. *)
         | testCases |
-        testCases := Vector new.
+        testCases:: Vector new.
         classMirror methods do:
           [:each |
           (isTestMethod: each) ifTrue:
@@ -584,7 +584,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       (* Returns a test suite containing all test cases defined in all test
          context classes of the catalogued module. *)
       | allTestCases |
-      allTestCases := Vector new: testsByContextName size + 1 * 20.
+      allTestCases:: Vector new: testsByContextName size + 1 * 20.
       testsByContextName do: [:each | allTestCases appendAll: each testCases].
       ^TestSuite testCases: allTestCases
     )
@@ -774,11 +774,11 @@ OTHER DEALINGS IN THE SOFTWARE. *)
 
     assert: promise erroredWith: expectedErrorClass = (
 (*      | state actualResolution |
-      state := #unresolved.
+      state:: #unresolved.
 
       (withTimeout: promise inMSecs: 300)
-        whenResolved: [:r | state := #resolved. actualResolution := r ]
-        onError:      [:e | state := #error.    actualResolution := e ].
+        whenResolved: [:r | state:: #resolved. actualResolution:: r ]
+        onError:      [:e | state:: #error.    actualResolution:: e ].
 
       state = #resolved
         ifTrue: [ ^ failWithMessage: 'Promise resolved with: ', actualResolution printString ].
@@ -967,7 +967,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     modules = (
       (* Returns a collection of test module instances that contain test cases of the suite. *)
       | result |
-      result := IdentitySet new.
+      result:: IdentitySet new.
       testCases do: [:each | result add: each module].
       ^result
     )
@@ -1021,7 +1021,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
         instancesByEnvironment do:
           [:each |
           (understandsCleanUp: each) ifTrue: [each cleanUp]].
-        instancesByEnvironment := IdentityDictionary new.
+        instancesByEnvironment:: IdentityDictionary new.
       )
 
       public createCoreInstances = (
@@ -1047,7 +1047,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
         environment isRoot ifTrue: [^environment moduleInstance].
         ^instancesByEnvironment at: environment ifAbsent:
           [| instance |
-          instance := environment createInstanceIn: (ensureInstanceFor: environment parent).
+          instance:: environment createInstanceIn: (ensureInstanceFor: environment parent).
           instancesByEnvironment at: environment put: instance.
           instance]
       )
@@ -1058,7 +1058,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       the class tree and its fringe. They have to be instantiated once before running
       the suite and cleaned up after. *)
         | result |
-        result := IdentitySet new.
+        result:: IdentitySet new.
         testSuite testCases do:
           [:each |
           each environment parentEnvironmentsDo:
@@ -1069,7 +1069,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
 
       coreEnvironmentsFor: testCase = (
         | result |
-        result := Vector new.
+        result:: Vector new.
         testCase environment parentEnvironmentsDo:
           [:each |
           each isRoot ifFalse: [result add: each]].
@@ -1079,7 +1079,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       understandsCleanUp: object = (
         (* Answer true if the object understands the #cleanUp message. *)
         | mirror |
-        mirror := (ObjectMirror reflecting: object) classMirror.
+        mirror:: (ObjectMirror reflecting: object) classMirror.
         ^mirror canUnderstand: #cleanUp
       )
     )
@@ -1115,7 +1115,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       (* Return a number between 0 and 1 indicating the ratio of tests in the
          suite completed so far. *)
       | testCount |
-      testCount := testSuite size.
+      testCount:: testSuite size.
       ^testCount = 0
         ifTrue: [1.0]
         ifFalse: [testsPerformed asFloat / testCount]
@@ -1125,10 +1125,10 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       (* This message must be sent to the tester once prior to running any
          tests. At this stage the tester instantiates shared state classes of
          the test module, which may potentially cause errors to be signaled. *)
-      errors    := Vector new.
-      failures  := Vector new.
-      successes := Vector new.
-      testsPerformed := 0.
+      errors::    Vector new.
+      failures::  Vector new.
+      successes:: Vector new.
+      testsPerformed:: 0.
       instanceManager createCoreInstances.
     )
 
@@ -1139,7 +1139,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
 
     public runAllAsynchronous = (
       | asyncCases |
-      asyncCases := testSuite testCases select: [:c | c isAsync ].
+      asyncCases:: testSuite testCases select: [:c | c isAsync ].
 
       ^ actors async: asyncCases do: [:case |
           executeAsynchronous: case ]
@@ -1155,8 +1155,8 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       (* Execute one test case, add the result to the appropriate collection and
          return it. *)
       | result |
-      result := case runUsing: self.
-      testsPerformed := testsPerformed + 1.
+      result:: case runUsing: self.
+      testsPerformed:: testsPerformed + 1.
       result isError   ifTrue: [errors    append: result].
       result isFailure ifTrue: [failures  append: result].
       result isSuccess ifTrue: [successes append: result].
@@ -1167,9 +1167,9 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       (* Execute one test case, add the result to the appropriate collection and
          return it. *)
       | result |
-      result := case runUsing: self.
+      result:: case runUsing: self.
       ^ result whenResolved: [:r |
-        testsPerformed := testsPerformed + 1.
+        testsPerformed:: testsPerformed + 1.
         r isError   ifTrue: [errors    append: r].
         r isFailure ifTrue: [failures  append: r].
         r isSuccess ifTrue: [successes append: r].
@@ -1213,8 +1213,8 @@ OTHER DEALINGS IN THE SOFTWARE. *)
       | suite |
       (* Creating a new OrderedCollection is a hack that allows us to use
          #readStream in case testCases is translated to a Javascript Array *)
-      suite := TestSuite testCases: OrderedCollection new.
-      catalogs do: [:each | suite := suite ++ each allTests].
+      suite:: TestSuite testCases: OrderedCollection new.
+      catalogs do: [:each | suite:: suite ++ each allTests].
       ^self testSuite: suite
     )
 
@@ -1224,7 +1224,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
 
     public testCase: testCase = (
       | suite |
-      suite := TestSuite testCases: (Array with: testCase).
+      suite:: TestSuite testCases: (Array with: testCase).
       ^ testSuite: suite
     )
   )

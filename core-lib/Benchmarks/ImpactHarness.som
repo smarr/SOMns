@@ -33,14 +33,14 @@ class ImpactHarness usingPlatform: platform = Value (
 
     (* Needs to return a promise. *)
     public benchmark: abortP  = ( self subclassResponsibility )
-    
+
     (* Needs to return a boolean *)
     public verifyResult: result = ( self subclassResponsibility )
 
     assert: expected equals: value = (
       expected = value ifFalse: [
-        self error: 'Expected value (' + expected asString + 
-                    ') differs from actual (' + value asString + 
+        self error: 'Expected value (' + expected asString +
+                    ') differs from actual (' + value asString +
                     ') benchmark result.'
       ].
       ^ true
@@ -61,7 +61,7 @@ class ImpactHarness usingPlatform: platform = Value (
       public timeout         ::= 0.
     |
   )(
-    
+
     public runBenchmark = (
       | result |
 
@@ -70,64 +70,64 @@ class ImpactHarness usingPlatform: platform = Value (
       ^ self doWarmup whenResolved: [:r |
           self doRuns whenResolved: [:result |
             self reportBenchmark: result.
-            total := total + result.
+            total:: total + result.
             '' println ] ]
     )
-    
+
     doWarmup = (
       | numIterationsTmp printAllTmp maxRuntimeTmp |
       warmUp = 0 ifTrue: [
         | pp |
-        pp := actors createPromisePair.
+        pp:: actors createPromisePair.
         pp resolve: self.
         '' println.
         ^ pp promise ].
 
-      numIterationsTmp := numIterations.
-      printAllTmp      := printAll.
-      maxRuntimeTmp    := maxRuntime.
+      numIterationsTmp:: numIterations.
+      printAllTmp::      printAll.
+      maxRuntimeTmp::    maxRuntime.
 
-      numIterations := warmUp.
-      printAll      := false.
-      maxRuntime    := nil.
+      numIterations:: warmUp.
+      printAll::      false.
+      maxRuntime::    nil.
 
       ' warmup ...' print.
       ^ self doRuns whenResolved: [:r |
-        numIterations := numIterationsTmp.
-        printAll      := printAllTmp.
-        maxRuntime    := maxRuntimeTmp.
+        numIterations:: numIterationsTmp.
+        printAll::      printAllTmp.
+        maxRuntime::    maxRuntimeTmp.
 
         ' completed.' println
       ]
     )
-    
+
     doRuns = (
       | total outerLoopP resultPP |
-      total := 0.
-      resultPP := actors createPromisePair.
-      numFailed := 0.
-      outerLoopP := actors async: 1 to: numIterations do: [:i |
+      total:: 0.
+      resultPP:: actors createPromisePair.
+      numFailed:: 0.
+      outerLoopP:: actors async: 1 to: numIterations do: [:i |
         | startTime endTime runTime bench pp|
-        bench := benchmarkSuite newInstance: problemSize.
-        startTime := system ticks.
-        pp := actors createPromisePair.
+        bench:: benchmarkSuite newInstance: problemSize.
+        startTime:: system ticks.
+        pp:: actors createPromisePair.
 
         timeout > 0 ifTrue: [
           actors after: timeout do: [ :r |
             pp resolve: 1.
         ] ].
-        
+
         (bench benchmark: pp promise) whenResolved: [:benchResult |
-          | success | 
-          success := (bench verifyResult: benchResult).
-          success ifFalse: [ numFailed := numFailed + 1 ].
-            endTime := system ticks.
-  
-            runTime := endTime - startTime.
+          | success |
+          success:: (bench verifyResult: benchResult).
+          success ifFalse: [ numFailed:: numFailed + 1 ].
+            endTime:: system ticks.
+
+            runTime:: endTime - startTime.
             printAll ifTrue: [ self printRun: runTime success: success].
-  
-            total := total + runTime.
-  
+
+            total:: total + runTime.
+
             maxRuntime ifNotNil: [
               total > maxRuntime ifTrue: [
                 resultPP resolve: total ] ] ].
@@ -139,28 +139,28 @@ class ImpactHarness usingPlatform: platform = Value (
 
       ^ resultPP promise
     )
-    
+
     reportBenchmark: result = (
       | out |
-      out :=  name.
-      out := out + ': iterations='.
-      out := out + numIterations.
-      out := out + ' average: '.
-      out := out + (result / numIterations * numThreads).
-      out := out + 'us'.
-      out := out + ' total: '.
-      out := out + result.
-      out := out + 'us'.
-      out := out + ' success: '.
-      out := out + ((1 - (numFailed//numIterations))*100) round.
-      out := out + '%\n'.
+      out::  name.
+      out:: out + ': iterations='.
+      out:: out + numIterations.
+      out:: out + ' average: '.
+      out:: out + (result / numIterations * numThreads).
+      out:: out + 'us'.
+      out:: out + ' total: '.
+      out:: out + result.
+      out:: out + 'us'.
+      out:: out + ' success: '.
+      out:: out + ((1 - (numFailed//numIterations))*100) round.
+      out:: out + '%\n'.
       out println.
     )
-     
+
     printRun: runTime success: success= (
       (name + ': iterations=1' + ' runtime: ' + runTime + 'us success: ' + success) println
     )
-        
+
     public printTotal = (
       ('Total Runtime: ' + total asString + 'us') println.
     )
@@ -186,8 +186,8 @@ class ImpactHarness usingPlatform: platform = Value (
   public main: args = (
     | run |
     args size < 2 ifTrue: [ self printUsage. ^ 1 ].
-    
-    run := Run new.
+
+    run:: Run new.
     self processArguments: args for: run.
 
     ^ run runBenchmark ensure: [:r |
@@ -211,8 +211,8 @@ class ImpactHarness usingPlatform: platform = Value (
 
   loadModule: className = (
     | file cls |
-    file := className + '.som'.
-    cls := system loadModule: file nextTo: self.
+    file:: className + '.som'.
+    cls:: system loadModule: file nextTo: self.
     cls ifNil: [
         self error: 'Failed loading benchmark: ' + className ].
     ^ cls usingPlatform: platform andHarness: self.
@@ -222,9 +222,9 @@ class ImpactHarness usingPlatform: platform = Value (
     | file module nested |
     (className includes: '.')
       ifFalse: [ ^ self loadModule: className ].
-    
-    nested := className split: '.'.
-    module := self loadModule: (nested at: 1).
+
+    nested:: className split: '.'.
+    module:: self loadModule: (nested at: 1).
     ^ (ObjectMirror reflecting: module) perform: (nested at: 2) asSymbol
   )
 )

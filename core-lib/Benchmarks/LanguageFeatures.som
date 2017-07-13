@@ -31,7 +31,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   public class Fibonacci = Benchmark ()(
 
     public benchmark = ( | result |
-      result := self fibonacci: 20.
+      result:: self fibonacci: 20.
       ^ result
     )
   
@@ -52,9 +52,9 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   public class OuterConstLoop = Benchmark ()(
     public benchmark = (
       | result |
-      result := 0.
+      result:: 0.
       1 to: 100000 do: [:i | 
-        result := result + one.
+        result:: result + one.
       ].
       ^ result
     )
@@ -71,46 +71,46 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     | counter ::= 0. |
   )(
     public benchmark = ( | iter |
-      counter := 0.
-      iter := 20000.
+      counter:: 0.
+      iter:: 20000.
 
       [ iter > 0 ] whileTrue: [
-        iter := iter - 1.
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
+        iter:: iter - 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
       
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
       
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
       
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
       
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
       
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
-        counter := counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
+        counter:: counter + 1.
       ].
       ^ counter
     )
@@ -128,10 +128,10 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   )(
     public benchmark = (
       | bar |
-      bar := 1234.
+      bar:: 1234.
   
       1 to: 20000 do: [:i |
-        counter := 2122.
+        counter:: 2122.
       ].
       ^ counter
     )
@@ -146,8 +146,8 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   
   public class IntegerLoop = Benchmark ()(
     public benchmark = ( | bounds a |
-      bounds := 20000.
-      bounds negated to: bounds by: 1 do: [:value | a := value-value].
+      bounds:: 20000.
+      bounds negated to: bounds by: 1 do: [:value | a:: value-value].
       ^ a
     )
   
@@ -162,8 +162,8 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   public class Loop = Benchmark ()(
     singleRun = (
       | sum |
-      sum := 0.
-      1 to: 100 do: [ :j | sum := sum + 1 ].
+      sum:: 0.
+      1 to: 100 do: [ :j | sum:: sum + 1 ].
       sum = 100 ifFalse: [
         self error: 'Wrong result: ' + sum + ' should be: 100' ].
       ^ sum
@@ -171,8 +171,8 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
 
     public benchmark = ( 
       | sum |
-      sum := 0.
-      1 to: 200 do: [ :i | sum := sum + self singleRun ].
+      sum:: 0.
+      1 to: 200 do: [ :i | sum:: sum + self singleRun ].
       ^ sum
     )
   
@@ -194,8 +194,8 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
 
     public benchmark = (
       | sum |
-      sum := 0.
-      1 to: 200 do: [ :i | sum := sum + self nlr ].
+      sum:: 0.
+      1 to: 200 do: [ :i | sum:: sum + self nlr ].
       ^ sum
     )
   
@@ -220,11 +220,11 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     
     public benchmark = (
       | sum |
-      sum := 0.
+      sum:: 0.
       1 to: 200 do: [:i |
         [self throw]
           on: ReturnEx
-          do: [:e | sum := sum + e a ]
+          do: [:e | sum:: sum + e a ]
       ].
       ^ sum
     )
@@ -258,14 +258,14 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   public class Sum = Benchmark ()(
     public benchmark = (
       | result |
-      1 to: 2 do: [:i | result := self sumFrom: 1 to: 10000 ].
+      1 to: 2 do: [:i | result:: self sumFrom: 1 to: 10000 ].
       ^ result
     )
   
     sumFrom: start to: end = (
       | sum |
-      sum := 0.
-      start to: end do: [:i | sum := sum + i ].
+      sum:: 0.
+      start to: end do: [:i | sum:: sum + i ].
       ^ sum
     )
   
@@ -280,19 +280,19 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   public class WhileLoop = Benchmark ()(
     singleRun = (
       | sum |
-      sum := 0.
+      sum:: 0.
       [sum < 1000]
         whileTrue:
-          [sum := sum + 1].
+          [sum:: sum + 1].
       ^ sum
     )
 
     public benchmark = ( 
       | sum |
-      sum := 0.
+      sum:: 0.
       [sum < 20000]
         whileTrue:
-          [sum := sum + self singleRun].
+          [sum:: sum + self singleRun].
       ^ sum
     )
   
@@ -308,25 +308,25 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
 
     singleRun = (
       | sum poly b |
-      sum := 0.
+      sum:: 0.
       [sum < 1000] whileTrue: [
-        sum := sum + 1.
-        (sum % 4) = 0 ifTrue: [ poly := 1 ].
-        (sum % 4) = 1 ifTrue: [ poly := 'abc' ].
-        (sum % 4) = 2 ifTrue: [ poly := 2222222222222222 ].
-        (sum % 4) = 3 ifTrue: [ poly := 1//2 ].
-        b := poly
+        sum:: sum + 1.
+        (sum % 4) = 0 ifTrue: [ poly:: 1 ].
+        (sum % 4) = 1 ifTrue: [ poly:: 'abc' ].
+        (sum % 4) = 2 ifTrue: [ poly:: 2222222222222222 ].
+        (sum % 4) = 3 ifTrue: [ poly:: 1//2 ].
+        b:: poly
       ].
-      b := b + b.
+      b:: b + b.
       ^ sum
     )
 
     public benchmark = ( 
         | sum |
-        sum := 0.
+        sum:: 0.
         [sum < 20000]
             whileTrue:
-                [sum := sum + self singleRun].
+                [sum:: sum + self singleRun].
         ^ sum
     )
 
@@ -341,21 +341,21 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   public class VectorRead = Benchmark ()(
     singleRun = (
         | sum v |
-        v := Vector new.
+        v:: Vector new.
         v at: 1 put: 1.
-        sum := 0.
+        sum:: 0.
         [sum < 1000]
             whileTrue:
-                [sum := sum + (v at: 1)].
+                [sum:: sum + (v at: 1)].
         ^ sum
     )
 
     public benchmark = ( 
       | sum |
-      sum := 0.
+      sum:: 0.
       [sum < 20000]
         whileTrue:
-          [sum := sum + self singleRun].
+          [sum:: sum + self singleRun].
       ^ sum
     )
     
@@ -370,8 +370,8 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   public class Dispatch = Benchmark ()(
     public benchmark = (
       | cnt |
-      cnt := 0.
-      1 to: 20000 do: [:i | cnt := cnt + (self method: i) ].
+      cnt:: 0.
+      1 to: 20000 do: [:i | cnt:: cnt + (self method: i) ].
       ^ cnt
     )
     
@@ -388,8 +388,8 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   public class DispatchNoArg = Benchmark ()(
     public benchmark = (
       | cnt |
-      cnt := 0.
-      1 to: 20000 do: [:i | cnt := cnt + self method ].
+      cnt:: 0.
+      1 to: 20000 do: [:i | cnt:: cnt + self method ].
       ^ cnt
     )
   
@@ -407,8 +407,8 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   public class DispatchPerform = Benchmark ()(
     public benchmark = (
       | cnt mirror |
-      cnt := 0.
-      mirror := ObjectMirror reflecting: self.
+      cnt:: 0.
+      mirror:: ObjectMirror reflecting: self.
       1 to: 20000 do: [ :i | mirror perform: #method: withArguments: (Array with: i)].
       ^ cnt
     )
@@ -426,9 +426,9 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   public class DispatchPerformNoArg = Benchmark ()(
     public benchmark = (
       | cnt mirror |
-      cnt := 0.
-      mirror := ObjectMirror reflecting: self.
-      1 to: 20000 do: [ :i | cnt := cnt + (mirror perform: #method)].
+      cnt:: 0.
+      mirror:: ObjectMirror reflecting: self.
+      1 to: 20000 do: [ :i | cnt:: cnt + (mirror perform: #method)].
       ^ cnt
     )
   
@@ -449,7 +449,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     
     public benchmark = (
       | val |
-      1 to: 20000 do: [:i | val := AValue new ].
+      1 to: 20000 do: [:i | val:: AValue new ].
       ^ val
     )
     
@@ -471,7 +471,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   )(
     public benchmark = (
       | val |
-      1 to: 20000 do: [:i | val := ValueValue new: aValue ].
+      1 to: 20000 do: [:i | val:: ValueValue new: aValue ].
       ^ val
     )
     
@@ -492,7 +492,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   )(
     public benchmark = (
       | val |
-      1 to: 20000 do: [:i | val := ValueValueFewer new: aValue ].
+      1 to: 20000 do: [:i | val:: ValueValueFewer new: aValue ].
       ^ val
     )
     
@@ -527,19 +527,19 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   public class PolyMorphicBlocks = Benchmark ()(
     public benchmark = (
       | blocks cnt |
-      blocks := Array new: 10.
+      blocks:: Array new: 10.
 
-      cnt := 0.
-      blocks at: 1 put: [ cnt := cnt +     1 ].
-      blocks at: 2 put: [ cnt := cnt + 10000 ].
-      blocks at: 3 put: [ cnt := cnt + 100000000 ].
-      blocks at: 4 put: [ cnt := cnt ].
-      blocks at: 5 put: [ cnt := cnt ].
-      blocks at: 6 put: [ cnt := cnt ].
-      blocks at: 7 put: [ cnt := cnt ].
-      blocks at: 8 put: [ cnt := cnt ].
-      blocks at: 9 put: [ cnt := cnt +     1 ].
-      blocks at: 10 put: [ cnt := cnt +     1 ].
+      cnt:: 0.
+      blocks at: 1 put: [ cnt:: cnt +     1 ].
+      blocks at: 2 put: [ cnt:: cnt + 10000 ].
+      blocks at: 3 put: [ cnt:: cnt + 100000000 ].
+      blocks at: 4 put: [ cnt:: cnt ].
+      blocks at: 5 put: [ cnt:: cnt ].
+      blocks at: 6 put: [ cnt:: cnt ].
+      blocks at: 7 put: [ cnt:: cnt ].
+      blocks at: 8 put: [ cnt:: cnt ].
+      blocks at: 9 put: [ cnt:: cnt +     1 ].
+      blocks at: 10 put: [ cnt:: cnt +     1 ].
       
       1 to: 8000 do: [:i |
         blocks do: [:b | b value ] ].

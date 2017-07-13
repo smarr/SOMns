@@ -31,10 +31,10 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
 
     public testDelayInterface = (
       | d |
-      d := Delay forSeconds: 1.
+      d:: Delay forSeconds: 1.
       self assert: 1000 equals: d duration.
 
-      d := Delay forMilliseconds: 1.
+      d:: Delay forMilliseconds: 1.
       self assert: 1    equals: d duration.
 
       (* This could change, perhaps to indicate interruption. *)
@@ -43,8 +43,8 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
 
     public testMutexInterface = (
       | m r cond1 cond2 |
-      m := Mutex new.
-      r := m critical: [ #value ].
+      m:: Mutex new.
+      r:: m critical: [ #value ].
       self assert: #value equals: r.
 
       self assert: false equals: m isLocked.
@@ -53,25 +53,25 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
       self assert: m     is:     m unlock.
       self assert: false equals: m isLocked.
 
-      cond1 := m newCondition.
-      cond2 := m newCondition.
+      cond1:: m newCondition.
+      cond2:: m newCondition.
       self deny: cond1 == cond2.
     )
 
     public testSpawning = (
       | thread |
-      thread := Thread spawn: [].
+      thread:: Thread spawn: [].
       self assert: (thread name beginsWith: 'Thread(').
 
-      thread := Thread spawn: [:i | i ] with: (Array with: 1).
+      thread:: Thread spawn: [:i | i ] with: (Array with: 1).
       self assert: (thread name beginsWith: 'Thread(')
     )
 
     public testThreadInterface = (
       | thread thread2 executed |
-      executed := false.
-      thread := Thread spawn: [
-        executed := true.
+      executed:: false.
+      thread:: Thread spawn: [
+        executed:: true.
         Thread current
       ].
       thread name: 'bar'.
@@ -82,16 +82,16 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
 
       self assert: Thread is: Thread yield.
 
-      thread  := Thread current.
-      thread2 := Thread current.
+      thread::  Thread current.
+      thread2:: Thread current.
       self assert: thread is: thread2.
       self assert: thread == nil.
     )
 
     public testThreadCurrent = (
       | thread subThreadCurrent |
-      thread := Thread spawn: [
-        subThreadCurrent := Thread current].
+      thread:: Thread spawn: [
+        subThreadCurrent:: Thread current].
       thread join.
 
       (* those two should be the same object *)
@@ -101,19 +101,19 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
 
     public testConditionInterface = (
       | m c t executed awaitResult1 |
-      executed := false.
-      m := Mutex new.
-      c := m newCondition.
+      executed:: false.
+      m:: Mutex new.
+      c:: m newCondition.
 
       m critical: [ c signalOne ].
-      awaitResult1 := m critical: [ c await: 1 ].
+      awaitResult1:: m critical: [ c await: 1 ].
 
       self deny: awaitResult1 description: 'Await times out'.
 
-      t := Thread spawn: [
+      t:: Thread spawn: [
         m critical: [
           c signalOne.
-          executed := true.
+          executed:: true.
       ] ].
 
       m critical: [
@@ -125,8 +125,8 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
 
     public testTaskInterface = (
       | t1 t2 v1 v2 |
-      t1 := Task spawn: [ v1 := 1 ].
-      t2 := Task spawn: [ v2 := #foo ].
+      t1:: Task spawn: [ v1:: 1 ].
+      t2:: Task spawn: [ v2:: #foo ].
 
       assert: 1 equals: t1 join.
       assert: 1 equals: v1.
@@ -137,8 +137,8 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
 
     public testTaskInterfaceWithArgs = (
       | t1 t2 v1 v2 |
-      t1 := Task spawn: [:a | v1 := a ] with: (Array with: 1).
-      t2 := Task spawn: [:b | v2 := b ] with: (Array with: #foo).
+      t1:: Task spawn: [:a | v1:: a ] with: (Array with: 1).
+      t2:: Task spawn: [:b | v2:: b ] with: (Array with: #foo).
 
       assert: 1 equals: t1 join.
       assert: 1 equals: v1.

@@ -6,11 +6,11 @@ class ForkJoin usingPlatform: platform = Value (
     | result task |
     n < 1 ifTrue: [ ^ 0 ].
 
-    task := Task spawn: [
+    task:: Task spawn: [
                   'cnt: ' print. n println.
                   cnt: n - 1 ].
 
-    result := task join.
+    result:: task join.
 
     ^ result
   )

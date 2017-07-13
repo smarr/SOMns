@@ -2,11 +2,11 @@ CalculatorDnuPerform = (
     | a |
     
     initializeWith: anInt = (
-        a := anInt
+        a:: anInt
     )
     
     inc: aSymbol = (
-        aSymbol = #once ifTrue: [ a := a + 1 ]
+        aSymbol = #once ifTrue: [ a:: a + 1 ]
     )
  
     a = ( ^ a )
@@ -19,7 +19,7 @@ CalculatorDnuPerform = (
     
     new: a = (
         | calc |
-        calc := self new.
+        calc:: self new.
         calc initializeWith: a.
         ^ calc
     )

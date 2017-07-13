@@ -83,12 +83,12 @@ class Havlak usingPlatform: platform andHarness: harness = (
       | node |
 
       (basicBlockMap size >= name)
-        ifTrue:  [ node := basicBlockMap at: name ]
+        ifTrue:  [ node:: basicBlockMap at: name ]
         ifFalse: [
-          node := BasicBlock new: name.
+          node:: BasicBlock new: name.
           basicBlockMap append: node ].
 
-      numNodes = 1 ifTrue: [startNode := node].
+      numNodes = 1 ifTrue: [startNode:: node].
       ^ node
     )
 
@@ -116,14 +116,14 @@ class Havlak usingPlatform: platform andHarness: harness = (
   |
     root nestingLevel: 0.
     root counter: loopCounter.
-    loopCounter := loopCounter + 1.
+    loopCounter:: loopCounter + 1.
     loops append: root
   )(
     public createNewLoop: bb reducible: isReducible = (
       | loop |
-      loop := SimpleLoop basicBlock: bb reducible: isReducible.
+      loop:: SimpleLoop basicBlock: bb reducible: isReducible.
       loop counter: loopCounter.
-      loopCounter := loopCounter + 1.
+      loopCounter:: loopCounter + 1.
       loops append: loop.
       ^ loop
     )
@@ -173,16 +173,16 @@ class Havlak usingPlatform: platform andHarness: harness = (
 
     public parent = ( ^ parent_ )
     public parent: val = (
-      parent_ := val.
+      parent_:: val.
       parent_ addChildLoop: self
     )
 
     public isRoot    = ( ^ isRoot_ )
-    public setIsRoot = ( isRoot_ := true )
+    public setIsRoot = ( isRoot_:: true )
 
     public nestingLevel = ( ^ nestingLevel_ )
     public nestingLevel: level = (
-      nestingLevel_ := level.
+      nestingLevel_:: level.
       level = 0 ifTrue: [ setIsRoot ]
     )
   )
@@ -194,29 +194,29 @@ class Havlak usingPlatform: platform andHarness: harness = (
     public loop ::= nil.
   |)(
     public initNode: bb dfs: dfsNumber = (
-      parent_ := self.
-      bb_ := bb.
-      dfsNumber_ := dfsNumber.
-      loop := nil.
+      parent_:: self.
+      bb_:: bb.
+      dfsNumber_:: dfsNumber.
+      loop:: nil.
     )
 
     public findSet = (
       | nodeList node |
-      nodeList := Vector new.
+      nodeList:: Vector new.
 
-      node := self.
+      node:: self.
 
       [node ~= node parent] whileTrue: [
         ((node parent) ~= (node parent parent)) ifTrue: [
           nodeList append: node ].
-        node := node parent ].
+        node:: node parent ].
 
       nodeList do: [:iter | iter union: parent_ ].
       ^ node
     )
 
     public union: basicBlock = (
-      parent_ := basicBlock
+      parent_:: basicBlock
     )
 
     public parent    = ( ^ parent_ )
@@ -232,7 +232,7 @@ class Havlak usingPlatform: platform andHarness: harness = (
   )(
     private buildDiamond: start = (
       | bb0 |
-      bb0 := start.
+      bb0:: start.
       BasicBlockEdge for: cfg from: bb0 to: bb0 + 1.
       BasicBlockEdge for: cfg from: bb0 to: bb0 + 2.
       BasicBlockEdge for: cfg from: bb0 + 1 to: bb0 + 3.
@@ -252,16 +252,16 @@ class Havlak usingPlatform: platform andHarness: harness = (
 
     private buildBaseLoop: from = (
       | header diamond1 d11 diamond2 footer |
-      header   := buildStraight: from n: 1.
-      diamond1 := buildDiamond: header.
-      d11      := buildStraight: diamond1 n: 1.
-      diamond2 := buildDiamond: d11.
-      footer   := buildStraight: diamond2 n: 1.
+      header::   buildStraight: from n: 1.
+      diamond1:: buildDiamond: header.
+      d11::      buildStraight: diamond1 n: 1.
+      diamond2:: buildDiamond: d11.
+      footer::   buildStraight: diamond2 n: 1.
 
       buildConnect: diamond2 end: d11.
       buildConnect: diamond1 end: header.
       buildConnect: footer   end: from.
-      footer := buildStraight: footer n: 1.
+      footer:: buildStraight: footer n: 1.
       ^ footer
     )
 
@@ -280,21 +280,21 @@ class Havlak usingPlatform: platform andHarness: harness = (
 
     private constructCFG: parLoops p: pparLoops p: ppparLoops = (
       | n |
-      n := 3.
+      n:: 3.
 
       parLoops timesRepeat: [
         cfg createNode: n + 1.
         buildConnect: 2 end: n + 1.
-        n := n + 1.
+        n:: n + 1.
 
         pparLoops timesRepeat: [
           | top bottom |
-          top := n.
-          n := buildStraight: n n:1.
-          ppparLoops timesRepeat: [ n := buildBaseLoop: n ].
-          bottom := buildStraight: n n: 1.
+          top:: n.
+          n:: buildStraight: n n:1.
+          ppparLoops timesRepeat: [ n:: buildBaseLoop: n ].
+          bottom:: buildStraight: n n: 1.
           buildConnect: n end: top.
-          n := bottom ].
+          n:: bottom ].
 
         buildConnect: n end: 1 ]
     )
@@ -306,7 +306,7 @@ class Havlak usingPlatform: platform andHarness: harness = (
 
     private findLoops: loopStructure = (
       | finder |
-      finder := HavlakLoopFinder new: cfg lsg: loopStructure.
+      finder:: HavlakLoopFinder new: cfg lsg: loopStructure.
       finder findLoops
     )
 
@@ -346,14 +346,14 @@ class Havlak usingPlatform: platform andHarness: harness = (
       (nodes at: current) initNode: currentNode dfs: current.
       number at: currentNode put: current.
 
-      lastId := current.
-      outerBlocks := currentNode outEdges.
+      lastId:: current.
+      outerBlocks:: currentNode outEdges.
 
       1 to: outerBlocks size do: [:i |
         | target |
-        target := outerBlocks at: i.
+        target:: outerBlocks at: i.
         (number at: target) = Unvisited ifTrue: [
-          lastId := doDFS: target current: lastId + 1 ] ].
+          lastId:: doDFS: target current: lastId + 1 ] ].
 
       last at: current put: lastId.
       ^ lastId
@@ -372,7 +372,7 @@ class Havlak usingPlatform: platform andHarness: harness = (
         header at: w put: 1.
         type   at: w put: #BBNonHeader.
 
-        nodeW := (nodes at: w) bb.
+        nodeW:: (nodes at: w) bb.
         nodeW isNil
           ifTrue:  [ type at: w put: #BBDead ]
           ifFalse: [ processEdges: nodeW w: w ] ]
@@ -382,7 +382,7 @@ class Havlak usingPlatform: platform andHarness: harness = (
       nodeW numPred > 0 ifTrue: [
         nodeW inEdges do: [:nodeV |
           | v |
-          v := number at: nodeV.
+          v:: number at: nodeV.
           v <> Unvisited ifTrue: [
             (isAncestor: w v: v)
               ifTrue:  [ (backPreds at: w) append: v ]
@@ -393,18 +393,18 @@ class Havlak usingPlatform: platform andHarness: harness = (
       | size |
       cfg startBasicBlock isNil ifTrue: [ ^ self ].
 
-      size := cfg numNodes.
+      size:: cfg numNodes.
 
       nonBackPreds removeAll.
       backPreds removeAll.
       number removeAll.
 
       size > maxSize ifTrue: [
-        header := Array new: size.
-        type   := Array new: size.
-        last   := Array new: size.
-        nodes  := Array new: size.
-        maxSize := size ].
+        header:: Array new: size.
+        type::   Array new: size.
+        last::   Array new: size.
+        nodes::  Array new: size.
+        maxSize:: size ].
 
       1 to: size do: [:i |
         nonBackPreds append: Set new.
@@ -417,14 +417,14 @@ class Havlak usingPlatform: platform andHarness: harness = (
 
       size downTo: 1 do: [:w |
         | nodePool nodeW |
-        nodePool := Vector new.
-        nodeW := (nodes at: w) bb.
+        nodePool:: Vector new.
+        nodeW:: (nodes at: w) bb.
 
         nodeW notNil ifTrue: [
           | workList |
           stepD: w nodePool: nodePool.
 
-          workList := Vector new.
+          workList:: Vector new.
           nodePool do: [:niter | workList append: niter ].
 
           nodePool size <> 0 ifTrue: [
@@ -433,23 +433,23 @@ class Havlak usingPlatform: platform andHarness: harness = (
 
           [ workList isEmpty ] whileFalse: [
             | x nonBackSize |
-            x := workList removeFirst.
+            x:: workList removeFirst.
 
-            nonBackSize := (nonBackPreds at: x dfsNumber) size.
+            nonBackSize:: (nonBackPreds at: x dfsNumber) size.
             nonBackSize > MaxNonBackPreds ifTrue: [ ^ self ].
             stepEProcessNonBackPreds: w nodePool: nodePool workList: workList x: x ].
 
           (nodePool size > 0 or: [(type at: w) = #BBSelf]) ifTrue: [
             | loop |
-            loop := lsg createNewLoop: nodeW reducible: ((type at: w) <> #BBIrreducible).
+            loop:: lsg createNewLoop: nodeW reducible: ((type at: w) <> #BBIrreducible).
             setLoopAttribute: w nodePool: nodePool loop: loop ] ] ]
     )
 
     private stepEProcessNonBackPreds: w nodePool: nodePool workList: workList x: x = (
       (nonBackPreds at: x dfsNumber) do: [:iter |
         | y ydash |
-        y := nodes at: iter.
-        ydash := y findSet.
+        y:: nodes at: iter.
+        ydash:: y findSet.
 
         (isAncestor: w v: ydash dfsNumber) not
           ifTrue: [

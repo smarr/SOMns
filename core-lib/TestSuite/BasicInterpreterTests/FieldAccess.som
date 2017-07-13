@@ -27,7 +27,7 @@ class FieldAccess = ()(
       private cnt ::= 0. |
     )(
       public count = (
-        cnt := cnt + 1.
+        cnt:: cnt + 1.
         ^ cnt = iterations
       )
     )
@@ -38,7 +38,7 @@ class FieldAccess = ()(
   
     public run = (
       | e |
-      e := A new: iterations.
+      e:: A new: iterations.
       [e count] whileFalse: [].
       ^ true
     )
@@ -48,7 +48,7 @@ class FieldAccess = ()(
   public inheritanceOfLocalClass = ( 
     1 to: 500 do: [:i |
       | c |
-      c := self new Count new: 100.
+      c:: self new Count new: 100.
       c run.
     ].
    

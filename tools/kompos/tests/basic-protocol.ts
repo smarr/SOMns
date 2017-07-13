@@ -134,7 +134,7 @@ describe("Basic Protocol", function() {
     "setting a source section asynchronous method before execution breakpoint":
     [{
       test: "accept async method before execution breakpoint, and halt on expected source section",
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 22, 9, 206, BT.ASYNC_MSG_BEFORE_EXEC, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 22, 9, 203, BT.ASYNC_MSG_BEFORE_EXEC, true),
       stackLength: 1,
       topMethod: "Ping>>#ping",
       line: 22
@@ -143,7 +143,7 @@ describe("Basic Protocol", function() {
     "setting a source section asynchronous message after execution breakpoint":
     [{
       test: "accept async message after execution breakpoint, and halt on expected source section",
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 69, 9, 88, BT.ASYNC_MSG_AFTER_EXEC, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 69, 9, 87, BT.ASYNC_MSG_AFTER_EXEC, true),
       stackLength: 1,
       topMethod: "Pong>>#ping:",
       line: 69
@@ -161,7 +161,7 @@ describe("Basic Protocol", function() {
     "setting a source section promise resolver breakpoint":
     [{
       test: "for normal resolution, accept promise resolver breakpoint, and halt on expected source section",
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 95, 17, 3, BT.PROMISE_RESOLVER, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 95, 16, 3, BT.PROMISE_RESOLVER, true),
       stackLength: 1,
       topMethod: "Ping>>#start",
       line: 16
@@ -175,93 +175,93 @@ describe("Basic Protocol", function() {
     },
     {
       test: "for chained resolution, accept promise resolver breakpoint for chained resolution, and halt on expected source section",
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 26, 20, 3, BT.PROMISE_RESOLVER, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 26, 19, 3, BT.PROMISE_RESOLVER, true),
       stackLength: 1,
       topMethod: "Ping>>#validate:",
       line: 33
     },
     {
       test: "on unresolved explicit promise, accept promise resolver breakpoint on unresolved explicit promise, and halt on expected source section",
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 92, 30, 17, BT.PROMISE_RESOLVER, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 92, 29, 17, BT.PROMISE_RESOLVER, true),
       stackLength: 1,
       topMethod: "Pong>>#stop",
       line: 80
     },
     {
       test: "on resolved explicit promise, accept promise resolution breakpoint on resolved explicit promise, and halt on expected source section",
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 41, 22, 17, BT.PROMISE_RESOLUTION, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 41, 21, 17, BT.PROMISE_RESOLUTION, true),
       stackLength: 1,
       topMethod: "Thing>>#println",
       line: 71
     },
     {
       test: "on resolved explicit promise, accept promise resolver breakpoint on resolved explicit promise, and halt on expected source section",
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 41, 22, 17, BT.PROMISE_RESOLVER, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 41, 21, 17, BT.PROMISE_RESOLVER, true),
       stackLength: 1,
       topMethod: "Ping>>#validNumber:",
       line: 49
     },
     {
       test: "on whenResolved, accept promise resolver breakpoint on whenResolved, and halt on expected source section",
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 27, 18, 32, BT.PROMISE_RESOLVER, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 27, 17, 32, BT.PROMISE_RESOLVER, true),
       stackLength: 1,
-      topMethod: "Ping>>#λping@27@32:",
+      topMethod: "Ping>>#λping@27@31:",
       line: 27
     },
     {
       test: "onError, accept promise resolver breakpoint onError, and halt on expected source section",
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 78, 19, 50, BT.PROMISE_RESOLVER, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 78, 18, 50, BT.PROMISE_RESOLVER, true),
       stackLength: 1,
-      topMethod: "Pong>>#λstop@78@28:",
+      topMethod: "Pong>>#λstop@78@27:",
       line: 78
     },
     {
       test: "whenResolvedOnError, accept promise resolver breakpoint whenResolvedOnError, and halt on expected source section",
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 34, 18, 91, BT.PROMISE_RESOLVER, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 34, 17, 91, BT.PROMISE_RESOLVER, true),
       stackLength: 1,
-      topMethod: "Ping>>#λvalidate@34@78:",
+      topMethod: "Ping>>#λvalidate@34@77:",
       line: 34
     }],
 
     "setting a source section promise resolution breakpoint":
     [{
       test: "for normal resolution, accept promise resolution breakpoint, and halt on expected source section",
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 95, 17, 3, BT.PROMISE_RESOLUTION, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 95, 16, 3, BT.PROMISE_RESOLUTION, true),
       stackLength: 1,
       topMethod: "Thing>>#println",
       line: 71
     },
     {
       test: "for chained resolution, accept promise resolution breakpoint for chained resolution, and halt on expected source section",
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 26, 20, 3, BT.PROMISE_RESOLUTION, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 26, 19, 3, BT.PROMISE_RESOLUTION, true),
       stackLength: 1,
-      topMethod: "Ping>>#λping@27@32:",
+      topMethod: "Ping>>#λping@27@31:",
       line: 27
     },
     {
       test: "on unresolved explicit promise, accept promise resolution breakpoint on unresolved explicit promise, and halt on expected source section",
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 92, 30, 17, BT.PROMISE_RESOLUTION, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 92, 29, 17, BT.PROMISE_RESOLUTION, true),
       stackLength: 1,
       topMethod: "PingPong>>#λbenchmark@97@44:",
       line: 98
     },
     {
       test: "on whenResolved, accept promise resolution breakpoint on whenResolved, and halt on expected source section",
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 27, 18, 32, BT.PROMISE_RESOLUTION, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 27, 17, 32, BT.PROMISE_RESOLUTION, true),
       stackLength: 1,
       topMethod: "Thing>>#println",
       line: 71
     },
     {
       test: "onError, accept promise resolution breakpoint onError, and halt on expected source section",
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 78, 19, 50, BT.PROMISE_RESOLUTION, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 78, 18, 50, BT.PROMISE_RESOLUTION, true),
       stackLength: 1,
       topMethod: "Thing>>#println",
       line: 71
     },
     {
       test: "whenResolvedOnError, accept promise resolution breakpoint on whenResolvedOnError, and halt on expected source section",
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 34, 18, 91, BT.PROMISE_RESOLUTION, true),
+      breakpoint: createSectionBreakpointData(PING_PONG_URI, 34, 17, 91, BT.PROMISE_RESOLUTION, true),
       stackLength: 1,
       topMethod: "Thing>>#println",
       line: 71

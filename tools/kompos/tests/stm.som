@@ -10,7 +10,7 @@ class STM usingPlatform: platform = Value (
   private doCount: o = (
     tx atomic: [
       | cnt |
-      cnt := o field.
+      cnt:: o field.
       o field: cnt + 1.
     ].
 
@@ -18,7 +18,7 @@ class STM usingPlatform: platform = Value (
 
     tx atomic: [
       | cnt |
-      cnt := o field.
+      cnt:: o field.
       o field: cnt + 1.
     ].
 
@@ -26,7 +26,7 @@ class STM usingPlatform: platform = Value (
 
     tx atomic: [
       | cnt |
-      cnt := o field.
+      cnt:: o field.
       o field: cnt + 1.
     ].
 
@@ -36,7 +36,7 @@ class STM usingPlatform: platform = Value (
   public main: args = (
     | o |
     'STM example\n' println.
-    o := MyObj new.
+    o:: MyObj new.
 
     Thread spawn: [ doCount: o ].
 

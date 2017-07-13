@@ -24,7 +24,7 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
   )(
     public class Inner = ()(
       public get = ( ^ field )
-      public set: val = ( field := val )
+      public set: val = ( field:: val )
     )
   )
 
@@ -47,18 +47,18 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
 
     public testTemp = (
       | v |
-      assert: (Transaction atomic: [ v := true. v ])
+      assert: (Transaction atomic: [ v:: true. v ])
     )
 
     public testTempRead = (
       | v |
-      v := true.
+      v:: true.
       assert: (Transaction atomic: [ v ])
     )
 
     public testTempWrite = (
       | v |
-      Transaction atomic: [ v := true ].
+      Transaction atomic: [ v:: true ].
       assert: v
     )
 
@@ -72,7 +72,7 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
 
     public testFieldReads = (
       | h |
-      h := Hello3 new.
+      h:: Hello3 new.
       assert: (Transaction atomic: [ h a ]) equals: #a.
       assert: (Transaction atomic: [ h b ]) equals: #b.
       assert: (Transaction atomic: [ h c ]) equals: #c.
@@ -83,7 +83,7 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
 
     public testFieldReadsMixedInherited = (
       | h |
-      h := Hello2 new.
+      h:: Hello2 new.
       assert: (Transaction atomic: [ h a ]) equals: #a.
       assert: (Transaction atomic: [ h b ]) equals: #b.
       assert: (Transaction atomic: [ h c ]) equals: #c.
@@ -92,7 +92,7 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
 
     public testFieldWrite = (
       | h |
-      h := Hello3 new.
+      h:: Hello3 new.
 
       Transaction atomic: [ h a: #A ].
       assert: (Transaction atomic: [ h a ]) equals: #A.
@@ -115,7 +115,7 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
 
     public testFieldWriteMixedInherited = (
       | h |
-      h := Hello2 new.
+      h:: Hello2 new.
 
       Transaction atomic: [ h a: #A ].
       assert: (Transaction atomic: [ h a ]) equals: #A.
@@ -132,20 +132,20 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
 
     public testOuter = (
       | h |
-      h := MutOuter new Inner new.
+      h:: MutOuter new Inner new.
       assert: (Transaction atomic: [ h set: #a. h get ]) equals: #a
     )
 
     public testOuterRead = (
       | h |
-      h := MutOuter new Inner new.
+      h:: MutOuter new Inner new.
       h set: #a.
       assert: (Transaction atomic: [ h get ]) equals: #a
     )
 
     public testOuterWrite = (
       | h |
-      h := MutOuter new Inner new.
+      h:: MutOuter new Inner new.
       Transaction atomic: [ h set: #a ].
       assert: h get equals: #a
     )
@@ -176,42 +176,42 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
 
     public testInlinedToDo = (
       | x |
-      x := 0.
-      Transaction atomic: [ 1 to: 10 do: [:i | x := x + i ] ].
+      x:: 0.
+      Transaction atomic: [ 1 to: 10 do: [:i | x:: x + i ] ].
       assert: x equals: 55.
 
-      x := 0.
-      Transaction atomic: [ 1 to: 10 by: 2 do: [:i | x := x + i ] ].
+      x:: 0.
+      Transaction atomic: [ 1 to: 10 by: 2 do: [:i | x:: x + i ] ].
       assert: x equals: 25.
     )
 
     public testInlinedWhile = (
       | i x |
-      i := 1. x := 0.
-      Transaction atomic: [ [ i <= 10 ] whileTrue: [ x := x + i. i := i + 1 ] ].
+      i:: 1. x:: 0.
+      Transaction atomic: [ [ i <= 10 ] whileTrue: [ x:: x + i. i:: i + 1 ] ].
       assert: x equals: 55.
 
-      i := 1. x := 0.
-      Transaction atomic: [ [ i > 10 ] whileFalse: [ x := x + i. i := i + 1 ] ].
+      i:: 1. x:: 0.
+      Transaction atomic: [ [ i > 10 ] whileFalse: [ x:: x + i. i:: i + 1 ] ].
       assert: x equals: 55
     )
 
     public testArray = (
       | array |
-      array := Array new: 1.
+      array:: Array new: 1.
       assert: (Transaction atomic: [ array at: 1 put: true. array at: 1 ]).
     )
 
     public testArrayRead = (
       | array |
-      array := Array new: 1.
+      array:: Array new: 1.
       array at: 1 put: true.
       assert: (Transaction atomic: [ array at: 1 ]).
     )
 
     public testArrayWrite = (
       | array |
-      array := Array new: 1.
+      array:: Array new: 1.
       Transaction atomic: [ array at: 1 put: true ].
       assert: (array at: 1).
     )
@@ -220,11 +220,11 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
       (* This is to test that the implementation handles nested array
          expressions correctly *)
       | arr1 arr2 arr3 r |
-      arr1 := Array new: 1 withAll: 0.
-      arr2 := Array new: 1 withAll: 0.
-      arr3 := Array new: 1 withAll: 0.
+      arr1:: Array new: 1 withAll: 0.
+      arr2:: Array new: 1 withAll: 0.
+      arr3:: Array new: 1 withAll: 0.
 
-      r := Transaction atomic: [
+      r:: Transaction atomic: [
         arr1 at: 1 put: 42.
         arr2 at: 1 put: 1.
         arr3 at: 1 put: 1.
@@ -236,21 +236,21 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
 
     public testCaughtException = (
       | v |
-      v := 0.
+      v:: 0.
       Transaction atomic: [
-        [ v := 1. Exception signal ]
+        [ v:: 1. Exception signal ]
           on: Exception
-          do: [ v := v + 1 ] ].
+          do: [ v:: v + 1 ] ].
       assert: v equals: 2.
     )
 
     (* TODO: What's the desired exception semantics. Should an exception abort it? *)
     public testUncaughtException = (
       | v |
-      v := 0.
-      [ Transaction atomic: [ v := 1. Exception signal ] ]
+      v:: 0.
+      [ Transaction atomic: [ v:: 1. Exception signal ] ]
         on: Exception
-        do: [ v := v + 1 ].
+        do: [ v:: v + 1 ].
       assert: v equals: 2.
     )
   ) : ( TEST_CONTEXT = () )
@@ -258,7 +258,7 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
   public class CollectionsTests = TestContext ()(
     public testArrayLongTx = (
       | arr |
-      Transaction atomic: [ arr := Array new: 10 withAll: 1. ].
+      Transaction atomic: [ arr:: Array new: 10 withAll: 1. ].
 
       Transaction atomic: [ 3 to: 10 do: [ :each |
         arr at: each put: (arr at: each - 1) + (arr at: each - 2) ] ].
@@ -269,7 +269,7 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
 
     public testArrayShortTx = (
       | arr |
-      Transaction atomic: [ arr := Array new: 10 withAll: 1. ].
+      Transaction atomic: [ arr:: Array new: 10 withAll: 1. ].
 
       3 to: 10 do: [ :each |
         Transaction atomic: [
@@ -281,7 +281,7 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
 
     public testDictionaryLongTx = (
       | dict |
-      dict := Dictionary new.
+      dict:: Dictionary new.
 
       Transaction atomic: [ 1 to: 10 do: [ :each |
         dict at: each put: each ] ].
@@ -294,7 +294,7 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
 
     public testDictionaryShortTx = (
       | dict |
-      dict := Dictionary new.
+      dict:: Dictionary new.
 
       1 to: 10 do: [ :each |
         Transaction atomic: [ dict at: each put: each ] ].
@@ -307,7 +307,7 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
 
     public testSetLongTx = (
       | set |
-      set := Set new.
+      set:: Set new.
 
       Transaction atomic: [ 1 to: 10 do: [ :each |
         set add: each ] ].
@@ -319,7 +319,7 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
 
     public testSetShortTx = (
       | set |
-      set := Set new.
+      set:: Set new.
 
       1 to: 10 do: [ :each |
         Transaction atomic: [ set add: each ] ].

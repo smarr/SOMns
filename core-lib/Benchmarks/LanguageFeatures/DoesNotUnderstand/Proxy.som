@@ -2,7 +2,7 @@ Proxy = (
     | target |
     
     initializeWith: anObj = (
-        target := anObj
+        target:: anObj
     )
     
     doesNotUnderstand: selector arguments: arguments = (
@@ -13,7 +13,7 @@ Proxy = (
     
     new: target = (
         | proxy |
-        proxy := self new.
+        proxy:: self new.
         proxy initializeWith: target.
         ^ proxy
     )

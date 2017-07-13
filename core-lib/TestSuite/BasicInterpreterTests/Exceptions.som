@@ -9,11 +9,11 @@ class Exceptions = (
   
   public testSignalOnDo = (
     | b |
-    b := 1.
+    b:: 1.
 
     [ kernel Exception signal ]
       on: kernel Exception
-      do: [:e | b := 4 ].
+      do: [:e | b:: 4 ].
 
     ^ b
   )
@@ -45,7 +45,7 @@ class Exceptions = (
   
   public testCustomExceptionSignalOnDo = (
     | exp |
-    exp := self new MyException.
+    exp:: self new MyException.
     [ exp signal: 343 ]
       on: exp
       do: [:e | ^ e msg ].

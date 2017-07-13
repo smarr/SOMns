@@ -4,10 +4,10 @@ class OuterSends = ()(
       protected baz = ( ^ 6 )
     )
     public class Inner = Sup ()(
-      public test1 = (| bar | bar := 1. ^ outer TestOuterBindings bar )
-      public test2 = (| bar | bar := 1. ^ outer Inner bar  )
+      public test1 = (| bar | bar:: 1. ^ outer TestOuterBindings bar )
+      public test2 = (| bar | bar:: 1. ^ outer Inner bar  )
       private bar = ( ^ 2 )
-      public test3 = (| bar | bar := 4. ^ outer Inner baz )
+      public test3 = (| bar | bar:: 4. ^ outer Inner baz )
     )
     private bar = ( ^ 3 )
     private baz = ( ^ 5 )
@@ -80,64 +80,64 @@ class OuterSends = ()(
 
   public testOuterSendLegalTargets = (
     | o r |
-    o := self new TestOuterSendLegalTargets new.
-    r := o A new C new foo.
+    o:: self new TestOuterSendLegalTargets new.
+    r:: o A new C new foo.
     r a =  1 ifFalse: [ ^ #error ].
     r b =  5 ifFalse: [ ^ #error ].
     r c = 13 ifFalse: [ ^ #error ].
     
-    r := o A new C foo.
+    r:: o A new C foo.
     r a =  2 ifFalse: [ ^ #error ].
     r b =  5 ifFalse: [ ^ #error ].
     r c = 13 ifFalse: [ ^ #error ].
     
-    r := o A new D new foo.
+    r:: o A new D new foo.
     r a =  3 ifFalse: [ ^ #error ].
     r b =  5 ifFalse: [ ^ #error ].
     r c = 13 ifFalse: [ ^ #error ].
     
-    r := o A new D foo.
+    r:: o A new D foo.
     r a =  4 ifFalse: [ ^ #error ].
     r b =  5 ifFalse: [ ^ #error ].
     r c = 13 ifFalse: [ ^ #error ].
     
-    r := o A new foo.
+    r:: o A new foo.
     r a =  5 ifFalse: [ ^ #error ].
     r b = 13 ifFalse: [ ^ #error ].
     
-    r := o A foo.
+    r:: o A foo.
     r a =  6 ifFalse: [ ^ #error ].
     r b = 13 ifFalse: [ ^ #error ].
     
-    r := o B new C new foo.
+    r:: o B new C new foo.
     r a =  7 ifFalse: [ ^ #error ].
     r b = 11 ifFalse: [ ^ #error ].
     r c = 13 ifFalse: [ ^ #error ].
 
-    r := o B new C foo.
+    r:: o B new C foo.
     r a =  8 ifFalse: [ ^ #error ].
     r b = 11 ifFalse: [ ^ #error ].
     r c = 13 ifFalse: [ ^ #error ].
     
-    r := o B new D new foo.
+    r:: o B new D new foo.
     r a =  9 ifFalse: [ ^ #error ].
     r b = 11 ifFalse: [ ^ #error ].
     r c = 13 ifFalse: [ ^ #error ].
     
-    r := o B new D foo.
+    r:: o B new D foo.
     r a = 10 ifFalse: [ ^ #error ].
     r b = 11 ifFalse: [ ^ #error ].
     r c = 13 ifFalse: [ ^ #error ].
     
-    r := o B new foo.
+    r:: o B new foo.
     r a = 11 ifFalse: [ ^ #error ].
     r b = 13 ifFalse: [ ^ #error ].
 
-    r := o B foo.
+    r:: o B foo.
     r a = 12 ifFalse: [ ^ #error ].
     r b = 13 ifFalse: [ ^ #error ].
 
-    r := o foo.
+    r:: o foo.
     r a = 13 ifFalse: [ ^ #error ].
     
     ^ 666

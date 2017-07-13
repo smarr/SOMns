@@ -40,7 +40,7 @@ class TestRunner usingPlatform: platform = (
 
   runTester: tester = (
     | promisePair |
-    promisePair := actors createPromisePair.
+    promisePair:: actors createPromisePair.
 
     tester runAll whenResolved: [:aTester |
       reportErrors:   tester errors.
@@ -58,8 +58,8 @@ class TestRunner usingPlatform: platform = (
 
   runAllTests: testModule = (
     | tester catalog |
-    catalog := minitest TestCatalog forModule: testModule.
-    tester := minitest Tester testSuite: catalog allTests.
+    catalog:: minitest TestCatalog forModule: testModule.
+    tester:: minitest Tester testSuite: catalog allTests.
 
     ^ runTester: tester
   )
@@ -68,21 +68,21 @@ class TestRunner usingPlatform: platform = (
     | tester catalog |
     (testId includes: '.') ifTrue: [
       | testNameElems |
-      testNameElems := testId split: '.'.
-      catalog := minitest TestCatalog
+      testNameElems:: testId split: '.'.
+      catalog:: minitest TestCatalog
         forModule: testModule select: (testNameElems at: 1) test: (testNameElems at: 2).
     ] ifFalse: [
-      catalog := minitest TestCatalog
+      catalog:: minitest TestCatalog
         forModule: testModule select: testId
     ].
-    tester  := minitest Tester testSuite: catalog allTests.
+    tester:: minitest Tester testSuite: catalog allTests.
     ^ runTester: tester
 
   )
 
   runAllKnownModules = (
     | modules allSuccessful allTestsDonePromise |
-    modules := 'ReflectionTests',
+    modules:: 'ReflectionTests',
                'LanguageTests',
                'MixinTests',
                'CollectionTests',
@@ -100,15 +100,15 @@ class TestRunner usingPlatform: platform = (
                'TransferObjectTests',
                'MinitestTests'.
 
-    allSuccessful := true.
-    allTestsDonePromise := actors async: modules do: [:m |
+    allSuccessful:: true.
+    allTestsDonePromise:: actors async: modules do: [:m |
       | testModule |
-      testModule := (system loadModule: m + '.som' nextTo: self)
+      testModule:: (system loadModule: m + '.som' nextTo: self)
                       usingPlatform: platform testFramework: minitest.
       m println.
       (runAllTests: testModule)
         whenResolved: [:successful |
-        allSuccessful := allSuccessful and: successful.
+        allSuccessful:: allSuccessful and: successful.
         '' println.
       ]
     ].
@@ -119,13 +119,13 @@ class TestRunner usingPlatform: platform = (
     | testModule testsCompletedPromise |
     args size >= 2 ifTrue: [
 
-      testModule := (system loadModule: (args at: 2)) usingPlatform: platform testFramework: minitest.
+      testModule:: (system loadModule: (args at: 2)) usingPlatform: platform testFramework: minitest.
 
       args size = 2 ifTrue: [
-        testsCompletedPromise := runAllTests: testModule ].
+        testsCompletedPromise:: runAllTests: testModule ].
 
       args size = 3 ifTrue: [
-        testsCompletedPromise := runTest: (args at: 3) in: testModule ].
+        testsCompletedPromise:: runTest: (args at: 3) in: testModule ].
 
       args size > 3 ifTrue: [
         (* TODO: add --help *)
@@ -134,7 +134,7 @@ class TestRunner usingPlatform: platform = (
     ].
 
     args size = 1 ifTrue: [
-      testsCompletedPromise := runAllKnownModules ].
+      testsCompletedPromise:: runAllKnownModules ].
 
     ^ testsCompletedPromise whenResolved: [:testsPassed |
       testsPassed

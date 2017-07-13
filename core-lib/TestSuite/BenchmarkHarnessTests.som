@@ -8,7 +8,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
   public class RandomTest = TestContext ()(
     public testSequenceOfNumbers = (
       | rand |
-      rand := Random new.
+      rand:: Random new.
       assert: 22896 equals: rand next.
       assert: 34761 equals: rand next.
       assert: 34014 equals: rand next.
@@ -24,7 +24,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
   public class JenkinsRandomTest = TestContext ()(
     public testSequenceOfNumbers = (
       | rand |
-      rand := JenkinsRandom new: 49734321.
+      rand:: JenkinsRandom new: 49734321.
       assert: -1345591281 equals: rand next.
       assert: -1516981560 equals: rand next.
       assert:   419616523 equals: rand next.

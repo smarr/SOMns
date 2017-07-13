@@ -25,12 +25,12 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
   private class Vacation = Benchmark ()(
     public innerBenchmarkLoop: problemSize numThreads: numThreads = (
       | manager clients threads i |
-      manager := initializeManager: problemSize.
-      clients := initializeClients: manager for: numThreads and: problemSize.
+      manager:: initializeManager: problemSize.
+      clients:: initializeClients: manager for: numThreads and: problemSize.
 
-      i := 0.
-      threads := Array new: numThreads withAll: [
-        i := i + 1.
+      i:: 0.
+      threads:: Array new: numThreads withAll: [
+        i:: i + 1.
         Thread spawn: [:i |
           (clients at: i) run
         ] with: (Array with: i)
@@ -43,14 +43,14 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
 
     private initializeManager: problemSize = (
       | random manager numRelations ids i |
-      random  := Random new.
-      manager := Manager new.
+      random::  Random new.
+      manager:: Manager new.
 
-      numRelations := ParamDefaultRelations << problemSize.
+      numRelations:: ParamDefaultRelations << problemSize.
 
-      i := 0.
-      ids := Array new: numRelations withAll: [
-        i := i + 1.
+      i:: 0.
+      ids:: Array new: numRelations withAll: [
+        i:: i + 1.
         i
       ].
 
@@ -58,18 +58,18 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
         (* Shuffle ids *)
         1 to: numRelations / 2 do: [:i |
           | x y tmp |
-          x := random next % numRelations + 1.
-          y := random next % numRelations + 1.
-          tmp := ids at: x.
+          x:: random next % numRelations + 1.
+          y:: random next % numRelations + 1.
+          tmp:: ids at: x.
           ids at: x put: (ids at: y).
           ids at: y put: tmp ].
 
         (* Populate table *)
         1 to: numRelations do: [:i |
           | id num price |
-          id := ids at: i.
-          num := random next % 5 + 1 * 100.
-          price := random next % 5 * 10 + 50.
+          id:: ids at: i.
+          num:: random next % 5 + 1 * 100.
+          price:: random next % 5 * 10 + 50.
           t = ReservationCar ifTrue: [
             manager addCar: id num: num price: price
           ] ifFalse: [
@@ -86,15 +86,15 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
     private initializeClients: manager for: numClients and: problemSize = (
       | numTransaction numRelation percentQuery clients numTransactionPerClient
         queryRange i |
-      numTransaction := ParamDefaultTransactions << problemSize.
-      numRelation    := ParamDefaultRelations << problemSize.
-      percentQuery   := ParamDefaultQueries.
+      numTransaction:: ParamDefaultTransactions << problemSize.
+      numRelation::    ParamDefaultRelations << problemSize.
+      percentQuery::   ParamDefaultQueries.
 
-      numTransactionPerClient := (numTransaction // numClients + 0.5) asInteger.
-      queryRange := (percentQuery // 100.0 * numRelation + 0.5) asInteger.
+      numTransactionPerClient:: (numTransaction // numClients + 0.5) asInteger.
+      queryRange:: (percentQuery // 100.0 * numRelation + 0.5) asInteger.
 
-      i := 0.
-      clients := Array new: numClients withAll: [
+      i:: 0.
+      clients:: Array new: numClients withAll: [
         Client id: i mng: manager ops: numTransactionPerClient
                queries: ParamDefaultNumber range: queryRange
                percent: ParamDefaultUser ].
@@ -104,15 +104,15 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
 
     private checkTables: manager problemSize: problemSize = (
       | numRelation customers tables percentQuery queryRange maxCustomerId |
-      numRelation := ParamDefaultRelations << problemSize.
-      customers   := manager customers.
+      numRelation:: ParamDefaultRelations << problemSize.
+      customers::   manager customers.
 
-      tables := Array with: manager cars with: manager flights with: manager rooms.
+      tables:: Array with: manager cars with: manager flights with: manager rooms.
 
       (* Check for unique customer IDs *)
-      percentQuery  := ParamDefaultQueries.
-      queryRange    := (percentQuery // 100.0 * numRelation + 0.5) asInteger.
-      maxCustomerId := queryRange + 1.
+      percentQuery::  ParamDefaultQueries.
+      queryRange::    (percentQuery // 100.0 * numRelation + 0.5) asInteger.
+      maxCustomerId:: queryRange + 1.
       1 to: maxCustomerId do: [:i |
         (customers at: i) ~= nil ifTrue: [
           (customers remove: i) == nil ifTrue: [
@@ -121,7 +121,7 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
       (* Check reservation tables for consistency and unique ids *)
       1 to: tables size do: [:t |
         | table |
-        table := tables at: t.
+        table:: tables at: t.
         1 to: numRelation do: [:i |
           (table at: i) ~= nil ifTrue: [
             t = ReservationCar ifTrue: [
@@ -156,12 +156,12 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
     private addReservation: reservations id: id num: num price: price = (
       reservations mtx critical: [
         | reservation |
-        reservation := reservations at: id.
+        reservation:: reservations at: id.
         reservation == nil
           ifTrue: [
             (* Create new reservation *)
             (num < 1 and: [ price < 0 ]) ifTrue: [ ^ false ].
-            reservation := Reservation new: id num: num price: price.
+            reservation:: Reservation new: id num: num price: price.
             reservations at: id put: reservation ]
           ifFalse: [
             (* Update existing reservation *)
@@ -215,7 +215,7 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
     public deleteFlight: flightId = (
       | reservation |
       flights mtx critical: [
-        reservation := flights at: flightId ].
+        reservation:: flights at: flightId ].
 
       reservation == nil ifTrue: [ ^ false ].
 
@@ -234,7 +234,7 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
         (customers contains: customerId)
           ifTrue: [ ^ false ].
 
-        customer := Customer new: customerId.
+        customer:: Customer new: customerId.
         customers at: customerId put: customer
       ].
       ^ true
@@ -245,24 +245,24 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
     public deleteCustomer: customerId = (
       | customer reservations |
       customers mtx critical: [
-        customer := customers at: customerId ].
+        customer:: customers at: customerId ].
 
       customer == nil ifTrue: [ ^ false ].
 
-      reservations := Array with: cars with: rooms with: flights.
+      reservations:: Array with: cars with: rooms with: flights.
 
       (* Cancel this customer's reservations *)
       customer mtx critical: [
         | reservationList it |
-        reservationList := customer reservations.
-        it := reservationList head.
+        reservationList:: customer reservations.
+        it:: reservationList head.
         [ it next == nil ] whileFalse: [
           | reservation table resrv |
-          it := it next.
-          reservation := it data.
-          table := reservations at: reservation type.
+          it:: it next.
+          reservation:: it data.
+          table:: reservations at: reservation type.
           table mtx critical: [
-            resrv := table at: reservation id ].
+            resrv:: table at: reservation id ].
           resrv cancel ] ].
 
       customers mtx critical: [
@@ -273,13 +273,13 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
     (* returns numFree of a reservation, -1 if failure *)
     public queryNumFree: table id: id = (
       | numFree reservation |
-      numFree := -1.
+      numFree:: -1.
 
       table mtx critical: [
-        reservation := table at: id ].
+        reservation:: table at: id ].
 
       reservation ~= nil ifTrue: [
-        numFree := reservation getNumFree ].
+        numFree:: reservation getNumFree ].
 
       ^ numFree
     )
@@ -287,12 +287,12 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
     (* returns price of a reservation, -1 if failure *)
     public queryPrice: table id: id = (
       | price reservation |
-      price := -1.
+      price:: -1.
       table mtx critical: [
-        reservation := table at: id ].
+        reservation:: table at: id ].
 
       reservation ~= nil ifTrue: [
-        price := reservation getPrice ].
+        price:: reservation getPrice ].
 
       ^ price
     )
@@ -334,12 +334,12 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
        returns -1 if the customer does not exist *)
     public queryCustomerBill: customerId = (
       | bill customer |
-      bill := -1.
+      bill:: -1.
       customers mtx critical: [
-        customer := customers at: customerId ].
+        customer:: customers at: customerId ].
 
       customer ~= nil ifTrue: [
-        bill := customer bill ].
+        bill:: customer bill ].
 
       ^ bill
     )
@@ -349,12 +349,12 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
       | customer reservation |
 
       customers mtx critical: [
-        customer := customers at: customerId ].
+        customer:: customers at: customerId ].
 
       customer == nil ifTrue: [ ^ false ].
 
       table mtx critical: [
-        reservation := table at: id ].
+        reservation:: table at: id ].
 
       reservation == nil ifTrue: [
         ^ false ].
@@ -408,31 +408,31 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
     public run = (
       | manager random numOperation numQueryPerTransaction queryRange
         percentUser types ids ops prices |
-      manager := self manager.
-      random  := self random.
+      manager:: self manager.
+      random::  self random.
 
-      numOperation           := self numOperation.
-      numQueryPerTransaction := self numQueryPerTransaction.
-      queryRange             := self queryRange.
-      percentUser            := self percentUser.
+      numOperation::           self numOperation.
+      numQueryPerTransaction:: self numQueryPerTransaction.
+      queryRange::             self queryRange.
+      percentUser::            self percentUser.
 
-      types  := Array new: numQueryPerTransaction withAll: 0.
-      ids    := Array new: numQueryPerTransaction withAll: 0.
-      ops    := Array new: numQueryPerTransaction withAll: 0.
-      prices := Array new: numQueryPerTransaction withAll: 0.
+      types::  Array new: numQueryPerTransaction withAll: 0.
+      ids::    Array new: numQueryPerTransaction withAll: 0.
+      ops::    Array new: numQueryPerTransaction withAll: 0.
+      prices:: Array new: numQueryPerTransaction withAll: 0.
 
       1 to: numOperation do: [:i |
         | r action numQuery customerId |
-        r := random next % 100.
-        action := selectAction: r with: percentUser.
+        r:: random next % 100.
+        action:: selectAction: r with: percentUser.
 
         action = ActionMakeReservation ifTrue: [
           | maxPrices maxIds |
-          maxPrices := Array new: NumReservationType withAll: -1.
-          maxIds    := Array new: NumReservationType withAll: -1.
+          maxPrices:: Array new: NumReservationType withAll: -1.
+          maxIds::    Array new: NumReservationType withAll: -1.
 
-          numQuery   := random next % numQueryPerTransaction + 1.
-          customerId := random next % queryRange + 1.
+          numQuery::   random next % numQueryPerTransaction + 1.
+          customerId:: random next % queryRange + 1.
 
           1 to: numQuery do: [:n |
             types at: n put: random next % NumReservationType + 1.
@@ -443,12 +443,12 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
         ] ifFalse: [
           action = ActionDeleteCustomer ifTrue: [
             | customerId |
-            customerId := random next % queryRange + 1.
+            customerId:: random next % queryRange + 1.
             atomicMethodTwo: manager customer: customerId
           ] ifFalse: [
             action = ActionUpdateTables ifTrue: [
               | numUpdate |
-              numUpdate := random next % numQueryPerTransaction + 1.
+              numUpdate:: random next % numQueryPerTransaction + 1.
               1 to: numUpdate do: [:n |
                 types at: n put: random next % NumReservationType + 1.
                 ids at: n put: random next % queryRange + 1.
@@ -464,13 +464,13 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
                        prices: prices updates: numUpdates = (
       1 to: numUpdates do: [:n |
         | t id doAdd |
-        t     := types at: n.
-        id    := ids at: n.
-        doAdd := ops at: n.
+        t::     types at: n.
+        id::    ids at: n.
+        doAdd:: ops at: n.
         doAdd = 1
           ifTrue: [
             | newPrice |
-            newPrice := prices at: n.
+            newPrice:: prices at: n.
             t = ReservationCar ifTrue: [
               manager addCar: id num: 100 price: newPrice
             ] ifFalse: [
@@ -492,7 +492,7 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
 
     private atomicMethodTwo: manager customer: customerId = (
       | bill |
-      bill := manager queryCustomerBill: customerId.
+      bill:: manager queryCustomerBill: customerId.
       bill >= 0 ifTrue: [
         manager deleteCustomer: customerId ]
     )
@@ -501,28 +501,28 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
                      maxIds: maxIds queries: numQuery customer: customerId
                     isFound: wasFound = (
       | isFound |
-      isFound := wasFound.
+      isFound:: wasFound.
       1 to: numQuery do: [:n |
         | t id price |
-        t     := types at: n.
-        id    := ids at: n.
-        price := -1.
+        t::     types at: n.
+        id::    ids at: n.
+        price:: -1.
         t = ReservationCar ifTrue: [
           (manager queryCar: id) >= 0 ifTrue: [
-            price := manager queryCarPrice: id ]
+            price:: manager queryCarPrice: id ]
         ] ifFalse: [
           t = ReservationFlight ifTrue: [
             (manager queryFlight: id) >= 0 ifTrue: [
-              price := manager queryFlightPrice: id ]
+              price:: manager queryFlightPrice: id ]
           ] ifFalse: [
             t = ReservationRoom ifTrue: [
               (manager queryRoom: id) >= 0 ifTrue: [
-                price := manager queryRoomPrice: id ] ] ] ].
+                price:: manager queryRoomPrice: id ] ] ] ].
 
         price > (maxPrices at: t) ifTrue: [
           maxPrices at: t put: price.
           maxIds at: t put: id.
-          isFound := true ] ].
+          isFound:: true ] ].
 
       isFound ifTrue: [
         manager addCustomer: customerId ].
@@ -545,14 +545,14 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
   |)(
     public addReservationInfo: type id: id price: price = (
       | reservation |
-      reservation := ReservationInfo new: type id: id price: price.
+      reservation:: ReservationInfo new: type id: id price: price.
       ^ reservations insert: reservation
     )
 
     public removeReservationInfo: type id: id = (
       | findReservationInfo reservation |
-      findReservationInfo := ReservationInfo new: type id: id price: 0.
-      reservation         := reservations find: findReservationInfo.
+      findReservationInfo:: ReservationInfo new: type id: id price: 0.
+      reservation::         reservations find: findReservationInfo.
 
       reservation == nil ifTrue: [ ^ false ].
 
@@ -562,15 +562,15 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
 
     public bill = (
       | bill it |
-      bill := 0.
+      bill:: 0.
 
       mtx critical: [
-        it := reservations head.
+        it:: reservations head.
         [ it next == nil ] whileFalse: [
           | reservation |
-          it := it next.
-          reservation := it data.
-          bill := bill + reservation price ] ].
+          it:: it next.
+          reservation:: it data.
+          bill:: bill + reservation price ] ].
       ^ bill
     )
   )
@@ -585,23 +585,23 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
 
     private findPrevious: data = (
       | prev node |
-      prev := head.
-      node := prev next.
+      prev:: head.
+      node:: prev next.
 
       [ node == nil ] whileFalse: [
         (ReservationInfo compare: node data with: data) >= 0 ifTrue: [
           ^ prev
         ].
-        prev := node.
-        node := node next
+        prev:: node.
+        node:: node next
       ].
       ^ prev
     )
 
     public find: data = (
       | prev node |
-      prev := findPrevious: data.
-      node := prev next.
+      prev:: findPrevious: data.
+      node:: prev next.
 
       (node == nil or: [ (ReservationInfo compare: node data with: data) <> 0 ]) ifTrue: [
         ^ nil
@@ -612,27 +612,27 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
 
     public insert: data = (
       | prev node curr |
-      prev := findPrevious: data.
-      node := ListNode new: data.
-      curr := prev next.
+      prev:: findPrevious: data.
+      node:: ListNode new: data.
+      curr:: prev next.
 
       node next: curr.
       prev next: node.
-      size := size + 1.
+      size:: size + 1.
 
       ^ true
     )
 
     public remove: data = (
       | prev node |
-      prev := findPrevious: data.
-      node := prev next.
+      prev:: findPrevious: data.
+      node:: prev next.
 
       (node ~= nil and: [ (ReservationInfo compare: node data with: data) = 0 ]) ifTrue: [
         prev next: node next.
         node next: nil.
-        node := nil.
-        size := size - 1.
+        node:: nil.
+        size:: size - 1.
 
         ^ true
       ].
@@ -664,10 +664,10 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
        TODO: unclear how this works, is that an STM thing? *)
     public checkReservation = (
       | numUsed numFree numTotal price |
-      numUsed  := self numUsed.
-      numFree  := self numFree.
-      numTotal := self numTotal.
-      price    := self price.
+      numUsed::  self numUsed.
+      numFree::  self numFree.
+      numTotal:: self numTotal.
+      price::    self price.
     )
 
     (* Adds if 'num' > 0, removes if 'num' < 0 *)
@@ -675,8 +675,8 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
       mtx critical: [
         numFree + num < 0 ifTrue: [ ^ false ].
 
-        numFree  := numFree + num.
-        numTotal := numTotal + num.
+        numFree::  numFree + num.
+        numTotal:: numTotal + num.
         checkReservation.
         ^ true ]
     )
@@ -685,8 +685,8 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
       mtx critical: [
         numFree < 1 ifTrue: [ ^ false ].
 
-        numUsed := numUsed + 1.
-        numFree := numFree - 1.
+        numUsed:: numUsed + 1.
+        numFree:: numFree - 1.
         checkReservation.
         ^ true ]
     )
@@ -694,8 +694,8 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
     public cancel = (
       mtx critical: [
         numUsed < 1 ifTrue: [ ^ false ].
-        numUsed := numUsed + 1.
-        numFree := numFree - 1.
+        numUsed:: numUsed + 1.
+        numFree:: numFree - 1.
         checkReservation.
         ^ true ]
     )
@@ -705,7 +705,7 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
       mtx critical: [
         newPrice < 0 ifTrue: [ ^ false ].
 
-        price := newPrice.
+        price:: newPrice.
         checkReservation.
         ^ true ]
     )
@@ -719,7 +719,7 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
     (* returns -1 if A < B, 0 if A = B, 1 if A > B *)
     public compare: a with: b = (
       | typeDiff |
-      typeDiff := a type - b type.
+      typeDiff:: a type - b type.
       ^ typeDiff <> 0
           ifTrue:  [ typeDiff ]
           ifFalse: [ a id - b id ]

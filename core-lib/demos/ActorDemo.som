@@ -11,7 +11,7 @@ class ActorDemo usingPlatform: platform = Value (
 
   public woResolver = (
     | p |
-    p := (actors createActorFromValue: Result) <-: new.
+    p:: (actors createActorFromValue: Result) <-: new.
     p <-: get.
     'after get send, sequential' println.
     ^ 0
@@ -19,16 +19,16 @@ class ActorDemo usingPlatform: platform = Value (
 
   public wResolverNoCallback = (
     | p p2 |
-    p := (actors createActorFromValue: Result) <-: new.
-    p2 := p <-: get.
+    p:: (actors createActorFromValue: Result) <-: new.
+    p2:: p <-: get.
     'after get send, sequential' println.
     ^ 0
   )
 
   public wResolverAndCallback = (
     | p p2 |
-    p := (actors createActorFromValue: Result) <-: new.
-    p2 := p <-: get.
+    p:: (actors createActorFromValue: Result) <-: new.
+    p2:: p <-: get.
     p2 whenResolved: [:r |
       'after get async' println.
       r println.
@@ -40,7 +40,7 @@ class ActorDemo usingPlatform: platform = Value (
 
   public main: args = (
     | completionPP |
-    completionPP := actors createPromisePair.
+    completionPP:: actors createPromisePair.
 
     1 halt.
 

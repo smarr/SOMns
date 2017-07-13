@@ -5,7 +5,7 @@
 #  This is adapted from a benchmark written by John Ellis and Pete Kovac
 #  of Post Communications.
 #  It was modified by Hans Boehm of Silicon Graphics.
-# 
+#
 #       This is no substitute for real applications.  No actual application
 #       is likely to behave in exactly this way.  However, this benchmark was
 #       designed to be more representative of real applications than other
@@ -58,29 +58,29 @@ class GCBenchSuite usingPlatform: platform andHarness: harness = (
   )(
     public innerBenchmarkLoop: innerIterations numThreads: threads = (
       | temp_tree long_lived_tree array depths cur_depth t_start t_finish |
-      kStretchTreeDepth   := 9 * innerIterations.
-      kLongLivedTreeDepth := 8 * innerIterations.
-      kArraySize := 250000 * innerIterations.
-      kMaxTreeDepth := 8   * innerIterations.
-      kMinTreeDepth := 2   * innerIterations.
-      
+      kStretchTreeDepth::   9 * innerIterations.
+      kLongLivedTreeDepth:: 8 * innerIterations.
+      kArraySize:: 250000 * innerIterations.
+      kMaxTreeDepth:: 8   * innerIterations.
+      kMinTreeDepth:: 2   * innerIterations.
+
       (* Stretching memory with a binary tree of depth kStretchTreeDepth *)
 
-      temp_tree := self make_tree: kStretchTreeDepth.
-      temp_tree := nil.
+      temp_tree:: self make_tree: kStretchTreeDepth.
+      temp_tree:: nil.
 
       (* Creating a long-lived binary tree of depth kLongLivedTreeDepth *)
-      long_lived_tree := Node create.
+      long_lived_tree:: Node create.
       self populate: kLongLivedTreeDepth tree: long_lived_tree.
 
       (* Creating a long-lived array of kArraySize  doubles *)
-      array := Array new: kArraySize withAll: 0.0.
+      array:: Array new: kArraySize withAll: 0.0.
       1 to: kArraySize / 2 do: [:value | array at: value put: 1.0 // value].
-      depths := Array new: ((kMaxTreeDepth - kMinTreeDepth)/ 2 + 1).
-      cur_depth := kMinTreeDepth.
+      depths:: Array new: ((kMaxTreeDepth - kMinTreeDepth)/ 2 + 1).
+      cur_depth:: kMinTreeDepth.
       depths doIndexes: [:value |
         depths at: value put: cur_depth.
-        cur_depth := cur_depth + 2.
+        cur_depth:: cur_depth + 2.
       ].
       self time_constructions: depths.
 
@@ -102,18 +102,18 @@ class GCBenchSuite usingPlatform: platform andHarness: harness = (
     )
 
     time_construction: depth = ( | niters t_start t_finish temp_tree |
-      niters := self num_iters: depth.
+      niters:: self num_iters: depth.
       (* Creating niters trees of depth depth *)
 
       0 to: niters - 1 do: [:i |
-        temp_tree := Node create.
+        temp_tree:: Node create.
         self populate: depth tree: temp_tree.
-        temp_tree := nil.
+        temp_tree:: nil.
       ].
-      
+
       0 to: niters - 1 do: [:i |
-        temp_tree := self make_tree: depth.
-        temp_tree := nil.
+        temp_tree:: self make_tree: depth.
+        temp_tree:: nil.
       ].
     )
 
@@ -131,12 +131,12 @@ class GCBenchSuite usingPlatform: platform andHarness: harness = (
     )
 
     tree_size: i = ( |val|
-      val := 2.
-      i timesRepeat: [val := val * 2].
+      val:: 2.
+      i timesRepeat: [val:: val * 2].
       ^ val - 1
     )
   )
-  
+
   class Node create: l with: r = (
   | public left  ::= l.
     public right ::= r.|

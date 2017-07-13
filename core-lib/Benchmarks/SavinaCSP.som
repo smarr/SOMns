@@ -18,7 +18,7 @@ class SavinaCSP usingPlatform: platform andHarness: harness = Value (
       public run = (
         [ pingsLeft > 0 ] whileTrue: [
           toPong write: #ping.
-          pingsLeft := pingsLeft - 1.
+          pingsLeft:: pingsLeft - 1.
           fromPong read.
         ].
         toPong write: #stop.
@@ -35,7 +35,7 @@ class SavinaCSP usingPlatform: platform andHarness: harness = Value (
         | msg |
         [ fromPing read = #ping ] whileTrue: [
           toPing write: #pong.
-          pongCount := pongCount + 1.
+          pongCount:: pongCount + 1.
         ].
         done write: pongCount.
       )
@@ -43,9 +43,9 @@ class SavinaCSP usingPlatform: platform andHarness: harness = Value (
 
     public benchmark = (
       | chDone chToPing chToPong |
-      chDone   := Channel new.
-      chToPing := Channel new.
-      chToPong := Channel new.
+      chDone::   Channel new.
+      chToPing:: Channel new.
+      chToPong:: Channel new.
 
       processes spawn: Ping with: (Array with: NumPings with: chToPong out with: chToPing in).
       processes spawn: Pong with: (Array with: chDone out with: chToPing out with: chToPong in).

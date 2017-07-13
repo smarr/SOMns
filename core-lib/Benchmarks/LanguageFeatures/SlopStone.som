@@ -41,8 +41,8 @@ SlopStone = Benchmark (
   innerBenchmarkLoop: innerIterations numThreads: threads = (
     "Using the SlopStone benchmarks, but not doing the
      old style Stone performance number reporting"
-    obj := Object.
-    o := obj new.
+    obj:: Object.
+    o:: obj new.
     
     1 to: innerIterations do: [:i | self doIntAdd         ].
     1 to: innerIterations do: [:i | self doFloatAdd       ].

@@ -67,7 +67,7 @@ class Threading usingVmMirror: vmMirror usingKernel: kernel = Value (
     public critical: aBlock = (
       | value |
       self lock.
-      [ value := aBlock value ]
+      [ value:: aBlock value ]
         ensure: [ self unlock ].
       ^ value
     )

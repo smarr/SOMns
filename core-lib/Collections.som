@@ -49,7 +49,7 @@ class Collections usingKernel: kernel = Value (
 
     public union: aCollection = (
       | new |
-      new := Set new.
+      new:: Set new.
       new addAll: self.
       new addAll: aCollection.
       ^ new
@@ -57,7 +57,7 @@ class Collections usingKernel: kernel = Value (
 
     public intersection: aCollection = (
       | new |
-      new := Set new.
+      new:: Set new.
       self do: [:it |
           (aCollection contains: it) ifTrue: [ new add: it ]].
       ^ new
@@ -65,7 +65,7 @@ class Collections usingKernel: kernel = Value (
 
     public - aCollection = ( (* set difference *)
       | new |
-      new := Set new.
+      new:: Set new.
       self do: [:it |
           (aCollection contains: it) ifFalse: [ new add: it ]].
       ^ new
@@ -78,12 +78,12 @@ class Collections usingKernel: kernel = Value (
 
     public remove: anObject = (
       | newItems |
-      newItems := Vector new.
+      newItems:: Vector new.
       [ items isEmpty ]
         whileFalse: [ | it |
-          it := items remove.
+          it:: items remove.
           it = anObject ifFalse: [ newItems append: it ] ].
-      items := newItems
+      items:: newItems
     )
 
     (* Sets do not have the notion of ordering, but
@@ -101,7 +101,7 @@ class Collections usingKernel: kernel = Value (
 
     (* Collection *)
     public collect: block = ( | coll |
-      coll := Vector new.
+      coll:: Vector new.
       self do: [ :e | coll append: (block value: e) ].
       ^coll
     )
@@ -115,9 +115,9 @@ class Collections usingKernel: kernel = Value (
 
     public asString = (
       | result |
-      result := 'a Set('.
-      items do: [:e | result := result + e asString + ', '].
-      result := result + ')'.
+      result:: 'a Set('.
+      items do: [:e | result:: result + e asString + ', '].
+      result:: result + ')'.
       ^ result
     )
 
@@ -160,7 +160,7 @@ class Collections usingKernel: kernel = Value (
     private hash: key = (
       | hash |
       key isNil ifTrue: [ ^ 0 ].
-      hash := key hashcode.
+      hash:: key hashcode.
       ^ hash bitXor: (hash >>> 16)
     )
 
@@ -178,38 +178,38 @@ class Collections usingKernel: kernel = Value (
 
     public at: aKey ifAbsent: aBlock = (
       | hash e |
-      hash := hash: aKey.
-      e := bucket: hash.
+      hash:: hash: aKey.
+      e:: bucket: hash.
 
       [ e notNil ] whileTrue: [
         (e match: hash key: aKey)
           ifTrue: [ ^ e value ].
-        e := e next ].
+        e:: e next ].
       ^ aBlock value
     )
 
     public containsKey: aKey = (
       | hash e |
-      hash := hash: aKey.
-      e := bucket: hash.
+      hash:: hash: aKey.
+      e:: bucket: hash.
 
       [ e notNil ] whileTrue: [
         (e match: hash key: aKey)
           ifTrue: [ ^ true ].
-        e := e next ].
+        e:: e next ].
       ^ false
     )
 
     public at: aKey put: aVal = (
       | hash i current |
-      hash := hash: aKey.
-      i := bucketIdx: hash.
-      current := buckets at: i.
+      hash:: hash: aKey.
+      i:: bucketIdx: hash.
+      current:: buckets at: i.
 
       current isNil
         ifTrue: [
           buckets at: i put: (newEntry: aKey value: aVal hash: hash).
-          size_ := size_ + 1 ]
+          size_:: size_ + 1 ]
         ifFalse: [
           insertBucketEntry: aKey value: aVal hash: hash head: current ].
 
@@ -223,30 +223,30 @@ class Collections usingKernel: kernel = Value (
 
     private insertBucketEntry: key value: value hash: hash head: head = (
       | current |
-      current := head.
+      current:: head.
 
       [true] whileTrue: [
         (current match: hash key: key) ifTrue: [
           current value: value.
           ^ self ].
         current next isNil ifTrue: [
-          size_ := size_ + 1.
+          size_:: size_ + 1.
           current next: (newEntry: key value: value hash: hash).
           ^ self ].
-        current := current next ]
+        current:: current next ]
     )
 
     private resize = (
       | oldStorage |
-      oldStorage := buckets.
-      buckets := Array new: oldStorage size * 2.
+      oldStorage:: buckets.
+      buckets:: Array new: oldStorage size * 2.
       transferEntries: oldStorage
     )
 
     private transferEntries: oldStorage = (
       1 to: oldStorage size do: [:i |
         | current |
-        current := oldStorage at: i.
+        current:: oldStorage at: i.
         current notNil ifTrue: [
           oldStorage at: i put: nil.
           current next isNil
@@ -258,23 +258,23 @@ class Collections usingKernel: kernel = Value (
 
     private splitBucket: oldStorage bucket: i head: head = (
       | loHead loTail hiHead hiTail current |
-      loHead := nil. loTail := nil.
-      hiHead := nil. hiTail := nil.
-      current := head.
+      loHead:: nil. loTail:: nil.
+      hiHead:: nil. hiTail:: nil.
+      current:: head.
 
       [current notNil] whileTrue: [
         (current hash & oldStorage size) = 0
           ifTrue: [
             loTail isNil
-              ifTrue:  [ loHead := current ]
+              ifTrue:  [ loHead:: current ]
               ifFalse: [ loTail next: current ].
-            loTail := current ]
+            loTail:: current ]
           ifFalse: [
             hiTail isNil
-              ifTrue:  [ hiHead := current ]
+              ifTrue:  [ hiHead:: current ]
               ifFalse: [ hiTail next: current ].
-            hiTail := current ].
-        current := current next ].
+            hiTail:: current ].
+        current:: current next ].
 
       loTail notNil ifTrue: [
         loTail next: nil.
@@ -287,40 +287,40 @@ class Collections usingKernel: kernel = Value (
     public size      = ( ^ size_ )
     public isEmpty   = ( ^ size_ = 0 )
     public removeAll = (
-      buckets := Array new: buckets size.
-      size_ := 0.
+      buckets:: Array new: buckets size.
+      size_:: 0.
     )
 
     public keys = (
       | keys |
-      keys := Vector new: size_.
+      keys:: Vector new: size_.
       buckets do: [:b |
         | current |
-        current := b.
+        current:: b.
         [ current notNil ] whileTrue: [
           keys append: current key.
-          current := current next ] ].
+          current:: current next ] ].
       ^ keys
     )
 
     public do: block = (
       buckets do: [:b |
         | current |
-        current := b.
+        current:: b.
         [ current notNil ] whileTrue: [
           block value: current value.
-          current := current next ] ].
+          current:: current next ] ].
     )
 
     public values = (
       | values |
-      values := Vector new: size_.
+      values:: Vector new: size_.
       buckets do: [:b |
         | current |
-        current := b.
+        current:: b.
         [ current notNil ] whileTrue: [
           values append: current value.
-          current := current next ] ].
+          current:: current next ] ].
       ^ values
     )
   ) : (

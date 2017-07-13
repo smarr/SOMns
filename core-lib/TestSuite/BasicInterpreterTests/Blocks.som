@@ -27,13 +27,13 @@ class Blocks = ()():(
     public argAndLocal = (
       ^ ([:a |
         | blockLocal | 
-        blockLocal := 3.
+        blockLocal:: 3.
         a + blockLocal] value: 5)
     )
     
     public argAndContext = ( | methodLocal |
       ^ ([:a |
-        methodLocal := 3.
+        methodLocal:: 3.
         a + methodLocal] value: 5)
     )
 )

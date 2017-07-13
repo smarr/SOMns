@@ -2,7 +2,7 @@ class BlockInlining4 = () () : (
   private method: arg = (
     false whileFalse: [
       | resrv |
-      [ [ [ ^ resrv := arg ] value ] value ] value ].
+      [ [ [ ^ resrv:: arg ] value ] value ] value ].
   )
   public test = ( ^ method: 33 )
 )

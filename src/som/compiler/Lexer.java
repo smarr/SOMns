@@ -154,10 +154,7 @@ public final class Lexer {
     } else if (currentChar() == ']') {
       match(Symbol.EndBlock);
     } else if (currentChar() == ':') {
-      if (nextChar() == '=') {
-        state.incPtr(2);
-        state.set(Symbol.Assign, '\0', ":=");
-      } else if (nextChar() == ':') {
+      if (nextChar() == ':') {
         state.incPtr();
         if (nextChar() == '=') { // a little hack to have a double peek...
           state.incPtr(2);
@@ -219,6 +216,10 @@ public final class Lexer {
           while (Character.isLetter(currentChar()) || currentChar() == ':') {
             state.text.append(bufchar(state.incPtr()));
           }
+        } else if (currentChar() == ':') {
+          state.sym = Symbol.SetterKeyword;
+          state.incPtr();
+          state.text.append(':');
         }
       }
     } else if (Character.isDigit(currentChar())) {
