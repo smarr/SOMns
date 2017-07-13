@@ -179,8 +179,9 @@ public final class MessageSendNode {
 
       synchronized (getLock()) {
         if (specializer != null) {
-          EagerlySpecializableNode newNode = specializer.create(arguments, argumentNodes, getSourceSection(), !specializer.noWrapper());
-          if (specializer.noWrapper()) {
+          boolean noWrapper = specializer.noWrapper();
+          EagerlySpecializableNode newNode = specializer.create(arguments, argumentNodes, sourceSection, !noWrapper);
+          if (noWrapper) {
             return replace(newNode);
           } else {
             return makeEagerPrim(newNode);
