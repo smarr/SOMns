@@ -38,10 +38,9 @@ public abstract class BinaryExpressionNode extends EagerlySpecializableNode {
   }
 
   @Override
-  public EagerPrimitive wrapInEagerWrapper(
-      final EagerlySpecializableNode prim, final SSymbol selector,
+  public EagerPrimitive wrapInEagerWrapper(final SSymbol selector,
       final ExpressionNode[] arguments) {
-    return new EagerBinaryPrimitiveNode(getSourceSection(), selector,
+    return new EagerBinaryPrimitiveNode(sourceSection, selector,
         arguments[0], arguments[1], this);
   }
 }

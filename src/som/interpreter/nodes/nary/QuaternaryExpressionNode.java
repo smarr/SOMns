@@ -40,8 +40,7 @@ public abstract class QuaternaryExpressionNode extends EagerlySpecializableNode 
   }
 
   @Override
-  public EagerPrimitive wrapInEagerWrapper(
-      final EagerlySpecializableNode prim, final SSymbol selector,
+  public EagerPrimitive wrapInEagerWrapper(final SSymbol selector,
       final ExpressionNode[] arguments) {
     throw new NotYetImplementedException(); // wasn't needed so far
   }
