@@ -113,10 +113,6 @@ public final class MessageSendNode {
       return super.isTaggedWith(tag);
     }
 
-    public boolean isSpecialSend() {
-      return unwrapIfNecessary(argumentNodes[0]) instanceof ISpecialSend;
-    }
-
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       Object[] arguments = evaluateArguments(frame);
@@ -253,11 +249,6 @@ public final class MessageSendNode {
     protected UninitializedSymbolSendNode(final SSymbol selector,
         final SourceSection source, final VM vm) {
       super(selector, new ExpressionNode[0], source, vm);
-    }
-
-    @Override
-    public boolean isSpecialSend() {
-      return false;
     }
 
     @Override
