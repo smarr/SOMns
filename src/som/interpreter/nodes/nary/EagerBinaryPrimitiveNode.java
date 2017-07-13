@@ -30,9 +30,9 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitive {
       final BinaryExpressionNode primitive) {
     super(source);
     assert source == primitive.getSourceSection();
-    this.receiver  = receiver;
-    this.argument  = argument;
-    this.primitive = primitive;
+    this.receiver  = insert(receiver);
+    this.argument  = insert(argument);
+    this.primitive = insert(primitive);
     this.selector = selector;
   }
 

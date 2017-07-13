@@ -34,10 +34,10 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitive {
       final TernaryExpressionNode primitive) {
     super(source);
     assert source == primitive.getSourceSection();
-    this.receiver  = receiver;
-    this.argument1 = argument1;
-    this.argument2 = argument2;
-    this.primitive = primitive;
+    this.receiver  = insert(receiver);
+    this.argument1 = insert(argument1);
+    this.argument2 = insert(argument2);
+    this.primitive = insert(primitive);
     this.selector = selector;
   }
 
