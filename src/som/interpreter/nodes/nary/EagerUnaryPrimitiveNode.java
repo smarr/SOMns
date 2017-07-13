@@ -26,8 +26,8 @@ public final class EagerUnaryPrimitiveNode extends EagerPrimitive {
       final ExpressionNode receiver, final UnaryExpressionNode primitive) {
     super(source);
     assert source == primitive.getSourceSection();
-    this.receiver  = receiver;
-    this.primitive = primitive;
+    this.receiver  = insert(receiver);
+    this.primitive = insert(primitive);
     this.selector = selector;
   }
 

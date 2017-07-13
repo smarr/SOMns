@@ -43,7 +43,7 @@ public final class MessageSendNode {
       if (specializer.noWrapper()) {
         return newNode;
       } else {
-        return newNode.wrapInEagerWrapper(newNode, selector, arguments);
+        return newNode.wrapInEagerWrapper(selector, arguments);
       }
     } else {
       return new UninitializedMessageSendNode(selector, arguments, source, vm);
@@ -113,10 +113,6 @@ public final class MessageSendNode {
       return super.isTaggedWith(tag);
     }
 
-    public boolean isSpecialSend() {
-      return unwrapIfNecessary(argumentNodes[0]) instanceof ISpecialSend;
-    }
-
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       Object[] arguments = evaluateArguments(frame);
@@ -183,8 +179,9 @@ public final class MessageSendNode {
 
       synchronized (getLock()) {
         if (specializer != null) {
-          EagerlySpecializableNode newNode = specializer.create(arguments, argumentNodes, getSourceSection(), !specializer.noWrapper());
-          if (specializer.noWrapper()) {
+          boolean noWrapper = specializer.noWrapper();
+          EagerlySpecializableNode newNode = specializer.create(arguments, argumentNodes, sourceSection, !noWrapper);
+          if (noWrapper) {
             return replace(newNode);
           } else {
             return makeEagerPrim(newNode);
@@ -206,7 +203,7 @@ public final class MessageSendNode {
       VM.insertInstrumentationWrapper(this);
       assert prim.getSourceSection() != null;
 
-      PreevaluatedExpression result = replace(prim.wrapInEagerWrapper(prim, selector, argumentNodes));
+      PreevaluatedExpression result = replace(prim.wrapInEagerWrapper(selector, argumentNodes));
 
       VM.insertInstrumentationWrapper((Node) result);
 
@@ -253,11 +250,6 @@ public final class MessageSendNode {
     protected UninitializedSymbolSendNode(final SSymbol selector,
         final SourceSection source, final VM vm) {
       super(selector, new ExpressionNode[0], source, vm);
-    }
-
-    @Override
-    public boolean isSpecialSend() {
-      return false;
     }
 
     @Override
