@@ -8,6 +8,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.OperationNode;
@@ -17,7 +18,6 @@ import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.specialized.AndMessageNode.AndOrSplzr;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory.AndBoolMessageNodeFactory;
-import som.primitives.Primitive;
 import som.vm.Primitives.Specializer;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;

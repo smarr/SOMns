@@ -11,6 +11,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.VM;
 import som.interpreter.Invokable;
 import som.interpreter.SArguments;
@@ -19,7 +20,6 @@ import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.transactions.TxArrayAccessFactory.TxTernaryArrayOpNodeGen;
-import som.primitives.Primitive;
 import som.primitives.arrays.AtPutPrim.TxAtPutPrim;
 import som.vm.Primitives.Specializer;
 import som.vm.Symbols;
