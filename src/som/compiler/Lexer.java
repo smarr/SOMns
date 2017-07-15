@@ -95,7 +95,7 @@ public final class Lexer {
   private LexerState          state;
   private LexerState          stateAfterPeek;
 
-  protected Lexer(final String content, final long fileSize) {
+  protected Lexer(final String content) {
     this.content = content;
     peekDone = false;
     state = new LexerState();

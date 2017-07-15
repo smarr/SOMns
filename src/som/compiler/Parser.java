@@ -268,7 +268,7 @@ public class Parser {
       throw new ParseError("Provided file is empty.", NONE, this);
     }
 
-    lexer = new Lexer(content, fileSize);
+    lexer = new Lexer(content);
 
     getSymbolFromLexer();
 
