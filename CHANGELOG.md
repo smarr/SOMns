@@ -3,6 +3,8 @@
 ## [Unreleased] \(0.5.0\) [v5]
 
  - Implement Newspeak setter send syntax and remove old assignment syntax
+ - Added support for Newspeak's full numeral syntax. This includes notation for
+   a radix and the exponent notation. Examples: 16rFFFF, 2r10.11, 3.7e3 [PR #172](https://github.com/smarr/SOMns/pull/172)
 
 ## [0.4.0] - [Concurrency-Agnostic Debugger][v4]
 

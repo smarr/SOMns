@@ -600,7 +600,7 @@ class Validation usingPlatform: platform andHarness: harness = Value (
       actors after: 1 do: [ :r |
         counter <-: B.
         lim > 0 ifTrue: [
-          doB: counter lim: (lim-1)
+          doB: counter lim: lim - 1
         ]
       ]
     )
