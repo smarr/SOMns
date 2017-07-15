@@ -46,20 +46,20 @@ public final class Lexer {
       ptr        = old.ptr;
       sym        = old.sym;
       symc       = old.symc;
-      text       = new StringBuffer(old.text);
+      text       = new StringBuilder(old.text);
       startCoord = old.startCoord;
     }
 
     public void set(final Symbol sym, final char symChar, final String text) {
       this.sym  = sym;
       this.symc = symChar;
-      this.text = new StringBuffer(text);
+      this.text = new StringBuilder(text);
     }
 
     public void set(final Symbol sym) {
       this.sym = sym;
       this.symc = 0;
-      this.text = new StringBuffer();
+      this.text = new StringBuilder();
     }
 
     private int                 lineNumber;
@@ -73,7 +73,7 @@ public final class Lexer {
 
     private Symbol              sym;
     private char                symc;
-    private StringBuffer        text;
+    private StringBuilder       text;
 
     private SourceCoordinate    startCoord;
 
@@ -99,7 +99,7 @@ public final class Lexer {
     this.content = content;
     peekDone = false;
     state = new LexerState();
-    state.text = new StringBuffer();
+    state.text = new StringBuilder();
     state.ptr = 0;
     state.lineNumber = 1;
     state.lastLineEnd = 0;
@@ -134,7 +134,7 @@ public final class Lexer {
       peekDone = false;
       state = stateAfterPeek;
       stateAfterPeek = null;
-      state.text = new StringBuffer(state.text);
+      state.text = new StringBuilder(state.text);
       return state.sym;
     }
 
