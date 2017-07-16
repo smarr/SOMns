@@ -198,7 +198,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public <= argument = ( ^ (self < argument) or: [ self = argument ] )
     public negative    = ( ^ self < 0 )
     public between: a and: b = ( ^ (self > a) and: [ self < b ] )
-    public compareTo: other = ( ^ self < other ifTrue: [ - 1 ] ifFalse: [ self = other ifTrue: [ 0 ] ifFalse: [ 1 ] ] )
+    public compareTo: other = ( ^ self < other ifTrue: [ -1 ] ifFalse: [ self = other ifTrue: [ 0 ] ifFalse: [ 1 ] ] )
 
     (* Converting *)
     public asString    = ( ^ vmMirror intAsString: self )

@@ -28,51 +28,59 @@ class DoubleTests usingPlatform: platform testFramework: minitest = (
     public testIntegerDivision = (
       self assert: 1 equals: (4/3) + (4/5)
     )
-  
+
     public testDoubleDivision = (
       self assert: 32 // 15 equals: (4//3) + (4//5)
     )
-  
+
     public testAsString = (
       self assert: '0.5' equals: (1//2) asString.
       self assert: '0.5' equals: 0.5 asString.
     )
-  
+
     public testEquals = (
       self assert: (1.0 = 1).
     )
-  
+
     public testRound = (
       self assert:   1 equals:     (5//10) round.
       self assert:   1 equals:    (14//10) round.
       self assert: 445 equals: (44534//100) round.
     )
-  
+
     public testInfinity = (
       self assert: Double PositiveInfinity > 1.
       self assert: Double PositiveInfinity equals: Double PositiveInfinity + 1.
       self assert: Double PositiveInfinity equals: Double PositiveInfinity - 1.
     )
-    
+
     public testSin = (
       assert: 0.0 sin equals: 0.0.
       assert: 1.5707963267948966 sin equals: 1.0.
       assert: 3.2 sin < 0
     )
-    
+
     public testAbs = (
       assert:  1.5 abs equals: 1.5.
       assert: -1.5 abs equals: 1.5.
     )
-    
+
     public testLog = (
       assert: 1.0 log               equals: 0.0.
       assert: 2.718281828459045 log equals: 1.0.
     )
-    
+
     public testExp = (
       assert: 1.0 exp equals: 2.718281828459045.
       assert: 0.0 exp equals: 1.0.
+    )
+
+    public testAdvancedLiterals = (
+      assert: 1e-1     equals: 0.1.
+      assert: 1e-10    equals: 0.0000000001.
+      assert: 2r0.1    equals: 0.5.
+      assert: 36r0.I   equals: 0.5.
+      assert: 36r0.I00 equals: 0.5.
     )
   ) : ( TEST_CONTEXT = () )
 )

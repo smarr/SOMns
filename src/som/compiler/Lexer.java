@@ -46,20 +46,21 @@ public final class Lexer {
       ptr        = old.ptr;
       sym        = old.sym;
       symc       = old.symc;
-      text       = new StringBuffer(old.text);
+      text       = new StringBuilder(old.text);
       startCoord = old.startCoord;
+      numeralParser = old.numeralParser;
     }
 
     public void set(final Symbol sym, final char symChar, final String text) {
       this.sym  = sym;
       this.symc = symChar;
-      this.text = new StringBuffer(text);
+      this.text = new StringBuilder(text);
     }
 
     public void set(final Symbol sym) {
       this.sym = sym;
       this.symc = 0;
-      this.text = new StringBuffer();
+      this.text = new StringBuilder();
     }
 
     private int                 lineNumber;
@@ -73,7 +74,9 @@ public final class Lexer {
 
     private Symbol              sym;
     private char                symc;
-    private StringBuffer        text;
+    private StringBuilder       text;
+
+    private NumeralParser numeralParser;
 
     private SourceCoordinate    startCoord;
 
@@ -95,11 +98,11 @@ public final class Lexer {
   private LexerState          state;
   private LexerState          stateAfterPeek;
 
-  protected Lexer(final String content, final long fileSize) {
+  protected Lexer(final String content) {
     this.content = content;
     peekDone = false;
     state = new LexerState();
-    state.text = new StringBuffer();
+    state.text = new StringBuilder();
     state.ptr = 0;
     state.lineNumber = 1;
     state.lastLineEnd = 0;
@@ -134,7 +137,7 @@ public final class Lexer {
       peekDone = false;
       state = stateAfterPeek;
       stateAfterPeek = null;
-      state.text = new StringBuffer(state.text);
+      state.text = new StringBuilder(state.text);
       return state.sym;
     }
 
@@ -184,7 +187,11 @@ public final class Lexer {
     } else if (currentChar() == '.') {
       match(Symbol.Period);
     } else if (currentChar() == '-') {
-      match(Symbol.Minus);
+      if (isDigit(nextChar())) {
+        lexNumber();
+      } else {
+        match(Symbol.Minus);
+      }
     } else if (currentChar() == '<') {
       state.incPtr();
       if (currentChar() == ':') {
@@ -222,7 +229,7 @@ public final class Lexer {
           state.text.append(':');
         }
       }
-    } else if (Character.isDigit(currentChar())) {
+    } else if (isDigit(currentChar())) {
       lexNumber();
     } else {
       state.set(Symbol.NONE, currentChar(), "" + currentChar());
@@ -233,20 +240,10 @@ public final class Lexer {
   }
 
   private void lexNumber() {
-    state.set(Symbol.Integer);
+    state.set(Symbol.Numeral);
 
-    boolean sawDecimalMark = false;
-
-    do {
-      state.text.append(bufchar(state.incPtr()));
-
-      if (!sawDecimalMark      &&
-          '.' == currentChar() &&
-          Character.isDigit(nextChar())) {
-        state.sym = Symbol.Double;
-        state.text.append(bufchar(state.incPtr()));
-      }
-    } while (Character.isDigit(currentChar()));
+    state.numeralParser = new NumeralParser(this);
+    state.numeralParser.parse();
   }
 
   private void lexEscapeChar() {
@@ -346,6 +343,10 @@ public final class Lexer {
     return state.text.toString();
   }
 
+  protected NumeralParser getNumeralParser() {
+    return state.numeralParser;
+  }
+
   protected int getCurrentLineNumber() {
     return state.lineNumber;
   }
@@ -398,7 +399,7 @@ public final class Lexer {
     }
   }
 
-  private char currentChar() {
+  protected char currentChar() {
     return bufchar(state.ptr);
   }
 
@@ -406,14 +407,32 @@ public final class Lexer {
     return bufchar(state.ptr + 1);
   }
 
+  protected char nextChar(final int offset) {
+    return bufchar(state.ptr + offset);
+  }
+
+  protected char acceptChar() {
+    char c = bufchar(state.incPtr());
+    state.text.append(c);
+    return c;
+  }
+
   private boolean endOfContent() {
     return state.ptr >= content.length();
   }
 
-  private boolean isOperator(final char c) {
+  private static boolean isOperator(final char c) {
     return c == '~' || c == '&' || c == '|' || c == '*' || c == '/'
         || c == '\\' || c == '+' || c == '=' || c == '>' || c == '<'
         || c == ',' || c == '@' || c == '%';
+  }
+
+  protected static boolean isDigit(final char c) {
+    return c >= '0' && c <= '9';
+  }
+
+  protected static boolean isUppercaseLetter(final char c) {
+    return c >= 'A' && c <= 'Z';
   }
 
   private void match(final Symbol s) {

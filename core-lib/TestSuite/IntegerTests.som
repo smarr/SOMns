@@ -39,27 +39,27 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
       | a b |
       a:: 42.
       b:: 42.
-    
+
       self assert: a = b.  (* Integers are equal based on their value *)
 
       (* Sometimes it can be hard to implement efficiently, but it SHOULD really
        be true for all values of integers. *)
       a:: 1 << 30.  b:: 1 << 30.
       self assert: a equals: b.
-    
+
       a:: 1 << 32.  b:: 1 << 32.
       self assert: a equals: b.
-    
+
       a:: 1 << 60.  b:: 1 << 60.
       self assert: a equals: b.
-    
+
       a:: 1 << 70.  b:: 1 << 70.
       self assert: a equals: b.
-    
+
       a:: 1 << 100.  b:: 1 << 100.
       self assert: a equals: b.
     )
-    
+
     public testClassAndValueRanges = (
       | i |
       self assert: #Integer equals: (ObjectMirror reflecting: -42) className.
@@ -67,64 +67,64 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
       self assert: #Integer equals: (ObjectMirror reflecting:  23) className.
       self assert: #Integer equals: (ObjectMirror reflecting:  1073741823) className.
       self assert: #Integer equals: (ObjectMirror reflecting:  1073741824) className.
-    
+
       (* Let's test for size behavior and corresponding class *)
       i:: 1 << 30.
       self assert: #Integer equals: (ObjectMirror reflecting: i) className.
       self assert: i > 0 description: 'should not overflow'.
       self assert: '1073741824' equals: i asString.
-    
+
       i:: 1 << 32.
       self assert: #Integer equals: (ObjectMirror reflecting: i) className.
       self assert: i > 0 description: 'should not overflow'.
       self assert: '4294967296' equals: i asString.
-    
+
       i:: 1 << 60.
       self assert: #Integer equals: (ObjectMirror reflecting: i) className.
       self assert: i > 0 description: 'should not overflow'.
       self assert: '1152921504606846976' equals: i asString.
-    
+
       i:: 1 << 70.
       self assert: #Integer equals: (ObjectMirror reflecting: i) className.
       self assert: i > 0 description: 'should not overflow'.
       self assert: '1180591620717411303424' equals: i asString.
-    
+
       i:: -1 << 30.
       self assert: #Integer equals: (ObjectMirror reflecting: i) className.
       self assert: i < 0 description: 'should not underflow'.
       self assert: '-1073741824' equals: i asString.
-    
+
       i:: -1 << 32.
       self assert: #Integer equals: (ObjectMirror reflecting: i) className.
       self assert: i < 0 description: 'should not underflow'.
       self assert: '-4294967296' equals: i asString.
-    
+
       i:: -1 << 60.
       self assert: #Integer equals: (ObjectMirror reflecting: i) className.
       self assert: i < 0 description: 'should not underflow'.
       self assert: '-1152921504606846976' equals: i asString.
-    
+
       i:: -1 << 70.
       self assert: #Integer equals: (ObjectMirror reflecting: i) className.
       self assert: i < 0 description: 'should not underflow'.
       self assert: '-1180591620717411303424' equals: i asString.
     )
-            
+
     public testStringConversion = (
       self assert:  '0' equals: ( 0 asString).
       self assert:  '1' equals: ( 1 asString).
       self assert:  '2' equals: ( 2 asString).
       self assert: '-1' equals: (-1 asString).
       self assert: '-2' equals: (-2 asString).
-    
+
       self assert:  1 equals: (Integer fromString:  '1').
       self assert: -1 equals: (Integer fromString: '-1').
       self assert: 42 equals: (Integer fromString: '42').
-    
+
       self assert: 42 equals: '42' asInteger.
       self assert: -2 equals: '-2' asInteger.
     )
-          
+
     public testRangeBorders = (
       self assert:   '536870911' equals:   536870911 asString.
       self assert:   '536870912' equals:   536870912 asString.
@@ -142,7 +142,7 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
       self assert: '-2147483647' equals: -2147483647 asString.
       self assert: '-2147483648' equals: -2147483648 asString.
     )
-          
+
     public testComparisons = (
       self assert: ( 9 =  9).
       self deny:   ( 1 =  2).
@@ -165,24 +165,24 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
     )
 
     public testAddition = (
-      self assert: 0 equals: ( 0+0).
-      self assert: 1 equals: ( 1+0).
-      self assert: 1 equals: ( 0+1).
-      self assert: 2 equals: ( 1+1).
-      self assert: 0 equals: (-1+1).
-      self assert: 1 equals: (-1+2).
+      self assert: 0 equals:  0 + 0.
+      self assert: 1 equals:  1 + 0.
+      self assert: 1 equals:  0 + 1.
+      self assert: 2 equals:  1 + 1.
+      self assert: 0 equals: -1 + 1.
+      self assert: 1 equals: -1 + 2.
     )
 
     public testSubtraction = (
-      self assert:  1 equals: (1-0).
-      self assert: -1 equals: (0-1).
-      self assert:  1 equals: (2-1).
+      self assert:  1 equals: 1 - 0.
+      self assert: -1 equals: 0 - 1.
+      self assert:  1 equals: 2 - 1.
     )
 
     public testMultiplication = (
-      self assert:   0 equals: ( 1*  0).                     
-      self assert:  -1 equals: (-1*  1).                   
-      self assert: -25 equals: ( 5* -5).                    
+      self assert:   0 equals: ( 1*  0).
+      self assert:  -1 equals: (-1*  1).
+      self assert: -25 equals: ( 5* -5).
       self assert:  12 equals: (-3* -4).
     )
 
@@ -203,13 +203,13 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
       self assert: -4 equals: ( 20// -5).
       self assert:  1 equals: ( -5// -5).
     )
-          
+
     public testModulo = (
       self assert:  1 equals: ( 10 %  3).
       self assert: -2 equals: ( 10 % -3).
       self assert:  2 equals: (-10 %  3).
       self assert: -1 equals: (-10 % -3).
-    
+
       self assert:  1 equals: ( 10 rem:  3).
       self assert:  1 equals: ( 10 rem: -3).
       self assert: -1 equals: (-10 rem:  3).
@@ -235,12 +235,12 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
       self assert: 0 equals: (2 & 1).
       self assert: 2 equals: (2 & 2).
     )
-  
+
     public testBitXor = (
       self assert: 0 equals: (1 bitXor: 1).
       self assert: 3 equals: (2 bitXor: 1).
     )
-  
+
     public testAs32BitUnsignedValue = (
       self assert: 1 <<  1 equals: (1 <<  1) as32BitUnsignedValue.
       self assert: 1 << 10 equals: (1 << 10) as32BitUnsignedValue.
@@ -255,30 +255,30 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
       self assert: -2147483648 equals: (1 << 31) as32BitSignedValue.
       self assert:           0 equals: (1 << 32) as32BitSignedValue.
     )
-  
+
     public testUnsignedRightShift = (
       self assert: 0   equals:    1 >>> 1.
       self assert: 512 equals: 1024 >>> 1.
       self assert: 127 equals: 1023 >>> 3.
-    
+
       (* not sure whether we should really insist on this *)
       self assert: 9223372036854775807 equals:    -1 >>> 1.
       self assert: 9223372036854775296 equals: -1024 >>> 1.
     )
-    
+
     public testMinMax = (
       assert: (0 min: 1) equals: 0.
       assert: (1 min: 0) equals: 0.
       assert: (1 max: 0) equals: 1.
       assert: (0 max: 1) equals: 1.
     )
-    
+
     public testToByDo = (
       | v |
       v:: Vector new.
       0 to: 10 by: 2 do: [:i |
         v append: i ].
-      
+
       assert: v size equals: 6.
       assert: (v at: 1) equals:  0.
       assert: (v at: 2) equals:  2.
@@ -287,7 +287,7 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
       assert: (v at: 5) equals:  8.
       assert: (v at: 6) equals: 10.
     )
-    
+
     public testDownToByDo = (
       | v |
       v:: Vector new.
@@ -301,6 +301,16 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
       assert: (v at: 4) equals:  4.
       assert: (v at: 5) equals:  2.
       assert: (v at: 6) equals:  0.
+    )
+
+    public testAdvancedLiterals = (
+      assert: 1e1     equals: 10.0.
+      assert: 16rA    equals: 10.
+      assert: 2r11    equals: 3.
+      assert: 2r1111  equals: 15.
+      assert: 10r1111 equals: 1111.
+      assert: 36rZ    equals: 35.
+      assert: 60rZ0   equals: 2100.
     )
   ) : ( TEST_CONTEXT = () )
 )
