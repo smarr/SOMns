@@ -16,7 +16,6 @@ import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SClass;
 import tools.concurrency.ActorExecutionTrace;
-import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.entities.ActivityType;
 
@@ -56,7 +55,7 @@ public abstract class CreateActorPrim extends BinaryComplexOperation {
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-    if (tag == ActivityCreation.class || tag == ExpressionBreakpoint.class) {
+    if (tag == ExpressionBreakpoint.class) {
       return true;
     }
     return super.isTaggedWith(tag);
