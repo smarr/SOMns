@@ -288,7 +288,16 @@ public class Parser {
     return lexer.getStartCoordinate();
   }
 
+  private void compatibilityNewspeakVersionAndFileCategory() throws ParseError {
+    if (sym == Identifier && "Newspeak3".equals(text)) {
+      expect(Identifier, KeywordTag.class);
+      expect(STString, LiteralTag.class);
+    }
+  }
+
   public MixinBuilder moduleDeclaration() throws ProgramDefinitionError {
+    compatibilityNewspeakVersionAndFileCategory();
+
     comments();
     return classDeclaration(null, AccessModifier.PUBLIC);
   }
