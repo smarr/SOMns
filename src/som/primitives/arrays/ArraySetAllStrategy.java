@@ -2,13 +2,18 @@ package som.primitives.arrays;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
 import som.VM;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.primitives.ObjectPrims.IsValue;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vm.constants.KernelObj;
+import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -106,6 +111,89 @@ public final class ArraySetAllStrategy {
     }
   }
 
+  @ExplodeLoop
+  public static Object evalForRemaining(final VirtualFrame frame,
+      final ExpressionNode[] exprs, final long[] storage, final int next) {
+    for (int i = next; i < exprs.length; i++) {
+      try {
+        storage[i] = exprs[i].executeLong(frame);
+      } catch (UnexpectedResultException e) {
+        Object[] newStorage = new Object[exprs.length];
+        for (int j = 0; j < i; j += 1) {
+          newStorage[j] = storage[j];
+        }
+        newStorage[i] = e.getResult();
+        return evalForRemaining(frame, exprs, newStorage, i + 1);
+      }
+    }
+    return storage;
+  }
+
+  @ExplodeLoop
+  public static Object evalForRemaining(final VirtualFrame frame,
+      final ExpressionNode[] exprs, final boolean[] storage, final int next) {
+    for (int i = next; i < exprs.length; i++) {
+      try {
+        storage[i] = exprs[i].executeBoolean(frame);
+      } catch (UnexpectedResultException e) {
+        Object[] newStorage = new Object[exprs.length];
+        for (int j = 0; j < i; j += 1) {
+          newStorage[j] = storage[j];
+        }
+        newStorage[i] = e.getResult();
+        return evalForRemaining(frame, exprs, newStorage, i + 1);
+      }
+    }
+    return storage;
+  }
+
+  @ExplodeLoop
+  public static Object evalForRemaining(final VirtualFrame frame,
+      final ExpressionNode[] exprs, final double[] storage, final int next) {
+    for (int i = next; i < exprs.length; i++) {
+      try {
+        storage[i] = exprs[i].executeDouble(frame);
+      } catch (UnexpectedResultException e) {
+        Object[] newStorage = new Object[exprs.length];
+        for (int j = 0; j < i; j += 1) {
+          newStorage[j] = storage[j];
+        }
+        newStorage[i] = e.getResult();
+        return evalForRemaining(frame, exprs, newStorage, i + 1);
+      }
+    }
+    return storage;
+  }
+
+  @ExplodeLoop
+  public static Object evalForRemaining(final VirtualFrame frame,
+      final ExpressionNode[] exprs, final Object[] storage, final int next) {
+    for (int i = next; i < exprs.length; i++) {
+      storage[i] = exprs[i].executeGeneric(frame);
+    }
+    return storage;
+  }
+
+  @ExplodeLoop
+  public static Object evalForRemainingNils(final VirtualFrame frame,
+      final ExpressionNode[] exprs, final int next) {
+    for (int i = next; i < exprs.length; i++) {
+      Object result = exprs[i].executeGeneric(frame);
+      if (result != Nil.nilObject) {
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        // TODO: not optimized for partially empty literals,
+        //       changes immediately to object storage
+        Object[] newStorage = new Object[exprs.length];
+        for (int j = 0; j < i; j += 1) {
+          newStorage[j] = Nil.nilObject;
+        }
+        newStorage[i] = result;
+        return evalForRemaining(frame, exprs, newStorage, i + 1);
+      }
+    }
+    return exprs.length;
+  }
+
   public static Object evaluateFirstDetermineStorageAndEvaluateRest(
       final SBlock blockNoArg, final long length,
       final BlockDispatchNode blockDispatch) {
@@ -161,6 +249,30 @@ public final class ArraySetAllStrategy {
       Object[] newStorage = new Object[(int) length];
       evalBlockWithArgForRemaining(blockWithArg, length, newStorage, blockDispatch, result, isValue);
       return newStorage;
+    }
+  }
+
+  public static Object evaluateFirstDetermineStorageAndEvaluateRest(
+      final VirtualFrame frame, final ExpressionNode[] exprs) {
+    Object result = exprs[0].executeGeneric(frame);
+    if (result == Nil.nilObject) {
+      return evalForRemainingNils(frame, exprs, SArray.FIRST_IDX + 1);
+    } else if (result instanceof Long) {
+      long[] newStorage = new long[exprs.length];
+      newStorage[0] = (long) result;
+      return evalForRemaining(frame, exprs, newStorage, SArray.FIRST_IDX + 1);
+    } else if (result instanceof Double) {
+      double[] newStorage = new double[exprs.length];
+      newStorage[0] = (double) result;
+      return evalForRemaining(frame, exprs, newStorage, SArray.FIRST_IDX + 1);
+    } else if (result instanceof Boolean) {
+      boolean[] newStorage = new boolean[exprs.length];
+      newStorage[0] = (boolean) result;
+      return evalForRemaining(frame, exprs, newStorage, SArray.FIRST_IDX + 1);
+    } else {
+      Object[] newStorage = new Object[exprs.length];
+      newStorage[0] = result;
+      return evalForRemaining(frame, exprs, newStorage, SArray.FIRST_IDX + 1);
     }
   }
 }

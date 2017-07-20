@@ -1441,7 +1441,7 @@ public class Parser {
       comments();
       if (sym == RCurly) {
         expect(RCurly, DelimiterClosingTag.class);
-        return new ArrayLiteralNode(expressions.toArray(new ExpressionNode[0]), getSource(coord));
+        return ArrayLiteralNode.create(expressions.toArray(new ExpressionNode[0]), getSource(coord));
       }
       if (needsSeparator) {
         expect(Period,
