@@ -1224,7 +1224,7 @@ OTHER DEALINGS IN THE SOFTWARE. *)
 
     public testCase: testCase = (
       | suite |
-      suite:: TestSuite testCases: (Array with: testCase).
+      suite:: TestSuite testCases: { testCase }.
       ^ testSuite: suite
     )
   )

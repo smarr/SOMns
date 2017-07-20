@@ -47,8 +47,8 @@ class SavinaCSP usingPlatform: platform andHarness: harness = Value (
       chToPing:: Channel new.
       chToPong:: Channel new.
 
-      processes spawn: Ping with: (Array with: NumPings with: chToPong out with: chToPing in).
-      processes spawn: Pong with: (Array with: chDone out with: chToPing out with: chToPong in).
+      processes spawn: Ping with: { NumPings.   chToPong out. chToPing in }.
+      processes spawn: Pong with: { chDone out. chToPing out. chToPong in }.
 
       ^ chDone in read
     )

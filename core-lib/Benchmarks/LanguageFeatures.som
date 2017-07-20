@@ -34,13 +34,13 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
       result:: self fibonacci: 20.
       ^ result
     )
-  
+
     fibonacci: n = (
         ^ n <= 1
-            ifTrue:  1 
+            ifTrue:  1
             ifFalse: [ (self fibonacci: n - 1) + (self fibonacci: n - 2) ]
     )
-  
+
     public verifyResult: result = (
       ^ 10946 = result
     )
@@ -48,17 +48,17 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public newInstance = ( ^ self new )
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
-  
+
   public class OuterConstLoop = Benchmark ()(
     public benchmark = (
       | result |
       result:: 0.
-      1 to: 100000 do: [:i | 
+      1 to: 100000 do: [:i |
         result:: result + one.
       ].
       ^ result
     )
-    
+
     public verifyResult: result = (
       ^ 555500000 = result
     )
@@ -81,31 +81,31 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
         counter:: counter + 1.
         counter:: counter + 1.
         counter:: counter + 1.
-      
+
         counter:: counter + 1.
         counter:: counter + 1.
         counter:: counter + 1.
         counter:: counter + 1.
         counter:: counter + 1.
-      
+
         counter:: counter + 1.
         counter:: counter + 1.
         counter:: counter + 1.
         counter:: counter + 1.
         counter:: counter + 1.
-      
+
         counter:: counter + 1.
         counter:: counter + 1.
         counter:: counter + 1.
         counter:: counter + 1.
         counter:: counter + 1.
-      
+
         counter:: counter + 1.
         counter:: counter + 1.
         counter:: counter + 1.
         counter:: counter + 1.
         counter:: counter + 1.
-      
+
         counter:: counter + 1.
         counter:: counter + 1.
         counter:: counter + 1.
@@ -114,7 +114,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
       ].
       ^ counter
     )
-  
+
     public verifyResult: result = (
       ^ 600000 = result
     )
@@ -122,14 +122,14 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public newInstance = ( ^ self new )
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
-  
+
   public class FieldWrite = Benchmark (
     | counter |
   )(
     public benchmark = (
       | bar |
       bar:: 1234.
-  
+
       1 to: 20000 do: [:i |
         counter:: 2122.
       ].
@@ -143,14 +143,14 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public newInstance = ( ^ self new )
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
-  
+
   public class IntegerLoop = Benchmark ()(
     public benchmark = ( | bounds a |
       bounds:: 20000.
       bounds negated to: bounds by: 1 do: [:value | a:: value-value].
       ^ a
     )
-  
+
     public verifyResult: result = (
       ^ 0 = result
     )
@@ -158,7 +158,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public newInstance = ( ^ self new )
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
-  
+
   public class Loop = Benchmark ()(
     singleRun = (
       | sum |
@@ -169,13 +169,13 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
       ^ sum
     )
 
-    public benchmark = ( 
+    public benchmark = (
       | sum |
       sum:: 0.
       1 to: 200 do: [ :i | sum:: sum + self singleRun ].
       ^ sum
     )
-  
+
     public verifyResult: result = (
       ^ 20000 = result
     )
@@ -183,13 +183,13 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public newInstance = ( ^ self new )
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
-  
+
   public class NonLocalReturn = Benchmark ()(
 
     first:  a = ( ^ self second: a )
     second: a = ( ^ self third: a  )
     third:  a = ( a value )
-  
+
     nlr = ( self first: [ ^ 1 ] )
 
     public benchmark = (
@@ -198,7 +198,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
       1 to: 200 do: [ :i | sum:: sum + self nlr ].
       ^ sum
     )
-  
+
     public verifyResult: result = (
       ^ 200 = result
     )
@@ -206,18 +206,18 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public newInstance = ( ^ self new )
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
-  
+
   public class Exceptions = Benchmark ()(
     class ReturnEx signal: a = Exception (
       | public a = a. |
       self signal
     )()
-    
+
     first:  a = ( ^ self second: a )
     second: a = ( ^ self third: a  )
     third:  a = ( ReturnEx signal: a )
     throw = ( self first: 1 )
-    
+
     public benchmark = (
       | sum |
       sum:: 0.
@@ -228,7 +228,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
       ].
       ^ sum
     )
-  
+
     public verifyResult: result = (
       ^ 200 = result
     )
@@ -236,17 +236,17 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public newInstance = ( ^ self new )
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
-  
+
   public class Recurse = Benchmark ()(
     public benchmark = (
       ^ self recurse: 13
     )
-  
+
     recurse: n = (
       n > 0 ifTrue: [ self recurse: n - 1. self recurse: n - 1 ].
       ^ n
     )
-  
+
     public verifyResult: result = (
       ^ 13 = result
     )
@@ -254,21 +254,21 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public newInstance = ( ^ self new )
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
-  
+
   public class Sum = Benchmark ()(
     public benchmark = (
       | result |
       1 to: 2 do: [:i | result:: self sumFrom: 1 to: 10000 ].
       ^ result
     )
-  
+
     sumFrom: start to: end = (
       | sum |
       sum:: 0.
       start to: end do: [:i | sum:: sum + i ].
       ^ sum
     )
-  
+
     public verifyResult: result = (
       ^ 50005000 = result
     )
@@ -276,7 +276,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public newInstance = ( ^ self new )
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
-  
+
   public class WhileLoop = Benchmark ()(
     singleRun = (
       | sum |
@@ -287,7 +287,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
       ^ sum
     )
 
-    public benchmark = ( 
+    public benchmark = (
       | sum |
       sum:: 0.
       [sum < 20000]
@@ -295,7 +295,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
           [sum:: sum + self singleRun].
       ^ sum
     )
-  
+
     public verifyResult: result = (
       ^ 20000 = result
     )
@@ -321,7 +321,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
       ^ sum
     )
 
-    public benchmark = ( 
+    public benchmark = (
         | sum |
         sum:: 0.
         [sum < 20000]
@@ -337,7 +337,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public newInstance = ( ^ self new )
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
-  
+
   public class VectorRead = Benchmark ()(
     singleRun = (
         | sum v |
@@ -350,7 +350,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
         ^ sum
     )
 
-    public benchmark = ( 
+    public benchmark = (
       | sum |
       sum:: 0.
       [sum < 20000]
@@ -358,7 +358,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
           [sum:: sum + self singleRun].
       ^ sum
     )
-    
+
     public verifyResult: result = (
       ^ 20000 = result
     )
@@ -374,9 +374,9 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
       1 to: 20000 do: [:i | cnt:: cnt + (self method: i) ].
       ^ cnt
     )
-    
+
     method: argument = ( ^argument )
-    
+
     public verifyResult: result = (
       ^ 200010000 = result
     )
@@ -384,7 +384,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public newInstance = ( ^ self new )
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
-  
+
   public class DispatchNoArg = Benchmark ()(
     public benchmark = (
       | cnt |
@@ -392,9 +392,9 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
       1 to: 20000 do: [:i | cnt:: cnt + self method ].
       ^ cnt
     )
-  
+
     method = ( ^ 1 )
-    
+
     public verifyResult: result = (
       ^ 20000 = result
     )
@@ -402,19 +402,19 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public newInstance = ( ^ self new )
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
-  
-  (* TODO: fix perform primitive 
+
+  (* TODO: fix perform primitive
   public class DispatchPerform = Benchmark ()(
     public benchmark = (
       | cnt mirror |
       cnt:: 0.
       mirror:: ObjectMirror reflecting: self.
-      1 to: 20000 do: [ :i | mirror perform: #method: withArguments: (Array with: i)].
+      1 to: 20000 do: [ :i | mirror perform: #method: withArguments: { i }].
       ^ cnt
     )
-  
+
     public method: argument = ( ^ argument )
-    
+
     public verifyResult: result = (
       ^ 200010000 = result
     )
@@ -422,7 +422,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public newInstance = ( ^ self new )
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   ) *)
-  
+
   public class DispatchPerformNoArg = Benchmark ()(
     public benchmark = (
       | cnt mirror |
@@ -431,9 +431,9 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
       1 to: 20000 do: [ :i | cnt:: cnt + (mirror perform: #method)].
       ^ cnt
     )
-  
+
     public method = ( ^ 1 )
-    
+
     public verifyResult: result = (
       ^ 20000 = result
     )
@@ -446,13 +446,13 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     class AValue = Value (
     | public a = 1. b = 2. c = 3. d = 5. |
     )()
-    
+
     public benchmark = (
       | val |
       1 to: 20000 do: [:i | val:: AValue new ].
       ^ val
     )
-    
+
     public verifyResult: result = (
       ^ 1 = result a
     )
@@ -465,7 +465,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   | public a1 = val. a2 = val. a3 = val. a4 = val. a5 = val. a6 = val.
     a7 = val. a8 = val. a9 = val. a10 = val. |
   )()
-  
+
   public class InstantiateValueValueObject = Benchmark (
   | aValue ::= ValueValue new: 2. |
   )(
@@ -474,7 +474,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
       1 to: 20000 do: [:i | val:: ValueValue new: aValue ].
       ^ val
     )
-    
+
     public verifyResult: result = (
       ^ 2 = (result a1 a1)
     )
@@ -482,11 +482,11 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public newInstance = ( ^ self new )
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
-  
+
   class ValueValueFewer new: val = Value (
   | public a1 = val. a2 = val. a3 = val. |
   )()
-  
+
   public class InstantiateValueValueObjectFewer = Benchmark (
   | aValue ::= ValueValueFewer new: 2. |
   )(
@@ -495,7 +495,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
       1 to: 20000 do: [:i | val:: ValueValueFewer new: aValue ].
       ^ val
     )
-    
+
     public verifyResult: result = (
       ^ 2 = (result a1 a1)
     )
@@ -503,11 +503,11 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public newInstance = ( ^ self new )
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
-  
+
   class ObjWithOneMutableField = (
   | public foo ::= 0. |
   )()
-  
+
   public class FieldWriteToEscapedObject = Benchmark (
   | private obj = ObjWithOneMutableField new. |
   )(
@@ -515,7 +515,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
       1 to: 20000000 do: [:i | obj foo: i ].
       ^ obj foo
     )
-    
+
     public verifyResult: result = (
       ^ 20000000 = result
     )
@@ -523,29 +523,28 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public newInstance = ( ^ self new )
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
-  
+
   public class PolyMorphicBlocks = Benchmark ()(
     public benchmark = (
       | blocks cnt |
-      blocks:: Array new: 10.
 
       cnt:: 0.
-      blocks at: 1 put: [ cnt:: cnt +     1 ].
-      blocks at: 2 put: [ cnt:: cnt + 10000 ].
-      blocks at: 3 put: [ cnt:: cnt + 100000000 ].
-      blocks at: 4 put: [ cnt:: cnt ].
-      blocks at: 5 put: [ cnt:: cnt ].
-      blocks at: 6 put: [ cnt:: cnt ].
-      blocks at: 7 put: [ cnt:: cnt ].
-      blocks at: 8 put: [ cnt:: cnt ].
-      blocks at: 9 put: [ cnt:: cnt +     1 ].
-      blocks at: 10 put: [ cnt:: cnt +     1 ].
-      
+      blocks:: { [ cnt:: cnt +     1 ].
+                 [ cnt:: cnt + 10000 ].
+                 [ cnt:: cnt + 100000000 ].
+                 [ cnt:: cnt ].
+                 [ cnt:: cnt ].
+                 [ cnt:: cnt ].
+                 [ cnt:: cnt ].
+                 [ cnt:: cnt ].
+                 [ cnt:: cnt +     1 ].
+                 [ cnt:: cnt +     1 ] }.
+
       1 to: 8000 do: [:i |
         blocks do: [:b | b value ] ].
       ^ cnt
     )
-  
+
     public verifyResult: result = (
     result println.
       (* ^ 800080008000 = result *)

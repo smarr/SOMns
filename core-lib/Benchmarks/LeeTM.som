@@ -15,8 +15,8 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
   private TRACK      = 8192.
   private MAX_WEIGHT = 1.
 
-  private dx = newDx.
-  private dy = newDy.
+  private dx = { { -1. 1.  0. 0 }. {  0. 0. -1. 1 } }.
+  private dy = { {  0. 0. -1. 1 }. { -1. 1.  0. 0 } }.
 |) (
   class Lee = Benchmark (
   | private data ::= nil.
@@ -573,7 +573,7 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
     private instantiateGrid = (
       ^ Array new: lt gridSize withAll: [
         Array new: lt gridSize withAll: [
-          Array new: 2 withAll: [ GridCell new: EMPTY ] ] ]
+          { GridCell new: EMPTY. GridCell new: EMPTY } ] ]
     )
 
     public run = (
@@ -591,38 +591,6 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
 
     public updateStatistics = ( myLaidTracks:: myLaidTracks + 1 )
     public reset            = ( myLaidTracks:: 0 )
-  )
-
-  private newDx = (
-    | arr1 arr2 |
-    arr1:: Array new: 4.
-    arr1 at: 1 put: -1.
-    arr1 at: 2 put:  1.
-    arr1 at: 3 put:  0.
-    arr1 at: 4 put:  0.
-
-    arr2:: Array new: 4.
-    arr2 at: 1 put:  0.
-    arr2 at: 2 put:  0.
-    arr2 at: 3 put: -1.
-    arr2 at: 4 put:  1.
-    ^ Array with: arr1 with: arr2
-  )
-
-  private newDy = (
-    | arr1 arr2 |
-    arr1:: Array new: 4.
-    arr1 at: 1 put:  0.
-    arr1 at: 2 put:  0.
-    arr1 at: 3 put: -1.
-    arr1 at: 4 put:  1.
-
-    arr2:: Array new: 4.
-    arr2 at: 1 put: -1.
-    arr2 at: 2 put:  1.
-    arr2 at: 3 put:  0.
-    arr2 at: 4 put:  0.
-    ^ Array with: arr1 with: arr2
   )
 
   public newInstance = ( ^ Lee new )

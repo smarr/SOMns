@@ -275,7 +275,7 @@ class Havlak usingPlatform: platform andHarness: harness = (
         findLoops: LoopStructureGraph new ].
 
       lsg calculateNestingLevel.
-      ^ Array with: lsg numLoops with: cfg numNodes
+      ^ { lsg numLoops. cfg numNodes }
     )
 
     private constructCFG: parLoops p: pparLoops p: ppparLoops = (

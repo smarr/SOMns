@@ -183,7 +183,7 @@ class DeltaBlue usingPlatform: platform andHarness: harness = (
     public changeVar: aVariable newValue: newValue = (
       | editConstraint plan |
       editConstraint:: EditConstraint var: aVariable strength: #preferred addTo: self.
-      plan:: self extractPlanFromConstraints: (Array with: editConstraint).
+      plan:: self extractPlanFromConstraints: { editConstraint }.
       10 timesRepeat: [
         aVariable value: newValue.
         plan execute].
@@ -251,7 +251,7 @@ class DeltaBlue usingPlatform: platform andHarness: harness = (
 
       StayConstraint var: vars last strength: #strongDefault addTo: planner.
       editConstraint:: EditConstraint var: vars first strength: #preferred addTo: planner.
-      plan:: planner extractPlanFromConstraints: (Array with: editConstraint).
+      plan:: planner extractPlanFromConstraints: { editConstraint }.
 
       1 to: 100 do: [:v |
         vars first value: v.
