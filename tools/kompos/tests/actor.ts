@@ -73,17 +73,17 @@ describe("Actor Stepping", () => {
       test: "return from turn to promise resolution",
       type: ST.RETURN_FROM_TURN_TO_PROMISE_RESOLUTION,
       length: 1,
-      methodName: "Ping>>#validate:",
-      line: 34,
-      stackIndex: 1
+      methodName: "Ping>>#λping@27@31:",
+      line: 27,
+      stackIndex: 2
     },
     {
       test: "resume after returning from turn",
       type: ST.RESUME,
       length: 1,
-      methodName: "Ping>>#λping@27@31:",
-      line: 27,
-      stackIndex: 2
+      methodName: "Ping>>#validate:",
+      line: 33,
+      stackIndex: 1
     }],
 
     "stepping to next turn":
@@ -97,17 +97,17 @@ describe("Actor Stepping", () => {
     {
       test: "step to next turn",
       type: ST.STEP_TO_NEXT_TURN,
-      length: 2,
-      methodName: "Ping>>#ping",
-      line: 24,
+      length: 1,
+      methodName: "Ping>>#pong:",
+      line: 56,
       stackIndex: 1
     },
     {
       test: "resume after stepping to next turn",
       type: ST.RESUME,
       length: 1,
-      methodName: "Ping>>#validate:",
-      line: 33,
+      methodName: "Ping>>#ping",
+      line: 23,
       stackIndex: 2
     }],
 
@@ -197,7 +197,7 @@ describe("Actor Stepping", () => {
       test: "should resume after step to promise resolution",
       type: ST.RESUME,
       length: 1,
-      methodName: "Ping>>#λping@27@31:",
+      methodName: "Ping>>#ping",
       line: 27,
       stackIndex: 3
     },
@@ -205,8 +205,8 @@ describe("Actor Stepping", () => {
       test: "should resume again to get to resolution",
       type: ST.RESUME,
       length: 1,
-      methodName: "Thing>>#println",
-      line: 71,
+      methodName: "Ping>>#ping",
+      line: 27,
       stackIndex: 4
     }],
 
@@ -238,7 +238,7 @@ describe("Actor Stepping", () => {
       test: "resume after step to promise resolution",
       type: ST.RESUME,
       length: 1,
-      methodName: "Ping>>#λvalidate@34@77:",
+      methodName: "Ping>>#validate:",
       line: 34,
       stackIndex: 3
     },
@@ -246,8 +246,8 @@ describe("Actor Stepping", () => {
       test: "resume again to get to resolution",
       type: ST.RESUME,
       length: 1,
-      methodName: "Thing>>#println",
-      line: 71,
+      methodName: "Ping>>#validate:",
+      line: 34,
       stackIndex: 4
     }],
 

@@ -179,7 +179,7 @@ public enum SteppingType {
       Group.ACTOR_STEPPING, "msg-close", null, new ActivityType[] {ActivityType.ACTOR}) {
     @Override
     public void process(final Suspension susp) {
-      susp.getEvent().prepareStepOver(1);
+      susp.getEvent().prepareContinue();
       susp.getActivityThread().setSteppingStrategy(this);
     }
   },
@@ -189,7 +189,7 @@ public enum SteppingType {
       "Return from Turn to Promise Resolution", Group.ACTOR_STEPPING, "msg-embedded",
       null, new ActivityType[] {ActivityType.ACTOR}) {
     @Override public void process(final Suspension susp) {
-      susp.getEvent().prepareStepOver(1);
+      susp.getEvent().prepareContinue();
       susp.getActivityThread().setSteppingStrategy(this);
     }
   };
