@@ -8,6 +8,7 @@ import som.primitives.arrays.ArraySetAllStrategy;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.SMutableArray;
+import tools.dym.Tags.NewArray;
 
 public abstract class ArrayLiteralNode extends LiteralNode {
   public static ArrayLiteralNode create(final ExpressionNode[] exprs, final SourceSection source) {
@@ -20,6 +21,15 @@ public abstract class ArrayLiteralNode extends LiteralNode {
     super(source);
     assert source != null;
     this.expressions = expressions;
+  }
+
+  @Override
+  protected boolean isTaggedWith(final Class<?> tag) {
+    if (tag == NewArray.class) {
+      return true;
+    } else {
+      return super.isTaggedWith(tag);
+    }
   }
 
   private static final class Uninit extends ArrayLiteralNode {
