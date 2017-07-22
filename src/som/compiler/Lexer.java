@@ -194,7 +194,7 @@ public final class Lexer {
       if (isDigit(nextChar())) {
         lexNumber();
       } else {
-        match(Symbol.Minus);
+        lexOperator();
       }
     } else if (currentChar() == '<') {
       state.incPtr();
@@ -325,6 +325,8 @@ public final class Lexer {
       match(Symbol.At);
     } else if (currentChar() == '%') {
       match(Symbol.Per);
+    } else if (currentChar() == '-') {
+      match(Symbol.Minus);
     }
   }
 
