@@ -92,7 +92,7 @@ public final class Lexer {
     }
   }
 
-  private final String content;
+  protected final String content;
 
   private boolean             peekDone;
   private LexerState          state;

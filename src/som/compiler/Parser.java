@@ -124,12 +124,12 @@ import tools.language.StructuralProbe;
 
 public class Parser {
 
-  private final Lexer               lexer;
+  protected final Lexer             lexer;
   private final Source              source;
 
   private final SomLanguage         language;
 
-  private Symbol                    sym;
+  protected Symbol                  sym;
   private String                    text;
   private Symbol                    nextSym;
   private String                    nextText;
@@ -618,7 +618,10 @@ public class Parser {
   }
 
   private String slotDecl() throws ParseError {
-    return identifier();
+    String id = identifier();
+
+    new TypeParser(this).parseType();
+    return id;
   }
 
   private void initExprs(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
@@ -735,7 +738,7 @@ public class Parser {
     throw new ParseError(msg, s, this);
   }
 
-  private void expect(final Symbol s, final Class<? extends Tags> tag) throws ParseError {
+  protected void expect(final Symbol s, final Class<? extends Tags> tag) throws ParseError {
     expect(s, "Unexpected symbol. Expected %(expected)s, but found %(found)s", tag);
   }
 
@@ -793,6 +796,8 @@ public class Parser {
         binaryPattern(builder);
         break;
     }
+
+    new TypeParser(this).parseReturnType();
   }
 
   protected void unaryPattern(final MethodBuilder builder) throws ParseError {
@@ -882,6 +887,9 @@ public class Parser {
   private String argument() throws ParseError {
     SourceCoordinate coord = getCoordinate();
     String id = identifier();
+
+    new TypeParser(this).parseType();
+
     language.getVM().reportSyntaxElement(ArgumentTag.class, getSource(coord));
     return id;
   }
