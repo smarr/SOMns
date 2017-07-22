@@ -588,6 +588,8 @@ public class Parser {
     SourceCoordinate coord = getCoordinate();
     AccessModifier acccessModifier = accessModifier();
 
+    comments();
+
     String slotName = slotDecl();
     boolean immutable;
     ExpressionNode init;
@@ -1060,12 +1062,17 @@ public class Parser {
         // Parse true, false, and nil as keyword-like constructs
         // (cf. Newspeak spec on reserved words)
         if (acceptIdentifier("true", LiteralTag.class)) {
+          comments();
           return new TrueLiteralNode(getSource(coord));
         }
+
         if (acceptIdentifier("false", LiteralTag.class)) {
+          comments();
           return new FalseLiteralNode(getSource(coord));
         }
+
         if (acceptIdentifier("nil", LiteralTag.class)) {
+          comments();
           return new NilLiteralNode(getSource(coord));
         }
         if ("outer".equals(text)) {
@@ -1073,6 +1080,9 @@ public class Parser {
         }
 
         SSymbol selector = unarySelector();
+
+        comments();
+
         return builder.getImplicitReceiverSend(selector, getSource(coord));
       }
       case NewTerm: {
@@ -1113,8 +1123,12 @@ public class Parser {
     expectIdentifier("outer", KeywordTag.class);
     String outer = identifier();
 
+    comments();
+
     ExpressionNode operand = builder.getOuterRead(outer, getSource(coord));
     operand = binaryConsecutiveMessages(builder, operand, false, null);
+
+    comments();
     return operand;
   }
 
@@ -1171,6 +1185,8 @@ public class Parser {
       final boolean eventualSend, final SourceSection sendOperator) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
+
+    comments();
     return createMessageSend(selector, new ExpressionNode[] {receiver},
         eventualSend, getSource(coord), sendOperator, language);
   }
