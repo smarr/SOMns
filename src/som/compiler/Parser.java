@@ -1233,7 +1233,10 @@ public class Parser {
 
     do {
       kw.append(keyword());
+      comments();
+
       arguments.add(formula(builder));
+      comments();
     }
     while (sym == Keyword);
 
