@@ -213,7 +213,7 @@ public final class Lexer {
       }
     } else if (isOperator(currentChar())) {
       lexOperator();
-    } else if (Character.isLetter(currentChar())) {
+    } else if (Character.isLetter(currentChar()) || currentChar() == '_') {
       state.set(Symbol.Identifier);
       while (isIdentifierChar(currentChar())) {
         state.text.append(bufchar(state.incPtr()));
