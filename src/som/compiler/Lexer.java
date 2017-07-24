@@ -156,6 +156,10 @@ public final class Lexer {
       match(Symbol.NewBlock);
     } else if (currentChar() == ']') {
       match(Symbol.EndBlock);
+    } else if (currentChar() == '{') {
+      match(Symbol.LCurly);
+    } else if (currentChar() == '}') {
+      match(Symbol.RCurly);
     } else if (currentChar() == ':') {
       if (nextChar() == ':') {
         state.incPtr();

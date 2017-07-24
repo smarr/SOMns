@@ -32,7 +32,7 @@ class ProcessTests usingPlatform: platform testFramework: minitest = Value (
     public testProcessCreationAndChannelCommunication = (
       | c |
       c:: Channel new.
-      processes spawn: DoneProcess with: (Array with: c out).
+      processes spawn: DoneProcess with: { c out }.
       assert: c in read equals: #done.
     )
 
@@ -42,8 +42,8 @@ class ProcessTests usingPlatform: platform testFramework: minitest = Value (
       c2:: Channel new.
       c3:: Channel new.
 
-      processes spawn: PassToNext with: (Array with: c1 in with: c2 out).
-      processes spawn: PassToNext with: (Array with: c2 in with: c3 out).
+      processes spawn: PassToNext with: { c1 in. c2 out }.
+      processes spawn: PassToNext with: { c2 in. c3 out }.
       c1 out write: 44.
       assert: c3 in read equals: 44.
     )

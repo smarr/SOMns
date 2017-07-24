@@ -41,13 +41,7 @@ class NBodySuite usingPlatform: platform andHarness: harness = (
   )(
     public createBodies = (
       | px py pz bodies |
-
-      bodies:: Array new: 5.
-      bodies at: 1 put: Body sun.
-      bodies at: 2 put: Body jupiter.
-      bodies at: 3 put: Body saturn.
-      bodies at: 4 put: Body uranus.
-      bodies at: 5 put: Body neptune.
+      bodies:: { Body sun. Body jupiter. Body saturn. Body uranus. Body neptune }.
 
       (* bodies do: [:b | b print. '' println ]. *)
 

@@ -1,0 +1,133 @@
+(* Copyright (c) 2001-2017 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+class ArrayLiteralTests usingPlatform: platform testFramework: minitest = (
+| private TestContext = minitest TestContext. |
+)(
+
+  public class ArrayLiteralTest = TestContext ()(
+
+    public generateLiteral: i = (
+        ^ { i. }
+    )
+
+    public testNil = (
+      | l |
+      l:: {nil. nil. nil}.
+      assert: (l at: 1) equals: nil.
+      assert: (l at: 2) equals: nil.
+      assert: (l at: 3) equals: nil.
+
+      l at: 1 put: #rr.
+      assert: (l at: 1) equals: #rr.
+      assert: (l at: 2) equals: nil.
+      assert: (l at: 3) equals: nil.
+    )
+
+    public testInteger = (
+      | l |
+      l:: {0. 1. 2}.
+      assert: (l at: 1) equals: 0.
+      assert: (l at: 2) equals: 1.
+      assert: (l at: 3) equals: 2.
+
+      l at: 1 put: #rr.
+      assert: (l at: 1) equals: #rr.
+      assert: (l at: 2) equals: 1.
+      assert: (l at: 3) equals: 2.
+    )
+
+    public testDouble = (
+      | l |
+      l:: {0.0. 1.0. 2.0}.
+      assert: (l at: 1) equals: 0.0.
+      assert: (l at: 2) equals: 1.0.
+      assert: (l at: 3) equals: 2.0.
+
+      l at: 2 put: #rr.
+      assert: (l at: 1) equals: 0.0.
+      assert: (l at: 2) equals: #rr.
+      assert: (l at: 3) equals: 2.0.
+    )
+
+    public testBoolean = (
+      | l |
+      l:: {true. false. true}.
+      assert: (l at: 1) equals: true.
+      assert: (l at: 2) equals: false.
+      assert: (l at: 3) equals: true.
+
+      l at: 3 put: #rr.
+      assert: (l at: 1) equals: true.
+      assert: (l at: 2) equals: false.
+      assert: (l at: 3) equals: #rr.
+    )
+
+    public testMixed = (
+      | l o |
+      o:: Object new.
+      l:: {nil. false. #rr. o}.
+      assert: (l at: 1) is: nil.
+      assert: (l at: 2) equals: false.
+      assert: (l at: 3) equals: #rr.
+      assert: (l at: 4) is: o.
+    )
+
+    public testEquality = (
+      deny: ({0. 1. 2} == {0. 1. 2}).
+      1 to: 3 do: [ :i |
+        assert: ({0. 1. 2} at: i) equals: ({0. 1. 2} at: i) ]
+    )
+
+    public testElements = (
+      | a |
+      a:: { 1. 2. 3. 'f' }.
+      assert: (a at: 1) equals: 1.
+      assert: (a at: 2) equals: 2.
+      assert: (a at: 3) equals: 3.
+      assert: (a at: 4) equals: 'f'.
+    )
+
+    public testInLoop = (
+       | sum l |
+
+       sum:: 0.
+       1 to: 1000 do: [ :i |
+         l:: generateLiteral: i.
+         sum:: sum + (l at: 1) ].
+
+       assert: sum equals: 500500.
+    )
+
+    public testComplexExpressions = (
+      | l |
+      l:: {
+        ((5, 6, 7) size) + 3 * 12 / 4.0.
+        [:j | [:i | i + 1 ] value: j ] value: 1001.
+        generateLiteral: 5 // 2.
+      }.
+
+      assert: (l at: 1) equals: 18.
+      assert: (l at: 2) equals: 1002.
+      assert: ((l at: 3) at: 1) equals: 2.5.
+    )
+
+  ) : ( TEST_CONTEXT = () )
+)

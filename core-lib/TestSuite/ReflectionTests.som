@@ -54,12 +54,12 @@ class ReflectionTest usingPlatform: platform testFramework: minitest = (
     public testPerform = (
       | o mirrorO mirror23 |
       mirror23:: ObjectMirror reflecting: 23.
-      self assert: (mirror23 perform: #between:and: withArguments: (Array with: 22 with: 24)).
+      self assert: (mirror23 perform: #between:and: withArguments: { 22. 24 }).
 
       o:: ReflectionTarget new.
       mirrorO:: ObjectMirror reflecting: o.
       assert: (mirrorO perform: #get) equals: 0.
-      mirrorO perform: #set: withArguments: (Array with: 5).
+      mirrorO perform: #set: withArguments: { 5 }.
 
       assert: (mirrorO perform: #get) equals: 5.
       assert: 28 equals: 5 + (mirror23 perform: #value)

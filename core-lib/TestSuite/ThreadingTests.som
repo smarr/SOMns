@@ -63,7 +63,7 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
       thread:: Thread spawn: [].
       self assert: (thread name beginsWith: 'Thread(').
 
-      thread:: Thread spawn: [:i | i ] with: (Array with: 1).
+      thread:: Thread spawn: [:i | i ] with: { 1 }.
       self assert: (thread name beginsWith: 'Thread(')
     )
 
@@ -137,8 +137,8 @@ class ThreadingTests usingPlatform: platform testFramework: minitest = (
 
     public testTaskInterfaceWithArgs = (
       | t1 t2 v1 v2 |
-      t1:: Task spawn: [:a | v1:: a ] with: (Array with: 1).
-      t2:: Task spawn: [:b | v2:: b ] with: (Array with: #foo).
+      t1:: Task spawn: [:a | v1:: a ] with: { 1 }.
+      t2:: Task spawn: [:b | v2:: b ] with: { #foo }.
 
       assert: 1 equals: t1 join.
       assert: 1 equals: v1.

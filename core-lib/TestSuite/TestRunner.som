@@ -89,6 +89,7 @@ class TestRunner usingPlatform: platform = (
                'DoubleTests',
                'IntegerTests',
                'StringTests',
+               'ArrayLiteralTests',
                'SymbolTests',
                'SystemTests',
                'BenchmarkHarnessTests',

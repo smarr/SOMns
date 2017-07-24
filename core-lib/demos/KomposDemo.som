@@ -273,8 +273,8 @@ class KomposDemo usingPlatform: platform = Value (
       stringOut:: toTokenizer out.
       dataIn::    toDataStore in.
 
-      processes spawn: JsonStreamTokenizer with: (Array with: toTokenizer in  with: toObjectCtor out).
-      processes spawn: DataFilterProcess   with: (Array with: toObjectCtor in with: toDataStore out).
+      processes spawn: JsonStreamTokenizer with: { toTokenizer in. toObjectCtor out }.
+      processes spawn: DataFilterProcess   with: { toObjectCtor in. toDataStore out }.
     )
 
     public stream: str = (
@@ -294,19 +294,16 @@ class KomposDemo usingPlatform: platform = Value (
   | private jsonInput = jsonInput.
   |)(
     private jsonStreamInput = (
-      | arr |
-      arr:: Array new: 10.
-      arr at:  1 put: '{"price":10,"quantity": 87,"customer": "Medesign","address":"993 Kensington Walk, Cassel, Tennessee, 8882","item": "strawberry"}'.
-      arr at:  2 put: '{"price": 5,"quantity": 83,"customer": "Gadtron","address": "652 Coffey Street, Oasis, Rhode Island, 8428","item": "apple"}'.
-      arr at:  3 put: '{"price": 5,"quantity": 20,"customer": "Rooforia","address": "117 Holmes Lane, Innsbrook, Connecticut, 4261","item": "banana"}'.
-      arr at:  4 put: '{"price": 4,"quantity": 18,"customer": "Sureplex","address": "586 Beacon Court, Durham, Louisiana, 1428","item": "apple"}'.
-      arr at:  5 put: '{"price": 2,"quantity": 39,"customer": "Spherix","address": "489 Beaver Street, Elbert, Florida, 3946","item": "strawberry"}'.
-      arr at:  6 put: '{"price": 8,"quantity": 33,"customer": "Podunk","address": "126 Concord Street, Westwood, Kansas, 2573","item": "banana"}'.
-      arr at:  7 put: '{"price": 1,"quantity": 31,"customer": "Malathion","address": "202 Newport Street, Boyd, Oklahoma, 4821","item": "strawberry"}'.
-      arr at:  8 put: '{"price": 3,"quantity": 48,"customer": "Illumity","address": "996 George Street, Bennett, Illinois, 1760","item": "strawberry"}'.
-      arr at:  9 put: '{"price": 2,"quantity": 33,"customer": "Accupharm","address": "654 Court Square, Kohatk, Indiana, 5110","item": "apple"}'.
-      arr at: 10 put: '{"price": 8,"quantity": 78,"customer": "Terascape","address": "767 Thatford Avenue, Sunbury, Delaware, 4729","item": "strawberry"}'.
-      ^ arr
+      ^ { '{"price":10,"quantity": 87,"customer": "Medesign","address":"993 Kensington Walk, Cassel, Tennessee, 8882","item": "strawberry"}'.
+          '{"price": 5,"quantity": 83,"customer": "Gadtron","address": "652 Coffey Street, Oasis, Rhode Island, 8428","item": "apple"}'.
+          '{"price": 5,"quantity": 20,"customer": "Rooforia","address": "117 Holmes Lane, Innsbrook, Connecticut, 4261","item": "banana"}'.
+          '{"price": 4,"quantity": 18,"customer": "Sureplex","address": "586 Beacon Court, Durham, Louisiana, 1428","item": "apple"}'.
+          '{"price": 2,"quantity": 39,"customer": "Spherix","address": "489 Beaver Street, Elbert, Florida, 3946","item": "strawberry"}'.
+          '{"price": 8,"quantity": 33,"customer": "Podunk","address": "126 Concord Street, Westwood, Kansas, 2573","item": "banana"}'.
+          '{"price": 1,"quantity": 31,"customer": "Malathion","address": "202 Newport Street, Boyd, Oklahoma, 4821","item": "strawberry"}'.
+          '{"price": 3,"quantity": 48,"customer": "Illumity","address": "996 George Street, Bennett, Illinois, 1760","item": "strawberry"}'.
+          '{"price": 2,"quantity": 33,"customer": "Accupharm","address": "654 Court Square, Kohatk, Indiana, 5110","item": "apple"}'.
+          '{"price": 8,"quantity": 78,"customer": "Terascape","address": "767 Thatford Avenue, Sunbury, Delaware, 4729","item": "strawberry"}' }
     )
 
     public start = (
@@ -369,7 +366,7 @@ class KomposDemo usingPlatform: platform = Value (
       leftTask:: Task
         spawn: [:l :h |
                   buildParallelSumTree: data from: l to: h ]
-         with: (Array with: low with: (high + low) / 2).
+         with: { low. (high + low) / 2) }.
 
       right:: buildParallelSumTree: data from: (high + low) / 2 to: high.
 

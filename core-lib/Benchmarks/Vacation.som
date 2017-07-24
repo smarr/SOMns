@@ -33,7 +33,7 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
         i:: i + 1.
         Thread spawn: [:i |
           (clients at: i) run
-        ] with: (Array with: i)
+        ] with: { i }
       ].
 
       threads do: [:t | t join ].
@@ -107,7 +107,7 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
       numRelation:: ParamDefaultRelations << problemSize.
       customers::   manager customers.
 
-      tables:: Array with: manager cars with: manager flights with: manager rooms.
+      tables:: { manager cars. manager flights. manager rooms }.
 
       (* Check for unique customer IDs *)
       percentQuery::  ParamDefaultQueries.
@@ -249,7 +249,7 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
 
       customer == nil ifTrue: [ ^ false ].
 
-      reservations:: Array with: cars with: rooms with: flights.
+      reservations:: { cars. rooms. flights }.
 
       (* Cancel this customer's reservations *)
       customer mtx critical: [

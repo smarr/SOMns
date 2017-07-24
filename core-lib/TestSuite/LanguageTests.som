@@ -625,7 +625,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       assert: value equals: 3.75
     )
 
-    private collection = ( ^ Array with: 7 with: 8 )
+    private collection = ( ^ { 7. 8 } )
   ) : ( TEST_CONTEXT = () )
 
   public class ReadUnwrittenVar = TestContext ()(

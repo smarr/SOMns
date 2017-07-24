@@ -40,6 +40,7 @@ import static som.compiler.Symbol.Exit;
 import static som.compiler.Symbol.Identifier;
 import static som.compiler.Symbol.Keyword;
 import static som.compiler.Symbol.KeywordSequence;
+import static som.compiler.Symbol.LCurly;
 import static som.compiler.Symbol.Less;
 import static som.compiler.Symbol.Minus;
 import static som.compiler.Symbol.MixinOperator;
@@ -56,6 +57,7 @@ import static som.compiler.Symbol.Per;
 import static som.compiler.Symbol.Period;
 import static som.compiler.Symbol.Plus;
 import static som.compiler.Symbol.Pound;
+import static som.compiler.Symbol.RCurly;
 import static som.compiler.Symbol.STString;
 import static som.compiler.Symbol.SlotMutableAssign;
 import static som.compiler.Symbol.Star;
@@ -82,6 +84,7 @@ import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNode;
+import som.interpreter.nodes.literals.ArrayLiteralNode;
 import som.interpreter.nodes.literals.BigIntegerLiteralNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext;
@@ -1037,6 +1040,9 @@ public class Parser {
           return new BlockNode(blockMethod, lastMethodsSourceSection);
         }
       }
+      case LCurly: {
+        return literalArray(builder);
+      }
       default: {
         if (symIn(literalSyms)) {
           return literal();
@@ -1422,6 +1428,29 @@ public class Parser {
     String s = string();
 
     return new StringLiteralNode(s, getSource(coord));
+  }
+
+  private LiteralNode literalArray(final MethodBuilder builder) throws ProgramDefinitionError {
+    SourceCoordinate coord = getCoordinate();
+    List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
+
+    expect(LCurly, DelimiterOpeningTag.class);
+
+    boolean needsSeparator = false;
+    while (true) {
+      comments();
+      if (sym == RCurly) {
+        expect(RCurly, DelimiterClosingTag.class);
+        return ArrayLiteralNode.create(expressions.toArray(new ExpressionNode[0]), getSource(coord));
+      }
+      if (needsSeparator) {
+        expect(Period,
+            "Could not parse statement. Expected a '.' but got '" + text + "'",
+            StatementSeparatorTag.class);
+      }
+      expressions.add(expression(builder));
+      needsSeparator = !accept(Period, StatementSeparatorTag.class);
+    }
   }
 
   private SSymbol selector() throws ParseError {
