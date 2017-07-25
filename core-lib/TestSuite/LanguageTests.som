@@ -739,4 +739,61 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       assert: o is: self.
     )
   ) : ( TEST_CONTEXT = () )
+
+  public class MessageCascades = TestContext ()(
+    class Cnt = (| public v ::= 0. |)(
+      public inc = ( v:: v + 1 )
+    )
+
+    class Setters = (|
+      public slot1
+      public slot2
+    |)(
+	    public runCascadeForEffect = (
+        self slot1: 23;
+             slot2: 42
+      )
+
+      public runCascadeForValue = (
+        ^ self slot1;
+               slot2
+      )
+    )
+
+    public testCascadeOnFieldRead = (
+      | c = Cnt new. |
+      assert: c v equals: 0.
+      c inc; inc; inc.
+      assert: c v equals: 3.
+    )
+
+    public testCascadeOnMultipleSends = (
+      | c = Cnt new. |
+      assert: c v equals: 0.
+      c inc inc inc;
+        inc;
+        inc;
+        inc.
+      assert: c v equals: 6.
+    )
+
+    public testKeywordCascade = (
+      | arr = Array new: 3. |
+
+      arr at: 1 put: 2;
+          at: 2 put: 3;
+          at: 3 put: 4.
+      assert: (arr at: 1) equals: 2.
+      assert: (arr at: 2) equals: 3.
+      assert: (arr at: 3) equals: 4.
+    )
+
+    public testSetter = (
+      | setter = Setters new. |
+      setter runCascadeForEffect.
+      assert: setter slot1 equals: 23.
+      assert: setter slot2 equals: 42.
+      assert: setter runCascadeForValue equals: 42.
+    )
+  ) : ( TEST_CONTEXT = () )
 )

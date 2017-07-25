@@ -44,8 +44,6 @@ the specifications are as follows:
 
  - local variables in methods do not yet support the full slotDeclartion style
 
- - as in SOM method chains are not supported
-
  - as in SOM, blocks can only have 3 arguments (counting `self`)
 
 Obtaining and Running SOMns

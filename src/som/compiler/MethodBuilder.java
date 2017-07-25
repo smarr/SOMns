@@ -85,6 +85,8 @@ public final class MethodBuilder {
 
   private final List<SInvokable> embeddedBlockMethods;
 
+  private int cascadeId;
+
 
   public MethodBuilder(final MixinBuilder holder, final MixinScope clsScope) {
     this(holder, clsScope, null, false, holder.getLanguage());
@@ -337,6 +339,11 @@ public final class MethodBuilder {
 
     Argument argument = new Argument(arg, arguments.size(), source);
     arguments.put(arg, argument);
+  }
+
+  public Local addMessageCascadeTemp(final SourceSection source) throws MethodDefinitionError {
+    cascadeId += 1;
+    return addLocal("$cascadeTmp" + cascadeId, true, source);
   }
 
   public Local addLocal(final String name, final boolean immutable,
