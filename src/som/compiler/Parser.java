@@ -1081,7 +1081,7 @@ public class Parser {
 
   private ExpressionNode messages(final MethodBuilder builder,
       final ExpressionNode receiver) throws ProgramDefinitionError {
-    ExpressionNode msg;
+    ExpressionNode msg = receiver;
     SourceCoordinate coord = getCoordinate();
     boolean eventualSend = accept(EventualSend, KeywordTag.class);
 
@@ -1090,45 +1090,26 @@ public class Parser {
       sendOp = getSource(coord);
     }
 
-    if (sym == Identifier) {
-      msg = unaryMessage(receiver, eventualSend, sendOp);
+    while (sym == Identifier) {
+      msg = unaryMessage(msg, eventualSend, sendOp);
       eventualSend = accept(EventualSend, KeywordTag.class);
       if (eventualSend) {
         sendOp = getSource(coord);
       }
-
-      while (sym == Identifier) {
-        msg = unaryMessage(msg, eventualSend, sendOp);
-        eventualSend = accept(EventualSend, KeywordTag.class);
-        if (eventualSend) {
-          sendOp = getSource(coord);
-        }
-      }
-
-      if (sym == OperatorSequence || symIn(binaryOpSyms)) {
-        msg = binaryConsecutiveMessages(builder, msg, eventualSend, sendOp);
-        eventualSend = accept(EventualSend, KeywordTag.class);
-        if (eventualSend) {
-          sendOp = getSource(coord);
-        }
-      }
-
-      if (sym == Keyword) {
-        msg = keywordMessage(builder, msg, true, eventualSend, sendOp);
-      }
-    } else if (sym == OperatorSequence || symIn(binaryOpSyms)) {
-      msg = binaryConsecutiveMessages(builder, receiver, eventualSend, sendOp);
-      eventualSend = accept(EventualSend, KeywordTag.class);
-      if (eventualSend) {
-        sendOp = getSource(coord);
-      }
-
-      if (sym == Keyword) {
-        msg = keywordMessage(builder, msg, true, eventualSend, sendOp);
-      }
-    } else {
-      msg = keywordMessage(builder, receiver, true, eventualSend, sendOp);
     }
+
+    if (sym == OperatorSequence || symIn(binaryOpSyms)) {
+      msg = binaryConsecutiveMessages(builder, msg, eventualSend, sendOp);
+      eventualSend = accept(EventualSend, KeywordTag.class);
+      if (eventualSend) {
+        sendOp = getSource(coord);
+      }
+    }
+
+    if (sym == Keyword) {
+      msg = keywordMessage(builder, msg, true, eventualSend, sendOp);
+    }
+
     return msg;
   }
 
