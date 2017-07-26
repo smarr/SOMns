@@ -236,6 +236,12 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
       self assert: 2 equals: (2 & 2).
     )
 
+    public testOr = (
+      assert: (2 bitOr: 1) equals: 3.
+      assert: (0 bitOr: 2) equals: 2.
+      assert: (1 bitOr: 1) equals: 1.
+    )
+
     public testBitXor = (
       self assert: 0 equals: (1 bitXor: 1).
       self assert: 3 equals: (2 bitXor: 1).

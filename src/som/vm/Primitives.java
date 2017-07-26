@@ -80,6 +80,7 @@ import som.primitives.arrays.NewImmutableArrayNodeFactory;
 import som.primitives.arrays.NewPrimFactory;
 import som.primitives.arrays.PutAllNodeFactory;
 import som.primitives.bitops.BitAndPrimFactory;
+import som.primitives.bitops.BitOrPrimFactory;
 import som.primitives.bitops.BitXorPrimFactory;
 import som.primitives.processes.ChannelPrimitivesFactory;
 import som.primitives.threading.ConditionPrimitivesFactory;
@@ -346,6 +347,7 @@ public class Primitives {
     allFactories.add(AtPrimFactory.getInstance());
     allFactories.add(AtPutPrimFactory.getInstance());
     allFactories.add(BitAndPrimFactory.getInstance());
+    allFactories.add(BitOrPrimFactory.getInstance());
     allFactories.add(BitXorPrimFactory.getInstance());
     allFactories.add(CopyPrimFactory.getInstance());
     allFactories.add(CosPrimFactory.getInstance());
