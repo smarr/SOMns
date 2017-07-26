@@ -182,6 +182,8 @@ public final class Lexer {
     } else if (currentChar() == '*' && nextChar() == ')') {
       state.incPtr(2);
       state.set(Symbol.EndComment, '\0', "*)");
+    } else if (currentChar() == ';') {
+      match(Symbol.Semicolon);
     } else if (currentChar() == ')') {
       match(Symbol.EndTerm);
     } else if (currentChar() == '#') {

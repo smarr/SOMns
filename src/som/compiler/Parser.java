@@ -59,6 +59,7 @@ import static som.compiler.Symbol.Plus;
 import static som.compiler.Symbol.Pound;
 import static som.compiler.Symbol.RCurly;
 import static som.compiler.Symbol.STString;
+import static som.compiler.Symbol.Semicolon;
 import static som.compiler.Symbol.SlotMutableAssign;
 import static som.compiler.Symbol.Star;
 import static som.interpreter.SNodeFactory.createImplicitReceiverSend;
@@ -408,7 +409,7 @@ public class Parser {
     if (sym != NewTerm && sym != MixinOperator && sym != Period) {
       mixinFactorySend = (AbstractUninitializedMessageSendNode) messages(
           mxnBuilder.getInitializerMethodBuilder(),
-          mxnBuilder.getInitializerMethodBuilder().getSelfRead(getSource(coord)));
+          new ExpressionNode[] {mxnBuilder.getInitializerMethodBuilder().getSelfRead(getSource(coord))});
 
       uniqueInitName = MixinBuilder.getInitializerName(
           mixinFactorySend.getSelector(), mixinId);
@@ -439,7 +440,7 @@ public class Parser {
       // used to create the proper initialize method, on which we rely here.
       ExpressionNode superFactorySend = messages(
           mxnBuilder.getInitializerMethodBuilder(),
-          mxnBuilder.getInitializerMethodBuilder().getSuperReadNode(getEmptySource()));
+          new ExpressionNode[] {mxnBuilder.getInitializerMethodBuilder().getSuperReadNode(getEmptySource())});
 
       SSymbol initializerName = MixinBuilder.getInitializerName(
           ((AbstractUninitializedMessageSendNode) superFactorySend).getSelector());
@@ -1044,10 +1045,57 @@ public class Parser {
     } else {
       exp = primary(builder);
     }
+
     if (symIsMessageSend()) {
-      exp = messages(builder, exp);
+      SourceCoordinate coord = getCoordinate();
+      ExpressionNode[] lastReceiver = new ExpressionNode[] {exp};
+
+      exp = messages(builder, lastReceiver);
+
+      if (sym == Semicolon) {
+        exp = msgCascade(exp, lastReceiver[0], builder, coord);
+      }
     }
     return exp;
+  }
+
+  private ExpressionNode msgCascade(final ExpressionNode nonEmptyMessage,
+      final ExpressionNode lastReceiver, final MethodBuilder builder,
+      final SourceCoordinate coord) throws ProgramDefinitionError {
+    List<ExpressionNode> cascade = new ArrayList<>();
+    SourceSection tmpSource = getSource(coord);
+
+    nonEmptyMessage.adoptChildren();
+
+    // first, create a temp variable, to which the result of the receiver is
+    // written, and then replace receiver use with reads from temp
+    Local tmp = builder.addMessageCascadeTemp(tmpSource);
+
+    // evaluate last receiver, and write value to temp
+    cascade.add(tmp.getWriteNode(0, lastReceiver, tmpSource));
+
+    // replace receiver with read from temp
+    lastReceiver.replace(tmp.getReadNode(0, tmpSource));
+
+    // add the initial message of the cascade, it is now send to the temp read
+    cascade.add(nonEmptyMessage);
+
+    while (sym == Semicolon) {
+      expect(Semicolon, KeywordTag.class);
+
+      ExpressionNode exp;
+      if (sym == Keyword) {
+        exp = keywordMessage(builder, tmp.getReadNode(0, tmpSource), false, false, null);
+      } else if (sym == OperatorSequence || symIn(binaryOpSyms)) {
+        exp = binaryMessage(builder, tmp.getReadNode(0, tmpSource), false, null);
+      } else {
+        assert sym == Identifier;
+        exp = unaryMessage(tmp.getReadNode(0, tmpSource), false, null);
+      }
+      cascade.add(exp);
+    }
+
+    return createSequence(cascade, getSource(coord));
   }
 
   private boolean symIsMessageSend() {
@@ -1148,8 +1196,9 @@ public class Parser {
   }
 
   private ExpressionNode messages(final MethodBuilder builder,
-      final ExpressionNode receiver) throws ProgramDefinitionError {
-    ExpressionNode msg = receiver;
+      final ExpressionNode[] lastReceiver) throws ProgramDefinitionError {
+    ExpressionNode msg = lastReceiver[0];
+
     SourceCoordinate coord = getCoordinate();
     boolean eventualSend = accept(EventualSend, KeywordTag.class);
 
@@ -1159,6 +1208,7 @@ public class Parser {
     }
 
     while (sym == Identifier) {
+      lastReceiver[0] = msg;
       msg = unaryMessage(msg, eventualSend, sendOp);
       eventualSend = accept(EventualSend, KeywordTag.class);
       if (eventualSend) {
@@ -1167,6 +1217,7 @@ public class Parser {
     }
 
     if (sym == OperatorSequence || symIn(binaryOpSyms)) {
+      lastReceiver[0] = msg;
       msg = binaryConsecutiveMessages(builder, msg, eventualSend, sendOp);
       eventualSend = accept(EventualSend, KeywordTag.class);
       if (eventualSend) {
@@ -1175,6 +1226,7 @@ public class Parser {
     }
 
     if (sym == Keyword) {
+      lastReceiver[0] = msg;
       msg = keywordMessage(builder, msg, true, eventualSend, sendOp);
     }
 
