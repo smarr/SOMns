@@ -41,8 +41,10 @@ import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.ProgramDefinitionError.SemanticDefinitionError;
 import som.compiler.Variable.Argument;
+import som.compiler.Variable.ImmutableLocal;
 import som.compiler.Variable.Internal;
 import som.compiler.Variable.Local;
+import som.compiler.Variable.MutableLocal;
 import som.interpreter.InliningVisitor;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.LexicalScope.MixinScope;
@@ -337,21 +339,26 @@ public final class MethodBuilder {
     arguments.put(arg, argument);
   }
 
-  public Local addLocal(final String name, final SourceSection source)
-      throws MethodDefinitionError {
+  public Local addLocal(final String name, final boolean immutable,
+      final SourceSection source) throws MethodDefinitionError {
     if (arguments.containsKey(name)) {
       throw new MethodDefinitionError("Method already defines argument " + name + ". Can't define local variable with same name.", source);
     }
 
-    Local l = new Local(name, source);
+    Local l;
+    if (immutable) {
+      l = new ImmutableLocal(name, source);
+    } else {
+      l = new MutableLocal(name, source);
+    }
     l.init(currentScope.getFrameDescriptor().addFrameSlot(l));
     locals.put(name, l);
     return l;
   }
 
-  public Local addLocalAndUpdateScope(final String name,
+  public Local addLocalAndUpdateScope(final String name, final boolean immutable,
       final SourceSection source) throws MethodDefinitionError {
-    Local l = addLocal(name, source);
+    Local l = addLocal(name, immutable, source);
     currentScope.addVariable(l);
     return l;
   }

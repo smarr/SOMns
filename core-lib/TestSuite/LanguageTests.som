@@ -709,4 +709,34 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
         self assert: 42 equals: (a at: i) aNumber ]
     )
   ) : ( TEST_CONTEXT = () )
+
+  public class InitializerForLocalVariables = TestContext ()(
+    public testSimpleInitializers = (
+      | cnt ::= 0.
+        inc = 1. |
+
+      assert: cnt equals: 0.
+      assert: inc equals: 1.
+
+      cnt:: cnt + inc.
+      cnt:: cnt + inc.
+
+      assert: cnt equals: 2.
+      assert: inc equals: 1.
+    )
+
+    private myself = ( ^ self )
+    private ret: o = ( ^ o )
+
+    public testMoreComplexExpressions = (
+      | zero ::= 4 - 8 + 4.
+        obj = myself.
+        o = ret: obj. |
+
+      assert: zero equals: 0.
+      assert: obj  is:  self.
+
+      assert: o is: self.
+    )
+  ) : ( TEST_CONTEXT = () )
 )

@@ -92,7 +92,7 @@ public final class Lexer {
     }
   }
 
-  private final String content;
+  protected final String content;
 
   private boolean             peekDone;
   private LexerState          state;
@@ -194,7 +194,7 @@ public final class Lexer {
       if (isDigit(nextChar())) {
         lexNumber();
       } else {
-        match(Symbol.Minus);
+        lexOperator();
       }
     } else if (currentChar() == '<') {
       state.incPtr();
@@ -213,7 +213,7 @@ public final class Lexer {
       }
     } else if (isOperator(currentChar())) {
       lexOperator();
-    } else if (Character.isLetter(currentChar())) {
+    } else if (Character.isLetter(currentChar()) || currentChar() == '_') {
       state.set(Symbol.Identifier);
       while (isIdentifierChar(currentChar())) {
         state.text.append(bufchar(state.incPtr()));
@@ -325,6 +325,8 @@ public final class Lexer {
       match(Symbol.At);
     } else if (currentChar() == '%') {
       match(Symbol.Per);
+    } else if (currentChar() == '-') {
+      match(Symbol.Minus);
     }
   }
 

@@ -5,6 +5,8 @@ import static som.compiler.Lexer.isUppercaseLetter;
 
 import java.math.BigInteger;
 
+import som.VM;
+
 
 public class NumeralParser {
 
@@ -88,7 +90,13 @@ public class NumeralParser {
         v = c - 'A' + 10 /* A has value 10 */;
       }
 
-      result = Math.addExact(result, (long) (Math.pow(r, length - i - 1) * v));
+      try {
+        result = Math.addExact(result, (long) (Math.pow(r, length - i - 1) * v));
+      } catch (ArithmeticException e) {
+        // TODO: need to overflow into BigInteger
+        VM.errorPrintln("Warning: Parsed Integer literal which did not fit into long. " + lexer.getCurrentLineNumber() + ":" + lexer.getCurrentColumn());
+        return result;
+      }
     }
     return result;
   }

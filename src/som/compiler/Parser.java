@@ -124,12 +124,12 @@ import tools.language.StructuralProbe;
 
 public class Parser {
 
-  private final Lexer               lexer;
+  protected final Lexer             lexer;
   private final Source              source;
 
   private final SomLanguage         language;
 
-  private Symbol                    sym;
+  protected Symbol                  sym;
   private String                    text;
   private Symbol                    nextSym;
   private String                    nextText;
@@ -288,7 +288,16 @@ public class Parser {
     return lexer.getStartCoordinate();
   }
 
+  private void compatibilityNewspeakVersionAndFileCategory() throws ParseError {
+    if (sym == Identifier && "Newspeak3".equals(text)) {
+      expect(Identifier, KeywordTag.class);
+      expect(STString, LiteralTag.class);
+    }
+  }
+
   public MixinBuilder moduleDeclaration() throws ProgramDefinitionError {
+    compatibilityNewspeakVersionAndFileCategory();
+
     comments();
     return classDeclaration(null, AccessModifier.PUBLIC);
   }
@@ -579,6 +588,8 @@ public class Parser {
     SourceCoordinate coord = getCoordinate();
     AccessModifier acccessModifier = accessModifier();
 
+    comments();
+
     String slotName = slotDecl();
     boolean immutable;
     ExpressionNode init;
@@ -609,7 +620,10 @@ public class Parser {
   }
 
   private String slotDecl() throws ParseError {
-    return identifier();
+    String id = identifier();
+
+    new TypeParser(this).parseType();
+    return id;
   }
 
   private void initExprs(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
@@ -726,7 +740,7 @@ public class Parser {
     throw new ParseError(msg, s, this);
   }
 
-  private void expect(final Symbol s, final Class<? extends Tags> tag) throws ParseError {
+  protected void expect(final Symbol s, final Class<? extends Tags> tag) throws ParseError {
     expect(s, "Unexpected symbol. Expected %(expected)s, but found %(found)s", tag);
   }
 
@@ -784,6 +798,8 @@ public class Parser {
         binaryPattern(builder);
         break;
     }
+
+    new TypeParser(this).parseReturnType();
   }
 
   protected void unaryPattern(final MethodBuilder builder) throws ParseError {
@@ -873,6 +889,9 @@ public class Parser {
   private String argument() throws ParseError {
     SourceCoordinate coord = getCoordinate();
     String id = identifier();
+
+    new TypeParser(this).parseType();
+
     language.getVM().reportSyntaxElement(ArgumentTag.class, getSource(coord));
     return id;
   }
@@ -880,27 +899,64 @@ public class Parser {
   private ExpressionNode blockContents(final MethodBuilder builder)
       throws ProgramDefinitionError {
     comments();
+    List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
+
     if (accept(Or, DelimiterOpeningTag.class)) {
-      locals(builder);
+      locals(builder, expressions);
       expect(Or, DelimiterClosingTag.class);
     }
     builder.setVarsOnMethodScope();
-    return blockBody(builder);
+    return blockBody(builder, expressions);
   }
 
-  private void locals(final MethodBuilder builder) throws ParseError, MethodDefinitionError {
-    while (sym == Identifier) {
-      SourceCoordinate coord = getCoordinate();
-      String id = identifier();
-      SourceSection source = getSource(coord);
-      builder.addLocal(id, source);
-      language.getVM().reportSyntaxElement(LocalVariableTag.class, source);
+  private void locals(final MethodBuilder builder,
+      final List<ExpressionNode> expressions) throws ProgramDefinitionError {
+    // Newspeak-speak: we do not support simSlotDecls, i.e.,
+    //                 simultaneous slots clauses (spec 6.3.2)
+    while (sym != Or) {
+      localDefinition(builder, expressions);
     }
   }
 
-  private ExpressionNode blockBody(final MethodBuilder builder) throws ProgramDefinitionError {
+  private void localDefinition(final MethodBuilder builder,
+      final List<ExpressionNode> expressions) throws ProgramDefinitionError {
+    comments();
+    if (sym == Or) { return; }
+
     SourceCoordinate coord = getCoordinate();
-    List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
+    String slotName = slotDecl();
+    SourceSection source = getSource(coord);
+
+    language.getVM().reportSyntaxElement(LocalVariableTag.class, source);
+
+    boolean immutable;
+    ExpressionNode initializer;
+
+    if (accept(Equal, KeywordTag.class)) {
+      immutable = true;
+      initializer = expression(builder);
+      expect(Period, StatementSeparatorTag.class);
+    } else if (accept(SlotMutableAssign, KeywordTag.class)) {
+      immutable = false;
+      initializer = expression(builder);
+      expect(Period, StatementSeparatorTag.class);
+    } else {
+      immutable = false;
+      initializer = null;
+    }
+
+    Local local = builder.addLocal(slotName, immutable, source);
+
+    if (initializer != null) {
+      SourceSection write = getSource(coord);
+      ExpressionNode writeNode = local.getWriteNode(0, initializer, write);
+      expressions.add(writeNode);
+    }
+  }
+
+  private ExpressionNode blockBody(final MethodBuilder builder,
+      final List<ExpressionNode> expressions) throws ProgramDefinitionError {
+    SourceCoordinate coord = getCoordinate();
 
     boolean sawPeriod = true;
 
@@ -1006,12 +1062,17 @@ public class Parser {
         // Parse true, false, and nil as keyword-like constructs
         // (cf. Newspeak spec on reserved words)
         if (acceptIdentifier("true", LiteralTag.class)) {
+          comments();
           return new TrueLiteralNode(getSource(coord));
         }
+
         if (acceptIdentifier("false", LiteralTag.class)) {
+          comments();
           return new FalseLiteralNode(getSource(coord));
         }
+
         if (acceptIdentifier("nil", LiteralTag.class)) {
+          comments();
           return new NilLiteralNode(getSource(coord));
         }
         if ("outer".equals(text)) {
@@ -1019,6 +1080,9 @@ public class Parser {
         }
 
         SSymbol selector = unarySelector();
+
+        comments();
+
         return builder.getImplicitReceiverSend(selector, getSource(coord));
       }
       case NewTerm: {
@@ -1059,8 +1123,12 @@ public class Parser {
     expectIdentifier("outer", KeywordTag.class);
     String outer = identifier();
 
+    comments();
+
     ExpressionNode operand = builder.getOuterRead(outer, getSource(coord));
     operand = binaryConsecutiveMessages(builder, operand, false, null);
+
+    comments();
     return operand;
   }
 
@@ -1117,6 +1185,8 @@ public class Parser {
       final boolean eventualSend, final SourceSection sendOperator) throws ParseError {
     SourceCoordinate coord = getCoordinate();
     SSymbol selector = unarySelector();
+
+    comments();
     return createMessageSend(selector, new ExpressionNode[] {receiver},
         eventualSend, getSource(coord), sendOperator, language);
   }
@@ -1187,7 +1257,10 @@ public class Parser {
 
     do {
       kw.append(keyword());
+      comments();
+
       arguments.add(formula(builder));
+      comments();
     }
     while (sym == Keyword);
 
@@ -1314,7 +1387,7 @@ public class Parser {
       // if it is a literal, we still need a memory location for counting, so,
       // add a synthetic local
       loopIdx = builder.addLocalAndUpdateScope(
-          "!i" + SourceCoordinate.getLocationQualifier(source), source);
+          "!i" + SourceCoordinate.getLocationQualifier(source), false, source);
     }
     return loopIdx;
   }

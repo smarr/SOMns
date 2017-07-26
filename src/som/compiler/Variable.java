@@ -121,7 +121,7 @@ public abstract class Variable {
         return null;
       }
 
-      Local l = new Local(name, source);
+      Local l = new ImmutableLocal(name, source);
       l.init(descriptor.addFrameSlot(l));
       return l;
     }
@@ -148,7 +148,7 @@ public abstract class Variable {
    * Represents a local variable, i.e., local to a specific scope.
    * Locals are stored in {@link FrameSlot}s inside a {@link Frame}.
    */
-  public static final class Local extends Variable {
+  public abstract static class Local extends Variable {
     @CompilationFinal private FrameSlot slot;
 
     Local(final String name, final SourceSection source) {
@@ -174,9 +174,11 @@ public abstract class Variable {
       return slot;
     }
 
+    protected abstract Local create();
+
     @Override
     public Local split(final FrameDescriptor descriptor) {
-      Local newLocal = new Local(name, source);
+      Local newLocal = create();
       newLocal.init(descriptor.addFrameSlot(newLocal));
       return newLocal;
     }
@@ -201,6 +203,28 @@ public abstract class Variable {
     public Object read(final Frame frame) {
       VM.callerNeedsToBeOptimized("Not to be used outside of tools");
       return frame.getValue(slot);
+    }
+  }
+
+  public static final class MutableLocal extends Local {
+    MutableLocal(final String name, final SourceSection source) {
+      super(name, source);
+    }
+
+    @Override
+    public Local create() {
+      return new MutableLocal(name, source);
+    }
+  }
+
+  public static final class ImmutableLocal extends Local {
+    ImmutableLocal(final String name, final SourceSection source) {
+      super(name, source);
+    }
+
+    @Override
+    public Local create() {
+      return new ImmutableLocal(name, source);
     }
   }
 
