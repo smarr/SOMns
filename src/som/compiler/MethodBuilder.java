@@ -215,6 +215,10 @@ public final class MethodBuilder {
     ctx.needsToCatchNonLocalReturn = true;
   }
 
+  public boolean accessesVariablesOfOuterScope() {
+    return accessesVariablesOfOuterScope;
+  }
+
   public boolean requiresContext() {
     return throwsNonLocalReturn || accessesVariablesOfOuterScope;
   }

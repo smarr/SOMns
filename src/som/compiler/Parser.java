@@ -1147,9 +1147,11 @@ public class Parser {
         builder.addEmbeddedBlockMethod(blockMethod);
 
         if (bgenc.requiresContext() || VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-          return new BlockNodeWithContext(blockMethod, lastMethodsSourceSection);
+          return new BlockNodeWithContext(blockMethod,
+              bgenc.accessesVariablesOfOuterScope(), lastMethodsSourceSection);
         } else {
-          return new BlockNode(blockMethod, lastMethodsSourceSection);
+          return new BlockNode(blockMethod,
+              bgenc.accessesVariablesOfOuterScope(), lastMethodsSourceSection);
         }
       }
       case LCurly: {
