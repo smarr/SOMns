@@ -104,10 +104,6 @@ public class BlockNode extends LiteralNode {
       super(blockMethod, needsAdjustmentOnScopeChange, source);
     }
 
-    public BlockNodeWithContext(final BlockNodeWithContext node) {
-      this(node.blockMethod, node.needsAdjustmentOnScopeChange, node.sourceSection);
-    }
-
     @Override
     public SBlock executeSBlock(final VirtualFrame frame) {
       return new SBlock(blockMethod, frame.materialize(), blockClass);

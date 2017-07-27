@@ -76,6 +76,7 @@ public final class MethodBuilder {
   private boolean throwsNonLocalReturn;       // does directly or indirectly a non-local return
 
   private boolean accessesVariablesOfOuterScope;
+  private boolean accessesLocalOfOuterScope;
 
   private final LinkedHashMap<String, Argument> arguments = new LinkedHashMap<>();
   private final LinkedHashMap<String, Local>    locals    = new LinkedHashMap<>();
@@ -215,8 +216,8 @@ public final class MethodBuilder {
     ctx.needsToCatchNonLocalReturn = true;
   }
 
-  public boolean accessesVariablesOfOuterScope() {
-    return accessesVariablesOfOuterScope;
+  public boolean accessesLocalOfOuterScope() {
+    return accessesLocalOfOuterScope;
   }
 
   public boolean requiresContext() {
@@ -421,6 +422,9 @@ public final class MethodBuilder {
       Variable outerVar = outerBuilder.getVariable(varName);
       if (outerVar != null) {
         accessesVariablesOfOuterScope = true;
+        if (outerVar instanceof Local) {
+          accessesLocalOfOuterScope = true;
+        }
       }
       return outerVar;
     }
@@ -530,6 +534,7 @@ public final class MethodBuilder {
       Local outerLocal = outerBuilder.getLocal(varName);
       if (outerLocal != null) {
         accessesVariablesOfOuterScope = true;
+        accessesLocalOfOuterScope = true;
       }
       return outerLocal;
     }

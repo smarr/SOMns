@@ -1148,10 +1148,10 @@ public class Parser {
 
         if (bgenc.requiresContext() || VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
           return new BlockNodeWithContext(blockMethod,
-              bgenc.accessesVariablesOfOuterScope(), lastMethodsSourceSection);
+              bgenc.accessesLocalOfOuterScope(), lastMethodsSourceSection);
         } else {
           return new BlockNode(blockMethod,
-              bgenc.accessesVariablesOfOuterScope(), lastMethodsSourceSection);
+              bgenc.accessesLocalOfOuterScope(), lastMethodsSourceSection);
         }
       }
       case LCurly: {
