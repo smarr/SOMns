@@ -49,6 +49,50 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     public setupVerifiedRun: run = ( run innerIterations: 1 )
   )
 
+  public class ClosureDefFibonacci = Benchmark ()(
+
+    public benchmark = ( | result |
+      result:: self fib: 20.
+      ^ result
+    )
+
+    private fib: x = (
+      | f |
+	    f:: [:n | n < 2 ifTrue: [ 1 ]
+	                   ifFalse: [ (self fib: n - 1) + (self fib: n - 2) ] ].
+	    ^ f value: x
+    )
+
+    public verifyResult: result = (
+      ^ 10946 = result
+    )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run innerIterations: 1 )
+  )
+
+  public class ClosureFibonacci = Benchmark ()(
+
+    public benchmark = ( | result |
+      result:: self fib value: 20.
+      ^ result
+    )
+
+    private fib = (
+      | f |
+	    f:: [:n | n < 2 ifTrue: [ 1 ]
+	                   ifFalse: [ (f value: n - 1) + (f value: n - 2) ] ].
+	    ^ f
+    )
+
+    public verifyResult: result = (
+      ^ 10946 = result
+    )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run innerIterations: 1 )
+  )
+
   public class OuterConstLoop = Benchmark ()(
     public benchmark = (
       | result |
