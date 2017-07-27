@@ -18,14 +18,16 @@ public final class InliningVisitor implements NodeVisitor {
 
   public static ExpressionNode doInline(
       final ExpressionNode body,
-      final MethodScope inlinedCurrentScope, final int appliesTo) {
+      final MethodScope inlinedCurrentScope, final int appliesTo,
+      final boolean someOuterScopeIsMerged) {
     ExpressionNode inlinedBody = NodeUtil.cloneNode(body);
 
     return NodeVisitorUtil.applyVisitor(inlinedBody,
-        new InliningVisitor(inlinedCurrentScope, appliesTo));
+        new InliningVisitor(inlinedCurrentScope, appliesTo, someOuterScopeIsMerged));
   }
 
   protected final MethodScope scope;
+  protected final boolean someOuterScopeIsMerged;
 
   /**
    * This inliner refers to the block at the contextLevel given here, and
@@ -34,9 +36,15 @@ public final class InliningVisitor implements NodeVisitor {
    */
   public final int contextLevel;
 
-  private InliningVisitor(final MethodScope scope, final int appliesTo) {
+  private InliningVisitor(final MethodScope scope, final int appliesTo,
+      final boolean someOuterScopeIsMerged) {
     this.scope = scope;
     this.contextLevel = appliesTo;
+    this.someOuterScopeIsMerged = someOuterScopeIsMerged;
+  }
+
+  public boolean someOuterScopeIsMerged() {
+    return someOuterScopeIsMerged;
   }
 
   public static final class ScopeElement {

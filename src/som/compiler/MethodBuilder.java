@@ -247,7 +247,7 @@ public final class MethodBuilder {
       final ExpressionNode body, final AccessModifier accessModifier,
       final SourceSection sourceSection) {
     MethodScope splitScope = currentScope.split();
-    ExpressionNode splitBody = InliningVisitor.doInline(body, splitScope, 0);
+    ExpressionNode splitBody = InliningVisitor.doInline(body, splitScope, 0, false);
     Method truffleMeth = assembleInvokable(splitBody, splitScope, sourceSection);
 
     // TODO: not sure whether it is safe to use the embeddedBlockMethods here,

@@ -76,11 +76,12 @@ public class BlockNode extends LiteralNode {
 
   @Override
   public void replaceAfterScopeChange(final InliningVisitor inliner) {
-    if (!needsAdjustmentOnScopeChange) { return; }
+    if (!needsAdjustmentOnScopeChange && !inliner.someOuterScopeIsMerged()) { return; }
 
     Method blockIvk = (Method) blockMethod.getInvokable();
     Method adapted = blockIvk.cloneAndAdaptAfterScopeChange(
-        inliner.getScope(blockIvk), inliner.contextLevel + 1, true);
+        inliner.getScope(blockIvk), inliner.contextLevel + 1, true,
+        inliner.someOuterScopeIsMerged());
     SInvokable adaptedIvk = new SInvokable(blockMethod.getSignature(),
         AccessModifier.BLOCK_METHOD,
         adapted, blockMethod.getEmbeddedBlocks());
