@@ -338,6 +338,8 @@ public class Parser {
     }
     mxnBuilder.setupInitializerBasedOnPrimaryFactory(getSource(coord));
 
+    comments();
+
     expect(Equal, "Unexpected symbol %(found)s."
         + " Tried to parse the class declaration of " + mixinName
         + " and expect '=' before the (optional) inheritance declaration.",
@@ -624,7 +626,12 @@ public class Parser {
   private String slotDecl() throws ParseError {
     String id = identifier();
 
+    comments();
+
     new TypeParser(this).parseType();
+
+    comments();
+
     return id;
   }
 
@@ -773,10 +780,18 @@ public class Parser {
     MethodBuilder builder = new MethodBuilder(
         mxnBuilder, mxnBuilder.getScopeForCurrentParserPosition());
 
+    comments();
+
     messagePattern(builder);
+
+    comments();
+
     expect(Equal,
         "Unexpected symbol %(found)s. Tried to parse method declaration and expect '=' between message pattern, and method body.",
         KeywordTag.class);
+
+    comments();
+
     ExpressionNode body = methodBlock(builder);
     builder.finalizeMethodScope();
     SInvokable meth = builder.assemble(body, accessModifier, getSource(coord));
@@ -800,6 +815,8 @@ public class Parser {
         binaryPattern(builder);
         break;
     }
+
+    comments();
 
     new TypeParser(this).parseReturnType();
   }
@@ -892,7 +909,11 @@ public class Parser {
     SourceCoordinate coord = getCoordinate();
     String id = identifier();
 
+    comments();
+
     new TypeParser(this).parseType();
+
+    comments();
 
     language.getVM().reportSyntaxElement(ArgumentTag.class, getSource(coord));
     return id;
@@ -970,6 +991,8 @@ public class Parser {
           expect(Period, null);
         }
         expressions.add(result(builder));
+
+        comments();
         return createSequence(expressions, getSource(coord));
       } else if (sym == EndBlock) {
         return createSequence(expressions, getSource(coord));
@@ -1040,6 +1063,8 @@ public class Parser {
 
   private ExpressionNode evaluation(final MethodBuilder builder)
       throws ProgramDefinitionError {
+    comments();
+
     ExpressionNode exp;
     if (sym == Keyword) {
       exp = keywordMessage(builder, builder.getSelfRead(getEmptySource()), false, false, null);
@@ -1057,6 +1082,9 @@ public class Parser {
         exp = msgCascade(exp, lastReceiver[0], builder, coord);
       }
     }
+
+    comments();
+
     return exp;
   }
 
@@ -1083,6 +1111,8 @@ public class Parser {
 
     while (sym == Semicolon) {
       expect(Semicolon, KeywordTag.class);
+
+      comments();
 
       ExpressionNode exp;
       if (sym == Keyword) {
@@ -1263,6 +1293,9 @@ public class Parser {
       final SourceSection sendOperator) throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
     SSymbol msg = binarySelector();
+
+    comments();
+
     ExpressionNode operand = binaryOperand(builder);
 
     if (!eventualSend) {
@@ -1272,6 +1305,9 @@ public class Parser {
         return node;
       }
     }
+
+    comments();
+
     return createMessageSend(msg, new ExpressionNode[] {receiver, operand},
         eventualSend, getSource(coord), sendOperator, language);
   }
@@ -1466,6 +1502,9 @@ public class Parser {
     expect(NewTerm, DelimiterOpeningTag.class);
     ExpressionNode exp = expression(builder);
     expect(EndTerm, DelimiterClosingTag.class);
+
+    comments();
+
     return exp;
   }
 
