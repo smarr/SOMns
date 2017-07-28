@@ -1072,10 +1072,10 @@ public class Parser {
     Local tmp = builder.addMessageCascadeTemp(tmpSource);
 
     // evaluate last receiver, and write value to temp
-    cascade.add(tmp.getWriteNode(0, lastReceiver, tmpSource));
+    cascade.add(builder.getWriteNode(tmp.name, lastReceiver, tmpSource));
 
     // replace receiver with read from temp
-    lastReceiver.replace(tmp.getReadNode(0, tmpSource));
+    lastReceiver.replace(builder.getReadNode(tmp.name, tmpSource));
 
     // add the initial message of the cascade, it is now send to the temp read
     cascade.add(nonEmptyMessage);
@@ -1085,12 +1085,12 @@ public class Parser {
 
       ExpressionNode exp;
       if (sym == Keyword) {
-        exp = keywordMessage(builder, tmp.getReadNode(0, tmpSource), false, false, null);
+        exp = keywordMessage(builder, builder.getReadNode(tmp.name, tmpSource), false, false, null);
       } else if (sym == OperatorSequence || symIn(binaryOpSyms)) {
-        exp = binaryMessage(builder, tmp.getReadNode(0, tmpSource), false, null);
+        exp = binaryMessage(builder, builder.getReadNode(tmp.name, tmpSource), false, null);
       } else {
         assert sym == Identifier;
-        exp = unaryMessage(tmp.getReadNode(0, tmpSource), false, null);
+        exp = unaryMessage(builder.getReadNode(tmp.name, tmpSource), false, null);
       }
       cascade.add(exp);
     }
