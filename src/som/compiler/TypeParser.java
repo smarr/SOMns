@@ -13,6 +13,7 @@ import static som.compiler.Symbol.More;
 import static som.compiler.Symbol.NewBlock;
 import static som.compiler.Symbol.NewTerm;
 import static som.compiler.Symbol.Or;
+import static som.compiler.Symbol.Period;
 import static som.compiler.Symbol.RCurly;
 
 import som.compiler.Parser.ParseError;
@@ -111,8 +112,8 @@ public class TypeParser {
       while (true) {
         typeExpr();
 
-        if (parser.sym == Comma) {
-          parser.expect(Comma, null);
+        if (parser.sym == Period) {
+          parser.expect(Period, null);
         } else {
           break;
         }

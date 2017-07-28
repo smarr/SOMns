@@ -30,7 +30,7 @@ public class TypeGrammarParserTest {
         "<[:String :ObjectMirror]>", "<List[Promise[V, E]]>",
         "<WeakMap[FarReference, InternalFarReference]>",
         "<[:V | V2 def]>", "<[:Promise | R def] | [R def]>",
-        "<{String, Foobar}>"};
+        "<{String. Foobar}>"};
   }
 
   @Test
