@@ -141,6 +141,11 @@ public class Parser {
   private final Set<SourceSection>  syntaxAnnotations;
   private final StructuralProbe     structuralProbe;
 
+  /**
+   * TODO: fix AST inlining while parsing locals/slots, and remove the disabling.
+   */
+  private int parsingSlotDefs;
+
   private static final Symbol[] singleOpSyms = new Symbol[] {Not, And, Or, Star,
     Div, Mod, Plus, Equal, More, Less, Comma, At, Per, Minus, NONE};
 
@@ -973,11 +978,15 @@ public class Parser {
 
   private void locals(final MethodBuilder builder,
       final List<ExpressionNode> expressions) throws ProgramDefinitionError {
+    parsingSlotDefs += 1;
+
     // Newspeak-speak: we do not support simSlotDecls, i.e.,
     //                 simultaneous slots clauses (spec 6.3.2)
     while (sym != Or) {
       localDefinition(builder, expressions);
     }
+
+    parsingSlotDefs -= 1;
   }
 
   private void localDefinition(final MethodBuilder builder,
@@ -1422,6 +1431,10 @@ public class Parser {
       final MethodBuilder builder, final List<ExpressionNode> arguments,
       final String msgStr, final int numberOfArguments,
       final SourceSection source) {
+    if (parsingSlotDefs > 0) {
+      return null;
+    }
+
     if (numberOfArguments == 2) {
       if (arguments.get(1) instanceof LiteralNode) {
         if ("ifTrue:".equals(msgStr)) {
