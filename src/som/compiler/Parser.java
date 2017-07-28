@@ -77,6 +77,7 @@ import java.util.Set;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.compiler.Lexer.Peek;
 import som.compiler.MethodBuilder.MethodDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionError;
@@ -504,7 +505,9 @@ public class Parser {
 
     while (sym != EndTerm) {
       comments();
-      methodDeclaration(mxnBuilder);
+      SourceCoordinate coord = getCoordinate();
+      AccessModifier accessModifier = accessModifier();
+      methodDeclaration(accessModifier, coord, mxnBuilder);
       comments();
     }
 
@@ -519,6 +522,20 @@ public class Parser {
     SourceCoordinate coord = getCoordinate();
     if (sym == Or) {
       slotDeclarations(mxnBuilder);
+    }
+
+    if (sym == OperatorSequence && "||".equals(text)) {
+      peekForNextSymbolFromLexer();
+      if (nextSym == EndTerm) {
+        expect(OperatorSequence, null);
+
+        mxnBuilder.setInitializerSource(getSource(coord));
+        expect(EndTerm, null);
+        mxnBuilder.finalizeInitializer();
+        return;
+      } else {
+        simSlotDeclarations(mxnBuilder);
+      }
     }
 
     comments();
@@ -583,6 +600,26 @@ public class Parser {
 
     expect(Or, DelimiterClosingTag.class);
   }
+
+  private void simSlotDeclarations(final MixinBuilder mxnBuilder)
+      throws ProgramDefinitionError {
+    // Newspeak-speak: we do not support simSlotDecls, i.e.,
+    //                 simultaneous slots clauses (spec 6.3.2)
+    VM.errorPrintln("Warning: Parsed simSlotDecls, but it isn't supported yet. " + lexer.getCurrentLineNumber() + ":" + lexer.getCurrentColumn());
+    assert "||".equals(text);
+    expect(OperatorSequence, DelimiterOpeningTag.class);
+
+    while (sym != OperatorSequence) {
+      slotDefinition(mxnBuilder);
+    }
+
+    comments();
+
+    assert "||".equals(text);
+    expect(OperatorSequence, DelimiterClosingTag.class);
+  }
+
+
 
   private void slotDefinition(final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
@@ -927,6 +964,8 @@ public class Parser {
     if (accept(Or, DelimiterOpeningTag.class)) {
       locals(builder, expressions);
       expect(Or, DelimiterClosingTag.class);
+    } else if (sym == OperatorSequence && "||".equals(text)) {
+      expect(OperatorSequence, null);
     }
     builder.setVarsOnMethodScope();
     return blockBody(builder, expressions);
