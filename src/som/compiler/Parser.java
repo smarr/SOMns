@@ -692,50 +692,39 @@ public class Parser {
     expect(NewTerm, DelimiterOpeningTag.class);
     comments();
 
-    while (canAcceptIdentifierWithOptionalEarlierIdentifier(
-        new String[]{"private", "protected", "public"}, "class")) {
-      nestedClassDeclaration(mxnBuilder);
+    SourceCoordinate coord = getCoordinate();
+    AccessModifier accessModifier = accessModifier();
+    peekForNextSymbolFromLexer();
+
+    while (sym == Identifier && nextSym == Identifier) {
+      nestedClassDeclaration(accessModifier, coord, mxnBuilder);
       comments();
+
+      coord = getCoordinate();
+      accessModifier = accessModifier();
+      peekForNextSymbolFromLexer();
     }
 
     while (sym != EndTerm) {
       comments();
-      methodDeclaration(mxnBuilder);
+      methodDeclaration(accessModifier, coord, mxnBuilder);
       comments();
+
+      coord = getCoordinate();
+      accessModifier = accessModifier();
     }
 
     expect(EndTerm, DelimiterClosingTag.class);
   }
 
-  private void nestedClassDeclaration(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
-    SourceCoordinate coord = getCoordinate();
-    AccessModifier accessModifier = accessModifier();
+  private void nestedClassDeclaration(final AccessModifier accessModifier,
+      final SourceCoordinate coord, final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
     MixinBuilder nestedCls = classDeclaration(mxnBuilder, accessModifier);
     mxnBuilder.addNestedMixin(nestedCls.assemble(getSource(coord)));
   }
 
   private boolean symIn(final Symbol[] ss) {
     return arrayContains(ss, sym);
-  }
-
-  private boolean canAcceptIdentifierWithOptionalEarlierIdentifier(
-      final String[] earlierIdentifier, final String identifier) {
-    if (sym != Identifier) { return false; }
-
-    if (identifier.equals(text)) { return true; }
-
-    boolean oneMatches = false;
-    for (String s : earlierIdentifier) {
-      if (s.equals(text)) {
-        oneMatches = true;
-        break;
-      }
-    }
-
-    if (!oneMatches) { return false; }
-
-    peekForNextSymbolFromLexer();
-    return nextSym == Identifier && identifier.equals(nextText);
   }
 
   private boolean acceptIdentifier(final String identifier,
@@ -814,11 +803,9 @@ public class Parser {
     return ss;
   }
 
-  private void methodDeclaration(final MixinBuilder mxnBuilder)
+  private void methodDeclaration(final AccessModifier accessModifier,
+      final SourceCoordinate coord, final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
-    SourceCoordinate coord = getCoordinate();
-
-    AccessModifier accessModifier = accessModifier();
     MethodBuilder builder = new MethodBuilder(
         mxnBuilder, mxnBuilder.getScopeForCurrentParserPosition());
 
