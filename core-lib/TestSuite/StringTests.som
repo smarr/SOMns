@@ -139,7 +139,16 @@ class StringTests usingPlatform: platform testFramework: minitest = (
       assert: '\n' equals: (str charAt: 4).
       assert: 7 equals: str length.
     )
-  
+
+    public testNewspeakTwoQuoteEscape = (
+      assert: '''' equals: '\''.
+      assert: 1    equals: '''' length.
+
+      assert: '123''456' equals: '123\'456'.
+      assert: '123''''456' equals: '123\'\'456'.
+      assert: '123''''456''' equals: '123\'\'456\''.
+    )
+
     public testEscapeSequences = (
       (* Tests for escape sequences, not all of them are reliable represented
          as proper strings. So, we do a simple equality test, and check

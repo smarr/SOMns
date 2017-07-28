@@ -270,7 +270,10 @@ public final class Lexer {
 
   private void lexStringChar() {
     char cur = currentChar();
-    if (cur == '\\') {
+    if (cur == '\'' && nextChar() == '\'') {
+      state.text.append('\'');
+      state.incPtr(2);
+    } else if (cur == '\\') {
       state.incPtr();
       lexEscapeChar();
     } else {
@@ -288,7 +291,7 @@ public final class Lexer {
     state.set(Symbol.STString);
     state.incPtr();
 
-    while (currentChar() != '\'') {
+    while (currentChar() != '\'' || nextChar() == '\'') {
       lexStringChar();
     }
 
