@@ -204,5 +204,13 @@ class StringTests usingPlatform: platform testFramework: minitest = (
       self assert: 'dfadf fgsfg sfg sdfg sfg sfg345243n 24n5 kwertlw erltnwrtln' hashcode
            equals: str hashcode.
     )
+
+    public testLiteralChars = (
+      self assert: "f" equals: 'f'.
+      self assert: """" equals: '"'.
+      self assert: "1" equals: '1'.
+      self assert: " " equals: ' '.
+      self assert: "{" equals: '{'.
+    )
   ) : ( TEST_CONTEXT = () )
 )

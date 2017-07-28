@@ -28,6 +28,7 @@ package som.compiler;
 import static som.compiler.Symbol.And;
 import static som.compiler.Symbol.At;
 import static som.compiler.Symbol.BeginComment;
+import static som.compiler.Symbol.Char;
 import static som.compiler.Symbol.Colon;
 import static som.compiler.Symbol.Comma;
 import static som.compiler.Symbol.Div;
@@ -150,7 +151,7 @@ public class Parser {
     KeywordSequence};
 
   private static final Symbol[] literalSyms = new Symbol[] {Pound, STString,
-    Numeral};
+    Numeral, Char};
 
   private static boolean arrayContains(final Symbol[] arr, final Symbol sym) {
     for (Symbol s : arr) {
@@ -1472,6 +1473,7 @@ public class Parser {
     switch (sym) {
       case Pound:     return literalSymbol();
       case STString:  return literalString();
+      case Char:      return literalChar();
       default:        return literalNumber();
     }
   }
@@ -1538,6 +1540,13 @@ public class Parser {
     return new StringLiteralNode(s, getSource(coord));
   }
 
+  private LiteralNode literalChar() throws ParseError {
+    SourceCoordinate coord = getCoordinate();
+    String s = character();
+
+    return new StringLiteralNode(s, getSource(coord));
+  }
+
   private LiteralNode literalArray(final MethodBuilder builder) throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
@@ -1581,6 +1590,12 @@ public class Parser {
   private String string() throws ParseError {
     String s = text;
     expect(STString, null);
+    return s;
+  }
+
+  private String character() throws ParseError {
+    String s = text;
+    expect(Char, null);
     return s;
   }
 

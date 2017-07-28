@@ -152,6 +152,8 @@ public final class Lexer {
 
     if (currentChar() == '\'') {
       lexString();
+    } else if (currentChar() == '"') {
+      lexCharacterLiteral();
     } else if (currentChar() == '[') {
       match(Symbol.NewBlock);
     } else if (currentChar() == ']') {
@@ -296,6 +298,23 @@ public final class Lexer {
     }
 
     state.incPtr();
+  }
+
+  private void lexCharacterLiteral() {
+    state.set(Symbol.Char);
+    state.incPtr();
+
+    char c = currentChar();
+    if (c == '"' && nextChar() == '"') {
+      state.text.append('"');
+      state.incPtr(2);
+    } else {
+      acceptChar();
+    }
+
+    if (currentChar() == '"') {
+      state.incPtr();
+    }
   }
 
   private void lexOperator() {
