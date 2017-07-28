@@ -796,4 +796,35 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       assert: setter runCascadeForValue equals: 42.
     )
   ) : ( TEST_CONTEXT = () )
+
+  public class OperatorSequences = TestContext ()(
+    class Op = (
+    | public operator
+      public operand
+    |)(
+      public -> op = (
+        operator:: #arrowRight.
+        operand:: op
+      )
+
+      public <- op = (
+        operator:: #arrowLeft.
+        operand:: op
+      )
+    )
+
+    public testArrows = (
+      | o = Op new. |
+
+      o <- 4.
+
+      assert: #arrowLeft equals: o operator.
+      assert: 4          equals: o operand.
+
+      o -> 54.
+
+      assert: #arrowRight equals: o operator.
+      assert: 54          equals: o operand.
+    )
+  ) : ( TEST_CONTEXT = () )
 )
