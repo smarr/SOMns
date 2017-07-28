@@ -351,6 +351,8 @@ public final class Lexer {
       match(Symbol.Per);
     } else if (currentChar() == '-') {
       match(Symbol.Minus);
+    } else if (currentChar() == '!') {
+      match(Symbol.OperatorSequence);
     }
   }
 
@@ -454,7 +456,7 @@ public final class Lexer {
   private static boolean isOperator(final char c) {
     return c == '~' || c == '&' || c == '|' || c == '*' || c == '/'
         || c == '\\' || c == '+' || c == '=' || c == '>' || c == '<'
-        || c == ',' || c == '@' || c == '%' || c == '-';
+        || c == ',' || c == '@' || c == '%' || c == '-' || c == '!';
   }
 
   protected static boolean isDigit(final char c) {

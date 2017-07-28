@@ -141,7 +141,7 @@ public class Parser {
   private final StructuralProbe     structuralProbe;
 
   private static final Symbol[] singleOpSyms = new Symbol[] {Not, And, Or, Star,
-    Div, Mod, Plus, Equal, More, Less, Comma, At, Per, NONE};
+    Div, Mod, Plus, Equal, More, Less, Comma, At, Per, Minus, NONE};
 
   private static final Symbol[] binaryOpSyms = new Symbol[] {Or, Comma, Minus,
     Equal, Not, And, Or, Star, Div, Mod, Plus, Equal, More, Less, Comma, At,

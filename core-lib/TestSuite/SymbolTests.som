@@ -31,14 +31,31 @@ class SymbolTests usingPlatform: platform testFramework: minitest = (
       self assert: 'gunk' equals: 'gunk' asSymbol asString.
       self assert: 'oink' equals: #oink asString.
     )
-  
+
     public testEquality = (
       self assert: #oink equals: 'oink' asSymbol.
     )
-  
+
     public testSymbolIsString = (
       self assert: (#oink beginsWith: 'oink').
       self assert: 100 equals: #'100' asInteger.
+    )
+
+    public testSymbolsWithOperators = (
+      assert: #! asString   equals: '!'.
+      assert: #!- asString  equals: '!-'.
+      assert: #-! asString  equals: '-!'.
+      assert: #!!! asString equals: '!!!'.
+
+      assert: #+> asString  equals: '+>'.
+      assert: #<- asString  equals: '<-'.
+      assert: #<-> asString equals: '<->'.
+      assert: #-> asString  equals: '->'.
+
+      (* Not supported by Newspeak either:
+      assert: #<: asString  equals: '<:'.
+      assert: #:> asString  equals: ':>'.
+      *)
     )
   ) : ( TEST_CONTEXT = () )
 )
