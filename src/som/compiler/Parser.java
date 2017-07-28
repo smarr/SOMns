@@ -1398,6 +1398,9 @@ public class Parser {
           return new IfInlinedLiteralNode(condition, false, inlinedBody,
               arguments.get(1), source);
         } else if ("whileTrue:".equals(msgStr)) {
+          if (!(arguments.get(0) instanceof LiteralNode) || !(arguments.get(1) instanceof LiteralNode)) {
+            return null;
+          }
           ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
           inlinedCondition.markAsControlFlowCondition();
           ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(builder);
@@ -1405,6 +1408,9 @@ public class Parser {
           return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
               true, arguments.get(0), arguments.get(1), source);
         } else if ("whileFalse:".equals(msgStr)) {
+          if (!(arguments.get(0) instanceof LiteralNode) || !(arguments.get(1) instanceof LiteralNode)) {
+            return null;
+          }
           ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
           inlinedCondition.markAsControlFlowCondition();
           ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(builder);
