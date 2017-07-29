@@ -76,6 +76,7 @@ public final class MethodBuilder {
   private boolean throwsNonLocalReturn;       // does directly or indirectly a non-local return
 
   private boolean accessesVariablesOfOuterScope;
+  private boolean accessesLocalOfOuterScope;
 
   private final LinkedHashMap<String, Argument> arguments = new LinkedHashMap<>();
   private final LinkedHashMap<String, Local>    locals    = new LinkedHashMap<>();
@@ -215,6 +216,10 @@ public final class MethodBuilder {
     ctx.needsToCatchNonLocalReturn = true;
   }
 
+  public boolean accessesLocalOfOuterScope() {
+    return accessesLocalOfOuterScope;
+  }
+
   public boolean requiresContext() {
     return throwsNonLocalReturn || accessesVariablesOfOuterScope;
   }
@@ -243,7 +248,7 @@ public final class MethodBuilder {
       final ExpressionNode body, final AccessModifier accessModifier,
       final SourceSection sourceSection) {
     MethodScope splitScope = currentScope.split();
-    ExpressionNode splitBody = InliningVisitor.doInline(body, splitScope, 0);
+    ExpressionNode splitBody = InliningVisitor.doInline(body, splitScope, 0, false);
     Method truffleMeth = assembleInvokable(splitBody, splitScope, sourceSection);
 
     // TODO: not sure whether it is safe to use the embeddedBlockMethods here,
@@ -417,6 +422,9 @@ public final class MethodBuilder {
       Variable outerVar = outerBuilder.getVariable(varName);
       if (outerVar != null) {
         accessesVariablesOfOuterScope = true;
+        if (outerVar instanceof Local) {
+          accessesLocalOfOuterScope = true;
+        }
       }
       return outerVar;
     }
@@ -526,6 +534,7 @@ public final class MethodBuilder {
       Local outerLocal = outerBuilder.getLocal(varName);
       if (outerLocal != null) {
         accessesVariablesOfOuterScope = true;
+        accessesLocalOfOuterScope = true;
       }
       return outerLocal;
     }

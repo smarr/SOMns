@@ -22,11 +22,13 @@ public class BlockNode extends LiteralNode {
 
   protected final SInvokable blockMethod;
   protected final SClass  blockClass;
+  protected final boolean needsAdjustmentOnScopeChange;
 
-  public BlockNode(final SInvokable blockMethod,
+  public BlockNode(final SInvokable blockMethod, final boolean needsAdjustmentOnScopeChange,
       final SourceSection source) {
     super(source);
-    this.blockMethod  = blockMethod;
+    this.blockMethod = blockMethod;
+    this.needsAdjustmentOnScopeChange = needsAdjustmentOnScopeChange;
     switch (blockMethod.getNumberOfArguments()) {
       case 1: { this.blockClass = Classes.blockClass1; break; }
       case 2: { this.blockClass = Classes.blockClass2; break; }
@@ -74,9 +76,12 @@ public class BlockNode extends LiteralNode {
 
   @Override
   public void replaceAfterScopeChange(final InliningVisitor inliner) {
+    if (!needsAdjustmentOnScopeChange && !inliner.someOuterScopeIsMerged()) { return; }
+
     Method blockIvk = (Method) blockMethod.getInvokable();
     Method adapted = blockIvk.cloneAndAdaptAfterScopeChange(
-        inliner.getScope(blockIvk), inliner.contextLevel + 1, true);
+        inliner.getScope(blockIvk), inliner.contextLevel + 1, true,
+        inliner.someOuterScopeIsMerged());
     SInvokable adaptedIvk = new SInvokable(blockMethod.getSignature(),
         AccessModifier.BLOCK_METHOD,
         adapted, blockMethod.getEmbeddedBlocks());
@@ -84,7 +89,7 @@ public class BlockNode extends LiteralNode {
   }
 
   protected BlockNode createNode(final SInvokable adapted) {
-    return new BlockNode(adapted, getSourceSection());
+    return new BlockNode(adapted, needsAdjustmentOnScopeChange, sourceSection);
   }
 
   @Override
@@ -95,12 +100,8 @@ public class BlockNode extends LiteralNode {
   public static final class BlockNodeWithContext extends BlockNode {
 
     public BlockNodeWithContext(final SInvokable blockMethod,
-        final SourceSection source) {
-      super(blockMethod, source);
-    }
-
-    public BlockNodeWithContext(final BlockNodeWithContext node) {
-      this(node.blockMethod, node.getSourceSection());
+        final boolean needsAdjustmentOnScopeChange, final SourceSection source) {
+      super(blockMethod, needsAdjustmentOnScopeChange, source);
     }
 
     @Override
@@ -110,7 +111,8 @@ public class BlockNode extends LiteralNode {
 
     @Override
     protected BlockNode createNode(final SInvokable adapted) {
-      return new BlockNodeWithContext(adapted, getSourceSection());
+      return new BlockNodeWithContext(adapted, needsAdjustmentOnScopeChange,
+          sourceSection);
     }
   }
 }

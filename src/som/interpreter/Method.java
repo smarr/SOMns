@@ -84,7 +84,7 @@ public final class Method extends Invokable {
   public ExpressionNode inline(final MethodBuilder builder, final SInvokable outer) {
     builder.mergeIntoScope(methodScope, outer);
     return InliningVisitor.doInline(
-        uninitializedBody, builder.getCurrentMethodScope(), 0);
+        uninitializedBody, builder.getCurrentMethodScope(), 0, true);
   }
 
   @Override
@@ -96,9 +96,10 @@ public final class Method extends Invokable {
   }
 
   public Method cloneAndAdaptAfterScopeChange(final MethodScope adaptedScope,
-      final int appliesTo, final boolean cloneAdaptedAsUninitialized) {
+      final int appliesTo, final boolean cloneAdaptedAsUninitialized,
+      final boolean someOuterScopeIsMerged) {
     ExpressionNode adaptedBody = InliningVisitor.doInline(
-        uninitializedBody, adaptedScope, appliesTo);
+        uninitializedBody, adaptedScope, appliesTo, someOuterScopeIsMerged);
 
     ExpressionNode uninit;
     if (cloneAdaptedAsUninitialized) {
@@ -118,7 +119,7 @@ public final class Method extends Invokable {
     MethodScope splitScope = methodScope.split();
     assert methodScope != splitScope;
     assert splitScope.isFinalized();
-    return cloneAndAdaptAfterScopeChange(splitScope, 0, false);
+    return cloneAndAdaptAfterScopeChange(splitScope, 0, false, false);
   }
 
   @Override
@@ -127,7 +128,7 @@ public final class Method extends Invokable {
     assert !isAtomic : "We should only ask non-atomic invokables for their atomic version";
 
     MethodScope splitScope = methodScope.split();
-    ExpressionNode body = InliningVisitor.doInline(uninitializedBody, splitScope, 0);
+    ExpressionNode body = InliningVisitor.doInline(uninitializedBody, splitScope, 0, true);
     ExpressionNode uninit = NodeUtil.cloneNode(body);
 
     Method atomic = new Method(name, getSourceSection(), definition, body,
