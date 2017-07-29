@@ -760,6 +760,11 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       )
     )
 
+    class InlinedScopes = (
+    | public if = true ifTrue: [ Cnt new inc; inc; inc ].
+      public if2 = [ true ifTrue: [ Cnt new inc; inc; inc ] ] value.
+    |)()
+
     public testCascadeOnFieldRead = (
       | c = Cnt new. |
       assert: c v equals: 0.
@@ -794,6 +799,51 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       assert: setter slot1 equals: 23.
       assert: setter slot2 equals: 42.
       assert: setter runCascadeForValue equals: 42.
+    )
+
+    public testCascadeInInlinedBlocks = (
+      | i   = InlinedScopes new.
+        if  = true ifTrue: [ Cnt new inc; inc; inc ].
+        if2 = [ true ifTrue: [ Cnt new inc; inc; inc ] ] value. |
+      assert: i if v  equals: 3.
+      assert: i if2 v equals: 3.
+
+      assert: if v  equals: 3.
+      assert: if2 v equals: 3.
+
+      assert: (true ifTrue: [ Cnt new inc; inc; inc ]) v         equals: 3.
+      assert: [ true ifTrue: [ Cnt new inc; inc; inc ] ] value v equals: 3.
+    )
+  ) : ( TEST_CONTEXT = () )
+
+  public class OperatorSequences = TestContext ()(
+    class Op = (
+    | public operator
+      public operand
+    |)(
+      public -> op = (
+        operator:: #arrowRight.
+        operand:: op
+      )
+
+      public <- op = (
+        operator:: #arrowLeft.
+        operand:: op
+      )
+    )
+
+    public testArrows = (
+      | o = Op new. |
+
+      o <- 4.
+
+      assert: #arrowLeft equals: o operator.
+      assert: 4          equals: o operand.
+
+      o -> 54.
+
+      assert: #arrowRight equals: o operator.
+      assert: 54          equals: o operand.
     )
   ) : ( TEST_CONTEXT = () )
 )

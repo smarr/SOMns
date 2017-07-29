@@ -152,6 +152,8 @@ public final class Lexer {
 
     if (currentChar() == '\'') {
       lexString();
+    } else if (currentChar() == '"') {
+      lexCharacterLiteral();
     } else if (currentChar() == '[') {
       match(Symbol.NewBlock);
     } else if (currentChar() == ']') {
@@ -270,7 +272,10 @@ public final class Lexer {
 
   private void lexStringChar() {
     char cur = currentChar();
-    if (cur == '\\') {
+    if (cur == '\'' && nextChar() == '\'') {
+      state.text.append('\'');
+      state.incPtr(2);
+    } else if (cur == '\\') {
       state.incPtr();
       lexEscapeChar();
     } else {
@@ -288,11 +293,28 @@ public final class Lexer {
     state.set(Symbol.STString);
     state.incPtr();
 
-    while (currentChar() != '\'') {
+    while (currentChar() != '\'' || nextChar() == '\'') {
       lexStringChar();
     }
 
     state.incPtr();
+  }
+
+  private void lexCharacterLiteral() {
+    state.set(Symbol.Char);
+    state.incPtr();
+
+    char c = currentChar();
+    if (c == '"' && nextChar() == '"') {
+      state.text.append('"');
+      state.incPtr(2);
+    } else {
+      acceptChar();
+    }
+
+    if (currentChar() == '"') {
+      state.incPtr();
+    }
   }
 
   private void lexOperator() {
@@ -329,6 +351,8 @@ public final class Lexer {
       match(Symbol.Per);
     } else if (currentChar() == '-') {
       match(Symbol.Minus);
+    } else if (currentChar() == '!') {
+      match(Symbol.OperatorSequence);
     }
   }
 
@@ -432,7 +456,7 @@ public final class Lexer {
   private static boolean isOperator(final char c) {
     return c == '~' || c == '&' || c == '|' || c == '*' || c == '/'
         || c == '\\' || c == '+' || c == '=' || c == '>' || c == '<'
-        || c == ',' || c == '@' || c == '%';
+        || c == ',' || c == '@' || c == '%' || c == '-' || c == '!';
   }
 
   protected static boolean isDigit(final char c) {

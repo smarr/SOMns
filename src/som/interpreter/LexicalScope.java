@@ -131,6 +131,15 @@ public abstract class LexicalScope {
       this.variables = variables;
     }
 
+    /**
+     * During parsing of locals, variables are not set yet.
+     * So, we don't need to set them explicitly.
+     * They will be set later automatically.
+     */
+    public boolean hasVariables() {
+      return variables != null;
+    }
+
     public void addVariable(final Variable var) {
       int length = variables.length;
       variables = Arrays.copyOf(variables, length + 1);

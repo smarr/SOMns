@@ -28,6 +28,7 @@ package som.compiler;
 import static som.compiler.Symbol.And;
 import static som.compiler.Symbol.At;
 import static som.compiler.Symbol.BeginComment;
+import static som.compiler.Symbol.Char;
 import static som.compiler.Symbol.Colon;
 import static som.compiler.Symbol.Comma;
 import static som.compiler.Symbol.Div;
@@ -76,6 +77,7 @@ import java.util.Set;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.VM;
 import som.compiler.Lexer.Peek;
 import som.compiler.MethodBuilder.MethodDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionError;
@@ -139,8 +141,13 @@ public class Parser {
   private final Set<SourceSection>  syntaxAnnotations;
   private final StructuralProbe     structuralProbe;
 
+  /**
+   * TODO: fix AST inlining while parsing locals/slots, and remove the disabling.
+   */
+  private int parsingSlotDefs;
+
   private static final Symbol[] singleOpSyms = new Symbol[] {Not, And, Or, Star,
-    Div, Mod, Plus, Equal, More, Less, Comma, At, Per, NONE};
+    Div, Mod, Plus, Equal, More, Less, Comma, At, Per, Minus, NONE};
 
   private static final Symbol[] binaryOpSyms = new Symbol[] {Or, Comma, Minus,
     Equal, Not, And, Or, Star, Div, Mod, Plus, Equal, More, Less, Comma, At,
@@ -150,7 +157,7 @@ public class Parser {
     KeywordSequence};
 
   private static final Symbol[] literalSyms = new Symbol[] {Pound, STString,
-    Numeral};
+    Numeral, Char};
 
   private static boolean arrayContains(final Symbol[] arr, final Symbol sym) {
     for (Symbol s : arr) {
@@ -337,6 +344,8 @@ public class Parser {
     }
     mxnBuilder.setupInitializerBasedOnPrimaryFactory(getSource(coord));
 
+    comments();
+
     expect(Equal, "Unexpected symbol %(found)s."
         + " Tried to parse the class declaration of " + mixinName
         + " and expect '=' before the (optional) inheritance declaration.",
@@ -501,7 +510,9 @@ public class Parser {
 
     while (sym != EndTerm) {
       comments();
-      methodDeclaration(mxnBuilder);
+      SourceCoordinate coord = getCoordinate();
+      AccessModifier accessModifier = accessModifier();
+      methodDeclaration(accessModifier, coord, mxnBuilder);
       comments();
     }
 
@@ -516,6 +527,20 @@ public class Parser {
     SourceCoordinate coord = getCoordinate();
     if (sym == Or) {
       slotDeclarations(mxnBuilder);
+    }
+
+    if (sym == OperatorSequence && "||".equals(text)) {
+      peekForNextSymbolFromLexer();
+      if (nextSym == EndTerm) {
+        expect(OperatorSequence, null);
+
+        mxnBuilder.setInitializerSource(getSource(coord));
+        expect(EndTerm, null);
+        mxnBuilder.finalizeInitializer();
+        return;
+      } else {
+        simSlotDeclarations(mxnBuilder);
+      }
     }
 
     comments();
@@ -581,6 +606,26 @@ public class Parser {
     expect(Or, DelimiterClosingTag.class);
   }
 
+  private void simSlotDeclarations(final MixinBuilder mxnBuilder)
+      throws ProgramDefinitionError {
+    // Newspeak-speak: we do not support simSlotDecls, i.e.,
+    //                 simultaneous slots clauses (spec 6.3.2)
+    VM.errorPrintln("Warning: Parsed simSlotDecls, but it isn't supported yet. " + lexer.getCurrentLineNumber() + ":" + lexer.getCurrentColumn());
+    assert "||".equals(text);
+    expect(OperatorSequence, DelimiterOpeningTag.class);
+
+    while (sym != OperatorSequence) {
+      slotDefinition(mxnBuilder);
+    }
+
+    comments();
+
+    assert "||".equals(text);
+    expect(OperatorSequence, DelimiterClosingTag.class);
+  }
+
+
+
   private void slotDefinition(final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
     comments();
@@ -623,7 +668,12 @@ public class Parser {
   private String slotDecl() throws ParseError {
     String id = identifier();
 
+    comments();
+
     new TypeParser(this).parseType();
+
+    comments();
+
     return id;
   }
 
@@ -642,50 +692,39 @@ public class Parser {
     expect(NewTerm, DelimiterOpeningTag.class);
     comments();
 
-    while (canAcceptIdentifierWithOptionalEarlierIdentifier(
-        new String[]{"private", "protected", "public"}, "class")) {
-      nestedClassDeclaration(mxnBuilder);
+    SourceCoordinate coord = getCoordinate();
+    AccessModifier accessModifier = accessModifier();
+    peekForNextSymbolFromLexer();
+
+    while (sym == Identifier && nextSym == Identifier) {
+      nestedClassDeclaration(accessModifier, coord, mxnBuilder);
       comments();
+
+      coord = getCoordinate();
+      accessModifier = accessModifier();
+      peekForNextSymbolFromLexer();
     }
 
     while (sym != EndTerm) {
       comments();
-      methodDeclaration(mxnBuilder);
+      methodDeclaration(accessModifier, coord, mxnBuilder);
       comments();
+
+      coord = getCoordinate();
+      accessModifier = accessModifier();
     }
 
     expect(EndTerm, DelimiterClosingTag.class);
   }
 
-  private void nestedClassDeclaration(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
-    SourceCoordinate coord = getCoordinate();
-    AccessModifier accessModifier = accessModifier();
+  private void nestedClassDeclaration(final AccessModifier accessModifier,
+      final SourceCoordinate coord, final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
     MixinBuilder nestedCls = classDeclaration(mxnBuilder, accessModifier);
     mxnBuilder.addNestedMixin(nestedCls.assemble(getSource(coord)));
   }
 
   private boolean symIn(final Symbol[] ss) {
     return arrayContains(ss, sym);
-  }
-
-  private boolean canAcceptIdentifierWithOptionalEarlierIdentifier(
-      final String[] earlierIdentifier, final String identifier) {
-    if (sym != Identifier) { return false; }
-
-    if (identifier.equals(text)) { return true; }
-
-    boolean oneMatches = false;
-    for (String s : earlierIdentifier) {
-      if (s.equals(text)) {
-        oneMatches = true;
-        break;
-      }
-    }
-
-    if (!oneMatches) { return false; }
-
-    peekForNextSymbolFromLexer();
-    return nextSym == Identifier && identifier.equals(nextText);
   }
 
   private boolean acceptIdentifier(final String identifier,
@@ -764,18 +803,24 @@ public class Parser {
     return ss;
   }
 
-  private void methodDeclaration(final MixinBuilder mxnBuilder)
+  private void methodDeclaration(final AccessModifier accessModifier,
+      final SourceCoordinate coord, final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
-    SourceCoordinate coord = getCoordinate();
-
-    AccessModifier accessModifier = accessModifier();
     MethodBuilder builder = new MethodBuilder(
         mxnBuilder, mxnBuilder.getScopeForCurrentParserPosition());
 
+    comments();
+
     messagePattern(builder);
+
+    comments();
+
     expect(Equal,
         "Unexpected symbol %(found)s. Tried to parse method declaration and expect '=' between message pattern, and method body.",
         KeywordTag.class);
+
+    comments();
+
     ExpressionNode body = methodBlock(builder);
     builder.finalizeMethodScope();
     SInvokable meth = builder.assemble(body, accessModifier, getSource(coord));
@@ -799,6 +844,8 @@ public class Parser {
         binaryPattern(builder);
         break;
     }
+
+    comments();
 
     new TypeParser(this).parseReturnType();
   }
@@ -891,7 +938,11 @@ public class Parser {
     SourceCoordinate coord = getCoordinate();
     String id = identifier();
 
+    comments();
+
     new TypeParser(this).parseType();
+
+    comments();
 
     language.getVM().reportSyntaxElement(ArgumentTag.class, getSource(coord));
     return id;
@@ -905,6 +956,8 @@ public class Parser {
     if (accept(Or, DelimiterOpeningTag.class)) {
       locals(builder, expressions);
       expect(Or, DelimiterClosingTag.class);
+    } else if (sym == OperatorSequence && "||".equals(text)) {
+      expect(OperatorSequence, null);
     }
     builder.setVarsOnMethodScope();
     return blockBody(builder, expressions);
@@ -912,11 +965,15 @@ public class Parser {
 
   private void locals(final MethodBuilder builder,
       final List<ExpressionNode> expressions) throws ProgramDefinitionError {
+    parsingSlotDefs += 1;
+
     // Newspeak-speak: we do not support simSlotDecls, i.e.,
     //                 simultaneous slots clauses (spec 6.3.2)
     while (sym != Or) {
       localDefinition(builder, expressions);
     }
+
+    parsingSlotDefs -= 1;
   }
 
   private void localDefinition(final MethodBuilder builder,
@@ -969,6 +1026,8 @@ public class Parser {
           expect(Period, null);
         }
         expressions.add(result(builder));
+
+        comments();
         return createSequence(expressions, getSource(coord));
       } else if (sym == EndBlock) {
         return createSequence(expressions, getSource(coord));
@@ -1039,6 +1098,8 @@ public class Parser {
 
   private ExpressionNode evaluation(final MethodBuilder builder)
       throws ProgramDefinitionError {
+    comments();
+
     ExpressionNode exp;
     if (sym == Keyword) {
       exp = keywordMessage(builder, builder.getSelfRead(getEmptySource()), false, false, null);
@@ -1056,6 +1117,9 @@ public class Parser {
         exp = msgCascade(exp, lastReceiver[0], builder, coord);
       }
     }
+
+    comments();
+
     return exp;
   }
 
@@ -1072,10 +1136,10 @@ public class Parser {
     Local tmp = builder.addMessageCascadeTemp(tmpSource);
 
     // evaluate last receiver, and write value to temp
-    cascade.add(tmp.getWriteNode(0, lastReceiver, tmpSource));
+    cascade.add(builder.getWriteNode(tmp.name, lastReceiver, tmpSource));
 
     // replace receiver with read from temp
-    lastReceiver.replace(tmp.getReadNode(0, tmpSource));
+    lastReceiver.replace(builder.getReadNode(tmp.name, tmpSource));
 
     // add the initial message of the cascade, it is now send to the temp read
     cascade.add(nonEmptyMessage);
@@ -1083,14 +1147,16 @@ public class Parser {
     while (sym == Semicolon) {
       expect(Semicolon, KeywordTag.class);
 
+      comments();
+
       ExpressionNode exp;
       if (sym == Keyword) {
-        exp = keywordMessage(builder, tmp.getReadNode(0, tmpSource), false, false, null);
+        exp = keywordMessage(builder, builder.getReadNode(tmp.name, tmpSource), false, false, null);
       } else if (sym == OperatorSequence || symIn(binaryOpSyms)) {
-        exp = binaryMessage(builder, tmp.getReadNode(0, tmpSource), false, null);
+        exp = binaryMessage(builder, builder.getReadNode(tmp.name, tmpSource), false, null);
       } else {
         assert sym == Identifier;
-        exp = unaryMessage(tmp.getReadNode(0, tmpSource), false, null);
+        exp = unaryMessage(builder.getReadNode(tmp.name, tmpSource), false, null);
       }
       cascade.add(exp);
     }
@@ -1262,6 +1328,9 @@ public class Parser {
       final SourceSection sendOperator) throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
     SSymbol msg = binarySelector();
+
+    comments();
+
     ExpressionNode operand = binaryOperand(builder);
 
     if (!eventualSend) {
@@ -1271,6 +1340,9 @@ public class Parser {
         return node;
       }
     }
+
+    comments();
+
     return createMessageSend(msg, new ExpressionNode[] {receiver, operand},
         eventualSend, getSource(coord), sendOperator, language);
   }
@@ -1346,6 +1418,10 @@ public class Parser {
       final MethodBuilder builder, final List<ExpressionNode> arguments,
       final String msgStr, final int numberOfArguments,
       final SourceSection source) {
+    if (parsingSlotDefs > 0) {
+      return null;
+    }
+
     if (numberOfArguments == 2) {
       if (arguments.get(1) instanceof LiteralNode) {
         if ("ifTrue:".equals(msgStr)) {
@@ -1361,6 +1437,9 @@ public class Parser {
           return new IfInlinedLiteralNode(condition, false, inlinedBody,
               arguments.get(1), source);
         } else if ("whileTrue:".equals(msgStr)) {
+          if (!(arguments.get(0) instanceof LiteralNode) || !(arguments.get(1) instanceof LiteralNode)) {
+            return null;
+          }
           ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
           inlinedCondition.markAsControlFlowCondition();
           ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(builder);
@@ -1368,6 +1447,9 @@ public class Parser {
           return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
               true, arguments.get(0), arguments.get(1), source);
         } else if ("whileFalse:".equals(msgStr)) {
+          if (!(arguments.get(0) instanceof LiteralNode) || !(arguments.get(1) instanceof LiteralNode)) {
+            return null;
+          }
           ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
           inlinedCondition.markAsControlFlowCondition();
           ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(builder);
@@ -1465,6 +1547,9 @@ public class Parser {
     expect(NewTerm, DelimiterOpeningTag.class);
     ExpressionNode exp = expression(builder);
     expect(EndTerm, DelimiterClosingTag.class);
+
+    comments();
+
     return exp;
   }
 
@@ -1472,6 +1557,7 @@ public class Parser {
     switch (sym) {
       case Pound:     return literalSymbol();
       case STString:  return literalString();
+      case Char:      return literalChar();
       default:        return literalNumber();
     }
   }
@@ -1538,6 +1624,13 @@ public class Parser {
     return new StringLiteralNode(s, getSource(coord));
   }
 
+  private LiteralNode literalChar() throws ParseError {
+    SourceCoordinate coord = getCoordinate();
+    String s = character();
+
+    return new StringLiteralNode(s, getSource(coord));
+  }
+
   private LiteralNode literalArray(final MethodBuilder builder) throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
@@ -1581,6 +1674,12 @@ public class Parser {
   private String string() throws ParseError {
     String s = text;
     expect(STString, null);
+    return s;
+  }
+
+  private String character() throws ParseError {
+    String s = text;
+    expect(Char, null);
     return s;
   }
 

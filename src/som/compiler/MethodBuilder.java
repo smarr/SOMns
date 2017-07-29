@@ -348,7 +348,11 @@ public final class MethodBuilder {
 
   public Local addMessageCascadeTemp(final SourceSection source) throws MethodDefinitionError {
     cascadeId += 1;
-    return addLocal("$cascadeTmp" + cascadeId, true, source);
+    Local l = addLocal("$cascadeTmp" + cascadeId, true, source);
+    if (currentScope.hasVariables()) {
+      currentScope.addVariable(l);
+    }
+    return l;
   }
 
   public Local addLocal(final String name, final boolean immutable,
