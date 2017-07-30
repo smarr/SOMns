@@ -39,6 +39,7 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.MixinDefinition.SlotMutator;
 import som.compiler.ProgramDefinitionError.SemanticDefinitionError;
 import som.compiler.Variable.Argument;
+import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
@@ -148,8 +149,10 @@ public final class MixinBuilder {
 
     // classes can only be defined on the instance side,
     // so, both time the instance scope
-    this.instanceScope = new MixinScope(outerMixin != null ? outerMixin.getInstanceScope() : null);
-    this.classScope    = new MixinScope(outerMixin != null ? outerMixin.getInstanceScope() : null);
+    MethodScope outerMethodScope = outerMethod != null ? outerMethod.getCurrentMethodScope() : null;
+    MixinScope outerMixinScope = outerMixin != null ? outerMixin.getInstanceScope() : null;
+    this.instanceScope = new MixinScope(outerMixinScope, outerMethodScope);
+    this.classScope    = new MixinScope(outerMixinScope, outerMethodScope);
 
     this.initializer          = new MethodBuilder(this, this.instanceScope);
     this.primaryFactoryMethod = new MethodBuilder(this, this.classScope);
