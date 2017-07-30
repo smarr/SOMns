@@ -1,4 +1,4 @@
-(* Copyright (c) 2001-2015 see AUTHORS file
+(* Copyright (c) 2001-2017 see AUTHORS file
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the 'Software'), to deal
@@ -593,6 +593,68 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     result println.
       (* ^ 800080008000 = result *)
       ^ 800080024000 = result
+    )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run innerIterations: 1 )
+  )
+
+  public class ObjectLiterals = Benchmark ()(
+    public benchmark = (
+      | cnt |
+      cnt:: 0.
+      1 to: 1000 do: [:i |
+        objL()( public inc = ( cnt:: cnt + 1 ) ) inc.
+      ].
+      ^ cnt
+    )
+
+    public verifyResult: result = (
+      ^ 1000 = result
+    )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run innerIterations: 1 )
+  )
+
+  public class ObjectLiterals2 = Benchmark (
+  | private cnt ::= 0. |
+  )(
+    private inc = (
+      objL()( public inc = ( cnt:: cnt + 1 ) ) inc.
+    )
+
+    public benchmark = (
+      cnt:: 0.
+      1 to: 1000 do: [:i | inc ].
+      ^ cnt
+    )
+
+    public verifyResult: result = (
+      ^ 1000 = result
+    )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run innerIterations: 1 )
+  )
+
+  public class ObjectLiterals3 = Benchmark ()(
+    private inc: i = (
+      | cnt |
+      cnt:: i.
+      objL()( public inc = ( cnt:: cnt + 1 ) ) inc.
+      ^ cnt
+    )
+
+    public benchmark = (
+      | cnt |
+      cnt:: 0.
+      1 to: 1000 do: [:i | cnt:: inc: cnt ].
+      ^ cnt
+    )
+
+    public verifyResult: result = (
+      ^ 1000 = result
     )
   ) : (
     public newInstance = ( ^ self new )
