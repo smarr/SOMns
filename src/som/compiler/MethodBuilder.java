@@ -393,16 +393,41 @@ public final class MethodBuilder {
     return level;
   }
 
+  /**
+   * The context level specifies how many scopes away a given variable
+   * is from the current activation. A level of 0 means that the variable
+   * is local to the current activation, a level of 1 means that the variable
+   * is defined in the enclosing activation, and so on.
+   *
+   * <p>This method first checks the current activation and returns 0 if the
+   * given variable exists in either the local variables of this activation
+   * or otherwise the arguments given to it.
+   *
+   * <p>In the case of nested blocks, we recursively check the enclosing block
+   * or method activations. The recursive check stops after the first method
+   * which always has a null `outerBuilder`. If the method belongs to an
+   * object literal we continue the recursive check starting from that object's
+   * enclosing activation.
+   *
+   * <p>If still no variable has been found then we have determined that the
+   * variable cannot be in scope and that a variable must have been erroneously
+   * by {@link #getReadNode} or {@link #getWriteNode}.
+   */
   private int getContextLevel(final String varName) {
+    // Check the current activation
     if (locals.containsKey(varName) || arguments.containsKey(varName)) {
       return 0;
     }
 
+    // Check all enclosing activations (ends after first method activation)
     if (outerBuilder != null) {
       return 1 + outerBuilder.getContextLevel(varName);
     }
 
-    throw new IllegalStateException("Didn't find variable.");
+    // Otherwise, the method belongs to an object literal, check the object's
+    // enclosing activations
+    assert directOuterMixin != null && directOuterMixin.isLiteral();
+    return 1 + directOuterMixin.getEnclosingMethod().getContextLevel(varName);
   }
 
   public Local getEmbeddedLocal(final String embeddedName) {
@@ -412,8 +437,13 @@ public final class MethodBuilder {
   /**
    * A variable is either an argument or a temporary in the lexical scope
    * of methods (only in methods).
+   *
+   * <p>Refer to {@link #getContextLevel} for a description of how the
+   * enclosing scopes are traversed.
    */
   protected Variable getVariable(final String varName) {
+
+    // Check the current activation
     if (locals.containsKey(varName)) {
       return locals.get(varName);
     }
@@ -422,6 +452,7 @@ public final class MethodBuilder {
       return arguments.get(varName);
     }
 
+    // Check all enclosing activations (ends after first method activation)
     if (outerBuilder != null) {
       Variable outerVar = outerBuilder.getVariable(varName);
       if (outerVar != null) {
@@ -429,8 +460,21 @@ public final class MethodBuilder {
         if (outerVar instanceof Local) {
           accessesLocalOfOuterScope = true;
         }
+        return outerVar;
       }
-      return outerVar;
+    }
+
+    // If the method belongs to an object literal, check the object's enclosing
+    // activations
+    if (directOuterMixin != null && directOuterMixin.isLiteral()) {
+      Variable literalVar = directOuterMixin.getEnclosingMethod().getVariable(varName);
+      if (literalVar != null) {
+        accessesVariablesOfOuterScope = true;
+        if (literalVar instanceof Local) {
+          accessesLocalOfOuterScope = true;
+        }
+        return literalVar;
+      }
     }
     return null;
   }
@@ -476,23 +520,31 @@ public final class MethodBuilder {
       return getSelfRead(source);
     }
 
-    // first look up local or argument variables
+    // first look up local and argument variables
     Variable variable = getVariable(selector.getString());
     if (variable != null) {
       return getReadNode(selector.getString(), source);
     }
 
-    if (getEnclosingMixinBuilder() == null) {
-      // this is normally only for the inheritance clauses for modules the case
+    // send the message to self if at top level (classes only) or
+    // if self has the slot defined (object literals only)
+    if (getEnclosingMixinBuilder() == null ||
+        getEnclosingMixinBuilder().hasSlotDefined(selector)) {
       return SNodeFactory.createMessageSend(selector,
           new ExpressionNode[] {getSelfRead(source)}, false, source, null, language);
-    } else {
-      // otherwise, it is an implicit receiver send
-      return SNodeFactory.createImplicitReceiverSend(selector,
-          new ExpressionNode[] {getSelfRead(source)},
-          getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(),
-          source, language.getVM());
     }
+
+    // then lookup non local and argument variables
+    Variable literalVariable = getVariable(selector.getString());
+    if (literalVariable != null) {
+      return getReadNode(selector.getString(), source);
+    }
+
+    // otherwise it's an implicit send
+    return SNodeFactory.createImplicitReceiverSend(selector,
+        new ExpressionNode[] {getSelfRead(source)},
+        getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(),
+        source, language.getVM());
   }
 
   public ExpressionNode getSetterSend(final SSymbol setter,
@@ -505,12 +557,31 @@ public final class MethodBuilder {
     if (hasArgument(varName)) {
       throw new MethodDefinitionError("Can't assign to argument: " + varName, source);
     }
+
+    // first look up local variables
     Local variable = getLocal(varName);
     if (variable != null) {
       return getWriteNode(varName, exp, source);
     }
 
-    // otherwise, it is a setter send.
+    // send the message to self if at top level (classes only) or
+    // if self has the slot defined (object literals only)
+    if (getEnclosingMixinBuilder() == null ||
+        getEnclosingMixinBuilder().hasSlotDefined(setter)) {
+      return SNodeFactory.createImplicitReceiverSend(
+          MixinBuilder.getSetterName(setter),
+          new ExpressionNode[] {getSelfRead(source), exp},
+          getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(),
+          source, language.getVM());
+    }
+
+    // then lookup non local and argument variables
+    Local literalVariable = getLocal(varName);
+    if (literalVariable != null) {
+      return getWriteNode(varName, exp, source);
+    }
+
+    // otherwise, it is a setter send
     return SNodeFactory.createImplicitReceiverSend(
         Symbols.symbolFor(setterName),
         new ExpressionNode[] {getSelfRead(source), exp},
@@ -529,18 +600,37 @@ public final class MethodBuilder {
     return false;
   }
 
+  /**
+   * Refer to {@link #getContextLevel} for a description of how the
+   * enclosing scopes are traversed.
+   */
   protected Local getLocal(final String varName) {
+    // Check the current activation
     if (locals.containsKey(varName)) {
       return locals.get(varName);
     }
 
+    // Check all enclosing activations (ends after first method activation)
     if (outerBuilder != null) {
       Local outerLocal = outerBuilder.getLocal(varName);
       if (outerLocal != null) {
         accessesVariablesOfOuterScope = true;
         accessesLocalOfOuterScope = true;
+        return outerLocal;
       }
-      return outerLocal;
+
+    }
+
+    // If the method belongs to an object literal, check the object's enclosing
+    // activations
+    if (directOuterMixin != null && directOuterMixin.isLiteral()) {
+      Local literalLocal = directOuterMixin.getEnclosingMethod().getLocal(varName);
+      if (literalLocal != null) {
+        accessesVariablesOfOuterScope = true;
+        accessesLocalOfOuterScope = true;
+        return literalLocal;
+      }
+
     }
     return null;
   }
