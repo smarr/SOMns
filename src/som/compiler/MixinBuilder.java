@@ -100,7 +100,8 @@ public final class MixinBuilder {
   private final MixinScope instanceScope;
   private final MixinScope classScope;
 
-  private final MixinBuilder outerBuilder;
+  private final MixinBuilder outerMixin;
+  private final MethodBuilder outerMethod;
 
   private final MixinDefinitionId mixinId;
 
@@ -131,7 +132,7 @@ public final class MixinBuilder {
     }
   };
 
-  public MixinBuilder(final MixinBuilder outerBuilder,
+  private MixinBuilder(final MixinBuilder outerMixin, final MethodBuilder outerMethod,
       final AccessModifier accessModifier, final SSymbol name,
       final SourceSection nameSection,
       final StructuralProbe structuralProbe,
@@ -141,13 +142,14 @@ public final class MixinBuilder {
     this.mixinId      = new MixinDefinitionId(name);
 
     this.classSide    = false;
-    this.outerBuilder = outerBuilder;
+    this.outerMixin   = outerMixin;
+    this.outerMethod  = outerMethod;
     this.language     = language;
 
     // classes can only be defined on the instance side,
     // so, both time the instance scope
-    this.instanceScope = new MixinScope(outerBuilder != null ? outerBuilder.getInstanceScope() : null);
-    this.classScope    = new MixinScope(outerBuilder != null ? outerBuilder.getInstanceScope() : null);
+    this.instanceScope = new MixinScope(outerMixin != null ? outerMixin.getInstanceScope() : null);
+    this.classScope    = new MixinScope(outerMixin != null ? outerMixin.getInstanceScope() : null);
 
     this.initializer          = new MethodBuilder(this, this.instanceScope);
     this.primaryFactoryMethod = new MethodBuilder(this, this.classScope);
@@ -155,6 +157,36 @@ public final class MixinBuilder {
 
     this.accessModifier = accessModifier;
     this.structuralProbe = structuralProbe;
+  }
+
+  /**
+   * This constructor is used to create a MixinBuilder for a Newspeak classes,
+   * which must either occur at the top lexical level or be nested inside of
+   * another class declaration (the <code>outerMixin</code>).
+   */
+  public MixinBuilder(final MixinBuilder outerMixin,
+      final AccessModifier accessModifier, final SSymbol name,
+      final SourceSection nameSection,
+      final StructuralProbe structuralProbe,
+      final SomLanguage language) {
+    this(outerMixin, null, accessModifier, name, nameSection,
+        structuralProbe, language);
+  }
+
+  /**
+   * This constructor is used to create a MixinBuilder for an object literal,
+   * which must be inside of an activation (the <code>outerMethod</code>).
+   * Since the object literal inherits from a class, we still need to hold
+   * a reference to the outer class declaration - the mixin that
+   * encloses the current activation.
+   */
+  public MixinBuilder(final MethodBuilder outerMethod,
+      final AccessModifier accessModifier, final SSymbol name,
+      final SourceSection nameSection,
+      final StructuralProbe structuralProbe,
+      final SomLanguage language) {
+    this(outerMethod.getEnclosingMixinBuilder(), outerMethod,
+        accessModifier, name, nameSection, structuralProbe, language);
   }
 
   public static class MixinDefinitionError extends SemanticDefinitionError {
@@ -174,7 +206,15 @@ public final class MixinBuilder {
   }
 
   public MixinBuilder getOuterBuilder() {
-    return outerBuilder;
+    return outerMixin;
+  }
+
+  public boolean isLiteral() {
+    return outerMethod != null;
+  }
+
+  public MethodBuilder getEnclosingMethod() {
+    return outerMethod;
   }
 
   public SSymbol getName() {
@@ -182,7 +222,7 @@ public final class MixinBuilder {
   }
 
   public boolean isModule() {
-    return outerBuilder == null;
+    return outerMixin == null;
   }
 
   public AccessModifier getAccessModifier() {
@@ -333,6 +373,16 @@ public final class MixinBuilder {
     }
   }
 
+  /**
+   * Determining whether this class defines a slot with the given name
+   * Currently used only for determining the context of variables whose
+   * activation's enclose an object literals,
+   * see {@link MethodBuilder#getContextLevel}.
+   */
+  public boolean hasSlotDefined(final SSymbol name) {
+    return slots.containsKey(name);
+  }
+
   public void addInitializerExpression(final ExpressionNode expression) {
     expression.markAsStatement();
     slotAndInitExprs.add(expression);
@@ -393,10 +443,10 @@ public final class MixinBuilder {
   }
 
   private boolean outerScopeIsImmutable() {
-    if (outerBuilder == null) {
+    if (outerMixin == null) {
       return true;
     }
-    return outerBuilder.allSlotsAreImmutable && outerBuilder.outerScopeIsImmutable();
+    return outerMixin.allSlotsAreImmutable && outerMixin.outerScopeIsImmutable();
   }
 
   private void setHolders(final MixinDefinition clsDef) {
@@ -414,11 +464,11 @@ public final class MixinBuilder {
 
   private MethodBuilder createSuperclassResolutionBuilder() {
     MethodBuilder definitionMethod;
-    if (outerBuilder == null) {
+    if (outerMixin == null) {
       definitionMethod = new MethodBuilder(true, language);
     } else {
-      definitionMethod = new MethodBuilder(outerBuilder,
-          outerBuilder.getInstanceScope());
+      definitionMethod = new MethodBuilder(outerMixin,
+          outerMixin.getInstanceScope());
     }
 
     // self is going to be the enclosing object
