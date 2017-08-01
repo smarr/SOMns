@@ -64,7 +64,7 @@ export class TestConnection extends VmConnection {
 
   private startSom(extraArgs?: string[], triggerDebugger?: boolean, testFile?: string) {
     if (!testFile) { testFile = "tests/pingpong.som"; }
-    let args = ["-G", "-t1", "-wd", testFile];
+    let args = ["-G", "-wd", testFile];
     if (triggerDebugger) { args = ["-d"].concat(args); };
     if (extraArgs) { args = args.concat(extraArgs); }
 
