@@ -12,13 +12,27 @@ import { VmConnection } from "../src/vm-connection";
 import { ActivityId } from "./somns-support";
 import { Activity } from "../src/execution-data";
 import { determinePorts } from "../src/launch-connector";
+import { Stop, Test } from "./stepping";
 
 const SOM_BASEPATH = "../../";
 export const SOM = SOM_BASEPATH + "som";
-export const PING_PONG_URI = "file:" + resolve("tests/pingpong.som");
+export const PING_PONG_FILE = resolve("tests/pingpong.som");
+export const PING_PONG_URI = "file:" + PING_PONG_FILE;
+export const ACTOR_FILE = resolve("tests/actor.som")
+export const ACTOR_URI = "file:" + ACTOR_FILE;
 
 const PRINT_SOM_OUTPUT = false;
 const PRINT_CMD_LINE = false;
+
+export function expectStop(msg: StackTraceResponse, stop: Stop, activityMap) {
+  expectStack(msg.stackFrames, stop.stackHeight, stop.methodName, stop.line);
+
+  if (activityMap[msg.activityId]) {
+    expect(activityMap[msg.activityId]).to.equal(stop.activity);
+  } else {
+    activityMap[msg.activityId] = stop.activity;
+  }
+}
 
 export function expectStack(stack: StackFrame[], length: number, methodName: string,
   startLine: number) {
@@ -204,5 +218,116 @@ export class HandleStoppedAndGetStackTrace extends ControllerWithInitialBreakpoi
 
   public onStackTrace(msg: StackTraceResponse) {
     this.resolveStackPs[msg.requestId](msg);
+  }
+}
+
+export class TestController extends ControllerWithInitialBreakpoints {
+  private readonly activityMap;
+
+  private numStopped: number;
+
+  private resolve: (value?: Stop[] | PromiseLike<Stop[]>) => void;
+  public stopsDoneForStep: Promise<Stop[]>;
+  private readonly suite: Test;
+
+  private expectedStops: Stop[];
+  private receivedStops: Stop[];
+  private readonly connectionP: Promise<boolean>;
+
+  constructor(suite: Test, vmConnection: VmConnection,
+    connectionP: Promise<boolean>) {
+    super(suite.initialBreakpoints, vmConnection);
+    this.connectionP = connectionP;
+    this.activityMap = {};
+    this.suite = suite;
+
+    this.numStopped = 0;
+    this.expectedStops = [suite.initialStop];
+    this.receivedStops = [];
+
+    this.renewPromise();
+  }
+
+  private renewPromise() {
+    if (this.expectedStops !== null && this.expectedStops !== undefined &&
+      this.expectedStops.length > 0) {
+      this.stopsDoneForStep = new Promise<Stop[]>((resolve, reject) => {
+        this.resolve = resolve;
+        this.connectionP.catch(reject);
+      });
+    } else {
+      this.stopsDoneForStep = Promise.resolve([]);
+    }
+    return this.stopsDoneForStep;
+  }
+
+  private getActivityId(activity: string): number {
+    for (const actId in this.activityMap) {
+      if (this.activityMap[actId] === activity) {
+        return parseInt(actId);
+      }
+    }
+
+    throw new Error("Activity map did not contain an id for activity: " + activity);
+  }
+
+  public doNextStep(type: string, activity: string, expectedStops?: Stop[]) {
+    this.expectedStops = expectedStops;
+    this.receivedStops = [];
+
+    const actId = this.getActivityId(activity);
+
+    const act: Activity = {
+      id: actId, completed: false,
+      name: "dummy", type: <number> ActivityId.ACTOR, creationScope: null,
+      creationActivity: null, running: false
+    };
+    this.vmConnection.sendDebuggerAction(type, act);
+    return this.renewPromise();
+  }
+
+  public onStoppedMessage(msg: StoppedMessage) {
+    if (this.numStopped === 0) {
+      this.activityMap[msg.activityId] = this.suite.initialStop.activity;
+    }
+
+    this.vmConnection.requestStackTrace(msg.activityId, this.numStopped);
+    this.numStopped += 1;
+  }
+
+  private getActivity(activityId: number, currentStop: Stop): string {
+    if (this.activityMap[activityId]) {
+      return this.activityMap[activityId];
+    }
+
+    for (const stop of this.expectedStops) {
+      if (stop.line === currentStop.line &&
+        stop.methodName === currentStop.methodName &&
+        stop.stackHeight === currentStop.stackHeight) {
+        this.activityMap[activityId] = stop.activity;
+        return stop.activity;
+      }
+    }
+    throw new Error("Could not identify which activity name corresponds to " +
+      `activity id: ${activityId} for stopped msg: ${JSON.stringify(currentStop)}`);
+  }
+
+  public onStackTrace(msg: StackTraceResponse) {
+    const stop: Stop = {
+      line: msg.stackFrames[0].line,
+      methodName: msg.stackFrames[0].name,
+      stackHeight: msg.stackFrames.length,
+      activity: ""
+    };
+    const activity = this.getActivity(msg.activityId, stop);
+    stop.activity = activity;
+
+    this.receivedStops.push(stop);
+
+    if (this.receivedStops.length === this.expectedStops.length) {
+      this.resolve(this.receivedStops);
+    } else if (this.receivedStops.length > this.expectedStops.length) {
+      throw new Error("Received more StoppedMessages than expected.");
+    }
   }
 }

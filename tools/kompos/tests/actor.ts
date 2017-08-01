@@ -1,6 +1,8 @@
+import { expect } from "chai";
 import { createSectionBreakpointData, createLineBreakpointData } from "../src/messages";
-import { PING_PONG_URI, HandleStoppedAndGetStackTrace, TestConnection, expectStack } from "./test-setup";
+import { PING_PONG_URI, TestConnection, ACTOR_URI, TestController, ACTOR_FILE, HandleStoppedAndGetStackTrace, expectStack, PING_PONG_FILE } from "./test-setup";
 import { BreakpointType as BT, SteppingType as ST } from "./somns-support";
+import { Test, Stop, expectStops } from "./stepping";
 
 let conn: TestConnection;
 
@@ -9,7 +11,7 @@ const closeConnectionAfterSuite = (done) => {
   conn.fullyConnected.catch(reason => done(reason));
 };
 
-describe("Actor Stepping", () => {
+describe("Actor Stepping, pingpong.som", () => {
   const steppingTests = {
     "stepping to message receiver":
     [{
@@ -56,34 +58,9 @@ describe("Actor Stepping", () => {
       test: "resume after step to promise resolution",
       type: ST.RESUME,
       length: 1,
-      methodName: "Ping>>#λvalidate@34@77:",
-      line: 34,
-      stackIndex: 2
-    }],
-
-    "returning from turn to promise resolution":
-    [{
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 33, 19, 3, BT.MSG_SENDER, true),
-      stopLine: 33,
-      stopMethod: "Ping>>#validate:",
-      numOp: 4,
-      length: 1
-    },
-    {
-      test: "return from turn to promise resolution",
-      type: ST.RETURN_FROM_TURN_TO_PROMISE_RESOLUTION,
-      length: 1,
-      methodName: "Ping>>#λping@27@31:",
-      line: 27,
-      stackIndex: 2
-    },
-    {
-      test: "resume after returning from turn",
-      type: ST.RESUME,
-      length: 1,
       methodName: "Ping>>#validate:",
       line: 33,
-      stackIndex: 1
+      stackIndex: 2
     }],
 
     "stepping to next turn":
@@ -330,6 +307,201 @@ describe("Actor Stepping", () => {
               });
             });
           }
+        });
+      });
+    });
+  }
+});
+
+describe("Actor Stepping", () => {
+  const MAPWhenResolved: Stop = {
+    line: 21,
+    methodName: "Actor>>#λmsgAndPromiseCallback@20@31:",
+    stackHeight: 1,
+    activity: "main"
+  };
+
+  const MTFooBody: Stop = {
+    line: 9,
+    methodName: "MyActor>>#foo",
+    stackHeight: 1,
+    activity: "MyActor"
+  };
+
+  const PingValidate: Stop = {
+    line: 33,
+    methodName: "Ping>>#validate:",
+    stackHeight: 1,
+    activity: "main"
+  };
+
+  const MTFooLine: Stop = {
+    line: 11,
+    methodName: "MyActor>>#foo",
+    stackHeight: 1,
+    activity: "MyActor"
+  };
+
+  const steppingTests: Test[] = [
+    {
+      title: "stepping to promise resolution",
+      test: ACTOR_FILE,
+      testArg: "msgAndPromiseCallback",
+      initialBreakpoints: [
+        createSectionBreakpointData(ACTOR_URI, 20, 8, 3, BT.MSG_SENDER, true)
+      ],
+      initialStop: {
+        line: 20,
+        methodName: "Actor>>#msgAndPromiseCallback:",
+        stackHeight: 6,
+        activity: "main"
+      },
+      steps: [
+        {
+          type: ST.STEP_TO_MESSAGE_RECEIVER,
+          activity: "main",
+          stops: [
+            {
+              line: 29,
+              methodName: "Actor>>#msgAndPromiseCallback:",
+              stackHeight: 6,
+              activity: "main"
+            },
+            {
+              line: 9,
+              methodName: "MyActor>>#foo",
+              stackHeight: 1,
+              activity: "MyActor"
+            }]
+        },
+        {
+          type: ST.RESUME,
+          activity: "main"
+        },
+        {
+          type: ST.RETURN_FROM_TURN_TO_PROMISE_RESOLUTION,
+          activity: "MyActor",
+          stops: [MAPWhenResolved]
+        },
+        {
+          type: ST.RESUME,
+          activity: "main"
+        }
+      ]
+    },
+    {
+      title: "returning from turn to promise resolution for self-send",
+      test: PING_PONG_FILE,
+      initialBreakpoints: [
+        createSectionBreakpointData(PING_PONG_URI, 33, 19, 3, BT.MSG_SENDER, true)
+      ],
+      initialStop: PingValidate,
+      steps: [
+        {
+          type: ST.RETURN_FROM_TURN_TO_PROMISE_RESOLUTION,
+          activity: "main",
+          stops: [PingValidate]
+        },
+        {
+          type: ST.RESUME,
+          activity: "main",
+          stops: [{
+            line: 27,
+            methodName: "Ping>>#λping@27@31:",
+            stackHeight: 1,
+            activity: "main"
+          }]
+        },
+        {
+          type: ST.RESUME,
+          activity: "main",
+          stops: [PingValidate]
+        },
+        {
+          type: ST.RESUME,
+          activity: "main"
+        },
+      ]
+    },
+    {
+      title: "breakpoint to promise resolution",
+      test: ACTOR_FILE,
+      testArg: "msgAndPromiseCallback",
+      initialBreakpoints: [
+        createSectionBreakpointData(ACTOR_URI, 20, 8, 3, BT.PROMISE_RESOLUTION, true)
+      ],
+      initialStop: MAPWhenResolved
+    },
+    {
+      title: "step to next turn",
+      test: ACTOR_FILE,
+      testArg: "multipleTurns",
+      initialBreakpoints: [
+        createLineBreakpointData(ACTOR_URI, 11, true)
+      ],
+      initialStop: MTFooLine,
+      steps: [
+        {
+          type: ST.STEP_TO_NEXT_TURN,
+          activity: "MyActor",
+          stops: [MTFooBody]
+        },
+        {
+          type: ST.STEP_TO_NEXT_TURN,
+          activity: "MyActor",
+          stops: [MTFooLine]
+        },
+        {
+          type: ST.STEP_TO_NEXT_TURN,
+          activity: "MyActor",
+          stops: [MTFooBody]
+        },
+        {
+          type: ST.STEP_TO_NEXT_TURN,
+          activity: "MyActor",
+          stops: [MTFooLine]
+        },
+        {
+          type: ST.RESUME,
+          activity: "MyActor"
+        }
+      ]
+    }
+  ];
+
+  for (const suite of steppingTests) {
+
+    describe(suite.title, () => {
+      let ctrl: TestController;
+
+      before("Start SOMns and Connect", () => {
+        const arg = suite.testArg ? [suite.testArg] : null;
+        conn = new TestConnection(arg, false, suite.test);
+        ctrl = new TestController(suite, conn, conn.fullyConnected);
+      });
+
+      after(closeConnectionAfterSuite);
+
+      it("should stop initially at breakpoint", () => {
+        return ctrl.stopsDoneForStep.then(stops => {
+          expect(stops).has.lengthOf(1);
+          expect(stops[0]).to.deep.equal(suite.initialStop);
+        });
+      });
+
+      describe("should", () => {
+        if (!suite.steps) { return; }
+
+        suite.steps.forEach(step => {
+          const expectedStops = step.stops ? step.stops.length : 0;
+          const desc = step.desc ? step.desc : `do ${step.type} on ${step.activity} and stop ${expectedStops} times.`;
+          it(desc, () => {
+            const stopPs = ctrl.doNextStep(step.type, step.activity, step.stops);
+
+            return stopPs.then(allStops => {
+              expectStops(allStops, step.stops);
+            });
+          });
         });
       });
     });

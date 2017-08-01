@@ -1,0 +1,56 @@
+class Actor usingPlatform: platform = Value (
+| private actors = platform actors.
+  private system = platform system.
+  private Exception = platform kernel Exception.
+|)(
+
+  private class MyActor = ()(
+    public foo = (
+      'Start #foo' println.
+
+      'Done with #foo' println.
+      ^ self
+    )
+  )
+
+  public msgAndPromiseCallback: completionPP = (
+    | a |
+    a:: (actors createActorFromValue: MyActor) <-: new.
+
+    (a <-: foo) whenResolved: [:r |
+      'Callback after #foo' println.
+      'Got as result: ' print.
+      r println.
+
+      (* End Program *)
+      completionPP resolve: 0.
+    ].
+
+    'msgAndPromiseCallback returning' println.
+  )
+
+  public multipleTurns: completionPP = (
+    | a |
+    a:: (actors createActorFromValue: MyActor) <-: new.
+    a <-: foo.
+    a <-: foo.
+    a <-: foo whenResolved: [:r |
+      completionPP resolve: 0
+    ].
+  )
+
+  public main: args = (
+    | completionPP a test |
+    'Actor breakpoint tests' println.
+
+    completionPP:: actors createPromisePair.
+    test:: args at: 2.
+    ('Run test: ' + test) println.
+
+    test = 'msgAndPromiseCallback' ifTrue: [ msgAndPromiseCallback: completionPP ].
+    test = 'multipleTurns'         ifTrue: [ multipleTurns: completionPP ].
+
+
+    ^ completionPP promise
+  )
+)
