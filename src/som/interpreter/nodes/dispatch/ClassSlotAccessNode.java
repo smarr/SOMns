@@ -7,8 +7,8 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 
 import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
-import som.interpreter.nodes.ClassInstantiationNode;
-import som.interpreter.nodes.ClassInstantiationNodeGen;
+import som.interpreter.nodes.InstantiationNode.ClassInstantiationNode;
+import som.interpreter.nodes.InstantiationNodeFactory.ClassInstantiationNodeGen;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
