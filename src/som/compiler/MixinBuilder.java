@@ -446,7 +446,7 @@ public final class MixinBuilder {
   }
 
   private boolean outerScopeIsImmutable() {
-    if (outerMixin == null) {
+    if (isModule()) {
       return true;
     }
     return outerMixin.allSlotsAreImmutable && outerMixin.outerScopeIsImmutable();
@@ -467,7 +467,7 @@ public final class MixinBuilder {
 
   private MethodBuilder createSuperclassResolutionBuilder() {
     MethodBuilder definitionMethod;
-    if (outerMixin == null) {
+    if (isModule()) {
       definitionMethod = new MethodBuilder(true, language);
     } else {
       definitionMethod = new MethodBuilder(outerMixin,
