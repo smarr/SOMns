@@ -5,8 +5,8 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.specialized.IntToDoMessageNode.ToDoSplzr;
-import som.primitives.Primitive;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 

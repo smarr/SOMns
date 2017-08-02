@@ -10,6 +10,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
+import bd.primitives.Primitive;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
@@ -24,7 +25,6 @@ import som.interpreter.processes.SChannel;
 import som.interpreter.processes.SChannel.SChannelInput;
 import som.interpreter.processes.SChannel.SChannelOutput;
 import som.primitives.ObjectPrims.IsValue;
-import som.primitives.Primitive;
 import som.vm.Activity;
 import som.vm.Symbols;
 import som.vm.VmSettings;

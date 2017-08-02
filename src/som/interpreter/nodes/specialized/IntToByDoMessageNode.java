@@ -7,10 +7,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
-import som.primitives.Primitive;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.dym.Tags.LoopNode;

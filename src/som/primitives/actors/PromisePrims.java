@@ -11,6 +11,8 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
+import bd.primitives.Primitive;
+import bd.primitives.Specializer;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.actors.Actor;
@@ -26,8 +28,6 @@ import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode.TernarySystemOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySystemOperation;
-import som.primitives.Primitive;
-import som.vm.Primitives.Specializer;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;

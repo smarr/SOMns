@@ -7,6 +7,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import bd.primitives.Primitive;
 import som.vm.constants.Nil;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;

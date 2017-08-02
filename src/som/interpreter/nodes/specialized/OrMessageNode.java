@@ -6,6 +6,7 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
+import bd.primitives.Primitive;
 import som.VM;
 import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.nary.BinaryBasicOperation;
@@ -14,7 +15,6 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.specialized.AndMessageNode.AndOrSplzr;
 import som.interpreter.nodes.specialized.OrMessageNode.OrSplzr;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory.OrBoolMessageNodeFactory;
-import som.primitives.Primitive;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.dym.Tags.ControlFlowCondition;

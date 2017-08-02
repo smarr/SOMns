@@ -4,11 +4,11 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import bd.primitives.Primitive;
+import bd.primitives.Specializer;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.primitives.Primitive;
-import som.vm.Primitives.Specializer;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SArray.SMutableArray;

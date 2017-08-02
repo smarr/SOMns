@@ -5,6 +5,8 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import bd.primitives.Primitive;
+import bd.primitives.Specializer;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
@@ -13,8 +15,6 @@ import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.specialized.SomLoop;
 import som.primitives.ObjectPrims.IsValue;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
-import som.primitives.Primitive;
-import som.vm.Primitives.Specializer;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray.SImmutableArray;

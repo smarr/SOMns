@@ -10,6 +10,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.interpreter.Types;

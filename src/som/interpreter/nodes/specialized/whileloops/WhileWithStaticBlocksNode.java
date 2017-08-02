@@ -7,14 +7,14 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
+import bd.primitives.Specializer;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileFalseSplzr;
 import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileTrueSplzr;
-import som.primitives.Primitive;
 import som.vm.NotYetImplementedException;
-import som.vm.Primitives.Specializer;
 import som.vmobjects.SBlock;
 
 

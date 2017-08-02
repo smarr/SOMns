@@ -6,7 +6,7 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
-import som.primitives.Primitive;
+import bd.primitives.Primitive;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SAbstractObject;
 

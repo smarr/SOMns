@@ -24,6 +24,8 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
+import bd.primitives.Specializer;
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.interop.ValueConversion.ToSomConversion;
@@ -37,7 +39,6 @@ import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySystemOperation;
 import som.vm.NotYetImplementedException;
-import som.vm.Primitives.Specializer;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;

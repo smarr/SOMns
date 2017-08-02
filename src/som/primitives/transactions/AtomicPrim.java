@@ -5,12 +5,12 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 
+import bd.primitives.Primitive;
 import som.VM;
 import som.interpreter.actors.SuspendExecutionNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.transactions.Transactions;
-import som.primitives.Primitive;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;

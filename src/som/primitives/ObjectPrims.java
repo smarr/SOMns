@@ -9,6 +9,7 @@ import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 
+import bd.primitives.Primitive;
 import som.VM;
 import som.interpreter.Types;
 import som.interpreter.actors.SFarReference;

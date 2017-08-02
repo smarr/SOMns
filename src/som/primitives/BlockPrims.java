@@ -11,6 +11,7 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Primitive;
 import som.VM;
 import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
 import som.interpreter.nodes.DummyParent;

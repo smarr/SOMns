@@ -7,7 +7,7 @@ import com.oracle.truffle.api.ExactMath;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
-import som.primitives.Primitive;
+import bd.primitives.Primitive;
 
 
 @GenerateNodeFactory

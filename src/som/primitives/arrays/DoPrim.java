@@ -5,12 +5,12 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.ValueProfile;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.specialized.SomLoop;
-import som.primitives.Primitive;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.PartiallyEmptyArray;

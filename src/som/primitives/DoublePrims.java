@@ -5,11 +5,11 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 import bd.primitives.Primitive;
+import bd.primitives.Specializer;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vm.Primitives.Specializer;
 import som.vm.constants.Classes;
 import tools.debugger.Tags.LiteralTag;
 import tools.dym.Tags.OpArithmetic;

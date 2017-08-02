@@ -14,6 +14,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.Specializer;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.instrumentation.MessageSendNodeWrapper;
@@ -24,7 +25,6 @@ import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
 import som.interpreter.nodes.nary.EagerlySpecializableNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.Primitives;
-import som.vm.Primitives.Specializer;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.dym.Tags.VirtualInvoke;
