@@ -5,6 +5,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinDefinition;
+import som.interpreter.InliningVisitor;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InstantiationNode.ObjectLiteralInstantiationNode;
 import som.interpreter.nodes.InstantiationNodeFactory.ObjectLiteralInstantiationNodeGen;
@@ -45,6 +46,16 @@ public class ObjectLiteralNode extends LiteralNode {
     Object superclassAndMixins = superClassResolver.call(outer);
     SClass sClassObject = instantiation.execute(outer, superclassAndMixins, frame.materialize());
     return newMessage.doPreEvaluated(frame, new Object[] {sClassObject});
+  }
+
+  @Override
+  public void replaceAfterScopeChange(final InliningVisitor inliner) {
+    MixinDefinition adaptedMixinDef = mixinDef.cloneAndAdaptAfterScopeChange(inliner.getCurrentScope(), inliner.contextLevel);
+    replace(createNode(adaptedMixinDef));
+  }
+
+  protected ObjectLiteralNode createNode(final MixinDefinition mixinDefinition) {
+    return new ObjectLiteralNode(mixinDefinition, outerRead, newMessage, sourceSection);
   }
 
 }
