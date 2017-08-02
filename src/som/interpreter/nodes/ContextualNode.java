@@ -21,15 +21,15 @@
  */
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.MaterializedFrame;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
-import som.vmobjects.SBlock;
+import som.vmobjects.SObjectWithContext;
 
 
 public abstract class ContextualNode extends ExprWithTagsNode {
@@ -48,12 +48,12 @@ public abstract class ContextualNode extends ExprWithTagsNode {
   }
 
   @ExplodeLoop
-  protected final MaterializedFrame determineContext(final VirtualFrame frame) {
-    SBlock self = (SBlock) SArguments.rcvr(frame);
+  protected final MaterializedFrame determineContext(final Frame frame) {
+    SObjectWithContext self = (SObjectWithContext) SArguments.rcvr(frame);
     int i = contextLevel - 1;
 
     while (i > 0) {
-      self = (SBlock) self.getOuterSelf();
+      self = self.getOuterSelf();
       i--;
     }
 
