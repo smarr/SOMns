@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { createSectionBreakpointData, createLineBreakpointData } from "../src/messages";
-import { PING_PONG_URI, TestConnection, ACTOR_URI, TestController, ACTOR_FILE, HandleStoppedAndGetStackTrace, expectStack, PING_PONG_FILE } from "./test-setup";
+import { PING_PONG_URI, TestConnection, ACTOR_URI, TestController, ACTOR_FILE, PING_PONG_FILE } from "./test-setup";
 import { BreakpointType as BT, SteppingType as ST } from "./somns-support";
 import { Test, Stop, expectStops } from "./stepping";
 
@@ -10,308 +10,6 @@ const closeConnectionAfterSuite = (done) => {
   conn.fullyConnected.then(_ => { conn.close(done); });
   conn.fullyConnected.catch(reason => done(reason));
 };
-
-describe("Actor Stepping, pingpong.som", () => {
-  const steppingTests = {
-    "stepping to message receiver":
-    [{
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 26, 19, 3, BT.MSG_SENDER, true),
-      stopLine: 26,
-      stopMethod: "Ping>>#ping",
-      numOp: 4,
-      length: 2
-    },
-    {
-      test: "step to message receiver",
-      type: ST.STEP_TO_MESSAGE_RECEIVER,
-      length: 2,
-      methodName: "Ping>>#ping",
-      line: 27,
-      stackIndex: 1
-    },
-    {
-      test: "resume after step to message receiver",
-      type: ST.RESUME,
-      length: 1,
-      methodName: "Ping>>#validate:",
-      line: 33,
-      stackIndex: 2
-    }],
-
-    "stepping to promise resolution":
-    [{
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 33, 19, 3, BT.MSG_SENDER, true),
-      stopLine: 33,
-      stopMethod: "Ping>>#validate:",
-      numOp: 4,
-      length: 1
-    },
-    {
-      test: "step to promise resolution",
-      type: ST.STEP_TO_PROMISE_RESOLUTION,
-      length: 1,
-      methodName: "Ping>>#validate:",
-      line: 34,
-      stackIndex: 1
-    },
-    {
-      test: "resume after step to promise resolution",
-      type: ST.RESUME,
-      length: 1,
-      methodName: "Ping>>#validate:",
-      line: 33,
-      stackIndex: 2
-    }],
-
-    "stepping to next turn":
-    [{
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 23, 14, 3, BT.MSG_SENDER, true),
-      stopLine: 23,
-      stopMethod: "Ping>>#ping",
-      numOp: 4,
-      length: 2
-    },
-    {
-      test: "step to next turn",
-      type: ST.STEP_TO_NEXT_TURN,
-      length: 1,
-      methodName: "Ping>>#pong:",
-      line: 56,
-      stackIndex: 1
-    },
-    {
-      test: "resume after stepping to next turn",
-      type: ST.RESUME,
-      length: 1,
-      methodName: "Ping>>#ping",
-      line: 23,
-      stackIndex: 2
-    }],
-
-    "stepping to promise resolver":
-    [{
-      breakpoint: createSectionBreakpointData(PING_PONG_URI, 26, 19, 3, BT.MSG_SENDER, true),
-      stopLine: 26,
-      stopMethod: "Ping>>#ping",
-      numOp: 4,
-      length: 2
-    },
-    {
-      test: "step to promise resolver",
-      type: ST.STEP_TO_PROMISE_RESOLVER,
-      length: 2,
-      methodName: "Ping>>#ping",
-      line: 27,
-      stackIndex: 1
-    },
-    {
-      test: "resume after step to promise resolver",
-      type: ST.RESUME,
-      length: 1,
-      methodName: "Ping>>#validate:",
-      line: 33,
-      stackIndex: 2
-    }],
-
-    "stepping to promise resolution for explicit promise":
-    [{
-      breakpoint: createLineBreakpointData(PING_PONG_URI, 92, true),
-      stopLine: 92,
-      stopMethod: "PingPong>>#benchmark",
-      numOp: 4,
-      length: 6
-    },
-    {
-      test: "step over",
-      type: ST.STEP_OVER,
-      length: 6,
-      methodName: "PingPong>>#benchmark",
-      line: 92,
-      stackIndex: 1
-    },
-    {
-      test: "step to promise resolution",
-      type: ST.STEP_TO_PROMISE_RESOLUTION,
-      length: 6,
-      methodName: "PingPong>>#benchmark",
-      line: 93,
-      stackIndex: 2
-    },
-    {
-      test: "resume after step to promise resolution",
-      type: ST.RESUME,
-      length: 1,
-      methodName: "PingPong>>#λbenchmark@97@44:",
-      line: 98,
-      stackIndex: 3
-    }],
-
-    "stepping to promise resolution for whenResolved":
-    [{
-      breakpoint: createLineBreakpointData(PING_PONG_URI, 27, true),
-      stopLine: 27,
-      stopMethod: "Ping>>#ping",
-      numOp: 5,
-      length: 2
-    },
-    {
-      test: "step over",
-      type: ST.STEP_OVER,
-      length: 2,
-      methodName: "Ping>>#ping",
-      line: 27,
-      stackIndex: 1
-    },
-    {
-      test: "should step to promise resolution",
-      type: ST.STEP_TO_PROMISE_RESOLUTION,
-      length: 2,
-      methodName: "Ping>>#ping",
-      line: 28,
-      stackIndex: 2
-    },
-    {
-      test: "should resume after step to promise resolution",
-      type: ST.RESUME,
-      length: 1,
-      methodName: "Ping>>#ping",
-      line: 27,
-      stackIndex: 3
-    },
-    {
-      test: "should resume again to get to resolution",
-      type: ST.RESUME,
-      length: 1,
-      methodName: "Ping>>#ping",
-      line: 27,
-      stackIndex: 4
-    }],
-
-    "stepping to promise resolution for whenResolvedOnError":
-    [{
-      breakpoint: createLineBreakpointData(PING_PONG_URI, 34, true),
-      stopLine: 34,
-      stopMethod: "Ping>>#validate:",
-      numOp: 5,
-      length: 1
-    },
-    {
-      test: "step over",
-      type: ST.STEP_OVER,
-      length: 1,
-      methodName: "Ping>>#validate:",
-      line: 34,
-      stackIndex: 1
-    },
-    {
-      test: "step to promise resolution",
-      type: ST.STEP_TO_PROMISE_RESOLUTION,
-      length: 1,
-      methodName: "Ping>>#validate:",
-      line: 35,
-      stackIndex: 2
-    },
-    {
-      test: "resume after step to promise resolution",
-      type: ST.RESUME,
-      length: 1,
-      methodName: "Ping>>#validate:",
-      line: 34,
-      stackIndex: 3
-    },
-    {
-      test: "resume again to get to resolution",
-      type: ST.RESUME,
-      length: 1,
-      methodName: "Ping>>#validate:",
-      line: 34,
-      stackIndex: 4
-    }],
-
-    "stepping to promise resolution for onError":
-    [{
-      breakpoint: createLineBreakpointData(PING_PONG_URI, 78, true),
-      stopLine: 78,
-      stopMethod: "Pong>>#stop",
-      numOp: 5,
-      length: 1
-    },
-    {
-      test: "step over",
-      type: ST.STEP_OVER,
-      length: 1,
-      methodName: "Pong>>#stop",
-      line: 78,
-      stackIndex: 1
-    },
-    {
-      test: "step to promise resolution",
-      type: ST.STEP_TO_PROMISE_RESOLUTION,
-      length: 1,
-      methodName: "Pong>>#stop",
-      line: 79,
-      stackIndex: 2
-    },
-    {
-      test: "resume after step to promise resolution",
-      type: ST.RESUME,
-      length: 1,
-      methodName: "Pong>>#λstop@78@27:",
-      line: 78,
-      stackIndex: 3
-    },
-    {
-      test: "resume again to get to resolution",
-      type: ST.RESUME,
-      length: 1,
-      methodName: "Thing>>#println",
-      line: 71,
-      stackIndex: 4
-    }]
-  };
-
-  for (const suiteName in steppingTests) {
-    const suite = steppingTests[suiteName];
-    const stopData = suite[0];
-
-    describe(suiteName, () => {
-      let ctrl: HandleStoppedAndGetStackTrace;
-
-      before("Start SOMns and Connect", () => {
-        conn = new TestConnection();
-        ctrl = new HandleStoppedAndGetStackTrace(
-          [stopData.breakpoint], conn, conn.fullyConnected, stopData.numOp);
-      });
-
-      after(closeConnectionAfterSuite);
-
-      it("should stop initially at breakpoint", () => {
-        return ctrl.stackPs[0].then(msg => {
-          expectStack(msg.stackFrames, stopData.length, stopData.stopMethod, stopData.stopLine);
-        });
-      });
-
-      describe("should", () => {
-        suite.forEach((testDesc, index) => {
-          if (index > 0) { // evaluate all stepping data except the first one that corresponds to the breakpoint
-            it(testDesc.test, () => {
-              ctrl.stackPs[testDesc.stackIndex - 1].then(_ => {
-                conn.sendDebuggerAction(testDesc.type, ctrl.stoppedActivities[0]);
-              });
-
-              return new Promise((resolve, _reject) => {
-                const p = ctrl.stackPs[testDesc.stackIndex].then(msgAfterStep => {
-                  expectStack(msgAfterStep.stackFrames, testDesc.length, testDesc.methodName, testDesc.line);
-                });
-                resolve(p);
-              });
-            });
-          }
-        });
-      });
-    });
-  }
-});
 
 describe("Actor Stepping", () => {
   const MAPWhenResolved: Stop = {
@@ -335,6 +33,13 @@ describe("Actor Stepping", () => {
     activity: "main"
   };
 
+  const PingPing: Stop = {
+    line: 23,
+    methodName: "Ping>>#ping",
+    stackHeight: 2,
+    activity: "ping"
+  };
+
   const MTFooLine: Stop = {
     line: 11,
     methodName: "MyActor>>#foo",
@@ -343,6 +48,40 @@ describe("Actor Stepping", () => {
   };
 
   const steppingTests: Test[] = [
+    {
+      title: "stepping to message receiver",
+      test: PING_PONG_FILE,
+      initialBreakpoints: [
+        createSectionBreakpointData(PING_PONG_URI, 26, 19, 3, BT.MSG_SENDER, true)],
+      initialStop: {
+        line: 26,
+        methodName: "Ping>>#ping",
+        stackHeight: 2,
+        activity: "ping"
+      },
+      steps: [
+        {
+          type: ST.STEP_TO_MESSAGE_RECEIVER,
+          activity: "ping",
+          stops: [{
+            line: 27,
+            methodName: "Ping>>#ping",
+            stackHeight: 2,
+            activity: "ping"
+          }]
+        },
+        {
+          type: ST.RESUME,
+          activity: "ping",
+          stops: [{
+            line: 33,
+            methodName: "Ping>>#validate:",
+            stackHeight: 1,
+            activity: "ping"
+          }]
+        }
+      ]
+    },
     {
       title: "stepping to promise resolution",
       test: ACTOR_FILE,
@@ -464,6 +203,281 @@ describe("Actor Stepping", () => {
         {
           type: ST.RESUME,
           activity: "MyActor"
+        }
+      ]
+    },
+    {
+      title: "stepping to next turn",
+      test: PING_PONG_FILE,
+      initialBreakpoints: [
+        createSectionBreakpointData(PING_PONG_URI, 23, 14, 3, BT.MSG_SENDER, true)
+      ],
+      initialStop: PingPing,
+      steps: [
+        {
+          type: ST.STEP_TO_NEXT_TURN,
+          activity: "ping",
+          stops: [{
+            line: 56,
+            methodName: "Ping>>#pong:",
+            stackHeight: 1,
+            activity: "ping"
+          }]
+        },
+        {
+          type: ST.RESUME,
+          activity: "ping",
+          stops: [{
+            line: 23,
+            methodName: "Ping>>#ping",
+            stackHeight: 1,
+            activity: "ping"
+          }]
+        }
+      ]
+    },
+    {
+      title: "stepping to promise resolution",
+      test: PING_PONG_FILE,
+      initialBreakpoints: [
+        createSectionBreakpointData(PING_PONG_URI, 33, 19, 3, BT.MSG_SENDER, true)],
+      initialStop: PingValidate,
+      steps: [
+        {
+          type: ST.STEP_TO_PROMISE_RESOLUTION,
+          activity: "main",
+          stops: [{
+            line: 34,
+            methodName: "Ping>>#validate:",
+            stackHeight: 1,
+            activity: "main"
+          }]
+        },
+        {
+          type: ST.RESUME,
+          activity: "main",
+          stops: [PingValidate]
+        }
+      ]
+    },
+    {
+      title: "stepping to promise resolver",
+      test: PING_PONG_FILE,
+      initialBreakpoints: [
+        createSectionBreakpointData(PING_PONG_URI, 26, 19, 3, BT.MSG_SENDER, true)],
+      initialStop: {
+        line: 26,
+        methodName: "Ping>>#ping",
+        stackHeight: 2,
+        activity: "main"
+      },
+      steps: [
+        {
+          type: ST.STEP_TO_PROMISE_RESOLVER,
+          activity: "main",
+          stops: [{
+            line: 27,
+            methodName: "Ping>>#ping",
+            stackHeight: 2,
+            activity: "main"
+          }]
+        },
+        {
+          type: ST.RESUME,
+          activity: "main",
+          stops: [PingValidate]
+        }
+      ]
+    },
+    {
+      title: "stepping to promise resolution for explicit promise",
+      test: PING_PONG_FILE,
+      initialBreakpoints: [createLineBreakpointData(PING_PONG_URI, 92, true)],
+      initialStop: {
+        line: 92,
+        methodName: "PingPong>>#benchmark",
+        stackHeight: 6,
+        activity: "main"
+      },
+      steps: [
+        {
+          type: ST.STEP_OVER,
+          activity: "main",
+          stops: [{
+            line: 92,
+            methodName: "PingPong>>#benchmark",
+            stackHeight: 6,
+            activity: "main"
+          }]
+        },
+        {
+          type: ST.STEP_TO_PROMISE_RESOLUTION,
+          activity: "main",
+          stops: [{
+            line: 93,
+            methodName: "PingPong>>#benchmark",
+            stackHeight: 6,
+            activity: "main"
+          }]
+        },
+        {
+          type: ST.RESUME,
+          activity: "main",
+          stops: [{
+            line: 98,
+            methodName: "PingPong>>#λbenchmark@97@44:",
+            stackHeight: 1,
+            activity: "main"
+          }]
+        }
+      ]
+    },
+    {
+      title: "stepping to promise resolution for whenResolved",
+      test: PING_PONG_FILE,
+      initialBreakpoints: [createLineBreakpointData(PING_PONG_URI, 27, true)],
+      initialStop: {
+        line: 27,
+        methodName: "Ping>>#ping",
+        activity: "ping",
+        stackHeight: 2
+      },
+      steps: [
+        {
+          type: ST.STEP_OVER,
+          activity: "ping",
+          stops: [{
+            line: 27,
+            methodName: "Ping>>#ping",
+            activity: "ping",
+            stackHeight: 2
+          }]
+        },
+        {
+          type: ST.STEP_TO_PROMISE_RESOLUTION,
+          activity: "ping",
+          stops: [{
+            line: 28,
+            methodName: "Ping>>#ping",
+            activity: "ping",
+            stackHeight: 2
+          }]
+        },
+        {
+          type: ST.RESUME,
+          activity: "ping",
+          stops: [{
+            line: 27,
+            methodName: "Ping>>#ping",
+            stackHeight: 1,
+            activity: "ping"
+          }]
+        }
+      ]
+    },
+    {
+      title: "stepping to promise resolution for whenResolvedOnError",
+      test: PING_PONG_FILE,
+      initialBreakpoints: [createLineBreakpointData(PING_PONG_URI, 34, true)],
+      initialStop: {
+        line: 34,
+        methodName: "Ping>>#validate:",
+        stackHeight: 1,
+        activity: "ping"
+      },
+      steps: [
+        {
+          type: ST.STEP_OVER,
+          activity: "ping",
+          stops: [{
+            line: 34,
+            methodName: "Ping>>#validate:",
+            stackHeight: 1,
+            activity: "ping"
+          }]
+        },
+        {
+          type: ST.STEP_TO_PROMISE_RESOLUTION,
+          activity: "ping",
+          stops: [{
+            line: 35,
+            methodName: "Ping>>#validate:",
+            stackHeight: 1,
+            activity: "ping"
+          }]
+        },
+        {
+          type: ST.RESUME,
+          activity: "ping",
+          stops: [{
+            line: 34,
+            methodName: "Ping>>#validate:",
+            stackHeight: 1,
+            activity: "ping"
+          }]
+        },
+        {
+          type: ST.RESUME,
+          activity: "ping",
+          stops: [{
+            line: 34,
+            methodName: "Ping>>#validate:",
+            stackHeight: 1,
+            activity: "ping"
+          }]
+        }
+      ]
+    },
+    {
+      title: "stepping to promise resolution for onError",
+      test: PING_PONG_FILE,
+      initialBreakpoints: [createLineBreakpointData(PING_PONG_URI, 78, true)],
+      initialStop: {
+        line: 78,
+        methodName: "Pong>>#stop",
+        stackHeight: 1,
+        activity: "pong"
+      },
+      steps: [
+        {
+          type: ST.STEP_OVER,
+          activity: "pong",
+          stops: [{
+            methodName: "Pong>>#stop",
+            line: 78,
+            stackHeight: 1,
+            activity: "pong"
+          }]
+        },
+        {
+          type: ST.STEP_TO_PROMISE_RESOLUTION,
+          activity: "pong",
+          stops: [{
+            methodName: "Pong>>#stop",
+            line: 79,
+            stackHeight: 1,
+            activity: "pong"
+          }]
+        },
+        {
+          type: ST.RESUME,
+          activity: "pong",
+          stops: [{
+            methodName: "Pong>>#λstop@78@27:",
+            line: 78,
+            stackHeight: 1,
+            activity: "pong"
+          }]
+        },
+        {
+          type: ST.RESUME,
+          activity: "pong",
+          stops: [{
+            line: 71,
+            methodName: "Thing>>#println",
+            stackHeight: 1,
+            activity: "pong"
+          }]
         }
       ]
     }
