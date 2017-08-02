@@ -20,4 +20,8 @@ public final class IntegerLiteralNode extends LiteralNode {
   public Object executeGeneric(final VirtualFrame frame) {
     return value;
   }
+
+  public long getValue() {
+    return value;
+  }
 }

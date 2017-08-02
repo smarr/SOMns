@@ -1,28 +1,35 @@
 package som.interpreter.nodes;
 
+import java.util.List;
+
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
-
 import som.compiler.Variable.Local;
 import som.interpreter.InliningVisitor;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
+import som.interpreter.nodes.superinstructions.IncrementOperationNode;
 import som.vm.constants.Nil;
 import tools.debugger.Tags.LocalVariableTag;
 import tools.dym.Tags.LocalVarRead;
 import tools.dym.Tags.LocalVarWrite;
 
-
 public abstract class LocalVariableNode extends ExprWithTagsNode {
   protected final FrameSlot slot;
   protected final Local     var;
 
-  private LocalVariableNode(final Local var) {
+  protected LocalVariableNode(final Local var) {
     this.slot = var.getSlot();
     this.var = var;
+  }
+
+  public Local getVar() {
+    return this.var;
   }
 
   @Override
@@ -111,6 +118,7 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
     }
   }
 
+  @ImportStatic(IncrementOperationNode.class)
   @NodeChild(value = "exp", type = ExpressionNode.class)
   public abstract static class LocalVariableWriteNode extends LocalVariableNode {
 
@@ -130,9 +138,19 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
       return expValue;
     }
 
+    /*
+     * write a Long value, but check if the AST subtree fulfills the necessary conditions
+     * to be replaced with an IncrementOperationNode. In case it does, replace myself
+     * with an IncrementOperationNode. In case it doesn't, the @Cached annotation ensures
+     * that ``isIncrementOperation`` is not called at every node evaluation.
+     */
     @Specialization(guards = "isLongKind(expValue)")
-    public final long writeLong(final VirtualFrame frame, final long expValue) {
+    public final long writeLong(final VirtualFrame frame, final long expValue,
+                                @Cached("isIncrementOperation(getExp(), var)") final boolean isIncrement) {
       frame.setLong(slot, expValue);
+      if(isIncrement) {
+        IncrementOperationNode.replaceNode(this);
+      }
       return expValue;
     }
 

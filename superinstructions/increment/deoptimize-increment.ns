@@ -1,0 +1,25 @@
+(* This illustrates the case in which an increment operation needs to be deoptimized
+   because the slot type changes from Long to something else. *)
+class Write usingPlatform: platform = Value ()
+(
+  public main: args = (
+    | i slot |
+    (* `i` is an ordinary counter variable.
+       `slot` is a counter variable whose type gets changed to String after two iterations. *)
+    i::     0.
+    slot::  0.
+    [ i < 4 ] whileTrue: [
+      ( i = 2 ) ifTrue: [
+        slot:: 'yo'.
+      ].
+      (* In the first iteration, this gets rewritten to a `IncrementOperationNode`.
+         In the second iteration, the `IncrementOperationNode` is used.
+         In the third iteration, it gets rewritten to the original subtree because
+         the type of `slot` has changed. *)
+      slot:: slot + 1.
+      i:: i + 1.
+    ].
+    slot println.
+    ^ 0
+  )
+)
