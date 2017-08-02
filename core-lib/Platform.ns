@@ -10,6 +10,7 @@ class Platform usingVmMirror: vmMirror = Value (
   public threading   = (vmMirror load: 'Threading.ns' nextTo: self) usingVmMirror: vmMirror usingKernel: kernel.
   public processes   = (vmMirror load: 'Processes.ns' nextTo: self) usingVmMirror: vmMirror.
   public collections = (vmMirror load: 'Collections.ns' nextTo: self) usingKernel: kernel.
+  public files       = (vmMirror load: 'Files.ns' nextTo: self) usingVmMirror: vmMirror usingPlatform: self.
 |
   vmMirror kernelIndexOutOfBounds: kernel IndexOutOfBounds.
 )(

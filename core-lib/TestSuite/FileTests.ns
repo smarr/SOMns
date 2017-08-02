@@ -1,0 +1,112 @@
+class FileTests usingPlatform: platform testFramework: minitest = Value (
+| private TestContext = minitest TestContext.
+  private AsyncTestContext = minitest AsyncTestContext.
+  private actors      = platform actors.
+  private Exception   = platform kernel Exception.
+  private NotAValue   = platform kernel NotAValue.
+  private Vector      = platform kernel Vector.
+  private Array       = platform kernel Array.
+  private ObjectMirror = platform mirrors ObjectMirror.
+  private errorTestMessage = 'test exception 1'.
+  private Files = platform files.
+  private fdes = Files FileDescriptor.
+  private fpath = Files FilePath.
+  private fpat = Files FilePattern.
+|
+)(
+  public class BasicFileTests = TestContext (
+    | path |
+    path:: (fpath currentDirectory / 'tests' / 'files') pattern.
+  )(
+    public testUtils = (
+      | a b |
+      a:: fpath for: path + '/data/A'.
+      assert: a exists.
+      assert: a size equals: 3656.
+      assert: a lastModified <> nil.
+      b:: fpath for: a containingDirectory pattern.
+      assert: b entries size equals: 3.
+    )
+
+    public testCreateDeleteFile = (
+      | f |
+      f:: fpath for: path + '/temp/A'.
+      (fpath for: (f containingDirectory pattern)) createDirectoryIfFail: [:r| assert: false ].
+      deny: f exists.
+      f open: #readwrite ifFail: [:r| assert: false message: 'should not happen' ].
+      assert: f exists.
+      f deleteFileIfFail: [:r |].
+      deny: f exists.
+    )
+
+    public testCreateDeleteDirectory = (
+      | f |
+      f:: fpath for: path + '/temp/A'.
+      deny: f exists.
+      f createDirectoryIfFail: [:r | assert: false ].
+      assert: f exists.
+      f deleteDirectoryIfFail: [:r |].
+      deny: f exists.
+    )
+
+    public testReadWrite = (
+      | f d |
+      f:: fpath for: path + '/tmp'.
+      deny: f exists.
+      d:: f open: #readwrite ifFail: [:r | assert: false ].
+
+      assert: d size equals: 0.
+
+      0 to: 255 do:[ :i|
+        d buffer at: i + 1 put: i - 128.
+      ].
+
+      d write: 256 at: 0 ifFail: [:r|].
+      assert: d size equals: 256.
+      assert: 256  equals: (d readAt: 0 ifFail: [:r |]).
+
+      0 to: 255 do:[ :i|
+        assert: (d buffer at: i + 1) equals: i - 128.
+      ].
+
+      d close.
+
+      f deleteFileIfFail: [:r |].
+      deny: f exists.
+    )
+
+    public testPaths = (
+      | f cnt |
+      cnt:: 0.
+      f:: fpat for: path + '/data/*'.
+      f pathsDo: [ :p |
+        assert: p exists.
+        cnt:: cnt + 1.
+      ].
+      assert: cnt = 3.
+    )
+
+    public testMove =(
+      | f g |
+      f:: fpath for: path + '/tmp'.
+      f open: #readwrite ifFail: [:r|].
+
+      f copyNamed: 'tmp2'.
+      g:: fpath for: path + '/tmp2'.
+      assert: g exists.
+      assert: f exists.
+      assert: g size equals: f size.
+
+      g deleteFileIfFail: [:r|].
+      deny: g exists.
+
+      f moveAs: g.
+      assert: g exists.
+      deny: f exists.
+
+      g deleteFileIfFail: [:r|].
+    )
+  ) : (
+    TEST_CONTEXT = ()
+  )
+)

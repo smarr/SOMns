@@ -651,6 +651,8 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     public first = ( ^ isEmpty ifTrue: [nil] ifFalse: [storage at: firstIdx] )
 
+    public last = ( ^ isEmpty ifTrue: [nil] ifFalse: [storage at: lastIdx - 1] )
+
     (* Iterating *)
     public do: block = (
       firstIdx to: lastIdx - 1 do: [ :i | block value: (storage at: i) ]

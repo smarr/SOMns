@@ -82,7 +82,7 @@ class TestRunner usingPlatform: platform = (
 
   runAllKnownModules = (
     | modules allSuccessful allTestsDonePromise |
-    modules:: 'ReflectionTests',
+    modules::  'ReflectionTests',
                'LanguageTests',
                'MixinTests',
                'CollectionTests',
@@ -100,6 +100,7 @@ class TestRunner usingPlatform: platform = (
                'TransactionTests',
                'TransferObjectTests',
                'ObjectLiteralTests',
+               'FileTests',
                'MinitestTests'.
 
     allSuccessful:: true.
