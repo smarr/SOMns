@@ -44,13 +44,6 @@ public abstract class LexicalScope {
       this.nullOrOuterMethod = nullOrOuterMethod;
     }
 
-    public MixinDefinition getOuter() {
-      if (outerMixin != null) {
-        return outerMixin.mixinDefinition;
-      }
-      return null;
-    }
-
     public MethodScope getOuterMethod() {
       return nullOrOuterMethod;
     }
@@ -285,11 +278,6 @@ public abstract class LexicalScope {
 
       return null;
 
-    }
-
-    public MethodScope getOuterMethodScope() {
-      assert outerMethod != null;
-      return outerMethod;
     }
 
     public void propagateLoopCountThroughoutMethodScope(final long count) {
