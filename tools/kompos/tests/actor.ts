@@ -484,6 +484,16 @@ describe("Actor Stepping", () => {
   ];
 
   for (const suite of steppingTests) {
+    if (suite.skip) {
+      describe.skip(suite.title, () => {
+        if (!suite.steps) { return; }
+        suite.steps.forEach(step => {
+          const desc = step.desc ? step.desc : `do ${step.type} on ${step.activity}.`;
+          it.skip(desc, () => { });
+        });
+      });
+      continue;
+    }
 
     describe(suite.title, () => {
       let ctrl: TestController;

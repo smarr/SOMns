@@ -50,6 +50,9 @@ export interface Test {
   initialStop: Stop;
 
   steps?: Step[];
+
+  /** Mark test to be skipped. */
+  skip?: boolean;
 }
 
 export function numberOfStops(test: Test) {
