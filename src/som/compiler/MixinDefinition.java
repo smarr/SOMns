@@ -62,7 +62,6 @@ import tools.SourceCoordinate;
  */
 public final class MixinDefinition {
   private final SSymbol       name;
-  @SuppressWarnings("unused")
   private final SourceSection nameSection;
 
   private final SSymbol       primaryFactoryName;
