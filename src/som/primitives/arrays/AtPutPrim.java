@@ -37,9 +37,8 @@ import tools.dym.Tags.BasicPrimitiveOperation;
 @Primitive(primitive = "array:at:put:", selector = "at:put:",
     receiverType = SArray.class, inParser = false, specializer = TxAtPutPrim.class)
 public abstract class AtPutPrim extends TernaryExpressionNode {
-  protected static final class TxAtPutPrim extends Specializer<TernaryExpressionNode> {
-    public TxAtPutPrim(final Primitive prim, final NodeFactory<TernaryExpressionNode> fact,
-        final VM vm) {
+  protected static final class TxAtPutPrim extends Specializer<TernaryExpressionNode, VM, ExpressionNode> {
+    public TxAtPutPrim(final Primitive prim, final NodeFactory<TernaryExpressionNode> fact, final VM vm) {
       super(prim, fact, vm);
     }
 

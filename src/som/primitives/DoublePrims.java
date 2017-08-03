@@ -55,11 +55,8 @@ public abstract class DoublePrims {
     }
   }
 
-  public static class IsDoubleClass extends Specializer<ExpressionNode> {
-    public IsDoubleClass(final Primitive prim, final NodeFactory<ExpressionNode> fact,
-        final VM vm) {
-      super(prim, fact, vm);
-    }
+  public static class IsDoubleClass extends Specializer<ExpressionNode, VM, ExpressionNode> {
+    public IsDoubleClass(final Primitive prim, final NodeFactory<ExpressionNode> fact, final VM vm) { super(prim, fact, vm); }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodess) {

@@ -30,9 +30,8 @@ import tools.dym.Tags.ArrayRead;
 @Primitive(primitive = "array:at:", selector = "at:", receiverType = SArray.class,
     inParser = false, specializer = TxAtPrim.class)
 public abstract class AtPrim extends BinaryBasicOperation {
-  protected static final class TxAtPrim extends Specializer<BinaryBasicOperation> {
-    public TxAtPrim(final Primitive prim, final NodeFactory<BinaryBasicOperation> fact,
-        final VM vm) {
+  protected static final class TxAtPrim extends Specializer<BinaryBasicOperation, VM, ExpressionNode> {
+    public TxAtPrim(final Primitive prim, final NodeFactory<BinaryBasicOperation> fact, final VM vm) {
       super(prim, fact, vm);
     }
 

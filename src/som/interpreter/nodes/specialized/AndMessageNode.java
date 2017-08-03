@@ -29,7 +29,7 @@ import tools.dym.Tags.OpComparison;
 @Primitive(selector = "and:", noWrapper = true, specializer = AndOrSplzr.class)
 @Primitive(selector = "&&", noWrapper = true, specializer = AndOrSplzr.class)
 public abstract class AndMessageNode extends BinaryComplexOperation {
-  public static class AndOrSplzr extends Specializer<BinaryExpressionNode> {
+  public static class AndOrSplzr extends Specializer<BinaryExpressionNode, VM, ExpressionNode> {
     protected final NodeFactory<BinaryExpressionNode> boolFact;
 
     @SuppressWarnings({"unchecked", "rawtypes"})

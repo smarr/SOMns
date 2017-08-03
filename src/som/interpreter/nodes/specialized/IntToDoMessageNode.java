@@ -23,15 +23,11 @@ import tools.dym.Tags.LoopNode;
 @Primitive(selector = "to:do:", noWrapper = true, disabled = true,
     specializer = ToDoSplzr.class, inParser = false)
 public abstract class IntToDoMessageNode extends TernaryExpressionNode {
-  public static class ToDoSplzr extends Specializer<IntToDoMessageNode> {
-    public ToDoSplzr(final Primitive prim, final NodeFactory<IntToDoMessageNode> fact,
-        final VM vm) {
-      super(prim, fact, vm);
-    }
+  public static class ToDoSplzr extends Specializer<IntToDoMessageNode, VM, ExpressionNode> {
+    public ToDoSplzr(final Primitive prim, final NodeFactory<IntToDoMessageNode> fact, final VM vm) { super(prim, fact, vm); }
 
     @Override
-    public boolean matches(final Object[] args,
-        final ExpressionNode[] argNodes) {
+    public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
       return !VmSettings.DYNAMIC_METRICS && args[0] instanceof Long &&
           (args[1] instanceof Long || args[1] instanceof Double) &&
           args[2] instanceof SBlock;

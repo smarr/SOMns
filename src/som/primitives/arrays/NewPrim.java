@@ -21,10 +21,8 @@ import tools.dym.Tags.NewArray;
 @Primitive(primitive = "array:new:", selector = "new:", inParser = false,
     specializer = NewPrim.IsArrayClass.class)
 public abstract class NewPrim extends BinaryExpressionNode {
-  public static class IsArrayClass extends Specializer<NewPrim> {
-    public IsArrayClass(final Primitive prim, final NodeFactory<NewPrim> fact, final VM vm) {
-      super(prim, fact, vm);
-    }
+  public static class IsArrayClass extends Specializer<NewPrim, VM, ExpressionNode> {
+    public IsArrayClass(final Primitive prim, final NodeFactory<NewPrim> fact, final VM vm) { super(prim, fact, vm); }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {

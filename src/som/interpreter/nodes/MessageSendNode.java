@@ -35,7 +35,7 @@ public final class MessageSendNode {
   public static ExpressionNode createMessageSend(final SSymbol selector,
       final ExpressionNode[] arguments, final SourceSection source, final VM vm) {
     Primitives prims = vm.getPrimitives();
-    Specializer<EagerlySpecializableNode> specializer =
+    Specializer<EagerlySpecializableNode, VM, ExpressionNode> specializer =
         prims.getParserSpecializer(selector, arguments);
     if (specializer != null) {
       EagerlySpecializableNode newNode =
@@ -179,7 +179,7 @@ public final class MessageSendNode {
 
       Primitives prims = vm.getPrimitives();
 
-      Specializer<EagerlySpecializableNode> specializer = prims.getEagerSpecializer(selector,
+      Specializer<EagerlySpecializableNode, VM, ExpressionNode> specializer = prims.getEagerSpecializer(selector,
           arguments, argumentNodes);
 
       Lock lock = getLock();

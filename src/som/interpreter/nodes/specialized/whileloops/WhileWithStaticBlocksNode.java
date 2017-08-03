@@ -21,7 +21,7 @@ import som.vmobjects.SBlock;
 @Primitive(selector = "whileTrue:", noWrapper = true, specializer = WhileTrueSplzr.class)
 @Primitive(selector = "whileFalse:", noWrapper = true, specializer = WhileFalseSplzr.class)
 public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
-  public abstract static class WhileSplzr extends Specializer<WhileWithStaticBlocksNode> {
+  public abstract static class WhileSplzr extends Specializer<WhileWithStaticBlocksNode, VM, ExpressionNode> {
     private final boolean whileTrueOrFalse;
 
     protected WhileSplzr(final Primitive prim,

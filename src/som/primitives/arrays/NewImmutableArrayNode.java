@@ -26,11 +26,8 @@ import som.vmobjects.SClass;
 @Primitive(selector = "new:withAll:", inParser = false,
     specializer = NewImmutableArrayNode.IsValueArrayClass.class)
 public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
-  public static class IsValueArrayClass extends Specializer<NewImmutableArrayNode> {
-    public IsValueArrayClass(final Primitive prim,
-        final NodeFactory<NewImmutableArrayNode> fact, final VM vm) {
-      super(prim, fact, vm);
-    }
+  public static class IsValueArrayClass extends Specializer<NewImmutableArrayNode, VM, ExpressionNode> {
+    public IsValueArrayClass(final Primitive prim, final NodeFactory<NewImmutableArrayNode> fact, final VM vm) { super(prim, fact, vm); }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
