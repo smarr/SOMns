@@ -8,8 +8,8 @@ import som.VM;
 
 
 public class VmOptions {
-  public static final String STANDARD_PLATFORM_FILE = "core-lib/Platform.som";
-  public static final String STANDARD_KERNEL_FILE   = "core-lib/Kernel.som";
+  public static final String STANDARD_PLATFORM_FILE = "core-lib/Platform.ns";
+  public static final String STANDARD_KERNEL_FILE   = "core-lib/Kernel.ns";
 
   public String   platformFile = STANDARD_PLATFORM_FILE;
   public String   kernelFile   = STANDARD_KERNEL_FILE;

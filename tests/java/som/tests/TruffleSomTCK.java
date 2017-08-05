@@ -40,9 +40,9 @@ public class TruffleSomTCK extends TruffleTCK {
         "--platform", VmOptions.STANDARD_PLATFORM_FILE}), true);
     preparedBuilder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OBJECT, vm);
 
-    InputStream in = getClass().getResourceAsStream("TruffleSomTCK.som");
+    InputStream in = getClass().getResourceAsStream("TruffleSomTCK.ns");
     Source source = Source.newBuilder(new InputStreamReader(in)).mimeType(
-        mimeType()).name("TruffleSomTCK.som").build();
+        mimeType()).name("TruffleSomTCK.ns").build();
     PolyglotEngine engine = preparedBuilder.build();
 
     Value tckModule = engine.eval(source);

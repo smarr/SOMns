@@ -154,7 +154,7 @@
             <classpath refid="project.classpath" />
             <jvmarg value="-ea" />
             <jvmarg value="-esa" />
-            <arg line="core-lib/TestSuite/TestRunner.som" />
+            <arg line="core-lib/TestSuite/TestRunner.ns" />
         </java>
         <fail message="Basic tests failed." if="test.failed" />
     </target>
@@ -165,11 +165,11 @@
         <arg value="--coverage" />
         <arg value="all.gcov" />
         <arg value="-G" />
-        <arg value="core-lib/TestSuite/TestRunner.som" />
+        <arg value="core-lib/TestSuite/TestRunner.ns" />
       </exec>
       <exec executable="./som" failonerror="true">
         <arg value="-X" />
-        <arg value="core-lib/TestSuite/TestRunner.som" />
+        <arg value="core-lib/TestSuite/TestRunner.ns" />
       </exec>
     </target>
 

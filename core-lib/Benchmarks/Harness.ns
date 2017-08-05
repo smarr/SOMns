@@ -206,7 +206,7 @@ class Harness usingPlatform: platform = Value (
   )
 
   printUsage = (
-    './som.sh core-lib/Benchmarks/Harness.som [benchmark] [num-iterations [warm-up [inner-iter [num-threads]]]' println.
+    './som.sh core-lib/Benchmarks/Harness.ns [benchmark] [num-iterations [warm-up [inner-iter [num-threads]]]' println.
     '' println.
     '  benchmark      - benchmark class name (supports nested classes with ".") ' println.
     '                   examples: Queens, Fibonacci, Sort.QuickSort, LanguageFeatures.Dispatch' println.
@@ -218,7 +218,7 @@ class Harness usingPlatform: platform = Value (
 
   loadModule: className = (
     | file cls |
-    file:: className + '.som'.
+    file:: className + '.ns'.
     cls:: system loadModule: file nextTo: self.
     cls ifNil: [
         self error: 'Failed loading benchmark: ' + className ].

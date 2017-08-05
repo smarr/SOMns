@@ -21,10 +21,10 @@ parser.add_argument('-d', '--debug', help='wait for debugger to attach',
                     dest='debug', action='store_true', default=False)
 parser.add_argument('-t', '--num-threads', help='number of threads to be used',
                     dest='threads', default=None)
-parser.add_argument('-p', '--platform', help='SOM Platform file, default: core-lib/Platform.som',
-                    dest='som_platform', default=BASE_DIR + '/core-lib/Platform.som')
-parser.add_argument('-k', '--kernel', help='SOM Kernel file, default: core-lib/Kernel.som',
-                    dest='som_kernel', default=BASE_DIR + '/core-lib/Kernel.som')
+parser.add_argument('-p', '--platform', help='SOM Platform file, default: core-lib/Platform.ns',
+                    dest='som_platform', default=BASE_DIR + '/core-lib/Platform.ns')
+parser.add_argument('-k', '--kernel', help='SOM Kernel file, default: core-lib/Kernel.ns',
+                    dest='som_kernel', default=BASE_DIR + '/core-lib/Kernel.ns')
 parser.add_argument('-dnu', '--stack-trace-on-dnu', help='Print a stack trace on #doesNotUnderstand:',
                     dest='som_dnu', action='store_true', default=False)
 parser.add_argument('-vmd', '--vmdebug', help='enables debug mode (additional output)',

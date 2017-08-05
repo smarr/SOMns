@@ -35,7 +35,7 @@ The overall goal is to be compliant with the specification, but include only
 absolutely necessary features. The current list of intended deviations from
 the specifications are as follows:
 
- - the mixin support of slots is not yet complete, see deactivate tests in core-lib/TestSuite/MixinTests.som
+ - the mixin support of slots is not yet complete, see deactivate tests in core-lib/TestSuite/MixinTests.ns
 
  - simultaneous slots clauses are not supported (spec. 6.3.2)
 
@@ -65,7 +65,7 @@ Then, SOMns can be build with Ant:
 
 Afterwards, the simple Hello World program is executed with:
 
-    ./som core-lib/Hello.som
+    ./som core-lib/Hello.ns
 
 Information on previous authors are included in the AUTHORS file. This code is
 distributed under the MIT License. Please see the LICENSE file for details.
@@ -91,13 +91,13 @@ Setup Development Environment with Eclipse and VS Code
    arguments, enter:
 
    In Program arguments:
-     `core-lib/Benchmarks/Harness.som Mandelbrot 2 0 500`
+     `core-lib/Benchmarks/Harness.ns Mandelbrot 2 0 500`
 
    In VM arguments:
      `-ea -esa`
 
 For testing on the command line, the full command is
-`./som -G core-lib/Benchmarks/Harness.som Mandelbrot 2 0 500`
+`./som -G core-lib/Benchmarks/Harness.ns Mandelbrot 2 0 500`
 
 Additionally, there are JUnit tests and `ant test` for executing the test suite.
 

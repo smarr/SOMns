@@ -80,7 +80,7 @@ describe("Basic Protocol", function() {
       return sourceP.then(sourceMsg => {
         const source = sourceMsg.source;
         expect(source.mimeType).to.equal("application/x-newspeak-som-ns");
-        expect(source.name).to.equal("Platform.som");
+        expect(source.name).to.equal("Platform.ns");
         expect(source).to.have.property("sourceText");
         expect(source).to.have.property("uri");
       });

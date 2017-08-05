@@ -46,7 +46,7 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
 
     private loadData: fileId = (
       | dataModule str |
-      dataModule:: system loadModule: 'LeeTMData.som' nextTo: outer LeeTMSuite.
+      dataModule:: system loadModule: 'LeeTMData.ns' nextTo: outer LeeTMSuite.
       fileId = 1 ifTrue: [
         str:: dataModule mainboard.
         gridSize:: 100 ].

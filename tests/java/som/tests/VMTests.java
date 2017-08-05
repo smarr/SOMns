@@ -27,33 +27,33 @@ public class VMTests {
   @Test
   public void testProcessArgumentsWithPlatformFile() {
     VmOptions opts = new VmOptions(
-        new String[] {"--platform", "foo.som"});
-    assertEquals(opts.platformFile, "foo.som");
+        new String[] {"--platform", "foo.ns"});
+    assertEquals(opts.platformFile, "foo.ns");
     assertArrayEquals(opts.args, new String[0]);
   }
 
   @Test
   public void testProcessArgumentsWithKernelFile() {
     VmOptions opts = new VmOptions(
-        new String[] {"--kernel", "foo.som"});
-    assertEquals(opts.kernelFile, "foo.som");
+        new String[] {"--kernel", "foo.ns"});
+    assertEquals(opts.kernelFile, "foo.ns");
     assertArrayEquals(opts.args, new String[0]);
   }
 
   @Test
   public void testProcessArgumentsWithAppFile() {
     VmOptions opts = new VmOptions(
-        new String[] {"app.som"});
+        new String[] {"app.ns"});
     assertEquals(opts.platformFile, VmOptions.STANDARD_PLATFORM_FILE);
-    assertArrayEquals(opts.args, new String[] {"app.som"});
+    assertArrayEquals(opts.args, new String[] {"app.ns"});
   }
 
   @Test
   public void testProcessArgumentsWithAppFileAndArgs() {
     VmOptions opts = new VmOptions(
-        new String[] {"app.som", "Foo", "1", "2"});
+        new String[] {"app.ns", "Foo", "1", "2"});
     assertEquals(opts.platformFile, VmOptions.STANDARD_PLATFORM_FILE);
-    assertArrayEquals(opts.args, new String[] {"app.som", "Foo", "1", "2"});
+    assertArrayEquals(opts.args, new String[] {"app.ns", "Foo", "1", "2"});
   }
 
   @Test

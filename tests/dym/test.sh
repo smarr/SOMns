@@ -23,7 +23,7 @@ function runBenchmark {
   BENCH=$1
   HARNESS="$SOM_DIR/som -dm -Ddm.metrics=$SCRIPT_PATH/results/$BENCH \
     --coverage $SOM_DIR/all.gcov \
-    -G $SOM_DIR/core-lib/Benchmarks/Harness.som"
+    -G $SOM_DIR/core-lib/Benchmarks/Harness.ns"
   echo $HARNESS $@
   $HARNESS $@
   

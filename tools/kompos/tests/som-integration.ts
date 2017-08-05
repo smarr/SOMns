@@ -24,24 +24,24 @@ describe("Stack trace output", () => {
   it("should be correct for #doesNotUnderstand", () => {
     const result = execSom(["dnu"]);
     expect(result.output[1].toString().replace(/\d/g, "")).to.equal("Stack Trace\n\
-\tPlatform>>#start                             Platform.som::\n\
-\tBlock>>#on:do:                               Kernel.som::\n\
+\tPlatform>>#start                             Platform.ns::\n\
+\tBlock>>#on:do:                               Kernel.ns::\n\
 \tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory::\n\
-\tPlatform>>#λstart@@                       Platform.som::\n\
-\tPingPongApp>>#main:                          pingpong.som::\n\
-\tPingPongApp>>#testDNU                        pingpong.som::\n\
+\tPlatform>>#λstart@@                       Platform.ns::\n\
+\tPingPongApp>>#main:                          pingpong.ns::\n\
+\tPingPongApp>>#testDNU                        pingpong.ns::\n\
 ERROR: MessageNotUnderstood(Integer>>#foobar)\n");
   });
 
   it("should be correct for `system printStackTrace`", () => {
     const result = execSom(["stack"]);
     expect(result.output[1].toString().replace(/\d/g, "")).to.equal("Stack Trace\n\
-\tPlatform>>#start                             Platform.som::\n\
-\tBlock>>#on:do:                               Kernel.som::\n\
+\tPlatform>>#start                             Platform.ns::\n\
+\tBlock>>#on:do:                               Kernel.ns::\n\
 \tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory::\n\
-\tPlatform>>#λstart@@                       Platform.som::\n\
-\tPingPongApp>>#main:                          pingpong.som::\n\
-\tPingPongApp>>#testPrintStackTrace            pingpong.som::\n");
+\tPlatform>>#λstart@@                       Platform.ns::\n\
+\tPingPongApp>>#main:                          pingpong.ns::\n\
+\tPingPongApp>>#testPrintStackTrace            pingpong.ns::\n");
   });
 });
 

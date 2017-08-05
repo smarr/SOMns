@@ -275,7 +275,7 @@ public class BasicInterpreterTests {
   protected VmOptions getVmArguments() {
     return new VmOptions(new String[] {
         "--platform",
-        "core-lib/TestSuite/BasicInterpreterTests/" + testClass + ".som" },
+        "core-lib/TestSuite/BasicInterpreterTests/" + testClass + ".ns" },
         testSelector);
   }
 

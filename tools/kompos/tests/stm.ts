@@ -5,7 +5,7 @@ import { BreakpointType, SteppingType } from "./somns-support";
 import { TestConnection, HandleStoppedAndGetStackTrace, expectStack } from "./test-setup";
 import { createSectionBreakpointData, StackTraceResponse } from "../src/messages";
 
-const STM_FILE = resolve("tests/stm.som");
+const STM_FILE = resolve("tests/stm.ns");
 const STM_URI = "file:" + STM_FILE;
 
 describe("Setting STM Breakpoints", () => {

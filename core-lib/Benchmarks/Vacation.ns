@@ -4,7 +4,7 @@ class VacationSuite usingPlatform: platform andHarness: harness = (
   private Random    = harness Random.
   private Array     = platform kernel Array.
   private Vector    = platform kernel Vector.
-  private RedBlackTree = (platform system loadModule: 'RedBlackTree.som' nextTo: self) new RedBlackTree.
+  private RedBlackTree = (platform system loadModule: 'RedBlackTree.ns' nextTo: self) new RedBlackTree.
   private Mutex     = platform threading Mutex.
   private Thread    = platform threading Thread.
 
