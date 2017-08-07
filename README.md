@@ -37,12 +37,7 @@ the specifications are as follows:
 
  - the mixin support of slots is not yet complete, see deactivate tests in core-lib/TestSuite/MixinTests.ns
 
- - simultaneous slots clauses are not supported (spec. 6.3.2)
-
- - the file syntax is adapted to be more practical. This includes that
-   category names are optional instead of being mandatory.
-
- - local variables in methods do not yet support the full slotDeclartion style
+ - simultaneous slots clauses are not fully supported (spec. 6.3.2)
 
  - as in SOM, blocks can only have 3 arguments (counting `self`)
  
