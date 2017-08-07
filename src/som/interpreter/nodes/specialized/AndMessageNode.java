@@ -27,12 +27,12 @@ import tools.dym.Tags.OpComparison;
 
 @GenerateNodeFactory
 @Primitive(selector = "and:", noWrapper = true, specializer = AndOrSplzr.class)
-@Primitive(selector = "&&",   noWrapper = true, specializer = AndOrSplzr.class)
+@Primitive(selector = "&&", noWrapper = true, specializer = AndOrSplzr.class)
 public abstract class AndMessageNode extends BinaryComplexOperation {
   public static class AndOrSplzr extends Specializer<BinaryExpressionNode> {
     protected final NodeFactory<BinaryExpressionNode> boolFact;
 
-    @SuppressWarnings({ "unchecked", "rawtypes" })
+    @SuppressWarnings({"unchecked", "rawtypes"})
     public AndOrSplzr(final Primitive prim,
         final NodeFactory<BinaryExpressionNode> fact, final VM vm) {
       this(prim, fact, (NodeFactory) AndBoolMessageNodeFactory.getInstance(), vm);
@@ -47,7 +47,9 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
     @Override
     public final boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
       // XXX: this is the case when doing parse-time specialization
-      if (args == null) { return true; }
+      if (args == null) {
+        return true;
+      }
 
       return args[0] instanceof Boolean &&
           (args[1] instanceof Boolean ||
@@ -67,8 +69,7 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
     }
   }
 
-
-  private final SInvokable blockMethod;
+  private final SInvokable      blockMethod;
   @Child private DirectCallNode blockValueSend;
 
   public AndMessageNode(final SBlock arg, final SourceSection source) {
@@ -80,7 +81,7 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
 
   public AndMessageNode(final AndMessageNode copy) {
     super(false, copy.getSourceSection());
-    blockMethod    = copy.blockMethod;
+    blockMethod = copy.blockMethod;
     blockValueSend = copy.blockValueSend;
   }
 
@@ -109,8 +110,11 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
   }
 
   @GenerateNodeFactory
-  public abstract static class AndBoolMessageNode extends BinaryBasicOperation implements OperationNode {
-    public AndBoolMessageNode(final SourceSection source) { super(false, source); }
+  public abstract static class AndBoolMessageNode extends BinaryBasicOperation
+      implements OperationNode {
+    public AndBoolMessageNode(final SourceSection source) {
+      super(false, source);
+    }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
@@ -122,7 +126,8 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
     }
 
     @Specialization
-    public final boolean doAnd(final VirtualFrame frame, final boolean receiver, final boolean argument) {
+    public final boolean doAnd(final VirtualFrame frame, final boolean receiver,
+        final boolean argument) {
       return receiver && argument;
     }
 

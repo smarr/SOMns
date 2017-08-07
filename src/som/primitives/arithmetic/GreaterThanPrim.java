@@ -14,7 +14,9 @@ import som.primitives.Primitive;
 @GenerateNodeFactory
 @Primitive(selector = ">")
 public abstract class GreaterThanPrim extends ComparisonPrim {
-  protected GreaterThanPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected GreaterThanPrim(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   @Specialization
   public final boolean doLong(final long left, final long right) {

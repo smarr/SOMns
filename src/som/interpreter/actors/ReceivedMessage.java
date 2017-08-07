@@ -25,14 +25,14 @@ public class ReceivedMessage extends ReceivedRootNode {
       final SSymbol selector, final SomLanguage lang) {
     super(lang, onReceive.getSourceSection(), null);
     this.onReceive = onReceive;
-    this.selector  = selector;
+    this.selector = selector;
     assert onReceive.getSourceSection() != null;
   }
 
   @Override
   public Object execute(final VirtualFrame frame) {
     EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
-    boolean haltOnResolver   = msg.getHaltOnResolver();
+    boolean haltOnResolver = msg.getHaltOnResolver();
     boolean haltOnResolution = msg.getHaltOnResolution();
 
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && haltOnResolver) {
@@ -90,7 +90,7 @@ public class ReceivedMessage extends ReceivedRootNode {
     @Override
     public Object execute(final VirtualFrame frame) {
       EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
-      boolean haltOnResolver   = msg.getHaltOnResolver();
+      boolean haltOnResolver = msg.getHaltOnResolver();
       boolean haltOnResolution = msg.getHaltOnResolution();
 
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && haltOnResolver) {

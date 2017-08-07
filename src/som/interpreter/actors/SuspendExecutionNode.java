@@ -15,7 +15,8 @@ public abstract class SuspendExecutionNode extends UnaryExpressionNode {
     this.skipFrames = 0;
   }
 
-  SuspendExecutionNode(final boolean eagWrap, final SourceSection source, final int skipFrames) {
+  SuspendExecutionNode(final boolean eagWrap, final SourceSection source,
+      final int skipFrames) {
     super(eagWrap, source);
     this.skipFrames = skipFrames;
   }

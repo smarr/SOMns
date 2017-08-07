@@ -16,7 +16,9 @@ import som.primitives.Primitive;
 @Primitive(primitive = "double:multiply:")
 @Primitive(selector = "*")
 public abstract class MultiplicationPrim extends ArithmeticPrim {
-  protected MultiplicationPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected MultiplicationPrim(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   @Specialization(rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long right) {

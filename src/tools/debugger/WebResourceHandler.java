@@ -12,13 +12,14 @@ import com.sun.net.httpserver.HttpHandler;
 
 import som.vm.NotYetImplementedException;
 
+
 class WebResourceHandler implements HttpHandler {
   private final int debuggerPort;
   private final int tracePort;
 
   WebResourceHandler(final int debuggerPort, final int tracePort) {
     this.debuggerPort = debuggerPort;
-    this.tracePort    = tracePort;
+    this.tracePort = tracePort;
   }
 
   @Override
@@ -50,7 +51,8 @@ class WebResourceHandler implements HttpHandler {
 
     switch (requestedFile) {
       case "/ports.json":
-        String jsonPorts = "{\"dbgPort\":" + debuggerPort + ",\"tracePort\":" + tracePort + "}";
+        String jsonPorts =
+            "{\"dbgPort\":" + debuggerPort + ",\"tracePort\":" + tracePort + "}";
         exchange.sendResponseHeaders(200, jsonPorts.length());
         exchange.getResponseBody().write(jsonPorts.getBytes(Charset.forName("UTF-8")));
         exchange.close();
@@ -73,7 +75,7 @@ class WebResourceHandler implements HttpHandler {
     int c = 0;
     while ((c = in.read(buf, 0, buf.length)) > 0) {
       out.write(buf, 0, c);
-//        out.flush();
+      // out.flush();
     }
 
     out.close();

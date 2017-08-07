@@ -15,8 +15,8 @@ import tools.debugger.entities.SteppingType;
 
 public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   public static AtomicInteger threadIdGen = new AtomicInteger(1);
-  protected final long threadId;
-  protected long nextEntityId;
+  protected final long        threadId;
+  protected long              nextEntityId;
 
   // Used for tracing, accessed by the ExecAllMessages classes
   public long createdMessages;
@@ -30,7 +30,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   protected ConcurrentEntityScope topEntity;
 
   private static class ConcurrentEntityScope {
-    private final EntityType type;
+    private final EntityType            type;
     private final ConcurrentEntityScope next;
 
     ConcurrentEntityScope(final EntityType type, final ConcurrentEntityScope next) {
@@ -56,7 +56,9 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   public abstract Activity getActivity();
 
   public final boolean isStepping(final SteppingType type) {
-    if (steppingStrategy == null) { return false; }
+    if (steppingStrategy == null) {
+      return false;
+    }
     return steppingStrategy.is(type);
   }
 

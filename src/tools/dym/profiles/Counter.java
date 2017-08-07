@@ -7,6 +7,7 @@ import com.oracle.truffle.api.utilities.JSONHelper.JSONStringBuilder;
 
 import tools.dym.JsonSerializable;
 
+
 public class Counter implements JsonSerializable {
   protected final SourceSection source;
 

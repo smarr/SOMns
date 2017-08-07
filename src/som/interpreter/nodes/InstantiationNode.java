@@ -30,13 +30,15 @@ public class InstantiationNode extends Node {
     return MixinDefinition.sameSuperAndMixins(superclassAndMixins, cached);
   }
 
-  public static SClass instantiateMetaclassClass(final ClassFactory factory, final SObjectWithClass outerObj) {
+  public static SClass instantiateMetaclassClass(final ClassFactory factory,
+      final SObjectWithClass outerObj) {
     SClass metaclassClass = new SClass(outerObj, Classes.metaclassClass);
     factory.getClassClassFactory().initializeClass(metaclassClass);
     return metaclassClass;
   }
 
-  public static SClass singalExceptionsIfFaultFoundElseReturnClassObject(final SObjectWithClass outerObj,
+  public static SClass singalExceptionsIfFaultFoundElseReturnClassObject(
+      final SObjectWithClass outerObj,
       final ClassFactory factory, final SClass classObj) {
     factory.initializeClass(classObj);
 
@@ -69,7 +71,8 @@ public class InstantiationNode extends Node {
       return instantiate(outerObj, factory);
     }
 
-    public static SClass instantiate(final SObjectWithClass outerObj, final ClassFactory factory) {
+    public static SClass instantiate(final SObjectWithClass outerObj,
+        final ClassFactory factory) {
       SClass classObj = new SClass(outerObj, instantiateMetaclassClass(factory, outerObj));
       return singalExceptionsIfFaultFoundElseReturnClassObject(outerObj, factory, classObj);
     }
@@ -88,7 +91,8 @@ public class InstantiationNode extends Node {
       super(mixinDefinition);
     }
 
-    public abstract SClass execute(SObjectWithClass outerObj, Object superclassAndMixins, MaterializedFrame frame);
+    public abstract SClass execute(SObjectWithClass outerObj, Object superclassAndMixins,
+        MaterializedFrame frame);
 
     @Specialization(guards = {"sameSuperAndMixins(superclassAndMixins, cachedSuperMixins)"})
     public SClass instantiateClass(final SObjectWithClass outerObj,
@@ -104,11 +108,12 @@ public class InstantiationNode extends Node {
      * class of the outer object.
      *
      * @param frame, the current activation
-     * @return, an object instantiated from the newly created class.
+     *          @return, an object instantiated from the newly created class.
      */
     private static SClass instantiate(final SObjectWithClass outerObj,
         final ClassFactory factory, final MaterializedFrame frame) {
-      SClass classObj = new SClass(outerObj, instantiateMetaclassClass(factory, outerObj), frame);
+      SClass classObj =
+          new SClass(outerObj, instantiateMetaclassClass(factory, outerObj), frame);
       return singalExceptionsIfFaultFoundElseReturnClassObject(outerObj, factory, classObj);
     }
 
@@ -120,4 +125,3 @@ public class InstantiationNode extends Node {
     }
   }
 }
-

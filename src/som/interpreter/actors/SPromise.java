@@ -38,23 +38,23 @@ public class SPromise extends SObjectWithClass {
   }
 
   // THREAD-SAFETY: these fields are subject to race conditions and should only
-  //                be accessed when under the SPromise(this) lock
-  //                currently, we minimize locking by first setting the result
-  //                value and resolved flag, and then release the lock again
-  //                this makes sure that the promise owner directly schedules
-  //                call backs, and does not block the resolver to schedule
-  //                call backs here either. After resolving the future,
-  //                whenResolved and whenBroken should only be accessed by the
-  //                resolver actor
-  protected PromiseMessage whenResolved;
+  // be accessed when under the SPromise(this) lock
+  // currently, we minimize locking by first setting the result
+  // value and resolved flag, and then release the lock again
+  // this makes sure that the promise owner directly schedules
+  // call backs, and does not block the resolver to schedule
+  // call backs here either. After resolving the future,
+  // whenResolved and whenBroken should only be accessed by the
+  // resolver actor
+  protected PromiseMessage            whenResolved;
   protected ArrayList<PromiseMessage> whenResolvedExt;
-  protected PromiseMessage onError;
+  protected PromiseMessage            onError;
   protected ArrayList<PromiseMessage> onErrorExt;
 
-  protected SPromise chainedPromise;
-  protected ArrayList<SPromise>  chainedPromiseExt;
+  protected SPromise            chainedPromise;
+  protected ArrayList<SPromise> chainedPromiseExt;
 
-  protected Object  value;
+  protected Object     value;
   protected Resolution resolutionState;
 
   /** The owner of this promise, on which all call backs are scheduled. */
@@ -94,7 +94,9 @@ public class SPromise extends SObjectWithClass {
     return false;
   }
 
-  public long getPromiseId() { return 0; }
+  public long getPromiseId() {
+    return 0;
+  }
 
   public final Actor getOwner() {
     return owner;
@@ -209,7 +211,7 @@ public class SPromise extends SObjectWithClass {
 
   public final boolean assertNotCompleted() {
     assert !isCompleted() : "Not sure yet what to do with re-resolving of promises? just ignore it? Error?";
-    assert value == null  : "If it isn't resolved yet, it shouldn't have a value";
+    assert value == null : "If it isn't resolved yet, it shouldn't have a value";
     return true;
   }
 
@@ -301,15 +303,16 @@ public class SPromise extends SObjectWithClass {
      * Handles the case when a promise is resolved with a proper value
      * and previously has been chained with other promises.
      */
-    // TODO: solve the TODO and then remove the TruffleBoundary, this might even need to go into a node
+    // TODO: solve the TODO and then remove the TruffleBoundary, this might even need to go
+    // into a node
     @TruffleBoundary
     protected static void resolveChainedPromisesUnsync(final Resolution type,
         final SPromise promise, final Object result, final Actor current,
         final ForkJoinPool actorPool, final boolean haltOnResolution) {
       // TODO: we should change the implementation of chained promises to
-      //       always move all the handlers to the other promise, then we
-      //       don't need to worry about traversing the chain, which can
-      //       lead to a stack overflow.
+      // always move all the handlers to the other promise, then we
+      // don't need to worry about traversing the chain, which can
+      // lead to a stack overflow.
       // TODO: restore 10000 as parameter in testAsyncDeeplyChainedResolution
       if (promise.chainedPromise != null) {
         Object wrapped = promise.chainedPromise.owner.wrapForUse(result, current, null);
@@ -320,6 +323,7 @@ public class SPromise extends SObjectWithClass {
             actorPool, haltOnResolution);
       }
     }
+
     /**
      * Resolve the other promises that has been chained to the first promise.
      */
@@ -350,11 +354,13 @@ public class SPromise extends SObjectWithClass {
 
       if (VmSettings.PROMISE_RESOLUTION) {
         if (VmSettings.REPLAY) {
-          // Promises resolved by the TimerPrim will appear as if they have been resolved by the main actor.
+          // Promises resolved by the TimerPrim will appear as if they have been resolved by
+          // the main actor.
           if (TimerPrim.isTimerThread(Thread.currentThread())) {
             ((SReplayPromise) p).resolvingActor = 0;
           } else {
-            ((SReplayPromise) p).resolvingActor = EventualMessage.getActorCurrentMessageIsExecutionOn().getId();
+            ((SReplayPromise) p).resolvingActor =
+                EventualMessage.getActorCurrentMessageIsExecutionOn().getId();
           }
         }
 
@@ -366,16 +372,19 @@ public class SPromise extends SObjectWithClass {
       }
 
       // LOCKING NOTE: we need a synchronization unit that is not the promise,
-      //               because otherwise we might end up in a deadlock, but we still need to group the
-      //               scheduling of messages and the propagation of the resolution state, otherwise
-      //               we might see message ordering issues
+      // because otherwise we might end up in a deadlock, but we still need to group the
+      // scheduling of messages and the propagation of the resolution state, otherwise
+      // we might see message ordering issues
       synchronized (wrapped) {
         // LOCKING NOTE: We can split the scheduling out of the synchronized
         // because after resolving the promise, all clients will schedule their
         // callbacks/msg themselves
         synchronized (p) {
           assert p.assertNotCompleted();
-          // TODO: is this correct? can we just resolve chained promises like this? this means, their state changes twice. I guess it is ok, not sure about synchronization thought. They are created as 'chained', and then there is the resolute propagation accross chained promisses
+          // TODO: is this correct? can we just resolve chained promises like this? this means,
+          // their state changes twice. I guess it is ok, not sure about synchronization
+          // thought. They are created as 'chained', and then there is the resolute propagation
+          // accross chained promisses
           // TODO use a special constructor to create chained promises???
           p.value = wrapped;
           p.resolutionState = type;
@@ -406,7 +415,7 @@ public class SPromise extends SObjectWithClass {
     }
 
     /**
-     *  Schedule callbacks from the whenResolvedExt extension array.
+     * Schedule callbacks from the whenResolvedExt extension array.
      */
     @TruffleBoundary
     private static void scheduleExtensions(final SPromise promise,
@@ -438,6 +447,7 @@ public class SPromise extends SObjectWithClass {
   }
 
   @CompilationFinal public static SClass pairClass;
+
   public static void setPairClass(final SClass cls) {
     assert pairClass == null || cls == null;
     pairClass = cls;

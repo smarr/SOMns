@@ -21,12 +21,12 @@ class ApplicationThreadStack {
    * These have been identified in the debugger, i.e., they got an id for
    * direct access.
    */
-  final ArrayList<Object> scopesAndObjects;
+  final ArrayList<Object>     scopesAndObjects;
   final HashMap<Object, Long> scopesAndObjectsSet;
 
   private final ArrayList<DebugStackFrame> stackFrames;
-  private final SuspendedEvent event;
-  private final Suspension suspension;
+  private final SuspendedEvent             event;
+  private final Suspension                 suspension;
 
   ApplicationThreadStack(final SuspendedEvent event, final Suspension suspension) {
     this.event = event;

@@ -15,7 +15,9 @@ abstract class ApplicationThreadTask {
 
   static class Resume extends ApplicationThreadTask {
     @Override
-    public boolean execute() { return false; }
+    public boolean execute() {
+      return false;
+    }
   }
 
   static class SendStackTrace extends ApplicationThreadTask {
@@ -24,16 +26,16 @@ abstract class ApplicationThreadTask {
     private final int requestId;
 
     private final FrontendConnector frontend;
-    private final Suspension suspension;
+    private final Suspension        suspension;
 
     SendStackTrace(final int startFrame, final int levels,
         final FrontendConnector frontend, final Suspension suspension,
         final int requestId) {
       this.startFrame = startFrame;
-      this.levels     = levels;
-      this.frontend   = frontend;
+      this.levels = levels;
+      this.frontend = frontend;
       this.suspension = suspension;
-      this.requestId  = requestId;
+      this.requestId = requestId;
     }
 
     @Override

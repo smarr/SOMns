@@ -1,6 +1,5 @@
 package tools.debugger.entities;
 
-
 /**
  * Trace events that encode implementation-specific information that is used
  * to interpret trace buffers, which represent only a chunk of the overall data.
@@ -17,6 +16,11 @@ public enum Implementation {
     this.size = size;
   }
 
-  public byte getId()  { return id; }
-  public int getSize() { return size; }
+  public byte getId() {
+    return id;
+  }
+
+  public int getSize() {
+    return size;
+  }
 }

@@ -3,11 +3,13 @@ package tools.debugger.message;
 import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.debugger.message.Message.OutgoingMessage;
 
+
 /**
  * This message is send to update the front-end with the latest source section
  * information.
  *
- * <p>This is useful to have dynamic semantic highlighting for a dynamic language.
+ * <p>
+ * This is useful to have dynamic semantic highlighting for a dynamic language.
  * The highlighting can then also indicate field reads done by slot getters,
  * distinguish local accesses from message sends in a uniform language, etc.
  */
@@ -20,13 +22,13 @@ public class UpdateSourceSections extends OutgoingMessage {
   }
 
   public static class SourceInfo {
-    private final String sourceUri;
+    private final String                   sourceUri;
     private final TaggedSourceCoordinate[] sections;
 
     public SourceInfo(final String sourceUri,
         final TaggedSourceCoordinate[] sections) {
       this.sourceUri = sourceUri;
-      this.sections  = sections;
+      this.sections = sections;
     }
   }
 }

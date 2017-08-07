@@ -14,7 +14,9 @@ import som.vmobjects.SSymbol;
 @Primitive(primitive = "objHashcode:")
 @Primitive(primitive = "stringHashcode:")
 public abstract class HashPrim extends UnaryExpressionNode {
-  public HashPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  public HashPrim(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   @Specialization
   @TruffleBoundary

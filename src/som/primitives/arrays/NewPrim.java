@@ -20,10 +20,12 @@ import tools.dym.Tags.NewArray;
 
 @GenerateNodeFactory
 @Primitive(primitive = "array:new:", selector = "new:", inParser = false,
-           specializer = NewPrim.IsArrayClass.class)
+    specializer = NewPrim.IsArrayClass.class)
 public abstract class NewPrim extends BinaryExpressionNode {
   public static class IsArrayClass extends Specializer<NewPrim> {
-    public IsArrayClass(final Primitive prim, final NodeFactory<NewPrim> fact, final VM vm) { super(prim, fact, vm); }
+    public IsArrayClass(final Primitive prim, final NodeFactory<NewPrim> fact, final VM vm) {
+      super(prim, fact, vm);
+    }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
@@ -31,7 +33,9 @@ public abstract class NewPrim extends BinaryExpressionNode {
     }
   }
 
-  public NewPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  public NewPrim(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
@@ -46,13 +50,15 @@ public abstract class NewPrim extends BinaryExpressionNode {
     return receiver == Classes.arrayClass;
   }
 
-  @Specialization(guards = {"receiver.isArray()", "!receiver.isTransferObject()", "!receiver.declaredAsValue()"})
+  @Specialization(guards = {"receiver.isArray()", "!receiver.isTransferObject()",
+      "!receiver.declaredAsValue()"})
   public static final SMutableArray createArray(final SClass receiver, final long length) {
     return new SMutableArray(length, receiver);
   }
 
   @Specialization(guards = {"receiver.isArray()", "receiver.declaredAsValue()"})
-  public static final SImmutableArray createValueArray(final SClass receiver, final long length) {
+  public static final SImmutableArray createValueArray(final SClass receiver,
+      final long length) {
     return new SImmutableArray(length, receiver);
   }
 

@@ -13,19 +13,19 @@ import com.sun.istack.internal.NotNull;
 
 public final class OperationProfile extends Counter {
 
-  private final String operation;
-  private final Set<Class<?>> tags;
-  private final Deque<Object[]> argumentsForExecutions;
-  protected final int numArgsAndResult;
+  private final String                    operation;
+  private final Set<Class<?>>             tags;
+  private final Deque<Object[]>           argumentsForExecutions;
+  protected final int                     numArgsAndResult;
   protected final Map<Arguments, Integer> argumentTypes;
 
   public OperationProfile(final SourceSection source,
       @NotNull final String operation, final Set<Class<?>> tags,
       final int numArgsAndResult) {
     super(source);
-    this.numArgsAndResult  = numArgsAndResult;
-    this.operation         = operation;
-    this.tags              = tags;
+    this.numArgsAndResult = numArgsAndResult;
+    this.operation = operation;
+    this.tags = tags;
     argumentsForExecutions = new ArrayDeque<>();
     argumentTypes = new HashMap<>();
     assert operation != null;

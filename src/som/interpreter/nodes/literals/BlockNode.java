@@ -18,11 +18,12 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import tools.debugger.Tags.LiteralTag;
 
+
 public class BlockNode extends LiteralNode {
 
   protected final SInvokable blockMethod;
-  protected final SClass  blockClass;
-  protected final boolean needsAdjustmentOnScopeChange;
+  protected final SClass     blockClass;
+  protected final boolean    needsAdjustmentOnScopeChange;
 
   public BlockNode(final SInvokable blockMethod, final boolean needsAdjustmentOnScopeChange,
       final SourceSection source) {
@@ -30,12 +31,22 @@ public class BlockNode extends LiteralNode {
     this.blockMethod = blockMethod;
     this.needsAdjustmentOnScopeChange = needsAdjustmentOnScopeChange;
     switch (blockMethod.getNumberOfArguments()) {
-      case 1: { this.blockClass = Classes.blockClass1; break; }
-      case 2: { this.blockClass = Classes.blockClass2; break; }
-      case 3: { this.blockClass = Classes.blockClass3; break; }
+      case 1: {
+        this.blockClass = Classes.blockClass1;
+        break;
+      }
+      case 2: {
+        this.blockClass = Classes.blockClass2;
+        break;
+      }
+      case 3: {
+        this.blockClass = Classes.blockClass3;
+        break;
+      }
 
       // we don't support more than 3 arguments
-      default : this.blockClass = Classes.blockClass;
+      default:
+        this.blockClass = Classes.blockClass;
     }
   }
 
@@ -76,7 +87,9 @@ public class BlockNode extends LiteralNode {
 
   @Override
   public void replaceAfterScopeChange(final InliningVisitor inliner) {
-    if (!needsAdjustmentOnScopeChange && !inliner.someOuterScopeIsMerged()) { return; }
+    if (!needsAdjustmentOnScopeChange && !inliner.someOuterScopeIsMerged()) {
+      return;
+    }
 
     Method blockIvk = (Method) blockMethod.getInvokable();
     Method adapted = blockIvk.cloneAndAdaptAfterScopeChange(

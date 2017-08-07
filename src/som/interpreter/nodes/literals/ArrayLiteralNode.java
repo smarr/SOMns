@@ -10,8 +10,10 @@ import som.vmobjects.SArray;
 import som.vmobjects.SArray.SMutableArray;
 import tools.dym.Tags.NewArray;
 
+
 public abstract class ArrayLiteralNode extends LiteralNode {
-  public static ArrayLiteralNode create(final ExpressionNode[] exprs, final SourceSection source) {
+  public static ArrayLiteralNode create(final ExpressionNode[] exprs,
+      final SourceSection source) {
     return new Uninit(exprs, source);
   }
 
@@ -39,7 +41,8 @@ public abstract class ArrayLiteralNode extends LiteralNode {
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
-      Object storage = ArraySetAllStrategy.evaluateFirstDetermineStorageAndEvaluateRest(frame, expressions);
+      Object storage =
+          ArraySetAllStrategy.evaluateFirstDetermineStorageAndEvaluateRest(frame, expressions);
       SMutableArray arr = new SMutableArray(storage, Classes.arrayClass);
       specialize(arr);
       return arr;
@@ -67,6 +70,7 @@ public abstract class ArrayLiteralNode extends LiteralNode {
     }
 
     protected abstract Object executeSpecialized(VirtualFrame frame);
+
     protected abstract boolean expectedType(SMutableArray arr);
 
     @Override

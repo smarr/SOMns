@@ -20,10 +20,11 @@ import tools.concurrency.ActorExecutionTrace;
 public abstract class AbstractPromiseResolutionNode extends QuaternaryExpressionNode {
   private final ForkJoinPool actorPool;
 
-  @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
+  @Child protected WrapReferenceNode   wrapper = WrapReferenceNodeGen.create();
   @Child protected UnaryExpressionNode haltNode;
 
-  protected AbstractPromiseResolutionNode(final boolean eagWrap, final SourceSection source, final ForkJoinPool actorPool) {
+  protected AbstractPromiseResolutionNode(final boolean eagWrap, final SourceSection source,
+      final ForkJoinPool actorPool) {
     super(eagWrap, source);
     this.actorPool = actorPool;
     haltNode = insert(SuspendExecutionNodeGen.create(false, source, 2, null));

@@ -49,8 +49,8 @@ import som.vmobjects.SSymbol;
 public final class ReturnNonLocalNode extends ContextualNode {
 
   @Child private ExpressionNode expression;
-  private final FrameSlot frameOnStackMarker;
-  private final Internal  onStackMarkerVar;
+  private final FrameSlot       frameOnStackMarker;
+  private final Internal        onStackMarkerVar;
 
   public ReturnNonLocalNode(final ExpressionNode expression,
       final Internal frameOnStackMarker,
@@ -58,9 +58,9 @@ public final class ReturnNonLocalNode extends ContextualNode {
       final SourceSection source) {
     super(outerSelfContextLevel, source);
     assert outerSelfContextLevel > 0;
-    this.expression         = expression;
+    this.expression = expression;
     this.frameOnStackMarker = frameOnStackMarker.getSlot();
-    this.onStackMarkerVar   = frameOnStackMarker;
+    this.onStackMarkerVar = frameOnStackMarker;
     assert this.frameOnStackMarker.getIdentifier() == frameOnStackMarker : "We expect slots to use `Variable` objects as identity";
     assert source != null;
   }
@@ -75,8 +75,9 @@ public final class ReturnNonLocalNode extends ContextualNode {
     return (FrameOnStackMarker) FrameUtil.getObjectSafe(ctx, frameOnStackMarker);
   }
 
-  private static final SSymbol escapedBlock = Symbols.symbolFor("escapedBlock:");
-  private static final IndirectCallNode call = Truffle.getRuntime().createIndirectCallNode();
+  private static final SSymbol          escapedBlock = Symbols.symbolFor("escapedBlock:");
+  private static final IndirectCallNode call         =
+      Truffle.getRuntime().createIndirectCallNode();
 
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
@@ -111,7 +112,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
       if (se.contextLevel == 0) {
         node = new ReturnLocalNode(expression, (Internal) se.var, sourceSection);
       } else {
-        node = new ReturnNonLocalNode(expression, (Internal) se.var, se.contextLevel, sourceSection);
+        node = new ReturnNonLocalNode(expression, (Internal) se.var, se.contextLevel,
+            sourceSection);
       }
       replace(node);
     }
@@ -124,8 +126,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
    */
   private static final class ReturnLocalNode extends ExprWithTagsNode {
     @Child private ExpressionNode expression;
-    private final FrameSlot frameOnStackMarker;
-    private final Internal onStackMarkerVar;
+    private final FrameSlot       frameOnStackMarker;
+    private final Internal        onStackMarkerVar;
 
     private ReturnLocalNode(final ExpressionNode exp,
         final Internal onStackMarker, final SourceSection source) {
@@ -149,14 +151,14 @@ public final class ReturnNonLocalNode extends ContextualNode {
       assert marker.isOnStack();
       throw new ReturnException(result, marker);
 
-//      if (marker.isOnStack()) {
-//      } else {
-//        throw new RuntimeException("This should never happen");
-//        blockEscaped.enter();
-//        SBlock block = (SBlock) SArguments.rcvr(frame);
-//        Object self = SArguments.rcvr(ctx);
-//        return SAbstractObject.sendEscapedBlock(self, block);
-//      }
+      // if (marker.isOnStack()) {
+      // } else {
+      // throw new RuntimeException("This should never happen");
+      // blockEscaped.enter();
+      // SBlock block = (SBlock) SArguments.rcvr(frame);
+      // Object self = SArguments.rcvr(ctx);
+      // return SAbstractObject.sendEscapedBlock(self, block);
+      // }
     }
 
     @Override
@@ -170,18 +172,18 @@ public final class ReturnNonLocalNode extends ContextualNode {
 
   public static final class CatchNonLocalReturnNode extends ExprWithTagsNode {
     @Child protected ExpressionNode methodBody;
-    private final BranchProfile nonLocalReturnHandler;
-    private final BranchProfile doCatch;
-    private final BranchProfile doPropagate;
-    private final FrameSlot frameOnStackMarker;
-    private final Internal  frameOnStackMarkerVar;
+    private final BranchProfile     nonLocalReturnHandler;
+    private final BranchProfile     doCatch;
+    private final BranchProfile     doPropagate;
+    private final FrameSlot         frameOnStackMarker;
+    private final Internal          frameOnStackMarkerVar;
 
     public CatchNonLocalReturnNode(final ExpressionNode methodBody,
         final Internal frameOnStackMarker) {
       super(methodBody.getSourceSection());
       this.methodBody = methodBody;
       this.nonLocalReturnHandler = BranchProfile.create();
-      this.frameOnStackMarker    = frameOnStackMarker.getSlot();
+      this.frameOnStackMarker = frameOnStackMarker.getSlot();
       this.frameOnStackMarkerVar = frameOnStackMarker;
       assert this.frameOnStackMarker.getIdentifier() == frameOnStackMarker : "We expect slots to use `Variable` objects as identity";
 

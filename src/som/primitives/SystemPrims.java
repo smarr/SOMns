@@ -52,7 +52,9 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemModuleObject:")
   public abstract static class SystemModuleObjectPrim extends UnaryExpressionNode {
-    public SystemModuleObjectPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public SystemModuleObjectPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final Object set(final SObjectWithClass system) {
@@ -76,7 +78,11 @@ public final class SystemPrims {
   @Primitive(primitive = "load:", requiresContext = true)
   public abstract static class LoadPrim extends UnaryExpressionNode {
     private final VM vm;
-    protected LoadPrim(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source); this.vm = vm; }
+
+    protected LoadPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
+      super(eagWrap, source);
+      this.vm = vm;
+    }
 
     @Specialization
     @TruffleBoundary
@@ -89,12 +95,17 @@ public final class SystemPrims {
   @Primitive(primitive = "load:nextTo:", requiresContext = true)
   public abstract static class LoadNextToPrim extends BinaryComplexOperation {
     private final VM vm;
-    protected LoadNextToPrim(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source); this.vm = vm; }
+
+    protected LoadNextToPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
+      super(eagWrap, source);
+      this.vm = vm;
+    }
 
     @Specialization
     @TruffleBoundary
     public final Object load(final String filename, final SObjectWithClass moduleObj) {
-      String path = moduleObj.getSOMClass().getMixinDefinition().getSourceSection().getSource().getPath();
+      String path = moduleObj.getSOMClass().getMixinDefinition().getSourceSection().getSource()
+                             .getPath();
       File file = new File(path);
       return loadModule(vm, file.getParent() + File.separator + filename);
     }
@@ -104,7 +115,11 @@ public final class SystemPrims {
   @Primitive(primitive = "exit:", requiresContext = true)
   public abstract static class ExitPrim extends UnaryExpressionNode {
     private final VM vm;
-    public ExitPrim(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source); this.vm = vm; }
+
+    public ExitPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
+      super(eagWrap, source);
+      this.vm = vm;
+    }
 
     @Specialization
     @TruffleBoundary
@@ -117,7 +132,9 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "printString:")
   public abstract static class PrintStringPrim extends UnaryExpressionNode {
-    public PrintStringPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public PrintStringPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final Object doSObject(final String argument) {
@@ -134,7 +151,9 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "printNewline:")
   public abstract static class PrintInclNewlinePrim extends UnaryExpressionNode {
-    public PrintInclNewlinePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public PrintInclNewlinePrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final Object doSObject(final String argument) {
@@ -146,7 +165,9 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "printStackTrace:")
   public abstract static class PrintStackTracePrim extends UnaryExpressionNode {
-    public PrintStackTracePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public PrintStackTracePrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final Object doSObject(final Object receiver) {
@@ -156,7 +177,7 @@ public final class SystemPrims {
 
     @TruffleBoundary
     public static void printStackTrace(final int skipDnuFrames, final SourceSection topNode) {
-      ArrayList<String> method   = new ArrayList<String>();
+      ArrayList<String> method = new ArrayList<String>();
       ArrayList<String> location = new ArrayList<String>();
       int[] maxLengthMethod = {0};
       boolean[] first = {true};
@@ -169,7 +190,7 @@ public final class SystemPrims {
 
           // TODO: do we need to handle other kinds of root nodes?
           if (!(ct.getRootNode() instanceof Invokable)) {
-             return null;
+            return null;
           }
 
           Invokable m = (Invokable) ct.getRootNode();
@@ -187,7 +208,8 @@ public final class SystemPrims {
               nodeSS = callNode.getEncapsulatingSourceSection();
             }
             if (nodeSS != null) {
-              location.add(nodeSS.getSource().getName() + SourceCoordinate.getLocationQualifier(nodeSS));
+              location.add(nodeSS.getSource().getName()
+                  + SourceCoordinate.getLocationQualifier(nodeSS));
             } else {
               location.add("");
             }
@@ -202,7 +224,7 @@ public final class SystemPrims {
       StringBuilder sb = new StringBuilder();
       for (int i = method.size() - 1; i >= skipDnuFrames; i--) {
         sb.append(String.format("\t%1$-" + (maxLengthMethod[0] + 4) + "s",
-          method.get(i)));
+            method.get(i)));
         sb.append(location.get(i));
         sb.append('\n');
       }
@@ -215,7 +237,11 @@ public final class SystemPrims {
   @Primitive(primitive = "vmArguments:", requiresContext = true)
   public abstract static class VMArgumentsPrim extends UnaryExpressionNode {
     private final VM vm;
-    public VMArgumentsPrim(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source); this.vm = vm; }
+
+    public VMArgumentsPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
+      super(eagWrap, source);
+      this.vm = vm;
+    }
 
     @Specialization
     public final SImmutableArray getArguments(final Object receiver) {
@@ -227,7 +253,9 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemGC:")
   public abstract static class FullGCPrim extends UnaryExpressionNode {
-    public FullGCPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public FullGCPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final Object doSObject(final Object receiver) {
@@ -239,7 +267,9 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemTime:")
   public abstract static class TimePrim extends UnaryBasicOperation {
-    public TimePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public TimePrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final long doSObject(final Object receiver) {
@@ -248,21 +278,28 @@ public final class SystemPrims {
   }
 
   public static class IsSystemModule extends Specializer<ExpressionNode> {
-    public IsSystemModule(final Primitive prim, final NodeFactory<ExpressionNode> fact, final VM vm) { super(prim, fact, vm); }
+    public IsSystemModule(final Primitive prim, final NodeFactory<ExpressionNode> fact,
+        final VM vm) {
+      super(prim, fact, vm);
+    }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
       // XXX: this is the case when doing parse-time specialization
-      if (args == null) { return true; }
+      if (args == null) {
+        return true;
+      }
       return args[0] == SystemPrims.SystemModule;
     }
   }
 
   @GenerateNodeFactory
   @Primitive(primitive = "systemTicks:", selector = "ticks",
-             specializer = IsSystemModule.class, noWrapper = true)
+      specializer = IsSystemModule.class, noWrapper = true)
   public abstract static class TicksPrim extends UnaryBasicOperation implements OperationNode {
-    public TicksPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public TicksPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final long doSObject(final Object receiver) {
@@ -284,7 +321,11 @@ public final class SystemPrims {
   @Primitive(primitive = "systemExport:as:", requiresContext = true)
   public abstract static class ExportAsPrim extends BinaryComplexOperation {
     private final VM vm;
-    protected ExportAsPrim(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source); this.vm = vm; }
+
+    protected ExportAsPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
+      super(eagWrap, source);
+      this.vm = vm;
+    }
 
     @Specialization
     public final boolean doString(final Object obj, final String name) {
@@ -301,12 +342,15 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemApply:with:")
   public abstract static class ApplyWithPrim extends BinaryComplexOperation {
-    protected ApplyWithPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    protected ApplyWithPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
-    private final ValueProfile storageType  = ValueProfile.createClassProfile();
+    private final ValueProfile storageType = ValueProfile.createClassProfile();
 
-    @Child protected SizeAndLengthPrim size = SizeAndLengthPrimFactory.create(false, null, null);
-    @Child protected ToSomConversion convert = ToSomConversionNodeGen.create(null);
+    @Child protected SizeAndLengthPrim size    =
+        SizeAndLengthPrimFactory.create(false, null, null);
+    @Child protected ToSomConversion   convert = ToSomConversionNodeGen.create(null);
 
     @Specialization
     public final Object doApply(final TruffleObject fun, final SArray args) {

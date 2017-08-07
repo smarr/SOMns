@@ -7,6 +7,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 
+
 public class PrimitiveCallOrigin {
   public static Node getCallerNode() {
     int[] level = new int[1];

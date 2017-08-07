@@ -19,11 +19,13 @@ import som.vmobjects.SSymbol;
 public abstract class PerformInSuperclassPrim extends TernaryExpressionNode {
   @Child private IndirectCallNode call = Truffle.getRuntime().createIndirectCallNode();
 
-  public PerformInSuperclassPrim(final SourceSection source) { super(false, source); }
+  public PerformInSuperclassPrim(final SourceSection source) {
+    super(false, source);
+  }
 
   @Specialization
   public final Object doSAbstractObject(final SAbstractObject receiver,
-      final SSymbol selector, final SClass  clazz) {
+      final SSymbol selector, final SClass clazz) {
     VM.thisMethodNeedsToBeOptimized("PerformInSuperclassPrim");
     Dispatchable invokable = clazz.lookupMessage(selector, AccessModifier.PUBLIC);
     return invokable.invoke(call, new Object[] {receiver});

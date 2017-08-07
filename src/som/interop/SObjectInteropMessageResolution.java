@@ -28,8 +28,10 @@ public class SObjectInteropMessageResolution {
     @TruffleBoundary
     protected final void ensureDispatch(final SObjectWithClass rcvr) {
       if (dispatch == null) {
-        // TODO: this is a bad hack. Ideally, we can pass the VM in somewhat more direct and robustly
-        VM vm = rcvr.getSOMClass().getMethods()[0].getInvokable().getRootNode().getLanguage(SomLanguage.class).getVM();
+        // TODO: this is a bad hack. Ideally, we can pass the VM in somewhat more direct and
+        // robustly
+        VM vm = rcvr.getSOMClass().getMethods()[0].getInvokable().getRootNode()
+                                                  .getLanguage(SomLanguage.class).getVM();
         dispatch = InteropDispatchNodeGen.create(vm);
       }
     }
@@ -48,8 +50,8 @@ public class SObjectInteropMessageResolution {
   @Resolve(message = "WRITE")
   public abstract static class SObjectWriteNode extends Node {
     // TODO: this isn't ideal, we don't really need the InteropDispatch
-    //       because it should be a precise lookup. But, for simplicity
-    //       we reuse this for now
+    // because it should be a precise lookup. But, for simplicity
+    // we reuse this for now
 
     @Child protected ToSomConversion convert = ToSomConversionNodeGen.create(null);
     @Child protected InteropDispatch dispatch;
@@ -57,8 +59,10 @@ public class SObjectInteropMessageResolution {
     @TruffleBoundary
     protected final void ensureDispatch(final SObjectWithClass rcvr) {
       if (dispatch == null) {
-        // TODO: this is a bad hack. Ideally, we can pass the VM in somewhat more direct and robustly
-        VM vm = rcvr.getSOMClass().getMethods()[0].getInvokable().getRootNode().getLanguage(SomLanguage.class).getVM();
+        // TODO: this is a bad hack. Ideally, we can pass the VM in somewhat more direct and
+        // robustly
+        VM vm = rcvr.getSOMClass().getMethods()[0].getInvokable().getRootNode()
+                                                  .getLanguage(SomLanguage.class).getVM();
         dispatch = InteropDispatchNodeGen.create(vm);
       }
     }

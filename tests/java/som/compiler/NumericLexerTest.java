@@ -31,10 +31,11 @@ public class NumericLexerTest {
         }
       }
 
-      String[] decimalNums = new String[signedDigits.length * digits.length * signedDigits.length +
-                                        signedDigits.length * digits.length +
-                                        signedDigits.length * signedDigits.length +
-                                        signedDigits.length];
+      String[] decimalNums =
+          new String[signedDigits.length * digits.length * signedDigits.length +
+              signedDigits.length * digits.length +
+              signedDigits.length * signedDigits.length +
+              signedDigits.length];
       i = 0;
 
       // (char: ”-”) opt, digits, fraction opt, exponent opt.
@@ -76,36 +77,62 @@ public class NumericLexerTest {
         i += 1;
       }
 
-      String[] extendedDigits = new String[] {"0", /* "A", "9", "Z", "AAA", "A09",*/ "04B", "CAFE", /*"BABE", "X33X56X",*/ "ZZ"};
-      String[] radixNumbers = new String[radix.length * signs.length * extendedDigits.length * extendedDigits.length * signedDigits.length +
-                                         radix.length * signs.length * extendedDigits.length * extendedDigits.length +
-                                         radix.length * signs.length * extendedDigits.length * signedDigits.length +
-                                         radix.length * signs.length * extendedDigits.length];
+      String[] extendedDigits = new String[] {"0", /* "A", "9", "Z", "AAA", "A09", */ "04B",
+          "CAFE", /* "BABE", "X33X56X", */ "ZZ"};
+      String[] radixNumbers = new String[radix.length * signs.length * extendedDigits.length
+          * extendedDigits.length * signedDigits.length +
+          radix.length * signs.length * extendedDigits.length * extendedDigits.length +
+          radix.length * signs.length * extendedDigits.length * signedDigits.length +
+          radix.length * signs.length * extendedDigits.length];
 
       i = 0;
       // radixNum = radix, (char: ”-”) opt, extendedDigits, extendedFraction opt, exponent opt.
-      for (String r : radix) { for (String s : signs) { for (String d : extendedDigits) { for (String f : extendedDigits) { for (String e : signedDigits) {
-        radixNumbers[i] = r + s + d + "." + f + "e" + e;
-        i += 1;
-      } } } } }
+      for (String r : radix) {
+        for (String s : signs) {
+          for (String d : extendedDigits) {
+            for (String f : extendedDigits) {
+              for (String e : signedDigits) {
+                radixNumbers[i] = r + s + d + "." + f + "e" + e;
+                i += 1;
+              }
+            }
+          }
+        }
+      }
 
       // radixNum = radix, (char: ”-”) opt, extendedDigits, extendedFraction opt.
-      for (String r : radix) { for (String s : signs) { for (String d : extendedDigits) { for (String f : extendedDigits) {
-        radixNumbers[i] = r + s + d + "." + f;
-        i += 1;
-      } } } }
+      for (String r : radix) {
+        for (String s : signs) {
+          for (String d : extendedDigits) {
+            for (String f : extendedDigits) {
+              radixNumbers[i] = r + s + d + "." + f;
+              i += 1;
+            }
+          }
+        }
+      }
 
       // radixNum = radix, (char: ”-”) opt, extendedDigits, exponent opt.
-      for (String r : radix) { for (String s : signs) { for (String d : extendedDigits) { for (String e : signedDigits) {
-        radixNumbers[i] = r + s + d + "e" + e;
-        i += 1;
-      } } } }
+      for (String r : radix) {
+        for (String s : signs) {
+          for (String d : extendedDigits) {
+            for (String e : signedDigits) {
+              radixNumbers[i] = r + s + d + "e" + e;
+              i += 1;
+            }
+          }
+        }
+      }
 
       // radixNum = radix, (char: ”-”) opt, extendedDigits.
-      for (String r : radix) { for (String s : signs) { for (String d : extendedDigits) {
-        radixNumbers[i] = r + s + d;
-        i += 1;
-      } } }
+      for (String r : radix) {
+        for (String s : signs) {
+          for (String d : extendedDigits) {
+            radixNumbers[i] = r + s + d;
+            i += 1;
+          }
+        }
+      }
 
       ArrayList<Object> list = new ArrayList<>();
       list.addAll(Arrays.asList(decimalNums));

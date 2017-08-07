@@ -13,7 +13,7 @@ import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import tools.dym.Tags.LoopNode;
 
 
-@NodeChild(value = "repCnt",  type = ExpressionNode.class)
+@NodeChild(value = "repCnt", type = ExpressionNode.class)
 public abstract class IntTimesRepeatLiteralNode extends ExprWithTagsNode {
 
   @Child protected ExpressionNode body;
@@ -21,14 +21,14 @@ public abstract class IntTimesRepeatLiteralNode extends ExprWithTagsNode {
   // In case we need to revert from this optimistic optimization, keep the
   // original node around
   @SuppressWarnings("unused") private final ExpressionNode bodyActualNode;
-  @CompilationFinal private double loopFrequency;
+  @CompilationFinal private double                         loopFrequency;
 
   public abstract ExpressionNode getRepCnt();
 
   public IntTimesRepeatLiteralNode(final ExpressionNode body,
       final ExpressionNode originalBody, final SourceSection sourceSection) {
     super(sourceSection);
-    this.body           = body;
+    this.body = body;
     this.bodyActualNode = originalBody;
   }
 
@@ -60,9 +60,8 @@ public abstract class IntTimesRepeatLiteralNode extends ExprWithTagsNode {
       loopFrequency = Math.max(loopFrequency, repCnt / (repCnt + 1.0));
     }
 
-    for (long i = repCnt;
-        CompilerDirectives.injectBranchProbability(loopFrequency, i > 0);
-        i--) {
+    for (long i = repCnt; CompilerDirectives.injectBranchProbability(loopFrequency,
+        i > 0); i--) {
       body.executeGeneric(frame);
       ObjectTransitionSafepoint.INSTANCE.checkAndPerformSafepoint();
     }

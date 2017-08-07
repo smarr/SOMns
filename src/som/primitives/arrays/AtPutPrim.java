@@ -35,10 +35,11 @@ import tools.dym.Tags.BasicPrimitiveOperation;
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
 @Primitive(primitive = "array:at:put:", selector = "at:put:",
-           receiverType = SArray.class, inParser = false, specializer = TxAtPutPrim.class)
+    receiverType = SArray.class, inParser = false, specializer = TxAtPutPrim.class)
 public abstract class AtPutPrim extends TernaryExpressionNode {
   protected static final class TxAtPutPrim extends Specializer<TernaryExpressionNode> {
-    public TxAtPutPrim(final Primitive prim, final NodeFactory<TernaryExpressionNode> fact, final VM vm) {
+    public TxAtPutPrim(final Primitive prim, final NodeFactory<TernaryExpressionNode> fact,
+        final VM vm) {
       super(prim, fact, vm);
     }
 
@@ -48,7 +49,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
         final boolean eagerWrapper) {
       TernaryExpressionNode node = super.create(arguments, argNodes, section, eagerWrapper);
       // TODO: seems a bit expensive,
-      //       might want to optimize for interpreter first iteration speed
+      // might want to optimize for interpreter first iteration speed
       // TODO: clone in UnitializedDispatchNode.AbstractUninitialized.forAtomic()
       RootNode root = argNodes[0].getRootNode();
       boolean forAtomic;
@@ -56,7 +57,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
         forAtomic = ((Invokable) root).isAtomic();
       } else {
         // TODO: need to think about integration with actors, but, that's a
-        //       later research project
+        // later research project
         forAtomic = false;
       }
 
@@ -67,7 +68,6 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
       }
     }
   }
-
 
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
@@ -110,7 +110,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
 
   private Object triggerException(final VirtualFrame frame,
       final SArray arr, final long idx) {
-    int rcvrIdx = SArguments.RCVR_IDX; assert rcvrIdx == 0;
+    int rcvrIdx = SArguments.RCVR_IDX;
+    assert rcvrIdx == 0;
     return exception.doPreEvaluated(frame,
         new Object[] {KernelObj.indexOutOfBoundsClass, arr, idx});
   }

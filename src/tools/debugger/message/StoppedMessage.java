@@ -17,10 +17,10 @@ public final class StoppedMessage extends OutgoingMessage {
   private StoppedMessage(final Reason reason, final long activityId,
       final ActivityType type, final String text) {
     assert TraceData.isWithinJSIntValueRange(activityId);
-    this.reason     = reason.value;
+    this.reason = reason.value;
     this.activityId = activityId;
     this.activityType = type.getId();
-    this.text       = text;
+    this.text = text;
     this.allThreadsStopped = false;
   }
 

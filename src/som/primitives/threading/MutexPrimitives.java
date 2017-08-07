@@ -24,7 +24,9 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingLock:", selector = "lock")
   public abstract static class LockPrim extends UnaryExpressionNode {
-    public LockPrim(final boolean ew, final SourceSection s) { super(ew, s); }
+    public LockPrim(final boolean ew, final SourceSection s) {
+      super(ew, s);
+    }
 
     @TruffleBoundary
     @Specialization
@@ -46,7 +48,9 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingUnlock:", selector = "unlock")
   public abstract static class UnlockPrim extends UnaryExpressionNode {
-    public UnlockPrim(final boolean ew, final SourceSection s) { super(ew, s); }
+    public UnlockPrim(final boolean ew, final SourceSection s) {
+      super(ew, s);
+    }
 
     @TruffleBoundary
     @Specialization
@@ -68,7 +72,9 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(selector = "critical:", receiverType = ReentrantLock.class)
   public abstract static class CritialPrim extends BinaryExpressionNode {
-    public CritialPrim(final boolean ew, final SourceSection s) { super(ew, s); }
+    public CritialPrim(final boolean ew, final SourceSection s) {
+      super(ew, s);
+    }
 
     @Child protected BlockDispatchNode dispatchBody = BlockDispatchNodeGen.create();
 
@@ -86,7 +92,9 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingIsLocked:")
   public abstract static class IsLockedPrim extends UnaryExpressionNode {
-    public IsLockedPrim(final boolean ew, final SourceSection s) { super(ew, s); }
+    public IsLockedPrim(final boolean ew, final SourceSection s) {
+      super(ew, s);
+    }
 
     @Specialization
     @TruffleBoundary
@@ -98,7 +106,9 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingConditionFor:")
   public abstract static class ConditionForPrim extends UnaryExpressionNode {
-    public ConditionForPrim(final boolean ew, final SourceSection s) { super(ew, s); }
+    public ConditionForPrim(final boolean ew, final SourceSection s) {
+      super(ew, s);
+    }
 
     @Specialization
     @TruffleBoundary
@@ -110,7 +120,9 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingMutexNew:")
   public abstract static class MutexNewPrim extends UnaryExpressionNode {
-    public MutexNewPrim(final boolean ew, final SourceSection s) { super(ew, s); }
+    public MutexNewPrim(final boolean ew, final SourceSection s) {
+      super(ew, s);
+    }
 
     // TODO: should I guard this on the mutex class?
     @Specialization

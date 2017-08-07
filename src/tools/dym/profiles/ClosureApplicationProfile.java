@@ -8,6 +8,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.Invokable;
 
+
 public class ClosureApplicationProfile extends Counter {
 
   private final Map<Invokable, ActivationCounter> callTargetMap;
@@ -16,7 +17,6 @@ public class ClosureApplicationProfile extends Counter {
     super(source);
     callTargetMap = new HashMap<>();
   }
-
 
   // TODO: remove code duplication with CallsiteProfile
 

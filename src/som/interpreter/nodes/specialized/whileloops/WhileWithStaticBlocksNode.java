@@ -18,11 +18,12 @@ import som.vm.Primitives.Specializer;
 import som.vmobjects.SBlock;
 
 
-@Primitive(selector = "whileTrue:",  noWrapper = true, specializer = WhileTrueSplzr.class)
+@Primitive(selector = "whileTrue:", noWrapper = true, specializer = WhileTrueSplzr.class)
 @Primitive(selector = "whileFalse:", noWrapper = true, specializer = WhileFalseSplzr.class)
 public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
   public abstract static class WhileSplzr extends Specializer<WhileWithStaticBlocksNode> {
     private final boolean whileTrueOrFalse;
+
     protected WhileSplzr(final Primitive prim,
         final NodeFactory<WhileWithStaticBlocksNode> fact, final VM vm,
         final boolean whileTrueOrFalse) {
@@ -43,7 +44,7 @@ public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
         final boolean eagerWrapper) {
       assert !eagerWrapper;
       BlockNode argBlockNode = (BlockNode) unwrapIfNecessary(argNodes[1]);
-      SBlock    argBlock     = (SBlock)    arguments[1];
+      SBlock argBlock = (SBlock) arguments[1];
       return new WhileWithStaticBlocksNode(
           (BlockNode) unwrapIfNecessary(argNodes[0]), argBlockNode,
           (SBlock) arguments[0], argBlock, whileTrueOrFalse, section);
@@ -52,12 +53,16 @@ public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
 
   public static final class WhileTrueSplzr extends WhileSplzr {
     public WhileTrueSplzr(final Primitive prim,
-        final NodeFactory<WhileWithStaticBlocksNode> fact, final VM vm) { super(prim, fact, vm, true); }
+        final NodeFactory<WhileWithStaticBlocksNode> fact, final VM vm) {
+      super(prim, fact, vm, true);
+    }
   }
 
   public static final class WhileFalseSplzr extends WhileSplzr {
     public WhileFalseSplzr(final Primitive prim,
-        final NodeFactory<WhileWithStaticBlocksNode> fact, final VM vm) { super(prim, fact, vm, false); }
+        final NodeFactory<WhileWithStaticBlocksNode> fact, final VM vm) {
+      super(prim, fact, vm, false);
+    }
   }
 
   @Child protected BlockNode receiver;
@@ -74,7 +79,7 @@ public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
     SBlock rcvr = receiver.executeSBlock(frame);
-    SBlock arg  = argument.executeSBlock(frame);
+    SBlock arg = argument.executeSBlock(frame);
     return executeEvaluated(frame, rcvr, arg);
   }
 
@@ -84,7 +89,8 @@ public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
     return doWhileUnconditionally(loopCondition, loopBody);
   }
 
-  public static final class WhileWithStaticBlocksNodeFactory implements NodeFactory<WhileWithStaticBlocksNode> {
+  public static final class WhileWithStaticBlocksNodeFactory
+      implements NodeFactory<WhileWithStaticBlocksNode> {
 
     @Override
     public WhileWithStaticBlocksNode createNode(final Object... args) {

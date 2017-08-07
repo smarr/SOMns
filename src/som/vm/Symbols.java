@@ -14,7 +14,9 @@ public final class Symbols {
     String interned = string.intern();
 
     SSymbol result = symbolTable.get(interned);
-    if (result != null) { return result; }
+    if (result != null) {
+      return result;
+    }
 
     result = new SSymbol(interned);
     symbolTable.put(string, result);
@@ -31,6 +33,6 @@ public final class Symbols {
   public static final SSymbol METACLASS       = symbolFor("Metaclass");
   public static final SSymbol METACLASS_CLASS = symbolFor("Metaclass class");
 
-  public static final SSymbol Nil             = symbolFor("Nil");
-  public static final SSymbol Kernel          = symbolFor("Kernel");
+  public static final SSymbol Nil    = symbolFor("Nil");
+  public static final SSymbol Kernel = symbolFor("Kernel");
 }

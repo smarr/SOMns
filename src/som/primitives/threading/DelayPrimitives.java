@@ -15,7 +15,9 @@ public final class DelayPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingWait:")
   public abstract static class WaitPrim extends UnaryExpressionNode {
-    public WaitPrim(final boolean ew, final SourceSection s) { super(ew, s); }
+    public WaitPrim(final boolean ew, final SourceSection s) {
+      super(ew, s);
+    }
 
     @Specialization
     @TruffleBoundary

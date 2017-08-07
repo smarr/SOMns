@@ -11,7 +11,9 @@ public abstract class BooleanLiteralNode extends LiteralNode {
   }
 
   public static final class TrueLiteralNode extends BooleanLiteralNode {
-    public TrueLiteralNode(final SourceSection source) { super(source); }
+    public TrueLiteralNode(final SourceSection source) {
+      super(source);
+    }
 
     @Override
     public boolean executeBoolean(final VirtualFrame frame) {
@@ -25,7 +27,9 @@ public abstract class BooleanLiteralNode extends LiteralNode {
   }
 
   public static final class FalseLiteralNode extends BooleanLiteralNode {
-    public FalseLiteralNode(final SourceSection source) { super(source); }
+    public FalseLiteralNode(final SourceSection source) {
+      super(source);
+    }
 
     @Override
     public boolean executeBoolean(final VirtualFrame frame) {

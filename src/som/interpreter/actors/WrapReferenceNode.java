@@ -19,22 +19,26 @@ public abstract class WrapReferenceNode extends Node {
   }
 
   @Specialization(guards = "ref.getActor() == target")
-  public Object farRefToTarget(final SFarReference ref, final Actor target, final Actor owner) {
+  public Object farRefToTarget(final SFarReference ref, final Actor target,
+      final Actor owner) {
     return ref.getValue();
   }
 
   @Specialization(guards = "ref.getActor() != target")
-  public SFarReference farRefNotToTarget(final SFarReference ref, final Actor target, final Actor owner) {
+  public SFarReference farRefNotToTarget(final SFarReference ref, final Actor target,
+      final Actor owner) {
     return ref;
   }
 
   @Specialization(guards = "promise.getOwner() == target")
-  public SPromise promiseOwnedByTarget(final SPromise promise, final Actor target, final Actor owner) {
+  public SPromise promiseOwnedByTarget(final SPromise promise, final Actor target,
+      final Actor owner) {
     return promise;
   }
 
   @Specialization(guards = "promise.getOwner() != target")
-  public SPromise promiseNotOwnedByTarget(final SPromise promise, final Actor target, final Actor owner) {
+  public SPromise promiseNotOwnedByTarget(final SPromise promise, final Actor target,
+      final Actor owner) {
     return promise.getChainedPromiseFor(target);
   }
 
@@ -58,7 +62,8 @@ public abstract class WrapReferenceNode extends Node {
     return TransferObject.isTransferObject(obj);
   }
 
-  @Specialization(guards = {"isNeitherFarRefNorPromise(obj)", "!isValue(obj)", "!isTransferObj(obj)"})
+  @Specialization(
+      guards = {"isNeitherFarRefNorPromise(obj)", "!isValue(obj)", "!isTransferObj(obj)"})
   public Object isNotValueObject(final Object obj, final Actor target, final Actor owner) {
     return new SFarReference(owner, obj);
   }
@@ -69,7 +74,8 @@ public abstract class WrapReferenceNode extends Node {
   }
 
   @Specialization
-  public Object isTransferArray(final STransferArray obj, final Actor target, final Actor owner) {
+  public Object isTransferArray(final STransferArray obj, final Actor target,
+      final Actor owner) {
     return TransferObject.transfer(obj, owner, target, null);
   }
 }

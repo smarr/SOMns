@@ -23,7 +23,7 @@ public class MessageSendNodeWrapper
   }
 
   private static final class MessageSendWrapper
-    extends AbstractMessageSendNode implements WrapperNode {
+      extends AbstractMessageSendNode implements WrapperNode {
 
     @Child private ExpressionNode delegate;
     @Child private ProbeNode      probe;
@@ -32,7 +32,7 @@ public class MessageSendNodeWrapper
         final ProbeNode probe) {
       super(null, null);
       this.delegate = delegate;
-      this.probe    = probe;
+      this.probe = probe;
     }
 
     @Override

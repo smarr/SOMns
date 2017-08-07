@@ -13,7 +13,7 @@ import tools.dym.Tags.CachedVirtualInvoke;
 @Instrumentable(factory = DirectCallNodeWrapper.class)
 public class InstrumentableDirectCallNode extends DirectCallNode {
 
-  @Child protected DirectCallNode callNode;
+  @Child protected DirectCallNode         callNode;
   @CompilationFinal private SourceSection sourceSection;
 
   public InstrumentableDirectCallNode(final DirectCallNode callNode,
@@ -93,7 +93,7 @@ public class InstrumentableDirectCallNode extends DirectCallNode {
       if (tag == CachedClosureInvoke.class) {
         return true;
       } else if (tag == CachedVirtualInvoke.class) {
-        return false;  // don't want that type of instrumentation here
+        return false; // don't want that type of instrumentation here
       } else {
         return super.isTaggedWith(tag);
       }

@@ -12,11 +12,12 @@ import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
  * the other relevant nodes are already available then.
  */
 public class LateReportResultNode extends ExecutionEventNode {
-  private final EventContext ctx;
+  private final EventContext              ctx;
   private final ExecutionEventNodeFactory factory;
 
-  public LateReportResultNode(final EventContext ctx, final ExecutionEventNodeFactory factory) {
-    this.ctx     = ctx;
+  public LateReportResultNode(final EventContext ctx,
+      final ExecutionEventNodeFactory factory) {
+    this.ctx = ctx;
     this.factory = factory;
   }
 

@@ -49,20 +49,23 @@ import tools.debugger.entities.SendOp;
  * Tracing of the execution is done on a per-thread basis to minimize overhead
  * at run-time.
  *
- * <p>To communicate detailed information about the system for debugging,
+ * <p>
+ * To communicate detailed information about the system for debugging,
  * TraceWorkerThreads will capture the available data periodically and send it
  * to the debugger.
  *
  * <h4>Synchronization Strategy</h4>
  *
- * <p>During normal execution with tracing, we do not need any synchronization,
+ * <p>
+ * During normal execution with tracing, we do not need any synchronization,
  * because all operations on the buffers are initiated by the
  * TracingActivityThreads themselves. Thus, everything is thread-local. The
  * swapping of buffers is initiated from the TracingActivityThreads, too.
  * It requires synchronization only on the data structure where the buffers
  * are listed.
  *
- * <p>During execution with the debugger however, the periodic data requests
+ * <p>
+ * During execution with the debugger however, the periodic data requests
  * cause higher synchronization requirements. Since this is about interactive
  * debugging the cost of synchronization is likely acceptable, and will simply
  * done on the buffer for all access.
@@ -70,17 +73,20 @@ import tools.debugger.entities.SendOp;
 // TODO: needs to be renamed and cleaned up.
 public class ActorExecutionTrace {
   private static final int BUFFER_POOL_SIZE = VmSettings.NUM_THREADS * 4;
-  static final int BUFFER_SIZE = 4096 * 1024;
+  static final int         BUFFER_SIZE      = 4096 * 1024;
 
-  static final int MESSAGE_SIZE = 44; // max message size without parameters
-  static final int PARAM_SIZE = 9; // max size for one parameter
+  static final int         MESSAGE_SIZE  = 44; // max message size without parameters
+  static final int         PARAM_SIZE    = 9;  // max size for one parameter
   private static final int TRACE_TIMEOUT = 500;
   private static final int POLL_TIMEOUT  = 100;
 
-  private static final List<java.lang.management.GarbageCollectorMXBean> gcbeans = ManagementFactory.getGarbageCollectorMXBeans();
+  private static final List<java.lang.management.GarbageCollectorMXBean> gcbeans =
+      ManagementFactory.getGarbageCollectorMXBeans();
 
-  private static final ArrayBlockingQueue<ByteBuffer> emptyBuffers = new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
-  private static final ArrayBlockingQueue<ByteBuffer> fullBuffers  = new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
+  private static final ArrayBlockingQueue<ByteBuffer> emptyBuffers =
+      new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
+  private static final ArrayBlockingQueue<ByteBuffer> fullBuffers  =
+      new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
 
   // contains symbols that need to be written to file/sent to debugger,
   // e.g. actor type, message type
@@ -88,8 +94,8 @@ public class ActorExecutionTrace {
 
   private static FrontendConnector front = null;
 
-  private static long collectedMemory = 0;
-  private static TraceWorkerThread workerThread = new TraceWorkerThread();
+  private static long              collectedMemory = 0;
+  private static TraceWorkerThread workerThread    = new TraceWorkerThread();
 
   static {
     if (VmSettings.MEMORY_TRACING) {
@@ -104,8 +110,7 @@ public class ActorExecutionTrace {
   }
 
   private static long getTotal(final Map<String, MemoryUsage> map) {
-    return map.entrySet().stream().
-        mapToLong(usage -> usage.getValue().getUsed()).sum();
+    return map.entrySet().stream().mapToLong(usage -> usage.getValue().getUsed()).sum();
   }
 
   public static void setUpGCMonitoring() {
@@ -113,11 +118,13 @@ public class ActorExecutionTrace {
       NotificationEmitter emitter = (NotificationEmitter) bean;
       NotificationListener listener = new NotificationListener() {
         @Override
-        public void handleNotification(final Notification notification, final Object handback) {
-          if (GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION.equals(notification.getType())) {
+        public void handleNotification(final Notification notification,
+            final Object handback) {
+          if (GarbageCollectionNotificationInfo.GARBAGE_COLLECTION_NOTIFICATION.equals(
+              notification.getType())) {
             GarbageCollectionNotificationInfo info = GarbageCollectionNotificationInfo.from(
                 (CompositeData) notification.getUserData());
-            long after  = getTotal(info.getGcInfo().getMemoryUsageAfterGc());
+            long after = getTotal(info.getGcInfo().getMemoryUsageAfterGc());
             long before = getTotal(info.getGcInfo().getMemoryUsageBeforeGc());
             collectedMemory += before - after;
           }
@@ -143,7 +150,8 @@ public class ActorExecutionTrace {
     for (GarbageCollectorMXBean garbageCollectorMXBean : ManagementFactory.getGarbageCollectorMXBeans()) {
       gcTime += garbageCollectorMXBean.getCollectionTime();
     }
-    VM.println("[Memstat] Heap: " + totalHeap + "B\tNonHeap: " + totalNonHeap + "B\tCollected: " + collectedMemory + "B\tGC-Time: " + gcTime + "ms");
+    VM.println("[Memstat] Heap: " + totalHeap + "B\tNonHeap: " + totalNonHeap
+        + "B\tCollected: " + collectedMemory + "B\tGC-Time: " + gcTime + "ms");
   }
 
   @TruffleBoundary
@@ -264,7 +272,8 @@ public class ActorExecutionTrace {
     assert current instanceof TracingActivityThread;
     TracingActivityThread t = (TracingActivityThread) current;
 
-    t.getBuffer().recordSendOperation(SendOp.PROMISE_RESOLUTION, 0, promiseId, t.getActivity());
+    t.getBuffer().recordSendOperation(SendOp.PROMISE_RESOLUTION, 0, promiseId,
+        t.getActivity());
     t.resolvedPromises++;
   }
 
@@ -276,7 +285,8 @@ public class ActorExecutionTrace {
 
     assert current instanceof TracingActivityThread;
     TracingActivityThread t = (TracingActivityThread) current;
-    t.getBuffer().recordSendOperation(SendOp.PROMISE_RESOLUTION, 0, promiseId, t.getActivity());
+    t.getBuffer().recordSendOperation(SendOp.PROMISE_RESOLUTION, 0, promiseId,
+        t.getActivity());
     t.erroredPromises++;
   }
 
@@ -370,7 +380,7 @@ public class ActorExecutionTrace {
             }
 
             if (b.remaining() <= Implementation.IMPL_THREAD.getSize() +
-                                 Implementation.IMPL_CURRENT_ACTIVITY.getSize()) {
+                Implementation.IMPL_CURRENT_ACTIVITY.getSize()) {
               // Ignore buffers that only contain the thread index
               b.clear();
               ActorExecutionTrace.emptyBuffers.add(b);
@@ -427,7 +437,7 @@ public class ActorExecutionTrace {
           }
 
           if (b.remaining() > (Implementation.IMPL_THREAD.getSize() +
-                               Implementation.IMPL_CURRENT_ACTIVITY.getSize()) && front != null) {
+              Implementation.IMPL_CURRENT_ACTIVITY.getSize()) && front != null) {
             front.sendTracingData(b);
           }
 

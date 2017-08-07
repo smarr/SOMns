@@ -23,11 +23,11 @@ public final class InitializationResponse extends OutgoingMessage {
 
   private static final class ImplementationData {
     private final byte marker;
-    private final int size;
+    private final int  size;
 
     ImplementationData(final byte marker, final int size) {
       this.marker = marker;
-      this.size   = size;
+      this.size = size;
     }
   }
 
@@ -37,22 +37,22 @@ public final class InitializationResponse extends OutgoingMessage {
 
     ParseData(final int creationSize,
         final int completionSize) {
-      this.creationSize   = creationSize == 0 ? null : creationSize;
+      this.creationSize = creationSize == 0 ? null : creationSize;
       this.completionSize = completionSize == 0 ? null : completionSize;
     }
   }
 
   private static final class Definition {
-    private final byte id;
-    private final Byte creation;
-    private final Byte completion;
+    private final byte   id;
+    private final Byte   creation;
+    private final Byte   completion;
     private final String label;
     private final String marker;
 
     private Definition(final byte id, final String label, final byte creation,
         final byte completion, final String marker) {
       this.id = id;
-      this.creation   = creation   == 0 ? null : creation;
+      this.creation = creation == 0 ? null : creation;
       this.completion = completion == 0 ? null : completion;
       this.label = label;
       this.marker = marker;
@@ -70,9 +70,9 @@ public final class InitializationResponse extends OutgoingMessage {
   }
 
   private static final class SendDef {
-    private final byte marker;
-    private final byte entity;
-    private final byte target;
+    private final byte   marker;
+    private final byte   entity;
+    private final byte   target;
     private final String label;
 
     SendDef(final byte marker, final EntityType entity, final EntityType target,
@@ -98,8 +98,8 @@ public final class InitializationResponse extends OutgoingMessage {
   }
 
   private static final class BreakpointData {
-    private final String name;
-    private final String label;
+    private final String   name;
+    private final String   label;
     private final String[] applicableTo;
 
     private BreakpointData(final BreakpointType bp) {
@@ -110,19 +110,19 @@ public final class InitializationResponse extends OutgoingMessage {
   }
 
   private static final class SteppingData {
-    private final String name;
-    private final String label;
-    private final String group;
-    private final String icon;
+    private final String   name;
+    private final String   label;
+    private final String   group;
+    private final String   icon;
     private final String[] applicableTo;
-    private final byte[] forActivities;
-    private final byte[] inScope;
+    private final byte[]   forActivities;
+    private final byte[]   inScope;
 
     private SteppingData(final SteppingType type) {
       this.name = type.name;
       this.label = type.label;
       this.group = type.group.label;
-      this.icon  = type.icon;
+      this.icon = type.icon;
       this.applicableTo = tagsToStrings(type.applicableTo);
       this.inScope = EntityType.getIds(type.inScope);
 
@@ -204,19 +204,19 @@ public final class InitializationResponse extends OutgoingMessage {
   }
 
   private static final class ServerCapabilities {
-    private final Definition[] activities;
-    private final Definition[] passiveEntities;
-    private final Definition[] dynamicScopes;
-    private final SendDef[] sendOps;
-    private final ReceiveDef[] receiveOps;
-    private final ParseData activityParseData;
-    private final ParseData passiveEntityParseData;
-    private final ParseData dynamicScopeParseData;
-    private final ParseData sendReceiveParseData;
+    private final Definition[]         activities;
+    private final Definition[]         passiveEntities;
+    private final Definition[]         dynamicScopes;
+    private final SendDef[]            sendOps;
+    private final ReceiveDef[]         receiveOps;
+    private final ParseData            activityParseData;
+    private final ParseData            passiveEntityParseData;
+    private final ParseData            dynamicScopeParseData;
+    private final ParseData            sendReceiveParseData;
     private final ImplementationData[] implementationData;
 
     private final BreakpointData[] breakpointTypes;
-    private final SteppingData[] steppingTypes;
+    private final SteppingData[]   steppingTypes;
 
     private ServerCapabilities(final EntityType[] supportedEntities,
         final ActivityType[] supportedActivities,
@@ -227,14 +227,14 @@ public final class InitializationResponse extends OutgoingMessage {
         final BreakpointType[] supportedBreakpoints,
         final SteppingType[] supportedSteps,
         final Implementation[] implData) {
-      activities      = getDefinitions(supportedActivities);
+      activities = getDefinitions(supportedActivities);
       passiveEntities = getDefinitions(supportedPassiveEntities);
-      dynamicScopes   = getDefinitions(supportedDynamicScopes);
-      sendOps         = getDefinitions(supportedSendOps);
-      receiveOps      = getDefinitions(supportedReceiveOps);
+      dynamicScopes = getDefinitions(supportedDynamicScopes);
+      sendOps = getDefinitions(supportedSendOps);
+      receiveOps = getDefinitions(supportedReceiveOps);
 
       breakpointTypes = new BreakpointData[supportedBreakpoints.length];
-      steppingTypes   = new SteppingData[supportedSteps.length];
+      steppingTypes = new SteppingData[supportedSteps.length];
 
       activityParseData = new ParseData(supportedActivities[0].getCreationSize(),
           supportedActivities[0].getCompletionSize());

@@ -17,8 +17,9 @@ import som.vmobjects.SObjectWithClass;
 
 
 public final class KernelObj {
-  private KernelObj() { }
-  public static final SImmutableObject kernel = new SImmutableObject(true, true);
+  private KernelObj() {}
+
+  public static final SImmutableObject   kernel = new SImmutableObject(true, true);
   @CompilationFinal public static SClass indexOutOfBoundsClass;
 
   public static Object signalException(final String selector, final Object receiver) {
@@ -36,7 +37,9 @@ public final class KernelObj {
   @GenerateNodeFactory
   @Primitive(primitive = "kernelIndexOutOfBounds:")
   public abstract static class SetIndexOutOfBounds extends UnaryExpressionNode {
-    public SetIndexOutOfBounds(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public SetIndexOutOfBounds(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final SClass setClass(final SClass value) {

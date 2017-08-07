@@ -21,13 +21,13 @@ import tools.dym.Tags.LocalVarWrite;
 public abstract class NonLocalVariableNode extends ContextualNode {
 
   protected final FrameSlot slot;
-  protected final Local var;
+  protected final Local     var;
 
   private NonLocalVariableNode(final int contextLevel, final Local var,
       final SourceSection source) {
     super(contextLevel, source);
     this.slot = var.getSlot();
-    this.var  = var;
+    this.var = var;
   }
 
   @Override

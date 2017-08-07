@@ -17,7 +17,9 @@ import tools.dym.Tags.OpArithmetic;
 @Primitive(primitive = "doubleSqrt:")
 @Primitive(selector = "sqrt", receiverType = {Long.class, BigInteger.class, Double.class})
 public abstract class SqrtPrim extends UnaryBasicOperation {
-  public SqrtPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  public SqrtPrim(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

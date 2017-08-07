@@ -50,7 +50,7 @@ public class ObjectBufferTests {
     try {
       i.next();
       fail("Should throw exception");
-    } catch (NoSuchElementException e) { }
+    } catch (NoSuchElementException e) {}
 
     assertEquals(0, buffer.size());
     assertEquals(0, buffer.capacity());
@@ -69,7 +69,7 @@ public class ObjectBufferTests {
     try {
       i.next();
       fail("Should throw exception");
-    } catch (NoSuchElementException e) { }
+    } catch (NoSuchElementException e) {}
 
     assertEquals(1, buffer.size());
     assertEquals(1, buffer.capacity());

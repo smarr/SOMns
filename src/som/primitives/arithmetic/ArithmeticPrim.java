@@ -10,7 +10,9 @@ import tools.dym.Tags.OpArithmetic;
 
 
 public abstract class ArithmeticPrim extends BinaryBasicOperation {
-  protected ArithmeticPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected ArithmeticPrim(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

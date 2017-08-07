@@ -61,24 +61,40 @@ public abstract class ExpressionNode extends SOMNode {
     return isTaggedWith(StatementTag.class);
   }
 
-  public void markAsRootExpression() { throw new UnsupportedOperationException(); }
+  public void markAsRootExpression() {
+    throw new UnsupportedOperationException();
+  }
 
-  public boolean isMarkedAsRootExpression() { throw new UnsupportedOperationException(); }
+  public boolean isMarkedAsRootExpression() {
+    throw new UnsupportedOperationException();
+  }
 
-  public void markAsLoopBody()  { throw new UnsupportedOperationException(); }
+  public void markAsLoopBody() {
+    throw new UnsupportedOperationException();
+  }
 
-  public void markAsControlFlowCondition()  { throw new UnsupportedOperationException(); }
+  public void markAsControlFlowCondition() {
+    throw new UnsupportedOperationException();
+  }
 
-  public void markAsPrimitiveArgument()  { throw new UnsupportedOperationException(); }
+  public void markAsPrimitiveArgument() {
+    throw new UnsupportedOperationException();
+  }
 
-  public void markAsVirtualInvokeReceiver()  { throw new UnsupportedOperationException(); }
+  public void markAsVirtualInvokeReceiver() {
+    throw new UnsupportedOperationException();
+  }
 
-  public void markAsStatement()  { throw new UnsupportedOperationException(); }
+  public void markAsStatement() {
+    throw new UnsupportedOperationException();
+  }
 
   public abstract Object executeGeneric(VirtualFrame frame);
 
   @Override
-  public ExpressionNode getFirstMethodBodyNode() { return this; }
+  public ExpressionNode getFirstMethodBodyNode() {
+    return this;
+  }
 
   public boolean executeBoolean(final VirtualFrame frame) throws UnexpectedResultException {
     return TypesGen.expectBoolean(executeGeneric(frame));
@@ -88,7 +104,8 @@ public abstract class ExpressionNode extends SOMNode {
     return TypesGen.expectLong(executeGeneric(frame));
   }
 
-  public BigInteger executeBigInteger(final VirtualFrame frame) throws UnexpectedResultException {
+  public BigInteger executeBigInteger(final VirtualFrame frame)
+      throws UnexpectedResultException {
     return TypesGen.expectBigInteger(executeGeneric(frame));
   }
 
@@ -112,7 +129,8 @@ public abstract class ExpressionNode extends SOMNode {
     return TypesGen.expectSClass(executeGeneric(frame));
   }
 
-  public SInvokable executeSInvokable(final VirtualFrame frame) throws UnexpectedResultException {
+  public SInvokable executeSInvokable(final VirtualFrame frame)
+      throws UnexpectedResultException {
     return TypesGen.expectSInvokable(executeGeneric(frame));
   }
 
@@ -124,15 +142,18 @@ public abstract class ExpressionNode extends SOMNode {
     return TypesGen.expectSArray(executeGeneric(frame));
   }
 
-  public SAbstractObject executeSAbstractObject(final VirtualFrame frame) throws UnexpectedResultException {
+  public SAbstractObject executeSAbstractObject(final VirtualFrame frame)
+      throws UnexpectedResultException {
     return TypesGen.expectSAbstractObject(executeGeneric(frame));
   }
 
-  public Object[] executeObjectArray(final VirtualFrame frame) throws UnexpectedResultException {
+  public Object[] executeObjectArray(final VirtualFrame frame)
+      throws UnexpectedResultException {
     return TypesGen.expectObjectArray(executeGeneric(frame));
   }
 
-  public SFarReference executeSFarReference(final VirtualFrame frame) throws UnexpectedResultException {
+  public SFarReference executeSFarReference(final VirtualFrame frame)
+      throws UnexpectedResultException {
     return TypesGen.expectSFarReference(executeGeneric(frame));
   }
 

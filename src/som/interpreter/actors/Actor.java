@@ -64,10 +64,10 @@ public class Actor implements Activity {
    * Optimized for cases where the mailbox contains only one message.
    * Further messages are stored in moreMessages, which is initialized lazily.
    */
-  protected EventualMessage firstMessage;
+  protected EventualMessage               firstMessage;
   protected ObjectBuffer<EventualMessage> mailboxExtension;
 
-  protected long firstMessageTimeStamp;
+  protected long               firstMessageTimeStamp;
   protected ObjectBuffer<Long> mailboxExtensionTimeStamps;
 
   /** Flag to indicate whether there is currently a F/J task executing. */
@@ -77,8 +77,8 @@ public class Actor implements Activity {
   protected final ExecAllMessages executor;
 
   // used to collect absolute numbers from the threads
-  private static Object statsLock = new Object();
-  private static long numCreatedEntities = 0;
+  private static Object statsLock          = new Object();
+  private static long   numCreatedEntities = 0;
 
   /**
    * Possible roles for an actor.
@@ -94,7 +94,9 @@ public class Actor implements Activity {
   }
 
   @Override
-  public ActivityType getType() { return ActivityType.ACTOR; }
+  public ActivityType getType() {
+    return ActivityType.ACTOR;
+  }
 
   protected ExecAllMessages createExecutor(final VM vm) {
     return new ExecAllMessages(this, vm);
@@ -118,7 +120,8 @@ public class Actor implements Activity {
       // promise gets resolved
 
       SPromise orgProm = (SPromise) o;
-      // assert orgProm.getOwner() == owner; this can be another actor, which initialized a scheduled eventual send by resolving a promise, that's the promise pipelining...
+      // assert orgProm.getOwner() == owner; this can be another actor, which initialized a
+      // scheduled eventual send by resolving a promise, that's the promise pipelining...
       if (orgProm.getOwner() == this) {
         return orgProm;
       }
@@ -131,7 +134,8 @@ public class Actor implements Activity {
       } else if (o instanceof STransferArray) {
         return TransferObject.transfer((STransferArray) o, owner, this,
             transferedObjects);
-      } else if (o instanceof SObjectWithoutFields && ((SObjectWithoutFields) o).getSOMClass().isTransferObject()) {
+      } else if (o instanceof SObjectWithoutFields
+          && ((SObjectWithoutFields) o).getSOMClass().isTransferObject()) {
         return TransferObject.transfer((SObjectWithoutFields) o, owner, this,
             transferedObjects);
       } else {
@@ -145,7 +149,7 @@ public class Actor implements Activity {
   public void setStepToJoin(final boolean val) {
     throw new UnsupportedOperationException(
         "Return from activity, and step to join are not supported " +
-        "for event-loop actors. This code should never be reached.");
+            "for event-loop actors. This code should never be reached.");
   }
 
   /**
@@ -195,9 +199,9 @@ public class Actor implements Activity {
    */
   public static class ExecAllMessages implements Runnable {
     protected final Actor actor;
-    protected final VM vm;
+    protected final VM    vm;
 
-    protected EventualMessage firstMessage;
+    protected EventualMessage               firstMessage;
     protected ObjectBuffer<EventualMessage> mailboxExtension;
 
     protected int size = 0;
@@ -235,7 +239,8 @@ public class Actor implements Activity {
       t.currentlyExecutingActor = null;
     }
 
-    protected void processCurrentMessages(final ActorProcessingThread currentThread, final WebDebugger dbg) {
+    protected void processCurrentMessages(final ActorProcessingThread currentThread,
+        final WebDebugger dbg) {
       assert size > 0;
 
       try {
@@ -310,9 +315,10 @@ public class Actor implements Activity {
   }
 
   @Override
-  public void setStepToNextTurn(final boolean val) {  }
+  public void setStepToNextTurn(final boolean val) {}
 
-  public static final class ActorProcessingThreadFactory implements ForkJoinWorkerThreadFactory {
+  public static final class ActorProcessingThreadFactory
+      implements ForkJoinWorkerThreadFactory {
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
       return new ActorProcessingThread(pool);

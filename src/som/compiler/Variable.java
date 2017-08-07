@@ -29,11 +29,11 @@ import tools.SourceCoordinate;
  * Represents state belonging to a method activation.
  */
 public abstract class Variable {
-  public final String name;
+  public final String        name;
   public final SourceSection source;
 
   Variable(final String name, final SourceSection source) {
-    this.name   = name;
+    this.name = name;
     this.source = source;
   }
 
@@ -50,27 +50,35 @@ public abstract class Variable {
   @Override
   public boolean equals(final Object o) {
     assert o != null;
-    if (o == this) { return true; }
-    if (!(o instanceof Variable)) { return false; }
+    if (o == this) {
+      return true;
+    }
+    if (!(o instanceof Variable)) {
+      return false;
+    }
     Variable var = (Variable) o;
     if (var.source == source) {
       assert name.equals(var.name) : "Defined in the same place, but names not equal?";
       return true;
     }
-    assert source == null || !source.equals(var.source) : "Why are there multiple objects for this source section? might need to fix comparison above";
+    assert source == null || !source.equals(
+        var.source) : "Why are there multiple objects for this source section? might need to fix comparison above";
     return false;
   }
 
   public abstract ExpressionNode getReadNode(int contextLevel, SourceSection source);
 
   public abstract Variable split(FrameDescriptor descriptor);
+
   public abstract Local splitToMergeIntoOuterScope(FrameDescriptor descriptor);
 
   /** Access method for the debugger and tools. Not to be used in language. */
   public abstract Object read(Frame frame);
 
   /** Not meant to be shown in debugger or other tools. */
-  public boolean isInternal() { return false; }
+  public boolean isInternal() {
+    return false;
+  }
 
   /**
    * Represents a parameter (argument) to a method activation.
@@ -269,10 +277,13 @@ public abstract class Variable {
 
     @Override
     public Object read(final Frame frame) {
-      throw new UnsupportedOperationException("This is for reading language-level values. Think, we should not need this");
+      throw new UnsupportedOperationException(
+          "This is for reading language-level values. Think, we should not need this");
     }
 
     @Override
-    public boolean isInternal() { return true; }
+    public boolean isInternal() {
+      return true;
+    }
   }
 }

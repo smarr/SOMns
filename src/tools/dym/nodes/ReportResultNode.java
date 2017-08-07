@@ -8,15 +8,15 @@ import tools.dym.profiles.OperationProfile;
 
 public class ReportResultNode extends ExecutionEventNode {
   protected final OperationProfile profile;
-  protected final int argIdx;
+  protected final int              argIdx;
 
   public ReportResultNode(final OperationProfile profile, final int argIdx) {
     this.profile = profile;
-    this.argIdx  = argIdx;
+    this.argIdx = argIdx;
   }
 
   @Override
-  public void onEnter(final VirtualFrame frame) {  }
+  public void onEnter(final VirtualFrame frame) {}
 
   @Override
   public void onReturnValue(final VirtualFrame frame, final Object result) {

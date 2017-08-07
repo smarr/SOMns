@@ -58,26 +58,25 @@ public final class VM {
   @CompilationFinal private PolyglotEngine engine;
 
   @CompilationFinal private StructuralProbe structuralProbe;
-  @CompilationFinal private WebDebugger webDebugger;
-  @CompilationFinal private Profiler truffleProfiler;
+  @CompilationFinal private WebDebugger     webDebugger;
+  @CompilationFinal private Profiler        truffleProfiler;
 
   private final ForkJoinPool actorPool;
   private final ForkJoinPool forkJoinPool;
   private final ForkJoinPool processesPool;
   private final ForkJoinPool threadPool;
 
-
-  private final boolean avoidExitForTesting;
+  private final boolean                  avoidExitForTesting;
   @CompilationFinal private ObjectSystem objectSystem;
 
   @CompilationFinal private SomLanguage language;
 
-  private int lastExitCode = 0;
-  private volatile boolean shouldExit = false;
-  private final VmOptions options;
+  private int              lastExitCode = 0;
+  private volatile boolean shouldExit   = false;
+  private final VmOptions  options;
 
   @CompilationFinal private SObjectWithoutFields vmMirror;
-  @CompilationFinal private Actor mainActor;
+  @CompilationFinal private Actor                mainActor;
 
   private static final int MAX_THREADS = 0x7fff;
 
@@ -102,10 +101,10 @@ public final class VM {
     this.avoidExitForTesting = true;
     this.options = vmOptions;
 
-    actorPool     = null;
+    actorPool = null;
     processesPool = null;
-    forkJoinPool  = null;
-    threadPool    = null;
+    forkJoinPool = null;
+    threadPool = null;
   }
 
   public WebDebugger getWebDebugger() {
@@ -142,7 +141,8 @@ public final class VM {
   }
 
   /**
-   * Used in {@link som.tests.BasicInterpreterTests} to identify which basic test method to invoke.
+   * Used in {@link som.tests.BasicInterpreterTests} to identify which basic test method to
+   * invoke.
    */
   public String getTestSelector() {
     return options.testSelector;
@@ -171,7 +171,8 @@ public final class VM {
     // TODO: make thread-safe!!!
     // TODO: can I assert that it is locked?? helper on Node??
     if (VmSettings.INSTRUMENTATION) {
-      assert node.getSourceSection() != null || (node instanceof WrapperNode) : "Node needs source section, or needs to be wrapper";
+      assert node.getSourceSection() != null
+          || (node instanceof WrapperNode) : "Node needs source section, or needs to be wrapper";
       synchronized (dynamicInstrumentationLock) {
         InstrumentationHandler.insertInstrumentationWrapper(node);
       }
@@ -211,7 +212,7 @@ public final class VM {
    */
   public boolean isPoolIdle() {
     // TODO: this is not working when a thread blocks, then it seems
-    //       not to be considered running
+    // not to be considered running
     return actorPool.isQuiescent() && processesPool.isQuiescent()
         && forkJoinPool.isQuiescent() && threadPool.isQuiescent();
   }
@@ -252,7 +253,8 @@ public final class VM {
   }
 
   private void shutdownPools() {
-    ForkJoinPool[] pools = new ForkJoinPool[] {actorPool, processesPool, forkJoinPool, threadPool};
+    ForkJoinPool[] pools =
+        new ForkJoinPool[] {actorPool, processesPool, forkJoinPool, threadPool};
 
     for (ForkJoinPool pool : pools) {
       pool.shutdown();
@@ -367,11 +369,11 @@ public final class VM {
     objectSystem = new ObjectSystem(new SourcecodeCompiler(lang), structuralProbe, this);
     objectSystem.loadKernelAndPlatform(options.platformFile, options.kernelFile);
 
-    assert vmMirror  == null : "VM seems to be initialized already";
+    assert vmMirror == null : "VM seems to be initialized already";
     assert mainActor == null : "VM seems to be initialized already";
 
     mainActor = Actor.createActor(this);
-    vmMirror  = objectSystem.initialize();
+    vmMirror = objectSystem.initialize();
 
     if (VmSettings.ACTOR_TRACING) {
       ActorExecutionTrace.recordMainActor(mainActor, objectSystem);
@@ -477,14 +479,14 @@ public final class VM {
     SPromise.setSOMClass(null);
     SResolver.setSOMClass(null);
 
-    ThreadingModule.ThreadingModule  = null;
-    ThreadingModule.ThreadClass      = null;
-    ThreadingModule.ThreadClassId    = null;
-    ThreadingModule.TaskClass        = null;
-    ThreadingModule.TaskClassId      = null;
-    ThreadingModule.MutexClass       = null;
-    ThreadingModule.MutexClassId     = null;
-    ThreadingModule.ConditionClass   = null;
+    ThreadingModule.ThreadingModule = null;
+    ThreadingModule.ThreadClass = null;
+    ThreadingModule.ThreadClassId = null;
+    ThreadingModule.TaskClass = null;
+    ThreadingModule.TaskClassId = null;
+    ThreadingModule.MutexClass = null;
+    ThreadingModule.MutexClassId = null;
+    ThreadingModule.ConditionClass = null;
     ThreadingModule.ConditionClassId = null;
 
     ChannelPrimitives.resetClassReferences();

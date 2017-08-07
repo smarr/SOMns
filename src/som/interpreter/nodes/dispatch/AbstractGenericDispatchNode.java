@@ -18,7 +18,7 @@ import som.vmobjects.SSymbol;
 
 public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
   @Child protected IndirectCallNode call;
-  protected final SSymbol selector;
+  protected final SSymbol           selector;
 
   public AbstractGenericDispatchNode(final SourceSection source,
       final SSymbol selector) {
@@ -47,7 +47,8 @@ public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
       final IndirectCallNode call) {
     if (VmSettings.DNU_PRINT_STACK_TRACE) {
       PrintStackTracePrim.printStackTrace(0, null);
-      VM.errorPrintln("Lookup of " + selector + " failed in " + Types.getClassOf(rcvr).getName().getString());
+      VM.errorPrintln("Lookup of " + selector + " failed in "
+          + Types.getClassOf(rcvr).getName().getString());
     }
 
     // Won't use DNU caching here, because it is already a megamorphic node

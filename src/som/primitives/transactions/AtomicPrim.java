@@ -41,7 +41,8 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
   }
 
   @Specialization
-  public final Object atomic(final VirtualFrame frame, final SClass clazz, final SBlock block) {
+  public final Object atomic(final VirtualFrame frame, final SClass clazz,
+      final SBlock block) {
     // TODO: needs to be optimized for compilation
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
         SteppingType.STEP_TO_NEXT_TX.isSet()) {
@@ -54,7 +55,8 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
           TracingActivityThread.currentThread().enterConcurrentScope(EntityType.TRANSACTION);
 
-          // TODO: here we are using a different approach for stepping, and for breakpointing, should unify
+          // TODO: here we are using a different approach for stepping, and for breakpointing,
+          // should unify
           if (beforeCommit.executeShouldHalt()) {
             vm.getWebDebugger().prepareSteppingAfterNextRootNode();
           }
@@ -74,7 +76,7 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
           }
 
           // TODO: still need to make sure that we don't have
-          //       a working copy as `result`, I think, or do I?
+          // a working copy as `result`, I think, or do I?
           return result;
         }
       } catch (Throwable t) {
@@ -90,7 +92,7 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
           }
 
           // TODO: still need to make sure that we don't have
-          //       a working copy as value in `t`, I think, or do I?
+          // a working copy as value in `t`, I think, or do I?
           throw t;
         }
       } finally {
@@ -100,7 +102,6 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
       }
     }
   }
-
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

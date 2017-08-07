@@ -16,13 +16,13 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
   @Child private DirectCallNode       cachedMethod;
   @Child private AbstractDispatchNode nextInCache;
 
-  private final DispatchGuard         guard;
+  private final DispatchGuard guard;
 
   public CachedDispatchNode(final CallTarget methodCallTarget,
       final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
     super(nextInCache.getSourceSection());
-    this.guard        = guard;
-    this.nextInCache  = nextInCache;
+    this.guard = guard;
+    this.nextInCache = nextInCache;
     this.cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
     if (VmSettings.DYNAMIC_METRICS) {
       this.cachedMethod = insert(new InstrumentableDirectCallNode(cachedMethod,
@@ -41,8 +41,7 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
       }
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      return replace(nextInCache).
-          executeDispatch(arguments);
+      return replace(nextInCache).executeDispatch(arguments);
     }
   }
 

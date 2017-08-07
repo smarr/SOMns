@@ -96,8 +96,8 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
 
   private abstract static class PrimSlotWrite extends CachedSlotWrite {
     protected final AbstractPrimitiveAccessor accessor;
-    protected final SlotDefinition slot;
-    protected final IntValueProfile primMarkProfile;
+    protected final SlotDefinition            slot;
+    protected final IntValueProfile           primMarkProfile;
 
     PrimSlotWrite(final SlotDefinition slot,
         final AbstractPrimitiveAccessor accessor, final CheckSObject guard,

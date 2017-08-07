@@ -41,7 +41,7 @@ public class Breakpoints {
 
   public Breakpoints(final Debugger debugger, final WebDebugger webDebugger) {
     this.truffleBreakpoints = new HashMap<>();
-    this.breakpoints        = new HashMap<>();
+    this.breakpoints = new HashMap<>();
     this.debuggerSession = debugger.startSession(webDebugger);
   }
 
@@ -62,9 +62,7 @@ public class Breakpoints {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {
       WebDebugger.log("LineBreakpoint: " + bId);
-      bp = Breakpoint.newBuilder(bId.getURI()).
-          lineIs(bId.getLine()).
-          build();
+      bp = Breakpoint.newBuilder(bId.getURI()).lineIs(bId.getLine()).build();
       debuggerSession.install(bp);
       truffleBreakpoints.put(bId, bp);
     }
@@ -97,20 +95,19 @@ public class Breakpoints {
   }
 
   public synchronized void addOrUpdateAsyncAfter(final SectionBreakpoint bId) {
-    Breakpoint bp = saveTruffleBasedBreakpoints(bId, RootTag.class, SteppingLocation.AFTER_STATEMENT);
+    Breakpoint bp =
+        saveTruffleBasedBreakpoints(bId, RootTag.class, SteppingLocation.AFTER_STATEMENT);
     bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
   }
 
-  private Breakpoint saveTruffleBasedBreakpoints(final SectionBreakpoint bId, final Class<?> tag, final SteppingLocation sl) {
+  private Breakpoint saveTruffleBasedBreakpoints(final SectionBreakpoint bId,
+      final Class<?> tag, final SteppingLocation sl) {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {
-      bp = Breakpoint.newBuilder(bId.getCoordinate().uri).
-          lineIs(bId.getCoordinate().startLine).
-          columnIs(bId.getCoordinate().startColumn).
-          sectionLength(bId.getCoordinate().charLength).
-          tag(tag).
-          steppingLocation(sl).
-          build();
+      bp = Breakpoint.newBuilder(bId.getCoordinate().uri).lineIs(bId.getCoordinate().startLine)
+                     .columnIs(bId.getCoordinate().startColumn)
+                     .sectionLength(bId.getCoordinate().charLength).tag(tag)
+                     .steppingLocation(sl).build();
       debuggerSession.install(bp);
       truffleBreakpoints.put(bId, bp);
     }
@@ -121,16 +118,17 @@ public class Breakpoints {
   private static final class BreakWhenActivatedByAsyncMessage implements SimpleCondition {
     static BreakWhenActivatedByAsyncMessage INSTANCE = new BreakWhenActivatedByAsyncMessage();
 
-    private BreakWhenActivatedByAsyncMessage() { }
+    private BreakWhenActivatedByAsyncMessage() {}
 
     @Override
     public boolean evaluate() {
-      RootCallTarget ct = (RootCallTarget) Truffle.getRuntime().getCallerFrame().getCallTarget();
+      RootCallTarget ct =
+          (RootCallTarget) Truffle.getRuntime().getCallerFrame().getCallTarget();
       return (ct.getRootNode() instanceof ReceivedRootNode);
     }
   }
 
- public synchronized BreakpointEnabling getBreakpoint(
+  public synchronized BreakpointEnabling getBreakpoint(
       final FullSourceCoordinate section, final BreakpointType type) {
     return breakpoints.computeIfAbsent(new SectionBreakpoint(section, type),
         ss -> new BreakpointEnabling(

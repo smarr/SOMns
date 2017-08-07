@@ -128,19 +128,19 @@ import tools.language.StructuralProbe;
 
 public class Parser {
 
-  protected final Lexer             lexer;
-  private final Source              source;
+  protected final Lexer lexer;
+  private final Source  source;
 
-  private final SomLanguage         language;
+  private final SomLanguage language;
 
-  protected Symbol                  sym;
-  private String                    text;
-  private Symbol                    nextSym;
-  private String                    nextText;
+  protected Symbol sym;
+  private String   text;
+  private Symbol   nextSym;
+  private String   nextText;
 
-  private SourceSection             lastMethodsSourceSection;
-  private final Set<SourceSection>  syntaxAnnotations;
-  private final StructuralProbe     structuralProbe;
+  private SourceSection            lastMethodsSourceSection;
+  private final Set<SourceSection> syntaxAnnotations;
+  private final StructuralProbe    structuralProbe;
 
   /**
    * TODO: fix AST inlining while parsing locals/slots, and remove the disabling.
@@ -148,17 +148,17 @@ public class Parser {
   private int parsingSlotDefs;
 
   private static final Symbol[] singleOpSyms = new Symbol[] {Not, And, Or, Star,
-    Div, Mod, Plus, Equal, More, Less, Comma, At, Per, Minus, NONE};
+      Div, Mod, Plus, Equal, More, Less, Comma, At, Per, Minus, NONE};
 
   private static final Symbol[] binaryOpSyms = new Symbol[] {Or, Comma, Minus,
-    Equal, Not, And, Or, Star, Div, Mod, Plus, Equal, More, Less, Comma, At,
-    Per, NONE};
+      Equal, Not, And, Or, Star, Div, Mod, Plus, Equal, More, Less, Comma, At,
+      Per, NONE};
 
   private static final Symbol[] keywordSelectorSyms = new Symbol[] {Keyword,
-    KeywordSequence};
+      KeywordSequence};
 
   private static final Symbol[] literalSyms = new Symbol[] {Pound, STString,
-    Numeral, Char};
+      Numeral, Char};
 
   private static boolean arrayContains(final Symbol[] arr, final Symbol sym) {
     for (Symbol s : arr) {
@@ -175,27 +175,27 @@ public class Parser {
   }
 
   public static class ParseError extends ProgramDefinitionError {
-    private static final long serialVersionUID = 425390202979033628L;
+    private static final long      serialVersionUID = 425390202979033628L;
     private final SourceCoordinate sourceCoordinate;
-    private final String text;
-    private final String rawBuffer;
-    private final String fileName;
-    private final Symbol expected;
-    private final Symbol found;
+    private final String           text;
+    private final String           rawBuffer;
+    private final String           fileName;
+    private final Symbol           expected;
+    private final Symbol           found;
 
     ParseError(final String message, final Symbol expected, final Parser parser) {
       super(message);
       if (parser.lexer == null) {
         this.sourceCoordinate = new SourceCoordinate(0, 0, 0, 0);
-        this.rawBuffer        = "";
+        this.rawBuffer = "";
       } else {
         this.sourceCoordinate = parser.getCoordinate();
-        this.rawBuffer        = new String(parser.lexer.getCurrentLine());
+        this.rawBuffer = new String(parser.lexer.getCurrentLine());
       }
-      this.text             = parser.text;
-      this.fileName         = parser.source.getName();
-      this.expected         = expected;
-      this.found            = parser.sym;
+      this.text = parser.text;
+      this.fileName = parser.source.getName();
+      this.expected = expected;
+      this.found = parser.sym;
     }
 
     protected String expectedSymbolAsString() {
@@ -219,7 +219,7 @@ public class Parser {
       String expectedStr = expectedSymbolAsString();
 
       msg = msg.replace("%(expected)s", expectedStr);
-      msg = msg.replace("%(found)s",    foundStr);
+      msg = msg.replace("%(found)s", foundStr);
 
       return msg;
     }
@@ -236,18 +236,19 @@ public class Parser {
       msg += ": " + rawBuffer;
       String expectedStr = expectedSymbolAsString();
 
-      msg = msg.replace("%(file)s",     fileName);
-      msg = msg.replace("%(line)d",     java.lang.Integer.toString(sourceCoordinate.startLine));
-      msg = msg.replace("%(column)d",   java.lang.Integer.toString(sourceCoordinate.startColumn));
+      msg = msg.replace("%(file)s", fileName);
+      msg = msg.replace("%(line)d", java.lang.Integer.toString(sourceCoordinate.startLine));
+      msg =
+          msg.replace("%(column)d", java.lang.Integer.toString(sourceCoordinate.startColumn));
       msg = msg.replace("%(expected)s", expectedStr);
-      msg = msg.replace("%(found)s",    foundStr);
+      msg = msg.replace("%(found)s", foundStr);
       return msg;
     }
   }
 
   public static class ParseErrorWithSymbols extends ParseError {
     private static final long serialVersionUID = 561313162441723955L;
-    private final Symbol[] expectedSymbols;
+    private final Symbol[]    expectedSymbols;
 
     ParseErrorWithSymbols(final String message, final Symbol[] expected,
         final Parser parser) {
@@ -261,9 +262,9 @@ public class Parser {
       String deliminator = "";
 
       for (Symbol s : expectedSymbols) {
-          sb.append(deliminator);
-          sb.append(s);
-          deliminator = ", ";
+        sb.append(deliminator);
+        sb.append(s);
+        deliminator = ", ";
       }
       return sb.toString();
     }
@@ -320,8 +321,8 @@ public class Parser {
   private MixinBuilder classDeclaration(final MixinBuilder outerBuilder,
       final AccessModifier accessModifier) throws ProgramDefinitionError {
     expectIdentifier("class", "Found unexpected token %(found)s. " +
-      "Tried parsing a class declaration and expected 'class' instead.",
-      KeywordTag.class);
+        "Tried parsing a class declaration and expected 'class' instead.",
+        KeywordTag.class);
 
     SourceCoordinate coord = getCoordinate();
     String mixinName = className();
@@ -334,8 +335,8 @@ public class Parser {
     coord = getCoordinate();
 
     // Newspeak-spec: this is not strictly sufficient for Newspeak
-    //                it could also parse a binary selector here, I think
-    //                but, doesn't seem so useful, so, let's keep it simple
+    // it could also parse a binary selector here, I think
+    // but, doesn't seem so useful, so, let's keep it simple
     if (sym == Identifier || sym == Keyword) {
       messagePattern(primaryFactory);
     } else {
@@ -419,7 +420,8 @@ public class Parser {
     if (sym != NewTerm && sym != MixinOperator && sym != Period) {
       mixinFactorySend = (AbstractUninitializedMessageSendNode) messages(
           mxnBuilder.getInitializerMethodBuilder(),
-          new ExpressionNode[] {mxnBuilder.getInitializerMethodBuilder().getSelfRead(getSource(coord))});
+          new ExpressionNode[] {
+              mxnBuilder.getInitializerMethodBuilder().getSelfRead(getSource(coord))});
 
       uniqueInitName = MixinBuilder.getInitializerName(
           mixinFactorySend.getSelector(), mixinId);
@@ -427,9 +429,10 @@ public class Parser {
           uniqueInitName, mixinFactorySend, language.getVM());
     } else {
       uniqueInitName = MixinBuilder.getInitializerName(Symbols.NEW, mixinId);
-      mixinFactorySend = (AbstractUninitializedMessageSendNode)
-          createMessageSend(uniqueInitName,
-              new ExpressionNode[] {mxnBuilder.getInitializerMethodBuilder().getSelfRead(getSource(coord))},
+      mixinFactorySend =
+          (AbstractUninitializedMessageSendNode) createMessageSend(uniqueInitName,
+              new ExpressionNode[] {
+                  mxnBuilder.getInitializerMethodBuilder().getSelfRead(getSource(coord))},
               false, getSource(coord), null, language);
     }
 
@@ -450,21 +453,25 @@ public class Parser {
       // used to create the proper initialize method, on which we rely here.
       ExpressionNode superFactorySend = messages(
           mxnBuilder.getInitializerMethodBuilder(),
-          new ExpressionNode[] {mxnBuilder.getInitializerMethodBuilder().getSuperReadNode(getEmptySource())});
+          new ExpressionNode[] {
+              mxnBuilder.getInitializerMethodBuilder().getSuperReadNode(getEmptySource())});
 
       SSymbol initializerName = MixinBuilder.getInitializerName(
           ((AbstractUninitializedMessageSendNode) superFactorySend).getSelector());
 
-      // TODO: the false we pass here, should that be conditional on the superFactorSend being a #new send?
+      // TODO: the false we pass here, should that be conditional on the superFactorSend being
+      // a #new send?
       mxnBuilder.setSuperclassFactorySend(
           MessageSendNode.adaptSymbol(
               initializerName,
               (AbstractUninitializedMessageSendNode) superFactorySend,
-              language.getVM()), false);
+              language.getVM()),
+          false);
     } else {
       mxnBuilder.setSuperclassFactorySend(
           mxnBuilder.createStandardSuperFactorySend(
-              getEmptySource()), true);
+              getEmptySource()),
+          true);
     }
   }
 
@@ -595,7 +602,7 @@ public class Parser {
   private void slotDeclarations(final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
     // Newspeak-speak: we do not support simSlotDecls, i.e.,
-    //                 simultaneous slots clauses (spec 6.3.2)
+    // simultaneous slots clauses (spec 6.3.2)
     expect(Or, DelimiterOpeningTag.class);
 
     while (sym != Or) {
@@ -610,8 +617,9 @@ public class Parser {
   private void simSlotDeclarations(final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
     // Newspeak-speak: we do not support simSlotDecls, i.e.,
-    //                 simultaneous slots clauses (spec 6.3.2)
-    VM.errorPrintln("Warning: Parsed simSlotDecls, but it isn't supported yet. " + lexer.getCurrentLineNumber() + ":" + lexer.getCurrentColumn());
+    // simultaneous slots clauses (spec 6.3.2)
+    VM.errorPrintln("Warning: Parsed simSlotDecls, but it isn't supported yet. "
+        + lexer.getCurrentLineNumber() + ":" + lexer.getCurrentColumn());
     assert "||".equals(text);
     expect(OperatorSequence, DelimiterOpeningTag.class);
 
@@ -625,12 +633,12 @@ public class Parser {
     expect(OperatorSequence, DelimiterClosingTag.class);
   }
 
-
-
   private void slotDefinition(final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
     comments();
-    if (sym == Or) { return; }
+    if (sym == Or) {
+      return;
+    }
 
     SourceCoordinate coord = getCoordinate();
     AccessModifier acccessModifier = accessModifier();
@@ -659,9 +667,15 @@ public class Parser {
 
   private AccessModifier accessModifier() {
     if (sym == Identifier) {
-      if (acceptIdentifier("private",   KeywordTag.class)) { return AccessModifier.PRIVATE;   }
-      if (acceptIdentifier("protected", KeywordTag.class)) { return AccessModifier.PROTECTED; }
-      if (acceptIdentifier("public",    KeywordTag.class)) { return AccessModifier.PUBLIC;    }
+      if (acceptIdentifier("private", KeywordTag.class)) {
+        return AccessModifier.PRIVATE;
+      }
+      if (acceptIdentifier("protected", KeywordTag.class)) {
+        return AccessModifier.PROTECTED;
+      }
+      if (acceptIdentifier("public", KeywordTag.class)) {
+        return AccessModifier.PUBLIC;
+      }
     }
     return AccessModifier.PROTECTED;
   }
@@ -719,7 +733,8 @@ public class Parser {
   }
 
   private void nestedClassDeclaration(final AccessModifier accessModifier,
-      final SourceCoordinate coord, final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
+      final SourceCoordinate coord, final MixinBuilder mxnBuilder)
+      throws ProgramDefinitionError {
     MixinBuilder nestedCls = classDeclaration(mxnBuilder, accessModifier);
     mxnBuilder.addNestedMixin(nestedCls.assemble(getSource(coord)));
   }
@@ -763,7 +778,9 @@ public class Parser {
 
   private void expectIdentifier(final String identifier, final String msg,
       final Class<? extends Tags> tag) throws ParseError {
-    if (acceptIdentifier(identifier, tag)) { return; }
+    if (acceptIdentifier(identifier, tag)) {
+      return;
+    }
 
     throw new ParseError(msg, Identifier, this);
   }
@@ -776,7 +793,9 @@ public class Parser {
 
   private void expect(final Symbol s, final String msg,
       final Class<? extends Tags> tag) throws ParseError {
-    if (accept(s, tag)) { return; }
+    if (accept(s, tag)) {
+      return;
+    }
 
     throw new ParseError(msg, s, this);
   }
@@ -785,8 +804,11 @@ public class Parser {
     expect(s, "Unexpected symbol. Expected %(expected)s, but found %(found)s", tag);
   }
 
-  private boolean expectOneOf(final Symbol[] ss, final Class<? extends Tags> tag) throws ParseError {
-    if (acceptOneOf(ss, tag)) { return true; }
+  private boolean expectOneOf(final Symbol[] ss, final Class<? extends Tags> tag)
+      throws ParseError {
+    if (acceptOneOf(ss, tag)) {
+      return true;
+    }
 
     throw new ParseErrorWithSymbols("Unexpected symbol. Expected one of " +
         "%(expected)s, but found %(found)s", ss, this);
@@ -875,8 +897,7 @@ public class Parser {
 
       coord = getCoordinate();
       builder.addArgument(argument(), getSource(coord));
-    }
-    while (sym == Keyword);
+    } while (sym == Keyword);
 
     builder.setSignature(symbolFor(kw.toString()));
   }
@@ -969,7 +990,7 @@ public class Parser {
     parsingSlotDefs += 1;
 
     // Newspeak-speak: we do not support simSlotDecls, i.e.,
-    //                 simultaneous slots clauses (spec 6.3.2)
+    // simultaneous slots clauses (spec 6.3.2)
     while (sym != Or) {
       localDefinition(builder, expressions);
     }
@@ -980,7 +1001,9 @@ public class Parser {
   private void localDefinition(final MethodBuilder builder,
       final List<ExpressionNode> expressions) throws ProgramDefinitionError {
     comments();
-    if (sym == Or) { return; }
+    if (sym == Or) {
+      return;
+    }
 
     SourceCoordinate coord = getCoordinate();
     String slotName = slotDecl();
@@ -1152,7 +1175,8 @@ public class Parser {
 
       ExpressionNode exp;
       if (sym == Keyword) {
-        exp = keywordMessage(builder, builder.getReadNode(tmp.name, tmpSource), false, false, null);
+        exp = keywordMessage(builder, builder.getReadNode(tmp.name, tmpSource), false, false,
+            null);
       } else if (sym == OperatorSequence || symIn(binaryOpSyms)) {
         exp = binaryMessage(builder, builder.getReadNode(tmp.name, tmpSource), false, null);
       } else {
@@ -1351,12 +1375,13 @@ public class Parser {
         eventualSend, getSource(coord), sendOperator, language);
   }
 
-  private ExpressionNode binaryOperand(final MethodBuilder builder) throws ProgramDefinitionError {
+  private ExpressionNode binaryOperand(final MethodBuilder builder)
+      throws ProgramDefinitionError {
     ExpressionNode operand = primary(builder);
 
     // a binary operand can receive unaryMessages
     // Example: 2 * 3 asString
-    //   is evaluated as 2 * (3 asString)
+    // is evaluated as 2 * (3 asString)
     SourceCoordinate coord = getCoordinate();
     boolean evenutalSend = accept(EventualSend, KeywordTag.class);
     while (sym == Identifier) {
@@ -1373,15 +1398,16 @@ public class Parser {
   }
 
   // TODO: if the eventual send is not consumed by an expression (assignment, etc)
-  //       we don't need to create a promise
+  // we don't need to create a promise
 
   protected ExpressionNode keywordMessage(final MethodBuilder builder,
       final ExpressionNode receiver, final boolean explicitRcvr,
-      final boolean eventualSend, final SourceSection sendOperator) throws ProgramDefinitionError {
+      final boolean eventualSend, final SourceSection sendOperator)
+      throws ProgramDefinitionError {
     assert !(!explicitRcvr && eventualSend);
     SourceCoordinate coord = getCoordinate();
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
-    StringBuilder        kw        = new StringBuilder();
+    StringBuilder kw = new StringBuilder();
 
     arguments.add(receiver);
 
@@ -1391,8 +1417,7 @@ public class Parser {
 
       arguments.add(formula(builder));
       comments();
-    }
-    while (sym == Keyword);
+    } while (sym == Keyword);
 
     String msgStr = kw.toString();
     SSymbol msg = symbolFor(msgStr);
@@ -1441,31 +1466,35 @@ public class Parser {
           return new IfInlinedLiteralNode(condition, false, inlinedBody,
               arguments.get(1), source);
         } else if ("whileTrue:".equals(msgStr)) {
-          if (!(arguments.get(0) instanceof LiteralNode) || !(arguments.get(1) instanceof LiteralNode)) {
+          if (!(arguments.get(0) instanceof LiteralNode)
+              || !(arguments.get(1) instanceof LiteralNode)) {
             return null;
           }
           ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
           inlinedCondition.markAsControlFlowCondition();
-          ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(builder);
+          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           inlinedBody.markAsLoopBody();
           return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
               true, arguments.get(0), arguments.get(1), source);
         } else if ("whileFalse:".equals(msgStr)) {
-          if (!(arguments.get(0) instanceof LiteralNode) || !(arguments.get(1) instanceof LiteralNode)) {
+          if (!(arguments.get(0) instanceof LiteralNode)
+              || !(arguments.get(1) instanceof LiteralNode)) {
             return null;
           }
           ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
           inlinedCondition.markAsControlFlowCondition();
-          ExpressionNode inlinedBody      = ((LiteralNode) arguments.get(1)).inline(builder);
+          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           inlinedBody.markAsLoopBody();
           return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
               false, arguments.get(0), arguments.get(1), source);
         } else if ("or:".equals(msgStr) || "||".equals(msgStr)) {
           ExpressionNode inlinedArg = ((LiteralNode) arguments.get(1)).inline(builder);
-          return new OrInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1), source);
+          return new OrInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1),
+              source);
         } else if ("and:".equals(msgStr) || "&&".equals(msgStr)) {
           ExpressionNode inlinedArg = ((LiteralNode) arguments.get(1)).inline(builder);
-          return new AndInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1), source);
+          return new AndInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1),
+              source);
         } else if (!VmSettings.DYNAMIC_METRICS && "timesRepeat:".equals(msgStr)) {
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           inlinedBody.markAsLoopBody();
@@ -1479,7 +1508,7 @@ public class Parser {
         LiteralNode blockOrVal = (LiteralNode) arguments.get(2);
         ExpressionNode condition = arguments.get(0);
         condition.markAsControlFlowCondition();
-        ExpressionNode inlinedTrueNode  = ((LiteralNode) arguments.get(1)).inline(builder);
+        ExpressionNode inlinedTrueNode = ((LiteralNode) arguments.get(1)).inline(builder);
         ExpressionNode inlinedFalseNode = blockOrVal.inline(builder);
         return new IfTrueIfFalseInlinedLiteralsNode(condition,
             inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2),
@@ -1559,10 +1588,14 @@ public class Parser {
 
   private LiteralNode literal() throws ParseError {
     switch (sym) {
-      case Pound:     return literalSymbol();
-      case STString:  return literalString();
-      case Char:      return literalChar();
-      default:        return literalNumber();
+      case Pound:
+        return literalSymbol();
+      case STString:
+        return literalString();
+      case Char:
+        return literalChar();
+      default:
+        return literalNumber();
     }
   }
 
@@ -1584,15 +1617,15 @@ public class Parser {
   private LiteralNode literalInteger(final NumeralParser parser,
       final SourceSection source) throws ParseError {
     try {
-       Number n = parser.getInteger();
-       if (n instanceof Long) {
-         return new IntegerLiteralNode((Long) n, source);
-       } else {
-         return new BigIntegerLiteralNode((BigInteger) n, source);
-       }
+      Number n = parser.getInteger();
+      if (n instanceof Long) {
+        return new IntegerLiteralNode((Long) n, source);
+      } else {
+        return new BigIntegerLiteralNode((BigInteger) n, source);
+      }
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse integer. Expected a number but " +
-                           "got '" + text + "'", NONE, this);
+          "got '" + text + "'", NONE, this);
     }
   }
 
@@ -1646,7 +1679,8 @@ public class Parser {
       comments();
       if (sym == RCurly) {
         expect(RCurly, DelimiterClosingTag.class);
-        return ArrayLiteralNode.create(expressions.toArray(new ExpressionNode[0]), getSource(coord));
+        return ArrayLiteralNode.create(expressions.toArray(new ExpressionNode[0]),
+            getSource(coord));
       }
       if (needsSeparator) {
         expect(Period,
@@ -1663,24 +1697,29 @@ public class Parser {
    * is anonymous - it is not referenced by any enclosing classes - and is named with
    * the following pattern <code>objL@line@column</code>.
    *
-   * <p>The class implements only the default factory (named <code>objL@line@column#new</code>),
+   * <p>
+   * The class implements only the default factory (named <code>objL@line@column#new</code>),
    * which is called later when the object literal node is invoked
    * (@see {@link ObjectLiteralNode#executeGeneric}).
    *
-   * <p>The class declaration for the object literal is parsed in the same fashion as
+   * <p>
+   * The class declaration for the object literal is parsed in the same fashion as
    * regular Newspeak classes (@see #inheritanceListAndOrBody).
    *
    *
-   * <p><strong>TODO</strong>: The current implementation is not compliant with Newspeak's specification,
+   * <p>
+   * <strong>TODO</strong>: The current implementation is not compliant with Newspeak's
+   * specification,
    * which states that an object literal features:
    *
    * <ol>
-   *   <li>an identifier (optional)
-   *            a keyword message for the primary factory (optional)
-   *   <li>a class declaration.
+   * <li>an identifier (optional)
+   * a keyword message for the primary factory (optional)
+   * <li>a class declaration.
    * </ol>
    *
-   * <p>Therefore <code>()()</code>, <code>name ()()</code>, and
+   * <p>
+   * Therefore <code>()()</code>, <code>name ()()</code>, and
    * <code>name new: var ()()</code> are all permitted.
    * Realizing this syntax requires more advanced look ahead than what is currently
    * provided by the lexer.
@@ -1689,7 +1728,8 @@ public class Parser {
       throws ProgramDefinitionError {
     // Generate the class's signature
     SourceSection source = getSource(getCoordinate());
-    SSymbol signature = symbolFor("objL@" + lexer.getCurrentLineNumber() + "@" + lexer.getCurrentColumn());
+    SSymbol signature =
+        symbolFor("objL@" + lexer.getCurrentLineNumber() + "@" + lexer.getCurrentColumn());
     MixinBuilder classBuilder = new MixinBuilder(builder,
         AccessModifier.PUBLIC, signature, source, structuralProbe, language);
 
@@ -1744,10 +1784,10 @@ public class Parser {
     return str.replace(":", "");
   }
 
-  private ExpressionNode nestedBlock(final MethodBuilder builder) throws ProgramDefinitionError {
+  private ExpressionNode nestedBlock(final MethodBuilder builder)
+      throws ProgramDefinitionError {
     SourceCoordinate coord = getCoordinate();
     expect(NewBlock, DelimiterOpeningTag.class);
-
 
     builder.addArgument("$blockSelf", getEmptySource());
 
@@ -1755,8 +1795,7 @@ public class Parser {
       blockPattern(builder);
     }
 
-    String outerMethodName = stripColons(builder.getOuterBuilder().
-        getSignature().getString());
+    String outerMethodName = stripColons(builder.getOuterBuilder().getSignature().getString());
 
     // generate Block signature
     String blockSig = "λ" + outerMethodName + "@" + coord.startLine + "@" + coord.startColumn;
@@ -1785,18 +1824,17 @@ public class Parser {
       expect(Colon, KeywordTag.class);
       SourceCoordinate coord = getCoordinate();
       builder.addArgument(argument(), getSource(coord));
-    }
-    while (sym == Colon);
+    } while (sym == Colon);
   }
 
   private void getSymbolFromLexer() {
-    sym  = lexer.getSym();
+    sym = lexer.getSym();
     text = lexer.getText();
   }
 
   private void peekForNextSymbolFromLexer() {
     Peek peek = lexer.peek();
-    nextSym  = peek.nextSym;
+    nextSym = peek.nextSym;
     nextText = peek.nextText;
   }
 

@@ -18,7 +18,7 @@ public abstract class ReceivedRootNode extends RootNode {
   @Child protected AbstractPromiseResolutionNode resolve;
   @Child protected AbstractPromiseResolutionNode error;
 
-  private final VM vm;
+  private final VM            vm;
   protected final WebDebugger dbg;
   private final SourceSection sourceSection;
 
@@ -49,7 +49,8 @@ public abstract class ReceivedRootNode extends RootNode {
       if (resolver == null) {
         this.resolve = insert(new NullResolver(sourceSection));
       } else {
-        this.resolve = insert(ResolvePromiseNodeFactory.create(false, sourceSection, vm, null, null, null, null));
+        this.resolve = insert(ResolvePromiseNodeFactory.create(false, sourceSection, vm, null,
+            null, null, null));
       }
     }
 
@@ -66,7 +67,8 @@ public abstract class ReceivedRootNode extends RootNode {
       if (resolver == null) {
         this.error = insert(new NullResolver(getSourceSection()));
       } else {
-        this.error = insert(ErrorPromiseNodeFactory.create(false, sourceSection, vm, null, null, null, null));
+        this.error = insert(
+            ErrorPromiseNodeFactory.create(false, sourceSection, vm, null, null, null, null));
       }
     }
 

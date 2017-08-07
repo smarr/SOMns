@@ -29,7 +29,10 @@ public abstract class DoIndexesPrim extends BinaryComplexOperation {
     block = BlockDispatchNodeGen.create();
     length = SizeAndLengthPrimFactory.create(false, null, null);
   }
-  public DoIndexesPrim(final SourceSection source) { this(false, source); }
+
+  public DoIndexesPrim(final SourceSection source) {
+    this(false, source);
+  }
 
   @Specialization
   public final SArray doArray(final SArray receiver, final SBlock block) {
@@ -45,7 +48,8 @@ public abstract class DoIndexesPrim extends BinaryComplexOperation {
 
       if (SArray.FIRST_IDX < length) {
         this.block.executeDispatch(new Object[] {
-            block, (long) SArray.FIRST_IDX + 1}); // +1 because it is going to the smalltalk level
+            block, (long) SArray.FIRST_IDX + 1}); // +1 because it is going to the smalltalk
+                                                  // level
       }
       for (long i = 1; i < length; i++) {
         this.block.executeDispatch(new Object[] {

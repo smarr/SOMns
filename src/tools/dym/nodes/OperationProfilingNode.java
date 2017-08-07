@@ -54,7 +54,8 @@ public final class OperationProfilingNode extends CountingNode<OperationProfile>
   public int registerSubexpressionAndGetIdx(final Node subExpr) {
     int idx = getChildIdx(subExpr);
     assert idx >= 0 : "Subexpression was not found. Something seems to be wrong with the instrumentation.";
-    return idx + 1; // + 1 is used to represent the index of the storage array used to hold the result. Return value is at 0 index.
+    return idx + 1; // + 1 is used to represent the index of the storage array used to hold the
+                    // result. Return value is at 0 index.
   }
 
   private int getChildIdx(final Node subExpr) {

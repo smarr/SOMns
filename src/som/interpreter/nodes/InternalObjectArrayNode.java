@@ -13,7 +13,8 @@ import som.interpreter.nodes.nary.ExprWithTagsNode;
 public final class InternalObjectArrayNode extends ExprWithTagsNode {
   @Children private final ExpressionNode[] expressions;
 
-  public InternalObjectArrayNode(final ExpressionNode[] expressions, final SourceSection source) {
+  public InternalObjectArrayNode(final ExpressionNode[] expressions,
+      final SourceSection source) {
     super(source);
     this.expressions = expressions;
   }

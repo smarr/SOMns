@@ -10,7 +10,7 @@ public enum PassiveEntityType {
   PROMISE(EntityType.PROMISE, Marker.PROMISE_CREATION);
 
   private final EntityType type;
-  private final byte creationMarker;
+  private final byte       creationMarker;
 
   PassiveEntityType(final EntityType type) {
     this(type, 0);
@@ -21,9 +21,19 @@ public enum PassiveEntityType {
     this.creationMarker = (byte) creationMarker;
   }
 
-  public byte getId()     { return type.id; }
-  public String getName() { return type.name; }
+  public byte getId() {
+    return type.id;
+  }
 
-  public byte getCreationMarker() { return creationMarker; }
-  public int getCreationSize() { return 9 + TraceData.SOURCE_SECTION_SIZE; }
+  public String getName() {
+    return type.name;
+  }
+
+  public byte getCreationMarker() {
+    return creationMarker;
+  }
+
+  public int getCreationSize() {
+    return 9 + TraceData.SOURCE_SECTION_SIZE;
+  }
 }

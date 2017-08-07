@@ -2,6 +2,7 @@ package tools;
 
 import som.vm.VmSettings;
 
+
 /**
  * Characterize and document some of the trace data.
  */
@@ -18,10 +19,10 @@ public class TraceData {
   public static final long VAL_ID_BITS = 13;
 
   private static final long JAVA_SCRIPT_INT_BITS = 53;
-  private static final long SAFE_JS_INT_VAL = (1L << JAVA_SCRIPT_INT_BITS) - 1;
+  private static final long SAFE_JS_INT_VAL      = (1L << JAVA_SCRIPT_INT_BITS) - 1;
 
   private static final long MAX_SAFE_ENTITY_ID = (1L << (ENTITY_ID_BITS + THREAD_ID_BITS)) - 1;
-  private static final long MAX_SAFE_VAL_ID = (1L << VAL_ID_BITS) - 1;
+  private static final long MAX_SAFE_VAL_ID    = (1L << VAL_ID_BITS) - 1;
 
   private static final long VAL_ID_MASK = MAX_SAFE_VAL_ID;
 
@@ -34,7 +35,7 @@ public class TraceData {
 
   public static long makeGlobalId(final int valId, final long entityId) {
     assert entityId <= MAX_SAFE_ENTITY_ID && entityId >= 0;
-    assert    valId <= MAX_SAFE_VAL_ID    && valId >= 0;
+    assert valId <= MAX_SAFE_VAL_ID && valId >= 0;
 
     return (entityId << VAL_ID_BITS) + valId;
   }

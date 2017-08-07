@@ -44,7 +44,7 @@ import tools.debugger.session.Breakpoints;
 @Instrumentable(factory = EventualSendNodeWrapper.class)
 public class EventualSendNode extends ExprWithTagsNode {
   @Child protected InternalObjectArrayNode arguments;
-  @Child protected SendNode send;
+  @Child protected SendNode                send;
 
   public EventualSendNode(final SSymbol selector, final int numArgs,
       final InternalObjectArrayNode arguments, final SourceSection source,
@@ -113,12 +113,12 @@ public class EventualSendNode extends ExprWithTagsNode {
 
   @Instrumentable(factory = SendNodeWrapper.class)
   public abstract static class SendNode extends Node {
-    protected final SSymbol selector;
+    protected final SSymbol                       selector;
     @Children protected final WrapReferenceNode[] wrapArgs;
-    protected final RootCallTarget onReceive;
+    protected final RootCallTarget                onReceive;
 
     protected final SourceSection source;
-    protected final ForkJoinPool actorPool;
+    protected final ForkJoinPool  actorPool;
 
     @Child protected AbstractBreakpointNode messageReceiverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
@@ -139,9 +139,12 @@ public class EventualSendNode extends ExprWithTagsNode {
         this.actorPool = null;
       } else {
         this.actorPool = vm.getActorPool();
-        this.messageReceiverBreakpoint   = insert(Breakpoints.create(source, BreakpointType.MSG_RECEIVER, vm));
-        this.promiseResolverBreakpoint   = insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLVER, vm));
-        this.promiseResolutionBreakpoint = insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLUTION, vm));
+        this.messageReceiverBreakpoint =
+            insert(Breakpoints.create(source, BreakpointType.MSG_RECEIVER, vm));
+        this.promiseResolverBreakpoint =
+            insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLVER, vm));
+        this.promiseResolutionBreakpoint =
+            insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLUTION, vm));
       }
     }
 
@@ -194,7 +197,8 @@ public class EventualSendNode extends ExprWithTagsNode {
           promiseResolverBreakpoint.executeShouldHalt());
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(), target.getId());
+        ActorExecutionTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
+            target.getId());
       }
       target.send(msg, actorPool);
     }
@@ -209,7 +213,8 @@ public class EventualSendNode extends ExprWithTagsNode {
           promiseResolverBreakpoint.executeShouldHalt());
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(), rcvr.getPromiseId());
+        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(),
+            rcvr.getPromiseId());
       }
       registerNode.register(rcvr, msg, rcvr.getOwner());
     }
@@ -227,7 +232,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final SPromise toFarRefWithResultPromise(final Object[] args) {
       Actor owner = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      SPromise  result   = SPromise.createPromise(owner,
+      SPromise result = SPromise.createPromise(owner,
           false, promiseResolutionBreakpoint.executeShouldHalt(), source);
       SResolver resolver = SPromise.createResolver(result);
 
@@ -241,7 +246,7 @@ public class EventualSendNode extends ExprWithTagsNode {
         @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
       SPromise rcvr = (SPromise) args[0];
 
-      SPromise  promise  = SPromise.createPromise(
+      SPromise promise = SPromise.createPromise(
           EventualMessage.getActorCurrentMessageIsExecutionOn(),
           false, promiseResolutionBreakpoint.executeShouldHalt(), source);
       SResolver resolver = SPromise.createResolver(promise);
@@ -254,7 +259,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final SPromise toNearRefWithResultPromise(final Object[] args) {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-      SPromise  result   = SPromise.createPromise(current,
+      SPromise result = SPromise.createPromise(current,
           false, promiseResolutionBreakpoint.executeShouldHalt(), source);
       SResolver resolver = SPromise.createResolver(result);
 
@@ -264,7 +269,8 @@ public class EventualSendNode extends ExprWithTagsNode {
           promiseResolverBreakpoint.executeShouldHalt());
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(), current.getId());
+        ActorExecutionTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
+            current.getId());
       }
       current.send(msg, actorPool);
 
@@ -287,7 +293,8 @@ public class EventualSendNode extends ExprWithTagsNode {
       return Nil.nilObject;
     }
 
-    @Specialization(guards = {"!isResultUsed()", "!isFarRefRcvr(args)", "!isPromiseRcvr(args)"})
+    @Specialization(
+        guards = {"!isResultUsed()", "!isFarRefRcvr(args)", "!isPromiseRcvr(args)"})
     public final Object toNearRefWithoutResultPromise(final Object[] args) {
       Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
@@ -297,7 +304,8 @@ public class EventualSendNode extends ExprWithTagsNode {
           promiseResolverBreakpoint.executeShouldHalt());
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(), current.getId());
+        ActorExecutionTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
+            current.getId());
       }
       current.send(msg, actorPool);
       return Nil.nilObject;
@@ -305,7 +313,8 @@ public class EventualSendNode extends ExprWithTagsNode {
 
     @Override
     protected boolean isTaggedWith(final Class<?> tag) {
-      if (tag == EventualMessageSend.class || tag == ExpressionBreakpoint.class || tag == StatementTag.class) {
+      if (tag == EventualMessageSend.class || tag == ExpressionBreakpoint.class
+          || tag == StatementTag.class) {
         return true;
       }
       return super.isTaggedWith(tag);

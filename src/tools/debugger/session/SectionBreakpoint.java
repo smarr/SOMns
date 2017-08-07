@@ -9,12 +9,12 @@ import tools.debugger.entities.BreakpointType;
 
 public final class SectionBreakpoint extends BreakpointInfo {
   protected final FullSourceCoordinate coord;
-  protected final BreakpointType bpType;
+  protected final BreakpointType       bpType;
 
   public SectionBreakpoint(final boolean enabled,
       final FullSourceCoordinate coord, final BreakpointType type) {
     super(enabled);
-    this.coord  = coord;
+    this.coord = coord;
     this.bpType = type;
   }
 
@@ -29,7 +29,7 @@ public final class SectionBreakpoint extends BreakpointInfo {
   protected SectionBreakpoint() {
     super();
     this.coord = null;
-    this.bpType  = null;
+    this.bpType = null;
   }
 
   public FullSourceCoordinate getCoordinate() {

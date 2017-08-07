@@ -12,6 +12,7 @@ import som.vm.Symbols;
 import som.vmobjects.SSymbol;
 import tools.debugger.Tags;
 
+
 /**
  * Represents a potentially empty range of source characters, for a potentially
  * not yet loaded source.
@@ -19,25 +20,26 @@ import tools.debugger.Tags;
 // TODO: this needs further cleanup by making class names nicer
 // and, some instance might not have a charIndex
 public class SourceCoordinate {
-  public final int startLine;
-  public final int startColumn;
+  public final int           startLine;
+  public final int           startColumn;
   public final transient int charIndex;
-  public final int charLength;
+  public final int           charLength;
 
   public SourceCoordinate(final int startLine, final int startColumn,
       final int charIndex, final int length) {
-    this.startLine   = startLine;
+    this.startLine = startLine;
     this.startColumn = startColumn;
-    this.charIndex   = charIndex;
-    this.charLength  = length;
-    assert startLine   >= 0;
+    this.charIndex = charIndex;
+    this.charLength = length;
+    assert startLine >= 0;
     assert startColumn >= 0;
-    assert charIndex   >= 0 || charIndex == -1;
+    assert charIndex >= 0 || charIndex == -1;
   }
 
   @Override
   public String toString() {
-    return "SrcCoord(line: " + startLine + ", col: " + startColumn + ", charlength:" + charLength + ")";
+    return "SrcCoord(line: " + startLine + ", col: " + startColumn + ", charlength:"
+        + charLength + ")";
   }
 
   public static class FullSourceCoordinate extends SourceCoordinate {
@@ -57,7 +59,9 @@ public class SourceCoordinate {
 
     @Override
     public boolean equals(final Object o) {
-      if (this == o) { return true; }
+      if (this == o) {
+        return true;
+      }
       if (!(o instanceof FullSourceCoordinate)) {
         return false;
       }
@@ -76,7 +80,7 @@ public class SourceCoordinate {
     private final String[] tags;
 
     protected TaggedSourceCoordinate(final int startLine, final int startColumn,
-      final int charIndex, final int length, final String[] tags) {
+        final int charIndex, final int length, final String[] tags) {
       super(startLine, startColumn, charIndex, length);
       this.tags = tags;
     }

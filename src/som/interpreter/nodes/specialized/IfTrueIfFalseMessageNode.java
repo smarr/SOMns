@@ -32,7 +32,8 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
 
   @Child private IndirectCallNode call;
 
-  public IfTrueIfFalseMessageNode(final boolean eagWrap, final SourceSection source, final Object[] args) {
+  public IfTrueIfFalseMessageNode(final boolean eagWrap, final SourceSection source,
+      final Object[] args) {
     super(eagWrap, source);
     assert !eagWrap;
 
@@ -75,7 +76,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
   }
 
   protected final boolean hasSameArguments(final Object firstArg, final Object secondArg) {
-    return (trueMethod  == null || ((SBlock) firstArg).getMethod()  == trueMethod)
+    return (trueMethod == null || ((SBlock) firstArg).getMethod() == trueMethod)
         && (falseMethod == null || ((SBlock) secondArg).getMethod() == falseMethod);
   }
 

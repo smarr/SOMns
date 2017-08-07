@@ -14,6 +14,7 @@ import tools.dym.Tags.LoopBody;
 import tools.dym.Tags.PrimitiveArgument;
 import tools.dym.Tags.VirtualInvokeReceiver;
 
+
 public abstract class ExprWithTagsNode extends ExpressionNode {
 
   @CompilationFinal protected byte tagMark;
@@ -122,7 +123,9 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
 
   @Override
   protected void onReplace(final Node newNode, final CharSequence reason) {
-    if (newNode instanceof WrapperNode) { return; }
+    if (newNode instanceof WrapperNode) {
+      return;
+    }
 
     if (newNode instanceof ExprWithTagsNode) {
       ExprWithTagsNode n = (ExprWithTagsNode) newNode;

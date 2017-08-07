@@ -33,7 +33,6 @@ public class LineBreakpoint extends BreakpointInfo {
     return sourceUri;
   }
 
-
   @Override
   public void registerOrUpdate(final FrontendConnector frontend) {
     frontend.registerOrUpdate(this);

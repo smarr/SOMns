@@ -4,7 +4,7 @@ import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 
 public final class Nil {
-  private Nil() { }
+  private Nil() {}
 
   public static final SObjectWithoutFields nilObject;
 

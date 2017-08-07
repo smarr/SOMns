@@ -17,9 +17,9 @@ public final class StackTraceResponse extends Response {
   private final StackFrame[] stackFrames;
 
   // TODO: we should perhaps move that into the stack frames to have more precise info
-  //       but that would make tracking more difficult
+  // but that would make tracking more difficult
   private final byte[] concurrentEntityScopes;
-  private final long activityId;
+  private final long   activityId;
 
   /**
    * Total number of frames available.
@@ -31,7 +31,7 @@ public final class StackTraceResponse extends Response {
       final int requestId, final byte[] concurrentEntityScopes) {
     super(requestId);
     assert TraceData.isWithinJSIntValueRange(activityId);
-    this.activityId  = activityId;
+    this.activityId = activityId;
     this.stackFrames = stackFrames;
     this.totalFrames = totalFrames;
     this.concurrentEntityScopes = concurrentEntityScopes;
@@ -77,14 +77,14 @@ public final class StackTraceResponse extends Response {
         final int line, final int column, final int endLine,
         final int endColumn, final int length) {
       assert TraceData.isWithinJSIntValueRange(globalId);
-      this.id        = globalId;
-      this.name      = name;
+      this.id = globalId;
+      this.name = name;
       this.sourceUri = sourceUri;
-      this.line      = line;
-      this.column    = column;
-      this.endLine   = endLine;
+      this.line = line;
+      this.column = column;
+      this.endLine = endLine;
       this.endColumn = endColumn;
-      this.length    = length;
+      this.length = length;
     }
   }
 
@@ -100,16 +100,21 @@ public final class StackTraceResponse extends Response {
     }
 
     int numFrames = levels;
-    if (numFrames == 0) { numFrames = Integer.MAX_VALUE; }
+    if (numFrames == 0) {
+      numFrames = Integer.MAX_VALUE;
+    }
     numFrames = Math.min(frames.size(), numFrames);
     numFrames -= skipFrames;
-    if (ignoreLast) { numFrames -= 1; }
+    if (ignoreLast) {
+      numFrames -= 1;
+    }
 
     StackFrame[] arr = new StackFrame[numFrames];
 
     for (int i = 0; i < numFrames; i += 1) {
       int frameId = i + skipFrames;
-      assert !(frames.get(frameId).getRootNode() instanceof ReceivedRootNode) : "This should have been skipped in the code above";
+      assert !(frames.get(
+          frameId).getRootNode() instanceof ReceivedRootNode) : "This should have been skipped in the code above";
       StackFrame f = createFrame(suspension, frameId, frames.get(frameId));
       arr[i] = f;
     }
@@ -138,18 +143,18 @@ public final class StackTraceResponse extends Response {
     int length;
     if (ss != null) {
       sourceUri = ss.getSource().getURI().toString();
-      line      = ss.getStartLine();
-      column    = ss.getStartColumn();
-      endLine   = ss.getEndLine();
+      line = ss.getStartLine();
+      column = ss.getStartColumn();
+      endLine = ss.getEndLine();
       endColumn = ss.getEndColumn();
-      length    = ss.getCharLength();
+      length = ss.getCharLength();
     } else {
       sourceUri = null;
-      line      = 0;
-      column    = 0;
-      endLine   = 0;
+      line = 0;
+      column = 0;
+      endLine = 0;
       endColumn = 0;
-      length    = 0;
+      length = 0;
     }
     return new StackFrame(id, name, sourceUri, line, column, endLine, endColumn, length);
   }

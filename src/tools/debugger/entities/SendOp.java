@@ -1,13 +1,12 @@
 package tools.debugger.entities;
 
-
 public enum SendOp {
-  ACTOR_MSG(Marker.ACTOR_MSG_SEND,      EntityType.ACT_MSG, EntityType.ACTOR),
+  ACTOR_MSG(Marker.ACTOR_MSG_SEND, EntityType.ACT_MSG, EntityType.ACTOR),
   PROMISE_MSG(Marker.PROMISE_MSG_SEND, EntityType.ACT_MSG, EntityType.PROMISE),
-  CHANNEL_SEND(Marker.CHANNEL_MSG_SEND, EntityType.CH_MSG,  EntityType.CHANNEL),
+  CHANNEL_SEND(Marker.CHANNEL_MSG_SEND, EntityType.CH_MSG, EntityType.CHANNEL),
   PROMISE_RESOLUTION(Marker.PROMISE_RESOLUTION, EntityType.PROMISE, EntityType.PROMISE);
 
-  private final byte id;
+  private final byte       id;
   private final EntityType entity;
   private final EntityType target;
 
@@ -17,8 +16,19 @@ public enum SendOp {
     this.target = target;
   }
 
-  public byte getId() { return id; }
-  public EntityType getEntity() { return entity; }
-  public EntityType getTarget() { return target; }
-  public int getSize() { return 17; }
+  public byte getId() {
+    return id;
+  }
+
+  public EntityType getEntity() {
+    return entity;
+  }
+
+  public EntityType getTarget() {
+    return target;
+  }
+
+  public int getSize() {
+    return 17;
+  }
 }

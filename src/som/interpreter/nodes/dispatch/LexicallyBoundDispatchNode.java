@@ -18,7 +18,8 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchNode {
 
   @Child private DirectCallNode cachedMethod;
 
-  public LexicallyBoundDispatchNode(final SourceSection source, final CallTarget methodCallTarget) {
+  public LexicallyBoundDispatchNode(final SourceSection source,
+      final CallTarget methodCallTarget) {
     super(source);
     cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
     if (VmSettings.DYNAMIC_METRICS) {

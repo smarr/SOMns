@@ -17,8 +17,8 @@ import som.vmobjects.SSymbol;
 
 public final class EagerBinaryPrimitiveNode extends EagerPrimitive {
 
-  @Child private ExpressionNode receiver;
-  @Child private ExpressionNode argument;
+  @Child private ExpressionNode       receiver;
+  @Child private ExpressionNode       argument;
   @Child private BinaryExpressionNode primitive;
 
   private final SSymbol selector;
@@ -30,15 +30,17 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitive {
       final BinaryExpressionNode primitive) {
     super(source);
     assert source == primitive.getSourceSection();
-    this.receiver  = insert(receiver);
-    this.argument  = insert(argument);
+    this.receiver = insert(receiver);
+    this.argument = insert(argument);
     this.primitive = insert(primitive);
     this.selector = selector;
   }
 
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
-    assert !(primitive instanceof WrapperNode) : "primitive can't be WrapperNodes to avoid double wrapping. It is: " + primitive.getClass().getSimpleName() + " and contains a " + ((WrapperNode) primitive).getDelegateNode().getClass().getSimpleName();
+    assert !(primitive instanceof WrapperNode) : "primitive can't be WrapperNodes to avoid double wrapping. It is: "
+        + primitive.getClass().getSimpleName() + " and contains a "
+        + ((WrapperNode) primitive).getDelegateNode().getClass().getSimpleName();
     return primitive.isTaggedWithIgnoringEagerness(tag);
   }
 
@@ -90,17 +92,18 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitive {
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
     Object rcvr = receiver.executeGeneric(frame);
-    Object arg  = argument.executeGeneric(frame);
+    Object arg = argument.executeGeneric(frame);
 
     return executeEvaluated(frame, rcvr, arg);
   }
 
   public Object executeEvaluated(final VirtualFrame frame,
-    final Object receiver, final Object argument) {
+      final Object receiver, final Object argument) {
     try {
       return primitive.executeEvaluated(frame, receiver, argument);
     } catch (UnsupportedSpecializationException e) {
-      TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
+      TruffleCompiler.transferToInterpreterAndInvalidate(
+          "Eager Primitive with unsupported specialization.");
       return makeGenericSend().doPreEvaluated(frame,
           new Object[] {receiver, argument});
     }

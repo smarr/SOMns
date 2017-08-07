@@ -19,12 +19,12 @@ import tools.dym.Tags.LocalVarWrite;
 
 public abstract class LocalVariableNode extends ExprWithTagsNode {
   protected final FrameSlot slot;
-  protected final Local var;
+  protected final Local     var;
 
   private LocalVariableNode(final Local var, final SourceSection source) {
     super(source);
     this.slot = var.getSlot();
-    this.var  = var;
+    this.var = var;
   }
 
   @Override

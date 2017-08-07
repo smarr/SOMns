@@ -46,29 +46,30 @@ import tools.language.StructuralProbe;
 public final class MetricsCsvWriter {
 
   private final Map<String, Map<SourceSection, ? extends JsonSerializable>> data;
-  private final String metricsFolder;
+  private final String                                                      metricsFolder;
 
   // TODO: not sure, we should probably not depend on the probe here
   private final StructuralProbe structuralProbe;
 
-  private final int maxStackHeight;
+  private final int                 maxStackHeight;
   private final List<SourceSection> allStatements;
 
   private MetricsCsvWriter(
       final Map<String, Map<SourceSection, ? extends JsonSerializable>> data,
       final String metricsFolder, final StructuralProbe probe,
       final int maxStackHeight, final List<SourceSection> allStatements) {
-    this.data          = data;
+    this.data = data;
     this.metricsFolder = metricsFolder;
     this.structuralProbe = probe;
     this.maxStackHeight = maxStackHeight;
-    this.allStatements  = allStatements;
+    this.allStatements = allStatements;
   }
 
   public static void fileOut(
       final Map<String, Map<SourceSection, ? extends JsonSerializable>> data,
       final String metricsFolder,
-      final StructuralProbe structuralProbe, // TODO: remove direct StructuralProbe passing hack
+      final StructuralProbe structuralProbe, // TODO: remove direct StructuralProbe passing
+                                             // hack
       final int maxStackHeight, final List<SourceSection> allStatements) {
     new MetricsCsvWriter(data, metricsFolder, structuralProbe, maxStackHeight,
         allStatements).createCsvFiles();
@@ -176,12 +177,11 @@ public final class MetricsCsvWriter {
   private void generalStats() {
     CovStats stats = getCoverageStats(getCoverageMap());
 
-
     try (CsvWriter file = new CsvWriter(metricsFolder, "general-stats.csv",
         "Statistic", "Value")) {
       file.write("Max Stack Height", maxStackHeight);
-      file.write("Lines Loaded",          stats.linesLoaded);
-      file.write("Lines Executed",        stats.linesExecuted);
+      file.write("Lines Loaded", stats.linesLoaded);
+      file.write("Lines Executed", stats.linesExecuted);
       file.write("Lines With Statements", stats.linesWithStatements);
     }
   }
@@ -226,7 +226,7 @@ public final class MetricsCsvWriter {
         return "int";
       }
 
-      String left  = typeCategory(a.getArgType(1));
+      String left = typeCategory(a.getArgType(1));
       String right = typeCategory(a.getArgType(2));
       if (left.equals(right)) {
         return left;
@@ -243,7 +243,7 @@ public final class MetricsCsvWriter {
         return typeCategory(a.getArgType(1));
       }
 
-      String left  = typeCategory(a.getArgType(1));
+      String left = typeCategory(a.getArgType(1));
       String right = typeCategory(a.getArgType(2));
       if (left.equals(right)) {
         return left;
@@ -277,14 +277,16 @@ public final class MetricsCsvWriter {
   }
 
   private static String[] toNameArray(final Set<Class<?>> tags) {
-    String[] tagArr = tags.stream().map(c -> c.getSimpleName()).toArray(size -> new String[size]);
+    String[] tagArr =
+        tags.stream().map(c -> c.getSimpleName()).toArray(size -> new String[size]);
     Arrays.sort(tagArr);
     return tagArr;
   }
 
   private void operationProfiles() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, OperationProfile> ops = (Map<SourceSection, OperationProfile>) data.get(JsonWriter.OPERATIONS);
+    Map<SourceSection, OperationProfile> ops =
+        (Map<SourceSection, OperationProfile>) data.get(JsonWriter.OPERATIONS);
     try (CsvWriter file = new CsvWriter(metricsFolder, "operations.csv",
         "Source Section", "Operation", "Category", "Type", "Invocations")) {
 
@@ -294,7 +296,7 @@ public final class MetricsCsvWriter {
               getSourceSectionAbbrv(e.getKey()),
               e.getValue().getOperation(),
               String.join(" ", toNameArray(e.getValue().getTags())),
-              operationType(e.getValue(), a.getKey()),  // a.getKey().getOperationType()
+              operationType(e.getValue(), a.getKey()), // a.getKey().getOperationType()
               a.getValue());
         }
 
@@ -310,7 +312,8 @@ public final class MetricsCsvWriter {
 
   private void methodActivations() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, InvocationProfile> profiles = (Map<SourceSection, InvocationProfile>) data.get(JsonWriter.METHOD_INVOCATION_PROFILE);
+    Map<SourceSection, InvocationProfile> profiles =
+        (Map<SourceSection, InvocationProfile>) data.get(JsonWriter.METHOD_INVOCATION_PROFILE);
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "method-activations.csv",
         "Source Identifier", "Activation Count")) {
@@ -324,7 +327,8 @@ public final class MetricsCsvWriter {
 
   private void methodCallsites() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, CallsiteProfile> profiles = (Map<SourceSection, CallsiteProfile>) data.get(JsonWriter.METHOD_CALLSITE);
+    Map<SourceSection, CallsiteProfile> profiles =
+        (Map<SourceSection, CallsiteProfile>) data.get(JsonWriter.METHOD_CALLSITE);
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "method-callsites.csv",
         "Source Section", "Call Count", "Num Rcvrs", "Num Targets")) {
@@ -333,15 +337,15 @@ public final class MetricsCsvWriter {
         if (data.get(JsonWriter.FIELD_READS).containsKey(p.getSourceSection()) ||
             data.get(JsonWriter.FIELD_WRITES).containsKey(p.getSourceSection()) ||
             data.get(JsonWriter.CLASS_READS).containsKey(p.getSourceSection())) {
-          continue;  // filter out field reads, writes, and accesses to class objects
+          continue; // filter out field reads, writes, and accesses to class objects
         }
 
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
 
         Map<ClassFactory, Integer> receivers = p.getReceivers();
-//      int numRcvrsRecorded = receivers.values().stream().reduce(0, Integer::sum);
+        // int numRcvrsRecorded = receivers.values().stream().reduce(0, Integer::sum);
         Map<Invokable, Integer> calltargets = p.getCallTargets();
-//      int numCalltargetsInvoked = calltargets.values().stream().reduce(0, Integer::sum);
+        // int numCalltargetsInvoked = calltargets.values().stream().reduce(0, Integer::sum);
 
         file.write(
             abbrv,
@@ -354,7 +358,9 @@ public final class MetricsCsvWriter {
 
   private void closureApplications() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, ClosureApplicationProfile> profiles = (Map<SourceSection, ClosureApplicationProfile>) data.get(JsonWriter.CLOSURE_APPLICATIONS);
+    Map<SourceSection, ClosureApplicationProfile> profiles =
+        (Map<SourceSection, ClosureApplicationProfile>) data.get(
+            JsonWriter.CLOSURE_APPLICATIONS);
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "closure-applications.csv",
         "Source Section", "Call Count", "Num Targets")) {
@@ -370,7 +376,8 @@ public final class MetricsCsvWriter {
 
   private void newObjectCount() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, AllocationProfile> profiles = (Map<SourceSection, AllocationProfile>) data.get(JsonWriter.NEW_OBJECT_COUNT);
+    Map<SourceSection, AllocationProfile> profiles =
+        (Map<SourceSection, AllocationProfile>) data.get(JsonWriter.NEW_OBJECT_COUNT);
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "new-objects.csv",
         "Source Section", "New Objects", "Number of Fields", "Class")) {
@@ -384,7 +391,8 @@ public final class MetricsCsvWriter {
 
   private void newArrayCount() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, ArrayCreationProfile> profiles = (Map<SourceSection, ArrayCreationProfile>) data.get(JsonWriter.NEW_ARRAY_COUNT);
+    Map<SourceSection, ArrayCreationProfile> profiles =
+        (Map<SourceSection, ArrayCreationProfile>) data.get(JsonWriter.NEW_ARRAY_COUNT);
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "new-arrays.csv",
         "Source Section", "New Arrays", "Size")) {
@@ -400,9 +408,11 @@ public final class MetricsCsvWriter {
 
   private void fieldAccesses() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, ReadValueProfile> reads = (Map<SourceSection, ReadValueProfile>) data.get(JsonWriter.FIELD_READS);
+    Map<SourceSection, ReadValueProfile> reads =
+        (Map<SourceSection, ReadValueProfile>) data.get(JsonWriter.FIELD_READS);
     @SuppressWarnings("unchecked")
-    Map<SourceSection, Counter> writes = (Map<SourceSection, Counter>) data.get(JsonWriter.FIELD_WRITES);
+    Map<SourceSection, Counter> writes =
+        (Map<SourceSection, Counter>) data.get(JsonWriter.FIELD_WRITES);
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "field-accesses.csv",
         "Source Section", "Access Type", "Data Type", "Count")) {
@@ -427,9 +437,11 @@ public final class MetricsCsvWriter {
 
   private void localAccesses() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, ReadValueProfile> reads = (Map<SourceSection, ReadValueProfile>) data.get(JsonWriter.LOCAL_READS);
+    Map<SourceSection, ReadValueProfile> reads =
+        (Map<SourceSection, ReadValueProfile>) data.get(JsonWriter.LOCAL_READS);
     @SuppressWarnings("unchecked")
-    Map<SourceSection, Counter> writes = (Map<SourceSection, Counter>) data.get(JsonWriter.LOCAL_WRITES);
+    Map<SourceSection, Counter> writes =
+        (Map<SourceSection, Counter>) data.get(JsonWriter.LOCAL_WRITES);
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "local-accesses.csv",
         "Source Section", "Access Type", "Data Type", "Count")) {
@@ -456,11 +468,13 @@ public final class MetricsCsvWriter {
   }
 
   private static String getSourceSectionAbbrv(final SourceSection source) {
-    String result = source.getSource().getName() + " pos=" + source.getCharIndex() + " len=" + source.getCharLength();
+    String result = source.getSource().getName() + " pos=" + source.getCharIndex() + " len="
+        + source.getCharLength();
     return result;
   }
 
-  private int methodInvocationCount(final SInvokable method, final Collection<InvocationProfile> profiles) {
+  private int methodInvocationCount(final SInvokable method,
+      final Collection<InvocationProfile> profiles) {
     InvocationProfile profile = null;
 
     for (InvocationProfile p : profiles) {
@@ -477,7 +491,8 @@ public final class MetricsCsvWriter {
     }
   }
 
-  private int numExecutedMethods(final MixinDefinition mixin, final Collection<InvocationProfile> profiles) {
+  private int numExecutedMethods(final MixinDefinition mixin,
+      final Collection<InvocationProfile> profiles) {
     int numMethodsExecuted = 0;
     Map<SSymbol, Dispatchable> disps = mixin.getInstanceDispatchables();
     for (Dispatchable d : disps.values()) {
@@ -493,7 +508,8 @@ public final class MetricsCsvWriter {
 
   private void usedClassesAndMethods() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, InvocationProfile> profiles = (Map<SourceSection, InvocationProfile>) data.get(JsonWriter.METHOD_INVOCATION_PROFILE);
+    Map<SourceSection, InvocationProfile> profiles =
+        (Map<SourceSection, InvocationProfile>) data.get(JsonWriter.METHOD_INVOCATION_PROFILE);
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "defined-classes.csv",
         "Class Name", "Source Section", "Methods Executed")) {
@@ -519,7 +535,8 @@ public final class MetricsCsvWriter {
 
   private void branchProfiles() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, BranchProfile> branches = (Map<SourceSection, BranchProfile>) data.get(JsonWriter.BRANCH_PROFILES);
+    Map<SourceSection, BranchProfile> branches =
+        (Map<SourceSection, BranchProfile>) data.get(JsonWriter.BRANCH_PROFILES);
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "branches.csv",
         "Source Section", "TrueCnt", "FalseCnt", "Total")) {
@@ -535,7 +552,8 @@ public final class MetricsCsvWriter {
 
   private void loopProfiles() {
     @SuppressWarnings("unchecked")
-    Map<SourceSection, LoopProfile> loops = (Map<SourceSection, LoopProfile>) data.get(JsonWriter.LOOPS);
+    Map<SourceSection, LoopProfile> loops =
+        (Map<SourceSection, LoopProfile>) data.get(JsonWriter.LOOPS);
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "loops.csv",
         "Source Section", "Loop Activations", "Num Iterations")) {
@@ -615,7 +633,8 @@ public final class MetricsCsvWriter {
     return sortedSet;
   }
 
-  private static <V> SortedSet<Entry<SourceSection, V>> sortSS(final Map<SourceSection, V> map) {
+  private static <V> SortedSet<Entry<SourceSection, V>> sortSS(
+      final Map<SourceSection, V> map) {
     return sort(map, (a, b) -> compare(a.getKey(), b.getKey()));
   }
 

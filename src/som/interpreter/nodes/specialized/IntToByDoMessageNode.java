@@ -20,7 +20,7 @@ import tools.dym.Tags.LoopNode;
 @GenerateNodeFactory
 @Primitive(selector = "to:by:do:", disabled = true, noWrapper = true, requiresArguments = true)
 public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode {
-  protected final SInvokable blockMethod;
+  protected final SInvokable      blockMethod;
   @Child protected DirectCallNode valueSend;
 
   public IntToByDoMessageNode(final boolean eagWrap,
@@ -29,13 +29,13 @@ public abstract class IntToByDoMessageNode extends QuaternaryExpressionNode {
     assert !eagWrap;
     blockMethod = ((SBlock) args[3]).getMethod();
     valueSend = Truffle.getRuntime().createDirectCallNode(
-                    blockMethod.getCallTarget());
+        blockMethod.getCallTarget());
   }
 
   public IntToByDoMessageNode(final IntToByDoMessageNode node) {
     super(false, node.getSourceSection());
     this.blockMethod = node.blockMethod;
-    this.valueSend   = node.valueSend;
+    this.valueSend = node.valueSend;
   }
 
   @Override

@@ -9,6 +9,7 @@ import som.vmobjects.SObject.SMutableObject;
 
 public final class CachedTxSlotRead extends CachedSlotRead {
   @Child protected CachedSlotRead read;
+
   public CachedTxSlotRead(final SlotAccess type,
       final CachedSlotRead read,
       final CheckSObject guard, final AbstractDispatchNode nextInCache) {

@@ -8,7 +8,7 @@ import som.interpreter.LexicalScope.MethodScope;
 
 public class RuntimeScope {
   private final MaterializedFrame frame;
-  private final MethodScope lexicalScope;
+  private final MethodScope       lexicalScope;
 
   public RuntimeScope(final MaterializedFrame frame, final MethodScope lexcialScope) {
     this.frame = frame;

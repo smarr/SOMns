@@ -27,7 +27,7 @@ public class StackTraceRequest extends Request {
     assert TraceData.isWithinJSIntValueRange(activityId);
     this.activityId = activityId;
     this.startFrame = startFrame;
-    this.levels     = levels;
+    this.levels = levels;
   }
 
   @Override

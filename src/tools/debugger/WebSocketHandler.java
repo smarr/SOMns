@@ -39,7 +39,7 @@ public abstract class WebSocketHandler extends WebSocketServer {
   }
 
   @Override
-  public void onOpen(final WebSocket conn, final ClientHandshake handshake) { }
+  public void onOpen(final WebSocket conn, final ClientHandshake handshake) {}
 
   @Override
   public void onClose(final WebSocket conn, final int code, final String reason,
@@ -59,7 +59,7 @@ public abstract class WebSocketHandler extends WebSocketServer {
 
   public static class MessageHandler extends WebSocketHandler {
     private final FrontendConnector connector;
-    private final Gson gson;
+    private final Gson              gson;
 
     public MessageHandler(final int port, final FrontendConnector connector,
         final Gson gson) {
@@ -94,7 +94,7 @@ public abstract class WebSocketHandler extends WebSocketServer {
     }
 
     @Override
-    public void onMessage(final WebSocket conn, final String message) { }
+    public void onMessage(final WebSocket conn, final String message) {}
 
     public CompletableFuture<WebSocket> getConnection() {
       return connection;

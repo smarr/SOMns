@@ -15,13 +15,15 @@ import tools.debugger.Tags.LiteralTag;
 import tools.dym.Tags.OpArithmetic;
 
 
-public abstract class DoublePrims  {
+public abstract class DoublePrims {
 
   @GenerateNodeFactory
   @Primitive(primitive = "doubleRound:", selector = "round",
-             receiverType = Double.class)
+      receiverType = Double.class)
   public abstract static class RoundPrim extends UnaryBasicOperation {
-    public RoundPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public RoundPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
@@ -40,9 +42,11 @@ public abstract class DoublePrims  {
 
   @GenerateNodeFactory
   @Primitive(primitive = "doubleAsInteger:", selector = "asInteger", inParser = false,
-             receiverType = Double.class)
+      receiverType = Double.class)
   public abstract static class AsIntPrim extends UnaryBasicOperation {
-    public AsIntPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public AsIntPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
@@ -60,12 +64,17 @@ public abstract class DoublePrims  {
   }
 
   public static class IsDoubleClass extends Specializer<ExpressionNode> {
-    public IsDoubleClass(final Primitive prim, final NodeFactory<ExpressionNode> fact, final VM vm) { super(prim, fact, vm); }
+    public IsDoubleClass(final Primitive prim, final NodeFactory<ExpressionNode> fact,
+        final VM vm) {
+      super(prim, fact, vm);
+    }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodess) {
       // XXX: this is the case when doing parse-time specialization
-      if (args == null) { return true; }
+      if (args == null) {
+        return true;
+      }
 
       return args[0] == Classes.doubleClass;
     }
@@ -73,10 +82,12 @@ public abstract class DoublePrims  {
 
   @GenerateNodeFactory
   @Primitive(primitive = "doublePositiveInfinity:",
-             selector = "PositiveInfinity", noWrapper = true,
-             specializer = IsDoubleClass.class)
+      selector = "PositiveInfinity", noWrapper = true,
+      specializer = IsDoubleClass.class)
   public abstract static class PositiveInfinityPrim extends UnaryExpressionNode {
-    public PositiveInfinityPrim(final boolean eagerWrapper, final SourceSection source) { super(eagerWrapper, source); }
+    public PositiveInfinityPrim(final boolean eagerWrapper, final SourceSection source) {
+      super(eagerWrapper, source);
+    }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

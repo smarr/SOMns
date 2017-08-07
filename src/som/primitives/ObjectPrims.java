@@ -37,11 +37,14 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "objClassName:")
   public abstract static class ObjectClassNamePrim extends UnaryExpressionNode {
-    public ObjectClassNamePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public ObjectClassNamePrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final SSymbol getName(final Object obj) {
-      VM.thisMethodNeedsToBeOptimized("Not yet optimized, need add specializations to remove Types.getClassOf");
+      VM.thisMethodNeedsToBeOptimized(
+          "Not yet optimized, need add specializations to remove Types.getClassOf");
       return Types.getClassOf(obj).getName();
     }
   }
@@ -49,7 +52,9 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "halt:")
   public abstract static class HaltPrim extends UnaryExpressionNode {
-    public HaltPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public HaltPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final Object doSAbstractObject(final Object receiver) {
@@ -69,7 +74,9 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "objClass:")
   public abstract static class ClassPrim extends UnaryExpressionNode {
-    public ClassPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public ClassPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final SClass doSAbstractObject(final SAbstractObject receiver) {
@@ -86,7 +93,9 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive(selector = "isNil", noWrapper = true)
   public abstract static class IsNilNode extends UnaryBasicOperation implements OperationNode {
-    public IsNilNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public IsNilNode(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
@@ -115,8 +124,11 @@ public final class ObjectPrims {
 
   @GenerateNodeFactory
   @Primitive(selector = "notNil", noWrapper = true)
-  public abstract static class NotNilNode extends UnaryBasicOperation implements OperationNode {
-    public NotNilNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  public abstract static class NotNilNode extends UnaryBasicOperation
+      implements OperationNode {
+    public NotNilNode(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
@@ -151,8 +163,13 @@ public final class ObjectPrims {
   @ImportStatic(Nil.class)
   @Instrumentable(factory = IsValueWrapper.class)
   public abstract static class IsValue extends UnaryExpressionNode {
-    public IsValue(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-    public IsValue(final IsValue node) { super(node); }
+    public IsValue(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
+
+    public IsValue(final IsValue node) {
+      super(node);
+    }
 
     public abstract boolean executeEvaluated(Object rcvr);
 
@@ -247,7 +264,8 @@ public final class ObjectPrims {
     }
 
     public static boolean isObjectValue(final Object obj) {
-      VM.callerNeedsToBeOptimized("This should only be used for prototyping, and then removed, because it is slow and duplicates code");
+      VM.callerNeedsToBeOptimized(
+          "This should only be used for prototyping, and then removed, because it is slow and duplicates code");
       if (obj instanceof Boolean ||
           obj instanceof Long ||
           obj instanceof BigInteger ||

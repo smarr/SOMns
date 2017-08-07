@@ -30,11 +30,11 @@ public final class CachedDnuNode extends AbstractDispatchNode {
       final DispatchGuard guard, final VM vm,
       final AbstractDispatchNode nextInCache) {
     super(nextInCache.getSourceSection());
-    this.nextInCache  = nextInCache;
+    this.nextInCache = nextInCache;
     this.cachedMethod = Truffle.getRuntime().createDirectCallNode(
         getDnu(rcvrClass, selector, vm));
     this.selector = selector;
-    this.guard    = guard;
+    this.guard = guard;
   }
 
   @Override
@@ -57,11 +57,12 @@ public final class CachedDnuNode extends AbstractDispatchNode {
       final Object rcvr) {
     if (VmSettings.DNU_PRINT_STACK_TRACE) {
       PrintStackTracePrim.printStackTrace(0, getSourceSection());
-      VM.errorPrintln("Lookup of " + selector + " failed in " + Types.getClassOf(rcvr).getName().getString());
+      VM.errorPrintln("Lookup of " + selector + " failed in "
+          + Types.getClassOf(rcvr).getName().getString());
     }
 
     Object[] argsArr = new Object[] {
-        rcvr, selector, SArguments.getArgumentsWithoutReceiver(arguments) };
+        rcvr, selector, SArguments.getArgumentsWithoutReceiver(arguments)};
     return cachedMethod.call(argsArr);
   }
 
@@ -72,7 +73,9 @@ public final class CachedDnuNode extends AbstractDispatchNode {
         Symbols.DNU, AccessModifier.PROTECTED);
 
     if (disp == null) {
-      vm.errorExit("Lookup of " + rcvrClass.getName().getString() + ">>#doesNotUnderstand:arguments: failed after failed lookup for: " + missingSymbol.toString());
+      vm.errorExit("Lookup of " + rcvrClass.getName().getString()
+          + ">>#doesNotUnderstand:arguments: failed after failed lookup for: "
+          + missingSymbol.toString());
     }
     return ((SInvokable) disp).getCallTarget();
   }

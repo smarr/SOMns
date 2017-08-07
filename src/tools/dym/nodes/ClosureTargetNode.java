@@ -11,7 +11,8 @@ public final class ClosureTargetNode extends CountingNode<ClosureApplicationProf
 
   protected final ActivationCounter cnt;
 
-  public ClosureTargetNode(final ClosureApplicationProfile profile, final Invokable invokable) {
+  public ClosureTargetNode(final ClosureApplicationProfile profile,
+      final Invokable invokable) {
     super(profile);
     cnt = profile.createCounter(invokable);
   }
@@ -23,8 +24,8 @@ public final class ClosureTargetNode extends CountingNode<ClosureApplicationProf
   }
 
   @Override
-  public void onReturnValue(final VirtualFrame frame, final Object result) { }
+  public void onReturnValue(final VirtualFrame frame, final Object result) {}
 
   @Override
-  public void onReturnExceptional(final VirtualFrame frame, final Throwable exception) { }
+  public void onReturnExceptional(final VirtualFrame frame, final Throwable exception) {}
 }

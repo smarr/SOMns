@@ -84,13 +84,12 @@ public final class MethodBuilder {
   private final LinkedHashMap<String, Argument> arguments = new LinkedHashMap<>();
   private final LinkedHashMap<String, Local>    locals    = new LinkedHashMap<>();
 
-  private       Internal    frameOnStackVar;
+  private Internal          frameOnStackVar;
   private final MethodScope currentScope;
 
   private final List<SInvokable> embeddedBlockMethods;
 
   private int cascadeId;
-
 
   public MethodBuilder(final MixinBuilder holder, final MixinScope clsScope) {
     this(holder, clsScope, null, false, holder.getLanguage());
@@ -111,18 +110,18 @@ public final class MethodBuilder {
       final SomLanguage language) {
     this.directOuterMixin = holder;
     this.outerBuilder = outerBuilder;
-    this.blockMethod  = isBlockMethod;
-    this.language     = language;
+    this.blockMethod = isBlockMethod;
+    this.language = language;
 
     MethodScope outer = (outerBuilder != null)
         ? outerBuilder.getCurrentMethodScope()
         : null;
     assert Nil.nilObject != null : "Nil.nilObject not yet initialized";
-    this.currentScope   = new MethodScope(new FrameDescriptor(Nil.nilObject), outer, clsScope);
+    this.currentScope = new MethodScope(new FrameDescriptor(Nil.nilObject), outer, clsScope);
 
     accessesVariablesOfOuterScope = false;
-    throwsNonLocalReturn          = false;
-    needsToCatchNonLocalReturn    = false;
+    throwsNonLocalReturn = false;
+    needsToCatchNonLocalReturn = false;
     embeddedBlockMethods = new ArrayList<SInvokable>();
   }
 
@@ -155,12 +154,12 @@ public final class MethodBuilder {
         currentScope.addVariable(l);
       }
     }
-    SInvokable[]  embeddedBlocks = outer.getEmbeddedBlocks();
+    SInvokable[] embeddedBlocks = outer.getEmbeddedBlocks();
     MethodScope[] embeddedScopes = scope.getEmbeddedScopes();
 
     assert ((embeddedBlocks == null || embeddedBlocks.length == 0) &&
-            (embeddedScopes == null || embeddedScopes.length == 0)) ||
-          embeddedBlocks.length == embeddedScopes.length;
+        (embeddedScopes == null || embeddedScopes.length == 0)) ||
+        embeddedBlocks.length == embeddedScopes.length;
 
     if (embeddedScopes != null) {
       for (MethodScope e : embeddedScopes) {
@@ -342,7 +341,8 @@ public final class MethodBuilder {
 
   public void addArgument(final String arg, final SourceSection source) {
     if (("self".equals(arg) || "$blockSelf".equals(arg)) && arguments.size() > 0) {
-      throw new IllegalStateException("The self argument always has to be the first argument of a method");
+      throw new IllegalStateException(
+          "The self argument always has to be the first argument of a method");
     }
 
     Argument argument = new Argument(arg, arguments.size(), source);
@@ -361,7 +361,8 @@ public final class MethodBuilder {
   public Local addLocal(final String name, final boolean immutable,
       final SourceSection source) throws MethodDefinitionError {
     if (arguments.containsKey(name)) {
-      throw new MethodDefinitionError("Method already defines argument " + name + ". Can't define local variable with same name.", source);
+      throw new MethodDefinitionError("Method already defines argument " + name
+          + ". Can't define local variable with same name.", source);
     }
 
     Local l;
@@ -402,17 +403,20 @@ public final class MethodBuilder {
    * is local to the current activation, a level of 1 means that the variable
    * is defined in the enclosing activation, and so on.
    *
-   * <p>This method first checks the current activation and returns 0 if the
+   * <p>
+   * This method first checks the current activation and returns 0 if the
    * given variable exists in either the local variables of this activation
    * or otherwise the arguments given to it.
    *
-   * <p>In the case of nested blocks, we recursively check the enclosing block
+   * <p>
+   * In the case of nested blocks, we recursively check the enclosing block
    * or method activations. The recursive check stops after the first method
    * which always has a null `outerBuilder`. If the method belongs to an
    * object literal we continue the recursive check starting from that object's
    * enclosing activation.
    *
-   * <p>If still no variable has been found then we have determined that the
+   * <p>
+   * If still no variable has been found then we have determined that the
    * variable cannot be in scope and that a variable must have been erroneously
    * by {@link #getReadNode} or {@link #getWriteNode}.
    */
@@ -441,7 +445,8 @@ public final class MethodBuilder {
    * A variable is either an argument or a temporary in the lexical scope
    * of methods (only in methods).
    *
-   * <p>Refer to {@link #getContextLevel} for a description of how the
+   * <p>
+   * Refer to {@link #getContextLevel} for a description of how the
    * enclosing scopes are traversed.
    */
   protected Variable getVariable(final String varName) {
@@ -555,7 +560,7 @@ public final class MethodBuilder {
     // write directly to local variables (excluding arguments)
     String setterSend = setter.getString();
     String setterName = setterSend.substring(0, setterSend.length() - 1);
-    String varName    = setterName.substring(0, setterName.length() - 1);
+    String varName = setterName.substring(0, setterName.length() - 1);
 
     if (hasArgument(varName)) {
       throw new MethodDefinitionError("Can't assign to argument: " + varName, source);

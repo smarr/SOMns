@@ -4,12 +4,14 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 
 import som.interpreter.SArguments;
 
+
 /**
  * This role is implement by both SBlock and SClass and provides
  * the behavior for stepping outward through a block or object
  * literal's activations.
  *
- * <p>When a block or object literal is nested inside of another
+ * <p>
+ * When a block or object literal is nested inside of another
  * block, a method, or an object literal its context is the activation
  * of that block, method, or object literal.
  */

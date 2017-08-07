@@ -23,8 +23,8 @@ public class CallTargetNode extends CountingNode<CallsiteProfile> {
   }
 
   @Override
-  public void onReturnValue(final VirtualFrame frame, final Object result) { }
+  public void onReturnValue(final VirtualFrame frame, final Object result) {}
 
   @Override
-  public void onReturnExceptional(final VirtualFrame frame, final Throwable exception) { }
+  public void onReturnExceptional(final VirtualFrame frame, final Throwable exception) {}
 }

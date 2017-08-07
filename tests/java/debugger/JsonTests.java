@@ -39,12 +39,14 @@ import tools.debugger.session.SectionBreakpoint;
 public class JsonTests {
   private final Gson gson = WebDebugger.createJsonProcessor();
 
-  private static final String FULL_COORD = "{\"uri\":\"file:/test\",\"startLine\":2,\"startColumn\":3,\"charLength\":55}";
-  private static final FullSourceCoordinate FULL_COORD_OBJ = SourceCoordinate.create("file:/test", 2, 3, 55);
+  private static final String               FULL_COORD     =
+      "{\"uri\":\"file:/test\",\"startLine\":2,\"startColumn\":3,\"charLength\":55}";
+  private static final FullSourceCoordinate FULL_COORD_OBJ =
+      SourceCoordinate.create("file:/test", 2, 3, 55);
 
   private void assertFullCoord(final FullSourceCoordinate coord) {
-    assertEquals(2,  coord.startLine);
-    assertEquals(3,  coord.startColumn);
+    assertEquals(2, coord.startLine);
+    assertEquals(3, coord.startColumn);
     assertEquals(55, coord.charLength);
   }
 
@@ -60,7 +62,8 @@ public class JsonTests {
     assertEquals(FULL_COORD, result);
   }
 
-  private static final String LINE_BP = "{\"sourceUri\":\"file:/test\",\"line\":21,\"enabled\":true,\"type\":\"LineBreakpoint\"}";
+  private static final String LINE_BP =
+      "{\"sourceUri\":\"file:/test\",\"line\":21,\"enabled\":true,\"type\":\"LineBreakpoint\"}";
 
   private void assertLineBreakpoint(final LineBreakpoint bp) {
     assertEquals(21, bp.getLine());
@@ -84,7 +87,8 @@ public class JsonTests {
     assertEquals(LINE_BP, result);
   }
 
-  private static final String MSG_RCV_BP = "{\"coord\":" + FULL_COORD + ",\"bpType\":\"msgReceiverBP\",\"enabled\":true,\"type\":\"SectionBreakpoint\"}";
+  private static final String MSG_RCV_BP = "{\"coord\":" + FULL_COORD
+      + ",\"bpType\":\"msgReceiverBP\",\"enabled\":true,\"type\":\"SectionBreakpoint\"}";
 
   @Test
   public void messageReceiverBreakpointDeserialize() {
@@ -97,11 +101,13 @@ public class JsonTests {
 
   @Test
   public void messageReceiverBreakpointSerialize() {
-    SectionBreakpoint bp = new SectionBreakpoint(true, FULL_COORD_OBJ, BreakpointType.MSG_RECEIVER);
+    SectionBreakpoint bp =
+        new SectionBreakpoint(true, FULL_COORD_OBJ, BreakpointType.MSG_RECEIVER);
     assertEquals(MSG_RCV_BP, gson.toJson(bp, BreakpointInfo.class));
   }
 
-  private static final String MSG_SND_BP = "{\"coord\":" + FULL_COORD + ",\"bpType\":\"msgSenderBP\",\"enabled\":true,\"type\":\"SectionBreakpoint\"}";
+  private static final String MSG_SND_BP = "{\"coord\":" + FULL_COORD
+      + ",\"bpType\":\"msgSenderBP\",\"enabled\":true,\"type\":\"SectionBreakpoint\"}";
 
   @Test
   public void messageSenderBreakpointDeserialize() {
@@ -116,13 +122,16 @@ public class JsonTests {
   @Test
   public void messageSenderBreakpointSerialize() {
     String result = gson.toJson(
-        new SectionBreakpoint(true, FULL_COORD_OBJ, BreakpointType.MSG_SENDER), BreakpointInfo.class);
+        new SectionBreakpoint(true, FULL_COORD_OBJ, BreakpointType.MSG_SENDER),
+        BreakpointInfo.class);
     assertEquals(MSG_SND_BP, result);
   }
 
-  private static final String ASYNC_MSG_RCV_BP = "{\"coord\":" + FULL_COORD + ",\"enabled\":true,\"type\":\"SectionBreakpoint\",\"bpType\":\"asyncMsgBeforeExecBP\"}";
+  private static final String ASYNC_MSG_RCV_BP = "{\"coord\":" + FULL_COORD
+      + ",\"enabled\":true,\"type\":\"SectionBreakpoint\",\"bpType\":\"asyncMsgBeforeExecBP\"}";
 
-  private static final String EMPTY_INITAL_BP = "{\"breakpoints\":[],\"action\":\"InitializeConnection\"}";
+  private static final String EMPTY_INITAL_BP =
+      "{\"breakpoints\":[],\"action\":\"InitializeConnection\"}";
 
   @Test
   public void initialBreakpointsMessageEmptySerialize() {
@@ -139,8 +148,9 @@ public class JsonTests {
         ((InitializeConnection) result).getBreakpoints());
   }
 
-  private static final String INITIAL_NON_EMPTY_BREAKPOINT_MSG = "{\"action\":\"InitializeConnection\",\"breakpoints\":" +
-      "[" + ASYNC_MSG_RCV_BP + "," + MSG_RCV_BP + "," + MSG_SND_BP + "," + LINE_BP + "]}";
+  private static final String INITIAL_NON_EMPTY_BREAKPOINT_MSG =
+      "{\"action\":\"InitializeConnection\",\"breakpoints\":" +
+          "[" + ASYNC_MSG_RCV_BP + "," + MSG_RCV_BP + "," + MSG_SND_BP + "," + LINE_BP + "]}";
 
   @Test
   public void initialBreakpointsMessageWithBreakPointsDeserialize() {
@@ -158,7 +168,8 @@ public class JsonTests {
     assertEquals(4, bps.length);
   }
 
-  private static final String UPDATE_LINE_BP = "{\"breakpoint\":" + LINE_BP + ",\"action\":\"updateBreakpoint\"}";
+  private static final String UPDATE_LINE_BP =
+      "{\"breakpoint\":" + LINE_BP + ",\"action\":\"updateBreakpoint\"}";
 
   @Test
   public void updateBreakpointDeserialize() {
@@ -182,7 +193,7 @@ public class JsonTests {
         EntityType.values(), ActivityType.values(), PassiveEntityType.values(),
         DynamicScopeType.values(), SendOp.values(), ReceiveOp.values(),
         BreakpointType.values(), SteppingType.values(), Implementation.values()),
-      OutgoingMessage.class);
+        OutgoingMessage.class);
     // This test is only doing a very basic sanity check
     assertTrue(1000 < result.length());
   }

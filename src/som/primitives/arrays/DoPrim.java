@@ -30,7 +30,10 @@ public abstract class DoPrim extends BinaryComplexOperation {
     // TODO: tag properly, it is a loop and an access
     block = BlockDispatchNodeGen.create();
   }
-  public DoPrim(final SourceSection source) { this(false, source); }
+
+  public DoPrim(final SourceSection source) {
+    this(false, source);
+  }
 
   private void execBlock(final SBlock block, final Object arg) {
     this.block.executeDispatch(new Object[] {block, arg});

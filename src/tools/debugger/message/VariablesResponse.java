@@ -20,7 +20,7 @@ import tools.debugger.message.Message.Response;
 @SuppressWarnings("unused")
 public final class VariablesResponse extends Response {
   private final Variable[] variables;
-  private final long variablesReference;
+  private final long       variablesReference;
 
   private VariablesResponse(final int requestId, final long globalVarRef,
       final Variable[] variables) {
@@ -35,8 +35,8 @@ public final class VariablesResponse extends Response {
     private final String value;
 
     private final long variablesReference;
-    private final int namedVariables;
-    private final int indexedVariables;
+    private final int  namedVariables;
+    private final int  indexedVariables;
 
     Variable(final String name, final String value, final long globalVarRef,
         final int named, final int indexed) {
@@ -67,8 +67,8 @@ public final class VariablesResponse extends Response {
 
     if (obj instanceof SObject) {
       SObject o = (SObject) obj;
-      for (Entry<SlotDefinition, StorageLocation> e :
-          o.getObjectLayout().getStorageLocations().entrySet()) {
+      for (Entry<SlotDefinition, StorageLocation> e : o.getObjectLayout().getStorageLocations()
+                                                       .entrySet()) {
         results.add(createVariable(
             e.getKey().getName().getString(), e.getValue().read(o), suspension));
       }
@@ -108,7 +108,7 @@ public final class VariablesResponse extends Response {
 
   private static Variable createVariable(final String name, final Object val,
       final Suspension suspension) {
-    int named   = Types.getNumberOfNamedSlots(val);
+    int named = Types.getNumberOfNamedSlots(val);
     int indexed = Types.getNumberOfIndexedSlots(val);
     long id;
     if (named + indexed > 0) {

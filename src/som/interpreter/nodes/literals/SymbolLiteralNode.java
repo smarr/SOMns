@@ -5,6 +5,7 @@ import som.vmobjects.SSymbol;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+
 public final class SymbolLiteralNode extends LiteralNode {
 
   private final SSymbol value;

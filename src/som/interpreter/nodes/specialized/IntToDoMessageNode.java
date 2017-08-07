@@ -22,10 +22,13 @@ import tools.dym.Tags.LoopNode;
 
 @GenerateNodeFactory
 @Primitive(selector = "to:do:", noWrapper = true, disabled = true,
-           specializer = ToDoSplzr.class, inParser = false)
+    specializer = ToDoSplzr.class, inParser = false)
 public abstract class IntToDoMessageNode extends TernaryExpressionNode {
   public static class ToDoSplzr extends Specializer<IntToDoMessageNode> {
-    public ToDoSplzr(final Primitive prim, final NodeFactory<IntToDoMessageNode> fact, final VM vm) { super(prim, fact, vm); }
+    public ToDoSplzr(final Primitive prim, final NodeFactory<IntToDoMessageNode> fact,
+        final VM vm) {
+      super(prim, fact, vm);
+    }
 
     @Override
     public boolean matches(final Object[] args,
@@ -40,7 +43,9 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode {
     return Truffle.getRuntime().createDirectCallNode(blockMethod.getCallTarget());
   }
 
-  protected IntToDoMessageNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected IntToDoMessageNode(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

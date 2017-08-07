@@ -12,6 +12,7 @@ import som.primitives.Primitive;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject.SImmutableObject;
 
+
 public final class ThreadingModule {
   @CompilationFinal public static SImmutableObject  ThreadingModule;
   @CompilationFinal public static SClass            ThreadClass;
@@ -26,16 +27,18 @@ public final class ThreadingModule {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingRegisterCondition:mutex:")
   public abstract static class RegisterConditionAndMutexPrim extends BinaryExpressionNode {
-    public RegisterConditionAndMutexPrim(final boolean ew, final SourceSection s) { super(ew, s); }
+    public RegisterConditionAndMutexPrim(final boolean ew, final SourceSection s) {
+      super(ew, s);
+    }
 
     @Specialization
     public final SClass doSClass(final SClass condition, final SClass mutex) {
       assert ConditionClass == null && MutexClass == null;
       ConditionClass = condition;
-      MutexClass     = mutex;
+      MutexClass = mutex;
 
       ConditionClassId = condition.getMixinDefinition().getMixinId();
-      MutexClassId     = mutex.getMixinDefinition().getMixinId();
+      MutexClassId = mutex.getMixinDefinition().getMixinId();
       return condition;
     }
   }
@@ -43,16 +46,18 @@ public final class ThreadingModule {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingRegisterThread:task:")
   public abstract static class RegisterThreadAndTaskPrim extends BinaryExpressionNode {
-    public RegisterThreadAndTaskPrim(final boolean ew, final SourceSection s) { super(ew, s); }
+    public RegisterThreadAndTaskPrim(final boolean ew, final SourceSection s) {
+      super(ew, s);
+    }
 
     @Specialization
     public final SClass doSClass(final SClass thread, final SClass task) {
       assert ThreadClass == null && TaskClass == null;
       ThreadClass = thread;
-      TaskClass   = task;
+      TaskClass = task;
 
       ThreadClassId = thread.getMixinDefinition().getMixinId();
-      TaskClassId   = task.getMixinDefinition().getMixinId();
+      TaskClassId = task.getMixinDefinition().getMixinId();
       return thread;
     }
   }
@@ -60,7 +65,9 @@ public final class ThreadingModule {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingRegisterModule:")
   public abstract static class RegisterModulePrim extends UnaryExpressionNode {
-    public RegisterModulePrim(final boolean ew, final SourceSection s) { super(ew, s); }
+    public RegisterModulePrim(final boolean ew, final SourceSection s) {
+      super(ew, s);
+    }
 
     @Specialization
     public final SImmutableObject doSClass(final SImmutableObject module) {

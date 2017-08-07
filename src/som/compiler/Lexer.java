@@ -26,33 +26,36 @@ package som.compiler;
 
 import tools.SourceCoordinate;
 
+
 public final class Lexer {
 
   public static class Peek {
     public Peek(final Symbol sym, final String text) {
-      nextSym  = sym;
+      nextSym = sym;
       nextText = text;
     }
+
     public final Symbol nextSym;
     public final String nextText;
   }
 
   private static class LexerState {
-    LexerState() { }
+    LexerState() {}
+
     LexerState(final LexerState old) {
       lineNumber = old.lineNumber;
-      lastLineEnd  = old.lastLineEnd;
+      lastLineEnd = old.lastLineEnd;
       lastNonWhiteCharIdx = old.lastNonWhiteCharIdx;
-      ptr        = old.ptr;
-      sym        = old.sym;
-      symc       = old.symc;
-      text       = new StringBuilder(old.text);
+      ptr = old.ptr;
+      sym = old.sym;
+      symc = old.symc;
+      text = new StringBuilder(old.text);
       startCoord = old.startCoord;
       numeralParser = old.numeralParser;
     }
 
     public void set(final Symbol sym, final char symChar, final String text) {
-      this.sym  = sym;
+      this.sym = sym;
       this.symc = symChar;
       this.text = new StringBuilder(text);
     }
@@ -63,22 +66,22 @@ public final class Lexer {
       this.text = new StringBuilder();
     }
 
-    private int                 lineNumber;
+    private int lineNumber;
 
     /** All characters read, excluding the current line, incl. line break. */
-    private int                 lastLineEnd;
+    private int lastLineEnd;
 
-    private int                 lastNonWhiteCharIdx;
+    private int lastNonWhiteCharIdx;
 
-    private int                 ptr;
+    private int ptr;
 
-    private Symbol              sym;
-    private char                symc;
-    private StringBuilder       text;
+    private Symbol        sym;
+    private char          symc;
+    private StringBuilder text;
 
     private NumeralParser numeralParser;
 
-    private SourceCoordinate    startCoord;
+    private SourceCoordinate startCoord;
 
     int incPtr() {
       return incPtr(1);
@@ -94,9 +97,9 @@ public final class Lexer {
 
   protected final String content;
 
-  private boolean             peekDone;
-  private LexerState          state;
-  private LexerState          stateAfterPeek;
+  private boolean    peekDone;
+  private LexerState state;
+  private LexerState stateAfterPeek;
 
   protected Lexer(final String content) {
     this.content = content;
@@ -407,7 +410,7 @@ public final class Lexer {
     while (!commentPartEnded) {
       char current = currentChar();
       commentPartEnded = (current == '(' && nextChar() == '*')
-                      || (current == '*' && nextChar() == ')');
+          || (current == '*' && nextChar() == ')');
       if (commentPartEnded) {
         return comment.toString();
       }

@@ -19,16 +19,17 @@ import som.vmobjects.SObject;
  * is realized as a simple message send in Newspeak, and as a result, part of
  * the dispatch chain.
  *
- * <p>The Newspeak semantics defines that class objects are allocated lazily.
+ * <p>
+ * The Newspeak semantics defines that class objects are allocated lazily.
  * This is realized here using read/write nodes on a slot of the enclosing
  * object, where the initialized class object is cached.
  */
 public final class ClassSlotAccessNode extends CachedSlotRead {
-  private final MixinDefinition mixinDef;
-  @Child protected DirectCallNode superclassAndMixinResolver;
+  private final MixinDefinition           mixinDef;
+  @Child protected DirectCallNode         superclassAndMixinResolver;
   @Child protected ClassInstantiationNode instantiation;
 
-  @Child protected CachedSlotRead read;
+  @Child protected CachedSlotRead  read;
   @Child protected CachedSlotWrite write;
 
   public ClassSlotAccessNode(final MixinDefinition mixinDef,

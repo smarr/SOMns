@@ -23,7 +23,9 @@ public final class ActorClasses {
   @GenerateNodeFactory
   @Primitive(primitive = "actorsFarReferenceClass:")
   public abstract static class SetFarReferenceClassPrim extends UnaryExpressionNode {
-    public SetFarReferenceClassPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public SetFarReferenceClassPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final SClass setClass(final SClass value) {
@@ -36,7 +38,9 @@ public final class ActorClasses {
   @GenerateNodeFactory
   @Primitive(primitive = "actorsPromiseClass:")
   public abstract static class SetPromiseClassPrim extends UnaryExpressionNode {
-    public SetPromiseClassPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public SetPromiseClassPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final SClass setClass(final SClass value) {
@@ -48,7 +52,9 @@ public final class ActorClasses {
   @GenerateNodeFactory
   @Primitive(primitive = "actorsPairClass:")
   public abstract static class SetPairClassPrim extends UnaryExpressionNode {
-    public SetPairClassPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public SetPairClassPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final SClass setClass(final SClass value) {
@@ -60,7 +66,9 @@ public final class ActorClasses {
   @GenerateNodeFactory
   @Primitive(primitive = "actorsResolverClass:")
   public abstract static class SetResolverClassPrim extends UnaryExpressionNode {
-    public SetResolverClassPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public SetResolverClassPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final SClass setClass(final SClass value) {
@@ -72,7 +80,9 @@ public final class ActorClasses {
   @GenerateNodeFactory
   @Primitive(primitive = "actorsModule:")
   public abstract static class SetModulePrim extends UnaryExpressionNode {
-    public SetModulePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public SetModulePrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final SImmutableObject setClass(final SImmutableObject value) {

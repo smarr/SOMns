@@ -5,15 +5,17 @@ import com.oracle.truffle.api.Truffle;
 
 import tools.debugger.entities.SteppingType;
 
+
 /**
  * BreakpointEnabling represents the interpreter data for optimized testing
  * whether a breakpoint is active or a stepping target has been reached.
  *
- * <p>This class is used for breakpoints and stepping targets that are not
+ * <p>
+ * This class is used for breakpoints and stepping targets that are not
  * managed by the Truffle framework.
  */
 public final class BreakpointEnabling {
-  private boolean   enabled;
+  private boolean              enabled;
   private transient Assumption unchanged;
 
   private SectionBreakpoint breakpointInfo;

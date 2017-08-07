@@ -50,21 +50,24 @@ import som.vm.constants.Classes;
 //       ClassFactory?
 public final class SClass extends SObjectWithClass {
 
-  @CompilationFinal private SClass superclass;
+  @CompilationFinal private SClass  superclass;
   @CompilationFinal private SSymbol name;
 
   @CompilationFinal private HashMap<SSymbol, Dispatchable> dispatchables;
-  @CompilationFinal private HashSet<SlotDefinition> slots; // includes slots of super classes and mixins
+  @CompilationFinal private HashSet<SlotDefinition>        slots;        // includes slots of
+                                                                         // super classes and
+                                                                         // mixins
 
   @CompilationFinal private MixinDefinition mixinDef;
-  @CompilationFinal private boolean declaredAsValue;
-  @CompilationFinal private boolean isTransferObject; // is a kind of TransferObject (subclass or TObj directly)
-  @CompilationFinal private boolean isArray; // is a subclass of Array
+  @CompilationFinal private boolean         declaredAsValue;
+  @CompilationFinal private boolean         isTransferObject; // is a kind of TransferObject
+                                                              // (subclass or TObj directly)
+  @CompilationFinal private boolean         isArray;          // is a subclass of Array
 
   @CompilationFinal private ClassFactory instanceClassGroup; // the factory for this object
 
   protected final SObjectWithClass enclosingObject;
-  private final MaterializedFrame context;
+  private final MaterializedFrame  context;
 
   /**
    * The constructor used for instantiating empty classes and meta-classes
@@ -90,7 +93,8 @@ public final class SClass extends SObjectWithClass {
    *
    * @param frame, the current activation.
    */
-  public SClass(final SObjectWithClass enclosing, final SClass clazz, final MaterializedFrame frame) {
+  public SClass(final SObjectWithClass enclosing, final SClass clazz,
+      final MaterializedFrame frame) {
     super(clazz, clazz.getInstanceFactory());
     this.enclosingObject = enclosing;
     this.context = frame;
@@ -105,9 +109,9 @@ public final class SClass extends SObjectWithClass {
   }
 
   public ClassFactory getInstanceFactory() {
-//    assert classGroup != null               || !ObjectSystem.isInitialized();
-//    assert instanceClassGroup != null       || !ObjectSystem.isInitialized();
-//    assert classGroup != instanceClassGroup || !ObjectSystem.isInitialized();
+    // assert classGroup != null || !ObjectSystem.isInitialized();
+    // assert instanceClassGroup != null || !ObjectSystem.isInitialized();
+    // assert classGroup != instanceClassGroup || !ObjectSystem.isInitialized();
     return instanceClassGroup;
   }
 
@@ -120,7 +124,8 @@ public final class SClass extends SObjectWithClass {
   }
 
   public void initializeClass(final SSymbol name, final SClass superclass) {
-    assert (this.name == null || this.name == name) && (this.superclass == null || this.superclass == superclass) : "Should only be initialized once";
+    assert (this.name == null || this.name == name) && (this.superclass == null
+        || this.superclass == superclass) : "Should only be initialized once";
     this.name = name;
     this.superclass = superclass;
   }
@@ -158,14 +163,14 @@ public final class SClass extends SObjectWithClass {
       final ClassFactory classFactory) {
     assert slots == null || slots.size() > 0;
 
-    this.mixinDef  = mixinDef;
-    this.slots     = slots;
-    this.dispatchables   = dispatchables;
+    this.mixinDef = mixinDef;
+    this.slots = slots;
+    this.dispatchables = dispatchables;
     this.declaredAsValue = declaredAsValue;
     this.isTransferObject = isTransferObject;
-    this.isArray          = isArray;
+    this.isArray = isArray;
     this.instanceClassGroup = classFactory;
-//    assert instanceClassGroup != null || !ObjectSystem.isInitialized();
+    // assert instanceClassGroup != null || !ObjectSystem.isInitialized();
   }
 
   private boolean isBasedOn(final MixinDefinitionId mixinId) {
@@ -177,14 +182,21 @@ public final class SClass extends SObjectWithClass {
    * and ignoring class identity, i.e., relying on class groups/factories, too.
    */
   public boolean isKindOf(final SClass clazz) {
-    if (this == clazz) { return true; }
-    if (this == Classes.topClass) { return false; }
-    if (this.instanceClassGroup == clazz.instanceClassGroup) { return true; }
+    if (this == clazz) {
+      return true;
+    }
+    if (this == Classes.topClass) {
+      return false;
+    }
+    if (this.instanceClassGroup == clazz.instanceClassGroup) {
+      return true;
+    }
     return superclass.isKindOf(clazz);
   }
 
   public SClass getClassCorrespondingTo(final MixinDefinitionId mixinId) {
-    VM.callerNeedsToBeOptimized("This should not be on the fast path, specialization/caching needed?");
+    VM.callerNeedsToBeOptimized(
+        "This should not be on the fast path, specialization/caching needed?");
     SClass cls = this;
     while (cls != null && !cls.isBasedOn(mixinId)) {
       cls = cls.getSuperClass();
@@ -202,7 +214,8 @@ public final class SClass extends SObjectWithClass {
   }
 
   public int getIdxForClassCorrespondingTo(final MixinDefinitionId mixinId) {
-    VM.callerNeedsToBeOptimized("This should not be on the fast path, specialization/caching needed?");
+    VM.callerNeedsToBeOptimized(
+        "This should not be on the fast path, specialization/caching needed?");
     SClass cls = this;
     int i = 0;
     while (cls != null && !cls.isBasedOn(mixinId)) {
@@ -263,7 +276,7 @@ public final class SClass extends SObjectWithClass {
    *
    * @param selector to be used for lookup
    * @param hasAtLeast the minimal access level the found method/slot-accessor
-   *                   is allowed to have
+   *          is allowed to have
    * @return a method or slot accessor
    */
   public Dispatchable lookupMessage(final SSymbol selector,

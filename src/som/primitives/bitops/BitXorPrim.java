@@ -11,7 +11,9 @@ import som.primitives.arithmetic.ArithmeticPrim;
 @GenerateNodeFactory
 @Primitive(primitive = "int:bitXor:", selector = "bitXor:")
 public abstract class BitXorPrim extends ArithmeticPrim {
-  protected BitXorPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected BitXorPrim(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   @Specialization
   public final long doLong(final long receiver, final long right) {

@@ -51,7 +51,9 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
   }
 
   @Override
-  public boolean isSuperSend() { return false; }
+  public boolean isSuperSend() {
+    return false;
+  }
 
   @Specialization(guards = {
       "receiver.getInstanceFactory() == factory",
@@ -94,9 +96,11 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
     ClassFactory factory = receiver.getInstanceFactory();
     if (factory.hasSlots()) {
       if (factory.hasOnlyImmutableFields()) {
-        return doClassWithOnlyImmutableFields(receiver, receiver.getInstanceFactory(), receiver.getInstanceFactory().getInstanceLayout());
+        return doClassWithOnlyImmutableFields(receiver, receiver.getInstanceFactory(),
+            receiver.getInstanceFactory().getInstanceLayout());
       } else {
-        return doClassWithFields(receiver, receiver.getInstanceFactory(), receiver.getInstanceFactory().getInstanceLayout());
+        return doClassWithFields(receiver, receiver.getInstanceFactory(),
+            receiver.getInstanceFactory().getInstanceLayout());
       }
     } else {
       return doClassWithoutFields(receiver, receiver.getInstanceFactory());

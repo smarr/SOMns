@@ -13,10 +13,11 @@ import tools.dym.profiles.ClosureApplicationProfile;
 
 
 public class LateClosureTargetNode extends ExecutionEventNode {
-  private final EventContext ctx;
+  private final EventContext              ctx;
   private final ExecutionEventNodeFactory factory;
 
-  public LateClosureTargetNode(final EventContext ctx, final ExecutionEventNodeFactory factory) {
+  public LateClosureTargetNode(final EventContext ctx,
+      final ExecutionEventNodeFactory factory) {
     this.ctx = ctx;
     this.factory = factory;
   }
@@ -24,14 +25,16 @@ public class LateClosureTargetNode extends ExecutionEventNode {
   @TruffleBoundary
   private ExecutionEventNode specialize() {
     ExecutionEventNode parent = ctx.findParentEventNode(factory);
-    InstrumentableBlockApplyNode disp = (InstrumentableBlockApplyNode) ctx.getInstrumentedNode();
+    InstrumentableBlockApplyNode disp =
+        (InstrumentableBlockApplyNode) ctx.getInstrumentedNode();
 
     if (parent == null) {
       return this;
     }
 
     @SuppressWarnings("unchecked")
-    CountingNode<ClosureApplicationProfile> p = (CountingNode<ClosureApplicationProfile>) parent;
+    CountingNode<ClosureApplicationProfile> p =
+        (CountingNode<ClosureApplicationProfile>) parent;
     ClosureApplicationProfile profile = p.getProfile();
     RootCallTarget root = (RootCallTarget) disp.getCallTarget();
     return replace(new ClosureTargetNode(profile, (Invokable) root.getRootNode()));

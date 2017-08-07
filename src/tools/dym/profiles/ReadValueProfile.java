@@ -14,7 +14,7 @@ import som.interpreter.objectstorage.ClassFactory;
 public class ReadValueProfile extends Counter implements CreateCounter {
 
   private final Map<ClassFactory, Integer> typesOfReadValue;
-  private final List<ProfileCounter> counters;
+  private final List<ProfileCounter>       counters;
 
   // TODO: add support for reading fields from profiled type of receiver objects.
   // need subexpression support for that
@@ -51,7 +51,7 @@ public class ReadValueProfile extends Counter implements CreateCounter {
   }
 
   public static final class ProfileCounter {
-    private int count;
+    private int                count;
     private final ClassFactory type;
 
     public ProfileCounter(final ClassFactory type) {

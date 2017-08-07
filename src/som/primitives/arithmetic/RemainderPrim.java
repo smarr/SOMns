@@ -13,7 +13,9 @@ import som.primitives.Primitive;
 @GenerateNodeFactory
 @Primitive(primitive = "int:reminder:", selector = "rem:")
 public abstract class RemainderPrim extends ArithmeticPrim {
-  protected RemainderPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected RemainderPrim(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   @Specialization
   public final double doDouble(final double left, final double right) {

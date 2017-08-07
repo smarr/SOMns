@@ -15,25 +15,22 @@ public final class Arguments {
   private final Class<?>[] argJavaTypes;
 
   // TODO: do we need this, or is the first sufficient?
-  //       this makes it language specific...
-  private final ClassFactory[]   argSomTypes;
+  // this makes it language specific...
+  private final ClassFactory[] argSomTypes;
 
   Arguments(final Object[] arguments) {
     this.argJavaTypes = getJavaTypes(arguments);
-    this.argSomTypes  = getSomTypes(arguments);
+    this.argSomTypes = getSomTypes(arguments);
   }
 
   private static Class<?>[] getJavaTypes(final Object[] args) {
     // remove the <?> because of checkstyle issue
-    return Arrays.stream(args).
-        map(e -> e.getClass()).
-        toArray(Class[]::new);
+    return Arrays.stream(args).map(e -> e.getClass()).toArray(Class[]::new);
   }
 
   private static ClassFactory[] getSomTypes(final Object[] args) {
-    return Arrays.stream(args).
-        map(e -> Types.getClassOf(e).getInstanceFactory()).
-        toArray(ClassFactory[]::new);
+    return Arrays.stream(args).map(e -> Types.getClassOf(e).getInstanceFactory())
+                 .toArray(ClassFactory[]::new);
   }
 
   @Override
@@ -48,7 +45,7 @@ public final class Arguments {
     Arguments o = (Arguments) obj;
 
     return Arrays.equals(argJavaTypes, o.argJavaTypes)
-        || Arrays.equals(argSomTypes,  o.argSomTypes);
+        || Arrays.equals(argSomTypes, o.argSomTypes);
   }
 
   public boolean argTypeIs(final int idx, final String name) {

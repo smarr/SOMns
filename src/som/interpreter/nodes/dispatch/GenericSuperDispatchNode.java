@@ -11,14 +11,14 @@ import som.vmobjects.SSymbol;
 
 public class GenericSuperDispatchNode extends AbstractGenericDispatchNode {
   private final MixinDefinitionId holderMixin;
-  private final boolean classSide;
+  private final boolean           classSide;
 
   public GenericSuperDispatchNode(final SourceSection source,
       final SSymbol selector, final MixinDefinitionId holderMixin,
       final boolean classSide) {
     super(source, selector);
     this.holderMixin = holderMixin;
-    this.classSide   = classSide;
+    this.classSide = classSide;
   }
 
   private static SClass getSuperClass(final SClass rcvrClass,

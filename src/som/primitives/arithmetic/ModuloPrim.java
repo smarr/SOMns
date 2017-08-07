@@ -15,7 +15,9 @@ import som.primitives.Primitive;
 @Primitive(primitive = "double:modulo:")
 @Primitive(selector = "%")
 public abstract class ModuloPrim extends ArithmeticPrim {
-  protected ModuloPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected ModuloPrim(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   @Specialization
   public final double doDouble(final double left, final double right) {

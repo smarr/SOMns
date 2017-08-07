@@ -23,7 +23,7 @@ import som.vmobjects.SObjectWithClass;
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
 @Primitive(selector = "putAll:", disabled = true,
-           extraChild = SizeAndLengthPrimFactory.class)
+    extraChild = SizeAndLengthPrimFactory.class)
 @NodeChild(value = "length", type = SizeAndLengthPrim.class, executeWith = "receiver")
 public abstract class PutAllNode extends BinaryComplexOperation {
   @Child protected BlockDispatchNode block;
@@ -38,10 +38,10 @@ public abstract class PutAllNode extends BinaryComplexOperation {
   }
 
   protected static final boolean valueOfNoOtherSpecialization(final Object value) {
-    return !(value instanceof Long)    &&
-           !(value instanceof Double)  &&
-           !(value instanceof Boolean) &&
-           !(value instanceof SBlock);
+    return !(value instanceof Long) &&
+        !(value instanceof Double) &&
+        !(value instanceof Boolean) &&
+        !(value instanceof SBlock);
   }
 
   @Specialization(guards = {"rcvr.isEmptyType()", "valueIsNil(nil)"})
@@ -52,13 +52,12 @@ public abstract class PutAllNode extends BinaryComplexOperation {
   }
 
   @Specialization(guards = {"valueIsNil(nil)"}, replaces = {"doPutNilInEmptyArray"})
-  public SMutableArray doPutNilInOtherArray(final SMutableArray rcvr, final SObjectWithClass nil,
+  public SMutableArray doPutNilInOtherArray(final SMutableArray rcvr,
+      final SObjectWithClass nil,
       final long length) {
     rcvr.transitionToEmpty(length);
     return rcvr;
   }
-
-
 
   @Specialization
   public SMutableArray doPutEvalBlock(final SMutableArray rcvr,

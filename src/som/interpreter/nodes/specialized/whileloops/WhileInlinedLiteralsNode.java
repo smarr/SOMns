@@ -34,10 +34,10 @@ public final class WhileInlinedLiteralsNode extends ExprWithTagsNode {
       final SourceSection sourceSection) {
     super(sourceSection);
     this.conditionNode = inlinedConditionNode;
-    this.bodyNode      = inlinedBodyNode;
-    this.expectedBool  = expectedBool;
+    this.bodyNode = inlinedBodyNode;
+    this.expectedBool = expectedBool;
     this.conditionActualNode = originalConditionNode;
-    this.bodyActualNode      = originalBodyNode;
+    this.bodyActualNode = originalBodyNode;
   }
 
   @Override
@@ -71,7 +71,9 @@ public final class WhileInlinedLiteralsNode extends ExprWithTagsNode {
         bodyNode.executeGeneric(frame);
         loopConditionResult = evaluateCondition(frame);
 
-        if (CompilerDirectives.inInterpreter()) { iterationCount++; }
+        if (CompilerDirectives.inInterpreter()) {
+          iterationCount++;
+        }
         ObjectTransitionSafepoint.INSTANCE.checkAndPerformSafepoint();
       }
     } finally {
