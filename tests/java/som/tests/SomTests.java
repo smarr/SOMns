@@ -83,8 +83,8 @@ public class SomTests {
     Assume.assumeTrue(ignoreReason, ignoreReason == null);
 
     VM vm = new VM(new VmOptions(new String[] {
-        "core-lib/TestSuite/TestRunner.som",
-        "core-lib/TestSuite/" + testName + ".som"}), true);
+        "core-lib/TestSuite/TestRunner.ns",
+        "core-lib/TestSuite/" + testName + ".ns"}), true);
 
     Builder builder = vm.createPolyglotBuilder();
     PolyglotEngine engine = builder.build();

@@ -54,7 +54,7 @@ public class TypeGrammarParserTest {
   private TypeParser createParser(final String testString)
       throws MissingMIMETypeException, MissingNameException, ParseError {
     Source s = Source.newBuilder(testString).
-        name("test.som").
+        name("test.ns").
         mimeType(SomLanguage.MIME_TYPE).build();
     Parser p = new Parser(
         testString, testString.length(), s, new StructuralProbe(),

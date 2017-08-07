@@ -3,7 +3,7 @@ import { HandleStoppedAndGetStackTrace, TestConnection, expectStack } from "./te
 import { createSectionBreakpointData } from "../src/messages";
 import { BreakpointType } from "./somns-support";
 
-const CSP_FILE = resolve("tests/pingpong-csp.som");
+const CSP_FILE = resolve("tests/pingpong-csp.ns");
 const CSP_URI = "file:" + CSP_FILE;
 
 describe("Setting CSP Breakpoints", () => {

@@ -16,9 +16,9 @@ import { Stop, Test } from "./stepping";
 
 const SOM_BASEPATH = "../../";
 export const SOM = SOM_BASEPATH + "som";
-export const PING_PONG_FILE = resolve("tests/pingpong.som");
+export const PING_PONG_FILE = resolve("tests/pingpong.ns");
 export const PING_PONG_URI = "file:" + PING_PONG_FILE;
-export const ACTOR_FILE = resolve("tests/actor.som")
+export const ACTOR_FILE = resolve("tests/actor.ns")
 export const ACTOR_URI = "file:" + ACTOR_FILE;
 
 const PRINT_SOM_OUTPUT = false;
@@ -77,7 +77,7 @@ export class TestConnection extends VmConnection {
   }
 
   private startSom(extraArgs?: string[], triggerDebugger?: boolean, testFile?: string) {
-    if (!testFile) { testFile = "tests/pingpong.som"; }
+    if (!testFile) { testFile = "tests/pingpong.ns"; }
     let args = ["-G", "-wd", testFile];
     if (triggerDebugger) { args = ["-d"].concat(args); };
     if (extraArgs) { args = args.concat(extraArgs); }
@@ -174,7 +174,7 @@ export class ControllerWithInitialBreakpoints extends Controller {
 }
 
 export function execSom(extraArgs: string[]): SpawnSyncReturns<string> {
-  const args = ["-G", "-t1", "-dnu", "tests/pingpong.som"].concat(extraArgs);
+  const args = ["-G", "-t1", "-dnu", "tests/pingpong.ns"].concat(extraArgs);
   return spawnSync(SOM, args);
 }
 

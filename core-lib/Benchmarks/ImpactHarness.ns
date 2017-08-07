@@ -18,7 +18,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
-class AsyncHarness usingPlatform: platform = Value (
+class ImpactHarness usingPlatform: platform = Value (
 (*  The Harness can be invoked on the command line and should be passed a list
     of benchmarks to run (class names) as arguments. It will run each of them
     and output single as well as a total. *)
@@ -32,7 +32,7 @@ class AsyncHarness usingPlatform: platform = Value (
   public class Benchmark = ()(
 
     (* Needs to return a promise. *)
-    public benchmark  = ( self subclassResponsibility )
+    public benchmark: abortP  = ( self subclassResponsibility )
 
     (* Needs to return a boolean *)
     public verifyResult: result = ( self subclassResponsibility )
@@ -50,6 +50,7 @@ class AsyncHarness usingPlatform: platform = Value (
   public class Run = (
     | public total           ::= 0.
       public numIterations   ::= 1.
+      public numFailed       ::= 0.
       public warmUp          ::= 0.
       public problemSize     ::= 1.
       public maxRuntime      ::= nil.
@@ -57,6 +58,7 @@ class AsyncHarness usingPlatform: platform = Value (
       public numThreads      ::= 1.
       public benchmarkSuite  ::= nil.
       public name            ::= nil.
+      public timeout         ::= 0.
     |
   )(
 
@@ -103,20 +105,26 @@ class AsyncHarness usingPlatform: platform = Value (
       | total outerLoopP resultPP |
       total:: 0.
       resultPP:: actors createPromisePair.
-
+      numFailed:: 0.
       outerLoopP:: actors async: 1 to: numIterations do: [:i |
-        | startTime endTime runTime bench |
+        | startTime endTime runTime bench pp|
         bench:: benchmarkSuite newInstance: problemSize.
         startTime:: system ticks.
+        pp:: actors createPromisePair.
 
-        bench benchmark whenResolved: [:benchResult |
-          (bench verifyResult: benchResult)
-            ifFalse: [ self error: 'Benchmark failed with incorrect result' ].
+        timeout > 0 ifTrue: [
+          actors after: timeout do: [ :r |
+            pp resolve: 1.
+        ] ].
 
+        (bench benchmark: pp promise) whenResolved: [:benchResult |
+          | success |
+          success:: (bench verifyResult: benchResult).
+          success ifFalse: [ numFailed:: numFailed + 1 ].
             endTime:: system ticks.
 
             runTime:: endTime - startTime.
-            printAll ifTrue: [ self printRun: runTime ].
+            printAll ifTrue: [ self printRun: runTime success: success].
 
             total:: total + runTime.
 
@@ -142,12 +150,15 @@ class AsyncHarness usingPlatform: platform = Value (
       out:: out + 'us'.
       out:: out + ' total: '.
       out:: out + result.
-      out:: out + 'us\n'.
+      out:: out + 'us'.
+      out:: out + ' success: '.
+      out:: out + ((1 - (numFailed//numIterations))*100) round.
+      out:: out + '%\n'.
       out println.
     )
 
-    printRun: runTime = (
-      (name + ': iterations=1' + ' runtime: ' + runTime + 'us') println
+    printRun: runTime success: success= (
+      (name + ': iterations=1' + ' runtime: ' + runTime + 'us success: ' + success) println
     )
 
     public printTotal = (
@@ -166,8 +177,10 @@ class AsyncHarness usingPlatform: platform = Value (
         args size > 4 ifTrue: [
           run problemSize: (args at: 5).
           args size > 5 ifTrue: [
-            run numThreads: (args at: 6) asInteger.
-    ] ] ] ]
+            run timeout: (args at: 6) asInteger.
+            args size > 6 ifTrue: [
+              run numThreads: (args at: 7) asInteger.
+    ] ] ] ] ]
   )
 
   public main: args = (
@@ -184,7 +197,7 @@ class AsyncHarness usingPlatform: platform = Value (
   )
 
   printUsage = (
-    './som.sh core-lib/Benchmarks/Harness.som [benchmark] [num-iterations [warm-up [prob-size [num-threads]]]' println.
+    './som.sh core-lib/Benchmarks/Harness.ns [benchmark] [num-iterations [warm-up [prob-size [num-threads]]]' println.
     '' println.
     '  benchmark      - benchmark class name (supports nested classes with ".") ' println.
     '                   examples: Queens, Fibonacci, Sort.QuickSort, LanguageFeatures.Dispatch' println.
@@ -192,12 +205,13 @@ class AsyncHarness usingPlatform: platform = Value (
     '  warm-up        - number of times to execute benchmark before measuring, default: 0' println.
     '  prob-size      - problem size, a benchmark specific value/value range, ' println.
     '                   which is measured in total, default: 1' println.
+    '  timeout        - maximum time for one iteration in ms, default: 0 = disabled.' println.
     '  num-threads    - number of threads executing, each doing num-iterations, default: 1' println.
   )
 
   loadModule: className = (
     | file cls |
-    file:: className + '.som'.
+    file:: className + '.ns'.
     cls:: system loadModule: file nextTo: self.
     cls ifNil: [
         self error: 'Failed loading benchmark: ' + className ].

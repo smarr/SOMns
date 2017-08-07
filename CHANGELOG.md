@@ -9,6 +9,7 @@
    use the keyword `objL` to identify literals. Otherwise, they are mostly
    compliant the Newspeak specification.
    ([#86](https://github.com/smarr/SOMns/issues/86), [PR #112](https://github.com/smarr/SOMns/pull/112))
+ - Change standard file extension to `.ns` PR #181](https://github.com/smarr/SOMns/pull/181)
 
 ## [0.4.0] - [Concurrency-Agnostic Debugger][v4]
 

@@ -29,7 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 class CDSuite usingPlatform: platform andHarness: harness = (
 | private Benchmark = harness Benchmark.
   private Vector = platform kernel Vector.
-  private RedBlackTree = (platform system loadModule: 'RedBlackTree.som' nextTo: self) new RedBlackTree.
+  private RedBlackTree = (platform system loadModule: 'RedBlackTree.ns' nextTo: self) new RedBlackTree.
 
   private MinX = 0.0.
   private MinY = 0.0.

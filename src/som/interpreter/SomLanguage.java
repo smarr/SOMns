@@ -102,7 +102,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
   public static final String MIME_TYPE = "application/x-newspeak-som-ns";
   public static final String VM_OBJECT = "vm-object";
-  public static final String FILE_EXTENSION = "som";
+  public static final String FILE_EXTENSION = "ns";
   public static final String DOT_FILE_EXTENSION = "." + FILE_EXTENSION;
 
   @CompilationFinal private VM vm;

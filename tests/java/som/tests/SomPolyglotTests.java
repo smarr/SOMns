@@ -42,7 +42,7 @@ public class SomPolyglotTests {
 
   @Test
   public void startEngineWithCommandLineParametersForHelloWorld() throws IOException {
-    VmOptions options = new VmOptions(new String[] {"core-lib/Hello.som"});
+    VmOptions options = new VmOptions(new String[] {"core-lib/Hello.ns"});
     VM vm = new VM(options, true);
 
     Builder builder = vm.createPolyglotBuilder();
@@ -56,7 +56,7 @@ public class SomPolyglotTests {
   @Test
   public void startEngineForTesting() throws IOException {
     VM vm = new VM(new VmOptions(new String[] {
-        "--platform", "core-lib/TestSuite/BasicInterpreterTests/Arrays.som"},
+        "--platform", "core-lib/TestSuite/BasicInterpreterTests/Arrays.ns"},
         "testEmptyToInts"), true);
     Builder builder = vm.createPolyglotBuilder();
     engine = builder.build();
@@ -71,7 +71,7 @@ public class SomPolyglotTests {
 
   @Test
   public void executeHelloWorldWithTruffleProfiler() throws IOException {
-    VM vm = new VM(new VmOptions(new String[] {"core-lib/Hello.som"}), true);
+    VM vm = new VM(new VmOptions(new String[] {"core-lib/Hello.ns"}), true);
 
     Builder builder = vm.createPolyglotBuilder();
     engine = builder.build();
@@ -90,7 +90,7 @@ public class SomPolyglotTests {
 
   @Test
   public void executeHelloWorldWithoutTruffleProfiler() throws IOException {
-    VM vm = new VM(new VmOptions(new String[] {"core-lib/Hello.som"}), true);
+    VM vm = new VM(new VmOptions(new String[] {"core-lib/Hello.ns"}), true);
 
     Builder builder = vm.createPolyglotBuilder();
     engine = builder.build();

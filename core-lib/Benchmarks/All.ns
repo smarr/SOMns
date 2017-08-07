@@ -20,7 +20,7 @@ THE SOFTWARE.
 *)
 class AllBenchmarks usingPlatform: platform = (
 | private platform = platform.
-  private harness  = (platform system loadModule: 'Harness.som' nextTo: self) usingPlatform: platform.
+  private harness  = (platform system loadModule: 'Harness.ns' nextTo: self) usingPlatform: platform.
   private system   = platform system.
   private ObjectMirror = platform mirrors ObjectMirror.
   private Run      = harness Run.
@@ -74,14 +74,14 @@ class AllBenchmarks usingPlatform: platform = (
       (run: 'ObjectLiterals'       in: 'LanguageFeatures' numIter: 1),
       (run: 'ObjectLiterals2'      in: 'LanguageFeatures' numIter: 1),
       (run: 'ObjectLiterals3'      in: 'LanguageFeatures' numIter: 1),
-    
+
       (run: 'PageRank'    numIter:  1),
       (run: 'GraphSearch' numIter:  1)
   )
 
   loadModule: name = (
     | file cls |
-    file:: name + '.som'.
+    file:: name + '.ns'.
     cls:: system loadModule: file nextTo: self.
     ^ cls usingPlatform: platform andHarness: harness.
   )

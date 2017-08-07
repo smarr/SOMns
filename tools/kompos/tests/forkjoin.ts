@@ -5,7 +5,7 @@ import { BreakpointType, SteppingType } from "./somns-support";
 import { TestConnection, HandleStoppedAndGetStackTrace, expectStack } from "./test-setup";
 import { createSectionBreakpointData, createLineBreakpointData, StackTraceResponse } from "../src/messages";
 
-const FJ_FILE = resolve("tests/forkjoin.som");
+const FJ_FILE = resolve("tests/forkjoin.ns");
 const FJ_URI = "file:" + FJ_FILE;
 
 describe("Setting Fork/Join Breakpoints", () => {

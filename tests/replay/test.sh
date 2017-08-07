@@ -52,10 +52,10 @@ for args in "${Savina[@]}"
 do  
   echo "$args" 
   echo "Tracing:" 
-  $SOM_DIR/som -G -JXmx1500m -vmd -at core-lib/Benchmarks/AsyncHarness.som Savina.$args 
+  $SOM_DIR/som -G -JXmx1500m -vmd -at core-lib/Benchmarks/AsyncHarness.ns Savina.$args 
   echo "" 
   echo "Replay:" 
-  $SOM_DIR/som -G -JXmx1500m -vmd -at -r core-lib/Benchmarks/AsyncHarness.som Savina.$args 
+  $SOM_DIR/som -G -JXmx1500m -vmd -at -r core-lib/Benchmarks/AsyncHarness.ns Savina.$args 
   echo "" 
   echo "========================================================" 
   echo "" 
@@ -65,10 +65,10 @@ for args in "${Validation[@]}"
 do 
   echo "$args"
   echo "Tracing:"
-  $SOM_DIR/som -G -JXmx1500m -vmd -at core-lib/Benchmarks/ImpactHarness.som Validation.$args | grep -o 'success: .*' > $SCRIPT_PATH/orig.txt
+  $SOM_DIR/som -G -JXmx1500m -vmd -at core-lib/Benchmarks/ImpactHarness.ns Validation.$args | grep -o 'success: .*' > $SCRIPT_PATH/orig.txt
   echo ""
   echo "Replay:"
-  $SOM_DIR/som -G -JXmx1500m -vmd -at -r core-lib/Benchmarks/ImpactHarness.som Validation.$args | grep -o 'success: .*' > $SCRIPT_PATH/repl.txt
+  $SOM_DIR/som -G -JXmx1500m -vmd -at -r core-lib/Benchmarks/ImpactHarness.ns Validation.$args | grep -o 'success: .*' > $SCRIPT_PATH/repl.txt
   diff $SCRIPT_PATH/orig.txt $SCRIPT_PATH/repl.txt
   echo ""
   echo "========================================================"
