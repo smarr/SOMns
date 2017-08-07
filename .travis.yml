@@ -11,9 +11,20 @@ env:
     - TASK=kompos-tests
     - TASK=replay1-tests
     - TASK=replay2-tests
+
+install: |
+  if [ "$TASK" = "checkstyle" ]
+  then
+    export ECLIPSE_TAR=eclipse.tar.gz
+    export ECLIPSE_URL=http://archive.eclipse.org/eclipse/downloads/drops4/R-4.6.3-201703010400/eclipse-SDK-4.6.3-linux-gtk-x86_64.tar.gz
+    wget ${ECLIPSE_URL} -O ${ECLIPSE_TAR}
+    tar -C ${TRAVIS_BUILD_DIR}/.. -xzf ${ECLIPSE_TAR}
+    export ECLIPSE_EXE=${TRAVIS_BUILD_DIR}/../eclipse/eclipse
+  fi
+
 script:
   - if [ "$TASK" = "core-tests" ]; then ant core-tests && ant coverage; fi
-  - if [ "$TASK" = "checkstyle" ]; then ant checkstyle && cd tools/kompos && nvm install 7 && npm install && npm run lint; fi
+  - if [ "$TASK" = "checkstyle" ]; then ant checkstyle && ant eclipseformat-check && cd tools/kompos && nvm install 7 && npm install && npm run lint; fi
   - if [ "$TASK" = "kompos-tests" ]; then nvm install 8 && ant && cd tools/kompos && npm -s run verify && npm test; fi
   - if [ "$TASK" = "replay1-tests" ]; then ant compile && ./tests/replay/test.sh 1; fi
   - if [ "$TASK" = "replay2-tests" ]; then ant compile && ./tests/replay/test.sh 2; fi

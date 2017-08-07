@@ -110,6 +110,20 @@
             <arg line="${javafiles}"/>
         </exec>
     </target>
+    
+    <target name="eclipseformat-check" depends="eclipseformat">
+        <exec executable="git" dir="${basedir}">
+            <arg value="status" />
+            <arg value="*.java" />
+        </exec>
+        <exec executable="git" dir="${basedir}" failonerror="true">
+            <arg value="diff-index" />
+            <arg value="--quiet" />
+            <arg value="--exit-code" />
+            <arg value="--ignore-submodules" />
+            <arg value="HEAD" />
+        </exec>
+    </target>
 
     <target name="checkstyle-jar">
         <get src="http://tenet.dl.sourceforge.net/project/checkstyle/checkstyle/${checkstyle.version}/checkstyle-${checkstyle.version}-all.jar"
