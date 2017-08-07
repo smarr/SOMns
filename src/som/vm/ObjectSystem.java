@@ -117,7 +117,7 @@ public final class ObjectSystem {
 
   private SObjectWithoutFields constructVmMirror() {
     HashMap<SSymbol, Dispatchable> vmMirrorMethods = primitives.takeVmMirrorPrimitives();
-    MixinScope scope = new MixinScope(null);
+    MixinScope scope = new MixinScope(null, null);
 
     MixinDefinition vmMirrorDef = new MixinDefinition(
         Symbols.VMMIRROR, null, null, null, null, null, null, null,

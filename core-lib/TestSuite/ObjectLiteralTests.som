@@ -1,0 +1,187 @@
+(* Copyright (c) 2001-2017 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+class ObjectLiteralTests usingPlatform: platform testFramework: minitest = (
+| private TestContext = minitest TestContext.
+  private outerVariable ::= 1. |
+) (
+
+  public class SuperClass = (
+    | public variable ::= 123. |
+  )()
+
+  public class ObjectTest = TestContext ()(
+
+    public testEquality = (
+      | a b |
+
+      a:: objL()().
+      b:: objL()().
+      deny: a == b.
+
+      1 to: 10 do: [ :i |
+        b:: a.
+        a:: objL()().
+        deny: a == b. ]
+    )
+
+    public testLoopInObject = (
+      | x |
+      x:: 0.
+
+      objL()(
+        public foo = (
+          1 to: 10 do: [ :i |
+            x:: x + 1 ]
+        )
+      ) foo.
+      assert: x equals: 10.
+    )
+
+    public testLoopInObjectInLoop = (
+      | x |
+      x:: 0.
+
+      1 to: 10 do: [ :i |
+        objL()(
+          public foo = (
+            1 to: 10 do: [ :j |
+              x:: x + 1 ]
+          )
+        ) foo.
+      ].
+
+      assert: x equals: 100.
+    )
+
+    public testReadFromAndWriteToEnclosingMethod = (
+      | x a |
+      x:: 1.
+
+      a:: objL()(
+        public foo = (
+          x:: x + 1.
+          ^ x
+        )
+      ) foo.
+
+      assert: a equals: 2.
+    )
+
+    public testReadFromAndWriteToEnclosingBlock = (
+      | a |
+
+      a:: [ :y | | z |
+        z:: 1.
+
+        objL()(
+          public foo = (
+            z:: 2.
+            ^ y + z
+          )
+        ) foo.
+      ] value: 1.
+
+      assert: a equals: 3.
+    )
+
+    public testReadFromOtherObject = (
+      | a b |
+
+      a:: objL(
+      | public slot ::= 42. |
+      )().
+
+      b:: objL()(
+        public foo = (
+          ^ a slot
+        )
+      ) foo.
+
+      assert: b equals: 42.
+    )
+
+    public testReadAndWriteToDeeplyNestingObjects = (
+      | a b |
+      a:: 0.
+      b:: 0.
+
+      1 to: 10 do: [ :i |
+        [
+          a:: a + objL ( | x ::= 0. | )(
+            public foo = (
+              [
+                ^ x + objL ( | x ::= 1. | )(
+                  public foo = (
+                    [
+                      ^ x + objL ( | x ::= 10. |)(
+                        public foo = (
+                          [
+                            b:: b + 1.
+                            ^ x + i
+                          ] value.
+                        )
+                      ) foo.
+                    ] value.
+                  )
+                ) foo.
+              ] value.
+            )
+          ) foo.
+        ] value.
+      ].
+
+      assert: a equals: 165.
+      assert: b equals: 10.
+    )
+
+    public testInheritance = (
+      | a b |
+      a:: objL SuperClass ()().
+      b:: a variable.
+      assert: b equals: 123.
+    )
+
+    public testOuterExplicitally = (
+      | a |
+
+      a:: objL()(
+        public foo = (
+          ^ outer ObjectLiteralTests
+        )
+      ) foo.
+
+      assert: a is: outer ObjectLiteralTests.
+    )
+
+    public testOuterImplicitlly = (
+      | a |
+
+      a:: objL()(
+        public foo = (
+          outerVariable:: outerVariable + 1.
+          ^ outerVariable
+        )
+      ) foo.
+
+      assert: a equals: 2.
+    )
+  ) : ( TEST_CONTEXT = () )
+)

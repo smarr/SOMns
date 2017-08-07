@@ -99,6 +99,7 @@ class TestRunner usingPlatform: platform = (
                'ThreadingTests',
                'TransactionTests',
                'TransferObjectTests',
+               'ObjectLiteralTests',
                'MinitestTests'.
 
     allSuccessful:: true.

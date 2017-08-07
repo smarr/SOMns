@@ -2,6 +2,7 @@ package som.vmobjects;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.interop.TruffleObject;
 
@@ -9,7 +10,7 @@ import som.interop.SObjectInteropMessageResolutionForeign;
 import som.interpreter.objectstorage.ClassFactory;
 
 
-public abstract class SObjectWithClass extends SAbstractObject implements TruffleObject {
+public abstract class SObjectWithClass extends SAbstractObject implements TruffleObject, SObjectWithContext {
   @CompilationFinal protected SClass       clazz;
   @CompilationFinal protected ClassFactory classGroup; // the factory by which clazz was created
 
@@ -53,6 +54,11 @@ public abstract class SObjectWithClass extends SAbstractObject implements Truffl
   @Override
   public ForeignAccess getForeignAccess() {
     return SObjectInteropMessageResolutionForeign.ACCESS;
+  }
+
+  @Override
+  public MaterializedFrame getContext() {
+    return clazz.getContext();
   }
 
   public static final class SObjectWithoutFields extends SObjectWithClass {

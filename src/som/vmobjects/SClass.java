@@ -31,6 +31,7 @@ import java.util.Map;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 import som.VM;
@@ -63,14 +64,36 @@ public final class SClass extends SObjectWithClass {
   @CompilationFinal private ClassFactory instanceClassGroup; // the factory for this object
 
   protected final SObjectWithClass enclosingObject;
+  private final MaterializedFrame context;
 
+  /**
+   * The constructor used for instantiating empty classes and meta-classes
+   * (these classes do not have an enclosing activation).
+   */
   public SClass(final SObjectWithClass enclosing) {
     this.enclosingObject = enclosing;
+    this.context = null;
   }
 
+  /**
+   * The constructor used for instantiating standard classes (these classes
+   * do not have an enclosing activation).
+   */
   public SClass(final SObjectWithClass enclosing, final SClass clazz) {
     super(clazz, clazz.getInstanceFactory());
     this.enclosingObject = enclosing;
+    this.context = null;
+  }
+
+  /**
+   * The constructor used for instantiating the SClass of an object literal.
+   *
+   * @param frame, the current activation.
+   */
+  public SClass(final SObjectWithClass enclosing, final SClass clazz, final MaterializedFrame frame) {
+    super(clazz, clazz.getInstanceFactory());
+    this.enclosingObject = enclosing;
+    this.context = frame;
   }
 
   public SObjectWithClass getEnclosingObject() {
@@ -264,5 +287,10 @@ public final class SClass extends SObjectWithClass {
   @Override
   public String toString() {
     return "Class(" + getName().getString() + ")";
+  }
+
+  @Override
+  public MaterializedFrame getContext() {
+    return context;
   }
 }

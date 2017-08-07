@@ -45,6 +45,9 @@ the specifications are as follows:
  - local variables in methods do not yet support the full slotDeclartion style
 
  - as in SOM, blocks can only have 3 arguments (counting `self`)
+ 
+ - object literals currently require a keyword prefix `objL`, to work around
+   parser limitations
 
 Obtaining and Running SOMns
 ---------------------------

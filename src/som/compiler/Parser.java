@@ -97,6 +97,7 @@ import som.interpreter.nodes.literals.DoubleLiteralNode;
 import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.literals.LiteralNode;
 import som.interpreter.nodes.literals.NilLiteralNode;
+import som.interpreter.nodes.literals.ObjectLiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
 import som.interpreter.nodes.literals.SymbolLiteralNode;
 import som.interpreter.nodes.specialized.BooleanInlinedLiteralNode.AndInlinedLiteralNode;
@@ -1189,6 +1190,9 @@ public class Parser {
           comments();
           return new NilLiteralNode(getSource(coord));
         }
+        if (acceptIdentifier("objL", LiteralTag.class)) {
+          return literalObject(builder);
+        }
         if ("outer".equals(text)) {
           return outerSend(builder);
         }
@@ -1652,6 +1656,59 @@ public class Parser {
       expressions.add(expression(builder));
       needsSeparator = !accept(Period, StatementSeparatorTag.class);
     }
+  }
+
+  /**
+   * This method builds the class for that supports an object literal node. The class
+   * is anonymous - it is not referenced by any enclosing classes - and is named with
+   * the following pattern <code>objL@line@column</code>.
+   *
+   * <p>The class implements only the default factory (named <code>objL@line@column#new</code>),
+   * which is called later when the object literal node is invoked
+   * (@see {@link ObjectLiteralNode#executeGeneric}).
+   *
+   * <p>The class declaration for the object literal is parsed in the same fashion as
+   * regular Newspeak classes (@see #inheritanceListAndOrBody).
+   *
+   *
+   * <p><strong>TODO</strong>: The current implementation is not compliant with Newspeak's specification,
+   * which states that an object literal features:
+   *
+   * <ol>
+   *   <li>an identifier (optional)
+   *            a keyword message for the primary factory (optional)
+   *   <li>a class declaration.
+   * </ol>
+   *
+   * <p>Therefore <code>()()</code>, <code>name ()()</code>, and
+   * <code>name new: var ()()</code> are all permitted.
+   * Realizing this syntax requires more advanced look ahead than what is currently
+   * provided by the lexer.
+   */
+  private ExpressionNode literalObject(final MethodBuilder builder)
+      throws ProgramDefinitionError {
+    // Generate the class's signature
+    SourceSection source = getSource(getCoordinate());
+    SSymbol signature = symbolFor("objL@" + lexer.getCurrentLineNumber() + "@" + lexer.getCurrentColumn());
+    MixinBuilder classBuilder = new MixinBuilder(builder,
+        AccessModifier.PUBLIC, signature, source, structuralProbe, language);
+
+    // Setup the builder and "new" factory for the implicit class
+    MethodBuilder primaryFactory = classBuilder.getPrimaryFactoryMethodBuilder();
+    primaryFactory.addArgument("self", getEmptySource());
+    primaryFactory.setSignature(Symbols.NEW);
+    classBuilder.setupInitializerBasedOnPrimaryFactory(source);
+
+    // Parse the object literal declaration
+    inheritanceListAndOrBody(classBuilder);
+
+    // Create the object literal node
+    MixinDefinition mixinDef = classBuilder.assemble(source);
+    ExpressionNode outerRead = builder.getSelfRead(source);
+    ExpressionNode newMessage = createMessageSend(symbolFor("new"),
+        new ExpressionNode[] {builder.getSelfRead(source)},
+        false, source, source, language);
+    return new ObjectLiteralNode(mixinDef, outerRead, newMessage, source);
   }
 
   private SSymbol selector() throws ParseError {

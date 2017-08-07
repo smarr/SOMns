@@ -20,12 +20,13 @@ import com.sun.istack.internal.Nullable;
 
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
-import som.interpreter.nodes.ClassInstantiationNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.InstantiationNode.ClassInstantiationNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotRead;
 import som.interpreter.nodes.dispatch.CachedSlotRead.SlotAccess;
@@ -61,7 +62,6 @@ import tools.SourceCoordinate;
  */
 public final class MixinDefinition {
   private final SSymbol       name;
-  @SuppressWarnings("unused")
   private final SourceSection nameSection;
 
   private final SSymbol       primaryFactoryName;
@@ -139,11 +139,6 @@ public final class MixinDefinition {
 
   public boolean isModule() {
     return isModule;
-  }
-
-  public MixinDefinition getOuter() {
-    assert instanceScope.getOuter() == classScope.getOuter() : "Inconsistent outer scope?";
-    return instanceScope.getOuter();
   }
 
   // TODO: does this really have to be an invokable?
@@ -714,5 +709,63 @@ public final class MixinDefinition {
   @Override
   public String toString() {
     return name.getString() + "[" + sourceSection + "]";
+  }
+
+  private MixinDefinition cloneForSplitting(final MixinScope adaptedInstanceScope,
+      final MixinScope adaptedClassScope) {
+    return new MixinDefinition(name, nameSection, primaryFactoryName,
+        new ArrayList<ExpressionNode>(initializerBody), initializerBuilder, initializerSource,
+        superclassMixinResolution,
+        slots,
+        new HashMap<SSymbol, Dispatchable>(instanceDispatchables),
+        new HashMap<SSymbol, SInvokable>(factoryMethods),
+        nestedMixinDefinitions, mixinId, accessModifier,
+        adaptedInstanceScope, adaptedClassScope,
+        allSlotsAreImmutable, outerScopeIsImmutable,
+        isModule, sourceSection);
+  }
+
+  private SInvokable adaptInvokable(final SInvokable invokable, final MethodScope scope, final int appliesTo) {
+    Method originalInvokable = (Method) invokable.getInvokable();
+    MethodScope adaptedScope = originalInvokable.getLexicalScope().split(scope);
+    Method adaptedInvokable = originalInvokable.cloneAndAdaptAfterScopeChange(
+        adaptedScope, appliesTo + 1, false, true);
+    return new SInvokable(invokable.getSignature(), invokable.getAccessModifier(),
+        adaptedInvokable, invokable.getEmbeddedBlocks());
+  }
+
+  private void adaptFactoryMethods(final MethodScope scope, final int appliesTo) {
+    for (SSymbol key : factoryMethods.keySet()) {
+      SInvokable invokable = factoryMethods.get(key);
+      SInvokable adaptedIvk = adaptInvokable(invokable, scope, appliesTo);
+      factoryMethods.put(key, adaptedIvk);
+    }
+  }
+
+  private void adaptInvokableDispatchables(final MethodScope scope, final int appliesTo) {
+    for (SSymbol key : instanceDispatchables.keySet()) {
+      Dispatchable dispatchable = instanceDispatchables.get(key);
+
+      // Only need to adapt SInvokable, don't need to adapt slot definitions
+      if (dispatchable instanceof SInvokable) {
+        SInvokable invokable = (SInvokable) instanceDispatchables.get(key);
+        SInvokable adaptedInvokable = adaptInvokable(invokable, scope, appliesTo);
+        instanceDispatchables.put(key, adaptedInvokable);
+      }
+    }
+  }
+
+  public MixinDefinition cloneAndAdaptAfterScopeChange(final MethodScope adaptedScope, final int appliesTo) {
+    MixinScope adaptedInstanceScope = new MixinScope(instanceScope.getOuterMixin(), adaptedScope);
+    MixinScope adaptedClassScope = new MixinScope(classScope.getOuterMixin(), adaptedScope);
+
+    MixinDefinition clone = cloneForSplitting(adaptedInstanceScope, adaptedClassScope);
+
+    adaptedInstanceScope.setMixinDefinition(clone, false);
+    adaptedClassScope.setMixinDefinition(clone, true);
+
+    clone.adaptFactoryMethods(adaptedScope, appliesTo);
+    clone.adaptInvokableDispatchables(adaptedScope, appliesTo);
+    return clone;
   }
 }

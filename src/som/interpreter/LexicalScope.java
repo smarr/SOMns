@@ -23,19 +23,33 @@ public abstract class LexicalScope {
   //       similar problems, instead of a single one
   public static final class MixinScope extends LexicalScope {
     private final MixinScope outerMixin;
+    private final MethodScope nullOrOuterMethod;
     private HashMap<SSymbol, Dispatchable> slotsClassesAndMethods;
 
     @CompilationFinal private MixinDefinition mixinDefinition;
 
-    public MixinScope(final MixinScope outerMixin) {
+    /**
+     * Both Newspeak's class and the class's created anonymously for object literal's
+     * need to be instantiated from the outer class. Regular classes do not have
+     * an enclosing activation, and so for regular classes the parameter corresponding to
+     * the outer method is null. In contrast, the class of an object literal has the outer
+     * method as its enclosing activation, and in this case the scope of the outer method
+     * is given.
+     *
+     * @param outerMixin, the scope of the outer class
+     * @param nullOrOuterMethod, either null or the scope of the current activation
+     */
+    public MixinScope(final MixinScope outerMixin, final MethodScope nullOrOuterMethod) {
       this.outerMixin = outerMixin;
+      this.nullOrOuterMethod = nullOrOuterMethod;
     }
 
-    public MixinDefinition getOuter() {
-      if (outerMixin != null) {
-        return outerMixin.mixinDefinition;
-      }
-      return null;
+    public MethodScope getOuterMethod() {
+      return nullOrOuterMethod;
+    }
+
+    public MixinScope getOuterMixin() {
+      return outerMixin;
     }
 
     public HashMap<SSymbol, Dispatchable> getDispatchables() {
@@ -254,12 +268,16 @@ public abstract class LexicalScope {
     }
 
     public MethodScope getOuterMethodScopeOrNull() {
-      return outerMethod;
-    }
+      if (outerMethod != null) {
+        return outerMethod;
+      }
 
-    public MethodScope getOuterMethodScope() {
-      assert outerMethod != null;
-      return outerMethod;
+      if (outerMixin.getOuterMethod() != null) {
+        return outerMixin.getOuterMethod();
+      }
+
+      return null;
+
     }
 
     public void propagateLoopCountThroughoutMethodScope(final long count) {

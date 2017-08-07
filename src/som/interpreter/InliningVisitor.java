@@ -81,6 +81,10 @@ public final class InliningVisitor implements NodeVisitor {
     return scope.getScope(method);
   }
 
+  public MethodScope getCurrentScope() {
+    return scope;
+  }
+
   @Override
   public boolean visit(final Node node) {
     if (node instanceof SOMNode) {
