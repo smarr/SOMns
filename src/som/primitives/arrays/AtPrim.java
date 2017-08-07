@@ -28,10 +28,11 @@ import tools.dym.Tags.ArrayRead;
 
 @GenerateNodeFactory
 @Primitive(primitive = "array:at:", selector = "at:", receiverType = SArray.class,
-           inParser = false, specializer = TxAtPrim.class)
+    inParser = false, specializer = TxAtPrim.class)
 public abstract class AtPrim extends BinaryBasicOperation {
   protected static final class TxAtPrim extends Specializer<BinaryBasicOperation> {
-    public TxAtPrim(final Primitive prim, final NodeFactory<BinaryBasicOperation> fact, final VM vm) {
+    public TxAtPrim(final Primitive prim, final NodeFactory<BinaryBasicOperation> fact,
+        final VM vm) {
       super(prim, fact, vm);
     }
 
@@ -42,7 +43,7 @@ public abstract class AtPrim extends BinaryBasicOperation {
       BinaryBasicOperation node = super.create(arguments, argNodes, section, eagerWrapper);
 
       // TODO: seems a bit expensive,
-      //       might want to optimize for interpreter first iteration speed
+      // might want to optimize for interpreter first iteration speed
       // TODO: clone in UnitializedDispatchNode.AbstractUninitialized.forAtomic()
       RootNode root = argNodes[0].getRootNode();
       boolean forAtomic;
@@ -50,7 +51,7 @@ public abstract class AtPrim extends BinaryBasicOperation {
         forAtomic = ((Invokable) root).isAtomic();
       } else {
         // TODO: need to think about integration with actors, but, that's a
-        //       later research project
+        // later research project
         forAtomic = false;
       }
 
@@ -83,7 +84,8 @@ public abstract class AtPrim extends BinaryBasicOperation {
 
   private Object triggerException(final VirtualFrame frame,
       final SArray arr, final long idx) {
-    int rcvrIdx = SArguments.RCVR_IDX; assert rcvrIdx == 0;
+    int rcvrIdx = SArguments.RCVR_IDX;
+    assert rcvrIdx == 0;
     return exception.doPreEvaluated(frame,
         new Object[] {KernelObj.indexOutOfBoundsClass, arr, idx});
   }

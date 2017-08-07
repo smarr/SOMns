@@ -15,6 +15,7 @@ public interface Dispatchable {
       Object rcvr, Object firstArg, AbstractDispatchNode newChainEnd, boolean forAtomic);
 
   AccessModifier getAccessModifier();
+
   Object invoke(IndirectCallNode node, Object[] arguments);
 
   String typeForErrors();

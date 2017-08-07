@@ -21,8 +21,8 @@ import tools.debugger.entities.ActivityType;
 
 
 @GenerateNodeFactory
-@Primitive(primitive = "actors:createFromValue:", selector  = "createActorFromValue:",
-           specializer = IsActorModule.class, requiresContext = true)
+@Primitive(primitive = "actors:createFromValue:", selector = "createActorFromValue:",
+    specializer = IsActorModule.class, requiresContext = true)
 public abstract class CreateActorPrim extends BinaryComplexOperation {
   private final VM vm;
 

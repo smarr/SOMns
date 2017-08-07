@@ -10,8 +10,9 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import tools.debugger.Tags;
 
+
 public abstract class Tagging {
-  private Tagging() { }
+  private Tagging() {}
 
   public static void collectSourceSectionsAndTags(
       final Iterable<RootNode> rootNodes,
@@ -22,8 +23,10 @@ public abstract class Tagging {
     }
     for (RootNode root : rootNodes) {
       root.accept(node -> {
-        @SuppressWarnings("rawtypes")  Set t = instrumenter.queryTags(node);
-        @SuppressWarnings("unchecked") Set<Class<? extends Tags>> tags = t;
+        @SuppressWarnings("rawtypes")
+        Set t = instrumenter.queryTags(node);
+        @SuppressWarnings("unchecked")
+        Set<Class<? extends Tags>> tags = t;
 
         if (tags.size() > 0) {
           if (sourceSectionsAndTags.containsKey(node.getSourceSection())) {

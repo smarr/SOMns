@@ -80,7 +80,7 @@ public abstract class TypeProfileNode extends Node {
   }
 
   // TODO: we should support different block classes here, but, well, this is
-  //       not really intersting for our metrics at the moment
+  // not really intersting for our metrics at the moment
   @Specialization
   public void doSBlock(final SBlock obj,
       @Cached("create(obj)") final ProfileCounter cnt) {

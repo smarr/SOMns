@@ -23,7 +23,9 @@ public abstract class InteropDispatch extends Node {
 
   private final VM vm;
 
-  public InteropDispatch(final VM vm) { this.vm = vm; }
+  public InteropDispatch(final VM vm) {
+    this.vm = vm;
+  }
 
   public abstract Object executeDispatch(VirtualFrame frame, String selector,
       Object[] args);
@@ -32,7 +34,8 @@ public abstract class InteropDispatch extends Node {
     return DispatchGuard.create(rcvr);
   }
 
-  protected static SSymbol lookupWithPrefix(final String prefix, SClass cls, final int numArgs) {
+  protected static SSymbol lookupWithPrefix(final String prefix, SClass cls,
+      final int numArgs) {
     Dispatchable disp = null;
     while (disp == null && cls != null) {
       for (Entry<SSymbol, Dispatchable> e : cls.getDispatchables().entrySet()) {

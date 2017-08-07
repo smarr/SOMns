@@ -17,7 +17,7 @@ import som.vmobjects.SSymbol;
 
 public final class EagerUnaryPrimitiveNode extends EagerPrimitive {
 
-  @Child private ExpressionNode receiver;
+  @Child private ExpressionNode      receiver;
   @Child private UnaryExpressionNode primitive;
 
   private final SSymbol selector;
@@ -26,7 +26,7 @@ public final class EagerUnaryPrimitiveNode extends EagerPrimitive {
       final ExpressionNode receiver, final UnaryExpressionNode primitive) {
     super(source);
     assert source == primitive.getSourceSection();
-    this.receiver  = insert(receiver);
+    this.receiver = insert(receiver);
     this.primitive = insert(primitive);
     this.selector = selector;
   }
@@ -93,7 +93,8 @@ public final class EagerUnaryPrimitiveNode extends EagerPrimitive {
     try {
       return primitive.executeEvaluated(frame, receiver);
     } catch (UnsupportedSpecializationException e) {
-      TruffleCompiler.transferToInterpreterAndInvalidate("Eager Primitive with unsupported specialization.");
+      TruffleCompiler.transferToInterpreterAndInvalidate(
+          "Eager Primitive with unsupported specialization.");
       return makeGenericSend().doPreEvaluated(frame, new Object[] {receiver});
     }
   }

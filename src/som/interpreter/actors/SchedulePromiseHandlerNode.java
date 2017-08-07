@@ -58,7 +58,7 @@ public abstract class SchedulePromiseHandlerNode extends Node {
     if (receiver instanceof SFarReference) {
       // now we are about to send a message to a far reference, so, it
       // is better to just redirect the message back to the current actor
-      finalTarget   = ((SFarReference) receiver).getActor();
+      finalTarget = ((SFarReference) receiver).getActor();
       receiver = ((SFarReference) receiver).getValue();
     }
 
@@ -72,7 +72,7 @@ public abstract class SchedulePromiseHandlerNode extends Node {
       msg.args[i] = finalTarget.wrapForUse(msg.args[i], msg.originalSender, null);
     }
 
-    msg.target      = finalTarget; // for sends to far references, we need to adjust the target
+    msg.target = finalTarget; // for sends to far references, we need to adjust the target
     msg.finalSender = current;
 
     finalTarget.send(msg, actorPool);

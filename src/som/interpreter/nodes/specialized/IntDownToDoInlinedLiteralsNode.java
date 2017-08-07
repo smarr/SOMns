@@ -19,8 +19,8 @@ import tools.dym.Tags.LoopNode;
 
 
 @NodeChildren({
-  @NodeChild(value = "from",  type = ExpressionNode.class),
-  @NodeChild(value = "to",  type = ExpressionNode.class)})
+    @NodeChild(value = "from", type = ExpressionNode.class),
+    @NodeChild(value = "to", type = ExpressionNode.class)})
 public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
 
   @Child protected ExpressionNode body;
@@ -30,18 +30,19 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
   private final ExpressionNode bodyActualNode;
 
   private final FrameSlot loopIndex;
-  private final Local loopIndexVar;
+  private final Local     loopIndexVar;
 
   public abstract ExpressionNode getFrom();
+
   public abstract ExpressionNode getTo();
 
   public IntDownToDoInlinedLiteralsNode(final ExpressionNode body,
       final Local loopIndex, final ExpressionNode originalBody,
       final SourceSection sourceSection) {
     super(sourceSection);
-    this.body           = body;
-    this.loopIndex      = loopIndex.getSlot();
-    this.loopIndexVar   = loopIndex;
+    this.body = body;
+    this.loopIndex = loopIndex.getSlot();
+    this.loopIndexVar = loopIndex;
     this.bodyActualNode = originalBody;
 
     // and, we can already tell the loop index that it is going to be long
@@ -104,7 +105,6 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
         body, (Local) se.var, bodyActualNode, sourceSection, getFrom(), getTo());
     replace(node);
   }
-
 
   @Override
   public boolean isResultUsed(final ExpressionNode child) {

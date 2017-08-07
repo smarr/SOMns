@@ -30,6 +30,7 @@ import som.interpreter.SomLanguage;
 import tools.SourceCoordinate;
 import tools.language.StructuralProbe;
 
+
 public class SourcecodeCompiler {
 
   protected final SomLanguage language;
@@ -44,7 +45,7 @@ public class SourcecodeCompiler {
 
   public MixinDefinition compileModule(final Source source,
       final StructuralProbe structuralProbe)
-          throws ProgramDefinitionError {
+      throws ProgramDefinitionError {
     Parser parser = new Parser(
         source.getCode(), source.getLength(), source, structuralProbe, language);
     return compile(parser, source);

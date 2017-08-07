@@ -17,13 +17,17 @@ import som.vm.VmSettings;
 import tools.concurrency.TraceParser.MessageRecord;
 import tools.debugger.WebDebugger;
 
+
 public class TracingActors {
   public static class TracingActor extends Actor {
-    // TODO: fix this code so that actorId can be final again... (adapt constructor of ReplayActor)
+    // TODO: fix this code so that actorId can be final again... (adapt constructor of
+    // ReplayActor)
     protected long actorId;
-    private int traceBufferId;
+    private int    traceBufferId;
 
-    /** Flag that indicates if a step-to-next-turn action has been made in the previous message. */
+    /**
+     * Flag that indicates if a step-to-next-turn action has been made in the previous message.
+     */
     protected boolean stepToNextTurn;
 
     public TracingActor(final VM vm) {
@@ -39,7 +43,9 @@ public class TracingActors {
     }
 
     @Override
-    public final long getId() { return actorId; }
+    public final long getId() {
+      return actorId;
+    }
 
     public boolean isStepToNextTurn() {
       return stepToNextTurn;
@@ -50,7 +56,8 @@ public class TracingActors {
       this.stepToNextTurn = stepToNextTurn;
     }
 
-    public static void handleBreakpointsAndStepping(final EventualMessage msg, final WebDebugger dbg, final Actor actor) {
+    public static void handleBreakpointsAndStepping(final EventualMessage msg,
+        final WebDebugger dbg, final Actor actor) {
       if (!VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
         return;
       }
@@ -66,14 +73,14 @@ public class TracingActors {
       if (msg.getHaltOnPromiseMessageResolution()) {
         dbg.prepareSteppingUntilNextRootNode();
       }
-   }
+    }
   }
 
   public static final class ReplayActor extends TracingActor {
-    protected int children;
-    protected final Queue<MessageRecord> expectedMessages;
+    protected int                              children;
+    protected final Queue<MessageRecord>       expectedMessages;
     protected final ArrayList<EventualMessage> leftovers = new ArrayList<>();
-    private static List<ReplayActor> actorList;
+    private static List<ReplayActor>           actorList;
 
     static {
       if (VmSettings.DEBUG_MODE) {
@@ -98,7 +105,9 @@ public class TracingActors {
       }
 
       if (VmSettings.DEBUG_MODE) {
-        synchronized (actorList) { actorList.add(this); }
+        synchronized (actorList) {
+          actorList.add(this);
+        }
       }
     }
 
@@ -127,6 +136,7 @@ public class TracingActors {
 
     /**
      * Prints a list of expected Messages and remaining mailbox content.
+     * 
      * @return true if there are actors expecting messages, false otherwise.
      */
     public static boolean printMissingMessages() {
@@ -140,9 +150,12 @@ public class TracingActors {
         if (ra.expectedMessages != null && ra.expectedMessages.peek() != null) {
           result = true; // program did not execute all messages
           if (ra.expectedMessages.peek() instanceof TraceParser.PromiseMessageRecord) {
-            VM.println(a.getName() + " [" + ra.getId() + "] expecting PromiseMessage from " + ra.expectedMessages.peek().sender + " PID " + ((TraceParser.PromiseMessageRecord) ra.expectedMessages.peek()).pId);
+            VM.println(a.getName() + " [" + ra.getId() + "] expecting PromiseMessage from "
+                + ra.expectedMessages.peek().sender + " PID "
+                + ((TraceParser.PromiseMessageRecord) ra.expectedMessages.peek()).pId);
           } else {
-            VM.println(a.getName() + " [" + ra.getId() + "] expecting Messagefrom " + ra.expectedMessages.peek().sender);
+            VM.println(a.getName() + " [" + ra.getId() + "] expecting Messagefrom "
+                + ra.expectedMessages.peek().sender);
           }
 
           if (a.firstMessage != null) {
@@ -159,7 +172,7 @@ public class TracingActors {
           }
         } else if (a.firstMessage != null || a.mailboxExtension != null) {
 
-          int n = a.firstMessage != null ?  1 : 0;
+          int n = a.firstMessage != null ? 1 : 0;
           n += a.mailboxExtension != null ? a.mailboxExtension.size() : 0;
 
           VM.println(a.getName() + " [" + a.getId() + "] has " + n + " unexpected messages");
@@ -170,7 +183,9 @@ public class TracingActors {
 
     private static void printMsg(final EventualMessage msg) {
       if (msg instanceof PromiseMessage) {
-        VM.println("\t" + "PromiseMessage " + msg.getMessageId() + " " + msg.getSelector() + " from " + msg.getSender().getId() + " PID " + ((SReplayPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
+        VM.println("\t" + "PromiseMessage " + msg.getMessageId() + " " + msg.getSelector()
+            + " from " + msg.getSender().getId() + " PID "
+            + ((SReplayPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
       } else {
         VM.println("\t" + "Message" + msg.getSelector() + " from " + msg.getSender().getId());
       }
@@ -219,7 +234,8 @@ public class TracingActors {
         super(actor, vm);
       }
 
-      private Queue<EventualMessage> determineNextMessages(final List<EventualMessage> postponedMsgs) {
+      private Queue<EventualMessage> determineNextMessages(
+          final List<EventualMessage> postponedMsgs) {
         final ReplayActor a = (ReplayActor) actor;
         int numReceivedMsgs = 1 + (mailboxExtension == null ? 0 : mailboxExtension.size());
         numReceivedMsgs += postponedMsgs.size();
@@ -253,12 +269,14 @@ public class TracingActors {
           }
         }
 
-        assert todo.size() + postponedMsgs.size() == numReceivedMsgs : "We shouldn't lose any messages here.";
+        assert todo.size()
+            + postponedMsgs.size() == numReceivedMsgs : "We shouldn't lose any messages here.";
         return todo;
       }
 
       @Override
-      protected void processCurrentMessages(final ActorProcessingThread currentThread, final WebDebugger dbg) {
+      protected void processCurrentMessages(final ActorProcessingThread currentThread,
+          final WebDebugger dbg) {
         assert actor instanceof ReplayActor;
         assert size > 0;
 

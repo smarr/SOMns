@@ -21,35 +21,35 @@ public class SourceMessage extends OutgoingMessage {
   }
 
   public static class SourceData {
-    private final String sourceText;
-    private final String mimeType;
-    private final String name;
-    private final String uri;
+    private final String                   sourceText;
+    private final String                   mimeType;
+    private final String                   name;
+    private final String                   uri;
     private final TaggedSourceCoordinate[] sections;
-    private final MethodData[] methods;
+    private final MethodData[]             methods;
 
     public SourceData(final String sourceText, final String mimeType,
         final String name, final String uri,
         final TaggedSourceCoordinate[] sections,
         final MethodData[] methods) {
       this.sourceText = sourceText;
-      this.mimeType   = mimeType;
-      this.name       = name;
-      this.uri        = uri;
-      this.sections   = sections;
-      this.methods    = methods;
+      this.mimeType = mimeType;
+      this.name = name;
+      this.uri = uri;
+      this.sections = sections;
+      this.methods = methods;
     }
   }
 
   protected static class MethodData {
-    private final String               name;
-    private final SourceCoordinate[]   definition;
-    private final SourceCoordinate     sourceSection;
+    private final String             name;
+    private final SourceCoordinate[] definition;
+    private final SourceCoordinate   sourceSection;
 
     protected MethodData(final String name, final SourceCoordinate[] definition,
         final SourceCoordinate sourceSection) {
-      this.name          = name;
-      this.definition    = definition;
+      this.name = name;
+      this.definition = definition;
       this.sourceSection = sourceSection;
     }
   }

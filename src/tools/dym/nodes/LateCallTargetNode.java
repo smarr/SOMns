@@ -13,7 +13,7 @@ import tools.dym.profiles.CallsiteProfile;
 
 
 public class LateCallTargetNode extends ExecutionEventNode {
-  private final EventContext ctx;
+  private final EventContext              ctx;
   private final ExecutionEventNodeFactory factory;
 
   public LateCallTargetNode(final EventContext ctx, final ExecutionEventNodeFactory factory) {
@@ -24,7 +24,8 @@ public class LateCallTargetNode extends ExecutionEventNode {
   @TruffleBoundary
   private ExecutionEventNode specialize() {
     ExecutionEventNode parent = ctx.findParentEventNode(factory);
-    InstrumentableDirectCallNode disp = (InstrumentableDirectCallNode) ctx.getInstrumentedNode();
+    InstrumentableDirectCallNode disp =
+        (InstrumentableDirectCallNode) ctx.getInstrumentedNode();
 
     if (parent == null) {
       return this;

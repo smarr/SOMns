@@ -17,7 +17,9 @@ import som.vmobjects.SSymbol;
 @ImportStatic(Nil.class)
 @Primitive(selector = "<>")
 public abstract class UnequalsPrim extends ComparisonPrim {
-  protected UnequalsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected UnequalsPrim(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {

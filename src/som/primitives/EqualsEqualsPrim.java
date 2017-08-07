@@ -18,7 +18,9 @@ import som.vmobjects.SObjectWithClass;
 @GenerateNodeFactory
 @Primitive(primitive = "object:identicalTo:", selector = "==")
 public abstract class EqualsEqualsPrim extends ComparisonPrim {
-  protected EqualsEqualsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected EqualsEqualsPrim(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   @Specialization
   public final boolean doSBlock(final SBlock left, final Object right) {

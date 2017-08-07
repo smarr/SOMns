@@ -15,8 +15,13 @@ import som.primitives.Primitive;
 @Primitive(primitive = "actorsError:with:isBPResolver:isBPResolution:", requiresContext = true)
 public abstract class ErrorPromiseNode extends AbstractPromiseResolutionNode {
 
-  protected ErrorPromiseNode(final boolean eagWrap, final SourceSection source, final VM vm) { super(eagWrap, source, vm.getActorPool());  }
-  protected ErrorPromiseNode(final ErrorPromiseNode node) { super(node); }
+  protected ErrorPromiseNode(final boolean eagWrap, final SourceSection source, final VM vm) {
+    super(eagWrap, source, vm.getActorPool());
+  }
+
+  protected ErrorPromiseNode(final ErrorPromiseNode node) {
+    super(node);
+  }
 
   /**
    * Standard error case, when the promise is errored with a value that's not a promise.

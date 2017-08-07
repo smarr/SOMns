@@ -11,6 +11,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
 
+
 public abstract class ValueConversion {
 
   @NodeChild(value = "obj", type = ExpressionNode.class)

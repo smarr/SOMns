@@ -11,13 +11,14 @@ public class VmOptions {
   public static final String STANDARD_PLATFORM_FILE = "core-lib/Platform.ns";
   public static final String STANDARD_KERNEL_FILE   = "core-lib/Kernel.ns";
 
-  public String   platformFile = STANDARD_PLATFORM_FILE;
-  public String   kernelFile   = STANDARD_KERNEL_FILE;
+  public String         platformFile = STANDARD_PLATFORM_FILE;
+  public String         kernelFile   = STANDARD_KERNEL_FILE;
   public final Object[] args;
   private final boolean showUsage;
 
   /**
-   * Used in {@link som.tests.BasicInterpreterTests} to identify which basic test method to invoke.
+   * Used in {@link som.tests.BasicInterpreterTests} to identify which basic test method to
+   * invoke.
    */
   public final String testSelector;
 
@@ -37,10 +38,10 @@ public class VmOptions {
     showUsage = args.length == 0;
     if (!VmSettings.INSTRUMENTATION &&
         (webDebuggerEnabled || profilingEnabled ||
-        dynamicMetricsEnabled || coverageEnabled)) {
+            dynamicMetricsEnabled || coverageEnabled)) {
       throw new IllegalStateException(
           "Instrumentation is not enabled, but one of the tools is used. " +
-          "Please set -D" + VmSettings.INSTRUMENTATION_PROP + "=true");
+              "Please set -D" + VmSettings.INSTRUMENTATION_PROP + "=true");
     }
   }
 
@@ -88,21 +89,26 @@ public class VmOptions {
   }
 
   public boolean configUsable() {
-    if (!showUsage) { return true; }
+    if (!showUsage) {
+      return true;
+    }
 
     VM.println("VM arguments, need to come before any application arguments:");
     VM.println("");
     VM.println("  --platform file-name   SOM Platform module to be loaded");
-    VM.println("                         file-name defaults to '" + VmOptions.STANDARD_PLATFORM_FILE + "'");
+    VM.println("                         file-name defaults to '"
+        + VmOptions.STANDARD_PLATFORM_FILE + "'");
     VM.println("  --kernel file-name     SOM Kernel module to be loaded");
-    VM.println("                         file-name defaults to '" + VmOptions.STANDARD_KERNEL_FILE + "'");
+    VM.println("                         file-name defaults to '"
+        + VmOptions.STANDARD_KERNEL_FILE + "'");
     VM.println("");
     VM.println("  --debug                Run in Truffle Debugger/REPL");
     VM.println("  --web-debug            Start web debugger");
     VM.println("");
     VM.println("  --profile              Enable the TruffleProfiler");
     VM.println("  --dynamic-metrics      Enable the DynamicMetrics tool");
-    VM.println("  --coveralls REPO_TOKEN Enable the Coverage tool and reporting to Coveralls.io");
+    VM.println(
+        "  --coveralls REPO_TOKEN Enable the Coverage tool and reporting to Coveralls.io");
     return false;
   }
 }

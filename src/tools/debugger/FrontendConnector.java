@@ -54,6 +54,7 @@ import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.Breakpoints;
 import tools.debugger.session.LineBreakpoint;
 
+
 /**
  * Connect the debugger to the UI front-end.
  */
@@ -87,10 +88,10 @@ public class FrontendConnector {
    */
   private CompletableFuture<WebSocket> clientConnected;
 
-  private final Gson gson;
-  private static final int MESSAGE_PORT = 7977;
-  private static final int TRACE_PORT   = 7978;
-  private static final int HTTP_PORT    = 8888;
+  private final Gson       gson;
+  private static final int MESSAGE_PORT   = 7977;
+  private static final int TRACE_PORT     = 7978;
+  private static final int HTTP_PORT      = 8888;
   private static final int EPHEMERAL_PORT = 0;
 
   private final ArrayList<Source> sourceToBeSent = new ArrayList<>();
@@ -107,7 +108,8 @@ public class FrontendConnector {
 
     try {
       log("[DEBUGGER] Initialize HTTP and WebSocket Server for Debugger");
-      messageHandler = initializeWebSocket(MESSAGE_PORT, port -> new MessageHandler(port, this, gson));
+      messageHandler =
+          initializeWebSocket(MESSAGE_PORT, port -> new MessageHandler(port, this, gson));
       traceHandler = initializeWebSocket(TRACE_PORT, port -> new TraceHandler(port));
       log("[DEBUGGER] Started WebSocket Servers");
       log("[DEBUGGER]   Message Handler: " + messageHandler.getPort());
@@ -116,7 +118,8 @@ public class FrontendConnector {
       contentServer = initializeHttpServer(HTTP_PORT,
           messageHandler.getPort(), traceHandler.getPort());
       log("[DEBUGGER] Started HTTP Server");
-      log("[DEBUGGER]   URL: http://localhost:" + contentServer.getAddress().getPort() + "/index.html");
+      log("[DEBUGGER]   URL: http://localhost:" + contentServer.getAddress().getPort()
+          + "/index.html");
     } catch (IOException e) {
       log("Failed starting WebSocket and/or HTTP Server");
       throw new RuntimeException(e);
@@ -129,7 +132,8 @@ public class FrontendConnector {
     return breakpoints;
   }
 
-  private <T extends WebSocketHandler> T tryInitializingWebSocket(final T server) throws Throwable {
+  private <T extends WebSocketHandler> T tryInitializingWebSocket(final T server)
+      throws Throwable {
     server.start();
     try {
       server.awaitStartup();
@@ -139,7 +143,8 @@ public class FrontendConnector {
     return server;
   }
 
-  private <T extends WebSocketHandler> T initializeWebSocket(final int port, final Function<Integer, T> ctor) {
+  private <T extends WebSocketHandler> T initializeWebSocket(final int port,
+      final Function<Integer, T> ctor) {
     try {
       return tryInitializingWebSocket(ctor.apply(port));
     } catch (BindException e) {
@@ -278,7 +283,8 @@ public class FrontendConnector {
     send(ScopesResponse.create(frameId, suspension, requestId));
   }
 
-  public void sendVariables(final long varRef, final int requestId, final Suspension suspension) {
+  public void sendVariables(final long varRef, final int requestId,
+      final Suspension suspension) {
     send(VariablesResponse.create(varRef, requestId, suspension));
   }
 
@@ -335,6 +341,6 @@ public class FrontendConnector {
     try {
       messageHandler.stop(delay);
       traceHandler.stop(delay);
-    } catch (InterruptedException e) { }
+    } catch (InterruptedException e) {}
   }
 }

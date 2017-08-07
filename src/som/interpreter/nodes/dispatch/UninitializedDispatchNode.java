@@ -40,10 +40,14 @@ public final class UninitializedDispatchNode {
     /**
      * The minimal visibility a target for this send can have.
      */
-    protected abstract AccessModifier    getMinimalVisibility();
+    protected abstract AccessModifier getMinimalVisibility();
+
     protected abstract MixinDefinitionId getMixinForPrivateLockupOrNull();
-    protected abstract Dispatchable      doLookup(SClass rcvrClass);
-    protected abstract AbstractUninitialized createNewChainEnd(Object rcvr, SClass rcvrClass, Dispatchable result);
+
+    protected abstract Dispatchable doLookup(SClass rcvrClass);
+
+    protected abstract AbstractUninitialized createNewChainEnd(Object rcvr, SClass rcvrClass,
+        Dispatchable result);
 
     private AbstractDispatchNode specialize(final Object[] arguments,
         final int chainDepth, final AbstractDispatchNode first) {
@@ -85,7 +89,8 @@ public final class UninitializedDispatchNode {
 
       AbstractUninitialized newChainEnd = createNewChainEnd(rcvr, rcvrClass, dispatchable);
       if (newChainEnd == null) {
-        newChainEnd = this; // TODO: this is a hack to pass always a source section to the getDispatchNode method
+        newChainEnd = this; // TODO: this is a hack to pass always a source section to the
+                            // getDispatchNode method
       }
 
       AbstractDispatchNode node;
@@ -100,13 +105,13 @@ public final class UninitializedDispatchNode {
 
     private boolean forAtomic() {
       // TODO: seems a bit expensive,
-      //       might want to optimize for interpreter first iteration speed
+      // might want to optimize for interpreter first iteration speed
       RootNode root = getRootNode();
       if (root instanceof Invokable) {
         return ((Invokable) root).isAtomic();
       } else {
         // TODO: need to think about integration with actors, but, that's a
-        //       later research project
+        // later research project
         return false;
       }
     }
@@ -126,8 +131,7 @@ public final class UninitializedDispatchNode {
     @Override
     public final Object executeDispatch(final Object[] arguments) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Initialize a dispatch node.");
-      return specialize(arguments).
-          executeDispatch(arguments);
+      return specialize(arguments).executeDispatch(arguments);
     }
 
     private AbstractDispatchNode specialize(final Object[] arguments) {
@@ -147,11 +151,11 @@ public final class UninitializedDispatchNode {
       // to make sure we hit a cached item of the new layout. Otherwise we could
       // add multiple.
       // TODO: this means objects are only migrated to the new shape on the
-      //       very slow path, I think this is ok, because we do not expect
-      //       many shape transitions. But, is this true?
+      // very slow path, I think this is ok, because we do not expect
+      // many shape transitions. But, is this true?
       // TODO: this approach is recursive, and we might run out of Java stack.
-      //       convert it to iterative approach, perhaps by exposing the guards
-      //       and checking them directly to find matching node
+      // convert it to iterative approach, perhaps by exposing the guards
+      // and checking them directly to find matching node
       Object receiver = arguments[0];
       if (receiver instanceof SObject) {
         SObject rcvr = (SObject) receiver;
@@ -235,7 +239,8 @@ public final class UninitializedDispatchNode {
     @Override
     protected AbstractUninitialized createNewChainEnd(final Object rcvr,
         final SClass rcvrClass, final Dispatchable result) {
-      if (result instanceof SInvokable && result.getAccessModifier() == AccessModifier.PRIVATE) {
+      if (result instanceof SInvokable
+          && result.getAccessModifier() == AccessModifier.PRIVATE) {
         // This is an optimization. For lexical dispatches to methods,
         // we don't need guards. So, there is no future failure,
         // and no uninit node needed. For slots however, we need the guard on
@@ -271,13 +276,13 @@ public final class UninitializedDispatchNode {
   private static final class UninitializedSuper extends AbstractUninitialized {
 
     private final MixinDefinitionId holderMixin;
-    private final boolean classSide;
+    private final boolean           classSide;
 
     UninitializedSuper(final SourceSection source, final SSymbol selector,
-      final MixinDefinitionId holderMixin, final boolean classSide) {
+        final MixinDefinitionId holderMixin, final boolean classSide) {
       super(source, selector);
       this.holderMixin = holderMixin;
-      this.classSide   = classSide;
+      this.classSide = classSide;
     }
 
     @Override

@@ -81,7 +81,6 @@ public class SomPolyglotTests {
     Assume.assumeNotNull(profiler);
     profiler.setEnabled(true);
 
-
     assertTrue(profiler.isEnabled());
     Value result = engine.eval(SomLanguage.START);
     assertTrue(profiler.isEnabled());

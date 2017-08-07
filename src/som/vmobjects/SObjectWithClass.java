@@ -10,21 +10,23 @@ import som.interop.SObjectInteropMessageResolutionForeign;
 import som.interpreter.objectstorage.ClassFactory;
 
 
-public abstract class SObjectWithClass extends SAbstractObject implements TruffleObject, SObjectWithContext {
+public abstract class SObjectWithClass extends SAbstractObject
+    implements TruffleObject, SObjectWithContext {
   @CompilationFinal protected SClass       clazz;
-  @CompilationFinal protected ClassFactory classGroup; // the factory by which clazz was created
+  @CompilationFinal protected ClassFactory classGroup; // the factory by which clazz was
+                                                       // created
 
   public SObjectWithClass(final SClass clazz, final ClassFactory classGroup) {
-    this.clazz      = clazz;
+    this.clazz = clazz;
     this.classGroup = classGroup;
     assert clazz.getInstanceFactory() == classGroup;
   }
 
-  public SObjectWithClass() { }
+  public SObjectWithClass() {}
 
   /** Copy Constructor. */
   protected SObjectWithClass(final SObjectWithClass old) {
-    this.clazz      = old.clazz;
+    this.clazz = old.clazz;
     this.classGroup = old.classGroup;
   }
 
@@ -39,11 +41,12 @@ public abstract class SObjectWithClass extends SAbstractObject implements Truffl
   }
 
   public void setClass(final SClass value) {
-    CompilerAsserts.neverPartOfCompilation("Only meant to be used in object system initalization");
+    CompilerAsserts.neverPartOfCompilation(
+        "Only meant to be used in object system initalization");
     assert value != null;
-    clazz      = value;
+    clazz = value;
     classGroup = value.getInstanceFactory();
-//    assert classGroup != null || !ObjectSystem.isInitialized();
+    // assert classGroup != null || !ObjectSystem.isInitialized();
   }
 
   public void setClassGroup(final ClassFactory factory) {
@@ -66,8 +69,13 @@ public abstract class SObjectWithClass extends SAbstractObject implements Truffl
       super(clazz, factory);
     }
 
-    public SObjectWithoutFields() { super(); }
-    public SObjectWithoutFields(final SObjectWithoutFields old) { super(old); }
+    public SObjectWithoutFields() {
+      super();
+    }
+
+    public SObjectWithoutFields(final SObjectWithoutFields old) {
+      super(old);
+    }
 
     public SObjectWithoutFields cloneBasics() {
       return new SObjectWithoutFields(this);

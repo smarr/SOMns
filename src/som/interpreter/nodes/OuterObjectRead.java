@@ -34,7 +34,7 @@ import som.vmobjects.SSymbol;
 
 
 @ImportStatic({ActorClasses.class, ThreadingModule.class,
-               ChannelPrimitives.class})
+    ChannelPrimitives.class})
 @NodeChild(value = "receiver", type = ExpressionNode.class)
 public abstract class OuterObjectRead
     extends ExprWithTagsNode implements ISpecialSend {
@@ -79,7 +79,9 @@ public abstract class OuterObjectRead
   }
 
   @Override
-  public boolean isSuperSend() { return false; }
+  public boolean isSuperSend() {
+    return false;
+  }
 
   public abstract Object executeEvaluated(Object receiver);
 
@@ -89,7 +91,8 @@ public abstract class OuterObjectRead
     return lexicalClass;
   }
 
-  protected static final SClass getEnclosingClassWithPotentialFailure(final SObjectWithClass rcvr,
+  protected static final SClass getEnclosingClassWithPotentialFailure(
+      final SObjectWithClass rcvr,
       final int superclassIdx) {
     SClass lexicalClass = rcvr.getSOMClass().getClassCorrespondingTo(superclassIdx);
     return lexicalClass;
@@ -161,28 +164,44 @@ public abstract class OuterObjectRead
   }
 
   @Specialization
-  public Object doBool(final boolean receiver) { return KernelObj.kernel; }
+  public Object doBool(final boolean receiver) {
+    return KernelObj.kernel;
+  }
 
   @Specialization
-  public Object doLong(final long receiver) { return KernelObj.kernel; }
+  public Object doLong(final long receiver) {
+    return KernelObj.kernel;
+  }
 
   @Specialization
-  public Object doString(final String receiver) { return KernelObj.kernel; }
+  public Object doString(final String receiver) {
+    return KernelObj.kernel;
+  }
 
   @Specialization
-  public Object doBigInteger(final BigInteger receiver) { return KernelObj.kernel; }
+  public Object doBigInteger(final BigInteger receiver) {
+    return KernelObj.kernel;
+  }
 
   @Specialization
-  public Object doDouble(final double receiver) { return KernelObj.kernel; }
+  public Object doDouble(final double receiver) {
+    return KernelObj.kernel;
+  }
 
   @Specialization
-  public Object doSSymbol(final SSymbol receiver) { return KernelObj.kernel; }
+  public Object doSSymbol(final SSymbol receiver) {
+    return KernelObj.kernel;
+  }
 
   @Specialization
-  public Object doSArray(final SArray receiver) { return KernelObj.kernel; }
+  public Object doSArray(final SArray receiver) {
+    return KernelObj.kernel;
+  }
 
   @Specialization
-  public Object doSBlock(final SBlock receiver) { return KernelObj.kernel; }
+  public Object doSBlock(final SBlock receiver) {
+    return KernelObj.kernel;
+  }
 
   @Specialization(guards = {"contextLevel == 1", "mixinId == ThreadClassId"})
   public Object doThread(final SomThreadTask receiver) {

@@ -18,16 +18,18 @@ import tools.concurrency.TracingActivityThread;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 
+
 public final class TaskThreads {
 
-  public abstract static class SomTaskOrThread extends RecursiveTask<Object> implements Activity {
+  public abstract static class SomTaskOrThread extends RecursiveTask<Object>
+      implements Activity {
     private static final long serialVersionUID = 4823503369882151811L;
 
     protected final Object[] argArray;
-    protected final boolean stopOnRoot;
+    protected final boolean  stopOnRoot;
 
     public SomTaskOrThread(final Object[] argArray, final boolean stopOnRoot) {
-      this.argArray   = argArray;
+      this.argArray = argArray;
       this.stopOnRoot = stopOnRoot;
       assert argArray[0] instanceof SBlock : "First argument of a block needs to be the block object";
     }
@@ -36,7 +38,9 @@ public final class TaskThreads {
       return ((SBlock) argArray[0]).getMethod();
     }
 
-    public boolean stopOnJoin() { return false; }
+    public boolean stopOnJoin() {
+      return false;
+    }
 
     @Override
     public int getNextTraceBufferId() {
@@ -68,7 +72,7 @@ public final class TaskThreads {
     public void setStepToNextTurn(final boolean val) {
       throw new UnsupportedOperationException(
           "Step to next turn is not supported " +
-          "for threads. This code should never be reached.");
+              "for threads. This code should never be reached.");
     }
   }
 
@@ -85,14 +89,16 @@ public final class TaskThreads {
     }
 
     @Override
-    public ActivityType getType() { return ActivityType.TASK; }
+    public ActivityType getType() {
+      return ActivityType.TASK;
+    }
   }
 
   public static class TracedForkJoinTask extends SomForkJoinTask {
     private static final long serialVersionUID = -2763766745049695112L;
 
     private final long id;
-    protected boolean stopOnJoin;
+    protected boolean  stopOnJoin;
 
     private int nextTraceBufferId;
 
@@ -107,7 +113,9 @@ public final class TaskThreads {
     }
 
     @Override
-    public void setStepToJoin(final boolean val) { stopOnJoin = val; }
+    public void setStepToJoin(final boolean val) {
+      stopOnJoin = val;
+    }
 
     @Override
     public int getNextTraceBufferId() {
@@ -142,7 +150,9 @@ public final class TaskThreads {
     }
 
     @Override
-    public ActivityType getType() { return ActivityType.THREAD; }
+    public ActivityType getType() {
+      return ActivityType.THREAD;
+    }
   }
 
   public static class TracedThreadTask extends SomThreadTask {
@@ -150,7 +160,7 @@ public final class TaskThreads {
     private static final long serialVersionUID = -7527703048413603761L;
 
     private final long id;
-    protected boolean stopOnJoin;
+    protected boolean  stopOnJoin;
 
     private int nextTraceBufferId;
 
@@ -165,7 +175,9 @@ public final class TaskThreads {
     }
 
     @Override
-    public void setStepToJoin(final boolean val) { stopOnJoin = val; }
+    public void setStepToJoin(final boolean val) {
+      stopOnJoin = val;
+    }
 
     @Override
     public int getNextTraceBufferId() {

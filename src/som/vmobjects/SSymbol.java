@@ -30,10 +30,11 @@ import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import tools.concurrency.ActorExecutionTrace;
 
+
 public final class SSymbol extends SAbstractObject {
-  private final String string;
-  private final int    numberOfSignatureArguments;
-  private final short symbolId;
+  private final String         string;
+  private final int            numberOfSignatureArguments;
+  private final short          symbolId;
   private static AtomicInteger idGenerator = new AtomicInteger(0);
 
   public SSymbol(final String value) {
@@ -77,7 +78,9 @@ public final class SSymbol extends SAbstractObject {
 
       // Iterate through every character in the signature string
       for (char c : string.toCharArray()) {
-        if (c == ':') { numberOfColons++; }
+        if (c == ':') {
+          numberOfColons++;
+        }
       }
 
       // The number of arguments is equal to the number of colons plus one
@@ -102,7 +105,9 @@ public final class SSymbol extends SAbstractObject {
     for (char c : string.toCharArray()) {
       if (c != '~' && c != '&' && c != '|' && c != '*' && c != '/' && c != '@'
           && c != '+' && c != '-' && c != '=' && c != '>' && c != '<'
-          && c != ',' && c != '%' && c != '\\') { return false; }
+          && c != ',' && c != '%' && c != '\\') {
+        return false;
+      }
     }
     return true;
   }

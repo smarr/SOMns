@@ -34,7 +34,7 @@ public class AllocationProfile extends Counter {
   }
 
   public abstract static class AllocProfileNode extends Node {
-    protected int numFields = -1;
+    protected int          numFields = -1;
     protected ClassFactory classFactory;
 
     public abstract void executeProfiling(Object obj);
@@ -66,14 +66,14 @@ public class AllocationProfile extends Counter {
 
     @Specialization(guards = "obj.getFactory() == factory", limit = "1")
     public void doObjectWOFields(final SObjectWithoutFields obj,
-        @Cached("create(obj.getFactory())") final ClassFactory factory) { }
+        @Cached("create(obj.getFactory())") final ClassFactory factory) {}
 
     @Specialization(guards = "obj.getFactory() == factory", limit = "1")
     public void doSMutableObject(final SMutableObject obj,
-        @Cached("create(obj.getFactory())") final ClassFactory factory) { }
+        @Cached("create(obj.getFactory())") final ClassFactory factory) {}
 
     @Specialization(guards = "obj.getFactory() == factory", limit = "1")
     public void doSImmutableObject(final SImmutableObject obj,
-        @Cached("create(obj.getFactory())") final ClassFactory factory) { }
+        @Cached("create(obj.getFactory())") final ClassFactory factory) {}
   }
 }

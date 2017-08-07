@@ -32,7 +32,8 @@ import som.vmobjects.SObject;
  * {@link ObjectLayout} that binds a {@link SlotDefinition slot} to a specific
  * memory location within an object.
  *
- * <p><code>StorageLocation</code> provides the node factories as well as slow
+ * <p>
+ * <code>StorageLocation</code> provides the node factories as well as slow
  * path accessor to read/write a slot.
  */
 public abstract class StorageLocation {
@@ -52,12 +53,12 @@ public abstract class StorageLocation {
     return new ObjectStorageLocation(layout, slot, objFieldIndex);
   }
 
-  protected final ObjectLayout layout;
+  protected final ObjectLayout   layout;
   protected final SlotDefinition slot;
 
   protected StorageLocation(final ObjectLayout layout, final SlotDefinition slot) {
     this.layout = layout;
-    this.slot   = slot;
+    this.slot = slot;
   }
 
   /**
@@ -88,7 +89,8 @@ public abstract class StorageLocation {
    * Unset slots return false, object slots always return true, because `nil`
    * is considered a set value.
    *
-   * <p>Slow-path accessor to slot.
+   * <p>
+   * Slow-path accessor to slot.
    */
   public abstract boolean isSet(SObject obj);
 
@@ -142,7 +144,8 @@ public abstract class StorageLocation {
 
     @Override
     public StorageAccessor getAccessor() {
-      throw new IllegalStateException("I suppose this should not happen? There's no storage location here");
+      throw new IllegalStateException(
+          "I suppose this should not happen? There's no storage location here");
     }
   }
 
@@ -200,7 +203,8 @@ public abstract class StorageLocation {
      */
     @Override
     public boolean isSet(final SObject obj) {
-      assert read(obj) != null : "null is not a valid value for an object slot, it needs to be initialized with nil.";
+      assert read(
+          obj) != null : "null is not a valid value for an object slot, it needs to be initialized with nil.";
       return true;
     }
 
@@ -266,7 +270,6 @@ public abstract class StorageLocation {
         return new LongSlotWriteSetOrUnset(slot, accessor, guard, next);
       }
     }
-
 
     /**
      * Slow-path accessor to slot.

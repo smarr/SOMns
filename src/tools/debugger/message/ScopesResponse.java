@@ -20,7 +20,7 @@ import tools.debugger.message.Message.Response;
 @SuppressWarnings("unused")
 public final class ScopesResponse extends Response {
   private final Scope[] scopes;
-  private final long variablesReference;
+  private final long    variablesReference;
 
   private ScopesResponse(final long globalFrameId, final Scope[] scopes,
       final int requestId) {
@@ -43,13 +43,12 @@ public final class ScopesResponse extends Response {
     /** If true, the number of variables in this scope is large or expensive to retrieve. */
     private final boolean expensive;
 
-
     private Scope(final String name, final long globalVarRef,
         final boolean expensive) {
       assert TraceData.isWithinJSIntValueRange(globalVarRef);
-      this.name               = name;
+      this.name = name;
       this.variablesReference = globalVarRef;
-      this.expensive          = expensive;
+      this.expensive = expensive;
     }
   }
 
@@ -85,9 +84,8 @@ public final class ScopesResponse extends Response {
       // NOOP, no scopes here
       assert false : "This should not be reached. This scope should never get an id";
     } else {
-      assert invokable instanceof Primitive :
-        "Got a " + invokable.getClass().getSimpleName() +
-        " here. Means we need to add support";
+      assert invokable instanceof Primitive : "Got a " + invokable.getClass().getSimpleName() +
+          " here. Means we need to add support";
     }
 
     return new ScopesResponse(globalFrameId, scopes.toArray(new Scope[0]), requestId);

@@ -17,7 +17,9 @@ public class ClassPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "mirrorAClassesName:")
   public abstract static class NamePrim extends UnaryExpressionNode {
-    public NamePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public NamePrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final SAbstractObject doSClass(final SClass receiver) {
@@ -28,7 +30,9 @@ public class ClassPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "mirrorClassName:")
   public abstract static class ClassNamePrim extends UnaryExpressionNode {
-    public ClassNamePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public ClassNamePrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final SAbstractObject doSClass(final Object receiver) {
@@ -39,7 +43,9 @@ public class ClassPrims {
 
   @GenerateNodeFactory
   public abstract static class SuperClassPrim extends UnaryExpressionNode {
-    public SuperClassPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public SuperClassPrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final SAbstractObject doSClass(final SClass receiver) {

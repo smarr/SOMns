@@ -11,7 +11,9 @@ import som.primitives.Primitive;
 @GenerateNodeFactory
 @Primitive(primitive = "doubleLog:", selector = "log", receiverType = Double.class)
 public abstract class LogPrim extends UnaryBasicOperation {
-  public LogPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  public LogPrim(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   // TODO: assign some specific tag
 

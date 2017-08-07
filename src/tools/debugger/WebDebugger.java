@@ -54,7 +54,8 @@ import tools.debugger.session.SectionBreakpoint;
  * The WebDebugger connects the Truffle debugging facilities with a HTML5
  * application using WebSockets and JSON.
  */
-@Registration(id = WebDebugger.ID, name = "WebDebugger", version = "0.1", services = {WebDebugger.class})
+@Registration(id = WebDebugger.ID, name = "WebDebugger", version = "0.1",
+    services = {WebDebugger.class})
 public class WebDebugger extends TruffleInstrument implements SuspendedCallback {
 
   public static final String ID = "web-debugger";
@@ -65,16 +66,19 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   @CompilationFinal VM vm;
 
-  private final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags = new HashMap<>();
-  private final Map<Source, Set<RootNode>> rootNodes = new HashMap<>();
+  private final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags =
+      new HashMap<>();
+  private final Map<Source, Set<RootNode>>                                  rootNodes         =
+      new HashMap<>();
 
   private final Map<Activity, Suspension> activityToSuspension = new HashMap<>();
-  private final Map<Long, Suspension> idToSuspension           = new HashMap<>();
+  private final Map<Long, Suspension>     idToSuspension       = new HashMap<>();
 
   public void reportSyntaxElement(final Class<? extends Tags> type,
       final SourceSection source) {
-    Map<SourceSection, Set<Class<? extends Tags>>> sections = loadedSourcesTags.computeIfAbsent(
-        source.getSource(), s -> new HashMap<>());
+    Map<SourceSection, Set<Class<? extends Tags>>> sections =
+        loadedSourcesTags.computeIfAbsent(
+            source.getSource(), s -> new HashMap<>());
     Set<Class<? extends Tags>> tags = sections.computeIfAbsent(source, s -> new HashSet<>(2));
     tags.add(type);
   }
@@ -119,7 +123,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     return suspension;
   }
 
-
   private Suspension getSuspension() {
     Thread thread = Thread.currentThread();
     Activity current;
@@ -128,7 +131,8 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
       activityThread = (TracingActivityThread) thread;
       current = activityThread.getActivity();
     } else {
-      throw new RuntimeException("Support for " + thread.getClass().getName() + " not yet implemented.");
+      throw new RuntimeException(
+          "Support for " + thread.getClass().getName() + " not yet implemented.");
     }
     return getSuspension(current, activityThread);
   }
@@ -178,7 +182,8 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
   }
 
   public static Gson createJsonProcessor() {
-    ClassHierarchyAdapterFactory<OutgoingMessage> outMsgAF = new ClassHierarchyAdapterFactory<>(OutgoingMessage.class, "type");
+    ClassHierarchyAdapterFactory<OutgoingMessage> outMsgAF =
+        new ClassHierarchyAdapterFactory<>(OutgoingMessage.class, "type");
     outMsgAF.register("source", SourceMessage.class);
     outMsgAF.register(InitializationResponse.class);
     outMsgAF.register(StoppedMessage.class);
@@ -188,7 +193,8 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     outMsgAF.register(VariablesResponse.class);
     outMsgAF.register(ProgramInfoResponse.class);
 
-    ClassHierarchyAdapterFactory<IncommingMessage> inMsgAF = new ClassHierarchyAdapterFactory<>(IncommingMessage.class, "action");
+    ClassHierarchyAdapterFactory<IncommingMessage> inMsgAF =
+        new ClassHierarchyAdapterFactory<>(IncommingMessage.class, "action");
     inMsgAF.register(InitializeConnection.class);
     inMsgAF.register("updateBreakpoint", UpdateBreakpoint.class);
     inMsgAF.register(StepMessage.class);
@@ -198,14 +204,13 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     inMsgAF.register(ProgramInfoRequest.class);
     inMsgAF.register(TraceDataRequest.class);
 
-    ClassHierarchyAdapterFactory<BreakpointInfo> breakpointAF = new ClassHierarchyAdapterFactory<>(BreakpointInfo.class, "type");
+    ClassHierarchyAdapterFactory<BreakpointInfo> breakpointAF =
+        new ClassHierarchyAdapterFactory<>(BreakpointInfo.class, "type");
     breakpointAF.register(LineBreakpoint.class);
     breakpointAF.register(SectionBreakpoint.class);
 
-    return new GsonBuilder().
-        registerTypeAdapterFactory(outMsgAF).
-        registerTypeAdapterFactory(inMsgAF).
-        registerTypeAdapterFactory(breakpointAF).
-        create();
+    return new GsonBuilder().registerTypeAdapterFactory(outMsgAF)
+                            .registerTypeAdapterFactory(inMsgAF)
+                            .registerTypeAdapterFactory(breakpointAF).create();
   }
 }

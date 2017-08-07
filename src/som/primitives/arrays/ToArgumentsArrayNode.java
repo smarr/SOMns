@@ -17,13 +17,18 @@ import som.vmobjects.SArray;
 
 @GenerateNodeFactory
 @NodeChildren({
-  @NodeChild("somArray"),
-  @NodeChild("receiver")})
+    @NodeChild("somArray"),
+    @NodeChild("receiver")})
 public abstract class ToArgumentsArrayNode extends ExprWithTagsNode {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
-  public ToArgumentsArrayNode() { super((SourceSection) null); }
-  public ToArgumentsArrayNode(final boolean eagWrap) { this(); } // to have uniform create() for @Primitive
+  public ToArgumentsArrayNode() {
+    super((SourceSection) null);
+  }
+
+  public ToArgumentsArrayNode(final boolean eagWrap) {
+    this();
+  } // to have uniform create() for @Primitive
 
   public static final boolean isNull(final Object somArray) {
     return somArray == null;

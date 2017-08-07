@@ -6,9 +6,10 @@ import som.interpreter.processes.SChannel;
 import tools.debugger.entities.ReceiveOp;
 import tools.debugger.entities.SendOp;
 
+
 public final class TracingChannel extends SChannel {
   protected final long channelId;
-  protected int messageId;
+  protected int        messageId;
 
   public TracingChannel() {
     channelId = TracingActivityThread.newEntityId();

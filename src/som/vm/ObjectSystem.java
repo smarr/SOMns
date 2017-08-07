@@ -43,20 +43,18 @@ import tools.language.StructuralProbe;
 
 public final class ObjectSystem {
 
-
   private final Map<URI, MixinDefinition> loadedModules;
 
   @CompilationFinal private MixinDefinition platformModule;
   @CompilationFinal private MixinDefinition kernelModule;
 
-  @CompilationFinal
-  private SClass platformClass;  // is only set after completion of initialize()
+  @CompilationFinal private SClass platformClass; // is only set after completion of
+                                                  // initialize()
 
-  @CompilationFinal
-  private boolean initialized = false;
+  @CompilationFinal private boolean initialized = false;
 
   private final SourcecodeCompiler compiler;
-  private final StructuralProbe structuralProbe;
+  private final StructuralProbe    structuralProbe;
 
   private final Primitives primitives;
 
@@ -67,16 +65,16 @@ public final class ObjectSystem {
   public ObjectSystem(final SourcecodeCompiler compiler,
       final StructuralProbe probe, final VM vm) {
     this.primitives = new Primitives(compiler.getLanguage());
-    this.compiler   = compiler;
+    this.compiler = compiler;
     structuralProbe = probe;
-    loadedModules   = new LinkedHashMap<>();
-    this.vm         = vm;
+    loadedModules = new LinkedHashMap<>();
+    this.vm = vm;
   }
 
   public void loadKernelAndPlatform(final String platformFilename,
       final String kernelFilename) throws IOException {
     platformModule = loadModule(platformFilename);
-    kernelModule   = loadModule(kernelFilename);
+    kernelModule = loadModule(kernelFilename);
   }
 
   public boolean isInitialized() {
@@ -126,7 +124,8 @@ public final class ObjectSystem {
         true, true, true, null);
     scope.setMixinDefinition(vmMirrorDef, false);
 
-    SClass vmMirrorClass = vmMirrorDef.instantiateClass(Nil.nilObject, new SClass[] {Classes.topClass, Classes.valueClass});
+    SClass vmMirrorClass = vmMirrorDef.instantiateClass(Nil.nilObject,
+        new SClass[] {Classes.topClass, Classes.valueClass});
     return new SObjectWithoutFields(vmMirrorClass, vmMirrorClass.getInstanceFactory());
   }
 
@@ -134,7 +133,7 @@ public final class ObjectSystem {
    * Allocate the metaclass class.
    */
   public static SClass newMetaclassClass(final SObject kernel) {
-    SClass metaclassClass      = new SClass(kernel);
+    SClass metaclassClass = new SClass(kernel);
     SClass metaclassClassClass = new SClass(kernel);
     metaclassClass.setClass(metaclassClassClass);
 
@@ -147,7 +146,7 @@ public final class ObjectSystem {
   }
 
   public static SClass newEmptyClassWithItsClass(final String name) {
-    SClass clazz      = new SClass(KernelObj.kernel);
+    SClass clazz = new SClass(KernelObj.kernel);
     SClass clazzClazz = new SClass(KernelObj.kernel);
 
     initializeClassAndItsClass(name, clazz, clazzClazz);
@@ -170,66 +169,71 @@ public final class ObjectSystem {
     assert platformModule != null && kernelModule != null;
 
     // these classes need to be defined by the Kernel module
-    MixinDefinition topDef   = kernelModule.getNestedMixinDefinition("Top");
+    MixinDefinition topDef = kernelModule.getNestedMixinDefinition("Top");
     MixinDefinition thingDef = kernelModule.getNestedMixinDefinition("Thing");
     thingDef.addSyntheticInitializerWithoutSuperSendOnlyForThingClass();
     MixinDefinition valueDef = kernelModule.getNestedMixinDefinition("Value");
     MixinDefinition transferDef = kernelModule.getNestedMixinDefinition("TransferObject");
-    MixinDefinition nilDef   = kernelModule.getNestedMixinDefinition("Nil");
+    MixinDefinition nilDef = kernelModule.getNestedMixinDefinition("Nil");
 
-    MixinDefinition objectDef    = kernelModule.getNestedMixinDefinition("Object");
-    MixinDefinition classDef     = kernelModule.getNestedMixinDefinition("Class");
+    MixinDefinition objectDef = kernelModule.getNestedMixinDefinition("Object");
+    MixinDefinition classDef = kernelModule.getNestedMixinDefinition("Class");
     MixinDefinition metaclassDef = kernelModule.getNestedMixinDefinition("Metaclass");
 
-    MixinDefinition arrayReadMixinDef = kernelModule.getNestedMixinDefinition("ArrayReadMixin");
-    MixinDefinition arrayDef   = kernelModule.getNestedMixinDefinition("Array");
+    MixinDefinition arrayReadMixinDef =
+        kernelModule.getNestedMixinDefinition("ArrayReadMixin");
+    MixinDefinition arrayDef = kernelModule.getNestedMixinDefinition("Array");
     MixinDefinition valueArrayDef = kernelModule.getNestedMixinDefinition("ValueArray");
     MixinDefinition transferArrayDef = kernelModule.getNestedMixinDefinition("TransferArray");
-    MixinDefinition symbolDef  = kernelModule.getNestedMixinDefinition("Symbol");
+    MixinDefinition symbolDef = kernelModule.getNestedMixinDefinition("Symbol");
     MixinDefinition integerDef = kernelModule.getNestedMixinDefinition("Integer");
-    MixinDefinition stringDef  = kernelModule.getNestedMixinDefinition("String");
-    MixinDefinition doubleDef  = kernelModule.getNestedMixinDefinition("Double");
+    MixinDefinition stringDef = kernelModule.getNestedMixinDefinition("String");
+    MixinDefinition doubleDef = kernelModule.getNestedMixinDefinition("Double");
 
     MixinDefinition booleanDef = kernelModule.getNestedMixinDefinition("Boolean");
-    MixinDefinition trueDef    = kernelModule.getNestedMixinDefinition("True");
-    MixinDefinition falseDef   = kernelModule.getNestedMixinDefinition("False");
+    MixinDefinition trueDef = kernelModule.getNestedMixinDefinition("True");
+    MixinDefinition falseDef = kernelModule.getNestedMixinDefinition("False");
 
-    MixinDefinition blockDef  = kernelModule.getNestedMixinDefinition("Block");
+    MixinDefinition blockDef = kernelModule.getNestedMixinDefinition("Block");
     MixinDefinition block1Def = kernelModule.getNestedMixinDefinition("Block1");
     MixinDefinition block2Def = kernelModule.getNestedMixinDefinition("Block2");
     MixinDefinition block3Def = kernelModule.getNestedMixinDefinition("Block3");
 
     // some basic assumptions about
-    assert      topDef.getNumberOfSlots() == 0;
-    assert    thingDef.getNumberOfSlots() == 0;
-    assert   objectDef.getNumberOfSlots() == 0;
-    assert    valueDef.getNumberOfSlots() == 0;
+    assert topDef.getNumberOfSlots() == 0;
+    assert thingDef.getNumberOfSlots() == 0;
+    assert objectDef.getNumberOfSlots() == 0;
+    assert valueDef.getNumberOfSlots() == 0;
     assert transferDef.getNumberOfSlots() == 0;
 
-       topDef.initializeClass(Classes.topClass, null);  // Top doesn't have a super class
-     thingDef.initializeClass(Classes.thingClass,  Classes.topClass);
-     valueDef.initializeClass(Classes.valueClass,  Classes.thingClass, true, false, false);
+    topDef.initializeClass(Classes.topClass, null); // Top doesn't have a super class
+    thingDef.initializeClass(Classes.thingClass, Classes.topClass);
+    valueDef.initializeClass(Classes.valueClass, Classes.thingClass, true, false, false);
     objectDef.initializeClass(Classes.objectClass, Classes.thingClass);
-     classDef.initializeClass(Classes.classClass,  Classes.objectClass);
-  transferDef.initializeClass(Classes.transferClass, Classes.objectClass, false, true, false);
+    classDef.initializeClass(Classes.classClass, Classes.objectClass);
+    transferDef.initializeClass(Classes.transferClass, Classes.objectClass, false, true,
+        false);
 
- metaclassDef.initializeClass(Classes.metaclassClass, Classes.classClass);
-       nilDef.initializeClass(Classes.nilClass,    Classes.valueClass);
+    metaclassDef.initializeClass(Classes.metaclassClass, Classes.classClass);
+    nilDef.initializeClass(Classes.nilClass, Classes.valueClass);
 
-arrayReadMixinDef.initializeClass(Classes.arrayReadMixinClass, Classes.objectClass);
-     arrayDef.initializeClass(Classes.arrayClass,   new SClass[] {Classes.objectClass, Classes.arrayReadMixinClass}, false, false, true);
-valueArrayDef.initializeClass(Classes.valueArrayClass, new SClass[] {Classes.valueClass, Classes.arrayReadMixinClass}, false, false, true);
-transferArrayDef.initializeClass(Classes.transferArrayClass, new SClass[] {Classes.arrayClass, Classes.transferClass}, false, false, true);
-   integerDef.initializeClass(Classes.integerClass, Classes.valueClass);
-    stringDef.initializeClass(Classes.stringClass,  Classes.valueClass);
-    doubleDef.initializeClass(Classes.doubleClass,  Classes.valueClass);
-    symbolDef.initializeClass(Classes.symbolClass,  Classes.stringClass);
+    arrayReadMixinDef.initializeClass(Classes.arrayReadMixinClass, Classes.objectClass);
+    arrayDef.initializeClass(Classes.arrayClass,
+        new SClass[] {Classes.objectClass, Classes.arrayReadMixinClass}, false, false, true);
+    valueArrayDef.initializeClass(Classes.valueArrayClass,
+        new SClass[] {Classes.valueClass, Classes.arrayReadMixinClass}, false, false, true);
+    transferArrayDef.initializeClass(Classes.transferArrayClass,
+        new SClass[] {Classes.arrayClass, Classes.transferClass}, false, false, true);
+    integerDef.initializeClass(Classes.integerClass, Classes.valueClass);
+    stringDef.initializeClass(Classes.stringClass, Classes.valueClass);
+    doubleDef.initializeClass(Classes.doubleClass, Classes.valueClass);
+    symbolDef.initializeClass(Classes.symbolClass, Classes.stringClass);
 
-   booleanDef.initializeClass(Classes.booleanClass, Classes.valueClass);
-      trueDef.initializeClass(Classes.trueClass,    Classes.booleanClass);
-     falseDef.initializeClass(Classes.falseClass,   Classes.booleanClass);
+    booleanDef.initializeClass(Classes.booleanClass, Classes.valueClass);
+    trueDef.initializeClass(Classes.trueClass, Classes.booleanClass);
+    falseDef.initializeClass(Classes.falseClass, Classes.booleanClass);
 
-     blockDef.initializeClass(Classes.blockClass,  Classes.objectClass);
+    blockDef.initializeClass(Classes.blockClass, Classes.objectClass);
     block1Def.initializeClass(Classes.blockClass1, Classes.blockClass);
     block2Def.initializeClass(Classes.blockClass2, Classes.blockClass1);
     block3Def.initializeClass(Classes.blockClass3, Classes.blockClass2);
@@ -238,29 +242,48 @@ transferArrayDef.initializeClass(Classes.transferArrayClass, new SClass[] {Class
 
     // fix up the metaclassClass group
     Classes.topClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.thingClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.valueClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
- Classes.objectClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.classClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.metaclassClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.nilClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.arrayReadMixinClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.arrayClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.valueArrayClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.transferArrayClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.integerClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.stringClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.doubleClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.symbolClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.booleanClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.trueClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.falseClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.blockClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.blockClass1.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.blockClass2.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-  Classes.blockClass3.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
-
+    Classes.thingClass.getSOMClass()
+                      .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.valueClass.getSOMClass()
+                      .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.objectClass.getSOMClass()
+                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.transferClass.getSOMClass()
+                         .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.classClass.getSOMClass()
+                      .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.metaclassClass.getSOMClass()
+                          .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.nilClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.arrayReadMixinClass.getSOMClass()
+                               .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.arrayClass.getSOMClass()
+                      .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.valueArrayClass.getSOMClass()
+                           .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.transferArrayClass.getSOMClass()
+                              .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.integerClass.getSOMClass()
+                        .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.stringClass.getSOMClass()
+                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.doubleClass.getSOMClass()
+                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.symbolClass.getSOMClass()
+                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.booleanClass.getSOMClass()
+                        .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.trueClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.falseClass.getSOMClass()
+                      .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.blockClass.getSOMClass()
+                      .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.blockClass1.getSOMClass()
+                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.blockClass2.getSOMClass()
+                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+    Classes.blockClass3.getSOMClass()
+                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
 
     SClass kernelClass = kernelModule.instantiateClass(Nil.nilObject, Classes.objectClass);
     KernelObj.kernel.setClass(kernelClass);
@@ -270,35 +293,35 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
     assert vmMirror.isValue();
 
     // initialize slots of kernel object
-    setSlot(KernelObj.kernel, "vmMirror",   vmMirror, kernelModule);
+    setSlot(KernelObj.kernel, "vmMirror", vmMirror, kernelModule);
     setSlot(KernelObj.kernel, "ObjectSlot", Classes.objectClass, kernelModule);
-    setSlot(KernelObj.kernel, "ValueSlot",  Classes.valueClass,  kernelModule);
+    setSlot(KernelObj.kernel, "ValueSlot", Classes.valueClass, kernelModule);
 
     // Initialize the class cache slots
-    setSlot(KernelObj.kernel, "Top",       Classes.topClass,       kernelModule);
-    setSlot(KernelObj.kernel, "Thing",     Classes.thingClass,     kernelModule);
-    setSlot(KernelObj.kernel, "Object",    Classes.objectClass,    kernelModule);
-    setSlot(KernelObj.kernel, "Value",     Classes.valueClass,     kernelModule);
+    setSlot(KernelObj.kernel, "Top", Classes.topClass, kernelModule);
+    setSlot(KernelObj.kernel, "Thing", Classes.thingClass, kernelModule);
+    setSlot(KernelObj.kernel, "Object", Classes.objectClass, kernelModule);
+    setSlot(KernelObj.kernel, "Value", Classes.valueClass, kernelModule);
     setSlot(KernelObj.kernel, "TransferObject", Classes.transferClass, kernelModule);
-    setSlot(KernelObj.kernel, "Class",     Classes.classClass,     kernelModule);
+    setSlot(KernelObj.kernel, "Class", Classes.classClass, kernelModule);
     setSlot(KernelObj.kernel, "Metaclass", Classes.metaclassClass, kernelModule);
-    setSlot(KernelObj.kernel, "Boolean",   Classes.booleanClass,   kernelModule);
-    setSlot(KernelObj.kernel, "True",      Classes.trueClass,      kernelModule);
-    setSlot(KernelObj.kernel, "False",     Classes.falseClass,     kernelModule);
-    setSlot(KernelObj.kernel, "Nil",       Classes.nilClass,       kernelModule);
-    setSlot(KernelObj.kernel, "Integer",   Classes.integerClass,   kernelModule);
-    setSlot(KernelObj.kernel, "Double",    Classes.doubleClass,    kernelModule);
-    setSlot(KernelObj.kernel, "Class",     Classes.classClass,     kernelModule);
-    setSlot(KernelObj.kernel, "String",    Classes.stringClass,    kernelModule);
-    setSlot(KernelObj.kernel, "Symbol",    Classes.symbolClass,    kernelModule);
+    setSlot(KernelObj.kernel, "Boolean", Classes.booleanClass, kernelModule);
+    setSlot(KernelObj.kernel, "True", Classes.trueClass, kernelModule);
+    setSlot(KernelObj.kernel, "False", Classes.falseClass, kernelModule);
+    setSlot(KernelObj.kernel, "Nil", Classes.nilClass, kernelModule);
+    setSlot(KernelObj.kernel, "Integer", Classes.integerClass, kernelModule);
+    setSlot(KernelObj.kernel, "Double", Classes.doubleClass, kernelModule);
+    setSlot(KernelObj.kernel, "Class", Classes.classClass, kernelModule);
+    setSlot(KernelObj.kernel, "String", Classes.stringClass, kernelModule);
+    setSlot(KernelObj.kernel, "Symbol", Classes.symbolClass, kernelModule);
     setSlot(KernelObj.kernel, "ArrayReadMixin", Classes.arrayReadMixinClass, kernelModule);
-    setSlot(KernelObj.kernel, "Array",     Classes.arrayClass,     kernelModule);
+    setSlot(KernelObj.kernel, "Array", Classes.arrayClass, kernelModule);
     setSlot(KernelObj.kernel, "ValueArray", Classes.valueArrayClass, kernelModule);
     setSlot(KernelObj.kernel, "TransferArray", Classes.transferArrayClass, kernelModule);
-    setSlot(KernelObj.kernel, "Block",     Classes.blockClass,     kernelModule);
-    setSlot(KernelObj.kernel, "Block1",    Classes.blockClass1,    kernelModule);
-    setSlot(KernelObj.kernel, "Block2",    Classes.blockClass2,    kernelModule);
-    setSlot(KernelObj.kernel, "Block3",    Classes.blockClass3,    kernelModule);
+    setSlot(KernelObj.kernel, "Block", Classes.blockClass, kernelModule);
+    setSlot(KernelObj.kernel, "Block1", Classes.blockClass1, kernelModule);
+    setSlot(KernelObj.kernel, "Block2", Classes.blockClass2, kernelModule);
+    setSlot(KernelObj.kernel, "Block3", Classes.blockClass3, kernelModule);
 
     initialized = true;
 
@@ -330,7 +353,9 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
         }
       }
 
-      try { Thread.sleep(500); } catch (InterruptedException e) { }
+      try {
+        Thread.sleep(500);
+      } catch (InterruptedException e) {}
 
       // never timeout when debugging
       if (vm.isPoolIdle() && !VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
@@ -342,7 +367,8 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
 
     assert !vm.shouldExit();
     TracingActors.ReplayActor.printMissingMessages();
-    vm.errorExit("VM seems to have exited prematurely. But the actor pool has been idle for " + emptyFJPool + " checks in a row.");
+    vm.errorExit("VM seems to have exited prematurely. But the actor pool has been idle for "
+        + emptyFJPool + " checks in a row.");
     vm.shutdownAndExit(1); // just in case it was disable for VM.errorExit
   }
 
@@ -391,7 +417,8 @@ Classes.transferClass.getSOMClass().setClassGroup(Classes.metaclassClass.getInst
         handlePromiseResult((SPromise) result);
         return;
       } else {
-        vm.errorExit("The application's #main: method returned a " + result.toString() + ", but it needs to return a Promise or Integer as return value.");
+        vm.errorExit("The application's #main: method returned a " + result.toString()
+            + ", but it needs to return a Promise or Integer as return value.");
       }
     } catch (InterruptedException | ExecutionException e) {
       // TODO Auto-generated catch block

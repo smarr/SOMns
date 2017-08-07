@@ -103,9 +103,9 @@ public abstract class ActivitySpawn {
 
     public SpawnPrim(final boolean ew, final SourceSection s, final VM vm) {
       super(ew, s);
-      this.forkJoinPool  = vm.getForkJoinPool();
+      this.forkJoinPool = vm.getForkJoinPool();
       this.processesPool = vm.getProcessPool();
-      this.threadPool    = vm.getThreadPool();
+      this.threadPool = vm.getThreadPool();
       this.onExec = insert(Breakpoints.create(s, BreakpointType.ACTIVITY_ON_EXEC, vm));
     }
 
@@ -158,15 +158,15 @@ public abstract class ActivitySpawn {
   @GenerateNodeFactory
   @ImportStatic({ThreadingModule.class, ChannelPrimitives.class, ActivitySpawn.class})
   @NodeChild(value = "argArr", type = ToArgumentsArrayNode.class,
-    executeWith = {"secondArg", "firstArg"})
+      executeWith = {"secondArg", "firstArg"})
   @Primitive(primitive = "threading:threadSpawn:with:",
-    extraChild = ToArgumentsArrayNodeFactory.class, requiresContext = true)
+      extraChild = ToArgumentsArrayNodeFactory.class, requiresContext = true)
   @Primitive(primitive = "threading:taskSpawn:with:",
-    extraChild = ToArgumentsArrayNodeFactory.class, requiresContext = true)
+      extraChild = ToArgumentsArrayNodeFactory.class, requiresContext = true)
   @Primitive(primitive = "proc:spawn:with:",
-    extraChild = ToArgumentsArrayNodeFactory.class, requiresContext = true)
+      extraChild = ToArgumentsArrayNodeFactory.class, requiresContext = true)
   @Primitive(selector = "spawn:with:",
-  extraChild = ToArgumentsArrayNodeFactory.class, requiresContext = true)
+      extraChild = ToArgumentsArrayNodeFactory.class, requiresContext = true)
   public abstract static class SpawnWithPrim extends TernaryExpressionNode {
     private final ForkJoinPool forkJoinPool;
     private final ForkJoinPool processesPool;
@@ -177,9 +177,9 @@ public abstract class ActivitySpawn {
 
     public SpawnWithPrim(final boolean ew, final SourceSection s, final VM vm) {
       super(ew, s);
-      this.forkJoinPool  = vm.getForkJoinPool();
+      this.forkJoinPool = vm.getForkJoinPool();
       this.processesPool = vm.getProcessPool();
-      this.threadPool    = vm.getThreadPool();
+      this.threadPool = vm.getThreadPool();
       this.onExec = insert(Breakpoints.create(s, BreakpointType.ACTIVITY_ON_EXEC, vm));
     }
 

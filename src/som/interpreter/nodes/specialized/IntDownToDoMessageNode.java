@@ -14,9 +14,11 @@ import som.vmobjects.SInvokable;
 
 @GenerateNodeFactory
 @Primitive(selector = "downTo:do:", noWrapper = true, disabled = true,
-           specializer = ToDoSplzr.class)
+    specializer = ToDoSplzr.class)
 public abstract class IntDownToDoMessageNode extends IntToDoMessageNode {
-  public IntDownToDoMessageNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  public IntDownToDoMessageNode(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   @Override
   @Specialization(guards = "block.getMethod() == blockMethod")

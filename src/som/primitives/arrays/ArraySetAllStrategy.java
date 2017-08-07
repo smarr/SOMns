@@ -33,7 +33,7 @@ public final class ArraySetAllStrategy {
   private static Object signalNotAValue() {
     // TODO: this is a duplicated from IsValueCheckNode
     // TODO: don't think this is a complete solution, we need to do something else here
-    //       perhaps write the node, and then also use a send node...
+    // perhaps write the node, and then also use a send node...
     CompilerDirectives.transferToInterpreter();
     VM.thisMethodNeedsToBeOptimized("Should be optimized or on slowpath");
 
@@ -182,7 +182,7 @@ public final class ArraySetAllStrategy {
       if (result != Nil.nilObject) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
         // TODO: not optimized for partially empty literals,
-        //       changes immediately to object storage
+        // changes immediately to object storage
         Object[] newStorage = new Object[exprs.length];
         for (int j = 0; j < i; j += 1) {
           newStorage[j] = Nil.nilObject;
@@ -198,7 +198,7 @@ public final class ArraySetAllStrategy {
       final SBlock blockNoArg, final long length,
       final BlockDispatchNode blockDispatch) {
     // TODO: this version does not handle the case that a subsequent value is
-    //       not of the expected type...
+    // not of the expected type...
     Object result = blockDispatch.executeDispatch(new Object[] {blockNoArg});
     if (result instanceof Long) {
       long[] newStorage = new long[(int) length];
@@ -227,7 +227,7 @@ public final class ArraySetAllStrategy {
       final SBlock blockWithArg, final long length,
       final BlockDispatchNode blockDispatch, final IsValue isValue) {
     // TODO: this version does not handle the case that a subsequent value is
-    //       not of the expected type...
+    // not of the expected type...
     Object result = blockDispatch.executeDispatch(new Object[] {blockWithArg, (long) 1});
 
     if (result instanceof Long) {
@@ -247,7 +247,8 @@ public final class ArraySetAllStrategy {
       return newStorage;
     } else {
       Object[] newStorage = new Object[(int) length];
-      evalBlockWithArgForRemaining(blockWithArg, length, newStorage, blockDispatch, result, isValue);
+      evalBlockWithArgForRemaining(blockWithArg, length, newStorage, blockDispatch, result,
+          isValue);
       return newStorage;
     }
   }

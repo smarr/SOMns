@@ -18,7 +18,8 @@ import tools.dym.Tags.FieldRead;
  * As a consequence, we use <code>CachedSlotRead</code> to handle some of the
  * variability encountered for field reads.
  *
- * <p>Currently, we handle here the cases for unwritten object slots, slots that
+ * <p>
+ * Currently, we handle here the cases for unwritten object slots, slots that
  * contain object or primitive values, as well as the distinction for primitive
  * slots of whether they have been always set to a value before or not.
  * This allows for a small optimization of handling the bit that indicates for
@@ -33,8 +34,8 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
   public CachedSlotRead(final SlotAccess type, final CheckSObject guard,
       final AbstractDispatchNode nextInCache) {
     super(nextInCache.sourceSection);
-    this.type        = type;
-    this.guard       = guard;
+    this.type = type;
+    this.guard = guard;
     this.nextInCache = nextInCache;
     assert nextInCache != null;
   }
@@ -49,8 +50,7 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
       }
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      return replace(nextInCache).
-          executeDispatch(arguments);
+      return replace(nextInCache).executeDispatch(arguments);
     }
   }
 
@@ -72,7 +72,9 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
     }
   }
 
-  public enum SlotAccess { FIELD_READ, CLASS_READ }
+  public enum SlotAccess {
+    FIELD_READ, CLASS_READ
+  }
 
   public static final class UnwrittenSlotRead extends CachedSlotRead {
 
@@ -105,7 +107,7 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
 
   private abstract static class PrimSlotRead extends CachedSlotRead {
     protected final AbstractPrimitiveAccessor accessor;
-    protected final IntValueProfile primMarkProfile;
+    protected final IntValueProfile           primMarkProfile;
 
     PrimSlotRead(final AbstractPrimitiveAccessor accessor,
         final SlotAccess type, final CheckSObject guard,

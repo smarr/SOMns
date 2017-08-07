@@ -1,118 +1,117 @@
 package tools.dym;
 
-
 public abstract class Tags {
-  private Tags() { }
+  private Tags() {}
 
   // this is some form of invoke in the source, unclear what it is during program execution
   public final class UnspecifiedInvoke extends Tags {
-    private UnspecifiedInvoke() { }
+    private UnspecifiedInvoke() {}
   }
 
   // a virtual invoke where the lookup was cached
   public final class CachedVirtualInvoke extends Tags {
-    private CachedVirtualInvoke() { }
+    private CachedVirtualInvoke() {}
   }
 
   // a closure invoke where the closure method was cached
   public final class CachedClosureInvoke extends Tags {
-    private CachedClosureInvoke() { }
+    private CachedClosureInvoke() {}
   }
 
   // the lexical site of a virtual invoke
   public final class VirtualInvoke extends Tags {
-    private VirtualInvoke() { }
+    private VirtualInvoke() {}
   }
 
   // the lexical site of a virtual invoke
   public final class VirtualInvokeReceiver extends Tags {
-    private VirtualInvokeReceiver() { }
+    private VirtualInvokeReceiver() {}
   }
 
   public final class NewObject extends Tags {
-    private NewObject() { }
+    private NewObject() {}
   }
 
   public final class NewArray extends Tags {
-    private NewArray() { }
+    private NewArray() {}
   }
 
   // a condition expression that results in a control-flow change
   public final class ControlFlowCondition extends Tags {
-    private ControlFlowCondition() { }
+    private ControlFlowCondition() {}
   }
 
   public final class FieldRead extends Tags {
-    private FieldRead() { }
+    private FieldRead() {}
   }
 
   public final class FieldWrite extends Tags {
-    private FieldWrite() { }
+    private FieldWrite() {}
   }
 
   // lexical access/reference to a class
   public final class ClassRead extends Tags {
-    private ClassRead() { }
+    private ClassRead() {}
   }
 
   public final class LocalVarRead extends Tags {
-    private LocalVarRead() { }
+    private LocalVarRead() {}
   }
 
   public final class LocalVarWrite extends Tags {
-    private LocalVarWrite() { }
+    private LocalVarWrite() {}
   }
 
   public final class LocalArgRead extends Tags {
-    private LocalArgRead() { }
+    private LocalArgRead() {}
   }
 
   public final class ArrayRead extends Tags {
-    private ArrayRead() { }
+    private ArrayRead() {}
   }
 
   public final class ArrayWrite extends Tags {
-    private ArrayWrite() { }
+    private ArrayWrite() {}
   }
 
   public final class LoopNode extends Tags {
-    private LoopNode() { }
+    private LoopNode() {}
   }
 
   public final class LoopBody extends Tags {
-    private LoopBody() { }
+    private LoopBody() {}
   }
 
   public final class BasicPrimitiveOperation extends Tags {
-    private BasicPrimitiveOperation() { }
+    private BasicPrimitiveOperation() {}
   }
 
   public final class ComplexPrimitiveOperation extends Tags {
-    private ComplexPrimitiveOperation() { }
+    private ComplexPrimitiveOperation() {}
   }
 
   public final class PrimitiveArgument extends Tags {
-    private PrimitiveArgument() { }
+    private PrimitiveArgument() {}
   }
 
   // some operation that somehow accesses a string
   public final class StringAccess extends Tags {
-    private StringAccess() { }
+    private StringAccess() {}
   }
 
   public final class OpClosureApplication extends Tags {
-    private OpClosureApplication() { }
+    private OpClosureApplication() {}
   }
 
   public final class OpArithmetic extends Tags {
-    private OpArithmetic() { }
+    private OpArithmetic() {}
   }
 
   public final class OpComparison extends Tags {
-    private OpComparison() { }
+    private OpComparison() {}
   }
 
   public final class OpLength extends Tags {
-    private OpLength() { }
+    private OpLength() {}
   }
 }

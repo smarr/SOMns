@@ -7,7 +7,9 @@ import tools.dym.Tags.OpComparison;
 
 
 public abstract class ComparisonPrim extends BinaryBasicOperation {
-  protected ComparisonPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected ComparisonPrim(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

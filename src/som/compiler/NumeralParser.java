@@ -10,14 +10,14 @@ import som.VM;
 
 public class NumeralParser {
 
-  private final Lexer lexer;
+  private final Lexer   lexer;
   private StringBuilder mainDigits;
   private StringBuilder radix;
   private StringBuilder exponent;
-  private int dotIndex;
-  private boolean isNegative;
-  private boolean hasFraction;
-  private boolean exponentIsNegative;
+  private int           dotIndex;
+  private boolean       isNegative;
+  private boolean       hasFraction;
+  private boolean       exponentIsNegative;
 
   public NumeralParser(final Lexer lexer) {
     this.lexer = lexer;
@@ -94,7 +94,8 @@ public class NumeralParser {
         result = Math.addExact(result, (long) (Math.pow(r, length - i - 1) * v));
       } catch (ArithmeticException e) {
         // TODO: need to overflow into BigInteger
-        VM.errorPrintln("Warning: Parsed Integer literal which did not fit into long. " + lexer.getCurrentLineNumber() + ":" + lexer.getCurrentColumn());
+        VM.errorPrintln("Warning: Parsed Integer literal which did not fit into long. "
+            + lexer.getCurrentLineNumber() + ":" + lexer.getCurrentColumn());
         return result;
       }
     }

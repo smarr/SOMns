@@ -87,6 +87,44 @@
             dest="${lib.dir}/somns-deps-source.jar" />
     </target>
 
+    <target name="eclipseformat">
+        <pathconvert pathsep=" " property="javafiles">
+            <fileset dir="${src.dir}">
+                <include name="**/*.java"/>
+            </fileset>
+            <fileset dir="${unit.dir}">
+                <include name="**/*.java"/>
+            </fileset>
+        </pathconvert>
+        <exec executable="${env.ECLIPSE_EXE}" dir="${basedir}">
+            <arg value="-nosplash"/>
+            <arg value="-application"/>
+            <arg value="-consolelog"/>
+            <arg value="-data"/>
+            <arg value="${basedir}"/>
+            <arg value="-vm"/>
+            <arg value="${env.JAVA_HOME}/bin/java"/>
+            <arg value="org.eclipse.jdt.core.JavaCodeFormatter"/>
+            <arg value="-config"/>
+            <arg value="${basedir}/.settings/org.eclipse.jdt.core.prefs"/>
+            <arg line="${javafiles}"/>
+        </exec>
+    </target>
+    
+    <target name="eclipseformat-check" depends="eclipseformat">
+        <exec executable="git" dir="${basedir}">
+            <arg value="status" />
+            <arg value="*.java" />
+        </exec>
+        <exec executable="git" dir="${basedir}" failonerror="true">
+            <arg value="diff-index" />
+            <arg value="--quiet" />
+            <arg value="--exit-code" />
+            <arg value="--ignore-submodules" />
+            <arg value="HEAD" />
+        </exec>
+    </target>
+
     <target name="checkstyle-jar">
         <get src="http://tenet.dl.sourceforge.net/project/checkstyle/checkstyle/${checkstyle.version}/checkstyle-${checkstyle.version}-all.jar"
             usetimestamp="true"

@@ -30,6 +30,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 
+
 @NodeInfo(cost = NodeCost.NONE)
 public final class SequenceNode extends ExprWithTagsNode {
   @Children private final ExpressionNode[] expressions;

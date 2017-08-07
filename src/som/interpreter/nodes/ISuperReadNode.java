@@ -21,9 +21,11 @@
  */
 package som.interpreter.nodes;
 
-
 public interface ISuperReadNode extends ISpecialSend {
   @Override
-  default boolean isSuperSend() { return true; };
+  default boolean isSuperSend() {
+    return true;
+  };
+
   boolean isClassSide();
 }

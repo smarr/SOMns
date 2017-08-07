@@ -36,17 +36,17 @@ import som.vmobjects.SInvokable;
 
 public final class Method extends Invokable {
 
-  private final MethodScope methodScope;
+  private final MethodScope     methodScope;
   private final SourceSection[] definition;
-  private final boolean block;
+  private final boolean         block;
 
   public Method(final String name, final SourceSection sourceSection,
-                final SourceSection[] definition,
-                final ExpressionNode expressions,
-                final MethodScope methodScope,
-                final ExpressionNode uninitialized, final boolean block,
-                final boolean isAtomic,
-                final SomLanguage lang) {
+      final SourceSection[] definition,
+      final ExpressionNode expressions,
+      final MethodScope methodScope,
+      final ExpressionNode uninitialized, final boolean block,
+      final boolean isAtomic,
+      final SomLanguage lang) {
     super(name, sourceSection, methodScope.getFrameDescriptor(),
         expressions, uninitialized, isAtomic, lang);
     this.definition = definition;
@@ -58,8 +58,12 @@ public final class Method extends Invokable {
 
   @Override
   public boolean equals(final Object o) {
-    if (o == this) { return true; }
-    if (!(o instanceof Method)) { return false; }
+    if (o == this) {
+      return true;
+    }
+    if (!(o instanceof Method)) {
+      return false;
+    }
 
     Method m = (Method) o;
 
@@ -67,7 +71,8 @@ public final class Method extends Invokable {
       return true;
     }
 
-    assert !getSourceSection().equals(m.getSourceSection()) : "If that triggers, something with the source sections is wrong.";
+    assert !getSourceSection().equals(
+        m.getSourceSection()) : "If that triggers, something with the source sections is wrong.";
     return false;
   }
 

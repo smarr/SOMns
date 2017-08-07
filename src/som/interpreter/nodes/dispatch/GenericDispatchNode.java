@@ -10,7 +10,7 @@ import som.vmobjects.SSymbol;
 
 
 public final class GenericDispatchNode extends AbstractGenericDispatchNode {
-  private final AccessModifier minimalVisibility;
+  private final AccessModifier    minimalVisibility;
   private final MixinDefinitionId mixinId;
 
   public GenericDispatchNode(final SourceSection source, final SSymbol selector,

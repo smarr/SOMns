@@ -18,14 +18,19 @@ import som.interpreter.actors.WrapReferenceNode;
 import som.interpreter.actors.WrapReferenceNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 
+
 @GenerateNodeFactory
 @Primitive(primitive = "actorResolveProm:after:", requiresContext = true)
-public abstract class TimerPrim extends BinaryComplexOperation{
+public abstract class TimerPrim extends BinaryComplexOperation {
   @CompilationFinal private static Timer timer;
 
   private final ForkJoinPool actorPool;
 
-  protected TimerPrim(final BinaryComplexOperation node) { super(node); this.actorPool = null; }
+  protected TimerPrim(final BinaryComplexOperation node) {
+    super(node);
+    this.actorPool = null;
+  }
+
   protected TimerPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
     super(eagWrap, source);
     this.actorPool = vm.getActorPool();

@@ -24,7 +24,9 @@ import som.vmobjects.SSymbol;
 @Primitive(primitive = "string:equals:")
 @Primitive(selector = "=")
 public abstract class EqualsPrim extends ComparisonPrim {
-  protected EqualsPrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  protected EqualsPrim(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {
@@ -60,7 +62,7 @@ public abstract class EqualsPrim extends ComparisonPrim {
   @Specialization
   public final boolean doFarReferences(final SFarReference left, final SFarReference right) {
     // TODO: this is not yet complete, the value compare should be perhaps more than
-    //       identity
+    // identity
     return left == right ||
         (left.getActor() == right.getActor() && left.getValue() == right.getValue());
   }
@@ -90,7 +92,7 @@ public abstract class EqualsPrim extends ComparisonPrim {
   @TruffleBoundary
   public final boolean doBigInteger(final BigInteger left, final double right) {
     // TODO: this needs to be properly specified, I don't really know what's
-    //       the most useful semantics, but this comes 'close', I hope
+    // the most useful semantics, but this comes 'close', I hope
     return doBigInteger(left, BigInteger.valueOf((long) right));
   }
 
@@ -98,7 +100,7 @@ public abstract class EqualsPrim extends ComparisonPrim {
   @TruffleBoundary
   public final boolean doDouble(final double left, final BigInteger right) {
     // TODO: this needs to be properly specified, I don't really know what's
-    //       the most useful semantics, but this comes 'close', I hope
+    // the most useful semantics, but this comes 'close', I hope
     return doBigInteger(BigInteger.valueOf((long) left), right);
   }
 

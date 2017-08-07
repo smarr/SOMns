@@ -31,7 +31,8 @@ import com.oracle.truffle.api.interop.TruffleObject;
 import som.interop.SBlockInteropMessageResolutionForeign;
 
 
-public final class SBlock extends SAbstractObject implements TruffleObject, SObjectWithContext {
+public final class SBlock extends SAbstractObject
+    implements TruffleObject, SObjectWithContext {
 
   private final SInvokable        method;
   private final MaterializedFrame context;
@@ -39,8 +40,8 @@ public final class SBlock extends SAbstractObject implements TruffleObject, SObj
 
   public SBlock(final SInvokable blockMethod, final MaterializedFrame context,
       final SClass blockClass) {
-    this.method     = blockMethod;
-    this.context    = context;
+    this.method = blockMethod;
+    this.context = context;
     this.blockClass = blockClass;
   }
 

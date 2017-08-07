@@ -20,7 +20,8 @@ import som.vmobjects.SObject.SImmutableObject;
  */
 public abstract class IsValueCheckNode extends UnaryExpressionNode {
 
-  public static IsValueCheckNode create(final SourceSection source, final ExpressionNode self) {
+  public static IsValueCheckNode create(final SourceSection source,
+      final ExpressionNode self) {
     return new UninitializedNode(source, self);
   }
 
@@ -58,8 +59,8 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       SImmutableObject rcvr = (SImmutableObject) receiver;
 
       if (rcvr.isValue()) {
-        return replace(new ValueCheckNode(sourceSection, self)).
-            executeEvaluated(frame, receiver);
+        return replace(new ValueCheckNode(sourceSection, self)).executeEvaluated(frame,
+            receiver);
       } else {
         // neither transfer object nor value, so nothing to check
         dropCheckNode();

@@ -19,9 +19,9 @@ public final class ForeignDispatchNode extends AbstractDispatchNode {
   private final String selector;
 
   @Child private AbstractDispatchNode nextInCache;
-  @Child private Node invoke;
-  @Child private Node read;
-  @Child private Node write;
+  @Child private Node                 invoke;
+  @Child private Node                 read;
+  @Child private Node                 write;
 
   public ForeignDispatchNode(final int numArgs, final String selector,
       final AbstractDispatchNode next) {

@@ -84,14 +84,14 @@ public enum SteppingType {
 
   @SerializedName("returnFromActivity")
   RETURN_FROM_ACTIVITY("returnFromActivity", "Return from Activity", Group.ACTIVITY_STEPPING, "arrow-left",
-      null, new ActivityType[] {ActivityType.PROCESS, ActivityType.TASK, ActivityType.THREAD}) {
+      null,
+      new ActivityType[] {ActivityType.PROCESS, ActivityType.TASK, ActivityType.THREAD}) {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareContinue();
       susp.getActivityThread().setSteppingStrategy(this);
     }
   },
-
 
   @SerializedName("stepToChannelRcvr")
   STEP_TO_CHANNEL_RCVR("stepToChannelRcvr", "Step to Receiver", Group.PROCESS_STEPPING, "arrow-right", new Class[] {ChannelWrite.class}) {
@@ -188,7 +188,8 @@ public enum SteppingType {
   RETURN_FROM_TURN_TO_PROMISE_RESOLUTION("returnFromTurnToPromiseResolution",
       "Return from Turn to Promise Resolution", Group.ACTOR_STEPPING, "msg-embedded",
       null, new ActivityType[] {ActivityType.ACTOR}) {
-    @Override public void process(final Suspension susp) {
+    @Override
+    public void process(final Suspension susp) {
       susp.getEvent().prepareContinue();
       susp.getActivityThread().setSteppingStrategy(this);
     }
@@ -204,7 +205,9 @@ public enum SteppingType {
 
     public final String label;
 
-    Group(final String label) { this.label = label; }
+    Group(final String label) {
+      this.label = label;
+    }
   }
 
   private static void handleFrameSkip(final Suspension susp) {
@@ -223,12 +226,16 @@ public enum SteppingType {
 
   public final ActivityType[] forActivities;
 
-  /** Tag to identify the source sections at which this step operation makes sense.
-      If no tags are given, it is assumed the operation is always valid. */
+  /**
+   * Tag to identify the source sections at which this step operation makes sense.
+   * If no tags are given, it is assumed the operation is always valid.
+   */
   public final Class<? extends Tags>[] applicableTo;
 
-  /** Stepping operation is only available when in the dynamic scope of the given entity.
-      If no entity types are given, it is assumed the operation is always valid. */
+  /**
+   * Stepping operation is only available when in the dynamic scope of the given entity.
+   * If no entity types are given, it is assumed the operation is always valid.
+   */
   public final EntityType[] inScope;
 
   SteppingType(final String name, final String label, final Group group, final String icon,
@@ -242,12 +249,13 @@ public enum SteppingType {
   }
 
   SteppingType(final String name, final String label, final Group group, final String icon,
-      final Class<? extends Tags>[] applicableTo, final ActivityType[] forActivities, final EntityType[] inScope) {
-    this.name  = name;
+      final Class<? extends Tags>[] applicableTo, final ActivityType[] forActivities,
+      final EntityType[] inScope) {
+    this.name = name;
     this.label = label;
     this.group = group;
-    this.icon  = icon;
-    this.applicableTo  = applicableTo;
+    this.icon = icon;
+    this.applicableTo = applicableTo;
     this.forActivities = forActivities;
     this.inScope = inScope;
   }

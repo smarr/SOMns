@@ -19,11 +19,11 @@ import som.vmobjects.SObject;
 
 public final class ObjectLayout {
   private final ClassFactory forClasses;
-  private final Assumption latestLayoutForClass;
+  private final Assumption   latestLayoutForClass;
 
-  private final int primitiveStorageLocationsUsed;
-  private final int objectStorageLocationsUsed;
-  private final int totalNumberOfStorageLocations;
+  private final int     primitiveStorageLocationsUsed;
+  private final int     objectStorageLocationsUsed;
+  private final int     totalNumberOfStorageLocations;
   private final boolean onlyImmutableFields;
   private final boolean isTransferObject;
 
@@ -38,7 +38,8 @@ public final class ObjectLayout {
 
   private static HashMap<SlotDefinition, Class<?>> getInitialStorageTypes(
       final HashSet<SlotDefinition> slots) {
-    HashMap<SlotDefinition, Class<?>> types = new HashMap<SlotDefinition, Class<?>>((int) (slots.size() / 0.75f));
+    HashMap<SlotDefinition, Class<?>> types =
+        new HashMap<SlotDefinition, Class<?>>((int) (slots.size() / 0.75f));
     for (SlotDefinition slot : slots) {
       types.put(slot, null);
     }
@@ -57,7 +58,7 @@ public final class ObjectLayout {
     storageLocations = new HashMap<>((int) (numberOfFields / 0.75f));
 
     int nextFreePrimIdx = 0;
-    int nextFreeObjIdx  = 0;
+    int nextFreeObjIdx = 0;
 
     boolean onlyImmutable = true;
 
@@ -81,8 +82,8 @@ public final class ObjectLayout {
     }
 
     primitiveStorageLocationsUsed = nextFreePrimIdx;
-    objectStorageLocationsUsed    = nextFreeObjIdx;
-    onlyImmutableFields           = onlyImmutable;
+    objectStorageLocationsUsed = nextFreeObjIdx;
+    onlyImmutableFields = onlyImmutable;
   }
 
   public boolean isValid() {
@@ -123,7 +124,7 @@ public final class ObjectLayout {
   }
 
   public ObjectLayout withInitializedField(final SlotDefinition slot, final Class<?> type) {
-    Class <?> specType;
+    Class<?> specType;
     if (type == Long.class || type == Double.class) {
       specType = type;
     } else {
@@ -162,13 +163,17 @@ public final class ObjectLayout {
 
   public int getNumberOfUsedExtendedObjectStorageLocations() {
     int requiredExtensionFields = objectStorageLocationsUsed - SObject.NUM_OBJECT_FIELDS;
-    if (requiredExtensionFields < 0) { return 0; }
+    if (requiredExtensionFields < 0) {
+      return 0;
+    }
     return requiredExtensionFields;
   }
 
   public int getNumberOfUsedExtendedPrimStorageLocations() {
     int requiredExtensionFields = primitiveStorageLocationsUsed - SObject.NUM_PRIMITIVE_FIELDS;
-    if (requiredExtensionFields < 0) { return 0;  }
+    if (requiredExtensionFields < 0) {
+      return 0;
+    }
     return requiredExtensionFields;
   }
 

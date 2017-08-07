@@ -38,7 +38,7 @@ import som.vmobjects.SObjectWithContext;
 
 public abstract class ContextualNode extends ExprWithTagsNode {
 
-  protected final int contextLevel;
+  protected final int        contextLevel;
   private final ValueProfile frameType;
   private final ValueProfile outerType;
 

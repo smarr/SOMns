@@ -95,14 +95,14 @@ import som.vmobjects.SSymbol;
 
 
 public class Primitives {
-  private final VM vm;
-  private HashMap<SSymbol, Dispatchable> vmMirrorPrimitives;
-  private final HashMap<SSymbol, Specializer<? extends ExpressionNode>>  eagerPrimitives;
+  private final VM                                                      vm;
+  private HashMap<SSymbol, Dispatchable>                                vmMirrorPrimitives;
+  private final HashMap<SSymbol, Specializer<? extends ExpressionNode>> eagerPrimitives;
 
   public Primitives(final SomLanguage lang) {
     vm = lang.getVM();
     vmMirrorPrimitives = new HashMap<>();
-    eagerPrimitives    = new HashMap<>();
+    eagerPrimitives = new HashMap<>();
     initialize(lang);
   }
 
@@ -131,22 +131,26 @@ public class Primitives {
    * it is to be instantiated.
    */
   public static class Specializer<T> {
-    protected final VM vm;
-    protected final som.primitives.Primitive prim;
-    protected final NodeFactory<T> fact;
+    protected final VM                                  vm;
+    protected final som.primitives.Primitive            prim;
+    protected final NodeFactory<T>                      fact;
     private final NodeFactory<? extends ExpressionNode> extraChildFactory;
 
     @SuppressWarnings("unchecked")
-    public Specializer(final som.primitives.Primitive prim, final NodeFactory<T> fact, final VM vm) {
+    public Specializer(final som.primitives.Primitive prim, final NodeFactory<T> fact,
+        final VM vm) {
       this.prim = prim;
       this.fact = fact;
-      this.vm   = vm;
+      this.vm = vm;
 
       if (prim.extraChild() == NoChild.class) {
         extraChildFactory = null;
       } else {
         try {
-          extraChildFactory = (NodeFactory<? extends ExpressionNode>) prim.extraChild().getMethod("getInstance").invoke(null);
+          extraChildFactory =
+              (NodeFactory<? extends ExpressionNode>) prim.extraChild()
+                                                          .getMethod("getInstance")
+                                                          .invoke(null);
         } catch (IllegalAccessException | IllegalArgumentException
             | InvocationTargetException | NoSuchMethodException
             | SecurityException e) {
@@ -233,14 +237,15 @@ public class Primitives {
   private static SInvokable constructVmMirrorPrimitive(final SSymbol signature,
       final Specializer<? extends ExpressionNode> specializer, final SomLanguage lang) {
     CompilerAsserts.neverPartOfCompilation("This is only executed during bootstrapping.");
-    assert signature.getNumberOfSignatureArguments() > 1 :
-      "Primitives should have the vmMirror as receiver, " +
-      "and then at least one object they are applied to";
+    assert signature.getNumberOfSignatureArguments() > 1 : "Primitives should have the vmMirror as receiver, "
+        +
+        "and then at least one object they are applied to";
 
     // ignore the implicit vmMirror argument
     final int numArgs = signature.getNumberOfSignatureArguments() - 1;
 
-    Source s = SomLanguage.getSyntheticSource("primitive", specializer.fact.getClass().getSimpleName());
+    Source s = SomLanguage.getSyntheticSource("primitive",
+        specializer.fact.getClass().getSimpleName());
     MethodBuilder prim = new MethodBuilder(true, lang);
     ExpressionNode[] args = new ExpressionNode[numArgs];
 
@@ -284,14 +289,16 @@ public class Primitives {
 
           if (!("".equals(vmMirrorName))) {
             SSymbol signature = Symbols.symbolFor(vmMirrorName);
-            assert !vmMirrorPrimitives.containsKey(signature) : "clash of vmMirrorPrimitive names";
+            assert !vmMirrorPrimitives.containsKey(
+                signature) : "clash of vmMirrorPrimitive names";
             vmMirrorPrimitives.put(signature,
                 constructVmMirrorPrimitive(signature, specializer, lang));
           }
 
           if (!("".equals(prim.selector()))) {
             SSymbol msgSel = Symbols.symbolFor(prim.selector());
-            assert !eagerPrimitives.containsKey(msgSel) : "clash of selectors and eager specialization";
+            assert !eagerPrimitives.containsKey(
+                msgSel) : "clash of selectors and eager specialization";
             eagerPrimitives.put(msgSel, specializer);
           }
         }
@@ -300,14 +307,14 @@ public class Primitives {
   }
 
   @SuppressWarnings("unchecked")
-  private <T> Specializer<T> getSpecializer(final som.primitives.Primitive prim, final NodeFactory<T> factory) {
+  private <T> Specializer<T> getSpecializer(final som.primitives.Primitive prim,
+      final NodeFactory<T> factory) {
     try {
-      return prim.specializer().
-          getConstructor(som.primitives.Primitive.class, NodeFactory.class, VM.class).
-          newInstance(prim, factory, vm);
-    } catch (InstantiationException | IllegalAccessException |
-        IllegalArgumentException | InvocationTargetException |
-        NoSuchMethodException | SecurityException e) {
+      return prim.specializer()
+                 .getConstructor(som.primitives.Primitive.class, NodeFactory.class, VM.class)
+                 .newInstance(prim, factory, vm);
+    } catch (InstantiationException | IllegalAccessException | IllegalArgumentException
+        | InvocationTargetException | NoSuchMethodException | SecurityException e) {
       throw new RuntimeException(e);
     }
   }

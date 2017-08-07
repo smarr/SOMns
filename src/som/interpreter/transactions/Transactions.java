@@ -11,7 +11,8 @@ import som.vmobjects.SObject.SMutableObject;
 /**
  * Implements a simple software transactional memory system.
  *
- * <p>The general idea is that all accesses to objects and arrays are mediated
+ * <p>
+ * The general idea is that all accesses to objects and arrays are mediated
  * via {@link Change} objects. These keep a copy of the initial state, and a
  * working copy on which the transactions perform their accesses.
  * On commit, we simply compare the initial state with the publicly visible
@@ -19,29 +20,34 @@ import som.vmobjects.SObject.SMutableObject;
  * conflict was determined, the new state is copied into the publicly visible
  * object.
  *
- * <p>Transactions always succeed, this implementation automatically retries.
+ * <p>
+ * Transactions always succeed, this implementation automatically retries.
  *
- * <p>The initial creation of a {@link Change} object accesses the public object
+ * <p>
+ * The initial creation of a {@link Change} object accesses the public object
  * while holding its lock. Similarly, on writing back changes, the lock is
  * acquired. Transaction commits are globally sequentialized on a single lock.
  *
- * <p>Inspired by: Transactional Memory for Smalltalk
+ * <p>
+ * Inspired by: Transactional Memory for Smalltalk
  * L. Renggli, and O. Nierstrasz. In Proc. of ICDL, 2007.
  * DOI: 10.1145/1352678.1352692
  */
 public final class Transactions {
 
   private IdentityHashMap<SMutableObject, ObjectChange> objects;
-  private IdentityHashMap<SMutableArray,  ArrayChange>  arrays;
+  private IdentityHashMap<SMutableArray, ArrayChange>   arrays;
 
   private static Object globalCommitLock = new Object();
 
-  private Transactions() { }
+  private Transactions() {}
 
   private abstract static class Change {
     abstract boolean hasChange();
+
     abstract boolean hasConflict();
-    abstract void    applyChanges();
+
+    abstract void applyChanges();
   }
 
   private static final class ObjectChange extends Change {
@@ -51,9 +57,9 @@ public final class Transactions {
 
     ObjectChange(final SMutableObject o) {
       synchronized (o) {
-        publicObj    = o;
+        publicObj = o;
         initialState = o.shallowCopy();
-        workingCopy  = o.shallowCopy();
+        workingCopy = o.shallowCopy();
       }
     }
 
@@ -82,9 +88,9 @@ public final class Transactions {
 
     ArrayChange(final SMutableArray a) {
       synchronized (a) {
-        publicArr    = a;
+        publicArr = a;
         initialState = a.shallowCopy();
-        workingCopy  = a.shallowCopy();
+        workingCopy = a.shallowCopy();
       }
     }
 
@@ -108,7 +114,7 @@ public final class Transactions {
 
   private void start() {
     objects = new IdentityHashMap<>();
-    arrays  = new IdentityHashMap<>();
+    arrays = new IdentityHashMap<>();
   }
 
   private SMutableObject getWorkingCopy(final SMutableObject o) {

@@ -27,10 +27,12 @@ public abstract class StorageAccessor {
   private static final Unsafe unsafe;
 
   private static final int MAX_OBJECT_FIELDS = 50;
-  private static final int MAX_PRIM_FIELDS = 30;
+  private static final int MAX_PRIM_FIELDS   = 30;
 
-  @CompilationFinal(dimensions = 1) private static final AbstractObjectAccessor[] objAccessors;
-  @CompilationFinal(dimensions = 1) private static final AbstractPrimitiveAccessor[] primAccessors;
+  @CompilationFinal(
+      dimensions = 1) private static final AbstractObjectAccessor[]                  objAccessors;
+  @CompilationFinal(
+      dimensions = 1) private static final AbstractPrimitiveAccessor[]               primAccessors;
 
   static {
     unsafe = loadUnsafe();
@@ -39,12 +41,14 @@ public abstract class StorageAccessor {
   }
 
   public static AbstractObjectAccessor getObjectAccessor(final int idx) {
-    assert idx < MAX_OBJECT_FIELDS : "Got a object slot allocated that goes beyond the currently supported. idx: " + idx;
+    assert idx < MAX_OBJECT_FIELDS : "Got a object slot allocated that goes beyond the currently supported. idx: "
+        + idx;
     return objAccessors[idx];
   }
 
   public static AbstractPrimitiveAccessor getPrimitiveAccessor(final int idx) {
-    assert idx < MAX_OBJECT_FIELDS : "Got a primitive slot allocated that goes beyond the currently supported. idx: " + idx;
+    assert idx < MAX_OBJECT_FIELDS : "Got a primitive slot allocated that goes beyond the currently supported. idx: "
+        + idx;
     return primAccessors[idx];
   }
 
@@ -88,6 +92,7 @@ public abstract class StorageAccessor {
 
   public abstract static class AbstractObjectAccessor extends StorageAccessor {
     public abstract Object read(SObject obj);
+
     public abstract void write(SObject obj, Object value);
   }
 
@@ -136,9 +141,11 @@ public abstract class StorageAccessor {
     }
 
     public abstract long readLong(SObject obj);
+
     public abstract double readDouble(SObject obj);
 
     public abstract void write(SObject obj, long value);
+
     public abstract void write(SObject obj, double value);
 
     public final boolean isPrimitiveSet(final SObject obj) {
@@ -231,7 +238,8 @@ public abstract class StorageAccessor {
       theUnsafeInstance.setAccessible(true);
       return (Unsafe) theUnsafeInstance.get(Unsafe.class);
     } catch (Exception e) {
-      throw new RuntimeException("exception while trying to get Unsafe.theUnsafe via reflection:", e);
+      throw new RuntimeException(
+          "exception while trying to get Unsafe.theUnsafe via reflection:", e);
     }
   }
 }

@@ -9,7 +9,7 @@ import tools.debugger.message.Message.IncommingMessage;
 
 
 public class StepMessage extends IncommingMessage {
-  private final long activityId;
+  private final long         activityId;
   private final SteppingType step;
 
   /**
@@ -17,7 +17,7 @@ public class StepMessage extends IncommingMessage {
    */
   public StepMessage() {
     activityId = -1;
-    step       = null;
+    step = null;
   }
 
   @Override

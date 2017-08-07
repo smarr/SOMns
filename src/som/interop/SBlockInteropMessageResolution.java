@@ -22,8 +22,8 @@ public class SBlockInteropMessageResolution {
   @Resolve(message = "EXECUTE")
   public abstract static class SBlockExecuteNode extends Node {
 
-    @Child protected BlockDispatchNode block = BlockDispatchNodeGen.create();
-    @Child protected ToSomConversion convert = ToSomConversionNodeGen.create(null);
+    @Child protected BlockDispatchNode block   = BlockDispatchNodeGen.create();
+    @Child protected ToSomConversion   convert = ToSomConversionNodeGen.create(null);
 
     public Object access(final SBlock rcvr, final Object[] args) {
       ObjectTransitionSafepoint.INSTANCE.register();

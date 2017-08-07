@@ -48,16 +48,19 @@ public final class TransferObject {
   public static SObject transfer(final SObject obj, final Actor origin,
       final Actor target,
       final Map<SAbstractObject, SAbstractObject> transferedObjects) {
-    assert obj.getSOMClass().isTransferObject() : "only TransferObjects should be handled here";
+    assert obj.getSOMClass()
+              .isTransferObject() : "only TransferObjects should be handled here";
     assert !obj.isValue() : "TransferObjects can't be Values";
 
     ObjectLayout layout = obj.getObjectLayout();
     HashMap<SlotDefinition, StorageLocation> fields = layout.getStorageLocations();
     SObject newObj = obj.cloneBasics();
 
-    Map<SAbstractObject, SAbstractObject> transferMap = takeOrCreateTransferMap(transferedObjects);
+    Map<SAbstractObject, SAbstractObject> transferMap =
+        takeOrCreateTransferMap(transferedObjects);
 
-    assert !transferMap.containsKey(obj) : "The algorithm should not transfer an object twice.";
+    assert !transferMap.containsKey(
+        obj) : "The algorithm should not transfer an object twice.";
     transferMap.put(obj, newObj);
 
     for (StorageLocation location : fields.values()) {
@@ -87,9 +90,11 @@ public final class TransferObject {
 
     assert newObj.isPartiallyEmptyType() || newObj.isObjectType();
 
-    Map<SAbstractObject, SAbstractObject> transferMap = takeOrCreateTransferMap(transferedObjects);
+    Map<SAbstractObject, SAbstractObject> transferMap =
+        takeOrCreateTransferMap(transferedObjects);
 
-    assert !transferMap.containsKey(arr) : "The algorithm should not transfer an object twice.";
+    assert !transferMap.containsKey(
+        arr) : "The algorithm should not transfer an object twice.";
     transferMap.put(arr, newObj);
 
     if (newObj.isObjectType()) {
@@ -107,7 +112,8 @@ public final class TransferObject {
         storage[i] = trnfObj;
       }
     } else if (newObj.isPartiallyEmptyType()) {
-      PartiallyEmptyArray parr = newObj.getPartiallyEmptyStorage(SArray.PartiallyEmptyStorageType);
+      PartiallyEmptyArray parr =
+          newObj.getPartiallyEmptyStorage(SArray.PartiallyEmptyStorageType);
       Object[] storage = parr.getStorage();
 
       for (int i = 0; i < storage.length; i++) {

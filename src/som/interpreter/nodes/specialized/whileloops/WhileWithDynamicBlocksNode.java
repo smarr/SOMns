@@ -35,7 +35,7 @@ public final class WhileWithDynamicBlocksNode extends AbstractWhileNode {
   protected Object doWhileConditionally(final SBlock loopCondition,
       final SBlock loopBody) {
     assert loopCondition.getMethod() == conditionMethod;
-    assert loopBody.getMethod()      == bodyMethod;
+    assert loopBody.getMethod() == bodyMethod;
     return doWhileUnconditionally(loopCondition, loopBody);
   }
 }

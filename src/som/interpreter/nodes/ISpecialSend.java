@@ -5,5 +5,6 @@ import som.compiler.MixinBuilder.MixinDefinitionId;
 
 public interface ISpecialSend {
   boolean isSuperSend();
+
   MixinDefinitionId getEnclosingMixinId();
 }

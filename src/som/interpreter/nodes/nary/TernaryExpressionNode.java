@@ -11,9 +11,9 @@ import som.vmobjects.SSymbol;
 
 
 @NodeChildren({
-  @NodeChild(value = "receiver",  type = ExpressionNode.class),
-  @NodeChild(value = "firstArg",  type = ExpressionNode.class),
-  @NodeChild(value = "secondArg", type = ExpressionNode.class)})
+    @NodeChild(value = "receiver", type = ExpressionNode.class),
+    @NodeChild(value = "firstArg", type = ExpressionNode.class),
+    @NodeChild(value = "secondArg", type = ExpressionNode.class)})
 @Instrumentable(factory = TernaryExpressionNodeWrapper.class)
 public abstract class TernaryExpressionNode extends EagerlySpecializableNode {
 

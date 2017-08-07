@@ -27,7 +27,7 @@ public final class InliningVisitor implements NodeVisitor {
   }
 
   protected final MethodScope scope;
-  protected final boolean someOuterScopeIsMerged;
+  protected final boolean     someOuterScopeIsMerged;
 
   /**
    * This inliner refers to the block at the contextLevel given here, and
@@ -49,14 +49,16 @@ public final class InliningVisitor implements NodeVisitor {
 
   public static final class ScopeElement {
     public final Variable var;
-    public final int contextLevel;
+    public final int      contextLevel;
+
     private ScopeElement(final Variable var, final int contextLevel) {
       this.var = var;
       this.contextLevel = contextLevel;
     }
   }
 
-  private ScopeElement getSplitVar(final Variable var, final MethodScope scope, final int lvl) {
+  private ScopeElement getSplitVar(final Variable var, final MethodScope scope,
+      final int lvl) {
     for (Variable v : scope.getVariables()) {
       if (v.equals(var)) {
         return new ScopeElement(v, lvl);
@@ -117,7 +119,8 @@ public final class InliningVisitor implements NodeVisitor {
       final MixinDefinitionId mixin, final int ctxLevel) {
     ScopeElement se = getSplitVar(var);
     if (se.var != var || se.contextLevel < ctxLevel) {
-      node.replace(((Argument) se.var).getSelfReadNode(se.contextLevel, mixin, node.getSourceSection()));
+      node.replace(((Argument) se.var).getSelfReadNode(se.contextLevel, mixin,
+          node.getSourceSection()));
     } else {
       assert ctxLevel == se.contextLevel;
     }

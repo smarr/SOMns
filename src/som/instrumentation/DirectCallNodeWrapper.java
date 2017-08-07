@@ -24,7 +24,7 @@ public class DirectCallNodeWrapper implements InstrumentableFactory<DirectCallNo
     private NodeWrapper(final DirectCallNode delegate, final ProbeNode probe) {
       super(null);
       this.delegate = delegate;
-      this.probe    = probe;
+      this.probe = probe;
     }
 
     @Override

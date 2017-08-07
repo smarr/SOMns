@@ -13,13 +13,13 @@ import som.vmobjects.SInvokable;
 
 
 public abstract class Invokable extends RootNode {
-  protected final String name;
+  protected final String      name;
   private final SourceSection sourceSection;
 
   /** Marks this invokable as being used in a transactional context. */
   protected final boolean isAtomic;
 
-  @Child protected ExpressionNode  expressionOrSequence;
+  @Child protected ExpressionNode expressionOrSequence;
 
   protected final ExpressionNode uninitializedBody;
 
@@ -32,9 +32,9 @@ public abstract class Invokable extends RootNode {
     super(lang, frameDescriptor);
     this.name = name;
     this.expressionOrSequence = expressionOrSequence;
-    this.uninitializedBody    = uninitialized;
-    this.isAtomic             = isAtomic;
-    this.sourceSection        = sourceSection;
+    this.uninitializedBody = uninitialized;
+    this.isAtomic = isAtomic;
+    this.sourceSection = sourceSection;
   }
 
   @Override

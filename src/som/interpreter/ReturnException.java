@@ -23,9 +23,10 @@ package som.interpreter;
 
 import com.oracle.truffle.api.nodes.ControlFlowException;
 
+
 public final class ReturnException extends ControlFlowException {
 
-  private final Object result;
+  private final Object             result;
   private final FrameOnStackMarker target;
 
   public ReturnException(final Object result, final FrameOnStackMarker target) {

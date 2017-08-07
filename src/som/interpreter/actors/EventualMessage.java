@@ -15,16 +15,16 @@ import tools.concurrency.TracingActivityThread;
 
 
 public abstract class EventualMessage {
-  protected final Object[]  args;
-  protected final SResolver resolver;
+  protected final Object[]       args;
+  protected final SResolver      resolver;
   protected final RootCallTarget onReceive;
-  protected final long messageId;
+  protected final long           messageId;
 
   /**
-    * Indicates the case that an asynchronous message has a receiver breakpoint.
-    * It is not final because its value can be updated so that other breakpoints
-    * can reuse the stepping strategy implemented for message receiver breakpoints.
-    */
+   * Indicates the case that an asynchronous message has a receiver breakpoint.
+   * It is not final because its value can be updated so that other breakpoints
+   * can reuse the stepping strategy implemented for message receiver breakpoints.
+   */
   protected boolean haltOnReceive;
 
   /**
@@ -36,16 +36,18 @@ public abstract class EventualMessage {
   protected EventualMessage(final Object[] args,
       final SResolver resolver, final RootCallTarget onReceive,
       final boolean haltOnReceive, final boolean haltOnResolver) {
-    this.args     = args;
+    this.args = args;
     this.resolver = resolver;
     this.onReceive = onReceive;
     this.haltOnReceive = haltOnReceive;
     this.haltOnResolver = haltOnResolver;
     this.messageId = TracingActivityThread.newEntityId();
-    assert onReceive.getRootNode() instanceof ReceivedMessage || onReceive.getRootNode() instanceof ReceivedCallback;
+    assert onReceive.getRootNode() instanceof ReceivedMessage
+        || onReceive.getRootNode() instanceof ReceivedCallback;
   }
 
   public abstract Actor getTarget();
+
   public abstract Actor getSender();
 
   public SResolver getResolver() {
@@ -80,8 +82,8 @@ public abstract class EventualMessage {
       super(arguments, resolver, onReceive, triggerMessageReceiverBreakpoint,
           triggerPromiseResolverBreakpoint);
       this.selector = selector;
-      this.sender   = sender;
-      this.target   = target;
+      this.sender = sender;
+      this.target = target;
 
       assert target != null;
       assert !(args[0] instanceof SFarReference) : "needs to be guaranted by call to this constructor";
@@ -106,14 +108,16 @@ public abstract class EventualMessage {
     }
 
     @Override
-    public boolean getHaltOnPromiseMessageResolution() { return false; }
+    public boolean getHaltOnPromiseMessageResolution() {
+      return false;
+    }
 
     @Override
     public String toString() {
       String t = target.toString();
       return "DirectMsg(" + selector.toString() + ", "
-        + Arrays.toString(args) +  ", " + t
-        + ", sender: " + (sender == null ? "" : sender.toString()) + ")";
+          + Arrays.toString(args) + ", " + t
+          + ", sender: " + (sender == null ? "" : sender.toString()) + ")";
     }
   }
 
@@ -131,7 +135,7 @@ public abstract class EventualMessage {
     if (receiver instanceof SFarReference) {
       // now we are about to send a message to a far reference, so, it
       // is better to just redirect the message back to the current actor
-      target   = ((SFarReference) receiver).getActor();
+      target = ((SFarReference) receiver).getActor();
       receiver = ((SFarReference) receiver).getValue();
     }
 
@@ -184,15 +188,18 @@ public abstract class EventualMessage {
    * after the promise is resolved.
    */
   public static final class PromiseSendMessage extends PromiseMessage {
-    private final SSymbol selector;
-    protected Actor target;
-    protected Actor finalSender;
+    private final SSymbol    selector;
+    protected Actor          target;
+    protected Actor          finalSender;
     protected final SPromise originalTarget;
 
     protected PromiseSendMessage(final SSymbol selector,
         final Object[] arguments, final Actor originalSender,
-        final SResolver resolver, final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint, final boolean triggerPromiseResolverBreakpoint) {
-      super(arguments, originalSender, resolver, onReceive, triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
+        final SResolver resolver, final RootCallTarget onReceive,
+        final boolean triggerMessageReceiverBreakpoint,
+        final boolean triggerPromiseResolverBreakpoint) {
+      super(arguments, originalSender, resolver, onReceive, triggerMessageReceiverBreakpoint,
+          triggerPromiseResolverBreakpoint);
       this.selector = selector;
       assert (args[0] instanceof SPromise);
       this.originalTarget = (SPromise) args[0];
@@ -203,13 +210,15 @@ public abstract class EventualMessage {
       determineAndSetTarget(rcvr, target, sendingActor);
     }
 
-    private void determineAndSetTarget(final Object rcvr, final Actor target, final Actor sendingActor) {
+    private void determineAndSetTarget(final Object rcvr, final Actor target,
+        final Actor sendingActor) {
       VM.thisMethodNeedsToBeOptimized("not optimized for compilation");
 
       args[0] = rcvr;
-      Actor finalTarget = determineTargetAndWrapArguments(args, target, sendingActor, originalSender);
+      Actor finalTarget =
+          determineTargetAndWrapArguments(args, target, sendingActor, originalSender);
 
-      this.target      = finalTarget; // for sends to far references, we need to adjust the target
+      this.target = finalTarget; // for sends to far references, we need to adjust the target
       this.finalSender = sendingActor;
     }
 
@@ -232,8 +241,8 @@ public abstract class EventualMessage {
       } else {
         t = target.toString();
       }
-      return "PSendMsg(" + selector.toString() + " " + Arrays.toString(args) +  ", " + t
-        + ", sender: " + (finalSender == null ? "" : finalSender.toString()) + ")";
+      return "PSendMsg(" + selector.toString() + " " + Arrays.toString(args) + ", " + t
+          + ", sender: " + (finalSender == null ? "" : finalSender.toString()) + ")";
     }
 
     @Override
@@ -250,7 +259,8 @@ public abstract class EventualMessage {
     protected final SPromise promise;
 
     public PromiseCallbackMessage(final Actor owner, final SBlock callback,
-        final SResolver resolver, final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint,
+        final SResolver resolver, final RootCallTarget onReceive,
+        final boolean triggerMessageReceiverBreakpoint,
         final boolean triggerPromiseResolverBreakpoint, final SPromise promiseRegisteredOn) {
       super(new Object[] {callback, null}, owner, resolver, onReceive,
           triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
@@ -303,7 +313,8 @@ public abstract class EventualMessage {
   }
 
   protected final void executeMessage() {
-    VM.thisMethodNeedsToBeOptimized("Not Optimized! But also not sure it can be part of compilation anyway");
+    VM.thisMethodNeedsToBeOptimized(
+        "Not Optimized! But also not sure it can be part of compilation anyway");
 
     Object rcvrObj = args[0];
     assert rcvrObj != null;
@@ -311,7 +322,8 @@ public abstract class EventualMessage {
     assert !(rcvrObj instanceof SFarReference);
     assert !(rcvrObj instanceof SPromise);
 
-    assert onReceive.getRootNode() instanceof ReceivedMessage || onReceive.getRootNode() instanceof ReceivedCallback;
+    assert onReceive.getRootNode() instanceof ReceivedMessage
+        || onReceive.getRootNode() instanceof ReceivedCallback;
     onReceive.call(this);
   }
 

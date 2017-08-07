@@ -28,23 +28,24 @@ import tools.debugger.frontend.ApplicationThreadTask.SendStackTrace;
  * Suspension controls the interaction between the debugger front-end and the
  * application thread.
  *
- * <p>It provides a simple mechanism to ask the application thread to perform
+ * <p>
+ * It provides a simple mechanism to ask the application thread to perform
  * tasks on behalf of the front-end. This is useful for instance to walk the
  * stack and obtain the relevant data for the debugger.
  */
 public class Suspension {
-  public final long activityId;
-  private final Activity activity;
-  private final TracingActivityThread activityThread;
+  public final long                                       activityId;
+  private final Activity                                  activity;
+  private final TracingActivityThread                     activityThread;
   private final ArrayBlockingQueue<ApplicationThreadTask> tasks;
 
-  private SuspendedEvent suspendedEvent;
+  private SuspendedEvent         suspendedEvent;
   private ApplicationThreadStack stack;
 
   public Suspension(final TracingActivityThread activityThread,
       final Activity activity, final long activityId) {
     this.activityThread = activityThread;
-    this.activity   = activity;
+    this.activity = activity;
     this.activityId = activityId;
     this.tasks = new ArrayBlockingQueue<>(2);
   }
@@ -72,7 +73,8 @@ public class Suspension {
   }
 
   /**
-   * Get skipping frame count for the case when it is a HaltPrimitive or a SuspendExecutionNode.
+   * Get skipping frame count for the case when it is a HaltPrimitive or a
+   * SuspendExecutionNode.
    */
   public synchronized int getFrameSkipCount() {
     int skipFrames = 0;
@@ -89,8 +91,8 @@ public class Suspension {
   }
 
   private int getLocalId(final long globalId) {
-    assert TraceData.getActivityIdFromGlobalValId(globalId) == activityId :
-      "should be an id for current activity, otherwise, something is wrong";
+    assert TraceData.getActivityIdFromGlobalValId(
+        globalId) == activityId : "should be an id for current activity, otherwise, something is wrong";
     return TraceData.valIdFromGlobal(globalId);
   }
 
@@ -124,7 +126,8 @@ public class Suspension {
     frontend.sendScopes(frameId, this, requestId);
   }
 
-  public void sendVariables(final long varRef, final FrontendConnector frontend, final int requestId) {
+  public void sendVariables(final long varRef, final FrontendConnector frontend,
+      final int requestId) {
     frontend.sendVariables(varRef, requestId, this);
   }
 
@@ -153,7 +156,8 @@ public class Suspension {
             activity.setStepToJoin(true);
           } else if (activityThread.isStepping(SteppingType.STEP_TO_NEXT_TURN)) {
             activity.setStepToNextTurn(true);
-          } else if (activityThread.isStepping(SteppingType.RETURN_FROM_TURN_TO_PROMISE_RESOLUTION)) {
+          } else if (activityThread.isStepping(
+              SteppingType.RETURN_FROM_TURN_TO_PROMISE_RESOLUTION)) {
             assert activity instanceof Actor;
             EventualMessage turnMessage = EventualMessage.getCurrentExecutingMessage();
             SResolver resolver = turnMessage.getResolver();
@@ -172,7 +176,15 @@ public class Suspension {
     ObjectTransitionSafepoint.INSTANCE.register();
   }
 
-  public TracingActivityThread getActivityThread() { return activityThread; }
-  public Activity getActivity() { return activity; }
-  public synchronized SuspendedEvent getEvent() { return suspendedEvent; }
+  public TracingActivityThread getActivityThread() {
+    return activityThread;
+  }
+
+  public Activity getActivity() {
+    return activity;
+  }
+
+  public synchronized SuspendedEvent getEvent() {
+    return suspendedEvent;
+  }
 }

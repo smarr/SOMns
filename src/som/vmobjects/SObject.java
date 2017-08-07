@@ -43,16 +43,18 @@ import som.interpreter.objectstorage.StorageLocation.ObjectStorageLocation;
 import som.interpreter.objectstorage.StorageLocation.UnwrittenStorageLocation;
 import som.vm.constants.Nil;
 
+
 public abstract class SObject extends SObjectWithClass {
 
   public static final int NUM_PRIMITIVE_FIELDS = 5;
   public static final int NUM_OBJECT_FIELDS    = 5;
 
   // TODO: when we got the possibility that we can hint to the compiler that a
-  //       read is from a final field, we should remove this
+  // read is from a final field, we should remove this
   public static final class SImmutableObject extends SObject {
 
-    public SImmutableObject(final SClass instanceClass, final ClassFactory classGroup, final ObjectLayout layout) {
+    public SImmutableObject(final SClass instanceClass, final ClassFactory classGroup,
+        final ObjectLayout layout) {
       super(instanceClass, classGroup, layout);
       field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
       isValue = instanceClass.declaredAsValue();
@@ -75,14 +77,14 @@ public abstract class SObject extends SObjectWithClass {
       this.primField3 = old.primField3;
       this.primField4 = old.primField4;
       this.primField5 = old.primField5;
-      this.isValue    = old.isValue;
+      this.isValue = old.isValue;
     }
 
-    @CompilationFinal protected long   primField1;
-    @CompilationFinal protected long   primField2;
-    @CompilationFinal protected long   primField3;
-    @CompilationFinal protected long   primField4;
-    @CompilationFinal protected long   primField5;
+    @CompilationFinal protected long primField1;
+    @CompilationFinal protected long primField2;
+    @CompilationFinal protected long primField3;
+    @CompilationFinal protected long primField4;
+    @CompilationFinal protected long primField5;
 
     @CompilationFinal public Object field1;
     @CompilationFinal public Object field2;
@@ -111,11 +113,11 @@ public abstract class SObject extends SObjectWithClass {
   }
 
   public static final class SMutableObject extends SObject {
-    private long   primField1;
-    private long   primField2;
-    private long   primField3;
-    private long   primField4;
-    private long   primField5;
+    private long primField1;
+    private long primField2;
+    private long primField3;
+    private long primField4;
+    private long primField5;
 
     private Object field1;
     private Object field2;
@@ -128,7 +130,8 @@ public abstract class SObject extends SObjectWithClass {
     // SMutableObject and SImmuableObject
     @SuppressWarnings("unused") private boolean isValueOfSImmutableObjectSync;
 
-    public SMutableObject(final SClass instanceClass, final ClassFactory factory, final ObjectLayout layout) {
+    public SMutableObject(final SClass instanceClass, final ClassFactory factory,
+        final ObjectLayout layout) {
       super(instanceClass, factory, layout);
       field1 = field2 = field3 = field4 = field5 = Nil.nilObject;
     }
@@ -148,7 +151,7 @@ public abstract class SObject extends SObjectWithClass {
 
     @Override
     protected void resetFields() {
-      field1     = field2     = field3     = field4     = field5     = null;
+      field1 = field2 = field3 = field4 = field5 = null;
       primField1 = primField2 = primField3 = primField4 = primField5 = Long.MIN_VALUE;
     }
 
@@ -171,9 +174,9 @@ public abstract class SObject extends SObjectWithClass {
       copy.primField5 = primField5;
 
       copy.classGroup = classGroup;
-      copy.clazz      = clazz;
+      copy.clazz = clazz;
 
-      copy.objectLayout     = objectLayout;
+      copy.objectLayout = objectLayout;
       copy.primitiveUsedMap = primitiveUsedMap;
 
       copy.field1 = field1;
@@ -195,17 +198,16 @@ public abstract class SObject extends SObjectWithClass {
 
     public boolean txEquals(final SMutableObject o) {
       // TODO: we actually need to take the object layout into account,
-      //       iff we want to ignore class slot stuff...
-      //       might be easier to just handle those
-      return
-          o.primField1 == primField1 &&
+      // iff we want to ignore class slot stuff...
+      // might be easier to just handle those
+      return o.primField1 == primField1 &&
           o.primField2 == primField2 &&
           o.primField3 == primField3 &&
           o.primField4 == primField4 &&
           o.primField5 == primField5 &&
 
           o.classGroup == classGroup && // TODO: should not be necessary
-          o.clazz      == clazz      && // TODO: should not be necessary
+          o.clazz == clazz && // TODO: should not be necessary
 
           o.primitiveUsedMap == primitiveUsedMap && // TODO: necessary?
           Arrays.equals(o.extensionPrimFields, extensionPrimFields) &&
@@ -215,7 +217,7 @@ public abstract class SObject extends SObjectWithClass {
 
     private boolean txMutObjLocEquals(final SMutableObject o) {
       HashMap<SlotDefinition, StorageLocation> oLocs = o.objectLayout.getStorageLocations();
-      HashMap<SlotDefinition, StorageLocation> locs  = objectLayout.getStorageLocations();
+      HashMap<SlotDefinition, StorageLocation> locs = objectLayout.getStorageLocations();
 
       for (Entry<SlotDefinition, StorageLocation> e : locs.entrySet()) {
         // need to ignore mutators and class slots
@@ -234,8 +236,8 @@ public abstract class SObject extends SObjectWithClass {
       primField4 = wc.primField4;
       primField5 = wc.primField5;
 
-      classGroup = wc.classGroup;  // TODO: should not be necessary
-      clazz      = wc.clazz;       // TODO: should not be necessary
+      classGroup = wc.classGroup; // TODO: should not be necessary
+      clazz = wc.clazz; // TODO: should not be necessary
 
       objectLayout = wc.objectLayout;
       primitiveUsedMap = wc.primitiveUsedMap;
@@ -258,21 +260,22 @@ public abstract class SObject extends SObjectWithClass {
     }
   }
 
-
   // TODO: if there is the possibility that we can hint that a read is from a
-  //       final field, we should reconsider removing these and store them in
-  //       normal object fields
+  // final field, we should reconsider removing these and store them in
+  // normal object fields
   @CompilationFinal(dimensions = 0) protected long[]   extensionPrimFields;
   @CompilationFinal(dimensions = 0) protected Object[] extensionObjFields;
 
   // we manage the layout entirely in the class, but need to keep a copy here
   // to know in case the layout changed that we can update the instances lazily
   @CompilationFinal protected ObjectLayout objectLayout;
-  public int primitiveUsedMap;
+  public int                               primitiveUsedMap;
 
-  public SObject(final SClass instanceClass, final ClassFactory factory, final ObjectLayout layout) {
+  public SObject(final SClass instanceClass, final ClassFactory factory,
+      final ObjectLayout layout) {
     super(instanceClass, factory);
-    assert factory.getInstanceLayout() == layout || layout.layoutForSameClasses(factory.getInstanceLayout());
+    assert factory.getInstanceLayout() == layout
+        || layout.layoutForSameClasses(factory.getInstanceLayout());
     setLayoutInitially(layout);
   }
 
@@ -287,7 +290,8 @@ public abstract class SObject extends SObjectWithClass {
 
     this.primitiveUsedMap = old.primitiveUsedMap;
 
-    // TODO: these tests should be compilation constant based on the object layout, check whether this needs to be optimized
+    // TODO: these tests should be compilation constant based on the object layout, check
+    // whether this needs to be optimized
     // we copy the content here, because we know they are all values
     if (old.extensionPrimFields != null) {
       this.extensionPrimFields = old.extensionPrimFields.clone();
@@ -302,16 +306,16 @@ public abstract class SObject extends SObjectWithClass {
 
   /**
    * @return new object of the same type, initialized with same primitive
-   * values, object layout etc. Object fields are not cloned. No deep copying
-   * either. This method is used for cloning transfer objects.
+   *         values, object layout etc. Object fields are not cloned. No deep copying
+   *         either. This method is used for cloning transfer objects.
    */
   public abstract SObject cloneBasics();
 
   private void setLayoutInitially(final ObjectLayout layout) {
     CompilerAsserts.partialEvaluationConstant(layout);
-    objectLayout        = layout;
+    objectLayout = layout;
     extensionPrimFields = getExtendedPrimStorage(layout);
-    extensionObjFields  = getExtendedObjectStorage(layout);
+    extensionObjFields = getExtendedObjectStorage(layout);
   }
 
   public final ObjectLayout getObjectLayout() {
@@ -330,7 +334,8 @@ public abstract class SObject extends SObjectWithClass {
 
   @Override
   public final void setClass(final SClass value) {
-    CompilerAsserts.neverPartOfCompilation("Only meant to be used in object system initalization");
+    CompilerAsserts.neverPartOfCompilation(
+        "Only meant to be used in object system initalization");
     super.setClass(value);
     setLayoutInitially(value.getLayoutForInstances());
   }
@@ -362,7 +367,8 @@ public abstract class SObject extends SObjectWithClass {
     assert objectLayout != null;
 
     HashMap<SlotDefinition, StorageLocation> locations = objectLayout.getStorageLocations();
-    HashMap<SlotDefinition, Object> fieldValues = new HashMap<>((int) (locations.size() / 0.75f));
+    HashMap<SlotDefinition, Object> fieldValues =
+        new HashMap<>((int) (locations.size() / 0.75f));
 
     for (Entry<SlotDefinition, StorageLocation> loc : locations.entrySet()) {
       if (loc.getValue().isSet(this)) {
@@ -418,9 +424,9 @@ public abstract class SObject extends SObjectWithClass {
 
     HashMap<SlotDefinition, Object> fieldValues = getAllFields();
 
-    objectLayout        = layoutAtClass;
+    objectLayout = layoutAtClass;
     extensionPrimFields = getExtendedPrimStorage(layoutAtClass);
-    extensionObjFields  = getExtendedObjectStorage(layoutAtClass);
+    extensionObjFields = getExtendedObjectStorage(layoutAtClass);
 
     setAllFields(fieldValues);
   }
@@ -431,7 +437,8 @@ public abstract class SObject extends SObjectWithClass {
    * is initialized. Otherwise, we check whether the field needs to be
    * generalized.
    *
-   * <p><strong>Note:</strong> This method is expected to be called while
+   * <p>
+   * <strong>Note:</strong> This method is expected to be called while
    * holding a lock on <code>this</code>.
    */
   protected final void updateLayoutWithInitializedField(
@@ -453,7 +460,8 @@ public abstract class SObject extends SObjectWithClass {
    * {@link ObjectStorageLocation}. If it is using one, another generalization
    * happened already, and we don't need to do it anymore.
    *
-   * <p><strong>Note:</strong> This method is expected to be called while
+   * <p>
+   * <strong>Note:</strong> This method is expected to be called while
    * holding a lock on <code>this</code>.
    */
   protected final void updateLayoutWithGeneralizedField(final SlotDefinition slot) {
@@ -467,7 +475,8 @@ public abstract class SObject extends SObjectWithClass {
   }
 
   public static int getPrimitiveFieldMask(final int fieldIndex) {
-    assert 0 <= fieldIndex && fieldIndex < 32; // this limits the number of object fields for the moment...
+    assert 0 <= fieldIndex && fieldIndex < 32; // this limits the number of object fields for
+                                               // the moment...
     return 1 << fieldIndex;
   }
 
@@ -483,12 +492,14 @@ public abstract class SObject extends SObjectWithClass {
     return location.read(this);
   }
 
-  public final synchronized void writeUninitializedSlot(final SlotDefinition slot, final Object value) {
+  public final synchronized void writeUninitializedSlot(final SlotDefinition slot,
+      final Object value) {
     updateLayoutWithInitializedField(slot, value.getClass());
     setFieldAfterLayoutChange(slot, value);
   }
 
-  public final synchronized void writeAndGeneralizeSlot(final SlotDefinition slot, final Object value) {
+  public final synchronized void writeAndGeneralizeSlot(final SlotDefinition slot,
+      final Object value) {
     updateLayoutWithGeneralizedField(slot);
     setFieldAfterLayoutChange(slot, value);
   }

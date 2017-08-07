@@ -14,9 +14,9 @@ public class ObjectBuffer<T> implements Iterable<T> {
 
   private Entry<T> current;
   private Entry<T> first;
-  private int currentIdx;
+  private int      currentIdx;
 
-  private int memoryIdx;
+  private int      memoryIdx;
   private Entry<T> memoryEntry;
 
   private int numEntries;
@@ -24,7 +24,7 @@ public class ObjectBuffer<T> implements Iterable<T> {
   @SuppressWarnings("unchecked")
   private static class Entry<T> {
     private final T[] buffer;
-    private Entry<T> next;
+    private Entry<T>  next;
 
     Entry(final int bufferSize, final Entry<T> prev) {
       buffer = (T[]) new Object[bufferSize];
@@ -105,8 +105,8 @@ public class ObjectBuffer<T> implements Iterable<T> {
   private static final class Iter<T> implements Iterator<T> {
 
     private final int lastIdxInLastEntry;
-    private Entry<T> current;
-    private int currentIdx;
+    private Entry<T>  current;
+    private int       currentIdx;
 
     private Iter(final int lastIdx, final Entry<T> current, final int fromIdx) {
       this.lastIdxInLastEntry = lastIdx - 1;
@@ -116,7 +116,7 @@ public class ObjectBuffer<T> implements Iterable<T> {
 
     @Override
     public boolean hasNext() {
-      if (current == null) {  // empty, had never any element
+      if (current == null) { // empty, had never any element
         return false;
       }
       if (current.next == null) {

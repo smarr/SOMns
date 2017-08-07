@@ -11,10 +11,10 @@ import som.vmobjects.SSymbol;
 
 
 @NodeChildren({
-  @NodeChild(value = "receiver",  type = ExpressionNode.class),
-  @NodeChild(value = "firstArg",  type = ExpressionNode.class),
-  @NodeChild(value = "secondArg", type = ExpressionNode.class),
-  @NodeChild(value = "thirdArg",  type = ExpressionNode.class)})
+    @NodeChild(value = "receiver", type = ExpressionNode.class),
+    @NodeChild(value = "firstArg", type = ExpressionNode.class),
+    @NodeChild(value = "secondArg", type = ExpressionNode.class),
+    @NodeChild(value = "thirdArg", type = ExpressionNode.class)})
 public abstract class QuaternaryExpressionNode extends EagerlySpecializableNode {
 
   public QuaternaryExpressionNode(final boolean eagerlyWrapped,

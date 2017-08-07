@@ -12,8 +12,13 @@ import tools.dym.Tags.ComplexPrimitiveOperation;
  * instructions or cause the execution of arbitrarily complex code.
  */
 public abstract class BinaryComplexOperation extends BinaryExpressionNode {
-  protected BinaryComplexOperation(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
-  protected BinaryComplexOperation(final BinaryComplexOperation node) { super(node); }
+  protected BinaryComplexOperation(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
+
+  protected BinaryComplexOperation(final BinaryComplexOperation node) {
+    super(node);
+  }
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

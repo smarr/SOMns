@@ -36,10 +36,12 @@ public enum BreakpointType {
       new Class[] {EventualMessageSend.class}, SteppingType.STEP_TO_MESSAGE_RECEIVER),
 
   /**
-   * Breakpoint on the RootTag node of a method, to halt before its execution, if the method was activated
+   * Breakpoint on the RootTag node of a method, to halt before its execution, if the method
+   * was activated
    * asynchronously.
    *
-   * <p>The method is identified by the source section info of the breakpoint.
+   * <p>
+   * The method is identified by the source section info of the breakpoint.
    */
   @SerializedName("asyncMsgBeforeExecBP")
   ASYNC_MSG_BEFORE_EXEC("asyncMsgBeforeExecBP", "Method async before execution",
@@ -51,10 +53,12 @@ public enum BreakpointType {
   },
 
   /**
-   * Breakpoint on the RootTag node of a method, to halt after its execution, if the method was activated
+   * Breakpoint on the RootTag node of a method, to halt after its execution, if the method was
+   * activated
    * asynchronously.
    *
-   * <p>The method is identified by the source section info of the breakpoint.
+   * <p>
+   * The method is identified by the source section info of the breakpoint.
    */
   @SerializedName("asyncMsgAfterExecBP")
   ASYNC_MSG_AFTER_EXEC("asyncMsgAfterExecBP", "Method async after execution",
@@ -195,9 +199,11 @@ public enum BreakpointType {
   public final String name;
   public final String label;
 
-  /** Tag to identify source section the breakpoint is applicable to.
-      NOTE: There is currently the assumption (in the UI) that only one of the
-      tags is on a specific section. */
+  /**
+   * Tag to identify source section the breakpoint is applicable to.
+   * NOTE: There is currently the assumption (in the UI) that only one of the
+   * tags is on a specific section.
+   */
   public final Class<? extends Tags>[] applicableTo;
 
   public final SteppingType steppingType;
@@ -209,8 +215,8 @@ public enum BreakpointType {
 
   BreakpointType(final String name, final String label,
       final Class<? extends Tags>[] applicableTo, final SteppingType steppingType) {
-    this.name         = name;
-    this.label        = label;
+    this.name = name;
+    this.label = label;
     this.applicableTo = applicableTo;
     this.steppingType = steppingType;
   }

@@ -55,7 +55,8 @@ public abstract class SOMNode extends Node {
    * the scope tree. This can be caused by method splitting to obtain
    * independent copies, or inlining of blocks to adjust context levels.
    *
-   * <p>When such changes occurred, all blocks within that tree need to be adjusted.
+   * <p>
+   * When such changes occurred, all blocks within that tree need to be adjusted.
    */
   public void replaceAfterScopeChange(final InliningVisitor inliner) {
     // do nothing!

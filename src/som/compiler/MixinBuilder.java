@@ -64,9 +64,10 @@ public final class MixinBuilder {
 
   /** The method that is used to resolve the superclass at runtime. */
   private final MethodBuilder superclassAndMixinResolutionBuilder;
-  private ExpressionNode superclassResolution;
+  private ExpressionNode      superclassResolution;
+
   private final ArrayList<ExpressionNode> mixinResolvers = new ArrayList<>();
-  private SourceSection mixinResolversSource;
+  private SourceSection                   mixinResolversSource;
 
   /** The method that is used to initialize an instance. */
   private final MethodBuilder initializer;
@@ -79,13 +80,17 @@ public final class MixinBuilder {
 
   private final ArrayList<ExpressionNode> slotAndInitExprs = new ArrayList<>();
 
-  private final SSymbol name;
+  private final SSymbol       name;
   private final SourceSection nameSection;
+
   @SuppressWarnings("unused") private String mixinComment;
 
-  private final HashMap<SSymbol, SlotDefinition> slots = new HashMap<>();
+  private final HashMap<SSymbol, SlotDefinition>     slots         = new HashMap<>();
   private final LinkedHashMap<SSymbol, Dispatchable> dispatchables = new LinkedHashMap<>();
-  private final HashMap<SSymbol, SInvokable> factoryMethods = new HashMap<SSymbol, SInvokable>();
+
+  private final HashMap<SSymbol, SInvokable> factoryMethods =
+      new HashMap<SSymbol, SInvokable>();
+
   private boolean allSlotsAreImmutable = true;
 
   private final LinkedHashMap<SSymbol, MixinDefinition> embeddedMixins = new LinkedHashMap<>();
@@ -93,7 +98,8 @@ public final class MixinBuilder {
   private boolean classSide;
 
   private ExpressionNode superclassFactorySend;
-  private boolean   isSimpleNewSuperFactoySend;
+  private boolean        isSimpleNewSuperFactoySend;
+
   private final ArrayList<ExpressionNode> mixinFactorySends = new ArrayList<>();
 
   private final AccessModifier accessModifier;
@@ -101,7 +107,7 @@ public final class MixinBuilder {
   private final MixinScope instanceScope;
   private final MixinScope classScope;
 
-  private final MixinBuilder outerMixin;
+  private final MixinBuilder  outerMixin;
   private final MethodBuilder outerMethod;
 
   private final MixinDefinitionId mixinId;
@@ -138,23 +144,24 @@ public final class MixinBuilder {
       final SourceSection nameSection,
       final StructuralProbe structuralProbe,
       final SomLanguage language) {
-    this.name         = name;
-    this.nameSection  = nameSection;
-    this.mixinId      = new MixinDefinitionId(name);
+    this.name = name;
+    this.nameSection = nameSection;
+    this.mixinId = new MixinDefinitionId(name);
 
-    this.classSide    = false;
-    this.outerMixin   = outerMixin;
-    this.outerMethod  = outerMethod;
-    this.language     = language;
+    this.classSide = false;
+    this.outerMixin = outerMixin;
+    this.outerMethod = outerMethod;
+    this.language = language;
 
     // classes can only be defined on the instance side,
     // so, both time the instance scope
-    MethodScope outerMethodScope = outerMethod != null ? outerMethod.getCurrentMethodScope() : null;
+    MethodScope outerMethodScope =
+        outerMethod != null ? outerMethod.getCurrentMethodScope() : null;
     MixinScope outerMixinScope = outerMixin != null ? outerMixin.getInstanceScope() : null;
     this.instanceScope = new MixinScope(outerMixinScope, outerMethodScope);
-    this.classScope    = new MixinScope(outerMixinScope, outerMethodScope);
+    this.classScope = new MixinScope(outerMixinScope, outerMethodScope);
 
-    this.initializer          = new MethodBuilder(this, this.instanceScope);
+    this.initializer = new MethodBuilder(this, this.instanceScope);
     this.primaryFactoryMethod = new MethodBuilder(this, this.classScope);
     this.superclassAndMixinResolutionBuilder = createSuperclassResolutionBuilder();
 
@@ -320,9 +327,9 @@ public final class MixinBuilder {
     if (!isPrimary) {
       if (existing != null) {
         throw new MixinDefinitionError("The class " + this.name.getString()
-        + " already contains a " + existing.typeForErrors() + " named "
-        + name.getString() + ". Can't define a method with the same name.",
-        meth.getSourceSection());
+            + " already contains a " + existing.typeForErrors() + " named "
+            + name.getString() + ". Can't define a method with the same name.",
+            meth.getSourceSection());
       }
       factoryMethods.put(name, meth);
       return;
@@ -409,13 +416,13 @@ public final class MixinBuilder {
 
   public MixinDefinition assemble(final SourceSection source) {
     // to prepare the mixin definition we need to assemble:
-    //   - the class instantiation method, which resolves super
-    //   - the primary factory method, which allocates the object,
-    //     and then calls initiation
-    //   - the initialization method, which class super, and then initializes the object
+    // - the class instantiation method, which resolves super
+    // - the primary factory method, which allocates the object,
+    // and then calls initiation
+    // - the initialization method, which class super, and then initializes the object
 
     Method superclassResolution = assembleSuperclassAndMixinResoltionMethod();
-    SInvokable primaryFactory       = assemblePrimaryFactoryMethod();
+    SInvokable primaryFactory = assemblePrimaryFactoryMethod();
     SInvokable initializationMethod = assembleInitializationMethod();
     try {
       addFactoryMethod(primaryFactory, primaryFactory.getSignature(), true);
@@ -476,8 +483,8 @@ public final class MixinBuilder {
 
     // self is going to be the enclosing object
     definitionMethod.addArgument("self",
-        SomLanguage.getSyntheticSource("self read", "super-class-resolution").
-        createSection(1));
+        SomLanguage.getSyntheticSource("self read", "super-class-resolution")
+                   .createSection(1));
     definitionMethod.setSignature(Symbols.DEF_CLASS);
 
     return definitionMethod;
@@ -485,7 +492,7 @@ public final class MixinBuilder {
 
   private Method assembleSuperclassAndMixinResoltionMethod() {
     ExpressionNode resolution;
-    SourceSection  source;
+    SourceSection source;
     if (mixinResolvers.isEmpty()) {
       resolution = superclassResolution;
       source = superclassResolution.getSourceSection();
@@ -528,7 +535,8 @@ public final class MixinBuilder {
         AccessModifier.PUBLIC, primaryFactorySource);
   }
 
-  private static final SSymbol StandardInitializer = MixinBuilder.getInitializerName(Symbols.NEW);
+  private static final SSymbol StandardInitializer =
+      MixinBuilder.getInitializerName(Symbols.NEW);
 
   private SInvokable assembleInitializationMethod() {
     if (isSimpleNewSuperFactoySend

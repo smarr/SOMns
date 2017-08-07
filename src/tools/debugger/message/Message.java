@@ -4,6 +4,7 @@ import org.java_websocket.WebSocket;
 
 import tools.debugger.FrontendConnector;
 
+
 public abstract class Message {
   public abstract static class IncommingMessage extends Message {
     public abstract void process(FrontendConnector connector, WebSocket conn);

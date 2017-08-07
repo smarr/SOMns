@@ -89,11 +89,11 @@ import tools.language.StructuralProbe;
  * dynamic metrics to characterize the behavior of executing code.
  *
  * WARNING:
- *   - designed for single-threaded use only
- *   - designed for use in interpreted mode only
+ * - designed for single-threaded use only
+ * - designed for use in interpreted mode only
  */
 @Registration(name = "DynamicMetrics", id = DynamicMetrics.ID, version = "0.1",
-  services = {StructuralProbe.class})
+    services = {StructuralProbe.class})
 public class DynamicMetrics extends TruffleInstrument {
 
   public static final String ID = "dym-dynamic-metrics";
@@ -101,29 +101,30 @@ public class DynamicMetrics extends TruffleInstrument {
   private int methodStackDepth;
   private int maxStackDepth;
 
-  private final Map<SourceSection, InvocationProfile>    methodInvocationCounter;
-  private final Map<SourceSection, CallsiteProfile>      methodCallsiteProfiles;
+  private final Map<SourceSection, InvocationProfile>         methodInvocationCounter;
+  private final Map<SourceSection, CallsiteProfile>           methodCallsiteProfiles;
   private final Map<SourceSection, ClosureApplicationProfile> closureProfiles;
-  private final Map<SourceSection, OperationProfile>     operationProfiles;
+  private final Map<SourceSection, OperationProfile>          operationProfiles;
 
   private final Map<SourceSection, AllocationProfile>    newObjectCounter;
   private final Map<SourceSection, ArrayCreationProfile> newArrayCounter;
 
-  private final Map<SourceSection, BranchProfile>        controlFlowProfiles;
-  private final Map<SourceSection, LoopProfile>          loopProfiles;
+  private final Map<SourceSection, BranchProfile> controlFlowProfiles;
+  private final Map<SourceSection, LoopProfile>   loopProfiles;
 
-  private final Map<SourceSection, ReadValueProfile>     fieldReadProfiles;
-  private final Map<SourceSection, Counter>              fieldWriteProfiles;
-  private final Map<SourceSection, Counter>              classReadProfiles;
-  private final Map<SourceSection, Counter>              literalReadCounter;
-  private final Map<SourceSection, ReadValueProfile>     localsReadProfiles;
-  private final Map<SourceSection, Counter>              localsWriteProfiles;
+  private final Map<SourceSection, ReadValueProfile> fieldReadProfiles;
+  private final Map<SourceSection, Counter>          fieldWriteProfiles;
+  private final Map<SourceSection, Counter>          classReadProfiles;
+  private final Map<SourceSection, Counter>          literalReadCounter;
+  private final Map<SourceSection, ReadValueProfile> localsReadProfiles;
+  private final Map<SourceSection, Counter>          localsWriteProfiles;
 
   private final StructuralProbe structuralProbe;
 
   private final Set<RootNode> rootNodes;
 
-  @CompilationFinal private static Instrumenter instrumenter; // TODO: this is one of those evil hacks
+  @CompilationFinal private static Instrumenter instrumenter; // TODO: this is one of those
+                                                              // evil hacks
 
   public static boolean isTaggedWith(final Node node, final Class<?> tag) {
     assert instrumenter != null : "Initialization order/dependencies?";
@@ -134,28 +135,28 @@ public class DynamicMetrics extends TruffleInstrument {
     structuralProbe = new StructuralProbe();
 
     methodInvocationCounter = new HashMap<>();
-    methodCallsiteProfiles  = new HashMap<>();
-    closureProfiles         = new HashMap<>();
-    operationProfiles       = new HashMap<>();
+    methodCallsiteProfiles = new HashMap<>();
+    closureProfiles = new HashMap<>();
+    operationProfiles = new HashMap<>();
 
-    newObjectCounter        = new HashMap<>();
-    newArrayCounter         = new HashMap<>();
+    newObjectCounter = new HashMap<>();
+    newArrayCounter = new HashMap<>();
 
-    controlFlowProfiles     = new HashMap<>();
-    loopProfiles            = new HashMap<>();
+    controlFlowProfiles = new HashMap<>();
+    loopProfiles = new HashMap<>();
 
-    fieldReadProfiles       = new HashMap<>();
-    fieldWriteProfiles      = new HashMap<>();
-    classReadProfiles       = new HashMap<>();
-    literalReadCounter      = new HashMap<>();
-    localsReadProfiles      = new HashMap<>();
-    localsWriteProfiles     = new HashMap<>();
+    fieldReadProfiles = new HashMap<>();
+    fieldWriteProfiles = new HashMap<>();
+    classReadProfiles = new HashMap<>();
+    literalReadCounter = new HashMap<>();
+    localsReadProfiles = new HashMap<>();
+    localsWriteProfiles = new HashMap<>();
 
     rootNodes = new HashSet<>();
 
     assert "DefaultTruffleRuntime".equals(
-        Truffle.getRuntime().getClass().getSimpleName())
-        : "To get metrics for the lexical, unoptimized behavior, please run this tool without Graal";
+        Truffle.getRuntime().getClass()
+               .getSimpleName()) : "To get metrics for the lexical, unoptimized behavior, please run this tool without Graal";
   }
 
   public void enterMethod() {
@@ -169,13 +170,13 @@ public class DynamicMetrics extends TruffleInstrument {
     assert methodStackDepth >= 0;
   }
 
-  private <N extends ExecutionEventNode, PRO extends Counter>
-    ExecutionEventNodeFactory addInstrumentation(final Instrumenter instrumenter,
-        final Map<SourceSection, PRO> storageMap,
-        final Class<?>[] tagsIs,
-        final Class<?>[] tagsIsNot,
-        final Function<SourceSection, PRO> pCtor,
-        final Function<PRO, N> nCtor) {
+  private <N extends ExecutionEventNode, PRO extends Counter> ExecutionEventNodeFactory addInstrumentation(
+      final Instrumenter instrumenter,
+      final Map<SourceSection, PRO> storageMap,
+      final Class<?>[] tagsIs,
+      final Class<?>[] tagsIsNot,
+      final Function<SourceSection, PRO> pCtor,
+      final Function<PRO, N> nCtor) {
     Builder filters = SourceSectionFilter.newBuilder();
     if (tagsIs != null && tagsIs.length > 0) {
       filters.tagIs(tagsIs);
@@ -200,7 +201,8 @@ public class DynamicMetrics extends TruffleInstrument {
       RootNode root = ctx.getInstrumentedNode().getRootNode();
       assert root instanceof Invokable : "TODO: make language independent";
       InvocationProfile p = methodInvocationCounter.computeIfAbsent(
-          ctx.getInstrumentedSourceSection(), ss -> new InvocationProfile(ss, (Invokable) root));
+          ctx.getInstrumentedSourceSection(),
+          ss -> new InvocationProfile(ss, (Invokable) root));
       return new InvocationProfilingNode(this, p);
     });
   }
@@ -230,9 +232,9 @@ public class DynamicMetrics extends TruffleInstrument {
       Set<Class<?>> tags = instrumenter.queryTags(ctx.getInstrumentedNode());
 
       OperationProfile p = operationProfiles.computeIfAbsent(
-        ctx.getInstrumentedSourceSection(),
-        (final SourceSection src) -> new OperationProfile(
-            src, operation, tags, numArgsAndResult));
+          ctx.getInstrumentedSourceSection(),
+          (final SourceSection src) -> new OperationProfile(
+              src, operation, tags, numArgsAndResult));
       return new OperationProfilingNode(p, ctx);
     };
 
@@ -280,7 +282,8 @@ public class DynamicMetrics extends TruffleInstrument {
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findParentEventNode(virtInvokeFactory);
-      InstrumentableDirectCallNode disp = (InstrumentableDirectCallNode) ctx.getInstrumentedNode();
+      InstrumentableDirectCallNode disp =
+          (InstrumentableDirectCallNode) ctx.getInstrumentedNode();
 
       if (parent == null) {
         return new LateCallTargetNode(ctx, virtInvokeFactory);
@@ -301,14 +304,16 @@ public class DynamicMetrics extends TruffleInstrument {
 
     instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findParentEventNode(factory);
-      InstrumentableBlockApplyNode disp = (InstrumentableBlockApplyNode) ctx.getInstrumentedNode();
+      InstrumentableBlockApplyNode disp =
+          (InstrumentableBlockApplyNode) ctx.getInstrumentedNode();
 
       if (parent == null) {
         return new LateClosureTargetNode(ctx, factory);
       }
 
       @SuppressWarnings("unchecked")
-      CountingNode<ClosureApplicationProfile> p = (CountingNode<ClosureApplicationProfile>) parent;
+      CountingNode<ClosureApplicationProfile> p =
+          (CountingNode<ClosureApplicationProfile>) parent;
       ClosureApplicationProfile profile = p.getProfile();
       RootCallTarget root = (RootCallTarget) disp.getCallTarget();
       return new ClosureTargetNode(profile, (Invokable) root.getRootNode());
@@ -372,9 +377,10 @@ public class DynamicMetrics extends TruffleInstrument {
         new Class<?>[] {ControlFlowCondition.class}, NO_TAGS,
         BranchProfile::new, ControlFlowProfileNode::new);
 
-    ExecutionEventNodeFactory loopProfileFactory = addInstrumentation(instrumenter, loopProfiles,
-        new Class<?>[] {LoopNode.class}, NO_TAGS,
-        LoopProfile::new, LoopProfilingNode::new);
+    ExecutionEventNodeFactory loopProfileFactory =
+        addInstrumentation(instrumenter, loopProfiles,
+            new Class<?>[] {LoopNode.class}, NO_TAGS,
+            LoopProfile::new, LoopProfilingNode::new);
 
     addLoopBodyInstrumentation(instrumenter, loopProfileFactory);
 
@@ -442,8 +448,12 @@ public class DynamicMetrics extends TruffleInstrument {
   private void outputAllTruffleMethodsToIGV() {
     GraphPrintVisitor graphPrinter = new GraphPrintVisitor();
 
-    List<MixinDefinition> classes = new ArrayList<MixinDefinition>(structuralProbe.getClasses());
-    Collections.sort(classes, (final MixinDefinition a, final MixinDefinition b) -> a.getName().getString().compareTo(b.getName().getString()));
+    List<MixinDefinition> classes =
+        new ArrayList<MixinDefinition>(structuralProbe.getClasses());
+    Collections.sort(classes,
+        (final MixinDefinition a,
+            final MixinDefinition b) -> a.getName().getString()
+                                         .compareTo(b.getName().getString()));
 
     for (MixinDefinition mixin : classes) {
       graphPrinter.beginGroup(mixin.getName().getString());
@@ -464,19 +474,19 @@ public class DynamicMetrics extends TruffleInstrument {
   private Map<String, Map<SourceSection, ? extends JsonSerializable>> collectData() {
     Map<String, Map<SourceSection, ? extends JsonSerializable>> data = new HashMap<>();
     data.put(JsonWriter.METHOD_INVOCATION_PROFILE, methodInvocationCounter);
-    data.put(JsonWriter.METHOD_CALLSITE,          methodCallsiteProfiles);
-    data.put(JsonWriter.CLOSURE_APPLICATIONS,     closureProfiles);
-    data.put(JsonWriter.NEW_OBJECT_COUNT,         newObjectCounter);
-    data.put(JsonWriter.NEW_ARRAY_COUNT,          newArrayCounter);
-    data.put(JsonWriter.FIELD_READS,              fieldReadProfiles);
-    data.put(JsonWriter.FIELD_WRITES,             fieldWriteProfiles);
-    data.put(JsonWriter.CLASS_READS,              classReadProfiles);
-    data.put(JsonWriter.BRANCH_PROFILES,          controlFlowProfiles);
-    data.put(JsonWriter.LITERAL_READS,            literalReadCounter);
-    data.put(JsonWriter.LOCAL_READS,              localsReadProfiles);
-    data.put(JsonWriter.LOCAL_WRITES,             localsWriteProfiles);
-    data.put(JsonWriter.OPERATIONS,               operationProfiles);
-    data.put(JsonWriter.LOOPS,                    loopProfiles);
+    data.put(JsonWriter.METHOD_CALLSITE, methodCallsiteProfiles);
+    data.put(JsonWriter.CLOSURE_APPLICATIONS, closureProfiles);
+    data.put(JsonWriter.NEW_OBJECT_COUNT, newObjectCounter);
+    data.put(JsonWriter.NEW_ARRAY_COUNT, newArrayCounter);
+    data.put(JsonWriter.FIELD_READS, fieldReadProfiles);
+    data.put(JsonWriter.FIELD_WRITES, fieldWriteProfiles);
+    data.put(JsonWriter.CLASS_READS, classReadProfiles);
+    data.put(JsonWriter.BRANCH_PROFILES, controlFlowProfiles);
+    data.put(JsonWriter.LITERAL_READS, literalReadCounter);
+    data.put(JsonWriter.LOCAL_READS, localsReadProfiles);
+    data.put(JsonWriter.LOCAL_WRITES, localsWriteProfiles);
+    data.put(JsonWriter.OPERATIONS, operationProfiles);
+    data.put(JsonWriter.LOOPS, loopProfiles);
     return data;
   }
 

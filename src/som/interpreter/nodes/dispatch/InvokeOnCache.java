@@ -49,8 +49,7 @@ public abstract class InvokeOnCache extends Node implements DispatchChain {
     public Object executeDispatch(final SInvokable invokable,
         final Object[] arguments) {
       transferToInterpreterAndInvalidate("Initialize a dispatch node.");
-      return specialize(invokable).
-          executeDispatch(invokable, arguments);
+      return specialize(invokable).executeDispatch(invokable, arguments);
     }
 
     private InvokeOnCache determineChainHead() {
@@ -68,9 +67,9 @@ public abstract class InvokeOnCache extends Node implements DispatchChain {
   }
 
   private static final class CachedDispatchNode extends InvokeOnCache {
-    private final SInvokable invokable;
+    private final SInvokable      invokable;
     @Child private DirectCallNode callNode;
-    @Child private InvokeOnCache nextInCache;
+    @Child private InvokeOnCache  nextInCache;
 
     CachedDispatchNode(final SInvokable invokable,
         final InvokeOnCache nextInCache, final int depth) {

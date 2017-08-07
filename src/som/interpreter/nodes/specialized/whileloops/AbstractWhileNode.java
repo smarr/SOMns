@@ -66,7 +66,9 @@ public abstract class AbstractWhileNode extends BinaryComplexOperation {
         loopConditionResult = (boolean) conditionValueSend.call(
             new Object[] {loopCondition});
 
-        if (CompilerDirectives.inInterpreter()) { iterationCount++; }
+        if (CompilerDirectives.inInterpreter()) {
+          iterationCount++;
+        }
         ObjectTransitionSafepoint.INSTANCE.checkAndPerformSafepoint();
       }
     } finally {

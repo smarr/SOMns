@@ -13,7 +13,9 @@ import tools.dym.Tags.OpArithmetic;
 @GenerateNodeFactory
 @Primitive(selector = "not", receiverType = Boolean.class)
 public abstract class NotMessageNode extends UnaryBasicOperation {
-  public NotMessageNode(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+  public NotMessageNode(final boolean eagWrap, final SourceSection source) {
+    super(eagWrap, source);
+  }
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

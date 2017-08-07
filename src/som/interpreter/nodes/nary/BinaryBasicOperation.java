@@ -12,7 +12,9 @@ import tools.dym.Tags.BasicPrimitiveOperation;
  */
 public abstract class BinaryBasicOperation extends BinaryExpressionNode {
   protected BinaryBasicOperation(final boolean eagerlyWrapped,
-      final SourceSection source) { super(eagerlyWrapped, source); }
+      final SourceSection source) {
+    super(eagerlyWrapped, source);
+  }
 
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {

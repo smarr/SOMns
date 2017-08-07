@@ -71,44 +71,45 @@ import tools.dym.Tags.VirtualInvokeReceiver;
 
 
 @TruffleLanguage.Registration(id = "SOMns", name = "SOMns", version = "0.1.0",
-                              interactive = false, internal = false,
-                              mimeType = "application/x-newspeak-som-ns")
+    interactive = false, internal = false,
+    mimeType = "application/x-newspeak-som-ns")
 @ProvidedTags({
-  RootTag.class, StatementTag.class, CallTag.class,
+    RootTag.class, StatementTag.class, CallTag.class,
 
-  AlwaysHalt.class,
+    AlwaysHalt.class,
 
-  KeywordTag.class, LiteralTag.class,
-  CommentTag.class, IdentifierTag.class, ArgumentTag.class,
-  LocalVariableTag.class, StatementSeparatorTag.class,
-  DelimiterOpeningTag.class, DelimiterClosingTag.class,
+    KeywordTag.class, LiteralTag.class,
+    CommentTag.class, IdentifierTag.class, ArgumentTag.class,
+    LocalVariableTag.class, StatementSeparatorTag.class,
+    DelimiterOpeningTag.class, DelimiterClosingTag.class,
 
-  UnspecifiedInvoke.class, CachedVirtualInvoke.class,
-  CachedClosureInvoke.class, VirtualInvoke.class,
-  VirtualInvokeReceiver.class, NewObject.class, NewArray.class,
-  ControlFlowCondition.class, FieldRead.class, FieldWrite.class, ClassRead.class,
-  LocalVarRead.class, LocalVarWrite.class, LocalArgRead.class, ArrayRead.class,
-  ArrayWrite.class, LoopNode.class, LoopBody.class, BasicPrimitiveOperation.class,
-  ComplexPrimitiveOperation.class, PrimitiveArgument.class,
-  StringAccess.class, OpClosureApplication.class, OpArithmetic.class,
-  OpComparison.class, OpLength.class,
+    UnspecifiedInvoke.class, CachedVirtualInvoke.class,
+    CachedClosureInvoke.class, VirtualInvoke.class,
+    VirtualInvokeReceiver.class, NewObject.class, NewArray.class,
+    ControlFlowCondition.class, FieldRead.class, FieldWrite.class, ClassRead.class,
+    LocalVarRead.class, LocalVarWrite.class, LocalArgRead.class, ArrayRead.class,
+    ArrayWrite.class, LoopNode.class, LoopBody.class, BasicPrimitiveOperation.class,
+    ComplexPrimitiveOperation.class, PrimitiveArgument.class,
+    StringAccess.class, OpClosureApplication.class, OpArithmetic.class,
+    OpComparison.class, OpLength.class,
 
-  EventualMessageSend.class, ChannelRead.class, ChannelWrite.class,
-  ExpressionBreakpoint.class, CreatePromisePair.class, WhenResolved.class,
-  WhenResolvedOnError.class, OnError.class, ActivityCreation.class,
-  ActivityJoin.class, Atomic.class, AcquireLock.class, ReleaseLock.class
+    EventualMessageSend.class, ChannelRead.class, ChannelWrite.class,
+    ExpressionBreakpoint.class, CreatePromisePair.class, WhenResolved.class,
+    WhenResolvedOnError.class, OnError.class, ActivityCreation.class,
+    ActivityJoin.class, Atomic.class, AcquireLock.class, ReleaseLock.class
 })
 public final class SomLanguage extends TruffleLanguage<VM> {
 
-  public static final String MIME_TYPE = "application/x-newspeak-som-ns";
-  public static final String VM_OBJECT = "vm-object";
-  public static final String FILE_EXTENSION = "ns";
+  public static final String MIME_TYPE          = "application/x-newspeak-som-ns";
+  public static final String VM_OBJECT          = "vm-object";
+  public static final String FILE_EXTENSION     = "ns";
   public static final String DOT_FILE_EXTENSION = "." + FILE_EXTENSION;
 
   @CompilationFinal private VM vm;
 
   public static Source getSyntheticSource(final String text, final String name) {
-    return Source.newBuilder(text).internal().name(name).mimeType(SomLanguage.MIME_TYPE).build();
+    return Source.newBuilder(text).internal().name(name).mimeType(SomLanguage.MIME_TYPE)
+                 .build();
   }
 
   private static final class ParseResult extends RootNode {
@@ -147,7 +148,8 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   }
 
   public static VM getVM(final RootNode root) {
-    CompilerAsserts.neverPartOfCompilation("This is a simple hack to get the VM object, and should never be on the fast path");
+    CompilerAsserts.neverPartOfCompilation(
+        "This is a simple hack to get the VM object, and should never be on the fast path");
     return root.getLanguage(SomLanguage.class).getVM();
   }
 

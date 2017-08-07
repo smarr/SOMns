@@ -33,13 +33,13 @@ public class SChannel extends SAbstractObject {
   private volatile boolean breakAfterWrite;
 
   protected SChannel() {
-    breakAfterRead  = false;
+    breakAfterRead = false;
     breakAfterWrite = false;
 
     SynchronousQueue<Object> cell = new SynchronousQueue<>();
 
     out = SChannelOutput.create(cell, this);
-    in  = SChannelInput.create(cell, this);
+    in = SChannelInput.create(cell, this);
   }
 
   @Override
@@ -68,11 +68,11 @@ public class SChannel extends SAbstractObject {
     }
 
     private final SynchronousQueue<Object> cell;
-    protected final SChannel channel;
+    protected final SChannel               channel;
 
     public SChannelInput(final SynchronousQueue<Object> cell,
         final SChannel channel) {
-      this.cell    = cell;
+      this.cell = cell;
       this.channel = channel;
     }
 
@@ -81,7 +81,8 @@ public class SChannel extends SAbstractObject {
       return cell.take();
     }
 
-    public final Object readAndSuspendWriter(final boolean doSuspend) throws InterruptedException {
+    public final Object readAndSuspendWriter(final boolean doSuspend)
+        throws InterruptedException {
       channel.breakAfterWrite = doSuspend;
       return read();
     }
@@ -113,10 +114,10 @@ public class SChannel extends SAbstractObject {
     }
 
     private final SynchronousQueue<Object> cell;
-    protected final SChannel channel;
+    protected final SChannel               channel;
 
     protected SChannelOutput(final SynchronousQueue<Object> cell, final SChannel channel) {
-      this.cell    = cell;
+      this.cell = cell;
       this.channel = channel;
     }
 

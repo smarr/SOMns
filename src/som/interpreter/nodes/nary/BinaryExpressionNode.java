@@ -11,8 +11,8 @@ import som.vmobjects.SSymbol;
 
 
 @NodeChildren({
-  @NodeChild(value = "receiver", type = ExpressionNode.class),
-  @NodeChild(value = "argument", type = ExpressionNode.class)})
+    @NodeChild(value = "receiver", type = ExpressionNode.class),
+    @NodeChild(value = "argument", type = ExpressionNode.class)})
 @Instrumentable(factory = BinaryExpressionNodeWrapper.class)
 public abstract class BinaryExpressionNode extends EagerlySpecializableNode {
 

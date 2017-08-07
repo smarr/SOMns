@@ -9,8 +9,9 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
 import som.vmobjects.SSymbol;
 
+
 public abstract class EagerlySpecializableNode extends ExprWithTagsNode
-  implements PreevaluatedExpression {
+    implements PreevaluatedExpression {
 
   @CompilationFinal private boolean eagerlyWrapped;
 
@@ -46,7 +47,9 @@ public abstract class EagerlySpecializableNode extends ExprWithTagsNode
   @Override
   protected void onReplace(final Node newNode, final CharSequence reason) {
     if (newNode instanceof WrapperNode ||
-        !(newNode instanceof EagerlySpecializableNode)) { return; }
+        !(newNode instanceof EagerlySpecializableNode)) {
+      return;
+    }
 
     EagerlySpecializableNode n = (EagerlySpecializableNode) newNode;
     n.eagerlyWrapped = eagerlyWrapped;

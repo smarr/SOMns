@@ -24,7 +24,9 @@ public final class MethodPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "methodName:")
   public abstract static class SignaturePrim extends UnaryExpressionNode {
-    public SignaturePrim(final boolean eagWrap, final SourceSection source) { super(eagWrap, source); }
+    public SignaturePrim(final boolean eagWrap, final SourceSection source) {
+      super(eagWrap, source);
+    }
 
     @Specialization
     public final SAbstractObject doSMethod(final SInvokable receiver) {
@@ -34,13 +36,13 @@ public final class MethodPrims {
 
   @GenerateNodeFactory
   @NodeChildren({
-    @NodeChild(value = "receiver", type = ExpressionNode.class),
-    @NodeChild(value = "target",  type = ExpressionNode.class),
-    @NodeChild(value = "somArr", type = ExpressionNode.class),
-    @NodeChild(value = "argArr", type = ToArgumentsArrayNode.class,
-               executeWith = {"somArr", "target"})})
+      @NodeChild(value = "receiver", type = ExpressionNode.class),
+      @NodeChild(value = "target", type = ExpressionNode.class),
+      @NodeChild(value = "somArr", type = ExpressionNode.class),
+      @NodeChild(value = "argArr", type = ToArgumentsArrayNode.class,
+          executeWith = {"somArr", "target"})})
   @Primitive(selector = "invokeOn:with:", noWrapper = true,
-             extraChild = ToArgumentsArrayNodeFactory.class)
+      extraChild = ToArgumentsArrayNodeFactory.class)
   public abstract static class InvokeOnPrim extends ExprWithTagsNode
       implements PreevaluatedExpression {
     @Child private InvokeOnCache callNode;
@@ -49,7 +51,10 @@ public final class MethodPrims {
       super(source);
       callNode = InvokeOnCache.create();
     }
-    public InvokeOnPrim(final InvokeOnPrim node) { this(node.sourceSection); }
+
+    public InvokeOnPrim(final InvokeOnPrim node) {
+      this(node.sourceSection);
+    }
 
     public abstract Object executeEvaluated(VirtualFrame frame,
         SInvokable receiver, Object target, SArray somArr);

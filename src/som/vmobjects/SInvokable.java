@@ -44,13 +44,14 @@ import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNode;
 import som.vm.constants.Classes;
 
+
 public class SInvokable extends SAbstractObject implements Dispatchable {
 
-  private final AccessModifier     accessModifier;
-  private final Invokable          invokable;
-  private final RootCallTarget     callTarget;
-  private final SSymbol            signature;
-  private final SInvokable[]       embeddedBlocks;
+  private final AccessModifier accessModifier;
+  private final Invokable      invokable;
+  private final RootCallTarget callTarget;
+  private final SSymbol        signature;
+  private final SInvokable[]   embeddedBlocks;
 
   @CompilationFinal private MixinDefinition holder;
   @CompilationFinal private RootCallTarget  atomicCallTarget;
@@ -61,8 +62,8 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     this.signature = signature;
     this.accessModifier = accessModifier;
 
-    this.invokable   = invokable;
-    this.callTarget  = invokable.createCallTarget();
+    this.invokable = invokable;
+    this.callTarget = invokable.createCallTarget();
     this.embeddedBlocks = embeddedBlocks;
   }
 
@@ -155,7 +156,8 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
       return "Method(nil>>" + getSignature().toString() + ")";
     }
 
-    return "Method(" + getHolder().getName().getString() + ">>" + getSignature().toString() + ")";
+    return "Method(" + getHolder().getName().getString() + ">>" + getSignature().toString()
+        + ")";
   }
 
   @Override

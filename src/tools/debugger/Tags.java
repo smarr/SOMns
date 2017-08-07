@@ -25,7 +25,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 
 public abstract class Tags {
-  private Tags() { }
+  private Tags() {}
 
   /**
    * Marks keywords or keyword-like language constructs.
@@ -33,14 +33,14 @@ public abstract class Tags {
    * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
   public final class KeywordTag extends Tags {
-    private KeywordTag() { }
+    private KeywordTag() {}
   }
 
   /**
    * Marks literal values.
    */
   public final class LiteralTag extends Tags {
-    private LiteralTag() { }
+    private LiteralTag() {}
   }
 
   /**
@@ -49,7 +49,7 @@ public abstract class Tags {
    * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
   public final class CommentTag extends Tags {
-    private CommentTag() { }
+    private CommentTag() {}
   }
 
   /**
@@ -59,7 +59,7 @@ public abstract class Tags {
    * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
   public final class IdentifierTag extends Tags {
-    private IdentifierTag() { }
+    private IdentifierTag() {}
   }
 
   /**
@@ -68,7 +68,7 @@ public abstract class Tags {
    * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
   public final class ArgumentTag extends Tags {
-    private ArgumentTag() { }
+    private ArgumentTag() {}
   }
 
   /**
@@ -77,7 +77,7 @@ public abstract class Tags {
    * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
   public final class LocalVariableTag extends Tags {
-    private LocalVariableTag() { }
+    private LocalVariableTag() {}
   }
 
   /**
@@ -86,7 +86,7 @@ public abstract class Tags {
    * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
   public final class StatementSeparatorTag extends Tags {
-    private StatementSeparatorTag() { }
+    private StatementSeparatorTag() {}
   }
 
   /**
@@ -95,7 +95,7 @@ public abstract class Tags {
    * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
   public final class DelimiterOpeningTag extends Tags {
-    private DelimiterOpeningTag() { }
+    private DelimiterOpeningTag() {}
   }
 
   /**
@@ -104,6 +104,6 @@ public abstract class Tags {
    * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
   public final class DelimiterClosingTag extends Tags {
-    private DelimiterClosingTag() { }
+    private DelimiterClosingTag() {}
   }
 }

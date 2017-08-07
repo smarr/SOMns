@@ -38,7 +38,8 @@ public final class MessageSendNode {
     Specializer<EagerlySpecializableNode> specializer =
         prims.getParserSpecializer(selector, arguments);
     if (specializer != null) {
-      EagerlySpecializableNode newNode = specializer.create(null, arguments, source, !specializer.noWrapper());
+      EagerlySpecializableNode newNode =
+          specializer.create(null, arguments, source, !specializer.noWrapper());
       for (ExpressionNode exp : arguments) {
         unwrapIfNecessary(exp).markAsPrimitiveArgument();
       }
@@ -84,7 +85,8 @@ public final class MessageSendNode {
     }
 
     if (dispatch == null) {
-      dispatch = UninitializedDispatchNode.createRcvrSend(source, selector, AccessModifier.PUBLIC);
+      dispatch =
+          UninitializedDispatchNode.createRcvrSend(source, selector, AccessModifier.PUBLIC);
     }
 
     return new GenericMessageSendNode(selector, argumentNodes, dispatch, source);
@@ -136,14 +138,14 @@ public final class MessageSendNode {
       extends AbstractMessageSendNode {
 
     protected final SSymbol selector;
-    protected final VM vm;
+    protected final VM      vm;
 
     protected AbstractUninitializedMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments,
         final SourceSection source, final VM vm) {
       super(arguments, source);
       this.selector = selector;
-      this.vm       = vm;
+      this.vm = vm;
     }
 
     @Override
@@ -167,8 +169,7 @@ public final class MessageSendNode {
         final Object[] arguments) {
       // This is a branch never taken, none of the code here should be compiled.
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      return specialize(arguments).
-          doPreEvaluated(frame, arguments);
+      return specialize(arguments).doPreEvaluated(frame, arguments);
     }
 
     private PreevaluatedExpression specialize(final Object[] arguments) {
@@ -184,7 +185,8 @@ public final class MessageSendNode {
         lock.lock();
         if (specializer != null) {
           boolean noWrapper = specializer.noWrapper();
-          EagerlySpecializableNode newNode = specializer.create(arguments, argumentNodes, sourceSection, !noWrapper);
+          EagerlySpecializableNode newNode =
+              specializer.create(arguments, argumentNodes, sourceSection, !noWrapper);
           if (noWrapper) {
             return replace(newNode);
           } else {
@@ -213,7 +215,8 @@ public final class MessageSendNode {
       VM.insertInstrumentationWrapper(this);
       assert prim.getSourceSection() != null;
 
-      PreevaluatedExpression result = replace(prim.wrapInEagerWrapper(selector, argumentNodes));
+      PreevaluatedExpression result =
+          replace(prim.wrapInEagerWrapper(selector, argumentNodes));
 
       VM.insertInstrumentationWrapper((Node) result);
 
@@ -255,7 +258,7 @@ public final class MessageSendNode {
   }
 
   private static final class UninitializedSymbolSendNode
-    extends AbstractUninitializedMessageSendNode {
+      extends AbstractUninitializedMessageSendNode {
 
     protected UninitializedSymbolSendNode(final SSymbol selector,
         final SourceSection source, final VM vm) {

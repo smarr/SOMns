@@ -2,11 +2,11 @@ package tools.debugger;
 
 import tools.debugger.entities.SteppingType;
 
+
 public final class SteppingStrategy {
 
   private final SteppingType type;
-  private boolean consumed;
-
+  private boolean            consumed;
 
   public SteppingStrategy(final SteppingType type) {
     this.type = type;

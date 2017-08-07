@@ -35,8 +35,10 @@ public class TraceBuffer {
 
   private ByteBuffer storage;
 
-  /** Id of the implementation-level thread.
-      Thus, not an application-level thread. */
+  /**
+   * Id of the implementation-level thread.
+   * Thus, not an application-level thread.
+   */
   private long implThreadId;
 
   /** Id of the last activity that was running on this buffer. */
@@ -74,7 +76,7 @@ public class TraceBuffer {
   boolean swapStorage(final Activity current) {
     if (storage == null ||
         storage.position() <= (Implementation.IMPL_THREAD.getSize() +
-                               Implementation.IMPL_CURRENT_ACTIVITY.getSize())) {
+            Implementation.IMPL_CURRENT_ACTIVITY.getSize())) {
       return false;
     }
     ActorExecutionTrace.returnBuffer(storage);
@@ -127,8 +129,8 @@ public class TraceBuffer {
     SourceSection section;
 
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      Dispatchable disp = objectSystem.getPlatformClass().
-          getDispatchables().get(Symbols.symbolFor("start"));
+      Dispatchable disp =
+          objectSystem.getPlatformClass().getDispatchables().get(Symbols.symbolFor("start"));
       SInvokable method = (SInvokable) disp;
 
       section = method.getInvokable().getSourceSection();
@@ -142,18 +144,19 @@ public class TraceBuffer {
 
   /** REM: Ensure it is in sync with {@link TraceSemantics#SOURCE_SECTION_SIZE}. */
   private void writeSourceSection(final SourceSection origin) {
-    /* TODO: make sure there is always a sourcesection
+    /*
+     * TODO: make sure there is always a sourcesection
      * right now promises created by getChainedPromiseFor have no sourceSection and
      * caused a Nullpointer exception in this method.
      * The following if is a workaround.
-     * */
+     */
     if (origin == null) {
       storage.putLong(0);
       return;
     }
 
-    assert !origin.getSource().isInternal() :
-      "Need special handling to ensure we see user code reported to trace/debugger";
+    assert !origin.getSource()
+                  .isInternal() : "Need special handling to ensure we see user code reported to trace/debugger";
     storage.putShort(SourceCoordinate.getURI(origin.getSource()).getSymbolId());
     storage.putShort((short) origin.getStartLine());
     storage.putShort((short) origin.getStartColumn());
@@ -251,7 +254,9 @@ public class TraceBuffer {
   }
 
   private static class SyncedTraceBuffer extends TraceBuffer {
-    protected SyncedTraceBuffer() { super(); }
+    protected SyncedTraceBuffer() {
+      super();
+    }
 
     @Override
     public synchronized void recordActivityCreation(final ActivityType entity,

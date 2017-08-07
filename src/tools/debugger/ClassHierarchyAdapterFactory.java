@@ -20,7 +20,8 @@ import com.google.gson.stream.JsonWriter;
  * This is a GSON {@link TypeAdapterFactory} to support common class-based
  * hierarchies in JSON encodings.
  *
- * <p>One field of the JSON object is used to represent the type, which allows
+ * <p>
+ * One field of the JSON object is used to represent the type, which allows
  * automatic serialization and deserialization.
  */
 public class ClassHierarchyAdapterFactory<T> implements TypeAdapterFactory {
@@ -30,7 +31,7 @@ public class ClassHierarchyAdapterFactory<T> implements TypeAdapterFactory {
   private final Map<String, Class<? extends T>> types;
 
   public ClassHierarchyAdapterFactory(final Class<T> baseType, final String typeField) {
-    this.baseType  = baseType;
+    this.baseType = baseType;
     this.typeField = typeField;
     this.types = new LinkedHashMap<>();
   }
@@ -47,7 +48,7 @@ public class ClassHierarchyAdapterFactory<T> implements TypeAdapterFactory {
     types.put(typeId, type);
   }
 
-  @SuppressWarnings({ "unchecked", "rawtypes" })
+  @SuppressWarnings({"unchecked", "rawtypes"})
   private void populateMaps(final Gson gson,
       final Map<String, TypeAdapter<? extends T>> actionToDelegate,
       final Map<Class<? extends T>, Pair<T>> subtypeToDelegate) {
@@ -66,8 +67,8 @@ public class ClassHierarchyAdapterFactory<T> implements TypeAdapterFactory {
       return null;
     }
 
-    final Map<String, TypeAdapter<? extends T>> actionToDelegate  = new LinkedHashMap<>();
-    final Map<Class<? extends T>, Pair<T>>      subtypeToDelegate = new LinkedHashMap<>();
+    final Map<String, TypeAdapter<? extends T>> actionToDelegate = new LinkedHashMap<>();
+    final Map<Class<? extends T>, Pair<T>> subtypeToDelegate = new LinkedHashMap<>();
 
     populateMaps(gson, actionToDelegate, subtypeToDelegate);
 
@@ -77,13 +78,13 @@ public class ClassHierarchyAdapterFactory<T> implements TypeAdapterFactory {
   private static class Adapter<T> extends TypeAdapter<T> {
     private final Map<String, TypeAdapter<? extends T>> actionToDelegate;
     private final Map<Class<? extends T>, Pair<T>>      subtypeToDelegate;
-    private final String typeField;
+    private final String                                typeField;
 
     Adapter(final String typeField,
         final Map<String, TypeAdapter<? extends T>> actionToDelegate,
         final Map<Class<? extends T>, Pair<T>> subtypeToDelegate) {
       this.typeField = typeField;
-      this.actionToDelegate  = actionToDelegate;
+      this.actionToDelegate = actionToDelegate;
       this.subtypeToDelegate = subtypeToDelegate;
     }
 
@@ -109,12 +110,12 @@ public class ClassHierarchyAdapterFactory<T> implements TypeAdapterFactory {
 
   private static final class Pair<T> {
     public final TypeAdapter<T> adapter;
-    public final String typeId;
+    public final String         typeId;
 
     @SuppressWarnings("unchecked")
     Pair(final TypeAdapter<? extends T> adapter, final String typeId) {
       this.adapter = (TypeAdapter<T>) adapter;
-      this.typeId  = typeId;
+      this.typeId = typeId;
     }
   }
 }

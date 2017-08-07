@@ -12,15 +12,17 @@ import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 
 import som.interpreter.Invokable;
 
+
 public class InvocationProfile extends Counter {
 
   private final Invokable method;
+
   private final Map<Arguments, Integer> argumentTypes;
 
   public InvocationProfile(final SourceSection source, final Invokable method) {
     super(source);
     argumentTypes = new HashMap<>();
-    this.method   = method;
+    this.method = method;
   }
 
   public Invokable getMethod() {

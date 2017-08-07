@@ -38,10 +38,10 @@ public final class IfTrueIfFalseInlinedLiteralsNode extends ExprWithTagsNode {
       final ExpressionNode originalFalseNode,
       final SourceSection sourceSection) {
     super(sourceSection);
-    this.conditionNode   = conditionNode;
-    this.trueNode        = inlinedTrueNode;
-    this.falseNode       = inlinedFalseNode;
-    this.trueActualNode  = originalTrueNode;
+    this.conditionNode = conditionNode;
+    this.trueNode = inlinedTrueNode;
+    this.falseNode = inlinedFalseNode;
+    this.trueActualNode = originalTrueNode;
     this.falseActualNode = originalFalseNode;
   }
 
