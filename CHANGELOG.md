@@ -5,6 +5,10 @@
  - Implement Newspeak setter send syntax and remove old assignment syntax
  - Added support for Newspeak's full numeral syntax. This includes notation for
    a radix and the exponent notation. Examples: 16rFFFF, 2r10.11, 3.7e3 [PR #172](https://github.com/smarr/SOMns/pull/172)
+ - Added support for object literals. Because of parsing issues, we currently
+   use the keyword `objL` to identify literals. Otherwise, they are mostly
+   compliant the Newspeak specification.
+   ([#86](https://github.com/smarr/SOMns/issues/86), [PR #112](https://github.com/smarr/SOMns/pull/112))
 
 ## [0.4.0] - [Concurrency-Agnostic Debugger][v4]
 
