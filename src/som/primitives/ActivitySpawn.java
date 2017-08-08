@@ -101,12 +101,21 @@ public abstract class ActivitySpawn {
     /** Breakpoint info for triggering suspension on first execution of code in activity. */
     @Child protected AbstractBreakpointNode onExec;
 
-    public SpawnPrim(final boolean ew, final SourceSection s, final VM vm) {
-      super(ew, s);
+    private final VM vm;
+
+    public SpawnPrim(final VM vm) {
+      this.vm = vm;
       this.forkJoinPool = vm.getForkJoinPool();
       this.processesPool = vm.getProcessPool();
       this.threadPool = vm.getThreadPool();
-      this.onExec = insert(Breakpoints.create(s, BreakpointType.ACTIVITY_ON_EXEC, vm));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public final SpawnPrim initialize(final SourceSection source) {
+      super.initialize(source);
+      this.onExec = insert(Breakpoints.create(source, BreakpointType.ACTIVITY_ON_EXEC, vm));
+      return this;
     }
 
     @Specialization(guards = "clazz == TaskClass")
@@ -175,12 +184,21 @@ public abstract class ActivitySpawn {
     /** Breakpoint info for triggering suspension on first execution of code in activity. */
     @Child protected AbstractBreakpointNode onExec;
 
-    public SpawnWithPrim(final boolean ew, final SourceSection s, final VM vm) {
-      super(ew, s);
+    private final VM vm;
+
+    public SpawnWithPrim(final VM vm) {
+      this.vm = vm;
       this.forkJoinPool = vm.getForkJoinPool();
       this.processesPool = vm.getProcessPool();
       this.threadPool = vm.getThreadPool();
-      this.onExec = insert(Breakpoints.create(s, BreakpointType.ACTIVITY_ON_EXEC, vm));
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public final SpawnWithPrim initialize(final SourceSection source) {
+      super.initialize(source);
+      this.onExec = insert(Breakpoints.create(source, BreakpointType.ACTIVITY_ON_EXEC, vm));
+      return this;
     }
 
     @Specialization(guards = "clazz == TaskClass")

@@ -3,7 +3,6 @@ package som.primitives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
@@ -21,10 +20,6 @@ public abstract class DoublePrims {
   @Primitive(primitive = "doubleRound:", selector = "round",
       receiverType = Double.class)
   public abstract static class RoundPrim extends UnaryBasicOperation {
-    public RoundPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == OpArithmetic.class) {
@@ -44,10 +39,6 @@ public abstract class DoublePrims {
   @Primitive(primitive = "doubleAsInteger:", selector = "asInteger", inParser = false,
       receiverType = Double.class)
   public abstract static class AsIntPrim extends UnaryBasicOperation {
-    public AsIntPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == OpArithmetic.class) {
@@ -85,10 +76,6 @@ public abstract class DoublePrims {
       selector = "PositiveInfinity", noWrapper = true,
       specializer = IsDoubleClass.class)
   public abstract static class PositiveInfinityPrim extends UnaryExpressionNode {
-    public PositiveInfinityPrim(final boolean eagerWrapper, final SourceSection source) {
-      super(eagerWrapper, source);
-    }
-
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == LiteralTag.class) {

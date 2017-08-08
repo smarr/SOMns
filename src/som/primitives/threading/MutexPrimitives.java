@@ -6,7 +6,6 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
@@ -24,10 +23,6 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingLock:", selector = "lock")
   public abstract static class LockPrim extends UnaryExpressionNode {
-    public LockPrim(final boolean ew, final SourceSection s) {
-      super(ew, s);
-    }
-
     @TruffleBoundary
     @Specialization
     public static final ReentrantLock lock(final ReentrantLock lock) {
@@ -48,10 +43,6 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingUnlock:", selector = "unlock")
   public abstract static class UnlockPrim extends UnaryExpressionNode {
-    public UnlockPrim(final boolean ew, final SourceSection s) {
-      super(ew, s);
-    }
-
     @TruffleBoundary
     @Specialization
     public static final ReentrantLock unlock(final ReentrantLock lock) {
@@ -72,10 +63,6 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(selector = "critical:", receiverType = ReentrantLock.class)
   public abstract static class CritialPrim extends BinaryExpressionNode {
-    public CritialPrim(final boolean ew, final SourceSection s) {
-      super(ew, s);
-    }
-
     @Child protected BlockDispatchNode dispatchBody = BlockDispatchNodeGen.create();
 
     @Specialization
@@ -92,10 +79,6 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingIsLocked:")
   public abstract static class IsLockedPrim extends UnaryExpressionNode {
-    public IsLockedPrim(final boolean ew, final SourceSection s) {
-      super(ew, s);
-    }
-
     @Specialization
     @TruffleBoundary
     public boolean doLock(final ReentrantLock lock) {
@@ -106,10 +89,6 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingConditionFor:")
   public abstract static class ConditionForPrim extends UnaryExpressionNode {
-    public ConditionForPrim(final boolean ew, final SourceSection s) {
-      super(ew, s);
-    }
-
     @Specialization
     @TruffleBoundary
     public Condition doLock(final ReentrantLock lock) {
@@ -120,10 +99,6 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingMutexNew:")
   public abstract static class MutexNewPrim extends UnaryExpressionNode {
-    public MutexNewPrim(final boolean ew, final SourceSection s) {
-      super(ew, s);
-    }
-
     // TODO: should I guard this on the mutex class?
     @Specialization
     @TruffleBoundary

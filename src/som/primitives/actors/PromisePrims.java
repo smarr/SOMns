@@ -73,19 +73,27 @@ public final class PromisePrims {
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
+    private final VM vm;
+
     protected static final DirectCallNode create() {
       Dispatchable disp = SPromise.pairClass.getSOMClass().lookupMessage(
           withAndFactory, AccessModifier.PUBLIC);
       return Truffle.getRuntime().createDirectCallNode(((SInvokable) disp).getCallTarget());
     }
 
-    public CreatePromisePairPrim(final boolean eagerWrapper, final SourceSection source,
-        final VM vm) {
-      super(eagerWrapper, source);
+    public CreatePromisePairPrim(final VM vm) {
+      this.vm = vm;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public final CreatePromisePairPrim initialize(final SourceSection source) {
+      super.initialize(source);
       this.promiseResolverBreakpoint =
           insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLVER, vm));
       this.promiseResolutionBreakpoint =
           insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLUTION, vm));
+      return this;
     }
 
     @Specialization
@@ -134,15 +142,22 @@ public final class PromisePrims {
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
-    protected WhenResolvedPrim(final boolean eagWrap, final SourceSection source,
-        final VM vm) {
-      super(eagWrap, source);
-      this.registerNode = new RegisterWhenResolved(vm.getActorPool());
+    private final VM vm;
 
+    protected WhenResolvedPrim(final VM vm) {
+      this.registerNode = new RegisterWhenResolved(vm.getActorPool());
+      this.vm = vm;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public final WhenResolvedPrim initialize(final SourceSection source) {
+      super.initialize(source);
       this.promiseResolverBreakpoint =
           insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLVER, vm));
       this.promiseResolutionBreakpoint =
           insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLUTION, vm));
+      return this;
     }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
@@ -200,14 +215,22 @@ public final class PromisePrims {
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
-    protected OnErrorPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
-      super(eagWrap, source);
-      this.registerNode = new RegisterOnError(vm.getActorPool());
+    private final VM vm;
 
+    protected OnErrorPrim(final VM vm) {
+      this.registerNode = new RegisterOnError(vm.getActorPool());
+      this.vm = vm;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public final OnErrorPrim initialize(final SourceSection source) {
+      super.initialize(source);
       this.promiseResolverBreakpoint =
           insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLVER, vm));
       this.promiseResolutionBreakpoint =
           insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLUTION, vm));
+      return this;
     }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
@@ -267,15 +290,23 @@ public final class PromisePrims {
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
-    public WhenResolvedOnErrorPrim(final boolean eagWrap, final SourceSection source,
-        final VM vm) {
-      super(eagWrap, source);
+    private final VM vm;
+
+    public WhenResolvedOnErrorPrim(final VM vm) {
       this.registerWhenResolved = new RegisterWhenResolved(vm.getActorPool());
       this.registerOnError = new RegisterOnError(vm.getActorPool());
+      this.vm = vm;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public final WhenResolvedOnErrorPrim initialize(final SourceSection source) {
+      super.initialize(source);
       this.promiseResolverBreakpoint =
           insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLVER, vm));
       this.promiseResolutionBreakpoint =
           insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLUTION, vm));
+      return this;
     }
 
     @Specialization(guards = {"resolvedMethod == resolved.getMethod()",

@@ -5,7 +5,6 @@ import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
@@ -25,14 +24,9 @@ public final class WhileInlinedLiteralsNode extends ExprWithTagsNode {
   @SuppressWarnings("unused") private final ExpressionNode conditionActualNode;
   @SuppressWarnings("unused") private final ExpressionNode bodyActualNode;
 
-  public WhileInlinedLiteralsNode(
-      final ExpressionNode inlinedConditionNode,
-      final ExpressionNode inlinedBodyNode,
-      final boolean expectedBool,
-      final ExpressionNode originalConditionNode,
-      final ExpressionNode originalBodyNode,
-      final SourceSection sourceSection) {
-    super(sourceSection);
+  public WhileInlinedLiteralsNode(final ExpressionNode inlinedConditionNode,
+      final ExpressionNode inlinedBodyNode, final boolean expectedBool,
+      final ExpressionNode originalConditionNode, final ExpressionNode originalBodyNode) {
     this.conditionNode = inlinedConditionNode;
     this.bodyNode = inlinedBodyNode;
     this.expectedBool = expectedBool;

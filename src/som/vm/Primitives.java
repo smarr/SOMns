@@ -136,6 +136,8 @@ public class Primitives {
     protected final NodeFactory<T>                      fact;
     private final NodeFactory<? extends ExpressionNode> extraChildFactory;
 
+    private final int extraArity;
+
     @SuppressWarnings("unchecked")
     public Specializer(final som.primitives.Primitive prim, final NodeFactory<T> fact,
         final VM vm) {
@@ -145,12 +147,14 @@ public class Primitives {
 
       if (prim.extraChild() == NoChild.class) {
         extraChildFactory = null;
+        extraArity = 0;
       } else {
         try {
           extraChildFactory =
               (NodeFactory<? extends ExpressionNode>) prim.extraChild()
                                                           .getMethod("getInstance")
                                                           .invoke(null);
+          extraArity = extraChildFactory.getExecutionSignature().size();
         } catch (IllegalAccessException | IllegalArgumentException
             | InvocationTargetException | NoSuchMethodException
             | SecurityException e) {
@@ -186,7 +190,7 @@ public class Primitives {
     }
 
     private int numberOfNodeConstructorArguments(final ExpressionNode[] argNodes) {
-      return argNodes.length + 2 +
+      return argNodes.length +
           (extraChildFactory != null ? 1 : 0) +
           (prim.requiresArguments() ? 1 : 0) +
           (prim.requiresContext() ? 1 : 0);
@@ -199,9 +203,7 @@ public class Primitives {
       int numArgs = numberOfNodeConstructorArguments(argNodes);
 
       Object[] ctorArgs = new Object[numArgs];
-      ctorArgs[0] = eagerWrapper;
-      ctorArgs[1] = section;
-      int offset = 2;
+      int offset = 0;
 
       if (prim.requiresContext()) {
         ctorArgs[offset] = vm;
@@ -220,11 +222,13 @@ public class Primitives {
       }
 
       if (extraChildFactory != null) {
-        ctorArgs[offset] = extraChildFactory.createNode(false, null, null);
+        ctorArgs[offset] = extraChildFactory.createNode(new Object[extraArity]);
         offset += 1;
       }
 
-      return fact.createNode(ctorArgs);
+      T node = fact.createNode(ctorArgs);
+      ((EagerlySpecializableNode) node).initialize(section, eagerWrapper);
+      return node;
     }
   }
 
@@ -252,7 +256,7 @@ public class Primitives {
     for (int i = 0; i < numArgs; i++) {
       // we do not pass the vmMirror, makes it easier to use the same primitives
       // as replacements on the node level
-      args[i] = new LocalArgumentReadNode(true, i + 1, s.createSection(1));
+      args[i] = new LocalArgumentReadNode(true, i + 1).initialize(s.createSection(1));
     }
 
     SourceSection source = s.createSection(1);

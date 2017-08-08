@@ -2,7 +2,6 @@ package som.interpreter.nodes.literals;
 
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinDefinition;
 import som.interpreter.InliningVisitor;
@@ -32,9 +31,7 @@ public class ObjectLiteralNode extends LiteralNode {
    * from that class.
    */
   public ObjectLiteralNode(final MixinDefinition mixinDefiniton,
-      final ExpressionNode outerRead,
-      final ExpressionNode newMessage, final SourceSection source) {
-    super(source);
+      final ExpressionNode outerRead, final ExpressionNode newMessage) {
     this.mixinDef = mixinDefiniton;
     this.superClassResolver =
         mixinDefiniton.getSuperclassAndMixinResolutionInvokable().createCallTarget();
@@ -61,7 +58,7 @@ public class ObjectLiteralNode extends LiteralNode {
   }
 
   protected ObjectLiteralNode createNode(final MixinDefinition mixinDefinition) {
-    return new ObjectLiteralNode(mixinDefinition, outerRead, newMessage, sourceSection);
+    return new ObjectLiteralNode(mixinDefinition, outerRead, newMessage).initialize(
+        sourceSection);
   }
-
 }

@@ -23,19 +23,22 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
   @Child protected WrapReferenceNode   wrapper = WrapReferenceNodeGen.create();
   @Child protected UnaryExpressionNode haltNode;
 
-  protected AbstractPromiseResolutionNode(final boolean eagWrap, final SourceSection source,
-      final ForkJoinPool actorPool) {
-    super(eagWrap, source);
+  protected AbstractPromiseResolutionNode(final ForkJoinPool actorPool) {
     this.actorPool = actorPool;
-    haltNode = insert(SuspendExecutionNodeGen.create(false, source, 2, null));
-    VM.insertInstrumentationWrapper(haltNode);
+    haltNode = insert(SuspendExecutionNodeGen.create(2, null));
   }
 
   protected AbstractPromiseResolutionNode(final AbstractPromiseResolutionNode node) {
-    super(node);
-    this.actorPool = node.actorPool;
-    haltNode = insert(SuspendExecutionNodeGen.create(false, node.getSourceSection(), 2, null));
+    this(node.actorPool);
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public AbstractPromiseResolutionNode initialize(final SourceSection sourceSection) {
+    super.initialize(sourceSection);
+    haltNode.initialize(sourceSection);
     VM.insertInstrumentationWrapper(haltNode);
+    return this;
   }
 
   public abstract Object executeEvaluated(VirtualFrame frame,

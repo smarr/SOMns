@@ -101,9 +101,9 @@ public abstract class Variable {
         final SourceSection source) {
       assert this instanceof Argument;
       if (contextLevel == 0) {
-        return new LocalSelfReadNode(this, holderMixin, source);
+        return new LocalSelfReadNode(this, holderMixin).initialize(source);
       } else {
-        return new NonLocalSelfReadNode(this, holderMixin, contextLevel, source);
+        return new NonLocalSelfReadNode(this, holderMixin, contextLevel).initialize(source);
       }
     }
 
@@ -112,9 +112,10 @@ public abstract class Variable {
         final SourceSection source) {
       assert this instanceof Argument;
       if (contextLevel == 0) {
-        return new LocalSuperReadNode(this, holderClass, classSide, source);
+        return new LocalSuperReadNode(this, holderClass, classSide).initialize(source);
       } else {
-        return new NonLocalSuperReadNode(this, contextLevel, holderClass, classSide, source);
+        return new NonLocalSuperReadNode(this, contextLevel, holderClass,
+            classSide).initialize(source);
       }
     }
 
@@ -139,9 +140,9 @@ public abstract class Variable {
         final SourceSection source) {
       transferToInterpreterAndInvalidate("Variable.getReadNode");
       if (contextLevel == 0) {
-        return new LocalArgumentReadNode(this, source);
+        return new LocalArgumentReadNode(this).initialize(source);
       } else {
-        return new NonLocalArgumentReadNode(this, contextLevel, source);
+        return new NonLocalArgumentReadNode(this, contextLevel).initialize(source);
       }
     }
 
@@ -171,11 +172,14 @@ public abstract class Variable {
     public ExpressionNode getReadNode(final int contextLevel,
         final SourceSection source) {
       transferToInterpreterAndInvalidate("Variable.getReadNode");
+      ExpressionNode node;
       if (contextLevel == 0) {
-        return LocalVariableReadNodeGen.create(this, source);
+        node = LocalVariableReadNodeGen.create(this);
       } else {
-        return NonLocalVariableReadNodeGen.create(contextLevel, this, source);
+        node = NonLocalVariableReadNodeGen.create(contextLevel, this);
       }
+      node.initialize(source);
+      return node;
     }
 
     public FrameSlot getSlot() {
@@ -194,12 +198,14 @@ public abstract class Variable {
     public ExpressionNode getWriteNode(final int contextLevel,
         final ExpressionNode valueExpr, final SourceSection source) {
       transferToInterpreterAndInvalidate("Variable.getWriteNode");
+      ExpressionNode node;
       if (contextLevel == 0) {
-        return LocalVariableWriteNodeGen.create(this, source, valueExpr);
+        node = LocalVariableWriteNodeGen.create(this, valueExpr);
       } else {
-        return NonLocalVariableWriteNodeGen.create(
-            contextLevel, this, source, valueExpr);
+        node = NonLocalVariableWriteNodeGen.create(contextLevel, this, valueExpr);
       }
+      node.initialize(source);
+      return node;
     }
 
     @Override

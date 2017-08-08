@@ -26,7 +26,6 @@ import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.profiles.ValueProfile;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
@@ -44,8 +43,7 @@ public abstract class ContextualNode extends ExprWithTagsNode {
 
   @CompilationFinal DetermineContext determineContext;
 
-  public ContextualNode(final int contextLevel, final SourceSection source) {
-    super(source);
+  public ContextualNode(final int contextLevel) {
     this.contextLevel = contextLevel;
     this.frameType = ValueProfile.createClassProfile();
     this.outerType = ValueProfile.createClassProfile();

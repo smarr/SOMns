@@ -3,7 +3,6 @@ package som.primitives.arrays;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.ValueProfile;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.Primitive;
@@ -14,10 +13,6 @@ import som.vmobjects.SArray.SMutableArray;
 @GenerateNodeFactory
 @Primitive(selector = "copy", receiverType = SArray.class, disabled = true)
 public abstract class CopyPrim extends UnaryExpressionNode {
-  public CopyPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-  }
-
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
   @Specialization(guards = "receiver.isEmptyType()")

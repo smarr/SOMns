@@ -5,7 +5,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.profiles.ConditionProfile;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
@@ -23,12 +22,8 @@ public abstract class BooleanInlinedLiteralNode extends ExprWithTagsNode {
 
   protected final ConditionProfile profile;
 
-  public BooleanInlinedLiteralNode(
-      final ExpressionNode receiverNode,
-      final ExpressionNode inlinedArgumentNode,
-      final ExpressionNode originalArgumentNode,
-      final SourceSection sourceSection) {
-    super(sourceSection);
+  public BooleanInlinedLiteralNode(final ExpressionNode receiverNode,
+      final ExpressionNode inlinedArgumentNode, final ExpressionNode originalArgumentNode) {
     this.receiverNode = receiverNode;
     this.argumentNode = inlinedArgumentNode;
     this.argumentAcutalNode = originalArgumentNode;
@@ -66,13 +61,9 @@ public abstract class BooleanInlinedLiteralNode extends ExprWithTagsNode {
 
   public static final class AndInlinedLiteralNode extends BooleanInlinedLiteralNode {
 
-    public AndInlinedLiteralNode(
-        final ExpressionNode receiverNode,
-        final ExpressionNode inlinedArgumentNode,
-        final ExpressionNode originalArgumentNode,
-        final SourceSection sourceSection) {
-      super(receiverNode, inlinedArgumentNode, originalArgumentNode,
-          sourceSection);
+    public AndInlinedLiteralNode(final ExpressionNode receiverNode,
+        final ExpressionNode inlinedArgumentNode, final ExpressionNode originalArgumentNode) {
+      super(receiverNode, inlinedArgumentNode, originalArgumentNode);
     }
 
     @Override
@@ -92,13 +83,9 @@ public abstract class BooleanInlinedLiteralNode extends ExprWithTagsNode {
 
   public static final class OrInlinedLiteralNode extends BooleanInlinedLiteralNode {
 
-    public OrInlinedLiteralNode(
-        final ExpressionNode receiverNode,
-        final ExpressionNode inlinedArgumentNode,
-        final ExpressionNode originalArgumentNode,
-        final SourceSection sourceSection) {
-      super(receiverNode, inlinedArgumentNode, originalArgumentNode,
-          sourceSection);
+    public OrInlinedLiteralNode(final ExpressionNode receiverNode,
+        final ExpressionNode inlinedArgumentNode, final ExpressionNode originalArgumentNode) {
+      super(receiverNode, inlinedArgumentNode, originalArgumentNode);
     }
 
     @Override

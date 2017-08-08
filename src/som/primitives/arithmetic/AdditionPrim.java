@@ -6,7 +6,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.ExactMath;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.primitives.Primitive;
 import som.vmobjects.SClass;
@@ -18,10 +17,6 @@ import som.vmobjects.SSymbol;
 @Primitive(primitive = "double:add:")
 @Primitive(selector = "+")
 public abstract class AdditionPrim extends ArithmeticPrim {
-  protected AdditionPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-  }
-
   @Specialization(rewriteOn = ArithmeticException.class)
   public final long doLong(final long left, final long argument) {
     return ExactMath.addExact(left, argument);

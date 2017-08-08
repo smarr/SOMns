@@ -6,7 +6,6 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
@@ -41,10 +40,6 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode {
 
   protected static final DirectCallNode create(final SInvokable blockMethod) {
     return Truffle.getRuntime().createDirectCallNode(blockMethod.getCallTarget());
-  }
-
-  protected IntToDoMessageNode(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
   }
 
   @Override

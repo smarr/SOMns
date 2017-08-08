@@ -4,7 +4,6 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.specialized.IntToDoMessageNode.ToDoSplzr;
 import som.primitives.Primitive;
@@ -16,10 +15,6 @@ import som.vmobjects.SInvokable;
 @Primitive(selector = "downTo:do:", noWrapper = true, disabled = true,
     specializer = ToDoSplzr.class)
 public abstract class IntDownToDoMessageNode extends IntToDoMessageNode {
-  public IntDownToDoMessageNode(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-  }
-
   @Override
   @Specialization(guards = "block.getMethod() == blockMethod")
   public final long doIntToDo(final long receiver,

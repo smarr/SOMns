@@ -4,7 +4,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.nodes.ISpecialSend;
@@ -31,8 +30,7 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
 
   private final MixinDefinitionId mixinId;
 
-  public NewObjectPrim(final SourceSection source, final MixinDefinitionId mixinId) {
-    super(false, source);
+  public NewObjectPrim(final MixinDefinitionId mixinId) {
     this.mixinId = mixinId;
   }
 

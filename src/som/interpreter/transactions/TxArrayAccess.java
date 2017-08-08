@@ -2,7 +2,6 @@ package som.interpreter.transactions;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -16,9 +15,7 @@ public abstract class TxArrayAccess {
 
     @Child protected BinaryBasicOperation arrayOp;
 
-    protected TxBinaryArrayOp(final boolean eagerlyWrapped,
-        final SourceSection source, final BinaryBasicOperation arrayOp) {
-      super(eagerlyWrapped, source);
+    protected TxBinaryArrayOp(final BinaryBasicOperation arrayOp) {
       this.arrayOp = arrayOp;
     }
 
@@ -38,9 +35,7 @@ public abstract class TxArrayAccess {
   public abstract static class TxTernaryArrayOp extends TernaryExpressionNode {
     @Child protected TernaryExpressionNode arrayOp;
 
-    protected TxTernaryArrayOp(final boolean eagWrap,
-        final SourceSection source, final TernaryExpressionNode arrayOp) {
-      super(eagWrap, source);
+    protected TxTernaryArrayOp(final TernaryExpressionNode arrayOp) {
       this.arrayOp = arrayOp;
     }
 

@@ -24,14 +24,15 @@ public class ActivityJoin {
   public abstract static class JoinPrim extends UnaryExpressionNode {
     @Child protected UnaryExpressionNode haltNode;
 
-    public JoinPrim(final boolean ew, final SourceSection s) {
-      super(ew, s);
+    @Override
+    @SuppressWarnings("unchecked")
+    public final JoinPrim initialize(final SourceSection source) {
+      super.initialize(source);
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        haltNode = insert(SuspendExecutionNodeGen.create(false, s, 0, null));
+        haltNode = insert(SuspendExecutionNodeGen.create(0, null).initialize(source));
         VM.insertInstrumentationWrapper(haltNode);
-      } else {
-        haltNode = null;
       }
+      return this;
     }
 
     @TruffleBoundary

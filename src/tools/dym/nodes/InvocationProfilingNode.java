@@ -16,8 +16,7 @@ public class InvocationProfilingNode extends CountingNode<InvocationProfile> {
 
   private final DynamicMetrics meter;
 
-  public InvocationProfilingNode(final DynamicMetrics meter,
-      final InvocationProfile counter) {
+  public InvocationProfilingNode(final DynamicMetrics meter, final InvocationProfile counter) {
     super(counter);
     this.meter = meter;
   }

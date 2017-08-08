@@ -1,15 +1,13 @@
 package som.interpreter.nodes.literals;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
 
 
 public final class StringLiteralNode extends LiteralNode {
 
   private final String value;
 
-  public StringLiteralNode(final String value, final SourceSection source) {
-    super(source);
+  public StringLiteralNode(final String value) {
     this.value = value;
   }
 

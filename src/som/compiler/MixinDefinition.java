@@ -423,7 +423,7 @@ public final class MixinDefinition {
   private SInitializer assembleMixinInitializer(final int mixinId) {
     ExpressionNode body;
     if (initializerBody == null) {
-      body = new NilLiteralNode(initializerSource);
+      body = new NilLiteralNode().initialize(initializerSource);
     } else {
       body = SNodeFactory.createSequence(initializerBody, initializerSource);
     }

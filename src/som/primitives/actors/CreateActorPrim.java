@@ -2,7 +2,6 @@ package som.primitives.actors;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.actors.Actor;
@@ -28,8 +27,7 @@ public abstract class CreateActorPrim extends BinaryComplexOperation {
 
   @Child protected IsValue isValue;
 
-  protected CreateActorPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
-    super(eagWrap, source);
+  protected CreateActorPrim(final VM vm) {
     this.vm = vm;
     isValue = IsValueNodeGen.createSubNode();
   }

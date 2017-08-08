@@ -33,11 +33,17 @@ public abstract class AtomicPrim extends BinaryComplexOperation {
   @Child protected AbstractBreakpointNode beforeCommit;
   @Child protected UnaryExpressionNode    haltNode;
 
-  protected AtomicPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
-    super(eagWrap, source);
+  protected AtomicPrim(final VM vm) {
     this.vm = vm;
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public final AtomicPrim initialize(final SourceSection source) {
+    super.initialize(source);
     beforeCommit = insert(Breakpoints.create(source, BreakpointType.ATOMIC_BEFORE_COMMIT, vm));
-    haltNode = SuspendExecutionNodeGen.create(false, sourceSection, null);
+    haltNode = SuspendExecutionNodeGen.create(0, null).initialize(source);
+    return this;
   }
 
   @Specialization

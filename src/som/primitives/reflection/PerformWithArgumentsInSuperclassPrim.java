@@ -16,12 +16,7 @@ import som.vmobjects.SSymbol;
 
 @GenerateNodeFactory
 public abstract class PerformWithArgumentsInSuperclassPrim extends QuaternaryExpressionNode {
-  @Child private IndirectCallNode call;
-
-  public PerformWithArgumentsInSuperclassPrim() {
-    super(null);
-    call = Truffle.getRuntime().createIndirectCallNode();
-  }
+  @Child private IndirectCallNode call = Truffle.getRuntime().createIndirectCallNode();
 
   @Specialization
   public final Object doSAbstractObject(final Object receiver, final SSymbol selector,

@@ -8,12 +8,12 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.Variable.Local;
 import som.interpreter.InliningVisitor;
 import som.interpreter.InliningVisitor.ScopeElement;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.SOMNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import tools.dym.Tags.LoopNode;
@@ -38,10 +38,8 @@ public abstract class IntToDoInlinedLiteralsNode extends ExprWithTagsNode {
 
   public abstract ExpressionNode getTo();
 
-  public IntToDoInlinedLiteralsNode(final ExpressionNode body,
-      final Local loopIndex, final ExpressionNode originalBody,
-      final SourceSection sourceSection) {
-    super(sourceSection);
+  public IntToDoInlinedLiteralsNode(final ExpressionNode body, final Local loopIndex,
+      final ExpressionNode originalBody) {
     this.body = body;
     this.loopIndex = loopIndex.getSlot();
     this.loopIndexVar = loopIndex;
@@ -109,8 +107,10 @@ public abstract class IntToDoInlinedLiteralsNode extends ExprWithTagsNode {
   @Override
   public void replaceAfterScopeChange(final InliningVisitor inliner) {
     ScopeElement se = inliner.getSplitVar(loopIndexVar);
-    replace(IntToDoInlinedLiteralsNodeGen.create(body, (Local) se.var, bodyActualNode,
-        sourceSection, getFrom(), getTo()));
+    SOMNode node = IntToDoInlinedLiteralsNodeGen.create(body, (Local) se.var, bodyActualNode,
+        getFrom(), getTo());
+    node.initialize(sourceSection);
+    replace(node);
   }
 
   @Override

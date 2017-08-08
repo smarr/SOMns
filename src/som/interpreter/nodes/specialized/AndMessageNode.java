@@ -61,10 +61,10 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
         final ExpressionNode[] argNodes, final SourceSection section,
         final boolean eagerWrapper) {
       if (unwrapIfNecessary(argNodes[1]) instanceof BlockNode) {
-        return fact.createNode(arguments[1], section, argNodes[0], argNodes[1]);
+        return fact.createNode(arguments[1], argNodes[0], argNodes[1]).initialize(section);
       } else {
         assert arguments == null || arguments[1] instanceof Boolean;
-        return boolFact.createNode(section, argNodes[0], argNodes[1]);
+        return boolFact.createNode(argNodes[0], argNodes[1]).initialize(section);
       }
     }
   }
@@ -72,17 +72,10 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
   private final SInvokable      blockMethod;
   @Child private DirectCallNode blockValueSend;
 
-  public AndMessageNode(final SBlock arg, final SourceSection source) {
-    super(false, source);
+  public AndMessageNode(final SBlock arg) {
     blockMethod = arg.getMethod();
     blockValueSend = Truffle.getRuntime().createDirectCallNode(
         blockMethod.getCallTarget());
-  }
-
-  public AndMessageNode(final AndMessageNode copy) {
-    super(false, copy.getSourceSection());
-    blockMethod = copy.blockMethod;
-    blockValueSend = copy.blockValueSend;
   }
 
   protected final boolean isSameBlock(final SBlock argument) {
@@ -112,10 +105,6 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
   @GenerateNodeFactory
   public abstract static class AndBoolMessageNode extends BinaryBasicOperation
       implements OperationNode {
-    public AndBoolMessageNode(final SourceSection source) {
-      super(false, source);
-    }
-
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == OpComparison.class) {

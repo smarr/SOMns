@@ -2,7 +2,6 @@ package som.primitives.threading;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -18,10 +17,6 @@ public final class ThreadPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingName:")
   public abstract static class NamePrim extends UnaryExpressionNode {
-    public NamePrim(final boolean ew, final SourceSection s) {
-      super(ew, s);
-    }
-
     @Specialization
     public final Object doThread(final SomThreadTask thread) {
       String name = thread.getName();
@@ -36,10 +31,6 @@ public final class ThreadPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingName:set:")
   public abstract static class NameSetPrim extends BinaryExpressionNode {
-    public NameSetPrim(final boolean ew, final SourceSection s) {
-      super(ew, s);
-    }
-
     @Specialization
     public final Object doThread(final SomThreadTask thread, final String name) {
       thread.setName(name);
@@ -50,10 +41,6 @@ public final class ThreadPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingCurrent:")
   public abstract static class CurrentPrim extends UnaryExpressionNode {
-    public CurrentPrim(final boolean ew, final SourceSection s) {
-      super(ew, s);
-    }
-
     @Specialization
     public final Object doSClass(final SClass module) {
       Activity activity = TracingActivityThread.currentThread().getActivity();
@@ -68,10 +55,6 @@ public final class ThreadPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingYieldCurrent:")
   public abstract static class YieldPrim extends UnaryExpressionNode {
-    public YieldPrim(final boolean ew, final SourceSection s) {
-      super(ew, s);
-    }
-
     @Specialization
     public final SClass doSClass(final SClass module) {
       Thread.yield();

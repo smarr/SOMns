@@ -49,20 +49,20 @@ public final class MessageSendNode {
         return newNode.wrapInEagerWrapper(selector, arguments);
       }
     } else {
-      return new UninitializedMessageSendNode(selector, arguments, source, vm);
+      return new UninitializedMessageSendNode(selector, arguments, vm).initialize(source);
     }
   }
 
   public static AbstractMessageSendNode adaptSymbol(final SSymbol newSelector,
       final AbstractMessageSendNode node, final VM vm) {
     assert node instanceof UninitializedMessageSendNode;
-    return new UninitializedMessageSendNode(newSelector, node.argumentNodes,
-        node.getSourceSection(), vm);
+    return new UninitializedMessageSendNode(newSelector, node.argumentNodes, vm).initialize(
+        node.sourceSection);
   }
 
-  public static AbstractMessageSendNode createForPerformNodes(
-      final SSymbol selector, final SourceSection source, final VM vm) {
-    return new UninitializedSymbolSendNode(selector, source, vm);
+  public static AbstractMessageSendNode createForPerformNodes(final SourceSection source,
+      final SSymbol selector, final VM vm) {
+    return new UninitializedSymbolSendNode(selector, vm).initialize(source);
   }
 
   public static GenericMessageSendNode createGeneric(final SSymbol selector,
@@ -89,7 +89,12 @@ public final class MessageSendNode {
           UninitializedDispatchNode.createRcvrSend(source, selector, AccessModifier.PUBLIC);
     }
 
-    return new GenericMessageSendNode(selector, argumentNodes, dispatch, source);
+    GenericMessageSendNode result =
+        new GenericMessageSendNode(selector, argumentNodes, dispatch);
+    if (source != null) {
+      result.initialize(source);
+    }
+    return result;
   }
 
   public abstract static class AbstractMessageSendNode extends ExprWithTagsNode
@@ -97,16 +102,8 @@ public final class MessageSendNode {
 
     @Children protected final ExpressionNode[] argumentNodes;
 
-    protected AbstractMessageSendNode(final ExpressionNode[] arguments,
-        final SourceSection source) {
-      super(source);
+    protected AbstractMessageSendNode(final ExpressionNode[] arguments) {
       this.argumentNodes = arguments;
-    }
-
-    protected AbstractMessageSendNode(final SourceSection source) {
-      super(source);
-      // default constructor for instrumentation wrapper nodes
-      this.argumentNodes = null;
     }
 
     @Override
@@ -141,9 +138,8 @@ public final class MessageSendNode {
     protected final VM      vm;
 
     protected AbstractUninitializedMessageSendNode(final SSymbol selector,
-        final ExpressionNode[] arguments,
-        final SourceSection source, final VM vm) {
-      super(arguments, source);
+        final ExpressionNode[] arguments, final VM vm) {
+      super(arguments);
       this.selector = selector;
       this.vm = vm;
     }
@@ -234,16 +230,15 @@ public final class MessageSendNode {
       extends AbstractUninitializedMessageSendNode {
 
     protected UninitializedMessageSendNode(final SSymbol selector,
-        final ExpressionNode[] arguments,
-        final SourceSection source, final VM vm) {
-      super(selector, arguments, source, vm);
+        final ExpressionNode[] arguments, final VM vm) {
+      super(selector, arguments, vm);
     }
 
     /**
      * For wrapper use only.
      */
     protected UninitializedMessageSendNode(final UninitializedMessageSendNode wrappedNode) {
-      super(wrappedNode.selector, null, null, null);
+      super(wrappedNode.selector, null, null);
     }
 
     @Override
@@ -260,9 +255,8 @@ public final class MessageSendNode {
   private static final class UninitializedSymbolSendNode
       extends AbstractUninitializedMessageSendNode {
 
-    protected UninitializedSymbolSendNode(final SSymbol selector,
-        final SourceSection source, final VM vm) {
-      super(selector, new ExpressionNode[0], source, vm);
+    protected UninitializedSymbolSendNode(final SSymbol selector, final VM vm) {
+      super(selector, new ExpressionNode[0], vm);
     }
 
     @Override
@@ -281,10 +275,9 @@ public final class MessageSendNode {
 
     @Child private AbstractDispatchNode dispatchNode;
 
-    private GenericMessageSendNode(final SSymbol selector,
-        final ExpressionNode[] arguments,
-        final AbstractDispatchNode dispatchNode, final SourceSection source) {
-      super(arguments, source);
+    private GenericMessageSendNode(final SSymbol selector, final ExpressionNode[] arguments,
+        final AbstractDispatchNode dispatchNode) {
+      super(arguments);
       this.selector = selector;
       this.dispatchNode = dispatchNode;
     }

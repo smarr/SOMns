@@ -62,7 +62,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
       }
 
       if (forAtomic) {
-        return TxTernaryArrayOpNodeGen.create(eagerWrapper, section, node, null, null, null);
+        return TxTernaryArrayOpNodeGen.create(node, null, null, null).initialize(section);
       } else {
         return node;
       }
@@ -73,10 +73,13 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
 
   @Child protected AbstractMessageSendNode exception;
 
-  protected AtPutPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
+  @Override
+  @SuppressWarnings("unchecked")
+  public AtPutPrim initialize(final SourceSection sourceSection) {
+    super.initialize(sourceSection);
     exception = MessageSendNode.createGeneric(
-        Symbols.symbolFor("signalWith:index:"), null, getSourceSection());
+        Symbols.symbolFor("signalWith:index:"), null, sourceSection);
+    return this;
   }
 
   @Override

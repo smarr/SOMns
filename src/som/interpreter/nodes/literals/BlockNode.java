@@ -3,7 +3,6 @@ package som.interpreter.nodes.literals;
 import java.util.ArrayList;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.AccessModifier;
 import som.compiler.MethodBuilder;
@@ -25,9 +24,7 @@ public class BlockNode extends LiteralNode {
   protected final SClass     blockClass;
   protected final boolean    needsAdjustmentOnScopeChange;
 
-  public BlockNode(final SInvokable blockMethod, final boolean needsAdjustmentOnScopeChange,
-      final SourceSection source) {
-    super(source);
+  public BlockNode(final SInvokable blockMethod, final boolean needsAdjustmentOnScopeChange) {
     this.blockMethod = blockMethod;
     this.needsAdjustmentOnScopeChange = needsAdjustmentOnScopeChange;
     switch (blockMethod.getNumberOfArguments()) {
@@ -102,7 +99,7 @@ public class BlockNode extends LiteralNode {
   }
 
   protected BlockNode createNode(final SInvokable adapted) {
-    return new BlockNode(adapted, needsAdjustmentOnScopeChange, sourceSection);
+    return new BlockNode(adapted, needsAdjustmentOnScopeChange).initialize(sourceSection);
   }
 
   @Override
@@ -113,8 +110,8 @@ public class BlockNode extends LiteralNode {
   public static final class BlockNodeWithContext extends BlockNode {
 
     public BlockNodeWithContext(final SInvokable blockMethod,
-        final boolean needsAdjustmentOnScopeChange, final SourceSection source) {
-      super(blockMethod, needsAdjustmentOnScopeChange, source);
+        final boolean needsAdjustmentOnScopeChange) {
+      super(blockMethod, needsAdjustmentOnScopeChange);
     }
 
     @Override
@@ -124,7 +121,7 @@ public class BlockNode extends LiteralNode {
 
     @Override
     protected BlockNode createNode(final SInvokable adapted) {
-      return new BlockNodeWithContext(adapted, needsAdjustmentOnScopeChange,
+      return new BlockNodeWithContext(adapted, needsAdjustmentOnScopeChange).initialize(
           sourceSection);
     }
   }

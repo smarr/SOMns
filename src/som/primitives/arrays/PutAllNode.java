@@ -5,7 +5,6 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
@@ -26,16 +25,8 @@ import som.vmobjects.SObjectWithClass;
     extraChild = SizeAndLengthPrimFactory.class)
 @NodeChild(value = "length", type = SizeAndLengthPrim.class, executeWith = "receiver")
 public abstract class PutAllNode extends BinaryComplexOperation {
-  @Child protected BlockDispatchNode block;
-
-  public PutAllNode(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source); // TODO: tag properly, it is a loop, and array access
-    block = BlockDispatchNodeGen.create();
-  }
-
-  public PutAllNode(final SourceSection source) {
-    this(false, source);
-  }
+  @Child protected BlockDispatchNode block = BlockDispatchNodeGen.create();
+  // TODO: tag properly, it is a loop, and array access
 
   protected static final boolean valueOfNoOtherSpecialization(final Object value) {
     return !(value instanceof Long) &&

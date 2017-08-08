@@ -52,10 +52,6 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemModuleObject:")
   public abstract static class SystemModuleObjectPrim extends UnaryExpressionNode {
-    public SystemModuleObjectPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Specialization
     public final Object set(final SObjectWithClass system) {
       SystemModule = system;
@@ -79,8 +75,7 @@ public final class SystemPrims {
   public abstract static class LoadPrim extends UnaryExpressionNode {
     private final VM vm;
 
-    protected LoadPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
-      super(eagWrap, source);
+    protected LoadPrim(final VM vm) {
       this.vm = vm;
     }
 
@@ -96,8 +91,7 @@ public final class SystemPrims {
   public abstract static class LoadNextToPrim extends BinaryComplexOperation {
     private final VM vm;
 
-    protected LoadNextToPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
-      super(eagWrap, source);
+    protected LoadNextToPrim(final VM vm) {
       this.vm = vm;
     }
 
@@ -116,8 +110,7 @@ public final class SystemPrims {
   public abstract static class ExitPrim extends UnaryExpressionNode {
     private final VM vm;
 
-    public ExitPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
-      super(eagWrap, source);
+    public ExitPrim(final VM vm) {
       this.vm = vm;
     }
 
@@ -132,10 +125,6 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "printString:")
   public abstract static class PrintStringPrim extends UnaryExpressionNode {
-    public PrintStringPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Specialization
     public final Object doSObject(final String argument) {
       VM.print(argument);
@@ -151,10 +140,6 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "printNewline:")
   public abstract static class PrintInclNewlinePrim extends UnaryExpressionNode {
-    public PrintInclNewlinePrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Specialization
     public final Object doSObject(final String argument) {
       VM.println(argument);
@@ -165,10 +150,6 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "printStackTrace:")
   public abstract static class PrintStackTracePrim extends UnaryExpressionNode {
-    public PrintStackTracePrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Specialization
     public final Object doSObject(final Object receiver) {
       printStackTrace(2, null);
@@ -238,8 +219,7 @@ public final class SystemPrims {
   public abstract static class VMArgumentsPrim extends UnaryExpressionNode {
     private final VM vm;
 
-    public VMArgumentsPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
-      super(eagWrap, source);
+    public VMArgumentsPrim(final VM vm) {
       this.vm = vm;
     }
 
@@ -253,10 +233,6 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemGC:")
   public abstract static class FullGCPrim extends UnaryExpressionNode {
-    public FullGCPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Specialization
     public final Object doSObject(final Object receiver) {
       System.gc();
@@ -267,10 +243,6 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemTime:")
   public abstract static class TimePrim extends UnaryBasicOperation {
-    public TimePrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Specialization
     public final long doSObject(final Object receiver) {
       return System.currentTimeMillis() - startTime;
@@ -297,10 +269,6 @@ public final class SystemPrims {
   @Primitive(primitive = "systemTicks:", selector = "ticks",
       specializer = IsSystemModule.class, noWrapper = true)
   public abstract static class TicksPrim extends UnaryBasicOperation implements OperationNode {
-    public TicksPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Specialization
     public final long doSObject(final Object receiver) {
       return System.nanoTime() / 1000L - startMicroTime;
@@ -322,8 +290,7 @@ public final class SystemPrims {
   public abstract static class ExportAsPrim extends BinaryComplexOperation {
     private final VM vm;
 
-    protected ExportAsPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
-      super(eagWrap, source);
+    protected ExportAsPrim(final VM vm) {
       this.vm = vm;
     }
 
@@ -342,14 +309,9 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemApply:with:")
   public abstract static class ApplyWithPrim extends BinaryComplexOperation {
-    protected ApplyWithPrim(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     private final ValueProfile storageType = ValueProfile.createClassProfile();
 
-    @Child protected SizeAndLengthPrim size    =
-        SizeAndLengthPrimFactory.create(false, null, null);
+    @Child protected SizeAndLengthPrim size    = SizeAndLengthPrimFactory.create(null);
     @Child protected ToSomConversion   convert = ToSomConversionNodeGen.create(null);
 
     @Specialization

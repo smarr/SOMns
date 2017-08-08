@@ -4,7 +4,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.ValueProfile;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
@@ -23,17 +22,9 @@ import som.vmobjects.SBlock;
 public abstract class DoPrim extends BinaryComplexOperation {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
-  @Child private BlockDispatchNode block;
+  @Child private BlockDispatchNode block = BlockDispatchNodeGen.create();
 
-  public DoPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-    // TODO: tag properly, it is a loop and an access
-    block = BlockDispatchNodeGen.create();
-  }
-
-  public DoPrim(final SourceSection source) {
-    this(false, source);
-  }
+  // TODO: tag properly, it is a loop and an access
 
   private void execBlock(final SBlock block, final Object arg) {
     this.block.executeDispatch(new Object[] {block, arg});

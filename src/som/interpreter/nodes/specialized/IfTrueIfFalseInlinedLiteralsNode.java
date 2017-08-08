@@ -1,14 +1,13 @@
 package som.interpreter.nodes.specialized;
 
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.ExprWithTagsNode;
-
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.profiles.ConditionProfile;
-import com.oracle.truffle.api.source.SourceSection;
+
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.ExprWithTagsNode;
 
 
 /**
@@ -30,14 +29,9 @@ public final class IfTrueIfFalseInlinedLiteralsNode extends ExprWithTagsNode {
   @SuppressWarnings("unused") private final ExpressionNode trueActualNode;
   @SuppressWarnings("unused") private final ExpressionNode falseActualNode;
 
-  public IfTrueIfFalseInlinedLiteralsNode(
-      final ExpressionNode conditionNode,
-      final ExpressionNode inlinedTrueNode,
-      final ExpressionNode inlinedFalseNode,
-      final ExpressionNode originalTrueNode,
-      final ExpressionNode originalFalseNode,
-      final SourceSection sourceSection) {
-    super(sourceSection);
+  public IfTrueIfFalseInlinedLiteralsNode(final ExpressionNode conditionNode,
+      final ExpressionNode inlinedTrueNode, final ExpressionNode inlinedFalseNode,
+      final ExpressionNode originalTrueNode, final ExpressionNode originalFalseNode) {
     this.conditionNode = conditionNode;
     this.trueNode = inlinedTrueNode;
     this.falseNode = inlinedFalseNode;

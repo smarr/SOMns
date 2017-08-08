@@ -24,6 +24,7 @@ package som.interpreter.nodes;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
@@ -37,11 +38,14 @@ import som.interpreter.Types;
 @TypeSystemReference(Types.class)
 public abstract class SOMNode extends Node {
 
-  protected final SourceSection sourceSection;
+  @CompilationFinal protected SourceSection sourceSection;
 
-  public SOMNode(final SourceSection sourceSection) {
-    super();
+  @SuppressWarnings("unchecked")
+  public <T extends SOMNode> T initialize(final SourceSection sourceSection) {
+    assert sourceSection != null;
+    assert this.sourceSection == null : "sourceSection should only be set once";
     this.sourceSection = sourceSection;
+    return (T) this;
   }
 
   @Override

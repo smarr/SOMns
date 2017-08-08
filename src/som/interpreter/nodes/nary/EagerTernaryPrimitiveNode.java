@@ -4,7 +4,6 @@ import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.TruffleCompiler;
@@ -25,15 +24,9 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitive {
 
   private final SSymbol selector;
 
-  public EagerTernaryPrimitiveNode(
-      final SourceSection source,
-      final SSymbol selector,
-      final ExpressionNode receiver,
-      final ExpressionNode argument1,
-      final ExpressionNode argument2,
+  public EagerTernaryPrimitiveNode(final SSymbol selector, final ExpressionNode receiver,
+      final ExpressionNode argument1, final ExpressionNode argument2,
       final TernaryExpressionNode primitive) {
-    super(source);
-    assert source == primitive.getSourceSection();
     this.receiver = insert(receiver);
     this.argument1 = insert(argument1);
     this.argument2 = insert(argument2);

@@ -25,7 +25,6 @@
 package som.compiler;
 
 import static som.interpreter.SNodeFactory.createCatchNonLocalReturn;
-import static som.interpreter.SNodeFactory.createNonLocalReturn;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -643,11 +642,10 @@ public final class MethodBuilder {
     return null;
   }
 
-  public ReturnNonLocalNode getNonLocalReturn(final ExpressionNode expr,
-      final SourceSection source) {
+  public ReturnNonLocalNode getNonLocalReturn(final ExpressionNode expr) {
     makeCatchNonLocalReturn();
-    return createNonLocalReturn(expr, getFrameOnStackMarkerVar(),
-        getOuterSelfContextLevel(), source);
+    return new ReturnNonLocalNode(expr, getFrameOnStackMarkerVar(),
+        getOuterSelfContextLevel());
   }
 
   public MethodBuilder getOuterBuilder() {
@@ -684,7 +682,7 @@ public final class MethodBuilder {
       return getSelfRead(source);
     } else {
       return OuterObjectReadNodeGen.create(ctxLevel, lexicalSelfMixinId,
-          enclosing.getMixinId(), source, getSelfRead(source));
+          enclosing.getMixinId(), getSelfRead(source)).initialize(source);
     }
   }
 

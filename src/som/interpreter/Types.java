@@ -142,7 +142,7 @@ public class Types {
   private static SizeAndLengthPrim sizePrim;
 
   static {
-    sizePrim = SizeAndLengthPrimFactory.create(false, null, null);
+    sizePrim = SizeAndLengthPrimFactory.create(null);
     new DummyParent(sizePrim);
   }
 

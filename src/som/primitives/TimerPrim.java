@@ -8,7 +8,6 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.actors.ResolvePromiseNode;
@@ -26,13 +25,7 @@ public abstract class TimerPrim extends BinaryComplexOperation {
 
   private final ForkJoinPool actorPool;
 
-  protected TimerPrim(final BinaryComplexOperation node) {
-    super(node);
-    this.actorPool = null;
-  }
-
-  protected TimerPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
-    super(eagWrap, source);
+  protected TimerPrim(final VM vm) {
     this.actorPool = vm.getActorPool();
   }
 

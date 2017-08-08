@@ -1080,7 +1080,7 @@ public class Parser {
     accept(Period, StatementSeparatorTag.class);
 
     if (builder.isBlockMethod()) {
-      return builder.getNonLocalReturn(exp, getSource(coord));
+      return builder.getNonLocalReturn(exp).initialize(getSource(coord));
     } else {
       return exp;
     }
@@ -1202,17 +1202,17 @@ public class Parser {
         // (cf. Newspeak spec on reserved words)
         if (acceptIdentifier("true", LiteralTag.class)) {
           comments();
-          return new TrueLiteralNode(getSource(coord));
+          return new TrueLiteralNode().initialize(getSource(coord));
         }
 
         if (acceptIdentifier("false", LiteralTag.class)) {
           comments();
-          return new FalseLiteralNode(getSource(coord));
+          return new FalseLiteralNode().initialize(getSource(coord));
         }
 
         if (acceptIdentifier("nil", LiteralTag.class)) {
           comments();
-          return new NilLiteralNode(getSource(coord));
+          return new NilLiteralNode().initialize(getSource(coord));
         }
         if (acceptIdentifier("objL", LiteralTag.class)) {
           return literalObject(builder);
@@ -1240,13 +1240,14 @@ public class Parser {
             AccessModifier.BLOCK_METHOD, lastMethodsSourceSection);
         builder.addEmbeddedBlockMethod(blockMethod);
 
+        ExpressionNode result;
         if (bgenc.requiresContext() || VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-          return new BlockNodeWithContext(blockMethod,
-              bgenc.accessesLocalOfOuterScope(), lastMethodsSourceSection);
+          result = new BlockNodeWithContext(blockMethod, bgenc.accessesLocalOfOuterScope());
         } else {
-          return new BlockNode(blockMethod,
-              bgenc.accessesLocalOfOuterScope(), lastMethodsSourceSection);
+          result = new BlockNode(blockMethod, bgenc.accessesLocalOfOuterScope());
         }
+        result.initialize(lastMethodsSourceSection);
+        return result;
       }
       case LCurly: {
         return literalArray(builder);
@@ -1346,8 +1347,11 @@ public class Parser {
     arguments.add(receiver);
     arguments.add(operand);
     SourceSection source = getSource(coord);
-    ExpressionNode node = inlineControlStructureIfPossible(builder, arguments,
-        msg.getString(), msg.getNumberOfSignatureArguments(), source);
+    ExpressionNode node = inlineControlStructureIfPossible(builder, arguments, msg.getString(),
+        msg.getNumberOfSignatureArguments(), source);
+    if (node != null) {
+      node.initialize(source);
+    }
     return node;
   }
 
@@ -1423,9 +1427,11 @@ public class Parser {
     SSymbol msg = symbolFor(msgStr);
 
     if (!eventualSend) {
+      SourceSection source = getSource(coord);
       ExpressionNode node = inlineControlStructureIfPossible(builder, arguments,
-          msgStr, msg.getNumberOfSignatureArguments(), getSource(coord));
+          msgStr, msg.getNumberOfSignatureArguments(), source);
       if (node != null) {
+        node.initialize(source);
         return node;
       }
     }
@@ -1445,8 +1451,7 @@ public class Parser {
 
   protected ExpressionNode inlineControlStructureIfPossible(
       final MethodBuilder builder, final List<ExpressionNode> arguments,
-      final String msgStr, final int numberOfArguments,
-      final SourceSection source) {
+      final String msgStr, final int numberOfArguments, final SourceSection source) {
     if (parsingSlotDefs > 0) {
       return null;
     }
@@ -1458,13 +1463,13 @@ public class Parser {
           condition.markAsControlFlowCondition();
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           return new IfInlinedLiteralNode(condition, true, inlinedBody,
-              arguments.get(1), source);
+              arguments.get(1));
         } else if ("ifFalse:".equals(msgStr)) {
           ExpressionNode condition = arguments.get(0);
           condition.markAsControlFlowCondition();
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           return new IfInlinedLiteralNode(condition, false, inlinedBody,
-              arguments.get(1), source);
+              arguments.get(1));
         } else if ("whileTrue:".equals(msgStr)) {
           if (!(arguments.get(0) instanceof LiteralNode)
               || !(arguments.get(1) instanceof LiteralNode)) {
@@ -1475,7 +1480,7 @@ public class Parser {
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           inlinedBody.markAsLoopBody();
           return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
-              true, arguments.get(0), arguments.get(1), source);
+              true, arguments.get(0), arguments.get(1));
         } else if ("whileFalse:".equals(msgStr)) {
           if (!(arguments.get(0) instanceof LiteralNode)
               || !(arguments.get(1) instanceof LiteralNode)) {
@@ -1486,20 +1491,18 @@ public class Parser {
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           inlinedBody.markAsLoopBody();
           return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
-              false, arguments.get(0), arguments.get(1), source);
+              false, arguments.get(0), arguments.get(1));
         } else if ("or:".equals(msgStr) || "||".equals(msgStr)) {
           ExpressionNode inlinedArg = ((LiteralNode) arguments.get(1)).inline(builder);
-          return new OrInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1),
-              source);
+          return new OrInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1));
         } else if ("and:".equals(msgStr) || "&&".equals(msgStr)) {
           ExpressionNode inlinedArg = ((LiteralNode) arguments.get(1)).inline(builder);
-          return new AndInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1),
-              source);
+          return new AndInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1));
         } else if (!VmSettings.DYNAMIC_METRICS && "timesRepeat:".equals(msgStr)) {
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           inlinedBody.markAsLoopBody();
-          return IntTimesRepeatLiteralNodeGen.create(inlinedBody,
-              arguments.get(1), source, arguments.get(0));
+          return IntTimesRepeatLiteralNodeGen.create(inlinedBody, arguments.get(1),
+              arguments.get(0));
         }
       }
     } else if (numberOfArguments == 3) {
@@ -1511,8 +1514,7 @@ public class Parser {
         ExpressionNode inlinedTrueNode = ((LiteralNode) arguments.get(1)).inline(builder);
         ExpressionNode inlinedFalseNode = blockOrVal.inline(builder);
         return new IfTrueIfFalseInlinedLiteralsNode(condition,
-            inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2),
-            source);
+            inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2));
       } else if (!VmSettings.DYNAMIC_METRICS && "to:do:".equals(msgStr) &&
           arguments.get(2) instanceof LiteralNode) {
         LiteralNode blockOrVal = (LiteralNode) arguments.get(2);
@@ -1521,8 +1523,8 @@ public class Parser {
           inlinedBody.markAsLoopBody();
 
           Local loopIdx = getLoopIdx(builder, blockOrVal, source);
-          return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx,
-              arguments.get(2), source, arguments.get(0), arguments.get(1));
+          return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx, arguments.get(2),
+              arguments.get(0), arguments.get(1));
         } catch (MethodDefinitionError e) {
           throw new RuntimeException(e);
         }
@@ -1535,7 +1537,7 @@ public class Parser {
 
           Local loopIdx = getLoopIdx(builder, blockOrVal, source);
           return IntDownToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx,
-              arguments.get(2), source, arguments.get(0), arguments.get(1));
+              arguments.get(2), arguments.get(0), arguments.get(1));
         } catch (MethodDefinitionError e) {
           throw new RuntimeException(e);
         }
@@ -1619,9 +1621,9 @@ public class Parser {
     try {
       Number n = parser.getInteger();
       if (n instanceof Long) {
-        return new IntegerLiteralNode((Long) n, source);
+        return new IntegerLiteralNode((Long) n).initialize(source);
       } else {
-        return new BigIntegerLiteralNode((BigInteger) n, source);
+        return new BigIntegerLiteralNode((BigInteger) n).initialize(source);
       }
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse integer. Expected a number but " +
@@ -1632,7 +1634,7 @@ public class Parser {
   private LiteralNode literalDouble(final NumeralParser parser,
       final SourceSection source) throws ParseError {
     try {
-      return new DoubleLiteralNode(parser.getDouble(), source);
+      return new DoubleLiteralNode(parser.getDouble()).initialize(source);
     } catch (NumberFormatException e) {
       throw new ParseError("Could not parse double. Expected a number but " +
           "got '" + text + "'", NONE, this);
@@ -1651,21 +1653,21 @@ public class Parser {
       symb = selector();
     }
 
-    return new SymbolLiteralNode(symb, getSource(coord));
+    return new SymbolLiteralNode(symb).initialize(getSource(coord));
   }
 
   private LiteralNode literalString() throws ParseError {
     SourceCoordinate coord = getCoordinate();
     String s = string();
 
-    return new StringLiteralNode(s, getSource(coord));
+    return new StringLiteralNode(s).initialize(getSource(coord));
   }
 
   private LiteralNode literalChar() throws ParseError {
     SourceCoordinate coord = getCoordinate();
     String s = character();
 
-    return new StringLiteralNode(s, getSource(coord));
+    return new StringLiteralNode(s).initialize(getSource(coord));
   }
 
   private LiteralNode literalArray(final MethodBuilder builder) throws ProgramDefinitionError {
@@ -1748,7 +1750,7 @@ public class Parser {
     ExpressionNode newMessage = createMessageSend(symbolFor("new"),
         new ExpressionNode[] {builder.getSelfRead(source)},
         false, source, source, language);
-    return new ObjectLiteralNode(mixinDef, outerRead, newMessage, source);
+    return new ObjectLiteralNode(mixinDef, outerRead, newMessage).initialize(source);
   }
 
   private SSymbol selector() throws ParseError {

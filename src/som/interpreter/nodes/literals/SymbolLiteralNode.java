@@ -1,17 +1,15 @@
 package som.interpreter.nodes.literals;
 
-import som.vmobjects.SSymbol;
-
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
+
+import som.vmobjects.SSymbol;
 
 
 public final class SymbolLiteralNode extends LiteralNode {
 
   private final SSymbol value;
 
-  public SymbolLiteralNode(final SSymbol value, final SourceSection source) {
-    super(source);
+  public SymbolLiteralNode(final SSymbol value) {
     this.value = value;
   }
 

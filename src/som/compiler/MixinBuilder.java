@@ -518,9 +518,9 @@ public final class MixinBuilder {
   private SInvokable assemblePrimaryFactoryMethod() {
     // first create new Object
 
-    ExpressionNode newObject = NewObjectPrimNodeGen.create(
-        primaryFactorySource, mixinId,
+    ExpressionNode newObject = NewObjectPrimNodeGen.create(mixinId,
         primaryFactoryMethod.getSelfRead(primaryFactorySource));
+    newObject.initialize(primaryFactorySource);
 
     List<ExpressionNode> args = createPrimaryFactoryArgumentRead(newObject);
 

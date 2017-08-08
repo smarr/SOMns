@@ -47,7 +47,7 @@ public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
       SBlock argBlock = (SBlock) arguments[1];
       return new WhileWithStaticBlocksNode(
           (BlockNode) unwrapIfNecessary(argNodes[0]), argBlockNode,
-          (SBlock) arguments[0], argBlock, whileTrueOrFalse, section);
+          (SBlock) arguments[0], argBlock, whileTrueOrFalse).initialize(section);
     }
   }
 
@@ -68,10 +68,9 @@ public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
   @Child protected BlockNode receiver;
   @Child protected BlockNode argument;
 
-  private WhileWithStaticBlocksNode(final BlockNode receiver,
-      final BlockNode argument, final SBlock rcvr, final SBlock arg,
-      final boolean predicateBool, final SourceSection source) {
-    super(rcvr, arg, predicateBool, source);
+  private WhileWithStaticBlocksNode(final BlockNode receiver, final BlockNode argument,
+      final SBlock rcvr, final SBlock arg, final boolean predicateBool) {
+    super(rcvr, arg, predicateBool);
     this.receiver = receiver;
     this.argument = argument;
   }
@@ -96,7 +95,7 @@ public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
     public WhileWithStaticBlocksNode createNode(final Object... args) {
       return new WhileWithStaticBlocksNode((BlockNode) args[0],
           (BlockNode) args[1], (SBlock) args[2], (SBlock) args[3],
-          (Boolean) args[4], (SourceSection) args[5]);
+          (Boolean) args[4]).initialize((SourceSection) args[5]);
     }
 
     @Override

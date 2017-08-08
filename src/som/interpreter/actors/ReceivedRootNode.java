@@ -1,5 +1,7 @@
 package som.interpreter.actors;
 
+import java.util.concurrent.ForkJoinPool;
+
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -47,10 +49,9 @@ public abstract class ReceivedRootNode extends RootNode {
     if (resolve == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       if (resolver == null) {
-        this.resolve = insert(new NullResolver(sourceSection));
+        this.resolve = insert(new NullResolver());
       } else {
-        this.resolve = insert(ResolvePromiseNodeFactory.create(false, sourceSection, vm, null,
-            null, null, null));
+        this.resolve = insert(ResolvePromiseNodeFactory.create(vm, null, null, null, null));
       }
     }
 
@@ -65,10 +66,9 @@ public abstract class ReceivedRootNode extends RootNode {
     if (error == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       if (resolver == null) {
-        this.error = insert(new NullResolver(getSourceSection()));
+        this.error = insert(new NullResolver());
       } else {
-        this.error = insert(
-            ErrorPromiseNodeFactory.create(false, sourceSection, vm, null, null, null, null));
+        this.error = insert(ErrorPromiseNodeFactory.create(vm, null, null, null, null));
       }
     }
 
@@ -80,8 +80,8 @@ public abstract class ReceivedRootNode extends RootNode {
    * Promise resolver for the case that the actual promise has been optimized out.
    */
   public final class NullResolver extends AbstractPromiseResolutionNode {
-    public NullResolver(final SourceSection source) {
-      super(false, source, null);
+    public NullResolver() {
+      super((ForkJoinPool) null);
     }
 
     @Override

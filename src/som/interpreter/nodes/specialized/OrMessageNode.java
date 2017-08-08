@@ -5,7 +5,6 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.nodes.OperationNode;
@@ -37,17 +36,10 @@ public abstract class OrMessageNode extends BinaryComplexOperation {
   private final SInvokable      blockMethod;
   @Child private DirectCallNode blockValueSend;
 
-  public OrMessageNode(final SBlock arg, final SourceSection source) {
-    super(false, source);
+  public OrMessageNode(final SBlock arg) {
     blockMethod = arg.getMethod();
     blockValueSend = Truffle.getRuntime().createDirectCallNode(
         blockMethod.getCallTarget());
-  }
-
-  public OrMessageNode(final OrMessageNode copy) {
-    super(false, copy.getSourceSection());
-    blockMethod = copy.blockMethod;
-    blockValueSend = copy.blockValueSend;
   }
 
   @Override
@@ -77,10 +69,6 @@ public abstract class OrMessageNode extends BinaryComplexOperation {
   @GenerateNodeFactory
   public abstract static class OrBoolMessageNode extends BinaryBasicOperation
       implements OperationNode {
-    public OrBoolMessageNode(final SourceSection source) {
-      super(false, source);
-    }
-
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == OpComparison.class) {

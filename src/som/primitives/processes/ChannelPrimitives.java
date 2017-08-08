@@ -188,10 +188,6 @@ public abstract class ChannelPrimitives {
   @Primitive(primitive = "procOut:")
   @GenerateNodeFactory
   public abstract static class OutPrim extends UnaryExpressionNode {
-    public OutPrim(final boolean eagerlyWrapped, final SourceSection source) {
-      super(eagerlyWrapped, source);
-    }
-
     @Specialization
     public static final SChannelOutput getOut(final SChannel channel) {
       return channel.out;
@@ -207,10 +203,19 @@ public abstract class ChannelPrimitives {
     /** Breakpoint info for triggering suspension after write. */
     @Child protected AbstractBreakpointNode afterWrite;
 
-    public ReadPrim(final boolean eagerlyWrapped, final SourceSection source, final VM vm) {
-      super(eagerlyWrapped, source);
-      haltNode = SuspendExecutionNodeGen.create(false, sourceSection, null);
+    private final VM vm;
+
+    public ReadPrim(final VM vm) {
+      this.vm = vm;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public final ReadPrim initialize(final SourceSection source) {
+      super.initialize(source);
+      haltNode = SuspendExecutionNodeGen.create(0, null).initialize(source);
       afterWrite = insert(Breakpoints.create(source, BreakpointType.CHANNEL_AFTER_SEND, vm));
+      return this;
     }
 
     @Specialization
@@ -240,7 +245,7 @@ public abstract class ChannelPrimitives {
   @Primitive(primitive = "procWrite:val:", selector = "write:", requiresContext = true)
   @GenerateNodeFactory
   public abstract static class WritePrim extends BinaryComplexOperation {
-    @Child protected IsValue isVal;
+    @Child protected IsValue isVal = IsValue.createSubNode();
 
     /** Halt execution when triggered by breakpoint on write end. */
     @Child protected UnaryExpressionNode haltNode;
@@ -248,11 +253,19 @@ public abstract class ChannelPrimitives {
     /** Breakpoint info for triggering suspension after read. */
     @Child protected AbstractBreakpointNode afterRead;
 
-    public WritePrim(final boolean eagerlyWrapped, final SourceSection source, final VM vm) {
-      super(eagerlyWrapped, source);
-      isVal = IsValue.createSubNode();
-      haltNode = SuspendExecutionNodeGen.create(false, sourceSection, null);
+    private final VM vm;
+
+    public WritePrim(final VM vm) {
+      this.vm = vm;
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public final WritePrim initialize(final SourceSection source) {
+      super.initialize(source);
+      haltNode = SuspendExecutionNodeGen.create(0, null).initialize(source);
       afterRead = insert(Breakpoints.create(source, BreakpointType.CHANNEL_AFTER_RCV, vm));
+      return this;
     }
 
     @Specialization
@@ -286,10 +299,6 @@ public abstract class ChannelPrimitives {
   @Primitive(primitive = "procIn:")
   @GenerateNodeFactory
   public abstract static class InPrim extends UnaryExpressionNode {
-    public InPrim(final boolean eagerlyWrapped, final SourceSection source) {
-      super(eagerlyWrapped, source);
-    }
-
     @Specialization
     public static final SChannelInput getInt(final SChannel channel) {
       return channel.in;
@@ -299,10 +308,6 @@ public abstract class ChannelPrimitives {
   @Primitive(primitive = "procChannelNew:")
   @GenerateNodeFactory
   public abstract static class ChannelNewPrim extends UnaryExpressionNode {
-    public ChannelNewPrim(final boolean eagerlyWrapped, final SourceSection source) {
-      super(eagerlyWrapped, source);
-    }
-
     @Specialization
     public final SChannel newChannel(final Object module) {
       SChannel result = SChannel.create();
@@ -318,10 +323,6 @@ public abstract class ChannelPrimitives {
   @Primitive(primitive = "procClassChannel:in:out:")
   @GenerateNodeFactory
   public abstract static class SetChannelClasses extends TernaryExpressionNode {
-    public SetChannelClasses(final boolean eagerlyWrapped, final SourceSection source) {
-      super(eagerlyWrapped, source);
-    }
-
     @Specialization
     public static final Object set(final SClass channel, final SClass in, final SClass out) {
       Channel = channel;
@@ -337,10 +338,6 @@ public abstract class ChannelPrimitives {
   @Primitive(primitive = "procModule:")
   @GenerateNodeFactory
   public abstract static class SetChannelModule extends UnaryExpressionNode {
-    public SetChannelModule(final boolean eagerlyWrapped, final SourceSection source) {
-      super(eagerlyWrapped, source);
-    }
-
     @Specialization
     public static final SImmutableObject setModule(final SImmutableObject module) {
       ProcessesModule = module;
