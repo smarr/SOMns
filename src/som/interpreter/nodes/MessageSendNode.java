@@ -62,7 +62,13 @@ public final class MessageSendNode {
 
   public static AbstractMessageSendNode createForPerformNodes(final SourceSection source,
       final SSymbol selector, final VM vm) {
-    return new UninitializedSymbolSendNode(selector, vm).initialize(source);
+    AbstractMessageSendNode result = new UninitializedSymbolSendNode(selector, vm);
+
+    // This is currently needed for interop, don't have source section there
+    if (source != null) {
+      result.initialize(source);
+    }
+    return result;
   }
 
   public static GenericMessageSendNode createGeneric(final SSymbol selector,
