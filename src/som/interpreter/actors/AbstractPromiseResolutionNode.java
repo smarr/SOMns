@@ -2,6 +2,7 @@ package som.interpreter.actors;
 
 import java.util.concurrent.ForkJoinPool;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
@@ -12,24 +13,31 @@ import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.primitives.WithContext;
 import som.vm.VmSettings;
 import tools.concurrency.ActorExecutionTrace;
 
 
 @Instrumentable(factory = AbstractPromiseResolutionNodeWrapper.class)
-public abstract class AbstractPromiseResolutionNode extends QuaternaryExpressionNode {
-  private final ForkJoinPool actorPool;
+public abstract class AbstractPromiseResolutionNode extends QuaternaryExpressionNode
+    implements WithContext<AbstractPromiseResolutionNode> {
+  @CompilationFinal private ForkJoinPool actorPool;
 
   @Child protected WrapReferenceNode   wrapper = WrapReferenceNodeGen.create();
   @Child protected UnaryExpressionNode haltNode;
 
-  protected AbstractPromiseResolutionNode(final ForkJoinPool actorPool) {
-    this.actorPool = actorPool;
+  protected AbstractPromiseResolutionNode() {
     haltNode = insert(SuspendExecutionNodeGen.create(2, null));
   }
 
   protected AbstractPromiseResolutionNode(final AbstractPromiseResolutionNode node) {
-    this(node.actorPool);
+    this();
+  }
+
+  @Override
+  public AbstractPromiseResolutionNode initialize(final VM vm) {
+    actorPool = vm.getActorPool();
+    return this;
   }
 
   @Override

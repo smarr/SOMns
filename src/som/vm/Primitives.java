@@ -53,6 +53,7 @@ import som.primitives.StringPrimsFactory;
 import som.primitives.SystemPrimsFactory;
 import som.primitives.TimerPrimFactory;
 import som.primitives.UnequalsPrimFactory;
+import som.primitives.WithContext;
 import som.primitives.actors.ActorClassesFactory;
 import som.primitives.actors.CreateActorPrimFactory;
 import som.primitives.actors.PromisePrimsFactory;
@@ -136,7 +137,8 @@ public class Primitives {
     protected final NodeFactory<T>                      fact;
     private final NodeFactory<? extends ExpressionNode> extraChildFactory;
 
-    private final int extraArity;
+    private final int     extraArity;
+    private final boolean requiresContext;
 
     @SuppressWarnings("unchecked")
     public Specializer(final som.primitives.Primitive prim, final NodeFactory<T> fact,
@@ -144,6 +146,8 @@ public class Primitives {
       this.prim = prim;
       this.fact = fact;
       this.vm = vm;
+
+      this.requiresContext = WithContext.class.isAssignableFrom(fact.getNodeClass());
 
       if (prim.extraChild() == NoChild.class) {
         extraChildFactory = null;
@@ -192,8 +196,7 @@ public class Primitives {
     private int numberOfNodeConstructorArguments(final ExpressionNode[] argNodes) {
       return argNodes.length +
           (extraChildFactory != null ? 1 : 0) +
-          (prim.requiresArguments() ? 1 : 0) +
-          (prim.requiresContext() ? 1 : 0);
+          (prim.requiresArguments() ? 1 : 0);
     }
 
     public T create(final Object[] arguments,
@@ -204,11 +207,6 @@ public class Primitives {
 
       Object[] ctorArgs = new Object[numArgs];
       int offset = 0;
-
-      if (prim.requiresContext()) {
-        ctorArgs[offset] = vm;
-        offset += 1;
-      }
 
       if (prim.requiresArguments()) {
         assert arguments != null;
@@ -228,6 +226,9 @@ public class Primitives {
 
       T node = fact.createNode(ctorArgs);
       ((EagerlySpecializableNode) node).initialize(section, eagerWrapper);
+      if (requiresContext) {
+        ((WithContext<?>) node).initialize(vm);
+      }
       return node;
     }
   }
@@ -323,6 +324,7 @@ public class Primitives {
     }
   }
 
+  @SuppressWarnings({"unchecked", "rawtypes"})
   private static List<NodeFactory<? extends ExpressionNode>> getFactories() {
     List<NodeFactory<? extends ExpressionNode>> allFactories = new ArrayList<>();
     allFactories.addAll(ActorClassesFactory.getFactories());
@@ -337,12 +339,12 @@ public class Primitives {
     allFactories.addAll(MirrorPrimsFactory.getFactories());
     allFactories.addAll(ObjectPrimsFactory.getFactories());
     allFactories.addAll(ObjectSystemPrimsFactory.getFactories());
-    allFactories.addAll(PromisePrimsFactory.getFactories());
+    allFactories.addAll((List) PromisePrimsFactory.getFactories());
     allFactories.addAll(StringPrimsFactory.getFactories());
     allFactories.addAll(SystemPrimsFactory.getFactories());
     allFactories.addAll(WhilePrimitiveNodeFactory.getFactories());
 
-    allFactories.addAll(ActivitySpawnFactory.getFactories());
+    allFactories.addAll((List) ActivitySpawnFactory.getFactories());
     allFactories.addAll(ThreadingModuleFactory.getFactories());
     allFactories.addAll(ConditionPrimitivesFactory.getFactories());
     allFactories.addAll(DelayPrimitivesFactory.getFactories());

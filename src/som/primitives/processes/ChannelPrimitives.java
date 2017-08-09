@@ -9,16 +9,16 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.SuspendExecutionNodeGen;
-import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySystemOperation;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.interpreter.processes.SChannel;
 import som.interpreter.processes.SChannel.SChannelInput;
@@ -194,27 +194,21 @@ public abstract class ChannelPrimitives {
     }
   }
 
-  @Primitive(primitive = "procRead:", selector = "read", requiresContext = true)
+  @Primitive(primitive = "procRead:", selector = "read")
   @GenerateNodeFactory
-  public abstract static class ReadPrim extends UnaryExpressionNode {
+  public abstract static class ReadPrim extends UnarySystemOperation {
     /** Halt execution when triggered by breakpoint on write end. */
     @Child protected UnaryExpressionNode haltNode;
 
     /** Breakpoint info for triggering suspension after write. */
     @Child protected AbstractBreakpointNode afterWrite;
 
-    private final VM vm;
-
-    public ReadPrim(final VM vm) {
-      this.vm = vm;
-    }
-
     @Override
-    @SuppressWarnings("unchecked")
-    public final ReadPrim initialize(final SourceSection source) {
-      super.initialize(source);
-      haltNode = SuspendExecutionNodeGen.create(0, null).initialize(source);
-      afterWrite = insert(Breakpoints.create(source, BreakpointType.CHANNEL_AFTER_SEND, vm));
+    public final ReadPrim initialize(final VM vm) {
+      super.initialize(vm);
+      haltNode = SuspendExecutionNodeGen.create(0, null).initialize(sourceSection);
+      afterWrite = insert(
+          Breakpoints.create(sourceSection, BreakpointType.CHANNEL_AFTER_SEND, vm));
       return this;
     }
 
@@ -242,9 +236,9 @@ public abstract class ChannelPrimitives {
     }
   }
 
-  @Primitive(primitive = "procWrite:val:", selector = "write:", requiresContext = true)
+  @Primitive(primitive = "procWrite:val:", selector = "write:")
   @GenerateNodeFactory
-  public abstract static class WritePrim extends BinaryComplexOperation {
+  public abstract static class WritePrim extends BinarySystemOperation {
     @Child protected IsValue isVal = IsValue.createSubNode();
 
     /** Halt execution when triggered by breakpoint on write end. */
@@ -253,18 +247,12 @@ public abstract class ChannelPrimitives {
     /** Breakpoint info for triggering suspension after read. */
     @Child protected AbstractBreakpointNode afterRead;
 
-    private final VM vm;
-
-    public WritePrim(final VM vm) {
-      this.vm = vm;
-    }
-
     @Override
-    @SuppressWarnings("unchecked")
-    public final WritePrim initialize(final SourceSection source) {
-      super.initialize(source);
-      haltNode = SuspendExecutionNodeGen.create(0, null).initialize(source);
-      afterRead = insert(Breakpoints.create(source, BreakpointType.CHANNEL_AFTER_RCV, vm));
+    public final WritePrim initialize(final VM vm) {
+      super.initialize(vm);
+      haltNode = SuspendExecutionNodeGen.create(0, null).initialize(sourceSection);
+      afterRead = insert(
+          Breakpoints.create(sourceSection, BreakpointType.CHANNEL_AFTER_RCV, vm));
       return this;
     }
 

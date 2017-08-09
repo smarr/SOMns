@@ -15,21 +15,23 @@ import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.actors.WrapReferenceNode;
 import som.interpreter.actors.WrapReferenceNodeGen;
-import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 
 
 @GenerateNodeFactory
-@Primitive(primitive = "actorResolveProm:after:", requiresContext = true)
-public abstract class TimerPrim extends BinaryComplexOperation {
+@Primitive(primitive = "actorResolveProm:after:")
+public abstract class TimerPrim extends BinarySystemOperation {
   @CompilationFinal private static Timer timer;
-
-  private final ForkJoinPool actorPool;
-
-  protected TimerPrim(final VM vm) {
-    this.actorPool = vm.getActorPool();
-  }
+  @CompilationFinal private ForkJoinPool actorPool;
 
   @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
+
+  @Override
+  public final TimerPrim initialize(final VM vm) {
+    super.initialize(vm);
+    this.actorPool = vm.getActorPool();
+    return this;
+  }
 
   @Specialization
   @TruffleBoundary

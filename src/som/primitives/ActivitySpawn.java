@@ -2,6 +2,7 @@ package som.primitives;
 
 import java.util.concurrent.ForkJoinPool;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -12,8 +13,8 @@ import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
-import som.interpreter.nodes.nary.BinaryComplexOperation;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
+import som.interpreter.nodes.nary.TernaryExpressionNode.TernarySystemOperation;
 import som.primitives.ObjectPrims.IsValue;
 import som.primitives.arrays.ToArgumentsArrayNode;
 import som.primitives.arrays.ToArgumentsArrayNodeFactory;
@@ -90,31 +91,25 @@ public abstract class ActivitySpawn {
 
   @GenerateNodeFactory
   @ImportStatic({ThreadingModule.class, ChannelPrimitives.class, ActivitySpawn.class})
-  @Primitive(primitive = "threading:threadSpawn:", requiresContext = true)
-  @Primitive(primitive = "threading:taskSpawn:", requiresContext = true)
-  @Primitive(selector = "spawn:", requiresContext = true)
-  public abstract static class SpawnPrim extends BinaryComplexOperation {
-    private final ForkJoinPool forkJoinPool;
-    private final ForkJoinPool processesPool;
-    private final ForkJoinPool threadPool;
+  @Primitive(primitive = "threading:threadSpawn:")
+  @Primitive(primitive = "threading:taskSpawn:")
+  @Primitive(selector = "spawn:")
+  public abstract static class SpawnPrim extends BinarySystemOperation {
+    @CompilationFinal private ForkJoinPool forkJoinPool;
+    @CompilationFinal private ForkJoinPool processesPool;
+    @CompilationFinal private ForkJoinPool threadPool;
 
     /** Breakpoint info for triggering suspension on first execution of code in activity. */
     @Child protected AbstractBreakpointNode onExec;
 
-    private final VM vm;
-
-    public SpawnPrim(final VM vm) {
-      this.vm = vm;
+    @Override
+    public final SpawnPrim initialize(final VM vm) {
+      super.initialize(vm);
+      this.onExec = insert(
+          Breakpoints.create(sourceSection, BreakpointType.ACTIVITY_ON_EXEC, vm));
       this.forkJoinPool = vm.getForkJoinPool();
       this.processesPool = vm.getProcessPool();
       this.threadPool = vm.getThreadPool();
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public final SpawnPrim initialize(final SourceSection source) {
-      super.initialize(source);
-      this.onExec = insert(Breakpoints.create(source, BreakpointType.ACTIVITY_ON_EXEC, vm));
       return this;
     }
 
@@ -169,35 +164,27 @@ public abstract class ActivitySpawn {
   @NodeChild(value = "argArr", type = ToArgumentsArrayNode.class,
       executeWith = {"secondArg", "firstArg"})
   @Primitive(primitive = "threading:threadSpawn:with:",
-      extraChild = ToArgumentsArrayNodeFactory.class, requiresContext = true)
+      extraChild = ToArgumentsArrayNodeFactory.class)
   @Primitive(primitive = "threading:taskSpawn:with:",
-      extraChild = ToArgumentsArrayNodeFactory.class, requiresContext = true)
-  @Primitive(primitive = "proc:spawn:with:",
-      extraChild = ToArgumentsArrayNodeFactory.class, requiresContext = true)
-  @Primitive(selector = "spawn:with:",
-      extraChild = ToArgumentsArrayNodeFactory.class, requiresContext = true)
-  public abstract static class SpawnWithPrim extends TernaryExpressionNode {
-    private final ForkJoinPool forkJoinPool;
-    private final ForkJoinPool processesPool;
-    private final ForkJoinPool threadPool;
+      extraChild = ToArgumentsArrayNodeFactory.class)
+  @Primitive(primitive = "proc:spawn:with:", extraChild = ToArgumentsArrayNodeFactory.class)
+  @Primitive(selector = "spawn:with:", extraChild = ToArgumentsArrayNodeFactory.class)
+  public abstract static class SpawnWithPrim extends TernarySystemOperation {
+    @CompilationFinal private ForkJoinPool forkJoinPool;
+    @CompilationFinal private ForkJoinPool processesPool;
+    @CompilationFinal private ForkJoinPool threadPool;
 
     /** Breakpoint info for triggering suspension on first execution of code in activity. */
     @Child protected AbstractBreakpointNode onExec;
 
-    private final VM vm;
-
-    public SpawnWithPrim(final VM vm) {
-      this.vm = vm;
+    @Override
+    public final SpawnWithPrim initialize(final VM vm) {
+      super.initialize(vm);
+      this.onExec = insert(
+          Breakpoints.create(sourceSection, BreakpointType.ACTIVITY_ON_EXEC, vm));
       this.forkJoinPool = vm.getForkJoinPool();
       this.processesPool = vm.getProcessPool();
       this.threadPool = vm.getThreadPool();
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public final SpawnWithPrim initialize(final SourceSection source) {
-      super.initialize(source);
-      this.onExec = insert(Breakpoints.create(source, BreakpointType.ACTIVITY_ON_EXEC, vm));
       return this;
     }
 

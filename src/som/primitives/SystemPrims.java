@@ -32,8 +32,10 @@ import som.interpreter.Invokable;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySystemOperation;
 import som.vm.NotYetImplementedException;
 import som.vm.Primitives.Specializer;
 import som.vm.constants.Classes;
@@ -71,14 +73,8 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "load:", requiresContext = true)
-  public abstract static class LoadPrim extends UnaryExpressionNode {
-    private final VM vm;
-
-    protected LoadPrim(final VM vm) {
-      this.vm = vm;
-    }
-
+  @Primitive(primitive = "load:")
+  public abstract static class LoadPrim extends UnarySystemOperation {
     @Specialization
     @TruffleBoundary
     public final Object doSObject(final String moduleName) {
@@ -87,14 +83,8 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "load:nextTo:", requiresContext = true)
-  public abstract static class LoadNextToPrim extends BinaryComplexOperation {
-    private final VM vm;
-
-    protected LoadNextToPrim(final VM vm) {
-      this.vm = vm;
-    }
-
+  @Primitive(primitive = "load:nextTo:")
+  public abstract static class LoadNextToPrim extends BinarySystemOperation {
     @Specialization
     @TruffleBoundary
     public final Object load(final String filename, final SObjectWithClass moduleObj) {
@@ -106,14 +96,8 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "exit:", requiresContext = true)
-  public abstract static class ExitPrim extends UnaryExpressionNode {
-    private final VM vm;
-
-    public ExitPrim(final VM vm) {
-      this.vm = vm;
-    }
-
+  @Primitive(primitive = "exit:")
+  public abstract static class ExitPrim extends UnarySystemOperation {
     @Specialization
     @TruffleBoundary
     public final Object doSObject(final long error) {
@@ -215,14 +199,8 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "vmArguments:", requiresContext = true)
-  public abstract static class VMArgumentsPrim extends UnaryExpressionNode {
-    private final VM vm;
-
-    public VMArgumentsPrim(final VM vm) {
-      this.vm = vm;
-    }
-
+  @Primitive(primitive = "vmArguments:")
+  public abstract static class VMArgumentsPrim extends UnarySystemOperation {
     @Specialization
     public final SImmutableArray getArguments(final Object receiver) {
       return new SImmutableArray(vm.getArguments(),
@@ -286,14 +264,8 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "systemExport:as:", requiresContext = true)
-  public abstract static class ExportAsPrim extends BinaryComplexOperation {
-    private final VM vm;
-
-    protected ExportAsPrim(final VM vm) {
-      this.vm = vm;
-    }
-
+  @Primitive(primitive = "systemExport:as:")
+  public abstract static class ExportAsPrim extends BinarySystemOperation {
     @Specialization
     public final boolean doString(final Object obj, final String name) {
       vm.registerExport(name, obj);

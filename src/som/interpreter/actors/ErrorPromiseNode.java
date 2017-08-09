@@ -4,20 +4,14 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
-import som.VM;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.primitives.Primitive;
 
 
 @GenerateNodeFactory
-@Primitive(primitive = "actorsError:with:isBPResolver:isBPResolution:", requiresContext = true)
+@Primitive(primitive = "actorsError:with:isBPResolver:isBPResolution:")
 public abstract class ErrorPromiseNode extends AbstractPromiseResolutionNode {
-
-  protected ErrorPromiseNode(final VM vm) {
-    super(vm.getActorPool());
-  }
-
   /**
    * Standard error case, when the promise is errored with a value that's not a promise.
    */

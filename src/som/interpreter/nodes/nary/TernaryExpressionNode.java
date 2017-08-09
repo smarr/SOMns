@@ -1,11 +1,14 @@
 package som.interpreter.nodes.nary;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 
+import som.VM;
 import som.interpreter.nodes.ExpressionNode;
+import som.primitives.WithContext;
 import som.vmobjects.SSymbol;
 
 
@@ -36,5 +39,17 @@ public abstract class TernaryExpressionNode extends EagerlySpecializableNode {
         arguments[0], arguments[1], arguments[2], this);
     result.initialize(sourceSection);
     return result;
+  }
+
+  public abstract static class TernarySystemOperation extends TernaryExpressionNode
+      implements WithContext<TernaryExpressionNode> {
+    @CompilationFinal protected VM vm;
+
+    @Override
+    public TernaryExpressionNode initialize(final VM vm) {
+      assert this.vm == null && vm != null;
+      this.vm = vm;
+      return this;
+    }
   }
 }
