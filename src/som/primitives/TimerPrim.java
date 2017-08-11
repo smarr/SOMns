@@ -8,7 +8,6 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.actors.ResolvePromiseNode;
@@ -16,27 +15,23 @@ import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.actors.WrapReferenceNode;
 import som.interpreter.actors.WrapReferenceNodeGen;
-import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 
 
 @GenerateNodeFactory
-@Primitive(primitive = "actorResolveProm:after:", requiresContext = true)
-public abstract class TimerPrim extends BinaryComplexOperation {
+@Primitive(primitive = "actorResolveProm:after:")
+public abstract class TimerPrim extends BinarySystemOperation {
   @CompilationFinal private static Timer timer;
-
-  private final ForkJoinPool actorPool;
-
-  protected TimerPrim(final BinaryComplexOperation node) {
-    super(node);
-    this.actorPool = null;
-  }
-
-  protected TimerPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
-    super(eagWrap, source);
-    this.actorPool = vm.getActorPool();
-  }
+  @CompilationFinal private ForkJoinPool actorPool;
 
   @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
+
+  @Override
+  public final TimerPrim initialize(final VM vm) {
+    super.initialize(vm);
+    this.actorPool = vm.getActorPool();
+    return this;
+  }
 
   @Specialization
   @TruffleBoundary

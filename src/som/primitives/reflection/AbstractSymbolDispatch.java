@@ -51,9 +51,8 @@ public abstract class AbstractSymbolDispatch extends Node {
   public abstract Object executeDispatch(VirtualFrame frame, Object receiver,
       SSymbol selector, Object argsArr);
 
-  public final AbstractMessageSendNode createForPerformNodes(
-      final SSymbol selector) {
-    return MessageSendNode.createForPerformNodes(selector, sourceSection,
+  public final AbstractMessageSendNode createForPerformNodes(final SSymbol selector) {
+    return MessageSendNode.createForPerformNodes(sourceSection, selector,
         SomLanguage.getVM(getRootNode()));
   }
 

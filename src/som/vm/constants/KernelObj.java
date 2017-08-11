@@ -4,7 +4,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -37,10 +36,6 @@ public final class KernelObj {
   @GenerateNodeFactory
   @Primitive(primitive = "kernelIndexOutOfBounds:")
   public abstract static class SetIndexOutOfBounds extends UnaryExpressionNode {
-    public SetIndexOutOfBounds(final boolean eagWrap, final SourceSection source) {
-      super(eagWrap, source);
-    }
-
     @Specialization
     public final SClass setClass(final SClass value) {
       assert indexOutOfBoundsClass == null;

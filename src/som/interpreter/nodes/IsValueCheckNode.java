@@ -22,19 +22,18 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
 
   public static IsValueCheckNode create(final SourceSection source,
       final ExpressionNode self) {
-    return new UninitializedNode(source, self);
+    return new UninitializedNode(self).initialize(source);
   }
 
   @Child protected ExpressionNode self;
 
-  protected IsValueCheckNode(final SourceSection source, final ExpressionNode self) {
-    super(false, source);
+  protected IsValueCheckNode(final ExpressionNode self) {
     this.self = self;
   }
 
   private static final class UninitializedNode extends IsValueCheckNode {
-    UninitializedNode(final SourceSection source, final ExpressionNode self) {
-      super(source, self);
+    UninitializedNode(final ExpressionNode self) {
+      super(self);
     }
 
     @Override
@@ -59,8 +58,8 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       SImmutableObject rcvr = (SImmutableObject) receiver;
 
       if (rcvr.isValue()) {
-        return replace(new ValueCheckNode(sourceSection, self)).executeEvaluated(frame,
-            receiver);
+        ValueCheckNode node = new ValueCheckNode(self).initialize(sourceSection);
+        return replace(node).executeEvaluated(frame, receiver);
       } else {
         // neither transfer object nor value, so nothing to check
         dropCheckNode();
@@ -81,8 +80,8 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
   }
 
   private static final class ValueCheckNode extends IsValueCheckNode {
-    ValueCheckNode(final SourceSection source, final ExpressionNode self) {
-      super(source, self);
+    ValueCheckNode(final ExpressionNode self) {
+      super(self);
     }
 
     @Override

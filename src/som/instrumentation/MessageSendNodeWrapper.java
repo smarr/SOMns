@@ -28,9 +28,8 @@ public class MessageSendNodeWrapper
     @Child private ExpressionNode delegate;
     @Child private ProbeNode      probe;
 
-    private MessageSendWrapper(final AbstractMessageSendNode delegate,
-        final ProbeNode probe) {
-      super(null, null);
+    private MessageSendWrapper(final AbstractMessageSendNode delegate, final ProbeNode probe) {
+      super(null);
       this.delegate = delegate;
       this.probe = probe;
     }

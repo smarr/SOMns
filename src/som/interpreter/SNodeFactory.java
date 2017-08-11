@@ -14,7 +14,6 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InternalObjectArrayNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.ResolvingImplicitReceiverSend;
-import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
 import som.interpreter.nodes.SequenceNode;
 import som.interpreter.nodes.literals.NilLiteralNode;
@@ -32,7 +31,7 @@ public final class SNodeFactory {
 
   public static InitializerFieldWrite createFieldWrite(final ExpressionNode self,
       final ExpressionNode exp, final SlotDefinition slot, final SourceSection source) {
-    return InitializerFieldWriteNodeGen.create(slot, source, self, exp);
+    return InitializerFieldWriteNodeGen.create(slot, self, exp).initialize(source);
   }
 
   public static ExpressionNode createSequence(
@@ -42,11 +41,13 @@ public final class SNodeFactory {
     }
 
     if (expressions.size() == 0) {
-      return new NilLiteralNode(source);
+      return new NilLiteralNode().initialize(source);
     } else if (expressions.size() == 1) {
       return expressions.get(0);
     }
-    return new SequenceNode(expressions.toArray(new ExpressionNode[0]), source);
+
+    SequenceNode s = new SequenceNode(expressions.toArray(new ExpressionNode[0]));
+    return s.initialize(source);
   }
 
   public static ExpressionNode createMessageSend(final SSymbol msg,
@@ -55,7 +56,7 @@ public final class SNodeFactory {
       final SomLanguage lang) {
     if (eventualSend) {
       return new EventualSendNode(msg, exprs.length,
-          new InternalObjectArrayNode(exprs, source), source, sendOperator, lang);
+          new InternalObjectArrayNode(exprs).initialize(source), source, sendOperator, lang);
     } else {
       return MessageSendNode.createMessageSend(msg, exprs, source, lang.getVM());
     }
@@ -67,23 +68,17 @@ public final class SNodeFactory {
         exprs.toArray(new ExpressionNode[0]), source, vm);
   }
 
-  public static ReturnNonLocalNode createNonLocalReturn(final ExpressionNode exp,
-      final Internal marker, final int contextLevel,
-      final SourceSection source) {
-    return new ReturnNonLocalNode(exp, marker, contextLevel, source);
-  }
-
   public static ExpressionNode createImplicitReceiverSend(
       final SSymbol selector, final ExpressionNode[] arguments,
       final MethodScope currentScope, final MixinDefinitionId mixinDefId,
       final SourceSection source, final VM vm) {
     assert mixinDefId != null;
     return new ResolvingImplicitReceiverSend(selector, arguments,
-        currentScope, mixinDefId, source, vm);
+        currentScope, mixinDefId, vm).initialize(source);
   }
 
   public static ExpressionNode createInternalObjectArray(
       final ExpressionNode[] expressions, final SourceSection source) {
-    return new InternalObjectArrayNode(expressions, source);
+    return new InternalObjectArrayNode(expressions).initialize(source);
   }
 }

@@ -29,7 +29,6 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.profiles.BranchProfile;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.AccessModifier;
 import som.compiler.Variable.Internal;
@@ -52,23 +51,19 @@ public final class ReturnNonLocalNode extends ContextualNode {
   private final FrameSlot       frameOnStackMarker;
   private final Internal        onStackMarkerVar;
 
-  public ReturnNonLocalNode(final ExpressionNode expression,
-      final Internal frameOnStackMarker,
-      final int outerSelfContextLevel,
-      final SourceSection source) {
-    super(outerSelfContextLevel, source);
+  public ReturnNonLocalNode(final ExpressionNode expression, final Internal frameOnStackMarker,
+      final int outerSelfContextLevel) {
+    super(outerSelfContextLevel);
     assert outerSelfContextLevel > 0;
     this.expression = expression;
     this.frameOnStackMarker = frameOnStackMarker.getSlot();
     this.onStackMarkerVar = frameOnStackMarker;
     assert this.frameOnStackMarker.getIdentifier() == frameOnStackMarker : "We expect slots to use `Variable` objects as identity";
-    assert source != null;
   }
 
   public ReturnNonLocalNode(final ReturnNonLocalNode node,
       final Internal inlinedFrameOnStack) {
-    this(node.expression, inlinedFrameOnStack,
-        node.contextLevel, node.getSourceSection());
+    this(node.expression, inlinedFrameOnStack, node.contextLevel);
   }
 
   private FrameOnStackMarker getMarkerFromContext(final MaterializedFrame ctx) {
@@ -110,11 +105,11 @@ public final class ReturnNonLocalNode extends ContextualNode {
     if (se.var != onStackMarkerVar || se.contextLevel < contextLevel) {
       ExpressionNode node;
       if (se.contextLevel == 0) {
-        node = new ReturnLocalNode(expression, (Internal) se.var, sourceSection);
+        node = new ReturnLocalNode(expression, (Internal) se.var);
       } else {
-        node = new ReturnNonLocalNode(expression, (Internal) se.var, se.contextLevel,
-            sourceSection);
+        node = new ReturnNonLocalNode(expression, (Internal) se.var, se.contextLevel);
       }
+      node.initialize(sourceSection);
       replace(node);
     }
   }
@@ -129,9 +124,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
     private final FrameSlot       frameOnStackMarker;
     private final Internal        onStackMarkerVar;
 
-    private ReturnLocalNode(final ExpressionNode exp,
-        final Internal onStackMarker, final SourceSection source) {
-      super(source);
+    private ReturnLocalNode(final ExpressionNode exp, final Internal onStackMarker) {
       this.expression = exp;
       this.frameOnStackMarker = onStackMarker.getSlot();
       this.onStackMarkerVar = onStackMarker;
@@ -165,7 +158,9 @@ public final class ReturnNonLocalNode extends ContextualNode {
     public void replaceAfterScopeChange(final InliningVisitor inliner) {
       ScopeElement se = inliner.getSplitVar(onStackMarkerVar);
       if (se.var != onStackMarkerVar) {
-        replace(new ReturnLocalNode(expression, (Internal) se.var, sourceSection));
+        ReturnLocalNode node = new ReturnLocalNode(expression, (Internal) se.var);
+        node.initialize(sourceSection);
+        replace(node);
       }
     }
   }
@@ -180,7 +175,7 @@ public final class ReturnNonLocalNode extends ContextualNode {
 
     public CatchNonLocalReturnNode(final ExpressionNode methodBody,
         final Internal frameOnStackMarker) {
-      super(methodBody.getSourceSection());
+      this.sourceSection = methodBody.sourceSection;
       this.methodBody = methodBody;
       this.nonLocalReturnHandler = BranchProfile.create();
       this.frameOnStackMarker = frameOnStackMarker.getSlot();

@@ -49,19 +49,14 @@ public class EventualSendNode extends ExprWithTagsNode {
   public EventualSendNode(final SSymbol selector, final int numArgs,
       final InternalObjectArrayNode arguments, final SourceSection source,
       final SourceSection sendOperator, final SomLanguage lang) {
-    super(source);
     this.arguments = arguments;
     this.send = SendNodeGen.create(selector, createArgWrapper(numArgs),
         createOnReceiveCallTarget(selector, source, lang),
         sendOperator, lang.getVM());
+    initialize(source);
   }
 
-  /**
-   * Use for wrapping node only.
-   */
-  protected EventualSendNode(final EventualSendNode wrappedNode) {
-    super((SourceSection) null);
-  }
+  protected EventualSendNode(final EventualSendNode wrappedNode) {}
 
   @Override
   public Object executeGeneric(final VirtualFrame frame) {

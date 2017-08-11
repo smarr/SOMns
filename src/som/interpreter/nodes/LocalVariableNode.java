@@ -6,7 +6,6 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.Variable.Local;
 import som.interpreter.InliningVisitor;
@@ -21,8 +20,7 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
   protected final FrameSlot slot;
   protected final Local     var;
 
-  private LocalVariableNode(final Local var, final SourceSection source) {
-    super(source);
+  private LocalVariableNode(final Local var) {
     this.slot = var.getSlot();
     this.var = var;
   }
@@ -38,12 +36,12 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
 
   public abstract static class LocalVariableReadNode extends LocalVariableNode {
 
-    public LocalVariableReadNode(final Local variable, final SourceSection source) {
-      super(variable, source);
+    public LocalVariableReadNode(final Local variable) {
+      super(variable);
     }
 
     public LocalVariableReadNode(final LocalVariableReadNode node) {
-      this(node.var, node.sourceSection);
+      this(node.var);
     }
 
     @Specialization(guards = "isUninitialized(frame)")
@@ -116,12 +114,12 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
   @NodeChild(value = "exp", type = ExpressionNode.class)
   public abstract static class LocalVariableWriteNode extends LocalVariableNode {
 
-    public LocalVariableWriteNode(final Local variable, final SourceSection source) {
-      super(variable, source);
+    public LocalVariableWriteNode(final Local variable) {
+      super(variable);
     }
 
     public LocalVariableWriteNode(final LocalVariableWriteNode node) {
-      super(node.var, node.sourceSection);
+      super(node.var);
     }
 
     public abstract ExpressionNode getExp();

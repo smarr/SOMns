@@ -9,7 +9,6 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.IntValueProfile;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.ExpressionNode;
@@ -38,9 +37,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
 
   protected final SlotDefinition slot;
 
-  protected InitializerFieldWrite(final SlotDefinition slot,
-      final SourceSection source) {
-    super(source);
+  protected InitializerFieldWrite(final SlotDefinition slot) {
     this.slot = slot;
   }
 

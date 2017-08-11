@@ -4,7 +4,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
@@ -44,12 +43,8 @@ public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
     }
   }
 
-  public NewImmutableArrayNode(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-  }
-
   @Child protected BlockDispatchNode block   = BlockDispatchNodeGen.create();
-  @Child protected IsValue           isValue = IsValueFactory.create(false, null, null);
+  @Child protected IsValue           isValue = IsValueFactory.create(null);
 
   public static boolean isValueArrayClass(final SClass valueArrayClass) {
     return Classes.valueArrayClass == valueArrayClass;

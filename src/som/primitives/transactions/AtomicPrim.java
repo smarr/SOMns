@@ -4,11 +4,10 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.actors.SuspendExecutionNodeGen;
-import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.transactions.Transactions;
 import som.primitives.Primitive;
@@ -26,18 +25,18 @@ import tools.debugger.session.Breakpoints;
 
 
 @GenerateNodeFactory
-@Primitive(primitive = "tx:atomic:", requiresContext = true, selector = "atomic:")
-public abstract class AtomicPrim extends BinaryComplexOperation {
-  private final VM vm;
-
+@Primitive(primitive = "tx:atomic:", selector = "atomic:")
+public abstract class AtomicPrim extends BinarySystemOperation {
   @Child protected AbstractBreakpointNode beforeCommit;
   @Child protected UnaryExpressionNode    haltNode;
 
-  protected AtomicPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
-    super(eagWrap, source);
-    this.vm = vm;
-    beforeCommit = insert(Breakpoints.create(source, BreakpointType.ATOMIC_BEFORE_COMMIT, vm));
-    haltNode = SuspendExecutionNodeGen.create(false, sourceSection, null);
+  @Override
+  public final AtomicPrim initialize(final VM vm) {
+    super.initialize(vm);
+    beforeCommit = insert(
+        Breakpoints.create(sourceSection, BreakpointType.ATOMIC_BEFORE_COMMIT, vm));
+    haltNode = SuspendExecutionNodeGen.create(0, null).initialize(sourceSection);
+    return this;
   }
 
   @Specialization

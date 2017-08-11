@@ -29,7 +29,6 @@ import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.TypesGen;
 import som.interpreter.actors.SFarReference;
@@ -46,16 +45,9 @@ import som.vmobjects.SSymbol;
 @Instrumentable(factory = ExpressionNodeWrapper.class)
 public abstract class ExpressionNode extends SOMNode {
 
-  public ExpressionNode(final SourceSection sourceSection) {
-    super(sourceSection);
-  }
+  protected ExpressionNode() {}
 
-  /**
-   * Use for wrapping node only.
-   */
-  protected ExpressionNode(final ExpressionNode wrappedNode) {
-    super(null);
-  }
+  protected ExpressionNode(final ExpressionNode wrapped) {}
 
   public boolean assertIsStatement() {
     return isTaggedWith(StatementTag.class);

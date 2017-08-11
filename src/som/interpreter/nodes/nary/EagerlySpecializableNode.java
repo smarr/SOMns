@@ -7,6 +7,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.PreevaluatedExpression;
+import som.interpreter.nodes.SOMNode;
 import som.vmobjects.SSymbol;
 
 
@@ -15,16 +16,13 @@ public abstract class EagerlySpecializableNode extends ExprWithTagsNode
 
   @CompilationFinal private boolean eagerlyWrapped;
 
-  protected EagerlySpecializableNode(final EagerlySpecializableNode wrappedNode) {
-    super(wrappedNode);
-    assert !wrappedNode.eagerlyWrapped : "I think this should be true.";
-    this.eagerlyWrapped = false;
-  }
-
-  public EagerlySpecializableNode(final boolean eagerlyWrapped,
-      final SourceSection source) {
-    super(source);
+  @SuppressWarnings("unchecked")
+  public <T extends SOMNode> T initialize(final SourceSection sourceSection,
+      final boolean eagerlyWrapped) {
+    this.initialize(sourceSection);
+    assert !this.eagerlyWrapped;
     this.eagerlyWrapped = eagerlyWrapped;
+    return (T) this;
   }
 
   /**

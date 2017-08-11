@@ -8,7 +8,6 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.Variable.Local;
 import som.interpreter.InliningVisitor;
@@ -23,9 +22,8 @@ public abstract class NonLocalVariableNode extends ContextualNode {
   protected final FrameSlot slot;
   protected final Local     var;
 
-  private NonLocalVariableNode(final int contextLevel, final Local var,
-      final SourceSection source) {
-    super(contextLevel, source);
+  private NonLocalVariableNode(final int contextLevel, final Local var) {
+    super(contextLevel);
     this.slot = var.getSlot();
     this.var = var;
   }
@@ -41,13 +39,12 @@ public abstract class NonLocalVariableNode extends ContextualNode {
 
   public abstract static class NonLocalVariableReadNode extends NonLocalVariableNode {
 
-    public NonLocalVariableReadNode(final int contextLevel,
-        final Local var, final SourceSection source) {
-      super(contextLevel, var, source);
+    public NonLocalVariableReadNode(final int contextLevel, final Local var) {
+      super(contextLevel, var);
     }
 
     public NonLocalVariableReadNode(final NonLocalVariableReadNode node) {
-      this(node.contextLevel, node.var, node.sourceSection);
+      this(node.contextLevel, node.var);
     }
 
     @Specialization(guards = "isUninitialized(frame)")
@@ -115,13 +112,12 @@ public abstract class NonLocalVariableNode extends ContextualNode {
   @NodeChild(value = "exp", type = ExpressionNode.class)
   public abstract static class NonLocalVariableWriteNode extends NonLocalVariableNode {
 
-    public NonLocalVariableWriteNode(final int contextLevel,
-        final Local var, final SourceSection source) {
-      super(contextLevel, var, source);
+    public NonLocalVariableWriteNode(final int contextLevel, final Local var) {
+      super(contextLevel, var);
     }
 
     public NonLocalVariableWriteNode(final NonLocalVariableWriteNode node) {
-      this(node.contextLevel, node.var, node.sourceSection);
+      this(node.contextLevel, node.var);
     }
 
     public abstract ExpressionNode getExp();

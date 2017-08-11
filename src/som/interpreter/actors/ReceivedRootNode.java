@@ -47,10 +47,10 @@ public abstract class ReceivedRootNode extends RootNode {
     if (resolve == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       if (resolver == null) {
-        this.resolve = insert(new NullResolver(sourceSection));
+        this.resolve = insert(new NullResolver());
       } else {
-        this.resolve = insert(ResolvePromiseNodeFactory.create(false, sourceSection, vm, null,
-            null, null, null));
+        this.resolve = insert(
+            ResolvePromiseNodeFactory.create(null, null, null, null).initialize(vm));
       }
     }
 
@@ -65,10 +65,10 @@ public abstract class ReceivedRootNode extends RootNode {
     if (error == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       if (resolver == null) {
-        this.error = insert(new NullResolver(getSourceSection()));
+        this.error = insert(new NullResolver());
       } else {
         this.error = insert(
-            ErrorPromiseNodeFactory.create(false, sourceSection, vm, null, null, null, null));
+            ErrorPromiseNodeFactory.create(null, null, null, null).initialize(vm));
       }
     }
 
@@ -80,10 +80,6 @@ public abstract class ReceivedRootNode extends RootNode {
    * Promise resolver for the case that the actual promise has been optimized out.
    */
   public final class NullResolver extends AbstractPromiseResolutionNode {
-    public NullResolver(final SourceSection source) {
-      super(false, source, null);
-    }
-
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
         final SResolver receiver, final Object argument,

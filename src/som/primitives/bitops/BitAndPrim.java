@@ -5,7 +5,6 @@ import java.math.BigInteger;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.primitives.Primitive;
 import som.primitives.arithmetic.ArithmeticPrim;
@@ -14,10 +13,6 @@ import som.primitives.arithmetic.ArithmeticPrim;
 @GenerateNodeFactory
 @Primitive(primitive = "int:bitAnd:", selector = "&")
 public abstract class BitAndPrim extends ArithmeticPrim {
-  protected BitAndPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-  }
-
   @Specialization
   public final long doLong(final long left, final long right) {
     return left & right;

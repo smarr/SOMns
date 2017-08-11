@@ -2,7 +2,6 @@ package som.interpreter.nodes.specialized.whileloops;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SBlock;
@@ -15,12 +14,12 @@ public final class WhileWithDynamicBlocksNode extends AbstractWhileNode {
 
   public static WhileWithDynamicBlocksNode create(final SBlock rcvr,
       final SBlock arg, final boolean predicateBool) {
-    return new WhileWithDynamicBlocksNode(rcvr, arg, predicateBool, null);
+    return new WhileWithDynamicBlocksNode(rcvr, arg, predicateBool);
   }
 
-  public WhileWithDynamicBlocksNode(final SBlock rcvr, final SBlock arg,
-      final boolean predicateBool, final SourceSection source) {
-    super(rcvr, arg, predicateBool, source);
+  private WhileWithDynamicBlocksNode(final SBlock rcvr, final SBlock arg,
+      final boolean predicateBool) {
+    super(rcvr, arg, predicateBool);
     conditionMethod = rcvr.getMethod();
     bodyMethod = arg.getMethod();
   }

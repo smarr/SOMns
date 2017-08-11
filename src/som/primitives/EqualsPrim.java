@@ -6,7 +6,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.SFarReference;
 import som.vm.constants.Nil;
@@ -24,10 +23,6 @@ import som.vmobjects.SSymbol;
 @Primitive(primitive = "string:equals:")
 @Primitive(selector = "=")
 public abstract class EqualsPrim extends ComparisonPrim {
-  protected EqualsPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-  }
-
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {
     return left == right;

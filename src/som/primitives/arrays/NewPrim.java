@@ -3,7 +3,6 @@ package som.primitives.arrays;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
@@ -31,10 +30,6 @@ public abstract class NewPrim extends BinaryExpressionNode {
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
       return args[0] instanceof SClass && ((SClass) args[0]).isArray();
     }
-  }
-
-  public NewPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
   }
 
   @Override

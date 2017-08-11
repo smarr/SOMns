@@ -200,8 +200,7 @@ public final class UninitializedDispatchNode {
       if (result != null) {
         assert result.getAccessModifier() != AccessModifier.PRIVATE;
       }
-      return new UninitializedReceiverSend(
-          getSourceSection(), selector, minimalVisibility);
+      return new UninitializedReceiverSend(sourceSection, selector, minimalVisibility);
     }
 
     @Override

@@ -10,7 +10,6 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.compiler.AccessModifier;
@@ -24,9 +23,9 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.interpreter.nodes.nary.BinaryComplexOperation;
-import som.interpreter.nodes.nary.TernaryExpressionNode;
-import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
+import som.interpreter.nodes.nary.TernaryExpressionNode.TernarySystemOperation;
+import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySystemOperation;
 import som.primitives.Primitive;
 import som.vm.Primitives.Specializer;
 import som.vm.Symbols;
@@ -68,8 +67,8 @@ public final class PromisePrims {
 
   @GenerateNodeFactory
   @Primitive(primitive = "actorsCreatePromisePair:", selector = "createPromisePair",
-      specializer = IsActorModule.class, noWrapper = true, requiresContext = true)
-  public abstract static class CreatePromisePairPrim extends UnaryExpressionNode {
+      specializer = IsActorModule.class, noWrapper = true)
+  public abstract static class CreatePromisePairPrim extends UnarySystemOperation {
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
@@ -79,13 +78,14 @@ public final class PromisePrims {
       return Truffle.getRuntime().createDirectCallNode(((SInvokable) disp).getCallTarget());
     }
 
-    public CreatePromisePairPrim(final boolean eagerWrapper, final SourceSection source,
-        final VM vm) {
-      super(eagerWrapper, source);
+    @Override
+    public final CreatePromisePairPrim initialize(final VM vm) {
+      super.initialize(vm);
       this.promiseResolverBreakpoint =
-          insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLVER, vm));
+          insert(Breakpoints.create(sourceSection, BreakpointType.PROMISE_RESOLVER, vm));
       this.promiseResolutionBreakpoint =
-          insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLUTION, vm));
+          insert(Breakpoints.create(sourceSection, BreakpointType.PROMISE_RESOLUTION, vm));
+      return this;
     }
 
     @Specialization
@@ -127,22 +127,22 @@ public final class PromisePrims {
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
   @Primitive(primitive = "actorsWhen:resolved:", selector = "whenResolved:",
-      receiverType = SPromise.class, requiresContext = true)
-  public abstract static class WhenResolvedPrim extends BinaryComplexOperation {
+      receiverType = SPromise.class)
+  public abstract static class WhenResolvedPrim extends BinarySystemOperation {
     @Child protected RegisterWhenResolved registerNode;
 
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
-    protected WhenResolvedPrim(final boolean eagWrap, final SourceSection source,
-        final VM vm) {
-      super(eagWrap, source);
+    @Override
+    public final WhenResolvedPrim initialize(final VM vm) {
+      super.initialize(vm);
       this.registerNode = new RegisterWhenResolved(vm.getActorPool());
-
       this.promiseResolverBreakpoint =
-          insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLVER, vm));
+          insert(Breakpoints.create(sourceSection, BreakpointType.PROMISE_RESOLVER, vm));
       this.promiseResolutionBreakpoint =
-          insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLUTION, vm));
+          insert(Breakpoints.create(sourceSection, BreakpointType.PROMISE_RESOLUTION, vm));
+      return this;
     }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
@@ -194,20 +194,21 @@ public final class PromisePrims {
   // TODO: should I add a literal version of OnErrorPrim??
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
-  @Primitive(primitive = "actorsFor:onError:", selector = "onError:", requiresContext = true)
-  public abstract static class OnErrorPrim extends BinaryComplexOperation {
+  @Primitive(primitive = "actorsFor:onError:", selector = "onError:")
+  public abstract static class OnErrorPrim extends BinarySystemOperation {
     @Child protected RegisterOnError        registerNode;
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
-    protected OnErrorPrim(final boolean eagWrap, final SourceSection source, final VM vm) {
-      super(eagWrap, source);
+    @Override
+    public final OnErrorPrim initialize(final VM vm) {
+      super.initialize(vm);
       this.registerNode = new RegisterOnError(vm.getActorPool());
-
       this.promiseResolverBreakpoint =
-          insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLVER, vm));
+          insert(Breakpoints.create(sourceSection, BreakpointType.PROMISE_RESOLVER, vm));
       this.promiseResolutionBreakpoint =
-          insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLUTION, vm));
+          insert(Breakpoints.create(sourceSection, BreakpointType.PROMISE_RESOLUTION, vm));
+      return this;
     }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
@@ -258,24 +259,23 @@ public final class PromisePrims {
 
   @GenerateNodeFactory
   @ImportStatic(PromisePrims.class)
-  @Primitive(primitive = "actorsWhen:resolved:onError:", selector = "whenResolved:onError:",
-      requiresContext = true)
-  public abstract static class WhenResolvedOnErrorPrim extends TernaryExpressionNode {
+  @Primitive(primitive = "actorsWhen:resolved:onError:", selector = "whenResolved:onError:")
+  public abstract static class WhenResolvedOnErrorPrim extends TernarySystemOperation {
     @Child protected RegisterWhenResolved registerWhenResolved;
     @Child protected RegisterOnError      registerOnError;
 
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
-    public WhenResolvedOnErrorPrim(final boolean eagWrap, final SourceSection source,
-        final VM vm) {
-      super(eagWrap, source);
+    @Override
+    public final WhenResolvedOnErrorPrim initialize(final VM vm) {
+      this.promiseResolverBreakpoint =
+          insert(Breakpoints.create(sourceSection, BreakpointType.PROMISE_RESOLVER, vm));
+      this.promiseResolutionBreakpoint =
+          insert(Breakpoints.create(sourceSection, BreakpointType.PROMISE_RESOLUTION, vm));
       this.registerWhenResolved = new RegisterWhenResolved(vm.getActorPool());
       this.registerOnError = new RegisterOnError(vm.getActorPool());
-      this.promiseResolverBreakpoint =
-          insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLVER, vm));
-      this.promiseResolutionBreakpoint =
-          insert(Breakpoints.create(source, BreakpointType.PROMISE_RESOLUTION, vm));
+      return this;
     }
 
     @Specialization(guards = {"resolvedMethod == resolved.getMethod()",

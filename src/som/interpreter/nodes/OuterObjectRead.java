@@ -10,7 +10,6 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.profiles.ValueProfile;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.actors.SFarReference;
@@ -57,11 +56,8 @@ public abstract class OuterObjectRead
 
   private final ValueProfile enclosingObj;
 
-  public OuterObjectRead(final int contextLevel,
-      final MixinDefinitionId mixinId,
-      final MixinDefinitionId enclosingMixinId,
-      final SourceSection sourceSection) {
-    super(sourceSection);
+  public OuterObjectRead(final int contextLevel, final MixinDefinitionId mixinId,
+      final MixinDefinitionId enclosingMixinId) {
     this.contextLevel = contextLevel;
     this.mixinId = mixinId;
     this.enclosingMixinId = enclosingMixinId;

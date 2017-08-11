@@ -5,7 +5,6 @@ import java.math.BigInteger;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.vmobjects.SSymbol;
@@ -16,10 +15,6 @@ import som.vmobjects.SSymbol;
 @Primitive(primitive = "intAsString:")
 @Primitive(primitive = "doubleAsString:")
 public abstract class AsStringPrim extends UnaryBasicOperation {
-  public AsStringPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-  }
-
   // TODO: assign a tag
 
   @Specialization

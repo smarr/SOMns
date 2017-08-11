@@ -5,7 +5,6 @@ import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.NotYetImplementedException;
@@ -50,14 +49,6 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
    * Indicate that this node is the first/root node of a statement.
    */
   private static final byte STATEMENT = 1 << 5;
-
-  public ExprWithTagsNode(final SourceSection sourceSection) {
-    super(sourceSection);
-  }
-
-  public ExprWithTagsNode(final ExpressionNode wrappedNode) {
-    super(wrappedNode);
-  }
 
   private boolean isTagged(final byte mask) {
     return (tagMark & mask) != 0;

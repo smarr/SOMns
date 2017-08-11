@@ -7,7 +7,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.Variable.Local;
 import som.interpreter.InliningVisitor;
@@ -36,10 +35,8 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
 
   public abstract ExpressionNode getTo();
 
-  public IntDownToDoInlinedLiteralsNode(final ExpressionNode body,
-      final Local loopIndex, final ExpressionNode originalBody,
-      final SourceSection sourceSection) {
-    super(sourceSection);
+  public IntDownToDoInlinedLiteralsNode(final ExpressionNode body, final Local loopIndex,
+      final ExpressionNode originalBody) {
     this.body = body;
     this.loopIndex = loopIndex.getSlot();
     this.loopIndexVar = loopIndex;
@@ -102,7 +99,8 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
   public void replaceAfterScopeChange(final InliningVisitor inliner) {
     ScopeElement se = inliner.getSplitVar(loopIndexVar);
     IntDownToDoInlinedLiteralsNode node = IntDownToDoInlinedLiteralsNodeGen.create(
-        body, (Local) se.var, bodyActualNode, sourceSection, getFrom(), getTo());
+        body, (Local) se.var, bodyActualNode, getFrom(), getTo());
+    node.initialize(sourceSection);
     replace(node);
   }
 

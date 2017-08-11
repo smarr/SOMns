@@ -53,7 +53,7 @@ public abstract class InteropDispatch extends Node {
   protected AbstractMessageSendNode createSend(final String selector, final Object[] args) {
     SClass cls = Types.getClassOf(args[0]);
     SSymbol firstFit = lookupWithPrefix(selector, cls, args.length);
-    return MessageSendNode.createForPerformNodes(firstFit, null, vm);
+    return MessageSendNode.createForPerformNodes(null, firstFit, vm);
   }
 
   @Specialization(guards = {"selector == cachedSelector"},

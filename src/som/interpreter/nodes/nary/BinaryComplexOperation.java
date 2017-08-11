@@ -1,7 +1,9 @@
 package som.interpreter.nodes.nary;
 
-import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
+import som.VM;
+import som.primitives.WithContext;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 
 
@@ -12,20 +14,24 @@ import tools.dym.Tags.ComplexPrimitiveOperation;
  * instructions or cause the execution of arbitrarily complex code.
  */
 public abstract class BinaryComplexOperation extends BinaryExpressionNode {
-  protected BinaryComplexOperation(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-  }
-
-  protected BinaryComplexOperation(final BinaryComplexOperation node) {
-    super(node);
-  }
-
   @Override
   protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
     if (tag == ComplexPrimitiveOperation.class) {
       return true;
     } else {
       return super.isTaggedWithIgnoringEagerness(tag);
+    }
+  }
+
+  public abstract static class BinarySystemOperation extends BinaryComplexOperation
+      implements WithContext<BinarySystemOperation> {
+    @CompilationFinal protected VM vm;
+
+    @Override
+    public BinarySystemOperation initialize(final VM vm) {
+      assert this.vm == null && vm != null;
+      this.vm = vm;
+      return this;
     }
   }
 }

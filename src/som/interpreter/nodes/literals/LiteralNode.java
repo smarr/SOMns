@@ -25,7 +25,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.nodes.NodeInfo;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MethodBuilder;
 import som.interpreter.nodes.ExpressionNode;
@@ -39,16 +38,9 @@ import tools.debugger.Tags.LiteralTag;
 public abstract class LiteralNode extends ExprWithTagsNode
     implements PreevaluatedExpression {
 
-  public LiteralNode(final SourceSection source) {
-    super(source);
-  }
+  protected LiteralNode() {}
 
-  /**
-   * For use by wrapping only.
-   */
-  protected LiteralNode(final LiteralNode wrappedNode) {
-    super(wrappedNode);
-  }
+  protected LiteralNode(final LiteralNode wrapped) {}
 
   @Override
   public final Object doPreEvaluated(final VirtualFrame frame,

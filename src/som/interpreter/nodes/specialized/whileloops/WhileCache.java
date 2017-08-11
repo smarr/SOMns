@@ -4,7 +4,6 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
@@ -21,8 +20,7 @@ public abstract class WhileCache extends BinaryComplexOperation {
 
   protected final boolean predicateBool;
 
-  public WhileCache(final SourceSection source, final boolean predicateBool) {
-    super(false, source);
+  public WhileCache(final boolean predicateBool) {
     this.predicateBool = predicateBool;
   }
 

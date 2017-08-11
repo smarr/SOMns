@@ -2,6 +2,7 @@ package som.interpreter.actors;
 
 import java.util.concurrent.ForkJoinPool;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
@@ -12,30 +13,40 @@ import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.primitives.WithContext;
 import som.vm.VmSettings;
 import tools.concurrency.ActorExecutionTrace;
 
 
 @Instrumentable(factory = AbstractPromiseResolutionNodeWrapper.class)
-public abstract class AbstractPromiseResolutionNode extends QuaternaryExpressionNode {
-  private final ForkJoinPool actorPool;
+public abstract class AbstractPromiseResolutionNode extends QuaternaryExpressionNode
+    implements WithContext<AbstractPromiseResolutionNode> {
+  @CompilationFinal private ForkJoinPool actorPool;
 
   @Child protected WrapReferenceNode   wrapper = WrapReferenceNodeGen.create();
   @Child protected UnaryExpressionNode haltNode;
 
-  protected AbstractPromiseResolutionNode(final boolean eagWrap, final SourceSection source,
-      final ForkJoinPool actorPool) {
-    super(eagWrap, source);
-    this.actorPool = actorPool;
-    haltNode = insert(SuspendExecutionNodeGen.create(false, source, 2, null));
-    VM.insertInstrumentationWrapper(haltNode);
+  protected AbstractPromiseResolutionNode() {
+    haltNode = insert(SuspendExecutionNodeGen.create(2, null));
   }
 
   protected AbstractPromiseResolutionNode(final AbstractPromiseResolutionNode node) {
-    super(node);
-    this.actorPool = node.actorPool;
-    haltNode = insert(SuspendExecutionNodeGen.create(false, node.getSourceSection(), 2, null));
+    this();
+  }
+
+  @Override
+  public AbstractPromiseResolutionNode initialize(final VM vm) {
+    actorPool = vm.getActorPool();
+    return this;
+  }
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public AbstractPromiseResolutionNode initialize(final SourceSection sourceSection) {
+    super.initialize(sourceSection);
+    haltNode.initialize(sourceSection);
     VM.insertInstrumentationWrapper(haltNode);
+    return this;
   }
 
   public abstract Object executeEvaluated(VirtualFrame frame,

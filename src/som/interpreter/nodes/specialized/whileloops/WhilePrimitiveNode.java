@@ -18,9 +18,8 @@ public abstract class WhilePrimitiveNode extends BinaryComplexOperation {
   @Child protected WhileCache whileNode;
 
   protected WhilePrimitiveNode(final SourceSection source, final boolean predicateBool) {
-    super(false, source);
     this.predicateBool = predicateBool;
-    this.whileNode = WhileCacheNodeGen.create(source, predicateBool, null, null);
+    this.whileNode = WhileCacheNodeGen.create(predicateBool, null, null).initialize(source);
   }
 
   protected WhilePrimitiveNode(final WhilePrimitiveNode node) {

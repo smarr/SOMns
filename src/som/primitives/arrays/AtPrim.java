@@ -56,7 +56,8 @@ public abstract class AtPrim extends BinaryBasicOperation {
       }
 
       if (forAtomic) {
-        return TxBinaryArrayOpNodeGen.create(eagerWrapper, section, node, null, null);
+        return TxBinaryArrayOpNodeGen.create(node, null, null).initialize(section,
+            eagerWrapper);
       } else {
         return node;
       }
@@ -67,10 +68,13 @@ public abstract class AtPrim extends BinaryBasicOperation {
 
   @Child protected AbstractMessageSendNode exception;
 
-  protected AtPrim(final boolean eagWrap, final SourceSection source) {
-    super(eagWrap, source);
-    exception = MessageSendNode.createGeneric(
-        Symbols.symbolFor("signalWith:index:"), null, getSourceSection());
+  @Override
+  @SuppressWarnings("unchecked")
+  public AtPrim initialize(final SourceSection sourceSection) {
+    super.initialize(sourceSection);
+    this.exception = MessageSendNode.createGeneric(
+        Symbols.symbolFor("signalWith:index:"), null, sourceSection);
+    return this;
   }
 
   @Override

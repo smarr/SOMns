@@ -3,7 +3,6 @@ package som.primitives.threading;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
@@ -27,10 +26,6 @@ public final class ThreadingModule {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingRegisterCondition:mutex:")
   public abstract static class RegisterConditionAndMutexPrim extends BinaryExpressionNode {
-    public RegisterConditionAndMutexPrim(final boolean ew, final SourceSection s) {
-      super(ew, s);
-    }
-
     @Specialization
     public final SClass doSClass(final SClass condition, final SClass mutex) {
       assert ConditionClass == null && MutexClass == null;
@@ -46,10 +41,6 @@ public final class ThreadingModule {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingRegisterThread:task:")
   public abstract static class RegisterThreadAndTaskPrim extends BinaryExpressionNode {
-    public RegisterThreadAndTaskPrim(final boolean ew, final SourceSection s) {
-      super(ew, s);
-    }
-
     @Specialization
     public final SClass doSClass(final SClass thread, final SClass task) {
       assert ThreadClass == null && TaskClass == null;
@@ -65,10 +56,6 @@ public final class ThreadingModule {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingRegisterModule:")
   public abstract static class RegisterModulePrim extends UnaryExpressionNode {
-    public RegisterModulePrim(final boolean ew, final SourceSection s) {
-      super(ew, s);
-    }
-
     @Specialization
     public final SImmutableObject doSClass(final SImmutableObject module) {
       ThreadingModule = module;
