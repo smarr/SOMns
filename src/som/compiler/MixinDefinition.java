@@ -132,6 +132,13 @@ public final class MixinDefinition {
     return name;
   }
 
+  /**
+   * Used by the SOMns Language Server.
+   */
+  public MixinDefinition getOuterMixinDefinition() {
+    return instanceScope.getOuterMixin().getMixinDefinition();
+  }
+
   public SSymbol getPrimaryFactorySelector() {
     return primaryFactoryName;
   }
