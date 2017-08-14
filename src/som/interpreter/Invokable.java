@@ -65,6 +65,16 @@ public abstract class Invokable extends RootNode {
     return true;
   }
 
+  @Override
+  protected final boolean isCloneUninitializedSupported() {
+    return true;
+  }
+
+  @Override
+  protected final RootNode cloneUninitialized() {
+    return (RootNode) deepCopy();
+  }
+
   public final RootCallTarget createCallTarget() {
     return Truffle.getRuntime().createCallTarget(this);
   }
