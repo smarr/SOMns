@@ -53,7 +53,6 @@ import som.primitives.StringPrimsFactory;
 import som.primitives.SystemPrimsFactory;
 import som.primitives.TimerPrimFactory;
 import som.primitives.UnequalsPrimFactory;
-import som.primitives.WithContext;
 import som.primitives.actors.ActorClassesFactory;
 import som.primitives.actors.CreateActorPrimFactory;
 import som.primitives.actors.PromisePrimsFactory;
@@ -95,9 +94,10 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 
-public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol, EagerlySpecializableNode> {
+public class Primitives
+    extends PrimitiveLoader<VM, ExpressionNode, SSymbol, EagerlySpecializableNode> {
 
-  private HashMap<SSymbol, Dispatchable> vmMirrorPrimitives;
+  private HashMap<SSymbol, Dispatchable>                                                    vmMirrorPrimitives;
   private final HashMap<SSymbol, Specializer<? extends ExpressionNode, VM, ExpressionNode>> eagerPrimitives;
 
   public Primitives(final SomLanguage lang) {
@@ -108,7 +108,8 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol, Eag
   }
 
   private static SInvokable constructVmMirrorPrimitive(final SSymbol signature,
-      final Specializer<? extends ExpressionNode, VM, ExpressionNode> specializer, final SomLanguage lang) {
+      final Specializer<? extends ExpressionNode, VM, ExpressionNode> specializer,
+      final SomLanguage lang) {
     CompilerAsserts.neverPartOfCompilation("This is only executed during bootstrapping.");
     assert signature.getNumberOfSignatureArguments() > 1 : "Primitives should have the vmMirror as receiver, "
         +
@@ -156,7 +157,8 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol, Eag
       bd.primitives.Primitive[] prims = getPrimitiveAnnotation(primFact);
       if (prims != null) {
         for (bd.primitives.Primitive prim : prims) {
-          Specializer<? extends ExpressionNode, VM, ExpressionNode> specializer = createSpecializer(prim, primFact);
+          Specializer<? extends ExpressionNode, VM, ExpressionNode> specializer =
+              createSpecializer(prim, primFact);
           String vmMirrorName = prim.primitive();
 
           if (!("".equals(vmMirrorName))) {
@@ -178,6 +180,7 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol, Eag
     }
   }
 
+  @SuppressWarnings({"rawtypes", "unchecked"})
   @Override
   protected List<NodeFactory<? extends ExpressionNode>> getFactories() {
     List<NodeFactory<? extends ExpressionNode>> allFactories = new ArrayList<>();
