@@ -83,11 +83,6 @@ public abstract class ExpressionNode extends SOMNode {
 
   public abstract Object executeGeneric(VirtualFrame frame);
 
-  @Override
-  public ExpressionNode getFirstMethodBodyNode() {
-    return this;
-  }
-
   public boolean executeBoolean(final VirtualFrame frame) throws UnexpectedResultException {
     return TypesGen.expectBoolean(executeGeneric(frame));
   }
