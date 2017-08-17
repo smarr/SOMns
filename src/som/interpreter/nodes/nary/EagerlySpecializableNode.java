@@ -5,24 +5,25 @@ import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.nodes.EagerlySpecializable;
 import bd.nodes.PreevaluatedExpression;
+import som.VM;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.SOMNode;
 import som.vmobjects.SSymbol;
 
 
 public abstract class EagerlySpecializableNode extends ExprWithTagsNode
-    implements PreevaluatedExpression {
+    implements PreevaluatedExpression, EagerlySpecializable<ExpressionNode, SSymbol, VM> {
 
   @CompilationFinal private boolean eagerlyWrapped;
 
-  @SuppressWarnings("unchecked")
-  public <T extends SOMNode> T initialize(final SourceSection sourceSection,
+  @Override
+  public ExpressionNode initialize(final SourceSection sourceSection,
       final boolean eagerlyWrapped) {
     this.initialize(sourceSection);
     assert !this.eagerlyWrapped;
     this.eagerlyWrapped = eagerlyWrapped;
-    return (T) this;
+    return this;
   }
 
   /**

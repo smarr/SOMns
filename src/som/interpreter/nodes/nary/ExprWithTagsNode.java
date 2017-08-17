@@ -121,8 +121,8 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
     if (newNode instanceof ExprWithTagsNode) {
       ExprWithTagsNode n = (ExprWithTagsNode) newNode;
       n.tagMark = tagMark;
-    } else if (newNode instanceof EagerPrimitive) {
-      ((EagerPrimitive) newNode).setTags(tagMark);
+    } else if (newNode instanceof EagerPrimitiveNode) {
+      ((EagerPrimitiveNode) newNode).setTags(tagMark);
     } else {
       throw new NotYetImplementedException();
     }

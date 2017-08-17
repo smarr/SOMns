@@ -15,7 +15,7 @@ import som.vm.NotYetImplementedException;
 import som.vmobjects.SSymbol;
 
 
-public final class EagerTernaryPrimitiveNode extends EagerPrimitive {
+public final class EagerTernaryPrimitiveNode extends EagerPrimitiveNode {
 
   @Child private ExpressionNode        receiver;
   @Child private ExpressionNode        argument1;
@@ -127,7 +127,7 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitive {
   }
 
   @Override
-  protected void setTags(final byte tagMark) {
+  public void setTags(final byte tagMark) {
     primitive.tagMark = tagMark;
   }
 
