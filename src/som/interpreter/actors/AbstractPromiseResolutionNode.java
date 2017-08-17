@@ -8,19 +8,19 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.nodes.WithContext;
 import som.VM;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.primitives.WithContext;
 import som.vm.VmSettings;
 import tools.concurrency.ActorExecutionTrace;
 
 
 @Instrumentable(factory = AbstractPromiseResolutionNodeWrapper.class)
 public abstract class AbstractPromiseResolutionNode extends QuaternaryExpressionNode
-    implements WithContext<AbstractPromiseResolutionNode> {
+    implements WithContext<AbstractPromiseResolutionNode, VM> {
   @CompilationFinal private ForkJoinPool actorPool;
 
   @Child protected WrapReferenceNode   wrapper = WrapReferenceNodeGen.create();

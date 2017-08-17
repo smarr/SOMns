@@ -5,9 +5,9 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 
+import bd.nodes.WithContext;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
-import som.primitives.WithContext;
 import som.vmobjects.SSymbol;
 
 
@@ -36,7 +36,7 @@ public abstract class UnaryExpressionNode extends EagerlySpecializableNode {
   }
 
   public abstract static class UnarySystemOperation extends UnaryExpressionNode
-      implements WithContext<UnarySystemOperation> {
+      implements WithContext<UnarySystemOperation, VM> {
     @CompilationFinal protected VM vm;
 
     @Override

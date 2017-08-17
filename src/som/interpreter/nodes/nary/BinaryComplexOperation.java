@@ -2,8 +2,8 @@ package som.interpreter.nodes.nary;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
+import bd.nodes.WithContext;
 import som.VM;
-import som.primitives.WithContext;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 
 
@@ -24,7 +24,7 @@ public abstract class BinaryComplexOperation extends BinaryExpressionNode {
   }
 
   public abstract static class BinarySystemOperation extends BinaryComplexOperation
-      implements WithContext<BinarySystemOperation> {
+      implements WithContext<BinarySystemOperation, VM> {
     @CompilationFinal protected VM vm;
 
     @Override
