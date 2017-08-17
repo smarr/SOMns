@@ -28,6 +28,7 @@ import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.PartiallyEmptyArray;
 import som.vmobjects.SArray.SMutableArray;
+import som.vmobjects.SSymbol;
 import tools.dym.Tags.ArrayWrite;
 import tools.dym.Tags.BasicPrimitiveOperation;
 
@@ -37,16 +38,17 @@ import tools.dym.Tags.BasicPrimitiveOperation;
 @Primitive(primitive = "array:at:put:", selector = "at:put:",
     receiverType = SArray.class, inParser = false, specializer = TxAtPutPrim.class)
 public abstract class AtPutPrim extends TernaryExpressionNode {
-  protected static final class TxAtPutPrim extends Specializer<TernaryExpressionNode, VM, ExpressionNode> {
-    public TxAtPutPrim(final Primitive prim, final NodeFactory<TernaryExpressionNode> fact, final VM vm) {
+  protected static final class TxAtPutPrim extends Specializer<VM, ExpressionNode, SSymbol> {
+    public TxAtPutPrim(final Primitive prim, final NodeFactory<ExpressionNode> fact,
+        final VM vm) {
       super(prim, fact, vm);
     }
 
     @Override
-    public TernaryExpressionNode create(final Object[] arguments,
+    public ExpressionNode create(final Object[] arguments,
         final ExpressionNode[] argNodes, final SourceSection section,
         final boolean eagerWrapper) {
-      TernaryExpressionNode node = super.create(arguments, argNodes, section, eagerWrapper);
+      ExpressionNode node = super.create(arguments, argNodes, section, eagerWrapper);
       // TODO: seems a bit expensive,
       // might want to optimize for interpreter first iteration speed
       // TODO: clone in UnitializedDispatchNode.AbstractUninitialized.forAtomic()
@@ -61,7 +63,8 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
       }
 
       if (forAtomic) {
-        return TxTernaryArrayOpNodeGen.create(node, null, null, null).initialize(section);
+        return TxTernaryArrayOpNodeGen.create((TernaryExpressionNode) node, null, null, null)
+                                      .initialize(section);
       } else {
         return node;
       }

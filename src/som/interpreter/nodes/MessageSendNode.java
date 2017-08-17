@@ -36,11 +36,11 @@ public final class MessageSendNode {
   public static ExpressionNode createMessageSend(final SSymbol selector,
       final ExpressionNode[] arguments, final SourceSection source, final VM vm) {
     Primitives prims = vm.getPrimitives();
-    Specializer<EagerlySpecializableNode, VM, ExpressionNode> specializer =
+    Specializer<VM, ExpressionNode, SSymbol> specializer =
         prims.getParserSpecializer(selector, arguments);
     if (specializer != null) {
-      EagerlySpecializableNode newNode =
-          specializer.create(null, arguments, source, !specializer.noWrapper());
+      EagerlySpecializableNode newNode = (EagerlySpecializableNode) specializer.create(null,
+          arguments, source, !specializer.noWrapper());
       for (ExpressionNode exp : arguments) {
         unwrapIfNecessary(exp).markAsPrimitiveArgument();
       }
@@ -180,8 +180,8 @@ public final class MessageSendNode {
 
       Primitives prims = vm.getPrimitives();
 
-      Specializer<EagerlySpecializableNode, VM, ExpressionNode> specializer = prims.getEagerSpecializer(selector,
-          arguments, argumentNodes);
+      Specializer<VM, ExpressionNode, SSymbol> specializer =
+          prims.getEagerSpecializer(selector, arguments, argumentNodes);
 
       Lock lock = getLock();
       try {
@@ -189,7 +189,8 @@ public final class MessageSendNode {
         if (specializer != null) {
           boolean noWrapper = specializer.noWrapper();
           EagerlySpecializableNode newNode =
-              specializer.create(arguments, argumentNodes, sourceSection, !noWrapper);
+              (EagerlySpecializableNode) specializer.create(arguments, argumentNodes,
+                  sourceSection, !noWrapper);
           if (noWrapper) {
             return replace(newNode);
           } else {

@@ -8,10 +8,10 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 
 import bd.primitives.Primitive;
 import som.VM;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.specialized.AndMessageNode.AndOrSplzr;
 import som.interpreter.nodes.specialized.OrMessageNode.OrSplzr;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory.OrBoolMessageNodeFactory;
@@ -27,8 +27,7 @@ import tools.dym.Tags.OpComparison;
 public abstract class OrMessageNode extends BinaryComplexOperation {
   public static final class OrSplzr extends AndOrSplzr {
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public OrSplzr(final Primitive prim, final NodeFactory<BinaryExpressionNode> fact,
-        final VM vm) {
+    public OrSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact, final VM vm) {
       super(prim, fact, (NodeFactory) OrBoolMessageNodeFactory.getInstance(), vm);
     }
   }

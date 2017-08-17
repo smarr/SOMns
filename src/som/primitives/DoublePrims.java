@@ -11,6 +11,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.constants.Classes;
+import som.vmobjects.SSymbol;
 import tools.debugger.Tags.LiteralTag;
 import tools.dym.Tags.OpArithmetic;
 
@@ -55,8 +56,11 @@ public abstract class DoublePrims {
     }
   }
 
-  public static class IsDoubleClass extends Specializer<ExpressionNode, VM, ExpressionNode> {
-    public IsDoubleClass(final Primitive prim, final NodeFactory<ExpressionNode> fact, final VM vm) { super(prim, fact, vm); }
+  public static class IsDoubleClass extends Specializer<VM, ExpressionNode, SSymbol> {
+    public IsDoubleClass(final Primitive prim, final NodeFactory<ExpressionNode> fact,
+        final VM vm) {
+      super(prim, fact, vm);
+    }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodess) {

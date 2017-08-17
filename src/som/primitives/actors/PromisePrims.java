@@ -48,7 +48,7 @@ import tools.debugger.session.Breakpoints;
 
 public final class PromisePrims {
 
-  public static class IsActorModule extends Specializer<ExpressionNode, VM, ExpressionNode> {
+  public static class IsActorModule extends Specializer<VM, ExpressionNode, SSymbol> {
     public IsActorModule(final Primitive prim, final NodeFactory<ExpressionNode> fact,
         final VM vm) {
       super(prim, fact, vm);

@@ -16,24 +16,23 @@ import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.Wh
 import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileTrueSplzr;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SBlock;
+import som.vmobjects.SSymbol;
 
 
 @Primitive(selector = "whileTrue:", noWrapper = true, specializer = WhileTrueSplzr.class)
 @Primitive(selector = "whileFalse:", noWrapper = true, specializer = WhileFalseSplzr.class)
 public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
-  public abstract static class WhileSplzr extends Specializer<WhileWithStaticBlocksNode, VM, ExpressionNode> {
+  public abstract static class WhileSplzr extends Specializer<VM, ExpressionNode, SSymbol> {
     private final boolean whileTrueOrFalse;
 
-    protected WhileSplzr(final Primitive prim,
-        final NodeFactory<WhileWithStaticBlocksNode> fact, final VM vm,
-        final boolean whileTrueOrFalse) {
+    protected WhileSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact,
+        final VM vm, final boolean whileTrueOrFalse) {
       super(prim, fact, vm);
       this.whileTrueOrFalse = whileTrueOrFalse;
     }
 
     @Override
-    public boolean matches(final Object[] args,
-        final ExpressionNode[] argNodes) {
+    public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
       return unwrapIfNecessary(argNodes[1]) instanceof BlockNode &&
           unwrapIfNecessary(argNodes[0]) instanceof BlockNode;
     }
@@ -45,22 +44,22 @@ public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
       assert !eagerWrapper;
       BlockNode argBlockNode = (BlockNode) unwrapIfNecessary(argNodes[1]);
       SBlock argBlock = (SBlock) arguments[1];
-      return new WhileWithStaticBlocksNode(
+      return (WhileWithStaticBlocksNode) new WhileWithStaticBlocksNode(
           (BlockNode) unwrapIfNecessary(argNodes[0]), argBlockNode,
-          (SBlock) arguments[0], argBlock, whileTrueOrFalse).initialize(section);
+          (SBlock) arguments[0], argBlock, whileTrueOrFalse).initialize(section, eagerWrapper);
     }
   }
 
   public static final class WhileTrueSplzr extends WhileSplzr {
-    public WhileTrueSplzr(final Primitive prim,
-        final NodeFactory<WhileWithStaticBlocksNode> fact, final VM vm) {
+    public WhileTrueSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact,
+        final VM vm) {
       super(prim, fact, vm, true);
     }
   }
 
   public static final class WhileFalseSplzr extends WhileSplzr {
-    public WhileFalseSplzr(final Primitive prim,
-        final NodeFactory<WhileWithStaticBlocksNode> fact, final VM vm) {
+    public WhileFalseSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact,
+        final VM vm) {
       super(prim, fact, vm, false);
     }
   }

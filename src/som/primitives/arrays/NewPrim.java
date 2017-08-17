@@ -14,6 +14,7 @@ import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SClass;
+import som.vmobjects.SSymbol;
 import tools.dym.Tags.NewArray;
 
 
@@ -21,8 +22,11 @@ import tools.dym.Tags.NewArray;
 @Primitive(primitive = "array:new:", selector = "new:", inParser = false,
     specializer = NewPrim.IsArrayClass.class)
 public abstract class NewPrim extends BinaryExpressionNode {
-  public static class IsArrayClass extends Specializer<NewPrim, VM, ExpressionNode> {
-    public IsArrayClass(final Primitive prim, final NodeFactory<NewPrim> fact, final VM vm) { super(prim, fact, vm); }
+  public static class IsArrayClass extends Specializer<VM, ExpressionNode, SSymbol> {
+    public IsArrayClass(final Primitive prim, final NodeFactory<ExpressionNode> fact,
+        final VM vm) {
+      super(prim, fact, vm);
+    }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {

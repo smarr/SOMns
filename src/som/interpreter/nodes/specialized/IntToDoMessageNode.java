@@ -16,6 +16,7 @@ import som.interpreter.nodes.specialized.IntToDoMessageNode.ToDoSplzr;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 import tools.dym.Tags.LoopNode;
 
 
@@ -23,8 +24,11 @@ import tools.dym.Tags.LoopNode;
 @Primitive(selector = "to:do:", noWrapper = true, disabled = true,
     specializer = ToDoSplzr.class, inParser = false)
 public abstract class IntToDoMessageNode extends TernaryExpressionNode {
-  public static class ToDoSplzr extends Specializer<IntToDoMessageNode, VM, ExpressionNode> {
-    public ToDoSplzr(final Primitive prim, final NodeFactory<IntToDoMessageNode> fact, final VM vm) { super(prim, fact, vm); }
+  public static class ToDoSplzr extends Specializer<VM, ExpressionNode, SSymbol> {
+    public ToDoSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact,
+        final VM vm) {
+      super(prim, fact, vm);
+    }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {

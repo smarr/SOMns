@@ -108,8 +108,7 @@ public class Primitives
   }
 
   private static SInvokable constructVmMirrorPrimitive(final SSymbol signature,
-      final Specializer<? extends ExpressionNode, VM, ExpressionNode> specializer,
-      final SomLanguage lang) {
+      final Specializer<VM, ExpressionNode, SSymbol> specializer, final SomLanguage lang) {
     CompilerAsserts.neverPartOfCompilation("This is only executed during bootstrapping.");
     assert signature.getNumberOfSignatureArguments() > 1 : "Primitives should have the vmMirror as receiver, "
         +

@@ -228,8 +228,11 @@ public final class SystemPrims {
     }
   }
 
-  public static class IsSystemModule extends Specializer<ExpressionNode, VM, ExpressionNode> {
-    public IsSystemModule(final Primitive prim, final NodeFactory<ExpressionNode> fact, final VM vm) { super(prim, fact, vm); }
+  public static class IsSystemModule extends Specializer<VM, ExpressionNode, SSymbol> {
+    public IsSystemModule(final Primitive prim, final NodeFactory<ExpressionNode> fact,
+        final VM vm) {
+      super(prim, fact, vm);
+    }
 
     @Override
     public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {

@@ -23,6 +23,7 @@ import som.vm.Symbols;
 import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
+import som.vmobjects.SSymbol;
 import tools.dym.Tags.ArrayRead;
 
 
@@ -30,16 +31,17 @@ import tools.dym.Tags.ArrayRead;
 @Primitive(primitive = "array:at:", selector = "at:", receiverType = SArray.class,
     inParser = false, specializer = TxAtPrim.class)
 public abstract class AtPrim extends BinaryBasicOperation {
-  protected static final class TxAtPrim extends Specializer<BinaryBasicOperation, VM, ExpressionNode> {
-    public TxAtPrim(final Primitive prim, final NodeFactory<BinaryBasicOperation> fact, final VM vm) {
+  protected static final class TxAtPrim extends Specializer<VM, ExpressionNode, SSymbol> {
+    public TxAtPrim(final Primitive prim, final NodeFactory<ExpressionNode> fact,
+        final VM vm) {
       super(prim, fact, vm);
     }
 
     @Override
-    public BinaryBasicOperation create(final Object[] arguments,
+    public ExpressionNode create(final Object[] arguments,
         final ExpressionNode[] argNodes, final SourceSection section,
         final boolean eagerWrapper) {
-      BinaryBasicOperation node = super.create(arguments, argNodes, section, eagerWrapper);
+      ExpressionNode node = super.create(arguments, argNodes, section, eagerWrapper);
 
       // TODO: seems a bit expensive,
       // might want to optimize for interpreter first iteration speed
@@ -55,8 +57,8 @@ public abstract class AtPrim extends BinaryBasicOperation {
       }
 
       if (forAtomic) {
-        return TxBinaryArrayOpNodeGen.create(node, null, null).initialize(section,
-            eagerWrapper);
+        return TxBinaryArrayOpNodeGen.create((BinaryBasicOperation) node, null, null)
+                                     .initialize(section, eagerWrapper);
       } else {
         return node;
       }
