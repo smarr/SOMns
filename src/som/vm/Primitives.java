@@ -122,13 +122,13 @@ public class Primitives
     MethodBuilder prim = new MethodBuilder(true, lang);
     ExpressionNode[] args = new ExpressionNode[numArgs];
 
+    SourceSection source = s.createSection(1);
     for (int i = 0; i < numArgs; i++) {
       // we do not pass the vmMirror, makes it easier to use the same primitives
       // as replacements on the node level
-      args[i] = new LocalArgumentReadNode(true, i + 1).initialize(s.createSection(1));
+      args[i] = new LocalArgumentReadNode(true, i + 1).initialize(source);
     }
 
-    SourceSection source = s.createSection(1);
     ExpressionNode primNode = specializer.create(null, args, source, false);
 
     String name = "vmMirror>>" + signature.toString();
