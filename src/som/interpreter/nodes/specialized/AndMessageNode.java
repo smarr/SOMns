@@ -8,11 +8,11 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.nodes.Operation;
 import bd.primitives.Primitive;
 import bd.primitives.Specializer;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
@@ -109,7 +109,7 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
 
   @GenerateNodeFactory
   public abstract static class AndBoolMessageNode extends BinaryBasicOperation
-      implements OperationNode {
+      implements Operation {
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == OpComparison.class) {

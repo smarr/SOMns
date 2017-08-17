@@ -27,11 +27,11 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.nodes.Operation;
 import som.compiler.MixinDefinition;
 import som.instrumentation.InstrumentableDirectCallNode;
 import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
 import som.interpreter.Invokable;
-import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable;
@@ -208,15 +208,15 @@ public class DynamicMetrics extends TruffleInstrument {
   }
 
   private static String getOperation(final Node node) {
-    if (node instanceof OperationNode) {
-      return ((OperationNode) node).getOperation();
+    if (node instanceof Operation) {
+      return ((Operation) node).getOperation();
     }
     throw new NotYetImplementedException();
   }
 
   private static int getNumArguments(final Node node) {
-    if (node instanceof OperationNode) {
-      return ((OperationNode) node).getNumArguments();
+    if (node instanceof Operation) {
+      return ((Operation) node).getNumArguments();
     }
     throw new NotYetImplementedException();
   }

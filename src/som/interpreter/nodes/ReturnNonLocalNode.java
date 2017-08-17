@@ -175,7 +175,6 @@ public final class ReturnNonLocalNode extends ContextualNode {
 
     public CatchNonLocalReturnNode(final ExpressionNode methodBody,
         final Internal frameOnStackMarker) {
-      this.sourceSection = methodBody.sourceSection;
       this.methodBody = methodBody;
       this.nonLocalReturnHandler = BranchProfile.create();
       this.frameOnStackMarker = frameOnStackMarker.getSlot();
@@ -212,7 +211,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
     public void replaceAfterScopeChange(final InliningVisitor inliner) {
       ScopeElement se = inliner.getSplitVar(frameOnStackMarkerVar);
       if (se.var != frameOnStackMarkerVar) {
-        replace(new CatchNonLocalReturnNode(methodBody, (Internal) se.var));
+        replace(new CatchNonLocalReturnNode(
+            methodBody, (Internal) se.var).initialize(sourceSection));
       }
     }
   }

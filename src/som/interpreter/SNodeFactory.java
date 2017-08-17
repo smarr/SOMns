@@ -26,7 +26,8 @@ public final class SNodeFactory {
 
   public static CatchNonLocalReturnNode createCatchNonLocalReturn(
       final ExpressionNode methodBody, final Internal frameOnStackMarker) {
-    return new CatchNonLocalReturnNode(methodBody, frameOnStackMarker);
+    return new CatchNonLocalReturnNode(
+        methodBody, frameOnStackMarker).initialize(methodBody.getSourceSection());
   }
 
   public static InitializerFieldWrite createFieldWrite(final ExpressionNode self,

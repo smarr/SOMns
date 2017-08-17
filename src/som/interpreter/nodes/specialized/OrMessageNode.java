@@ -6,10 +6,10 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
+import bd.nodes.Operation;
 import bd.primitives.Primitive;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.specialized.AndMessageNode.AndOrSplzr;
@@ -67,7 +67,7 @@ public abstract class OrMessageNode extends BinaryComplexOperation {
 
   @GenerateNodeFactory
   public abstract static class OrBoolMessageNode extends BinaryBasicOperation
-      implements OperationNode {
+      implements Operation {
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == OpComparison.class) {
