@@ -173,7 +173,8 @@ BOOT_CLASSPATH = ('-Xbootclasspath/a:'
              + BASE_DIR + '/libs/truffle/truffle/mxbuild/dists/truffle-debug.jar:'
              + BASE_DIR + '/libs/somns-deps.jar')
 
-SOM_ARGS = [BOOT_CLASSPATH, 'som.VM',
+SOM_ARGS = [BOOT_CLASSPATH,
+            '-Dbd.settings=som.vm.VmSettings', 'som.VM',
             '--platform', args.som_platform, '--kernel', args.som_kernel]
 
 # == Compiler Settings
