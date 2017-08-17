@@ -21,7 +21,6 @@ import som.interpreter.actors.ResolvePromiseNodeFactory;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.interpreter.nodes.nary.EagerlySpecializableNode;
 import som.interpreter.nodes.specialized.AndMessageNodeFactory;
 import som.interpreter.nodes.specialized.IfMessageNodeGen;
 import som.interpreter.nodes.specialized.IfTrueIfFalseMessageNodeFactory;
@@ -94,17 +93,16 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 
-public class Primitives
-    extends PrimitiveLoader<VM, ExpressionNode, SSymbol, EagerlySpecializableNode> {
+public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
 
-  private HashMap<SSymbol, Dispatchable>                                                    vmMirrorPrimitives;
-  private final HashMap<SSymbol, Specializer<? extends ExpressionNode, VM, ExpressionNode>> eagerPrimitives;
+  private HashMap<SSymbol, Dispatchable> vmMirrorPrimitives;
+  private final SomLanguage              lang;
 
   public Primitives(final SomLanguage lang) {
     super(lang.getVM());
     vmMirrorPrimitives = new HashMap<>();
-    eagerPrimitives = new HashMap<>();
-    initialize(lang);
+    this.lang = lang;
+    initialize();
   }
 
   private static SInvokable constructVmMirrorPrimitive(final SSymbol signature,
@@ -146,36 +144,22 @@ public class Primitives
     return result;
   }
 
-  /**
-   * Setup the lookup data structures for vm primitive registration as well as
-   * eager primitive replacement.
-   */
-  private void initialize(final SomLanguage lang) {
-    List<NodeFactory<? extends ExpressionNode>> primFacts = getFactories();
-    for (NodeFactory<? extends ExpressionNode> primFact : primFacts) {
-      bd.primitives.Primitive[] prims = getPrimitiveAnnotation(primFact);
-      if (prims != null) {
-        for (bd.primitives.Primitive prim : prims) {
-          Specializer<? extends ExpressionNode, VM, ExpressionNode> specializer =
-              createSpecializer(prim, primFact);
-          String vmMirrorName = prim.primitive();
+  @Override
+  protected SSymbol getId(final String id) {
+    return Symbols.symbolFor(id);
+  }
 
-          if (!("".equals(vmMirrorName))) {
-            SSymbol signature = Symbols.symbolFor(vmMirrorName);
-            assert !vmMirrorPrimitives.containsKey(
-                signature) : "clash of vmMirrorPrimitive names";
-            vmMirrorPrimitives.put(signature,
-                constructVmMirrorPrimitive(signature, specializer, lang));
-          }
+  @Override
+  protected void registerPrimitive(final bd.primitives.Primitive prim,
+      final Specializer<VM, ExpressionNode, SSymbol> specializer) {
+    String vmMirrorName = prim.primitive();
 
-          if (!("".equals(prim.selector()))) {
-            SSymbol msgSel = Symbols.symbolFor(prim.selector());
-            assert !eagerPrimitives.containsKey(
-                msgSel) : "clash of selectors and eager specialization";
-            eagerPrimitives.put(msgSel, specializer);
-          }
-        }
-      }
+    if (!("".equals(vmMirrorName))) {
+      SSymbol signature = Symbols.symbolFor(vmMirrorName);
+      assert !vmMirrorPrimitives.containsKey(
+          signature) : "clash of vmMirrorPrimitive names";
+      vmMirrorPrimitives.put(signature,
+          constructVmMirrorPrimitive(signature, specializer, lang));
     }
   }
 
