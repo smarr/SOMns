@@ -53,10 +53,4 @@ public abstract class EagerlySpecializableNode extends ExprWithTagsNode
     n.eagerlyWrapped = eagerlyWrapped;
     super.onReplace(newNode, reason);
   }
-
-  /**
-   * Create an eager primitive wrapper, which wraps this node.
-   */
-  public abstract EagerPrimitive wrapInEagerWrapper(SSymbol selector,
-      ExpressionNode[] arguments);
 }

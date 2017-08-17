@@ -33,8 +33,8 @@ public abstract class TernaryExpressionNode extends EagerlySpecializableNode {
   }
 
   @Override
-  public EagerPrimitive wrapInEagerWrapper(final SSymbol selector,
-      final ExpressionNode[] arguments) {
+  public EagerPrimitiveNode wrapInEagerWrapper(final SSymbol selector,
+      final ExpressionNode[] arguments, final VM vm) {
     EagerTernaryPrimitiveNode result = new EagerTernaryPrimitiveNode(selector,
         arguments[0], arguments[1], arguments[2], this);
     result.initialize(sourceSection);

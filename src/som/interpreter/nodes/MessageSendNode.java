@@ -47,7 +47,7 @@ public final class MessageSendNode {
       if (specializer.noWrapper()) {
         return newNode;
       } else {
-        return newNode.wrapInEagerWrapper(selector, arguments);
+        return newNode.wrapInEagerWrapper(selector, arguments, vm);
       }
     } else {
       return new UninitializedMessageSendNode(selector, arguments, vm).initialize(source);
@@ -219,7 +219,8 @@ public final class MessageSendNode {
       assert prim.getSourceSection() != null;
 
       PreevaluatedExpression result =
-          replace(prim.wrapInEagerWrapper(selector, argumentNodes));
+          (PreevaluatedExpression) replace(
+              prim.wrapInEagerWrapper(selector, argumentNodes, vm));
 
       VM.insertInstrumentationWrapper((Node) result);
 

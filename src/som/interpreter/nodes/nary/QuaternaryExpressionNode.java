@@ -4,6 +4,7 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
+import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SSymbol;
@@ -27,8 +28,8 @@ public abstract class QuaternaryExpressionNode extends EagerlySpecializableNode 
   }
 
   @Override
-  public EagerPrimitive wrapInEagerWrapper(final SSymbol selector,
-      final ExpressionNode[] arguments) {
+  public EagerPrimitiveNode wrapInEagerWrapper(final SSymbol selector,
+      final ExpressionNode[] arguments, final VM vm) {
     throw new NotYetImplementedException(); // wasn't needed so far
   }
 }
