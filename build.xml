@@ -3,6 +3,7 @@
     <property name="src.dir"     value="src"/>
     <property name="src_gen.dir" value="src_gen"/>
     <property name="lib.dir"     value="libs" />
+    <property name="bd.dir"      value="${lib.dir}/black-diamonds/src" />
     <property name="unit.dir"    value="tests/java" />
     <property name="kompos.dir"  value="tools/kompos" />
     <property name="truffle.dir" value="${lib.dir}/truffle/truffle" />
@@ -143,6 +144,12 @@
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${classes.dir}" />
         <mkdir dir="${src_gen.dir}" />
+        <javac includeantruntime="false" srcdir="${bd.dir}" destdir="${classes.dir}" debug="true">
+          <classpath refid="project.classpath" />
+          <compilerarg line="-s ${src_gen.dir}" />
+          <compilerarg line="-XDignore.symbol.file" />
+          <compilerarg line="-Xlint:all" />
+        </javac>
         <javac includeantruntime="false" srcdir="${src.dir}" destdir="${classes.dir}" debug="true">
           <classpath refid="project.classpath" />
           <compilerarg line="-s ${src_gen.dir}" />
