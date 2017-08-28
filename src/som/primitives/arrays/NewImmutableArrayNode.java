@@ -5,6 +5,8 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import bd.primitives.Primitive;
+import bd.primitives.Specializer;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
@@ -13,22 +15,21 @@ import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.specialized.SomLoop;
 import som.primitives.ObjectPrims.IsValue;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
-import som.primitives.Primitive;
-import som.vm.Primitives.Specializer;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
+import som.vmobjects.SSymbol;
 
 
 @GenerateNodeFactory
 @Primitive(selector = "new:withAll:", inParser = false,
     specializer = NewImmutableArrayNode.IsValueArrayClass.class)
 public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
-  public static class IsValueArrayClass extends Specializer<NewImmutableArrayNode> {
-    public IsValueArrayClass(final Primitive prim,
-        final NodeFactory<NewImmutableArrayNode> fact, final VM vm) {
+  public static class IsValueArrayClass extends Specializer<VM, ExpressionNode, SSymbol> {
+    public IsValueArrayClass(final Primitive prim, final NodeFactory<ExpressionNode> fact,
+        final VM vm) {
       super(prim, fact, vm);
     }
 

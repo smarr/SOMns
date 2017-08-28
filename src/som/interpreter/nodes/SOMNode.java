@@ -96,11 +96,6 @@ public abstract class SOMNode extends Node {
     return true;
   }
 
-  /**
-   * @return body of a node that just wraps the actual method body.
-   */
-  public abstract ExpressionNode getFirstMethodBodyNode();
-
   @SuppressWarnings("unchecked")
   public static <T extends Node> T unwrapIfNecessary(final T node) {
     if (node instanceof WrapperNode) {

@@ -7,15 +7,16 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
+import bd.primitives.Primitive;
+import bd.primitives.Specializer;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.specialized.IntToDoMessageNode.ToDoSplzr;
-import som.primitives.Primitive;
-import som.vm.Primitives.Specializer;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 import tools.dym.Tags.LoopNode;
 
 
@@ -23,15 +24,14 @@ import tools.dym.Tags.LoopNode;
 @Primitive(selector = "to:do:", noWrapper = true, disabled = true,
     specializer = ToDoSplzr.class, inParser = false)
 public abstract class IntToDoMessageNode extends TernaryExpressionNode {
-  public static class ToDoSplzr extends Specializer<IntToDoMessageNode> {
-    public ToDoSplzr(final Primitive prim, final NodeFactory<IntToDoMessageNode> fact,
+  public static class ToDoSplzr extends Specializer<VM, ExpressionNode, SSymbol> {
+    public ToDoSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact,
         final VM vm) {
       super(prim, fact, vm);
     }
 
     @Override
-    public boolean matches(final Object[] args,
-        final ExpressionNode[] argNodes) {
+    public boolean matches(final Object[] args, final ExpressionNode[] argNodes) {
       return !VmSettings.DYNAMIC_METRICS && args[0] instanceof Long &&
           (args[1] instanceof Long || args[1] instanceof Double) &&
           args[2] instanceof SBlock;

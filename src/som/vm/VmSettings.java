@@ -3,8 +3,10 @@ package som.vm;
 import java.util.Arrays;
 import java.util.List;
 
+import bd.settings.Settings;
 
-public class VmSettings {
+
+public class VmSettings implements Settings {
   public static final int NUM_THREADS;
 
   // TODO: revise naming of flags
@@ -71,5 +73,10 @@ public class VmSettings {
 
   private static boolean getBool(final String prop, final boolean defaultVal) {
     return Boolean.parseBoolean(System.getProperty(prop, defaultVal ? "true" : "false"));
+  }
+
+  @Override
+  public boolean dynamicMetricsEnabled() {
+    return DYNAMIC_METRICS;
   }
 }

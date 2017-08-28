@@ -3,6 +3,7 @@ package som.primitives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import tools.dym.Tags.OpArithmetic;
 

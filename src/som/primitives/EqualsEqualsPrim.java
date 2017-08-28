@@ -6,6 +6,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import bd.primitives.Primitive;
 import som.interpreter.actors.SFarReference;
 import som.primitives.threading.TaskThreads.SomThreadTask;
 import som.vmobjects.SArray.SMutableArray;

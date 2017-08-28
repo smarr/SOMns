@@ -6,8 +6,8 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
-import som.primitives.Primitive;
 import tools.dym.Tags.OpArithmetic;
 
 

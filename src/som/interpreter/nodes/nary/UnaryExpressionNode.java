@@ -5,9 +5,9 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 
+import bd.nodes.WithContext;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
-import som.primitives.WithContext;
 import som.vmobjects.SSymbol;
 
 
@@ -28,15 +28,15 @@ public abstract class UnaryExpressionNode extends EagerlySpecializableNode {
   }
 
   @Override
-  public EagerPrimitive wrapInEagerWrapper(final SSymbol selector,
-      final ExpressionNode[] arguments) {
+  public EagerPrimitiveNode wrapInEagerWrapper(final SSymbol selector,
+      final ExpressionNode[] arguments, final VM vm) {
     EagerUnaryPrimitiveNode result = new EagerUnaryPrimitiveNode(selector, arguments[0], this);
     result.initialize(sourceSection);
     return result;
   }
 
   public abstract static class UnarySystemOperation extends UnaryExpressionNode
-      implements WithContext<UnarySystemOperation> {
+      implements WithContext<UnarySystemOperation, VM> {
     @CompilationFinal protected VM vm;
 
     @Override

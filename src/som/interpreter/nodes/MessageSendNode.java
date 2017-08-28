@@ -14,6 +14,8 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.nodes.PreevaluatedExpression;
+import bd.primitives.Specializer;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.instrumentation.MessageSendNodeWrapper;
@@ -24,7 +26,6 @@ import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
 import som.interpreter.nodes.nary.EagerlySpecializableNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.Primitives;
-import som.vm.Primitives.Specializer;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.dym.Tags.VirtualInvoke;
@@ -35,18 +36,18 @@ public final class MessageSendNode {
   public static ExpressionNode createMessageSend(final SSymbol selector,
       final ExpressionNode[] arguments, final SourceSection source, final VM vm) {
     Primitives prims = vm.getPrimitives();
-    Specializer<EagerlySpecializableNode> specializer =
+    Specializer<VM, ExpressionNode, SSymbol> specializer =
         prims.getParserSpecializer(selector, arguments);
     if (specializer != null) {
-      EagerlySpecializableNode newNode =
-          specializer.create(null, arguments, source, !specializer.noWrapper());
+      EagerlySpecializableNode newNode = (EagerlySpecializableNode) specializer.create(null,
+          arguments, source, !specializer.noWrapper());
       for (ExpressionNode exp : arguments) {
         unwrapIfNecessary(exp).markAsPrimitiveArgument();
       }
       if (specializer.noWrapper()) {
         return newNode;
       } else {
-        return newNode.wrapInEagerWrapper(selector, arguments);
+        return newNode.wrapInEagerWrapper(selector, arguments, vm);
       }
     } else {
       return new UninitializedMessageSendNode(selector, arguments, vm).initialize(source);
@@ -179,8 +180,8 @@ public final class MessageSendNode {
 
       Primitives prims = vm.getPrimitives();
 
-      Specializer<EagerlySpecializableNode> specializer = prims.getEagerSpecializer(selector,
-          arguments, argumentNodes);
+      Specializer<VM, ExpressionNode, SSymbol> specializer =
+          prims.getEagerSpecializer(selector, arguments, argumentNodes);
 
       Lock lock = getLock();
       try {
@@ -188,7 +189,8 @@ public final class MessageSendNode {
         if (specializer != null) {
           boolean noWrapper = specializer.noWrapper();
           EagerlySpecializableNode newNode =
-              specializer.create(arguments, argumentNodes, sourceSection, !noWrapper);
+              (EagerlySpecializableNode) specializer.create(arguments, argumentNodes,
+                  sourceSection, !noWrapper);
           if (noWrapper) {
             return replace(newNode);
           } else {
@@ -218,7 +220,8 @@ public final class MessageSendNode {
       assert prim.getSourceSection() != null;
 
       PreevaluatedExpression result =
-          replace(prim.wrapInEagerWrapper(selector, argumentNodes));
+          (PreevaluatedExpression) replace(
+              prim.wrapInEagerWrapper(selector, argumentNodes, vm));
 
       VM.insertInstrumentationWrapper((Node) result);
 

@@ -3,12 +3,12 @@ package som.primitives.actors;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import bd.primitives.Primitive;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.primitives.ObjectPrims.IsValue;
 import som.primitives.ObjectPrimsFactory.IsValueFactory.IsValueNodeGen;
-import som.primitives.Primitive;
 import som.primitives.actors.PromisePrims.IsActorModule;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;

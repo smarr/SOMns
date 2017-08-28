@@ -6,6 +6,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 
+import bd.nodes.PreevaluatedExpression;
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.instrumentation.MessageSendNodeWrapper;

@@ -5,6 +5,7 @@ import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 
+import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;
 
@@ -29,8 +30,8 @@ public abstract class BinaryExpressionNode extends EagerlySpecializableNode {
   }
 
   @Override
-  public EagerPrimitive wrapInEagerWrapper(final SSymbol selector,
-      final ExpressionNode[] arguments) {
+  public EagerPrimitiveNode wrapInEagerWrapper(final SSymbol selector,
+      final ExpressionNode[] arguments, final VM vm) {
     EagerBinaryPrimitiveNode result =
         new EagerBinaryPrimitiveNode(selector, arguments[0], arguments[1], this);
     result.initialize(sourceSection);

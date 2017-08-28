@@ -24,20 +24,21 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.nodes.Operation;
+import bd.primitives.Primitive;
+import bd.primitives.Specializer;
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.interop.ValueConversion.ToSomConversion;
 import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySystemOperation;
 import som.vm.NotYetImplementedException;
-import som.vm.Primitives.Specializer;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
@@ -227,7 +228,7 @@ public final class SystemPrims {
     }
   }
 
-  public static class IsSystemModule extends Specializer<ExpressionNode> {
+  public static class IsSystemModule extends Specializer<VM, ExpressionNode, SSymbol> {
     public IsSystemModule(final Primitive prim, final NodeFactory<ExpressionNode> fact,
         final VM vm) {
       super(prim, fact, vm);
@@ -246,7 +247,7 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemTicks:", selector = "ticks",
       specializer = IsSystemModule.class, noWrapper = true)
-  public abstract static class TicksPrim extends UnaryBasicOperation implements OperationNode {
+  public abstract static class TicksPrim extends UnaryBasicOperation implements Operation {
     @Specialization
     public final long doSObject(final Object receiver) {
       return System.nanoTime() / 1000L - startMicroTime;

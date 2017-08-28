@@ -9,12 +9,13 @@ import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 
+import bd.nodes.Operation;
+import bd.primitives.Primitive;
 import som.VM;
 import som.interpreter.Types;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
-import som.interpreter.nodes.OperationNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
@@ -79,7 +80,7 @@ public final class ObjectPrims {
 
   @GenerateNodeFactory
   @Primitive(selector = "isNil", noWrapper = true)
-  public abstract static class IsNilNode extends UnaryBasicOperation implements OperationNode {
+  public abstract static class IsNilNode extends UnaryBasicOperation implements Operation {
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == OpComparison.class) {
@@ -108,7 +109,7 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive(selector = "notNil", noWrapper = true)
   public abstract static class NotNilNode extends UnaryBasicOperation
-      implements OperationNode {
+      implements Operation {
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == OpComparison.class) {

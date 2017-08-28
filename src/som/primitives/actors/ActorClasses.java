@@ -4,12 +4,12 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import bd.primitives.Primitive;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.primitives.Primitive;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject.SImmutableObject;
 

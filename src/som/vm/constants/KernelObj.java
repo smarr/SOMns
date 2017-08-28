@@ -5,9 +5,9 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import bd.primitives.Primitive;
 import som.VM;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.primitives.Primitive;
 import som.vm.Symbols;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;

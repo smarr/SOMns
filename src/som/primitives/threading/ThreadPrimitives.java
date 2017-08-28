@@ -3,9 +3,9 @@ package som.primitives.threading;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.primitives.Primitive;
 import som.primitives.threading.TaskThreads.SomThreadTask;
 import som.vm.Activity;
 import som.vm.constants.Nil;

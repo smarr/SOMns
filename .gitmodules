@@ -6,3 +6,6 @@
 	path = libs/mx
 	url = https://github.com/smarr/mx.git
 	shallow = false
+[submodule "libs/black-diamonds"]
+	path = libs/black-diamonds
+	url = https://github.com/SOM-st/black-diamonds.git

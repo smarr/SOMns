@@ -4,16 +4,17 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import bd.primitives.Primitive;
+import bd.primitives.Specializer;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.primitives.Primitive;
-import som.vm.Primitives.Specializer;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SClass;
+import som.vmobjects.SSymbol;
 import tools.dym.Tags.NewArray;
 
 
@@ -21,8 +22,9 @@ import tools.dym.Tags.NewArray;
 @Primitive(primitive = "array:new:", selector = "new:", inParser = false,
     specializer = NewPrim.IsArrayClass.class)
 public abstract class NewPrim extends BinaryExpressionNode {
-  public static class IsArrayClass extends Specializer<NewPrim> {
-    public IsArrayClass(final Primitive prim, final NodeFactory<NewPrim> fact, final VM vm) {
+  public static class IsArrayClass extends Specializer<VM, ExpressionNode, SSymbol> {
+    public IsArrayClass(final Primitive prim, final NodeFactory<ExpressionNode> fact,
+        final VM vm) {
       super(prim, fact, vm);
     }
 

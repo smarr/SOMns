@@ -6,11 +6,11 @@ import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import bd.primitives.Primitive;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.specialized.SomLoop;
-import som.primitives.Primitive;
 import som.primitives.SizeAndLengthPrim;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.vm.constants.Nil;
