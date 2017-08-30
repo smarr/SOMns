@@ -61,3 +61,5 @@ benchmark_nightly_job:
     - ant compile
     - rebench -d --without-nice -c --commit-id="$CI_BUILD_REF" --environment="Infinity Ubuntu" --project=SOMns --branch=master codespeed.conf nightly
     - rebench -d --without-nice -c --commit-id="$CI_BUILD_REF" --environment="Infinity Ubuntu" --project=SOMns --branch=master codespeed.conf SOMns-Savina-tracing
+    - rebench -d --without-nice -c --commit-id="$CI_BUILD_REF" --environment="Infinity Ubuntu" --project=SOMns --branch=master super.conf
+    - curl -F "file=@codespeed.data" https://file.io
