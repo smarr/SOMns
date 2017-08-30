@@ -324,4 +324,19 @@ public class TruffleSomTCK extends TruffleTCK {
   @Override
   @Ignore("todo: remove override")
   public void testObjectWithKeyInfoAttributes() throws Exception {}
+
+  @Test
+  @Override
+  @Ignore("disabled, language enviroment is already disposed, might be solved in Graal SDK")
+  public void testPlusWithIntsOnCompoundObject() throws Exception {}
+
+  @Test
+  @Override
+  @Ignore("disabled, language enviroment is already disposed, might be solved in Graal SDK")
+  public void testFortyTwoWithCompoundObject() throws Exception {}
+
+  @Test
+  @Override
+  @Ignore("disabled, language enviroment is already disposed, might be solved in Graal SDK")
+  public void testNullInCompoundObject() throws Exception {}
 }
