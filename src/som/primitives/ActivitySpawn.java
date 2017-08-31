@@ -22,9 +22,8 @@ import som.primitives.arrays.ToArgumentsArrayNodeFactory;
 import som.primitives.processes.ChannelPrimitives;
 import som.primitives.processes.ChannelPrimitives.Process;
 import som.primitives.processes.ChannelPrimitives.TracingProcess;
-import som.primitives.threading.TaskThreads.SomForkJoinTask;
+import som.primitives.threading.TaskThreads.SomForkJoinOrg;
 import som.primitives.threading.TaskThreads.SomThreadTask;
-import som.primitives.threading.TaskThreads.TracedForkJoinTask;
 import som.primitives.threading.TaskThreads.TracedThreadTask;
 import som.primitives.threading.ThreadingModule;
 import som.vm.VmSettings;
@@ -48,16 +47,11 @@ import tools.debugger.session.Breakpoints;
 
 public abstract class ActivitySpawn {
 
-  private static SomForkJoinTask createTask(final Object[] argArray,
-      final boolean stopOnRoot, final SBlock block, final SourceSection section) {
-    SomForkJoinTask task;
-    if (VmSettings.ACTOR_TRACING) {
-      task = new TracedForkJoinTask(argArray, stopOnRoot);
-      ActorExecutionTrace.activityCreation(ActivityType.TASK, task.getId(),
-          block.getMethod().getSignature(), section);
-    } else {
-      task = new SomForkJoinTask(argArray, stopOnRoot);
-    }
+  private static SomForkJoinOrg createTask(final Object[] argArray,
+      final boolean stopOnRoot, final SBlock block,
+      final SourceSection section, final boolean flag) {
+    SomForkJoinOrg task = new SomForkJoinOrg(argArray, stopOnRoot);
+
     return task;
   }
 
@@ -116,11 +110,16 @@ public abstract class ActivitySpawn {
 
     @Specialization(guards = "clazz == TaskClass")
     @TruffleBoundary
-    public final SomForkJoinTask spawnTask(final SClass clazz, final SBlock block) {
-      SomForkJoinTask task = createTask(new Object[] {block},
-          onExec.executeShouldHalt(), block, sourceSection);
-      forkJoinPool.execute(task);
+    public final SomForkJoinOrg spawnTask(final SClass clazz, final SBlock block) {
+      SomForkJoinOrg task = createTask(new Object[] {block},
+          onExec.executeShouldHalt(), block, sourceSection, true);
+      scheduleOnPool(task);
       return task;
+    }
+
+    @TruffleBoundary
+    private void scheduleOnPool(final SomForkJoinOrg task) {
+      forkJoinPool.execute(task);
     }
 
     @Specialization(guards = "clazz == ThreadClass")
@@ -190,13 +189,17 @@ public abstract class ActivitySpawn {
     }
 
     @Specialization(guards = "clazz == TaskClass")
-    @TruffleBoundary
-    public SomForkJoinTask spawnTask(final SClass clazz, final SBlock block,
+    public SomForkJoinOrg spawnTask(final SClass clazz, final SBlock block,
         final SArray somArgArr, final Object[] argArr) {
-      SomForkJoinTask task = createTask(argArr,
-          onExec.executeShouldHalt(), block, sourceSection);
-      forkJoinPool.execute(task);
+      SomForkJoinOrg task = createTask(argArr,
+          onExec.executeShouldHalt(), block, sourceSection, true);
+      scheduleOnPool(task);
       return task;
+    }
+
+    @TruffleBoundary
+    private void scheduleOnPool(final SomForkJoinOrg task) {
+      forkJoinPool.execute(task);
     }
 
     @Specialization(guards = "clazz == ThreadClass")

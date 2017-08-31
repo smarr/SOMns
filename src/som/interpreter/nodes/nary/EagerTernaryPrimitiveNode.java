@@ -83,6 +83,14 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitiveNode {
     return 3;
   }
 
+  public ExpressionNode[] getArguments() {
+    ExpressionNode[] exprNode = new ExpressionNode[3];
+    exprNode[0] = argument1;
+    exprNode[1] = argument2;
+    exprNode[2] = receiver;
+    return exprNode;
+  }
+
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
     Object rcvr = receiver.executeGeneric(frame);

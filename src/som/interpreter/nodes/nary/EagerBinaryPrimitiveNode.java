@@ -81,6 +81,13 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitiveNode {
     return 2;
   }
 
+  public ExpressionNode[] getArguments() {
+    ExpressionNode[] exprNode = new ExpressionNode[2];
+    exprNode[0] = argument;
+    exprNode[1] = receiver;
+    return exprNode;
+  }
+
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
     Object rcvr = receiver.executeGeneric(frame);

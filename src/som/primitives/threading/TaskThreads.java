@@ -76,10 +76,10 @@ public final class TaskThreads {
     }
   }
 
-  public static class SomForkJoinTask extends SomTaskOrThread {
+  public static class SomForkJoinOrg extends SomTaskOrThread {
     private static final long serialVersionUID = -2145613708553535622L;
 
-    public SomForkJoinTask(final Object[] argArray, final boolean stopOnRoot) {
+    public SomForkJoinOrg(final Object[] argArray, final boolean stopOnRoot) {
       super(argArray, stopOnRoot);
     }
 
@@ -94,7 +94,7 @@ public final class TaskThreads {
     }
   }
 
-  public static class TracedForkJoinTask extends SomForkJoinTask {
+  public static class TracedForkJoinTask extends SomForkJoinOrg {
     private static final long serialVersionUID = -2763766745049695112L;
 
     private final long id;
@@ -127,6 +127,16 @@ public final class TaskThreads {
     @Override
     public long getId() {
       return id;
+    }
+  }
+
+  public static class SomForkJoinTask {
+    public final Object[]   evaluateArgsForSpawn;
+    public volatile boolean stolen;
+    public volatile Object  result;
+
+    public SomForkJoinTask(final Object[] evaluateArgsForSpawn) {
+      this.evaluateArgsForSpawn = evaluateArgsForSpawn;
     }
   }
 
@@ -193,9 +203,18 @@ public final class TaskThreads {
   }
 
   public static final class ForkJoinThreadFactory implements ForkJoinWorkerThreadFactory {
+    private static final int MAX_NUM_THREADS = 40000; // VmSettings.ENABLE_ORG ? 1024 : 4000;
+
+    private int numThreadsCreated;
+
     @Override
-    public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
-      return new ForkJoinThread(pool);
+    public synchronized ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
+      if (numThreadsCreated < MAX_NUM_THREADS) {
+        numThreadsCreated += 1;
+        return new ForkJoinThread(pool);
+      } else {
+        throw new RuntimeException("Can't create more F/J threads than " + MAX_NUM_THREADS);
+      }
     }
   }
 

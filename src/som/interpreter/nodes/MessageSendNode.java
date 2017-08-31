@@ -157,6 +157,10 @@ public final class MessageSendNode {
       return "UninitMsgSend(" + selector.toString() + ")";
     }
 
+    public ExpressionNode[] getArguments() {
+      return this.argumentNodes;
+    }
+
     @Override
     public SSymbol getSelector() {
       return selector;

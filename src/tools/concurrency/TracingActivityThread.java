@@ -1,10 +1,14 @@
 package tools.concurrency;
 
 import java.util.ArrayList;
+import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import som.VM;
+import som.primitives.threading.TaskThreads.SomForkJoinTask;
 import som.vm.Activity;
 import som.vm.VmSettings;
 import tools.TraceData;
@@ -29,6 +33,25 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
 
   protected ConcurrentEntityScope topEntity;
 
+  // Work Steal Parameters
+  public BlockingDeque<SomForkJoinTask> taskQueue = new LinkedBlockingDeque<SomForkJoinTask>();
+
+  public int                workStealingTries = 0;
+  public final SimpleRandom backoffRnd        = new SimpleRandom();
+
+  public static class SimpleRandom {
+    private int seed = 74755;
+
+    public int next() {
+      seed = ((seed * 1309) + 13849) & 65535;
+      return seed;
+    }
+
+    public int next(final int bound) {
+      return next() % bound;
+    }
+  }
+
   private static class ConcurrentEntityScope {
     private final EntityType            type;
     private final ConcurrentEntityScope next;
@@ -51,6 +74,13 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
       traceBuffer = null;
     }
     setName(getClass().getSimpleName() + "-" + threadId);
+
+    if (!VmSettings.ENABLE_ORG) {
+      synchronized (VM.threads) {
+        VM.threads[VM.numWSThreads] = this;
+        VM.numWSThreads += 1;
+      }
+    }
   }
 
   public abstract Activity getActivity();
@@ -113,6 +143,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
       traceBuffer.init(ActorExecutionTrace.getEmptyBuffer(), threadId);
       ActorExecutionTrace.registerThread(this);
     }
+    setName(getClass().getSimpleName() + "-" + threadId);
   }
 
   @Override

@@ -77,6 +77,10 @@ public final class EagerUnaryPrimitiveNode extends EagerPrimitiveNode {
     return 1;
   }
 
+  public ExpressionNode getArgument() {
+    return receiver;
+  }
+
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
     Object rcvr = receiver.executeGeneric(frame);

@@ -34,6 +34,7 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.nodes.DummyParent;
 import som.primitives.SizeAndLengthPrim;
 import som.primitives.SizeAndLengthPrimFactory;
+import som.primitives.threading.TaskThreads.SomForkJoinOrg;
 import som.primitives.threading.TaskThreads.SomForkJoinTask;
 import som.primitives.threading.TaskThreads.SomThreadTask;
 import som.primitives.threading.ThreadingModule;
@@ -95,7 +96,7 @@ public class Types {
     } else if (obj instanceof Condition) {
       assert ThreadingModule.ConditionClass != null;
       return ThreadingModule.ConditionClass;
-    } else if (obj instanceof SomForkJoinTask) {
+    } else if (obj instanceof SomForkJoinTask || obj instanceof SomForkJoinOrg) {
       assert ThreadingModule.TaskClass != null;
       return ThreadingModule.TaskClass;
     }

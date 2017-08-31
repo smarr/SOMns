@@ -1,7 +1,10 @@
 package som;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
@@ -45,7 +48,9 @@ import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors;
+import tools.concurrency.WorkStealingWorker.WSWork;
 import tools.debugger.Tags;
 import tools.debugger.WebDebugger;
 import tools.debugger.session.Breakpoints;
@@ -66,6 +71,7 @@ public final class VM {
   private final ForkJoinPool forkJoinPool;
   private final ForkJoinPool processesPool;
   private final ForkJoinPool threadPool;
+  private final List<WSWork> wsWork;
 
   private final boolean                  avoidExitForTesting;
   @CompilationFinal private ObjectSystem objectSystem;
@@ -81,6 +87,13 @@ public final class VM {
 
   private static final int MAX_THREADS = 0x7fff;
 
+  public static final int MAX_WS_THREADS = 100;
+
+  @CompilationFinal(dimensions = 1) public static final TracingActivityThread[] threads =
+      new TracingActivityThread[MAX_WS_THREADS];
+
+  @CompilationFinal public static int numWSThreads = 0;
+
   public VM(final VmOptions vmOptions, final boolean avoidExitForTesting) {
     this.avoidExitForTesting = avoidExitForTesting;
     options = vmOptions;
@@ -91,8 +104,27 @@ public final class VM {
         new ProcessThreadFactory(), new UncaughtExceptions(this), true);
     forkJoinPool = new ForkJoinPool(VmSettings.NUM_THREADS,
         new ForkJoinThreadFactory(), new UncaughtExceptions(this), false);
-    threadPool = new ForkJoinPool(MAX_THREADS,
-        new ForkJoinThreadFactory(), new UncaughtExceptions(this), false);
+
+    if (VmSettings.ENABLE_ORG) {
+      threadPool = new ForkJoinPool(8, new ForkJoinThreadFactory(),
+          new UncaughtExceptions(this), false);
+    } else {
+      threadPool = new ForkJoinPool(MAX_THREADS, new ForkJoinThreadFactory(),
+          new UncaughtExceptions(this), false);
+    }
+
+    this.wsWork = Collections.synchronizedList(new ArrayList<WSWork>());
+
+    if (!(VmSettings.ENABLE_SEQUENTIAL || VmSettings.ENABLE_ORG)) {
+      wsWork.add(new WSWork(forkJoinPool));
+      wsWork.add(new WSWork(forkJoinPool));
+      wsWork.add(new WSWork(forkJoinPool));
+
+      for (WSWork w : wsWork) {
+        w.execute();
+      }
+    }
+
   }
 
   /**
@@ -106,6 +138,7 @@ public final class VM {
     processesPool = null;
     forkJoinPool = null;
     threadPool = null;
+    wsWork = null;
   }
 
   public WebDebugger getWebDebugger() {

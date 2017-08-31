@@ -14,7 +14,8 @@ public abstract class EagerPrimitiveNode extends ExpressionNode
     this.selector = selector;
   }
 
-  public SSymbol getSelector() {
+  @Override
+  public final SSymbol getSelector() {
     return selector;
   }
 }
