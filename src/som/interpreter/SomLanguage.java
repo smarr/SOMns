@@ -19,6 +19,7 @@ import com.oracle.truffle.api.source.Source;
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.vm.NotYetImplementedException;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import tools.concurrency.Tags.AcquireLock;
 import tools.concurrency.Tags.ActivityCreation;
@@ -210,6 +211,14 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
   @Override
   protected boolean isObjectOfLanguage(final Object object) {
+    if (object instanceof SAbstractObject) {
+      return true;
+    }
     throw new NotYetImplementedException();
+  }
+
+  @Override
+  protected boolean isThreadAccessAllowed(final Thread thread, final boolean singleThreaded) {
+    return true;
   }
 }
