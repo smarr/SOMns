@@ -1,0 +1,82 @@
+(* Copyright (c) 2001-2015 see AUTHORS file
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+class FFTSuite usingPlatform: platform andHarness: harness = (
+| private Array     = platform kernel Array.
+  private Benchmark = harness Benchmark.
+|
+)(
+
+private class COMPLEX = (
+   | re im |
+)
+(
+ public copy: to from: fr = (
+to.re:: fr.re.
+to.im:: fr.im.
+)
+)
+
+  public class Integrate = Benchmark (
+  | private epsilon = 0.00000000100.
+    private xMax = 10000.0. |
+  )(
+    public benchmark = (
+      ^ computeArea: xMax.
+    )
+
+    public verifyResult: result = (
+      (result = 2500000050000000.00000000000) ifFalse: [ error: 'Incorrect Result' + ' result is ' + result].
+      ^ true
+    )
+
+    public computeArea: x = (
+      | fr result|
+      (15 bitXor: 3) println.
+      fr:: (x*x + 1.0) * x.
+      result:: recEval: 0 farLeft: 0 right: x farRight: fr area: 0.
+      ^ result
+     )
+
+    private recEval: l farLeft: fl right: r farRight: fr area: a = (
+      | h hh c fc al ar alr expr1 expr2 texpr1 texpr2|
+
+      h:: (r - l) * 0.5.
+      hh:: h * 0.5.
+      c:: l + h.
+      fc:: (c*c + 1.0) * c.
+      al:: (fl + fc) * hh.
+      ar:: (fr + fc) * hh.
+      alr:: al + ar.
+      ((alr - a < epsilon) && (a - alr < epsilon)) ifTrue: [ ^ alr].
+      texpr1:: Task spawn: [recEval: c farLeft: fc right: r farRight: fr area: ar].
+      texpr2:: Task spawn: [recEval: l farLeft: fl right: c farRight: fc area: al].
+      expr1:: texpr1 join.
+      expr2:: texpr2 join.
+      (* expr1:: recEval: c farLeft: fc right: r farRight: fr area: ar.
+      expr2:: recEval: l farLeft: fl right: c farRight: fc area: al. *)
+      ^ expr1 + expr2.
+     )
+  ) : (
+
+  public newInstance = ( ^ Integrate new )
+  public setupVerifiedRun: run = ( run innerIterations: 1 )
+ )
+)
+

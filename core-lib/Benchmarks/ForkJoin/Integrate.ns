@@ -1,0 +1,49 @@
+class IntegrateSuite usingPlatform: platform andHarness: harness = (
+| private Array     = platform kernel Array.
+  private Benchmark = harness Benchmark.
+  private Task      = platform threading Task.
+|
+)(
+  public class Integrate = Benchmark (
+  | private epsilon = 0.00000000100.
+    private xMax = 1000.0. | (* For 5000, result = 156250012500000 *) (* For 500, result = 15625125000.00033 *) (* For 2500, result =      9765628125000.004*)
+  )(
+    public benchmark = (
+      ^ computeArea: xMax.
+    )
+
+    public verifyResult: result = (
+      (result = 250000500000.001) ifFalse: [ error: 'Incorrect Result: ' + result].
+      ^ true
+    )
+
+    public computeArea: x = (
+      | fr result|
+      fr:: (x*x + 1.0) * x.
+      result:: recEval: 0 farLeft: 0 right: x farRight: fr area: 0.
+      ^ result
+     )
+
+    private recEval: l farLeft: fl right: r farRight: fr area: a = (
+      | h hh c fc al ar alr expr1 expr2 texpr1 texpr2|
+
+      h:: (r - l) * 0.5.
+      hh:: h * 0.5.
+      c:: l + h.
+      fc:: (c*c + 1.0) * c.
+      al:: (fl + fc) * hh.
+      ar:: (fr + fc) * hh.
+      alr:: al + ar.
+      ((alr - a < epsilon) && (a - alr < epsilon)) ifTrue: [ ^ alr].
+      texpr1:: Task spawn: [recEval: c farLeft: fc right: r farRight: fr area: ar].
+      texpr2:: Task spawn: [recEval: l farLeft: fl right: c farRight: fc area: al].
+      expr1:: texpr1 join.
+      expr2:: texpr2 join.
+      ^ expr1 + expr2.
+     )
+  ) : (
+
+  public newInstance = ( ^ Integrate new )
+  public setupVerifiedRun: run = ( run innerIterations: 1 )
+ )
+)

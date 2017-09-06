@@ -1,0 +1,259 @@
+(* Copyright (c) 2001-2015 see AUTHORS file
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+
+class JacobiSuite usingPlatform: platform andHarness: harness = (
+| private Array     = platform kernel Array.
+  private Random    = harness Random.
+  private Benchmark = harness Benchmark.
+  private Vector    = platform kernel Vector.
+  private Task      = platform threading Task.
+|
+)(
+  public class Jacobi = Benchmark (
+  | private epsilon = 0.0001.
+    private expected = createExpected.
+    private N = 256.
+    private dataSize = 258.
+    private granularity = 2. |
+  )(
+    public benchmark = (
+      ^ computeResult.
+    )
+
+    public verifyResult: result = (
+
+    | i |
+    i:: 1.
+    (* [ i <= 15] whileTrue: [
+                          ( ', ' + (result at: i) ) print.
+                          i:: i + 1. ]. *)
+    i:: 1.
+    [ i <= 15] whileTrue: [
+                          ((result at: i) = (expected at: i)) ifFalse: [ error: 'Incorrect Result ' + i + ': ' + (result at: i) + ' ' + (expected at: i) ].
+                          i:: i + 1. ].
+    ^ true.
+    )
+
+    (* private createExpected = (
+      | e |
+      e:: Vector new.
+      e, 0.03532437858581544,0.017849813902944933,0.01192949360929535,
+         0.008988350379449561,0.007195258835605234,0.005983223755848366,
+         0.005145446751888216,0.004491799673319474,0.0040017586597708155,
+         0.0035942981873005597,0.0032725732667924223,0.0029970514366798318,
+         0.0027653688264400733,0.0025724189553933963,0.002397642724590421.
+      ^ e asArray
+    )  *) (* for datasize 1024*)
+
+
+    (*  private createExpected = (
+      | e |
+      e:: Vector new.
+      e, 0.08592890624999999, 0.04485635375976571, 0.02953085008263595,
+         0.022455727302935047, 0.01786960945461402, 0.015140556471532063,
+         0.013131070201561235, 0.012027008346555512, 0.01136572233849592,
+         0.011171329788966233, 0.011045406597036733, 0.01075206889222824,
+         0.010351325524401711, 0.009886317917326415, 0.009387419540406117.
+      ^ e asArray
+    )  *) (* for datasize 16 *)
+
+
+
+     private createExpected = (
+      | e |
+      e:: Vector new.
+      e, 0.04485635375976571, 0.022454818422999345, 0.015009955959066179,
+         0.011189116709923008, 0.008988350379449561, 0.007473777737741605,
+         0.006421113179404858, 0.005607730722584248, 0.005001425315033503,
+         0.004491799673319474, 0.004091032313171428, 0.0037461695373718906,
+         0.0034564480260170782, 0.003215396904645007, 0.0029970514366798318.
+      ^ e asArray
+    )  (* for datasize 256 *)
+
+
+  (* private createExpected = (
+      | e |
+      e:: Vector new.
+      e, 0.233427758789063, 0.229009603634477, 0.227870588728938,
+         0.227419214956334, 0.22719596653086,  0.227069554727413,
+         0.226991127818523, 0.226939154970952, 0.226902952237417,
+         0.226876730468932, 0.226857131930357, 0.226842100532465,
+         0.226830320188084, 0.226820916811076, 0.226813291463287.
+      ^ e asArray
+    ) *) (* for datasize 256 -- incorrect *)
+
+
+    private computeResult = (
+
+    | a b i j k iter arr1 arr2 result val dim innersteps |
+
+    a:: Array new: dataSize withAll:[ Array new: dataSize withAll: epsilon].
+    b:: Array new: dataSize withAll: [ Array new: dataSize withAll: 0.0].
+    result:: Array new: dataSize withAll: 0.0.
+
+    k:: 1.
+    dim:: N + 2.
+    ('N: ' + N ) println.
+
+    [ k <= dim ] whileTrue: [
+                            ( a at: k ) at: 1 put: 1.0.
+                            ( a at: k ) at: dim put: 1.0.
+                            ( a at: 1 ) at: k put: 1.0.
+                            ( a at: dim) at: k put: 1.0.
+                            ( b at: k ) at: 1 put: 1.0.
+                            ( b at: k ) at: dim put: 1.0.
+                            ( b at: 1 ) at: k put: 1.0.
+                            ( b at: dim) at: k put: 1.0.
+                            k:: k + 1. ].
+
+    i:: 0.
+    innersteps:: 8. (* 2^10 = 1024, 2^8 = 256 *)
+    iter:: 1.
+
+
+    [ i < 3 ] whileTrue: [  j:: 0.
+                            [ j < 5 ] whileTrue: [  val:: 0.0.
+                                                     k:: 0.
+                                                     [ k < innersteps ] whileTrue: [  val:: buildNode: a and: b lrow: 2 hrow: (N + 1) lcol: 2 hcol: (N + 1) leafnodes: 2 steps: k.
+                                                                                      k:: k + 1. ].
+                                                     ( iter <= 15 ) ifTrue: [ result at: iter put: val. ].
+                                                     iter:: iter + 1.
+                                                     j:: j + 1. ].
+                            i:: i + 1. ].
+    ^result.
+   )
+
+    private buildNode: a and: b lrow: lr hrow: hr lcol: lc hcol: hc leafnodes: leafs steps: st = (
+
+      | rows cols mr mc hrows hcols tdf1 tdf2 tdf3 tdf4 df1 df2 df3 df4 t1 t2 tleafs |
+
+      tleafs:: leafs.
+      rows:: hr - lr + 1.
+      cols:: hc - lc + 1.
+      mr:: (lr + hr) >>> 1.
+      mc:: (lc + hc) >>> 1.
+      hrows:: mr - lr + 1.
+      hcols:: mc - lc + 1.
+      df1:: 0.
+      df2:: 0.
+      df3:: 0.
+      df4:: 0.
+
+      ( rows * cols <= leafs ) ifTrue:[  tleafs:: tleafs + 1.
+                                         ^processLeafNode: a and: b lrow: lr hrow: hr lcol: lc hcol: hc steps: st. ].
+
+      ( hrows * hcols >= leafs ) ifTrue:[
+        tdf1:: Task spawn:[ buildNode: a and: b lrow: lr hrow: mr lcol: lc hcol: mc leafnodes: tleafs steps: st ].
+        tdf2:: Task spawn:[ buildNode: a and: b lrow: lr hrow: mr lcol: ( mc + 1 ) hcol: hc leafnodes: tleafs steps: st ].
+        tdf3:: Task spawn:[ buildNode: a and: b lrow: ( mr + 1 ) hrow: hr lcol: lc hcol: mc leafnodes: tleafs steps: st ].
+        tdf4:: Task spawn:[ buildNode: a and: b lrow: ( mr + 1 ) hrow: hr lcol: ( mc + 1 ) hcol: hc leafnodes: tleafs steps: st ].
+
+        df1:: tdf1 join.
+        df2:: tdf2 join.
+        df3:: tdf3 join.
+        df4:: tdf4 join.
+
+
+       ( df1 > df2 )
+          ifTrue:  [ t1:: df1.]
+          ifFalse: [ t1:: df2.].
+
+       ( t1 > df3 )
+          ifTrue:  [ ( df1 > df2 )
+                        ifTrue:  [ t1:: df1. ]
+                        ifFalse: [ t1:: df2. ]]
+          ifFalse: [ t1:: df3. ].
+
+       ( t1 > df4 )
+          ifTrue:  [ ( df1 > df2 )
+                        ifTrue:  [ t2:: df1. ]
+                        ifFalse: [ t2:: df2. ].
+
+                     ( t2 > df3 )
+                        ifTrue:  [ ( df1 > df2 )
+                                      ifTrue:  [ t2:: df1. ]
+                                      ifFalse: [ t2:: df2. ]]
+                        ifFalse: [ t2:: df3. ]]
+
+          ifFalse: [ t2:: df4. ].
+       ^ t2.
+      ].
+
+      ( cols >= rows ) ifTrue: [
+        tdf1:: Task spawn:[ buildNode: a and: b lrow: lr hrow: hr lcol: lc hcol: mc leafnodes: tleafs steps: st ].
+        tdf2:: Task spawn:[ buildNode: a and: b lrow: lr hrow: hr lcol: ( mc + 1 ) hcol: hc leafnodes: tleafs steps: st ].
+
+        df1:: tdf1 join.
+        df2:: tdf2 join.
+
+      ( df1 > df2 )
+          ifTrue:  [ ^df1 ]
+          ifFalse: [ ^df2 ]
+      ].
+
+      tdf1:: Task spawn:[ buildNode: a and: b lrow: lr hrow: mr lcol: lc hcol: hc leafnodes: tleafs steps: st ].
+      tdf2:: Task spawn:[ buildNode: a and: b lrow: ( mr + 1 ) hrow: hr lcol: lc hcol: hc leafnodes: tleafs steps: st ].
+
+        df1:: tdf1 join.
+        df2:: tdf2 join.
+
+      ( df1 > df2 )
+         ifTrue:  [ ^df1 ]
+         ifFalse: [ ^df2 ].
+    )
+
+    private processLeafNode: A and: B lrow: lr hrow: hr lcol: lc hcol: hc steps: st = (
+
+    | a b md v i j diff AtoB |
+
+    a:: B.
+    b:: A.
+    AtoB:: (st & 1).
+
+    AtoB = 0
+      ifTrue: [ a:: A. b:: B. ].
+
+    md:: 0.0.
+    i:: lr.
+
+
+     [ i <= hr]
+        whileTrue: [
+           j:: lc.
+           [ j <= hc]
+
+           whileTrue: [
+
+              v:: 0.25 * (((a at: (i - 1)) at: j ) + ((a at: i) at: ( j - 1 )) + ((a at: (i + 1)) at: j) + ((a at: i) at: ( j + 1 ))).
+              ( b at: i ) at: j put: v.
+              diff:: v - ((a at: i) at: j ).
+              ( diff < 0 ) ifTrue:  [ diff:: diff - 2*diff ].
+              ( diff > md ) ifTrue: [ md:: diff ].
+              j:: j + 1.].
+           i:: i + 1. ].
+    ^ md.
+    )
+  ) : (
+
+  public newInstance = ( ^ Jacobi new )
+  public setupVerifiedRun: run = ( run innerIterations: 1 )
+ )
+)
+

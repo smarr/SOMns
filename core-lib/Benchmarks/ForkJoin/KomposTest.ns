@@ -1,0 +1,102 @@
+class KomposTest usingPlatform: platform andHarness: harness = (
+|
+  private Benchmark = harness Benchmark.
+  private Random    = harness Random.
+  private Array     = platform kernel Array.
+  private Task      = platform threading Task.
+
+|)
+(
+public class Kompos = Benchmark (
+|   private arr = self randomArray: self dataSize with: Random new.
+    private prefixSum = calculatePrefixSum: arr.
+|)(
+  private class TempTreeNode left: left right: right sum: sum low: low high: high = (
+    | public left  = left.
+      public right = right.
+      public sum  = sum.
+      public low  = low.
+      public high = high.
+    |)(public isLeaf = ( ^ left isNil and: [ right isNil ] ))
+
+    public buildParallelSumTree: data from: low to: high = (
+      | left leftTask right rightTask|
+      high - low < 2 ifTrue: [ ^ TempTreeNode left: nil right: nil sum: (data at: low) low: low high: high ].
+
+	(* left:: buildParallelSumTree: data from: low to: (high + low) / 2. *)
+        (* right:: buildParallelSumTree: data from: (high + low) / 2 to: high. *)
+
+        leftTask:: Task spawn: [:l :h | buildParallelSumTree: data from: l to: h ] with: (Array with: low with: (high + low) / 2).
+        rightTask:: Task spawn: [:l :h | buildParallelSumTree: data from: l to: h ] with: (Array with: (high + low) / 2 with: high).
+
+	left:: leftTask join.
+	right:: rightTask join.
+
+      ^  TempTreeNode left: left right: right sum: left sum + right sum low: low high: high
+    )
+
+    public calculateSumOf: tempNode with: leftSum from: input into: result = (
+      tempNode isLeaf
+        ifTrue: [
+          result at: tempNode low put: (input at: tempNode low) + leftSum ]
+        ifFalse: [
+	  | leftTask rightTask|
+
+          leftTask:: Task spawn: [calculateSumOf: tempNode left with: leftSum from: input into: result].
+          rightTask:: Task spawn: [calculateSumOf: tempNode right with: leftSum + tempNode left sum from: input into: result].
+	  leftTask join.
+	  rightTask join.
+
+	(* leftTask:: calculateSumOf: tempNode left with: leftSum from: input into: result.
+	rightTask:: calculateSumOf: tempNode right with: leftSum + tempNode left sum from: input into: result. *)
+
+        ]
+    )
+
+    public calculateParallelPrefixSum: arr = (
+      | tempTree result |
+      result:: Array new: arr size withAll: 0.
+      tempTree:: buildParallelSumTree: arr from: 1 to: arr size + 1.
+      calculateSumOf: tempTree with: 0 from: arr into: result.
+      ^ result
+    )
+
+randomArray: size with: random = (
+|array|
+array:: Array new: size withAll: [random next].
+^array
+)
+
+
+ benchmark = (
+(* 	| arr |
+        arr:: self randomArray: self dataSize with: Random new. *)
+	^ calculateParallelPrefixSum: arr.
+)
+
+
+public verifyResult: result = (
+
+  result doIndexes: [ :i | ((result at: i) = (prefixSum at: i)) ifFalse: [ error: 'Incorrect Result' + i + ' ' + (result at: i) + ' ' + (prefixSum at: i) ]].
+  ^ true
+)
+
+
+private calculatePrefixSum: arr = (
+
+        | prefixSum |
+	prefixSum:: Array new: arr size.
+	arr doIndexes: [:i |
+	| prev |
+	i = 1 ifTrue: [ prev:: 0 ] ifFalse: [ prev:: prefixSum at: i - 1 ].
+	prefixSum at: i put: (arr at: i) + prev ].
+	^ prefixSum
+)
+
+dataSize = ( ^ 100000 )
+)
+:(
+public newInstance = (^ Kompos new)
+public setupVerifiedRun: run = (run innerIterations: 1)
+)
+)
