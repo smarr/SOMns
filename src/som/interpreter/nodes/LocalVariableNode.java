@@ -138,19 +138,18 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
       return expValue;
     }
 
-    /*
-     * write a Long value, but check if the AST subtree fulfills the necessary conditions
-     * to be replaced with an IncrementOperationNode. In case it does, replace myself
-     * with an IncrementOperationNode. In case it doesn't, the @Cached annotation ensures
-     * that ``isIncrementOperation`` is not called at every node evaluation.
-     */
-    @Specialization(guards = "isLongKind(expValue)")
-    public final long writeLong(final VirtualFrame frame, final long expValue,
-                                @Cached("isIncrementOperation(getExp(), var)") final boolean isIncrement) {
+    @Specialization(guards = "isIncrement")
+    public final long writeLongAndInsertSuperinstruction(final VirtualFrame frame,
+                         final long expValue,
+                         final @Cached("isIncrementOperation(getExp(), var)") boolean isIncrement) {
       frame.setLong(slot, expValue);
-      if(isIncrement) {
-        IncrementOperationNode.replaceNode(this);
-      }
+      IncrementOperationNode.replaceNode(this);
+      return expValue;
+    }
+
+    @Specialization(guards = "isLongKind(expValue)")
+    public final long writeLong(final VirtualFrame frame, final long expValue) {
+      frame.setLong(slot, expValue);
       return expValue;
     }
 
