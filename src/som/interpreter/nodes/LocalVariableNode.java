@@ -13,6 +13,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import som.compiler.Variable.Local;
 import som.interpreter.InliningVisitor;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
+import som.interpreter.nodes.superinstructions.AssignVariableProductNode;
 import som.interpreter.nodes.superinstructions.IncrementOperationNode;
 import som.vm.constants.Nil;
 import tools.debugger.Tags.LocalVariableTag;
@@ -118,7 +119,7 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
     }
   }
 
-  @ImportStatic(IncrementOperationNode.class)
+  @ImportStatic({IncrementOperationNode.class, AssignVariableProductNode.class})
   @NodeChild(value = "exp", type = ExpressionNode.class)
   public abstract static class LocalVariableWriteNode extends LocalVariableNode {
 
@@ -144,6 +145,15 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
                          final @Cached("isIncrementOperation(getExp(), var)") boolean isIncrement) {
       frame.setLong(slot, expValue);
       IncrementOperationNode.replaceNode(this);
+      return expValue;
+    }
+
+    @Specialization(guards = "isAssign")
+    public final double writeDoubleAndInsertSuperinstruction(final VirtualFrame frame,
+                                         final double expValue,
+                                         final @Cached("isAssignOperation(getExp())") boolean isAssign) {
+      frame.setDouble(slot, expValue);
+      AssignVariableProductNode.replaceNode(this);
       return expValue;
     }
 
