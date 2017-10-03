@@ -6,10 +6,12 @@ import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
+import som.VM;
 import som.compiler.Variable;
 import som.interpreter.InliningVisitor;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.LocalVariableNode;
+import som.interpreter.nodes.SOMNode;
 import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.primitives.arithmetic.AdditionPrim;
@@ -99,12 +101,13 @@ public abstract class IncrementOperationNode extends LocalVariableNode {
    *    |- AdditionPrim
    */
   public static boolean isIncrementOperation(ExpressionNode exp, Variable.Local var) {
+    exp = SOMNode.unwrapIfNecessary(exp);
     if(exp instanceof EagerBinaryPrimitiveNode) {
       List<Node> children = NodeUtil.findNodeChildren(exp);
-      if(children.get(0) instanceof LocalVariableReadNode
-              && children.get(1) instanceof IntegerLiteralNode
-              && children.get(2) instanceof AdditionPrim) {
-        LocalVariableReadNode read = (LocalVariableReadNode)children.get(0);
+      if(SOMNode.unwrapIfNecessary(children.get(0)) instanceof LocalVariableReadNode
+              && SOMNode.unwrapIfNecessary(children.get(1)) instanceof IntegerLiteralNode
+              && SOMNode.unwrapIfNecessary(children.get(2)) instanceof AdditionPrim) {
+        LocalVariableReadNode read = (LocalVariableReadNode)SOMNode.unwrapIfNecessary(children.get(0));
         if(read.getVar().equals(var)) {
           return true;
         }
@@ -115,10 +118,13 @@ public abstract class IncrementOperationNode extends LocalVariableNode {
 
   public static void replaceNode(LocalVariableWriteNode node) {
     // TODO: This could be optimized
-    long increment = ((IntegerLiteralNode)NodeUtil.findNodeChildren(node.getExp()).get(1)).getValue();
+    long increment = ((IntegerLiteralNode)
+            SOMNode.unwrapIfNecessary(NodeUtil.findNodeChildren(
+              SOMNode.unwrapIfNecessary(node.getExp())).get(1))).getValue();
     IncrementOperationNode newNode = IncrementOperationNodeGen.create(node.getVar(),
             increment,
             node).initialize(node.getSourceSection());
     node.replace(newNode);
+    VM.insertInstrumentationWrapper(newNode);
   }
 }

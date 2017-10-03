@@ -7,11 +7,13 @@ import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
+import som.VM;
 import som.compiler.Variable;
 import som.interpreter.InliningVisitor;
 import som.interpreter.nodes.ArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.LocalVariableNode;
+import som.interpreter.nodes.SOMNode;
 import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.primitives.arithmetic.AdditionPrim;
@@ -113,11 +115,12 @@ public abstract class AssignVariableProductNode extends LocalVariableNode {
    *    |- MultiplicationPrim
    */
   public static boolean isAssignOperation(ExpressionNode exp) {
+    exp = SOMNode.unwrapIfNecessary(exp);
     if(exp instanceof EagerBinaryPrimitiveNode) {
       List<Node> children = NodeUtil.findNodeChildren(exp);
-      if(children.get(0) instanceof LocalVariableReadNode
-              && children.get(1) instanceof LocalVariableReadNode
-              && children.get(2) instanceof MultiplicationPrim) {
+      if(SOMNode.unwrapIfNecessary(children.get(0)) instanceof LocalVariableReadNode
+              && SOMNode.unwrapIfNecessary(children.get(1)) instanceof LocalVariableReadNode
+              && SOMNode.unwrapIfNecessary(children.get(2)) instanceof MultiplicationPrim) {
         return true;
       }
     }
@@ -126,13 +129,15 @@ public abstract class AssignVariableProductNode extends LocalVariableNode {
 
   public static void replaceNode(LocalVariableWriteNode node) {
     // TODO: This could be optimized
-    List<Node> eagerChildren = NodeUtil.findNodeChildren(node.getExp());
-    Variable.Local left = ((LocalVariableReadNode)eagerChildren.get(0)).getVar();
-    Variable.Local right = ((LocalVariableReadNode)eagerChildren.get(1)).getVar();
+    List<Node> eagerChildren = NodeUtil.findNodeChildren(
+            SOMNode.unwrapIfNecessary(node.getExp()));
+    Variable.Local left = ((LocalVariableReadNode)SOMNode.unwrapIfNecessary(eagerChildren.get(0))).getVar();
+    Variable.Local right = ((LocalVariableReadNode)SOMNode.unwrapIfNecessary(eagerChildren.get(1))).getVar();
     AssignVariableProductNode newNode = AssignVariableProductNodeGen.create(node.getVar(),
             left,
             right,
             node).initialize(node.getSourceSection());
     node.replace(newNode);
+    VM.insertInstrumentationWrapper(newNode);
   }
 }
