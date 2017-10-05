@@ -386,7 +386,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
     singleRun = (
         | sum v |
         v:: Vector new.
-        v at: 1 put: 1.
+        v append: 1.
         sum:: 0.
         [sum < 1000]
             whileTrue:
