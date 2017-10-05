@@ -217,7 +217,8 @@ public final class MetricsCsvWriter {
           p.getOperation().equals("sqrt") ||
           p.getOperation().equals("sin") ||
           p.getOperation().equals("cos") ||
-          p.getOperation().equals("asInteger")) {
+          p.getOperation().equals("asInteger") ||
+          p.getOperation().equals("round")) {
         return typeCategory(a.getArgType(1));
       } else if (p.getOperation().equals("as32BitUnsignedValue") ||
           p.getOperation().equals("as32BitSignedValue")) {
