@@ -10,13 +10,10 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 import som.VM;
 import som.compiler.Variable;
 import som.interpreter.InliningVisitor;
-import som.interpreter.nodes.ArgumentReadNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.LocalVariableNode;
 import som.interpreter.nodes.SOMNode;
-import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
-import som.primitives.arithmetic.AdditionPrim;
 import som.primitives.arithmetic.MultiplicationPrim;
 import tools.dym.Tags;
 
@@ -25,21 +22,21 @@ import java.util.List;
 /**
  * Created by fred on 29/09/17.
  */
-public abstract class AssignVariableProductNode extends LocalVariableNode {
+public abstract class AssignProductToVariableNode extends LocalVariableNode {
   protected final FrameSlot leftSlot, rightSlot;
   protected final LocalVariableNode originalSubtree;
 
-  public AssignVariableProductNode(final Variable.Local destination,
-                                   final Variable.Local left,
-                                   final Variable.Local right,
-                                   final LocalVariableNode originalSubtree) {
+  public AssignProductToVariableNode(final Variable.Local destination,
+                                     final Variable.Local left,
+                                     final Variable.Local right,
+                                     final LocalVariableNode originalSubtree) {
     super(destination);
     this.leftSlot = left.getSlot();
     this.rightSlot = right.getSlot();
     this.originalSubtree = originalSubtree;
   }
 
-  public AssignVariableProductNode(final AssignVariableProductNode node) {
+  public AssignProductToVariableNode(final AssignProductToVariableNode node) {
     super(node.var);
     this.leftSlot = node.getLeftSlot();
     this.rightSlot = node.getRightSlot();
@@ -133,7 +130,7 @@ public abstract class AssignVariableProductNode extends LocalVariableNode {
             SOMNode.unwrapIfNecessary(node.getExp()));
     Variable.Local left = ((LocalVariableReadNode)SOMNode.unwrapIfNecessary(eagerChildren.get(0))).getVar();
     Variable.Local right = ((LocalVariableReadNode)SOMNode.unwrapIfNecessary(eagerChildren.get(1))).getVar();
-    AssignVariableProductNode newNode = AssignVariableProductNodeGen.create(node.getVar(),
+    AssignProductToVariableNode newNode = AssignProductToVariableNodeGen.create(node.getVar(),
             left,
             right,
             node).initialize(node.getSourceSection());
