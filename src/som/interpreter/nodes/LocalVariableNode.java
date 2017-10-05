@@ -15,6 +15,7 @@ import som.interpreter.InliningVisitor;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.nodes.superinstructions.AssignVariableProductNode;
 import som.interpreter.nodes.superinstructions.IncrementOperationNode;
+import som.vm.VmSettings;
 import som.vm.constants.Nil;
 import tools.debugger.Tags.LocalVariableTag;
 import tools.dym.Tags.LocalVarRead;
@@ -119,7 +120,7 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
     }
   }
 
-  @ImportStatic({IncrementOperationNode.class, AssignVariableProductNode.class})
+  @ImportStatic({IncrementOperationNode.class, AssignVariableProductNode.class, VmSettings.class})
   @NodeChild(value = "exp", type = ExpressionNode.class)
   public abstract static class LocalVariableWriteNode extends LocalVariableNode {
 
@@ -139,7 +140,7 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
       return expValue;
     }
 
-    @Specialization(guards = "isIncrement")
+    @Specialization(guards = {"SUPERINSTRUCTIONS", "isIncrement"})
     public final long writeLongAndInsertSuperinstruction(final VirtualFrame frame,
                          final long expValue,
                          final @Cached("isIncrementOperation(getExp(), var)") boolean isIncrement) {
@@ -148,7 +149,7 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
       return expValue;
     }
 
-    @Specialization(guards = "isAssign")
+    @Specialization(guards = {"SUPERINSTRUCTIONS", "isAssign"})
     public final double writeDoubleAndInsertSuperinstruction(final VirtualFrame frame,
                                          final double expValue,
                                          final @Cached("isAssignOperation(getExp())") boolean isAssign) {
