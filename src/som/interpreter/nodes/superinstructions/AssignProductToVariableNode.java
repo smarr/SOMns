@@ -114,10 +114,10 @@ public abstract class AssignProductToVariableNode extends LocalVariableNode {
   public static boolean isAssignOperation(ExpressionNode exp) {
     exp = SOMNode.unwrapIfNecessary(exp);
     if(exp instanceof EagerBinaryPrimitiveNode) {
-      List<Node> children = NodeUtil.findNodeChildren(exp);
-      if(SOMNode.unwrapIfNecessary(children.get(0)) instanceof LocalVariableReadNode
-              && SOMNode.unwrapIfNecessary(children.get(1)) instanceof LocalVariableReadNode
-              && SOMNode.unwrapIfNecessary(children.get(2)) instanceof MultiplicationPrim) {
+      EagerBinaryPrimitiveNode eagerNode = (EagerBinaryPrimitiveNode)exp;
+      if(SOMNode.unwrapIfNecessary(eagerNode.getReceiver()) instanceof LocalVariableReadNode
+              && SOMNode.unwrapIfNecessary(eagerNode.getArgument()) instanceof LocalVariableReadNode
+              && SOMNode.unwrapIfNecessary(eagerNode.getPrimitive()) instanceof MultiplicationPrim) {
         return true;
       }
     }
@@ -125,11 +125,9 @@ public abstract class AssignProductToVariableNode extends LocalVariableNode {
   }
 
   public static void replaceNode(LocalVariableWriteNode node) {
-    // TODO: This could be optimized
-    List<Node> eagerChildren = NodeUtil.findNodeChildren(
-            SOMNode.unwrapIfNecessary(node.getExp()));
-    Variable.Local left = ((LocalVariableReadNode)SOMNode.unwrapIfNecessary(eagerChildren.get(0))).getVar();
-    Variable.Local right = ((LocalVariableReadNode)SOMNode.unwrapIfNecessary(eagerChildren.get(1))).getVar();
+    EagerBinaryPrimitiveNode eagerNode = (EagerBinaryPrimitiveNode)SOMNode.unwrapIfNecessary(node.getExp());
+    Variable.Local left = ((LocalVariableReadNode)SOMNode.unwrapIfNecessary(eagerNode.getReceiver())).getVar();
+    Variable.Local right = ((LocalVariableReadNode)SOMNode.unwrapIfNecessary(eagerNode.getArgument())).getVar();
     AssignProductToVariableNode newNode = AssignProductToVariableNodeGen.create(node.getVar(),
             left,
             right,

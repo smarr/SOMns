@@ -103,11 +103,11 @@ public abstract class IncrementOperationNode extends LocalVariableNode {
   public static boolean isIncrementOperation(ExpressionNode exp, Variable.Local var) {
     exp = SOMNode.unwrapIfNecessary(exp);
     if(exp instanceof EagerBinaryPrimitiveNode) {
-      List<Node> children = NodeUtil.findNodeChildren(exp);
-      if(SOMNode.unwrapIfNecessary(children.get(0)) instanceof LocalVariableReadNode
-              && SOMNode.unwrapIfNecessary(children.get(1)) instanceof IntegerLiteralNode
-              && SOMNode.unwrapIfNecessary(children.get(2)) instanceof AdditionPrim) {
-        LocalVariableReadNode read = (LocalVariableReadNode)SOMNode.unwrapIfNecessary(children.get(0));
+      EagerBinaryPrimitiveNode eagerNode = (EagerBinaryPrimitiveNode)exp;
+      if(SOMNode.unwrapIfNecessary(eagerNode.getReceiver()) instanceof LocalVariableReadNode
+              && SOMNode.unwrapIfNecessary(eagerNode.getArgument()) instanceof IntegerLiteralNode
+              && SOMNode.unwrapIfNecessary(eagerNode.getPrimitive()) instanceof AdditionPrim) {
+        LocalVariableReadNode read = (LocalVariableReadNode)SOMNode.unwrapIfNecessary(eagerNode.getReceiver());
         if(read.getVar().equals(var)) {
           return true;
         }
@@ -117,10 +117,8 @@ public abstract class IncrementOperationNode extends LocalVariableNode {
   }
 
   public static void replaceNode(LocalVariableWriteNode node) {
-    // TODO: This could be optimized
-    long increment = ((IntegerLiteralNode)
-            SOMNode.unwrapIfNecessary(NodeUtil.findNodeChildren(
-              SOMNode.unwrapIfNecessary(node.getExp())).get(1))).getValue();
+    EagerBinaryPrimitiveNode eagerNode = (EagerBinaryPrimitiveNode)SOMNode.unwrapIfNecessary(node.getExp());
+    long increment = ((IntegerLiteralNode)eagerNode.getArgument()).getValue();
     IncrementOperationNode newNode = IncrementOperationNodeGen.create(node.getVar(),
             increment,
             node).initialize(node.getSourceSection());
