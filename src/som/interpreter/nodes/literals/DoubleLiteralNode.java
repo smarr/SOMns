@@ -19,4 +19,8 @@ public final class DoubleLiteralNode extends LiteralNode {
   public Object executeGeneric(final VirtualFrame frame) {
     return value;
   }
+
+  public double getValue() {
+    return value;
+  }
 }

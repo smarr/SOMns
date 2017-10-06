@@ -100,13 +100,9 @@ import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.nodes.literals.ObjectLiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
 import som.interpreter.nodes.literals.SymbolLiteralNode;
+import som.interpreter.nodes.specialized.*;
 import som.interpreter.nodes.specialized.BooleanInlinedLiteralNode.AndInlinedLiteralNode;
 import som.interpreter.nodes.specialized.BooleanInlinedLiteralNode.OrInlinedLiteralNode;
-import som.interpreter.nodes.specialized.IfInlinedLiteralNode;
-import som.interpreter.nodes.specialized.IfTrueIfFalseInlinedLiteralsNode;
-import som.interpreter.nodes.specialized.IntDownToDoInlinedLiteralsNodeGen;
-import som.interpreter.nodes.specialized.IntTimesRepeatLiteralNodeGen;
-import som.interpreter.nodes.specialized.IntToDoInlinedLiteralsNodeGen;
 import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
 import som.vm.Symbols;
 import som.vm.VmSettings;
@@ -1462,13 +1458,13 @@ public class Parser {
           ExpressionNode condition = arguments.get(0);
           condition.markAsControlFlowCondition();
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
-          return new IfInlinedLiteralNode(condition, true, inlinedBody,
-              arguments.get(1));
+          return IfInlinedLiteralNodeGen.create(condition, true, inlinedBody,
+                  arguments.get(1));
         } else if ("ifFalse:".equals(msgStr)) {
           ExpressionNode condition = arguments.get(0);
           condition.markAsControlFlowCondition();
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
-          return new IfInlinedLiteralNode(condition, false, inlinedBody,
+          return IfInlinedLiteralNodeGen.create(condition, false, inlinedBody,
               arguments.get(1));
         } else if ("whileTrue:".equals(msgStr)) {
           if (!(arguments.get(0) instanceof LiteralNode)
