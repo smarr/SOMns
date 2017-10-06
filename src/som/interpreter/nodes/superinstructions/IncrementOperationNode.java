@@ -118,7 +118,7 @@ public abstract class IncrementOperationNode extends LocalVariableNode {
 
   public static void replaceNode(LocalVariableWriteNode node) {
     EagerBinaryPrimitiveNode eagerNode = (EagerBinaryPrimitiveNode)SOMNode.unwrapIfNecessary(node.getExp());
-    long increment = ((IntegerLiteralNode)eagerNode.getArgument()).getValue();
+    long increment = ((IntegerLiteralNode)SOMNode.unwrapIfNecessary(eagerNode.getArgument())).getValue();
     IncrementOperationNode newNode = IncrementOperationNodeGen.create(node.getVar(),
             increment,
             node).initialize(node.getSourceSection());
