@@ -67,6 +67,10 @@ public abstract class ArgumentReadNode {
     public void replaceAfterScopeChange(final InliningVisitor inliner) {
       inliner.updateRead(arg, this, 0);
     }
+
+    public int getArgumentIndex() {
+      return argumentIndex;
+    }
   }
 
   public static class LocalSelfReadNode extends LocalArgumentReadNode implements ISpecialSend {

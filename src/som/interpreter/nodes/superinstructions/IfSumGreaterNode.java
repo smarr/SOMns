@@ -72,7 +72,7 @@ abstract public class IfSumGreaterNode extends ExprWithTagsNode {
   }
 
   @Specialization(replaces = {"executeSpecialized"})
-  public Object execute(final VirtualFrame frame) {
+  public Object executeAndDeoptimize(final VirtualFrame frame) {
     Object result = originalSubtree.executeGeneric(frame);
     replace(originalSubtree);
     return result;
@@ -103,6 +103,7 @@ abstract public class IfSumGreaterNode extends ExprWithTagsNode {
             node.getBodyNode(),
             node).initialize(node.getSourceSection());
     node.replace(newNode);
+    newNode.adoptChildren(); // because we adopt the body node
     VM.insertInstrumentationWrapper(newNode);
     return newNode;
   }
@@ -115,8 +116,12 @@ abstract public class IfSumGreaterNode extends ExprWithTagsNode {
     return SOMNode.unwrapIfNecessary(eagerNode.getArgument());
   }
 
-  public static boolean isIfSumGreaterNode(ExpressionNode conditionNode,
+  public static boolean isIfSumGreaterNode(boolean expectedBool,
+                                           ExpressionNode conditionNode,
                                            VirtualFrame frame) {
+    // is this even ifTrue?
+    if(!expectedBool)
+      return false;
     // is the branching condition a greater-than comparison?
     if(SOMNode.unwrapIfNecessary(conditionNode) instanceof EagerBinaryPrimitiveNode) {
       EagerBinaryPrimitiveNode condition = (EagerBinaryPrimitiveNode)SOMNode.unwrapIfNecessary(conditionNode);

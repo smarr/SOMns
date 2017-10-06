@@ -104,6 +104,7 @@ import som.interpreter.nodes.specialized.*;
 import som.interpreter.nodes.specialized.BooleanInlinedLiteralNode.AndInlinedLiteralNode;
 import som.interpreter.nodes.specialized.BooleanInlinedLiteralNode.OrInlinedLiteralNode;
 import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
+import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNodeGen;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
@@ -1475,8 +1476,8 @@ public class Parser {
           inlinedCondition.markAsControlFlowCondition();
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           inlinedBody.markAsLoopBody();
-          return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
-              true, arguments.get(0), arguments.get(1));
+          return WhileInlinedLiteralsNodeGen.create(inlinedCondition, inlinedBody,
+                  true, arguments.get(0), arguments.get(1));
         } else if ("whileFalse:".equals(msgStr)) {
           if (!(arguments.get(0) instanceof LiteralNode)
               || !(arguments.get(1) instanceof LiteralNode)) {
@@ -1486,7 +1487,7 @@ public class Parser {
           inlinedCondition.markAsControlFlowCondition();
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           inlinedBody.markAsLoopBody();
-          return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
+          return WhileInlinedLiteralsNodeGen.create(inlinedCondition, inlinedBody,
               false, arguments.get(0), arguments.get(1));
         } else if ("or:".equals(msgStr) || "||".equals(msgStr)) {
           ExpressionNode inlinedArg = ((LiteralNode) arguments.get(1)).inline(builder);

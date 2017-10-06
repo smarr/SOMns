@@ -22,7 +22,7 @@ abstract public class IfInlinedLiteralNode extends ExprWithTagsNode {
   @Child private ExpressionNode conditionNode;
   @Child private ExpressionNode bodyNode;
 
-  private final boolean expectedBool;
+  protected final boolean expectedBool;
 
   // In case we need to revert from this optimistic optimization, keep the
   // original nodes around
@@ -48,7 +48,7 @@ abstract public class IfInlinedLiteralNode extends ExprWithTagsNode {
 
   @Specialization(guards = { "SUPERINSTRUCTIONS", "isApplicable"})
   public Object executeAndReplace(final VirtualFrame frame,
-                                  @Cached("isIfSumGreaterNode(getConditionNode(), frame)")
+                                  @Cached("isIfSumGreaterNode(expectedBool, getConditionNode(), frame)")
                                           boolean isApplicable) {
     return IfSumGreaterNode.replaceNode(this).executeGeneric(frame);
   }

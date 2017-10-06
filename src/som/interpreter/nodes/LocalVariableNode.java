@@ -140,8 +140,9 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
       return expValue;
     }
 
+    /** Check for ``IncrementOperationNode`` superinstruction and replcae where applicable */
     @Specialization(guards = {"SUPERINSTRUCTIONS", "isIncrement"})
-    public final long writeLongAndInsertSuperinstruction(final VirtualFrame frame,
+    public final long writeLongAndReplaceWithIncrement(final VirtualFrame frame,
                          final long expValue,
                          final @Cached("isIncrementOperation(getExp(), var)") boolean isIncrement) {
       frame.setLong(slot, expValue);
@@ -149,8 +150,9 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
       return expValue;
     }
 
+    /** Check for ``WhileSmallerEqualThanArgumentNode`` superinstruction and replace where applicable */
     @Specialization(guards = {"SUPERINSTRUCTIONS", "isAssign"})
-    public final double writeDoubleAndInsertSuperinstruction(final VirtualFrame frame,
+    public final double writeDoubleAndReplaceWithAssign(final VirtualFrame frame,
                                          final double expValue,
                                          final @Cached("isAssignOperation(getExp())") boolean isAssign) {
       frame.setDouble(slot, expValue);
