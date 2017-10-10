@@ -173,7 +173,14 @@ public final class SClass extends SObjectWithClass {
     // assert instanceClassGroup != null || !ObjectSystem.isInitialized();
   }
 
-  private boolean isBasedOn(final MixinDefinitionId mixinId) {
+  /**
+   * This method checks whether a given class was created from `this`
+   * class. The check is made by comparing unique identifiers, the
+   * one given as an argument and the from the MixinDefintion encapsulated
+   * by this class. The identities match when the class identifier by the
+   * argument was created by this class.
+   */
+  public boolean isBasedOn(final MixinDefinitionId mixinId) {
     return this.mixinDef.getMixinId() == mixinId;
   }
 
@@ -194,7 +201,7 @@ public final class SClass extends SObjectWithClass {
     return superclass.isKindOf(clazz);
   }
 
-  public SClass getClassCorrespondingTo(final MixinDefinitionId mixinId) {
+  public SClass lookupClass(final MixinDefinitionId mixinId) {
     VM.callerNeedsToBeOptimized(
         "This should not be on the fast path, specialization/caching needed?");
     SClass cls = this;
@@ -204,8 +211,18 @@ public final class SClass extends SObjectWithClass {
     return cls;
   }
 
+  public SClass lookupClassWithMixinApplied(final MixinDefinitionId mixinId) {
+    VM.callerNeedsToBeOptimized(
+        "This should not be on the fast path, specialization/caching needed?");
+    SClass cls = this;
+    while (cls != null && !instanceClassGroup.isBasedOn(mixinId)) {
+      cls = cls.getSuperClass();
+    }
+    return cls;
+  }
+
   @ExplodeLoop
-  public SClass getClassCorrespondingTo(final int superclassIdx) {
+  public SClass lookupClass(final int superclassIdx) {
     SClass cls = this;
     for (int i = 0; i < superclassIdx && cls != null; i++) {
       cls = cls.getSuperClass();
@@ -261,7 +278,7 @@ public final class SClass extends SObjectWithClass {
       final MixinDefinitionId mixinId) {
     VM.callerNeedsToBeOptimized("should never be called on fast path");
 
-    SClass cls = getClassCorrespondingTo(mixinId);
+    SClass cls = lookupClass(mixinId);
     if (cls != null) {
       Dispatchable disp = cls.dispatchables.get(selector);
       if (disp != null && disp.getAccessModifier() == AccessModifier.PRIVATE) {

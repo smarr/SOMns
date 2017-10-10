@@ -6,6 +6,7 @@ import java.util.HashSet;
 import com.oracle.truffle.api.CompilerAsserts;
 
 import som.VM;
+import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
@@ -118,6 +119,21 @@ public final class ClassFactory {
 
   public SClass[] getSuperclassAndMixins() {
     return superclassAndMixins;
+  }
+
+  /**
+   * This method is used to verify whether the class identified by `mixinId` was
+   * created from either the superclasses or any of other mixins encapsulated by
+   * this class factory.
+   */
+  public boolean isBasedOn(final MixinDefinitionId mixinId) {
+    VM.callerNeedsToBeOptimized("Result of isBasedOn should be cached");
+    for (SClass cls : getSuperclassAndMixins()) {
+      if (cls.isBasedOn(mixinId)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   public void initializeClass(final SClass result) {
