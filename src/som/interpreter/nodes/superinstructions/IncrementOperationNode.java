@@ -1,5 +1,6 @@
 package som.interpreter.nodes.superinstructions;
 
+import com.oracle.truffle.api.ExactMath;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
@@ -43,7 +44,7 @@ public abstract class IncrementOperationNode extends LocalVariableNode {
 
   @Specialization(guards = "isLongKind(frame)", rewriteOn = {FrameSlotTypeException.class})
   public final long writeLong(final VirtualFrame frame) throws FrameSlotTypeException {
-    long newValue = frame.getLong(slot) + increment;
+    long newValue = ExactMath.addExact(frame.getLong(slot), increment);
     frame.setLong(slot, newValue);
     return newValue;
   }
