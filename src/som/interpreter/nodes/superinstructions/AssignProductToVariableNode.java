@@ -111,7 +111,7 @@ public abstract class AssignProductToVariableNode extends LocalVariableNode {
    *    |- LocalVariableReadNode
    *    |- MultiplicationPrim
    */
-  public static boolean isAssignOperation(ExpressionNode exp) {
+  public static boolean isAssignProductOperation(ExpressionNode exp) {
     exp = SOMNode.unwrapIfNecessary(exp);
     if(exp instanceof EagerBinaryPrimitiveNode) {
       EagerBinaryPrimitiveNode eagerNode = (EagerBinaryPrimitiveNode)exp;
