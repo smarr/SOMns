@@ -1,0 +1,25 @@
+(* This illustrates the case in which an increment operation isn't optimized
+   to a superinstruction because the slot type is only changed to Long
+   after the first execution *)
+class Write usingPlatform: platform = Value ()
+(
+  public main: args = (
+    | i slot |
+    (* `i` is an ordinary counter variable.
+       `slot` is a counter variable whose type gets changed to Long after one iteration. *)
+    i::     0.
+    slot::  'yo'.
+    [ i < 4 ] whileTrue: [
+      ( i = 1 ) ifTrue: [
+        slot:: 1.
+      ].
+      (* In the first iteration, the slot type is read, considered to be String and this result is cached.
+         In the second iteration, the slot type is changed to `Long`, but since
+         the cached slot type is still String, the subtree isn't replaced by a superinstruction. *)
+      slot:: slot + 1.
+      i:: i + 1.
+    ].
+    slot println.
+    ^ 0
+  )
+)
