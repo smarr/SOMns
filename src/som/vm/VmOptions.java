@@ -25,6 +25,7 @@ public class VmOptions {
   @CompilationFinal public boolean webDebuggerEnabled;
   @CompilationFinal public boolean profilingEnabled;
   @CompilationFinal public boolean dynamicMetricsEnabled;
+  @CompilationFinal public boolean siCandidateIdentifierEnabled;
   @CompilationFinal public boolean coverageEnabled;
   @CompilationFinal public String  coverageFile;
 
@@ -38,7 +39,7 @@ public class VmOptions {
     showUsage = args.length == 0;
     if (!VmSettings.INSTRUMENTATION &&
         (webDebuggerEnabled || profilingEnabled ||
-            dynamicMetricsEnabled || coverageEnabled)) {
+            dynamicMetricsEnabled || coverageEnabled || siCandidateIdentifierEnabled)) {
       throw new IllegalStateException(
           "Instrumentation is not enabled, but one of the tools is used. " +
               "Please set -D" + VmSettings.INSTRUMENTATION_PROP + "=true");
@@ -69,6 +70,9 @@ public class VmOptions {
           currentArg += 1;
         } else if (arguments[currentArg].equals("--dynamic-metrics")) {
           dynamicMetricsEnabled = true;
+          currentArg += 1;
+        } else if (arguments[currentArg].equals("--si-candidates")) {
+          siCandidateIdentifierEnabled = true;
           currentArg += 1;
         } else if (arguments[currentArg].equals("--coverage")) {
           coverageEnabled = true;
@@ -107,6 +111,7 @@ public class VmOptions {
     VM.println("");
     VM.println("  --profile              Enable the TruffleProfiler");
     VM.println("  --dynamic-metrics      Enable the DynamicMetrics tool");
+    VM.println("  --si-candidates        Enable the Super-instruction candidate tool");
     VM.println(
         "  --coveralls REPO_TOKEN Enable the Coverage tool and reporting to Coveralls.io");
     return false;
