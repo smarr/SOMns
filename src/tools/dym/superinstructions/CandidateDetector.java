@@ -16,7 +16,7 @@ import java.util.stream.Stream;
  * create a list of superinstruction candidates.
  */
 public class CandidateDetector {
-  private static final int             CONSIDER_CHILDREN = 100;
+  private static final int             CONSIDER_TOP_CONTEXTS = 100;
   private Map<ActivationContext, Long> contexts;
 
   public CandidateDetector(final Map<ActivationContext, Long> contexts) {
@@ -42,11 +42,9 @@ public class CandidateDetector {
     Map<Integer, ActivationContext> result = new HashMap<>();
     // Find all activation contexts which extend ``prefix``
     // with one child slot index and one class name.
-    Set<ActivationContext> extensions = contextsWithPrefix(prefix)
-                                                                  .filter(
-                                                                      ctx -> ctx.getTrace().length == prefix.length
-                                                                          + 2)
-                                                                  .collect(Collectors.toSet());
+    Set<ActivationContext> extensions =
+        contextsWithPrefix(prefix).filter(ctx -> ctx.getTrace().length == prefix.length + 2)
+                                  .collect(Collectors.toSet());
     // Extract all possible values of ``s_n``.
     Set<Integer> childIndices = extensions.stream()
                                           .map(ActivationContext::getLeafChildIndex)
@@ -56,13 +54,10 @@ public class CandidateDetector {
       // Get all extensions for which ``s_n`` == childIndex,
       // get the extension with the most activations,
       // put it into the map.
-      ActivationContext extension = extensions.stream()
-                                              .filter(
-                                                  ctx -> ctx.getLeafChildIndex() == childIndex)
-                                              .max(Comparator.comparingLong(
-                                                  ctx -> contexts.get(ctx)))
-                                              .orElseThrow(() -> new RuntimeException(
-                                                  "No suitable alternatives"));
+      ActivationContext extension =
+          extensions.stream().filter(ctx -> ctx.getLeafChildIndex() == childIndex)
+                    .max(Comparator.comparingLong(ctx -> contexts.get(ctx)))
+                    .orElseThrow(() -> new RuntimeException("No suitable alternatives"));
       result.put(childIndex, extension);
     }
     return result;
@@ -100,9 +95,8 @@ public class CandidateDetector {
       if (piblingSlot == currentContext.getChildIndex(0)) {
         // This is C_1. We add it to the candidate and proceed
         // with adding the siblings of C_2 and C_2 itself.
-        Candidate.Node child = candidate.getRoot().setChild(piblingSlot,
-            currentContext.getClass(1),
-            "?");
+        Candidate.Node child =
+            candidate.getRoot().setChild(piblingSlot, currentContext.getClass(1), "?");
         for (int siblingSlot : siblings.keySet()) {
           if (siblingSlot == currentContext.getChildIndex(1)) {
             // Add C_2
@@ -142,25 +136,23 @@ public class CandidateDetector {
     // sort them by activation counts in descending order,
     // fetch the top ``CONSIDER_TOP_CONTEXTS`` activation contexts
     // and construct a candidate for each of them.
-    List<ActivationContext> sorted = contexts.keySet().stream()
-                                             .filter(
-                                                 context -> context.getNumberOfClasses() == 3)
-                                             .filter(context -> !Arrays.asList(
-                                                 context.getTrace()).contains(
-                                                     "som.interpreter.nodes.SequenceNode"))
-                                             .sorted(Comparator.comparingLong(
-                                                 context -> contexts.get(context)).reversed())
-                                             .limit(CONSIDER_TOP_CONTEXTS)
-                                             .collect(Collectors.toList());
+    List<ActivationContext> sorted =
+        contexts.keySet().stream().filter(context -> context.getNumberOfClasses() == 3)
+                .filter(context -> !Arrays.asList(context.getTrace())
+                                          .contains("som.interpreter.nodes.SequenceNode"))
+                .sorted(Comparator.comparingLong(context -> contexts.get(context)).reversed())
+                .limit(CONSIDER_TOP_CONTEXTS)
+                .collect(Collectors.toList());
     Set<Candidate> candidates = new HashSet<>();
+
     for (ActivationContext context : sorted) {
       candidates.add(constructCandidate(context));
     }
+
     // Sort the candidates by their score and format the results.
-    List<Candidate> tops = candidates.stream()
-                                     .sorted(Comparator.comparingLong(Candidate::getScore)
-                                                       .reversed())
-                                     .collect(Collectors.toList());
+    List<Candidate> tops =
+        candidates.stream().sorted(Comparator.comparingLong(Candidate::getScore).reversed())
+                  .collect(Collectors.toList());
     StringBuilder builder = new StringBuilder();
     for (Candidate top : tops) {
       builder.append(top.prettyPrint()).append('\n');
