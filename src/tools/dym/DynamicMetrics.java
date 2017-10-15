@@ -1,9 +1,5 @@
 package tools.dym;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -40,7 +36,6 @@ import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable;
 import tools.debugger.Tags.LiteralTag;
-import tools.dym.Tags.AnyNode;
 import tools.dym.Tags.BasicPrimitiveOperation;
 import tools.dym.Tags.CachedClosureInvoke;
 import tools.dym.Tags.CachedVirtualInvoke;
@@ -76,7 +71,6 @@ import tools.dym.nodes.OperationProfilingNode;
 import tools.dym.nodes.ReadProfilingNode;
 import tools.dym.nodes.ReportReceiverNode;
 import tools.dym.nodes.ReportResultNode;
-import tools.dym.nodes.TypeCountingNode;
 import tools.dym.profiles.AllocationProfile;
 import tools.dym.profiles.ArrayCreationProfile;
 import tools.dym.profiles.BranchProfile;
@@ -87,9 +81,6 @@ import tools.dym.profiles.InvocationProfile;
 import tools.dym.profiles.LoopProfile;
 import tools.dym.profiles.OperationProfile;
 import tools.dym.profiles.ReadValueProfile;
-import tools.dym.profiles.TypeCounter;
-import tools.dym.superinstructions.CandidateDetector;
-import tools.dym.superinstructions.ContextCollector;
 import tools.language.StructuralProbe;
 
 
@@ -128,8 +119,6 @@ public class DynamicMetrics extends TruffleInstrument {
   private final Map<SourceSection, ReadValueProfile> localsReadProfiles;
   private final Map<SourceSection, Counter>          localsWriteProfiles;
 
-  private final Map<Node, TypeCounter> activations;
-
   private final StructuralProbe structuralProbe;
 
   private final Set<RootNode> rootNodes;
@@ -162,8 +151,6 @@ public class DynamicMetrics extends TruffleInstrument {
     literalReadCounter = new HashMap<>();
     localsReadProfiles = new HashMap<>();
     localsWriteProfiles = new HashMap<>();
-
-    activations = new HashMap<>();
 
     rootNodes = new HashSet<>();
 
@@ -397,25 +384,12 @@ public class DynamicMetrics extends TruffleInstrument {
 
     addLoopBodyInstrumentation(instrumenter, loopProfileFactory);
 
-    addActivationInstrumentation(instrumenter);
-
     instrumenter.attachLoadSourceSectionListener(
         SourceSectionFilter.newBuilder().tagIs(RootTag.class).build(),
         e -> rootNodes.add(e.getNode().getRootNode()),
         true);
 
     env.registerService(structuralProbe);
-  }
-
-  private void addActivationInstrumentation(final Instrumenter instrumenter) {
-    // Attach a TypeCountingNode to *any* node
-    SourceSectionFilter filter = SourceSectionFilter.newBuilder().tagIs(AnyNode.class).build();
-    ExecutionEventNodeFactory factory = (final EventContext ctx) -> {
-      TypeCounter p = activations.computeIfAbsent(ctx.getInstrumentedNode(),
-          k -> new TypeCounter(ctx.getInstrumentedSourceSection()));
-      return new TypeCountingNode<>(p);
-    };
-    instrumenter.attachFactory(filter, factory);
   }
 
   private void addLoopBodyInstrumentation(
@@ -442,26 +416,7 @@ public class DynamicMetrics extends TruffleInstrument {
     MetricsCsvWriter.fileOut(data, metricsFolder, structuralProbe,
         maxStackDepth, getAllStatementsAlsoNotExecuted());
 
-    identifySuperinstructionCandidates(metricsFolder);
     outputAllTruffleMethodsToIGV();
-  }
-
-  private void identifySuperinstructionCandidates(final String metricsFolder) {
-    // First, extract activation contexts from the recorded activations
-    ContextCollector collector = new ContextCollector(activations);
-    for (RootNode root : rootNodes) {
-      root.accept(collector);
-    }
-    // Then, detect superinstruction candidates using the heuristic ...
-    CandidateDetector detector = new CandidateDetector(collector.getContexts());
-    // ... and write a report to the metrics folder
-    String report = detector.detect();
-    Path reportPath = Paths.get(metricsFolder, "superinstruction-candidates.txt");
-    try {
-      Files.write(reportPath, report.getBytes());
-    } catch (IOException e) {
-      throw new RuntimeException("Could not write superinstruction candidate report: " + e);
-    }
   }
 
   private List<SourceSection> getAllStatementsAlsoNotExecuted() {

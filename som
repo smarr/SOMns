@@ -69,6 +69,8 @@ tools.add_argument('-wd', '--web-debugger', help='start Web debugger',
                     dest='web_debugger', action='store_true', default=False)
 tools.add_argument('-dm', '--dynamic-metrics', help='Capture Dynamic Metrics',
                     dest='dynamic_metrics', action='store_true', default=False)
+tools.add_argument('-si', '--si-candidates', help='Identify candidates for super-instructions',
+                    dest='si_candidates', action='store_true', default=False)
 tools.add_argument('-at', '--actor-tracing', help='enable tracing of actor operations',
                     dest='actor_tracing', action='store_true', default=False)
 tools.add_argument('-atcfg', '--actor-tracing-cfg', help='Configuration string for actor tracing',
@@ -79,7 +81,7 @@ tools.add_argument('-tf', '--trace-file', help='Trace file destination, default:
                     dest='trace_file', default=BASE_DIR + '/traces/trace')
 tools.add_argument('-TF', '--disable-trace-file', help='trace file wont be written to disk',
                     dest='disable_trace_file', action='store_true', default=False)
-tools.add_argument('-r', '--replay', help='execution of the programm is guided by an exisiting trace file',
+tools.add_argument('-r', '--replay', help='execution of the program is guided by an existing trace file',
                     dest='replay', action='store_true', default=False)
 tools.add_argument('--coverage', help='determine code coverage and store in given file',
                    dest='coverage', default=None)
@@ -251,6 +253,8 @@ if args.web_debugger:
 if args.dynamic_metrics:
     SOM_ARGS += ['--dynamic-metrics']
     flags += ['-Dsom.dynamicMetrics=true']
+if args.si_candidates:
+    SOM_ARGS += ['--si-candidates']
 if args.vmdebug:
     flags += ['-Dsom.debugMode=true']
 
@@ -268,7 +272,7 @@ if args.replay:
     flags += ['-Dsom.replay=true']
 
 if (args.truffle_profile or args.web_debugger or
-    args.dynamic_metrics or args.coverage):
+    args.dynamic_metrics or args.coverage or args.si_candidates):
     flags += ['-Dsom.instrumentation=true']
 
 if args.web_debugger:

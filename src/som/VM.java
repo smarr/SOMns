@@ -51,6 +51,7 @@ import tools.debugger.WebDebugger;
 import tools.debugger.session.Breakpoints;
 import tools.dym.DynamicMetrics;
 import tools.language.StructuralProbe;
+import tools.superinstructions.CandidateIdentifier;
 
 
 public final class VM {
@@ -457,6 +458,14 @@ public final class VM {
       dynM.setEnabled(true);
       structuralProbe = dynM.lookup(StructuralProbe.class);
       assert structuralProbe != null : "Initialization of DynamicMetrics tool incomplete";
+    }
+
+    if (options.siCandidateIdentifierEnabled) {
+      assert !options.dynamicMetricsEnabled : "Currently, DynamicMetrics and CandidateIdentifer are not compatible";
+      Instrument siCI = instruments.get(CandidateIdentifier.ID);
+      siCI.setEnabled(true);
+      structuralProbe = siCI.lookup(StructuralProbe.class);
+      assert structuralProbe != null : "Initialization of CandidateIdentifer tool incomplete";
     }
 
     Value returnCode = engine.eval(SomLanguage.START);
