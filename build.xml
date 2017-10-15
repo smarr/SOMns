@@ -225,8 +225,12 @@
       </exec>
     </target>
 
-    <target name="dynamic-metrics-tests" depends="compile">
+    <target name="dynamic-metrics-tests" depends="compile-som">
       <exec executable="tests/dym/test.sh" failonerror="true"></exec>
+    </target>
+
+    <target name="superinstructions-tests" depends="compile-som">
+      <exec executable="tests/superinstructions/test.sh" failonerror="true"></exec>
     </target>
 
     <target name="replay-tests" depends="compile">
@@ -238,7 +242,7 @@
       </exec>
     </target>
     
-    <target name="core-tests" depends="unit-tests,som-tests,dynamic-metrics-tests">
+    <target name="core-tests" depends="unit-tests,som-tests,dynamic-metrics-tests,superinstructions-tests">
     </target>
 
     <target name="coverage">
