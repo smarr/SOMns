@@ -18,8 +18,9 @@ import som.vm.VmSettings;
 import som.vm.constants.Nil;
 import tools.dym.Tags.LoopNode;
 
+
 @ImportStatic({WhileSmallerEqualThanArgumentNode.class, VmSettings.class})
-abstract public class WhileInlinedLiteralsNode extends ExprWithTagsNode {
+public abstract class WhileInlinedLiteralsNode extends ExprWithTagsNode {
 
   @Child private ExpressionNode conditionNode;
   @Child private ExpressionNode bodyNode;
@@ -58,11 +59,10 @@ abstract public class WhileInlinedLiteralsNode extends ExprWithTagsNode {
     }
   }
 
-  /** Check for superinstruction ``WhileSmallerEqualThanArgumentNode`` */
-  @Specialization(guards = {"SUPERINSTRUCTIONS", "isApplicable"} )
+  /** Check for superinstruction {@link WhileSmallerEqualThanArgumentNode}. */
+  @Specialization(guards = {"SUPERINSTRUCTIONS", "isApplicable"})
   public Object executeAndReplace(final VirtualFrame frame,
-                                  @Cached("isWhileSmallerEqualThanArgumentNode(expectedBool, getConditionNode(), frame)")
-                                  boolean isApplicable) {
+      @Cached("isWhileSmallerEqualThanArgumentNode(expectedBool, getConditionNode(), frame)") final boolean isApplicable) {
     return WhileSmallerEqualThanArgumentNode.replaceNode(this).executeGeneric(frame);
   }
 

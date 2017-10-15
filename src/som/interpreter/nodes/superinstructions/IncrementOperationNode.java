@@ -5,8 +5,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeUtil;
+
 import som.VM;
 import som.compiler.Variable;
 import som.interpreter.InliningVisitor;
@@ -18,15 +17,31 @@ import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.primitives.arithmetic.AdditionPrim;
 import tools.dym.Tags;
 
-import java.util.List;
 
+/**
+ * Matches the following AST.
+ *
+ * <pre>
+ * LocalVariableWriteNode
+ *   EagerBinaryPrimitiveNode
+ *     LocalVariableReadNode (with the same variable as LocalVariableWriteNode above)
+ *     IntegerLiteralNode
+ *     AdditionPrim
+ * </pre>
+ *
+ * and replaces it with
+ *
+ * <pre>
+ * IncrementOperationNode
+ * </pre>
+ */
 public abstract class IncrementOperationNode extends LocalVariableNode {
-  private final long increment;
+  private final long              increment;
   private final LocalVariableNode originalSubtree;
 
   public IncrementOperationNode(final Variable.Local variable,
-                                final long increment,
-                                final LocalVariableNode originalSubtree) {
+      final long increment,
+      final LocalVariableNode originalSubtree) {
     super(variable);
     this.increment = increment;
     this.originalSubtree = originalSubtree;
@@ -42,7 +57,10 @@ public abstract class IncrementOperationNode extends LocalVariableNode {
     return increment;
   }
 
-  @Specialization(guards = "isLongKind(frame)", rewriteOn = {FrameSlotTypeException.class})
+  @Specialization(guards = "isLongKind(frame)", rewriteOn = {
+      FrameSlotTypeException.class,
+      ArithmeticException.class
+  })
   public final long writeLong(final VirtualFrame frame) throws FrameSlotTypeException {
     long newValue = ExactMath.addExact(frame.getLong(slot), increment);
     frame.setLong(slot, newValue);
@@ -51,13 +69,16 @@ public abstract class IncrementOperationNode extends LocalVariableNode {
 
   @Specialization(replaces = {"writeLong"})
   public final Object writeGeneric(final VirtualFrame frame) {
-    /* Replace myself with the stored original subtree */
+    // Replace myself with the stored original subtree.
+    // This could happen because the frame slot type has changed or because of an overflow.
     Object result = originalSubtree.executeGeneric(frame);
     replace(originalSubtree);
     return result;
   }
 
-  protected final boolean isLongKind(final VirtualFrame frame) { // uses frame to make sure guard is not converted to assertion
+  protected final boolean isLongKind(final VirtualFrame frame) { // uses frame to make sure
+                                                                 // guard is not converted to
+                                                                 // assertion
     if (slot.getKind() == FrameSlotKind.Long) {
       return true;
     }
@@ -84,9 +105,11 @@ public abstract class IncrementOperationNode extends LocalVariableNode {
 
   @Override
   public void replaceAfterScopeChange(final InliningVisitor inliner) {
-    /* This should never happen because ``replaceAfterScopeChange`` is only called in the
-    parsing stage, whereas the ``IncrementOperationNode`` superinstruction is only inserted
-    into the AST *after* parsing. */
+    /*
+     * This should never happen because ``replaceAfterScopeChange`` is only called in the
+     * parsing stage, whereas the ``IncrementOperationNode`` superinstruction is only inserted
+     * into the AST *after* parsing.
+     */
     throw new RuntimeException("replaceAfterScopeChange: This should never happen!");
   }
 
@@ -94,22 +117,19 @@ public abstract class IncrementOperationNode extends LocalVariableNode {
     return originalSubtree;
   }
 
-  /** Check if the AST subtree has the shape of an increment operation, i.e. looks like this:
-   * LocalVariableWriteNode
-   * |- EagerBinaryPrimitiveNode
-   *    |- LocalVariableReadNode (with var == this.var)
-   *    |- IntegerLiteralNode
-   *    |- AdditionPrim
+  /**
+   * Check if the AST subtree has the shape of an increment operation.
    */
-  public static boolean isIncrementOperation(ExpressionNode exp, Variable.Local var) {
+  public static boolean isIncrementOperation(ExpressionNode exp, final Variable.Local var) {
     exp = SOMNode.unwrapIfNecessary(exp);
-    if(exp instanceof EagerBinaryPrimitiveNode) {
-      EagerBinaryPrimitiveNode eagerNode = (EagerBinaryPrimitiveNode)exp;
-      if(SOMNode.unwrapIfNecessary(eagerNode.getReceiver()) instanceof LocalVariableReadNode
-              && SOMNode.unwrapIfNecessary(eagerNode.getArgument()) instanceof IntegerLiteralNode
-              && SOMNode.unwrapIfNecessary(eagerNode.getPrimitive()) instanceof AdditionPrim) {
-        LocalVariableReadNode read = (LocalVariableReadNode)SOMNode.unwrapIfNecessary(eagerNode.getReceiver());
-        if(read.getVar().equals(var)) {
+    if (exp instanceof EagerBinaryPrimitiveNode) {
+      EagerBinaryPrimitiveNode eagerNode = (EagerBinaryPrimitiveNode) exp;
+      if (SOMNode.unwrapIfNecessary(eagerNode.getReceiver()) instanceof LocalVariableReadNode
+          && SOMNode.unwrapIfNecessary(eagerNode.getArgument()) instanceof IntegerLiteralNode
+          && SOMNode.unwrapIfNecessary(eagerNode.getPrimitive()) instanceof AdditionPrim) {
+        LocalVariableReadNode read =
+            (LocalVariableReadNode) SOMNode.unwrapIfNecessary(eagerNode.getReceiver());
+        if (read.getVar().equals(var)) {
           return true;
         }
       }
@@ -117,12 +137,18 @@ public abstract class IncrementOperationNode extends LocalVariableNode {
     return false;
   }
 
-  public static void replaceNode(LocalVariableWriteNode node) {
-    EagerBinaryPrimitiveNode eagerNode = (EagerBinaryPrimitiveNode)SOMNode.unwrapIfNecessary(node.getExp());
-    long increment = ((IntegerLiteralNode)SOMNode.unwrapIfNecessary(eagerNode.getArgument())).getValue();
+  /**
+   * Replace ``node`` with a superinstruction. Assumes that the AST subtree has the correct
+   * shape.
+   */
+  public static void replaceNode(final LocalVariableWriteNode node) {
+    EagerBinaryPrimitiveNode eagerNode =
+        (EagerBinaryPrimitiveNode) SOMNode.unwrapIfNecessary(node.getExp());
+    long increment =
+        ((IntegerLiteralNode) SOMNode.unwrapIfNecessary(eagerNode.getArgument())).getValue();
     IncrementOperationNode newNode = IncrementOperationNodeGen.create(node.getVar(),
-            increment,
-            node).initialize(node.getSourceSection());
+        increment,
+        node).initialize(node.getSourceSection());
     node.replace(newNode);
     VM.insertInstrumentationWrapper(newNode);
   }

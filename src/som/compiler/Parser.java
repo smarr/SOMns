@@ -1460,7 +1460,7 @@ public class Parser {
           condition.markAsControlFlowCondition();
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           return IfInlinedLiteralNodeGen.create(condition, true, inlinedBody,
-                  arguments.get(1));
+              arguments.get(1));
         } else if ("ifFalse:".equals(msgStr)) {
           ExpressionNode condition = arguments.get(0);
           condition.markAsControlFlowCondition();
@@ -1477,7 +1477,7 @@ public class Parser {
           ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
           inlinedBody.markAsLoopBody();
           return WhileInlinedLiteralsNodeGen.create(inlinedCondition, inlinedBody,
-                  true, arguments.get(0), arguments.get(1));
+              true, arguments.get(0), arguments.get(1));
         } else if ("whileFalse:".equals(msgStr)) {
           if (!(arguments.get(0) instanceof LiteralNode)
               || !(arguments.get(1) instanceof LiteralNode)) {

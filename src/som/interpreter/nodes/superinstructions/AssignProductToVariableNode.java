@@ -5,8 +5,7 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeUtil;
+
 import som.VM;
 import som.compiler.Variable;
 import som.interpreter.InliningVisitor;
@@ -17,19 +16,31 @@ import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.primitives.arithmetic.MultiplicationPrim;
 import tools.dym.Tags;
 
-import java.util.List;
 
 /**
- * Created by fred on 29/09/17.
+ * Matches the following AST.
+ *
+ * <pre>
+ * LocalVariableWriteNode
+ * EagerBinaryPrimitiveNode
+ *    LocalVariableReadNode (of type Double)
+ *    LocalVariableReadNode (of type Double)
+ * MultiplicationPrim
+ * </pre>
+ *
+ * and replaces it with
+ *
+ * AssignProductToVariable
  */
 public abstract class AssignProductToVariableNode extends LocalVariableNode {
-  protected final FrameSlot leftSlot, rightSlot;
+  protected final FrameSlot         leftSlot;
+  protected final FrameSlot         rightSlot;
   protected final LocalVariableNode originalSubtree;
 
   public AssignProductToVariableNode(final Variable.Local destination,
-                                     final Variable.Local left,
-                                     final Variable.Local right,
-                                     final LocalVariableNode originalSubtree) {
+      final Variable.Local left,
+      final Variable.Local right,
+      final LocalVariableNode originalSubtree) {
     super(destination);
     this.leftSlot = left.getSlot();
     this.rightSlot = right.getSlot();
@@ -57,6 +68,9 @@ public abstract class AssignProductToVariableNode extends LocalVariableNode {
 
   @Specialization(guards = "isDoubleKind(frame)", rewriteOn = {FrameSlotTypeException.class})
   public final double writeDouble(final VirtualFrame frame) throws FrameSlotTypeException {
+    // Read the two slots, multiply their contents, set the variable
+    // This might throw a FrameSlotTypeException, in which case the
+    // original subtree is restored
     double newValue = frame.getDouble(leftSlot) * frame.getDouble(rightSlot);
     frame.setDouble(slot, newValue);
     return newValue;
@@ -64,7 +78,7 @@ public abstract class AssignProductToVariableNode extends LocalVariableNode {
 
   @Specialization(replaces = {"writeDouble"})
   public final Object writeGeneric(final VirtualFrame frame) {
-    /* Replace myself with the stored original subtree */
+    // Replace myself with the stored original subtree
     Object result = originalSubtree.executeGeneric(frame);
     replace(originalSubtree);
     return result;
@@ -98,40 +112,59 @@ public abstract class AssignProductToVariableNode extends LocalVariableNode {
 
   @Override
   public void replaceAfterScopeChange(final InliningVisitor inliner) {
-    /* This should never happen because ``replaceAfterScopeChange`` is only called in the
-    parsing stage, whereas the ``IncrementOperationNode`` superinstruction is only inserted
-    into the AST *after* parsing. */
+    /*
+     * This should never happen because ``replaceAfterScopeChange`` is only called in the
+     * parsing stage, whereas the ``AssignProductToVariableNode`` superinstruction is only
+     * inserted
+     * into the AST *after* parsing.
+     */
     throw new RuntimeException("replaceAfterScopeChange: This should never happen!");
   }
 
-  /** Check if the AST subtree has the correct shape, i.e. looks like this:
-   * LocalVariableWriteNode
-   * |- EagerBinaryPrimitiveNode
-   *    |- LocalVariableReadNode
-   *    |- LocalVariableReadNode
-   *    |- MultiplicationPrim
+  /**
+   * Check if the AST subtree has the correct shape.
    */
-  public static boolean isAssignProductOperation(ExpressionNode exp) {
+  public static boolean isAssignProductOperation(ExpressionNode exp,
+      final VirtualFrame frame) {
     exp = SOMNode.unwrapIfNecessary(exp);
-    if(exp instanceof EagerBinaryPrimitiveNode) {
-      EagerBinaryPrimitiveNode eagerNode = (EagerBinaryPrimitiveNode)exp;
-      if(SOMNode.unwrapIfNecessary(eagerNode.getReceiver()) instanceof LocalVariableReadNode
-              && SOMNode.unwrapIfNecessary(eagerNode.getArgument()) instanceof LocalVariableReadNode
-              && SOMNode.unwrapIfNecessary(eagerNode.getPrimitive()) instanceof MultiplicationPrim) {
-        return true;
+    // Check that the expression is a multiplication of two local variables ...
+    if (exp instanceof EagerBinaryPrimitiveNode) {
+      EagerBinaryPrimitiveNode eagerNode = (EagerBinaryPrimitiveNode) exp;
+      if (SOMNode.unwrapIfNecessary(eagerNode.getReceiver()) instanceof LocalVariableReadNode
+          && SOMNode.unwrapIfNecessary(
+              eagerNode.getArgument()) instanceof LocalVariableReadNode
+          && SOMNode.unwrapIfNecessary(
+              eagerNode.getPrimitive()) instanceof MultiplicationPrim) {
+        // ... and extract the variables ...
+        LocalVariableReadNode left =
+            (LocalVariableReadNode) SOMNode.unwrapIfNecessary(eagerNode.getReceiver());
+        LocalVariableReadNode right =
+            (LocalVariableReadNode) SOMNode.unwrapIfNecessary(eagerNode.getArgument());
+        // ... and check that they currently store Double values
+        if (frame.isDouble(left.getVar().getSlot())
+            && frame.isDouble(right.getVar().getSlot())) {
+          return true;
+        }
       }
     }
     return false;
   }
 
-  public static void replaceNode(LocalVariableWriteNode node) {
-    EagerBinaryPrimitiveNode eagerNode = (EagerBinaryPrimitiveNode)SOMNode.unwrapIfNecessary(node.getExp());
-    Variable.Local left = ((LocalVariableReadNode)SOMNode.unwrapIfNecessary(eagerNode.getReceiver())).getVar();
-    Variable.Local right = ((LocalVariableReadNode)SOMNode.unwrapIfNecessary(eagerNode.getArgument())).getVar();
+  /**
+   * Replace ``node`` with a superinstruction. This assumes that the subtree has the correct
+   * shape.
+   */
+  public static void replaceNode(final LocalVariableWriteNode node) {
+    EagerBinaryPrimitiveNode eagerNode =
+        (EagerBinaryPrimitiveNode) SOMNode.unwrapIfNecessary(node.getExp());
+    Variable.Local left =
+        ((LocalVariableReadNode) SOMNode.unwrapIfNecessary(eagerNode.getReceiver())).getVar();
+    Variable.Local right =
+        ((LocalVariableReadNode) SOMNode.unwrapIfNecessary(eagerNode.getArgument())).getVar();
     AssignProductToVariableNode newNode = AssignProductToVariableNodeGen.create(node.getVar(),
-            left,
-            right,
-            node).initialize(node.getSourceSection());
+        left,
+        right,
+        node).initialize(node.getSourceSection());
     node.replace(newNode);
     VM.insertInstrumentationWrapper(newNode);
   }

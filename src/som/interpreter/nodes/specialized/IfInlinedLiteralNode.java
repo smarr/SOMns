@@ -15,8 +15,9 @@ import som.interpreter.nodes.superinstructions.IfSumGreaterNode;
 import som.vm.VmSettings;
 import som.vm.constants.Nil;
 
+
 @ImportStatic({IfSumGreaterNode.class, VmSettings.class})
-abstract public class IfInlinedLiteralNode extends ExprWithTagsNode {
+public abstract class IfInlinedLiteralNode extends ExprWithTagsNode {
   private final ConditionProfile condProf = ConditionProfile.createCountingProfile();
 
   @Child private ExpressionNode conditionNode;
@@ -46,10 +47,9 @@ abstract public class IfInlinedLiteralNode extends ExprWithTagsNode {
     }
   }
 
-  @Specialization(guards = { "SUPERINSTRUCTIONS", "isApplicable"})
+  @Specialization(guards = {"SUPERINSTRUCTIONS", "isApplicable"})
   public Object executeAndReplace(final VirtualFrame frame,
-                                  @Cached("isIfSumGreaterNode(expectedBool, getConditionNode(), frame)")
-                                          boolean isApplicable) {
+      @Cached("isIfSumGreaterNode(expectedBool, getConditionNode(), frame)") final boolean isApplicable) {
     return IfSumGreaterNode.replaceNode(this).executeGeneric(frame);
   }
 
