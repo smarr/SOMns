@@ -85,13 +85,13 @@ public final class VM {
     options = vmOptions;
 
     actorPool = new ForkJoinPool(VmSettings.NUM_THREADS,
-        new ActorProcessingThreadFactory(), new UncaughtExceptions(), true);
+        new ActorProcessingThreadFactory(), new UncaughtExceptions(this), true);
     processesPool = new ForkJoinPool(VmSettings.NUM_THREADS,
-        new ProcessThreadFactory(), new UncaughtExceptions(), true);
+        new ProcessThreadFactory(), new UncaughtExceptions(this), true);
     forkJoinPool = new ForkJoinPool(VmSettings.NUM_THREADS,
-        new ForkJoinThreadFactory(), new UncaughtExceptions(), false);
+        new ForkJoinThreadFactory(), new UncaughtExceptions(this), false);
     threadPool = new ForkJoinPool(MAX_THREADS,
-        new ForkJoinThreadFactory(), new UncaughtExceptions(), false);
+        new ForkJoinThreadFactory(), new UncaughtExceptions(this), false);
   }
 
   /**
