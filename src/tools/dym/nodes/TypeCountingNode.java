@@ -10,7 +10,6 @@ import som.vm.NotYetImplementedException;
 import tools.dym.profiles.TypeCounter;
 
 
-
 /**
  * Simple execution event node which may be used in conjunction with `TypeCounter`
  * to count node activations while also keeping track of the respective result types.
