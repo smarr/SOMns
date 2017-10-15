@@ -10,6 +10,12 @@ import tools.concurrency.TracingActivityThread;
  */
 public final class UncaughtExceptions implements UncaughtExceptionHandler {
 
+  private final VM vm;
+
+  public UncaughtExceptions(final VM vm) {
+    this.vm = vm;
+  }
+
   @Override
   public void uncaughtException(final Thread t, final Throwable e) {
     if (e instanceof ThreadDeath) {
@@ -20,5 +26,7 @@ public final class UncaughtExceptions implements UncaughtExceptionHandler {
     VM.errorPrintln("Processing failed for: "
         + thread.getActivity().toString());
     e.printStackTrace();
+
+    vm.requestExit(2);
   }
 }
