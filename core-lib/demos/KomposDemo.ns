@@ -363,10 +363,9 @@ class KomposDemo usingPlatform: platform = Value (
       | left leftTask right |
       high - low < 2 ifTrue: [ ^ TempTreeNode left: nil right: nil sum: (data at: low) low: low high: high ].
 
-      leftTask:: Task
-        spawn: [:l :h |
-                  buildParallelSumTree: data from: l to: h ]
-         with: { low. (high + low) / 2) }.
+      leftTask:: Task spawn: [:l :h | buildParallelSumTree: data from: l to: h ]
+                       with: { low.
+                               (high + low) / 2 }.
 
       right:: buildParallelSumTree: data from: (high + low) / 2 to: high.
 
