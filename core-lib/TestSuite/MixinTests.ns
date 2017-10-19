@@ -114,7 +114,29 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
 
   ) : ( TEST_CONTEXT = () )
 
-  public class InitializationAndAccess = TestContext ()(
+  public class InitializationAndAccess = TestContext (
+    | public _x public _y public _c |
+  )(
+
+    class AccessOuterMethod = ()(
+      class Accessor = ()(
+        public invoke = ( ^ outerMethod )
+      )
+      public class Item = Object <: Accessor ()()
+    )
+
+    class AccessOuterSlots = ()(
+      class Point x: x y: y = ( _x:: x. _y:: y. )()
+      class Colored color: c = ( _c:: c )()
+      public class ColoredPoint x: x y: y color: c = Point x: x y: y <: Colored color: c (
+      )(
+        public x = ( ^ _x )
+        public y = ( ^ _y)
+        public sum = ( ^ _x + _y )
+        public color = ( ^ _c )
+      )
+    )
+
     class AccessSuperSlots = ()(
       class Point x: x y: y = (| public x = x. public y = y. |)()
       class Colored color: c = (| public color = c. |)()
@@ -179,6 +201,27 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       )(
         public sum = ( ^ x + y + z + origin )
       )
+    )
+
+    public outerMethod = (
+      ^ 42.
+    )
+
+    public testAccessOuterMethod = (
+      | sample i |
+      sample:: AccessOuterMethod new.
+      i:: sample Item new.
+      assert: i invoke equals: 42.
+    )
+
+    public testAccessOuterSlots = (
+      | sample p |
+      sample:: AccessOuterSlots new.
+      p:: sample ColoredPoint x: 1 y: 2 color: 'red'.
+      assert: p x equals: 1.
+      assert: p y equals: 2.
+      assert: p color equals: 'red'.
+      assert: p sum equals: 3.
     )
 
     public testAccessSuperSlots = (
@@ -358,7 +401,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       assert: c x equals: 5.
     )
 
-    public DEACTIVATEDtestConflictingMethods = (
+    public testConflictingMethods = (
       | c |
       c:: ConflictingMethods new.
       assert: c y is: nil.
@@ -373,7 +416,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       assert: c x equals: 4.
     )
 
-    public DEACTIVATEDtestInitializer2 = (
+    public testInitializer2 = (
       | i c |
       i:: Initializer2 new.
       c:: i C new.

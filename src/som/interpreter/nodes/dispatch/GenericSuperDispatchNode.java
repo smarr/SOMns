@@ -23,7 +23,7 @@ public class GenericSuperDispatchNode extends AbstractGenericDispatchNode {
 
   private static SClass getSuperClass(final SClass rcvrClass,
       final MixinDefinitionId holderMixin, final boolean classSide) {
-    SClass cls = rcvrClass.getClassCorrespondingTo(holderMixin);
+    SClass cls = rcvrClass.lookupClass(holderMixin);
     SClass superClass = cls.getSuperClass();
 
     if (classSide) {

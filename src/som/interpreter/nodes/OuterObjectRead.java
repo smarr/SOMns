@@ -81,8 +81,25 @@ public abstract class OuterObjectRead
 
   public abstract Object executeEvaluated(Object receiver);
 
+  /**
+   * The enclosing class can be either the class of the given receiver
+   * or any of its superclasses. The receiver can denote either a class
+   * or a mixin and, consequently, we need to check both the inheritance
+   * chain and any mixins applied to that class (or one of its superclasses).
+   * The class and its superclasses are queried first, and if no
+   * class was found then all mixins applied along the inheritance chain are
+   * queried.
+   *
+   * Note that this method should always find a class for the given receiver
+   * and that the return value must be either the receiver's class or one its
+   * superclasses (and not the class of a mixin).
+   */
   protected final SClass getEnclosingClass(final SObjectWithClass rcvr) {
-    SClass lexicalClass = rcvr.getSOMClass().getClassCorrespondingTo(mixinId);
+    SClass rcvrClass = rcvr.getSOMClass();
+    SClass lexicalClass = rcvrClass.lookupClass(mixinId);
+    if (lexicalClass == null) {
+      lexicalClass = rcvrClass.lookupClassWithMixinApplied(mixinId);
+    }
     assert lexicalClass != null;
     return lexicalClass;
   }
@@ -90,7 +107,7 @@ public abstract class OuterObjectRead
   protected static final SClass getEnclosingClassWithPotentialFailure(
       final SObjectWithClass rcvr,
       final int superclassIdx) {
-    SClass lexicalClass = rcvr.getSOMClass().getClassCorrespondingTo(superclassIdx);
+    SClass lexicalClass = rcvr.getSOMClass().lookupClass(superclassIdx);
     return lexicalClass;
   }
 
