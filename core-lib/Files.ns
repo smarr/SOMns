@@ -1,0 +1,586 @@
+class Files usingVmMirror: vmMirror usingPlatform: platform = Value (
+(* This code was derived from Newspeak File classes, which is why the Sun Microsystems copyright and BSD license below applies.
+Original Newspeak version of classes:  
+https://bitbucket.org/newspeaklanguage/newspeak/src/38a47c705f1a1ab3359f2a58b79e8c728bfb218f/Files.ns 
+https://bitbucket.org/newspeaklanguage/newspeak/src/38a47c705f1a1ab3359f2a58b79e8c728bfb218f/Win32Files.ns 
+
+Copyright (c) 1995-2006 Sun Microsystems, Inc. ALL RIGHTS RESERVED.
+Copyright 2008-2009 Gilad Bracha and other contributors.
+Copyright 2010 Ryan Macnak and other contributors.
+Copyright 2017 Dominik Aumayr.
+
+Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright notice,
+ this  list of conditions and the following disclaimer.
+
+* Redistribution in binary form must reproduce the above copyright notice,
+this list of conditions and the following disclaimer in the documentation and/o other materials provided with the distribution.
+
+Neither the name of Sun Microsystems or the names of contributors may
+be used to endorse or promote products derived from this software without
+specific prior written permission.
+
+>>
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ''AS IS'' AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
+BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE
+GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH
+DAMAGE.>> *)
+| private vmMirror  = vmMirror.
+  private Vector    = kernel Vector.
+  private Exception = kernel Exception.
+|
+  vmMirror fileDescriptorClass: FileDescriptor.
+  vmMirror fileObject:  self.
+) (
+  public class FileDescriptor = Object () (
+
+    (* return buffer array *)
+    public buffer = (
+      ^ vmMirror fileBuffer: self.
+    )
+
+    (* set access mode *)
+    public mode: m = (
+      vmMirror file: self setMode: m.
+    )
+
+    (* return size of the internal buffer *)
+    public bufferSize = (
+      ^ vmMirror fileBufferSize: self.
+    )
+
+    (* set size for the interal buffer, only works before opening the file *)
+    public bufferSize: size = (
+      (vmMirror file: self setBufferSize: size) ifFalse: [
+        self error: 'File already open! Buffer size can be changed for closed files only'.
+      ].
+    )
+
+    (* close file *)
+    public close = (
+      vmMirror fileClose: self.
+    )
+
+    (* read as many bytes as possible into the buffer (up to its size),
+       and return the number of bytes that were actually read.
+       The semantics at end of file are to return 0 with no error. *)
+    public readAt: pos <Integer> ifFail: errf <[:IOException]> ^ <Integer> = (
+      ^ vmMirror file: self readAt: pos ifFail: errf.
+    )
+
+    public write: nBytes <Integer> at: pos <Integer> ifFail: errf <[:IOException]>  = (
+      vmMirror file: self write: nBytes at: pos ifFail: errf.
+    )
+
+    public size ^ <Integer> = (
+      ^ vmMirror fileSize: self.
+    )
+
+    public isClosed ^ <Boolean> = (
+      ^ vmMirror fileIsClosed: self.
+    )
+
+    public openIfFail: errf <[:IOException]> = (
+      vmMirror file: self openIfFail: errf.
+    )
+  ) : (
+    (* Create a new instance, but don't open yet *)
+    public for: obj mode: m = (
+      ^ (vmMirror fileCreateFileDescriptorFor: obj) mode: m.
+    )
+
+    public new = ( self error: 'Please use for:mode: instead of new!\n' 
+     + '\talternatively the open method of a FilePath object can be used.' 
+    )
+  )
+
+  (* FilePatterns represent a pattern that matches some set of files,
+     and are used (along with the subclass FilePath, which represents individual
+     files without wildcards) to represent all file paths in the system.
+     For example, (FilePattern for: '*') is the pattern for all files in the
+     current directory.
+
+     For example,  a relative FilePattern that matches '*.bar' files
+     in a subdirectory 'foo' can be constructed with
+     ```
+	   fp:: FilePattern forElements: #('foo' '*.bar')
+     ```
+
+     To turn this into an absolute path, you can use the general FilePattern
+     concatenation operator ',': `FilePath currentDirectory, fp`
+  *)
+  public class FilePattern = Object (
+  | pattern_0 <String> |
+  )(
+    (* Concatenation of FilePatterns *)
+    public , extension <FilePattern> ^ <EXTENDED> = (
+      ^ extension extendPattern: self
+    )
+
+    (* returns the seperator *)
+    public separator = (
+      ^ vmMirror pathSeparator: self.
+    )
+
+    (* extend pattern *)
+    public / string = (
+      ^self , (FilePattern for: string)
+    )
+
+    (* get the name of directory/file *)
+    public baseName ^ <FilePattern> = (
+      ^self elements last
+    )
+
+
+    elementsDo: blk <[:FilePattern]> = (
+      | elems |
+      (self pattern beginsWith: '/') ifTrue: [
+        |i|
+        i:: pattern indexOf: '/' startingAt: 2.
+        elems:: Vector new.
+        elems append: (pattern substringFrom: 1 to: (i - 1)).
+        ((pattern substringFrom: (i+1) to: pattern length) split: separator) do: [ :s |
+          elems append: s.
+        ]
+      ] ifFalse: [
+        elems:: self pattern split: separator.
+      ].
+      elems do: [ :e | blk value: (FilePattern for: e)].
+    )
+
+    firstWildElementOf: els <Vector[FilePattern]> ifFail: fail <[X def]> ^<Int | X> = (
+      1 to: els size do:
+        [ :i <Int> |
+          (((els at: i) pattern includes: '*') or: ((els at: i) pattern includes: '?'))
+            ifTrue: [ ^i ]
+        ].
+      ^fail value
+    )
+
+    assert: block = (
+      block value ifFalse: [
+        self error: 'Assertion Failed'
+      ]
+    )
+
+    assert: block message: msg = (
+      block value ifFalse: [
+        self error: ('Assertion Failed: ' + msg)
+      ]
+    )
+
+
+    public isAbsolute ^<Boolean> = (
+      ^ vmMirror pathIsAbsolute: self pattern.
+    )
+
+    (* for each over the matching paths *)
+    public pathsDo: blk <[:FilePath]> = (
+      | els <Vector[FilePattern]> i <Int> |
+
+      els:: self elements.
+      i:: self firstWildElementOf: els
+        ifFail: [ ^self shouldNotHappen ].
+
+      (i = els size) ifTrue: [ self terminalPathsDo: blk ]
+      ifFalse: [ | rest <FilePattern> tmp |
+          (i + 1 = els size)
+            ifTrue: [ rest:: els last ] (*optimization*)
+            ifFalse: [
+              tmp:: Vector new.
+              (i + 1) to: (els size) do: [ :j | tmp append: (els at: j)].
+              rest:: FilePattern forAll: tmp.
+            ].
+
+          tmp:: Vector new.
+
+          1 to: i do: [ :j | tmp append: (els at: j)].
+          (FilePattern forAll: tmp) pathsDo: [ :fp <FilePath> |
+            fp isDirectory ifTrue: [ (fp, rest) pathsDo: blk ]	]
+        ]
+    )
+
+    patternExtending: pat <FilePattern> ^<String> = (
+      ^(pat pattern endsWith: separator)
+        ifTrue: [ pat pattern + self pattern ]
+        ifFalse: [ pat pattern + separator + self pattern ]
+    )
+
+    terminalPathsDo: blk <[:FilePath]> = (
+      (* assumes that the last element of the receiver is the only one that contains wildcards *)
+      | data  hnd  allpat  pat  els <Vector[FilePattern]> prefix paths temp|
+      els:: self elements.
+      els size = 1
+        ifTrue: [
+          allpat:: FilePattern for: '*.*'.
+          prefix:: FilePattern for: ''.
+        ]
+        ifFalse: [
+          allpat:: self containingDirectory pattern, (separator + '*.*').
+          temp:: Vector new: (els size - 1).
+          1 to: (els size - 1) do: [ :i | temp append: (els at: i) ].
+          prefix:: (FilePattern forAll: temp) pattern concatenate: separator.
+      ].
+      pat:: els last pattern. (*the part with wildcard i.e. asdf* *)
+
+      (*get filenames in directory*)
+      paths:: vmMirror pathContents: prefix.
+      paths do: [ :next |
+        ((string: next platformMatch: pat) and: [ next <> '.' and: [ next <> '..' ]])
+          ifTrue: [
+            blk value: (FilePath for: (prefix concatenate: next))
+            ]. (*file matches wildcards*)
+      ].
+    )
+
+    string: s platformMatch: m = (
+      ^ string: s match: m si: 1 mi: 1
+    )
+
+    string: s match: m si: si mi: mi = (
+      |mi_ si_|
+      mi_:: mi.
+      si_:: si.
+      [(mi_ <= m length)] whileTrue: [
+        ((m charAt: mi_) = "?") ifTrue: [
+          (*match single character except empty*)
+          (si_ <= s length) ifFalse: [
+            ^false.
+          ].
+          mi_:: mi_ + 1.
+          si_:: si_ + 1.
+        ] ifFalse: [
+          (*multi match*)
+          ((m charAt: mi_) = "*") ifTrue: [
+            (string: s match: m si: si_ mi: (mi_ + 1)) ifTrue: [
+              ^true.
+            ].
+            (si <= s length) ifTrue: [
+              (string: s match: m si: (si_ + 1) mi: mi_) ifTrue: [
+                ^true.
+              ]
+            ].
+            ^false.
+          ] ifFalse: [
+            (*regular match*)
+            (s charAt: si_) = (m charAt: mi_) ifFalse: [
+              ^false.
+            ].
+            si_:: si_ + 1.
+            mi_:: mi_ + 1.
+          ]
+        ]
+      ].
+      ^((mi_ > m length) and: (si_ > s length))
+    )
+
+    public containingDirectory ^ <FilePattern> = (
+      | e r |
+      e:: self elements.
+      self assert: [ e size > 1 ] message: ''.
+      r:: Vector new: (e size - 1).
+      1 to: (e size - 1) do: [ :i |
+        r append: (e at: i)
+      ].
+      ^ FilePattern forAll: r
+    )
+
+    copyToDir: dirPath <FilePath> ifFail: fail = (
+      self subclassResponsibility
+    )
+
+    public delete = (
+      (* This deletes all files and directories that match the specified pattern, with a dynamic failure if
+        unsuccessful. *)
+      self deleteIfFail: [ :err <Symbol> | self error: err ]
+    )
+
+    public deleteIfFail: blk <[:Symbol]> = (
+      (* This deletes all files and directories that match the specified pattern.
+        This should be used with extreme caution.  Directories that are
+        not empty are not deleted.  If any matching files or directories cannot
+        be deleted, blk is evaluated with an error symbol *)
+      self pathsDo: [ :p <FilePath> |
+        p deletePathIfFail: [ :err <Symbol> |
+          blk value: err.
+          ^self
+        ]
+      ]
+    )
+
+    elements ^ <Vector[FilePattern]> = (
+      (* Return a collection of the elements that you would get from elementsDo: *)
+      | els |
+      els:: Vector new.
+      self elementsDo:
+        [ :el <FilePattern> |
+          els append: el.
+        ].
+      ^els
+    )
+
+    public extendPath: path <FilePath> ^ <FilePattern> = (
+      ^FilePattern for: (self patternExtending: path)
+    )
+
+    public extendPattern: pat <FilePattern> ^ <FilePattern> = (
+      ^FilePattern for: (self patternExtending: pat)
+    )
+
+    public isPath ^ <Boolean> = (
+      (* Returns true if the receive is a FilePath (i.e. contains no wildcards) *)
+      ^false
+    )
+
+    public isRelative ^ <Boolean> = (
+      ^self isAbsolute not
+    )
+
+    public paths ^ <Vector[FilePath]> = (
+      (* Return a collection of the elements that you would get from pathsDo: *)
+      | els |
+      els:: Vector new.
+      self pathsDo: [ :el <FilePath> |
+        els append: el.
+      ].
+      ^els
+    )
+
+    public pattern ^ <String> = (
+      ^pattern_0
+    )
+
+    public pattern: p <String> = (
+      pattern_0:: p
+    )
+  ) : (
+    public for: pat <String>  ^<FilePattern> = (
+      ^self new pattern: pat
+    )
+
+    public multipleMatchWildcardCharacter ^ <Character> = (
+      ^"*"
+    )
+
+    public patternHasWildcards: pat <String> ^<Boolean> = (
+      ^(pat includes: multipleMatchWildcardCharacter)
+        or: [ pat includes: singleMatchWildcardCharacter ]
+    )
+
+    public singleMatchWildcardCharacter  ^ <Character> = (
+      ^"?"
+    )
+
+    public forAll: patternElements <Vector[FilePattern]>  ^ <FilePattern> = (
+      | p <FilePattern> |
+      patternElements do:
+        [ :el <FilePattern> |
+          p isNil
+            ifTrue: [ p:: el ]
+            ifFalse: [ p:: p, el ]
+        ].
+      ^p
+    )
+
+    public forElements: els <Vector[Str]> ^ <FilePattern> = (
+      ^self forAll: (els collect: [ :s <String> | FilePattern for: s ])
+    )
+
+    assert: block = (
+      block value ifFalse: [
+        self error: 'Assertion Failed'
+      ]
+    )
+
+    assert: block message: msg = (
+      block value ifFalse: [
+        self error: ('Assertion Failed' + msg)
+      ]
+    )
+  )
+
+  (* FilePaths are FilePatterns without wildcard characters,
+     which means they match individual files, not sets of files. *)
+  public class FilePath = FilePattern ()(
+    
+    (* concatenation *)
+    public , extension <FilePattern> ^ <FilePattern> = (
+      ^ extension extendPath: self (* ) *)
+    )
+
+    public copyAs: newPath <FilePath> ifFail: fail <[:IOException]> = (
+      vmMirror path: (self pattern) copyAs: (newPath pattern) ifFail: fail.
+    )
+
+    (* create directory from this path *)
+    public createDirectoryIfFail: fail <[:Symbol]> = (
+      vmMirror pathCreateDirectory: self pattern ifFail: fail.
+    )
+
+    public deleteDirectoryIfFail: fail <[:Symbol]> = (
+      vmMirror pathDeleteFileDir: self pattern ifFail: fail.
+    )
+
+    public deleteFileIfFail: fail <[:Symbol]> = (
+      vmMirror pathDeleteFileDir: self pattern ifFail: fail.
+    )
+
+    public deletePathIfFail: fail <[:Symbol]> = (
+      self exists
+        ifFalse: [	blk value: #NoSuchFileOrDirectory.
+                ^self		].
+      self isDirectory
+        ifTrue: [ self deleteDirectoryIfFail: fail ]
+        ifFalse: [ self deleteFileIfFail: fail ]
+    )
+
+    public exists ^ <Boolean> = (
+      ^ vmMirror pathFileExists: self pattern.
+    )
+
+    public isDirectory ^ <Boolean> = (
+      ^ vmMirror pathIsDirectory: self pattern.
+    )
+
+    public isReadOnly ^ <Boolean> = (
+      ^ vmMirror pathIsReadOnly: self pattern.
+    )
+
+    public lastModified = (
+      ^ vmMirror pathLastModified: self pattern.
+    )
+
+    public moveAs: newPath <FilePath> ifFail: fail <[:IOException]> = (
+      vmMirror path: self pattern moveAs: newPath pattern ifFail: fail.
+    )
+
+    public size = (
+      ^ vmMirror pathGetSize: self pattern.
+    )
+
+    public copyAs: newPath <FilePath> = (
+      self copyAs: newPath ifFail: [ :err <Symbol> |
+        self error: err
+      ]
+    )
+
+    (* Create a copy in the same directory with the specified name.
+       The new path is returned. *)
+    public copyNamed: name <String> ^ <FilePath> = (
+      ^ self copyNamed: name ifFail: [ :err <Symbol> | self error: err ]
+    )
+
+    (* Create a copy in the same directory with the specified name.
+       The new path is returned. *)
+    public copyNamed: name <String> ifFail: fail <[:IOException]>  ^ <FilePath> = (
+      | newPath <FilePath> |
+      newPath:: self containingDirectory, (FilePath for: name).
+      self copyAs: newPath ifFail: [ :err <Symbol> |
+        self error: err
+      ].
+      ^ newPath
+    )
+
+    public elements ^ <Vector[FilePath]> = (
+      (* A file path's elements must also be filepaths *)
+      ^ super elements
+    )
+
+    (* returns a pattern that represents all subfiles of a directory *)
+    public entries ^ <Vector[FilePath]>  = (
+      ^ (self, (FilePattern for: '*')) paths
+    )
+
+    public extendPath: path <FilePath> ^ <FilePath> = (
+      ^ FilePath for: (self patternExtending: path)
+    )
+
+    public isPath ^ <Boolean> = (
+      ^ true
+    )
+
+    public isWriteable ^ <Boolean> = (
+      ^ self isReadOnly not
+    )
+
+    public moveAs: newPath <FilePath> = (
+      self moveAs: newPath
+        ifFail: [ :err <Symbol> | self error: err	]
+    )
+
+    public name ^ <String> = (
+      ^ self pattern
+    )
+
+    public open: mode <Symbol> ifFail: err <[:IOException | X def]>  ^ <FileDescriptor | X> = (
+      (* Modes: #read, #write, #readWrite *)
+      ^ (FileDescriptor for: self pattern mode: mode)
+        openIfFail: [:e <IOException> |
+          ^ err value: e ]
+    )
+
+    public pathsDo: blk <[:FilePath]> = (
+      self exists ifTrue: [  blk value: self ]
+    )
+
+    public pattern: p <String> = (
+      super pattern: p.
+      self assert: [ (FilePattern patternHasWildcards: p) not ] message: 'shouldnothavewildcards'.
+    )
+
+    (* Rename in the same directory. The new path is returned. *)
+    public rename: name <String> ^ <FilePath> = (
+      ^ self rename: name ifFail: [ :err <Symbol> | self error: err ]
+    )
+
+    (* Rename in the same directory. The new path is returned. *)
+    public rename: name <String> ifFail: fail <[:IOException]> ^ <FilePath> = (
+      | newPath <FilePath> |
+      newPath:: self containingDirectory, (FilePath for: name).
+      self moveAs: newPath ifFail: fail.
+      ^ newPath
+    )
+
+    public simpleName ^ <String> = (
+      ^ elements last name
+    )
+  ) : (
+    public currentDirectory ^<FilePath> = (
+        ^ FilePath for: (vmMirror pathCurrentDirectory: nil)
+    )
+
+    public for: name <String> ^ <FilePath> = (
+      ^ FilePath new pattern: name
+    )
+  )
+
+  public class IOException signalWith: aMessage = Exception (
+  | public message = aMessage. |
+    self signal.
+  )(
+    public asString = (
+      ^ 'IOException(' + msg + ')'
+    )
+  )
+
+  public class FileNotFoundException signalFor: fileName with: message = IOException signalWith: message (
+  | public fileName = fileName. |
+  )(
+    public asString = (
+      ^ 'FileNotFoundException(file: ' + fileName + ', message: ' + message + ')'
+    )
+  )
+
+  (* Short cut from VM. Likely to be removed when optimized. *)
+  private signalIOException: aMessage = (
+    IOException signalWith: aMessage
+  )
+
+  private signalFileNotFoundException: fileName with: aMessage = (
+    IOException signalFor: fileName with: aMessage
+  )
+)

@@ -377,6 +377,20 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
       v removeAll.
       self assert: 5 equals: v capacity.
     )
+
+    public testFirst = (
+      | v |
+      v:: Vector new.
+      1 to: 5 do: [:i | v append: i ].
+      assert: 1 = v first.
+    )
+
+    public testLast = (
+      | v |
+      v:: Vector new.
+      1 to: 5 do: [:i | v append: i ].
+      assert: 5 = v last.
+    )
   ) : ( TEST_CONTEXT = () )
   
   public class DictionaryTest = TestContext ()(

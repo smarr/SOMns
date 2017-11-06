@@ -41,12 +41,14 @@ import som.primitives.DoublePrimsFactory;
 import som.primitives.EqualsEqualsPrimFactory;
 import som.primitives.EqualsPrimFactory;
 import som.primitives.ExceptionsPrimsFactory;
+import som.primitives.FilePrimsFactory;
 import som.primitives.HashPrimFactory;
 import som.primitives.IntegerPrimsFactory;
 import som.primitives.MethodPrimsFactory;
 import som.primitives.MirrorPrimsFactory;
 import som.primitives.ObjectPrimsFactory;
 import som.primitives.ObjectSystemPrimsFactory;
+import som.primitives.PathPrimsFactory;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.StringPrimsFactory;
 import som.primitives.SystemPrimsFactory;
@@ -172,6 +174,7 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     allFactories.addAll(ClassPrimsFactory.getFactories());
     allFactories.addAll(DoublePrimsFactory.getFactories());
     allFactories.addAll(ExceptionsPrimsFactory.getFactories());
+    allFactories.addAll(FilePrimsFactory.getFactories());
     allFactories.addAll(IfMessageNodeGen.getFactories());
     allFactories.addAll(IntegerPrimsFactory.getFactories());
     allFactories.addAll(KernelObjFactory.getFactories());
@@ -179,6 +182,7 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     allFactories.addAll(MirrorPrimsFactory.getFactories());
     allFactories.addAll(ObjectPrimsFactory.getFactories());
     allFactories.addAll(ObjectSystemPrimsFactory.getFactories());
+    allFactories.addAll(PathPrimsFactory.getFactories());
     allFactories.addAll((List) PromisePrimsFactory.getFactories());
     allFactories.addAll(StringPrimsFactory.getFactories());
     allFactories.addAll(SystemPrimsFactory.getFactories());
@@ -240,6 +244,7 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     allFactories.add(CreateActorPrimFactory.getInstance());
     allFactories.add(ResolvePromiseNodeFactory.getInstance());
     allFactories.add(ErrorPromiseNodeFactory.getInstance());
+
     return allFactories;
   }
 }
