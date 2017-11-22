@@ -60,7 +60,7 @@ public final class JsonWriter {
   private JSONObjectBuilder sourceToJson(final Source s, final String id) {
     JSONObjectBuilder builder = JSONHelper.object();
     builder.add("id", id);
-    builder.add("sourceText", s.getCode());
+    builder.add("sourceText", s.getCharacters().toString());
     builder.add("mimeType", s.getMimeType());
     builder.add("name", s.getName());
     builder.add("uri", s.getURI().toString());

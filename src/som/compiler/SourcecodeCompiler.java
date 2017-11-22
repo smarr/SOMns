@@ -46,8 +46,8 @@ public class SourcecodeCompiler {
   public MixinDefinition compileModule(final Source source,
       final StructuralProbe structuralProbe)
       throws ProgramDefinitionError {
-    Parser parser = new Parser(
-        source.getCode(), source.getLength(), source, structuralProbe, language);
+    Parser parser = new Parser(source.getCharacters().toString(), source.getLength(), source,
+        structuralProbe, language);
     return compile(parser, source);
   }
 
