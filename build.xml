@@ -2,13 +2,13 @@
 
     <property name="src.dir"     value="src"/>
     <property name="src_gen.dir" value="src_gen"/>
-    <property name="lib.dir"     value="libs" />
-    <property name="bd.dir"      value="${lib.dir}/black-diamonds/src" />
+    <property name="lib.dir"     location="libs" />
+    <property name="bd.dir"      location="${lib.dir}/black-diamonds/" />
     <property name="unit.dir"    value="tests/java" />
     <property name="kompos.dir"  value="tools/kompos" />
-    <property name="truffle.dir" value="${lib.dir}/truffle/truffle" />
-    <property name="sdk.build"   value="${lib.dir}/truffle/sdk/mxbuild/dists" />
-    <property name="truffle.build" value="${truffle.dir}/mxbuild/dists" />
+    <property name="truffle.dir" location="${lib.dir}/truffle/truffle" />
+    <property name="sdk.build"   location="${lib.dir}/truffle/sdk/mxbuild/dists" />
+    <property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
     <property name="somns-deps.version" value="0.3.3" />
     <property name="checkstyle.version" value="7.6.1" />
     
@@ -25,6 +25,7 @@
     <path id="project.classpath">
         <pathelement location="${classes.dir}" />
         <pathelement location="${unit.dir}" />
+        <pathelement location="${bd.dir}/build/classes" />
         <pathelement location="${sdk.build}/graal-sdk.jar" />
         <pathelement location="${sdk.build}/word-api.jar" />
         <pathelement location="${lib.dir}/somns-deps-dev.jar" />
@@ -66,6 +67,15 @@
             <arg value="--no-native"/>
         </exec>
     </target>
+    
+    <target name="bd-libs"> <!-- implicit dependency on truffle-libs -->
+        <ant dir="${bd.dir}" useNativeBasedir="true" target="libs-junit" inheritAll="false"/>
+        <ant dir="${bd.dir}" useNativeBasedir="true" target="compile-nodeps" inheritAll="false">
+            <property name="sdk.build"   value="${sdk.build}" />
+            <property name="truffle.dir" value="${truffle.dir}" />
+            <property name="truffle.build" value="${truffle.build}" />
+        </ant>
+    </target>
 
     <target name="ideinit" depends="source">
         <exec executable="${mx.cmd}" dir="${truffle.dir}" failonerror="true">
@@ -73,7 +83,7 @@
         </exec>
     </target>
 
-    <target name="libs" depends="truffle-libs" unless="skip.libs">
+    <target name="libs" depends="truffle-libs,bd-libs" unless="skip.libs">
         <get src="${lib.url}/somns-deps-${somns-deps.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/somns-deps.jar" />
@@ -144,12 +154,6 @@
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${classes.dir}" />
         <mkdir dir="${src_gen.dir}" />
-        <javac includeantruntime="false" srcdir="${bd.dir}" destdir="${classes.dir}" debug="true">
-          <classpath refid="project.classpath" />
-          <compilerarg line="-s ${src_gen.dir}" />
-          <compilerarg line="-XDignore.symbol.file" />
-          <compilerarg line="-Xlint:all" />
-        </javac>
         <javac includeantruntime="false" srcdir="${src.dir}" destdir="${classes.dir}" debug="true">
           <classpath refid="project.classpath" />
           <compilerarg line="-s ${src_gen.dir}" />
