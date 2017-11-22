@@ -212,7 +212,7 @@ public class FrontendConnector {
   private void sendSource(final Source source,
       final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
       final Set<RootNode> rootNodes) {
-    SourceData data = new SourceData(source.getCode(), source.getMimeType(),
+    SourceData data = new SourceData(source.getCharacters().toString(), source.getMimeType(),
         source.getName(), source.getURI().toString(),
         createSourceSections(source, loadedSourcesTags, instrumenter, rootNodes),
         SourceMessage.createMethodDefinitions(rootNodes));
