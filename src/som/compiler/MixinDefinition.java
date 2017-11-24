@@ -136,7 +136,11 @@ public final class MixinDefinition {
    * Used by the SOMns Language Server.
    */
   public MixinDefinition getOuterMixinDefinition() {
-    return instanceScope.getOuterMixin().getMixinDefinition();
+    MixinScope outer = instanceScope.getOuterMixin();
+    if (outer == null) {
+      return null;
+    }
+    return outer.getMixinDefinition();
   }
 
   public SSymbol getPrimaryFactorySelector() {
