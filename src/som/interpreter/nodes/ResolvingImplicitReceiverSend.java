@@ -114,6 +114,10 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
     return replacedBy;
   }
 
+  public SSymbol getSelector() {
+    return selector;
+  }
+
   @Override
   public String toString() {
     return "ImplicitSend(" + selector.toString() + ")";
