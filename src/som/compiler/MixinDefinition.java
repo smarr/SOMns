@@ -462,6 +462,10 @@ public final class MixinDefinition {
     return factoryMethods;
   }
 
+  public HashMap<SSymbol, SlotDefinition> getSlots() {
+    return slots;
+  }
+
   public HashMap<SSymbol, Dispatchable> getInstanceDispatchables() {
     return instanceDispatchables;
   }

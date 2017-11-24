@@ -381,6 +381,10 @@ public final class MixinBuilder {
       write.markAsStatement();
       slotAndInitExprs.add(write);
     }
+
+    if (structuralProbe != null) {
+      structuralProbe.recordNewSlot(slot);
+    }
   }
 
   /**
