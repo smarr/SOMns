@@ -42,6 +42,10 @@ public abstract class ArgumentReadNode {
       assert insidePrim : "Only to be used for primitive nodes";
     }
 
+    public Argument getArg() {
+      return arg;
+    }
+
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       return SArguments.arg(frame, argumentIndex);
@@ -126,6 +130,10 @@ public abstract class ArgumentReadNode {
           this instanceof NonLocalSuperReadNode;
       this.argumentIndex = arg.index;
       this.arg = arg;
+    }
+
+    public final Argument getArg() {
+      return arg;
     }
 
     @Override

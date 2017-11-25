@@ -118,7 +118,7 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     final int numArgs = signature.getNumberOfSignatureArguments() - 1;
 
     Source s = SomLanguage.getSyntheticSource("primitive", specializer.getName());
-    MethodBuilder prim = new MethodBuilder(true, lang);
+    MethodBuilder prim = new MethodBuilder(true, lang, null);
     ExpressionNode[] args = new ExpressionNode[numArgs];
 
     SourceSection source = s.createSection(1);

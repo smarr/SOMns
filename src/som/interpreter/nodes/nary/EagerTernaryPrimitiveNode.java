@@ -22,16 +22,14 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitiveNode {
   @Child private ExpressionNode        argument2;
   @Child private TernaryExpressionNode primitive;
 
-  private final SSymbol selector;
-
   public EagerTernaryPrimitiveNode(final SSymbol selector, final ExpressionNode receiver,
       final ExpressionNode argument1, final ExpressionNode argument2,
       final TernaryExpressionNode primitive) {
+    super(selector);
     this.receiver = insert(receiver);
     this.argument1 = insert(argument1);
     this.argument2 = insert(argument2);
     this.primitive = insert(primitive);
-    this.selector = selector;
   }
 
   @Override

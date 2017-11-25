@@ -136,7 +136,11 @@ public final class MixinDefinition {
    * Used by the SOMns Language Server.
    */
   public MixinDefinition getOuterMixinDefinition() {
-    return instanceScope.getOuterMixin().getMixinDefinition();
+    MixinScope outer = instanceScope.getOuterMixin();
+    if (outer == null) {
+      return null;
+    }
+    return outer.getMixinDefinition();
   }
 
   public SSymbol getPrimaryFactorySelector() {
@@ -458,6 +462,10 @@ public final class MixinDefinition {
     return factoryMethods;
   }
 
+  public HashMap<SSymbol, SlotDefinition> getSlots() {
+    return slots;
+  }
+
   public HashMap<SSymbol, Dispatchable> getInstanceDispatchables() {
     return instanceDispatchables;
   }
@@ -709,7 +717,7 @@ public final class MixinDefinition {
 
   public void addSyntheticInitializerWithoutSuperSendOnlyForThingClass() {
     SSymbol init = MixinBuilder.getInitializerName(Symbols.NEW);
-    MethodBuilder builder = new MethodBuilder(true, initializerBuilder.getLanguage());
+    MethodBuilder builder = new MethodBuilder(true, initializerBuilder.getLanguage(), null);
     builder.setSignature(init);
     builder.addArgument("self",
         SomLanguage.getSyntheticSource("self read", "super-class-resolution")

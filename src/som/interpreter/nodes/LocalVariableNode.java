@@ -25,6 +25,10 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
     this.var = var;
   }
 
+  public final Local getLocal() {
+    return var;
+  }
+
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
     if (tag == LocalVariableTag.class) {

@@ -496,7 +496,7 @@ public class Parser {
     } else if (acceptIdentifier("self", KeywordTag.class)) {
       self = meth.getSelfRead(getSource(coord));
     } else {
-      return meth.getImplicitReceiverSend(unarySelector(), getSource(coord));
+      return implicitUnaryMessage(meth, unarySelector(), getSource(coord));
     }
     return unaryMessage(self, false, null);
   }
@@ -830,7 +830,7 @@ public class Parser {
       final SourceCoordinate coord, final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
     MethodBuilder builder = new MethodBuilder(
-        mxnBuilder, mxnBuilder.getScopeForCurrentParserPosition());
+        mxnBuilder, mxnBuilder.getScopeForCurrentParserPosition(), structuralProbe);
 
     comments();
 
@@ -1225,7 +1225,7 @@ public class Parser {
 
         comments();
 
-        return builder.getImplicitReceiverSend(selector, getSource(coord));
+        return implicitUnaryMessage(builder, selector, getSource(coord));
       }
       case NewTerm: {
         return nestedTerm(builder);
@@ -1328,6 +1328,11 @@ public class Parser {
     }
 
     return msg;
+  }
+
+  protected ExpressionNode implicitUnaryMessage(final MethodBuilder meth,
+      final SSymbol selector, final SourceSection section) {
+    return meth.getImplicitReceiverSend(selector, section);
   }
 
   protected ExpressionNode unaryMessage(final ExpressionNode receiver,
