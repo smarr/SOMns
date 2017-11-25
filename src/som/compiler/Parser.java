@@ -830,7 +830,7 @@ public class Parser {
       final SourceCoordinate coord, final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
     MethodBuilder builder = new MethodBuilder(
-        mxnBuilder, mxnBuilder.getScopeForCurrentParserPosition());
+        mxnBuilder, mxnBuilder.getScopeForCurrentParserPosition(), structuralProbe);
 
     comments();
 

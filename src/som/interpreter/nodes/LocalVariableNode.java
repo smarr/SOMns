@@ -25,7 +25,7 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
     this.var = var;
   }
 
-  public Local getLocal() {
+  public final Local getLocal() {
     return var;
   }
 

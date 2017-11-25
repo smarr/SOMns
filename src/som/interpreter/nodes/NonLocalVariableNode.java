@@ -28,6 +28,10 @@ public abstract class NonLocalVariableNode extends ContextualNode {
     this.var = var;
   }
 
+  public final Local getLocal() {
+    return var;
+  }
+
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
     if (tag == LocalVariableTag.class) {

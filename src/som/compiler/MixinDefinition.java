@@ -717,7 +717,7 @@ public final class MixinDefinition {
 
   public void addSyntheticInitializerWithoutSuperSendOnlyForThingClass() {
     SSymbol init = MixinBuilder.getInitializerName(Symbols.NEW);
-    MethodBuilder builder = new MethodBuilder(true, initializerBuilder.getLanguage());
+    MethodBuilder builder = new MethodBuilder(true, initializerBuilder.getLanguage(), null);
     builder.setSignature(init);
     builder.addArgument("self",
         SomLanguage.getSyntheticSource("self read", "super-class-resolution")

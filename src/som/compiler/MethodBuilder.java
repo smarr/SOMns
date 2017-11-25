@@ -58,6 +58,7 @@ import som.vm.constants.Nil;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SSymbol;
+import tools.language.StructuralProbe;
 
 
 public final class MethodBuilder {
@@ -90,27 +91,32 @@ public final class MethodBuilder {
 
   private int cascadeId;
 
-  public MethodBuilder(final MixinBuilder holder, final MixinScope clsScope) {
-    this(holder, clsScope, null, false, holder.getLanguage());
+  private final StructuralProbe structuralProbe;
+
+  public MethodBuilder(final MixinBuilder holder, final MixinScope clsScope,
+      final StructuralProbe probe) {
+    this(holder, clsScope, null, false, holder.getLanguage(), probe);
   }
 
-  public MethodBuilder(final boolean withoutContext, final SomLanguage language) {
-    this(null, null, null, false, language);
+  public MethodBuilder(final boolean withoutContext, final SomLanguage language,
+      final StructuralProbe probe) {
+    this(null, null, null, false, language, probe);
     assert withoutContext;
   }
 
   public MethodBuilder(final MethodBuilder outerBuilder) {
     this(outerBuilder.directOuterMixin, outerBuilder.getHolderScope(),
-        outerBuilder, true, outerBuilder.language);
+        outerBuilder, true, outerBuilder.language, outerBuilder.structuralProbe);
   }
 
   private MethodBuilder(final MixinBuilder holder, final MixinScope clsScope,
       final MethodBuilder outerBuilder, final boolean isBlockMethod,
-      final SomLanguage language) {
+      final SomLanguage language, final StructuralProbe probe) {
     this.directOuterMixin = holder;
     this.outerBuilder = outerBuilder;
     this.blockMethod = isBlockMethod;
     this.language = language;
+    this.structuralProbe = probe;
 
     MethodScope outer = (outerBuilder != null)
         ? outerBuilder.getCurrentMethodScope()
@@ -346,6 +352,10 @@ public final class MethodBuilder {
 
     Argument argument = new Argument(arg, arguments.size(), source);
     arguments.put(arg, argument);
+
+    if (structuralProbe != null) {
+      structuralProbe.recordNewVariable(argument);
+    }
   }
 
   public Local addMessageCascadeTemp(final SourceSection source) throws MethodDefinitionError {
@@ -372,6 +382,10 @@ public final class MethodBuilder {
     }
     l.init(currentScope.getFrameDescriptor().addFrameSlot(l));
     locals.put(name, l);
+
+    if (structuralProbe != null) {
+      structuralProbe.recordNewVariable(l);
+    }
     return l;
   }
 

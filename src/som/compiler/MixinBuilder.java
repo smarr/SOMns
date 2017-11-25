@@ -161,8 +161,8 @@ public final class MixinBuilder {
     this.instanceScope = new MixinScope(outerMixinScope, outerMethodScope);
     this.classScope = new MixinScope(outerMixinScope, outerMethodScope);
 
-    this.initializer = new MethodBuilder(this, this.instanceScope);
-    this.primaryFactoryMethod = new MethodBuilder(this, this.classScope);
+    this.initializer = new MethodBuilder(this, this.instanceScope, structuralProbe);
+    this.primaryFactoryMethod = new MethodBuilder(this, this.classScope, structuralProbe);
     this.superclassAndMixinResolutionBuilder = createSuperclassResolutionBuilder();
 
     this.accessModifier = accessModifier;
@@ -479,10 +479,10 @@ public final class MixinBuilder {
   private MethodBuilder createSuperclassResolutionBuilder() {
     MethodBuilder definitionMethod;
     if (isModule()) {
-      definitionMethod = new MethodBuilder(true, language);
+      definitionMethod = new MethodBuilder(true, language, structuralProbe);
     } else {
       definitionMethod = new MethodBuilder(outerMixin,
-          outerMixin.getInstanceScope());
+          outerMixin.getInstanceScope(), structuralProbe);
     }
 
     // self is going to be the enclosing object
