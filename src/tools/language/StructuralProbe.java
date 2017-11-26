@@ -23,19 +23,19 @@ public class StructuralProbe {
     variables = new HashSet<>();
   }
 
-  public void recordNewClass(final MixinDefinition clazz) {
+  public synchronized void recordNewClass(final MixinDefinition clazz) {
     classes.add(clazz);
   }
 
-  public void recordNewMethod(final SInvokable method) {
+  public synchronized void recordNewMethod(final SInvokable method) {
     methods.add(method);
   }
 
-  public void recordNewSlot(final SlotDefinition slot) {
+  public synchronized void recordNewSlot(final SlotDefinition slot) {
     slots.add(slot);
   }
 
-  public void recordNewVariable(final Variable var) {
+  public synchronized void recordNewVariable(final Variable var) {
     variables.add(var);
   }
 
