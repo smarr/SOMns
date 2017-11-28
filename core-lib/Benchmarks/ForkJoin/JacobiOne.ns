@@ -1,0 +1,138 @@
+(*
+Written by Doug Lea with assistance from members of JCP JSR-166
+Expert Group and released to the public domain, as explained at
+http://creativecommons.org/publicdomain/zero/1.0/
+
+Only one active task at any given time.
+
+Vivek Kumar: Ported to JavaTC work-asyncing.
+*)
+class JacobiOne usingPlatform: platform andHarness: harness = (
+| private Array     = platform kernel Array.
+  private Random    = harness Random.
+  private Benchmark = harness Benchmark.
+  private Vector    = platform kernel Vector.
+  private Task      = platform threading Task.
+
+  private EPSILON = 0.0001.
+  private STEPS = 10.
+  private DEFAULT_GRANULARITY = 2.
+|)(
+  public class Jacobi = Benchmark ()(
+    public innerBenchmarkLoop: n numThreads: threads = (
+      | dim a b df |
+      dim:: n + 2.
+
+      a:: Array new: dim withAll: [ Array new: dim withAll: 0.0 ].
+      b:: Array new: dim withAll: [ Array new: dim withAll: 0.0 ].
+
+      2 to: dim - 1 do: [:i |
+        2 to: dim - 1 do: [:j |
+          (a at: i) at: j put: EPSILON ] ].
+
+      1 to: dim do: [:k |
+        (a at: k  ) at: 1   put: 1.0.
+        (a at: k  ) at: dim put: 1.0.
+        (a at: 1  ) at: k   put: 1.0.
+        (a at: dim) at: k   put: 1.0.
+        (b at: k  ) at: 1   put: 1.0.
+        (b at: k  ) at: dim put: 1.0.
+        (b at: 1  ) at: k   put: 1.0.
+        (b at: dim) at: k   put: 1.0.
+      ].
+
+      df:: 0.0.
+      0 to: STEPS - 1 do: [:x |
+        df:: buildNode: a and: b lrow: 2 hrow: n + 1 lcol: 2 hcol: n + 1 leafnodes: DEFAULT_GRANULARITY steps: x ].
+
+      ^ verifyResult: df n: n
+    )
+
+    public verifyResult: df n: n = (
+      (* original benchmark does repeated iterations on the same data
+         we don't do that to have more predictable behavior *)
+      ^ df = 0.03532437858581544.
+    )
+
+    private buildNode: a and: b lrow: lr hrow: hr lcol: lc hcol: hc leafnodes: leafs steps: steps = (
+      | rows = hr - lr + 1.
+        cols = hc - lc + 1.
+        mr = (lr + hr) >>> 1.
+        mc = (lc + hc) >>> 1.
+        hrows = mr - lr + 1.
+        hcols = mc - lc + 1. |
+
+      rows * cols <= leafs ifTrue: [
+        ^ processLeafNode: a and: b lrow: lr hrow: hr lcol: lc hcol: hc steps: steps ].
+
+      hrows * hcols >= leafs ifTrue: [
+        | task1 task2 task3 task4 df1 df2 df3 df4 max12 max123 |
+        task1:: Task spawn: [ buildNode: a and: b lrow: lr     hrow: mr lcol: lc     hcol: mc leafnodes: leafs steps: steps ].
+        df1:: task1 join.
+
+        task2:: Task spawn: [ buildNode: a and: b lrow: lr     hrow: mr lcol: mc + 1 hcol: hc leafnodes: leafs steps: steps ].
+        df2:: task2 join.
+
+        task3:: Task spawn: [ buildNode: a and: b lrow: mr + 1 hrow: hr lcol: lc     hcol: mc leafnodes: leafs steps: steps ].
+        df3:: task3 join.
+
+        task4:: Task spawn: [ buildNode: a and: b lrow: mr + 1 hrow: hr lcol: mc + 1 hcol: hc leafnodes: leafs steps: steps ].
+        df4:: task4 join.
+
+        max12::  df1 > df2   ifTrue: [ df1 ]   ifFalse: [ df2 ].
+        max123:: max12 > df3 ifTrue: [ max12 ] ifFalse: [ df3 ].
+
+        ^ max123 > df4 ifTrue: [ max123 ] ifFalse: [ df4 ].
+      ].
+
+      cols >= rows
+        ifTrue: [
+          | task1 task2 df1 df2 |
+          task1:: Task spawn: [ buildNode: a and: b lrow: lr hrow: hr lcol: lc     hcol: mc leafnodes: leafs steps: steps ].
+          df1:: task1 join.
+
+          task2:: Task spawn: [ buildNode: a and: b lrow: lr hrow: hr lcol: mc + 1 hcol: hc leafnodes: leafs steps: steps ].
+          df2:: task2 join.
+
+          df1 > df2
+            ifTrue:  [ ^ df1 ]
+            ifFalse: [ ^ df2 ] ]
+        ifFalse: [
+          | task1 task2 df1 df2 |
+          task1:: Task spawn:[ buildNode: a and: b lrow: lr     hrow: mr lcol: lc hcol: hc leafnodes: leafs steps: steps ].
+          df1:: task1 join.
+
+          task2:: Task spawn:[ buildNode: a and: b lrow: mr + 1 hrow: hr lcol: lc hcol: hc leafnodes: leafs steps: steps ].
+          df2:: task2 join.
+
+          df1 > df2
+            ifTrue:  [ ^ df1 ]
+            ifFalse: [ ^ df2 ] ]
+    )
+
+    private processLeafNode: A and: B lrow: loRow hrow: hiRow lcol: loCol hcol: hiCol steps: steps = (
+      | AtoB a b md |
+      AtoB:: (steps & 1) = 0.
+      a:: AtoB ifTrue: [ A ] ifFalse: [ B ].
+      b:: AtoB ifTrue: [ B ] ifFalse: [ A ].
+
+      md:: 0.0.
+
+      loRow to: hiRow do: [:i |
+        loCol to: hiCol do: [:j |
+          | v diff |
+          v:: 0.25 *
+                (((a at: i - 1) at: j) + ((a at: i) at: j - 1) +
+                 ((a at: i + 1) at: j) + ((a at: i) at: j + 1)).
+          (b at: i) at: j put: v.
+          diff:: v - ((a at: i) at: j).
+          diff < 0.0 ifTrue: [ diff:: 0.0 - diff ].
+          diff > md ifTrue: [ md:: diff ] ] ].
+
+      ^ md.
+    )
+  )
+
+  public newInstance = ( ^ Jacobi new )
+  public setupVerifiedRun: run = ( run innerIterations: 1 )
+)
