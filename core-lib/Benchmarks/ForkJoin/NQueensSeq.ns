@@ -1,0 +1,86 @@
+(*
+Fully sequential version, replacing all forks with compute.
+
+https://github.com/vivkumar/TryCatchWS/blob/master/test/NQueens.java
+*)
+class NQueensSuite usingPlatform: platform andHarness: harness = (
+| private Array     = platform kernel Array.
+  private Benchmark = harness Benchmark.
+  private Vector    = platform kernel Vector.
+  private Mutex     = platform threading Mutex.
+  private Task      = platform threading Task.
+
+  private SOLUTIONS = {
+    1. 0. 0. 2. 10.
+    4. 40. 92. 352. 724.
+    2680. 14200. 73712. 365596. 2279184.
+    14772512 }.
+|)(
+  public class Queens = Benchmark (
+  | private nSolutions ::= 0.
+    private lock = Mutex new.
+  |)(
+    public innerBenchmarkLoop: size numThreads: threads = (
+      nSolutions:: 0.
+      compute: size.
+      ^ verify: size
+    )
+
+    private compute: size = (
+      | a = Array new: 0. |
+      nqueensTask: size a: a depth: 0
+    )
+
+    private nqueens: size a: a depth: depth = (
+      size = depth ifTrue: [
+        lock critical: [
+          nSolutions:: nSolutions + 1.
+        ].
+        ^ nil
+      ].
+
+      ^ nqueensTask: size a: a depth: depth
+    )
+
+    private kernel: size and: a depth: depth i: i = (
+      | b status |
+      b:: Array new: depth + 1 withAll: 0.
+
+      1 to: depth do: [:idx |
+        b at: idx put: (a at: idx) ].
+
+      b at: depth + 1 put: i.
+
+      status:: ok: depth + 1 and: b.
+      status
+        ifTrue:  [ ^ nqueens: size a: b depth: depth + 1 ]
+        ifFalse: [ ^ nil ]
+    )
+
+    private ok: n and: a = (
+      1 to: n do: [:i |
+        | p |
+        p:: a at: i.
+        i + 1 to: n do: [ :j |
+          | q |
+          q:: a at: j.
+          q = p || (q = (p - (j - i))) || (q = (p + (j - i)))
+            ifTrue: [ ^ false ].
+        ].
+      ].
+      ^ true.
+    )
+
+    private verify: size = (
+      ^ nSolutions = (SOLUTIONS at: size)
+    )
+
+    private nqueensTask: size a: a depth: depth = (
+      1 to: size do: [:i |
+        kernel: size and: a depth: depth i: i - 1 ]
+    )
+  )
+
+  public newInstance = ( ^ Queens new )
+  public setupVerifiedRun: run = ( run innerIterations: 1 )
+)
