@@ -8,6 +8,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 import bd.primitives.Primitive;
 import som.interpreter.actors.SFarReference;
+import som.primitives.threading.TaskThreads.SomForkJoinTask;
 import som.primitives.threading.TaskThreads.SomThreadTask;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SBlock;
@@ -54,6 +55,11 @@ public abstract class EqualsEqualsPrim extends ComparisonPrim {
 
   @Specialization
   public final boolean doThread(final SomThreadTask left, final Object right) {
+    return left == right;
+  }
+
+  @Specialization
+  public final boolean doThread(final SomForkJoinTask left, final Object right) {
     return left == right;
   }
 
