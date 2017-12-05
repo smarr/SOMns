@@ -93,7 +93,8 @@ public abstract class IntToDoInlinedLiteralsNode extends ExprWithTagsNode {
     }
 
     if (CompilerDirectives.inInterpreter()) {
-      loopFrequency = Math.max(0.0, Math.max(loopFrequency, (to - from) / (to - from + 1.0)));
+      loopFrequency = Math.min(1.0,
+          Math.max(0.0, Math.max(loopFrequency, (to - from) / (to - from + 1.0))));
     }
 
     for (long i = from + 1; CompilerDirectives.injectBranchProbability(loopFrequency,
