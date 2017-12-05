@@ -1,0 +1,276 @@
+(*
+Copyright (c) 2000 Massachusetts Institute of Technology
+Copyright (c) 2000 Matteo Frigo
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+aint with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*)
+
+(* Parallelized, and one of the tasks is done locally. *)
+(* Vivek Kumar: Ported to JavaTC work-asyncing. *)
+class LUDecompositionOpt usingPlatform: platform andHarness: harness = (
+| private Benchmark = harness Benchmark.
+  private Random    = harness Random.
+
+  private Array     = platform kernel Array.
+  private Task      = platform threading Task.
+
+  private BLOCK_SIZE = 16.
+|)(
+  private class LUDecompositionNai = Benchmark (
+  | private LU     ::= nil.
+    private LUSave ::= nil.
+  |)(
+    public innerBenchmarkLoop: size numThreads: threads = (
+      | numOfBlocks = size / BLOCK_SIZE. |
+      allocate: size.
+      initialize: size.
+
+      calcLU: 0 c: 0 num: numOfBlocks.
+
+      ^ verifyResult: size
+    )
+
+    private blockLU: posBR c: posBC = (
+      1 to: BLOCK_SIZE do: [:k |
+        k + 1 to: BLOCK_SIZE do: [:i |
+          | a
+            brI    = LU  at: posBR + i.
+            brIbcK = brI at: posBC + k.
+            brK    = LU  at: posBR + k. |
+          a:: brIbcK // (brK at: posBC + k).
+          brI at: posBC + k put: a.
+
+          BLOCK_SIZE downTo: k + 1 do: [:n |
+            | brIbcN = brI at: posBC + n. |
+            brI at: posBC + n put: brIbcN - (a * (brK at: posBC + n)) ] ] ]
+    )
+
+    private blockLowerSolve: posBR bc: posBC lr: posLR lc: posLC = (
+      2 to: BLOCK_SIZE do: [:i |
+        1 to: i - 1 do: [:k |
+          | a = (LU at: posLR + i) at: posLC + k. |
+          BLOCK_SIZE downTo: 1 do: [:n |
+            | brI = LU at: posBR + i. |
+            brI at: posBC + n put: (brI at: posBC + n) - (a * ((LU at: posBR + k) at: posBC + n)) ] ] ]
+    )
+
+    private blockUpperSolve: posBR bc: posBC ur: posUR uc: posUC = (
+      1 to: BLOCK_SIZE do: [:i |
+        1 to: BLOCK_SIZE do: [:k |
+          | brI = LU at: posBR + i.
+            urK = LU at: posUR + k.
+            a   = (brI at: posBC + k) // (urK at: posUC + k). |
+          brI at: posBC + k put: a.
+
+          BLOCK_SIZE downTo: k + 1 do: [:n |
+            brI at: posBC + n put: (brI at: posBC + n) - (a * (urK at: posUC + n)) ] ] ]
+    )
+
+    private blockSchur: posBR bc: posBC ar: posAR ac: posAC cr: posCR cc: posCC = (
+      1 to: BLOCK_SIZE do: [:i |
+        | brI =  LU at: posBR + i. |
+        1 to: BLOCK_SIZE do: [:k |
+          | a = (LU at: posAR + i) at: posAC + k.
+            crK = LU at: posCR + k. |
+          BLOCK_SIZE downTo: 1 do: [:n |
+            brI at: posBC + n put: (brI at: posBC + n) - (a * (crK at: posCC + n)) ] ] ]
+    )
+
+    private schur: posMR mc: posMC vr: posVR vc: posVC wr: posWR wc: posWC num: numOfBlocks = (
+      | halfNb posM01C posM10R posM11R posM11C posV01C posV10R posV11R posV11C
+        posW01C posW10R posW11R posW11C a b c |
+      numOfBlocks = 1 ifTrue: [
+        blockSchur: posMR bc: posMC ar: posVR ac: posVC cr: posWR cc: posWC.
+        ^ self ].
+
+      halfNb:: numOfBlocks / 2.
+
+      posM01C:: posMC + (halfNb * BLOCK_SIZE).
+      posM10R:: posMR + (halfNb * BLOCK_SIZE).
+      posM11R:: posMR + (halfNb * BLOCK_SIZE).
+      posM11C:: posMC + (halfNb * BLOCK_SIZE).
+      posV01C:: posVC + (halfNb * BLOCK_SIZE).
+      posV10R:: posVR + (halfNb * BLOCK_SIZE).
+      posV11R:: posVR + (halfNb * BLOCK_SIZE).
+      posV11C:: posVC + (halfNb * BLOCK_SIZE).
+      posW01C:: posWC + (halfNb * BLOCK_SIZE).
+      posW10R:: posWR + (halfNb * BLOCK_SIZE).
+      posW11R:: posWR + (halfNb * BLOCK_SIZE).
+      posW11C:: posWC + (halfNb * BLOCK_SIZE).
+
+      a:: Task spawn: [ schur: posMR   mc: posMC   vr: posVR   vc: posVC wr: posWR wc: posWC   num: halfNb ].
+      b:: Task spawn: [ schur: posMR   mc: posM01C vr: posVR   vc: posVC wr: posWR wc: posW01C num: halfNb ].
+      c:: Task spawn: [ schur: posM10R mc: posMC   vr: posV10R vc: posVC wr: posWR wc: posWC   num: halfNb ].
+
+      schur: posM11R mc: posM11C vr: posV10R vc: posVC wr: posWR wc: posW01C num: halfNb.
+
+      a join.
+      b join.
+      c join.
+
+      a:: Task spawn: [ schur: posMR   mc: posMC   vr: posVR   vc: posV01C wr: posW10R wc: posWC   num: halfNb ].
+      b:: Task spawn: [ schur: posMR   mc: posM01C vr: posVR   vc: posV01C wr: posW11R wc: posW11C num: halfNb ].
+      c:: Task spawn: [ schur: posM10R mc: posMC   vr: posV11R vc: posV11C wr: posW10R wc: posWC   num: halfNb ].
+
+      schur: posM11R mc: posM11C vr: posV11R vc: posV11C wr: posW11R wc: posW11C num: halfNb.
+
+      a join.
+      b join.
+      c join.
+    )
+
+    private lowerSolve: posMR mc: posMC lr: posLR lc: posLC num: numOfBlocks = (
+      | halfNb posM01C posM10R posM11R posM11C a |
+      numOfBlocks = 1 ifTrue: [
+        blockLowerSolve: posMR bc: posMC lr: posLR lc: posLC.
+        ^ self ].
+
+      halfNb:: numOfBlocks / 2.
+      posM01C:: posMC + (halfNb * BLOCK_SIZE).
+      posM10R:: posMR + (halfNb * BLOCK_SIZE).
+      posM11R:: posMR + (halfNb * BLOCK_SIZE).
+      posM11C:: posMC + (halfNb * BLOCK_SIZE).
+
+      a:: Task spawn: [ auxLowerSolve: posMR maC: posMC mbR: posM10R mbC: posMC
+                                   lr: posLR lc: posLC num: halfNb ].
+
+      auxLowerSolve: posMR maC: posM01C mbR: posM11R mbC: posM11C lr: posLR lc: posLC num: halfNb.
+
+      a join.
+    )
+
+    private auxLowerSolve: posMaR maC: posMaC mbR: posMbR mbC: posMbC lr: posLR
+        lc: posLC num: numOfBlocks = (
+      | posL01C = posLC + (numOfBlocks * BLOCK_SIZE).
+        posL10R = posLR + (numOfBlocks * BLOCK_SIZE).
+        posL11R = posLR + (numOfBlocks * BLOCK_SIZE).
+        posL11C = posLC + (numOfBlocks * BLOCK_SIZE). |
+      lowerSolve: posMaR mc: posMaC lr: posLR lc: posLC num: numOfBlocks.
+      schur: posMbR mc: posMbC vr: posL10R vc: posLC wr: posMaR wc: posMaC num: numOfBlocks.
+      lowerSolve: posMbR mc: posMbC lr: posL11R lc: posL11C num: numOfBlocks.
+    )
+
+    private upperSolve: posMR mc: posMC ur: posUR uc: posUC num: numOfBlocks = (
+      | halfNb posM00R posM00C posM01R posM01C posM10R posM10C posM11R posM11C
+        a b |
+      numOfBlocks = 1 ifTrue: [
+        blockUpperSolve: posMR bc: posMC ur: posUR uc: posUC.
+        ^ self ].
+
+      halfNb:: numOfBlocks / 2.
+      posM00R:: posMR.
+      posM00C:: posMC.
+      posM01R:: posMR.
+      posM01C:: posMC + (halfNb * BLOCK_SIZE).
+      posM10R:: posMR + (halfNb * BLOCK_SIZE).
+      posM10C:: posMC.
+      posM11R:: posMR + (halfNb * BLOCK_SIZE).
+      posM11C:: posMC + (halfNb * BLOCK_SIZE).
+
+      a:: Task spawn: [ auxUpperSolve: posM00R maC: posM00C mbR: posM01R
+                                  mbC: posM01C ur: posUR uc: posUC num: halfNb ].
+
+      auxUpperSolve: posM10R maC: posM10C mbR: posM11R mbC: posM11C ur: posUR uc: posUC num: halfNb.
+
+      a join.
+    )
+
+    private auxUpperSolve: posMaR maC: posMaC mbR: posMbR mbC: posMbC ur: posUR
+        uc: posUC num: numOfBlocks = (
+      | posU00R = posUR.
+        posU00C = posUC.
+        posU01R = posUR.
+        posU01C = posUC + (numOfBlocks * BLOCK_SIZE).
+        posU10R = posUR + (numOfBlocks * BLOCK_SIZE).
+        posU10C = posUC.
+        posU11R = posUR + (numOfBlocks * BLOCK_SIZE).
+        posU11C = posUC + (numOfBlocks * BLOCK_SIZE). |
+      upperSolve: posMaR mc: posMaC ur: posU00R uc: posU00C num: numOfBlocks.
+      schur: posMbR mc: posMbC vr: posMaR vc: posMaC wr: posU01R wc: posU01C num: numOfBlocks.
+      upperSolve: posMbR mc: posMbC ur: posU11R uc: posU11C num: numOfBlocks.
+    )
+
+    private calcLU: posR c: posC num: numOfBlocks = (
+      | halfNb pos00R pos00C pos01R pos01C pos10R pos10C pos11R pos11C a b |
+      numOfBlocks = 1 ifTrue: [
+        blockLU: posR c: posC.
+        ^ self ].
+
+      halfNb:: numOfBlocks / 2.
+      pos00R:: posR.
+      pos00C:: posC.
+      pos01R:: posR.
+      pos01C:: posC + (halfNb * BLOCK_SIZE).
+      pos10R:: posR + (halfNb * BLOCK_SIZE).
+      pos10C:: posC.
+      pos11R:: posR + (halfNb * BLOCK_SIZE).
+      pos11C:: posC + (halfNb * BLOCK_SIZE).
+
+      calcLU: pos00R c: pos00C num: halfNb.
+
+      a:: Task spawn: [ lowerSolve: pos01R mc: pos01C lr: pos00R lc: pos00C num: halfNb ].
+
+      upperSolve: pos10R mc: pos10C ur: pos00R uc: pos00C num: halfNb.
+
+      a join.
+
+      schur: pos11R mc: pos11C vr: pos10R vc: pos10C wr: pos01R wc: pos01C num: halfNb.
+      calcLU: pos11R c: pos11C num: halfNb
+    )
+
+    private allocate: n = (
+      | r = Random new. |
+
+      LU::     Array new: n withAll: [ Array new: n withAll: 0.0 ].
+      LUSave:: Array new: n withAll: [ Array new: n withAll: [ r next // 65535.0 ] ].
+
+      LUSave doIndexes: [:k |
+        | a = LUSave at: k. |
+        a at: k put: (a at: k) * 10.0  ]
+    )
+
+    private initialize: n = (
+      LU doIndexes: [:i |
+        (LU at: i) doIndexes: [:j |
+          (LU at: i) at: j put: ((LUSave at: i) at: j) ] ].
+    )
+
+    private verifyResult: size = (
+      | maxDiff ::= 0.0. |
+
+      LU doIndexes: [:i |
+        (LU at: i) doIndexes: [:j |
+          | v = 0.0.
+            k ::= 1.
+            diff |
+
+          [ k < i and: [ k <= j ] ] whileTrue: [
+            v:: v + (((LU at: i) at: k) * ((LU at: k) at: j)).
+            k:: k + 1 ].
+
+          (k = i and: [ k <= j ]) ifTrue: [
+            v:: v + ((LU at: k) at: j) ].
+
+          diff:: (((LUSave at: i) at: j) - v) abs.
+          diff > maxDiff ifTrue: [
+            maxDiff:: diff ] ] ].
+
+      ^ maxDiff <= 0.00001
+    )
+  )
+
+  public newInstance = ( ^ LUDecompositionNai new )
+  public setupVerifiedRun: run = ( run innerIterations: 32 )
+)
