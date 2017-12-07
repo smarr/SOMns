@@ -1,7 +1,6 @@
 package som.primitives;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -67,7 +66,7 @@ public final class SystemPrims {
     try {
       module = vm.loadModule(path);
       return module.instantiateModuleClass();
-    } catch (IOException e) {
+    } catch (Throwable e) {
       // TODO: convert to SOM exception
       throw new RuntimeException(e);
     }
