@@ -81,8 +81,8 @@ public final class MethodBuilder {
   private boolean accessesVariablesOfOuterScope;
   private boolean accessesLocalOfOuterScope;
 
-  private final LinkedHashMap<String, Argument> arguments = new LinkedHashMap<>();
-  private final LinkedHashMap<String, Local>    locals    = new LinkedHashMap<>();
+  private final LinkedHashMap<SSymbol, Argument> arguments = new LinkedHashMap<>();
+  private final LinkedHashMap<SSymbol, Local>    locals    = new LinkedHashMap<>();
 
   private Internal          frameOnStackVar;
   private final MethodScope currentScope;
@@ -153,7 +153,7 @@ public final class MethodBuilder {
     for (Variable v : scope.getVariables()) {
       Local l = v.splitToMergeIntoOuterScope(currentScope.getFrameDescriptor());
       if (l != null) { // can happen for instance for the block self, which we omit
-        String name = l.getQualifiedName();
+        SSymbol name = l.getQualifiedName();
         assert !locals.containsKey(name);
         locals.put(name, l);
         currentScope.addVariable(l);
@@ -196,7 +196,7 @@ public final class MethodBuilder {
 
   // Name for the frameOnStack slot,
   // starting with ! to make it a name that's not possible in Smalltalk
-  private static final String FRAME_ON_STACK_SLOT_NAME = "!frameOnStack";
+  private static final SSymbol FRAME_ON_STACK_SLOT_NAME = Symbols.symbolFor("!frameOnStack");
 
   public Internal getFrameOnStackMarkerVar() {
     if (outerBuilder != null) {
@@ -344,8 +344,8 @@ public final class MethodBuilder {
     signature = sig;
   }
 
-  public void addArgument(final String arg, final SourceSection source) {
-    if (("self".equals(arg) || "$blockSelf".equals(arg)) && arguments.size() > 0) {
+  public void addArgument(final SSymbol arg, final SourceSection source) {
+    if ((Symbols.SELF == arg || Symbols.BLOCK_SELF == arg) && arguments.size() > 0) {
       throw new IllegalStateException(
           "The self argument always has to be the first argument of a method");
     }
@@ -360,14 +360,14 @@ public final class MethodBuilder {
 
   public Local addMessageCascadeTemp(final SourceSection source) throws MethodDefinitionError {
     cascadeId += 1;
-    Local l = addLocal("$cascadeTmp" + cascadeId, true, source);
+    Local l = addLocal(Symbols.symbolFor("$cascadeTmp" + cascadeId), true, source);
     if (currentScope.hasVariables()) {
       currentScope.addVariable(l);
     }
     return l;
   }
 
-  public Local addLocal(final String name, final boolean immutable,
+  public Local addLocal(final SSymbol name, final boolean immutable,
       final SourceSection source) throws MethodDefinitionError {
     if (arguments.containsKey(name)) {
       throw new MethodDefinitionError("Method already defines argument " + name
@@ -389,7 +389,7 @@ public final class MethodBuilder {
     return l;
   }
 
-  public Local addLocalAndUpdateScope(final String name, final boolean immutable,
+  public Local addLocalAndUpdateScope(final SSymbol name, final boolean immutable,
       final SourceSection source) throws MethodDefinitionError {
     Local l = addLocal(name, immutable, source);
     currentScope.addVariable(l);
@@ -433,7 +433,7 @@ public final class MethodBuilder {
    * variable cannot be in scope and that a variable must have been erroneously
    * by {@link #getReadNode} or {@link #getWriteNode}.
    */
-  private int getContextLevel(final String varName) {
+  private int getContextLevel(final SSymbol varName) {
     // Check the current activation
     if (locals.containsKey(varName) || arguments.containsKey(varName)) {
       return 0;
@@ -462,7 +462,7 @@ public final class MethodBuilder {
    * Refer to {@link #getContextLevel} for a description of how the
    * enclosing scopes are traversed.
    */
-  protected Variable getVariable(final String varName) {
+  protected Variable getVariable(final SSymbol varName) {
 
     // Check the current activation
     if (locals.containsKey(varName)) {
@@ -501,7 +501,7 @@ public final class MethodBuilder {
   }
 
   public Argument getSelf() {
-    return (Argument) getVariable("self");
+    return (Argument) getVariable(Symbols.SELF);
   }
 
   public ExpressionNode getSuperReadNode(@NotNull final SourceSection source) {
@@ -515,17 +515,17 @@ public final class MethodBuilder {
     assert source != null;
     MixinBuilder holder = getEnclosingMixinBuilder();
     MixinDefinitionId mixinId = holder == null ? null : holder.getMixinId();
-    return getSelf().getSelfReadNode(getContextLevel("self"), mixinId, source);
+    return getSelf().getSelfReadNode(getContextLevel(Symbols.SELF), mixinId, source);
   }
 
-  public ExpressionNode getReadNode(final String variableName,
+  public ExpressionNode getReadNode(final SSymbol variableName,
       final SourceSection source) {
     assert source != null;
     Variable variable = getVariable(variableName);
     return variable.getReadNode(getContextLevel(variableName), source);
   }
 
-  public ExpressionNode getWriteNode(final String variableName,
+  public ExpressionNode getWriteNode(final SSymbol variableName,
       final ExpressionNode valExpr, final SourceSection source) {
     Local variable = getLocal(variableName);
     return variable.getWriteNode(getContextLevel(variableName), valExpr, source);
@@ -534,17 +534,17 @@ public final class MethodBuilder {
   public ExpressionNode getImplicitReceiverSend(final SSymbol selector,
       final SourceSection source) {
     // we need to handle super and self special here
-    if ("super".equals(selector.getString())) {
+    if (Symbols.SUPER == selector) {
       return getSuperReadNode(source);
     }
-    if ("self".equals(selector.getString())) {
+    if (Symbols.SELF == selector) {
       return getSelfRead(source);
     }
 
     // first look up local and argument variables
-    Variable variable = getVariable(selector.getString());
+    Variable variable = getVariable(selector);
     if (variable != null) {
-      return getReadNode(selector.getString(), source);
+      return getReadNode(selector, source);
     }
 
     // send the message to self if at top level (classes only) or
@@ -556,9 +556,9 @@ public final class MethodBuilder {
     }
 
     // then lookup non local and argument variables
-    Variable literalVariable = getVariable(selector.getString());
+    Variable literalVariable = getVariable(selector);
     if (literalVariable != null) {
-      return getReadNode(selector.getString(), source);
+      return getReadNode(selector, source);
     }
 
     // otherwise it's an implicit send
@@ -573,7 +573,8 @@ public final class MethodBuilder {
     // write directly to local variables (excluding arguments)
     String setterSend = setter.getString();
     String setterName = setterSend.substring(0, setterSend.length() - 1);
-    String varName = setterName.substring(0, setterName.length() - 1);
+    String varNameStr = setterName.substring(0, setterName.length() - 1);
+    SSymbol varName = Symbols.symbolFor(varNameStr);
 
     if (hasArgument(varName)) {
       throw new MethodDefinitionError("Can't assign to argument: " + varName, source);
@@ -610,7 +611,7 @@ public final class MethodBuilder {
         source, language.getVM());
   }
 
-  protected boolean hasArgument(final String varName) {
+  protected boolean hasArgument(final SSymbol varName) {
     if (arguments.containsKey(varName)) {
       return true;
     }
@@ -625,7 +626,7 @@ public final class MethodBuilder {
    * Refer to {@link #getContextLevel} for a description of how the
    * enclosing scopes are traversed.
    */
-  protected Local getLocal(final String varName) {
+  protected Local getLocal(final SSymbol varName) {
     // Check the current activation
     if (locals.containsKey(varName)) {
       return locals.get(varName);

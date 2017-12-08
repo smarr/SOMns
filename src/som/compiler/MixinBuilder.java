@@ -486,7 +486,7 @@ public final class MixinBuilder {
     }
 
     // self is going to be the enclosing object
-    definitionMethod.addArgument("self",
+    definitionMethod.addArgument(Symbols.SELF,
         SomLanguage.getSyntheticSource("self read", "super-class-resolution")
                    .createSection(1));
     definitionMethod.setSignature(Symbols.DEF_CLASS);
@@ -582,7 +582,7 @@ public final class MixinBuilder {
     args.add(objectInstantiationExpr);
 
     for (Argument arg : arguments) {
-      if (!"self".equals(arg.name)) { // already have self as the newly instantiated object
+      if (Symbols.SELF != arg.name) { // already have self as the newly instantiated object
         args.add(primaryFactoryMethod.getReadNode(arg.name, arg.source));
       }
     }

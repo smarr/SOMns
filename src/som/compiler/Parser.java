@@ -341,7 +341,7 @@ public class Parser {
       messagePattern(primaryFactory);
     } else {
       // in the standard case, the primary factory method is #new
-      primaryFactory.addArgument("self", getEmptySource());
+      primaryFactory.addArgument(Symbols.SELF, getEmptySource());
       primaryFactory.setSignature(Symbols.NEW);
     }
     mxnBuilder.setupInitializerBasedOnPrimaryFactory(getSource(coord));
@@ -855,7 +855,7 @@ public class Parser {
   }
 
   private void messagePattern(final MethodBuilder builder) throws ParseError {
-    builder.addArgument("self", getEmptySource());
+    builder.addArgument(Symbols.SELF, getEmptySource());
     switch (sym) {
       case Identifier:
         unaryPattern(builder);
@@ -885,7 +885,7 @@ public class Parser {
     builder.addMethodDefinitionSource(getSource(coord));
 
     coord = getCoordinate();
-    builder.addArgument(argument(), getSource(coord));
+    builder.addArgument(symbolFor(argument()), getSource(coord));
   }
 
   protected void keywordPattern(final MethodBuilder builder) throws ParseError {
@@ -896,7 +896,7 @@ public class Parser {
       builder.addMethodDefinitionSource(getSource(coord));
 
       coord = getCoordinate();
-      builder.addArgument(argument(), getSource(coord));
+      builder.addArgument(symbolFor(argument()), getSource(coord));
     } while (sym == Keyword);
 
     builder.setSignature(symbolFor(kw.toString()));
@@ -1027,7 +1027,7 @@ public class Parser {
       initializer = null;
     }
 
-    Local local = builder.addLocal(slotName, immutable, source);
+    Local local = builder.addLocal(symbolFor(slotName), immutable, source);
 
     if (initializer != null) {
       SourceSection write = getSource(coord);
@@ -1563,7 +1563,7 @@ public class Parser {
       // if it is a literal, we still need a memory location for counting, so,
       // add a synthetic local
       loopIdx = builder.addLocalAndUpdateScope(
-          "!i" + SourceCoordinate.getLocationQualifier(source), false, source);
+          symbolFor("!i" + SourceCoordinate.getLocationQualifier(source)), false, source);
     }
     return loopIdx;
   }
@@ -1742,7 +1742,7 @@ public class Parser {
 
     // Setup the builder and "new" factory for the implicit class
     MethodBuilder primaryFactory = classBuilder.getPrimaryFactoryMethodBuilder();
-    primaryFactory.addArgument("self", getEmptySource());
+    primaryFactory.addArgument(Symbols.SELF, getEmptySource());
     primaryFactory.setSignature(Symbols.NEW);
     classBuilder.setupInitializerBasedOnPrimaryFactory(source);
 
@@ -1796,7 +1796,7 @@ public class Parser {
     SourceCoordinate coord = getCoordinate();
     expect(NewBlock, DelimiterOpeningTag.class);
 
-    builder.addArgument("$blockSelf", getEmptySource());
+    builder.addArgument(Symbols.BLOCK_SELF, getEmptySource());
 
     if (sym == Colon) {
       blockPattern(builder);
@@ -1830,7 +1830,7 @@ public class Parser {
     do {
       expect(Colon, KeywordTag.class);
       SourceCoordinate coord = getCoordinate();
-      builder.addArgument(argument(), getSource(coord));
+      builder.addArgument(symbolFor(argument()), getSource(coord));
     } while (sym == Colon);
   }
 

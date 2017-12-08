@@ -22,6 +22,8 @@ import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableReadNodeGen;
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeGen;
 import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableReadNodeGen;
 import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableWriteNodeGen;
+import som.vm.Symbols;
+import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 
 
@@ -29,22 +31,22 @@ import tools.SourceCoordinate;
  * Represents state belonging to a method activation.
  */
 public abstract class Variable {
-  public final String        name;
+  public final SSymbol       name;
   public final SourceSection source;
 
-  Variable(final String name, final SourceSection source) {
+  Variable(final SSymbol name, final SourceSection source) {
     this.name = name;
     this.source = source;
   }
 
   /** Gets the name including lexical location. */
-  public String getQualifiedName() {
-    return name + SourceCoordinate.getLocationQualifier(source);
+  public SSymbol getQualifiedName() {
+    return Symbols.symbolFor(name.getString() + SourceCoordinate.getLocationQualifier(source));
   }
 
   @Override
   public String toString() {
-    return getClass().getSimpleName() + "(" + name + ")";
+    return getClass().getSimpleName() + "(" + name.getString() + ")";
   }
 
   @Override
@@ -58,7 +60,7 @@ public abstract class Variable {
     }
     Variable var = (Variable) o;
     if (var.source == source) {
-      assert name.equals(var.name) : "Defined in the same place, but names not equal?";
+      assert name == var.name : "Defined in the same place, but names not equal?";
       return true;
     }
     assert source == null || !source.equals(
@@ -87,13 +89,13 @@ public abstract class Variable {
   public static final class Argument extends Variable {
     public final int index;
 
-    Argument(final String name, final int index, final SourceSection source) {
+    Argument(final SSymbol name, final int index, final SourceSection source) {
       super(name, source);
       this.index = index;
     }
 
     public boolean isSelf() {
-      return "self".equals(name) || "$blockSelf".equals(name);
+      return Symbols.SELF == name || Symbols.BLOCK_SELF == name;
     }
 
     public ExpressionNode getSelfReadNode(final int contextLevel,
@@ -160,7 +162,7 @@ public abstract class Variable {
   public abstract static class Local extends Variable {
     @CompilationFinal private FrameSlot slot;
 
-    Local(final String name, final SourceSection source) {
+    Local(final SSymbol name, final SourceSection source) {
       super(name, source);
     }
 
@@ -221,7 +223,7 @@ public abstract class Variable {
   }
 
   public static final class MutableLocal extends Local {
-    MutableLocal(final String name, final SourceSection source) {
+    MutableLocal(final SSymbol name, final SourceSection source) {
       super(name, source);
     }
 
@@ -232,7 +234,7 @@ public abstract class Variable {
   }
 
   public static final class ImmutableLocal extends Local {
-    ImmutableLocal(final String name, final SourceSection source) {
+    ImmutableLocal(final SSymbol name, final SourceSection source) {
       super(name, source);
     }
 
@@ -250,7 +252,7 @@ public abstract class Variable {
   public static final class Internal extends Variable {
     @CompilationFinal private FrameSlot slot;
 
-    public Internal(final String name) {
+    public Internal(final SSymbol name) {
       super(name, null);
     }
 

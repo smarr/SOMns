@@ -74,8 +74,9 @@ public final class VariablesResponse extends Response {
       SObject o = (SObject) obj;
       for (Entry<SlotDefinition, StorageLocation> e : o.getObjectLayout().getStorageLocations()
                                                        .entrySet()) {
-        results.add(createVariable(
-            e.getKey().getName().getString(), e.getValue().read(o), suspension));
+        results.add(
+            createVariable(e.getKey().getName().getString(), e.getValue().read(o),
+                suspension));
       }
     } else {
       int startIdx = start == null ? 0 : (int) (long) start;
@@ -108,7 +109,7 @@ public final class VariablesResponse extends Response {
     for (som.compiler.Variable v : scope.getVariables()) {
       if (!v.isInternal()) {
         Object val = scope.read(v);
-        results.add(createVariable(v.name, val, suspension));
+        results.add(createVariable(v.name.getString(), val, suspension));
       }
     }
     return results;
