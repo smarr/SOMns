@@ -11,12 +11,14 @@ import som.compiler.Variable.Local;
 import som.interpreter.InliningVisitor;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
+import som.vmobjects.SSymbol;
+import tools.Send;
 import tools.debugger.Tags.LocalVariableTag;
 import tools.dym.Tags.LocalVarRead;
 import tools.dym.Tags.LocalVarWrite;
 
 
-public abstract class LocalVariableNode extends ExprWithTagsNode {
+public abstract class LocalVariableNode extends ExprWithTagsNode implements Send {
   protected final FrameSlot slot;
   protected final Local     var;
 
@@ -27,6 +29,11 @@ public abstract class LocalVariableNode extends ExprWithTagsNode {
 
   public final Local getLocal() {
     return var;
+  }
+
+  @Override
+  public final SSymbol getSelector() {
+    return var.name;
   }
 
   @Override

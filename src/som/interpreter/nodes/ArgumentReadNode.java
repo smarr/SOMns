@@ -9,6 +9,8 @@ import som.compiler.Variable.Argument;
 import som.interpreter.InliningVisitor;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
+import som.vmobjects.SSymbol;
+import tools.Send;
 import tools.debugger.Tags.ArgumentTag;
 import tools.debugger.Tags.KeywordTag;
 import tools.dym.Tags.LocalArgRead;
@@ -17,7 +19,7 @@ import tools.dym.Tags.LocalArgRead;
 public abstract class ArgumentReadNode {
 
   @Instrumentable(factory = LocalArgumentReadNodeWrapper.class)
-  public static class LocalArgumentReadNode extends ExprWithTagsNode {
+  public static class LocalArgumentReadNode extends ExprWithTagsNode implements Send {
     protected final int      argumentIndex;
     protected final Argument arg;
 
@@ -44,6 +46,11 @@ public abstract class ArgumentReadNode {
 
     public Argument getArg() {
       return arg;
+    }
+
+    @Override
+    public final SSymbol getSelector() {
+      return arg.name;
     }
 
     @Override
@@ -118,7 +125,7 @@ public abstract class ArgumentReadNode {
     }
   }
 
-  public static class NonLocalArgumentReadNode extends ContextualNode {
+  public static class NonLocalArgumentReadNode extends ContextualNode implements Send {
     protected final int      argumentIndex;
     protected final Argument arg;
 
@@ -134,6 +141,11 @@ public abstract class ArgumentReadNode {
 
     public final Argument getArg() {
       return arg;
+    }
+
+    @Override
+    public final SSymbol getSelector() {
+      return arg.name;
     }
 
     @Override
