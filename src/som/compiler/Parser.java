@@ -1758,7 +1758,7 @@ public class Parser {
     return new ObjectLiteralNode(mixinDef, outerRead, newMessage).initialize(source);
   }
 
-  private SSymbol selector() throws ParseError {
+  protected SSymbol selector() throws ParseError {
     if (sym == OperatorSequence || symIn(singleOpSyms)) {
       return binarySelector();
     } else if (sym == Keyword || sym == KeywordSequence) {
