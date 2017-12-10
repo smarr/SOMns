@@ -4,7 +4,7 @@
 import { ActivityType } from "./messages";
 import * as d3 from "d3";
 import { TraceDataUpdate } from "./execution-data";
-import { ActivityNode, EntityLink, SystemViewData, PassiveEntityNode } from "./system-view-data";
+import { ActivityNode, EntityLink, SystemViewData, PassiveEntityNode, EntityNode } from "./system-view-data";
 import { KomposMetaModel } from "./meta-model";
 
 // Tango Color Scheme: http://emilis.info/other/extended_tango/
@@ -132,17 +132,19 @@ export class SystemView {
   private forceLayoutUpdateIteration() {
     // draw directed edges with proper padding from node centers
     this.entityLinks.attr("d", (d: EntityLink) => {
-      const deltaX = d.target.x - d.source.x,
-        deltaY = d.target.y - d.source.y,
+      const target = <EntityNode> d.target;
+      const source = <EntityNode> d.source;
+      const deltaX = target.x - source.x,
+        deltaY = target.y - source.y,
         dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
         normX = deltaX / dist,
         normY = deltaY / dist,
         sourcePadding = d.left ? 17 : 12,
         targetPadding = d.right ? 17 : 12,
-        sourceX = d.source.x + (sourcePadding * normX),
-        sourceY = d.source.y + (sourcePadding * normY),
-        targetX = d.target.x - (targetPadding * normX),
-        targetY = d.target.y - (targetPadding * normY);
+        sourceX = source.x + (sourcePadding * normX),
+        sourceY = source.y + (sourcePadding * normY),
+        targetX = target.x - (targetPadding * normX),
+        targetY = target.y - (targetPadding * normY);
       return `M${sourceX},${sourceY}L${targetX},${targetY}`;
     });
 

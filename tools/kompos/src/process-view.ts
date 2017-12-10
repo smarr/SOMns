@@ -316,12 +316,12 @@ class Message extends EmptyMessage {
   private visualization: d3.Selection<SVGElement>;
   private anchor: d3.Selection<SVGElement>;
 
-  private readonly sendOp: SendOp;
+  // private readonly sendOp: SendOp;
 
   constructor(senderActor: ActorHeading, targetActor: ActorHeading,
-    sendOp: SendOp, senderTurn: TurnNode) {
+    _sendOp: SendOp, senderTurn: TurnNode) {
     super();
-    this.sendOp = sendOp;
+    // this.sendOp = sendOp;
     this.sender = senderTurn;
     this.target = new TurnNode(targetActor, this);
 

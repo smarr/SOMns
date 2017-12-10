@@ -332,6 +332,15 @@ export interface VariablesRequest {
 
   /** Reference of the variable container/scope. */
   variablesReference: number;
+
+  /** Filter child variables */
+  filter?: "indexed" | "named";
+
+  /** Optional start index. */
+  start?: number;
+
+  /** Optional number of elements to be returned. */
+  count?: number;
 }
 
 export interface VariablesResponse {

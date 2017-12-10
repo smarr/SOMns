@@ -198,8 +198,8 @@ export class TraceParser {
 
     let currentActivityId = null;
     let currentScopeId = null;
-    let currentImplThreadId = null;
-    let currentActivityBufferId = null;
+    // let currentImplThreadId = null;
+    // let currentActivityBufferId = null;
 
     let prevMarker = null;
 
@@ -232,13 +232,13 @@ export class TraceParser {
           i = this.readReceiveOp(i, data, currentActivityId, currentScopeId);
           break;
         case TraceRecords.ImplThread: {
-          currentImplThreadId = this.readLong(data, i + 1);
+          /* currentImplThreadId = */ this.readLong(data, i + 1);
           i += RECORD_SIZE.ImplThread;
           break;
         }
         case TraceRecords.ImplThreadCurrentActivity: {
           currentActivityId = this.readLong(data, i + 1);
-          currentActivityBufferId = data.getUint32(i + 9);
+          /* currentActivityBufferId = */ data.getUint32(i + 9);
           i += RECORD_SIZE.ImplThreadCurrentActivity;
           break;
         }
