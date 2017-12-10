@@ -192,12 +192,12 @@ class BeginMethodDef extends SectionMarker {
 }
 
 class End extends SectionMarker {
-  private section: SourceCoordinate;
+  // private section: SourceCoordinate;
   private len: number;
 
-  constructor(section: SourceCoordinate, length: number) {
+  constructor(_section: SourceCoordinate, length: number) {
     super(End);
-    this.section = section;
+    // this.section = section;
     this.len = length;
   }
 
