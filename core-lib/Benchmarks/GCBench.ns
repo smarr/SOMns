@@ -47,7 +47,7 @@
 #               - Results are sensitive to locking cost, but we don't
 #                 check for proper locking
 *)
-class GCBenchSuite usingPlatform: platform andHarness: harness = (
+class GCBench usingPlatform: platform andHarness: harness = (
 | private Benchmark       = harness Benchmark.
   private Array           = platform kernel Array.
 |

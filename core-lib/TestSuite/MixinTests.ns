@@ -1,4 +1,4 @@
-class LanguageTests usingPlatform: platform testFramework: minitest = (
+class MixinTests usingPlatform: platform testFramework: minitest = (
 | private TestContext  = minitest TestContext.
   private MessageNotUnderstood = platform kernel MessageNotUnderstood.
 |

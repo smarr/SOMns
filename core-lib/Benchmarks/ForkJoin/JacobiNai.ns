@@ -7,8 +7,7 @@ Parallelized, but no local work.
 
 Vivek Kumar: Ported to JavaTC work-asyncing.
 *)
-
-class JacobiSuite usingPlatform: platform andHarness: harness = (
+class JacobiNai usingPlatform: platform andHarness: harness = (
 | private Array     = platform kernel Array.
   private Random    = harness Random.
   private Benchmark = harness Benchmark.
@@ -135,4 +134,3 @@ class JacobiSuite usingPlatform: platform andHarness: harness = (
   public newInstance = ( ^ Jacobi new )
   public setupVerifiedRun: run = ( run innerIterations: 1 )
 )
-

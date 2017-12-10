@@ -18,9 +18,9 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
-class StorageSuite usingPlatform: platform andHarness: harness = (
+class Storage usingPlatform: platform andHarness: harness = (
 | private Random    = harness Random.
-  private Array     = platform kernel Array. 
+  private Array     = platform kernel Array.
   private Benchmark = harness Benchmark.
 |
 ) (
@@ -34,14 +34,14 @@ class StorageSuite usingPlatform: platform andHarness: harness = (
       self buildTreeDepth: 7 with: random.
       ^ count
     )
-    
+
     verifyResult: result = (
       ^ self assert: 5461 equals: result
     )
-    
+
     buildTreeDepth: depth with: random = (
       count:: count + 1.
-      ^(depth = 1) 
+      ^(depth = 1)
           ifTrue:  [ Array new: random next % 10 + 1 ]
           ifFalse: [
               Array new: 4 withAll: [ self buildTreeDepth: depth - 1 with: random ] ]

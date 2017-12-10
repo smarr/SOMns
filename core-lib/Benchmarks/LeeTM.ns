@@ -1,5 +1,5 @@
 (* *)
-class LeeTMSuite usingPlatform: platform andHarness: harness = (
+class LeeTM usingPlatform: platform andHarness: harness = (
 | private Benchmark = harness Benchmark.
   private Array     = platform kernel Array.
   private Vector    = platform kernel Vector.
@@ -46,7 +46,7 @@ class LeeTMSuite usingPlatform: platform andHarness: harness = (
 
     private loadData: fileId = (
       | dataModule str |
-      dataModule:: system loadModule: 'LeeTMData.ns' nextTo: outer LeeTMSuite.
+      dataModule:: system loadModule: 'LeeTMData.ns' nextTo: outer LeeTM.
       fileId = 1 ifTrue: [
         str:: dataModule mainboard.
         gridSize:: 100 ].

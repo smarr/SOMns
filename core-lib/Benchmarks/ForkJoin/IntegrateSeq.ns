@@ -15,7 +15,7 @@ Ported first to Java fork/join, then to SOMns.
 
 Fully sequential version, replacing all forks with compute.
 *)
-class IntegrateSuite usingPlatform: platform andHarness: harness = (
+class IntegrateSeq usingPlatform: platform andHarness: harness = (
 | private Benchmark = harness Benchmark.
   private Task      = platform threading Task.
 

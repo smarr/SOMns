@@ -3,7 +3,7 @@ Parallelized, but no local work.
 
 https://github.com/vivkumar/TryCatchWS/blob/master/test/NQueens.java
 *)
-class NQueensSuite usingPlatform: platform andHarness: harness = (
+class NQueensNai usingPlatform: platform andHarness: harness = (
 | private Array     = platform kernel Array.
   private Benchmark = harness Benchmark.
   private Vector    = platform kernel Vector.

@@ -1,6 +1,6 @@
 (*  This is a rough port of minijson from Java.
     TODO: add details (com.eclipsesource.json) *)
-class JsonSuite usingPlatform: platform andHarness: harness = (
+class Json usingPlatform: platform andHarness: harness = (
 | private Benchmark       = harness Benchmark.
   private Array           = platform kernel Array.
   private Vector          = platform kernel Vector.

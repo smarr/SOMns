@@ -1,4 +1,4 @@
-class DeltaBlue usingPlatform: platform andHarness: harness = (
+class DeltaBlueNS usingPlatform: platform andHarness: harness = (
 | private List      = platform kernel Vector.
   private Benchmark = harness Benchmark.
 

@@ -24,7 +24,7 @@ Pfannkuchen are somehow known in Benchmarking. i.e., there is a Lisp story.
  http://shootout.alioth.debian.org/
  contributed by Paolo Bonzini
 *)
-class FannkuchSuite usingPlatform: platform andHarness: harness = (
+class Fannkuch usingPlatform: platform andHarness: harness = (
 | private Benchmark       = harness Benchmark.
   private Array           = platform kernel Array.
   private expectedResults = self createExpectedResults.
@@ -98,7 +98,7 @@ class FannkuchSuite usingPlatform: platform andHarness: harness = (
       ^ result
     )
   )
-  
+
   private createExpectedResults = (
     | results |
     results:: Array new: 12.
@@ -116,7 +116,7 @@ class FannkuchSuite usingPlatform: platform andHarness: harness = (
     results at: 12 put: 65.
     ^ results
   )
-  
+
   public newInstance = ( ^ FannkuchBenchmark new )
   public setupVerifiedRun: run = ( run innerIterations: 7 )
 )

@@ -1,4 +1,4 @@
-class LanguageTests usingPlatform: platform testFramework: minitest = (
+class BenchmarkHarnessTests usingPlatform: platform testFramework: minitest = (
 | private TestContext = minitest TestContext.
   private harness     = (platform system loadModule: '../Benchmarks/Harness.ns' nextTo: self) usingPlatform: platform.
   private Random      = harness Random.

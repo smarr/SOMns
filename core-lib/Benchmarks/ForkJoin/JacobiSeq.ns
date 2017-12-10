@@ -7,8 +7,7 @@ Fully sequential version, replacing all forks with compute.
 
 Vivek Kumar: Ported to JavaTC work-asyncing.
 *)
-
-class JacobiSuite usingPlatform: platform andHarness: harness = (
+class JacobiSeq usingPlatform: platform andHarness: harness = (
 | private Array     = platform kernel Array.
   private Random    = harness Random.
   private Benchmark = harness Benchmark.

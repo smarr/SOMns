@@ -7,7 +7,7 @@
 
   Based on nbody.java ported to SOM by Stefan Marr.
 *)
-class NBodySuite usingPlatform: platform andHarness: harness = (
+class NBody usingPlatform: platform andHarness: harness = (
 | private Benchmark       = harness Benchmark.
   private Array           = platform kernel Array.
 |

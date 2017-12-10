@@ -1,4 +1,4 @@
-class GraphSearchSuite usingPlatform: platform andHarness: harness = (
+class GraphSearch usingPlatform: platform andHarness: harness = (
 | private Benchmark       = harness Benchmark.
   private Array           = platform kernel Array.
   private Vector          = platform kernel Vector.

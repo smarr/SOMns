@@ -63,7 +63,7 @@ array of elements in half and sorting each half.  It then merges the
 two sorted halves back together, but in a divide-and-conquer approach
 rather than the usual serial merge.
 *)
-class CilkSortNai usingPlatform: platform andHarness: harness = (
+class CilkSortSeq usingPlatform: platform andHarness: harness = (
 | private Benchmark = harness Benchmark.
   private Random    = harness Random.
   private Array     = platform kernel Array.

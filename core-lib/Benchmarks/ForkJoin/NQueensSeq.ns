@@ -3,7 +3,7 @@ Fully sequential version, replacing all forks with compute.
 
 https://github.com/vivkumar/TryCatchWS/blob/master/test/NQueens.java
 *)
-class NQueensSuite usingPlatform: platform andHarness: harness = (
+class NQueensSeq usingPlatform: platform andHarness: harness = (
 | private Array     = platform kernel Array.
   private Benchmark = harness Benchmark.
   private Vector    = platform kernel Vector.
