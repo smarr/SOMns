@@ -27,6 +27,7 @@ import som.interpreter.nodes.nary.EagerlySpecializableNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.Primitives;
 import som.vmobjects.SSymbol;
+import tools.Send;
 import tools.SourceCoordinate;
 import tools.dym.Tags.VirtualInvoke;
 
@@ -105,7 +106,7 @@ public final class MessageSendNode {
   }
 
   public abstract static class AbstractMessageSendNode extends ExprWithTagsNode
-      implements PreevaluatedExpression {
+      implements PreevaluatedExpression, Send {
 
     @Children protected final ExpressionNode[] argumentNodes;
 
@@ -156,6 +157,7 @@ public final class MessageSendNode {
       return "UninitMsgSend(" + selector.toString() + ")";
     }
 
+    @Override
     public SSymbol getSelector() {
       return selector;
     }
@@ -289,6 +291,11 @@ public final class MessageSendNode {
       super(arguments);
       this.selector = selector;
       this.dispatchNode = dispatchNode;
+    }
+
+    @Override
+    public SSymbol getSelector() {
+      return selector;
     }
 
     @Override

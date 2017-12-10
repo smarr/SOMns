@@ -50,6 +50,7 @@ import tools.debugger.message.SourceMessage.SourceData;
 import tools.debugger.message.StackTraceResponse;
 import tools.debugger.message.StoppedMessage;
 import tools.debugger.message.SymbolMessage;
+import tools.debugger.message.VariablesRequest.FilterType;
 import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.Breakpoints;
 import tools.debugger.session.LineBreakpoint;
@@ -284,8 +285,9 @@ public class FrontendConnector {
   }
 
   public void sendVariables(final long varRef, final int requestId,
-      final Suspension suspension) {
-    send(VariablesResponse.create(varRef, requestId, suspension));
+      final Suspension suspension, final FilterType filter, final Long start,
+      final Long count) {
+    send(VariablesResponse.create(varRef, requestId, suspension, filter, start, count));
   }
 
   public void sendStoppedMessage(final Suspension suspension) {

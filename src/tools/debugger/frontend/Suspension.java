@@ -22,6 +22,7 @@ import tools.debugger.entities.EntityType;
 import tools.debugger.entities.SteppingType;
 import tools.debugger.frontend.ApplicationThreadTask.Resume;
 import tools.debugger.frontend.ApplicationThreadTask.SendStackTrace;
+import tools.debugger.message.VariablesRequest.FilterType;
 
 
 /**
@@ -127,8 +128,8 @@ public class Suspension {
   }
 
   public void sendVariables(final long varRef, final FrontendConnector frontend,
-      final int requestId) {
-    frontend.sendVariables(varRef, requestId, this);
+      final int requestId, final FilterType filter, final Long start, final Long count) {
+    frontend.sendVariables(varRef, requestId, this, filter, start, count);
   }
 
   private void submitTask(final ApplicationThreadTask task) {

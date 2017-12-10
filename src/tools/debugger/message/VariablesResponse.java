@@ -15,6 +15,7 @@ import tools.TraceData;
 import tools.debugger.frontend.RuntimeScope;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.Response;
+import tools.debugger.message.VariablesRequest.FilterType;
 
 
 @SuppressWarnings("unused")
@@ -50,34 +51,42 @@ public final class VariablesResponse extends Response {
   }
 
   public static VariablesResponse create(final long globalVarRef, final int requestId,
-      final Suspension suspension) {
+      final Suspension suspension, final FilterType filter, final Long start,
+      final Long count) {
     Object scopeOrObject = suspension.getScopeOrObject(globalVarRef);
     ArrayList<Variable> results;
     if (scopeOrObject instanceof RuntimeScope) {
+      assert start == null || start == 0 : "Don't support starting from non-0 index";
       results = createFromScope((RuntimeScope) scopeOrObject, suspension);
     } else {
-      results = createFromObject(scopeOrObject, suspension);
+      results = createFromObject(scopeOrObject, suspension, filter, start, count);
     }
     return new VariablesResponse(requestId, globalVarRef, results.toArray(new Variable[0]));
   }
 
   private static ArrayList<Variable> createFromObject(final Object obj,
-      final Suspension suspension) {
+      final Suspension suspension, final FilterType filter, final Long start,
+      final Long count) {
     ArrayList<Variable> results = new ArrayList<>();
 
     if (obj instanceof SObject) {
+      assert start == null || start == 0 : "Don't support starting from non-0 index";
       SObject o = (SObject) obj;
       for (Entry<SlotDefinition, StorageLocation> e : o.getObjectLayout().getStorageLocations()
                                                        .entrySet()) {
-        results.add(createVariable(
-            e.getKey().getName().getString(), e.getValue().read(o), suspension));
+        results.add(
+            createVariable(e.getKey().getName().getString(), e.getValue().read(o),
+                suspension));
       }
     } else {
+      int startIdx = start == null ? 0 : (int) (long) start;
+
       assert obj instanceof SArray;
       SArray arr = (SArray) obj;
       Object storage = arr.getStoragePlain();
       if (storage instanceof Integer) {
-        for (int i = 0; i < (int) storage; i += 1) {
+        long numItems = count == null ? (int) storage : count;
+        for (int i = startIdx; i < numItems; i += 1) {
           results.add(createVariable("" + (i + 1), Nil.nilObject, suspension));
         }
       } else {
@@ -85,8 +94,8 @@ public final class VariablesResponse extends Response {
           storage = ((PartiallyEmptyArray) storage).getStorage();
         }
 
-        int length = Array.getLength(storage);
-        for (int i = 0; i < length; i += 1) {
+        long numItems = count == null ? Array.getLength(storage) : count;
+        for (int i = startIdx; i < numItems; i += 1) {
           results.add(createVariable("" + (i + 1), Array.get(storage, i), suspension));
         }
       }
@@ -100,7 +109,7 @@ public final class VariablesResponse extends Response {
     for (som.compiler.Variable v : scope.getVariables()) {
       if (!v.isInternal()) {
         Object val = scope.read(v);
-        results.add(createVariable(v.name, val, suspension));
+        results.add(createVariable(v.name.getString(), val, suspension));
       }
     }
     return results;

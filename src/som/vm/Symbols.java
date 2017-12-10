@@ -33,6 +33,11 @@ public final class Symbols {
   public static final SSymbol METACLASS       = symbolFor("Metaclass");
   public static final SSymbol METACLASS_CLASS = symbolFor("Metaclass class");
 
+  public static final SSymbol SUPER = symbolFor("super");
+
+  public static final SSymbol SELF       = symbolFor("self");
+  public static final SSymbol BLOCK_SELF = symbolFor("$blockSelf");
+
   public static final SSymbol Nil    = symbolFor("Nil");
   public static final SSymbol Kernel = symbolFor("Kernel");
 }

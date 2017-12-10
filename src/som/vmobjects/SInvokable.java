@@ -131,6 +131,14 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     return holder;
   }
 
+  /**
+   * This method is meant for the language server,
+   * it doesn't check whether the holder is set.
+   */
+  public final MixinDefinition getHolderUnsafe() {
+    return holder;
+  }
+
   public final void setHolder(final MixinDefinition value) {
     assert value != null;
     transferToInterpreterAndInvalidate("SMethod.setHolder");
