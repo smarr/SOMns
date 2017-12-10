@@ -132,6 +132,10 @@ public final class MixinDefinition {
     return name;
   }
 
+  public SourceSection getNameSourceSection() {
+    return nameSection;
+  }
+
   /**
    * Used by the SOMns Language Server.
    */
