@@ -75,6 +75,15 @@ class DoubleTests usingPlatform: platform testFramework: minitest = (
       assert: 0.0 exp equals: 1.0.
     )
 
+    public testPow = (
+      assert: (1.0 pow: 1.0)  equals: 1.0.
+      assert: (1.0 pow: 10.0) equals: 1.0.
+      assert: (2.0 pow: 2.0)  equals: 4.0.
+      assert: (2.0 pow: 10.0)  equals: 1024.0.
+      assert: (10.0 pow: -2.0)  equals: 0.01.
+      assert: (-2.0 pow: -4.0)  equals: 0.0625.
+    )
+
     public testAdvancedLiterals = (
       assert: 1e-1     equals: 0.1.
       assert: 1e-10    equals: 0.0000000001.
