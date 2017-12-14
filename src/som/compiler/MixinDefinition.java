@@ -445,7 +445,7 @@ public final class MixinDefinition {
 
     return initializerBuilder.splitBodyAndAssembleInitializerAs(
         MixinBuilder.getInitializerName(primaryFactoryName, mixinId),
-        body, AccessModifier.PROTECTED, initializerSource);
+        body, AccessModifier.PRIVATE, initializerSource);
   }
 
   private void addSlots(final HashSet<SlotDefinition> instanceSlots,
