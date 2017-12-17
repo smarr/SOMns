@@ -43,12 +43,12 @@ public class InstantiationNode extends Node {
 
     if (factory.isDeclaredAsValue() && factory.isTransferObject()) {
       // REM: cast is fine here, because we never return anyway
-      return (SClass) KernelObj.signalException("signalTOCannotBeValues:", classObj);
+      return (SClass) KernelObj.signalExceptionWithClass("signalTOCannotBeValues:", classObj);
     }
 
     if ((factory.isTransferObject() || factory.isDeclaredAsValue()) &&
         !outerObj.isValue()) {
-      return (SClass) KernelObj.signalException("signalNotAValueWith:", classObj);
+      return (SClass) KernelObj.signalExceptionWithClass("signalNotAValueWith:", classObj);
     }
 
     return classObj;

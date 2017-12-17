@@ -10,8 +10,11 @@ import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Symbols;
+import som.vm.constants.KernelObj;
 import som.vmobjects.SAbstractObject;
+import som.vmobjects.SArray;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 import tools.dym.Tags.StringAccess;
@@ -151,6 +154,69 @@ public class StringPrims {
         return "Error - index out of bounds";
       }
       return String.valueOf(receiver.charAt(i));
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "stringFrom:")
+  public abstract static class StringFromPrim extends UnaryExpressionNode {
+
+    @Specialization
+    public final String doString(final SArray chars) {
+      Object[] storage = chars.getObjectStorage(chars.ObjectStorageType);
+      StringBuilder sb = new StringBuilder(storage.length);
+      for (Object o : storage) {
+        if (!(o instanceof String) || ((String) o).length() != 1) {
+          KernelObj.signalException("signalArgumentError:", storage);
+        }
+        sb.append((String) o);
+      }
+
+      return sb.toString();
+    }
+
+    @Specialization
+    public final void doGeneric(final Object obj) {
+      KernelObj.signalException("signalInvalidArgument:", obj);
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "charFrom:")
+  public abstract static class CharFromPrim extends UnaryExpressionNode {
+
+    public boolean inRange(final long val) {
+      return (0 < val && val < 128);
+    }
+
+    @Specialization(guards = "inRange(val)")
+    public final String doString(final long val) {
+      return new String(new char[] {(char) val});
+    }
+
+    @Specialization
+    public final void doGeneric(final long val) {
+      KernelObj.signalException("signalArgumentError:", "" + val);
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "charValue:")
+  public abstract static class CharValuePrim extends UnaryExpressionNode {
+
+    @Specialization
+    public final long doString(final String c) {
+      if (c == null || c.length() != 1) {
+        KernelObj.signalException("signalArgumentError:", c);
+        return -1;
+      }
+
+      return c.charAt(0);
+    }
+
+    @Specialization
+    public final void doGeneric(final Object obj) {
+      KernelObj.signalException("signalArgumentError:", obj);
     }
   }
 }

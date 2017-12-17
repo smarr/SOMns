@@ -40,7 +40,7 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
 
   @Specialization(guards = "!isValue.executeEvaluated(argument)")
   public final Object throwNotAValueException(final Object receiver, final Object argument) {
-    return KernelObj.signalException("signalNotAValueWith:", argument);
+    return KernelObj.signalExceptionWithClass("signalNotAValueWith:", argument);
   }
 
   @Override

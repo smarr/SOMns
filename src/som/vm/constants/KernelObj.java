@@ -7,12 +7,12 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 import bd.primitives.Primitive;
 import som.VM;
+import som.interpreter.Types;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Symbols;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
-import som.vmobjects.SObjectWithClass;
 
 
 public final class KernelObj {
@@ -21,16 +21,21 @@ public final class KernelObj {
   public static final SImmutableObject   kernel = new SImmutableObject(true, true);
   @CompilationFinal public static SClass indexOutOfBoundsClass;
 
-  public static Object signalException(final String selector, final Object receiver) {
-    SObjectWithClass rcvr = (SObjectWithClass) receiver;
+  public static Object signalException(final String selector, final Object arg) {
     CompilerDirectives.transferToInterpreter();
     VM.thisMethodNeedsToBeOptimized("Should be optimized or on slowpath");
 
-    // the value object was not constructed properly.
     SInvokable disp = (SInvokable) KernelObj.kernel.getSOMClass().lookupPrivate(
         Symbols.symbolFor(selector),
         KernelObj.kernel.getSOMClass().getMixinDefinition().getMixinId());
-    return disp.invoke(new Object[] {KernelObj.kernel, rcvr.getSOMClass()});
+
+    return disp.invoke(new Object[] {KernelObj.kernel, arg});
+  }
+
+  public static Object signalExceptionWithClass(final String selector, final Object receiver) {
+    CompilerDirectives.transferToInterpreter();
+    SClass clazz = Types.getClassOf(receiver);
+    return signalException(selector, clazz);
   }
 
   @GenerateNodeFactory

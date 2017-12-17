@@ -260,7 +260,7 @@ public abstract class ChannelPrimitives {
     public final Object write(final VirtualFrame frame, final SChannelOutput out,
         final Object val) {
       if (!isVal.executeEvaluated(val)) {
-        KernelObj.signalException("signalNotAValueWith:", val);
+        KernelObj.signalExceptionWithClass("signalNotAValueWith:", val);
       }
       try {
         out.writeAndSuspendReader(val, afterRead.executeShouldHalt());

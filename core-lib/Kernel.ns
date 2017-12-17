@@ -413,6 +413,10 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     (* Printing *)
     public print = ( vmMirror printString: self )
+  ) : (
+    public from: charArray = (
+      ^vmMirror stringFrom: charArray.
+    )
   )
 
   public class Symbol = String ()
@@ -423,6 +427,18 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     (* Printing *)
     public print    = ( '#' print. super print )
+  )
+
+  public class Character = String () () : (
+    
+    (*convert to char*)
+    public from: anInt = (
+      ^vmMirror charFrom: anInt.
+    )
+
+    public value: char = (
+      ^vmMirror charValue: char
+    )
   )
 
   public class ArrayReadMixin = ()(
@@ -895,6 +911,16 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     )
   )
 
+  public class ArgumentError signalWith: argument = Exception (
+    |
+      public arg = argument. | 
+    self signal.
+  )(
+    public asString = (
+      ^ 'ArgumentError(' + arg + ')'.
+    )
+  )
+
   (* Exception signaled when a Value is instantiated referring to a mutable object. *)
   public class NotAValue signalWith: aClass = Exception (
     | public class = aClass. |
@@ -927,5 +953,9 @@ class Kernel vmMirror: vmMirror = Object <: Value (
   (* Short cut from VM. Likely to be removed when optimized. *)
   private signalTOCannotBeValues: aClass = (
     TransferObjectsCannotBeValues signalWith: aClass
+  )
+
+  private signalArgumentError: message = (
+    ArgumentError signalWith: message.
   )
 )
