@@ -9,7 +9,6 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.primitives.PathPrims;
-import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray.SMutableArray;
 
@@ -19,10 +18,11 @@ public class SFileDescriptor extends SObjectWithClass {
 
   public static final int BUFFER_SIZE = 32 * 1024;
 
-  private boolean open       = false;
-  private SArray  buffer;
-  private SSymbol mode;
-  private int     bufferSize = BUFFER_SIZE;
+  private boolean     open       = false;
+  private SArray      buffer;
+  private SSymbol     mode;
+  private int         bufferSize = BUFFER_SIZE;
+  private AccessModes access;
 
   private RandomAccessFile raf;
   private final File       f;
@@ -41,13 +41,13 @@ public class SFileDescriptor extends SObjectWithClass {
     buffer = new SMutableArray(storage, Classes.arrayClass);
 
     try {
-      if (mode == Symbols.symbolFor("read")) {
-        raf = new RandomAccessFile(f, "r");
-      } else if (mode == Symbols.symbolFor("readwrite")) {
-        raf = new RandomAccessFile(f, "rw");
-      } else {
-        dispatchHandler.executeDispatch(new Object[] {fail, "invalid access mode"});
-      }
+      this.access = AccessModes.valueOf(mode.getString().toUpperCase());
+    } catch (Exception e) {
+      dispatchHandler.executeDispatch(new Object[] {fail, "invalid access mode: " + mode});
+    }
+
+    try {
+      raf = new RandomAccessFile(f, access.getMode());
     } catch (FileNotFoundException e) {
       dispatchHandler.executeDispatch(new Object[] {fail, e.toString()});
     }
@@ -68,6 +68,11 @@ public class SFileDescriptor extends SObjectWithClass {
       final BlockDispatchNode dispatchHandler) {
     if (!open) {
       fail.getMethod().invoke(new Object[] {fail, "File not open"});
+      return 0;
+    }
+
+    if (access == AccessModes.WRITE) {
+      fail.getMethod().invoke(new Object[] {fail, "Opened in write only"});
       return 0;
     }
 
@@ -97,6 +102,11 @@ public class SFileDescriptor extends SObjectWithClass {
       final BlockDispatchNode dispatchHandler) {
     if (!open) {
       dispatchHandler.executeDispatch(new Object[] {fail, "File not opened"});
+      return;
+    }
+
+    if (access == AccessModes.READ) {
+      fail.getMethod().invoke(new Object[] {fail, "Opened in read only"});
       return;
     }
 
@@ -156,5 +166,18 @@ public class SFileDescriptor extends SObjectWithClass {
 
   public void setMode(final SSymbol mode) {
     this.mode = mode;
+  }
+
+  private enum AccessModes {
+    READ("r"), WRITE("rw"), READWRITE("rw");
+    String mode;
+
+    AccessModes(final String mode) {
+      this.mode = mode;
+    }
+
+    String getMode() {
+      return mode;
+    }
   }
 }

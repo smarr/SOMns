@@ -1,8 +1,8 @@
 class Files usingVmMirror: vmMirror usingPlatform: platform = Value (
 (* This code was derived from Newspeak File classes, which is why the Sun Microsystems copyright and BSD license below applies.
-Original Newspeak version of classes:  
-https://bitbucket.org/newspeaklanguage/newspeak/src/38a47c705f1a1ab3359f2a58b79e8c728bfb218f/Files.ns 
-https://bitbucket.org/newspeaklanguage/newspeak/src/38a47c705f1a1ab3359f2a58b79e8c728bfb218f/Win32Files.ns 
+Original Newspeak version of classes:
+https://bitbucket.org/newspeaklanguage/newspeak/src/38a47c705f1a1ab3359f2a58b79e8c728bfb218f/Files.ns
+https://bitbucket.org/newspeaklanguage/newspeak/src/38a47c705f1a1ab3359f2a58b79e8c728bfb218f/Win32Files.ns
 
 Copyright (c) 1995-2006 Sun Microsystems, Inc. ALL RIGHTS RESERVED.
 Copyright 2008-2009 Gilad Bracha and other contributors.
@@ -92,8 +92,8 @@ DAMAGE.>> *)
       ^ (vmMirror fileCreateFileDescriptorFor: obj) mode: m.
     )
 
-    public new = ( self error: 'Please use for:mode: instead of new!\n' 
-     + '\talternatively the open method of a FilePath object can be used.' 
+    public new = ( self error: 'Please use for:mode: instead of new!\n'
+     + '\talternatively the open method of a FilePath object can be used.'
     )
   )
 
@@ -406,7 +406,7 @@ DAMAGE.>> *)
   (* FilePaths are FilePatterns without wildcard characters,
      which means they match individual files, not sets of files. *)
   public class FilePath = FilePattern ()(
-    
+
     (* concatenation *)
     public , extension <FilePattern> ^ <FilePattern> = (
       ^ extension extendPath: self (* ) *)
