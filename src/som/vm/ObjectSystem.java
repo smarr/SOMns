@@ -341,7 +341,7 @@ public final class ObjectSystem {
   private void handlePromiseResult(final SPromise promise) {
     int emptyFJPool = 0;
     while (emptyFJPool < 120) {
-      if (promise.isCompleted() || vm.shouldExit()) {
+      if (promise.isCompleted()) {
         if (vm.isAvoidingExit()) {
           return;
         }
@@ -351,6 +351,13 @@ public final class ObjectSystem {
         } else {
           vm.shutdownAndExit(0);
         }
+      }
+
+      if (vm.shouldExit()) {
+        if (vm.isAvoidingExit()) {
+          return;
+        }
+        vm.shutdownAndExit(vm.lastExitCode());
       }
 
       try {
