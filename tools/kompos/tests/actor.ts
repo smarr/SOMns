@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { createSectionBreakpointData, createLineBreakpointData } from "../src/messages";
-import { PING_PONG_URI, TestConnection, ACTOR_URI, TestController, ACTOR_FILE, PING_PONG_FILE } from "./test-setup";
+import { TestConnection, ACTOR_URI, TestController, ACTOR_FILE, ACTOR2_FILE, ACTOR2_URI } from "./test-setup";
 import { BreakpointType as BT, SteppingType as ST } from "./somns-support";
 import { Test, Stop, expectStops } from "./stepping";
 
@@ -26,20 +26,6 @@ describe("Actor Stepping", () => {
     activity: "MyActor"
   };
 
-  const PingValidate: Stop = {
-    line: 33,
-    methodName: "Ping>>#validate:",
-    stackHeight: 1,
-    activity: "main"
-  };
-
-  const PingPing: Stop = {
-    line: 23,
-    methodName: "Ping>>#ping",
-    stackHeight: 2,
-    activity: "ping"
-  };
-
   const MTFooLine: Stop = {
     line: 11,
     methodName: "MyActor>>#foo",
@@ -49,36 +35,76 @@ describe("Actor Stepping", () => {
 
   const steppingTests: Test[] = [
     {
-      title: "stepping to message receiver",
-      test: PING_PONG_FILE,
+      title: "stepping to message receiver on same actor",
+      test: ACTOR2_FILE,
+      testArg: "stepToMessageReceiverOnSameActor",
       initialBreakpoints: [
-        createSectionBreakpointData(PING_PONG_URI, 26, 19, 3, BT.MSG_SENDER, true)],
+        createSectionBreakpointData(ACTOR2_URI, 14, 12, 3, BT.MSG_SENDER, true)],
       initialStop: {
-        line: 26,
-        methodName: "Ping>>#ping",
-        stackHeight: 2,
-        activity: "ping"
+        line: 14,
+        methodName: "ActA>>#doSelfSend",
+        stackHeight: 1,
+        activity: "actA"
       },
       steps: [
         {
           type: ST.STEP_TO_MESSAGE_RECEIVER,
-          activity: "ping",
+          activity: "actA",
           stops: [{
-            line: 27,
-            methodName: "Ping>>#ping",
-            stackHeight: 2,
-            activity: "ping"
+            // we do the step, which is remote and local, so, we stop locally first
+            line: 15,
+            methodName: "ActA>>#doSelfSend",
+            stackHeight: 1,
+            activity: "actA"
           }]
         },
         {
           type: ST.RESUME,
-          activity: "ping",
+          activity: "actA",
           stops: [{
-            line: 33,
-            methodName: "Ping>>#validate:",
+            // after resuming, we arrive at the actual step target
+            line: 19,
+            methodName: "ActA>>#doSelfSend2",
             stackHeight: 1,
-            activity: "ping"
+            activity: "actA"
           }]
+        }
+      ]
+    },
+    {
+      title: "stepping to message receiver on other actor",
+      test: ACTOR2_FILE,
+      testArg: "stepToMessageReceiverOnOtherActor",
+      initialBreakpoints: [
+        createSectionBreakpointData(ACTOR2_URI, 33, 12, 3, BT.MSG_SENDER, true)],
+      initialStop: {
+        line: 33,
+        methodName: "ActB>>#doSendToA",
+        stackHeight: 1,
+        activity: "actB"
+      },
+      steps: [
+        {
+          type: ST.STEP_TO_MESSAGE_RECEIVER,
+          activity: "actB",
+          stops: [{
+            // we do the step, which is remote and local, so, we stop locally first
+            line: 34,
+            methodName: "ActB>>#doSendToA",
+            stackHeight: 1,
+            activity: "actB"
+          },
+          {
+            // and then, in parallel, we stop in the remote actor
+            line: 25,
+            methodName: "ActA>>#finish",
+            stackHeight: 1,
+            activity: "actA"
+          }]
+        },
+        {
+          type: ST.RESUME,
+          activity: "actA"
         }
       ]
     },
@@ -130,36 +156,30 @@ describe("Actor Stepping", () => {
     },
     {
       title: "returning from turn to promise resolution for self-send",
-      test: PING_PONG_FILE,
-      initialBreakpoints: [
-        createSectionBreakpointData(PING_PONG_URI, 33, 19, 3, BT.MSG_SENDER, true)
-      ],
-      initialStop: PingValidate,
+      test: ACTOR2_FILE,
+      testArg: "returnFromTurnToPromiseResolutionForSelfSend",
+      initialBreakpoints: [createLineBreakpointData(ACTOR2_URI, 49, true)],
+      initialStop: {
+        line: 49,
+        methodName: "ActC>>#msg",
+        stackHeight: 1,
+        activity: "ActC"
+      },
       steps: [
         {
           type: ST.RETURN_FROM_TURN_TO_PROMISE_RESOLUTION,
-          activity: "main",
-          stops: [PingValidate]
-        },
-        {
-          type: ST.RESUME,
-          activity: "main",
+          activity: "ActC",
           stops: [{
-            line: 27,
-            methodName: "Ping>>#λping@27@31:",
+            line: 44,
+            methodName: "ActC>>#λdoSelfSend@43@23:",
             stackHeight: 1,
-            activity: "main"
+            activity: "ActC"
           }]
         },
         {
           type: ST.RESUME,
-          activity: "main",
-          stops: [PingValidate]
-        },
-        {
-          type: ST.RESUME,
-          activity: "main"
-        },
+          activity: "ActC"
+        }
       ]
     },
     {
@@ -207,276 +227,182 @@ describe("Actor Stepping", () => {
       ]
     },
     {
-      title: "stepping to next turn",
-      test: PING_PONG_FILE,
+      title: "stepping to promise resolver on self send",
+      test: ACTOR2_FILE,
+      testArg: "stepToMessageReceiverOnSameActor",
       initialBreakpoints: [
-        createSectionBreakpointData(PING_PONG_URI, 23, 14, 3, BT.MSG_SENDER, true)
-      ],
-      initialStop: PingPing,
-      steps: [
-        {
-          type: ST.STEP_TO_NEXT_TURN,
-          activity: "ping",
-          stops: [{
-            line: 56,
-            methodName: "Ping>>#pong:",
-            stackHeight: 1,
-            activity: "ping"
-          }]
-        },
-        {
-          type: ST.RESUME,
-          activity: "ping",
-          stops: [{
-            line: 23,
-            methodName: "Ping>>#ping",
-            stackHeight: 1,
-            activity: "ping"
-          }]
-        }
-      ]
-    },
-    {
-      title: "stepping to promise resolution",
-      test: PING_PONG_FILE,
-      initialBreakpoints: [
-        createSectionBreakpointData(PING_PONG_URI, 33, 19, 3, BT.MSG_SENDER, true)],
-      initialStop: PingValidate,
-      steps: [
-        {
-          type: ST.STEP_TO_PROMISE_RESOLUTION,
-          activity: "main",
-          stops: [{
-            line: 34,
-            methodName: "Ping>>#validate:",
-            stackHeight: 1,
-            activity: "main"
-          }]
-        },
-        {
-          type: ST.RESUME,
-          activity: "main",
-          stops: [PingValidate]
-        }
-      ]
-    },
-    {
-      title: "stepping to promise resolver",
-      test: PING_PONG_FILE,
-      initialBreakpoints: [
-        createSectionBreakpointData(PING_PONG_URI, 26, 19, 3, BT.MSG_SENDER, true)],
+        createSectionBreakpointData(ACTOR2_URI, 14, 12, 3, BT.MSG_SENDER, true)],
       initialStop: {
-        line: 26,
-        methodName: "Ping>>#ping",
-        stackHeight: 2,
-        activity: "main"
+        line: 14,
+        methodName: "ActA>>#doSelfSend",
+        stackHeight: 1,
+        activity: "ActA"
       },
       steps: [
         {
           type: ST.STEP_TO_PROMISE_RESOLVER,
-          activity: "main",
-          stops: [{
-            line: 27,
-            methodName: "Ping>>#ping",
-            stackHeight: 2,
-            activity: "main"
+          activity: "ActA",
+          stops: [{ // first we step locally, the stop for promise resolver is only in a later turn
+            line: 15,
+            methodName: "ActA>>#doSelfSend",
+            stackHeight: 1,
+            activity: "ActA"
           }]
         },
         {
           type: ST.RESUME,
-          activity: "main",
-          stops: [PingValidate]
+          activity: "ActA",
+          stops: [{
+            line: 19,
+            methodName: "ActA>>#doSelfSend2",
+            stackHeight: 1,
+            activity: "ActA"
+          }]
         }
       ]
     },
     {
       title: "stepping to promise resolution for explicit promise",
-      test: PING_PONG_FILE,
-      initialBreakpoints: [createLineBreakpointData(PING_PONG_URI, 92, true)],
+      test: ACTOR2_FILE,
+      testArg: "stepToResolutionExplicitPromise",
+      initialBreakpoints: [createLineBreakpointData(ACTOR2_URI, 53, true)],
       initialStop: {
-        line: 92,
-        methodName: "PingPong>>#benchmark",
-        stackHeight: 6,
-        activity: "main"
+        line: 53,
+        methodName: "ActC>>#makePromise",
+        stackHeight: 1,
+        activity: "ActC"
       },
       steps: [
         {
           type: ST.STEP_OVER,
-          activity: "main",
+          activity: "ActC",
           stops: [{
-            line: 92,
-            methodName: "PingPong>>#benchmark",
-            stackHeight: 6,
-            activity: "main"
+            line: 54,
+            methodName: "ActC>>#makePromise",
+            stackHeight: 1,
+            activity: "ActC"
           }]
         },
         {
           type: ST.STEP_TO_PROMISE_RESOLUTION,
-          activity: "main",
+          activity: "ActC",
           stops: [{
-            line: 93,
-            methodName: "PingPong>>#benchmark",
-            stackHeight: 6,
-            activity: "main"
+            line: 54,
+            methodName: "ActC>>#makePromise",
+            stackHeight: 1,
+            activity: "ActC"
           }]
         },
         {
           type: ST.RESUME,
-          activity: "main",
+          activity: "ActC",
           stops: [{
-            line: 98,
-            methodName: "PingPong>>#λbenchmark@97@44:",
+            line: 56,
+            methodName: "ActC>>#λmakePromise@55@32:",
             stackHeight: 1,
-            activity: "main"
+            activity: "ActC"
           }]
         }
       ]
     },
     {
       title: "stepping to promise resolution for whenResolved",
-      test: PING_PONG_FILE,
-      initialBreakpoints: [createLineBreakpointData(PING_PONG_URI, 27, true)],
+      test: ACTOR2_FILE,
+      testArg: "stepToResolutionOfWhenResolved",
+      initialBreakpoints: [createLineBreakpointData(ACTOR2_URI, 66, true)],
       initialStop: {
-        line: 27,
-        methodName: "Ping>>#ping",
-        activity: "ping",
-        stackHeight: 2
+        line: 66,
+        methodName: "ActC>>#whenResolved",
+        activity: "ActC",
+        stackHeight: 1
       },
       steps: [
         {
-          type: ST.STEP_OVER,
-          activity: "ping",
-          stops: [{
-            line: 27,
-            methodName: "Ping>>#ping",
-            activity: "ping",
-            stackHeight: 2
-          }]
-        },
-        {
           type: ST.STEP_TO_PROMISE_RESOLUTION,
-          activity: "ping",
+          activity: "ActC",
           stops: [{
-            line: 28,
-            methodName: "Ping>>#ping",
-            activity: "ping",
-            stackHeight: 2
+            line: 66,
+            methodName: "ActC>>#whenResolved",
+            activity: "ActC",
+            stackHeight: 1
           }]
         },
         {
           type: ST.RESUME,
-          activity: "ping",
+          activity: "ActC",
           stops: [{
-            line: 27,
-            methodName: "Ping>>#ping",
+            line: 70,
+            methodName: "ActC>>#λwhenResolved@69@24:",
             stackHeight: 1,
-            activity: "ping"
+            activity: "ActC"
           }]
         }
       ]
     },
     {
       title: "stepping to promise resolution for whenResolvedOnError",
-      test: PING_PONG_FILE,
-      initialBreakpoints: [createLineBreakpointData(PING_PONG_URI, 34, true)],
+      test: ACTOR2_FILE,
+      testArg: "stepToResolutionOfWhenResolvedError",
+      initialBreakpoints: [createLineBreakpointData(ACTOR2_URI, 79, true)],
       initialStop: {
-        line: 34,
-        methodName: "Ping>>#validate:",
-        stackHeight: 1,
-        activity: "ping"
+        line: 79,
+        methodName: "ActC>>#whenResolvedError",
+        activity: "ActC",
+        stackHeight: 1
       },
       steps: [
         {
-          type: ST.STEP_OVER,
-          activity: "ping",
-          stops: [{
-            line: 34,
-            methodName: "Ping>>#validate:",
-            stackHeight: 1,
-            activity: "ping"
-          }]
-        },
-        {
           type: ST.STEP_TO_PROMISE_RESOLUTION,
-          activity: "ping",
+          activity: "ActC",
           stops: [{
-            line: 35,
-            methodName: "Ping>>#validate:",
-            stackHeight: 1,
-            activity: "ping"
+            line: 79,
+            methodName: "ActC>>#whenResolvedError",
+            activity: "ActC",
+            stackHeight: 1
           }]
         },
         {
           type: ST.RESUME,
-          activity: "ping",
+          activity: "ActC",
           stops: [{
-            line: 34,
-            methodName: "Ping>>#validate:",
+            line: 83,
+            methodName: "ActC>>#λwhenResolvedError@82@24:",
             stackHeight: 1,
-            activity: "ping"
-          }]
-        },
-        {
-          type: ST.RESUME,
-          activity: "ping",
-          stops: [{
-            line: 34,
-            methodName: "Ping>>#validate:",
-            stackHeight: 1,
-            activity: "ping"
+            activity: "ActC"
           }]
         }
       ]
     },
     {
       title: "stepping to promise resolution for onError",
-      test: PING_PONG_FILE,
-      initialBreakpoints: [createLineBreakpointData(PING_PONG_URI, 78, true)],
+      test: ACTOR2_FILE,
+      testArg: "stepToResolutionOnError",
+      initialBreakpoints: [createLineBreakpointData(ACTOR2_URI, 96, true)],
       initialStop: {
-        line: 78,
-        methodName: "Pong>>#stop",
-        stackHeight: 1,
-        activity: "pong"
+        line: 96,
+        methodName: "ActC>>#onError",
+        activity: "ActC",
+        stackHeight: 1
       },
       steps: [
         {
-          type: ST.STEP_OVER,
-          activity: "pong",
-          stops: [{
-            methodName: "Pong>>#stop",
-            line: 78,
-            stackHeight: 1,
-            activity: "pong"
-          }]
-        },
-        {
           type: ST.STEP_TO_PROMISE_RESOLUTION,
-          activity: "pong",
+          activity: "ActC",
           stops: [{
-            methodName: "Pong>>#stop",
-            line: 79,
-            stackHeight: 1,
-            activity: "pong"
+            line: 96,
+            methodName: "ActC>>#onError",
+            activity: "ActC",
+            stackHeight: 1
           }]
         },
         {
           type: ST.RESUME,
-          activity: "pong",
+          activity: "ActC",
           stops: [{
-            methodName: "Pong>>#λstop@78@27:",
-            line: 78,
+            line: 100,
+            methodName: "ActC>>#λonError@99@24:",
             stackHeight: 1,
-            activity: "pong"
-          }]
-        },
-        {
-          type: ST.RESUME,
-          activity: "pong",
-          stops: [{
-            line: 71,
-            methodName: "Thing>>#println",
-            stackHeight: 1,
-            activity: "pong"
+            activity: "ActC"
           }]
         }
       ]

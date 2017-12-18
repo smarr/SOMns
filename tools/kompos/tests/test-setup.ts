@@ -19,7 +19,9 @@ export const SOM = SOM_BASEPATH + "som";
 export const PING_PONG_FILE = resolve("tests/pingpong.ns");
 export const PING_PONG_URI = "file:" + PING_PONG_FILE;
 export const ACTOR_FILE = resolve("tests/actor.ns")
+export const ACTOR2_FILE = resolve("tests/actor2.ns")
 export const ACTOR_URI = "file:" + ACTOR_FILE;
+export const ACTOR2_URI = "file:" + ACTOR2_FILE;
 
 const PRINT_SOM_OUTPUT = false;
 const PRINT_CMD_LINE = false;

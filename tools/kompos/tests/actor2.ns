@@ -1,0 +1,161 @@
+(* A second little actor system in addition to Actor.
+   *)
+class Actor2 usingPlatform: platform = Value (
+| private actors = platform actors.
+  private system = platform system.
+  private Exception = platform kernel Exception.
+|)(
+
+  private class ActA new: resolver = (
+  | private resolver = resolver. |
+  )(
+    public doSelfSend = (
+      'ActA.doSelfSend' println.
+      self <-: doSelfSend2.
+      ^ self
+    )
+
+    public doSelfSend2 = (
+      'ActA.doSelfSend2' println.
+      self <-: finish.
+      ^ self
+    )
+
+    public finish = (
+      resolver resolve: #done
+    )
+  )
+
+  private class ActB new: actA = (
+  | private actA = actA. |
+  )(
+    public doSendToA = (
+      actA <-: finish.
+      ^ self
+    )
+  )
+
+  private class ActC new: resolver = (
+  | private resolver = resolver. |
+  )(
+    public doSelfSend = (
+      self <-: msg
+        whenResolved: [:r |
+          'doSelfSend whenResolved: ' print.
+          r println.
+          resolver resolve: #done. ]
+    )
+
+    public msg = ( ^ 42 )
+
+    public makePromise = (
+      | pp |
+      'ActC.makePromise' println.
+      pp:: actors createPromisePair.
+      pp promise whenResolved: [:r |
+        'makePromise whenResolved' println. resolver resolve: #done. ].
+
+      'makePromise after whenResolved' println.
+
+      pp resolve: #done.
+    )
+
+    public whenResolved = (
+      | p p2 |
+      p:: self <-: msg.
+      p2:: p whenResolved: [:r |
+        'whenResolved whenResolved' println ].
+
+      p2 whenResolved: [:r |
+        'whenResolved whenResolved2' println.
+        resolver resolve: #done. ].
+
+      'whenResolved after whenResolved' println.
+    )
+
+    public whenResolvedError = (
+      | p p2 |
+      p:: self <-: msg.
+      p2:: p whenResolved: [:r |
+        'whenResolved whenResolved' println ] onError: [:e| ('-Error: ' + e) println ].
+
+      p2 whenResolved: [:r |
+        'whenResolved whenResolved2' println.
+        resolver resolve: #done. ].
+
+      'whenResolved after whenResolved' println.
+    )
+
+    public error = (
+      Exception signal.
+    )
+
+    public onError = (
+      | p p2 |
+      p:: self <-: error.
+      p2:: p onError: [:e |
+        ('-Error: ' + e) println ].
+
+      p2 whenResolved: [:r |
+        'onError whenResolved' println.
+        resolver resolve: #done. ].
+
+      'onError after whenResolved' println.
+    )
+  )
+
+  public stepToMessageReceiverOnSameActor: completionPP = (
+    | a = (actors createActorFromValue: ActA) <-: new: completionPP resolver. |
+    a <-: doSelfSend.
+  )
+
+  public stepToMessageReceiverOnOtherActor: completionPP = (
+    | a = (actors createActorFromValue: ActA) <-: new: completionPP resolver.
+      b = (actors createActorFromValue: ActB) <-: new: a. |
+    b <-: doSendToA.
+  )
+
+  public returnFromTurnToPromiseResolutionForSelfSend: completionPP = (
+    | c = (actors createActorFromValue: ActC) <-: new: completionPP resolver. |
+    c <-: doSelfSend.
+  )
+
+  public stepToResolutionExplicitPromise: completionPP = (
+    | c = (actors createActorFromValue: ActC) <-: new: completionPP resolver. |
+    c <-: makePromise.
+  )
+
+  public stepToResolutionOfWhenResolved: completionPP = (
+    | c = (actors createActorFromValue: ActC) <-: new: completionPP resolver. |
+    c <-: whenResolved.
+  )
+
+  public stepToResolutionOfWhenResolvedError: completionPP = (
+    | c = (actors createActorFromValue: ActC) <-: new: completionPP resolver. |
+    c <-: whenResolvedError.
+  )
+
+  public stepToResolutionOnError: completionPP = (
+    | c = (actors createActorFromValue: ActC) <-: new: completionPP resolver. |
+    c <-: onError.
+  )
+
+  public main: args = (
+    | completionPP a test |
+    'Actor breakpoint tests' println.
+
+    completionPP:: actors createPromisePair.
+    test:: args at: 2.
+    ('Run test: ' + test) println.
+
+    test = 'stepToMessageReceiverOnSameActor' ifTrue: [ stepToMessageReceiverOnSameActor: completionPP ].
+    test = 'stepToMessageReceiverOnOtherActor' ifTrue: [ stepToMessageReceiverOnOtherActor: completionPP ].
+    test = 'returnFromTurnToPromiseResolutionForSelfSend' ifTrue: [ returnFromTurnToPromiseResolutionForSelfSend: completionPP ].
+    test = 'stepToResolutionExplicitPromise' ifTrue: [ stepToResolutionExplicitPromise: completionPP ].
+    test = 'stepToResolutionOfWhenResolved' ifTrue: [ stepToResolutionOfWhenResolved: completionPP ].
+    test = 'stepToResolutionOfWhenResolvedError' ifTrue: [ stepToResolutionOfWhenResolvedError: completionPP ].
+    test = 'stepToResolutionOnError' ifTrue: [ stepToResolutionOnError: completionPP ].
+
+    ^ completionPP promise
+  )
+)
