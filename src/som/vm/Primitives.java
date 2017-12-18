@@ -54,6 +54,7 @@ import som.primitives.EqualsPrimFactory;
 import som.primitives.ExceptionsPrimsFactory;
 import som.primitives.FilePrimsFactory;
 import som.primitives.HashPrimFactory;
+import som.primitives.HttpPrimsFactory;
 import som.primitives.IntegerPrimsFactory;
 import som.primitives.MethodPrimsFactory;
 import som.primitives.MirrorPrimsFactory;
@@ -182,6 +183,7 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     allFactories.addAll(DoublePrimsFactory.getFactories());
     allFactories.addAll(ExceptionsPrimsFactory.getFactories());
     allFactories.addAll(FilePrimsFactory.getFactories());
+    allFactories.addAll(HttpPrimsFactory.getFactories());
     allFactories.addAll(IfMessageNodeGen.getFactories());
     allFactories.addAll(IntegerPrimsFactory.getFactories());
     allFactories.addAll(KernelObjFactory.getFactories());

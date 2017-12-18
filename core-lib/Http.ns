@@ -1,0 +1,147 @@
+(* Copyright (c) 2017 Dominik Aumayr
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+
+class Http usingVmMirror: vmMirror usingPlatform: platform = Value (
+  | private vmMirror = vmMirror. 
+    private files = platform files.
+  |
+  vmMirror httpServerClass: Server.
+  vmMirror httpResponseClass: Response.
+  vmMirror httpRequestClass: Request.
+) (
+
+  public class Server = (
+
+  )(
+    (*use exchange attributes to store parsed stuff*)
+    (*application/json, text/html and 'application/x-www-form-urlencoded'*)
+    public route: path <String> with: method <SSymbol> to: aBlock <Block[Request, Response]> = (
+      vmMirror httpRegisterHandle: self method: method path: path handler: aBlock.
+    )
+
+    (*statically provide files, file name = path*)
+    public static: path = (
+      ^ vmMirror httpRegisterStatic: self path: path content: ((files FilePath currentDirectory) + path) .
+    )
+
+    (* filename != path *)
+    public static: path with: content = (
+      ^ vmMirror httpRegisterStatic: self path: path content: content.
+    )
+
+    public start = (
+      ^ vmMirror httpStartServer: self.
+    )
+
+    public stop = (
+      ^ self stop: 0.
+    )
+
+    public stop: delay <int> = (
+      ^ vmMirror httpStopServer: self delay: delay.
+    )
+  ) : (
+    public create: ip <String> port: port <int> = (
+      ^ vmMirror httpCreateServer: ip port: port.
+    )
+
+    public new = ( self error: 'Please use create:port: instead of new!\n' )
+  )
+
+  public class Request = (
+    | |
+  )(
+    (*modify request attributes*)
+    public at: key <String> ^ <Object> = (
+      ^ vmMirror httpRequest: self getAttribute: key.
+    )
+
+    public at: key <String> put: value <Object> = (
+      ^ vmMirror httpRequest: self setAttribute: key to: value.
+    )
+
+    (*get values of a HeaderField*)
+    public get: field <String> ^ <Array> = (
+      ^ vmMirror httpRequest: self getHeader: field.
+    )
+
+    public params = (
+
+    )
+
+    (*return the value of a cookie*)
+    public cookie: name <Symbol> = (
+      (*TODO*)
+      ^ get: 'Cookie'.
+    )
+  ) : (
+    private new = ( self error: 'Should not happen' )
+  )
+
+  public class Response = (
+    | statusCode ::= 200. (*default is OK*) |
+  ) (
+    public cookie: name <String> with: value <String> = (
+      header: 'Set-Cookie' value: (name + '=' + value).
+    )
+
+    (*set status header, and send string representation as body*)
+    public sendStatus: status <int> = (
+      ^ (status: status) send: ('' + status).
+    )
+
+    (*set response status*)
+    public status: status <int> = (
+      vmMirror httpResponse: self setStatus: status.
+      ^ self.
+    )
+
+    (*send response without Body*)
+    public send = (
+      send: ''.
+    )
+
+    (*send response with Body*)
+    public send: body <String> = (
+      (* TODO set content type*)
+      vmMirror httpResponse: self send: body.
+    )
+
+    (*send response with Body*)
+    public send: body <String> with: status= (
+      (* TODO set content type*)
+      vmMirror httpResponse: self setStatus: status.
+      vmMirror httpResponse: self send: body.
+    )
+
+    (*Set Response HTTP Header*)
+    public header: field <String> value: value <String> = (
+      vmMirror httpResponse: self setHeader: field to: value.
+    )
+
+    (*set content type HTTP Header*)
+    public contentType: type <String> = (
+      header: 'Content-Type' value: type.
+    )
+  ) : (
+    private new = ( self error: 'Should not happen' )
+  )
+)
