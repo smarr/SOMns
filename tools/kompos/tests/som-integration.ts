@@ -28,8 +28,8 @@ describe("Stack trace output", () => {
 \tBlock>>#on:do:                               Kernel.ns::\n\
 \tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory::\n\
 \tPlatform>>#λstart@@                       Platform.ns::\n\
-\tPingPongApp>>#main:                          pingpong.ns::\n\
-\tPingPongApp>>#testDNU                        pingpong.ns::\n\
+\tPingPong>>#main:                             pingpong.ns::\n\
+\tPingPong>>#testDNU                           pingpong.ns::\n\
 ERROR: MessageNotUnderstood(Integer>>#foobar)\n");
   });
 
@@ -40,8 +40,8 @@ ERROR: MessageNotUnderstood(Integer>>#foobar)\n");
 \tBlock>>#on:do:                               Kernel.ns::\n\
 \tvmMirror>>#exceptionDo:catch:onException:    ExceptionDoOnPrimFactory::\n\
 \tPlatform>>#λstart@@                       Platform.ns::\n\
-\tPingPongApp>>#main:                          pingpong.ns::\n\
-\tPingPongApp>>#testPrintStackTrace            pingpong.ns::\n");
+\tPingPong>>#main:                             pingpong.ns::\n\
+\tPingPong>>#testPrintStackTrace               pingpong.ns::\n");
   });
 });
 
@@ -64,7 +64,7 @@ describe("Language Debugger Integration", function() {
 
     it("should halt on expected source section", () => {
       return ctrl.stackPs[0].then(msg => {
-        expectStack(msg.stackFrames, 6, "PingPongApp>>#testHalt", 106);
+        expectStack(msg.stackFrames, 6, "PingPong>>#testHalt", 106);
       });
     });
   });

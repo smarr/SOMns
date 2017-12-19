@@ -1,4 +1,4 @@
-class PingPongApp usingPlatform: platform = Value (
+class PingPong usingPlatform: platform = Value (
 | private actors = platform actors.
   private system = platform system.
   private Exception = platform kernel Exception.
