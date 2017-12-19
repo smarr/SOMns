@@ -203,6 +203,45 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       )
     )
 
+    class InitMixinFields = ()(
+      class MixinWithFields = (| public x ::= 23. public y = 24. |)
+      ( 
+        public getx = ( ^ x )
+
+        public gety = ( ^ y )
+      )
+
+      class SuperClassWithMixin = Object <: MixinWithFields (| public z ::= 25. |)(
+        public getz =( ^ z )
+      )
+
+      class AnotherMixin = (| u ::= 0. |)( public getu = (^ u) )
+
+      public class SubClassWithMixin = SuperClassWithMixin <: AnotherMixin ()()
+
+      public class SubClassWithoutMixin = SuperClassWithMixin ()()
+    )
+
+    (*Temporary duplicate until issue #202 is fixed*)
+    class InitMixinFields2 = ()(
+      class MixinWithFields = (| public x ::= 23. public y = 24. |)
+      ( 
+        public getx = ( ^ x )
+
+        public gety = ( ^ y )
+      )
+
+      class SuperClassWithMixin = Object <: MixinWithFields (| public z ::= 25. |)(
+        public getz =( ^ z )
+      )
+
+      class AnotherMixin = (| public u | u:: 20.)( public getu = (^ u) )
+
+      public class SubClassWithMixin = SuperClassWithMixin <: AnotherMixin ()()
+
+      public class SubClassWithoutMixin = SuperClassWithMixin ()()
+    )
+
     public outerMethod = (
       ^ 42.
     )
@@ -292,6 +331,32 @@ class LanguageTests usingPlatform: platform testFramework: minitest = (
       assert: p origin equals: 0.
       assert: p color  equals: 'red'.
       assert: p sum    equals: 12.
+    )
+
+    public testInitMixinFields = (
+      | sample p |
+      sample:: InitMixinFields new.
+      p:: (sample SubClassWithoutMixin) new.
+      assert: p getx = 23.
+      assert: p gety = 24.
+      assert: p getz = 25.
+      assert: p x = 23.
+      assert: p y = 24.
+      assert: p z = 25.
+    )
+
+    public testInitMixinFields2 = (
+      | sample p |
+      sample:: InitMixinFields2 new.
+      p:: (sample SubClassWithMixin) new.
+      assert: p getu = 20.
+      assert: p getx = 23.
+      assert: p gety = 24.
+      assert: p getz = 25.
+      assert: p u = 20.
+      assert: p x = 23.
+      assert: p y = 24.
+      assert: p z = 25.
     )
   ) : ( TEST_CONTEXT = () )
 
