@@ -155,17 +155,13 @@ export class TestConnection extends VmConnection {
   }
 
   public close(done: MochaDone) {
-    if (this.closed) {
-      done();
-      return;
+    if (!this.closed) {
+      this.closed = true;
+      this.disconnect();
+      this.somProc.kill();
     }
 
-    this.somProc.on("exit", _code => {
-      this.closed = true;
-      // wait until process is shut down, to make sure all ports are closed
-      done();
-    });
-    this.somProc.kill();
+    done();
   }
 }
 
