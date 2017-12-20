@@ -20,12 +20,19 @@ build_and_test_job:
     - ant eclipseformat-check
     - timeout 5m ant unit-tests som-tests
 
-full_test_job:
+kompos_and_dym_tests:
   stage: full-test
   tags: [benchmarks, infinity]
   script:
-    - timeout 10m ant dynamic-metrics-tests replay-tests
-    - cd tools/kompos && npm install && npm -s run verify && npm test
+    - ant dynamic-metrics-tests
+    - cd tools/kompos && npm install . && npm -s run verify && npm test
+
+replay_tests:
+  stage: full-test
+  tags: [benchmarks, infinity]
+  script:
+    - timeout 10m ant replay-tests
+
 
 benchmark_savina_job:
   stage: benchmark

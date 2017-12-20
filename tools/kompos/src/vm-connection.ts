@@ -119,7 +119,17 @@ export class VmConnection {
   }
 
   public disconnect() {
-    console.assert(this.isConnected());
+    if (this.socket) {
+      try {
+        this.socket.terminate();
+      } catch (_) { }
+    }
+
+    if (this.traceDataSocket) {
+      try {
+        this.traceDataSocket.terminate();
+      } catch (_) { }
+    }
   }
 
   public requestProgramInfo() {

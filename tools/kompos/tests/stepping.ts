@@ -1,6 +1,7 @@
 import { expect } from "chai";
 
 import { BreakpointData } from "../src/messages";
+import { TestConnection, TestController, getStdOut, getStdErr } from "./test-setup";
 
 export interface Step {
   /** Type of the stepping operation to be performed. */
@@ -113,4 +114,71 @@ export function expectStops(actual?: Stop[], expected?: Stop[]) {
   const c = copy.filter(v => { return v !== undefined });
   expect(c).to.deep.equal(e);
   expect(c).to.be.empty;
+}
+
+export function describeDebuggerTests(title: string, steppingTests: Test[]) {
+  describe(title, () => {
+    let conn: TestConnection;
+
+    const closeConnectionAfterSuite = (done) => {
+      conn.fullyConnected.then(_ => { conn.close(done); });
+      conn.fullyConnected.catch(reason => done(reason));
+    };
+
+    for (const suite of steppingTests) {
+      if (suite.skip) {
+        describe.skip(suite.title, () => {
+          if (!suite.steps) { return; }
+          suite.steps.forEach(step => {
+            const desc = step.desc ? step.desc : `do ${step.type} on ${step.activity}.`;
+            it.skip(desc, () => { });
+          });
+        });
+        continue;
+      }
+
+      describe(suite.title, () => {
+        let ctrl: TestController;
+
+        before("Start SOMns and Connect", () => {
+          const arg = suite.testArg ? [suite.testArg] : null;
+          conn = new TestConnection(arg, false, suite.test);
+          ctrl = new TestController(suite, conn, conn.fullyConnected);
+        });
+
+        after(closeConnectionAfterSuite);
+
+        afterEach(function(done) {
+          if (this.currentTest.state === "failed") {
+            console.log("STDOUT: [---out]\n" + getStdOut() + "\n[/out---]");
+            console.log("STDERR: [---out]\n" + getStdErr() + "\n[/out---]");
+          }
+          done();
+        });
+
+        it("should stop initially at breakpoint", () => {
+          return ctrl.stopsDoneForStep.then(stops => {
+            expect(stops).has.lengthOf(1);
+            expect(stops[0]).to.deep.equal(suite.initialStop);
+          });
+        });
+
+        describe("should", () => {
+          if (!suite.steps) { return; }
+
+          suite.steps.forEach(step => {
+            const expectedStops = step.stops ? step.stops.length : 0;
+            const desc = step.desc ? step.desc : `do ${step.type} on ${step.activity} and stop ${expectedStops} times.`;
+            it(desc, () => {
+              const stopPs = ctrl.doNextStep(step.type, step.activity, step.stops);
+
+              return stopPs.then(allStops => {
+                expectStops(allStops, step.stops);
+              });
+            });
+          });
+        });
+      });
+    }
+  });
 }
