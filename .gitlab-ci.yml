@@ -25,7 +25,7 @@ full_test_job:
   tags: [benchmarks, infinity]
   script:
     - timeout 10m ant dynamic-metrics-tests replay-tests
-    - cd tools/kompos && npm install && npm -s run verify && npm test
+    - cd tools/kompos && npm install . && npm -s run verify && npm test
 
 benchmark_savina_job:
   stage: benchmark
