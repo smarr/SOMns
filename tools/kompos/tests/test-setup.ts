@@ -26,6 +26,12 @@ export const ACTOR2_URI = "file:" + ACTOR2_FILE;
 const PRINT_SOM_OUTPUT = false;
 const PRINT_CMD_LINE = false;
 
+let stdErr = "";
+let stdOut = "";
+
+export function getStdErr() { let current = stdErr; stdErr = ""; return current; }
+export function getStdOut() { let current = stdOut; stdOut = ""; return current; }
+
 export function expectStop(msg: StackTraceResponse, stop: Stop, activityMap) {
   expectStack(msg.stackFrames, stop.stackHeight, stop.methodName, stop.line);
 
@@ -100,13 +106,14 @@ export class TestConnection extends VmConnection {
     const promise = new Promise<boolean>((resolve, reject) => {
       this.connectionResolver = resolve;
       let connecting = false;
-      let errOut = "";
+      stdErr = "";
+      stdOut = "";
 
       this.somProc.on("exit", (code, signal) => {
         if (code !== 0) {
           this.somProc.stderr.on("close", () => {
             this.somProc.on("exit", (_code, _signal) => {
-              reject(new Error("Process exited with code: " + code + " Signal: " + signal + " StdErr: " + errOut));
+              reject(new Error("Process exited with code: " + code + " Signal: " + signal + " StdErr: " + stdErr));
             });
           });
         }
@@ -117,12 +124,13 @@ export class TestConnection extends VmConnection {
         if (PRINT_SOM_OUTPUT) {
           console.error(dataStr);
         }
-        errOut += dataStr;
+        stdErr += dataStr;
       });
 
       const ports = { msg: 0, trace: 0 };
       this.somProc.stdout.on("data", (data) => {
         const dataStr = data.toString();
+        stdOut += dataStr;
         if (PRINT_SOM_OUTPUT) {
           console.log(dataStr);
         }
@@ -136,7 +144,7 @@ export class TestConnection extends VmConnection {
         if (dataStr.includes("Failed starting WebSocket and/or HTTP Server")) {
           this.somProc.stderr.on("close", () => {
             this.somProc.on("exit", (_code, _signal) => {
-              reject(new Error("SOMns failed to starting WebSocket and/or HTTP Server. StdOut: " + dataStr + " StdErr: " + errOut));
+              reject(new Error("SOMns failed to starting WebSocket and/or HTTP Server. StdOut: " + dataStr + " StdErr: " + stdErr));
             });
           });
           this.somProc.kill();

@@ -1,7 +1,7 @@
 import { expect } from "chai";
 
 import { BreakpointData } from "../src/messages";
-import { TestConnection, TestController } from "./test-setup";
+import { TestConnection, TestController, getStdOut, getStdErr } from "./test-setup";
 
 export interface Step {
   /** Type of the stepping operation to be performed. */
@@ -147,6 +147,14 @@ export function describeDebuggerTests(title: string, steppingTests: Test[]) {
         });
 
         after(closeConnectionAfterSuite);
+
+        afterEach(function(done) {
+          if (this.currentTest.state === "failed") {
+            console.log("STDOUT: [---out]\n" + getStdOut() + "\n[/out---]");
+            console.log("STDERR: [---out]\n" + getStdErr() + "\n[/out---]");
+          }
+          done();
+        });
 
         it("should stop initially at breakpoint", () => {
           return ctrl.stopsDoneForStep.then(stops => {
