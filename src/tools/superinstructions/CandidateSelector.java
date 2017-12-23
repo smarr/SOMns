@@ -127,6 +127,14 @@ final class CandidateSelector {
     return candidate;
   }
 
+  private static int candidateByScoreAndPrint(final Candidate a, final Candidate b) {
+    long r = b.getScore() - a.getScore();
+    if (r != 0) {
+      return (int) r;
+    }
+    return a.prettyPrint().compareTo(b.prettyPrint());
+  }
+
   /**
    * Run the candidate detection heuristic and return a report as a String.
    */
@@ -152,7 +160,7 @@ final class CandidateSelector {
 
     // Sort the candidates by their score and format the results
     List<Candidate> tops =
-        candidates.stream().sorted(Comparator.comparingLong(Candidate::getScore).reversed())
+        candidates.stream().sorted(CandidateSelector::candidateByScoreAndPrint)
                   .collect(Collectors.toList());
     StringBuilder builder = new StringBuilder();
     for (Candidate top : tops) {
