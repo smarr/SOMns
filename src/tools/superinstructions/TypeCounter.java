@@ -11,8 +11,8 @@ import com.oracle.truffle.api.source.SourceSection;
  * and their respective result types (that is, Java types).
  */
 final class TypeCounter {
-  protected final SourceSection source;
-  private Map<Class<?>, Long>   activations;
+  protected final SourceSection     source;
+  private final Map<Class<?>, Long> activations;
 
   TypeCounter(final SourceSection source) {
     this.source = source;
@@ -34,6 +34,6 @@ final class TypeCounter {
   }
 
   public Map<Class<?>, Long> getActivations() {
-    return this.activations;
+    return activations;
   }
 }
