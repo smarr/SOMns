@@ -1,7 +1,6 @@
 package tools.superinstructions;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +42,9 @@ final class ContextCollector implements NodeVisitor {
       // If the contextLevel is 0 or if the node is the tree root,
       // we return a list with just one element: The node class name.
       assert !(node instanceof WrapperNode);
-      return Arrays.asList(getNodeClass(node));
+      ArrayList<Object> result = new ArrayList<>();
+      result.add(getNodeClass(node));
+      return result;
     } else {
       // In any other case, we construct the rightmost entries of the
       // trace and recursively construct the left part after that.
@@ -69,12 +70,10 @@ final class ContextCollector implements NodeVisitor {
       // [..., s_{n-1}, C_n]
       // and construct the left part recursively.
       String childClass = getNodeClass(node);
-      ArrayList<Object> trace = new ArrayList<>();
       List<Object> parentTrace = constructTrace(parent, contextLevel - 1);
-      trace.addAll(parentTrace);
-      trace.add(childIndex);
-      trace.add(childClass);
-      return trace;
+      parentTrace.add(childIndex);
+      parentTrace.add(childClass);
+      return parentTrace;
     }
   }
 
