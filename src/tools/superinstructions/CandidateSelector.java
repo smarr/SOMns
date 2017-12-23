@@ -145,7 +145,6 @@ final class CandidateSelector {
                 .filter(context -> !Arrays.asList(context.getTrace())
                                           .contains(SequenceNode.class.getName()))
                 .sorted(Comparator.comparingLong(context -> contexts.get(context)).reversed())
-                .limit(CONSIDER_TOP_CONTEXTS)
                 .collect(Collectors.toList());
     Set<Candidate> candidates = new HashSet<>();
 
@@ -156,7 +155,9 @@ final class CandidateSelector {
     // Sort the candidates by their score and format the results
     List<Candidate> tops =
         candidates.stream().sorted(CandidateSelector::candidateByScoreAndPrint)
+                  .limit(CONSIDER_TOP_CONTEXTS)
                   .collect(Collectors.toList());
+
     StringBuilder builder = new StringBuilder();
     for (Candidate top : tops) {
       builder.append(top.prettyPrint()).append('\n');
