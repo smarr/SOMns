@@ -96,7 +96,7 @@ final class CandidateSelector {
       if (piblingSlot == currentContext.getChildIndex(0)) {
         // This is C_1. We add it to the candidate and proceed
         // with adding the siblings of C_2 and C_2 itself.
-        Candidate.Node child =
+        Candidate.AstNode child =
             candidate.getRoot().setChild(piblingSlot, currentContext.getClass(1), "?");
         for (int siblingSlot : siblings.keySet()) {
           if (siblingSlot == currentContext.getChildIndex(1)) {

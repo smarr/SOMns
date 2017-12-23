@@ -13,11 +13,11 @@ import java.util.Objects;
  * Each node is annotated with a Java type (or "?" if it is unknown)
  */
 final class Candidate {
-  private Node rootNode;
-  private long score;
+  private final AstNode rootNode;
+  private long          score;
 
   Candidate(final String rootClass, final String javaType) {
-    this.rootNode = new Node(rootClass, javaType);
+    this.rootNode = new AstNode(rootClass, javaType);
   }
 
   /**
@@ -28,7 +28,7 @@ final class Candidate {
     return splitted[splitted.length - 1];
   }
 
-  public Node getRoot() {
+  public AstNode getRoot() {
     return rootNode;
   }
 
@@ -57,7 +57,7 @@ final class Candidate {
     }
 
     Candidate candidate = (Candidate) o;
-    return Objects.equals(rootNode, candidate.rootNode);
+    return rootNode.equals(candidate.rootNode);
   }
 
   @Override
@@ -65,12 +65,12 @@ final class Candidate {
     return Objects.hash(rootNode);
   }
 
-  static final class Node {
-    private String             nodeClass;
-    private String             javaType;
-    private Map<Integer, Node> children;
+  static final class AstNode {
+    private final String                nodeClass;
+    private final String                javaType;
+    private final Map<Integer, AstNode> children;
 
-    Node(final String nodeClass, final String javaType) {
+    AstNode(final String nodeClass, final String javaType) {
       this.nodeClass = nodeClass;
       this.javaType = javaType;
       this.children = new HashMap<>();
@@ -79,17 +79,18 @@ final class Candidate {
     /**
      * Create a new Node object at the given slot index, add it to the tree and return it.
      */
-    public Node setChild(final int index, final String childClass, final String javaType) {
-      Node node = new Node(childClass, javaType);
-      this.children.put(index, node);
-      return node;
+    public AstNode setChild(final int index, final String childClass,
+        final String javaType) {
+      AstNode astNode = new AstNode(childClass, javaType);
+      this.children.put(index, astNode);
+      return astNode;
     }
 
     public String getNodeClass() {
       return nodeClass;
     }
 
-    public Map<Integer, Node> getChildren() {
+    public Map<Integer, AstNode> getChildren() {
       return children;
     }
 
@@ -103,10 +104,10 @@ final class Candidate {
         return false;
       }
 
-      Node node = (Node) o;
-      return Objects.equals(nodeClass, node.nodeClass) &&
-          Objects.equals(javaType, node.javaType) &&
-          Objects.equals(children, node.children);
+      AstNode astNode = (AstNode) o;
+      return Objects.equals(nodeClass, astNode.nodeClass) &&
+          Objects.equals(javaType, astNode.javaType) &&
+          Objects.equals(children, astNode.children);
     }
 
     @Override
@@ -140,7 +141,7 @@ final class Candidate {
         if (children.containsKey(slot)) {
           children.get(slot).prettyPrint(builder, level + 1);
         } else {
-          Node dummy = new Node("?", "?");
+          AstNode dummy = new AstNode("?", "?");
           dummy.prettyPrint(builder, level + 1);
         }
       }
