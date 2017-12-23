@@ -127,10 +127,14 @@ final class ContextCollector implements NodeVisitor {
       // Handle each activation result Java type separately.
       for (Class<?> javaType : activationsByType.keySet()) {
         long typeActivations = activationsByType.get(javaType);
-        // Construct contexts up to CONTEXT_LENGTH
+        // Construct contexts up to CONTEXT_LEVEL
         for (int level = 0; level <= CONTEXT_LEVEL; level++) {
           ActivationContext context = makeActivationContext(node, javaType, level);
-          contexts.merge(context, typeActivations, Long::sum);
+          if (context.getNumberOfClasses() == level + 1) {
+            contexts.merge(context, typeActivations, Long::sum);
+          } else {
+            break;
+          }
         }
       }
     }
