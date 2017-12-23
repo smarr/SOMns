@@ -17,5 +17,8 @@ traces
 /tests/dym/old-results
 /tests/dym/results
 /tests/dym/expected-results
+/tests/superinstructions/old-results
+/tests/superinstructions/results
+/tests/superinstructions/expected-results
 npm-debug.log*
 /.metadata
