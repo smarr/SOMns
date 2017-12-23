@@ -77,15 +77,8 @@ final class ContextCollector implements NodeVisitor {
     }
   }
 
-  private int getChildIndex(final Node childNode, final Node parent) {
-    int i = 0;
-    for (Node child : NodeUtil.findNodeChildren(parent)) {
-      if (child == childNode) {
-        return i;
-      }
-      i++;
-    }
-    return -1;
+  private static int getChildIndex(final Node childNode, final Node parent) {
+    return NodeUtil.findNodeChildren(parent).indexOf(childNode);
   }
 
   /**
