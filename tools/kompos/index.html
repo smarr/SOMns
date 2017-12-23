@@ -4,10 +4,9 @@
   <link href="/node_modules/font-awesome/css/font-awesome.css" rel="stylesheet" />
   <link href="/node_modules/bootstrap/dist/css/bootstrap.css" rel="stylesheet" />
   <link href="/node_modules/bootstrap/dist/css/bootstrap-reboot.css" rel="stylesheet" />
-  <link href="/node_modules/tether/dist/css/tether.css" rel="stylesheet" />
   <script src="/node_modules/jquery/dist/jquery.js"></script>
   <script src="/out/src/libs/jquery-resizable.js"></script>
-  <script src="/node_modules/tether/dist/js/tether.js"></script>
+  <script src="/node_modules/popper.js/dist/umd/popper.js"></script>
   <script src="/node_modules/bootstrap/dist/js/bootstrap.js"></script>
   <script src="/node_modules/zenscroll/zenscroll.js"></script>
 
@@ -212,6 +211,13 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
     font-weight: bold;
     cursor: default;
   }
+
+  /* Adapting bootstrap 4-beta theme slightly */
+  .btn-secondary {
+    color: #000;
+    background-color: #eee;
+  }
+
   label.btn {
     margin-bottom: 0;
     font-size: 8px;
