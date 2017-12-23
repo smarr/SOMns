@@ -40,7 +40,7 @@ final class CandidateSelector {
    * [ C_0, s_0, ..., s_{n-1}, C_n, s_n, C_{n+1} ]
    * for which the number of activations is maximal.
    */
-  private Map<Integer, ActivationContext> findExtensions(final Object[] prefix) {
+  private Map<Integer, ActivationContext> findExtensions(final Object... prefix) {
     Map<Integer, ActivationContext> result = new HashMap<>();
     // Find all activation contexts which extend prefix
     // with one child slot index and one class name
@@ -75,19 +75,14 @@ final class CandidateSelector {
     // We now find possible "piblings", i.e. siblings of its parent.
     // For that, we invoke findExtensions on the prefix
     // [C_0]
-    Map<Integer, ActivationContext> piblings = findExtensions(
-        new Object[] {
-            currentContext.getClass(0)
-        });
+    Map<Integer, ActivationContext> piblings = findExtensions(currentContext.getClass(0));
+
     // Also, we find possible siblings. For that, we invoke findExtensions
     // on the prefix
     // [C_0, s_0, C_1]
-    Map<Integer, ActivationContext> siblings = findExtensions(
-        new Object[] {
-            currentContext.getClass(0),
-            currentContext.getChildIndex(0),
-            currentContext.getClass(1)
-        });
+    Map<Integer, ActivationContext> siblings = findExtensions(currentContext.getClass(0),
+        currentContext.getChildIndex(0), currentContext.getClass(1));
+
     // We now construct a super-instruction candidate, i.e.
     // a tree of height 2. The root of the tree is C_0 (its Java type is unknown).
     Candidate candidate = new Candidate(currentContext.getClass(0), "?");
