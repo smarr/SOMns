@@ -414,17 +414,17 @@ public final class VM {
     engine = builder.build();
 
     Map<String, ? extends Instrument> instruments = engine.getRuntime().getInstruments();
-    Instrument profiler = instruments.get(ProfilerInstrument.ID);
-    if (options.profilingEnabled && profiler == null) {
-      VM.errorPrintln("Truffle profiler not available. Might be a class path issue");
-    } else {
-      profiler.setEnabled(options.profilingEnabled);
-    }
 
-    if (options.profilingEnabled && profiler != null) {
-      truffleProfiler = Profiler.find(engine);
-      truffleProfiler.setCollecting(true);
-      truffleProfiler.setTiming(true);
+    if (options.profilingEnabled) {
+      Instrument profiler = instruments.get(ProfilerInstrument.ID);
+      if (profiler == null) {
+        VM.errorPrintln("Truffle profiler not available. Might be a class path issue");
+      } else {
+        profiler.setEnabled(options.profilingEnabled);
+        truffleProfiler = Profiler.find(engine);
+        truffleProfiler.setCollecting(true);
+        truffleProfiler.setTiming(true);
+      }
     }
 
     Debugger debugger = null;
