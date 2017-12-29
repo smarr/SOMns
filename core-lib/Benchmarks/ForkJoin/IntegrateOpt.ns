@@ -1,0 +1,74 @@
+(*
+Source: From X10 distribution
+
+SM: Likely based on
+  https://github.com/x10-lang/x10/blob/c336f860467765e6c4e6dd4c1bf07ff3b568e7c8/x10.dist/samples/Integrate.x10
+
+Which means, the following likely applies:
+
+This file is licensed to You under the Eclipse Public License (EPL); You may
+not use this file except in compliance with the License. You may obtain a
+copy of the License at http://www.opensource.org/licenses/eclipse-1.0.php
+(C) Copyright IBM Corporation 2006-2016.
+
+Ported first to Java fork/join, then to SOMns.
+
+Parallelized, and one of the tasks is done locally.
+*)
+class IntegrateOpt usingPlatform: platform andHarness: harness = (
+| private Benchmark = harness Benchmark.
+  private Task      = platform threading Task.
+
+  private EPSILON   = 1.0e-9.
+|
+)(
+  public class Integrate = Benchmark ()(
+    public innerBenchmarkLoop: xMax numThreads: threads = (
+      ^ verifyResult: (computeAreaLeft: 0.0 right: xMax) size: xMax
+    )
+
+    public verifyResult: area size: xMax  = (
+      xMax = 10000 ifTrue: [ ^ area = 2.50000005e15 ].
+      xMax = 5000  ifTrue: [ ^ area = 1.562500125e14 ].
+      xMax = 2500  ifTrue: [ ^ area = 9.765628125000004e12 ].
+      xMax = 1000  ifTrue: [ ^ area = 2.50000500000001e11 ].
+      xMax = 100   ifTrue: [ ^ area = 2.5005000000039525e7 ].
+      xMax = 60    ifTrue: [ ^ area = 3241800.000019885 ].
+      xMax = 50    ifTrue: [ ^ area = 1563750.0000224751 ].
+      xMax = 20    ifTrue: [ ^ area = 40200.0000048903 ].
+      xMax = 10    ifTrue: [ ^ area = 2550.0000024884703 ].
+
+      ('No expected result for xMax=' + xMax + ' result area: ' + area) println.
+      ^ false
+    )
+
+    private computeAreaLeft: left right: right = (
+      ^ recEval: left   farLeft: (left * left + 1.0) * left
+          right: right farRight: (right * right + 1.0) * right area: 0.0.
+    )
+
+    private recEval: l farLeft: fl right: r farRight: fr area: a = (
+      | h hh c fc al ar alr taskR taskL right left |
+
+      h::  (r - l) // 2.0.
+      hh:: h // 2.0.
+      c::  l + h.
+      fc:: (c * c + 1.0) * c.
+      al:: (fl + fc) * hh.
+      ar:: (fr + fc) * hh.
+      alr:: al + ar.
+
+      ((alr - a < EPSILON) and: [ a - alr < EPSILON ])
+        ifTrue: [ ^ alr ].
+
+      taskR:: Task spawn: [ recEval: c farLeft: fc right: r farRight: fr area: ar ].
+      left:: recEval: l farLeft: fl right: c farRight: fc area: al.
+      right:: taskR join.
+
+      ^ right + left.
+     )
+  )
+
+  public newInstance = ( ^ Integrate new )
+  public setupVerifiedRun: run = ( run innerIterations: 1000 )
+)

@@ -1,5 +1,5 @@
 (*  https://github.com/Sable/Ostrich/blob/master/map-reduce/page-rank/js/pagerank.js *)
-class PageRankSuite usingPlatform: platform andHarness: harness = (
+class PageRank usingPlatform: platform andHarness: harness = (
 | private Array     = platform kernel Array.
   private Double    = platform kernel Double.
   private Vector    = platform kernel Vector.

@@ -68,6 +68,7 @@ import som.primitives.arithmetic.LessThanPrimFactory;
 import som.primitives.arithmetic.LogPrimFactory;
 import som.primitives.arithmetic.ModuloPrimFactory;
 import som.primitives.arithmetic.MultiplicationPrimFactory;
+import som.primitives.arithmetic.PowPrimFactory;
 import som.primitives.arithmetic.RemainderPrimFactory;
 import som.primitives.arithmetic.SinPrimFactory;
 import som.primitives.arithmetic.SqrtPrimFactory;
@@ -225,6 +226,7 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     allFactories.add(LessThanOrEqualPrimFactory.getInstance());
     allFactories.add(LessThanPrimFactory.getInstance());
     allFactories.add(LogPrimFactory.getInstance());
+    allFactories.add(PowPrimFactory.getInstance());
     allFactories.add(ModuloPrimFactory.getInstance());
     allFactories.add(MultiplicationPrimFactory.getInstance());
     allFactories.add(NewPrimFactory.getInstance());

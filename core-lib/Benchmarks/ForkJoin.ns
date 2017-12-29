@@ -1,5 +1,5 @@
 (* Fork/Join Benchmarks for SOMns *)
-class ForkJoinBenchmarks usingPlatform: platform andHarness: harness = (
+class ForkJoin usingPlatform: platform andHarness: harness = (
 | private Benchmark = harness Benchmark.
   private Task      = platform threading Task.
   private Vector    = platform kernel Vector.

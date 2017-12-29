@@ -1,0 +1,273 @@
+(*
+Copyright (c) 2000 Massachusetts Institute of Technology
+Copyright (c) 2000 Matteo Frigo
+
+This program is free software; you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation; either version 2 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+aint with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+*)
+
+(*
+this program uses an algorithm that we call `cilksort'.
+The algorithm is essentially mergesort:
+
+  cilksort(in[1..n]) =
+    async cilksort(in[1..n/2], tmp[1..n/2])
+    async cilksort(in[n/2..n], tmp[n/2..n])
+    sync
+    async cilkmerge(tmp[1..n/2], tmp[n/2..n], in[1..n])
+
+The procedure cilkmerge does the following:
+
+  cilkmerge(A[1..n], B[1..m], C[1..(n+m)]) =
+     find the median of A union B using binary
+     search.  The binary search gives a pair
+     (ma, mb) such that ma + mb = (n + m)/2
+     and all elements in A[1..ma] are smaller than
+     B[mb..m], and all the B[1..mb] are smaller
+     than all elements in A[ma..n].
+
+     spawn cilkmerge(A[1..ma], B[1..mb], C[1..(n+m)/2])
+     spawn cilkmerge(A[ma..m], B[mb..n], C[(n+m)/2 .. (n+m)])
+     sync
+
+The algorithm appears for the first time (AFAIK) in S. G. Akl and
+N. Santoro, "Optimal Parallel Merging and Sorting Without Memory
+Conflicts", IEEE Trans. Comp., Vol. C-36 No. 11, Nov. 1987 .  The
+paper does not express the algorithm using recursion, but the
+idea of finding the median is there.
+
+For cilksort of n elements, T_1 = O(n log n) and
+T_\infty = O(log^3 n).  There is a way to shave a
+log factor in the critical path (left as homework).
+
+Vivek Kumar: Ported to JavaTC work-asyncing.
+*)
+
+(* Fully sequential version, replacing all forks with compute. *)
+
+(*
+Cilksort is a parallel sorting algorithm, donned "Multisort", which
+is a variant of ordinary mergesort.  Multisort begins by dividing an
+array of elements in half and sorting each half.  It then merges the
+two sorted halves back together, but in a divide-and-conquer approach
+rather than the usual serial merge.
+*)
+class CilkSortSeq usingPlatform: platform andHarness: harness = (
+| private Benchmark = harness Benchmark.
+  private Random    = harness Random.
+  private Array     = platform kernel Array.
+
+  private KILO = 1024.
+  private MERGESIZE = 2 * KILO.
+  private QUICKSIZE = 2 * KILO.
+|)(
+  private class CilkSort = Benchmark (
+  )(
+    public innerBenchmarkLoop: problemSize numThreads: threads = (
+      | size  = problemSize * 10000.
+        r     = Random new.
+        array = Array new: size withAll: [ r next ].
+        tmp   = Array new: size withAll: 0. |
+
+      sort: array tmp: tmp low: 1 x: 1 size: size.
+
+      ^ verifyResult: array
+    )
+
+    public verifyResult: result = (
+      | a b ok |
+      a:: 0.
+      ok:: true.
+
+      result do: [:v |
+        ok:: ok && (a <= v).
+        a:: v ].
+
+      ^ ok
+    )
+
+    private seqmerge: l1 h: high1 l: l2 h: high2 l: ld src: src dest: dest = (
+      | a1 a2 low1 low2 lowdest |
+      low1:: l1.
+      low2:: l2.
+      lowdest:: ld.
+
+      (low1 < high1 and: [ low2 < high2 ]) ifTrue: [
+        | loopDone |
+        a1:: src at: low1.
+        a2:: src at: low2.
+
+        loopDone:: false.
+
+        [ loopDone ] whileFalse: [
+          a1 < a2
+            ifTrue: [
+              dest at: lowdest put: a1.
+              lowdest:: lowdest + 1.
+              low1:: low1 + 1.
+              a1:: src at: low1.
+              low1 >= high1 ifTrue: [ loopDone:: true ] ]
+            ifFalse: [
+              dest at: lowdest put: a2.
+              lowdest:: lowdest + 1.
+              low2:: low2 + 1.
+              a2:: dest at: low2.
+              low2 >= high2 ifTrue: [ loopDone:: true ] ]
+        ] ].
+
+      (low1 <= high1 and: [ low2 <= high2 ]) ifTrue: [
+        | loopDone |
+        a1:: src at: low1.
+        a2:: src at: low2.
+
+        loopDone:: false.
+
+        [ loopDone ] whileFalse: [
+          a1 < a2
+            ifTrue: [
+              dest at: lowdest put: a1.
+              lowdest:: lowdest + 1.
+              low1:: low1 + 1.
+              low1 > high1
+                ifTrue: [ loopDone:: true ]
+                ifFalse: [ a1:: src at: low1 ] ]
+            ifFalse: [
+              dest at: lowdest put: a2.
+              lowdest:: lowdest + 1.
+              low2:: low2 + 1.
+              low2 > high2
+                ifTrue: [ loopDone:: true ]
+                ifFalse: [ a2:: src at: low2 ] ] ] ].
+
+      low1 > high1
+        ifTrue: [
+          0 to: high2 - low2 do: [:i | dest at: lowdest + i put: (src at: low2 + i) ] ]
+        ifFalse: [
+          0 to: high1 - low1 do: [:i | dest at: lowdest + i put: (src at: low1 + i) ] ].
+    )
+
+    private binsplit: val l: l h: h src: src = (
+      | high low |
+      high:: h.
+      low:: l.
+      [ low <> high ] whileTrue: [
+        | mid |
+        mid:: low + ((high - low + 1) >>> 1).
+        val <= (src at: mid)
+          ifTrue: [ high:: mid - 1 ]
+          ifFalse: [ low:: mid ]
+         ].
+
+      (src at: low) > val
+        ifTrue:  [ ^ low - 1 ]
+        ifFalse: [ ^ low ]
+    )
+
+	  private sort: array tmp: tmp low: low x: tmpx size: size = (
+      | quarter A tmpA B tmpB C tmpC D tmpD |
+      quarter:: size / 4.
+
+      size < QUICKSIZE ifTrue: [
+        quicksort: array l: low r: low + size - 1.
+        ^ self ].
+
+      A:: low.
+      tmpA:: tmpx.
+      B:: A + quarter.
+      tmpB:: tmpA + quarter.
+      C:: B + quarter.
+      tmpC:: tmpB + quarter.
+      D:: C + quarter.
+      tmpD:: tmpC + quarter.
+
+      sort: array tmp: tmp low: A x: tmpA size: quarter.
+      sort: array tmp: tmp low: B x: tmpB size: quarter.
+      sort: array tmp: tmp low: C x: tmpC size: quarter.
+      sort: array tmp: tmp low: D x: tmpD size: size - (3 * quarter).
+
+      merge: A h: A + quarter - 1 l: B h: B + quarter - 1 ld: tmpA src: array dest: tmp.
+      merge: C h: C + quarter - 1 l: D h: low + size - 1  ld: tmpC src: array dest: tmp.
+
+      merge: tmpA h: tmpC - 1 l: tmpC h: tmpA + size - 1 ld: A src: tmp dest: array
+    )
+
+    private partition: array l: left r: right = (
+      | i j tmpx pivot |
+      i:: left.
+      j:: right.
+      pivot:: array at: (left + right) / 2.
+
+      [ i <= j ] whileTrue: [
+        [ (array at: i) < pivot ] whileTrue: [ i:: i + 1 ].
+        [ (array at: j) > pivot ] whileTrue: [ j:: j - 1 ].
+
+        i <= j ifTrue: [
+          tmpx:: array at: i.
+          array at: i put: (array at: j).
+          array at: j put: tmpx.
+          i:: i + 1.
+          j:: j - 1 ] ].
+      ^ i
+    )
+
+    private quicksort: array l: left r: right = (
+      | index |
+      index:: partition: array l: left r: right.
+
+      left < (index - 1) ifTrue: [
+        quicksort: array l: left r: index - 1 ].
+
+      index < right ifTrue: [
+        quicksort: array l: index r: right ]
+    )
+
+	  private merge: l1 h: h1 l: l2 h: h2 ld: lowdest src: src dest: dest = (
+      | split1 split2 lowsize low1 low2 high1 high2 |
+      low1:: l1.
+      low2:: l2.
+      high1:: h1.
+      high2:: h2.
+
+      high2 - low2 > (high1 - low1) ifTrue: [
+        | tmp1 tmp2 |
+
+        tmp1:: low1.
+        low1:: low2.
+        low2:: tmp1.
+
+        tmp2::  high1.
+        high1:: high2.
+        high2:: tmp2 ].
+
+      high1 < low1 ifTrue: [
+        0 to: high2 - low2 do: [:i | dest at: lowdest + i put: (src at: low2 + i) ].
+        ^ self ].
+
+      high2 - low2 < MERGESIZE ifTrue: [
+        seqmerge: low1 h: high1 l: low2 h: high2 l: lowdest src: dest dest: src.
+        ^ self ].
+
+      split1:: ((high1 - low1 + 1) / 2) + low1.
+      split2:: binsplit: split1 l: low2 h: high2 src: src.
+      lowsize:: split1 - low1 + split2 - low2.
+      dest at: lowdest + lowsize + 1 put: (src at: split1).
+
+      merge: low1       h: split1 - 1 l: low2       h: split2 ld: lowdest src: src dest: dest.
+      merge: split1 + 1 h: high1      l: split2 + 1 h: high2  ld: lowdest + lowsize + 2 src: src dest: dest.
+    )
+  )
+
+  public newInstance = ( ^ CilkSort new )
+  public setupVerifiedRun: run = ( run innerIterations: 1 )
+)

@@ -206,14 +206,23 @@ class Harness usingPlatform: platform = Value (
   )
 
   printUsage = (
-    './som.sh core-lib/Benchmarks/Harness.ns [benchmark] [num-iterations [warm-up [inner-iter [num-threads]]]' println.
+    './som core-lib/Benchmarks/Harness.ns [benchmark] [num-iterations [warm-up [inner-iter [num-threads]]]' println.
     '' println.
-    '  benchmark      - benchmark class name (supports nested classes with ".") ' println.
-    '                   examples: Queens, Fibonacci, Sort.QuickSort, LanguageFeatures.Dispatch' println.
+    '  benchmark      - benchmark file name or class name (supports nested classes with ".") ' println.
+    '                   file name examples: core-lib/Benchmark/Queens.ns' println.
+    '                   class name examples: Queens, Fibonacci, Sort.QuickSort, LanguageFeatures.Dispatch' println.
     '  num-iterations - number of times to execute benchmark, default: 1' println.
     '  warm-up        - number of times to execute benchmark before measuring, default: 0' println.
     '  inner-iter     - number of times the benchmark is executed in an inner loop, ' println.
     '                   which is measured in total, default: 1' println.
+    '  num-threads    - number of threads that run the benchmark' println.
+  )
+
+  loadFile: fileName = (
+    | cls = system loadModule: fileName. |
+    cls ifNil: [
+        self error: 'Failed loading benchmark: ' + fileName ].
+    ^ cls usingPlatform: platform andHarness: self.
   )
 
   loadModule: className = (
@@ -227,6 +236,8 @@ class Harness usingPlatform: platform = Value (
 
   loadBenchmarkSuite: className = (
     | file module nested |
+    (className endsWith: '.ns')
+      ifTrue: [ ^ self loadFile: className ].
     (className includes: '.')
       ifFalse: [ ^ self loadModule: className ].
 

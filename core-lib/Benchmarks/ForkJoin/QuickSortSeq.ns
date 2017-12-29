@@ -1,0 +1,69 @@
+(* Fully sequential version, replacing all forks with compute. *)
+class QuickSortSeq usingPlatform: platform andHarness: harness = (
+| private Benchmark = harness Benchmark.
+  private Random    = harness Random.
+
+  private Array     = platform kernel Array.
+|)(
+  private class QuickSort = Benchmark (
+  | private randomNumbers |
+  )(
+    private initRandomNumbers: size = (
+      | r = Random new. |
+      randomNumbers:: Array new: size withAll: [ r next ].
+    )
+
+    public innerBenchmarkLoop: problemSize numThreads: threads = (
+      | size = problemSize * 1000.
+        data = Array new: size withAll: 0. a |
+
+      randomNumbers == nil ifTrue: [
+        initRandomNumbers: size ].
+
+      (* init data with random numbers *)
+      randomNumbers doIndexes: [:i |
+        data at: i put: (randomNumbers at: i) ].
+
+      qsort: data l: 1 r: size.
+
+      a:: 0.
+      data do: [:e |
+        a > e ifTrue: [ ^ false ].
+        a:: e ].
+
+      ^ true
+    )
+
+    private partition: data l: left r: right = (
+      | i = left.
+        j = right.
+        pivot = data at: (left + right) / 2. |
+
+      [ i <= j ] whileTrue: [
+        [ (data at: i) < pivot ] whileTrue: [ i:: i + 1 ].
+        [ (data at: j) > pivot ] whileTrue: [ j:: j - 1 ].
+
+        i <= j ifTrue: [
+          | tmp = data at: i. |
+          data at: i put: (data at: j).
+          data at: j put: tmp.
+          i:: i + 1.
+          j:: j - 1. ] ].
+
+      ^ i
+    )
+
+	  private qsort: data l: left r: right = (
+	    | index = partition: data l: left r: right. a b |
+
+	    left < (index - 1)
+        ifTrue:  [ qsort: data l: left r: index - 1 ].
+
+	    index < right
+        ifTrue:  [ qsort: data l: index r: right ].
+    )
+  )
+
+  public newInstance = ( ^ QuickSort new )
+  public setupVerifiedRun: run = ( run innerIterations: 1 )
+)

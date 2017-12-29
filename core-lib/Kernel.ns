@@ -265,6 +265,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public sin         = ( ^ vmMirror doubleSin:  self )
     public exp         = ( ^ vmMirror doubleExp:  self )
     public log         = ( ^ vmMirror doubleLog:  self )
+    public pow: exp    = ( ^ vmMirror doublePow:  self exp: exp )
     public sqrt        = ( ^ vmMirror doubleSqrt: self )
     public negated     = ( ^ 0.0 - self )
     public round       = ( ^ vmMirror doubleRound: self )

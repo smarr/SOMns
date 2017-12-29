@@ -1,5 +1,5 @@
 (* *)
-class VacationSuite usingPlatform: platform andHarness: harness = (
+class Vacation usingPlatform: platform andHarness: harness = (
 | private Benchmark = harness Benchmark.
   private Random    = harness Random.
   private Array     = platform kernel Array.

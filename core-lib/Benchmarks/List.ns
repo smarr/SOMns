@@ -18,7 +18,7 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
-class ListSuite usingPlatform: platform andHarness: harness = (
+class List usingPlatform: platform andHarness: harness = (
 | private Benchmark = harness Benchmark. |
 ) (
   class List = Benchmark ()(
@@ -30,11 +30,11 @@ class ListSuite usingPlatform: platform andHarness: harness = (
                   withZ:     (self makeList: 6).
       ^ result length
     )
-    
+
     public verifyResult: result = (
       ^ self assert: 10 equals: result
     )
-    
+
     private makeList: length = (
       (length = 0)
         ifTrue: [ ^ nil ]
@@ -44,20 +44,20 @@ class ListSuite usingPlatform: platform andHarness: harness = (
           e next: (self makeList: (length - 1)).
           ^ e ]
     )
-    
+
     private isShorter: x than: y = (
       | xTail yTail |
-      
+
       xTail:: x. yTail:: y.
       [ yTail isNil ]
         whileFalse: [
           xTail isNil ifTrue: [ ^ true ].
           xTail:: xTail next.
           yTail:: yTail next ].
-      
+
       ^ false
     )
-    
+
     private talkWithX: x withY: y withZ: z = (
       (self isShorter: y than: x)
         ifTrue: [
@@ -75,7 +75,7 @@ class ListSuite usingPlatform: platform andHarness: harness = (
   |)(
     public length = ( next isNil ifTrue: [ ^ 1 ] ifFalse: [ ^ (1 + next length) ] )
   )
-  
+
   public newInstance = ( ^ List new )
   public setupVerifiedRun: run = ( run innerIterations: 1 )
 )

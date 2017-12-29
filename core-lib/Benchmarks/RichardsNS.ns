@@ -1,4 +1,4 @@
-class RichardsBenchmark usingPlatform: platform andHarness: harness = (
+class RichardsNS usingPlatform: platform andHarness: harness = (
   (* An OS kernel simulation benchmark, originally written in BCPL
      by Martin Richards.
 
