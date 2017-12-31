@@ -166,12 +166,21 @@ public final class ClassFactory {
     return instanceLayout;
   }
 
+  private static String getFullyQualifiedName(final MixinDefinition d) {
+    MixinDefinition o = d.getOuterMixinDefinition();
+    String result = d.getName().getString();
+    if (o != null) {
+      result = getFullyQualifiedName(o) + "." + result;
+    }
+    return result;
+  }
+
   @Override
   public String toString() {
     String s = "";
     for (SClass sc : superclassAndMixins) {
       s += ", " + sc.getName().getString();
     }
-    return "ClsFct[" + className.getString() + s + "]";
+    return "ClsFct[" + getFullyQualifiedName(mixinDef) + s + "]";
   }
 }
