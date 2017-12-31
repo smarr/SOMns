@@ -3,8 +3,8 @@ package som.interpreter.objectstorage;
 import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -265,10 +265,15 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
     return executeEvaluated(rcvr, value);
   }
 
-  @Fallback
-  public final Object writeFallback(final Object rcvr, final Object value) {
+  @TruffleBoundary
+  protected boolean isNonObjectLocation(final SObject rcvr) {
+    return !(rcvr.getObjectLayout().getStorageLocation(slot) instanceof ObjectStorageLocation);
+  }
+
+  @Specialization(guards = {"isNonObjectLocation(rcvr)"})
+  public final Object generalizeStorageLocation(final SObject rcvr, final Object value) {
     CompilerAsserts.neverPartOfCompilation("should never be part of a compiled AST.");
-    ((SObject) rcvr).writeSlot(slot, value);
+    rcvr.writeSlot(slot, value);
     return value;
   }
 }

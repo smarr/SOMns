@@ -1,9 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
@@ -36,20 +34,20 @@ public abstract class BlockDispatchNode extends Node {
         getMethod(arguments).getCallTarget());
   }
 
+  protected static final IndirectCallNode createIndirectCall() {
+    return Truffle.getRuntime().createIndirectCallNode();
+  }
+
   @Specialization(guards = "isSameMethod(arguments, cached)")
-  public Object activateBlock(final Object[] arguments,
+  public Object activateCachedBlock(final Object[] arguments,
       @Cached("getMethod(arguments)") final SInvokable cached,
       @Cached("createCallNode(arguments)") final DirectCallNode call) {
     return call.call(arguments);
   }
 
-  @CompilationFinal protected IndirectCallNode indirect;
-
-  @Fallback
-  public Object activateBlock(final Object[] arguments) {
-    if (indirect == null) {
-      indirect = Truffle.getRuntime().createIndirectCallNode();
-    }
+  @Specialization(replaces = "activateCachedBlock")
+  public Object activateBlock(final Object[] arguments,
+      @Cached("createIndirectCall()") final IndirectCallNode indirect) {
     return indirect.call(getMethod(arguments).getCallTarget(), arguments);
   }
 }
