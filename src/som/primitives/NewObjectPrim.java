@@ -2,7 +2,6 @@ package som.primitives;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
@@ -87,7 +86,8 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
     return new SObjectWithoutFields(receiver, factory);
   }
 
-  @Fallback
+  @Specialization(replaces = {"doClassWithOnlyImmutableFields", "doClassWithFields",
+      "doClassWithoutFields"})
   @TruffleBoundary
   public final SAbstractObject fallback(final Object rcvr) {
     SClass receiver = (SClass) rcvr;

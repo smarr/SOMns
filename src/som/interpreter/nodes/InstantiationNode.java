@@ -1,7 +1,6 @@
 package som.interpreter.nodes;
 
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.Node;
@@ -77,7 +76,7 @@ public class InstantiationNode extends Node {
       return singalExceptionsIfFaultFoundElseReturnClassObject(outerObj, factory, classObj);
     }
 
-    @Fallback
+    @Specialization(replaces = "instantiateClass")
     public SClass instantiateClassWithNewClassFactory(final SObjectWithClass outerObj,
         final Object superclassAndMixins) {
       return instantiateClass(outerObj, superclassAndMixins, null,
@@ -108,7 +107,7 @@ public class InstantiationNode extends Node {
      * class of the outer object.
      *
      * @param frame, the current activation
-     *          @return, an object instantiated from the newly created class.
+     * @return an object instantiated from the newly created class.
      */
     private static SClass instantiate(final SObjectWithClass outerObj,
         final ClassFactory factory, final MaterializedFrame frame) {
@@ -117,7 +116,7 @@ public class InstantiationNode extends Node {
       return singalExceptionsIfFaultFoundElseReturnClassObject(outerObj, factory, classObj);
     }
 
-    @Fallback
+    @Specialization(replaces = "instantiateClass")
     public SClass instantiateClassWithNewClassFactory(final SObjectWithClass outerObj,
         final Object superclassAndMixins, final MaterializedFrame frame) {
       return instantiateClass(outerObj, superclassAndMixins, frame, null,
