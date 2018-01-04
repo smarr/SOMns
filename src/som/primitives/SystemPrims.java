@@ -66,6 +66,8 @@ public final class SystemPrims {
     try {
       module = vm.loadModule(path);
       return module.instantiateModuleClass();
+    } catch (ThreadDeath e) {
+      throw e;
     } catch (Throwable e) {
       // TODO: convert to SOM exception
       throw new RuntimeException(e);
