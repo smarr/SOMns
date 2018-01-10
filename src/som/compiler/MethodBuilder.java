@@ -293,8 +293,7 @@ public final class MethodBuilder {
       return meth;
     }
 
-    MethodScope splitScope = currentScope.split();
-    ExpressionNode splitBody = PostParsedVisitor.doInline(body, splitScope, 0);
+    ExpressionNode splitBody = PostParsedVisitor.doInline(body);
     Method truffleMethod = assembleInvokable(splitBody, sourceSection);
     SInvokable meth = new SInvokable(signature, accessModifier, truffleMethod,
         embeddedBlockMethods.toArray(new SInvokable[0]));
