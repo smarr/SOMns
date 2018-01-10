@@ -48,7 +48,6 @@ import som.interpreter.InliningVisitor;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
-import som.interpreter.PostParsedVisitor;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
@@ -60,6 +59,7 @@ import som.vm.constants.Nil;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SSymbol;
+import tools.concurrency.AdaptSpawnJoinNodes;
 import tools.language.StructuralProbe;
 
 
@@ -293,7 +293,7 @@ public final class MethodBuilder {
       return meth;
     }
 
-    ExpressionNode splitBody = PostParsedVisitor.doInline(body);
+    ExpressionNode splitBody = AdaptSpawnJoinNodes.doInline(body);
     Method truffleMethod = assembleInvokable(splitBody, sourceSection);
     SInvokable meth = new SInvokable(signature, accessModifier, truffleMethod,
         embeddedBlockMethods.toArray(new SInvokable[0]));

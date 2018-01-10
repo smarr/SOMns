@@ -1,4 +1,4 @@
-package som.interpreter;
+package tools.concurrency;
 
 import java.util.ArrayList;
 
@@ -6,6 +6,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeVisitor;
 
 import som.compiler.Variable.Local;
+import som.interpreter.NodeVisitorUtil;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.LocalVariableNode;
 import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNode;
@@ -22,7 +23,7 @@ import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 
 
-public final class PostParsedVisitor implements NodeVisitor {
+public final class AdaptSpawnJoinNodes implements NodeVisitor {
 
   private static final SSymbol SPAWN_WITH = Symbols.symbolFor("spawn:with:");
   private static final SSymbol SPAWN      = Symbols.symbolFor("spawn:");
@@ -31,10 +32,10 @@ public final class PostParsedVisitor implements NodeVisitor {
   private static ArrayList<Local> wvar = new ArrayList<Local>();
 
   public static ExpressionNode doInline(final ExpressionNode body) {
-    return NodeVisitorUtil.applyVisitor(body, new PostParsedVisitor());
+    return NodeVisitorUtil.applyVisitor(body, new AdaptSpawnJoinNodes());
   }
 
-  private PostParsedVisitor() {}
+  private AdaptSpawnJoinNodes() {}
 
   @Override
   public boolean visit(final Node node) {
