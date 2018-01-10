@@ -94,6 +94,12 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       ^[^42]
     )
 
+    manyArguments = (
+      ^[ :arg1 :arg2 :arg3 :arg4 |
+        (arg1 + arg2 + arg3 + arg4)
+      ]
+    )
+
     public testSimpleBlocks = (
       self assert: 42 equals: self simpleBlock value.
       self assert: 4  equals: (self incBlock value: 3).
@@ -114,6 +120,26 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       testInst:: BlockTest new.
       self assert: testInst is: testInst selfKeeper value.
       self assert: self     is: self selfKeeper value.
+    )
+
+    public testValueWithArguments = (
+      self assert: 18 equals: (self manyArguments valueWithArguments: { 3 . 4 . 5 . 6 }).
+      self assert: 42 equals: (self simpleBlock valueWithArguments: (Array new: 0)).
+      self assert: 4  equals: (self incBlock valueWithArguments: { 3 }).
+    )
+
+    public testBlockArgumentErrors = (
+      [ self simpleBlock value: 1.
+        self assert: false.
+      ] on: kernel ArgumentError do: [:e | ].
+      
+      [ self manyArguments value.
+        self assert: false.
+      ] on: kernel ArgumentError do: [:e | ].
+
+      [ self incBlock valueWithArguments: (Array new: 0). 
+        self assert: false.
+      ] on: kernel ArgumentError do: [:e | ].
     )
 
     public testEscapedBlock = (

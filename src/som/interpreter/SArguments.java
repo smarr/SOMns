@@ -2,7 +2,10 @@ package som.interpreter;
 
 import com.oracle.truffle.api.frame.Frame;
 
+import som.primitives.SizeAndLengthPrim;
+import som.primitives.arrays.AtPrim;
 import som.vm.constants.Classes;
+import som.vmobjects.SArray;
 import som.vmobjects.SArray.SImmutableArray;
 
 
@@ -44,5 +47,15 @@ public final class SArguments {
 
     System.arraycopy(arguments, 1, argsArr, 0, argsArr.length);
     return argsArr;
+  }
+
+  public static Object[] getPlainArgumentsWithReceiver(final Object receiver,
+      final SArray args, final SizeAndLengthPrim size, final AtPrim at) {
+    Object[] result = new Object[(int) (size.executeEvaluated(args) + 1)];
+    result[0] = receiver;
+    for (int i = 1; i < result.length; i++) {
+      result[i] = at.executeEvaluated(null, args, (long) i);
+    }
+    return result;
   }
 }
