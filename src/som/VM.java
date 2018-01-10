@@ -50,7 +50,7 @@ import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors;
-import tools.concurrency.WorkStealingWorker.WSWork;
+import tools.concurrency.WorkStealingWorker;
 import tools.debugger.Tags;
 import tools.debugger.WebDebugger;
 import tools.debugger.session.Breakpoints;
@@ -67,11 +67,11 @@ public final class VM {
   @CompilationFinal private WebDebugger     webDebugger;
   @CompilationFinal private Profiler        truffleProfiler;
 
-  private final ForkJoinPool actorPool;
-  private final ForkJoinPool forkJoinPool;
-  private final ForkJoinPool processesPool;
-  private final ForkJoinPool threadPool;
-  private final List<WSWork> wsWork;
+  private final ForkJoinPool             actorPool;
+  private final ForkJoinPool             forkJoinPool;
+  private final ForkJoinPool             processesPool;
+  private final ForkJoinPool             threadPool;
+  private final List<WorkStealingWorker> wsWorker;
 
   private final boolean                  avoidExitForTesting;
   @CompilationFinal private ObjectSystem objectSystem;
@@ -113,18 +113,15 @@ public final class VM {
           new UncaughtExceptions(this), false);
     }
 
-    this.wsWork = Collections.synchronizedList(new ArrayList<WSWork>());
+    wsWorker = Collections.synchronizedList(new ArrayList<>());
 
     if (!(VmSettings.ENABLE_SEQUENTIAL || VmSettings.ENABLE_ORG)) {
-      wsWork.add(new WSWork(forkJoinPool));
-      wsWork.add(new WSWork(forkJoinPool));
-      wsWork.add(new WSWork(forkJoinPool));
-
-      for (WSWork w : wsWork) {
-        w.execute();
+      for (int i = 0; i < VmSettings.NUM_WORKSTEALING_WORKERS; i += 1) {
+        WorkStealingWorker w = new WorkStealingWorker();
+        wsWorker.add(w);
+        forkJoinPool.execute(w);
       }
     }
-
   }
 
   /**
@@ -138,7 +135,7 @@ public final class VM {
     processesPool = null;
     forkJoinPool = null;
     threadPool = null;
-    wsWork = null;
+    wsWorker = null;
   }
 
   public WebDebugger getWebDebugger() {

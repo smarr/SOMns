@@ -36,6 +36,8 @@ public class VmSettings implements Settings {
   public static final boolean ENABLE_ORG;
   public static final boolean ENABLE_PARALLEL;
 
+  public static final int NUM_WORKSTEALING_WORKERS = 3;
+
   public static final String INSTRUMENTATION_PROP = "som.instrumentation";
 
   static {
