@@ -131,7 +131,6 @@ public final class PostParsedVisitor implements NodeVisitor {
             exp[0], new ExpressionNode[] {real[1], real[2]}).initialize(
                 node.getSourceSection());
         node.replace(replacement);
-        System.out.println("Spawn Node: " + replacement);
       }
     }
 
@@ -163,7 +162,6 @@ public final class PostParsedVisitor implements NodeVisitor {
         }
 
         node.replace(replacement);
-        System.out.println("Spawn Node: " + replacement);
       }
     }
 
@@ -193,7 +191,6 @@ public final class PostParsedVisitor implements NodeVisitor {
          */
 
         node.replace(replacement);
-        System.out.println("Join Node: " + replacement);
       }
     }
     return true;
@@ -255,7 +252,7 @@ public final class PostParsedVisitor implements NodeVisitor {
  * if (n instanceof NonLocalVariableNode) { wvar = ((NonLocalVariableNode)
  * n).getVar(); } else if (n instanceof LocalVariableNode) { wvar =
  * ((LocalVariableNode) n).getVar(); break; } } }
- * node.replace(replacement); System.out.println("Spawn Node: " + replacement);
+ * node.replace(replacement);
  * } }
  * else if (node instanceof EagerUnaryPrimitiveNode) {
  * EagerUnaryPrimitiveNode joinNode = (EagerUnaryPrimitiveNode) node;
@@ -268,6 +265,6 @@ public final class PostParsedVisitor implements NodeVisitor {
  * if (exp instanceof NonLocalVariableNode) {
  * if (wvar.equals(((NonLocalVariableNode) exp).getVar())) {
  * replacement = new OptJoinNode(node.getSourceSection(), exp); } }
- * node.replace(replacement); System.out.println("Join Node: " + replacement); }
+ * node.replace(replacement);
  * } return true; }
  */
