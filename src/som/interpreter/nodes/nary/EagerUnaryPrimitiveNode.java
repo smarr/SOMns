@@ -77,7 +77,7 @@ public final class EagerUnaryPrimitiveNode extends EagerPrimitiveNode {
     return 1;
   }
 
-  public ExpressionNode getArgument() {
+  public ExpressionNode getReceiver() {
     return receiver;
   }
 

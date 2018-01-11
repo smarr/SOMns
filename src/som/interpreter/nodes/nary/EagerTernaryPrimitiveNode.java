@@ -84,11 +84,7 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitiveNode {
   }
 
   public ExpressionNode[] getArguments() {
-    ExpressionNode[] exprNode = new ExpressionNode[3];
-    exprNode[0] = argument1;
-    exprNode[1] = argument2;
-    exprNode[2] = receiver;
-    return exprNode;
+    return new ExpressionNode[] {receiver, argument1, argument2};
   }
 
   @Override

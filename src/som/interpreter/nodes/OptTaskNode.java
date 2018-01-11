@@ -58,13 +58,12 @@ public final class OptTaskNode extends ExprWithTagsNode {
 
   @ExplodeLoop
   private Object[] executeArgs(final VirtualFrame frame) {
-
-    Object[] executedArgArray = new Object[this.argArray.length + 1];
+    Object[] executedArgArray = new Object[argArray.length + 1];
     int i = 1;
 
     executedArgArray[0] = block.executeGeneric(frame);
 
-    for (ExpressionNode e : this.argArray) {
+    for (ExpressionNode e : argArray) {
       executedArgArray[i] = e.executeGeneric(frame);
       i++;
     }

@@ -82,10 +82,7 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitiveNode {
   }
 
   public ExpressionNode[] getArguments() {
-    ExpressionNode[] exprNode = new ExpressionNode[2];
-    exprNode[0] = argument;
-    exprNode[1] = receiver;
-    return exprNode;
+    return new ExpressionNode[] {receiver, argument};
   }
 
   @Override

@@ -158,7 +158,7 @@ public final class MessageSendNode {
     }
 
     public ExpressionNode[] getArguments() {
-      return this.argumentNodes;
+      return argumentNodes;
     }
 
     @Override

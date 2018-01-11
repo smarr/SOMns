@@ -13,6 +13,7 @@ import som.interpreter.nodes.MessageSendNode.AbstractUninitializedMessageSendNod
 import som.interpreter.nodes.NonLocalVariableNode;
 import som.interpreter.nodes.OptJoinNode;
 import som.interpreter.nodes.OptTaskNode;
+import som.interpreter.nodes.ResolvingImplicitReceiverSend;
 import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerTernaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerUnaryPrimitiveNode;
@@ -28,6 +29,8 @@ public final class AdaptSpawnJoinNodes implements NodeVisitor {
   private static final SSymbol SPAWN_WITH = Symbols.symbolFor("spawn:with:");
   private static final SSymbol SPAWN      = Symbols.symbolFor("spawn:");
   private static final SSymbol JOIN       = Symbols.symbolFor("join");
+  private static final SSymbol WITH_WITH  = Symbols.symbolFor("with:with:");
+  private static final SSymbol THREAD     = Symbols.symbolFor("Thread");
 
   private static ArrayList<Local> wvar = new ArrayList<Local>();
 
@@ -51,17 +54,24 @@ public final class AdaptSpawnJoinNodes implements NodeVisitor {
         ExpressionNode[] exp = msgSend.getArguments();
         ExpressionNode[] real = new ExpressionNode[3];
 
-        if (exp[1] instanceof AbstractUninitializedMessageSendNode) {
-          AbstractUninitializedMessageSendNode o =
-              (AbstractUninitializedMessageSendNode) exp[1];
-          real = o.getArguments();
+        if (!(exp[2] instanceof AbstractUninitializedMessageSendNode)) {
+          // can't handle this at the moment
+          return true;
         }
+
+        // assuming this is `Array with: a with: b`
+        AbstractUninitializedMessageSendNode o = (AbstractUninitializedMessageSendNode) exp[2];
+        if (o.getSelector() != WITH_WITH) {
+          // can't handle this at the moment
+          return true;
+        }
+        real = o.getArguments();
 
         recordVars(exp);
 
         Node replacement = new OptTaskNode(
             ValueTwoPrimFactory.create(null, null, null).initialize(node.getSourceSection()),
-            exp[0], new ExpressionNode[] {real[1], real[2]}).initialize(
+            exp[1], new ExpressionNode[] {real[2], real[0]}).initialize(
                 node.getSourceSection());
         node.replace(replacement);
       }
@@ -72,6 +82,12 @@ public final class AdaptSpawnJoinNodes implements NodeVisitor {
 
       if (msgSend.getSelector() == SPAWN) {
         ExpressionNode[] exp = msgSend.getArguments();
+        if (exp[0] instanceof ResolvingImplicitReceiverSend
+            && ((ResolvingImplicitReceiverSend) exp[0]).getSelector() == THREAD) {
+          // ignore Thread spawns
+          return true;
+        }
+
         Node replacement = new OptTaskNode(
             ValueNonePrimFactory.create(null).initialize(node.getSourceSection()),
             exp[0], new ExpressionNode[] {}).initialize(node.getSourceSection());
@@ -86,11 +102,8 @@ public final class AdaptSpawnJoinNodes implements NodeVisitor {
       EagerUnaryPrimitiveNode joinNode = (EagerUnaryPrimitiveNode) node;
 
       if (joinNode.getSelector() == JOIN) {
-        ExpressionNode exp = joinNode.getArgument();
-
-        Node replacement = exp;
-
-        replacement = new OptJoinNode(exp).initialize(node.getSourceSection());
+        ExpressionNode exp = joinNode.getReceiver();
+        Node replacement = new OptJoinNode(exp).initialize(node.getSourceSection());
 
         node.replace(replacement);
       }
@@ -134,14 +147,14 @@ public final class AdaptSpawnJoinNodes implements NodeVisitor {
       EagerUnaryPrimitiveNode joinNode = (EagerUnaryPrimitiveNode) node;
 
       if (joinNode.getSelector() == JOIN) {
-        ExpressionNode exp = joinNode.getArgument();
+        ExpressionNode exp = joinNode.getReceiver();
         node.replace(exp);
       }
     }
   }
 
   private void recordVars(final ExpressionNode[] exp) {
-    Node n = exp[0];
+    Node n = exp[1];
 
     while (n.getParent() != null) {
       n = n.getParent();
