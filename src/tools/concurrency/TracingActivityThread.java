@@ -34,7 +34,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   protected ConcurrentEntityScope topEntity;
 
   // Work Steal Parameters
-  public BlockingDeque<SomForkJoinTask> taskQueue = new LinkedBlockingDeque<SomForkJoinTask>();
+  public final BlockingDeque<SomForkJoinTask> taskQueue = new LinkedBlockingDeque<>();
 
   public int                workStealingTries = 0;
   public final SimpleRandom backoffRnd        = new SimpleRandom();

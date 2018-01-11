@@ -87,12 +87,12 @@ public final class VM {
 
   private static final int MAX_THREADS = 0x7fff;
 
-  public static final int MAX_WS_THREADS = 100;
+  private static final int MAX_NUM_WORKER_THREADS = 100;
 
   @CompilationFinal(dimensions = 1) public static final TracingActivityThread[] threads =
-      new TracingActivityThread[MAX_WS_THREADS];
+      new TracingActivityThread[MAX_NUM_WORKER_THREADS];
 
-  @CompilationFinal public static int numWSThreads = 0;
+  @CompilationFinal public static volatile int numWSThreads = 0;
 
   public VM(final VmOptions vmOptions, final boolean avoidExitForTesting) {
     this.avoidExitForTesting = avoidExitForTesting;
@@ -116,10 +116,12 @@ public final class VM {
     wsWorker = Collections.synchronizedList(new ArrayList<>());
 
     if (!(VmSettings.ENABLE_SEQUENTIAL || VmSettings.ENABLE_ORG)) {
-      for (int i = 0; i < VmSettings.NUM_WORKSTEALING_WORKERS; i += 1) {
-        WorkStealingWorker w = new WorkStealingWorker();
-        wsWorker.add(w);
-        forkJoinPool.execute(w);
+      if (numWSThreads <= 0) {
+        for (int i = 0; i < VmSettings.NUM_WORKSTEALING_WORKERS; i += 1) {
+          WorkStealingWorker w = new WorkStealingWorker();
+          wsWorker.add(w);
+          forkJoinPool.execute(w);
+        }
       }
     }
   }
@@ -284,7 +286,15 @@ public final class VM {
     return options.args;
   }
 
-  private void shutdownPools() {
+  public void shutdownPools() {
+    // reset work-stealing threads
+    numWSThreads = 0;
+
+    for (int i = 0; i < MAX_NUM_WORKER_THREADS; i += 1) {
+      threads[i] = null;
+    }
+
+    // now shutdown pools
     ForkJoinPool[] pools =
         new ForkJoinPool[] {actorPool, processesPool, forkJoinPool, threadPool};
 

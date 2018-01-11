@@ -15,7 +15,7 @@ public class WorkStealingWorker implements Runnable {
   public void run() {
     TracingActivityThread currentThread = TracingActivityThread.currentThread();
 
-    while (true) {
+    while (VM.numWSThreads > 0) {
       boolean stolenTask = tryStealingAndExecuting(currentThread);
       if (VmSettings.ENABLE_BACKOFF) {
         doBackoffIfNecessary(currentThread, stolenTask);
@@ -37,6 +37,9 @@ public class WorkStealingWorker implements Runnable {
 
     if (sf == null) {
       TracingActivityThread victim = selectVictim(currentThread);
+      if (victim == null) {
+        return false;
+      }
 
       if (victim != currentThread) {
         sf = stealFromOther(victim);

@@ -403,6 +403,7 @@ public final class ObjectSystem {
       if (result instanceof Long || result instanceof Integer) {
         int exitCode = (result instanceof Long) ? (int) (long) result : (int) result;
         if (vm.isAvoidingExit()) {
+          vm.shutdownPools();
           return;
         } else {
           vm.shutdownAndExit(exitCode);
