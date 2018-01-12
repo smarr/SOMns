@@ -289,6 +289,7 @@ public abstract class OuterObjectRead
   public Object doTaskInKernelScope(final SomForkJoinOrg receiver) {
     return KernelObj.kernel;
   }
+
   @Specialization(guards = {"contextLevel == 1", "mixinId != ChannelId"})
   public Object doChannelInKernelScope(final SChannel receiver) {
     return KernelObj.kernel;
