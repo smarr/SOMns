@@ -23,8 +23,10 @@ public final class UncaughtExceptions implements UncaughtExceptionHandler {
       return;
     }
     TracingActivityThread thread = (TracingActivityThread) t;
-    Output.errorPrintln("Processing failed for: "
-        + thread.getActivity().toString());
+    if (thread.getActivity() != null) {
+      Output.errorPrintln("Processing failed for: "
+          + thread.getActivity().toString());
+    }
     e.printStackTrace();
 
     vm.requestExit(2);
