@@ -81,6 +81,7 @@ public final class TaskThreads {
 
     public SomForkJoinOrg(final Object[] argArray, final boolean stopOnRoot) {
       super(argArray, stopOnRoot);
+      assert false : "This class should not be instantiated on this branch.";
     }
 
     @Override
