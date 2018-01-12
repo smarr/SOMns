@@ -37,6 +37,7 @@ public class WorkStealingWorker implements Runnable {
 
     if (sf == null) {
       TracingActivityThread victim = selectVictim(currentThread);
+
       if (victim == null) {
         return false;
       }
@@ -70,6 +71,10 @@ public class WorkStealingWorker implements Runnable {
     if (sf == null) {
       TracingActivityThread victim = selectVictim(currentThread);
 
+      if (victim == null) {
+        return false;
+      }
+
       if (victim != currentThread) {
         sf = stealFromOther(victim);
       }
@@ -91,7 +96,12 @@ public class WorkStealingWorker implements Runnable {
 
   private static TracingActivityThread selectVictim(
       final TracingActivityThread currentThread) {
-    int victimIdx = currentThread.backoffRnd.next(VM.numWSThreads);
+    int numThreads = VM.numWSThreads;
+    if (numThreads == 0) {
+      return null;
+    }
+
+    int victimIdx = currentThread.backoffRnd.next(numThreads);
 
     return VM.threads[victimIdx];
   }
