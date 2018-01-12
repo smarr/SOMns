@@ -14,6 +14,7 @@ import som.interpreter.nodes.NonLocalVariableNode;
 import som.interpreter.nodes.OptJoinNode;
 import som.interpreter.nodes.OptTaskNode;
 import som.interpreter.nodes.ResolvingImplicitReceiverSend;
+import som.interpreter.nodes.literals.ArrayLiteralNode;
 import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerTernaryPrimitiveNode;
 import som.interpreter.nodes.nary.EagerUnaryPrimitiveNode;
@@ -31,6 +32,7 @@ public final class AdaptSpawnJoinNodes implements NodeVisitor {
   private static final SSymbol JOIN       = Symbols.symbolFor("join");
   private static final SSymbol WITH_WITH  = Symbols.symbolFor("with:with:");
   private static final SSymbol THREAD     = Symbols.symbolFor("Thread");
+  private static final SSymbol PROCESSES  = Symbols.symbolFor("processes");
 
   private static ArrayList<Local> wvar = new ArrayList<Local>();
 
@@ -52,27 +54,44 @@ public final class AdaptSpawnJoinNodes implements NodeVisitor {
 
       if (msgSend.getSelector() == SPAWN_WITH) {
         ExpressionNode[] exp = msgSend.getArguments();
-        ExpressionNode[] real = new ExpressionNode[3];
 
-        if (!(exp[2] instanceof AbstractUninitializedMessageSendNode)) {
+        if (doesntSpawnTask(exp)) {
+          return true;
+        }
+
+        ExpressionNode[] spawnArgs;
+
+        if (!(exp[2] instanceof AbstractUninitializedMessageSendNode)
+            && !(exp[2] instanceof ArrayLiteralNode)) {
           // can't handle this at the moment
           return true;
         }
 
-        // assuming this is `Array with: a with: b`
-        AbstractUninitializedMessageSendNode o = (AbstractUninitializedMessageSendNode) exp[2];
-        if (o.getSelector() != WITH_WITH) {
-          // can't handle this at the moment
-          return true;
+        if (exp[2] instanceof AbstractUninitializedMessageSendNode) {
+          // assuming this is `Array with: a with: b`
+          AbstractUninitializedMessageSendNode o =
+              (AbstractUninitializedMessageSendNode) exp[2];
+          if (o.getSelector() != WITH_WITH) {
+            // can't handle this at the moment
+            return true;
+          }
+          ExpressionNode[] args = o.getArguments();
+          spawnArgs = new ExpressionNode[] {args[1], args[2]};
+        } else {
+          assert exp[2] instanceof ArrayLiteralNode;
+          ArrayLiteralNode arr = (ArrayLiteralNode) exp[2];
+          spawnArgs = arr.getElementNodes();
+          if (spawnArgs.length != 2) {
+            // can't handle this at the moment
+            return true;
+          }
         }
-        real = o.getArguments();
 
         recordVars(exp);
 
         Node replacement = new OptTaskNode(
             ValueTwoPrimFactory.create(null, null, null).initialize(node.getSourceSection()),
-            exp[1], new ExpressionNode[] {real[2], real[0]}).initialize(
-                node.getSourceSection());
+            exp[1], spawnArgs).initialize(node.getSourceSection());
         node.replace(replacement);
       }
     }
@@ -82,15 +101,13 @@ public final class AdaptSpawnJoinNodes implements NodeVisitor {
 
       if (msgSend.getSelector() == SPAWN) {
         ExpressionNode[] exp = msgSend.getArguments();
-        if (exp[0] instanceof ResolvingImplicitReceiverSend
-            && ((ResolvingImplicitReceiverSend) exp[0]).getSelector() == THREAD) {
-          // ignore Thread spawns
+        if (doesntSpawnTask(exp)) {
           return true;
         }
 
         Node replacement = new OptTaskNode(
             ValueNonePrimFactory.create(null).initialize(node.getSourceSection()),
-            exp[0], new ExpressionNode[] {}).initialize(node.getSourceSection());
+            exp[1], new ExpressionNode[] {}).initialize(node.getSourceSection());
 
         recordVars(exp);
 
@@ -109,6 +126,12 @@ public final class AdaptSpawnJoinNodes implements NodeVisitor {
       }
     }
     return true;
+  }
+
+  private boolean doesntSpawnTask(final ExpressionNode[] exp) {
+    return exp[0] instanceof ResolvingImplicitReceiverSend
+        && (((ResolvingImplicitReceiverSend) exp[0]).getSelector() == THREAD) ||
+        ((ResolvingImplicitReceiverSend) exp[0]).getSelector() == PROCESSES;
   }
 
   private void convertSpawnJoinToSequential(final Node node) {

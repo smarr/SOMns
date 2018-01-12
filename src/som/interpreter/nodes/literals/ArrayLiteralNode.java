@@ -29,6 +29,10 @@ public abstract class ArrayLiteralNode extends LiteralNode {
     this.expressions = expressions;
   }
 
+  public final ExpressionNode[] getElementNodes() {
+    return expressions;
+  }
+
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
     if (tag == NewArray.class) {
