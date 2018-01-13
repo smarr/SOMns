@@ -65,7 +65,7 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
   public void markAsRootExpression() {
     assert !isTagged(ROOT_EXPR);
     assert !isTagged(LOOP_BODY);
-    assert !isTagged(PRIMITIVE_ARGUMENT);
+    // assert !isTagged(PRIMITIVE_ARGUMENT);
     assert !isTagged(CONTROL_FLOW_CONDITION);
     assert getSourceSection() != null;
     tagWith(ROOT_EXPR);
