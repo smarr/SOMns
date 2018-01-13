@@ -140,15 +140,29 @@ public final class AdaptSpawnJoinNodes implements NodeVisitor {
 
       if (msgSend.getSelector() == SPAWN_WITH) {
         ExpressionNode[] exp = msgSend.getArguments();
-        ExpressionNode[] real = new ExpressionNode[3];
+        ExpressionNode[] spawnArgs;
 
-        if (exp[1] instanceof AbstractUninitializedMessageSendNode) {
+        if (exp[2] instanceof AbstractUninitializedMessageSendNode) {
+          // assuming this is `Array with: a with: b`
           AbstractUninitializedMessageSendNode o =
-              (AbstractUninitializedMessageSendNode) exp[1];
-          real = o.getArguments();
+              (AbstractUninitializedMessageSendNode) exp[2];
+          if (o.getSelector() != WITH_WITH) {
+            // can't handle this at the moment
+            return;
+          }
+          ExpressionNode[] args = o.getArguments();
+          spawnArgs = new ExpressionNode[] {args[1], args[2]};
+        } else {
+          assert exp[2] instanceof ArrayLiteralNode;
+          ArrayLiteralNode arr = (ArrayLiteralNode) exp[2];
+          spawnArgs = arr.getElementNodes();
+          if (spawnArgs.length != 2) {
+            // can't handle this at the moment
+            return;
+          }
         }
 
-        Node replacement = ValueTwoPrimFactory.create(exp[0], real[1], real[2])
+        Node replacement = ValueTwoPrimFactory.create(exp[1], spawnArgs[1], spawnArgs[2])
                                               .initialize(node.getSourceSection());
         node.replace(replacement);
       }
@@ -160,7 +174,7 @@ public final class AdaptSpawnJoinNodes implements NodeVisitor {
       if (msgSend.getSelector() == SPAWN) {
         ExpressionNode[] exp = msgSend.getArguments();
         Node replacement =
-            ValueNonePrimFactory.create(exp[0]).initialize(node.getSourceSection());
+            ValueNonePrimFactory.create(exp[1]).initialize(node.getSourceSection());
 
         node.replace(replacement);
       }
