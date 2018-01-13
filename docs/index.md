@@ -1,8 +1,8 @@
----
-title:  "SOMns: A Simple Newspeak Implementation focusing on Concurrency Features"
-layout: default
----
-
 # SOMns: A Simple Newspeak Implementation focusing on Concurrency Features
 
-- [Getting Started Guide for SOMns Development](getting-started)
+This documentation is split in multiple parts.
+Please see the navigation on the left to find links to:
+
+ - documentation for users
+ - documentation for developers
+ - an overview of SOMns' design

@@ -2,7 +2,9 @@
 
 ## [Unreleased] \(0.6.0\) - Black Diamonds [v6]
 
-  -
+  - 
+
+  - Included documentation into the repository and enabled http://somns.readthedocs.io/ [\#212](https://github.com/smarr/SOMns/pull/212)
 
 ## [0.5.0] - More Newspeak [v5]
 
