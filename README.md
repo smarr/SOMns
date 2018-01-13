@@ -40,15 +40,15 @@ the specifications are as follows:
  - simultaneous slots clauses are not fully supported (spec. 6.3.2)
 
  - as in SOM, blocks can only have 3 arguments (counting `self`)
- 
+
  - object literals currently require a keyword prefix `objL`, to work around
    parser limitations
 
 Obtaining and Running SOMns
 ---------------------------
 
-This is a brief guide, a more comprehensive overview is available here:
-[Getting Started Guide](http://som-st.github.io/somns/getting-started/).
+This is a brief guide, a more comprehensive overview for users or developers is
+available in the `docs` folder and on [ReadTheDocs](http://somns.readthedocs.io/en/dev/).
 
 To checkout the code:
 
@@ -71,7 +71,7 @@ Setup Development Environment with Eclipse and VS Code
 1. Install JDK 1.8 and Eclipse Mars (or later)
 
 2. Download the project from Github
-   `git clone https://github.com/smarr/SOMns`
+   `git clone https://github.com/smarr/SOMns.git`
 
 3. Run `ant compile` on the command line, or via Eclipse, to make sure that all
    libraries are loaded and available.
@@ -131,6 +131,9 @@ Academic Work
 
 SOMns is designed as platform for research on concurrent programming models,
 and their interactions. Here, we collect related papers:
+
+ - [A Concurrency-Agnostic Protocol for Multi-Paradigm Concurrent Debugging Tools](http://stefan-marr.de/papers/dls-marr-et-al-concurrency-agnostic-protocol-for-debugging/),
+   S. Marr, C. Torres Lopez, D. Aumayr, E. Gonzalez Boix, H. Mössenböck; Dynamic Language Symposium'17.
 
  - [Kómpos: A Platform for Debugging Complex Concurrent Applications](http://stefan-marr.de/downloads/progdemo-marr-et-al-kompos-a-platform-for-debugging-complex-concurrent-applications.pdf),
    S. Marr, C. Torres Lopez, D. Aumayr, E. Gonzalez Boix, H. Mössenböck; Demonstration at the &lt;Programming&gt;'17 conference.
