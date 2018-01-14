@@ -1,0 +1,27 @@
+site_name: 'SOMns: A Simple Newspeak'
+# site_url: 
+site_description: SOMns Project documentation
+site_author: SOMns contributors
+
+pages:
+  - 'SOMns: A Simple Newspeak': index.md
+  - For Users:
+      - Basic User Setup: basic-setup.md
+      - IDE Setup: vs-code.md
+      - som Launcher: launcher.md
+  - For Developers:
+      - Development Setup: dev-setup.md
+      - Repository and Code Layout: repo-layout.md
+      - Development Infrastructure: infrastructure.md
+      - Release Checklist: release-checklist.md
+  - SOMns Design Notes:
+      - Interaction with Kompos Debugger: kompos-connection.md
+      - CSP Design: csp-design.md
+  - License:    LICENSE.md
+  - README:     README.md
+  - Change Log: CHANGELOG.md
+  - Authors:    AUTHORS.md
+
+markdown_extensions:
+  - toc:
+      permalink: True
