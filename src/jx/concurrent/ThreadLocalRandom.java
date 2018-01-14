@@ -241,7 +241,7 @@ final class ThreadLocalRandom {
 
   static {
     try {
-      UNSAFE = sun.misc.Unsafe.getUnsafe();
+      UNSAFE = ForkJoinPool.loadUnsafe();
       Class<?> tk = Thread.class;
       SEED = UNSAFE.objectFieldOffset(tk.getDeclaredField("threadLocalRandomSeed"));
       PROBE = UNSAFE.objectFieldOffset(tk.getDeclaredField("threadLocalRandomProbe"));

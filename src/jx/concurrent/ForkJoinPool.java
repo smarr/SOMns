@@ -36,6 +36,7 @@
 package jx.concurrent;
 
 import java.lang.Thread.UncaughtExceptionHandler;
+import java.lang.reflect.Field;
 import java.security.Permissions;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,6 +51,8 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+
+import sun.misc.Unsafe;
 
 
 /**
@@ -1172,7 +1175,7 @@ public class ForkJoinPool extends AbstractExecutorService {
 
     static {
       try {
-        U = sun.misc.Unsafe.getUnsafe();
+        U = loadUnsafe();
         Class<?> wk = WorkQueue.class;
         Class<?> ak = ForkJoinTask[].class;
         QTOP = U.objectFieldOffset(wk.getDeclaredField("top"));
@@ -3297,10 +3300,26 @@ public class ForkJoinPool extends AbstractExecutorService {
   private static final long            QCURRENTSTEAL;
   private static final long            QCURRENTJOIN;
 
+  public static Unsafe loadUnsafe() {
+    try {
+      return Unsafe.getUnsafe();
+    } catch (SecurityException e) {
+      // can fail, is ok, just to the fallback below
+    }
+    try {
+      Field theUnsafeInstance = Unsafe.class.getDeclaredField("theUnsafe");
+      theUnsafeInstance.setAccessible(true);
+      return (Unsafe) theUnsafeInstance.get(Unsafe.class);
+    } catch (Exception e) {
+      throw new RuntimeException(
+          "exception while trying to get Unsafe.theUnsafe via reflection:", e);
+    }
+  }
+
   static {
     // initialize field offsets for CAS etc
     try {
-      U = sun.misc.Unsafe.getUnsafe();
+      U = loadUnsafe();
       Class<?> k = ForkJoinPool.class;
       CTL = U.objectFieldOffset(k.getDeclaredField("ctl"));
       RUNSTATE = U.objectFieldOffset(k.getDeclaredField("runState"));
