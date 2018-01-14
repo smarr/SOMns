@@ -739,9 +739,6 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     @Override
-    public void setRawResult(final Void x) {}
-
-    @Override
     public boolean exec() {
       return true;
     }

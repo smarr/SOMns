@@ -935,29 +935,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
   }
 
   /**
-   * Completes this task, and if not already aborted or cancelled,
-   * returning the given value as the result of subsequent
-   * invocations of {@code join} and related operations. This method
-   * may be used to provide results for asynchronous tasks, or to
-   * provide alternative handling for tasks that would not otherwise
-   * complete normally. Its use in other situations is
-   * discouraged. This method is overridable, but overridden
-   * versions must invoke {@code super} implementation to maintain
-   * guarantees.
-   *
-   * @param value the result value for this task
-   */
-  public void complete(final V value) {
-    try {
-      setRawResult(value);
-    } catch (Throwable rex) {
-      setExceptionalCompletion(rex);
-      return;
-    }
-    setCompletion(NORMAL);
-  }
-
-  /**
    * Completes this task normally without setting a value. The most
    * recent value established by {@link #setRawResult} (or {@code
    * null} by default) will be returned as the result of subsequent
@@ -1189,15 +1166,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
   public abstract V getRawResult();
 
   /**
-   * Forces the given value to be returned as a result. This method
-   * is designed to support extensions, and should not in general be
-   * called otherwise.
-   *
-   * @param value the value
-   */
-  protected abstract void setRawResult(V value);
-
-  /**
    * Immediately performs the base action of this task and returns
    * true if, upon return from this method, this task is guaranteed
    * to have completed normally. This method may return false
@@ -1349,11 +1317,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     @Override
-    public void setRawResult(final T v) {
-      result = v;
-    }
-
-    @Override
     public boolean exec() {
       runnable.run();
       return true;
@@ -1385,9 +1348,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     public Void getRawResult() {
       return null;
     }
-
-    @Override
-    public void setRawResult(final Void v) {}
 
     @Override
     public boolean exec() {
@@ -1422,9 +1382,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     @Override
-    public void setRawResult(final Void v) {}
-
-    @Override
     public boolean exec() {
       runnable.run();
       return true;
@@ -1456,11 +1413,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     @Override
     public T getRawResult() {
       return result;
-    }
-
-    @Override
-    public void setRawResult(final T v) {
-      result = v;
     }
 
     @Override
