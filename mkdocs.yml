@@ -17,9 +17,10 @@ pages:
   - SOMns Design Notes:
       - Interaction with Kompos Debugger: kompos-connection.md
       - CSP Design: csp-design.md
-  # - License: ../LICENSE
-  # - README: ../README.md
-  # - Change Log: ../CHANGELOG.md
+  - License:    LICENSE.md
+  - README:     README.md
+  - Change Log: CHANGELOG.md
+  - Authors:    AUTHORS.md
 
 markdown_extensions:
   - toc:
