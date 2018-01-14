@@ -35,9 +35,6 @@
 
 package jx.concurrent;
 
-import java.security.AccessControlContext;
-
-
 /**
  * A thread managed by a {@link ForkJoinPool}, which executes
  * {@link ForkJoinTask}s.
@@ -52,7 +49,7 @@ import java.security.AccessControlContext;
  * @since 1.7
  * @author Doug Lea
  */
-public class ForkJoinWorkerThread extends Thread {
+public abstract class ForkJoinWorkerThread extends Thread {
   /*
    * ForkJoinWorkerThreads are managed by ForkJoinPools and perform
    * ForkJoinTasks. For explanation, see the internal documentation
@@ -80,19 +77,6 @@ public class ForkJoinWorkerThread extends Thread {
    * @throws NullPointerException if pool is null
    */
   protected ForkJoinWorkerThread(final ForkJoinPool pool) {
-    // Use a placeholder until a useful name can be set in registerWorker
-    super("aForkJoinWorkerThread");
-    this.pool = pool;
-    this.workQueue = pool.registerWorker(this);
-  }
-
-  /**
-   * Version for InnocuousForkJoinWorkerThread.
-   */
-  ForkJoinWorkerThread(final ForkJoinPool pool, final ThreadGroup threadGroup,
-      final AccessControlContext acc) {
-    super(threadGroup, null, "aForkJoinWorkerThread");
-    U.putOrderedObject(this, INHERITEDACCESSCONTROLCONTEXT, acc);
     this.pool = pool;
     this.workQueue = pool.registerWorker(this);
   }
@@ -102,7 +86,7 @@ public class ForkJoinWorkerThread extends Thread {
    *
    * @return the pool
    */
-  public ForkJoinPool getPool() {
+  public final ForkJoinPool getPool() {
     return pool;
   }
 
@@ -116,7 +100,7 @@ public class ForkJoinWorkerThread extends Thread {
    *
    * @return the index number
    */
-  public int getPoolIndex() {
+  public final int getPoolIndex() {
     return workQueue.getPoolIndex();
   }
 
@@ -166,22 +150,6 @@ public class ForkJoinWorkerThread extends Thread {
           pool.deregisterWorker(this, exception);
         }
       }
-    }
-  }
-
-  // Set up to allow setting thread fields in constructor
-  private static final sun.misc.Unsafe U;
-  private static final long            INHERITEDACCESSCONTROLCONTEXT;
-
-  static {
-    try {
-      U = sun.misc.Unsafe.getUnsafe();
-      Class<?> tk = Thread.class;
-      INHERITEDACCESSCONTROLCONTEXT =
-          U.objectFieldOffset(tk.getDeclaredField("inheritedAccessControlContext"));
-
-    } catch (Exception e) {
-      throw new Error(e);
     }
   }
 }

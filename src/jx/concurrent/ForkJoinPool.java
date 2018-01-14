@@ -1082,14 +1082,10 @@ public class ForkJoinPool extends AbstractExecutorService {
         (currentSteal = task).doExec();
         U.putOrderedObject(this, QCURRENTSTEAL, null); // release for GC
         execLocalTasks();
-        ForkJoinWorkerThread thread = owner;
         if (++nsteals < 0) {
           transferStealCount(pool);
         }
         scanState |= SCANNING;
-        if (thread != null) {
-          thread.afterTopLevelExec();
-        }
       }
     }
 
