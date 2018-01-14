@@ -9,7 +9,6 @@ import jx.concurrent.ForkJoinWorkerThread;
 import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.Activity;
-import som.vm.NotYetImplementedException;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -28,6 +27,8 @@ public final class TaskThreads {
     protected final Object[] argArray;
     protected final boolean  stopOnRoot;
 
+    private Object result;
+
     public SomTaskOrThread(final Object[] argArray, final boolean stopOnRoot) {
       this.argArray = argArray;
       this.stopOnRoot = stopOnRoot;
@@ -36,7 +37,7 @@ public final class TaskThreads {
 
     @Override
     public Object getRawResult() {
-      throw new NotYetImplementedException(); // in exec(), we'd need to store the result
+      return result;
     }
 
     public final SInvokable getMethod() {
@@ -67,8 +68,7 @@ public final class TaskThreads {
 
         ForkJoinThread thread = (ForkJoinThread) Thread.currentThread();
         thread.task = this;
-        Object result = target.call(argArray);
-        // result unused!
+        result = target.call(argArray);
         return true;
       } finally {
         ObjectTransitionSafepoint.INSTANCE.unregister();
