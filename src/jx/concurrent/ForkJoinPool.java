@@ -1161,93 +1161,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
 
     /**
-     * Pops task if in the same CC computation as the given task,
-     * in either shared or owned mode. Used only by helpComplete.
-     */
-    final CountedCompleter<?> popCC(final CountedCompleter<?> task, final int mode) {
-      int s;
-      ForkJoinTask<?>[] a;
-      Object o;
-      if (base - (s = top) < 0 && (a = array) != null) {
-        long j = (((a.length - 1) & (s - 1)) << ASHIFT) + ABASE;
-        if ((o = U.getObjectVolatile(a, j)) != null &&
-            (o instanceof CountedCompleter)) {
-          CountedCompleter<?> t = (CountedCompleter<?>) o;
-          for (CountedCompleter<?> r = t;;) {
-            if (r == task) {
-              if (mode < 0) { // must lock
-                if (U.compareAndSwapInt(this, QLOCK, 0, 1)) {
-                  if (top == s && array == a &&
-                      U.compareAndSwapObject(a, j, t, null)) {
-                    U.putOrderedInt(this, QTOP, s - 1);
-                    U.putOrderedInt(this, QLOCK, 0);
-                    return t;
-                  }
-                  U.compareAndSwapInt(this, QLOCK, 1, 0);
-                }
-              } else if (U.compareAndSwapObject(a, j, t, null)) {
-                U.putOrderedInt(this, QTOP, s - 1);
-                return t;
-              }
-              break;
-            } else if ((r = r.completer) == null) {
-              break;
-            }
-          }
-        }
-      }
-      return null;
-    }
-
-    /**
-     * Steals and runs a task in the same CC computation as the
-     * given task if one exists and can be taken without
-     * contention. Otherwise returns a checksum/control value for
-     * use by method helpComplete.
-     *
-     * @return 1 if successful, 2 if retryable (lost to another
-     *         stealer), -1 if non-empty but no matching task found, else
-     *         the base index, forced negative.
-     */
-    final int pollAndExecCC(final CountedCompleter<?> task) {
-      int b, h;
-      ForkJoinTask<?>[] a;
-      Object o;
-      if ((b = base) - top >= 0 || (a = array) == null) {
-        h = b | Integer.MIN_VALUE; // to sense movement on re-poll
-      } else {
-        long j = (((a.length - 1) & b) << ASHIFT) + ABASE;
-        if ((o = U.getObjectVolatile(a, j)) == null) {
-          h = 2; // retryable
-        } else if (!(o instanceof CountedCompleter)) {
-          h = -1; // unmatchable
-        } else {
-          CountedCompleter<?> t = (CountedCompleter<?>) o;
-          for (CountedCompleter<?> r = t;;) {
-            if (r == task) {
-              if (base == b &&
-                  U.compareAndSwapObject(a, j, t, null)) {
-                base = b + 1;
-                t.doExec();
-                h = 1; // success
-              } else {
-                h = 2; // lost CAS
-              }
-              break;
-            } else if ((r = r.completer) == null) {
-              h = -1; // unmatched
-              break;
-            }
-          }
-        }
-      }
-      return h;
-    }
-
-    /**
      * Returns true if owned and not known to be blocked.
      */
-    final boolean isApparentlyUnblocked() {
+    private boolean isApparentlyUnblocked() {
       Thread wt;
       Thread.State s;
       return (scanState >= 0 &&
@@ -1264,6 +1180,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     private static final long            QTOP;
     private static final long            QLOCK;
     private static final long            QCURRENTSTEAL;
+
     static {
       try {
         U = sun.misc.Unsafe.getUnsafe();
@@ -1920,72 +1837,6 @@ public class ForkJoinPool extends AbstractExecutorService {
   // Joining tasks
 
   /**
-   * Tries to steal and run tasks within the target's computation.
-   * Uses a variant of the top-level algorithm, restricted to tasks
-   * with the given task as ancestor: It prefers taking and running
-   * eligible tasks popped from the worker's own queue (via
-   * popCC). Otherwise it scans others, randomly moving on
-   * contention or execution, deciding to give up based on a
-   * checksum (via return codes frob pollAndExecCC). The maxTasks
-   * argument supports external usages; internal calls use zero,
-   * allowing unbounded steps (external calls trap non-positive
-   * values).
-   *
-   * @param w caller
-   * @param maxTasks if non-zero, the maximum number of other tasks to run
-   * @return task status on exit
-   */
-  final int helpComplete(final WorkQueue w, final CountedCompleter<?> task,
-      int maxTasks) {
-    WorkQueue[] ws;
-    int s = 0, m;
-    if ((ws = workQueues) != null && (m = ws.length - 1) >= 0 &&
-        task != null && w != null) {
-      int mode = w.config; // for popCC
-      int r = w.hint ^ w.top; // arbitrary seed for origin
-      int origin = r & m; // first queue to scan
-      int h = 1; // 1:ran, >1:contended, <0:hash
-      for (int k = origin, oldSum = 0, checkSum = 0;;) {
-        CountedCompleter<?> p;
-        WorkQueue q;
-        if ((s = task.status) < 0) {
-          break;
-        }
-        if (h == 1 && (p = w.popCC(task, mode)) != null) {
-          p.doExec(); // run local task
-          if (maxTasks != 0 && --maxTasks == 0) {
-            break;
-          }
-          origin = k; // reset
-          oldSum = checkSum = 0;
-        } else { // poll other queues
-          if ((q = ws[k]) == null) {
-            h = 0;
-          } else if ((h = q.pollAndExecCC(task)) < 0) {
-            checkSum += h;
-          }
-          if (h > 0) {
-            if (h == 1 && maxTasks != 0 && --maxTasks == 0) {
-              break;
-            }
-            r ^= r << 13;
-            r ^= r >>> 17;
-            r ^= r << 5; // xorshift
-            origin = k = r & m; // move and restart
-            oldSum = checkSum = 0;
-          } else if ((k = (k + 1) & m) == origin) {
-            if (oldSum == (oldSum = checkSum)) {
-              break;
-            }
-            checkSum = 0;
-          }
-        }
-      }
-    }
-    return s;
-  }
-
-  /**
    * Tries to locate and execute tasks for a stealer of the given
    * task, or in turn one of its stealers, Traces currentSteal ->
    * currentJoin links looking for a thread working on a descendant
@@ -2000,13 +1851,16 @@ public class ForkJoinPool extends AbstractExecutorService {
    */
   private void helpStealer(final WorkQueue w, final ForkJoinTask<?> task) {
     WorkQueue[] ws = workQueues;
-    int oldSum = 0, checkSum, m;
+    int oldSum = 0;
+    int checkSum;
+    int m;
     if (ws != null && (m = ws.length - 1) >= 0 && w != null &&
         task != null) {
       do { // restart point
         checkSum = 0; // for stability check
         ForkJoinTask<?> subtask;
-        WorkQueue j = w, v; // v is subtask stealer
+        WorkQueue j = w;
+        WorkQueue v; // v is subtask stealer
         descent: for (subtask = task; subtask.status >= 0;) {
           for (int h = j.hint | 1, k = 0, i;; k += 2) {
             if (k > m) {
@@ -2134,21 +1988,20 @@ public class ForkJoinPool extends AbstractExecutorService {
     if (task != null && w != null) {
       ForkJoinTask<?> prevJoin = w.currentJoin;
       U.putOrderedObject(w, QCURRENTJOIN, task);
-      CountedCompleter<?> cc =
-          (task instanceof CountedCompleter) ? (CountedCompleter<?>) task : null;
+
       for (;;) {
         if ((s = task.status) < 0) {
           break;
         }
-        if (cc != null) {
-          helpComplete(w, cc, 0);
-        } else if (w.base == w.top || w.tryRemoveAndExec(task)) {
+        if (w.base == w.top || w.tryRemoveAndExec(task)) {
           helpStealer(w, task);
         }
         if ((s = task.status) < 0) {
           break;
         }
-        long ms, ns;
+
+        long ms;
+        long ns;
         if (deadline == 0L) {
           ms = 0L;
         } else if ((ns = deadline - System.nanoTime()) <= 0L) {
@@ -2596,17 +2449,6 @@ public class ForkJoinPool extends AbstractExecutorService {
       }
     }
     return false;
-  }
-
-  /**
-   * Performs helpComplete for an external submitter.
-   */
-  final int externalHelpComplete(final CountedCompleter<?> task, final int maxTasks) {
-    WorkQueue[] ws;
-    int n;
-    int r = ThreadLocalRandom.getProbe();
-    return ((ws = workQueues) == null || (n = ws.length) == 0) ? 0
-        : helpComplete(ws[(n - 1) & r & SQMASK], task, maxTasks);
   }
 
   // Exported methods

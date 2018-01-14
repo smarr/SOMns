@@ -334,10 +334,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
    * @return status upon completion
    */
   private int externalAwaitDone() {
-    int s = ((this instanceof CountedCompleter) ? // try helping
-        ForkJoinPool.common.externalHelpComplete(
-            (CountedCompleter<?>) this, 0)
-        : ForkJoinPool.common.tryExternalUnpush(this) ? doExec() : 0);
+    int s = (ForkJoinPool.common.tryExternalUnpush(this) ? doExec() : 0);
     if (s >= 0 && (s = status) >= 0) {
       boolean interrupted = false;
       do {
@@ -371,9 +368,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
       throw new InterruptedException();
     }
     if ((s = status) >= 0 &&
-        (s = ((this instanceof CountedCompleter) ? ForkJoinPool.common.externalHelpComplete(
-            (CountedCompleter<?>) this, 0)
-            : ForkJoinPool.common.tryExternalUnpush(this) ? doExec() : 0)) >= 0) {
+        (s = (ForkJoinPool.common.tryExternalUnpush(this) ? doExec() : 0)) >= 0) {
       while ((s = status) >= 0) {
         if (U.compareAndSwapInt(this, STATUS, s, s | SIGNAL)) {
           synchronized (this) {
@@ -862,9 +857,8 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
       invokeAll(tasks.toArray(new ForkJoinTask<?>[tasks.size()]));
       return tasks;
     }
-    @SuppressWarnings("unchecked")
-    List<? extends ForkJoinTask<?>> ts =
-        (List<? extends ForkJoinTask<?>>) tasks;
+
+    List<? extends ForkJoinTask<?>> ts = (List<? extends ForkJoinTask<?>>) tasks;
     Throwable ex = null;
     int last = ts.size() - 1;
     for (int i = last; i >= 0; --i) {
@@ -1078,11 +1072,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
       if (t instanceof ForkJoinWorkerThread) {
         ForkJoinWorkerThread wt = (ForkJoinWorkerThread) t;
         s = wt.pool.awaitJoin(wt.workQueue, this, deadline);
-      } else if ((s =
-          ((this instanceof CountedCompleter) ? ForkJoinPool.common.externalHelpComplete(
-              (CountedCompleter<?>) this, 0)
-              : ForkJoinPool.common.tryExternalUnpush(this) ? doExec() : 0)) >= 0) {
-        long ns, ms; // measure in nanosecs, but wait in millisecs
+      } else if ((s = (ForkJoinPool.common.tryExternalUnpush(this) ? doExec() : 0)) >= 0) {
+        long ns;
+        long ms; // measure in nanosecs, but wait in millisecs
         while ((s = status) >= 0 &&
             (ns = deadline - System.nanoTime()) > 0L) {
           if ((ms = TimeUnit.NANOSECONDS.toMillis(ns)) > 0L &&
