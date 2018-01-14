@@ -787,7 +787,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * share GC bookkeeping (especially cardmarks) such that
      * per-write accesses encounter serious memory contention.
      */
-    static final int INITIAL_QUEUE_CAPACITY = 1 << 13;
+    private static final int INITIAL_QUEUE_CAPACITY = 1 << 13;
 
     /**
      * Maximum size for queue arrays. Must be a power of two less
@@ -796,24 +796,26 @@ public class ForkJoinPool extends AbstractExecutorService {
      * value a bit less than this to help users trap runaway
      * programs before saturating systems.
      */
-    static final int MAXIMUM_QUEUE_CAPACITY = 1 << 26; // 64M
+    private static final int MAXIMUM_QUEUE_CAPACITY = 1 << 26; // 64M
 
     // Instance fields
-    volatile int               scanState;    // versioned, <0: inactive; odd:scanning
-    int                        stackPred;    // pool stack (ctl) predecessor
-    int                        nsteals;      // number of steals
-    int                        hint;         // randomization and stealer
-                                             // index hint
-    int                        config;       // pool index and mode
-    volatile int               qlock;        // 1: locked, < 0: terminate; else 0
-    volatile int               base;         // index of next slot for poll
-    int                        top;          // index of next slot for push
-    ForkJoinTask<?>[]          array;        // the elements (initially unallocated)
-    final ForkJoinPool         pool;         // the containing pool (may be null)
-    final ForkJoinWorkerThread owner;        // owning thread or null if shared
-    volatile Thread            parker;       // == owner during call to park; else null
-    volatile ForkJoinTask<?>   currentJoin;  // task being joined in awaitJoin
-    volatile ForkJoinTask<?>   currentSteal; // mainly used by helpStealer
+    private volatile int scanState; // versioned, <0: inactive; odd:scanning
+    private int          stackPred; // pool stack (ctl) predecessor
+    private int          nsteals;   // number of steals
+    private int          hint;      // randomization and stealer index hint
+
+    private int          config; // pool index and mode
+    private volatile int qlock;  // 1: locked, < 0: terminate; else 0
+    private volatile int base;   // index of next slot for poll
+    private int          top;    // index of next slot for push
+
+    ForkJoinTask<?>[] array; // the elements (initially unallocated)
+
+    private final ForkJoinPool         pool;         // the containing pool (may be null)
+    private final ForkJoinWorkerThread owner;        // owning thread or null if shared
+    private volatile Thread            parker;       // == owner during call to park; else null
+    private volatile ForkJoinTask<?>   currentJoin;  // task being joined in awaitJoin
+    private volatile ForkJoinTask<?>   currentSteal; // mainly used by helpStealer
 
     WorkQueue(final ForkJoinPool pool, final ForkJoinWorkerThread owner) {
       this.pool = pool;
@@ -1297,16 +1299,16 @@ public class ForkJoinPool extends AbstractExecutorService {
   private static final int SHUTDOWN   = 1 << 31;
 
   // Instance fields
-  volatile long                     ctl;              // main pool control
-  volatile int                      runState;         // lockable status
-  final int                         config;           // parallelism, mode
-  int                               indexSeed;        // to generate
-                                                      // worker index
-  volatile WorkQueue[]              workQueues;       // main registry
-  final ForkJoinWorkerThreadFactory factory;
-  final UncaughtExceptionHandler    ueh;              // per-worker UEH
-  final String                      workerNamePrefix; // to create worker name string
-  volatile AtomicLong               stealCounter;     // also used as sync monitor
+  private volatile long ctl;       // main pool control
+  private volatile int  runState;  // lockable status
+  private final int     config;    // parallelism, mode
+  private int           indexSeed; // to generate worker index
+
+  private volatile WorkQueue[]              workQueues;       // main registry
+  private final ForkJoinWorkerThreadFactory factory;
+  private final UncaughtExceptionHandler    ueh;              // per-worker UEH
+  private final String                      workerNamePrefix; // to create worker name string
+  private volatile AtomicLong               stealCounter;     // also used as sync monitor
 
   /**
    * Acquires the runState lock; returns current (locked) runState.

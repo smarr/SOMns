@@ -253,13 +253,14 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
    */
 
   /** The run status of this task. */
-  volatile int     status;                   // accessed directly by pool and workers
-  static final int DONE_MASK   = 0xf0000000; // mask out non-completion bits
-  static final int NORMAL      = 0xf0000000; // must be negative
-  static final int CANCELLED   = 0xc0000000; // must be < NORMAL
-  static final int EXCEPTIONAL = 0x80000000; // must be < CANCELLED
-  static final int SIGNAL      = 0x00010000; // must be >= 1 << 16
-  static final int SMASK       = 0x0000ffff; // short bits for tags
+  volatile int status; // accessed directly by pool and workers
+
+  private static final int DONE_MASK   = 0xf0000000; // mask out non-completion bits
+  static final int         NORMAL      = 0xf0000000; // must be negative
+  private static final int CANCELLED   = 0xc0000000; // must be < NORMAL
+  private static final int EXCEPTIONAL = 0x80000000; // must be < CANCELLED
+  private static final int SIGNAL      = 0x00010000; // must be >= 1 << 16
+  private static final int SMASK       = 0x0000ffff; // short bits for tags
 
   /**
    * Marks completion and wakes up threads waiting to join this
@@ -1300,8 +1301,8 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
    */
   static final class AdaptedRunnable<T> extends ForkJoinTask<T>
       implements RunnableFuture<T> {
-    final Runnable runnable;
-    T              result;
+    private final Runnable runnable;
+    private T              result;
 
     AdaptedRunnable(final Runnable runnable, final T result) {
       if (runnable == null) {
@@ -1335,7 +1336,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
    */
   static final class AdaptedRunnableAction extends ForkJoinTask<Void>
       implements RunnableFuture<Void> {
-    final Runnable runnable;
+    private final Runnable runnable;
 
     AdaptedRunnableAction(final Runnable runnable) {
       if (runnable == null) {
@@ -1367,7 +1368,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
    * Adaptor for Runnables in which failure forces worker exception.
    */
   static final class RunnableExecuteAction extends ForkJoinTask<Void> {
-    final Runnable runnable;
+    private final Runnable runnable;
 
     RunnableExecuteAction(final Runnable runnable) {
       if (runnable == null) {
@@ -1400,8 +1401,8 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
    */
   static final class AdaptedCallable<T> extends ForkJoinTask<T>
       implements RunnableFuture<T> {
-    final Callable<? extends T> callable;
-    T                           result;
+    private final Callable<? extends T> callable;
+    private T                           result;
 
     AdaptedCallable(final Callable<? extends T> callable) {
       if (callable == null) {
