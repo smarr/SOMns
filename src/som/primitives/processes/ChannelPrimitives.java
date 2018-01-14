@@ -9,6 +9,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import bd.primitives.Primitive;
 import jx.concurrent.ForkJoinPool;
 import jx.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
+import jx.concurrent.ForkJoinTask;
 import jx.concurrent.ForkJoinWorkerThread;
 import som.VM;
 import som.compiler.AccessModifier;
@@ -84,7 +85,9 @@ public abstract class ChannelPrimitives {
     }
   }
 
-  public static class Process implements Activity, Runnable {
+  public static class Process extends ForkJoinTask<Void> implements Activity {
+    private static final long serialVersionUID = 7939164731603463316L;
+
     private final SObjectWithClass obj;
 
     public Process(final SObjectWithClass obj) {
@@ -99,7 +102,7 @@ public abstract class ChannelPrimitives {
     protected void beforeExec(final SInvokable disp) {}
 
     @Override
-    public void run() {
+    protected boolean exec() {
       ((ProcessThread) Thread.currentThread()).current = this;
       ObjectTransitionSafepoint.INSTANCE.register();
 
@@ -114,6 +117,7 @@ public abstract class ChannelPrimitives {
       } finally {
         ObjectTransitionSafepoint.INSTANCE.unregister();
       }
+      return true;
     }
 
     public SObjectWithClass getProcObject() {
@@ -131,9 +135,16 @@ public abstract class ChannelPrimitives {
           "Step to next turn is not supported " +
               "for processes. This code should never be reached.");
     }
+
+    @Override
+    public Void getRawResult() {
+      return null;
+    }
   }
 
   public static class TracingProcess extends Process {
+    private static final long serialVersionUID = 7128422681933561142L;
+
     protected final long processId;
     private int          nextTraceBufferId;
 
@@ -164,9 +175,9 @@ public abstract class ChannelPrimitives {
     }
 
     @Override
-    public void run() {
+    protected boolean exec() {
       try {
-        super.run();
+        return super.exec();
       } finally {
         assert VmSettings.ACTOR_TRACING;
         ActorExecutionTrace.activityCompletion(ActivityType.PROCESS);

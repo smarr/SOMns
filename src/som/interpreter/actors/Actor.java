@@ -7,6 +7,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import jx.concurrent.ForkJoinPool;
 import jx.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
+import jx.concurrent.ForkJoinTask;
 import jx.concurrent.ForkJoinWorkerThread;
 import som.Output;
 import som.VM;
@@ -197,7 +198,9 @@ public class Actor implements Activity {
    * Is scheduled on the fork/join pool and executes messages for a specific
    * actor.
    */
-  public static class ExecAllMessages implements Runnable {
+  public static class ExecAllMessages extends ForkJoinTask<Void> {
+    private static final long serialVersionUID = 5763858976060265629L;
+
     protected final Actor actor;
     protected final VM    vm;
 
@@ -212,7 +215,7 @@ public class Actor implements Activity {
     }
 
     @Override
-    public void run() {
+    protected boolean exec() {
       ObjectTransitionSafepoint.INSTANCE.register();
 
       ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
@@ -237,6 +240,7 @@ public class Actor implements Activity {
       }
 
       t.currentlyExecutingActor = null;
+      return true;
     }
 
     protected void processCurrentMessages(final ActorProcessingThread currentThread,
@@ -303,11 +307,17 @@ public class Actor implements Activity {
 
       return true;
     }
+
+    @Override
+    public Void getRawResult() {
+      return null;
+    }
   }
 
   @TruffleBoundary
   protected void execute(final ForkJoinPool actorPool) {
     try {
+      executor.reinitialize();
       actorPool.execute(executor);
     } catch (RejectedExecutionException e) {
       throw new ThreadDeath();

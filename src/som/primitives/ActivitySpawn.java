@@ -143,7 +143,7 @@ public abstract class ActivitySpawn {
       SInvokable disp = procCls.getMixinDefinition().getFactoryMethods().get(sel);
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(new Object[] {procCls});
 
-      processesPool.submit(createProcess(obj, sourceSection,
+      processesPool.execute(createProcess(obj, sourceSection,
           onExec.executeShouldHalt()));
       return Nil.nilObject;
     }
@@ -221,7 +221,7 @@ public abstract class ActivitySpawn {
       SInvokable disp = procCls.getMixinDefinition().getFactoryMethods().get(sel);
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(argArr);
 
-      processesPool.submit(createProcess(obj, sourceSection,
+      processesPool.execute(createProcess(obj, sourceSection,
           onExec.executeShouldHalt()));
       return Nil.nilObject;
     }

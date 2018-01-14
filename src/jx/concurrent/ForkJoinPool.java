@@ -38,17 +38,12 @@ package jx.concurrent;
 import java.lang.Thread.UncaughtExceptionHandler;
 import java.lang.reflect.Field;
 import java.security.Permissions;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.AbstractExecutorService;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.concurrent.RejectedExecutionException;
-import java.util.concurrent.RunnableFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -168,7 +163,7 @@ import sun.misc.Unsafe;
  * @author Doug Lea
  */
 @sun.misc.Contended
-public class ForkJoinPool extends AbstractExecutorService {
+public class ForkJoinPool {
 
   /*-
    * Implementation Overview
@@ -2484,31 +2479,6 @@ public class ForkJoinPool extends AbstractExecutorService {
   // Execution methods
 
   /**
-   * Performs the given task, returning its result upon completion.
-   * If the computation encounters an unchecked Exception or Error,
-   * it is rethrown as the outcome of this invocation. Rethrown
-   * exceptions behave in the same way as regular exceptions, but,
-   * when possible, contain stack traces (as displayed for example
-   * using {@code ex.printStackTrace()}) of both the current thread
-   * as well as the thread actually encountering the exception;
-   * minimally only the latter.
-   *
-   * @param task the task
-   * @param <T> the type of the task's result
-   * @return the task's result
-   * @throws NullPointerException if the task is null
-   * @throws RejectedExecutionException if the task cannot be
-   *           scheduled for execution
-   */
-  public <T> T invoke(final ForkJoinTask<T> task) {
-    if (task == null) {
-      throw new NullPointerException();
-    }
-    externalPush(task);
-    return task.join();
-  }
-
-  /**
    * Arranges for (asynchronous) execution of the given task.
    *
    * @param task the task
@@ -2517,145 +2487,11 @@ public class ForkJoinPool extends AbstractExecutorService {
    *           scheduled for execution
    */
   public void execute(final ForkJoinTask<?> task) {
-    if (task == null) {
-      throw new NullPointerException();
-    }
+    assert task != null;
     externalPush(task);
   }
 
   // AbstractExecutorService methods
-
-  /**
-   * @throws NullPointerException if the task is null
-   * @throws RejectedExecutionException if the task cannot be
-   *           scheduled for execution
-   */
-  @Override
-  public void execute(final Runnable task) {
-    if (task == null) {
-      throw new NullPointerException();
-    }
-    ForkJoinTask<?> job;
-    if (task instanceof ForkJoinTask<?>) {
-      job = (ForkJoinTask<?>) task;
-    } else {
-      job = new ForkJoinTask.RunnableExecuteAction(task);
-    }
-    externalPush(job);
-  }
-
-  /**
-   * Submits a ForkJoinTask for execution.
-   *
-   * @param task the task to submit
-   * @param <T> the type of the task's result
-   * @return the task
-   * @throws NullPointerException if the task is null
-   * @throws RejectedExecutionException if the task cannot be
-   *           scheduled for execution
-   */
-  public <T> ForkJoinTask<T> submit(final ForkJoinTask<T> task) {
-    if (task == null) {
-      throw new NullPointerException();
-    }
-    externalPush(task);
-    return task;
-  }
-
-  /**
-   * @throws NullPointerException if the task is null
-   * @throws RejectedExecutionException if the task cannot be
-   *           scheduled for execution
-   */
-  @Override
-  public <T> ForkJoinTask<T> submit(final Callable<T> task) {
-    ForkJoinTask<T> job = new ForkJoinTask.AdaptedCallable<T>(task);
-    externalPush(job);
-    return job;
-  }
-
-  /**
-   * @throws NullPointerException if the task is null
-   * @throws RejectedExecutionException if the task cannot be
-   *           scheduled for execution
-   */
-  @Override
-  public <T> ForkJoinTask<T> submit(final Runnable task, final T result) {
-    ForkJoinTask<T> job = new ForkJoinTask.AdaptedRunnable<T>(task, result);
-    externalPush(job);
-    return job;
-  }
-
-  /**
-   * @throws NullPointerException if the task is null
-   * @throws RejectedExecutionException if the task cannot be
-   *           scheduled for execution
-   */
-  @Override
-  public ForkJoinTask<?> submit(final Runnable task) {
-    if (task == null) {
-      throw new NullPointerException();
-    }
-    ForkJoinTask<?> job;
-    if (task instanceof ForkJoinTask<?>) {
-      job = (ForkJoinTask<?>) task;
-    } else {
-      job = new ForkJoinTask.AdaptedRunnableAction(task);
-    }
-    externalPush(job);
-    return job;
-  }
-
-  /**
-   * @throws NullPointerException {@inheritDoc}
-   * @throws RejectedExecutionException {@inheritDoc}
-   */
-  @Override
-  public <T> List<Future<T>> invokeAll(final Collection<? extends Callable<T>> tasks) {
-    // In previous versions of this class, this method constructed
-    // a task to run ForkJoinTask.invokeAll, but now external
-    // invocation of multiple tasks is at least as efficient.
-    ArrayList<Future<T>> futures = new ArrayList<>(tasks.size());
-
-    boolean done = false;
-    try {
-      for (Callable<T> t : tasks) {
-        ForkJoinTask<T> f = new ForkJoinTask.AdaptedCallable<T>(t);
-        futures.add(f);
-        externalPush(f);
-      }
-      for (int i = 0, size = futures.size(); i < size; i++) {
-        ((ForkJoinTask<?>) futures.get(i)).quietlyJoin();
-      }
-      done = true;
-      return futures;
-    } finally {
-      if (!done) {
-        for (int i = 0, size = futures.size(); i < size; i++) {
-          futures.get(i).cancel(false);
-        }
-      }
-    }
-  }
-
-  /**
-   * Returns the factory used for constructing new workers.
-   *
-   * @return the factory used for constructing new workers
-   */
-  public ForkJoinWorkerThreadFactory getFactory() {
-    return factory;
-  }
-
-  /**
-   * Returns the handler for internal worker threads that terminate
-   * due to unrecoverable errors encountered while executing tasks.
-   *
-   * @return the handler, or {@code null} if none
-   */
-  public UncaughtExceptionHandler getUncaughtExceptionHandler() {
-    return ueh;
-  }
 
   /**
    * Returns the targeted parallelism level of this pool.
@@ -2954,7 +2790,6 @@ public class ForkJoinPool extends AbstractExecutorService {
    *           because it does not hold {@link
    *           java.lang.RuntimePermission}{@code ("modifyThread")}
    */
-  @Override
   public void shutdown() {
     checkPermission();
     tryTerminate(false, true);
@@ -2978,7 +2813,6 @@ public class ForkJoinPool extends AbstractExecutorService {
    *           because it does not hold {@link
    *           java.lang.RuntimePermission}{@code ("modifyThread")}
    */
-  @Override
   public List<Runnable> shutdownNow() {
     checkPermission();
     tryTerminate(true, true);
@@ -2990,7 +2824,6 @@ public class ForkJoinPool extends AbstractExecutorService {
    *
    * @return {@code true} if all tasks have completed following shut down
    */
-  @Override
   public boolean isTerminated() {
     return (runState & TERMINATED) != 0;
   }
@@ -3018,7 +2851,6 @@ public class ForkJoinPool extends AbstractExecutorService {
    *
    * @return {@code true} if this pool has been shut down
    */
-  @Override
   public boolean isShutdown() {
     return (runState & SHUTDOWN) != 0;
   }
@@ -3037,7 +2869,6 @@ public class ForkJoinPool extends AbstractExecutorService {
    *         {@code false} if the timeout elapsed before termination
    * @throws InterruptedException if interrupted while waiting
    */
-  @Override
   public boolean awaitTermination(final long timeout, final TimeUnit unit)
       throws InterruptedException {
     if (Thread.interrupted()) {
@@ -3271,20 +3102,6 @@ public class ForkJoinPool extends AbstractExecutorService {
       do { /* no-op */ } while (!blocker.isReleasable() &&
           !blocker.block());
     }
-  }
-
-  // AbstractExecutorService overrides. These rely on undocumented
-  // fact that ForkJoinTask.adapt returns ForkJoinTasks that also
-  // implement RunnableFuture.
-
-  @Override
-  protected <T> RunnableFuture<T> newTaskFor(final Runnable runnable, final T value) {
-    return new ForkJoinTask.AdaptedRunnable<T>(runnable, value);
-  }
-
-  @Override
-  protected <T> RunnableFuture<T> newTaskFor(final Callable<T> callable) {
-    return new ForkJoinTask.AdaptedCallable<T>(callable);
   }
 
   // Unsafe mechanics
