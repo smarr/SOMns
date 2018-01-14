@@ -36,7 +36,6 @@
 package jx.concurrent;
 
 import java.security.AccessControlContext;
-import java.security.ProtectionDomain;
 
 
 /**
@@ -204,73 +203,4 @@ public class ForkJoinWorkerThread extends Thread {
       throw new Error(e);
     }
   }
-
-  /**
-   * A worker thread that has no permissions, is not a member of any
-   * user-defined ThreadGroup, and erases all ThreadLocals after
-   * running each top-level task.
-   */
-  static final class InnocuousForkJoinWorkerThread extends ForkJoinWorkerThread {
-    /** The ThreadGroup for all InnocuousForkJoinWorkerThreads */
-    private static final ThreadGroup innocuousThreadGroup =
-        createThreadGroup();
-
-    /** An AccessControlContext supporting no privileges */
-    private static final AccessControlContext INNOCUOUS_ACC =
-        new AccessControlContext(
-            new ProtectionDomain[] {
-                new ProtectionDomain(null, null)
-            });
-
-    InnocuousForkJoinWorkerThread(final ForkJoinPool pool) {
-      super(pool, innocuousThreadGroup, INNOCUOUS_ACC);
-    }
-
-    @Override // to erase ThreadLocals
-    void afterTopLevelExec() {
-      eraseThreadLocals();
-    }
-
-    @Override // to always report system loader
-    public ClassLoader getContextClassLoader() {
-      return ClassLoader.getSystemClassLoader();
-    }
-
-    @Override // to silently fail
-    public void setUncaughtExceptionHandler(final UncaughtExceptionHandler x) {}
-
-    @Override // paranoically
-    public void setContextClassLoader(final ClassLoader cl) {
-      throw new SecurityException("setContextClassLoader");
-    }
-
-    /**
-     * Returns a new group with the system ThreadGroup (the
-     * topmost, parent-less group) as parent. Uses Unsafe to
-     * traverse Thread.group and ThreadGroup.parent fields.
-     */
-    private static ThreadGroup createThreadGroup() {
-      try {
-        sun.misc.Unsafe u = sun.misc.Unsafe.getUnsafe();
-        Class<?> tk = Thread.class;
-        Class<?> gk = ThreadGroup.class;
-        long tg = u.objectFieldOffset(tk.getDeclaredField("group"));
-        long gp = u.objectFieldOffset(gk.getDeclaredField("parent"));
-        ThreadGroup group = (ThreadGroup) u.getObject(Thread.currentThread(), tg);
-        while (group != null) {
-          ThreadGroup parent = (ThreadGroup) u.getObject(group, gp);
-          if (parent == null) {
-            return new ThreadGroup(group,
-                "InnocuousForkJoinWorkerThreadGroup");
-          }
-          group = parent;
-        }
-      } catch (Exception e) {
-        throw new Error(e);
-      }
-      // fall through if null as cannot-happen safeguard
-      throw new Error("Cannot create ThreadGroup");
-    }
-  }
-
 }

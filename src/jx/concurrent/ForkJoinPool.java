@@ -36,9 +36,7 @@
 package jx.concurrent;
 
 import java.lang.Thread.UncaughtExceptionHandler;
-import java.security.AccessControlContext;
 import java.security.Permissions;
-import java.security.ProtectionDomain;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -719,19 +717,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @return the new worker thread
      * @throws NullPointerException if the pool is null
      */
-    public ForkJoinWorkerThread newThread(ForkJoinPool pool);
-  }
-
-  /**
-   * Default ForkJoinWorkerThreadFactory implementation; creates a
-   * new ForkJoinWorkerThread.
-   */
-  static final class DefaultForkJoinWorkerThreadFactory
-      implements ForkJoinWorkerThreadFactory {
-    @Override
-    public final ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
-      return new ForkJoinWorkerThread(pool);
-    }
+    ForkJoinWorkerThread newThread(ForkJoinPool pool);
   }
 
   /**
@@ -1189,7 +1175,6 @@ public class ForkJoinPool extends AbstractExecutorService {
     private static final int             ABASE;
     private static final int             ASHIFT;
     private static final long            QTOP;
-    private static final long            QLOCK;
     private static final long            QCURRENTSTEAL;
 
     static {
@@ -1198,7 +1183,6 @@ public class ForkJoinPool extends AbstractExecutorService {
         Class<?> wk = WorkQueue.class;
         Class<?> ak = ForkJoinTask[].class;
         QTOP = U.objectFieldOffset(wk.getDeclaredField("top"));
-        QLOCK = U.objectFieldOffset(wk.getDeclaredField("qlock"));
         QCURRENTSTEAL = U.objectFieldOffset(wk.getDeclaredField("currentSteal"));
         ABASE = U.arrayBaseOffset(ak);
         int scale = U.arrayIndexScale(ak);
@@ -1215,37 +1199,10 @@ public class ForkJoinPool extends AbstractExecutorService {
   // static fields (initialized in static initializer below)
 
   /**
-   * Creates a new ForkJoinWorkerThread. This factory is used unless
-   * overridden in ForkJoinPool constructors.
-   */
-  public static final ForkJoinWorkerThreadFactory defaultForkJoinWorkerThreadFactory;
-
-  /**
    * Permission required for callers of methods that may start or
    * kill threads.
    */
   private static final RuntimePermission modifyThreadPermission;
-
-  /**
-   * Common (static) pool. Non-null for public use unless a static
-   * construction exception, but internal usages null-check on use
-   * to paranoically avoid potential initialization circularities
-   * as well as to simplify generated code.
-   */
-  static final ForkJoinPool common;
-
-  /**
-   * Common pool parallelism. To allow simpler use and management
-   * when common pool threads are disabled, we allow the underlying
-   * common.parallelism field to be zero, but in that case still report
-   * parallelism as 1 to reflect resulting caller-runs mechanics.
-   */
-  static final int commonParallelism;
-
-  /**
-   * Limit on spare thread construction in tryCompensate.
-   */
-  private static int commonMaxSpares;
 
   /**
    * Sequence number for creating workerNamePrefix.
@@ -1276,15 +1233,6 @@ public class ForkJoinPool extends AbstractExecutorService {
    * Tolerance for idle timeouts, to cope with timer undershoots.
    */
   private static final long TIMEOUT_SLOP = 20L * 1000L * 1000L; // 20ms
-
-  /**
-   * The initial value for commonMaxSpares during static
-   * initialization. The value is far in excess of normal
-   * requirements, but also far short of MAX_CAP and typical
-   * OS thread limits, so allows JVMs to catch misuse/abuse
-   * before running out of resources needed to do so.
-   */
-  private static final int DEFAULT_COMMON_MAX_SPARES = 256;
 
   /**
    * Number of times to spin-wait before blocking. The spins (in
@@ -1977,8 +1925,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         long nc = ((AC_MASK & (c - AC_UNIT)) |
             (~AC_MASK & c)); // uncompensated
         canBlock = U.compareAndSwapLong(this, CTL, c, nc);
-      } else if (tc >= MAX_CAP ||
-          (this == common && tc >= pc + commonMaxSpares)) {
+      } else if (tc >= MAX_CAP) {
         throw new RejectedExecutionException(
             "Thread limit exceeded replacing blocked worker");
       } else { // similar to tryAddWorker
@@ -2204,9 +2151,6 @@ public class ForkJoinPool extends AbstractExecutorService {
    */
   private boolean tryTerminate(final boolean now, final boolean enable) {
     int rs;
-    if (this == common) {
-      return false;
-    }
     if ((rs = runState) >= 0) {
       if (!enable) {
         return false;
@@ -2438,18 +2382,6 @@ public class ForkJoinPool extends AbstractExecutorService {
   }
 
   /**
-   * Returns common pool queue for an external thread.
-   */
-  static WorkQueue commonSubmitterQueue() {
-    ForkJoinPool p = common;
-    int r = ThreadLocalRandom.getProbe();
-    WorkQueue[] ws;
-    int m;
-    return (p != null && (ws = p.workQueues) != null &&
-        (m = ws.length - 1) >= 0) ? ws[m & r & SQMASK] : null;
-  }
-
-  /**
    * Performs tryUnpush for an external submitter: Finds queue,
    * locks if apparently non-empty, validates upon locking, and
    * adjusts top. Each check can fail but rarely does.
@@ -2484,46 +2416,11 @@ public class ForkJoinPool extends AbstractExecutorService {
   // Constructors
 
   /**
-   * Creates a {@code ForkJoinPool} with parallelism equal to {@link
-   * java.lang.Runtime#availableProcessors}, using the {@linkplain
-   * #defaultForkJoinWorkerThreadFactory default thread factory},
-   * no UncaughtExceptionHandler, and non-async LIFO processing mode.
-   *
-   * @throws SecurityException if a security manager exists and
-   *           the caller is not permitted to modify threads
-   *           because it does not hold {@link
-   *           java.lang.RuntimePermission}{@code ("modifyThread")}
-   */
-  public ForkJoinPool() {
-    this(Math.min(MAX_CAP, Runtime.getRuntime().availableProcessors()),
-        defaultForkJoinWorkerThreadFactory, null, false);
-  }
-
-  /**
-   * Creates a {@code ForkJoinPool} with the indicated parallelism
-   * level, the {@linkplain
-   * #defaultForkJoinWorkerThreadFactory default thread factory},
-   * no UncaughtExceptionHandler, and non-async LIFO processing mode.
-   *
-   * @param parallelism the parallelism level
-   * @throws IllegalArgumentException if parallelism less than or
-   *           equal to zero, or greater than implementation limit
-   * @throws SecurityException if a security manager exists and
-   *           the caller is not permitted to modify threads
-   *           because it does not hold {@link
-   *           java.lang.RuntimePermission}{@code ("modifyThread")}
-   */
-  public ForkJoinPool(final int parallelism) {
-    this(parallelism, defaultForkJoinWorkerThreadFactory, null, false);
-  }
-
-  /**
    * Creates a {@code ForkJoinPool} with the given parameters.
    *
    * @param parallelism the parallelism level. For default value,
    *          use {@link java.lang.Runtime#availableProcessors}.
-   * @param factory the factory for creating new threads. For default value,
-   *          use {@link #defaultForkJoinWorkerThreadFactory}.
+   * @param factory the factory for creating new threads.
    * @param handler the handler for internal worker threads that
    *          terminate due to unrecoverable errors encountered while executing
    *          tasks. For default value, use {@code null}.
@@ -2584,24 +2481,6 @@ public class ForkJoinPool extends AbstractExecutorService {
     this.config = (parallelism & SMASK) | mode;
     long np = (-parallelism); // offset ctl counts
     this.ctl = ((np << AC_SHIFT) & AC_MASK) | ((np << TC_SHIFT) & TC_MASK);
-  }
-
-  /**
-   * Returns the common pool instance. This pool is statically
-   * constructed; its run state is unaffected by attempts to {@link
-   * #shutdown} or {@link #shutdownNow}. However this pool and any
-   * ongoing processing are automatically terminated upon program
-   * {@link System#exit}. Any program that relies on asynchronous
-   * task processing to complete before program termination should
-   * invoke {@code commonPool().}{@link #awaitQuiescence awaitQuiescence},
-   * before exit.
-   *
-   * @return the common pool instance
-   * @since 1.8
-   */
-  public static ForkJoinPool commonPool() {
-    // assert common != null : "static init error";
-    return common;
   }
 
   // Execution methods
@@ -2788,16 +2667,6 @@ public class ForkJoinPool extends AbstractExecutorService {
   public int getParallelism() {
     int par;
     return ((par = config & SMASK) > 0) ? par : 1;
-  }
-
-  /**
-   * Returns the targeted parallelism level of the common pool.
-   *
-   * @return the targeted parallelism level of the common pool
-   * @since 1.8
-   */
-  public static int getCommonPoolParallelism() {
-    return commonParallelism;
   }
 
   /**
@@ -3176,10 +3045,6 @@ public class ForkJoinPool extends AbstractExecutorService {
     if (Thread.interrupted()) {
       throw new InterruptedException();
     }
-    if (this == common) {
-      awaitQuiescence(timeout, unit);
-      return false;
-    }
     long nanos = unit.toNanos(timeout);
     if (isTerminated()) {
       return true;
@@ -3253,14 +3118,6 @@ public class ForkJoinPool extends AbstractExecutorService {
       }
     }
     return true;
-  }
-
-  /**
-   * Waits and/or attempts to assist performing tasks indefinitely
-   * until the {@link #commonPool()} {@link #isQuiescent}.
-   */
-  static void quiesceCommonPool() {
-    common.awaitQuiescence(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
   }
 
   /**
@@ -3475,98 +3332,6 @@ public class ForkJoinPool extends AbstractExecutorService {
       throw new Error(e);
     }
 
-    commonMaxSpares = DEFAULT_COMMON_MAX_SPARES;
-    defaultForkJoinWorkerThreadFactory =
-        new DefaultForkJoinWorkerThreadFactory();
     modifyThreadPermission = new RuntimePermission("modifyThread");
-
-    common = java.security.AccessController.doPrivileged(
-        new java.security.PrivilegedAction<ForkJoinPool>() {
-          @Override
-          public ForkJoinPool run() {
-            return makeCommonPool();
-          }
-        });
-    int par = common.config & SMASK; // report 1 even if threads disabled
-    commonParallelism = par > 0 ? par : 1;
   }
-
-  /**
-   * Creates and returns the common pool, respecting user settings
-   * specified via system properties.
-   */
-  private static ForkJoinPool makeCommonPool() {
-    int parallelism = -1;
-    ForkJoinWorkerThreadFactory factory = null;
-    UncaughtExceptionHandler handler = null;
-    try { // ignore exceptions in accessing/parsing properties
-      String pp = System.getProperty("java.util.concurrent.ForkJoinPool.common.parallelism");
-      String fp = System.getProperty("java.util.concurrent.ForkJoinPool.common.threadFactory");
-      String hp =
-          System.getProperty("java.util.concurrent.ForkJoinPool.common.exceptionHandler");
-      if (pp != null) {
-        parallelism = Integer.parseInt(pp);
-      }
-      if (fp != null) {
-        factory = ((ForkJoinWorkerThreadFactory) ClassLoader.getSystemClassLoader()
-                                                            .loadClass(fp).newInstance());
-      }
-      if (hp != null) {
-        handler = ((UncaughtExceptionHandler) ClassLoader.getSystemClassLoader().loadClass(hp)
-                                                         .newInstance());
-      }
-    } catch (Exception ignore) {}
-    if (factory == null) {
-      if (System.getSecurityManager() == null) {
-        factory = defaultForkJoinWorkerThreadFactory;
-      } else {
-        factory = new InnocuousForkJoinWorkerThreadFactory();
-      }
-    }
-    if (parallelism < 0 && // default 1 less than #cores
-        (parallelism = Runtime.getRuntime().availableProcessors() - 1) <= 0) {
-      parallelism = 1;
-    }
-    if (parallelism > MAX_CAP) {
-      parallelism = MAX_CAP;
-    }
-    return new ForkJoinPool(parallelism, factory, handler, LIFO_QUEUE,
-        "ForkJoinPool.commonPool-worker-");
-  }
-
-  /**
-   * Factory for innocuous worker threads
-   */
-  static final class InnocuousForkJoinWorkerThreadFactory
-      implements ForkJoinWorkerThreadFactory {
-
-    /**
-     * An ACC to restrict permissions for the factory itself.
-     * The constructed workers have no permissions set.
-     */
-    private static final AccessControlContext innocuousAcc;
-    static {
-      Permissions innocuousPerms = new Permissions();
-      innocuousPerms.add(modifyThreadPermission);
-      innocuousPerms.add(new RuntimePermission(
-          "enableContextClassLoaderOverride"));
-      innocuousPerms.add(new RuntimePermission(
-          "modifyThreadGroup"));
-      innocuousAcc = new AccessControlContext(new ProtectionDomain[] {
-          new ProtectionDomain(null, innocuousPerms)
-      });
-    }
-
-    @Override
-    public final ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
-      return java.security.AccessController.doPrivileged(
-          new java.security.PrivilegedAction<ForkJoinWorkerThread>() {
-            @Override
-            public ForkJoinWorkerThread run() {
-              return new ForkJoinWorkerThread.InnocuousForkJoinWorkerThread(pool);
-            }
-          }, innocuousAcc);
-    }
-  }
-
 }
