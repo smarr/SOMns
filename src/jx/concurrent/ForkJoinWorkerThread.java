@@ -93,7 +93,6 @@ public class ForkJoinWorkerThread extends Thread {
       final AccessControlContext acc) {
     super(threadGroup, null, "aForkJoinWorkerThread");
     U.putOrderedObject(this, INHERITEDACCESSCONTROLCONTEXT, acc);
-    eraseThreadLocals(); // clear before registering
     this.pool = pool;
     this.workQueue = pool.registerWorker(this);
   }
@@ -170,32 +169,14 @@ public class ForkJoinWorkerThread extends Thread {
     }
   }
 
-  /**
-   * Erases ThreadLocals by nulling out Thread maps.
-   */
-  final void eraseThreadLocals() {
-    U.putObject(this, THREADLOCALS, null);
-    U.putObject(this, INHERITABLETHREADLOCALS, null);
-  }
-
-  /**
-   * Non-public hook method for InnocuousForkJoinWorkerThread.
-   */
-  void afterTopLevelExec() {}
-
   // Set up to allow setting thread fields in constructor
   private static final sun.misc.Unsafe U;
-  private static final long            THREADLOCALS;
-  private static final long            INHERITABLETHREADLOCALS;
   private static final long            INHERITEDACCESSCONTROLCONTEXT;
 
   static {
     try {
       U = sun.misc.Unsafe.getUnsafe();
       Class<?> tk = Thread.class;
-      THREADLOCALS = U.objectFieldOffset(tk.getDeclaredField("threadLocals"));
-      INHERITABLETHREADLOCALS =
-          U.objectFieldOffset(tk.getDeclaredField("inheritableThreadLocals"));
       INHERITEDACCESSCONTROLCONTEXT =
           U.objectFieldOffset(tk.getDeclaredField("inheritedAccessControlContext"));
 
