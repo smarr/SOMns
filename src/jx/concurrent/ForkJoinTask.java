@@ -251,7 +251,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
    * tags.
    */
 
-  /** The run status of this task */
+  /** The run status of this task. */
   volatile int     status;                   // accessed directly by pool and workers
   static final int DONE_MASK   = 0xf0000000; // mask out non-completion bits
   static final int NORMAL      = 0xf0000000; // must be negative
@@ -601,7 +601,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
       Class<? extends Throwable> ec = ex.getClass();
       try {
         Constructor<?> noArgCtor = null;
-        Constructor<?>[] cs = ec.getConstructors();// public ctors only
+        Constructor<?>[] cs = ec.getConstructors(); // public ctors only
         for (int i = 0; i < cs.length; ++i) {
           Constructor<?> c = cs[i];
           Class<?>[] ps = c.getParameterTypes();
@@ -668,7 +668,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
   }
 
   /**
-   * A version of "sneaky throw" to relay exceptions
+   * A version of "sneaky throw" to relay exceptions.
    */
   static void rethrow(final Throwable ex) {
     if (ex != null) {
@@ -679,7 +679,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
   /**
    * The sneaky part of sneaky throw, relying on generics
    * limitations to evade compiler complaints about rethrowing
-   * unchecked exceptions
+   * unchecked exceptions.
    */
   @SuppressWarnings("unchecked")
   static <T extends Throwable> void uncheckedThrow(final Throwable t) throws T {
@@ -778,7 +778,9 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
    * @throws NullPointerException if any task is null
    */
   public static void invokeAll(final ForkJoinTask<?> t1, final ForkJoinTask<?> t2) {
-    int s1, s2;
+    int s1;
+    int s2;
+
     t2.fork();
     if ((s1 = t1.doInvoke() & DONE_MASK) != NORMAL) {
       t1.reportException(s1);
@@ -1303,7 +1305,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     } else {
       q = ForkJoinPool.commonSubmitterQueue();
     }
-    return (q == null) ? null : q.peek();
+    return q == null ? null : q.peek();
   }
 
   /**
@@ -1414,23 +1416,23 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     @Override
-    public final T getRawResult() {
+    public T getRawResult() {
       return result;
     }
 
     @Override
-    public final void setRawResult(final T v) {
+    public void setRawResult(final T v) {
       result = v;
     }
 
     @Override
-    public final boolean exec() {
+    public boolean exec() {
       runnable.run();
       return true;
     }
 
     @Override
-    public final void run() {
+    public void run() {
       invoke();
     }
 
@@ -1438,7 +1440,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
   }
 
   /**
-   * Adaptor for Runnables without results
+   * Adaptor for Runnables without results.
    */
   static final class AdaptedRunnableAction extends ForkJoinTask<Void>
       implements RunnableFuture<Void> {
@@ -1452,21 +1454,21 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     @Override
-    public final Void getRawResult() {
+    public Void getRawResult() {
       return null;
     }
 
     @Override
-    public final void setRawResult(final Void v) {}
+    public void setRawResult(final Void v) {}
 
     @Override
-    public final boolean exec() {
+    public boolean exec() {
       runnable.run();
       return true;
     }
 
     @Override
-    public final void run() {
+    public void run() {
       invoke();
     }
 
@@ -1474,7 +1476,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
   }
 
   /**
-   * Adaptor for Runnables in which failure forces worker exception
+   * Adaptor for Runnables in which failure forces worker exception.
    */
   static final class RunnableExecuteAction extends ForkJoinTask<Void> {
     final Runnable runnable;
@@ -1487,15 +1489,15 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     @Override
-    public final Void getRawResult() {
+    public Void getRawResult() {
       return null;
     }
 
     @Override
-    public final void setRawResult(final Void v) {}
+    public void setRawResult(final Void v) {}
 
     @Override
-    public final boolean exec() {
+    public boolean exec() {
       runnable.run();
       return true;
     }
@@ -1509,7 +1511,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
   }
 
   /**
-   * Adaptor for Callables
+   * Adaptor for Callables.
    */
   static final class AdaptedCallable<T> extends ForkJoinTask<T>
       implements RunnableFuture<T> {
@@ -1524,17 +1526,17 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     @Override
-    public final T getRawResult() {
+    public T getRawResult() {
       return result;
     }
 
     @Override
-    public final void setRawResult(final T v) {
+    public void setRawResult(final T v) {
       result = v;
     }
 
     @Override
-    public final boolean exec() {
+    public boolean exec() {
       try {
         result = callable.call();
         return true;
@@ -1548,7 +1550,7 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
     }
 
     @Override
-    public final void run() {
+    public void run() {
       invoke();
     }
 

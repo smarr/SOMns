@@ -88,7 +88,7 @@ public class ForkJoinWorkerThread extends Thread {
   }
 
   /**
-   * Version for InnocuousForkJoinWorkerThread
+   * Version for InnocuousForkJoinWorkerThread.
    */
   ForkJoinWorkerThread(final ForkJoinPool pool, final ThreadGroup threadGroup,
       final AccessControlContext acc) {
@@ -180,7 +180,7 @@ public class ForkJoinWorkerThread extends Thread {
   }
 
   /**
-   * Non-public hook method for InnocuousForkJoinWorkerThread
+   * Non-public hook method for InnocuousForkJoinWorkerThread.
    */
   void afterTopLevelExec() {}
 
@@ -189,6 +189,7 @@ public class ForkJoinWorkerThread extends Thread {
   private static final long            THREADLOCALS;
   private static final long            INHERITABLETHREADLOCALS;
   private static final long            INHERITEDACCESSCONTROLCONTEXT;
+
   static {
     try {
       U = sun.misc.Unsafe.getUnsafe();

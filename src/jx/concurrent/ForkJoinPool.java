@@ -711,7 +711,7 @@ public class ForkJoinPool extends AbstractExecutorService {
    * for {@code ForkJoinWorkerThread} subclasses that extend base
    * functionality or initialize threads with different contexts.
    */
-  public static interface ForkJoinWorkerThreadFactory {
+  public interface ForkJoinWorkerThreadFactory {
     /**
      * Returns a new worker thread operating in the given pool.
      *
@@ -748,15 +748,15 @@ public class ForkJoinPool extends AbstractExecutorService {
     } // force done
 
     @Override
-    public final Void getRawResult() {
+    public Void getRawResult() {
       return null;
     }
 
     @Override
-    public final void setRawResult(final Void x) {}
+    public void setRawResult(final Void x) {}
 
     @Override
-    public final boolean exec() {
+    public boolean exec() {
       return true;
     }
   }
@@ -764,21 +764,21 @@ public class ForkJoinPool extends AbstractExecutorService {
   // Constants shared across ForkJoinPool and WorkQueue
 
   // Bounds
-  static final int SMASK    = 0xffff; // short bits == max index
-  static final int MAX_CAP  = 0x7fff; // max #workers - 1
-  static final int EVENMASK = 0xfffe; // even short bits
-  static final int SQMASK   = 0x007e; // max 64 (even) slots
+  private static final int SMASK    = 0xffff; // short bits == max index
+  private static final int MAX_CAP  = 0x7fff; // max #workers - 1
+  private static final int EVENMASK = 0xfffe; // even short bits
+  private static final int SQMASK   = 0x007e; // max 64 (even) slots
 
   // Masks and units for WorkQueue.scanState and ctl sp subfield
-  static final int SCANNING = 1;       // false when running tasks
-  static final int INACTIVE = 1 << 31; // must be negative
-  static final int SS_SEQ   = 1 << 16; // version count
+  private static final int SCANNING = 1;       // false when running tasks
+  private static final int INACTIVE = 1 << 31; // must be negative
+  private static final int SS_SEQ   = 1 << 16; // version count
 
   // Mode bits for ForkJoinPool.config and WorkQueue.config
-  static final int MODE_MASK    = 0xffff << 16; // top half of int
-  static final int LIFO_QUEUE   = 0;
-  static final int FIFO_QUEUE   = 1 << 16;
-  static final int SHARED_QUEUE = 1 << 31;      // must be negative
+  private static final int MODE_MASK    = 0xffff << 16; // top half of int
+  private static final int LIFO_QUEUE   = 0;
+  private static final int FIFO_QUEUE   = 1 << 16;
+  private static final int SHARED_QUEUE = 1 << 31;      // must be negative
 
   /**
    * Queues supporting work-stealing as well as external task
@@ -839,14 +839,14 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Returns an exportable index (used by ForkJoinWorkerThread).
      */
-    final int getPoolIndex() {
+    int getPoolIndex() {
       return (config & 0xffff) >>> 1; // ignore odd/even tag bit
     }
 
     /**
      * Returns the approximate number of tasks in the queue.
      */
-    final int queueSize() {
+    int queueSize() {
       int n = base - top; // non-owner callers must read base first
       return (n >= 0) ? 0 : -n; // ignore transient negative
     }
@@ -856,9 +856,11 @@ public class ForkJoinPool extends AbstractExecutorService {
      * any tasks than does queueSize, by checking whether a
      * near-empty queue has at least one unclaimed task.
      */
-    final boolean isEmpty() {
+    boolean isEmpty() {
       ForkJoinTask<?>[] a;
-      int n, m, s;
+      int n;
+      int m;
+      int s;
       return ((n = base - (s = top)) >= 0 ||
           (n == -1 && // possibly one task
               ((a = array) == null || (m = a.length - 1) < 0 ||
@@ -872,10 +874,12 @@ public class ForkJoinPool extends AbstractExecutorService {
      * @param task the task. Caller must ensure non-null.
      * @throws RejectedExecutionException if array cannot be resized
      */
-    final void push(final ForkJoinTask<?> task) {
+    void push(final ForkJoinTask<?> task) {
       ForkJoinTask<?>[] a;
       ForkJoinPool p;
-      int b = base, s = top, n;
+      int b = base;
+      int s = top;
+      int n;
       if ((a = array) != null) { // ignore if queue removed
         int m = a.length - 1; // fenced write for task visibility
         U.putOrderedObject(a, ((m & s) << ASHIFT) + ABASE, task);
@@ -895,13 +899,15 @@ public class ForkJoinPool extends AbstractExecutorService {
      * by owner or with lock held -- it is OK for base, but not
      * top, to move while resizings are in progress.
      */
-    final ForkJoinTask<?>[] growArray() {
+    ForkJoinTask<?>[] growArray() {
       ForkJoinTask<?>[] oldA = array;
       int size = oldA != null ? oldA.length << 1 : INITIAL_QUEUE_CAPACITY;
       if (size > MAXIMUM_QUEUE_CAPACITY) {
         throw new RejectedExecutionException("Queue capacity exceeded");
       }
-      int oldMask, t, b;
+      int oldMask;
+      int t;
+      int b;
       ForkJoinTask<?>[] a = array = new ForkJoinTask<?>[size];
       if (oldA != null && (oldMask = oldA.length - 1) >= 0 &&
           (t = top) - (b = base) > 0) {
@@ -924,7 +930,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Takes next task, if one exists, in LIFO order. Call only
      * by owner in unshared queues.
      */
-    final ForkJoinTask<?> pop() {
+    ForkJoinTask<?> pop() {
       ForkJoinTask<?>[] a;
       ForkJoinTask<?> t;
       int m;
@@ -948,7 +954,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * can be claimed without contention. Specialized versions
      * appear in ForkJoinPool methods scan and helpStealer.
      */
-    final ForkJoinTask<?> pollAt(final int b) {
+    ForkJoinTask<?> pollAt(final int b) {
       ForkJoinTask<?> t;
       ForkJoinTask<?>[] a;
       if ((a = array) != null) {
@@ -965,7 +971,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Takes next task, if one exists, in FIFO order.
      */
-    final ForkJoinTask<?> poll() {
+    ForkJoinTask<?> poll() {
       ForkJoinTask<?>[] a;
       int b;
       ForkJoinTask<?> t;
@@ -989,14 +995,14 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Takes next task, if one exists, in order specified by mode.
      */
-    final ForkJoinTask<?> nextLocalTask() {
+    ForkJoinTask<?> nextLocalTask() {
       return (config & FIFO_QUEUE) == 0 ? pop() : poll();
     }
 
     /**
      * Returns next task, if one exists, in order specified by mode.
      */
-    final ForkJoinTask<?> peek() {
+    ForkJoinTask<?> peek() {
       ForkJoinTask<?>[] a = array;
       int m;
       if (a == null || (m = a.length - 1) < 0) {
@@ -1011,7 +1017,7 @@ public class ForkJoinPool extends AbstractExecutorService {
      * Pops the given task only if it is at the current top.
      * (A shared version is available only via FJP.tryExternalUnpush)
      */
-    final boolean tryUnpush(final ForkJoinTask<?> t) {
+    boolean tryUnpush(final ForkJoinTask<?> t) {
       ForkJoinTask<?>[] a;
       int s;
       if ((a = array) != null && (s = top) != base &&
@@ -1025,7 +1031,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Removes and cancels all known tasks, ignoring any exceptions.
      */
-    final void cancelAll() {
+    void cancelAll() {
       ForkJoinTask<?> t;
       if ((t = currentJoin) != null) {
         currentJoin = null;
@@ -1045,7 +1051,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Polls and runs tasks until empty.
      */
-    final void pollAndExecAll() {
+    void pollAndExecAll() {
       for (ForkJoinTask<?> t; (t = poll()) != null;) {
         t.doExec();
       }
@@ -1056,8 +1062,10 @@ public class ForkJoinPool extends AbstractExecutorService {
      * pollAndExecAll. Otherwise implements a specialized pop loop
      * to exec until empty.
      */
-    final void execLocalTasks() {
-      int b = base, m, s;
+    void execLocalTasks() {
+      int b = base;
+      int m;
+      int s;
       ForkJoinTask<?>[] a = array;
       if (b - (s = top - 1) <= 0 && a != null &&
           (m = a.length - 1) >= 0) {
@@ -1082,7 +1090,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Executes the given task and any remaining local tasks.
      */
-    final void runTask(final ForkJoinTask<?> task) {
+    void runTask(final ForkJoinTask<?> task) {
       if (task != null) {
         scanState &= ~SCANNING; // mark as busy
         (currentSteal = task).doExec();
@@ -1102,7 +1110,7 @@ public class ForkJoinPool extends AbstractExecutorService {
     /**
      * Adds steal count to pool stealCounter if it exists, and resets.
      */
-    final void transferStealCount(final ForkJoinPool p) {
+    void transferStealCount(final ForkJoinPool p) {
       AtomicLong sc;
       if (p != null && (sc = p.stealCounter) != null) {
         int s = nsteals;
@@ -1117,9 +1125,12 @@ public class ForkJoinPool extends AbstractExecutorService {
      *
      * @return true if queue empty and task not known to be done
      */
-    final boolean tryRemoveAndExec(final ForkJoinTask<?> task) {
+    boolean tryRemoveAndExec(final ForkJoinTask<?> task) {
       ForkJoinTask<?>[] a;
-      int m, s, b, n;
+      int m;
+      int s;
+      int b;
+      int n;
       if ((a = array) != null && (m = a.length - 1) >= 0 &&
           task != null) {
         while ((n = (s = top) - (b = base)) > 0) {
@@ -1245,7 +1256,7 @@ public class ForkJoinPool extends AbstractExecutorService {
    * Returns the next sequence number. We don't expect this to
    * ever contend, so use simple builtin sync.
    */
-  private static final synchronized int nextPoolId() {
+  private static synchronized int nextPoolId() {
     return ++poolNumberSequence;
   }
 
@@ -1262,7 +1273,7 @@ public class ForkJoinPool extends AbstractExecutorService {
   private static final long IDLE_TIMEOUT = 2000L * 1000L * 1000L; // 2sec
 
   /**
-   * Tolerance for idle timeouts, to cope with timer undershoots
+   * Tolerance for idle timeouts, to cope with timer undershoots.
    */
   private static final long TIMEOUT_SLOP = 20L * 1000L * 1000L; // 20ms
 
@@ -1465,7 +1476,8 @@ public class ForkJoinPool extends AbstractExecutorService {
       long nc = ((AC_MASK & (c + AC_UNIT)) |
           (TC_MASK & (c + TC_UNIT)));
       if (ctl == c) {
-        int rs, stop; // check if terminating
+        int rs;
+        int stop; // check if terminating
         if ((stop = (rs = lockRunState()) & STOP) == 0) {
           add = U.compareAndSwapLong(this, CTL, c, nc);
         }
@@ -1549,9 +1561,10 @@ public class ForkJoinPool extends AbstractExecutorService {
       unlockRunState(rs, rs & ~RSLOCK);
     }
     long c; // decrement counts
-    do {} while (!U.compareAndSwapLong(this, CTL, c = ctl, ((AC_MASK & (c - AC_UNIT)) |
-        (TC_MASK & (c - TC_UNIT)) |
-        (SP_MASK & c))));
+    do { /* no-op */ } while (!U.compareAndSwapLong(this, CTL, c = ctl,
+        ((AC_MASK & (c - AC_UNIT)) |
+            (TC_MASK & (c - TC_UNIT)) |
+            (SP_MASK & c))));
     if (w != null) {
       w.qlock = -1; // ensure set
       w.transferStealCount(this);
@@ -1559,7 +1572,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
     for (;;) { // possibly replace
       WorkQueue[] ws;
-      int m, sp;
+      int m;
+      int sp;
       if (tryTerminate(false, false) || w == null || w.array == null ||
           (runState & STOP) != 0 || (ws = workQueues) == null ||
           (m = ws.length - 1) < 0) {
@@ -1593,7 +1607,8 @@ public class ForkJoinPool extends AbstractExecutorService {
    */
   final void signalWork(final WorkQueue[] ws, final WorkQueue q) {
     long c;
-    int sp, i;
+    int sp;
+    int i;
     WorkQueue v;
     Thread p;
     while ((c = ctl) < 0L) { // too few active
@@ -1639,7 +1654,8 @@ public class ForkJoinPool extends AbstractExecutorService {
    * @return true if successful
    */
   private boolean tryRelease(final long c, final WorkQueue v, final long inc) {
-    int sp = (int) c, vs = (sp + SS_SEQ) & ~INACTIVE;
+    int sp = (int) c;
+    int vs = (sp + SS_SEQ) & ~INACTIVE;
     Thread p;
     if (v != null && v.scanState == sp) { // v is at top of stack
       long nc = (UC_MASK & (c + inc)) | (SP_MASK & v.stackPred);
@@ -1700,7 +1716,8 @@ public class ForkJoinPool extends AbstractExecutorService {
         WorkQueue q;
         ForkJoinTask<?>[] a;
         ForkJoinTask<?> t;
-        int b, n;
+        int b;
+        int n;
         long c;
         if ((q = ws[k]) != null) {
           if ((n = (b = q.base) - q.top) < 0 &&
@@ -1784,8 +1801,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         if (r >= 0 && --spins == 0) { // randomize spins
           WorkQueue v;
           WorkQueue[] ws;
-          int s, j;
-          AtomicLong sc;
+          int j;
           if (pred != 0 && (ws = workQueues) != null &&
               (j = pred & SMASK) < ws.length &&
               (v = ws[j]) != null && // see if pred parking
@@ -1796,7 +1812,10 @@ public class ForkJoinPool extends AbstractExecutorService {
       } else if (w.qlock < 0) {
         return false;
       } else if (!Thread.interrupted()) {
-        long c, prevctl, parkTime, deadline;
+        long c;
+        long prevctl;
+        long parkTime;
+        long deadline;
         int ac = (int) ((c = ctl) >> AC_SHIFT) + (config & SMASK);
         if ((ac <= 0 && tryTerminate(false, false)) ||
             (runState & STOP) != 0) {
@@ -1930,7 +1949,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     boolean canBlock;
     WorkQueue[] ws;
     long c;
-    int m, pc, sp;
+    int m;
+    int pc;
+    int sp;
     if (w == null || w.qlock < 0 || // caller terminating
         (ws = workQueues) == null || (m = ws.length - 1) <= 0 ||
         (pc = config & SMASK) == 0) {
@@ -2199,7 +2220,8 @@ public class ForkJoinPool extends AbstractExecutorService {
         for (long oldSum = 0L;;) { // repeat until stable
           WorkQueue[] ws;
           WorkQueue w;
-          int m, b;
+          int m;
+          int b;
           long c;
           long checkSum = ctl;
           if ((int) (checkSum >> AC_SHIFT) + (config & SMASK) > 0) {
@@ -2276,7 +2298,8 @@ public class ForkJoinPool extends AbstractExecutorService {
         break;
       } else if (++pass > 1) { // try to dequeue
         long c;
-        int j = 0, sp; // bound attempts
+        int j = 0;
+        int sp; // bound attempts
         while (j++ <= m && (sp = (int) (c = ctl)) != 0) {
           tryRelease(c, ws[sp & m], AC_UNIT);
         }
@@ -2305,7 +2328,9 @@ public class ForkJoinPool extends AbstractExecutorService {
     for (;;) {
       WorkQueue[] ws;
       WorkQueue q;
-      int rs, m, k;
+      int rs;
+      int m;
+      int k;
       boolean move = false;
       if ((rs = runState) < 0) {
         tryTerminate(false, false); // help terminate
@@ -2393,7 +2418,9 @@ public class ForkJoinPool extends AbstractExecutorService {
         (q = ws[m & r & SQMASK]) != null && r != 0 && rs > 0 &&
         U.compareAndSwapInt(q, QLOCK, 0, 1)) {
       ForkJoinTask<?>[] a;
-      int am, n, s;
+      int am;
+      int n;
+      int s;
       if ((a = q.array) != null &&
           (am = a.length - 1) > (n = (s = q.top) - q.base)) {
         int j = ((am & s) << ASHIFT) + ABASE;
@@ -2431,7 +2458,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     WorkQueue[] ws;
     WorkQueue w;
     ForkJoinTask<?>[] a;
-    int m, s;
+    int m;
+    int s;
     int r = ThreadLocalRandom.getProbe();
     if ((ws = workQueues) != null && (m = ws.length - 1) >= 0 &&
         (w = ws[m & r & SQMASK]) != null &&
@@ -2999,7 +3027,8 @@ public class ForkJoinPool extends AbstractExecutorService {
   @Override
   public String toString() {
     // Use a single pass through workQueues to collect counts
-    long qt = 0L, qs = 0L;
+    long qt = 0L;
+    long qs = 0L;
     int rc = 0;
     AtomicLong sc = stealCounter;
     long st = (sc == null) ? 0L : sc.get();
@@ -3196,7 +3225,8 @@ public class ForkJoinPool extends AbstractExecutorService {
     }
     long startTime = System.nanoTime();
     WorkQueue[] ws;
-    int r = 0, m;
+    int r = 0;
+    int m;
     boolean found = true;
     while (!isQuiescent() && (ws = workQueues) != null &&
         (m = ws.length - 1) >= 0) {
@@ -3210,7 +3240,8 @@ public class ForkJoinPool extends AbstractExecutorService {
       for (int j = (m + 1) << 2; j >= 0; --j) {
         ForkJoinTask<?> t;
         WorkQueue q;
-        int b, k;
+        int b;
+        int k;
         if ((k = r++ & m) <= m && k >= 0 && (q = ws[k]) != null &&
             (b = q.base) - q.top < 0) {
           found = true;
@@ -3311,7 +3342,7 @@ public class ForkJoinPool extends AbstractExecutorService {
    * }
    * </pre>
    */
-  public static interface ManagedBlocker {
+  interface ManagedBlocker {
     /**
      * Possibly blocks the current thread, for example waiting for
      * a lock or condition.
@@ -3373,7 +3404,7 @@ public class ForkJoinPool extends AbstractExecutorService {
       while (!blocker.isReleasable()) {
         if (p.tryCompensate(w)) {
           try {
-            do {} while (!blocker.isReleasable() &&
+            do { /* no-op */ } while (!blocker.isReleasable() &&
                 !blocker.block());
           } finally {
             U.getAndAddLong(p, CTL, AC_UNIT);
@@ -3382,7 +3413,7 @@ public class ForkJoinPool extends AbstractExecutorService {
         }
       }
     } else {
-      do {} while (!blocker.isReleasable() &&
+      do { /* no-op */ } while (!blocker.isReleasable() &&
           !blocker.block());
     }
   }
