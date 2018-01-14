@@ -1,7 +1,5 @@
 package som.interpreter.actors;
 
-import java.util.concurrent.ForkJoinPool;
-
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -9,6 +7,7 @@ import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.nodes.WithContext;
+import jx.concurrent.ForkJoinPool;
 import som.VM;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;

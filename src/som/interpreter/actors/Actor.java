@@ -1,13 +1,13 @@
 package som.interpreter.actors;
 
 import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
-import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RejectedExecutionException;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
+import jx.concurrent.ForkJoinPool;
+import jx.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
+import jx.concurrent.ForkJoinWorkerThread;
 import som.Output;
 import som.VM;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
@@ -159,8 +159,7 @@ public class Actor implements Activity {
    * This is the main method to be used in this API.
    */
   @TruffleBoundary
-  public synchronized void send(final EventualMessage msg,
-      final ForkJoinPool actorPool) {
+  public synchronized void send(final EventualMessage msg, final ForkJoinPool actorPool) {
     doSend(msg, actorPool);
   }
 

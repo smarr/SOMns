@@ -1,11 +1,10 @@
 package som.interpreter.actors;
 
-import java.util.concurrent.ForkJoinPool;
-
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 
+import jx.concurrent.ForkJoinPool;
 import som.VM;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;

@@ -1,10 +1,10 @@
 package tools.concurrency;
 
 import java.util.ArrayList;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import jx.concurrent.ForkJoinPool;
+import jx.concurrent.ForkJoinWorkerThread;
 import som.vm.Activity;
 import som.vm.VmSettings;
 import tools.TraceData;

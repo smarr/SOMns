@@ -3,7 +3,6 @@ package som;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -24,6 +23,7 @@ import com.oracle.truffle.tools.Profiler;
 import com.oracle.truffle.tools.ProfilerInstrument;
 
 import coveralls.truffle.Coverage;
+import jx.concurrent.ForkJoinPool;
 import som.compiler.MixinDefinition;
 import som.compiler.SourcecodeCompiler;
 import som.interpreter.Method;

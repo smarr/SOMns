@@ -1,9 +1,5 @@
 package som.primitives.processes;
 
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
-import java.util.concurrent.ForkJoinWorkerThread;
-
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -11,6 +7,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 import bd.primitives.Primitive;
+import jx.concurrent.ForkJoinPool;
+import jx.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
+import jx.concurrent.ForkJoinWorkerThread;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;

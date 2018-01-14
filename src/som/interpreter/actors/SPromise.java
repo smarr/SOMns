@@ -1,13 +1,13 @@
 package som.interpreter.actors;
 
 import java.util.ArrayList;
-import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.istack.internal.NotNull;
 
+import jx.concurrent.ForkJoinPool;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.primitives.TimerPrim;
 import som.vm.VmSettings;

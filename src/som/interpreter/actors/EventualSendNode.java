@@ -1,7 +1,6 @@
 package som.interpreter.actors;
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.RootCallTarget;
@@ -15,6 +14,7 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
+import jx.concurrent.ForkJoinPool;
 import som.VM;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.EventualMessage.DirectMessage;

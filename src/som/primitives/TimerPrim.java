@@ -2,7 +2,6 @@ package som.primitives;
 
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -10,6 +9,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 import bd.primitives.Primitive;
+import jx.concurrent.ForkJoinPool;
 import som.VM;
 import som.interpreter.actors.ResolvePromiseNode;
 import som.interpreter.actors.SPromise.Resolution;

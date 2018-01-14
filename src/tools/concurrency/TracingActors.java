@@ -4,10 +4,10 @@ import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
-import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
+import jx.concurrent.ForkJoinPool;
 import som.Output;
 import som.VM;
 import som.interpreter.actors.Actor;

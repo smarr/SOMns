@@ -1,15 +1,15 @@
 package som.primitives.threading;
 
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
-import java.util.concurrent.ForkJoinWorkerThread;
-import java.util.concurrent.RecursiveTask;
-
 import com.oracle.truffle.api.RootCallTarget;
 
+import jx.concurrent.ForkJoinPool;
+import jx.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
+import jx.concurrent.ForkJoinTask;
+import jx.concurrent.ForkJoinWorkerThread;
 import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.Activity;
+import som.vm.NotYetImplementedException;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -21,7 +21,7 @@ import tools.debugger.entities.ActivityType;
 
 public final class TaskThreads {
 
-  public abstract static class SomTaskOrThread extends RecursiveTask<Object>
+  public abstract static class SomTaskOrThread extends ForkJoinTask<Object>
       implements Activity {
     private static final long serialVersionUID = 4823503369882151811L;
 
@@ -32,6 +32,11 @@ public final class TaskThreads {
       this.argArray = argArray;
       this.stopOnRoot = stopOnRoot;
       assert argArray[0] instanceof SBlock : "First argument of a block needs to be the block object";
+    }
+
+    @Override
+    public Object getRawResult() {
+      throw new NotYetImplementedException(); // in exec(), we'd need to store the result
     }
 
     public final SInvokable getMethod() {
@@ -48,7 +53,7 @@ public final class TaskThreads {
     }
 
     @Override
-    protected final Object compute() {
+    protected final boolean exec() {
       ObjectTransitionSafepoint.INSTANCE.register();
       try {
         RootCallTarget target = ((SBlock) argArray[0]).getMethod().getCallTarget();
@@ -62,7 +67,9 @@ public final class TaskThreads {
 
         ForkJoinThread thread = (ForkJoinThread) Thread.currentThread();
         thread.task = this;
-        return target.call(argArray);
+        Object result = target.call(argArray);
+        // result unused!
+        return true;
       } finally {
         ObjectTransitionSafepoint.INSTANCE.unregister();
       }

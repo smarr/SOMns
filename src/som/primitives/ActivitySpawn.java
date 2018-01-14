@@ -1,7 +1,5 @@
 package som.primitives;
 
-import java.util.concurrent.ForkJoinPool;
-
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
@@ -13,6 +11,7 @@ import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
+import jx.concurrent.ForkJoinPool;
 import som.VM;
 import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode.TernarySystemOperation;
