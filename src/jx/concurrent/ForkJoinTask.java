@@ -35,7 +35,6 @@
 
 package jx.concurrent;
 
-import java.io.Serializable;
 import java.lang.ref.ReferenceQueue;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Constructor;
@@ -210,7 +209,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @since 1.7
  * @author Doug Lea
  */
-public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
+public abstract class ForkJoinTask<V> implements Future<V> {
 
   /*
    * See the internal documentation of class ForkJoinPool for a
@@ -1081,8 +1080,6 @@ public abstract class ForkJoinTask<V> implements Future<V>, Serializable {
   }
 
   // Serialization support
-
-  private static final long serialVersionUID = -7721805057305804111L;
 
   /**
    * Saves this task to a stream (that is, serializes it).

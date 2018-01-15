@@ -86,8 +86,6 @@ public abstract class ChannelPrimitives {
   }
 
   public static class Process extends ForkJoinTask<Void> implements Activity {
-    private static final long serialVersionUID = 7939164731603463316L;
-
     private final SObjectWithClass obj;
 
     public Process(final SObjectWithClass obj) {
@@ -143,8 +141,6 @@ public abstract class ChannelPrimitives {
   }
 
   public static class TracingProcess extends Process {
-    private static final long serialVersionUID = 7128422681933561142L;
-
     protected final long processId;
     private int          nextTraceBufferId;
 

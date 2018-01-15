@@ -22,8 +22,6 @@ public final class TaskThreads {
 
   public abstract static class SomTaskOrThread extends ForkJoinTask<Object>
       implements Activity {
-    private static final long serialVersionUID = 4823503369882151811L;
-
     protected final Object[] argArray;
     protected final boolean  stopOnRoot;
 
@@ -84,8 +82,6 @@ public final class TaskThreads {
   }
 
   public static class SomForkJoinTask extends SomTaskOrThread {
-    private static final long serialVersionUID = -2145613708553535622L;
-
     public SomForkJoinTask(final Object[] argArray, final boolean stopOnRoot) {
       super(argArray, stopOnRoot);
     }
@@ -102,8 +98,6 @@ public final class TaskThreads {
   }
 
   public static class TracedForkJoinTask extends SomForkJoinTask {
-    private static final long serialVersionUID = -2763766745049695112L;
-
     private final long id;
     protected boolean  stopOnJoin;
 
@@ -138,8 +132,6 @@ public final class TaskThreads {
   }
 
   public static class SomThreadTask extends SomTaskOrThread {
-    private static final long serialVersionUID = -8700297704150992350L;
-
     private String name;
 
     public SomThreadTask(final Object[] argArray, final boolean stopOnRoot) {
@@ -163,9 +155,6 @@ public final class TaskThreads {
   }
 
   public static class TracedThreadTask extends SomThreadTask {
-
-    private static final long serialVersionUID = -7527703048413603761L;
-
     private final long id;
     protected boolean  stopOnJoin;
 

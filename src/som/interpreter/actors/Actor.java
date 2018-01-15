@@ -199,8 +199,6 @@ public class Actor implements Activity {
    * actor.
    */
   public static class ExecAllMessages extends ForkJoinTask<Void> {
-    private static final long serialVersionUID = 5763858976060265629L;
-
     protected final Actor actor;
     protected final VM    vm;
 

@@ -723,8 +723,6 @@ public class ForkJoinPool {
    * actually do anything beyond having a unique identity.
    */
   static final class EmptyTask extends ForkJoinTask<Void> {
-    private static final long serialVersionUID = -7721805057305804111L;
-
     EmptyTask() {
       status = ForkJoinTask.NORMAL;
     } // force done
