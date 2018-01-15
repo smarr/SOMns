@@ -40,8 +40,6 @@ import java.lang.reflect.Field;
 import java.security.Permissions;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -2345,7 +2343,7 @@ public class ForkJoinPool {
    *
    * @param task the task. Caller must ensure non-null.
    */
-  final void externalPush(final ForkJoinTask<?> task) {
+  private void externalPush(final ForkJoinTask<?> task) {
     WorkQueue[] ws;
     WorkQueue q;
     int m;
@@ -2797,26 +2795,22 @@ public class ForkJoinPool {
 
   /**
    * Possibly attempts to cancel and/or stop all tasks, and reject
-   * all subsequently submitted tasks. Invocation has no effect on
-   * execution state if this is the {@link #commonPool()}, and no
+   * all subsequently submitted tasks. Invocation has no
    * additional effect if already shut down. Otherwise, tasks that
    * are in the process of being submitted or executed concurrently
    * during the course of this method may or may not be
    * rejected. This method cancels both existing and unexecuted
    * tasks, in order to permit termination in the presence of task
-   * dependencies. So the method always returns an empty list
-   * (unlike the case for some other Executors).
+   * dependencies.
    *
-   * @return an empty list
    * @throws SecurityException if a security manager exists and
    *           the caller is not permitted to modify threads
    *           because it does not hold {@link
    *           java.lang.RuntimePermission}{@code ("modifyThread")}
    */
-  public List<Runnable> shutdownNow() {
+  public void shutdownNow() {
     checkPermission();
     tryTerminate(true, true);
-    return Collections.emptyList();
   }
 
   /**
