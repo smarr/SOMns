@@ -346,23 +346,6 @@ public abstract class ForkJoinTask<V> implements Future<V> {
         && (s = doExec()) < 0 ? s : wt.pool.awaitJoin(w, this, 0L);
   }
 
-  /**
-   * Implementation for invoke, quietlyInvoke.
-   *
-   * @return status upon completion
-   */
-  private int doInvoke() {
-    int s = doExec();
-    if (s < 0) {
-      return s;
-    }
-    Thread t = Thread.currentThread();
-    assert t instanceof ForkJoinWorkerThread;
-
-    ForkJoinWorkerThread wt;
-    return (wt = (ForkJoinWorkerThread) t).pool.awaitJoin(wt.workQueue, this, 0L);
-  }
-
   // Exception table support
 
   /**
