@@ -6,6 +6,7 @@ class Platform usingVmMirror: vmMirror = Value (
   public system  = (vmMirror load: 'System.ns' nextTo: self)  usingVmMirror: vmMirror.
   public mirrors = (vmMirror load: 'Mirrors.ns' nextTo: self) usingVmMirror: vmMirror.
   public actors      = (vmMirror load: 'Actors.ns'    nextTo: self) usingVmMirror: vmMirror usingKernel: kernel.
+  public derby       = (vmMirror load: 'Derby.ns'    nextTo: self) usingVmMirror: vmMirror usingPlatform: kernel.
   public transactions= (vmMirror load: 'Transactions.ns' nextTo: self) usingVmMirror: vmMirror usingKernel: kernel.
   public threading   = (vmMirror load: 'Threading.ns' nextTo: self) usingVmMirror: vmMirror usingKernel: kernel.
   public processes   = (vmMirror load: 'Processes.ns' nextTo: self) usingVmMirror: vmMirror.

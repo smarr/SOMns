@@ -1,0 +1,44 @@
+class Derby usingVmMirror: vmMirror usingPlatform: platform = Value (
+ |
+   private vmMirror  = vmMirror.
+ |
+  vmMirror derbyConnectionClass: DerbyConnection.
+  vmMirror derbyPrepStatementClass: PreparedStatement.
+)(
+  public class DerbyConnection = Value ()(
+
+      public close = ()
+
+      public prepareStatement: statement <String> ^ <PreparedStatement> = (
+        ^ vmMirror derby: self prepareStatement: statement.
+      )
+
+      public execute: statement <String> callback: aBlock = (
+        ^ vmMirror derby: self executeStatement: statement callback: aBlock.
+      )
+  ) : (
+    private new = ( self error: 'use Derby #getConnection: instead')
+  )
+
+  public class PreparedStatement = ()(
+    public execute: args <Array> callback: aBlock <Block> = (
+      ^ vmMirror derby: self executePreparedStatement: args callback: aBlock.
+    )
+  ) : (
+    new = ( self error: 'use DerbyConnection #prepareStatement: instead')
+  )
+
+  public class SQLException = Exception ()()
+
+  public start = (
+    vmMirror derbyStart: nil.
+  )
+
+  public stop = (
+    vmMirror derbyStop: nil.
+  )
+
+  public getConnection: dbName = (
+    ^ vmMirror derbyGetConnection: dbName.
+  )
+)

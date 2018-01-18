@@ -184,7 +184,8 @@ if java_bin == "java" and (not JAVA_MAJOR_VERSION or JAVA_MAJOR_VERSION < 9):
 CLASSPATH = (BASE_DIR + '/build/classes:'
            + BASE_DIR + '/libs/black-diamonds/build/classes:'
            + TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-debug.jar:'
-           + BASE_DIR + '/libs/somns-deps.jar')
+           + BASE_DIR + '/libs/somns-deps.jar'
+           + BASE_DIR + '/libs/derby.jar')
 
 BOOT_CLASSPATH = ('-Xbootclasspath/a:'
              + TRUFFLE_DIR + '/sdk/mxbuild/dists/graal-sdk.jar:'

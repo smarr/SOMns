@@ -47,6 +47,7 @@ import som.primitives.AsStringPrimFactory;
 import som.primitives.BlockPrimsFactory;
 import som.primitives.ClassPrimsFactory;
 import som.primitives.CosPrimFactory;
+import som.primitives.DerbyPrimsFactory;
 import som.primitives.DoublePrimsFactory;
 import som.primitives.EqualsEqualsPrimFactory;
 import som.primitives.EqualsPrimFactory;
@@ -177,6 +178,7 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     allFactories.addAll(ActorClassesFactory.getFactories());
     allFactories.addAll(BlockPrimsFactory.getFactories());
     allFactories.addAll(ClassPrimsFactory.getFactories());
+    allFactories.addAll(DerbyPrimsFactory.getFactories());
     allFactories.addAll(DoublePrimsFactory.getFactories());
     allFactories.addAll(ExceptionsPrimsFactory.getFactories());
     allFactories.addAll(FilePrimsFactory.getFactories());

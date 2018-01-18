@@ -69,6 +69,8 @@ public abstract class AtPrim extends BinaryBasicOperation {
 
   @Child protected AbstractMessageSendNode exception;
 
+  public abstract Object execute(VirtualFrame frame, SArray array, long index);
+
   @Override
   @SuppressWarnings("unchecked")
   public AtPrim initialize(final SourceSection sourceSection) {
