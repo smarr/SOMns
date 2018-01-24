@@ -451,6 +451,12 @@ public final class Lexer {
   protected char acceptChar() {
     char c = bufchar(state.incPtr());
     state.text.append(c);
+
+    if (Character.isHighSurrogate(c)) {
+      c = bufchar(state.incPtr());
+      state.text.append(c);
+      assert !Character.isHighSurrogate(c);
+    }
     return c;
   }
 

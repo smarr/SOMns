@@ -411,11 +411,24 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       ^ self substringFrom: argument to: argument
     )
 
+    (* Read the character at the given `idx` and return its Unicode code point. *)
+    public codepointAt: idx = (
+      ^ vmMirror string: self codepointAt: idx
+    )
+
     (* Printing *)
     public print = ( vmMirror printString: self )
   ) : (
-    public from: charArray = (
-      ^vmMirror stringFrom: charArray.
+    public fromArray: charArray = (
+      (* TODO: replace with a Smalltalk implementation to specifiy semantics
+               and leave the primitive in only for performance optimization *)
+      ^ vmMirror stringFromArray: charArray.
+    )
+
+    (* Create a `String` from a given Unicode code point, which is give as `Integer`.
+       Throws `ArgumentError` if `anInt` is not a valid code point. *)
+    public fromCodepoint: anInt = (
+      ^ vmMirror stringFromCodepoint: anInt.
     )
   )
 
@@ -427,18 +440,6 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     (* Printing *)
     public print    = ( '#' print. super print )
-  )
-
-  public class Character = String () () : (
-    
-    (*convert to char*)
-    public from: anInt = (
-      ^vmMirror charFrom: anInt.
-    )
-
-    public value: char = (
-      ^vmMirror charValue: char
-    )
   )
 
   public class ArrayReadMixin = ()(
@@ -912,8 +913,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
   )
 
   public class ArgumentError signalWith: argument = Exception (
-    |
-      public arg = argument. | 
+    | public arg = argument. |
     self signal.
   )(
     public asString = (

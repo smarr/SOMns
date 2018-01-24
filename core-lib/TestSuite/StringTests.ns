@@ -19,8 +19,10 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
 class StringTests usingPlatform: platform testFramework: minitest = (
-| private TestContext = minitest TestContext. |
-) (
+| private TestContext = minitest TestContext.
+  private String      = platform kernel String.
+  private ArgumentError = platform kernel ArgumentError.
+|)(
   public class StringTest = TestContext ()(
 
     public testEquality = (
@@ -211,6 +213,87 @@ class StringTests usingPlatform: platform testFramework: minitest = (
       self assert: "1" equals: '1'.
       self assert: " " equals: ' '.
       self assert: "{" equals: '{'.
+    )
+
+    public testStringFromArrayOfCharacters = (
+      | str |
+      str:: String fromArray: {'1'. '2'. '3'. '4'. '5'. '6'. '7'. '8'. 'a'. 'b'. 'C'}.
+      assert: '12345678abC' equals: str.
+    )
+
+    public testStringFromArrayOfStrings = (
+      | str |
+      str:: String fromArray: {'aaa'. 'bbb'. 'ccc'}.
+      assert: str equals: 'aaabbbccc'.
+    )
+
+    public testStringFromArrayWithOtherStuffShouldError = (
+      should: [
+        String fromArray: {'a'. 4. }
+      ] signal: ArgumentError.
+
+      should: [
+        String fromArray: {'a'. String }
+      ] signal: ArgumentError.
+
+      should: [
+        String fromArray: {'a'. 0.6 }
+      ] signal: ArgumentError.
+
+      should: [
+        String fromArray: {'a'. true }
+      ] signal: ArgumentError.
+
+      shouldnt: [
+        String fromArray: {'a'. #rrr }
+      ] signal: ArgumentError.
+    )
+
+    public testStringFromArrayWithSymbols = (
+      | str |
+      str:: String fromArray: { 'a'. 'b'. #c. #d. 'e'. 'f' }.
+      assert: str equals: 'abcdef'.
+    )
+
+    public testFromCodepoint = (
+      assert: 'A' equals: (String fromCodepoint: 65).
+      assert: '❤' equals: (String fromCodepoint: 16r2764).
+      assert: '囚' equals: (String fromCodepoint: 16r56DA).
+      assert: '𐄹' equals: (String fromCodepoint: 16r10139).
+      assert: '💩' equals: (String fromCodepoint: 16r1F4A9).
+      assert: '🧑' equals: (String fromCodepoint: 16r1F9D1).
+    )
+
+    public testFromCodepointArgumentException = (
+      shouldnt: [
+        String fromCodepoint: 16r10FFFF.
+      ] signal: ArgumentError.
+
+      should: [
+        String fromCodepoint: 16r10FFFF + 1.
+      ] signal: ArgumentError.
+
+      should: [
+        String fromCodepoint: 16r10FFFF * 100000.
+      ] signal: ArgumentError.
+    )
+
+    public testCodepointAt = (
+      assert:       65 equals: ('A' codepointAt: 1).
+      assert:  16r2764 equals: ('❤' codepointAt: 1).
+      assert:  16r56DA equals: ('囚' codepointAt: 1).
+      assert: 16r10139 equals: ('𐄹' codepointAt: 1).
+      assert: 16r1F4A9 equals: ('💩' codepointAt: 1).
+      assert: 16r1F9D1 equals: ('🧑' codepointAt: 1).
+    )
+
+    public testCharacterLiteralsAndUnicode = (
+      assert: "A" equals: 'A'.
+      assert: "❤" equals: '❤'.
+      assert: "囚" equals: '囚'.
+      assert: "𐄹" equals: '𐄹'.
+      assert: "💩" equals: '💩'.
+      assert: "🧑" equals: '🧑'.
     )
   ) : ( TEST_CONTEXT = () )
 )

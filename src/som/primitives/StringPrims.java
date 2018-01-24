@@ -1,11 +1,13 @@
 package som.primitives;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.BranchProfile;
 
 import bd.primitives.Primitive;
+import som.VM;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -155,68 +157,99 @@ public class StringPrims {
       }
       return String.valueOf(receiver.charAt(i));
     }
+
+    @Specialization
+    public final String doSSymbol(final SSymbol sym, final long idx) {
+      return doString(sym.getString(), idx);
+    }
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "stringFrom:")
-  public abstract static class StringFromPrim extends UnaryExpressionNode {
+  @Primitive(primitive = "stringFromArray:")
+  public abstract static class FromArrayPrim extends UnaryExpressionNode {
 
     @Specialization
     public final String doString(final SArray chars) {
-      Object[] storage = chars.getObjectStorage(chars.ObjectStorageType);
+      VM.thisMethodNeedsToBeOptimized(
+          "Method not yet optimal for compilation, should speculate or use branch profile in the loop");
+      Object[] storage = chars.getObjectStorage(SArray.ObjectStorageType);
       StringBuilder sb = new StringBuilder(storage.length);
       for (Object o : storage) {
-        if (!(o instanceof String) || ((String) o).length() != 1) {
-          KernelObj.signalException("signalArgumentError:", storage);
+        if (o instanceof String) {
+          sb.append((String) o);
+        } else if (o instanceof SSymbol) {
+          sb.append(((SSymbol) o).getString());
+        } else {
+          // TODO: there should be a Smalltalk asString message here, I think
+          KernelObj.signalException("signalArgumentError:",
+              "Array can't contain non-string objects, but has " + o.toString());
         }
-        sb.append((String) o);
       }
 
       return sb.toString();
     }
 
-    @Specialization
+    @Fallback
     public final void doGeneric(final Object obj) {
       KernelObj.signalException("signalInvalidArgument:", obj);
     }
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "charFrom:")
-  public abstract static class CharFromPrim extends UnaryExpressionNode {
+  @Primitive(primitive = "stringFromCodepoint:")
+  public abstract static class FromCodepointPrim extends UnaryExpressionNode {
 
-    public boolean inRange(final long val) {
-      return (0 < val && val < 128);
+    protected static final boolean isStrictlyBmpCodePoint(final long val) {
+      // SM: Based on Character.isBmpCodePoint(val)
+      return val >>> 16 == 0;
     }
 
-    @Specialization(guards = "inRange(val)")
+    @Specialization(guards = "isStrictlyBmpCodePoint(val)")
     public final String doString(final long val) {
       return new String(new char[] {(char) val});
     }
 
-    @Specialization
-    public final void doGeneric(final long val) {
-      KernelObj.signalException("signalArgumentError:", "" + val);
+    protected static final boolean isValidCodePointButNotBmp(final long val) {
+      // SM: based on Character.isValidCodePoint(val);
+      long plane = val >>> 16;
+      if (plane == 0) {
+        // Only the case for BMP, which is separate specialization
+        return false;
+      }
+      return plane < ((Character.MAX_CODE_POINT + 1) >>> 16);
+    }
+
+    private static void toSurrogates(final int codePoint, final char[] dst, final int index) {
+      // SM: Copy from Character.toSurrogates(.)
+      // We write elements "backwards" to guarantee all-or-nothing
+      dst[index + 1] = Character.lowSurrogate(codePoint);
+      dst[index] = Character.highSurrogate(codePoint);
+    }
+
+    @Specialization(guards = "isValidCodePointButNotBmp(val)")
+    public final String doUnicodeChar(final long val) {
+      char[] result = new char[2];
+      toSurrogates((int) val, result, 0);
+      return new String(result);
+    }
+
+    @Fallback
+    public final void doGeneric(final Object val) {
+      KernelObj.signalException("signalArgumentError:",
+          "The value " + val + " is not a valid Unicode code point.");
     }
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "charValue:")
-  public abstract static class CharValuePrim extends UnaryExpressionNode {
+  @Primitive(primitive = "string:codepointAt:")
+  public abstract static class CodepointAtPrim extends BinaryExpressionNode {
 
     @Specialization
-    public final long doString(final String c) {
-      if (c == null || c.length() != 1) {
-        KernelObj.signalException("signalArgumentError:", c);
-        return -1;
-      }
-
-      return c.charAt(0);
-    }
-
-    @Specialization
-    public final void doGeneric(final Object obj) {
-      KernelObj.signalException("signalArgumentError:", obj);
+    public final long doString(final String str, final long idx) {
+      VM.thisMethodNeedsToBeOptimized(
+          "CodepointAtPrim: we probably want to specialize here to ideally only have a char read and check");
+      int i = (int) idx - 1; // go from 1-based to 0-based
+      return str.codePointAt(i);
     }
   }
 }
