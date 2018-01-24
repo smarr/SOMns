@@ -1,6 +1,7 @@
 package som.primitives.threading;
 
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 import jx.concurrent.ForkJoinPool;
 import jx.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
@@ -206,5 +207,19 @@ public final class TaskThreads {
     public Activity getActivity() {
       return task;
     }
+  }
+
+  /**
+   * Check whether the current thread is a fork/join thread.
+   *
+   * @param frame, unused, just to avoid turning this into an assertion
+   * @return true, if on f/j thread, false otherwise
+   */
+  public static boolean currentThreadIsForkJoinThread(final VirtualFrame frame) {
+    return Thread.currentThread().getClass() == ForkJoinThread.class;
+  }
+
+  public static ForkJoinThread currentThread() {
+    return (ForkJoinThread) Thread.currentThread();
   }
 }

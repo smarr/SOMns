@@ -7,6 +7,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -21,6 +22,7 @@ import som.primitives.arrays.ToArgumentsArrayNodeFactory;
 import som.primitives.processes.ChannelPrimitives;
 import som.primitives.processes.ChannelPrimitives.Process;
 import som.primitives.processes.ChannelPrimitives.TracingProcess;
+import som.primitives.threading.TaskThreads;
 import som.primitives.threading.TaskThreads.SomForkJoinTask;
 import som.primitives.threading.TaskThreads.SomThreadTask;
 import som.primitives.threading.TaskThreads.TracedForkJoinTask;
@@ -90,7 +92,8 @@ public abstract class ActivitySpawn {
   }
 
   @GenerateNodeFactory
-  @ImportStatic({ThreadingModule.class, ChannelPrimitives.class, ActivitySpawn.class})
+  @ImportStatic({ThreadingModule.class, ChannelPrimitives.class, ActivitySpawn.class,
+      TaskThreads.class})
   @Primitive(primitive = "threading:threadSpawn:")
   @Primitive(primitive = "threading:taskSpawn:")
   @Primitive(selector = "spawn:")
@@ -113,12 +116,41 @@ public abstract class ActivitySpawn {
       return this;
     }
 
-    @Specialization(guards = "clazz == TaskClass")
-    @TruffleBoundary
-    public final SomForkJoinTask spawnTask(final SClass clazz, final SBlock block) {
+    /**
+     * Create fork/join task and fork it.
+     * We are currently on a f/j thread.
+     *
+     * TODO: should we try to just execute the task for its result here? Perhaps?
+     * We are likely executing a larger task currently, which might need to join on this one.
+     * But, we also don't want to reduce parallelism too much.
+     */
+    @Specialization(guards = {"clazz == TaskClass", "currentThreadIsForkJoinThread(frame)"})
+    public final SomForkJoinTask spawnTaskOnFJThread(final VirtualFrame frame,
+        final SClass clazz, final SBlock block) {
       SomForkJoinTask task = createTask(new Object[] {block},
           onExec.executeShouldHalt(), block, sourceSection);
-      forkJoinPool.execute(task);
+
+      // TODO: handle the different cases:
+      // - spawn from some random thread
+      // - spawn from a SOM f/j thread
+      // - exec directly when system seems busy
+
+      task.fork(TaskThreads.currentThread());
+      return task;
+    }
+
+    @Specialization(guards = {"clazz == TaskClass", "!currentThreadIsForkJoinThread(frame)"})
+    public final SomForkJoinTask spawnTaskOnNonFJThread(final VirtualFrame frame,
+        final SClass clazz, final SBlock block) {
+      SomForkJoinTask task = createTask(new Object[] {block},
+          onExec.executeShouldHalt(), block, sourceSection);
+
+      // TODO: handle the different cases:
+      // - spawn from some random thread
+      // - spawn from a SOM f/j thread
+      // - exec directly when system seems busy
+
+      forkJoinPool.executeExternal(task);
       return task;
     }
 
@@ -127,7 +159,7 @@ public abstract class ActivitySpawn {
     public final SomThreadTask spawnThread(final SClass clazz, final SBlock block) {
       SomThreadTask thread = createThread(new Object[] {block},
           onExec.executeShouldHalt(), block, sourceSection);
-      threadPool.execute(thread);
+      threadPool.executeExternal(thread);
       return thread;
     }
 
@@ -143,7 +175,7 @@ public abstract class ActivitySpawn {
       SInvokable disp = procCls.getMixinDefinition().getFactoryMethods().get(sel);
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(new Object[] {procCls});
 
-      processesPool.execute(createProcess(obj, sourceSection,
+      processesPool.executeExternal(createProcess(obj, sourceSection,
           onExec.executeShouldHalt()));
       return Nil.nilObject;
     }
@@ -194,7 +226,7 @@ public abstract class ActivitySpawn {
         final SArray somArgArr, final Object[] argArr) {
       SomForkJoinTask task = createTask(argArr,
           onExec.executeShouldHalt(), block, sourceSection);
-      forkJoinPool.execute(task);
+      forkJoinPool.executeExternal(task);
       return task;
     }
 
@@ -204,7 +236,7 @@ public abstract class ActivitySpawn {
         final SArray somArgArr, final Object[] argArr) {
       SomThreadTask thread = createThread(argArr,
           onExec.executeShouldHalt(), block, sourceSection);
-      threadPool.execute(thread);
+      threadPool.executeExternal(thread);
       return thread;
     }
 
@@ -221,7 +253,7 @@ public abstract class ActivitySpawn {
       SInvokable disp = procCls.getMixinDefinition().getFactoryMethods().get(sel);
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(argArr);
 
-      processesPool.execute(createProcess(obj, sourceSection,
+      processesPool.executeExternal(createProcess(obj, sourceSection,
           onExec.executeShouldHalt()));
       return Nil.nilObject;
     }

@@ -51,6 +51,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+
 
 /**
  * Abstract base class for tasks that run within a {@link ForkJoinPool}.
@@ -651,6 +653,11 @@ public abstract class ForkJoinTask<V> implements Future<V> {
       throw new RuntimeException("Can't be called on non-f/j threads");
     }
     return this;
+  }
+
+  @TruffleBoundary
+  public final void fork(final ForkJoinWorkerThread t) {
+    t.workQueue.push(this);
   }
 
   /**

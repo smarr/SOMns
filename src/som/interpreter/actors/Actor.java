@@ -316,7 +316,7 @@ public class Actor implements Activity {
   protected void execute(final ForkJoinPool actorPool) {
     try {
       executor.reinitialize();
-      actorPool.execute(executor);
+      actorPool.executeExternal(executor);
     } catch (RejectedExecutionException e) {
       throw new ThreadDeath();
     }

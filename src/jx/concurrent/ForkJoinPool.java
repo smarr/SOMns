@@ -45,6 +45,8 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+
 import sun.misc.Unsafe;
 
 
@@ -112,7 +114,7 @@ import sun.misc.Unsafe;
  * </tr>
  * <tr>
  * <td> <b>Arrange async execution</b></td>
- * <td> {@link #execute(ForkJoinTask)}</td>
+ * <td> {@link #executeExternal(ForkJoinTask)}</td>
  * <td> {@link ForkJoinTask#fork}</td>
  * </tr>
  * <tr>
@@ -2482,7 +2484,8 @@ public class ForkJoinPool {
    * @throws RejectedExecutionException if the task cannot be
    *           scheduled for execution
    */
-  public void execute(final ForkJoinTask<?> task) {
+  @TruffleBoundary
+  public void executeExternal(final ForkJoinTask<?> task) {
     assert task != null;
     externalPush(task);
   }

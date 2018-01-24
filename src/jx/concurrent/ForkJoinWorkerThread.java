@@ -90,6 +90,11 @@ public abstract class ForkJoinWorkerThread extends Thread {
     return pool;
   }
 
+  public boolean hasTasksToBeStolen() {
+    return workQueue.queueSize() > 1; // > 1 to make sure there are at least 2 tasks that could
+                                      // be stolen, just seems like a good idea at the moment
+  }
+
   /**
    * Returns the unique index number of this thread in its pool.
    * The returned value ranges from zero to the maximum number of
