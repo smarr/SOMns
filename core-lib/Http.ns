@@ -22,53 +22,56 @@ THE SOFTWARE.
 class Http usingVmMirror: vmMirror usingPlatform: platform = Value (
   | private vmMirror = vmMirror. 
     private files = platform files.
+    private Dictionary = platform collections Dictionary.
+    private actors = platform actors.
   |
   vmMirror httpServerClass: Server.
   vmMirror httpResponseClass: Response.
   vmMirror httpRequestClass: Request.
 ) (
 
-  public class Server = (
+  public class Server = ()():(
+    public create: ip <String> port: port <int> = (
+      | server |
+      server:: (actors createActorFromValue: ServerActor) <-: new: ip port: port.
+      ^ server.
+    )
+  )
 
+  public class ServerActor new: ip port: port = (
+    | server |
+    server:: vmMirror httpCreateServer: ip port: port.
   )(
     (*use exchange attributes to store parsed stuff*)
     (*application/json, text/html and 'application/x-www-form-urlencoded'*)
     public route: path <String> with: method <SSymbol> to: aBlock <Block[Request, Response]> = (
-      vmMirror httpRegisterHandle: self method: method path: path handler: aBlock.
+      ^ vmMirror httpRegisterHandle: server method: method path: path handler: aBlock.
     )
 
     (*statically provide files, file name = path*)
     public static: path = (
-      ^ vmMirror httpRegisterStatic: self path: path content: ((files FilePath currentDirectory) + path) .
+      ^ vmMirror httpRegisterStatic: server path: path content: (((files FilePath currentDirectory) /  path) pattern) .
     )
 
     (* filename != path *)
     public static: path with: content = (
-      ^ vmMirror httpRegisterStatic: self path: path content: content.
+      ^ vmMirror httpRegisterStatic: server path: path content: content.
     )
 
     public start = (
-      ^ vmMirror httpStartServer: self.
+      ^ vmMirror httpStartServer: server.
     )
 
     public stop = (
-      ^ self stop: 0.
+      ^ server stop: 0.
     )
 
     public stop: delay <int> = (
-      ^ vmMirror httpStopServer: self delay: delay.
+      ^ vmMirror httpStopServer: server delay: delay.
     )
-  ) : (
-    public create: ip <String> port: port <int> = (
-      ^ vmMirror httpCreateServer: ip port: port.
-    )
-
-    public new = ( self error: 'Please use create:port: instead of new!\n' )
   )
 
-  public class Request = (
-    | |
-  )(
+  public class Request = ()(
     (*modify request attributes*)
     public at: key <String> ^ <Object> = (
       ^ vmMirror httpRequest: self getAttribute: key.
@@ -83,14 +86,40 @@ class Http usingVmMirror: vmMirror usingPlatform: platform = Value (
       ^ vmMirror httpRequest: self getHeader: field.
     )
 
+    public body = (
+      ^ vmMirror httpRequestGetBody: self
+    )
+
+    public getQuery = (
+      self contentType println.
+      ^ parseUrlBody: (vmMirror httpRequestGetQuery: self)
+    )
+
+    parseUrlBody: body = (
+    | result pairs comp|
+      body println.
+      result:: Dictionary new.
+
+      pairs:: (body split: '&').
+      
+      pairs do: [ :pair |
+        comp:: (pair split: '=').
+        result at: (comp at: 1) put: (comp at: 2).
+      ].
+      ^ result.
+    )
+
     public params = (
 
     )
 
+    public contentType = (
+      ^ (self get: 'Content-Type') at: 1
+    )
+
     (*return the value of a cookie*)
     public cookie: name <Symbol> = (
-      (*TODO*)
-      ^ get: 'Cookie'.
+      ^ vmMirror httpRequest: self getCookie: (name asString).
     )
   ) : (
     private new = ( self error: 'Should not happen' )
