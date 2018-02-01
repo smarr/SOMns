@@ -878,12 +878,14 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     )
   )
 
+  (* An Exception represents a rare corner case that an application might want
+     to handle. *)
   public class Exception = ()(
     (* Exception does not have any state on purpose.
        It is good practice to have distinct exceptions for separate issues.
        Thus, subclassing is encouraged. *)
     public signal = ( vmMirror signalException: self )
-  ):(
+  ) : (
     public signal = (
       ^ self new signal
     )
