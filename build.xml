@@ -237,7 +237,6 @@
     <target name="som-tests" depends="compile">
       <!-- delete old coverage data, this should be the first task generating coverage data -->
       <delete file="all.gcov" />
-      <delete file="jacoco.exec" />
 
       <exec executable="./som" failonerror="true">
         <arg value="--coverage" />
