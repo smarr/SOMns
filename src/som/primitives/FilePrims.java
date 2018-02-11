@@ -134,8 +134,7 @@ public final class FilePrims {
 
     @Specialization
     public final Object fileOpen(final SFileDescriptor file, final SBlock handler) {
-      file.openFile(handler, dispatchHandler);
-      return file;
+      return file.openFile(handler, dispatchHandler);
     }
   }
 

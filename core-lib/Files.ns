@@ -83,8 +83,8 @@ DAMAGE.>> *)
       ^ vmMirror fileIsClosed: self.
     )
 
-    public openIfFail: errf <[:IOException]> = (
-      vmMirror file: self openIfFail: errf.
+    public openIfFail: errBlock <[:Symbol]> = (
+      ^ vmMirror file: self openIfFail: errBlock.
     )
   ) : (
     (* Create a new instance, but don't open yet *)
@@ -135,7 +135,6 @@ DAMAGE.>> *)
       ^self elements last
     )
 
-
     elementsDo: blk <[:FilePattern]> = (
       | elems |
       (self pattern beginsWith: '/') ifTrue: [
@@ -172,7 +171,6 @@ DAMAGE.>> *)
         self error: ('Assertion Failed: ' + msg)
       ]
     )
-
 
     public isAbsolute ^<Boolean> = (
       ^ vmMirror pathIsAbsolute: self pattern.
@@ -516,11 +514,10 @@ DAMAGE.>> *)
       ^ self pattern
     )
 
-    public open: mode <Symbol> ifFail: err <[:IOException | X def]>  ^ <FileDescriptor | X> = (
+    public open: mode <Symbol> ifFail: errBlock <[:Symbol | X def]> ^ <FileDescriptor | X> = (
       (* Modes: #read, #write, #readWrite *)
       ^ (FileDescriptor for: self pattern mode: mode)
-        openIfFail: [:e <IOException> |
-          ^ err value: e ]
+          openIfFail: errBlock
     )
 
     public pathsDo: blk <[:FilePath]> = (

@@ -8,30 +8,28 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
   private Array       = platform kernel Array.
   private ObjectMirror = platform mirrors ObjectMirror.
   private errorTestMessage = 'test exception 1'.
-  private Files = platform files.
-  private fdes = Files FileDescriptor.
-  private fpath = Files FilePath.
-  private fpat = Files FilePattern.
-|
-)(
+
+  private FilePath    = platform files FilePath.
+  private FilePattern = platform files FilePattern.
+  private FileNotFoundException = platform files FileNotFoundException.
+|)(
   public class BasicFileTests = TestContext (
-    | path |
-    path:: (fpath currentDirectory / 'tests' / 'files') pattern.
+  | private path = (FilePath currentDirectory / 'tests' / 'files') pattern. |
   )(
     public testUtils = (
       | a b |
-      a:: fpath for: path + '/data/A'.
+      a:: FilePath for: path + '/data/A'.
       assert: a exists.
       assert: a size equals: 3656.
       assert: a lastModified <> nil.
-      b:: fpath for: a containingDirectory pattern.
+      b:: FilePath for: a containingDirectory pattern.
       assert: b entries size equals: 3.
     )
 
     public testCreateDeleteFile = (
       | f |
-      f:: fpath for: path + '/temp/A'.
-      (fpath for: (f containingDirectory pattern)) createDirectoryIfFail: [:r| assert: false ].
+      f:: FilePath for: path + '/temp/A'.
+      (FilePath for: (f containingDirectory pattern)) createDirectoryIfFail: [:r| assert: false ].
       deny: f exists.
       f open: #readwrite ifFail: [:r| assert: false message: 'should not happen' ].
       assert: f exists.
@@ -41,7 +39,7 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
 
     public testCreateDeleteDirectory = (
       | f |
-      f:: fpath for: path + '/temp/A'.
+      f:: FilePath for: path + '/temp/A'.
       deny: f exists.
       f createDirectoryIfFail: [:r | assert: false ].
       assert: f exists.
@@ -51,7 +49,7 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
 
     public testReadWrite = (
       | f d |
-      f:: fpath for: path + '/tmp'.
+      f:: FilePath for: path + '/tmp'.
       deny: f exists.
       d:: f open: #readwrite ifFail: [:r | assert: false ].
 
@@ -78,7 +76,7 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
     public testPaths = (
       | f cnt |
       cnt:: 0.
-      f:: fpat for: path + '/data/*'.
+      f:: FilePattern for: path + '/data/*'.
       f pathsDo: [ :p |
         assert: p exists.
         cnt:: cnt + 1.
@@ -88,11 +86,11 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
 
     public testMove =(
       | f g |
-      f:: fpath for: path + '/tmp'.
+      f:: FilePath for: path + '/tmp'.
       f open: #readwrite ifFail: [:r|].
 
       f copyNamed: 'tmp2'.
-      g:: fpath for: path + '/tmp2'.
+      g:: FilePath for: path + '/tmp2'.
       assert: g exists.
       assert: f exists.
       assert: g size equals: f size.
@@ -105,6 +103,23 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
       deny: f exists.
 
       g deleteFileIfFail: [:r|].
+    )
+
+    public testFileNotFound = (
+      | f d |
+      f:: FilePath for: path + '/nonExisting'.
+      deny: f exists description: 'The file ' + f name asString + ' should not exist.'.
+      d:: f open: #read ifFail: [:err |
+        assert: err equals: #FileNotFound.
+        #FileNotFoundSuccessfullyRetrieved ].
+
+      assert: d equals: #FileNotFoundSuccessfullyRetrieved.
+
+      d:: f open: #read ifFail: [:err |
+        assert: err equals: #FileNotFound.
+        ^ self ].
+
+      assert: false description: 'Should not reach here because of return above.'
     )
   ) : (
     TEST_CONTEXT = ()

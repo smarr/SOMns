@@ -9,12 +9,16 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.primitives.PathPrims;
+import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray.SMutableArray;
 
 
 public class SFileDescriptor extends SObjectWithClass {
   @CompilationFinal public static SClass fileDescriptorClass;
+
+  private static final SSymbol INVALID_ACCESS_MODE = Symbols.symbolFor("InvalidAccessMode");
+  private static final SSymbol FILE_NOT_FOUND      = Symbols.symbolFor("FileNotFound");
 
   public static final int BUFFER_SIZE = 32 * 1024;
 
@@ -36,23 +40,24 @@ public class SFileDescriptor extends SObjectWithClass {
     f = new File(uri);
   }
 
-  public void openFile(final SBlock fail, final BlockDispatchNode dispatchHandler) {
+  public Object openFile(final SBlock fail, final BlockDispatchNode dispatchHandler) {
     long[] storage = new long[bufferSize];
     buffer = new SMutableArray(storage, Classes.arrayClass);
 
     try {
       this.access = AccessModes.valueOf(mode.getString().toUpperCase());
     } catch (Exception e) {
-      dispatchHandler.executeDispatch(new Object[] {fail, "invalid access mode: " + mode});
+      return dispatchHandler.executeDispatch(new Object[] {fail, INVALID_ACCESS_MODE});
     }
 
     try {
       raf = new RandomAccessFile(f, access.getMode());
     } catch (FileNotFoundException e) {
-      dispatchHandler.executeDispatch(new Object[] {fail, e.toString()});
+      return dispatchHandler.executeDispatch(new Object[] {fail, FILE_NOT_FOUND});
     }
 
     open = true;
+    return this;
   }
 
   public void closeFile() {
