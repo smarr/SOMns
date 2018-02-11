@@ -520,6 +520,17 @@ DAMAGE.>> *)
           openIfFail: errBlock
     )
 
+    public open: mode <Symbol> ^ <FileDescriptor | X> = (
+      ^ open: mode ifFail: [:s |
+          s = #FileNotFound ifTrue: [
+            FileNotFoundException signalFor: name with: 'File not found' ].
+
+          s = #InvalidAccessMode ifTrue: [
+            IOException signalWith: 'Invalid access mode (' + mode + ') for file ' + name asString ].
+
+          IOException signalWith: 'Failed to open file ' + name asString ]
+    )
+
     public pathsDo: blk <[:FilePath]> = (
       self exists ifTrue: [  blk value: self ]
     )

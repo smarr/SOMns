@@ -121,6 +121,13 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
 
       assert: false description: 'Should not reach here because of return above.'
     )
+
+    public testFileNotFoundException = (
+      | f |
+      f:: FilePath for: path + '/nonExisting'.
+      deny: f exists description: 'The file ' + f name asString + ' should not exist.'.
+      should: [ d:: f open: #read ] signal: FileNotFoundException.
+    )
   ) : (
     TEST_CONTEXT = ()
   )
