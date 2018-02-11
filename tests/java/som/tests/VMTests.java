@@ -58,10 +58,15 @@ public class VMTests {
 
   @Test
   public void testProfileFlag() {
-    VmOptions opts = new VmOptions(
-        new String[] {"--profile"});
-    assertEquals(opts.platformFile, VmOptions.STANDARD_PLATFORM_FILE);
-    assertTrue(opts.profilingEnabled);
-    assertArrayEquals(opts.args, new String[0]);
+    try {
+      VmOptions opts = new VmOptions(
+          new String[] {"--profile"});
+      assertEquals(opts.platformFile, VmOptions.STANDARD_PLATFORM_FILE);
+      assertTrue(opts.profilingEnabled);
+      assertArrayEquals(opts.args, new String[0]);
+    } catch (IllegalStateException e) {
+      assertTrue("If it fails, expect that it complains that instrumentation is not enabled",
+          e.getMessage().contains(VmSettings.INSTRUMENTATION_PROP));
+    }
   }
 }
