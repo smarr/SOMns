@@ -162,6 +162,12 @@
             classpath="${lib.dir}/jacoco/lib/jacocoant.jar" />
     </target>
 
+    <target name="codacy-coverage-lib" description="Report Coverage to Codacy">
+        <get src="https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/2.0.2/codacy-coverage-reporter-2.0.2-assembly.jar"
+            usetimestamp="true"
+            dest="${lib.dir}/codacy-coverage-reporter.jar" />
+    </target>
+
     <target name="compile-som" description="Compile SOMns">
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${classes.dir}" />
@@ -270,7 +276,39 @@
     <target name="core-tests" depends="unit-tests,som-tests,dynamic-metrics-tests,superinstructions-tests">
     </target>
 
-    <target name="coverage">
+    <target name="send-java-coverage" depends="jacoco-lib,codacy-coverage-lib">
+      <jacoco:report>
+        <executiondata>
+          <file file="jacoco.exec"/>
+        </executiondata>
+
+        <structure name="SOMns coverage">
+          <classfiles>
+            <fileset dir="${classes.dir}"/>
+            <fileset dir="${bd.dir}/build/classes"/>
+          </classfiles>
+          <sourcefiles encoding="UTF-8">
+            <fileset dir="src"/>
+            <fileset dir="${bd.dir}/src"/>
+          </sourcefiles>
+        </structure>
+
+        <!-- <html destdir="report"/> -->
+        <xml destfile="jacoco.xml"/>
+      </jacoco:report>
+
+      <java classname="com.codacy.CodacyCoverageReporter">
+        <classpath>
+          <pathelement location="${lib.dir}/codacy-coverage-reporter.jar" />
+        </classpath>
+        <arg value="-l" />
+        <arg value="Java" />
+        <arg value="-r" />
+        <arg value="jacoco.xml" />
+      </java>
+    </target>
+
+    <target name="send-somns-coverage">
         <!-- submit coverage data -->
         <java classname="coveralls.Report" fork="true" failonerror="true">
             <classpath refid="project.classpath" />
@@ -278,6 +316,8 @@
             <arg value="all.gcov" />
         </java>
     </target>
+
+    <target name="coverage" depends="send-java-coverage,send-somns-coverage" />
 
     <target name="tests" depends="core-tests,replay-tests,coverage">
     </target>
