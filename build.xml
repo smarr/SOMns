@@ -1,4 +1,5 @@
-<project name="som" basedir="." default="compile-all">
+<project name="som" basedir="." default="compile-all"
+    xmlns:jacoco="antlib:org.jacoco.ant">
 
     <property name="src.dir"     value="src"/>
     <property name="src_gen.dir" value="src_gen"/>
@@ -11,15 +12,16 @@
     <property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
     <property name="somns-deps.version" value="0.3.3" />
     <property name="checkstyle.version" value="7.6.1" />
-    
+    <property name="jacoco.version"     value="0.8.0" />
+
     <!-- <property name="lib.url" value="https://dl.bintray.com/smarr/SOM" /> -->
     <property name="lib.url" value="http://stefan-marr.de/dev" />
-    
+
     <property name="mx.cmd" value="../../mx/mx" />
 
     <property name="build.dir"   value="build"/>
     <property name="classes.dir" value="${build.dir}/classes"/>
-    
+
     <property environment="env"/>
 
     <path id="project.classpath">
@@ -40,18 +42,18 @@
         <delete dir="${build.dir}"/>
         <delete dir="${src_gen.dir}"/>
     </target>
-    
+
     <target name="clean-truffle" depends="check-truffle-available" if="truffle.present">
         <exec executable="${mx.cmd}" dir="${truffle.dir}">
             <arg value="clean"/>
         </exec>
     </target>
-    
+
     <target name="clobber" description="Do clean, and also clean truffle build" depends="clean,clean-truffle">
         <delete dir="${kompos.dir}/out"/>
         <delete dir="${kompos.dir}/node_modules"/>
     </target>
-    
+
     <target name="check-truffle-available">
         <available file="${lib.dir}/truffle/.git" property="truffle.present"/>
     </target>
@@ -67,7 +69,7 @@
             <arg value="--no-native"/>
         </exec>
     </target>
-    
+
     <target name="bd-libs"> <!-- implicit dependency on truffle-libs -->
         <ant dir="${bd.dir}" useNativeBasedir="true" target="libs-junit" inheritAll="false"/>
         <ant dir="${bd.dir}" useNativeBasedir="true" target="compile-nodeps" inheritAll="false">
@@ -121,7 +123,7 @@
             <arg line="${javafiles}"/>
         </exec>
     </target>
-    
+
     <target name="eclipseformat-check" depends="eclipseformat">
         <exec executable="git" dir="${basedir}">
             <arg value="status" />
@@ -141,13 +143,29 @@
             usetimestamp="true"
             dest="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
     </target>
-    
+
     <target name="checkstyle" depends="checkstyle-jar" description="Check Code with Checkstyle">
         <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties" classpath="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
         <checkstyle config=".checkstyle_checks.xml">
           <fileset dir="src" includes="**/*.java"/>
           <formatter type="plain"/>
         </checkstyle>
+    </target>
+
+    <target name="jacoco-lib" description="Get JaCoCo dependency">
+        <get src="http://search.maven.org/remotecontent?filepath=org/jacoco/jacoco/${jacoco.version}/jacoco-${jacoco.version}.zip"
+            usetimestamp="true"
+            dest="${lib.dir}/jacoco-${jacoco.version}.zip" />
+        <unzip src="${lib.dir}/jacoco-${jacoco.version}.zip" dest="${lib.dir}/jacoco"/>
+        <taskdef uri="antlib:org.jacoco.ant"
+            resource="org/jacoco/ant/antlib.xml"
+            classpath="${lib.dir}/jacoco/lib/jacocoant.jar" />
+    </target>
+
+    <target name="codacy-coverage-lib" description="Report Coverage to Codacy">
+        <get src="https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/2.0.2/codacy-coverage-reporter-2.0.2-assembly.jar"
+            usetimestamp="true"
+            dest="${lib.dir}/codacy-coverage-reporter.jar" />
     </target>
 
     <target name="compile-som" description="Compile SOMns">
@@ -169,7 +187,7 @@
           <classpath refid="project.classpath" />
         </javac>
     </target>
-    
+
     <target name="compile" depends="libs,compile-som" description="Compile SOMns and dependencies">
     </target>
 
@@ -179,17 +197,18 @@
             <arg value="install"/>
         </exec>
     </target>
-    
+
     <target name="compile-all" depends="compile,kompos" description="Build SOMns and Kompos">
     </target>
 
     <target name="jar" depends="compile" description="Package as JAR">
         <jar destfile="${build.dir}/som.jar" basedir="${classes.dir}"></jar>
     </target>
-    
-    <target name="unit-tests" depends="compile" description="Execute tests">
+
+    <target name="unit-tests" depends="compile,jacoco-lib" description="Execute tests">
+      <jacoco:coverage>
         <junit haltonerror="false" haltonfailure="false" failureproperty="test.failed"
-            outputtoformatters="true">
+            outputtoformatters="true" fork="true" forkmode="once">
             <jvmarg value="-ea" />
             <jvmarg value="-esa" />
             <classpath refid="project.classpath" />
@@ -201,24 +220,34 @@
             </batchtest>
             <formatter type="brief" usefile="false"/>
         </junit>
+     </jacoco:coverage>
 
+     <jacoco:coverage>
         <java classname="som.VM" fork="true" failonerror="true">
             <classpath refid="project.classpath" />
             <jvmarg value="-ea" />
             <jvmarg value="-esa" />
             <arg line="core-lib/TestSuite/TestRunner.ns" />
         </java>
-        <fail message="Basic tests failed." if="test.failed" />
+     </jacoco:coverage>
+
+     <fail message="Basic tests failed." if="test.failed" />
     </target>
 
     <target name="som-tests" depends="compile">
-      <delete file="all.gcov" /> <!-- delete old coverage data, this should be the first task generating coverage data -->
+      <!-- delete old coverage data, this should be the first task generating coverage data -->
+      <delete file="all.gcov" />
+      <delete file="jacoco.exec" />
+
       <exec executable="./som" failonerror="true">
         <arg value="--coverage" />
         <arg value="all.gcov" />
+        <arg value="--java-coverage" />
+        <arg value="jacoco.exec" />
         <arg value="-G" />
         <arg value="core-lib/TestSuite/TestRunner.ns" />
       </exec>
+
       <exec executable="./som" failonerror="true">
         <arg value="-X" />
         <arg value="core-lib/TestSuite/TestRunner.ns" />
@@ -226,7 +255,9 @@
     </target>
 
     <target name="dynamic-metrics-tests" depends="compile-som">
-      <exec executable="tests/dym/test.sh" failonerror="true"></exec>
+      <exec executable="tests/dym/test.sh" failonerror="true">
+          <arg value="--coverage" />
+      </exec>
     </target>
 
     <target name="superinstructions-tests" depends="compile-som">
@@ -241,11 +272,43 @@
           <arg value="2" />
       </exec>
     </target>
-    
+
     <target name="core-tests" depends="unit-tests,som-tests,dynamic-metrics-tests,superinstructions-tests">
     </target>
 
-    <target name="coverage">
+    <target name="send-java-coverage" depends="jacoco-lib,codacy-coverage-lib">
+      <jacoco:report>
+        <executiondata>
+          <file file="jacoco.exec"/>
+        </executiondata>
+
+        <structure name="SOMns coverage">
+          <classfiles>
+            <fileset dir="${classes.dir}"/>
+            <fileset dir="${bd.dir}/build/classes"/>
+          </classfiles>
+          <sourcefiles encoding="UTF-8">
+            <fileset dir="src"/>
+            <fileset dir="${bd.dir}/src"/>
+          </sourcefiles>
+        </structure>
+
+        <!-- <html destdir="report"/> -->
+        <xml destfile="jacoco.xml"/>
+      </jacoco:report>
+
+      <java classname="com.codacy.CodacyCoverageReporter">
+        <classpath>
+          <pathelement location="${lib.dir}/codacy-coverage-reporter.jar" />
+        </classpath>
+        <arg value="-l" />
+        <arg value="Java" />
+        <arg value="-r" />
+        <arg value="jacoco.xml" />
+      </java>
+    </target>
+
+    <target name="send-somns-coverage">
         <!-- submit coverage data -->
         <java classname="coveralls.Report" fork="true" failonerror="true">
             <classpath refid="project.classpath" />
@@ -253,6 +316,8 @@
             <arg value="all.gcov" />
         </java>
     </target>
+
+    <target name="coverage" depends="send-java-coverage,send-somns-coverage" />
 
     <target name="tests" depends="core-tests,replay-tests,coverage">
     </target>
