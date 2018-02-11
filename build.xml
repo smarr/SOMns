@@ -152,6 +152,16 @@
         </checkstyle>
     </target>
 
+    <target name="jacoco-lib" description="Get JaCoCo dependency">
+        <get src="http://search.maven.org/remotecontent?filepath=org/jacoco/jacoco/${jacoco.version}/jacoco-${jacoco.version}.zip"
+            usetimestamp="true"
+            dest="${lib.dir}/jacoco-${jacoco.version}.zip" />
+        <unzip src="${lib.dir}/jacoco-${jacoco.version}.zip" dest="${lib.dir}/jacoco"/>
+        <taskdef uri="antlib:org.jacoco.ant"
+            resource="org/jacoco/ant/antlib.xml"
+            classpath="${lib.dir}/jacoco/lib/jacocoant.jar" />
+    </target>
+
     <target name="compile-som" description="Compile SOMns">
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${classes.dir}" />
@@ -188,10 +198,11 @@
     <target name="jar" depends="compile" description="Package as JAR">
         <jar destfile="${build.dir}/som.jar" basedir="${classes.dir}"></jar>
     </target>
-    <target name="unit-tests" depends="compile" description="Execute tests">
 
+    <target name="unit-tests" depends="compile,jacoco-lib" description="Execute tests">
+      <jacoco:coverage>
         <junit haltonerror="false" haltonfailure="false" failureproperty="test.failed"
-            outputtoformatters="true">
+            outputtoformatters="true" fork="true" forkmode="once">
             <jvmarg value="-ea" />
             <jvmarg value="-esa" />
             <classpath refid="project.classpath" />
@@ -203,24 +214,34 @@
             </batchtest>
             <formatter type="brief" usefile="false"/>
         </junit>
+     </jacoco:coverage>
 
+     <jacoco:coverage>
         <java classname="som.VM" fork="true" failonerror="true">
             <classpath refid="project.classpath" />
             <jvmarg value="-ea" />
             <jvmarg value="-esa" />
             <arg line="core-lib/TestSuite/TestRunner.ns" />
         </java>
-        <fail message="Basic tests failed." if="test.failed" />
+     </jacoco:coverage>
+
+     <fail message="Basic tests failed." if="test.failed" />
     </target>
 
     <target name="som-tests" depends="compile">
-      <delete file="all.gcov" /> <!-- delete old coverage data, this should be the first task generating coverage data -->
+      <!-- delete old coverage data, this should be the first task generating coverage data -->
+      <delete file="all.gcov" />
+      <delete file="jacoco.exec" />
+
       <exec executable="./som" failonerror="true">
         <arg value="--coverage" />
         <arg value="all.gcov" />
+        <arg value="--java-coverage" />
+        <arg value="jacoco.exec" />
         <arg value="-G" />
         <arg value="core-lib/TestSuite/TestRunner.ns" />
       </exec>
+
       <exec executable="./som" failonerror="true">
         <arg value="-X" />
         <arg value="core-lib/TestSuite/TestRunner.ns" />
@@ -228,7 +249,9 @@
     </target>
 
     <target name="dynamic-metrics-tests" depends="compile-som">
-      <exec executable="tests/dym/test.sh" failonerror="true"></exec>
+      <exec executable="tests/dym/test.sh" failonerror="true">
+          <arg value="--coverage" />
+      </exec>
     </target>
 
     <target name="superinstructions-tests" depends="compile-som">
