@@ -79,5 +79,9 @@ The benchmark execution is configured with `codespeed.conf` and are executed
 with the [ReBench](https://github.com/smarr/ReBench) tool.
 
 **SOMns Code Coverage:**
-To track SOMns code coverage, we use
+To track code coverage of the SOMns code, we use
 [Coveralls](https://coveralls.io/github/smarr/SOMns).
+
+**Java Code Coverage:**
+To track code coverage of the Java code, we use
+[Codacy](https://app.codacy.com/app/smarr/SOMns/dashboard).
