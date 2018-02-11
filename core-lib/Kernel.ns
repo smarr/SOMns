@@ -411,8 +411,25 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       ^ self substringFrom: argument to: argument
     )
 
+    (* Read the character at the given `idx` and return its Unicode code point. *)
+    public codepointAt: idx = (
+      ^ vmMirror string: self codepointAt: idx
+    )
+
     (* Printing *)
     public print = ( vmMirror printString: self )
+  ) : (
+    public fromArray: charArray = (
+      (* TODO: replace with a Smalltalk implementation to specifiy semantics
+               and leave the primitive in only for performance optimization *)
+      ^ vmMirror stringFromArray: charArray.
+    )
+
+    (* Create a `String` from a given Unicode code point, which is give as `Integer`.
+       Throws `ArgumentError` if `anInt` is not a valid code point. *)
+    public fromCodepoint: anInt = (
+      ^ vmMirror stringFromCodepoint: anInt.
+    )
   )
 
   public class Symbol = String ()
@@ -861,12 +878,14 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     )
   )
 
+  (* An Exception represents a rare corner case that an application might want
+     to handle. *)
   public class Exception = ()(
     (* Exception does not have any state on purpose.
        It is good practice to have distinct exceptions for separate issues.
        Thus, subclassing is encouraged. *)
     public signal = ( vmMirror signalException: self )
-  ):(
+  ) : (
     public signal = (
       ^ self new signal
     )
@@ -892,6 +911,15 @@ class Kernel vmMirror: vmMirror = Object <: Value (
   )(
     public asString = (
       ^ 'MessageNotUnderstood(' + (vmMirror objClassName: receiver) + '>>#' + selector + ')'
+    )
+  )
+
+  public class ArgumentError signalWith: argument = Exception (
+    | public arg = argument. |
+    self signal.
+  )(
+    public asString = (
+      ^ 'ArgumentError(' + arg + ')'.
     )
   )
 
@@ -927,5 +955,9 @@ class Kernel vmMirror: vmMirror = Object <: Value (
   (* Short cut from VM. Likely to be removed when optimized. *)
   private signalTOCannotBeValues: aClass = (
     TransferObjectsCannotBeValues signalWith: aClass
+  )
+
+  private signalArgumentError: message = (
+    ArgumentError signalWith: message.
   )
 )

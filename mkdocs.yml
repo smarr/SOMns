@@ -1,5 +1,5 @@
 site_name: 'SOMns: A Simple Newspeak'
-# site_url: 
+# site_url:
 site_description: SOMns Project documentation
 site_author: SOMns contributors
 
@@ -15,6 +15,7 @@ pages:
       - Development Infrastructure: infrastructure.md
       - Release Checklist: release-checklist.md
   - SOMns Design Notes:
+      - Naming Conventions: naming.md
       - Interaction with Kompos Debugger: kompos-connection.md
       - CSP Design: csp-design.md
   - License:    LICENSE.md

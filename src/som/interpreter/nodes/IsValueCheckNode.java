@@ -92,7 +92,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       if (allFieldsContainValues) {
         return rcvr;
       }
-      return KernelObj.signalException("signalNotAValueWith:", receiver);
+      return KernelObj.signalExceptionWithClass("signalNotAValueWith:", receiver);
     }
 
     private boolean allFieldsContainValues(final SImmutableObject rcvr) {

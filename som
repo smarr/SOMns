@@ -325,4 +325,7 @@ all_args = JAVA_ARGS + flags + SOM_ARGS + args.args
 if args.verbose:
     print "CMD: " + java_bin + ' ' + ' '.join(all_args)
 
-os.execvp(java_bin, all_args)
+env = dict(os.environ)
+env['JVMCI_VERSION_CHECK'] = 'ignore'
+
+os.execvpe(java_bin, all_args, env)
