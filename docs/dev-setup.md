@@ -89,3 +89,50 @@ A brief list of steps:
 3. Import Eclipse projects
 
 4. Run `ant` from the command line or Eclipse
+
+## Run Kómpos Debugger
+
+After finishing the configuration of Eclipse to Develop the Interpreter we are ready to run Kómpos, the Web Debugger for SOMns programs.
+
+The SOMns program to debug can be run from the command line. You need to be located in the path of the `SOMns` directory. For example:
+
+```bash
+cd SOMns
+./som  -G  -wd tools/kompos/tests/pingpong.ns
+```
+
+The terminal will indicate that the debugger has started with the following log:
+
+```bash
+[DEBUGGER] Initialize HTTP and WebSocket Server for Debugger
+[DEBUGGER] Started WebSocket Servers
+[DEBUGGER]   Message Handler: 7977
+[DEBUGGER]   Trace Handler:   7978
+[DEBUGGER] Started HTTP Server
+[DEBUGGER]   URL: http://localhost:8888/index.html
+[DEBUGGER] Waiting for debugger to connect.
+[DEBUGGER] Debugger connected.
+```
+
+To open Kómpos we only need to access to this URL in the browser:
+```bash
+http://localhost:8888/index.html
+```
+
+Note: In order to visualized the code of the file being debugged is needed to add "1 halt." in the source code before running Kómpos. Preferably in the benchmark method. For the mentioned example will be like this:
+
+```
+public benchmark = (
+      | ping pong completionPP p |
+      completionPP:: actors createPromisePair.  1 halt.
+```
+
+## Run tests for Kómpos Debugger
+
+To run the existing Typescript tests for Kómpos you need to go to `tools/kompos` folder and execute the following npm command:
+
+```bash
+npm test
+```
+
+You can enable the interpreter logs setting to true `PRINT_SOM_OUTPUT` in the file `tools/kompos/test-setup.ts`
