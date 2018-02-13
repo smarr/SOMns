@@ -90,11 +90,21 @@ A brief list of steps:
 
 4. Run `ant` from the command line or Eclipse
 
+## Build SOMns and Kómpos Debugger
+
+The `ant` command from the command line allows to build not only SOMns but also Kómpos, the Web Debugger for SOMns programs.
+Other useful commands are:
+
+```bash
+ant compile ## does not include the Kómpos build, only SOMns build
+ant kompos ## includes only Kómpos build
+ant compile-all ## includes the Kómpos and SOMns build
+```
+
 ## Run Kómpos Debugger
 
-After finishing the configuration of Eclipse to Develop the Interpreter we are ready to run Kómpos, the Web Debugger for SOMns programs.
-
-The SOMns program to debug can be run from the command line. You need to be located in the path of the `SOMns` directory. For example:
+To debug a SOMns program you can run from the command line the command `./som  -G  -wd pathToFile`.
+You need to be located in the path of the `SOMns` directory. For example:
 
 ```bash
 cd SOMns
