@@ -1,7 +1,14 @@
 # A Complete Development Setup
 
-To setup a complete development environment, we need also the Graal just-in-time
-compiler, and Node.js to work on the Kompos Web Debugger.
+The [Basic User Setup](basic-setup) gives a brief set of instructions to be able
+to run SOMns programs. However, it does not include the setup of Graal to enable
+just-in-time compilation, and Node.js to work on the Kompos Web Debugger.
+
+For these two, we need to install additional dependencies.
+Specifically, we need:
+
+ - the GraalBasic setup
+ - Node.js
 
 On Ubuntu, the necessary software can be installed with:
 
@@ -77,7 +84,7 @@ For this approach, we need a *Remote Java Application* debug configuration
 in Eclipse. After starting SOMns, it should tell you that it is waiting on port
 `8000`, which is used as the port in the Eclipse debug configuration.
 
-## Summary
+### Summary
 
 A brief list of steps:
 
@@ -89,3 +96,74 @@ A brief list of steps:
 3. Import Eclipse projects
 
 4. Run `ant` from the command line or Eclipse
+
+## Setting up and using the Kómpos Debugger
+
+Kómpos is a web-based debugger to work with SOMns' advanced concurrency
+features.
+
+### Build SOMns and Kómpos Debugger
+
+The `ant` command from the command line allows to build not only SOMns but also
+Kómpos. Previously, we showed `ant compile` which does not build Kómpos.
+To build it, we use `ant kompos` or `ant compile-all`:
+
+```bash
+ant compile     ## does not include the Kómpos build, only SOMns build
+ant kompos      ## includes only Kómpos build
+ant compile-all ## includes the Kómpos and SOMns build
+```
+
+### Run Kómpos Debugger
+
+To debug a SOMns program, you can run from the command line the command
+`./som  -G  -wd pathToFile`. The `-wd` indicates that we want to use the
+"web debugger", i.e., Kómpos.
+For example, we can run a simple ping/pong actor program from the SOMns folder:
+
+```bash
+cd SOMns
+./som  -G  -wd tools/kompos/tests/pingpong.ns
+```
+
+The terminal indicates that the debugger has started with the following log:
+
+```
+[DEBUGGER] Initialize HTTP and WebSocket Server for Debugger
+[DEBUGGER] Started WebSocket Servers
+[DEBUGGER]   Message Handler: 7977
+[DEBUGGER]   Trace Handler:   7978
+[DEBUGGER] Started HTTP Server
+[DEBUGGER]   URL: http://localhost:8888/index.html
+[DEBUGGER] Waiting for debugger to connect.
+[DEBUGGER] Debugger connected.
+```
+
+To open Kómpos we access the following URL in the browser:
+[http://localhost:8888/index.html](http://localhost:8888/index.html)
+
+
+To have the debugger stop automatically, we can add `1 halt.` in the source code
+before running Kómpos. We can add it for instance in the `benchmark` method
+like this:
+
+```
+public benchmark = (
+  | ping pong completionPP p |
+  1 halt.
+  completionPP:: actors createPromisePair.
+
+  (* ... *)
+)
+```
+
+### Run tests for Kómpos Debugger
+
+To run the existing Typescript tests for Kómpos you need to go to `tools/kompos` folder and execute the following npm command:
+
+```bash
+npm test
+```
+
+You can enable the additional interpreter output by setting `PRINT_SOM_OUTPUT`
+in the file `tools/kompos/test-setup.ts` to `true`.
