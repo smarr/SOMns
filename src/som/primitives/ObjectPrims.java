@@ -11,6 +11,7 @@ import com.oracle.truffle.api.instrumentation.Instrumentable;
 
 import bd.nodes.Operation;
 import bd.primitives.Primitive;
+import som.Output;
 import som.VM;
 import som.interpreter.Types;
 import som.interpreter.actors.SFarReference;
@@ -50,7 +51,7 @@ public final class ObjectPrims {
   public abstract static class HaltPrim extends UnaryExpressionNode {
     @Specialization
     public final Object doSAbstractObject(final Object receiver) {
-      VM.errorPrintln("BREAKPOINT");
+      Output.errorPrintln("BREAKPOINT");
       return receiver;
     }
 

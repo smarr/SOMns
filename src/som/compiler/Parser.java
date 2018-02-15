@@ -77,7 +77,7 @@ import java.util.Set;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VM;
+import som.Output;
 import som.compiler.Lexer.Peek;
 import som.compiler.MethodBuilder.MethodDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionError;
@@ -618,7 +618,7 @@ public class Parser {
       throws ProgramDefinitionError {
     // Newspeak-speak: we do not support simSlotDecls, i.e.,
     // simultaneous slots clauses (spec 6.3.2)
-    VM.errorPrintln("Warning: Parsed simSlotDecls, but it isn't supported yet. "
+    Output.errorPrintln("Warning: Parsed simSlotDecls, but it isn't supported yet. "
         + lexer.getCurrentLineNumber() + ":" + lexer.getCurrentColumn());
     assert "||".equals(text);
     expect(OperatorSequence, DelimiterOpeningTag.class);

@@ -8,6 +8,7 @@ import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
+import som.Output;
 import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
@@ -136,7 +137,7 @@ public class TracingActors {
 
     /**
      * Prints a list of expected Messages and remaining mailbox content.
-     * 
+     *
      * @return true if there are actors expecting messages, false otherwise.
      */
     public static boolean printMissingMessages() {
@@ -150,11 +151,11 @@ public class TracingActors {
         if (ra.expectedMessages != null && ra.expectedMessages.peek() != null) {
           result = true; // program did not execute all messages
           if (ra.expectedMessages.peek() instanceof TraceParser.PromiseMessageRecord) {
-            VM.println(a.getName() + " [" + ra.getId() + "] expecting PromiseMessage from "
+            Output.println(a.getName() + " [" + ra.getId() + "] expecting PromiseMessage from "
                 + ra.expectedMessages.peek().sender + " PID "
                 + ((TraceParser.PromiseMessageRecord) ra.expectedMessages.peek()).pId);
           } else {
-            VM.println(a.getName() + " [" + ra.getId() + "] expecting Messagefrom "
+            Output.println(a.getName() + " [" + ra.getId() + "] expecting Messagefrom "
                 + ra.expectedMessages.peek().sender);
           }
 
@@ -175,7 +176,8 @@ public class TracingActors {
           int n = a.firstMessage != null ? 1 : 0;
           n += a.mailboxExtension != null ? a.mailboxExtension.size() : 0;
 
-          VM.println(a.getName() + " [" + a.getId() + "] has " + n + " unexpected messages");
+          Output.println(
+              a.getName() + " [" + a.getId() + "] has " + n + " unexpected messages");
         }
       }
       return result;
@@ -183,11 +185,12 @@ public class TracingActors {
 
     private static void printMsg(final EventualMessage msg) {
       if (msg instanceof PromiseMessage) {
-        VM.println("\t" + "PromiseMessage " + msg.getMessageId() + " " + msg.getSelector()
+        Output.println("\t" + "PromiseMessage " + msg.getMessageId() + " " + msg.getSelector()
             + " from " + msg.getSender().getId() + " PID "
             + ((SReplayPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
       } else {
-        VM.println("\t" + "Message" + msg.getSelector() + " from " + msg.getSender().getId());
+        Output.println(
+            "\t" + "Message" + msg.getSelector() + " from " + msg.getSender().getId());
       }
     }
 

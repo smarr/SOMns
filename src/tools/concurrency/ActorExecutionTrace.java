@@ -28,7 +28,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.management.GarbageCollectionNotificationInfo;
 
-import som.VM;
+import som.Output;
 import som.interpreter.actors.Actor;
 import som.primitives.TimerPrim;
 import som.vm.Activity;
@@ -150,7 +150,7 @@ public class ActorExecutionTrace {
     for (GarbageCollectorMXBean garbageCollectorMXBean : ManagementFactory.getGarbageCollectorMXBeans()) {
       gcTime += garbageCollectorMXBean.getCollectionTime();
     }
-    VM.println("[Memstat] Heap: " + totalHeap + "B\tNonHeap: " + totalNonHeap
+    Output.println("[Memstat] Heap: " + totalHeap + "B\tNonHeap: " + totalNonHeap
         + "B\tCollected: " + collectedMemory + "B\tGC-Time: " + gcTime + "ms");
   }
 

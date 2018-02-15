@@ -105,8 +105,6 @@ parser.add_argument('-T', '--no-trace', help='do not print truffle compilation i
 parser.add_argument('--no-graph-pe', help='disable Graph PE',
                     dest='graph_pe', action='store_false', default=True)
 
-
-
 parser.add_argument('-vv', '--verbose', action='store_true', default=False,
                     dest='verbose', help="print command-line before executing")
 parser.add_argument('--print-graal-options', action='store_true', default=False,
@@ -116,6 +114,10 @@ parser.add_argument('-J', help="Java VM Argument prefix",
                     dest="java_args", action='append')
 parser.add_argument('-D', help="define a Java property",
                     dest="java_properties", action='append')
+
+
+parser.add_argument('-ac', '--ansi-coloring', help='Enable ANSI coloring for output from interpreter with true, or disable with false',
+                    dest='use_ansi_coloring', action='store', default=hasattr(sys.stdout, 'isatty') and sys.stdout.isatty())
 
 parser.add_argument('args', nargs=argparse.REMAINDER,
                     help='arguments passed to SOMns')
@@ -197,6 +199,9 @@ if not args.interpreter:
 
 if args.som_dnu:
     flags += ['-Dsom.printStackTraceOnDNU=true']
+
+if args.use_ansi_coloring:
+    flags += ['-Dsom.useAnsiColoring=' + str(args.use_ansi_coloring).lower()]
 
 # Handle executable names
 if sys.argv[0].endswith('fast'):
