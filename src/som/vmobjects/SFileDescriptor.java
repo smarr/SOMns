@@ -23,7 +23,6 @@ public class SFileDescriptor extends SObjectWithClass {
 
   public static final int BUFFER_SIZE = 32 * 1024;
 
-  private boolean     open       = false;
   private SArray      buffer;
   private int         bufferSize = BUFFER_SIZE;
   private AccessModes accessMode;
@@ -50,14 +49,13 @@ public class SFileDescriptor extends SObjectWithClass {
       return dispatchHandler.executeDispatch(new Object[] {fail, FILE_NOT_FOUND});
     }
 
-    open = true;
     return this;
   }
 
   public void closeFile() {
     try {
       raf.close();
-      open = false;
+      raf = null;
     } catch (IOException e) {
       PathPrims.signalIOException(e.getMessage());
     }
@@ -65,7 +63,7 @@ public class SFileDescriptor extends SObjectWithClass {
 
   public int read(final long position, final SBlock fail,
       final BlockDispatchNode dispatchHandler) {
-    if (!open) {
+    if (raf == null) {
       fail.getMethod().invoke(new Object[] {fail, "File not open"});
       return 0;
     }
@@ -80,7 +78,7 @@ public class SFileDescriptor extends SObjectWithClass {
     int bytes = 0;
 
     try {
-      assert open;
+      assert raf != null;
 
       // set position in file
       raf.seek(position);
@@ -99,7 +97,7 @@ public class SFileDescriptor extends SObjectWithClass {
 
   public void write(final int nBytes, final long position, final SBlock fail,
       final BlockDispatchNode dispatchHandler) {
-    if (!open) {
+    if (raf == null) {
       dispatchHandler.executeDispatch(new Object[] {fail, "File not opened"});
       return;
     }
@@ -140,7 +138,7 @@ public class SFileDescriptor extends SObjectWithClass {
   }
 
   public boolean isClosed() {
-    return !open;
+    return raf == null;
   }
 
   @Override
@@ -158,8 +156,10 @@ public class SFileDescriptor extends SObjectWithClass {
 
   public void setBufferSize(final int bufferSize) {
     // buffer size only changeable for closed files.
-    if (!open) {
+    if (raf == null) {
       this.bufferSize = bufferSize;
+    } else {
+      throw new NotYetImplementedException();
     }
   }
 

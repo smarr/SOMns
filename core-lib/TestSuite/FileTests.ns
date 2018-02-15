@@ -32,6 +32,16 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
       assert: b entries size equals: 3.
     )
 
+    public testClose = (
+      | fp f |
+      fp:: FilePath for: path + '/data/A'.
+      f:: fp open: #read.
+
+      deny: f isClosed.
+      f close.
+      assert: f isClosed.
+    )
+
     public testCreateDeleteFile = (
       | f |
       f:: FilePath for: path + '/temp/A'.
