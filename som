@@ -62,7 +62,7 @@ profile.add_argument('-gb', '--graal-branch-profile', help='enable Graal-level b
                     dest='graal_branch_profile', action='store_true', default=False)
 profile.add_argument('-tp', '--truffle-profile', help='enable Graal-level profiling after warmup',
                     dest='truffle_profile', action='store_true', default=False)
-                    
+
 
 tools = parser.add_argument_group('Tools', 'Additional Tools')
 tools.add_argument('-wd', '--web-debugger', help='start Web debugger',
@@ -250,7 +250,7 @@ if args.coverage:
     SOM_ARGS += ['--coverage', args.coverage]
 
 if args.java_coverage:
-    flags += ['-javaagent:libs/jacoco/lib/jacocoagent.jar=inclbootstrapclasses=true,destfile=' + args.java_coverage]
+    flags += ['-javaagent:' + BASE_DIR + '/libs/jacoco/lib/jacocoagent.jar=inclbootstrapclasses=true,destfile=' + args.java_coverage]
 
 if args.web_debugger:
     SOM_ARGS += ['--web-debug']
