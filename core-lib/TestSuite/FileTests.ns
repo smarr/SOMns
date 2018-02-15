@@ -12,16 +12,21 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
   private FilePath    = platform files FilePath.
   private FilePattern = platform files FilePattern.
   private FileNotFoundException = platform files FileNotFoundException.
+
+  private modulePath = (ObjectMirror reflecting: self) classMirror classDefinition filePath.
 |)(
   public class BasicFileTests = TestContext (
-  | private path = (FilePath currentDirectory / 'tests' / 'files') pattern. |
+  | private path = ((FilePath for: modulePath)
+                      containingDirectory
+                      containingDirectory
+                      containingDirectory / 'tests' / 'files') pattern. |
   )(
     public testUtils = (
       | a b |
       a:: FilePath for: path + '/data/A'.
-      assert: a exists.
+      assert: a exists description: path + '/data/A is expected to exist.'.
       assert: a size equals: 3656.
-      assert: a lastModified <> nil.
+      assert: a lastModified <> nil description: 'file should have a last modified date'.
       b:: FilePath for: a containingDirectory pattern.
       assert: b entries size equals: 3.
     )

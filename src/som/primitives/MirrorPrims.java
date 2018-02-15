@@ -150,6 +150,17 @@ public abstract class MirrorPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive(primitive = "classDefFilePath:")
+  public abstract static class ClassDefFilePathPrim extends UnaryExpressionNode {
+    @Specialization
+    public final String getFilePath(final Object mixinHandle) {
+      assert mixinHandle instanceof MixinDefinition;
+      MixinDefinition def = (MixinDefinition) mixinHandle;
+      return def.getSourceSection().getSource().getPath();
+    }
+  }
+
+  @GenerateNodeFactory
   @Primitive(primitive = "classDefMethods:")
   public abstract static class ClassDefMethodsPrim extends UnaryExpressionNode {
     @Specialization
