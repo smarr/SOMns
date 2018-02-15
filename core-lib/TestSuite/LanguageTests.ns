@@ -6,9 +6,10 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
   private Set          = platform collections Set.
   private kernel       = platform kernel.
   private NotAValue    = platform kernel NotAValue.
+
+  private ArgumentError = platform kernel ArgumentError.
   private langTestsModule = self.
-|
-)(
+|)(
   (* This test verifies that SOM blocks are indeed closures.
      The test was found on Eliot Miranda's Cog Blog. *)
 
@@ -65,39 +66,36 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
   public class BlockTest = TestContext (
     | escapeCount anEscapedBlock |
   ) (
-
-    simpleBlock = (
-      ^[42]
+    private simpleBlock = (
+      ^ [ 42 ]
     )
 
     incBlock = (
-      ^[ :val | val + 1]
+      ^ [:val | val + 1 ]
     )
 
     (* This requires a closure *)
     adderBlock: amount = (
-      ^[ :val | amount + val]
+      ^ [:val | amount + val ]
     )
 
     (* Closure with mutable state in block *)
     counterBlock = (
       |count|
       count:: 0.
-      ^[count:: count + 1. count]
+      ^ [ count:: count + 1. count ]
     )
 
     public selfKeeper = (
-      ^[self]
+      ^ [ self ]
     )
 
     escapingBlock = (
-      ^[^42]
+      ^ [ ^ 42 ]
     )
 
-    manyArguments = (
-      ^[ :arg1 :arg2 :arg3 :arg4 |
-        (arg1 + arg2 + arg3 + arg4)
-      ]
+    private manyArguments = (
+      ^ [:arg1 :arg2 :arg3 :arg4 | (arg1 + arg2 + arg3 + arg4) ]
     )
 
     public testSimpleBlocks = (
@@ -123,23 +121,22 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
     )
 
     public testValueWithArguments = (
-      self assert: 18 equals: (self manyArguments valueWithArguments: { 3 . 4 . 5 . 6 }).
+      self assert: 18 equals: (self manyArguments valueWithArguments: { 3. 4. 5. 6 }).
       self assert: 42 equals: (self simpleBlock valueWithArguments: (Array new: 0)).
       self assert: 4  equals: (self incBlock valueWithArguments: { 3 }).
+
+      assert: ([:a :b :c :d :e :f :g :h :k :l |
+                  a + b + c + d + e + f + g + h + k + l ]
+              valueWithArguments: {1. 2. 3. 4. 5. 6. 7. 8. 9. 10})
+      equals: 2.
     )
 
     public testBlockArgumentErrors = (
-      [ self simpleBlock value: 1.
-        self assert: false.
-      ] on: kernel ArgumentError do: [:e | ].
-      
-      [ self manyArguments value.
-        self assert: false.
-      ] on: kernel ArgumentError do: [:e | ].
+      | r |
+      should: [ simpleBlock value: 1. ] signal: ArgumentError.
+      should: [ manyArguments value ]   signal: ArgumentError.
 
-      [ self incBlock valueWithArguments: (Array new: 0). 
-        self assert: false.
-      ] on: kernel ArgumentError do: [:e | ].
+      should: [ incBlock valueWithArguments: {}. ] signal: ArgumentError.
     )
 
     public testEscapedBlock = (
