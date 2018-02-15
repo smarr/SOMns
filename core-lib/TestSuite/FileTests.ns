@@ -4,6 +4,7 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
   private actors      = platform actors.
   private Exception   = platform kernel Exception.
   private NotAValue   = platform kernel NotAValue.
+  private ArgumentError = platform kernel ArgumentError.
   private Vector      = platform kernel Vector.
   private Array       = platform kernel Array.
   private ObjectMirror = platform mirrors ObjectMirror.
@@ -36,7 +37,7 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
       f:: FilePath for: path + '/temp/A'.
       (FilePath for: (f containingDirectory pattern)) createDirectoryIfFail: [:r| assert: false ].
       deny: f exists.
-      f open: #readwrite ifFail: [:r| assert: false message: 'should not happen' ].
+      f open: #readWrite ifFail: [:r| assert: false message: 'should not happen' ].
       assert: f exists.
       f deleteFileIfFail: [:r |].
       deny: f exists.
@@ -56,7 +57,7 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
       | f d |
       f:: FilePath for: path + '/tmp'.
       deny: f exists.
-      d:: f open: #readwrite ifFail: [:r | assert: false ].
+      d:: f open: #readWrite ifFail: [:r | assert: false ].
 
       assert: d size equals: 0.
 
@@ -92,7 +93,7 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
     public testMove =(
       | f g |
       f:: FilePath for: path + '/tmp'.
-      f open: #readwrite ifFail: [:r|].
+      f open: #readWrite ifFail: [:r|].
 
       f copyNamed: 'tmp2'.
       g:: FilePath for: path + '/tmp2'.
@@ -131,7 +132,17 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
       | f |
       f:: FilePath for: path + '/nonExisting'.
       deny: f exists description: 'The file ' + f name asString + ' should not exist.'.
-      should: [ d:: f open: #read ] signal: FileNotFoundException.
+      should: [ f open: #read ] signal: FileNotFoundException.
+    )
+
+    public testInvalidAccessMode = (
+      | f |
+      f:: FilePath for: path + '/nonExisting'.
+
+      should: [ f open: #readr     ] signal: ArgumentError.
+      should: [ f open: #Read      ] signal: ArgumentError.
+      should: [ f open: #Write     ] signal: ArgumentError.
+      should: [ f open: #ReadWrite ] signal: ArgumentError.
     )
   ) : (
     TEST_CONTEXT = ()

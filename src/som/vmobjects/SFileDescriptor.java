@@ -11,6 +11,7 @@ import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.primitives.PathPrims;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
+import som.vm.constants.KernelObj;
 import som.vmobjects.SArray.SMutableArray;
 
 
@@ -24,9 +25,8 @@ public class SFileDescriptor extends SObjectWithClass {
 
   private boolean     open       = false;
   private SArray      buffer;
-  private SSymbol     mode;
   private int         bufferSize = BUFFER_SIZE;
-  private AccessModes access;
+  private AccessModes accessMode;
 
   private RandomAccessFile raf;
   private final File       f;
@@ -45,13 +45,7 @@ public class SFileDescriptor extends SObjectWithClass {
     buffer = new SMutableArray(storage, Classes.arrayClass);
 
     try {
-      this.access = AccessModes.valueOf(mode.getString().toUpperCase());
-    } catch (Exception e) {
-      return dispatchHandler.executeDispatch(new Object[] {fail, INVALID_ACCESS_MODE});
-    }
-
-    try {
-      raf = new RandomAccessFile(f, access.getMode());
+      raf = new RandomAccessFile(f, accessMode.mode);
     } catch (FileNotFoundException e) {
       return dispatchHandler.executeDispatch(new Object[] {fail, FILE_NOT_FOUND});
     }
@@ -76,7 +70,7 @@ public class SFileDescriptor extends SObjectWithClass {
       return 0;
     }
 
-    if (access == AccessModes.WRITE) {
+    if (accessMode == AccessModes.write) {
       fail.getMethod().invoke(new Object[] {fail, "Opened in write only"});
       return 0;
     }
@@ -110,7 +104,7 @@ public class SFileDescriptor extends SObjectWithClass {
       return;
     }
 
-    if (access == AccessModes.READ) {
+    if (accessMode == AccessModes.read) {
       fail.getMethod().invoke(new Object[] {fail, "Opened in read only"});
       return;
     }
@@ -170,19 +164,37 @@ public class SFileDescriptor extends SObjectWithClass {
   }
 
   public void setMode(final SSymbol mode) {
-    this.mode = mode;
+    try {
+      this.accessMode = AccessModes.valueOf(mode.getString());
+    } catch (IllegalArgumentException e) {
+      KernelObj.signalException("signalArgumentError:", "File access mode invalid, was: "
+          + mode.getString() + " " + AccessModes.VALID_MODES);
+    }
   }
 
   private enum AccessModes {
-    READ("r"), WRITE("rw"), READWRITE("rw");
-    String mode;
+    read("r"), write("rw"), readWrite("rw");
+
+    final String mode;
 
     AccessModes(final String mode) {
       this.mode = mode;
     }
 
-    String getMode() {
-      return mode;
+    static final String VALID_MODES = renderValid();
+
+    private static String renderValid() {
+      String result = "Valid access modes are ";
+      boolean first = true;
+      for (AccessModes m : values()) {
+        if (first) {
+          first = false;
+        } else {
+          result += ", ";
+        }
+        result += "#" + m.name();
+      }
+      return result;
     }
   }
 }

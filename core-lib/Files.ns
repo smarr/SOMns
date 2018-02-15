@@ -42,8 +42,8 @@ DAMAGE.>> *)
       ^ vmMirror fileBuffer: self.
     )
 
-    (* set access mode *)
-    public mode: m = (
+    (* set access mode, can be #read, #write, or #readWrite *)
+    public mode: m <Symbol> = (
       vmMirror file: self setMode: m.
     )
 
@@ -87,7 +87,8 @@ DAMAGE.>> *)
       ^ vmMirror file: self openIfFail: errBlock.
     )
   ) : (
-    (* Create a new instance, but don't open yet *)
+    (* Create a new instance, but don't open yet.
+       Mode `m` can be #read, #write, or #readWrite. *)
     public for: obj mode: m = (
       ^ (vmMirror fileCreateFileDescriptorFor: obj) mode: m.
     )
@@ -514,12 +515,16 @@ DAMAGE.>> *)
       ^ self pattern
     )
 
+    (* Open file with given access mode.
+       Access mode can be #read, #write, or #readWrite. *)
     public open: mode <Symbol> ifFail: errBlock <[:Symbol | X def]> ^ <FileDescriptor | X> = (
       (* Modes: #read, #write, #readWrite *)
       ^ (FileDescriptor for: self pattern mode: mode)
           openIfFail: errBlock
     )
 
+    (* Open file with given access mode.
+       Access mode can be #read, #write, or #readWrite. *)
     public open: mode <Symbol> ^ <FileDescriptor | X> = (
       ^ open: mode ifFail: [:s |
           s = #FileNotFound ifTrue: [
