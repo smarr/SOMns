@@ -143,6 +143,10 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
       should: [ f open: #Read      ] signal: ArgumentError.
       should: [ f open: #Write     ] signal: ArgumentError.
       should: [ f open: #ReadWrite ] signal: ArgumentError.
+      should: [ f open: 0          ] signal: ArgumentError.
+      should: [ f open: 'read'     ] signal: ArgumentError.
+      should: [ f open: 3423       ] signal: ArgumentError.
+      should: [ f open: Object new ] signal: ArgumentError.
     )
   ) : (
     TEST_CONTEXT = ()
