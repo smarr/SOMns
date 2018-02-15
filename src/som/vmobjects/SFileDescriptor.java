@@ -4,11 +4,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Objects;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.primitives.PathPrims;
+import som.vm.NotYetImplementedException;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vm.constants.KernelObj;
@@ -18,8 +21,7 @@ import som.vmobjects.SArray.SMutableArray;
 public class SFileDescriptor extends SObjectWithClass {
   @CompilationFinal public static SClass fileDescriptorClass;
 
-  private static final SSymbol INVALID_ACCESS_MODE = Symbols.symbolFor("InvalidAccessMode");
-  private static final SSymbol FILE_NOT_FOUND      = Symbols.symbolFor("FileNotFound");
+  private static final SSymbol FILE_NOT_FOUND = Symbols.symbolFor("FileNotFound");
 
   public static final int BUFFER_SIZE = 32 * 1024;
 
@@ -167,9 +169,14 @@ public class SFileDescriptor extends SObjectWithClass {
     try {
       this.accessMode = AccessModes.valueOf(mode.getString());
     } catch (IllegalArgumentException e) {
-      KernelObj.signalException("signalArgumentError:", "File access mode invalid, was: "
-          + mode.getString() + " " + AccessModes.VALID_MODES);
+      signalInvalidAccessMode(mode.getString());
     }
+  }
+
+  public static void signalInvalidAccessMode(final Object mode) {
+    CompilerAsserts.neverPartOfCompilation();
+    KernelObj.signalException("signalArgumentError:", "File access mode invalid, was: "
+        + Objects.toString(mode) + " " + AccessModes.VALID_MODES);
   }
 
   private enum AccessModes {
