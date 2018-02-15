@@ -67,8 +67,20 @@ DAMAGE.>> *)
     (* read as many bytes as possible into the buffer (up to its size),
        and return the number of bytes that were actually read.
        The semantics at end of file are to return 0 with no error. *)
-    public readAt: pos <Integer> ifFail: errf <[:IOException]> ^ <Integer> = (
+    public readAt: pos <Integer> ^ <Integer> = (
+      ^ readAt: pos ifFail: [:s |
+          IOException signalWith: 'Reading from file failed. File: ' + #TODO + ' ' + s ]
+    )
+
+    (* read as many bytes as possible into the buffer (up to its size),
+       and return the number of bytes that were actually read.
+       The semantics at end of file are to return 0 with no error. *)
+    public readAt: pos <Integer> ifFail: errf <[:Symbol]> ^ <Integer> = (
       ^ vmMirror file: self readAt: pos ifFail: errf.
+    )
+
+    public write: nBytes <Integer> at: pos <Integer> = (
+      ^ write: nBytes at: pos ifFail: [:s | 'Writing to file failed. File: ' + #TODO + ' ' + s ]
     )
 
     public write: nBytes <Integer> at: pos <Integer> ifFail: errf <[:IOException]>  = (
@@ -416,14 +428,31 @@ DAMAGE.>> *)
     )
 
     (* create directory from this path *)
+    public createDirectory = (
+      ^ createDirectoryIfFail: [:s | IOException signalWith: 'Could not create directory: ' + self name ]
+    )
+
+    (* create directory from this path *)
     public createDirectoryIfFail: fail <[:Symbol]> = (
       vmMirror pathCreateDirectory: self pattern ifFail: fail.
     )
 
+    (* delete directory named by this path *)
+    public deleteDirectory = (
+      ^ deleteDirectoryIfFail: [:s | IOException signalWith: 'Could not delete directory: ' + self name ]
+    )
+
+    (* delete directory named by this path *)
     public deleteDirectoryIfFail: fail <[:Symbol]> = (
       vmMirror pathDeleteFileDir: self pattern ifFail: fail.
     )
 
+    (* delete file named by this path *)
+    public deleteFile = (
+      ^ deleteFileIfFail: [:s | IOException signalWith: 'Could not delete file: ' + self name ]
+    )
+
+    (* delete file named by this path *)
     public deleteFileIfFail: fail <[:Symbol]> = (
       vmMirror pathDeleteFileDir: self pattern ifFail: fail.
     )

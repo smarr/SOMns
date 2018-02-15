@@ -35,11 +35,11 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
     public testCreateDeleteFile = (
       | f |
       f:: FilePath for: path + '/temp/A'.
-      (FilePath for: (f containingDirectory pattern)) createDirectoryIfFail: [:r| assert: false ].
+      (FilePath for: (f containingDirectory pattern)) createDirectory.
       deny: f exists.
-      f open: #readWrite ifFail: [:r| assert: false message: 'should not happen' ].
+      f open: #readWrite.
       assert: f exists.
-      f deleteFileIfFail: [:r |].
+      f deleteFile.
       deny: f exists.
     )
 
@@ -47,9 +47,9 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
       | f |
       f:: FilePath for: path + '/temp/A'.
       deny: f exists.
-      f createDirectoryIfFail: [:r | assert: false ].
+      f createDirectory.
       assert: f exists.
-      f deleteDirectoryIfFail: [:r |].
+      f deleteDirectory.
       deny: f exists.
     )
 
@@ -67,7 +67,7 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
 
       d write: 256 at: 0 ifFail: [:r|].
       assert: d size equals: 256.
-      assert: 256  equals: (d readAt: 0 ifFail: [:r |]).
+      assert: 256 equals: (d readAt: 0).
 
       0 to: 255 do:[ :i|
         assert: (d buffer at: i + 1) equals: i - 128.
@@ -75,7 +75,7 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
 
       d close.
 
-      f deleteFileIfFail: [:r |].
+      f deleteFile.
       deny: f exists.
     )
 
@@ -93,7 +93,7 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
     public testMove =(
       | f g |
       f:: FilePath for: path + '/tmp'.
-      f open: #readWrite ifFail: [:r|].
+      f open: #readWrite.
 
       f copyNamed: 'tmp2'.
       g:: FilePath for: path + '/tmp2'.
@@ -101,14 +101,14 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
       assert: f exists.
       assert: g size equals: f size.
 
-      g deleteFileIfFail: [:r|].
+      g deleteFile.
       deny: g exists.
 
       f moveAs: g.
       assert: g exists.
       deny: f exists.
 
-      g deleteFileIfFail: [:r|].
+      g deleteFile.
     )
 
     public testFileNotFound = (
