@@ -33,8 +33,8 @@ DAMAGE.>> *)
   private Exception = kernel Exception.
 |
   vmMirror fileDescriptorClass: FileDescriptor.
-  vmMirror fileObject:  self.
-) (
+  vmMirror fileObject: self.
+)(
   public class FileDescriptor = Object () (
 
     (* return buffer array *)
@@ -547,7 +547,6 @@ DAMAGE.>> *)
     (* Open file with given access mode.
        Access mode can be #read, #write, or #readWrite. *)
     public open: mode <Symbol> ifFail: errBlock <[:Symbol | X def]> ^ <FileDescriptor | X> = (
-      (* Modes: #read, #write, #readWrite *)
       ^ (FileDescriptor for: self pattern mode: mode)
           openIfFail: errBlock
     )
@@ -617,12 +616,13 @@ DAMAGE.>> *)
     )
   )
 
-  (* Short cut from VM. Likely to be removed when optimized. *)
+  (* Short cut from VM. To be removed when optimized. *)
   private signalIOException: aMessage = (
     IOException signalWith: aMessage
   )
 
+  (* Short cut from VM. To be removed when optimized. *)
   private signalFileNotFoundException: fileName with: aMessage = (
-    IOException signalFor: fileName with: aMessage
+    FileNotFoundException signalFor: fileName with: aMessage
   )
 )

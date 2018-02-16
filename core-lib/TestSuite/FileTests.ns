@@ -13,6 +13,7 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
   private FilePath    = platform files FilePath.
   private FilePattern = platform files FilePattern.
   private FileNotFoundException = platform files FileNotFoundException.
+  private IOException = platform files IOException.
 
   private modulePath = (ObjectMirror reflecting: self) classMirror classDefinition filePath.
 |)(
@@ -157,6 +158,15 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
       should: [ f open: 'read'     ] signal: ArgumentError.
       should: [ f open: 3423       ] signal: ArgumentError.
       should: [ f open: Object new ] signal: ArgumentError.
+    )
+
+    public testFilePathSize = (
+      | fp f |
+      fp:: FilePath for: path + '/data/A'.
+      assert: fp size equals: 3656.
+
+      fp:: FilePath for: path + '/nonExisting'.
+      should: [ fp size ] signal: FileNotFoundException.
     )
   ) : (
     TEST_CONTEXT = ()
