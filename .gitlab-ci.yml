@@ -24,7 +24,7 @@ kompos_and_dym_tests:
   stage: full-test
   tags: [benchmarks, infinity]
   script:
-    - ant compile dynamic-metrics-tests superinstructions-tests
+    - ant jacoco-lib compile dynamic-metrics-tests superinstructions-tests
     - cd tools/kompos && npm install . && npm -s run verify && npm test
 
 replay_tests:
