@@ -349,7 +349,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       self assert: #Integer equals: (ObjectMirror reflecting: 10000000000) className.
       self assert: #Double  equals: (ObjectMirror reflecting: (1 // 2)) className.
       self assert: #Double  equals: (ObjectMirror reflecting: 0.5) className.
-      self assert: #Block1  equals: (ObjectMirror reflecting: [42]) className.
+      self assert: #Block   equals: (ObjectMirror reflecting: [42]) className.
       self assert: #Object  equals: (ObjectMirror reflecting: Object new) className.
       self assert: #Set     equals: (ObjectMirror reflecting: Set new) className.
       self assert: #String  equals: (ObjectMirror reflecting: 'foo') className.

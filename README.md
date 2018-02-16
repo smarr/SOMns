@@ -39,8 +39,6 @@ the specifications are as follows:
 
  - simultaneous slots clauses are not fully supported (spec. 6.3.2)
 
- - as in SOM, blocks can only have 3 arguments (counting `self`)
-
  - object literals currently require a keyword prefix `objL`, to work around
    parser limitations
 

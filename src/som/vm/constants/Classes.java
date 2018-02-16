@@ -29,9 +29,6 @@ public final class Classes {
   public static final SClass falseClass;
 
   public static final SClass blockClass;
-  public static final SClass blockClass1;
-  public static final SClass blockClass2;
-  public static final SClass blockClass3;
 
   // These classes can be statically preinitialized.
   static {
@@ -63,8 +60,5 @@ public final class Classes {
     falseClass = ObjectSystem.newEmptyClassWithItsClass("False");
 
     blockClass = ObjectSystem.newEmptyClassWithItsClass("Block");
-    blockClass1 = ObjectSystem.newEmptyClassWithItsClass("Block1");
-    blockClass2 = ObjectSystem.newEmptyClassWithItsClass("Block2");
-    blockClass3 = ObjectSystem.newEmptyClassWithItsClass("Block3");
   }
 }

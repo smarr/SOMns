@@ -195,9 +195,6 @@ public final class ObjectSystem {
     MixinDefinition falseDef = kernelModule.getNestedMixinDefinition("False");
 
     MixinDefinition blockDef = kernelModule.getNestedMixinDefinition("Block");
-    MixinDefinition block1Def = kernelModule.getNestedMixinDefinition("Block1");
-    MixinDefinition block2Def = kernelModule.getNestedMixinDefinition("Block2");
-    MixinDefinition block3Def = kernelModule.getNestedMixinDefinition("Block3");
 
     // some basic assumptions about
     assert topDef.getNumberOfSlots() == 0;
@@ -234,9 +231,6 @@ public final class ObjectSystem {
     falseDef.initializeClass(Classes.falseClass, Classes.booleanClass);
 
     blockDef.initializeClass(Classes.blockClass, Classes.objectClass);
-    block1Def.initializeClass(Classes.blockClass1, Classes.blockClass);
-    block2Def.initializeClass(Classes.blockClass2, Classes.blockClass1);
-    block3Def.initializeClass(Classes.blockClass3, Classes.blockClass2);
 
     Nil.nilObject.setClass(Classes.nilClass);
 
@@ -278,12 +272,6 @@ public final class ObjectSystem {
                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
     Classes.blockClass.getSOMClass()
                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
-    Classes.blockClass1.getSOMClass()
-                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
-    Classes.blockClass2.getSOMClass()
-                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
-    Classes.blockClass3.getSOMClass()
-                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
 
     SClass kernelClass = kernelModule.instantiateClass(Nil.nilObject, Classes.objectClass);
     KernelObj.kernel.setClass(kernelClass);
@@ -319,9 +307,6 @@ public final class ObjectSystem {
     setSlot(KernelObj.kernel, "ValueArray", Classes.valueArrayClass, kernelModule);
     setSlot(KernelObj.kernel, "TransferArray", Classes.transferArrayClass, kernelModule);
     setSlot(KernelObj.kernel, "Block", Classes.blockClass, kernelModule);
-    setSlot(KernelObj.kernel, "Block1", Classes.blockClass1, kernelModule);
-    setSlot(KernelObj.kernel, "Block2", Classes.blockClass2, kernelModule);
-    setSlot(KernelObj.kernel, "Block3", Classes.blockClass3, kernelModule);
 
     initialized = true;
 

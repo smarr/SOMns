@@ -596,14 +596,16 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public size                  = ( ^ vmMirror arraySize: self )
 
     public copy = ( ^ self )
-  ):(
+  ) : (
     public new: size withAll: aBlock = ( vmMirror valueArrayNew: size withAll: aBlock )
   )
 
-  public class Block = Object ()
-  (
+  public class Block = Object ()(
     (* Evaluation *)
-    public value = ( ^ vmMirror blockValue: self )
+    public value                    = ( ^ vmMirror blockValue: self )
+    public value: arg               = ( ^ vmMirror blockValue: self with: arg )
+    public value: arg1 with: arg2   = ( ^ vmMirror blockValue: self with: arg1 with: arg2 )
+    public valueWithArguments: args = ( ^ vmMirror blockValue: self withArguments: args )
 
     (* Looping *)
     public whileFalse: block = (
@@ -624,25 +626,6 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public ensure: aBlock = (
       ^ vmMirror exceptionDo: self ensure: aBlock
     )
-  )
-
-  protected class Block1 = Block ()()
-  protected class Block2 = Block ()
-  (
-    (* Evaluating *)
-    public value: argument = ( ^ vmMirror blockValue: self with: argument )
-  )
-
-  protected class Block3 = Block ()
-  (
-    (* Evaluating *)
-    public value: arg1 with: arg2 = ( ^ vmMirror blockValue: self with: arg1 with: arg2 )
-  )
-
-  protected class BlockArbitrary = Block ()
-  (
-    (* Evaluating *)
-    public valueWithArguments: args             = ( ^ vmMirror blockValue: self withArguments: args )
   )
 
   public class Pair withKey: aKey andValue: aValue = (
