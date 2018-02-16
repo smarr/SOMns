@@ -21,7 +21,10 @@ import som.vmobjects.SArray.SMutableArray;
 public class SFileDescriptor extends SObjectWithClass {
   @CompilationFinal public static SClass fileDescriptorClass;
 
-  private static final SSymbol FILE_NOT_FOUND = Symbols.symbolFor("FileNotFound");
+  private static final SSymbol FILE_NOT_FOUND  = Symbols.symbolFor("FileNotFound");
+  private static final SSymbol FILE_IS_CLOSED  = Symbols.symbolFor("FileIsClosed");
+  private static final SSymbol READ_ONLY_MODE  = Symbols.symbolFor("ReadOnlyMode");
+  private static final SSymbol WRITE_ONLY_MODE = Symbols.symbolFor("WriteOnlyMode");
 
   public static final int BUFFER_SIZE = 32 * 1024;
 
@@ -55,6 +58,10 @@ public class SFileDescriptor extends SObjectWithClass {
   }
 
   public void closeFile() {
+    if (raf == null) {
+      return;
+    }
+
     try {
       raf.close();
       raf = null;
@@ -66,12 +73,12 @@ public class SFileDescriptor extends SObjectWithClass {
   public int read(final long position, final SBlock fail,
       final BlockDispatchNode dispatchHandler) {
     if (raf == null) {
-      fail.getMethod().invoke(new Object[] {fail, "File not open"});
+      fail.getMethod().invoke(new Object[] {fail, FILE_IS_CLOSED});
       return 0;
     }
 
     if (accessMode == AccessModes.write) {
-      fail.getMethod().invoke(new Object[] {fail, "Opened in write only"});
+      fail.getMethod().invoke(new Object[] {fail, WRITE_ONLY_MODE});
       return 0;
     }
 
@@ -100,12 +107,12 @@ public class SFileDescriptor extends SObjectWithClass {
   public void write(final int nBytes, final long position, final SBlock fail,
       final BlockDispatchNode dispatchHandler) {
     if (raf == null) {
-      dispatchHandler.executeDispatch(new Object[] {fail, "File not opened"});
+      dispatchHandler.executeDispatch(new Object[] {fail, FILE_IS_CLOSED});
       return;
     }
 
     if (accessMode == AccessModes.read) {
-      fail.getMethod().invoke(new Object[] {fail, "Opened in read only"});
+      fail.getMethod().invoke(new Object[] {fail, READ_ONLY_MODE});
       return;
     }
 

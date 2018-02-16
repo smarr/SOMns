@@ -41,6 +41,11 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
       deny: f isClosed.
       f close.
       assert: f isClosed.
+
+      (* what happens if we close it again?
+         should be an idempotent operation *)
+      f close.
+      assert: f isClosed.
     )
 
     public testCreateDeleteFile = (
@@ -64,11 +69,30 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
       deny: f exists.
     )
 
-    public testReadWrite = (
-      | f d |
+    public testRead = (
+      | f d err |
+      f:: FilePath for: path + '/data/A'.
+      assert: f exists.
+
+      d:: f open: #read.
+
+      d write: 100 at: 0 ifFail: [:e | err:: e ].
+      assert: err equals: #ReadOnlyMode.
+      d close.
+      assert: d isClosed.
+
+      d readAt: 0 ifFail: [:s | err:: s ].
+      assert: err equals: #FileIsClosed.
+    )
+
+    public testWrite = (
+      | f d err |
       f:: FilePath for: path + '/tmp'.
       deny: f exists.
-      d:: f open: #readWrite ifFail: [:r | assert: false ].
+
+      d:: f open: #write.
+
+      deny: d isClosed.
 
       assert: d size equals: 0.
 
@@ -76,7 +100,39 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
         d buffer at: i + 1 put: i - 128.
       ].
 
-      d write: 256 at: 0 ifFail: [:r|].
+      d write: 256 at: 0.
+      assert: d size equals: 256.
+
+      should: [ d readAt: 0 ] signal: IOException.
+      d readAt: 0 ifFail: [:s | err:: s ].
+      assert: err equals: #WriteOnlyMode.
+
+      0 to: 255 do:[ :i|
+        assert: (d buffer at: i + 1) equals: i - 128.
+      ].
+
+      d close.
+      assert: d isClosed.
+
+      d write: 100 at: 0 ifFail: [:e | err:: e ].
+      assert: err equals: #FileIsClosed.
+
+      f deleteFile.
+      deny: f exists.
+    )
+
+    public testReadWrite = (
+      | f d |
+      f:: FilePath for: path + '/tmp'.
+      deny: f exists.
+      d:: f open: #readWrite.
+
+      assert: d size equals: 0.
+
+      0 to: 255 do:[ :i|
+        d buffer at: i + 1 put: i - 128 ].
+
+      d write: 256 at: 0.
       assert: d size equals: 256.
       assert: 256 equals: (d readAt: 0).
 
