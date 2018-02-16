@@ -4,56 +4,95 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
   private actors      = platform actors.
   private Exception   = platform kernel Exception.
   private NotAValue   = platform kernel NotAValue.
+  private ArgumentError = platform kernel ArgumentError.
   private Vector      = platform kernel Vector.
   private Array       = platform kernel Array.
   private ObjectMirror = platform mirrors ObjectMirror.
   private errorTestMessage = 'test exception 1'.
-  private Files = platform files.
-  private fdes = Files FileDescriptor.
-  private fpath = Files FilePath.
-  private fpat = Files FilePattern.
-|
-)(
+
+  private FilePath    = platform files FilePath.
+  private FilePattern = platform files FilePattern.
+  private FileNotFoundException = platform files FileNotFoundException.
+  private IOException = platform files IOException.
+
+  private modulePath = (ObjectMirror reflecting: self) classMirror classDefinition filePath.
+|)(
   public class BasicFileTests = TestContext (
-    | path |
-    path:: (fpath currentDirectory / 'tests' / 'files') pattern.
+  | private path = ((FilePath for: modulePath)
+                      containingDirectory
+                      containingDirectory
+                      containingDirectory / 'tests' / 'files') pattern. |
   )(
     public testUtils = (
       | a b |
-      a:: fpath for: path + '/data/A'.
-      assert: a exists.
+      a:: FilePath for: path + '/data/A'.
+      assert: a exists description: path + '/data/A is expected to exist.'.
       assert: a size equals: 3656.
-      assert: a lastModified <> nil.
-      b:: fpath for: a containingDirectory pattern.
+      assert: a lastModified <> nil description: 'file should have a last modified date'.
+      b:: FilePath for: a containingDirectory pattern.
       assert: b entries size equals: 3.
+    )
+
+    public testClose = (
+      | fp f |
+      fp:: FilePath for: path + '/data/A'.
+      f:: fp open: #read.
+
+      deny: f isClosed.
+      f close.
+      assert: f isClosed.
+
+      (* what happens if we close it again?
+         should be an idempotent operation *)
+      f close.
+      assert: f isClosed.
     )
 
     public testCreateDeleteFile = (
       | f |
-      f:: fpath for: path + '/temp/A'.
-      (fpath for: (f containingDirectory pattern)) createDirectoryIfFail: [:r| assert: false ].
+      f:: FilePath for: path + '/temp/A'.
+      (FilePath for: (f containingDirectory pattern)) createDirectory.
       deny: f exists.
-      f open: #readwrite ifFail: [:r| assert: false message: 'should not happen' ].
+      f open: #readWrite.
       assert: f exists.
-      f deleteFileIfFail: [:r |].
+      f deleteFile.
       deny: f exists.
     )
 
     public testCreateDeleteDirectory = (
       | f |
-      f:: fpath for: path + '/temp/A'.
+      f:: FilePath for: path + '/temp/A'.
       deny: f exists.
-      f createDirectoryIfFail: [:r | assert: false ].
+      f createDirectory.
       assert: f exists.
-      f deleteDirectoryIfFail: [:r |].
+      f deleteDirectory.
       deny: f exists.
     )
 
-    public testReadWrite = (
-      | f d |
-      f:: fpath for: path + '/tmp'.
+    public testRead = (
+      | f d err |
+      f:: FilePath for: path + '/data/A'.
+      assert: f exists.
+
+      d:: f open: #read.
+
+      d write: 100 at: 0 ifFail: [:e | err:: e ].
+      assert: err equals: #ReadOnlyMode.
+      d close.
+      assert: d isClosed.
+
+      d readAt: 0 ifFail: [:s | err:: s ].
+      assert: err equals: #FileIsClosed.
+    )
+
+    public testWrite = (
+      | f d err |
+      f:: FilePath for: path + '/tmp'.
       deny: f exists.
-      d:: f open: #readwrite ifFail: [:r | assert: false ].
+
+      d:: f open: #write.
+
+      deny: d isClosed.
 
       assert: d size equals: 0.
 
@@ -61,9 +100,41 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
         d buffer at: i + 1 put: i - 128.
       ].
 
-      d write: 256 at: 0 ifFail: [:r|].
+      d write: 256 at: 0.
       assert: d size equals: 256.
-      assert: 256  equals: (d readAt: 0 ifFail: [:r |]).
+
+      should: [ d readAt: 0 ] signal: IOException.
+      d readAt: 0 ifFail: [:s | err:: s ].
+      assert: err equals: #WriteOnlyMode.
+
+      0 to: 255 do:[ :i|
+        assert: (d buffer at: i + 1) equals: i - 128.
+      ].
+
+      d close.
+      assert: d isClosed.
+
+      d write: 100 at: 0 ifFail: [:e | err:: e ].
+      assert: err equals: #FileIsClosed.
+
+      f deleteFile.
+      deny: f exists.
+    )
+
+    public testReadWrite = (
+      | f d |
+      f:: FilePath for: path + '/tmp'.
+      deny: f exists.
+      d:: f open: #readWrite.
+
+      assert: d size equals: 0.
+
+      0 to: 255 do:[ :i|
+        d buffer at: i + 1 put: i - 128 ].
+
+      d write: 256 at: 0.
+      assert: d size equals: 256.
+      assert: 256 equals: (d readAt: 0).
 
       0 to: 255 do:[ :i|
         assert: (d buffer at: i + 1) equals: i - 128.
@@ -71,14 +142,14 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
 
       d close.
 
-      f deleteFileIfFail: [:r |].
+      f deleteFile.
       deny: f exists.
     )
 
     public testPaths = (
       | f cnt |
       cnt:: 0.
-      f:: fpat for: path + '/data/*'.
+      f:: FilePattern for: path + '/data/*'.
       f pathsDo: [ :p |
         assert: p exists.
         cnt:: cnt + 1.
@@ -88,23 +159,70 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
 
     public testMove =(
       | f g |
-      f:: fpath for: path + '/tmp'.
-      f open: #readwrite ifFail: [:r|].
+      f:: FilePath for: path + '/tmp'.
+      f open: #readWrite.
 
       f copyNamed: 'tmp2'.
-      g:: fpath for: path + '/tmp2'.
+      g:: FilePath for: path + '/tmp2'.
       assert: g exists.
       assert: f exists.
       assert: g size equals: f size.
 
-      g deleteFileIfFail: [:r|].
+      g deleteFile.
       deny: g exists.
 
       f moveAs: g.
       assert: g exists.
       deny: f exists.
 
-      g deleteFileIfFail: [:r|].
+      g deleteFile.
+    )
+
+    public testFileNotFound = (
+      | f d |
+      f:: FilePath for: path + '/nonExisting'.
+      deny: f exists description: 'The file ' + f name asString + ' should not exist.'.
+      d:: f open: #read ifFail: [:err |
+        assert: err equals: #FileNotFound.
+        #FileNotFoundSuccessfullyRetrieved ].
+
+      assert: d equals: #FileNotFoundSuccessfullyRetrieved.
+
+      d:: f open: #read ifFail: [:err |
+        assert: err equals: #FileNotFound.
+        ^ self ].
+
+      assert: false description: 'Should not reach here because of return above.'
+    )
+
+    public testFileNotFoundException = (
+      | f |
+      f:: FilePath for: path + '/nonExisting'.
+      deny: f exists description: 'The file ' + f name asString + ' should not exist.'.
+      should: [ f open: #read ] signal: FileNotFoundException.
+    )
+
+    public testInvalidAccessMode = (
+      | f |
+      f:: FilePath for: path + '/nonExisting'.
+
+      should: [ f open: #readr     ] signal: ArgumentError.
+      should: [ f open: #Read      ] signal: ArgumentError.
+      should: [ f open: #Write     ] signal: ArgumentError.
+      should: [ f open: #ReadWrite ] signal: ArgumentError.
+      should: [ f open: 0          ] signal: ArgumentError.
+      should: [ f open: 'read'     ] signal: ArgumentError.
+      should: [ f open: 3423       ] signal: ArgumentError.
+      should: [ f open: Object new ] signal: ArgumentError.
+    )
+
+    public testFilePathSize = (
+      | fp f |
+      fp:: FilePath for: path + '/data/A'.
+      assert: fp size equals: 3656.
+
+      fp:: FilePath for: path + '/nonExisting'.
+      should: [ fp size ] signal: FileNotFoundException.
     )
   ) : (
     TEST_CONTEXT = ()

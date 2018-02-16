@@ -15,7 +15,7 @@ SOM_DIR=$SCRIPT_PATH/../..
 
 if [ "$1" = "--coverage" ]
 then
-  COVERAGE="--java-coverage $SOM_DIR/jacoco.exec --coverage $SOM_DIR/all.gcov "
+  COVERAGE="--java-coverage $SOM_DIR/jacoco.exec "
 fi
 
 ## create folder for new results
@@ -27,7 +27,7 @@ tar xf $SCRIPT_PATH/expected-results.tar.bz2 -C $SCRIPT_PATH/
 function runBenchmark {
   BENCH=$1
   HARNESS="$SOM_DIR/som -dm -Ddm.metrics=$SCRIPT_PATH/results/$BENCH \
-    $COVERAGE \
+    $COVERAGE --coverage $SOM_DIR/all.gcov \
     -G $SOM_DIR/core-lib/Benchmarks/Harness.ns"
   echo $HARNESS $@
   $HARNESS $@

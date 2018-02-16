@@ -1,5 +1,6 @@
 package som.primitives;
 
+import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -13,7 +14,6 @@ import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySystemOperation;
 import som.primitives.actors.PromisePrims;
-import som.vm.Symbols;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
@@ -96,15 +96,9 @@ public final class FilePrims {
       return file;
     }
 
-    @Specialization
-    public final Object setModeString(final SFileDescriptor file, final String mode) {
-      file.setMode(Symbols.symbolFor(mode));
-      return file;
-    }
-
-    @Specialization
-    public final Object setModeGeneral(final SFileDescriptor file, final Object mode) {
-      PathPrims.signalIOException("Invalid Access Mode");
+    @Fallback
+    public final Object setWithUnsupportedValue(final Object file, final Object mode) {
+      SFileDescriptor.signalInvalidAccessMode(mode);
       return file;
     }
   }
@@ -134,8 +128,7 @@ public final class FilePrims {
 
     @Specialization
     public final Object fileOpen(final SFileDescriptor file, final SBlock handler) {
-      file.openFile(handler, dispatchHandler);
-      return file;
+      return file.openFile(handler, dispatchHandler);
     }
   }
 

@@ -90,6 +90,9 @@ class Mirrors usingVmMirror: vmMirror = Value (
     )
 
     public factoryMethods = ( self notYetImplemented )
+
+    (* Returns the absolute path of the file with this class definition. *)
+    public filePath = ( ^ vmMirror classDefFilePath: classDefHandle )
   )
 
   public class ObjectMirror reflecting: obj = (

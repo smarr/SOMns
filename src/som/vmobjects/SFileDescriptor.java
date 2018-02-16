@@ -4,25 +4,33 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.util.Objects;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.primitives.PathPrims;
+import som.vm.NotYetImplementedException;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
+import som.vm.constants.KernelObj;
 import som.vmobjects.SArray.SMutableArray;
 
 
 public class SFileDescriptor extends SObjectWithClass {
   @CompilationFinal public static SClass fileDescriptorClass;
 
+  private static final SSymbol FILE_NOT_FOUND  = Symbols.symbolFor("FileNotFound");
+  private static final SSymbol FILE_IS_CLOSED  = Symbols.symbolFor("FileIsClosed");
+  private static final SSymbol READ_ONLY_MODE  = Symbols.symbolFor("ReadOnlyMode");
+  private static final SSymbol WRITE_ONLY_MODE = Symbols.symbolFor("WriteOnlyMode");
+
   public static final int BUFFER_SIZE = 32 * 1024;
 
-  private boolean open       = false;
-  private SArray  buffer;
-  private SSymbol mode;
-  private int     bufferSize = BUFFER_SIZE;
+  private SArray      buffer;
+  private int         bufferSize = BUFFER_SIZE;
+  private AccessModes accessMode;
 
   private RandomAccessFile raf;
   private final File       f;
@@ -36,29 +44,27 @@ public class SFileDescriptor extends SObjectWithClass {
     f = new File(uri);
   }
 
-  public void openFile(final SBlock fail, final BlockDispatchNode dispatchHandler) {
+  public Object openFile(final SBlock fail, final BlockDispatchNode dispatchHandler) {
     long[] storage = new long[bufferSize];
     buffer = new SMutableArray(storage, Classes.arrayClass);
 
     try {
-      if (mode == Symbols.symbolFor("read")) {
-        raf = new RandomAccessFile(f, "r");
-      } else if (mode == Symbols.symbolFor("readwrite")) {
-        raf = new RandomAccessFile(f, "rw");
-      } else {
-        dispatchHandler.executeDispatch(new Object[] {fail, "invalid access mode"});
-      }
+      raf = new RandomAccessFile(f, accessMode.mode);
     } catch (FileNotFoundException e) {
-      dispatchHandler.executeDispatch(new Object[] {fail, e.toString()});
+      return dispatchHandler.executeDispatch(new Object[] {fail, FILE_NOT_FOUND});
     }
 
-    open = true;
+    return this;
   }
 
   public void closeFile() {
+    if (raf == null) {
+      return;
+    }
+
     try {
       raf.close();
-      open = false;
+      raf = null;
     } catch (IOException e) {
       PathPrims.signalIOException(e.getMessage());
     }
@@ -66,8 +72,13 @@ public class SFileDescriptor extends SObjectWithClass {
 
   public int read(final long position, final SBlock fail,
       final BlockDispatchNode dispatchHandler) {
-    if (!open) {
-      fail.getMethod().invoke(new Object[] {fail, "File not open"});
+    if (raf == null) {
+      fail.getMethod().invoke(new Object[] {fail, FILE_IS_CLOSED});
+      return 0;
+    }
+
+    if (accessMode == AccessModes.write) {
+      fail.getMethod().invoke(new Object[] {fail, WRITE_ONLY_MODE});
       return 0;
     }
 
@@ -76,7 +87,7 @@ public class SFileDescriptor extends SObjectWithClass {
     int bytes = 0;
 
     try {
-      assert open;
+      assert raf != null;
 
       // set position in file
       raf.seek(position);
@@ -95,8 +106,13 @@ public class SFileDescriptor extends SObjectWithClass {
 
   public void write(final int nBytes, final long position, final SBlock fail,
       final BlockDispatchNode dispatchHandler) {
-    if (!open) {
-      dispatchHandler.executeDispatch(new Object[] {fail, "File not opened"});
+    if (raf == null) {
+      dispatchHandler.executeDispatch(new Object[] {fail, FILE_IS_CLOSED});
+      return;
+    }
+
+    if (accessMode == AccessModes.read) {
+      fail.getMethod().invoke(new Object[] {fail, READ_ONLY_MODE});
       return;
     }
 
@@ -122,8 +138,6 @@ public class SFileDescriptor extends SObjectWithClass {
   public long getFileSize() {
     try {
       return raf.length();
-    } catch (FileNotFoundException e) {
-      PathPrims.signalFileNotFoundException(f.getAbsolutePath(), e.getMessage());
     } catch (IOException e) {
       PathPrims.signalIOException(e.getMessage());
     }
@@ -131,7 +145,7 @@ public class SFileDescriptor extends SObjectWithClass {
   }
 
   public boolean isClosed() {
-    return !open;
+    return raf == null;
   }
 
   @Override
@@ -149,12 +163,50 @@ public class SFileDescriptor extends SObjectWithClass {
 
   public void setBufferSize(final int bufferSize) {
     // buffer size only changeable for closed files.
-    if (!open) {
+    if (raf == null) {
       this.bufferSize = bufferSize;
+    } else {
+      throw new NotYetImplementedException();
     }
   }
 
   public void setMode(final SSymbol mode) {
-    this.mode = mode;
+    try {
+      this.accessMode = AccessModes.valueOf(mode.getString());
+    } catch (IllegalArgumentException e) {
+      signalInvalidAccessMode(mode.getString());
+    }
+  }
+
+  public static void signalInvalidAccessMode(final Object mode) {
+    CompilerAsserts.neverPartOfCompilation();
+    KernelObj.signalException("signalArgumentError:", "File access mode invalid, was: "
+        + Objects.toString(mode) + " " + AccessModes.VALID_MODES);
+  }
+
+  private enum AccessModes {
+    read("r"), write("rw"), readWrite("rw");
+
+    final String mode;
+
+    AccessModes(final String mode) {
+      this.mode = mode;
+    }
+
+    static final String VALID_MODES = renderValid();
+
+    private static String renderValid() {
+      String result = "Valid access modes are ";
+      boolean first = true;
+      for (AccessModes m : values()) {
+        if (first) {
+          first = false;
+        } else {
+          result += ", ";
+        }
+        result += "#" + m.name();
+      }
+      return result;
+    }
   }
 }

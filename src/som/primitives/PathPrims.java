@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
@@ -30,6 +31,7 @@ import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
+import som.vmobjects.SSymbol;
 
 
 public final class PathPrims {
@@ -48,23 +50,23 @@ public final class PathPrims {
 
   public static Object signalFileNotFoundException(final String fileName,
       final String message) {
-    CompilerDirectives.transferToInterpreter();
-    VM.thisMethodNeedsToBeOptimized("Should be optimized or on slowpath");
-
-    SInvokable disp = (SInvokable) fileObject.getSOMClass().lookupPrivate(
-        Symbols.symbolFor("signalFileNotFoundException:with:"),
-        fileObject.getSOMClass().getMixinDefinition().getMixinId());
-    return disp.invoke(new Object[] {fileObject, fileName, message});
+    return signalException(Symbols.symbolFor("signalFileNotFoundException:with:"),
+        new Object[] {fileObject, fileName, message});
   }
 
   public static Object signalIOException(final String message) {
+    return signalException(Symbols.symbolFor("signalIOException:"),
+        new Object[] {fileObject, message});
+  }
+
+  private static Object signalException(final SSymbol selector, final Object[] args) {
     CompilerDirectives.transferToInterpreter();
     VM.thisMethodNeedsToBeOptimized("Should be optimized or on slowpath");
 
     SInvokable disp = (SInvokable) fileObject.getSOMClass().lookupPrivate(
-        Symbols.symbolFor("signalIOException:"),
-        fileObject.getSOMClass().getMixinDefinition().getMixinId());
-    return disp.invoke(new Object[] {fileObject, message});
+        selector, fileObject.getSOMClass().getMixinDefinition().getMixinId());
+    assert disp != null : "Lookup of " + selector.getString() + " failed in Files.ns";
+    return disp.invoke(args);
   }
 
   @GenerateNodeFactory
@@ -200,7 +202,7 @@ public final class PathPrims {
     public final long getSize(final String dir) {
       try {
         return Files.size(Paths.get(dir));
-      } catch (FileNotFoundException e) {
+      } catch (NoSuchFileException e) {
         signalFileNotFoundException(dir, e.getMessage());
       } catch (IOException e) {
         signalIOException(e.getMessage());
