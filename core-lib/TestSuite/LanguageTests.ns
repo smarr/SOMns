@@ -94,10 +94,6 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       ^ [ ^ 42 ]
     )
 
-    private manyArguments = (
-      ^ [:arg1 :arg2 :arg3 :arg4 | (arg1 + arg2 + arg3 + arg4) ]
-    )
-
     public testSimpleBlocks = (
       self assert: 42 equals: self simpleBlock value.
       self assert: 4  equals: (self incBlock value: 3).
@@ -121,22 +117,33 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
     )
 
     public testValueWithArguments = (
-      self assert: 18 equals: (self manyArguments valueWithArguments: { 3. 4. 5. 6 }).
-      self assert: 42 equals: (self simpleBlock valueWithArguments: (Array new: 0)).
-      self assert: 4  equals: (self incBlock valueWithArguments: { 3 }).
+      assert: 18 equals: ([:arg1 :arg2 :arg3 :arg4 | (arg1 + arg2 + arg3 + arg4) ] valueWithArguments: { 3. 4. 5. 6 }).
+      assert: 42 equals: (self simpleBlock valueWithArguments: {}).
+      assert: 4  equals: (self incBlock valueWithArguments: { 3 }).
 
       assert: ([:a :b :c :d :e :f :g :h :k :l |
                   a + b + c + d + e + f + g + h + k + l ]
               valueWithArguments: {1. 2. 3. 4. 5. 6. 7. 8. 9. 10})
-      equals: 2.
+      equals: 55.
+    )
+
+    public testCull = (
+      assert: ([ #t ] cull: 4)                        equals: #t.
+      assert: ([ #t ] cull: 4 with: 6)                equals: #t.
+      assert: ([ #t ] cullArguments: {})              equals: #t.
+      assert: ([ #t ] cullArguments: {1. 2. 3. 4. 5}) equals: #t.
+
+      should: [ [:a :b :c | {a. b. c} ] cull: 1 ]              signal: ArgumentError.
+      should: [ [:a :b :c | {a. b. c} ] cullArguments: { 1 } ] signal: ArgumentError.
     )
 
     public testBlockArgumentErrors = (
       | r |
       should: [ simpleBlock value: 1. ] signal: ArgumentError.
-      should: [ manyArguments value ]   signal: ArgumentError.
 
-      should: [ incBlock valueWithArguments: {}. ] signal: ArgumentError.
+      should: [ [:arg1 :arg2 :arg3 :arg4 | (arg1 + arg2 + arg3 + arg4) ] value ] signal: ArgumentError.
+
+      should: [ incBlock valueWithArguments: {} ] signal: ArgumentError.
     )
 
     public testEscapedBlock = (

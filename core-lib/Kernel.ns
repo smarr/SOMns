@@ -64,7 +64,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public notNil = ( ^ true )
     public ifNil: aBlock = ( ^ self )
     public ifNotNil: aBlock = ( ^ aBlock value )
-    public ifNil: noGoBlock ifNotNil: goBlock = ( ^ goBlock value: self )
+    public ifNil: noGoBlock ifNotNil: goBlock = ( ^ goBlock cull: self )
 
     (* Debugging *)
     public print    = ( self asString print )
@@ -606,6 +606,28 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public value: arg               = ( ^ vmMirror blockValue: self with: arg )
     public value: arg1 with: arg2   = ( ^ vmMirror blockValue: self with: arg1 with: arg2 )
     public valueWithArguments: args = ( ^ vmMirror blockValue: self withArguments: args )
+
+    (* Execute block with given or less arguments *)
+    public cull: arg = (
+      ^ (vmMirror blockNumArgs: self) = 1
+          ifTrue: [ value ] ifFalse: [ value: arg ]
+    )
+
+    public cull: arg1 with: arg2 = (
+      ^ (vmMirror blockNumArgs: self) < 3
+          ifTrue: [ cull: arg1 ] ifFalse: [ value: arg1 with: arg2 ]
+    )
+
+    public cullArguments: args = (
+      | numArgs ::= (vmMirror blockNumArgs: self) - 1 (* args does not include receiver *). |
+      args size < numArgs ifTrue: [
+        ^ ArgumentError signalWith: 'wrong number of Block arguments: '
+                                    + args size + ', expected: ' + numArgs ].
+      args size > numArgs ifTrue: [
+        ^ valueWithArguments: (args copyFrom: 1 to: numArgs) ].
+
+      ^ valueWithArguments: args
+    )
 
     (* Looping *)
     public whileFalse: block = (
