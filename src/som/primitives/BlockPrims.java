@@ -203,4 +203,13 @@ public abstract class BlockPrims {
           call, SArguments.getPlainArgumentsWithReceiver(receiver, args, size, at));
     }
   }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "blockNumArgs:", receiverType = SBlock.class)
+  public abstract static class BlockNumArgsPrim extends UnaryExpressionNode {
+    @Specialization
+    public final long getNumArgs(final SBlock receiver) {
+      return receiver.getMethod().getNumberOfArguments();
+    }
+  }
 }
