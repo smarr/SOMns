@@ -64,7 +64,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public notNil = ( ^ true )
     public ifNil: aBlock = ( ^ self )
     public ifNotNil: aBlock = ( ^ aBlock value )
-    public ifNil: noGoBlock ifNotNil: goBlock = ( ^ goBlock value: self )
+    public ifNil: noGoBlock ifNotNil: goBlock = ( ^ goBlock cull: self )
 
     (* Debugging *)
     public print    = ( self asString print )
@@ -596,14 +596,38 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public size                  = ( ^ vmMirror arraySize: self )
 
     public copy = ( ^ self )
-  ):(
+  ) : (
     public new: size withAll: aBlock = ( vmMirror valueArrayNew: size withAll: aBlock )
   )
 
-  public class Block = Object ()
-  (
+  public class Block = Object ()(
     (* Evaluation *)
-    public value = ( ^ vmMirror blockValue: self )
+    public value                    = ( ^ vmMirror blockValue: self )
+    public value: arg               = ( ^ vmMirror blockValue: self with: arg )
+    public value: arg1 with: arg2   = ( ^ vmMirror blockValue: self with: arg1 with: arg2 )
+    public valueWithArguments: args = ( ^ vmMirror blockValue: self withArguments: args )
+
+    (* Execute block with given or less arguments *)
+    public cull: arg = (
+      ^ (vmMirror blockNumArgs: self) = 1
+          ifTrue: [ value ] ifFalse: [ value: arg ]
+    )
+
+    public cull: arg1 with: arg2 = (
+      ^ (vmMirror blockNumArgs: self) < 3
+          ifTrue: [ cull: arg1 ] ifFalse: [ value: arg1 with: arg2 ]
+    )
+
+    public cullArguments: args = (
+      | numArgs ::= (vmMirror blockNumArgs: self) - 1 (* args does not include receiver *). |
+      args size < numArgs ifTrue: [
+        ^ ArgumentError signalWith: 'wrong number of Block arguments: '
+                                    + args size + ', expected: ' + numArgs ].
+      args size > numArgs ifTrue: [
+        ^ valueWithArguments: (args copyFrom: 1 to: numArgs) ].
+
+      ^ valueWithArguments: args
+    )
 
     (* Looping *)
     public whileFalse: block = (
@@ -624,22 +648,6 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public ensure: aBlock = (
       ^ vmMirror exceptionDo: self ensure: aBlock
     )
-  )
-
-  protected class Block1 = Block ()()
-  protected class Block2 = Block ()
-  (
-    (* Evaluating *)
-    public value           = ( self value: nil )
-    public value: argument = ( ^ vmMirror blockValue: self with: argument )
-  )
-
-  protected class Block3 = Block ()
-  (
-    (* Evaluating *)
-    public value                  = ( self value: nil with: nil )
-    public value: arg             = ( self value: arg with: nil )
-    public value: arg1 with: arg2 = ( ^ vmMirror blockValue: self with: arg1 with: arg2 )
   )
 
   public class Pair withKey: aKey andValue: aValue = (

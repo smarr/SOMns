@@ -29,6 +29,7 @@ import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.interop.TruffleObject;
 
 import som.interop.SBlockInteropMessageResolutionForeign;
+import som.vm.constants.Classes;
 
 
 public final class SBlock extends SAbstractObject
@@ -36,13 +37,10 @@ public final class SBlock extends SAbstractObject
 
   private final SInvokable        method;
   private final MaterializedFrame context;
-  private final SClass            blockClass;
 
-  public SBlock(final SInvokable blockMethod, final MaterializedFrame context,
-      final SClass blockClass) {
+  public SBlock(final SInvokable blockMethod, final MaterializedFrame context) {
     this.method = blockMethod;
     this.context = context;
-    this.blockClass = blockClass;
   }
 
   public SInvokable getMethod() {
@@ -57,7 +55,7 @@ public final class SBlock extends SAbstractObject
 
   @Override
   public SClass getSOMClass() {
-    return blockClass;
+    return Classes.blockClass;
   }
 
   @Override

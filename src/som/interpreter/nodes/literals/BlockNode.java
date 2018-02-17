@@ -11,9 +11,7 @@ import som.compiler.Variable.Argument;
 import som.interpreter.InliningVisitor;
 import som.interpreter.Method;
 import som.interpreter.nodes.ExpressionNode;
-import som.vm.constants.Classes;
 import som.vmobjects.SBlock;
-import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import tools.debugger.Tags.LiteralTag;
 
@@ -21,30 +19,11 @@ import tools.debugger.Tags.LiteralTag;
 public class BlockNode extends LiteralNode {
 
   protected final SInvokable blockMethod;
-  protected final SClass     blockClass;
   protected final boolean    needsAdjustmentOnScopeChange;
 
   public BlockNode(final SInvokable blockMethod, final boolean needsAdjustmentOnScopeChange) {
     this.blockMethod = blockMethod;
     this.needsAdjustmentOnScopeChange = needsAdjustmentOnScopeChange;
-    switch (blockMethod.getNumberOfArguments()) {
-      case 1: {
-        this.blockClass = Classes.blockClass1;
-        break;
-      }
-      case 2: {
-        this.blockClass = Classes.blockClass2;
-        break;
-      }
-      case 3: {
-        this.blockClass = Classes.blockClass3;
-        break;
-      }
-
-      // we don't support more than 3 arguments
-      default:
-        this.blockClass = Classes.blockClass;
-    }
   }
 
   @Override
@@ -74,7 +53,7 @@ public class BlockNode extends LiteralNode {
 
   @Override
   public SBlock executeSBlock(final VirtualFrame frame) {
-    return new SBlock(blockMethod, null, blockClass);
+    return new SBlock(blockMethod, null);
   }
 
   @Override
@@ -116,7 +95,7 @@ public class BlockNode extends LiteralNode {
 
     @Override
     public SBlock executeSBlock(final VirtualFrame frame) {
-      return new SBlock(blockMethod, frame.materialize(), blockClass);
+      return new SBlock(blockMethod, frame.materialize());
     }
 
     @Override

@@ -6,9 +6,10 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
   private Set          = platform collections Set.
   private kernel       = platform kernel.
   private NotAValue    = platform kernel NotAValue.
+
+  private ArgumentError = platform kernel ArgumentError.
   private langTestsModule = self.
-|
-)(
+|)(
   (* This test verifies that SOM blocks are indeed closures.
      The test was found on Eliot Miranda's Cog Blog. *)
 
@@ -65,33 +66,32 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
   public class BlockTest = TestContext (
     | escapeCount anEscapedBlock |
   ) (
-
-    simpleBlock = (
-      ^[42]
+    private simpleBlock = (
+      ^ [ 42 ]
     )
 
     incBlock = (
-      ^[ :val | val + 1]
+      ^ [:val | val + 1 ]
     )
 
     (* This requires a closure *)
     adderBlock: amount = (
-      ^[ :val | amount + val]
+      ^ [:val | amount + val ]
     )
 
     (* Closure with mutable state in block *)
     counterBlock = (
       |count|
       count:: 0.
-      ^[count:: count + 1. count]
+      ^ [ count:: count + 1. count ]
     )
 
     public selfKeeper = (
-      ^[self]
+      ^ [ self ]
     )
 
     escapingBlock = (
-      ^[^42]
+      ^ [ ^ 42 ]
     )
 
     public testSimpleBlocks = (
@@ -114,6 +114,36 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       testInst:: BlockTest new.
       self assert: testInst is: testInst selfKeeper value.
       self assert: self     is: self selfKeeper value.
+    )
+
+    public testValueWithArguments = (
+      assert: 18 equals: ([:arg1 :arg2 :arg3 :arg4 | (arg1 + arg2 + arg3 + arg4) ] valueWithArguments: { 3. 4. 5. 6 }).
+      assert: 42 equals: (self simpleBlock valueWithArguments: {}).
+      assert: 4  equals: (self incBlock valueWithArguments: { 3 }).
+
+      assert: ([:a :b :c :d :e :f :g :h :k :l |
+                  a + b + c + d + e + f + g + h + k + l ]
+              valueWithArguments: {1. 2. 3. 4. 5. 6. 7. 8. 9. 10})
+      equals: 55.
+    )
+
+    public testCull = (
+      assert: ([ #t ] cull: 4)                        equals: #t.
+      assert: ([ #t ] cull: 4 with: 6)                equals: #t.
+      assert: ([ #t ] cullArguments: {})              equals: #t.
+      assert: ([ #t ] cullArguments: {1. 2. 3. 4. 5}) equals: #t.
+
+      should: [ [:a :b :c | {a. b. c} ] cull: 1 ]              signal: ArgumentError.
+      should: [ [:a :b :c | {a. b. c} ] cullArguments: { 1 } ] signal: ArgumentError.
+    )
+
+    public testBlockArgumentErrors = (
+      | r |
+      should: [ simpleBlock value: 1. ] signal: ArgumentError.
+
+      should: [ [:arg1 :arg2 :arg3 :arg4 | (arg1 + arg2 + arg3 + arg4) ] value ] signal: ArgumentError.
+
+      should: [ incBlock valueWithArguments: {} ] signal: ArgumentError.
     )
 
     public testEscapedBlock = (
@@ -326,7 +356,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       self assert: #Integer equals: (ObjectMirror reflecting: 10000000000) className.
       self assert: #Double  equals: (ObjectMirror reflecting: (1 // 2)) className.
       self assert: #Double  equals: (ObjectMirror reflecting: 0.5) className.
-      self assert: #Block1  equals: (ObjectMirror reflecting: [42]) className.
+      self assert: #Block   equals: (ObjectMirror reflecting: [42]) className.
       self assert: #Object  equals: (ObjectMirror reflecting: Object new) className.
       self assert: #Set     equals: (ObjectMirror reflecting: Set new) className.
       self assert: #String  equals: (ObjectMirror reflecting: 'foo') className.
