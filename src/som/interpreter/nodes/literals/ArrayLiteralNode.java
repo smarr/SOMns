@@ -14,7 +14,13 @@ import tools.dym.Tags.NewArray;
 public abstract class ArrayLiteralNode extends LiteralNode {
   public static ArrayLiteralNode create(final ExpressionNode[] exprs,
       final SourceSection source) {
-    return new Uninit(exprs).initialize(source);
+    ArrayLiteralNode lit;
+    if (exprs.length == 0) {
+      lit = new EmptyArrayNode();
+    } else {
+      lit = new Uninit(exprs);
+    }
+    return lit.initialize(source);
   }
 
   @Children protected final ExpressionNode[] expressions;
@@ -29,6 +35,17 @@ public abstract class ArrayLiteralNode extends LiteralNode {
       return true;
     } else {
       return super.isTaggedWith(tag);
+    }
+  }
+
+  private static final class EmptyArrayNode extends ArrayLiteralNode {
+    private EmptyArrayNode() {
+      super(null);
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      return new SMutableArray(0, Classes.arrayClass);
     }
   }
 
