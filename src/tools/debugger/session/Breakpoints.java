@@ -9,8 +9,7 @@ import com.oracle.truffle.api.debug.Breakpoint;
 import com.oracle.truffle.api.debug.Breakpoint.SimpleCondition;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.DebuggerSession;
-import com.oracle.truffle.api.debug.DebuggerSession.SteppingLocation;
-import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.debug.SuspendAnchor;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -76,33 +75,32 @@ public class Breakpoints {
   }
 
   public synchronized void addOrUpdateBeforeExpression(final SectionBreakpoint bId) {
-    saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class, null);
+    saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class, SuspendAnchor.BEFORE);
   }
 
   public synchronized void addOrUpdateAfterExpression(final SectionBreakpoint bId) {
-    saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class,
-        SteppingLocation.AFTER_STATEMENT);
+    saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class, SuspendAnchor.AFTER);
   }
 
   public synchronized void addOrUpdateAsyncBefore(final SectionBreakpoint bId) {
-    Breakpoint bp = saveTruffleBasedBreakpoints(bId, RootTag.class, null);
+    Breakpoint bp = saveTruffleBasedBreakpoints(bId, RootTag.class, SuspendAnchor.BEFORE);
     bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
   }
 
   public synchronized void addOrUpdateAsyncAfter(final SectionBreakpoint bId) {
     Breakpoint bp =
-        saveTruffleBasedBreakpoints(bId, RootTag.class, SteppingLocation.AFTER_STATEMENT);
+        saveTruffleBasedBreakpoints(bId, RootTag.class, SuspendAnchor.AFTER);
     bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
   }
 
   private Breakpoint saveTruffleBasedBreakpoints(final SectionBreakpoint bId,
-      final Class<?> tag, final SteppingLocation sl) {
+      final Class<?> tag, final SuspendAnchor anchor) {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {
       bp = Breakpoint.newBuilder(bId.getCoordinate().uri).lineIs(bId.getCoordinate().startLine)
                      .columnIs(bId.getCoordinate().startColumn)
                      .sectionLength(bId.getCoordinate().charLength).tag(tag)
-                     .steppingLocation(sl).build();
+                     .suspendAnchor(anchor).build();
       debuggerSession.install(bp);
       truffleBreakpoints.put(bId, bp);
     }
