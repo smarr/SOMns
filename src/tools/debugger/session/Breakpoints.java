@@ -45,11 +45,6 @@ public class Breakpoints {
     this.debuggerSession = debugger.startSession(webDebugger);
   }
 
-  public void doSuspend(final MaterializedFrame frame,
-      final SteppingLocation steppingLocation) {
-    debuggerSession.doSuspend(frame, steppingLocation);
-  }
-
   public void prepareSteppingUntilNextRootNode() {
     debuggerSession.prepareSteppingUntilNextRootNode();
   }

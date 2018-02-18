@@ -9,10 +9,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.debug.Debugger;
-import com.oracle.truffle.api.debug.DebuggerSession.SteppingLocation;
 import com.oracle.truffle.api.debug.SuspendedCallback;
 import com.oracle.truffle.api.debug.SuspendedEvent;
-import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
@@ -144,11 +142,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
     connector.sendStoppedMessage(suspension);
     suspension.suspend();
-  }
-
-  public void suspendExecution(final MaterializedFrame haltedFrame,
-      final SteppingLocation steppingLocation) {
-    breakpoints.doSuspend(haltedFrame, steppingLocation);
   }
 
   public static void log(final String str) {
