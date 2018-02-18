@@ -49,15 +49,28 @@ public class DirectCallNodeWrapper implements InstrumentableFactory<DirectCallNo
 
     @Override
     public Object call(final VirtualFrame frame, final Object[] arguments) {
-      try {
-        probe.onEnter(frame);
-        Object returnValue = delegate.call(arguments);
-        probe.onReturnValue(frame, returnValue);
-        return returnValue;
-      } catch (Throwable t) {
-        probe.onReturnExceptional(frame, t);
-        throw t;
+      Object returnValue;
+      for (;;) {
+        boolean wasOnReturnExecuted = false;
+        try {
+          probe.onEnter(frame);
+          returnValue = delegate.call(arguments);
+          wasOnReturnExecuted = true;
+          probe.onReturnValue(frame, returnValue);
+          break;
+        } catch (Throwable t) {
+          Object result = probe.onReturnExceptionalOrUnwind(frame, t, wasOnReturnExecuted);
+          if (result == ProbeNode.UNWIND_ACTION_REENTER) {
+            continue;
+          } else if (result != null) {
+            returnValue = result;
+            break;
+          } else {
+            throw t;
+          }
+        }
       }
+      return returnValue;
     }
 
     @Override
