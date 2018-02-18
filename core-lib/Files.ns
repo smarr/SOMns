@@ -599,20 +599,27 @@ DAMAGE.>> *)
     )
   )
 
-  public class IOException signalWith: aMessage = Exception (
+  public class IOException with: aMessage = Exception (
   | public message = aMessage. |
-    self signal.
   )(
     public asString = (
       ^ 'IOException(' + message + ')'
     )
+  ) : (
+    public signalWith: aMessage = (
+      (IOException with: aMessage) signal
+    )
   )
 
-  public class FileNotFoundException signalFor: fileName with: message = IOException signalWith: message (
+  public class FileNotFoundException for: fileName with: message = IOException with: message (
   | public fileName = fileName. |
   )(
     public asString = (
       ^ 'FileNotFoundException(file: ' + fileName + ', message: ' + message + ')'
+    )
+  ) : (
+    public signalFor: fileName with: message = (
+      (FileNotFoundException for: fileName with: message) signal
     )
   )
 
