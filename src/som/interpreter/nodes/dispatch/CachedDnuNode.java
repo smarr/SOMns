@@ -6,6 +6,7 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
+import som.Output;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.SArguments;
@@ -57,7 +58,7 @@ public final class CachedDnuNode extends AbstractDispatchNode {
       final Object rcvr) {
     if (VmSettings.DNU_PRINT_STACK_TRACE) {
       PrintStackTracePrim.printStackTrace(0, getSourceSection());
-      VM.errorPrintln("Lookup of " + selector + " failed in "
+      Output.errorPrintln("Lookup of " + selector + " failed in "
           + Types.getClassOf(rcvr).getName().getString());
     }
 

@@ -8,6 +8,7 @@ import java.util.concurrent.RejectedExecutionException;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
+import som.Output;
 import som.VM;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.IsValue;
@@ -347,7 +348,8 @@ public class Actor implements Activity {
       if (VmSettings.ACTOR_TRACING) {
         long createdEntities = nextEntityId - 1 - (threadId << TraceData.ENTITY_ID_BITS);
 
-        VM.printConcurrencyEntitiesReport("[Thread " + threadId + "]\tE#" + createdEntities);
+        Output.printConcurrencyEntitiesReport(
+            "[Thread " + threadId + "]\tE#" + createdEntities);
 
         synchronized (statsLock) {
           numCreatedEntities += createdEntities;
@@ -360,7 +362,7 @@ public class Actor implements Activity {
   public static final void reportStats() {
     if (VmSettings.ACTOR_TRACING) {
       synchronized (statsLock) {
-        VM.printConcurrencyEntitiesReport("[Total]\tE#" + numCreatedEntities);
+        Output.printConcurrencyEntitiesReport("[Total]\tE#" + numCreatedEntities);
       }
     }
   }

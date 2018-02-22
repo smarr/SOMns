@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
-import som.VM;
+import som.Output;
 
 
 public class VmOptions {
@@ -97,22 +97,22 @@ public class VmOptions {
       return true;
     }
 
-    VM.println("VM arguments, need to come before any application arguments:");
-    VM.println("");
-    VM.println("  --platform file-name   SOM Platform module to be loaded");
-    VM.println("                         file-name defaults to '"
+    Output.println("VM arguments, need to come before any application arguments:");
+    Output.println("");
+    Output.println("  --platform file-name   SOM Platform module to be loaded");
+    Output.println("                         file-name defaults to '"
         + VmOptions.STANDARD_PLATFORM_FILE + "'");
-    VM.println("  --kernel file-name     SOM Kernel module to be loaded");
-    VM.println("                         file-name defaults to '"
+    Output.println("  --kernel file-name     SOM Kernel module to be loaded");
+    Output.println("                         file-name defaults to '"
         + VmOptions.STANDARD_KERNEL_FILE + "'");
-    VM.println("");
-    VM.println("  --debug                Run in Truffle Debugger/REPL");
-    VM.println("  --web-debug            Start web debugger");
-    VM.println("");
-    VM.println("  --profile              Enable the TruffleProfiler");
-    VM.println("  --dynamic-metrics      Enable the DynamicMetrics tool");
-    VM.println("  --si-candidates        Enable the Super-instruction candidate tool");
-    VM.println(
+    Output.println("");
+    Output.println("  --debug                Run in Truffle Debugger/REPL");
+    Output.println("  --web-debug            Start web debugger");
+    Output.println("");
+    Output.println("  --profile              Enable the TruffleProfiler");
+    Output.println("  --dynamic-metrics      Enable the DynamicMetrics tool");
+    Output.println("  --si-candidates        Enable the Super-instruction candidate tool");
+    Output.println(
         "  --coveralls REPO_TOKEN Enable the Coverage tool and reporting to Coveralls.io");
     return false;
   }

@@ -16,7 +16,7 @@ import java.util.Queue;
 
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VM;
+import som.Output;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
@@ -167,7 +167,7 @@ public final class TraceParser {
     long currentThread = 0;
     Context current = new Context(0, 0, 0);
 
-    VM.println("Parsing Trace ...");
+    Output.println("Parsing Trace ...");
     parseSymbols();
 
     try (FileInputStream fis = new FileInputStream(traceFile);
@@ -357,7 +357,7 @@ public final class TraceParser {
 
     assert messageReceiveContexts.isEmpty();
 
-    VM.println("Trace with " + parsedMessages + " Messages and " + parsedActors
+    Output.println("Trace with " + parsedMessages + " Messages and " + parsedActors
         + " Actors sucessfully parsed!");
   }
 

@@ -5,7 +5,7 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VM;
+import som.Output;
 import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.Types;
@@ -47,7 +47,7 @@ public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
       final IndirectCallNode call) {
     if (VmSettings.DNU_PRINT_STACK_TRACE) {
       PrintStackTracePrim.printStackTrace(0, null);
-      VM.errorPrintln("Lookup of " + selector + " failed in "
+      Output.errorPrintln("Lookup of " + selector + " failed in "
           + Types.getClassOf(rcvr).getName().getString());
     }
 

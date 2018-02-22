@@ -14,6 +14,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.Output;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
@@ -359,8 +360,9 @@ public final class ObjectSystem {
 
     assert !vm.shouldExit();
     TracingActors.ReplayActor.printMissingMessages();
-    VM.errorPrintln("VM seems to have exited prematurely. The actor pool has been idle for "
-        + emptyFJPool + " checks in a row.");
+    Output.errorPrintln(
+        "VM seems to have exited prematurely. The actor pool has been idle for "
+            + emptyFJPool + " checks in a row.");
     vm.shutdownAndExit(1); // just in case it was disable for VM.errorExit
   }
 
@@ -409,7 +411,7 @@ public final class ObjectSystem {
         handlePromiseResult((SPromise) result);
         return;
       } else {
-        VM.errorPrintln("The application's #main: method returned a " + result.toString()
+        Output.errorPrintln("The application's #main: method returned a " + result.toString()
             + ", but it needs to return a Promise or Integer as return value.");
         vm.shutdownAndExit(1);
       }

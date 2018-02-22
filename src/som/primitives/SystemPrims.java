@@ -26,6 +26,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import bd.nodes.Operation;
 import bd.primitives.Primitive;
 import bd.primitives.Specializer;
+import som.Output;
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.interop.ValueConversion.ToSomConversion;
@@ -113,7 +114,7 @@ public final class SystemPrims {
   public abstract static class PrintStringPrim extends UnaryExpressionNode {
     @Specialization
     public final Object doSObject(final String argument) {
-      VM.print(argument);
+      Output.print(argument);
       return argument;
     }
 
@@ -128,7 +129,27 @@ public final class SystemPrims {
   public abstract static class PrintInclNewlinePrim extends UnaryExpressionNode {
     @Specialization
     public final Object doSObject(final String argument) {
-      VM.println(argument);
+      Output.println(argument);
+      return argument;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "printWarning:")
+  public abstract static class PrintWarningPrim extends UnaryExpressionNode {
+    @Specialization
+    public final Object doSObject(final String argument) {
+      Output.warningPrintln(argument);
+      return argument;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "printError:")
+  public abstract static class PrintErrorPrim extends UnaryExpressionNode {
+    @Specialization
+    public final Object doSObject(final String argument) {
+      Output.errorPrintln(argument);
       return argument;
     }
   }
@@ -148,7 +169,7 @@ public final class SystemPrims {
       ArrayList<String> location = new ArrayList<String>();
       int[] maxLengthMethod = {0};
       boolean[] first = {true};
-      VM.println("Stack Trace");
+      Output.println("Stack Trace");
 
       Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<Object>() {
         @Override
@@ -196,7 +217,7 @@ public final class SystemPrims {
         sb.append('\n');
       }
 
-      VM.print(sb.toString());
+      Output.print(sb.toString());
     }
   }
 

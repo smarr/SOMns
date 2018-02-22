@@ -30,7 +30,7 @@ describe("Stack trace output", () => {
 \tPlatform>>#λstart@@                       Platform.ns::\n\
 \tPingPong>>#main:                             pingpong.ns::\n\
 \tPingPong>>#testDNU                           pingpong.ns::\n\
-ERROR: MessageNotUnderstood(Integer>>#foobar)\n");
+");
   });
 
   it("should be correct for `system printStackTrace`", () => {
