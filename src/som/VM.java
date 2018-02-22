@@ -180,6 +180,7 @@ public final class VM {
     }
   }
 
+  @SuppressWarnings("deprecation")
   private static void outputToIGV(final Method method) {
     GraphPrintVisitor graphPrinter = new GraphPrintVisitor();
 

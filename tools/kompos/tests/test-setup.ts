@@ -28,9 +28,11 @@ const PRINT_CMD_LINE = false;
 
 let stdErr = "";
 let stdOut = "";
+let lastCommandLine = "";
 
 export function getStdErr() { let current = stdErr; stdErr = ""; return current; }
 export function getStdOut() { let current = stdOut; stdOut = ""; return current; }
+export function getCmd() { return lastCommandLine; }
 
 export function expectStop(msg: StackTraceResponse, stop: Stop, activityMap) {
   expectStack(msg.stackFrames, stop.stackHeight, stop.methodName, stop.line);
@@ -90,8 +92,9 @@ export class TestConnection extends VmConnection {
     if (triggerDebugger) { args = ["-d"].concat(args); };
     if (extraArgs) { args = args.concat(extraArgs); }
 
+    lastCommandLine = SOM + " " + args.join(" ");
     if (PRINT_CMD_LINE) {
-      console.log("[CMD]" + SOM + " " + args.join(" "));
+      console.log("[CMD]" + lastCommandLine);
     }
 
     this.somProc = spawn(SOM, args);

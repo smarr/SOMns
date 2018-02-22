@@ -8,7 +8,8 @@
     <property name="unit.dir"    value="tests/java" />
     <property name="kompos.dir"  value="tools/kompos" />
     <property name="truffle.dir" location="${lib.dir}/truffle/truffle" />
-    <property name="sdk.build"   location="${lib.dir}/truffle/sdk/mxbuild/dists" />
+    <property name="sdk.dir"     location="${lib.dir}/truffle/sdk" />
+    <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists" />
     <property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
     <property name="somns-deps.version" value="0.3.3" />
     <property name="checkstyle.version" value="7.6.1" />
@@ -81,6 +82,9 @@
 
     <target name="ideinit" depends="source">
         <exec executable="${mx.cmd}" dir="${truffle.dir}" failonerror="true">
+            <arg value="eclipseinit"/>
+        </exec>
+        <exec executable="${mx.cmd}" dir="${sdk.dir}" failonerror="true">
             <arg value="eclipseinit"/>
         </exec>
     </target>

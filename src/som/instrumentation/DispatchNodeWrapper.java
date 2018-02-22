@@ -59,15 +59,29 @@ public final class DispatchNodeWrapper implements
 
     @Override
     public Object executeDispatch(final Object[] arguments) {
-      try {
-        probeNode.onEnter(null);
-        Object returnValue = delegateNode.executeDispatch(arguments);
-        probeNode.onReturnValue(null, returnValue);
-        return returnValue;
-      } catch (Throwable t) {
-        probeNode.onReturnExceptional(null, t);
-        throw t;
+      Object returnValue;
+      for (;;) {
+        boolean wasOnReturnExecuted = false;
+        try {
+          probeNode.onEnter(null);
+          returnValue = delegateNode.executeDispatch(arguments);
+          wasOnReturnExecuted = true;
+          probeNode.onReturnValue(null, returnValue);
+          return returnValue;
+        } catch (Throwable t) {
+          // TODO: is passing `null` here as virtual frame an issue?
+          Object result = probeNode.onReturnExceptionalOrUnwind(null, t, wasOnReturnExecuted);
+          if (result == ProbeNode.UNWIND_ACTION_REENTER) {
+            continue;
+          } else if (result != null) {
+            returnValue = result;
+            break;
+          } else {
+            throw t;
+          }
+        }
       }
+      return returnValue;
     }
   }
 }

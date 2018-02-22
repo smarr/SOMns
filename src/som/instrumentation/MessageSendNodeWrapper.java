@@ -53,28 +53,54 @@ public class MessageSendNodeWrapper
 
     @Override
     public Object doPreEvaluated(final VirtualFrame frame, final Object[] args) {
-      try {
-        probe.onEnter(frame);
-        Object result = ((PreevaluatedExpression) delegate).doPreEvaluated(frame, args);
-        probe.onReturnValue(frame, result);
-        return result;
-      } catch (Throwable t) {
-        probe.onReturnExceptional(frame, t);
-        throw t;
+      Object returnValue;
+      for (;;) {
+        boolean wasOnReturnExecuted = false;
+        try {
+          probe.onEnter(frame);
+          Object result = ((PreevaluatedExpression) delegate).doPreEvaluated(frame, args);
+          wasOnReturnExecuted = true;
+          probe.onReturnValue(frame, result);
+          return result;
+        } catch (Throwable t) {
+          Object result = probe.onReturnExceptionalOrUnwind(frame, t, wasOnReturnExecuted);
+          if (result == ProbeNode.UNWIND_ACTION_REENTER) {
+            continue;
+          } else if (result != null) {
+            returnValue = result;
+            break;
+          } else {
+            throw t;
+          }
+        }
       }
+      return returnValue;
     }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
-      try {
-        probe.onEnter(frame);
-        Object result = delegate.executeGeneric(frame);
-        probe.onReturnValue(frame, result);
-        return result;
-      } catch (Throwable t) {
-        probe.onReturnExceptional(frame, t);
-        throw t;
+      Object returnValue;
+      for (;;) {
+        boolean wasOnReturnExecuted = false;
+        try {
+          probe.onEnter(frame);
+          Object result = delegate.executeGeneric(frame);
+          wasOnReturnExecuted = true;
+          probe.onReturnValue(frame, result);
+          return result;
+        } catch (Throwable t) {
+          Object result = probe.onReturnExceptionalOrUnwind(frame, t, wasOnReturnExecuted);
+          if (result == ProbeNode.UNWIND_ACTION_REENTER) {
+            continue;
+          } else if (result != null) {
+            returnValue = result;
+            break;
+          } else {
+            throw t;
+          }
+        }
       }
+      return returnValue;
     }
 
     @Override
