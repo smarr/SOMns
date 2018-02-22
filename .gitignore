@@ -4,7 +4,12 @@ mini-som.sh
 mini.sh
 rebench.conf
 user-dict.txt
-libs/*.jar
+/libs/*.jar
+/libs/*.zip
+/libs/jacoco
+jacoco.exec
+jacoco.xml
+/report
 *.json
 nbproject
 .idea
