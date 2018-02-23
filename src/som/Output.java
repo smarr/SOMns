@@ -35,7 +35,7 @@ public class Output {
   @TruffleBoundary
   private static void print(final String msg, final String color, final PrintStream s) {
     if (VmSettings.ANSI_COLOR_IN_OUTPUT) {
-      s.print(color + msg);
+      s.print(color + msg + AnsiColor8.RESET);
     } else {
       s.print(msg);
     }
@@ -44,7 +44,7 @@ public class Output {
   @TruffleBoundary
   private static void println(final String msg, final String color, final PrintStream s) {
     if (VmSettings.ANSI_COLOR_IN_OUTPUT) {
-      s.println(color + msg);
+      s.println(color + msg + AnsiColor8.RESET);
     } else {
       s.println(msg);
     }
@@ -55,11 +55,11 @@ public class Output {
   }
 
   public static void print(final String msg) {
-    print(msg, AnsiColor8.RESET, System.out);
+    print(msg, "", System.out);
   }
 
   public static void println(final String msg) {
-    println(msg, AnsiColor8.RESET);
+    println(msg, "");
   }
 
   public static void errorPrintln(final String msg) {
