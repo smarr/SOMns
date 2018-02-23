@@ -11,8 +11,6 @@ GRAAL_FLAGS = os.getenv('GRAAL_FLAGS', None)
 
 GRAAL_LOCATIONS = ['~/.local/graal-core/',
                    BASE_DIR + '/../graal/graal-jvmci-8']
-JDK_VERSIONS = ['jdk1.8.0_91', 'jdk1.8.0_77', 'jdk1.8.0_72', 'jdk1.8.0_66',
-                'jdk1.8.0_65', 'jdk1.8.0_60', 'jdk1.8.0_45']
 
 parser = argparse.ArgumentParser(
     description='Helper script to run SOMns with/without Graal')
@@ -128,8 +126,7 @@ if len(sys.argv) < 2:
 
 args = parser.parse_args()
 
-JAVA_BIN  = '/product/bin/java'
-JAVA_ARGS = ['-d64']
+JAVA_ARGS = ['-d64', '-server']
 
 if args.dynamic_metrics:
     args.interpreter = True
@@ -137,39 +134,27 @@ if args.dynamic_metrics:
 if args.java_interpreter:
     args.interpreter = True
 
-if args.interpreter:
-    java_bin = "java"
-elif JVMCI_BIN:
-    java_bin = JVMCI_BIN
-    JAVA_ARGS += ['-server']
-else:
-    # determine graal binary
-    if GRAAL_HOME:
-        graal_home = GRAAL_HOME
-    else:
-        graal_home = None
-        for d in GRAAL_LOCATIONS:
-            d = os.path.expanduser(d)
-            if os.path.isdir(d):
-                graal_home = d
-                break
-        if not graal_home:
-            print "Graal couldn't be found. Please set GRAAL_HOME"
-            sys.exit(1)
-    print graal_home
-    if os.path.isdir(graal_home + '/bin'):
-        java_bin = graal_home + '/bin/java'
-    else:
-        java_bin = graal_home
-        for v in JDK_VERSIONS:
-            p = graal_home + '/' + v
-            if os.path.isdir(p):
-                java_bin = p + JAVA_BIN
-                break
+graal_home = GRAAL_HOME
+java_bin = JVMCI_BIN
 
-    if java_bin is graal_home or not os.path.isfile(java_bin):
-      print "No compatible JDK build found, is this script outdated?"
-      sys.exit(1)
+if not java_bin:
+  if not graal_home:
+    # search known Graal locations
+    for d in GRAAL_LOCATIONS:
+      d = os.path.expanduser(d)
+      if os.path.isdir(d):
+        graal_home = d
+        break
+
+  if graal_home and os.path.isdir(graal_home + '/bin'):
+    java_bin = graal_home + '/bin/java'
+
+if java_bin is graal_home or not os.path.isfile(java_bin):
+  if args.interpreter:
+    java_bin = "java"
+  else:
+    print "No compatible JDK found. Please set the GRAAL_HOME or JVMCI_BIN environment variables."
+    sys.exit(1)
 
 BOOT_CLASSPATH = ('-Xbootclasspath/a:'
              + BASE_DIR + '/build/classes:'
@@ -193,7 +178,9 @@ if not args.interpreter and GRAAL_FLAGS:
 else:
     flags = []
 
-if not args.interpreter:
+if args.interpreter:
+    flags += ['-Dtruffle.TruffleRuntime=com.oracle.truffle.api.impl.DefaultTruffleRuntime']
+else:
     flags += ['-server', '-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI',
               '-Djvmci.Compiler=graal', '-XX:-UseJVMCICompiler']
 
