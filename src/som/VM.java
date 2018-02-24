@@ -54,6 +54,7 @@ import tools.language.StructuralProbe;
 import tools.superinstructions.CandidateIdentifier;
 
 
+@SuppressWarnings("deprecation")
 public final class VM {
 
   @CompilationFinal private PolyglotEngine engine;
@@ -180,7 +181,6 @@ public final class VM {
     }
   }
 
-  @SuppressWarnings("deprecation")
   private static void outputToIGV(final Method method) {
     GraphPrintVisitor graphPrinter = new GraphPrintVisitor();
 
