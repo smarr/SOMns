@@ -4,10 +4,11 @@ import java.util.HashMap;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
+import bd.basic.IdProvider;
 import som.vmobjects.SSymbol;
 
 
-public final class Symbols {
+public final class Symbols implements IdProvider<SSymbol> {
 
   @TruffleBoundary
   public static SSymbol symbolFor(final String string) {
@@ -21,6 +22,13 @@ public final class Symbols {
     result = new SSymbol(interned);
     symbolTable.put(string, result);
     return result;
+  }
+
+  private Symbols() {}
+
+  @Override
+  public SSymbol getId(final String id) {
+    return symbolFor(id);
   }
 
   private static final HashMap<String, SSymbol> symbolTable = new HashMap<>();
@@ -40,4 +48,6 @@ public final class Symbols {
 
   public static final SSymbol Nil    = symbolFor("Nil");
   public static final SSymbol Kernel = symbolFor("Kernel");
+
+  public static final Symbols PROVIDER = new Symbols();
 }

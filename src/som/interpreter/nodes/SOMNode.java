@@ -31,18 +31,21 @@ import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.interpreter.InliningVisitor;
+import bd.inlining.ScopeAdaptationVisitor;
+import bd.inlining.nodes.ScopeReference;
+import bd.inlining.nodes.WithSource;
 import som.interpreter.Types;
 import tools.dym.Tags;
 
 
 @TypeSystemReference(Types.class)
-public abstract class SOMNode extends Node {
+public abstract class SOMNode extends Node implements ScopeReference, WithSource {
 
   @CompilationFinal protected SourceSection sourceSection;
 
+  @Override
   @SuppressWarnings("unchecked")
-  public <T extends SOMNode> T initialize(final SourceSection sourceSection) {
+  public <T extends Node> T initialize(final SourceSection sourceSection) {
     assert sourceSection != null;
     assert this.sourceSection == null : "sourceSection should only be set once";
     this.sourceSection = sourceSection;
@@ -63,7 +66,8 @@ public abstract class SOMNode extends Node {
    * <p>
    * When such changes occurred, all blocks within that tree need to be adjusted.
    */
-  public void replaceAfterScopeChange(final InliningVisitor inliner) {
+  @Override
+  public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
     // do nothing!
     // only a small subset of nodes needs to implement this method.
     // Most notably, nodes using FrameSlots, and block nodes with method

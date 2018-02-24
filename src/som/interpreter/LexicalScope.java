@@ -8,6 +8,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.inlining.Scope;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.Variable;
@@ -115,18 +116,19 @@ public abstract class LexicalScope {
    * the other hand, after construction is finalized, it also represents
    * the variables in that scope and possibly embedded scopes.
    */
-  public static final class MethodScope extends LexicalScope {
+  public static final class MethodScope extends LexicalScope
+      implements Scope<MethodScope, Method> {
     private final MethodScope outerMethod;
     private final MixinScope  outerMixin;
 
     private final FrameDescriptor frameDescriptor;
 
-    @CompilationFinal private MethodScope[] embeddedScopes;
+    @CompilationFinal(dimensions = 1) private MethodScope[] embeddedScopes;
 
     /**
      * All arguments, local and internal variables used in a method.
      */
-    @CompilationFinal private Variable[] variables;
+    @CompilationFinal(dimensions = 1) private Variable[] variables;
 
     @CompilationFinal private boolean finalized;
 
@@ -191,6 +193,7 @@ public abstract class LexicalScope {
       embeddedScopes = remainingScopes;
     }
 
+    @Override
     public MethodScope getScope(final Method method) {
       if (method.equals(this.method)) {
         return this;
@@ -218,6 +221,8 @@ public abstract class LexicalScope {
       return finalized;
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
     public Variable[] getVariables() {
       assert variables != null;
       return variables;
@@ -269,7 +274,8 @@ public abstract class LexicalScope {
       return frameDescriptor;
     }
 
-    public MethodScope getOuterMethodScopeOrNull() {
+    @Override
+    public MethodScope getOuterScopeOrNull() {
       if (outerMethod != null) {
         return outerMethod;
       }
@@ -279,7 +285,6 @@ public abstract class LexicalScope {
       }
 
       return null;
-
     }
 
     public void propagateLoopCountThroughoutMethodScope(final long count) {
@@ -299,6 +304,11 @@ public abstract class LexicalScope {
       assert this.method == null ||
           this.method.getSourceSection() == method.getSourceSection();
       this.method = method;
+    }
+
+    @Override
+    public String getName() {
+      return method.getName();
     }
 
     @Override

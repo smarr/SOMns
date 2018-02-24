@@ -28,10 +28,10 @@ import java.util.concurrent.locks.ReentrantLock;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.TypeSystem;
 
+import bd.basic.nodes.DummyParent;
 import som.VM;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
-import som.interpreter.nodes.DummyParent;
 import som.primitives.SizeAndLengthPrim;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.threading.TaskThreads.SomForkJoinTask;

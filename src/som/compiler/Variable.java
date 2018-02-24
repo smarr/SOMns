@@ -9,6 +9,7 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.inlining.NodeState;
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
@@ -30,7 +31,24 @@ import tools.SourceCoordinate;
 /**
  * Represents state belonging to a method activation.
  */
-public abstract class Variable {
+public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
+
+  public static class AccessNodeState implements NodeState {
+    private final MixinDefinitionId id;
+
+    /* Only used for super reads. */
+    private final boolean classSide;
+
+    public AccessNodeState(final MixinDefinitionId id) {
+      this(id, false);
+    }
+
+    public AccessNodeState(final MixinDefinitionId id, final boolean classSide) {
+      this.id = id;
+      this.classSide = classSide;
+    }
+  }
+
   public final SSymbol       name;
   public final SourceSection source;
 
@@ -40,7 +58,7 @@ public abstract class Variable {
   }
 
   /** Gets the name including lexical location. */
-  public SSymbol getQualifiedName() {
+  public final SSymbol getQualifiedName() {
     return Symbols.symbolFor(name.getString() + SourceCoordinate.getLocationQualifier(source));
   }
 
@@ -67,8 +85,6 @@ public abstract class Variable {
         var.source) : "Why are there multiple objects for this source section? might need to fix comparison above";
     return false;
   }
-
-  public abstract ExpressionNode getReadNode(int contextLevel, SourceSection source);
 
   public abstract Variable split(FrameDescriptor descriptor);
 
@@ -98,26 +114,30 @@ public abstract class Variable {
       return Symbols.SELF == name || Symbols.BLOCK_SELF == name;
     }
 
-    public ExpressionNode getSelfReadNode(final int contextLevel,
-        final MixinDefinitionId holderMixin,
+    @Override
+    public ExpressionNode getThisReadNode(final int contextLevel, final NodeState state,
         final SourceSection source) {
       assert this instanceof Argument;
+      AccessNodeState holder = (AccessNodeState) state;
+
       if (contextLevel == 0) {
-        return new LocalSelfReadNode(this, holderMixin).initialize(source);
+        return new LocalSelfReadNode(this, holder.id).initialize(source);
       } else {
-        return new NonLocalSelfReadNode(this, holderMixin, contextLevel).initialize(source);
+        return new NonLocalSelfReadNode(this, holder.id, contextLevel).initialize(source);
       }
     }
 
-    public ExpressionNode getSuperReadNode(final int contextLevel,
-        final MixinDefinitionId holderClass, final boolean classSide,
+    @Override
+    public ExpressionNode getSuperReadNode(final int contextLevel, final NodeState state,
         final SourceSection source) {
       assert this instanceof Argument;
+      AccessNodeState holder = (AccessNodeState) state;
+
       if (contextLevel == 0) {
-        return new LocalSuperReadNode(this, holderClass, classSide).initialize(source);
+        return new LocalSuperReadNode(this, holder.id, holder.classSide).initialize(source);
       } else {
-        return new NonLocalSuperReadNode(this, contextLevel, holderClass,
-            classSide).initialize(source);
+        return new NonLocalSuperReadNode(this, contextLevel, holder.id,
+            holder.classSide).initialize(source);
       }
     }
 
@@ -171,8 +191,7 @@ public abstract class Variable {
     }
 
     @Override
-    public ExpressionNode getReadNode(final int contextLevel,
-        final SourceSection source) {
+    public ExpressionNode getReadNode(final int contextLevel, final SourceSection source) {
       transferToInterpreterAndInvalidate("Variable.getReadNode");
       ExpressionNode node;
       if (contextLevel == 0) {
@@ -197,14 +216,16 @@ public abstract class Variable {
       return newLocal;
     }
 
-    public ExpressionNode getWriteNode(final int contextLevel,
-        final ExpressionNode valueExpr, final SourceSection source) {
+    @Override
+    public ExpressionNode getWriteNode(final int contextLevel, final ExpressionNode valueExpr,
+        final SourceSection source) {
       transferToInterpreterAndInvalidate("Variable.getWriteNode");
       ExpressionNode node;
       if (contextLevel == 0) {
         node = LocalVariableWriteNodeGen.create(this, valueExpr);
       } else {
-        node = NonLocalVariableWriteNodeGen.create(contextLevel, this, valueExpr);
+        node = NonLocalVariableWriteNodeGen.create(contextLevel, this,
+            valueExpr);
       }
       node.initialize(source);
       return node;
@@ -273,8 +294,7 @@ public abstract class Variable {
     }
 
     @Override
-    public ExpressionNode getReadNode(final int contextLevel,
-        final SourceSection source) {
+    public ExpressionNode getReadNode(final int contextLevel, final SourceSection source) {
       throw new UnsupportedOperationException();
     }
 

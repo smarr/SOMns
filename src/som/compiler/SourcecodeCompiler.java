@@ -26,6 +26,7 @@ package som.compiler;
 
 import com.oracle.truffle.api.source.Source;
 
+import bd.basic.ProgramDefinitionError;
 import som.interpreter.SomLanguage;
 import tools.SourceCoordinate;
 import tools.language.StructuralProbe;

@@ -3,8 +3,8 @@ package som.interpreter.nodes.literals;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
+import bd.inlining.ScopeAdaptationVisitor;
 import som.compiler.MixinDefinition;
-import som.interpreter.InliningVisitor;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InstantiationNode.ObjectLiteralInstantiationNode;
 import som.interpreter.nodes.InstantiationNodeFactory.ObjectLiteralInstantiationNodeGen;
@@ -51,7 +51,7 @@ public class ObjectLiteralNode extends LiteralNode {
   }
 
   @Override
-  public void replaceAfterScopeChange(final InliningVisitor inliner) {
+  public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
     MixinDefinition adaptedMixinDef = mixinDef.cloneAndAdaptAfterScopeChange(
         inliner.getCurrentScope(), inliner.contextLevel);
     replace(createNode(adaptedMixinDef));

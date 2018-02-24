@@ -1,6 +1,6 @@
 package som.interpreter.nodes.nary;
 
-import bd.nodes.EagerPrimitive;
+import bd.primitives.nodes.EagerPrimitive;
 import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;
 import tools.Send;
@@ -14,6 +14,7 @@ public abstract class EagerPrimitiveNode extends ExpressionNode
     this.selector = selector;
   }
 
+  @Override
   public SSymbol getSelector() {
     return selector;
   }

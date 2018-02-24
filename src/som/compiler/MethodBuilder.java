@@ -25,6 +25,7 @@
 package som.compiler;
 
 import static som.interpreter.SNodeFactory.createCatchNonLocalReturn;
+import static som.vm.Symbols.symbolFor;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -35,15 +36,17 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.inlining.ScopeAdaptationVisitor;
+import bd.inlining.ScopeBuilder;
+import bd.inlining.nodes.Inlinable;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionId;
-import som.compiler.ProgramDefinitionError.SemanticDefinitionError;
+import som.compiler.Variable.AccessNodeState;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.ImmutableLocal;
 import som.compiler.Variable.Internal;
 import som.compiler.Variable.Local;
 import som.compiler.Variable.MutableLocal;
-import som.interpreter.InliningVisitor;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
@@ -52,15 +55,17 @@ import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.OuterObjectReadNodeGen;
 import som.interpreter.nodes.ReturnNonLocalNode;
+import som.interpreter.nodes.literals.BlockNode;
 import som.vm.Symbols;
 import som.vm.constants.Nil;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SSymbol;
+import tools.SourceCoordinate;
 import tools.language.StructuralProbe;
 
 
-public final class MethodBuilder {
+public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
 
   /** To get to an indirect outer, use outerBuilder. */
   private final MixinBuilder  directOuterMixin;
@@ -180,6 +185,24 @@ public final class MethodBuilder {
     currentScope.removeMerged(scope);
   }
 
+  @Override
+  public bd.inlining.Variable<?> introduceTempForInlinedVersion(
+      final Inlinable<MethodBuilder> blockOrVal, final SourceSection source)
+      throws MethodDefinitionError {
+    Local loopIdx;
+    if (blockOrVal instanceof BlockNode) {
+      Argument[] args = ((BlockNode) blockOrVal).getArguments();
+      assert args.length == 2;
+      loopIdx = getLocal(args[1].getQualifiedName());
+    } else {
+      // if it is a literal, we still need a memory location for counting, so,
+      // add a synthetic local
+      loopIdx = addLocalAndUpdateScope(
+          symbolFor("!i" + SourceCoordinate.getLocationQualifier(source)), false, source);
+    }
+    return loopIdx;
+  }
+
   public void addEmbeddedBlockMethod(final SInvokable blockMethod) {
     embeddedBlockMethods.add(blockMethod);
     currentScope.addEmbeddedScope(((Method) blockMethod.getInvokable()).getLexicalScope());
@@ -254,7 +277,7 @@ public final class MethodBuilder {
       final ExpressionNode body, final AccessModifier accessModifier,
       final SourceSection sourceSection) {
     MethodScope splitScope = currentScope.split();
-    ExpressionNode splitBody = InliningVisitor.doInline(body, splitScope, 0, false);
+    ExpressionNode splitBody = ScopeAdaptationVisitor.adapt(body, splitScope, 0, false);
     Method truffleMeth = assembleInvokable(splitBody, splitScope, sourceSection);
 
     // TODO: not sure whether it is safe to use the embeddedBlockMethods here,
@@ -388,7 +411,7 @@ public final class MethodBuilder {
     return l;
   }
 
-  public Local addLocalAndUpdateScope(final SSymbol name, final boolean immutable,
+  private Local addLocalAndUpdateScope(final SSymbol name, final boolean immutable,
       final SourceSection source) throws MethodDefinitionError {
     Local l = addLocal(name, immutable, source);
     currentScope.addVariable(l);
@@ -507,14 +530,15 @@ public final class MethodBuilder {
     assert source != null;
     MixinBuilder holder = getEnclosingMixinBuilder();
     return getSelf().getSuperReadNode(getOuterSelfContextLevel(),
-        holder.getMixinId(), holder.isClassSide(), source);
+        new AccessNodeState(holder.getMixinId(), holder.isClassSide()), source);
   }
 
   public ExpressionNode getSelfRead(final SourceSection source) {
     assert source != null;
     MixinBuilder holder = getEnclosingMixinBuilder();
     MixinDefinitionId mixinId = holder == null ? null : holder.getMixinId();
-    return getSelf().getSelfReadNode(getContextLevel(Symbols.SELF), mixinId, source);
+    return getSelf().getThisReadNode(getContextLevel(Symbols.SELF),
+        new AccessNodeState(mixinId), source);
   }
 
   public ExpressionNode getReadNode(final SSymbol variableName,

@@ -26,7 +26,8 @@ import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.nodes.NodeInfo;
 
-import bd.nodes.PreevaluatedExpression;
+import bd.inlining.nodes.Inlinable;
+import bd.primitives.nodes.PreevaluatedExpression;
 import som.compiler.MethodBuilder;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
@@ -36,7 +37,7 @@ import tools.debugger.Tags.LiteralTag;
 @NodeInfo(cost = NodeCost.NONE)
 @Instrumentable(factory = LiteralNodeWrapper.class)
 public abstract class LiteralNode extends ExprWithTagsNode
-    implements PreevaluatedExpression {
+    implements PreevaluatedExpression, Inlinable<MethodBuilder> {
 
   protected LiteralNode() {}
 
@@ -48,6 +49,7 @@ public abstract class LiteralNode extends ExprWithTagsNode
     return executeGeneric(frame);
   }
 
+  @Override
   public ExpressionNode inline(final MethodBuilder builder) {
     return this;
   }

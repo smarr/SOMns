@@ -15,13 +15,14 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.basic.ProgramDefinitionError;
+import bd.inlining.InlinableNodes;
 import som.Output;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
-import som.compiler.ProgramDefinitionError;
 import som.compiler.SourcecodeCompiler;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.SomLanguage;
@@ -60,6 +61,8 @@ public final class ObjectSystem {
 
   private final Primitives primitives;
 
+  private final InlinableNodes<SSymbol> inlinableNodes;
+
   private CompletableFuture<Object> mainThreadCompleted;
 
   private final VM vm;
@@ -67,6 +70,8 @@ public final class ObjectSystem {
   public ObjectSystem(final SourcecodeCompiler compiler,
       final StructuralProbe probe, final VM vm) {
     this.primitives = new Primitives(compiler.getLanguage());
+    this.inlinableNodes = new InlinableNodes<>(Symbols.PROVIDER,
+        Primitives.getInlinableNodes(), Primitives.getInlinableFactories());
     this.compiler = compiler;
     structuralProbe = probe;
     loadedModules = new LinkedHashMap<>();
@@ -85,6 +90,10 @@ public final class ObjectSystem {
 
   public Primitives getPrimitives() {
     return primitives;
+  }
+
+  public InlinableNodes<SSymbol> getInlinableNodes() {
+    return inlinableNodes;
   }
 
   public SClass getPlatformClass() {

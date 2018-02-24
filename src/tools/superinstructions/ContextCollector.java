@@ -11,7 +11,7 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.nodes.NodeVisitor;
 import com.oracle.truffle.api.nodes.RootNode;
 
-import bd.nodes.EagerPrimitive;
+import bd.primitives.nodes.EagerPrimitive;
 
 
 /**

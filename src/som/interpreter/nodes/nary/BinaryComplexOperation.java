@@ -2,7 +2,7 @@ package som.interpreter.nodes.nary;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
-import bd.nodes.WithContext;
+import bd.primitives.nodes.WithContext;
 import som.VM;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 

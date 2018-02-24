@@ -6,11 +6,16 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 
+import bd.inlining.Inline;
+import bd.inlining.Inline.False;
+import bd.inlining.Inline.True;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.constants.Nil;
 
 
+@Inline(selector = "ifTrue:", inlineableArgIdx = {1}, additionalArgs = {True.class})
+@Inline(selector = "ifFalse:", inlineableArgIdx = {1}, additionalArgs = {False.class})
 public final class IfInlinedLiteralNode extends ExprWithTagsNode {
   private final ConditionProfile condProf = ConditionProfile.createCountingProfile();
 
@@ -23,8 +28,9 @@ public final class IfInlinedLiteralNode extends ExprWithTagsNode {
   // original nodes around
   @SuppressWarnings("unused") private final ExpressionNode bodyActualNode;
 
-  public IfInlinedLiteralNode(final ExpressionNode conditionNode, final boolean expectedBool,
-      final ExpressionNode inlinedBodyNode, final ExpressionNode originalBodyNode) {
+  public IfInlinedLiteralNode(final ExpressionNode conditionNode,
+      final ExpressionNode originalBodyNode, final ExpressionNode inlinedBodyNode,
+      final boolean expectedBool) {
     this.conditionNode = conditionNode;
     this.expectedBool = expectedBool;
     this.bodyNode = inlinedBodyNode;

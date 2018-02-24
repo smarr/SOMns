@@ -6,7 +6,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 
-import bd.nodes.PreevaluatedExpression;
+import bd.primitives.nodes.PreevaluatedExpression;
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.instrumentation.MessageSendNodeWrapper;
@@ -114,6 +114,7 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
     return replacedBy;
   }
 
+  @Override
   public SSymbol getSelector() {
     return selector;
   }

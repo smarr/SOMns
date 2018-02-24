@@ -8,9 +8,9 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bd.nodes.Operation;
 import bd.primitives.Primitive;
 import bd.primitives.Specializer;
+import bd.tools.nodes.Operation;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.literals.BlockNode;

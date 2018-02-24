@@ -25,9 +25,9 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bd.nodes.Operation;
 import bd.primitives.Primitive;
 import bd.primitives.Specializer;
+import bd.tools.nodes.Operation;
 import som.Output;
 import som.VM;
 import som.compiler.MixinDefinition;

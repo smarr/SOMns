@@ -14,8 +14,8 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeCost;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bd.nodes.PreevaluatedExpression;
 import bd.primitives.Specializer;
+import bd.primitives.nodes.PreevaluatedExpression;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.instrumentation.MessageSendNodeWrapper;

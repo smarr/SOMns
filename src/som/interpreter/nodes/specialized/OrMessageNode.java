@@ -6,8 +6,8 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
-import bd.nodes.Operation;
 import bd.primitives.Primitive;
+import bd.tools.nodes.Operation;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryBasicOperation;
