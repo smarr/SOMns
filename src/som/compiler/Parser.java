@@ -282,7 +282,12 @@ public class Parser {
 
     this.syntaxAnnotations = new HashSet<>();
     this.structuralProbe = structuralProbe;
-    this.inlinableNodes = language.getVM().getInlinableNodes();
+
+    if (language.getVM() != null) {
+      this.inlinableNodes = language.getVM().getInlinableNodes();
+    } else {
+      this.inlinableNodes = null;
+    }
   }
 
   Set<SourceSection> getSyntaxAnnotations() {
