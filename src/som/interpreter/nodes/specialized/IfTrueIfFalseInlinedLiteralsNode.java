@@ -39,6 +39,8 @@ public final class IfTrueIfFalseInlinedLiteralsNode extends ExprWithTagsNode {
     this.falseNode = inlinedFalseNode;
     this.trueActualNode = originalTrueNode;
     this.falseActualNode = originalFalseNode;
+
+    conditionNode.markAsControlFlowCondition();
   }
 
   private boolean evaluateCondition(final VirtualFrame frame) {

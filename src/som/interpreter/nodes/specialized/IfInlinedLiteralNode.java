@@ -35,6 +35,7 @@ public final class IfInlinedLiteralNode extends ExprWithTagsNode {
     this.expectedBool = expectedBool;
     this.bodyNode = inlinedBodyNode;
     this.bodyActualNode = originalBodyNode;
+    conditionNode.markAsControlFlowCondition();
   }
 
   private boolean evaluateCondition(final VirtualFrame frame) {

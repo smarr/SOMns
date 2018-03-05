@@ -32,6 +32,7 @@ public abstract class IntTimesRepeatLiteralNode extends ExprWithTagsNode {
       final ExpressionNode body) {
     this.body = body;
     this.bodyActualNode = originalBody;
+    body.markAsLoopBody();
   }
 
   @Override

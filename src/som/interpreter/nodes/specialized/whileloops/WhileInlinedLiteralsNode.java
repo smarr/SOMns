@@ -37,6 +37,9 @@ public final class WhileInlinedLiteralsNode extends ExprWithTagsNode {
     this.expectedBool = expectedBool;
     this.conditionActualNode = originalConditionNode;
     this.bodyActualNode = originalBodyNode;
+
+    inlinedConditionNode.markAsControlFlowCondition();
+    inlinedBodyNode.markAsLoopBody();
   }
 
   @Override

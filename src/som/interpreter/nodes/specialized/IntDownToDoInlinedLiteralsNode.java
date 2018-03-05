@@ -46,6 +46,7 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
 
     // and, we can already tell the loop index that it is going to be long
     this.loopIndex.setKind(FrameSlotKind.Long);
+    body.markAsLoopBody();
   }
 
   @Override
