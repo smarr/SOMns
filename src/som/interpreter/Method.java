@@ -125,7 +125,7 @@ public final class Method extends Invokable {
     MethodScope splitScope = methodScope.split();
     assert methodScope != splitScope;
     assert splitScope.isFinalized();
-    return cloneAndAdaptAfterScopeChange(splitScope, 0, false, false);
+    return cloneAndAdaptAfterScopeChange(splitScope, 0, false, true);
   }
 
   @Override
