@@ -25,5 +25,6 @@ traces
 /tests/superinstructions/old-results
 /tests/superinstructions/results
 /tests/superinstructions/expected-results
+/tests/streams/*.txt
 npm-debug.log*
 /.metadata
