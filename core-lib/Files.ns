@@ -614,7 +614,7 @@ DAMAGE.>> *)
 
     public readWriteStream ^ <ExternalReadWriteStream> = (
       ^ExternalReadWriteStream onDescriptor: (
-        self open: #readwrite ifFail: [ :err <Exception> | 
+        self open: #readWrite ifFail: [ :err <Exception> | 
           self error: err 
         ]
       )

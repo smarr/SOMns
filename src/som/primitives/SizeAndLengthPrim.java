@@ -58,6 +58,8 @@ public abstract class SizeAndLengthPrim extends UnaryBasicOperation {
     return receiver.getBooleanStorage(storageType).length;
   }
 
+  public abstract long executeEvaluated(Object receiver);
+
   public abstract long executeEvaluated(SArray receiver);
 
   @Specialization
