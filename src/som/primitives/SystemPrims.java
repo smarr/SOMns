@@ -1,6 +1,8 @@
 package som.primitives;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -38,6 +40,7 @@ import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySystemOperation;
+import som.vm.NotAFileException;
 import som.vm.NotYetImplementedException;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
@@ -63,16 +66,19 @@ public final class SystemPrims {
   }
 
   public static Object loadModule(final VM vm, final String path) {
-    MixinDefinition module;
     try {
-      module = vm.loadModule(path);
+      MixinDefinition module = vm.loadModule(path);
       return module.instantiateModuleClass();
-    } catch (ThreadDeath e) {
-      throw e;
-    } catch (Throwable e) {
-      // TODO: convert to SOM exception
-      throw new RuntimeException(e);
+    } catch (FileNotFoundException e) {
+      PathPrims.signalFileNotFoundException(e.getMessage(), "Could not find module file.");
+    } catch (NotAFileException e) {
+      PathPrims.signalFileNotFoundException(e.getMessage(),
+          "Path does not seem to be a file.");
+    } catch (IOException e) {
+      PathPrims.signalIOException(e.getMessage());
     }
+    assert false : "This should never be reached, because exceptions do not return";
+    return Nil.nilObject;
   }
 
   @GenerateNodeFactory

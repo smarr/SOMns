@@ -1,6 +1,7 @@
 package som.vm;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.util.HashMap;
@@ -93,6 +94,15 @@ public final class ObjectSystem {
 
   public MixinDefinition loadModule(final String filename) throws IOException {
     File file = new File(filename);
+
+    if (!file.exists()) {
+      throw new FileNotFoundException(filename);
+    }
+
+    if (!file.isFile()) {
+      throw new NotAFileException(filename);
+    }
+
     Source source = Source.newBuilder(file).mimeType(SomLanguage.MIME_TYPE).build();
     return loadModule(source);
   }
