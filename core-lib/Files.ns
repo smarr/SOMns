@@ -31,6 +31,12 @@ DAMAGE.>> *)
 | private vmMirror  = vmMirror.
   private Vector    = kernel Vector.
   private Exception = kernel Exception.
+  (* Streams *)
+  private ExternalOutputStream = platform streams ExternalOutputStream.
+  private ExternalReadStream = platform streams ExternalReadStream.
+  private ExternalReadWriteStream = platform streams ExternalReadWriteStream.
+  private CharacterReadConverter = platform streams CharacterReadConverter.
+  private CharacterInputOutputConverter = platform streams CharacterInputOutputConverter.
 |
   vmMirror fileDescriptorClass: FileDescriptor.
   vmMirror fileObject: self.
@@ -588,6 +594,38 @@ DAMAGE.>> *)
 
     public simpleName ^ <String> = (
       ^ elements last name
+    )
+
+    public charInputStream ^ <CharInputStream> = (
+      ^CharacterReadConverter on: self readStream.
+    )
+
+    public charOutputStream ^ <CharOutputStream> = (
+      ^CharacterInputOutputConverter on: self writeStream
+    )
+
+    public readStream ^ <ExternalReadStream> = (
+      ^ExternalReadStream onDescriptor: (
+        self open: #read ifFail: [ :err <Exception> | 
+          self error: err 
+        ]
+      )
+    )
+
+    public readWriteStream ^ <ExternalReadWriteStream> = (
+      ^ExternalReadWriteStream onDescriptor: (
+        self open: #readwrite ifFail: [ :err <Exception> | 
+          self error: err 
+        ]
+      )
+    )
+
+    public writeStream ^ <ExternalReadWriteStream> = (
+      ^ExternalOutputStream onDescriptor: (
+        self open: #write ifFail: [ :err <Exception> | 
+          self error: err 
+        ]
+      )
     )
   ) : (
     public currentDirectory ^<FilePath> = (
