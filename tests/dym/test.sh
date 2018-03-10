@@ -24,6 +24,8 @@ mkdir -p $SCRIPT_PATH/results/
 ## extract expected results
 tar xf $SCRIPT_PATH/expected-results.tar.bz2 -C $SCRIPT_PATH/
 
+NEEDS_UPDATE=false
+
 function runBenchmark {
   BENCH=$1
   HARNESS="$SOM_DIR/som -dm -Ddm.metrics=$SCRIPT_PATH/results/$BENCH \
@@ -33,6 +35,9 @@ function runBenchmark {
   $HARNESS $@
   
   diff -r $SCRIPT_PATH/expected-results/$BENCH $SCRIPT_PATH/results/$BENCH
+  if [ $? -ne 0 ]; then
+    NEEDS_UPDATE=true
+  fi
 }
 
 runBenchmark LanguageFeatures.Fibonacci    1 0 2
@@ -62,7 +67,7 @@ runBenchmark Storage     1 0 2
 runBenchmark Sieve       1 0 2
 runBenchmark Towers      1 0 2
 
-if [ "$1" = "update" ]
+if [ "$1" = "update" ] && [ "$NEEDS_UPDATE" = true ]
 then
   ## move old results out of the way, and new results to expected folder
   rm -Rf $SCRIPT_PATH/old-results

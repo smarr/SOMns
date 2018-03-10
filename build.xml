@@ -266,6 +266,15 @@
     <target name="superinstructions-tests" depends="compile-som">
       <exec executable="tests/superinstructions/test.sh" failonerror="true"></exec>
     </target>
+    
+    <target name="update-test-data" depends="compile-som" description="Updates the test data for DynamicMetrics and SuperInstructions">
+      <exec executable="tests/dym/test.sh" failonerror="true">
+        <arg value="update" />
+      </exec>
+      <exec executable="tests/superinstructions/test.sh" failonerror="true">
+        <arg value="update" />
+      </exec>
+    </target>
 
     <target name="replay-tests" depends="compile">
       <exec executable="tests/replay/test.sh" failonerror="true">
