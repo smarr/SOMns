@@ -6,7 +6,6 @@ import java.util.concurrent.ForkJoinPool;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
-import com.sun.istack.internal.NotNull;
 
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.primitives.TimerPrim;
@@ -70,7 +69,7 @@ public class SPromise extends SObjectWithClass {
    */
   private boolean haltOnResolution;
 
-  protected SPromise(@NotNull final Actor owner, final boolean haltOnResolver,
+  protected SPromise(final Actor owner, final boolean haltOnResolver,
       final boolean haltOnResolution) {
     super(promiseClass, promiseClass.getInstanceFactory());
     assert owner != null;
@@ -175,7 +174,7 @@ public class SPromise extends SObjectWithClass {
     msg.getTarget().send(msg, actorPool);
   }
 
-  public final synchronized void addChainedPromise(@NotNull final SPromise remote) {
+  public final synchronized void addChainedPromise(final SPromise remote) {
     assert remote != null;
     remote.resolutionState = Resolution.CHAINED;
     if (chainedPromise == null) {

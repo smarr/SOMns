@@ -16,7 +16,6 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
-import com.sun.istack.internal.Nullable;
 
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
@@ -85,7 +84,7 @@ public final class MixinDefinition {
   private final boolean outerScopeIsImmutable;
   private final boolean isModule;
 
-  @Nullable private final LinkedHashMap<SSymbol, MixinDefinition> nestedMixinDefinitions;
+  private final LinkedHashMap<SSymbol, MixinDefinition> nestedMixinDefinitions;
 
   public MixinDefinition(final SSymbol name, final SourceSection nameSection,
       final SSymbol primaryFactoryName,
