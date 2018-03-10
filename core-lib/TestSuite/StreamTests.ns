@@ -1,0 +1,158 @@
+class StreamTests usingPlatform: platform testFramework: minitest = Value (
+| private TestContext = minitest TestContext.
+  private AsyncTestContext = minitest AsyncTestContext.
+  private actors      = platform actors.
+  private Exception   = platform kernel Exception.
+  private NotAValue   = platform kernel NotAValue.
+  private Vector      = platform kernel Vector.
+  private Array       = platform kernel Array.
+  private ObjectMirror = platform mirrors ObjectMirror.
+  private errorTestMessage = 'test exception 1'.
+  private Streams = platform streams.
+  private Files = platform files.
+  private fdes = Files FileDescriptor.
+  private filePath = Files FilePath.
+|
+)(
+  public class BasicStreamTests = TestContext (
+    | path testString|
+    path:: (filePath currentDirectory / 'tests' / 'streams') pattern.
+    testString:: 'This is a test String, it is written to a file via a 
+    readWriteStream, and then read and checked to make sure it works'.
+  )(
+    public testReadBinary = (
+      | fp cc b |
+      (*file contains bytes with increasing values, starting with 1*)
+      fp:: filePath for: path + '/Binary.blob'.
+      cc:: fp readStream.
+
+      (*verify stream is at beginning*)
+      assert: cc position = 0.
+      deny: cc atEnd.
+
+      (*read 10 bytes into t*)
+      b:: (cc next: 10).
+
+      (*verify read data*)
+      1 to: 10 do: [ :i|
+        assert: (b at: i) = i.
+      ].
+
+      (*check that peek/next work and position changes accordingly *)
+      11 to: (cc size) do: [ :i|
+        assert: cc peek = i.
+        assert: cc position = (i - 1).
+        assert: cc next = i.
+        assert: cc position = i.
+      ].
+
+      (*stream is at end*)
+      assert: cc atEnd.
+      
+      cc close.
+    )
+
+    public testWriteBinary = (
+      | fp cc t |
+      fp:: filePath for: path + '/a.txt'.
+      cc:: fp writeStream.
+      1 to: 20 do: [ :i|
+        cc put: i.
+      ].
+      
+      cc close.
+    )
+
+
+    public testReadWriteBinary = (
+      | fp cc t |
+        
+      fp:: filePath for: path + '/bin.txt'.
+      cc:: fp readWriteStream.
+
+      assert: cc position = 0.
+
+      1 to: 20 do: [ :i|
+        cc put: i.
+      ].
+      cc close.
+
+
+      fp:: filePath for: path + '/bin.txt'.
+      cc:: fp readWriteStream.
+      deny: cc atEnd.
+      t:: (cc next: (cc size)).
+      1 to: 20 do: [ :i|
+        assert: (t at: i) = i.
+      ].
+      cc close.
+    )
+
+    public testReadCharacter = (
+      | fp cc t |
+      fp:: filePath for: path + '/Text.t'.
+      cc:: Streams CharacterReadConverter on: fp readStream.
+
+      deny: cc atEnd.
+
+      t:: (cc next: (cc size)).
+      assert: t = 'ABCDEFGHIJKLMNOPQRSTUVW1234567890'.
+
+      cc close.
+    )
+
+    public testReadWriteCharacter = (
+      | fp cc t |
+      fp:: filePath for: path + '/test.txt'.
+      cc:: Streams CharacterInputOutputConverter on: fp readWriteStream.
+      cc putAll: testString.
+      cc close.
+
+      fp:: filePath for: path + '/test.txt'.
+      cc:: Streams CharacterInputOutputConverter on: fp readWriteStream.
+
+      assert: cc position = 0.
+      deny: cc atEnd.
+
+      t:: (cc next: (cc size)).
+      cc close.
+
+      assert: t = testString.
+    )
+
+    public testCollectionReadStream = (
+      | v cs |
+      v:: Vector new.
+      1 to: 20 do: [ :i|
+        v append: i.
+      ].
+
+      cs:: Streams SeqCltnReadStream on: v.
+      assert: cs position = 0.
+      deny: cs atEnd.
+
+      assert: cs size = v size.
+      1 to: 20 do: [ :i|
+        assert: (v at: i) = cs next.
+      ].
+    )
+
+    public testCollectionReadWriteStream = (
+      | v cs |
+      v:: Array new: 20.
+      cs:: Streams SeqCltnReadWriteStream on: v.
+      1 to: 20 do: [ :i|
+        cs put: i.
+      ].
+
+      cs position:0.
+
+      assert: (cs size = 20 ).
+      1 to: 20 do: [ :i|
+        assert: (cs next) = i.
+      ].
+    )
+  ) : (
+    TEST_CONTEXT = ()
+  )
+)

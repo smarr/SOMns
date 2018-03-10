@@ -22,7 +22,7 @@ import som.vmobjects.SObjectWithClass;
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
 @Primitive(selector = "putAll:", disabled = true,
-    extraChild = SizeAndLengthPrimFactory.class)
+    extraChild = SizeAndLengthPrimFactory.class, receiverType = SMutableArray.class)
 @NodeChild(value = "length", type = SizeAndLengthPrim.class, executeWith = "receiver")
 public abstract class PutAllNode extends BinaryComplexOperation {
   @Child protected BlockDispatchNode block = BlockDispatchNodeGen.create();
