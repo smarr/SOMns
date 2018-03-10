@@ -13,6 +13,7 @@ import som.compiler.MixinDefinition;
 import som.compiler.Variable;
 import som.interpreter.LexicalScope.MixinScope.MixinIdAndContextLevel;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
 
@@ -130,7 +131,7 @@ public abstract class LexicalScope {
 
     @CompilationFinal private boolean finalized;
 
-    @CompilationFinal private Method method;
+    @CompilationFinal private SInvokable method;
 
     public MethodScope(final FrameDescriptor frameDescriptor,
         final MethodScope outerMethod, final MixinScope outerMixin) {
@@ -249,16 +250,9 @@ public abstract class LexicalScope {
       return split;
     }
 
-    /** Split lexical scope. */
-    public MethodScope split() {
-      assert isFinalized();
-      return constructSplitScope(outerMethod);
-    }
-
     /**
      * Split lexical scope to adapt to new outer lexical scope.
-     * One of the outer scopes was inlined into its parent,
-     * or simply split itself.
+     * One of the outer scopes was inlined into its parent.
      */
     public MethodScope split(final MethodScope newOuter) {
       assert isFinalized();
@@ -288,11 +282,11 @@ public abstract class LexicalScope {
       }
     }
 
-    public Method getMethod() {
+    public SInvokable getMethod() {
       return method;
     }
 
-    public void setMethod(final Method method) {
+    public void setMethod(final SInvokable method) {
       CompilerAsserts.neverPartOfCompilation("LexicalContext.sOM()");
       // might be reset when doing inlining/embedded, but should always
       // refer to the same method
@@ -305,7 +299,7 @@ public abstract class LexicalScope {
     public String toString() {
       String result = "MethodScope";
       if (method != null) {
-        result += "(" + method.name + ")";
+        result += "(" + method.getSignature().getString() + ")";
       }
       if (variables != null) {
         result += Arrays.toString(variables);

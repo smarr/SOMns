@@ -139,6 +139,7 @@ public final class InliningVisitor implements NodeVisitor {
 
   @Override
   public String toString() {
-    return getClass().getSimpleName() + "[" + scope.getMethod().getName() + "]";
+    return getClass().getSimpleName() + "[" + scope.getMethod().getSignature().getString()
+        + "]";
   }
 }

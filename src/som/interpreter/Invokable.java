@@ -1,5 +1,6 @@
 package som.interpreter;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -23,6 +24,8 @@ public abstract class Invokable extends RootNode {
 
   protected final ExpressionNode uninitializedBody;
 
+  @CompilationFinal private SInvokable invokable;
+
   public Invokable(final String name,
       final SourceSection sourceSection,
       final FrameDescriptor frameDescriptor,
@@ -35,6 +38,16 @@ public abstract class Invokable extends RootNode {
     this.uninitializedBody = uninitialized;
     this.isAtomic = isAtomic;
     this.sourceSection = sourceSection;
+  }
+
+  public void setInvokable(final SInvokable invokable) {
+    assert invokable != null;
+    assert this.invokable == null;
+    this.invokable = invokable;
+  }
+
+  public SInvokable getInvokable() {
+    return invokable;
   }
 
   @Override

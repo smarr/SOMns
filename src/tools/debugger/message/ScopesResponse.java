@@ -59,7 +59,8 @@ public final class ScopesResponse extends Response {
       assert rcvr instanceof SBlock;
       MaterializedFrame mFrame = ((SBlock) rcvr).getContext();
       long globalScopeId = suspension.addScope(mFrame, outer);
-      scopes.add(new Scope(outer.getMethod().getName(), globalScopeId, false));
+      scopes.add(
+          new Scope(outer.getMethod().getSignature().getString(), globalScopeId, false));
     }
   }
 

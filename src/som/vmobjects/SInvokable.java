@@ -65,6 +65,7 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     this.invokable = invokable;
     this.callTarget = invokable.createCallTarget();
     this.embeddedBlocks = embeddedBlocks;
+    invokable.setInvokable(this);
   }
 
   public static class SInitializer extends SInvokable {

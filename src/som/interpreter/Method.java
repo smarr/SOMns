@@ -115,16 +115,14 @@ public final class Method extends Invokable {
 
     Method clone = new Method(name, getSourceSection(), definition, adaptedBody,
         adaptedScope, uninit, block, isAtomic, getLanguage(SomLanguage.class));
-    adaptedScope.setMethod(clone);
+    adaptedScope.setMethod(getInvokable());
     return clone;
   }
 
   @Override
   public Node deepCopy() {
-    MethodScope splitScope = methodScope.split();
-    assert methodScope != splitScope;
-    assert splitScope.isFinalized();
-    return cloneAndAdaptAfterScopeChange(splitScope, 0, false, false);
+    assert methodScope.isFinalized();
+    return cloneAndAdaptAfterScopeChange(methodScope, 0, false, false);
   }
 
   @Override
@@ -132,13 +130,11 @@ public final class Method extends Invokable {
   public Invokable createAtomic() {
     assert !isAtomic : "We should only ask non-atomic invokables for their atomic version";
 
-    MethodScope splitScope = methodScope.split();
-    ExpressionNode body = InliningVisitor.doInline(uninitializedBody, splitScope, 0, true);
+    ExpressionNode body = InliningVisitor.doInline(uninitializedBody, methodScope, 0, true);
     ExpressionNode uninit = NodeUtil.cloneNode(body);
 
     Method atomic = new Method(name, getSourceSection(), definition, body,
-        splitScope, uninit, block, true, getLanguage(SomLanguage.class));
-    splitScope.setMethod(atomic);
+        methodScope, uninit, block, true, getLanguage(SomLanguage.class));
     return atomic;
   }
 
