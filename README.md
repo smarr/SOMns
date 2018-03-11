@@ -4,11 +4,15 @@ SOMns - A Simple Newspeak Implementation
 Introduction
 ------------
 
-Newspeak is a dynamic, class-based, purely object-oriented language in the
+Newspeak is a dynamic, class-based, object-oriented language in the
 tradition of Smalltalk and Self. SOMns is an implementation of the [Newspeak
-Specification Version 0.0.95][spec] derived from the [SOM][SOM](Simple Object
-Machine) class libraries, and based on the [TruffleSOM][TSOM]. Thus, SOMns is
+Specification Version 0.0.95][spec] derived from the [SOM][SOM] (Simple Object
+Machine) class libraries, and based on [TruffleSOM][TSOM]. It is
 implemented using the [Truffle framework][T] and runs on the JVM platform.
+
+Truffle provides just-in-time compilation based on the Graal compiler,
+which enables SOMns to reach [performance that is on par][AWFY] with
+state-of-the-art VMs for dynamic languages, including V8.
 
 A simple Hello World program looks like:
 
@@ -21,32 +25,11 @@ class Hello usingPlatform: platform = (
 )
 ```
 
-Implementation and Deviations from the Specification
-----------------------------------------------------
-
-SOMns is implemented as [self-optimizing AST interpreter][SOAI] using the
-Truffle framework. Thus, it can utilize the Truffle support for just-in-time
-compilation to optimize the execution performance at runtime. It is completely
-file-based and does not have support for images. The parser is written in Java
-and creates a custom AST that is geared towards representing the executable
-semantics.
-
-The overall goal is to be compliant with the specification, but include only
-absolutely necessary features. The current list of intended deviations from
-the specifications are as follows:
-
- - the mixin support of slots is not yet complete, see deactivate tests in core-lib/TestSuite/MixinTests.ns
-
- - simultaneous slots clauses are not fully supported (spec. 6.3.2)
-
- - object literals currently require a keyword prefix `objL`, to work around
-   parser limitations
-
 Obtaining and Running SOMns
 ---------------------------
 
-This is a brief guide, a more comprehensive overview for users or developers is
-available in the `docs` folder and on [ReadTheDocs](http://somns.readthedocs.io/en/dev/).
+The basic requirements for SOMns are a system with Java 9 or later, git, ant,
+and Python. Windows is currently not supported, but we test on Linux and macOS.
 
 To checkout the code:
 
@@ -60,69 +43,66 @@ Afterwards, the simple Hello World program is executed with:
 
     ./som core-lib/Hello.ns
 
-Information on previous authors are included in the AUTHORS file. This code is
-distributed under the MIT License. Please see the LICENSE file for details.
+To get an impression of the benefit o
+
+For testing on the command line, the full command is
+`./som core-lib/Benchmarks/Harness.ns Mandelbrot 500 0 500`
+
+Additionally, there are JUnit tests and `ant test` for executing the test suite.
+
+
+A more comprehensive setup guide is available in the `docs` folder and on
+[ReadTheDocs][RTD].
+
+
+Implementation and Deviations from the Specification
+----------------------------------------------------
+
+Compared to other Newspeaks and Smalltalks, it is completely file-based
+and does not have support for images.
+Instead of using customary bytecodes, SOMns is implemented as
+[self-optimizing AST interpreter][SOAI] using the Truffle framework.
+
+The overall goal is to be compliant with the specification, but include only
+absolutely necessary features. The current list of intended deviations from
+the specifications are as follows:
+
+ - the mixin support of slots is not yet complete, see deactivate tests in core-lib/TestSuite/MixinTests.ns
+
+ - simultaneous slots clauses are not fully supported (spec. 6.3.2)
+
+ - object literals currently require a keyword prefix `objL`, to work around
+   parser limitations
+
+
+License and Author Information
+------------------------------
+
+This code is distributed under the MIT License. Please see the LICENSE file for
+details. All contributions to the project are implicitly assumed to be under the
+MIT License. If this is not desired, we ask that it is stated explicitly.
+Information on previous authors are included in the AUTHORS file.
 
 Setup Development Environment with Eclipse and VS Code
 ------------------------------------------------------
 
-1. Install JDK 1.8 and Eclipse Mars (or later)
+SOMns code is best written using our VS Code plugin, which provides support
+for typical IDE features such as code navigation and compilation, as well as
+a debugger. The [SOMns][vscode] support can then be installed via the Marketplace.
 
-2. Download the project from Github
-   `git clone https://github.com/smarr/SOMns.git`
+For the development of SOMns itself, we typically use Eclipse.
+A complete guide on how to setup a workspace is available in the `docs` folder
+and on [ReadTheDocs][RTD].
 
-3. Run `ant compile` on the command line, or via Eclipse, to make sure that all
-   libraries are loaded and available.
 
-4. Create Truffle Eclipse projects with `ant ideinit`.
+Development Status
+------------------
 
-5. Import SOMns project and the Truffle projects into Eclipse
+Active development of SOMns happens on the `dev` branch [![Build Status](https://travis-ci.org/smarr/SOMns.png?branch=dev)](https://travis-ci.org/smarr/SOMns/tree/dev).
 
-6. For debugging the interpreter, create a run configuration with the
-   Mandelbrot benchmark.
-   In option Run Configurations go to Java Application/SOMns and select tab
-   arguments, enter:
+The latest release is reflected by the `master` branch [![Build Status](https://travis-ci.org/smarr/SOMns.png?branch=master)](https://travis-ci.org/smarr/SOMns).
 
-   In Program arguments:
-     `core-lib/Benchmarks/Harness.ns Mandelbrot 2 0 500`
-
-   In VM arguments:
-     `-ea -esa`
-
-For testing on the command line, the full command is
-`./som -G core-lib/Benchmarks/Harness.ns Mandelbrot 2 0 500`
-
-Additionally, there are JUnit tests and `ant test` for executing the test suite.
-
-To use VS Code as IDE and debugger for SOMns programs,
-it needs to be installed manually from: https://code.visualstudio.com/Download
-
-The [SOMns](https://marketplace.visualstudio.com/items?itemName=MetaConcProject.SOMns) support can then be installed via the Marketplace.
-
-### Instructions for Ubuntu
-
-```bash
-sudo add-apt-repository ppa:webupd8team/java
-curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
-sudo apt install oracle-java8-installer git ant npm nodejs
-
-git clone --recursive https://github.com/smarr/GraalBasic.git
-cd GraalBasic
-yes "n" | ./build.sh
-cd ..
-
-git clone https://github.com/smarr/SOMns.git
-cd SOMns
-ant       ## build SOMns
-ant tests ## run all tests
-
-ant ideinit ## Generate all Truffle Eclipse projects
-```
-
-Build Status
-------------
-
-The current build status is: [![Build Status](https://travis-ci.org/smarr/SOMns.png?branch=master)](https://travis-ci.org/smarr/SOMns)
+Changes and releases are documented in our [CHANGELOG.md][cl].
 
 Academic Work
 -------------
@@ -132,6 +112,8 @@ and their interactions. Here, we collect related papers:
 
  - [A Concurrency-Agnostic Protocol for Multi-Paradigm Concurrent Debugging Tools](http://stefan-marr.de/papers/dls-marr-et-al-concurrency-agnostic-protocol-for-debugging/),
    S. Marr, C. Torres Lopez, D. Aumayr, E. Gonzalez Boix, H. Mössenböck; Dynamic Language Symposium'17.
+
+ - [Few Versatile vs. Many Specialized Collections: How to design a collection library for exploratory programming?](http://stefan-marr.de/papers/px-marr-daloze-few-versatile-vs-many-specialized-collections/) S. Marr, B. Daloze ; Programming Experience Workshop, PX/18.
 
  - [Kómpos: A Platform for Debugging Complex Concurrent Applications](http://stefan-marr.de/downloads/progdemo-marr-et-al-kompos-a-platform-for-debugging-complex-concurrent-applications.pdf),
    S. Marr, C. Torres Lopez, D. Aumayr, E. Gonzalez Boix, H. Mössenböck; Demonstration at the &lt;Programming&gt;'17 conference.
@@ -152,3 +134,7 @@ and their interactions. Here, we collect related papers:
  [SOAI]:http://lafo.ssw.uni-linz.ac.at/papers/2012_DLS_SelfOptimizingASTInterpreters.pdf
  [T]:   http://ssw.uni-linz.ac.at/Research/Projects/JVM/Truffle.html
  [spec]:http://bracha.org/newspeak-spec.pdf
+ [AWFY]:https://github.com/smarr/are-we-fast-yet
+ [RTD]: http://somns.readthedocs.io/en/dev/
+ [vscode]: https://marketplace.visualstudio.com/items?itemName=MetaConcProject.SOMns
+ [cl]:  https://github.com/smarr/SOMns/blob/dev/CHANGELOG.md
