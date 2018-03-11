@@ -209,6 +209,8 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
 
     protected abstract Local create();
 
+    public abstract boolean isMutable();
+
     @Override
     public Local split(final FrameDescriptor descriptor) {
       Local newLocal = create();
@@ -252,6 +254,11 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
     public Local create() {
       return new MutableLocal(name, source);
     }
+
+    @Override
+    public boolean isMutable() {
+      return true;
+    }
   }
 
   public static final class ImmutableLocal extends Local {
@@ -262,6 +269,11 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
     @Override
     public Local create() {
       return new ImmutableLocal(name, source);
+    }
+
+    @Override
+    public boolean isMutable() {
+      return false;
     }
   }
 

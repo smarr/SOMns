@@ -796,9 +796,8 @@ public final class MixinDefinition {
 
   public MixinDefinition cloneAndAdaptAfterScopeChange(final MethodScope adaptedScope,
       final int appliesTo) {
-    MixinScope adaptedInstanceScope =
-        new MixinScope(instanceScope.getOuterMixin(), adaptedScope);
-    MixinScope adaptedClassScope = new MixinScope(classScope.getOuterMixin(), adaptedScope);
+    MixinScope adaptedInstanceScope = new MixinScope(adaptedScope);
+    MixinScope adaptedClassScope = new MixinScope(adaptedScope);
 
     MixinDefinition clone = cloneForSplitting(adaptedInstanceScope, adaptedClassScope);
 

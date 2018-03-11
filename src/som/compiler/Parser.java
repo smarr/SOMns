@@ -829,8 +829,7 @@ public class Parser {
   private void methodDeclaration(final AccessModifier accessModifier,
       final SourceCoordinate coord, final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
-    MethodBuilder builder = new MethodBuilder(
-        mxnBuilder, mxnBuilder.getScopeForCurrentParserPosition(), structuralProbe);
+    MethodBuilder builder = new MethodBuilder(mxnBuilder, structuralProbe);
 
     comments();
 
@@ -1441,8 +1440,8 @@ public class Parser {
     } else {
       assert !eventualSend;
       return createImplicitReceiverSend(msg, args,
-          builder.getCurrentMethodScope(),
-          builder.getEnclosingMixinBuilder().getMixinId(), source, language.getVM());
+          builder.getScope(),
+          builder.getMixin().getMixinId(), source, language.getVM());
     }
   }
 
@@ -1690,7 +1689,7 @@ public class Parser {
       blockPattern(builder);
     }
 
-    String outerMethodName = stripColons(builder.getOuterBuilder().getSignature().getString());
+    String outerMethodName = stripColons(builder.getOuter().getName());
 
     // generate Block signature
     String blockSig = "λ" + outerMethodName + "@" + coord.startLine + "@" + coord.startColumn;
