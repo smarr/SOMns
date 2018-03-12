@@ -1,0 +1,29 @@
+version: build {build} {branch}
+
+image: Visual Studio 2017
+
+install:
+  - ps: |
+      Add-Type -AssemblyName System.IO.Compression.FileSystem
+      if (!(Test-Path -Path "C:\ant\apache-ant-1.10.2" )) {
+        (new-object System.Net.WebClient).DownloadFile(
+        'http://www.mirrorservice.org/sites/ftp.apache.org//ant/binaries/apache-ant-1.10.2-bin.zip',
+        'C:\ant-bin.zip'
+        )
+        [System.IO.Compression.ZipFile]::ExtractToDirectory("C:\ant-bin.zip", "C:\ant")
+      }
+  - cmd: SET JAVA_HOME=C:\Program Files\Java\jdk9
+  - cmd: SET PATH=C:\ant\apache-ant-1.10.2\bin;%JAVA_HOME%\bin;%PATH%
+  - cmd: echo %USERPROFILE%
+  - cmd: echo %PATH%
+  - cmd: java -version
+  - cmd: git submodule update --init --recursive
+
+build_script:
+  - ant compile  
+
+test_script:
+  - som core-lib/TestSuite/TestRunner.ns
+
+cache:
+  - C:\ant
