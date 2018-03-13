@@ -5,6 +5,8 @@ import os
 import shlex
 
 BASE_DIR    = os.path.dirname(os.path.realpath(__file__))
+TRUFFLE_DIR = BASE_DIR + '/libs/truffle'
+JAVA_HOME   = os.getenv('JAVA_HOME',  None)
 JVMCI_BIN   = os.getenv('JVMCI_BIN',  None)
 GRAAL_HOME  = os.getenv('GRAAL_HOME',  None)
 GRAAL_FLAGS = os.getenv('GRAAL_FLAGS', None)
@@ -12,6 +14,9 @@ GRAAL_FLAGS = os.getenv('GRAAL_FLAGS', None)
 GRAAL_LOCATIONS = ['~/.local/graal-core/',
                    BASE_DIR + '/../graal/graal-jvmci-8']
 
+##
+## Defining Argument Parsing
+##
 parser = argparse.ArgumentParser(
     description='Helper script to run SOMns with/without Graal')
 
@@ -96,6 +101,8 @@ parser.add_argument('-C', '--no-compilation', help='disable Truffle compilation'
                     dest='no_compilation', action='store_true', default=False)
 parser.add_argument('-G', '--interpreter', help='run without Graal',
                     dest='interpreter', action='store_true', default=False)
+parser.add_argument('-EG', '--no-embedded-graal', help='run without the embedded Graal',
+                    dest='embedded_graal', action='store_false', default=True)
 parser.add_argument('-X', '--java-interpreter', help='run without Graal, and only the Java interpreter',
                     dest='java_interpreter', action='store_true', default=False)
 parser.add_argument('-T', '--no-trace', help='do not print truffle compilation info',
@@ -126,8 +133,6 @@ if len(sys.argv) < 2:
 
 args = parser.parse_args()
 
-JAVA_ARGS = ['-d64', '-server']
-
 if args.dynamic_metrics:
     args.interpreter = True
 
@@ -135,7 +140,12 @@ if args.java_interpreter:
     args.interpreter = True
 
 graal_home = GRAAL_HOME
-java_bin = JVMCI_BIN
+java_bin = None
+
+if JAVA_HOME:
+  java_bin = JAVA_HOME + '/bin/java'
+if JVMCI_BIN:
+  java_bin = JVMCI_BIN
 
 if not java_bin:
   if not graal_home:
@@ -156,22 +166,60 @@ if java_bin is graal_home or not os.path.isfile(java_bin):
     print "No compatible JDK found. Please set the GRAAL_HOME or JVMCI_BIN environment variables."
     sys.exit(1)
 
-BOOT_CLASSPATH = ('-Xbootclasspath/a:'
-             + BASE_DIR + '/build/classes:'
-             + BASE_DIR + '/libs/black-diamonds/build/classes:'
-             + BASE_DIR + '/libs/truffle/sdk/mxbuild/dists/graal-sdk.jar:'
-             + BASE_DIR + '/libs/truffle/truffle/mxbuild/dists/truffle-api.jar:'
-             + BASE_DIR + '/libs/truffle/truffle/mxbuild/dists/truffle-debug.jar:'
-             + BASE_DIR + '/libs/somns-deps.jar')
+JAVA_MAJOR_VERSION = None
+try:
+  j_ver_str = os.popen(java_bin + " -version 2>&1").read()
+  j_arr = j_ver_str.split("\"")
+  if j_arr[1].startswith("1.8"):
+    JAVA_MAJOR_VERSION = 8
+  else:
+    JAVA_MAJOR_VERSION = int(j_arr[1].split(".")[0])
+except:
+  pass
 
-SOM_ARGS = [BOOT_CLASSPATH,
-            '-Dbd.settings=som.vm.VmSettings', 'som.VM',
+##
+## Defining Necessary Parameter Bits
+##
+
+CLASSPATH = (BASE_DIR + '/build/classes:'
+           + BASE_DIR + '/libs/black-diamonds/build/classes:'
+           + TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-debug.jar:'
+           + BASE_DIR + '/libs/somns-deps.jar')
+
+BOOT_CLASSPATH = ('-Xbootclasspath/a:'
+             + TRUFFLE_DIR + '/sdk/mxbuild/dists/graal-sdk.jar:'
+             + TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-api.jar')
+
+GRAAL_JAVA_8_FLAGS = ['-Djvmci.Compiler=graal',
+  '-Djvmci.class.path.append=' + TRUFFLE_DIR + '/compiler/mxbuild/dists/graal.jar']
+
+GRAAL_JAVA_9_FLAGS = [
+  '--module-path=' + TRUFFLE_DIR + '/sdk/mxbuild/modules/org.graalvm.graal_sdk.jar:' +
+       TRUFFLE_DIR + '/truffle/mxbuild/modules/com.oracle.truffle.truffle_api.jar',
+  '--upgrade-module-path=' + TRUFFLE_DIR + '/compiler/mxbuild/modules/jdk.internal.vm.compiler.jar']
+
+SOM_ARGS = ['-Dbd.settings=som.vm.VmSettings', 'som.VM',
             '--platform', args.som_platform, '--kernel', args.som_kernel]
 
 # == Compiler Settings
 TWEAK_INLINING = ['-Dgraal.TruffleCompilationThreshold=191',
                   '-Dgraal.TruffleInliningMaxCallerSize=10000',
                   '-Dgraal.TruffleSplittingMaxCalleeSize=100000']
+
+GRAAL_JVMCI_FLAGS = ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', '-XX:-UseJVMCICompiler']
+
+JAVA_ARGS = ['-server']
+
+if JAVA_MAJOR_VERSION == 8:
+  JAVA_ARGS += ['-d64']
+  GRAAL_EMBEDDED_FLAGS = GRAAL_JAVA_8_FLAGS
+
+if JAVA_MAJOR_VERSION > 8:
+  GRAAL_EMBEDDED_FLAGS = GRAAL_JAVA_9_FLAGS
+
+##
+## Processing Parameters and Assembling Command Line
+##
 
 if not args.interpreter and GRAAL_FLAGS:
     flags = shlex.split(str.strip(GRAAL_FLAGS))
@@ -181,8 +229,9 @@ else:
 if args.interpreter:
     flags += ['-Dtruffle.TruffleRuntime=com.oracle.truffle.api.impl.DefaultTruffleRuntime']
 else:
-    flags += ['-server', '-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI',
-              '-Djvmci.Compiler=graal', '-XX:-UseJVMCICompiler']
+  flags += GRAAL_JVMCI_FLAGS
+  if args.embedded_graal:
+    flags += GRAAL_EMBEDDED_FLAGS
 
 if args.som_dnu:
     flags += ['-Dsom.printStackTraceOnDNU=true']
@@ -316,7 +365,7 @@ if args.java_args:
 
 flags += ['-Dsom.tools=' + BASE_DIR + '/tools']
 
-all_args = JAVA_ARGS + flags + SOM_ARGS + args.args
+all_args = JAVA_ARGS + ['-classpath', CLASSPATH] + [BOOT_CLASSPATH] + flags + SOM_ARGS + args.args
 
 if args.verbose:
     print "CMD: " + java_bin + ' ' + ' '.join(all_args)

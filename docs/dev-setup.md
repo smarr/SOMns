@@ -1,37 +1,33 @@
 # A Complete Development Setup
 
 The [Basic User Setup](basic-setup) gives a brief set of instructions to be able
-to run SOMns programs. However, it does not include the setup of Graal to enable
-just-in-time compilation, and Node.js to work on the Kompos Web Debugger.
-
-For these two, we need to install additional dependencies.
-Specifically, we need:
-
- - the GraalBasic setup
- - Node.js
+to run SOMns programs. However, it does not include the setup of Node.js,
+which is needed for the Kómpos Web Debugger.
 
 On Ubuntu, the necessary software can be installed with:
 
 ```bash
-## First, installing Node.js and the Node Package Manager (NPM)
+## First, register the Node.js package repository
 curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash -
 sudo apt install npm nodejs
-
-## Second, installing and compiling the Graal JIT Compiler
-cd .. ## leaving the SOMns folder
-git clone --recursive https://github.com/smarr/GraalBasic.git
-cd GraalBasic
-yes "n" | ./build.sh
-cd ../SOMns
-ant ## to ensure everything is compiled
 ```
 
-At this point, it should be possible to use Graal to run SOMns by dropping the
-`-G` option from the command line:
+With Homebrew, it can be installed with:
 
 ```bash
-./som core-lib/Hello.ns
+brew install node
 ```
+
+With this being completed, the default target of Ant should complete
+successfully:
+
+```bash
+ant
+```
+
+This will compile SOMns, but also the Kómpos Web Debugger, which can also be
+compiled by invoking the target directly: `ant kompos`
+
 
 <figure style="float: right; margin-right: -100px">
 <img style="width: 200px;" src="../eclipse-project-outline.png" alt="Eclipse Project outline" />
@@ -40,7 +36,7 @@ Eclipse Project outline.
 </figcaption>
 </figure>
 
-## Eclipse to Develop the Interpreter
+## Using Eclipse to Develop the Interpreter
 
 SOMns is currently developed with Eclipse. While other Java IDEs can also be
 used, for brevity, we'll focus on Eclipse only.
@@ -88,8 +84,8 @@ in Eclipse. After starting SOMns, it should tell you that it is waiting on port
 
 A brief list of steps:
 
-1. Install software dependencies: ant, git, Java 8, Eclipse 4.6 (or later),
-   VS Code 1.8 (or later), Node.js, NPM, Graal JIT compiler
+1. Install software dependencies: Ant, git, Java 9, Eclipse 4.6 (or later),
+   VS Code 1.21 (or later), Node.js, NPM, Graal JIT compiler
 
 2. Create Truffle Eclipse projects: `ant ideinit`
 

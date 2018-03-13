@@ -34,7 +34,6 @@ import java.util.List;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.source.SourceSection;
-import com.sun.istack.internal.NotNull;
 
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionId;
@@ -504,14 +503,14 @@ public final class MethodBuilder {
     return (Argument) getVariable(Symbols.SELF);
   }
 
-  public ExpressionNode getSuperReadNode(@NotNull final SourceSection source) {
+  public ExpressionNode getSuperReadNode(final SourceSection source) {
     assert source != null;
     MixinBuilder holder = getEnclosingMixinBuilder();
     return getSelf().getSuperReadNode(getOuterSelfContextLevel(),
         holder.getMixinId(), holder.isClassSide(), source);
   }
 
-  public ExpressionNode getSelfRead(@NotNull final SourceSection source) {
+  public ExpressionNode getSelfRead(final SourceSection source) {
     assert source != null;
     MixinBuilder holder = getEnclosingMixinBuilder();
     MixinDefinitionId mixinId = holder == null ? null : holder.getMixinId();
