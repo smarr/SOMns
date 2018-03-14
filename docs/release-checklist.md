@@ -8,13 +8,10 @@ release.
 
 2. Update CHANGELOG.md with all elements missing
    A useful tool is the `github_changelog_generator`
-
    It can be used like this:
 
-```
-sudo gem install github_changelog_generator
-github_changelog_generator -u smarr -p SOMns --token ${GITHUB_TOKEN}
-```
+        sudo gem install github_changelog_generator
+        github_changelog_generator -u smarr -p SOMns -o changelog-gen.md --since-tag v0.5.0 --token ${GITHUB_TOKEN}
 
 3. Make sure all desired changes are part of the `dev` branch.
 
