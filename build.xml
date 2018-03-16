@@ -56,6 +56,7 @@
     <target name="clobber" description="Do clean, and also clean truffle build" depends="clean,clean-truffle">
         <delete dir="${kompos.dir}/out"/>
         <delete dir="${kompos.dir}/node_modules"/>
+        <ant dir="${bd.dir}" useNativeBasedir="true" target="clean" inheritAll="false"/>
     </target>
 
     <target name="check-java">
