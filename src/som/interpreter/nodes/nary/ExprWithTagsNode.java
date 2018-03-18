@@ -78,7 +78,6 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
 
   @Override
   public void markAsLoopBody() {
-    assert !isTagged(LOOP_BODY);
     assert !isTagged(ROOT_EXPR);
     assert !isTagged(CONTROL_FLOW_CONDITION);
     assert getSourceSection() != null;
@@ -89,7 +88,6 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
   public void markAsControlFlowCondition() {
     assert !isTagged(LOOP_BODY);
     assert !isTagged(ROOT_EXPR);
-    assert !isTagged(CONTROL_FLOW_CONDITION);
     assert getSourceSection() != null;
     tagWith(CONTROL_FLOW_CONDITION);
   }

@@ -27,7 +27,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bd.nodes.Operation;
+import bd.tools.nodes.Operation;
 import som.compiler.MixinDefinition;
 import som.instrumentation.InstrumentableDirectCallNode;
 import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
@@ -92,6 +92,7 @@ import tools.language.StructuralProbe;
  * - designed for single-threaded use only
  * - designed for use in interpreted mode only
  */
+@SuppressWarnings("deprecation")
 @Registration(name = "DynamicMetrics", id = DynamicMetrics.ID, version = "0.1",
     services = {StructuralProbe.class})
 public class DynamicMetrics extends TruffleInstrument {
@@ -445,7 +446,6 @@ public class DynamicMetrics extends TruffleInstrument {
     return allSourceSections;
   }
 
-  @SuppressWarnings("deprecation")
   private void outputAllTruffleMethodsToIGV() {
     GraphPrintVisitor graphPrinter = new GraphPrintVisitor();
 

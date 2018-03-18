@@ -4,11 +4,11 @@ import java.util.ArrayList;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 
+import bd.inlining.ScopeAdaptationVisitor;
 import som.compiler.AccessModifier;
 import som.compiler.MethodBuilder;
 import som.compiler.Variable;
 import som.compiler.Variable.Argument;
-import som.interpreter.InliningVisitor;
 import som.interpreter.Method;
 import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SBlock;
@@ -62,15 +62,15 @@ public class BlockNode extends LiteralNode {
   }
 
   @Override
-  public void replaceAfterScopeChange(final InliningVisitor inliner) {
-    if (!needsAdjustmentOnScopeChange && !inliner.someOuterScopeIsMerged()) {
+  public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
+    if (!needsAdjustmentOnScopeChange && !inliner.outerScopeChanged()) {
       return;
     }
 
     Method blockIvk = (Method) blockMethod.getInvokable();
     Method adapted = blockIvk.cloneAndAdaptAfterScopeChange(
         inliner.getScope(blockIvk), inliner.contextLevel + 1, true,
-        inliner.someOuterScopeIsMerged());
+        inliner.outerScopeChanged());
     SInvokable adaptedIvk = new SInvokable(blockMethod.getSignature(),
         AccessModifier.BLOCK_METHOD,
         adapted, blockMethod.getEmbeddedBlocks());

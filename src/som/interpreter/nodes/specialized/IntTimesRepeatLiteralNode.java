@@ -2,17 +2,21 @@ package som.interpreter.nodes.specialized;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
+import bd.inlining.Inline;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import tools.dym.Tags.LoopNode;
 
 
+@Inline(selector = "timesRepeat:", inlineableArgIdx = 1, disabled = true)
 @NodeChild(value = "repCnt", type = ExpressionNode.class)
+@GenerateNodeFactory
 public abstract class IntTimesRepeatLiteralNode extends ExprWithTagsNode {
 
   @Child protected ExpressionNode body;
@@ -24,10 +28,11 @@ public abstract class IntTimesRepeatLiteralNode extends ExprWithTagsNode {
 
   public abstract ExpressionNode getRepCnt();
 
-  public IntTimesRepeatLiteralNode(final ExpressionNode body,
-      final ExpressionNode originalBody) {
+  public IntTimesRepeatLiteralNode(final ExpressionNode originalBody,
+      final ExpressionNode body) {
     this.body = body;
     this.bodyActualNode = originalBody;
+    body.markAsLoopBody();
   }
 
   @Override

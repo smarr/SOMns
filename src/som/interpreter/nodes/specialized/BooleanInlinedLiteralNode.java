@@ -6,6 +6,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.profiles.ConditionProfile;
 
+import bd.inlining.Inline;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import tools.dym.Tags.ControlFlowCondition;
@@ -59,10 +60,12 @@ public abstract class BooleanInlinedLiteralNode extends ExprWithTagsNode {
     }
   }
 
+  @Inline(selector = "and:", inlineableArgIdx = 1)
+  @Inline(selector = "&&", inlineableArgIdx = 1)
   public static final class AndInlinedLiteralNode extends BooleanInlinedLiteralNode {
 
     public AndInlinedLiteralNode(final ExpressionNode receiverNode,
-        final ExpressionNode inlinedArgumentNode, final ExpressionNode originalArgumentNode) {
+        final ExpressionNode originalArgumentNode, final ExpressionNode inlinedArgumentNode) {
       super(receiverNode, inlinedArgumentNode, originalArgumentNode);
     }
 
@@ -81,10 +84,12 @@ public abstract class BooleanInlinedLiteralNode extends ExprWithTagsNode {
     }
   }
 
+  @Inline(selector = "or:", inlineableArgIdx = 1)
+  @Inline(selector = "||", inlineableArgIdx = 1)
   public static final class OrInlinedLiteralNode extends BooleanInlinedLiteralNode {
 
     public OrInlinedLiteralNode(final ExpressionNode receiverNode,
-        final ExpressionNode inlinedArgumentNode, final ExpressionNode originalArgumentNode) {
+        final ExpressionNode originalArgumentNode, final ExpressionNode inlinedArgumentNode) {
       super(receiverNode, inlinedArgumentNode, originalArgumentNode);
     }
 

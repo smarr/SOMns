@@ -1,25 +1,27 @@
 package som.interpreter.nodes.specialized;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeChild;
-import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
+import bd.inlining.Inline;
+import bd.inlining.ScopeAdaptationVisitor;
+import bd.inlining.ScopeAdaptationVisitor.ScopeElement;
 import som.compiler.Variable.Local;
-import som.interpreter.InliningVisitor;
-import som.interpreter.InliningVisitor.ScopeElement;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import tools.dym.Tags.LoopNode;
 
 
-@NodeChildren({
-    @NodeChild(value = "from", type = ExpressionNode.class),
-    @NodeChild(value = "to", type = ExpressionNode.class)})
+@GenerateNodeFactory
+@NodeChild(value = "from", type = ExpressionNode.class)
+@NodeChild(value = "to", type = ExpressionNode.class)
+@Inline(selector = "downTo:do:", inlineableArgIdx = 2, introduceTemps = 2, disabled = true)
 public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
 
   @Child protected ExpressionNode body;
@@ -35,8 +37,8 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
 
   public abstract ExpressionNode getTo();
 
-  public IntDownToDoInlinedLiteralsNode(final ExpressionNode body, final Local loopIndex,
-      final ExpressionNode originalBody) {
+  public IntDownToDoInlinedLiteralsNode(final ExpressionNode originalBody,
+      final ExpressionNode body, final Local loopIndex) {
     this.body = body;
     this.loopIndex = loopIndex.getSlot();
     this.loopIndexVar = loopIndex;
@@ -44,6 +46,7 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
 
     // and, we can already tell the loop index that it is going to be long
     this.loopIndex.setKind(FrameSlotKind.Long);
+    body.markAsLoopBody();
   }
 
   @Override
@@ -96,10 +99,10 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
   }
 
   @Override
-  public void replaceAfterScopeChange(final InliningVisitor inliner) {
-    ScopeElement se = inliner.getSplitVar(loopIndexVar);
-    IntDownToDoInlinedLiteralsNode node = IntDownToDoInlinedLiteralsNodeGen.create(
-        body, (Local) se.var, bodyActualNode, getFrom(), getTo());
+  public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
+    ScopeElement<ExpressionNode> se = inliner.getAdaptedVar(loopIndexVar);
+    IntDownToDoInlinedLiteralsNode node = IntDownToDoInlinedLiteralsNodeFactory.create(
+        bodyActualNode, body, (Local) se.var, getFrom(), getTo());
     node.initialize(sourceSection);
     replace(node);
   }

@@ -5,8 +5,8 @@ import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bd.nodes.EagerlySpecializable;
-import bd.nodes.PreevaluatedExpression;
+import bd.primitives.nodes.EagerlySpecializable;
+import bd.primitives.nodes.PreevaluatedExpression;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;

@@ -27,6 +27,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.inlining.ScopeAdaptationVisitor;
 import som.compiler.MethodBuilder;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
@@ -88,7 +89,7 @@ public final class Method extends Invokable {
   @Override
   public ExpressionNode inline(final MethodBuilder builder, final SInvokable outer) {
     builder.mergeIntoScope(methodScope, outer);
-    return InliningVisitor.doInline(
+    return ScopeAdaptationVisitor.adapt(
         uninitializedBody, builder.getCurrentMethodScope(), 0, true);
   }
 
@@ -103,7 +104,7 @@ public final class Method extends Invokable {
   public Method cloneAndAdaptAfterScopeChange(final MethodScope adaptedScope,
       final int appliesTo, final boolean cloneAdaptedAsUninitialized,
       final boolean someOuterScopeIsMerged) {
-    ExpressionNode adaptedBody = InliningVisitor.doInline(
+    ExpressionNode adaptedBody = ScopeAdaptationVisitor.adapt(
         uninitializedBody, adaptedScope, appliesTo, someOuterScopeIsMerged);
 
     ExpressionNode uninit;
@@ -124,7 +125,7 @@ public final class Method extends Invokable {
     MethodScope splitScope = methodScope.split();
     assert methodScope != splitScope;
     assert splitScope.isFinalized();
-    return cloneAndAdaptAfterScopeChange(splitScope, 0, false, false);
+    return cloneAndAdaptAfterScopeChange(splitScope, 0, false, true);
   }
 
   @Override
@@ -133,7 +134,7 @@ public final class Method extends Invokable {
     assert !isAtomic : "We should only ask non-atomic invokables for their atomic version";
 
     MethodScope splitScope = methodScope.split();
-    ExpressionNode body = InliningVisitor.doInline(uninitializedBody, splitScope, 0, true);
+    ExpressionNode body = ScopeAdaptationVisitor.adapt(uninitializedBody, splitScope, 0, true);
     ExpressionNode uninit = NodeUtil.cloneNode(body);
 
     Method atomic = new Method(name, getSourceSection(), definition, body,

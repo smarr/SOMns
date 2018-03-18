@@ -30,11 +30,11 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.profiles.BranchProfile;
 
+import bd.inlining.ScopeAdaptationVisitor;
+import bd.inlining.ScopeAdaptationVisitor.ScopeElement;
 import som.compiler.AccessModifier;
 import som.compiler.Variable.Internal;
 import som.interpreter.FrameOnStackMarker;
-import som.interpreter.InliningVisitor;
-import som.interpreter.InliningVisitor.ScopeElement;
 import som.interpreter.ReturnException;
 import som.interpreter.SArguments;
 import som.interpreter.Types;
@@ -99,8 +99,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
   }
 
   @Override
-  public void replaceAfterScopeChange(final InliningVisitor inliner) {
-    ScopeElement se = inliner.getSplitVar(onStackMarkerVar);
+  public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
+    ScopeElement<ExpressionNode> se = inliner.getAdaptedVar(onStackMarkerVar);
 
     if (se.var != onStackMarkerVar || se.contextLevel < contextLevel) {
       ExpressionNode node;
@@ -155,8 +155,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
     }
 
     @Override
-    public void replaceAfterScopeChange(final InliningVisitor inliner) {
-      ScopeElement se = inliner.getSplitVar(onStackMarkerVar);
+    public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
+      ScopeElement<ExpressionNode> se = inliner.getAdaptedVar(onStackMarkerVar);
       if (se.var != onStackMarkerVar) {
         ReturnLocalNode node = new ReturnLocalNode(expression, (Internal) se.var);
         node.initialize(sourceSection);
@@ -208,8 +208,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
     }
 
     @Override
-    public void replaceAfterScopeChange(final InliningVisitor inliner) {
-      ScopeElement se = inliner.getSplitVar(frameOnStackMarkerVar);
+    public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
+      ScopeElement<ExpressionNode> se = inliner.getAdaptedVar(frameOnStackMarkerVar);
       if (se.var != frameOnStackMarkerVar) {
         replace(new CatchNonLocalReturnNode(
             methodBody, (Internal) se.var).initialize(sourceSection));

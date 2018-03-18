@@ -9,8 +9,8 @@ import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 
-import bd.nodes.Operation;
 import bd.primitives.Primitive;
+import bd.tools.nodes.Operation;
 import som.Output;
 import som.VM;
 import som.interpreter.Types;

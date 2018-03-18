@@ -3,6 +3,7 @@ package som.interpreter.nodes.literals;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 
+@SuppressWarnings("unchecked")
 public abstract class BooleanLiteralNode extends LiteralNode {
 
   public static final class TrueLiteralNode extends BooleanLiteralNode {

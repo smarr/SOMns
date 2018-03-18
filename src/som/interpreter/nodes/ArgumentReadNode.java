@@ -4,9 +4,10 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
 import com.oracle.truffle.api.profiles.ValueProfile;
 
+import bd.inlining.ScopeAdaptationVisitor;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.compiler.Variable.AccessNodeState;
 import som.compiler.Variable.Argument;
-import som.interpreter.InliningVisitor;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vmobjects.SSymbol;
@@ -75,7 +76,7 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+    public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
       inliner.updateRead(arg, this, 0);
     }
   }
@@ -111,8 +112,8 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public void replaceAfterScopeChange(final InliningVisitor inliner) {
-      inliner.updateSelfRead(arg, this, mixin, 0);
+    public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
+      inliner.updateThisRead(arg, this, new AccessNodeState(mixin), 0);
     }
 
     @Override
@@ -154,7 +155,7 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+    public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
       inliner.updateRead(arg, this, contextLevel);
     }
 
@@ -203,8 +204,8 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public void replaceAfterScopeChange(final InliningVisitor inliner) {
-      inliner.updateSelfRead(arg, this, mixin, contextLevel);
+    public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
+      inliner.updateThisRead(arg, this, new AccessNodeState(mixin), contextLevel);
     }
 
     @Override
@@ -241,8 +242,8 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public void replaceAfterScopeChange(final InliningVisitor inliner) {
-      inliner.updateSuperRead(arg, this, holderMixin, classSide, 0);
+    public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
+      inliner.updateSuperRead(arg, this, new AccessNodeState(holderMixin, classSide), 0);
     }
 
     @Override
@@ -274,8 +275,9 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public void replaceAfterScopeChange(final InliningVisitor inliner) {
-      inliner.updateSuperRead(arg, this, holderMixin, classSide, contextLevel);
+    public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
+      inliner.updateSuperRead(arg, this, new AccessNodeState(holderMixin, classSide),
+          contextLevel);
     }
 
     @Override

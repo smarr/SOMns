@@ -9,8 +9,8 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
+import bd.inlining.ScopeAdaptationVisitor;
 import som.compiler.Variable.Local;
-import som.interpreter.InliningVisitor;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 import tools.Send;
@@ -115,7 +115,7 @@ public abstract class NonLocalVariableNode extends ContextualNode implements Sen
     }
 
     @Override
-    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+    public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
       inliner.updateRead(var, this, contextLevel);
     }
   }
@@ -211,7 +211,7 @@ public abstract class NonLocalVariableNode extends ContextualNode implements Sen
     }
 
     @Override
-    public void replaceAfterScopeChange(final InliningVisitor inliner) {
+    public void replaceAfterScopeChange(final ScopeAdaptationVisitor inliner) {
       inliner.updateWrite(var, this, getExp(), contextLevel);
     }
   }

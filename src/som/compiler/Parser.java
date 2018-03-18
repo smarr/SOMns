@@ -77,11 +77,11 @@ import java.util.Set;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.basic.ProgramDefinitionError;
+import bd.inlining.InlinableNodes;
 import som.Output;
 import som.compiler.Lexer.Peek;
-import som.compiler.MethodBuilder.MethodDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionError;
-import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
@@ -100,14 +100,6 @@ import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.nodes.literals.ObjectLiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
 import som.interpreter.nodes.literals.SymbolLiteralNode;
-import som.interpreter.nodes.specialized.BooleanInlinedLiteralNode.AndInlinedLiteralNode;
-import som.interpreter.nodes.specialized.BooleanInlinedLiteralNode.OrInlinedLiteralNode;
-import som.interpreter.nodes.specialized.IfInlinedLiteralNode;
-import som.interpreter.nodes.specialized.IfTrueIfFalseInlinedLiteralsNode;
-import som.interpreter.nodes.specialized.IntDownToDoInlinedLiteralsNodeGen;
-import som.interpreter.nodes.specialized.IntTimesRepeatLiteralNodeGen;
-import som.interpreter.nodes.specialized.IntToDoInlinedLiteralsNodeGen;
-import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
@@ -141,6 +133,8 @@ public class Parser {
   private SourceSection            lastMethodsSourceSection;
   private final Set<SourceSection> syntaxAnnotations;
   private final StructuralProbe    structuralProbe;
+
+  private final InlinableNodes<SSymbol> inlinableNodes;
 
   /**
    * TODO: fix AST inlining while parsing locals/slots, and remove the disabling.
@@ -288,6 +282,12 @@ public class Parser {
 
     this.syntaxAnnotations = new HashSet<>();
     this.structuralProbe = structuralProbe;
+
+    if (language.getVM() != null) {
+      this.inlinableNodes = language.getVM().getInlinableNodes();
+    } else {
+      this.inlinableNodes = null;
+    }
   }
 
   Set<SourceSection> getSyntaxAnnotations() {
@@ -1347,17 +1347,12 @@ public class Parser {
 
   private ExpressionNode tryInliningBinaryMessage(final MethodBuilder builder,
       final ExpressionNode receiver, final SourceCoordinate coord, final SSymbol msg,
-      final ExpressionNode operand) {
+      final ExpressionNode operand) throws ProgramDefinitionError {
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
     arguments.add(receiver);
     arguments.add(operand);
     SourceSection source = getSource(coord);
-    ExpressionNode node = inlineControlStructureIfPossible(builder, arguments, msg.getString(),
-        msg.getNumberOfSignatureArguments(), source);
-    if (node != null) {
-      node.initialize(source);
-    }
-    return node;
+    return inlineControlStructureIfPossible(builder, arguments, msg, source);
   }
 
   protected ExpressionNode binaryMessage(final MethodBuilder builder,
@@ -1431,17 +1426,14 @@ public class Parser {
     String msgStr = kw.toString();
     SSymbol msg = symbolFor(msgStr);
 
+    SourceSection source = getSource(coord);
     if (!eventualSend) {
-      SourceSection source = getSource(coord);
-      ExpressionNode node = inlineControlStructureIfPossible(builder, arguments,
-          msgStr, msg.getNumberOfSignatureArguments(), source);
+      ExpressionNode node = inlineControlStructureIfPossible(builder, arguments, msg, source);
       if (node != null) {
-        node.initialize(source);
         return node;
       }
     }
 
-    SourceSection source = getSource(coord);
     ExpressionNode[] args = arguments.toArray(new ExpressionNode[0]);
     if (explicitRcvr) {
       return createMessageSend(
@@ -1454,118 +1446,14 @@ public class Parser {
     }
   }
 
-  protected ExpressionNode inlineControlStructureIfPossible(
-      final MethodBuilder builder, final List<ExpressionNode> arguments,
-      final String msgStr, final int numberOfArguments, final SourceSection source) {
+  protected ExpressionNode inlineControlStructureIfPossible(final MethodBuilder builder,
+      final List<ExpressionNode> arguments, final SSymbol msg, final SourceSection source)
+      throws ProgramDefinitionError {
     if (parsingSlotDefs > 0) {
       return null;
     }
 
-    if (numberOfArguments == 2) {
-      if (arguments.get(1) instanceof LiteralNode) {
-        if ("ifTrue:".equals(msgStr)) {
-          ExpressionNode condition = arguments.get(0);
-          condition.markAsControlFlowCondition();
-          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
-          return new IfInlinedLiteralNode(condition, true, inlinedBody,
-              arguments.get(1));
-        } else if ("ifFalse:".equals(msgStr)) {
-          ExpressionNode condition = arguments.get(0);
-          condition.markAsControlFlowCondition();
-          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
-          return new IfInlinedLiteralNode(condition, false, inlinedBody,
-              arguments.get(1));
-        } else if ("whileTrue:".equals(msgStr)) {
-          if (!(arguments.get(0) instanceof LiteralNode)
-              || !(arguments.get(1) instanceof LiteralNode)) {
-            return null;
-          }
-          ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
-          inlinedCondition.markAsControlFlowCondition();
-          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
-          inlinedBody.markAsLoopBody();
-          return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
-              true, arguments.get(0), arguments.get(1));
-        } else if ("whileFalse:".equals(msgStr)) {
-          if (!(arguments.get(0) instanceof LiteralNode)
-              || !(arguments.get(1) instanceof LiteralNode)) {
-            return null;
-          }
-          ExpressionNode inlinedCondition = ((LiteralNode) arguments.get(0)).inline(builder);
-          inlinedCondition.markAsControlFlowCondition();
-          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
-          inlinedBody.markAsLoopBody();
-          return new WhileInlinedLiteralsNode(inlinedCondition, inlinedBody,
-              false, arguments.get(0), arguments.get(1));
-        } else if ("or:".equals(msgStr) || "||".equals(msgStr)) {
-          ExpressionNode inlinedArg = ((LiteralNode) arguments.get(1)).inline(builder);
-          return new OrInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1));
-        } else if ("and:".equals(msgStr) || "&&".equals(msgStr)) {
-          ExpressionNode inlinedArg = ((LiteralNode) arguments.get(1)).inline(builder);
-          return new AndInlinedLiteralNode(arguments.get(0), inlinedArg, arguments.get(1));
-        } else if (!VmSettings.DYNAMIC_METRICS && "timesRepeat:".equals(msgStr)) {
-          ExpressionNode inlinedBody = ((LiteralNode) arguments.get(1)).inline(builder);
-          inlinedBody.markAsLoopBody();
-          return IntTimesRepeatLiteralNodeGen.create(inlinedBody, arguments.get(1),
-              arguments.get(0));
-        }
-      }
-    } else if (numberOfArguments == 3) {
-      if ("ifTrue:ifFalse:".equals(msgStr) &&
-          arguments.get(1) instanceof LiteralNode && arguments.get(2) instanceof LiteralNode) {
-        LiteralNode blockOrVal = (LiteralNode) arguments.get(2);
-        ExpressionNode condition = arguments.get(0);
-        condition.markAsControlFlowCondition();
-        ExpressionNode inlinedTrueNode = ((LiteralNode) arguments.get(1)).inline(builder);
-        ExpressionNode inlinedFalseNode = blockOrVal.inline(builder);
-        return new IfTrueIfFalseInlinedLiteralsNode(condition,
-            inlinedTrueNode, inlinedFalseNode, arguments.get(1), arguments.get(2));
-      } else if (!VmSettings.DYNAMIC_METRICS && "to:do:".equals(msgStr) &&
-          arguments.get(2) instanceof LiteralNode) {
-        LiteralNode blockOrVal = (LiteralNode) arguments.get(2);
-        try {
-          ExpressionNode inlinedBody = blockOrVal.inline(builder);
-          inlinedBody.markAsLoopBody();
-
-          Local loopIdx = getLoopIdx(builder, blockOrVal, source);
-          return IntToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx, arguments.get(2),
-              arguments.get(0), arguments.get(1));
-        } catch (MethodDefinitionError e) {
-          throw new RuntimeException(e);
-        }
-      } else if (!VmSettings.DYNAMIC_METRICS && "downTo:do:".equals(msgStr) &&
-          arguments.get(2) instanceof LiteralNode) {
-        LiteralNode blockOrVal = (LiteralNode) arguments.get(2);
-        try {
-          ExpressionNode inlinedBody = blockOrVal.inline(builder);
-          inlinedBody.markAsLoopBody();
-
-          Local loopIdx = getLoopIdx(builder, blockOrVal, source);
-          return IntDownToDoInlinedLiteralsNodeGen.create(inlinedBody, loopIdx,
-              arguments.get(2), arguments.get(0), arguments.get(1));
-        } catch (MethodDefinitionError e) {
-          throw new RuntimeException(e);
-        }
-      }
-    }
-    return null;
-  }
-
-  private Local getLoopIdx(final MethodBuilder builder,
-      final LiteralNode blockOrVal, final SourceSection source)
-      throws MethodDefinitionError {
-    Local loopIdx;
-    if (blockOrVal instanceof BlockNode) {
-      Argument[] args = ((BlockNode) blockOrVal).getArguments();
-      assert args.length == 2;
-      loopIdx = builder.getLocal(args[1].getQualifiedName());
-    } else {
-      // if it is a literal, we still need a memory location for counting, so,
-      // add a synthetic local
-      loopIdx = builder.addLocalAndUpdateScope(
-          symbolFor("!i" + SourceCoordinate.getLocationQualifier(source)), false, source);
-    }
-    return loopIdx;
+    return inlinableNodes.inline(msg, arguments, builder, source);
   }
 
   private ExpressionNode formula(final MethodBuilder builder)

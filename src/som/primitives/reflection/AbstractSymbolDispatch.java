@@ -8,7 +8,7 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bd.nodes.PreevaluatedExpression;
+import bd.primitives.nodes.PreevaluatedExpression;
 import som.compiler.AccessModifier;
 import som.interpreter.SomLanguage;
 import som.interpreter.Types;

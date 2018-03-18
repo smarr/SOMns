@@ -23,6 +23,7 @@ import com.oracle.truffle.api.vm.PolyglotRuntime.Instrument;
 import com.oracle.truffle.tools.Profiler;
 import com.oracle.truffle.tools.ProfilerInstrument;
 
+import bd.inlining.InlinableNodes;
 import coveralls.truffle.Coverage;
 import som.compiler.MixinDefinition;
 import som.compiler.SourcecodeCompiler;
@@ -44,6 +45,7 @@ import som.vm.VmOptions;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
+import som.vmobjects.SSymbol;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.TracingActors;
 import tools.debugger.Tags;
@@ -54,6 +56,7 @@ import tools.language.StructuralProbe;
 import tools.superinstructions.CandidateIdentifier;
 
 
+@SuppressWarnings("deprecation")
 public final class VM {
 
   @CompilationFinal private PolyglotEngine engine;
@@ -153,6 +156,10 @@ public final class VM {
     return objectSystem.getPrimitives();
   }
 
+  public InlinableNodes<SSymbol> getInlinableNodes() {
+    return objectSystem.getInlinableNodes();
+  }
+
   public static void thisMethodNeedsToBeOptimized(final String msg) {
     if (VmSettings.FAIL_ON_MISSING_OPTIMIZATIONS) {
       CompilerAsserts.neverPartOfCompilation(msg);
@@ -180,7 +187,6 @@ public final class VM {
     }
   }
 
-  @SuppressWarnings("deprecation")
   private static void outputToIGV(final Method method) {
     GraphPrintVisitor graphPrinter = new GraphPrintVisitor();
 
