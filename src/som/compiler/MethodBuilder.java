@@ -37,7 +37,6 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.inlining.ScopeAdaptationVisitor;
-import bd.inlining.ScopeBuilder;
 import bd.inlining.nodes.Inlinable;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionId;
@@ -47,8 +46,8 @@ import som.compiler.Variable.ImmutableLocal;
 import som.compiler.Variable.Internal;
 import som.compiler.Variable.Local;
 import som.compiler.Variable.MutableLocal;
+import som.interpreter.LexicalScope;
 import som.interpreter.LexicalScope.MethodScope;
-import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
@@ -65,12 +64,10 @@ import tools.SourceCoordinate;
 import tools.language.StructuralProbe;
 
 
-public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
+public final class MethodBuilder extends ScopeBuilder<MethodScope>
+    implements bd.inlining.ScopeBuilder<MethodBuilder> {
 
-  /** To get to an indirect outer, use outerBuilder. */
-  private final MixinBuilder  directOuterMixin;
-  private final MethodBuilder outerBuilder;
-  private final boolean       blockMethod;
+  private final boolean blockMethod;
 
   private final SomLanguage language;
 
@@ -88,8 +85,7 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
   private final LinkedHashMap<SSymbol, Argument> arguments = new LinkedHashMap<>();
   private final LinkedHashMap<SSymbol, Local>    locals    = new LinkedHashMap<>();
 
-  private Internal          frameOnStackVar;
-  private final MethodScope currentScope;
+  private Internal frameOnStackVar;
 
   private final List<SInvokable> embeddedBlockMethods;
 
@@ -97,41 +93,37 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
 
   private final StructuralProbe structuralProbe;
 
-  public MethodBuilder(final MixinBuilder holder, final MixinScope clsScope,
-      final StructuralProbe probe) {
-    this(holder, clsScope, null, false, holder.getLanguage(), probe);
-  }
-
   public MethodBuilder(final boolean withoutContext, final SomLanguage language,
       final StructuralProbe probe) {
-    this(null, null, null, false, language, probe);
+    this(null, null, false, language, probe);
     assert withoutContext;
   }
 
-  public MethodBuilder(final MethodBuilder outerBuilder) {
-    this(outerBuilder.directOuterMixin, outerBuilder.getHolderScope(),
-        outerBuilder, true, outerBuilder.language, outerBuilder.structuralProbe);
+  public MethodBuilder(final MethodBuilder outer) {
+    this(outer, outer.getScope(), true, outer.language, outer.structuralProbe);
   }
 
-  private MethodBuilder(final MixinBuilder holder, final MixinScope clsScope,
-      final MethodBuilder outerBuilder, final boolean isBlockMethod,
-      final SomLanguage language, final StructuralProbe probe) {
-    this.directOuterMixin = holder;
-    this.outerBuilder = outerBuilder;
+  public MethodBuilder(final MixinBuilder outer, final StructuralProbe probe) {
+    this(outer, outer.getScope(), false, outer.getLanguage(), probe);
+  }
+
+  public MethodBuilder(final ScopeBuilder<?> outer, final LexicalScope scope,
+      final boolean isBlockMethod, final SomLanguage language, final StructuralProbe probe) {
+    super(outer, scope);
     this.blockMethod = isBlockMethod;
     this.language = language;
     this.structuralProbe = probe;
-
-    MethodScope outer = (outerBuilder != null)
-        ? outerBuilder.getCurrentMethodScope()
-        : null;
-    assert Nil.nilObject != null : "Nil.nilObject not yet initialized";
-    this.currentScope = new MethodScope(new FrameDescriptor(Nil.nilObject), outer, clsScope);
 
     accessesVariablesOfOuterScope = false;
     throwsNonLocalReturn = false;
     needsToCatchNonLocalReturn = false;
     embeddedBlockMethods = new ArrayList<SInvokable>();
+  }
+
+  @Override
+  protected MethodScope createScope(final LexicalScope scope) {
+    assert Nil.nilObject != null : "Nil.nilObject not yet initialized";
+    return new MethodScope(new FrameDescriptor(Nil.nilObject), scope);
   }
 
   public static class MethodDefinitionError extends SemanticDefinitionError {
@@ -155,12 +147,12 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
    */
   public void mergeIntoScope(final MethodScope scope, final SInvokable outer) {
     for (Variable v : scope.getVariables()) {
-      Local l = v.splitToMergeIntoOuterScope(currentScope.getFrameDescriptor());
+      Local l = v.splitToMergeIntoOuterScope(this.scope.getFrameDescriptor());
       if (l != null) { // can happen for instance for the block self, which we omit
         SSymbol name = l.getQualifiedName();
         assert !locals.containsKey(name);
         locals.put(name, l);
-        currentScope.addVariable(l);
+        this.scope.addVariable(l);
       }
     }
     SInvokable[] embeddedBlocks = outer.getEmbeddedBlocks();
@@ -172,7 +164,7 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
 
     if (embeddedScopes != null) {
       for (MethodScope e : embeddedScopes) {
-        currentScope.addEmbeddedScope(e.split(currentScope));
+        this.scope.addEmbeddedScope(e.split(this.scope));
       }
 
       for (SInvokable i : embeddedBlocks) {
@@ -182,7 +174,7 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
 
     boolean removed = embeddedBlockMethods.remove(outer);
     assert removed;
-    currentScope.removeMerged(scope);
+    this.scope.removeMerged(scope);
   }
 
   @Override
@@ -205,24 +197,20 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
 
   public void addEmbeddedBlockMethod(final SInvokable blockMethod) {
     embeddedBlockMethods.add(blockMethod);
-    currentScope.addEmbeddedScope(((Method) blockMethod.getInvokable()).getLexicalScope());
-  }
-
-  public MethodScope getCurrentMethodScope() {
-    return currentScope;
-  }
-
-  public MixinScope getHolderScope() {
-    return currentScope.getHolderScope();
+    scope.addEmbeddedScope(((Method) blockMethod.getInvokable()).getLexicalScope());
   }
 
   // Name for the frameOnStack slot,
   // starting with ! to make it a name that's not possible in Smalltalk
   private static final SSymbol FRAME_ON_STACK_SLOT_NAME = Symbols.symbolFor("!frameOnStack");
 
+  @Override
   public Internal getFrameOnStackMarkerVar() {
-    if (outerBuilder != null) {
-      return outerBuilder.getFrameOnStackMarkerVar();
+    if (outer != null) {
+      Internal result = outer.getFrameOnStackMarkerVar();
+      if (result != null) {
+        return result;
+      }
     }
 
     if (frameOnStackVar == null) {
@@ -230,9 +218,9 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
 
       frameOnStackVar = new Internal(FRAME_ON_STACK_SLOT_NAME);
       frameOnStackVar.init(
-          currentScope.getFrameDescriptor().addFrameSlot(
+          scope.getFrameDescriptor().addFrameSlot(
               frameOnStackVar, FrameSlotKind.Object));
-      currentScope.addVariable(frameOnStackVar);
+      scope.addVariable(frameOnStackVar);
     }
     return frameOnStackVar;
   }
@@ -254,17 +242,19 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
   }
 
   private MethodBuilder markOuterContextsToRequireContextAndGetRootContext() {
-    MethodBuilder ctx = outerBuilder;
-    while (ctx.outerBuilder != null) {
+    assert outer != null;
+    assert outer instanceof MethodBuilder;
+    MethodBuilder ctx = outer.getMethod();
+    while (ctx.outer.getMethod() != null) {
       ctx.throwsNonLocalReturn = true;
-      ctx = ctx.outerBuilder;
+      ctx = ctx.outer.getMethod();
     }
     return ctx;
   }
 
   public boolean needsToCatchNonLocalReturn() {
     // only the most outer method needs to catch
-    return needsToCatchNonLocalReturn && outerBuilder == null;
+    return needsToCatchNonLocalReturn && outer.getMethod() == null;
   }
 
   public SInitializer assembleInitializer(final ExpressionNode body,
@@ -276,7 +266,7 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
   public SInitializer splitBodyAndAssembleInitializerAs(final SSymbol signature,
       final ExpressionNode body, final AccessModifier accessModifier,
       final SourceSection sourceSection) {
-    MethodScope splitScope = currentScope.split();
+    MethodScope splitScope = scope.split();
     ExpressionNode splitBody = ScopeAdaptationVisitor.adapt(body, splitScope, 0, false);
     Method truffleMeth = assembleInvokable(splitBody, splitScope, sourceSection);
 
@@ -326,22 +316,22 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
       vars[i] = l;
       i += 1;
     }
-    currentScope.setVariables(vars);
+    scope.setVariables(vars);
   }
 
   public void finalizeMethodScope() {
-    currentScope.finalizeScope();
+    scope.finalizeScope();
   }
 
   public Method assembleInvokable(final ExpressionNode body,
       final SourceSection sourceSection) {
-    return assembleInvokable(body, currentScope, sourceSection);
+    return assembleInvokable(body, scope, sourceSection);
   }
 
   private String getMethodIdentifier() {
-    MixinBuilder holder = getEnclosingMixinBuilder();
+    MixinBuilder holder = getMixin();
     String cls = holder != null && holder.isClassSide() ? "_class" : "";
-    String name = holder == null ? "_unknown_" : holder.getName().getString();
+    String name = holder == null ? "_unknown_" : holder.getName();
 
     return name + cls + ">>" + signature.toString();
   }
@@ -383,8 +373,8 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
   public Local addMessageCascadeTemp(final SourceSection source) throws MethodDefinitionError {
     cascadeId += 1;
     Local l = addLocal(Symbols.symbolFor("$cascadeTmp" + cascadeId), true, source);
-    if (currentScope.hasVariables()) {
-      currentScope.addVariable(l);
+    if (scope.hasVariables()) {
+      scope.addVariable(l);
     }
     return l;
   }
@@ -402,7 +392,7 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
     } else {
       l = new MutableLocal(name, source);
     }
-    l.init(currentScope.getFrameDescriptor().addFrameSlot(l));
+    l.init(scope.getFrameDescriptor().addFrameSlot(l));
     locals.put(name, l);
 
     if (structuralProbe != null) {
@@ -414,7 +404,7 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
   private Local addLocalAndUpdateScope(final SSymbol name, final boolean immutable,
       final SourceSection source) throws MethodDefinitionError {
     Local l = addLocal(name, immutable, source);
-    currentScope.addVariable(l);
+    scope.addVariable(l);
     return l;
   }
 
@@ -424,9 +414,9 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
 
   private int getOuterSelfContextLevel() {
     int level = 0;
-    MethodBuilder ctx = outerBuilder;
+    MethodBuilder ctx = outer.getMethod();
     while (ctx != null) {
-      ctx = ctx.outerBuilder;
+      ctx = ctx.outer.getMethod();
       level++;
     }
     return level;
@@ -455,21 +445,16 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
    * variable cannot be in scope and that a variable must have been erroneously
    * by {@link #getReadNode} or {@link #getWriteNode}.
    */
-  private int getContextLevel(final SSymbol varName) {
+  @Override
+  protected int getContextLevel(final SSymbol varName) {
     // Check the current activation
     if (locals.containsKey(varName) || arguments.containsKey(varName)) {
       return 0;
     }
 
-    // Check all enclosing activations (ends after first method activation)
-    if (outerBuilder != null) {
-      return 1 + outerBuilder.getContextLevel(varName);
-    }
-
-    // Otherwise, the method belongs to an object literal, check the object's
-    // enclosing activations
-    assert directOuterMixin != null && directOuterMixin.isLiteral();
-    return 1 + directOuterMixin.getEnclosingMethod().getContextLevel(varName);
+    // Check all enclosing activations
+    assert outer != null;
+    return 1 + outer.getContextLevel(varName);
   }
 
   public Local getEmbeddedLocal(final String embeddedName) {
@@ -484,8 +469,8 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
    * Refer to {@link #getContextLevel} for a description of how the
    * enclosing scopes are traversed.
    */
+  @Override
   protected Variable getVariable(final SSymbol varName) {
-
     // Check the current activation
     if (locals.containsKey(varName)) {
       return locals.get(varName);
@@ -495,9 +480,9 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
       return arguments.get(varName);
     }
 
-    // Check all enclosing activations (ends after first method activation)
-    if (outerBuilder != null) {
-      Variable outerVar = outerBuilder.getVariable(varName);
+    // Check all enclosing activations
+    if (outer != null) {
+      Variable outerVar = outer.getVariable(varName);
       if (outerVar != null) {
         accessesVariablesOfOuterScope = true;
         if (outerVar instanceof Local) {
@@ -507,19 +492,17 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
       }
     }
 
-    // If the method belongs to an object literal, check the object's enclosing
-    // activations
-    if (directOuterMixin != null && directOuterMixin.isLiteral()) {
-      Variable literalVar = directOuterMixin.getEnclosingMethod().getVariable(varName);
-      if (literalVar != null) {
-        accessesVariablesOfOuterScope = true;
-        if (literalVar instanceof Local) {
-          accessesLocalOfOuterScope = true;
-        }
-        return literalVar;
+    return null;
+  }
+
+  @Override
+  protected boolean isImmutable() {
+    for (Local l : locals.values()) {
+      if (l.isMutable()) {
+        return false;
       }
     }
-    return null;
+    return outer.isImmutable();
   }
 
   public Argument getSelf() {
@@ -528,14 +511,14 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
 
   public ExpressionNode getSuperReadNode(final SourceSection source) {
     assert source != null;
-    MixinBuilder holder = getEnclosingMixinBuilder();
+    MixinBuilder holder = getMixin();
     return getSelf().getSuperReadNode(getOuterSelfContextLevel(),
         new AccessNodeState(holder.getMixinId(), holder.isClassSide()), source);
   }
 
   public ExpressionNode getSelfRead(final SourceSection source) {
     assert source != null;
-    MixinBuilder holder = getEnclosingMixinBuilder();
+    MixinBuilder holder = getMixin();
     MixinDefinitionId mixinId = holder == null ? null : holder.getMixinId();
     return getSelf().getThisReadNode(getContextLevel(Symbols.SELF),
         new AccessNodeState(mixinId), source);
@@ -572,8 +555,8 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
 
     // send the message to self if at top level (classes only) or
     // if self has the slot defined (object literals only)
-    if (getEnclosingMixinBuilder() == null ||
-        getEnclosingMixinBuilder().hasSlotDefined(selector)) {
+    if (getMixin() == null ||
+        getMixin().hasSlotDefined(selector)) {
       return SNodeFactory.createMessageSend(selector,
           new ExpressionNode[] {getSelfRead(source)}, false, source, null, language);
     }
@@ -587,7 +570,7 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
     // otherwise it's an implicit send
     return SNodeFactory.createImplicitReceiverSend(selector,
         new ExpressionNode[] {getSelfRead(source)},
-        getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(),
+        scope, getMixin().getMixinId(),
         source, language.getVM());
   }
 
@@ -599,6 +582,9 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
     String varNameStr = setterName.substring(0, setterName.length() - 1);
     SSymbol varName = Symbols.symbolFor(varNameStr);
 
+    // TODO: this looks strange. can an inner name shadow any outer name, I would think so
+    // so, this seems incorrect to check first the whole chain for the name instead of doing it
+    // only step wise
     if (hasArgument(varName)) {
       throw new MethodDefinitionError("Can't assign to argument: " + varName, source);
     }
@@ -611,12 +597,12 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
 
     // send the message to self if at top level (classes only) or
     // if self has the slot defined (object literals only)
-    if (getEnclosingMixinBuilder() == null ||
-        getEnclosingMixinBuilder().hasSlotDefined(setter)) {
+    if (getMixin() == null ||
+        getMixin().hasSlotDefined(setter)) {
       return SNodeFactory.createImplicitReceiverSend(
           MixinBuilder.getSetterName(setter),
           new ExpressionNode[] {getSelfRead(source), exp},
-          getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(),
+          scope, getMixin().getMixinId(),
           source, language.getVM());
     }
 
@@ -630,17 +616,18 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
     return SNodeFactory.createImplicitReceiverSend(
         Symbols.symbolFor(setterName),
         new ExpressionNode[] {getSelfRead(source), exp},
-        getCurrentMethodScope(), getEnclosingMixinBuilder().getMixinId(),
+        scope, getMixin().getMixinId(),
         source, language.getVM());
   }
 
+  @Override
   protected boolean hasArgument(final SSymbol varName) {
     if (arguments.containsKey(varName)) {
       return true;
     }
 
-    if (outerBuilder != null) {
-      return outerBuilder.hasArgument(varName);
+    if (outer != null) {
+      return outer.hasArgument(varName);
     }
     return false;
   }
@@ -649,34 +636,23 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
    * Refer to {@link #getContextLevel} for a description of how the
    * enclosing scopes are traversed.
    */
+  @Override
   protected Local getLocal(final SSymbol varName) {
     // Check the current activation
     if (locals.containsKey(varName)) {
       return locals.get(varName);
     }
 
-    // Check all enclosing activations (ends after first method activation)
-    if (outerBuilder != null) {
-      Local outerLocal = outerBuilder.getLocal(varName);
+    // Check all enclosing activations
+    if (outer != null) {
+      Local outerLocal = outer.getLocal(varName);
       if (outerLocal != null) {
         accessesVariablesOfOuterScope = true;
         accessesLocalOfOuterScope = true;
         return outerLocal;
       }
-
     }
 
-    // If the method belongs to an object literal, check the object's enclosing
-    // activations
-    if (directOuterMixin != null && directOuterMixin.isLiteral()) {
-      Local literalLocal = directOuterMixin.getEnclosingMethod().getLocal(varName);
-      if (literalLocal != null) {
-        accessesVariablesOfOuterScope = true;
-        accessesLocalOfOuterScope = true;
-        return literalLocal;
-      }
-
-    }
     return null;
   }
 
@@ -686,30 +662,33 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
         getOuterSelfContextLevel());
   }
 
-  public MethodBuilder getOuterBuilder() {
-    return outerBuilder;
+  @Override
+  public String getName() {
+    return signature.getString();
   }
 
-  public MixinBuilder getEnclosingMixinBuilder() {
-    if (this.directOuterMixin == null) {
-      if (outerBuilder == null) {
-        return null;
-      } else {
-        return outerBuilder.getEnclosingMixinBuilder();
-      }
+  @Override
+  public MixinBuilder getMixin() {
+    if (outer != null) {
+      return outer.getMixin();
     } else {
-      return directOuterMixin;
+      return null;
     }
+  }
+
+  @Override
+  public MethodBuilder getMethod() {
+    return this;
   }
 
   public ExpressionNode getOuterRead(final String outerName,
       final SourceSection source) throws MixinDefinitionError {
-    MixinBuilder enclosing = getEnclosingMixinBuilder();
+    MixinBuilder enclosing = getMixin();
     MixinDefinitionId lexicalSelfMixinId = enclosing.getMixinId();
     int ctxLevel = 0;
-    while (!outerName.equals(enclosing.getName().getString())) {
+    while (!outerName.equals(enclosing.getName())) {
       ctxLevel++;
-      enclosing = enclosing.getOuterBuilder();
+      enclosing = enclosing.getOuter().getMixin();
       if (enclosing == null) {
         throw new MixinDefinitionError("Outer send `outer " + outerName
             + "` could not be resolved", source);
@@ -742,7 +721,8 @@ public final class MethodBuilder implements ScopeBuilder<MethodBuilder> {
 
   @Override
   public String toString() {
-    return "MethodBuilder(" + getEnclosingMixinBuilder().getName().getString() +
-        ">>" + signature.toString() + ")";
+    MixinBuilder mixin = getMixin();
+    String name = mixin == null ? "" : mixin.getName();
+    return "MethodBuilder(" + name + ">>" + signature.toString() + ")";
   }
 }

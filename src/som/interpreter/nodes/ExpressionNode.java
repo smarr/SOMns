@@ -157,4 +157,9 @@ public abstract class ExpressionNode extends SOMNode {
     }
     return true;
   }
+
+  @Override
+  public String toString() {
+    return getClass().getSimpleName() + "(" + sourceSection.toString() + ")";
+  }
 }

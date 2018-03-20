@@ -90,7 +90,7 @@ public final class Method extends Invokable {
   public ExpressionNode inline(final MethodBuilder builder, final SInvokable outer) {
     builder.mergeIntoScope(methodScope, outer);
     return ScopeAdaptationVisitor.adapt(
-        uninitializedBody, builder.getCurrentMethodScope(), 0, true);
+        uninitializedBody, builder.getScope(), 0, true);
   }
 
   @Override

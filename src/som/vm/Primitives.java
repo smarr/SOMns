@@ -142,7 +142,7 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     String name = "vmMirror>>" + signature.toString();
 
     Primitive primMethodNode = new Primitive(name, primNode,
-        prim.getCurrentMethodScope().getFrameDescriptor(),
+        prim.getScope().getFrameDescriptor(),
         (ExpressionNode) primNode.deepCopy(), false, lang);
     return new SInvokable(signature, AccessModifier.PUBLIC,
         primMethodNode, null);
