@@ -67,8 +67,8 @@
       <os family="windows"/>
     </condition>
 
-    <property name="mx.cmd" value="../../mx/mx" />
-    <property name="mx.cmd" value="..\..\mx\mx.cmd" if:true="${is.windows}" />
+    <property name="mx.cmd" location="${lib.dir}/mx/mx" unless:true="${is.windows}" />
+    <property name="mx.cmd" location="${lib.dir}\mx\mx.cmd" if:true="${is.windows}" />
 
     <property name="build.dir"   value="build"/>
     <property name="classes.dir" value="${build.dir}/classes"/>
@@ -162,6 +162,20 @@
             <env key="JAVA_HOME" value="${jvmci.home}" />
         </exec>
         <travis target="truffle-libs" />
+    </target>
+    
+    <target name="build-graal" description="Build the embedded Graal" unless="skip.graal">
+        <echo unless:true="${is.atLeastJava9}" level="warning">
+            The used JDK needs to have JVMCI support, which is the case for Java 9.
+            If Java 8 is needed, see
+            http://www.oracle.com/technetwork/oracle-labs/program-languages/downloads/index.html
+            for a JVMCI JDK Download.
+        </echo>
+        
+        <exec executable="${mx.cmd}" dir="${graal.dir}" failonerror="true">
+            <arg value="build" />
+            <arg value="--no-native" />
+        </exec>
     </target>
 
     <target name="bd-libs"> <!-- implicit dependency on truffle-libs -->
@@ -443,7 +457,7 @@
       <exec executable="tests/superinstructions/test.sh" failonerror="true"></exec>
       <travis target="si-tests" />
     </target>
-    
+
     <target name="update-test-data" depends="compile-som" description="Updates the test data for DynamicMetrics and SuperInstructions">
       <exec executable="tests/dym/test.sh" failonerror="true">
         <arg value="update" />
