@@ -5,6 +5,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
@@ -13,7 +14,7 @@ import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.interpreter.actors.SPromise.SReplayPromise;
+import som.interpreter.actors.SPromise.STracingPromise;
 import som.vm.VmSettings;
 import tools.concurrency.TraceParser.MessageRecord;
 import tools.debugger.WebDebugger;
@@ -21,10 +22,8 @@ import tools.debugger.WebDebugger;
 
 public class TracingActors {
   public static class TracingActor extends Actor {
-    // TODO: fix this code so that actorId can be final again... (adapt constructor of
-    // ReplayActor)
-    protected long actorId;
-    private int    traceBufferId;
+    private final static AtomicInteger IdGen = new AtomicInteger(0);
+    final protected int                actorId;
 
     /**
      * Flag that indicates if a step-to-next-turn action has been made in the previous message.
@@ -33,18 +32,21 @@ public class TracingActors {
 
     public TracingActor(final VM vm) {
       super(vm);
-      this.actorId = TracingActivityThread.newEntityId();
+      this.actorId = IdGen.getAndIncrement();
     }
 
-    @Override
-    public int getNextTraceBufferId() {
-      int result = traceBufferId;
-      traceBufferId += 1;
-      return result;
+    protected TracingActor(final VM vm, final int id) {
+      super(vm);
+      this.actorId = id;
     }
 
     @Override
     public final long getId() {
+      return actorId;
+    }
+
+    @Override
+    public final int getActorId() {
       return actorId;
     }
 
@@ -89,21 +91,23 @@ public class TracingActors {
       }
     }
 
-    @TruffleBoundary
-    public ReplayActor(final VM vm) {
-      super(vm);
+    private static int lookupId() {
       if (Thread.currentThread() instanceof ActorProcessingThread) {
         ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
         ReplayActor parent = (ReplayActor) t.currentMessage.getTarget();
         long parentId = parent.getId();
         int childNo = parent.addChild();
-
-        actorId = TraceParser.getReplayId(parentId, childNo);
-        expectedMessages = TraceParser.getExpectedMessages(actorId);
-
-      } else {
-        expectedMessages = TraceParser.getExpectedMessages(0L);
+        return TraceParser.getReplayId(parentId, childNo);
       }
+
+      return 0;
+    }
+
+    @TruffleBoundary
+    public ReplayActor(final VM vm) {
+      super(vm, lookupId());
+
+      expectedMessages = TraceParser.getExpectedMessages(actorId);
 
       if (VmSettings.DEBUG_MODE) {
         synchronized (actorList) {
@@ -185,9 +189,9 @@ public class TracingActors {
 
     private static void printMsg(final EventualMessage msg) {
       if (msg instanceof PromiseMessage) {
-        Output.println("\t" + "PromiseMessage " + msg.getMessageId() + " " + msg.getSelector()
+        Output.println("\t" + "PromiseMessage " + msg.getSelector()
             + " from " + msg.getSender().getId() + " PID "
-            + ((SReplayPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
+            + ((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
       } else {
         Output.println(
             "\t" + "Message" + msg.getSelector() + " from " + msg.getSender().getId());
@@ -211,7 +215,7 @@ public class TracingActors {
       // handle promise messages
       if (other instanceof TraceParser.PromiseMessageRecord) {
         if (msg instanceof PromiseMessage) {
-          if (((SReplayPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor() != ((TraceParser.PromiseMessageRecord) other).pId) {
+          if (((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor() != ((TraceParser.PromiseMessageRecord) other).pId) {
             return false;
           }
         } else {

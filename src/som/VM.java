@@ -46,8 +46,9 @@ import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.MedeorTrace;
 import tools.concurrency.TracingActors;
+import tools.concurrency.TracingBackend;
 import tools.debugger.Tags;
 import tools.debugger.WebDebugger;
 import tools.debugger.session.Breakpoints;
@@ -287,7 +288,7 @@ public final class VM {
     shutdownPools();
 
     Actor.reportStats();
-    ActorExecutionTrace.waitForTrace();
+    TracingBackend.waitForTrace();
 
     int code = errorCode;
     if (TracingActors.ReplayActor.printMissingMessages() && errorCode == 0) {
@@ -295,7 +296,7 @@ public final class VM {
     }
     engine.dispose();
     if (VmSettings.MEMORY_TRACING) {
-      ActorExecutionTrace.reportPeakMemoryUsage();
+      TracingBackend.reportPeakMemoryUsage();
     }
     System.exit(code);
   }
@@ -337,8 +338,11 @@ public final class VM {
     mainActor = Actor.createActor(this);
     vmMirror = objectSystem.initialize();
 
-    if (VmSettings.ACTOR_TRACING) {
-      ActorExecutionTrace.recordMainActor(mainActor, objectSystem);
+    if (VmSettings.ACTOR_TRACING || VmSettings.MEDEOR_TRACING) {
+      TracingBackend.startTracingBackend();
+    }
+    if (VmSettings.MEDEOR_TRACING) {
+      MedeorTrace.recordMainActor(mainActor, objectSystem);
     }
 
     language = lang;

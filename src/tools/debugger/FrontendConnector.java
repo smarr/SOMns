@@ -27,7 +27,7 @@ import tools.SourceCoordinate;
 import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
 import tools.TraceData;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.TracingBackend;
 import tools.debugger.WebSocketHandler.MessageHandler;
 import tools.debugger.WebSocketHandler.TraceHandler;
 import tools.debugger.entities.ActivityType;
@@ -270,7 +270,7 @@ public class FrontendConnector {
     } catch (InterruptedException | ExecutionException ex) {
       throw new RuntimeException(ex);
     }
-    ActorExecutionTrace.setFrontEnd(this);
+    TracingBackend.setFrontEnd(this);
     log("[DEBUGGER] Debugger connected.");
   }
 
@@ -295,8 +295,8 @@ public class FrontendConnector {
   }
 
   public void sendTracingData() {
-    if (VmSettings.ACTOR_TRACING) {
-      ActorExecutionTrace.forceSwapBuffers();
+    if (VmSettings.ACTOR_TRACING || VmSettings.MEDEOR_TRACING) {
+      TracingBackend.forceSwapBuffers();
     }
   }
 

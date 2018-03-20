@@ -11,14 +11,13 @@ import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
-import tools.concurrency.TracingActivityThread;
 
 
 public abstract class EventualMessage {
   protected final Object[]       args;
   protected final SResolver      resolver;
   protected final RootCallTarget onReceive;
-  protected final long           messageId;
+  // protected final long messageId;
 
   /**
    * Indicates the case that an asynchronous message has a receiver breakpoint.
@@ -41,7 +40,7 @@ public abstract class EventualMessage {
     this.onReceive = onReceive;
     this.haltOnReceive = haltOnReceive;
     this.haltOnResolver = haltOnResolver;
-    this.messageId = TracingActivityThread.newEntityId();
+    // this.messageId = TracingActivityThread.newEntityId();
     assert onReceive.getRootNode() instanceof ReceivedMessage
         || onReceive.getRootNode() instanceof ReceivedCallback;
   }
@@ -55,7 +54,8 @@ public abstract class EventualMessage {
   }
 
   public final long getMessageId() {
-    return messageId;
+    return 0;
+    // return messageId;
   }
 
   public abstract SSymbol getSelector();

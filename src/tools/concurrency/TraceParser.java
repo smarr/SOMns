@@ -48,7 +48,7 @@ public final class TraceParser {
 
   private final HashMap<Short, SSymbol>             symbolMapping    = new HashMap<>();
   private ByteBuffer                                b                =
-      ByteBuffer.allocate(ActorExecutionTrace.BUFFER_SIZE);
+      ByteBuffer.allocate(TracingBackend.BUFFER_SIZE);
   private final HashMap<Long, ActorNode>            mappedActors     = new HashMap<>();
   private final HashMap<Long, Queue<MessageRecord>> expectedMessages = new HashMap<>();
 
@@ -67,13 +67,13 @@ public final class TraceParser {
     return parser.expectedMessages.remove(replayId);
   }
 
-  public static synchronized long getReplayId(final long parentId, final int childNo) {
+  public static synchronized int getReplayId(final long parentId, final int childNo) {
     if (parser == null) {
       parser = new TraceParser();
       parser.parseTrace();
     }
     assert parser.mappedActors.containsKey(parentId) : "Parent doesn't exist";
-    return parser.mappedActors.get(parentId).getChild(childNo).actorId;
+    return (int) parser.mappedActors.get(parentId).getChild(childNo).actorId;
   }
 
   private TraceParser() {
@@ -210,7 +210,8 @@ public final class TraceParser {
               }
 
               ActorNode node = mappedActors.containsKey(newActivityId)
-                  ? mappedActors.get(newActivityId) : new ActorNode(newActivityId);
+                  ? mappedActors.get(newActivityId)
+                  : new ActorNode(newActivityId);
               node.mailboxNo = current.traceBufferId;
               mappedActors.get(current.activityId).addChild(node);
             }

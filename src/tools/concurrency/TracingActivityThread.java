@@ -110,8 +110,8 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   protected void onStart() {
     super.onStart();
     if (VmSettings.ACTOR_TRACING) {
-      traceBuffer.init(ActorExecutionTrace.getEmptyBuffer(), threadId);
-      ActorExecutionTrace.registerThread(this);
+      traceBuffer.init(TracingBackend.getEmptyBuffer(), threadId);
+      TracingBackend.registerThread(this);
     }
   }
 
@@ -119,7 +119,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   protected void onTermination(final Throwable exception) {
     if (VmSettings.ACTOR_TRACING) {
       traceBuffer.returnBuffer();
-      ActorExecutionTrace.unregisterThread(this);
+      TracingBackend.unregisterThread(this);
     }
     super.onTermination(exception);
   }
@@ -129,11 +129,12 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   }
 
   public static long newEntityId() {
-    if (VmSettings.ACTOR_TRACING && Thread.currentThread() instanceof TracingActivityThread) {
+    if (VmSettings.MEDEOR_TRACING && Thread.currentThread() instanceof TracingActivityThread) {
       TracingActivityThread t = TracingActivityThread.currentThread();
       return t.generateEntityId();
     } else {
       return 0; // main actor
     }
   }
+
 }

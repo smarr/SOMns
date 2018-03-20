@@ -24,7 +24,6 @@ import som.primitives.processes.ChannelPrimitives.Process;
 import som.primitives.processes.ChannelPrimitives.TracingProcess;
 import som.primitives.threading.TaskThreads.SomForkJoinTask;
 import som.primitives.threading.TaskThreads.SomThreadTask;
-import som.primitives.threading.TaskThreads.TracedForkJoinTask;
 import som.primitives.threading.TaskThreads.TracedThreadTask;
 import som.primitives.threading.ThreadingModule;
 import som.vm.VmSettings;
@@ -37,7 +36,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.MedeorTrace;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.entities.ActivityType;
@@ -51,22 +50,24 @@ public abstract class ActivitySpawn {
   private static SomForkJoinTask createTask(final Object[] argArray,
       final boolean stopOnRoot, final SBlock block, final SourceSection section) {
     SomForkJoinTask task;
-    if (VmSettings.ACTOR_TRACING) {
-      task = new TracedForkJoinTask(argArray, stopOnRoot);
-      ActorExecutionTrace.activityCreation(ActivityType.TASK, task.getId(),
-          block.getMethod().getSignature(), section);
-    } else {
-      task = new SomForkJoinTask(argArray, stopOnRoot);
-    }
+    /*
+     * if (VmSettings.ACTOR_TRACING) {
+     * TODOtask = new TracedForkJoinTask(argArray, stopOnRoot);
+     * ActorExecutionTrace.activityCreation(ActivityType.TASK, task.getId(),
+     * block.getMethod().getSignature(), section);
+     * } else {
+     */
+    task = new SomForkJoinTask(argArray, stopOnRoot);
+    // }
     return task;
   }
 
   private static SomThreadTask createThread(final Object[] argArray,
       final boolean stopOnRoot, final SBlock block, final SourceSection section) {
     SomThreadTask thread;
-    if (VmSettings.ACTOR_TRACING) {
+    if (VmSettings.MEDEOR_TRACING) {
       thread = new TracedThreadTask(argArray, stopOnRoot);
-      ActorExecutionTrace.activityCreation(ActivityType.THREAD, thread.getId(),
+      MedeorTrace.activityCreation(ActivityType.THREAD, thread.getId(),
           block.getMethod().getSignature(), section);
     } else {
       thread = new SomThreadTask(argArray, stopOnRoot);
@@ -76,9 +77,9 @@ public abstract class ActivitySpawn {
 
   private static Process createProcess(final SObjectWithClass obj,
       final SourceSection origin, final boolean stopOnRoot) {
-    if (VmSettings.ACTOR_TRACING) {
+    if (VmSettings.MEDEOR_TRACING) {
       TracingProcess result = new TracingProcess(obj, stopOnRoot);
-      ActorExecutionTrace.activityCreation(ActivityType.PROCESS,
+      MedeorTrace.activityCreation(ActivityType.PROCESS,
           result.getId(), result.getProcObject().getSOMClass().getName(), origin);
       return result;
     } else {
