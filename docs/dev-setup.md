@@ -41,7 +41,7 @@ Eclipse Project outline.
 SOMns is currently developed with Eclipse. While other Java IDEs can also be
 used, for brevity, we'll focus on Eclipse only.
 
-At the time of writing, I am using [Eclipse Neon 4.6](https://eclipse.org/downloads/).
+At the time of writing, I am using [Eclipse Oxygen 4.7](https://eclipse.org/downloads/).
 Please also install the **Eclipse Checkstyle Plugin** from the [Eclipse Marketplace](http://eclipse-cs.sourceforge.net/#!/install).
 
 For development, we also need to setup all Eclipse projects:
@@ -84,7 +84,7 @@ in Eclipse. After starting SOMns, it should tell you that it is waiting on port
 
 A brief list of steps:
 
-1. Install software dependencies: Ant, git, Java 9, Eclipse 4.6 (or later),
+1. Install software dependencies: Ant, git, Java 10, Eclipse 4.7 (or later),
    VS Code 1.21 (or later), Node.js, NPM, Graal JIT compiler
 
 2. Create Truffle Eclipse projects: `ant ideinit`

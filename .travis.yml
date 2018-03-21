@@ -25,18 +25,32 @@ matrix:
       jdk:  oraclejdk9
       env:  TASK=unit-tests
 
+    - os:   linux
+      dist: trusty
+      jdk:  oraclejdk8
+      env:  TASK=unit-tests JDK=10
+      before_install: |
+        mkdir jdk10
+        cd jdk10
+        wget https://download.java.net/java/GA/jdk10/10/binaries/openjdk-10_linux-x64_bin.tar.gz
+        tar -xzf openjdk-10_linux-x64_bin.tar.gz
+        export JAVA_HOME=`pwd`/jdk-10
+        export PATH=${JAVA_HOME}/bin:$PATH
+        cd ..
+
     - os: osx
       osx_image: xcode9.2
       language: generic
       env:  TASK=unit-tests
+      before_install: |
+        brew tap caskroom/versions
+        brew cask reinstall java
+        brew install ant
+        export JAVA_HOME=`/usr/libexec/java_home`
 
   allow_failures:
     - env: TASK=replay1-tests
     - env: TASK=replay2-tests
-
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew tap caskroom/versions; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew cask reinstall java && brew install ant; export JAVA_HOME=`/usr/libexec/java_home`; fi
 
 install: |
   if [ "$TASK" = "checkstyle" ]

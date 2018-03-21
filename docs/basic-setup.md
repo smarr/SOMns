@@ -4,7 +4,7 @@ A brief overview for a basic development setup for SOMns.
 
 ## Minimal Software Requirements
 
-SOMns requires Java 9, uses Ant as a build system, git as
+SOMns works on Java 9 or 10, uses Ant as a build system, git as
 source control system, and Python for a launcher script.
 
 We test SOMns on Linux and macOS. Windows is not currently supported.
