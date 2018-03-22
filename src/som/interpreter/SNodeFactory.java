@@ -5,6 +5,7 @@ import java.util.List;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
+import som.compiler.MixinBuilder;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable.Internal;
@@ -13,6 +14,7 @@ import som.interpreter.actors.EventualSendNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InternalObjectArrayNode;
 import som.interpreter.nodes.MessageSendNode;
+import som.interpreter.nodes.OuterObjectReadNodeGen;
 import som.interpreter.nodes.ResolvingImplicitReceiverSend;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
 import som.interpreter.nodes.SequenceNode;
@@ -81,5 +83,21 @@ public final class SNodeFactory {
   public static ExpressionNode createInternalObjectArray(
       final ExpressionNode[] expressions, final SourceSection source) {
     return new InternalObjectArrayNode(expressions).initialize(source);
+  }
+
+  public static ExpressionNode createOuterLookupChain(final List<MixinDefinitionId> outerIds,
+      final MixinBuilder enclosing, final ExpressionNode receiver,
+      final SourceSection source) {
+    MixinDefinitionId currentMixin = enclosing.getMixinId();
+    ExpressionNode currentReceiver = receiver;
+
+    for (MixinDefinitionId enclosingMixin : outerIds) {
+      currentReceiver =
+          OuterObjectReadNodeGen.create(currentMixin, enclosingMixin, currentReceiver)
+                                .initialize(source);
+      currentMixin = enclosingMixin;
+    }
+
+    return currentReceiver;
   }
 }

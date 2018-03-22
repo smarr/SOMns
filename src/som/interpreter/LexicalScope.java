@@ -1,6 +1,8 @@
 package som.interpreter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import org.graalvm.collections.EconomicMap;
 
@@ -13,7 +15,6 @@ import bd.inlining.Scope;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.Variable;
-import som.interpreter.LexicalScope.MixinScope.MixinIdAndContextLevel;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SSymbol;
 
@@ -34,8 +35,22 @@ public abstract class LexicalScope {
 
   public abstract MixinScope getOuterMixin();
 
-  public abstract MixinIdAndContextLevel lookupSlotOrClass(SSymbol selector,
-      int bbjectContextLevel);
+  /** Return list of mixins inside out. */
+  public final List<MixinDefinitionId> lookupSlotOrClass(final SSymbol selector) {
+    List<MixinDefinitionId> result = new ArrayList<>();
+    if (lookupSlotOrClass(selector, result)) {
+      return result;
+    } else {
+      return null;
+    }
+  }
+
+  /**
+   * Determine list of mixins inside out.
+   *
+   * @return true, if lookup was successful, false otherwise
+   */
+  public abstract boolean lookupSlotOrClass(SSymbol selector, List<MixinDefinitionId> result);
 
   // public abstract void propagateLoopCountThroughoutMethodScope(long count);
 
@@ -122,23 +137,26 @@ public abstract class LexicalScope {
     }
 
     @Override
-    public MixinIdAndContextLevel lookupSlotOrClass(final SSymbol selector,
-        final int objectContextLevel) {
-      assert mixinDefinition != null;
+    public boolean lookupSlotOrClass(final SSymbol selector,
+        final List<MixinDefinitionId> results) {
+      assert mixinDefinition != null : "Scope was not initialized completely.";
       if (slotsClassesAndMethods.containsKey(selector)) {
-        return new MixinIdAndContextLevel(mixinDefinition.getMixinId(), objectContextLevel);
+        results.add(mixinDefinition.getMixinId());
+        return true;
       }
 
       if (outerScope != null) {
-        return outerScope.lookupSlotOrClass(selector, objectContextLevel + 1);
+        results.add(mixinDefinition.getMixinId());
+        return outerScope.lookupSlotOrClass(selector, results);
       }
-      return null;
+      return false;
     }
 
     @Override
     public String toString() {
       String clsName = mixinDefinition != null
-          ? mixinDefinition.getName().getString() : "";
+          ? mixinDefinition.getName().getString()
+          : "";
       return "MixinScope(" + clsName + ")";
     }
 
@@ -350,10 +368,6 @@ public abstract class LexicalScope {
       return result;
     }
 
-    public MixinIdAndContextLevel lookupSlotOrClass(final SSymbol selector) {
-      return getMixinScope().lookupSlotOrClass(selector, 0);
-    }
-
     @Override
     public MixinScope getMixinScope() {
       assert outerScope != null : "Should not be possible, because we do not support top-level methods";
@@ -379,11 +393,11 @@ public abstract class LexicalScope {
     }
 
     @Override
-    public MixinIdAndContextLevel lookupSlotOrClass(final SSymbol selector,
-        final int objectContextLevel) {
+    public boolean lookupSlotOrClass(final SSymbol selector,
+        final List<MixinDefinitionId> results) {
       assert outerScope != null : "Should not be possible, because we do not support top-level methods";
-      // REM: We don't count methods, because we only need the number of enclosing objects
-      return outerScope.lookupSlotOrClass(selector, objectContextLevel);
+      // this traversal concerns only the enclosing objects, not the activations
+      return outerScope.lookupSlotOrClass(selector, results);
     }
 
     public MethodScope getEmbeddedScope(final SourceSection source) {

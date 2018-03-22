@@ -52,7 +52,6 @@ import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.OuterObjectReadNodeGen;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.literals.BlockNode;
 import som.vm.Symbols;
@@ -677,26 +676,38 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     return this;
   }
 
-  public ExpressionNode getOuterRead(final String outerName,
-      final SourceSection source) throws MixinDefinitionError {
+  public ExpressionNode getOuterRead(final String outerName, final SourceSection source)
+      throws MixinDefinitionError {
+    ExpressionNode receiver = getSelfRead(source);
     MixinBuilder enclosing = getMixin();
-    MixinDefinitionId lexicalSelfMixinId = enclosing.getMixinId();
-    int ctxLevel = 0;
-    while (!outerName.equals(enclosing.getName())) {
-      ctxLevel++;
-      enclosing = enclosing.getOuter().getMixin();
-      if (enclosing == null) {
-        throw new MixinDefinitionError("Outer send `outer " + outerName
-            + "` could not be resolved", source);
+
+    List<MixinDefinitionId> outerIds = determineOuterMixinIds(outerName, source, enclosing);
+
+    if (outerIds.size() == 1) {
+      return receiver;
+    } else {
+      // skip the "self-outer", that's already our receiver
+      outerIds.remove(0);
+      return SNodeFactory.createOuterLookupChain(outerIds, enclosing, receiver, source);
+    }
+  }
+
+  private List<MixinDefinitionId> determineOuterMixinIds(final String outerName,
+      final SourceSection source, final MixinBuilder enclosing) throws MixinDefinitionError {
+    List<MixinDefinitionId> outerIds = new ArrayList<MixinDefinitionId>();
+    outerIds.add(enclosing.getMixinId());
+
+    MixinBuilder current = enclosing;
+    while (!outerName.equals(current.getName())) {
+      current = current.getOuter().getMixin();
+      if (current == null) {
+        throw new MixinDefinitionError(
+            "Outer send `outer " + outerName + "` could not be resolved", source);
       }
+      outerIds.add(current.getMixinId());
     }
 
-    if (ctxLevel == 0) {
-      return getSelfRead(source);
-    } else {
-      return OuterObjectReadNodeGen.create(ctxLevel, lexicalSelfMixinId,
-          enclosing.getMixinId(), getSelfRead(source)).initialize(source);
-    }
+    return outerIds;
   }
 
   /**

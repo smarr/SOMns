@@ -1,5 +1,6 @@
 package som.interpreter.nodes;
 
+import java.util.List;
 import java.util.concurrent.locks.Lock;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -11,7 +12,6 @@ import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.LexicalScope.MethodScope;
-import som.interpreter.LexicalScope.MixinScope.MixinIdAndContextLevel;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vmobjects.SSymbol;
 
@@ -73,38 +73,47 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
     Lock lock = getLock();
     try {
       lock.lock();
-      newNode = specialize(args);
+      newNode = specialize(frame, args);
     } finally {
       lock.unlock();
     }
     return newNode.doPreEvaluated(frame, args);
   }
 
-  private PreevaluatedExpression specialize(final Object[] args) {
+  private PreevaluatedExpression specialize(final VirtualFrame frame, final Object[] args) {
     if (replacedBy != null) {
       // already has been specialized
       if (newReceiverNodeForOuterSend != null) {
         // need to recalculate the real receiver for outer sends
-        args[0] = newReceiverNodeForOuterSend.executeEvaluated(args[0]);
+        args[0] = newReceiverNodeForOuterSend.executeGeneric(frame);
       }
       return replacedBy;
     }
     // first check whether it is an outer send
     // it it is, we get the context level of the outer send and rewrite to one
-    MixinIdAndContextLevel result = currentScope.lookupSlotOrClass(selector);
-    if (result != null && result.contextLevel > 0) {
-      newReceiverNodeForOuterSend = OuterObjectReadNodeGen.create(
-          result.contextLevel, mixinId, result.mixinId,
-          argumentNodes[0]).initialize(sourceSection);
+    List<MixinDefinitionId> result = currentScope.lookupSlotOrClass(selector);
+    if (result != null && result.size() > 1) {
+      assert mixinId == result.get(0);
+      result.remove(0);
+
       ExpressionNode[] msgArgNodes = argumentNodes.clone();
-      msgArgNodes[0] = newReceiverNodeForOuterSend;
+      MixinDefinitionId currentMixin = mixinId;
+
+      for (MixinDefinitionId enclosingMixin : result) {
+        newReceiverNodeForOuterSend =
+            OuterObjectReadNodeGen.create(currentMixin, enclosingMixin, msgArgNodes[0])
+                                  .initialize(sourceSection);
+
+        msgArgNodes[0] = newReceiverNodeForOuterSend;
+        args[0] = newReceiverNodeForOuterSend.executeEvaluated(args[0]);
+        currentMixin = enclosingMixin;
+      }
 
       replacedBy =
           (PreevaluatedExpression) MessageSendNode.createMessageSend(selector, msgArgNodes,
               getSourceSection(), vm);
 
       replace((ExpressionNode) replacedBy);
-      args[0] = newReceiverNodeForOuterSend.executeEvaluated(args[0]);
     } else {
       replacedBy =
           (PreevaluatedExpression) MessageSendNode.createMessageSend(selector, argumentNodes,
