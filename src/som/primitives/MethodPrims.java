@@ -12,8 +12,8 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.InvokeOnCache;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.primitives.arrays.ToArgumentsArrayFactory;
 import som.primitives.arrays.ToArgumentsArrayNode;
-import som.primitives.arrays.ToArgumentsArrayNodeFactory;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SInvokable;
@@ -38,7 +38,7 @@ public final class MethodPrims {
       @NodeChild(value = "argArr", type = ToArgumentsArrayNode.class,
           executeWith = {"somArr", "target"})})
   @Primitive(selector = "invokeOn:with:", noWrapper = true,
-      extraChild = ToArgumentsArrayNodeFactory.class)
+      extraChild = ToArgumentsArrayFactory.class)
   public abstract static class InvokeOnPrim extends ExprWithTagsNode
       implements PreevaluatedExpression {
     @Child private InvokeOnCache callNode = InvokeOnCache.create();
