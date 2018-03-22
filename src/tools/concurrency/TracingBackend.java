@@ -60,8 +60,8 @@ import tools.debugger.entities.Implementation;
  * done on the buffer for all access.
  */
 public class TracingBackend {
-  private static final int BUFFER_POOL_SIZE = VmSettings.NUM_THREADS;
-  static final int         BUFFER_SIZE      = 4096 * 1024;
+  private static final int BUFFER_POOL_SIZE = VmSettings.NUM_THREADS * 4;
+  static final int         BUFFER_SIZE      = 4096 * 128;
 
   private static final int TRACE_TIMEOUT = 500;
   private static final int POLL_TIMEOUT  = 100;
@@ -141,16 +141,18 @@ public class TracingBackend {
   }
 
   @TruffleBoundary
-  public static synchronized ByteBuffer getEmptyBuffer() {
+  public static ByteBuffer getEmptyBuffer() {
     try {
-      return emptyBuffers.take();
+      synchronized (emptyBuffers) {
+        return emptyBuffers.take();
+      }
     } catch (InterruptedException e) {
       throw new IllegalStateException("Failed to acquire a new Buffer!");
     }
   }
 
   @TruffleBoundary
-  static synchronized void returnBuffer(final ByteBuffer b) {
+  static void returnBuffer(final ByteBuffer b) {
     if (b == null) {
       return;
     }
@@ -158,7 +160,9 @@ public class TracingBackend {
     b.limit(b.position());
     b.rewind();
 
-    fullBuffers.add(b);
+    synchronized (fullBuffers) {
+      fullBuffers.add(b);
+    }
   }
 
   private static HashSet<TracingActivityThread> tracingThreads = new HashSet<>();

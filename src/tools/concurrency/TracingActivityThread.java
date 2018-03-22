@@ -110,7 +110,6 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   protected void onStart() {
     super.onStart();
     if (VmSettings.ACTOR_TRACING) {
-      traceBuffer.init(TracingBackend.getEmptyBuffer(), threadId);
       TracingBackend.registerThread(this);
     }
   }

@@ -99,6 +99,10 @@ public class Actor implements Activity {
     return 0;
   }
 
+  public byte getOrdering() {
+    return 0;
+  }
+
   protected ExecAllMessages createExecutor(final VM vm) {
     return new ExecAllMessages(this, vm);
   }
@@ -225,7 +229,7 @@ public class Actor implements Activity {
       t.currentlyExecutingActor = actor;
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.recordActorContext(actor.getActorId());
+        ActorExecutionTrace.recordActorContext(actor);
       } else if (VmSettings.MEDEOR_TRACING) {
         MedeorTrace.currentActivity(actor);
       }
@@ -292,7 +296,8 @@ public class Actor implements Activity {
           // complete execution after all messages are processed
           actor.isExecuting = false;
           if (VmSettings.ACTOR_TRACING) {
-            ActorExecutionTrace.actorFinished();
+            // ActorExecutionTrace.actorFinished();
+            ((TracingActor) actor).incrementOrdering();
           } else if (VmSettings.MEDEOR_TRACING) {
             MedeorTrace.clearCurrentActivity(actor);
           }

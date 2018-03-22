@@ -9,7 +9,7 @@ import som.vm.VmSettings;
 import tools.concurrency.ActorExecutionTrace.ActorTraceBuffer;
 
 
-public class TraceBuffer {
+public abstract class TraceBuffer {
 
   public static TraceBuffer create() {
     assert VmSettings.ACTOR_TRACING || VmSettings.MEDEOR_TRACING;
@@ -20,17 +20,14 @@ public class TraceBuffer {
     }
   }
 
-  /**
-   * Id of the implementation-level thread.
-   * Thus, not an application-level thread.
-   */
-  protected long implThreadId;
-
   protected ByteBuffer storage;
 
-  public void init(final ByteBuffer storage, final long implThreadId) {
-    this.storage = storage;
-    this.implThreadId = implThreadId;
+  protected TraceBuffer() {
+    retrieveBuffer();
+  }
+
+  public void retrieveBuffer() {
+    this.storage = TracingBackend.getEmptyBuffer();
     assert storage.order() == ByteOrder.BIG_ENDIAN;
   }
 
@@ -49,7 +46,7 @@ public class TraceBuffer {
 
   boolean swapStorage() {
     TracingBackend.returnBuffer(storage);
-    init(TracingBackend.getEmptyBuffer(), implThreadId);
+    retrieveBuffer();
     return true;
   }
 

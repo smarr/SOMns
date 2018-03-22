@@ -2,6 +2,7 @@ package tools.concurrency;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
+import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
@@ -16,9 +17,9 @@ public class ActorExecutionTrace {
     return (TracingActivityThread) current;
   }
 
-  public static void recordActorContext(final int actorId) {
+  public static void recordActorContext(final Actor actor) {
     TracingActivityThread t = getThread();
-    ((ActorTraceBuffer) t.getBuffer()).recordActorContext(actorId);
+    ((ActorTraceBuffer) t.getBuffer()).recordActorContext(actor);
   }
 
   public static void recordActorCreation(final int childId) {
@@ -33,12 +34,25 @@ public class ActorExecutionTrace {
   }
 
   public static void actorFinished() {
-    // TracingActivityThread t = getThread();
-    // t.getBuffer().swapStorage(t.getActivity());
+    TracingActivityThread t = getThread();
+    t.getBuffer().swapStorage();
   }
 
   public static class ActorTraceBuffer extends TraceBuffer {
-    int currentActor;
+    Actor currentActor;
+
+    private void writeId(final int id) {
+      if (id < 0) {
+        storage.putInt(id);
+      } else if (id <= 0xFF) {
+        storage.put((byte) id);
+      } else if (id <= 0xFFFF) {
+        storage.putChar((char) id);
+      } else if (id <= 0xFFFFFF) {
+        storage.put((byte) (id >> 16));
+        storage.putChar((char) id);
+      }
+    }
 
     @TruffleBoundary
     @Override
@@ -52,17 +66,18 @@ public class ActorExecutionTrace {
       return false;
     }
 
-    public void recordActorContext(final int actorId) {
-      currentActor = actorId;
+    public void recordActorContext(final Actor actor) {
+      currentActor = actor;
       ensureSufficientSpace(5);
       storage.put((byte) 1);
-      storage.putInt(actorId);
+      writeId(actor.getActorId());
+      storage.put(actor.getOrdering());
     }
 
     public void recordActorCreation(final int childId) {
       ensureSufficientSpace(5);
       storage.put((byte) 2);
-      storage.putInt(childId);
+      writeId(childId);
     }
 
     public void recordMessages(final EventualMessage m,
@@ -90,14 +105,14 @@ public class ActorExecutionTrace {
     private void recordMessage(final int senderId) {
       ensureSufficientSpace(5);
       storage.put((byte) 3);
-      storage.putInt(senderId);
+      writeId(senderId);
     }
 
     private void recordPromiseMessage(final int senderId, final int resolverId) {
       ensureSufficientSpace(9);
       storage.put((byte) 4);
-      storage.putInt(senderId);
-      storage.putInt(resolverId);
+      writeId(senderId);
+      writeId(resolverId);
     }
   }
 }

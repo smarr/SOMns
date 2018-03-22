@@ -1,7 +1,7 @@
 package tools.concurrency;
 
 import java.nio.ByteBuffer;
-
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.Actor;
@@ -27,9 +27,7 @@ public class MedeorTrace {
 
   public static void recordMainActor(final Actor mainActor,
       final ObjectSystem objectSystem) {
-    ByteBuffer storage = TracingBackend.getEmptyBuffer();
-    MedeorTraceBuffer buffer = (MedeorTraceBuffer) TraceBuffer.create();
-    buffer.init(storage, 0);
+    MedeorTraceBuffer buffer = MedeorTraceBuffer.create(0);
     buffer.recordCurrentActivity(mainActor);
     buffer.recordMainActor(mainActor, objectSystem);
     buffer.recordSendOperation(SendOp.ACTOR_MSG, 0, mainActor.getId(), mainActor);
@@ -149,22 +147,28 @@ public class MedeorTrace {
 
   public static class MedeorTraceBuffer extends TraceBuffer {
 
+    /**
+     * Id of the implementation-level thread.
+     * Thus, not an application-level thread.
+     */
+    protected final long implThreadId;
+
     /** Id of the last activity that was running on this buffer. */
     private Activity lastActivity;
 
-    public static TraceBuffer create() {
+    public static MedeorTraceBuffer create(final long implThreadId) {
       assert VmSettings.MEDEOR_TRACING;
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        return new SyncedMedeorTraceBuffer();
+        return new SyncedMedeorTraceBuffer(implThreadId);
       } else {
-        return new TraceBuffer();
+        return new MedeorTraceBuffer(implThreadId);
       }
     }
 
-    @Override
-    public void init(final ByteBuffer storage, final long implThreadId) {
-      super.init(storage, implThreadId);
+    protected MedeorTraceBuffer(final long implThreadId) {
+      this.implThreadId = implThreadId;
       this.lastActivity = null;
+      retrieveBuffer();
       recordThreadId();
     }
 
@@ -175,13 +179,21 @@ public class MedeorTrace {
               Implementation.IMPL_CURRENT_ACTIVITY.getSize())) {
         return false;
       }
-      super.swapStorage(current);
+      super.swapStorage();
+      this.lastActivity = null;
+      recordCurrentActivity(current);
       recordCurrentActivity(current);
       return true;
     }
 
-    protected MedeorTraceBuffer() {
-      lastActivity = null;
+    @TruffleBoundary
+    protected boolean ensureSufficientSpace(final int requiredSpace, final Activity current) {
+      if (storage.remaining() < requiredSpace) {
+        boolean didSwap = swapStorage(current);
+        assert didSwap;
+        return didSwap;
+      }
+      return false;
     }
 
     public void resetLastActivity() {
@@ -347,6 +359,10 @@ public class MedeorTrace {
     }
 
     public static class SyncedMedeorTraceBuffer extends MedeorTraceBuffer {
+
+      protected SyncedMedeorTraceBuffer(final long implThreadId) {
+        super(implThreadId);
+      }
 
       @Override
       public synchronized void recordActivityCreation(final ActivityType entity,
