@@ -17,8 +17,8 @@ import som.VM;
 import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode.TernarySystemOperation;
 import som.primitives.ObjectPrims.IsValue;
+import som.primitives.arrays.ToArgumentsArrayFactory;
 import som.primitives.arrays.ToArgumentsArrayNode;
-import som.primitives.arrays.ToArgumentsArrayNodeFactory;
 import som.primitives.processes.ChannelPrimitives;
 import som.primitives.processes.ChannelPrimitives.Process;
 import som.primitives.processes.ChannelPrimitives.TracingProcess;
@@ -165,11 +165,11 @@ public abstract class ActivitySpawn {
   @NodeChild(value = "argArr", type = ToArgumentsArrayNode.class,
       executeWith = {"secondArg", "firstArg"})
   @Primitive(primitive = "threading:threadSpawn:with:",
-      extraChild = ToArgumentsArrayNodeFactory.class)
+      extraChild = ToArgumentsArrayFactory.class)
   @Primitive(primitive = "threading:taskSpawn:with:",
-      extraChild = ToArgumentsArrayNodeFactory.class)
-  @Primitive(primitive = "proc:spawn:with:", extraChild = ToArgumentsArrayNodeFactory.class)
-  @Primitive(selector = "spawn:with:", extraChild = ToArgumentsArrayNodeFactory.class)
+      extraChild = ToArgumentsArrayFactory.class)
+  @Primitive(primitive = "proc:spawn:with:", extraChild = ToArgumentsArrayFactory.class)
+  @Primitive(selector = "spawn:with:", extraChild = ToArgumentsArrayFactory.class)
   public abstract static class SpawnWithPrim extends TernarySystemOperation {
     @CompilationFinal private ForkJoinPool forkJoinPool;
     @CompilationFinal private ForkJoinPool processesPool;
