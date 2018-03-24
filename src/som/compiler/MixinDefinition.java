@@ -3,10 +3,11 @@ package som.compiler;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
+
+import org.graalvm.collections.EconomicSet;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
@@ -289,7 +290,7 @@ public final class MixinDefinition {
       assert mixins.length > 1;
     }
 
-    HashSet<SlotDefinition> instanceSlots = new HashSet<>();
+    EconomicSet<SlotDefinition> instanceSlots = EconomicSet.create();
     addSlots(instanceSlots, superClass);
     HashMap<SSymbol, Dispatchable> dispatchables = new HashMap<>();
 
@@ -328,7 +329,7 @@ public final class MixinDefinition {
     return classFactory;
   }
 
-  protected boolean hasOnlyImmutableFields(final HashSet<SlotDefinition> instanceSlots) {
+  protected boolean hasOnlyImmutableFields(final EconomicSet<SlotDefinition> instanceSlots) {
     if (instanceSlots == null) {
       return true;
     }
@@ -344,7 +345,7 @@ public final class MixinDefinition {
   }
 
   private boolean[] determineSlotsAndDispatchables(final Object[] mixins,
-      final HashSet<SlotDefinition> instanceSlots,
+      final EconomicSet<SlotDefinition> instanceSlots,
       final HashMap<SSymbol, Dispatchable> dispatchables) {
     boolean mixinsIncludeValue = false;
     boolean mixinsIncludeTransferObject = false;
@@ -447,13 +448,13 @@ public final class MixinDefinition {
         body, AccessModifier.PRIVATE, initializerSource);
   }
 
-  private void addSlots(final HashSet<SlotDefinition> instanceSlots,
+  private void addSlots(final EconomicSet<SlotDefinition> instanceSlots,
       final SClass clazz) {
     if (clazz == null) {
       return;
     }
 
-    HashSet<SlotDefinition> slots = clazz.getInstanceSlots();
+    EconomicSet<SlotDefinition> slots = clazz.getInstanceSlots();
     if (slots == null) {
       return;
     }

@@ -25,8 +25,9 @@
 package som.vmobjects;
 
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map.Entry;
+
+import org.graalvm.collections.EconomicMap;
+import org.graalvm.collections.MapCursor;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
@@ -216,10 +217,12 @@ public abstract class SObject extends SObjectWithClass {
     }
 
     private boolean txMutObjLocEquals(final SMutableObject o) {
-      HashMap<SlotDefinition, StorageLocation> oLocs = o.objectLayout.getStorageLocations();
-      HashMap<SlotDefinition, StorageLocation> locs = objectLayout.getStorageLocations();
+      EconomicMap<SlotDefinition, StorageLocation> oLocs =
+          o.objectLayout.getStorageLocations();
+      EconomicMap<SlotDefinition, StorageLocation> locs = objectLayout.getStorageLocations();
 
-      for (Entry<SlotDefinition, StorageLocation> e : locs.entrySet()) {
+      MapCursor<SlotDefinition, StorageLocation> e = locs.getEntries();
+      while (e.advance()) {
         // need to ignore mutators and class slots
         if (e.getKey().getClass() == SlotDefinition.class &&
             e.getValue().read(this) != oLocs.get(e.getKey()).read(o)) {
@@ -248,9 +251,11 @@ public abstract class SObject extends SObjectWithClass {
 
     /** Only set the mutable slots. */
     private void txSetMutObjLoc(final SMutableObject wc) {
-      HashMap<SlotDefinition, StorageLocation> oLocs = wc.objectLayout.getStorageLocations();
+      EconomicMap<SlotDefinition, StorageLocation> oLocs =
+          wc.objectLayout.getStorageLocations();
 
-      for (Entry<SlotDefinition, StorageLocation> e : oLocs.entrySet()) {
+      MapCursor<SlotDefinition, StorageLocation> e = oLocs.getEntries();
+      while (e.advance()) {
         // need to ignore mutators and class slots
         if (e.getKey().getClass() == SlotDefinition.class) {
           Object val = e.getValue().read(wc);
@@ -363,14 +368,16 @@ public abstract class SObject extends SObjectWithClass {
   }
 
   @ExplodeLoop
-  private HashMap<SlotDefinition, Object> getAllFields() {
+  private EconomicMap<SlotDefinition, Object> getAllFields() {
     assert objectLayout != null;
 
-    HashMap<SlotDefinition, StorageLocation> locations = objectLayout.getStorageLocations();
-    HashMap<SlotDefinition, Object> fieldValues =
-        new HashMap<>((int) (locations.size() / 0.75f));
+    EconomicMap<SlotDefinition, StorageLocation> locations =
+        objectLayout.getStorageLocations();
+    EconomicMap<SlotDefinition, Object> fieldValues =
+        EconomicMap.create((int) (locations.size() / 0.75f));
 
-    for (Entry<SlotDefinition, StorageLocation> loc : locations.entrySet()) {
+    MapCursor<SlotDefinition, StorageLocation> loc = locations.getEntries();
+    while (loc.advance()) {
       if (loc.getValue().isSet(this)) {
         fieldValues.put(loc.getKey(), loc.getValue().read(this));
       } else {
@@ -383,11 +390,12 @@ public abstract class SObject extends SObjectWithClass {
   protected abstract void resetFields();
 
   @ExplodeLoop
-  private void setAllFields(final HashMap<SlotDefinition, Object> fieldValues) {
+  private void setAllFields(final EconomicMap<SlotDefinition, Object> fieldValues) {
     resetFields();
     primitiveUsedMap = 0;
 
-    for (Entry<SlotDefinition, Object> entry : fieldValues.entrySet()) {
+    MapCursor<SlotDefinition, Object> entry = fieldValues.getEntries();
+    while (entry.advance()) {
       if (entry.getValue() != null) {
         writeSlot(entry.getKey(), entry.getValue());
       } else if (getLocation(entry.getKey()) instanceof ObjectStorageLocation) {
@@ -414,7 +422,7 @@ public abstract class SObject extends SObjectWithClass {
   private void setLayoutAndTransferFields(final ObjectLayout layoutAtClass) {
     CompilerDirectives.transferToInterpreterAndInvalidate();
 
-    HashMap<SlotDefinition, Object> fieldValues = getAllFields();
+    EconomicMap<SlotDefinition, Object> fieldValues = getAllFields();
 
     objectLayout = layoutAtClass;
     extensionPrimFields = getExtendedPrimStorage(layoutAtClass);

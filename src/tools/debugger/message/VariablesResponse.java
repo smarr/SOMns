@@ -2,7 +2,8 @@ package tools.debugger.message;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Map.Entry;
+
+import org.graalvm.collections.MapCursor;
 
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.Types;
@@ -72,11 +73,11 @@ public final class VariablesResponse extends Response {
     if (obj instanceof SObject) {
       assert start == null || start == 0 : "Don't support starting from non-0 index";
       SObject o = (SObject) obj;
-      for (Entry<SlotDefinition, StorageLocation> e : o.getObjectLayout().getStorageLocations()
-                                                       .entrySet()) {
-        results.add(
-            createVariable(e.getKey().getName().getString(), e.getValue().read(o),
-                suspension));
+      MapCursor<SlotDefinition, StorageLocation> e =
+          o.getObjectLayout().getStorageLocations().getEntries();
+      while (e.advance()) {
+        results.add(createVariable(e.getKey().getName().getString(), e.getValue().read(o),
+            suspension));
       }
     } else {
       int startIdx = start == null ? 0 : (int) (long) start;

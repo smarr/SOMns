@@ -26,8 +26,9 @@ package som.vmobjects;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
+
+import org.graalvm.collections.EconomicSet;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -54,9 +55,9 @@ public final class SClass extends SObjectWithClass {
   @CompilationFinal private SSymbol name;
 
   @CompilationFinal private HashMap<SSymbol, Dispatchable> dispatchables;
-  @CompilationFinal private HashSet<SlotDefinition>        slots;        // includes slots of
-                                                                         // super classes and
-                                                                         // mixins
+
+  // includes slots of super classes and mixins
+  @CompilationFinal private EconomicSet<SlotDefinition> slots;
 
   @CompilationFinal private MixinDefinition mixinDef;
   @CompilationFinal private boolean         declaredAsValue;
@@ -136,7 +137,7 @@ public final class SClass extends SObjectWithClass {
     return layout;
   }
 
-  public HashSet<SlotDefinition> getInstanceSlots() {
+  public EconomicSet<SlotDefinition> getInstanceSlots() {
     return slots;
   }
 
@@ -173,7 +174,7 @@ public final class SClass extends SObjectWithClass {
   }
 
   public void initializeStructure(final MixinDefinition mixinDef,
-      final HashSet<SlotDefinition> slots,
+      final EconomicSet<SlotDefinition> slots,
       final HashMap<SSymbol, Dispatchable> dispatchables,
       final boolean declaredAsValue, final boolean isTransferObject,
       final boolean isArray,
