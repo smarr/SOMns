@@ -337,7 +337,7 @@ public abstract class SObject extends SObjectWithClass {
     CompilerAsserts.neverPartOfCompilation(
         "Only meant to be used in object system initalization");
     super.setClass(value);
-    setLayoutInitially(value.getLayoutForInstances());
+    setLayoutInitially(value.getLayoutForInstancesUnsafe());
   }
 
   private long[] getExtendedPrimStorage(final ObjectLayout layout) {
@@ -397,30 +397,22 @@ public abstract class SObject extends SObjectWithClass {
   }
 
   public final boolean isLayoutCurrent() {
-    return objectLayout == clazz.getLayoutForInstances() && objectLayout.isValid();
+    return objectLayout == clazz.getLayoutForInstancesUnsafe() && objectLayout.isValid();
   }
 
   public final synchronized boolean updateLayoutToMatchClass() {
-    ObjectLayout layoutAtClass = clazz.getLayoutForInstances();
+    ObjectLayout layoutAtClass = clazz.getLayoutForInstancesToUpdateObject();
 
     if (objectLayout != layoutAtClass) {
-      setLayoutAndTransferFields();
+      setLayoutAndTransferFields(layoutAtClass);
       return true;
     } else {
       return false;
     }
   }
 
-  private void setLayoutAndTransferFields() {
+  private void setLayoutAndTransferFields(final ObjectLayout layoutAtClass) {
     CompilerDirectives.transferToInterpreterAndInvalidate();
-
-    ObjectLayout layoutAtClass;
-    synchronized (clazz) {
-      layoutAtClass = clazz.getLayoutForInstances();
-      if (objectLayout == layoutAtClass) {
-        return;
-      }
-    }
 
     HashMap<SlotDefinition, Object> fieldValues = getAllFields();
 
@@ -447,7 +439,7 @@ public abstract class SObject extends SObjectWithClass {
     if (loc instanceof UnwrittenStorageLocation) {
       ObjectLayout layout = classGroup.updateInstanceLayoutWithInitializedField(slot, type);
       assert objectLayout != layout;
-      setLayoutAndTransferFields();
+      setLayoutAndTransferFields(layout);
     } else if ((type == Long.class && !(loc instanceof LongStorageLocation)) ||
         (type == Double.class && !(loc instanceof DoubleStorageLocation))) {
       updateLayoutWithGeneralizedField(slot);
@@ -470,7 +462,7 @@ public abstract class SObject extends SObjectWithClass {
       ObjectLayout layout = classGroup.updateInstanceLayoutWithGeneralizedField(slot);
 
       assert objectLayout != layout;
-      setLayoutAndTransferFields();
+      setLayoutAndTransferFields(layout);
     }
   }
 
