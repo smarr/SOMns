@@ -28,9 +28,9 @@ import static som.interpreter.SNodeFactory.createCatchNonLocalReturn;
 import static som.vm.Symbols.symbolFor;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.List;
+
+import org.graalvm.collections.EconomicMap;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
@@ -82,8 +82,8 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
   private boolean accessesVariablesOfOuterScope;
   private boolean accessesLocalOfOuterScope;
 
-  private final LinkedHashMap<SSymbol, Argument> arguments = new LinkedHashMap<>();
-  private final LinkedHashMap<SSymbol, Local>    locals    = new LinkedHashMap<>();
+  private final EconomicMap<SSymbol, Argument> arguments = EconomicMap.create();
+  private final EconomicMap<SSymbol, Local>    locals    = EconomicMap.create();
 
   private Internal frameOnStackVar;
 
@@ -138,8 +138,8 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     return language;
   }
 
-  public Collection<Argument> getArguments() {
-    return arguments.values();
+  public Iterable<Argument> getArguments() {
+    return arguments.getValues();
   }
 
   /**
@@ -307,12 +307,12 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
   public void setVarsOnMethodScope() {
     Variable[] vars = new Variable[arguments.size() + locals.size()];
     int i = 0;
-    for (Argument a : arguments.values()) {
+    for (Argument a : arguments.getValues()) {
       vars[i] = a;
       i += 1;
     }
 
-    for (Local l : locals.values()) {
+    for (Local l : locals.getValues()) {
       vars[i] = l;
       i += 1;
     }
@@ -493,7 +493,7 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
 
   @Override
   protected boolean isImmutable() {
-    for (Local l : locals.values()) {
+    for (Local l : locals.getValues()) {
       if (l.isMutable()) {
         return false;
       }

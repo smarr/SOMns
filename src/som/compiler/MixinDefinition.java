@@ -2,12 +2,11 @@ package som.compiler;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map.Entry;
 
+import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
+import org.graalvm.collections.MapCursor;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
@@ -71,9 +70,9 @@ public final class MixinDefinition {
 
   private final Method superclassMixinResolution;
 
-  private final HashMap<SSymbol, SlotDefinition> slots;
-  private final HashMap<SSymbol, Dispatchable>   instanceDispatchables;
-  private final HashMap<SSymbol, SInvokable>     factoryMethods;
+  private final EconomicMap<SSymbol, SlotDefinition> slots;
+  private final EconomicMap<SSymbol, Dispatchable>   instanceDispatchables;
+  private final EconomicMap<SSymbol, SInvokable>     factoryMethods;
 
   private final SourceSection     sourceSection;
   private final MixinDefinitionId mixinId;
@@ -85,7 +84,7 @@ public final class MixinDefinition {
   private final boolean outerScopeIsImmutable;
   private final boolean isModule;
 
-  private final LinkedHashMap<SSymbol, MixinDefinition> nestedMixinDefinitions;
+  private final EconomicMap<SSymbol, MixinDefinition> nestedMixinDefinitions;
 
   public MixinDefinition(final SSymbol name, final SourceSection nameSection,
       final SSymbol primaryFactoryName,
@@ -93,10 +92,10 @@ public final class MixinDefinition {
       final MethodBuilder initializerBuilder,
       final SourceSection initializerSource,
       final Method superclassMixinResolution,
-      final HashMap<SSymbol, SlotDefinition> slots,
-      final HashMap<SSymbol, Dispatchable> instanceDispatchables,
-      final HashMap<SSymbol, SInvokable> factoryMethods,
-      final LinkedHashMap<SSymbol, MixinDefinition> nestedMixinDefinitions,
+      final EconomicMap<SSymbol, SlotDefinition> slots,
+      final EconomicMap<SSymbol, Dispatchable> instanceDispatchables,
+      final EconomicMap<SSymbol, SInvokable> factoryMethods,
+      final EconomicMap<SSymbol, MixinDefinition> nestedMixinDefinitions,
       final MixinDefinitionId mixinId, final AccessModifier accessModifier,
       final MixinScope instanceScope, final MixinScope classScope,
       final boolean allSlotsAreImmutable, final boolean outerScopeIsImmutable,
@@ -292,7 +291,7 @@ public final class MixinDefinition {
 
     EconomicSet<SlotDefinition> instanceSlots = EconomicSet.create();
     addSlots(instanceSlots, superClass);
-    HashMap<SSymbol, Dispatchable> dispatchables = new HashMap<>();
+    EconomicMap<SSymbol, Dispatchable> dispatchables = EconomicMap.create();
 
     boolean[] mixinInfo = determineSlotsAndDispatchables(mixins,
         instanceSlots, dispatchables);
@@ -346,12 +345,12 @@ public final class MixinDefinition {
 
   private boolean[] determineSlotsAndDispatchables(final Object[] mixins,
       final EconomicSet<SlotDefinition> instanceSlots,
-      final HashMap<SSymbol, Dispatchable> dispatchables) {
+      final EconomicMap<SSymbol, Dispatchable> dispatchables) {
     boolean mixinsIncludeValue = false;
     boolean mixinsIncludeTransferObject = false;
 
     if (mixins != null) {
-      HashMap<SSymbol, SlotDefinition> mixinSlots = new HashMap<>();
+      EconomicMap<SSymbol, SlotDefinition> mixinSlots = EconomicMap.create();
       for (int i = 1; i < mixins.length; i++) {
         SClass mixin = (SClass) mixins[i];
         if (mixin == Classes.valueClass) {
@@ -365,7 +364,8 @@ public final class MixinDefinition {
           mixinSlots.putAll(cdef.slots);
         }
 
-        for (Entry<SSymbol, Dispatchable> e : cdef.instanceDispatchables.entrySet()) {
+        MapCursor<SSymbol, Dispatchable> e = cdef.instanceDispatchables.getEntries();
+        while (e.advance()) {
           if (!e.getValue().isInitializer()) {
             dispatchables.put(e.getKey(), e.getValue());
           }
@@ -374,18 +374,18 @@ public final class MixinDefinition {
         SInitializer mixinInit = cdef.assembleMixinInitializer(i);
         dispatchables.put(mixinInit.getSignature(), mixinInit);
       }
-      instanceSlots.addAll(mixinSlots.values());
+      instanceSlots.addAll(mixinSlots.getValues());
       dispatchables.putAll(instanceScope.getDispatchables());
 
       if (slots != null) {
-        instanceSlots.addAll(slots.values());
+        instanceSlots.addAll(slots.getValues());
       }
     } else {
       dispatchables.putAll(instanceScope.getDispatchables());
     }
 
     if (slots != null) {
-      instanceSlots.addAll(slots.values());
+      instanceSlots.addAll(slots.getValues());
     }
     return new boolean[] {mixinsIncludeValue, mixinsIncludeTransferObject};
   }
@@ -462,15 +462,15 @@ public final class MixinDefinition {
     instanceSlots.addAll(slots);
   }
 
-  public HashMap<SSymbol, SInvokable> getFactoryMethods() {
+  public EconomicMap<SSymbol, SInvokable> getFactoryMethods() {
     return factoryMethods;
   }
 
-  public HashMap<SSymbol, SlotDefinition> getSlots() {
+  public EconomicMap<SSymbol, SlotDefinition> getSlots() {
     return slots;
   }
 
-  public HashMap<SSymbol, Dispatchable> getInstanceDispatchables() {
+  public EconomicMap<SSymbol, Dispatchable> getInstanceDispatchables() {
     return instanceDispatchables;
   }
 
@@ -704,7 +704,11 @@ public final class MixinDefinition {
   }
 
   public Object[] getNestedMixinDefinitions() {
-    return nestedMixinDefinitions.values().toArray(new Object[0]);
+    ArrayList<Object> result = new ArrayList<>();
+    for (MixinDefinition m : nestedMixinDefinitions.getValues()) {
+      result.add(m);
+    }
+    return result.toArray(new Object[0]);
   }
 
   public AccessModifier getAccessModifier() {
@@ -754,10 +758,8 @@ public final class MixinDefinition {
       final MixinScope adaptedClassScope) {
     return new MixinDefinition(name, nameSection, primaryFactoryName,
         new ArrayList<ExpressionNode>(initializerBody), initializerBuilder, initializerSource,
-        superclassMixinResolution,
-        slots,
-        new HashMap<SSymbol, Dispatchable>(instanceDispatchables),
-        new HashMap<SSymbol, SInvokable>(factoryMethods),
+        superclassMixinResolution, slots,
+        EconomicMap.create(instanceDispatchables), EconomicMap.create(factoryMethods),
         nestedMixinDefinitions, mixinId, accessModifier,
         adaptedInstanceScope, adaptedClassScope,
         allSlotsAreImmutable, outerScopeIsImmutable,
@@ -775,7 +777,7 @@ public final class MixinDefinition {
   }
 
   private void adaptFactoryMethods(final MethodScope scope, final int appliesTo) {
-    for (SSymbol key : factoryMethods.keySet()) {
+    for (SSymbol key : factoryMethods.getKeys()) {
       SInvokable invokable = factoryMethods.get(key);
       SInvokable adaptedIvk = adaptInvokable(invokable, scope, appliesTo);
       factoryMethods.put(key, adaptedIvk);
@@ -783,7 +785,7 @@ public final class MixinDefinition {
   }
 
   private void adaptInvokableDispatchables(final MethodScope scope, final int appliesTo) {
-    for (SSymbol key : instanceDispatchables.keySet()) {
+    for (SSymbol key : instanceDispatchables.getKeys()) {
       Dispatchable dispatchable = instanceDispatchables.get(key);
 
       // Only need to adapt SInvokable, don't need to adapt slot definitions

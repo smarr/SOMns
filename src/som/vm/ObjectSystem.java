@@ -4,11 +4,10 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+
+import org.graalvm.collections.EconomicMap;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -46,7 +45,7 @@ import tools.language.StructuralProbe;
 
 public final class ObjectSystem {
 
-  private final Map<URI, MixinDefinition> loadedModules;
+  private final EconomicMap<URI, MixinDefinition> loadedModules;
 
   @CompilationFinal private MixinDefinition platformModule;
   @CompilationFinal private MixinDefinition kernelModule;
@@ -74,7 +73,7 @@ public final class ObjectSystem {
         Primitives.getInlinableNodes(), Primitives.getInlinableFactories());
     this.compiler = compiler;
     structuralProbe = probe;
-    loadedModules = new LinkedHashMap<>();
+    loadedModules = EconomicMap.create();
     this.vm = vm;
   }
 
@@ -134,7 +133,7 @@ public final class ObjectSystem {
   }
 
   private SObjectWithoutFields constructVmMirror() {
-    HashMap<SSymbol, Dispatchable> vmMirrorMethods = primitives.takeVmMirrorPrimitives();
+    EconomicMap<SSymbol, Dispatchable> vmMirrorMethods = primitives.takeVmMirrorPrimitives();
     MixinScope scope = new MixinScope(null);
 
     MixinDefinition vmMirrorDef = new MixinDefinition(

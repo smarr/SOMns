@@ -170,7 +170,7 @@ public abstract class MirrorPrims {
       MixinDefinition def = (MixinDefinition) mixinHandle;
 
       ArrayList<SInvokable> methods = new ArrayList<SInvokable>();
-      for (Dispatchable disp : def.getInstanceDispatchables().values()) {
+      for (Dispatchable disp : def.getInstanceDispatchables().getValues()) {
         if (disp instanceof SInvokable) {
           methods.add((SInvokable) disp);
         }

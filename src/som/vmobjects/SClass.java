@@ -25,9 +25,8 @@
 package som.vmobjects;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
 
+import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -54,7 +53,7 @@ public final class SClass extends SObjectWithClass {
   @CompilationFinal private SClass  superclass;
   @CompilationFinal private SSymbol name;
 
-  @CompilationFinal private HashMap<SSymbol, Dispatchable> dispatchables;
+  @CompilationFinal private EconomicMap<SSymbol, Dispatchable> dispatchables;
 
   // includes slots of super classes and mixins
   @CompilationFinal private EconomicSet<SlotDefinition> slots;
@@ -175,7 +174,7 @@ public final class SClass extends SObjectWithClass {
 
   public void initializeStructure(final MixinDefinition mixinDef,
       final EconomicSet<SlotDefinition> slots,
-      final HashMap<SSymbol, Dispatchable> dispatchables,
+      final EconomicMap<SSymbol, Dispatchable> dispatchables,
       final boolean declaredAsValue, final boolean isTransferObject,
       final boolean isArray,
       final ClassFactory classFactory) {
@@ -268,7 +267,7 @@ public final class SClass extends SObjectWithClass {
   @TruffleBoundary
   public SInvokable[] getMethods() {
     ArrayList<SInvokable> methods = new ArrayList<SInvokable>();
-    for (Dispatchable disp : dispatchables.values()) {
+    for (Dispatchable disp : dispatchables.getValues()) {
       if (disp instanceof SInvokable) {
         methods.add((SInvokable) disp);
       }
@@ -280,7 +279,7 @@ public final class SClass extends SObjectWithClass {
   public SClass[] getNestedClasses(final SObjectWithClass instance) {
     VM.thisMethodNeedsToBeOptimized("Not optimized, we do unrecorded invokes here");
     ArrayList<SClass> classes = new ArrayList<SClass>();
-    for (Dispatchable disp : dispatchables.values()) {
+    for (Dispatchable disp : dispatchables.getValues()) {
       if (disp instanceof ClassSlotDefinition) {
         classes.add((SClass) disp.invoke(null, new Object[] {instance}));
       }
@@ -288,7 +287,7 @@ public final class SClass extends SObjectWithClass {
     return classes.toArray(new SClass[classes.size()]);
   }
 
-  public Map<SSymbol, Dispatchable> getDispatchables() {
+  public EconomicMap<SSymbol, Dispatchable> getDispatchables() {
     return dispatchables;
   }
 

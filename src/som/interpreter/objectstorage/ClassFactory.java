@@ -1,7 +1,6 @@
 package som.interpreter.objectstorage;
 
-import java.util.HashMap;
-
+import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -49,8 +48,8 @@ public final class ClassFactory {
 
   private final MixinDefinition mixinDef;
 
-  private final EconomicSet<SlotDefinition>    instanceSlots;
-  private final HashMap<SSymbol, Dispatchable> dispatchables;
+  private final EconomicSet<SlotDefinition>        instanceSlots;
+  private final EconomicMap<SSymbol, Dispatchable> dispatchables;
 
   private final boolean hasOnlyImmutableFields;
 
@@ -60,7 +59,7 @@ public final class ClassFactory {
 
   public ClassFactory(final SSymbol name, final MixinDefinition mixinDef,
       final EconomicSet<SlotDefinition> instanceSlots,
-      final HashMap<SSymbol, Dispatchable> dispatchables,
+      final EconomicMap<SSymbol, Dispatchable> dispatchables,
       final boolean declaredAsValue,
       final boolean isTransferObject,
       final boolean isArray,
