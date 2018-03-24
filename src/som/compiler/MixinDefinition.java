@@ -653,8 +653,8 @@ public final class MixinDefinition {
       CachedSlotRead read = super.createNode(loc, guard, next, isSet);
       CachedSlotWrite write = loc.getWriteNode(this, guard, next, isSet);
 
-      ClassSlotAccessNode node = new ClassSlotAccessNode(mixinDefinition,
-          read, write);
+      ClassSlotAccessNode node =
+          new ClassSlotAccessNode(mixinDefinition, loc.getSlot(), read, write);
       return node;
     }
 
