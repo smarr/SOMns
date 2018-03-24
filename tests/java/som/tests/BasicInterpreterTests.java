@@ -117,15 +117,15 @@ public class BasicInterpreterTests {
         {"BlockInlining4", "test", 33, Long.class, null},
         {"BlockInlining5", "test", 33, Long.class, null},
 
-        {"Lookup", "testClassMethodsNotBlockingOuterMethods", 42, Long.class, UNSAFE_OM},
-        {"Lookup", "testExplicitOuterInInitializer", 182, Long.class, UNSAFE_OM},
-        {"Lookup", "testImplicitOuterInInitializer", 182, Long.class, UNSAFE_OM},
-        {"Lookup", "testImplicitSend", 42, Long.class, UNSAFE_OM},
-        {"Lookup", "testSiblingLookupA", 42, Long.class, UNSAFE_OM},
-        {"Lookup", "testSiblingLookupB", 43, Long.class, UNSAFE_OM},
-        {"Lookup", "testNesting1", 91, Long.class, UNSAFE_OM},
-        {"Lookup", "testNesting2", 182, Long.class, UNSAFE_OM},
-        {"Lookup", "testNesting3", 364, Long.class, UNSAFE_OM},
+        {"Lookup", "testClassMethodsNotBlockingOuterMethods", 42, Long.class, null},
+        {"Lookup", "testExplicitOuterInInitializer", 182, Long.class, null},
+        {"Lookup", "testImplicitOuterInInitializer", 182, Long.class, null},
+        {"Lookup", "testImplicitSend", 42, Long.class, null},
+        {"Lookup", "testSiblingLookupA", 42, Long.class, null},
+        {"Lookup", "testSiblingLookupB", 43, Long.class, null},
+        {"Lookup", "testNesting1", 91, Long.class, null},
+        {"Lookup", "testNesting2", 182, Long.class, null},
+        {"Lookup", "testNesting3", 364, Long.class, null},
         {"Lookup", "testInner18", 999, Long.class, UNSAFE_OM},
 
         {"Lookup", "testImplicitReceiverSendToPrivateMethod", 55, Long.class, null},
@@ -154,7 +154,7 @@ public class BasicInterpreterTests {
         {"ObjectCreation", "testImmutableRead", 3, Long.class, null},
         {"ObjectCreation", "testImmutableReadInner", 42, Long.class, null},
 
-        {"Parser", "testOuterInKeyword", 32 * 32 * 32, Long.class, UNSAFE_OM},
+        {"Parser", "testOuterInKeyword", 32 * 32 * 32, Long.class, null},
         {"Parser", "testOuterWithKeyword", 3 * 4, Long.class, null},
         {"Parser", "testOuterInheritancePrefix", 32, Long.class, null},
 
@@ -165,11 +165,11 @@ public class BasicInterpreterTests {
 
         {"Exceptions", "testSignalOnDo", 4, Long.class, null},
         {"Exceptions", "testSignalOnDoMethod", 5, Long.class, null},
-        {"Exceptions", "testNestedSignalOnDo", 22, Long.class, UNSAFE_OM},
-        {"Exceptions", "testSignalOnDoMethod", 5, Long.class, UNSAFE_OM},
-        {"Exceptions", "testCustomExceptionSignalOnDo", 343, Long.class, UNSAFE_OM},
-        {"Exceptions", "testEnsure", 444, Long.class, UNSAFE_OM},
-        {"Exceptions", "testEnsureWithSignal", 66, Long.class, UNSAFE_OM},
+        {"Exceptions", "testNestedSignalOnDo", 22, Long.class, null},
+        {"Exceptions", "testSignalOnDoMethod", 5, Long.class, null},
+        {"Exceptions", "testCustomExceptionSignalOnDo", 343, Long.class, null},
+        {"Exceptions", "testEnsure", 444, Long.class, null},
+        {"Exceptions", "testEnsureWithSignal", 66, Long.class, null},
 
         {"FieldAccess", "inheritanceOfLocalClass", 33, Long.class, null},
     });
