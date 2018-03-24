@@ -457,10 +457,6 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     return 1 + outer.getContextLevel(varName);
   }
 
-  public Local getEmbeddedLocal(final String embeddedName) {
-    return locals.get(embeddedName);
-  }
-
   /**
    * A variable is either an argument or a temporary in the lexical scope
    * of methods (only in methods).
