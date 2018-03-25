@@ -1,8 +1,9 @@
 package som.vm;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
+
+import org.graalvm.collections.EconomicMap;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.NodeFactory;
@@ -107,12 +108,12 @@ import som.vmobjects.SSymbol;
 
 public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
 
-  private HashMap<SSymbol, Dispatchable> vmMirrorPrimitives;
-  private final SomLanguage              lang;
+  private EconomicMap<SSymbol, Dispatchable> vmMirrorPrimitives;
+  private final SomLanguage                  lang;
 
   public Primitives(final SomLanguage lang) {
     super(Symbols.PROVIDER, lang.getVM());
-    vmMirrorPrimitives = new HashMap<>();
+    vmMirrorPrimitives = EconomicMap.create();
     this.lang = lang;
     initialize();
   }
@@ -148,9 +149,9 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
         primMethodNode, null);
   }
 
-  public HashMap<SSymbol, Dispatchable> takeVmMirrorPrimitives() {
+  public EconomicMap<SSymbol, Dispatchable> takeVmMirrorPrimitives() {
     assert vmMirrorPrimitives != null : "vmMirrorPrimitives can only be obtained once";
-    HashMap<SSymbol, Dispatchable> result = vmMirrorPrimitives;
+    EconomicMap<SSymbol, Dispatchable> result = vmMirrorPrimitives;
     vmMirrorPrimitives = null;
     return result;
   }

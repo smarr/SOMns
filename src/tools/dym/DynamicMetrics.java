@@ -459,7 +459,7 @@ public class DynamicMetrics extends TruffleInstrument {
     for (MixinDefinition mixin : classes) {
       graphPrinter.beginGroup(mixin.getName().getString());
 
-      for (Dispatchable disp : mixin.getInstanceDispatchables().values()) {
+      for (Dispatchable disp : mixin.getInstanceDispatchables().getValues()) {
         if (disp instanceof SInvokable) {
           SInvokable i = (SInvokable) disp;
           graphPrinter.beginGraph(i.toString()).visit(i.getCallTarget().getRootNode());

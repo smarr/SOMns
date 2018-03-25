@@ -3,6 +3,11 @@ package som.interpreter.actors;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.graalvm.collections.EconomicMap;
+
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.interpreter.objectstorage.StorageLocation;
@@ -15,9 +20,6 @@ import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
-
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 
 public final class TransferObject {
@@ -53,7 +55,7 @@ public final class TransferObject {
     assert !obj.isValue() : "TransferObjects can't be Values";
 
     ObjectLayout layout = obj.getObjectLayout();
-    HashMap<SlotDefinition, StorageLocation> fields = layout.getStorageLocations();
+    EconomicMap<SlotDefinition, StorageLocation> fields = layout.getStorageLocations();
     SObject newObj = obj.cloneBasics();
 
     Map<SAbstractObject, SAbstractObject> transferMap =
@@ -63,7 +65,7 @@ public final class TransferObject {
         obj) : "The algorithm should not transfer an object twice.";
     transferMap.put(obj, newObj);
 
-    for (StorageLocation location : fields.values()) {
+    for (StorageLocation location : fields.getValues()) {
       if (location.isObjectLocation()) {
         Object orgObj = location.read(obj);
 

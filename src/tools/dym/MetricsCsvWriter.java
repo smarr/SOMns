@@ -12,6 +12,8 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
+import org.graalvm.collections.EconomicMap;
+
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -495,8 +497,8 @@ public final class MetricsCsvWriter {
   private int numExecutedMethods(final MixinDefinition mixin,
       final Collection<InvocationProfile> profiles) {
     int numMethodsExecuted = 0;
-    Map<SSymbol, Dispatchable> disps = mixin.getInstanceDispatchables();
-    for (Dispatchable d : disps.values()) {
+    EconomicMap<SSymbol, Dispatchable> disps = mixin.getInstanceDispatchables();
+    for (Dispatchable d : disps.getValues()) {
       if (d instanceof SInvokable) {
         int invokeCount = methodInvocationCount(((SInvokable) d), profiles);
         if (invokeCount > 0) {
@@ -610,12 +612,22 @@ public final class MetricsCsvWriter {
     return sortedSet;
   }
 
+  private static <K, V> boolean contains(final EconomicMap<K, V> map, final V val) {
+    for (V v : map.getValues()) {
+      if (v.equals(val)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
   private static int compare(final SInvokable a, final SInvokable b) {
     if (a.getHolder() == b.getHolder()) {
       int result = a.toString().compareTo(b.toString());
       if (result == 0 && a != b) {
         assert a.getHolder() != null : "TODO: need to handle this case";
-        if (a.getHolder().getInstanceDispatchables().values().contains(a)) {
+        if (contains(a.getHolder().getInstanceDispatchables(), a)) {
           return -1;
         } else {
           return 1;

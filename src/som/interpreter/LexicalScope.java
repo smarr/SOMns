@@ -1,7 +1,8 @@
 package som.interpreter;
 
 import java.util.Arrays;
-import java.util.HashMap;
+
+import org.graalvm.collections.EconomicMap;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -42,7 +43,7 @@ public abstract class LexicalScope {
   // super sends. seems like we currently have two similar ways to solve
   // similar problems, instead of a single one
   public static final class MixinScope extends LexicalScope {
-    private HashMap<SSymbol, Dispatchable> slotsClassesAndMethods;
+    private EconomicMap<SSymbol, Dispatchable> slotsClassesAndMethods;
 
     @CompilationFinal private MixinDefinition mixinDefinition;
 
@@ -87,7 +88,7 @@ public abstract class LexicalScope {
       return outerScope.getMethodScope();
     }
 
-    public HashMap<SSymbol, Dispatchable> getDispatchables() {
+    public EconomicMap<SSymbol, Dispatchable> getDispatchables() {
       return slotsClassesAndMethods;
     }
 
@@ -97,8 +98,9 @@ public abstract class LexicalScope {
       mixinDefinition = def;
 
       if (classSide) {
-        HashMap<SSymbol, ? extends Dispatchable> disps = mixinDefinition.getFactoryMethods();
-        slotsClassesAndMethods = (HashMap<SSymbol, Dispatchable>) disps;
+        EconomicMap<SSymbol, ? extends Dispatchable> disps =
+            mixinDefinition.getFactoryMethods();
+        slotsClassesAndMethods = (EconomicMap<SSymbol, Dispatchable>) disps;
       } else {
         slotsClassesAndMethods = mixinDefinition.getInstanceDispatchables();
       }

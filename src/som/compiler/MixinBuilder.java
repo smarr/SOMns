@@ -27,10 +27,9 @@ package som.compiler;
 import static som.vm.Symbols.symbolFor;
 
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
+
+import org.graalvm.collections.EconomicMap;
 
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -86,15 +85,14 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
 
   @SuppressWarnings("unused") private String mixinComment;
 
-  private final HashMap<SSymbol, SlotDefinition>     slots         = new HashMap<>();
-  private final LinkedHashMap<SSymbol, Dispatchable> dispatchables = new LinkedHashMap<>();
+  private final EconomicMap<SSymbol, SlotDefinition> slots         = EconomicMap.create();
+  private final EconomicMap<SSymbol, Dispatchable>   dispatchables = EconomicMap.create();
 
-  private final HashMap<SSymbol, SInvokable> factoryMethods =
-      new HashMap<SSymbol, SInvokable>();
+  private final EconomicMap<SSymbol, SInvokable> factoryMethods = EconomicMap.create();
 
   private boolean allSlotsAreImmutable = true;
 
-  private final LinkedHashMap<SSymbol, MixinDefinition> embeddedMixins = new LinkedHashMap<>();
+  private final EconomicMap<SSymbol, MixinDefinition> embeddedMixins = EconomicMap.create();
 
   private boolean classSide;
 
@@ -474,13 +472,13 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
 
   private void setHolders(final MixinDefinition clsDef) {
     assert clsDef != null;
-    for (Dispatchable disp : dispatchables.values()) {
+    for (Dispatchable disp : dispatchables.getValues()) {
       if (disp instanceof SInvokable) {
         ((SInvokable) disp).setHolder(clsDef);
       }
     }
 
-    for (SInvokable invok : factoryMethods.values()) {
+    for (SInvokable invok : factoryMethods.getValues()) {
       invok.setHolder(clsDef);
     }
   }
@@ -586,8 +584,8 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
   protected List<ExpressionNode> createPrimaryFactoryArgumentRead(
       final ExpressionNode objectInstantiationExpr) {
     // then, call the initializer on it
-    Collection<Argument> arguments = primaryFactoryMethod.getArguments();
-    List<ExpressionNode> args = new ArrayList<>(arguments.size());
+    Iterable<Argument> arguments = primaryFactoryMethod.getArguments();
+    List<ExpressionNode> args = new ArrayList<>();
     args.add(objectInstantiationExpr);
 
     for (Argument arg : arguments) {

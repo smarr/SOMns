@@ -1,6 +1,6 @@
 package som.interop;
 
-import java.util.Map.Entry;
+import org.graalvm.collections.MapCursor;
 
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -38,7 +38,8 @@ public abstract class InteropDispatch extends Node {
       final int numArgs) {
     Dispatchable disp = null;
     while (disp == null && cls != null) {
-      for (Entry<SSymbol, Dispatchable> e : cls.getDispatchables().entrySet()) {
+      MapCursor<SSymbol, Dispatchable> e = cls.getDispatchables().getEntries();
+      while (e.advance()) {
         SSymbol sel = e.getKey();
         if (sel.getNumberOfSignatureArguments() == numArgs &&
             sel.getString().startsWith(prefix)) {
