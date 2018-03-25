@@ -61,6 +61,10 @@ public abstract class StorageLocation {
     this.slot = slot;
   }
 
+  public SlotDefinition getSlot() {
+    return slot;
+  }
+
   /**
    * @return true, if it is an object location, false otherwise.
    */

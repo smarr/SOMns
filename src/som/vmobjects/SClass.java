@@ -115,8 +115,25 @@ public final class SClass extends SObjectWithClass {
     return instanceClassGroup;
   }
 
-  public ObjectLayout getLayoutForInstances() {
+  public ObjectLayout getLayoutForInstancesUnsafe() {
     return instanceClassGroup.getInstanceLayout();
+  }
+
+  public ObjectLayout getLayoutForInstancesToUpdateObject() {
+    ObjectLayout layout = instanceClassGroup.getInstanceLayout();
+
+    // layout might already be invalidated, let's busy wait here
+    //
+    // Some class loading might happen when initializing a new object layout
+    // (new ObjectLayout being called by another thread doing a layout transition).
+    // Class loading can take considerable time and might be problematic here.
+    // But seems better than running into a stack overflow in other places.
+    while (!layout.isValid()) {
+      // TODO(JDK9): add call to Thread.onSpinWait() once moving to JDK9 support
+      layout = instanceClassGroup.getInstanceLayout();
+    }
+
+    return layout;
   }
 
   public HashSet<SlotDefinition> getInstanceSlots() {
