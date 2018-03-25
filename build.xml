@@ -97,9 +97,7 @@
       
       <exec executable="${mx.cmd}" dir="${graal.dir}" failonerror="true">
         <arg value="build" />
-      </exec>
-      <exec executable="${mx.cmd}" dir="${sdk.dir}" failonerror="true">
-        <arg value="build" />
+        <arg value="--no-native" />
       </exec>
     </target>
 
