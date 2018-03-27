@@ -10,6 +10,13 @@ import tools.ObjectBuffer;
 
 
 public class ActorExecutionTrace {
+  // events
+  public static byte ACTOR_CREATION  = 0;
+  public static byte ACTOR_SCOPE     = 1;
+  public static byte MESSAGE         = 2;
+  public static byte PROMISE_MESSAGE = 3;
+  // flags
+  public static byte EXTERNAL_BIT = 4;
 
   private static TracingActivityThread getThread() {
     Thread current = Thread.currentThread();
@@ -41,19 +48,6 @@ public class ActorExecutionTrace {
   public static class ActorTraceBuffer extends TraceBuffer {
     Actor currentActor;
 
-    private void writeId(final int id) {
-      if (id < 0) {
-        storage.putInt(id);
-      } else if (id <= 0xFF) {
-        storage.put((byte) id);
-      } else if (id <= 0xFFFF) {
-        storage.putChar((char) id);
-      } else if (id <= 0xFFFFFF) {
-        storage.put((byte) (id >> 16));
-        storage.putChar((char) id);
-      }
-    }
-
     @TruffleBoundary
     @Override
     protected boolean ensureSufficientSpace(final int requiredSpace) {
@@ -68,16 +62,51 @@ public class ActorExecutionTrace {
 
     public void recordActorContext(final Actor actor) {
       currentActor = actor;
-      ensureSufficientSpace(5);
-      storage.put((byte) 1);
-      writeId(actor.getActorId());
+      int id = actor.getActorId();
+      ensureSufficientSpace(6);
+
+      int unusedBytes = Integer.numberOfLeadingZeros(id) / 8;
+      storage.put((byte) (ACTOR_SCOPE | (unusedBytes << 3)));
+
       storage.put(actor.getOrdering());
+      switch (unusedBytes) {
+        case 0:
+          storage.put((byte) id);
+          break;
+        case 1:
+          storage.putChar((char) id);
+          break;
+        case 2:
+          storage.put((byte) (id >> 16));
+          storage.putChar((char) id);
+          break;
+        case 3:
+          storage.putInt(id);
+          break;
+      }
     }
 
     public void recordActorCreation(final int childId) {
       ensureSufficientSpace(5);
-      storage.put((byte) 2);
-      writeId(childId);
+
+      int unusedBytes = Integer.numberOfLeadingZeros(childId) / 8;
+      storage.put((byte) (ACTOR_CREATION | (unusedBytes << 3)));
+
+      switch (unusedBytes) {
+        case 0:
+          storage.put((byte) childId);
+          break;
+        case 1:
+          storage.putChar((char) childId);
+          break;
+        case 2:
+          storage.put((byte) (childId >> 16));
+          storage.putChar((char) childId);
+          break;
+        case 3:
+          storage.putInt(childId);
+          break;
+      }
     }
 
     public void recordMessages(final EventualMessage m,
@@ -104,15 +133,53 @@ public class ActorExecutionTrace {
 
     private void recordMessage(final int senderId) {
       ensureSufficientSpace(5);
-      storage.put((byte) 3);
-      writeId(senderId);
+      int unusedBytes = Integer.numberOfLeadingZeros(senderId) / 8;
+      storage.put((byte) (MESSAGE | (unusedBytes << 3)));
+
+      switch (unusedBytes) {
+        case 0:
+          storage.put((byte) senderId);
+          break;
+        case 1:
+          storage.putChar((char) senderId);
+          break;
+        case 2:
+          storage.put((byte) (senderId >> 16));
+          storage.putChar((char) senderId);
+          break;
+        case 3:
+          storage.putInt(senderId);
+          break;
+      }
     }
 
     private void recordPromiseMessage(final int senderId, final int resolverId) {
       ensureSufficientSpace(9);
-      storage.put((byte) 4);
-      writeId(senderId);
-      writeId(resolverId);
+      int unusedBytes = Math.min(Integer.numberOfLeadingZeros(senderId),
+          Integer.numberOfLeadingZeros(resolverId)) / 8;
+
+      storage.put((byte) (PROMISE_MESSAGE | (unusedBytes << 3)));
+
+      switch (unusedBytes) {
+        case 0:
+          storage.put((byte) senderId);
+          storage.put((byte) resolverId);
+          break;
+        case 1:
+          storage.putChar((char) senderId);
+          storage.putChar((char) resolverId);
+          break;
+        case 2:
+          storage.put((byte) (senderId >> 16));
+          storage.putChar((char) senderId);
+          storage.put((byte) (resolverId >> 16));
+          storage.putChar((char) resolverId);
+          break;
+        case 3:
+          storage.putInt(senderId);
+          storage.putInt(resolverId);
+          break;
+      }
     }
   }
 }
