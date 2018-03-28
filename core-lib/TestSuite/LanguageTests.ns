@@ -901,4 +901,85 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       assert: 54          equals: o operand.
     )
   ) : ( TEST_CONTEXT = () )
+
+  (* OuterLexicalTraversal tests that the traversal of outer objects
+     follows the lexical chain of outer objects, i.e., the outer
+     objects corresponding to the source code structure.
+     Note, the lexical chain can be different from the chain of outer objects
+     of the concrete classes of objects, because the concrete classes might
+     be defined in another lexical scope. *)
+  public class OuterLexicalTraversal = TestContext ()(
+
+    class TraversalTarget = ()(
+      public test = ( ^ #found )
+    )
+
+    (* Nested classes to test outer traversal *)
+    class A = (| local = #local. |)(
+      public class B = ()(
+        public class C = ()(
+          public accessTarget = (
+            ^ TraversalTarget new test
+          )
+
+          public localTarget = ( ^ local )
+        )
+      )
+    )
+
+    (* Sublclasses with different outer from their super classes *)
+    class BSubClass = getB ()()
+    class CSubClass = getC ()()
+
+    class AnotherA = A (
+    | local = #overridden.
+      public accessCnt ::= 0. |
+    )(
+      public class B = superB ()(
+        public class C = superC ()(
+          public accessTarget = (
+            accessCnt:: accessCnt + 1.
+            ^ super accessTarget
+          )
+        )
+
+        superC = ( ^ super C )
+      )
+
+      superB = ( ^ super B )
+    )
+
+    (* This time, we add another scope aroud it, at the concrete class *)
+    class OtherScope = ()(
+      public class AnotherA = A ( | local = #overridden2. | )()
+    )
+
+    (* Helper methods to have unary message to get super classes *)
+    getB = ( ^ A new B )
+    getC = ( ^ A new B new C )
+
+    public testOuterTraversalWithShorterOuterPathOnActualClass = (
+      assert: #found equals: A new B new C new accessTarget.
+      assert: #found equals: BSubClass new C new accessTarget.
+      assert: #found equals: CSubClass new accessTarget.
+
+      assert: #local equals: A new B new C new localTarget.
+      assert: #local equals: BSubClass new C new localTarget.
+      assert: #local equals: CSubClass new localTarget.
+    )
+
+    public testOuterTraversalWithOverridingOfInnerClasses = (
+      | aa = AnotherA new. |
+      assert: 0 equals: aa accessCnt.
+      assert: #found      equals: aa B new C new accessTarget.
+      assert: 1 equals: aa accessCnt.
+      assert: #overridden equals: aa B new C new localTarget.
+      assert: 1 equals: aa accessCnt.
+    )
+
+    public testOuterTraversalWithExtraOtherScope = (
+      assert: #found       equals: OtherScope new AnotherA new B new C new accessTarget.
+      assert: #overridden2 equals: OtherScope new AnotherA new B new C new localTarget.
+    )
+  ) : ( TEST_CONTEXT = () )
 )
