@@ -1,7 +1,6 @@
 package tools.debugger.entities;
 
 import com.google.gson.annotations.SerializedName;
-import com.oracle.truffle.api.debug.SuspendedEvent;
 
 import som.vm.NotYetImplementedException;
 import tools.concurrency.Tags;
@@ -215,11 +214,9 @@ public enum SteppingType {
   }
 
   private static void handleFrameSkip(final Suspension susp) {
-    if (susp.getFrameSkipCount() > 0) {
-      SuspendedEvent event = susp.getEvent();
-      for (int i = 0; i < susp.getFrameSkipCount(); i += 1) {
-        event.prepareStepOut(1);
-      }
+    int skipCnt = susp.getFrameSkipCount();
+    if (skipCnt > 1) {
+      susp.getEvent().prepareStepOut(skipCnt - 1); // -1 for correct step-out semantics
     }
   }
 
