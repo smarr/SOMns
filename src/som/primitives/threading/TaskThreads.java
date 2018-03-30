@@ -54,7 +54,7 @@ public final class TaskThreads {
         RootCallTarget target = ((SBlock) argArray[0]).getMethod().getCallTarget();
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRoot) {
           WebDebugger dbg = SomLanguage.getVM(target.getRootNode()).getWebDebugger();
-          dbg.prepareSteppingUntilNextRootNode();
+          dbg.prepareSteppingUntilNextRootNode(Thread.currentThread());
         }
         if (VmSettings.KOMPOS_TRACING) {
           KomposTrace.currentActivity(this);

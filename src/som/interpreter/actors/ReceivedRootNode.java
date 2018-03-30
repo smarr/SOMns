@@ -57,7 +57,7 @@ public abstract class ReceivedRootNode extends RootNode {
       haltOnResolution = msg.getHaltOnResolution();
 
       if (haltOnResolver) {
-        dbg.prepareSteppingAfterNextRootNode();
+        dbg.prepareSteppingAfterNextRootNode(Thread.currentThread());
       }
     } else {
       haltOnResolver = false;
