@@ -44,12 +44,12 @@ public class Breakpoints {
     this.debuggerSession = debugger.startSession(webDebugger);
   }
 
-  public void prepareSteppingUntilNextRootNode() {
-    debuggerSession.prepareSteppingUntilNextRootNode();
+  public void prepareSteppingUntilNextRootNode(final Thread thread) {
+    debuggerSession.prepareStepUntilNext(RootTag.class, SuspendAnchor.BEFORE, thread);
   }
 
-  public void prepareSteppingAfterNextRootNode() {
-    debuggerSession.prepareSteppingAfterNextRootNode();
+  public void prepareSteppingAfterNextRootNode(final Thread thread) {
+    debuggerSession.prepareStepUntilNext(RootTag.class, SuspendAnchor.AFTER, thread);
   }
 
   public synchronized void addOrUpdate(final LineBreakpoint bId) {

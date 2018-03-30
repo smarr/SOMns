@@ -95,12 +95,12 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     roots.add(rootNode);
   }
 
-  public void prepareSteppingUntilNextRootNode() {
-    breakpoints.prepareSteppingUntilNextRootNode();
+  public void prepareSteppingUntilNextRootNode(final Thread thread) {
+    breakpoints.prepareSteppingUntilNextRootNode(thread);
   }
 
-  public void prepareSteppingAfterNextRootNode() {
-    breakpoints.prepareSteppingAfterNextRootNode();
+  public void prepareSteppingAfterNextRootNode(final Thread thread) {
+    breakpoints.prepareSteppingAfterNextRootNode(thread);
   }
 
   Suspension getSuspension(final long activityId) {

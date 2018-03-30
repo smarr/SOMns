@@ -158,7 +158,7 @@ public abstract class ChannelPrimitives {
     protected void beforeExec(final SInvokable disp) {
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRootNode) {
         WebDebugger dbg = SomLanguage.getVM(disp.getInvokable()).getWebDebugger();
-        dbg.prepareSteppingUntilNextRootNode();
+        dbg.prepareSteppingUntilNextRootNode(Thread.currentThread());
       }
 
       KomposTrace.currentActivity(this);

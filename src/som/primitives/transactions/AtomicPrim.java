@@ -57,7 +57,7 @@ public abstract class AtomicPrim extends BinarySystemOperation {
           // TODO: here we are using a different approach for stepping, and for breakpointing,
           // should unify
           if (beforeCommit.executeShouldHalt()) {
-            vm.getWebDebugger().prepareSteppingAfterNextRootNode();
+            vm.getWebDebugger().prepareSteppingAfterNextRootNode(Thread.currentThread());
           }
         }
 
