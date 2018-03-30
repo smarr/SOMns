@@ -11,6 +11,7 @@ import com.oracle.truffle.api.debug.DebuggerTags.AlwaysHalt;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.ProvidedTags;
 import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
+import com.oracle.truffle.api.instrumentation.StandardTags.ExpressionTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -72,11 +73,11 @@ import tools.dym.Tags.VirtualInvoke;
 import tools.dym.Tags.VirtualInvokeReceiver;
 
 
-@TruffleLanguage.Registration(id = "SOMns", name = "SOMns", version = "0.1.0",
+@TruffleLanguage.Registration(id = "SOMns", name = "SOMns", version = "0.6.0",
     interactive = false, internal = false,
     mimeType = "application/x-newspeak-som-ns")
 @ProvidedTags({
-    RootTag.class, StatementTag.class, CallTag.class,
+    RootTag.class, StatementTag.class, CallTag.class, ExpressionTag.class,
 
     AlwaysHalt.class,
 
