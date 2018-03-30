@@ -4,7 +4,7 @@ public abstract class Tags {
   private Tags() {}
 
   // this is some form of invoke in the source, unclear what it is during program execution
-  public final class UnspecifiedInvoke extends Tags {
+  public final class UnspecifiedInvoke extends Tag {
     private UnspecifiedInvoke() {}
   }
 
@@ -19,25 +19,25 @@ public abstract class Tags {
   }
 
   // the lexical site of a virtual invoke
-  public final class VirtualInvoke extends Tags {
+  public final class VirtualInvoke extends Tag {
     private VirtualInvoke() {}
   }
 
   // the lexical site of a virtual invoke
-  public final class VirtualInvokeReceiver extends Tags {
+  public final class VirtualInvokeReceiver extends Tag {
     private VirtualInvokeReceiver() {}
   }
 
-  public final class NewObject extends Tags {
+  public final class NewObject extends Tag {
     private NewObject() {}
   }
 
-  public final class NewArray extends Tags {
+  public final class NewArray extends Tag {
     private NewArray() {}
   }
 
   // a condition expression that results in a control-flow change
-  public final class ControlFlowCondition extends Tags {
+  public final class ControlFlowCondition extends Tag {
     private ControlFlowCondition() {}
   }
 
@@ -54,68 +54,68 @@ public abstract class Tags {
     private ClassRead() {}
   }
 
-  public final class LocalVarRead extends Tags {
+  public final class LocalVarRead extends Tag {
     private LocalVarRead() {}
   }
 
-  public final class LocalVarWrite extends Tags {
+  public final class LocalVarWrite extends Tag {
     private LocalVarWrite() {}
   }
 
-  public final class LocalArgRead extends Tags {
+  public final class LocalArgRead extends Tag {
     private LocalArgRead() {}
   }
 
-  public final class ArrayRead extends Tags {
+  public final class ArrayRead extends Tag {
     private ArrayRead() {}
   }
 
-  public final class ArrayWrite extends Tags {
+  public final class ArrayWrite extends Tag {
     private ArrayWrite() {}
   }
 
-  public final class LoopNode extends Tags {
+  public final class LoopNode extends Tag {
     private LoopNode() {}
   }
 
-  public final class LoopBody extends Tags {
+  public final class LoopBody extends Tag {
     private LoopBody() {}
   }
 
-  public final class BasicPrimitiveOperation extends Tags {
+  public final class BasicPrimitiveOperation extends Tag {
     private BasicPrimitiveOperation() {}
   }
 
-  public final class ComplexPrimitiveOperation extends Tags {
+  public final class ComplexPrimitiveOperation extends Tag {
     private ComplexPrimitiveOperation() {}
   }
 
-  public final class PrimitiveArgument extends Tags {
+  public final class PrimitiveArgument extends Tag {
     private PrimitiveArgument() {}
   }
 
   // some operation that somehow accesses a string
-  public final class StringAccess extends Tags {
+  public final class StringAccess extends Tag {
     private StringAccess() {}
   }
 
-  public final class OpClosureApplication extends Tags {
+  public final class OpClosureApplication extends Tag {
     private OpClosureApplication() {}
   }
 
-  public final class OpArithmetic extends Tags {
+  public final class OpArithmetic extends Tag {
     private OpArithmetic() {}
   }
 
-  public final class OpComparison extends Tags {
+  public final class OpComparison extends Tag {
     private OpComparison() {}
   }
 
-  public final class OpLength extends Tags {
+  public final class OpLength extends Tag {
     private OpLength() {}
   }
 
-  public final class AnyNode extends Tags {
+  public final class AnyNode extends Tag {
     private AnyNode() {}
   }
 }

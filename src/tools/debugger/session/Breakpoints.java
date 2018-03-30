@@ -11,6 +11,7 @@ import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.DebuggerSession;
 import com.oracle.truffle.api.debug.SuspendAnchor;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
@@ -88,13 +89,12 @@ public class Breakpoints {
   }
 
   public synchronized void addOrUpdateAsyncAfter(final SectionBreakpoint bId) {
-    Breakpoint bp =
-        saveTruffleBasedBreakpoints(bId, RootTag.class, SuspendAnchor.AFTER);
+    Breakpoint bp = saveTruffleBasedBreakpoints(bId, RootTag.class, SuspendAnchor.AFTER);
     bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
   }
 
   private Breakpoint saveTruffleBasedBreakpoints(final SectionBreakpoint bId,
-      final Class<?> tag, final SuspendAnchor anchor) {
+      final Class<? extends Tag> tag, final SuspendAnchor anchor) {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {
       bp = Breakpoint.newBuilder(bId.getCoordinate().uri).lineIs(bId.getCoordinate().startLine)
