@@ -1,8 +1,8 @@
 package tools.debugger.entities;
 
 import com.google.gson.annotations.SerializedName;
+import com.oracle.truffle.api.instrumentation.Tag;
 
-import tools.concurrency.Tags;
 import tools.concurrency.Tags.AcquireLock;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ActivityJoin;
@@ -204,17 +204,17 @@ public enum BreakpointType {
    * NOTE: There is currently the assumption (in the UI) that only one of the
    * tags is on a specific section.
    */
-  public final Class<? extends Tags>[] applicableTo;
+  public final Class<? extends Tag>[] applicableTo;
 
   public final SteppingType steppingType;
 
   BreakpointType(final String name, final String label,
-      final Class<? extends Tags>[] applicableTo) {
+      final Class<? extends Tag>[] applicableTo) {
     this(name, label, applicableTo, null);
   }
 
   BreakpointType(final String name, final String label,
-      final Class<? extends Tags>[] applicableTo, final SteppingType steppingType) {
+      final Class<? extends Tag>[] applicableTo, final SteppingType steppingType) {
     this.name = name;
     this.label = label;
     this.applicableTo = applicableTo;
