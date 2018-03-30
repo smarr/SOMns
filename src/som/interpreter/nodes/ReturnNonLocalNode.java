@@ -27,6 +27,7 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameUtil;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.StandardTags.ExpressionTag;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.profiles.BranchProfile;
 
@@ -213,6 +214,15 @@ public final class ReturnNonLocalNode extends ContextualNode {
       if (se.var != frameOnStackMarkerVar) {
         replace(new CatchNonLocalReturnNode(
             methodBody, (Internal) se.var).initialize(sourceSection));
+      }
+    }
+
+    @Override
+    protected boolean isTaggedWith(final Class<?> tag) {
+      if (tag == ExpressionTag.class) {
+        return false;
+      } else {
+        return super.isTaggedWith(tag);
       }
     }
   }

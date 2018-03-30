@@ -2,6 +2,7 @@ package som.interpreter.nodes.nary;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.instrumentation.StandardTags.ExpressionTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.nodes.Node;
@@ -128,7 +129,9 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
 
   @Override
   protected boolean isTaggedWith(final Class<?> tag) {
-    if (tag == StatementTag.class) {
+    if (tag == ExpressionTag.class) {
+      return true;
+    } else if (tag == StatementTag.class) {
       return isTagged(STATEMENT);
     } else if (tag == RootTag.class) {
       return isTagged(ROOT_EXPR);
