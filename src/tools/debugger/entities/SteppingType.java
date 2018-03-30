@@ -74,7 +74,8 @@ public enum SteppingType {
   },
 
   @SerializedName("stepIntoActivity")
-  STEP_INTO_ACTIVITY("stepIntoActivity", "Step into Activity", Group.ACTIVITY_STEPPING, "arrow-down", new Class[] {ActivityCreation.class}) {
+  STEP_INTO_ACTIVITY("stepIntoActivity", "Step into Activity", Group.ACTIVITY_STEPPING,
+      "arrow-down", new Class[] {ActivityCreation.class}) {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareStepOver(1);
@@ -83,8 +84,8 @@ public enum SteppingType {
   },
 
   @SerializedName("returnFromActivity")
-  RETURN_FROM_ACTIVITY("returnFromActivity", "Return from Activity", Group.ACTIVITY_STEPPING, "arrow-left",
-      null,
+  RETURN_FROM_ACTIVITY("returnFromActivity", "Return from Activity", Group.ACTIVITY_STEPPING,
+      "arrow-left", null,
       new ActivityType[] {ActivityType.PROCESS, ActivityType.TASK, ActivityType.THREAD}) {
     @Override
     public void process(final Suspension susp) {
@@ -94,7 +95,8 @@ public enum SteppingType {
   },
 
   @SerializedName("stepToChannelRcvr")
-  STEP_TO_CHANNEL_RCVR("stepToChannelRcvr", "Step to Receiver", Group.PROCESS_STEPPING, "arrow-right", new Class[] {ChannelWrite.class}) {
+  STEP_TO_CHANNEL_RCVR("stepToChannelRcvr", "Step to Receiver", Group.PROCESS_STEPPING,
+      "arrow-right", new Class[] {ChannelWrite.class}) {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareStepOver(1);
@@ -103,7 +105,8 @@ public enum SteppingType {
   },
 
   @SerializedName("stepToChannelSender")
-  STEP_TO_CHANNEL_SENDER("stepToChannelSender", "Step to Sender", Group.PROCESS_STEPPING, "arrow-left", new Class[] {ChannelRead.class}) {
+  STEP_TO_CHANNEL_SENDER("stepToChannelSender", "Step to Sender", Group.PROCESS_STEPPING,
+      "arrow-left", new Class[] {ChannelRead.class}) {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareStepInto(1);
@@ -112,7 +115,8 @@ public enum SteppingType {
   },
 
   @SerializedName("stepToNextTx")
-  STEP_TO_NEXT_TX("stepToNextTx", "Step to next Transaction", Group.ACTIVITY_STEPPING, "arrow-right", null, null) {
+  STEP_TO_NEXT_TX("stepToNextTx", "Step to next Transaction", Group.ACTIVITY_STEPPING,
+      "arrow-right", null, null) {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareContinue();
