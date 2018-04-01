@@ -10,11 +10,8 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.debug.Debugger;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
-import com.oracle.truffle.api.instrumentation.InstrumentationHandler;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.GraphPrintVisitor;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.api.vm.PolyglotEngine;
@@ -174,19 +171,6 @@ public final class VM {
   }
 
   private static final Object dynamicInstrumentationLock = new Object();
-
-  public static void insertInstrumentationWrapper(final Node node) {
-
-    // TODO: make thread-safe!!!
-    // TODO: can I assert that it is locked?? helper on Node??
-    if (VmSettings.INSTRUMENTATION) {
-      assert node.getSourceSection() != null
-          || (node instanceof WrapperNode) : "Node needs source section, or needs to be wrapper";
-      synchronized (dynamicInstrumentationLock) {
-        InstrumentationHandler.insertInstrumentationWrapper(node);
-      }
-    }
-  }
 
   private static void outputToIGV(final Method method) {
     GraphPrintVisitor graphPrinter = new GraphPrintVisitor();
