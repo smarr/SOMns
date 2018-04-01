@@ -67,7 +67,7 @@ public class CandidateIdentifier extends TruffleInstrument {
           k -> new TypeCounter(ctx.getInstrumentedSourceSection()));
       return new TypeCountingNode(p);
     };
-    instrumenter.attachFactory(filter, factory);
+    instrumenter.attachExecutionEventFactory(filter, factory);
   }
 
   @Override
