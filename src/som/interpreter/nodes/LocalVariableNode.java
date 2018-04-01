@@ -6,6 +6,7 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.inlining.ScopeAdaptationVisitor;
 import som.compiler.Variable.Local;
@@ -37,11 +38,11 @@ public abstract class LocalVariableNode extends ExprWithTagsNode implements Send
   }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  public boolean hasTag(final Class<? extends Tag> tag) {
     if (tag == LocalVariableTag.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.hasTag(tag);
     }
   }
 
@@ -103,11 +104,11 @@ public abstract class LocalVariableNode extends ExprWithTagsNode implements Send
     }
 
     @Override
-    protected final boolean isTaggedWith(final Class<?> tag) {
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == LocalVarRead.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.hasTag(tag);
       }
     }
 
@@ -197,11 +198,11 @@ public abstract class LocalVariableNode extends ExprWithTagsNode implements Send
     }
 
     @Override
-    protected final boolean isTaggedWith(final Class<?> tag) {
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == LocalVarWrite.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.hasTag(tag);
       }
     }
 

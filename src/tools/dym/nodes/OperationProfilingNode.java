@@ -64,9 +64,9 @@ public final class OperationProfilingNode extends CountingNode<OperationProfile>
       Node child = SOMNode.unwrapIfNecessary(n);
 
       if (child == subExpr) {
-        assert DynamicMetrics.isTaggedWith(child, PrimitiveArgument.class);
+        assert DynamicMetrics.hasTag(child, ArgumentExpr.class);
         return taggedIdx;
-      } else if (DynamicMetrics.isTaggedWith(child, PrimitiveArgument.class)) {
+      } else if (DynamicMetrics.hasTag(child, ArgumentExpr.class)) {
         taggedIdx += 1;
       }
     }

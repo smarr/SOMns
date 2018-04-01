@@ -4,7 +4,8 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.GenerateWrapper;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
 
 import bd.primitives.nodes.WithContext;
 import som.VM;
@@ -16,7 +17,7 @@ import som.vmobjects.SSymbol;
     @NodeChild(value = "receiver", type = ExpressionNode.class),
     @NodeChild(value = "firstArg", type = ExpressionNode.class),
     @NodeChild(value = "secondArg", type = ExpressionNode.class)})
-@Instrumentable(factory = TernaryExpressionNodeWrapper.class)
+@GenerateWrapper
 public abstract class TernaryExpressionNode extends EagerlySpecializableNode {
 
   protected TernaryExpressionNode() {}
@@ -25,6 +26,11 @@ public abstract class TernaryExpressionNode extends EagerlySpecializableNode {
 
   public abstract Object executeEvaluated(VirtualFrame frame, Object receiver,
       Object firstArg, Object secondArg);
+
+  @Override
+  public WrapperNode createWrapper(final ProbeNode probe) {
+    return new TernaryExpressionNodeWrapper(this, probe);
+  }
 
   @Override
   public final Object doPreEvaluated(final VirtualFrame frame,

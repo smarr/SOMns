@@ -3,13 +3,12 @@ package som.interpreter.nodes.dispatch;
 import java.util.concurrent.locks.Lock;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.Invokable;
@@ -64,8 +63,6 @@ public final class UninitializedDispatchNode {
 
     protected final AbstractDispatchNode insertSpecialization(final Object rcvr,
         final Object firstArg, final int numArgs) {
-      VM.insertInstrumentationWrapper(this);
-
       AbstractDispatchNode node;
       if (!(rcvr instanceof SAbstractObject) && rcvr instanceof TruffleObject) {
         node = createForeignDispatchNode(numArgs);
@@ -74,7 +71,7 @@ public final class UninitializedDispatchNode {
       }
 
       replace(node);
-      VM.insertInstrumentationWrapper(node);
+      notifyInserted(node);
       return node;
     }
 
@@ -129,9 +126,9 @@ public final class UninitializedDispatchNode {
     }
 
     @Override
-    public final Object executeDispatch(final Object[] arguments) {
+    public final Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Initialize a dispatch node.");
-      return specialize(arguments).executeDispatch(arguments);
+      return specialize(arguments).executeDispatch(frame, arguments);
     }
 
     private AbstractDispatchNode specialize(final Object[] arguments) {
@@ -258,7 +255,8 @@ public final class UninitializedDispatchNode {
     @Override
     protected AccessModifier getMinimalVisibility() {
       return (mixinForPrivateLookup == null)
-          ? AccessModifier.PROTECTED : AccessModifier.PRIVATE;
+          ? AccessModifier.PROTECTED
+          : AccessModifier.PRIVATE;
     }
 
     @Override

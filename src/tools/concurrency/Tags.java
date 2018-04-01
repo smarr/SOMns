@@ -6,7 +6,7 @@ import com.oracle.truffle.api.instrumentation.Tag;
 public abstract class Tags {
 
   /** Marks the eventual message send operator. */
-  public final class EventualMessageSend extends Tags {
+  public final class EventualMessageSend extends Tag {
     private EventualMessageSend() {}
   }
 

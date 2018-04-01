@@ -32,7 +32,7 @@ public class SObjectInteropMessageResolution {
         // robustly
         VM vm = rcvr.getSOMClass().getMethods()[0].getInvokable().getRootNode()
                                                   .getLanguage(SomLanguage.class).getVM();
-        dispatch = InteropDispatchNodeGen.create(vm);
+        dispatch = insert(InteropDispatchNodeGen.create(vm));
       }
     }
 
@@ -63,7 +63,7 @@ public class SObjectInteropMessageResolution {
         // robustly
         VM vm = rcvr.getSOMClass().getMethods()[0].getInvokable().getRootNode()
                                                   .getLanguage(SomLanguage.class).getVM();
-        dispatch = InteropDispatchNodeGen.create(vm);
+        dispatch = insert(InteropDispatchNodeGen.create(vm));
       }
     }
 

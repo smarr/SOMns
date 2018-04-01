@@ -3,6 +3,8 @@ package som.primitives.actors;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.Primitive;
 import som.VM;
@@ -19,7 +21,6 @@ import tools.concurrency.KomposTrace;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.entities.ActivityType;
-import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.nodes.TraceActorCreationNode;
 
 
@@ -38,8 +39,9 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
     return this;
   }
 
-  @Specialization(guards = "isValue.executeEvaluated(argument)")
-  public final SFarReference createActor(final Object receiver, final Object argument) {
+  @Specialization(guards = "isValue.executeBoolean(frame, argument)")
+  public final SFarReference createActor(final VirtualFrame frame, final Object receiver,
+      final Object argument) {
     Actor actor = Actor.createActor(vm);
     SFarReference ref = new SFarReference(actor, argument);
 
@@ -60,10 +62,10 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
   }
 
   @Override
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
     if (tag == ExpressionBreakpoint.class) {
       return true;
     }
-    return super.isTaggedWith(tag);
+    return super.hasTag(tag);
   }
 }

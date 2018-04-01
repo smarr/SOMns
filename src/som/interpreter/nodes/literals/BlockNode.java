@@ -3,6 +3,7 @@ package som.interpreter.nodes.literals;
 import java.util.ArrayList;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.inlining.ScopeAdaptationVisitor;
 import som.compiler.AccessModifier;
@@ -27,11 +28,11 @@ public class BlockNode extends LiteralNode {
   }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  public boolean hasTag(final Class<? extends Tag> tag) {
     if (LiteralTag.class == tag) {
       return false; // Blocks should not be indicated as literals, looks strange.
     } else {
-      return super.isTaggedWith(tag);
+      return super.hasTag(tag);
     }
   }
 

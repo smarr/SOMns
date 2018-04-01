@@ -15,11 +15,13 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
+import com.oracle.truffle.api.instrumentation.InstrumentableNode;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter.Builder;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.api.nodes.GraphPrintVisitor;
@@ -127,9 +129,11 @@ public class DynamicMetrics extends TruffleInstrument {
   @CompilationFinal private static Instrumenter instrumenter; // TODO: this is one of those
                                                               // evil hacks
 
-  public static boolean isTaggedWith(final Node node, final Class<?> tag) {
-    assert instrumenter != null : "Initialization order/dependencies?";
-    return instrumenter.isTaggedWith(node, tag);
+  public static boolean hasTag(final Node node, final Class<? extends Tag> tag) {
+    if (node instanceof InstrumentableNode) {
+      return ((InstrumentableNode) node).hasTag(tag);
+    }
+    return false;
   }
 
   public DynamicMetrics() {

@@ -1,5 +1,8 @@
 package tools.dym;
 
+import com.oracle.truffle.api.instrumentation.Tag;
+
+
 public abstract class Tags {
   private Tags() {}
 
@@ -9,12 +12,12 @@ public abstract class Tags {
   }
 
   // a virtual invoke where the lookup was cached
-  public final class CachedVirtualInvoke extends Tags {
+  public final class CachedVirtualInvoke extends Tag {
     private CachedVirtualInvoke() {}
   }
 
   // a closure invoke where the closure method was cached
-  public final class CachedClosureInvoke extends Tags {
+  public final class CachedClosureInvoke extends Tag {
     private CachedClosureInvoke() {}
   }
 
@@ -41,16 +44,16 @@ public abstract class Tags {
     private ControlFlowCondition() {}
   }
 
-  public final class FieldRead extends Tags {
+  public final class FieldRead extends Tag {
     private FieldRead() {}
   }
 
-  public final class FieldWrite extends Tags {
+  public final class FieldWrite extends Tag {
     private FieldWrite() {}
   }
 
   // lexical access/reference to a class
-  public final class ClassRead extends Tags {
+  public final class ClassRead extends Tag {
     private ClassRead() {}
   }
 
