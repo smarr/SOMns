@@ -195,14 +195,14 @@ public class DynamicMetrics extends TruffleInstrument {
       return nCtor.apply(p);
     };
 
-    instrumenter.attachFactory(filters.build(), factory);
+    instrumenter.attachExecutionEventFactory(filters.build(), factory);
     return factory;
   }
 
   private void addRootTagInstrumentation(final Instrumenter instrumenter) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(RootTag.class);
-    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+    instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
       RootNode root = ctx.getInstrumentedNode().getRootNode();
       assert root instanceof Invokable : "TODO: make language independent";
       InvocationProfile p = methodInvocationCounter.computeIfAbsent(
@@ -243,7 +243,7 @@ public class DynamicMetrics extends TruffleInstrument {
       return new OperationProfilingNode(p, ctx);
     };
 
-    instrumenter.attachFactory(filters.build(), primExpFactory);
+    instrumenter.attachExecutionEventFactory(filters.build(), primExpFactory);
     return primExpFactory;
   }
 
@@ -252,7 +252,7 @@ public class DynamicMetrics extends TruffleInstrument {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(PrimitiveArgument.class);
 
-    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+    instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findDirectParentEventNode(factory);
 
       if (parent == null) {
@@ -270,7 +270,7 @@ public class DynamicMetrics extends TruffleInstrument {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(VirtualInvokeReceiver.class);
 
-    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+    instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findDirectParentEventNode(virtInvokeFactory);
 
       @SuppressWarnings("unchecked")
@@ -285,7 +285,7 @@ public class DynamicMetrics extends TruffleInstrument {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(CachedVirtualInvoke.class);
 
-    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+    instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findParentEventNode(virtInvokeFactory);
       InstrumentableDirectCallNode disp =
           (InstrumentableDirectCallNode) ctx.getInstrumentedNode();
@@ -307,7 +307,7 @@ public class DynamicMetrics extends TruffleInstrument {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(CachedClosureInvoke.class);
 
-    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+    instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findParentEventNode(factory);
       InstrumentableBlockApplyNode disp =
           (InstrumentableBlockApplyNode) ctx.getInstrumentedNode();
@@ -403,7 +403,7 @@ public class DynamicMetrics extends TruffleInstrument {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(LoopBody.class);
 
-    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+    instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findDirectParentEventNode(loopProfileFactory);
       assert parent != null : "Direct parent does not seem to be set up properly with event node and/or wrapping";
       LoopProfilingNode p = (LoopProfilingNode) parent;
