@@ -49,7 +49,7 @@ public abstract class WrapReferenceNode extends Node {
   @Child protected IsValue isValue = IsValueFactory.create(null);
 
   protected final boolean isValue(final Object obj) {
-    return isValue.executeEvaluated(obj);
+    return isValue.executeBoolean(null, obj);
   }
 
   @Specialization(guards = {"isNeitherFarRefNorPromise(obj)", "isValue(obj)"})

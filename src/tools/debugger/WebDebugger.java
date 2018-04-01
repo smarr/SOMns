@@ -12,6 +12,7 @@ import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.SuspendedCallback;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.api.nodes.RootNode;
@@ -64,20 +65,20 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   @CompilationFinal VM vm;
 
-  private final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags =
+  private final Map<Source, Map<SourceSection, Set<Class<? extends Tag>>>> loadedSourcesTags =
       new HashMap<>();
-  private final Map<Source, Set<RootNode>>                                  rootNodes         =
-      new HashMap<>();
+
+  private final Map<Source, Set<RootNode>> rootNodes = new HashMap<>();
 
   private final Map<Activity, Suspension> activityToSuspension = new HashMap<>();
   private final Map<Long, Suspension>     idToSuspension       = new HashMap<>();
 
-  public void reportSyntaxElement(final Class<? extends Tags> type,
+  public void reportSyntaxElement(final Class<? extends Tag> type,
       final SourceSection source) {
-    Map<SourceSection, Set<Class<? extends Tags>>> sections =
+    Map<SourceSection, Set<Class<? extends Tag>>> sections =
         loadedSourcesTags.computeIfAbsent(
             source.getSource(), s -> new HashMap<>());
-    Set<Class<? extends Tags>> tags = sections.computeIfAbsent(source, s -> new HashSet<>(2));
+    Set<Class<? extends Tag>> tags = sections.computeIfAbsent(source, s -> new HashSet<>(2));
     tags.add(type);
   }
 

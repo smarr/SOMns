@@ -5,14 +5,14 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.nodes.DummyParent;
 import bd.primitives.Primitive;
-import som.VM;
 import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ExceptionSignalingNode;
@@ -40,8 +40,7 @@ public abstract class BlockPrims {
 
     if (VmSettings.DYNAMIC_METRICS) {
       callNode = new InstrumentableBlockApplyNode(callNode, sourceSection);
-      new DummyParent(callNode);
-      VM.insertInstrumentationWrapper(callNode);
+      new DummyParent(callNode).notifyInserted();
       assert callNode.getParent() instanceof WrapperNode;
       callNode = (DirectCallNode) callNode.getParent();
     }
@@ -69,11 +68,11 @@ public abstract class BlockPrims {
     }
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == OpClosureApplication.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 
@@ -125,11 +124,11 @@ public abstract class BlockPrims {
     }
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == OpClosureApplication.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 
@@ -167,11 +166,11 @@ public abstract class BlockPrims {
     }
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == OpClosureApplication.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 
@@ -213,11 +212,11 @@ public abstract class BlockPrims {
     }
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == OpClosureApplication.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 

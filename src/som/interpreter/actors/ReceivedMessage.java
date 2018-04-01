@@ -7,6 +7,7 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
+import bd.primitives.nodes.PreevaluatedExpression;
 import som.interpreter.SomException;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
@@ -15,7 +16,7 @@ import som.vmobjects.SSymbol;
 
 public class ReceivedMessage extends ReceivedRootNode {
 
-  @Child protected AbstractMessageSendNode onReceive;
+  @Child protected PreevaluatedExpression onReceive;
 
   private final SSymbol selector;
 

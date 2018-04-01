@@ -12,6 +12,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.instrumentation.InstrumentationHandler;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.GraphPrintVisitor;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
@@ -49,7 +50,6 @@ import som.vmobjects.SSymbol;
 import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActors;
 import tools.concurrency.TracingBackend;
-import tools.debugger.Tags;
 import tools.debugger.WebDebugger;
 import tools.debugger.session.Breakpoints;
 import tools.dym.DynamicMetrics;
@@ -226,7 +226,7 @@ public final class VM {
         && forkJoinPool.isQuiescent() && threadPool.isQuiescent();
   }
 
-  public void reportSyntaxElement(final Class<? extends Tags> type,
+  public void reportSyntaxElement(final Class<? extends Tag> type,
       final SourceSection source) {
     if (webDebugger != null) {
       webDebugger.reportSyntaxElement(type, source);

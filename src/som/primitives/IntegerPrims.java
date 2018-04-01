@@ -5,6 +5,7 @@ import java.math.BigInteger;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.profiles.BranchProfile;
 
 import bd.primitives.Primitive;
@@ -27,11 +28,11 @@ public abstract class IntegerPrims {
       selector = "as32BitSignedValue", receiverType = Long.class)
   public abstract static class As32BitSignedValue extends UnaryBasicOperation {
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == OpArithmetic.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 
@@ -46,11 +47,11 @@ public abstract class IntegerPrims {
       selector = "as32BitUnsignedValue", receiverType = Long.class)
   public abstract static class As32BitUnsignedValue extends UnaryBasicOperation {
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == OpArithmetic.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 
@@ -64,13 +65,13 @@ public abstract class IntegerPrims {
   @Primitive(primitive = "intFromString:")
   public abstract static class FromStringPrim extends UnaryExpressionNode {
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == ComplexPrimitiveOperation.class) {
         return true;
       } else if (tag == StringAccess.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 
@@ -149,11 +150,11 @@ public abstract class IntegerPrims {
   @Primitive(selector = "abs", receiverType = Long.class)
   public abstract static class AbsPrim extends UnaryBasicOperation {
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == OpArithmetic.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 

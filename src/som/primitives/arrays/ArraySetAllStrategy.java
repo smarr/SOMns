@@ -25,16 +25,16 @@ public final class ArraySetAllStrategy {
     }
   }
 
-  public static void evalBlockWithArgForRemaining(final SBlock block,
-      final long length, final Object[] storage,
+  public static void evalBlockWithArgForRemaining(final VirtualFrame frame,
+      final SBlock block, final long length, final Object[] storage,
       final BlockDispatchNode blockDispatch, final Object first, final IsValue isValue,
       final ExceptionSignalingNode notAValue) {
-    if (!isValue.executeEvaluated(first)) {
+    if (!isValue.executeBoolean(frame, first)) {
       notAValue.signal(Classes.valueArrayClass);
     }
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
       Object result = blockDispatch.executeDispatch(new Object[] {block, (long) i + 1});
-      if (!isValue.executeEvaluated(result)) {
+      if (!isValue.executeBoolean(frame, result)) {
         notAValue.signal(Classes.valueArrayClass);
       } else {
         storage[i] = result;
@@ -205,7 +205,7 @@ public final class ArraySetAllStrategy {
     }
   }
 
-  public static Object evaluateFirstDetermineStorageAndEvaluateRest(
+  public static Object evaluateFirstDetermineStorageAndEvaluateRest(final VirtualFrame frame,
       final SBlock blockWithArg, final long length,
       final BlockDispatchNode blockDispatch, final IsValue isValue,
       final ExceptionSignalingNode notAValue) {
@@ -230,7 +230,8 @@ public final class ArraySetAllStrategy {
       return newStorage;
     } else {
       Object[] newStorage = new Object[(int) length];
-      evalBlockWithArgForRemaining(blockWithArg, length, newStorage, blockDispatch, result,
+      evalBlockWithArgForRemaining(frame, blockWithArg, length, newStorage, blockDispatch,
+          result,
           isValue, notAValue);
       return newStorage;
     }

@@ -4,10 +4,10 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
-import som.VM;
 import som.interpreter.actors.SuspendExecutionNodeGen;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.threading.TaskThreads.SomTaskOrThread;
@@ -32,7 +32,6 @@ public class ActivityJoin {
       super.initialize(source);
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
         haltNode = insert(SuspendExecutionNodeGen.create(0, null).initialize(source));
-        VM.insertInstrumentationWrapper(haltNode);
       }
       return this;
     }
@@ -58,11 +57,11 @@ public class ActivityJoin {
     }
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == Tags.ActivityJoin.class || tag == ExpressionBreakpoint.class) {
         return true;
       }
-      return super.isTaggedWith(tag);
+      return super.hasTag(tag);
     }
   }
 }

@@ -9,8 +9,11 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.GenerateWrapper;
+import com.oracle.truffle.api.instrumentation.InstrumentableNode;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
@@ -41,7 +44,7 @@ import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 
 
-@Instrumentable(factory = EventualSendNodeWrapper.class)
+@GenerateWrapper
 public class EventualSendNode extends ExprWithTagsNode {
   @Child protected InternalObjectArrayNode arguments;
   @Child protected SendNode                send;
@@ -56,7 +59,13 @@ public class EventualSendNode extends ExprWithTagsNode {
     initialize(source);
   }
 
-  protected EventualSendNode(final EventualSendNode wrappedNode) {}
+  /** For wrappers. */
+  protected EventualSendNode() {}
+
+  @Override
+  public WrapperNode createWrapper(final ProbeNode probe) {
+    return new EventualSendNodeWrapper(this, probe);
+  }
 
   @Override
   public Object executeGeneric(final VirtualFrame frame) {
@@ -106,8 +115,8 @@ public class EventualSendNode extends ExprWithTagsNode {
     return true;
   }
 
-  @Instrumentable(factory = SendNodeWrapper.class)
-  public abstract static class SendNode extends Node {
+  @GenerateWrapper
+  public abstract static class SendNode extends Node implements InstrumentableNode {
     protected final SSymbol                       selector;
     @Children protected final WrapReferenceNode[] wrapArgs;
     protected final RootCallTarget                onReceive;
@@ -146,11 +155,21 @@ public class EventualSendNode extends ExprWithTagsNode {
     /**
      * Use for wrapping node only.
      */
-    protected SendNode(final SendNode wrappedNode) {
+    protected SendNode() {
       this(null, null, null, null, null);
     }
 
     public abstract Object execute(VirtualFrame frame, Object[] args);
+
+    @Override
+    public boolean isInstrumentable() {
+      return true;
+    }
+
+    @Override
+    public WrapperNode createWrapper(final ProbeNode probe) {
+      return new SendNodeWrapper(this, probe);
+    }
 
     @Override
     public SourceSection getSourceSection() {
@@ -311,12 +330,9 @@ public class EventualSendNode extends ExprWithTagsNode {
     }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
-      if (tag == EventualMessageSend.class || tag == ExpressionBreakpoint.class
-          || tag == StatementTag.class) {
-        return true;
-      }
-      return super.isTaggedWith(tag);
+    public boolean hasTag(final Class<? extends Tag> tag) {
+      return tag == EventualMessageSend.class || tag == ExpressionBreakpoint.class
+          || tag == StatementTag.class;
     }
   }
 }
