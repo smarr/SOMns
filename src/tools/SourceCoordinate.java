@@ -73,6 +73,12 @@ public class SourceCoordinate {
           // sc.charIndex == charIndex &&
           sc.charLength == charLength;
     }
+
+    @Override
+    public String toString() {
+      return "SrcCoord(line: " + startLine + ", col: " + startColumn + ", charlength:"
+          + charLength + ", uri: " + uri.getPath() + ")";
+    }
   }
 
   @SuppressWarnings("unused")

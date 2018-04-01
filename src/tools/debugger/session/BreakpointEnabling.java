@@ -52,4 +52,9 @@ public final class BreakpointEnabling {
   public Assumption getAssumption() {
     return unchanged;
   }
+
+  @Override
+  public String toString() {
+    return "BPEnabling[" + enabled + ", " + breakpointInfo.toString() + "]";
+  }
 }

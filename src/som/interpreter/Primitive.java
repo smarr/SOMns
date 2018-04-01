@@ -11,6 +11,7 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 
 import som.compiler.MethodBuilder;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.SOMNode;
 import som.primitives.ObjectPrims.HaltPrim;
 import som.vmobjects.SInvokable;
 
@@ -52,8 +53,12 @@ public final class Primitive extends Invokable {
 
   @Override
   public String toString() {
-    return "Primitive " + expressionOrSequence.getClass().getSimpleName() + "@"
-        + Integer.toHexString(hashCode());
+    ExpressionNode n = SOMNode.unwrapIfNecessary(expressionOrSequence);
+    String nodeType = n.getClass().getSimpleName();
+    if (n != expressionOrSequence) {
+      nodeType += " (wrapped)"; // indicate that it is wrapped
+    }
+    return "Primitive " + nodeType + "@" + Integer.toHexString(hashCode());
   }
 
   @Override
