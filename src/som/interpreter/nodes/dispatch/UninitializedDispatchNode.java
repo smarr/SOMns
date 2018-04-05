@@ -11,6 +11,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.interop.SomInteropObject;
 import som.interpreter.Invokable;
 import som.interpreter.SomLanguage;
 import som.interpreter.TruffleCompiler;
@@ -18,7 +19,6 @@ import som.interpreter.Types;
 import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -64,7 +64,7 @@ public final class UninitializedDispatchNode {
     protected final AbstractDispatchNode insertSpecialization(final Object rcvr,
         final Object firstArg, final int numArgs) {
       AbstractDispatchNode node;
-      if (!(rcvr instanceof SAbstractObject) && rcvr instanceof TruffleObject) {
+      if (rcvr instanceof TruffleObject && !(rcvr instanceof SomInteropObject)) {
         node = createForeignDispatchNode(numArgs);
       } else {
         node = createSomDispatchNode(rcvr, firstArg);
