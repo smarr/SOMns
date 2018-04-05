@@ -12,8 +12,8 @@ import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.nodes.Node;
 
 import som.VM;
+import som.interop.SomInteropObject;
 import som.interpreter.SArguments;
-import som.vmobjects.SAbstractObject;
 
 
 public final class ForeignDispatchNode extends AbstractDispatchNode {
@@ -44,7 +44,7 @@ public final class ForeignDispatchNode extends AbstractDispatchNode {
     VM.thisMethodNeedsToBeOptimized("");
     CompilerDirectives.transferToInterpreter();
     Object rcvr = arguments[0];
-    if (rcvr instanceof TruffleObject && !(rcvr instanceof SAbstractObject)) {
+    if (rcvr instanceof TruffleObject && !(rcvr instanceof SomInteropObject)) {
       TruffleObject r = (TruffleObject) rcvr;
       try {
         return ForeignAccess.sendInvoke(invoke, r,
