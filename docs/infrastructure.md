@@ -57,14 +57,16 @@ as well as a private GitLab instance to run benchmarks (see `.gitlab-ci.yml`).
 
 In case you forked SOMns on GitHub for your own work, please consider [enabling Travis CI](https://docs.travis-ci.com/user/getting-started/).
 
-The current build status is: [![Build Status](https://travis-ci.org/smarr/SOMns.png?branch=master)](https://travis-ci.org/smarr/SOMns)
+The current build status of the release branch is: [![Build Status](https://travis-ci.org/smarr/SOMns.png?branch=release)](https://travis-ci.org/smarr/SOMns)
+
+The status of the development branch `dev` is: [![Build Status](https://travis-ci.org/smarr/SOMns.png?branch=dev)](https://travis-ci.org/smarr/SOMns/tree/dev).
 
 **Performance Tracking:**
 Since one goal of SOMns is to be a platform for research on concurrency with
 performance close to state-of-the-art JVMs, we continuously track benchmark
 performance, for startup as well as peak performance with
 [Codespeed](http://somns-speed.stefan-marr.de/timeline/#/?exe=14,23,19,21,22,20,16,17,15,18&base=none&ben=peak.Havlak&env=1&revs=10&equid=off).
-It is run on every change to the master branch, and can be used to track and
+It is run on every change to the dev branch, and can be used to track and
 compare performance of experimental changes as well.
 
 <figure style="text-align:center">

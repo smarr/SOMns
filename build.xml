@@ -15,7 +15,7 @@
     <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists" />
     <property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
     <property name="somns-deps.version" value="0.3.3" />
-    <property name="checkstyle.version" value="7.6.1" />
+    <property name="checkstyle.version" value="8.8" />
     <property name="jacoco.version"     value="0.8.0" />
 
     <!-- <property name="lib.url" value="https://dl.bintray.com/smarr/SOM" /> -->
@@ -97,9 +97,7 @@
       
       <exec executable="${mx.cmd}" dir="${graal.dir}" failonerror="true">
         <arg value="build" />
-      </exec>
-      <exec executable="${mx.cmd}" dir="${sdk.dir}" failonerror="true">
-        <arg value="build" />
+        <arg value="--no-native" />
       </exec>
     </target>
 

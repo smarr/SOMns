@@ -12,8 +12,7 @@ We test SOMns on Linux and macOS. Windows is not currently supported.
 On Ubuntu, the following instructions will install the necessary dependencies:
 
 ```bash
-sudo add-apt-repository ppa:webupd8team/java
-sudo apt install oracle-java9-installer git ant
+sudo apt install openjdk-9-jdk git ant
 ```
 
 On macOS, the relevant dependencies can be installed, for instance with

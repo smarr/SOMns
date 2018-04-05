@@ -160,11 +160,7 @@ if not java_bin:
     java_bin = graal_home + '/bin/java'
 
 if java_bin is graal_home or not os.path.isfile(java_bin):
-  if args.interpreter:
-    java_bin = "java"
-  else:
-    print "No compatible JDK found. Please set the GRAAL_HOME or JVMCI_BIN environment variables."
-    sys.exit(1)
+  java_bin = "java"
 
 JAVA_MAJOR_VERSION = None
 try:
@@ -176,6 +172,10 @@ try:
     JAVA_MAJOR_VERSION = int(j_arr[1].split(".")[0])
 except:
   pass
+
+if java_bin == "java" and (not JAVA_MAJOR_VERSION or JAVA_MAJOR_VERSION < 9):
+  print "No compatible JDK found. Please set the GRAAL_HOME or JVMCI_BIN environment variables."
+  sys.exit(1)
 
 ##
 ## Defining Necessary Parameter Bits

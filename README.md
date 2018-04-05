@@ -100,7 +100,7 @@ Development Status
 
 Active development of SOMns happens on the `dev` branch [![Build Status](https://travis-ci.org/smarr/SOMns.png?branch=dev)](https://travis-ci.org/smarr/SOMns/tree/dev).
 
-The latest release is reflected by the `master` branch [![Build Status](https://travis-ci.org/smarr/SOMns.png?branch=master)](https://travis-ci.org/smarr/SOMns).
+The latest release is reflected by the `release` branch [![Build Status](https://travis-ci.org/smarr/SOMns.png?branch=release)](https://travis-ci.org/smarr/SOMns).
 
 Changes and releases are documented in our [CHANGELOG.md][cl].
 
