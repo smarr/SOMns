@@ -12,11 +12,12 @@ import tools.ObjectBuffer;
 public class ActorExecutionTrace {
   // events
   public static byte ACTOR_CREATION  = 0;
-  public static byte ACTOR_SCOPE     = 1;
+  public static byte ACTOR_CONTEXT   = 1;
   public static byte MESSAGE         = 2;
   public static byte PROMISE_MESSAGE = 3;
+  public static byte SYSTEM_CALL     = 5;
   // flags
-  public static byte EXTERNAL_BIT = 4;
+  public static byte EXTERNAL_BIT = 8;
 
   private static TracingActivityThread getThread() {
     Thread current = Thread.currentThread();
@@ -60,27 +61,40 @@ public class ActorExecutionTrace {
       return false;
     }
 
+    static int getUsedBytes(final int id) {
+      if (id >= 0) {
+        if (id <= 0xFF) {
+          return 1;
+        } else if (id <= 0xFFFF) {
+          return 2;
+        } else if (id <= 0xFFFFFF) {
+          return 3;
+        }
+      }
+      return 4;
+    }
+
     public void recordActorContext(final Actor actor) {
       currentActor = actor;
       int id = actor.getActorId();
       ensureSufficientSpace(6);
 
-      int unusedBytes = Integer.numberOfLeadingZeros(id) / 8;
-      storage.put((byte) (ACTOR_SCOPE | (unusedBytes << 3)));
+      int usedBytes = getUsedBytes(id);
+      storage.put((byte) (ACTOR_CONTEXT | (usedBytes << 4)));
 
       storage.put(actor.getOrdering());
-      switch (unusedBytes) {
-        case 0:
+      switch (usedBytes) {
+        case 1:
           storage.put((byte) id);
           break;
-        case 1:
-          storage.putChar((char) id);
-          break;
         case 2:
-          storage.put((byte) (id >> 16));
           storage.putChar((char) id);
           break;
         case 3:
+          storage.put((byte) (id >> 16));
+          storage.putChar((char) id);
+          break;
+        case 4:
           storage.putInt(id);
           break;
       }
@@ -89,21 +103,21 @@ public class ActorExecutionTrace {
     public void recordActorCreation(final int childId) {
       ensureSufficientSpace(5);
 
-      int unusedBytes = Integer.numberOfLeadingZeros(childId) / 8;
-      storage.put((byte) (ACTOR_CREATION | (unusedBytes << 3)));
+      int usedBytes = getUsedBytes(childId);
+      storage.put((byte) (ACTOR_CREATION | (usedBytes << 4)));
 
-      switch (unusedBytes) {
-        case 0:
+      switch (usedBytes) {
+        case 1:
           storage.put((byte) childId);
           break;
-        case 1:
-          storage.putChar((char) childId);
-          break;
         case 2:
-          storage.put((byte) (childId >> 16));
           storage.putChar((char) childId);
           break;
         case 3:
+          storage.put((byte) (childId >> 16));
+          storage.putChar((char) childId);
+          break;
+        case 4:
           storage.putInt(childId);
           break;
       }
@@ -133,21 +147,21 @@ public class ActorExecutionTrace {
 
     private void recordMessage(final int senderId) {
       ensureSufficientSpace(5);
-      int unusedBytes = Integer.numberOfLeadingZeros(senderId) / 8;
-      storage.put((byte) (MESSAGE | (unusedBytes << 3)));
+      int usedBytes = getUsedBytes(senderId);
+      storage.put((byte) (MESSAGE | (usedBytes << 4)));
 
-      switch (unusedBytes) {
-        case 0:
+      switch (usedBytes) {
+        case 1:
           storage.put((byte) senderId);
           break;
-        case 1:
-          storage.putChar((char) senderId);
-          break;
         case 2:
-          storage.put((byte) (senderId >> 16));
           storage.putChar((char) senderId);
           break;
         case 3:
+          storage.put((byte) (senderId >> 16));
+          storage.putChar((char) senderId);
+          break;
+        case 4:
           storage.putInt(senderId);
           break;
       }
@@ -155,27 +169,26 @@ public class ActorExecutionTrace {
 
     private void recordPromiseMessage(final int senderId, final int resolverId) {
       ensureSufficientSpace(9);
-      int unusedBytes = Math.min(Integer.numberOfLeadingZeros(senderId),
-          Integer.numberOfLeadingZeros(resolverId)) / 8;
+      int usedBytes = Math.max(getUsedBytes(resolverId), getUsedBytes(senderId));
 
-      storage.put((byte) (PROMISE_MESSAGE | (unusedBytes << 3)));
+      storage.put((byte) (PROMISE_MESSAGE | (usedBytes << 4)));
 
-      switch (unusedBytes) {
-        case 0:
+      switch (usedBytes) {
+        case 1:
           storage.put((byte) senderId);
           storage.put((byte) resolverId);
           break;
-        case 1:
+        case 2:
           storage.putChar((char) senderId);
           storage.putChar((char) resolverId);
           break;
-        case 2:
+        case 3:
           storage.put((byte) (senderId >> 16));
           storage.putChar((char) senderId);
           storage.put((byte) (resolverId >> 16));
           storage.putChar((char) resolverId);
           break;
-        case 3:
+        case 4:
           storage.putInt(senderId);
           storage.putInt(resolverId);
           break;
