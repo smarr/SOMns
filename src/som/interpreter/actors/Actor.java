@@ -258,10 +258,7 @@ public class Actor implements Activity {
           }
         }
       } finally {
-        if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.recordMessages(firstMessage, mailboxExtension);
-          // currentThread.createdMessages += size;
-        }
+
       }
     }
 
@@ -278,6 +275,10 @@ public class Actor implements Activity {
               msg.getTargetSourceSection());
         }
         msg.execute();
+        if (VmSettings.ACTOR_TRACING) {
+          ActorExecutionTrace.recordMessage(msg);
+        }
+
       } finally {
         if (VmSettings.MEDEOR_TRACING) {
           MedeorTrace.scopeEnd(DynamicScopeType.TURN);
@@ -296,7 +297,6 @@ public class Actor implements Activity {
           // complete execution after all messages are processed
           actor.isExecuting = false;
           if (VmSettings.ACTOR_TRACING) {
-            // ActorExecutionTrace.actorFinished();
             ((TracingActor) actor).incrementOrdering();
           } else if (VmSettings.MEDEOR_TRACING) {
             MedeorTrace.clearCurrentActivity(actor);

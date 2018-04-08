@@ -32,11 +32,11 @@ public final class TraceParser {
     SYSTEM_CALL
   }
 
-  private final HashMap<Short, SSymbol>                symbolMapping    = new HashMap<>();
-  private ByteBuffer                                   b                =
+  private final HashMap<Short, SSymbol>                    symbolMapping    = new HashMap<>();
+  private ByteBuffer                                       b                =
       ByteBuffer.allocate(TracingBackend.BUFFER_SIZE);
-  private final HashMap<Integer, ActorNode>            mappedActors     = new HashMap<>();
-  private final HashMap<Integer, Queue<MessageRecord>> expectedMessages = new HashMap<>();
+  private final HashMap<Integer, ActorNode>                mappedActors     = new HashMap<>();
+  private final HashMap<Integer, ArrayList<MessageRecord>> expectedMessages = new HashMap<>();
 
   private long parsedMessages = 0;
   private long parsedActors   = 0;
@@ -50,7 +50,7 @@ public final class TraceParser {
       parser = new TraceParser();
       parser.parseTrace();
     }
-    return parser.expectedMessages.remove(replayId);
+    return null;// parser.expectedMessages.remove(replayId);
   }
 
   public static synchronized int getReplayId(final int parentId, final int childNo) {
@@ -83,8 +83,9 @@ public final class TraceParser {
     boolean readMainActor = false;
     File traceFile = new File(VmSettings.TRACE_FILE + ".trace");
 
-    long scopeId = -1;
-    Context current = new Context(0, 0);
+    int sender, resolver;
+    int currentActor = 0;
+    int currentOrdering = 0;
 
     Output.println("Parsing Trace ...");
 
@@ -116,16 +117,15 @@ public final class TraceParser {
                 mappedActors.put(newActorId, new ActorNode(newActorId));
               }
             } else {
-
-              if (!mappedActors.containsKey(current.actorId)) {
-                mappedActors.put(current.actorId, new ActorNode(current.actorId));
+              if (!mappedActors.containsKey(currentActor)) {
+                mappedActors.put(currentActor, new ActorNode(currentActor));
               }
 
               ActorNode node = mappedActors.containsKey(newActorId)
                   ? mappedActors.get(newActorId)
                   : new ActorNode(newActorId);
-              node.mailboxNo = current.traceBufferId;
-              mappedActors.get(current.actorId).addChild(node);
+              node.mailboxNo = currentOrdering;
+              mappedActors.get(currentActor).addChild(node);
             }
             parsedActors++;
 
@@ -133,14 +133,17 @@ public final class TraceParser {
             break;
           }
           case ACTOR_CONTEXT:
-            scopeId = b.getLong();
+            currentOrdering = Byte.toUnsignedInt(b.get());
+            currentActor = b.getInt();
             assert b.position() == start + DynamicScopeType.TRANSACTION.getStartSize();
             break;
           case MESSAGE:
-            b.getLong();
+            sender = b.getInt();
             assert b.position() == start + ReceiveOp.CHANNEL_RCV.getSize();
             break;
           case PROMISE_MESSAGE:
+            sender = b.getInt();
+            resolver = b.getInt();
           case SYSTEM_CALL:
           default:
             assert false;
@@ -162,9 +165,9 @@ public final class TraceParser {
    */
   private static class Context {
     final int actorId;
-    int       traceBufferId;
+    byte      traceBufferId;
 
-    Context(final int activityId, final int tracebufferId) {
+    Context(final int activityId, final byte tracebufferId) {
       super();
       this.actorId = activityId;
       this.traceBufferId = tracebufferId;

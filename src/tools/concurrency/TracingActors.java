@@ -105,7 +105,7 @@ public class TracingActors {
       if (Thread.currentThread() instanceof ActorProcessingThread) {
         ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
         ReplayActor parent = (ReplayActor) t.currentMessage.getTarget();
-        long parentId = parent.getId();
+        int parentId = parent.getActorId();
         int childNo = parent.addChild();
         return TraceParser.getReplayId(parentId, childNo);
       }

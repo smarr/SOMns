@@ -13,6 +13,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.MedeorTrace;
 import tools.concurrency.TracingActivityThread;
+import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.entities.PassiveEntityType;
 
 
@@ -361,7 +362,7 @@ public class SPromise extends SObjectWithClass {
          * } else {
          */
         ((STracingPromise) p).resolvingActor =
-            EventualMessage.getActorCurrentMessageIsExecutionOn().getActorId();
+            ((TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn()).getActorId();
         // }
       } else if (VmSettings.MEDEOR_TRACING) {
         if (type == Resolution.SUCCESSFUL && p.resolutionState != Resolution.CHAINED) {

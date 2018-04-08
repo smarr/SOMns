@@ -6,7 +6,6 @@ import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
-import tools.ObjectBuffer;
 
 
 public class ActorExecutionTrace {
@@ -35,10 +34,14 @@ public class ActorExecutionTrace {
     ((ActorTraceBuffer) t.getBuffer()).recordActorCreation(childId);
   }
 
-  public static void recordMessages(final EventualMessage m,
-      final ObjectBuffer<EventualMessage> moreCurrent) {
+  public static void recordMessage(final EventualMessage msg) {
     TracingActivityThread t = getThread();
-    ((ActorTraceBuffer) t.getBuffer()).recordMessages(m, moreCurrent);
+    if (msg instanceof PromiseMessage) {
+      ((ActorTraceBuffer) t.getBuffer()).recordPromiseMessage(msg.getSender().getActorId(),
+          ((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
+    } else {
+      ((ActorTraceBuffer) t.getBuffer()).recordMessage(msg.getSender().getActorId());
+    }
   }
 
   public static void actorFinished() {
@@ -123,29 +126,7 @@ public class ActorExecutionTrace {
       }
     }
 
-    public void recordMessages(final EventualMessage m,
-        final ObjectBuffer<EventualMessage> moreCurrent) {
-
-      writeMessage(m);
-
-      if (moreCurrent != null) {
-        for (EventualMessage em : moreCurrent) {
-          writeMessage(em);
-        }
-      }
-    }
-
-    private void writeMessage(final EventualMessage em) {
-      if (em instanceof PromiseMessage) {
-        PromiseMessage pm = (PromiseMessage) em;
-        recordPromiseMessage(em.getSender().getActorId(),
-            ((STracingPromise) pm.getPromise()).getResolvingActor());
-      } else {
-        recordMessage(em.getSender().getActorId());
-      }
-    }
-
-    private void recordMessage(final int senderId) {
+    public void recordMessage(final int senderId) {
       ensureSufficientSpace(5);
       int usedBytes = getUsedBytes(senderId);
       storage.put((byte) (MESSAGE | (usedBytes << 4)));
@@ -167,7 +148,7 @@ public class ActorExecutionTrace {
       }
     }
 
-    private void recordPromiseMessage(final int senderId, final int resolverId) {
+    public void recordPromiseMessage(final int senderId, final int resolverId) {
       ensureSufficientSpace(9);
       int usedBytes = Math.max(getUsedBytes(resolverId), getUsedBytes(senderId));
 
