@@ -24,7 +24,7 @@ public class TracingActors {
   public static class TracingActor extends Actor {
     private final static AtomicInteger IdGen = new AtomicInteger(0);
     final protected int                actorId;
-    protected byte                     ordering;
+    protected short                    ordering;
 
     /**
      * Flag that indicates if a step-to-next-turn action has been made in the previous message.
@@ -52,7 +52,7 @@ public class TracingActors {
     }
 
     @Override
-    public byte getOrdering() {
+    public short getOrdering() {
       return ordering;
     }
 

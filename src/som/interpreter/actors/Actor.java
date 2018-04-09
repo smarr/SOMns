@@ -99,7 +99,7 @@ public class Actor implements Activity {
     return 0;
   }
 
-  public byte getOrdering() {
+  public short getOrdering() {
     return 0;
   }
 

@@ -27,10 +27,10 @@ public class SPromise extends SObjectWithClass {
   public static SPromise createPromise(final Actor owner,
       final boolean haltOnResolver, final boolean haltOnResolution,
       final SourceSection section) {
-    if (VmSettings.ACTOR_TRACING) {
-      return new STracingPromise(owner, haltOnResolver, haltOnResolution);
-    } else if (VmSettings.MEDEOR_TRACING) {
+    if (VmSettings.MEDEOR_TRACING) {
       return new SMedeorPromise(owner, haltOnResolver, haltOnResolution, section);
+    } else if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
+      return new STracingPromise(owner, haltOnResolver, haltOnResolution);
     } else {
       return new SPromise(owner, haltOnResolver, haltOnResolution);
     }
@@ -115,7 +115,7 @@ public class SPromise extends SObjectWithClass {
     if (isCompleted()) {
       remote.value = value;
       remote.resolutionState = resolutionState;
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
         ((STracingPromise) remote).resolvingActor = ((STracingPromise) this).resolvingActor;
       }
     } else {
@@ -353,7 +353,7 @@ public class SPromise extends SObjectWithClass {
         final boolean haltOnResolution) {
       assert !(result instanceof SPromise);
 
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
         // Promises resolved by the TimerPrim will appear as if they have been resolved by
         // the main actor.
         /*
