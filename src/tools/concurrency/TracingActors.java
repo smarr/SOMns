@@ -25,6 +25,7 @@ public class TracingActors {
     private final static AtomicInteger IdGen = new AtomicInteger(0);
     final protected int                actorId;
     protected short                    ordering;
+    protected int                      nextDataID;
 
     /**
      * Flag that indicates if a step-to-next-turn action has been made in the previous message.
@@ -54,6 +55,11 @@ public class TracingActors {
     @Override
     public short getOrdering() {
       return ordering;
+    }
+
+    @Override
+    public synchronized int getDataId() {
+      return nextDataID++;
     }
 
     public void incrementOrdering() {

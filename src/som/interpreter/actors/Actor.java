@@ -103,6 +103,10 @@ public class Actor implements Activity {
     return 0;
   }
 
+  public int getDataId() {
+    return 0;
+  }
+
   protected ExecAllMessages createExecutor(final VM vm) {
     return new ExecAllMessages(this, vm);
   }

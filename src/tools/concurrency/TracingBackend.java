@@ -14,6 +14,7 @@ import java.lang.management.MemoryUsage;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -73,6 +74,7 @@ public class TracingBackend {
       new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
   private static final ArrayBlockingQueue<ByteBuffer> fullBuffers  =
       new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
+  private static final LinkedList<ByteBuffer>         externalData = new LinkedList<>();
 
   // contains symbols that need to be written to file/sent to debugger,
   // e.g. actor type, message type
@@ -182,7 +184,7 @@ public class TracingBackend {
   }
 
   public static final void forceSwapBuffers() {
-    assert VmSettings.TRUFFLE_DEBUGGER_ENABLED && VmSettings.ACTOR_TRACING;
+    assert VmSettings.TRUFFLE_DEBUGGER_ENABLED && VmSettings.MEDEOR_TRACING;
     TracingActivityThread[] result;
     synchronized (tracingThreads) {
       result = tracingThreads.toArray(new TracingActivityThread[0]);
@@ -191,8 +193,22 @@ public class TracingBackend {
     for (TracingActivityThread t : result) {
       TraceBuffer buffer = t.getBuffer();
       synchronized (buffer) {
-        buffer.swapStorage(t.getActivity());
+        buffer.swapStorage();
       }
+    }
+  }
+
+  @TruffleBoundary
+  public static final void addExternalData(final ByteBuffer b) {
+    if (b == null) {
+      return;
+    }
+
+    b.limit(b.position());
+    b.rewind();
+
+    synchronized (externalData) {
+      externalData.add(b);
     }
   }
 
@@ -231,11 +247,13 @@ public class TracingBackend {
 
       File f = new File(VmSettings.TRACE_FILE + ".trace");
       File sf = new File(VmSettings.TRACE_FILE + ".sym");
+      File edf = new File(VmSettings.TRACE_FILE + ".dat");
       f.getParentFile().mkdirs();
 
       if (!VmSettings.DISABLE_TRACE_FILE) {
         try (FileOutputStream fos = new FileOutputStream(f);
             FileOutputStream sfos = new FileOutputStream(sf);
+            FileOutputStream edfos = new FileOutputStream(edf);
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(sfos))) {
 
           while (cont || TracingBackend.fullBuffers.size() > 0) {
@@ -260,6 +278,13 @@ public class TracingBackend {
               b.clear();
               TracingBackend.emptyBuffers.add(b);
               continue;
+            }
+
+            synchronized (externalData) {
+              while (!externalData.isEmpty()) {
+                edfos.getChannel().write(externalData.removeFirst());
+                edfos.flush();
+              }
             }
 
             synchronized (symbolsToWrite) {

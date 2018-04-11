@@ -1,11 +1,15 @@
 package tools.concurrency;
 
+import java.nio.ByteBuffer;
+
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
+import som.interpreter.actors.EventualMessage.ExternalMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
+import tools.concurrency.TracingActors.TracingActor;
 
 
 public class ActorExecutionTrace {
@@ -36,17 +40,79 @@ public class ActorExecutionTrace {
 
   public static void recordMessage(final EventualMessage msg) {
     TracingActivityThread t = getThread();
-    if (msg instanceof PromiseMessage) {
-      ((ActorTraceBuffer) t.getBuffer()).recordPromiseMessage(msg.getSender().getActorId(),
-          ((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
+    ActorTraceBuffer atb = ((ActorTraceBuffer) t.getBuffer());
+    if (msg instanceof ExternalMessage) {
+      ExternalMessage em = (ExternalMessage) msg;
+      if (msg instanceof PromiseMessage) {
+        atb.recordExternalPromiseMessage(msg.getSender().getActorId(),
+            ((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor(),
+            em.getMethod(), em.getDataId());
+      } else {
+        atb.recordExternalMessage(msg.getSender().getActorId(), em.getMethod(),
+            em.getDataId());
+      }
     } else {
-      ((ActorTraceBuffer) t.getBuffer()).recordMessage(msg.getSender().getActorId());
+      if (msg instanceof PromiseMessage) {
+        atb.recordPromiseMessage(msg.getSender().getActorId(),
+            ((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
+      } else {
+        atb.recordMessage(msg.getSender().getActorId());
+      }
     }
   }
 
-  public static void actorFinished() {
+  public static void recordSystemCall(final int dataId) {
     TracingActivityThread t = getThread();
-    t.getBuffer().swapStorage();
+    ((ActorTraceBuffer) t.getBuffer()).recordSystemCall(dataId);
+  }
+
+  public static void intSystemCall(final int i) {
+    TracingActor ta = (TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
+    int dataId = ta.getActorId();
+    ByteBuffer b = getExtDataByteBuffer(ta.getActorId(), dataId, Integer.BYTES);
+    b.putInt(i);
+    recordSystemCall(dataId);
+    recordExternalData(b);
+  }
+
+  public static void longSystemCall(final long l) {
+    TracingActor ta = (TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
+    int dataId = ta.getActorId();
+    ByteBuffer b = getExtDataByteBuffer(ta.getActorId(), dataId, Long.BYTES);
+    b.putLong(l);
+    recordSystemCall(dataId);
+    recordExternalData(b);
+  }
+
+  public static void doubleSystemCall(final double d) {
+    TracingActor ta = (TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
+    int dataId = ta.getActorId();
+    ByteBuffer b = getExtDataByteBuffer(ta.getActorId(), dataId, Double.BYTES);
+    b.putDouble(d);
+    recordSystemCall(dataId);
+    recordExternalData(b);
+  }
+
+  public static void stringSystemCall(final String s) {
+    TracingActor ta = (TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
+    int dataId = ta.getActorId();
+    ByteBuffer b = getExtDataByteBuffer(ta.getActorId(), dataId, s.getBytes().length);
+    b.put(s.getBytes());
+    recordSystemCall(dataId);
+    recordExternalData(b);
+  }
+
+  public static ByteBuffer getExtDataByteBuffer(final int actor, final int dataId,
+      final int size) {
+    ByteBuffer bb = ByteBuffer.allocate(size + 12);
+    bb.putInt(actor);
+    bb.putInt(dataId);
+    bb.putInt(size);
+    return bb;
+  }
+
+  public static void recordExternalData(final ByteBuffer data) {
+    TracingBackend.addExternalData(data);
   }
 
   public static class ActorTraceBuffer extends TraceBuffer {
@@ -111,6 +177,35 @@ public class ActorExecutionTrace {
 
       writeId(usedBytes, senderId);
       writeId(usedBytes, resolverId);
+    }
+
+    public void recordExternalMessage(final int senderId, final short method,
+        final int dataId) {
+      ensureSufficientSpace(11);
+      int usedBytes = getUsedBytes(senderId);
+      storage.put((byte) (EXTERNAL_BIT | MESSAGE | (usedBytes << 4)));
+      writeId(usedBytes, senderId);
+      storage.putShort(method);
+      storage.putInt(senderId);
+    }
+
+    public void recordExternalPromiseMessage(final int senderId, final int resolverId,
+        final short method, final int dataId) {
+      ensureSufficientSpace(15);
+      int usedBytes = Math.max(getUsedBytes(resolverId), getUsedBytes(senderId));
+
+      storage.put((byte) (EXTERNAL_BIT | PROMISE_MESSAGE | (usedBytes << 4)));
+
+      writeId(usedBytes, senderId);
+      writeId(usedBytes, resolverId);
+      storage.putShort(method);
+      storage.putInt(senderId);
+    }
+
+    public void recordSystemCall(final int dataId) {
+      ensureSufficientSpace(5);
+      storage.put(SYSTEM_CALL);
+      storage.putInt(dataId);
     }
 
     private void writeId(final int usedBytes, final int id) {

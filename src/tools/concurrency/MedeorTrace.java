@@ -1,6 +1,5 @@
 package tools.concurrency;
 
-import java.nio.ByteBuffer;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -172,7 +171,6 @@ public class MedeorTrace {
       recordThreadId();
     }
 
-    @Override
     boolean swapStorage(final Activity current) {
       if (storage == null ||
           storage.position() <= (Implementation.IMPL_THREAD.getSize() +
