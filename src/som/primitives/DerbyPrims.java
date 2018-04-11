@@ -8,9 +8,8 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -18,11 +17,13 @@ import com.oracle.truffle.api.dsl.Specialization;
 import bd.primitives.Primitive;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
-import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.arrays.AtPrim;
 import som.primitives.arrays.AtPrimFactory;
+import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
@@ -62,6 +63,7 @@ public final class DerbyPrims {
   @Primitive(primitive = "derbyStart:")
   public abstract static class StartDerbyPrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final Object doStart(final Object o) {
       try {
         Class.forName(DRIVER);
@@ -78,6 +80,7 @@ public final class DerbyPrims {
   @Primitive(primitive = "derbyStop:")
   public abstract static class StopDerbyPrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final Object doStop(final Object o) {
       try {
         DriverManager.getConnection("jdbc:derby:;shutdown=true");
@@ -90,12 +93,14 @@ public final class DerbyPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "derbyGetConnection:")
-  public abstract static class DerbyGetConnectionPrim extends UnaryExpressionNode {
-    public final String PROTOCOL = "jdbc:derby:derby/";
+  @Primitive(primitive = "derbyGetConnection:ifFail:")
+  public abstract static class DerbyGetConnectionPrim extends BinaryComplexOperation {
+    public final String                PROTOCOL        = "jdbc:derby:derby/";
+    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
-    public final Object getConnection(final String dbName) {
+    @TruffleBoundary
+    public final Object getConnection(final String dbName, final SBlock fail) {
 
       try {
         Connection conn =
@@ -103,29 +108,31 @@ public final class DerbyPrims {
 
         return new SDerbyConnection(conn);
       } catch (SQLException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
+        return dispatchHandler.executeDispatch(new Object[] {fail,
+            Symbols.symbolFor("SQLException" + e.getErrorCode()), e.getMessage()});
       }
-      return Nil.nilObject;
     }
   }
 
   @GenerateNodeFactory
   @ImportStatic(DerbyPrims.class)
-  @Primitive(primitive = "derby:prepareStatement:")
-  public abstract static class DerbyPrepareStatementPrim extends BinaryExpressionNode {
-    public final String PROTOCOL = "jdbc:derby:";
+  @Primitive(primitive = "derby:prepareStatement:ifFail:")
+  public abstract static class DerbyPrepareStatementPrim extends TernaryExpressionNode {
+    public final String                PROTOCOL        = "jdbc:derby:";
+    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
-    public final Object getConnection(final SDerbyConnection conn, final String query) {
+    @TruffleBoundary
+    public final Object getConnection(final SDerbyConnection conn, final String query,
+        final SBlock fail) {
       PreparedStatement ps;
       try {
         ps = conn.getConnection().prepareStatement(query);
         return new SDerbyConnection.SDerbyPreparedStatement(ps);
       } catch (SQLException e) {
-        e.printStackTrace();
+        return dispatchHandler.executeDispatch(new Object[] {fail,
+            Symbols.symbolFor("SQLException" + e.getErrorCode()), e.getMessage()});
       }
-      return Nil.nilObject;
     }
   }
 
@@ -142,8 +149,11 @@ public final class DerbyPrims {
           storage[i] = new SImmutableArray(a.getArray(), Classes.arrayClass);
         } else if (storage[i] instanceof Integer) {
           storage[i] = ((Integer) storage[i]).longValue();
+        } else if (storage[i] == null) {
+          storage[i] = Nil.nilObject;
         }
       }
+
       results.add(new SImmutableArray(storage, Classes.arrayClass));
     }
 
@@ -152,75 +162,71 @@ public final class DerbyPrims {
 
   @GenerateNodeFactory
   @ImportStatic(DerbyPrims.class)
-  @Primitive(primitive = "derby:executePreparedStatement:callback:")
-  public abstract static class DerbyExecutePrepareStatementPrim extends TernaryExpressionNode {
+  @Primitive(primitive = "derby:executePreparedStatement:callback:ifFail:")
+  public abstract static class DerbyExecutePrepareStatementPrim
+      extends QuaternaryExpressionNode {
     public final String                PROTOCOL        = "jdbc:derby:";
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
     @Child protected AtPrim            arrayAt         = AtPrimFactory.create(null, null);
 
     @Specialization
+    @TruffleBoundary
     public final Object execute(final SDerbyPreparedStatement statement,
         final SArray parameters,
-        final SBlock callback) {
+        final SBlock callback,
+        final SBlock fail) {
       try {
         PreparedStatement prep = statement.getStatement();
         prep.clearParameters();
 
-        List<Object> params = Arrays.asList(parameters.getStoragePlain());
-
         for (int i = 1; i <= prep.getParameterMetaData().getParameterCount(); i++) {
-          prep.setObject(i, arrayAt.execute(null, parameters, i));
+          Object o = arrayAt.execute(null, parameters, i);
+          prep.setObject(i, o);
         }
 
         if (prep.execute()) {
           ResultSet result = prep.getResultSet();
-          dispatchHandler.executeDispatch(
-              new Object[] {callback, Nil.nilObject, processResults(result)});
+          return dispatchHandler.executeDispatch(
+              new Object[] {callback, processResults(result)});
         } else {
-          dispatchHandler.executeDispatch(
-              new Object[] {callback, Nil.nilObject, (long) prep.getUpdateCount()});
+          return dispatchHandler.executeDispatch(
+              new Object[] {callback, (long) prep.getUpdateCount()});
         }
       } catch (SQLException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-        dispatchHandler.executeDispatch(
-            new Object[] {callback, 1, Nil.nilObject});
+        return dispatchHandler.executeDispatch(new Object[] {fail,
+            Symbols.symbolFor("SQLException" + e.getErrorCode()), e.getMessage()});
       }
-
-      return statement;
     }
   }
 
   @GenerateNodeFactory
   @ImportStatic(DerbyPrims.class)
-  @Primitive(primitive = "derby:executeStatement:callback:")
-  public abstract static class DerbyExecuteStatementPrim extends TernaryExpressionNode {
+  @Primitive(primitive = "derby:executeStatement:callback:ifFail:")
+  public abstract static class DerbyExecuteStatementPrim extends QuaternaryExpressionNode {
     public final String                PROTOCOL        = "jdbc:derby:";
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
+    @TruffleBoundary
     public final Object execute(final SDerbyConnection connection,
         final String query,
-        final SBlock callback) {
+        final SBlock callback,
+        final SBlock fail) {
       try {
         Statement statement = connection.getConnection().createStatement();
 
         if (statement.execute(query)) {
           ResultSet result = statement.getResultSet();
-          dispatchHandler.executeDispatch(
-              new Object[] {callback, Nil.nilObject, processResults(result)});
+          return dispatchHandler.executeDispatch(
+              new Object[] {callback, processResults(result)});
         } else {
-          dispatchHandler.executeDispatch(
-              new Object[] {callback, Nil.nilObject, (long) statement.getUpdateCount()});
+          return dispatchHandler.executeDispatch(
+              new Object[] {callback, (long) statement.getUpdateCount()});
         }
       } catch (SQLException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-        dispatchHandler.executeDispatch(
-            new Object[] {callback, 1, Nil.nilObject});
+        return dispatchHandler.executeDispatch(new Object[] {fail,
+            Symbols.symbolFor("SQLException" + e.getErrorCode()), e.getMessage()});
       }
-
-      return connection;
     }
 
   }

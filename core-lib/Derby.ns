@@ -1,34 +1,53 @@
 class Derby usingVmMirror: vmMirror usingPlatform: platform = Value (
  |
    private vmMirror  = vmMirror.
+   private Exception = platform kernel Exception.
  |
   vmMirror derbyConnectionClass: DerbyConnection.
   vmMirror derbyPrepStatementClass: PreparedStatement.
 )(
   public class DerbyConnection = Value ()(
+    public close = ()
 
-      public close = ()
+    public prepareStatement: statement <String> ifFail: failBlock <Block> ^ <PreparedStatement> = (
+      ^ vmMirror derby: self prepareStatement: statement ifFail: failBlock.
+    )
 
-      public prepareStatement: statement <String> ^ <PreparedStatement> = (
-        ^ vmMirror derby: self prepareStatement: statement.
-      )
+    public prepareStatement: statement <String> ^ <PreparedStatement> = (
+      ^ self prepareStatement: statement ifFail: defaultHandler.
+    )
 
-      public execute: statement <String> callback: aBlock = (
-        ^ vmMirror derby: self executeStatement: statement callback: aBlock.
-      )
+    public execute: statement <String> callback: aBlock ifFail: failBlock= (
+      ^ vmMirror derby: self executeStatement: statement callback: aBlock ifFail: failBlock.
+    )
+
+    public execute: statement <String> callback: aBlock = (
+      ^ self execute: statement callback: aBlock ifFail: defaultHandler.
+    )
   ) : (
     private new = ( self error: 'use Derby #getConnection: instead')
   )
 
   public class PreparedStatement = ()(
+    public execute: args <Array> callback: aBlock <Block> ifFail: failBlock = (
+      ^ vmMirror derby: self executePreparedStatement: args callback: aBlock ifFail: failBlock.
+    )
+
     public execute: args <Array> callback: aBlock <Block> = (
-      ^ vmMirror derby: self executePreparedStatement: args callback: aBlock.
+      self execute: args callback: aBlock ifFail: defaultHandler.
     )
   ) : (
     new = ( self error: 'use DerbyConnection #prepareStatement: instead')
   )
 
-  public class SQLException = Exception ()()
+  public class SQLException signalWith: aMessage = Exception (
+    | public message = aMessage. |
+    self signal.
+  )(
+    public asString = (
+      ^ 'SQLException(' + message + ')'
+    )
+  )
 
   public start = (
     vmMirror derbyStart: nil.
@@ -38,7 +57,20 @@ class Derby usingVmMirror: vmMirror usingPlatform: platform = Value (
     vmMirror derbyStop: nil.
   )
 
+  public getConnection: dbName ifFail: failBlock = (
+    ^ vmMirror derbyGetConnection: dbName ifFail: failBlock.
+  )
+
   public getConnection: dbName = (
-    ^ vmMirror derbyGetConnection: dbName.
+    ^ self getConnection: dbName ifFail: defaultHandler.
+  )
+
+  public defaultHandler = (
+    ^ [ :sym :msg |
+      (sym asString beginsWith: 'SQLException') ifTrue: [
+        ('' + sym + '   ' + msg) println.
+        SQLException signalWith: msg.
+      ]
+    ]
   )
 )
