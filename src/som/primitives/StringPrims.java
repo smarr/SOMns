@@ -148,6 +148,7 @@ public class StringPrims {
       }
     }
 
+    @TruffleBoundary
     @Specialization
     public final String doString(final String receiver, final long idx) {
       int i = (int) idx - 1;

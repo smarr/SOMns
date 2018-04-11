@@ -8,6 +8,7 @@ import java.util.Objects;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.primitives.PathPrims;
@@ -70,6 +71,7 @@ public class SFileDescriptor extends SObjectWithClass {
     }
   }
 
+  @TruffleBoundary
   public int read(final long position, final SBlock fail,
       final BlockDispatchNode dispatchHandler) {
     if (raf == null) {
@@ -104,6 +106,7 @@ public class SFileDescriptor extends SObjectWithClass {
     return bytes;
   }
 
+  @TruffleBoundary
   public void write(final int nBytes, final long position, final SBlock fail,
       final BlockDispatchNode dispatchHandler) {
     if (raf == null) {

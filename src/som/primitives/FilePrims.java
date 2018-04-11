@@ -1,6 +1,7 @@
 package som.primitives;
 
 import com.oracle.truffle.api.dsl.Fallback;
+import java.util.UUID;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -154,6 +155,15 @@ public final class FilePrims {
         final long offset, final SBlock fail) {
       file.write((int) nBytes, offset, fail, dispatchHandler);
       return file;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "uuidV4:")
+  public abstract static class UUIDPrim extends UnaryExpressionNode {
+    @Specialization
+    public final String getUUIDv4(final Object o) {
+      return UUID.randomUUID().toString();
     }
   }
 }
