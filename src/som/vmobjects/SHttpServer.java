@@ -14,6 +14,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.source.SourceSection;
@@ -22,7 +23,6 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 import com.sun.net.httpserver.HttpServer;
 
-import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor;
@@ -33,12 +33,12 @@ import som.interpreter.actors.SFarReference;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vm.Symbols;
+import tools.concurrency.SExternalDataSource;
 
 
-public class SHttpServer extends SObjectWithClass {
+public class SHttpServer extends SObjectWithClass implements SExternalDataSource {
   @CompilationFinal public static SClass httpServerClass;
-  @CompilationFinal public static SClass httpRequestClass;
-  @CompilationFinal public static SClass httpResponseClass;
+  @CompilationFinal public static SClass httpExchangeClass;
 
   private final HttpServer   server;
   private final Actor        serverActor;
@@ -50,12 +50,8 @@ public class SHttpServer extends SObjectWithClass {
     httpServerClass = cls;
   }
 
-  public static void setRequestSOMClass(final SClass cls) {
-    httpRequestClass = cls;
-  }
-
-  public static void setResponseSOMClass(final SClass cls) {
-    httpResponseClass = cls;
+  public static void setExchangeSOMClass(final SClass cls) {
+    httpExchangeClass = cls;
   }
 
   public SHttpServer(final InetSocketAddress address, final ForkJoinPool actorPool,
@@ -91,7 +87,7 @@ public class SHttpServer extends SObjectWithClass {
     if (p.contains(":")) {
       p = p.substring(0, p.indexOf(":"));
     }
-    VM.println(p);
+    System.out.println(p);
 
     DynamicHttpHandler dyn = new DynamicHttpHandler(path);
     dyn.addHandler(method, handler);
@@ -130,8 +126,7 @@ public class SHttpServer extends SObjectWithClass {
 
     @Override
     public void handle(final HttpExchange exch) throws IOException {
-      SHttpResponse response = new SHttpResponse(exch);
-      SHttpRequest request = new SHttpRequest(exch);
+      SHttpExchange exchange = new SHttpExchange(exch);
 
       if (path.contains(":")) {
         String[] requesPath = exch.getRequestURI().getPath().toString().split("/");
@@ -139,7 +134,7 @@ public class SHttpServer extends SObjectWithClass {
         if (requesPath.length >= handlerPath.length) {
           for (int i = 0; i < handlerPath.length; i++) {
             if (handlerPath[i].startsWith(":")) {
-              request.attributes.put("params." + handlerPath[i].substring(1), requesPath[i]);
+              exchange.attributes.put("params." + handlerPath[i].substring(1), requesPath[i]);
             }
           }
         } else {
@@ -153,11 +148,11 @@ public class SHttpServer extends SObjectWithClass {
 
         for (SFarReference obj : handlers.get(requestMethod)) {
           // check that response hasnt been sent by a previous handler
-          if (response.isClosed()) {
+          if (exchange.isClosed()) {
             break;
           }
 
-          SSymbol selector = Symbols.symbolFor("value:with:");
+          SSymbol selector = Symbols.symbolFor("value:");
 
           SAbstractObject o = (SAbstractObject) obj.getValue();
 
@@ -169,17 +164,21 @@ public class SHttpServer extends SObjectWithClass {
 
           DirectMessage msg =
               new DirectMessage(obj.getActor(), selector,
-                  new Object[] {obj.getValue(), request, response}, serverActor, null, rct,
+                  new Object[] {obj.getValue(), exchange}, serverActor, null, rct,
                   false, false);
 
           obj.getActor().send(msg, actorPool);
         }
       } else {
-        VM.println("ignored Request");
+        System.out.println("ignored Request");
       }
     }
   }
 
+  /**
+   * StaticHttpHandlers don't need to be considered in replay, the events don't trigger, and
+   * there is no inteartion with SOMns code.
+   */
   class StaticHttpHandler implements HttpHandler {
     private final String root;
     private final String base;
@@ -195,7 +194,6 @@ public class SHttpServer extends SObjectWithClass {
 
     @Override
     public void handle(final HttpExchange t) throws IOException {
-
       URI uri = t.getRequestURI();
       assert uri.getPath().startsWith(base);
 
@@ -207,7 +205,7 @@ public class SHttpServer extends SObjectWithClass {
         String response = "404 (Not Found)\n";
         t.sendResponseHeaders(404, response.length());
         OutputStream os = t.getResponseBody();
-        VM.println("" + uri);
+        System.out.println("" + uri);
         os.write(response.getBytes());
         os.close();
       } else {
@@ -347,16 +345,25 @@ public class SHttpServer extends SObjectWithClass {
     }
   }
 
-  public class SHttpResponse extends SObjectWithClass {
-
+  public class SHttpExchange extends SObjectWithClass {
     private final HttpExchange exchange;
-    // default is OK
+
+    // Request
+    private final String            requestBody;
+    private HashMap<String, String> requestCookies;
+    private HashMap<String, Object> attributes;
+
+    // Response Fields
     private long    status = 200;
     private boolean closed = false;
 
-    public SHttpResponse(final HttpExchange exchange) {
-      super(httpResponseClass, httpResponseClass.getInstanceFactory());
+    public SHttpExchange(final HttpExchange exchange) {
+      super(httpExchangeClass, httpExchangeClass.getInstanceFactory());
       this.exchange = exchange;
+      this.requestBody = new BufferedReader(
+          new InputStreamReader(exchange.getRequestBody())).lines().collect(
+              Collectors.joining("\n"));
+      this.attributes = new HashMap<>();
     }
 
     @Override
@@ -368,6 +375,37 @@ public class SHttpServer extends SObjectWithClass {
       return exchange;
     }
 
+    public String getBody() {
+      return this.requestBody;
+    }
+
+    public void setAttribute(final String key, final Object value) {
+      attributes.put(key, value);
+    }
+
+    public Object getAttribute(final String key) {
+      return attributes.get(key);
+    }
+
+    @TruffleBoundary
+    public Object getCookie(final String key) {
+      if (requestCookies == null) {
+        requestCookies = new HashMap<>();
+        for (String entry : exchange.getRequestHeaders().get("Cookie")) {
+
+          for (String e : entry.split(";")) {
+            String[] keyval = e.split("=");
+            if (keyval.length == 2) {
+              requestCookies.put(keyval[0].trim(), keyval[1].trim());
+            }
+          }
+        }
+      }
+
+      return requestCookies.get(key);
+    }
+
+    // Response Methods
     public long getStatus() {
       return status;
     }
@@ -385,58 +423,9 @@ public class SHttpServer extends SObjectWithClass {
     }
   }
 
-  public class SHttpRequest extends SObjectWithClass {
+  @Override
+  public void requestExternalMessage(final short method, final int dataId) {
+    // TODO Auto-generated method stub
 
-    private final HttpExchange      exchange;
-    private final String            body;
-    private HashMap<String, String> cookies;
-    private HashMap<String, Object> attributes;
-
-    public SHttpRequest(final HttpExchange exchange) {
-      super(httpRequestClass, httpRequestClass.getInstanceFactory());
-      this.exchange = exchange;
-      this.body = new BufferedReader(
-          new InputStreamReader(exchange.getRequestBody())).lines().collect(
-              Collectors.joining("\n"));
-      this.attributes = new HashMap<>();
-    }
-
-    @Override
-    public boolean isValue() {
-      return false;
-    }
-
-    public HttpExchange getExchange() {
-      return exchange;
-    }
-
-    public String getBody() {
-      return this.body;
-    }
-
-    public void setAttribute(final String key, final Object value) {
-      attributes.put(key, value);
-    }
-
-    public Object getAttribute(final String key) {
-      return attributes.get(key);
-    }
-
-    public Object getCookie(final String key) {
-      if (cookies == null) {
-        cookies = new HashMap<>();
-        for (String entry : exchange.getRequestHeaders().get("Cookie")) {
-
-          for (String e : entry.split(";")) {
-            String[] keyval = e.split("=");
-            if (keyval.length == 2) {
-              cookies.put(keyval[0].trim(), keyval[1].trim());
-            }
-          }
-        }
-      }
-
-      return cookies.get(key);
-    }
   }
 }

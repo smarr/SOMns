@@ -26,8 +26,7 @@ class Http usingVmMirror: vmMirror usingPlatform: platform = Value (
     private actors = platform actors.
   |
   vmMirror httpServerClass: Server.
-  vmMirror httpResponseClass: Response.
-  vmMirror httpRequestClass: Request.
+  vmMirror httpExchangeClass: Exchange.
 ) (
 
   public class Server = ()():(
@@ -71,33 +70,33 @@ class Http usingVmMirror: vmMirror usingPlatform: platform = Value (
     )
   )
 
-  public class Request = ()(
+  public class Exchange = (
+     | statusCode ::= 200. (*default is OK*) |
+  )(
     (*modify request attributes*)
     public at: key <String> ^ <Object> = (
-      ^ vmMirror httpRequest: self getAttribute: key.
+      ^ vmMirror httpExchange: self getAttribute: key.
     )
 
     public at: key <String> put: value <Object> = (
-      ^ vmMirror httpRequest: self setAttribute: key to: value.
+      ^ vmMirror httpExchange: self setAttribute: key to: value.
     )
 
     (*get values of a HeaderField*)
     public get: field <String> ^ <Array> = (
-      ^ vmMirror httpRequest: self getHeader: field.
+      ^ vmMirror httpExchange: self getHeader: field.
     )
 
-    public body = (
-      ^ vmMirror httpRequestGetBody: self
+    public requestBody = (
+      ^ vmMirror httpExchangeGetRequestBody: self
     )
 
-    public getQuery = (
-      self contentType println.
-      ^ parseUrlBody: (vmMirror httpRequestGetQuery: self)
+    public getRequestQuery = (
+      ^ parseUrlBody: (vmMirror httpExchangeGetRequestQuery: self)
     )
 
     parseUrlBody: body = (
     | result pairs comp|
-      body println.
       result:: Dictionary new.
 
       pairs:: (body split: '&').
@@ -113,63 +112,59 @@ class Http usingVmMirror: vmMirror usingPlatform: platform = Value (
 
     )
 
-    public contentType = (
+    public requestContentType = (
       ^ (self get: 'Content-Type') at: 1
     )
 
     (*return the value of a cookie*)
-    public cookie: name <Symbol> = (
-      ^ vmMirror httpRequest: self getCookie: (name asString).
+    public requestCookie: name <Symbol> = (
+      ^ vmMirror httpExchange: self getRequestCookie: (name asString).
     )
-  ) : (
-    private new = ( self error: 'Should not happen' )
-  )
 
-  public class Response = (
-    | statusCode ::= 200. (*default is OK*) |
-  ) (
-    public cookie: name <String> with: value <String> = (
-      header: 'Set-Cookie' value: (name + '=' + value).
+    (*Response stuff*)
+    public responseCookie: name <String> with: value <String> = (
+      responseHeader: 'Set-Cookie' value: (name + '=' + value).
     )
 
     (*set status header, and send string representation as body*)
-    public sendStatus: status <int> = (
-      ^ (status: status) send: ('' + status).
+    public sendResponseStatus: status <int> = (
+      ^ (responseStatus: status) sendResponse: ('' + status).
     )
 
     (*set response status*)
-    public status: status <int> = (
-      vmMirror httpResponse: self setStatus: status.
+    public responseStatus: status <int> = (
+      vmMirror httpExchange: self setResponseStatus: status.
       ^ self.
     )
 
     (*send response without Body*)
-    public send = (
-      send: ''.
+    public sendResponse = (
+      sendResponse: ''.
     )
 
     (*send response with Body*)
-    public send: body <String> = (
+    public sendResponse: body <String> = (
       (* TODO set content type*)
-      vmMirror httpResponse: self send: body.
+      vmMirror httpExchange: self send: body.
     )
 
     (*send response with Body*)
-    public send: body <String> with: status= (
+    public sendResponse: body <String> with: status= (
       (* TODO set content type*)
-      vmMirror httpResponse: self setStatus: status.
-      vmMirror httpResponse: self send: body.
+      vmMirror httpExchange: self setStatus: status.
+      vmMirror httpExchange: self send: body.
     )
 
     (*Set Response HTTP Header*)
-    public header: field <String> value: value <String> = (
-      vmMirror httpResponse: self setHeader: field to: value.
+    public responseHeader: field <String> value: value <String> = (
+      vmMirror httpExchange: self setResponseHeader: field to: value.
     )
 
     (*set content type HTTP Header*)
-    public contentType: type <String> = (
-      header: 'Content-Type' value: type.
+    public responseContentType: type <String> = (
+      responseHeader: 'Content-Type' value: type.
     )
+    
   ) : (
     private new = ( self error: 'Should not happen' )
   )

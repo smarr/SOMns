@@ -8,9 +8,11 @@ import java.net.URLDecoder;
 import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.sun.net.httpserver.HttpExchange;
 
 import bd.primitives.Primitive;
 import som.VM;
@@ -21,14 +23,14 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SHttpServer;
-import som.vmobjects.SHttpServer.SHttpRequest;
-import som.vmobjects.SHttpServer.SHttpResponse;
+import som.vmobjects.SHttpServer.SHttpExchange;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
@@ -48,22 +50,11 @@ public class HttpPrims {
 
   @GenerateNodeFactory
   @ImportStatic(HttpPrims.class)
-  @Primitive(primitive = "httpRequestClass:")
+  @Primitive(primitive = "httpExchangeClass:")
   public abstract static class HttpSetRequestClassPrim extends UnaryExpressionNode {
     @Specialization
     public final SClass setClass(final SClass value) {
-      SHttpServer.setRequestSOMClass(value);
-      return value;
-    }
-  }
-
-  @GenerateNodeFactory
-  @ImportStatic(HttpPrims.class)
-  @Primitive(primitive = "httpResponseClass:")
-  public abstract static class HttpSetResponseClassPrim extends UnaryExpressionNode {
-    @Specialization
-    public final SClass setClass(final SClass value) {
-      SHttpServer.setResponseSOMClass(value);
+      SHttpServer.setExchangeSOMClass(value);
       return value;
     }
   }
@@ -153,23 +144,26 @@ public class HttpPrims {
 
   @GenerateNodeFactory
   @ImportStatic(HttpPrims.class)
-  @Primitive(primitive = "httpResponse:setHeader:to:")
+  @Primitive(primitive = "httpExchange:setResponseHeader:to:")
   public abstract static class HttpSetHeaderPrim extends TernaryExpressionNode {
     @Specialization
-    public final SHttpResponse setClass(final SHttpResponse response, final String header,
+    public final SHttpExchange getHeader(final SHttpExchange response, final String header,
         final String value) {
-      response.getExchange().getResponseHeaders().add(header, value);
+      if (!VmSettings.REPLAY) {
+        response.getExchange().getResponseHeaders().add(header, value);
+      }
       return response;
     }
   }
 
   @GenerateNodeFactory
   @ImportStatic(HttpPrims.class)
-  @Primitive(primitive = "httpRequest:getHeader:")
+  @Primitive(primitive = "httpExchange:getRequestHeader:")
   public abstract static class HttpGetHeaderPrim extends BinaryExpressionNode {
     @Specialization
-    public final Object setClass(final SHttpRequest request, final String header) {
+    public final Object getHeader(final SHttpExchange request, final String header) {
 
+      // TODO systemcall
       if (!request.getExchange().getRequestHeaders().containsKey(header)) {
         return Nil.nilObject;
       }
@@ -184,40 +178,47 @@ public class HttpPrims {
 
   @GenerateNodeFactory
   @ImportStatic(HttpPrims.class)
-  @Primitive(primitive = "httpRequestGetBody:")
+  @Primitive(primitive = "httpExchangeGetRequestBody:")
   public abstract static class HttpGetBodyPrim extends UnaryExpressionNode {
     @Specialization
-    public final Object getBody(final SHttpRequest request) {
+    public final Object getBody(final SHttpExchange request) {
+      // TODO systemcall
       return request.getBody();
     }
   }
 
   @GenerateNodeFactory
   @ImportStatic(HttpPrims.class)
-  @Primitive(primitive = "httpRequestGetQuery:")
+  @Primitive(primitive = "httpExchangeGetRequestQuery:")
   public abstract static class HttpGetDecodedUrlPrim extends UnaryExpressionNode {
     @Specialization
-    public final Object getUrl(final SHttpRequest request) {
+    public final Object getUrl(final SHttpExchange request) {
+      // TODO systemcall
       if (request.getExchange().getRequestURI().getQuery() != null) {
         return request.getExchange().getRequestURI().getQuery();
       }
 
       try {
-        return URLDecoder.decode(request.getBody(), "utf-8");
+        return decodeURL(request.getBody());
       } catch (UnsupportedEncodingException e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
       }
       return "";
     }
+
+    @TruffleBoundary
+    private Object decodeURL(final String url) throws UnsupportedEncodingException {
+      return URLDecoder.decode(url, "utf-8");
+    }
   }
 
   @GenerateNodeFactory
   @ImportStatic(HttpPrims.class)
-  @Primitive(primitive = "httpRequest:getAttribute:")
+  @Primitive(primitive = "httpExchange:getAttribute:")
   public abstract static class HttpGetAttributerPrim extends BinaryExpressionNode {
     @Specialization
-    public final Object setClass(final SHttpRequest request, final String key) {
+    public final Object setClass(final SHttpExchange request, final String key) {
       Object result = request.getAttribute(key);
       if (result == null) {
         return Nil.nilObject;
@@ -231,10 +232,10 @@ public class HttpPrims {
 
   @GenerateNodeFactory
   @ImportStatic(HttpPrims.class)
-  @Primitive(primitive = "httpRequest:setAttribute:to:")
+  @Primitive(primitive = "httpExchange:setAttribute:to:")
   public abstract static class HttpSetAttributePrim extends TernaryExpressionNode {
     @Specialization
-    public final SHttpRequest setClass(final SHttpRequest request, final String key,
+    public final SHttpExchange setClass(final SHttpExchange request, final String key,
         final Object value) {
       request.setAttribute(key, value);
       return request;
@@ -243,58 +244,69 @@ public class HttpPrims {
 
   @GenerateNodeFactory
   @ImportStatic(HttpPrims.class)
-  @Primitive(primitive = "httpRequest:getCookie:")
+  @Primitive(primitive = "httpExchange:getRequestCookie:")
   public abstract static class HttpGetCookiePrim extends BinaryExpressionNode {
     @Specialization
-    public final Object setClass(final SHttpRequest request, final String key) {
+    public final Object setClass(final SHttpExchange request, final String key) {
       return request.getCookie(key);
     }
   }
 
   @GenerateNodeFactory
   @ImportStatic(HttpPrims.class)
-  @Primitive(primitive = "httpResponse:send:")
+  @Primitive(primitive = "httpExchange:send:")
   public abstract static class HttpSendResponsePrim extends BinaryExpressionNode {
     @Specialization
-    public final SHttpResponse setClass(final SHttpResponse response, final String body) {
+    public final SHttpExchange setClass(final SHttpExchange response, final String body) {
+      if (VmSettings.REPLAY) {
+        return response;
+      }
 
       try {
-        response.getExchange().sendResponseHeaders((int) response.getStatus(),
+        sendResponse(response.getExchange(), body, (int) response.getStatus());
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+
+      response.setClosed(true);
+
+      return response;
+    }
+
+    @Specialization
+    public final SHttpExchange setClass(final SHttpExchange response, final Object body) {
+      return setClass(response, body.toString());
+    }
+
+    @TruffleBoundary
+    private void sendResponse(final HttpExchange exch, final String body, final int status)
+        throws IOException {
+      try {
+        exch.sendResponseHeaders(status,
             body.getBytes().length);
       } catch (IOException e) {
         // TODO Auto-generated catch block
         e.printStackTrace();
       }
 
-      try {
-        OutputStream os = response.getExchange().getResponseBody();
-        os.write(body.getBytes());
-        os.flush();
-        os.close();
-      } catch (IOException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
-      }
+      OutputStream os = exch.getResponseBody();
+      os.write(body.getBytes());
+      os.flush();
+      os.close();
 
-      response.setClosed(true);
-      response.getExchange().close();
-
-      return response;
-    }
-
-    @Specialization
-    public final SHttpResponse setClass(final SHttpResponse response, final Object body) {
-      return setClass(response, body.toString());
+      exch.close();
     }
   }
 
   @GenerateNodeFactory
   @ImportStatic(HttpPrims.class)
-  @Primitive(primitive = "httpResponse:setStatus:")
+  @Primitive(primitive = "httpExchange:setResponseStatus:")
   public abstract static class HttpSetResponseStatusPrim extends BinaryExpressionNode {
     @Specialization
-    public final SHttpResponse setStatus(final SHttpResponse response, final long status) {
-      response.setStatus(status);
+    public final SHttpExchange setStatus(final SHttpExchange response, final long status) {
+      if (!VmSettings.REPLAY) {
+        response.setStatus(status);
+      }
       return response;
     }
   }

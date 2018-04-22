@@ -609,7 +609,7 @@ DAMAGE.>> *)
     )
 
     public readWriteStream ^ <ExternalReadWriteStream> = (
-      ^ExternalReadWriteStream onDescriptor: (self open: #readwrite)
+      ^ExternalReadWriteStream onDescriptor: (self open: #readWrite)
     )
 
     public writeStream ^ <ExternalReadWriteStream> = (
