@@ -1,5 +1,6 @@
 package tools.concurrency;
 
+import java.nio.charset.StandardCharsets;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.ExternalMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
@@ -92,10 +93,18 @@ public class ActorExecutionTrace {
   public static void stringSystemCall(final String s) {
     TracingActor ta = (TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
     int dataId = ta.getActorId();
-    ByteBuffer b = getExtDataByteBuffer(ta.getActorId(), dataId, s.getBytes().length);
-    b.put(s.getBytes());
+    byte[] bytes = getStringBytes(s);
+    ByteBuffer b =
+        getExtDataByteBuffer(ta.getActorId(), dataId, bytes.length + Integer.BYTES);
+    b.putInt(bytes.length);
+    b.put(bytes);
     recordSystemCall(dataId);
     recordExternalData(b);
+  }
+
+  @TruffleBoundary
+  private static byte[] getStringBytes(final String s) {
+    return s.getBytes(StandardCharsets.UTF_8);
   }
 
   public static ByteBuffer getExtDataByteBuffer(final int actor, final int dataId,

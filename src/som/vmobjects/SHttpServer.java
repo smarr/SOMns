@@ -8,6 +8,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.URI;
+import java.nio.ByteBuffer;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.ForkJoinPool;
@@ -28,11 +30,14 @@ import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.DirectMessage;
+import som.interpreter.actors.EventualMessage.ExternalDirectMessage;
 import som.interpreter.actors.ReceivedMessage;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vm.Symbols;
+import som.vm.VmSettings;
+import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.SExternalDataSource;
 
 
@@ -58,18 +63,23 @@ public class SHttpServer extends SObjectWithClass implements SExternalDataSource
       final SomLanguage language)
       throws IOException {
     super(httpServerClass, httpServerClass.getInstanceFactory());
-    this.server = HttpServer.create(address, 0);
-    this.server.setExecutor(null);
+
     this.actorPool = actorPool;
     this.language = language;
     this.serverActor = EventualMessage.getActorCurrentMessageIsExecutionOn();
     this.root = new PathNode();
-    server.createContext("/", new HttpHandler() {
-      @Override
-      public void handle(final HttpExchange exchange) throws IOException {
-        root.handle(exchange.getRequestURI().getPath(), exchange);
-      }
-    });
+    if (!VmSettings.REPLAY) {
+      this.server = HttpServer.create(address, 0);
+      this.server.setExecutor(null);
+      server.createContext("/", new HttpHandler() {
+        @Override
+        public void handle(final HttpExchange exchange) throws IOException {
+          root.handle(exchange.getRequestURI().getPath(), exchange);
+        }
+      });
+    } else {
+      this.server = null;
+    }
   }
 
   @Override
@@ -162,10 +172,29 @@ public class SHttpServer extends SObjectWithClass implements SExternalDataSource
           RootCallTarget rct = createOnReceiveCallTarget(selector,
               s.getSourceSection(), language);
 
-          DirectMessage msg =
-              new DirectMessage(obj.getActor(), selector,
-                  new Object[] {obj.getValue(), exchange}, serverActor, null, rct,
-                  false, false);
+          DirectMessage msg;
+          if (VmSettings.ACTOR_TRACING) {
+            int dataId = serverActor.getDataId();
+
+            // serialize request method and path
+            byte[] data = String
+                                .join("ä", exch.getRequestURI().getPath().toString(),
+                                    exchange.getExchange().getRequestMethod())
+                                .getBytes(StandardCharsets.UTF_8);
+            ByteBuffer b =
+                ActorExecutionTrace.getExtDataByteBuffer(serverActor.getActorId(), dataId,
+                    data.length);
+            b.put(data);
+            ActorExecutionTrace.recordExternalData(b);
+
+            msg = new ExternalDirectMessage(obj.getActor(), selector,
+                new Object[] {obj.getValue(), exchange}, serverActor, null, rct,
+                false, false, (short) 0, dataId);
+          } else {
+            msg = new DirectMessage(obj.getActor(), selector,
+                new Object[] {obj.getValue(), exchange}, serverActor, null, rct,
+                false, false);
+          }
 
           obj.getActor().send(msg, actorPool);
         }
@@ -325,11 +354,13 @@ public class SHttpServer extends SObjectWithClass implements SExternalDataSource
     public void accept(final HttpExchange exchange) {
       if (handler == null) {
         try {
-          String response = "404 (Not Found)\n";
-          exchange.sendResponseHeaders(404, response.length());
-          OutputStream os = exchange.getResponseBody();
-          os.write(response.getBytes());
-          os.close();
+          if (!VmSettings.REPLAY) {
+            String response = "404 (Not Found)\n";
+            exchange.sendResponseHeaders(404, response.length());
+            OutputStream os = exchange.getResponseBody();
+            os.write(response.getBytes());
+            os.close();
+          }
         } catch (IOException e) {
           // TODO Auto-generated catch block
           e.printStackTrace();
@@ -388,7 +419,7 @@ public class SHttpServer extends SObjectWithClass implements SExternalDataSource
     }
 
     @TruffleBoundary
-    public Object getCookie(final String key) {
+    public String getCookie(final String key) {
       if (requestCookies == null) {
         requestCookies = new HashMap<>();
         for (String entry : exchange.getRequestHeaders().get("Cookie")) {

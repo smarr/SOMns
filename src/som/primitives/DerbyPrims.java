@@ -228,7 +228,6 @@ public final class DerbyPrims {
             Symbols.symbolFor("SQLException" + e.getErrorCode()), e.getMessage()});
       }
     }
-
   }
 
 }

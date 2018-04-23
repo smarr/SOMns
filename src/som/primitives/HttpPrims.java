@@ -26,16 +26,16 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
-import som.vmobjects.SArray;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SHttpServer;
 import som.vmobjects.SHttpServer.SHttpExchange;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
+import tools.concurrency.ActorExecutionTrace;
 
 
-public class HttpPrims {
+public final class HttpPrims {
 
   @GenerateNodeFactory
   @ImportStatic(HttpPrims.class)
@@ -90,7 +90,9 @@ public class HttpPrims {
   public abstract static class HttpStartServerPrim extends UnaryExpressionNode {
     @Specialization
     public final SHttpServer startServer(final SHttpServer server) {
-      server.getServer().start();
+      if (!VmSettings.REPLAY) {
+        server.getServer().start();
+      }
       return server;
     }
   }
@@ -101,7 +103,9 @@ public class HttpPrims {
   public abstract static class HttpStopServerPrim extends BinaryExpressionNode {
     @Specialization
     public final SHttpServer stopServer(final SHttpServer server, final long delay) {
-      server.getServer().stop(0);
+      if (!VmSettings.REPLAY) {
+        server.getServer().stop(0);
+      }
       return server;
     }
   }
@@ -147,7 +151,7 @@ public class HttpPrims {
   @Primitive(primitive = "httpExchange:setResponseHeader:to:")
   public abstract static class HttpSetHeaderPrim extends TernaryExpressionNode {
     @Specialization
-    public final SHttpExchange getHeader(final SHttpExchange response, final String header,
+    public final SHttpExchange setHeader(final SHttpExchange response, final String header,
         final String value) {
       if (!VmSettings.REPLAY) {
         response.getExchange().getResponseHeaders().add(header, value);
@@ -163,16 +167,33 @@ public class HttpPrims {
     @Specialization
     public final Object getHeader(final SHttpExchange request, final String header) {
 
-      // TODO systemcall
+      if (VmSettings.REPLAY) {
+        // TODO fetch result
+        throw new UnsupportedOperationException();
+        // String s = null;
+
+        // if (s.equals("")) {
+        // return Nil.nilObject;
+        // }
+
+        // return new SMutableArray(s.split("ä"), Classes.arrayClass);
+      }
+
       if (!request.getExchange().getRequestHeaders().containsKey(header)) {
+        if (VmSettings.ACTOR_TRACING) {
+          ActorExecutionTrace.stringSystemCall("");
+        }
         return Nil.nilObject;
       }
 
-      SArray result = new SMutableArray(
-          request.getExchange().getRequestHeaders().get(header).toArray(new Object[0]),
-          Classes.arrayClass);
+      String[] entries =
+          request.getExchange().getRequestHeaders().get(header).toArray(new String[0]);
 
-      return result;
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.stringSystemCall(String.join("ä", entries));
+      }
+
+      return new SMutableArray(entries, Classes.arrayClass);
     }
   }
 
@@ -181,9 +202,17 @@ public class HttpPrims {
   @Primitive(primitive = "httpExchangeGetRequestBody:")
   public abstract static class HttpGetBodyPrim extends UnaryExpressionNode {
     @Specialization
-    public final Object getBody(final SHttpExchange request) {
-      // TODO systemcall
-      return request.getBody();
+    public final String getBody(final SHttpExchange request) {
+      if (VmSettings.REPLAY) {
+        // TODO
+        throw new UnsupportedOperationException();
+      }
+
+      String body = request.getBody();
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.stringSystemCall(body);
+      }
+      return body;
     }
   }
 
@@ -192,23 +221,31 @@ public class HttpPrims {
   @Primitive(primitive = "httpExchangeGetRequestQuery:")
   public abstract static class HttpGetDecodedUrlPrim extends UnaryExpressionNode {
     @Specialization
-    public final Object getUrl(final SHttpExchange request) {
-      // TODO systemcall
-      if (request.getExchange().getRequestURI().getQuery() != null) {
-        return request.getExchange().getRequestURI().getQuery();
+    public final String getUrl(final SHttpExchange request) {
+      if (VmSettings.REPLAY) {
+        throw new UnsupportedOperationException();
       }
 
-      try {
-        return decodeURL(request.getBody());
-      } catch (UnsupportedEncodingException e) {
-        // TODO Auto-generated catch block
-        e.printStackTrace();
+      String result = "";
+      if (request.getExchange().getRequestURI().getQuery() != null) {
+        result = request.getExchange().getRequestURI().getQuery();
+      } else {
+        try {
+          result = decodeURL(request.getBody());
+        } catch (UnsupportedEncodingException e) {
+          // TODO Auto-generated catch block
+          e.printStackTrace();
+        }
       }
-      return "";
+
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.stringSystemCall(result);
+      }
+      return result;
     }
 
     @TruffleBoundary
-    private Object decodeURL(final String url) throws UnsupportedEncodingException {
+    private String decodeURL(final String url) throws UnsupportedEncodingException {
       return URLDecoder.decode(url, "utf-8");
     }
   }
@@ -235,7 +272,7 @@ public class HttpPrims {
   @Primitive(primitive = "httpExchange:setAttribute:to:")
   public abstract static class HttpSetAttributePrim extends TernaryExpressionNode {
     @Specialization
-    public final SHttpExchange setClass(final SHttpExchange request, final String key,
+    public final SHttpExchange setAttribute(final SHttpExchange request, final String key,
         final Object value) {
       request.setAttribute(key, value);
       return request;
@@ -247,8 +284,16 @@ public class HttpPrims {
   @Primitive(primitive = "httpExchange:getRequestCookie:")
   public abstract static class HttpGetCookiePrim extends BinaryExpressionNode {
     @Specialization
-    public final Object setClass(final SHttpExchange request, final String key) {
-      return request.getCookie(key);
+    public final String getCookie(final SHttpExchange request, final String key) {
+      if (VmSettings.REPLAY) {
+        throw new UnsupportedOperationException();
+      }
+
+      String result = request.getCookie(key);
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.stringSystemCall(result);
+      }
+      return result;
     }
   }
 

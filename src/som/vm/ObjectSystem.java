@@ -344,7 +344,7 @@ public final class ObjectSystem {
 
   private void handlePromiseResult(final SPromise promise) {
     int emptyFJPool = 0;
-    while (emptyFJPool < 120) {
+    while (emptyFJPool < 120000) {
       if (promise.isCompleted()) {
         if (vm.isAvoidingExit()) {
           return;

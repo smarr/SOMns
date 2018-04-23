@@ -37,6 +37,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     )
 
     protected escapedBlock: block = (
+      halt.
       error: 'Block has escaped and cannot be executed'
     )
 

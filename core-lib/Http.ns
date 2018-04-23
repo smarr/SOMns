@@ -35,6 +35,8 @@ class Http usingVmMirror: vmMirror usingPlatform: platform = Value (
       server:: (actors createActorFromValue: ServerActor) <-: new: ip port: port.
       ^ server.
     )
+
+    private new = ( self error: 'use #create:port: instead')
   )
 
   public class ServerActor new: ip port: port = (
@@ -58,7 +60,8 @@ class Http usingVmMirror: vmMirror usingPlatform: platform = Value (
     )
 
     public start = (
-      ^ vmMirror httpStartServer: server.
+      vmMirror httpStartServer: server.
+      ^ self.
     )
 
     public stop = (
