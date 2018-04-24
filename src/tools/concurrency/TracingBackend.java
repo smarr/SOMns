@@ -251,7 +251,7 @@ public class TracingBackend {
             FileOutputStream edfos = new FileOutputStream(edf);
             BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(sfos))) {
 
-          while (cont || TracingBackend.fullBuffers.size() > 0) {
+          while (cont || !TracingBackend.fullBuffers.isEmpty()) {
             ByteBuffer b;
 
             try {
@@ -314,7 +314,7 @@ public class TracingBackend {
           throw new RuntimeException(e);
         }
       } else {
-        while (cont || TracingBackend.fullBuffers.size() > 0) {
+        while (cont || !TracingBackend.fullBuffers.isEmpty()) {
           ByteBuffer b;
 
           try {
