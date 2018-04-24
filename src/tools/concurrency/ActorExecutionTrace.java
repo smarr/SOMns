@@ -1,6 +1,9 @@
 package tools.concurrency;
 
 import java.nio.charset.StandardCharsets;
+
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.ExternalMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
