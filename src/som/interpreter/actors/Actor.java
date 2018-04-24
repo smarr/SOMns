@@ -253,16 +253,12 @@ public class Actor implements Activity {
         final WebDebugger dbg) {
       assert size > 0;
 
-      try {
-        execute(firstMessage, currentThread, dbg);
+      execute(firstMessage, currentThread, dbg);
 
-        if (size > 1) {
-          for (EventualMessage msg : mailboxExtension) {
-            execute(msg, currentThread, dbg);
-          }
+      if (size > 1) {
+        for (EventualMessage msg : mailboxExtension) {
+          execute(msg, currentThread, dbg);
         }
-      } finally {
-        // TODO: what is this???
       }
     }
 
