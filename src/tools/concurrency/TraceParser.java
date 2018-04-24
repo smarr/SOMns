@@ -79,7 +79,8 @@ public final class TraceParser {
     boolean readMainActor = false;
     File traceFile = new File(VmSettings.TRACE_FILE + ".trace");
 
-    int sender = 0, resolver = 0;
+    int sender = 0;
+    int resolver = 0;
     int currentActor = 0;
     int ordering = 0;
     ArrayList<MessageRecord> contextMessages = null;
@@ -96,7 +97,7 @@ public final class TraceParser {
           b.clear();
           channel.read(b);
           b.flip();
-          System.out.println("swapping");
+          // System.out.println("swapping");
         } else if (b.remaining() < 20) {
           b.compact();
           channel.read(b);
@@ -219,8 +220,8 @@ public final class TraceParser {
     int                                        mailboxNo;
     boolean                                    sorted           = false;
     ArrayList<ActorNode>                       children;
-    HashMap<Integer, ArrayList<MessageRecord>> Bucket_1         = new HashMap<>();
-    HashMap<Integer, ArrayList<MessageRecord>> Bucket_2         = new HashMap<>();
+    HashMap<Integer, ArrayList<MessageRecord>> bucket1         = new HashMap<>();
+    HashMap<Integer, ArrayList<MessageRecord>> bucket2         = new HashMap<>();
     Queue<MessageRecord>                       expectedMessages = new java.util.LinkedList<>();
 
     ActorNode(final long actorId) {
@@ -263,35 +264,35 @@ public final class TraceParser {
     }
 
     private void addMessageRecords(final ArrayList<MessageRecord> mr, final int order) {
-      if (Bucket_1.containsKey(order)) {
+      if (bucket1.containsKey(order)) {
         // use bucket two
-        assert !Bucket_2.containsKey(order);
-        Bucket_2.put(order, mr);
+        assert !bucket2.containsKey(order);
+        bucket2.put(order, mr);
       } else {
-        assert !Bucket_2.containsKey(order);
-        Bucket_1.put(order, mr);
+        assert !bucket2.containsKey(order);
+        bucket1.put(order, mr);
 
-        if (Bucket_1.size() == 0xFFFF) {
+        if (bucket1.size() == 0xFFFF) {
           // Bucket 1 is full, switch
-          assert Bucket_2.size() < 0xEFFF;
+          assert bucket2.size() < 0xEFFF;
 
           for (int i = 0; i < 0xFFFF; i++) {
-            expectedMessages.addAll(Bucket_1.get(i));
+            expectedMessages.addAll(bucket1.get(i));
           }
 
-          Bucket_1.clear();
-          HashMap<Integer, ArrayList<MessageRecord>> temp = Bucket_1;
-          Bucket_1 = Bucket_2;
-          Bucket_2 = temp;
+          bucket1.clear();
+          HashMap<Integer, ArrayList<MessageRecord>> temp = bucket1;
+          bucket1 = bucket2;
+          bucket2 = temp;
         }
       }
     }
 
     public Queue<MessageRecord> getExpectedMessages() {
-      assert Bucket_1.size() < 0xFFFF && Bucket_2.isEmpty();
+      assert bucket1.size() < 0xFFFF && bucket2.isEmpty();
       for (int i = 0; i < 0xFFFF; i++) {
-        if (Bucket_1.containsKey(i)) {
-          expectedMessages.addAll(Bucket_1.get(i));
+        if (bucket1.containsKey(i)) {
+          expectedMessages.addAll(bucket1.get(i));
         } else {
           break;
         }

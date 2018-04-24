@@ -46,7 +46,7 @@ public class VmSettings implements Settings {
         System.getProperty("som.traceFile", System.getProperty("user.dir") + "/traces/trace");
     MEMORY_TRACING = getBool("som.memoryTracing", false);
     REPLAY = getBool("som.replay", false);
-    MEDEOR_TRACING = false;// REPLAY;
+    MEDEOR_TRACING = false; // REPLAY;
     DISABLE_TRACE_FILE = getBool("som.disableTraceFile", false) || REPLAY;
 
     String atConfig = System.getProperty("som.actorTracingCfg", "");
