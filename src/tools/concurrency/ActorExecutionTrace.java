@@ -1,6 +1,5 @@
 package tools.concurrency;
 
-import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.ExternalMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
@@ -25,7 +24,7 @@ public class ActorExecutionTrace {
     return (TracingActivityThread) current;
   }
 
-  public static void recordActorContext(final Actor actor) {
+  public static void recordActorContext(final TracingActor actor) {
     TracingActivityThread t = getThread();
     ((ActorTraceBuffer) t.getBuffer()).recordActorContext(actor);
   }
@@ -113,7 +112,7 @@ public class ActorExecutionTrace {
   }
 
   public static class ActorTraceBuffer extends TraceBuffer {
-    Actor currentActor;
+    TracingActor currentActor;
 
     @Override
     protected void swapBufferWhenNotEnoughSpace() {
@@ -135,12 +134,12 @@ public class ActorExecutionTrace {
       return 3;
     }
 
-    public void recordActorContext(final Actor actor) {
+    public void recordActorContext(final TracingActor actor) {
       ensureSufficientSpace(7);
       recordActorContextWithoutBufferCheck(actor);
     }
 
-    private void recordActorContextWithoutBufferCheck(final Actor actor) {
+    private void recordActorContextWithoutBufferCheck(final TracingActor actor) {
       currentActor = actor;
       int id = actor.getActorId();
 
