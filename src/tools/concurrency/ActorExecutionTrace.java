@@ -1,7 +1,5 @@
 package tools.concurrency;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.ExternalMessage;
@@ -117,16 +115,11 @@ public class ActorExecutionTrace {
   public static class ActorTraceBuffer extends TraceBuffer {
     Actor currentActor;
 
-    @TruffleBoundary
     @Override
-    protected boolean ensureSufficientSpace(final int requiredSpace) {
-      if (storage.remaining() < requiredSpace) {
-        boolean didSwap = swapStorage();
-        assert didSwap;
-        recordActorContext(currentActor);
-        return didSwap;
-      }
-      return false;
+    protected void swapBufferWhenNotEnoughSpace() {
+      boolean didSwap = swapStorage();
+      assert didSwap;
+      recordActorContextWithoutBufferCheck(currentActor);
     }
 
     static int getUsedBytes(final int id) {
@@ -143,9 +136,13 @@ public class ActorExecutionTrace {
     }
 
     public void recordActorContext(final Actor actor) {
+      ensureSufficientSpace(7);
+      recordActorContextWithoutBufferCheck(actor);
+    }
+
+    private void recordActorContextWithoutBufferCheck(final Actor actor) {
       currentActor = actor;
       int id = actor.getActorId();
-      ensureSufficientSpace(7);
 
       if (VmSettings.TRACE_SMALL_IDS) {
         int usedBytes = getUsedBytes(id);

@@ -1,7 +1,5 @@
 package tools.concurrency;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-
 import som.vm.VmSettings;
 import tools.concurrency.ActorExecutionTrace.ActorTraceBuffer;
 
@@ -46,14 +44,13 @@ public abstract class TraceBuffer {
     return true;
   }
 
-  @TruffleBoundary
-  protected boolean ensureSufficientSpace(final int requiredSpace) {
+  protected final void ensureSufficientSpace(final int requiredSpace) {
     if (storage.remaining() < requiredSpace) {
-      boolean didSwap = swapStorage();
-      assert didSwap;
-      return didSwap;
+      swapBufferWhenNotEnoughSpace();
     }
-    return false;
   }
 
+  protected void swapBufferWhenNotEnoughSpace() {
+    swapStorage();
+  }
 }

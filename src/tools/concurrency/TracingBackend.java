@@ -152,7 +152,6 @@ public class TracingBackend {
     }
   }
 
-  @TruffleBoundary
   static void returnBuffer(final ByteBuffer b) {
     if (b == null) {
       return;
@@ -161,6 +160,11 @@ public class TracingBackend {
     b.limit(b.position());
     b.rewind();
 
+    returnBufferGlobally(b);
+  }
+
+  @TruffleBoundary
+  private static void returnBufferGlobally(final ByteBuffer b) {
     synchronized (fullBuffers) {
       fullBuffers.add(b);
     }
