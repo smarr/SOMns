@@ -267,7 +267,7 @@ public class TracingBackend {
               continue;
             }
 
-            if (b.remaining() <= Implementation.IMPL_THREAD.getSize() +
+            if (b.position() <= Implementation.IMPL_THREAD.getSize() +
                 Implementation.IMPL_CURRENT_ACTIVITY.getSize()) {
               // Ignore buffers that only contain the thread index
               b.clear();
@@ -333,7 +333,7 @@ public class TracingBackend {
             TracingBackend.symbolsToWrite.clear();
           }
 
-          if (b.remaining() > (Implementation.IMPL_THREAD.getSize() +
+          if (b.position() > (Implementation.IMPL_THREAD.getSize() +
               Implementation.IMPL_CURRENT_ACTIVITY.getSize()) && front != null) {
             front.sendTracingData(b);
           }
