@@ -16,7 +16,6 @@ import som.Output;
 import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
-import som.interpreter.actors.EventualMessage.ExternalMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
 import som.vm.VmSettings;
@@ -124,7 +123,7 @@ public class TracingActors {
     }
 
     private static int lookupId() {
-      if (Thread.currentThread() instanceof ActorProcessingThread) {
+      if (VmSettings.REPLAY && Thread.currentThread() instanceof ActorProcessingThread) {
         ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
         ReplayActor parent = (ReplayActor) t.currentMessage.getTarget();
         int parentId = parent.getActorId();
@@ -144,23 +143,37 @@ public class TracingActors {
     public ReplayActor(final VM vm) {
       super(vm, lookupId());
 
-      expectedMessages = TraceParser.getExpectedMessages(actorId);
       this.activityId = TracingActivityThread.newEntityId();
 
-      synchronized (actorList) {
-        actorList.put(actorId, this);
+      if (VmSettings.REPLAY) {
+        expectedMessages = TraceParser.getExpectedMessages(actorId);
+
+        synchronized (actorList) {
+          actorList.put(actorId, this);
+        }
+      } else {
+        expectedMessages = null;
       }
     }
 
     @Override
     protected ExecAllMessages createExecutor(final VM vm) {
-      return new ExecAllMessagesReplay(this, vm);
+      if (VmSettings.REPLAY) {
+        return new ExecAllMessagesReplay(this, vm);
+      } else {
+        return super.createExecutor(vm);
+      }
     }
 
     @Override
     @TruffleBoundary
     public synchronized void send(final EventualMessage msg, final ForkJoinPool actorPool) {
       assert msg.getTarget() == this;
+
+      if (!VmSettings.REPLAY) {
+        super.send(msg, actorPool);
+        return;
+      }
 
       if (firstMessage == null) {
         firstMessage = msg;

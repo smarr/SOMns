@@ -33,11 +33,11 @@ else
   ) 
 
   declare -a Validation=(
-    "Counting 100 0 1000"
-    "Philosophers 100 0 5:5 25"
-    "DeadLock 100 0 4:2:3"
-    "Messages 100 0 1000"
-    "Sequence 100 0 100"
+    #"Counting 100 0 1000"
+    #"Philosophers 100 0 5:5 25"
+    #"DeadLock 100 0 4:2:3"
+    #"Messages 100 0 1000"
+    #"Sequence 100 0 100"
   )
 fi
 

@@ -61,7 +61,7 @@ public class Actor implements Activity {
   }
 
   public static Actor createActor(final VM vm) {
-    if (VmSettings.REPLAY) {
+    if (VmSettings.REPLAY || VmSettings.KOMPOS_TRACING) {
       return new ReplayActor(vm);
     } else if (VmSettings.ACTOR_TRACING) {
       return new TracingActor(vm);
@@ -249,7 +249,7 @@ public class Actor implements Activity {
       t.currentlyExecutingActor = actor;
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.recordActorContext(actor);
+        ActorExecutionTrace.recordActorContext((TracingActor) actor);
       } else if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.currentActivity(actor);
       }
