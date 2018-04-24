@@ -97,7 +97,7 @@ public final class TraceParser {
           b.clear();
           channel.read(b);
           b.flip();
-          System.out.println("swapping");
+          // System.out.println("swapping");
         } else if (b.remaining() < 20) {
           b.compact();
           channel.read(b);
