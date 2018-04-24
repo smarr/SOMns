@@ -14,13 +14,13 @@ import tools.concurrency.TracingActors.TracingActor;
 
 public class ActorExecutionTrace {
   // events
-  public static byte ACTOR_CREATION  = 0;
-  public static byte ACTOR_CONTEXT   = 1;
-  public static byte MESSAGE         = 2;
-  public static byte PROMISE_MESSAGE = 3;
-  public static byte SYSTEM_CALL     = 4;
+  public static final byte ACTOR_CREATION  = 0;
+  public static final byte ACTOR_CONTEXT   = 1;
+  public static final byte MESSAGE         = 2;
+  public static final byte PROMISE_MESSAGE = 3;
+  public static final byte SYSTEM_CALL     = 4;
   // flags
-  public static byte EXTERNAL_BIT = 8;
+  public static final byte EXTERNAL_BIT = 8;
 
   private static TracingActivityThread getThread() {
     Thread current = Thread.currentThread();
