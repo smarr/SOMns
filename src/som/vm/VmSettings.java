@@ -21,6 +21,7 @@ public class VmSettings implements Settings {
   public static final boolean DNU_PRINT_STACK_TRACE;
   public static final boolean REPLAY;
   public static final boolean MEDEOR_TRACING;
+  public static final boolean TRACE_SMALL_IDS;
 
   public static final boolean TRUFFLE_DEBUGGER_ENABLED;
 
@@ -48,6 +49,7 @@ public class VmSettings implements Settings {
     REPLAY = getBool("som.replay", false);
     MEDEOR_TRACING = false; // REPLAY;
     DISABLE_TRACE_FILE = getBool("som.disableTraceFile", false) || REPLAY;
+    TRACE_SMALL_IDS = getBool("som.smallIds", false);
 
     String atConfig = System.getProperty("som.actorTracingCfg", "");
     List<String> al = Arrays.asList(atConfig.split(":"));

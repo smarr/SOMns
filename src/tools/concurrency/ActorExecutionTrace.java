@@ -9,6 +9,7 @@ import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.ExternalMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
+import som.vm.VmSettings;
 import tools.concurrency.TracingActors.TracingActor;
 
 
@@ -148,56 +149,90 @@ public class ActorExecutionTrace {
       int id = actor.getActorId();
       ensureSufficientSpace(7);
 
-      int usedBytes = getUsedBytes(id);
-      storage.put((byte) (ACTOR_CONTEXT | (usedBytes << 4)));
-
-      storage.putShort(actor.getOrdering());
-      writeId(usedBytes, id);
+      if (VmSettings.TRACE_SMALL_IDS) {
+        int usedBytes = getUsedBytes(id);
+        storage.put((byte) (ACTOR_CONTEXT | (usedBytes << 4)));
+        storage.putShort(actor.getOrdering());
+        writeId(usedBytes, id);
+      } else {
+        storage.put((byte) (ACTOR_CONTEXT | (3 << 4)));
+        storage.putShort(actor.getOrdering());
+        storage.putInt(id);
+      }
     }
 
     public void recordActorCreation(final int childId) {
       ensureSufficientSpace(5);
-      int usedBytes = getUsedBytes(childId);
-      storage.put((byte) (ACTOR_CREATION | (usedBytes << 4)));
-      writeId(usedBytes, childId);
+      if (VmSettings.TRACE_SMALL_IDS) {
+        int usedBytes = getUsedBytes(childId);
+        storage.put((byte) (ACTOR_CREATION | (usedBytes << 4)));
+        writeId(usedBytes, childId);
+      } else {
+        storage.put((byte) (ACTOR_CREATION | (3 << 4)));
+        storage.putInt(childId);
+      }
     }
 
     public void recordMessage(final int senderId) {
       ensureSufficientSpace(5);
-      int usedBytes = getUsedBytes(senderId);
-      storage.put((byte) (MESSAGE | (usedBytes << 4)));
-      writeId(usedBytes, senderId);
+      if (VmSettings.TRACE_SMALL_IDS) {
+        int usedBytes = getUsedBytes(senderId);
+        storage.put((byte) (MESSAGE | (usedBytes << 4)));
+        writeId(usedBytes, senderId);
+      } else {
+        storage.put((byte) (MESSAGE | (3 << 4)));
+        storage.putInt(senderId);
+      }
     }
 
     public void recordPromiseMessage(final int senderId, final int resolverId) {
       ensureSufficientSpace(9);
       int usedBytes = Math.max(getUsedBytes(resolverId), getUsedBytes(senderId));
 
-      storage.put((byte) (PROMISE_MESSAGE | (usedBytes << 4)));
-
-      writeId(usedBytes, senderId);
-      writeId(usedBytes, resolverId);
+      if (VmSettings.TRACE_SMALL_IDS) {
+        storage.put((byte) (PROMISE_MESSAGE | (usedBytes << 4)));
+        writeId(usedBytes, senderId);
+        writeId(usedBytes, resolverId);
+      } else {
+        storage.put((byte) (PROMISE_MESSAGE | (3 << 4)));
+        storage.putInt(senderId);
+        storage.putInt(resolverId);
+      }
     }
 
     public void recordExternalMessage(final int senderId, final short method,
         final int dataId) {
       ensureSufficientSpace(11);
-      int usedBytes = getUsedBytes(senderId);
-      storage.put((byte) (EXTERNAL_BIT | MESSAGE | (usedBytes << 4)));
-      writeId(usedBytes, senderId);
+
+      if (VmSettings.TRACE_SMALL_IDS) {
+        int usedBytes = getUsedBytes(senderId);
+        storage.put((byte) (EXTERNAL_BIT | MESSAGE | (usedBytes << 4)));
+        writeId(usedBytes, senderId);
+      } else {
+        storage.put((byte) (EXTERNAL_BIT | MESSAGE | (3 << 4)));
+        storage.putInt(senderId);
+      }
       storage.putShort(method);
       storage.putInt(senderId);
+
     }
 
     public void recordExternalPromiseMessage(final int senderId, final int resolverId,
         final short method, final int dataId) {
       ensureSufficientSpace(15);
-      int usedBytes = Math.max(getUsedBytes(resolverId), getUsedBytes(senderId));
 
-      storage.put((byte) (EXTERNAL_BIT | PROMISE_MESSAGE | (usedBytes << 4)));
+      if (VmSettings.TRACE_SMALL_IDS) {
+        int usedBytes = Math.max(getUsedBytes(resolverId), getUsedBytes(senderId));
+        storage.put((byte) (EXTERNAL_BIT | PROMISE_MESSAGE | (usedBytes << 4)));
 
-      writeId(usedBytes, senderId);
-      writeId(usedBytes, resolverId);
+        writeId(usedBytes, senderId);
+        writeId(usedBytes, resolverId);
+      } else {
+        storage.put((byte) (EXTERNAL_BIT | PROMISE_MESSAGE | (3 << 4)));
+        storage.putInt(senderId);
+        storage.putInt(resolverId);
+      }
+
       storage.putShort(method);
       storage.putInt(senderId);
     }
