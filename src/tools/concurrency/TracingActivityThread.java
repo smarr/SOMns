@@ -33,6 +33,8 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
 
   protected ConcurrentEntityScope topEntity;
 
+  public volatile boolean swapTracingBuffer = false;
+
   private static class ConcurrentEntityScope {
     private final EntityType            type;
     private final ConcurrentEntityScope next;
@@ -46,8 +48,8 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   public TracingActivityThread(final ForkJoinPool pool) {
     super(pool);
     if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
-      traceBuffer = TraceBuffer.create();
       threadId = threadIdGen.getAndIncrement();
+      traceBuffer = TraceBuffer.create(threadId);
       nextEntityId = 1 + (threadId << TraceData.ENTITY_ID_BITS);
       externalData = new Object[EXTERNAL_BUFFER_SIZE];
     } else {

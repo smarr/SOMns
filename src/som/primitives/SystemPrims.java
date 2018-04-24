@@ -55,7 +55,6 @@ import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.TraceParser;
-import tools.concurrency.TracingBackend;
 
 
 public final class SystemPrims {
