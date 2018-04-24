@@ -162,9 +162,7 @@ public class TracingBackend {
 
   @TruffleBoundary
   private static void returnBufferGlobally(final ByteBuffer b) {
-    synchronized (fullBuffers) {
-      fullBuffers.add(b);
-    }
+    fullBuffers.offer(b);
   }
 
   private static HashSet<TracingActivityThread> tracingThreads = new HashSet<>();
