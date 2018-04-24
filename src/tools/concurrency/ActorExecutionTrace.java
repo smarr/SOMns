@@ -1,7 +1,5 @@
 package tools.concurrency;
 
-import java.nio.ByteBuffer;
-
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import som.interpreter.actors.Actor;

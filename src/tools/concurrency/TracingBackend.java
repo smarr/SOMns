@@ -11,7 +11,6 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
 import java.lang.management.MemoryUsage;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -282,7 +281,8 @@ public class TracingBackend {
 
             synchronized (externalData) {
               while (!externalData.isEmpty()) {
-                edfos.getChannel().write(externalData.removeFirst());
+                // TODO: the buffer gets lost here, is this on purpose?
+                edfos.getChannel().write(externalData.removeFirst().getBuffer());
                 edfos.flush();
               }
             }
@@ -300,7 +300,7 @@ public class TracingBackend {
               TracingBackend.symbolsToWrite.clear();
             }
 
-            fos.getChannel().write(b);
+            fos.getChannel().write(b.getBuffer());
             fos.flush();
             b.rewind();
 

@@ -1,8 +1,5 @@
 package tools.concurrency;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import som.vm.VmSettings;
@@ -28,7 +25,6 @@ public abstract class TraceBuffer {
 
   public void retrieveBuffer() {
     this.storage = TracingBackend.getEmptyBuffer();
-    assert storage.order() == ByteOrder.BIG_ENDIAN;
   }
 
   public void returnBuffer() {
