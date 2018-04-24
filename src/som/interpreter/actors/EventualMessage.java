@@ -304,10 +304,10 @@ public abstract class EventualMessage {
     }
   }
 
-  public static interface ExternalMessage {
-    public short getMethod();
+  public interface ExternalMessage {
+    short getMethod();
 
-    public int getDataId();
+    int getDataId();
   }
 
   public static final class ExternalDirectMessage extends DirectMessage

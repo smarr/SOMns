@@ -22,8 +22,8 @@ import tools.debugger.WebDebugger;
 
 public class TracingActors {
   public static class TracingActor extends Actor {
-    private final static AtomicInteger IdGen = new AtomicInteger(0);
-    final protected int                actorId;
+    private static final AtomicInteger IdGen = new AtomicInteger(0);
+    protected final int                actorId;
     protected short                    ordering;
     protected int                      nextDataID;
 
