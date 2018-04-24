@@ -77,7 +77,7 @@ tools.add_argument('-si', '--si-candidates', help='Identify candidates for super
 tools.add_argument('-at', '--actor-tracing', help='enable tracing of actor operations',
                     dest='actor_tracing', action='store_true', default=False)
 tools.add_argument('-sid', '--small-ids', help='use small id optimization to reduce trace size',
-                    dest='small_ids', default='')
+                    dest='small_ids', action='store_true', default=False)
 tools.add_argument('-mt', '--memory-tracing', help='enable tracing of memory usage and GC',
                     dest='memory_tracing', action='store_true', default=False)
 tools.add_argument('-tf', '--trace-file', help='Trace file destination, default: traces/trace',
@@ -306,7 +306,7 @@ if args.vmdebug:
 if args.actor_tracing:
     flags += ['-Dsom.actorTracing=true']
 if args.small_ids:
-    flags += ['-Dsom.smallIds=%s' % args.small_ids ]
+    flags += ['-Dsom.smallIds=true']
 if args.trace_file:
     flags += ['-Dsom.traceFile=%s' % args.trace_file ]
 if args.memory_tracing:
