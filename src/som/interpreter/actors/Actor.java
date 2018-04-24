@@ -249,7 +249,7 @@ public class Actor implements Activity {
       t.currentlyExecutingActor = actor;
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.recordActorContext(actor);
+        ActorExecutionTrace.recordActorContext((TracingActor) actor);
       } else if (VmSettings.MEDEOR_TRACING) {
         MedeorTrace.currentActivity(actor);
       }

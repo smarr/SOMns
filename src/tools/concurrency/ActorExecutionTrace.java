@@ -1,10 +1,5 @@
 package tools.concurrency;
 
-import java.nio.ByteBuffer;
-
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-
-import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.ExternalMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
@@ -29,7 +24,7 @@ public class ActorExecutionTrace {
     return (TracingActivityThread) current;
   }
 
-  public static void recordActorContext(final Actor actor) {
+  public static void recordActorContext(final TracingActor actor) {
     TracingActivityThread t = getThread();
     ((ActorTraceBuffer) t.getBuffer()).recordActorContext(actor);
   }
@@ -117,18 +112,13 @@ public class ActorExecutionTrace {
   }
 
   public static class ActorTraceBuffer extends TraceBuffer {
-    Actor currentActor;
+    TracingActor currentActor;
 
-    @TruffleBoundary
     @Override
-    protected boolean ensureSufficientSpace(final int requiredSpace) {
-      if (storage.remaining() < requiredSpace) {
-        boolean didSwap = swapStorage();
-        assert didSwap;
-        recordActorContext(currentActor);
-        return didSwap;
-      }
-      return false;
+    protected void swapBufferWhenNotEnoughSpace() {
+      boolean didSwap = swapStorage();
+      assert didSwap;
+      recordActorContextWithoutBufferCheck(currentActor);
     }
 
     static int getUsedBytes(final int id) {
@@ -144,20 +134,22 @@ public class ActorExecutionTrace {
       return 3;
     }
 
-    public void recordActorContext(final Actor actor) {
+    public void recordActorContext(final TracingActor actor) {
+      ensureSufficientSpace(7);
+      recordActorContextWithoutBufferCheck(actor);
+    }
+
+    private void recordActorContextWithoutBufferCheck(final TracingActor actor) {
       currentActor = actor;
       int id = actor.getActorId();
-      ensureSufficientSpace(7);
 
       if (VmSettings.TRACE_SMALL_IDS) {
         int usedBytes = getUsedBytes(id);
-        storage.put((byte) (ACTOR_CONTEXT | (usedBytes << 4)));
-        storage.putShort(actor.getOrdering());
+        storage.putByteShort((byte) (ACTOR_CONTEXT | (usedBytes << 4)), actor.getOrdering());
         writeId(usedBytes, id);
       } else {
-        storage.put((byte) (ACTOR_CONTEXT | (3 << 4)));
-        storage.putShort(actor.getOrdering());
-        storage.putInt(id);
+        storage.putByteShortInt(
+            (byte) (ACTOR_CONTEXT | (3 << 4)), actor.getOrdering(), id);
       }
     }
 
@@ -168,8 +160,7 @@ public class ActorExecutionTrace {
         storage.put((byte) (ACTOR_CREATION | (usedBytes << 4)));
         writeId(usedBytes, childId);
       } else {
-        storage.put((byte) (ACTOR_CREATION | (3 << 4)));
-        storage.putInt(childId);
+        storage.putByteInt((byte) (ACTOR_CREATION | (3 << 4)), (short) childId);
       }
     }
 
@@ -180,8 +171,7 @@ public class ActorExecutionTrace {
         storage.put((byte) (MESSAGE | (usedBytes << 4)));
         writeId(usedBytes, senderId);
       } else {
-        storage.put((byte) (MESSAGE | (3 << 4)));
-        storage.putInt(senderId);
+        storage.putByteInt((byte) (MESSAGE | (3 << 4)), senderId);
       }
     }
 
@@ -194,9 +184,7 @@ public class ActorExecutionTrace {
         writeId(usedBytes, senderId);
         writeId(usedBytes, resolverId);
       } else {
-        storage.put((byte) (PROMISE_MESSAGE | (3 << 4)));
-        storage.putInt(senderId);
-        storage.putInt(resolverId);
+        storage.putByteIntInt((byte) (PROMISE_MESSAGE | (3 << 4)), senderId, resolverId);
       }
     }
 
@@ -209,12 +197,9 @@ public class ActorExecutionTrace {
         storage.put((byte) (EXTERNAL_BIT | MESSAGE | (usedBytes << 4)));
         writeId(usedBytes, senderId);
       } else {
-        storage.put((byte) (EXTERNAL_BIT | MESSAGE | (3 << 4)));
-        storage.putInt(senderId);
+        storage.putByteInt((byte) (EXTERNAL_BIT | MESSAGE | (3 << 4)), senderId);
       }
-      storage.putShort(method);
-      storage.putInt(senderId);
-
+      storage.putShortInt(method, senderId);
     }
 
     public void recordExternalPromiseMessage(final int senderId, final int resolverId,
@@ -228,19 +213,16 @@ public class ActorExecutionTrace {
         writeId(usedBytes, senderId);
         writeId(usedBytes, resolverId);
       } else {
-        storage.put((byte) (EXTERNAL_BIT | PROMISE_MESSAGE | (3 << 4)));
-        storage.putInt(senderId);
-        storage.putInt(resolverId);
+        storage.putByteIntInt((byte) (EXTERNAL_BIT | PROMISE_MESSAGE | (3 << 4)), senderId,
+            resolverId);
       }
 
-      storage.putShort(method);
-      storage.putInt(senderId);
+      storage.putShortInt(method, senderId);
     }
 
     public void recordSystemCall(final int dataId) {
       ensureSufficientSpace(5);
-      storage.put(SYSTEM_CALL);
-      storage.putInt(dataId);
+      storage.putByteInt(SYSTEM_CALL, dataId);
     }
 
     private void writeId(final int usedBytes, final int id) {
@@ -252,8 +234,7 @@ public class ActorExecutionTrace {
           storage.putShort((short) id);
           break;
         case 2:
-          storage.put((byte) (id >> 16));
-          storage.putShort((short) id);
+          storage.putByteShort((byte) (id >> 16), (short) id);
           break;
         case 3:
           storage.putInt(id);

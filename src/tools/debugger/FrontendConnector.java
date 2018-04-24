@@ -3,7 +3,6 @@ package tools.debugger;
 import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Map;
@@ -27,6 +26,7 @@ import tools.SourceCoordinate;
 import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
 import tools.TraceData;
+import tools.concurrency.ByteBuffer;
 import tools.concurrency.TracingBackend;
 import tools.debugger.WebSocketHandler.MessageHandler;
 import tools.debugger.WebSocketHandler.TraceHandler;
@@ -254,7 +254,7 @@ public class FrontendConnector {
   }
 
   public void sendTracingData(final ByteBuffer b) {
-    traceSocket.send(b);
+    traceSocket.send(b.getReadingFromStartBuffer());
   }
 
   public void awaitClient() {

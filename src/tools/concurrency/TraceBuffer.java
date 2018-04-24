@@ -1,10 +1,5 @@
 package tools.concurrency;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-
 import som.vm.VmSettings;
 import tools.concurrency.ActorExecutionTrace.ActorTraceBuffer;
 
@@ -28,7 +23,6 @@ public abstract class TraceBuffer {
 
   public void retrieveBuffer() {
     this.storage = TracingBackend.getEmptyBuffer();
-    assert storage.order() == ByteOrder.BIG_ENDIAN;
   }
 
   public void returnBuffer() {
@@ -50,14 +44,13 @@ public abstract class TraceBuffer {
     return true;
   }
 
-  @TruffleBoundary
-  protected boolean ensureSufficientSpace(final int requiredSpace) {
+  protected final void ensureSufficientSpace(final int requiredSpace) {
     if (storage.remaining() < requiredSpace) {
-      boolean didSwap = swapStorage();
-      assert didSwap;
-      return didSwap;
+      swapBufferWhenNotEnoughSpace();
     }
-    return false;
   }
 
+  protected void swapBufferWhenNotEnoughSpace() {
+    swapStorage();
+  }
 }

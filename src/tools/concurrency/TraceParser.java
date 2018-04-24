@@ -136,7 +136,6 @@ public final class TraceParser {
           b.clear();
           channel.read(b);
           b.flip();
-          // System.out.println("swapping");
         } else if (b.remaining() < 20) {
           b.compact();
           channel.read(b);
@@ -339,8 +338,8 @@ public final class TraceParser {
     int                                        mailboxNo;
     boolean                                    sorted           = false;
     ArrayList<ActorNode>                       children;
-    HashMap<Integer, ArrayList<MessageRecord>> bucket1         = new HashMap<>();
-    HashMap<Integer, ArrayList<MessageRecord>> bucket2         = new HashMap<>();
+    HashMap<Integer, ArrayList<MessageRecord>> bucket1          = new HashMap<>();
+    HashMap<Integer, ArrayList<MessageRecord>> bucket2          = new HashMap<>();
     Queue<MessageRecord>                       expectedMessages = new java.util.LinkedList<>();
     int                                        max              = 0;
     int                                        max2             = 0;

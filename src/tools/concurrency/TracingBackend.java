@@ -11,10 +11,8 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
 import java.lang.management.MemoryUsage;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -29,10 +27,16 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.sun.management.GarbageCollectionNotificationInfo;
 
 import som.Output;
+import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.vm.VmSettings;
+import som.vm.constants.Classes;
+import som.vm.constants.Nil;
+import som.vmobjects.SArray;
+import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SSymbol;
+import tools.concurrency.ActorExecutionTrace.StringWrapper;
+import tools.concurrency.ActorExecutionTrace.TwoDArrayWrapper;
 import tools.debugger.FrontendConnector;
-import tools.debugger.entities.Implementation;
 
 
 /**
@@ -149,26 +153,18 @@ public class TracingBackend {
   @TruffleBoundary
   public static ByteBuffer getEmptyBuffer() {
     try {
-      synchronized (emptyBuffers) {
-        return emptyBuffers.take();
-      }
+      return emptyBuffers.take();
     } catch (InterruptedException e) {
       throw new IllegalStateException("Failed to acquire a new Buffer!");
     }
   }
 
-  @TruffleBoundary
   static void returnBuffer(final ByteBuffer b) {
     if (b == null) {
       return;
     }
 
-    b.limit(b.position());
-    b.rewind();
-
-    synchronized (fullBuffers) {
-      fullBuffers.add(b);
-    }
+    returnBufferGlobally(b);
   }
 
   @TruffleBoundary
@@ -200,9 +196,36 @@ public class TracingBackend {
     }
 
     for (TracingActivityThread t : result) {
-      TraceBuffer buffer = t.getBuffer();
-      synchronized (buffer) {
-        buffer.swapStorage();
+      t.swapTracingBuffer = true;
+    }
+
+    int runningThreads = result.length;
+    while (runningThreads > 1) {
+      for (int i = 0; i < result.length; i += 1) {
+        TracingActivityThread t = result[i];
+        if (t == null) {
+          continue;
+        }
+
+        if (!t.swapTracingBuffer) { // indicating that it was swapped
+          runningThreads -= 1;
+          result[i] = null;
+        } else if (t instanceof ActorProcessingThread
+            && (((ActorProcessingThread) t).getCurrentActor() == null)) {
+          // if the thread is not currently having an actor, it is not executing
+          runningThreads -= 1;
+          result[i] = null;
+          t.getBuffer().swapStorage();
+        }
+      }
+    }
+
+    while (!fullBuffers.isEmpty()) {
+      // wait until the worker thread processed all the buffers
+      try {
+        Thread.sleep(1);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
       }
     }
   }
@@ -243,109 +266,238 @@ public class TracingBackend {
   private static class TraceWorkerThread extends Thread {
     protected boolean cont = true;
 
+    protected long traceBytes;
+    protected long externalBytes;
+
+    private ByteBuffer tryToObtainBuffer() {
+      ByteBuffer buffer;
+      try {
+        buffer = TracingBackend.fullBuffers.poll(POLL_TIMEOUT, TimeUnit.MILLISECONDS);
+        if (buffer == null) {
+          if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+            // swap all non-empty buffers and try again
+            TracingBackend.forceSwapBuffers();
+          }
+          return null;
+        } else {
+          return buffer;
+        }
+      } catch (InterruptedException e) {
+        return null;
+      }
+    }
+
+    private void writeExternalData(final FileOutputStream edfos) throws IOException {
+      while (!externalData.isEmpty()) {
+        Object[] o = externalData.poll();
+        for (Object oo : o) {
+          if (oo == null) {
+            continue;
+          }
+          if (oo instanceof StringWrapper) {
+            StringWrapper sw = (StringWrapper) oo;
+            byte[] bytes = sw.s.getBytes();
+            byte[] header =
+                ActorExecutionTrace.getExtDataHeader(sw.actorId, sw.dataId, bytes.length);
+
+            if (edfos != null) {
+              edfos.getChannel().write(ByteBuffer.wrap(header));
+              edfos.getChannel().write(ByteBuffer.wrap(bytes));
+              edfos.flush();
+            }
+            externalBytes += bytes.length + 12;
+          } else if (oo instanceof TwoDArrayWrapper) {
+            writeArray((TwoDArrayWrapper) oo, edfos);
+          } else {
+
+            byte[] data = (byte[]) oo;
+            externalBytes += data.length;
+            if (edfos != null) {
+              edfos.getChannel().write(ByteBuffer.wrap(data));
+              edfos.flush();
+            }
+          }
+        }
+      }
+    }
+
+    private void writeArray(final TwoDArrayWrapper aw, final FileOutputStream edfos)
+        throws IOException {
+      SImmutableArray sia = aw.ia;
+
+      Object[] outer = sia.getObjectStorage(SArray.ObjectStorageType);
+      byte[][][] bouter = new byte[outer.length][][];
+      byte[] endRow = {ENDROW};
+      int numBytes = 0;
+      for (int i = 0; i < outer.length; i++) {
+        Object o = outer[i];
+        SImmutableArray ia = (SImmutableArray) o;
+        Object[] inner = ia.getObjectStorage(SArray.ObjectStorageType);
+        byte[][] binner = new byte[inner.length + 1][];
+        for (int j = 0; j < inner.length; j++) {
+          Object oo = inner[j];
+          byte[] bytes = null;
+          if (oo instanceof String) {
+            byte[] sbytes = ((String) oo).getBytes();
+            bytes = new byte[5 + sbytes.length];
+            TraceBuffer.UNSAFE.putByte(bytes, TraceBuffer.BYTE_ARR_BASE_OFFSET, STRING);
+            TraceBuffer.UNSAFE.putInt(bytes, TraceBuffer.BYTE_ARR_BASE_OFFSET + 1,
+                sbytes.length);
+            System.arraycopy(sbytes, 0, bytes, 5, sbytes.length);
+          } else if (oo instanceof Long) {
+            bytes = new byte[9];
+            TraceBuffer.UNSAFE.putByte(bytes, TraceBuffer.BYTE_ARR_BASE_OFFSET, LONG);
+            TraceBuffer.UNSAFE.putLong(bytes, TraceBuffer.BYTE_ARR_BASE_OFFSET + 1, (Long) oo);
+          } else if (oo instanceof Double) {
+            bytes = new byte[9];
+            TraceBuffer.UNSAFE.putByte(bytes, TraceBuffer.BYTE_ARR_BASE_OFFSET, DOUBLE);
+            TraceBuffer.UNSAFE.putDouble(bytes, TraceBuffer.BYTE_ARR_BASE_OFFSET + 1,
+                (Double) oo);
+          } else if (oo instanceof Boolean) {
+            bytes = new byte[1];
+            TraceBuffer.UNSAFE.putByte(bytes, TraceBuffer.BYTE_ARR_BASE_OFFSET + 1,
+                ((Boolean) oo ? TRUE : FALSE));
+          } else if (oo == Nil.nilObject) {
+            bytes = new byte[1];
+            TraceBuffer.UNSAFE.putByte(bytes, TraceBuffer.BYTE_ARR_BASE_OFFSET, NULL);
+          } else {
+            throw new UnsupportedOperationException("Unexpected DataType");
+          }
+
+          numBytes += bytes.length;
+          binner[j] = bytes;
+        }
+        binner[binner.length - 1] = endRow;
+        numBytes++;
+        bouter[i] = binner;
+      }
+
+      byte[] header =
+          ActorExecutionTrace.getExtDataHeader(aw.actorId, aw.dataId, numBytes);
+
+      if (edfos != null) {
+        edfos.getChannel().write(ByteBuffer.wrap(header));
+        for (byte[][] baa : bouter) {
+          for (byte[] ba : baa) {
+            edfos.getChannel().write(ByteBuffer.wrap(ba));
+          }
+        }
+
+        edfos.flush();
+      }
+      externalBytes += numBytes + 12;
+    }
+
+    private void writeSymbols(final BufferedWriter bw) throws IOException {
+      synchronized (symbolsToWrite) {
+        if (front != null) {
+          front.sendSymbols(TracingBackend.symbolsToWrite);
+        }
+
+        if (bw != null) {
+          for (SSymbol s : symbolsToWrite) {
+            bw.write(s.getSymbolId() + ":" + s.getString());
+            bw.newLine();
+          }
+          bw.flush();
+        }
+        TracingBackend.symbolsToWrite.clear();
+      }
+    }
+
+    private void writeAndRecycleBuffer(final FileOutputStream fos, final ByteBuffer buffer)
+        throws IOException {
+      if (fos != null) {
+        fos.getChannel().write(buffer.getReadingFromStartBuffer());
+        fos.flush();
+      }
+      traceBytes += buffer.position();
+      buffer.clear();
+      TracingBackend.emptyBuffers.add(buffer);
+    }
+
+    private void processTraceData(final FileOutputStream traceDataStream,
+        final FileOutputStream externalDataStream,
+        final BufferedWriter symbolStream) throws IOException {
+      while (cont || !TracingBackend.fullBuffers.isEmpty()
+          || !TracingBackend.externalData.isEmpty()) {
+        writeExternalData(externalDataStream);
+
+        ByteBuffer b = tryToObtainBuffer();
+        if (b == null) {
+          continue;
+        }
+
+        writeSymbols(symbolStream);
+        if (front != null) {
+          front.sendTracingData(b);
+        }
+
+        writeAndRecycleBuffer(traceDataStream, b);
+      }
+    }
+
     @Override
     public void run() {
-
       File f = new File(VmSettings.TRACE_FILE + ".trace");
       File sf = new File(VmSettings.TRACE_FILE + ".sym");
       File edf = new File(VmSettings.TRACE_FILE + ".dat");
       f.getParentFile().mkdirs();
 
-      if (!VmSettings.DISABLE_TRACE_FILE) {
-        try (FileOutputStream fos = new FileOutputStream(f);
-            FileOutputStream sfos = new FileOutputStream(sf);
-            FileOutputStream edfos = new FileOutputStream(edf);
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(sfos))) {
-
-          while (cont || TracingBackend.fullBuffers.size() > 0) {
-            ByteBuffer b;
-
-            try {
-              b = TracingBackend.fullBuffers.poll(POLL_TIMEOUT, TimeUnit.MILLISECONDS);
-              if (b == null) {
-                if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-                  // swap all non-empty buffers and try again
-                  TracingBackend.forceSwapBuffers();
-                }
-                continue;
-              }
-            } catch (InterruptedException e) {
-              continue;
-            }
-
-            if (b.remaining() <= Implementation.IMPL_THREAD.getSize() +
-                Implementation.IMPL_CURRENT_ACTIVITY.getSize()) {
-              // Ignore buffers that only contain the thread index
-              b.clear();
-              TracingBackend.emptyBuffers.add(b);
-              continue;
-            }
-
-            synchronized (externalData) {
-              while (!externalData.isEmpty()) {
-                edfos.getChannel().write(externalData.removeFirst());
-                edfos.flush();
-              }
-            }
-
-            synchronized (symbolsToWrite) {
-              if (front != null) {
-                front.sendSymbols(TracingBackend.symbolsToWrite);
-              }
-
-              for (SSymbol s : symbolsToWrite) {
-                bw.write(s.getSymbolId() + ":" + s.getString());
-                bw.newLine();
-              }
-              bw.flush();
-              TracingBackend.symbolsToWrite.clear();
-            }
-
-            fos.getChannel().write(b);
-            fos.flush();
-            b.rewind();
-
-            if (front != null) {
-              front.sendTracingData(b);
-            }
-
-            b.clear();
-            TracingBackend.emptyBuffers.add(b);
+      try {
+        if (VmSettings.DISABLE_TRACE_FILE) {
+          processTraceData(null, null, null);
+        } else {
+          try (FileOutputStream traceDataStream = new FileOutputStream(f);
+              FileOutputStream symbolStream = new FileOutputStream(sf);
+              FileOutputStream externalDataStream = new FileOutputStream(edf);
+              BufferedWriter symbolWriter =
+                  new BufferedWriter(new OutputStreamWriter(symbolStream))) {
+            processTraceData(traceDataStream, externalDataStream, symbolWriter);
+          } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
           }
-        } catch (FileNotFoundException e) {
-          throw new RuntimeException(e);
-        } catch (IOException e) {
-          throw new RuntimeException(e);
         }
-      } else {
-        while (cont || TracingBackend.fullBuffers.size() > 0) {
-          ByteBuffer b;
-
-          try {
-            b = TracingBackend.fullBuffers.poll(POLL_TIMEOUT, TimeUnit.MILLISECONDS);
-            if (b == null) {
-              continue;
-            }
-          } catch (InterruptedException e) {
-            continue;
-          }
-
-          synchronized (symbolsToWrite) {
-            if (front != null) {
-              front.sendSymbols(TracingBackend.symbolsToWrite);
-            }
-            TracingBackend.symbolsToWrite.clear();
-          }
-
-          if (b.remaining() > (Implementation.IMPL_THREAD.getSize() +
-              Implementation.IMPL_CURRENT_ACTIVITY.getSize()) && front != null) {
-            front.sendTracingData(b);
-          }
-
-          b.clear();
-          TracingBackend.emptyBuffers.add(b);
-        }
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
     }
+  }
+
+  static final byte STRING = 0;
+  static final byte LONG   = 1;
+  static final byte DOUBLE = 2;
+  static final byte TRUE   = 3;
+  static final byte FALSE  = 4;
+  static final byte NULL   = 5;
+  static final byte ENDROW = 6;
+
+  public static SArray parseArray(final ByteBuffer bb) {
+    List<SArray> rows = new ArrayList<>();
+    List<Object> currentRow = new ArrayList<>();
+
+    while (bb.hasRemaining()) {
+      byte type = bb.get();
+      if (type == STRING) {
+        int len = bb.getInt();
+        byte[] bytes = new byte[len];
+        bb.get(bytes);
+        currentRow.add(new String(bytes));
+      } else if (type == LONG) {
+        currentRow.add(bb.getLong());
+      } else if (type == DOUBLE) {
+        currentRow.add(bb.getDouble());
+      } else if (type == TRUE) {
+        currentRow.add(true);
+      } else if (type == FALSE) {
+        currentRow.add(false);
+      } else if (type == NULL) {
+        currentRow.add(Nil.nilObject);
+      } else if (type == ENDROW) {
+        rows.add(new SImmutableArray(currentRow.toArray(), Classes.arrayClass));
+        currentRow.clear();
+      }
+    }
+    return new SImmutableArray(rows.toArray(), Classes.arrayClass);
   }
 }
