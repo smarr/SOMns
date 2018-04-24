@@ -157,9 +157,6 @@ public class TracingBackend {
       return;
     }
 
-    b.limit(b.position());
-    b.rewind();
-
     returnBufferGlobally(b);
   }
 
@@ -206,9 +203,6 @@ public class TracingBackend {
     if (b == null) {
       return;
     }
-
-    b.limit(b.position());
-    b.rewind();
 
     synchronized (externalData) {
       externalData.add(b);
@@ -286,7 +280,8 @@ public class TracingBackend {
             synchronized (externalData) {
               while (!externalData.isEmpty()) {
                 // TODO: the buffer gets lost here, is this on purpose?
-                edfos.getChannel().write(externalData.removeFirst().getBuffer());
+                edfos.getChannel()
+                     .write(externalData.removeFirst().getReadingFromStartBuffer());
                 edfos.flush();
               }
             }
@@ -304,7 +299,7 @@ public class TracingBackend {
               TracingBackend.symbolsToWrite.clear();
             }
 
-            fos.getChannel().write(b.getBuffer());
+            fos.getChannel().write(b.getReadingFromStartBuffer());
             fos.flush();
             b.rewind();
 

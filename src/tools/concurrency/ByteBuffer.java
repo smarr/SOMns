@@ -1,6 +1,6 @@
 package tools.concurrency;
 
-import java.nio.BufferOverflowException;
+import com.oracle.truffle.api.CompilerDirectives;
 
 
 public final class ByteBuffer {
@@ -9,20 +9,16 @@ public final class ByteBuffer {
   }
 
   private int position;
-  private int limit;
-  private int capacity;
 
   private final byte[] buffer;
 
   private ByteBuffer(final int capacity) {
     buffer = new byte[capacity];
-    this.capacity = capacity;
-    this.limit = capacity;
     this.position = 0;
   }
 
-  public java.nio.ByteBuffer getBuffer() {
-    return java.nio.ByteBuffer.wrap(buffer, 0, limit);
+  public java.nio.ByteBuffer getReadingFromStartBuffer() {
+    return java.nio.ByteBuffer.wrap(buffer, 0, position);
   }
 
   public int position() {
@@ -30,7 +26,8 @@ public final class ByteBuffer {
   }
 
   public ByteBuffer position(final int newPosition) {
-    if ((newPosition > limit) || (newPosition < 0)) {
+    if (newPosition < 0) {
+      CompilerDirectives.transferToInterpreter();
       throw new IllegalArgumentException();
     }
     position = newPosition;
@@ -43,37 +40,19 @@ public final class ByteBuffer {
   }
 
   public int remaining() {
-    return limit - position;
+    return buffer.length - position;
   }
 
   public ByteBuffer clear() {
     position = 0;
-    limit = capacity;
-    return this;
-  }
-
-  public ByteBuffer limit(final int newLimit) {
-    if ((newLimit > capacity) || (newLimit < 0)) {
-      throw new IllegalArgumentException();
-    }
-    limit = newLimit;
-    if (position > limit) {
-      position = limit;
-    }
     return this;
   }
 
   private int nextPutIndex() {
-    if (position >= limit) {
-      throw new BufferOverflowException();
-    }
     return position++;
   }
 
   private int nextPutIndex(final int nb) {
-    if (limit - position < nb) {
-      throw new BufferOverflowException();
-    }
     int p = position;
     position += nb;
     return p;
@@ -185,21 +164,9 @@ public final class ByteBuffer {
     return put(src, 0, src.length);
   }
 
-  private static void checkBounds(final int off, final int len, final int size) {
-    if ((off | len | (off + len) | (size - (off + len))) < 0) {
-      throw new IndexOutOfBoundsException();
-    }
-  }
-
   public ByteBuffer put(final byte[] src, final int offset, final int length) {
-
-    checkBounds(offset, length, src.length);
-    if (length > remaining()) {
-      throw new BufferOverflowException();
-    }
-    System.arraycopy(src, offset, buffer, position(), length);
-    position(position() + length);
+    System.arraycopy(src, offset, buffer, position, length);
+    position += length;
     return this;
-
   }
 }

@@ -254,7 +254,7 @@ public class FrontendConnector {
   }
 
   public void sendTracingData(final ByteBuffer b) {
-    traceSocket.send(b.getBuffer());
+    traceSocket.send(b.getReadingFromStartBuffer());
   }
 
   public void awaitClient() {
