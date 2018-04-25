@@ -18,6 +18,8 @@ import som.vmobjects.SClass;
 import tools.concurrency.KomposTrace;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActors.TracingActor;
+import tools.concurrency.nodes.TraceActorCreation;
+import tools.concurrency.nodes.TraceActorCreationNodeGen;
 import tools.debugger.entities.ActivityType;
 import tools.replay.actors.ActorExecutionTrace;
 
@@ -28,6 +30,7 @@ import tools.replay.actors.ActorExecutionTrace;
 public abstract class CreateActorPrim extends BinarySystemOperation {
   @Child protected IsValue                isValue = IsValueNodeGen.createSubNode();
   @Child protected ExceptionSignalingNode notAValue;
+  @Child protected TraceActorCreation trace   = TraceActorCreationNodeGen.create();
 
   @Override
   public final CreateActorPrim initialize(final VM vm) {
@@ -42,7 +45,7 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
     SFarReference ref = new SFarReference(actor, argument);
 
     if (VmSettings.ACTOR_TRACING) {
-      ActorExecutionTrace.recordActorCreation(((TracingActor) actor).getActorId());
+      trace.execute((TracingActor) actor);
     } else if (VmSettings.KOMPOS_TRACING) {
       assert argument instanceof SClass;
       final SClass actorClass = (SClass) argument;
