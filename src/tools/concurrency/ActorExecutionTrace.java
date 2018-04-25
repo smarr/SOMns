@@ -145,8 +145,7 @@ public class ActorExecutionTrace {
 
       if (VmSettings.TRACE_SMALL_IDS) {
         int usedBytes = getUsedBytes(id);
-        storage.put((byte) (ACTOR_CONTEXT | (usedBytes << 4)));
-        storage.putShort(actor.getOrdering());
+        storage.putByteShort((byte) (ACTOR_CONTEXT | (usedBytes << 4)), actor.getOrdering());
         writeId(usedBytes, id);
       } else {
         storage.putByteShortInt(
@@ -200,8 +199,7 @@ public class ActorExecutionTrace {
       } else {
         storage.putByteInt((byte) (EXTERNAL_BIT | MESSAGE | (3 << 4)), senderId);
       }
-      storage.putShort(method);
-      storage.putInt(senderId);
+      storage.putShortInt(method, senderId);
     }
 
     public void recordExternalPromiseMessage(final int senderId, final int resolverId,
@@ -219,8 +217,7 @@ public class ActorExecutionTrace {
             resolverId);
       }
 
-      storage.putShort(method);
-      storage.putInt(senderId);
+      storage.putShortInt(method, senderId);
     }
 
     public void recordSystemCall(final int dataId) {
