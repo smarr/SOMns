@@ -11,7 +11,7 @@ import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.TracingActor;
 
 
-public abstract class TraceActorCreation extends Node {
+public abstract class TraceActorContext extends Node {
   public abstract void execute(TracingActor actor);
 
   protected static boolean smallIds() {
@@ -31,40 +31,39 @@ public abstract class TraceActorCreation extends Node {
   }
 
   @Specialization(guards = {"smallIds()", "byteId(actor)"})
-  public void traceByteId(final TracingActor actor) {
+  public static void traceByteId(final TracingActor actor) {
     ByteBuffer storage = getStorage();
-    storage.put((byte) (ActorExecutionTrace.ACTOR_CREATION | (0 << 4)));
-    storage.put((byte) actor.getActorId());
+    storage.putByteShortByte((byte) (ActorExecutionTrace.ACTOR_CREATION | (0 << 4)),
+        actor.getOrdering(), (byte) actor.getActorId());
   }
 
   @Specialization(guards = {"smallIds()", "shortId(actor)"}, replaces = "traceByteId")
-  public void traceShortId(final TracingActor actor) {
+  public static void traceShortId(final TracingActor actor) {
     ByteBuffer storage = getStorage();
-    storage.putByteShort((byte) (ActorExecutionTrace.ACTOR_CREATION | (1 << 4)),
-        (short) actor.getActorId());
+    storage.putByteShortShort((byte) (ActorExecutionTrace.ACTOR_CREATION | (1 << 4)),
+        actor.getOrdering(), (short) actor.getActorId());
   }
 
   @Specialization(guards = {"smallIds()", "threeByteId(actor)"},
       replaces = {"traceShortId", "traceByteId"})
-  public void traceThreeByteId(final TracingActor actor) {
+  public static void traceThreeByteId(final TracingActor actor) {
     ByteBuffer storage = getStorage();
     int id = actor.getActorId();
-    storage.putByteByteShort((byte) (ActorExecutionTrace.ACTOR_CREATION | (2 << 4)),
-        (byte) (id >> 16), (short) id);
+    storage.putByteShortByteShort((byte) (ActorExecutionTrace.ACTOR_CREATION | (2 << 4)),
+        actor.getOrdering(), (byte) (id >> 16), (short) id);
   }
 
   @Specialization(replaces = {"traceShortId", "traceByteId", "traceThreeByteId"})
-  public void traceStandardId(final TracingActor actor) {
+  public static void traceStandardId(final TracingActor actor) {
     ByteBuffer storage = getStorage();
     int id = actor.getActorId();
-    storage.putByteInt((byte) (ActorExecutionTrace.ACTOR_CREATION | (3 << 4)), id);
+    storage.putByteShortInt((byte) (ActorExecutionTrace.ACTOR_CREATION | (3 << 4)),
+        actor.getOrdering(), id);
   }
 
-  @Child TraceActorContext tracer = TraceActorContextNodeGen.create();
-
-  private ByteBuffer getStorage() {
+  private static ByteBuffer getStorage() {
     ActorTraceBuffer buffer = getCurrentBuffer();
-    return buffer.ensureSufficientSpace(5, tracer);
+    return buffer.getStorage();
   }
 
   private static TracingActivityThread getThread() {
