@@ -1,6 +1,5 @@
 package som.primitives;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 import java.sql.Array;
 import java.sql.Connection;
@@ -56,6 +55,7 @@ import som.vmobjects.SDerbyConnection.SDerbyPreparedStatement;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.ByteBuffer;
 
 
 public final class DerbyPrims {
