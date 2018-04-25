@@ -136,11 +136,11 @@ public class ActorExecutionTrace {
 
     public void recordActorContext(final TracingActor actor) {
       ensureSufficientSpace(7);
+      currentActor = actor;
       recordActorContextWithoutBufferCheck(actor);
     }
 
     private void recordActorContextWithoutBufferCheck(final TracingActor actor) {
-      currentActor = actor;
       int id = actor.getActorId();
 
       if (VmSettings.TRACE_SMALL_IDS) {
