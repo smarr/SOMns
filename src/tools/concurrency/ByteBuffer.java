@@ -211,6 +211,21 @@ public final class ByteBuffer {
     // _put(bi + 4, int0(b));
   }
 
+  public void putByteShortByte(final byte a, final short b, final byte c) {
+    int bi = nextPutIndex(1 + 2 + 1);
+    _put(bi, a);
+    unsafe.putShort(buffer, byteArrBaseOffset + bi + 1, b);
+    _put(bi + 3, c);
+  }
+
+  public void putByteShortByteShort(final byte a, final short b, final byte c, final short d) {
+    int bi = nextPutIndex(1 + 2 + 1 + 2);
+    _put(bi, a);
+    unsafe.putShort(buffer, byteArrBaseOffset + bi + 1, b);
+    _put(bi + 3, c);
+    unsafe.putShort(buffer, byteArrBaseOffset + bi + 4, d);
+  }
+
   public void putByteShortShort(final byte a, final short b, final short c) {
     int bi = nextPutIndex(1 + 2 + 2);
     _put(bi, a);

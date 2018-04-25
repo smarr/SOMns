@@ -51,6 +51,8 @@ import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.nodes.TraceActorContext;
+import tools.concurrency.nodes.TraceActorContextNodeGen;
 
 
 public final class SystemPrims {
@@ -252,11 +254,13 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemTime:")
   public abstract static class TimePrim extends UnaryBasicOperation {
+    @Child TraceActorContext tracer = TraceActorContextNodeGen.create();
+
     @Specialization
     public final long doSObject(final Object receiver) {
       long res = System.currentTimeMillis() - startTime;
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.longSystemCall(res);
+        ActorExecutionTrace.longSystemCall(res, tracer);
       }
       return res;
     }
@@ -282,11 +286,13 @@ public final class SystemPrims {
   @Primitive(primitive = "systemTicks:", selector = "ticks",
       specializer = IsSystemModule.class, noWrapper = true)
   public abstract static class TicksPrim extends UnaryBasicOperation implements Operation {
+    @Child TraceActorContext tracer = TraceActorContextNodeGen.create();
+
     @Specialization
     public final long doSObject(final Object receiver) {
       long res = System.nanoTime() / 1000L - startMicroTime;
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.longSystemCall(res);
+        ActorExecutionTrace.longSystemCall(res, tracer);
       }
       return res;
     }

@@ -2,6 +2,7 @@ package tools.concurrency;
 
 import som.vm.VmSettings;
 import tools.concurrency.ActorExecutionTrace.ActorTraceBuffer;
+import tools.concurrency.nodes.TraceActorContext;
 
 
 public abstract class TraceBuffer {
@@ -44,14 +45,19 @@ public abstract class TraceBuffer {
     return true;
   }
 
-  public final ByteBuffer ensureSufficientSpace(final int requiredSpace) {
+  public final ByteBuffer ensureSufficientSpace(final int requiredSpace,
+      final TraceActorContext tracer) {
     if (storage.remaining() < requiredSpace) {
-      swapBufferWhenNotEnoughSpace();
+      swapBufferWhenNotEnoughSpace(tracer);
     }
     return storage;
   }
 
-  protected void swapBufferWhenNotEnoughSpace() {
+  public final ByteBuffer getStorage() {
+    return storage;
+  }
+
+  protected void swapBufferWhenNotEnoughSpace(final TraceActorContext tracer) {
     swapStorage();
   }
 }
