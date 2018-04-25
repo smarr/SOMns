@@ -169,4 +169,20 @@ public final class ByteBuffer {
     position += length;
     return this;
   }
+
+  public void putByteShort(final byte a, final short b) {
+    int bi = nextPutIndex(1 + 2);
+    _put(bi, a);
+    _put(bi + 1, short1(b));
+    _put(bi + 2, short0(b));
+  }
+
+  public void putByteShortShort(final byte a, final short b, final short c) {
+    int bi = nextPutIndex(1 + 2 + 2);
+    _put(bi, a);
+    _put(bi + 1, short1(b));
+    _put(bi + 2, short0(b));
+    _put(bi + 3, short1(c));
+    _put(bi + 4, short0(c));
+  }
 }

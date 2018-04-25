@@ -149,9 +149,8 @@ public class ActorExecutionTrace {
         storage.putShort(actor.getOrdering());
         writeId(usedBytes, id);
       } else {
-        storage.put((byte) (ACTOR_CONTEXT | (3 << 4)));
-        storage.putShort(actor.getOrdering());
-        storage.putInt(id);
+      storage.putByteShortShort(
+          (byte) (ACTOR_CONTEXT | (usedBytes << 4)), actor.getOrdering(), (short) id);
       }
     }
 
@@ -162,8 +161,7 @@ public class ActorExecutionTrace {
         storage.put((byte) (ACTOR_CREATION | (usedBytes << 4)));
         writeId(usedBytes, childId);
       } else {
-        storage.put((byte) (ACTOR_CREATION | (3 << 4)));
-        storage.putInt(childId);
+      storage.putByteShort((byte) (ACTOR_CREATION | (usedBytes << 4)), (short) childId);
       }
     }
 
