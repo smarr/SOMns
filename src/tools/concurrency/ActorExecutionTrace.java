@@ -6,6 +6,7 @@ import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
 import som.vm.VmSettings;
 import tools.concurrency.TracingActors.TracingActor;
+import tools.concurrency.nodes.TraceActorContext;
 
 
 public class ActorExecutionTrace {
@@ -24,17 +25,13 @@ public class ActorExecutionTrace {
     return (TracingActivityThread) current;
   }
 
-  public static void recordActorContext(final TracingActor actor) {
+  public static void recordActorContext(final TracingActor actor,
+      final TraceActorContext tracer) {
     TracingActivityThread t = getThread();
-    ((ActorTraceBuffer) t.getBuffer()).recordActorContext(actor);
+    ((ActorTraceBuffer) t.getBuffer()).recordActorContext(actor, tracer);
   }
 
-  public static void recordActorCreation(final int childId) {
-    TracingActivityThread t = getThread();
-    ((ActorTraceBuffer) t.getBuffer()).recordActorCreation(childId);
-  }
-
-  public static void recordMessage(final EventualMessage msg) {
+  public static void recordMessage(final EventualMessage msg, final TraceActorContext tracer) {
     TracingActivityThread t = getThread();
     ActorTraceBuffer atb = ((ActorTraceBuffer) t.getBuffer());
     if (msg instanceof ExternalMessage) {
@@ -42,59 +39,60 @@ public class ActorExecutionTrace {
       if (msg instanceof PromiseMessage) {
         atb.recordExternalPromiseMessage(msg.getSender().getActorId(),
             ((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor(),
-            em.getMethod(), em.getDataId());
+            em.getMethod(), em.getDataId(), tracer);
       } else {
         atb.recordExternalMessage(msg.getSender().getActorId(), em.getMethod(),
-            em.getDataId());
+            em.getDataId(), tracer);
       }
     } else {
       if (msg instanceof PromiseMessage) {
         atb.recordPromiseMessage(msg.getSender().getActorId(),
-            ((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
+            ((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor(),
+            tracer);
       } else {
-        atb.recordMessage(msg.getSender().getActorId());
+        atb.recordMessage(msg.getSender().getActorId(), tracer);
       }
     }
   }
 
-  public static void recordSystemCall(final int dataId) {
+  public static void recordSystemCall(final int dataId, final TraceActorContext tracer) {
     TracingActivityThread t = getThread();
-    ((ActorTraceBuffer) t.getBuffer()).recordSystemCall(dataId);
+    ((ActorTraceBuffer) t.getBuffer()).recordSystemCall(dataId, tracer);
   }
 
-  public static void intSystemCall(final int i) {
+  public static void intSystemCall(final int i, final TraceActorContext tracer) {
     TracingActor ta = (TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
     int dataId = ta.getActorId();
     ByteBuffer b = getExtDataByteBuffer(ta.getActorId(), dataId, Integer.BYTES);
     b.putInt(i);
-    recordSystemCall(dataId);
+    recordSystemCall(dataId, tracer);
     recordExternalData(b);
   }
 
-  public static void longSystemCall(final long l) {
+  public static void longSystemCall(final long l, final TraceActorContext tracer) {
     TracingActor ta = (TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
     int dataId = ta.getActorId();
     ByteBuffer b = getExtDataByteBuffer(ta.getActorId(), dataId, Long.BYTES);
     b.putLong(l);
-    recordSystemCall(dataId);
+    recordSystemCall(dataId, tracer);
     recordExternalData(b);
   }
 
-  public static void doubleSystemCall(final double d) {
+  public static void doubleSystemCall(final double d, final TraceActorContext tracer) {
     TracingActor ta = (TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
     int dataId = ta.getActorId();
     ByteBuffer b = getExtDataByteBuffer(ta.getActorId(), dataId, Double.BYTES);
     b.putDouble(d);
-    recordSystemCall(dataId);
+    recordSystemCall(dataId, tracer);
     recordExternalData(b);
   }
 
-  public static void stringSystemCall(final String s) {
+  public static void stringSystemCall(final String s, final TraceActorContext tracer) {
     TracingActor ta = (TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
     int dataId = ta.getActorId();
     ByteBuffer b = getExtDataByteBuffer(ta.getActorId(), dataId, s.getBytes().length);
     b.put(s.getBytes());
-    recordSystemCall(dataId);
+    recordSystemCall(dataId, tracer);
     recordExternalData(b);
   }
 
@@ -115,10 +113,10 @@ public class ActorExecutionTrace {
     TracingActor currentActor;
 
     @Override
-    protected void swapBufferWhenNotEnoughSpace() {
+    protected void swapBufferWhenNotEnoughSpace(final TraceActorContext tracer) {
       boolean didSwap = swapStorage();
       assert didSwap;
-      recordActorContextWithoutBufferCheck(currentActor);
+      tracer.execute(currentActor);
     }
 
     static int getUsedBytes(final int id) {
@@ -134,38 +132,14 @@ public class ActorExecutionTrace {
       return 3;
     }
 
-    public void recordActorContext(final TracingActor actor) {
-      ensureSufficientSpace(7);
+    public void recordActorContext(final TracingActor actor, final TraceActorContext tracer) {
+      ensureSufficientSpace(7, tracer);
       currentActor = actor;
-      recordActorContextWithoutBufferCheck(actor);
+      tracer.execute(actor);
     }
 
-    private void recordActorContextWithoutBufferCheck(final TracingActor actor) {
-      int id = actor.getActorId();
-
-      if (VmSettings.TRACE_SMALL_IDS) {
-        int usedBytes = getUsedBytes(id);
-        storage.putByteShort((byte) (ACTOR_CONTEXT | (usedBytes << 4)), actor.getOrdering());
-        writeId(usedBytes, id);
-      } else {
-        storage.putByteShortInt(
-            (byte) (ACTOR_CONTEXT | (3 << 4)), actor.getOrdering(), id);
-      }
-    }
-
-    public void recordActorCreation(final int childId) {
-      ensureSufficientSpace(5);
-      if (VmSettings.TRACE_SMALL_IDS) {
-        int usedBytes = getUsedBytes(childId);
-        storage.put((byte) (ACTOR_CREATION | (usedBytes << 4)));
-        writeId(usedBytes, childId);
-      } else {
-        storage.putByteInt((byte) (ACTOR_CREATION | (3 << 4)), (short) childId);
-      }
-    }
-
-    public void recordMessage(final int senderId) {
-      ensureSufficientSpace(5);
+    public void recordMessage(final int senderId, final TraceActorContext tracer) {
+      ensureSufficientSpace(5, tracer);
       if (VmSettings.TRACE_SMALL_IDS) {
         int usedBytes = getUsedBytes(senderId);
         storage.put((byte) (MESSAGE | (usedBytes << 4)));
@@ -175,8 +149,9 @@ public class ActorExecutionTrace {
       }
     }
 
-    public void recordPromiseMessage(final int senderId, final int resolverId) {
-      ensureSufficientSpace(9);
+    public void recordPromiseMessage(final int senderId, final int resolverId,
+        final TraceActorContext tracer) {
+      ensureSufficientSpace(9, tracer);
       int usedBytes = Math.max(getUsedBytes(resolverId), getUsedBytes(senderId));
 
       if (VmSettings.TRACE_SMALL_IDS) {
@@ -189,8 +164,8 @@ public class ActorExecutionTrace {
     }
 
     public void recordExternalMessage(final int senderId, final short method,
-        final int dataId) {
-      ensureSufficientSpace(11);
+        final int dataId, final TraceActorContext tracer) {
+      ensureSufficientSpace(11, tracer);
 
       if (VmSettings.TRACE_SMALL_IDS) {
         int usedBytes = getUsedBytes(senderId);
@@ -203,8 +178,8 @@ public class ActorExecutionTrace {
     }
 
     public void recordExternalPromiseMessage(final int senderId, final int resolverId,
-        final short method, final int dataId) {
-      ensureSufficientSpace(15);
+        final short method, final int dataId, final TraceActorContext tracer) {
+      ensureSufficientSpace(15, tracer);
 
       if (VmSettings.TRACE_SMALL_IDS) {
         int usedBytes = Math.max(getUsedBytes(resolverId), getUsedBytes(senderId));
@@ -220,8 +195,8 @@ public class ActorExecutionTrace {
       storage.putShortInt(method, senderId);
     }
 
-    public void recordSystemCall(final int dataId) {
-      ensureSufficientSpace(5);
+    public void recordSystemCall(final int dataId, final TraceActorContext tracer) {
+      ensureSufficientSpace(5, tracer);
       storage.putByteInt(SYSTEM_CALL, dataId);
     }
 

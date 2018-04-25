@@ -29,6 +29,8 @@ import tools.concurrency.MedeorTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
+import tools.concurrency.nodes.TraceActorContext;
+import tools.concurrency.nodes.TraceActorContextNodeGen;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.DynamicScopeType;
@@ -230,6 +232,8 @@ public class Actor implements Activity {
       this.vm = vm;
     }
 
+    private static final TraceActorContext tracer = TraceActorContextNodeGen.create();
+
     @Override
     public void run() {
       assert executorRoot != null : "Actor system not initalized, call to initializeActorSystem(.) missing?";
@@ -249,7 +253,7 @@ public class Actor implements Activity {
       t.currentlyExecutingActor = actor;
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.recordActorContext((TracingActor) actor);
+        ActorExecutionTrace.recordActorContext((TracingActor) actor, tracer);
       } else if (VmSettings.MEDEOR_TRACING) {
         MedeorTrace.currentActivity(actor);
       }
@@ -294,7 +298,7 @@ public class Actor implements Activity {
         MedeorTrace.scopeEnd(DynamicScopeType.TURN);
       }
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.recordMessage(msg);
+        ActorExecutionTrace.recordMessage(msg, tracer);
       }
     }
 
