@@ -1,9 +1,23 @@
 package tools.concurrency;
 
+import java.lang.reflect.Field;
+
 import com.oracle.truffle.api.CompilerDirectives;
+
+import sun.misc.Unsafe;
 
 
 public final class ByteBuffer {
+  private static final Unsafe unsafe;
+  private static final long   byteArrBaseOffset;
+
+  static {
+    unsafe = loadUnsafe();
+    byteArrBaseOffset = unsafe.arrayBaseOffset(byte[].class);
+    assert unsafe.arrayIndexScale(
+        byte[].class) == 1 : "Expect byte elements to be exactly one byte in size.";
+  }
+
   public static ByteBuffer allocate(final int capacity) {
     return new ByteBuffer(capacity);
   }
@@ -173,49 +187,81 @@ public final class ByteBuffer {
   public void putByteShort(final byte a, final short b) {
     int bi = nextPutIndex(1 + 2);
     _put(bi, a);
-    _put(bi + 1, short1(b));
-    _put(bi + 2, short0(b));
+    unsafe.putShort(buffer, byteArrBaseOffset + bi + 1, b);
+    // _put(bi + 1, short1(b));
+    // _put(bi + 2, short0(b));
   }
 
   public void putByteInt(final byte a, final int b) {
     int bi = nextPutIndex(1 + 4);
     _put(bi, a);
-    _put(bi + 1, int3(b));
-    _put(bi + 2, int2(b));
-    _put(bi + 3, int1(b));
-    _put(bi + 4, int0(b));
+
+    unsafe.putInt(buffer, byteArrBaseOffset + bi + 1, b);
+    // _put(bi + 1, int3(b));
+    // _put(bi + 2, int2(b));
+    // _put(bi + 3, int1(b));
+    // _put(bi + 4, int0(b));
   }
 
   public void putByteShortShort(final byte a, final short b, final short c) {
     int bi = nextPutIndex(1 + 2 + 2);
     _put(bi, a);
-    _put(bi + 1, short1(b));
-    _put(bi + 2, short0(b));
-    _put(bi + 3, short1(c));
-    _put(bi + 4, short0(c));
+    unsafe.putShort(buffer, byteArrBaseOffset + bi + 1, b);
+    // _put(bi + 1, short1(b));
+    // _put(bi + 2, short0(b));
+    unsafe.putShort(buffer, byteArrBaseOffset + bi + 3, c);
+    // _put(bi + 3, short1(c));
+    // _put(bi + 4, short0(c));
   }
 
   public void putByteShortInt(final byte a, final short b, final int c) {
     int bi = nextPutIndex(1 + 2 + 4);
     _put(bi, a);
-    _put(bi + 1, short1(b));
-    _put(bi + 2, short0(b));
-    _put(bi + 3, int3(c));
-    _put(bi + 4, int2(c));
-    _put(bi + 5, int1(c));
-    _put(bi + 6, int0(c));
+    unsafe.putShort(buffer, byteArrBaseOffset + bi + 1, b);
+
+    // _put(bi + 1, short1(b));
+    // _put(bi + 2, short0(b));
+    unsafe.putInt(buffer, byteArrBaseOffset + bi + 3, c);
+    // _put(bi + 3, int3(c));
+    // _put(bi + 4, int2(c));
+    // _put(bi + 5, int1(c));
+    // _put(bi + 6, int0(c));
   }
 
   public void putByteIntInt(final byte a, final int b, final int c) {
     int bi = nextPutIndex(1 + 4 + 4);
     _put(bi, a);
-    _put(bi + 1, int3(b));
-    _put(bi + 2, int2(b));
-    _put(bi + 3, int1(b));
-    _put(bi + 4, int0(b));
-    _put(bi + 5, int3(c));
-    _put(bi + 6, int2(c));
-    _put(bi + 7, int1(c));
-    _put(bi + 8, int0(c));
+    unsafe.putInt(buffer, byteArrBaseOffset + bi + 1, b);
+    // _put(bi + 1, int3(b));
+    // _put(bi + 2, int2(b));
+    // _put(bi + 3, int1(b));
+    // _put(bi + 4, int0(b));
+    unsafe.putInt(buffer, byteArrBaseOffset + bi + 5, c);
+    // _put(bi + 5, int3(c));
+    // _put(bi + 6, int2(c));
+    // _put(bi + 7, int1(c));
+    // _put(bi + 8, int0(c));
+  }
+
+  public void putShortInt(final short a, final int b) {
+    int bi = nextPutIndex(2 + 4);
+    unsafe.putShort(buffer, byteArrBaseOffset + bi, a);
+    unsafe.putInt(buffer, byteArrBaseOffset + bi + 2, b);
+  }
+
+  private static Unsafe loadUnsafe() {
+    try {
+      return Unsafe.getUnsafe();
+    } catch (SecurityException e) {
+      // can fail, is ok, just to the fallback below
+    }
+    try {
+      Field theUnsafeInstance = Unsafe.class.getDeclaredField("theUnsafe");
+      theUnsafeInstance.setAccessible(true);
+      return (Unsafe) theUnsafeInstance.get(Unsafe.class);
+    } catch (Exception e) {
+      throw new RuntimeException(
+          "exception while trying to get Unsafe.theUnsafe via reflection:", e);
+    }
   }
 }
