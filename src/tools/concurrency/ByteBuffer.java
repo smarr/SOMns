@@ -177,6 +177,15 @@ public final class ByteBuffer {
     _put(bi + 2, short0(b));
   }
 
+  public void putByteInt(final byte a, final int b) {
+    int bi = nextPutIndex(1 + 4);
+    _put(bi, a);
+    _put(bi + 1, int3(b));
+    _put(bi + 2, int2(b));
+    _put(bi + 3, int1(b));
+    _put(bi + 4, int0(b));
+  }
+
   public void putByteShortShort(final byte a, final short b, final short c) {
     int bi = nextPutIndex(1 + 2 + 2);
     _put(bi, a);
@@ -184,5 +193,29 @@ public final class ByteBuffer {
     _put(bi + 2, short0(b));
     _put(bi + 3, short1(c));
     _put(bi + 4, short0(c));
+  }
+
+  public void putByteShortInt(final byte a, final short b, final int c) {
+    int bi = nextPutIndex(1 + 2 + 4);
+    _put(bi, a);
+    _put(bi + 1, short1(b));
+    _put(bi + 2, short0(b));
+    _put(bi + 3, int3(c));
+    _put(bi + 4, int2(c));
+    _put(bi + 5, int1(c));
+    _put(bi + 6, int0(c));
+  }
+
+  public void putByteIntInt(final byte a, final int b, final int c) {
+    int bi = nextPutIndex(1 + 4 + 4);
+    _put(bi, a);
+    _put(bi + 1, int3(b));
+    _put(bi + 2, int2(b));
+    _put(bi + 3, int1(b));
+    _put(bi + 4, int0(b));
+    _put(bi + 5, int3(c));
+    _put(bi + 6, int2(c));
+    _put(bi + 7, int1(c));
+    _put(bi + 8, int0(c));
   }
 }

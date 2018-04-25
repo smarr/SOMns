@@ -149,8 +149,8 @@ public class ActorExecutionTrace {
         storage.putShort(actor.getOrdering());
         writeId(usedBytes, id);
       } else {
-      storage.putByteShortShort(
-          (byte) (ACTOR_CONTEXT | (usedBytes << 4)), actor.getOrdering(), (short) id);
+        storage.putByteShortInt(
+            (byte) (ACTOR_CONTEXT | (3 << 4)), actor.getOrdering(), id);
       }
     }
 
@@ -161,7 +161,7 @@ public class ActorExecutionTrace {
         storage.put((byte) (ACTOR_CREATION | (usedBytes << 4)));
         writeId(usedBytes, childId);
       } else {
-      storage.putByteShort((byte) (ACTOR_CREATION | (usedBytes << 4)), (short) childId);
+        storage.putByteInt((byte) (ACTOR_CREATION | (3 << 4)), (short) childId);
       }
     }
 
@@ -172,8 +172,7 @@ public class ActorExecutionTrace {
         storage.put((byte) (MESSAGE | (usedBytes << 4)));
         writeId(usedBytes, senderId);
       } else {
-        storage.put((byte) (MESSAGE | (3 << 4)));
-        storage.putInt(senderId);
+        storage.putByteInt((byte) (MESSAGE | (3 << 4)), senderId);
       }
     }
 
@@ -186,9 +185,7 @@ public class ActorExecutionTrace {
         writeId(usedBytes, senderId);
         writeId(usedBytes, resolverId);
       } else {
-        storage.put((byte) (PROMISE_MESSAGE | (3 << 4)));
-        storage.putInt(senderId);
-        storage.putInt(resolverId);
+        storage.putByteIntInt((byte) (PROMISE_MESSAGE | (3 << 4)), senderId, resolverId);
       }
     }
 
@@ -201,12 +198,10 @@ public class ActorExecutionTrace {
         storage.put((byte) (EXTERNAL_BIT | MESSAGE | (usedBytes << 4)));
         writeId(usedBytes, senderId);
       } else {
-        storage.put((byte) (EXTERNAL_BIT | MESSAGE | (3 << 4)));
-        storage.putInt(senderId);
+        storage.putByteInt((byte) (EXTERNAL_BIT | MESSAGE | (3 << 4)), senderId);
       }
       storage.putShort(method);
       storage.putInt(senderId);
-
     }
 
     public void recordExternalPromiseMessage(final int senderId, final int resolverId,
@@ -220,9 +215,8 @@ public class ActorExecutionTrace {
         writeId(usedBytes, senderId);
         writeId(usedBytes, resolverId);
       } else {
-        storage.put((byte) (EXTERNAL_BIT | PROMISE_MESSAGE | (3 << 4)));
-        storage.putInt(senderId);
-        storage.putInt(resolverId);
+        storage.putByteIntInt((byte) (EXTERNAL_BIT | PROMISE_MESSAGE | (3 << 4)), senderId,
+            resolverId);
       }
 
       storage.putShort(method);
@@ -231,8 +225,7 @@ public class ActorExecutionTrace {
 
     public void recordSystemCall(final int dataId) {
       ensureSufficientSpace(5);
-      storage.put(SYSTEM_CALL);
-      storage.putInt(dataId);
+      storage.putByteInt(SYSTEM_CALL, dataId);
     }
 
     private void writeId(final int usedBytes, final int id) {
@@ -244,8 +237,7 @@ public class ActorExecutionTrace {
           storage.putShort((short) id);
           break;
         case 2:
-          storage.put((byte) (id >> 16));
-          storage.putShort((short) id);
+          storage.putByteShort((byte) (id >> 16), (short) id);
           break;
         case 3:
           storage.putInt(id);
