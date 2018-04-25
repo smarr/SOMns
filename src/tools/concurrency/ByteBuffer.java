@@ -73,7 +73,7 @@ public final class ByteBuffer {
   }
 
   private void _put(final int i, final byte b) {
-    buffer[i] = b;
+    unsafe.putByte(buffer, byteArrBaseOffset + i, b);
   }
 
   private static byte short1(final short x) {
@@ -170,7 +170,8 @@ public final class ByteBuffer {
   }
 
   public ByteBuffer put(final byte x) {
-    buffer[nextPutIndex()] = x;
+    unsafe.putByte(buffer, byteArrBaseOffset + nextPutIndex(), x);
+    // buffer[nextPutIndex()] = x;
     return this;
   }
 
