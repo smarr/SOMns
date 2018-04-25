@@ -15,9 +15,11 @@ import som.primitives.ObjectPrimsFactory.IsValueFactory.IsValueNodeGen;
 import som.primitives.actors.PromisePrims.IsActorModule;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
-import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.MedeorTrace;
 import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.concurrency.TracingActors.TracingActor;
+import tools.concurrency.nodes.TraceActorCreation;
+import tools.concurrency.nodes.TraceActorCreationNodeGen;
 import tools.debugger.entities.ActivityType;
 
 
@@ -27,6 +29,7 @@ import tools.debugger.entities.ActivityType;
 public abstract class CreateActorPrim extends BinarySystemOperation {
   @Child protected IsValue                isValue = IsValueNodeGen.createSubNode();
   @Child protected ExceptionSignalingNode notAValue;
+  @Child protected TraceActorCreation trace   = TraceActorCreationNodeGen.create();
 
   @Override
   public final CreateActorPrim initialize(final VM vm) {
@@ -41,7 +44,7 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
     SFarReference ref = new SFarReference(actor, argument);
 
     if (VmSettings.ACTOR_TRACING) {
-      ActorExecutionTrace.recordActorCreation(actor.getActorId());
+      trace.execute((TracingActor) actor);
     } else if (VmSettings.MEDEOR_TRACING) {
       assert argument instanceof SClass;
       final SClass actorClass = (SClass) argument;
