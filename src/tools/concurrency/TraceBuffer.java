@@ -44,10 +44,11 @@ public abstract class TraceBuffer {
     return true;
   }
 
-  protected final void ensureSufficientSpace(final int requiredSpace) {
+  public final ByteBuffer ensureSufficientSpace(final int requiredSpace) {
     if (storage.remaining() < requiredSpace) {
       swapBufferWhenNotEnoughSpace();
     }
+    return storage;
   }
 
   protected void swapBufferWhenNotEnoughSpace() {
