@@ -113,7 +113,7 @@ public class SHttpServer extends SObjectWithClass implements SExternalDataSource
     final String                                     path;
     final HashMap<SSymbol, ArrayList<SFarReference>> handlers;
 
-    public DynamicHttpHandler(final String path) {
+    DynamicHttpHandler(final String path) {
       this.path = path;
       handlers = new HashMap<>(2);
     }
@@ -208,11 +208,11 @@ public class SHttpServer extends SObjectWithClass implements SExternalDataSource
    * StaticHttpHandlers don't need to be considered in replay, the events don't trigger, and
    * there is no inteartion with SOMns code.
    */
-  class StaticHttpHandler implements HttpHandler {
+  static class StaticHttpHandler implements HttpHandler {
     private final String root;
     private final String base;
 
-    public StaticHttpHandler(final String root, final String base) {
+    StaticHttpHandler(final String root, final String base) {
       if (root.endsWith("/")) {
         this.root = root;
       } else {

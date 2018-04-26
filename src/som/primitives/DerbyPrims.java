@@ -59,7 +59,7 @@ import tools.concurrency.ByteBuffer;
 
 
 public final class DerbyPrims {
-  private final static String DRIVER              = "org.apache.derby.jdbc.EmbeddedDriver";
+  private static final String DRIVER              = "org.apache.derby.jdbc.EmbeddedDriver";
   private static final short  METHOD_EXEC_PREP_UC = 0;
   private static final short  METHOD_EXEC_PREP_RS = 1;
   private static final short  METHOD_EXEC_UC      = 2;
@@ -129,7 +129,7 @@ public final class DerbyPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "derbyGetConnection:ifFail:")
   public abstract static class DerbyGetConnectionPrim extends BinarySystemOperation {
-    public final String                PROTOCOL        = "jdbc:derby:derby/";
+    private static final String        PROTOCOL        = "jdbc:derby:derby/";
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
@@ -173,7 +173,6 @@ public final class DerbyPrims {
   @ImportStatic(DerbyPrims.class)
   @Primitive(primitive = "derby:prepareStatement:ifFail:")
   public abstract static class DerbyPrepareStatementPrim extends TernaryExpressionNode {
-    public final String                PROTOCOL        = "jdbc:derby:";
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
@@ -307,7 +306,6 @@ public final class DerbyPrims {
   @Primitive(primitive = "derby:executePreparedStatement:callback:ifFail:")
   public abstract static class DerbyExecutePrepareStatementPrim
       extends QuaternaryExpressionNode {
-    public final String                PROTOCOL        = "jdbc:derby:";
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
     @Child protected AtPrim            arrayAt         = AtPrimFactory.create(null, null);
 
@@ -410,7 +408,6 @@ public final class DerbyPrims {
   @ImportStatic(DerbyPrims.class)
   @Primitive(primitive = "derby:executeStatement:callback:ifFail:")
   public abstract static class DerbyExecuteStatementPrim extends QuaternaryExpressionNode {
-    public final String                PROTOCOL        = "jdbc:derby:";
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
