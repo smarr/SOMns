@@ -17,6 +17,7 @@
     <property name="somns-deps.version" value="0.3.3" />
     <property name="checkstyle.version" value="8.8" />
     <property name="jacoco.version"     value="0.8.0" />
+    <property name="derby.version"      value="10.14.1.0" />
 
     <!-- <property name="lib.url" value="https://dl.bintray.com/smarr/SOM" /> -->
     <property name="lib.url" value="http://stefan-marr.de/dev" />
@@ -129,6 +130,9 @@
         <get src="${lib.url}/somns-deps-dev-${somns-deps.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/somns-deps-dev.jar" />
+        <get src="http://repo1.maven.org/maven2/org/apache/derby/derby/${derby.version}/derby-${derby.version}.jar"
+            usetimestamp="true"
+            dest="${lib.dir}/derby.jar" />
     </target>
 
     <target name="source" description="Download Source Jars for development">
