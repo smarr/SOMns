@@ -31,11 +31,6 @@ public class ActorExecutionTrace {
     ((ActorTraceBuffer) t.getBuffer()).recordActorContext(actor, tracer);
   }
 
-  public static void recordActorCreation(final int childId) {
-    TracingActivityThread t = getThread();
-    ((ActorTraceBuffer) t.getBuffer()).recordActorCreation(childId);
-  }
-
   public static void recordMessage(final EventualMessage msg, final TraceActorContext tracer) {
     TracingActivityThread t = getThread();
     ActorTraceBuffer atb = ((ActorTraceBuffer) t.getBuffer());
