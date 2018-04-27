@@ -76,80 +76,16 @@ public final class ByteBuffer {
     unsafe.putByte(buffer, byteArrBaseOffset + i, b);
   }
 
-  private static byte short1(final short x) {
-    return (byte) (x >> 8);
-  }
-
-  private static byte short0(final short x) {
-    return (byte) (x);
-  }
-
-  private static byte long7(final long x) {
-    return (byte) (x >> 56);
-  }
-
-  private static byte long6(final long x) {
-    return (byte) (x >> 48);
-  }
-
-  private static byte long5(final long x) {
-    return (byte) (x >> 40);
-  }
-
-  private static byte long4(final long x) {
-    return (byte) (x >> 32);
-  }
-
-  private static byte long3(final long x) {
-    return (byte) (x >> 24);
-  }
-
-  private static byte long2(final long x) {
-    return (byte) (x >> 16);
-  }
-
-  private static byte long1(final long x) {
-    return (byte) (x >> 8);
-  }
-
-  private static byte long0(final long x) {
-    return (byte) (x);
-  }
-
-  private static byte int3(final int x) {
-    return (byte) (x >> 24);
-  }
-
-  private static byte int2(final int x) {
-    return (byte) (x >> 16);
-  }
-
-  private static byte int1(final int x) {
-    return (byte) (x >> 8);
-  }
-
-  private static byte int0(final int x) {
-    return (byte) (x);
-  }
-
   public ByteBuffer putShort(final short x) {
     int bi = nextPutIndex(2);
-    _put(bi, short1(x));
-    _put(bi + 1, short0(x));
+    unsafe.putShort(buffer, byteArrBaseOffset + bi, x);
 
     return this;
   }
 
   public ByteBuffer putLong(final long x) {
     int bi = nextPutIndex(8);
-    _put(bi, long7(x));
-    _put(bi + 1, long6(x));
-    _put(bi + 2, long5(x));
-    _put(bi + 3, long4(x));
-    _put(bi + 4, long3(x));
-    _put(bi + 5, long2(x));
-    _put(bi + 6, long1(x));
-    _put(bi + 7, long0(x));
+    unsafe.putLong(buffer, byteArrBaseOffset + bi, x);
 
     return this;
   }
@@ -161,10 +97,9 @@ public final class ByteBuffer {
 
   public ByteBuffer putInt(final int x) {
     int bi = nextPutIndex(4);
-    _put(bi, int3(x));
-    _put(bi + 1, int2(x));
-    _put(bi + 2, int1(x));
-    _put(bi + 3, int0(x));
+    unsafe.putInt(buffer, byteArrBaseOffset + bi, x);
+
+    return this;
 
     return this;
   }
