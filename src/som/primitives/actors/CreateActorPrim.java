@@ -17,7 +17,6 @@ import tools.concurrency.MedeorTrace;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.concurrency.nodes.TraceActorCreationNode;
-import tools.concurrency.nodes.TraceActorCreationNodeGen;
 import tools.debugger.entities.ActivityType;
 
 
@@ -25,8 +24,8 @@ import tools.debugger.entities.ActivityType;
 @Primitive(primitive = "actors:createFromValue:", selector = "createActorFromValue:",
     specializer = IsActorModule.class)
 public abstract class CreateActorPrim extends BinarySystemOperation {
-  @Child protected IsValue            isValue = IsValueNodeGen.createSubNode();
-  @Child protected TraceActorCreationNode trace   = TraceActorCreationNodeGen.create();
+  @Child protected IsValue                isValue = IsValueNodeGen.createSubNode();
+  @Child protected TraceActorCreationNode trace   = new TraceActorCreationNode();
 
   @Specialization(guards = "isValue.executeEvaluated(argument)")
   public final SFarReference createActor(final Object receiver, final Object argument) {
@@ -34,7 +33,7 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
     SFarReference ref = new SFarReference(actor, argument);
 
     if (VmSettings.ACTOR_TRACING) {
-      trace.execute((TracingActor) actor);
+      trace.trace((TracingActor) actor);
     } else if (VmSettings.MEDEOR_TRACING) {
       assert argument instanceof SClass;
       final SClass actorClass = (SClass) argument;
