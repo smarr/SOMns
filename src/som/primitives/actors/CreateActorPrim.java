@@ -16,7 +16,7 @@ import som.vmobjects.SClass;
 import tools.concurrency.MedeorTrace;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActors.TracingActor;
-import tools.concurrency.nodes.TraceActorCreation;
+import tools.concurrency.nodes.TraceActorCreationNode;
 import tools.concurrency.nodes.TraceActorCreationNodeGen;
 import tools.debugger.entities.ActivityType;
 
@@ -26,7 +26,7 @@ import tools.debugger.entities.ActivityType;
     specializer = IsActorModule.class)
 public abstract class CreateActorPrim extends BinarySystemOperation {
   @Child protected IsValue            isValue = IsValueNodeGen.createSubNode();
-  @Child protected TraceActorCreation trace   = TraceActorCreationNodeGen.create();
+  @Child protected TraceActorCreationNode trace   = TraceActorCreationNodeGen.create();
 
   @Specialization(guards = "isValue.executeEvaluated(argument)")
   public final SFarReference createActor(final Object receiver, final Object argument) {

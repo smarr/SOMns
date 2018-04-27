@@ -14,7 +14,7 @@ import som.interpreter.actors.SPromise.SResolver;
 import som.vm.VmSettings;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.MedeorTrace;
-import tools.concurrency.nodes.TraceActorContext;
+import tools.concurrency.nodes.TraceActorContextNode;
 import tools.concurrency.nodes.TraceActorContextNodeGen;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.DynamicScopeType;
@@ -25,7 +25,7 @@ public abstract class ReceivedRootNode extends RootNode {
   @Child protected AbstractPromiseResolutionNode resolve;
   @Child protected AbstractPromiseResolutionNode error;
 
-  @Child protected TraceActorContext tracer = TraceActorContextNodeGen.create();
+  @Child protected TraceActorContextNode tracer = TraceActorContextNodeGen.create();
 
   private final ValueProfile msgProfile = ValueProfile.createClassProfile();
 

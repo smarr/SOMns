@@ -51,7 +51,7 @@ import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.concurrency.ActorExecutionTrace;
-import tools.concurrency.nodes.TraceActorContext;
+import tools.concurrency.nodes.TraceActorContextNode;
 import tools.concurrency.nodes.TraceActorContextNodeGen;
 
 
@@ -254,7 +254,7 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemTime:")
   public abstract static class TimePrim extends UnaryBasicOperation {
-    @Child TraceActorContext tracer = TraceActorContextNodeGen.create();
+    @Child TraceActorContextNode tracer = TraceActorContextNodeGen.create();
 
     @Specialization
     public final long doSObject(final Object receiver) {
@@ -286,7 +286,7 @@ public final class SystemPrims {
   @Primitive(primitive = "systemTicks:", selector = "ticks",
       specializer = IsSystemModule.class, noWrapper = true)
   public abstract static class TicksPrim extends UnaryBasicOperation implements Operation {
-    @Child TraceActorContext tracer = TraceActorContextNodeGen.create();
+    @Child TraceActorContextNode tracer = TraceActorContextNodeGen.create();
 
     @Specialization
     public final long doSObject(final Object receiver) {
