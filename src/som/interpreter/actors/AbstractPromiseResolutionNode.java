@@ -6,6 +6,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.nodes.WithContext;
@@ -25,6 +26,8 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
 
   @Child protected WrapReferenceNode   wrapper = WrapReferenceNodeGen.create();
   @Child protected UnaryExpressionNode haltNode;
+
+  private final ValueProfile whenResolvedProfile = ValueProfile.createClassProfile();
 
   protected AbstractPromiseResolutionNode() {
     haltNode = insert(SuspendExecutionNodeGen.create(2, null));
@@ -110,15 +113,16 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
     SPromise promise = resolver.getPromise();
     Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-    resolve(type, wrapper, promise, result, current, actorPool, haltOnResolution);
+    resolve(type, wrapper, promise, result, current, actorPool, haltOnResolution,
+        whenResolvedProfile);
   }
 
   public static void resolve(final Resolution type,
       final WrapReferenceNode wrapper, final SPromise promise,
       final Object result, final Actor current, final ForkJoinPool actorPool,
-      final boolean haltOnResolution) {
+      final boolean haltOnResolution, final ValueProfile whenResolvedProfile) {
     Object wrapped = wrapper.execute(result, promise.owner, current);
     SResolver.resolveAndTriggerListenersUnsynced(type, result, wrapped, promise,
-        current, actorPool, haltOnResolution);
+        current, actorPool, haltOnResolution, whenResolvedProfile);
   }
 }

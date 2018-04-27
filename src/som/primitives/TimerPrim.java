@@ -8,6 +8,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.profiles.ValueProfile;
 
 import bd.primitives.Primitive;
 import som.VM;
@@ -27,6 +28,8 @@ public abstract class TimerPrim extends BinarySystemOperation {
 
   @Child protected WrapReferenceNode wrapper = WrapReferenceNodeGen.create();
 
+  private final ValueProfile whenResolvedProfile = ValueProfile.createClassProfile();
+
   @Override
   public final TimerPrim initialize(final VM vm) {
     super.initialize(vm);
@@ -45,7 +48,7 @@ public abstract class TimerPrim extends BinarySystemOperation {
       public void run() {
         ResolvePromiseNode.resolve(Resolution.SUCCESSFUL, wrapper,
             resolver.getPromise(), true,
-            resolver.getPromise().getOwner(), actorPool, false);
+            resolver.getPromise().getOwner(), actorPool, false, whenResolvedProfile);
       }
     }, timeout);
     return true;
