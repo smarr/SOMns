@@ -13,9 +13,11 @@ import som.interpreter.SomLanguage;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.VmSettings;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.MedeorTrace;
 import tools.concurrency.nodes.TraceActorContext;
 import tools.concurrency.nodes.TraceActorContextNodeGen;
 import tools.debugger.WebDebugger;
+import tools.debugger.entities.DynamicScopeType;
 
 
 public abstract class ReceivedRootNode extends RootNode {
@@ -66,11 +68,20 @@ public abstract class ReceivedRootNode extends RootNode {
       haltOnResolution = false;
     }
 
+    if (VmSettings.MEDEOR_TRACING) {
+      MedeorTrace.scopeStart(DynamicScopeType.TURN, msg.getMessageId(),
+          msg.getTargetSourceSection());
+    }
+
     try {
       return executeBody(frame, msg, haltOnResolver, haltOnResolution);
     } finally {
       if (VmSettings.ACTOR_TRACING) {
         ActorExecutionTrace.recordMessage(msgProfile.profile(msg), tracer);
+      }
+
+      if (VmSettings.MEDEOR_TRACING) {
+        MedeorTrace.scopeEnd(DynamicScopeType.TURN);
       }
     }
   }

@@ -27,7 +27,6 @@ import tools.concurrency.nodes.TraceActorContext;
 import tools.concurrency.nodes.TraceActorContextNodeGen;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
-import tools.debugger.entities.DynamicScopeType;
 
 
 /**
@@ -273,17 +272,7 @@ public class Actor implements Activity {
         TracingActor.handleBreakpointsAndStepping(msg, dbg, actor);
       }
 
-      try {
-        if (VmSettings.MEDEOR_TRACING) {
-          MedeorTrace.scopeStart(DynamicScopeType.TURN, msg.getMessageId(),
-              msg.getTargetSourceSection());
-        }
-        msg.execute();
-      } finally {
-        if (VmSettings.MEDEOR_TRACING) {
-          MedeorTrace.scopeEnd(DynamicScopeType.TURN);
-        }
-      }
+      msg.execute();
     }
 
     private boolean getCurrentMessagesOrCompleteExecution() {
