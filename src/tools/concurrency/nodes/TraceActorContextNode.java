@@ -1,44 +1,26 @@
 package tools.concurrency.nodes;
 
-import com.oracle.truffle.api.dsl.Specialization;
-
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.ActorExecutionTrace.ActorTraceBuffer;
 import tools.concurrency.ByteBuffer;
 import tools.concurrency.TracingActors.TracingActor;
 
 
-public abstract class TraceActorContextNode extends TraceNode {
+public final class TraceActorContextNode extends TraceNode {
 
-  @Specialization(guards = {"smallIds()", "byteId(actor)"})
-  public static void traceByteId(final TracingActor actor) {
-    ByteBuffer storage = getStorage();
-    storage.putByteShortByte((byte) (ActorExecutionTrace.ACTOR_CREATION | (0 << 4)),
-        actor.getOrdering(), (byte) actor.getActorId());
-  }
+  @Child protected RecordIdNode id = RecordIdNodeGen.create();
 
-  @Specialization(guards = {"smallIds()", "shortId(actor)"}, replaces = "traceByteId")
-  public static void traceShortId(final TracingActor actor) {
+  public void trace(final TracingActor actor) {
     ByteBuffer storage = getStorage();
-    storage.putByteShortShort((byte) (ActorExecutionTrace.ACTOR_CREATION | (1 << 4)),
-        actor.getOrdering(), (short) actor.getActorId());
-  }
+    int pos = storage.position();
 
-  @Specialization(guards = {"smallIds()", "threeByteId(actor)"},
-      replaces = {"traceShortId", "traceByteId"})
-  public static void traceThreeByteId(final TracingActor actor) {
-    ByteBuffer storage = getStorage();
-    int id = actor.getActorId();
-    storage.putByteShortByteShort((byte) (ActorExecutionTrace.ACTOR_CREATION | (2 << 4)),
-        actor.getOrdering(), (byte) (id >> 16), (short) id);
-  }
+    int idLen = id.execute(storage, pos + 3, actor.getActorId());
+    int idBit = (idLen - 1) << 4;
 
-  @Specialization(replaces = {"traceShortId", "traceByteId", "traceThreeByteId"})
-  public static void traceStandardId(final TracingActor actor) {
-    ByteBuffer storage = getStorage();
-    int id = actor.getActorId();
-    storage.putByteShortInt((byte) (ActorExecutionTrace.ACTOR_CREATION | (3 << 4)),
-        actor.getOrdering(), id);
+    storage.putByteAt(pos, (byte) (ActorExecutionTrace.ACTOR_CONTEXT | idBit));
+    storage.putShortAt(pos + 1, actor.getOrdering());
+
+    storage.position(pos + idLen + 1 + 2);
   }
 
   private static ByteBuffer getStorage() {
