@@ -44,7 +44,7 @@ public abstract class TraceMessageNode extends TraceNode {
     int idLen = id.execute(storage, pos + 1, ((TracingActor) msg.getSender()).getActorId());
     int idBit = (idLen - 1) << 4;
 
-    storage.put((byte) (ActorExecutionTrace.MESSAGE | idBit));
+    storage.putByteAt(pos, (byte) (ActorExecutionTrace.MESSAGE | idBit));
     storage.position(pos + idLen + 1);
   }
 
@@ -91,7 +91,7 @@ public abstract class TraceMessageNode extends TraceNode {
         ((STracingPromise) msg.getPromise()).getResolvingActor());
     int idBit = (idLen - 1) << 4;
 
-    storage.put((byte) (ActorExecutionTrace.PROMISE_MESSAGE | idBit));
+    storage.putByteAt(pos, (byte) (ActorExecutionTrace.PROMISE_MESSAGE | idBit));
     storage.position(pos + idLen + idLen + 1);
   }
 
