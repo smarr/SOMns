@@ -1,10 +1,6 @@
 package tools.concurrency;
 
 import som.interpreter.actors.EventualMessage;
-import som.interpreter.actors.EventualMessage.ExternalMessage;
-import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.interpreter.actors.SPromise.STracingPromise;
-import som.vm.VmSettings;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.concurrency.nodes.TraceActorContextNode;
 
@@ -29,30 +25,6 @@ public class ActorExecutionTrace {
       final TraceActorContextNode tracer) {
     TracingActivityThread t = getThread();
     ((ActorTraceBuffer) t.getBuffer()).recordActorContext(actor, tracer);
-  }
-
-  public static void recordMessage(final EventualMessage msg, final TraceActorContextNode tracer) {
-    TracingActivityThread t = getThread();
-    ActorTraceBuffer atb = ((ActorTraceBuffer) t.getBuffer());
-    if (msg instanceof ExternalMessage) {
-      ExternalMessage em = (ExternalMessage) msg;
-      if (msg instanceof PromiseMessage) {
-        atb.recordExternalPromiseMessage(msg.getSender().getActorId(),
-            ((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor(),
-            em.getMethod(), em.getDataId(), tracer);
-      } else {
-        atb.recordExternalMessage(msg.getSender().getActorId(), em.getMethod(),
-            em.getDataId(), tracer);
-      }
-    } else {
-      if (msg instanceof PromiseMessage) {
-        atb.recordPromiseMessage(msg.getSender().getActorId(),
-            ((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor(),
-            tracer);
-      } else {
-        atb.recordMessage(msg.getSender().getActorId(), tracer);
-      }
-    }
   }
 
   public static void recordSystemCall(final int dataId, final TraceActorContextNode tracer) {
@@ -116,105 +88,19 @@ public class ActorExecutionTrace {
     protected void swapBufferWhenNotEnoughSpace(final TraceActorContextNode tracer) {
       boolean didSwap = swapStorage();
       assert didSwap;
-      tracer.execute(currentActor);
+      tracer.trace(currentActor);
     }
 
-    static int getUsedBytes(final int id) {
-      if (id >= 0) {
-        if (id <= 0xFF) {
-          return 0;
-        } else if (id <= 0xFFFF) {
-          return 1;
-        } else if (id <= 0xFFFFFF) {
-          return 2;
-        }
-      }
-      return 3;
-    }
-
-    public void recordActorContext(final TracingActor actor, final TraceActorContextNode tracer) {
+    public void recordActorContext(final TracingActor actor,
+        final TraceActorContextNode tracer) {
       ensureSufficientSpace(7, tracer);
       currentActor = actor;
-      tracer.execute(actor);
-    }
-
-    public void recordMessage(final int senderId, final TraceActorContextNode tracer) {
-      ensureSufficientSpace(5, tracer);
-      if (VmSettings.TRACE_SMALL_IDS) {
-        int usedBytes = getUsedBytes(senderId);
-        storage.put((byte) (MESSAGE | (usedBytes << 4)));
-        writeId(usedBytes, senderId);
-      } else {
-        storage.putByteInt((byte) (MESSAGE | (3 << 4)), senderId);
-      }
-    }
-
-    public void recordPromiseMessage(final int senderId, final int resolverId,
-        final TraceActorContextNode tracer) {
-      ensureSufficientSpace(9, tracer);
-      int usedBytes = Math.max(getUsedBytes(resolverId), getUsedBytes(senderId));
-
-      if (VmSettings.TRACE_SMALL_IDS) {
-        storage.put((byte) (PROMISE_MESSAGE | (usedBytes << 4)));
-        writeId(usedBytes, senderId);
-        writeId(usedBytes, resolverId);
-      } else {
-        storage.putByteIntInt((byte) (PROMISE_MESSAGE | (3 << 4)), senderId, resolverId);
-      }
-    }
-
-    public void recordExternalMessage(final int senderId, final short method,
-        final int dataId, final TraceActorContextNode tracer) {
-      ensureSufficientSpace(11, tracer);
-
-      if (VmSettings.TRACE_SMALL_IDS) {
-        int usedBytes = getUsedBytes(senderId);
-        storage.put((byte) (EXTERNAL_BIT | MESSAGE | (usedBytes << 4)));
-        writeId(usedBytes, senderId);
-      } else {
-        storage.putByteInt((byte) (EXTERNAL_BIT | MESSAGE | (3 << 4)), senderId);
-      }
-      storage.putShortInt(method, senderId);
-    }
-
-    public void recordExternalPromiseMessage(final int senderId, final int resolverId,
-        final short method, final int dataId, final TraceActorContextNode tracer) {
-      ensureSufficientSpace(15, tracer);
-
-      if (VmSettings.TRACE_SMALL_IDS) {
-        int usedBytes = Math.max(getUsedBytes(resolverId), getUsedBytes(senderId));
-        storage.put((byte) (EXTERNAL_BIT | PROMISE_MESSAGE | (usedBytes << 4)));
-
-        writeId(usedBytes, senderId);
-        writeId(usedBytes, resolverId);
-      } else {
-        storage.putByteIntInt((byte) (EXTERNAL_BIT | PROMISE_MESSAGE | (3 << 4)), senderId,
-            resolverId);
-      }
-
-      storage.putShortInt(method, senderId);
+      tracer.trace(actor);
     }
 
     public void recordSystemCall(final int dataId, final TraceActorContextNode tracer) {
       ensureSufficientSpace(5, tracer);
       storage.putByteInt(SYSTEM_CALL, dataId);
-    }
-
-    private void writeId(final int usedBytes, final int id) {
-      switch (usedBytes) {
-        case 0:
-          storage.put((byte) id);
-          break;
-        case 1:
-          storage.putShort((short) id);
-          break;
-        case 2:
-          storage.putByteShort((byte) (id >> 16), (short) id);
-          break;
-        case 3:
-          storage.putInt(id);
-          break;
-      }
     }
   }
 }
