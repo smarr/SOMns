@@ -8,7 +8,7 @@ import tools.concurrency.ByteBuffer;
 import tools.concurrency.TracingActors.TracingActor;
 
 
-public abstract class TraceActorCreation extends TraceNode {
+public abstract class TraceActorCreationNode extends TraceNode {
 
   @Specialization(guards = {"smallIds()", "byteId(actor)"})
   public void traceByteId(final TracingActor actor) {
@@ -40,7 +40,7 @@ public abstract class TraceActorCreation extends TraceNode {
     storage.putByteInt((byte) (ActorExecutionTrace.ACTOR_CREATION | (3 << 4)), id);
   }
 
-  @Child TraceActorContext tracer = TraceActorContextNodeGen.create();
+  @Child TraceActorContextNode tracer = TraceActorContextNodeGen.create();
 
   private ByteBuffer getStorage() {
     ActorTraceBuffer buffer = getCurrentBuffer();
