@@ -80,7 +80,7 @@
       </exec>
     </target>
 
-    <target name="truffle-libs" unless="skip.libs" depends="truffle,build-graal">
+    <target name="truffle-libs" unless="skip.truffle" depends="truffle,build-graal">
         <exec executable="${mx.cmd}" dir="${truffle.dir}" failonerror="true">
             <arg value="build"/>
             <arg value="--no-native"/>
