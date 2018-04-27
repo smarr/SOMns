@@ -47,17 +47,14 @@ public class TracingActors {
       return actorId;
     }
 
-    @Override
     public final int getActorId() {
       return actorId;
     }
 
-    @Override
     public short getOrdering() {
       return ordering;
     }
 
-    @Override
     public synchronized int getDataId() {
       return nextDataID++;
     }
