@@ -72,10 +72,6 @@ public final class ByteBuffer {
     return p;
   }
 
-  private void _put(final int i, final byte b) {
-    unsafe.putByte(buffer, byteArrBaseOffset + i, b);
-  }
-
   public ByteBuffer putShort(final short x) {
     int bi = nextPutIndex(2);
     unsafe.putShort(buffer, byteArrBaseOffset + bi, x);
@@ -134,16 +130,16 @@ public final class ByteBuffer {
 
   public void putByteByteShort(final byte a, final byte b, final short c) {
     int bi = nextPutIndex(1 + 2);
-    _put(bi, a);
-    _put(bi + 1, b);
+    putByteAt(bi, a);
+    putByteAt(bi + 1, b);
     unsafe.putShort(buffer, byteArrBaseOffset + bi + 2, b);
   }
 
   public void putByteByteShortShortInt(final byte a, final byte b, final short c,
       final short d, final int e) {
     int bi = nextPutIndex(1 + 1 + 2 + 2 + 4);
-    _put(bi, a);
-    _put(bi + 1, b);
+    putByteAt(bi, a);
+    putByteAt(bi + 1, b);
     unsafe.putShort(buffer, byteArrBaseOffset + bi + 2, b);
     unsafe.putShort(buffer, byteArrBaseOffset + bi + 4, b);
     unsafe.putInt(buffer, byteArrBaseOffset + bi + 6, e);
@@ -151,18 +147,18 @@ public final class ByteBuffer {
 
   public void putByteByteShortInt(final byte a, final byte b, final short c, final int d) {
     int bi = nextPutIndex(1 + 1 + 2 + 4);
-    _put(bi, a);
-    _put(bi + 1, b);
+    putByteAt(bi, a);
+    putByteAt(bi + 1, b);
     unsafe.putShort(buffer, byteArrBaseOffset + bi + 2, b);
     unsafe.putInt(buffer, byteArrBaseOffset + bi + 4, b);
   }
 
   public void putByteShort(final byte a, final short b) {
     int bi = nextPutIndex(1 + 2);
-    _put(bi, a);
+    putByteAt(bi, a);
     unsafe.putShort(buffer, byteArrBaseOffset + bi + 1, b);
-    // _put(bi + 1, short1(b));
-    // _put(bi + 2, short0(b));
+    // putByteAt(bi + 1, short1(b));
+    // putByteAt(bi + 2, short0(b));
   }
 
   public void putByteShortAt(final int idx, final byte a, final short b) {
@@ -172,22 +168,22 @@ public final class ByteBuffer {
 
   public void putByteShortByte(final byte a, final short b, final byte c) {
     int bi = nextPutIndex(1 + 2 + 1);
-    _put(bi, a);
+    putByteAt(bi, a);
     unsafe.putShort(buffer, byteArrBaseOffset + bi + 1, b);
-    _put(bi + 3, c);
+    putByteAt(bi + 3, c);
   }
 
   public void putByteShortByteShort(final byte a, final short b, final byte c, final short d) {
     int bi = nextPutIndex(1 + 2 + 1 + 2);
-    _put(bi, a);
+    putByteAt(bi, a);
     unsafe.putShort(buffer, byteArrBaseOffset + bi + 1, b);
-    _put(bi + 3, c);
+    putByteAt(bi + 3, c);
     unsafe.putShort(buffer, byteArrBaseOffset + bi + 4, d);
   }
 
   public void putByteShortShortInt(final byte a, final short b, final short c, final int d) {
     int bi = nextPutIndex(1 + 2 + 2 + 4);
-    _put(bi, a);
+    putByteAt(bi, a);
     unsafe.putShort(buffer, byteArrBaseOffset + bi + 1, b);
     unsafe.putShort(buffer, byteArrBaseOffset + bi + 3, c);
     unsafe.putInt(buffer, byteArrBaseOffset + bi + 5, d);
@@ -195,38 +191,38 @@ public final class ByteBuffer {
 
   public void putByteShortShort(final byte a, final short b, final short c) {
     int bi = nextPutIndex(1 + 2 + 2);
-    _put(bi, a);
+    putByteAt(bi, a);
     unsafe.putShort(buffer, byteArrBaseOffset + bi + 1, b);
-    // _put(bi + 1, short1(b));
-    // _put(bi + 2, short0(b));
+    // putByteAt(bi + 1, short1(b));
+    // putByteAt(bi + 2, short0(b));
     unsafe.putShort(buffer, byteArrBaseOffset + bi + 3, c);
-    // _put(bi + 3, short1(c));
-    // _put(bi + 4, short0(c));
+    // putByteAt(bi + 3, short1(c));
+    // putByteAt(bi + 4, short0(c));
   }
 
   public void putByteShortInt(final byte a, final short b, final int c) {
     int bi = nextPutIndex(1 + 2 + 4);
-    _put(bi, a);
+    putByteAt(bi, a);
     unsafe.putShort(buffer, byteArrBaseOffset + bi + 1, b);
 
-    // _put(bi + 1, short1(b));
-    // _put(bi + 2, short0(b));
+    // putByteAt(bi + 1, short1(b));
+    // putByteAt(bi + 2, short0(b));
     unsafe.putInt(buffer, byteArrBaseOffset + bi + 3, c);
-    // _put(bi + 3, int3(c));
-    // _put(bi + 4, int2(c));
-    // _put(bi + 5, int1(c));
-    // _put(bi + 6, int0(c));
+    // putByteAt(bi + 3, int3(c));
+    // putByteAt(bi + 4, int2(c));
+    // putByteAt(bi + 5, int1(c));
+    // putByteAt(bi + 6, int0(c));
   }
 
   public void putByteInt(final byte a, final int b) {
     int bi = nextPutIndex(1 + 4);
-    _put(bi, a);
+    putByteAt(bi, a);
     unsafe.putInt(buffer, byteArrBaseOffset + bi + 1, b);
   }
 
   public void putByteIntShortInt(final byte a, final int b, final short c, final int d) {
     int bi = nextPutIndex(1 + 4 + 2 + 4);
-    _put(bi, a);
+    putByteAt(bi, a);
 
     unsafe.putInt(buffer, byteArrBaseOffset + bi + 1, b);
     unsafe.putShort(buffer, byteArrBaseOffset + bi + 5, c);
@@ -235,17 +231,17 @@ public final class ByteBuffer {
 
   public void putByteIntInt(final byte a, final int b, final int c) {
     int bi = nextPutIndex(1 + 4 + 4);
-    _put(bi, a);
+    putByteAt(bi, a);
     unsafe.putInt(buffer, byteArrBaseOffset + bi + 1, b);
-    // _put(bi + 1, int3(b));
-    // _put(bi + 2, int2(b));
-    // _put(bi + 3, int1(b));
-    // _put(bi + 4, int0(b));
+    // putByteAt(bi + 1, int3(b));
+    // putByteAt(bi + 2, int2(b));
+    // putByteAt(bi + 3, int1(b));
+    // putByteAt(bi + 4, int0(b));
     unsafe.putInt(buffer, byteArrBaseOffset + bi + 5, c);
-    // _put(bi + 5, int3(c));
-    // _put(bi + 6, int2(c));
-    // _put(bi + 7, int1(c));
-    // _put(bi + 8, int0(c));
+    // putByteAt(bi + 5, int3(c));
+    // putByteAt(bi + 6, int2(c));
+    // putByteAt(bi + 7, int1(c));
+    // putByteAt(bi + 8, int0(c));
   }
 
   public void putShortInt(final short a, final int b) {
