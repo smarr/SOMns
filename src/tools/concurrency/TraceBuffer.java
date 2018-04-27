@@ -7,10 +7,10 @@ import tools.concurrency.nodes.TraceActorContextNode;
 
 public abstract class TraceBuffer {
 
-  public static TraceBuffer create() {
+  public static TraceBuffer create(final long implThreadId) {
     assert VmSettings.ACTOR_TRACING || VmSettings.MEDEOR_TRACING;
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      return MedeorTrace.MedeorTraceBuffer.create();
+      return MedeorTrace.MedeorTraceBuffer.create(implThreadId);
     } else {
       return new ActorTraceBuffer();
     }
