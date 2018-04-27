@@ -18,7 +18,7 @@ import som.vmobjects.SClass;
 import tools.concurrency.MedeorTrace;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActors.TracingActor;
-import tools.concurrency.nodes.TraceActorCreation;
+import tools.concurrency.nodes.TraceActorCreationNode;
 import tools.concurrency.nodes.TraceActorCreationNodeGen;
 import tools.debugger.entities.ActivityType;
 
@@ -29,7 +29,7 @@ import tools.debugger.entities.ActivityType;
 public abstract class CreateActorPrim extends BinarySystemOperation {
   @Child protected IsValue                isValue = IsValueNodeGen.createSubNode();
   @Child protected ExceptionSignalingNode notAValue;
-  @Child protected TraceActorCreation trace   = TraceActorCreationNodeGen.create();
+  @Child protected TraceActorCreationNode trace   = TraceActorCreationNodeGen.create();
 
   @Override
   public final CreateActorPrim initialize(final VM vm) {

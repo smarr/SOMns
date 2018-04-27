@@ -8,7 +8,7 @@ import tools.concurrency.ByteBuffer;
 import tools.concurrency.TracingActors.TracingActor;
 
 
-public abstract class TraceActorContext extends TraceNode {
+public abstract class TraceActorContextNode extends TraceNode {
 
   @Specialization(guards = {"smallIds()", "byteId(actor)"})
   public static void traceByteId(final TracingActor actor) {
