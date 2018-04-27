@@ -57,7 +57,6 @@ import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.TraceParser;
 import tools.concurrency.TracingBackend;
 import tools.concurrency.nodes.TraceActorContextNode;
-import tools.concurrency.nodes.TraceActorContextNodeGen;
 
 
 public final class SystemPrims {
@@ -288,7 +287,7 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemTime:")
   public abstract static class TimePrim extends UnaryBasicOperation {
-    @Child TraceActorContextNode tracer = TraceActorContextNodeGen.create();
+    @Child TraceActorContextNode tracer = new TraceActorContextNode();
 
     @Specialization
     public final long doSObject(final Object receiver) {
@@ -324,7 +323,7 @@ public final class SystemPrims {
   @Primitive(primitive = "systemTicks:", selector = "ticks",
       specializer = IsSystemModule.class, noWrapper = true)
   public abstract static class TicksPrim extends UnaryBasicOperation implements Operation {
-    @Child TraceActorContextNode tracer = TraceActorContextNodeGen.create();
+    @Child TraceActorContextNode tracer = new TraceActorContextNode();
 
     @Specialization
     public final long doSObject(final Object receiver) {

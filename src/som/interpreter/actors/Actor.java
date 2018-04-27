@@ -30,7 +30,6 @@ import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.concurrency.nodes.TraceActorContextNode;
-import tools.concurrency.nodes.TraceActorContextNodeGen;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.DynamicScopeType;
@@ -232,7 +231,7 @@ public class Actor implements Activity {
       this.vm = vm;
     }
 
-    private static final TraceActorContextNode tracer = TraceActorContextNodeGen.create();
+    private static final TraceActorContextNode tracer = new TraceActorContextNode();
 
     @Override
     public void run() {
