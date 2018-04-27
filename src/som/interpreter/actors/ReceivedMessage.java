@@ -30,7 +30,7 @@ public class ReceivedMessage extends ReceivedRootNode {
   }
 
   @Override
-  public Object execute(final VirtualFrame frame) {
+  protected Object executeBody(final VirtualFrame frame) {
     EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
     boolean haltOnResolver = msg.getHaltOnResolver();
     boolean haltOnResolution = msg.getHaltOnResolution();
@@ -65,7 +65,7 @@ public class ReceivedMessage extends ReceivedRootNode {
     }
 
     @Override
-    public Object execute(final VirtualFrame frame) {
+    protected Object executeBody(final VirtualFrame frame) {
       EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
 
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.getHaltOnResolver()) {
@@ -88,7 +88,7 @@ public class ReceivedMessage extends ReceivedRootNode {
     }
 
     @Override
-    public Object execute(final VirtualFrame frame) {
+    protected Object executeBody(final VirtualFrame frame) {
       EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
       boolean haltOnResolver = msg.getHaltOnResolver();
       boolean haltOnResolution = msg.getHaltOnResolution();

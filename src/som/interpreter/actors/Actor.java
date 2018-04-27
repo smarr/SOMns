@@ -279,10 +279,6 @@ public class Actor implements Activity {
               msg.getTargetSourceSection());
         }
         msg.execute();
-        if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.recordMessage(msg, tracer);
-        }
-
       } finally {
         if (VmSettings.MEDEOR_TRACING) {
           MedeorTrace.scopeEnd(DynamicScopeType.TURN);

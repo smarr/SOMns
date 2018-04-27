@@ -4,12 +4,17 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
+import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.VmSettings;
+import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.nodes.TraceActorContext;
+import tools.concurrency.nodes.TraceActorContextNodeGen;
 import tools.debugger.WebDebugger;
 
 
@@ -17,6 +22,10 @@ public abstract class ReceivedRootNode extends RootNode {
 
   @Child protected AbstractPromiseResolutionNode resolve;
   @Child protected AbstractPromiseResolutionNode error;
+
+  @Child protected TraceActorContext tracer = TraceActorContextNodeGen.create();
+
+  private final ValueProfile msgProfile = ValueProfile.createClassProfile();
 
   private final VM            vm;
   protected final WebDebugger dbg;
@@ -33,6 +42,20 @@ public abstract class ReceivedRootNode extends RootNode {
       this.dbg = null;
     }
     this.sourceSection = sourceSection;
+  }
+
+  protected abstract Object executeBody(VirtualFrame frame);
+
+  @Override
+  public final Object execute(final VirtualFrame frame) {
+    try {
+      return executeBody(frame);
+    } finally {
+      if (VmSettings.ACTOR_TRACING) {
+        EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
+        ActorExecutionTrace.recordMessage(msgProfile.profile(msg), tracer);
+      }
+    }
   }
 
   @Override
