@@ -44,15 +44,32 @@ public abstract class ReceivedRootNode extends RootNode {
     this.sourceSection = sourceSection;
   }
 
-  protected abstract Object executeBody(VirtualFrame frame);
+  protected abstract Object executeBody(VirtualFrame frame, EventualMessage msg,
+      boolean haltOnResolver, boolean haltOnResolution);
 
   @Override
   public final Object execute(final VirtualFrame frame) {
+    EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
+
+    boolean haltOnResolver;
+    boolean haltOnResolution;
+
+    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      haltOnResolver = msg.getHaltOnResolver();
+      haltOnResolution = msg.getHaltOnResolution();
+
+      if (haltOnResolver) {
+        dbg.prepareSteppingAfterNextRootNode();
+      }
+    } else {
+      haltOnResolver = false;
+      haltOnResolution = false;
+    }
+
     try {
-      return executeBody(frame);
+      return executeBody(frame, msg, haltOnResolver, haltOnResolution);
     } finally {
       if (VmSettings.ACTOR_TRACING) {
-        EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
         ActorExecutionTrace.recordMessage(msgProfile.profile(msg), tracer);
       }
     }
