@@ -97,7 +97,6 @@ public final class TraceParser {
           b.clear();
           channel.read(b);
           b.flip();
-          // System.out.println("swapping");
         } else if (b.remaining() < 20) {
           b.compact();
           channel.read(b);
@@ -150,8 +149,6 @@ public final class TraceParser {
             if (!actors.containsKey(currentActor)) {
               actors.put(currentActor, new ActorNode(currentActor));
             }
-
-            // System.out.println("" + currentActor + " : " + ordering);
 
             contextMessages = null;
             assert b.position() == start + (numbytes + 4);
@@ -220,8 +217,8 @@ public final class TraceParser {
     int                                        mailboxNo;
     boolean                                    sorted           = false;
     ArrayList<ActorNode>                       children;
-    HashMap<Integer, ArrayList<MessageRecord>> bucket1         = new HashMap<>();
-    HashMap<Integer, ArrayList<MessageRecord>> bucket2         = new HashMap<>();
+    HashMap<Integer, ArrayList<MessageRecord>> bucket1          = new HashMap<>();
+    HashMap<Integer, ArrayList<MessageRecord>> bucket2          = new HashMap<>();
     Queue<MessageRecord>                       expectedMessages = new java.util.LinkedList<>();
 
     ActorNode(final long actorId) {
