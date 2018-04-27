@@ -10,6 +10,10 @@ public final class Unsafe {
   }
 
   public native long objectFieldOffset(Field f);
+  
+  public native int arrayBaseOffset(Class<?> clazz);
+  
+  public native int arrayIndexScale(Class<?> clazz);
 
   public native Object getObject(Object o, long offset);
 
