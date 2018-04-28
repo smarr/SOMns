@@ -76,6 +76,17 @@ public final class SystemPrims {
     }
   }
 
+  @GenerateNodeFactory
+  @Primitive(primitive = "traceStatistics:")
+  public abstract static class TraceStatisticsPrim extends UnarySystemOperation {
+    @Specialization
+    @TruffleBoundary
+    public final Object doSObject(final Object module) {
+      long[] stats = TracingBackend.getStatistics();
+      return new SImmutableArray(stats, Classes.valueArrayClass);
+    }
+  }
+
   public static Object loadModule(final VM vm, final String path,
       final ExceptionSignalingNode ioException) {
     // TODO: a single node for the different exceptions?
