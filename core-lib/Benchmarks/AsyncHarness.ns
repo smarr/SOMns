@@ -120,6 +120,9 @@ class AsyncHarness usingPlatform: platform = Value (
     )
 
     printRun: runTime = (
+      | stats = system traceStatistics. |
+      (name + ': trace size:    ' + (stats at: 1) + 'byte') println.
+      (name + ': external data: ' + (stats at: 2) + 'byte') println.
       (name + ': iterations=1' + ' runtime: ' + runTime + 'us') println
     )
 
