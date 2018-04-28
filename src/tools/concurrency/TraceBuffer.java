@@ -39,7 +39,7 @@ public abstract class TraceBuffer {
     return storage.remaining() == 0;
   }
 
-  boolean swapStorage() {
+  public boolean swapStorage() {
     TracingBackend.returnBuffer(storage);
     retrieveBuffer();
     return true;

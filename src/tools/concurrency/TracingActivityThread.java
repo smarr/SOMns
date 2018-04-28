@@ -33,6 +33,8 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
 
   protected ConcurrentEntityScope topEntity;
 
+  public volatile boolean swapTracingBuffer = false;
+
   private static class ConcurrentEntityScope {
     private final EntityType            type;
     private final ConcurrentEntityScope next;

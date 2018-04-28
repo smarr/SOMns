@@ -185,16 +185,22 @@ public class TracingBackend {
     synchronized (tracingThreads) {
       boolean removed = tracingThreads.remove(t);
       assert removed;
+      t.swapTracingBuffer = false;
     }
   }
 
   public static final void forceSwapBuffers() {
-    assert VmSettings.TRUFFLE_DEBUGGER_ENABLED && VmSettings.MEDEOR_TRACING;
+    assert VmSettings.ACTOR_TRACING
+        || (VmSettings.TRUFFLE_DEBUGGER_ENABLED && VmSettings.MEDEOR_TRACING);
     TracingActivityThread[] result;
     synchronized (tracingThreads) {
       result = tracingThreads.toArray(new TracingActivityThread[0]);
     }
 
+    // XXX: This is only safe because we assume that threads do not disappear
+    // XXX: correction, I think this is all inherently racy, but hopefully good enough
+
+    // signal threads to swap buffers
     for (TracingActivityThread t : result) {
       t.swapTracingBuffer = true;
     }
@@ -228,6 +234,14 @@ public class TracingBackend {
         throw new RuntimeException(e);
       }
     }
+  }
+
+  public static final long[] getStatistics() {
+    long[] stats = new long[] {workerThread.traceBytes, workerThread.externalBytes};
+
+    workerThread.traceBytes = 0;
+    workerThread.externalBytes = 0;
+    return stats;
   }
 
   @TruffleBoundary
@@ -276,7 +290,11 @@ public class TracingBackend {
         if (buffer == null) {
           if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
             // swap all non-empty buffers and try again
-            TracingBackend.forceSwapBuffers();
+            // TracingBackend.forceSwapBuffers();
+
+            // TODO: implement buffer swapping for debugger again,
+            // but need an implementation that's decoupled from the trace stats primitive
+            throw new NotYetImplementedException();
           }
           return null;
         } else {
