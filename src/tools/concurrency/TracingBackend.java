@@ -237,110 +237,126 @@ public class TracingBackend {
   private static class TraceWorkerThread extends Thread {
     protected boolean cont = true;
 
+    protected long traceBytes;
+    protected long externalBytes;
+
+    private ByteBuffer ignoreEmptyBuffer(final ByteBuffer buffer) {
+      // Ignore buffers that only contain the thread index
+      if (buffer.position() <= Implementation.IMPL_THREAD.getSize() +
+          Implementation.IMPL_CURRENT_ACTIVITY.getSize()) {
+
+        buffer.clear();
+        TracingBackend.emptyBuffers.add(buffer);
+        return null;
+      } else {
+        return buffer;
+      }
+    }
+
+    private ByteBuffer tryToObtainBuffer() {
+      ByteBuffer buffer;
+      try {
+        buffer = TracingBackend.fullBuffers.poll(POLL_TIMEOUT, TimeUnit.MILLISECONDS);
+        if (buffer == null) {
+          if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+            // swap all non-empty buffers and try again
+            TracingBackend.forceSwapBuffers();
+          }
+          return null;
+        } else {
+          return ignoreEmptyBuffer(buffer);
+        }
+      } catch (InterruptedException e) {
+        return null;
+      }
+    }
+
+    private void writeExternalData(final FileOutputStream edfos) throws IOException {
+      synchronized (externalData) {
+        while (!externalData.isEmpty()) {
+          ByteBuffer data = externalData.removeFirst();
+
+          externalBytes += data.position();
+          if (edfos != null) {
+            edfos.getChannel()
+                 .write(data.getReadingFromStartBuffer());
+            edfos.flush();
+          }
+        }
+      }
+    }
+
+    private void writeSymbols(final BufferedWriter bw) throws IOException {
+      synchronized (symbolsToWrite) {
+        if (front != null) {
+          front.sendSymbols(TracingBackend.symbolsToWrite);
+        }
+
+        if (bw != null) {
+          for (SSymbol s : symbolsToWrite) {
+            bw.write(s.getSymbolId() + ":" + s.getString());
+            bw.newLine();
+          }
+          bw.flush();
+        }
+        TracingBackend.symbolsToWrite.clear();
+      }
+    }
+
+    private void writeAndRecycleBuffer(final FileOutputStream fos, final ByteBuffer buffer)
+        throws IOException {
+      if (fos != null) {
+        fos.getChannel().write(buffer.getReadingFromStartBuffer());
+        fos.flush();
+      }
+      traceBytes += buffer.position();
+      buffer.clear();
+      TracingBackend.emptyBuffers.add(buffer);
+    }
+
+    private void processTraceData(final FileOutputStream traceDataStream,
+        final FileOutputStream externalDataStream,
+        final BufferedWriter symbolStream) throws IOException {
+      while (cont || !TracingBackend.fullBuffers.isEmpty()) {
+        ByteBuffer b = tryToObtainBuffer();
+        if (b == null) {
+          continue;
+        }
+
+        writeExternalData(externalDataStream);
+        writeSymbols(symbolStream);
+
+        if (front != null) {
+          front.sendTracingData(b);
+        }
+
+        writeAndRecycleBuffer(traceDataStream, b);
+      }
+    }
+
     @Override
     public void run() {
-
       File f = new File(VmSettings.TRACE_FILE + ".trace");
       File sf = new File(VmSettings.TRACE_FILE + ".sym");
       File edf = new File(VmSettings.TRACE_FILE + ".dat");
       f.getParentFile().mkdirs();
 
-      if (!VmSettings.DISABLE_TRACE_FILE) {
-        try (FileOutputStream fos = new FileOutputStream(f);
-            FileOutputStream sfos = new FileOutputStream(sf);
-            FileOutputStream edfos = new FileOutputStream(edf);
-            BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(sfos))) {
-
-          while (cont || !TracingBackend.fullBuffers.isEmpty()) {
-            ByteBuffer b;
-
-            try {
-              b = TracingBackend.fullBuffers.poll(POLL_TIMEOUT, TimeUnit.MILLISECONDS);
-              if (b == null) {
-                if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-                  // swap all non-empty buffers and try again
-                  TracingBackend.forceSwapBuffers();
-                }
-                continue;
-              }
-            } catch (InterruptedException e) {
-              continue;
-            }
-
-            if (b.position() <= Implementation.IMPL_THREAD.getSize() +
-                Implementation.IMPL_CURRENT_ACTIVITY.getSize()) {
-              // Ignore buffers that only contain the thread index
-              b.clear();
-              TracingBackend.emptyBuffers.add(b);
-              continue;
-            }
-
-            synchronized (externalData) {
-              while (!externalData.isEmpty()) {
-                // TODO: the buffer gets lost here, is this on purpose?
-                edfos.getChannel()
-                     .write(externalData.removeFirst().getReadingFromStartBuffer());
-                edfos.flush();
-              }
-            }
-
-            synchronized (symbolsToWrite) {
-              if (front != null) {
-                front.sendSymbols(TracingBackend.symbolsToWrite);
-              }
-
-              for (SSymbol s : symbolsToWrite) {
-                bw.write(s.getSymbolId() + ":" + s.getString());
-                bw.newLine();
-              }
-              bw.flush();
-              TracingBackend.symbolsToWrite.clear();
-            }
-
-            fos.getChannel().write(b.getReadingFromStartBuffer());
-            fos.flush();
-            b.rewind();
-
-            if (front != null) {
-              front.sendTracingData(b);
-            }
-
-            b.clear();
-            TracingBackend.emptyBuffers.add(b);
+      try {
+        if (VmSettings.DISABLE_TRACE_FILE) {
+          processTraceData(null, null, null);
+        } else {
+          try (FileOutputStream traceDataStream = new FileOutputStream(f);
+              FileOutputStream symbolStream = new FileOutputStream(sf);
+              FileOutputStream externalDataStream = new FileOutputStream(edf);
+              BufferedWriter symbolWriter =
+                  new BufferedWriter(new OutputStreamWriter(symbolStream))) {
+            processTraceData(traceDataStream, externalDataStream, symbolWriter);
+          } catch (FileNotFoundException e) {
+            throw new RuntimeException(e);
           }
-        } catch (FileNotFoundException e) {
-          throw new RuntimeException(e);
-        } catch (IOException e) {
-          throw new RuntimeException(e);
         }
-      } else {
-        while (cont || !TracingBackend.fullBuffers.isEmpty()) {
-          ByteBuffer b;
-
-          try {
-            b = TracingBackend.fullBuffers.poll(POLL_TIMEOUT, TimeUnit.MILLISECONDS);
-            if (b == null) {
-              continue;
-            }
-          } catch (InterruptedException e) {
-            continue;
-          }
-
-          synchronized (symbolsToWrite) {
-            if (front != null) {
-              front.sendSymbols(TracingBackend.symbolsToWrite);
-            }
-            TracingBackend.symbolsToWrite.clear();
-          }
-
-          if (b.position() > (Implementation.IMPL_THREAD.getSize() +
-              Implementation.IMPL_CURRENT_ACTIVITY.getSize()) && front != null) {
-            front.sendTracingData(b);
-          }
-
-          b.clear();
-          TracingBackend.emptyBuffers.add(b);
-        }
+      } catch (IOException e) {
+        throw new RuntimeException(e);
       }
     }
   }

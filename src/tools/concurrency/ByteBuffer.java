@@ -48,11 +48,6 @@ public final class ByteBuffer {
     return this;
   }
 
-  public ByteBuffer rewind() {
-    position = 0;
-    return this;
-  }
-
   public int remaining() {
     return buffer.length - position;
   }
