@@ -51,6 +51,7 @@ import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.TracingBackend;
 import tools.concurrency.nodes.TraceActorContextNode;
 
 
@@ -65,6 +66,17 @@ public final class SystemPrims {
     public final Object set(final SObjectWithClass system) {
       SystemModule = system;
       return system;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "traceStatistics:")
+  public abstract static class TraceStatisticsPrim extends UnarySystemOperation {
+    @Specialization
+    @TruffleBoundary
+    public final Object doSObject(final Object module) {
+      long[] stats = TracingBackend.forceSwapBuffersAndGetStatistics();
+      return new SImmutableArray(stats, Classes.valueArrayClass);
     }
   }
 
