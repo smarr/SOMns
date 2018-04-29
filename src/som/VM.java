@@ -328,6 +328,8 @@ public final class VM {
   }
 
   public void initalize(final SomLanguage lang) throws IOException {
+    Actor.initializeActorSystem(language);
+
     assert objectSystem == null;
     objectSystem = new ObjectSystem(new SourcecodeCompiler(lang), structuralProbe, this);
     objectSystem.loadKernelAndPlatform(options.platformFile, options.kernelFile);

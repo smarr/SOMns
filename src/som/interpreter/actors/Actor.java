@@ -6,9 +6,21 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RejectedExecutionException;
 
+import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.RootNode;
 
 import som.VM;
+import som.interpreter.SomLanguage;
+import som.interpreter.actors.ActorFactory.MessageCacheNodeGen;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.IsValue;
 import som.vm.Activity;
@@ -46,6 +58,13 @@ import tools.debugger.entities.ActivityType;
  * + - and sequentially executes all messages
  */
 public class Actor implements Activity {
+
+  @CompilationFinal protected static RootCallTarget executorRoot;
+
+  public static void initializeActorSystem(final SomLanguage lang) {
+    ExecutorRootNode root = new ExecutorRootNode(lang);
+    executorRoot = Truffle.getRuntime().createCallTarget(root);
+  }
 
   public static Actor createActor(final VM vm) {
     if (VmSettings.REPLAY) {
@@ -189,6 +208,45 @@ public class Actor implements Activity {
     mailboxExtension.append(msg);
   }
 
+  private static final class ExecutorRootNode extends RootNode {
+
+    private ExecutorRootNode(final SomLanguage language) {
+      super(language);
+      tracer = new TraceActorContextNode();
+      cache = MessageCacheNodeGen.create();
+    }
+
+    @Child private TraceActorContextNode tracer;
+    @Child private MessageCache          cache;
+
+    @Override
+    public Object execute(final VirtualFrame frame) {
+      ExecAllMessages executor = (ExecAllMessages) frame.getArguments()[0];
+      executor.doRun(tracer, cache);
+      return null;
+    }
+  }
+
+  public abstract static class MessageCache extends Node {
+    public abstract void execute(CallTarget onReceive, EventualMessage msg);
+
+    protected static final DirectCallNode createCallNode(final CallTarget onReceive) {
+      return Truffle.getRuntime().createDirectCallNode(onReceive);
+    }
+
+    @Specialization(guards = "onReceive == cachedOnReceive", limit = "6")
+    public static void doCached(final CallTarget onReceive, final EventualMessage msg,
+        @Cached("onReceive") final CallTarget cachedOnReceive,
+        @Cached("createCallNode(onReceive)") final DirectCallNode call) {
+      call.call(new Object[] {msg});
+    }
+
+    @Specialization(replaces = "doCached")
+    public static void unCached(final CallTarget onReceive, final EventualMessage msg) {
+      onReceive.call(msg);
+    }
+  }
+
   /**
    * Is scheduled on the fork/join pool and executes messages for a specific
    * actor.
@@ -207,10 +265,13 @@ public class Actor implements Activity {
       this.vm = vm;
     }
 
-    private static final TraceActorContextNode tracer = new TraceActorContextNode();
-
     @Override
     public void run() {
+      assert executorRoot != null : "Actor system not initalized, call to initializeActorSystem(.) missing?";
+      executorRoot.call(this);
+    }
+
+    void doRun(final TraceActorContextNode tracer, final MessageCache cache) {
       ObjectTransitionSafepoint.INSTANCE.register();
 
       ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
@@ -230,7 +291,7 @@ public class Actor implements Activity {
 
       try {
         while (getCurrentMessagesOrCompleteExecution()) {
-          processCurrentMessages(t, dbg);
+          processCurrentMessages(t, cache, dbg);
         }
       } finally {
         ObjectTransitionSafepoint.INSTANCE.unregister();
@@ -244,26 +305,26 @@ public class Actor implements Activity {
     }
 
     protected void processCurrentMessages(final ActorProcessingThread currentThread,
-        final WebDebugger dbg) {
+        final MessageCache cache, final WebDebugger dbg) {
       assert size > 0;
 
-      execute(firstMessage, currentThread, dbg);
+      execute(firstMessage, cache, currentThread, dbg);
 
       if (size > 1) {
         for (EventualMessage msg : mailboxExtension) {
-          execute(msg, currentThread, dbg);
+          execute(msg, cache, currentThread, dbg);
         }
       }
     }
 
-    private void execute(final EventualMessage msg,
+    private void execute(final EventualMessage msg, final MessageCache cache,
         final ActorProcessingThread currentThread, final WebDebugger dbg) {
       currentThread.currentMessage = msg;
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
         TracingActor.handleBreakpointsAndStepping(msg, dbg, actor);
       }
 
-      msg.execute();
+      msg.execute(cache);
     }
 
     private boolean getCurrentMessagesOrCompleteExecution() {

@@ -7,6 +7,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.actors.Actor.ActorProcessingThread;
+import som.interpreter.actors.Actor.MessageCache;
 import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vmobjects.SBlock;
@@ -421,18 +422,15 @@ public abstract class EventualMessage {
     }
   }
 
-  public final void execute() {
+  public final void execute(final MessageCache cache) {
     try {
-      executeMessage();
+      executeMessage(cache);
     } catch (ThreadDeath t) {
       throw t;
     }
   }
 
-  protected final void executeMessage() {
-    VM.thisMethodNeedsToBeOptimized(
-        "Not Optimized! But also not sure it can be part of compilation anyway");
-
+  protected final void executeMessage(final MessageCache cache) {
     Object rcvrObj = args[0];
     assert rcvrObj != null;
 
@@ -441,7 +439,7 @@ public abstract class EventualMessage {
 
     assert onReceive.getRootNode() instanceof ReceivedMessage
         || onReceive.getRootNode() instanceof ReceivedCallback;
-    onReceive.call(this);
+    cache.execute(onReceive, this);
   }
 
   public static Actor getActorCurrentMessageIsExecutionOn() {
