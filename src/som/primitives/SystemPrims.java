@@ -75,7 +75,7 @@ public final class SystemPrims {
     @Specialization
     @TruffleBoundary
     public final Object doSObject(final Object module) {
-      long[] stats = TracingBackend.forceSwapBuffersAndGetStatistics();
+      long[] stats = TracingBackend.getStatistics();
       return new SImmutableArray(stats, Classes.valueArrayClass);
     }
   }

@@ -185,7 +185,7 @@ public class TracingBackend {
     }
   }
 
-  public static final long[] forceSwapBuffersAndGetStatistics() {
+  public static final void forceSwapBuffers() {
     assert VmSettings.ACTOR_TRACING
         || (VmSettings.TRUFFLE_DEBUGGER_ENABLED && VmSettings.MEDEOR_TRACING);
     TracingActivityThread[] result;
@@ -232,7 +232,9 @@ public class TracingBackend {
         throw new RuntimeException(e);
       }
     }
+  }
 
+  public static final long[] getStatistics() {
     long[] stats = new long[] {workerThread.traceBytes, workerThread.externalBytes};
 
     workerThread.traceBytes = 0;
