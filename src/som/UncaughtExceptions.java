@@ -22,9 +22,14 @@ public final class UncaughtExceptions implements UncaughtExceptionHandler {
       // Ignore those, we already signaled an error
       return;
     }
+
+    Output.errorPrintln("Uncaught exception on " + t.getName());
+
     TracingActivityThread thread = (TracingActivityThread) t;
-    Output.errorPrintln("Processing failed for: "
-        + thread.getActivity().toString());
+    if (thread.getActivity() != null) {
+      Output.errorPrintln("Processing failed for: "
+          + thread.getActivity().toString());
+    }
     e.printStackTrace();
 
     vm.requestExit(2);
