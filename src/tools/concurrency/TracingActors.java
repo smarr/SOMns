@@ -296,7 +296,7 @@ public class TracingActors {
 
       @Override
       protected void processCurrentMessages(final ActorProcessingThread currentThread,
-          final MessageCache cache, final WebDebugger dbg) {
+          final WebDebugger dbg) {
         assert actor instanceof ReplayActor;
         assert size > 0;
 
@@ -306,7 +306,7 @@ public class TracingActors {
         for (EventualMessage msg : todo) {
           currentThread.currentMessage = msg;
           handleBreakpointsAndStepping(firstMessage, dbg, a);
-          msg.execute(cache);
+          msg.execute();
         }
 
         currentThread.createdMessages += todo.size();
