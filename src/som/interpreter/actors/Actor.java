@@ -6,22 +6,16 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RejectedExecutionException;
 
-import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 
 import som.Output;
 import som.VM;
 import som.interpreter.SomLanguage;
-import som.interpreter.actors.ActorFactory.MessageCacheNodeGen;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.IsValue;
 import som.vm.Activity;
@@ -217,38 +211,13 @@ public class Actor implements Activity {
 
     private ExecutorRootNode(final SomLanguage language) {
       super(language);
-      tracer = new TraceActorContextNode();
-      cache = MessageCacheNodeGen.create();
     }
-
-    @Child private TraceActorContextNode tracer;
-    @Child private MessageCache          cache;
 
     @Override
     public Object execute(final VirtualFrame frame) {
       ExecAllMessages executor = (ExecAllMessages) frame.getArguments()[0];
-      executor.doRun(tracer, cache);
+      executor.doRun();
       return null;
-    }
-  }
-
-  public abstract static class MessageCache extends Node {
-    public abstract void execute(CallTarget onReceive, EventualMessage msg);
-
-    protected static final DirectCallNode createCallNode(final CallTarget onReceive) {
-      return Truffle.getRuntime().createDirectCallNode(onReceive);
-    }
-
-    @Specialization(guards = "onReceive == cachedOnReceive", limit = "6")
-    public static void doCached(final CallTarget onReceive, final EventualMessage msg,
-        @Cached("onReceive") final CallTarget cachedOnReceive,
-        @Cached("createCallNode(onReceive)") final DirectCallNode call) {
-      call.call(new Object[] {msg});
-    }
-
-    @Specialization(replaces = "doCached")
-    public static void unCached(final CallTarget onReceive, final EventualMessage msg) {
-      onReceive.call(msg);
     }
   }
 
@@ -276,7 +245,7 @@ public class Actor implements Activity {
       executorRoot.call(this);
     }
 
-    void doRun(final TraceActorContextNode tracer, final MessageCache cache) {
+    void doRun() {
       ObjectTransitionSafepoint.INSTANCE.register();
 
       ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
@@ -294,7 +263,7 @@ public class Actor implements Activity {
 
       try {
         while (getCurrentMessagesOrCompleteExecution()) {
-          processCurrentMessages(t, cache, dbg);
+          processCurrentMessages(t, dbg);
         }
       } finally {
         ObjectTransitionSafepoint.INSTANCE.unregister();
@@ -304,15 +273,15 @@ public class Actor implements Activity {
     }
 
     protected void processCurrentMessages(final ActorProcessingThread currentThread,
-        final MessageCache cache, final WebDebugger dbg) {
+        final WebDebugger dbg) {
       assert size > 0;
 
       try {
-        execute(firstMessage, cache, currentThread, dbg);
+        execute(firstMessage, currentThread, dbg);
 
         if (size > 1) {
           for (EventualMessage msg : mailboxExtension) {
-            execute(msg, cache, currentThread, dbg);
+            execute(msg, currentThread, dbg);
           }
         }
       } finally {
@@ -322,7 +291,7 @@ public class Actor implements Activity {
       }
     }
 
-    private void execute(final EventualMessage msg, final MessageCache cache,
+    private void execute(final EventualMessage msg,
         final ActorProcessingThread currentThread, final WebDebugger dbg) {
       currentThread.currentMessage = msg;
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
@@ -334,7 +303,7 @@ public class Actor implements Activity {
           ActorExecutionTrace.scopeStart(DynamicScopeType.TURN, msg.getMessageId(),
               msg.getTargetSourceSection());
         }
-        msg.execute(cache);
+        msg.execute();
       } finally {
         if (VmSettings.ACTOR_TRACING) {
           ActorExecutionTrace.scopeEnd(DynamicScopeType.TURN);
