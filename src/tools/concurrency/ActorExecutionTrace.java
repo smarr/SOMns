@@ -88,12 +88,15 @@ public class ActorExecutionTrace {
     protected void swapBufferWhenNotEnoughSpace(final TraceActorContextNode tracer) {
       boolean didSwap = swapStorage();
       assert didSwap;
-      tracer.trace(currentActor);
+      if (tracer != null) {
+        tracer.trace(currentActor);
+      }
     }
 
     public void recordActorContext(final TracingActor actor,
         final TraceActorContextNode tracer) {
-      ensureSufficientSpace(7, tracer);
+      ensureSufficientSpace(7, null); // null, because we don't need to write actor context,
+                                      // and going to do it ourselves
       currentActor = actor;
       tracer.trace(actor);
     }
