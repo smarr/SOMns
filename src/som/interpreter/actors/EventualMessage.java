@@ -422,14 +422,6 @@ public abstract class EventualMessage {
   }
 
   public final void execute() {
-    try {
-      executeMessage();
-    } catch (ThreadDeath t) {
-      throw t;
-    }
-  }
-
-  protected final void executeMessage() {
     Object rcvrObj = args[0];
     assert rcvrObj != null;
 
