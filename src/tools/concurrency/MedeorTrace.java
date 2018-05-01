@@ -172,8 +172,8 @@ public class MedeorTrace {
     }
 
     boolean swapStorage(final Activity current) {
-      if (storage == null ||
-          storage.position() <= (Implementation.IMPL_THREAD.getSize() +
+      if (buffer == null ||
+          position <= (Implementation.IMPL_THREAD.getSize() +
               Implementation.IMPL_CURRENT_ACTIVITY.getSize())) {
         return false;
       }
@@ -186,7 +186,7 @@ public class MedeorTrace {
 
     @TruffleBoundary
     protected boolean ensureSufficientSpace(final int requiredSpace, final Activity current) {
-      if (storage.remaining() < requiredSpace) {
+      if (position + requiredSpace < TracingBackend.BUFFER_SIZE) {
         boolean didSwap = swapStorage(current);
         assert didSwap;
         return didSwap;
@@ -217,13 +217,13 @@ public class MedeorTrace {
     }
 
     private void recordThreadId() {
-      final int start = storage.position();
+      final int start = position;
       assert start == 0;
 
-      storage.put(Implementation.IMPL_THREAD.getId());
-      storage.putLong(implThreadId);
+      put(Implementation.IMPL_THREAD.getId());
+      putLong(implThreadId);
 
-      assert storage.position() == start + Implementation.IMPL_THREAD.getSize();
+      assert position == start + Implementation.IMPL_THREAD.getSize();
     }
 
     public void recordCurrentActivity(final Activity current) {
@@ -236,13 +236,13 @@ public class MedeorTrace {
 
       lastActivity = current;
 
-      final int start = storage.position();
+      final int start = position;
 
-      storage.put(Implementation.IMPL_CURRENT_ACTIVITY.getId());
-      storage.putLong(current.getId());
-      storage.putInt(current.getNextTraceBufferId());
+      put(Implementation.IMPL_CURRENT_ACTIVITY.getId());
+      putLong(current.getId());
+      putInt(current.getNextTraceBufferId());
 
-      assert storage.position() == start + Implementation.IMPL_CURRENT_ACTIVITY.getSize();
+      assert position == start + Implementation.IMPL_CURRENT_ACTIVITY.getSize();
     }
 
     /** REM: Ensure it is in sync with {@link TraceSemantics#SOURCE_SECTION_SIZE}. */
@@ -254,16 +254,16 @@ public class MedeorTrace {
        * The following if is a workaround.
        */
       if (origin == null) {
-        storage.putLong(0);
+        putLong(0);
         return;
       }
 
       assert !origin.getSource()
                     .isInternal() : "Need special handling to ensure we see user code reported to trace/debugger";
-      storage.putShort(SourceCoordinate.getURI(origin.getSource()).getSymbolId());
-      storage.putShort((short) origin.getStartLine());
-      storage.putShort((short) origin.getStartColumn());
-      storage.putShort((short) origin.getCharLength());
+      putShort(SourceCoordinate.getURI(origin.getSource()).getSymbolId());
+      putShort((short) origin.getStartLine());
+      putShort((short) origin.getStartColumn());
+      putShort((short) origin.getCharLength());
     }
 
     public void recordActivityCreation(final ActivityType entity, final long activityId,
@@ -271,42 +271,42 @@ public class MedeorTrace {
       int requiredSpace = entity.getCreationSize();
       ensureSufficientSpace(requiredSpace, current);
 
-      final int start = storage.position();
+      final int start = position;
 
       assert entity.getCreationMarker() != 0;
 
-      storage.put(entity.getCreationMarker());
-      storage.putLong(activityId);
-      storage.putShort(symbolId);
+      put(entity.getCreationMarker());
+      putLong(activityId);
+      putShort(symbolId);
 
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
         writeSourceSection(sourceSection);
       }
-      assert storage.position() == start + requiredSpace;
+      assert position == start + requiredSpace;
     }
 
     public void recordActivityCompletion(final ActivityType entity, final Activity current) {
       int requireSize = entity.getCompletionSize();
       ensureSufficientSpace(requireSize, current);
 
-      final int start = storage.position();
-      storage.put(entity.getCompletionMarker());
-      assert storage.position() == start + requireSize;
+      final int start = position;
+      put(entity.getCompletionMarker());
+      assert position == start + requireSize;
     }
 
     private void recordEventWithIdAndSource(final byte eventMarker, final int eventSize,
         final long id, final SourceSection section, final Activity current) {
       ensureSufficientSpace(eventSize, current);
 
-      final int start = storage.position();
+      final int start = position;
 
-      storage.put(eventMarker);
-      storage.putLong(id);
+      put(eventMarker);
+      putLong(id);
 
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
         writeSourceSection(section);
       }
-      assert storage.position() == start + eventSize;
+      assert position == start + eventSize;
     }
 
     public void recordScopeStart(final DynamicScopeType entity, final long scopeId,
@@ -319,10 +319,10 @@ public class MedeorTrace {
       int requiredSpace = entity.getEndSize();
       ensureSufficientSpace(requiredSpace, current);
 
-      final int start = storage.position();
-      storage.put(entity.getEndMarker());
+      final int start = position;
+      put(entity.getEndMarker());
 
-      assert storage.position() == start + requiredSpace;
+      assert position() == start + requiredSpace;
     }
 
     public void recordPassiveEntityCreation(final PassiveEntityType entity,
@@ -336,11 +336,11 @@ public class MedeorTrace {
       int requiredSpace = op.getSize();
       ensureSufficientSpace(requiredSpace, current);
 
-      final int start = storage.position();
-      storage.put(op.getId());
-      storage.putLong(sourceId);
+      final int start = position;
+      put(op.getId());
+      putLong(sourceId);
 
-      assert storage.position() == start + requiredSpace;
+      assert position == start + requiredSpace;
     }
 
     public void recordSendOperation(final SendOp op, final long entityId,
@@ -348,12 +348,12 @@ public class MedeorTrace {
       int requiredSpace = op.getSize();
       ensureSufficientSpace(requiredSpace, current);
 
-      final int start = storage.position();
-      storage.put(op.getId());
-      storage.putLong(entityId);
-      storage.putLong(targetId);
+      final int start = position;
+      put(op.getId());
+      putLong(entityId);
+      putLong(targetId);
 
-      assert storage.position() == start + requiredSpace;
+      assert position == start + requiredSpace;
     }
 
     public static class SyncedMedeorTraceBuffer extends MedeorTraceBuffer {

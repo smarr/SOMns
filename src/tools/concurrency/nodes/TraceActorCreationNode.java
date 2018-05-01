@@ -2,7 +2,6 @@ package tools.concurrency.nodes;
 
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.ActorExecutionTrace.ActorTraceBuffer;
-import tools.concurrency.ByteBuffer;
 import tools.concurrency.TracingActors.TracingActor;
 
 
@@ -13,19 +12,15 @@ public final class TraceActorCreationNode extends TraceNode {
   @Child protected TraceActorContextNode tracer = new TraceActorContextNode();
   @Child protected RecordIdNode          id     = RecordIdNodeGen.create();
 
-  private ByteBuffer getStorage() {
-    ActorTraceBuffer buffer = getCurrentBuffer();
-    return buffer.ensureSufficientSpace(TRACE_ENTRY_SIZE, tracer);
-  }
-
   public void trace(final TracingActor actor) {
-    ByteBuffer storage = getStorage();
-    int pos = storage.position();
+    ActorTraceBuffer buffer = getCurrentBuffer();
+    buffer.ensureSufficientSpace(TRACE_ENTRY_SIZE, tracer);
+    int pos = buffer.position();
 
-    int idLen = id.execute(storage, pos + 1, actor.getActorId());
+    int idLen = id.execute(buffer, pos + 1, actor.getActorId());
     int idBit = (idLen - 1) << 4;
 
-    storage.putByteAt(pos, (byte) (ActorExecutionTrace.ACTOR_CREATION | idBit));
-    storage.position(pos + idLen + 1);
+    buffer.putByteAt(pos, (byte) (ActorExecutionTrace.ACTOR_CREATION | idBit));
+    buffer.position(pos + idLen + 1);
   }
 }

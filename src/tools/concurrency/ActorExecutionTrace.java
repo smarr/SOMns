@@ -1,5 +1,7 @@
 package tools.concurrency;
 
+import java.util.Arrays;
+
 import som.interpreter.actors.EventualMessage;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.concurrency.nodes.TraceActorContextNode;
@@ -35,50 +37,53 @@ public class ActorExecutionTrace {
   public static void intSystemCall(final int i, final TraceActorContextNode tracer) {
     TracingActor ta = (TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
     int dataId = ta.getActorId();
-    ByteBuffer b = getExtDataByteBuffer(ta.getActorId(), dataId, Integer.BYTES);
-    b.putInt(i);
+    byte[] b = getExtDataByteBuffer(ta.getActorId(), dataId, Integer.BYTES);
+    TraceBuffer.UNSAFE.putInt(
+        b, TraceBuffer.BYTE_ARR_BASE_OFFSET + EXT_DATA_HEADER_SIZE, i);
     recordSystemCall(dataId, tracer);
-    recordExternalData(b);
+    TracingBackend.addExternalData(b);
   }
 
   public static void longSystemCall(final long l, final TraceActorContextNode tracer) {
     TracingActor ta = (TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
     int dataId = ta.getActorId();
-    ByteBuffer b = getExtDataByteBuffer(ta.getActorId(), dataId, Long.BYTES);
-    b.putLong(l);
+    byte[] b = getExtDataByteBuffer(ta.getActorId(), dataId, Long.BYTES);
+    TraceBuffer.UNSAFE.putLong(
+        b, TraceBuffer.BYTE_ARR_BASE_OFFSET + EXT_DATA_HEADER_SIZE, l);
     recordSystemCall(dataId, tracer);
-    recordExternalData(b);
+    TracingBackend.addExternalData(b);
   }
 
   public static void doubleSystemCall(final double d, final TraceActorContextNode tracer) {
     TracingActor ta = (TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
     int dataId = ta.getActorId();
-    ByteBuffer b = getExtDataByteBuffer(ta.getActorId(), dataId, Double.BYTES);
-    b.putDouble(d);
+    byte[] b = getExtDataByteBuffer(ta.getActorId(), dataId, Double.BYTES);
+    TraceBuffer.UNSAFE.putDouble(
+        b, TraceBuffer.BYTE_ARR_BASE_OFFSET + EXT_DATA_HEADER_SIZE, d);
     recordSystemCall(dataId, tracer);
-    recordExternalData(b);
+    TracingBackend.addExternalData(b);
   }
 
   public static void stringSystemCall(final String s, final TraceActorContextNode tracer) {
     TracingActor ta = (TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
     int dataId = ta.getActorId();
-    ByteBuffer b = getExtDataByteBuffer(ta.getActorId(), dataId, s.getBytes().length);
-    b.put(s.getBytes());
+    byte[] b = getExtDataByteBuffer(ta.getActorId(), dataId, s.getBytes().length);
+    // TODO: fix this, do this better
+    // b.put(s.getBytes());
     recordSystemCall(dataId, tracer);
-    recordExternalData(b);
+    TracingBackend.addExternalData(b);
   }
 
-  public static ByteBuffer getExtDataByteBuffer(final int actor, final int dataId,
+  private static final int EXT_DATA_HEADER_SIZE = 3 * 4;
+
+  public static byte[] getExtDataByteBuffer(final int actor, final int dataId,
       final int size) {
-    ByteBuffer bb = ByteBuffer.allocate(size + 12);
-    bb.putInt(actor);
-    bb.putInt(dataId);
-    bb.putInt(size);
-    return bb;
-  }
-
-  public static void recordExternalData(final ByteBuffer data) {
-    TracingBackend.addExternalData(data);
+    byte[] buffer = new byte[size + EXT_DATA_HEADER_SIZE];
+    Arrays.fill(buffer, (byte) -1);
+    TraceBuffer.UNSAFE.putInt(buffer, TraceBuffer.BYTE_ARR_BASE_OFFSET, actor);
+    TraceBuffer.UNSAFE.putInt(buffer, TraceBuffer.BYTE_ARR_BASE_OFFSET + 4, dataId);
+    TraceBuffer.UNSAFE.putInt(buffer, TraceBuffer.BYTE_ARR_BASE_OFFSET + 8, size);
+    return buffer;
   }
 
   public static class ActorTraceBuffer extends TraceBuffer {
@@ -86,8 +91,7 @@ public class ActorExecutionTrace {
 
     @Override
     protected void swapBufferWhenNotEnoughSpace(final TraceActorContextNode tracer) {
-      boolean didSwap = swapStorage();
-      assert didSwap;
+      swapStorage();
       if (tracer != null) {
         tracer.trace(currentActor);
       }
@@ -103,7 +107,7 @@ public class ActorExecutionTrace {
 
     public void recordSystemCall(final int dataId, final TraceActorContextNode tracer) {
       ensureSufficientSpace(5, tracer);
-      storage.putByteInt(SYSTEM_CALL, dataId);
+      putByteInt(SYSTEM_CALL, dataId);
     }
   }
 }

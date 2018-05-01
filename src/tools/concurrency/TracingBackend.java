@@ -11,6 +11,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
 import java.lang.management.MemoryUsage;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedList;
@@ -24,6 +25,7 @@ import javax.management.NotificationEmitter;
 import javax.management.NotificationListener;
 import javax.management.openmbean.CompositeData;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.sun.management.GarbageCollectionNotificationInfo;
 
@@ -63,7 +65,7 @@ import tools.debugger.entities.Implementation;
  */
 public class TracingBackend {
   private static final int BUFFER_POOL_SIZE = VmSettings.NUM_THREADS * 4;
-  static final int         BUFFER_SIZE      = 4096 * 128;
+  public static final int  BUFFER_SIZE      = 4096 * 128;
 
   private static final int TRACE_TIMEOUT = 500;
   private static final int POLL_TIMEOUT  = 100;
@@ -71,12 +73,13 @@ public class TracingBackend {
   private static final List<java.lang.management.GarbageCollectorMXBean> gcbeans =
       ManagementFactory.getGarbageCollectorMXBeans();
 
-  private static final ArrayBlockingQueue<ByteBuffer> emptyBuffers =
-      new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
-  private static final ArrayBlockingQueue<ByteBuffer> fullBuffers  =
-      new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
+  private static final ArrayBlockingQueue<byte[]> emptyBuffers =
+      new ArrayBlockingQueue<>(BUFFER_POOL_SIZE);
 
-  private static final LinkedList<ByteBuffer> externalData = new LinkedList<>();
+  private static final ArrayBlockingQueue<BufferAndLimit> fullBuffers =
+      new ArrayBlockingQueue<>(BUFFER_POOL_SIZE);
+
+  private static final LinkedList<byte[]> externalData = new LinkedList<>();
 
   // contains symbols that need to be written to file/sent to debugger,
   // e.g. actor type, message type
@@ -94,7 +97,7 @@ public class TracingBackend {
 
     if (VmSettings.ACTOR_TRACING) {
       for (int i = 0; i < BUFFER_POOL_SIZE; i++) {
-        emptyBuffers.add(ByteBuffer.allocate(BUFFER_SIZE));
+        emptyBuffers.add(new byte[BUFFER_SIZE]);
       }
     }
   }
@@ -145,25 +148,40 @@ public class TracingBackend {
   }
 
   @TruffleBoundary
-  public static ByteBuffer getEmptyBuffer() {
+  public static byte[] getEmptyBuffer() {
     try {
       return emptyBuffers.take();
     } catch (InterruptedException e) {
+      CompilerDirectives.transferToInterpreter();
       throw new IllegalStateException("Failed to acquire a new Buffer!");
     }
   }
 
-  static void returnBuffer(final ByteBuffer b) {
-    if (b == null) {
+  static void returnBuffer(final byte[] buffer, final int pos) {
+    if (buffer == null) {
       return;
     }
 
-    returnBufferGlobally(b);
+    returnBufferGlobally(new BufferAndLimit(buffer, pos));
+  }
+
+  private static final class BufferAndLimit {
+    final byte[] buffer;
+    final int    limit;
+
+    BufferAndLimit(final byte[] buffer, final int limit) {
+      this.buffer = buffer;
+      this.limit = limit;
+    }
+
+    public java.nio.ByteBuffer getReadingFromStartBuffer() {
+      return java.nio.ByteBuffer.wrap(buffer, 0, limit);
+    }
   }
 
   @TruffleBoundary
-  private static void returnBufferGlobally(final ByteBuffer b) {
-    fullBuffers.offer(b);
+  private static void returnBufferGlobally(final BufferAndLimit buffer) {
+    fullBuffers.offer(buffer);
   }
 
   private static HashSet<TracingActivityThread> tracingThreads = new HashSet<>();
@@ -241,10 +259,8 @@ public class TracingBackend {
   }
 
   @TruffleBoundary
-  public static final void addExternalData(final ByteBuffer b) {
-    if (b == null) {
-      return;
-    }
+  public static final void addExternalData(final byte[] b) {
+    assert b != null;
 
     synchronized (externalData) {
       externalData.add(b);
@@ -284,21 +300,20 @@ public class TracingBackend {
     protected long traceBytes;
     protected long externalBytes;
 
-    private ByteBuffer ignoreEmptyBuffer(final ByteBuffer buffer) {
+    private BufferAndLimit ignoreEmptyBuffer(final BufferAndLimit buffer) {
       // Ignore buffers that only contain the thread index
-      if (buffer.position() <= Implementation.IMPL_THREAD.getSize() +
+      if (buffer.limit <= Implementation.IMPL_THREAD.getSize() +
           Implementation.IMPL_CURRENT_ACTIVITY.getSize()) {
 
-        buffer.clear();
-        TracingBackend.emptyBuffers.add(buffer);
+        TracingBackend.emptyBuffers.add(buffer.buffer);
         return null;
       } else {
         return buffer;
       }
     }
 
-    private ByteBuffer tryToObtainBuffer() {
-      ByteBuffer buffer;
+    private BufferAndLimit tryToObtainBuffer() {
+      BufferAndLimit buffer;
       try {
         buffer = TracingBackend.fullBuffers.poll(POLL_TIMEOUT, TimeUnit.MILLISECONDS);
         if (buffer == null) {
@@ -322,12 +337,11 @@ public class TracingBackend {
     private void writeExternalData(final FileOutputStream edfos) throws IOException {
       synchronized (externalData) {
         while (!externalData.isEmpty()) {
-          ByteBuffer data = externalData.removeFirst();
+          byte[] data = externalData.removeFirst();
 
-          externalBytes += data.position();
+          externalBytes += data.length;
           if (edfos != null) {
-            edfos.getChannel()
-                 .write(data.getReadingFromStartBuffer());
+            edfos.getChannel().write(ByteBuffer.wrap(data));
             edfos.flush();
           }
         }
@@ -351,22 +365,21 @@ public class TracingBackend {
       }
     }
 
-    private void writeAndRecycleBuffer(final FileOutputStream fos, final ByteBuffer buffer)
+    private void writeAndRecycleBuffer(final FileOutputStream fos, final BufferAndLimit buffer)
         throws IOException {
       if (fos != null) {
         fos.getChannel().write(buffer.getReadingFromStartBuffer());
         fos.flush();
       }
-      traceBytes += buffer.position();
-      buffer.clear();
-      TracingBackend.emptyBuffers.add(buffer);
+      traceBytes += buffer.limit;
+      TracingBackend.emptyBuffers.add(buffer.buffer);
     }
 
     private void processTraceData(final FileOutputStream traceDataStream,
         final FileOutputStream externalDataStream,
         final BufferedWriter symbolStream) throws IOException {
       while (cont || !TracingBackend.fullBuffers.isEmpty()) {
-        ByteBuffer b = tryToObtainBuffer();
+        BufferAndLimit b = tryToObtainBuffer();
         if (b == null) {
           continue;
         }
@@ -375,7 +388,7 @@ public class TracingBackend {
         writeSymbols(symbolStream);
 
         if (front != null) {
-          front.sendTracingData(b);
+          front.sendTracingData(b.getReadingFromStartBuffer());
         }
 
         writeAndRecycleBuffer(traceDataStream, b);
