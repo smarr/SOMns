@@ -54,4 +54,11 @@ public final class Symbols implements IdProvider<SSymbol> {
   public static final SSymbol Kernel = symbolFor("Kernel");
 
   public static final Symbols PROVIDER = new Symbols();
+
+  public static final SSymbol PLATFORM_MODULE = symbolFor("platform");
+  public static final SSymbol SYSTEM_MODULE   = symbolFor("system");
+
+  public static final SSymbol LOAD_SINGLETON_MODULE = symbolFor("loadSingletonModule:");
+
+  public static final SSymbol SECRET_DIALECT_SLOT = symbolFor("dialect");
 }

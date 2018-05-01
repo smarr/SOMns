@@ -37,6 +37,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.java.accessibility.util.Translator;
+
+import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
@@ -82,6 +84,22 @@ public class AstBuilder {
   public class Objects {
 
     /**
+     * Adds an immutable slot to the object currently at the top of stack. The slot will be
+     * initialized by executing the given expressions.
+     */
+    private void addImmutableSlot(final SSymbol slotName, final ExpressionNode init,
+        final SourceSection sourceSection) {
+      try {
+        scopeManager.peekObject().addSlot(slotName, AccessModifier.PUBLIC, true, init,
+            sourceSection);
+      } catch (MixinDefinitionError e) {
+        language.getVM().errorExit("Failed to add " + slotName + " as a slot on "
+            + scopeManager.peekObject().getName());
+        throw new RuntimeException();
+      }
+    }
+
+    /**
      * Creates the AST for a SOM module (although most of the construction is handled by the
      * {@link MixinBuilder} class).
      *
@@ -95,20 +113,35 @@ public class AstBuilder {
      *
      * @return - the assembled class corresponding to the module
      */
-      SSymbol name = symbolFor("GraceModule");
-      MixinBuilder moduleBuilder = scopeManager.newModule(name, sourceManager.empty());
     public MixinDefinition module(final JsonArray body) {
+      SSymbol moduleName = symbolFor(sourceManager.getModuleName());
+      MixinBuilder moduleBuilder =
+          scopeManager.newModule(moduleName, sourceManager.empty());
 
       // Set up the method used to create instances
       MethodBuilder instanceFactory = moduleBuilder.getPrimaryFactoryMethodBuilder();
       instanceFactory.setSignature(Symbols.DEFAULT_MODULE_FACTORY);
       instanceFactory.addArgument(Symbols.SELF, sourceManager.empty());
+      instanceFactory.addArgument(Symbols.PLATFORM_MODULE, sourceManager.empty());
       moduleBuilder.setupInitializerBasedOnPrimaryFactory(sourceManager.empty());
       moduleBuilder.setInitializerSource(sourceManager.empty());
       moduleBuilder.finalizeInitializer();
 
       // Push the initializer onto the stack
       scopeManager.pushMethod(moduleBuilder.getInitializerMethodBuilder());
+
+      // Add the SOM platform as a secret slot on this module
+      addImmutableSlot(Symbols.PLATFORM_MODULE,
+          scopeManager.peekMethod().getReadNode(Symbols.PLATFORM_MODULE,
+              sourceManager.empty()),
+          sourceManager.empty());
+
+      // Add the default dialect as a secret slot on this module
+      if (!sourceManager.getModuleName().equals("standardGrace")) {
+        addImmutableSlot(Symbols.SECRET_DIALECT_SLOT,
+            requestBuilder.importModule(symbolFor("standardGrace")),
+            sourceManager.empty());
+      }
 
       // Translate the body and add each to the initializer
       for (JsonElement element : body) {
@@ -216,6 +249,26 @@ public class AstBuilder {
             arguments.toArray(new ExpressionNode[arguments.size()]), method.getScope(),
             method.getMixin().getMixinId(), sourceSection, language.getVM());
       }
+    }
+
+    /**
+     * Creates a request to the SOM platform module
+     */
+    private ExpressionNode platformModule() {
+      MethodBuilder method = scopeManager.peekMethod();
+      return method.getImplicitReceiverSend(Symbols.PLATFORM_MODULE, sourceManager.empty());
+    }
+
+    /**
+     * Creates an message that will cause SOMns to import the named module when executed, which
+     * evaluates to the class representing that module.
+     */
+    public ExpressionNode importModule(final SSymbol moduleName) {
+      String path = sourceManager.pathForModuleNamed(moduleName);
+      List<ExpressionNode> args = new ArrayList<ExpressionNode>();
+      args.add(new StringLiteralNode(path).initialize(sourceManager.empty()));
+      return explicit(Symbols.LOAD_SINGLETON_MODULE, platformModule(), args,
+          sourceManager.empty());
     }
   }
 

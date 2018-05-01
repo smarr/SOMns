@@ -34,4 +34,8 @@ class Platform usingVmMirror: vmMirror = Value (
 
     ^ errorCodeOrPromise
   )
+
+  public loadSingletonModule: path = (
+    ^ system loadSingletonModule: path usingPlatform: self.
+  )
 )
