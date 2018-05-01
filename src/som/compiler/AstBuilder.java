@@ -86,14 +86,18 @@ public class AstBuilder {
      * {@link MixinBuilder} class).
      *
      * First the {@link MixinBuilder} is created. We then create the primary "factory", which
-     * is a method on the module used to create instances of that module. And finally, we
-     * create a main method that simply returns zero (via the {@link MethodBuilder} class).
+     * is a method on the module used to create instances of that module. We use the
+     * {@link Translator} to translate each of the Grace AST nodes into expressions, which are
+     * added to this initializer method.
+     *
+     * And finally, we create a main method that simply returns zero (via the
+     * {@link MethodBuilder} class).
      *
      * @return - the assembled class corresponding to the module
      */
-    public MixinDefinition module() {
       SSymbol name = symbolFor("GraceModule");
       MixinBuilder moduleBuilder = scopeManager.newModule(name, sourceManager.empty());
+    public MixinDefinition module(final JsonArray body) {
 
       // Set up the method used to create instances
       MethodBuilder instanceFactory = moduleBuilder.getPrimaryFactoryMethodBuilder();
@@ -102,6 +106,26 @@ public class AstBuilder {
       moduleBuilder.setupInitializerBasedOnPrimaryFactory(sourceManager.empty());
       moduleBuilder.setInitializerSource(sourceManager.empty());
       moduleBuilder.finalizeInitializer();
+
+      // Push the initializer onto the stack
+      scopeManager.pushMethod(moduleBuilder.getInitializerMethodBuilder());
+
+      // Translate the body and add each to the initializer
+      for (JsonElement element : body) {
+        Object expr = translator.translate(element.getAsJsonObject());
+        if (expr != null) {
+          if (expr instanceof ExpressionNode) {
+            moduleBuilder.addInitializerExpression((ExpressionNode) expr);
+          } else {
+            language.getVM().errorExit(
+                "Only expression nodes can be provided for the body of an object's initializer");
+            throw new RuntimeException();
+          }
+        }
+      }
+
+      // Remove the initializer from the stack
+      scopeManager.popMethod();
 
       // Set module to inherit from object
       moduleBuilder.setSimpleInheritance(Symbols.OBJECT, sourceManager.empty());
