@@ -147,9 +147,7 @@ public class TracingBackend {
   @TruffleBoundary
   public static ByteBuffer getEmptyBuffer() {
     try {
-      synchronized (emptyBuffers) {
-        return emptyBuffers.take();
-      }
+      return emptyBuffers.take();
     } catch (InterruptedException e) {
       throw new IllegalStateException("Failed to acquire a new Buffer!");
     }
