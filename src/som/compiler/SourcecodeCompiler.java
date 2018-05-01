@@ -24,6 +24,7 @@
 
 package som.compiler;
 
+import com.google.gson.JsonObject;
 import com.oracle.truffle.api.source.Source;
 
 import bd.basic.ProgramDefinitionError;
@@ -71,6 +72,9 @@ public class SourcecodeCompiler {
       final StructuralProbe structuralProbe)
       throws ProgramDefinitionError {
     AstBuilder astBuilder = new AstBuilder(source, language, structuralProbe);
+    KernanClient client = new KernanClient(source, language, structuralProbe);
+
+    JsonObject parseTree = client.getParseTree();
     MixinDefinition result = astBuilder.objectBuilder.module();
     language.getVM().reportLoadedSource(source);
     return result;
