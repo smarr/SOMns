@@ -47,12 +47,13 @@ public class SourcecodeCompiler {
   public MixinDefinition compileModule(final Source source,
       final StructuralProbe structuralProbe)
       throws ProgramDefinitionError {
-    Parser parser = new Parser(source.getCharacters().toString(), source.getLength(), source,
-        structuralProbe, language);
+    NewspeakParser parser =
+        new NewspeakParser(source.getCharacters().toString(), source.getLength(), source,
+            structuralProbe, language);
     return compile(parser, source);
   }
 
-  protected final MixinDefinition compile(final Parser parser,
+  protected final MixinDefinition compile(final NewspeakParser parser,
       final Source source) throws ProgramDefinitionError {
     SourceCoordinate coord = parser.getCoordinate();
     MixinBuilder mxnBuilder = parser.moduleDeclaration();

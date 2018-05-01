@@ -16,14 +16,14 @@ import static som.compiler.Symbol.Or;
 import static som.compiler.Symbol.Period;
 import static som.compiler.Symbol.RCurly;
 
-import som.compiler.Parser.ParseError;
+import som.compiler.NewspeakParser.ParseError;
 
 
 public class TypeParser {
 
-  private final Parser parser;
+  private final NewspeakParser parser;
 
-  public TypeParser(final Parser parser) {
+  public TypeParser(final NewspeakParser parser) {
     this.parser = parser;
   }
 
