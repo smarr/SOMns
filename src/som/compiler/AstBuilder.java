@@ -33,7 +33,10 @@ import static som.vm.Symbols.symbolFor;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.oracle.truffle.api.source.SourceSection;
+import com.sun.java.accessibility.util.Translator;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
@@ -53,6 +56,7 @@ import tools.language.StructuralProbe;
  */
 public class AstBuilder {
 
+  private final JsonTreeTranslator translator;
   private final SomLanguage        language;
 
   private final ScopeManager  scopeManager;
@@ -62,10 +66,13 @@ public class AstBuilder {
   public final Requests requestBuilder;
   public final Literals literalBuilder;
 
-  public AstBuilder(final Source source, final SomLanguage language,
-      final StructuralProbe probe) {
+  public AstBuilder(final JsonTreeTranslator translator, final SourceManager sourceManager,
+      final SomLanguage language, final StructuralProbe probe) {
+    this.translator = translator;
+    this.language = language;
+
     scopeManager = new ScopeManager(language, probe);
-    sourceManager = new SourceManager(source);
+    this.sourceManager = sourceManager;
 
     objectBuilder = new Objects();
     requestBuilder = new Requests();
@@ -110,6 +117,43 @@ public class AstBuilder {
 
       // Assemble and return the completed module
       return scopeManager.assumbleCurrentModule(sourceManager.empty());
+    }
+
+    /**
+     * Adds a method with the given selector, parameters, and body to the object at the top of
+     * the stack.
+     */
+    public void method(final SSymbol selector, final SSymbol[] parameters,
+        final JsonArray body) {
+      MethodBuilder builder = scopeManager.newMethod(selector);
+
+      // Set the parameters
+      builder.addArgument(Symbols.SELF, sourceManager.empty());
+      for (int i = 0; i < parameters.length; i++) {
+        builder.addArgument(parameters[i], sourceManager.empty());
+      }
+      builder.setVarsOnMethodScope();
+      builder.finalizeMethodScope();
+
+      // Translate the body and add each to the initializer
+      List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
+      for (JsonElement element : body) {
+        Object expr = translator.translate(element.getAsJsonObject());
+        if (expr != null) {
+          if (expr instanceof ExpressionNode) {
+            expressions.add((ExpressionNode) expr);
+          } else {
+            language.getVM().errorExit(
+                "Only expression nodes can be provided for the body of an object's initializer");
+            throw new RuntimeException();
+          }
+        }
+      }
+
+      // Assemble and return the completed module
+      scopeManager.assembleCurrentMethod(
+          SNodeFactory.createSequence(expressions, sourceManager.empty()),
+          sourceManager.empty());
     }
   }
 
