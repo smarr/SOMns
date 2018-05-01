@@ -35,6 +35,7 @@ import com.oracle.truffle.api.source.Source;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.literals.IntegerLiteralNode;
+import som.interpreter.nodes.literals.StringLiteralNode;
 import som.vm.Symbols;
 import som.vmobjects.SSymbol;
 import tools.language.StructuralProbe;
@@ -52,7 +53,8 @@ public class AstBuilder {
   private final ScopeManager  scopeManager;
   private final SourceManager sourceManager;
 
-  public final Objects objectBuilder;
+  public final Objects  objectBuilder;
+  public final Literals literalBuilder;
 
   public AstBuilder(final Source source, final SomLanguage language,
       final StructuralProbe probe) {
@@ -60,6 +62,7 @@ public class AstBuilder {
     sourceManager = new SourceManager(source);
 
     objectBuilder = new Objects();
+    literalBuilder = new Literals();
   }
 
   public class Objects {
@@ -100,6 +103,16 @@ public class AstBuilder {
 
       // Assemble and return the completed module
       return scopeManager.assumbleCurrentModule(sourceManager.empty());
+    }
+  }
+
+  public class Literals {
+
+    /**
+     * Creates a SOM string literal from the given string.
+     */
+    public ExpressionNode string(final String value, final SourceSection sourceSection) {
+      return new StringLiteralNode(value).initialize(sourceSection);
     }
   }
 }
