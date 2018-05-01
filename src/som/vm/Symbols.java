@@ -41,6 +41,10 @@ public final class Symbols implements IdProvider<SSymbol> {
   public static final SSymbol METACLASS       = symbolFor("Metaclass");
   public static final SSymbol METACLASS_CLASS = symbolFor("Metaclass class");
 
+  public static final SSymbol DEFAULT_MODULE_FACTORY = symbolFor("usingPlatform:");
+  public static final SSymbol DEFAULT_MAIN_METHOD    = symbolFor("main:");
+  public static final SSymbol MAIN_METHOD_ARGS       = symbolFor("args");
+
   public static final SSymbol SUPER = symbolFor("super");
 
   public static final SSymbol SELF       = symbolFor("self");
