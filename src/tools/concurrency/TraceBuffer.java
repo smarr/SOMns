@@ -51,7 +51,7 @@ public abstract class TraceBuffer {
   protected int    position;
 
   protected TraceBuffer() {
-    retrieveBuffer();
+    buffer = TracingBackend.getEmptyBuffer();
   }
 
   public int position() {
@@ -86,19 +86,14 @@ public abstract class TraceBuffer {
     return p;
   }
 
-  public void retrieveBuffer() {
-    this.buffer = TracingBackend.getEmptyBuffer();
-  }
-
-  public final void returnBuffer() {
+  public final void returnBuffer(final byte[] nextBuffer) {
     TracingBackend.returnBuffer(buffer, position);
-    buffer = null;
+    buffer = nextBuffer;
     position = 0;
   }
 
   public final void swapStorage() {
-    returnBuffer();
-    retrieveBuffer();
+    returnBuffer(TracingBackend.getEmptyBuffer());
   }
 
   public boolean isEmpty() {

@@ -119,7 +119,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   @Override
   protected void onTermination(final Throwable exception) {
     if (VmSettings.ACTOR_TRACING) {
-      traceBuffer.returnBuffer();
+      traceBuffer.returnBuffer(null);
       TracingBackend.unregisterThread(this);
     }
     super.onTermination(exception);

@@ -30,7 +30,7 @@ public class MedeorTrace {
     buffer.recordCurrentActivity(mainActor);
     buffer.recordMainActor(mainActor, objectSystem);
     buffer.recordSendOperation(SendOp.ACTOR_MSG, 0, mainActor.getId(), mainActor);
-    buffer.returnBuffer();
+    buffer.returnBuffer(null);
   }
 
   public static void currentActivity(final Activity current) {
@@ -167,7 +167,7 @@ public class MedeorTrace {
     protected MedeorTraceBuffer(final long implThreadId) {
       this.implThreadId = implThreadId;
       this.lastActivity = null;
-      retrieveBuffer();
+
       recordThreadId();
     }
 
