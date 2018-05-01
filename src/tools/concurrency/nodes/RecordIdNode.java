@@ -4,7 +4,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 
 import som.vm.VmSettings;
-import tools.concurrency.ByteBuffer;
+import tools.concurrency.ActorExecutionTrace.ActorTraceBuffer;
 
 
 public abstract class RecordIdNode extends Node {
@@ -13,7 +13,7 @@ public abstract class RecordIdNode extends Node {
   private static final int THREE_BYTE_LEN = 3;
   private static final int INT_LEN        = 4;
 
-  public abstract int execute(ByteBuffer storage, int idx, int id);
+  public abstract int execute(ActorTraceBuffer buffer, int idx, int id);
 
   protected static boolean smallIds() {
     return VmSettings.TRACE_SMALL_IDS;
@@ -32,28 +32,28 @@ public abstract class RecordIdNode extends Node {
   }
 
   @Specialization(guards = {"smallIds()", "byteId(id)"})
-  public int traceByteId(final ByteBuffer storage, final int idx, final int id) {
-    storage.putByteAt(idx, (byte) id);
+  public int traceByteId(final ActorTraceBuffer buffer, final int idx, final int id) {
+    buffer.putByteAt(idx, (byte) id);
     return BYTE_LEN;
   }
 
   @Specialization(guards = {"smallIds()", "shortId(id)"},
       replaces = "traceByteId")
-  public int traceShortId(final ByteBuffer storage, final int idx, final int id) {
-    storage.putShortAt(idx, (short) id);
+  public int traceShortId(final ActorTraceBuffer buffer, final int idx, final int id) {
+    buffer.putShortAt(idx, (short) id);
     return SHORT_LEN;
   }
 
   @Specialization(guards = {"smallIds()", "threeByteId(id)"},
       replaces = {"traceShortId", "traceByteId"})
-  public int traceThreeByteId(final ByteBuffer storage, final int idx, final int id) {
-    storage.putByteShortAt(idx, (byte) (id >> 16), (short) id);
+  public int traceThreeByteId(final ActorTraceBuffer buffer, final int idx, final int id) {
+    buffer.putByteShortAt(idx, (byte) (id >> 16), (short) id);
     return THREE_BYTE_LEN;
   }
 
   @Specialization(replaces = {"traceShortId", "traceByteId", "traceThreeByteId"})
-  public int traceStandardId(final ByteBuffer storage, final int idx, final int id) {
-    storage.putIntAt(idx, id);
+  public int traceStandardId(final ActorTraceBuffer buffer, final int idx, final int id) {
+    buffer.putIntAt(idx, id);
     return INT_LEN;
   }
 }
