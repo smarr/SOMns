@@ -44,21 +44,52 @@ public class SourcecodeCompiler {
     return language;
   }
 
-  public MixinDefinition compileModule(final Source source,
+  /**
+   * Builds a SOM module using the {@link NewspeakParser}.
+   *
+   * @return - a finished SOM class created from the given module
+   */
+  public MixinDefinition compileSomModule(final Source source,
       final StructuralProbe structuralProbe)
       throws ProgramDefinitionError {
     NewspeakParser parser =
         new NewspeakParser(source.getCharacters().toString(), source.getLength(), source,
             structuralProbe, language);
-    return compile(parser, source);
-  }
-
-  protected final MixinDefinition compile(final NewspeakParser parser,
-      final Source source) throws ProgramDefinitionError {
     SourceCoordinate coord = parser.getCoordinate();
     MixinBuilder mxnBuilder = parser.moduleDeclaration();
     MixinDefinition result = mxnBuilder.assemble(parser.getSource(coord));
     language.getVM().reportLoadedSource(source);
     return result;
+  }
+
+  /**
+   * Builds a SOM module whose main method simply returns zero.
+   *
+   * @return - a finished SOM class created from the given module
+   */
+  public MixinDefinition compileGraceModule(final Source source,
+      final StructuralProbe structuralProbe)
+      throws ProgramDefinitionError {
+    AstBuilder astBuilder = new AstBuilder(source, language, structuralProbe);
+    MixinDefinition result = astBuilder.objectBuilder.module();
+    language.getVM().reportLoadedSource(source);
+    return result;
+  }
+
+  /**
+   * Compiles a program, which must be written in either Grace or Newspeak.
+   *
+   * @return - a finished SOM class created from the given module
+   */
+  public MixinDefinition compileModule(final Source source,
+      final StructuralProbe structuralProbe)
+      throws ProgramDefinitionError {
+    final String path = source.getURI().getPath();
+
+    if (path.endsWith(".grace") || path.endsWith(".grc")) {
+      return compileGraceModule(source, structuralProbe);
+    } else {
+      return compileSomModule(source, structuralProbe);
+    }
   }
 }
