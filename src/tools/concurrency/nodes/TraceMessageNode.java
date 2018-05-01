@@ -13,7 +13,6 @@ import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.ActorExecutionTrace.ActorTraceBuffer;
-import tools.concurrency.ByteBuffer;
 import tools.concurrency.TracingActors.TracingActor;
 
 
@@ -30,14 +29,15 @@ public abstract class TraceMessageNode extends TraceNode {
 
   public abstract void execute(EventualMessage msg);
 
-  private ByteBuffer getStorage(final int entrySize) {
+  private ActorTraceBuffer getStorage(final int entrySize) {
     ActorTraceBuffer buffer = getCurrentBuffer();
-    return buffer.ensureSufficientSpace(entrySize, tracer);
+    buffer.ensureSufficientSpace(entrySize, tracer);
+    return buffer;
   }
 
   @Specialization
   public void trace(final DirectMessage msg) {
-    ByteBuffer storage = getStorage(DIRECT_MSG_SIZE);
+    ActorTraceBuffer storage = getStorage(DIRECT_MSG_SIZE);
 
     int pos = storage.position();
 
@@ -50,7 +50,7 @@ public abstract class TraceMessageNode extends TraceNode {
 
   @Specialization
   public void trace(final ExternalDirectMessage msg) {
-    ByteBuffer storage = getStorage(EXT_DIRECT_MSG_SIZE);
+    ActorTraceBuffer storage = getStorage(EXT_DIRECT_MSG_SIZE);
 
     int pos = storage.position();
 
@@ -82,7 +82,7 @@ public abstract class TraceMessageNode extends TraceNode {
   }
 
   private void tracePromiseMsg(final PromiseMessage msg) {
-    ByteBuffer storage = getStorage(PROMISE_MSG_SIZE);
+    ActorTraceBuffer storage = getStorage(PROMISE_MSG_SIZE);
 
     int pos = storage.position();
 
@@ -107,7 +107,7 @@ public abstract class TraceMessageNode extends TraceNode {
 
   private void traceExternalPromiseMsg(final PromiseMessage msg, final short method,
       final int dataId) {
-    ByteBuffer storage = getStorage(EXT_PROMISE_MSG_SIZE);
+    ActorTraceBuffer storage = getStorage(EXT_PROMISE_MSG_SIZE);
 
     int pos = storage.position();
 
