@@ -30,8 +30,11 @@ package som.compiler;
 
 import static som.vm.Symbols.symbolFor;
 
-import com.oracle.truffle.api.source.Source;
+import java.util.ArrayList;
+import java.util.List;
 
+import com.oracle.truffle.api.source.SourceSection;
+import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.literals.IntegerLiteralNode;
@@ -50,10 +53,13 @@ import tools.language.StructuralProbe;
  */
 public class AstBuilder {
 
+  private final SomLanguage        language;
+
   private final ScopeManager  scopeManager;
   private final SourceManager sourceManager;
 
   public final Objects  objectBuilder;
+  public final Requests requestBuilder;
   public final Literals literalBuilder;
 
   public AstBuilder(final Source source, final SomLanguage language,
@@ -62,6 +68,7 @@ public class AstBuilder {
     sourceManager = new SourceManager(source);
 
     objectBuilder = new Objects();
+    requestBuilder = new Requests();
     literalBuilder = new Literals();
   }
 
@@ -103,6 +110,44 @@ public class AstBuilder {
 
       // Assemble and return the completed module
       return scopeManager.assumbleCurrentModule(sourceManager.empty());
+    }
+  }
+
+  public class Requests {
+
+    /**
+     * Sends the named message send to the given receiver, with the given arguments. Note that
+     * the receiver is added as the first argument of the message send.
+     */
+    public ExpressionNode explicit(final SSymbol selector, final ExpressionNode receiver,
+        final List<ExpressionNode> arguments, final SourceSection sourceSection) {
+      arguments.add(0, receiver);
+      return SNodeFactory.createMessageSend(selector, arguments, sourceSection,
+          language.getVM());
+    }
+
+    /**
+     * Creates either a variable read or an implicit send, for the given name, from the method
+     * at the top of the stack.
+     */
+    public ExpressionNode implicit(final SSymbol name, final SourceSection sourceSection) {
+      MethodBuilder method = scopeManager.peekMethod();
+      return method.getImplicitReceiverSend(name, sourceSection);
+    }
+
+    /**
+     * Creates either an implicit send for the given request.
+     */
+    public ExpressionNode implicit(final SSymbol selector,
+        final List<ExpressionNode> arguments, final SourceSection sourceSection) {
+      if (arguments.size() == 0) {
+        return implicit(selector, sourceSection);
+      } else {
+        MethodBuilder method = scopeManager.peekMethod();
+        return SNodeFactory.createImplicitReceiverSend(selector,
+            arguments.toArray(new ExpressionNode[arguments.size()]), method.getScope(),
+            method.getMixin().getMixinId(), sourceSection, language.getVM());
+      }
     }
   }
 
