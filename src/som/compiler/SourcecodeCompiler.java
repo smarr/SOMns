@@ -71,11 +71,12 @@ public class SourcecodeCompiler {
   public MixinDefinition compileGraceModule(final Source source,
       final StructuralProbe structuralProbe)
       throws ProgramDefinitionError {
-    AstBuilder astBuilder = new AstBuilder(source, language, structuralProbe);
     KernanClient client = new KernanClient(source, language, structuralProbe);
-
     JsonObject parseTree = client.getParseTree();
-    MixinDefinition result = astBuilder.objectBuilder.module();
+    JsonTreeTranslator translator =
+        new JsonTreeTranslator(parseTree, source, language, structuralProbe);
+
+    MixinDefinition result = translator.translateModule();
     language.getVM().reportLoadedSource(source);
     return result;
   }
