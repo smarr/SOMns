@@ -4,7 +4,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 
 import som.vm.VmSettings;
-import tools.concurrency.ByteBuffer;
+import tools.concurrency.ActorExecutionTrace.ActorTraceBuffer;
 
 
 public abstract class RecordIdIdNode extends Node {
@@ -13,7 +13,7 @@ public abstract class RecordIdIdNode extends Node {
   private static final int THREE_BYTE_LEN = 3;
   private static final int INT_LEN        = 4;
 
-  public abstract int execute(ByteBuffer storage, int idx, int id1, int id2);
+  public abstract int execute(ActorTraceBuffer storage, int idx, int id1, int id2);
 
   protected static boolean smallIds() {
     return VmSettings.TRACE_SMALL_IDS;
@@ -32,7 +32,7 @@ public abstract class RecordIdIdNode extends Node {
   }
 
   @Specialization(guards = {"smallIds()", "byteId(id1, id2)"})
-  public int traceByteId(final ByteBuffer storage, final int idx, final int id1,
+  public int traceByteId(final ActorTraceBuffer storage, final int idx, final int id1,
       final int id2) {
     storage.putByteAt(idx, (byte) id1);
     storage.putByteAt(idx + 1, (byte) id2);
@@ -41,7 +41,7 @@ public abstract class RecordIdIdNode extends Node {
 
   @Specialization(guards = {"smallIds()", "shortId(id1, id2)"},
       replaces = "traceByteId")
-  public int traceShortId(final ByteBuffer storage, final int idx, final int id1,
+  public int traceShortId(final ActorTraceBuffer storage, final int idx, final int id1,
       final int id2) {
     storage.putShortAt(idx, (short) id1);
     storage.putShortAt(idx + 2, (short) id2);
@@ -50,7 +50,7 @@ public abstract class RecordIdIdNode extends Node {
 
   @Specialization(guards = {"smallIds()", "threeByteId(id1, id2)"},
       replaces = {"traceShortId", "traceByteId"})
-  public int traceThreeByteId(final ByteBuffer storage, final int idx, final int id1,
+  public int traceThreeByteId(final ActorTraceBuffer storage, final int idx, final int id1,
       final int id2) {
     storage.putByteShortAt(idx, (byte) (id1 >> 16), (short) id1);
     storage.putByteShortAt(idx + 3, (byte) (id2 >> 16), (short) id2);
@@ -58,7 +58,7 @@ public abstract class RecordIdIdNode extends Node {
   }
 
   @Specialization(replaces = {"traceShortId", "traceByteId", "traceThreeByteId"})
-  public int traceStandardId(final ByteBuffer storage, final int idx, final int id1,
+  public int traceStandardId(final ActorTraceBuffer storage, final int idx, final int id1,
       final int id2) {
     storage.putIntAt(idx, id1);
     storage.putIntAt(idx + 4, id2);

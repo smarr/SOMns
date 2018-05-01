@@ -11,6 +11,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
 import java.lang.management.MemoryUsage;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -23,6 +24,7 @@ import javax.management.NotificationEmitter;
 import javax.management.NotificationListener;
 import javax.management.openmbean.CompositeData;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.sun.management.GarbageCollectionNotificationInfo;
 
@@ -75,11 +77,11 @@ public class TracingBackend {
   private static final List<GarbageCollectorMXBean> gcbeans =
       ManagementFactory.getGarbageCollectorMXBeans();
 
-  private static final ArrayBlockingQueue<ByteBuffer> emptyBuffers =
-      new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
+  private static final ArrayBlockingQueue<byte[]> emptyBuffers =
+      new ArrayBlockingQueue<>(BUFFER_POOL_SIZE);
 
-  private static final ArrayBlockingQueue<ByteBuffer> fullBuffers =
-      new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
+  private static final ArrayBlockingQueue<BufferAndLimit> fullBuffers =
+      new ArrayBlockingQueue<>(BUFFER_POOL_SIZE);
 
   private static final java.util.concurrent.ConcurrentLinkedQueue<Object[]> externalData =
       new java.util.concurrent.ConcurrentLinkedQueue<Object[]>();
@@ -101,7 +103,7 @@ public class TracingBackend {
 
     if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
       for (int i = 0; i < BUFFER_POOL_SIZE; i++) {
-        emptyBuffers.add(ByteBuffer.allocate(BUFFER_SIZE));
+        emptyBuffers.add(new byte[BUFFER_SIZE]);
       }
     }
   }
@@ -152,20 +154,35 @@ public class TracingBackend {
   }
 
   @TruffleBoundary
-  public static ByteBuffer getEmptyBuffer() {
+  public static byte[] getEmptyBuffer() {
     try {
       return emptyBuffers.take();
     } catch (InterruptedException e) {
+      CompilerDirectives.transferToInterpreter();
       throw new IllegalStateException("Failed to acquire a new Buffer!");
     }
   }
 
-  static void returnBuffer(final ByteBuffer b) {
-    if (b == null) {
+  static void returnBuffer(final byte[] buffer, final int pos) {
+    if (buffer == null) {
       return;
     }
 
-    returnBufferGlobally(b);
+    returnBufferGlobally(new BufferAndLimit(buffer, pos));
+  }
+
+  private static final class BufferAndLimit {
+    final byte[] buffer;
+    final int    limit;
+
+    BufferAndLimit(final byte[] buffer, final int limit) {
+      this.buffer = buffer;
+      this.limit = limit;
+    }
+
+    public ByteBuffer getReadingFromStartBuffer() {
+      return ByteBuffer.wrap(buffer, 0, limit);
+    }
   }
 
   @TruffleBoundary
@@ -284,8 +301,8 @@ public class TracingBackend {
     protected long traceBytes;
     protected long externalBytes;
 
-    private ByteBuffer tryToObtainBuffer() {
-      ByteBuffer buffer;
+    private BufferAndLimit tryToObtainBuffer() {
+      BufferAndLimit buffer;
       try {
         buffer = TracingBackend.fullBuffers.poll(POLL_TIMEOUT, TimeUnit.MILLISECONDS);
         if (buffer == null) {
@@ -416,15 +433,14 @@ public class TracingBackend {
       }
     }
 
-    private void writeAndRecycleBuffer(final FileOutputStream fos, final ByteBuffer buffer)
+    private void writeAndRecycleBuffer(final FileOutputStream fos, final BufferAndLimit buffer)
         throws IOException {
       if (fos != null) {
         fos.getChannel().write(buffer.getReadingFromStartBuffer());
         fos.flush();
       }
-      traceBytes += buffer.position();
-      buffer.clear();
-      TracingBackend.emptyBuffers.add(buffer);
+      traceBytes += buffer.limit;
+      TracingBackend.emptyBuffers.add(buffer.buffer);
     }
 
     private void processTraceData(final FileOutputStream traceDataStream,
@@ -434,14 +450,14 @@ public class TracingBackend {
           || !TracingBackend.externalData.isEmpty()) {
         writeExternalData(externalDataStream);
 
-        ByteBuffer b = tryToObtainBuffer();
+        BufferAndLimit b = tryToObtainBuffer();
         if (b == null) {
           continue;
         }
 
         writeSymbols(symbolStream);
         if (front != null) {
-          front.sendTracingData(b);
+          front.sendTracingData(b.getReadingFromStartBuffer());
         }
 
         writeAndRecycleBuffer(traceDataStream, b);
