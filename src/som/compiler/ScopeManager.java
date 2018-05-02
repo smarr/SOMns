@@ -37,6 +37,7 @@ import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SequenceNode;
+import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.language.StructuralProbe;
@@ -132,6 +133,16 @@ public class ScopeManager {
   }
 
   /**
+   * Creates a builder that makes a block in the method sitting at the top of the method stack
+   */
+  public MethodBuilder newBlock(final SSymbol signature) {
+    MethodBuilder builder = new MethodBuilder(peekMethod());
+    builder.setSignature(signature);
+    methods.push(builder);
+    return builder;
+  }
+
+  /**
    * Assembles an invokable method that performs the give expression. Once the method has been
    * assembled, the finish SOM method is added to the object at the top of the stack.
    *
@@ -150,6 +161,32 @@ public class ScopeManager {
           + peekObject().getName() + ":" + e.getMessage());
       throw new RuntimeException(e);
     }
+  }
+
+  /**
+   * Assembles an invokable block that performs the given expression. Once the block has been
+   * assembled, the finished SOM block is added to the method at the top of the stack. Finally,
+   * before being returned, the block is assigned as either a block requiring or not-requiring
+   * information from the enclosing context.
+   */
+  public ExpressionNode assembleCurrentBlock(final ExpressionNode body,
+      final SourceSection sourceSection) {
+    MethodBuilder builder = popMethod();
+    SInvokable blockMethod =
+        builder.assemble(body, AccessModifier.BLOCK_METHOD, sourceSection);
+    peekMethod().addEmbeddedBlockMethod(blockMethod);
+
+    ExpressionNode blockExpression;
+    if (builder.requiresContext() || VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      blockExpression =
+          new som.interpreter.nodes.literals.BlockNode.BlockNodeWithContext(blockMethod,
+              builder.accessesLocalOfOuterScope());
+    } else {
+      blockExpression = new som.interpreter.nodes.literals.BlockNode(blockMethod,
+          builder.accessesLocalOfOuterScope());
+    }
+    blockExpression.initialize(sourceSection);
+    return blockExpression;
   }
 
   /**

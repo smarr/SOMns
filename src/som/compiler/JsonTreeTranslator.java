@@ -266,11 +266,30 @@ public class JsonTreeTranslator {
       return parameterNamesFromParts(
           node.get("signature").getAsJsonObject().get("parts").getAsJsonArray());
 
+    } else if (node.has("parameters")) {
+      List<SSymbol> parametersNames = new ArrayList<SSymbol>();
+      for (JsonElement parameterElement : node.get("parameters").getAsJsonArray()) {
+        SSymbol name = symbolFor(name(parameterElement.getAsJsonObject()));
+        parametersNames.add(name);
+      }
+      return parametersNames.toArray(new SSymbol[parametersNames.size()]);
+
     } else {
       language.getVM().errorExit(
           "The translator doesn't understand how to get parameters from " + node);
       throw new RuntimeException();
     }
+  }
+
+  private SSymbol[] locals(final JsonObject node) {
+    List<SSymbol> localNames = new ArrayList<SSymbol>();
+    for (JsonElement element : body(node)) {
+      String type = nodeType(element.getAsJsonObject());
+      if (type.equals("def-declaration") || type.equals("var-declaration")) {
+        localNames.add(symbolFor(name(element.getAsJsonObject())));
+      }
+    }
+    return localNames.toArray(new SSymbol[localNames.size()]);
   }
 
   /**
@@ -326,6 +345,10 @@ public class JsonTreeTranslator {
     if (nodeType(node).equals("method-declaration")) {
       astBuilder.objectBuilder.method(selector(node), parameters(node), body(node));
       return null;
+
+    } else if (nodeType(node).equals("block")) {
+      return astBuilder.objectBuilder.block(parameters(node), locals(node), body(node),
+          source(node));
 
     } else if (nodeType(node).equals("identifier")) {
       return astBuilder.requestBuilder.implicit(symbolFor(name(node)), source(node));
