@@ -56,6 +56,8 @@ import tools.language.StructuralProbe;
  */
 public class JsonTreeTranslator {
 
+  public static boolean translatingMain = true; // The main module is always translated first
+
   private final SomLanguage language;
 
   private final SourceManager sourceManager;
@@ -438,9 +440,17 @@ public class JsonTreeTranslator {
 
   /**
    * The entry point for the translator, which begins the translation at the module level.
+   *
+   * The body of the module will be added to the initialization method for all modules expect
+   * the main module, in which case those expressions are added to main (so that the system
+   * arguments are available).
    */
   public MixinDefinition translateModule() {
     JsonObject moduleNode = jsonAST.get("module").getAsJsonObject();
-    return astBuilder.objectBuilder.module(locals(moduleNode), body(moduleNode));
+    MixinDefinition result =
+        astBuilder.objectBuilder.module(locals(moduleNode), body(moduleNode),
+            translatingMain);
+    translatingMain = false;
+    return result;
   }
 }

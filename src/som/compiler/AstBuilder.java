@@ -132,10 +132,12 @@ public class AstBuilder {
      * {@link MethodBuilder} class).
      *
      * @param locals
+     * @param addExpressionsToMain
      *
      * @return - the assembled class corresponding to the module
      */
-    public MixinDefinition module(final SSymbol[] locals, final JsonArray body) {
+    public MixinDefinition module(final SSymbol[] locals, final JsonArray body,
+        final boolean isMainModule) {
       SSymbol moduleName = symbolFor(sourceManager.getModuleName());
       MixinBuilder moduleBuilder =
           scopeManager.newModule(moduleName, sourceManager.empty());
@@ -170,16 +172,19 @@ public class AstBuilder {
         addMutableSlot(local, sourceManager.empty());
       }
 
-      // Translate the body and add each to the initializer
-      for (JsonElement element : body) {
-        Object expr = translator.translate(element.getAsJsonObject());
-        if (expr != null) {
-          if (expr instanceof ExpressionNode) {
-            moduleBuilder.addInitializerExpression((ExpressionNode) expr);
-          } else {
-            language.getVM().errorExit(
-                "Only expression nodes can be provided for the body of an object's initializer");
-            throw new RuntimeException();
+      // Translate the body and add each to the initializer (except when this is the main
+      // module)
+      if (!isMainModule) {
+        for (JsonElement element : body) {
+          Object expr = translator.translate(element.getAsJsonObject());
+          if (expr != null) {
+            if (expr instanceof ExpressionNode) {
+              moduleBuilder.addInitializerExpression((ExpressionNode) expr);
+            } else {
+              language.getVM().errorExit(
+                  "Only expression nodes can be provided for the body of an object's initializer");
+              throw new RuntimeException();
+            }
           }
         }
       }
@@ -190,14 +195,27 @@ public class AstBuilder {
       // Set module to inherit from object
       moduleBuilder.setSimpleInheritance(Symbols.OBJECT, sourceManager.empty());
 
-      // Create the main method, which simply returns zero
+      // Create the main method, which contains the main module expressions. If this is not the
+      // main module then this method simply returns zero
       MethodBuilder mainMethod = scopeManager.newMethod(Symbols.DEFAULT_MAIN_METHOD);
       mainMethod.addArgument(Symbols.SELF, sourceManager.empty());
       mainMethod.addArgument(Symbols.MAIN_METHOD_ARGS, sourceManager.empty());
       mainMethod.setVarsOnMethodScope();
       mainMethod.finalizeMethodScope();
-      ExpressionNode zero = new IntegerLiteralNode(0).initialize(sourceManager.empty());
-      scopeManager.assembleCurrentMethod(zero, sourceManager.empty());
+      List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
+      if (isMainModule) {
+        for (JsonElement element : body) {
+          ExpressionNode expression =
+              (ExpressionNode) translator.translate(element.getAsJsonObject());
+          if (expression != null) {
+            expressions.add(expression);
+          }
+        }
+      }
+      expressions.add(new IntegerLiteralNode(0).initialize(sourceManager.empty()));
+      scopeManager.assembleCurrentMethod(
+          SNodeFactory.createSequence(expressions, sourceManager.empty()),
+          sourceManager.empty());
 
       // Assemble and return the completed module
       return scopeManager.assumbleCurrentModule(sourceManager.empty());
