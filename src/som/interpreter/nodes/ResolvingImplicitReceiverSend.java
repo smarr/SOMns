@@ -12,7 +12,10 @@ import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.instrumentation.MessageSendNodeWrapper;
 import som.interpreter.LexicalScope.MethodScope;
+import som.interpreter.Types;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.vm.Symbols;
+import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
 
@@ -77,7 +80,7 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
     Lock lock = getLock();
     try {
       lock.lock();
-      newNode = specialize(args);
+      newNode = specialize(frame, args);
     } finally {
       lock.unlock();
     }
@@ -105,7 +108,7 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
     return newNode;
   }
 
-  private PreevaluatedExpression specialize(final Object[] args) {
+  private PreevaluatedExpression specialize(final VirtualFrame frame, final Object[] args) {
     PreevaluatedExpression newNode = reusePreviousSpecialization(args);
     if (newNode != null) {
       return newNode;
@@ -117,17 +120,22 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
 
     // first check whether it is an outer send
     // it it is, we get the context level of the outer send and rewrite to one
-    List<MixinDefinitionId> result = currentScope.lookupSlotOrClass(selector);
-    if (result != null && result.size() > 1) {
-      assert mixinId == result.get(0);
-      result.remove(0);
+    List<MixinDefinitionId> selectorResult = currentScope.lookupSlotOrClass(selector);
+    List<MixinDefinitionId> dialectResult =
+        currentScope.lookupSlotOrClass(Symbols.SECRET_DIALECT_SLOT);
+
+    SClass selfClass = Types.getClassOf(args[0]);
+
+    if (selectorResult != null && selectorResult.size() > 1) {
+      assert mixinId == selectorResult.get(0);
+      selectorResult.remove(0);
 
       msgArgNodes = argumentNodes.clone();
       ExpressionNode currentReceiver = msgArgNodes[0];
 
       MixinDefinitionId currentMixin = mixinId;
 
-      for (MixinDefinitionId enclosingMixin : result) {
+      for (MixinDefinitionId enclosingMixin : selectorResult) {
         currentReceiver =
             OuterObjectReadNodeGen.create(currentMixin, enclosingMixin, currentReceiver)
                                   .initialize(sourceSection);
@@ -138,6 +146,40 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
 
       msgArgNodes[0] = currentReceiver;
       newOuterRead = (OuterObjectRead) currentReceiver;
+
+    } else if (!selfClass.canUnderstand(selector) && dialectResult != null) {
+      assert mixinId == dialectResult.get(0);
+
+      if (dialectResult.size() > 1) {
+        dialectResult.remove(0);
+
+        msgArgNodes = argumentNodes.clone();
+        ExpressionNode currentReceiver = msgArgNodes[0];
+
+        MixinDefinitionId currentMixin = mixinId;
+
+        for (MixinDefinitionId enclosingMixin : dialectResult) {
+          currentReceiver =
+              OuterObjectReadNodeGen.create(currentMixin, enclosingMixin, currentReceiver)
+                                    .initialize(sourceSection);
+
+          args[0] = ((OuterObjectRead) currentReceiver).executeEvaluated(args[0]);
+          currentMixin = enclosingMixin;
+        }
+
+        msgArgNodes[0] = currentReceiver;
+        newOuterRead = (OuterObjectRead) currentReceiver;
+      }
+
+      // Expression to get dialect from module
+      ExpressionNode dialectExpr =
+          MessageSendNode.createMessageSend(Symbols.SECRET_DIALECT_SLOT,
+              new ExpressionNode[] {msgArgNodes[0]},
+              getSourceSection(), vm);
+      insert(dialectExpr);
+      args[0] = ((PreevaluatedExpression) dialectExpr).doPreEvaluated(frame, args);
+
+      msgArgNodes[0] = dialectExpr;
     }
 
     ExpressionNode replacementNode =

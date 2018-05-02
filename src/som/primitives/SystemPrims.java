@@ -1,9 +1,13 @@
 package som.primitives;
 
+import static som.vm.Symbols.symbolFor;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -15,6 +19,7 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.interop.Message;
@@ -35,6 +40,8 @@ import som.interop.ValueConversion.ToSomConversion;
 import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MessageSendNode;
+import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
@@ -101,6 +108,51 @@ public final class SystemPrims {
                              .getPath();
       File file = new File(path);
       return loadModule(vm, file.getParent() + File.separator + filename);
+    }
+  }
+
+  /**
+   * A system primitive for loading modules in a singleton style; the class for a module is
+   * parsed and instanced only once, every time the same module would be loaded again the
+   * already-created instance is returned.
+   *
+   * This primitives caches the already-created instances based on the given filepath, which
+   * should hopefully be sufficient to ensure that no name collisions occur between different
+   * modules of the same name.
+   *
+   */
+  @GenerateNodeFactory
+  @Primitive(primitive = "loadSingleton:usingPlatform:")
+  public abstract static class LoadSingletonPrim extends BinarySystemOperation {
+    private static Map<String, Object> moduleInstances = new HashMap<String, Object>();
+
+    @Child GenericMessageSendNode newSend =
+        MessageSendNode.createGeneric(symbolFor("usingPlatform:"), null, null);
+
+    @Specialization
+    public final Object doSObject(final VirtualFrame frame, final String path,
+        final Object platform) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+
+      // Return the already-created instance if we've already seen this module.
+      if (moduleInstances.containsKey(path)) {
+        return moduleInstances.get(path);
+      }
+
+      // Otherwise parse, instance, cache, and then return the module.
+      MixinDefinition moduleDefinition;
+      try {
+        moduleDefinition = vm.loadModule(path);
+      } catch (IOException e) {
+        vm.errorExit("Failed to load " + path + ": " + e.getMessage());
+        throw new RuntimeException();
+      }
+
+      Object moduleClass = moduleDefinition.instantiateModuleClass();
+      Object moduleInstance =
+          newSend.doPreEvaluated(frame, new Object[] {moduleClass, platform});
+      moduleInstances.put(path, moduleInstance);
+      return moduleInstance;
     }
   }
 

@@ -24,6 +24,7 @@
 
 package som.compiler;
 
+import com.google.gson.JsonObject;
 import com.oracle.truffle.api.source.Source;
 
 import bd.basic.ProgramDefinitionError;
@@ -44,20 +45,56 @@ public class SourcecodeCompiler {
     return language;
   }
 
-  public MixinDefinition compileModule(final Source source,
+  /**
+   * Builds a SOM module using the {@link NewspeakParser}.
+   *
+   * @return - a finished SOM class created from the given module
+   */
+  public MixinDefinition compileSomModule(final Source source,
       final StructuralProbe structuralProbe)
       throws ProgramDefinitionError {
-    Parser parser = new Parser(source.getCharacters().toString(), source.getLength(), source,
-        structuralProbe, language);
-    return compile(parser, source);
-  }
-
-  protected final MixinDefinition compile(final Parser parser,
-      final Source source) throws ProgramDefinitionError {
+    NewspeakParser parser =
+        new NewspeakParser(source.getCharacters().toString(), source.getLength(), source,
+            structuralProbe, language);
     SourceCoordinate coord = parser.getCoordinate();
     MixinBuilder mxnBuilder = parser.moduleDeclaration();
     MixinDefinition result = mxnBuilder.assemble(parser.getSource(coord));
     language.getVM().reportLoadedSource(source);
     return result;
+  }
+
+  /**
+   * Builds a SOM module whose main method simply returns zero.
+   *
+   * @return - a finished SOM class created from the given module
+   */
+  public MixinDefinition compileGraceModule(final Source source,
+      final StructuralProbe structuralProbe)
+      throws ProgramDefinitionError {
+    KernanClient client = new KernanClient(source, language, structuralProbe);
+    JsonObject parseTree = client.getParseTree();
+    JsonTreeTranslator translator =
+        new JsonTreeTranslator(parseTree, source, language, structuralProbe);
+
+    MixinDefinition result = translator.translateModule();
+    language.getVM().reportLoadedSource(source);
+    return result;
+  }
+
+  /**
+   * Compiles a program, which must be written in either Grace or Newspeak.
+   *
+   * @return - a finished SOM class created from the given module
+   */
+  public MixinDefinition compileModule(final Source source,
+      final StructuralProbe structuralProbe)
+      throws ProgramDefinitionError {
+    final String path = source.getURI().getPath();
+
+    if (path.endsWith(".grace") || path.endsWith(".grc")) {
+      return compileGraceModule(source, structuralProbe);
+    } else {
+      return compileSomModule(source, structuralProbe);
+    }
   }
 }

@@ -118,7 +118,7 @@ import tools.debugger.Tags.StatementSeparatorTag;
 import tools.language.StructuralProbe;
 
 
-public class Parser {
+public class NewspeakParser {
 
   protected final Lexer lexer;
   private final Source  source;
@@ -177,7 +177,7 @@ public class Parser {
     private final Symbol           expected;
     private final Symbol           found;
 
-    ParseError(final String message, final Symbol expected, final Parser parser) {
+    ParseError(final String message, final Symbol expected, final NewspeakParser parser) {
       super(message);
       if (parser.lexer == null) {
         this.sourceCoordinate = new SourceCoordinate(0, 0, 0, 0);
@@ -205,7 +205,7 @@ public class Parser {
       String msg = super.getMessage();
 
       String foundStr;
-      if (Parser.printableSymbol(found)) {
+      if (NewspeakParser.printableSymbol(found)) {
         foundStr = found + " (" + text + ")";
       } else {
         foundStr = found.toString();
@@ -222,7 +222,7 @@ public class Parser {
     public String toString() {
       String msg = "%(file)s:%(line)d:%(column)d: error: " + super.getMessage();
       String foundStr;
-      if (Parser.printableSymbol(found)) {
+      if (NewspeakParser.printableSymbol(found)) {
         foundStr = found + " (" + text + ")";
       } else {
         foundStr = found.toString();
@@ -245,7 +245,7 @@ public class Parser {
     private final Symbol[]    expectedSymbols;
 
     ParseErrorWithSymbols(final String message, final Symbol[] expected,
-        final Parser parser) {
+        final NewspeakParser parser) {
       super(message, null, parser);
       this.expectedSymbols = expected;
     }
@@ -264,7 +264,7 @@ public class Parser {
     }
   }
 
-  public Parser(final String content, final long fileSize, final Source source,
+  public NewspeakParser(final String content, final long fileSize, final Source source,
       final StructuralProbe structuralProbe, final SomLanguage language) throws ParseError {
     this.source = source;
     this.language = language;

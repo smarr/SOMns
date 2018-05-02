@@ -604,6 +604,23 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     return superFactorySend;
   }
 
+  /**
+   * Configures this class being built to inherit from the named super class. The named
+   * superclass must be found via a simple self send.
+   *
+   * @param superclassName - the name of the superclass
+   * @param sourceSection
+   */
+  public void setSimpleInheritance(final SSymbol superclassName,
+      final SourceSection sourceSection) {
+    MethodBuilder def = getClassInstantiationMethodBuilder();
+    ExpressionNode selfRead = def.getSelfRead(sourceSection);
+    ExpressionNode superClass = SNodeFactory.createMessageSend(superclassName,
+        new ExpressionNode[] {selfRead}, false, sourceSection, null, language);
+    setSuperClassResolution(superClass);
+    setSuperclassFactorySend(createStandardSuperFactorySend(sourceSection), true);
+  }
+
   public static SSymbol getSetterName(final SSymbol selector) {
     assert !selector.getString().endsWith(":");
     return symbolFor(selector.getString() + ":");

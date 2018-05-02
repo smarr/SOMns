@@ -9,7 +9,7 @@ import com.oracle.truffle.api.source.MissingMIMETypeException;
 import com.oracle.truffle.api.source.MissingNameException;
 import com.oracle.truffle.api.source.Source;
 
-import som.compiler.Parser.ParseError;
+import som.compiler.NewspeakParser.ParseError;
 import som.interpreter.SomLanguage;
 import tools.language.StructuralProbe;
 
@@ -55,7 +55,7 @@ public class TypeGrammarParserTest {
       throws MissingMIMETypeException, MissingNameException, ParseError {
     Source s =
         Source.newBuilder(testString).name("test.ns").mimeType(SomLanguage.MIME_TYPE).build();
-    Parser p = new Parser(
+    NewspeakParser p = new NewspeakParser(
         testString, testString.length(), s, new StructuralProbe(),
         new SomLanguage());
 
