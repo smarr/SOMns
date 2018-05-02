@@ -138,7 +138,11 @@ public class JsonTreeTranslator {
       return translate(node.get("value").getAsJsonObject());
 
     } else if (nodeType(node).equals("var-declaration")) {
-      return translate(node.get("value").getAsJsonObject());
+      if (node.get("value").isJsonNull()) {
+        return null;
+      } else {
+        return translate(node.get("value").getAsJsonObject());
+      }
 
     } else {
       language.getVM().errorExit(
