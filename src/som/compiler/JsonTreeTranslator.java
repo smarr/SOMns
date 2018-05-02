@@ -128,7 +128,10 @@ public class JsonTreeTranslator {
    * depends on the type node.
    */
   private Object value(final JsonObject node) {
-    if (nodeType(node).equals("string-literal")) {
+    if (nodeType(node).equals("number")) {
+      return Double.parseDouble(node.get("digits").getAsString());
+
+    } else if (nodeType(node).equals("string-literal")) {
       return node.get("raw").getAsString();
 
     } else {
@@ -339,6 +342,9 @@ public class JsonTreeTranslator {
       astBuilder.objectBuilder.addImmutableSlot(symbolFor(name(node)), importExpression,
           source(node));
       return null;
+
+    } else if (nodeType(node).equals("number")) {
+      return astBuilder.literalBuilder.number((double) value(node), source(node));
 
     } else if (nodeType(node).equals("string-literal")) {
       return astBuilder.literalBuilder.string((String) value(node), source(node));

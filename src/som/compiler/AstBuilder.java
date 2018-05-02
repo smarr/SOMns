@@ -42,6 +42,9 @@ import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.literals.BooleanLiteralNode.FalseLiteralNode;
+import som.interpreter.nodes.literals.BooleanLiteralNode.TrueLiteralNode;
+import som.interpreter.nodes.literals.DoubleLiteralNode;
 import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
 import som.vm.Symbols;
@@ -232,6 +235,9 @@ public class AstBuilder {
      * at the top of the stack.
      */
     public ExpressionNode implicit(final SSymbol name, final SourceSection sourceSection) {
+      if (name.getString().equals("true") || name.getString().equals("false")) {
+        return literalBuilder.bool(name.getString(), sourceSection);
+      }
       MethodBuilder method = scopeManager.peekMethod();
       return method.getImplicitReceiverSend(name, sourceSection);
     }
@@ -274,6 +280,24 @@ public class AstBuilder {
   }
 
   public class Literals {
+
+    /**
+     * Creates a SOM boolean literal from the given string.
+     */
+    public ExpressionNode bool(final String value, final SourceSection sourceSection) {
+      if (value.equals("true")) {
+        return new TrueLiteralNode().initialize(sourceSection);
+      } else {
+        return new FalseLiteralNode().initialize(sourceSection);
+      }
+    }
+
+    /**
+     * Creates a SOM number literal from the given string.
+     */
+    public ExpressionNode number(final double value, final SourceSection sourceSection) {
+      return new DoubleLiteralNode(value).initialize(sourceSection);
+    }
 
     /**
      * Creates a SOM string literal from the given string.
