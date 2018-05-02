@@ -36,7 +36,6 @@ import java.util.List;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.oracle.truffle.api.source.SourceSection;
-import com.sun.java.accessibility.util.Translator;
 
 import som.compiler.MethodBuilder.MethodDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionError;
@@ -125,8 +124,8 @@ public class AstBuilder {
      *
      * First the {@link MixinBuilder} is created. We then create the primary "factory", which
      * is a method on the module used to create instances of that module. We use the
-     * {@link Translator} to translate each of the Grace AST nodes into expressions, which are
-     * added to this initializer method.
+     * {@link JsonTreeTranslator} to translate each of the Grace AST nodes into expressions,
+     * which are added to this initializer method.
      *
      * And finally, we create a main method that simply returns zero (via the
      * {@link MethodBuilder} class).
