@@ -134,6 +134,12 @@ public class JsonTreeTranslator {
     } else if (nodeType(node).equals("string-literal")) {
       return node.get("raw").getAsString();
 
+    } else if (nodeType(node).equals("def-declaration")) {
+      return translate(node.get("value").getAsJsonObject());
+
+    } else if (nodeType(node).equals("var-declaration")) {
+      return translate(node.get("value").getAsJsonObject());
+
     } else {
       language.getVM().errorExit(
           "The translator doesn't understand how to get a value from " + nodeType(node));
@@ -343,12 +349,25 @@ public class JsonTreeTranslator {
   public Object translate(final JsonObject node) {
 
     if (nodeType(node).equals("method-declaration")) {
-      astBuilder.objectBuilder.method(selector(node), parameters(node), body(node));
+      astBuilder.objectBuilder.method(selector(node), parameters(node), locals(node),
+          body(node));
       return null;
 
     } else if (nodeType(node).equals("block")) {
       return astBuilder.objectBuilder.block(parameters(node), locals(node), body(node),
           source(node));
+
+    } else if (nodeType(node).equals("def-declaration")) {
+      return astBuilder.requestBuilder.assignment(symbolFor(name(node)),
+          (ExpressionNode) value(node));
+
+    } else if (nodeType(node).equals("var-declaration")) {
+      ExpressionNode value = (ExpressionNode) value(node);
+      if (value == null) {
+        return null;
+      } else {
+        return astBuilder.requestBuilder.assignment(symbolFor(name(node)), value);
+      }
 
     } else if (nodeType(node).equals("identifier")) {
       return astBuilder.requestBuilder.implicit(symbolFor(name(node)), source(node));
@@ -384,8 +403,6 @@ public class JsonTreeTranslator {
    */
   public MixinDefinition translateModule() {
     JsonObject moduleNode = jsonAST.get("module").getAsJsonObject();
-    JsonArray body = body(moduleNode);
-
-    return astBuilder.objectBuilder.module(body);
+    return astBuilder.objectBuilder.module(locals(moduleNode), body(moduleNode));
   }
 }

@@ -105,6 +105,21 @@ public class AstBuilder {
     }
 
     /**
+     * Adds a mutable slot to the object currently at the top of stack. The slot will be
+     * initialized to nil.
+     */
+    public void addMutableSlot(final SSymbol slotName, final SourceSection sourceSection) {
+      try {
+        scopeManager.peekObject().addSlot(slotName, AccessModifier.PUBLIC, false, null,
+            sourceSection);
+      } catch (MixinDefinitionError e) {
+        language.getVM().errorExit("Failed to add " + slotName + " as a slot on "
+            + scopeManager.peekObject().getName());
+        throw new RuntimeException();
+      }
+    }
+
+    /**
      * Creates the AST for a SOM module (although most of the construction is handled by the
      * {@link MixinBuilder} class).
      *
@@ -116,9 +131,11 @@ public class AstBuilder {
      * And finally, we create a main method that simply returns zero (via the
      * {@link MethodBuilder} class).
      *
+     * @param locals
+     *
      * @return - the assembled class corresponding to the module
      */
-    public MixinDefinition module(final JsonArray body) {
+    public MixinDefinition module(final SSymbol[] locals, final JsonArray body) {
       SSymbol moduleName = symbolFor(sourceManager.getModuleName());
       MixinBuilder moduleBuilder =
           scopeManager.newModule(moduleName, sourceManager.empty());
@@ -146,6 +163,11 @@ public class AstBuilder {
         addImmutableSlot(Symbols.SECRET_DIALECT_SLOT,
             requestBuilder.importModule(symbolFor("standardGrace")),
             sourceManager.empty());
+      }
+
+      // Add all other slots for this module
+      for (SSymbol local : locals) {
+        addMutableSlot(local, sourceManager.empty());
       }
 
       // Translate the body and add each to the initializer
@@ -258,7 +280,7 @@ public class AstBuilder {
      * the stack.
      */
     public void method(final SSymbol selector, final SSymbol[] parameters,
-        final JsonArray body) {
+        final SSymbol[] locals, final JsonArray body) {
       MethodBuilder builder = scopeManager.newMethod(selector);
 
       // Set the parameters
@@ -266,6 +288,17 @@ public class AstBuilder {
       for (int i = 0; i < parameters.length; i++) {
         builder.addArgument(parameters[i], sourceManager.empty());
       }
+
+      // Set the locals
+      for (int i = 0; i < locals.length; i++) {
+        try {
+          builder.addLocal(locals[i], false, sourceManager.empty());
+        } catch (MethodDefinitionError e) {
+          language.getVM().errorExit("Failed to add " + locals[i] + " to "
+              + builder.getSignature() + ": " + e.getMessage());
+        }
+      }
+
       builder.setVarsOnMethodScope();
       builder.finalizeMethodScope();
 
@@ -356,6 +389,22 @@ public class AstBuilder {
         return SNodeFactory.createImplicitReceiverSend(selector,
             arguments.toArray(new ExpressionNode[arguments.size()]), method.getScope(),
             method.getMixin().getMixinId(), sourceSection, language.getVM());
+      }
+    }
+
+    /**
+     * Creates an expression that executes the expression given by `value` and assigns the
+     * result to the named variable.
+     */
+    public ExpressionNode assignment(final SSymbol name, final ExpressionNode value) {
+      MethodBuilder method = scopeManager.peekMethod();
+      SSymbol assignmentName = symbolFor(name.getString() + "::");
+      try {
+        return method.getSetterSend(assignmentName, value, sourceManager.empty());
+      } catch (MethodDefinitionError e) {
+        language.getVM().errorExit(
+            "Failed to create a setter send for " + name + " from " + method.getSignature());
+        throw new RuntimeException();
       }
     }
 
