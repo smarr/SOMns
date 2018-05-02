@@ -376,7 +376,10 @@ public class JsonTreeTranslator {
    */
   public Object translate(final JsonObject node) {
 
-    if (nodeType(node).equals("method-declaration")) {
+    if (nodeType(node).equals("comment")) {
+      return null;
+
+    } else if (nodeType(node).equals("method-declaration")) {
       astBuilder.objectBuilder.method(selector(node), parameters(node), locals(node),
           body(node));
       return null;
