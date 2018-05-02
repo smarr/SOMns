@@ -159,7 +159,7 @@ public class KernanClient {
     }
 
     private void setMessage(final String message) {
-      if (data.length < 126) {
+      if (message.length() < 126) {
         setMessageWithLenLessThan126(message);
       } else {
         setMessageWithLenGreaterThanOrEqual126(message);
