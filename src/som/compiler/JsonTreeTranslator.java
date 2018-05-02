@@ -111,6 +111,19 @@ public class JsonTreeTranslator {
   }
 
   /**
+   * Gets the value of the path field in a {@link JsonObject}
+   */
+  private String path(final JsonObject node) {
+    if (node.get("path").isJsonObject()) {
+      return node.get("path").getAsJsonObject().get("raw").getAsString();
+    } else {
+      language.getVM().errorExit(
+          "The translator doesn't understand how to get a path from " + nodeType(node));
+      throw new RuntimeException();
+    }
+  }
+
+  /**
    * Extracts a literal value from the {@link JsonObject}. The field containing the value
    * depends on the type node.
    */
@@ -319,6 +332,13 @@ public class JsonTreeTranslator {
 
     } else if (nodeType(node).equals("explicit-receiver-request")) {
       return explicit(selector(node), receiver(node), arguments(node), source(node));
+
+    } else if (nodeType(node).equals("import")) {
+      ExpressionNode importExpression =
+          astBuilder.requestBuilder.importModule(symbolFor(path(node)));
+      astBuilder.objectBuilder.addImmutableSlot(symbolFor(name(node)), importExpression,
+          source(node));
+      return null;
 
     } else if (nodeType(node).equals("string-literal")) {
       return astBuilder.literalBuilder.string((String) value(node), source(node));

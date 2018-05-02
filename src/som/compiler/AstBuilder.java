@@ -87,7 +87,7 @@ public class AstBuilder {
      * Adds an immutable slot to the object currently at the top of stack. The slot will be
      * initialized by executing the given expressions.
      */
-    private void addImmutableSlot(final SSymbol slotName, final ExpressionNode init,
+    public void addImmutableSlot(final SSymbol slotName, final ExpressionNode init,
         final SourceSection sourceSection) {
       try {
         scopeManager.peekObject().addSlot(slotName, AccessModifier.PUBLIC, true, init,
