@@ -245,6 +245,7 @@ public class AstBuilder {
         return implicit(selector, sourceSection);
       } else {
         MethodBuilder method = scopeManager.peekMethod();
+        arguments.add(0, method.getSelfRead(sourceSection));
         return SNodeFactory.createImplicitReceiverSend(selector,
             arguments.toArray(new ExpressionNode[arguments.size()]), method.getScope(),
             method.getMixin().getMixinId(), sourceSection, language.getVM());
