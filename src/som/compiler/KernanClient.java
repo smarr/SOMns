@@ -71,16 +71,14 @@ import tools.language.StructuralProbe;
  * then added to the stack. The {@link Executors} module is used to run the sender and the
  * receiver asynchronously.
  *
- * The client continues to wait until a parse-tree response is received from Kernan. In
- * particular, the {@link Receiver} continues to process until it finds this response (and
- * currently ignores all other responses). Once found, the contents of the parse-tree message
- * are used to complete the {@link #futureToCompleteWithParseTree}. Once this future has been
- * completed, this client will send a frame asking Kernan to stop listening and then closing
- * the socket. Finally, the client parses the parse-tree message into a {@link JsonObject}
- * and returns this object to the {@link SourcecodeCompiler}.
+ * The client continues to wait until a response is received from Kernan. In particular, the
+ * {@link Receiver} continues to process until it finds a response the compiler responds to
+ * (currently just the parse tree and error responses, all others are ignored). Once found, the
+ * contents of the message are used to complete the {@link #futureToComplete}. Once this future
+ * has been completed, this client will simply returns the message to the compiler.
  *
  * While neither implementation is strictly compliant, the current implementation seems to be
- * sufficient for sending code to Kernan and receiving back a JSON-based parse tree.
+ * sufficient for sending code to Kernan and receiving back errors and a parse tree.
  */
 public class KernanClient {
 
@@ -97,7 +95,7 @@ public class KernanClient {
   private final Sender   sender;
   private final Receiver receiver;
 
-  private CompletableFuture<String> futureToCompleteWithParseTree;
+  private CompletableFuture<String> futureToComplete;
 
   /**
    * This frame class partially implements the frame data structure defined by the Web-socket
@@ -221,12 +219,12 @@ public class KernanClient {
   }
 
   /**
-   * Closes the socket by sending the close operation code to Kernan.
+   * Asks Kernan to close.
    */
-  private void close() {
+  private void sendCloseFrame() {
     Frame frame = buildFrame(OPCODE_CLOSE, "");
     sendFrame(frame);
-    sender.sendAnyRemainingFramesAndClose();
+    sender.sendAnyRemainingFrames();
   }
 
   /**
@@ -234,9 +232,9 @@ public class KernanClient {
    *
    * Data is read directly from the socket via the {@link DataInputStream}; note that the read
    * requests will block until the corresponding bytes become available. When run, the receiver
-   * collects all frames received over the wire. As soon as a frame containing the parse-tree
-   * is found, the {@link KernanClient#futureToCompleteWithParseTree} future is completed,
-   * after which point this client will close the socket and then return the parse tree.
+   * collects all frames received over the wire. As soon as a frame containing a parse-tree or
+   * an error is found, the {@link KernanClient#futureToComplete} future is completed, after
+   * which point this client will return the message.
    */
   private class Receiver implements Runnable {
 
@@ -304,9 +302,21 @@ public class KernanClient {
     }
 
     /**
+     * This method examines the structure of the given message to decide whether or not it
+     * contains a static error.
+     *
+     * @param message - the given message
+     * @return - true when the given message contains an error
+     */
+    public boolean messageContainsStaticError(final String message) {
+      JsonObject root = new JsonParser().parse(message).getAsJsonObject();
+      return root.has("mode") && root.get("mode").getAsString().equals("static-error");
+    }
+
+    /**
      * This method will cause continue to read frames sent from Kernan until it finds a message
-     * containing a parse-tree. Note that this method will add each frame to the stack and
-     * block until the desired parse-tree frame is found.
+     * containing an error or a parse-tree. Note that this method will add each frame to the
+     * stack and block until the frame is found.
      */
     @Override
     public void run() {
@@ -340,9 +350,12 @@ public class KernanClient {
       // Record the message to the stack
       frames.add(buildFrame(op, message));
 
-      // Either complete the future (when a parse tree is found) or read the next frame
+      // Either complete the future (when an error or parse tree is found) or simple ignores
+      // the message and continues on to wait for the next frame
       if (messageContainsParseTree(message)) {
-        futureToCompleteWithParseTree.complete(message);
+        futureToComplete.complete(message);
+      } else if (messageContainsStaticError(message)) {
+        futureToComplete.complete(message);
       } else {
         run();
       }
@@ -398,17 +411,10 @@ public class KernanClient {
     }
 
     /**
-     * Used by {@link KernanClient#close()} to send any remaining frames, to Kernan, before the
-     * socket is closed.
+     * Used by {@link KernanClient#sendCloseFrame()} to send any remaining frames to Kernan
      */
-    public void sendAnyRemainingFramesAndClose() {
+    public void sendAnyRemainingFrames() {
       run();
-      try {
-        socket.close();
-      } catch (IOException e) {
-        vm.errorExit("Sender was not able to close the socket: " + e.getMessage());
-        throw new RuntimeException();
-      }
     }
   }
 
@@ -479,12 +485,12 @@ public class KernanClient {
   /**
    * Encodes the given source code into a Web-socket frame and sends it to Kernan via the
    * {@link Sender}. This method then blocks until the parse tree response, from Kernan, has
-   * been processed by the {@link Receiver}. The socket is then closed and the parse tree is
-   * decoded from the message.
+   * been processed by the {@link Receiver}. This client then asks Kernan to close and finally
+   * returns the response back to the compiler.
    *
    * @return a {@link JsonObject} representing the decoded parse tree.
    */
-  public JsonObject getParseTree() {
+  public JsonObject getKernanResponse() {
 
     // Build and send the frame.
     final Map<String, String> data = new HashMap<String, String>();
@@ -495,20 +501,18 @@ public class KernanClient {
     sendFrame(frame);
 
     // Wait for the receiver to complete the message
-    futureToCompleteWithParseTree = new CompletableFuture<>();
+    futureToComplete = new CompletableFuture<>();
     waitForParseTreeResponse();
     String message;
     try {
-      message = futureToCompleteWithParseTree.get();
+      message = futureToComplete.get();
     } catch (InterruptedException | ExecutionException e) {
       vm.errorExit("KernanClient failed to get future: " + e.getMessage());
       throw new RuntimeException();
     }
 
-    // Close the socket and return the parse tree
-    close();
-    JsonObject asJson = new JsonParser().parse(message).getAsJsonObject();
-    JsonObject parseTree = asJson.get("data").getAsJsonObject();
-    return parseTree;
+    // Asks Kernan to close and then returns the response
+    sendCloseFrame();
+    return new JsonParser().parse(message).getAsJsonObject();
   }
 }
