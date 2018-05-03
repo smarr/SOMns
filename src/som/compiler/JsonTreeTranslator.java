@@ -116,11 +116,31 @@ public class JsonTreeTranslator {
     } else if (node.has("left")) {
       return name(node.get("left").getAsJsonObject());
 
+    } else if (node.has("from")) {
+      return name(node.get("from").getAsJsonObject());
+
     } else {
       language.getVM().errorExit(
           "The translator doesn't understand how to get a name from " + nodeType(node));
       throw new RuntimeException();
     }
+  }
+
+  /**
+   * Generates a munged class name based on the class named in the given inherits expressions.
+   * The format of the munged name is:
+   *
+   * <name><suffix>[Class]
+   *
+   * where name is the class name as it is and suffix is a series of `:` (one for each argument
+   * in the inherits expression).
+   */
+  private SSymbol className(final JsonObject node) {
+    String suffix = "";
+    for (int i = 0; i < arguments(node).length; i++) {
+      suffix += ":";
+    }
+    return symbolFor(name(node) + suffix + "[Class]");
   }
 
   /**
@@ -276,6 +296,14 @@ public class JsonTreeTranslator {
     } else if (node.has("right")) {
       return new JsonObject[] {node.get("right").getAsJsonObject()};
 
+    } else if (nodeType(node).equals("inherits")) {
+      JsonObject from = node.get("from").getAsJsonObject();
+      if (from.has("parts")) {
+        return argumentsFromParts(from.get("parts").getAsJsonArray());
+      } else {
+        return new JsonObject[] {};
+      }
+
     } else {
       language.getVM().errorExit(
           "The translator doesn't understand how to get arguments from " + node);
@@ -394,6 +422,14 @@ public class JsonTreeTranslator {
           body(node));
       return null;
 
+    } else if (nodeType(node).equals("class-declaration")) {
+      SSymbol selector = selector(node);
+      SSymbol[] parameters = parameters(node);
+      astBuilder.objectBuilder.clazzDefinition(selector, parameters, locals(node), body(node),
+          source(node));
+      astBuilder.objectBuilder.clazzMethod(selector, parameters, source(node));
+      return null;
+
     } else if (nodeType(node).equals("block")) {
       return astBuilder.objectBuilder.block(parameters(node), locals(node), body(node),
           source(node));
@@ -425,6 +461,11 @@ public class JsonTreeTranslator {
 
     } else if (nodeType(node).equals("operator")) {
       return explicit(selector(node), receiver(node), arguments(node), source(node));
+
+    } else if (nodeType(node).equals("inherits")) {
+      astBuilder.objectBuilder.setInheritanceByName(className(node), arguments(node),
+          source(node));
+      return null;
 
     } else if (nodeType(node).equals("import")) {
       ExpressionNode importExpression =

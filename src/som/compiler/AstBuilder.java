@@ -35,6 +35,7 @@ import java.util.List;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.MethodBuilder.MethodDefinitionError;
@@ -47,6 +48,7 @@ import som.interpreter.nodes.literals.BooleanLiteralNode.FalseLiteralNode;
 import som.interpreter.nodes.literals.BooleanLiteralNode.TrueLiteralNode;
 import som.interpreter.nodes.literals.DoubleLiteralNode;
 import som.interpreter.nodes.literals.IntegerLiteralNode;
+import som.interpreter.nodes.literals.LiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
 import som.vm.Symbols;
 import som.vmobjects.SSymbol;
@@ -218,6 +220,168 @@ public class AstBuilder {
 
       // Assemble and return the completed module
       return scopeManager.assumbleCurrentModule(sourceManager.empty());
+    }
+
+    /**
+     * Creates a clazz definition that implements the given body and adds it onto the object
+     * currently at the top of the stack. In Grace, classes are just methods. However, our
+     * support for inheritance requires classes not only be expressed as a method (via
+     * {@link #clazzMethod(SSymbol, SSymbol[], SourceSection)}), but also as a real SOM classes
+     * nested on the enclosing object.
+     *
+     * To ensure that any variables defined in the scope enclosing the Grace clazz, we insert
+     * all variables as arguments to the SOM class's instance factory. Those arguments are then
+     * used to initialized slots, of the same name, on the object that results from running the
+     * initialization method.
+     *
+     * This is not a correct solution, since those variables can no longer be mutated. However,
+     * this solution is simple. I will revisit this solution and attempt to develop a better
+     * solution later.
+     */
+    public void clazzDefinition(final SSymbol name, final SSymbol[] parameters,
+        final SSymbol[] locals, final JsonArray body, final SourceSection sourceSection) {
+
+      // Munge the name of the class
+      SSymbol clazzName = symbolFor(name.getString() + "[Class]");
+      MixinBuilder builder = scopeManager.newClazz(clazzName, sourceManager.empty());
+
+      // Set up the method used to create instances
+      String instanceFactoryName = Symbols.NEW.getString();
+      for (int i = 0; i < parameters.length; i++) {
+        instanceFactoryName += ":";
+      }
+
+      // Create the initialization method, with munging applied to the argument names
+      MethodBuilder instanceFactory = builder.getPrimaryFactoryMethodBuilder();
+      instanceFactory.setSignature(symbolFor(instanceFactoryName));
+      instanceFactory.addArgument(Symbols.SELF, sourceManager.empty());
+      for (int i = 0; i < parameters.length; i++) {
+        instanceFactory.addArgument(symbolFor(parameters[i].getString() + "'"),
+            sourceManager.empty());
+      }
+      builder.setupInitializerBasedOnPrimaryFactory(sourceManager.empty());
+      builder.setInitializerSource(sourceManager.empty());
+      builder.finalizeInitializer();
+
+      // Push the initializer onto the stack
+      scopeManager.pushMethod(builder.getInitializerMethodBuilder());
+
+      // Add slots that copy values from arguments
+      for (SSymbol parameter : parameters) {
+        ExpressionNode argRead = requestBuilder.implicit(
+            symbolFor(parameter.getString() + "'"), sourceManager.empty());
+        addImmutableSlot(parameter, argRead, sourceManager.empty());
+      }
+
+      // Add all other slots for this module
+      for (SSymbol local : locals) {
+        addMutableSlot(local, sourceManager.empty());
+      }
+
+      // Set module to inherit from object by default (this can be changed via Grace's inherits
+      // expressions)
+      builder.setSimpleInheritance(Symbols.OBJECT, sourceManager.empty());
+
+      // Translate the body and add each to the initializer (except when this is the main
+      // module)
+      for (JsonElement element : body) {
+        Object expr = translator.translate(element.getAsJsonObject());
+        if (expr != null) {
+          if (expr instanceof ExpressionNode) {
+            builder.addInitializerExpression((ExpressionNode) expr);
+          } else {
+            language.getVM().errorExit(
+                "Only expression nodes can be provided for the body of an object's initializer");
+            throw new RuntimeException();
+          }
+        }
+      }
+
+      // Remove the initializer from the stack
+      scopeManager.popMethod();
+
+      // Assemble and return the completed module
+      scopeManager.assumbleCurrentClazz(sourceManager.empty());
+    }
+
+    /**
+     * Creates a method that returns an instance of the named class.
+     */
+    public void clazzMethod(final SSymbol name, final SSymbol[] parameters,
+        final SourceSection sourceSection) {
+      MethodBuilder builder = scopeManager.newMethod(name);
+
+      // Set the parameters
+      builder.addArgument(Symbols.SELF, sourceManager.empty());
+      for (int i = 0; i < parameters.length; i++) {
+        builder.addArgument(parameters[i], sourceManager.empty());
+      }
+
+      builder.setVarsOnMethodScope();
+      builder.finalizeMethodScope();
+
+      // Apply the name munging
+      SSymbol clazzName = symbolFor(name.getString() + "[Class]");
+      ExpressionNode getClazz = requestBuilder.implicit(clazzName, sourceSection);
+
+      // Generate the new message signature
+      String newSignature = Symbols.NEW.getString();
+      for (int i = 0; i < parameters.length; i++) {
+        newSignature += ":";
+      }
+
+      // Compose the arguments for the new message (simply read each of the arguments given to
+      // this method
+      List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
+      for (int i = 0; i < parameters.length; i++) {
+        arguments.add(builder.getReadNode(parameters[i], sourceManager.empty()));
+      }
+
+      // Create the new send
+      ExpressionNode getInstance =
+          requestBuilder.explicit(symbolFor(newSignature), getClazz, arguments, sourceSection);
+
+      // Assemble and return the completed module
+      scopeManager.assembleCurrentMethod(getInstance, sourceManager.empty());
+    }
+
+    /**
+     * Changes the class currently at the top of the stack so that it inherits from the
+     * named superclass. Arguments can be provided with the requests, but for now the must be
+     * literals.
+     *
+     * TODO: allow other types of expressions in inheritance requests.
+     */
+    public void setInheritanceByName(final SSymbol name, final JsonObject[] argumentNodes,
+        final SourceSection sourceSection) {
+      MixinBuilder builder = scopeManager.peekObject();
+
+      // Push the instantiation builder onto the stack
+      scopeManager.pushMethod(builder.getClassInstantiationMethodBuilder());
+
+      // Translate the arguments
+      List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
+      for (JsonObject argumentNode : argumentNodes) {
+        ExpressionNode argumentExpression =
+            (ExpressionNode) translator.translate(argumentNode);
+
+        if (!(argumentExpression instanceof LiteralNode)) {
+          String moduleName = sourceManager.getModuleName();
+          int line = sourceSection.getStartLine();
+          int column = sourceSection.getStartColumn();
+          language.getVM().errorExit("MothError in " + moduleName + "@" + line + "," + column
+              + ": Sorry only literal expressions are supported for the inherits statement");
+        }
+
+        arguments.add(argumentExpression);
+      }
+
+      // And then set the request
+      builder.setSuperClassResolution(requestBuilder.implicit(name, sourceSection));
+      builder.setSuperclassFactorySend(
+          builder.createStandardSuperFactorySendWithArgs(arguments, sourceSection),
+          false);
+      scopeManager.popMethod();
     }
 
     /**
