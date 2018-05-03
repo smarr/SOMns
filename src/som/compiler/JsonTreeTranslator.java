@@ -222,6 +222,10 @@ public class JsonTreeTranslator {
 
   /**
    * Gets the selector for an array of parts, given either from a request or a declaration.
+   *
+   * Note that signatures defined for Grace's built in objects map directly onto other defined
+   * for SOM's built in objects. We change to the SOM signature in the cases to take advantage
+   * of this mapping.
    */
   private SSymbol selector(final JsonObject node) {
     if (node.has("parts")) {
@@ -232,7 +236,11 @@ public class JsonTreeTranslator {
           node.get("signature").getAsJsonObject().get("parts").getAsJsonArray());
 
     } else if (node.has("operator")) {
-      return symbolFor(node.get("operator").getAsString());
+      String operator = node.get("operator").getAsString();
+      if (operator.equals("!=")) {
+        operator = "<>";
+      }
+      return symbolFor(operator);
 
     } else {
       language.getVM().errorExit(
