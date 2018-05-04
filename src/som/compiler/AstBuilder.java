@@ -38,6 +38,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.basic.ProgramDefinitionError;
+import bd.inlining.InlinableNodes;
 import som.compiler.MethodBuilder.MethodDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.interpreter.SNodeFactory;
@@ -508,6 +510,26 @@ public class AstBuilder {
 
   public class Requests {
 
+    private ExpressionNode inlineIfPossible(final SSymbol selector,
+        final List<ExpressionNode> arguments, final SourceSection sourceSection) {
+      ExpressionNode inlinedSend;
+      InlinableNodes<SSymbol> inlineableNodes = language.getVM().getInlinableNodes();
+      try {
+        inlinedSend = inlineableNodes.inline(selector, arguments, scopeManager.peekMethod(),
+            sourceSection);
+      } catch (ProgramDefinitionError e) {
+        language.getVM().errorExit(
+            "Failed to create inlined node for " + selector + ": " + e.getMessage());
+        throw new RuntimeException();
+      }
+      if (inlinedSend != null) {
+        return inlinedSend;
+      } else {
+        return SNodeFactory.createMessageSend(selector, arguments, sourceSection,
+            language.getVM());
+      }
+    }
+
     /**
      * Sends the named message send to the given receiver, with the given arguments. Note that
      * the receiver is added as the first argument of the message send.
@@ -542,8 +564,7 @@ public class AstBuilder {
         return explicit(selectorAfterChecks, arguments.get(0), newArguments, sourceSection);
       }
 
-      return SNodeFactory.createMessageSend(selectorAfterChecks, arguments, sourceSection,
-          language.getVM());
+      return inlineIfPossible(selectorAfterChecks, arguments, sourceSection);
     }
 
     /**
