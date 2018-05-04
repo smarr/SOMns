@@ -271,6 +271,8 @@ public class JsonTreeTranslator {
       String operator = node.get("operator").getAsString();
       if (operator.equals("!=")) {
         operator = "<>";
+      } else if (operator.equals("==")) {
+        operator = "=";
       }
       return symbolFor(operator);
 
