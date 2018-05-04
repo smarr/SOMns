@@ -464,6 +464,9 @@ public class JsonTreeTranslator {
     } else if (nodeType(node).equals("operator")) {
       return explicit(selector(node), receiver(node), arguments(node), source(node));
 
+    } else if (nodeType(node).equals("parenthesised")) {
+      return translate(node.get("expression").getAsJsonObject());
+
     } else if (nodeType(node).equals("return")) {
       ExpressionNode returnExpression =
           (ExpressionNode) translate(node.get("returnvalue").getAsJsonObject());
