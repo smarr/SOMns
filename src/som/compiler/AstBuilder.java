@@ -74,12 +74,13 @@ public class AstBuilder {
   public final Requests requestBuilder;
   public final Literals literalBuilder;
 
-  public AstBuilder(final JsonTreeTranslator translator, final SourceManager sourceManager,
-      final SomLanguage language, final StructuralProbe probe) {
+  public AstBuilder(final JsonTreeTranslator translator, final ScopeManager scopeManager,
+      final SourceManager sourceManager, final SomLanguage language,
+      final StructuralProbe probe) {
     this.translator = translator;
     this.language = language;
 
-    scopeManager = new ScopeManager(language, probe);
+    this.scopeManager = scopeManager;
     this.sourceManager = sourceManager;
 
     objectBuilder = new Objects();

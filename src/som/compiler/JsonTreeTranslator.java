@@ -60,6 +60,7 @@ public class JsonTreeTranslator {
 
   private final SomLanguage language;
 
+  private final ScopeManager  scopeManager;
   private final SourceManager sourceManager;
 
   private final AstBuilder astBuilder;
@@ -69,9 +70,10 @@ public class JsonTreeTranslator {
       final SomLanguage language, final StructuralProbe probe) {
     this.language = language;
 
+    this.scopeManager = new ScopeManager(language, probe);
     this.sourceManager = new SourceManager(source);
 
-    this.astBuilder = new AstBuilder(this, sourceManager, language, probe);
+    this.astBuilder = new AstBuilder(this, scopeManager, sourceManager, language, probe);
     this.jsonAST = jsonAST;
   }
 
