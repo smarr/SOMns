@@ -273,6 +273,8 @@ public class JsonTreeTranslator {
         operator = "<>";
       } else if (operator.equals("==")) {
         operator = "=";
+      } else if (operator.equals("/")) {
+        operator = "//";
       }
       return symbolFor(operator);
 
