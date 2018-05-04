@@ -608,6 +608,18 @@ public class AstBuilder {
       return explicit(Symbols.LOAD_SINGLETON_MODULE, platformModule(), args,
           sourceManager.empty());
     }
+
+    /**
+     * Creates an expression to return the given expression from a block, which stops any
+     * further expressions in the enclosing method from being expected.
+     */
+    public ExpressionNode makeBlockReturn(final ExpressionNode returnExpression,
+        final SourceSection sourceSection) {
+      assert scopeManager.peekMethod()
+                         .isBlockMethod() : "can only build a return expression for block nodes";
+      return scopeManager.peekMethod().getNonLocalReturn(returnExpression)
+                         .initialize(sourceSection);
+    }
   }
 
   public class Literals {

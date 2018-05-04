@@ -462,6 +462,15 @@ public class JsonTreeTranslator {
     } else if (nodeType(node).equals("operator")) {
       return explicit(selector(node), receiver(node), arguments(node), source(node));
 
+    } else if (nodeType(node).equals("return")) {
+      ExpressionNode returnExpression =
+          (ExpressionNode) translate(node.get("returnvalue").getAsJsonObject());
+      if (scopeManager.peekMethod().isBlockMethod()) {
+        return astBuilder.requestBuilder.makeBlockReturn(returnExpression, source(node));
+      } else {
+        return returnExpression;
+      }
+
     } else if (nodeType(node).equals("inherits")) {
       astBuilder.objectBuilder.setInheritanceByName(className(node), arguments(node),
           source(node));
