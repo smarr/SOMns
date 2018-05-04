@@ -28,7 +28,9 @@
  */
 package som.compiler;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -80,9 +82,18 @@ public class SourceManager {
    * @param moduleName
    * @return
    */
+
+  private final static List<String> builtinModules = new ArrayList<String>();
+  static {
+    builtinModules.add("standardGrace");
+    builtinModules.add("io");
+    builtinModules.add("mirrors");
+  }
+
   public String pathForModuleNamed(final SSymbol moduleName) {
-    if (moduleName.getString().equals("standardGrace")) {
-      return System.getenv("MOTH_HOME") + "/GraceLibrary/Modules/standardGrace.grace";
+    if (builtinModules.contains(moduleName.getString())) {
+      return System.getenv("MOTH_HOME") + "/GraceLibrary/Modules/" + moduleName.getString()
+          + ".grace";
     }
     String[] pathParts = source.getPath().split("/");
     String[] pathPartsWithoutFilename = Arrays.copyOfRange(pathParts, 0, pathParts.length - 1);

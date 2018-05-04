@@ -72,13 +72,28 @@ public class SourcecodeCompiler {
       final StructuralProbe structuralProbe)
       throws ProgramDefinitionError {
     KernanClient client = new KernanClient(source, language, structuralProbe);
-    JsonObject parseTree = client.getParseTree();
-    JsonTreeTranslator translator =
-        new JsonTreeTranslator(parseTree, source, language, structuralProbe);
+    JsonObject response = client.getKernanResponse();
 
-    MixinDefinition result = translator.translateModule();
-    language.getVM().reportLoadedSource(source);
-    return result;
+    if (response.has("event") && response.get("event").getAsString().equals("parse-tree")) {
+      JsonObject parseTree = response.get("data").getAsJsonObject();
+      JsonTreeTranslator translator =
+          new JsonTreeTranslator(parseTree, source, language, structuralProbe);
+      MixinDefinition result = translator.translateModule();
+      language.getVM().reportLoadedSource(source);
+      return result;
+
+    } else if (response.has("mode")
+        && response.get("mode").getAsString().equals("static-error")) {
+      language.getVM().errorExit("Kernan Error: " + response.get("message").getAsString());
+      throw new RuntimeException();
+
+    } else {
+      language.getVM().errorExit(
+          "The compiler doesn't understand how to process the following message from Kernan: "
+              + response);
+      throw new RuntimeException();
+    }
+
   }
 
   /**

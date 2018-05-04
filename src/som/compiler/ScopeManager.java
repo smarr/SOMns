@@ -117,6 +117,20 @@ public class ScopeManager {
   }
 
   /**
+   * Creates a builder that makes a class for the object sitting at the top of the object
+   * stack
+   */
+  public MixinBuilder newClazz(final SSymbol name, final SourceSection sourceSection) {
+    MixinBuilder builder =
+        new MixinBuilder(peekObject(),
+            AccessModifier.PUBLIC, // not sure if this is required to be PUBLIC
+            name,
+            sourceSection, probe, language);
+    pushObject(builder);
+    return builder;
+  }
+
+  /**
    * Creates a builder that makes a method for the object sitting at the top of the object
    * stack
    *
@@ -190,7 +204,25 @@ public class ScopeManager {
   }
 
   /**
-   * Produces a finished class definition by assembling the object at the top of the stack.
+   * Produces a finished class definition by assembling the object at the top of the stack, and
+   * then adds the resulting class to the object enclosing it (the object below it in the
+   * stack).
+   * 
+   * @throws MixinDefinitionError
+   */
+  public void assumbleCurrentClazz(final SourceSection sourceSection) {
+    MixinDefinition result = popObject().assemble(sourceSection);
+    try {
+      peekObject().addNestedMixin(result);
+    } catch (MixinDefinitionError e) {
+      language.getVM().errorExit(
+          "Failed to add " + result.getName() + " to " + peekObject().getName());
+      throw new RuntimeException();
+    }
+  }
+
+  /**
+   * Produces a finished module definition by assembling the object at the top of the stack.
    * Since this method is used to assemble SOM modules, which are enclosing by nil, the stack
    * must contain precisely one element.
    *

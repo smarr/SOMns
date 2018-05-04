@@ -501,6 +501,18 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     return definitionMethod;
   }
 
+  /**
+   * Adds an argument of the given name to the method to obtains the superclass for this class.
+   * Each time an argument is added, the ":" separator is appended to the end of the method's
+   * signature.
+   */
+  public void addArgumentToSuperClassResolutionBuilder(final SSymbol name,
+      final SourceSection sourceSection) {
+    superclassAndMixinResolutionBuilder.addArgument(name, sourceSection);
+    String newSelector = superclassAndMixinResolutionBuilder.getSignature().getString() + ":";
+    superclassAndMixinResolutionBuilder.setSignature(symbolFor(newSelector));
+  }
+
   private Method assembleSuperclassAndMixinResoltionMethod() {
     ExpressionNode resolution;
     SourceSection source;
@@ -601,6 +613,31 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     SSymbol init = getInitializerName(Symbols.NEW);
     ExpressionNode superFactorySend = SNodeFactory.createMessageSend(
         init, new ExpressionNode[] {superNode}, false, source, null, language);
+    return superFactorySend;
+  }
+
+  /**
+   * Creates a send to the initialization method of this classes superclass.
+   *
+   * This send will have the selector `#new` followed by some number of `:` (one for each
+   * non-self argument).
+   */
+  public ExpressionNode createStandardSuperFactorySendWithArgs(
+      final List<ExpressionNode> argumentNodes, final SourceSection source) {
+
+    // Add super as the first arguments
+    argumentNodes.add(0, initializer.getSuperReadNode(source));
+    ExpressionNode[] arguments =
+        argumentNodes.toArray(new ExpressionNode[argumentNodes.size()]);
+
+    // Generate the send
+    String suffix = "";
+    for (int i = 1; i < argumentNodes.size(); i++) {
+      suffix += ":";
+    }
+    SSymbol init = getInitializerName(symbolFor(Symbols.NEW.getString() + suffix));
+    ExpressionNode superFactorySend =
+        SNodeFactory.createMessageSend(init, arguments, false, source, null, language);
     return superFactorySend;
   }
 
