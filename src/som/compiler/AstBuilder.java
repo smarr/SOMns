@@ -51,6 +51,7 @@ import som.interpreter.nodes.literals.BooleanLiteralNode.TrueLiteralNode;
 import som.interpreter.nodes.literals.DoubleLiteralNode;
 import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.literals.LiteralNode;
+import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
 import som.vm.Symbols;
 import som.vmobjects.SSymbol;
@@ -574,6 +575,8 @@ public class AstBuilder {
     public ExpressionNode implicit(final SSymbol name, final SourceSection sourceSection) {
       if (name.getString().equals("true") || name.getString().equals("false")) {
         return literalBuilder.bool(name.getString(), sourceSection);
+      } else if (name.getString().equals("Done")) {
+        return literalBuilder.done(sourceSection);
       }
       MethodBuilder method = scopeManager.peekMethod();
       return method.getImplicitReceiverSend(name, sourceSection);
@@ -655,6 +658,10 @@ public class AstBuilder {
       } else {
         return new FalseLiteralNode().initialize(sourceSection);
       }
+    }
+
+    public ExpressionNode done(final SourceSection sourceSection) {
+      return new NilLiteralNode().initialize(sourceSection);
     }
 
     /**
