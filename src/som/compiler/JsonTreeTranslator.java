@@ -257,6 +257,16 @@ public class JsonTreeTranslator {
       return selectorFromParts(
           node.get("signature").getAsJsonObject().get("parts").getAsJsonArray());
 
+    } else if (nodeType(node).equals("prefix-operator")) {
+      String operator = name(node);
+      if (operator.equals("!")) {
+        return symbolFor("not");
+      } else {
+        language.getVM().errorExit("The translator doesn't understand what to do with the `"
+            + operator + "` prefix operator");
+        throw new RuntimeException();
+      }
+
     } else if (node.has("operator")) {
       String operator = node.get("operator").getAsString();
       if (operator.equals("!=")) {
@@ -463,6 +473,9 @@ public class JsonTreeTranslator {
 
     } else if (nodeType(node).equals("operator")) {
       return explicit(selector(node), receiver(node), arguments(node), source(node));
+
+    } else if (nodeType(node).equals("prefix-operator")) {
+      return explicit(selector(node), receiver(node), new JsonObject[] {}, source(node));
 
     } else if (nodeType(node).equals("parenthesised")) {
       return translate(node.get("expression").getAsJsonObject());
