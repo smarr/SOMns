@@ -55,22 +55,21 @@ public final class UninitializedDispatchNode {
       assert rcvr != null;
 
       if (chainDepth < INLINE_CACHE_SIZE) {
-        Object firstArg = arguments.length > 1 ? arguments[1] : null;
-        return insertSpecialization(rcvr, firstArg, arguments.length);
+        return insertSpecialization(rcvr, arguments);
       } else {
         return generalizeChain((GenericMessageSendNode) first.getParent());
       }
     }
 
     protected final AbstractDispatchNode insertSpecialization(final Object rcvr,
-        final Object firstArg, final int numArgs) {
+        final Object[] arguments) {
       VM.insertInstrumentationWrapper(this);
 
       AbstractDispatchNode node;
       if (!(rcvr instanceof SAbstractObject) && rcvr instanceof TruffleObject) {
-        node = createForeignDispatchNode(numArgs);
+        node = createForeignDispatchNode(arguments.length);
       } else {
-        node = createSomDispatchNode(rcvr, firstArg);
+        node = createSomDispatchNode(rcvr, arguments);
       }
 
       replace(node);
@@ -83,7 +82,7 @@ public final class UninitializedDispatchNode {
     }
 
     private AbstractDispatchNode createSomDispatchNode(final Object rcvr,
-        final Object firstArg) {
+        final Object[] arguments) {
       SClass rcvrClass = Types.getClassOf(rcvr);
       Dispatchable dispatchable = doLookup(rcvrClass);
 
@@ -98,7 +97,7 @@ public final class UninitializedDispatchNode {
         node = new CachedDnuNode(rcvrClass, selector,
             DispatchGuard.create(rcvr), SomLanguage.getVM(getRootNode()), newChainEnd);
       } else {
-        node = dispatchable.getDispatchNode(rcvr, firstArg, newChainEnd, forAtomic());
+        node = dispatchable.getDispatchNode(rcvr, arguments, newChainEnd, forAtomic());
       }
       return node;
     }
@@ -258,7 +257,8 @@ public final class UninitializedDispatchNode {
     @Override
     protected AccessModifier getMinimalVisibility() {
       return (mixinForPrivateLookup == null)
-          ? AccessModifier.PROTECTED : AccessModifier.PRIVATE;
+          ? AccessModifier.PROTECTED
+          : AccessModifier.PRIVATE;
     }
 
     @Override

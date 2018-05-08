@@ -179,7 +179,7 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
 
   @Override
   public final AbstractDispatchNode getDispatchNode(final Object rcvr,
-      final Object firstArg, final AbstractDispatchNode next, final boolean forAtomic) {
+      final Object[] arguments, final AbstractDispatchNode next, final boolean forAtomic) {
     assert next != null : "Pass the old node, just need the source section";
 
     CallTarget ct = forAtomic ? getAtomicCallTarget() : callTarget;
@@ -189,8 +189,9 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
       return new LexicallyBoundDispatchNode(next.getSourceSection(), ct);
     }
 
-    DispatchGuard guard = DispatchGuard.create(rcvr);
-    return new CachedDispatchNode(ct, guard, next);
+    List<DispatchGuard> guards = new ArrayList<DispatchGuard>();
+    guards.add(DispatchGuard.create(rcvr)); // receiver guard
+    return new CachedDispatchNode(ct, guards.toArray(new DispatchGuard[guards.size()]), next);
   }
 
   @Override
