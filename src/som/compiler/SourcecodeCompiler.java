@@ -84,7 +84,11 @@ public class SourcecodeCompiler {
 
     } else if (response.has("mode")
         && response.get("mode").getAsString().equals("static-error")) {
-      language.getVM().errorExit("Kernan Error: " + response.get("message").getAsString());
+      String errorMessage = "Kernan Error: " + response.get("message").getAsString();
+      if (response.has("line")) {
+        errorMessage += " (@ line " + response.get("line").getAsInt() + ")";
+      }
+      language.getVM().errorExit(errorMessage);
       throw new RuntimeException();
 
     } else {
