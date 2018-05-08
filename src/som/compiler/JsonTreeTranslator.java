@@ -385,6 +385,51 @@ public class JsonTreeTranslator {
     }
   }
 
+  /**
+   * Extracts the name of type declared inside of the given node, which may be either a
+   * typed-parameter or otherwise a simple identifier.
+   */
+  private String typeName(final JsonObject node) {
+    String nodeType = nodeType(node);
+
+    if (nodeType.equals("typed-parameter")) {
+      return name(node.get("type").getAsJsonObject());
+
+    } else if (nodeType.equals("identifier")) {
+      return "Unknown";
+
+    } else {
+      language.getVM().errorExit(
+          "The translator doesn't understand how to get type for " + nodeType);
+      throw new RuntimeException();
+    }
+  }
+
+  /**
+   * Gets the parameter types for a declaration node.
+   */
+  private SSymbol[] typesForParameters(final JsonObject node) {
+    List<SSymbol> types = new ArrayList<SSymbol>();
+
+    if (node.has("signature")) {
+      for (JsonElement partElement : node.get("signature").getAsJsonObject().get("parts")
+                                         .getAsJsonArray()) {
+        JsonObject partObject = partElement.getAsJsonObject();
+
+        for (JsonElement parameterElement : partObject.get("parameters").getAsJsonArray()) {
+          JsonObject parameterObject = parameterElement.getAsJsonObject();
+          types.add(symbolFor(typeName(parameterObject)));
+        }
+      }
+      return types.toArray(new SSymbol[types.size()]);
+
+    } else {
+      language.getVM().errorExit(
+          "The translator doesn't understand how to get parameters from " + node);
+      throw new RuntimeException();
+    }
+  }
+
   private SSymbol[] locals(final JsonObject node) {
     List<SSymbol> localNames = new ArrayList<SSymbol>();
     for (JsonElement element : body(node)) {
@@ -486,7 +531,8 @@ public class JsonTreeTranslator {
       return null;
 
     } else if (nodeType(node).equals("method-declaration")) {
-      astBuilder.objectBuilder.method(selector(node), parameters(node), locals(node),
+      astBuilder.objectBuilder.method(selector(node), parameters(node),
+          typesForParameters(node), locals(node),
           body(node));
       return null;
 

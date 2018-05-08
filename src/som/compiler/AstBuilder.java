@@ -383,7 +383,7 @@ public class AstBuilder {
       // Create the initialization method
       MethodBuilder instanceFactory = builder.getPrimaryFactoryMethodBuilder();
       instanceFactory.setSignature(Symbols.NEW);
-      instanceFactory.addArgument(Symbols.SELF, sourceManager.empty());
+      instanceFactory.addUntypedArgument(Symbols.SELF, sourceManager.empty());
       builder.setupInitializerBasedOnPrimaryFactory(sourceManager.empty());
       builder.setInitializerSource(sourceManager.empty());
       builder.finalizeInitializer();
@@ -543,13 +543,14 @@ public class AstBuilder {
      * the stack.
      */
     public void method(final SSymbol selector, final SSymbol[] parameters,
-        final SSymbol[] locals, final JsonArray body) {
+        final SSymbol[] types, final SSymbol[] locals, final JsonArray body) {
       MethodBuilder builder = scopeManager.newMethod(selector);
 
       // Set the parameters
-      builder.addArgument(Symbols.SELF, sourceManager.empty());
+      builder.addUntypedArgument(Symbols.SELF, sourceManager.empty());
       for (int i = 0; i < parameters.length; i++) {
-        builder.addArgument(parameters[i], sourceManager.empty());
+        builder.addTypedArgument(parameters[i], typeManager.get(types[i]),
+            sourceManager.empty());
       }
 
       // Set the locals
