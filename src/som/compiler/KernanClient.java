@@ -290,6 +290,18 @@ public class KernanClient {
     }
 
     /**
+     * Reads enough bytes from the stream to compose an long (who cares if it's signed).
+     */
+    private long readLengthGreaterThan65535() {
+      try {
+        return stream.readLong();
+      } catch (IOException e) {
+        vm.errorExit("Websocket failed to read short:" + e.getMessage());
+        throw new RuntimeException();
+      }
+    }
+
+    /**
      * This method examines the structure of the given message to decide whether or not it
      * contains a parse tree.
      *
@@ -334,9 +346,11 @@ public class KernanClient {
       int op = (opByte + 128);
 
       // Get the length of the message
-      int len = lenByte;
+      long len = lenByte;
       if (len == 126) {
         len = readLengthGreaterThan126();
+      } else if (len == 127) {
+        len = readLengthGreaterThan65535();
       }
 
       // And parse the message itself
