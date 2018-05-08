@@ -54,6 +54,7 @@ import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.ReturnNonLocalNode;
 import som.interpreter.nodes.literals.BlockNode;
+import som.vm.SomStructuralType;
 import som.vm.Symbols;
 import som.vm.constants.Nil;
 import som.vmobjects.SInvokable;
@@ -274,7 +275,7 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     // the concrete block methods anymore, but might not matter, because they
     // are only used to do further splitting anyway
     SInitializer meth = new SInitializer(signature, accessModifier,
-        truffleMeth, embeddedBlockMethods.toArray(new SInvokable[0]));
+        truffleMeth, embeddedBlockMethods.toArray(new SInvokable[0]), getTypes());
 
     // the method's holder field is to be set later on!
     return meth;
@@ -285,10 +286,27 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
       final SourceSection sourceSection) {
     Method truffleMethod = assembleInvokable(body, sourceSection);
     SInitializer meth = new SInitializer(signature, accessModifier,
-        truffleMethod, embeddedBlockMethods.toArray(new SInvokable[0]));
+        truffleMethod, embeddedBlockMethods.toArray(new SInvokable[0]), getTypes());
 
     // the method's holder field is to be set later on!
     return meth;
+  }
+
+  private SomStructuralType[] getTypes() {
+    List<SomStructuralType> types = new ArrayList<SomStructuralType>();
+
+    int i = 0;
+    for (Argument arg : getArguments()) {
+
+      // skip self
+      if (i != 0) {
+        types.add(arg.type);
+      }
+
+      i += 1;
+    }
+
+    return types.toArray(new SomStructuralType[types.size()]);
   }
 
   public SInvokable assemble(final ExpressionNode body,
@@ -296,7 +314,7 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
       final SourceSection sourceSection) {
     Method truffleMethod = assembleInvokable(body, sourceSection);
     SInvokable meth = new SInvokable(signature, accessModifier,
-        truffleMethod, embeddedBlockMethods.toArray(new SInvokable[0]));
+        truffleMethod, embeddedBlockMethods.toArray(new SInvokable[0]), getTypes());
 
     language.getVM().reportParsedRootNode(truffleMethod);
     // the method's holder field is to be set later on!
@@ -355,18 +373,23 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     signature = sig;
   }
 
-  public void addArgument(final SSymbol arg, final SourceSection source) {
+  public void addTypedArgument(final SSymbol arg, final SomStructuralType type,
+      final SourceSection source) {
     if ((Symbols.SELF == arg || Symbols.BLOCK_SELF == arg) && arguments.size() > 0) {
       throw new IllegalStateException(
           "The self argument always has to be the first argument of a method");
     }
 
-    Argument argument = new Argument(arg, arguments.size(), source);
+    Argument argument = new Argument(arg, type, arguments.size(), source);
     arguments.put(arg, argument);
 
     if (structuralProbe != null) {
       structuralProbe.recordNewVariable(argument);
     }
+  }
+
+  public void addUntypedArgument(final SSymbol arg, final SourceSection source) {
+    addTypedArgument(arg, null, source);
   }
 
   public Local addMessageCascadeTemp(final SourceSection source) throws MethodDefinitionError {
@@ -387,9 +410,9 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
 
     Local l;
     if (immutable) {
-      l = new ImmutableLocal(name, source);
+      l = new ImmutableLocal(name, null, source);
     } else {
-      l = new MutableLocal(name, source);
+      l = new MutableLocal(name, null, source);
     }
     l.init(scope.getFrameDescriptor().addFrameSlot(l));
     locals.put(name, l);
