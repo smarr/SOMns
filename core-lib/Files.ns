@@ -593,7 +593,7 @@ DAMAGE.>> *)
     )
 
     public simpleName ^ <String> = (
-      ^ elements last name
+      ^ elements last pattern
     )
 
     public charInputStream ^ <CharInputStream> = (
