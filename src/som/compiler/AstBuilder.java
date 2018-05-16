@@ -28,6 +28,7 @@
  */
 package som.compiler;
 
+import static som.interpreter.SNodeFactory.createMessageSend;
 import static som.vm.Symbols.symbolFor;
 
 import java.util.ArrayList;
@@ -52,6 +53,7 @@ import som.interpreter.nodes.literals.DoubleLiteralNode;
 import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.literals.LiteralNode;
 import som.interpreter.nodes.literals.NilLiteralNode;
+import som.interpreter.nodes.literals.ObjectLiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
 import som.vm.Symbols;
 import som.vmobjects.SSymbol;
@@ -347,6 +349,79 @@ public class AstBuilder {
 
       // Assemble and return the completed module
       scopeManager.assembleCurrentMethod(getInstance, sourceManager.empty());
+    }
+
+    /**
+     * Creates a clazz definition that implements the body of the given object, and then
+     * returns a node that creates an instance of this class when executed.
+     *
+     * The object is assigned a special name, based on a munging of the enclosing method's name
+     * along with a special tag. The munging on the method name is simply to replace any
+     * occurrences of `:` with `_`, so as not to confuse SOMns by suggesting this class might
+     * require arguments. The naming pattern is:
+     *
+     * <munged method name>θ<line>@<column>
+     */
+    public ExpressionNode objectConstructor(final SSymbol[] locals, final JsonArray body,
+        final SourceSection sourceSection) {
+
+      // Generate the signature for the block
+      int line = sourceSection.getStartLine();
+      int column = sourceSection.getStartColumn();
+      String methodName = scopeManager.peekMethod().getSignature().getString();
+      String suffix = line + "@" + column;
+
+      SSymbol objectName = symbolFor(methodName.replace(":", "_") + "θ" + suffix);
+
+      // Munge the name of the class
+      SSymbol clazzName = symbolFor(objectName.getString() + "[Class]");
+      MixinBuilder builder = scopeManager.newClazz(clazzName, sourceManager.empty());
+
+      // Create the initialization method
+      MethodBuilder instanceFactory = builder.getPrimaryFactoryMethodBuilder();
+      instanceFactory.setSignature(Symbols.NEW);
+      instanceFactory.addArgument(Symbols.SELF, sourceManager.empty());
+      builder.setupInitializerBasedOnPrimaryFactory(sourceManager.empty());
+      builder.setInitializerSource(sourceManager.empty());
+      builder.finalizeInitializer();
+
+      // Push the initializer onto the stack
+      scopeManager.pushMethod(builder.getInitializerMethodBuilder());
+
+      // Add all other slots for this module
+      for (SSymbol local : locals) {
+        addMutableSlot(local, sourceManager.empty());
+      }
+
+      // Set module to inherit from object by default (this can be changed via Grace's inherits
+      // expressions)
+      builder.setSimpleInheritance(Symbols.OBJECT, sourceManager.empty());
+
+      // Translate the body and add each to the initializer (except when this is the main
+      // module)
+      for (JsonElement element : body) {
+        Object expr = translator.translate(element.getAsJsonObject());
+        if (expr != null) {
+          if (expr instanceof ExpressionNode) {
+            builder.addInitializerExpression((ExpressionNode) expr);
+          } else {
+            language.getVM().errorExit(
+                "Only expression nodes can be provided for the body of an object's initializer");
+            throw new RuntimeException();
+          }
+        }
+      }
+
+      // Remove the initializer from the stack
+      scopeManager.popMethod();
+
+      // Assemble and return the completed module
+      MixinDefinition classDef = scopeManager.assumbleCurrentClazz(sourceManager.empty());
+      ExpressionNode outerRead = scopeManager.peekMethod().getSelfRead(sourceSection);
+      ExpressionNode newMessage = createMessageSend(Symbols.NEW,
+          new ExpressionNode[] {scopeManager.peekMethod().getSelfRead(sourceSection)},
+          false, sourceSection, sourceSection, language);
+      return new ObjectLiteralNode(classDef, outerRead, newMessage).initialize(sourceSection);
     }
 
     /**

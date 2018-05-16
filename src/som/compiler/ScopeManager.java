@@ -207,10 +207,11 @@ public class ScopeManager {
    * Produces a finished class definition by assembling the object at the top of the stack, and
    * then adds the resulting class to the object enclosing it (the object below it in the
    * stack).
-   * 
+   *
    * @throws MixinDefinitionError
+   * @return - the assembled class definition
    */
-  public void assumbleCurrentClazz(final SourceSection sourceSection) {
+  public MixinDefinition assumbleCurrentClazz(final SourceSection sourceSection) {
     MixinDefinition result = popObject().assemble(sourceSection);
     try {
       peekObject().addNestedMixin(result);
@@ -219,6 +220,8 @@ public class ScopeManager {
           "Failed to add " + result.getName() + " to " + peekObject().getName());
       throw new RuntimeException();
     }
+
+    return result;
   }
 
   /**

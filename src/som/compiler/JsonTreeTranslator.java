@@ -446,6 +446,9 @@ public class JsonTreeTranslator {
       astBuilder.objectBuilder.clazzMethod(selector, parameters, source(node));
       return null;
 
+    } else if (nodeType(node).equals("object")) {
+      return astBuilder.objectBuilder.objectConstructor(locals(node), body(node), source(node));
+
     } else if (nodeType(node).equals("block")) {
       return astBuilder.objectBuilder.block(parameters(node), locals(node), body(node),
           source(node));
