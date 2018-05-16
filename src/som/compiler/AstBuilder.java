@@ -28,6 +28,7 @@
  */
 package som.compiler;
 
+import static som.interpreter.SNodeFactory.createMessageSend;
 import static som.vm.Symbols.symbolFor;
 
 import java.util.ArrayList;
@@ -38,6 +39,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.basic.ProgramDefinitionError;
+import bd.inlining.InlinableNodes;
 import som.compiler.MethodBuilder.MethodDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.interpreter.SNodeFactory;
@@ -49,6 +52,8 @@ import som.interpreter.nodes.literals.BooleanLiteralNode.TrueLiteralNode;
 import som.interpreter.nodes.literals.DoubleLiteralNode;
 import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.literals.LiteralNode;
+import som.interpreter.nodes.literals.NilLiteralNode;
+import som.interpreter.nodes.literals.ObjectLiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
 import som.vm.Symbols;
 import som.vmobjects.SSymbol;
@@ -347,6 +352,79 @@ public class AstBuilder {
     }
 
     /**
+     * Creates a clazz definition that implements the body of the given object, and then
+     * returns a node that creates an instance of this class when executed.
+     *
+     * The object is assigned a special name, based on a munging of the enclosing method's name
+     * along with a special tag. The munging on the method name is simply to replace any
+     * occurrences of `:` with `_`, so as not to confuse SOMns by suggesting this class might
+     * require arguments. The naming pattern is:
+     *
+     * <munged method name>θ<line>@<column>
+     */
+    public ExpressionNode objectConstructor(final SSymbol[] locals, final JsonArray body,
+        final SourceSection sourceSection) {
+
+      // Generate the signature for the block
+      int line = sourceSection.getStartLine();
+      int column = sourceSection.getStartColumn();
+      String methodName = scopeManager.peekMethod().getSignature().getString();
+      String suffix = line + "@" + column;
+
+      SSymbol objectName = symbolFor(methodName.replace(":", "_") + "θ" + suffix);
+
+      // Munge the name of the class
+      SSymbol clazzName = symbolFor(objectName.getString() + "[Class]");
+      MixinBuilder builder = scopeManager.newClazz(clazzName, sourceManager.empty());
+
+      // Create the initialization method
+      MethodBuilder instanceFactory = builder.getPrimaryFactoryMethodBuilder();
+      instanceFactory.setSignature(Symbols.NEW);
+      instanceFactory.addArgument(Symbols.SELF, sourceManager.empty());
+      builder.setupInitializerBasedOnPrimaryFactory(sourceManager.empty());
+      builder.setInitializerSource(sourceManager.empty());
+      builder.finalizeInitializer();
+
+      // Push the initializer onto the stack
+      scopeManager.pushMethod(builder.getInitializerMethodBuilder());
+
+      // Add all other slots for this module
+      for (SSymbol local : locals) {
+        addMutableSlot(local, sourceManager.empty());
+      }
+
+      // Set module to inherit from object by default (this can be changed via Grace's inherits
+      // expressions)
+      builder.setSimpleInheritance(Symbols.OBJECT, sourceManager.empty());
+
+      // Translate the body and add each to the initializer (except when this is the main
+      // module)
+      for (JsonElement element : body) {
+        Object expr = translator.translate(element.getAsJsonObject());
+        if (expr != null) {
+          if (expr instanceof ExpressionNode) {
+            builder.addInitializerExpression((ExpressionNode) expr);
+          } else {
+            language.getVM().errorExit(
+                "Only expression nodes can be provided for the body of an object's initializer");
+            throw new RuntimeException();
+          }
+        }
+      }
+
+      // Remove the initializer from the stack
+      scopeManager.popMethod();
+
+      // Assemble and return the completed module
+      MixinDefinition classDef = scopeManager.assumbleCurrentClazz(sourceManager.empty());
+      ExpressionNode outerRead = scopeManager.peekMethod().getSelfRead(sourceSection);
+      ExpressionNode newMessage = createMessageSend(Symbols.NEW,
+          new ExpressionNode[] {scopeManager.peekMethod().getSelfRead(sourceSection)},
+          false, sourceSection, sourceSection, language);
+      return new ObjectLiteralNode(classDef, outerRead, newMessage).initialize(sourceSection);
+    }
+
+    /**
      * Changes the class currently at the top of the stack so that it inherits from the
      * named superclass. Arguments can be provided with the requests, but for now the must be
      * literals.
@@ -508,6 +586,26 @@ public class AstBuilder {
 
   public class Requests {
 
+    private ExpressionNode inlineIfPossible(final SSymbol selector,
+        final List<ExpressionNode> arguments, final SourceSection sourceSection) {
+      ExpressionNode inlinedSend;
+      InlinableNodes<SSymbol> inlineableNodes = language.getVM().getInlinableNodes();
+      try {
+        inlinedSend = inlineableNodes.inline(selector, arguments, scopeManager.peekMethod(),
+            sourceSection);
+      } catch (ProgramDefinitionError e) {
+        language.getVM().errorExit(
+            "Failed to create inlined node for " + selector + ": " + e.getMessage());
+        throw new RuntimeException();
+      }
+      if (inlinedSend != null) {
+        return inlinedSend;
+      } else {
+        return SNodeFactory.createMessageSend(selector, arguments, sourceSection,
+            language.getVM());
+      }
+    }
+
     /**
      * Sends the named message send to the given receiver, with the given arguments. Note that
      * the receiver is added as the first argument of the message send.
@@ -542,8 +640,7 @@ public class AstBuilder {
         return explicit(selectorAfterChecks, arguments.get(0), newArguments, sourceSection);
       }
 
-      return SNodeFactory.createMessageSend(selectorAfterChecks, arguments, sourceSection,
-          language.getVM());
+      return inlineIfPossible(selectorAfterChecks, arguments, sourceSection);
     }
 
     /**
@@ -553,6 +650,8 @@ public class AstBuilder {
     public ExpressionNode implicit(final SSymbol name, final SourceSection sourceSection) {
       if (name.getString().equals("true") || name.getString().equals("false")) {
         return literalBuilder.bool(name.getString(), sourceSection);
+      } else if (name.getString().equals("Done")) {
+        return literalBuilder.done(sourceSection);
       }
       MethodBuilder method = scopeManager.peekMethod();
       return method.getImplicitReceiverSend(name, sourceSection);
@@ -621,6 +720,39 @@ public class AstBuilder {
       return scopeManager.peekMethod().getNonLocalReturn(returnExpression)
                          .initialize(sourceSection);
     }
+
+    /**
+     * This builds builds an interpolated string: given an array of Grace nodes, this method
+     * uses the {@link JsonTreeTranslator} to translate each node, then creates a send of
+     * `toString` to the translated expressions and finally concatenates it to previous. The
+     * result is:
+     *
+     * e_1.toString + e_2.toString + ... + e_n.toString
+     */
+    public ExpressionNode interpolatedString(final JsonArray elements) {
+
+      // Translate first receiver as `expression.toString`
+      JsonObject firstObj = elements.get(0).getAsJsonObject();
+      ExpressionNode receiver = (ExpressionNode) translator.translate(firstObj);
+      receiver = explicit(symbolFor("toString"), receiver, new ArrayList<ExpressionNode>(),
+          translator.source(firstObj));
+
+      for (int i = 0; i < elements.size(); i++) {
+        JsonObject operandObj = elements.get(i).getAsJsonObject();
+
+        // Set operand as `expression.toString`
+        ExpressionNode operand = (ExpressionNode) translator.translate(operandObj);
+        operand = explicit(symbolFor("toString"), operand, new ArrayList<ExpressionNode>(),
+            translator.source(operandObj));
+
+        // Add operand to receiver
+        List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
+        arguments.add(operand);
+        receiver = explicit(symbolFor("+"), receiver, arguments, sourceManager.empty());
+      }
+
+      return receiver;
+    }
   }
 
   public class Literals {
@@ -634,6 +766,10 @@ public class AstBuilder {
       } else {
         return new FalseLiteralNode().initialize(sourceSection);
       }
+    }
+
+    public ExpressionNode done(final SourceSection sourceSection) {
+      return new NilLiteralNode().initialize(sourceSection);
     }
 
     /**
