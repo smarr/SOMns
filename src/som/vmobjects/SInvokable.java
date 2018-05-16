@@ -27,6 +27,9 @@ package som.vmobjects;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -42,6 +45,7 @@ import som.interpreter.nodes.dispatch.CachedDispatchNode;
 import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNode;
+import som.vm.SomStructuralType;
 import som.vm.constants.Classes;
 
 
@@ -52,27 +56,31 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
   private final RootCallTarget callTarget;
   private final SSymbol        signature;
   private final SInvokable[]   embeddedBlocks;
+  private SomStructuralType[]  expectedTypes;
 
   @CompilationFinal private MixinDefinition holder;
   @CompilationFinal private RootCallTarget  atomicCallTarget;
 
   public SInvokable(final SSymbol signature,
       final AccessModifier accessModifier,
-      final Invokable invokable, final SInvokable[] embeddedBlocks) {
+      final Invokable invokable, final SInvokable[] embeddedBlocks,
+      final SomStructuralType[] expectedTypes) {
     this.signature = signature;
     this.accessModifier = accessModifier;
 
     this.invokable = invokable;
     this.callTarget = invokable.createCallTarget();
     this.embeddedBlocks = embeddedBlocks;
+    this.expectedTypes = expectedTypes;
   }
 
   public static class SInitializer extends SInvokable {
 
     public SInitializer(final SSymbol signature,
         final AccessModifier accessModifier,
-        final Invokable invokable, final SInvokable[] embeddedBlocks) {
-      super(signature, accessModifier, invokable, embeddedBlocks);
+        final Invokable invokable, final SInvokable[] embeddedBlocks,
+        final SomStructuralType[] expectedArguments) {
+      super(signature, accessModifier, invokable, embeddedBlocks, expectedArguments);
     }
 
     @Override
@@ -83,6 +91,10 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
 
   public final SInvokable[] getEmbeddedBlocks() {
     return embeddedBlocks;
+  }
+
+  public final SomStructuralType[] getExepctedTypes() {
+    return expectedTypes;
   }
 
   @Override
@@ -191,6 +203,11 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
 
     List<DispatchGuard> guards = new ArrayList<DispatchGuard>();
     guards.add(DispatchGuard.create(rcvr)); // receiver guard
+    for (int i = 0; i < expectedTypes.length; i++) {
+      SomStructuralType expectedType = expectedTypes[i];
+      guards.add(DispatchGuard.createTypeCheck(expectedType, arguments[i + 1]));
+    }
+
     return new CachedDispatchNode(ct, guards.toArray(new DispatchGuard[guards.size()]), next);
   }
 
