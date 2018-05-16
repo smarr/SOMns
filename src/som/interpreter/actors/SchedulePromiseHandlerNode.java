@@ -4,7 +4,9 @@ import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.profiles.IntValueProfile;
 
 import som.VM;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
@@ -44,7 +46,8 @@ public abstract class SchedulePromiseHandlerNode extends Node {
   @Specialization
   public final void schedule(final SPromise promise,
       final PromiseSendMessage msg, final Actor current,
-      @Cached("createWrapper()") final WrapReferenceNode rcvrWrapper) {
+      @Cached("createWrapper()") final WrapReferenceNode rcvrWrapper,
+      @Cached("createWrapper()") final WrapReferenceNode argWrapper) {
     VM.thisMethodNeedsToBeOptimized("Still needs to get out the extra cases and the wrapping");
     assert promise.getOwner() != null;
 
@@ -67,14 +70,22 @@ public abstract class SchedulePromiseHandlerNode extends Node {
     assert !(receiver instanceof SFarReference) : "this should not happen, because we need to redirect messages to the other actor, and normally we just unwrapped this";
     assert !(receiver instanceof SPromise);
 
-    // TODO: break that out into nodes
-    for (int i = 1; i < msg.args.length; i++) {
-      msg.args[i] = finalTarget.wrapForUse(msg.args[i], msg.originalSender, null);
-    }
+    wrapArguments(msg, finalTarget, argWrapper);
 
     msg.target = finalTarget; // for sends to far references, we need to adjust the target
     msg.finalSender = current;
 
     finalTarget.send(msg, actorPool);
+  }
+
+  private final IntValueProfile numArgs = IntValueProfile.createIdentityProfile();
+
+  @ExplodeLoop
+  private void wrapArguments(final PromiseSendMessage msg, final Actor finalTarget,
+      final WrapReferenceNode argWrapper) {
+    // TODO: break that out into nodes
+    for (int i = 1; i < numArgs.profile(msg.args.length); i++) {
+      msg.args[i] = argWrapper.execute(msg.args[i], finalTarget, msg.originalSender);
+    }
   }
 }

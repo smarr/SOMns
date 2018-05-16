@@ -5,6 +5,7 @@ import java.util.concurrent.Phaser;
 import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
@@ -55,9 +56,8 @@ public final class ObjectTransitionSafepoint {
    * in some way. Thus, all threads that access {@link SMutableObject} or
    * {@link SImmutableObject} at some point of their lifetime need to register.
    */
+  @TruffleBoundary
   public void register() {
-    CompilerAsserts.neverPartOfCompilation(
-        "Register is expect to be a rare operation and not part of compilation.");
     phaser.register();
   }
 
@@ -69,9 +69,8 @@ public final class ObjectTransitionSafepoint {
    * in some way. Thus, all threads that access {@link SMutableObject} or
    * {@link SImmutableObject} at some point of their lifetime need to register.
    */
+  @TruffleBoundary
   public void unregister() {
-    CompilerAsserts.neverPartOfCompilation(
-        "Unregister is expect to be a rare operation and not part of compilation.");
     phaser.arriveAndDeregister();
   }
 

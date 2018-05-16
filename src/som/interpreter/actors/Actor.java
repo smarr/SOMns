@@ -6,10 +6,16 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RejectedExecutionException;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.RootNode;
 
 import som.Output;
 import som.VM;
+import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.IsValue;
 import som.vm.Activity;
@@ -47,6 +53,13 @@ import tools.debugger.entities.DynamicScopeType;
  * + - and sequentially executes all messages
  */
 public class Actor implements Activity {
+
+  @CompilationFinal protected static RootCallTarget executorRoot;
+
+  public static void initializeActorSystem(final SomLanguage lang) {
+    ExecutorRootNode root = new ExecutorRootNode(lang);
+    executorRoot = Truffle.getRuntime().createCallTarget(root);
+  }
 
   public static Actor createActor(final VM vm) {
     if (VmSettings.REPLAY) {
@@ -194,6 +207,20 @@ public class Actor implements Activity {
     mailboxExtension.append(msg);
   }
 
+  public static final class ExecutorRootNode extends RootNode {
+
+    private ExecutorRootNode(final SomLanguage language) {
+      super(language);
+    }
+
+    @Override
+    public Object execute(final VirtualFrame frame) {
+      ExecAllMessages executor = (ExecAllMessages) frame.getArguments()[0];
+      executor.doRun();
+      return null;
+    }
+  }
+
   /**
    * Is scheduled on the fork/join pool and executes messages for a specific
    * actor.
@@ -214,6 +241,11 @@ public class Actor implements Activity {
 
     @Override
     public void run() {
+      assert executorRoot != null : "Actor system not initalized, call to initializeActorSystem(.) missing?";
+      executorRoot.call(this);
+    }
+
+    void doRun() {
       ObjectTransitionSafepoint.INSTANCE.register();
 
       ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();

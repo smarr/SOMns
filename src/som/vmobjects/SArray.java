@@ -21,12 +21,12 @@ public abstract class SArray extends SAbstractObject {
   protected Object       storage;
   protected final SClass clazz;
 
-  public SArray(final long length, final SClass clazz) {
+  protected SArray(final long length, final SClass clazz) {
     storage = (int) length;
     this.clazz = clazz;
   }
 
-  public SArray(final Object storage, final SClass clazz) {
+  protected SArray(final Object storage, final SClass clazz) {
     assert !(storage instanceof Long);
     assert storage != null;
     this.storage = storage;
@@ -201,7 +201,7 @@ public abstract class SArray extends SAbstractObject {
 
     /**
      * Creates and empty array, using the EMPTY strategy.
-     * 
+     *
      * @param length
      */
     public SMutableArray(final long length, final SClass clazz) {
@@ -264,7 +264,7 @@ public abstract class SArray extends SAbstractObject {
     /**
      * For internal use only, specifically, for SClass.
      * There we now, it is either empty, or of OBJECT type.
-     * 
+     *
      * @param value
      * @return new mutable array extended by value
      */

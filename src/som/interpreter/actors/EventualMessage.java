@@ -313,9 +313,6 @@ public abstract class EventualMessage {
   }
 
   protected final void executeMessage() {
-    VM.thisMethodNeedsToBeOptimized(
-        "Not Optimized! But also not sure it can be part of compilation anyway");
-
     Object rcvrObj = args[0];
     assert rcvrObj != null;
 
