@@ -720,6 +720,39 @@ public class AstBuilder {
       return scopeManager.peekMethod().getNonLocalReturn(returnExpression)
                          .initialize(sourceSection);
     }
+
+    /**
+     * This builds builds an interpolated string: given an array of Grace nodes, this method
+     * uses the {@link JsonTreeTranslator} to translate each node, then creates a send of
+     * `toString` to the translated expressions and finally concatenates it to previous. The
+     * result is:
+     *
+     * e_1.toString + e_2.toString + ... + e_n.toString
+     */
+    public ExpressionNode interpolatedString(final JsonArray elements) {
+
+      // Translate first receiver as `expression.toString`
+      JsonObject firstObj = elements.get(0).getAsJsonObject();
+      ExpressionNode receiver = (ExpressionNode) translator.translate(firstObj);
+      receiver = explicit(symbolFor("toString"), receiver, new ArrayList<ExpressionNode>(),
+          translator.source(firstObj));
+
+      for (int i = 0; i < elements.size(); i++) {
+        JsonObject operandObj = elements.get(i).getAsJsonObject();
+
+        // Set operand as `expression.toString`
+        ExpressionNode operand = (ExpressionNode) translator.translate(operandObj);
+        operand = explicit(symbolFor("toString"), operand, new ArrayList<ExpressionNode>(),
+            translator.source(operandObj));
+
+        // Add operand to receiver
+        List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
+        arguments.add(operand);
+        receiver = explicit(symbolFor("+"), receiver, arguments, sourceManager.empty());
+      }
+
+      return receiver;
+    }
   }
 
   public class Literals {

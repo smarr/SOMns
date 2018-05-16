@@ -81,7 +81,7 @@ public class JsonTreeTranslator {
    * Uses the {@link SourceManager} to create a section corresponding to the source code at the
    * given line and column.
    */
-  private SourceSection source(final JsonObject node) {
+  public SourceSection source(final JsonObject node) {
     int line = node.get("line").getAsInt();
     int column = node.get("column").getAsInt();
     return sourceManager.atLineColumn(line, column);
@@ -447,7 +447,8 @@ public class JsonTreeTranslator {
       return null;
 
     } else if (nodeType(node).equals("object")) {
-      return astBuilder.objectBuilder.objectConstructor(locals(node), body(node), source(node));
+      return astBuilder.objectBuilder.objectConstructor(locals(node), body(node),
+          source(node));
 
     } else if (nodeType(node).equals("block")) {
       return astBuilder.objectBuilder.block(parameters(node), locals(node), body(node),
@@ -513,6 +514,9 @@ public class JsonTreeTranslator {
 
     } else if (nodeType(node).equals("string-literal")) {
       return astBuilder.literalBuilder.string((String) value(node), source(node));
+
+    } else if (nodeType(node).equals("interpolated-string")) {
+      return astBuilder.requestBuilder.interpolatedString(node.get("parts").getAsJsonArray());
 
     } else {
       language.getVM().errorExit(
