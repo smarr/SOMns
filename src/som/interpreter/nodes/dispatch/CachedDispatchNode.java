@@ -12,6 +12,7 @@ import som.VM;
 import som.instrumentation.InstrumentableDirectCallNode;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
+import som.vm.constants.Nil;
 
 
 public final class CachedDispatchNode extends AbstractDispatchNode {
@@ -39,7 +40,7 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
     for (int i = 0; i < guards.length; i++) {
       DispatchGuard guard = guards[i];
       Object arg = arguments[i];
-      boolean matches = guard.entryMatches(arg);
+      boolean matches = arg == Nil.nilObject || guard.entryMatches(arg);
       if (!matches) {
         return false;
       }
