@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -259,9 +260,24 @@ public final class SClass extends SObjectWithClass {
     return i;
   }
 
+  /**
+   * A mechanism to check whether this class, or one of its superclass responds to the given
+   * message.
+   *
+   * @param selector - the message name
+   * @return - true when this class can respond, otherwise false
+   */
   public boolean canUnderstand(final SSymbol selector) {
-    VM.callerNeedsToBeOptimized("Should not be called on fast path");
-    return dispatchables.containsKey(selector);
+    CompilerDirectives.transferToInterpreter();
+    boolean understands = dispatchables.containsKey(selector);
+    if (understands) {
+      return true;
+    } else {
+      if (superclass == null) {
+        return false;
+      }
+      return superclass.canUnderstand(selector);
+    }
   }
 
   @TruffleBoundary

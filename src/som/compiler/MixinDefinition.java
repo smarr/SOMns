@@ -537,7 +537,7 @@ public final class MixinDefinition {
 
     @Override
     public AbstractDispatchNode getDispatchNode(final Object receiver,
-        final Object firstArg, final AbstractDispatchNode next,
+        final Object[] arguments, final AbstractDispatchNode next,
         final boolean forAtomic) {
       SObject rcvr = (SObject) receiver;
       StorageLocation loc = rcvr.getObjectLayout().getStorageLocation(this);
@@ -608,7 +608,7 @@ public final class MixinDefinition {
 
     @Override
     public AbstractDispatchNode getDispatchNode(final Object receiver,
-        final Object firstArg, final AbstractDispatchNode next, final boolean forAtomic) {
+        final Object[] arguments, final AbstractDispatchNode next, final boolean forAtomic) {
       SObject rcvr = (SObject) receiver;
       StorageLocation loc = rcvr.getObjectLayout().getStorageLocation(mainSlot);
       boolean isSet = loc.isSet(rcvr);
@@ -727,7 +727,7 @@ public final class MixinDefinition {
     SSymbol init = MixinBuilder.getInitializerName(Symbols.NEW);
     MethodBuilder builder = new MethodBuilder(true, initializerBuilder.getLanguage(), null);
     builder.setSignature(init);
-    builder.addArgument(Symbols.SELF,
+    builder.addUntypedArgument(Symbols.SELF,
         SomLanguage.getSyntheticSource("self read", "super-class-resolution")
                    .createSection(1));
 
@@ -773,7 +773,7 @@ public final class MixinDefinition {
     Method adaptedInvokable = originalInvokable.cloneAndAdaptAfterScopeChange(
         adaptedScope, appliesTo + 1, false, true);
     return new SInvokable(invokable.getSignature(), invokable.getAccessModifier(),
-        adaptedInvokable, invokable.getEmbeddedBlocks());
+        adaptedInvokable, invokable.getEmbeddedBlocks(), invokable.getExepctedTypes());
   }
 
   private void adaptFactoryMethods(final MethodScope scope, final int appliesTo) {

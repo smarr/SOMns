@@ -2,13 +2,17 @@ package som.interpreter.nodes.dispatch;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 import som.VM;
 import som.instrumentation.InstrumentableDirectCallNode;
 import som.vm.VmSettings;
+import som.vm.constants.KernelObj;
+import som.vm.constants.Nil;
 
 
 public final class CachedDispatchNode extends AbstractDispatchNode {
@@ -16,12 +20,12 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
   @Child private DirectCallNode       cachedMethod;
   @Child private AbstractDispatchNode nextInCache;
 
-  private final DispatchGuard guard;
+  @CompilationFinal(dimensions = 1) private final DispatchGuard[] guards;
 
   public CachedDispatchNode(final CallTarget methodCallTarget,
-      final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
+      final DispatchGuard[] guards, final AbstractDispatchNode nextInCache) {
     super(nextInCache.getSourceSection());
-    this.guard = guard;
+    this.guards = guards;
     this.nextInCache = nextInCache;
     this.cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
     if (VmSettings.DYNAMIC_METRICS) {
@@ -31,10 +35,23 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
     }
   }
 
+  @ExplodeLoop
+  public boolean checkGuards(final Object[] arguments) throws InvalidAssumptionException {
+    for (int i = 0; i < guards.length; i++) {
+      DispatchGuard guard = guards[i];
+      Object arg = arguments[i];
+      boolean matches = arg == Nil.nilObject || guard.entryMatches(arg);
+      if (!matches) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   @Override
   public Object executeDispatch(final Object[] arguments) {
     try {
-      if (guard.entryMatches(arguments[0])) {
+      if (checkGuards(arguments)) {
         return cachedMethod.call(arguments);
       } else {
         return nextInCache.executeDispatch(arguments);
@@ -42,6 +59,9 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       return replace(nextInCache).executeDispatch(arguments);
+    } catch (IllegalArgumentException e) {
+      KernelObj.signalException("signalArgumentError:", e.getMessage());
+      return null;
     }
   }
 

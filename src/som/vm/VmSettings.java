@@ -33,6 +33,8 @@ public class VmSettings implements Settings {
 
   public static final String INSTRUMENTATION_PROP = "som.instrumentation";
 
+  public static final boolean BOYLAND_CHECKING;
+
   static {
     String prop = System.getProperty("som.threads");
     if (prop == null) {
@@ -73,6 +75,8 @@ public class VmSettings implements Settings {
     IGV_DUMP_AFTER_PARSING = getBool("som.igvDumpAfterParsing", false);
 
     ANSI_COLOR_IN_OUTPUT = getBool("som.useAnsiColoring", false);
+
+    BOYLAND_CHECKING = getBool("som.boylandChecking", false);
   }
 
   private static boolean getBool(final String prop, final boolean defaultVal) {

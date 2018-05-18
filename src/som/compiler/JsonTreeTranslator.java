@@ -47,7 +47,7 @@ import tools.language.StructuralProbe;
 
 /**
  * The JSON Tree Translator is responsible for creating SOM AST from {@link #jsonAST} (a JSON
- * representation of Grace AST).
+ * representation of Grace AST) and also for extracting Grace's type information.
  *
  * The translator walks through each node of the JSON AST and uses the {@link AstBuilder} to
  * generate the equivalent AST for each node. The AstBuilder may invoke the parse method on
@@ -62,6 +62,7 @@ public class JsonTreeTranslator {
 
   private final ScopeManager  scopeManager;
   private final SourceManager sourceManager;
+  private final TypeManager   typeManager;
 
   private final AstBuilder astBuilder;
   private final JsonObject jsonAST;
@@ -72,8 +73,10 @@ public class JsonTreeTranslator {
 
     this.scopeManager = new ScopeManager(language, probe);
     this.sourceManager = new SourceManager(source);
+    this.typeManager = new TypeManager(language, sourceManager);
 
-    this.astBuilder = new AstBuilder(this, scopeManager, sourceManager, language, probe);
+    this.astBuilder =
+        new AstBuilder(this, scopeManager, sourceManager, typeManager, language, probe);
     this.jsonAST = jsonAST;
   }
 
@@ -114,6 +117,9 @@ public class JsonTreeTranslator {
       } else {
         return node.get("name").getAsString();
       }
+
+    } else if (node.has("basename")) {
+      return name(node.get("basename").getAsJsonObject());
 
     } else if (node.has("left")) {
       return name(node.get("left").getAsJsonObject());
@@ -243,6 +249,23 @@ public class JsonTreeTranslator {
   }
 
   /**
+   * Maps a Grace prefix operator to a NS operator or method call.
+   *
+   * TODO: prefix operators may be defined on non-primitive objects. Consequently, this mapping
+   * should be handled dynamically.
+   */
+  private SSymbol prefixOperatorFor(final String name) {
+    if (name.equals("prefix!") || name.equals("!")) {
+      return symbolFor("not");
+
+    } else {
+      language.getVM().errorExit("The translator doesn't understand what to do with the `"
+          + name + "` prefix operator");
+      throw new RuntimeException();
+    }
+  }
+
+  /**
    * Gets the selector for an array of parts, given either from a request or a declaration.
    *
    * Note that signatures defined for Grace's built in objects map directly onto other defined
@@ -258,14 +281,7 @@ public class JsonTreeTranslator {
           node.get("signature").getAsJsonObject().get("parts").getAsJsonArray());
 
     } else if (nodeType(node).equals("prefix-operator")) {
-      String operator = name(node);
-      if (operator.equals("!")) {
-        return symbolFor("not");
-      } else {
-        language.getVM().errorExit("The translator doesn't understand what to do with the `"
-            + operator + "` prefix operator");
-        throw new RuntimeException();
-      }
+      return prefixOperatorFor(name(node));
 
     } else if (node.has("operator")) {
       String operator = node.get("operator").getAsString();
@@ -369,6 +385,51 @@ public class JsonTreeTranslator {
     }
   }
 
+  /**
+   * Extracts the name of type declared inside of the given node, which may be either a
+   * typed-parameter or otherwise a simple identifier.
+   */
+  private String typeName(final JsonObject node) {
+    String nodeType = nodeType(node);
+
+    if (nodeType.equals("typed-parameter")) {
+      return name(node.get("type").getAsJsonObject());
+
+    } else if (nodeType.equals("identifier")) {
+      return "Unknown";
+
+    } else {
+      language.getVM().errorExit(
+          "The translator doesn't understand how to get type for " + nodeType);
+      throw new RuntimeException();
+    }
+  }
+
+  /**
+   * Gets the parameter types for a declaration node.
+   */
+  private SSymbol[] typesForParameters(final JsonObject node) {
+    List<SSymbol> types = new ArrayList<SSymbol>();
+
+    if (node.has("signature")) {
+      for (JsonElement partElement : node.get("signature").getAsJsonObject().get("parts")
+                                         .getAsJsonArray()) {
+        JsonObject partObject = partElement.getAsJsonObject();
+
+        for (JsonElement parameterElement : partObject.get("parameters").getAsJsonArray()) {
+          JsonObject parameterObject = parameterElement.getAsJsonObject();
+          types.add(symbolFor(typeName(parameterObject)));
+        }
+      }
+      return types.toArray(new SSymbol[types.size()]);
+
+    } else {
+      language.getVM().errorExit(
+          "The translator doesn't understand how to get parameters from " + node);
+      throw new RuntimeException();
+    }
+  }
+
   private SSymbol[] locals(final JsonObject node) {
     List<SSymbol> localNames = new ArrayList<SSymbol>();
     for (JsonElement element : body(node)) {
@@ -378,6 +439,42 @@ public class JsonTreeTranslator {
       }
     }
     return localNames.toArray(new SSymbol[localNames.size()]);
+  }
+
+  /**
+   * Determines whether the given signature is an operator (true when the signature is composed
+   * of only one or more of Grace's operator symbols).
+   */
+  private boolean isOperator(final String signature) {
+    return signature.matches("[+\\-*/<>]+");
+  }
+
+  /**
+   * Extracts the list of signatures defined by a Grace interface node. Any Grace to SOM
+   * mappings (such as those for operators) are performed before this list of signatures is
+   * returned; so the returned list will contain the NS `not` rather than the Grace `prefix!`.
+   */
+  private List<SSymbol> parseTypeSignatures(final JsonObject node) {
+    List<SSymbol> signatures = new ArrayList<SSymbol>();
+
+    JsonArray signatureNodes = node.get("body").getAsJsonObject().get("body").getAsJsonArray();
+    for (JsonElement signatureElement : signatureNodes) {
+      JsonObject signatureNode = signatureElement.getAsJsonObject();
+      SSymbol signature = selectorFromParts(signatureNode.get("parts").getAsJsonArray());
+
+      if (signature.getString().startsWith("prefix")) {
+        signatures.add(prefixOperatorFor(signature.getString()));
+
+      } else if (isOperator(signature.getString().replace(":", ""))) {
+        signatures.add(symbolFor(signature.getString().replace(":", "")));
+
+      } else {
+        signatures.add(signature);
+      }
+
+    }
+
+    return signatures;
   }
 
   /**
@@ -434,7 +531,8 @@ public class JsonTreeTranslator {
       return null;
 
     } else if (nodeType(node).equals("method-declaration")) {
-      astBuilder.objectBuilder.method(selector(node), parameters(node), locals(node),
+      astBuilder.objectBuilder.method(selector(node), parameters(node),
+          typesForParameters(node), locals(node),
           body(node));
       return null;
 
@@ -449,6 +547,10 @@ public class JsonTreeTranslator {
     } else if (nodeType(node).equals("object")) {
       return astBuilder.objectBuilder.objectConstructor(locals(node), body(node),
           source(node));
+
+    } else if (nodeType(node).equals("type-statement")) {
+      typeManager.addTypeDeclaration(symbolFor(name(node)), parseTypeSignatures(node));
+      return null;
 
     } else if (nodeType(node).equals("block")) {
       return astBuilder.objectBuilder.block(parameters(node), locals(node), body(node),

@@ -12,7 +12,7 @@ import som.compiler.AccessModifier;
 public interface Dispatchable {
 
   AbstractDispatchNode getDispatchNode(
-      Object rcvr, Object firstArg, AbstractDispatchNode newChainEnd, boolean forAtomic);
+      Object rcvr, Object[] arguments, AbstractDispatchNode newChainEnd, boolean forAtomic);
 
   AccessModifier getAccessModifier();
 

@@ -297,7 +297,7 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     initializer.setSignature(getInitializerName(
         primaryFactoryMethod.getSignature()));
     for (Argument arg : primaryFactoryMethod.getArguments()) {
-      initializer.addArgument(arg.name, arg.source);
+      initializer.addUntypedArgument(arg.name, arg.source);
     }
     initializer.setVarsOnMethodScope();
   }
@@ -493,7 +493,7 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     }
 
     // self is going to be the enclosing object
-    definitionMethod.addArgument(Symbols.SELF,
+    definitionMethod.addUntypedArgument(Symbols.SELF,
         SomLanguage.getSyntheticSource("self read", "super-class-resolution")
                    .createSection(1));
     definitionMethod.setSignature(Symbols.DEF_CLASS);
@@ -508,7 +508,7 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
    */
   public void addArgumentToSuperClassResolutionBuilder(final SSymbol name,
       final SourceSection sourceSection) {
-    superclassAndMixinResolutionBuilder.addArgument(name, sourceSection);
+    superclassAndMixinResolutionBuilder.addUntypedArgument(name, sourceSection);
     String newSelector = superclassAndMixinResolutionBuilder.getSignature().getString() + ":";
     superclassAndMixinResolutionBuilder.setSignature(symbolFor(newSelector));
   }

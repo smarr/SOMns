@@ -23,6 +23,7 @@ import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableReadNodeGen;
 import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeGen;
 import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableReadNodeGen;
 import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableWriteNodeGen;
+import som.vm.SomStructuralType;
 import som.vm.Symbols;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
@@ -49,11 +50,13 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
     }
   }
 
-  public final SSymbol       name;
-  public final SourceSection source;
+  public final SSymbol           name;
+  public final SomStructuralType type;
+  public final SourceSection     source;
 
-  Variable(final SSymbol name, final SourceSection source) {
+  Variable(final SSymbol name, final SomStructuralType type, final SourceSection source) {
     this.name = name;
+    this.type = type;
     this.source = source;
   }
 
@@ -105,8 +108,9 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
   public static final class Argument extends Variable {
     public final int index;
 
-    Argument(final SSymbol name, final int index, final SourceSection source) {
-      super(name, source);
+    Argument(final SSymbol name, final SomStructuralType type, final int index,
+        final SourceSection source) {
+      super(name, type, source);
       this.index = index;
     }
 
@@ -152,7 +156,7 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
         return null;
       }
 
-      Local l = new ImmutableLocal(name, source);
+      Local l = new ImmutableLocal(name, type, source);
       l.init(descriptor.addFrameSlot(l));
       return l;
     }
@@ -182,8 +186,8 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
   public abstract static class Local extends Variable {
     @CompilationFinal private FrameSlot slot;
 
-    Local(final SSymbol name, final SourceSection source) {
-      super(name, source);
+    Local(final SSymbol name, final SomStructuralType type, final SourceSection source) {
+      super(name, type, source);
     }
 
     public void init(final FrameSlot slot) {
@@ -246,13 +250,14 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
   }
 
   public static final class MutableLocal extends Local {
-    MutableLocal(final SSymbol name, final SourceSection source) {
-      super(name, source);
+    MutableLocal(final SSymbol name, final SomStructuralType type,
+        final SourceSection source) {
+      super(name, type, source);
     }
 
     @Override
     public Local create() {
-      return new MutableLocal(name, source);
+      return new MutableLocal(name, type, source);
     }
 
     @Override
@@ -262,13 +267,14 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
   }
 
   public static final class ImmutableLocal extends Local {
-    ImmutableLocal(final SSymbol name, final SourceSection source) {
-      super(name, source);
+    ImmutableLocal(final SSymbol name, final SomStructuralType type,
+        final SourceSection source) {
+      super(name, type, source);
     }
 
     @Override
     public Local create() {
-      return new ImmutableLocal(name, source);
+      return new ImmutableLocal(name, type, source);
     }
 
     @Override
@@ -286,7 +292,7 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
     @CompilationFinal private FrameSlot slot;
 
     public Internal(final SSymbol name) {
-      super(name, null);
+      super(name, null, null);
     }
 
     public void init(final FrameSlot slot) {

@@ -74,19 +74,22 @@ public class AstBuilder {
 
   private final ScopeManager  scopeManager;
   private final SourceManager sourceManager;
+  private final TypeManager   typeManager;
 
   public final Objects  objectBuilder;
   public final Requests requestBuilder;
   public final Literals literalBuilder;
 
   public AstBuilder(final JsonTreeTranslator translator, final ScopeManager scopeManager,
-      final SourceManager sourceManager, final SomLanguage language,
+      final SourceManager sourceManager, final TypeManager typeManager,
+      final SomLanguage language,
       final StructuralProbe probe) {
     this.translator = translator;
     this.language = language;
 
     this.scopeManager = scopeManager;
     this.sourceManager = sourceManager;
+    this.typeManager = typeManager;
 
     objectBuilder = new Objects();
     requestBuilder = new Requests();
@@ -152,8 +155,8 @@ public class AstBuilder {
       // Set up the method used to create instances
       MethodBuilder instanceFactory = moduleBuilder.getPrimaryFactoryMethodBuilder();
       instanceFactory.setSignature(Symbols.DEFAULT_MODULE_FACTORY);
-      instanceFactory.addArgument(Symbols.SELF, sourceManager.empty());
-      instanceFactory.addArgument(Symbols.PLATFORM_MODULE, sourceManager.empty());
+      instanceFactory.addUntypedArgument(Symbols.SELF, sourceManager.empty());
+      instanceFactory.addUntypedArgument(Symbols.PLATFORM_MODULE, sourceManager.empty());
       moduleBuilder.setupInitializerBasedOnPrimaryFactory(sourceManager.empty());
       moduleBuilder.setInitializerSource(sourceManager.empty());
       moduleBuilder.finalizeInitializer();
@@ -205,8 +208,8 @@ public class AstBuilder {
       // Create the main method, which contains the main module expressions. If this is not the
       // main module then this method simply returns zero
       MethodBuilder mainMethod = scopeManager.newMethod(Symbols.DEFAULT_MAIN_METHOD);
-      mainMethod.addArgument(Symbols.SELF, sourceManager.empty());
-      mainMethod.addArgument(Symbols.MAIN_METHOD_ARGS, sourceManager.empty());
+      mainMethod.addUntypedArgument(Symbols.SELF, sourceManager.empty());
+      mainMethod.addUntypedArgument(Symbols.MAIN_METHOD_ARGS, sourceManager.empty());
       mainMethod.setVarsOnMethodScope();
       mainMethod.finalizeMethodScope();
       List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
@@ -260,9 +263,9 @@ public class AstBuilder {
       // Create the initialization method, with munging applied to the argument names
       MethodBuilder instanceFactory = builder.getPrimaryFactoryMethodBuilder();
       instanceFactory.setSignature(symbolFor(instanceFactoryName));
-      instanceFactory.addArgument(Symbols.SELF, sourceManager.empty());
+      instanceFactory.addUntypedArgument(Symbols.SELF, sourceManager.empty());
       for (int i = 0; i < parameters.length; i++) {
-        instanceFactory.addArgument(symbolFor(parameters[i].getString() + "'"),
+        instanceFactory.addUntypedArgument(symbolFor(parameters[i].getString() + "'"),
             sourceManager.empty());
       }
       builder.setupInitializerBasedOnPrimaryFactory(sourceManager.empty());
@@ -318,9 +321,9 @@ public class AstBuilder {
       MethodBuilder builder = scopeManager.newMethod(name);
 
       // Set the parameters
-      builder.addArgument(Symbols.SELF, sourceManager.empty());
+      builder.addUntypedArgument(Symbols.SELF, sourceManager.empty());
       for (int i = 0; i < parameters.length; i++) {
-        builder.addArgument(parameters[i], sourceManager.empty());
+        builder.addUntypedArgument(parameters[i], sourceManager.empty());
       }
 
       builder.setVarsOnMethodScope();
@@ -380,7 +383,7 @@ public class AstBuilder {
       // Create the initialization method
       MethodBuilder instanceFactory = builder.getPrimaryFactoryMethodBuilder();
       instanceFactory.setSignature(Symbols.NEW);
-      instanceFactory.addArgument(Symbols.SELF, sourceManager.empty());
+      instanceFactory.addUntypedArgument(Symbols.SELF, sourceManager.empty());
       builder.setupInitializerBasedOnPrimaryFactory(sourceManager.empty());
       builder.setInitializerSource(sourceManager.empty());
       builder.finalizeInitializer();
@@ -496,9 +499,9 @@ public class AstBuilder {
       MethodBuilder builder = scopeManager.newBlock(signature);
 
       // Set the parameters
-      builder.addArgument(Symbols.BLOCK_SELF, sourceManager.empty());
+      builder.addUntypedArgument(Symbols.BLOCK_SELF, sourceManager.empty());
       for (int i = 0; i < parameters.length; i++) {
-        builder.addArgument(parameters[i], sourceManager.empty());
+        builder.addUntypedArgument(parameters[i], sourceManager.empty());
       }
 
       // Set the locals
@@ -540,13 +543,14 @@ public class AstBuilder {
      * the stack.
      */
     public void method(final SSymbol selector, final SSymbol[] parameters,
-        final SSymbol[] locals, final JsonArray body) {
+        final SSymbol[] types, final SSymbol[] locals, final JsonArray body) {
       MethodBuilder builder = scopeManager.newMethod(selector);
 
       // Set the parameters
-      builder.addArgument(Symbols.SELF, sourceManager.empty());
+      builder.addUntypedArgument(Symbols.SELF, sourceManager.empty());
       for (int i = 0; i < parameters.length; i++) {
-        builder.addArgument(parameters[i], sourceManager.empty());
+        builder.addTypedArgument(parameters[i], typeManager.get(types[i]),
+            sourceManager.empty());
       }
 
       // Set the locals
