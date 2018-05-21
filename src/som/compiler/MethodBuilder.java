@@ -184,7 +184,7 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     Local loopIdx;
     if (blockOrVal instanceof BlockNode) {
       Argument[] args = ((BlockNode) blockOrVal).getArguments();
-      assert args.length == 2;
+      assert args.length == 2 : "Did you put enough parameters on the block?";
       loopIdx = getLocal(args[1].getQualifiedName());
     } else {
       // if it is a literal, we still need a memory location for counting, so,
