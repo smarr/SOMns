@@ -741,7 +741,7 @@ public class AstBuilder {
       receiver = explicit(symbolFor("asString"), receiver, new ArrayList<ExpressionNode>(),
           translator.source(firstObj));
 
-      for (int i = 0; i < elements.size(); i++) {
+      for (int i = 1; i < elements.size(); i++) {
         JsonObject operandObj = elements.get(i).getAsJsonObject();
 
         // Set operand as `expression.toString`
