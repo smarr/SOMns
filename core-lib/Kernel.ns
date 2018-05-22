@@ -954,18 +954,4 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       ^ 'TransferObjectsCannotBeValues(' + (vmMirror mirrorAClassesName: class) + ')'
     )
   )
-
-  (* Short cut from VM. Likely to be removed when optimized. *)
-  private signalNotAValueWith: aClass = (
-    NotAValue signalWith: aClass
-  )
-
-  (* Short cut from VM. Likely to be removed when optimized. *)
-  private signalTOCannotBeValues: aClass = (
-    TransferObjectsCannotBeValues signalWith: aClass
-  )
-
-  private signalArgumentError: message = (
-    ArgumentError signalWith: message.
-  )
 )

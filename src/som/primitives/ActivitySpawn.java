@@ -14,6 +14,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
 import som.VM;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode.TernarySystemOperation;
 import som.primitives.ObjectPrims.IsValue;
@@ -28,7 +29,6 @@ import som.primitives.threading.TaskThreads.TracedForkJoinTask;
 import som.primitives.threading.TaskThreads.TracedThreadTask;
 import som.primitives.threading.ThreadingModule;
 import som.vm.VmSettings;
-import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
@@ -103,6 +103,8 @@ public abstract class ActivitySpawn {
     /** Breakpoint info for triggering suspension on first execution of code in activity. */
     @Child protected AbstractBreakpointNode onExec;
 
+    @Child protected ExceptionSignalingNode thrower;
+
     @Override
     public final SpawnPrim initialize(final VM vm) {
       super.initialize(vm);
@@ -111,6 +113,7 @@ public abstract class ActivitySpawn {
       this.forkJoinPool = vm.getForkJoinPool();
       this.processesPool = vm.getProcessPool();
       this.threadPool = vm.getThreadPool();
+      thrower = ExceptionSignalingNode.createNotAValueExceptionSignalingNode(sourceSection);
       return this;
     }
 
@@ -137,7 +140,7 @@ public abstract class ActivitySpawn {
     public final Object spawnProcess(final SImmutableObject procMod,
         final SClass procCls, @Cached("createIsValue()") final IsValue isVal) {
       if (!isVal.executeEvaluated(procCls)) {
-        KernelObj.signalExceptionWithClass("signalNotAValueWith:", procCls);
+        thrower.execute(procCls);
       }
 
       SSymbol sel = procCls.getMixinDefinition().getPrimaryFactorySelector();
@@ -178,6 +181,8 @@ public abstract class ActivitySpawn {
     /** Breakpoint info for triggering suspension on first execution of code in activity. */
     @Child protected AbstractBreakpointNode onExec;
 
+    @Child protected ExceptionSignalingNode thrower;
+
     @Override
     public final SpawnWithPrim initialize(final VM vm) {
       super.initialize(vm);
@@ -186,6 +191,7 @@ public abstract class ActivitySpawn {
       this.forkJoinPool = vm.getForkJoinPool();
       this.processesPool = vm.getProcessPool();
       this.threadPool = vm.getThreadPool();
+      thrower = ExceptionSignalingNode.createNotAValueExceptionSignalingNode(sourceSection);
       return this;
     }
 
@@ -215,7 +221,7 @@ public abstract class ActivitySpawn {
         final SClass procCls, final SArray arg, final Object[] argArr,
         @Cached("createIsValue()") final IsValue isVal) {
       if (!isVal.executeEvaluated(procCls)) {
-        KernelObj.signalExceptionWithClass("signalNotAValueWith:", procCls);
+        thrower.execute(procCls);
       }
 
       SSymbol sel = procCls.getMixinDefinition().getPrimaryFactorySelector();

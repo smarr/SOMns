@@ -175,7 +175,7 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
   protected List<NodeFactory<? extends ExpressionNode>> getFactories() {
     List<NodeFactory<? extends ExpressionNode>> allFactories = new ArrayList<>();
     allFactories.addAll(ActorClassesFactory.getFactories());
-    allFactories.addAll(BlockPrimsFactory.getFactories());
+    allFactories.addAll((List) BlockPrimsFactory.getFactories());
     allFactories.addAll(ClassPrimsFactory.getFactories());
     allFactories.addAll(DoublePrimsFactory.getFactories());
     allFactories.addAll(ExceptionsPrimsFactory.getFactories());

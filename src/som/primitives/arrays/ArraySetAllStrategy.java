@@ -31,17 +31,18 @@ public final class ArraySetAllStrategy {
 
   @TruffleBoundary
   private static Object signalNotAValue() {
-    // TODO: this is a duplicated from IsValueCheckNode
-    // TODO: don't think this is a complete solution, we need to do something else here
-    // perhaps write the node, and then also use a send node...
     CompilerDirectives.transferToInterpreter();
     VM.thisMethodNeedsToBeOptimized("Should be optimized or on slowpath");
 
     // the value object was not constructed properly.
-    SInvokable disp = (SInvokable) KernelObj.kernel.getSOMClass().lookupPrivate(
-        Symbols.symbolFor("signalNotAValueWith:"),
+    SInvokable getNotAValue = (SInvokable) KernelObj.kernel.getSOMClass().lookupPrivate(
+        Symbols.symbolFor("NotAValue"),
         KernelObj.kernel.getSOMClass().getMixinDefinition().getMixinId());
-    return disp.invoke(new Object[] {KernelObj.kernel, Classes.valueArrayClass});
+    Object notAValue = getNotAValue.invoke(new Object[] {KernelObj.kernel});
+    SInvokable disp = (SInvokable) KernelObj.kernel.getSOMClass().lookupPrivate(
+        Symbols.symbolFor("signalWith:"),
+        KernelObj.kernel.getSOMClass().getMixinDefinition().getMixinId());
+    return disp.invoke(new Object[] {notAValue, Classes.valueArrayClass});
   }
 
   public static void evalBlockWithArgForRemaining(final SBlock block,

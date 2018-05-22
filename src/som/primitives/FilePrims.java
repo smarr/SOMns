@@ -1,11 +1,14 @@
 package som.primitives;
 
+import java.util.Objects;
+
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 
 import bd.primitives.Primitive;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
@@ -47,9 +50,17 @@ public final class FilePrims {
   @GenerateNodeFactory
   @Primitive(primitive = "fileClose:")
   public abstract static class CloseFilePrim extends UnaryExpressionNode {
+    @Child ExceptionSignalingNode thrower;
+    // new ExceptionSignalingNode("IOException", "signalWith:", this.getSourceSection());
+
     @Specialization
     public final Object closeFile(final SFileDescriptor file) {
-      file.closeFile();
+
+      if (thrower == null) {
+        thrower = insert(new ExceptionSignalingNode("IOException",
+            "signalWith:", this.getSourceSection(), PathPrims.fileObject));
+      }
+      file.closeFile(thrower);
       return file;
     }
   }
@@ -90,25 +101,49 @@ public final class FilePrims {
   @GenerateNodeFactory
   @Primitive(primitive = "file:setMode:")
   public abstract static class FileSetModePrim extends BinaryExpressionNode {
+
+    @Child protected ExceptionSignalingNode thrower;
+
     @Specialization
     public final Object setModeSymbol(final SFileDescriptor file, final SSymbol mode) {
-      file.setMode(mode);
+      try {
+        file.setMode(mode);
+      } catch (IllegalArgumentException e) {
+        signalInvalidAccessMode(mode.getString());
+      }
       return file;
     }
 
     @Fallback
     public final Object setWithUnsupportedValue(final Object file, final Object mode) {
-      SFileDescriptor.signalInvalidAccessMode(mode);
+
+      signalInvalidAccessMode("File access mode invalid, was: "
+          + Objects.toString(mode) + " " + SFileDescriptor.getValidAccessModes());
+
       return file;
     }
+
+    protected void signalInvalidAccessMode(final String message) {
+      if (thrower == null) {
+        thrower = insert(ExceptionSignalingNode.createArgumentErrorExceptionSignalingNode(
+            this.getSourceSection()));
+      }
+      thrower.execute(message);
+    };
   }
 
   @GenerateNodeFactory
   @Primitive(primitive = "fileSize:")
   public abstract static class FileSizePrim extends UnaryExpressionNode {
+    @Child ExceptionSignalingNode thrower;
+
     @Specialization
     public final long getFileSize(final SFileDescriptor file) {
-      return file.getFileSize();
+      if (thrower == null) {
+        thrower = insert(new ExceptionSignalingNode("IOException",
+            "signalWith:", this.getSourceSection(), PathPrims.fileObject));
+      }
+      return file.getFileSize(thrower);
     }
   }
 
@@ -147,12 +182,17 @@ public final class FilePrims {
   @GenerateNodeFactory
   @Primitive(primitive = "file:write:at:ifFail:")
   public abstract static class WriteFilePrim extends QuaternaryExpressionNode {
-    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
+    @Child protected BlockDispatchNode      dispatchHandler = BlockDispatchNodeGen.create();
+    @Child protected ExceptionSignalingNode thrower;
 
     @Specialization
     public final Object write(final SFileDescriptor file, final long nBytes,
         final long offset, final SBlock fail) {
-      file.write((int) nBytes, offset, fail, dispatchHandler);
+      if (thrower == null) {
+        thrower = insert(new ExceptionSignalingNode("IOException",
+            "signalWith:", this.getSourceSection(), PathPrims.fileObject));
+      }
+      file.write((int) nBytes, offset, fail, dispatchHandler, thrower);
       return file;
     }
   }
