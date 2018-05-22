@@ -16,13 +16,13 @@ import bd.primitives.Primitive;
 import som.VM;
 import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
 import som.interpreter.SArguments;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.arrays.AtPrim;
 import som.primitives.arrays.AtPrimFactory;
 import som.vm.VmSettings;
-import som.vm.constants.KernelObj;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -52,11 +52,28 @@ public abstract class BlockPrims {
     return Truffle.getRuntime().createIndirectCallNode();
   }
 
+  public interface ValuePrim {
+    void signalException(String message);
+  }
+
   @GenerateNodeFactory
-  @ImportStatic(BlockPrims.class)
+  @ImportStatic({BlockPrims.class, ValuePrim.class})
   @Primitive(primitive = "blockValue:", selector = "value", inParser = false,
       receiverType = {SBlock.class, Boolean.class})
-  public abstract static class ValueNonePrim extends UnaryExpressionNode {
+  public abstract static class ValueNonePrim extends UnaryExpressionNode implements ValuePrim {
+
+    @Child ExceptionSignalingNode thrower;
+
+    @Override
+    public void signalException(final String message) {
+      if (thrower == null) {
+        thrower =
+            insert(ExceptionSignalingNode.createArgumentErrorExceptionSignalingNode(
+                getSourceSection()));
+      }
+      thrower.execute(message);
+    };
+
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == OpClosureApplication.class) {
@@ -83,25 +100,40 @@ public abstract class BlockPrims {
     @Specialization(replaces = "doCachedBlock")
     public final Object doGeneric(final SBlock receiver,
         @Cached("create()") final IndirectCallNode call) {
-      checkArguments(receiver, 1);
+      checkArguments(receiver, 1, this);
       return receiver.getMethod().invoke(call, new Object[] {receiver});
     }
+
   }
 
-  private static void checkArguments(final SBlock receiver, final int expectedNumArgs) {
+  private static void checkArguments(final SBlock receiver, final int expectedNumArgs,
+      final ValuePrim node) {
     if (receiver.getMethod().getNumberOfArguments() != expectedNumArgs) {
       CompilerDirectives.transferToInterpreter();
-      KernelObj.signalException("signalArgumentError:",
+      node.signalException(
           "Incorrect number of Block arguments: " + expectedNumArgs + ", expected: "
               + (receiver.getMethod().getNumberOfArguments() - 1));
     }
   }
 
   @GenerateNodeFactory
-  @ImportStatic(BlockPrims.class)
+  @ImportStatic({BlockPrims.class, ValuePrim.class})
   @Primitive(primitive = "blockValue:with:", selector = "value:", inParser = false,
       receiverType = SBlock.class)
-  public abstract static class ValueOnePrim extends BinaryExpressionNode {
+  public abstract static class ValueOnePrim extends BinaryExpressionNode implements ValuePrim {
+
+    @Child ExceptionSignalingNode thrower;
+
+    @Override
+    public void signalException(final String message) {
+      if (thrower == null) {
+        thrower =
+            insert(ExceptionSignalingNode.createArgumentErrorExceptionSignalingNode(
+                getSourceSection()));
+      }
+      thrower.execute(message);
+    };
+
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == OpClosureApplication.class) {
@@ -123,16 +155,29 @@ public abstract class BlockPrims {
     @Specialization(replaces = "doCachedBlock")
     public final Object doGeneric(final SBlock receiver, final Object arg,
         @Cached("create()") final IndirectCallNode call) {
-      checkArguments(receiver, 2);
+      checkArguments(receiver, 2, this);
       return receiver.getMethod().invoke(call, new Object[] {receiver, arg});
     }
   }
 
   @GenerateNodeFactory
-  @ImportStatic(BlockPrims.class)
+  @ImportStatic({BlockPrims.class, ValuePrim.class})
   @Primitive(primitive = "blockValue:with:with:", selector = "value:with:", inParser = false,
       receiverType = SBlock.class)
-  public abstract static class ValueTwoPrim extends TernaryExpressionNode {
+  public abstract static class ValueTwoPrim extends TernaryExpressionNode
+      implements ValuePrim {
+
+    @Child ExceptionSignalingNode thrower;
+
+    @Override
+    public void signalException(final String message) {
+      if (thrower == null) {
+        thrower = insert(ExceptionSignalingNode.createArgumentErrorExceptionSignalingNode(
+            getSourceSection()));
+      }
+      thrower.execute(message);
+    };
+
     @Override
     protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
       if (tag == OpClosureApplication.class) {
@@ -156,17 +201,30 @@ public abstract class BlockPrims {
     public final Object doGeneric(final SBlock receiver, final Object arg1,
         final Object arg2,
         @Cached("create()") final IndirectCallNode call) {
-      checkArguments(receiver, 3);
+      checkArguments(receiver, 3, this);
       return receiver.getMethod().invoke(call, new Object[] {receiver, arg1, arg2});
     }
   }
 
   @GenerateNodeFactory
-  @ImportStatic({BlockPrims.class, SArray.class})
+  @ImportStatic({BlockPrims.class, SArray.class, ValuePrim.class})
   @Primitive(primitive = "blockValue:withArguments:", selector = "valueWithArguments:",
       inParser = false,
       receiverType = SBlock.class)
-  public abstract static class ValueArgsPrim extends BinaryExpressionNode {
+  public abstract static class ValueArgsPrim extends BinaryExpressionNode
+      implements ValuePrim {
+
+    @Child ExceptionSignalingNode thrower;
+
+    @Override
+    public void signalException(final String message) {
+      if (thrower == null) {
+        thrower =
+            insert(ExceptionSignalingNode.createArgumentErrorExceptionSignalingNode(
+                getSourceSection()));
+      }
+      thrower.execute(message);
+    };
 
     protected @Child SizeAndLengthPrim size = SizeAndLengthPrimFactory.create(null);
     protected @Child AtPrim            at   = AtPrimFactory.create(null, null);
@@ -198,7 +256,7 @@ public abstract class BlockPrims {
     @Specialization(replaces = "doCachedBlock")
     public final Object doGeneric(final SBlock receiver, final SArray args,
         @Cached("create()") final IndirectCallNode call) {
-      checkArguments(receiver, (int) getNumArgs(args));
+      checkArguments(receiver, (int) getNumArgs(args), this);
       return receiver.getMethod().invoke(
           call, SArguments.getPlainArgumentsWithReceiver(receiver, args, size, at));
     }

@@ -19,12 +19,12 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 import bd.primitives.Primitive;
 import som.VM;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray.SImmutableArray;
@@ -49,14 +49,13 @@ public final class PathPrims {
   }
 
   public static Object signalFileNotFoundException(final String fileName,
-      final String message) {
-    return signalException(Symbols.symbolFor("signalFileNotFoundException:with:"),
-        new Object[] {fileObject, fileName, message});
+      final String message, final ExceptionSignalingNode thrower) {
+    return thrower.execute(fileName, message);
   }
 
-  public static Object signalIOException(final String message) {
-    return signalException(Symbols.symbolFor("signalIOException:"),
-        new Object[] {fileObject, message});
+  public static Object signalIOException(final String message,
+      final ExceptionSignalingNode thrower) {
+    return thrower.execute(message);
   }
 
   private static Object signalException(final SSymbol selector, final Object[] args) {
@@ -165,15 +164,26 @@ public final class PathPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "pathLastModified:")
   public abstract static class LastModifiedPrim extends UnaryExpressionNode {
+    @Child ExceptionSignalingNode thrower;
+    @Child ExceptionSignalingNode fileNotFound;
+
     @Specialization
     public final Object lastModified(final String dir) {
       try {
         return Files.getLastModifiedTime(Paths.get(dir), new LinkOption[0]).toString();
       } catch (FileNotFoundException e) {
-        signalFileNotFoundException(dir, e.getMessage());
+        if (fileNotFound == null) {
+          fileNotFound = insert(new ExceptionSignalingNode("FileNotFoundException",
+              "signalFor:with:", this.getSourceSection(), PathPrims.fileObject));
+        }
+        signalFileNotFoundException(dir, e.getMessage(), fileNotFound);
         return Nil.nilObject;
       } catch (IOException e) {
-        signalIOException(e.getMessage());
+        if (thrower == null) {
+          thrower = insert(new ExceptionSignalingNode("IOException",
+              "signalWith:", this.getSourceSection(), PathPrims.fileObject));
+        }
+        signalIOException(e.getMessage(), thrower);
         return Nil.nilObject;
       }
     }
@@ -198,14 +208,25 @@ public final class PathPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "pathGetSize:")
   public abstract static class SizePrim extends UnaryExpressionNode {
+    @Child ExceptionSignalingNode thrower;
+    @Child ExceptionSignalingNode fileNotFound;
+
     @Specialization
     public final long getSize(final String dir) {
       try {
         return Files.size(Paths.get(dir));
       } catch (NoSuchFileException e) {
-        signalFileNotFoundException(dir, e.getMessage());
+        if (fileNotFound == null) {
+          fileNotFound = insert(new ExceptionSignalingNode("FileNotFoundException",
+              "signalFor:with:", this.getSourceSection(), PathPrims.fileObject));
+        }
+        signalFileNotFoundException(dir, e.getMessage(), fileNotFound);
       } catch (IOException e) {
-        signalIOException(e.getMessage());
+        if (thrower == null) {
+          thrower = insert(new ExceptionSignalingNode("IOException",
+              "signalWith:", this.getSourceSection(), PathPrims.fileObject));
+        }
+        signalIOException(e.getMessage(), thrower);
       }
       return -1;
     }

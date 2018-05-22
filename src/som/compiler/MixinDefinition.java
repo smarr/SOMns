@@ -17,6 +17,7 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.basic.nodes.DummyParent;
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.LexicalScope.MethodScope;
@@ -24,6 +25,7 @@ import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InstantiationNode.ClassInstantiationNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
@@ -85,6 +87,23 @@ public final class MixinDefinition {
   private final boolean isModule;
 
   private final EconomicMap<SSymbol, MixinDefinition> nestedMixinDefinitions;
+
+  // The parser can instantiate classes, those nodes are used to throw the exception in such
+  // case.
+  protected static ExceptionSignalingNode floatingNotAValueThrower      =
+      ExceptionSignalingNode.createNotAValueExceptionSignalingNode(
+          SomLanguage.getSyntheticSource("", "ClassInstantiation instantiate")
+                     .createSection(1));
+  protected static ExceptionSignalingNode floatingCannotBeValuesThrower =
+      ExceptionSignalingNode.createKernelSignalWithExceptionNode(
+          "TransferObjectsCannotBeValues",
+          SomLanguage.getSyntheticSource("", "ClassInstantiation instantiate")
+                     .createSection(1));
+
+  static {
+    new DummyParent(floatingNotAValueThrower);
+    new DummyParent(floatingCannotBeValuesThrower);
+  }
 
   public MixinDefinition(final SSymbol name, final SourceSection nameSection,
       final SSymbol primaryFactoryName,
@@ -487,7 +506,8 @@ public final class MixinDefinition {
       final Object superclassAndMixins) {
     ClassFactory factory = createClassFactory(superclassAndMixins,
         false, false, false);
-    return ClassInstantiationNode.instantiate(outer, factory);
+    return ClassInstantiationNode.instantiate(outer, factory, floatingNotAValueThrower,
+        floatingCannotBeValuesThrower);
   }
 
   // TODO: need to rename this, it doesn't really fulfill this role anymore

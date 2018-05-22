@@ -8,6 +8,7 @@ import com.oracle.truffle.api.profiles.BranchProfile;
 
 import bd.primitives.Primitive;
 import som.VM;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -168,6 +169,8 @@ public class StringPrims {
   @Primitive(primitive = "stringFromArray:")
   public abstract static class FromArrayPrim extends UnaryExpressionNode {
 
+    @Child protected ExceptionSignalingNode thrower;
+
     @Specialization
     public final String doString(final SArray chars) {
       VM.thisMethodNeedsToBeOptimized(
@@ -181,13 +184,21 @@ public class StringPrims {
           sb.append(((SSymbol) o).getString());
         } else {
           // TODO: there should be a Smalltalk asString message here, I think
-          KernelObj.signalException("signalArgumentError:",
-              "Array can't contain non-string objects, but has " + o.toString());
+          signalException("Array can't contain non-string objects, but has " + o.toString());
         }
       }
 
       return sb.toString();
     }
+
+    protected void signalException(final String message) {
+      if (thrower == null) {
+        thrower =
+            insert(ExceptionSignalingNode.createArgumentErrorExceptionSignalingNode(
+                this.getSourceSection()));
+      }
+      thrower.execute(message);
+    };
 
     @Fallback
     public final void doGeneric(final Object obj) {
@@ -198,6 +209,8 @@ public class StringPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "stringFromCodepoint:")
   public abstract static class FromCodepointPrim extends UnaryExpressionNode {
+
+    @Child protected ExceptionSignalingNode thrower;
 
     protected static final boolean isStrictlyBmpCodePoint(final long val) {
       // SM: Based on Character.isBmpCodePoint(val)
@@ -233,10 +246,17 @@ public class StringPrims {
       return new String(result);
     }
 
+    protected void signalException(final String message) {
+      if (thrower == null) {
+        thrower = insert(ExceptionSignalingNode.createArgumentErrorExceptionSignalingNode(
+            this.getSourceSection()));
+      }
+      thrower.execute(message);
+    };
+
     @Fallback
     public final void doGeneric(final Object val) {
-      KernelObj.signalException("signalArgumentError:",
-          "The value " + val + " is not a valid Unicode code point.");
+      signalException("The value " + val + " is not a valid Unicode code point.");
     }
   }
 

@@ -661,13 +661,4 @@ DAMAGE.>> *)
     )
   )
 
-  (* Short cut from VM. To be removed when optimized. *)
-  private signalIOException: aMessage = (
-    IOException signalWith: aMessage
-  )
-
-  (* Short cut from VM. To be removed when optimized. *)
-  private signalFileNotFoundException: fileName with: aMessage = (
-    FileNotFoundException signalFor: fileName with: aMessage
-  )
 )
