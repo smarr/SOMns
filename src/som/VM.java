@@ -43,6 +43,7 @@ import som.vm.ObjectSystem;
 import som.vm.Primitives;
 import som.vm.VmOptions;
 import som.vm.VmSettings;
+import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 import tools.concurrency.ActorExecutionTrace;
@@ -432,6 +433,10 @@ public final class VM {
 
     Value returnCode = engine.eval(SomLanguage.START);
     shutdownAndExit(returnCode.as(Integer.class));
+  }
+
+  public SClass loadExtensionModule(final String filename) {
+    return objectSystem.loadExtensionModule(filename);
   }
 
   public MixinDefinition loadModule(final String filename) throws IOException {
