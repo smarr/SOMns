@@ -307,6 +307,9 @@ public class JsonTreeTranslator {
       }
       return symbolFor(operator);
 
+    } else if (nodeType(node).equals("bind")) {
+      return selector(node.get("left").getAsJsonObject());
+
     } else {
       error("The translator doesn't understand how to a selector from " + nodeType(node),
           node);
@@ -551,6 +554,12 @@ public class JsonTreeTranslator {
         source);
   }
 
+  public ExpressionNode explicitAssignment(final SSymbol selector, final JsonObject receiver,
+      final JsonObject[] arguments, final SourceSection source) {
+    SSymbol setterSelector = symbolFor(selector.getString() + ":");
+    return explicit(setterSelector, receiver, arguments, source);
+  }
+
   /**
    * Creates either a variable read (when no arguments are provided) or a message send (when
    * arguments are provided) using the method currently at the top of the stack.
@@ -631,8 +640,13 @@ public class JsonTreeTranslator {
       return explicit(selector(node), receiver(node), arguments(node), source(node));
 
     } else if (nodeType(node).equals("bind")) {
-      return astBuilder.requestBuilder.assignment(symbolFor(name(node)),
-          (ExpressionNode) value(node));
+      if (nodeType(node.get("left").getAsJsonObject()).equals("explicit-receiver-request")) {
+        return explicitAssignment(selector(node), receiver(node.get("left").getAsJsonObject()),
+            arguments(node), source(node));
+      } else {
+        return astBuilder.requestBuilder.assignment(symbolFor(name(node)),
+            (ExpressionNode) value(node));
+      }
 
     } else if (nodeType(node).equals("operator")) {
       return explicit(selector(node), receiver(node), arguments(node), source(node));
