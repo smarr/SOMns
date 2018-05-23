@@ -255,6 +255,14 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     mixinResolversSource = mixin;
   }
 
+  public ExpressionNode constructSuperClassResolution(final SSymbol superClass,
+      final SourceSection source) {
+    MethodBuilder def = getClassInstantiationMethodBuilder();
+    ExpressionNode selfRead = def.getSelfRead(source);
+    return SNodeFactory.createMessageSend(superClass,
+        new ExpressionNode[] {selfRead}, false, source, null, language);
+  }
+
   /**
    * The method that is used to instantiate the class object.
    * This method is based on the inheritance definition of the class.
@@ -320,6 +328,15 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     } else {
       addFactoryMethod(meth, name, false);
     }
+  }
+
+  /**
+   * Add a pre-determined set of methods to the mixin.
+   * This is currently used for constructing the class
+   * that contains primitive methods of extension modules.
+   */
+  public void addMethods(final EconomicMap<SSymbol, Dispatchable> disps) {
+    dispatchables.putAll(disps);
   }
 
   private void addFactoryMethod(final SInvokable meth, final SSymbol name,

@@ -19,6 +19,8 @@ import bd.inlining.InlinableNodes;
 import som.Output;
 import som.VM;
 import som.compiler.AccessModifier;
+import som.compiler.MethodBuilder;
+import som.compiler.MixinBuilder;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
@@ -100,6 +102,13 @@ public final class ObjectSystem {
     return platformClass;
   }
 
+  public SClass loadExtensionModule(final String filename) {
+    ExtensionLoader loader = new ExtensionLoader(filename, compiler.getLanguage());
+    EconomicMap<SSymbol, Dispatchable> primitives = loader.getPrimitives();
+    MixinDefinition mixin = constructPrimitiveMixin(filename, primitives);
+    return mixin.instantiateClass(Nil.nilObject, Classes.topClass);
+  }
+
   public MixinDefinition loadModule(final String filename) throws IOException {
     File file = new File(filename);
 
@@ -134,18 +143,49 @@ public final class ObjectSystem {
 
   private SObjectWithoutFields constructVmMirror() {
     EconomicMap<SSymbol, Dispatchable> vmMirrorMethods = primitives.takeVmMirrorPrimitives();
+    SClass vmMirrorClass = constructPrimitiveClass(vmMirrorMethods);
+    return new SObjectWithoutFields(vmMirrorClass, vmMirrorClass.getInstanceFactory());
+  }
+
+  private MixinDefinition constructPrimitiveMixin(final String module,
+      final EconomicMap<SSymbol, Dispatchable> primitives) {
+    SSymbol moduleName = Symbols.symbolFor(module);
+    Source source = SomLanguage.getSyntheticSource("", module + "-extension-primitives");
+    SourceSection ss = source.createSection(1);
+
+    MixinBuilder mixin = new MixinBuilder(null, AccessModifier.PUBLIC, moduleName,
+        ss, null, compiler.getLanguage());
+    MethodBuilder primFactor = mixin.getPrimaryFactoryMethodBuilder();
+
+    primFactor.addArgument(Symbols.SELF, ss);
+    primFactor.setSignature(Symbols.NEW);
+
+    mixin.setupInitializerBasedOnPrimaryFactory(ss);
+    mixin.setInitializerSource(ss);
+    mixin.finalizeInitializer();
+    mixin.setSuperClassResolution(mixin.constructSuperClassResolution(Symbols.TOP, ss));
+
+    // we do not need any initialization, and super is top, so, simply return self
+    mixin.setSuperclassFactorySend(mixin.getInitializerMethodBuilder().getSelfRead(ss), false);
+
+    mixin.addMethods(primitives);
+
+    return mixin.assemble(ss);
+  }
+
+  private SClass constructPrimitiveClass(final EconomicMap<SSymbol, Dispatchable> primitives) {
     MixinScope scope = new MixinScope(null);
 
     MixinDefinition vmMirrorDef = new MixinDefinition(
         Symbols.VMMIRROR, null, null, null, null, null, null, null,
-        vmMirrorMethods, null,
+        primitives, null,
         null, new MixinDefinitionId(Symbols.VMMIRROR), AccessModifier.PUBLIC, scope, scope,
         true, true, true, null);
     scope.setMixinDefinition(vmMirrorDef, false);
 
     SClass vmMirrorClass = vmMirrorDef.instantiateClass(Nil.nilObject,
         new SClass[] {Classes.topClass, Classes.valueClass});
-    return new SObjectWithoutFields(vmMirrorClass, vmMirrorClass.getInstanceFactory());
+    return vmMirrorClass;
   }
 
   /**

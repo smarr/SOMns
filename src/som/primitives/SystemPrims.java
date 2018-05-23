@@ -56,6 +56,9 @@ import tools.SourceCoordinate;
 
 public final class SystemPrims {
 
+  /** File extension for SOMns extensions with Java code. */
+  private static final String EXTENSION_EXT = ".jar";
+
   @CompilationFinal public static SObjectWithClass SystemModule;
 
   @GenerateNodeFactory
@@ -72,8 +75,12 @@ public final class SystemPrims {
       final ExceptionSignalingNode ioException) {
     // TODO: a single node for the different exceptions?
     try {
-      MixinDefinition module = vm.loadModule(path);
-      return module.instantiateModuleClass();
+      if (path.endsWith(EXTENSION_EXT)) {
+        return vm.loadExtensionModule(path);
+      } else {
+        MixinDefinition module = vm.loadModule(path);
+        return module.instantiateModuleClass();
+      }
     } catch (FileNotFoundException e) {
       ioException.signal(path, "Could not find module file. " + e.getMessage());
     } catch (NotAFileException e) {
