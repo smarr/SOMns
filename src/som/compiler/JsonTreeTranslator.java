@@ -90,6 +90,16 @@ public class JsonTreeTranslator {
     return sourceManager.atLineColumn(line, column);
   }
 
+  private void error(final String message, final JsonObject node) {
+    String prefix = "";
+    if (node != null) {
+      int line = node.get("line").getAsInt();
+      int column = node.get("column").getAsInt();
+      prefix = "[" + line + "," + column + "] ";
+    }
+    language.getVM().errorExit(prefix + message);
+  }
+
   /**
    * Gets the type of a {@link JsonObject}, which should be a string stored in the "nodetype"
    * field.
@@ -128,8 +138,8 @@ public class JsonTreeTranslator {
       return name(node.get("from").getAsJsonObject());
 
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get a name from " + nodeType(node));
+      error("The translator doesn't understand how to get a name from " + nodeType(node),
+          node);
       throw new RuntimeException();
     }
   }
@@ -158,8 +168,8 @@ public class JsonTreeTranslator {
     if (node.get("path").isJsonObject()) {
       return node.get("path").getAsJsonObject().get("raw").getAsString();
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get a path from " + nodeType(node));
+      error("The translator doesn't understand how to get a path from " + nodeType(node),
+          node);
       throw new RuntimeException();
     }
   }
@@ -189,8 +199,8 @@ public class JsonTreeTranslator {
       return translate(node.get("right").getAsJsonObject());
 
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get a value from " + nodeType(node));
+      error("The translator doesn't understand how to get a value from " + nodeType(node),
+          node);
       throw new RuntimeException();
     }
   }
@@ -204,9 +214,9 @@ public class JsonTreeTranslator {
     } else if (part.has("parameters")) {
       return part.get("parameters").getAsJsonArray().size();
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to count the arguments or parameters for the part: "
-              + part);
+      error(
+          "The translator doesn't understand how to count the arguments or parameters for the part",
+          part);
       throw new RuntimeException();
     }
 
@@ -242,8 +252,8 @@ public class JsonTreeTranslator {
       return node.get("left").getAsJsonObject();
 
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get a receiver from " + nodeType(node));
+      error("The translator doesn't understand how to get a receiver from " + nodeType(node),
+          node);
       throw new RuntimeException();
     }
   }
@@ -262,8 +272,8 @@ public class JsonTreeTranslator {
       return symbolFor("negated");
 
     } else {
-      language.getVM().errorExit("The translator doesn't understand what to do with the `"
-          + name + "` prefix operator");
+      error("The translator doesn't understand what to do with the `" + name
+          + "` prefix operator", null);
       throw new RuntimeException();
     }
   }
@@ -298,8 +308,8 @@ public class JsonTreeTranslator {
       return symbolFor(operator);
 
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get a name from " + nodeType(node));
+      error("The translator doesn't understand how to a selector from " + nodeType(node),
+          node);
       throw new RuntimeException();
     }
   }
@@ -340,8 +350,10 @@ public class JsonTreeTranslator {
       }
 
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get arguments from " + node);
+      error(
+          "The translator doesn't understand how to get arguments from a " + nodeType(node)
+              + "node",
+          node);
       throw new RuntimeException();
     }
   }
@@ -382,8 +394,7 @@ public class JsonTreeTranslator {
       return parametersNames.toArray(new SSymbol[parametersNames.size()]);
 
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get parameters from " + node);
+      error("The translator doesn't understand how to get parameters from " + node, node);
       throw new RuntimeException();
     }
   }
@@ -430,8 +441,7 @@ public class JsonTreeTranslator {
       return "Unknown";
 
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get type for " + nodeType);
+      error("The translator doesn't understand how to get type for " + nodeType, node);
       throw new RuntimeException();
     }
   }
@@ -455,8 +465,8 @@ public class JsonTreeTranslator {
       return types.toArray(new SSymbol[types.size()]);
 
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get parameters from " + node);
+      error("The translator doesn't understand how to get parameters from " + nodeType(node),
+          node);
       throw new RuntimeException();
     }
   }
@@ -664,8 +674,8 @@ public class JsonTreeTranslator {
       return astBuilder.requestBuilder.interpolatedString(node.get("parts").getAsJsonArray());
 
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand what to do with a " + nodeType(node) + " node?");
+      error("The translator doesn't understand what to do with a " + nodeType(node) + " node?",
+          node);
       throw new RuntimeException();
     }
   }
