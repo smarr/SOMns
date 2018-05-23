@@ -378,7 +378,7 @@ public class AstBuilder {
 
       // Munge the name of the class
       SSymbol clazzName = symbolFor(objectName.getString() + "[Class]");
-      MixinBuilder builder = scopeManager.newClazz(clazzName, sourceManager.empty());
+      MixinBuilder builder = scopeManager.newObject(clazzName, sourceManager.empty());
 
       // Create the initialization method
       MethodBuilder instanceFactory = builder.getPrimaryFactoryMethodBuilder();
@@ -419,7 +419,7 @@ public class AstBuilder {
       scopeManager.popMethod();
 
       // Assemble and return the completed module
-      MixinDefinition classDef = scopeManager.assumbleCurrentClazz(sourceManager.empty());
+      MixinDefinition classDef = scopeManager.assumbleCurrentObject(sourceManager.empty());
       ExpressionNode outerRead = scopeManager.peekMethod().getSelfRead(sourceSection);
       ExpressionNode newMessage = createMessageSend(Symbols.NEW,
           new ExpressionNode[] {scopeManager.peekMethod().getSelfRead(sourceSection)},
