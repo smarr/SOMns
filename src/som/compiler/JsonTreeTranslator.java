@@ -386,6 +386,34 @@ public class JsonTreeTranslator {
   }
 
   /**
+   * Gets the source sections for the parameters of a declaration node.
+   */
+  private SourceSection[] sourceOfParameters(final JsonObject node) {
+    List<SourceSection> parameterSources = new ArrayList<SourceSection>();
+
+    if (node.has("signature")) {
+      JsonArray parts = node.get("signature").getAsJsonObject().get("parts").getAsJsonArray();
+      for (JsonElement partElement : parts) {
+        JsonObject part = partElement.getAsJsonObject();
+        for (JsonElement parameterElement : part.get("parameters").getAsJsonArray()) {
+          parameterSources.add(source(parameterElement.getAsJsonObject()));
+        }
+      }
+
+    } else if (node.has("parameters")) {
+      for (JsonElement parameterElement : node.get("parameters").getAsJsonArray()) {
+        parameterSources.add(source(parameterElement.getAsJsonObject()));
+      }
+
+    } else {
+      error("The translator doesn't understand how to get parameters from " + node, node);
+      throw new RuntimeException();
+    }
+
+    return parameterSources.toArray(new SourceSection[parameterSources.size()]);
+  }
+
+  /**
    * Extracts the name of type declared inside of the given node, which may be either a
    * typed-parameter or otherwise a simple identifier.
    */
@@ -439,6 +467,18 @@ public class JsonTreeTranslator {
       }
     }
     return localNames.toArray(new SSymbol[localNames.size()]);
+  }
+
+  private SourceSection[] sourceOfLocals(final JsonObject node) {
+    List<SourceSection> sourceSections = new ArrayList<SourceSection>();
+    for (JsonElement element : body(node)) {
+      JsonObject object = element.getAsJsonObject();
+      String type = nodeType(object);
+      if (type.equals("def-declaration") || type.equals("var-declaration")) {
+        sourceSections.add(source(object));
+      }
+    }
+    return sourceSections.toArray(new SourceSection[sourceSections.size()]);
   }
 
   /**
@@ -553,8 +593,8 @@ public class JsonTreeTranslator {
       return null;
 
     } else if (nodeType(node).equals("block")) {
-      return astBuilder.objectBuilder.block(parameters(node), locals(node), body(node),
-          source(node));
+      return astBuilder.objectBuilder.block(parameters(node), sourceOfParameters(node),
+          locals(node), sourceOfLocals(node), body(node), source(node));
 
     } else if (nodeType(node).equals("def-declaration")) {
       return astBuilder.requestBuilder.assignment(symbolFor(name(node)),

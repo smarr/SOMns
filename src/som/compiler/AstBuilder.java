@@ -482,8 +482,10 @@ public class AstBuilder {
      *
      * #foo__λ5@8::
      */
-    public ExpressionNode block(final SSymbol[] parameters, final SSymbol[] locals,
-        final JsonArray body, final SourceSection sourceSection) {
+    public ExpressionNode block(final SSymbol[] parameters,
+        final SourceSection[] parameterSources, final SSymbol[] locals,
+        final SourceSection[] sourceLocals, final JsonArray body,
+        final SourceSection sourceSection) {
 
       // Generate the signature for the block
       int line = sourceSection.getStartLine();
@@ -501,13 +503,13 @@ public class AstBuilder {
       // Set the parameters
       builder.addUntypedArgument(Symbols.BLOCK_SELF, sourceManager.empty());
       for (int i = 0; i < parameters.length; i++) {
-        builder.addUntypedArgument(parameters[i], sourceManager.empty());
+        builder.addUntypedArgument(parameters[i], parameterSources[i]);
       }
 
       // Set the locals
       for (int i = 0; i < locals.length; i++) {
         try {
-          builder.addLocal(locals[i], false, sourceManager.empty());
+          builder.addLocal(locals[i], false, sourceLocals[i]);
         } catch (MethodDefinitionError e) {
           language.getVM().errorExit("Failed to add " + locals[i] + " to "
               + builder.getSignature() + ": " + e.getMessage());
