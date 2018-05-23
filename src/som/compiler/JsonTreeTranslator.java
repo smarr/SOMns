@@ -258,6 +258,9 @@ public class JsonTreeTranslator {
     if (name.equals("prefix!") || name.equals("!")) {
       return symbolFor("not");
 
+    } else if (name.equals("prefix-") || name.equals("-")) {
+      return symbolFor("negated");
+
     } else {
       language.getVM().errorExit("The translator doesn't understand what to do with the `"
           + name + "` prefix operator");
