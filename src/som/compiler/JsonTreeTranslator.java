@@ -658,8 +658,14 @@ public class JsonTreeTranslator {
       return translate(node.get("expression").getAsJsonObject());
 
     } else if (nodeType(node).equals("return")) {
-      ExpressionNode returnExpression =
-          (ExpressionNode) translate(node.get("returnvalue").getAsJsonObject());
+      ExpressionNode returnExpression;
+      if (node.get("returnvalue").isJsonNull()) {
+        returnExpression = astBuilder.literalBuilder.done(source(node));
+      } else {
+        returnExpression =
+            (ExpressionNode) translate(node.get("returnvalue").getAsJsonObject());
+      }
+
       if (scopeManager.peekMethod().isBlockMethod()) {
         return astBuilder.requestBuilder.makeBlockReturn(returnExpression, source(node));
       } else {
