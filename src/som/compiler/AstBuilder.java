@@ -791,5 +791,13 @@ public class AstBuilder {
     public ExpressionNode string(final String value, final SourceSection sourceSection) {
       return new StringLiteralNode(value).initialize(sourceSection);
     }
+
+    public Object array(final JsonObject[] arguments, final SourceSection sourceSection) {
+      ExpressionNode[] exprs = new ExpressionNode[arguments.length];
+      for (int i = 0; i < arguments.length; i++) {
+        exprs[i] = (ExpressionNode) translator.translate(arguments[i]);
+      }
+      return ArrayLiteralNode.create(exprs, sourceSection);
+    }
   }
 }

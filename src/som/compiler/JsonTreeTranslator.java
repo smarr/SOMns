@@ -341,6 +341,14 @@ public class JsonTreeTranslator {
     if (node.has("parts")) {
       return argumentsFromParts(node.get("parts").getAsJsonArray());
 
+    } else if (node.has("arguments")) {
+      JsonArray args = node.get("arguments").getAsJsonArray();
+      JsonObject[] ret = new JsonObject[args.size()];
+      for (int i = 0; i < args.size(); i++) {
+        ret[i] = args.get(i).getAsJsonObject();
+      }
+      return ret;
+
     } else if (node.has("right")) {
       return new JsonObject[] {node.get("right").getAsJsonObject()};
 
@@ -692,6 +700,9 @@ public class JsonTreeTranslator {
 
     } else if (nodeType(node).equals("interpolated-string")) {
       return astBuilder.requestBuilder.interpolatedString(node.get("parts").getAsJsonArray());
+
+    } else if (nodeType(node).equals("implicit-bracket-request")) {
+      return astBuilder.literalBuilder.array(arguments(node), source(node));
 
     } else {
       error("The translator doesn't understand what to do with a " + nodeType(node) + " node?",
