@@ -76,13 +76,16 @@ class Kernel vmMirror: vmMirror = Object <: Value (
   public class Object = Thing ()
   (
     public == other = ( ^ vmMirror object: self identicalTo: other )
+    public = other  = ( ^ self == other )
     public ~= other = ( ^ (self == other) not )
   )
 
   public class Value = Thing ()
   (
     public =  other = ( ^ vmMirror value: self sameAs: other )
+    public ==  other = ( ^ self = other )
     public <> other = ( ^ (self = other) not )
+    public != other = ( ^ self <> other )
     public copy = ( ^ self )
   )
 
