@@ -3,7 +3,6 @@ package som.primitives.arrays;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
@@ -13,9 +12,8 @@ import bd.primitives.Specializer;
 import som.VM;
 import som.interpreter.Invokable;
 import som.interpreter.SArguments;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.MessageSendNode;
-import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.interpreter.transactions.TxArrayAccessFactory.TxBinaryArrayOpNodeGen;
 import som.primitives.arrays.AtPrim.TxAtPrim;
@@ -67,14 +65,14 @@ public abstract class AtPrim extends BinaryBasicOperation {
 
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
-  @Child protected AbstractMessageSendNode exception;
+  @Child protected ExceptionSignalingNode indexOutOfBounds;
 
   @Override
   @SuppressWarnings("unchecked")
   public AtPrim initialize(final SourceSection sourceSection) {
     super.initialize(sourceSection);
-    this.exception = MessageSendNode.createGeneric(
-        Symbols.symbolFor("signalWith:index:"), null, sourceSection);
+    indexOutOfBounds = insert(ExceptionSignalingNode.createNode(KernelObj.kernel,
+        Symbols.IndexOutOfBounds, Symbols.SIGNAL_WITH_IDX, sourceSection));
     return this;
   }
 
@@ -87,70 +85,62 @@ public abstract class AtPrim extends BinaryBasicOperation {
     }
   }
 
-  private Object triggerException(final VirtualFrame frame,
-      final SArray arr, final long idx) {
+  private Object triggerException(final SArray arr, final long idx) {
     int rcvrIdx = SArguments.RCVR_IDX;
     assert rcvrIdx == 0;
-    return exception.doPreEvaluated(frame,
-        new Object[] {KernelObj.indexOutOfBoundsClass, arr, idx});
+    return indexOutOfBounds.signal(arr, idx);
   }
 
   @Specialization(guards = "receiver.isEmptyType()")
-  public final Object doEmptySArray(final VirtualFrame frame,
-      final SArray receiver, final long idx) {
+  public final Object doEmptySArray(final SArray receiver, final long idx) {
     if (idx < 1 || idx > receiver.getEmptyStorage(storageType)) {
-      return triggerException(frame, receiver, idx);
+      return triggerException(receiver, idx);
     }
     return Nil.nilObject;
   }
 
   @Specialization(guards = "receiver.isPartiallyEmptyType()")
-  public final Object doPartiallyEmptySArray(final VirtualFrame frame,
-      final SArray receiver, final long idx) {
+  public final Object doPartiallyEmptySArray(final SArray receiver, final long idx) {
     try {
       return receiver.getPartiallyEmptyStorage(storageType).get(idx - 1);
     } catch (IndexOutOfBoundsException e) {
-      return triggerException(frame, receiver, idx);
+      return triggerException(receiver, idx);
     }
   }
 
   @Specialization(guards = "receiver.isObjectType()")
-  public final Object doObjectSArray(final VirtualFrame frame,
-      final SArray receiver, final long idx) {
+  public final Object doObjectSArray(final SArray receiver, final long idx) {
     try {
       return receiver.getObjectStorage(storageType)[(int) idx - 1];
     } catch (IndexOutOfBoundsException e) {
-      return triggerException(frame, receiver, idx);
+      return triggerException(receiver, idx);
     }
   }
 
   @Specialization(guards = "receiver.isLongType()")
-  public final long doLongSArray(final VirtualFrame frame,
-      final SArray receiver, final long idx) {
+  public final long doLongSArray(final SArray receiver, final long idx) {
     try {
       return receiver.getLongStorage(storageType)[(int) idx - 1];
     } catch (IndexOutOfBoundsException e) {
-      return (long) triggerException(frame, receiver, idx);
+      return (long) triggerException(receiver, idx);
     }
   }
 
   @Specialization(guards = "receiver.isDoubleType()")
-  public final double doDoubleSArray(final VirtualFrame frame,
-      final SArray receiver, final long idx) {
+  public final double doDoubleSArray(final SArray receiver, final long idx) {
     try {
       return receiver.getDoubleStorage(storageType)[(int) idx - 1];
     } catch (IndexOutOfBoundsException e) {
-      return (double) triggerException(frame, receiver, idx);
+      return (double) triggerException(receiver, idx);
     }
   }
 
   @Specialization(guards = "receiver.isBooleanType()")
-  public final boolean doBooleanSArray(final VirtualFrame frame,
-      final SArray receiver, final long idx) {
+  public final boolean doBooleanSArray(final SArray receiver, final long idx) {
     try {
       return receiver.getBooleanStorage(storageType)[(int) idx - 1];
     } catch (IndexOutOfBoundsException e) {
-      return (boolean) triggerException(frame, receiver, idx);
+      return (boolean) triggerException(receiver, idx);
     }
   }
 }

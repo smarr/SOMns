@@ -247,16 +247,15 @@ public abstract class ChannelPrimitives {
     /** Breakpoint info for triggering suspension after read. */
     @Child protected AbstractBreakpointNode afterRead;
 
-    @Child protected ExceptionSignalingNode thrower;
+    @Child protected ExceptionSignalingNode notAValue;
 
     @Override
     public final WritePrim initialize(final VM vm) {
       super.initialize(vm);
-      haltNode = SuspendExecutionNodeGen.create(0, null).initialize(sourceSection);
-      afterRead = insert(
-          Breakpoints.create(sourceSection, BreakpointType.CHANNEL_AFTER_RCV, vm));
-      thrower = ExceptionSignalingNode.createKernelSignalWithExceptionNode("NotAValue",
-          sourceSection);
+      haltNode = insert(SuspendExecutionNodeGen.create(0, null).initialize(sourceSection));
+      afterRead =
+          insert(Breakpoints.create(sourceSection, BreakpointType.CHANNEL_AFTER_RCV, vm));
+      notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
       return this;
     }
 
@@ -264,7 +263,7 @@ public abstract class ChannelPrimitives {
     public final Object write(final VirtualFrame frame, final SChannelOutput out,
         final Object val) {
       if (!isVal.executeEvaluated(val)) {
-        thrower.execute(val);
+        notAValue.signal(val);
       }
       try {
         out.writeAndSuspendReader(val, afterRead.executeShouldHalt());

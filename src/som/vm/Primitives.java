@@ -101,7 +101,6 @@ import som.primitives.threading.MutexPrimitivesFactory;
 import som.primitives.threading.ThreadPrimitivesFactory;
 import som.primitives.threading.ThreadingModuleFactory;
 import som.primitives.transactions.AtomicPrimFactory;
-import som.vm.constants.KernelObjFactory;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
@@ -175,14 +174,13 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
   protected List<NodeFactory<? extends ExpressionNode>> getFactories() {
     List<NodeFactory<? extends ExpressionNode>> allFactories = new ArrayList<>();
     allFactories.addAll(ActorClassesFactory.getFactories());
-    allFactories.addAll((List) BlockPrimsFactory.getFactories());
+    allFactories.addAll(BlockPrimsFactory.getFactories());
     allFactories.addAll(ClassPrimsFactory.getFactories());
     allFactories.addAll(DoublePrimsFactory.getFactories());
     allFactories.addAll(ExceptionsPrimsFactory.getFactories());
     allFactories.addAll(FilePrimsFactory.getFactories());
     allFactories.addAll(IfMessageNodeGen.getFactories());
     allFactories.addAll(IntegerPrimsFactory.getFactories());
-    allFactories.addAll(KernelObjFactory.getFactories());
     allFactories.addAll(MethodPrimsFactory.getFactories());
     allFactories.addAll(MirrorPrimsFactory.getFactories());
     allFactories.addAll(ObjectPrimsFactory.getFactories());

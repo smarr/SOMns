@@ -80,18 +80,18 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
 
   private static final class ValueCheckNode extends IsValueCheckNode {
 
-    @Child protected ExceptionSignalingNode thrower;
+    @Child protected ExceptionSignalingNode notAValue;
 
     ValueCheckNode(final ExpressionNode self) {
       super(self);
-      SourceSection ss;
-      if (self.sourceSection == null) {
-        ss = self.getParent().getSourceSection();
-      } else {
-        ss = self.sourceSection;
-      }
-      thrower =
-          ExceptionSignalingNode.createNotAValueExceptionSignalingNode(ss);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public ValueCheckNode initialize(final SourceSection sourceSection) {
+      super.initialize(sourceSection);
+      notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
+      return this;
     }
 
     @Override
@@ -102,9 +102,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       if (allFieldsContainValues) {
         return rcvr;
       }
-
-      return thrower.execute(rcvr);
-
+      return notAValue.signal(rcvr);
     }
 
     private boolean allFieldsContainValues(final SImmutableObject rcvr) {

@@ -4,10 +4,12 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
 import bd.primitives.Specializer;
 import som.VM;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
@@ -44,8 +46,17 @@ public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
     }
   }
 
-  @Child protected BlockDispatchNode block   = BlockDispatchNodeGen.create();
-  @Child protected IsValue           isValue = IsValueFactory.create(null);
+  @Child protected BlockDispatchNode      block   = BlockDispatchNodeGen.create();
+  @Child protected IsValue                isValue = IsValueFactory.create(null);
+  @Child protected ExceptionSignalingNode notAValue;
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public NewImmutableArrayNode initialize(final SourceSection sourceSection) {
+    super.initialize(sourceSection);
+    notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
+    return this;
+  }
 
   public static boolean isValueArrayClass(final SClass valueArrayClass) {
     return Classes.valueArrayClass == valueArrayClass;
@@ -60,7 +71,7 @@ public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
 
     try {
       Object newStorage = ArraySetAllStrategy.evaluateFirstDetermineStorageAndEvaluateRest(
-          block, size, this.block, isValue);
+          block, size, this.block, isValue, notAValue);
       return new SImmutableArray(newStorage, valueArrayClass);
     } finally {
       if (CompilerDirectives.inInterpreter()) {

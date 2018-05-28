@@ -54,7 +54,7 @@ public class SFileDescriptor extends SObjectWithClass {
     return this;
   }
 
-  public void closeFile(final ExceptionSignalingNode thrower) {
+  public void closeFile(final ExceptionSignalingNode ioException) {
     if (raf == null) {
       return;
     }
@@ -63,7 +63,7 @@ public class SFileDescriptor extends SObjectWithClass {
       raf.close();
       raf = null;
     } catch (IOException e) {
-      thrower.execute(e.getMessage());
+      ioException.signal(e.getMessage());
     }
   }
 
@@ -102,7 +102,7 @@ public class SFileDescriptor extends SObjectWithClass {
   }
 
   public void write(final int nBytes, final long position, final SBlock fail,
-      final BlockDispatchNode dispatchHandler, final ExceptionSignalingNode thrower) {
+      final BlockDispatchNode dispatchHandler, final ExceptionSignalingNode ioException) {
     if (raf == null) {
       dispatchHandler.executeDispatch(new Object[] {fail, FILE_IS_CLOSED});
       return;
@@ -118,7 +118,7 @@ public class SFileDescriptor extends SObjectWithClass {
 
     for (int i = 0; i < bufferSize; i++) {
       if (storage[i] <= Byte.MIN_VALUE && Byte.MAX_VALUE <= storage[i]) {
-        thrower.execute(
+        ioException.signal(
             "Buffer only supports values in the range -128 to 127 (" + storage[i] + ")");
       }
       buff[i] = (byte) storage[i];
@@ -132,11 +132,11 @@ public class SFileDescriptor extends SObjectWithClass {
     }
   }
 
-  public long getFileSize(final ExceptionSignalingNode thrower) {
+  public long getFileSize(final ExceptionSignalingNode ioException) {
     try {
       return raf.length();
     } catch (IOException e) {
-      thrower.execute(e.getMessage());
+      ioException.signal(e.getMessage());
     }
     return 0;
   }

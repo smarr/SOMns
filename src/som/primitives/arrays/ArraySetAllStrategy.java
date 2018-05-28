@@ -1,22 +1,18 @@
 package som.primitives.arrays;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
-import som.VM;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.primitives.ObjectPrims.IsValue;
-import som.vm.Symbols;
 import som.vm.constants.Classes;
-import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
 
 
 public final class ArraySetAllStrategy {
@@ -29,32 +25,17 @@ public final class ArraySetAllStrategy {
     }
   }
 
-  @TruffleBoundary
-  private static Object signalNotAValue() {
-    CompilerDirectives.transferToInterpreter();
-    VM.thisMethodNeedsToBeOptimized("Should be optimized or on slowpath");
-
-    // the value object was not constructed properly.
-    SInvokable getNotAValue = (SInvokable) KernelObj.kernel.getSOMClass().lookupPrivate(
-        Symbols.symbolFor("NotAValue"),
-        KernelObj.kernel.getSOMClass().getMixinDefinition().getMixinId());
-    Object notAValue = getNotAValue.invoke(new Object[] {KernelObj.kernel});
-    SInvokable disp = (SInvokable) KernelObj.kernel.getSOMClass().lookupPrivate(
-        Symbols.symbolFor("signalWith:"),
-        KernelObj.kernel.getSOMClass().getMixinDefinition().getMixinId());
-    return disp.invoke(new Object[] {notAValue, Classes.valueArrayClass});
-  }
-
   public static void evalBlockWithArgForRemaining(final SBlock block,
       final long length, final Object[] storage,
-      final BlockDispatchNode blockDispatch, final Object first, final IsValue isValue) {
+      final BlockDispatchNode blockDispatch, final Object first, final IsValue isValue,
+      final ExceptionSignalingNode notAValue) {
     if (!isValue.executeEvaluated(first)) {
-      signalNotAValue();
+      notAValue.signal(Classes.valueArrayClass);
     }
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
       Object result = blockDispatch.executeDispatch(new Object[] {block, (long) i + 1});
       if (!isValue.executeEvaluated(result)) {
-        signalNotAValue();
+        notAValue.signal(Classes.valueArrayClass);
       } else {
         storage[i] = result;
       }
@@ -226,7 +207,8 @@ public final class ArraySetAllStrategy {
 
   public static Object evaluateFirstDetermineStorageAndEvaluateRest(
       final SBlock blockWithArg, final long length,
-      final BlockDispatchNode blockDispatch, final IsValue isValue) {
+      final BlockDispatchNode blockDispatch, final IsValue isValue,
+      final ExceptionSignalingNode notAValue) {
     // TODO: this version does not handle the case that a subsequent value is
     // not of the expected type...
     Object result = blockDispatch.executeDispatch(new Object[] {blockWithArg, (long) 1});
@@ -249,7 +231,7 @@ public final class ArraySetAllStrategy {
     } else {
       Object[] newStorage = new Object[(int) length];
       evalBlockWithArgForRemaining(blockWithArg, length, newStorage, blockDispatch, result,
-          isValue);
+          isValue, notAValue);
       return newStorage;
     }
   }
