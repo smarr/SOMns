@@ -606,24 +606,24 @@ DAMAGE.>> *)
 
     public readStream ^ <ExternalReadStream> = (
       ^ExternalReadStream onDescriptor: (
-        self open: #read ifFail: [ :err <Exception> | 
-          self error: err 
+        self open: #read ifFail: [ :err <Exception> |
+          self error: err
         ]
       )
     )
 
     public readWriteStream ^ <ExternalReadWriteStream> = (
       ^ExternalReadWriteStream onDescriptor: (
-        self open: #readWrite ifFail: [ :err <Exception> | 
-          self error: err 
+        self open: #readWrite ifFail: [ :err <Exception> |
+          self error: err
         ]
       )
     )
 
     public writeStream ^ <ExternalReadWriteStream> = (
       ^ExternalOutputStream onDescriptor: (
-        self open: #write ifFail: [ :err <Exception> | 
-          self error: err 
+        self open: #write ifFail: [ :err <Exception> |
+          self error: err
         ]
       )
     )
