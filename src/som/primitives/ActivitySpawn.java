@@ -102,18 +102,18 @@ public abstract class ActivitySpawn {
 
     /** Breakpoint info for triggering suspension on first execution of code in activity. */
     @Child protected AbstractBreakpointNode onExec;
-
-    @Child protected ExceptionSignalingNode thrower;
+    @Child protected ExceptionSignalingNode notAValue;
 
     @Override
     public final SpawnPrim initialize(final VM vm) {
       super.initialize(vm);
-      this.onExec = insert(
-          Breakpoints.create(sourceSection, BreakpointType.ACTIVITY_ON_EXEC, vm));
-      this.forkJoinPool = vm.getForkJoinPool();
-      this.processesPool = vm.getProcessPool();
-      this.threadPool = vm.getThreadPool();
-      thrower = ExceptionSignalingNode.createNotAValueExceptionSignalingNode(sourceSection);
+      onExec = insert(Breakpoints.create(sourceSection, BreakpointType.ACTIVITY_ON_EXEC, vm));
+      notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
+
+      forkJoinPool = vm.getForkJoinPool();
+      processesPool = vm.getProcessPool();
+      threadPool = vm.getThreadPool();
+
       return this;
     }
 
@@ -140,7 +140,7 @@ public abstract class ActivitySpawn {
     public final Object spawnProcess(final SImmutableObject procMod,
         final SClass procCls, @Cached("createIsValue()") final IsValue isVal) {
       if (!isVal.executeEvaluated(procCls)) {
-        thrower.execute(procCls);
+        notAValue.signal(procCls);
       }
 
       SSymbol sel = procCls.getMixinDefinition().getPrimaryFactorySelector();
@@ -181,17 +181,18 @@ public abstract class ActivitySpawn {
     /** Breakpoint info for triggering suspension on first execution of code in activity. */
     @Child protected AbstractBreakpointNode onExec;
 
-    @Child protected ExceptionSignalingNode thrower;
+    @Child protected ExceptionSignalingNode notAValue;
 
     @Override
     public final SpawnWithPrim initialize(final VM vm) {
       super.initialize(vm);
-      this.onExec = insert(
-          Breakpoints.create(sourceSection, BreakpointType.ACTIVITY_ON_EXEC, vm));
-      this.forkJoinPool = vm.getForkJoinPool();
-      this.processesPool = vm.getProcessPool();
-      this.threadPool = vm.getThreadPool();
-      thrower = ExceptionSignalingNode.createNotAValueExceptionSignalingNode(sourceSection);
+      onExec = insert(Breakpoints.create(sourceSection, BreakpointType.ACTIVITY_ON_EXEC, vm));
+      notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
+
+      forkJoinPool = vm.getForkJoinPool();
+      processesPool = vm.getProcessPool();
+      threadPool = vm.getThreadPool();
+
       return this;
     }
 
@@ -221,7 +222,7 @@ public abstract class ActivitySpawn {
         final SClass procCls, final SArray arg, final Object[] argArr,
         @Cached("createIsValue()") final IsValue isVal) {
       if (!isVal.executeEvaluated(procCls)) {
-        thrower.execute(procCls);
+        notAValue.signal(procCls);
       }
 
       SSymbol sel = procCls.getMixinDefinition().getPrimaryFactorySelector();

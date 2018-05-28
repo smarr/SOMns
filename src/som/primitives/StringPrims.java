@@ -5,17 +5,18 @@ import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.profiles.BranchProfile;
+import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
 import som.VM;
 import som.interpreter.nodes.ExceptionSignalingNode;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Symbols;
-import som.vm.constants.KernelObj;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SSymbol;
@@ -169,7 +170,15 @@ public class StringPrims {
   @Primitive(primitive = "stringFromArray:")
   public abstract static class FromArrayPrim extends UnaryExpressionNode {
 
-    @Child protected ExceptionSignalingNode thrower;
+    @Child protected ExceptionSignalingNode argumentError;
+
+    @Override
+    public ExpressionNode initialize(final SourceSection sourceSection,
+        final boolean eagerlyWrapped) {
+      super.initialize(sourceSection, eagerlyWrapped);
+      argumentError = insert(ExceptionSignalingNode.createArgumentErrorNode(sourceSection));
+      return this;
+    }
 
     @Specialization
     public final String doString(final SArray chars) {
@@ -184,25 +193,17 @@ public class StringPrims {
           sb.append(((SSymbol) o).getString());
         } else {
           // TODO: there should be a Smalltalk asString message here, I think
-          signalException("Array can't contain non-string objects, but has " + o.toString());
+          argumentError.signal(
+              "Array can't contain non-string objects, but has " + o.toString());
         }
       }
 
       return sb.toString();
     }
 
-    protected void signalException(final String message) {
-      if (thrower == null) {
-        thrower =
-            insert(ExceptionSignalingNode.createArgumentErrorExceptionSignalingNode(
-                this.getSourceSection()));
-      }
-      thrower.execute(message);
-    };
-
     @Fallback
     public final void doGeneric(final Object obj) {
-      KernelObj.signalException("signalInvalidArgument:", obj);
+      argumentError.signal(obj);
     }
   }
 
@@ -210,7 +211,15 @@ public class StringPrims {
   @Primitive(primitive = "stringFromCodepoint:")
   public abstract static class FromCodepointPrim extends UnaryExpressionNode {
 
-    @Child protected ExceptionSignalingNode thrower;
+    @Child protected ExceptionSignalingNode argumentError;
+
+    @Override
+    public ExpressionNode initialize(final SourceSection sourceSection,
+        final boolean eagerlyWrapped) {
+      super.initialize(sourceSection, eagerlyWrapped);
+      argumentError = insert(ExceptionSignalingNode.createArgumentErrorNode(sourceSection));
+      return this;
+    }
 
     protected static final boolean isStrictlyBmpCodePoint(final long val) {
       // SM: Based on Character.isBmpCodePoint(val)
@@ -246,17 +255,9 @@ public class StringPrims {
       return new String(result);
     }
 
-    protected void signalException(final String message) {
-      if (thrower == null) {
-        thrower = insert(ExceptionSignalingNode.createArgumentErrorExceptionSignalingNode(
-            this.getSourceSection()));
-      }
-      thrower.execute(message);
-    };
-
     @Fallback
     public final void doGeneric(final Object val) {
-      signalException("The value " + val + " is not a valid Unicode code point.");
+      argumentError.signal("The value " + val + " is not a valid Unicode code point.");
     }
   }
 

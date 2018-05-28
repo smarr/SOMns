@@ -1,10 +1,11 @@
 package som.primitives.actors;
 
+import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 import bd.primitives.Primitive;
-import som.interpreter.SomLanguage;
+import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.nodes.ExceptionSignalingNode;
@@ -24,10 +25,14 @@ import tools.debugger.entities.ActivityType;
     specializer = IsActorModule.class)
 public abstract class CreateActorPrim extends BinarySystemOperation {
   @Child protected IsValue                isValue = IsValueNodeGen.createSubNode();
-  @Child protected ExceptionSignalingNode thrower =
-      ExceptionSignalingNode.createKernelSignalWithExceptionNode("NotAValue",
-          SomLanguage.getSyntheticSource("", "Actor creation")
-                     .createSection(1));;
+  @Child protected ExceptionSignalingNode notAValue;
+
+  @Override
+  public final CreateActorPrim initialize(final VM vm) {
+    super.initialize(vm);
+    notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
+    return this;
+  }
 
   @Specialization(guards = "isValue.executeEvaluated(argument)")
   public final SFarReference createActor(final Object receiver, final Object argument) {
@@ -43,9 +48,9 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
     return ref;
   }
 
-  @Specialization(guards = "!isValue.executeEvaluated(argument)")
+  @Fallback
   public final Object throwNotAValueException(final Object receiver, final Object argument) {
-    return thrower.execute(argument);
+    return notAValue.signal(argument);
   }
 
   @Override

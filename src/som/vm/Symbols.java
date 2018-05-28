@@ -49,5 +49,19 @@ public final class Symbols implements IdProvider<SSymbol> {
   public static final SSymbol Nil    = symbolFor("Nil");
   public static final SSymbol Kernel = symbolFor("Kernel");
 
+  public static final SSymbol NotAValue                     = symbolFor("NotAValue");
+  public static final SSymbol TransferObjectsCannotBeValues =
+      symbolFor("TransferObjectsCannotBeValues");
+
+  public static final SSymbol ArgumentError    = symbolFor("ArgumentError");
+  public static final SSymbol IndexOutOfBounds = symbolFor("IndexOutOfBounds");
+
+  public static final SSymbol IOException           = symbolFor("IOException");
+  public static final SSymbol FileNotFoundException = symbolFor("FileNotFoundException");
+
+  public static final SSymbol SIGNAL_WITH     = symbolFor("signalWith:");
+  public static final SSymbol SIGNAL_FOR_WITH = symbolFor("signalFor:with:");
+  public static final SSymbol SIGNAL_WITH_IDX = symbolFor("signalWith:index:");
+
   public static final Symbols PROVIDER = new Symbols();
 }
