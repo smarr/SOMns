@@ -45,6 +45,7 @@ import som.primitives.PathPrims.FileModule;
 import som.vm.NotAFileException;
 import som.vm.NotYetImplementedException;
 import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
@@ -52,6 +53,9 @@ import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
+import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.TraceParser;
+import tools.concurrency.TracingBackend;
 
 
 public final class SystemPrims {
@@ -284,7 +288,15 @@ public final class SystemPrims {
   public abstract static class TimePrim extends UnaryBasicOperation {
     @Specialization
     public final long doSObject(final Object receiver) {
-      return System.currentTimeMillis() - startTime;
+      if (VmSettings.REPLAY) {
+        return TraceParser.getLongSysCallResult();
+      }
+
+      long res = System.currentTimeMillis() - startTime;
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.longSystemCall(res);
+      }
+      return res;
     }
   }
 
@@ -310,7 +322,16 @@ public final class SystemPrims {
   public abstract static class TicksPrim extends UnaryBasicOperation implements Operation {
     @Specialization
     public final long doSObject(final Object receiver) {
-      return System.nanoTime() / 1000L - startMicroTime;
+      if (VmSettings.REPLAY) {
+        return TraceParser.getLongSysCallResult();
+      }
+
+      long res = System.nanoTime() / 1000L - startMicroTime;
+
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.longSystemCall(res);
+      }
+      return res;
     }
 
     @Override

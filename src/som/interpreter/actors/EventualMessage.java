@@ -9,6 +9,7 @@ import som.VM;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.SPromise.SResolver;
+import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActivityThread;
@@ -41,7 +42,11 @@ public abstract class EventualMessage {
     this.onReceive = onReceive;
     this.haltOnReceive = haltOnReceive;
     this.haltOnResolver = haltOnResolver;
-    this.messageId = TracingActivityThread.newEntityId();
+    if (VmSettings.MEDEOR_TRACING) {
+      this.messageId = TracingActivityThread.newEntityId();
+    } else {
+      this.messageId = 0;
+    }
     assert onReceive.getRootNode() instanceof ReceivedMessage
         || onReceive.getRootNode() instanceof ReceivedCallback;
   }
@@ -70,7 +75,7 @@ public abstract class EventualMessage {
    *
    * ARGUMENTS: are wrapped eagerly on message creation
    */
-  public static final class DirectMessage extends EventualMessage {
+  public static class DirectMessage extends EventualMessage {
     private final SSymbol selector;
     private final Actor   target;
     private final Actor   sender;
@@ -187,7 +192,7 @@ public abstract class EventualMessage {
    * A message that was send with <-: to a promise, and will be delivered
    * after the promise is resolved.
    */
-  public static final class PromiseSendMessage extends PromiseMessage {
+  public static class PromiseSendMessage extends PromiseMessage {
     private final SSymbol    selector;
     protected Actor          target;
     protected Actor          finalSender;
@@ -252,7 +257,7 @@ public abstract class EventualMessage {
   }
 
   /** The callback message to be send after a promise is resolved. */
-  public static final class PromiseCallbackMessage extends PromiseMessage {
+  public static class PromiseCallbackMessage extends PromiseMessage {
     /**
      * The promise on which this callback is registered on.
      */
@@ -301,6 +306,92 @@ public abstract class EventualMessage {
     @Override
     public SPromise getPromise() {
       return promise;
+    }
+  }
+
+  public interface ExternalMessage {
+    short getMethod();
+
+    int getDataId();
+  }
+
+  public static final class ExternalDirectMessage extends DirectMessage
+      implements ExternalMessage {
+    public ExternalDirectMessage(final Actor target, final SSymbol selector,
+        final Object[] arguments,
+        final Actor sender, final SResolver resolver, final RootCallTarget onReceive,
+        final boolean triggerMessageReceiverBreakpoint,
+        final boolean triggerPromiseResolverBreakpoint, final short method, final int dataId) {
+      super(target, selector, arguments, sender, resolver, onReceive,
+          triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
+      this.method = method;
+      this.dataId = dataId;
+    }
+
+    final short method;
+    final int   dataId;
+
+    @Override
+    public short getMethod() {
+      return method;
+    }
+
+    @Override
+    public int getDataId() {
+      return dataId;
+    }
+  }
+
+  public static final class ExternalPromiseSendMessage extends PromiseSendMessage
+      implements ExternalMessage {
+    protected ExternalPromiseSendMessage(final SSymbol selector, final Object[] arguments,
+        final Actor originalSender, final SResolver resolver, final RootCallTarget onReceive,
+        final boolean triggerMessageReceiverBreakpoint,
+        final boolean triggerPromiseResolverBreakpoint, final short method, final int dataId) {
+      super(selector, arguments, originalSender, resolver, onReceive,
+          triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
+      this.dataId = dataId;
+      this.method = method;
+    }
+
+    final short method;
+    final int   dataId;
+
+    @Override
+    public short getMethod() {
+      return method;
+    }
+
+    @Override
+    public int getDataId() {
+      return dataId;
+    }
+  }
+
+  public static final class ExternalPromiseCallbackMessage extends PromiseCallbackMessage
+      implements ExternalMessage {
+    public ExternalPromiseCallbackMessage(final Actor owner, final SBlock callback,
+        final SResolver resolver,
+        final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint,
+        final boolean triggerPromiseResolverBreakpoint, final SPromise promiseRegisteredOn,
+        final short method, final int dataId) {
+      super(owner, callback, resolver, onReceive, triggerMessageReceiverBreakpoint,
+          triggerPromiseResolverBreakpoint, promiseRegisteredOn);
+      this.method = method;
+      this.dataId = dataId;
+    }
+
+    final short method;
+    final int   dataId;
+
+    @Override
+    public short getMethod() {
+      return method;
+    }
+
+    @Override
+    public int getDataId() {
+      return dataId;
     }
   }
 
