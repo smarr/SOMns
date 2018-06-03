@@ -4,6 +4,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 import bd.primitives.Primitive;
+import dep.SomeDependency;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 
 
@@ -27,6 +28,15 @@ public class ExtensionPrims {
     @Specialization
     public static final Object count(final Object o) {
       return cnt;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "valueFromClasspath")
+  public abstract static class GetValuePrim extends UnaryExpressionNode {
+    @Specialization
+    public static final Object inc(final Object o) {
+      return SomeDependency.getValue();
     }
   }
 }
