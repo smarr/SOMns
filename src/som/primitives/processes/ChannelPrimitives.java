@@ -16,6 +16,7 @@ import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.SuspendExecutionNodeGen;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -28,7 +29,6 @@ import som.primitives.ObjectPrims.IsValue;
 import som.vm.Activity;
 import som.vm.Symbols;
 import som.vm.VmSettings;
-import som.vm.constants.KernelObj;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
@@ -247,12 +247,15 @@ public abstract class ChannelPrimitives {
     /** Breakpoint info for triggering suspension after read. */
     @Child protected AbstractBreakpointNode afterRead;
 
+    @Child protected ExceptionSignalingNode notAValue;
+
     @Override
     public final WritePrim initialize(final VM vm) {
       super.initialize(vm);
-      haltNode = SuspendExecutionNodeGen.create(0, null).initialize(sourceSection);
-      afterRead = insert(
-          Breakpoints.create(sourceSection, BreakpointType.CHANNEL_AFTER_RCV, vm));
+      haltNode = insert(SuspendExecutionNodeGen.create(0, null).initialize(sourceSection));
+      afterRead =
+          insert(Breakpoints.create(sourceSection, BreakpointType.CHANNEL_AFTER_RCV, vm));
+      notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
       return this;
     }
 
@@ -260,7 +263,7 @@ public abstract class ChannelPrimitives {
     public final Object write(final VirtualFrame frame, final SChannelOutput out,
         final Object val) {
       if (!isVal.executeEvaluated(val)) {
-        KernelObj.signalExceptionWithClass("signalNotAValueWith:", val);
+        notAValue.signal(val);
       }
       try {
         out.writeAndSuspendReader(val, afterRead.executeShouldHalt());

@@ -1,17 +1,19 @@
 package som.primitives.actors;
 
+import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 import bd.primitives.Primitive;
+import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.SFarReference;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.primitives.ObjectPrims.IsValue;
 import som.primitives.ObjectPrimsFactory.IsValueFactory.IsValueNodeGen;
 import som.primitives.actors.PromisePrims.IsActorModule;
 import som.vm.VmSettings;
-import som.vm.constants.KernelObj;
 import som.vmobjects.SClass;
 import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.Tags.ExpressionBreakpoint;
@@ -22,7 +24,15 @@ import tools.debugger.entities.ActivityType;
 @Primitive(primitive = "actors:createFromValue:", selector = "createActorFromValue:",
     specializer = IsActorModule.class)
 public abstract class CreateActorPrim extends BinarySystemOperation {
-  @Child protected IsValue isValue = IsValueNodeGen.createSubNode();
+  @Child protected IsValue                isValue = IsValueNodeGen.createSubNode();
+  @Child protected ExceptionSignalingNode notAValue;
+
+  @Override
+  public final CreateActorPrim initialize(final VM vm) {
+    super.initialize(vm);
+    notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
+    return this;
+  }
 
   @Specialization(guards = "isValue.executeEvaluated(argument)")
   public final SFarReference createActor(final Object receiver, final Object argument) {
@@ -38,9 +48,9 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
     return ref;
   }
 
-  @Specialization(guards = "!isValue.executeEvaluated(argument)")
+  @Fallback
   public final Object throwNotAValueException(final Object receiver, final Object argument) {
-    return KernelObj.signalExceptionWithClass("signalNotAValueWith:", argument);
+    return notAValue.signal(argument);
   }
 
   @Override

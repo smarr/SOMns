@@ -43,7 +43,6 @@ import som.vm.ObjectSystem;
 import som.vm.Primitives;
 import som.vm.VmOptions;
 import som.vm.VmSettings;
-import som.vm.constants.KernelObj;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 import tools.concurrency.ActorExecutionTrace;
@@ -462,7 +461,5 @@ public final class VM {
     ThreadingModule.ConditionClassId = null;
 
     ChannelPrimitives.resetClassReferences();
-
-    KernelObj.indexOutOfBoundsClass = null;
   }
 }

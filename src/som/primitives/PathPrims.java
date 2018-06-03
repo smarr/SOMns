@@ -10,15 +10,17 @@ import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
+import java.util.function.Supplier;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
-import som.VM;
+import som.interpreter.nodes.ExceptionSignalingNode;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
@@ -29,13 +31,20 @@ import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SBlock;
-import som.vmobjects.SInvokable;
+import som.vmobjects.SObject;
 import som.vmobjects.SObject.SImmutableObject;
-import som.vmobjects.SSymbol;
 
 
 public final class PathPrims {
-  @CompilationFinal public static SImmutableObject fileObject;
+  @CompilationFinal private static SImmutableObject fileObject;
+
+  public static final class FileModule implements Supplier<SObject> {
+
+    @Override
+    public SObject get() {
+      return PathPrims.fileObject;
+    }
+  }
 
   @GenerateNodeFactory
   @ImportStatic(FilePrims.class)
@@ -46,27 +55,6 @@ public final class PathPrims {
       fileObject = value;
       return value;
     }
-  }
-
-  public static Object signalFileNotFoundException(final String fileName,
-      final String message) {
-    return signalException(Symbols.symbolFor("signalFileNotFoundException:with:"),
-        new Object[] {fileObject, fileName, message});
-  }
-
-  public static Object signalIOException(final String message) {
-    return signalException(Symbols.symbolFor("signalIOException:"),
-        new Object[] {fileObject, message});
-  }
-
-  private static Object signalException(final SSymbol selector, final Object[] args) {
-    CompilerDirectives.transferToInterpreter();
-    VM.thisMethodNeedsToBeOptimized("Should be optimized or on slowpath");
-
-    SInvokable disp = (SInvokable) fileObject.getSOMClass().lookupPrivate(
-        selector, fileObject.getSOMClass().getMixinDefinition().getMixinId());
-    assert disp != null : "Lookup of " + selector.getString() + " failed in Files.ns";
-    return disp.invoke(args);
   }
 
   @GenerateNodeFactory
@@ -165,15 +153,29 @@ public final class PathPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "pathLastModified:")
   public abstract static class LastModifiedPrim extends UnaryExpressionNode {
+    protected @Child ExceptionSignalingNode ioException;
+    protected @Child ExceptionSignalingNode fileNotFound;
+
+    @Override
+    public ExpressionNode initialize(final SourceSection sourceSection,
+        final boolean eagerlyWrapped) {
+      super.initialize(sourceSection, eagerlyWrapped);
+      fileNotFound = insert(ExceptionSignalingNode.createNode(new FileModule(),
+          Symbols.FileNotFoundException, Symbols.SIGNAL_FOR_WITH, sourceSection));
+      ioException = insert(ExceptionSignalingNode.createNode(new FileModule(),
+          Symbols.IOException, Symbols.SIGNAL_WITH, sourceSection));
+      return this;
+    }
+
     @Specialization
     public final Object lastModified(final String dir) {
       try {
         return Files.getLastModifiedTime(Paths.get(dir), new LinkOption[0]).toString();
       } catch (FileNotFoundException e) {
-        signalFileNotFoundException(dir, e.getMessage());
+        fileNotFound.signal(dir, e.getMessage());
         return Nil.nilObject;
       } catch (IOException e) {
-        signalIOException(e.getMessage());
+        ioException.signal(e.getMessage());
         return Nil.nilObject;
       }
     }
@@ -198,14 +200,28 @@ public final class PathPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "pathGetSize:")
   public abstract static class SizePrim extends UnaryExpressionNode {
+    protected @Child ExceptionSignalingNode ioException;
+    protected @Child ExceptionSignalingNode fileNotFound;
+
+    @Override
+    public ExpressionNode initialize(final SourceSection sourceSection,
+        final boolean eagerlyWrapped) {
+      super.initialize(sourceSection, eagerlyWrapped);
+      fileNotFound = insert(ExceptionSignalingNode.createNode(new FileModule(),
+          Symbols.FileNotFoundException, Symbols.SIGNAL_FOR_WITH, sourceSection));
+      ioException = insert(ExceptionSignalingNode.createNode(new FileModule(),
+          Symbols.IOException, Symbols.SIGNAL_WITH, sourceSection));
+      return this;
+    }
+
     @Specialization
     public final long getSize(final String dir) {
       try {
         return Files.size(Paths.get(dir));
       } catch (NoSuchFileException e) {
-        signalFileNotFoundException(dir, e.getMessage());
+        fileNotFound.signal(dir, e.getMessage());
       } catch (IOException e) {
-        signalIOException(e.getMessage());
+        ioException.signal(e.getMessage());
       }
       return -1;
     }

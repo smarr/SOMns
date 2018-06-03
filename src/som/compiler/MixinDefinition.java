@@ -17,6 +17,7 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.basic.nodes.DummyParent;
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.LexicalScope.MethodScope;
@@ -24,6 +25,7 @@ import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InstantiationNode.ClassInstantiationNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
@@ -86,6 +88,22 @@ public final class MixinDefinition {
 
   private final EconomicMap<SSymbol, MixinDefinition> nestedMixinDefinitions;
 
+  // These nodes are used to throw the exception in the parser, where we don't have an AST.
+  protected static final ExceptionSignalingNode notAValue;
+  protected static final ExceptionSignalingNode cannotBeValues;
+
+  static {
+    SourceSection ss =
+        SomLanguage.getSyntheticSource("", "ClassInstantiation instantiate").createSection(1);
+
+    notAValue = ExceptionSignalingNode.createNotAValueNode(ss);
+    cannotBeValues =
+        ExceptionSignalingNode.createNode(Symbols.TransferObjectsCannotBeValues, ss);
+
+    new DummyParent(notAValue);
+    new DummyParent(cannotBeValues);
+  }
+
   public MixinDefinition(final SSymbol name, final SourceSection nameSection,
       final SSymbol primaryFactoryName,
       final List<ExpressionNode> initializerBody,
@@ -133,6 +151,10 @@ public final class MixinDefinition {
 
   public SourceSection getNameSourceSection() {
     return nameSection;
+  }
+
+  public SourceSection getInitializerSourceSection() {
+    return initializerSource;
   }
 
   /**
@@ -487,7 +509,8 @@ public final class MixinDefinition {
       final Object superclassAndMixins) {
     ClassFactory factory = createClassFactory(superclassAndMixins,
         false, false, false);
-    return ClassInstantiationNode.instantiate(outer, factory);
+    return ClassInstantiationNode.instantiate(outer, factory, notAValue,
+        cannotBeValues);
   }
 
   // TODO: need to rename this, it doesn't really fulfill this role anymore

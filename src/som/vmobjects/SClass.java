@@ -206,6 +206,7 @@ public final class SClass extends SObjectWithClass {
    * and ignoring class identity, i.e., relying on class groups/factories, too.
    */
   public boolean isKindOf(final SClass clazz) {
+    VM.callerNeedsToBeOptimized("This method is not optimized for run-time performance.");
     if (this == clazz) {
       return true;
     }

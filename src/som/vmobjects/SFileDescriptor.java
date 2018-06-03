@@ -4,17 +4,14 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.Objects;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
-import som.primitives.PathPrims;
 import som.vm.NotYetImplementedException;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
-import som.vm.constants.KernelObj;
 import som.vmobjects.SArray.SMutableArray;
 
 
@@ -57,7 +54,7 @@ public class SFileDescriptor extends SObjectWithClass {
     return this;
   }
 
-  public void closeFile() {
+  public void closeFile(final ExceptionSignalingNode ioException) {
     if (raf == null) {
       return;
     }
@@ -66,7 +63,7 @@ public class SFileDescriptor extends SObjectWithClass {
       raf.close();
       raf = null;
     } catch (IOException e) {
-      PathPrims.signalIOException(e.getMessage());
+      ioException.signal(e.getMessage());
     }
   }
 
@@ -105,7 +102,7 @@ public class SFileDescriptor extends SObjectWithClass {
   }
 
   public void write(final int nBytes, final long position, final SBlock fail,
-      final BlockDispatchNode dispatchHandler) {
+      final BlockDispatchNode dispatchHandler, final ExceptionSignalingNode ioException) {
     if (raf == null) {
       dispatchHandler.executeDispatch(new Object[] {fail, FILE_IS_CLOSED});
       return;
@@ -121,7 +118,7 @@ public class SFileDescriptor extends SObjectWithClass {
 
     for (int i = 0; i < bufferSize; i++) {
       if (storage[i] <= Byte.MIN_VALUE && Byte.MAX_VALUE <= storage[i]) {
-        PathPrims.signalIOException(
+        ioException.signal(
             "Buffer only supports values in the range -128 to 127 (" + storage[i] + ")");
       }
       buff[i] = (byte) storage[i];
@@ -135,11 +132,11 @@ public class SFileDescriptor extends SObjectWithClass {
     }
   }
 
-  public long getFileSize() {
+  public long getFileSize(final ExceptionSignalingNode ioException) {
     try {
       return raf.length();
     } catch (IOException e) {
-      PathPrims.signalIOException(e.getMessage());
+      ioException.signal(e.getMessage());
     }
     return 0;
   }
@@ -161,6 +158,10 @@ public class SFileDescriptor extends SObjectWithClass {
     return bufferSize;
   }
 
+  public static String getValidAccessModes() {
+    return AccessModes.VALID_MODES;
+  }
+
   public void setBufferSize(final int bufferSize) {
     // buffer size only changeable for closed files.
     if (raf == null) {
@@ -171,17 +172,7 @@ public class SFileDescriptor extends SObjectWithClass {
   }
 
   public void setMode(final SSymbol mode) {
-    try {
-      this.accessMode = AccessModes.valueOf(mode.getString());
-    } catch (IllegalArgumentException e) {
-      signalInvalidAccessMode(mode.getString());
-    }
-  }
-
-  public static void signalInvalidAccessMode(final Object mode) {
-    CompilerAsserts.neverPartOfCompilation();
-    KernelObj.signalException("signalArgumentError:", "File access mode invalid, was: "
-        + Objects.toString(mode) + " " + AccessModes.VALID_MODES);
+    this.accessMode = AccessModes.valueOf(mode.getString());
   }
 
   private enum AccessModes {

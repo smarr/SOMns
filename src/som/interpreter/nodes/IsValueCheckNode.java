@@ -9,7 +9,6 @@ import som.VM;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.ObjectPrims.IsValue;
-import som.vm.constants.KernelObj;
 import som.vmobjects.SObject.SImmutableObject;
 
 
@@ -80,8 +79,19 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
   }
 
   private static final class ValueCheckNode extends IsValueCheckNode {
+
+    @Child protected ExceptionSignalingNode notAValue;
+
     ValueCheckNode(final ExpressionNode self) {
       super(self);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public ValueCheckNode initialize(final SourceSection sourceSection) {
+      super.initialize(sourceSection);
+      notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
+      return this;
     }
 
     @Override
@@ -92,7 +102,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       if (allFieldsContainValues) {
         return rcvr;
       }
-      return KernelObj.signalExceptionWithClass("signalNotAValueWith:", receiver);
+      return notAValue.signal(rcvr);
     }
 
     private boolean allFieldsContainValues(final SImmutableObject rcvr) {

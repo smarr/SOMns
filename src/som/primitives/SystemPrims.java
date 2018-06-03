@@ -34,14 +34,17 @@ import som.compiler.MixinDefinition;
 import som.interop.ValueConversion.ToSomConversion;
 import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
 import som.interpreter.Invokable;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySystemOperation;
+import som.primitives.PathPrims.FileModule;
 import som.vm.NotAFileException;
 import som.vm.NotYetImplementedException;
+import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
@@ -65,17 +68,18 @@ public final class SystemPrims {
     }
   }
 
-  public static Object loadModule(final VM vm, final String path) {
+  public static Object loadModule(final VM vm, final String path,
+      final ExceptionSignalingNode ioException) {
+    // TODO: a single node for the different exceptions?
     try {
       MixinDefinition module = vm.loadModule(path);
       return module.instantiateModuleClass();
     } catch (FileNotFoundException e) {
-      PathPrims.signalFileNotFoundException(e.getMessage(), "Could not find module file.");
+      ioException.signal(path, "Could not find module file. " + e.getMessage());
     } catch (NotAFileException e) {
-      PathPrims.signalFileNotFoundException(e.getMessage(),
-          "Path does not seem to be a file.");
+      ioException.signal(path, "Path does not seem to be a file. " + e.getMessage());
     } catch (IOException e) {
-      PathPrims.signalIOException(e.getMessage());
+      ioException.signal(e.getMessage());
     }
     assert false : "This should never be reached, because exceptions do not return";
     return Nil.nilObject;
@@ -84,23 +88,44 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "load:")
   public abstract static class LoadPrim extends UnarySystemOperation {
+    @Child ExceptionSignalingNode ioException;
+
+    @Override
+    public UnarySystemOperation initialize(final VM vm) {
+      super.initialize(vm);
+      ioException = insert(ExceptionSignalingNode.createNode(new FileModule(),
+          Symbols.IOException, Symbols.SIGNAL_WITH, sourceSection));
+      return this;
+    }
+
     @Specialization
     @TruffleBoundary
     public final Object doSObject(final String moduleName) {
-      return loadModule(vm, moduleName);
+      return loadModule(vm, moduleName, ioException);
     }
   }
 
   @GenerateNodeFactory
   @Primitive(primitive = "load:nextTo:")
   public abstract static class LoadNextToPrim extends BinarySystemOperation {
+    protected @Child ExceptionSignalingNode ioException;
+
+    @Override
+    public BinarySystemOperation initialize(final VM vm) {
+      super.initialize(vm);
+      ioException = insert(ExceptionSignalingNode.createNode(new FileModule(),
+          Symbols.IOException, Symbols.SIGNAL_WITH, sourceSection));
+      return this;
+    }
+
     @Specialization
     @TruffleBoundary
     public final Object load(final String filename, final SObjectWithClass moduleObj) {
       String path = moduleObj.getSOMClass().getMixinDefinition().getSourceSection().getSource()
                              .getPath();
       File file = new File(path);
-      return loadModule(vm, file.getParent() + File.separator + filename);
+
+      return loadModule(vm, file.getParent() + File.separator + filename, ioException);
     }
   }
 
