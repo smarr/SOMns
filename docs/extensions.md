@@ -152,3 +152,4 @@ for instance like this:
 [0]: http://www.graalvm.org/docs/reference-manual/polyglot/
 [1]: https://github.com/smarr/SOMns/blob/dev/src/som/vm/Extension.java
 [2]: https://github.com/SOM-st/black-diamonds/blob/master/src/bd/primitives/Primitive.java
+[3]: https://docs.oracle.com/javase/tutorial/deployment/jar/downman.html

@@ -60,5 +60,12 @@ class ExtensionTests usingPlatform: platform testFramework: minitest = Value (
       assert: m1 counter equals: 1.
       assert: m2 counter equals: 2.
     )
+
+    (* JARs can define classpath dependencies with the Class-Path attribute.
+       Check that the extension jar is able to access the dependent jar. *)
+    public testClassPathDependency = (
+      | m = loadModule new. |
+      assert: m valueFromClasspath equals: 42.
+    )
   ) : ( TEST_CONTEXT = () )
 )
