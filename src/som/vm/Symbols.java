@@ -36,6 +36,7 @@ public final class Symbols implements IdProvider<SSymbol> {
   public static final SSymbol NEW             = symbolFor("new");
   public static final SSymbol DEF_CLASS       = symbolFor("`define`cls");
   public static final SSymbol OBJECT          = symbolFor("Object");
+  public static final SSymbol TOP             = symbolFor("Top");
   public static final SSymbol DNU             = symbolFor("doesNotUnderstand:arguments:");
   public static final SSymbol VMMIRROR        = symbolFor("VmMirror");
   public static final SSymbol METACLASS       = symbolFor("Metaclass");

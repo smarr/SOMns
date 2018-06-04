@@ -3,8 +3,11 @@ class TestRunner usingPlatform: platform = (
   private system   = platform system.
   private actors   = platform actors.
   private minitest = (system loadModule: 'Minitest.ns' nextTo: self) usingPlatform: platform.
-|
-)(
+  private modulePath = (platform mirrors ObjectMirror reflecting: self) classMirror classDefinition filePath.
+
+  private FilePath = platform files FilePath.
+  private FilePattern = platform files FilePattern.
+|)(
 
   printNameAndDescription: failureOrError = (
     failureOrError testCase environment classDeclarationMirror name asString print.
@@ -81,35 +84,18 @@ class TestRunner usingPlatform: platform = (
   )
 
   runAllKnownModules = (
-    | modules allSuccessful allTestsDonePromise |
-    modules::  'ReflectionTests',
-               'LanguageTests',
-               'MixinTests',
-               'CollectionTests',
-               'DoubleTests',
-               'IntegerTests',
-               'StringTests',
-               'ArrayLiteralTests',
-               'SymbolTests',
-               'SystemTests',
-               'BenchmarkHarnessTests',
-               'ActorTests',
-               'ProcessTests',
-               'RegressionTests',
-               'ThreadingTests',
-               'TransactionTests',
-               'TransferObjectTests',
-               'ObjectLiteralTests',
-               'FileTests',
-               'StreamTests',
-               'MinitestTests'.
+    | moduleDir = (FilePath for: modulePath) containingDirectory pattern.
+      testModules = (FilePattern for: moduleDir + '/*Tests.ns').
+      modules = testModules paths.
+      allSuccessful allTestsDonePromise |
+
 
     allSuccessful:: true.
     allTestsDonePromise:: actors async: modules do: [:m |
       | testModule |
-      testModule:: (system loadModule: m + '.ns' nextTo: self)
+      testModule:: (system loadModule: m pattern)
                       usingPlatform: platform testFramework: minitest.
-      m println.
+      m simpleName println.
       (runAllTests: testModule)
         whenResolved: [:successful |
         allSuccessful:: allSuccessful and: successful.

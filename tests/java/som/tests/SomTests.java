@@ -66,6 +66,7 @@ public class SomTests {
         {"TransactionTests", null},
         {"TransferObjectTests", null},
         {"ObjectLiteralTests", null},
+        {"ExtensionTests", null},
         {"MinitestTests",
             "DISABLED, see issue #10 Failing MinitestTests in JUnit Harness, caching causes comparison of Exception object with old one to fail"},
 

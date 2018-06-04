@@ -9,6 +9,7 @@
     <property name="bd.dir"      location="${lib.dir}/black-diamonds/" />
     <property name="unit.dir"    value="tests/java" />
     <property name="kompos.dir"  value="tools/kompos" />
+    <property name="corelib.dir" location="core-lib" />
     <property name="graal.dir"   location="${lib.dir}/truffle/compiler" />
     <property name="truffle.dir" location="${lib.dir}/truffle/truffle" />
     <property name="sdk.dir"     location="${lib.dir}/truffle/sdk" />
@@ -145,6 +146,9 @@
             <fileset dir="${unit.dir}">
                 <include name="**/*.java"/>
             </fileset>
+            <fileset dir="${corelib.dir}">
+                <include name="**/*.java"/>
+            </fileset>
         </pathconvert>
         <exec executable="${env.ECLIPSE_EXE}" dir="${basedir}">
             <arg value="-nosplash"/>
@@ -184,7 +188,9 @@
     <target name="checkstyle" depends="checkstyle-jar" description="Check Code with Checkstyle">
         <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties" classpath="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
         <checkstyle config=".checkstyle_checks.xml">
-          <fileset dir="src" includes="**/*.java"/>
+          <fileset dir="${src.dir}" includes="**/*.java"/>
+          <fileset dir="${unit.dir}" includes="**/*.java"/>
+          <fileset dir="${corelib.dir}" includes="**/*.java"/>
           <formatter type="plain"/>
         </checkstyle>
     </target>
@@ -235,7 +241,12 @@
         </javac>
     </target>
 
-    <target name="compile" depends="libs,compile-som" description="Compile SOMns and dependencies">
+    <target name="compile" depends="libs,compile-som,compile-test-extension" description="Compile SOMns and dependencies">
+    </target>
+
+    <target name="compile-test-extension">
+      <ant dir="${corelib.dir}/TestSuite/extension" useNativeBasedir="true" target="jar" inheritAll="false">
+      </ant>
     </target>
 
     <target name="kompos" description="Build Kompos">
@@ -274,7 +285,7 @@
             <classpath refid="project.classpath" />
             <jvmarg value="-ea" />
             <jvmarg value="-esa" />
-            <arg line="core-lib/TestSuite/TestRunner.ns" />
+            <arg line="${corelib.dir}/TestSuite/TestRunner.ns" />
         </java>
      </jacoco:coverage>
 
@@ -291,12 +302,12 @@
         <arg value="--java-coverage" />
         <arg value="jacoco.exec" />
         <arg value="-G" />
-        <arg value="core-lib/TestSuite/TestRunner.ns" />
+        <arg value="${corelib.dir}/TestSuite/TestRunner.ns" />
       </exec>
 
       <exec executable="./som" failonerror="true">
         <arg value="-X" />
-        <arg value="core-lib/TestSuite/TestRunner.ns" />
+        <arg value="${corelib.dir}/TestSuite/TestRunner.ns" />
       </exec>
     </target>
 

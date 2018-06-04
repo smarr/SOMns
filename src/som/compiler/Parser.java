@@ -369,10 +369,8 @@ public class Parser {
   private void defaultSuperclassAndBody(final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
     SourceSection source = getEmptySource();
-    MethodBuilder def = mxnBuilder.getClassInstantiationMethodBuilder();
-    ExpressionNode selfRead = def.getSelfRead(source);
-    ExpressionNode superClass = createMessageSend(Symbols.OBJECT,
-        new ExpressionNode[] {selfRead}, false, source, null, language);
+    ExpressionNode superClass =
+        mxnBuilder.constructSuperClassResolution(Symbols.OBJECT, source);
     mxnBuilder.setSuperClassResolution(superClass);
 
     mxnBuilder.setSuperclassFactorySend(
