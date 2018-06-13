@@ -291,36 +291,41 @@ public class JsonTreeTranslator {
    * for SOM's built in objects. We change to the SOM signature in the cases to take advantage
    * of this mapping.
    */
+  private SSymbol processSelector(final SSymbol selector) {
+    if (isOperator(selector.getString().replace(":", ""))) {
+      return symbolFor(selector.getString().replace(":", ""));
+    }
+
+    return selector;
+  }
+
   private SSymbol selector(final JsonObject node) {
+    SSymbol selector;
     if (node.has("parts")) {
-      return selectorFromParts(node.get("parts").getAsJsonArray());
+      selector = selectorFromParts(node.get("parts").getAsJsonArray());
 
     } else if (node.has("signature")) {
-      return selectorFromParts(
+      selector = selectorFromParts(
           node.get("signature").getAsJsonObject().get("parts").getAsJsonArray());
 
     } else if (nodeType(node).equals("prefix-operator")) {
-      return prefixOperatorFor(name(node));
+      selector = prefixOperatorFor(name(node));
+
+    } else if (nodeType(node).equals("bind")) {
+      selector = selector(node.get("left").getAsJsonObject());
 
     } else if (node.has("operator")) {
       String operator = node.get("operator").getAsString();
-      if (operator.equals("!=")) {
-        operator = "<>";
-      } else if (operator.equals("==")) {
-        operator = "=";
-      } else if (operator.equals("/")) {
-        operator = "//";
-      }
-      return symbolFor(operator);
-
-    } else if (nodeType(node).equals("bind")) {
-      return selector(node.get("left").getAsJsonObject());
+      selector = symbolFor(operator);
 
     } else {
-      error("The translator doesn't understand how to a selector from " + nodeType(node),
+      error(
+          "The translator doesn't understand how to get a selector from an " + nodeType(node),
           node);
       throw new RuntimeException();
     }
+
+    return processSelector(selector);
   }
 
   /**
