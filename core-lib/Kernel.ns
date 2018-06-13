@@ -310,6 +310,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     (* Concatenate: returns a new string object *)
     public concatenate: argument = ( ^ vmMirror string: self concat: argument )
     public + argument            = ( ^ self concatenate: argument asString )
+    public ++ argument            = ( ^ self + argument )
 
     (* Converting *)
     public asString = ( ^ self )
