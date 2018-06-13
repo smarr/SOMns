@@ -57,8 +57,6 @@ import tools.language.StructuralProbe;
  */
 public class JsonTreeTranslator {
 
-  public static boolean translatingMain = true; // The main module is always translated first
-
   private final SomLanguage language;
 
   private final ScopeManager  scopeManager;

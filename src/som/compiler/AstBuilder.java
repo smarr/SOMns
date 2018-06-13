@@ -184,7 +184,7 @@ public class AstBuilder {
 
       // Translate the body and add each to the initializer (except when this is the main
       // module)
-      if (!isMainModule) {
+      if (!sourceManager.isMainModule()) {
         for (JsonElement element : body) {
           Object expr = translator.translate(element.getAsJsonObject());
           if (expr != null) {
@@ -214,7 +214,7 @@ public class AstBuilder {
       mainMethod.setVarsOnMethodScope();
       mainMethod.finalizeMethodScope();
       List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
-      if (isMainModule) {
+      if (sourceManager.isMainModule()) {
         for (JsonElement element : body) {
           ExpressionNode expression =
               (ExpressionNode) translator.translate(element.getAsJsonObject());
