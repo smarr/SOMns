@@ -131,6 +131,19 @@ public class ScopeManager {
   }
 
   /**
+   * Creates a builder that makes an object literal inside the current method
+   */
+  public MixinBuilder newObject(final SSymbol clazzName, final SourceSection empty) {
+    MixinBuilder builder =
+        new MixinBuilder(peekMethod(),
+            AccessModifier.PUBLIC, // not sure if this is required to be PUBLIC
+            clazzName,
+            empty, probe, language);
+    pushObject(builder);
+    return builder;
+  }
+
+  /**
    * Creates a builder that makes a method for the object sitting at the top of the object
    * stack
    *
@@ -221,6 +234,18 @@ public class ScopeManager {
       throw new RuntimeException();
     }
 
+    return result;
+  }
+
+  /**
+   * Produces a finished class definition by assembling the object at the top of the stack
+   * (this class is anonymous and therefore not added anything enclosing it.
+   *
+   * @throws MixinDefinitionError
+   * @return - the assembled class definition
+   */
+  public MixinDefinition assumbleCurrentObject(final SourceSection sourceSection) {
+    MixinDefinition result = popObject().assemble(sourceSection);
     return result;
   }
 

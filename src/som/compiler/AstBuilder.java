@@ -378,7 +378,7 @@ public class AstBuilder {
 
       // Munge the name of the class
       SSymbol clazzName = symbolFor(objectName.getString() + "[Class]");
-      MixinBuilder builder = scopeManager.newClazz(clazzName, sourceManager.empty());
+      MixinBuilder builder = scopeManager.newObject(clazzName, sourceManager.empty());
 
       // Create the initialization method
       MethodBuilder instanceFactory = builder.getPrimaryFactoryMethodBuilder();
@@ -419,7 +419,7 @@ public class AstBuilder {
       scopeManager.popMethod();
 
       // Assemble and return the completed module
-      MixinDefinition classDef = scopeManager.assumbleCurrentClazz(sourceManager.empty());
+      MixinDefinition classDef = scopeManager.assumbleCurrentObject(sourceManager.empty());
       ExpressionNode outerRead = scopeManager.peekMethod().getSelfRead(sourceSection);
       ExpressionNode newMessage = createMessageSend(Symbols.NEW,
           new ExpressionNode[] {scopeManager.peekMethod().getSelfRead(sourceSection)},
@@ -482,8 +482,10 @@ public class AstBuilder {
      *
      * #foo__λ5@8::
      */
-    public ExpressionNode block(final SSymbol[] parameters, final SSymbol[] locals,
-        final JsonArray body, final SourceSection sourceSection) {
+    public ExpressionNode block(final SSymbol[] parameters,
+        final SourceSection[] parameterSources, final SSymbol[] locals,
+        final SourceSection[] sourceLocals, final JsonArray body,
+        final SourceSection sourceSection) {
 
       // Generate the signature for the block
       int line = sourceSection.getStartLine();
@@ -501,13 +503,13 @@ public class AstBuilder {
       // Set the parameters
       builder.addUntypedArgument(Symbols.BLOCK_SELF, sourceManager.empty());
       for (int i = 0; i < parameters.length; i++) {
-        builder.addUntypedArgument(parameters[i], sourceManager.empty());
+        builder.addUntypedArgument(parameters[i], parameterSources[i]);
       }
 
       // Set the locals
       for (int i = 0; i < locals.length; i++) {
         try {
-          builder.addLocal(locals[i], false, sourceManager.empty());
+          builder.addLocal(locals[i], false, sourceLocals[i]);
         } catch (MethodDefinitionError e) {
           language.getVM().errorExit("Failed to add " + locals[i] + " to "
               + builder.getSignature() + ": " + e.getMessage());
@@ -738,15 +740,15 @@ public class AstBuilder {
       // Translate first receiver as `expression.toString`
       JsonObject firstObj = elements.get(0).getAsJsonObject();
       ExpressionNode receiver = (ExpressionNode) translator.translate(firstObj);
-      receiver = explicit(symbolFor("toString"), receiver, new ArrayList<ExpressionNode>(),
+      receiver = explicit(symbolFor("asString"), receiver, new ArrayList<ExpressionNode>(),
           translator.source(firstObj));
 
-      for (int i = 0; i < elements.size(); i++) {
+      for (int i = 1; i < elements.size(); i++) {
         JsonObject operandObj = elements.get(i).getAsJsonObject();
 
         // Set operand as `expression.toString`
         ExpressionNode operand = (ExpressionNode) translator.translate(operandObj);
-        operand = explicit(symbolFor("toString"), operand, new ArrayList<ExpressionNode>(),
+        operand = explicit(symbolFor("asString"), operand, new ArrayList<ExpressionNode>(),
             translator.source(operandObj));
 
         // Add operand to receiver
@@ -788,6 +790,14 @@ public class AstBuilder {
      */
     public ExpressionNode string(final String value, final SourceSection sourceSection) {
       return new StringLiteralNode(value).initialize(sourceSection);
+    }
+
+    public Object array(final JsonObject[] arguments, final SourceSection sourceSection) {
+      ExpressionNode[] exprs = new ExpressionNode[arguments.length];
+      for (int i = 0; i < arguments.length; i++) {
+        exprs[i] = (ExpressionNode) translator.translate(arguments[i]);
+      }
+      return ArrayLiteralNode.create(exprs, sourceSection);
     }
   }
 }

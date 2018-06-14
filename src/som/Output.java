@@ -34,19 +34,23 @@ public class Output {
 
   @TruffleBoundary
   private static void print(final String msg, final String color, final PrintStream s) {
+    String ret = msg.replace("\\n", System.getProperty("line.separator"));
+
     if (VmSettings.ANSI_COLOR_IN_OUTPUT) {
-      s.print(color + msg + AnsiColor8.RESET);
+      s.print(color + ret + AnsiColor8.RESET);
     } else {
-      s.print(msg);
+      s.print(ret);
     }
   }
 
   @TruffleBoundary
   private static void println(final String msg, final String color, final PrintStream s) {
+    String ret = msg.replace("\\n", System.getProperty("line.separator"));
+
     if (VmSettings.ANSI_COLOR_IN_OUTPUT) {
-      s.println(color + msg + AnsiColor8.RESET);
+      s.println(color + ret + AnsiColor8.RESET);
     } else {
-      s.println(msg);
+      s.println(ret);
     }
   }
 

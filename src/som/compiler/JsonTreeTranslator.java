@@ -90,6 +90,16 @@ public class JsonTreeTranslator {
     return sourceManager.atLineColumn(line, column);
   }
 
+  private void error(final String message, final JsonObject node) {
+    String prefix = "";
+    if (node != null) {
+      int line = node.get("line").getAsInt();
+      int column = node.get("column").getAsInt();
+      prefix = "[" + line + "," + column + "] ";
+    }
+    language.getVM().errorExit(prefix + message);
+  }
+
   /**
    * Gets the type of a {@link JsonObject}, which should be a string stored in the "nodetype"
    * field.
@@ -128,8 +138,8 @@ public class JsonTreeTranslator {
       return name(node.get("from").getAsJsonObject());
 
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get a name from " + nodeType(node));
+      error("The translator doesn't understand how to get a name from " + nodeType(node),
+          node);
       throw new RuntimeException();
     }
   }
@@ -158,8 +168,8 @@ public class JsonTreeTranslator {
     if (node.get("path").isJsonObject()) {
       return node.get("path").getAsJsonObject().get("raw").getAsString();
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get a path from " + nodeType(node));
+      error("The translator doesn't understand how to get a path from " + nodeType(node),
+          node);
       throw new RuntimeException();
     }
   }
@@ -189,8 +199,8 @@ public class JsonTreeTranslator {
       return translate(node.get("right").getAsJsonObject());
 
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get a value from " + nodeType(node));
+      error("The translator doesn't understand how to get a value from " + nodeType(node),
+          node);
       throw new RuntimeException();
     }
   }
@@ -204,9 +214,9 @@ public class JsonTreeTranslator {
     } else if (part.has("parameters")) {
       return part.get("parameters").getAsJsonArray().size();
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to count the arguments or parameters for the part: "
-              + part);
+      error(
+          "The translator doesn't understand how to count the arguments or parameters for the part",
+          part);
       throw new RuntimeException();
     }
 
@@ -242,8 +252,8 @@ public class JsonTreeTranslator {
       return node.get("left").getAsJsonObject();
 
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get a receiver from " + nodeType(node));
+      error("The translator doesn't understand how to get a receiver from " + nodeType(node),
+          node);
       throw new RuntimeException();
     }
   }
@@ -258,9 +268,12 @@ public class JsonTreeTranslator {
     if (name.equals("prefix!") || name.equals("!")) {
       return symbolFor("not");
 
+    } else if (name.equals("prefix-") || name.equals("-")) {
+      return symbolFor("negated");
+
     } else {
-      language.getVM().errorExit("The translator doesn't understand what to do with the `"
-          + name + "` prefix operator");
+      error("The translator doesn't understand what to do with the `" + name
+          + "` prefix operator", null);
       throw new RuntimeException();
     }
   }
@@ -294,9 +307,12 @@ public class JsonTreeTranslator {
       }
       return symbolFor(operator);
 
+    } else if (nodeType(node).equals("bind")) {
+      return selector(node.get("left").getAsJsonObject());
+
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get a name from " + nodeType(node));
+      error("The translator doesn't understand how to a selector from " + nodeType(node),
+          node);
       throw new RuntimeException();
     }
   }
@@ -325,6 +341,14 @@ public class JsonTreeTranslator {
     if (node.has("parts")) {
       return argumentsFromParts(node.get("parts").getAsJsonArray());
 
+    } else if (node.has("arguments")) {
+      JsonArray args = node.get("arguments").getAsJsonArray();
+      JsonObject[] ret = new JsonObject[args.size()];
+      for (int i = 0; i < args.size(); i++) {
+        ret[i] = args.get(i).getAsJsonObject();
+      }
+      return ret;
+
     } else if (node.has("right")) {
       return new JsonObject[] {node.get("right").getAsJsonObject()};
 
@@ -337,8 +361,10 @@ public class JsonTreeTranslator {
       }
 
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get arguments from " + node);
+      error(
+          "The translator doesn't understand how to get arguments from a " + nodeType(node)
+              + "node",
+          node);
       throw new RuntimeException();
     }
   }
@@ -379,10 +405,37 @@ public class JsonTreeTranslator {
       return parametersNames.toArray(new SSymbol[parametersNames.size()]);
 
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get parameters from " + node);
+      error("The translator doesn't understand how to get parameters from " + node, node);
       throw new RuntimeException();
     }
+  }
+
+  /**
+   * Gets the source sections for the parameters of a declaration node.
+   */
+  private SourceSection[] sourceOfParameters(final JsonObject node) {
+    List<SourceSection> parameterSources = new ArrayList<SourceSection>();
+
+    if (node.has("signature")) {
+      JsonArray parts = node.get("signature").getAsJsonObject().get("parts").getAsJsonArray();
+      for (JsonElement partElement : parts) {
+        JsonObject part = partElement.getAsJsonObject();
+        for (JsonElement parameterElement : part.get("parameters").getAsJsonArray()) {
+          parameterSources.add(source(parameterElement.getAsJsonObject()));
+        }
+      }
+
+    } else if (node.has("parameters")) {
+      for (JsonElement parameterElement : node.get("parameters").getAsJsonArray()) {
+        parameterSources.add(source(parameterElement.getAsJsonObject()));
+      }
+
+    } else {
+      error("The translator doesn't understand how to get parameters from " + node, node);
+      throw new RuntimeException();
+    }
+
+    return parameterSources.toArray(new SourceSection[parameterSources.size()]);
   }
 
   /**
@@ -399,8 +452,7 @@ public class JsonTreeTranslator {
       return "Unknown";
 
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get type for " + nodeType);
+      error("The translator doesn't understand how to get type for " + nodeType, node);
       throw new RuntimeException();
     }
   }
@@ -424,8 +476,8 @@ public class JsonTreeTranslator {
       return types.toArray(new SSymbol[types.size()]);
 
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand how to get parameters from " + node);
+      error("The translator doesn't understand how to get parameters from " + nodeType(node),
+          node);
       throw new RuntimeException();
     }
   }
@@ -439,6 +491,18 @@ public class JsonTreeTranslator {
       }
     }
     return localNames.toArray(new SSymbol[localNames.size()]);
+  }
+
+  private SourceSection[] sourceOfLocals(final JsonObject node) {
+    List<SourceSection> sourceSections = new ArrayList<SourceSection>();
+    for (JsonElement element : body(node)) {
+      JsonObject object = element.getAsJsonObject();
+      String type = nodeType(object);
+      if (type.equals("def-declaration") || type.equals("var-declaration")) {
+        sourceSections.add(source(object));
+      }
+    }
+    return sourceSections.toArray(new SourceSection[sourceSections.size()]);
   }
 
   /**
@@ -498,6 +562,12 @@ public class JsonTreeTranslator {
         source);
   }
 
+  public ExpressionNode explicitAssignment(final SSymbol selector, final JsonObject receiver,
+      final JsonObject[] arguments, final SourceSection source) {
+    SSymbol setterSelector = symbolFor(selector.getString() + ":");
+    return explicit(setterSelector, receiver, arguments, source);
+  }
+
   /**
    * Creates either a variable read (when no arguments are provided) or a message send (when
    * arguments are provided) using the method currently at the top of the stack.
@@ -553,8 +623,8 @@ public class JsonTreeTranslator {
       return null;
 
     } else if (nodeType(node).equals("block")) {
-      return astBuilder.objectBuilder.block(parameters(node), locals(node), body(node),
-          source(node));
+      return astBuilder.objectBuilder.block(parameters(node), sourceOfParameters(node),
+          locals(node), sourceOfLocals(node), body(node), source(node));
 
     } else if (nodeType(node).equals("def-declaration")) {
       return astBuilder.requestBuilder.assignment(symbolFor(name(node)),
@@ -578,8 +648,13 @@ public class JsonTreeTranslator {
       return explicit(selector(node), receiver(node), arguments(node), source(node));
 
     } else if (nodeType(node).equals("bind")) {
-      return astBuilder.requestBuilder.assignment(symbolFor(name(node)),
-          (ExpressionNode) value(node));
+      if (nodeType(node.get("left").getAsJsonObject()).equals("explicit-receiver-request")) {
+        return explicitAssignment(selector(node), receiver(node.get("left").getAsJsonObject()),
+            arguments(node), source(node));
+      } else {
+        return astBuilder.requestBuilder.assignment(symbolFor(name(node)),
+            (ExpressionNode) value(node));
+      }
 
     } else if (nodeType(node).equals("operator")) {
       return explicit(selector(node), receiver(node), arguments(node), source(node));
@@ -591,8 +666,14 @@ public class JsonTreeTranslator {
       return translate(node.get("expression").getAsJsonObject());
 
     } else if (nodeType(node).equals("return")) {
-      ExpressionNode returnExpression =
-          (ExpressionNode) translate(node.get("returnvalue").getAsJsonObject());
+      ExpressionNode returnExpression;
+      if (node.get("returnvalue").isJsonNull()) {
+        returnExpression = astBuilder.literalBuilder.done(source(node));
+      } else {
+        returnExpression =
+            (ExpressionNode) translate(node.get("returnvalue").getAsJsonObject());
+      }
+
       if (scopeManager.peekMethod().isBlockMethod()) {
         return astBuilder.requestBuilder.makeBlockReturn(returnExpression, source(node));
       } else {
@@ -620,9 +701,12 @@ public class JsonTreeTranslator {
     } else if (nodeType(node).equals("interpolated-string")) {
       return astBuilder.requestBuilder.interpolatedString(node.get("parts").getAsJsonArray());
 
+    } else if (nodeType(node).equals("implicit-bracket-request")) {
+      return astBuilder.literalBuilder.array(arguments(node), source(node));
+
     } else {
-      language.getVM().errorExit(
-          "The translator doesn't understand what to do with a " + nodeType(node) + " node?");
+      error("The translator doesn't understand what to do with a " + nodeType(node) + " node?",
+          node);
       throw new RuntimeException();
     }
   }

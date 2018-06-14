@@ -76,13 +76,16 @@ class Kernel vmMirror: vmMirror = Object <: Value (
   public class Object = Thing ()
   (
     public == other = ( ^ vmMirror object: self identicalTo: other )
+    public = other  = ( ^ self == other )
     public ~= other = ( ^ (self == other) not )
   )
 
   public class Value = Thing ()
   (
     public =  other = ( ^ vmMirror value: self sameAs: other )
+    public ==  other = ( ^ self = other )
     public <> other = ( ^ (self = other) not )
+    public != other = ( ^ self <> other )
     public copy = ( ^ self )
   )
 
@@ -186,7 +189,9 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     (* Bit operations *)
     public & argument  = ( ^ vmMirror int: self bitAnd: argument )
     public << argument = ( ^ vmMirror int: self leftShift: argument )
+    public bitLeftShift: argument = ( ^ self << argument )
     public >>> argument= ( ^ vmMirror int: self unsignedRightShift: argument )
+    public bitRightShift: argument = ( ^ self >>> argument )
     public bitOr: argument  = ( ^ vmMirror int: self bitOr: argument )
     public bitXor: argument = ( ^ vmMirror int: self bitXor: argument )
 
@@ -258,6 +263,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public + argument  = ( ^ vmMirror double: self add: argument )
     public - argument  = ( ^ vmMirror double: self subtract: argument )
     public * argument  = ( ^ vmMirror double: self multiply: argument )
+    public / argument = ( ^ self // argument )
     public // argument = ( ^ vmMirror double: self divideDouble: argument )
     public % argument  = ( ^ vmMirror double: self modulo: argument )
     public abs         = ( ^ (self < 0.0) ifTrue: (0.0 - self) ifFalse: self )
@@ -304,6 +310,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     (* Concatenate: returns a new string object *)
     public concatenate: argument = ( ^ vmMirror string: self concat: argument )
     public + argument            = ( ^ self concatenate: argument asString )
+    public ++ argument            = ( ^ self + argument )
 
     (* Converting *)
     public asString = ( ^ self )

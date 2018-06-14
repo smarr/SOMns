@@ -88,6 +88,7 @@ public class SourceManager {
     builtinModules.add("standardGrace");
     builtinModules.add("io");
     builtinModules.add("mirrors");
+    builtinModules.add("random");
   }
 
   public String pathForModuleNamed(final SSymbol moduleName) {
