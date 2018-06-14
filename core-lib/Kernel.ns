@@ -934,7 +934,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     self signal.
   )(
     public asString = (
-      ^ 'ArgumentError(' + arg + ')'.
+      ^ 'Error' + arg + ''.
     )
   )
 
