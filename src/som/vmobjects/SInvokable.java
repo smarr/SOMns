@@ -205,7 +205,7 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     guards.add(DispatchGuard.create(rcvr)); // receiver guard
     for (int i = 0; i < expectedTypes.length; i++) {
       SomStructuralType expectedType = expectedTypes[i];
-      guards.add(DispatchGuard.createTypeCheck(expectedType, arguments[i + 1]));
+      guards.add(DispatchGuard.createTypeCheck(expectedType));
     }
 
     return new CachedDispatchNode(ct, guards.toArray(new DispatchGuard[guards.size()]), next);

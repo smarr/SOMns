@@ -1,9 +1,12 @@
 package som.interpreter.nodes.dispatch;
 
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
+import com.oracle.truffle.api.source.SourceSection;
 
+import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
+import som.interpreter.Types;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.vm.SomStructuralType;
@@ -16,8 +19,8 @@ import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 
 public abstract class DispatchGuard {
-  public abstract boolean entryMatches(Object obj)
-      throws InvalidAssumptionException;
+  public abstract boolean entryMatches(Object obj, SourceSection sourceSection)
+      throws InvalidAssumptionException, IllegalArgumentException;
 
   public static DispatchGuard create(final Object obj) {
     if (obj == Boolean.TRUE) {
@@ -66,18 +69,11 @@ public abstract class DispatchGuard {
    * primitive type-checking guard that implements a simple "instance of" check. And finally,
    * if we are given a proper SOM object, we create a full structural type-checking guard.
    */
-  public static AbstractTypeCheck createTypeCheck(final SomStructuralType expectedType,
-      final Object argument) {
+  public static AbstractTypeCheck createTypeCheck(final SomStructuralType expectedType) {
     if (expectedType == null) {
       return new NoTypeCheck();
-    } else if (expectedType.isBoolean()) {
-      return new BooleanTypeCheck();
-    } else if (expectedType.isNumber()) {
-      return new NumberTypeCheck();
-    } else if (expectedType.isString()) {
-      return new StringTypeCheck();
     } else {
-      return new StructuralTypeCheck(expectedType, argument);
+      return new StructuralTypeCheck(expectedType);
     }
   }
 
@@ -94,21 +90,24 @@ public abstract class DispatchGuard {
     }
 
     @Override
-    public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
+    public boolean entryMatches(final Object obj, final SourceSection sourceSection)
+        throws InvalidAssumptionException {
       return obj.getClass() == expected;
     }
   }
 
   private static final class CheckTrue extends DispatchGuard {
     @Override
-    public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
+    public boolean entryMatches(final Object obj, final SourceSection sourceSection)
+        throws InvalidAssumptionException {
       return obj == Boolean.TRUE;
     }
   }
 
   private static final class CheckFalse extends DispatchGuard {
     @Override
-    public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
+    public boolean entryMatches(final Object obj, final SourceSection sourceSection)
+        throws InvalidAssumptionException {
       return obj == Boolean.FALSE;
     }
   }
@@ -122,7 +121,8 @@ public abstract class DispatchGuard {
     }
 
     @Override
-    public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
+    public boolean entryMatches(final Object obj, final SourceSection sourceSection)
+        throws InvalidAssumptionException {
       return obj instanceof SObjectWithoutFields &&
           ((SObjectWithoutFields) obj).getFactory() == expected;
     }
@@ -137,7 +137,8 @@ public abstract class DispatchGuard {
     }
 
     @Override
-    public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
+    public boolean entryMatches(final Object obj, final SourceSection sourceSection)
+        throws InvalidAssumptionException {
       return obj instanceof SClass &&
           ((SClass) obj).getFactory() == expected;
     }
@@ -156,7 +157,8 @@ public abstract class DispatchGuard {
     }
 
     @Override
-    public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
+    public boolean entryMatches(final Object obj, final SourceSection sourceSection)
+        throws InvalidAssumptionException {
       expected.checkIsLatest();
       return obj instanceof SMutableObject &&
           ((SMutableObject) obj).getObjectLayout() == expected;
@@ -177,7 +179,8 @@ public abstract class DispatchGuard {
     }
 
     @Override
-    public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
+    public boolean entryMatches(final Object obj, final SourceSection sourceSection)
+        throws InvalidAssumptionException {
       expected.checkIsLatest();
       return obj instanceof SImmutableObject &&
           ((SImmutableObject) obj).getObjectLayout() == expected;
@@ -189,60 +192,37 @@ public abstract class DispatchGuard {
     }
   }
 
-  private static abstract class AbstractTypeCheck extends DispatchGuard {
+  public static abstract class AbstractTypeCheck extends DispatchGuard {
 
-    protected void throwTypeError(final Object obj, final String expected) {
+    protected void throwTypeError(final Object obj, final SomStructuralType expected,
+        final SourceSection sourceSection) throws IllegalArgumentException {
+      CompilerDirectives.transferToInterpreter();
+      String prefix = "";
+      if (sourceSection != null) {
+        prefix =
+            "[" + sourceSection.getStartLine() + "," + sourceSection.getStartColumn() + "]";
+      }
+
+      SomStructuralType objType;
+      if (obj instanceof SObjectWithClass) {
+        objType = SomStructuralType.getTypeFromMixin(
+            ((SObjectWithClass) obj).getSOMClass().getMixinDefinition());
+      } else {
+        objType =
+            SomStructuralType.getTypeFromMixin(Types.getClassOf(obj).getMixinDefinition());
+      }
       throw new IllegalArgumentException(
-          "Argument " + obj + " does not conform to the " + expected + " type");
+          prefix + " " + objType + " does not implemenet the interface " + expected);
     }
 
   }
 
-  private static final class NoTypeCheck extends AbstractTypeCheck {
+  public static final class NoTypeCheck extends AbstractTypeCheck {
     @Override
-    public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
+    public boolean entryMatches(final Object obj, final SourceSection sourceSection)
+        throws InvalidAssumptionException {
       return true;
     }
-  }
-
-  private static final class BooleanTypeCheck extends AbstractTypeCheck {
-
-    @Override
-    public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
-      if (obj instanceof Boolean) {
-        return true;
-      } else {
-        throwTypeError(obj, "Boolean");
-        return false;
-      }
-    }
-  }
-
-  private static final class NumberTypeCheck extends AbstractTypeCheck {
-
-    @Override
-    public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
-      if (obj instanceof Number) {
-        return true;
-      } else {
-        throwTypeError(obj, "Number");
-        return false;
-      }
-    }
-  }
-
-  private static final class StringTypeCheck extends AbstractTypeCheck {
-
-    @Override
-    public boolean entryMatches(final Object obj) throws InvalidAssumptionException {
-      if (obj instanceof String) {
-        return true;
-      } else {
-        throwTypeError(obj, "String");
-        return false;
-      }
-    }
-
   }
 
   /**
@@ -260,38 +240,69 @@ public abstract class DispatchGuard {
    * the error during execution rather than initialization.
    *
    */
-  private static final class StructuralTypeCheck extends AbstractTypeCheck {
+  public static final class StructuralTypeCheck extends AbstractTypeCheck {
 
-    private final SomStructuralType structuralType;
+    private final SomStructuralType   expected;
+    private final MixinDefinitionId[] cacheIds;
+    private final boolean[]           cacheResults;
+    private final int                 cacheSize;
+    private int                       nCached = 0;
 
-    @CompilationFinal private final MixinDefinition expected;
+    StructuralTypeCheck(final SomStructuralType structuralType, final int cacheSize) {
+      this.expected = structuralType;
+      this.cacheSize = cacheSize;
+      this.cacheIds = new MixinDefinitionId[cacheSize];
+      this.cacheResults = new boolean[cacheSize];
+    }
 
-    StructuralTypeCheck(final SomStructuralType structuralType, final Object argument) {
-      this.structuralType = structuralType;
+    public StructuralTypeCheck(final SomStructuralType structuralType) {
+      this(structuralType, 10);
+    }
 
-      if (argument instanceof SObjectWithClass && structuralType.matchesObject(argument)) {
-        this.expected = ((SObjectWithClass) argument).getSOMClass().getMixinDefinition();
-      } else {
-        this.expected = null;
-      }
+    public boolean doTypeCheckOnSlowPath(final MixinDefinition mixinDef) {
+      CompilerDirectives.transferToInterpreter();
+      SomStructuralType objType = mixinDef.getType();
+      boolean ret = (objType.isSubclassOf(expected));
+      cacheIds[nCached] = mixinDef.getMixinId();
+      cacheResults[nCached] = ret;
+      nCached += 1;
+      return ret;
     }
 
     @Override
-    public boolean entryMatches(final Object obj)
+    public boolean entryMatches(final Object obj, final SourceSection sourceSection)
         throws InvalidAssumptionException, IllegalArgumentException {
 
-      if (obj instanceof SObjectWithClass
-          && ((SObjectWithClass) obj).getSOMClass().getMixinDefinition() == expected) {
+      MixinDefinition mixinDef;
+      if (obj instanceof SObjectWithClass) {
+        mixinDef = ((SObjectWithClass) obj).getSOMClass().getMixinDefinition();
+      } else {
+        mixinDef = Types.getClassOf(obj).getMixinDefinition();
+      }
+
+      MixinDefinitionId id = mixinDef.getMixinId();
+      for (int i = 0; i < cacheSize; i++) {
+        if (id == cacheIds[i]) {
+          if (cacheResults[i]) {
+            return true;
+          } else {
+            throwTypeError(obj, expected, sourceSection);
+            return false;
+          }
+        }
+      }
+
+      if (doTypeCheckOnSlowPath(mixinDef)) {
         return true;
       } else {
-        throwTypeError(obj, structuralType.getName().getString());
+        throwTypeError(obj, expected, sourceSection);
         return false;
       }
     }
 
     @Override
     public boolean ignore() {
-      return structuralType == null;
+      return expected == null;
     }
   }
 }
