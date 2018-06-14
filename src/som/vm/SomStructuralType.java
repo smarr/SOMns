@@ -30,16 +30,16 @@ package som.vm;
 
 import static som.vm.Symbols.symbolFor;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
-import som.interpreter.objectstorage.ClassFactory;
-import som.vmobjects.SClass;
-import som.vmobjects.SInvokable;
-import som.vmobjects.SObjectWithClass;
+import som.compiler.MixinDefinition;
+import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SSymbol;
 
 
@@ -53,89 +53,97 @@ import som.vmobjects.SSymbol;
  */
 public class SomStructuralType {
 
-  public final static SSymbol NAME_FOR_BOOLEAN_PRIMITIVE = symbolFor("Boolean");
-  public final static SSymbol NAME_FOR_NUMBER_PRIMITIVE  = symbolFor("Number");
-  public final static SSymbol NAME_FOR_STRING_PRIMITIVE  = symbolFor("String");
+  @CompilationFinal public final static SSymbol UNKNOWN = symbolFor("Unknown");
 
-  private final SSymbol   name;
-  private final SSymbol[] signatures;
   private final static List<SomStructuralType>         allKnownTypes =
       new ArrayList<SomStructuralType>();
   private final static Map<SSymbol, SomStructuralType> recordedTypes =
       new HashMap<SSymbol, SomStructuralType>();
 
-  private final Map<ClassFactory, Boolean> matches;
+  @CompilationFinal(dimensions = 1) private final SSymbol[] signatures;
 
-  public SomStructuralType(final SSymbol name, final List<SSymbol> signatures) {
-    this.name = name;
+  private SomStructuralType(final List<SSymbol> signatures) {
     this.signatures = signatures.toArray(new SSymbol[signatures.size()]);
-
-    this.matches = new HashMap<ClassFactory, Boolean>();
   }
 
-  /**
-   * This method computes, and then caches, whether a given object's class conforms to this
-   * type. The calculation is simple: does the class understand each of methods named by
-   * {@link #signatures}?
-   *
-   * The result is indexed against the class of the given object.
-   *
-   * TODO: can we make the indexing more abstract, since multiple classes might implement this
-   * type.
-   */
-  public void computeAndRecordMatch(final Object obj) {
-    CompilerAsserts.neverPartOfCompilation();
-    SClass clazz = ((SObjectWithClass) obj).getSOMClass();
-    for (SSymbol signature : signatures) {
-      if (!clazz.canUnderstand(signature)) {
-        matches.put(((SObjectWithClass) obj).getFactory(), false);
-        return;
+  public boolean isSubclassOf(final SomStructuralType other) {
+    for (SSymbol sigOther : other.signatures) {
+      boolean found = false;
+      for (SSymbol sigThis : signatures) {
+        if (sigThis.equals(sigOther)) {
+          found = true;
+        }
+      }
+      if (!found) {
+        return false;
       }
     }
-    matches.put(((SObjectWithClass) obj).getFactory(), true);
+
+    return true;
   }
 
-  /**
-   * This method first obtains the class of the given object. If we've already encountered
-   * this class, we simply return the result we calculated previously. Otherwise, we do the
-   * calculation and store the result.
-   *
-   * Even though each this method is only called via a dispatch guard, the caching is important
-   * (since the same structural type may be referred to by different call sites: @see
-   * {@link SInvokable#getDispatchNode}.
-   *
-   * Finally, note that this method should only be used for checking the conformity of
-   * {@link SObjectWithClass}es.
-   */
-  public boolean matchesObject(final Object obj) {
-    CompilerAsserts.neverPartOfCompilation();
-    ClassFactory factory = ((SObjectWithClass) obj).getFactory();
-    if (matches.containsKey(factory)) {
-      return matches.get(factory);
-    } else {
-      computeAndRecordMatch(obj);
-      return matches.get(factory);
+  public static SomStructuralType makeType(final List<SSymbol> signatures) {
+    SSymbol[] sigs = signatures.toArray(new SSymbol[signatures.size()]);
+
+    for (int i = 0; i < allKnownTypes.size(); i++) {
+      SomStructuralType inRecord = allKnownTypes.get(i);
+      if (Arrays.equals(sigs, inRecord.signatures)) {
+        return inRecord;
+      }
     }
+
+    return new SomStructuralType(signatures);
   }
 
-  public SSymbol getName() {
-    return name;
+  public static SomStructuralType getTypeFromMixin(final MixinDefinition mixinDefinition) {
+    org.graalvm.collections.EconomicMap<SSymbol, Dispatchable> dispatchables =
+        mixinDefinition.getInstanceDispatchables();
+    List<SSymbol> signatures = new ArrayList<SSymbol>();
+    for (SSymbol sig : dispatchables.getKeys()) {
+      signatures.add(sig);
+    }
+    return makeType(signatures);
+  }
+
+  public static void recordTypeByName(final SSymbol name, final SomStructuralType type) {
+    if (recordedTypes.containsKey(name)) {
+      throw new RuntimeException(
+          "A type is  already known under the name `" + name.getString() + "`");
+    }
+    recordedTypes.put(name, type);
+  }
+
+  public static SomStructuralType recallTypeByName(final SSymbol name) {
+    if (!recordedTypes.containsKey(name)) {
+      throw new RuntimeException(
+          "No type is known under the name `" + name.getString() + "`");
+    }
+    return recordedTypes.get(name);
+  }
+
+  public static SomStructuralType recallTypeByName(final String name) {
+    return recordedTypes.get(symbolFor(name));
+  }
+
+  public boolean isBoolean() {
+    return signatures.length == 1 && signatures[0].getString().equals("__BOOLEAN");
+  }
+
+  public boolean isNumber() {
+    return signatures.length == 1 && signatures[0].getString().equals("__NUMBER");
+  }
+
+  public boolean isString() {
+    return signatures.length == 1 && signatures[0].getString().equals("__STRING");
   }
 
   @Override
   public String toString() {
-    return "SomStructuralType[" + name.getString() + "]";
-  }
-
-  public boolean isBoolean() {
-    return getName().equals(NAME_FOR_BOOLEAN_PRIMITIVE);
-  }
-
-  public boolean isNumber() {
-    return getName().equals(NAME_FOR_NUMBER_PRIMITIVE);
-  }
-
-  public boolean isString() {
-    return getName().equals(NAME_FOR_STRING_PRIMITIVE);
+    String s = "{ ";
+    for (SSymbol sig : signatures) {
+      s += " " + sig.getString() + ",";
+    }
+    s += " }";
+    return s;
   }
 }
