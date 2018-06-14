@@ -38,7 +38,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
 
   public ClassSlotAccessNode(final MixinDefinition mixinDef, final SlotDefinition slotDef,
       final CachedSlotRead read, final CachedSlotWrite write) {
-    super(SlotAccess.CLASS_READ, read.guard, read.nextInCache);
+    super(SlotAccess.CLASS_READ, read.guardForRcvr, read.guardForType, read.nextInCache);
 
     // TODO: can the slot read be an unwritten read? I'd think so.
     this.read = read;
@@ -64,7 +64,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
       try {
         // recheck guard under synchronized, don't want to access object if
         // layout might have changed, we are going to slow path in that case
-        read.guard.entryMatches(rcvr);
+        read.guardForRcvr.entryMatches(rcvr, null);
         cachedValue = read.read(rcvr);
       } catch (InvalidAssumptionException e) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -93,7 +93,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
       //
       // at this point the guard will fail, if it failed for the read guard,
       // but we simply recheck here to avoid impact on fast path
-      write.guard.entryMatches(rcvr);
+      write.guardForRcvr.entryMatches(rcvr, null);
       write.doWrite(rcvr, classObject);
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreterAndInvalidate();

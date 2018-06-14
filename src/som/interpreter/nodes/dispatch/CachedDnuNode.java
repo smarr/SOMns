@@ -43,7 +43,7 @@ public final class CachedDnuNode extends AbstractDispatchNode {
     boolean match;
     Object rcvr = arguments[0];
     try {
-      match = guard.entryMatches(rcvr);
+      match = guard.entryMatches(rcvr, null);
     } catch (InvalidAssumptionException e) {
       match = false;
     }

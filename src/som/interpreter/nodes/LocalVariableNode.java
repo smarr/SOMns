@@ -9,7 +9,10 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 
 import bd.inlining.ScopeAdaptationVisitor;
 import som.compiler.Variable.Local;
+import som.interpreter.nodes.dispatch.DispatchGuard;
+import som.interpreter.nodes.dispatch.DispatchGuard.AbstractTypeCheck;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
+import som.vm.SomStructuralType;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 import tools.Send;
@@ -19,12 +22,16 @@ import tools.dym.Tags.LocalVarWrite;
 
 
 public abstract class LocalVariableNode extends ExprWithTagsNode implements Send {
-  protected final FrameSlot slot;
-  protected final Local     var;
+  protected final FrameSlot         slot;
+  protected final Local             var;
+  protected final SomStructuralType type;
+  protected final AbstractTypeCheck check;
 
-  private LocalVariableNode(final Local var) {
+  private LocalVariableNode(final Local var, final SomStructuralType type) {
     this.slot = var.getSlot();
     this.var = var;
+    this.type = type;
+    this.check = DispatchGuard.createTypeCheck(type);
   }
 
   public final Local getLocal() {
@@ -47,12 +54,13 @@ public abstract class LocalVariableNode extends ExprWithTagsNode implements Send
 
   public abstract static class LocalVariableReadNode extends LocalVariableNode {
 
-    public LocalVariableReadNode(final Local variable) {
-      super(variable);
+    public LocalVariableReadNode(final Local variable, final SomStructuralType type) {
+      super(variable, type);
     }
 
-    public LocalVariableReadNode(final LocalVariableReadNode node) {
-      this(node.var);
+    public LocalVariableReadNode(final LocalVariableReadNode node,
+        final SomStructuralType type) {
+      this(node.var, type);
     }
 
     @Specialization(guards = "isUninitialized(frame)")
@@ -125,12 +133,13 @@ public abstract class LocalVariableNode extends ExprWithTagsNode implements Send
   @NodeChild(value = "exp", type = ExpressionNode.class)
   public abstract static class LocalVariableWriteNode extends LocalVariableNode {
 
-    public LocalVariableWriteNode(final Local variable) {
-      super(variable);
+    public LocalVariableWriteNode(final Local variable, final SomStructuralType type) {
+      super(variable, type);
     }
 
-    public LocalVariableWriteNode(final LocalVariableWriteNode node) {
-      super(node.var);
+    public LocalVariableWriteNode(final LocalVariableWriteNode node,
+        final SomStructuralType type) {
+      super(node.var, type);
     }
 
     public abstract ExpressionNode getExp();

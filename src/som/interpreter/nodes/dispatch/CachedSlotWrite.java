@@ -6,6 +6,7 @@ import com.oracle.truffle.api.profiles.IntValueProfile;
 
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.TruffleCompiler;
+import som.interpreter.nodes.dispatch.DispatchGuard.AbstractTypeCheck;
 import som.interpreter.nodes.dispatch.DispatchGuard.CheckSObject;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.interpreter.objectstorage.StorageAccessor.AbstractObjectAccessor;
@@ -23,12 +24,14 @@ import tools.dym.Tags.FieldWrite;
 public abstract class CachedSlotWrite extends AbstractDispatchNode {
   @Child protected AbstractDispatchNode nextInCache;
 
-  protected final CheckSObject guard;
+  protected final CheckSObject      guardForRcvr;
+  protected final AbstractTypeCheck guardForType;
 
-  public CachedSlotWrite(final CheckSObject guard,
-      final AbstractDispatchNode nextInCache) {
+  public CachedSlotWrite(final CheckSObject guardForRcvr,
+      final AbstractTypeCheck guardForType, final AbstractDispatchNode nextInCache) {
     super(nextInCache.getSourceSection());
-    this.guard = guard;
+    this.guardForRcvr = guardForRcvr;
+    this.guardForType = guardForType;
     this.nextInCache = nextInCache;
   }
 
@@ -37,7 +40,8 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
   @Override
   public final Object executeDispatch(final Object[] arguments) {
     try {
-      if (guard.entryMatches(arguments[0])) {
+      if (guardForRcvr.entryMatches(arguments[0], null)
+          && guardForType.entryMatches(arguments[1], sourceSection)) {
         doWrite((SMutableObject) arguments[0], arguments[1]);
         return arguments[1];
       } else {
@@ -66,9 +70,9 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
   public static final class UnwrittenSlotWrite extends CachedSlotWrite {
     private final SlotDefinition slot;
 
-    public UnwrittenSlotWrite(final SlotDefinition slot, final CheckSObject guard,
-        final AbstractDispatchNode nextInCache) {
-      super(guard, nextInCache);
+    public UnwrittenSlotWrite(final SlotDefinition slot, final CheckSObject guardForRcvr,
+        final AbstractTypeCheck guardForType, final AbstractDispatchNode nextInCache) {
+      super(guardForRcvr, guardForType, nextInCache);
       this.slot = slot;
     }
 
@@ -83,8 +87,9 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
     private final AbstractObjectAccessor accessor;
 
     public ObjectSlotWrite(final AbstractObjectAccessor accessor,
-        final CheckSObject guard, final AbstractDispatchNode nextInCache) {
-      super(guard, nextInCache);
+        final CheckSObject guardForRcvr, final AbstractTypeCheck guardForType,
+        final AbstractDispatchNode nextInCache) {
+      super(guardForRcvr, guardForType, nextInCache);
       this.accessor = accessor;
     }
 
@@ -99,10 +104,10 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
     protected final SlotDefinition            slot;
     protected final IntValueProfile           primMarkProfile;
 
-    PrimSlotWrite(final SlotDefinition slot,
-        final AbstractPrimitiveAccessor accessor, final CheckSObject guard,
+    PrimSlotWrite(final SlotDefinition slot, final AbstractPrimitiveAccessor accessor,
+        final CheckSObject guardForRcvr, final AbstractTypeCheck guardForType,
         final AbstractDispatchNode nextInCache) {
-      super(guard, nextInCache);
+      super(guardForRcvr, guardForType, nextInCache);
       this.accessor = accessor;
       this.slot = slot;
       this.primMarkProfile = IntValueProfile.createIdentityProfile();
@@ -112,9 +117,9 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
   public static final class LongSlotWriteSetOrUnset extends PrimSlotWrite {
 
     public LongSlotWriteSetOrUnset(final SlotDefinition slot,
-        final AbstractPrimitiveAccessor accessor, final CheckSObject guard,
-        final AbstractDispatchNode nextInCache) {
-      super(slot, accessor, guard, nextInCache);
+        final AbstractPrimitiveAccessor accessor, final CheckSObject guardForRcvr,
+        final AbstractTypeCheck guardForType, final AbstractDispatchNode nextInCache) {
+      super(slot, accessor, guardForRcvr, guardForType, nextInCache);
     }
 
     @Override
@@ -132,9 +137,9 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
   public static final class LongSlotWriteSet extends PrimSlotWrite {
 
     public LongSlotWriteSet(final SlotDefinition slot,
-        final AbstractPrimitiveAccessor accessor, final CheckSObject guard,
-        final AbstractDispatchNode nextInCache) {
-      super(slot, accessor, guard, nextInCache);
+        final AbstractPrimitiveAccessor accessor, final CheckSObject guardForRcvr,
+        final AbstractTypeCheck guardForType, final AbstractDispatchNode nextInCache) {
+      super(slot, accessor, guardForRcvr, guardForType, nextInCache);
     }
 
     @Override
@@ -146,7 +151,8 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
           accessor.markPrimAsSet(obj);
 
           // fall back to LongSlotWriteSetOrUnset
-          replace(new LongSlotWriteSetOrUnset(slot, accessor, guard, nextInCache));
+          replace(new LongSlotWriteSetOrUnset(slot, accessor, guardForRcvr, guardForType,
+              nextInCache));
         }
       } else {
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
@@ -158,9 +164,9 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
   public static final class DoubleSlotWriteSetOrUnset extends PrimSlotWrite {
 
     public DoubleSlotWriteSetOrUnset(final SlotDefinition slot,
-        final AbstractPrimitiveAccessor accessor, final CheckSObject guard,
-        final AbstractDispatchNode nextInCache) {
-      super(slot, accessor, guard, nextInCache);
+        final AbstractPrimitiveAccessor accessor, final CheckSObject guardForRcvr,
+        final AbstractTypeCheck guardForType, final AbstractDispatchNode nextInCache) {
+      super(slot, accessor, guardForRcvr, guardForType, nextInCache);
     }
 
     @Override
@@ -178,9 +184,9 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
   public static final class DoubleSlotWriteSet extends PrimSlotWrite {
 
     public DoubleSlotWriteSet(final SlotDefinition slot,
-        final AbstractPrimitiveAccessor accessor, final CheckSObject guard,
-        final AbstractDispatchNode nextInCache) {
-      super(slot, accessor, guard, nextInCache);
+        final AbstractPrimitiveAccessor accessor, final CheckSObject guardForRcvr,
+        final AbstractTypeCheck guardForType, final AbstractDispatchNode nextInCache) {
+      super(slot, accessor, guardForRcvr, guardForType, nextInCache);
     }
 
     @Override
@@ -192,7 +198,8 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
           accessor.markPrimAsSet(obj);
 
           // fall back to LongSlotWriteSetOrUnset
-          replace(new DoubleSlotWriteSetOrUnset(slot, accessor, guard, nextInCache));
+          replace(new DoubleSlotWriteSetOrUnset(slot, accessor, guardForRcvr, guardForType,
+              nextInCache));
         }
       } else {
         TruffleCompiler.transferToInterpreterAndInvalidate("unstabelized write node");
