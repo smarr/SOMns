@@ -35,6 +35,7 @@ import java.util.List;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.SomLanguage;
 import som.vmobjects.SSymbol;
 
 
@@ -44,9 +45,11 @@ import som.vmobjects.SSymbol;
  * the module name).
  */
 public class SourceManager {
-  private Source source;
+  private SomLanguage language;
+  private Source      source;
 
-  SourceManager(final Source source) {
+  SourceManager(final SomLanguage language, final Source source) {
+    this.language = language;
     this.source = source;
   }
 
@@ -100,5 +103,11 @@ public class SourceManager {
     String[] pathPartsWithoutFilename = Arrays.copyOfRange(pathParts, 0, pathParts.length - 1);
     String directory = String.join("/", pathPartsWithoutFilename);
     return directory + "/" + moduleName.getString() + ".grace";
+  }
+
+  public boolean isMainModule() {
+    String path = source.getURI().getPath();
+    String firstArg = (String) language.getVM().getArguments()[0];
+    return path.contains(firstArg);
   }
 }

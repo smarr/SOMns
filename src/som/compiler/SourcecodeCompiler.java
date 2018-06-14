@@ -24,6 +24,10 @@
 
 package som.compiler;
 
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
 import com.google.gson.JsonObject;
 import com.oracle.truffle.api.source.Source;
 
@@ -68,9 +72,17 @@ public class SourcecodeCompiler {
    *
    * @return - a finished SOM class created from the given module
    */
+
+  private Map<String, MixinDefinition> alreadyLoaded = new HashMap<String, MixinDefinition>();
+
   public MixinDefinition compileGraceModule(final Source source,
       final StructuralProbe structuralProbe)
-      throws ProgramDefinitionError {
+      throws ProgramDefinitionError, IOException {
+    String filepath = source.getURI().getPath();
+    if (alreadyLoaded.containsKey(filepath)) {
+      return alreadyLoaded.get(filepath);
+    }
+
     KernanClient client = new KernanClient(source, language, structuralProbe);
     JsonObject response = client.getKernanResponse();
 
@@ -80,6 +92,7 @@ public class SourcecodeCompiler {
           new JsonTreeTranslator(parseTree, source, language, structuralProbe);
       MixinDefinition result = translator.translateModule();
       language.getVM().reportLoadedSource(source);
+      alreadyLoaded.put(filepath, result);
       return result;
 
     } else if (response.has("mode")
@@ -104,10 +117,11 @@ public class SourcecodeCompiler {
    * Compiles a program, which must be written in either Grace or Newspeak.
    *
    * @return - a finished SOM class created from the given module
+   * @throws IOException
    */
   public MixinDefinition compileModule(final Source source,
       final StructuralProbe structuralProbe)
-      throws ProgramDefinitionError {
+      throws ProgramDefinitionError, IOException {
     final String path = source.getURI().getPath();
 
     if (path.endsWith(".grace") || path.endsWith(".grc")) {

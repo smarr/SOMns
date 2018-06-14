@@ -37,6 +37,7 @@ import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SequenceNode;
+import som.vm.SomStructuralType;
 import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -152,9 +153,10 @@ public class ScopeManager {
    *          code)
    * @return the builder
    */
-  public MethodBuilder newMethod(final SSymbol signature) {
+  public MethodBuilder newMethod(final SSymbol signature, final SomStructuralType returnType) {
     MethodBuilder builder = new MethodBuilder(peekObject(), probe);
     builder.setSignature(signature);
+    builder.setReturnType(returnType);
     methods.push(builder);
     return builder;
   }

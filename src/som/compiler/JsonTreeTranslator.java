@@ -41,6 +41,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
+import som.vm.SomStructuralType;
 import som.vmobjects.SSymbol;
 import tools.language.StructuralProbe;
 
@@ -56,13 +57,10 @@ import tools.language.StructuralProbe;
  */
 public class JsonTreeTranslator {
 
-  public static boolean translatingMain = true; // The main module is always translated first
-
   private final SomLanguage language;
 
   private final ScopeManager  scopeManager;
   private final SourceManager sourceManager;
-  private final TypeManager   typeManager;
 
   private final AstBuilder astBuilder;
   private final JsonObject jsonAST;
@@ -72,11 +70,9 @@ public class JsonTreeTranslator {
     this.language = language;
 
     this.scopeManager = new ScopeManager(language, probe);
-    this.sourceManager = new SourceManager(source);
-    this.typeManager = new TypeManager(language, sourceManager);
+    this.sourceManager = new SourceManager(language, source);
 
-    this.astBuilder =
-        new AstBuilder(this, scopeManager, sourceManager, typeManager, language, probe);
+    this.astBuilder = new AstBuilder(this, scopeManager, sourceManager, language, probe);
     this.jsonAST = jsonAST;
   }
 
@@ -258,6 +254,16 @@ public class JsonTreeTranslator {
     }
   }
 
+  private SomStructuralType returnType(final JsonObject node) {
+    JsonObject signatureNode = node.get("signature").getAsJsonObject();
+    if (signatureNode.get("returntype").isJsonNull()) {
+      return null;
+    } else {
+      SSymbol name = symbolFor(name(signatureNode.get("returntype").getAsJsonObject()));
+      return SomStructuralType.recallTypeByName(name);
+    }
+  }
+
   /**
    * Maps a Grace prefix operator to a NS operator or method call.
    *
@@ -285,36 +291,41 @@ public class JsonTreeTranslator {
    * for SOM's built in objects. We change to the SOM signature in the cases to take advantage
    * of this mapping.
    */
+  private SSymbol processSelector(final SSymbol selector) {
+    if (isOperator(selector.getString().replace(":", ""))) {
+      return symbolFor(selector.getString().replace(":", ""));
+    }
+
+    return selector;
+  }
+
   private SSymbol selector(final JsonObject node) {
+    SSymbol selector;
     if (node.has("parts")) {
-      return selectorFromParts(node.get("parts").getAsJsonArray());
+      selector = selectorFromParts(node.get("parts").getAsJsonArray());
 
     } else if (node.has("signature")) {
-      return selectorFromParts(
+      selector = selectorFromParts(
           node.get("signature").getAsJsonObject().get("parts").getAsJsonArray());
 
     } else if (nodeType(node).equals("prefix-operator")) {
-      return prefixOperatorFor(name(node));
+      selector = prefixOperatorFor(name(node));
+
+    } else if (nodeType(node).equals("bind")) {
+      selector = selector(node.get("left").getAsJsonObject());
 
     } else if (node.has("operator")) {
       String operator = node.get("operator").getAsString();
-      if (operator.equals("!=")) {
-        operator = "<>";
-      } else if (operator.equals("==")) {
-        operator = "=";
-      } else if (operator.equals("/")) {
-        operator = "//";
-      }
-      return symbolFor(operator);
-
-    } else if (nodeType(node).equals("bind")) {
-      return selector(node.get("left").getAsJsonObject());
+      selector = symbolFor(operator);
 
     } else {
-      error("The translator doesn't understand how to a selector from " + nodeType(node),
+      error(
+          "The translator doesn't understand how to get a selector from an " + nodeType(node),
           node);
       throw new RuntimeException();
     }
+
+    return processSelector(selector);
   }
 
   /**
@@ -370,64 +381,25 @@ public class JsonTreeTranslator {
   }
 
   /**
-   * Gets a list of parameters names, each represented by an {@link SSymbol}, from a
-   * declaration node by iterating through the parameters belonging to each part of that
-   * declaration.
-   */
-  private SSymbol[] parameterNamesFromParts(final JsonArray parts) {
-    List<SSymbol> parametersNames = new ArrayList<SSymbol>();
-
-    for (JsonElement partElement : parts) {
-      JsonObject part = partElement.getAsJsonObject();
-      for (JsonElement parameterElement : part.get("parameters").getAsJsonArray()) {
-        SSymbol name = symbolFor(name(parameterElement.getAsJsonObject()));
-        parametersNames.add(name);
-      }
-    }
-
-    return parametersNames.toArray(new SSymbol[parametersNames.size()]);
-  }
-
-  /**
    * Gets the parameters for a declaration node.
    */
   private SSymbol[] parameters(final JsonObject node) {
-    if (node.has("signature")) {
-      return parameterNamesFromParts(
-          node.get("signature").getAsJsonObject().get("parts").getAsJsonArray());
-
-    } else if (node.has("parameters")) {
-      List<SSymbol> parametersNames = new ArrayList<SSymbol>();
-      for (JsonElement parameterElement : node.get("parameters").getAsJsonArray()) {
-        SSymbol name = symbolFor(name(parameterElement.getAsJsonObject()));
-        parametersNames.add(name);
-      }
-      return parametersNames.toArray(new SSymbol[parametersNames.size()]);
-
-    } else {
-      error("The translator doesn't understand how to get parameters from " + node, node);
-      throw new RuntimeException();
-    }
-  }
-
-  /**
-   * Gets the source sections for the parameters of a declaration node.
-   */
-  private SourceSection[] sourceOfParameters(final JsonObject node) {
-    List<SourceSection> parameterSources = new ArrayList<SourceSection>();
+    List<SSymbol> parametersNames = new ArrayList<SSymbol>();
 
     if (node.has("signature")) {
       JsonArray parts = node.get("signature").getAsJsonObject().get("parts").getAsJsonArray();
       for (JsonElement partElement : parts) {
         JsonObject part = partElement.getAsJsonObject();
         for (JsonElement parameterElement : part.get("parameters").getAsJsonArray()) {
-          parameterSources.add(source(parameterElement.getAsJsonObject()));
+          SSymbol name = symbolFor(name(parameterElement.getAsJsonObject()));
+          parametersNames.add(name);
         }
       }
 
     } else if (node.has("parameters")) {
       for (JsonElement parameterElement : node.get("parameters").getAsJsonArray()) {
-        parameterSources.add(source(parameterElement.getAsJsonObject()));
+        SSymbol name = symbolFor(name(parameterElement.getAsJsonObject()));
+        parametersNames.add(name);
       }
 
     } else {
@@ -435,21 +407,29 @@ public class JsonTreeTranslator {
       throw new RuntimeException();
     }
 
-    return parameterSources.toArray(new SourceSection[parameterSources.size()]);
+    return parametersNames.toArray(new SSymbol[parametersNames.size()]);
   }
 
   /**
    * Extracts the name of type declared inside of the given node, which may be either a
    * typed-parameter or otherwise a simple identifier.
    */
-  private String typeName(final JsonObject node) {
+  private SomStructuralType typeFor(final JsonObject node) {
     String nodeType = nodeType(node);
 
     if (nodeType.equals("typed-parameter")) {
-      return name(node.get("type").getAsJsonObject());
+      return SomStructuralType.recallTypeByName(name(node.get("type").getAsJsonObject()));
 
     } else if (nodeType.equals("identifier")) {
-      return "Unknown";
+      return null;
+
+    } else if (node.has("type")) {
+      if (node.get("type").isJsonNull()) {
+        return null;
+      } else {
+        return SomStructuralType.recallTypeByName(
+            node.get("type").getAsJsonObject().get("name").getAsString());
+      }
 
     } else {
       error("The translator doesn't understand how to get type for " + nodeType, node);
@@ -460,8 +440,8 @@ public class JsonTreeTranslator {
   /**
    * Gets the parameter types for a declaration node.
    */
-  private SSymbol[] typesForParameters(final JsonObject node) {
-    List<SSymbol> types = new ArrayList<SSymbol>();
+  private SomStructuralType[] typesForParameters(final JsonObject node) {
+    List<SomStructuralType> types = new ArrayList<SomStructuralType>();
 
     if (node.has("signature")) {
       for (JsonElement partElement : node.get("signature").getAsJsonObject().get("parts")
@@ -470,16 +450,55 @@ public class JsonTreeTranslator {
 
         for (JsonElement parameterElement : partObject.get("parameters").getAsJsonArray()) {
           JsonObject parameterObject = parameterElement.getAsJsonObject();
-          types.add(symbolFor(typeName(parameterObject)));
+          types.add(typeFor(parameterObject));
         }
       }
-      return types.toArray(new SSymbol[types.size()]);
+
+    } else if (node.has("parameters")) {
+      for (JsonElement parameterElement : node.get("parameters").getAsJsonArray()) {
+        types.add(typeFor(parameterElement.getAsJsonObject()));
+      }
 
     } else {
-      error("The translator doesn't understand how to get parameters from " + nodeType(node),
+      error("The translator doesn't understand how to get the types for parameters from a "
+          + nodeType(node), node);
+      throw new RuntimeException();
+    }
+
+    return types.toArray(new SomStructuralType[types.size()]);
+  }
+
+  /**
+   * Gets the parameter sources for a declaration node.
+   */
+  private SourceSection[] sourcesForParameters(final JsonObject node) {
+    List<SourceSection> sources = new ArrayList<SourceSection>();
+
+    if (node.has("signature")) {
+      for (JsonElement partElement : node.get("signature").getAsJsonObject().get("parts")
+                                         .getAsJsonArray()) {
+        JsonObject partObject = partElement.getAsJsonObject();
+
+        for (JsonElement parameterElement : partObject.get("parameters").getAsJsonArray()) {
+          JsonObject parameterObject = parameterElement.getAsJsonObject();
+          sources.add(source(parameterObject));
+        }
+      }
+
+    } else if (node.has("parameters")) {
+      for (JsonElement parameterElement : node.get("parameters").getAsJsonArray()) {
+        sources.add(source(parameterElement.getAsJsonObject()));
+      }
+
+    } else {
+      error(
+          "The translator doesn't understand how to get sources for the parameters in a "
+              + nodeType(node),
           node);
       throw new RuntimeException();
     }
+
+    return sources.toArray(new SourceSection[sources.size()]);
   }
 
   private SSymbol[] locals(final JsonObject node) {
@@ -493,7 +512,19 @@ public class JsonTreeTranslator {
     return localNames.toArray(new SSymbol[localNames.size()]);
   }
 
-  private SourceSection[] sourceOfLocals(final JsonObject node) {
+  private SomStructuralType[] typesForLocals(final JsonObject node) {
+    List<SomStructuralType> types = new ArrayList<SomStructuralType>();
+    for (JsonElement element : body(node)) {
+      JsonObject eNode = element.getAsJsonObject();
+      String type = nodeType(element.getAsJsonObject());
+      if (type.equals("def-declaration") || type.equals("var-declaration")) {
+        types.add(typeFor(eNode));
+      }
+    }
+    return types.toArray(new SomStructuralType[types.size()]);
+  }
+
+  private SourceSection[] sourcesForLocals(final JsonObject node) {
     List<SourceSection> sourceSections = new ArrayList<SourceSection>();
     for (JsonElement element : body(node)) {
       JsonObject object = element.getAsJsonObject();
@@ -601,30 +632,37 @@ public class JsonTreeTranslator {
       return null;
 
     } else if (nodeType(node).equals("method-declaration")) {
-      astBuilder.objectBuilder.method(selector(node), parameters(node),
-          typesForParameters(node), locals(node),
-          body(node));
+      astBuilder.objectBuilder.method(selector(node), returnType(node), parameters(node),
+          typesForParameters(node), sourcesForParameters(node), locals(node),
+          typesForLocals(node), sourcesForLocals(node), body(node));
       return null;
 
     } else if (nodeType(node).equals("class-declaration")) {
       SSymbol selector = selector(node);
       SSymbol[] parameters = parameters(node);
-      astBuilder.objectBuilder.clazzDefinition(selector, parameters, locals(node), body(node),
+      astBuilder.objectBuilder.clazzDefinition(selector, returnType(node), parameters,
+          typesForParameters(node),
+          sourcesForParameters(node),
+          locals(node), typesForLocals(node), sourcesForLocals(node), body(node),
           source(node));
-      astBuilder.objectBuilder.clazzMethod(selector, parameters, source(node));
+      astBuilder.objectBuilder.clazzMethod(selector, returnType(node), parameters,
+          typesForParameters(node),
+          sourcesForParameters(node), source(node));
       return null;
 
     } else if (nodeType(node).equals("object")) {
-      return astBuilder.objectBuilder.objectConstructor(locals(node), body(node),
-          source(node));
+      return astBuilder.objectBuilder.objectConstructor(locals(node), typesForLocals(node),
+          sourcesForLocals(node), body(node), source(node));
 
     } else if (nodeType(node).equals("type-statement")) {
-      typeManager.addTypeDeclaration(symbolFor(name(node)), parseTypeSignatures(node));
+      SomStructuralType.recordTypeByName(symbolFor(name(node)),
+          SomStructuralType.makeType(parseTypeSignatures(node)));
       return null;
 
     } else if (nodeType(node).equals("block")) {
-      return astBuilder.objectBuilder.block(parameters(node), sourceOfParameters(node),
-          locals(node), sourceOfLocals(node), body(node), source(node));
+      return astBuilder.objectBuilder.block(parameters(node), typesForParameters(node),
+          sourcesForParameters(node), locals(node), typesForLocals(node),
+          sourcesForLocals(node), body(node), source(node));
 
     } else if (nodeType(node).equals("def-declaration")) {
       return astBuilder.requestBuilder.assignment(symbolFor(name(node)),
@@ -688,7 +726,7 @@ public class JsonTreeTranslator {
     } else if (nodeType(node).equals("import")) {
       ExpressionNode importExpression =
           astBuilder.requestBuilder.importModule(symbolFor(path(node)));
-      astBuilder.objectBuilder.addImmutableSlot(symbolFor(name(node)), importExpression,
+      astBuilder.objectBuilder.addImmutableSlot(symbolFor(name(node)), null, importExpression,
           source(node));
       return null;
 
@@ -720,10 +758,8 @@ public class JsonTreeTranslator {
    */
   public MixinDefinition translateModule() {
     JsonObject moduleNode = jsonAST.get("module").getAsJsonObject();
-    MixinDefinition result =
-        astBuilder.objectBuilder.module(locals(moduleNode), body(moduleNode),
-            translatingMain);
-    translatingMain = false;
+    MixinDefinition result = astBuilder.objectBuilder.module(locals(moduleNode),
+        typesForLocals(moduleNode), sourcesForLocals(moduleNode), body(moduleNode));
     return result;
   }
 }

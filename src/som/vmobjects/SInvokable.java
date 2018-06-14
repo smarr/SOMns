@@ -46,7 +46,6 @@ import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNode;
 import som.vm.SomStructuralType;
-import som.vm.VmSettings;
 import som.vm.constants.Classes;
 
 
@@ -203,14 +202,10 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     }
 
     List<DispatchGuard> guards = new ArrayList<DispatchGuard>();
-    guards.add(DispatchGuard.create(rcvr)); // receiver guard, always present
-
-    // Add type checking guards when SOMns is in "Boyland Checking" mode
-    if (VmSettings.BOYLAND_CHECKING) {
-      for (int i = 0; i < expectedTypes.length; i++) {
-        SomStructuralType expectedType = expectedTypes[i];
-        guards.add(DispatchGuard.createTypeCheck(expectedType, arguments[i + 1]));
-      }
+    guards.add(DispatchGuard.create(rcvr)); // receiver guard
+    for (int i = 0; i < expectedTypes.length; i++) {
+      SomStructuralType expectedType = expectedTypes[i];
+      guards.add(DispatchGuard.createTypeCheck(expectedType));
     }
 
     return new CachedDispatchNode(ct, guards.toArray(new DispatchGuard[guards.size()]), next);

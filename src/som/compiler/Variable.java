@@ -199,7 +199,7 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
       transferToInterpreterAndInvalidate("Variable.getReadNode");
       ExpressionNode node;
       if (contextLevel == 0) {
-        node = LocalVariableReadNodeGen.create(this);
+        node = LocalVariableReadNodeGen.create(this, type);
       } else {
         node = NonLocalVariableReadNodeGen.create(contextLevel, this);
       }
@@ -228,7 +228,7 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
       transferToInterpreterAndInvalidate("Variable.getWriteNode");
       ExpressionNode node;
       if (contextLevel == 0) {
-        node = LocalVariableWriteNodeGen.create(this, valueExpr);
+        node = LocalVariableWriteNodeGen.create(this, type, valueExpr);
       } else {
         node = NonLocalVariableWriteNodeGen.create(contextLevel, this,
             valueExpr);

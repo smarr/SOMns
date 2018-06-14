@@ -341,7 +341,7 @@ public class NewspeakParser {
       messagePattern(primaryFactory);
     } else {
       // in the standard case, the primary factory method is #new
-      primaryFactory.addUntypedArgument(Symbols.SELF, getEmptySource());
+      primaryFactory.addArgument(Symbols.SELF, null, getEmptySource());
       primaryFactory.setSignature(Symbols.NEW);
     }
     mxnBuilder.setupInitializerBasedOnPrimaryFactory(getSource(coord));
@@ -661,7 +661,7 @@ public class NewspeakParser {
       immutable = false;
       init = null;
     }
-    mxnBuilder.addSlot(symbolFor(slotName), acccessModifier, immutable, init,
+    mxnBuilder.addSlot(symbolFor(slotName), null, acccessModifier, immutable, init,
         getSource(coord));
   }
 
@@ -854,7 +854,7 @@ public class NewspeakParser {
   }
 
   private void messagePattern(final MethodBuilder builder) throws ParseError {
-    builder.addUntypedArgument(Symbols.SELF, getEmptySource());
+    builder.addArgument(Symbols.SELF, null, getEmptySource());
     switch (sym) {
       case Identifier:
         unaryPattern(builder);
@@ -884,7 +884,7 @@ public class NewspeakParser {
     builder.addMethodDefinitionSource(getSource(coord));
 
     coord = getCoordinate();
-    builder.addUntypedArgument(symbolFor(argument()), getSource(coord));
+    builder.addArgument(symbolFor(argument()), null, getSource(coord));
   }
 
   protected void keywordPattern(final MethodBuilder builder) throws ParseError {
@@ -895,7 +895,7 @@ public class NewspeakParser {
       builder.addMethodDefinitionSource(getSource(coord));
 
       coord = getCoordinate();
-      builder.addUntypedArgument(symbolFor(argument()), getSource(coord));
+      builder.addArgument(symbolFor(argument()), null, getSource(coord));
     } while (sym == Keyword);
 
     builder.setSignature(symbolFor(kw.toString()));
@@ -1026,7 +1026,7 @@ public class NewspeakParser {
       initializer = null;
     }
 
-    Local local = builder.addLocal(symbolFor(slotName), immutable, source);
+    Local local = builder.addLocal(symbolFor(slotName), null, immutable, source);
 
     if (initializer != null) {
       SourceSection write = getSource(coord);
@@ -1629,7 +1629,7 @@ public class NewspeakParser {
 
     // Setup the builder and "new" factory for the implicit class
     MethodBuilder primaryFactory = classBuilder.getPrimaryFactoryMethodBuilder();
-    primaryFactory.addUntypedArgument(Symbols.SELF, getEmptySource());
+    primaryFactory.addArgument(Symbols.SELF, null, getEmptySource());
     primaryFactory.setSignature(Symbols.NEW);
     classBuilder.setupInitializerBasedOnPrimaryFactory(source);
 
@@ -1683,7 +1683,7 @@ public class NewspeakParser {
     SourceCoordinate coord = getCoordinate();
     expect(NewBlock, DelimiterOpeningTag.class);
 
-    builder.addUntypedArgument(Symbols.BLOCK_SELF, getEmptySource());
+    builder.addArgument(Symbols.BLOCK_SELF, null, getEmptySource());
 
     if (sym == Colon) {
       blockPattern(builder);
@@ -1717,7 +1717,7 @@ public class NewspeakParser {
     do {
       expect(Colon, KeywordTag.class);
       SourceCoordinate coord = getCoordinate();
-      builder.addUntypedArgument(symbolFor(argument()), getSource(coord));
+      builder.addArgument(symbolFor(argument()), null, getSource(coord));
     } while (sym == Colon);
   }
 

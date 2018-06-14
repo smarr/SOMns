@@ -32,6 +32,7 @@ import som.interpreter.nodes.dispatch.CachedSlotRead.SlotAccess;
 import som.interpreter.nodes.dispatch.CachedSlotWrite;
 import som.interpreter.nodes.dispatch.ClassSlotAccessNode;
 import som.interpreter.nodes.dispatch.DispatchGuard;
+import som.interpreter.nodes.dispatch.DispatchGuard.AbstractTypeCheck;
 import som.interpreter.nodes.dispatch.DispatchGuard.CheckSObject;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.literals.NilLiteralNode;
@@ -40,6 +41,7 @@ import som.interpreter.objectstorage.InitializerFieldWrite;
 import som.interpreter.objectstorage.StorageLocation;
 import som.interpreter.transactions.CachedTxSlotRead;
 import som.interpreter.transactions.CachedTxSlotWrite;
+import som.vm.SomStructuralType;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
@@ -86,7 +88,8 @@ public final class MixinDefinition {
 
   private final EconomicMap<SSymbol, MixinDefinition> nestedMixinDefinitions;
 
-  public MixinDefinition(final SSymbol name, final SourceSection nameSection,
+  public MixinDefinition(final SSymbol name,
+      final SourceSection nameSection,
       final SSymbol primaryFactoryName,
       final List<ExpressionNode> initializerBody,
       final MethodBuilder initializerBuilder,
@@ -494,17 +497,19 @@ public final class MixinDefinition {
   // should split out the definition, and the accessor related stuff
   // perhaps move some of the responsibilities to SlotAccessNode???
   public static class SlotDefinition implements Dispatchable {
-    private final SSymbol          name;
-    protected final AccessModifier modifier;
-    private final boolean          immutable;
-    protected final SourceSection  source;
+    private final SSymbol             name;
+    protected final SomStructuralType type;
+    protected final AccessModifier    modifier;
+    private final boolean             immutable;
+    protected final SourceSection     source;
 
     @CompilationFinal protected CallTarget genericAccessTarget;
 
-    public SlotDefinition(final SSymbol name,
+    public SlotDefinition(final SSymbol name, final SomStructuralType type,
         final AccessModifier acccessModifier, final boolean immutable,
         final SourceSection source) {
       this.name = name;
+      this.type = type;
       this.modifier = acccessModifier;
       this.immutable = immutable;
       this.source = source;
@@ -544,12 +549,13 @@ public final class MixinDefinition {
       boolean isSet = loc.isSet(rcvr);
 
       CachedSlotRead read =
-          createNode(loc, DispatchGuard.createSObjectCheck(rcvr), next, isSet);
+          createNode(loc, DispatchGuard.createSObjectCheck(rcvr),
+              DispatchGuard.createTypeCheck(type), next, isSet);
 
       if (forAtomic && rcvr instanceof SMutableObject &&
           getAccessType() == SlotAccess.FIELD_READ) {
         return new CachedTxSlotRead(getAccessType(), read,
-            DispatchGuard.createSObjectCheck(rcvr), next);
+            DispatchGuard.createSObjectCheck(rcvr), DispatchGuard.createTypeCheck(type), next);
       } else {
         return read;
       }
@@ -575,9 +581,9 @@ public final class MixinDefinition {
     }
 
     protected CachedSlotRead createNode(final StorageLocation loc,
-        final CheckSObject guard, final AbstractDispatchNode next,
-        final boolean isSet) {
-      return loc.getReadNode(getAccessType(), guard, next, isSet);
+        final CheckSObject guardForRcvr, final AbstractTypeCheck guardForType,
+        final AbstractDispatchNode next, final boolean isSet) {
+      return loc.getReadNode(getAccessType(), guardForRcvr, guardForType, next, isSet);
     }
 
     protected SlotAccess getAccessType() {
@@ -598,10 +604,10 @@ public final class MixinDefinition {
 
     private SlotDefinition mainSlot;
 
-    public SlotMutator(final SSymbol name, final AccessModifier acccessModifier,
-        final boolean immutable, final SourceSection source,
-        final SlotDefinition mainSlot) {
-      super(name, acccessModifier, immutable, source);
+    public SlotMutator(final SSymbol name, final SomStructuralType type,
+        final AccessModifier acccessModifier, final boolean immutable,
+        final SourceSection source, final SlotDefinition mainSlot) {
+      super(name, type, acccessModifier, immutable, source);
       assert !immutable;
       this.mainSlot = mainSlot;
     }
@@ -613,11 +619,12 @@ public final class MixinDefinition {
       StorageLocation loc = rcvr.getObjectLayout().getStorageLocation(mainSlot);
       boolean isSet = loc.isSet(rcvr);
       CachedSlotWrite write =
-          loc.getWriteNode(mainSlot, DispatchGuard.createSObjectCheck(rcvr), next, isSet);
+          loc.getWriteNode(mainSlot, DispatchGuard.createSObjectCheck(rcvr),
+              DispatchGuard.createTypeCheck(type), next, isSet);
 
       if (forAtomic) {
         return new CachedTxSlotWrite(write,
-            DispatchGuard.createSObjectCheck(rcvr), next);
+            DispatchGuard.createSObjectCheck(rcvr), DispatchGuard.createTypeCheck(type), next);
       } else {
         return write;
       }
@@ -640,19 +647,19 @@ public final class MixinDefinition {
   public static final class ClassSlotDefinition extends SlotDefinition {
     private final MixinDefinition mixinDefinition;
 
-    public ClassSlotDefinition(final SSymbol name,
+    public ClassSlotDefinition(final SSymbol name, final SomStructuralType type,
         final MixinDefinition mixinDefinition) {
-      super(name, mixinDefinition.getAccessModifier(), true,
+      super(name, type, mixinDefinition.getAccessModifier(), true,
           mixinDefinition.getSourceSection());
       this.mixinDefinition = mixinDefinition;
     }
 
     @Override
     protected CachedSlotRead createNode(final StorageLocation loc,
-        final CheckSObject guard, final AbstractDispatchNode next,
-        final boolean isSet) {
-      CachedSlotRead read = super.createNode(loc, guard, next, isSet);
-      CachedSlotWrite write = loc.getWriteNode(this, guard, next, isSet);
+        final CheckSObject guardForRcvr, final AbstractTypeCheck guardForType,
+        final AbstractDispatchNode next, final boolean isSet) {
+      CachedSlotRead read = super.createNode(loc, guardForRcvr, guardForType, next, isSet);
+      CachedSlotWrite write = loc.getWriteNode(this, guardForRcvr, guardForType, next, isSet);
 
       ClassSlotAccessNode node =
           new ClassSlotAccessNode(mixinDefinition, loc.getSlot(), read, write);
@@ -727,7 +734,7 @@ public final class MixinDefinition {
     SSymbol init = MixinBuilder.getInitializerName(Symbols.NEW);
     MethodBuilder builder = new MethodBuilder(true, initializerBuilder.getLanguage(), null);
     builder.setSignature(init);
-    builder.addUntypedArgument(Symbols.SELF,
+    builder.addArgument(Symbols.SELF, null,
         SomLanguage.getSyntheticSource("self read", "super-class-resolution")
                    .createSection(1));
 
@@ -810,5 +817,9 @@ public final class MixinDefinition {
     clone.adaptFactoryMethods(adaptedScope, appliesTo);
     clone.adaptInvokableDispatchables(adaptedScope, appliesTo);
     return clone;
+  }
+
+  public SomStructuralType getType() {
+    return SomStructuralType.getTypeFromMixin(this);
   }
 }

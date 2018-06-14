@@ -35,12 +35,28 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
     }
   }
 
+  public boolean checkReturnValue(final Object ret) throws InvalidAssumptionException {
+
+    // skip when the only guard is for self
+    if (guards.length == 1) {
+      return true;
+    }
+
+    DispatchGuard guard = guards[guards.length - 1];
+    boolean matches = ret == Nil.nilObject || guard.entryMatches(ret, sourceSection);
+    if (!matches) {
+      return false;
+    }
+    return true;
+  }
+
   @ExplodeLoop
   public boolean checkGuards(final Object[] arguments) throws InvalidAssumptionException {
-    for (int i = 0; i < guards.length; i++) {
+    for (int i = 0; i < guards.length - 1; i++) { // skip the return check
       DispatchGuard guard = guards[i];
       Object arg = arguments[i];
-      boolean matches = arg == Nil.nilObject || guard.entryMatches(arg);
+      boolean matches =
+          arg == Nil.nilObject || guard.entryMatches(arg, sourceSection);
       if (!matches) {
         return false;
       }
@@ -50,12 +66,16 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
 
   @Override
   public Object executeDispatch(final Object[] arguments) {
+    Object ret;
     try {
       if (checkGuards(arguments)) {
-        return cachedMethod.call(arguments);
+        ret = cachedMethod.call(arguments);
       } else {
-        return nextInCache.executeDispatch(arguments);
+        ret = nextInCache.executeDispatch(arguments);
       }
+
+      checkReturnValue(ret);
+      return ret;
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       return replace(nextInCache).executeDispatch(arguments);
