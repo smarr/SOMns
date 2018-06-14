@@ -55,6 +55,7 @@ import som.interpreter.nodes.literals.LiteralNode;
 import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.nodes.literals.ObjectLiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
+import som.vm.SomStructuralType;
 import som.vm.Symbols;
 import som.vmobjects.SSymbol;
 import tools.language.StructuralProbe;
@@ -99,10 +100,11 @@ public class AstBuilder {
      * Adds an immutable slot to the object currently at the top of stack. The slot will be
      * initialized by executing the given expressions.
      */
-    public void addImmutableSlot(final SSymbol slotName, final ExpressionNode init,
+    public void addImmutableSlot(final SSymbol slotName, final SomStructuralType type,
+        final ExpressionNode init,
         final SourceSection sourceSection) {
       try {
-        scopeManager.peekObject().addSlot(slotName, AccessModifier.PUBLIC, true, init,
+        scopeManager.peekObject().addSlot(slotName, type, AccessModifier.PUBLIC, true, init,
             sourceSection);
       } catch (MixinDefinitionError e) {
         language.getVM().errorExit("Failed to add " + slotName + " as a slot on "
@@ -115,9 +117,10 @@ public class AstBuilder {
      * Adds a mutable slot to the object currently at the top of stack. The slot will be
      * initialized to nil.
      */
-    public void addMutableSlot(final SSymbol slotName, final SourceSection sourceSection) {
+    public void addMutableSlot(final SSymbol slotName, final SomStructuralType type,
+        final SourceSection sourceSection) {
       try {
-        scopeManager.peekObject().addSlot(slotName, AccessModifier.PUBLIC, false, null,
+        scopeManager.peekObject().addSlot(slotName, type, AccessModifier.PUBLIC, false, null,
             sourceSection);
       } catch (MixinDefinitionError e) {
         language.getVM().errorExit("Failed to add " + slotName + " as a slot on "
@@ -143,8 +146,8 @@ public class AstBuilder {
      *
      * @return - the assembled class corresponding to the module
      */
-    public MixinDefinition module(final SSymbol[] locals, final JsonArray body,
-        final boolean isMainModule) {
+    public MixinDefinition module(final SSymbol[] locals, final SomStructuralType[] localTypes,
+        final SourceSection[] localSources, final JsonArray body) {
       SSymbol moduleName = symbolFor(sourceManager.getModuleName());
       MixinBuilder moduleBuilder =
           scopeManager.newModule(moduleName, sourceManager.empty());
@@ -152,8 +155,8 @@ public class AstBuilder {
       // Set up the method used to create instances
       MethodBuilder instanceFactory = moduleBuilder.getPrimaryFactoryMethodBuilder();
       instanceFactory.setSignature(Symbols.DEFAULT_MODULE_FACTORY);
-      instanceFactory.addUntypedArgument(Symbols.SELF, sourceManager.empty());
-      instanceFactory.addUntypedArgument(Symbols.PLATFORM_MODULE, sourceManager.empty());
+      instanceFactory.addArgument(Symbols.SELF, null, sourceManager.empty());
+      instanceFactory.addArgument(Symbols.PLATFORM_MODULE, null, sourceManager.empty());
       moduleBuilder.setupInitializerBasedOnPrimaryFactory(sourceManager.empty());
       moduleBuilder.setInitializerSource(sourceManager.empty());
       moduleBuilder.finalizeInitializer();
@@ -162,21 +165,21 @@ public class AstBuilder {
       scopeManager.pushMethod(moduleBuilder.getInitializerMethodBuilder());
 
       // Add the SOM platform as a secret slot on this module
-      addImmutableSlot(Symbols.PLATFORM_MODULE,
+      addImmutableSlot(Symbols.PLATFORM_MODULE, null,
           scopeManager.peekMethod().getReadNode(Symbols.PLATFORM_MODULE,
               sourceManager.empty()),
           sourceManager.empty());
 
       // Add the default dialect as a secret slot on this module
       if (!sourceManager.getModuleName().equals("standardGrace")) {
-        addImmutableSlot(Symbols.SECRET_DIALECT_SLOT,
+        addImmutableSlot(Symbols.SECRET_DIALECT_SLOT, null,
             requestBuilder.importModule(symbolFor("standardGrace")),
             sourceManager.empty());
       }
 
       // Add all other slots for this module
-      for (SSymbol local : locals) {
-        addMutableSlot(local, sourceManager.empty());
+      for (int i = 0; i < locals.length; i++) {
+        addMutableSlot(locals[i], localTypes[i], localSources[i]);
       }
 
       // Translate the body and add each to the initializer (except when this is the main
@@ -204,9 +207,10 @@ public class AstBuilder {
 
       // Create the main method, which contains the main module expressions. If this is not the
       // main module then this method simply returns zero
-      MethodBuilder mainMethod = scopeManager.newMethod(Symbols.DEFAULT_MAIN_METHOD);
-      mainMethod.addUntypedArgument(Symbols.SELF, sourceManager.empty());
-      mainMethod.addUntypedArgument(Symbols.MAIN_METHOD_ARGS, sourceManager.empty());
+      MethodBuilder mainMethod =
+          scopeManager.newMethod(Symbols.DEFAULT_MAIN_METHOD, null);
+      mainMethod.addArgument(Symbols.SELF, null, sourceManager.empty());
+      mainMethod.addArgument(Symbols.MAIN_METHOD_ARGS, null, sourceManager.empty());
       mainMethod.setVarsOnMethodScope();
       mainMethod.finalizeMethodScope();
       List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
@@ -244,8 +248,11 @@ public class AstBuilder {
      * this solution is simple. I will revisit this solution and attempt to develop a better
      * solution later.
      */
-    public void clazzDefinition(final SSymbol name, final SSymbol[] parameters,
-        final SSymbol[] locals, final JsonArray body, final SourceSection sourceSection) {
+    public void clazzDefinition(final SSymbol name, final SomStructuralType returnType,
+        final SSymbol[] parameters, final SomStructuralType[] parameterTypes,
+        final SourceSection[] parameterSources, final SSymbol[] locals,
+        final SomStructuralType[] localTypes, final SourceSection[] localSources,
+        final JsonArray body, final SourceSection sourceSection) {
 
       // Munge the name of the class
       SSymbol clazzName = symbolFor(name.getString() + "[Class]");
@@ -259,11 +266,12 @@ public class AstBuilder {
 
       // Create the initialization method, with munging applied to the argument names
       MethodBuilder instanceFactory = builder.getPrimaryFactoryMethodBuilder();
+      instanceFactory.setReturnType(returnType);
       instanceFactory.setSignature(symbolFor(instanceFactoryName));
-      instanceFactory.addUntypedArgument(Symbols.SELF, sourceManager.empty());
+      instanceFactory.addArgument(Symbols.SELF, null, sourceManager.empty());
       for (int i = 0; i < parameters.length; i++) {
-        instanceFactory.addUntypedArgument(symbolFor(parameters[i].getString() + "'"),
-            sourceManager.empty());
+        instanceFactory.addArgument(symbolFor(parameters[i].getString() + "'"),
+            parameterTypes[i], parameterSources[i]);
       }
       builder.setupInitializerBasedOnPrimaryFactory(sourceManager.empty());
       builder.setInitializerSource(sourceManager.empty());
@@ -273,15 +281,15 @@ public class AstBuilder {
       scopeManager.pushMethod(builder.getInitializerMethodBuilder());
 
       // Add slots that copy values from arguments
-      for (SSymbol parameter : parameters) {
+      for (int i = 0; i < parameters.length; i++) {
         ExpressionNode argRead = requestBuilder.implicit(
-            symbolFor(parameter.getString() + "'"), sourceManager.empty());
-        addImmutableSlot(parameter, argRead, sourceManager.empty());
+            symbolFor(parameters[i].getString() + "'"), parameterSources[i]);
+        addImmutableSlot(parameters[i], parameterTypes[i], argRead, parameterSources[i]);
       }
 
       // Add all other slots for this module
-      for (SSymbol local : locals) {
-        addMutableSlot(local, sourceManager.empty());
+      for (int i = 0; i < locals.length; i++) {
+        addMutableSlot(locals[i], localTypes[i], localSources[i]);
       }
 
       // Set module to inherit from object by default (this can be changed via Grace's inherits
@@ -313,14 +321,17 @@ public class AstBuilder {
     /**
      * Creates a method that returns an instance of the named class.
      */
-    public void clazzMethod(final SSymbol name, final SSymbol[] parameters,
+    public void clazzMethod(final SSymbol name, final SomStructuralType returnType,
+        final SSymbol[] parameters,
+        final SomStructuralType[] parameterTypes, final SourceSection[] parameterSources,
         final SourceSection sourceSection) {
-      MethodBuilder builder = scopeManager.newMethod(name);
+      MethodBuilder builder = scopeManager.newMethod(name, null);
+      builder.setReturnType(returnType);
 
       // Set the parameters
-      builder.addUntypedArgument(Symbols.SELF, sourceManager.empty());
+      builder.addArgument(Symbols.SELF, null, sourceManager.empty());
       for (int i = 0; i < parameters.length; i++) {
-        builder.addUntypedArgument(parameters[i], sourceManager.empty());
+        builder.addArgument(parameters[i], parameterTypes[i], parameterSources[i]);
       }
 
       builder.setVarsOnMethodScope();
@@ -362,8 +373,9 @@ public class AstBuilder {
      *
      * <munged method name>θ<line>@<column>
      */
-    public ExpressionNode objectConstructor(final SSymbol[] locals, final JsonArray body,
-        final SourceSection sourceSection) {
+    public ExpressionNode objectConstructor(final SSymbol[] locals,
+        final SomStructuralType[] localTypes, final SourceSection[] localSources,
+        final JsonArray body, final SourceSection sourceSection) {
 
       // Generate the signature for the block
       int line = sourceSection.getStartLine();
@@ -380,7 +392,7 @@ public class AstBuilder {
       // Create the initialization method
       MethodBuilder instanceFactory = builder.getPrimaryFactoryMethodBuilder();
       instanceFactory.setSignature(Symbols.NEW);
-      instanceFactory.addUntypedArgument(Symbols.SELF, sourceManager.empty());
+      instanceFactory.addArgument(Symbols.SELF, null, sourceManager.empty());
       builder.setupInitializerBasedOnPrimaryFactory(sourceManager.empty());
       builder.setInitializerSource(sourceManager.empty());
       builder.finalizeInitializer();
@@ -389,8 +401,8 @@ public class AstBuilder {
       scopeManager.pushMethod(builder.getInitializerMethodBuilder());
 
       // Add all other slots for this module
-      for (SSymbol local : locals) {
-        addMutableSlot(local, sourceManager.empty());
+      for (int i = 0; i < locals.length; i++) {
+        addMutableSlot(locals[i], localTypes[i], localSources[i]);
       }
 
       // Set module to inherit from object by default (this can be changed via Grace's inherits
@@ -480,8 +492,9 @@ public class AstBuilder {
      * #foo__λ5@8::
      */
     public ExpressionNode block(final SSymbol[] parameters,
-        final SourceSection[] parameterSources, final SSymbol[] locals,
-        final SourceSection[] sourceLocals, final JsonArray body,
+        final SomStructuralType[] parameterTypes, final SourceSection[] parameterSources,
+        final SSymbol[] locals, final SomStructuralType[] localTypes,
+        final SourceSection[] localSources, final JsonArray body,
         final SourceSection sourceSection) {
 
       // Generate the signature for the block
@@ -498,15 +511,15 @@ public class AstBuilder {
       MethodBuilder builder = scopeManager.newBlock(signature);
 
       // Set the parameters
-      builder.addUntypedArgument(Symbols.BLOCK_SELF, sourceManager.empty());
+      builder.addArgument(Symbols.BLOCK_SELF, null, sourceManager.empty());
       for (int i = 0; i < parameters.length; i++) {
-        builder.addUntypedArgument(parameters[i], parameterSources[i]);
+        builder.addArgument(parameters[i], parameterTypes[i], parameterSources[i]);
       }
 
       // Set the locals
       for (int i = 0; i < locals.length; i++) {
         try {
-          builder.addLocal(locals[i], false, sourceLocals[i]);
+          builder.addLocal(locals[i], localTypes[i], false, localSources[i]);
         } catch (MethodDefinitionError e) {
           language.getVM().errorExit("Failed to add " + locals[i] + " to "
               + builder.getSignature() + ": " + e.getMessage());
@@ -541,21 +554,23 @@ public class AstBuilder {
      * Adds a method with the given selector, variables, and body to the object at the top of
      * the stack.
      */
-    public void method(final SSymbol selector, final SSymbol[] parameters,
-        final SSymbol[] types, final SSymbol[] locals, final JsonArray body) {
-      MethodBuilder builder = scopeManager.newMethod(selector);
+    public void method(final SSymbol selector, final SomStructuralType returnType,
+        final SSymbol[] parameters, final SomStructuralType[] parameterTypes,
+        final SourceSection[] parameterSources, final SSymbol[] locals,
+        final SomStructuralType[] localTypes, final SourceSection[] localSources,
+        final JsonArray body) {
+      MethodBuilder builder = scopeManager.newMethod(selector, returnType);
 
       // Set the parameters
-      builder.addUntypedArgument(Symbols.SELF, sourceManager.empty());
+      builder.addArgument(Symbols.SELF, null, sourceManager.empty());
       for (int i = 0; i < parameters.length; i++) {
-        builder.addTypedArgument(parameters[i], typeManager.get(types[i]),
-            sourceManager.empty());
+        builder.addArgument(parameters[i], parameterTypes[i], parameterSources[i]);
       }
 
       // Set the locals
       for (int i = 0; i < locals.length; i++) {
         try {
-          builder.addLocal(locals[i], false, sourceManager.empty());
+          builder.addLocal(locals[i], localTypes[i], false, localSources[i]);
         } catch (MethodDefinitionError e) {
           language.getVM().errorExit("Failed to add " + locals[i] + " to "
               + builder.getSignature() + ": " + e.getMessage());
