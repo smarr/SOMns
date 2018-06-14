@@ -59,6 +59,10 @@ public class SomStructuralType {
 
   private final SSymbol   name;
   private final SSymbol[] signatures;
+  private final static List<SomStructuralType>         allKnownTypes =
+      new ArrayList<SomStructuralType>();
+  private final static Map<SSymbol, SomStructuralType> recordedTypes =
+      new HashMap<SSymbol, SomStructuralType>();
 
   private final Map<ClassFactory, Boolean> matches;
 
