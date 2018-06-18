@@ -74,7 +74,7 @@ public class BlockNode extends LiteralNode {
         inliner.outerScopeChanged());
     SInvokable adaptedIvk = new SInvokable(blockMethod.getSignature(),
         AccessModifier.BLOCK_METHOD,
-        adapted, blockMethod.getEmbeddedBlocks(), new SomStructuralType[] {});
+        adapted, blockMethod.getEmbeddedBlocks(), new SomStructuralType[] {null});
     replace(createNode(adaptedIvk));
   }
 

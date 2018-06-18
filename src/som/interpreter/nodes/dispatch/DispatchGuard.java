@@ -10,6 +10,7 @@ import som.interpreter.Types;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.vm.SomStructuralType;
+import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SObject.SImmutableObject;
@@ -272,6 +273,10 @@ public abstract class DispatchGuard {
     @Override
     public boolean entryMatches(final Object obj, final SourceSection sourceSection)
         throws InvalidAssumptionException, IllegalArgumentException {
+
+      if (obj == Nil.nilObject) {
+        return true;
+      }
 
       MixinDefinition mixinDef;
       if (obj instanceof SObjectWithClass) {
