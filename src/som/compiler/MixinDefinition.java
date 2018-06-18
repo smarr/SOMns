@@ -818,8 +818,4 @@ public final class MixinDefinition {
     clone.adaptInvokableDispatchables(adaptedScope, appliesTo);
     return clone;
   }
-
-  public SomStructuralType getType() {
-    return SomStructuralType.getTypeFromMixin(this);
-  }
 }

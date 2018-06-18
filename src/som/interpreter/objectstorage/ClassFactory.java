@@ -1,5 +1,8 @@
 package som.interpreter.objectstorage;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
 
@@ -10,6 +13,7 @@ import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.vm.SomStructuralType;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
@@ -57,6 +61,8 @@ public final class ClassFactory {
 
   private final ClassFactory classClassFactory;
 
+  public final SomStructuralType type;
+
   public ClassFactory(final SSymbol name, final MixinDefinition mixinDef,
       final EconomicSet<SlotDefinition> instanceSlots,
       final EconomicMap<SSymbol, Dispatchable> dispatchables,
@@ -86,6 +92,7 @@ public final class ClassFactory {
         : new ObjectLayout(instanceSlots, this, isTransferObject);
 
     this.classClassFactory = classClassFactory;
+    this.type = getType();
   }
 
   public boolean isDeclaredAsValue() {
@@ -182,5 +189,41 @@ public final class ClassFactory {
       s += ", " + sc.getName().getString();
     }
     return "ClsFct[" + getFullyQualifiedName(mixinDef) + s + "]";
+  }
+
+  private SomStructuralType getType() {
+    List<SSymbol> signatures = new ArrayList<SSymbol>();
+
+    EconomicMap<SSymbol, Dispatchable> dispatchables = mixinDef.getInstanceDispatchables();
+    for (SSymbol sig : dispatchables.getKeys()) {
+      signatures.add(sig);
+    }
+
+    for (int i = 0; i < superclassAndMixins.length; i++) {
+
+      if (superclassAndMixins[i] == null) {
+        break;
+      } else {
+
+        SClass clazz = superclassAndMixins[i];
+        if (clazz == null) {
+          continue;
+        } else {
+          SClass next = clazz;
+          while (next != null) {
+            EconomicMap<SSymbol, Dispatchable> dispatchablesOfMixin =
+                next.getDispatchables();
+            if (dispatchablesOfMixin != null) {
+              for (SSymbol sig : dispatchablesOfMixin.getKeys()) {
+                signatures.add(sig);
+              }
+            }
+            next = next.getSuperClass();
+          }
+        }
+      }
+    }
+
+    return SomStructuralType.makeType(signatures);
   }
 }
