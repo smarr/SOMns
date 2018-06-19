@@ -32,9 +32,10 @@ import som.interpreter.nodes.dispatch.CachedSlotRead.SlotAccess;
 import som.interpreter.nodes.dispatch.CachedSlotWrite;
 import som.interpreter.nodes.dispatch.ClassSlotAccessNode;
 import som.interpreter.nodes.dispatch.DispatchGuard;
-import som.interpreter.nodes.dispatch.DispatchGuard.AbstractTypeCheck;
 import som.interpreter.nodes.dispatch.DispatchGuard.CheckSObject;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.nodes.dispatch.TypeCheckNode;
+import som.interpreter.nodes.dispatch.TypeCheckNodeGen;
 import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.InitializerFieldWrite;
@@ -550,12 +551,16 @@ public final class MixinDefinition {
 
       CachedSlotRead read =
           createNode(loc, DispatchGuard.createSObjectCheck(rcvr),
-              DispatchGuard.createTypeCheck(type), next, isSet);
+              type == null ? null
+                  : TypeCheckNodeGen.create(type, loc.getSlot().getSourceSection()),
+              next,
+              isSet);
 
       if (forAtomic && rcvr instanceof SMutableObject &&
           getAccessType() == SlotAccess.FIELD_READ) {
         return new CachedTxSlotRead(getAccessType(), read,
-            DispatchGuard.createSObjectCheck(rcvr), DispatchGuard.createTypeCheck(type), next);
+            DispatchGuard.createSObjectCheck(rcvr),
+            TypeCheckNodeGen.create(type, getSourceSection()), next);
       } else {
         return read;
       }
@@ -581,9 +586,9 @@ public final class MixinDefinition {
     }
 
     protected CachedSlotRead createNode(final StorageLocation loc,
-        final CheckSObject guardForRcvr, final AbstractTypeCheck guardForType,
+        final CheckSObject guardForRcvr, final TypeCheckNode typeCheck,
         final AbstractDispatchNode next, final boolean isSet) {
-      return loc.getReadNode(getAccessType(), guardForRcvr, guardForType, next, isSet);
+      return loc.getReadNode(getAccessType(), guardForRcvr, typeCheck, next, isSet);
     }
 
     protected SlotAccess getAccessType() {
@@ -620,11 +625,15 @@ public final class MixinDefinition {
       boolean isSet = loc.isSet(rcvr);
       CachedSlotWrite write =
           loc.getWriteNode(mainSlot, DispatchGuard.createSObjectCheck(rcvr),
-              DispatchGuard.createTypeCheck(type), next, isSet);
+              type == null ? null
+                  : TypeCheckNodeGen.create(type, loc.getSlot().getSourceSection()),
+              next,
+              isSet);
 
       if (forAtomic) {
         return new CachedTxSlotWrite(write,
-            DispatchGuard.createSObjectCheck(rcvr), DispatchGuard.createTypeCheck(type), next);
+            DispatchGuard.createSObjectCheck(rcvr),
+            TypeCheckNodeGen.create(type, loc.getSlot().getSourceSection()), next);
       } else {
         return write;
       }
@@ -656,10 +665,10 @@ public final class MixinDefinition {
 
     @Override
     protected CachedSlotRead createNode(final StorageLocation loc,
-        final CheckSObject guardForRcvr, final AbstractTypeCheck guardForType,
+        final CheckSObject guardForRcvr, final TypeCheckNode typeCheck,
         final AbstractDispatchNode next, final boolean isSet) {
-      CachedSlotRead read = super.createNode(loc, guardForRcvr, guardForType, next, isSet);
-      CachedSlotWrite write = loc.getWriteNode(this, guardForRcvr, guardForType, next, isSet);
+      CachedSlotRead read = super.createNode(loc, guardForRcvr, typeCheck, next, isSet);
+      CachedSlotWrite write = loc.getWriteNode(this, guardForRcvr, typeCheck, next, isSet);
 
       ClassSlotAccessNode node =
           new ClassSlotAccessNode(mixinDefinition, loc.getSlot(), read, write);

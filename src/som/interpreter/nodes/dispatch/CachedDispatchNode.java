@@ -11,8 +11,6 @@ import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import som.VM;
 import som.instrumentation.InstrumentableDirectCallNode;
 import som.vm.VmSettings;
-import som.vm.constants.KernelObj;
-import som.vm.constants.Nil;
 
 
 public final class CachedDispatchNode extends AbstractDispatchNode {
@@ -20,12 +18,16 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
   @Child private DirectCallNode       cachedMethod;
   @Child private AbstractDispatchNode nextInCache;
 
-  @CompilationFinal(dimensions = 1) private final DispatchGuard[] guards;
+  @CompilationFinal private final DispatchGuard guard;
+
+  @Children private final TypeCheckNode[] typeChecks;
 
   public CachedDispatchNode(final CallTarget methodCallTarget,
-      final DispatchGuard[] guards, final AbstractDispatchNode nextInCache) {
+      final DispatchGuard guard, final TypeCheckNode[] types,
+      final AbstractDispatchNode nextInCache) {
     super(nextInCache.getSourceSection());
-    this.guards = guards;
+    this.guard = guard;
+    this.typeChecks = types;
     this.nextInCache = nextInCache;
     this.cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
     if (VmSettings.DYNAMIC_METRICS) {
@@ -35,53 +37,30 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
     }
   }
 
-  public boolean checkReturnValue(final Object ret) throws InvalidAssumptionException {
-
-    // skip when the only guard is for self
-    if (guards.length == 1) {
-      return true;
-    }
-
-    DispatchGuard guard = guards[guards.length - 1];
-    boolean matches = ret == Nil.nilObject || guard.entryMatches(ret, sourceSection);
-    if (!matches) {
-      return false;
-    }
-    return true;
-  }
-
+  @Override
   @ExplodeLoop
-  public boolean checkGuards(final Object[] arguments) throws InvalidAssumptionException {
-    for (int i = 0; i < guards.length - 1; i++) { // skip the return check
-      DispatchGuard guard = guards[i];
-      Object arg = arguments[i];
-      boolean matches =
-          arg == Nil.nilObject || guard.entryMatches(arg, sourceSection);
-      if (!matches) {
-        return false;
+  public Object executeDispatch(final Object[] arguments) {
+    for (int i = 0; i < typeChecks.length - 1; i++) { // not the return type
+      if (typeChecks[i] != null) {
+        typeChecks[i].executeTypeCheck(arguments[i + 1]);
       }
     }
-    return true;
-  }
 
-  @Override
-  public Object executeDispatch(final Object[] arguments) {
     Object ret;
     try {
-      if (checkGuards(arguments)) {
+      if (guard.entryMatches(arguments[0], sourceSection)) {
         ret = cachedMethod.call(arguments);
       } else {
         ret = nextInCache.executeDispatch(arguments);
       }
 
-      checkReturnValue(ret);
+      if (typeChecks[typeChecks.length - 1] != null) {
+        typeChecks[typeChecks.length - 1].executeTypeCheck(ret);
+      }
       return ret;
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       return replace(nextInCache).executeDispatch(arguments);
-    } catch (IllegalArgumentException e) {
-      KernelObj.signalException("signalArgumentError:", e.getMessage());
-      return null;
     }
   }
 

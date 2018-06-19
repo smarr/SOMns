@@ -6,15 +6,13 @@ import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 import bd.inlining.ScopeAdaptationVisitor;
 import som.compiler.Variable.Local;
-import som.interpreter.nodes.dispatch.DispatchGuard;
-import som.interpreter.nodes.dispatch.DispatchGuard.AbstractTypeCheck;
+import som.interpreter.nodes.dispatch.TypeCheckNode;
+import som.interpreter.nodes.dispatch.TypeCheckNodeGen;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.SomStructuralType;
-import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 import tools.Send;
@@ -27,13 +25,14 @@ public abstract class LocalVariableNode extends ExprWithTagsNode implements Send
   protected final FrameSlot         slot;
   protected final Local             var;
   protected final SomStructuralType type;
-  protected final AbstractTypeCheck check;
+
+  @Child protected TypeCheckNode typeCheck;
 
   private LocalVariableNode(final Local var, final SomStructuralType type) {
     this.slot = var.getSlot();
     this.var = var;
     this.type = type;
-    this.check = DispatchGuard.createTypeCheck(type);
+    this.typeCheck = type == null ? null : TypeCheckNodeGen.create(type, var.source);
   }
 
   public final Local getLocal() {
@@ -89,12 +88,8 @@ public abstract class LocalVariableNode extends ExprWithTagsNode implements Send
     @Specialization(guards = {"isBoolean(frame)"}, rewriteOn = {FrameSlotTypeException.class})
     public final boolean doBoolean(final VirtualFrame frame) throws FrameSlotTypeException {
       boolean ret = frame.getBoolean(slot);
-      try {
-        check.entryMatches(ret, sourceSection);
-      } catch (IllegalArgumentException e) {
-        KernelObj.signalException("signalArgumentError:", e.getMessage());
-      } catch (InvalidAssumptionException e) {
-        throw new RuntimeException(e.getMessage());
+      if (typeCheck != null) {
+        typeCheck.executeTypeCheck(ret);
       }
       return ret;
     }
@@ -102,12 +97,8 @@ public abstract class LocalVariableNode extends ExprWithTagsNode implements Send
     @Specialization(guards = {"isLong(frame)"}, rewriteOn = {FrameSlotTypeException.class})
     public final long doLong(final VirtualFrame frame) throws FrameSlotTypeException {
       long ret = frame.getLong(slot);
-      try {
-        check.entryMatches(ret, sourceSection);
-      } catch (IllegalArgumentException e) {
-        KernelObj.signalException("signalArgumentError:", e.getMessage());
-      } catch (InvalidAssumptionException e) {
-        throw new RuntimeException(e.getMessage());
+      if (typeCheck != null) {
+        typeCheck.executeTypeCheck(ret);
       }
       return ret;
     }
@@ -115,12 +106,8 @@ public abstract class LocalVariableNode extends ExprWithTagsNode implements Send
     @Specialization(guards = {"isDouble(frame)"}, rewriteOn = {FrameSlotTypeException.class})
     public final double doDouble(final VirtualFrame frame) throws FrameSlotTypeException {
       double ret = frame.getDouble(slot);
-      try {
-        check.entryMatches(ret, sourceSection);
-      } catch (IllegalArgumentException e) {
-        KernelObj.signalException("signalArgumentError:", e.getMessage());
-      } catch (InvalidAssumptionException e) {
-        throw new RuntimeException(e.getMessage());
+      if (typeCheck != null) {
+        typeCheck.executeTypeCheck(ret);
       }
       return ret;
     }
@@ -131,12 +118,8 @@ public abstract class LocalVariableNode extends ExprWithTagsNode implements Send
     public final Object doObject(final VirtualFrame frame)
         throws FrameSlotTypeException, IllegalArgumentException {
       Object ret = frame.getObject(slot);
-      try {
-        check.entryMatches(ret, sourceSection);
-      } catch (IllegalArgumentException e) {
-        KernelObj.signalException("signalArgumentError:", e.getMessage());
-      } catch (InvalidAssumptionException e) {
-        throw new RuntimeException(e.getMessage());
+      if (typeCheck != null) {
+        typeCheck.executeTypeCheck(ret);
       }
       return ret;
     }
@@ -181,54 +164,35 @@ public abstract class LocalVariableNode extends ExprWithTagsNode implements Send
 
     @Specialization(guards = "isBoolKind(expValue)")
     public final boolean writeBoolean(final VirtualFrame frame, final boolean expValue) {
-      try {
-        check.entryMatches(expValue, sourceSection);
-      } catch (IllegalArgumentException e) {
-        KernelObj.signalException("signalArgumentError:", e.getMessage());
-      } catch (InvalidAssumptionException e) {
-        throw new RuntimeException(e.getMessage());
+      if (typeCheck != null) {
+        typeCheck.executeTypeCheck(expValue);
       }
-
       frame.setBoolean(slot, expValue);
       return expValue;
     }
 
     @Specialization(guards = "isLongKind(expValue)")
     public final long writeLong(final VirtualFrame frame, final long expValue) {
-      try {
-        check.entryMatches(expValue, sourceSection);
-      } catch (IllegalArgumentException e) {
-        KernelObj.signalException("signalArgumentError:", e.getMessage());
-      } catch (InvalidAssumptionException e) {
-        throw new RuntimeException(e.getMessage());
+      if (typeCheck != null) {
+        typeCheck.executeTypeCheck(expValue);
       }
-
       frame.setLong(slot, expValue);
       return expValue;
     }
 
     @Specialization(guards = "isDoubleKind(expValue)")
     public final double writeDouble(final VirtualFrame frame, final double expValue) {
-      try {
-        check.entryMatches(expValue, sourceSection);
-      } catch (IllegalArgumentException e) {
-        KernelObj.signalException("signalArgumentError:", e.getMessage());
-      } catch (InvalidAssumptionException e) {
-        throw new RuntimeException(e.getMessage());
+      if (typeCheck != null) {
+        typeCheck.executeTypeCheck(expValue);
       }
-
       frame.setDouble(slot, expValue);
       return expValue;
     }
 
     @Specialization(replaces = {"writeBoolean", "writeLong", "writeDouble"})
     public final Object writeGeneric(final VirtualFrame frame, final Object expValue) {
-      try {
-        check.entryMatches(expValue, sourceSection);
-      } catch (IllegalArgumentException e) {
-        KernelObj.signalException("signalArgumentError:", e.getMessage());
-      } catch (InvalidAssumptionException e) {
-        throw new RuntimeException(e.getMessage());
+      if (typeCheck != null) {
+        typeCheck.executeTypeCheck(expValue);
       }
       slot.setKind(FrameSlotKind.Object);
       frame.setObject(slot, expValue);

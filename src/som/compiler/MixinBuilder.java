@@ -701,8 +701,7 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     }
 
     embeddedMixins.put(name, nestedMixin);
-    ClassSlotDefinition cacheSlot =
-        new ClassSlotDefinition(name, nestedMixin.getType(), nestedMixin);
+    ClassSlotDefinition cacheSlot = new ClassSlotDefinition(name, null, nestedMixin);
     dispatchables.put(name, cacheSlot);
     slots.put(name, cacheSlot);
   }
