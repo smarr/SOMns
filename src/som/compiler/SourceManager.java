@@ -92,6 +92,7 @@ public class SourceManager {
     builtinModules.add("io");
     builtinModules.add("mirrors");
     builtinModules.add("random");
+    builtinModules.add("system");
   }
 
   public String pathForModuleNamed(final SSymbol moduleName) {
