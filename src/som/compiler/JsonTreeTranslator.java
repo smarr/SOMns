@@ -84,6 +84,12 @@ public class JsonTreeTranslator {
   public SourceSection source(final JsonObject node) {
     int line = node.get("line").getAsInt();
     int column = node.get("column").getAsInt();
+    if (line < 1) {
+      line = 1;
+    }
+    if (column < 1) {
+      column = 1;
+    }
     return sourceManager.atLineColumn(line, column);
   }
 
@@ -690,7 +696,7 @@ public class JsonTreeTranslator {
     } else if (nodeType(node).equals("method-declaration")) {
       astBuilder.objectBuilder.method(selector(node), returnType(node), parameters(node),
           typesForParameters(node), sourcesForParameters(node), locals(node),
-          typesForLocals(node), sourcesForLocals(node), body(node));
+          typesForLocals(node), sourcesForLocals(node), body(node), source(node));
       return null;
 
     } else if (nodeType(node).equals("class-declaration")) {
@@ -722,14 +728,15 @@ public class JsonTreeTranslator {
 
     } else if (nodeType(node).equals("def-declaration")) {
       return astBuilder.requestBuilder.assignment(symbolFor(name(node)),
-          (ExpressionNode) value(node));
+          (ExpressionNode) value(node), source(node));
 
     } else if (nodeType(node).equals("var-declaration")) {
       ExpressionNode value = (ExpressionNode) value(node);
       if (value == null) {
         return null;
       } else {
-        return astBuilder.requestBuilder.assignment(symbolFor(name(node)), value);
+        return astBuilder.requestBuilder.assignment(symbolFor(name(node)), value,
+            source(node));
       }
 
     } else if (nodeType(node).equals("identifier")) {
@@ -747,7 +754,7 @@ public class JsonTreeTranslator {
             arguments(node), source(node));
       } else {
         return astBuilder.requestBuilder.assignment(symbolFor(name(node)),
-            (ExpressionNode) value(node));
+            (ExpressionNode) value(node), source(node));
       }
 
     } else if (nodeType(node).equals("operator")) {
@@ -797,7 +804,7 @@ public class JsonTreeTranslator {
 
     } else if (nodeType(node).equals("import")) {
       ExpressionNode importExpression =
-          astBuilder.requestBuilder.importModule(symbolFor(path(node)));
+          astBuilder.requestBuilder.importModule(symbolFor(path(node)), source(node));
       astBuilder.objectBuilder.addImmutableSlot(symbolFor(name(node)), null, importExpression,
           source(node));
       return null;
@@ -831,7 +838,8 @@ public class JsonTreeTranslator {
   public MixinDefinition translateModule() {
     JsonObject moduleNode = jsonAST.get("module").getAsJsonObject();
     MixinDefinition result = astBuilder.objectBuilder.module(locals(moduleNode),
-        typesForLocals(moduleNode), sourcesForLocals(moduleNode), body(moduleNode));
+        typesForLocals(moduleNode), sourcesForLocals(moduleNode), body(moduleNode),
+        source(moduleNode));
     return result;
   }
 }
