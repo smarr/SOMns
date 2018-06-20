@@ -162,4 +162,23 @@ public abstract class IntegerPrims {
       return Math.abs(receiver);
     }
   }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "intAsCodepointString:",
+      selector = "intAsCodepointString", receiverType = Long.class)
+  public abstract static class IntAsCodepointStringPrim extends UnaryBasicOperation {
+    @Override
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+      if (tag == OpArithmetic.class) {
+        return true;
+      } else {
+        return super.isTaggedWithIgnoringEagerness(tag);
+      }
+    }
+
+    @Specialization
+    public final String doString(final long codepoint) {
+      return new String(new int[] {(int) codepoint}, 0, 1);
+    }
+  }
 }

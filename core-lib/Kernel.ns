@@ -210,6 +210,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public asString    = ( ^ vmMirror intAsString: self )
     public as32BitSignedValue   = ( ^ vmMirror intAs32BitSignedValue: self )   (* returns an int, with the value that a signed 32-bit integer would have *)
     public as32BitUnsignedValue = ( ^ vmMirror intAs32BitUnsignedValue: self ) (* returns an int, with the value that a unsigned 32-bit integer would have *)
+    public asCodepointString = ( ^ vmMirror intAsCodepointString: self )
     public hashcode    = ( ^ self )
 
     (* Iterating *)
@@ -322,6 +323,39 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     (* Comparing *)
     public = argument = ( ^ vmMirror string: self equals: argument )
+    
+    public < argument = (
+      | maxi |
+      maxi:: length max: argument length.
+
+      1 to: maxi do: [ :i | 
+        | codePointA codePointB |
+        codePointA:: (codepointAt: i).
+        codePointB:: (argument codepointAt: i).
+
+        (codePointA < codePointB) ifTrue: [ ^ true ].
+      ].
+
+      ^ false.
+    )
+
+    public > argument = (
+      | maxi |
+      maxi:: length max: argument length.
+
+      1 to: maxi do: [ :i | 
+        | codePointA codePointB |
+        codePointA:: (codepointAt: i).
+        codePointB:: (argument codepointAt: i).
+
+        (codePointA > codePointB) ifTrue: [ ^ true ].
+      ].
+
+      ^ false.
+    )
+
+    public >= argument = ( ^ (self = argument) or: [ self > argument ] )
+    public <= argument = ( ^ (self = argument) or: [ self < argument ] )
 
     (* substring: from 'start' to (and including) 'end'. *)
     private primSubstringFrom: start to: end = ( ^ vmMirror string: self
