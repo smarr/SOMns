@@ -76,6 +76,8 @@ public class SomStructuralType {
   @CompilationFinal private final int tableIndex;
 
   private SomStructuralType(final List<SSymbol> signatures) {
+    assert VmSettings.USE_TYPE_CHECKING : "SomStructuralType is created dispited USE_TYPE_CHECKING not being enabled";
+
     this.signatures = signatures.toArray(new SSymbol[signatures.size()]);
     this.tableIndex = nTypes;
     nTypes += 1;
@@ -143,6 +145,9 @@ public class SomStructuralType {
   }
 
   public static SomStructuralType recallTypeByName(final SSymbol name) {
+    if (!VmSettings.USE_TYPE_CHECKING || name == null || name == SomStructuralType.UNKNOWN) {
+      return null;
+    }
     if (!recordedTypes.containsKey(name)) {
       throw new RuntimeException(
           "No type is known under the name `" + name.getString() + "`");

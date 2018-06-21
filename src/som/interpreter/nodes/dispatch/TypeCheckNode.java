@@ -13,6 +13,7 @@ import som.interpreter.Types;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.vm.SomStructuralType;
+import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
@@ -29,6 +30,7 @@ public abstract class TypeCheckNode extends Node {
   @CompilationFinal SourceSection     sourceSection;
 
   TypeCheckNode(final SomStructuralType expected, final SourceSection sourceSection) {
+    assert VmSettings.USE_TYPE_CHECKING : "Trying to create a TypeCheckNode, while USE_TYPE_CHECKING is disabled";
     this.expected = expected;
     this.sourceSection = sourceSection;
   }

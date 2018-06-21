@@ -40,11 +40,7 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
   @Override
   @ExplodeLoop
   public Object executeDispatch(final Object[] arguments) {
-    for (int i = 0; i < typeChecks.length - 1; i++) { // not the return type
-      if (typeChecks[i] != null) {
-        typeChecks[i].executeTypeCheck(arguments[i + 1]);
-      }
-    }
+    performTypeChecks(arguments);
 
     Object ret;
     try {
@@ -54,13 +50,35 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
         ret = nextInCache.executeDispatch(arguments);
       }
 
-      if (typeChecks[typeChecks.length - 1] != null) {
-        typeChecks[typeChecks.length - 1].executeTypeCheck(ret);
-      }
+      performReturnValueTypeCheck(ret);
       return ret;
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       return replace(nextInCache).executeDispatch(arguments);
+    }
+  }
+
+  private void performReturnValueTypeCheck(final Object ret) {
+    if (!VmSettings.USE_TYPE_CHECKING) {
+      return;
+    }
+
+    TypeCheckNode node = typeChecks[typeChecks.length - 1];
+    if (node != null) {
+      node.executeTypeCheck(ret);
+    }
+  }
+
+  private void performTypeChecks(final Object[] arguments) {
+    if (!VmSettings.USE_TYPE_CHECKING) {
+      return;
+    }
+
+    for (int i = 0; i < typeChecks.length - 1; i++) { // not the return type
+      TypeCheckNode node = typeChecks[i];
+      if (node != null) {
+        node.executeTypeCheck(arguments[i + 1]);
+      }
     }
   }
 

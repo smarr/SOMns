@@ -48,6 +48,7 @@ import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNode;
 import som.interpreter.nodes.dispatch.TypeCheckNode;
 import som.interpreter.nodes.dispatch.TypeCheckNodeGen;
 import som.vm.SomStructuralType;
+import som.vm.VmSettings;
 import som.vm.constants.Classes;
 
 
@@ -203,6 +204,16 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
       return new LexicallyBoundDispatchNode(next.getSourceSection(), ct);
     }
 
+    TypeCheckNode[] typeCheckNodes = createTypeCheckNodes();
+
+    return new CachedDispatchNode(ct, DispatchGuard.create(rcvr),
+        typeCheckNodes, next);
+  }
+
+  private TypeCheckNode[] createTypeCheckNodes() {
+    if (!VmSettings.USE_TYPE_CHECKING) {
+      return null;
+    }
     List<TypeCheckNode> types = new ArrayList<TypeCheckNode>();
     for (int i = 0; i < expectedTypes.length; i++) {
       SomStructuralType expectedType = expectedTypes[i];
@@ -211,11 +222,10 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
       } else {
         types.add(TypeCheckNodeGen.create(expectedType, getSourceSection()));
       }
-
     }
 
-    return new CachedDispatchNode(ct, DispatchGuard.create(rcvr),
-        types.toArray(new TypeCheckNode[types.size()]), next);
+    TypeCheckNode[] typeCheckNodes = types.toArray(new TypeCheckNode[types.size()]);
+    return typeCheckNodes;
   }
 
   @Override

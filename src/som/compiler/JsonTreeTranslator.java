@@ -43,6 +43,7 @@ import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vm.SomStructuralType;
+import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.language.StructuralProbe;
 
@@ -264,7 +265,11 @@ public class JsonTreeTranslator {
     }
   }
 
-  private SomStructuralType returnType(final JsonObject node) {
+  private SSymbol returnType(final JsonObject node) {
+    if (!VmSettings.USE_TYPE_CHECKING) { // simply return null if type checking not used
+      return null;
+    }
+
     JsonObject signatureNode = node.get("signature").getAsJsonObject();
     if (signatureNode.get("returntype").isJsonNull()) {
       return null;
@@ -425,6 +430,10 @@ public class JsonTreeTranslator {
    * typed-parameter or otherwise a simple identifier.
    */
   private SomStructuralType typeFor(final JsonObject node) {
+    if (!VmSettings.USE_TYPE_CHECKING) { // simply return null if type checking not used
+      return null;
+    }
+
     String nodeType = nodeType(node);
 
     if (nodeType.equals("typed-parameter")) {
@@ -717,8 +726,10 @@ public class JsonTreeTranslator {
           sourcesForLocals(node), body(node), source(node));
 
     } else if (nodeType(node).equals("type-statement")) {
-      SomStructuralType.recordTypeByName(symbolFor(name(node)),
-          SomStructuralType.makeType(parseTypeSignatures(node)));
+      if (VmSettings.USE_TYPE_CHECKING) {
+        SomStructuralType.recordTypeByName(symbolFor(name(node)),
+            SomStructuralType.makeType(parseTypeSignatures(node)));
+      }
       return null;
 
     } else if (nodeType(node).equals("block")) {

@@ -124,6 +124,9 @@ parser.add_argument('-D', help="define a Java property",
 parser.add_argument('-ac', '--ansi-coloring', help='Enable ANSI coloring for output from interpreter with true, or disable with false',
                     dest='use_ansi_coloring', action='store', default=hasattr(sys.stdout, 'isatty') and sys.stdout.isatty())
 
+parser.add_argument('-tc', '--type-checking', help='Enable type checking with true, or disable with false',
+                    dest='use_type_checking', action='store_true', default=False)
+
 parser.add_argument('args', nargs=argparse.REMAINDER,
                     help='arguments passed to SOMns')
 
@@ -238,6 +241,9 @@ if args.som_dnu:
 
 if args.use_ansi_coloring:
     flags += ['-Dsom.useAnsiColoring=' + str(args.use_ansi_coloring).lower()]
+
+if args.use_type_checking:
+    flags += ['-Dsom.useTypeChecking=true']
 
 # Handle executable names
 if sys.argv[0].endswith('fast'):

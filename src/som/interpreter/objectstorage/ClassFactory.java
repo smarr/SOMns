@@ -14,6 +14,7 @@ import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.SomStructuralType;
+import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
@@ -192,6 +193,10 @@ public final class ClassFactory {
   }
 
   private SomStructuralType getType() {
+    if (!VmSettings.USE_TYPE_CHECKING) {
+      return null;
+    }
+
     List<SSymbol> signatures = new ArrayList<SSymbol>();
 
     EconomicMap<SSymbol, Dispatchable> dispatchables = mixinDef.getInstanceDispatchables();
