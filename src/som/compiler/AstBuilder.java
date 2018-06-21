@@ -639,17 +639,11 @@ public class AstBuilder {
       SSymbol selectorAfterChecks = selector;
 
       // Use the Newspeak's `value` methods directly when the selector is Grace's `apply`
-      if (selector.getString().equals("apply")) {
-        selectorAfterChecks = symbolFor("value");
-      } else if (selector.getString().equals("apply:")) {
-        selectorAfterChecks = symbolFor("value:");
-      } else if (selector.getString().equals("apply::")) {
-        selectorAfterChecks = symbolFor("value:with:");
-      } else if (selector.getString().contains("apply:::")) {
+      if (selector.getString().contains("apply::")) {
 
         // For the variable arity method, we need to provide the arguments as a list instead.
         int n = arguments.size() - 1;
-        selectorAfterChecks = symbolFor("valueWithArguments:");
+        selectorAfterChecks = symbolFor("applyWithArguments:");
         List<ExpressionNode> newArguments = new ArrayList<ExpressionNode>();
         newArguments.add(
             ArrayLiteralNode.create(
