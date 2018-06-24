@@ -3,8 +3,8 @@
     xmlns:if="ant:if"
     xmlns:jacoco="antlib:org.jacoco.ant">
 
-    <property name="src.dir"     value="src"/>
-    <property name="src_gen.dir" value="src_gen"/>
+    <property name="src.dir"     location="src"/>
+    <property name="src_gen.dir" location="src_gen"/>
     <property name="lib.dir"     location="libs" />
     <property name="bd.dir"      location="${lib.dir}/black-diamonds/" />
     <property name="unit.dir"    value="tests/java" />
