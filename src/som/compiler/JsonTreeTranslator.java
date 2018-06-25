@@ -41,6 +41,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vm.SomStructuralType;
 import som.vmobjects.SSymbol;
 import tools.language.StructuralProbe;
@@ -132,6 +133,9 @@ public class JsonTreeTranslator {
 
     } else if (node.has("from")) {
       return name(node.get("from").getAsJsonObject());
+
+    } else if (nodeType(node).equals("explicit-receiver-request")) {
+      return name(node.get("parts").getAsJsonArray().get(0).getAsJsonObject());
 
     } else {
       error("The translator doesn't understand how to get a name from " + nodeType(node),
@@ -771,8 +775,24 @@ public class JsonTreeTranslator {
       }
 
     } else if (nodeType(node).equals("inherits")) {
-      astBuilder.objectBuilder.setInheritanceByName(className(node), arguments(node),
-          source(node));
+      JsonObject from = node.get("from").getAsJsonObject();
+      if (nodeType(from).equals("explicit-receiver-request")) {
+        MixinBuilder builder = scopeManager.peekObject();
+        scopeManager.pushMethod(builder.getClassInstantiationMethodBuilder());
+
+        ExpressionNode e =
+            explicit(selector(from), receiver(from), arguments(from), source(from));
+        AbstractMessageSendNode req = (AbstractMessageSendNode) e;
+        req.addSuffixToSelector("[Class]");
+        astBuilder.objectBuilder.setInheritanceByExpression(req, arguments(from),
+            source(node));
+
+        scopeManager.popMethod();
+
+      } else {
+        astBuilder.objectBuilder.setInheritanceByName(className(node), arguments(node),
+            source(node));
+      }
       return null;
 
     } else if (nodeType(node).equals("import")) {

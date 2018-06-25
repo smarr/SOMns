@@ -1,5 +1,7 @@
 package som.interpreter.nodes;
 
+import static som.vm.Symbols.symbolFor;
+
 import java.util.List;
 import java.util.concurrent.locks.Lock;
 
@@ -22,7 +24,7 @@ import som.vmobjects.SSymbol;
 @Instrumentable(factory = MessageSendNodeWrapper.class)
 public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
 
-  private final SSymbol           selector;
+  private SSymbol                 selector;
   private final MethodScope       currentScope;
   private final MixinDefinitionId mixinId;
   private final VM                vm;
@@ -203,5 +205,11 @@ public final class ResolvingImplicitReceiverSend extends AbstractMessageSendNode
   @Override
   public String toString() {
     return "ImplicitSend(" + selector.toString() + ")";
+  }
+
+  @Override
+  public void addSuffixToSelector(final String suffix) {
+    selector = symbolFor(selector.getString() + suffix);
+
   }
 }

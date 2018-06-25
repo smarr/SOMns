@@ -43,9 +43,12 @@ import bd.basic.ProgramDefinitionError;
 import bd.inlining.InlinableNodes;
 import som.compiler.MethodBuilder.MethodDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionError;
+import som.compiler.Variable.Argument;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.interpreter.nodes.ResolvingImplicitReceiverSend;
 import som.interpreter.nodes.literals.ArrayLiteralNode;
 import som.interpreter.nodes.literals.BooleanLiteralNode.FalseLiteralNode;
 import som.interpreter.nodes.literals.BooleanLiteralNode.TrueLiteralNode;
@@ -284,7 +287,17 @@ public class AstBuilder {
       for (int i = 0; i < parameters.length; i++) {
         ExpressionNode argRead = requestBuilder.implicit(
             symbolFor(parameters[i].getString() + "'"), parameterSources[i]);
-        addImmutableSlot(parameters[i], parameterTypes[i], argRead, parameterSources[i]);
+        // addImmutableSlot(parameters[i], parameterTypes[i], argRead, parameterSources[i]);
+
+        try {
+          scopeManager.peekObject().addSlot(parameters[i], parameterTypes[i],
+              AccessModifier.PRIVATE, true, argRead,
+              sourceSection);
+        } catch (MixinDefinitionError e) {
+          language.getVM().errorExit("Failed to add " + parameters[i] + " as a slot on "
+              + scopeManager.peekObject().getName());
+          throw new RuntimeException();
+        }
       }
 
       // Add all other slots for this module
@@ -436,6 +449,43 @@ public class AstBuilder {
       return new ObjectLiteralNode(classDef, outerRead, newMessage).initialize(sourceSection);
     }
 
+    public void setInheritanceByExpression(final ExpressionNode req,
+        final JsonObject[] argumentNodes,
+        final SourceSection sourceSection) {
+      MixinBuilder builder = scopeManager.peekObject();
+      builder.setSuperClassResolution(req);
+
+      // Translate the arguments
+      List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
+
+      List<SSymbol> argumentNames = new ArrayList<SSymbol>();
+      for (Argument arg : builder.getInitializerMethodBuilder().getArguments()) {
+        argumentNames.add(arg.name);
+      }
+
+      for (int i = 0; i < argumentNodes.length; i++) {
+        JsonObject argumentNode = argumentNodes[i];
+        ExpressionNode argumentExpression =
+            (ExpressionNode) translator.translate(argumentNode);
+
+        if (!(argumentExpression instanceof LiteralNode)) {
+          if ((argumentExpression instanceof ResolvingImplicitReceiverSend)) {
+            String argName =
+                ((AbstractMessageSendNode) argumentExpression).getSelector().getString() + "'";
+            argumentExpression =
+                builder.getInitializerMethodBuilder().getReadNode(symbolFor(argName),
+                    sourceSection);
+          }
+        }
+
+        arguments.add(argumentExpression);
+      }
+
+      builder.setSuperclassFactorySend(
+          builder.createStandardSuperFactorySendWithArgs(arguments, sourceSection),
+          false);
+    }
+
     /**
      * Changes the class currently at the top of the stack so that it inherits from the
      * named superclass. Arguments can be provided with the requests, but for now the must be
@@ -452,16 +502,24 @@ public class AstBuilder {
 
       // Translate the arguments
       List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
-      for (JsonObject argumentNode : argumentNodes) {
+      List<SSymbol> argumentNames = new ArrayList<SSymbol>();
+      for (Argument arg : builder.getInitializerMethodBuilder().getArguments()) {
+        argumentNames.add(arg.name);
+      }
+
+      for (int i = 0; i < argumentNodes.length; i++) {
+        JsonObject argumentNode = argumentNodes[i];
         ExpressionNode argumentExpression =
             (ExpressionNode) translator.translate(argumentNode);
 
         if (!(argumentExpression instanceof LiteralNode)) {
-          String moduleName = sourceManager.getModuleName();
-          int line = sourceSection.getStartLine();
-          int column = sourceSection.getStartColumn();
-          language.getVM().errorExit("MothError in " + moduleName + "@" + line + "," + column
-              + ": Sorry only literal expressions are supported for the inherits statement");
+          if ((argumentExpression instanceof ResolvingImplicitReceiverSend)) {
+            String argName =
+                ((AbstractMessageSendNode) argumentExpression).getSelector().getString() + "'";
+            argumentExpression =
+                builder.getInitializerMethodBuilder().getReadNode(symbolFor(argName),
+                    sourceSection);
+          }
         }
 
         arguments.add(argumentExpression);

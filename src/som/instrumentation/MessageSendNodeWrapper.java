@@ -112,5 +112,11 @@ public class MessageSendNodeWrapper
     public SSymbol getSelector() {
       return ((Send) delegate).getSelector();
     }
+
+    @Override
+    public void addSuffixToSelector(final String suffix) {
+      throw new RuntimeException("addSuffixToSelector should never be called on the wrapper?");
+
+    }
   }
 }
