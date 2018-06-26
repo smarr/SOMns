@@ -305,14 +305,6 @@ public class TracingBackend {
       try {
         buffer = TracingBackend.fullBuffers.poll(POLL_TIMEOUT, TimeUnit.MILLISECONDS);
         if (buffer == null) {
-          if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-            // swap all non-empty buffers and try again
-            // TracingBackend.forceSwapBuffers();
-
-            // TODO: implement buffer swapping for debugger again,
-            // but need an implementation that's decoupled from the trace stats primitive
-            throw new NotYetImplementedException();
-          }
           return null;
         } else {
           return buffer;

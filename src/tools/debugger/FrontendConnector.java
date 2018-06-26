@@ -296,9 +296,7 @@ public class FrontendConnector {
 
   public void sendTracingData() {
     if (VmSettings.ACTOR_TRACING || VmSettings.MEDEOR_TRACING) {
-      // TODO: need to find a way to design this so that it does not interact strangely with
-      // the force for statistics
-      // TracingBackend.forceSwapBuffers();
+      TracingBackend.forceSwapBuffers();
     }
   }
 
