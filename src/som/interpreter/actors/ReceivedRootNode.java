@@ -11,7 +11,7 @@ import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.VmSettings;
-import tools.concurrency.MedeorTrace;
+import tools.concurrency.KomposTrace;
 import tools.concurrency.nodes.TraceMessageNode;
 import tools.concurrency.nodes.TraceMessageNodeGen;
 import tools.debugger.WebDebugger;
@@ -64,8 +64,8 @@ public abstract class ReceivedRootNode extends RootNode {
       haltOnResolution = false;
     }
 
-    if (VmSettings.MEDEOR_TRACING) {
-      MedeorTrace.scopeStart(DynamicScopeType.TURN, msg.getMessageId(),
+    if (VmSettings.KOMPOS_TRACING) {
+      KomposTrace.scopeStart(DynamicScopeType.TURN, msg.getMessageId(),
           msg.getTargetSourceSection());
     }
 
@@ -76,8 +76,8 @@ public abstract class ReceivedRootNode extends RootNode {
         msgTracer.execute(msg);
       }
 
-      if (VmSettings.MEDEOR_TRACING) {
-        MedeorTrace.scopeEnd(DynamicScopeType.TURN);
+      if (VmSettings.KOMPOS_TRACING) {
+        KomposTrace.scopeEnd(DynamicScopeType.TURN);
       }
     }
   }
