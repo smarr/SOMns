@@ -111,4 +111,15 @@ public class SourceManager {
     String firstArg = (String) language.getVM().getArguments()[0];
     return path.contains(firstArg);
   }
+
+  public boolean isBuiltInModule() {
+
+    String path = source.getURI().getPath();
+    for (String name : builtinModules) {
+      if (path.contains(name + ".grace")) {
+        return true;
+      }
+    }
+    return false;
+  }
 }

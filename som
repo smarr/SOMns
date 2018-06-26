@@ -127,6 +127,9 @@ parser.add_argument('-ac', '--ansi-coloring', help='Enable ANSI coloring for out
 parser.add_argument('-tc', '--type-checking', help='Enable type checking with true, or disable with false',
                     dest='use_type_checking', action='store_true', default=False)
 
+parser.add_argument('-eft', '--ensure-fully-typed', help='Enable errors when any possible type annotation is missing with true, or disable with false',
+                    dest='ensure_fully_typed', action='store_true', default=False)
+
 parser.add_argument('args', nargs=argparse.REMAINDER,
                     help='arguments passed to SOMns')
 
@@ -244,6 +247,9 @@ if args.use_ansi_coloring:
 
 if args.use_type_checking:
     flags += ['-Dsom.useTypeChecking=true']
+
+if args.ensure_fully_typed:
+    flags += ['-Dsom.ensureFullyTyped=true']
 
 # Handle executable names
 if sys.argv[0].endswith('fast'):

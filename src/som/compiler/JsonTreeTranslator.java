@@ -272,6 +272,13 @@ public class JsonTreeTranslator {
 
     JsonObject signatureNode = node.get("signature").getAsJsonObject();
     if (signatureNode.get("returntype").isJsonNull()) {
+      if (!sourceManager.isBuiltInModule()) {
+        if (VmSettings.MUST_BE_FULLY_TYPED) {
+          error(nodeType(node) + " is missing a type annotation", node);
+          throw new RuntimeException();
+        }
+      }
+
       return null;
     } else {
       SSymbol name = symbolFor(name(signatureNode.get("returntype").getAsJsonObject()));
@@ -435,18 +442,18 @@ public class JsonTreeTranslator {
     }
 
     String nodeType = nodeType(node);
+    SomStructuralType ret = null;
 
     if (nodeType.equals("typed-parameter")) {
-      return SomStructuralType.recallTypeByName(name(node.get("type").getAsJsonObject()));
-
+      ret = SomStructuralType.recallTypeByName(name(node.get("type").getAsJsonObject()));
     } else if (nodeType.equals("identifier")) {
-      return null;
+      // no op - leave as null
 
     } else if (node.has("type")) {
       if (node.get("type").isJsonNull()) {
-        return null;
+        // no op - leave as null
       } else {
-        return SomStructuralType.recallTypeByName(
+        ret = SomStructuralType.recallTypeByName(
             node.get("type").getAsJsonObject().get("name").getAsString());
       }
 
@@ -454,6 +461,14 @@ public class JsonTreeTranslator {
       error("The translator doesn't understand how to get type for " + nodeType, node);
       throw new RuntimeException();
     }
+
+    if (!sourceManager.isBuiltInModule()) {
+      if (VmSettings.MUST_BE_FULLY_TYPED && ret == null) {
+        error(nodeType + " is missing a type annotation", node);
+        throw new RuntimeException();
+      }
+    }
+    return ret;
   }
 
   /**
