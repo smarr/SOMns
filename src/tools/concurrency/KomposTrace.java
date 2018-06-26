@@ -158,7 +158,7 @@ public class KomposTrace {
     public static KomposTraceBuffer create(final long implThreadId) {
       assert VmSettings.KOMPOS_TRACING;
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        return new SyncedMedeorTraceBuffer(implThreadId);
+        return new SyncedKomposTraceBuffer(implThreadId);
       } else {
         return new KomposTraceBuffer(implThreadId);
       }
@@ -354,9 +354,9 @@ public class KomposTrace {
       assert position == start + requiredSpace;
     }
 
-    public static class SyncedMedeorTraceBuffer extends KomposTraceBuffer {
+    public static class SyncedKomposTraceBuffer extends KomposTraceBuffer {
 
-      protected SyncedMedeorTraceBuffer(final long implThreadId) {
+      protected SyncedKomposTraceBuffer(final long implThreadId) {
         super(implThreadId);
       }
 

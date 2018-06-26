@@ -114,16 +114,16 @@ export class TraceParser {
 
   /** Read a long within JS int range */
   private readLong(d: DataView, offset: number) {
-    const high = d.getUint32(offset);
+    const high = d.getUint32(offset + 4, true);
     console.assert(high <= MAX_SAFE_HIGH_VAL, "expected 53bit, but read high int as: " + high);
-    return high * SHIFT_HIGH_INT + d.getUint32(offset + 4);
+    return high * SHIFT_HIGH_INT + d.getUint32(offset, true);
   }
 
   private readSourceSection(data: DataView, i: number): RawSourceCoordinate {
-    const fileId: number = data.getUint16(i);
-    const startLine: number = data.getUint16(i + 2);
-    const startCol: number = data.getUint16(i + 4);
-    const charLen: number = data.getUint16(i + 6);
+    const fileId: number = data.getUint16(i, true);
+    const startLine: number = data.getUint16(i + 2, true);
+    const startCol: number = data.getUint16(i + 4, true);
+    const charLen: number = data.getUint16(i + 6, true);
     return new RawSourceCoordinate(fileId, charLen, startLine, startCol);
   }
 
@@ -131,7 +131,7 @@ export class TraceParser {
     currentActivityId: number, currentScopeId: number) {
     const marker = data.getUint8(i);
     const activityId = this.readLong(data, i + 1);
-    const symbolId = data.getUint16(i + 9);
+    const symbolId = data.getUint16(i + 9, true);
     const sourceSection = this.readSourceSection(data, i + 11);
 
     this.execData.addRawActivity(new RawActivity(
@@ -238,7 +238,7 @@ export class TraceParser {
         }
         case TraceRecords.ImplThreadCurrentActivity: {
           currentActivityId = this.readLong(data, i + 1);
-          /* currentActivityBufferId = */ data.getUint32(i + 9);
+          /* currentActivityBufferId = */ data.getUint32(i + 9, true);
           i += RECORD_SIZE.ImplThreadCurrentActivity;
           break;
         }
