@@ -58,7 +58,6 @@ import som.interpreter.nodes.literals.LiteralNode;
 import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.nodes.literals.ObjectLiteralNode;
 import som.interpreter.nodes.literals.StringLiteralNode;
-import som.vm.SomStructuralType;
 import som.vm.Symbols;
 import som.vmobjects.SSymbol;
 import tools.language.StructuralProbe;
@@ -103,7 +102,7 @@ public class AstBuilder {
      * Adds an immutable slot to the object currently at the top of stack. The slot will be
      * initialized by executing the given expressions.
      */
-    public void addImmutableSlot(final SSymbol slotName, final SomStructuralType type,
+    public void addImmutableSlot(final SSymbol slotName, final SSymbol type,
         final ExpressionNode init,
         final SourceSection sourceSection) {
       try {
@@ -120,7 +119,7 @@ public class AstBuilder {
      * Adds a mutable slot to the object currently at the top of stack. The slot will be
      * initialized to nil.
      */
-    public void addMutableSlot(final SSymbol slotName, final SomStructuralType type,
+    public void addMutableSlot(final SSymbol slotName, final SSymbol type,
         final SourceSection sourceSection) {
       try {
         scopeManager.peekObject().addSlot(slotName, type, AccessModifier.PUBLIC, false, null,
@@ -149,7 +148,7 @@ public class AstBuilder {
      *
      * @return - the assembled class corresponding to the module
      */
-    public MixinDefinition module(final SSymbol[] locals, final SomStructuralType[] localTypes,
+    public MixinDefinition module(final SSymbol[] locals, final SSymbol[] localTypes,
         final SourceSection[] localSources, final JsonArray body,
         final SourceSection sourceSection) {
       SSymbol moduleName = symbolFor(sourceManager.getModuleName());
@@ -251,10 +250,10 @@ public class AstBuilder {
      * this solution is simple. I will revisit this solution and attempt to develop a better
      * solution later.
      */
-    public void clazzDefinition(final SSymbol name, final SomStructuralType returnType,
-        final SSymbol[] parameters, final SomStructuralType[] parameterTypes,
+    public void clazzDefinition(final SSymbol name, final SSymbol returnType,
+        final SSymbol[] parameters, final SSymbol[] parameterTypes,
         final SourceSection[] parameterSources, final SSymbol[] locals,
-        final SomStructuralType[] localTypes, final SourceSection[] localSources,
+        final SSymbol[] localTypes, final SourceSection[] localSources,
         final JsonArray body, final SourceSection sourceSection) {
 
       // Munge the name of the class
@@ -334,9 +333,9 @@ public class AstBuilder {
     /**
      * Creates a method that returns an instance of the named class.
      */
-    public void clazzMethod(final SSymbol name, final SomStructuralType returnType,
+    public void clazzMethod(final SSymbol name, final SSymbol returnType,
         final SSymbol[] parameters,
-        final SomStructuralType[] parameterTypes, final SourceSection[] parameterSources,
+        final SSymbol[] parameterTypes, final SourceSection[] parameterSources,
         final SourceSection sourceSection) {
       MethodBuilder builder = scopeManager.newMethod(name, null);
       builder.setReturnType(returnType);
@@ -387,7 +386,7 @@ public class AstBuilder {
      * <munged method name>θ<line>@<column>
      */
     public ExpressionNode objectConstructor(final SSymbol[] locals,
-        final SomStructuralType[] localTypes, final SourceSection[] localSources,
+        final SSymbol[] localTypes, final SourceSection[] localSources,
         final JsonArray body, final SourceSection sourceSection) {
 
       // Generate the signature for the block
@@ -550,8 +549,8 @@ public class AstBuilder {
      * #foo__λ5@8::
      */
     public ExpressionNode block(final SSymbol[] parameters,
-        final SomStructuralType[] parameterTypes, final SourceSection[] parameterSources,
-        final SSymbol[] locals, final SomStructuralType[] localTypes,
+        final SSymbol[] parameterTypes, final SourceSection[] parameterSources,
+        final SSymbol[] locals, final SSymbol[] localTypes,
         final SourceSection[] localSources, final JsonArray body,
         final SourceSection sourceSection) {
 
@@ -612,10 +611,10 @@ public class AstBuilder {
      * Adds a method with the given selector, variables, and body to the object at the top of
      * the stack.
      */
-    public void method(final SSymbol selector, final SomStructuralType returnType,
-        final SSymbol[] parameters, final SomStructuralType[] parameterTypes,
+    public void method(final SSymbol selector, final SSymbol returnType,
+        final SSymbol[] parameters, final SSymbol[] parameterTypes,
         final SourceSection[] parameterSources, final SSymbol[] locals,
-        final SomStructuralType[] localTypes, final SourceSection[] localSources,
+        final SSymbol[] localTypes, final SourceSection[] localSources,
         final JsonArray body, final SourceSection sourceSection) {
       MethodBuilder builder = scopeManager.newMethod(selector, returnType);
 

@@ -49,7 +49,6 @@ import som.interpreter.nodes.IsValueCheckNode;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.InitializerFieldWrite;
 import som.primitives.NewObjectPrimNodeGen;
-import som.vm.SomStructuralType;
 import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -354,7 +353,7 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     }
   }
 
-  public void addSlot(final SSymbol name, final SomStructuralType type,
+  public void addSlot(final SSymbol name, final SSymbol type,
       final AccessModifier acccessModifier, final boolean immutable, final ExpressionNode init,
       final SourceSection source) throws MixinDefinitionError {
     if (dispatchables.containsKey(name)) {
@@ -507,7 +506,7 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
    * signature.
    */
   public void addArgumentToSuperClassResolutionBuilder(final SSymbol name,
-      final SomStructuralType type, final SourceSection sourceSection) {
+      final SSymbol type, final SourceSection sourceSection) {
     superclassAndMixinResolutionBuilder.addArgument(name, type, sourceSection);
     String newSelector = superclassAndMixinResolutionBuilder.getSignature().getString() + ":";
     superclassAndMixinResolutionBuilder.setSignature(symbolFor(newSelector));
