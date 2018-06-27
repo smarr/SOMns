@@ -30,6 +30,7 @@ package som.compiler;
 
 import static som.vm.Symbols.symbolFor;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -828,8 +829,15 @@ public class JsonTreeTranslator {
       return null;
 
     } else if (nodeType(node).equals("import")) {
+      String path = path(node);
+      try {
+        language.getVM().loadModule(sourceManager.pathForModuleNamed(symbolFor(path)));
+      } catch (IOException e) {
+        error("An error was throwing when eagerly parsing " + path, node);
+        throw new RuntimeException();
+      }
       ExpressionNode importExpression =
-          astBuilder.requestBuilder.importModule(symbolFor(path(node)), source(node));
+          astBuilder.requestBuilder.importModule(symbolFor(path), source(node));
       astBuilder.objectBuilder.addImmutableSlot(symbolFor(name(node)), null, importExpression,
           source(node));
       return null;
