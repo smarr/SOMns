@@ -87,6 +87,7 @@ public abstract class IntegerPrims {
 
   @GenerateNodeFactory
   @Primitive(primitive = "int:leftShift:", selector = "<<", receiverType = Long.class)
+  @Primitive(selector = "bitLeftShift:", receiverType = Long.class)
   public abstract static class LeftShiftPrim extends ArithmeticPrim {
     private final BranchProfile overflow = BranchProfile.create();
 
@@ -115,6 +116,7 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "int:unsignedRightShift:", selector = ">>>",
       receiverType = Long.class)
+  @Primitive(selector = "bitRightShift:", receiverType = Long.class)
   public abstract static class UnsignedRightShiftPrim extends ArithmeticPrim {
     @Specialization
     public final long doLong(final long receiver, final long right) {

@@ -189,6 +189,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     (* Bit operations *)
     public & argument  = ( ^ vmMirror int: self bitAnd: argument )
+    public bitAnd: argument  = ( ^ self & argument )
     public << argument = ( ^ vmMirror int: self leftShift: argument )
     public bitLeftShift: argument = ( ^ self << argument )
     public >>> argument= ( ^ vmMirror int: self unsignedRightShift: argument )
