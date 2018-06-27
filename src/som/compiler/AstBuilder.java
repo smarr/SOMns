@@ -795,7 +795,11 @@ public class AstBuilder {
      * Creates a SOM string literal from the given string.
      */
     public ExpressionNode string(final String value, final SourceSection sourceSection) {
-      return new StringLiteralNode(value).initialize(sourceSection);
+      String processEscapes = value;
+      processEscapes = processEscapes.replace("\\{", "{");
+      processEscapes = processEscapes.replace("\\}", "}");
+      processEscapes = processEscapes.replace("\\\"", "\"");
+      return new StringLiteralNode(processEscapes).initialize(sourceSection);
     }
 
     public Object array(final JsonObject[] arguments, final SourceSection sourceSection) {
