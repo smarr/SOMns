@@ -45,6 +45,7 @@ import som.primitives.PathPrims.FileModule;
 import som.vm.NotAFileException;
 import som.vm.NotYetImplementedException;
 import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
@@ -52,6 +53,10 @@ import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
+import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.TraceParser;
+import tools.concurrency.TracingBackend;
+import tools.concurrency.nodes.TraceActorContextNode;
 
 
 public final class SystemPrims {
@@ -68,6 +73,17 @@ public final class SystemPrims {
     public final Object set(final SObjectWithClass system) {
       SystemModule = system;
       return system;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "traceStatistics:")
+  public abstract static class TraceStatisticsPrim extends UnarySystemOperation {
+    @Specialization
+    @TruffleBoundary
+    public final Object doSObject(final Object module) {
+      long[] stats = TracingBackend.getStatistics();
+      return new SImmutableArray(stats, Classes.valueArrayClass);
     }
   }
 
@@ -282,9 +298,19 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemTime:")
   public abstract static class TimePrim extends UnaryBasicOperation {
+    @Child TraceActorContextNode tracer = new TraceActorContextNode();
+
     @Specialization
     public final long doSObject(final Object receiver) {
-      return System.currentTimeMillis() - startTime;
+      if (VmSettings.REPLAY) {
+        return TraceParser.getLongSysCallResult();
+      }
+
+      long res = System.currentTimeMillis() - startTime;
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.longSystemCall(res, tracer);
+      }
+      return res;
     }
   }
 
@@ -308,9 +334,20 @@ public final class SystemPrims {
   @Primitive(primitive = "systemTicks:", selector = "ticks",
       specializer = IsSystemModule.class, noWrapper = true)
   public abstract static class TicksPrim extends UnaryBasicOperation implements Operation {
+    @Child TraceActorContextNode tracer = new TraceActorContextNode();
+
     @Specialization
     public final long doSObject(final Object receiver) {
-      return System.nanoTime() / 1000L - startMicroTime;
+      if (VmSettings.REPLAY) {
+        return TraceParser.getLongSysCallResult();
+      }
+
+      long res = System.nanoTime() / 1000L - startMicroTime;
+
+      if (VmSettings.ACTOR_TRACING) {
+        ActorExecutionTrace.longSystemCall(res, tracer);
+      }
+      return res;
     }
 
     @Override

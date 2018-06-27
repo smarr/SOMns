@@ -16,7 +16,7 @@ import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.VmSettings;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.MedeorTrace;
 
 
 @Instrumentable(factory = AbstractPromiseResolutionNodeWrapper.class)
@@ -86,8 +86,8 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
       final boolean haltOnResolution) {
     assert resolver.assertNotCompleted();
     SPromise promiseToBeResolved = resolver.getPromise();
-    if (VmSettings.PROMISE_RESOLUTION) {
-      ActorExecutionTrace.promiseChained(
+    if (VmSettings.MEDEOR_TRACING) {
+      MedeorTrace.promiseChained(
           promiseValue.getPromiseId(), promiseToBeResolved.getPromiseId());
     }
 

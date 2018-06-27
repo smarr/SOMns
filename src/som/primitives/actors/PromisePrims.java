@@ -34,7 +34,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SSymbol;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.MedeorTrace;
 import tools.concurrency.Tags.CreatePromisePair;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.Tags.OnError;
@@ -172,8 +172,9 @@ public final class PromisePrims {
       PromiseCallbackMessage pcm = new PromiseCallbackMessage(rcvr.getOwner(),
           block, resolver, blockCallTarget, false,
           promiseResolverBreakpoint.executeShouldHalt(), rcvr);
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, pcm.getMessageId(),
+
+      if (VmSettings.MEDEOR_TRACING) {
+        MedeorTrace.sendOperation(SendOp.PROMISE_MSG, pcm.getMessageId(),
             rcvr.getPromiseId());
       }
       registerNode.register(rcvr, pcm, current);
@@ -238,8 +239,9 @@ public final class PromisePrims {
       PromiseCallbackMessage msg = new PromiseCallbackMessage(rcvr.getOwner(),
           block, resolver, blockCallTarget, false,
           promiseResolverBreakpoint.executeShouldHalt(), rcvr);
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(),
+
+      if (VmSettings.MEDEOR_TRACING) {
+        MedeorTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(),
             rcvr.getPromiseId());
       }
       registerNode.register(rcvr, msg, current);
@@ -317,10 +319,10 @@ public final class PromisePrims {
       PromiseCallbackMessage onError = new PromiseCallbackMessage(rcvr.getOwner(), error,
           resolver, errorTarget, false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
 
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, onResolved.getMessageId(),
+      if (VmSettings.MEDEOR_TRACING) {
+        MedeorTrace.sendOperation(SendOp.PROMISE_MSG, onResolved.getMessageId(),
             rcvr.getPromiseId());
-        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, onError.getMessageId(),
+        MedeorTrace.sendOperation(SendOp.PROMISE_MSG, onError.getMessageId(),
             rcvr.getPromiseId());
       }
 

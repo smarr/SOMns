@@ -13,7 +13,6 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 
-import som.Output;
 import som.VM;
 import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
@@ -25,11 +24,12 @@ import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
-import tools.TraceData;
 import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.MedeorTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
+import tools.concurrency.nodes.TraceActorContextNode;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.DynamicScopeType;
@@ -81,18 +81,11 @@ public class Actor implements Activity {
   protected EventualMessage               firstMessage;
   protected ObjectBuffer<EventualMessage> mailboxExtension;
 
-  protected long               firstMessageTimeStamp;
-  protected ObjectBuffer<Long> mailboxExtensionTimeStamps;
-
   /** Flag to indicate whether there is currently a F/J task executing. */
   protected boolean isExecuting;
 
   /** Is scheduled on the pool, and executes messages to this actor. */
   protected final ExecAllMessages executor;
-
-  // used to collect absolute numbers from the threads
-  private static Object statsLock          = new Object();
-  private static long   numCreatedEntities = 0;
 
   /**
    * Possible roles for an actor.
@@ -202,7 +195,6 @@ public class Actor implements Activity {
   protected void appendToMailbox(final EventualMessage msg) {
     if (mailboxExtension == null) {
       mailboxExtension = new ObjectBuffer<>(MAILBOX_EXTENSION_SIZE);
-      mailboxExtensionTimeStamps = new ObjectBuffer<>(MAILBOX_EXTENSION_SIZE);
     }
     mailboxExtension.append(msg);
   }
@@ -239,6 +231,8 @@ public class Actor implements Activity {
       this.vm = vm;
     }
 
+    private static final TraceActorContextNode tracer = new TraceActorContextNode();
+
     @Override
     public void run() {
       assert executorRoot != null : "Actor system not initalized, call to initializeActorSystem(.) missing?";
@@ -258,7 +252,9 @@ public class Actor implements Activity {
       t.currentlyExecutingActor = actor;
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.currentActivity(actor);
+        ActorExecutionTrace.recordActorContext((TracingActor) actor, tracer);
+      } else if (VmSettings.MEDEOR_TRACING) {
+        MedeorTrace.currentActivity(actor);
       }
 
       try {
@@ -269,6 +265,10 @@ public class Actor implements Activity {
         ObjectTransitionSafepoint.INSTANCE.unregister();
       }
 
+      if (VmSettings.ACTOR_TRACING && t.swapTracingBuffer) {
+        t.getBuffer().swapStorage();
+        t.swapTracingBuffer = false;
+      }
       t.currentlyExecutingActor = null;
     }
 
@@ -276,17 +276,11 @@ public class Actor implements Activity {
         final WebDebugger dbg) {
       assert size > 0;
 
-      try {
-        execute(firstMessage, currentThread, dbg);
+      execute(firstMessage, currentThread, dbg);
 
-        if (size > 1) {
-          for (EventualMessage msg : mailboxExtension) {
-            execute(msg, currentThread, dbg);
-          }
-        }
-      } finally {
-        if (VmSettings.ACTOR_TRACING) {
-          currentThread.createdMessages += size;
+      if (size > 1) {
+        for (EventualMessage msg : mailboxExtension) {
+          execute(msg, currentThread, dbg);
         }
       }
     }
@@ -298,16 +292,13 @@ public class Actor implements Activity {
         TracingActor.handleBreakpointsAndStepping(msg, dbg, actor);
       }
 
-      try {
-        if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.scopeStart(DynamicScopeType.TURN, msg.getMessageId(),
-              msg.getTargetSourceSection());
-        }
-        msg.execute();
-      } finally {
-        if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.scopeEnd(DynamicScopeType.TURN);
-        }
+      if (VmSettings.MEDEOR_TRACING) {
+        MedeorTrace.scopeStart(DynamicScopeType.TURN, msg.getMessageId(),
+            msg.getTargetSourceSection());
+      }
+      msg.execute();
+      if (VmSettings.MEDEOR_TRACING) {
+        MedeorTrace.scopeEnd(DynamicScopeType.TURN);
       }
     }
 
@@ -321,8 +312,8 @@ public class Actor implements Activity {
           assert mailboxExtension == null;
           // complete execution after all messages are processed
           actor.isExecuting = false;
-          if (VmSettings.ACTOR_TRACING) {
-            ActorExecutionTrace.clearCurrentActivity(actor);
+          if (VmSettings.MEDEOR_TRACING) {
+            MedeorTrace.clearCurrentActivity(actor);
           }
           size = 0;
           return false;
@@ -375,27 +366,8 @@ public class Actor implements Activity {
       return currentMessage.getTarget();
     }
 
-    @Override
-    protected void onTermination(final Throwable exception) {
-      if (VmSettings.ACTOR_TRACING) {
-        long createdEntities = nextEntityId - 1 - (threadId << TraceData.ENTITY_ID_BITS);
-
-        Output.printConcurrencyEntitiesReport(
-            "[Thread " + threadId + "]\tE#" + createdEntities);
-
-        synchronized (statsLock) {
-          numCreatedEntities += createdEntities;
-        }
-      }
-      super.onTermination(exception);
-    }
-  }
-
-  public static final void reportStats() {
-    if (VmSettings.ACTOR_TRACING) {
-      synchronized (statsLock) {
-        Output.printConcurrencyEntitiesReport("[Total]\tE#" + numCreatedEntities);
-      }
+    public Actor getCurrentActor() {
+      return currentlyExecutingActor;
     }
   }
 

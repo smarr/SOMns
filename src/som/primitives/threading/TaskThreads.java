@@ -13,7 +13,7 @@ import som.vm.Activity;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.MedeorTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
@@ -56,8 +56,8 @@ public final class TaskThreads {
           WebDebugger dbg = SomLanguage.getVM(target.getRootNode()).getWebDebugger();
           dbg.prepareSteppingUntilNextRootNode();
         }
-        if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.currentActivity(this);
+        if (VmSettings.MEDEOR_TRACING) {
+          MedeorTrace.currentActivity(this);
         }
 
         ForkJoinThread thread = (ForkJoinThread) Thread.currentThread();

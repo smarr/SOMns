@@ -9,12 +9,12 @@ import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.primitives.TimerPrim;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.MedeorTrace;
 import tools.concurrency.TracingActivityThread;
+import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.entities.PassiveEntityType;
 
 
@@ -28,10 +28,10 @@ public class SPromise extends SObjectWithClass {
   public static SPromise createPromise(final Actor owner,
       final boolean haltOnResolver, final boolean haltOnResolution,
       final SourceSection section) {
-    if (VmSettings.REPLAY) {
-      return new SReplayPromise(owner, haltOnResolver, haltOnResolution, section);
-    } else if (VmSettings.PROMISE_CREATION) {
-      return new STracingPromise(owner, haltOnResolver, haltOnResolution, section);
+    if (VmSettings.MEDEOR_TRACING) {
+      return new SMedeorPromise(owner, haltOnResolver, haltOnResolution, section);
+    } else if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
+      return new STracingPromise(owner, haltOnResolver, haltOnResolution);
     } else {
       return new SPromise(owner, haltOnResolver, haltOnResolution);
     }
@@ -110,14 +110,14 @@ public class SPromise extends SObjectWithClass {
   public final synchronized SPromise getChainedPromiseFor(final Actor target) {
     SPromise remote = SPromise.createPromise(target, haltOnResolver,
         haltOnResolution, null);
-    if (VmSettings.PROMISE_RESOLUTION) {
-      ActorExecutionTrace.promiseChained(getPromiseId(), remote.getPromiseId());
+    if (VmSettings.MEDEOR_TRACING) {
+      MedeorTrace.promiseChained(getPromiseId(), remote.getPromiseId());
     }
     if (isCompleted()) {
       remote.value = value;
       remote.resolutionState = resolutionState;
-      if (VmSettings.REPLAY) {
-        ((SReplayPromise) remote).resolvingActor = ((SReplayPromise) this).resolvingActor;
+      if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
+        ((STracingPromise) remote).resolvingActor = ((STracingPromise) this).resolvingActor;
       }
     } else {
       addChainedPromise(remote);
@@ -230,34 +230,36 @@ public class SPromise extends SObjectWithClass {
     return value;
   }
 
-  protected static class STracingPromise extends SPromise {
-    protected final long promiseId;
+  public static class STracingPromise extends SPromise {
 
     protected STracingPromise(final Actor owner, final boolean haltOnResolver,
+        final boolean haltOnResolution) {
+      super(owner, haltOnResolver, haltOnResolution);
+    }
+
+    protected int resolvingActor;
+
+    public int getResolvingActor() {
+      assert isCompleted();
+      return resolvingActor;
+    }
+
+  }
+
+  public static final class SMedeorPromise extends STracingPromise {
+    protected final long promiseId;
+
+    protected SMedeorPromise(final Actor owner, final boolean haltOnResolver,
         final boolean haltOnResolution, final SourceSection section) {
       super(owner, haltOnResolver, haltOnResolution);
       promiseId = TracingActivityThread.newEntityId();
-      ActorExecutionTrace.passiveEntityCreation(
+      MedeorTrace.passiveEntityCreation(
           PassiveEntityType.PROMISE, promiseId, section);
     }
 
     @Override
     public long getPromiseId() {
       return promiseId;
-    }
-  }
-
-  public static final class SReplayPromise extends STracingPromise {
-    protected SReplayPromise(final Actor owner, final boolean haltOnResolver,
-        final boolean haltOnResolution, final SourceSection section) {
-      super(owner, haltOnResolver, haltOnResolution, section);
-    }
-
-    protected long resolvingActor;
-
-    public long getResolvingActor() {
-      assert isCompleted();
-      return resolvingActor;
     }
   }
 
@@ -354,22 +356,14 @@ public class SPromise extends SObjectWithClass {
         final ValueProfile whenResolvedProfile) {
       assert !(result instanceof SPromise);
 
-      if (VmSettings.PROMISE_RESOLUTION) {
-        if (VmSettings.REPLAY) {
-          // Promises resolved by the TimerPrim will appear as if they have been resolved by
-          // the main actor.
-          if (TimerPrim.isTimerThread(Thread.currentThread())) {
-            ((SReplayPromise) p).resolvingActor = 0;
-          } else {
-            ((SReplayPromise) p).resolvingActor =
-                EventualMessage.getActorCurrentMessageIsExecutionOn().getId();
-          }
-        }
-
+      if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
+        ((STracingPromise) p).resolvingActor =
+            ((TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn()).getActorId();
+      } else if (VmSettings.MEDEOR_TRACING) {
         if (type == Resolution.SUCCESSFUL && p.resolutionState != Resolution.CHAINED) {
-          ActorExecutionTrace.promiseResolution(p.getPromiseId(), result);
+          MedeorTrace.promiseResolution(p.getPromiseId(), result);
         } else if (type == Resolution.ERRONEOUS) {
-          ActorExecutionTrace.promiseError(p.getPromiseId(), result);
+          MedeorTrace.promiseError(p.getPromiseId(), result);
         }
       }
 

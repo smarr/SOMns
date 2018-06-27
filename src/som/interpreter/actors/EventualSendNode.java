@@ -32,7 +32,7 @@ import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.VmSettings;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.MedeorTrace;
 import tools.concurrency.Tags.EventualMessageSend;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.entities.BreakpointType;
@@ -191,10 +191,11 @@ public class EventualSendNode extends ExprWithTagsNode {
           messageReceiverBreakpoint.executeShouldHalt(),
           promiseResolverBreakpoint.executeShouldHalt());
 
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
+      if (VmSettings.MEDEOR_TRACING) {
+        MedeorTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
             target.getId());
       }
+
       target.send(msg, actorPool);
     }
 
@@ -207,10 +208,11 @@ public class EventualSendNode extends ExprWithTagsNode {
           messageReceiverBreakpoint.executeShouldHalt(),
           promiseResolverBreakpoint.executeShouldHalt());
 
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(),
+      if (VmSettings.MEDEOR_TRACING) {
+        MedeorTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(),
             rcvr.getPromiseId());
       }
+
       registerNode.register(rcvr, msg, rcvr.getOwner());
     }
 
@@ -263,10 +265,11 @@ public class EventualSendNode extends ExprWithTagsNode {
           messageReceiverBreakpoint.executeShouldHalt(),
           promiseResolverBreakpoint.executeShouldHalt());
 
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
+      if (VmSettings.MEDEOR_TRACING) {
+        MedeorTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
             current.getId());
       }
+
       current.send(msg, actorPool);
 
       return result;
@@ -298,10 +301,11 @@ public class EventualSendNode extends ExprWithTagsNode {
           messageReceiverBreakpoint.executeShouldHalt(),
           promiseResolverBreakpoint.executeShouldHalt());
 
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
+      if (VmSettings.MEDEOR_TRACING) {
+        MedeorTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
             current.getId());
       }
+
       current.send(msg, actorPool);
       return Nil.nilObject;
     }

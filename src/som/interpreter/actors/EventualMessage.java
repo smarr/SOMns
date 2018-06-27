@@ -9,6 +9,7 @@ import som.VM;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.SPromise.SResolver;
+import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActivityThread;
@@ -41,7 +42,11 @@ public abstract class EventualMessage {
     this.onReceive = onReceive;
     this.haltOnReceive = haltOnReceive;
     this.haltOnResolver = haltOnResolver;
-    this.messageId = TracingActivityThread.newEntityId();
+    if (VmSettings.MEDEOR_TRACING) {
+      this.messageId = TracingActivityThread.newEntityId();
+    } else {
+      this.messageId = 0;
+    }
     assert onReceive.getRootNode() instanceof ReceivedMessage
         || onReceive.getRootNode() instanceof ReceivedCallback;
   }
@@ -70,12 +75,12 @@ public abstract class EventualMessage {
    *
    * ARGUMENTS: are wrapped eagerly on message creation
    */
-  public static final class DirectMessage extends EventualMessage {
+  private abstract static class AbstractDirectMessage extends EventualMessage {
     private final SSymbol selector;
     private final Actor   target;
     private final Actor   sender;
 
-    public DirectMessage(final Actor target, final SSymbol selector,
+    AbstractDirectMessage(final Actor target, final SSymbol selector,
         final Object[] arguments, final Actor sender, final SResolver resolver,
         final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint,
         final boolean triggerPromiseResolverBreakpoint) {
@@ -118,6 +123,16 @@ public abstract class EventualMessage {
       return "DirectMsg(" + selector.toString() + ", "
           + Arrays.toString(args) + ", " + t
           + ", sender: " + (sender == null ? "" : sender.toString()) + ")";
+    }
+  }
+
+  public static final class DirectMessage extends AbstractDirectMessage {
+    public DirectMessage(final Actor target, final SSymbol selector,
+        final Object[] arguments, final Actor sender, final SResolver resolver,
+        final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint,
+        final boolean triggerPromiseResolverBreakpoint) {
+      super(target, selector, arguments, sender, resolver, onReceive,
+          triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
     }
   }
 
@@ -187,13 +202,13 @@ public abstract class EventualMessage {
    * A message that was send with <-: to a promise, and will be delivered
    * after the promise is resolved.
    */
-  public static final class PromiseSendMessage extends PromiseMessage {
+  private abstract static class AbstractPromiseSendMessage extends PromiseMessage {
     private final SSymbol    selector;
     protected Actor          target;
     protected Actor          finalSender;
     protected final SPromise originalTarget;
 
-    protected PromiseSendMessage(final SSymbol selector,
+    protected AbstractPromiseSendMessage(final SSymbol selector,
         final Object[] arguments, final Actor originalSender,
         final SResolver resolver, final RootCallTarget onReceive,
         final boolean triggerMessageReceiverBreakpoint,
@@ -251,14 +266,24 @@ public abstract class EventualMessage {
     }
   }
 
+  public static final class PromiseSendMessage extends AbstractPromiseSendMessage {
+    protected PromiseSendMessage(final SSymbol selector, final Object[] arguments,
+        final Actor originalSender, final SResolver resolver, final RootCallTarget onReceive,
+        final boolean triggerMessageReceiverBreakpoint,
+        final boolean triggerPromiseResolverBreakpoint) {
+      super(selector, arguments, originalSender, resolver, onReceive,
+          triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
+    }
+  }
+
   /** The callback message to be send after a promise is resolved. */
-  public static final class PromiseCallbackMessage extends PromiseMessage {
+  private abstract static class AbstractPromiseCallbackMessage extends PromiseMessage {
     /**
      * The promise on which this callback is registered on.
      */
     protected final SPromise promise;
 
-    public PromiseCallbackMessage(final Actor owner, final SBlock callback,
+    AbstractPromiseCallbackMessage(final Actor owner, final SBlock callback,
         final SResolver resolver, final RootCallTarget onReceive,
         final boolean triggerMessageReceiverBreakpoint,
         final boolean triggerPromiseResolverBreakpoint, final SPromise promiseRegisteredOn) {
@@ -304,15 +329,104 @@ public abstract class EventualMessage {
     }
   }
 
-  public final void execute() {
-    try {
-      executeMessage();
-    } catch (ThreadDeath t) {
-      throw t;
+  public static final class PromiseCallbackMessage extends AbstractPromiseCallbackMessage {
+    public PromiseCallbackMessage(final Actor owner, final SBlock callback,
+        final SResolver resolver, final RootCallTarget onReceive,
+        final boolean triggerMessageReceiverBreakpoint,
+        final boolean triggerPromiseResolverBreakpoint, final SPromise promiseRegisteredOn) {
+      super(owner, callback, resolver, onReceive, triggerMessageReceiverBreakpoint,
+          triggerPromiseResolverBreakpoint, promiseRegisteredOn);
+    }
+
+  }
+
+  public interface ExternalMessage {
+    short getMethod();
+
+    int getDataId();
+  }
+
+  public static final class ExternalDirectMessage extends AbstractDirectMessage
+      implements ExternalMessage {
+    public ExternalDirectMessage(final Actor target, final SSymbol selector,
+        final Object[] arguments,
+        final Actor sender, final SResolver resolver, final RootCallTarget onReceive,
+        final boolean triggerMessageReceiverBreakpoint,
+        final boolean triggerPromiseResolverBreakpoint, final short method, final int dataId) {
+      super(target, selector, arguments, sender, resolver, onReceive,
+          triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
+      this.method = method;
+      this.dataId = dataId;
+    }
+
+    final short method;
+    final int   dataId;
+
+    @Override
+    public short getMethod() {
+      return method;
+    }
+
+    @Override
+    public int getDataId() {
+      return dataId;
     }
   }
 
-  protected final void executeMessage() {
+  public static final class ExternalPromiseSendMessage extends AbstractPromiseSendMessage
+      implements ExternalMessage {
+    protected ExternalPromiseSendMessage(final SSymbol selector, final Object[] arguments,
+        final Actor originalSender, final SResolver resolver, final RootCallTarget onReceive,
+        final boolean triggerMessageReceiverBreakpoint,
+        final boolean triggerPromiseResolverBreakpoint, final short method, final int dataId) {
+      super(selector, arguments, originalSender, resolver, onReceive,
+          triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
+      this.dataId = dataId;
+      this.method = method;
+    }
+
+    final short method;
+    final int   dataId;
+
+    @Override
+    public short getMethod() {
+      return method;
+    }
+
+    @Override
+    public int getDataId() {
+      return dataId;
+    }
+  }
+
+  public static final class ExternalPromiseCallbackMessage
+      extends AbstractPromiseCallbackMessage implements ExternalMessage {
+    public ExternalPromiseCallbackMessage(final Actor owner, final SBlock callback,
+        final SResolver resolver,
+        final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint,
+        final boolean triggerPromiseResolverBreakpoint, final SPromise promiseRegisteredOn,
+        final short method, final int dataId) {
+      super(owner, callback, resolver, onReceive, triggerMessageReceiverBreakpoint,
+          triggerPromiseResolverBreakpoint, promiseRegisteredOn);
+      this.method = method;
+      this.dataId = dataId;
+    }
+
+    final short method;
+    final int   dataId;
+
+    @Override
+    public short getMethod() {
+      return method;
+    }
+
+    @Override
+    public int getDataId() {
+      return dataId;
+    }
+  }
+
+  public final void execute() {
     Object rcvrObj = args[0];
     assert rcvrObj != null;
 

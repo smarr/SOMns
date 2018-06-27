@@ -27,7 +27,7 @@ import tools.SourceCoordinate;
 import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
 import tools.TraceData;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.TracingBackend;
 import tools.debugger.WebSocketHandler.MessageHandler;
 import tools.debugger.WebSocketHandler.TraceHandler;
 import tools.debugger.entities.ActivityType;
@@ -253,12 +253,12 @@ public class FrontendConnector {
     send(new SymbolMessage(symbolsToWrite));
   }
 
-  public void sendTracingData(final ByteBuffer b) {
-    traceSocket.send(b);
+  public void sendTracingData(final ByteBuffer buffer) {
+    traceSocket.send(buffer);
   }
 
   public void awaitClient() {
-    assert VmSettings.ACTOR_TRACING && VmSettings.TRUFFLE_DEBUGGER_ENABLED;
+    assert VmSettings.MEDEOR_TRACING && VmSettings.TRUFFLE_DEBUGGER_ENABLED;
     assert clientConnected != null;
     assert messageSocket == null && traceSocket == null;
     assert traceHandler.getConnection() != null;
@@ -270,7 +270,7 @@ public class FrontendConnector {
     } catch (InterruptedException | ExecutionException ex) {
       throw new RuntimeException(ex);
     }
-    ActorExecutionTrace.setFrontEnd(this);
+    TracingBackend.setFrontEnd(this);
     log("[DEBUGGER] Debugger connected.");
   }
 
@@ -295,8 +295,8 @@ public class FrontendConnector {
   }
 
   public void sendTracingData() {
-    if (VmSettings.ACTOR_TRACING) {
-      ActorExecutionTrace.forceSwapBuffers();
+    if (VmSettings.ACTOR_TRACING || VmSettings.MEDEOR_TRACING) {
+      TracingBackend.forceSwapBuffers();
     }
   }
 

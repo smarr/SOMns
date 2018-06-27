@@ -42,6 +42,9 @@ class System usingVmMirror: vmMirror = Value (
   public time  = ( ^ vmMirror systemTime: nil  )
   public ticks = ( ^ vmMirror systemTicks: nil ) (* returns the microseconds since start *)
 
+  (* Actor Tracing Statistics *)
+  public traceStatistics = ( ^ vmMirror traceStatistics: nil )
+
   (* Force Garbage Collection *)
   public fullGC = ( ^ vmMirror systemGC: nil )
 
