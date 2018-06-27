@@ -16,6 +16,7 @@ import som.vmobjects.SSymbol;
 @GenerateNodeFactory
 @ImportStatic(Nil.class)
 @Primitive(selector = "<>")
+@Primitive(selector = "!=")
 public abstract class UnequalsPrim extends ComparisonPrim {
   @Specialization
   public final boolean doBoolean(final boolean left, final boolean right) {
@@ -48,7 +49,7 @@ public abstract class UnequalsPrim extends ComparisonPrim {
     return left != right;
   }
 
-  @Specialization(guards = "valueIsNil(left)")
+  @Specialization
   public final boolean isNil(final SObjectWithClass left, final Object right) {
     return left != right;
   }
