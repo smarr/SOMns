@@ -544,15 +544,15 @@ public class JsonTreeTranslator {
     return signature.matches("[+\\-*/<>]+");
   }
 
-  /**
-   * Extracts the list of signatures defined by a Grace interface node. Any Grace to SOM
-   * mappings (such as those for operators) are performed before this list of signatures is
-   * returned; so the returned list will contain the NS `not` rather than the Grace `prefix!`.
-   */
-  private List<SSymbol> parseTypeSignatures(final JsonObject node) {
+  private List<SSymbol> parseTypeBody(final JsonObject node) {
     List<SSymbol> signatures = new ArrayList<SSymbol>();
 
-    JsonArray signatureNodes = node.get("body").getAsJsonObject().get("body").getAsJsonArray();
+    if (!node.has("body")) {
+      error("Some is wrong with the type literal?", node);
+      throw new RuntimeException();
+    }
+
+    JsonArray signatureNodes = node.get("body").getAsJsonArray();
     for (JsonElement signatureElement : signatureNodes) {
       JsonObject signatureNode = signatureElement.getAsJsonObject();
       SSymbol signature = selectorFromParts(signatureNode.get("parts").getAsJsonArray());
@@ -570,6 +570,58 @@ public class JsonTreeTranslator {
     }
 
     return signatures;
+  }
+
+  private List<SSymbol> parseAndType(final JsonObject node) {
+    List<SSymbol> signatures = new ArrayList<SSymbol>();
+    JsonObject body = node.get("body").getAsJsonObject();
+
+    JsonObject left = body.get("left").getAsJsonObject();
+    if (nodeType(left).equals("identifier")) {
+      SomStructuralType leftType = SomStructuralType.recallTypeByName(name(left));
+      for (SSymbol sig : leftType.signatures) {
+        signatures.add(sig);
+      }
+    } else {
+      signatures.addAll(parseTypeBody(left));
+    }
+
+    JsonObject right = body.get("right").getAsJsonObject();
+    if (nodeType(right).equals("identifier")) {
+      SomStructuralType rightType = SomStructuralType.recallTypeByName(name(right));
+      for (SSymbol sig : rightType.signatures) {
+        signatures.add(sig);
+      }
+    } else {
+      signatures.addAll(parseTypeBody(right));
+    }
+
+    return signatures;
+  }
+
+  /**
+   * Extracts the list of signatures defined by a Grace interface node. Any Grace to SOM
+   * mappings (such as those for operators) are performed before this list of signatures is
+   * returned; so the returned list will contain the NS `not` rather than the Grace `prefix!`.
+   */
+  private List<SSymbol> parseTypeSignatures(final JsonObject node) {
+
+    JsonObject body = node.get("body").getAsJsonObject();
+    if (body.has("left")) {
+      String combination = body.get("operator").getAsString();
+      if (combination.equals("&")) {
+        return parseAndType(node);
+      } else {
+        error(
+            "The translator doesn't understand how to parse a " + combination
+                + " type combination"
+                + nodeType(node),
+            node);
+        throw new RuntimeException();
+      }
+    }
+
+    return parseTypeBody(body);
   }
 
   /**
