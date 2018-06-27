@@ -91,7 +91,7 @@ public class JsonTreeTranslator {
     if (node != null) {
       int line = node.get("line").getAsInt();
       int column = node.get("column").getAsInt();
-      prefix = "[" + line + "," + column + "] ";
+      prefix = "[" + sourceManager.getModuleName() + " " + line + "," + column + "] ";
     }
     language.getVM().errorExit(prefix + message);
   }
