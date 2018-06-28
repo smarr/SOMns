@@ -60,25 +60,25 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
       return (SClass) cachedValue;
     }
 
-    synchronized (rcvr) {
-      try {
-        // recheck guard under synchronized, don't want to access object if
-        // layout might have changed, we are going to slow path in that case
-        read.guardForRcvr.entryMatches(rcvr, null);
-        cachedValue = read.read(rcvr);
-      } catch (InvalidAssumptionException e) {
-        CompilerDirectives.transferToInterpreterAndInvalidate();
-        cachedValue = rcvr.readSlot(slotDef);
-      }
-
-      // check whether cache is initialized with class object
-      if (cachedValue == Nil.nilObject) {
-        return instantiateAndWriteUnsynced(rcvr);
-      } else {
-        assert cachedValue instanceof SClass;
-        return (SClass) cachedValue;
-      }
+    // synchronized (rcvr) {
+    try {
+      // recheck guard under synchronized, don't want to access object if
+      // layout might have changed, we are going to slow path in that case
+      read.guardForRcvr.entryMatches(rcvr, null);
+      cachedValue = read.read(rcvr);
+    } catch (InvalidAssumptionException e) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      cachedValue = rcvr.readSlot(slotDef);
     }
+
+    // check whether cache is initialized with class object
+    if (cachedValue == Nil.nilObject) {
+      return instantiateAndWriteUnsynced(rcvr);
+    } else {
+      assert cachedValue instanceof SClass;
+      return (SClass) cachedValue;
+    }
+    // }
   }
 
   /**
