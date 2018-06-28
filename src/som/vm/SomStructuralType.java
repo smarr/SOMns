@@ -92,6 +92,28 @@ public class SomStructuralType {
         }
       }
       if (!found) {
+        return SUBCLASS_STATE.NOT_SUBCLASS;
+      }
+    }
+
+    return SUBCLASS_STATE.IS_SUBCLASS;
+  }
+
+  public boolean isSubclassOf(final SomStructuralType other) {
+    CompilerAsserts.neverPartOfCompilation();
+
+    if (other == null || Nil.nilObject.getFactory().type == other) {
+      return true;
+    }
+
+    SUBCLASS_STATE state = subtypingTable[other.tableIndex][this.tableIndex];
+    if (state == null) {
+      subtypingTable[other.tableIndex][this.tableIndex] = checkSignatures(other);
+      return isSubclassOf(other);
+    } else {
+      if (state == SUBCLASS_STATE.IS_SUBCLASS) {
+        return true;
+      } else {
         return false;
       }
     }
