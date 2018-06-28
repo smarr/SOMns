@@ -551,7 +551,7 @@ public final class MixinDefinition {
 
       CachedSlotRead read =
           createNode(loc, DispatchGuard.createSObjectCheck(rcvr),
-              type == null ? null
+              SomStructuralType.isNullOrUnknown(type) ? null
                   : TypeCheckNodeGen.create(SomStructuralType.recallTypeByName(type),
                       loc.getSlot().getSourceSection()),
               next,
@@ -628,7 +628,7 @@ public final class MixinDefinition {
       boolean isSet = loc.isSet(rcvr);
       CachedSlotWrite write =
           loc.getWriteNode(mainSlot, DispatchGuard.createSObjectCheck(rcvr),
-              type == null ? null
+              SomStructuralType.isNullOrUnknown(type) ? null
                   : TypeCheckNodeGen.create(SomStructuralType.recallTypeByName(type),
                       loc.getSlot().getSourceSection()),
               next,

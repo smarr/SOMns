@@ -159,6 +159,10 @@ public class SomStructuralType {
     return recordedTypes.get(symbolFor(name));
   }
 
+  public static boolean isNullOrUnknown(final SSymbol identifier) {
+    return identifier == null || identifier == UNKNOWN;
+  }
+
   @Override
   public String toString() {
     List<SSymbol> typeElements = Arrays.asList(signatures);
