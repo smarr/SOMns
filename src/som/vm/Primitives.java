@@ -68,7 +68,6 @@ import som.primitives.actors.ActorClassesFactory;
 import som.primitives.actors.CreateActorPrimFactory;
 import som.primitives.actors.PromisePrimsFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
-import som.primitives.arithmetic.DividePrimFactory;
 import som.primitives.arithmetic.DoubleDivPrimFactory;
 import som.primitives.arithmetic.ExpPrimFactory;
 import som.primitives.arithmetic.GreaterThanOrEqualPrimFactory;
@@ -213,7 +212,6 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     allFactories.add(BitXorPrimFactory.getInstance());
     allFactories.add(CopyPrimFactory.getInstance());
     allFactories.add(CosPrimFactory.getInstance());
-    allFactories.add(DividePrimFactory.getInstance());
     allFactories.add(DoIndexesPrimFactory.getInstance());
     allFactories.add(DoPrimFactory.getInstance());
     allFactories.add(DoubleDivPrimFactory.getInstance());
