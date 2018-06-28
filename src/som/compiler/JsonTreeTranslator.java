@@ -273,11 +273,9 @@ public class JsonTreeTranslator {
 
     JsonObject signatureNode = node.get("signature").getAsJsonObject();
     if (signatureNode.get("returntype").isJsonNull()) {
-      if (!sourceManager.isBuiltInModule()) {
-        if (VmSettings.MUST_BE_FULLY_TYPED) {
-          error(nodeType(node) + " is missing a type annotation", node);
-          throw new RuntimeException();
-        }
+      if (VmSettings.MUST_BE_FULLY_TYPED) {
+        error(nodeType(node) + " is missing a type annotation", node);
+        throw new RuntimeException();
       }
 
       return SomStructuralType.UNKNOWN;
@@ -462,11 +460,9 @@ public class JsonTreeTranslator {
       throw new RuntimeException();
     }
 
-    if (!sourceManager.isBuiltInModule()) {
-      if (VmSettings.MUST_BE_FULLY_TYPED) {
-        error(nodeType + " is missing a type annotation", node);
-        throw new RuntimeException();
-      }
+    if (VmSettings.MUST_BE_FULLY_TYPED) {
+      error(nodeType + " is missing a type annotation", node);
+      throw new RuntimeException();
     }
     return SomStructuralType.UNKNOWN;
   }
