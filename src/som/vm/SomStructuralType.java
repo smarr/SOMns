@@ -57,18 +57,18 @@ enum SUBCLASS_STATE {
   NOT_SUBCLASS
 };
 
-public class SomStructuralType {
-  public final static SSymbol UNKNOWN = symbolFor("Unknown");
+public final class SomStructuralType {
+  public static final SSymbol UNKNOWN = symbolFor("Unknown");
 
   private static int nTypes = 0;
 
-  private final static int                MAX_TABLE_SIZE = 10000;
-  private final static SUBCLASS_STATE[][] subtypingTable =
+  private static final int                MAX_TABLE_SIZE = 10000;
+  private static final SUBCLASS_STATE[][] subtypingTable =
       new SUBCLASS_STATE[MAX_TABLE_SIZE][MAX_TABLE_SIZE];
 
-  private final static List<SomStructuralType>         allKnownTypes =
+  private static final List<SomStructuralType>         allKnownTypes =
       new ArrayList<SomStructuralType>();
-  private final static Map<SSymbol, SomStructuralType> recordedTypes =
+  private static final Map<SSymbol, SomStructuralType> recordedTypes =
       new HashMap<SSymbol, SomStructuralType>();
 
   @CompilationFinal(dimensions = 1) public final SSymbol[] signatures;
@@ -83,7 +83,7 @@ public class SomStructuralType {
     nTypes += 1;
   }
 
-  private final SUBCLASS_STATE checkSignatures(final SomStructuralType other) {
+  private SUBCLASS_STATE checkSignatures(final SomStructuralType other) {
     CompilerAsserts.neverPartOfCompilation();
 
     for (SSymbol sigOther : other.signatures) {

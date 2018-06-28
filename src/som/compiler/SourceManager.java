@@ -86,7 +86,7 @@ public class SourceManager {
    * @return
    */
 
-  private final static List<String> builtinModules = new ArrayList<String>();
+  private static final List<String> builtinModules = new ArrayList<String>();
   static {
     builtinModules.add("standardGrace");
     builtinModules.add("io");
