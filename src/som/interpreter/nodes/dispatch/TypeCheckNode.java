@@ -35,13 +35,15 @@ public abstract class TypeCheckNode extends Node {
     this.sourceSection = sourceSection;
   }
 
-  private void throwTypeError(final Object obj) {
+  private void throwTypeError(final Object obj, final SomStructuralType actualType) {
     CompilerDirectives.transferToInterpreter();
     int line = sourceSection.getStartLine();
     int column = sourceSection.getStartColumn();
-    String suffix = "[" + line + "," + column + "]";
+    String[] parts = sourceSection.getSource().getURI().getPath().split("/");
+    String suffix = parts[parts.length - 1] + " [" + line + "," + column + "]";
     KernelObj.signalException("signalTypeError:",
-        suffix + " " + obj + " is not a subclass of " + expected);
+        suffix + " " + obj + " is not a subclass of " + expected + ", because it has the type "
+            + actualType);
   }
 
   protected boolean isNil(final SObjectWithoutFields obj) {
@@ -129,7 +131,7 @@ public abstract class TypeCheckNode extends Node {
 
   @Fallback
   public void typeCheckFailed(final Object obj) {
-    throwTypeError(obj);
+    throwTypeError(obj, null);
   }
 
   public abstract void executeTypeCheck(final Object obj);
