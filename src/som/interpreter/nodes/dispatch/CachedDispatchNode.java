@@ -38,7 +38,6 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
   }
 
   @Override
-  @ExplodeLoop
   public Object executeDispatch(final Object[] arguments) {
     performTypeChecks(arguments);
 
@@ -69,6 +68,7 @@ public final class CachedDispatchNode extends AbstractDispatchNode {
     }
   }
 
+  @ExplodeLoop
   private void performTypeChecks(final Object[] arguments) {
     if (!VmSettings.USE_TYPE_CHECKING) {
       return;
