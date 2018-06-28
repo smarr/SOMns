@@ -49,7 +49,6 @@ import som.primitives.ClassPrimsFactory;
 import som.primitives.CosPrimFactory;
 import som.primitives.DoublePrimsFactory;
 import som.primitives.EqualsEqualsPrimFactory;
-import som.primitives.EqualsPrimFactory;
 import som.primitives.ExceptionsPrimsFactory;
 import som.primitives.FilePrimsFactory;
 import som.primitives.HashPrimFactory;
@@ -216,7 +215,6 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     allFactories.add(DoPrimFactory.getInstance());
     allFactories.add(DoubleDivPrimFactory.getInstance());
     allFactories.add(EqualsEqualsPrimFactory.getInstance());
-    allFactories.add(EqualsPrimFactory.getInstance());
     allFactories.add(ExpPrimFactory.getInstance());
     allFactories.add(GreaterThanOrEqualPrimFactory.getInstance());
     allFactories.add(GreaterThanPrimFactory.getInstance());
