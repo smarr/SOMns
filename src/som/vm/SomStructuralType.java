@@ -161,8 +161,11 @@ public class SomStructuralType {
 
   @Override
   public String toString() {
+    List<SSymbol> typeElements = Arrays.asList(signatures);
+    typeElements.sort((a, b) -> a.getString().compareTo(b.getString()));
+
     String s = "{ ";
-    for (SSymbol sig : signatures) {
+    for (SSymbol sig : typeElements) {
       s += " " + sig.getString() + ",";
     }
     s += " }";
