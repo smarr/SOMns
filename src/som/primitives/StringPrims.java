@@ -185,7 +185,7 @@ public class StringPrims {
     public final String doString(final SArray chars) {
       VM.thisMethodNeedsToBeOptimized(
           "Method not yet optimal for compilation, should speculate or use branch profile in the loop");
-      Object[] storage = chars.getObjectStorage(SArray.ObjectStorageType);
+      Object[] storage = chars.getObjectStorage();
       StringBuilder sb = new StringBuilder(storage.length);
       for (Object o : storage) {
         if (o instanceof String) {

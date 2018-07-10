@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.profiles.ValueProfile;
 
 import som.vm.NotYetImplementedException;
 import som.vm.constants.Nil;
@@ -43,34 +42,34 @@ public abstract class SArray extends SAbstractObject {
     return storage;
   }
 
-  public int getEmptyStorage(final ValueProfile storageType) {
+  public int getEmptyStorage() {
     assert isEmptyType();
-    return (int) storageType.profile(storage);
+    return CompilerDirectives.castExact(storage, int.class);
   }
 
-  public PartiallyEmptyArray getPartiallyEmptyStorage(final ValueProfile storageType) {
+  public PartiallyEmptyArray getPartiallyEmptyStorage() {
     assert isPartiallyEmptyType();
-    return (PartiallyEmptyArray) storageType.profile(storage);
+    return CompilerDirectives.castExact(storage, PartiallyEmptyArray.class);
   }
 
-  public Object[] getObjectStorage(final ValueProfile storageType) {
+  public Object[] getObjectStorage() {
     assert isObjectType();
-    return (Object[]) storageType.profile(storage);
+    return CompilerDirectives.castExact(storage, Object[].class);
   }
 
-  public long[] getLongStorage(final ValueProfile storageType) {
+  public long[] getLongStorage() {
     assert isLongType();
-    return (long[]) storageType.profile(storage);
+    return CompilerDirectives.castExact(storage, long[].class);
   }
 
-  public double[] getDoubleStorage(final ValueProfile storageType) {
+  public double[] getDoubleStorage() {
     assert isDoubleType();
-    return (double[]) storageType.profile(storage);
+    return CompilerDirectives.castExact(storage, double[].class);
   }
 
-  public boolean[] getBooleanStorage(final ValueProfile storageType) {
+  public boolean[] getBooleanStorage() {
     assert isBooleanType();
-    return (boolean[]) storageType.profile(storage);
+    return CompilerDirectives.castExact(storage, boolean[].class);
   }
 
   public boolean isEmptyType() {
@@ -124,9 +123,6 @@ public abstract class SArray extends SAbstractObject {
     }
     return storage;
   }
-
-  public static final ValueProfile PartiallyEmptyStorageType =
-      ValueProfile.createClassProfile();
 
   public static final class PartiallyEmptyArray {
     private final Object[] arr;
@@ -194,8 +190,6 @@ public abstract class SArray extends SAbstractObject {
       return new PartiallyEmptyArray(this);
     }
   }
-
-  public static final ValueProfile ObjectStorageType = ValueProfile.createClassProfile();
 
   public static class SMutableArray extends SArray {
 
@@ -275,7 +269,7 @@ public abstract class SArray extends SAbstractObject {
       } else {
         // if this is not true, this method is used in a wrong context
         assert isObjectType();
-        Object[] s = getObjectStorage(ObjectStorageType);
+        Object[] s = getObjectStorage();
         newArr = Arrays.copyOf(s, s.length + 1);
         newArr[s.length] = value;
       }
@@ -321,8 +315,6 @@ public abstract class SArray extends SAbstractObject {
       this.storage = newStorage;
     }
 
-    // private static final ValueProfile emptyStorageType = ValueProfile.createClassProfile();
-
     public final void transitionToObjectWithAll(final long length, final Object val) {
       Object[] arr = new Object[(int) length];
       Arrays.fill(arr, val);
@@ -354,7 +346,7 @@ public abstract class SArray extends SAbstractObject {
     }
 
     public final void ifFullOrObjectTransitionPartiallyEmpty() {
-      PartiallyEmptyArray arr = getPartiallyEmptyStorage(PartiallyEmptyStorageType);
+      PartiallyEmptyArray arr = getPartiallyEmptyStorage();
 
       if (arr.isFull()) {
         if (arr.getType() == PartiallyEmptyArray.Type.LONG) {
