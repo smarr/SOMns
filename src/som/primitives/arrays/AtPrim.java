@@ -6,7 +6,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.RootNode;
-import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
@@ -65,8 +64,6 @@ public abstract class AtPrim extends BinaryBasicOperation {
     }
   }
 
-  private final ValueProfile storageType = ValueProfile.createClassProfile();
-
   @Child protected ExceptionSignalingNode indexOutOfBounds;
 
   public abstract Object execute(VirtualFrame frame, SArray array, long index);
@@ -97,7 +94,7 @@ public abstract class AtPrim extends BinaryBasicOperation {
 
   @Specialization(guards = "receiver.isEmptyType()")
   public final Object doEmptySArray(final SArray receiver, final long idx) {
-    if (idx < 1 || idx > receiver.getEmptyStorage(storageType)) {
+    if (idx < 1 || idx > receiver.getEmptyStorage()) {
       return triggerException(receiver, idx);
     }
     return Nil.nilObject;
@@ -106,7 +103,7 @@ public abstract class AtPrim extends BinaryBasicOperation {
   @Specialization(guards = "receiver.isPartiallyEmptyType()")
   public final Object doPartiallyEmptySArray(final SArray receiver, final long idx) {
     try {
-      return receiver.getPartiallyEmptyStorage(storageType).get(idx - 1);
+      return receiver.getPartiallyEmptyStorage().get(idx - 1);
     } catch (IndexOutOfBoundsException e) {
       return triggerException(receiver, idx);
     }
@@ -115,7 +112,7 @@ public abstract class AtPrim extends BinaryBasicOperation {
   @Specialization(guards = "receiver.isObjectType()")
   public final Object doObjectSArray(final SArray receiver, final long idx) {
     try {
-      return receiver.getObjectStorage(storageType)[(int) idx - 1];
+      return receiver.getObjectStorage()[(int) idx - 1];
     } catch (IndexOutOfBoundsException e) {
       return triggerException(receiver, idx);
     }
@@ -124,7 +121,7 @@ public abstract class AtPrim extends BinaryBasicOperation {
   @Specialization(guards = "receiver.isLongType()")
   public final long doLongSArray(final SArray receiver, final long idx) {
     try {
-      return receiver.getLongStorage(storageType)[(int) idx - 1];
+      return receiver.getLongStorage()[(int) idx - 1];
     } catch (IndexOutOfBoundsException e) {
       return (long) triggerException(receiver, idx);
     }
@@ -133,7 +130,7 @@ public abstract class AtPrim extends BinaryBasicOperation {
   @Specialization(guards = "receiver.isDoubleType()")
   public final double doDoubleSArray(final SArray receiver, final long idx) {
     try {
-      return receiver.getDoubleStorage(storageType)[(int) idx - 1];
+      return receiver.getDoubleStorage()[(int) idx - 1];
     } catch (IndexOutOfBoundsException e) {
       return (double) triggerException(receiver, idx);
     }
@@ -142,7 +139,7 @@ public abstract class AtPrim extends BinaryBasicOperation {
   @Specialization(guards = "receiver.isBooleanType()")
   public final boolean doBooleanSArray(final SArray receiver, final long idx) {
     try {
-      return receiver.getBooleanStorage(storageType)[(int) idx - 1];
+      return receiver.getBooleanStorage()[(int) idx - 1];
     } catch (IndexOutOfBoundsException e) {
       return (boolean) triggerException(receiver, idx);
     }

@@ -2,7 +2,6 @@ package som.primitives.arrays;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.profiles.ValueProfile;
 
 import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -13,20 +12,19 @@ import som.vmobjects.SArray.SMutableArray;
 @GenerateNodeFactory
 @Primitive(selector = "copy", receiverType = SArray.class, disabled = true)
 public abstract class CopyPrim extends UnaryExpressionNode {
-  private final ValueProfile storageType = ValueProfile.createClassProfile();
 
   @Specialization(guards = "receiver.isEmptyType()")
   public final SMutableArray doEmptyArray(final SMutableArray receiver) {
     assert !receiver.getSOMClass()
                     .isTransferObject() : "Not yet supported, need to instantiate another class";
-    return new SMutableArray(receiver.getEmptyStorage(storageType), receiver.getSOMClass());
+    return new SMutableArray(receiver.getEmptyStorage(), receiver.getSOMClass());
   }
 
   @Specialization(guards = "receiver.isPartiallyEmptyType()")
   public final SMutableArray doPartiallyEmptyArray(final SMutableArray receiver) {
     assert !receiver.getSOMClass()
                     .isTransferObject() : "Not yet supported, need to instantiate another class";
-    return new SMutableArray(receiver.getPartiallyEmptyStorage(storageType).copy(),
+    return new SMutableArray(receiver.getPartiallyEmptyStorage().copy(),
         receiver.getSOMClass());
   }
 
@@ -34,7 +32,7 @@ public abstract class CopyPrim extends UnaryExpressionNode {
   public final SMutableArray doObjectArray(final SMutableArray receiver) {
     assert !receiver.getSOMClass()
                     .isTransferObject() : "Not yet supported, need to instantiate another class";
-    return new SMutableArray(receiver.getObjectStorage(storageType).clone(),
+    return new SMutableArray(receiver.getObjectStorage().clone(),
         receiver.getSOMClass());
   }
 
@@ -42,7 +40,7 @@ public abstract class CopyPrim extends UnaryExpressionNode {
   public final SMutableArray doLongArray(final SMutableArray receiver) {
     assert !receiver.getSOMClass()
                     .isTransferObject() : "Not yet supported, need to instantiate another class";
-    return new SMutableArray(receiver.getLongStorage(storageType).clone(),
+    return new SMutableArray(receiver.getLongStorage().clone(),
         receiver.getSOMClass());
   }
 
@@ -50,7 +48,7 @@ public abstract class CopyPrim extends UnaryExpressionNode {
   public final SMutableArray doDoubleArray(final SMutableArray receiver) {
     assert !receiver.getSOMClass()
                     .isTransferObject() : "Not yet supported, need to instantiate another class";
-    return new SMutableArray(receiver.getDoubleStorage(storageType).clone(),
+    return new SMutableArray(receiver.getDoubleStorage().clone(),
         receiver.getSOMClass());
   }
 
@@ -58,7 +56,7 @@ public abstract class CopyPrim extends UnaryExpressionNode {
   public final SMutableArray doBooleanArray(final SMutableArray receiver) {
     assert !receiver.getSOMClass()
                     .isTransferObject() : "Not yet supported, need to instantiate another class";
-    return new SMutableArray(receiver.getBooleanStorage(storageType).clone(),
+    return new SMutableArray(receiver.getBooleanStorage().clone(),
         receiver.getSOMClass());
   }
 }

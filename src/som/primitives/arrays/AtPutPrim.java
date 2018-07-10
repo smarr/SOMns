@@ -8,7 +8,6 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.RootNode;
-import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
@@ -69,8 +68,6 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
       }
     }
   }
-
-  private final ValueProfile storageType = ValueProfile.createClassProfile();
 
   @Child protected ExceptionSignalingNode indexOutOfBounds;
 
@@ -135,7 +132,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
 
   private void setAndPossiblyTransition(final SMutableArray receiver,
       final long index, final Object value, final PartiallyEmptyArray.Type expectedType) {
-    PartiallyEmptyArray storage = receiver.getPartiallyEmptyStorage(storageType);
+    PartiallyEmptyArray storage = receiver.getPartiallyEmptyStorage();
     setValue(index - 1, value, storage);
     if (storage.getType() != expectedType) {
       storage.setType(PartiallyEmptyArray.Type.OBJECT);
@@ -181,7 +178,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   public final Object doEmptySArray(final SMutableArray receiver, final long index,
       final Object value) {
     final int idx = (int) index - 1;
-    int size = receiver.getEmptyStorage(storageType);
+    int size = receiver.getEmptyStorage();
 
     // if the value is an object, we transition directly to an Object array
     Object[] newStorage = new Object[size];
@@ -199,7 +196,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   public final Object doEmptySArrayWithNil(final SMutableArray receiver, final long index,
       final Object value) {
     long idx = index - 1;
-    if (idx < 0 || idx >= receiver.getEmptyStorage(storageType)) {
+    if (idx < 0 || idx >= receiver.getEmptyStorage()) {
       return triggerException(receiver, index);
     }
     return Nil.nilObject;
@@ -242,7 +239,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   public final Object doPartiallyEmptySArrayWithNil(final SMutableArray receiver,
       final long index, final Object value) {
     long idx = index - 1;
-    PartiallyEmptyArray storage = receiver.getPartiallyEmptyStorage(storageType);
+    PartiallyEmptyArray storage = receiver.getPartiallyEmptyStorage();
 
     try {
       if (storage.get(idx) != Nil.nilObject) {
@@ -270,7 +267,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   public final Object doObjectSArray(final SMutableArray receiver, final long index,
       final Object value) {
     try {
-      receiver.getObjectStorage(storageType)[(int) index - 1] = value;
+      receiver.getObjectStorage()[(int) index - 1] = value;
       return value;
     } catch (IndexOutOfBoundsException e) {
       return triggerException(receiver, index);
@@ -281,7 +278,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   public final long doObjectSArray(final SMutableArray receiver, final long index,
       final long value) {
     try {
-      receiver.getLongStorage(storageType)[(int) index - 1] = value;
+      receiver.getLongStorage()[(int) index - 1] = value;
       return value;
     } catch (IndexOutOfBoundsException e) {
       return (long) triggerException(receiver, index);
@@ -291,7 +288,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   @Specialization(guards = {"receiver.isLongType()", "valueIsNotLong(value)"})
   public final Object doLongSArray(final SMutableArray receiver, final long index,
       final Object value) {
-    long[] storage = receiver.getLongStorage(storageType);
+    long[] storage = receiver.getLongStorage();
     Object[] newStorage = new Object[storage.length];
     for (int i = 0; i < storage.length; i++) {
       newStorage[i] = storage[i];
@@ -308,7 +305,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   public final double doDoubleSArray(final SMutableArray receiver, final long index,
       final double value) {
     try {
-      receiver.getDoubleStorage(storageType)[(int) index - 1] = value;
+      receiver.getDoubleStorage()[(int) index - 1] = value;
       return value;
     } catch (IndexOutOfBoundsException e) {
       return (double) triggerException(receiver, index);
@@ -318,7 +315,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   @Specialization(guards = {"receiver.isDoubleType()", "valueIsNotDouble(value)"})
   public final Object doDoubleSArray(final SMutableArray receiver, final long index,
       final Object value) {
-    double[] storage = receiver.getDoubleStorage(storageType);
+    double[] storage = receiver.getDoubleStorage();
     Object[] newStorage = new Object[storage.length];
     for (int i = 0; i < storage.length; i++) {
       newStorage[i] = storage[i];
@@ -334,7 +331,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   public final boolean doBooleanSArray(final SMutableArray receiver, final long index,
       final boolean value) {
     try {
-      receiver.getBooleanStorage(storageType)[(int) index - 1] = value;
+      receiver.getBooleanStorage()[(int) index - 1] = value;
       return value;
     } catch (IndexOutOfBoundsException e) {
       return (boolean) triggerException(receiver, index);
@@ -344,7 +341,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   @Specialization(guards = {"receiver.isBooleanType()", "valueIsNotBoolean(value)"})
   public final Object doBooleanSArray(final SMutableArray receiver, final long index,
       final Object value) {
-    boolean[] storage = receiver.getBooleanStorage(storageType);
+    boolean[] storage = receiver.getBooleanStorage();
     Object[] newStorage = new Object[storage.length];
     for (int i = 0; i < storage.length; i++) {
       newStorage[i] = storage[i];

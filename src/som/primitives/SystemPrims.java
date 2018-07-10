@@ -23,7 +23,6 @@ import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
@@ -380,8 +379,6 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemApply:with:")
   public abstract static class ApplyWithPrim extends BinaryComplexOperation {
-    private final ValueProfile storageType = ValueProfile.createClassProfile();
-
     @Child protected SizeAndLengthPrim size    = SizeAndLengthPrimFactory.create(null);
     @Child protected ToSomConversion   convert = ToSomConversionNodeGen.create(null);
 
@@ -391,13 +388,13 @@ public final class SystemPrims {
 
       Object[] arguments;
       if (args.isLongType()) {
-        long[] arr = args.getLongStorage(storageType);
+        long[] arr = args.getLongStorage();
         arguments = new Object[arr.length];
         for (int i = 0; i < arr.length; i++) {
           arguments[i] = arr[i];
         }
       } else if (args.isObjectType()) {
-        arguments = args.getObjectStorage(storageType);
+        arguments = args.getObjectStorage();
       } else {
         CompilerDirectives.transferToInterpreter();
         throw new NotYetImplementedException();
