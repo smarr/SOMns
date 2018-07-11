@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.profiles.ValueProfile;
 
 import som.vm.NotYetImplementedException;
 import som.vm.constants.Nil;
@@ -16,6 +17,7 @@ import som.vm.constants.Nil;
  */
 public abstract class SArray extends SAbstractObject {
   public static final int FIRST_IDX = 0;
+  public static final ValueProfile OBJECT_ARRAY_PROFILE = ValueProfile.createClassProfile();
 
   protected Object       storage;
   protected final SClass clazz;
@@ -44,32 +46,34 @@ public abstract class SArray extends SAbstractObject {
 
   public int getEmptyStorage() {
     assert isEmptyType();
-    return CompilerDirectives.castExact(storage, int.class);
+    return (int) storage;
   }
 
   public PartiallyEmptyArray getPartiallyEmptyStorage() {
     assert isPartiallyEmptyType();
-    return CompilerDirectives.castExact(storage, PartiallyEmptyArray.class);
+    return (PartiallyEmptyArray) storage;
   }
 
   public Object[] getObjectStorage() {
     assert isObjectType();
-    return CompilerDirectives.castExact(storage, Object[].class);
+    // TODO: `CompilerDirectives.castExact(storage, Object[].class);` can be
+    // used here instead of a ValueProfile (see issue #256).
+    return (Object[]) OBJECT_ARRAY_PROFILE.profile(storage);
   }
 
   public long[] getLongStorage() {
     assert isLongType();
-    return CompilerDirectives.castExact(storage, long[].class);
+    return (long[]) storage;
   }
 
   public double[] getDoubleStorage() {
     assert isDoubleType();
-    return CompilerDirectives.castExact(storage, double[].class);
+    return (double[]) storage;
   }
 
   public boolean[] getBooleanStorage() {
     assert isBooleanType();
-    return CompilerDirectives.castExact(storage, boolean[].class);
+    return (boolean[]) storage;
   }
 
   public boolean isEmptyType() {
