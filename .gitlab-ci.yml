@@ -40,7 +40,7 @@ benchmark_savina_job:
   allow_failure: true
   script:
     - ant -Dskip.graal=true compile
-    - export EXP=`if [[ "$CI_BUILD_REF_NAME" = "master" ]]; then echo "SOMns-Savina"; else echo "SOMns-Savina-exp"; fi`; rebench -d --without-nice -c --commit-id="$CI_BUILD_REF" --environment="Infinity Ubuntu" --project=SOMns-Savina --branch=master codespeed.conf $EXP
+    - export EXP=`if [[ "$CI_BUILD_REF_NAME" = "master" ]]; then echo "SOMns-Savina"; else echo "SOMns-Savina-exp"; fi`; rebench --without-nice -c --commit-id="$CI_BUILD_REF" --environment="`hostname` `cat /etc/issue | cut -d ' ' -f 1`" --project=SOMns-Savina --branch=master codespeed.conf $EXP
 
 benchmark_job:
   stage: benchmark
@@ -48,7 +48,7 @@ benchmark_job:
   allow_failure: true
   script:
     - ant -Dskip.graal=true compile
-    - export EXP=`if [[ "$CI_BUILD_REF_NAME" = "master" ]]; then echo "SOMns"; else echo "SOMns-exp"; fi`; rebench -d --without-nice -c --commit-id="$CI_BUILD_REF" --environment="Infinity Ubuntu" --project=SOMns --branch=master codespeed.conf $EXP
+    - export EXP=`if [[ "$CI_BUILD_REF_NAME" = "master" ]]; then echo "SOMns"; else echo "SOMns-exp"; fi`; rebench --without-nice -c --commit-id="$CI_BUILD_REF" --environment="`hostname` `cat /etc/issue | cut -d ' ' -f 1`" --project=SOMns --branch=master codespeed.conf $EXP
 
 benchmark_interp_job:
   stage: benchmark
@@ -56,7 +56,7 @@ benchmark_interp_job:
   allow_failure: true
   script:
     - ant -Dskip.graal=true compile
-    - export EXP=`if [[ "$CI_BUILD_REF_NAME" = "master" ]]; then echo "SOMns-interp"; else echo "SOMns-interp-exp"; fi`; rebench -d --without-nice -c --commit-id="$CI_BUILD_REF" --environment="Infinity Ubuntu" --project=SOMns --branch=master codespeed.conf $EXP
+    - export EXP=`if [[ "$CI_BUILD_REF_NAME" = "master" ]]; then echo "SOMns-interp"; else echo "SOMns-interp-exp"; fi`; rebench --without-nice -c --commit-id="$CI_BUILD_REF" --environment="`hostname` `cat /etc/issue | cut -d ' ' -f 1`" --project=SOMns --branch=master codespeed.conf $EXP
 
 benchmark_nightly_job:
   stage: benchmark
@@ -66,5 +66,5 @@ benchmark_nightly_job:
     - triggers
   script:
     - ant -Dskip.graal=true compile
-    - rebench -d --without-nice -c --commit-id="$CI_BUILD_REF" --environment="Infinity Ubuntu" --project=SOMns --branch=master codespeed.conf nightly
-    - rebench -d --without-nice -c --commit-id="$CI_BUILD_REF" --environment="Infinity Ubuntu" --project=SOMns --branch=master codespeed.conf SOMns-Savina-tracing
+    - rebench --without-nice -c --commit-id="$CI_BUILD_REF" --environment="`hostname` `cat /etc/issue | cut -d ' ' -f 1`" --project=SOMns --branch=master codespeed.conf nightly
+    - rebench --without-nice -c --commit-id="$CI_BUILD_REF" --environment="`hostname` `cat /etc/issue | cut -d ' ' -f 1`" --project=SOMns --branch=master codespeed.conf SOMns-Savina-tracing
