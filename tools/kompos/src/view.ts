@@ -264,7 +264,7 @@ function arrayToString(arr: any[][]) {
 function nodeFromTemplate(tplId: string) {
   const tpl = document.getElementById(tplId);
   console.assert(tpl, "nodeFromTemplate failed for: " + tplId);
-  const result = <Element> tpl.cloneNode(true);
+  const result = <HTMLElement> tpl.cloneNode(true);
   result.removeAttribute("id");
   return result;
 }
@@ -539,7 +539,7 @@ export class View {
   }
 
   private enableBreakpointMenuButtons() {
-    $(document).on("click", ".bp-btn", function(e) {
+    $(document).on("click", ".bp-btn", function(e: any) {
       e.stopImmediatePropagation();
       ctrl.onToggleSectionBreakpoint(e.currentTarget.attributes["data-ss-id"].value,
         e.currentTarget.attributes["data-bp-type"].value);
