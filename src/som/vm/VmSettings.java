@@ -20,7 +20,7 @@ public class VmSettings implements Settings {
   public static final boolean DYNAMIC_METRICS;
   public static final boolean DNU_PRINT_STACK_TRACE;
   public static final boolean REPLAY;
-  public static final boolean MEDEOR_TRACING;
+  public static final boolean KOMPOS_TRACING;
   public static final boolean TRACE_SMALL_IDS;
 
   public static final boolean TRUFFLE_DEBUGGER_ENABLED;
@@ -47,7 +47,7 @@ public class VmSettings implements Settings {
         System.getProperty("som.traceFile", System.getProperty("user.dir") + "/traces/trace");
     MEMORY_TRACING = getBool("som.memoryTracing", false);
     REPLAY = getBool("som.replay", false);
-    MEDEOR_TRACING = TRUFFLE_DEBUGGER_ENABLED; // REPLAY;
+    KOMPOS_TRACING = TRUFFLE_DEBUGGER_ENABLED; // REPLAY;
     DISABLE_TRACE_FILE = getBool("som.disableTraceFile", false) || REPLAY;
     TRACE_SMALL_IDS = getBool("som.smallIds", false);
 
