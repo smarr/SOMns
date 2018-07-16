@@ -18,12 +18,16 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   protected final long        threadId;
   protected long              nextEntityId;
 
+  public static final int EXTERNAL_BUFFER_SIZE = 500;
+
   // Used for tracing, accessed by the ExecAllMessages classes
   public long createdMessages;
   public long resolvedPromises;
   public long erroredPromises;
 
   protected final TraceBuffer traceBuffer;
+  protected Object[]          externalData;
+  protected int               extIndex = 0;
 
   protected SteppingStrategy steppingStrategy;
 
@@ -41,14 +45,16 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
 
   public TracingActivityThread(final ForkJoinPool pool) {
     super(pool);
-    if (VmSettings.ACTOR_TRACING) {
+    if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
       traceBuffer = TraceBuffer.create();
       threadId = threadIdGen.getAndIncrement();
       nextEntityId = 1 + (threadId << TraceData.ENTITY_ID_BITS);
+      externalData = new Object[EXTERNAL_BUFFER_SIZE];
     } else {
       threadId = 0;
       nextEntityId = 0;
       traceBuffer = null;
+      externalData = null;
     }
     setName(getClass().getSimpleName() + "-" + threadId);
   }
@@ -106,12 +112,21 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     return traceBuffer;
   }
 
+  public final void addExternalData(final Object data) {
+    externalData[extIndex] = data;
+    extIndex++;
+    if (extIndex == EXTERNAL_BUFFER_SIZE) {
+      TracingBackend.addExternalData(externalData);
+      externalData = new Object[EXTERNAL_BUFFER_SIZE];
+      extIndex = 0;
+    }
+  }
+
   @Override
   protected void onStart() {
     super.onStart();
     if (VmSettings.ACTOR_TRACING) {
-      traceBuffer.init(ActorExecutionTrace.getEmptyBuffer(), threadId);
-      ActorExecutionTrace.registerThread(this);
+      TracingBackend.registerThread(this);
     }
   }
 
@@ -119,7 +134,8 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   protected void onTermination(final Throwable exception) {
     if (VmSettings.ACTOR_TRACING) {
       traceBuffer.returnBuffer();
-      ActorExecutionTrace.unregisterThread(this);
+      TracingBackend.addExternalData(externalData);
+      TracingBackend.unregisterThread(this);
     }
     super.onTermination(exception);
   }
@@ -129,11 +145,12 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   }
 
   public static long newEntityId() {
-    if (VmSettings.ACTOR_TRACING && Thread.currentThread() instanceof TracingActivityThread) {
+    if (VmSettings.KOMPOS_TRACING && Thread.currentThread() instanceof TracingActivityThread) {
       TracingActivityThread t = TracingActivityThread.currentThread();
       return t.generateEntityId();
     } else {
       return 0; // main actor
     }
   }
+
 }
