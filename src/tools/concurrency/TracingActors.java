@@ -17,6 +17,7 @@ import som.interpreter.actors.SPromise.SReplayPromise;
 import som.vm.VmSettings;
 import tools.concurrency.TraceParser.MessageRecord;
 import tools.debugger.WebDebugger;
+import tools.replay.actors.ExternalMessage;
 
 
 public class TracingActors {
