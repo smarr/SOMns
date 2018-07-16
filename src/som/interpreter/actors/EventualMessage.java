@@ -70,12 +70,12 @@ public abstract class EventualMessage {
    *
    * ARGUMENTS: are wrapped eagerly on message creation
    */
-  public static final class DirectMessage extends EventualMessage {
+  public abstract static class AbstractDirectMessage extends EventualMessage {
     private final SSymbol selector;
     private final Actor   target;
     private final Actor   sender;
 
-    public DirectMessage(final Actor target, final SSymbol selector,
+    protected AbstractDirectMessage(final Actor target, final SSymbol selector,
         final Object[] arguments, final Actor sender, final SResolver resolver,
         final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint,
         final boolean triggerPromiseResolverBreakpoint) {
@@ -118,6 +118,16 @@ public abstract class EventualMessage {
       return "DirectMsg(" + selector.toString() + ", "
           + Arrays.toString(args) + ", " + t
           + ", sender: " + (sender == null ? "" : sender.toString()) + ")";
+    }
+  }
+
+  public static final class DirectMessage extends AbstractDirectMessage {
+    public DirectMessage(final Actor target, final SSymbol selector,
+        final Object[] arguments, final Actor sender, final SResolver resolver,
+        final RootCallTarget onReceive, final boolean triggerMessageReceiverBreakpoint,
+        final boolean triggerPromiseResolverBreakpoint) {
+      super(target, selector, arguments, sender, resolver, onReceive,
+          triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
     }
   }
 
@@ -187,13 +197,13 @@ public abstract class EventualMessage {
    * A message that was send with <-: to a promise, and will be delivered
    * after the promise is resolved.
    */
-  public static final class PromiseSendMessage extends PromiseMessage {
+  public abstract static class AbstractPromiseSendMessage extends PromiseMessage {
     private final SSymbol    selector;
     protected Actor          target;
     protected Actor          finalSender;
     protected final SPromise originalTarget;
 
-    protected PromiseSendMessage(final SSymbol selector,
+    protected AbstractPromiseSendMessage(final SSymbol selector,
         final Object[] arguments, final Actor originalSender,
         final SResolver resolver, final RootCallTarget onReceive,
         final boolean triggerMessageReceiverBreakpoint,
@@ -251,14 +261,24 @@ public abstract class EventualMessage {
     }
   }
 
+  public static final class PromiseSendMessage extends AbstractPromiseSendMessage {
+    protected PromiseSendMessage(final SSymbol selector, final Object[] arguments,
+        final Actor originalSender, final SResolver resolver, final RootCallTarget onReceive,
+        final boolean triggerMessageReceiverBreakpoint,
+        final boolean triggerPromiseResolverBreakpoint) {
+      super(selector, arguments, originalSender, resolver, onReceive,
+          triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
+    }
+  }
+
   /** The callback message to be send after a promise is resolved. */
-  public static final class PromiseCallbackMessage extends PromiseMessage {
+  public abstract static class AbstractPromiseCallbackMessage extends PromiseMessage {
     /**
      * The promise on which this callback is registered on.
      */
     protected final SPromise promise;
 
-    public PromiseCallbackMessage(final Actor owner, final SBlock callback,
+    protected AbstractPromiseCallbackMessage(final Actor owner, final SBlock callback,
         final SResolver resolver, final RootCallTarget onReceive,
         final boolean triggerMessageReceiverBreakpoint,
         final boolean triggerPromiseResolverBreakpoint, final SPromise promiseRegisteredOn) {
@@ -304,15 +324,17 @@ public abstract class EventualMessage {
     }
   }
 
-  public final void execute() {
-    try {
-      executeMessage();
-    } catch (ThreadDeath t) {
-      throw t;
+  public static final class PromiseCallbackMessage extends AbstractPromiseCallbackMessage {
+    public PromiseCallbackMessage(final Actor owner, final SBlock callback,
+        final SResolver resolver, final RootCallTarget onReceive,
+        final boolean triggerMessageReceiverBreakpoint,
+        final boolean triggerPromiseResolverBreakpoint, final SPromise promiseRegisteredOn) {
+      super(owner, callback, resolver, onReceive, triggerMessageReceiverBreakpoint,
+          triggerPromiseResolverBreakpoint, promiseRegisteredOn);
     }
   }
 
-  protected final void executeMessage() {
+  public final void execute() {
     Object rcvrObj = args[0];
     assert rcvrObj != null;
 
