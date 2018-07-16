@@ -3,6 +3,7 @@ package som.primitives.arrays;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
@@ -66,6 +67,8 @@ public abstract class AtPrim extends BinaryBasicOperation {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
   @Child protected ExceptionSignalingNode indexOutOfBounds;
+
+  public abstract Object execute(VirtualFrame frame, SArray array, long index);
 
   @Override
   @SuppressWarnings("unchecked")
