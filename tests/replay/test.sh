@@ -37,7 +37,7 @@ else
     "Philosophers 100 0 5:5 25"
     "DeadLock 100 0 4:2:3"
     "Messages 100 0 1000"
-    #"Sequence 100 0 100"
+    "Sequence 100 0 100"
   )
 fi
 
@@ -52,10 +52,10 @@ for args in "${Savina[@]}"
 do  
   echo "$args" 
   echo "Tracing:" 
-  $SOM_DIR/som -G -JXmx1500m -vmd -at core-lib/Benchmarks/AsyncHarness.ns Savina.$args 
+  $SOM_DIR/som -G -JXmx1500m -at core-lib/Benchmarks/AsyncHarness.ns Savina.$args 
   echo "" 
   echo "Replay:" 
-  $SOM_DIR/som -G -JXmx1500m -vmd -at -r core-lib/Benchmarks/AsyncHarness.ns Savina.$args 
+  $SOM_DIR/som -G -JXmx1500m -vmd -r core-lib/Benchmarks/AsyncHarness.ns Savina.$args 
   echo "" 
   echo "========================================================" 
   echo "" 
@@ -65,10 +65,10 @@ for args in "${Validation[@]}"
 do 
   echo "$args"
   echo "Tracing:"
-  $SOM_DIR/som -G -JXmx1500m -vmd -at core-lib/Benchmarks/ImpactHarness.ns Validation.$args | grep -o 'success: .*' > $SCRIPT_PATH/orig.txt
+  $SOM_DIR/som -G -JXmx1500m -at core-lib/Benchmarks/ImpactHarness.ns Validation.$args | grep -o 'success: .*' > $SCRIPT_PATH/orig.txt
   echo ""
   echo "Replay:"
-  $SOM_DIR/som -G -JXmx1500m -vmd -at -r core-lib/Benchmarks/ImpactHarness.ns Validation.$args | grep -o 'success: .*' > $SCRIPT_PATH/repl.txt
+  $SOM_DIR/som -G -JXmx1500m -vmd -r core-lib/Benchmarks/ImpactHarness.ns Validation.$args | grep -o 'success: .*' > $SCRIPT_PATH/repl.txt
   diff $SCRIPT_PATH/orig.txt $SCRIPT_PATH/repl.txt
   echo ""
   echo "========================================================"

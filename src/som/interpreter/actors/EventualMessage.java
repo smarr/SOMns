@@ -9,6 +9,7 @@ import som.VM;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.SPromise.SResolver;
+import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActivityThread;
@@ -41,7 +42,11 @@ public abstract class EventualMessage {
     this.onReceive = onReceive;
     this.haltOnReceive = haltOnReceive;
     this.haltOnResolver = haltOnResolver;
-    this.messageId = TracingActivityThread.newEntityId();
+    if (VmSettings.KOMPOS_TRACING) {
+      this.messageId = TracingActivityThread.newEntityId();
+    } else {
+      this.messageId = 0;
+    }
     assert onReceive.getRootNode() instanceof ReceivedMessage
         || onReceive.getRootNode() instanceof ReceivedCallback;
   }
