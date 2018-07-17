@@ -191,7 +191,8 @@ public class TracingBackend {
 
   @TruffleBoundary
   private static void returnBufferGlobally(final BufferAndLimit buffer) {
-    assert fullBuffers.offer(buffer);
+    boolean inserted = fullBuffers.offer(buffer);
+    assert inserted;
   }
 
   private static HashSet<TracingActivityThread> tracingThreads = new HashSet<>();
