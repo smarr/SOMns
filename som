@@ -86,6 +86,14 @@ tools.add_argument('-TF', '--disable-trace-file', help='trace file wont be writt
                     dest='disable_trace_file', action='store_true', default=False)
 tools.add_argument('-r', '--replay', help='execution of the program is guided by an existing trace file',
                     dest='replay', action='store_true', default=False)
+tools.add_argument('-BR', '--no-buffer-recycling', help='create singe-use buffers only',
+                    dest='buffer_recycling', action='store_true', default=False)
+tools.add_argument('-bpt', '--buffers-per-thread', help='used to calculate the number of buffers to use for tracing',
+                    dest='buffers_per_thread', default=4)
+tools.add_argument('-bs', '--buffer-size', help='set the size of buffer used for tracing',
+                    dest='buffer_size', default=1048576)
+tools.add_argument('-bd', '--buffer-delay', help='set the delay for checking if there are buffers to write',
+                    dest='buffer_delay', default=50)                    
 tools.add_argument('--coverage', help='determine SOMns code coverage and store in given file',
                    dest='coverage', default=None)
 tools.add_argument('--java-coverage', help='determine Java code coverage and store in given file',
@@ -315,6 +323,14 @@ if args.disable_trace_file:
     flags += ['-Dsom.disableTraceFile=true']
 if args.replay:
     flags += ['-Dsom.replay=true']
+if args.buffer_recycling:
+    flags += ['-Dsom.bufferRecycling=false']
+if args.buffer_size:
+    flags += ['-Dsom.buffSize=%s' % args.buffer_size ]
+if args.buffer_size:
+    flags += ['-Dsom.buffDelay=%s' % args.buffer_delay ]
+if args.buffers_per_thread:
+    flags += ['-Dsom.buffPerThread=%s' % args.buffers_per_thread ]
 
 if (args.truffle_profile or args.web_debugger or
     args.dynamic_metrics or args.coverage or args.si_candidates):

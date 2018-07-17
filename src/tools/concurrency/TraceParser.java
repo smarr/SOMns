@@ -33,7 +33,7 @@ public final class TraceParser {
   }
 
   private ByteBuffer                        b                =
-      ByteBuffer.allocate(TracingBackend.BUFFER_SIZE);
+      ByteBuffer.allocate(VmSettings.BUFFER_SIZE);
   private final HashMap<Integer, ActorNode> actors           = new HashMap<>();
   private final HashMap<Long, Long>         externalDataDict = new HashMap<>();
 

@@ -31,6 +31,11 @@ public class VmSettings implements Settings {
 
   public static final String INSTRUMENTATION_PROP = "som.instrumentation";
 
+  public static final int     BUFFERS_PER_THREAD;
+  public static final int     BUFFER_SIZE;
+  public static final boolean RECYCLE_BUFFERS;
+  public static final int     BUFFER_TIMEOUT;
+
   static {
     String prop = System.getProperty("som.threads");
     if (prop == null) {
@@ -67,10 +72,19 @@ public class VmSettings implements Settings {
     IGV_DUMP_AFTER_PARSING = getBool("som.igvDumpAfterParsing", false);
 
     ANSI_COLOR_IN_OUTPUT = getBool("som.useAnsiColoring", false);
+
+    BUFFER_SIZE = getInteger("som.buffSize", 1024 * 1024);
+    BUFFERS_PER_THREAD = getInteger("som.buffPerThread", 4);
+    BUFFER_TIMEOUT = getInteger("som.buffDelay", 50);
+    RECYCLE_BUFFERS = getBool("som.bufferRecycling", true);
   }
 
   private static boolean getBool(final String prop, final boolean defaultVal) {
     return Boolean.parseBoolean(System.getProperty(prop, defaultVal ? "true" : "false"));
+  }
+
+  private static int getInteger(final String prop, final int defaultVal) {
+    return Integer.parseInt(System.getProperty(prop, "" + defaultVal));
   }
 
   @Override

@@ -68,11 +68,10 @@ import tools.replay.actors.ActorExecutionTrace;
  * done on the buffer for all access.
  */
 public class TracingBackend {
-  private static final int BUFFER_POOL_SIZE = VmSettings.NUM_THREADS * 16;
-  public static final int  BUFFER_SIZE      = 4096 * 256;
+  private static final int BUFFER_POOL_SIZE =
+      VmSettings.NUM_THREADS * VmSettings.BUFFERS_PER_THREAD;
 
   private static final int TRACE_TIMEOUT = 500;
-  private static final int POLL_TIMEOUT  = 50;
 
   private static final List<GarbageCollectorMXBean> gcbeans =
       ManagementFactory.getGarbageCollectorMXBeans();
@@ -101,9 +100,10 @@ public class TracingBackend {
       setUpGCMonitoring();
     }
 
-    if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
+    if (VmSettings.RECYCLE_BUFFERS
+        && (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING)) {
       for (int i = 0; i < BUFFER_POOL_SIZE; i++) {
-        emptyBuffers.add(new byte[BUFFER_SIZE]);
+        emptyBuffers.add(new byte[VmSettings.BUFFER_SIZE]);
       }
     }
   }
@@ -155,11 +155,15 @@ public class TracingBackend {
 
   @TruffleBoundary
   public static byte[] getEmptyBuffer() {
-    try {
-      return emptyBuffers.take();
-    } catch (InterruptedException e) {
-      CompilerDirectives.transferToInterpreter();
-      throw new IllegalStateException("Failed to acquire a new Buffer!");
+    if (VmSettings.RECYCLE_BUFFERS) {
+      try {
+        return emptyBuffers.take();
+      } catch (InterruptedException e) {
+        CompilerDirectives.transferToInterpreter();
+        throw new IllegalStateException("Failed to acquire a new Buffer!");
+      }
+    } else {
+      return new byte[VmSettings.BUFFER_SIZE];
     }
   }
 
@@ -304,7 +308,8 @@ public class TracingBackend {
     private BufferAndLimit tryToObtainBuffer() {
       BufferAndLimit buffer;
       try {
-        buffer = TracingBackend.fullBuffers.poll(POLL_TIMEOUT, TimeUnit.MILLISECONDS);
+        buffer =
+            TracingBackend.fullBuffers.poll(VmSettings.BUFFER_TIMEOUT, TimeUnit.MILLISECONDS);
         if (buffer == null) {
           return null;
         } else {
@@ -440,7 +445,9 @@ public class TracingBackend {
         fos.flush();
       }
       traceBytes += buffer.limit;
-      TracingBackend.emptyBuffers.add(buffer.buffer);
+      if (VmSettings.RECYCLE_BUFFERS) {
+        TracingBackend.emptyBuffers.add(buffer.buffer);
+      }
     }
 
     private void processTraceData(final FileOutputStream traceDataStream,
