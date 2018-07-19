@@ -24,7 +24,6 @@ import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
-import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.ReplayActor;
@@ -32,6 +31,7 @@ import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.DynamicScopeType;
+import tools.replay.actors.ActorExecutionTrace;
 
 
 /**

@@ -15,11 +15,11 @@ import som.primitives.ObjectPrimsFactory.IsValueFactory.IsValueNodeGen;
 import som.primitives.actors.PromisePrims.IsActorModule;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
-import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.KomposTrace;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.entities.ActivityType;
+import tools.replay.actors.ActorExecutionTrace;
 
 
 @GenerateNodeFactory

@@ -53,8 +53,8 @@ import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
-import tools.concurrency.ActorExecutionTrace;
 import tools.concurrency.TraceParser;
+import tools.replay.actors.ActorExecutionTrace;
 
 
 public final class SystemPrims {

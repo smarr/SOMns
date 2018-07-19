@@ -16,6 +16,7 @@ import som.Output;
 import som.interpreter.actors.EventualMessage;
 import som.vm.VmSettings;
 import tools.concurrency.TracingActors.ReplayActor;
+import tools.replay.actors.ActorExecutionTrace;
 
 
 public final class TraceParser {
