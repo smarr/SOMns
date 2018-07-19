@@ -43,7 +43,7 @@ matrix:
       language: generic
       env:  TASK=unit-tests
       before_install: |
-        brew tap caskroom/versions
+        brew update
         brew cask reinstall java
         brew install ant
         export JAVA_HOME=`/usr/libexec/java_home`
