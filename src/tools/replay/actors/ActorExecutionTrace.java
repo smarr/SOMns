@@ -1,4 +1,4 @@
-package tools.concurrency;
+package tools.replay.actors;
 
 import java.util.Arrays;
 
@@ -7,9 +7,10 @@ import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
 import som.vm.VmSettings;
-import som.vmobjects.SArray.SImmutableArray;
+import tools.concurrency.TraceBuffer;
+import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.TracingActor;
-import tools.replay.actors.ExternalMessage;
+import tools.replay.StringWrapper;
 
 
 public class ActorExecutionTrace {
@@ -249,32 +250,6 @@ public class ActorExecutionTrace {
           storage.putInt(id);
           break;
       }
-    }
-  }
-
-  public static class StringWrapper {
-    final String s;
-    final int    actorId;
-    final int    dataId;
-
-    public StringWrapper(final String s, final int actorId, final int dataId) {
-      super();
-      this.s = s;
-      this.actorId = actorId;
-      this.dataId = dataId;
-    }
-  }
-
-  public static class TwoDArrayWrapper {
-    final SImmutableArray ia;
-    final int             actorId;
-    final int             dataId;
-
-    public TwoDArrayWrapper(final SImmutableArray ia, final int actorId, final int dataId) {
-      super();
-      this.ia = ia;
-      this.actorId = actorId;
-      this.dataId = dataId;
     }
   }
 }

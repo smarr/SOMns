@@ -1,7 +1,7 @@
 package tools.concurrency;
 
 import som.vm.VmSettings;
-import tools.concurrency.ActorExecutionTrace.ActorTraceBuffer;
+import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
 
 
 public abstract class TraceBuffer {
@@ -38,7 +38,7 @@ public abstract class TraceBuffer {
     return storage.remaining() == 0;
   }
 
-  boolean swapStorage() {
+  public boolean swapStorage() {
     TracingBackend.returnBuffer(storage);
     retrieveBuffer();
     return true;

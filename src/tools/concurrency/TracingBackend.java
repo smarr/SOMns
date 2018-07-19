@@ -34,9 +34,10 @@ import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SSymbol;
-import tools.concurrency.ActorExecutionTrace.StringWrapper;
-import tools.concurrency.ActorExecutionTrace.TwoDArrayWrapper;
 import tools.debugger.FrontendConnector;
+import tools.replay.StringWrapper;
+import tools.replay.TwoDArrayWrapper;
+import tools.replay.actors.ActorExecutionTrace;
 
 
 /**
