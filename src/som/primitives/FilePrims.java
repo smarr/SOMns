@@ -6,6 +6,7 @@ import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.profiles.BranchProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
@@ -181,18 +182,22 @@ public final class FilePrims {
   @GenerateNodeFactory
   @Primitive(primitive = "file:readAt:ifFail:")
   public abstract static class ReadFilePrim extends TernaryExpressionNode {
+    private final BranchProfile errorCases = BranchProfile.create();
+
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
     public final long read(final SFileDescriptor file, final long offset,
         final SBlock fail) {
-      return file.read(offset, fail, dispatchHandler);
+      return file.read(offset, fail, dispatchHandler, errorCases);
     }
   }
 
   @GenerateNodeFactory
   @Primitive(primitive = "file:write:at:ifFail:")
   public abstract static class WriteFilePrim extends QuaternaryExpressionNode {
+    private final BranchProfile errorCases = BranchProfile.create();
+
     @Child protected BlockDispatchNode      dispatchHandler = BlockDispatchNodeGen.create();
     @Child protected ExceptionSignalingNode ioException;
 
@@ -208,7 +213,7 @@ public final class FilePrims {
     @Specialization
     public final Object write(final SFileDescriptor file, final long nBytes,
         final long offset, final SBlock fail) {
-      file.write((int) nBytes, offset, fail, dispatchHandler, ioException);
+      file.write((int) nBytes, offset, fail, dispatchHandler, ioException, errorCases);
       return file;
     }
   }
