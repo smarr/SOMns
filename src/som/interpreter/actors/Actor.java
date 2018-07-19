@@ -13,7 +13,6 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 
-import som.Output;
 import som.VM;
 import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
@@ -25,14 +24,14 @@ import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
-import tools.TraceData;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.DynamicScopeType;
+import tools.replay.actors.ActorExecutionTrace;
 
 
 /**
@@ -62,7 +61,7 @@ public class Actor implements Activity {
   }
 
   public static Actor createActor(final VM vm) {
-    if (VmSettings.REPLAY) {
+    if (VmSettings.REPLAY || VmSettings.KOMPOS_TRACING) {
       return new ReplayActor(vm);
     } else if (VmSettings.ACTOR_TRACING) {
       return new TracingActor(vm);
@@ -81,18 +80,11 @@ public class Actor implements Activity {
   protected EventualMessage               firstMessage;
   protected ObjectBuffer<EventualMessage> mailboxExtension;
 
-  protected long               firstMessageTimeStamp;
-  protected ObjectBuffer<Long> mailboxExtensionTimeStamps;
-
   /** Flag to indicate whether there is currently a F/J task executing. */
   protected boolean isExecuting;
 
   /** Is scheduled on the pool, and executes messages to this actor. */
   protected final ExecAllMessages executor;
-
-  // used to collect absolute numbers from the threads
-  private static Object statsLock          = new Object();
-  private static long   numCreatedEntities = 0;
 
   /**
    * Possible roles for an actor.
@@ -202,7 +194,6 @@ public class Actor implements Activity {
   protected void appendToMailbox(final EventualMessage msg) {
     if (mailboxExtension == null) {
       mailboxExtension = new ObjectBuffer<>(MAILBOX_EXTENSION_SIZE);
-      mailboxExtensionTimeStamps = new ObjectBuffer<>(MAILBOX_EXTENSION_SIZE);
     }
     mailboxExtension.append(msg);
   }
@@ -258,7 +249,9 @@ public class Actor implements Activity {
       t.currentlyExecutingActor = actor;
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.currentActivity(actor);
+        ActorExecutionTrace.recordActorContext((TracingActor) actor);
+      } else if (VmSettings.KOMPOS_TRACING) {
+        KomposTrace.currentActivity(actor);
       }
 
       try {
@@ -276,17 +269,11 @@ public class Actor implements Activity {
         final WebDebugger dbg) {
       assert size > 0;
 
-      try {
-        execute(firstMessage, currentThread, dbg);
+      execute(firstMessage, currentThread, dbg);
 
-        if (size > 1) {
-          for (EventualMessage msg : mailboxExtension) {
-            execute(msg, currentThread, dbg);
-          }
-        }
-      } finally {
-        if (VmSettings.ACTOR_TRACING) {
-          currentThread.createdMessages += size;
+      if (size > 1) {
+        for (EventualMessage msg : mailboxExtension) {
+          execute(msg, currentThread, dbg);
         }
       }
     }
@@ -299,14 +286,17 @@ public class Actor implements Activity {
       }
 
       try {
-        if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.scopeStart(DynamicScopeType.TURN, msg.getMessageId(),
+        if (VmSettings.KOMPOS_TRACING) {
+          KomposTrace.scopeStart(DynamicScopeType.TURN, msg.getMessageId(),
               msg.getTargetSourceSection());
         }
         msg.execute();
       } finally {
+        if (VmSettings.KOMPOS_TRACING) {
+          KomposTrace.scopeEnd(DynamicScopeType.TURN);
+        }
         if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.scopeEnd(DynamicScopeType.TURN);
+          ActorExecutionTrace.recordMessage(msg);
         }
       }
     }
@@ -321,8 +311,8 @@ public class Actor implements Activity {
           assert mailboxExtension == null;
           // complete execution after all messages are processed
           actor.isExecuting = false;
-          if (VmSettings.ACTOR_TRACING) {
-            ActorExecutionTrace.clearCurrentActivity(actor);
+          if (VmSettings.KOMPOS_TRACING) {
+            KomposTrace.clearCurrentActivity(actor);
           }
           size = 0;
           return false;
@@ -375,27 +365,8 @@ public class Actor implements Activity {
       return currentMessage.getTarget();
     }
 
-    @Override
-    protected void onTermination(final Throwable exception) {
-      if (VmSettings.ACTOR_TRACING) {
-        long createdEntities = nextEntityId - 1 - (threadId << TraceData.ENTITY_ID_BITS);
-
-        Output.printConcurrencyEntitiesReport(
-            "[Thread " + threadId + "]\tE#" + createdEntities);
-
-        synchronized (statsLock) {
-          numCreatedEntities += createdEntities;
-        }
-      }
-      super.onTermination(exception);
-    }
-  }
-
-  public static final void reportStats() {
-    if (VmSettings.ACTOR_TRACING) {
-      synchronized (statsLock) {
-        Output.printConcurrencyEntitiesReport("[Total]\tE#" + numCreatedEntities);
-      }
+    public Actor getCurrentActor() {
+      return currentlyExecutingActor;
     }
   }
 

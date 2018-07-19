@@ -605,27 +605,15 @@ DAMAGE.>> *)
     )
 
     public readStream ^ <ExternalReadStream> = (
-      ^ExternalReadStream onDescriptor: (
-        self open: #read ifFail: [ :err <Exception> |
-          self error: err
-        ]
-      )
+      ^ExternalReadStream onDescriptor: (self open: #read)
     )
 
     public readWriteStream ^ <ExternalReadWriteStream> = (
-      ^ExternalReadWriteStream onDescriptor: (
-        self open: #readWrite ifFail: [ :err <Exception> |
-          self error: err
-        ]
-      )
+      ^ExternalReadWriteStream onDescriptor: (self open: #readWrite)
     )
 
     public writeStream ^ <ExternalReadWriteStream> = (
-      ^ExternalOutputStream onDescriptor: (
-        self open: #write ifFail: [ :err <Exception> |
-          self error: err
-        ]
-      )
+      ^ExternalOutputStream onDescriptor: (self open: #write)
     )
   ) : (
     public currentDirectory ^<FilePath> = (

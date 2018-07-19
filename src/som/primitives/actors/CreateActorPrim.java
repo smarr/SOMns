@@ -15,9 +15,11 @@ import som.primitives.ObjectPrimsFactory.IsValueFactory.IsValueNodeGen;
 import som.primitives.actors.PromisePrims.IsActorModule;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.KomposTrace;
 import tools.concurrency.Tags.ExpressionBreakpoint;
+import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.entities.ActivityType;
+import tools.replay.actors.ActorExecutionTrace;
 
 
 @GenerateNodeFactory
@@ -40,9 +42,11 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
     SFarReference ref = new SFarReference(actor, argument);
 
     if (VmSettings.ACTOR_TRACING) {
+      ActorExecutionTrace.recordActorCreation(((TracingActor) actor).getActorId());
+    } else if (VmSettings.KOMPOS_TRACING) {
       assert argument instanceof SClass;
       final SClass actorClass = (SClass) argument;
-      ActorExecutionTrace.activityCreation(ActivityType.ACTOR, actor.getId(),
+      KomposTrace.activityCreation(ActivityType.ACTOR, actor.getId(),
           actorClass.getName(), sourceSection);
     }
     return ref;

@@ -33,7 +33,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObjectWithClass;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.KomposTrace;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.ExpressionBreakpoint;
@@ -161,7 +161,7 @@ public abstract class ChannelPrimitives {
         dbg.prepareSteppingUntilNextRootNode();
       }
 
-      ActorExecutionTrace.currentActivity(this);
+      KomposTrace.currentActivity(this);
     }
 
     @Override
@@ -169,8 +169,8 @@ public abstract class ChannelPrimitives {
       try {
         super.run();
       } finally {
-        assert VmSettings.ACTOR_TRACING;
-        ActorExecutionTrace.activityCompletion(ActivityType.PROCESS);
+        assert VmSettings.KOMPOS_TRACING;
+        KomposTrace.activityCompletion(ActivityType.PROCESS);
       }
     }
 
@@ -303,9 +303,9 @@ public abstract class ChannelPrimitives {
     public final SChannel newChannel(final Object module) {
       SChannel result = SChannel.create();
 
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.passiveEntityCreation(PassiveEntityType.CHANNEL,
-            result.getId(), ActorExecutionTrace.getPrimitiveCaller(sourceSection));
+      if (VmSettings.KOMPOS_TRACING) {
+        KomposTrace.passiveEntityCreation(PassiveEntityType.CHANNEL,
+            result.getId(), KomposTrace.getPrimitiveCaller(sourceSection));
       }
       return result;
     }
