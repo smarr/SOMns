@@ -54,7 +54,9 @@ import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.concurrency.TraceParser;
+import tools.concurrency.TracingBackend;
 import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.nodes.TraceActorContextNode;
 
 
 public final class SystemPrims {
@@ -71,6 +73,17 @@ public final class SystemPrims {
     public final Object set(final SObjectWithClass system) {
       SystemModule = system;
       return system;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "traceStatistics:")
+  public abstract static class TraceStatisticsPrim extends UnarySystemOperation {
+    @Specialization
+    @TruffleBoundary
+    public final Object doSObject(final Object module) {
+      long[] stats = TracingBackend.getStatistics();
+      return new SImmutableArray(stats, Classes.valueArrayClass);
     }
   }
 
@@ -285,6 +298,8 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemTime:")
   public abstract static class TimePrim extends UnaryBasicOperation {
+    @Child TraceActorContextNode tracer = new TraceActorContextNode();
+
     @Specialization
     public final long doSObject(final Object receiver) {
       if (VmSettings.REPLAY) {
@@ -293,7 +308,7 @@ public final class SystemPrims {
 
       long res = System.currentTimeMillis() - startTime;
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.longSystemCall(res);
+        ActorExecutionTrace.longSystemCall(res, tracer);
       }
       return res;
     }
@@ -319,6 +334,8 @@ public final class SystemPrims {
   @Primitive(primitive = "systemTicks:", selector = "ticks",
       specializer = IsSystemModule.class, noWrapper = true)
   public abstract static class TicksPrim extends UnaryBasicOperation implements Operation {
+    @Child TraceActorContextNode tracer = new TraceActorContextNode();
+
     @Specialization
     public final long doSObject(final Object receiver) {
       if (VmSettings.REPLAY) {
@@ -328,7 +345,7 @@ public final class SystemPrims {
       long res = System.nanoTime() / 1000L - startMicroTime;
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.longSystemCall(res);
+        ActorExecutionTrace.longSystemCall(res, tracer);
       }
       return res;
     }

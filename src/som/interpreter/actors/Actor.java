@@ -32,6 +32,7 @@ import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.DynamicScopeType;
 import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.nodes.TraceActorContextNode;
 
 
 /**
@@ -230,6 +231,8 @@ public class Actor implements Activity {
       this.vm = vm;
     }
 
+    private static final TraceActorContextNode tracer = new TraceActorContextNode();
+
     @Override
     public void run() {
       assert executorRoot != null : "Actor system not initalized, call to initializeActorSystem(.) missing?";
@@ -249,7 +252,7 @@ public class Actor implements Activity {
       t.currentlyExecutingActor = actor;
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.recordActorContext((TracingActor) actor);
+        ActorExecutionTrace.recordActorContext((TracingActor) actor, tracer);
       } else if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.currentActivity(actor);
       }
@@ -262,6 +265,10 @@ public class Actor implements Activity {
         ObjectTransitionSafepoint.INSTANCE.unregister();
       }
 
+      if (VmSettings.ACTOR_TRACING && t.swapTracingBuffer) {
+        t.getBuffer().swapStorage();
+        t.swapTracingBuffer = false;
+      }
       t.currentlyExecutingActor = null;
     }
 
@@ -294,9 +301,6 @@ public class Actor implements Activity {
       } finally {
         if (VmSettings.KOMPOS_TRACING) {
           KomposTrace.scopeEnd(DynamicScopeType.TURN);
-        }
-        if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.recordMessage(msg);
         }
       }
     }

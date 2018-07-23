@@ -11,6 +11,7 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryPoolMXBean;
 import java.lang.management.MemoryType;
 import java.lang.management.MemoryUsage;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -23,6 +24,7 @@ import javax.management.NotificationEmitter;
 import javax.management.NotificationListener;
 import javax.management.openmbean.CompositeData;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.sun.management.GarbageCollectionNotificationInfo;
 
@@ -66,20 +68,19 @@ import tools.replay.actors.ActorExecutionTrace;
  * done on the buffer for all access.
  */
 public class TracingBackend {
-  private static final int BUFFER_POOL_SIZE = VmSettings.NUM_THREADS * 16;
-  public static final int  BUFFER_SIZE      = 4096 * 256;
+  private static final int BUFFER_POOL_SIZE =
+      VmSettings.NUM_THREADS * VmSettings.BUFFERS_PER_THREAD;
 
   private static final int TRACE_TIMEOUT = 500;
-  private static final int POLL_TIMEOUT  = 50;
 
   private static final List<GarbageCollectorMXBean> gcbeans =
       ManagementFactory.getGarbageCollectorMXBeans();
 
-  private static final ArrayBlockingQueue<ByteBuffer> emptyBuffers =
-      new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
+  private static final ArrayBlockingQueue<byte[]> emptyBuffers =
+      new ArrayBlockingQueue<>(BUFFER_POOL_SIZE);
 
-  private static final ArrayBlockingQueue<ByteBuffer> fullBuffers =
-      new ArrayBlockingQueue<ByteBuffer>(BUFFER_POOL_SIZE);
+  private static final ArrayBlockingQueue<BufferAndLimit> fullBuffers =
+      new ArrayBlockingQueue<>(BUFFER_POOL_SIZE);
 
   private static final java.util.concurrent.ConcurrentLinkedQueue<Object[]> externalData =
       new java.util.concurrent.ConcurrentLinkedQueue<Object[]>();
@@ -99,9 +100,10 @@ public class TracingBackend {
       setUpGCMonitoring();
     }
 
-    if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
+    if (VmSettings.RECYCLE_BUFFERS
+        && (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING)) {
       for (int i = 0; i < BUFFER_POOL_SIZE; i++) {
-        emptyBuffers.add(ByteBuffer.allocate(BUFFER_SIZE));
+        emptyBuffers.add(new byte[VmSettings.BUFFER_SIZE]);
       }
     }
   }
@@ -152,25 +154,45 @@ public class TracingBackend {
   }
 
   @TruffleBoundary
-  public static ByteBuffer getEmptyBuffer() {
-    try {
-      return emptyBuffers.take();
-    } catch (InterruptedException e) {
-      throw new IllegalStateException("Failed to acquire a new Buffer!");
+  public static byte[] getEmptyBuffer() {
+    if (VmSettings.RECYCLE_BUFFERS) {
+      try {
+        return emptyBuffers.take();
+      } catch (InterruptedException e) {
+        CompilerDirectives.transferToInterpreter();
+        throw new IllegalStateException("Failed to acquire a new Buffer!");
+      }
+    } else {
+      return new byte[VmSettings.BUFFER_SIZE];
     }
   }
 
-  static void returnBuffer(final ByteBuffer b) {
-    if (b == null) {
+  static void returnBuffer(final byte[] buffer, final int pos) {
+    if (buffer == null) {
       return;
     }
 
-    returnBufferGlobally(b);
+    returnBufferGlobally(new BufferAndLimit(buffer, pos));
+  }
+
+  private static final class BufferAndLimit {
+    final byte[] buffer;
+    final int    limit;
+
+    BufferAndLimit(final byte[] buffer, final int limit) {
+      this.buffer = buffer;
+      this.limit = limit;
+    }
+
+    public ByteBuffer getReadingFromStartBuffer() {
+      return ByteBuffer.wrap(buffer, 0, limit);
+    }
   }
 
   @TruffleBoundary
-  private static void returnBufferGlobally(final ByteBuffer buffer) {
-    assert fullBuffers.offer(buffer);
+  private static void returnBufferGlobally(final BufferAndLimit buffer) {
+    boolean inserted = fullBuffers.offer(buffer);
+    assert inserted;
   }
 
   private static HashSet<TracingActivityThread> tracingThreads = new HashSet<>();
@@ -186,16 +208,22 @@ public class TracingBackend {
     synchronized (tracingThreads) {
       boolean removed = tracingThreads.remove(t);
       assert removed;
+      t.swapTracingBuffer = false;
     }
   }
 
   public static final void forceSwapBuffers() {
-    assert VmSettings.TRUFFLE_DEBUGGER_ENABLED && VmSettings.KOMPOS_TRACING;
+    assert VmSettings.ACTOR_TRACING
+        || (VmSettings.TRUFFLE_DEBUGGER_ENABLED && VmSettings.KOMPOS_TRACING);
     TracingActivityThread[] result;
     synchronized (tracingThreads) {
       result = tracingThreads.toArray(new TracingActivityThread[0]);
     }
 
+    // XXX: This is only safe because we assume that threads do not disappear
+    // XXX: correction, I think this is all inherently racy, but hopefully good enough
+
+    // signal threads to swap buffers
     for (TracingActivityThread t : result) {
       t.swapTracingBuffer = true;
     }
@@ -229,6 +257,14 @@ public class TracingBackend {
         throw new RuntimeException(e);
       }
     }
+  }
+
+  public static final long[] getStatistics() {
+    long[] stats = new long[] {workerThread.traceBytes, workerThread.externalBytes};
+
+    workerThread.traceBytes = 0;
+    workerThread.externalBytes = 0;
+    return stats;
   }
 
   @TruffleBoundary
@@ -270,10 +306,11 @@ public class TracingBackend {
     protected long traceBytes;
     protected long externalBytes;
 
-    private ByteBuffer tryToObtainBuffer() {
-      ByteBuffer buffer;
+    private BufferAndLimit tryToObtainBuffer() {
+      BufferAndLimit buffer;
       try {
-        buffer = TracingBackend.fullBuffers.poll(POLL_TIMEOUT, TimeUnit.MILLISECONDS);
+        buffer =
+            TracingBackend.fullBuffers.poll(VmSettings.BUFFER_TIMEOUT, TimeUnit.MILLISECONDS);
         if (buffer == null) {
           return null;
         } else {
@@ -298,8 +335,8 @@ public class TracingBackend {
                 ActorExecutionTrace.getExtDataHeader(sw.actorId, sw.dataId, bytes.length);
 
             if (edfos != null) {
-              edfos.getChannel().write(java.nio.ByteBuffer.wrap(header));
-              edfos.getChannel().write(java.nio.ByteBuffer.wrap(bytes));
+              edfos.getChannel().write(ByteBuffer.wrap(header));
+              edfos.getChannel().write(ByteBuffer.wrap(bytes));
               edfos.flush();
             }
             externalBytes += bytes.length + 12;
@@ -310,7 +347,7 @@ public class TracingBackend {
             byte[] data = (byte[]) oo;
             externalBytes += data.length;
             if (edfos != null) {
-              edfos.getChannel().write(java.nio.ByteBuffer.wrap(data));
+              edfos.getChannel().write(ByteBuffer.wrap(data));
               edfos.flush();
             }
           }
@@ -320,9 +357,69 @@ public class TracingBackend {
 
     private void writeArray(final TwoDArrayWrapper aw, final FileOutputStream edfos)
         throws IOException {
-      // TODO
-      // this is to work around codacy
-      edfos.write(aw.actorId);
+      SImmutableArray sia = aw.immArray;
+
+      Object[] outer = sia.getObjectStorage(SArray.ObjectStorageType);
+      byte[][][] bouter = new byte[outer.length][][];
+      byte[] endRow = {ENDROW};
+      int numBytes = 0;
+      for (int i = 0; i < outer.length; i++) {
+        Object o = outer[i];
+        SImmutableArray ia = (SImmutableArray) o;
+        Object[] inner = ia.getObjectStorage(SArray.ObjectStorageType);
+        byte[][] binner = new byte[inner.length + 1][];
+        for (int j = 0; j < inner.length; j++) {
+          Object oo = inner[j];
+          byte[] bytes = null;
+          if (oo instanceof String) {
+            byte[] sbytes = ((String) oo).getBytes();
+            bytes = new byte[5 + sbytes.length];
+            TraceBuffer.UNSAFE.putByte(bytes, TraceBuffer.BYTE_ARR_BASE_OFFSET, STRING);
+            TraceBuffer.UNSAFE.putInt(bytes, TraceBuffer.BYTE_ARR_BASE_OFFSET + 1,
+                sbytes.length);
+            System.arraycopy(sbytes, 0, bytes, 5, sbytes.length);
+          } else if (oo instanceof Long) {
+            bytes = new byte[9];
+            TraceBuffer.UNSAFE.putByte(bytes, TraceBuffer.BYTE_ARR_BASE_OFFSET, LONG);
+            TraceBuffer.UNSAFE.putLong(bytes, TraceBuffer.BYTE_ARR_BASE_OFFSET + 1, (Long) oo);
+          } else if (oo instanceof Double) {
+            bytes = new byte[9];
+            TraceBuffer.UNSAFE.putByte(bytes, TraceBuffer.BYTE_ARR_BASE_OFFSET, DOUBLE);
+            TraceBuffer.UNSAFE.putDouble(bytes, TraceBuffer.BYTE_ARR_BASE_OFFSET + 1,
+                (Double) oo);
+          } else if (oo instanceof Boolean) {
+            bytes = new byte[1];
+            TraceBuffer.UNSAFE.putByte(bytes, TraceBuffer.BYTE_ARR_BASE_OFFSET + 1,
+                ((Boolean) oo ? TRUE : FALSE));
+          } else if (oo == Nil.nilObject) {
+            bytes = new byte[1];
+            TraceBuffer.UNSAFE.putByte(bytes, TraceBuffer.BYTE_ARR_BASE_OFFSET, NULL);
+          } else {
+            throw new UnsupportedOperationException("Unexpected DataType");
+          }
+
+          numBytes += bytes.length;
+          binner[j] = bytes;
+        }
+        binner[binner.length - 1] = endRow;
+        numBytes++;
+        bouter[i] = binner;
+      }
+
+      byte[] header =
+          ActorExecutionTrace.getExtDataHeader(aw.actorId, aw.dataId, numBytes);
+
+      if (edfos != null) {
+        edfos.getChannel().write(ByteBuffer.wrap(header));
+        for (byte[][] baa : bouter) {
+          for (byte[] ba : baa) {
+            edfos.getChannel().write(ByteBuffer.wrap(ba));
+          }
+        }
+
+        edfos.flush();
+      }
+      externalBytes += numBytes + 12;
     }
 
     private void writeSymbols(final BufferedWriter bw) throws IOException {
@@ -342,15 +439,16 @@ public class TracingBackend {
       }
     }
 
-    private void writeAndRecycleBuffer(final FileOutputStream fos, final ByteBuffer buffer)
+    private void writeAndRecycleBuffer(final FileOutputStream fos, final BufferAndLimit buffer)
         throws IOException {
       if (fos != null) {
         fos.getChannel().write(buffer.getReadingFromStartBuffer());
         fos.flush();
       }
-      traceBytes += buffer.position();
-      buffer.clear();
-      TracingBackend.emptyBuffers.add(buffer);
+      traceBytes += buffer.limit;
+      if (VmSettings.RECYCLE_BUFFERS) {
+        TracingBackend.emptyBuffers.add(buffer.buffer);
+      }
     }
 
     private void processTraceData(final FileOutputStream traceDataStream,
@@ -360,14 +458,14 @@ public class TracingBackend {
           || !TracingBackend.externalData.isEmpty()) {
         writeExternalData(externalDataStream);
 
-        ByteBuffer b = tryToObtainBuffer();
+        BufferAndLimit b = tryToObtainBuffer();
         if (b == null) {
           continue;
         }
 
         writeSymbols(symbolStream);
         if (front != null) {
-          front.sendTracingData(b);
+          front.sendTracingData(b.getReadingFromStartBuffer());
         }
 
         writeAndRecycleBuffer(traceDataStream, b);
@@ -409,7 +507,7 @@ public class TracingBackend {
   static final byte NULL   = 5;
   static final byte ENDROW = 6;
 
-  public static SArray parseArray(final java.nio.ByteBuffer bb) {
+  public static SArray parseArray(final ByteBuffer bb) {
     List<SArray> rows = new ArrayList<>();
     List<Object> currentRow = new ArrayList<>();
 
