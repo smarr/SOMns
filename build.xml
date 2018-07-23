@@ -73,15 +73,15 @@
     </target>
 
     <target name="check-truffle-available">
-        <available file="${lib.dir}/truffle/.git" property="truffle.present"/>
+        <available file="${truffle.dir}" property="truffle.present"/>
     </target>
-    <target name="truffle" depends="check-truffle-available"
+    <target name="truffle-submodule" depends="check-truffle-available"
             unless="truffle.present">
       <exec executable="./.gitloadmodules" failonerror="true">
       </exec>
     </target>
 
-    <target name="truffle-libs" unless="skip.truffle" depends="truffle,build-graal">
+    <target name="truffle-libs" unless="skip.truffle" depends="truffle-submodule,build-graal">
         <exec executable="${mx.cmd}" dir="${truffle.dir}" failonerror="true">
             <arg value="build"/>
             <arg value="--no-native"/>
