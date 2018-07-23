@@ -7,7 +7,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import som.vm.VmSettings;
 import sun.misc.Unsafe;
 import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
-import tools.concurrency.nodes.TraceActorContext;
+import tools.replay.nodes.TraceActorContextNode;
 
 
 public abstract class TraceBuffer {
@@ -21,8 +21,8 @@ public abstract class TraceBuffer {
     }
   }
 
-  static final Unsafe UNSAFE;
-  static final long   BYTE_ARR_BASE_OFFSET;
+  public static final Unsafe UNSAFE;
+  public static final long   BYTE_ARR_BASE_OFFSET;
 
   private static Unsafe loadUnsafe() {
     try {

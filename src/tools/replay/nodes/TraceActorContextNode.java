@@ -1,8 +1,8 @@
-package tools.concurrency.nodes;
+package tools.replay.nodes;
 
-import tools.concurrency.ActorExecutionTrace;
-import tools.concurrency.ActorExecutionTrace.ActorTraceBuffer;
 import tools.concurrency.TracingActors.TracingActor;
+import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
 
 
 public final class TraceActorContextNode extends TraceNode {

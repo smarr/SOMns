@@ -1,19 +1,19 @@
-package tools.concurrency.nodes;
+package tools.replay.nodes;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.DirectMessage;
-import som.interpreter.actors.EventualMessage.ExternalDirectMessage;
-import som.interpreter.actors.EventualMessage.ExternalPromiseCallbackMessage;
-import som.interpreter.actors.EventualMessage.ExternalPromiseSendMessage;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
-import tools.concurrency.ActorExecutionTrace;
-import tools.concurrency.ActorExecutionTrace.ActorTraceBuffer;
 import tools.concurrency.TracingActors.TracingActor;
+import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
+import tools.replay.actors.ExternalEventualMessage.ExternalDirectMessage;
+import tools.replay.actors.ExternalEventualMessage.ExternalPromiseCallbackMessage;
+import tools.replay.actors.ExternalEventualMessage.ExternalPromiseSendMessage;
 
 
 public abstract class TraceMessageNode extends TraceNode {

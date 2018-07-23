@@ -11,7 +11,7 @@ import tools.concurrency.TraceBuffer;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.replay.StringWrapper;
-import tools.concurrency.nodes.TraceActorContextNode;
+import tools.replay.nodes.TraceActorContextNode;
 
 
 public class ActorExecutionTrace {

@@ -1,10 +1,10 @@
-package tools.concurrency.nodes;
+package tools.replay.nodes;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 
 import som.vm.VmSettings;
-import tools.concurrency.ActorExecutionTrace.ActorTraceBuffer;
+import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
 
 
 public abstract class RecordIdIdNode extends Node {

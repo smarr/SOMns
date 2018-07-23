@@ -4,13 +4,13 @@ import som.vmobjects.SArray.SImmutableArray;
 
 
 public class TwoDArrayWrapper {
-  final SImmutableArray ia;
-  public final int      actorId;
-  final int             dataId;
+  public final SImmutableArray immArray;
+  public final int             actorId;
+  public final int             dataId;
 
   public TwoDArrayWrapper(final SImmutableArray ia, final int actorId, final int dataId) {
     super();
-    this.ia = ia;
+    this.immArray = ia;
     this.actorId = actorId;
     this.dataId = dataId;
   }
