@@ -357,7 +357,7 @@ public class TracingBackend {
 
     private void writeArray(final TwoDArrayWrapper aw, final FileOutputStream edfos)
         throws IOException {
-      SImmutableArray sia = aw.ia;
+      SImmutableArray sia = aw.immArray;
 
       Object[] outer = sia.getObjectStorage(SArray.ObjectStorageType);
       byte[][][] bouter = new byte[outer.length][][];

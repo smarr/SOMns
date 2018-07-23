@@ -1,9 +1,9 @@
-package tools.concurrency.nodes;
+package tools.replay.nodes;
 
 import com.oracle.truffle.api.nodes.Node;
 
-import tools.concurrency.ActorExecutionTrace.ActorTraceBuffer;
 import tools.concurrency.TracingActivityThread;
+import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
 
 
 public abstract class TraceNode extends Node {

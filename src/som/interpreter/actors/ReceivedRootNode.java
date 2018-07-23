@@ -12,10 +12,10 @@ import som.interpreter.SomLanguage;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.VmSettings;
 import tools.concurrency.KomposTrace;
-import tools.concurrency.nodes.TraceMessageNode;
-import tools.concurrency.nodes.TraceMessageNodeGen;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.DynamicScopeType;
+import tools.replay.nodes.TraceMessageNode;
+import tools.replay.nodes.TraceMessageNodeGen;
 
 
 public abstract class ReceivedRootNode extends RootNode {

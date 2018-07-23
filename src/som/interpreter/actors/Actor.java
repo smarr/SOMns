@@ -28,11 +28,11 @@ import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
-import tools.concurrency.nodes.TraceActorContextNode;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.DynamicScopeType;
 import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.nodes.TraceActorContextNode;
 
 
 /**
@@ -301,9 +301,6 @@ public class Actor implements Activity {
       } finally {
         if (VmSettings.KOMPOS_TRACING) {
           KomposTrace.scopeEnd(DynamicScopeType.TURN);
-        }
-        if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.recordMessage(msg);
         }
       }
     }

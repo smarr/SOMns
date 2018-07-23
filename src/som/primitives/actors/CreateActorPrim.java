@@ -18,9 +18,9 @@ import som.vmobjects.SClass;
 import tools.concurrency.KomposTrace;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActors.TracingActor;
-import tools.concurrency.nodes.TraceActorCreationNode;
 import tools.debugger.entities.ActivityType;
 import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.nodes.TraceActorCreationNode;
 
 
 @GenerateNodeFactory
