@@ -416,69 +416,93 @@ public final class MessageSendNode {
 
   public static final class UnaryMessageSendNode extends GenericMessageSendNode {
 
+    @Child private ExpressionNode arg;
+
     private UnaryMessageSendNode(final SSymbol selector, final ExpressionNode[] arguments,
         final AbstractDispatchNode dispatchNode) {
       super(selector, arguments, dispatchNode);
       assert arguments.length == 1;
+      arg = arguments[0];
     }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
-      Object[] arguments = new Object[] {argumentNodes[0].executeGeneric(frame)};
+      Object[] arguments = new Object[] {arg.executeGeneric(frame)};
       return doPreEvaluated(frame, arguments);
     }
   }
 
   public static final class BinaryMessageSendNode extends GenericMessageSendNode {
 
+    @Child private ExpressionNode arg1;
+    @Child private ExpressionNode arg2;
+
     private BinaryMessageSendNode(final SSymbol selector, final ExpressionNode[] arguments,
         final AbstractDispatchNode dispatchNode) {
       super(selector, arguments, dispatchNode);
       assert arguments.length == 2;
+      arg1 = argumentNodes[0];
+      arg2 = argumentNodes[1];
     }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       Object[] arguments = new Object[] {
-          argumentNodes[0].executeGeneric(frame),
-          argumentNodes[1].executeGeneric(frame)};
+          arg1.executeGeneric(frame),
+          arg2.executeGeneric(frame)};
       return doPreEvaluated(frame, arguments);
     }
   }
 
   public static final class TernaryMessageSendNode extends GenericMessageSendNode {
 
+    @Child private ExpressionNode arg1;
+    @Child private ExpressionNode arg2;
+    @Child private ExpressionNode arg3;
+
     private TernaryMessageSendNode(final SSymbol selector, final ExpressionNode[] arguments,
         final AbstractDispatchNode dispatchNode) {
       super(selector, arguments, dispatchNode);
       assert arguments.length == 3;
+      arg1 = argumentNodes[0];
+      arg2 = argumentNodes[1];
+      arg3 = argumentNodes[2];
     }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       Object[] arguments = new Object[] {
-          argumentNodes[0].executeGeneric(frame),
-          argumentNodes[1].executeGeneric(frame),
-          argumentNodes[2].executeGeneric(frame)};
+          arg1.executeGeneric(frame),
+          arg2.executeGeneric(frame),
+          arg3.executeGeneric(frame)};
       return doPreEvaluated(frame, arguments);
     }
   }
 
   public static final class QuaternaryMessageSendNode extends GenericMessageSendNode {
 
+    @Child private ExpressionNode arg1;
+    @Child private ExpressionNode arg2;
+    @Child private ExpressionNode arg3;
+    @Child private ExpressionNode arg4;
+
     private QuaternaryMessageSendNode(final SSymbol selector, final ExpressionNode[] arguments,
         final AbstractDispatchNode dispatchNode) {
       super(selector, arguments, dispatchNode);
       assert arguments.length == 4;
+      arg1 = argumentNodes[0];
+      arg2 = argumentNodes[1];
+      arg3 = argumentNodes[2];
+      arg4 = argumentNodes[3];
     }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       Object[] arguments = new Object[] {
-          argumentNodes[0].executeGeneric(frame),
-          argumentNodes[1].executeGeneric(frame),
-          argumentNodes[2].executeGeneric(frame),
-          argumentNodes[3].executeGeneric(frame)};
+          arg1.executeGeneric(frame),
+          arg2.executeGeneric(frame),
+          arg3.executeGeneric(frame),
+          arg4.executeGeneric(frame)};
       return doPreEvaluated(frame, arguments);
     }
   }
