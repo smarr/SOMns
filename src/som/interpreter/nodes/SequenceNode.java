@@ -31,37 +31,130 @@ import som.interpreter.nodes.nary.ExprWithTagsNode;
 
 
 @NodeInfo(cost = NodeCost.NONE)
-public final class SequenceNode extends ExprWithTagsNode {
-  @Children private final ExpressionNode[] expressions;
+public abstract class SequenceNode extends ExprWithTagsNode {
 
-  public SequenceNode(final ExpressionNode[] expressions) {
-    this.expressions = expressions;
-  }
-
-  @Override
-  public Object executeGeneric(final VirtualFrame frame) {
-    executeAllButLast(frame);
-    return expressions[expressions.length - 1].executeGeneric(frame);
-  }
-
-  @ExplodeLoop
-  private void executeAllButLast(final VirtualFrame frame) {
-    for (int i = 0; i < expressions.length - 1; i++) {
-      expressions[i].executeGeneric(frame);
+  protected boolean isResultUsedByParent() {
+    Node parent = getParent();
+    assert parent != null;
+    if (parent instanceof ExpressionNode) {
+      return ((ExpressionNode) parent).isResultUsed(this);
     }
+    return true;
   }
 
   @Override
-  public boolean isResultUsed(final ExpressionNode child) {
-    if (SOMNode.unwrapIfNecessary(expressions[expressions.length - 1]) == child) {
-      Node parent = getParent();
-      assert parent != null;
-      if (parent instanceof ExpressionNode) {
-        return ((ExpressionNode) parent).isResultUsed(this);
+  public abstract boolean isResultUsed(ExpressionNode child);
+
+  public static final class SeqNNode extends SequenceNode {
+    @Children private final ExpressionNode[] expressions;
+
+    public SeqNNode(final ExpressionNode[] expressions) {
+      this.expressions = expressions;
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      executeAllButLast(frame);
+      return expressions[expressions.length - 1].executeGeneric(frame);
+    }
+
+    @ExplodeLoop
+    private void executeAllButLast(final VirtualFrame frame) {
+      for (int i = 0; i < expressions.length - 1; i++) {
+        expressions[i].executeGeneric(frame);
       }
-      return true;
     }
-    return false;
+
+    @Override
+    public boolean isResultUsed(final ExpressionNode child) {
+      if (SOMNode.unwrapIfNecessary(expressions[expressions.length - 1]) == child) {
+        return isResultUsedByParent();
+      }
+      return false;
+    }
+  }
+
+  public static final class Seq2Node extends SequenceNode {
+    @Child private ExpressionNode expr1;
+    @Child private ExpressionNode expr2;
+
+    public Seq2Node(final ExpressionNode expr1, final ExpressionNode expr2) {
+      this.expr1 = expr1;
+      this.expr2 = expr2;
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      expr1.executeGeneric(frame);
+      return expr2.executeGeneric(frame);
+    }
+
+    @Override
+    public boolean isResultUsed(final ExpressionNode child) {
+      if (SOMNode.unwrapIfNecessary(expr2) == child) {
+        return isResultUsedByParent();
+      }
+      return false;
+    }
+  }
+
+  public static final class Seq3Node extends SequenceNode {
+    @Child private ExpressionNode expr1;
+    @Child private ExpressionNode expr2;
+    @Child private ExpressionNode expr3;
+
+    public Seq3Node(final ExpressionNode expr1, final ExpressionNode expr2,
+        final ExpressionNode expr3) {
+      this.expr1 = expr1;
+      this.expr2 = expr2;
+      this.expr3 = expr3;
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      expr1.executeGeneric(frame);
+      expr2.executeGeneric(frame);
+      return expr3.executeGeneric(frame);
+    }
+
+    @Override
+    public boolean isResultUsed(final ExpressionNode child) {
+      if (SOMNode.unwrapIfNecessary(expr3) == child) {
+        return isResultUsedByParent();
+      }
+      return false;
+    }
+  }
+
+  public static final class Seq4Node extends SequenceNode {
+    @Child private ExpressionNode expr1;
+    @Child private ExpressionNode expr2;
+    @Child private ExpressionNode expr3;
+    @Child private ExpressionNode expr4;
+
+    public Seq4Node(final ExpressionNode expr1, final ExpressionNode expr2,
+        final ExpressionNode expr3, final ExpressionNode expr4) {
+      this.expr1 = expr1;
+      this.expr2 = expr2;
+      this.expr3 = expr3;
+      this.expr4 = expr4;
+    }
+
+    @Override
+    public Object executeGeneric(final VirtualFrame frame) {
+      expr1.executeGeneric(frame);
+      expr2.executeGeneric(frame);
+      expr3.executeGeneric(frame);
+      return expr4.executeGeneric(frame);
+    }
+
+    @Override
+    public boolean isResultUsed(final ExpressionNode child) {
+      if (SOMNode.unwrapIfNecessary(expr4) == child) {
+        return isResultUsedByParent();
+      }
+      return false;
+    }
   }
 
   @Override

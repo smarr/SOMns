@@ -18,6 +18,10 @@ import som.interpreter.nodes.OuterObjectReadNodeGen;
 import som.interpreter.nodes.ResolvingImplicitReceiverSend;
 import som.interpreter.nodes.ReturnNonLocalNode.CatchNonLocalReturnNode;
 import som.interpreter.nodes.SequenceNode;
+import som.interpreter.nodes.SequenceNode.Seq2Node;
+import som.interpreter.nodes.SequenceNode.Seq3Node;
+import som.interpreter.nodes.SequenceNode.Seq4Node;
+import som.interpreter.nodes.SequenceNode.SeqNNode;
 import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.objectstorage.InitializerFieldWrite;
 import som.interpreter.objectstorage.InitializerFieldWriteNodeGen;
@@ -43,13 +47,27 @@ public final class SNodeFactory {
       statement.markAsStatement();
     }
 
-    if (expressions.size() == 0) {
-      return new NilLiteralNode().initialize(source);
-    } else if (expressions.size() == 1) {
-      return expressions.get(0);
+    SequenceNode s;
+    switch (expressions.size()) {
+      case 0:
+        return new NilLiteralNode().initialize(source);
+      case 1:
+        return expressions.get(0);
+      case 2:
+        s = new Seq2Node(expressions.get(0), expressions.get(1));
+        break;
+      case 3:
+        s = new Seq3Node(expressions.get(0), expressions.get(1), expressions.get(2));
+        break;
+      case 4:
+        s = new Seq4Node(expressions.get(0), expressions.get(1), expressions.get(2),
+            expressions.get(3));
+        break;
+      default:
+        s = new SeqNNode(expressions.toArray(new ExpressionNode[0]));
+        break;
     }
 
-    SequenceNode s = new SequenceNode(expressions.toArray(new ExpressionNode[0]));
     return s.initialize(source);
   }
 
