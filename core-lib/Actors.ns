@@ -30,6 +30,7 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   vmMirror actorsPairClass:     Pair.
   vmMirror actorsResolverClass: Resolver.
   vmMirror actorsModule: self.
+  vmMirror actorSetupTimer: nil.
 )(
   public class FarReference = Value (
     (* This class cannot be instantiated directly *)
@@ -258,9 +259,6 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   )
 
   public after: milliseconds do: aBlock = (
-    | promisePair |
-    promisePair:: createPromisePair.
-    promisePair promise whenResolved: aBlock.
-    vmMirror actorResolveProm: (promisePair resolver) after: milliseconds.
+      vmMirror actorDo: aBlock after: milliseconds.
   )
 )
