@@ -318,6 +318,10 @@ public final class VM {
     return objectSystem.executeApplication(vmMirror, mainActor);
   }
 
+  public Actor getMainActor() {
+    return mainActor;
+  }
+
   /**
    * We only do this when we execute an application.
    * We don't setup the instruments for BasicInterpreterTests.
