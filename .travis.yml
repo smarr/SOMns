@@ -49,8 +49,9 @@ matrix:
         export JAVA_HOME=`/usr/libexec/java_home`
 
   allow_failures:
-    - env: TASK=replay1-tests
-    - env: TASK=replay2-tests
+    - env: TASK=unit-tests JDK=10
+    - jdk: oraclejdk9
+    - os: osx
 
 install: |
   if [ "$TASK" = "checkstyle" ]
