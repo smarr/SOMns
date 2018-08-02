@@ -78,6 +78,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public == other = ( ^ vmMirror object: self identicalTo: other )
     public = other  = ( ^ self == other )
     public ~= other = ( ^ (self == other) not )
+    public != other = ( ^ self ~= other )
   )
 
   public class Value = Thing ()
@@ -188,6 +189,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     (* Bit operations *)
     public & argument  = ( ^ vmMirror int: self bitAnd: argument )
+    public bitAnd: argument  = ( ^ self & argument )
     public << argument = ( ^ vmMirror int: self leftShift: argument )
     public bitLeftShift: argument = ( ^ self << argument )
     public >>> argument= ( ^ vmMirror int: self unsignedRightShift: argument )
@@ -210,6 +212,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public asString    = ( ^ vmMirror intAsString: self )
     public as32BitSignedValue   = ( ^ vmMirror intAs32BitSignedValue: self )   (* returns an int, with the value that a signed 32-bit integer would have *)
     public as32BitUnsignedValue = ( ^ vmMirror intAs32BitUnsignedValue: self ) (* returns an int, with the value that a unsigned 32-bit integer would have *)
+    public asCodepointString = ( ^ vmMirror intAsCodepointString: self )
     public hashcode    = ( ^ self )
 
     (* Iterating *)
@@ -322,6 +325,39 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     (* Comparing *)
     public = argument = ( ^ vmMirror string: self equals: argument )
+    
+    public < argument = (
+      | maxi |
+      maxi:: length max: argument length.
+
+      1 to: maxi do: [ :i | 
+        | codePointA codePointB |
+        codePointA:: (codepointAt: i).
+        codePointB:: (argument codepointAt: i).
+
+        (codePointA < codePointB) ifTrue: [ ^ true ].
+      ].
+
+      ^ false.
+    )
+
+    public > argument = (
+      | maxi |
+      maxi:: length max: argument length.
+
+      1 to: maxi do: [ :i | 
+        | codePointA codePointB |
+        codePointA:: (codepointAt: i).
+        codePointB:: (argument codepointAt: i).
+
+        (codePointA > codePointB) ifTrue: [ ^ true ].
+      ].
+
+      ^ false.
+    )
+
+    public >= argument = ( ^ (self = argument) or: [ self > argument ] )
+    public <= argument = ( ^ (self = argument) or: [ self < argument ] )
 
     (* substring: from 'start' to (and including) 'end'. *)
     private primSubstringFrom: start to: end = ( ^ vmMirror string: self
@@ -613,6 +649,10 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public value: arg               = ( ^ vmMirror blockValue: self with: arg )
     public value: arg1 with: arg2   = ( ^ vmMirror blockValue: self with: arg1 with: arg2 )
     public valueWithArguments: args = ( ^ vmMirror blockValue: self withArguments: args )
+
+    public apply                    = ( ^ value )
+    public apply: arg               = ( ^ value: arg )
+    public applyWithArguments: args = ( ^ valueWithArguments: args )
 
     (* Execute block with given or less arguments *)
     public cull: arg = (

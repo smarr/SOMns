@@ -43,9 +43,12 @@ import bd.basic.ProgramDefinitionError;
 import bd.inlining.InlinableNodes;
 import som.compiler.MethodBuilder.MethodDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionError;
+import som.compiler.Variable.Argument;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.interpreter.nodes.ResolvingImplicitReceiverSend;
 import som.interpreter.nodes.literals.ArrayLiteralNode;
 import som.interpreter.nodes.literals.BooleanLiteralNode.FalseLiteralNode;
 import som.interpreter.nodes.literals.BooleanLiteralNode.TrueLiteralNode;
@@ -147,18 +150,19 @@ public class AstBuilder {
      * @return - the assembled class corresponding to the module
      */
     public MixinDefinition module(final SSymbol[] locals, final SomStructuralType[] localTypes,
-        final SourceSection[] localSources, final JsonArray body) {
+        final SourceSection[] localSources, final JsonArray body,
+        final SourceSection sourceSection) {
       SSymbol moduleName = symbolFor(sourceManager.getModuleName());
       MixinBuilder moduleBuilder =
-          scopeManager.newModule(moduleName, sourceManager.empty());
+          scopeManager.newModule(moduleName, sourceSection);
 
       // Set up the method used to create instances
       MethodBuilder instanceFactory = moduleBuilder.getPrimaryFactoryMethodBuilder();
       instanceFactory.setSignature(Symbols.DEFAULT_MODULE_FACTORY);
       instanceFactory.addArgument(Symbols.SELF, null, sourceManager.empty());
       instanceFactory.addArgument(Symbols.PLATFORM_MODULE, null, sourceManager.empty());
-      moduleBuilder.setupInitializerBasedOnPrimaryFactory(sourceManager.empty());
-      moduleBuilder.setInitializerSource(sourceManager.empty());
+      moduleBuilder.setupInitializerBasedOnPrimaryFactory(sourceSection);
+      moduleBuilder.setInitializerSource(sourceSection);
       moduleBuilder.finalizeInitializer();
 
       // Push the initializer onto the stack
@@ -173,8 +177,8 @@ public class AstBuilder {
       // Add the default dialect as a secret slot on this module
       if (!sourceManager.getModuleName().equals("standardGrace")) {
         addImmutableSlot(Symbols.SECRET_DIALECT_SLOT, null,
-            requestBuilder.importModule(symbolFor("standardGrace")),
-            sourceManager.empty());
+            requestBuilder.importModule(symbolFor("standardGrace"), sourceSection),
+            sourceSection);
       }
 
       // Add all other slots for this module
@@ -203,7 +207,7 @@ public class AstBuilder {
       scopeManager.popMethod();
 
       // Set module to inherit from object
-      moduleBuilder.setSimpleInheritance(Symbols.OBJECT, sourceManager.empty());
+      moduleBuilder.setSimpleInheritance(Symbols.OBJECT, sourceSection);
 
       // Create the main method, which contains the main module expressions. If this is not the
       // main module then this method simply returns zero
@@ -225,11 +229,10 @@ public class AstBuilder {
       }
       expressions.add(new IntegerLiteralNode(0).initialize(sourceManager.empty()));
       scopeManager.assembleCurrentMethod(
-          SNodeFactory.createSequence(expressions, sourceManager.empty()),
-          sourceManager.empty());
+          SNodeFactory.createSequence(expressions, sourceSection), sourceSection);
 
       // Assemble and return the completed module
-      return scopeManager.assumbleCurrentModule(sourceManager.empty());
+      return scopeManager.assumbleCurrentModule(sourceSection);
     }
 
     /**
@@ -256,7 +259,7 @@ public class AstBuilder {
 
       // Munge the name of the class
       SSymbol clazzName = symbolFor(name.getString() + "[Class]");
-      MixinBuilder builder = scopeManager.newClazz(clazzName, sourceManager.empty());
+      MixinBuilder builder = scopeManager.newClazz(clazzName, sourceSection);
 
       // Set up the method used to create instances
       String instanceFactoryName = Symbols.NEW.getString();
@@ -273,8 +276,8 @@ public class AstBuilder {
         instanceFactory.addArgument(symbolFor(parameters[i].getString() + "'"),
             parameterTypes[i], parameterSources[i]);
       }
-      builder.setupInitializerBasedOnPrimaryFactory(sourceManager.empty());
-      builder.setInitializerSource(sourceManager.empty());
+      builder.setupInitializerBasedOnPrimaryFactory(sourceSection);
+      builder.setInitializerSource(sourceSection);
       builder.finalizeInitializer();
 
       // Push the initializer onto the stack
@@ -284,7 +287,17 @@ public class AstBuilder {
       for (int i = 0; i < parameters.length; i++) {
         ExpressionNode argRead = requestBuilder.implicit(
             symbolFor(parameters[i].getString() + "'"), parameterSources[i]);
-        addImmutableSlot(parameters[i], parameterTypes[i], argRead, parameterSources[i]);
+        // addImmutableSlot(parameters[i], parameterTypes[i], argRead, parameterSources[i]);
+
+        try {
+          scopeManager.peekObject().addSlot(parameters[i], parameterTypes[i],
+              AccessModifier.PRIVATE, true, argRead,
+              sourceSection);
+        } catch (MixinDefinitionError e) {
+          language.getVM().errorExit("Failed to add " + parameters[i] + " as a slot on "
+              + scopeManager.peekObject().getName());
+          throw new RuntimeException();
+        }
       }
 
       // Add all other slots for this module
@@ -294,7 +307,7 @@ public class AstBuilder {
 
       // Set module to inherit from object by default (this can be changed via Grace's inherits
       // expressions)
-      builder.setSimpleInheritance(Symbols.OBJECT, sourceManager.empty());
+      builder.setSimpleInheritance(Symbols.OBJECT, sourceSection);
 
       // Translate the body and add each to the initializer (except when this is the main
       // module)
@@ -359,7 +372,7 @@ public class AstBuilder {
           requestBuilder.explicit(symbolFor(newSignature), getClazz, arguments, sourceSection);
 
       // Assemble and return the completed module
-      scopeManager.assembleCurrentMethod(getInstance, sourceManager.empty());
+      scopeManager.assembleCurrentMethod(getInstance, sourceSection);
     }
 
     /**
@@ -387,14 +400,14 @@ public class AstBuilder {
 
       // Munge the name of the class
       SSymbol clazzName = symbolFor(objectName.getString() + "[Class]");
-      MixinBuilder builder = scopeManager.newObject(clazzName, sourceManager.empty());
+      MixinBuilder builder = scopeManager.newObject(clazzName, sourceSection);
 
       // Create the initialization method
       MethodBuilder instanceFactory = builder.getPrimaryFactoryMethodBuilder();
       instanceFactory.setSignature(Symbols.NEW);
       instanceFactory.addArgument(Symbols.SELF, null, sourceManager.empty());
-      builder.setupInitializerBasedOnPrimaryFactory(sourceManager.empty());
-      builder.setInitializerSource(sourceManager.empty());
+      builder.setupInitializerBasedOnPrimaryFactory(sourceSection);
+      builder.setInitializerSource(sourceSection);
       builder.finalizeInitializer();
 
       // Push the initializer onto the stack
@@ -407,7 +420,7 @@ public class AstBuilder {
 
       // Set module to inherit from object by default (this can be changed via Grace's inherits
       // expressions)
-      builder.setSimpleInheritance(Symbols.OBJECT, sourceManager.empty());
+      builder.setSimpleInheritance(Symbols.OBJECT, sourceSection);
 
       // Translate the body and add each to the initializer (except when this is the main
       // module)
@@ -436,6 +449,43 @@ public class AstBuilder {
       return new ObjectLiteralNode(classDef, outerRead, newMessage).initialize(sourceSection);
     }
 
+    public void setInheritanceByExpression(final ExpressionNode req,
+        final JsonObject[] argumentNodes,
+        final SourceSection sourceSection) {
+      MixinBuilder builder = scopeManager.peekObject();
+      builder.setSuperClassResolution(req);
+
+      // Translate the arguments
+      List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
+
+      List<SSymbol> argumentNames = new ArrayList<SSymbol>();
+      for (Argument arg : builder.getInitializerMethodBuilder().getArguments()) {
+        argumentNames.add(arg.name);
+      }
+
+      for (int i = 0; i < argumentNodes.length; i++) {
+        JsonObject argumentNode = argumentNodes[i];
+        ExpressionNode argumentExpression =
+            (ExpressionNode) translator.translate(argumentNode);
+
+        if (!(argumentExpression instanceof LiteralNode)) {
+          if ((argumentExpression instanceof ResolvingImplicitReceiverSend)) {
+            String argName =
+                ((AbstractMessageSendNode) argumentExpression).getSelector().getString() + "'";
+            argumentExpression =
+                builder.getInitializerMethodBuilder().getReadNode(symbolFor(argName),
+                    sourceSection);
+          }
+        }
+
+        arguments.add(argumentExpression);
+      }
+
+      builder.setSuperclassFactorySend(
+          builder.createStandardSuperFactorySendWithArgs(arguments, sourceSection),
+          false);
+    }
+
     /**
      * Changes the class currently at the top of the stack so that it inherits from the
      * named superclass. Arguments can be provided with the requests, but for now the must be
@@ -452,16 +502,24 @@ public class AstBuilder {
 
       // Translate the arguments
       List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
-      for (JsonObject argumentNode : argumentNodes) {
+      List<SSymbol> argumentNames = new ArrayList<SSymbol>();
+      for (Argument arg : builder.getInitializerMethodBuilder().getArguments()) {
+        argumentNames.add(arg.name);
+      }
+
+      for (int i = 0; i < argumentNodes.length; i++) {
+        JsonObject argumentNode = argumentNodes[i];
         ExpressionNode argumentExpression =
             (ExpressionNode) translator.translate(argumentNode);
 
         if (!(argumentExpression instanceof LiteralNode)) {
-          String moduleName = sourceManager.getModuleName();
-          int line = sourceSection.getStartLine();
-          int column = sourceSection.getStartColumn();
-          language.getVM().errorExit("MothError in " + moduleName + "@" + line + "," + column
-              + ": Sorry only literal expressions are supported for the inherits statement");
+          if ((argumentExpression instanceof ResolvingImplicitReceiverSend)) {
+            String argName =
+                ((AbstractMessageSendNode) argumentExpression).getSelector().getString() + "'";
+            argumentExpression =
+                builder.getInitializerMethodBuilder().getReadNode(symbolFor(argName),
+                    sourceSection);
+          }
         }
 
         arguments.add(argumentExpression);
@@ -558,7 +616,7 @@ public class AstBuilder {
         final SSymbol[] parameters, final SomStructuralType[] parameterTypes,
         final SourceSection[] parameterSources, final SSymbol[] locals,
         final SomStructuralType[] localTypes, final SourceSection[] localSources,
-        final JsonArray body) {
+        final JsonArray body, final SourceSection sourceSection) {
       MethodBuilder builder = scopeManager.newMethod(selector, returnType);
 
       // Set the parameters
@@ -597,8 +655,7 @@ public class AstBuilder {
 
       // Assemble and return the completed module
       scopeManager.assembleCurrentMethod(
-          SNodeFactory.createSequence(expressions, sourceManager.empty()),
-          sourceManager.empty());
+          SNodeFactory.createSequence(expressions, sourceSection), sourceSection);
     }
   }
 
@@ -639,17 +696,11 @@ public class AstBuilder {
       SSymbol selectorAfterChecks = selector;
 
       // Use the Newspeak's `value` methods directly when the selector is Grace's `apply`
-      if (selector.getString().equals("apply")) {
-        selectorAfterChecks = symbolFor("value");
-      } else if (selector.getString().equals("apply:")) {
-        selectorAfterChecks = symbolFor("value:");
-      } else if (selector.getString().equals("apply::")) {
-        selectorAfterChecks = symbolFor("value:with:");
-      } else if (selector.getString().contains("apply:::")) {
+      if (selector.getString().contains("apply::")) {
 
         // For the variable arity method, we need to provide the arguments as a list instead.
         int n = arguments.size() - 1;
-        selectorAfterChecks = symbolFor("valueWithArguments:");
+        selectorAfterChecks = symbolFor("applyWithArguments:");
         List<ExpressionNode> newArguments = new ArrayList<ExpressionNode>();
         newArguments.add(
             ArrayLiteralNode.create(
@@ -695,11 +746,12 @@ public class AstBuilder {
      * Creates an expression that executes the expression given by `value` and assigns the
      * result to the named variable.
      */
-    public ExpressionNode assignment(final SSymbol name, final ExpressionNode value) {
+    public ExpressionNode assignment(final SSymbol name, final ExpressionNode value,
+        final SourceSection sourceSection) {
       MethodBuilder method = scopeManager.peekMethod();
       SSymbol assignmentName = symbolFor(name.getString() + "::");
       try {
-        return method.getSetterSend(assignmentName, value, sourceManager.empty());
+        return method.getSetterSend(assignmentName, value, sourceSection);
       } catch (MethodDefinitionError e) {
         language.getVM().errorExit(
             "Failed to create a setter send for " + name + " from " + method.getSignature());
@@ -719,12 +771,12 @@ public class AstBuilder {
      * Creates an message that will cause SOMns to import the named module when executed, which
      * evaluates to the class representing that module.
      */
-    public ExpressionNode importModule(final SSymbol moduleName) {
+    public ExpressionNode importModule(final SSymbol moduleName,
+        final SourceSection sourceSection) {
       String path = sourceManager.pathForModuleNamed(moduleName);
       List<ExpressionNode> args = new ArrayList<ExpressionNode>();
-      args.add(new StringLiteralNode(path).initialize(sourceManager.empty()));
-      return explicit(Symbols.LOAD_SINGLETON_MODULE, platformModule(), args,
-          sourceManager.empty());
+      args.add(new StringLiteralNode(path).initialize(sourceSection));
+      return explicit(Symbols.LOAD_SINGLETON_MODULE, platformModule(), args, sourceSection);
     }
 
     /**
@@ -766,7 +818,8 @@ public class AstBuilder {
         // Add operand to receiver
         List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
         arguments.add(operand);
-        receiver = explicit(symbolFor("+"), receiver, arguments, sourceManager.empty());
+        receiver = explicit(symbolFor("+"), receiver, arguments,
+            translator.source(elements.get(0).getAsJsonObject()));
       }
 
       return receiver;
@@ -801,7 +854,11 @@ public class AstBuilder {
      * Creates a SOM string literal from the given string.
      */
     public ExpressionNode string(final String value, final SourceSection sourceSection) {
-      return new StringLiteralNode(value).initialize(sourceSection);
+      String processEscapes = value;
+      processEscapes = processEscapes.replace("\\{", "{");
+      processEscapes = processEscapes.replace("\\}", "}");
+      processEscapes = processEscapes.replace("\\\"", "\"");
+      return new StringLiteralNode(processEscapes).initialize(sourceSection);
     }
 
     public Object array(final JsonObject[] arguments, final SourceSection sourceSection) {

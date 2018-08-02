@@ -87,6 +87,7 @@ public abstract class IntegerPrims {
 
   @GenerateNodeFactory
   @Primitive(primitive = "int:leftShift:", selector = "<<", receiverType = Long.class)
+  @Primitive(selector = "bitLeftShift:", receiverType = Long.class)
   public abstract static class LeftShiftPrim extends ArithmeticPrim {
     private final BranchProfile overflow = BranchProfile.create();
 
@@ -115,6 +116,7 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "int:unsignedRightShift:", selector = ">>>",
       receiverType = Long.class)
+  @Primitive(selector = "bitRightShift:", receiverType = Long.class)
   public abstract static class UnsignedRightShiftPrim extends ArithmeticPrim {
     @Specialization
     public final long doLong(final long receiver, final long right) {
@@ -160,6 +162,25 @@ public abstract class IntegerPrims {
     @Specialization
     public final long doLong(final long receiver) {
       return Math.abs(receiver);
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "intAsCodepointString:",
+      selector = "intAsCodepointString", receiverType = Long.class)
+  public abstract static class IntAsCodepointStringPrim extends UnaryBasicOperation {
+    @Override
+    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+      if (tag == OpArithmetic.class) {
+        return true;
+      } else {
+        return super.isTaggedWithIgnoringEagerness(tag);
+      }
+    }
+
+    @Specialization
+    public final String doString(final long codepoint) {
+      return new String(new int[] {(int) codepoint}, 0, 1);
     }
   }
 }

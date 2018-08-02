@@ -60,7 +60,7 @@ public class SomStructuralType {
   private final static Map<SSymbol, SomStructuralType> recordedTypes =
       new HashMap<SSymbol, SomStructuralType>();
 
-  @CompilationFinal(dimensions = 1) private final SSymbol[] signatures;
+  @CompilationFinal(dimensions = 1) public final SSymbol[] signatures;
 
   private SomStructuralType(final List<SSymbol> signatures) {
     this.signatures = signatures.toArray(new SSymbol[signatures.size()]);

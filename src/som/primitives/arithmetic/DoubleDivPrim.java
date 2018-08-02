@@ -15,6 +15,7 @@ import som.vmobjects.SAbstractObject;
 @Primitive(primitive = "int:divideDouble:")
 @Primitive(primitive = "double:divideDouble:")
 @Primitive(selector = "//")
+@Primitive(selector = "/")
 public abstract class DoubleDivPrim extends ArithmeticPrim {
   @Specialization
   public final double doDouble(final double left, final double right) {

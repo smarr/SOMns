@@ -1,6 +1,7 @@
 package som.interpreter.nodes;
 
 import static som.interpreter.nodes.SOMNode.unwrapIfNecessary;
+import static som.vm.Symbols.symbolFor;
 
 import java.util.concurrent.locks.Lock;
 
@@ -137,13 +138,15 @@ public final class MessageSendNode {
       }
       return arguments;
     }
+
+    public abstract void addSuffixToSelector(String suffix);
   }
 
   public abstract static class AbstractUninitializedMessageSendNode
       extends AbstractMessageSendNode {
 
-    protected final SSymbol selector;
-    protected final VM      vm;
+    protected SSymbol  selector;
+    protected final VM vm;
 
     protected AbstractUninitializedMessageSendNode(final SSymbol selector,
         final ExpressionNode[] arguments, final VM vm) {
@@ -234,6 +237,11 @@ public final class MessageSendNode {
 
       return result;
     }
+
+    @Override
+    public void addSuffixToSelector(final String suffix) {
+      selector = symbolFor(selector.getString() + suffix);
+    }
   }
 
   @Instrumentable(factory = MessageSendNodeWrapper.class)
@@ -282,7 +290,7 @@ public final class MessageSendNode {
   public static final class GenericMessageSendNode
       extends AbstractMessageSendNode {
 
-    private final SSymbol selector;
+    private SSymbol selector;
 
     @Child private AbstractDispatchNode dispatchNode;
 
@@ -341,6 +349,12 @@ public final class MessageSendNode {
     @Override
     public NodeCost getCost() {
       return Cost.getCost(dispatchNode);
+    }
+
+    @Override
+    public void addSuffixToSelector(final String suffix) {
+      selector = symbolFor(selector.getString() + suffix);
+
     }
   }
 }

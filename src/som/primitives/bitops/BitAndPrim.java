@@ -11,7 +11,9 @@ import som.primitives.arithmetic.ArithmeticPrim;
 
 
 @GenerateNodeFactory
-@Primitive(primitive = "int:bitAnd:", selector = "&")
+@Primitive(primitive = "int:bitAnd:")
+@Primitive(selector = "&")
+@Primitive(selector = "bitAnd:")
 public abstract class BitAndPrim extends ArithmeticPrim {
   @Specialization
   public final long doLong(final long left, final long right) {

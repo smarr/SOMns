@@ -41,6 +41,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vm.SomStructuralType;
 import som.vmobjects.SSymbol;
 import tools.language.StructuralProbe;
@@ -83,6 +84,12 @@ public class JsonTreeTranslator {
   public SourceSection source(final JsonObject node) {
     int line = node.get("line").getAsInt();
     int column = node.get("column").getAsInt();
+    if (line < 1) {
+      line = 1;
+    }
+    if (column < 1) {
+      column = 1;
+    }
     return sourceManager.atLineColumn(line, column);
   }
 
@@ -91,7 +98,7 @@ public class JsonTreeTranslator {
     if (node != null) {
       int line = node.get("line").getAsInt();
       int column = node.get("column").getAsInt();
-      prefix = "[" + line + "," + column + "] ";
+      prefix = "[" + sourceManager.getModuleName() + " " + line + "," + column + "] ";
     }
     language.getVM().errorExit(prefix + message);
   }
@@ -132,6 +139,9 @@ public class JsonTreeTranslator {
 
     } else if (node.has("from")) {
       return name(node.get("from").getAsJsonObject());
+
+    } else if (nodeType(node).equals("explicit-receiver-request")) {
+      return name(node.get("parts").getAsJsonArray().get(0).getAsJsonObject());
 
     } else {
       error("The translator doesn't understand how to get a name from " + nodeType(node),
@@ -544,15 +554,15 @@ public class JsonTreeTranslator {
     return signature.matches("[+\\-*/<>]+");
   }
 
-  /**
-   * Extracts the list of signatures defined by a Grace interface node. Any Grace to SOM
-   * mappings (such as those for operators) are performed before this list of signatures is
-   * returned; so the returned list will contain the NS `not` rather than the Grace `prefix!`.
-   */
-  private List<SSymbol> parseTypeSignatures(final JsonObject node) {
+  private List<SSymbol> parseTypeBody(final JsonObject node) {
     List<SSymbol> signatures = new ArrayList<SSymbol>();
 
-    JsonArray signatureNodes = node.get("body").getAsJsonObject().get("body").getAsJsonArray();
+    if (!node.has("body")) {
+      error("Some is wrong with the type literal?", node);
+      throw new RuntimeException();
+    }
+
+    JsonArray signatureNodes = node.get("body").getAsJsonArray();
     for (JsonElement signatureElement : signatureNodes) {
       JsonObject signatureNode = signatureElement.getAsJsonObject();
       SSymbol signature = selectorFromParts(signatureNode.get("parts").getAsJsonArray());
@@ -570,6 +580,58 @@ public class JsonTreeTranslator {
     }
 
     return signatures;
+  }
+
+  private List<SSymbol> parseAndType(final JsonObject node) {
+    List<SSymbol> signatures = new ArrayList<SSymbol>();
+    JsonObject body = node.get("body").getAsJsonObject();
+
+    JsonObject left = body.get("left").getAsJsonObject();
+    if (nodeType(left).equals("identifier")) {
+      SomStructuralType leftType = SomStructuralType.recallTypeByName(name(left));
+      for (SSymbol sig : leftType.signatures) {
+        signatures.add(sig);
+      }
+    } else {
+      signatures.addAll(parseTypeBody(left));
+    }
+
+    JsonObject right = body.get("right").getAsJsonObject();
+    if (nodeType(right).equals("identifier")) {
+      SomStructuralType rightType = SomStructuralType.recallTypeByName(name(right));
+      for (SSymbol sig : rightType.signatures) {
+        signatures.add(sig);
+      }
+    } else {
+      signatures.addAll(parseTypeBody(right));
+    }
+
+    return signatures;
+  }
+
+  /**
+   * Extracts the list of signatures defined by a Grace interface node. Any Grace to SOM
+   * mappings (such as those for operators) are performed before this list of signatures is
+   * returned; so the returned list will contain the NS `not` rather than the Grace `prefix!`.
+   */
+  private List<SSymbol> parseTypeSignatures(final JsonObject node) {
+
+    JsonObject body = node.get("body").getAsJsonObject();
+    if (body.has("left")) {
+      String combination = body.get("operator").getAsString();
+      if (combination.equals("&")) {
+        return parseAndType(node);
+      } else {
+        error(
+            "The translator doesn't understand how to parse a " + combination
+                + " type combination"
+                + nodeType(node),
+            node);
+        throw new RuntimeException();
+      }
+    }
+
+    return parseTypeBody(body);
   }
 
   /**
@@ -634,7 +696,7 @@ public class JsonTreeTranslator {
     } else if (nodeType(node).equals("method-declaration")) {
       astBuilder.objectBuilder.method(selector(node), returnType(node), parameters(node),
           typesForParameters(node), sourcesForParameters(node), locals(node),
-          typesForLocals(node), sourcesForLocals(node), body(node));
+          typesForLocals(node), sourcesForLocals(node), body(node), source(node));
       return null;
 
     } else if (nodeType(node).equals("class-declaration")) {
@@ -666,14 +728,15 @@ public class JsonTreeTranslator {
 
     } else if (nodeType(node).equals("def-declaration")) {
       return astBuilder.requestBuilder.assignment(symbolFor(name(node)),
-          (ExpressionNode) value(node));
+          (ExpressionNode) value(node), source(node));
 
     } else if (nodeType(node).equals("var-declaration")) {
       ExpressionNode value = (ExpressionNode) value(node);
       if (value == null) {
         return null;
       } else {
-        return astBuilder.requestBuilder.assignment(symbolFor(name(node)), value);
+        return astBuilder.requestBuilder.assignment(symbolFor(name(node)), value,
+            source(node));
       }
 
     } else if (nodeType(node).equals("identifier")) {
@@ -691,7 +754,7 @@ public class JsonTreeTranslator {
             arguments(node), source(node));
       } else {
         return astBuilder.requestBuilder.assignment(symbolFor(name(node)),
-            (ExpressionNode) value(node));
+            (ExpressionNode) value(node), source(node));
       }
 
     } else if (nodeType(node).equals("operator")) {
@@ -719,13 +782,29 @@ public class JsonTreeTranslator {
       }
 
     } else if (nodeType(node).equals("inherits")) {
-      astBuilder.objectBuilder.setInheritanceByName(className(node), arguments(node),
-          source(node));
+      JsonObject from = node.get("from").getAsJsonObject();
+      if (nodeType(from).equals("explicit-receiver-request")) {
+        MixinBuilder builder = scopeManager.peekObject();
+        scopeManager.pushMethod(builder.getClassInstantiationMethodBuilder());
+
+        ExpressionNode e =
+            explicit(selector(from), receiver(from), arguments(from), source(from));
+        AbstractMessageSendNode req = (AbstractMessageSendNode) e;
+        req.addSuffixToSelector("[Class]");
+        astBuilder.objectBuilder.setInheritanceByExpression(req, arguments(from),
+            source(node));
+
+        scopeManager.popMethod();
+
+      } else {
+        astBuilder.objectBuilder.setInheritanceByName(className(node), arguments(node),
+            source(node));
+      }
       return null;
 
     } else if (nodeType(node).equals("import")) {
       ExpressionNode importExpression =
-          astBuilder.requestBuilder.importModule(symbolFor(path(node)));
+          astBuilder.requestBuilder.importModule(symbolFor(path(node)), source(node));
       astBuilder.objectBuilder.addImmutableSlot(symbolFor(name(node)), null, importExpression,
           source(node));
       return null;
@@ -759,7 +838,8 @@ public class JsonTreeTranslator {
   public MixinDefinition translateModule() {
     JsonObject moduleNode = jsonAST.get("module").getAsJsonObject();
     MixinDefinition result = astBuilder.objectBuilder.module(locals(moduleNode),
-        typesForLocals(moduleNode), sourcesForLocals(moduleNode), body(moduleNode));
+        typesForLocals(moduleNode), sourcesForLocals(moduleNode), body(moduleNode),
+        source(moduleNode));
     return result;
   }
 }
