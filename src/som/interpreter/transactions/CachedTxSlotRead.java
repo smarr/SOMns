@@ -2,8 +2,8 @@ package som.interpreter.transactions;
 
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotRead;
-import som.interpreter.nodes.dispatch.DispatchGuard.AbstractTypeCheck;
 import som.interpreter.nodes.dispatch.DispatchGuard.CheckSObject;
+import som.interpreter.nodes.dispatch.TypeCheckNode;
 import som.vmobjects.SObject;
 import som.vmobjects.SObject.SMutableObject;
 
@@ -12,9 +12,9 @@ public final class CachedTxSlotRead extends CachedSlotRead {
   @Child protected CachedSlotRead read;
 
   public CachedTxSlotRead(final SlotAccess type, final CachedSlotRead read,
-      final CheckSObject guardForRcvr, final AbstractTypeCheck guardForType,
+      final CheckSObject guardForRcvr, final TypeCheckNode typeCheck,
       final AbstractDispatchNode nextInCache) {
-    super(type, guardForRcvr, guardForType, nextInCache);
+    super(type, guardForRcvr, typeCheck, nextInCache);
     assert type == SlotAccess.FIELD_READ;
     this.read = read;
   }

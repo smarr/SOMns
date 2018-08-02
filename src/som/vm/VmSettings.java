@@ -31,6 +31,10 @@ public class VmSettings implements Settings {
 
   public static final boolean ANSI_COLOR_IN_OUTPUT;
 
+  public static final boolean USE_TYPE_CHECKING;
+
+  public static final boolean MUST_BE_FULLY_TYPED;
+
   public static final String INSTRUMENTATION_PROP = "som.instrumentation";
 
   static {
@@ -73,6 +77,9 @@ public class VmSettings implements Settings {
     IGV_DUMP_AFTER_PARSING = getBool("som.igvDumpAfterParsing", false);
 
     ANSI_COLOR_IN_OUTPUT = getBool("som.useAnsiColoring", false);
+
+    USE_TYPE_CHECKING = getBool("som.useTypeChecking", false);
+    MUST_BE_FULLY_TYPED = getBool("som.ensureFullyTyped", false);
   }
 
   private static boolean getBool(final String prop, final boolean defaultVal) {

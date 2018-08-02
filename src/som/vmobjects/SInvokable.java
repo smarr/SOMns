@@ -45,7 +45,10 @@ import som.interpreter.nodes.dispatch.CachedDispatchNode;
 import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNode;
+import som.interpreter.nodes.dispatch.TypeCheckNode;
+import som.interpreter.nodes.dispatch.TypeCheckNodeGen;
 import som.vm.SomStructuralType;
+import som.vm.VmSettings;
 import som.vm.constants.Classes;
 
 
@@ -201,14 +204,28 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
       return new LexicallyBoundDispatchNode(next.getSourceSection(), ct);
     }
 
-    List<DispatchGuard> guards = new ArrayList<DispatchGuard>();
-    guards.add(DispatchGuard.create(rcvr)); // receiver guard
+    TypeCheckNode[] typeCheckNodes = createTypeCheckNodes();
+
+    return new CachedDispatchNode(ct, DispatchGuard.create(rcvr),
+        typeCheckNodes, next);
+  }
+
+  private TypeCheckNode[] createTypeCheckNodes() {
+    if (!VmSettings.USE_TYPE_CHECKING) {
+      return null;
+    }
+    List<TypeCheckNode> types = new ArrayList<TypeCheckNode>();
     for (int i = 0; i < expectedTypes.length; i++) {
       SomStructuralType expectedType = expectedTypes[i];
-      guards.add(DispatchGuard.createTypeCheck(expectedType));
+      if (expectedType == null) {
+        types.add(null);
+      } else {
+        types.add(TypeCheckNodeGen.create(expectedType, getSourceSection()));
+      }
     }
 
-    return new CachedDispatchNode(ct, guards.toArray(new DispatchGuard[guards.size()]), next);
+    TypeCheckNode[] typeCheckNodes = types.toArray(new TypeCheckNode[types.size()]);
+    return typeCheckNodes;
   }
 
   @Override

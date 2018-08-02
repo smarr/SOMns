@@ -30,6 +30,7 @@ package som.compiler;
 
 import static som.vm.Symbols.symbolFor;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -43,6 +44,7 @@ import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vm.SomStructuralType;
+import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.language.StructuralProbe;
 
@@ -264,13 +266,22 @@ public class JsonTreeTranslator {
     }
   }
 
-  private SomStructuralType returnType(final JsonObject node) {
+  private SSymbol returnType(final JsonObject node) {
+    if (!VmSettings.USE_TYPE_CHECKING) { // simply return null if type checking not used
+      return null;
+    }
+
     JsonObject signatureNode = node.get("signature").getAsJsonObject();
     if (signatureNode.get("returntype").isJsonNull()) {
-      return null;
+      if (VmSettings.MUST_BE_FULLY_TYPED) {
+        error(nodeType(node) + " is missing a type annotation", node);
+        throw new RuntimeException();
+      }
+
+      return SomStructuralType.UNKNOWN;
     } else {
-      SSymbol name = symbolFor(name(signatureNode.get("returntype").getAsJsonObject()));
-      return SomStructuralType.recallTypeByName(name);
+      return symbolFor(name(signatureNode.get("returntype").getAsJsonObject()));
+
     }
   }
 
@@ -424,34 +435,43 @@ public class JsonTreeTranslator {
    * Extracts the name of type declared inside of the given node, which may be either a
    * typed-parameter or otherwise a simple identifier.
    */
-  private SomStructuralType typeFor(final JsonObject node) {
+  private SSymbol typeFor(final JsonObject node) {
+    if (!VmSettings.USE_TYPE_CHECKING) { // simply return null if type checking not used
+      return null;
+    }
+
     String nodeType = nodeType(node);
 
     if (nodeType.equals("typed-parameter")) {
-      return SomStructuralType.recallTypeByName(name(node.get("type").getAsJsonObject()));
+      return symbolFor(name(node.get("type").getAsJsonObject()));
 
     } else if (nodeType.equals("identifier")) {
-      return null;
+      // no op (returns unknown)
 
     } else if (node.has("type")) {
       if (node.get("type").isJsonNull()) {
-        return null;
+        // no op (returns unknown)
       } else {
-        return SomStructuralType.recallTypeByName(
-            node.get("type").getAsJsonObject().get("name").getAsString());
+        return symbolFor(node.get("type").getAsJsonObject().get("name").getAsString());
       }
 
     } else {
       error("The translator doesn't understand how to get type for " + nodeType, node);
       throw new RuntimeException();
     }
+
+    if (VmSettings.MUST_BE_FULLY_TYPED) {
+      error(nodeType + " is missing a type annotation", node);
+      throw new RuntimeException();
+    }
+    return SomStructuralType.UNKNOWN;
   }
 
   /**
    * Gets the parameter types for a declaration node.
    */
-  private SomStructuralType[] typesForParameters(final JsonObject node) {
-    List<SomStructuralType> types = new ArrayList<SomStructuralType>();
+  private SSymbol[] typesForParameters(final JsonObject node) {
+    List<SSymbol> types = new ArrayList<SSymbol>();
 
     if (node.has("signature")) {
       for (JsonElement partElement : node.get("signature").getAsJsonObject().get("parts")
@@ -475,7 +495,7 @@ public class JsonTreeTranslator {
       throw new RuntimeException();
     }
 
-    return types.toArray(new SomStructuralType[types.size()]);
+    return types.toArray(new SSymbol[types.size()]);
   }
 
   /**
@@ -522,8 +542,8 @@ public class JsonTreeTranslator {
     return localNames.toArray(new SSymbol[localNames.size()]);
   }
 
-  private SomStructuralType[] typesForLocals(final JsonObject node) {
-    List<SomStructuralType> types = new ArrayList<SomStructuralType>();
+  private SSymbol[] typesForLocals(final JsonObject node) {
+    List<SSymbol> types = new ArrayList<SSymbol>();
     for (JsonElement element : body(node)) {
       JsonObject eNode = element.getAsJsonObject();
       String type = nodeType(element.getAsJsonObject());
@@ -531,7 +551,7 @@ public class JsonTreeTranslator {
         types.add(typeFor(eNode));
       }
     }
-    return types.toArray(new SomStructuralType[types.size()]);
+    return types.toArray(new SSymbol[types.size()]);
   }
 
   private SourceSection[] sourcesForLocals(final JsonObject node) {
@@ -717,8 +737,10 @@ public class JsonTreeTranslator {
           sourcesForLocals(node), body(node), source(node));
 
     } else if (nodeType(node).equals("type-statement")) {
-      SomStructuralType.recordTypeByName(symbolFor(name(node)),
-          SomStructuralType.makeType(parseTypeSignatures(node)));
+      if (VmSettings.USE_TYPE_CHECKING) {
+        SomStructuralType.recordTypeByName(symbolFor(name(node)),
+            SomStructuralType.makeType(parseTypeSignatures(node)));
+      }
       return null;
 
     } else if (nodeType(node).equals("block")) {
@@ -803,8 +825,15 @@ public class JsonTreeTranslator {
       return null;
 
     } else if (nodeType(node).equals("import")) {
+      String path = path(node);
+      try {
+        language.getVM().loadModule(sourceManager.pathForModuleNamed(symbolFor(path)));
+      } catch (IOException e) {
+        error("An error was throwing when eagerly parsing " + path, node);
+        throw new RuntimeException();
+      }
       ExpressionNode importExpression =
-          astBuilder.requestBuilder.importModule(symbolFor(path(node)), source(node));
+          astBuilder.requestBuilder.importModule(symbolFor(path), source(node));
       astBuilder.objectBuilder.addImmutableSlot(symbolFor(name(node)), null, importExpression,
           source(node));
       return null;

@@ -144,7 +144,7 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
         prim.getScope().getFrameDescriptor(),
         (ExpressionNode) primNode.deepCopy(), false, lang);
     return new SInvokable(signature, AccessModifier.PUBLIC,
-        primMethodNode, null, new SomStructuralType[] {});
+        primMethodNode, null, new SomStructuralType[] {null});
   }
 
   public EconomicMap<SSymbol, Dispatchable> takeVmMirrorPrimitives() {

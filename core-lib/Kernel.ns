@@ -978,6 +978,15 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     )
   )
 
+  public class TypeError signalWith: argument = Exception (
+    | public arg = argument. |
+    self signal.
+  )(
+    public asString = (
+      ^ 'TypeError: ' + arg + ''.
+    )
+  )
+
   (* Exception signaled when a Value is instantiated referring to a mutable object. *)
   public class NotAValue signalWith: aClass = Exception (
     | public class = aClass. |
@@ -1015,4 +1024,10 @@ class Kernel vmMirror: vmMirror = Object <: Value (
   private signalArgumentError: message = (
     ArgumentError signalWith: message.
   )
+
+  (* Short cut from VM. Likely to be removed when optimized. *)
+  private signalTypeError: message = (
+    TypeError signalWith: message.
+  )
+
 )

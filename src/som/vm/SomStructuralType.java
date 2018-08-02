@@ -36,10 +36,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
-import som.compiler.MixinDefinition;
-import som.interpreter.nodes.dispatch.Dispatchable;
+import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 
 
@@ -51,9 +51,20 @@ import som.vmobjects.SSymbol;
  * to this type. For now, objects conform to the type when they can respond to each of method
  * names contained in this list.
  */
-public class SomStructuralType {
 
-  @CompilationFinal public final static SSymbol UNKNOWN = symbolFor("Unknown");
+enum SUBCLASS_STATE {
+  IS_SUBCLASS,
+  NOT_SUBCLASS
+};
+
+public class SomStructuralType {
+  public final static SSymbol UNKNOWN = symbolFor("Unknown");
+
+  private static int nTypes = 0;
+
+  private final static int                MAX_TABLE_SIZE = 10000;
+  private final static SUBCLASS_STATE[][] subtypingTable =
+      new SUBCLASS_STATE[MAX_TABLE_SIZE][MAX_TABLE_SIZE];
 
   private final static List<SomStructuralType>         allKnownTypes =
       new ArrayList<SomStructuralType>();
@@ -62,11 +73,19 @@ public class SomStructuralType {
 
   @CompilationFinal(dimensions = 1) public final SSymbol[] signatures;
 
+  @CompilationFinal private final int tableIndex;
+
   private SomStructuralType(final List<SSymbol> signatures) {
+    assert VmSettings.USE_TYPE_CHECKING : "SomStructuralType is created dispited USE_TYPE_CHECKING not being enabled";
+
     this.signatures = signatures.toArray(new SSymbol[signatures.size()]);
+    this.tableIndex = nTypes;
+    nTypes += 1;
   }
 
-  public boolean isSubclassOf(final SomStructuralType other) {
+  private final SUBCLASS_STATE checkSignatures(final SomStructuralType other) {
+    CompilerAsserts.neverPartOfCompilation();
+
     for (SSymbol sigOther : other.signatures) {
       boolean found = false;
       for (SSymbol sigThis : signatures) {
@@ -75,11 +94,31 @@ public class SomStructuralType {
         }
       }
       if (!found) {
-        return false;
+        return SUBCLASS_STATE.NOT_SUBCLASS;
       }
     }
 
-    return true;
+    return SUBCLASS_STATE.IS_SUBCLASS;
+  }
+
+  public boolean isSubclassOf(final SomStructuralType other) {
+    CompilerAsserts.neverPartOfCompilation();
+
+    if (other == null || Nil.nilObject.getFactory().type == other) {
+      return true;
+    }
+
+    SUBCLASS_STATE state = subtypingTable[other.tableIndex][this.tableIndex];
+    if (state == null) {
+      subtypingTable[other.tableIndex][this.tableIndex] = checkSignatures(other);
+      return isSubclassOf(other);
+    } else {
+      if (state == SUBCLASS_STATE.IS_SUBCLASS) {
+        return true;
+      } else {
+        return false;
+      }
+    }
   }
 
   public static SomStructuralType makeType(final List<SSymbol> signatures) {
@@ -92,17 +131,9 @@ public class SomStructuralType {
       }
     }
 
-    return new SomStructuralType(signatures);
-  }
-
-  public static SomStructuralType getTypeFromMixin(final MixinDefinition mixinDefinition) {
-    org.graalvm.collections.EconomicMap<SSymbol, Dispatchable> dispatchables =
-        mixinDefinition.getInstanceDispatchables();
-    List<SSymbol> signatures = new ArrayList<SSymbol>();
-    for (SSymbol sig : dispatchables.getKeys()) {
-      signatures.add(sig);
-    }
-    return makeType(signatures);
+    SomStructuralType ret = new SomStructuralType(signatures);
+    allKnownTypes.add(ret);
+    return ret;
   }
 
   public static void recordTypeByName(final SSymbol name, final SomStructuralType type) {
@@ -114,6 +145,9 @@ public class SomStructuralType {
   }
 
   public static SomStructuralType recallTypeByName(final SSymbol name) {
+    if (!VmSettings.USE_TYPE_CHECKING || name == null || name == SomStructuralType.UNKNOWN) {
+      return null;
+    }
     if (!recordedTypes.containsKey(name)) {
       throw new RuntimeException(
           "No type is known under the name `" + name.getString() + "`");
@@ -125,22 +159,17 @@ public class SomStructuralType {
     return recordedTypes.get(symbolFor(name));
   }
 
-  public boolean isBoolean() {
-    return signatures.length == 1 && signatures[0].getString().equals("__BOOLEAN");
-  }
-
-  public boolean isNumber() {
-    return signatures.length == 1 && signatures[0].getString().equals("__NUMBER");
-  }
-
-  public boolean isString() {
-    return signatures.length == 1 && signatures[0].getString().equals("__STRING");
+  public static boolean isNullOrUnknown(final SSymbol identifier) {
+    return identifier == null || identifier == UNKNOWN;
   }
 
   @Override
   public String toString() {
+    List<SSymbol> typeElements = Arrays.asList(signatures);
+    typeElements.sort((a, b) -> a.getString().compareTo(b.getString()));
+
     String s = "{ ";
-    for (SSymbol sig : signatures) {
+    for (SSymbol sig : typeElements) {
       s += " " + sig.getString() + ",";
     }
     s += " }";

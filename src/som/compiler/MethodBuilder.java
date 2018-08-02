@@ -71,8 +71,8 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
 
   private final SomLanguage language;
 
-  private SSymbol           signature;
-  private SomStructuralType returnType;
+  private SSymbol signature;
+  private SSymbol returnType;
 
   private final List<SourceSection> definition = new ArrayList<>(3);
 
@@ -303,13 +303,13 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
 
       // skip self
       if (i != 0) {
-        types.add(arg.type);
+        types.add(SomStructuralType.recallTypeByName(arg.type));
       }
 
       i += 1;
     }
 
-    types.add(returnType);
+    types.add(SomStructuralType.recallTypeByName(returnType));
 
     return types.toArray(new SomStructuralType[types.size()]);
   }
@@ -378,11 +378,11 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     signature = sig;
   }
 
-  public void setReturnType(final SomStructuralType returnType) {
+  public void setReturnType(final SSymbol returnType) {
     this.returnType = returnType;
   }
 
-  public void addArgument(final SSymbol arg, final SomStructuralType type,
+  public void addArgument(final SSymbol arg, final SSymbol type,
       final SourceSection source) {
     if ((Symbols.SELF == arg || Symbols.BLOCK_SELF == arg) && arguments.size() > 0) {
       throw new IllegalStateException(
@@ -406,7 +406,7 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     return l;
   }
 
-  public Local addLocal(final SSymbol name, final SomStructuralType type,
+  public Local addLocal(final SSymbol name, final SSymbol type,
       final boolean immutable, final SourceSection source) throws MethodDefinitionError {
     if (arguments.containsKey(name)) {
       throw new MethodDefinitionError("Method already defines argument " + name
@@ -428,7 +428,7 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     return l;
   }
 
-  private Local addLocalAndUpdateScope(final SSymbol name, final SomStructuralType type,
+  private Local addLocalAndUpdateScope(final SSymbol name, final SSymbol type,
       final boolean immutable, final SourceSection source) throws MethodDefinitionError {
     Local l = addLocal(name, type, immutable, source);
     scope.addVariable(l);
