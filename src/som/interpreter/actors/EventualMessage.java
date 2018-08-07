@@ -6,6 +6,7 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
+import som.interpreter.SArguments;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.SPromise.SResolver;
@@ -159,14 +160,8 @@ public abstract class EventualMessage {
     assert !(receiver instanceof SFarReference) : "this should not happen, because we need to redirect messages to the other actor, and normally we just unwrapped this";
     assert !(receiver instanceof SPromise);
 
-    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      for (int i = 1; i < arguments.length - 1; i++) {
-        arguments[i] = target.wrapForUse(arguments[i], originalSender, null);
-      }
-    } else {
-      for (int i = 1; i < arguments.length; i++) {
-        arguments[i] = target.wrapForUse(arguments[i], originalSender, null);
-      }
+    for (int i = 1; i < SArguments.getLengthWithoutShadowStack(arguments); i++) {
+      arguments[i] = target.wrapForUse(arguments[i], originalSender, null);
     }
 
     return target;

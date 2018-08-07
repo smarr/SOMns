@@ -33,7 +33,6 @@ public final class UncaughtExceptions implements UncaughtExceptionHandler {
 
     Output.errorPrintln(
         "Stack Trace: (printing may fail in some situation with a null pointer exception");
-    Output.errorPrintln("Exception class: " + e.getClass().getName());
     e.printStackTrace();
 
     vm.requestExit(2);
