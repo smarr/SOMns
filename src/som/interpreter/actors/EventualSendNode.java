@@ -19,6 +19,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
+import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
@@ -198,14 +199,8 @@ public class EventualSendNode extends ExprWithTagsNode {
       SFarReference rcvr = (SFarReference) args[0];
       Actor target = rcvr.getActor();
 
-      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-        for (int i = 0; i < args.length - 1; i++) {
-          args[i] = wrapArgs[i].execute(args[i], target, owner);
-        }
-      } else {
-        for (int i = 0; i < args.length; i++) {
-          args[i] = wrapArgs[i].execute(args[i], target, owner);
-        }
+      for (int i = 0; i < SArguments.getLengthWithoutShadowStack(args); i++) {
+        args[i] = wrapArgs[i].execute(args[i], target, owner);
       }
 
       assert !(args[0] instanceof SFarReference) : "This should not happen for this specialization, but it is handled in determineTargetAndWrapArguments(.)";

@@ -90,9 +90,13 @@ public final class SArguments {
       return (ShadowStackEntry) maybeShadowStack;
     }
     return null;
-    // if (maybeShadowStack == null) {
-    // return null;
-    // }
-    // return (ShadowStackEntry) maybeShadowStack;
+  }
+
+  public static int getLengthWithoutShadowStack(final Object[] arguments) {
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      return arguments.length - 1;
+    } else {
+      return arguments.length;
+    }
   }
 }
