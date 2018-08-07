@@ -33,6 +33,8 @@ public class VmSettings implements Settings {
   public static final boolean RECYCLE_BUFFERS;
   public static final int     BUFFER_TIMEOUT;
 
+  public static final boolean ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
+
   static {
     String prop = System.getProperty("som.threads");
     if (prop == null) {
@@ -52,6 +54,8 @@ public class VmSettings implements Settings {
     KOMPOS_TRACING = TRUFFLE_DEBUGGER_ENABLED; // REPLAY;
     DISABLE_TRACE_FILE = getBool("som.disableTraceFile", false) || REPLAY;
     TRACE_SMALL_IDS = getBool("som.smallIds", false);
+
+    ACTOR_ASYNC_STACK_TRACE_STRUCTURE = getBool("som.actorAsyncStackTraceStructure", false);
 
     ACTOR_TRACING = getBool("som.actorTracing", false);
 

@@ -13,6 +13,7 @@ import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.actors.EventualSendNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InternalObjectArrayNode;
+import som.interpreter.nodes.InternalObjectArrayNode.ArgumentEvaluationNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.OuterObjectReadNodeGen;
 import som.interpreter.nodes.ResolvingImplicitReceiverSend;
@@ -59,7 +60,7 @@ public final class SNodeFactory {
       final SomLanguage lang) {
     if (eventualSend) {
       return new EventualSendNode(msg, exprs.length,
-          new InternalObjectArrayNode(exprs).initialize(source), source, sendOperator, lang);
+          new ArgumentEvaluationNode(exprs).initialize(source), source, sendOperator, lang);
     } else {
       return MessageSendNode.createMessageSend(msg, exprs, source, lang.getVM());
     }
