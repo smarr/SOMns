@@ -16,6 +16,7 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.interop.Message;
@@ -34,6 +35,7 @@ import som.compiler.MixinDefinition;
 import som.interop.ValueConversion.ToSomConversion;
 import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
 import som.interpreter.Invokable;
+import som.interpreter.SArguments;
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
@@ -205,6 +207,16 @@ public final class SystemPrims {
     public final Object doSObject(final String argument) {
       Output.errorPrintln(argument);
       return argument;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "printAsyncStackTrace:")
+  public abstract static class PrintAsyncStackTracePrim extends UnaryExpressionNode {
+    @Specialization
+    public final Object printAsyncStackTrace(final VirtualFrame frame, final Object receiver) {
+      SArguments.getShadowStackEntry(frame).print();
+      return receiver;
     }
   }
 

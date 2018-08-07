@@ -12,6 +12,7 @@ import som.VM;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
+import som.vm.VmSettings;
 
 
 /**
@@ -84,8 +85,15 @@ public abstract class SchedulePromiseHandlerNode extends Node {
   private void wrapArguments(final PromiseSendMessage msg, final Actor finalTarget,
       final WrapReferenceNode argWrapper) {
     // TODO: break that out into nodes
-    for (int i = 1; i < numArgs.profile(msg.args.length); i++) {
-      msg.args[i] = argWrapper.execute(msg.args[i], finalTarget, msg.originalSender);
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      for (int i = 1; i < numArgs.profile(msg.args.length - 1); i++) {
+        msg.args[i] = argWrapper.execute(msg.args[i], finalTarget, msg.originalSender);
+      }
+    } else {
+      for (int i = 1; i < numArgs.profile(msg.args.length); i++) {
+        msg.args[i] = argWrapper.execute(msg.args[i], finalTarget, msg.originalSender);
+      }
     }
+
   }
 }

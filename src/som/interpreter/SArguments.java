@@ -1,12 +1,16 @@
 package som.interpreter;
 
 import com.oracle.truffle.api.frame.Frame;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
+import som.interpreter.nodes.ExpressionNode;
 import som.primitives.SizeAndLengthPrim;
 import som.primitives.arrays.AtPrim;
+import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.SImmutableArray;
+import tools.asyncstacktraces.ShadowStackEntry;
 
 
 public final class SArguments {
@@ -49,6 +53,14 @@ public final class SArguments {
     return argsArr;
   }
 
+  public static Object[] allocateArgumentsArray(final ExpressionNode[] argumentNodes) {
+    int argLength = argumentNodes.length;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      argLength++;
+    }
+    return new Object[argLength];
+  }
+
   public static Object[] getPlainArgumentsWithReceiver(final Object receiver,
       final SArray args, final SizeAndLengthPrim size, final AtPrim at) {
     Object[] result = new Object[(int) (size.executeEvaluated(args) + 1)];
@@ -57,5 +69,30 @@ public final class SArguments {
       result[i] = at.executeEvaluated(null, args, (long) i);
     }
     return result;
+  }
+
+  /**
+   *
+   * @param expression Expression is typically a send
+   */
+  public static void setShadowStack(final Object[] arguments, final ExpressionNode expression,
+      final VirtualFrame frame) {
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      arguments[arguments.length - 1] =
+          new ShadowStackEntry(getShadowStackEntry(frame), expression);
+    }
+  }
+
+  public static ShadowStackEntry getShadowStackEntry(final VirtualFrame frame) {
+    Object[] args = frame.getArguments();
+    Object maybeShadowStack = args[args.length - 1];
+    if (maybeShadowStack instanceof ShadowStackEntry) {
+      return (ShadowStackEntry) maybeShadowStack;
+    }
+    return null;
+    // if (maybeShadowStack == null) {
+    // return null;
+    // }
+    // return (ShadowStackEntry) maybeShadowStack;
   }
 }

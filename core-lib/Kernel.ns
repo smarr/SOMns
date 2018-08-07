@@ -27,6 +27,9 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
   public class Thing = Top ()(
     protected error: msg = ( vmMirror printNewline: 'ERROR: ' + msg. vmMirror exit: 1 )
+    protected asyncError: msg = ( 
+    	vmMirror printAsyncStackTrace: nil.
+    	vmMirror printNewline: 'ERROR: ' + msg. vmMirror exit: 1 )
 
     (* Error recovering *)
     protected doesNotUnderstand: selector arguments: arguments = (

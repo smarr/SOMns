@@ -27,7 +27,7 @@ import som.interpreter.actors.ReceivedMessage.ReceivedMessageForVMMain;
 import som.interpreter.actors.RegisterOnPromiseNode.RegisterWhenResolved;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.InternalObjectArrayNode;
+import som.interpreter.nodes.InternalObjectArrayNode.ArgumentEvaluationNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.interpreter.nodes.SOMNode;
@@ -46,11 +46,11 @@ import tools.debugger.session.Breakpoints;
 
 @GenerateWrapper
 public class EventualSendNode extends ExprWithTagsNode {
-  @Child protected InternalObjectArrayNode arguments;
-  @Child protected SendNode                send;
+  @Child protected ArgumentEvaluationNode arguments;
+  @Child protected SendNode               send;
 
   public EventualSendNode(final SSymbol selector, final int numArgs,
-      final InternalObjectArrayNode arguments, final SourceSection source,
+      final ArgumentEvaluationNode arguments, final SourceSection source,
       final SourceSection sendOperator, final SomLanguage lang) {
     this.arguments = arguments;
     this.send = SendNodeGen.create(selector, createArgWrapper(numArgs),
@@ -198,8 +198,14 @@ public class EventualSendNode extends ExprWithTagsNode {
       SFarReference rcvr = (SFarReference) args[0];
       Actor target = rcvr.getActor();
 
-      for (int i = 0; i < args.length; i++) {
-        args[i] = wrapArgs[i].execute(args[i], target, owner);
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+        for (int i = 0; i < args.length - 1; i++) {
+          args[i] = wrapArgs[i].execute(args[i], target, owner);
+        }
+      } else {
+        for (int i = 0; i < args.length; i++) {
+          args[i] = wrapArgs[i].execute(args[i], target, owner);
+        }
       }
 
       assert !(args[0] instanceof SFarReference) : "This should not happen for this specialization, but it is handled in determineTargetAndWrapArguments(.)";

@@ -98,6 +98,8 @@ tools.add_argument('--coverage', help='determine SOMns code coverage and store i
                    dest='coverage', default=None)
 tools.add_argument('--java-coverage', help='determine Java code coverage and store in given file',
                    dest='java_coverage', default=None)
+tools.add_argument('--async_stack_traces_structure', help='Show async stack traces in debugging through a separate structure',
+                    dest='async_stack_traces_structure', default=False)
 
 parser.add_argument('-o', '--only', help='only compile give methods, comma separated list',
                     dest='only_compile', default=None)
@@ -272,7 +274,7 @@ if  not args.interpreter and args.only_igv:
 if not args.interpreter and args.igv_to_file:
     flags += ['-Dgraal.PrintIdealGraphFile=true']
 if args.igv_methods:
-    flags += ['-Dsom.igvDumpAfterParsing=true']
+    flags += ['-Dsom.igvDumpAfterParsing=true']fr
 if args.low_level:
     flags += ['-XX:+UnlockDiagnosticVMOptions', '-XX:+LogCompilation',
               '-XX:+TraceDeoptimization']
@@ -297,6 +299,9 @@ if args.truffle_profile:
 
 if args.coverage:
     SOM_ARGS += ['--coverage', args.coverage]
+    
+if args.async_stack_traces_structure:
+	flags += ['-Dsom.actorAsyncStackTraceStructure=true']
 
 if args.java_coverage:
     flags += ['-javaagent:' + BASE_DIR + '/libs/jacoco/lib/jacocoagent.jar=inclbootstrapclasses=true,destfile=' + args.java_coverage]

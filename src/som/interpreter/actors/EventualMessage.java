@@ -159,8 +159,14 @@ public abstract class EventualMessage {
     assert !(receiver instanceof SFarReference) : "this should not happen, because we need to redirect messages to the other actor, and normally we just unwrapped this";
     assert !(receiver instanceof SPromise);
 
-    for (int i = 1; i < arguments.length; i++) {
-      arguments[i] = target.wrapForUse(arguments[i], originalSender, null);
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      for (int i = 1; i < arguments.length - 1; i++) {
+        arguments[i] = target.wrapForUse(arguments[i], originalSender, null);
+      }
+    } else {
+      for (int i = 1; i < arguments.length; i++) {
+        arguments[i] = target.wrapForUse(arguments[i], originalSender, null);
+      }
     }
 
     return target;
