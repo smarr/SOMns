@@ -99,7 +99,7 @@ tools.add_argument('--coverage', help='determine SOMns code coverage and store i
 tools.add_argument('--java-coverage', help='determine Java code coverage and store in given file',
                    dest='java_coverage', default=None)
 tools.add_argument('--async_stack_traces_structure', help='Show async stack traces in debugging through a separate structure',
-                    dest='async_stack_traces_structure', default=False)
+                    dest='async_stack_traces_structure', default=True)
 
 parser.add_argument('-o', '--only', help='only compile give methods, comma separated list',
                     dest='only_compile', default=None)
