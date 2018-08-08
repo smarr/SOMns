@@ -8,6 +8,7 @@ import com.oracle.truffle.api.utilities.JSONHelper.JSONObjectBuilder;
 
 import som.interpreter.Types;
 import som.interpreter.objectstorage.ClassFactory;
+import som.vm.VmSettings;
 
 
 public final class Arguments {
@@ -19,8 +20,12 @@ public final class Arguments {
   private final ClassFactory[] argSomTypes;
 
   Arguments(final Object[] arguments) {
-    this.argJavaTypes = getJavaTypes(arguments);
-    this.argSomTypes = getSomTypes(arguments);
+    Object[] argsToProfile = arguments;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      argsToProfile = Arrays.copyOf(arguments, arguments.length - 1);
+    }
+    this.argJavaTypes = getJavaTypes(argsToProfile);
+    this.argSomTypes = getSomTypes(argsToProfile);
   }
 
   private static Class<?>[] getJavaTypes(final Object[] args) {
