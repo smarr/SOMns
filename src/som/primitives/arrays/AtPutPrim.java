@@ -62,7 +62,7 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
 
       if (forAtomic) {
         return TxTernaryArrayOpNodeGen.create((TernaryExpressionNode) node, null, null, null)
-                                      .initialize(section);
+                                      .initialize(section, eagerWrapper);
       } else {
         return node;
       }
