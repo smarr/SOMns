@@ -26,7 +26,6 @@ public class ShadowStackEntry {
     } else {
       this.actor = null;
     }
-
   }
 
   public void print() {
