@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Arrays;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -55,6 +56,8 @@ import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
+import tools.asyncstacktraces.ShadowStackEntry;
+import tools.asyncstacktraces.ShadowStackEntryCache;
 import tools.concurrency.TraceParser;
 import tools.concurrency.TracingBackend;
 import tools.replay.actors.ActorExecutionTrace;
@@ -84,7 +87,22 @@ public final class SystemPrims {
     @Specialization
     @TruffleBoundary
     public final Object doSObject(final Object module) {
-      long[] stats = TracingBackend.getStatistics();
+      long[] tracingStats = TracingBackend.getStatistics();
+      long[] stats = Arrays.copyOf(tracingStats, tracingStats.length + 7);
+      stats[tracingStats.length] = ShadowStackEntry.numberOfAllocations;
+      ShadowStackEntry.numberOfAllocations = 0;
+      stats[tracingStats.length + 1] = ShadowStackEntryCache.megamorphicCacheMiss;
+      ShadowStackEntryCache.megamorphicCacheMiss = 0;
+      stats[tracingStats.length + 2] = ShadowStackEntryCache.cacheHit;
+      ShadowStackEntryCache.cacheHit = 0;
+      stats[tracingStats.length + 3] = ShadowStackEntryCache.cacheRewrite;
+      ShadowStackEntryCache.cacheRewrite = 0;
+      stats[tracingStats.length + 4] = ShadowStackEntryCache.dynamicCacheRewrite;
+      ShadowStackEntryCache.dynamicCacheRewrite = 0;
+      stats[tracingStats.length + 5] = ShadowStackEntryCache.failedSendSites.size();
+      ShadowStackEntryCache.failedSendSites.clear();
+      stats[tracingStats.length + 6] = ShadowStackEntryCache.sendSites.size();
+      ShadowStackEntryCache.sendSites.clear();
       return new SImmutableArray(stats, Classes.valueArrayClass);
     }
   }
@@ -215,7 +233,7 @@ public final class SystemPrims {
   public abstract static class PrintAsyncStackTracePrim extends UnaryExpressionNode {
     @Specialization
     public final Object printAsyncStackTrace(final VirtualFrame frame, final Object receiver) {
-      SArguments.getShadowStackEntry(frame).print();
+      SArguments.getShadowStackEntry(frame).printAsyncStackTrace();
       return receiver;
     }
   }

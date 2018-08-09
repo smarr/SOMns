@@ -10,7 +10,10 @@ import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.SImmutableArray;
+import tools.asyncstacktraces.AsyncShadowStackEntry;
+import tools.asyncstacktraces.LocalShadowStackEntry;
 import tools.asyncstacktraces.ShadowStackEntry;
+import tools.asyncstacktraces.ShadowStackEntryCache;
 
 
 public final class SArguments {
@@ -71,15 +74,23 @@ public final class SArguments {
     return result;
   }
 
-  /**
-   *
-   * @param expression Expression is typically a send
-   */
-  public static void setShadowStack(final Object[] arguments, final ExpressionNode expression,
-      final VirtualFrame frame) {
+  public static void setShadowStackEntryWithCache(final Object[] arguments,
+      final ExpressionNode expression,
+      final ShadowStackEntryCache cache,
+      final VirtualFrame frame,
+      final boolean async) {
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      arguments[arguments.length - 1] =
-          new ShadowStackEntry(getShadowStackEntry(frame), expression);
+      cache.lookupInCache(arguments, expression, frame, async);
+    }
+  }
+
+  public static ShadowStackEntry instantiateShadowStackEntry(
+      final ShadowStackEntry previousStackEntry,
+      final ExpressionNode expression, final boolean async) {
+    if (async) {
+      return new AsyncShadowStackEntry(previousStackEntry, expression);
+    } else {
+      return new LocalShadowStackEntry(previousStackEntry, expression);
     }
   }
 

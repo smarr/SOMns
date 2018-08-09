@@ -10,47 +10,58 @@ import som.interpreter.nodes.ExpressionNode;
 import tools.SourceCoordinate;
 
 
-public class ShadowStackEntry {
+public abstract class ShadowStackEntry {
 
   protected final ShadowStackEntry previousEntry;
   protected final ExpressionNode   expression;
-  protected final Actor            actor;
+  public static long               numberOfAllocations = 0;
+  public static final boolean      ALLOCATION_COUNT    = false;
 
   public ShadowStackEntry(final ShadowStackEntry previousEntry,
       final ExpressionNode expression) {
     this.previousEntry = previousEntry;
     this.expression = expression;
+    if (ALLOCATION_COUNT) {
+      numberOfAllocations++;
+    }
+  }
+
+  public static Actor getCurrentActorOrNull() {
     Thread t = Thread.currentThread();
     if (t instanceof ActorProcessingThread) {
-      this.actor = EventualMessage.getActorCurrentMessageIsExecutionOn();
+      return EventualMessage.getActorCurrentMessageIsExecutionOn();
     } else {
-      this.actor = null;
+      return null;
     }
   }
 
-  public void print() {
+  public void printAsyncStackTrace() {
     ShadowStackEntry currentEntry = this;
     StringBuilder sb = new StringBuilder();
-    Actor currentActor = actor;
+    Actor currentActor = getCurrentActorOrNull();
     while (currentEntry != null) {
-      if (currentActor != currentEntry.actor) {
-        sb.append(currentEntry.actor.toString());
-        sb.append(" (");
-        sb.append(currentEntry.actor.hashCode());
-        sb.append(")\n");
-        currentActor = currentEntry.actor;
-      }
-      SourceSection nodeSS = currentEntry.expression.getSourceSection();
-      String location =
-          nodeSS.getSource().getName() + SourceCoordinate.getLocationQualifier(nodeSS);
-      String method = currentEntry.expression.getRootNode().getName();
-      sb.append(method);
-      sb.append(':');
-      sb.append(location);
-      sb.append('\n');
+      currentActor = currentEntry.printOn(sb, currentActor);
       currentEntry = currentEntry.previousEntry;
     }
-
+    if (ALLOCATION_COUNT) {
+      sb.append("Number of Shadow Stack Entry Allocations: ");
+      sb.append(numberOfAllocations);
+      sb.append("\n");
+    }
     Output.print(sb.toString());
   }
+
+  public Actor printOn(final StringBuilder sb, final Actor currentActor) {
+    SourceSection nodeSS = expression.getSourceSection();
+    String location =
+        nodeSS.getSource().getName() + SourceCoordinate.getLocationQualifier(nodeSS);
+    String method = expression.getRootNode().getName();
+    sb.append(' ');
+    sb.append(method);
+    sb.append(':');
+    sb.append(location);
+    sb.append('\n');
+    return currentActor;
+  }
+
 }
