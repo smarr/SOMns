@@ -43,11 +43,6 @@ public abstract class ShadowStackEntry {
       currentActor = currentEntry.printOn(sb, currentActor);
       currentEntry = currentEntry.previousEntry;
     }
-    if (ALLOCATION_COUNT) {
-      sb.append("Number of Shadow Stack Entry Allocations: ");
-      sb.append(numberOfAllocations);
-      sb.append("\n");
-    }
     Output.print(sb.toString());
   }
 
