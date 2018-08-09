@@ -36,6 +36,7 @@ import som.vm.Primitives;
 import som.vmobjects.SSymbol;
 import tools.Send;
 import tools.SourceCoordinate;
+import tools.asyncstacktraces.ShadowStackEntryCache;
 import tools.dym.Tags.VirtualInvoke;
 
 
@@ -118,9 +119,11 @@ public final class MessageSendNode {
       implements PreevaluatedExpression, Send {
 
     @Children protected final ExpressionNode[] argumentNodes;
+    protected final ShadowStackEntryCache      shadowStackCache;
 
     protected AbstractMessageSendNode(final ExpressionNode[] arguments) {
       this.argumentNodes = arguments;
+      shadowStackCache = ShadowStackEntryCache.createShadowStackEntryCache();
     }
 
     /** For wrappers only. */
@@ -149,7 +152,7 @@ public final class MessageSendNode {
         arguments[i] = argumentNodes[i].executeGeneric(frame);
         assert arguments[i] != null : "Some expression evaluated to null, which is not supported.";
       }
-      SArguments.setShadowStack(arguments, this, frame);
+      SArguments.setShadowStackEntryWithCache(arguments, this, shadowStackCache, frame, false);
       return arguments;
     }
 
