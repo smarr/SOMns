@@ -38,7 +38,7 @@ public final class Primitive extends Invokable {
     assert getFrameDescriptor().getSize() == 0;
     return new Primitive(name, NodeUtil.cloneNode(uninitializedBody),
         getFrameDescriptor(), uninitializedBody, isAtomic,
-        getLanguage(SomLanguage.class));
+        SomLanguage.getLanguage(this));
   }
 
   @Override
@@ -48,7 +48,7 @@ public final class Primitive extends Invokable {
     ExpressionNode uninitAtomic = NodeUtil.cloneNode(atomic);
 
     return new Primitive(name, atomic, getFrameDescriptor(), uninitAtomic, true,
-        getLanguage(SomLanguage.class));
+        SomLanguage.getLanguage(this));
   }
 
   @Override
