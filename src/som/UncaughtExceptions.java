@@ -30,6 +30,9 @@ public final class UncaughtExceptions implements UncaughtExceptionHandler {
       Output.errorPrintln("Processing failed for: "
           + thread.getActivity().toString());
     }
+
+    Output.errorPrintln(
+        "Stack Trace: (printing may fail in some situation with a null pointer exception");
     e.printStackTrace();
 
     vm.requestExit(2);
