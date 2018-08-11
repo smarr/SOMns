@@ -59,6 +59,13 @@ public abstract class SOMNode extends Node implements ScopeReference, WithSource
   }
 
   /**
+   * A work around for restrictions in Truffle's guard DSL.
+   */
+  public SOMNode getThis() {
+    return this;
+  }
+
+  /**
    * This method is called by a visitor to adjust nodes that access lexical
    * elements such as locals or arguments. This is necessary after changes in
    * the scope tree. This can be caused by method splitting to obtain

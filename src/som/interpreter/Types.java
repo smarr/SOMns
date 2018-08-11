@@ -143,7 +143,7 @@ public class Types {
 
   static {
     sizePrim = SizeAndLengthPrimFactory.create(null);
-    new DummyParent(sizePrim);
+    new DummyParent(null, sizePrim);
   }
 
   public static int getNumberOfIndexedSlots(final Object obj) {
