@@ -58,6 +58,7 @@
     <target name="clean" description="Remove build directories and generated code">
         <delete dir="${build.dir}"/>
         <delete dir="${src_gen.dir}"/>
+        <ant dir="${corelib.dir}/TestSuite/extension" useNativeBasedir="true" target="clean" inheritAll="false" />
     </target>
 
     <target name="clean-truffle" depends="check-truffle-available" if="truffle.present">
@@ -245,8 +246,7 @@
     </target>
 
     <target name="compile-test-extension">
-      <ant dir="${corelib.dir}/TestSuite/extension" useNativeBasedir="true" target="jar" inheritAll="false">
-      </ant>
+      <ant dir="${corelib.dir}/TestSuite/extension" useNativeBasedir="true" target="jar" inheritAll="false" />
     </target>
 
     <target name="kompos" description="Build Kompos">
