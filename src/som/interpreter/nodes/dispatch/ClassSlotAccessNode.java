@@ -64,7 +64,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
       try {
         // recheck guard under synchronized, don't want to access object if
         // layout might have changed, we are going to slow path in that case
-        read.guard.entryMatches(rcvr);
+        guard.entryMatches(rcvr);
         cachedValue = read.read(rcvr);
       } catch (InvalidAssumptionException e) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -93,7 +93,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
       //
       // at this point the guard will fail, if it failed for the read guard,
       // but we simply recheck here to avoid impact on fast path
-      write.guard.entryMatches(rcvr);
+      guard.entryMatches(rcvr);
       write.doWrite(rcvr, classObject);
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
