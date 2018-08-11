@@ -93,8 +93,11 @@ public abstract class Tags {
     private ComplexPrimitiveOperation() {}
   }
 
-  public final class PrimitiveArgument extends Tag {
-    private PrimitiveArgument() {}
+  /**
+   * Tags expressions that are arguments to message sends.
+   */
+  public final class ArgumentExpr extends Tag {
+    private ArgumentExpr() {}
   }
 
   // some operation that somehow accesses a string
