@@ -90,7 +90,7 @@ public final class Method extends Invokable {
   public ExpressionNode inline(final MethodBuilder builder, final SInvokable outer) {
     builder.mergeIntoScope(methodScope, outer);
     return ScopeAdaptationVisitor.adapt(
-        uninitializedBody, builder.getScope(), 0, true);
+        uninitializedBody, builder.getScope(), 0, true, SomLanguage.getLanguage(this));
   }
 
   @Override
@@ -104,8 +104,9 @@ public final class Method extends Invokable {
   public Method cloneAndAdaptAfterScopeChange(final MethodScope adaptedScope,
       final int appliesTo, final boolean cloneAdaptedAsUninitialized,
       final boolean someOuterScopeIsMerged) {
+    SomLanguage lang = SomLanguage.getLanguage(this);
     ExpressionNode adaptedBody = ScopeAdaptationVisitor.adapt(
-        uninitializedBody, adaptedScope, appliesTo, someOuterScopeIsMerged);
+        uninitializedBody, adaptedScope, appliesTo, someOuterScopeIsMerged, lang);
 
     ExpressionNode uninit;
     if (cloneAdaptedAsUninitialized) {
@@ -115,7 +116,7 @@ public final class Method extends Invokable {
     }
 
     Method clone = new Method(name, getSourceSection(), definition, adaptedBody,
-        adaptedScope, uninit, block, isAtomic, getLanguage(SomLanguage.class));
+        adaptedScope, uninit, block, isAtomic, lang);
     adaptedScope.setMethod(clone);
     return clone;
   }
@@ -132,13 +133,15 @@ public final class Method extends Invokable {
   @TruffleBoundary
   public Invokable createAtomic() {
     assert !isAtomic : "We should only ask non-atomic invokables for their atomic version";
+    SomLanguage lang = SomLanguage.getLanguage(this);
 
     MethodScope splitScope = methodScope.split();
-    ExpressionNode body = ScopeAdaptationVisitor.adapt(uninitializedBody, splitScope, 0, true);
+    ExpressionNode body =
+        ScopeAdaptationVisitor.adapt(uninitializedBody, splitScope, 0, true, lang);
     ExpressionNode uninit = NodeUtil.cloneNode(body);
 
     Method atomic = new Method(name, getSourceSection(), definition, body,
-        splitScope, uninit, block, true, getLanguage(SomLanguage.class));
+        splitScope, uninit, block, true, lang);
     splitScope.setMethod(atomic);
     return atomic;
   }

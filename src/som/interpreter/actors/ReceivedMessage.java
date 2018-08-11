@@ -69,7 +69,7 @@ public class ReceivedMessage extends ReceivedRootNode {
     @Child protected DirectCallNode onReceive;
 
     public ReceivedCallback(final RootCallTarget onReceive) {
-      super(onReceive.getRootNode().getLanguage(SomLanguage.class),
+      super(SomLanguage.getLanguage(onReceive.getRootNode()),
           onReceive.getRootNode().getSourceSection(), null);
       this.onReceive = Truffle.getRuntime().createDirectCallNode(onReceive);
     }

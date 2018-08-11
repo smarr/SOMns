@@ -14,6 +14,7 @@ import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.ExpressionTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 
@@ -151,10 +152,14 @@ public final class SomLanguage extends TruffleLanguage<VM> {
     return vm;
   }
 
-  public static VM getVM(final RootNode root) {
+  public static VM getVM(final Node node) {
+    return getLanguage(node).getVM();
+  }
+
+  public static SomLanguage getLanguage(final Node node) {
     CompilerAsserts.neverPartOfCompilation(
         "This is a simple hack to get the VM object, and should never be on the fast path");
-    return root.getLanguage(SomLanguage.class).getVM();
+    return node.getRootNode().getLanguage(SomLanguage.class);
   }
 
   // Marker source used to start execution with command line arguments
