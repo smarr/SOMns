@@ -15,8 +15,10 @@ import bd.basic.nodes.DummyParent;
 import bd.primitives.Primitive;
 import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
 import som.interpreter.SArguments;
+import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.SOMNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -33,14 +35,15 @@ public abstract class BlockPrims {
   public static final int CHAIN_LENGTH = VmSettings.DYNAMIC_METRICS ? 100 : 6;
 
   public static final DirectCallNode createDirectCallNode(final SBlock receiver,
-      final SourceSection sourceSection) {
+      final SOMNode node) {
+    SomLanguage lang = SomLanguage.getLanguage(node);
     assert null != receiver.getMethod().getCallTarget();
     DirectCallNode callNode = Truffle.getRuntime().createDirectCallNode(
         receiver.getMethod().getCallTarget());
 
     if (VmSettings.DYNAMIC_METRICS) {
-      callNode = new InstrumentableBlockApplyNode(callNode, sourceSection);
-      new DummyParent(callNode).notifyInserted();
+      callNode = new InstrumentableBlockApplyNode(callNode, node.getSourceSection());
+      new DummyParent(lang, callNode).notifyInserted();
       assert callNode.getParent() instanceof WrapperNode;
       callNode = (DirectCallNode) callNode.getParent();
     }
@@ -85,7 +88,7 @@ public abstract class BlockPrims {
         guards = {"cached == receiver.getMethod()", "cached.getNumberOfArguments() == 1"},
         limit = "CHAIN_LENGTH")
     public final Object doCachedBlock(final SBlock receiver,
-        @Cached("createDirectCallNode(receiver, getSourceSection())") final DirectCallNode call,
+        @Cached("createDirectCallNode(receiver, getThis())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
       return call.call(new Object[] {receiver});
     }
@@ -136,7 +139,7 @@ public abstract class BlockPrims {
         guards = {"cached == receiver.getMethod()", "cached.getNumberOfArguments() == 2"},
         limit = "CHAIN_LENGTH")
     public final Object doCachedBlock(final SBlock receiver, final Object arg,
-        @Cached("createDirectCallNode(receiver, getSourceSection())") final DirectCallNode call,
+        @Cached("createDirectCallNode(receiver, getThis())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
       return call.call(new Object[] {receiver, arg});
     }
@@ -179,7 +182,7 @@ public abstract class BlockPrims {
         limit = "CHAIN_LENGTH")
     public final Object doCachedBlock(final SBlock receiver, final Object arg1,
         final Object arg2,
-        @Cached("createDirectCallNode(receiver, getSourceSection())") final DirectCallNode call,
+        @Cached("createDirectCallNode(receiver, getThis())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
       return call.call(new Object[] {receiver, arg1, arg2});
     }
@@ -230,7 +233,7 @@ public abstract class BlockPrims {
         limit = "CHAIN_LENGTH")
     public final Object doCachedBlock(final SBlock receiver, final SArray args,
         @Cached("getNumArgs(args)") final long numArgs,
-        @Cached("createDirectCallNode(receiver, getSourceSection())") final DirectCallNode call,
+        @Cached("createDirectCallNode(receiver, getThis())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
       return call.call(SArguments.getPlainArgumentsWithReceiver(receiver, args, size, at));
     }

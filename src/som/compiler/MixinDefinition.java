@@ -104,8 +104,8 @@ public final class MixinDefinition implements SomInteropObject {
     cannotBeValues =
         ExceptionSignalingNode.createNode(Symbols.TransferObjectsCannotBeValues, ss);
 
-    new DummyParent(notAValue);
-    new DummyParent(cannotBeValues);
+    new DummyParent(null, notAValue);
+    new DummyParent(null, cannotBeValues);
   }
 
   public MixinDefinition(final SSymbol name, final SourceSection nameSection,
