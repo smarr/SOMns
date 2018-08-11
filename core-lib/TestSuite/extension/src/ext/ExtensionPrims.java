@@ -8,7 +8,7 @@ import dep.SomeDependency;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 
 
-public class ExtensionPrims {
+public abstract class ExtensionPrims {
 
   private static long cnt = 0;
 
