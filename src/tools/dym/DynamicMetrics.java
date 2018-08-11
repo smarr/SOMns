@@ -38,6 +38,7 @@ import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable;
 import tools.debugger.Tags.LiteralTag;
+import tools.dym.Tags.ArgumentExpr;
 import tools.dym.Tags.BasicPrimitiveOperation;
 import tools.dym.Tags.CachedClosureInvoke;
 import tools.dym.Tags.CachedVirtualInvoke;
@@ -54,7 +55,6 @@ import tools.dym.Tags.LoopNode;
 import tools.dym.Tags.NewArray;
 import tools.dym.Tags.NewObject;
 import tools.dym.Tags.OpClosureApplication;
-import tools.dym.Tags.PrimitiveArgument;
 import tools.dym.Tags.VirtualInvoke;
 import tools.dym.Tags.VirtualInvokeReceiver;
 import tools.dym.nodes.AllocationProfilingNode;
@@ -250,7 +250,7 @@ public class DynamicMetrics extends TruffleInstrument {
   private void addSubexpressionInstrumentation(final Instrumenter instrumenter,
       final ExecutionEventNodeFactory factory) {
     Builder filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(PrimitiveArgument.class);
+    filters.tagIs(ArgumentExpr.class);
 
     instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findDirectParentEventNode(factory);

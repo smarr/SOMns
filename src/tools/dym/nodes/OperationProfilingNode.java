@@ -8,7 +8,7 @@ import som.interpreter.ReturnException;
 import som.interpreter.nodes.SOMNode;
 import som.vm.NotYetImplementedException;
 import tools.dym.DynamicMetrics;
-import tools.dym.Tags.PrimitiveArgument;
+import tools.dym.Tags.ArgumentExpr;
 import tools.dym.profiles.OperationProfile;
 
 

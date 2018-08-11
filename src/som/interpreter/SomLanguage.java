@@ -45,6 +45,7 @@ import tools.debugger.Tags.LiteralTag;
 import tools.debugger.Tags.LocalVariableTag;
 import tools.debugger.Tags.StatementSeparatorTag;
 import tools.dym.Tags.AnyNode;
+import tools.dym.Tags.ArgumentExpr;
 import tools.dym.Tags.ArrayRead;
 import tools.dym.Tags.ArrayWrite;
 import tools.dym.Tags.BasicPrimitiveOperation;
@@ -66,7 +67,6 @@ import tools.dym.Tags.OpArithmetic;
 import tools.dym.Tags.OpClosureApplication;
 import tools.dym.Tags.OpComparison;
 import tools.dym.Tags.OpLength;
-import tools.dym.Tags.PrimitiveArgument;
 import tools.dym.Tags.StringAccess;
 import tools.dym.Tags.UnspecifiedInvoke;
 import tools.dym.Tags.VirtualInvoke;
@@ -92,7 +92,7 @@ import tools.dym.Tags.VirtualInvokeReceiver;
     ControlFlowCondition.class, FieldRead.class, FieldWrite.class, ClassRead.class,
     LocalVarRead.class, LocalVarWrite.class, LocalArgRead.class, ArrayRead.class,
     ArrayWrite.class, LoopNode.class, LoopBody.class, BasicPrimitiveOperation.class,
-    ComplexPrimitiveOperation.class, PrimitiveArgument.class,
+    ComplexPrimitiveOperation.class, ArgumentExpr.class,
     StringAccess.class, OpClosureApplication.class, OpArithmetic.class,
     OpComparison.class, OpLength.class,
 

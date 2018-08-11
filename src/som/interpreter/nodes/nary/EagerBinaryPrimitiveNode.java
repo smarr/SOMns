@@ -56,8 +56,8 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitiveNode {
   }
 
   @Override
-  public void markAsPrimitiveArgument() {
-    primitive.markAsPrimitiveArgument();
+  public void markAsArgument() {
+    primitive.markAsArgument();
   }
 
   @Override

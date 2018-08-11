@@ -58,8 +58,8 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitiveNode {
   }
 
   @Override
-  public void markAsPrimitiveArgument() {
-    primitive.markAsPrimitiveArgument();
+  public void markAsArgument() {
+    primitive.markAsArgument();
   }
 
   @Override

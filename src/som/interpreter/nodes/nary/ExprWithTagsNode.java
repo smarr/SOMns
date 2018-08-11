@@ -9,9 +9,9 @@ import com.oracle.truffle.api.nodes.Node;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.NotYetImplementedException;
+import tools.dym.Tags.ArgumentExpr;
 import tools.dym.Tags.ControlFlowCondition;
 import tools.dym.Tags.LoopBody;
-import tools.dym.Tags.PrimitiveArgument;
 import tools.dym.Tags.VirtualInvokeReceiver;
 
 
@@ -37,9 +37,9 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
   private static final byte CONTROL_FLOW_CONDITION = 1 << 2;
 
   /**
-   * Indicates that this node is an argument to a primitive.
+   * Indicates that this node is an argument to a send.
    */
-  private static final byte PRIMITIVE_ARGUMENT = 1 << 3;
+  private static final byte ARGUMENT = 1 << 3;
 
   /**
    * Indicates that this node determines a receiver for an invoke.
@@ -66,7 +66,7 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
   public void markAsRootExpression() {
     assert !isTagged(ROOT_EXPR);
     assert !isTagged(LOOP_BODY);
-    assert !isTagged(PRIMITIVE_ARGUMENT);
+    assert !isTagged(ARGUMENT);
     assert !isTagged(CONTROL_FLOW_CONDITION);
     assert getSourceSection() != null;
     tagWith(ROOT_EXPR);
@@ -94,9 +94,9 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
   }
 
   @Override
-  public void markAsPrimitiveArgument() {
+  public void markAsArgument() {
     assert getSourceSection() != null;
-    tagWith(PRIMITIVE_ARGUMENT);
+    tagWith(ARGUMENT);
   }
 
   @Override
@@ -139,8 +139,8 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
       return isTagged(LOOP_BODY);
     } else if (tag == ControlFlowCondition.class) {
       return isTagged(CONTROL_FLOW_CONDITION);
-    } else if (tag == PrimitiveArgument.class) {
-      return isTagged(PRIMITIVE_ARGUMENT);
+    } else if (tag == ArgumentExpr.class) {
+      return isTagged(ARGUMENT);
     } else if (tag == VirtualInvokeReceiver.class) {
       return isTagged(VIRTUAL_INVOKE_RECEIVER);
     } else {
