@@ -72,10 +72,6 @@ public class TracingActors {
 
     public static void handleBreakpointsAndStepping(final EventualMessage msg,
         final WebDebugger dbg, final Actor actor) {
-      if (!VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-        return;
-      }
-
       if (msg.getHaltOnReceive() || ((TracingActor) actor).isStepToNextTurn()) {
         dbg.prepareSteppingUntilNextRootNode();
         if (((TracingActor) actor).isStepToNextTurn()) { // reset flag
@@ -101,7 +97,7 @@ public class TracingActors {
 
     static {
       if (VmSettings.REPLAY) {
-        actorList = new WeakHashMap();
+        actorList = new WeakHashMap<>();
       }
     }
 
