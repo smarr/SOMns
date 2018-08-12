@@ -245,7 +245,12 @@ public abstract class LexicalScope {
 
     @Override
     public MethodScope getOuterScopeOrNull() {
-      return outerScope.getMethodScope();
+      if (outerScope == null) {
+        // this can only happen for superclass resolution methods
+        return null;
+      } else {
+        return outerScope.getMethodScope();
+      }
     }
 
     @Override
@@ -395,13 +400,13 @@ public abstract class LexicalScope {
     @Override
     public boolean lookupSlotOrClass(final SSymbol selector,
         final List<MixinDefinitionId> results) {
-      assert outerScope != null : "Should not be possible, because we do not support top-level methods";
+      assert outerScope != null : "Should not be possible, because we do not support top-level methods, except for superclass resolution";
       // this traversal concerns only the enclosing objects, not the activations
       return outerScope.lookupSlotOrClass(selector, results);
     }
 
     public MethodScope getEmbeddedScope(final SourceSection source) {
-      assert embeddedScopes != null : "Something is wrong, trying to get embedded scope for leaf method";
+      assert embeddedScopes != null : "Something is wrong, trying to get embedded scope for leaf method, except for superclass resolution";
       for (MethodScope s : embeddedScopes) {
         if (s.method.getSourceSection().equals(source)) {
           return s;
