@@ -265,9 +265,8 @@ public class Actor implements Activity {
         ObjectTransitionSafepoint.INSTANCE.unregister();
       }
 
-      if (VmSettings.ACTOR_TRACING && t.swapTracingBuffer) {
-        t.getBuffer().swapStorage();
-        t.swapTracingBuffer = false;
+      if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
+        t.swapTracingBufferIfRequestedUnsync();
       }
       t.currentlyExecutingActor = null;
     }

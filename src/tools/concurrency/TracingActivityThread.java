@@ -33,7 +33,8 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
 
   protected ConcurrentEntityScope topEntity;
 
-  public volatile boolean swapTracingBuffer = false;
+  protected volatile boolean swapTracingBuffer = false;
+  protected boolean          suspendedInDebugger;
 
   private static class ConcurrentEntityScope {
     private final EntityType            type;
@@ -43,6 +44,36 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
       this.type = type;
       this.next = next;
     }
+  }
+
+  /**
+   * Swap the tracing buffer, if it was requested.
+   *
+   * <p>
+   * This method is unsynchronized, and should only be called by the thread itself.
+   * Or when we know that the thread is blocked, for instance in a breakpoint.
+   */
+  public void swapTracingBufferIfRequestedUnsync() {
+    if (swapTracingBuffer) {
+      getBuffer().swapStorage();
+      swapTracingBuffer = false;
+    }
+  }
+
+  public synchronized void markThreadAsSuspendedInDebugger() {
+    suspendedInDebugger = true;
+  }
+
+  public synchronized void markThreadAsResumedFromDebugger() {
+    suspendedInDebugger = false;
+  }
+
+  public synchronized boolean swapTracingBufferIfThreadSuspendedInDebugger() {
+    if (suspendedInDebugger) {
+      swapTracingBufferIfRequestedUnsync();
+      return true;
+    }
+    return false;
   }
 
   public TracingActivityThread(final ForkJoinPool pool) {
@@ -127,14 +158,14 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   @Override
   protected void onStart() {
     super.onStart();
-    if (VmSettings.ACTOR_TRACING) {
+    if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
       TracingBackend.registerThread(this);
     }
   }
 
   @Override
   protected void onTermination(final Throwable exception) {
-    if (VmSettings.ACTOR_TRACING) {
+    if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
       traceBuffer.returnBuffer(null);
       TracingBackend.addExternalData(externalData);
       TracingBackend.unregisterThread(this);
