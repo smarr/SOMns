@@ -54,7 +54,7 @@ import tools.language.StructuralProbe;
 import tools.superinstructions.CandidateIdentifier;
 
 
-@SuppressWarnings("deprecation")
+//@SuppressWarnings("deprecation")
 public final class VM {
 
   @CompilationFinal private PolyglotEngine engine;
