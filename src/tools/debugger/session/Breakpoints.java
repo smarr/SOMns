@@ -9,6 +9,7 @@ import com.oracle.truffle.api.debug.Breakpoint;
 import com.oracle.truffle.api.debug.Breakpoint.SimpleCondition;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.DebuggerSession;
+import com.oracle.truffle.api.debug.SourceElement;
 import com.oracle.truffle.api.debug.SuspendAnchor;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 import com.oracle.truffle.api.instrumentation.Tag;
@@ -42,7 +43,9 @@ public class Breakpoints {
   public Breakpoints(final Debugger debugger, final WebDebugger webDebugger) {
     this.truffleBreakpoints = new HashMap<>();
     this.breakpoints = new HashMap<>();
-    this.debuggerSession = debugger.startSession(webDebugger);
+    @SuppressWarnings("unchecked")
+    Class<Tag>[] tags = new Class[] {ExpressionBreakpoint.class, RootTag.class};
+    this.debuggerSession = debugger.startSession(webDebugger, tags, SourceElement.STATEMENT);
   }
 
   public void prepareSteppingUntilNextRootNode(final Thread thread) {
@@ -97,9 +100,12 @@ public class Breakpoints {
       final Class<? extends Tag> tag, final SuspendAnchor anchor) {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {
+      WebDebugger.log("SectionBreakpoint: " + bId);
       bp = Breakpoint.newBuilder(bId.getCoordinate().uri).lineIs(bId.getCoordinate().startLine)
                      .columnIs(bId.getCoordinate().startColumn)
-                     .sectionLength(bId.getCoordinate().charLength).tag(tag)
+                     .sectionLength(bId.getCoordinate().charLength)
+                     .sourceElements(SourceElement.EXPRESSION)
+                     .tag(tag)
                      .suspendAnchor(anchor).build();
       debuggerSession.install(bp);
       truffleBreakpoints.put(bId, bp);
