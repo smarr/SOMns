@@ -7,22 +7,14 @@ class STM usingPlatform: platform = Value (
   |  public field ::= 0. |
   )()
 
-  private doCount: o = (
+  private doCount: o id: id = (
     tx atomic: [
       | cnt |
       cnt:: o field.
       o field: cnt + 1.
     ].
 
-    o field println.
-
-    tx atomic: [
-      | cnt |
-      cnt:: o field.
-      o field: cnt + 1.
-    ].
-
-    o field println.
+    ('id: ' + id asString + ' val: ' + o field asString) println.
 
     tx atomic: [
       | cnt |
@@ -30,7 +22,15 @@ class STM usingPlatform: platform = Value (
       o field: cnt + 1.
     ].
 
-    o field println.
+    ('id: ' + id asString + ' val: ' + o field asString) println.
+
+    tx atomic: [
+      | cnt |
+      cnt:: o field.
+      o field: cnt + 1.
+    ].
+
+    ('id: ' + id asString + ' val: ' + o field asString) println.
   )
 
   public main: args = (
@@ -38,9 +38,9 @@ class STM usingPlatform: platform = Value (
     'STM example\n' println.
     o:: MyObj new.
 
-    Thread spawn: [ doCount: o ].
+    Thread spawn: [ doCount: o id: 2 ].
 
-    doCount: o.
+    doCount: o id: 1.
 
     ^ 0
   )
