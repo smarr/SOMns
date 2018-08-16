@@ -1,20 +1,13 @@
 "use strict";
 
 import { expect } from "chai";
-import * as fs from "fs";
 import { X_OK } from "constants";
-
-import {
-  SOM, PING_PONG_URI, ControllerWithInitialBreakpoints,
-  TestConnection, HandleStoppedAndGetStackTrace,
-  expectStack, expectSourceCoordinate
-} from "./test-setup";
-
-import {
-  SourceMessage, createLineBreakpointData,
-  createSectionBreakpointData
-} from "../src/messages";
+import * as fs from "fs";
+import { createLineBreakpointData, createSectionBreakpointData, SourceMessage } from "../src/messages";
 import { BreakpointType as BT, SteppingType as ST } from "./somns-support";
+import { ControllerWithInitialBreakpoints, expectSourceCoordinate, expectStack, HandleStoppedAndGetStackTrace, PING_PONG_URI, SOM, TestConnection, getCmd } from "./test-setup";
+
+
 
 let connectionPossible = false;
 function onlyWithConnection(fn) {
@@ -282,6 +275,15 @@ describe("Basic Protocol", function() {
           });
 
           after(closeConnectionAfterSuite);
+
+          afterEach(function() {
+            if (this.currentTest.state === "failed") {
+              console.log("Failed test: " + suiteName);
+              console.log("To reproduce the issue:")
+              console.log("\tcmd: " + getCmd());
+              console.log("\tbp: " + JSON.stringify(testDesc.breakpoint));
+            }
+          });
 
           it(testDesc.test, onlyWithConnection(() => {
             return ctrl.stackPs[0].then(msg => {
