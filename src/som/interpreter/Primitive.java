@@ -10,6 +10,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
 
 import som.compiler.MethodBuilder;
+import som.interpreter.actors.ResolvePromiseNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
 import som.primitives.ObjectPrims.HaltPrim;
@@ -72,7 +73,8 @@ public final class Primitive extends Invokable {
    */
   @Override
   protected boolean isInstrumentable() {
-    return expressionOrSequence instanceof HaltPrim;
+    return expressionOrSequence instanceof HaltPrim
+        || expressionOrSequence instanceof ResolvePromiseNode;
   }
 
   private static Method getNextMethodOnStack() {
