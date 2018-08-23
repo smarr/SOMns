@@ -57,7 +57,7 @@ import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.asyncstacktraces.ShadowStackEntry;
-import tools.asyncstacktraces.ShadowStackEntryCache;
+import tools.asyncstacktraces.ShadowStackEntryLoad;
 import tools.concurrency.TraceParser;
 import tools.concurrency.TracingBackend;
 import tools.replay.actors.ActorExecutionTrace;
@@ -88,21 +88,17 @@ public final class SystemPrims {
     @TruffleBoundary
     public final Object doSObject(final Object module) {
       long[] tracingStats = TracingBackend.getStatistics();
-      long[] stats = Arrays.copyOf(tracingStats, tracingStats.length + 7);
+      long[] stats = Arrays.copyOf(tracingStats, tracingStats.length + 5);
       stats[tracingStats.length] = ShadowStackEntry.numberOfAllocations;
       ShadowStackEntry.numberOfAllocations = 0;
-      stats[tracingStats.length + 1] = ShadowStackEntryCache.megamorphicCacheMiss;
-      ShadowStackEntryCache.megamorphicCacheMiss = 0;
-      stats[tracingStats.length + 2] = ShadowStackEntryCache.cacheHit;
-      ShadowStackEntryCache.cacheHit = 0;
-      stats[tracingStats.length + 3] = ShadowStackEntryCache.cacheRewrite;
-      ShadowStackEntryCache.cacheRewrite = 0;
-      stats[tracingStats.length + 4] = ShadowStackEntryCache.dynamicCacheRewrite;
-      ShadowStackEntryCache.dynamicCacheRewrite = 0;
-      stats[tracingStats.length + 5] = ShadowStackEntryCache.failedSendSites.size();
-      ShadowStackEntryCache.failedSendSites.clear();
-      stats[tracingStats.length + 6] = ShadowStackEntryCache.sendSites.size();
-      ShadowStackEntryCache.sendSites.clear();
+      stats[tracingStats.length + 1] = ShadowStackEntryLoad.cacheMiss;
+      ShadowStackEntryLoad.cacheMiss = 0;
+      stats[tracingStats.length + 2] = ShadowStackEntryLoad.cacheHit;
+      ShadowStackEntryLoad.cacheHit = 0;
+      stats[tracingStats.length + 3] = ShadowStackEntryLoad.megaMiss;
+      ShadowStackEntryLoad.megaMiss = 0;
+      stats[tracingStats.length + 4] = ShadowStackEntryLoad.megaCacheHit;
+      ShadowStackEntryLoad.megaCacheHit = 0;
       return new SImmutableArray(stats, Classes.valueArrayClass);
     }
   }

@@ -13,7 +13,7 @@ import som.vmobjects.SArray.SImmutableArray;
 import tools.asyncstacktraces.AsyncShadowStackEntry;
 import tools.asyncstacktraces.LocalShadowStackEntry;
 import tools.asyncstacktraces.ShadowStackEntry;
-import tools.asyncstacktraces.ShadowStackEntryCache;
+import tools.asyncstacktraces.ShadowStackEntryLoad;
 
 
 public final class SArguments {
@@ -65,22 +65,74 @@ public final class SArguments {
   }
 
   public static Object[] getPlainArgumentsWithReceiver(final Object receiver,
-      final SArray args, final SizeAndLengthPrim size, final AtPrim at) {
-    Object[] result = new Object[(int) (size.executeEvaluated(args) + 1)];
+      final SArray args, final SizeAndLengthPrim size, final AtPrim at,
+      final ExpressionNode expression,
+      final ShadowStackEntryLoad entryLoad,
+      final VirtualFrame frame) {
+    int argSize = (int) (size.executeEvaluated(args) + 1);
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      argSize++;
+    }
+    Object[] result = new Object[argSize];
     result[0] = receiver;
     for (int i = 1; i < result.length; i++) {
       result[i] = at.executeEvaluated(null, args, (long) i);
     }
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      entryLoad.loadShadowStackEntry(result, expression, frame, false);
+    }
     return result;
+  }
+
+  public static Object[] getPlainNoArgumentsWithReceiver(final Object receiver,
+      final ExpressionNode expression,
+      final ShadowStackEntryLoad entryLoad,
+      final VirtualFrame frame) {
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      Object[] arguments = new Object[] {receiver, null};
+      entryLoad.loadShadowStackEntry(arguments, expression, frame, false);
+      return arguments;
+    } else {
+      return new Object[] {receiver};
+    }
+  }
+
+  public static Object[] getPlain1ArgumentWithReceiver(final Object receiver,
+      final Object firstArg,
+      final ExpressionNode expression,
+      final ShadowStackEntryLoad entryLoad,
+      final VirtualFrame frame) {
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      Object[] arguments = new Object[] {receiver, firstArg, null};
+      entryLoad.loadShadowStackEntry(arguments, expression, frame, false);
+      return arguments;
+    } else {
+      return new Object[] {receiver, firstArg};
+    }
+  }
+
+  public static Object[] getPlain2ArgumentsWithReceiver(final Object receiver,
+      final Object firstArg,
+      final Object secondArg,
+      final ExpressionNode expression,
+      final ShadowStackEntryLoad entryLoad,
+      final VirtualFrame frame) {
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      Object[] arguments = new Object[] {receiver, firstArg, secondArg, null};
+      entryLoad.loadShadowStackEntry(arguments, expression, frame, false);
+      return arguments;
+    } else {
+      return new Object[] {receiver, firstArg, secondArg};
+    }
   }
 
   public static void setShadowStackEntryWithCache(final Object[] arguments,
       final ExpressionNode expression,
-      final ShadowStackEntryCache cache,
+      final ShadowStackEntryLoad entryLoad,
       final VirtualFrame frame,
       final boolean async) {
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      cache.lookupInCache(arguments, expression, frame, async);
+      entryLoad.loadShadowStackEntry(arguments, expression, frame, async);
     }
   }
 
