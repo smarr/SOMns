@@ -51,7 +51,7 @@ public abstract class ShadowStackEntry {
     String location =
         nodeSS.getSource().getName() + SourceCoordinate.getLocationQualifier(nodeSS);
     String method = expression.getRootNode().getName();
-    sb.append(' ');
+    sb.append("   ");
     sb.append(method);
     sb.append(':');
     sb.append(location);
