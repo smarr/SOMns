@@ -206,7 +206,7 @@ GRAAL_JAVA_9_FLAGS = [
        TRUFFLE_DIR + '/truffle/mxbuild/modules/com.oracle.truffle.truffle_api.jar',
   '--upgrade-module-path=' + TRUFFLE_DIR + '/compiler/mxbuild/modules/jdk.internal.vm.compiler.jar']
 
-SOM_ARGS = ['-Dbd.settings=som.vm.VmSettings', 'som.VM',
+SOM_ARGS = ['-Dbd.settings=som.vm.VmSettings', 'som.Launcher',
             '--platform', args.som_platform, '--kernel', args.som_kernel]
 
 # == Compiler Settings

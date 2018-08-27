@@ -34,7 +34,7 @@ public class VmOptions {
   }
 
   public VmOptions(final String[] args, final String testSelector) {
-    this.testSelector = testSelector;
+    this.testSelector = "".equals(testSelector) ? null : testSelector;
     this.args = processVmArguments(args);
     showUsage = args.length == 0;
     if (!VmSettings.INSTRUMENTATION &&
@@ -44,6 +44,10 @@ public class VmOptions {
           "Instrumentation is not enabled, but one of the tools is used. " +
               "Please set -D" + VmSettings.INSTRUMENTATION_PROP + "=true");
     }
+  }
+
+  public boolean isTestExecution() {
+    return testSelector != null;
   }
 
   private Object[] processVmArguments(final String[] arguments) {

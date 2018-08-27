@@ -6,6 +6,9 @@ import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Engine;
+
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -14,10 +17,6 @@ import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.GraphPrintVisitor;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
-import com.oracle.truffle.api.vm.PolyglotEngine;
-import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
-import com.oracle.truffle.api.vm.PolyglotEngine.Value;
-import com.oracle.truffle.api.vm.PolyglotRuntime.Instrument;
 import com.oracle.truffle.tools.profiler.CPUSampler;
 
 import bd.inlining.InlinableNodes;
@@ -56,8 +55,6 @@ import tools.superinstructions.CandidateIdentifier;
 //@SuppressWarnings("deprecation")
 public final class VM {
 
-  @CompilationFinal private PolyglotEngine engine;
-
   @CompilationFinal private StructuralProbe structuralProbe;
   @CompilationFinal private WebDebugger     webDebugger;
   @CompilationFinal private CPUSampler      truffleProfiler;
@@ -67,7 +64,6 @@ public final class VM {
   private final ForkJoinPool processesPool;
   private final ForkJoinPool threadPool;
 
-  private final boolean                  avoidExitForTesting;
   @CompilationFinal private ObjectSystem objectSystem;
 
   @CompilationFinal private SomLanguage language;
@@ -81,8 +77,7 @@ public final class VM {
 
   private static final int MAX_THREADS = 0x7fff;
 
-  public VM(final VmOptions vmOptions, final boolean avoidExitForTesting) {
-    this.avoidExitForTesting = avoidExitForTesting;
+  public VM(final VmOptions vmOptions) {
     options = vmOptions;
 
     actorPool = new ForkJoinPool(VmSettings.NUM_THREADS,
@@ -98,8 +93,8 @@ public final class VM {
   /**
    * Used by language server.
    */
-  public VM(final VmOptions vmOptions) {
-    this.avoidExitForTesting = true;
+  public VM(final VmOptions vmOptions, final boolean languageServer) {
+    assert languageServer : "Only to be used by language server";
     this.options = vmOptions;
 
     actorPool = null;
@@ -259,28 +254,15 @@ public final class VM {
   }
 
   /**
-   * Does minimal cleanup and disposes the polyglot engine, before doing a hard
-   * exit. This method is expected to be called from main thread.
+   * Do some cleanup.
    */
   @TruffleBoundary
-  public void shutdownAndExit(final int errorCode) {
+  public void shutdown() {
     if (truffleProfiler != null) {
       truffleProfiler.printHistograms(System.err);
     }
 
     shutdownPools();
-
-    TracingBackend.waitForTrace();
-
-    int code = errorCode;
-    if (TracingActors.ReplayActor.printMissingMessages() && errorCode == 0) {
-      code = 1;
-    }
-    engine.dispose();
-    if (VmSettings.MEMORY_TRACING) {
-      TracingBackend.reportPeakMemoryUsage();
-    }
-    System.exit(code);
   }
 
   /**
@@ -303,10 +285,6 @@ public final class VM {
     TruffleCompiler.transferToInterpreter("errorExit");
     Output.errorPrintln("Run-time Error: " + message);
     requestExit(1);
-  }
-
-  public boolean isAvoidingExit() {
-    return avoidExitForTesting;
   }
 
   public void initalize(final SomLanguage lang) throws IOException {
@@ -336,33 +314,16 @@ public final class VM {
     return objectSystem.execute(selector);
   }
 
-  public void execute() {
-    objectSystem.executeApplication(vmMirror, mainActor);
+  public int execute() {
+    return objectSystem.executeApplication(vmMirror, mainActor);
   }
 
-  public static void main(final String[] args) {
-    VmOptions vmOptions = new VmOptions(args);
-
-    if (!vmOptions.configUsable()) {
-      return;
-    }
-
-    VM vm = new VM(vmOptions, false);
-    Builder builder = vm.createPolyglotBuilder();
-
-    vm.startExecution(builder);
-  }
-
-  public Builder createPolyglotBuilder() {
-    Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OBJECT, this);
-    return builder;
-  }
-
-  private void startExecution(final Builder builder) {
-    engine = builder.build();
-
-    Map<String, ? extends Instrument> instruments = engine.getRuntime().getInstruments();
+  /**
+   * We only do this when we execute an application.
+   * We don't setup the instruments for BasicInterpreterTests.
+   */
+  public void setupInstruments() {
+    Engine engine = Context.getCurrent().getEngine();
 
     if (options.profilingEnabled) {
       truffleProfiler = CPUSampler.find(engine);
@@ -403,9 +364,6 @@ public final class VM {
       structuralProbe = CandidateIdentifier.find(engine);
       assert structuralProbe != null : "Initialization of CandidateIdentifer tool incomplete";
     }
-
-    Value returnCode = engine.eval(SomLanguage.START);
-    shutdownAndExit(returnCode.as(Integer.class));
   }
 
   public SClass loadExtensionModule(final String filename) {
