@@ -120,7 +120,7 @@ public final class ObjectSystem {
       throw new NotAFileException(filename);
     }
 
-    Source source = Source.newBuilder(file).mimeType(SomLanguage.MIME_TYPE).build();
+    Source source = SomLanguage.getSource(file);
     return loadModule(source);
   }
 
