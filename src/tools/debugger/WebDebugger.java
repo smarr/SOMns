@@ -5,6 +5,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.graalvm.polyglot.Engine;
+import org.graalvm.polyglot.Instrument;
+
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -57,7 +60,17 @@ import tools.debugger.session.SectionBreakpoint;
     services = {WebDebugger.class})
 public class WebDebugger extends TruffleInstrument implements SuspendedCallback {
 
-  public static final String ID = "web-debugger";
+  static final String ID = "web-debugger";
+
+  public static WebDebugger find(final Engine engine) {
+    Instrument instrument = engine.getInstruments().get(ID);
+    if (instrument == null) {
+      throw new IllegalStateException(
+          "WebDebugger not properly installed into polyglot.Engine");
+    }
+
+    return instrument.lookup(WebDebugger.class);
+  }
 
   private FrontendConnector connector;
   private Instrumenter      instrumenter;

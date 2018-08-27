@@ -376,10 +376,8 @@ public final class VM {
 
     if (options.webDebuggerEnabled) {
       assert VmSettings.TRUFFLE_DEBUGGER_ENABLED && debugger != null;
-      Instrument webDebuggerInst = instruments.get(WebDebugger.ID);
-      webDebuggerInst.setEnabled(true);
 
-      webDebugger = webDebuggerInst.lookup(WebDebugger.class);
+      webDebugger = WebDebugger.find(engine);
       webDebugger.startServer(debugger, this);
     }
 
@@ -396,17 +394,13 @@ public final class VM {
 
     if (options.dynamicMetricsEnabled) {
       assert VmSettings.DYNAMIC_METRICS;
-      Instrument dynM = instruments.get(DynamicMetrics.ID);
-      dynM.setEnabled(true);
-      structuralProbe = dynM.lookup(StructuralProbe.class);
+      structuralProbe = DynamicMetrics.find(engine);
       assert structuralProbe != null : "Initialization of DynamicMetrics tool incomplete";
     }
 
     if (options.siCandidateIdentifierEnabled) {
       assert !options.dynamicMetricsEnabled : "Currently, DynamicMetrics and CandidateIdentifer are not compatible";
-      Instrument siCI = instruments.get(CandidateIdentifier.ID);
-      siCI.setEnabled(true);
-      structuralProbe = siCI.lookup(StructuralProbe.class);
+      structuralProbe = CandidateIdentifier.find(engine);
       assert structuralProbe != null : "Initialization of CandidateIdentifer tool incomplete";
     }
 
