@@ -49,10 +49,6 @@ public abstract class ExpressionNode extends SOMNode {
 
   protected ExpressionNode(final ExpressionNode wrapped) {}
 
-  public boolean assertIsStatement() {
-    return isTaggedWith(StatementTag.class);
-  }
-
   public void markAsRootExpression() {
     throw new UnsupportedOperationException();
   }
