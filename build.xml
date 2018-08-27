@@ -291,7 +291,7 @@
      </jacoco:coverage>
 
      <jacoco:coverage>
-        <java classname="som.VM" fork="true" failonerror="true">
+        <java classname="som.Launcher" fork="true" failonerror="true">
             <classpath refid="project.classpath" />
             <jvmarg value="-ea" />
             <jvmarg value="-esa" />
