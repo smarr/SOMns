@@ -1,5 +1,6 @@
 package som.interpreter;
 
+import java.io.File;
 import java.io.IOException;
 
 import com.oracle.truffle.api.CallTarget;
@@ -113,7 +114,12 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   @CompilationFinal private VM vm;
 
   public static Source getSyntheticSource(final String text, final String name) {
-    return Source.newBuilder(text).internal().name(name).mimeType(SomLanguage.MIME_TYPE)
+    return Source.newBuilder(LANG_ID, text, name).internal(true).mimeType(MIME_TYPE)
+                 .build();
+  }
+
+  public static Source getSource(final File file) throws IOException {
+    return Source.newBuilder(SomLanguage.LANG_ID, file.toURI().toURL()).mimeType(MIME_TYPE)
                  .build();
   }
 
