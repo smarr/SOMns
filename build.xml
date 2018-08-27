@@ -13,7 +13,9 @@
     <property name="graal.dir"   location="${lib.dir}/truffle/compiler" />
     <property name="truffle.dir" location="${lib.dir}/truffle/truffle" />
     <property name="sdk.dir"     location="${lib.dir}/truffle/sdk" />
+    <property name="tools.dir"   location="${lib.dir}/truffle/tools" />
     <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists" />
+    <property name="tools.build" location="${tools.dir}/mxbuild/dists" />
     <property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
     <property name="somns-deps.version" value="0.3.3" />
     <property name="checkstyle.version" value="8.11" />

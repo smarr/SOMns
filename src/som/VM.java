@@ -18,8 +18,7 @@ import com.oracle.truffle.api.vm.PolyglotEngine;
 import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
 import com.oracle.truffle.api.vm.PolyglotEngine.Value;
 import com.oracle.truffle.api.vm.PolyglotRuntime.Instrument;
-import com.oracle.truffle.tools.Profiler;
-import com.oracle.truffle.tools.ProfilerInstrument;
+import com.oracle.truffle.tools.profiler.CPUSampler;
 
 import bd.inlining.InlinableNodes;
 import coveralls.truffle.Coverage;
@@ -61,7 +60,7 @@ public final class VM {
 
   @CompilationFinal private StructuralProbe structuralProbe;
   @CompilationFinal private WebDebugger     webDebugger;
-  @CompilationFinal private Profiler        truffleProfiler;
+  @CompilationFinal private CPUSampler      truffleProfiler;
 
   private final ForkJoinPool actorPool;
   private final ForkJoinPool forkJoinPool;
@@ -366,15 +365,8 @@ public final class VM {
     Map<String, ? extends Instrument> instruments = engine.getRuntime().getInstruments();
 
     if (options.profilingEnabled) {
-      Instrument profiler = instruments.get(ProfilerInstrument.ID);
-      if (profiler == null) {
-        Output.errorPrintln("Truffle profiler not available. Might be a class path issue");
-      } else {
-        profiler.setEnabled(options.profilingEnabled);
-        truffleProfiler = Profiler.find(engine);
-        truffleProfiler.setCollecting(true);
-        truffleProfiler.setTiming(true);
-      }
+      truffleProfiler = CPUSampler.find(engine);
+      truffleProfiler.setCollecting(true);
     }
 
     Debugger debugger = null;
