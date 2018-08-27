@@ -9,6 +9,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.graalvm.polyglot.Engine;
+import org.graalvm.polyglot.Instrument;
+
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -99,7 +102,17 @@ import tools.language.StructuralProbe;
     services = {StructuralProbe.class})
 public class DynamicMetrics extends TruffleInstrument {
 
-  public static final String ID = "dym-dynamic-metrics";
+  static final String ID = "dym-dynamic-metrics";
+
+  public static StructuralProbe find(final Engine engine) {
+    Instrument instrument = engine.getInstruments().get(ID);
+    if (instrument == null) {
+      throw new IllegalStateException(
+          "DynamicMetrics not properly installed into polyglot.Engine");
+    }
+
+    return instrument.lookup(StructuralProbe.class);
+  }
 
   private int methodStackDepth;
   private int maxStackDepth;
