@@ -88,7 +88,7 @@ class StreamTests usingPlatform: platform testFramework: minitest = Value (
       cc close.
     )
 
-    public testReadCharacter = (
+   (*  public testReadCharacter = (
       | fp cc t |
       fp:: FilePath for: path + '/Text.t'.
       cc:: streams CharacterReadConverter on: fp readStream.
@@ -151,7 +151,7 @@ class StreamTests usingPlatform: platform testFramework: minitest = Value (
       1 to: 20 do: [ :i|
         assert: (cs next) = i.
       ].
-    )
+    ) *)
   ) : (
     TEST_CONTEXT = ()
   )
