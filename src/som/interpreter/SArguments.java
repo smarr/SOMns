@@ -70,12 +70,13 @@ public final class SArguments {
       final ShadowStackEntryLoad entryLoad,
       final VirtualFrame frame) {
     int argSize = (int) (size.executeEvaluated(args) + 1);
+    int defaultArgSize = argSize;
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       argSize++;
     }
     Object[] result = new Object[argSize];
     result[0] = receiver;
-    for (int i = 1; i < result.length; i++) {
+    for (int i = 1; i < defaultArgSize; i++) {
       result[i] = at.executeEvaluated(null, args, (long) i);
     }
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
