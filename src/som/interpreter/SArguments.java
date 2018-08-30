@@ -35,22 +35,35 @@ public final class SArguments {
   /**
    * Create a new array from an SArguments array that contains only the true
    * arguments and excludes the receiver. This is used for instance for
-   * #doesNotUnderstand (#dnu)
+   * #doesNotUnderstand (#dnu).
    */
   public static SImmutableArray getArgumentsWithoutReceiver(final Object[] arguments) {
-    if (arguments.length == 1) {
-      return new SImmutableArray(0, Classes.valueArrayClass);
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      if (arguments.length == 2) {
+        return new SImmutableArray(0, Classes.valueArrayClass);
+      }
+    } else {
+      if (arguments.length == 1) {
+        return new SImmutableArray(0, Classes.valueArrayClass);
+      }
     }
-
     Object[] argsArr = getPlainArgumentWithoutReceiver(arguments);
     return new SImmutableArray(argsArr, Classes.valueArrayClass);
   }
 
+  /**
+   * Create a new array and copy inside the arguments without the receiver.
+   * Used for FFI calls and DNUs.
+   */
   public static Object[] getPlainArgumentWithoutReceiver(final Object[] arguments) {
     int rcvrIdx = 0; // the code and magic numbers below are based on the following assumption
     assert RCVR_IDX == rcvrIdx;
     assert arguments.length >= 1; // <- that's the receiver
-    Object[] argsArr = new Object[arguments.length - 1];
+    int argsSize = arguments.length - 1;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      argsSize--;
+    }
+    Object[] argsArr = new Object[argsSize];
 
     System.arraycopy(arguments, 1, argsArr, 0, argsArr.length);
     return argsArr;
