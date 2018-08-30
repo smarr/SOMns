@@ -344,9 +344,7 @@ public final class VM {
     }
 
     if (options.coverageEnabled) {
-      Instrument coveralls = instruments.get(Coverage.ID);
-      coveralls.setEnabled(true);
-      Coverage cov = coveralls.lookup(Coverage.class);
+      Coverage cov = Coverage.find(env);
       try {
         cov.setOutputFile(options.coverageFile);
       } catch (IOException e) {
