@@ -17,7 +17,7 @@
     <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists" />
     <property name="tools.build" location="${tools.dir}/mxbuild/dists" />
     <property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
-    <property name="somns-deps.version" value="0.3.3" />
+    <property name="somns-deps.version" value="0.3.5" />
     <property name="checkstyle.version" value="8.11" />
     <property name="jacoco.version"     value="0.8.0" />
 
