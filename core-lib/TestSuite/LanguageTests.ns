@@ -311,7 +311,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       self assert: #foo equals: result selector.
     )
 
-   (* public testArguments = (
+    public testArguments = (
       | result |
       result:: self foo.
       self assert: 0 equals: result arguments size.
@@ -325,7 +325,7 @@ class LanguageTests usingPlatform: platform testFramework: minitest = Value (
       self assert: 1 equals: (result arguments at: 1).
       self assert: 2 equals: (result arguments at: 2).
       self assert: 3 equals: (result arguments at: 3).
-    ) *)
+    ) 
 
     public testRepeat = (
       | result |
