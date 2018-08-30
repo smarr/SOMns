@@ -233,7 +233,8 @@
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${classes.dir}" />
         <mkdir dir="${src_gen.dir}" />
-        <javac includeantruntime="false" srcdir="${src.dir}" destdir="${classes.dir}" debug="true">
+        <javac includeantruntime="false" srcdir="${src.dir}" destdir="${classes.dir}" debug="true"> <!-- for debugging: fork="true"  -->
+          <!-- for debugging: <compilerarg line="-J-Xdebug -J-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000" /> -->
           <classpath refid="project.classpath" />
           <compilerarg line="-s ${src_gen.dir}" />
           <compilerarg line="-XDignore.symbol.file" />
