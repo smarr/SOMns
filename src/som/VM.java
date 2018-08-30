@@ -36,6 +36,7 @@ import som.primitives.processes.ChannelPrimitives;
 import som.primitives.processes.ChannelPrimitives.ProcessThreadFactory;
 import som.primitives.threading.TaskThreads.ForkJoinThreadFactory;
 import som.primitives.threading.ThreadingModule;
+import som.vm.NotYetImplementedException;
 import som.vm.ObjectSystem;
 import som.vm.Primitives;
 import som.vm.VmOptions;
@@ -44,7 +45,6 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 import tools.concurrency.KomposTrace;
-import tools.concurrency.TracingActors;
 import tools.concurrency.TracingBackend;
 import tools.debugger.WebDebugger;
 import tools.debugger.session.Breakpoints;
@@ -53,7 +53,6 @@ import tools.language.StructuralProbe;
 import tools.superinstructions.CandidateIdentifier;
 
 
-//@SuppressWarnings("deprecation")
 public final class VM {
 
   @CompilationFinal private StructuralProbe structuralProbe;
@@ -260,7 +259,8 @@ public final class VM {
   @TruffleBoundary
   public void shutdown() {
     if (truffleProfiler != null) {
-      truffleProfiler.printHistograms(System.err);
+      throw new NotYetImplementedException();
+      // truffleProfiler.printHistograms(System.err);
     }
 
     shutdownPools();
