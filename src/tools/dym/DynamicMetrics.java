@@ -13,8 +13,10 @@ import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Instrument;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.InstrumentInfo;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
@@ -103,6 +105,16 @@ import tools.language.StructuralProbe;
 public class DynamicMetrics extends TruffleInstrument {
 
   static final String ID = "dym-dynamic-metrics";
+
+  public static StructuralProbe find(final TruffleLanguage.Env env) {
+    InstrumentInfo instrument = env.getInstruments().get(ID);
+    if (instrument == null) {
+      throw new IllegalStateException(
+          "DynamicMetrics not properly installed into polyglot.Engine");
+    }
+
+    return env.lookup(instrument, StructuralProbe.class);
+  }
 
   public static StructuralProbe find(final Engine engine) {
     Instrument instrument = engine.getInstruments().get(ID);

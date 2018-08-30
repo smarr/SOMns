@@ -170,7 +170,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
     vm = new VM(options);
 
     if (!options.isTestExecution()) {
-      vm.setupInstruments();
+      vm.setupInstruments(env);
     }
 
     return vm;
