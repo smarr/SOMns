@@ -12,6 +12,7 @@ import org.graalvm.polyglot.Engine;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.TruffleLanguage.Env;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.GraphPrintVisitor;
@@ -322,7 +323,7 @@ public final class VM {
    * We only do this when we execute an application.
    * We don't setup the instruments for BasicInterpreterTests.
    */
-  public void setupInstruments() {
+  public void setupInstruments(final Env env) {
     Engine engine = Context.getCurrent().getEngine();
 
     if (options.profilingEnabled) {
@@ -332,13 +333,13 @@ public final class VM {
 
     Debugger debugger = null;
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      debugger = Debugger.find(engine);
+      debugger = Debugger.find(env);
     }
 
     if (options.webDebuggerEnabled) {
       assert VmSettings.TRUFFLE_DEBUGGER_ENABLED && debugger != null;
 
-      webDebugger = WebDebugger.find(engine);
+      webDebugger = WebDebugger.find(env);
       webDebugger.startServer(debugger, this);
     }
 
@@ -361,7 +362,7 @@ public final class VM {
 
     if (options.siCandidateIdentifierEnabled) {
       assert !options.dynamicMetricsEnabled : "Currently, DynamicMetrics and CandidateIdentifer are not compatible";
-      structuralProbe = CandidateIdentifier.find(engine);
+      structuralProbe = CandidateIdentifier.find(env);
       assert structuralProbe != null : "Initialization of CandidateIdentifer tool incomplete";
     }
   }

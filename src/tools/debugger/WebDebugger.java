@@ -11,6 +11,8 @@ import org.graalvm.polyglot.Instrument;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.InstrumentInfo;
+import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.SuspendedCallback;
 import com.oracle.truffle.api.debug.SuspendedEvent;
@@ -61,6 +63,16 @@ import tools.debugger.session.SectionBreakpoint;
 public class WebDebugger extends TruffleInstrument implements SuspendedCallback {
 
   static final String ID = "web-debugger";
+
+  public static WebDebugger find(final TruffleLanguage.Env env) {
+    InstrumentInfo instrument = env.getInstruments().get(ID);
+    if (instrument == null) {
+      throw new IllegalStateException(
+          "WebDebugger not properly installed into polyglot.Engine");
+    }
+
+    return env.lookup(instrument, WebDebugger.class);
+  }
 
   public static WebDebugger find(final Engine engine) {
     Instrument instrument = engine.getInstruments().get(ID);
