@@ -150,7 +150,7 @@ export class TestConnection extends VmConnection {
               reject(new Error("SOMns failed to starting WebSocket and/or HTTP Server. StdOut: " + dataStr + " StdErr: " + stdErr));
             });
           });
-          this.somProc.kill();
+          this.somProc.kill("SIGKILL");
         }
       });
     });
@@ -161,7 +161,7 @@ export class TestConnection extends VmConnection {
     if (!this.closed) {
       this.closed = true;
       this.disconnect();
-      this.somProc.kill();
+      this.somProc.kill("SIGKILL");
     }
 
     done();
