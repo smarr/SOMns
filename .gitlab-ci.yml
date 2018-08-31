@@ -8,6 +8,7 @@ variables:
   JVMCI_BIN: /home/gitlab-runner/.local/graal-core/bin/java
   JVMCI_VERSION_CHECK: ignore
   ECLIPSE_EXE: /home/gitlab-runner/.local/eclipse/eclipse
+  JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
 
 before_script:
   - git submodule update --init
