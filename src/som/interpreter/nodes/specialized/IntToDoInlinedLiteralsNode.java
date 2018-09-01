@@ -41,6 +41,7 @@ public abstract class IntToDoInlinedLiteralsNode extends ExprWithTagsNode {
 
   public abstract ExpressionNode getTo();
 
+  @SuppressWarnings("deprecation") // see LocalVariableNode about descriptor and slots
   public IntToDoInlinedLiteralsNode(final ExpressionNode originalBody,
       final ExpressionNode body, final Local loopIndex) {
     this.body = body;
