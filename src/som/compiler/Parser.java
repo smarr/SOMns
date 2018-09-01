@@ -128,7 +128,9 @@ public class Parser {
   protected Symbol sym;
   private String   text;
   private Symbol   nextSym;
-  private String   nextText;
+
+  @SuppressWarnings("unused") // for debugging
+  private String nextText;
 
   private SourceSection            lastMethodsSourceSection;
   private final Set<SourceSection> syntaxAnnotations;
