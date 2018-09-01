@@ -164,8 +164,7 @@ public final class VM {
     }
   }
 
-  private static final Object dynamicInstrumentationLock = new Object();
-
+  @SuppressWarnings("deprecation")
   private static void outputToIGV(final Method method) {
     GraphPrintVisitor graphPrinter = new GraphPrintVisitor();
 
