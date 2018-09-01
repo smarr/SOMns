@@ -1,8 +1,5 @@
 package som.vm;
 
-import java.util.Arrays;
-import java.util.List;
-
 import bd.settings.Settings;
 
 
@@ -55,11 +52,6 @@ public class VmSettings implements Settings {
     KOMPOS_TRACING = TRUFFLE_DEBUGGER_ENABLED; // REPLAY;
     DISABLE_TRACE_FILE = getBool("som.disableTraceFile", false) || REPLAY;
     TRACE_SMALL_IDS = getBool("som.smallIds", false);
-
-    String atConfig = System.getProperty("som.actorTracingCfg", "");
-    List<String> al = Arrays.asList(atConfig.split(":"));
-    boolean filter =
-        (al.size() > 0 && !atConfig.isEmpty()) || getBool("som.actorTracing", false);
 
     ACTOR_TRACING = getBool("som.actorTracing", false);
 
