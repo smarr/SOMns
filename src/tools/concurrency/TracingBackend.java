@@ -245,6 +245,9 @@ public class TracingBackend {
           runningThreads -= 1;
           result[i] = null;
           t.getBuffer().swapStorage();
+        } else if (t.swapTracingBufferIfThreadSuspendedInDebugger()) {
+          runningThreads -= 1;
+          result[i] = null;
         }
       }
     }
