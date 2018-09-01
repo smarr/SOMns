@@ -475,6 +475,7 @@ public class DynamicMetrics extends TruffleInstrument {
     return allSourceSections;
   }
 
+  @SuppressWarnings("deprecation")
   private void outputAllTruffleMethodsToIGV() {
     GraphPrintVisitor graphPrinter = new GraphPrintVisitor();
 
