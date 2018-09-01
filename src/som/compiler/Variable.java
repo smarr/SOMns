@@ -298,10 +298,15 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
     }
 
     @Override
+    @SuppressWarnings("deprecation") // we need to sort this out with issue #240, and decide
+                                     // what we want here
     public Variable split(final FrameDescriptor descriptor) {
       Internal newInternal = new Internal(name);
-      assert slot.getKind() == FrameSlotKind.Object : "We only have the on stack marker currently, so, we expect those not to specialize";
-      newInternal.init(descriptor.addFrameSlot(newInternal, slot.getKind()));
+      assert slot.getFrameDescriptor().getFrameSlotKind(
+          slot) == FrameSlotKind.Object : "We only have the on stack marker currently, so, we expect those not to specialize";
+      newInternal.init(
+          descriptor.addFrameSlot(newInternal,
+              slot.getFrameDescriptor().getFrameSlotKind(slot)));
       return newInternal;
     }
 
