@@ -10,6 +10,8 @@ import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.nodes.nary.UnaryExpressionNode.UnarySystemOperation;
+import som.primitives.TimerPrim;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject.SImmutableObject;
 
@@ -62,10 +64,11 @@ public final class ActorClasses {
 
   @GenerateNodeFactory
   @Primitive(primitive = "actorsModule:")
-  public abstract static class SetModulePrim extends UnaryExpressionNode {
+  public abstract static class SetModulePrim extends UnarySystemOperation {
     @Specialization
     public final SImmutableObject setClass(final SImmutableObject value) {
       ActorModule = value;
+      TimerPrim.initializeTimer(vm);
       return value;
     }
   }
