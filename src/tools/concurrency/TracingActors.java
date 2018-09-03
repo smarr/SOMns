@@ -245,11 +245,12 @@ public class TracingActors {
 
       if (msg instanceof PromiseMessage) {
         Output.println("PromiseMessage " + msg.getSelector()
-            + " from " + msg.getSender().getId() + " PID "
+            + " from " + ((TracingActor) msg.getSender()).getActorId() + " PID "
             + ((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
       } else {
         Output.println(
-            "Message" + msg.getSelector() + " from " + msg.getSender().getId());
+            "Message" + msg.getSelector() + " from "
+                + ((TracingActor) msg.getSender()).getActorId());
       }
     }
 
@@ -282,13 +283,13 @@ public class TracingActors {
 
       MessageRecord other = expectedMessages.peek();
 
-      if (msg instanceof PromiseMessage != other instanceof TraceParser.PromiseMessageRecord) {
+      if ((msg instanceof PromiseMessage) != (other instanceof TraceParser.PromiseMessageRecord)) {
         return false;
       }
 
       // handle promise messages
       if (msg instanceof PromiseMessage
-          && ((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor() != ((TraceParser.PromiseMessageRecord) other).pId) {
+          && (((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor() != ((TraceParser.PromiseMessageRecord) other).pId)) {
         return false;
       }
 

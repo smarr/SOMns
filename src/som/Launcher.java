@@ -38,8 +38,8 @@ public final class Launcher {
 
     TracingBackend.waitForTrace();
 
-    if (ReplayActor.printMissingMessages() && exitCode == 0) {
-      exitCode = EXIT_WITH_ERROR;
+    if (exitCode != 0) {
+      ReplayActor.printMissingMessages();
     }
 
     if (VmSettings.MEMORY_TRACING) {
