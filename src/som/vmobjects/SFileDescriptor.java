@@ -7,7 +7,6 @@ import java.io.RandomAccessFile;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.profiles.BranchProfile;
-import com.oracle.truffle.api.profiles.ValueProfile;
 
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
@@ -18,8 +17,6 @@ import som.vmobjects.SArray.SMutableArray;
 
 
 public class SFileDescriptor extends SObjectWithClass {
-  /** Data buffers in this file descriptor are expected to contain only integers. */
-  private static final ValueProfile longStorageType = ValueProfile.createClassProfile();
 
   @CompilationFinal public static SClass fileDescriptorClass;
 
@@ -86,7 +83,7 @@ public class SFileDescriptor extends SObjectWithClass {
       return 0;
     }
 
-    long[] storage = buffer.getLongStorage(longStorageType);
+    long[] storage = buffer.getLongStorage();
     byte[] buff = new byte[bufferSize];
     int bytes = 0;
 
@@ -124,7 +121,7 @@ public class SFileDescriptor extends SObjectWithClass {
       return;
     }
 
-    long[] storage = buffer.getLongStorage(longStorageType);
+    long[] storage = buffer.getLongStorage();
     byte[] buff = new byte[bufferSize];
 
     for (int i = 0; i < bufferSize; i++) {
