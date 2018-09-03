@@ -8,7 +8,6 @@ import com.oracle.truffle.api.nodes.Node;
 
 import som.interop.ValueConversion.ToSomConversion;
 import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
-import som.interpreter.SomLanguage;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
@@ -16,7 +15,7 @@ import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
 
 
-@MessageResolution(receiverType = SBlock.class, language = SomLanguage.class)
+@MessageResolution(receiverType = SBlock.class)
 public class SBlockInteropMessageResolution {
 
   @Resolve(message = "EXECUTE")

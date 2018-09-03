@@ -10,7 +10,9 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
 
 import som.compiler.MethodBuilder;
+import som.interpreter.actors.ResolvePromiseNode;
 import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.SOMNode;
 import som.primitives.ObjectPrims.HaltPrim;
 import som.vmobjects.SInvokable;
 
@@ -37,7 +39,7 @@ public final class Primitive extends Invokable {
     assert getFrameDescriptor().getSize() == 0;
     return new Primitive(name, NodeUtil.cloneNode(uninitializedBody),
         getFrameDescriptor(), uninitializedBody, isAtomic,
-        getLanguage(SomLanguage.class));
+        SomLanguage.getLanguage(this));
   }
 
   @Override
@@ -47,13 +49,17 @@ public final class Primitive extends Invokable {
     ExpressionNode uninitAtomic = NodeUtil.cloneNode(atomic);
 
     return new Primitive(name, atomic, getFrameDescriptor(), uninitAtomic, true,
-        getLanguage(SomLanguage.class));
+        SomLanguage.getLanguage(this));
   }
 
   @Override
   public String toString() {
-    return "Primitive " + expressionOrSequence.getClass().getSimpleName() + "@"
-        + Integer.toHexString(hashCode());
+    ExpressionNode n = SOMNode.unwrapIfNecessary(expressionOrSequence);
+    String nodeType = n.getClass().getSimpleName();
+    if (n != expressionOrSequence) {
+      nodeType += " (wrapped)"; // indicate that it is wrapped
+    }
+    return "Primitive " + nodeType + "@" + Integer.toHexString(hashCode());
   }
 
   @Override
@@ -67,7 +73,8 @@ public final class Primitive extends Invokable {
    */
   @Override
   protected boolean isInstrumentable() {
-    return expressionOrSequence instanceof HaltPrim;
+    return expressionOrSequence instanceof HaltPrim
+        || expressionOrSequence instanceof ResolvePromiseNode;
   }
 
   private static Method getNextMethodOnStack() {

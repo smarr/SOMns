@@ -4,6 +4,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
@@ -63,15 +64,15 @@ public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
   }
 
   @Specialization(guards = "isValueArrayClass(valueArrayClass)")
-  public SImmutableArray create(final SClass valueArrayClass, final long size,
-      final SBlock block) {
+  public SImmutableArray create(final VirtualFrame frame, final SClass valueArrayClass,
+      final long size, final SBlock block) {
     if (size <= 0) {
       return new SImmutableArray(0, valueArrayClass);
     }
 
     try {
       Object newStorage = ArraySetAllStrategy.evaluateFirstDetermineStorageAndEvaluateRest(
-          block, size, this.block, isValue, notAValue);
+          frame, block, size, this.block, isValue, notAValue);
       return new SImmutableArray(newStorage, valueArrayClass);
     } finally {
       if (CompilerDirectives.inInterpreter()) {

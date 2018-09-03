@@ -27,7 +27,8 @@ import java.util.Arrays;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.frame.FrameSlot;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -55,6 +56,13 @@ public abstract class SOMNode extends Node implements ScopeReference, WithSource
   @Override
   public SourceSection getSourceSection() {
     return sourceSection;
+  }
+
+  /**
+   * A work around for restrictions in Truffle's guard DSL.
+   */
+  public SOMNode getThis() {
+    return this;
   }
 
   /**
@@ -121,12 +129,7 @@ public abstract class SOMNode extends Node implements ScopeReference, WithSource
     }
   }
 
-  @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
-    if (tag == Tags.AnyNode.class) {
-      return true;
-    } else {
-      return super.isTaggedWith(tag);
-    }
+  public boolean hasTag(final Class<? extends Tag> tag) {
+    return tag == Tags.AnyNode.class;
   }
 }

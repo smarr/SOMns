@@ -12,6 +12,8 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.interop.ForeignAccess;
+import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.Source;
@@ -20,6 +22,8 @@ import com.oracle.truffle.api.source.SourceSection;
 import bd.basic.nodes.DummyParent;
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.interop.MixinDefinitionInteropMessagesForeign;
+import som.interop.SomInteropObject;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
@@ -61,7 +65,7 @@ import tools.SourceCoordinate;
  * at runtime, which then also has the super class and mixins resolved to be
  * used to instantiate {@link SClass} objects.
  */
-public final class MixinDefinition {
+public final class MixinDefinition implements SomInteropObject {
   private final SSymbol       name;
   private final SourceSection nameSection;
 
@@ -100,8 +104,8 @@ public final class MixinDefinition {
     cannotBeValues =
         ExceptionSignalingNode.createNode(Symbols.TransferObjectsCannotBeValues, ss);
 
-    new DummyParent(notAValue);
-    new DummyParent(cannotBeValues);
+    new DummyParent(null, notAValue);
+    new DummyParent(null, cannotBeValues);
   }
 
   public MixinDefinition(final SSymbol name, final SourceSection nameSection,
@@ -833,5 +837,17 @@ public final class MixinDefinition {
     clone.adaptFactoryMethods(adaptedScope, appliesTo);
     clone.adaptInvokableDispatchables(adaptedScope, appliesTo);
     return clone;
+  }
+
+  @Override
+  public ForeignAccess getForeignAccess() {
+    return MixinDefinitionInteropMessagesForeign.ACCESS;
+  }
+
+  /**
+   * Used by Truffle interop.
+   */
+  public static boolean isInstance(final TruffleObject obj) {
+    return obj instanceof MixinDefinition;
   }
 }

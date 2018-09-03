@@ -3,6 +3,7 @@ package som.primitives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.nodes.ISpecialSend;
@@ -39,11 +40,11 @@ public abstract class NewObjectPrim extends UnaryExpressionNode implements ISpec
   }
 
   @Override
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
     if (tag == NewObject.class) {
       return true;
     } else {
-      return super.isTaggedWithIgnoringEagerness(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
   }
 

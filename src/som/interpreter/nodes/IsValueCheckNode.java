@@ -1,7 +1,6 @@
 package som.interpreter.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -71,7 +70,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
         // in case there is a wrapper, get rid of it first
         Node wrapper = getParent();
         wrapper.replace(self);
-        VM.insertInstrumentationWrapper(self);
+        notifyInserted(self);
       } else {
         replace(self);
       }

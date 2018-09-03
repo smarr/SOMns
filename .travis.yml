@@ -22,35 +22,22 @@ matrix:
 
     - os:   linux
       dist: trusty
-      jdk:  oraclejdk9
+      jdk:  openjdk11
       env:  TASK=unit-tests
-
-    - os:   linux
-      dist: trusty
-      jdk:  oraclejdk8
-      env:  TASK=unit-tests JDK=10
-      before_install: |
-        mkdir jdk10
-        cd jdk10
-        wget https://download.java.net/java/GA/jdk10/10/binaries/openjdk-10_linux-x64_bin.tar.gz
-        tar -xzf openjdk-10_linux-x64_bin.tar.gz
-        export JAVA_HOME=`pwd`/jdk-10
-        export PATH=${JAVA_HOME}/bin:$PATH
-        cd ..
 
     - os: osx
-      osx_image: xcode9.2
+      osx_image: xcode10
       language: generic
       env:  TASK=unit-tests
-      before_install: |
-        brew update
-        brew cask reinstall java
-        brew install ant
-        export JAVA_HOME=`/usr/libexec/java_home`
+      # before_install: |
+      #   brew update
+      #   ## the following is a hack to be able to install java
+      #   find "$(brew --prefix)/Caskroom/"*'/.metadata' -type f -name '*.rb' | xargs grep 'EOS.undent' --files-with-matches | xargs sed -i '' 's/EOS.undent/EOS/'
+      #   brew cask reinstall java
+      #   brew install ant
+      #   export JAVA_HOME=`/usr/libexec/java_home`
 
   allow_failures:
-    - env: TASK=unit-tests JDK=10
-    - jdk: oraclejdk9
     - os: osx
 
 install: |

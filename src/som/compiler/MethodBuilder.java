@@ -266,7 +266,8 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
       final ExpressionNode body, final AccessModifier accessModifier,
       final SourceSection sourceSection) {
     MethodScope splitScope = scope.split();
-    ExpressionNode splitBody = ScopeAdaptationVisitor.adapt(body, splitScope, 0, false);
+    ExpressionNode splitBody = ScopeAdaptationVisitor.adapt(body, splitScope, 0, false,
+        language);
     Method truffleMeth = assembleInvokable(splitBody, splitScope, sourceSection);
 
     // TODO: not sure whether it is safe to use the embeddedBlockMethods here,

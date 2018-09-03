@@ -5,12 +5,12 @@ import java.net.URISyntaxException;
 import java.util.Objects;
 import java.util.Set;
 
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.vm.Symbols;
 import som.vmobjects.SSymbol;
-import tools.debugger.Tags;
 
 
 /**
@@ -73,6 +73,12 @@ public class SourceCoordinate {
           // sc.charIndex == charIndex &&
           sc.charLength == charLength;
     }
+
+    @Override
+    public String toString() {
+      return "SrcCoord(line: " + startLine + ", col: " + startColumn + ", charlength:"
+          + charLength + ", uri: " + uri.getPath() + ")";
+    }
   }
 
   @SuppressWarnings("unused")
@@ -92,11 +98,11 @@ public class SourceCoordinate {
   }
 
   public static TaggedSourceCoordinate create(final SourceSection section,
-      final Set<Class<? extends Tags>> tags) {
+      final Set<Class<? extends Tag>> tags) {
     String[] strTags = new String[tags.size()];
 
     int i = 0;
-    for (Class<? extends Tags> tagClass : tags) {
+    for (Class<? extends Tag> tagClass : tags) {
       strTags[i] = tagClass.getSimpleName();
       i += 1;
     }

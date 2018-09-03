@@ -1,9 +1,9 @@
 package tools.debugger.entities;
 
 import com.google.gson.annotations.SerializedName;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import som.vm.NotYetImplementedException;
-import tools.concurrency.Tags;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
@@ -231,7 +231,7 @@ public enum SteppingType {
    * Tag to identify the source sections at which this step operation makes sense.
    * If no tags are given, it is assumed the operation is always valid.
    */
-  public final Class<? extends Tags>[] applicableTo;
+  public final Class<? extends Tag>[] applicableTo;
 
   /**
    * Stepping operation is only available when in the dynamic scope of the given entity.
@@ -240,17 +240,17 @@ public enum SteppingType {
   public final EntityType[] inScope;
 
   SteppingType(final String name, final String label, final Group group, final String icon,
-      final Class<? extends Tags>[] applicableTo) {
+      final Class<? extends Tag>[] applicableTo) {
     this(name, label, group, icon, applicableTo, null, null);
   }
 
   SteppingType(final String name, final String label, final Group group, final String icon,
-      final Class<? extends Tags>[] applicableTo, final ActivityType[] forActivities) {
+      final Class<? extends Tag>[] applicableTo, final ActivityType[] forActivities) {
     this(name, label, group, icon, applicableTo, forActivities, null);
   }
 
   SteppingType(final String name, final String label, final Group group, final String icon,
-      final Class<? extends Tags>[] applicableTo, final ActivityType[] forActivities,
+      final Class<? extends Tag>[] applicableTo, final ActivityType[] forActivities,
       final EntityType[] inScope) {
     this.name = name;
     this.label = label;

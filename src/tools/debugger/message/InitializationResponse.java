@@ -1,6 +1,7 @@
 package tools.debugger.message;
 
-import tools.concurrency.Tags;
+import com.oracle.truffle.api.instrumentation.Tag;
+
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.DynamicScopeType;
@@ -84,7 +85,7 @@ public final class InitializationResponse extends OutgoingMessage {
     }
   }
 
-  private static String[] tagsToStrings(final Class<? extends Tags>[] tags) {
+  private static String[] tagsToStrings(final Class<? extends Tag>[] tags) {
     if (tags == null) {
       return null;
     }

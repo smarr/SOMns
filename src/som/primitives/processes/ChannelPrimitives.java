@@ -9,6 +9,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.Primitive;
 import som.VM;
@@ -158,7 +159,7 @@ public abstract class ChannelPrimitives {
     protected void beforeExec(final SInvokable disp) {
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRootNode) {
         WebDebugger dbg = SomLanguage.getVM(disp.getInvokable()).getWebDebugger();
-        dbg.prepareSteppingUntilNextRootNode();
+        dbg.prepareSteppingUntilNextRootNode(Thread.currentThread());
       }
 
       KomposTrace.currentActivity(this);
@@ -227,11 +228,11 @@ public abstract class ChannelPrimitives {
     }
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == ChannelRead.class || tag == ExpressionBreakpoint.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
   }
@@ -262,7 +263,7 @@ public abstract class ChannelPrimitives {
     @Specialization
     public final Object write(final VirtualFrame frame, final SChannelOutput out,
         final Object val) {
-      if (!isVal.executeEvaluated(val)) {
+      if (!isVal.executeBoolean(frame, val)) {
         notAValue.signal(val);
       }
       try {
@@ -278,11 +279,11 @@ public abstract class ChannelPrimitives {
     }
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == ChannelWrite.class || tag == ExpressionBreakpoint.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
   }

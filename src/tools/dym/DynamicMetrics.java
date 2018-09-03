@@ -9,17 +9,24 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.graalvm.polyglot.Engine;
+import org.graalvm.polyglot.Instrument;
+
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.InstrumentInfo;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
+import com.oracle.truffle.api.instrumentation.InstrumentableNode;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter.Builder;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.api.nodes.GraphPrintVisitor;
@@ -36,6 +43,7 @@ import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable;
 import tools.debugger.Tags.LiteralTag;
+import tools.dym.Tags.ArgumentExpr;
 import tools.dym.Tags.BasicPrimitiveOperation;
 import tools.dym.Tags.CachedClosureInvoke;
 import tools.dym.Tags.CachedVirtualInvoke;
@@ -52,7 +60,6 @@ import tools.dym.Tags.LoopNode;
 import tools.dym.Tags.NewArray;
 import tools.dym.Tags.NewObject;
 import tools.dym.Tags.OpClosureApplication;
-import tools.dym.Tags.PrimitiveArgument;
 import tools.dym.Tags.VirtualInvoke;
 import tools.dym.Tags.VirtualInvokeReceiver;
 import tools.dym.nodes.AllocationProfilingNode;
@@ -92,12 +99,32 @@ import tools.language.StructuralProbe;
  * - designed for single-threaded use only
  * - designed for use in interpreted mode only
  */
-@SuppressWarnings("deprecation")
+// @SuppressWarnings("deprecation")
 @Registration(name = "DynamicMetrics", id = DynamicMetrics.ID, version = "0.1",
     services = {StructuralProbe.class})
 public class DynamicMetrics extends TruffleInstrument {
 
-  public static final String ID = "dym-dynamic-metrics";
+  static final String ID = "dym-dynamic-metrics";
+
+  public static StructuralProbe find(final TruffleLanguage.Env env) {
+    InstrumentInfo instrument = env.getInstruments().get(ID);
+    if (instrument == null) {
+      throw new IllegalStateException(
+          "DynamicMetrics not properly installed into polyglot.Engine");
+    }
+
+    return env.lookup(instrument, StructuralProbe.class);
+  }
+
+  public static StructuralProbe find(final Engine engine) {
+    Instrument instrument = engine.getInstruments().get(ID);
+    if (instrument == null) {
+      throw new IllegalStateException(
+          "DynamicMetrics not properly installed into polyglot.Engine");
+    }
+
+    return instrument.lookup(StructuralProbe.class);
+  }
 
   private int methodStackDepth;
   private int maxStackDepth;
@@ -127,9 +154,11 @@ public class DynamicMetrics extends TruffleInstrument {
   @CompilationFinal private static Instrumenter instrumenter; // TODO: this is one of those
                                                               // evil hacks
 
-  public static boolean isTaggedWith(final Node node, final Class<?> tag) {
-    assert instrumenter != null : "Initialization order/dependencies?";
-    return instrumenter.isTaggedWith(node, tag);
+  public static boolean hasTag(final Node node, final Class<? extends Tag> tag) {
+    if (node instanceof InstrumentableNode) {
+      return ((InstrumentableNode) node).hasTag(tag);
+    }
+    return false;
   }
 
   public DynamicMetrics() {
@@ -191,14 +220,14 @@ public class DynamicMetrics extends TruffleInstrument {
       return nCtor.apply(p);
     };
 
-    instrumenter.attachFactory(filters.build(), factory);
+    instrumenter.attachExecutionEventFactory(filters.build(), factory);
     return factory;
   }
 
   private void addRootTagInstrumentation(final Instrumenter instrumenter) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(RootTag.class);
-    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+    instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
       RootNode root = ctx.getInstrumentedNode().getRootNode();
       assert root instanceof Invokable : "TODO: make language independent";
       InvocationProfile p = methodInvocationCounter.computeIfAbsent(
@@ -239,16 +268,16 @@ public class DynamicMetrics extends TruffleInstrument {
       return new OperationProfilingNode(p, ctx);
     };
 
-    instrumenter.attachFactory(filters.build(), primExpFactory);
+    instrumenter.attachExecutionEventFactory(filters.build(), primExpFactory);
     return primExpFactory;
   }
 
   private void addSubexpressionInstrumentation(final Instrumenter instrumenter,
       final ExecutionEventNodeFactory factory) {
     Builder filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(PrimitiveArgument.class);
+    filters.tagIs(ArgumentExpr.class);
 
-    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+    instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findDirectParentEventNode(factory);
 
       if (parent == null) {
@@ -266,7 +295,7 @@ public class DynamicMetrics extends TruffleInstrument {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(VirtualInvokeReceiver.class);
 
-    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+    instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findDirectParentEventNode(virtInvokeFactory);
 
       @SuppressWarnings("unchecked")
@@ -281,7 +310,7 @@ public class DynamicMetrics extends TruffleInstrument {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(CachedVirtualInvoke.class);
 
-    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+    instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findParentEventNode(virtInvokeFactory);
       InstrumentableDirectCallNode disp =
           (InstrumentableDirectCallNode) ctx.getInstrumentedNode();
@@ -303,7 +332,7 @@ public class DynamicMetrics extends TruffleInstrument {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(CachedClosureInvoke.class);
 
-    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+    instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findParentEventNode(factory);
       InstrumentableBlockApplyNode disp =
           (InstrumentableBlockApplyNode) ctx.getInstrumentedNode();
@@ -399,7 +428,7 @@ public class DynamicMetrics extends TruffleInstrument {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(LoopBody.class);
 
-    instrumenter.attachFactory(filters.build(), (final EventContext ctx) -> {
+    instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findDirectParentEventNode(loopProfileFactory);
       assert parent != null : "Direct parent does not seem to be set up properly with event node and/or wrapping";
       LoopProfilingNode p = (LoopProfilingNode) parent;
@@ -446,6 +475,7 @@ public class DynamicMetrics extends TruffleInstrument {
     return allSourceSections;
   }
 
+  @SuppressWarnings("deprecation")
   private void outputAllTruffleMethodsToIGV() {
     GraphPrintVisitor graphPrinter = new GraphPrintVisitor();
 

@@ -2,10 +2,9 @@ package som.interpreter.nodes.nary;
 
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.Node;
 
-import som.VM;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
@@ -29,11 +28,11 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitiveNode {
   }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  public boolean hasTag(final Class<? extends Tag> tag) {
     assert !(primitive instanceof WrapperNode) : "primitive can't be WrapperNodes to avoid double wrapping. It is: "
         + primitive.getClass().getSimpleName() + " and contains a "
         + ((WrapperNode) primitive).getDelegateNode().getClass().getSimpleName();
-    return primitive.isTaggedWithIgnoringEagerness(tag);
+    return primitive.hasTagIgnoringEagerness(tag);
   }
 
   @Override
@@ -57,8 +56,8 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitiveNode {
   }
 
   @Override
-  public void markAsPrimitiveArgument() {
-    primitive.markAsPrimitiveArgument();
+  public void markAsArgument() {
+    primitive.markAsArgument();
   }
 
   @Override
@@ -108,14 +107,10 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitiveNode {
   }
 
   private GenericMessageSendNode makeGenericSend() {
-    VM.insertInstrumentationWrapper(this);
-
     GenericMessageSendNode node = MessageSendNode.createGeneric(selector,
         new ExpressionNode[] {receiver, argument}, getSourceSection());
     replace(node);
-    VM.insertInstrumentationWrapper(node);
-    VM.insertInstrumentationWrapper(receiver);
-    VM.insertInstrumentationWrapper(argument);
+    notifyInserted(node);
     return node;
   }
 

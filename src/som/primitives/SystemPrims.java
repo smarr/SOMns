@@ -3,6 +3,7 @@ package som.primitives;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -146,7 +147,7 @@ public final class SystemPrims {
     public final Object load(final String filename, final SObjectWithClass moduleObj) {
       String path = moduleObj.getSOMClass().getMixinDefinition().getSourceSection().getSource()
                              .getPath();
-      File file = new File(path);
+      File file = new File(URI.create(path).getPath());
 
       return loadModule(vm, file.getParent() + File.separator + filename, ioException);
     }

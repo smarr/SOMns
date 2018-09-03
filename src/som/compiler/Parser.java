@@ -74,6 +74,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -105,7 +106,6 @@ import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
-import tools.debugger.Tags;
 import tools.debugger.Tags.ArgumentTag;
 import tools.debugger.Tags.CommentTag;
 import tools.debugger.Tags.DelimiterClosingTag;
@@ -128,7 +128,9 @@ public class Parser {
   protected Symbol sym;
   private String   text;
   private Symbol   nextSym;
-  private String   nextText;
+
+  @SuppressWarnings("unused") // for debugging
+  private String nextText;
 
   private SourceSection            lastMethodsSourceSection;
   private final Set<SourceSection> syntaxAnnotations;
@@ -742,7 +744,7 @@ public class Parser {
   }
 
   private boolean acceptIdentifier(final String identifier,
-      final Class<? extends Tags> tag) {
+      final Class<? extends Tag> tag) {
     if (sym == Identifier && identifier.equals(text)) {
       accept(Identifier, tag);
       return true;
@@ -750,7 +752,7 @@ public class Parser {
     return false;
   }
 
-  private boolean accept(final Symbol s, final Class<? extends Tags> tag) {
+  private boolean accept(final Symbol s, final Class<? extends Tag> tag) {
     if (sym == s) {
       SourceCoordinate coord = tag == null ? null : getCoordinate();
       getSymbolFromLexer();
@@ -762,7 +764,7 @@ public class Parser {
     return false;
   }
 
-  private boolean acceptOneOf(final Symbol[] ss, final Class<? extends Tags> tag) {
+  private boolean acceptOneOf(final Symbol[] ss, final Class<? extends Tag> tag) {
     if (symIn(ss)) {
       SourceCoordinate coord = tag == null ? null : getCoordinate();
       getSymbolFromLexer();
@@ -775,7 +777,7 @@ public class Parser {
   }
 
   private void expectIdentifier(final String identifier, final String msg,
-      final Class<? extends Tags> tag) throws ParseError {
+      final Class<? extends Tag> tag) throws ParseError {
     if (acceptIdentifier(identifier, tag)) {
       return;
     }
@@ -784,13 +786,13 @@ public class Parser {
   }
 
   private void expectIdentifier(final String identifier,
-      final Class<? extends Tags> tag) throws ParseError {
+      final Class<? extends Tag> tag) throws ParseError {
     expectIdentifier(identifier, "Unexpected token. Expected '" + identifier +
         "', but found %(found)s", tag);
   }
 
   private void expect(final Symbol s, final String msg,
-      final Class<? extends Tags> tag) throws ParseError {
+      final Class<? extends Tag> tag) throws ParseError {
     if (accept(s, tag)) {
       return;
     }
@@ -798,11 +800,11 @@ public class Parser {
     throw new ParseError(msg, s, this);
   }
 
-  protected void expect(final Symbol s, final Class<? extends Tags> tag) throws ParseError {
+  protected void expect(final Symbol s, final Class<? extends Tag> tag) throws ParseError {
     expect(s, "Unexpected symbol. Expected %(expected)s, but found %(found)s", tag);
   }
 
-  private boolean expectOneOf(final Symbol[] ss, final Class<? extends Tags> tag)
+  private boolean expectOneOf(final Symbol[] ss, final Class<? extends Tag> tag)
       throws ParseError {
     if (acceptOneOf(ss, tag)) {
       return true;

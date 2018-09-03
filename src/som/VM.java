@@ -6,22 +6,19 @@ import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
 
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Engine;
+
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.TruffleLanguage.Env;
 import com.oracle.truffle.api.debug.Debugger;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
-import com.oracle.truffle.api.instrumentation.InstrumentationHandler;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.GraphPrintVisitor;
-import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
-import com.oracle.truffle.api.vm.PolyglotEngine;
-import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
-import com.oracle.truffle.api.vm.PolyglotEngine.Value;
-import com.oracle.truffle.api.vm.PolyglotRuntime.Instrument;
-import com.oracle.truffle.tools.Profiler;
-import com.oracle.truffle.tools.ProfilerInstrument;
+import com.oracle.truffle.tools.profiler.CPUSampler;
 
 import bd.inlining.InlinableNodes;
 import coveralls.truffle.Coverage;
@@ -39,6 +36,7 @@ import som.primitives.processes.ChannelPrimitives;
 import som.primitives.processes.ChannelPrimitives.ProcessThreadFactory;
 import som.primitives.threading.TaskThreads.ForkJoinThreadFactory;
 import som.primitives.threading.ThreadingModule;
+import som.vm.NotYetImplementedException;
 import som.vm.ObjectSystem;
 import som.vm.Primitives;
 import som.vm.VmOptions;
@@ -47,9 +45,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 import tools.concurrency.KomposTrace;
-import tools.concurrency.TracingActors;
 import tools.concurrency.TracingBackend;
-import tools.debugger.Tags;
 import tools.debugger.WebDebugger;
 import tools.debugger.session.Breakpoints;
 import tools.dym.DynamicMetrics;
@@ -57,21 +53,17 @@ import tools.language.StructuralProbe;
 import tools.superinstructions.CandidateIdentifier;
 
 
-@SuppressWarnings("deprecation")
 public final class VM {
-
-  @CompilationFinal private PolyglotEngine engine;
 
   @CompilationFinal private StructuralProbe structuralProbe;
   @CompilationFinal private WebDebugger     webDebugger;
-  @CompilationFinal private Profiler        truffleProfiler;
+  @CompilationFinal private CPUSampler      truffleProfiler;
 
   private final ForkJoinPool actorPool;
   private final ForkJoinPool forkJoinPool;
   private final ForkJoinPool processesPool;
   private final ForkJoinPool threadPool;
 
-  private final boolean                  avoidExitForTesting;
   @CompilationFinal private ObjectSystem objectSystem;
 
   @CompilationFinal private SomLanguage language;
@@ -85,8 +77,7 @@ public final class VM {
 
   private static final int MAX_THREADS = 0x7fff;
 
-  public VM(final VmOptions vmOptions, final boolean avoidExitForTesting) {
-    this.avoidExitForTesting = avoidExitForTesting;
+  public VM(final VmOptions vmOptions) {
     options = vmOptions;
 
     actorPool = new ForkJoinPool(VmSettings.NUM_THREADS,
@@ -102,8 +93,8 @@ public final class VM {
   /**
    * Used by language server.
    */
-  public VM(final VmOptions vmOptions) {
-    this.avoidExitForTesting = true;
+  public VM(final VmOptions vmOptions, final boolean languageServer) {
+    assert languageServer : "Only to be used by language server";
     this.options = vmOptions;
 
     actorPool = null;
@@ -173,21 +164,7 @@ public final class VM {
     }
   }
 
-  private static final Object dynamicInstrumentationLock = new Object();
-
-  public static void insertInstrumentationWrapper(final Node node) {
-
-    // TODO: make thread-safe!!!
-    // TODO: can I assert that it is locked?? helper on Node??
-    if (VmSettings.INSTRUMENTATION) {
-      assert node.getSourceSection() != null
-          || (node instanceof WrapperNode) : "Node needs source section, or needs to be wrapper";
-      synchronized (dynamicInstrumentationLock) {
-        InstrumentationHandler.insertInstrumentationWrapper(node);
-      }
-    }
-  }
-
+  @SuppressWarnings("deprecation")
   private static void outputToIGV(final Method method) {
     GraphPrintVisitor graphPrinter = new GraphPrintVisitor();
 
@@ -226,7 +203,7 @@ public final class VM {
         && forkJoinPool.isQuiescent() && threadPool.isQuiescent();
   }
 
-  public void reportSyntaxElement(final Class<? extends Tags> type,
+  public void reportSyntaxElement(final Class<? extends Tag> type,
       final SourceSection source) {
     if (webDebugger != null) {
       webDebugger.reportSyntaxElement(type, source);
@@ -276,28 +253,16 @@ public final class VM {
   }
 
   /**
-   * Does minimal cleanup and disposes the polyglot engine, before doing a hard
-   * exit. This method is expected to be called from main thread.
+   * Do some cleanup.
    */
   @TruffleBoundary
-  public void shutdownAndExit(final int errorCode) {
+  public void shutdown() {
     if (truffleProfiler != null) {
-      truffleProfiler.printHistograms(System.err);
+      throw new NotYetImplementedException();
+      // truffleProfiler.printHistograms(System.err);
     }
 
     shutdownPools();
-
-    TracingBackend.waitForTrace();
-
-    int code = errorCode;
-    if (TracingActors.ReplayActor.printMissingMessages() && errorCode == 0) {
-      code = 1;
-    }
-    engine.dispose();
-    if (VmSettings.MEMORY_TRACING) {
-      TracingBackend.reportPeakMemoryUsage();
-    }
-    System.exit(code);
   }
 
   /**
@@ -320,10 +285,6 @@ public final class VM {
     TruffleCompiler.transferToInterpreter("errorExit");
     Output.errorPrintln("Run-time Error: " + message);
     requestExit(1);
-  }
-
-  public boolean isAvoidingExit() {
-    return avoidExitForTesting;
   }
 
   public void initalize(final SomLanguage lang) throws IOException {
@@ -353,64 +314,36 @@ public final class VM {
     return objectSystem.execute(selector);
   }
 
-  public void execute() {
-    objectSystem.executeApplication(vmMirror, mainActor);
+  public int execute() {
+    return objectSystem.executeApplication(vmMirror, mainActor);
   }
 
-  public static void main(final String[] args) {
-    VmOptions vmOptions = new VmOptions(args);
-
-    if (!vmOptions.configUsable()) {
-      return;
-    }
-
-    VM vm = new VM(vmOptions, false);
-    Builder builder = vm.createPolyglotBuilder();
-
-    vm.startExecution(builder);
-  }
-
-  public Builder createPolyglotBuilder() {
-    Builder builder = PolyglotEngine.newBuilder();
-    builder.config(SomLanguage.MIME_TYPE, SomLanguage.VM_OBJECT, this);
-    return builder;
-  }
-
-  private void startExecution(final Builder builder) {
-    engine = builder.build();
-
-    Map<String, ? extends Instrument> instruments = engine.getRuntime().getInstruments();
+  /**
+   * We only do this when we execute an application.
+   * We don't setup the instruments for BasicInterpreterTests.
+   */
+  public void setupInstruments(final Env env) {
+    Engine engine = Context.getCurrent().getEngine();
 
     if (options.profilingEnabled) {
-      Instrument profiler = instruments.get(ProfilerInstrument.ID);
-      if (profiler == null) {
-        Output.errorPrintln("Truffle profiler not available. Might be a class path issue");
-      } else {
-        profiler.setEnabled(options.profilingEnabled);
-        truffleProfiler = Profiler.find(engine);
-        truffleProfiler.setCollecting(true);
-        truffleProfiler.setTiming(true);
-      }
+      truffleProfiler = CPUSampler.find(engine);
+      truffleProfiler.setCollecting(true);
     }
 
     Debugger debugger = null;
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      debugger = Debugger.find(engine);
+      debugger = Debugger.find(env);
     }
 
     if (options.webDebuggerEnabled) {
       assert VmSettings.TRUFFLE_DEBUGGER_ENABLED && debugger != null;
-      Instrument webDebuggerInst = instruments.get(WebDebugger.ID);
-      webDebuggerInst.setEnabled(true);
 
-      webDebugger = webDebuggerInst.lookup(WebDebugger.class);
+      webDebugger = WebDebugger.find(env);
       webDebugger.startServer(debugger, this);
     }
 
     if (options.coverageEnabled) {
-      Instrument coveralls = instruments.get(Coverage.ID);
-      coveralls.setEnabled(true);
-      Coverage cov = coveralls.lookup(Coverage.class);
+      Coverage cov = Coverage.find(env);
       try {
         cov.setOutputFile(options.coverageFile);
       } catch (IOException e) {
@@ -420,22 +353,15 @@ public final class VM {
 
     if (options.dynamicMetricsEnabled) {
       assert VmSettings.DYNAMIC_METRICS;
-      Instrument dynM = instruments.get(DynamicMetrics.ID);
-      dynM.setEnabled(true);
-      structuralProbe = dynM.lookup(StructuralProbe.class);
+      structuralProbe = DynamicMetrics.find(engine);
       assert structuralProbe != null : "Initialization of DynamicMetrics tool incomplete";
     }
 
     if (options.siCandidateIdentifierEnabled) {
       assert !options.dynamicMetricsEnabled : "Currently, DynamicMetrics and CandidateIdentifer are not compatible";
-      Instrument siCI = instruments.get(CandidateIdentifier.ID);
-      siCI.setEnabled(true);
-      structuralProbe = siCI.lookup(StructuralProbe.class);
+      structuralProbe = CandidateIdentifier.find(env);
       assert structuralProbe != null : "Initialization of CandidateIdentifer tool incomplete";
     }
-
-    Value returnCode = engine.eval(SomLanguage.START);
-    shutdownAndExit(returnCode.as(Integer.class));
   }
 
   public SClass loadExtensionModule(final String filename) {

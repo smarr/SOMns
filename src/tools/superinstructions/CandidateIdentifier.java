@@ -9,6 +9,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.graalvm.polyglot.Engine;
+import org.graalvm.polyglot.Instrument;
+
+import com.oracle.truffle.api.InstrumentInfo;
+import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
@@ -33,6 +38,26 @@ import tools.language.StructuralProbe;
 public class CandidateIdentifier extends TruffleInstrument {
 
   public static final String ID = "si-candidate-ider";
+
+  public static StructuralProbe find(final TruffleLanguage.Env env) {
+    InstrumentInfo instrument = env.getInstruments().get(ID);
+    if (instrument == null) {
+      throw new IllegalStateException(
+          "CandidateIdentifier not properly installed into polyglot.Engine");
+    }
+
+    return env.lookup(instrument, StructuralProbe.class);
+  }
+
+  public static StructuralProbe find(final Engine engine) {
+    Instrument instrument = engine.getInstruments().get(ID);
+    if (instrument == null) {
+      throw new IllegalStateException(
+          "CandidateIdentifier not properly installed into polyglot.Engine");
+    }
+
+    return instrument.lookup(StructuralProbe.class);
+  }
 
   private final Map<Node, TypeCounter> activations;
 
@@ -67,7 +92,7 @@ public class CandidateIdentifier extends TruffleInstrument {
           k -> new TypeCounter(ctx.getInstrumentedSourceSection()));
       return new TypeCountingNode(p);
     };
-    instrumenter.attachFactory(filter, factory);
+    instrumenter.attachExecutionEventFactory(filter, factory);
   }
 
   @Override

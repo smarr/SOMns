@@ -6,7 +6,11 @@ import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveTask;
 
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.interop.ForeignAccess;
+import com.oracle.truffle.api.interop.TruffleObject;
 
+import som.interop.SomInteropObject;
+import som.interop.SomTaskOrThreadInteropMessagesForeign;
 import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.Activity;
@@ -22,7 +26,7 @@ import tools.debugger.entities.ActivityType;
 public final class TaskThreads {
 
   public abstract static class SomTaskOrThread extends RecursiveTask<Object>
-      implements Activity {
+      implements Activity, SomInteropObject {
     private static final long serialVersionUID = 4823503369882151811L;
 
     protected final Object[] argArray;
@@ -54,7 +58,7 @@ public final class TaskThreads {
         RootCallTarget target = ((SBlock) argArray[0]).getMethod().getCallTarget();
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRoot) {
           WebDebugger dbg = SomLanguage.getVM(target.getRootNode()).getWebDebugger();
-          dbg.prepareSteppingUntilNextRootNode();
+          dbg.prepareSteppingUntilNextRootNode(Thread.currentThread());
         }
         if (VmSettings.KOMPOS_TRACING) {
           KomposTrace.currentActivity(this);
@@ -73,6 +77,18 @@ public final class TaskThreads {
       throw new UnsupportedOperationException(
           "Step to next turn is not supported " +
               "for threads. This code should never be reached.");
+    }
+
+    @Override
+    public ForeignAccess getForeignAccess() {
+      return SomTaskOrThreadInteropMessagesForeign.ACCESS;
+    }
+
+    /**
+     * Used by Truffle interop.
+     */
+    public static boolean isInstance(final TruffleObject obj) {
+      return obj instanceof SomTaskOrThread;
     }
   }
 

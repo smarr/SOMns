@@ -1,7 +1,7 @@
 package som.interpreter.nodes.nary;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -30,16 +30,16 @@ public abstract class EagerlySpecializableNode extends ExprWithTagsNode
    * This method is used by eager wrapper or if this node is not eagerly
    * wrapped.
    */
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-    return super.isTaggedWith(tag);
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
+    return super.hasTag(tag);
   }
 
   @Override
-  protected final boolean isTaggedWith(final Class<?> tag) {
+  public final boolean hasTag(final Class<? extends Tag> tag) {
     if (eagerlyWrapped) {
       return false;
     } else {
-      return isTaggedWithIgnoringEagerness(tag);
+      return hasTagIgnoringEagerness(tag);
     }
   }
 

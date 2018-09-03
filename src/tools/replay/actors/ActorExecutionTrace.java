@@ -3,10 +3,6 @@ package tools.replay.actors;
 import java.util.Arrays;
 
 import som.interpreter.actors.Actor.ActorProcessingThread;
-import som.interpreter.actors.EventualMessage;
-import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.interpreter.actors.SPromise.STracingPromise;
-import som.vm.VmSettings;
 import tools.concurrency.TraceBuffer;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.TracingActor;

@@ -2,6 +2,7 @@ package som.primitives;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.profiles.ValueProfile;
 
 import bd.primitives.Primitive;
@@ -20,11 +21,11 @@ public abstract class SizeAndLengthPrim extends UnaryBasicOperation {
   private final ValueProfile storageType = ValueProfile.createClassProfile();
 
   @Override
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
     if (tag == OpLength.class) {
       return true;
     } else {
-      return super.isTaggedWithIgnoringEagerness(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
   }
 

@@ -1,6 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.interop.Message;
@@ -11,8 +12,8 @@ import com.oracle.truffle.api.interop.UnsupportedTypeException;
 import com.oracle.truffle.api.nodes.Node;
 
 import som.VM;
+import som.interop.SomInteropObject;
 import som.interpreter.SArguments;
-import som.vmobjects.SAbstractObject;
 
 
 public final class ForeignDispatchNode extends AbstractDispatchNode {
@@ -38,12 +39,12 @@ public final class ForeignDispatchNode extends AbstractDispatchNode {
   }
 
   @Override
-  @TruffleBoundary
   // TODO: needs to be optimized for compilation
-  public Object executeDispatch(final Object[] arguments) {
+  public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
     VM.thisMethodNeedsToBeOptimized("");
+    CompilerDirectives.transferToInterpreter();
     Object rcvr = arguments[0];
-    if (rcvr instanceof TruffleObject && !(rcvr instanceof SAbstractObject)) {
+    if (rcvr instanceof TruffleObject && !(rcvr instanceof SomInteropObject)) {
       TruffleObject r = (TruffleObject) rcvr;
       try {
         return ForeignAccess.sendInvoke(invoke, r,
@@ -68,7 +69,7 @@ public final class ForeignDispatchNode extends AbstractDispatchNode {
         }
       }
     } else {
-      return nextInCache.executeDispatch(arguments);
+      return nextInCache.executeDispatch(frame, arguments);
     }
   }
 

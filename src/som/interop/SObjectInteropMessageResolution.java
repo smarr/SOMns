@@ -30,9 +30,8 @@ public class SObjectInteropMessageResolution {
       if (dispatch == null) {
         // TODO: this is a bad hack. Ideally, we can pass the VM in somewhat more direct and
         // robustly
-        VM vm = rcvr.getSOMClass().getMethods()[0].getInvokable().getRootNode()
-                                                  .getLanguage(SomLanguage.class).getVM();
-        dispatch = InteropDispatchNodeGen.create(vm);
+        VM vm = SomLanguage.getVM(rcvr.getSOMClass().getMethods()[0].getInvokable());
+        dispatch = insert(InteropDispatchNodeGen.create(vm));
       }
     }
 
@@ -61,9 +60,8 @@ public class SObjectInteropMessageResolution {
       if (dispatch == null) {
         // TODO: this is a bad hack. Ideally, we can pass the VM in somewhat more direct and
         // robustly
-        VM vm = rcvr.getSOMClass().getMethods()[0].getInvokable().getRootNode()
-                                                  .getLanguage(SomLanguage.class).getVM();
-        dispatch = InteropDispatchNodeGen.create(vm);
+        VM vm = SomLanguage.getVM(rcvr.getSOMClass().getMethods()[0].getInvokable());
+        dispatch = insert(InteropDispatchNodeGen.create(vm));
       }
     }
 

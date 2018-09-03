@@ -16,6 +16,7 @@ import org.java_websocket.WebSocket;
 
 import com.google.gson.Gson;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -186,10 +187,10 @@ public class FrontendConnector {
 
   // TODO: simplify, way to convoluted
   private static TaggedSourceCoordinate[] createSourceSections(final Source source,
-      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> sourcesTags,
+      final Map<Source, Map<SourceSection, Set<Class<? extends Tag>>>> sourcesTags,
       final Instrumenter instrumenter, final Set<RootNode> rootNodes) {
     Set<SourceSection> sections = new HashSet<>();
-    Map<SourceSection, Set<Class<? extends Tags>>> tagsForSections = sourcesTags.get(source);
+    Map<SourceSection, Set<Class<? extends Tag>>> tagsForSections = sourcesTags.get(source);
 
     if (tagsForSections != null) {
       Tagging.collectSourceSectionsAndTags(rootNodes, tagsForSections, instrumenter);
@@ -211,7 +212,7 @@ public class FrontendConnector {
   }
 
   private void sendSource(final Source source,
-      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
+      final Map<Source, Map<SourceSection, Set<Class<? extends Tag>>>> loadedSourcesTags,
       final Set<RootNode> rootNodes) {
     SourceData data = new SourceData(source.getCharacters().toString(), source.getMimeType(),
         source.getName(), source.getURI().toString(),
@@ -226,7 +227,7 @@ public class FrontendConnector {
   }
 
   private void sendBufferedSources(
-      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
+      final Map<Source, Map<SourceSection, Set<Class<? extends Tag>>>> loadedSourcesTags,
       final Map<Source, Set<RootNode>> rootNodes) {
     if (!sourceToBeSent.isEmpty()) {
       for (Source s : sourceToBeSent) {
@@ -237,7 +238,7 @@ public class FrontendConnector {
   }
 
   public void sendLoadedSource(final Source source,
-      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
+      final Map<Source, Map<SourceSection, Set<Class<? extends Tag>>>> loadedSourcesTags,
       final Map<Source, Set<RootNode>> rootNodes) {
     if (messageHandler == null || messageSocket == null) {
       sourceToBeSent.add(source);

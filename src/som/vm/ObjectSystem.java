@@ -16,6 +16,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.ProgramDefinitionError;
 import bd.inlining.InlinableNodes;
+import som.Launcher;
 import som.Output;
 import som.VM;
 import som.compiler.AccessModifier;
@@ -120,7 +121,7 @@ public final class ObjectSystem {
       throw new NotAFileException(filename);
     }
 
-    Source source = Source.newBuilder(file).mimeType(SomLanguage.MIME_TYPE).build();
+    Source source = SomLanguage.getSource(file);
     return loadModule(source);
   }
 
@@ -382,26 +383,21 @@ public final class ObjectSystem {
     slot.setValueDuringBootstrap(obj, value);
   }
 
-  private void handlePromiseResult(final SPromise promise) {
+  private int handlePromiseResult(final SPromise promise) {
+    // This is an attempt to prevent to get stuck indeterminately.
+    // We check whether there is activity on any of the pools.
+    // And, we exit when either the main promise is resolved, or an exit was requested.
     int emptyFJPool = 0;
     while (emptyFJPool < 120) {
       if (promise.isCompleted()) {
-        if (vm.isAvoidingExit()) {
-          return;
-        }
-
         if (promise.isErroredUnsync()) {
-          vm.shutdownAndExit(1);
-        } else {
-          vm.shutdownAndExit(0);
+          return Launcher.EXIT_WITH_ERROR;
         }
+        return vm.lastExitCode();
       }
 
       if (vm.shouldExit()) {
-        if (vm.isAvoidingExit()) {
-          return;
-        }
-        vm.shutdownAndExit(vm.lastExitCode());
+        return vm.lastExitCode();
       }
 
       try {
@@ -421,7 +417,7 @@ public final class ObjectSystem {
     Output.errorPrintln(
         "VM seems to have exited prematurely. The actor pool has been idle for "
             + emptyFJPool + " checks in a row.");
-    vm.shutdownAndExit(1); // just in case it was disable for VM.errorExit
+    return Launcher.EXIT_WITH_ERROR;
   }
 
   public void releaseMainThread(final int errorCode) {
@@ -429,7 +425,7 @@ public final class ObjectSystem {
   }
 
   @TruffleBoundary
-  public void executeApplication(final SObjectWithoutFields vmMirror, final Actor mainActor) {
+  public int executeApplication(final SObjectWithoutFields vmMirror, final Actor mainActor) {
     mainThreadCompleted = new CompletableFuture<>();
 
     ObjectTransitionSafepoint.INSTANCE.register();
@@ -460,23 +456,17 @@ public final class ObjectSystem {
 
       if (result instanceof Long || result instanceof Integer) {
         int exitCode = (result instanceof Long) ? (int) (long) result : (int) result;
-        if (vm.isAvoidingExit()) {
-          return;
-        } else {
-          vm.shutdownAndExit(exitCode);
-        }
+        return exitCode;
       } else if (result instanceof SPromise) {
-        handlePromiseResult((SPromise) result);
-        return;
+        return handlePromiseResult((SPromise) result);
       } else {
         Output.errorPrintln("The application's #main: method returned a " + result.toString()
             + ", but it needs to return a Promise or Integer as return value.");
-        vm.shutdownAndExit(1);
+        return Launcher.EXIT_WITH_ERROR;
       }
     } catch (InterruptedException | ExecutionException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
-      vm.shutdownAndExit(1);
+      return Launcher.EXIT_WITH_ERROR;
     }
   }
 

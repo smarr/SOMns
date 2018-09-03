@@ -5,7 +5,8 @@ import java.util.concurrent.ForkJoinPool;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.GenerateWrapper;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -19,7 +20,7 @@ import som.vm.VmSettings;
 import tools.concurrency.KomposTrace;
 
 
-@Instrumentable(factory = AbstractPromiseResolutionNodeWrapper.class)
+@GenerateWrapper
 public abstract class AbstractPromiseResolutionNode extends QuaternaryExpressionNode
     implements WithContext<AbstractPromiseResolutionNode, VM> {
   @CompilationFinal private ForkJoinPool actorPool;
@@ -48,13 +49,17 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
   public AbstractPromiseResolutionNode initialize(final SourceSection sourceSection) {
     super.initialize(sourceSection);
     haltNode.initialize(sourceSection);
-    VM.insertInstrumentationWrapper(haltNode);
     return this;
   }
 
   public abstract Object executeEvaluated(VirtualFrame frame,
       SResolver receiver, Object argument, boolean haltOnResolver,
       boolean haltOnResolution);
+
+  @Override
+  public WrapperNode createWrapper(final ProbeNode probe) {
+    return new AbstractPromiseResolutionNodeWrapper(this, probe);
+  }
 
   /**
    * To avoid cycles in the promise chain, do nothing when a promise is resolved with itself.
