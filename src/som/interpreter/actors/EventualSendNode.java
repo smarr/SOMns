@@ -73,7 +73,7 @@ public class EventualSendNode extends ExprWithTagsNode {
     return send.execute(frame, args);
   }
 
-  private static RootCallTarget createOnReceiveCallTarget(final SSymbol selector,
+  public static RootCallTarget createOnReceiveCallTarget(final SSymbol selector,
       final SourceSection source, final SomLanguage lang) {
 
     AbstractMessageSendNode invoke = MessageSendNode.createGeneric(selector, null, source);
