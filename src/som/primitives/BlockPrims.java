@@ -5,6 +5,7 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -150,7 +151,8 @@ public abstract class BlockPrims {
     @Specialization(
         guards = {"cached == receiver.getMethod()", "cached.getNumberOfArguments() == 2"},
         limit = "CHAIN_LENGTH")
-    public final Object doCachedBlock(final VirtualFrame frame, final SBlock receiver, final Object arg,
+    public final Object doCachedBlock(final VirtualFrame frame, final SBlock receiver,
+        final Object arg,
         @Cached("createDirectCallNode(receiver, getThis())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
       return call.call(SArguments.getPlain1ArgumentWithReceiver(receiver, arg, this,
