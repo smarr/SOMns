@@ -362,14 +362,14 @@ public class TracingBackend {
         throws IOException {
       SImmutableArray sia = aw.immArray;
 
-      Object[] outer = sia.getObjectStorage(SArray.ObjectStorageType);
+      Object[] outer = sia.getObjectStorage();
       byte[][][] bouter = new byte[outer.length][][];
       byte[] endRow = {ENDROW};
       int numBytes = 0;
       for (int i = 0; i < outer.length; i++) {
         Object o = outer[i];
         SImmutableArray ia = (SImmutableArray) o;
-        Object[] inner = ia.getObjectStorage(SArray.ObjectStorageType);
+        Object[] inner = ia.getObjectStorage();
         byte[][] binner = new byte[inner.length + 1][];
         for (int j = 0; j < inner.length; j++) {
           Object oo = inner[j];
