@@ -230,7 +230,7 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
     padding: 0;
   }
   .activity-stack {
-    font-size: 75%;
+    font-size: 50%;
     width: 100%;
   }
   .activity-stack label {
@@ -397,7 +397,7 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
             </button>
           </div>
         </div>
-        <div class="activity-stack btn-group-vertical stack" data-toggle="buttons"></div>
+        <div class="activity-stack list-group stack" data-toggle="buttons"></div>
 
         <table class="activity-scopes"><tbody></tbody></table>
       </div>
@@ -406,9 +406,8 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   <!-- This allows the cards to wrap earlier to the next column. Makes UI nicer. -->
   <div id="card-wrapper" class="card container-fluid force-wrap-card"></div>
 
-  <label id="stack-trace-elem-tpl" class="trace-entry btn btn-sm btn-secondary">
+  <label id="stack-trace-elem-tpl" class="trace-entry list-group-item">
     <span class="trace-method">
-      <input type="radio" name="options" autocomplete="off">
       <span class="trace-method-name"></span>
     </span>
     <span class="trace-location"></span>
