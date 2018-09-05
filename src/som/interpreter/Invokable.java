@@ -51,6 +51,10 @@ public abstract class Invokable extends RootNode {
     return expressionOrSequence.executeGeneric(frame);
   }
 
+  public ExpressionNode getRoot() {
+    return expressionOrSequence;
+  }
+
   /** Inline invokable into the lexical context of the given builder. */
   public abstract ExpressionNode inline(MethodBuilder builder, SInvokable outer);
 

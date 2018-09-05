@@ -127,8 +127,9 @@ public final class StackTraceResponse extends Response {
 
     for (int i = 0; i < numFrames; i += 1) {
       int frameId = i + skipFrames;
-      assert !(frames.get(
-          frameId).root instanceof ReceivedRootNode) : "This should have been skipped in the code above";
+      // assert !(frames.get(
+      // frameId).root instanceof ReceivedRootNode) : "This should have been skipped in the
+      // code above";
       StackFrame f = createFrame(suspension, frameId, frames.get(frameId));
       arr[i] = f;
     }
