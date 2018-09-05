@@ -10,6 +10,7 @@ import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.SImmutableArray;
+import som.vmobjects.SBlock;
 import tools.asyncstacktraces.AsyncShadowStackEntry;
 import tools.asyncstacktraces.LocalShadowStackEntry;
 import tools.asyncstacktraces.ShadowStackEntry;
@@ -87,11 +88,13 @@ public final class SArguments {
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       argSize++;
     }
+
     Object[] result = new Object[argSize];
     result[0] = receiver;
     for (int i = 1; i < defaultArgSize; i++) {
       result[i] = at.executeEvaluated(null, args, (long) i);
     }
+
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       entryLoad.loadShadowStackEntry(result, expression, frame, false);
     }
@@ -140,6 +143,14 @@ public final class SArguments {
     }
   }
 
+  public static Object[] getPromiseCallbackArgumentArray(final SBlock callback) {
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      return new Object[] {callback, null, null};
+    } else {
+      return new Object[] {callback, null};
+    }
+  }
+
   public static void setShadowStackEntryWithCache(final Object[] arguments,
       final ExpressionNode expression,
       final ShadowStackEntryLoad entryLoad,
@@ -162,11 +173,21 @@ public final class SArguments {
 
   public static ShadowStackEntry getShadowStackEntry(final VirtualFrame frame) {
     Object[] args = frame.getArguments();
+    return getShadowStackEntry(args);
+  }
+
+  public static ShadowStackEntry getShadowStackEntry(final Object[] args) {
     Object maybeShadowStack = args[args.length - 1];
     if (maybeShadowStack instanceof ShadowStackEntry) {
       return (ShadowStackEntry) maybeShadowStack;
     }
     return null;
+  }
+
+  public static void setShadowStackEntry(final Object[] args,
+      final ShadowStackEntry entry) {
+    assert args[args.length - 1] == null : "Assume shadow stack entry is not already set.";
+    args[args.length - 1] = entry;
   }
 
   public static int getLengthWithoutShadowStack(final Object[] arguments) {

@@ -7,10 +7,11 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import bd.primitives.Primitive;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
+import tools.asyncstacktraces.AsyncShadowStackEntry;
 
 
 @GenerateNodeFactory
-@Primitive(primitive = "actorsResolve:with:isBPResolver:isBPResolution:")
+@Primitive(primitive = "actorsResolve:with:entry:isBPResolver:isBPResolution:")
 public abstract class ResolvePromiseNode extends AbstractPromiseResolutionNode {
   /**
    * Normal case, when the promise is resolved with a value that's not a promise.
@@ -19,7 +20,7 @@ public abstract class ResolvePromiseNode extends AbstractPromiseResolutionNode {
    */
   @Specialization(guards = {"notAPromise(result)"})
   public SResolver normalResolution(final VirtualFrame frame,
-      final SResolver resolver, final Object result,
+      final SResolver resolver, final Object result, final AsyncShadowStackEntry entry,
       final boolean haltOnResolver, final boolean haltOnResolution) {
     SPromise promise = resolver.getPromise();
 
@@ -27,7 +28,7 @@ public abstract class ResolvePromiseNode extends AbstractPromiseResolutionNode {
       haltNode.executeEvaluated(frame, result);
     }
 
-    resolvePromise(Resolution.SUCCESSFUL, resolver, result,
+    resolvePromise(Resolution.SUCCESSFUL, resolver, result, entry,
         haltOnResolution || promise.getHaltOnResolution());
     return resolver;
   }

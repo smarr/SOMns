@@ -13,6 +13,7 @@ import som.interpreter.actors.SPromise.SResolver;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
+import tools.asyncstacktraces.AsyncShadowStackEntry;
 import tools.concurrency.TracingActivityThread;
 
 
@@ -183,7 +184,8 @@ public abstract class EventualMessage {
       this.originalSender = originalSender;
     }
 
-    public abstract void resolve(Object rcvr, Actor target, Actor sendingActor);
+    public abstract void resolve(Object rcvr, Actor target, Actor sendingActor,
+        AsyncShadowStackEntry entry);
 
     @Override
     public final Actor getSender() {
@@ -222,12 +224,13 @@ public abstract class EventualMessage {
     }
 
     @Override
-    public void resolve(final Object rcvr, final Actor target, final Actor sendingActor) {
-      determineAndSetTarget(rcvr, target, sendingActor);
+    public void resolve(final Object rcvr, final Actor target, final Actor sendingActor,
+        final AsyncShadowStackEntry entry) {
+      determineAndSetTarget(rcvr, target, sendingActor, entry);
     }
 
     private void determineAndSetTarget(final Object rcvr, final Actor target,
-        final Actor sendingActor) {
+        final Actor sendingActor, final AsyncShadowStackEntry entry) {
       VM.thisMethodNeedsToBeOptimized("not optimized for compilation");
 
       args[0] = rcvr;
@@ -288,14 +291,15 @@ public abstract class EventualMessage {
         final SResolver resolver, final RootCallTarget onReceive,
         final boolean triggerMessageReceiverBreakpoint,
         final boolean triggerPromiseResolverBreakpoint, final SPromise promiseRegisteredOn) {
-      super(new Object[] {callback, null}, owner, resolver, onReceive,
+      super(SArguments.getPromiseCallbackArgumentArray(callback), owner, resolver, onReceive,
           triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
       this.promise = promiseRegisteredOn;
     }
 
     @Override
-    public void resolve(final Object rcvr, final Actor target, final Actor sendingActor) {
-      setPromiseValue(rcvr, sendingActor);
+    public void resolve(final Object rcvr, final Actor target, final Actor sendingActor,
+        final AsyncShadowStackEntry entry) {
+      setPromiseValue(rcvr, sendingActor, entry);
     }
 
     /**
@@ -304,8 +308,10 @@ public abstract class EventualMessage {
      *
      * @param resolvingActor - the owner of the value, the promise was resolved to.
      */
-    private void setPromiseValue(final Object value, final Actor resolvingActor) {
+    private void setPromiseValue(final Object value, final Actor resolvingActor,
+        final AsyncShadowStackEntry entry) {
       args[1] = originalSender.wrapForUse(value, resolvingActor, null);
+      SArguments.setShadowStackEntry(args, entry);
     }
 
     @Override

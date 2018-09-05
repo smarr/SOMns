@@ -120,8 +120,7 @@ public final class PromisePrims {
   // does not require node creation? Might need a generic received node.
   @TruffleBoundary
   public static RootCallTarget createReceived(final SBlock callback) {
-    RootCallTarget target = callback.getMethod().getCallTarget();
-    ReceivedCallback node = new ReceivedCallback(target);
+    ReceivedCallback node = new ReceivedCallback(callback.getMethod());
     return Truffle.getRuntime().createCallTarget(node);
   }
 
