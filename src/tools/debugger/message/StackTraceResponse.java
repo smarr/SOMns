@@ -2,13 +2,13 @@ package tools.debugger.message;
 
 import java.util.ArrayList;
 
-import com.oracle.truffle.api.debug.DebugStackFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.Actor.ExecutorRootNode;
 import som.interpreter.actors.ReceivedRootNode;
 import tools.TraceData;
 import tools.debugger.entities.EntityType;
+import tools.debugger.frontend.ApplicationThreadStack;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.Response;
 
@@ -89,17 +89,18 @@ public final class StackTraceResponse extends Response {
     }
   }
 
-  private static int getNumRootNodesToSkip(final ArrayList<DebugStackFrame> frames) {
+  private static int getNumRootNodesToSkip(
+      final ArrayList<ApplicationThreadStack.StackFrame> frames) {
     int skip = 0;
     int size = frames.size();
 
     // Actor-specific infrastructure, to be skipped from stack traces
-    if (frames.get(size - 1).getRootNode() instanceof ExecutorRootNode) {
+    if (frames.get(size - 1).root instanceof ExecutorRootNode) {
       skip += 1;
     }
 
     // Actor-specific infrastructure, to be skipped from stack traces
-    if (size >= 2 && frames.get(size - 2).getRootNode() instanceof ReceivedRootNode) {
+    if (size >= 2 && frames.get(size - 2).root instanceof ReceivedRootNode) {
       skip += 1;
     }
 
@@ -108,7 +109,7 @@ public final class StackTraceResponse extends Response {
 
   public static StackTraceResponse create(final int startFrame, final int levels,
       final Suspension suspension, final int requestId) {
-    ArrayList<DebugStackFrame> frames = suspension.getStackFrames();
+    ArrayList<ApplicationThreadStack.StackFrame> frames = suspension.getStackFrames();
     int skipFrames = suspension.getFrameSkipCount();
 
     if (startFrame > skipFrames) {
@@ -127,7 +128,7 @@ public final class StackTraceResponse extends Response {
     for (int i = 0; i < numFrames; i += 1) {
       int frameId = i + skipFrames;
       assert !(frames.get(
-          frameId).getRootNode() instanceof ReceivedRootNode) : "This should have been skipped in the code above";
+          frameId).root instanceof ReceivedRootNode) : "This should have been skipped in the code above";
       StackFrame f = createFrame(suspension, frameId, frames.get(frameId));
       arr[i] = f;
     }
@@ -139,15 +140,15 @@ public final class StackTraceResponse extends Response {
   }
 
   private static StackFrame createFrame(final Suspension suspension,
-      final int frameId, final DebugStackFrame frame) {
+      final int frameId, final ApplicationThreadStack.StackFrame frame) {
     long id = suspension.getGlobalId(frameId);
 
-    String name = frame.getName();
+    String name = frame.root.getName();
     if (name == null) {
       name = "vm (internal)";
     }
 
-    SourceSection ss = frame.getSourceSection();
+    SourceSection ss = frame.section;
     String sourceUri;
     int line;
     int column;
