@@ -25,4 +25,8 @@ public class AsyncShadowStackEntry extends ShadowStackEntry {
     return actor;
   }
 
+  @Override
+  public boolean isAsync() {
+    return true;
+  }
 }

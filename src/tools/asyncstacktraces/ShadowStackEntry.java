@@ -73,4 +73,8 @@ public abstract class ShadowStackEntry {
   public SourceSection getSourceSection() {
     return expression.getSourceSection();
   }
+
+  public boolean isAsync() {
+    return false;
+  }
 }

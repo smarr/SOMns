@@ -679,12 +679,15 @@ export class View {
 
   private showFrame(frame: StackFrame, active: boolean, list: JQuery) {
     let location;
+    let hasSourceLocation;
     if (frame.sourceUri) {
       const fileNameStart = frame.sourceUri.lastIndexOf("/") + 1;
       const fileName = frame.sourceUri.substr(fileNameStart);
       location = fileName + ":" + frame.line + ":" + frame.column;
+      hasSourceLocation = true;
     } else {
-      location = "vmMirror";
+      location = "";
+      hasSourceLocation = false;
     }
 
     const entry = nodeFromTemplate("stack-trace-elem-tpl");
@@ -692,6 +695,10 @@ export class View {
 
     if (active) {
       $(entry).addClass("active");
+    }
+
+    if (!hasSourceLocation) {
+      $(entry).addClass("trace-entry-no-source");
     }
 
     const name = $(entry).find(".trace-method-name");
