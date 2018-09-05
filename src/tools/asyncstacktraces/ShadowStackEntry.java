@@ -1,5 +1,6 @@
 package tools.asyncstacktraces;
 
+import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.Output;
@@ -14,8 +15,10 @@ public abstract class ShadowStackEntry {
 
   protected final ShadowStackEntry previousEntry;
   protected final ExpressionNode   expression;
-  public static long               numberOfAllocations = 0;
-  public static final boolean      ALLOCATION_COUNT    = false;
+
+  public static long numberOfAllocations;
+
+  public static final boolean ALLOCATION_COUNT = false;
 
   public ShadowStackEntry(final ShadowStackEntry previousEntry,
       final ExpressionNode expression) {
@@ -47,10 +50,10 @@ public abstract class ShadowStackEntry {
   }
 
   public Actor printOn(final StringBuilder sb, final Actor currentActor) {
-    SourceSection nodeSS = expression.getSourceSection();
+    SourceSection nodeSS = getSourceSection();
     String location =
         nodeSS.getSource().getName() + SourceCoordinate.getLocationQualifier(nodeSS);
-    String method = expression.getRootNode().getName();
+    String method = getRootNode().getName();
     sb.append("   ");
     sb.append(method);
     sb.append(':');
@@ -59,4 +62,15 @@ public abstract class ShadowStackEntry {
     return currentActor;
   }
 
+  public ShadowStackEntry getPrevious() {
+    return previousEntry;
+  }
+
+  public RootNode getRootNode() {
+    return expression.getRootNode();
+  }
+
+  public SourceSection getSourceSection() {
+    return expression.getSourceSection();
+  }
 }
