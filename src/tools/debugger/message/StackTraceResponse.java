@@ -148,6 +148,10 @@ public final class StackTraceResponse extends Response {
       name = "vm (internal)";
     }
 
+    if (frame.asyncSeparator) {
+      name = "Send: " + name;
+    }
+
     SourceSection ss = frame.section;
     String sourceUri;
     int line;
@@ -156,6 +160,7 @@ public final class StackTraceResponse extends Response {
     int endColumn;
     int length;
     if (ss != null) {
+      assert !frame.asyncSeparator : "Just checking, don't expect async sends to have a source section. This is a separate marker entry.";
       sourceUri = ss.getSource().getURI().toString();
       line = ss.getStartLine();
       column = ss.getStartColumn();

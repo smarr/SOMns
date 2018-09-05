@@ -36,12 +36,14 @@ public class ApplicationThreadStack {
     public final RootNode          root;
     public final SourceSection     section;
     public final MaterializedFrame frame;
+    public final boolean           asyncSeparator;
 
     private StackFrame(final RootNode root, final SourceSection section,
-        final MaterializedFrame frame) {
+        final MaterializedFrame frame, final boolean asyncSeparator) {
       this.root = root;
       this.section = section;
       this.frame = frame;
+      this.asyncSeparator = asyncSeparator;
     }
   }
 
@@ -62,7 +64,8 @@ public class ApplicationThreadStack {
       // the shadow stack always points to the caller
       // this means for the top, we assemble a stack frame independent of it
       MaterializedFrame topFrame = top.getFrame();
-      stackFrames.add(new StackFrame(top.getRootNode(), top.getSourceSection(), topFrame));
+      stackFrames.add(
+          new StackFrame(top.getRootNode(), top.getSourceSection(), topFrame, false));
 
       // for the rest of the stack, we use shadow stack and local stack iterator
       // but at some point, we won't have info on local stack anymore, when going
@@ -78,7 +81,12 @@ public class ApplicationThreadStack {
         }
 
         stackFrames.add(new StackFrame(currentFrame.getRootNode(),
-            currentFrame.getSourceSection(), frame));
+            currentFrame.getSourceSection(), frame, false));
+
+        if (currentFrame.isAsync()) {
+          stackFrames.add(new StackFrame(currentFrame.getRootNode(), null, null, true));
+        }
+
         currentFrame = currentFrame.getPrevious();
       }
 
