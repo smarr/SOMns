@@ -130,7 +130,22 @@ class GroupNode extends ActivityNode {
   public getActivityId() { return this.group.activities[0].id; }
 }
 
-export class PassiveEntityNode extends EntityNode {
+export abstract class AbstractPassiveEntityNode extends EntityNode {
+  public readonly reflexive: boolean;
+
+  constructor(x: number, y: number) {
+    super(x, y);
+  }
+
+  public abstract getGroupSize(): number;
+  public abstract getName(): string;
+  public abstract getDataId(): string;
+  public abstract getSystemViewId() : string;
+
+  public abstract getEntityType() : EntityRefType;
+}
+
+export class PassiveEntityNode extends AbstractPassiveEntityNode {
   public readonly entity: PassiveEntity;
   public messages?: number[][];
 
@@ -139,11 +154,42 @@ export class PassiveEntityNode extends EntityNode {
     this.entity = entity;
   }
 
+  public getGroupSize() {return 1}
   public getDataId() { return getEntityId(this.entity.id); }
   public getSystemViewId() { return getEntityVizId(this.entity.id); }
+  public getName() { 
+    return getPEName(this.entity)}
+  public getEntityType() { return EntityRefType.PassiveEntity; }
+}
+
+class PassiveGroupNode extends AbstractPassiveEntityNode {
+  private group: PassiveEntityGroup;
+
+  constructor(group: PassiveEntityGroup, x: number, y: number) {
+    super(x, y);
+    this.group = group;
+  }
+
+  public getGroupSize() { return this.group.promises.length; }
+
+  public getDataId() { return getEntityGroupId(this.group.id); }
+  public getSystemViewId() { return getEntityGroupVizId(this.group.id); }
+  public getName() { return getPEName(this.group.promises[0]) }
+  public getQueryForCodePane() {
+    let result = "";
+    for (const p of this.group.promises) {
+      if (result !== "") { result += ","; }
+      result += "#" + getEntityId(p.id);
+    }
+    return result;
+  }
 
   public getEntityType() { return EntityRefType.PassiveEntity; }
 }
+
+function getPEName(pe: PassiveEntity) : string { 
+  const ss = pe.origin;
+  return ss.uri + ":" + ss.startLine + ":" + ss.startColumn + ":" +ss.charLength }
 
 export interface EntityLink extends d3.layout.force.Link<EntityNode> {
   left: boolean;
@@ -156,6 +202,12 @@ interface ActivityGroup {
   id: number;
   activities: Activity[];
   groupNode?: GroupNode;
+}
+
+interface PassiveEntityGroup {
+  id: number;
+  promises: PassiveEntity[];
+  groupNode?: PassiveGroupNode;
 }
 
 type SourceTargetMap = Map<EntityNode, Map<EntityNode, number>>;
@@ -181,6 +233,7 @@ export class SystemViewData {
 
   private activities: IdMap<ActivityNodeImpl>;
   private activitiesPerType: IdMap<ActivityGroup>;
+  private promisesPerLocation: IdMap<PassiveEntityGroup>;
 
   private passiveEntities: IdMap<PassiveEntityNode>;
 
@@ -200,6 +253,7 @@ export class SystemViewData {
     this.activities = {};
     this.activitiesPerType = {};
     this.passiveEntities = {};
+    this.promisesPerLocation = {};
 
     this.maxMessageCount = 0;
 
@@ -250,6 +304,17 @@ export class SystemViewData {
     return node;
   }
 
+  private getPassiveGroupOrActivity(id: number): AbstractPassiveEntityNode {
+    const node = this.passiveEntities[id];
+    console.assert(node !== undefined);
+
+    const group = this.promisesPerLocation[node.getName()];
+    if (group.groupNode) {
+      return group.groupNode;
+    }
+    return node;
+  }
+
   private getNode(type: EntityRefType, entity: number | Activity | DynamicScope | PassiveEntity) {
     switch (type) {
       case EntityRefType.Activity:
@@ -272,9 +337,27 @@ export class SystemViewData {
     sourceTargetInc(this.messages, source, target);
   }
 
-  private addPassiveEntity(passiveEntity: PassiveEntity) {
-    this.passiveEntities[passiveEntity.id] = new PassiveEntityNode(
-      passiveEntity, HORIZONTAL_DISTANCE * Object.keys(this.passiveEntities).length, 0);
+
+
+  private addPassiveEntity(pe: PassiveEntity) {
+    if(pe.type == 5){
+      //group Promises
+      const numGroups = Object.keys(this.promisesPerLocation).length;
+      if (!this.promisesPerLocation[getPEName(pe)]) {
+        this.promisesPerLocation[getPEName(pe)] = { id: numGroups, promises: [] };
+      }
+      
+      this.promisesPerLocation[getPEName(pe)].promises.push(pe);
+      
+      const node = new PassiveEntityNode(pe,
+        HORIZONTAL_DISTANCE + HORIZONTAL_DISTANCE * this.promisesPerLocation[getPEName(pe)].promises.length,
+        VERTICAL_DISTANCE * numGroups);
+      this.passiveEntities[pe.id.toString()] = node;
+    } else {
+      //other passive entities
+      this.passiveEntities[pe.id] = new PassiveEntityNode(
+        pe, HORIZONTAL_DISTANCE * Object.keys(this.passiveEntities).length, 0);
+    }
   }
 
   public getMaxMessageSends() {
@@ -307,9 +390,26 @@ export class SystemViewData {
   }
 
   public getEntityNodes(): PassiveEntityNode[] {
+    const groupStarted = {};
+
     const result = [];
+
     for (const i in this.passiveEntities) {
-      result.push(this.passiveEntities[i]);
+      const p = this.passiveEntities[i];
+      const name = p.getName();
+      const group = this.promisesPerLocation[name];
+      if (group.promises.length > 1) {
+        if (!groupStarted[name]) {
+          groupStarted[name] = true;
+          const groupNode = new PassiveGroupNode(group,
+            HORIZONTAL_DISTANCE + HORIZONTAL_DISTANCE * group.promises.length,
+            VERTICAL_DISTANCE * Object.keys(this.activitiesPerType).length);
+          group.groupNode = groupNode;
+          result.push(groupNode);
+        }
+      } else {
+        result.push(p);
+      }
     }
     return result;
   }
@@ -328,7 +428,7 @@ export class SystemViewData {
             sender = this.getGroupOrActivity((<ActivityNodeImpl> source).activity.id);
             break;
           case EntityRefType.PassiveEntity:
-            sender = source;
+            sender = this.getPassiveGroupOrActivity((<PassiveEntityNode> source).entity.id);
             break;
         }
 
@@ -339,7 +439,7 @@ export class SystemViewData {
             receiver = this.getGroupOrActivity((<ActivityNodeImpl> target).activity.id);
             break;
           case EntityRefType.PassiveEntity:
-            receiver = target;
+            receiver = this.getPassiveGroupOrActivity((<PassiveEntityNode> target).entity.id);
             break;
         }
 
@@ -377,10 +477,10 @@ export class SystemViewData {
     }
 
     for (const i in this.passiveEntities) {
-      const e = this.passiveEntities[i];
+      const e =   this.passiveEntities[i];
       const source = this.getGroupOrActivity(e.entity.creationActivity.id);
-
-      sourceTargetInc(connections, source, e);
+      const target = this.getPassiveGroupOrActivity(e.entity.id);
+      sourceTargetInc(connections, source, target);
     }
 
     for (const [source, m] of connections) {
