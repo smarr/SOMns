@@ -239,6 +239,8 @@ public abstract class EventualMessage {
 
       this.target = finalTarget; // for sends to far references, we need to adjust the target
       this.finalSender = sendingActor;
+
+      // TODO: what do I do with the shadow stack entry here. give it two parents?
     }
 
     @Override
