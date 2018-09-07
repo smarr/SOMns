@@ -219,8 +219,8 @@ public abstract class EventualMessage {
       super(arguments, originalSender, resolver, onReceive, triggerMessageReceiverBreakpoint,
           triggerPromiseResolverBreakpoint);
       this.selector = selector;
-      assert (args[0] instanceof SPromise);
-      this.originalTarget = (SPromise) args[0];
+      assert (args[PROMISE_RCVR_IDX] instanceof SPromise);
+      this.originalTarget = (SPromise) args[PROMISE_RCVR_IDX];
     }
 
     @Override
@@ -233,7 +233,7 @@ public abstract class EventualMessage {
         final Actor sendingActor, final ShadowStackEntry entry) {
       VM.thisMethodNeedsToBeOptimized("not optimized for compilation");
 
-      args[0] = rcvr;
+      args[PROMISE_RCVR_IDX] = rcvr;
       Actor finalTarget =
           determineTargetAndWrapArguments(args, target, sendingActor, originalSender);
 
@@ -310,14 +310,14 @@ public abstract class EventualMessage {
      * @param resolvingActor - the owner of the value, the promise was resolved to.
      */
     private void setPromiseValue(final Object value, final Actor resolvingActor,
-      args[1] = originalSender.wrapForUse(value, resolvingActor, null);
         final ShadowStackEntry entry) {
+      args[PROMISE_VALUE_IDX] = originalSender.wrapForUse(value, resolvingActor, null);
       SArguments.setShadowStackEntry(args, entry);
     }
 
     @Override
     public SSymbol getSelector() {
-      return ((SBlock) args[0]).getMethod().getSignature();
+      return ((SBlock) args[PROMISE_RCVR_IDX]).getMethod().getSignature();
     }
 
     @Override
