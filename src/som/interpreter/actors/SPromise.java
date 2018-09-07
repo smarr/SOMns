@@ -12,7 +12,7 @@ import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
-import tools.asyncstacktraces.AsyncShadowStackEntry;
+import tools.asyncstacktraces.ShadowStackEntry;
 import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.TracingActor;
@@ -160,7 +160,7 @@ public class SPromise extends SObjectWithClass {
 
   protected final void scheduleCallbacksOnResolution(final Object result,
       final PromiseMessage msg, final Actor current,
-      final ForkJoinPool actorPool, final AsyncShadowStackEntry entry,
+      final ForkJoinPool actorPool, final ShadowStackEntry entry,
       final boolean haltOnResolution) {
     // when a promise is resolved, we need to schedule all the
     // #whenResolved:/#onError:/... callbacks msgs as well as all eventual send
@@ -312,7 +312,7 @@ public class SPromise extends SObjectWithClass {
     @TruffleBoundary
     protected static void resolveChainedPromisesUnsync(final Resolution type,
         final SPromise promise, final Object result, final Actor current,
-        final ForkJoinPool actorPool, final AsyncShadowStackEntry entry,
+        final ForkJoinPool actorPool, final ShadowStackEntry entry,
         final boolean haltOnResolution, final ValueProfile whenResolvedProfile) {
       // TODO: we should change the implementation of chained promises to
       // always move all the handlers to the other promise, then we
@@ -335,7 +335,7 @@ public class SPromise extends SObjectWithClass {
     @TruffleBoundary
     private static void resolveMoreChainedPromisesUnsynced(final Resolution type,
         final SPromise promise, final Object result, final Actor current,
-        final ForkJoinPool actorPool, final AsyncShadowStackEntry entry,
+        final ForkJoinPool actorPool, final ShadowStackEntry entry,
         final boolean haltOnResolution,
         final ValueProfile whenResolvedProfile) {
       if (promise.chainedPromiseExt != null) {
@@ -355,7 +355,7 @@ public class SPromise extends SObjectWithClass {
      */
     protected static void resolveAndTriggerListenersUnsynced(final Resolution type,
         final Object result, final Object wrapped, final SPromise p, final Actor current,
-        final ForkJoinPool actorPool, final AsyncShadowStackEntry entry,
+        final ForkJoinPool actorPool, final ShadowStackEntry entry,
         final boolean haltOnResolution, final ValueProfile whenResolvedProfile) {
       assert !(result instanceof SPromise);
 
@@ -407,7 +407,7 @@ public class SPromise extends SObjectWithClass {
      */
     protected static void scheduleAllWhenResolvedUnsync(final SPromise promise,
         final Object result, final Actor current, final ForkJoinPool actorPool,
-        final AsyncShadowStackEntry entry,
+        final ShadowStackEntry entry,
         final boolean haltOnResolution, final ValueProfile whenResolvedProfile) {
       if (promise.whenResolved != null) {
         promise.scheduleCallbacksOnResolution(result,
@@ -425,7 +425,7 @@ public class SPromise extends SObjectWithClass {
     private static void scheduleExtensions(final SPromise promise,
         final ArrayList<PromiseMessage> extension,
         final Object result, final Actor current,
-        final ForkJoinPool actorPool, final AsyncShadowStackEntry entry,
+        final ForkJoinPool actorPool, final ShadowStackEntry entry,
         final boolean haltOnResolution) {
       if (extension != null) {
         for (int i = 0; i < extension.size(); i++) {
@@ -441,7 +441,7 @@ public class SPromise extends SObjectWithClass {
      */
     protected static void scheduleAllOnErrorUnsync(final SPromise promise,
         final Object result, final Actor current,
-        final ForkJoinPool actorPool, final AsyncShadowStackEntry entry,
+        final ForkJoinPool actorPool, final ShadowStackEntry entry,
         final boolean haltOnResolution) {
       if (promise.onError != null) {
         promise.scheduleCallbacksOnResolution(result, promise.onError, current,

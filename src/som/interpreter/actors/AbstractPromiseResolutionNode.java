@@ -23,7 +23,7 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.NotYetImplementedException;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
-import tools.asyncstacktraces.AsyncShadowStackEntry;
+import tools.asyncstacktraces.ShadowStackEntry;
 import tools.concurrency.KomposTrace;
 
 
@@ -66,7 +66,7 @@ public abstract class AbstractPromiseResolutionNode extends EagerlySpecializable
   }
 
   public abstract Object executeEvaluated(VirtualFrame frame,
-      SResolver receiver, Object argument, AsyncShadowStackEntry entry,
+      SResolver receiver, Object argument, ShadowStackEntry entry,
       boolean haltOnResolver, boolean haltOnResolution);
 
   public abstract Object executeEvaluated(VirtualFrame frame, Object receiver,
@@ -95,7 +95,7 @@ public abstract class AbstractPromiseResolutionNode extends EagerlySpecializable
    */
   @Specialization(guards = {"resolver.getPromise() == result"})
   public SResolver selfResolution(final SResolver resolver,
-      final SPromise result, final AsyncShadowStackEntry entry,
+      final SPromise result, final ShadowStackEntry entry,
       final boolean haltOnResolver, final boolean haltOnResolution) {
     return resolver;
   }
@@ -105,7 +105,7 @@ public abstract class AbstractPromiseResolutionNode extends EagerlySpecializable
    */
   @Specialization(guards = {"resolver.getPromise() != promiseValue"})
   public SResolver chainedPromise(final VirtualFrame frame,
-      final SResolver resolver, final SPromise promiseValue, final AsyncShadowStackEntry entry,
+      final SResolver resolver, final SPromise promiseValue, final ShadowStackEntry entry,
       final boolean haltOnResolver, final boolean haltOnResolution) {
     chainPromise(resolver, promiseValue, entry, haltOnResolver, haltOnResolution);
     return resolver;
@@ -116,7 +116,7 @@ public abstract class AbstractPromiseResolutionNode extends EagerlySpecializable
   }
 
   protected void chainPromise(final SResolver resolver,
-      final SPromise promiseValue, final AsyncShadowStackEntry entry,
+      final SPromise promiseValue, final ShadowStackEntry entry,
       final boolean haltOnResolver, final boolean haltOnResolution) {
     assert resolver.assertNotCompleted();
     SPromise promiseToBeResolved = resolver.getPromise();
@@ -142,7 +142,7 @@ public abstract class AbstractPromiseResolutionNode extends EagerlySpecializable
   }
 
   protected void resolvePromise(final Resolution type,
-      final SResolver resolver, final Object result, final AsyncShadowStackEntry entry,
+      final SResolver resolver, final Object result, final ShadowStackEntry entry,
       final boolean haltOnResolution) {
     SPromise promise = resolver.getPromise();
     Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
@@ -154,7 +154,7 @@ public abstract class AbstractPromiseResolutionNode extends EagerlySpecializable
   public static void resolve(final Resolution type,
       final WrapReferenceNode wrapper, final SPromise promise,
       final Object result, final Actor current, final ForkJoinPool actorPool,
-      final AsyncShadowStackEntry entry,
+      final ShadowStackEntry entry,
       final boolean haltOnResolution, final ValueProfile whenResolvedProfile) {
     Object wrapped = wrapper.execute(result, promise.owner, current);
     SResolver.resolveAndTriggerListenersUnsynced(type, result, wrapped, promise,

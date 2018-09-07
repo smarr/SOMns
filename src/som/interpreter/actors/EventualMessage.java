@@ -13,7 +13,7 @@ import som.interpreter.actors.SPromise.SResolver;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
-import tools.asyncstacktraces.AsyncShadowStackEntry;
+import tools.asyncstacktraces.ShadowStackEntry;
 import tools.concurrency.TracingActivityThread;
 
 
@@ -185,7 +185,7 @@ public abstract class EventualMessage {
     }
 
     public abstract void resolve(Object rcvr, Actor target, Actor sendingActor,
-        AsyncShadowStackEntry entry);
+        ShadowStackEntry entry);
 
     @Override
     public final Actor getSender() {
@@ -225,12 +225,12 @@ public abstract class EventualMessage {
 
     @Override
     public void resolve(final Object rcvr, final Actor target, final Actor sendingActor,
-        final AsyncShadowStackEntry entry) {
+        final ShadowStackEntry entry) {
       determineAndSetTarget(rcvr, target, sendingActor, entry);
     }
 
     private void determineAndSetTarget(final Object rcvr, final Actor target,
-        final Actor sendingActor, final AsyncShadowStackEntry entry) {
+        final Actor sendingActor, final ShadowStackEntry entry) {
       VM.thisMethodNeedsToBeOptimized("not optimized for compilation");
 
       args[0] = rcvr;
@@ -298,7 +298,7 @@ public abstract class EventualMessage {
 
     @Override
     public void resolve(final Object rcvr, final Actor target, final Actor sendingActor,
-        final AsyncShadowStackEntry entry) {
+        final ShadowStackEntry entry) {
       setPromiseValue(rcvr, sendingActor, entry);
     }
 
@@ -309,8 +309,8 @@ public abstract class EventualMessage {
      * @param resolvingActor - the owner of the value, the promise was resolved to.
      */
     private void setPromiseValue(final Object value, final Actor resolvingActor,
-        final AsyncShadowStackEntry entry) {
       args[1] = originalSender.wrapForUse(value, resolvingActor, null);
+        final ShadowStackEntry entry) {
       SArguments.setShadowStackEntry(args, entry);
     }
 

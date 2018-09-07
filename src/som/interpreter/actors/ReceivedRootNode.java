@@ -11,7 +11,7 @@ import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.VmSettings;
-import tools.asyncstacktraces.AsyncShadowStackEntry;
+import tools.asyncstacktraces.ShadowStackEntry;
 import tools.concurrency.KomposTrace;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.DynamicScopeType;
@@ -90,7 +90,7 @@ public abstract class ReceivedRootNode extends RootNode {
 
   protected final void resolvePromise(final VirtualFrame frame,
       final SResolver resolver, final Object result,
-      final AsyncShadowStackEntry entry,
+      final ShadowStackEntry entry,
       final boolean haltOnResolver, final boolean haltOnResolution) {
     // lazy initialization of resolution node
     if (resolve == null) {
@@ -109,7 +109,7 @@ public abstract class ReceivedRootNode extends RootNode {
 
   protected final void errorPromise(final VirtualFrame frame,
       final SResolver resolver, final Object exception,
-      final AsyncShadowStackEntry entry,
+      final ShadowStackEntry entry,
       final boolean haltOnResolver, final boolean haltOnResolution) {
     // lazy initialization of resolution node
     if (error == null) {
@@ -133,7 +133,7 @@ public abstract class ReceivedRootNode extends RootNode {
   public final class NullResolver extends AbstractPromiseResolutionNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
-        final SResolver receiver, final Object argument, final AsyncShadowStackEntry entry,
+        final SResolver receiver, final Object argument, final ShadowStackEntry entry,
         final boolean haltOnResolver, final boolean haltOnResolution) {
       assert receiver == null;
       return null;
