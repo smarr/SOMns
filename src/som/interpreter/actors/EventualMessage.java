@@ -299,6 +299,7 @@ public abstract class EventualMessage {
     @Override
     public void resolve(final Object rcvr, final Actor target, final Actor sendingActor,
         final ShadowStackEntry entry) {
+      assert entry != null || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
       setPromiseValue(rcvr, sendingActor, entry);
     }
 

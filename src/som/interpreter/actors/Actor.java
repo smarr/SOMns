@@ -177,6 +177,8 @@ public class Actor implements Activity {
 
   private void doSend(final EventualMessage msg,
       final ForkJoinPool actorPool) {
+    assert msg.args[msg.args.length - 1] != null
+        || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
     assert msg.getTarget() == this;
 
     if (firstMessage == null) {
