@@ -108,7 +108,7 @@ class GroupNode extends ActivityNode {
 
   public getGroupSize() { return this.group.activities.length; }
   public isRunning() {
-    console.warn("GroupNode.isRunning() not yet implemented");
+    // console.warn("GroupNode.isRunning() not yet implemented");
     return true;
   }
   public getName() { return this.group.activities[0].name; }
