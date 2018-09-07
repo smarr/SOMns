@@ -9,6 +9,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VM;
 import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
+import som.interpreter.actors.ResolvePromiseNodeFactory.ResolveNodeGen;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.VmSettings;
 import tools.asyncstacktraces.ShadowStackEntry;
@@ -99,7 +100,7 @@ public abstract class ReceivedRootNode extends RootNode {
         this.resolve = insert(new NullResolver());
       } else {
         this.resolve = insert(
-            ResolvePromiseNodeFactory.create(null, null, null, null, null).initialize(vm));
+            ResolveNodeGen.create(null, null, null, null, null).initialize(vm));
       }
     }
 
