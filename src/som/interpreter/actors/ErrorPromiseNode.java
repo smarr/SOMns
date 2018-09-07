@@ -7,7 +7,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import bd.primitives.Primitive;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
-import tools.asyncstacktraces.AsyncShadowStackEntry;
+import tools.asyncstacktraces.ShadowStackEntry;
 
 
 @GenerateNodeFactory
@@ -18,7 +18,7 @@ public abstract class ErrorPromiseNode extends AbstractPromiseResolutionNode {
    */
   @Specialization(guards = {"notAPromise(result)"})
   public SResolver standardError(final VirtualFrame frame, final SResolver resolver,
-      final Object result, final AsyncShadowStackEntry entry, final boolean haltOnResolver,
+      final Object result, final ShadowStackEntry entry, final boolean haltOnResolver,
       final boolean haltOnResolution) {
     SPromise promise = resolver.getPromise();
 
