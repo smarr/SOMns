@@ -127,6 +127,8 @@ public final class StackTraceResponse extends Response {
 
     for (int i = 0; i < numFrames; i += 1) {
       int frameId = i + skipFrames;
+      // TODO: remove the below assert once we are satisfied things work. because now we can
+      // have received root nodes in the stack trace
       // assert !(frames.get(
       // frameId).root instanceof ReceivedRootNode) : "This should have been skipped in the
       // code above";
