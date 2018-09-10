@@ -16,7 +16,6 @@ import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.asyncstacktraces.AsyncShadowStackEntry;
 import tools.asyncstacktraces.ShadowStackEntry;
 
 
@@ -44,16 +43,17 @@ public class ReceivedMessage extends ReceivedRootNode {
       final boolean haltOnResolver, final boolean haltOnResolution) {
     ShadowStackEntry entry = SArguments.getShadowStackEntry(msg.args);
     assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || entry != null;
-    AsyncShadowStackEntry newEntry =
-        new AsyncShadowStackEntry(entry, (ExpressionNode) onReceive);
+    ShadowStackEntry resolutionEntry =
+        ShadowStackEntry.createAtPromiseResolution(entry, (ExpressionNode) onReceive);
+
     try {
       Object result = onReceive.doPreEvaluated(frame, msg.args);
 
       resolvePromise(frame, msg.resolver, result,
-          newEntry, haltOnResolver, haltOnResolution);
+          resolutionEntry, haltOnResolver, haltOnResolution);
     } catch (SomException exception) {
       errorPromise(frame, msg.resolver, exception.getSomObject(),
-          newEntry, haltOnResolver, haltOnResolution);
+          resolutionEntry, haltOnResolver, haltOnResolution);
     }
     return null;
   }
@@ -104,16 +104,16 @@ public class ReceivedMessage extends ReceivedRootNode {
         final boolean haltOnResolver, final boolean haltOnResolution) {
       ShadowStackEntry entry = SArguments.getShadowStackEntry(msg.args);
       assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || entry != null;
-      AsyncShadowStackEntry newEntry =
-          new AsyncShadowStackEntry(entry, onReceiveMethod.getRoot());
+      ShadowStackEntry resolutionEntry =
+          ShadowStackEntry.createAtPromiseResolution(entry, onReceiveMethod.getRoot());
 
       try {
         Object result = onReceive.call(msg.args);
-        resolvePromise(frame, msg.resolver, result, newEntry,
+        resolvePromise(frame, msg.resolver, result, resolutionEntry,
             haltOnResolver, haltOnResolution);
       } catch (SomException exception) {
         errorPromise(frame, msg.resolver, exception.getSomObject(),
-            newEntry, haltOnResolver, haltOnResolution);
+            resolutionEntry, haltOnResolver, haltOnResolution);
       }
       return null;
     }

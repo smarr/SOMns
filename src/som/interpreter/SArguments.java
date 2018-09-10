@@ -11,8 +11,6 @@ import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SBlock;
-import tools.asyncstacktraces.AsyncShadowStackEntry;
-import tools.asyncstacktraces.LocalShadowStackEntry;
 import tools.asyncstacktraces.ShadowStackEntry;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
 
@@ -161,13 +159,12 @@ public final class SArguments {
     }
   }
 
-  public static ShadowStackEntry instantiateShadowStackEntry(
-      final ShadowStackEntry previousStackEntry,
-      final ExpressionNode expression, final boolean async) {
+  public static ShadowStackEntry instantiateShadowStackEntry(final ShadowStackEntry previous,
+      final ExpressionNode expr, final boolean async) {
     if (async) {
-      return new AsyncShadowStackEntry(previousStackEntry, expression);
+      return ShadowStackEntry.createAtAsyncSend(previous, expr);
     } else {
-      return new LocalShadowStackEntry(previousStackEntry, expression);
+      return ShadowStackEntry.create(previous, expr);
     }
   }
 

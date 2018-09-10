@@ -14,7 +14,7 @@ import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.nodes.ExpressionNode;
-import tools.asyncstacktraces.AsyncShadowStackEntry;
+import tools.asyncstacktraces.ShadowStackEntry;
 
 
 /**
@@ -46,10 +46,10 @@ public abstract class SchedulePromiseHandlerNode extends Node {
 
     // TODO: I think, we need the info about the resolution context from the promise
     // we want to know where it was resolved, where the value is coming from
-    AsyncShadowStackEntry newEntry =
-        new AsyncShadowStackEntry(null, (ExpressionNode) this.getParent().getParent());
+    ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(null,
+        (ExpressionNode) getParent().getParent());
 
-    SArguments.setShadowStackEntry(msg.args, newEntry);
+    SArguments.setShadowStackEntry(msg.args, resolutionEntry);
     msg.originalSender.send(msg, actorPool);
   }
 
