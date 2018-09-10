@@ -11,19 +11,33 @@ import som.interpreter.nodes.ExpressionNode;
 import tools.SourceCoordinate;
 
 
-public abstract class ShadowStackEntry {
+public class ShadowStackEntry {
 
-  protected final ShadowStackEntry previousEntry;
+  protected final ShadowStackEntry previous;
   protected final ExpressionNode   expression;
 
   public static long numberOfAllocations;
 
   public static final boolean ALLOCATION_COUNT = false;
 
-  public ShadowStackEntry(final ShadowStackEntry previousEntry,
-      final ExpressionNode expression) {
-    this.previousEntry = previousEntry;
-    this.expression = expression;
+  public static ShadowStackEntry create(final ShadowStackEntry previous,
+      final ExpressionNode expr) {
+    return new ShadowStackEntry(previous, expr);
+  }
+
+  public static ShadowStackEntry createAtAsyncSend(final ShadowStackEntry previous,
+      final ExpressionNode expr) {
+    return new EntryAtMessageSend(previous, expr);
+  }
+
+  public static ShadowStackEntry createAtPromiseResolution(final ShadowStackEntry previous,
+      final ExpressionNode expr) {
+    return new EntryForPromiseResolution(previous, expr);
+  }
+
+  protected ShadowStackEntry(final ShadowStackEntry previous, final ExpressionNode expr) {
+    this.previous = previous;
+    this.expression = expr;
     if (ALLOCATION_COUNT) {
       numberOfAllocations++;
     }
@@ -44,7 +58,7 @@ public abstract class ShadowStackEntry {
     Actor currentActor = getCurrentActorOrNull();
     while (currentEntry != null) {
       currentActor = currentEntry.printOn(sb, currentActor);
-      currentEntry = currentEntry.previousEntry;
+      currentEntry = currentEntry.previous;
     }
     Output.print(sb.toString());
   }
@@ -63,7 +77,7 @@ public abstract class ShadowStackEntry {
   }
 
   public ShadowStackEntry getPrevious() {
-    return previousEntry;
+    return previous;
   }
 
   public RootNode getRootNode() {
@@ -76,5 +90,43 @@ public abstract class ShadowStackEntry {
 
   public boolean isAsync() {
     return false;
+  }
+
+  private static final class EntryAtMessageSend extends ShadowStackEntry {
+    protected final Actor sender;
+
+    private EntryAtMessageSend(final ShadowStackEntry previous, final ExpressionNode expr) {
+      super(previous, expr);
+      this.sender = getCurrentActorOrNull();
+    }
+
+    @Override
+    public Actor printOn(final StringBuilder sb, final Actor currentActor) {
+      if (sender != currentActor) {
+        sb.append(sender.toString());
+        sb.append(" (hash=");
+        sb.append(sender.hashCode());
+        sb.append(")\n");
+      }
+      super.printOn(sb, currentActor);
+      return sender;
+    }
+
+    @Override
+    public boolean isAsync() {
+      return true;
+    }
+  }
+
+  private static final class EntryForPromiseResolution extends ShadowStackEntry {
+    private EntryForPromiseResolution(final ShadowStackEntry previous,
+        final ExpressionNode expr) {
+      super(previous, expr);
+    }
+
+    @Override
+    public boolean isAsync() {
+      return true;
+    }
   }
 }

@@ -14,11 +14,11 @@ public class ShadowStackEntryCache {
 
   // *** Cache settings ***
   // If true, on cache miss & cache full override one of the previous entry, deterministically.
-  public static final boolean          DYNAMIC_REWRITE          = true;
-  public static final int              SHADOW_STACK_ENTRY_SIZE  = 2;
-  public static final int              NUM_SHADOW_STACK_ENTRIES = 4;
-  public static final ShadowStackEntry DEFAULT_ENTRY            =
-      new LocalShadowStackEntry(null, null);
+  public static final boolean DYNAMIC_REWRITE          = true;
+  public static final int     SHADOW_STACK_ENTRY_SIZE  = 2;
+  public static final int     NUM_SHADOW_STACK_ENTRIES = 4;
+
+  public static final ShadowStackEntry DEFAULT_ENTRY = ShadowStackEntry.create(null, null);
 
   // *** Analysis variables (optional) ***
   public static final boolean           ANALYSIS             = false;
