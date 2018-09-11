@@ -166,6 +166,6 @@ public abstract class ExpressionNode extends SOMNode implements InstrumentableNo
 
   @Override
   public String toString() {
-    return getClass().getSimpleName() + "(" + sourceSection.toString() + ")";
+    return getClass().getSimpleName() + "(" + String.valueOf(sourceSection) + ")";
   }
 }
