@@ -93,7 +93,7 @@ public class FrontendConnector {
   private final Gson       gson;
   private static final int MESSAGE_PORT   = 7977;
   private static final int TRACE_PORT     = 7978;
-  private static final int HTTP_PORT      = 8888;
+  private static final int HTTP_PORT      = 8880;
   private static final int EPHEMERAL_PORT = 0;
 
   private final ArrayList<Source> sourceToBeSent = new ArrayList<>();
