@@ -212,14 +212,14 @@ export class UiController extends Controller {
     this.data.addSymbols(msg);
     this.updateTraceData(this.data.getNewestDataSinceLastUpdate());
 
-    this.view.displaySystemView();
+    // this.view.displaySystemView();
   }
 
   public onTracingData(data: DataView) {
     this.data.updateTraceData(data);
     this.updateTraceData(this.data.getNewestDataSinceLastUpdate());
 
-    this.view.displaySystemView();
+    // this.view.displaySystemView();
   }
 
   public onUnknownMessage(msg: any) {
