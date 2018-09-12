@@ -95,12 +95,12 @@ public final class StackTraceResponse extends Response {
     int size = frames.size();
 
     // Actor-specific infrastructure, to be skipped from stack traces
-    if (frames.get(size - 1).root instanceof ExecutorRootNode) {
+    if (frames.get(size - 1).getRootNode() instanceof ExecutorRootNode) {
       skip += 1;
     }
 
     // Actor-specific infrastructure, to be skipped from stack traces
-    if (size >= 2 && frames.get(size - 2).root instanceof ReceivedRootNode) {
+    if (size >= 2 && frames.get(size - 2).getRootNode() instanceof ReceivedRootNode) {
       skip += 1;
     }
 
@@ -145,17 +145,9 @@ public final class StackTraceResponse extends Response {
   private static StackFrame createFrame(final Suspension suspension,
       final int frameId, final ApplicationThreadStack.StackFrame frame) {
     long id = suspension.getGlobalId(frameId);
-
-    String name = frame.root.getName();
-    if (name == null) {
-      name = "vm (internal)";
-    }
-
-    if (frame.asyncSeparator) {
-      name = "Send: " + name;
-    }
-
+    String name = frame.name;
     SourceSection ss = frame.section;
+
     String sourceUri;
     int line;
     int column;
@@ -163,7 +155,6 @@ public final class StackTraceResponse extends Response {
     int endColumn;
     int length;
     if (ss != null) {
-      assert !frame.asyncSeparator : "Just checking, don't expect async sends to have a source section. This is a separate marker entry.";
       sourceUri = ss.getSource().getURI().toString();
       line = ss.getStartLine();
       column = ss.getStartColumn();

@@ -69,25 +69,27 @@ public final class ScopesResponse extends Response {
       final int requestId) {
     StackFrame frame = suspension.getFrame(globalFrameId);
     ArrayList<Scope> scopes = new ArrayList<>(SMALL_INITIAL_SIZE);
-    MaterializedFrame mFrame = frame.frame;
 
-    RootNode invokable = frame.root;
-    if (invokable instanceof Method) {
-      Method m = (Method) invokable;
-      MethodScope scope = m.getLexicalScope();
-      long scopeId = suspension.addScope(mFrame, scope);
-      scopes.add(new Scope("Locals", scopeId, false));
+    if (frame.hasFrame()) {
+      MaterializedFrame mFrame = frame.frame;
+      RootNode invokable = frame.getRootNode();
+      if (invokable instanceof Method) {
+        Method m = (Method) invokable;
+        MethodScope scope = m.getLexicalScope();
+        long scopeId = suspension.addScope(mFrame, scope);
+        scopes.add(new Scope("Locals", scopeId, false));
 
-      Object rcvr = SArguments.rcvr(mFrame);
-      addScopes(scopes, scope, rcvr, suspension);
-    } else if (invokable instanceof ReceivedRootNode) {
-      // NOOP, no scopes here
-      assert false : "This should not be reached. This scope should never get an id";
-    } else {
-      assert invokable instanceof Primitive : "Got a " + invokable.getClass().getSimpleName() +
-          " here. Means we need to add support";
+        Object rcvr = SArguments.rcvr(mFrame);
+        addScopes(scopes, scope, rcvr, suspension);
+      } else if (invokable instanceof ReceivedRootNode) {
+        // NOOP, no scopes here
+        assert false : "This should not be reached. This scope should never get an id";
+      } else {
+        assert invokable instanceof Primitive : "Got a " + invokable.getClass().getSimpleName()
+            +
+            " here. Means we need to add support";
+      }
     }
-
     return new ScopesResponse(globalFrameId, scopes.toArray(new Scope[0]), requestId);
   }
 }
