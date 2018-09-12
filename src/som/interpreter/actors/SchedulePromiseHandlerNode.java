@@ -4,6 +4,7 @@ import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.IntValueProfile;
@@ -33,10 +34,11 @@ public abstract class SchedulePromiseHandlerNode extends Node {
     this.actorPool = actorPool;
   }
 
-  public abstract void execute(SPromise promise, PromiseMessage msg, Actor current);
+  public abstract void execute(VirtualFrame frame, SPromise promise, PromiseMessage msg,
+      Actor current);
 
   @Specialization
-  public final void schedule(final SPromise promise,
+  public final void schedule(final VirtualFrame frame, final SPromise promise,
       final PromiseCallbackMessage msg, final Actor current,
       @Cached("createWrapper()") final WrapReferenceNode wrapper) {
     assert promise.getOwner() != null;
@@ -46,7 +48,8 @@ public abstract class SchedulePromiseHandlerNode extends Node {
 
     // TODO: I think, we need the info about the resolution context from the promise
     // we want to know where it was resolved, where the value is coming from
-    ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(null,
+    ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
+        SArguments.getShadowStackEntry(frame),
         (ExpressionNode) getParent().getParent());
 
     SArguments.setShadowStackEntry(msg.args, resolutionEntry);
@@ -75,6 +78,8 @@ public abstract class SchedulePromiseHandlerNode extends Node {
       receiver = ((SFarReference) receiver).getValue();
     }
 
+    // TODO: we already have a shadow stack entry here, Don't think we need to do anything
+    // about it
     msg.args[PromiseMessage.PROMISE_RCVR_IDX] = receiver;
 
     assert !(receiver instanceof SFarReference) : "this should not happen, because we need to redirect messages to the other actor, and normally we just unwrapped this";
@@ -98,6 +103,5 @@ public abstract class SchedulePromiseHandlerNode extends Node {
         1; i < numArgs.profile(SArguments.getLengthWithoutShadowStack(msg.args)); i++) {
       msg.args[i] = argWrapper.execute(msg.args[i], finalTarget, msg.originalSender);
     }
-
   }
 }

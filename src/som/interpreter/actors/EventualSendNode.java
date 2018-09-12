@@ -219,8 +219,9 @@ public class EventualSendNode extends ExprWithTagsNode {
       target.send(msg, actorPool);
     }
 
-    protected void sendPromiseMessage(final Object[] args, final SPromise rcvr,
-        final SResolver resolver, final RegisterWhenResolved registerNode) {
+    protected void sendPromiseMessage(final VirtualFrame frame, final Object[] args,
+        final SPromise rcvr, final SResolver resolver,
+        final RegisterWhenResolved registerNode) {
       assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
 
       PromiseSendMessage msg = new PromiseSendMessage(selector, args,
@@ -233,7 +234,7 @@ public class EventualSendNode extends ExprWithTagsNode {
             rcvr.getPromiseId());
       }
 
-      registerNode.register(rcvr, msg, rcvr.getOwner());
+      registerNode.register(frame, rcvr, msg, rcvr.getOwner());
     }
 
     protected RegisterWhenResolved createRegisterNode() {
@@ -259,7 +260,8 @@ public class EventualSendNode extends ExprWithTagsNode {
     }
 
     @Specialization(guards = {"isResultUsed()", "isPromiseRcvr(args)"})
-    public final SPromise toPromiseWithResultPromise(final Object[] args,
+    public final SPromise toPromiseWithResultPromise(final VirtualFrame frame,
+        final Object[] args,
         @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
       SPromise rcvr = (SPromise) args[0];
 
@@ -268,7 +270,7 @@ public class EventualSendNode extends ExprWithTagsNode {
           false, promiseResolutionBreakpoint.executeShouldHalt(), source);
       SResolver resolver = SPromise.createResolver(promise);
 
-      sendPromiseMessage(args, rcvr, resolver, registerNode);
+      sendPromiseMessage(frame, args, rcvr, resolver, registerNode);
       return promise;
     }
 
@@ -305,9 +307,10 @@ public class EventualSendNode extends ExprWithTagsNode {
     }
 
     @Specialization(guards = {"!isResultUsed()", "isPromiseRcvr(args)"})
-    public final Object toPromiseWithoutResultPromise(final Object[] args,
+    public final Object toPromiseWithoutResultPromise(final VirtualFrame frame,
+        final Object[] args,
         @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
-      sendPromiseMessage(args, (SPromise) args[0], null, registerNode);
+      sendPromiseMessage(frame, args, (SPromise) args[0], null, registerNode);
       return Nil.nilObject;
     }
 
