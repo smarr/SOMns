@@ -35,16 +35,19 @@ public class ShadowStackEntry {
 
   public static ShadowStackEntry create(final ShadowStackEntry previous,
       final ExpressionNode expr) {
+    // TODO: assert previous != null;
     return new ShadowStackEntry(previous, SOMNode.unwrapIfNecessary(expr));
   }
 
   public static ShadowStackEntry createAtAsyncSend(final ShadowStackEntry previous,
       final ExpressionNode expr) {
+    // TODO: assert previous != null;
     return new EntryAtMessageSend(previous, SOMNode.unwrapIfNecessary(expr));
   }
 
   public static ShadowStackEntry createAtPromiseResolution(final ShadowStackEntry previous,
       final ExpressionNode expr) {
+    // TODO: assert previous != null;
     return new EntryForPromiseResolution(previous, SOMNode.unwrapIfNecessary(expr));
   }
 
