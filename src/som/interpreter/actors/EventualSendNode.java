@@ -74,6 +74,10 @@ public class EventualSendNode extends ExprWithTagsNode {
     return send.execute(frame, args);
   }
 
+  public SSymbol getSentSymbol() {
+    return SOMNode.unwrapIfNecessary(send).getSelector();
+  }
+
   public static RootCallTarget createOnReceiveCallTarget(final SSymbol selector,
       final SourceSection source, final SomLanguage lang) {
 
@@ -239,6 +243,10 @@ public class EventualSendNode extends ExprWithTagsNode {
 
     protected RegisterWhenResolved createRegisterNode() {
       return new RegisterWhenResolved(actorPool);
+    }
+
+    public SSymbol getSelector() {
+      return selector;
     }
 
     @Override

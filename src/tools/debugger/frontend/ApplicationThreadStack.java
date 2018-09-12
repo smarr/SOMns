@@ -2,16 +2,14 @@ package tools.debugger.frontend;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 
-import com.oracle.truffle.api.debug.DebugStackFrame;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.LexicalScope.MethodScope;
-import tools.asyncstacktraces.ShadowStackEntry;
+import tools.asyncstacktraces.ShadowStackEntry.StackIterator;
 
 
 /**
@@ -33,17 +31,30 @@ public class ApplicationThreadStack {
   private final Suspension            suspension;
 
   public static final class StackFrame {
-    public final RootNode          root;
-    public final SourceSection     section;
-    public final MaterializedFrame frame;
-    public final boolean           asyncSeparator;
+    public final String        name;
+    public final SourceSection section;
 
-    private StackFrame(final RootNode root, final SourceSection section,
+    public final MaterializedFrame frame;
+
+    public final boolean asyncSeparator;
+
+    private final RootNode root;
+
+    public StackFrame(final String name, final RootNode root, final SourceSection section,
         final MaterializedFrame frame, final boolean asyncSeparator) {
+      this.name = name;
       this.root = root;
       this.section = section;
       this.frame = frame;
       this.asyncSeparator = asyncSeparator;
+    }
+
+    public RootNode getRootNode() {
+      return root;
+    }
+
+    public boolean hasFrame() {
+      return frame != null;
     }
   }
 
@@ -57,37 +68,10 @@ public class ApplicationThreadStack {
 
   ArrayList<StackFrame> get() {
     if (stackFrames.isEmpty()) {
-      Iterator<DebugStackFrame> stack = event.getStackFrames().iterator();
+      StackIterator stack = new StackIterator(event.getStackFrames().iterator());
 
-      DebugStackFrame top = stack.next();
-
-      // the shadow stack always points to the caller
-      // this means for the top, we assemble a stack frame independent of it
-      MaterializedFrame topFrame = top.getFrame();
-      stackFrames.add(
-          new StackFrame(top.getRootNode(), top.getSourceSection(), topFrame, false));
-
-      // for the rest of the stack, we use shadow stack and local stack iterator
-      // but at some point, we won't have info on local stack anymore, when going
-      // to remote/async stacks
-      Object[] args = topFrame.getArguments();
-      assert args[args.length - 1] instanceof ShadowStackEntry;
-      ShadowStackEntry currentFrame = (ShadowStackEntry) args[args.length - 1];
-
-      while (currentFrame != null) {
-        MaterializedFrame frame = null;
-        if (stack.hasNext()) {
-          frame = stack.next().getFrame();
-        }
-
-        stackFrames.add(new StackFrame(currentFrame.getRootNode(),
-            currentFrame.getSourceSection(), frame, false));
-
-        if (currentFrame.isAsync()) {
-          stackFrames.add(new StackFrame(currentFrame.getRootNode(), null, null, true));
-        }
-
-        currentFrame = currentFrame.getPrevious();
+      while (stack.hasNext()) {
+        stackFrames.add(stack.next());
       }
 
       assert !stackFrames.isEmpty() : "We expect that there is always at least one stack frame";
