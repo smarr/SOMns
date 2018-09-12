@@ -6,7 +6,7 @@ import { Debugger } from "./debugger";
 import {
   SourceMessage, SymbolMessage, StoppedMessage, StackTraceResponse,
   ScopesResponse, VariablesResponse, ProgramInfoResponse, InitializationResponse,
-  Source, Method
+  Source, Method, getSectionIdFromFrame
 } from "./messages";
 import {
   LineBreakpoint, SectionBreakpoint, getBreakpointId,
@@ -176,7 +176,7 @@ export class UiController extends Controller {
 
       const newSource = this.view.displaySource(act, source, sourceId);
 
-      const ssId = this.dbg.getSectionIdFromFrame(sourceId, msg.stackFrames[0]);
+      const ssId = getSectionIdFromFrame(sourceId, msg.stackFrames[0]);
       const section = this.dbg.getSection(ssId);
 
       this.view.displayStackTrace(sourceId, msg, topFrameId, act, ssId, section);

@@ -7,7 +7,7 @@ import { Controller } from "./controller";
 import {
   Source, Method, StackFrame, SourceCoordinate, StackTraceResponse,
   TaggedSourceCoordinate, Scope, getSectionId, Variable, ActivityType,
-  BreakpointType, SteppingType, EntityType
+  BreakpointType, SteppingType, EntityType, getSectionIdFromFrame
 } from "./messages";
 import { Breakpoint, SectionBreakpoint, LineBreakpoint } from "./breakpoints";
 import { SystemView } from "./system-view";
@@ -677,14 +677,17 @@ export class View {
     return "frame-" + frameId;
   }
 
-  private showFrame(frame: StackFrame, active: boolean, list: JQuery) {
+  private showFrame(sourceId: string, activity: Activity, frame: StackFrame, active: boolean, list: JQuery) {
     let location;
+    let hasSourceLocation;
     if (frame.sourceUri) {
       const fileNameStart = frame.sourceUri.lastIndexOf("/") + 1;
       const fileName = frame.sourceUri.substr(fileNameStart);
       location = fileName + ":" + frame.line + ":" + frame.column;
+      hasSourceLocation = true;
     } else {
-      location = "vmMirror";
+      location = "";
+      hasSourceLocation = false;
     }
 
     const entry = nodeFromTemplate("stack-trace-elem-tpl");
@@ -692,6 +695,18 @@ export class View {
 
     if (active) {
       $(entry).addClass("active");
+    }
+
+    if (!hasSourceLocation) {
+      $(entry).addClass("trace-entry-no-source");
+    } else {
+      const that = this;
+      $(entry).on("click", function(e) {
+        e.preventDefault();
+        $(this).tab("show");
+        const ssId = getSectionIdFromFrame(sourceId, frame);
+        that.highlightProgramPosition(sourceId, activity, ssId);
+      })
     }
 
     const name = $(entry).find(".trace-method-name");
@@ -710,7 +725,7 @@ export class View {
     list.html(""); // rest view
 
     for (let i = 0; i < data.stackFrames.length; i++) {
-      this.showFrame(data.stackFrames[i],
+      this.showFrame(sourceId, activity, data.stackFrames[i],
         data.stackFrames[i].id === requestedId, list);
       console.assert(data.stackFrames[i].id !== requestedId || i === 0, "We expect that the first frame is displayed.");
     }
