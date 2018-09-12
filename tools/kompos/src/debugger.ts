@@ -43,15 +43,6 @@ export class Debugger {
     return this.sources[id];
   }
 
-  public getSectionIdFromFrame(sourceId: string, frame: StackFrame) {
-    const line = frame.line,
-      column = frame.column,
-      length = frame.length;
-
-    return getSectionId(sourceId,
-      { startLine: line, startColumn: column, charLength: length });
-  }
-
   public addSource(msg: SourceMessage): Source {
     const s = msg.source;
     let id = this.getSourceId(s.uri);
