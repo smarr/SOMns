@@ -361,12 +361,12 @@ export class View {
 
   public setCapabilities(metaModel: KomposMetaModel) {
     this.metaModel = metaModel;
-    this.systemView.setCapabilities(metaModel);
-    this.protocolView.setMetaModel(metaModel);
+    // this.systemView.setCapabilities(metaModel);
+    // this.protocolView.setMetaModel(metaModel);
   }
 
   public displaySystemView() {
-    this.systemView.display();
+    // this.systemView.display();
   }
 
   public onConnect() {
@@ -628,8 +628,8 @@ export class View {
   }
 
   public updateTraceData(data: TraceDataUpdate) {
-    this.systemView.updateTraceData(data);
-    this.protocolView.updateTraceData(data);
+    // this.systemView.updateTraceData(data);
+    // this.protocolView.updateTraceData(data);
 
     for (const act of data.activities) {
       this.displayActivity(act);
