@@ -4,12 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import com.oracle.truffle.api.debug.SuspendedEvent;
-import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.LexicalScope.MethodScope;
-import tools.asyncstacktraces.ShadowStackEntry.StackIterator;
+import tools.asyncstacktraces.ShadowStackEntry.SuspensionStackIterator;
 
 
 /**
@@ -34,14 +34,14 @@ public class ApplicationThreadStack {
     public final String        name;
     public final SourceSection section;
 
-    public final MaterializedFrame frame;
+    public final Frame frame;
 
     public final boolean asyncSeparator;
 
     private final RootNode root;
 
     public StackFrame(final String name, final RootNode root, final SourceSection section,
-        final MaterializedFrame frame, final boolean asyncSeparator) {
+        final Frame frame, final boolean asyncSeparator) {
       this.name = name;
       this.root = root;
       this.section = section;
@@ -68,7 +68,8 @@ public class ApplicationThreadStack {
 
   ArrayList<StackFrame> get() {
     if (stackFrames.isEmpty()) {
-      StackIterator stack = new StackIterator(event.getStackFrames().iterator());
+      SuspensionStackIterator stack =
+          new SuspensionStackIterator(event.getStackFrames().iterator());
 
       while (stack.hasNext()) {
         stackFrames.add(stack.next());
@@ -79,8 +80,7 @@ public class ApplicationThreadStack {
     return stackFrames;
   }
 
-  long addScope(final MaterializedFrame frame,
-      final MethodScope lexicalScope) {
+  long addScope(final Frame frame, final MethodScope lexicalScope) {
     scopesAndObjects.add(new RuntimeScope(frame, lexicalScope));
     return getLastScopeOrVarId();
   }

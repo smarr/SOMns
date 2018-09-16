@@ -2,6 +2,7 @@ package tools.debugger.message;
 
 import java.util.ArrayList;
 
+import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 
@@ -71,7 +72,7 @@ public final class ScopesResponse extends Response {
     ArrayList<Scope> scopes = new ArrayList<>(SMALL_INITIAL_SIZE);
 
     if (frame.hasFrame()) {
-      MaterializedFrame mFrame = frame.frame;
+      Frame mFrame = frame.frame;
       RootNode invokable = frame.getRootNode();
       if (invokable instanceof Method) {
         Method m = (Method) invokable;
