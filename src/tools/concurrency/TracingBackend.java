@@ -427,8 +427,12 @@ public class TracingBackend {
 
     private void writeSymbols(final BufferedWriter bw) throws IOException {
       synchronized (symbolsToWrite) {
+        if (symbolsToWrite.isEmpty()) {
+          return;
+        }
+
         if (front != null) {
-          front.sendSymbols(TracingBackend.symbolsToWrite);
+          front.sendSymbols(symbolsToWrite);
         }
 
         if (bw != null) {
