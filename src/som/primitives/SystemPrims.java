@@ -10,14 +10,9 @@ import java.util.Arrays;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.FrameInstance;
-import com.oracle.truffle.api.frame.FrameInstanceVisitor;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.interop.Message;
@@ -35,8 +30,6 @@ import som.VM;
 import som.compiler.MixinDefinition;
 import som.interop.ValueConversion.ToSomConversion;
 import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
-import som.interpreter.Invokable;
-import som.interpreter.SArguments;
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
@@ -57,9 +50,11 @@ import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.asyncstacktraces.ShadowStackEntry;
+import tools.asyncstacktraces.ShadowStackEntry.HaltStackIterator;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
 import tools.concurrency.TraceParser;
 import tools.concurrency.TracingBackend;
+import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.nodes.TraceActorContextNode;
 
@@ -225,16 +220,6 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
-  @Primitive(primitive = "printAsyncStackTrace:")
-  public abstract static class PrintAsyncStackTracePrim extends UnaryExpressionNode {
-    @Specialization
-    public final Object printAsyncStackTrace(final VirtualFrame frame, final Object receiver) {
-      SArguments.getShadowStackEntry(frame).printAsyncStackTrace();
-      return receiver;
-    }
-  }
-
-  @GenerateNodeFactory
   @Primitive(primitive = "printStackTrace:")
   public abstract static class PrintStackTracePrim extends UnaryExpressionNode {
     @Specialization
@@ -248,46 +233,25 @@ public final class SystemPrims {
       ArrayList<String> method = new ArrayList<String>();
       ArrayList<String> location = new ArrayList<String>();
       int[] maxLengthMethod = {0};
-      boolean[] first = {true};
+
       Output.println("Stack Trace");
 
-      Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<Object>() {
-        @Override
-        public Object visitFrame(final FrameInstance frameInstance) {
-          RootCallTarget ct = (RootCallTarget) frameInstance.getCallTarget();
+      HaltStackIterator stack = new HaltStackIterator(topNode);
+      while (stack.hasNext()) {
+        StackFrame frame = stack.next();
 
-          // TODO: do we need to handle other kinds of root nodes?
-          if (!(ct.getRootNode() instanceof Invokable)) {
-            return null;
-          }
+        method.add(frame.name);
+        maxLengthMethod[0] = Math.max(maxLengthMethod[0], frame.name.length());
+        // TODO: is this better `callNode.getEncapsulatingSourceSection();` ???
 
-          Invokable m = (Invokable) ct.getRootNode();
-
-          String id = m.getName();
-          method.add(id);
-          maxLengthMethod[0] = Math.max(maxLengthMethod[0], id.length());
-          Node callNode = frameInstance.getCallNode();
-          if (callNode != null || first[0]) {
-            SourceSection nodeSS;
-            if (first[0]) {
-              first[0] = false;
-              nodeSS = topNode;
-            } else {
-              nodeSS = callNode.getEncapsulatingSourceSection();
-            }
-            if (nodeSS != null) {
-              location.add(nodeSS.getSource().getName()
-                  + SourceCoordinate.getLocationQualifier(nodeSS));
-            } else {
-              location.add("");
-            }
-          } else {
-            location.add("");
-          }
-
-          return null;
+        SourceSection nodeSS = frame.section;
+        if (nodeSS != null) {
+          location.add(nodeSS.getSource().getName()
+              + SourceCoordinate.getLocationQualifier(nodeSS));
+        } else {
+          location.add("");
         }
-      });
+      }
 
       StringBuilder sb = new StringBuilder();
       for (int i = method.size() - 1; i >= skipDnuFrames; i--) {

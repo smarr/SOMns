@@ -3,20 +3,25 @@ package tools.asyncstacktraces;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.debug.DebugStackFrame;
+import com.oracle.truffle.api.frame.Frame;
+import com.oracle.truffle.api.frame.FrameInstance;
+import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
+import com.oracle.truffle.api.frame.FrameInstanceVisitor;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.Output;
+import som.interpreter.Invokable;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualSendNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
-import tools.SourceCoordinate;
 import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 
 
@@ -68,30 +73,6 @@ public class ShadowStackEntry {
     }
   }
 
-  public void printAsyncStackTrace() {
-    ShadowStackEntry currentEntry = this;
-    StringBuilder sb = new StringBuilder();
-    Actor currentActor = getCurrentActorOrNull();
-    while (currentEntry != null) {
-      currentActor = currentEntry.printOn(sb, currentActor);
-      currentEntry = currentEntry.previous;
-    }
-    Output.print(sb.toString());
-  }
-
-  public Actor printOn(final StringBuilder sb, final Actor currentActor) {
-    SourceSection nodeSS = getSourceSection();
-    String location =
-        nodeSS.getSource().getName() + SourceCoordinate.getLocationQualifier(nodeSS);
-    String method = getRootNode().getName();
-    sb.append("   ");
-    sb.append(method);
-    sb.append(':');
-    sb.append(location);
-    sb.append('\n');
-    return currentActor;
-  }
-
   public RootNode getRootNode() {
     return expression.getRootNode();
   }
@@ -105,23 +86,9 @@ public class ShadowStackEntry {
   }
 
   private static final class EntryAtMessageSend extends ShadowStackEntry {
-    protected final Actor sender;
 
     private EntryAtMessageSend(final ShadowStackEntry previous, final ExpressionNode expr) {
       super(previous, expr);
-      this.sender = getCurrentActorOrNull();
-    }
-
-    @Override
-    public Actor printOn(final StringBuilder sb, final Actor currentActor) {
-      if (sender != currentActor) {
-        sb.append(sender.toString());
-        sb.append(" (hash=");
-        sb.append(sender.hashCode());
-        sb.append(")\n");
-      }
-      super.printOn(sb, currentActor);
-      return sender;
     }
 
     @Override
@@ -152,23 +119,15 @@ public class ShadowStackEntry {
    * We chose to do this to explicitly represent context switches in asynchronous
    * control flow, as caused for instance by eventual message sends or promise resolution.
    */
-  public static final class StackIterator implements Iterator<StackFrame> {
-
-    private final Iterator<DebugStackFrame> localStack;
+  abstract static class StackIterator implements Iterator<StackFrame> {
 
     private ShadowStackEntry current;
-    private boolean          first;
+    protected boolean        first;
 
     private ShadowStackEntry useAgain;
-    private DebugStackFrame  useAgainFrame;
-    // private boolean dummyConsumed;
+    private Frame            useAgainFrame;
 
-    public StackIterator(final Iterator<DebugStackFrame> localStack) {
-      assert localStack != null;
-      assert localStack.hasNext();
-
-      this.localStack = localStack;
-
+    StackIterator() {
       current = null;
       first = true;
     }
@@ -178,62 +137,61 @@ public class ShadowStackEntry {
       return current != null || first || useAgain != null;
     }
 
+    protected abstract Frame getNextOnStack();
+
+    protected abstract StackFrame createFirstStackFrame();
+
     @Override
     public StackFrame next() {
       if (!hasNext()) {
         throw new NoSuchElementException();
       }
 
-      ShadowStackEntry result = null;
+      ShadowStackEntry shadow = null;
       boolean isFirst = first;
 
-      DebugStackFrame localFrame = null;
+      Frame localFrame = null;
       boolean usedAgain = false;
       if (isFirst) {
-        first = false;
-        localFrame = localStack.next();
+        localFrame = getNextOnStack();
 
         // From now on, use shadow stack and local stack iterator together.
         // Though, at some point, we won't have info on local stack anymore, when going
         // to remote/async stacks.
-        MaterializedFrame topFrame = localFrame.getFrame();
-        Object[] args = topFrame.getArguments();
+        Object[] args = localFrame.getArguments();
         assert args[args.length - 1] instanceof ShadowStackEntry;
         current = (ShadowStackEntry) args[args.length - 1];
+
+        first = false;
       } else if (useAgain != null) {
-        result = useAgain;
+        shadow = useAgain;
         usedAgain = true;
         localFrame = useAgainFrame;
 
         useAgain = null;
         useAgainFrame = null;
       } else {
-        result = current;
-        if (result != null) {
-          current = result.previous;
+        shadow = current;
+        if (shadow != null) {
+          current = shadow.previous;
         }
-        if (localStack.hasNext()) {
-          localFrame = localStack.next();
-        }
+        localFrame = getNextOnStack();
       }
 
-      return createStackFrame(result, localFrame, usedAgain);
+      if (isFirst) {
+        assert shadow == null
+            && localFrame != null : "the shadow stack always starts with the caller this means for the top, we assemble a stack frame independent of it";
+        return createFirstStackFrame();
+      } else {
+        return createStackFrame(shadow, localFrame, usedAgain);
+      }
     }
 
     private StackFrame createStackFrame(final ShadowStackEntry shadow,
-        final DebugStackFrame localFrame, final boolean usedAgain) {
-      if (shadow == null && localFrame != null) {
-        // the shadow stack always starts with the caller
-        // this means for the top, we assemble a stack frame independent of it
-        String name = localFrame.getRootNode().getName();
-        return new StackFrame(name, localFrame.getRootNode(), localFrame.getSourceSection(),
-            localFrame.getFrame(), false);
-      }
-
+        final Frame localFrame, final boolean usedAgain) {
       assert shadow != null : "Since it is not the first stack element (we handled that above), we expect a shadow entry here";
 
       boolean contextTransitionElement;
-      MaterializedFrame frame;
 
       String name = shadow.getRootNode().getName();
       SourceSection location;
@@ -241,7 +199,6 @@ public class ShadowStackEntry {
       if (!usedAgain && (shadow instanceof EntryAtMessageSend
           || shadow instanceof EntryForPromiseResolution)) {
         contextTransitionElement = true;
-        frame = null;
         location = null;
 
         if (shadow instanceof EntryAtMessageSend) {
@@ -259,14 +216,87 @@ public class ShadowStackEntry {
         }
       } else {
         contextTransitionElement = false;
-        frame = (localFrame == null) ? null : localFrame.getFrame();
         location = shadow.getSourceSection();
       }
 
       StackFrame result = new StackFrame(name, shadow.getRootNode(),
-          location, frame, contextTransitionElement);
+          location, localFrame, contextTransitionElement);
 
       return result;
+    }
+  }
+
+  public static final class SuspensionStackIterator extends StackIterator {
+    private final Iterator<DebugStackFrame> localStack;
+    private DebugStackFrame                 firstFrame;
+
+    public SuspensionStackIterator(final Iterator<DebugStackFrame> localStack) {
+      assert localStack != null;
+      assert localStack.hasNext();
+
+      this.localStack = localStack;
+    }
+
+    @Override
+    protected MaterializedFrame getNextOnStack() {
+      if (localStack.hasNext()) {
+        DebugStackFrame frame = localStack.next();
+
+        if (first) {
+          firstFrame = frame;
+        }
+
+        return frame.getFrame();
+      } else {
+        return null;
+      }
+    }
+
+    @Override
+    protected StackFrame createFirstStackFrame() {
+      String name = firstFrame.getRootNode().getName();
+      return new StackFrame(name, firstFrame.getRootNode(), firstFrame.getSourceSection(),
+          firstFrame.getFrame(), false);
+    }
+  }
+
+  public static final class HaltStackIterator extends StackIterator {
+    private static FrameInstance getTopFrame() {
+      FrameInstance result =
+          Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<FrameInstance>() {
+            @Override
+            public FrameInstance visitFrame(final FrameInstance frame) {
+              return frame;
+            }
+          });
+      return result;
+    }
+
+    private final FrameInstance firstFrame;
+    private final SourceSection firstSourceSection;
+
+    public HaltStackIterator(final SourceSection firstSourceSection) {
+      this.firstSourceSection = firstSourceSection;
+      firstFrame = getTopFrame();
+    }
+
+    @Override
+    protected Frame getNextOnStack() {
+      if (first) {
+        return firstFrame.getFrame(FrameAccess.READ_ONLY);
+      } else {
+        return null;
+      }
+    }
+
+    @Override
+    protected StackFrame createFirstStackFrame() {
+      RootCallTarget ct = (RootCallTarget) firstFrame.getCallTarget();
+      Invokable m = (Invokable) ct.getRootNode();
+
+      String name = ct.getRootNode().getName();
+      return new StackFrame(name, ct.getRootNode(), firstSourceSection,
+          firstFrame.getFrame(FrameAccess.READ_ONLY), false);
     }
   }
 }
