@@ -14,8 +14,10 @@
     <property name="truffle.dir" location="${lib.dir}/truffle/truffle" />
     <property name="sdk.dir"     location="${lib.dir}/truffle/sdk" />
     <property name="tools.dir"   location="${lib.dir}/truffle/tools" />
+    <property name="svm.dir"     location="${lib.dir}/truffle/substratevm" />
     <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists" />
     <property name="tools.build" location="${tools.dir}/mxbuild/dists" />
+    <property name="svm.build"   location="${svm.dir}/mxbuild/dists" />
     <property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
     <property name="somns-deps.version" value="0.3.5" />
     <property name="checkstyle.version" value="8.11" />
@@ -45,6 +47,7 @@
         <pathelement location="${truffle.build}/truffle-dsl-processor.jar" />
         <pathelement location="${truffle.build}/truffle-tck.jar" />
         <pathelement location="${tools.build}/truffle-profiler.jar" />
+        <pathelement location="${svm.build}/svm-core.jar" />
     </path>
     
     <condition property="is.atLeastJava9" value="true" else="false">
@@ -97,6 +100,9 @@
         <exec executable="${mx.cmd}" dir="${tools.dir}" failonerror="true">
             <arg value="build"/>
         </exec>
+        <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
+            <arg value="build"/>
+        </exec>
     </target>
 
     <target name="build-graal" description="Build the embedded Graal" unless="skip.graal">
@@ -130,6 +136,12 @@
             <arg value="eclipseinit"/>
         </exec>
         <exec executable="${mx.cmd}" dir="${sdk.dir}" failonerror="true">
+            <arg value="eclipseinit"/>
+        </exec>
+        <exec executable="${mx.cmd}" dir="${tools.dir}" failonerror="true">
+            <arg value="eclipseinit"/>
+        </exec>
+        <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
             <arg value="eclipseinit"/>
         </exec>
     </target>
