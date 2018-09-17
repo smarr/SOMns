@@ -12,6 +12,15 @@ export interface Source {
   methods: Method[];
 }
 
+export function getSectionIdFromFrame(sourceId: string, frame: StackFrame) {
+  const line = frame.line,
+    column = frame.column,
+    length = frame.length;
+
+  return getSectionId(sourceId,
+    { startLine: line, startColumn: column, charLength: length });
+}
+
 export function getSectionId(sourceId: string, section: SourceCoordinate) {
   return sourceId + ":" + section.startLine + ":" + section.startColumn + ":" +
     section.charLength;

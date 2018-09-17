@@ -15,6 +15,9 @@
   <title>Kompos Debugger</title>
 
   <style id="style-main">
+    .demo #debugger-log {display: none;}
+    .demo #debugger table {display: none;}
+
   #templates { display: none; }
 
   .filename  { font-family: sans-serif; }
@@ -193,9 +196,10 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
     max-height: 700px;
     overflow: auto;
   }
-  #code-views {
-    column-count: 2;
-  }
+
+  #code-views { column-count: 2; }
+  .demo #code-views { column-count: 1; }
+
   #debugger button {
     font-size: 75%;
     padding: 2px 6px 3px;
@@ -229,10 +233,14 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   .activity-sources {
     padding: 0;
   }
+  .demo .activity-sources { font-size: 150%; }
+
   .activity-stack {
-    font-size: 75%;
+    font-size: 50%;
     width: 100%;
   }
+  .demo .activity-stack { font-size: 100%; }
+
   .activity-stack label {
     padding: 0.1rem .2rem;
     overflow: hidden;
@@ -296,6 +304,8 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
     top: 4ex;
     right: 1ex;
   }
+  .demo .system-status { top: 1ex; }
+
   .activity-state {
     margin:  0;
     padding: 0;
@@ -304,9 +314,13 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
     width: 100%;
     clear: both;
   }
+  .trace-entry-no-source {
+    color: #999;
+    background-color: #dddddd;
+  }
   .trace-location {
     float:right;
-    font-size:5px;
+    font-size:60%;
   }
   .trace-method {
     float:left;
@@ -345,6 +359,9 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
 <div class="btn-toolbar card-pane" role="toolbar" aria-label="Debugger Controls">
   <div class="btn-group btn-group-xs" role="group" aria-label="Basic Controls">
     <button id="dbg-connect-btn" type="button" class="btn btn-secondary btn-sm" onclick="ctrl.toggleConnection();">Connecting</button>
+  </div>
+  <div class="btn-group btn-group-xs" role="group" aria-label="Demo Mode" style="float: right;margin-left: 40%;font-size:45%">
+    <input type="checkbox" id="demo-checkbox" class="btn btn-secondary btn-sm" onclick="$('body').toggleClass('demo', this.checked);" /> demo
   </div>
 </div>
 
@@ -397,7 +414,7 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
             </button>
           </div>
         </div>
-        <div class="activity-stack btn-group-vertical stack" data-toggle="buttons"></div>
+        <div class="activity-stack list-group stack" data-toggle="buttons"></div>
 
         <table class="activity-scopes"><tbody></tbody></table>
       </div>
@@ -406,9 +423,8 @@ https://github.com/ivyl/gedit-mate/blob/master/styles/Tango.xml
   <!-- This allows the cards to wrap earlier to the next column. Makes UI nicer. -->
   <div id="card-wrapper" class="card container-fluid force-wrap-card"></div>
 
-  <label id="stack-trace-elem-tpl" class="trace-entry btn btn-sm btn-secondary">
+  <label id="stack-trace-elem-tpl" class="trace-entry list-group-item">
     <span class="trace-method">
-      <input type="radio" name="options" autocomplete="off">
       <span class="trace-method-name"></span>
     </span>
     <span class="trace-location"></span>

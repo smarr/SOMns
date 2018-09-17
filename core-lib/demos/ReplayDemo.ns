@@ -1,0 +1,95 @@
+(* Written by Dominik Aumayr *)
+class ReplayDemo usingPlatform: platform = Value (
+| private actors    = platform actors.
+  private Array     = platform kernel Array.
+  private TransferArray= platform kernel TransferArray.
+  private harness   = (platform system loadModule: '../Benchmarks/Harness.ns' nextTo: self) usingPlatform: platform.
+  private Random    = harness Random.
+
+  private numCustomers = 11.
+  private numFlights = 10.
+  private numBookings = 1.
+|)(
+  public class Website new: completionRes = (
+  | private completionRes = completionRes.
+    private finishedCustomers ::= 0.
+    private flightPrices = TransferArray new: numFlights withAll: 50.
+    private resolved ::= false.
+  |)(
+    public requestFlights = (
+      ^ flightPrices.
+    )
+
+    public book: customer flight: flightId = (
+      ('Book flights for customer: ' + customer asString) println.
+      ^ flightPrices at: flightId.
+    )
+
+    public pay: customer flight: flightId amount: amount = (
+      amount = (flightPrices at: flightId)
+        ifTrue:[
+          (* customer paid correct price, ok *)
+          ('Payment succeeded. Booking confirmed for customer ' + customer) println.
+          (* flight is in demand, let's increase the price *)
+          flightPrices at: flightId put: (amount + 10) ]
+        ifFalse:[
+          (* didn't match price, fail *)
+          'Payment FAILED' println.
+          resolved ifFalse: [
+            completionRes resolve: false.
+            resolved:: true ] ]
+    )
+
+    public done = (
+      finishedCustomers:: finishedCustomers + 1.
+      finishedCustomers = numCustomers ifTrue: [
+        resolved ifFalse:[
+          completionRes resolve: true.
+          resolved:: true ] ]
+    )
+  )
+
+  public class Customer new: customerId website: web = (
+  | private id = customerId.
+    private web = web.
+    private rand = Random new: customerId + 73425.
+  |)(
+    public bookFlight = (
+      | flightId |
+      ('Customer starts booking flights. Customer id: ' + id) println.
+      numBookings timesRepeat: [
+        (web <-: requestFlights) whenResolved: [:flights |
+          flightId:: 1 + (rand next % numFlights).
+          web <-: book: id flight: flightId.
+          web <-: pay: id flight: flightId amount: (flights at: flightId).
+          web <-: done ] ]
+    )
+  )
+
+  public main: args = (
+    | customers website payment completionPP |
+
+    printBanner.
+
+    completionPP:: actors createPromisePair.
+    website:: (actors createActorFromValue: Website) <-: new: completionPP resolver.
+
+    customers:: Array new: numCustomers.
+    customers doIndexes: [:i |
+      | c |
+      c:: (actors createActorFromValue: Customer) <-: new: i website: website.
+      customers at: i put: c ].
+
+    customers do: [:c | c <-: bookFlight ].
+
+    ^ completionPP promise
+  )
+
+  private printBanner = (
+    '
+   /_\\  __ _ __  ___  /_\\ (_)_ _  |  \\/  (_)_ _ (_)
+  / _ \\/ _| \'  \\/ -_)/ _ \\| | \'_| | |\\/| | | \' \\| |
+ /_/ \\_\\__|_|_|_\\___/_/ \\_\\_|_|   |_|  |_|_|_||_|_|
+' println.
+  )
+)

@@ -1,9 +1,6 @@
-import {
-  SymbolMessage, FullSourceCoordinate, ActivityType, PassiveEntityType,
-  DynamicScopeType, SendOpType, ReceiveOpType
-} from "./messages";
+import { ActivityType, DynamicScopeType, FullSourceCoordinate, PassiveEntityType, ReceiveOpType, SendOpType, SymbolMessage } from "./messages";
+import { EntityRefType, KomposMetaModel } from "./meta-model";
 import { TraceParser } from "./trace-parser";
-import { KomposMetaModel, EntityRefType } from "./meta-model";
 
 
 export interface EntityProperties {
