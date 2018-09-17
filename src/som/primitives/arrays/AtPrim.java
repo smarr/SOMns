@@ -31,16 +31,15 @@ import tools.dym.Tags.ArrayRead;
     inParser = false, specializer = TxAtPrim.class)
 public abstract class AtPrim extends BinaryBasicOperation {
   protected static final class TxAtPrim extends Specializer<VM, ExpressionNode, SSymbol> {
-    public TxAtPrim(final Primitive prim, final NodeFactory<ExpressionNode> fact,
-        final VM vm) {
-      super(prim, fact, vm);
+    public TxAtPrim(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact);
     }
 
     @Override
     public ExpressionNode create(final Object[] arguments,
         final ExpressionNode[] argNodes, final SourceSection section,
-        final boolean eagerWrapper) {
-      ExpressionNode node = super.create(arguments, argNodes, section, eagerWrapper);
+        final boolean eagerWrapper, final VM vm) {
+      ExpressionNode node = super.create(arguments, argNodes, section, eagerWrapper, vm);
 
       // TODO: seems a bit expensive,
       // might want to optimize for interpreter first iteration speed

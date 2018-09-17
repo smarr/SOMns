@@ -137,7 +137,7 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
       args[i] = new LocalArgumentReadNode(true, i + 1).initialize(source);
     }
 
-    ExpressionNode primNode = specializer.create(null, args, source, false);
+    ExpressionNode primNode = specializer.create(null, args, source, false, lang.getVM());
 
     String name = "vmMirror>>" + signature.toString();
 

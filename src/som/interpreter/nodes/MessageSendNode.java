@@ -51,7 +51,7 @@ public final class MessageSendNode {
         prims.getParserSpecializer(selector, arguments);
     if (specializer != null) {
       EagerlySpecializableNode newNode = (EagerlySpecializableNode) specializer.create(null,
-          arguments, source, !specializer.noWrapper());
+          arguments, source, !specializer.noWrapper(), vm);
       if (specializer.noWrapper()) {
         return newNode;
       } else {
@@ -228,7 +228,7 @@ public final class MessageSendNode {
           boolean noWrapper = specializer.noWrapper();
           EagerlySpecializableNode newNode =
               (EagerlySpecializableNode) specializer.create(arguments, argumentNodes,
-                  sourceSection, !noWrapper);
+                  sourceSection, !noWrapper, vm);
           if (noWrapper) {
             return replace(newNode);
           } else {

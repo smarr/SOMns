@@ -124,7 +124,7 @@ public final class ExtensionLoader extends PrimitiveLoader<VM, ExpressionNode, S
       args[i] = new LocalArgumentReadNode(true, i).initialize(source);
     }
 
-    ExpressionNode primNode = specializer.create(null, args, source, false);
+    ExpressionNode primNode = specializer.create(null, args, source, false, lang.getVM());
 
     String name = moduleName + ">>" + signature.toString();
 

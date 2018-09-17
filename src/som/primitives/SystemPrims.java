@@ -315,9 +315,8 @@ public final class SystemPrims {
   }
 
   public static class IsSystemModule extends Specializer<VM, ExpressionNode, SSymbol> {
-    public IsSystemModule(final Primitive prim, final NodeFactory<ExpressionNode> fact,
-        final VM vm) {
-      super(prim, fact, vm);
+    public IsSystemModule(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact);
     }
 
     @Override

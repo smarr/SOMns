@@ -37,16 +37,15 @@ import tools.dym.Tags.BasicPrimitiveOperation;
     receiverType = SArray.class, inParser = false, specializer = TxAtPutPrim.class)
 public abstract class AtPutPrim extends TernaryExpressionNode {
   protected static final class TxAtPutPrim extends Specializer<VM, ExpressionNode, SSymbol> {
-    public TxAtPutPrim(final Primitive prim, final NodeFactory<ExpressionNode> fact,
-        final VM vm) {
-      super(prim, fact, vm);
+    public TxAtPutPrim(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact);
     }
 
     @Override
     public ExpressionNode create(final Object[] arguments,
         final ExpressionNode[] argNodes, final SourceSection section,
-        final boolean eagerWrapper) {
-      ExpressionNode node = super.create(arguments, argNodes, section, eagerWrapper);
+        final boolean eagerWrapper, final VM vm) {
+      ExpressionNode node = super.create(arguments, argNodes, section, eagerWrapper, vm);
       // TODO: seems a bit expensive,
       // might want to optimize for interpreter first iteration speed
       // TODO: clone in UnitializedDispatchNode.AbstractUninitialized.forAtomic()
