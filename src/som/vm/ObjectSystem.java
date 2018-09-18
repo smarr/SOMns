@@ -48,6 +48,11 @@ import tools.language.StructuralProbe;
 
 public final class ObjectSystem {
 
+  static {
+    inlinableNodes = new InlinableNodes<>(Symbols.PROVIDER,
+        Primitives.getInlinableNodes(), Primitives.getInlinableFactories());
+  }
+
   private final EconomicMap<URI, MixinDefinition> loadedModules;
 
   @CompilationFinal private MixinDefinition platformModule;
@@ -63,7 +68,7 @@ public final class ObjectSystem {
 
   private final Primitives primitives;
 
-  private final InlinableNodes<SSymbol> inlinableNodes;
+  private static final InlinableNodes<SSymbol> inlinableNodes;
 
   private CompletableFuture<Object> mainThreadCompleted;
 
@@ -72,8 +77,6 @@ public final class ObjectSystem {
   public ObjectSystem(final SourcecodeCompiler compiler,
       final StructuralProbe probe, final VM vm) {
     this.primitives = new Primitives(compiler.getLanguage());
-    this.inlinableNodes = new InlinableNodes<>(Symbols.PROVIDER,
-        Primitives.getInlinableNodes(), Primitives.getInlinableFactories());
     this.compiler = compiler;
     structuralProbe = probe;
     loadedModules = EconomicMap.create();

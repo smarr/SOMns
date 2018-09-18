@@ -11,11 +11,9 @@ import java.util.Properties;
 import org.graalvm.collections.EconomicMap;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bd.primitives.Primitive;
 import bd.primitives.PrimitiveLoader;
 import bd.primitives.Specializer;
 import som.VM;
@@ -40,7 +38,7 @@ public final class ExtensionLoader extends PrimitiveLoader<VM, ExpressionNode, S
   private final Extension      extension;
 
   public ExtensionLoader(final String moduleName, final SomLanguage lang) {
-    super(Symbols.PROVIDER, lang.getVM());
+    super(Symbols.PROVIDER);
     primitives = EconomicMap.create();
     this.lang = lang;
     this.moduleName = moduleName;
@@ -90,14 +88,14 @@ public final class ExtensionLoader extends PrimitiveLoader<VM, ExpressionNode, S
   }
 
   @Override
-  protected List<NodeFactory<? extends ExpressionNode>> getFactories() {
-    return extension.getFactories();
+  protected List<Specializer<VM, ExpressionNode, SSymbol>> getSpecializers() {
+    return extension.getSpecializers();
   }
 
   @Override
-  protected void registerPrimitive(final Primitive prim,
+  protected void registerPrimitive(
       final Specializer<VM, ExpressionNode, SSymbol> specializer) {
-    String name = prim.primitive();
+    String name = specializer.getPrimitive().primitive();
 
     assert !("".equals(name));
     SSymbol signature = Symbols.symbolFor(name);

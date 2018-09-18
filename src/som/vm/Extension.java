@@ -2,9 +2,10 @@ package som.vm;
 
 import java.util.List;
 
-import com.oracle.truffle.api.dsl.NodeFactory;
-
+import bd.primitives.Specializer;
+import som.VM;
 import som.interpreter.nodes.ExpressionNode;
+import som.vmobjects.SSymbol;
 
 
 /**
@@ -14,5 +15,5 @@ import som.interpreter.nodes.ExpressionNode;
  * extension. These are then used to create a Newspeak class, similar to {@code vmMirror}.
  */
 public interface Extension {
-  List<NodeFactory<? extends ExpressionNode>> getFactories();
+  List<Specializer<VM, ExpressionNode, SSymbol>> getSpecializers();
 }
