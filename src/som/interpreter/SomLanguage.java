@@ -24,6 +24,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 
+import som.Launcher;
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.vm.NotYetImplementedException;
@@ -163,28 +164,32 @@ public final class SomLanguage extends TruffleLanguage<VM> {
     this.options = new VmOptions(
         env.getApplicationArguments(), env.getOptions().get(TestSelector));
 
-    if (!options.configUsable()) {
-      throw new IllegalStateException();
+    if (options.isConfigUsable()) {
+      vm = new VM(options);
+
+      if (!options.isTestExecution()) {
+        vm.setupInstruments(env);
+      }
+
+      return vm;
+    } else {
+      return null;
     }
-
-    vm = new VM(options);
-
-    if (!options.isTestExecution()) {
-      vm.setupInstruments(env);
-    }
-
-    return vm;
   }
 
   @Override
   protected void initializeContext(final VM vm) throws Exception {
-    vm.initalize(this);
+    if (vm != null) {
+      vm.initalize(this);
+    }
   }
 
   @Override
   protected void disposeContext(final VM context) {
-    assert vm == context;
-    context.shutdown();
+    if (context != null) {
+      assert vm == context;
+      context.shutdown();
+    }
   }
 
   public VM getVM() {
@@ -212,6 +217,10 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
     @Override
     public Object execute(final VirtualFrame frame) {
+      if (vm == null) {
+        return Launcher.EXIT_WITH_ERROR;
+      }
+
       String selector = vm.getTestSelector();
       if (selector == null) {
         return vm.execute();
