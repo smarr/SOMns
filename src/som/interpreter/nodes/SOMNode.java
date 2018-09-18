@@ -25,6 +25,7 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.dsl.TypeSystemReference;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
@@ -98,6 +99,10 @@ public abstract class SOMNode extends Node implements ScopeReference, WithSource
   }
 
   private boolean assertNodeHasNoFrameSlots() {
+    if (TruffleOptions.AOT) {
+      return true;
+    }
+
     if (this.getClass().desiredAssertionStatus()) {
       for (Field f : getAllFields(getClass())) {
         assert f.getType() != FrameSlot.class;
