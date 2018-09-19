@@ -177,7 +177,6 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     return specializer;
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
   private static List<Specializer<VM, ExpressionNode, SSymbol>> initSpecializers() {
     List<Specializer<VM, ExpressionNode, SSymbol>> allFactories = new ArrayList<>();
     addAll(allFactories, ActorClassesFactory.getFactories());
