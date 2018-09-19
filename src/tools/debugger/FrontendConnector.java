@@ -267,7 +267,10 @@ public class FrontendConnector {
     log("[DEBUGGER] Waiting for debugger to connect.");
     try {
       messageSocket = clientConnected.get();
+      assert messageSocket != null;
+
       traceSocket = traceHandler.getConnection().get();
+      assert traceSocket != null;
     } catch (InterruptedException | ExecutionException ex) {
       throw new RuntimeException(ex);
     }
