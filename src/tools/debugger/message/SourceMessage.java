@@ -41,7 +41,7 @@ public class SourceMessage extends OutgoingMessage {
     }
   }
 
-  protected static class MethodData {
+  private static class MethodData {
     private final String             name;
     private final SourceCoordinate[] definition;
     private final SourceCoordinate   sourceSection;

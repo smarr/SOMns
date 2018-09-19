@@ -14,6 +14,10 @@ public class UpdateBreakpoint extends IncommingMessage {
     this.breakpoint = breakpoint;
   }
 
+  UpdateBreakpoint() {
+    this.breakpoint = null;
+  }
+
   public BreakpointInfo getBreakpoint() {
     return breakpoint;
   }

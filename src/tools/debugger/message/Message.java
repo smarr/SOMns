@@ -14,10 +14,14 @@ public abstract class Message {
    * With id to connect request and response.
    */
   public abstract static class Request extends IncommingMessage {
-    protected int requestId;
+    protected final int requestId;
 
     public Request(final int requestId) {
       this.requestId = requestId;
+    }
+
+    protected Request() {
+      this.requestId = 0;
     }
   }
 

@@ -51,6 +51,10 @@ public class SourceCoordinate {
       this.uri = uri;
     }
 
+    protected FullSourceCoordinate() {
+      this(null, 0, 0, 0, 0);
+    }
+
     @Override
     public int hashCode() {
       // ignore charIndex, not always set
