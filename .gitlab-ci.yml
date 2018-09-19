@@ -6,6 +6,7 @@ stages:
 variables:
   PYTHONUNBUFFERED: "true"
   JVMCI_BIN: /home/gitlab-runner/.local/graal-core/bin/java
+  JVMCI_HOME: /home/gitlab-runner/.local/graal-core/
   JVMCI_VERSION_CHECK: ignore
   ECLIPSE_EXE: /home/gitlab-runner/.local/eclipse/eclipse
   JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
@@ -26,7 +27,7 @@ kompos_and_dym_tests:
   tags: [benchmarks, infinity]
   script:
     - ant -Dskip.graal=true jacoco-lib compile dynamic-metrics-tests superinstructions-tests
-    - cd tools/kompos && npm install . && npm -s run verify && npm test
+    - (cd tools/kompos && npm install . && npm -s run verify && npm test)
 
 replay_tests:
   stage: full-test
@@ -34,6 +35,11 @@ replay_tests:
   script:
     - timeout 10m ant -Dskip.graal=true replay-tests
 
+svm_tests:
+  stage: full-test
+  tags: [benchmarks, infinity]
+  script:
+    - ant native
 
 benchmark_savina_job:
   stage: benchmark

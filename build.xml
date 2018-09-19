@@ -15,11 +15,12 @@
     <property name="sdk.dir"     location="${lib.dir}/truffle/sdk" />
     <property name="tools.dir"   location="${lib.dir}/truffle/tools" />
     <property name="svm.dir"     location="${lib.dir}/truffle/substratevm" />
+    <property name="compiler.build" location="${graal.dir}/mxbuild/dists" />
     <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists" />
     <property name="tools.build" location="${tools.dir}/mxbuild/dists" />
     <property name="svm.build"   location="${svm.dir}/mxbuild/dists" />
     <property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
-    <property name="somns-deps.version" value="0.3.5" />
+    <property name="somns-deps.version" value="0.3.6" />
     <property name="checkstyle.version" value="8.11" />
     <property name="jacoco.version"     value="0.8.0" />
 
@@ -33,21 +34,51 @@
 
     <property environment="env"/>
 
-    <path id="project.classpath">
-        <pathelement location="${classes.dir}" />
-        <pathelement location="${unit.dir}" />
-        <pathelement location="${bd.dir}/build/classes" />
+    <path id="boot.cp">
         <pathelement location="${sdk.build}/graal-sdk.jar" />
+        <pathelement location="${truffle.build}/truffle-api.jar" />
+    </path>
+    
+    <path id="svm.cp">
+        <pathelement location="${svm.build}/objectfile.jar" />
+        <pathelement location="${svm.build}/pointsto.jar" />
+        <pathelement location="${svm.build}/svm.jar" />
+        <pathelement location="${compiler.build}/graal-management.jar" />
+        <pathelement location="${compiler.build}/graal.jar" />
+        
+        <pathelement location="${env.JVMCI_HOME}/jre/lib/jvmci/jvmci-api.jar" />
+        <pathelement location="${env.JVMCI_HOME}/jre/lib/jvmci/jvmci-hotspot.jar" />
+    </path>
+
+    <path id="common.cp">
+        <pathelement location="${classes.dir}" />
+        <pathelement location="${bd.dir}/build/classes" />
+        <pathelement location="${lib.dir}/somns-deps.jar" />
+        
+        <pathelement location="${svm.build}/svm-core.jar" />
+        <pathelement location="${tools.build}/truffle-profiler.jar" />
+    </path>
+    
+    <path id="som.cp">
+        <path refid="boot.cp"/>
+        <path refid="common.cp"/>
+        <pathelement location="${unit.dir}" />
+
         <pathelement location="${sdk.build}/word-api.jar" />
         <pathelement location="${sdk.build}/polyglot-tck.jar" />
         <pathelement location="${lib.dir}/somns-deps-dev.jar" />
-        <pathelement location="${lib.dir}/somns-deps.jar" />
-        <pathelement location="${truffle.build}/truffle-api.jar" />
+        
+
         <pathelement location="${truffle.build}/truffle-debug.jar" />
         <pathelement location="${truffle.build}/truffle-dsl-processor.jar" />
         <pathelement location="${truffle.build}/truffle-tck.jar" />
-        <pathelement location="${tools.build}/truffle-profiler.jar" />
-        <pathelement location="${svm.build}/svm-core.jar" />
+    </path>
+    
+    <path id="image.cp">
+        <path refid="boot.cp"/>
+        <path refid="svm.cp"/>
+        <path refid="common.cp"/>
+        <pathelement location="${svm.build}/library-support.jar" />
     </path>
     
     <condition property="is.atLeastJava9" value="true" else="false">
@@ -56,10 +87,14 @@
         <matches string="${java.version}" pattern="^1[0-9]"/>
       </or>
     </condition>
+    <condition property="kernel" value="darwin-amd64" else="linux-amd64">
+        <os family="mac"/>
+    </condition>
     <echo>
         ant.java.version: ${ant.java.version}
         java.version:     ${java.version}
         is.atLeastJava9:  ${is.atLeastJava9}
+        kernel:           ${kernel}
     </echo>
 
     <target name="clean" description="Remove build directories and generated code">
@@ -92,7 +127,7 @@
       </exec>
     </target>
 
-    <target name="truffle-libs" unless="skip.truffle" depends="truffle-submodule,build-graal">
+    <target name="truffle-libs" unless="skip.truffle" depends="truffle-submodule">
         <exec executable="${mx.cmd}" dir="${truffle.dir}" failonerror="true">
             <arg value="build"/>
             <arg value="--no-native"/>
@@ -102,6 +137,7 @@
         </exec>
         <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
             <arg value="build"/>
+            <env key="JAVA_HOME" value="${env.JVMCI_HOME}" />
         </exec>
     </target>
 
@@ -247,25 +283,25 @@
         <mkdir dir="${src_gen.dir}" />
         <javac includeantruntime="false" srcdir="${src.dir}" destdir="${classes.dir}" debug="true"> <!-- for debugging: fork="true"  -->
           <!-- for debugging: <compilerarg line="-J-Xdebug -J-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000" /> -->
-          <classpath refid="project.classpath" />
+          <classpath refid="som.cp" />
           <compilerarg line="-s ${src_gen.dir}" />
           <compilerarg line="-XDignore.symbol.file" />
           <compilerarg line="-Xlint:all" />
           <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
         </javac>
         <javac includeantruntime="false" srcdir="${src_gen.dir}" destdir="${classes.dir}" debug="true">
-          <classpath refid="project.classpath" />
+          <classpath refid="som.cp" />
           <compilerarg line="-s ${src_gen.dir}" />
           <compilerarg line="-Xlint:all" />
           <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
         </javac>
         <javac includeantruntime="false" srcdir="${unit.dir}" destdir="${classes.dir}" debug="true">
-          <classpath refid="project.classpath" />
+          <classpath refid="som.cp" />
           <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
         </javac>
     </target>
 
-    <target name="compile" depends="libs,compile-som,compile-test-extension" description="Compile SOMns and dependencies">
+    <target name="compile" depends="libs,compile-som,compile-test-extension,build-graal" description="Compile SOMns and dependencies">
     </target>
 
     <target name="compile-test-extension">
@@ -292,7 +328,7 @@
             outputtoformatters="true" fork="true" forkmode="once">
             <jvmarg value="-ea" />
             <jvmarg value="-esa" />
-            <classpath refid="project.classpath" />
+            <classpath refid="som.cp" />
             <batchtest fork="yes" filtertrace="false">
               <fileset dir="${unit.dir}">
                   <include name="**/*Test*.java"/>
@@ -305,7 +341,7 @@
 
      <jacoco:coverage>
         <java classname="som.Launcher" fork="true" failonerror="true">
-            <classpath refid="project.classpath" />
+            <classpath refid="som.cp" />
             <jvmarg value="-ea" />
             <jvmarg value="-esa" />
             <arg line="${corelib.dir}/TestSuite/TestRunner.ns" />
@@ -400,7 +436,7 @@
     <target name="send-somns-coverage">
         <!-- submit coverage data -->
         <java classname="coveralls.Report" fork="true" failonerror="true">
-            <classpath refid="project.classpath" />
+            <classpath refid="som.cp" />
             <arg value="${env.COVERALLS_REPO_TOKEN}" />
             <arg value="all.gcov" />
         </java>
@@ -409,5 +445,40 @@
     <target name="coverage" depends="send-java-coverage,send-somns-coverage" />
 
     <target name="tests" depends="core-tests,replay-tests,coverage">
+    </target>
+    
+    <target name="native" depends="libs,compile-som">
+      <java classname="com.oracle.svm.hosted.NativeImageGeneratorRunner" fork="true" failonerror="true"
+          jvm="${env.JVMCI_HOME}/bin/java">
+        <classpath refid="svm.cp" />
+        <jvmarg line="-Xbootclasspath/a:${ant.refid:boot.cp}" />
+        <jvmarg line="-Djvmci.Compiler=graal -Djvmci.class.path.append=${compiler.build}/graal.jar" />
+
+        <jvmarg line="-server -d64 -noverify" />
+        <jvmarg line="-Dgraal.EagerSnippets=true" />
+        <jvmarg line="-Xss10m -Xms1g -Xmx13743895344" />
+        <jvmarg line="-XX:+UnlockExperimentalVMOptions" />
+        <jvmarg line="-XX:+EnableJVMCI" />
+        <jvmarg line="-XX:-UseJVMCIClassLoader" />
+        
+        <jvmarg line="-Duser.country=US -Duser.language=en " />
+        <jvmarg line="-Dgraalvm.version=dev -Dorg.graalvm.version=dev -Dcom.oracle.graalvm.isaot=true" />
+        <jvmarg line="-Dgraalvm.locatorDisabled=true -Dtruffle.TrustAllTruffleRuntimeProviders=true" />
+        <!-- <jvmarg line="-Dsom.instrumentation=true -Dsom.truffleDebugger=true" /> -->
+
+        <arg line="-imagecp ${ant.refid:image.cp}" />
+        
+        <!-- <arg line="-H:+PrintRuntimeCompileMethods" /> -->
+        <!-- <arg line="-H:+PrintMethodHistogram" /> -->
+        
+        <arg line="-H:Path=${basedir}" />
+        <arg line="-H:-ThrowUnsafeOffsetErrors" />
+        <arg line="-H:+RuntimeAssertions" />
+        <arg line="-H:MaxRuntimeCompileMethods=800" />
+        <arg line="-H:CLibraryPath=${svm.dir}/clibraries/${kernel}" />
+        <arg line="-H:Features=com.oracle.svm.truffle.TruffleFeature" />
+        <arg line="-H:Class=som.Launcher -H:Name=som-native" />
+
+      </java>
     </target>
 </project>
