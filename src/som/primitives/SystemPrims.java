@@ -289,6 +289,7 @@ public final class SystemPrims {
   @Primitive(primitive = "systemGC:")
   public abstract static class FullGCPrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final Object doSObject(final Object receiver) {
       System.gc();
       return true;

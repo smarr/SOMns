@@ -1,5 +1,6 @@
 package tools.dym.nodes;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.nodes.Node;
@@ -47,6 +48,7 @@ public final class OperationProfilingNode extends CountingNode<OperationProfile>
     if (e instanceof ReturnException) {
       counter.profileReturn(((ReturnException) e).result());
     } else {
+      CompilerDirectives.transferToInterpreter();
       throw new NotYetImplementedException();
     }
   }
