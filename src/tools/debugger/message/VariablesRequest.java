@@ -11,7 +11,6 @@ import tools.debugger.message.Message.Request;
 
 
 public final class VariablesRequest extends Request {
-
   private final long variablesReference;
 
   private final FilterType filter;
@@ -33,6 +32,13 @@ public final class VariablesRequest extends Request {
     this.filter = filter;
     this.start = start;
     this.count = count;
+  }
+
+  VariablesRequest() {
+    variablesReference = 0;
+    filter = null;
+    start = null;
+    count = null;
   }
 
   @Override

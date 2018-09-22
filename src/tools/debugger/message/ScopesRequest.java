@@ -15,6 +15,10 @@ public final class ScopesRequest extends Request {
     this.frameId = frameId;
   }
 
+  ScopesRequest() {
+    frameId = 0;
+  }
+
   @Override
   public void process(final FrontendConnector connector, final WebSocket conn) {
     Suspension suspension = connector.getSuspensionForGlobalId(frameId);

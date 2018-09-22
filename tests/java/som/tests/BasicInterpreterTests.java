@@ -41,6 +41,7 @@ import org.junit.runners.Parameterized.Parameters;
 import som.Launcher;
 import som.VM;
 import som.interpreter.Types;
+import som.interpreter.objectstorage.StorageAccessor;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
@@ -179,6 +180,10 @@ public class BasicInterpreterTests {
   private final Class<?> resultType;
 
   private final String ignoreForParallelExecutionReason;
+
+  static {
+    StorageAccessor.initAccessors();
+  }
 
   public BasicInterpreterTests(final String testClass,
       final String testSelector,

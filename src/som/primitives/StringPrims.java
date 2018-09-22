@@ -194,12 +194,16 @@ public class StringPrims {
           sb.append(((SSymbol) o).getString());
         } else {
           // TODO: there should be a Smalltalk asString message here, I think
-          argumentError.signal(
-              "Array can't contain non-string objects, but has " + o.toString());
+          argumentError.signal(errorMsg(o));
         }
       }
 
       return sb.toString();
+    }
+
+    @TruffleBoundary
+    private static String errorMsg(final Object o) {
+      return "Array can't contain non-string objects, but has " + o.toString();
     }
 
     @Fallback

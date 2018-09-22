@@ -2,6 +2,7 @@ package som.primitives;
 
 import java.util.Objects;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
@@ -132,10 +133,14 @@ public final class FilePrims {
 
     @Fallback
     public final Object setWithUnsupportedValue(final Object file, final Object mode) {
-      argumentError.signal("File access mode invalid, was: "
-          + Objects.toString(mode) + " " + SFileDescriptor.getValidAccessModes());
-
+      argumentError.signal(errorMsg(mode));
       return file;
+    }
+
+    @TruffleBoundary
+    private String errorMsg(final Object mode) {
+      return "File access mode invalid, was: " + Objects.toString(mode) + " "
+          + SFileDescriptor.getValidAccessModes();
     }
   }
 

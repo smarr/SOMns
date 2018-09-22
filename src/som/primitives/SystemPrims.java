@@ -289,6 +289,7 @@ public final class SystemPrims {
   @Primitive(primitive = "systemGC:")
   public abstract static class FullGCPrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final Object doSObject(final Object receiver) {
       System.gc();
       return true;
@@ -315,9 +316,8 @@ public final class SystemPrims {
   }
 
   public static class IsSystemModule extends Specializer<VM, ExpressionNode, SSymbol> {
-    public IsSystemModule(final Primitive prim, final NodeFactory<ExpressionNode> fact,
-        final VM vm) {
-      super(prim, fact, vm);
+    public IsSystemModule(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact);
     }
 
     @Override

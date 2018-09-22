@@ -9,7 +9,6 @@ import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Instrument;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.InstrumentInfo;
 import com.oracle.truffle.api.TruffleLanguage;
@@ -30,28 +29,7 @@ import tools.SourceCoordinate;
 import tools.TraceData;
 import tools.concurrency.TracingActivityThread;
 import tools.debugger.frontend.Suspension;
-import tools.debugger.message.InitializationResponse;
-import tools.debugger.message.InitializeConnection;
-import tools.debugger.message.Message.IncommingMessage;
-import tools.debugger.message.Message.OutgoingMessage;
-import tools.debugger.message.ProgramInfoRequest;
-import tools.debugger.message.ProgramInfoResponse;
-import tools.debugger.message.ScopesRequest;
-import tools.debugger.message.ScopesResponse;
-import tools.debugger.message.SourceMessage;
-import tools.debugger.message.StackTraceRequest;
-import tools.debugger.message.StackTraceResponse;
-import tools.debugger.message.StepMessage;
-import tools.debugger.message.StoppedMessage;
-import tools.debugger.message.SymbolMessage;
-import tools.debugger.message.TraceDataRequest;
-import tools.debugger.message.UpdateBreakpoint;
-import tools.debugger.message.VariablesRequest;
-import tools.debugger.message.VariablesResponse;
-import tools.debugger.session.BreakpointInfo;
 import tools.debugger.session.Breakpoints;
-import tools.debugger.session.LineBreakpoint;
-import tools.debugger.session.SectionBreakpoint;
 
 
 /**
@@ -191,8 +169,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     assert vm != null;
     this.vm = vm;
     breakpoints = new Breakpoints(dbg, this);
-    connector = new FrontendConnector(breakpoints, instrumenter, this,
-        createJsonProcessor());
+    connector = new FrontendConnector(breakpoints, instrumenter, this, jsonProcessor);
     connector.awaitClient();
   }
 
@@ -200,36 +177,5 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     return breakpoints;
   }
 
-  public static Gson createJsonProcessor() {
-    ClassHierarchyAdapterFactory<OutgoingMessage> outMsgAF =
-        new ClassHierarchyAdapterFactory<>(OutgoingMessage.class, "type");
-    outMsgAF.register("source", SourceMessage.class);
-    outMsgAF.register(InitializationResponse.class);
-    outMsgAF.register(StoppedMessage.class);
-    outMsgAF.register(SymbolMessage.class);
-    outMsgAF.register(StackTraceResponse.class);
-    outMsgAF.register(ScopesResponse.class);
-    outMsgAF.register(VariablesResponse.class);
-    outMsgAF.register(ProgramInfoResponse.class);
-
-    ClassHierarchyAdapterFactory<IncommingMessage> inMsgAF =
-        new ClassHierarchyAdapterFactory<>(IncommingMessage.class, "action");
-    inMsgAF.register(InitializeConnection.class);
-    inMsgAF.register("updateBreakpoint", UpdateBreakpoint.class);
-    inMsgAF.register(StepMessage.class);
-    inMsgAF.register(StackTraceRequest.class);
-    inMsgAF.register(ScopesRequest.class);
-    inMsgAF.register(VariablesRequest.class);
-    inMsgAF.register(ProgramInfoRequest.class);
-    inMsgAF.register(TraceDataRequest.class);
-
-    ClassHierarchyAdapterFactory<BreakpointInfo> breakpointAF =
-        new ClassHierarchyAdapterFactory<>(BreakpointInfo.class, "type");
-    breakpointAF.register(LineBreakpoint.class);
-    breakpointAF.register(SectionBreakpoint.class);
-
-    return new GsonBuilder().registerTypeAdapterFactory(outMsgAF)
-                            .registerTypeAdapterFactory(inMsgAF)
-                            .registerTypeAdapterFactory(breakpointAF).create();
-  }
+  private static Gson jsonProcessor = RuntimeReflectionRegistration.createJsonProcessor();
 }

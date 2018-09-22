@@ -1,6 +1,7 @@
 package som.primitives.actors;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -25,6 +26,7 @@ public final class ActorClasses {
   @Primitive(primitive = "actorsFarReferenceClass:")
   public abstract static class SetFarReferenceClassPrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final SClass setClass(final SClass value) {
       SFarReference.setSOMClass(value);
       FarRefId = value.getMixinDefinition().getMixinId();
@@ -36,6 +38,7 @@ public final class ActorClasses {
   @Primitive(primitive = "actorsPromiseClass:")
   public abstract static class SetPromiseClassPrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final SClass setClass(final SClass value) {
       SPromise.setSOMClass(value);
       return value;
@@ -46,6 +49,7 @@ public final class ActorClasses {
   @Primitive(primitive = "actorsPairClass:")
   public abstract static class SetPairClassPrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final SClass setClass(final SClass value) {
       SPromise.setPairClass(value);
       return value;
@@ -56,6 +60,7 @@ public final class ActorClasses {
   @Primitive(primitive = "actorsResolverClass:")
   public abstract static class SetResolverClassPrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final SClass setClass(final SClass value) {
       SResolver.setSOMClass(value);
       return value;
@@ -66,6 +71,7 @@ public final class ActorClasses {
   @Primitive(primitive = "actorsModule:")
   public abstract static class SetModulePrim extends UnarySystemOperation {
     @Specialization
+    @TruffleBoundary
     public final SImmutableObject setClass(final SImmutableObject value) {
       ActorModule = value;
       TimerPrim.initializeTimer(vm);

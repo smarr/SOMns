@@ -2,6 +2,7 @@ package som.interpreter.actors;
 
 import java.util.concurrent.CompletableFuture;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -60,8 +61,13 @@ public class ReceivedMessage extends ReceivedRootNode {
     protected Object executeBody(final VirtualFrame frame, final EventualMessage msg,
         final boolean haltOnResolver, final boolean haltOnResolution) {
       Object result = onReceive.doPreEvaluated(frame, msg.args);
-      future.complete(result);
+      resolveFuture(result);
       return result;
+    }
+
+    @TruffleBoundary
+    private void resolveFuture(final Object result) {
+      future.complete(result);
     }
   }
 

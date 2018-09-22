@@ -8,10 +8,15 @@ import tools.debugger.session.BreakpointInfo;
 
 
 public class InitializeConnection extends IncommingMessage {
+
   private final BreakpointInfo[] breakpoints;
 
   public InitializeConnection(final BreakpointInfo[] breakpoints) {
     this.breakpoints = breakpoints;
+  }
+
+  InitializeConnection() {
+    this.breakpoints = null;
   }
 
   public BreakpointInfo[] getBreakpoints() {
@@ -20,8 +25,10 @@ public class InitializeConnection extends IncommingMessage {
 
   @Override
   public void process(final FrontendConnector connector, final WebSocket conn) {
-    for (BreakpointInfo bp : breakpoints) {
-      bp.registerOrUpdate(connector);
+    if (breakpoints != null) {
+      for (BreakpointInfo bp : breakpoints) {
+        bp.registerOrUpdate(connector);
+      }
     }
     connector.completeConnection(conn);
   }

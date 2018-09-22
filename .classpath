@@ -22,5 +22,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/BlackDiamonds"/>
 	<classpathentry kind="src" path="/com.oracle.truffle.tools.profiler"/>
 	<classpathentry kind="src" path="/org.graalvm.polyglot.tck"/>
+	<classpathentry kind="src" path="/com.oracle.svm.core"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

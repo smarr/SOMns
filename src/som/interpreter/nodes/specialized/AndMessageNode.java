@@ -35,14 +35,13 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
     protected final NodeFactory<ExpressionNode> boolFact;
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public AndOrSplzr(final Primitive prim,
-        final NodeFactory<ExpressionNode> fact, final VM vm) {
-      this(prim, fact, (NodeFactory) AndBoolMessageNodeFactory.getInstance(), vm);
+    public AndOrSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      this(prim, fact, (NodeFactory) AndBoolMessageNodeFactory.getInstance());
     }
 
     protected AndOrSplzr(final Primitive prim, final NodeFactory<ExpressionNode> msgFact,
-        final NodeFactory<ExpressionNode> boolFact, final VM vm) {
-      super(prim, msgFact, vm);
+        final NodeFactory<ExpressionNode> boolFact) {
+      super(prim, msgFact);
       this.boolFact = boolFact;
     }
 
@@ -61,7 +60,7 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
     @Override
     public final BinaryExpressionNode create(final Object[] arguments,
         final ExpressionNode[] argNodes, final SourceSection section,
-        final boolean eagerWrapper) {
+        final boolean eagerWrapper, final VM vm) {
       BinaryExpressionNode node;
       if (unwrapIfNecessary(argNodes[1]) instanceof BlockNode) {
         node = (BinaryExpressionNode) fact.createNode(

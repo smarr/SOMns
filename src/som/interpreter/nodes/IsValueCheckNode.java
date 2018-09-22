@@ -1,5 +1,6 @@
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
@@ -42,6 +43,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
       return specialize(frame, receiver);
     }
 

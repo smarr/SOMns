@@ -9,17 +9,17 @@ import tools.debugger.message.Message.Request;
 
 
 public class StackTraceRequest extends Request {
-  private long activityId;
+  private final long activityId;
 
   /**
    * Index of the first frame to return.
    */
-  private int startFrame;
+  private final int startFrame;
 
   /**
    * Maximum number of frames to return, or all for 0.
    */
-  private int levels;
+  private final int levels;
 
   public StackTraceRequest(final long activityId, final int startFrame,
       final int levels, final int requestId) {
@@ -28,6 +28,12 @@ public class StackTraceRequest extends Request {
     this.activityId = activityId;
     this.startFrame = startFrame;
     this.levels = levels;
+  }
+
+  StackTraceRequest() {
+    activityId = 0;
+    startFrame = 0;
+    levels = 0;
   }
 
   @Override

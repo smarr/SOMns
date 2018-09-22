@@ -21,11 +21,11 @@ public class UpdateSourceSections extends OutgoingMessage {
     this.updates = updates;
   }
 
-  public static class SourceInfo {
+  private static final class SourceInfo {
     private final String                   sourceUri;
     private final TaggedSourceCoordinate[] sections;
 
-    public SourceInfo(final String sourceUri,
+    private SourceInfo(final String sourceUri,
         final TaggedSourceCoordinate[] sections) {
       this.sourceUri = sourceUri;
       this.sections = sections;

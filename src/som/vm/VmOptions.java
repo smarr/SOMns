@@ -96,7 +96,7 @@ public class VmOptions {
     }
   }
 
-  public boolean configUsable() {
+  public boolean isConfigUsable() {
     if (!showUsage) {
       return true;
     }
@@ -118,6 +118,7 @@ public class VmOptions {
     Output.println("  --si-candidates        Enable the Super-instruction candidate tool");
     Output.println(
         "  --coveralls REPO_TOKEN Enable the Coverage tool and reporting to Coveralls.io");
+
     return false;
   }
 }

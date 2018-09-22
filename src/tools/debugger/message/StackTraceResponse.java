@@ -47,7 +47,7 @@ public final class StackTraceResponse extends Response {
     }
   }
 
-  static class StackFrame {
+  private static class StackFrame {
     /**
      * Id for the frame, unique across all threads.
      */

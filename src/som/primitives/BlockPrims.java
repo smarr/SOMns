@@ -1,5 +1,6 @@
 package som.primitives;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -103,11 +104,16 @@ public abstract class BlockPrims {
 
   private static void checkArguments(final SBlock receiver, final int expectedNumArgs,
       final ExceptionSignalingNode argumentError) {
-    if (receiver.getMethod().getNumberOfArguments() != expectedNumArgs) {
-      argumentError.signal(
-          "Incorrect number of Block arguments: " + expectedNumArgs + ", expected: "
-              + (receiver.getMethod().getNumberOfArguments() - 1));
+    int numArgs = receiver.getMethod().getNumberOfArguments();
+    if (numArgs != expectedNumArgs) {
+      argumentError.signal(errorMsg(expectedNumArgs, numArgs));
     }
+  }
+
+  @TruffleBoundary
+  private static String errorMsg(final int expectedNumArgs, final int numArgs) {
+    return "Incorrect number of Block arguments: " + expectedNumArgs + ", expected: "
+        + (numArgs - 1);
   }
 
   @GenerateNodeFactory

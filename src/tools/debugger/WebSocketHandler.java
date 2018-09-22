@@ -70,6 +70,7 @@ public abstract class WebSocketHandler extends WebSocketServer {
 
     @Override
     public void onMessage(final WebSocket conn, final String message) {
+      assert conn != null;
       try {
         IncommingMessage respond = gson.fromJson(message, IncommingMessage.class);
         respond.process(connector, conn);

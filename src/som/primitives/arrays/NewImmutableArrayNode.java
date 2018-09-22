@@ -31,9 +31,8 @@ import som.vmobjects.SSymbol;
     specializer = NewImmutableArrayNode.IsValueArrayClass.class)
 public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
   public static class IsValueArrayClass extends Specializer<VM, ExpressionNode, SSymbol> {
-    public IsValueArrayClass(final Primitive prim, final NodeFactory<ExpressionNode> fact,
-        final VM vm) {
-      super(prim, fact, vm);
+    public IsValueArrayClass(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact);
     }
 
     @Override

@@ -107,11 +107,14 @@ import som.vmobjects.SSymbol;
 
 public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
 
+  private static List<Specializer<VM, ExpressionNode, SSymbol>> specializer =
+      initSpecializers();
+
   private EconomicMap<SSymbol, Dispatchable> vmMirrorPrimitives;
   private final SomLanguage                  lang;
 
   public Primitives(final SomLanguage lang) {
-    super(Symbols.PROVIDER, lang.getVM());
+    super(Symbols.PROVIDER);
     vmMirrorPrimitives = EconomicMap.create();
     this.lang = lang;
     initialize();
@@ -137,7 +140,7 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
       args[i] = new LocalArgumentReadNode(true, i + 1).initialize(source);
     }
 
-    ExpressionNode primNode = specializer.create(null, args, source, false);
+    ExpressionNode primNode = specializer.create(null, args, source, false, lang.getVM());
 
     String name = "vmMirror>>" + signature.toString();
 
@@ -156,9 +159,9 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
   }
 
   @Override
-  protected void registerPrimitive(final bd.primitives.Primitive prim,
+  protected void registerPrimitive(
       final Specializer<VM, ExpressionNode, SSymbol> specializer) {
-    String vmMirrorName = prim.primitive();
+    String vmMirrorName = specializer.getPrimitive().primitive();
 
     if (!("".equals(vmMirrorName))) {
       SSymbol signature = Symbols.symbolFor(vmMirrorName);
@@ -169,85 +172,88 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     }
   }
 
-  @SuppressWarnings({"rawtypes", "unchecked"})
   @Override
-  protected List<NodeFactory<? extends ExpressionNode>> getFactories() {
-    List<NodeFactory<? extends ExpressionNode>> allFactories = new ArrayList<>();
-    allFactories.addAll(ActorClassesFactory.getFactories());
-    allFactories.addAll(BlockPrimsFactory.getFactories());
-    allFactories.addAll(ClassPrimsFactory.getFactories());
-    allFactories.addAll(DoublePrimsFactory.getFactories());
-    allFactories.addAll(ExceptionsPrimsFactory.getFactories());
-    allFactories.addAll(FilePrimsFactory.getFactories());
-    allFactories.addAll(IfMessageNodeGen.getFactories());
-    allFactories.addAll(IntegerPrimsFactory.getFactories());
-    allFactories.addAll(MethodPrimsFactory.getFactories());
-    allFactories.addAll(MirrorPrimsFactory.getFactories());
-    allFactories.addAll(ObjectPrimsFactory.getFactories());
-    allFactories.addAll(ObjectSystemPrimsFactory.getFactories());
-    allFactories.addAll(PathPrimsFactory.getFactories());
-    allFactories.addAll((List) PromisePrimsFactory.getFactories());
-    allFactories.addAll(StringPrimsFactory.getFactories());
-    allFactories.addAll(SystemPrimsFactory.getFactories());
-    allFactories.addAll(WhilePrimitiveNodeFactory.getFactories());
+  protected List<Specializer<VM, ExpressionNode, SSymbol>> getSpecializers() {
+    return specializer;
+  }
 
-    allFactories.addAll((List) ActivitySpawnFactory.getFactories());
-    allFactories.addAll(ThreadingModuleFactory.getFactories());
-    allFactories.addAll(ConditionPrimitivesFactory.getFactories());
-    allFactories.addAll(DelayPrimitivesFactory.getFactories());
-    allFactories.addAll(MutexPrimitivesFactory.getFactories());
-    allFactories.addAll(ActivityJoinFactory.getFactories());
-    allFactories.addAll(ThreadPrimitivesFactory.getFactories());
-    allFactories.addAll(ChannelPrimitivesFactory.getFactories());
+  private static List<Specializer<VM, ExpressionNode, SSymbol>> initSpecializers() {
+    List<Specializer<VM, ExpressionNode, SSymbol>> allFactories = new ArrayList<>();
+    addAll(allFactories, ActorClassesFactory.getFactories());
+    addAll(allFactories, BlockPrimsFactory.getFactories());
+    addAll(allFactories, ClassPrimsFactory.getFactories());
+    addAll(allFactories, DoublePrimsFactory.getFactories());
+    addAll(allFactories, ExceptionsPrimsFactory.getFactories());
+    addAll(allFactories, FilePrimsFactory.getFactories());
+    addAll(allFactories, IfMessageNodeGen.getFactories());
+    addAll(allFactories, IntegerPrimsFactory.getFactories());
+    addAll(allFactories, MethodPrimsFactory.getFactories());
+    addAll(allFactories, MirrorPrimsFactory.getFactories());
+    addAll(allFactories, ObjectPrimsFactory.getFactories());
+    addAll(allFactories, ObjectSystemPrimsFactory.getFactories());
+    addAll(allFactories, PathPrimsFactory.getFactories());
+    addAll(allFactories, PromisePrimsFactory.getFactories());
+    addAll(allFactories, StringPrimsFactory.getFactories());
+    addAll(allFactories, SystemPrimsFactory.getFactories());
+    addAll(allFactories, WhilePrimitiveNodeFactory.getFactories());
 
-    allFactories.add(AdditionPrimFactory.getInstance());
-    allFactories.add(AndMessageNodeFactory.getInstance());
-    allFactories.add(AsStringPrimFactory.getInstance());
-    allFactories.add(AtomicPrimFactory.getInstance());
-    allFactories.add(AtPrimFactory.getInstance());
-    allFactories.add(AtPutPrimFactory.getInstance());
-    allFactories.add(BitAndPrimFactory.getInstance());
-    allFactories.add(BitOrPrimFactory.getInstance());
-    allFactories.add(BitXorPrimFactory.getInstance());
-    allFactories.add(CopyPrimFactory.getInstance());
-    allFactories.add(CosPrimFactory.getInstance());
-    allFactories.add(DividePrimFactory.getInstance());
-    allFactories.add(DoIndexesPrimFactory.getInstance());
-    allFactories.add(DoPrimFactory.getInstance());
-    allFactories.add(DoubleDivPrimFactory.getInstance());
-    allFactories.add(EqualsEqualsPrimFactory.getInstance());
-    allFactories.add(EqualsPrimFactory.getInstance());
-    allFactories.add(ExpPrimFactory.getInstance());
-    allFactories.add(GreaterThanOrEqualPrimFactory.getInstance());
-    allFactories.add(GreaterThanPrimFactory.getInstance());
-    allFactories.add(HashPrimFactory.getInstance());
-    allFactories.add(IfTrueIfFalseMessageNodeFactory.getInstance());
-    allFactories.add(IntToDoMessageNodeFactory.getInstance());
-    allFactories.add(IntDownToDoMessageNodeFactory.getInstance());
-    allFactories.add(IntToByDoMessageNodeFactory.getInstance());
-    allFactories.add(LessThanOrEqualPrimFactory.getInstance());
-    allFactories.add(LessThanPrimFactory.getInstance());
-    allFactories.add(LogPrimFactory.getInstance());
-    allFactories.add(PowPrimFactory.getInstance());
-    allFactories.add(ModuloPrimFactory.getInstance());
-    allFactories.add(MultiplicationPrimFactory.getInstance());
-    allFactories.add(NewPrimFactory.getInstance());
-    allFactories.add(NewImmutableArrayNodeFactory.getInstance());
-    allFactories.add(NotMessageNodeFactory.getInstance());
-    allFactories.add(OrMessageNodeFactory.getInstance());
-    allFactories.add(PutAllNodeFactory.getInstance());
-    allFactories.add(RemainderPrimFactory.getInstance());
-    allFactories.add(SinPrimFactory.getInstance());
-    allFactories.add(SizeAndLengthPrimFactory.getInstance());
-    allFactories.add(SqrtPrimFactory.getInstance());
-    allFactories.add(SubtractionPrimFactory.getInstance());
-    allFactories.add(UnequalsPrimFactory.getInstance());
-    allFactories.add(new WhileWithStaticBlocksNodeFactory());
-    allFactories.add(TimerPrimFactory.getInstance());
+    addAll(allFactories, ActivitySpawnFactory.getFactories());
+    addAll(allFactories, ThreadingModuleFactory.getFactories());
+    addAll(allFactories, ConditionPrimitivesFactory.getFactories());
+    addAll(allFactories, DelayPrimitivesFactory.getFactories());
+    addAll(allFactories, MutexPrimitivesFactory.getFactories());
+    addAll(allFactories, ActivityJoinFactory.getFactories());
+    addAll(allFactories, ThreadPrimitivesFactory.getFactories());
+    addAll(allFactories, ChannelPrimitivesFactory.getFactories());
 
-    allFactories.add(CreateActorPrimFactory.getInstance());
-    allFactories.add(ResolvePromiseNodeFactory.getInstance());
-    allFactories.add(ErrorPromiseNodeFactory.getInstance());
+    add(allFactories, AdditionPrimFactory.getInstance());
+    add(allFactories, AndMessageNodeFactory.getInstance());
+    add(allFactories, AsStringPrimFactory.getInstance());
+    add(allFactories, AtomicPrimFactory.getInstance());
+    add(allFactories, AtPrimFactory.getInstance());
+    add(allFactories, AtPutPrimFactory.getInstance());
+    add(allFactories, BitAndPrimFactory.getInstance());
+    add(allFactories, BitOrPrimFactory.getInstance());
+    add(allFactories, BitXorPrimFactory.getInstance());
+    add(allFactories, CopyPrimFactory.getInstance());
+    add(allFactories, CosPrimFactory.getInstance());
+    add(allFactories, DividePrimFactory.getInstance());
+    add(allFactories, DoIndexesPrimFactory.getInstance());
+    add(allFactories, DoPrimFactory.getInstance());
+    add(allFactories, DoubleDivPrimFactory.getInstance());
+    add(allFactories, EqualsEqualsPrimFactory.getInstance());
+    add(allFactories, EqualsPrimFactory.getInstance());
+    add(allFactories, ExpPrimFactory.getInstance());
+    add(allFactories, GreaterThanOrEqualPrimFactory.getInstance());
+    add(allFactories, GreaterThanPrimFactory.getInstance());
+    add(allFactories, HashPrimFactory.getInstance());
+    add(allFactories, IfTrueIfFalseMessageNodeFactory.getInstance());
+    add(allFactories, IntToDoMessageNodeFactory.getInstance());
+    add(allFactories, IntDownToDoMessageNodeFactory.getInstance());
+    add(allFactories, IntToByDoMessageNodeFactory.getInstance());
+    add(allFactories, LessThanOrEqualPrimFactory.getInstance());
+    add(allFactories, LessThanPrimFactory.getInstance());
+    add(allFactories, LogPrimFactory.getInstance());
+    add(allFactories, PowPrimFactory.getInstance());
+    add(allFactories, ModuloPrimFactory.getInstance());
+    add(allFactories, MultiplicationPrimFactory.getInstance());
+    add(allFactories, NewPrimFactory.getInstance());
+    add(allFactories, NewImmutableArrayNodeFactory.getInstance());
+    add(allFactories, NotMessageNodeFactory.getInstance());
+    add(allFactories, OrMessageNodeFactory.getInstance());
+    add(allFactories, PutAllNodeFactory.getInstance());
+    add(allFactories, RemainderPrimFactory.getInstance());
+    add(allFactories, SinPrimFactory.getInstance());
+    add(allFactories, SizeAndLengthPrimFactory.getInstance());
+    add(allFactories, SqrtPrimFactory.getInstance());
+    add(allFactories, SubtractionPrimFactory.getInstance());
+    add(allFactories, UnequalsPrimFactory.getInstance());
+    add(allFactories, new WhileWithStaticBlocksNodeFactory());
+    add(allFactories, TimerPrimFactory.getInstance());
+
+    add(allFactories, CreateActorPrimFactory.getInstance());
+    add(allFactories, ResolvePromiseNodeFactory.getInstance());
+    add(allFactories, ErrorPromiseNodeFactory.getInstance());
 
     return allFactories;
   }

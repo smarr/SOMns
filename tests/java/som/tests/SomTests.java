@@ -37,6 +37,7 @@ import org.junit.runners.Parameterized.Parameters;
 
 import som.Launcher;
 import som.VM;
+import som.interpreter.objectstorage.StorageAccessor;
 
 
 @RunWith(Parameterized.class)
@@ -74,6 +75,10 @@ public class SomTests {
 
   private final String testName;
   private final String ignoreReason;
+
+  static {
+    StorageAccessor.initAccessors();
+  }
 
   public SomTests(final String testName, final String ignoreReason) {
     this.testName = testName;

@@ -13,6 +13,7 @@ import java.nio.file.attribute.FileAttribute;
 import java.util.function.Supplier;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -39,7 +40,6 @@ public final class PathPrims {
   @CompilationFinal private static SImmutableObject fileObject;
 
   public static final class FileModule implements Supplier<SObject> {
-
     @Override
     public SObject get() {
       return PathPrims.fileObject;
@@ -62,8 +62,7 @@ public final class PathPrims {
   public abstract static class PathContentsPrim extends UnaryExpressionNode {
     @Specialization
     public final Object getContents(final String directory) {
-      File f = new File(directory);
-      String[] content = f.list();
+      String[] content = contents(directory);
 
       if (content == null) {
         return Nil.nilObject;
@@ -72,6 +71,13 @@ public final class PathPrims {
       Object[] o = new Object[content.length];
       System.arraycopy(content, 0, o, 0, content.length);
       return new SImmutableArray(o, Classes.arrayClass);
+    }
+
+    @TruffleBoundary
+    private static String[] contents(final String directory) {
+      File f = new File(directory);
+      String[] content = f.list();
+      return content;
     }
   }
 
@@ -83,43 +89,58 @@ public final class PathPrims {
     @Specialization
     public final Object copyAs(final String source, final String dest, final SBlock fail) {
       try {
-        Files.copy(Paths.get(source), Paths.get(dest), new CopyOption[0]);
+        copy(source, dest);
       } catch (IOException e) {
-        dispatchHandler.executeDispatch(new Object[] {fail, e.toString()});
+        dispatchHandler.executeDispatch(new Object[] {fail, PathPrims.toString(e)});
       }
       return Nil.nilObject;
+    }
+
+    @TruffleBoundary
+    private static void copy(final String source, final String dest) throws IOException {
+      Files.copy(Paths.get(source), Paths.get(dest), new CopyOption[0]);
     }
   }
 
   @GenerateNodeFactory
   @Primitive(primitive = "pathCreateDirectory:ifFail:")
-  public abstract static class CreateDireytoryPrim extends BinaryExpressionNode {
+  public abstract static class CreateDirectoryPrim extends BinaryExpressionNode {
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
     public final Object createDirectory(final String dir, final SBlock fail) {
       try {
-        Files.createDirectories(Paths.get(dir), new FileAttribute<?>[0]);
+        createDirectory(dir);
       } catch (IOException e) {
-        dispatchHandler.executeDispatch(new Object[] {fail, e.toString()});
+        dispatchHandler.executeDispatch(new Object[] {fail, PathPrims.toString(e)});
       }
       return Nil.nilObject;
+    }
+
+    @TruffleBoundary
+    private static void createDirectory(final String dir) throws IOException {
+      Files.createDirectories(Paths.get(dir), new FileAttribute<?>[0]);
     }
   }
 
   @GenerateNodeFactory
   @Primitive(primitive = "pathDeleteFileDir:ifFail:")
-  public abstract static class DeleteDireytoryPrim extends BinaryExpressionNode {
+  public abstract static class DeleteDirectoryPrim extends BinaryExpressionNode {
     @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
     public final Object delteDirectory(final String dir, final SBlock fail) {
       try {
-        Files.delete(Paths.get(dir));
+        delete(dir);
       } catch (IOException e) {
-        dispatchHandler.executeDispatch(new Object[] {fail, e.toString()});
+        dispatchHandler.executeDispatch(new Object[] {fail, PathPrims.toString(e)});
       }
       return Nil.nilObject;
+    }
+
+    @TruffleBoundary
+    private static void delete(final String dir) throws IOException {
+      Files.delete(Paths.get(dir));
     }
   }
 
@@ -127,6 +148,7 @@ public final class PathPrims {
   @Primitive(primitive = "pathFileExists:")
   public abstract static class PathExistsPrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final boolean exists(final String dir) {
       return Files.exists(Paths.get(dir), new LinkOption[0]);
     }
@@ -136,6 +158,7 @@ public final class PathPrims {
   @Primitive(primitive = "pathIsDirectory:")
   public abstract static class IsDirectoryPrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final boolean isDirectory(final String dir) {
       return Files.isDirectory(Paths.get(dir), new LinkOption[0]);
     }
@@ -145,6 +168,7 @@ public final class PathPrims {
   @Primitive(primitive = "pathIsReadOnly:")
   public abstract static class IsReadOnlyPrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final boolean isReadOnly(final String dir) {
       return Files.isReadable(Paths.get(dir)) && !Files.isWritable(Paths.get(dir));
     }
@@ -170,7 +194,7 @@ public final class PathPrims {
     @Specialization
     public final Object lastModified(final String dir) {
       try {
-        return Files.getLastModifiedTime(Paths.get(dir), new LinkOption[0]).toString();
+        return lastModifiedTime(dir);
       } catch (FileNotFoundException e) {
         fileNotFound.signal(dir, e.getMessage());
         return Nil.nilObject;
@@ -178,6 +202,11 @@ public final class PathPrims {
         ioException.signal(e.getMessage());
         return Nil.nilObject;
       }
+    }
+
+    @TruffleBoundary
+    private static String lastModifiedTime(final String dir) throws IOException {
+      return Files.getLastModifiedTime(Paths.get(dir), new LinkOption[0]).toString();
     }
   }
 
@@ -189,11 +218,16 @@ public final class PathPrims {
     @Specialization
     public final Object moveAs(final String source, final String dest, final SBlock fail) {
       try {
-        Files.move(Paths.get(source), Paths.get(dest), new CopyOption[0]);
+        move(source, dest);
       } catch (IOException e) {
-        dispatchHandler.executeDispatch(new Object[] {fail, e.toString()});
+        dispatchHandler.executeDispatch(new Object[] {fail, PathPrims.toString(e)});
       }
       return Nil.nilObject;
+    }
+
+    @TruffleBoundary
+    private static void move(final String source, final String dest) throws IOException {
+      Files.move(Paths.get(source), Paths.get(dest), new CopyOption[0]);
     }
   }
 
@@ -217,7 +251,7 @@ public final class PathPrims {
     @Specialization
     public final long getSize(final String dir) {
       try {
-        return Files.size(Paths.get(dir));
+        return size(dir);
       } catch (NoSuchFileException e) {
         fileNotFound.signal(dir, e.getMessage());
       } catch (IOException e) {
@@ -225,12 +259,18 @@ public final class PathPrims {
       }
       return -1;
     }
+
+    @TruffleBoundary
+    private static long size(final String dir) throws IOException {
+      return Files.size(Paths.get(dir));
+    }
   }
 
   @GenerateNodeFactory
   @Primitive(primitive = "pathCurrentDirectory:")
   public abstract static class CurrentDirectoryPrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final String getSize(final Object o) {
       return System.getProperty("user.dir");
     }
@@ -249,9 +289,15 @@ public final class PathPrims {
   @Primitive(primitive = "pathIsAbsolute:")
   public abstract static class AbsolutePrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final boolean isAbsolute(final String path) {
       Path p = Paths.get(path);
       return p.isAbsolute();
     }
+  }
+
+  @TruffleBoundary
+  private static String toString(final IOException e) {
+    return e.toString();
   }
 }

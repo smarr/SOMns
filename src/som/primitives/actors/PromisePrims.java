@@ -50,9 +50,8 @@ import tools.debugger.session.Breakpoints;
 public final class PromisePrims {
 
   public static class IsActorModule extends Specializer<VM, ExpressionNode, SSymbol> {
-    public IsActorModule(final Primitive prim, final NodeFactory<ExpressionNode> fact,
-        final VM vm) {
-      super(prim, fact, vm);
+    public IsActorModule(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact);
     }
 
     @Override

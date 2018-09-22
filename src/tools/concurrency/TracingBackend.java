@@ -93,7 +93,7 @@ public class TracingBackend {
   private static FrontendConnector front = null;
 
   private static long              collectedMemory = 0;
-  private static TraceWorkerThread workerThread    = new TraceWorkerThread();
+  private static TraceWorkerThread workerThread;
 
   static {
     if (VmSettings.MEMORY_TRACING) {
@@ -263,6 +263,10 @@ public class TracingBackend {
   }
 
   public static final long[] getStatistics() {
+    if (workerThread == null) {
+      return new long[] {0, 0};
+    }
+
     long[] stats = new long[] {workerThread.traceBytes, workerThread.externalBytes};
 
     workerThread.traceBytes = 0;
@@ -278,6 +282,7 @@ public class TracingBackend {
 
   public static void startTracingBackend() {
     // start worker thread for trace processing
+    workerThread = new TraceWorkerThread();
     workerThread.start();
   }
 
@@ -295,6 +300,10 @@ public class TracingBackend {
   }
 
   public static void waitForTrace() {
+    if (workerThread == null) {
+      return;
+    }
+
     workerThread.cont = false;
     try {
       workerThread.join(TRACE_TIMEOUT);

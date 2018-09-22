@@ -154,6 +154,7 @@ public abstract class MirrorPrims {
   @Primitive(primitive = "classDefFilePath:")
   public abstract static class ClassDefFilePathPrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final String getFilePath(final Object mixinHandle) {
       assert mixinHandle instanceof MixinDefinition;
       MixinDefinition def = (MixinDefinition) mixinHandle;

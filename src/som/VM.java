@@ -334,13 +334,9 @@ public final class VM {
       truffleProfiler.setCollecting(true);
     }
 
-    Debugger debugger = null;
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      debugger = Debugger.find(env);
-    }
-
-    if (options.webDebuggerEnabled) {
-      assert VmSettings.TRUFFLE_DEBUGGER_ENABLED && debugger != null;
+      assert options.webDebuggerEnabled : "If debugging is enabled, we currently expect the web debugger to be used.";
+      Debugger debugger = Debugger.find(env);
 
       webDebugger = WebDebugger.find(env);
       webDebugger.startServer(debugger, this);

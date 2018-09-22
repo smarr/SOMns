@@ -26,9 +26,8 @@ import tools.dym.Tags.LoopNode;
     specializer = ToDoSplzr.class, inParser = false)
 public abstract class IntToDoMessageNode extends TernaryExpressionNode {
   public static class ToDoSplzr extends Specializer<VM, ExpressionNode, SSymbol> {
-    public ToDoSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact,
-        final VM vm) {
-      super(prim, fact, vm);
+    public ToDoSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact);
     }
 
     @Override
