@@ -188,6 +188,10 @@ public final class SClass extends SObjectWithClass {
     this.isArray = isArray;
     this.instanceClassGroup = classFactory;
     // assert instanceClassGroup != null || !ObjectSystem.isInitialized();
+
+    if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
+      SnapshotBackend.registerClass(Symbols.symbolFor(mixinDef.getIdentifier()), this);
+    }
   }
 
   /**

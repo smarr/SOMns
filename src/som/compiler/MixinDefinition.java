@@ -850,4 +850,14 @@ public final class MixinDefinition implements SomInteropObject {
   public static boolean isInstance(final TruffleObject obj) {
     return obj instanceof MixinDefinition;
   }
+
+  public String getIdentifier() {
+    MixinDefinition outer = getOuterMixinDefinition();
+    if (outer != null) {
+      return outer.getIdentifier() + "." + this.name.getString();
+    } else if (this.isModule && this.sourceSection != null) {
+      return this.sourceSection.getSource().getPath() + ":" + this.name.getString();
+    }
+    return this.name.getString();
+  }
 }
