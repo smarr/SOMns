@@ -43,7 +43,12 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
+import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vm.constants.Classes;
+import tools.snapshot.SnapshotBackend;
+import tools.snapshot.nodes.AbstractSerializationNode;
+import tools.snapshot.nodes.SObjectWithFieldsSerializationNode;
 
 
 // TODO: should we move more of that out of SClass and use the corresponding
@@ -66,6 +71,8 @@ public final class SClass extends SObjectWithClass {
 
   @CompilationFinal private ClassFactory instanceClassGroup; // the factory for this object
 
+  @CompilationFinal protected AbstractSerializationNode serializer;
+
   protected final SObjectWithClass enclosingObject;
   private final MaterializedFrame  context;
 
@@ -76,6 +83,7 @@ public final class SClass extends SObjectWithClass {
   public SClass(final SObjectWithClass enclosing) {
     this.enclosingObject = enclosing;
     this.context = null;
+    this.serializer = SObjectWithFieldsSerializationNode.create(this);
   }
 
   /**
@@ -86,6 +94,7 @@ public final class SClass extends SObjectWithClass {
     super(clazz, clazz.getInstanceFactory());
     this.enclosingObject = enclosing;
     this.context = null;
+    this.serializer = SObjectWithFieldsSerializationNode.create(this);
   }
 
   /**
@@ -98,6 +107,7 @@ public final class SClass extends SObjectWithClass {
     super(clazz, clazz.getInstanceFactory());
     this.enclosingObject = enclosing;
     this.context = frame;
+    this.serializer = SObjectWithFieldsSerializationNode.create(this);
   }
 
   public SObjectWithClass getEnclosingObject() {
@@ -344,5 +354,13 @@ public final class SClass extends SObjectWithClass {
   @Override
   public MaterializedFrame getContext() {
     return context;
+  }
+
+  public AbstractSerializationNode getSerializer() {
+    return serializer;
+  }
+
+  public void setSerializer(final AbstractSerializationNode serializer) {
+    this.serializer = serializer;
   }
 }
