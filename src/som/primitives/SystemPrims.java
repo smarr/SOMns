@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -34,6 +35,7 @@ import som.compiler.MixinDefinition;
 import som.interop.ValueConversion.ToSomConversion;
 import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
 import som.interpreter.Invokable;
+import som.interpreter.Types;
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
@@ -50,6 +52,7 @@ import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.SImmutableArray;
+import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
@@ -57,6 +60,8 @@ import tools.concurrency.TraceParser;
 import tools.concurrency.TracingBackend;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.nodes.TraceActorContextNode;
+import tools.snapshot.SnapshotBackend;
+import tools.snapshot.SnapshotBuffer;
 
 
 public final class SystemPrims {
@@ -312,6 +317,59 @@ public final class SystemPrims {
         ActorExecutionTrace.longSystemCall(res, tracer);
       }
       return res;
+    }
+  }
+
+  /**
+   * This primitive serves testing purposes for the snapshot serialization by allowing to
+   * serialize
+   * objects on demand.
+   *
+   * @author dominikaumayr
+   *
+   */
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "snapshot:")
+  public abstract static class SnapshotPrim extends UnaryBasicOperation {
+
+    @Specialization
+    public final long doSObject(final Object receiver) {
+      if (VmSettings.SNAPSHOTS_ENABLED) {
+        SnapshotBuffer sb = new SnapshotBuffer();
+
+        if (!sb.containsObject(receiver)) {
+          SClass sc = Types.getClassOf(receiver);
+          sc.getSerializer().serialize(receiver, sb);
+        }
+        return 0;
+      }
+      return 0;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "snapshotClone:")
+  public abstract static class SnapshotClonePrim extends UnaryBasicOperation {
+
+    @Specialization
+    public final Object doSObject(final Object receiver) {
+      if (VmSettings.SNAPSHOTS_ENABLED) {
+        SnapshotBuffer sb = new SnapshotBuffer();
+
+        if (!sb.containsObject(receiver)) {
+          SClass sc = Types.getClassOf(receiver);
+          sc.getSerializer().serialize(receiver, sb);
+          ByteBuffer bb = sb.getBuffer();
+
+          short cId = bb.getShort();
+
+          SClass clazz = SnapshotBackend.lookupClass(cId);
+          Object o = clazz.getSerializer().deserialize(bb);
+          return o;
+        }
+      }
+      return null;
     }
   }
 
