@@ -3,6 +3,10 @@ package tools.snapshot.nodes;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
+
 import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
@@ -11,6 +15,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
+import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.ClassSerializationNodeFactory;
 
 
 public abstract class PrimitiveSerializationNodes {
@@ -125,14 +130,31 @@ public abstract class PrimitiveSerializationNodes {
     }
   }
 
-  public static class ClassSerializationNode extends AbstractSerializationNode {
+  @GenerateNodeFactory
+  public abstract static class ClassSerializationNode extends AbstractSerializationNode {
+
+    public static ClassSerializationNode create() {
+      return ClassSerializationNodeFactory.create();
+    }
+
+    protected abstract void execute(Object o, SnapshotBuffer sb);
+
+    protected short getSymbolId(final Object o) {
+      assert o instanceof SClass;
+      return Symbols.symbolFor(((SClass) o).getMixinDefinition().getIdentifier())
+                    .getSymbolId();
+    }
+
     @Override
     public void serialize(final Object o, final SnapshotBuffer sb) {
-      assert o instanceof SClass;
-      SClass sc = (SClass) o;
+      this.execute(o, sb);
+    }
+
+    @Specialization
+    protected void doCached(final Object o, final SnapshotBuffer sb,
+        @Cached("getSymbolId(o)") final short cachedId) {
       int base = sb.addObject(o, Classes.classClass, 2);
-      sb.putShortAt(base,
-          Symbols.symbolFor(sc.getMixinDefinition().getIdentifier()).getSymbolId());
+      sb.putShortAt(base, cachedId);
     }
 
     @Override

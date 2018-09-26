@@ -48,7 +48,8 @@ import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.nodes.AbstractSerializationNode;
-import tools.snapshot.nodes.SObjectWithFieldsSerializationNode;
+import tools.snapshot.nodes.ObjectSerializationNode;
+import tools.snapshot.nodes.PrimitiveSerializationNodes.ClassSerializationNode;
 
 
 // TODO: should we move more of that out of SClass and use the corresponding
@@ -83,7 +84,7 @@ public final class SClass extends SObjectWithClass {
   public SClass(final SObjectWithClass enclosing) {
     this.enclosingObject = enclosing;
     this.context = null;
-    this.serializer = SObjectWithFieldsSerializationNode.create(this);
+    this.serializer = ClassSerializationNode.create();
   }
 
   /**
@@ -94,7 +95,11 @@ public final class SClass extends SObjectWithClass {
     super(clazz, clazz.getInstanceFactory());
     this.enclosingObject = enclosing;
     this.context = null;
-    this.serializer = SObjectWithFieldsSerializationNode.create(this);
+    if (clazz == Classes.metaclassClass) {
+      this.serializer = ClassSerializationNode.create();
+    } else {
+      this.serializer = ObjectSerializationNode.create(this);
+    }
   }
 
   /**
@@ -107,7 +112,7 @@ public final class SClass extends SObjectWithClass {
     super(clazz, clazz.getInstanceFactory());
     this.enclosingObject = enclosing;
     this.context = frame;
-    this.serializer = SObjectWithFieldsSerializationNode.create(this);
+    this.serializer = ObjectSerializationNode.create(this);
   }
 
   public SObjectWithClass getEnclosingObject() {
