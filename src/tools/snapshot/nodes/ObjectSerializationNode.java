@@ -39,7 +39,68 @@ public abstract class ObjectSerializationNode extends AbstractSerializationNode 
     return new UninitializedObjectSerializationNode(clazz);
   }
 
-  protected static class UninitializedObjectSerializationNode
+  protected final CachedSlotWrite[] createWriteNodes(final SObject o) {
+    CompilerDirectives.transferToInterpreter();
+
+    // sort slots so we get the right order
+    ObjectLayout layout = clazz.getLayoutForInstancesUnsafe();
+    ArrayList<SlotDefinition> definitions = new ArrayList<>();
+    layout.getStorageLocations().getKeys().forEach(sd -> definitions.add(sd));
+    CachedSlotWrite[] writes = new CachedSlotWrite[definitions.size()];
+
+    Collections.sort(definitions, (a, b) -> {
+      return a.getName().getString().compareTo(b.getName().getString());
+    });
+
+    for (int i = 0; i < writes.length; i++) {
+      StorageLocation loc =
+          layout.getStorageLocation(definitions.get(i));
+
+      AbstractDispatchNode next =
+          UninitializedDispatchNode.createLexicallyBound(loc.getSlot().getSourceSection(),
+              loc.getSlot().getName(), clazz.getMixinDefinition().getMixinId());
+
+      writes[i] =
+          loc.getWriteNode(loc.getSlot(), DispatchGuard.createSObjectCheck(o),
+              next,
+              false);
+    }
+    return writes;
+  }
+
+  protected final CachedSlotRead[] createReadNodes(final SObject o) {
+    CompilerDirectives.transferToInterpreter();
+
+    ArrayList<SlotDefinition> definitions = new ArrayList<>();
+    ObjectLayout layout = clazz.getLayoutForInstancesUnsafe();
+    layout.getStorageLocations().getKeys().forEach(sd -> definitions.add(sd));
+    CachedSlotRead[] reads = new CachedSlotRead[definitions.size()];
+
+    // Reads are ordered by the name of the slots
+    // this way the entry order is deterministic and independent of layout changes
+    // same order in replay when reading
+    Collections.sort(definitions, (a, b) -> {
+      return a.getName().getString().compareTo(b.getName().getString());
+    });
+
+    for (int i = 0; i < reads.length; i++) {
+      StorageLocation loc = layout.getStorageLocation(definitions.get(i));
+
+      AbstractDispatchNode next =
+          UninitializedDispatchNode.createLexicallyBound(loc.getSlot().getSourceSection(),
+              loc.getSlot().getName(), clazz.getMixinDefinition().getMixinId());
+
+      reads[i] =
+          loc.getReadNode(SlotAccess.FIELD_READ,
+              DispatchGuard.createSObjectCheck(o),
+              next,
+              false);
+    }
+
+    return reads;
+  }
+
+  protected static final class UninitializedObjectSerializationNode
       extends ObjectSerializationNode {
 
     private UninitializedObjectSerializationNode(final SClass clazz) {
@@ -71,72 +132,11 @@ public abstract class ObjectSerializationNode extends AbstractSerializationNode 
         return clazz.getSerializer().deserialize(sb);
       }
     }
-
-    protected final CachedSlotWrite[] createWriteNodes(final SObject o) {
-      CompilerDirectives.transferToInterpreter();
-
-      // sort slots so we get the right order
-      ObjectLayout layout = clazz.getLayoutForInstancesUnsafe();
-      ArrayList<SlotDefinition> definitions = new ArrayList<>();
-      layout.getStorageLocations().getKeys().forEach(sd -> definitions.add(sd));
-      CachedSlotWrite[] writes = new CachedSlotWrite[definitions.size()];
-
-      Collections.sort(definitions, (a, b) -> {
-        return a.getName().getString().compareTo(b.getName().getString());
-      });
-
-      for (int i = 0; i < writes.length; i++) {
-        StorageLocation loc =
-            layout.getStorageLocation(definitions.get(i));
-
-        AbstractDispatchNode next =
-            UninitializedDispatchNode.createLexicallyBound(loc.getSlot().getSourceSection(),
-                loc.getSlot().getName(), clazz.getMixinDefinition().getMixinId());
-
-        writes[i] =
-            loc.getWriteNode(loc.getSlot(), DispatchGuard.createSObjectCheck(o),
-                next,
-                false);
-      }
-      return writes;
-    }
-
-    protected final CachedSlotRead[] createReadNodes(final SObject o) {
-      CompilerDirectives.transferToInterpreter();
-
-      ArrayList<SlotDefinition> definitions = new ArrayList<>();
-      ObjectLayout layout = clazz.getLayoutForInstancesUnsafe();
-      layout.getStorageLocations().getKeys().forEach(sd -> definitions.add(sd));
-      CachedSlotRead[] reads = new CachedSlotRead[definitions.size()];
-
-      // Reads are ordered by the name of the slots
-      // this way the entry order is deterministic and independent of layout changes
-      // same order in replay when reading
-      Collections.sort(definitions, (a, b) -> {
-        return a.getName().getString().compareTo(b.getName().getString());
-      });
-
-      for (int i = 0; i < reads.length; i++) {
-        StorageLocation loc = layout.getStorageLocation(definitions.get(i));
-
-        AbstractDispatchNode next =
-            UninitializedDispatchNode.createLexicallyBound(loc.getSlot().getSourceSection(),
-                loc.getSlot().getName(), clazz.getMixinDefinition().getMixinId());
-
-        reads[i] =
-            loc.getReadNode(SlotAccess.FIELD_READ,
-                DispatchGuard.createSObjectCheck(o),
-                next,
-                false);
-      }
-
-      return reads;
-    }
   }
 
   // These Nodes may need to be replaced in the class when object layouts change
   protected static final class SObjectSerializationNode
-      extends UninitializedObjectSerializationNode {
+      extends ObjectSerializationNode {
 
     private final int                                     fieldCnt;
     @CompilationFinal @Children private CachedSlotRead[]  fieldReads;
@@ -224,7 +224,7 @@ public abstract class ObjectSerializationNode extends AbstractSerializationNode 
     @Override
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof SObjectWithoutFields;
-      int base = sb.addObject(o, clazz, 0);
+      sb.addObject(o, clazz, 0);
     }
 
     @Override
