@@ -50,11 +50,11 @@ public abstract class ObjectSerializationNode extends AbstractSerializationNode 
     public void serialize(final Object o, final SnapshotBuffer sb) {
       if (o instanceof SObject) {
         clazz.setSerializer(
-            new InitializedSObjectSerializationNode(clazz, createReadNodes((SObject) o)));
+            new SObjectSerializationNode(clazz, createReadNodes((SObject) o)));
         clazz.getSerializer().serialize(o, sb);
       } else if (o instanceof SObjectWithoutFields) {
         clazz.setSerializer(
-            new InitializedSObjectWithoutFieldsSerializationNode(clazz));
+            new SObjectWithoutFieldsSerializationNode(clazz));
         clazz.getSerializer().serialize(o, sb);
       }
     }
@@ -63,11 +63,11 @@ public abstract class ObjectSerializationNode extends AbstractSerializationNode 
     public Object deserialize(final ByteBuffer sb) {
       if (clazz.getFactory().hasSlots()) {
         clazz.setSerializer(
-            new InitializedSObjectSerializationNode(clazz, null));
+            new SObjectSerializationNode(clazz, null));
         return clazz.getSerializer().deserialize(sb);
       } else {
         clazz.setSerializer(
-            new InitializedSObjectWithoutFieldsSerializationNode(clazz));
+            new SObjectWithoutFieldsSerializationNode(clazz));
         return clazz.getSerializer().deserialize(sb);
       }
     }
@@ -135,7 +135,7 @@ public abstract class ObjectSerializationNode extends AbstractSerializationNode 
   }
 
   // These Nodes may need to be replaced in the class when object layouts change
-  protected static final class InitializedSObjectSerializationNode
+  protected static final class SObjectSerializationNode
       extends UninitializedObjectSerializationNode {
 
     private final int                                     fieldCnt;
@@ -143,7 +143,7 @@ public abstract class ObjectSerializationNode extends AbstractSerializationNode 
     @CompilationFinal @Children private CachedSlotWrite[] fieldWrites;
     private ObjectLayout                                  layout;
 
-    private InitializedSObjectSerializationNode(final SClass clazz,
+    private SObjectSerializationNode(final SClass clazz,
         final CachedSlotRead[] reads) {
       super(clazz);
       layout = clazz.getLayoutForInstancesUnsafe();
@@ -213,10 +213,10 @@ public abstract class ObjectSerializationNode extends AbstractSerializationNode 
     }
   }
 
-  protected static final class InitializedSObjectWithoutFieldsSerializationNode
+  public static final class SObjectWithoutFieldsSerializationNode
       extends ObjectSerializationNode {
 
-    private InitializedSObjectWithoutFieldsSerializationNode(final SClass clazz) {
+    public SObjectWithoutFieldsSerializationNode(final SClass clazz) {
       super(clazz);
     }
 
