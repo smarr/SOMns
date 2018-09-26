@@ -51,6 +51,10 @@ public final class SBlock extends SAbstractObject implements SObjectWithContext 
     return context;
   }
 
+  public MaterializedFrame getContextOrNull() {
+    return context;
+  }
+
   @Override
   public SClass getSOMClass() {
     return Classes.blockClass;
