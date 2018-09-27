@@ -65,17 +65,16 @@ public class BlockSerializationNode extends AbstractSerializationNode {
         // assume this is ordered by index
         assert slot.getIndex() == j;
 
+        // TODO optimization: MaterializedFrameSerialization Nodes that are associated with the
+        // Invokables Frame Descriptor. Possibly use Local Var Read Nodes.
         Object value = mf.getValue(slot);
         switch (fd.getFrameSlotKind(slot)) {
           case Boolean:
             Classes.booleanClass.getSerializer().serialize(value, sb);
             break;
-          case Byte:
           case Double:
-          case Float:
             Classes.doubleClass.getSerializer().serialize(value, sb);
             break;
-          case Int:
           case Long:
             Classes.integerClass.getSerializer().serialize(value, sb);
             break;
@@ -89,7 +88,6 @@ public class BlockSerializationNode extends AbstractSerializationNode {
               Types.getClassOf(value).getSerializer().serialize(value, sb);
             }
             break;
-          case Illegal:
           default:
             throw new IllegalStateException("We don't handle illegal frame slots");
 
@@ -138,12 +136,9 @@ public class BlockSerializationNode extends AbstractSerializationNode {
         case Boolean:
           frame.setBoolean(slot, (boolean) o);
           break;
-        case Byte:
         case Double:
-        case Float:
           frame.setDouble(slot, (double) o);
           break;
-        case Int:
         case Long:
           frame.setLong(slot, (long) o);
           break;
@@ -157,7 +152,6 @@ public class BlockSerializationNode extends AbstractSerializationNode {
           }
           frame.setObject(slot, o);
           break;
-        case Illegal:
         default:
           throw new IllegalStateException("We don't handle illegal frame slots");
       }

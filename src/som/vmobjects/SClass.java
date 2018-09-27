@@ -48,7 +48,7 @@ import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.nodes.AbstractSerializationNode;
-import tools.snapshot.nodes.ObjectSerializationNode;
+import tools.snapshot.nodes.ObjectSerializationNodes.ObjectSerializationNode;
 import tools.snapshot.nodes.PrimitiveSerializationNodes.ClassSerializationNode;
 
 

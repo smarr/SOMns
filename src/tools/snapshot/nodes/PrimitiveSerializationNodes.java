@@ -3,6 +3,7 @@ package tools.snapshot.nodes;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -153,6 +154,7 @@ public abstract class PrimitiveSerializationNodes {
     @Specialization
     protected void doCached(final Object o, final SnapshotBuffer sb,
         @Cached("getSymbolId(o)") final short cachedId) {
+      CompilerAsserts.compilationConstant(cachedId);
       int base = sb.addObject(o, Classes.classClass, 2);
       sb.putShortAt(base, cachedId);
     }

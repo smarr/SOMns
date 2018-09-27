@@ -6,7 +6,7 @@ import tools.snapshot.nodes.ArraySerializationNode;
 import tools.snapshot.nodes.ArraySerializationNode.TransferArraySerializationNode;
 import tools.snapshot.nodes.ArraySerializationNode.ValueArraySerializationNode;
 import tools.snapshot.nodes.BlockSerializationNode;
-import tools.snapshot.nodes.ObjectSerializationNode.SObjectWithoutFieldsSerializationNode;
+import tools.snapshot.nodes.ObjectSerializationNodes.SObjectWithoutFieldsSerializationNode;
 import tools.snapshot.nodes.PrimitiveSerializationNodes.BooleanSerializationNode;
 import tools.snapshot.nodes.PrimitiveSerializationNodes.ClassSerializationNode;
 import tools.snapshot.nodes.PrimitiveSerializationNodes.DoubleSerializationNode;
