@@ -46,6 +46,7 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
         ^ a * b.
       ].
     |
+    'Starting SerializationTest' println.
     )(
 
     public class EmptyClass = ()(

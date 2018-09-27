@@ -375,7 +375,9 @@
         <arg value="-G" />
         <arg value="-at" />
         <arg value="-tas" />
-        <arg value="${corelib.dir}/TestSuite/TestRunner.ns ${corelib.dir}/TestSuite/Serialization.ns" />
+        <arg value="${corelib.dir}/TestSuite/TestRunner.ns" />
+        <arg value="${corelib.dir}/TestSuite/Serialization.ns" /> 
+        <arg value="SerializationTest" />
       </exec>
     </target>
 
