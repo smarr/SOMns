@@ -30,6 +30,12 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
 
   protected abstract void execute(SArray sa, SnapshotBuffer sb);
 
+  @Override
+  public Object deserialize(final ByteBuffer sb) {
+    // This is for the DSL Processor, without this it won't generate stuff
+    throw new UnsupportedOperationException("This should never be called");
+  }
+
   @Specialization(guards = "sa.isBooleanType()")
   protected void doBoolean(final SArray sa, final SnapshotBuffer sb) {
     boolean[] ba = sa.getBooleanStorage();
