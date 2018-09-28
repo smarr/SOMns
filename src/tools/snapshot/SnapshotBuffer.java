@@ -18,7 +18,7 @@ public class SnapshotBuffer extends TraceBuffer {
   public static final int MAX_FIELD_CNT = Byte.MAX_VALUE;
 
   public SnapshotBuffer() {
-    super();
+    super(true);
     this.entries = EconomicMap.create();
   }
 

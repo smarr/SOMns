@@ -54,6 +54,14 @@ public abstract class TraceBuffer {
     buffer = TracingBackend.getEmptyBuffer();
   }
 
+  protected TraceBuffer(final boolean create) {
+    if (create) {
+      this.buffer = new byte[VmSettings.BUFFER_SIZE];
+    } else {
+      buffer = TracingBackend.getEmptyBuffer();
+    }
+  }
+
   public int position() {
     assert position <= VmSettings.BUFFER_SIZE;
     assert position <= buffer.length;
