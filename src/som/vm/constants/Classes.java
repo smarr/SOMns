@@ -2,9 +2,9 @@ package som.vm.constants;
 
 import som.vm.ObjectSystem;
 import som.vmobjects.SClass;
-import tools.snapshot.nodes.ArraySerializationNode;
-import tools.snapshot.nodes.ArraySerializationNode.TransferArraySerializationNode;
-import tools.snapshot.nodes.ArraySerializationNode.ValueArraySerializationNode;
+import tools.snapshot.nodes.AbstractArraySerializationNode.ArraySerializationNode;
+import tools.snapshot.nodes.AbstractArraySerializationNode.TransferArraySerializationNode;
+import tools.snapshot.nodes.AbstractArraySerializationNode.ValueArraySerializationNode;
 import tools.snapshot.nodes.BlockSerializationNode;
 import tools.snapshot.nodes.ObjectSerializationNodes.SObjectWithoutFieldsSerializationNode;
 import tools.snapshot.nodes.PrimitiveSerializationNodes.BooleanSerializationNode;
@@ -76,11 +76,11 @@ public final class Classes {
     arrayReadMixinClass.setSerializer(
         new SObjectWithoutFieldsSerializationNode(arrayReadMixinClass));
     arrayClass = ObjectSystem.newEmptyClassWithItsClass("Array");
-    arrayClass.setSerializer(new ArraySerializationNode());
+    arrayClass.setSerializer(ArraySerializationNode.create());
     valueArrayClass = ObjectSystem.newEmptyClassWithItsClass("ValueArray");
-    valueArrayClass.setSerializer(new ValueArraySerializationNode());
+    valueArrayClass.setSerializer(ValueArraySerializationNode.create());
     transferArrayClass = ObjectSystem.newEmptyClassWithItsClass("TransferArray");
-    transferArrayClass.setSerializer(new TransferArraySerializationNode());
+    transferArrayClass.setSerializer(TransferArraySerializationNode.create());
     symbolClass = ObjectSystem.newEmptyClassWithItsClass("Symbol");
     symbolClass.setSerializer(new SymbolSerializationNode());
 
