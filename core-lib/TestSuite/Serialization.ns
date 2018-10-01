@@ -29,25 +29,20 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
 |)(
 
   public class ValueClass new: a and: b = Value (
-      |
-        public f1 = a.
-        public f2 = b.
-      |
-    )(
-      public verify: clone =(
-        con assert: f1 equals: clone f1.
-        con assert: f2 equals: clone f2.
-      )
+  | public f1 = a.
+    public f2 = b.|
+  )(
+    public verify: clone =(
+      con assert: f1 equals: clone f1.
+      con assert: f2 equals: clone f2.
     )
+  )
 
   public class SerializationTest = TestContext (
-    |
-      blockWC = [ :a :b |
-        ^ a * b.
-      ].
-    |
-    'Starting SerializationTest' println.
-    )(
+  | blockWC = [ :a :b |
+      ^ a * b.
+    ].
+  |)(
 
     public class EmptyClass = ()(
       public test = (
@@ -55,8 +50,8 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
       )
     )
 
-    public class ClassWithFields new: a and: b = (|
-      public f1 ::= a.
+    public class ClassWithFields new: a and: b = (
+    | public f1 ::= a.
       public f2 ::= b.
       public f3
       public f4
@@ -73,23 +68,23 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
       )
     )
 
-    
+      
 
     public cloneAndVerify: obj = (
       |clone|
-      clone:: Actors sclone: obj.
+      clone:: Actors snapshotClone: obj.
       assert: (obj verify: clone).
     )
 
     public cloneAndEquals: obj = (
       |clone|
-      clone:: Actors sclone: obj.
+      clone:: Actors snapshotClone: obj.
       assert: obj equals: clone.
     )
 
     public cloneAndVerifyArray: arr = (
       | clone |
-      clone:: Actors sclone: arr.
+      clone:: Actors snapshotClone: arr.
       arr doIndexes: [ :i |
         assert: (arr at: i) equals: (clone at: i).
       ]
@@ -109,14 +104,14 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
     public testObjectWithoutFields = (
       |original clone | 
       original:: EmptyClass new.
-      clone:: Actors sclone: original.
+      clone:: Actors snapshotClone: original.
       assert: original test equals: clone test.
     )
 
     public testValues = (
       | original clone |
       original:: ValueClass new: 'test' and: 0.2.
-      clone:: Actors sclone: original.
+      clone:: Actors snapshotClone: original.
       assert: original f1 equals: clone f1.
       assert: original f2 equals: clone f2.
     )
@@ -139,10 +134,8 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
     public testClassReference = (
       | original clone |
       original:: SerializationTest.
-      clone:: Actors sclone: original.
-      original println.
-      clone println.
-      assert: original == original.
+      clone:: Actors snapshotClone: original.
+      assert: original is: clone.
     )
 
     (*
@@ -151,7 +144,7 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
     public testBlockWithoutContext = (
       | original clone |
       original:: blockWC.
-      clone:: Actors sclone: original.
+      clone:: Actors snapshotClone: original.
       assert: (original value: 21 with: 2) equals: (clone value: 21 with: 2).
     )
     *)
@@ -187,7 +180,7 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
       ].
       cloneAndVerifyArray: varr.
       assert: varr isValue.
-      assert: (Actors sclone: varr) isValue.
+      assert: (Actors snapshotClone: varr) isValue.
     )
   ) : ( TEST_CONTEXT = () )
 )

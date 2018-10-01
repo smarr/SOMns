@@ -11,15 +11,19 @@ import som.vmobjects.SSymbol;
 public class SnapshotBackend {
   private static byte snapshotVersion = 0;
 
-  private static EconomicMap<Short, SSymbol>      symbolDictionary;
-  private static EconomicMap<SSymbol, SClass>     classDictionary;
-  private static EconomicMap<SSymbol, SInvokable> invokableDictionary;
+  private static final EconomicMap<Short, SSymbol>      symbolDictionary;
+  private static final EconomicMap<SSymbol, SClass>     classDictionary;
+  private static final EconomicMap<SSymbol, SInvokable> invokableDictionary;
 
   static {
     if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
       classDictionary = EconomicMap.create();
       invokableDictionary = EconomicMap.create();
       symbolDictionary = EconomicMap.create();
+    } else {
+      classDictionary = null;
+      invokableDictionary = null;
+      symbolDictionary = null;
     }
   }
 

@@ -17,14 +17,14 @@ public class SnapshotBuffer extends TraceBuffer {
   public static final int CLASS_ID_SIZE = 2;
   public static final int MAX_FIELD_CNT = Byte.MAX_VALUE;
 
+  // This map allows us to know if we already serialized an object (and avoid circles)
+  // We can get the location of the serialized object in the trace
+  private final EconomicMap<Object, Long> entries;
+
   public SnapshotBuffer() {
     super(true);
     this.entries = EconomicMap.create();
   }
-
-  // This map allows us to know if we already serialized an object (and avoid circles)
-  // We can get the location of the serialized object in the trace
-  private EconomicMap<Object, Long> entries;
 
   public boolean containsObject(final Object o) {
     return entries.containsKey(o);
@@ -59,8 +59,7 @@ public class SnapshotBuffer extends TraceBuffer {
 
   @Override
   protected void swapBufferWhenNotEnoughSpace(final TraceActorContextNode tracer) {
-    throw new UnsupportedOperationException();
-    // todo find a solution for snapshot size
+    throw new UnsupportedOperationException("TODO find a solution for snapshot size");
   }
 
   // for testing purposes
