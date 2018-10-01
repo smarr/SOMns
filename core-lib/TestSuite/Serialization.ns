@@ -68,7 +68,7 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
       )
     )
 
-      
+
 
     public cloneAndVerify: obj = (
       |clone|
@@ -102,7 +102,7 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
     )
 
     public testObjectWithoutFields = (
-      |original clone | 
+      |original clone |
       original:: EmptyClass new.
       clone:: Actors snapshotClone: original.
       assert: original test equals: clone test.
@@ -139,7 +139,7 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
     )
 
     (*
-    not context free... context also contains a reference to the block itself, 
+    not context free... context also contains a reference to the block itself,
     such cyclic graphs are currently not surrported
     public testBlockWithoutContext = (
       | original clone |
@@ -148,7 +148,7 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
       assert: (original value: 21 with: 2) equals: (clone value: 21 with: 2).
     )
     *)
-    
+
     public testSimpleArrays = (
       cloneAndVerifyArray: { 1 . 20 . 33 . 404 }.
       cloneAndVerifyArray: { 1.523 . 2.250 . 235.33 . 436.04 }.
