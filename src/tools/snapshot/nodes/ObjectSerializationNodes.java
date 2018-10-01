@@ -27,20 +27,20 @@ import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.SObjectSerializationNodeFactory;
+import tools.snapshot.nodes.ObjectSerializationNodesFactory.SObjectWithoutFieldsSerializationNodeFactory;
+import tools.snapshot.nodes.ObjectSerializationNodesFactory.UninitializedObjectSerializationNodeFactory;
 
 
 public abstract class ObjectSerializationNodes {
 
   public abstract static class ObjectSerializationNode extends AbstractSerializationNode {
 
-    protected final SClass clazz;
-
     protected ObjectSerializationNode(final SClass clazz) {
-      this.clazz = clazz;
+      super(clazz);
     }
 
-    public static AbstractSerializationNode create(final SClass clazz) {
-      return new UninitializedObjectSerializationNode(clazz);
+    public static ObjectSerializationNode create(final SClass clazz) {
+      return UninitializedObjectSerializationNodeFactory.create(clazz);
     }
 
     protected final CachedSlotWrite[] createWriteNodes(final SObject o) {
@@ -105,31 +105,31 @@ public abstract class ObjectSerializationNodes {
     }
   }
 
-  protected static final class UninitializedObjectSerializationNode
+  @GenerateNodeFactory
+  public abstract static class UninitializedObjectSerializationNode
       extends ObjectSerializationNode {
 
-    private UninitializedObjectSerializationNode(final SClass clazz) {
+    protected UninitializedObjectSerializationNode(final SClass clazz) {
       super(clazz);
     }
 
-    @Override
+    @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       if (o instanceof SObject) {
-        replace(
-            SObjectSerializationNode.create(clazz, createReadNodes((SObject) o))).serialize(o,
-                sb);
+        replace(SObjectSerializationNodeFactory.create(clazz,
+            createReadNodes((SObject) o))).serialize(o, sb);
       } else if (o instanceof SObjectWithoutFields) {
-        replace(new SObjectWithoutFieldsSerializationNode(clazz)).serialize(o, sb);
+        replace(SObjectWithoutFieldsSerializationNodeFactory.create(clazz)).serialize(o, sb);
       }
     }
 
     @Override
     public Object deserialize(final ByteBuffer sb) {
       if (clazz.getFactory().hasSlots()) {
-        replace(SObjectSerializationNode.create(clazz));
+        replace(SObjectSerializationNodeFactory.getInstance().createNode(clazz));
         return clazz.getSerializer().deserialize(sb);
       } else {
-        replace(new SObjectWithoutFieldsSerializationNode(clazz));
+        replace(SObjectWithoutFieldsSerializationNodeFactory.create(clazz));
         return clazz.getSerializer().deserialize(sb);
       }
     }
@@ -147,8 +147,6 @@ public abstract class ObjectSerializationNodes {
     @Children private CachedSerializationNode[] cachedSerializers;
     protected final ObjectLayout                layout;
 
-    protected abstract void execute(SObject o, SnapshotBuffer sb);
-
     protected SObjectSerializationNode(final SClass clazz,
         final CachedSlotRead[] reads) {
       super(clazz);
@@ -157,12 +155,7 @@ public abstract class ObjectSerializationNodes {
       fieldCnt = fieldReads.length;
     }
 
-    public static SObjectSerializationNode create(final SClass clazz,
-        final CachedSlotRead[] reads) {
-      return SObjectSerializationNodeFactory.create(clazz, reads);
-    }
-
-    @Override
+    @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof SObject;
 
@@ -174,10 +167,10 @@ public abstract class ObjectSerializationNodes {
       if (!layout.isValid()) {
         // replace this with a new node for the new layout
         SObjectSerializationNode replacement =
-            SObjectSerializationNode.create(clazz, createReadNodes(so));
+            SObjectSerializationNodeFactory.create(clazz, createReadNodes(so));
         replace(replacement).serialize(o, sb);
       } else {
-        this.execute((SObject) o, sb);
+        doCached((SObject) o, sb);
       }
     }
 
@@ -185,13 +178,12 @@ public abstract class ObjectSerializationNodes {
       CachedSerializationNode[] nodes = new CachedSerializationNode[fieldCnt];
       for (int i = 0; i < fieldCnt; i++) {
         Object value = fieldReads[i].read(o);
-        nodes[i] = new CachedSerializationNode(value);
+        nodes[i] = CachedSerializationNodeFactory.create(value);
       }
       return nodes;
     }
 
     @ExplodeLoop
-    @Specialization
     public void doCached(final SObject o, final SnapshotBuffer sb) {
       int base = sb.addObjectWithFields(o, clazz, fieldCnt);
 
@@ -240,19 +232,16 @@ public abstract class ObjectSerializationNodes {
     }
   }
 
-  public static final class SObjectWithoutFieldsSerializationNode
+  @GenerateNodeFactory
+  public abstract static class SObjectWithoutFieldsSerializationNode
       extends ObjectSerializationNode {
 
-    public static AbstractSerializationNode create(final SClass clazz) {
-      return new SObjectWithoutFieldsSerializationNode(clazz);
-    }
-
-    public SObjectWithoutFieldsSerializationNode(final SClass clazz) {
+    protected SObjectWithoutFieldsSerializationNode(final SClass clazz) {
       super(clazz);
     }
 
     @ExplodeLoop
-    @Override
+    @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof SObjectWithoutFields;
       sb.addObject(o, clazz, 0);

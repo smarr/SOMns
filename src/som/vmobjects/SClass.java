@@ -31,8 +31,7 @@ import org.graalvm.collections.EconomicSet;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
@@ -52,8 +51,8 @@ import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.nodes.AbstractSerializationNode;
 import tools.snapshot.nodes.ObjectSerializationNodes.ObjectSerializationNode;
-import tools.snapshot.nodes.PrimitiveSerializationNodes.ClassSerializationNode;
-import tools.snapshot.nodes.SerializerFactory;
+import tools.snapshot.nodes.ObjectSerializationNodesFactory.UninitializedObjectSerializationNodeFactory;
+import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.ClassSerializationNodeFactory;
 import tools.snapshot.nodes.SerializerRootNode;
 
 
@@ -77,7 +76,7 @@ public final class SClass extends SObjectWithClass {
 
   @CompilationFinal private ClassFactory instanceClassGroup; // the factory for this object
 
-  @CompilationFinal protected RootCallTarget serializationRoot;
+  @CompilationFinal protected SerializerRootNode serializationRoot;
 
   protected final SObjectWithClass enclosingObject;
   private final MaterializedFrame  context;
@@ -86,19 +85,15 @@ public final class SClass extends SObjectWithClass {
    * The constructor used for instantiating empty classes and meta-classes
    * (these classes do not have an enclosing activation).
    */
-  public SClass(final SObjectWithClass enclosing, final SerializerFactory factory) {
+  public SClass(final SObjectWithClass enclosing,
+      final NodeFactory<? extends AbstractSerializationNode> factory) {
     this.enclosingObject = enclosing;
     this.context = null;
-    this.serializationRoot = createSerializationRootNode(factory);
-  }
-
-  private RootCallTarget createSerializationRootNode(final SerializerFactory factory) {
-    SerializerRootNode srn = new SerializerRootNode(null, factory.create(this));
-    return Truffle.getRuntime().createCallTarget(srn);
+    this.serializationRoot = new SerializerRootNode(null, factory.createNode(this));
   }
 
   public SClass(final SObjectWithClass enclosing) {
-    this(enclosing, ClassSerializationNode::create);
+    this(enclosing, ClassSerializationNodeFactory.getInstance());
   }
 
   /**
@@ -106,11 +101,11 @@ public final class SClass extends SObjectWithClass {
    * do not have an enclosing activation).
    */
   public SClass(final SObjectWithClass enclosing, final SClass clazz,
-      final SerializerFactory factory) {
+      final NodeFactory<? extends AbstractSerializationNode> factory) {
     super(clazz, clazz.getInstanceFactory());
     this.enclosingObject = enclosing;
     this.context = null;
-    this.serializationRoot = createSerializationRootNode(factory);
+    this.serializationRoot = new SerializerRootNode(null, factory.createNode(this));
   }
 
   public SClass(final SObjectWithClass enclosing, final SClass clazz) {
@@ -118,9 +113,12 @@ public final class SClass extends SObjectWithClass {
     this.enclosingObject = enclosing;
     this.context = null;
     if (clazz == Classes.metaclassClass) {
-      this.serializationRoot = createSerializationRootNode(ClassSerializationNode::create);
+      this.serializationRoot = new SerializerRootNode(null,
+          ClassSerializationNodeFactory.getInstance().createNode(this));
     } else {
-      this.serializationRoot = createSerializationRootNode(ObjectSerializationNode::create);
+      this.serializationRoot =
+          new SerializerRootNode(null,
+              ObjectSerializationNode.create(this));
     }
   }
 
@@ -130,16 +128,17 @@ public final class SClass extends SObjectWithClass {
    * @param frame, the current activation.
    */
   public SClass(final SObjectWithClass enclosing, final SClass clazz,
-      final MaterializedFrame frame, final SerializerFactory factory) {
+      final MaterializedFrame frame,
+      final NodeFactory<? extends AbstractSerializationNode> factory) {
     super(clazz, clazz.getInstanceFactory());
     this.enclosingObject = enclosing;
     this.context = frame;
-    this.serializationRoot = createSerializationRootNode(factory);
+    this.serializationRoot = new SerializerRootNode(null, factory.createNode(this));
   }
 
   public SClass(final SObjectWithClass enclosing, final SClass clazz,
       final MaterializedFrame frame) {
-    this(enclosing, clazz, frame, ObjectSerializationNode::create);
+    this(enclosing, clazz, frame, UninitializedObjectSerializationNodeFactory.getInstance());
   }
 
   public SObjectWithClass getEnclosingObject() {
@@ -389,7 +388,7 @@ public final class SClass extends SObjectWithClass {
   }
 
   public void serialize(final Object o, final SnapshotBuffer sb) {
-    serializationRoot.call(o, sb);
+    serializationRoot.getSerializer().execute(o, sb);
   }
 
   public AbstractSerializationNode getSerializer() {

@@ -3,6 +3,8 @@ package tools.snapshot.nodes;
 import java.nio.ByteBuffer;
 
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -20,17 +22,17 @@ import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 
 
-public class BlockSerializationNode extends AbstractSerializationNode {
+@GenerateNodeFactory
+public abstract class BlockSerializationNode extends AbstractSerializationNode {
+
   private static final int SINVOKABLE_SIZE = Short.BYTES;
 
-  public static AbstractSerializationNode create(final SClass clazz) {
-    return new BlockSerializationNode();
+  public BlockSerializationNode(final SClass clazz) {
+    super(clazz);
   }
 
-  @Override
-  public void serialize(final Object o, final SnapshotBuffer sb) {
-    assert o instanceof SBlock;
-    SBlock block = (SBlock) o;
+  @Specialization
+  public void serialize(final SBlock block, final SnapshotBuffer sb) {
 
     MaterializedFrame mf = block.getContextOrNull();
 
@@ -75,22 +77,22 @@ public class BlockSerializationNode extends AbstractSerializationNode {
         Object value = mf.getValue(slot);
         switch (fd.getFrameSlotKind(slot)) {
           case Boolean:
-            Classes.booleanClass.getSerializer().serialize(value, sb);
+            Classes.booleanClass.serialize(value, sb);
             break;
           case Double:
-            Classes.doubleClass.getSerializer().serialize(value, sb);
+            Classes.doubleClass.serialize(value, sb);
             break;
           case Long:
-            Classes.integerClass.getSerializer().serialize(value, sb);
+            Classes.integerClass.serialize(value, sb);
             break;
           case Object:
             // We are going to represent this as a boolean, the slot will handled in replay
             if (value instanceof FrameOnStackMarker) {
               value = ((FrameOnStackMarker) value).isOnStack();
-              Classes.booleanClass.getSerializer().serialize(value, sb);
+              Classes.booleanClass.serialize(value, sb);
             } else {
               assert value instanceof SAbstractObject;
-              Types.getClassOf(value).getSerializer().serialize(value, sb);
+              Types.getClassOf(value).serialize(value, sb);
             }
             break;
           default:

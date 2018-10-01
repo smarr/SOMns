@@ -10,8 +10,13 @@ import tools.snapshot.SnapshotBuffer;
 
 
 public abstract class AbstractSerializationNode extends Node {
+  public final SClass clazz;
 
-  public abstract void serialize(Object o, SnapshotBuffer sb);
+  public AbstractSerializationNode(final SClass clazz) {
+    this.clazz = clazz;
+  }
+
+  public abstract void execute(Object o, SnapshotBuffer sb);
 
   public abstract Object deserialize(ByteBuffer sb);
 

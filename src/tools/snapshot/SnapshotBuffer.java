@@ -17,8 +17,10 @@ public class SnapshotBuffer extends TraceBuffer {
   public static final int CLASS_ID_SIZE = 2;
   public static final int MAX_FIELD_CNT = Byte.MAX_VALUE;
 
-  // This map allows us to know if we already serialized an object (and avoid circles)
-  // We can get the location of the serialized object in the trace
+  /**
+   * This map allows us to know if we already serialized an object (and avoid circles).
+   * We can get the location of the serialized object in the trace
+   */
   private final EconomicMap<Object, Long> entries;
 
   public SnapshotBuffer() {

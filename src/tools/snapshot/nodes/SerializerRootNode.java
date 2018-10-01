@@ -4,7 +4,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 
 import som.interpreter.SomLanguage;
-import tools.snapshot.SnapshotBuffer;
 
 
 public final class SerializerRootNode extends RootNode {
@@ -13,13 +12,13 @@ public final class SerializerRootNode extends RootNode {
   public SerializerRootNode(final SomLanguage language,
       final AbstractSerializationNode serializer) {
     super(language);
-    this.serializer = serializer;
+    this.serializer = insert(serializer);
   }
 
   @Override
   public Object execute(final VirtualFrame frame) {
-    serializer.serialize(frame.getArguments()[0], (SnapshotBuffer) frame.getArguments()[1]);
-    return null;
+    throw new UnsupportedOperationException(
+        "Don't use this execute method, instead directly use the serializer");
   }
 
   public AbstractSerializationNode getSerializer() {

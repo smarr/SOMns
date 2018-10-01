@@ -16,16 +16,17 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
-import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.ClassSerializationNodeFactory;
 
 
 public abstract class PrimitiveSerializationNodes {
-  public static class StringSerializationNode extends AbstractSerializationNode {
-    public static AbstractSerializationNode create(final SClass clazz) {
-      return new StringSerializationNode();
+  @GenerateNodeFactory
+  public abstract static class StringSerializationNode extends AbstractSerializationNode {
+
+    public StringSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
-    @Override
+    @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof String;
       String s = (String) o;
@@ -46,12 +47,14 @@ public abstract class PrimitiveSerializationNodes {
     }
   }
 
-  public static class IntegerSerializationNode extends AbstractSerializationNode {
-    public static AbstractSerializationNode create(final SClass clazz) {
-      return new IntegerSerializationNode();
+  @GenerateNodeFactory
+  public abstract static class IntegerSerializationNode extends AbstractSerializationNode {
+
+    public IntegerSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
-    @Override
+    @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof Long;
       long l = (long) o;
@@ -65,12 +68,14 @@ public abstract class PrimitiveSerializationNodes {
     }
   }
 
-  public static class DoubleSerializationNode extends AbstractSerializationNode {
-    public static AbstractSerializationNode create(final SClass clazz) {
-      return new DoubleSerializationNode();
+  @GenerateNodeFactory
+  public abstract static class DoubleSerializationNode extends AbstractSerializationNode {
+
+    public DoubleSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
-    @Override
+    @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof Double;
       double d = (double) o;
@@ -84,12 +89,14 @@ public abstract class PrimitiveSerializationNodes {
     }
   }
 
-  public static class BooleanSerializationNode extends AbstractSerializationNode {
-    public static AbstractSerializationNode create(final SClass clazz) {
-      return new BooleanSerializationNode();
+  @GenerateNodeFactory
+  public abstract static class BooleanSerializationNode extends AbstractSerializationNode {
+
+    public BooleanSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
-    @Override
+    @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof Boolean;
       boolean b = (boolean) o;
@@ -103,12 +110,14 @@ public abstract class PrimitiveSerializationNodes {
     }
   }
 
-  public static class TrueSerializationNode extends AbstractSerializationNode {
-    public static AbstractSerializationNode create(final SClass clazz) {
-      return new TrueSerializationNode();
+  @GenerateNodeFactory
+  public abstract static class TrueSerializationNode extends AbstractSerializationNode {
+
+    public TrueSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
-    @Override
+    @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof Boolean;
       assert ((boolean) o);
@@ -121,12 +130,14 @@ public abstract class PrimitiveSerializationNodes {
     }
   }
 
-  public static class FalseSerializationNode extends AbstractSerializationNode {
-    public static AbstractSerializationNode create(final SClass clazz) {
-      return new FalseSerializationNode();
+  @GenerateNodeFactory
+  public abstract static class FalseSerializationNode extends AbstractSerializationNode {
+
+    public FalseSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
-    @Override
+    @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof Boolean;
       assert !((boolean) o);
@@ -139,12 +150,14 @@ public abstract class PrimitiveSerializationNodes {
     }
   }
 
-  public static class SymbolSerializationNode extends AbstractSerializationNode {
-    public static AbstractSerializationNode create(final SClass clazz) {
-      return new SymbolSerializationNode();
+  @GenerateNodeFactory
+  public abstract static class SymbolSerializationNode extends AbstractSerializationNode {
+
+    public SymbolSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
-    @Override
+    @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof SSymbol;
       SSymbol ss = (SSymbol) o;
@@ -162,21 +175,14 @@ public abstract class PrimitiveSerializationNodes {
   @GenerateNodeFactory
   public abstract static class ClassSerializationNode extends AbstractSerializationNode {
 
-    public static ClassSerializationNode create(final SClass clazz) {
-      return ClassSerializationNodeFactory.create();
+    public ClassSerializationNode(final SClass clazz) {
+      super(clazz);
     }
-
-    protected abstract void execute(Object o, SnapshotBuffer sb);
 
     protected short getSymbolId(final Object o) {
       assert o instanceof SClass;
       return Symbols.symbolFor(((SClass) o).getMixinDefinition().getIdentifier())
                     .getSymbolId();
-    }
-
-    @Override
-    public void serialize(final Object o, final SnapshotBuffer sb) {
-      this.execute(o, sb);
     }
 
     @Specialization
@@ -194,12 +200,14 @@ public abstract class PrimitiveSerializationNodes {
     }
   }
 
-  public static class SInvokableSerializationNode extends AbstractSerializationNode {
-    public static AbstractSerializationNode create(final SClass clazz) {
-      return new SInvokableSerializationNode();
+  @GenerateNodeFactory
+  public abstract static class SInvokableSerializationNode extends AbstractSerializationNode {
+
+    public SInvokableSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
-    @Override
+    @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof SInvokable;
       SInvokable si = (SInvokable) o;
@@ -215,12 +223,14 @@ public abstract class PrimitiveSerializationNodes {
     }
   }
 
-  public static class NilSerializationNode extends AbstractSerializationNode {
-    public static AbstractSerializationNode create(final SClass clazz) {
-      return new NilSerializationNode();
+  @GenerateNodeFactory
+  public abstract static class NilSerializationNode extends AbstractSerializationNode {
+
+    public NilSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
-    @Override
+    @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       sb.addObject(o, Classes.nilClass, 0);
     }

@@ -11,6 +11,7 @@ import org.graalvm.collections.EconomicMap;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -44,7 +45,7 @@ import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors;
 import tools.language.StructuralProbe;
-import tools.snapshot.nodes.SerializerFactory;
+import tools.snapshot.nodes.AbstractSerializationNode;
 
 
 public final class ObjectSystem {
@@ -218,7 +219,7 @@ public final class ObjectSystem {
   }
 
   public static SClass newEmptyClassWithItsClass(final String name,
-      final SerializerFactory factory) {
+      final NodeFactory<? extends AbstractSerializationNode> factory) {
     SClass clazz = new SClass(KernelObj.kernel, factory);
     SClass clazzClazz = new SClass(KernelObj.kernel);
 

@@ -10,26 +10,19 @@ import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import tools.snapshot.SnapshotBuffer;
-import tools.snapshot.nodes.AbstractArraySerializationNodeGen.ArraySerializationNodeFactory;
-import tools.snapshot.nodes.AbstractArraySerializationNodeGen.TransferArraySerializationNodeFactory;
-import tools.snapshot.nodes.AbstractArraySerializationNodeGen.ValueArraySerializationNodeFactory;
 
 
 public abstract class AbstractArraySerializationNode extends AbstractSerializationNode {
+
   private static final byte TYPE_BOOLEAN = 0;
   private static final byte TYPE_DOUBLE  = 1;
   private static final byte TYPE_LONG    = 2;
   private static final byte TYPE_OBJECT  = 3;
   private static final byte TYPE_EMPTY   = 4;
 
-  @Override
-  public void serialize(final Object o, final SnapshotBuffer sb) {
-    assert o instanceof SArray;
-    SArray sa = (SArray) o;
-    this.execute(sa, sb);
+  public AbstractArraySerializationNode(final SClass clazz) {
+    super(clazz);
   }
-
-  protected abstract void execute(SArray sa, SnapshotBuffer sb);
 
   @Override
   public Object deserialize(final ByteBuffer sb) {
@@ -148,8 +141,8 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   @GenerateNodeFactory
   public abstract static class ArraySerializationNode extends AbstractArraySerializationNode {
 
-    public static ArraySerializationNode create(final SClass clazz) {
-      return ArraySerializationNodeFactory.create();
+    public ArraySerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
     @Override
@@ -162,8 +155,8 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   @GenerateNodeFactory
   public abstract static class TransferArraySerializationNode extends ArraySerializationNode {
 
-    public static TransferArraySerializationNode create(final SClass clazz) {
-      return TransferArraySerializationNodeFactory.create();
+    public TransferArraySerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
     @Override
@@ -176,8 +169,8 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   @GenerateNodeFactory
   public abstract static class ValueArraySerializationNode extends ArraySerializationNode {
 
-    public static ValueArraySerializationNode create(final SClass clazz) {
-      return ValueArraySerializationNodeFactory.create();
+    public ValueArraySerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
     @Override
