@@ -340,7 +340,7 @@ public final class SystemPrims {
 
         if (!sb.containsObject(receiver)) {
           SClass sc = Types.getClassOf(receiver);
-          sc.getSerializer().serialize(receiver, sb);
+          sc.serialize(receiver, sb);
         }
         return 0;
       }
@@ -359,7 +359,7 @@ public final class SystemPrims {
 
         if (!sb.containsObject(receiver)) {
           SClass sc = Types.getClassOf(receiver);
-          sc.getSerializer().serialize(receiver, sb);
+          sc.serialize(receiver, sb);
           ByteBuffer bb = sb.getBuffer();
 
           short cId = bb.getShort();

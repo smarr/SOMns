@@ -21,6 +21,10 @@ import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.ClassSerializatio
 
 public abstract class PrimitiveSerializationNodes {
   public static class StringSerializationNode extends AbstractSerializationNode {
+    public static AbstractSerializationNode create(final SClass clazz) {
+      return new StringSerializationNode();
+    }
+
     @Override
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof String;
@@ -43,6 +47,10 @@ public abstract class PrimitiveSerializationNodes {
   }
 
   public static class IntegerSerializationNode extends AbstractSerializationNode {
+    public static AbstractSerializationNode create(final SClass clazz) {
+      return new IntegerSerializationNode();
+    }
+
     @Override
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof Long;
@@ -58,6 +66,10 @@ public abstract class PrimitiveSerializationNodes {
   }
 
   public static class DoubleSerializationNode extends AbstractSerializationNode {
+    public static AbstractSerializationNode create(final SClass clazz) {
+      return new DoubleSerializationNode();
+    }
+
     @Override
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof Double;
@@ -73,6 +85,10 @@ public abstract class PrimitiveSerializationNodes {
   }
 
   public static class BooleanSerializationNode extends AbstractSerializationNode {
+    public static AbstractSerializationNode create(final SClass clazz) {
+      return new BooleanSerializationNode();
+    }
+
     @Override
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof Boolean;
@@ -88,6 +104,10 @@ public abstract class PrimitiveSerializationNodes {
   }
 
   public static class TrueSerializationNode extends AbstractSerializationNode {
+    public static AbstractSerializationNode create(final SClass clazz) {
+      return new TrueSerializationNode();
+    }
+
     @Override
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof Boolean;
@@ -102,6 +122,10 @@ public abstract class PrimitiveSerializationNodes {
   }
 
   public static class FalseSerializationNode extends AbstractSerializationNode {
+    public static AbstractSerializationNode create(final SClass clazz) {
+      return new FalseSerializationNode();
+    }
+
     @Override
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof Boolean;
@@ -116,6 +140,10 @@ public abstract class PrimitiveSerializationNodes {
   }
 
   public static class SymbolSerializationNode extends AbstractSerializationNode {
+    public static AbstractSerializationNode create(final SClass clazz) {
+      return new SymbolSerializationNode();
+    }
+
     @Override
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof SSymbol;
@@ -134,7 +162,7 @@ public abstract class PrimitiveSerializationNodes {
   @GenerateNodeFactory
   public abstract static class ClassSerializationNode extends AbstractSerializationNode {
 
-    public static ClassSerializationNode create() {
+    public static ClassSerializationNode create(final SClass clazz) {
       return ClassSerializationNodeFactory.create();
     }
 
@@ -167,6 +195,10 @@ public abstract class PrimitiveSerializationNodes {
   }
 
   public static class SInvokableSerializationNode extends AbstractSerializationNode {
+    public static AbstractSerializationNode create(final SClass clazz) {
+      return new SInvokableSerializationNode();
+    }
+
     @Override
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof SInvokable;
@@ -184,6 +216,10 @@ public abstract class PrimitiveSerializationNodes {
   }
 
   public static class NilSerializationNode extends AbstractSerializationNode {
+    public static AbstractSerializationNode create(final SClass clazz) {
+      return new NilSerializationNode();
+    }
+
     @Override
     public void serialize(final Object o, final SnapshotBuffer sb) {
       sb.addObject(o, Classes.nilClass, 0);

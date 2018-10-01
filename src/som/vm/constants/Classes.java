@@ -49,59 +49,51 @@ public final class Classes {
   static {
     // Allocate the Metaclass classes
     metaclassClass = ObjectSystem.newMetaclassClass(KernelObj.kernel);
-    metaclassClass.setSerializer(ClassSerializationNode.create());
-    classClass = new SClass(KernelObj.kernel);
-    classClass.setSerializer(ClassSerializationNode.create());
+    classClass = new SClass(KernelObj.kernel, ClassSerializationNode::create);
     SClass classClassClass = new SClass(KernelObj.kernel);
     ObjectSystem.initializeClassAndItsClass("Class", classClass, classClassClass);
 
     // Allocate the rest of the system classes
 
-    topClass = ObjectSystem.newEmptyClassWithItsClass("Top");
-    topClass.setSerializer(new SObjectWithoutFieldsSerializationNode(topClass));
-    thingClass = ObjectSystem.newEmptyClassWithItsClass("Thing");
-    thingClass.setSerializer(new SObjectWithoutFieldsSerializationNode(thingClass));
-    objectClass = ObjectSystem.newEmptyClassWithItsClass("Object");
-    objectClass.setSerializer(
-        new SObjectWithoutFieldsSerializationNode(objectClass));
-    valueClass = ObjectSystem.newEmptyClassWithItsClass("Value");
-    valueClass.setSerializer(new SObjectWithoutFieldsSerializationNode(valueClass));
-    transferClass = ObjectSystem.newEmptyClassWithItsClass("TransferObject");
-    transferClass.setSerializer(
-        new SObjectWithoutFieldsSerializationNode(transferClass));
-    nilClass = ObjectSystem.newEmptyClassWithItsClass("Nil");
-    nilClass.setSerializer(new NilSerializationNode());
+    topClass = ObjectSystem.newEmptyClassWithItsClass("Top",
+        SObjectWithoutFieldsSerializationNode::create);
+    thingClass = ObjectSystem.newEmptyClassWithItsClass("Thing",
+        SObjectWithoutFieldsSerializationNode::create);
+    objectClass = ObjectSystem.newEmptyClassWithItsClass("Object",
+        SObjectWithoutFieldsSerializationNode::create);
+    valueClass = ObjectSystem.newEmptyClassWithItsClass("Value",
+        SObjectWithoutFieldsSerializationNode::create);
+    transferClass = ObjectSystem.newEmptyClassWithItsClass("TransferObject",
+        SObjectWithoutFieldsSerializationNode::create);
+    nilClass = ObjectSystem.newEmptyClassWithItsClass("Nil", NilSerializationNode::create);
 
-    arrayReadMixinClass = ObjectSystem.newEmptyClassWithItsClass("ArrayReadMixin");
-    arrayReadMixinClass.setSerializer(
-        new SObjectWithoutFieldsSerializationNode(arrayReadMixinClass));
-    arrayClass = ObjectSystem.newEmptyClassWithItsClass("Array");
-    arrayClass.setSerializer(ArraySerializationNode.create());
-    valueArrayClass = ObjectSystem.newEmptyClassWithItsClass("ValueArray");
-    valueArrayClass.setSerializer(ValueArraySerializationNode.create());
-    transferArrayClass = ObjectSystem.newEmptyClassWithItsClass("TransferArray");
-    transferArrayClass.setSerializer(TransferArraySerializationNode.create());
-    symbolClass = ObjectSystem.newEmptyClassWithItsClass("Symbol");
-    symbolClass.setSerializer(new SymbolSerializationNode());
+    arrayReadMixinClass = ObjectSystem.newEmptyClassWithItsClass("ArrayReadMixin",
+        SObjectWithoutFieldsSerializationNode::create);
+    arrayClass =
+        ObjectSystem.newEmptyClassWithItsClass("Array", ArraySerializationNode::create);
+    valueArrayClass = ObjectSystem.newEmptyClassWithItsClass("ValueArray",
+        ValueArraySerializationNode::create);
+    transferArrayClass = ObjectSystem.newEmptyClassWithItsClass("TransferArray",
+        TransferArraySerializationNode::create);
+    symbolClass =
+        ObjectSystem.newEmptyClassWithItsClass("Symbol", SymbolSerializationNode::create);
+    methodClass =
+        ObjectSystem.newEmptyClassWithItsClass("Method", SInvokableSerializationNode::create);
 
-    methodClass = ObjectSystem.newEmptyClassWithItsClass("Method");
-    methodClass.setSerializer(new SInvokableSerializationNode());
+    integerClass =
+        ObjectSystem.newEmptyClassWithItsClass("Integer", IntegerSerializationNode::create);
+    stringClass =
+        ObjectSystem.newEmptyClassWithItsClass("String", StringSerializationNode::create);
+    doubleClass =
+        ObjectSystem.newEmptyClassWithItsClass("Double", DoubleSerializationNode::create);
 
-    integerClass = ObjectSystem.newEmptyClassWithItsClass("Integer");
-    integerClass.setSerializer(new IntegerSerializationNode());
-    stringClass = ObjectSystem.newEmptyClassWithItsClass("String");
-    stringClass.setSerializer(new StringSerializationNode());
-    doubleClass = ObjectSystem.newEmptyClassWithItsClass("Double");
-    doubleClass.setSerializer(new DoubleSerializationNode());
+    booleanClass =
+        ObjectSystem.newEmptyClassWithItsClass("Boolean", BooleanSerializationNode::create);
+    trueClass = ObjectSystem.newEmptyClassWithItsClass("True", TrueSerializationNode::create);
+    falseClass =
+        ObjectSystem.newEmptyClassWithItsClass("False", FalseSerializationNode::create);
 
-    booleanClass = ObjectSystem.newEmptyClassWithItsClass("Boolean");
-    booleanClass.setSerializer(new BooleanSerializationNode());
-    trueClass = ObjectSystem.newEmptyClassWithItsClass("True");
-    trueClass.setSerializer(new TrueSerializationNode());
-    falseClass = ObjectSystem.newEmptyClassWithItsClass("False");
-    falseClass.setSerializer(new FalseSerializationNode());
-
-    blockClass = ObjectSystem.newEmptyClassWithItsClass("Block");
-    blockClass.setSerializer(new BlockSerializationNode());
+    blockClass =
+        ObjectSystem.newEmptyClassWithItsClass("Block", BlockSerializationNode::create);
   }
 }

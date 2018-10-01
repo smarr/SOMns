@@ -26,7 +26,7 @@ public class CachedSerializationNode extends AbstractSerializationNode {
       if (guard.entryMatches(o)) {
         cachedSerializer.serialize(o, sb);
       } else {
-        Types.getClassOf(o).getSerializer().serialize(o, sb);
+        Types.getClassOf(o).serialize(o, sb);
       }
     } catch (InvalidAssumptionException e) {
       // checked layout is outdated

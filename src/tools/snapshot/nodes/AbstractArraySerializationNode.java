@@ -8,6 +8,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import som.interpreter.Types;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
+import som.vmobjects.SClass;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.nodes.AbstractArraySerializationNodeGen.ArraySerializationNodeFactory;
 import tools.snapshot.nodes.AbstractArraySerializationNodeGen.TransferArraySerializationNodeFactory;
@@ -87,7 +88,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
     sb.putIntAt(base + 1, oa.length);
     base += 5;
     for (Object obj : oa) {
-      Types.getClassOf(obj).getSerializer().serialize(obj, sb);
+      Types.getClassOf(obj).serialize(obj, sb);
       long pos = sb.getObjectPointer(obj);
       sb.putLongAt(base, pos);
       base += Long.BYTES;
@@ -147,7 +148,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   @GenerateNodeFactory
   public abstract static class ArraySerializationNode extends AbstractArraySerializationNode {
 
-    public static ArraySerializationNode create() {
+    public static ArraySerializationNode create(final SClass clazz) {
       return ArraySerializationNodeFactory.create();
     }
 
@@ -161,7 +162,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   @GenerateNodeFactory
   public abstract static class TransferArraySerializationNode extends ArraySerializationNode {
 
-    public static TransferArraySerializationNode create() {
+    public static TransferArraySerializationNode create(final SClass clazz) {
       return TransferArraySerializationNodeFactory.create();
     }
 
@@ -175,7 +176,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   @GenerateNodeFactory
   public abstract static class ValueArraySerializationNode extends ArraySerializationNode {
 
-    public static ValueArraySerializationNode create() {
+    public static ValueArraySerializationNode create(final SClass clazz) {
       return ValueArraySerializationNodeFactory.create();
     }
 

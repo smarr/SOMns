@@ -31,6 +31,8 @@ import org.graalvm.collections.EconomicSet;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
@@ -47,9 +49,12 @@ import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import tools.snapshot.SnapshotBackend;
+import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.nodes.AbstractSerializationNode;
 import tools.snapshot.nodes.ObjectSerializationNodes.ObjectSerializationNode;
 import tools.snapshot.nodes.PrimitiveSerializationNodes.ClassSerializationNode;
+import tools.snapshot.nodes.SerializerFactory;
+import tools.snapshot.nodes.SerializerRootNode;
 
 
 // TODO: should we move more of that out of SClass and use the corresponding
@@ -72,7 +77,7 @@ public final class SClass extends SObjectWithClass {
 
   @CompilationFinal private ClassFactory instanceClassGroup; // the factory for this object
 
-  @CompilationFinal protected AbstractSerializationNode serializer;
+  @CompilationFinal protected RootCallTarget serializationRoot;
 
   protected final SObjectWithClass enclosingObject;
   private final MaterializedFrame  context;
@@ -81,24 +86,41 @@ public final class SClass extends SObjectWithClass {
    * The constructor used for instantiating empty classes and meta-classes
    * (these classes do not have an enclosing activation).
    */
-  public SClass(final SObjectWithClass enclosing) {
+  public SClass(final SObjectWithClass enclosing, final SerializerFactory factory) {
     this.enclosingObject = enclosing;
     this.context = null;
-    this.serializer = ClassSerializationNode.create();
+    this.serializationRoot = createSerializationRootNode(factory);
+  }
+
+  private RootCallTarget createSerializationRootNode(final SerializerFactory factory) {
+    SerializerRootNode srn = new SerializerRootNode(null, factory.create(this));
+    return Truffle.getRuntime().createCallTarget(srn);
+  }
+
+  public SClass(final SObjectWithClass enclosing) {
+    this(enclosing, ClassSerializationNode::create);
   }
 
   /**
    * The constructor used for instantiating standard classes (these classes
    * do not have an enclosing activation).
    */
+  public SClass(final SObjectWithClass enclosing, final SClass clazz,
+      final SerializerFactory factory) {
+    super(clazz, clazz.getInstanceFactory());
+    this.enclosingObject = enclosing;
+    this.context = null;
+    this.serializationRoot = createSerializationRootNode(factory);
+  }
+
   public SClass(final SObjectWithClass enclosing, final SClass clazz) {
     super(clazz, clazz.getInstanceFactory());
     this.enclosingObject = enclosing;
     this.context = null;
     if (clazz == Classes.metaclassClass) {
-      this.serializer = ClassSerializationNode.create();
+      this.serializationRoot = createSerializationRootNode(ClassSerializationNode::create);
     } else {
-      this.serializer = ObjectSerializationNode.create(this);
+      this.serializationRoot = createSerializationRootNode(ObjectSerializationNode::create);
     }
   }
 
@@ -108,11 +130,16 @@ public final class SClass extends SObjectWithClass {
    * @param frame, the current activation.
    */
   public SClass(final SObjectWithClass enclosing, final SClass clazz,
-      final MaterializedFrame frame) {
+      final MaterializedFrame frame, final SerializerFactory factory) {
     super(clazz, clazz.getInstanceFactory());
     this.enclosingObject = enclosing;
     this.context = frame;
-    this.serializer = ObjectSerializationNode.create(this);
+    this.serializationRoot = createSerializationRootNode(factory);
+  }
+
+  public SClass(final SObjectWithClass enclosing, final SClass clazz,
+      final MaterializedFrame frame) {
+    this(enclosing, clazz, frame, ObjectSerializationNode::create);
   }
 
   public SObjectWithClass getEnclosingObject() {
@@ -361,11 +388,11 @@ public final class SClass extends SObjectWithClass {
     return context;
   }
 
-  public AbstractSerializationNode getSerializer() {
-    return serializer;
+  public void serialize(final Object o, final SnapshotBuffer sb) {
+    serializationRoot.call(o, sb);
   }
 
-  public void setSerializer(final AbstractSerializationNode serializer) {
-    this.serializer = serializer;
+  public AbstractSerializationNode getSerializer() {
+    return ((SerializerRootNode) serializationRoot.getRootNode()).getSerializer();
   }
 }

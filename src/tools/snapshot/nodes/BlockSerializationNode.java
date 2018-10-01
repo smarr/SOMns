@@ -14,6 +14,7 @@ import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
+import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
@@ -21,6 +22,10 @@ import tools.snapshot.SnapshotBuffer;
 
 public class BlockSerializationNode extends AbstractSerializationNode {
   private static final int SINVOKABLE_SIZE = Short.BYTES;
+
+  public static AbstractSerializationNode create(final SClass clazz) {
+    return new BlockSerializationNode();
+  }
 
   @Override
   public void serialize(final Object o, final SnapshotBuffer sb) {
@@ -51,7 +56,7 @@ public class BlockSerializationNode extends AbstractSerializationNode {
       base += 3;
 
       for (int i = 0; i < args.length; i++) {
-        Types.getClassOf(args[i]).getSerializer().serialize(args[i], sb);
+        Types.getClassOf(args[i]).serialize(args[i], sb);
         sb.putLongAt(base + (i * Long.BYTES), sb.getObjectPointer(args[i]));
       }
 

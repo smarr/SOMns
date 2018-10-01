@@ -10,7 +10,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 import som.compiler.MixinDefinition.SlotDefinition;
-import som.interpreter.Types;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotRead;
 import som.interpreter.nodes.dispatch.CachedSlotRead.SlotAccess;
@@ -40,7 +39,7 @@ public abstract class ObjectSerializationNodes {
       this.clazz = clazz;
     }
 
-    public static ObjectSerializationNode create(final SClass clazz) {
+    public static AbstractSerializationNode create(final SClass clazz) {
       return new UninitializedObjectSerializationNode(clazz);
     }
 
@@ -116,25 +115,21 @@ public abstract class ObjectSerializationNodes {
     @Override
     public void serialize(final Object o, final SnapshotBuffer sb) {
       if (o instanceof SObject) {
-        clazz.setSerializer(
-            SObjectSerializationNode.create(clazz, createReadNodes((SObject) o)));
-        clazz.getSerializer().serialize(o, sb);
+        replace(
+            SObjectSerializationNode.create(clazz, createReadNodes((SObject) o))).serialize(o,
+                sb);
       } else if (o instanceof SObjectWithoutFields) {
-        clazz.setSerializer(
-            new SObjectWithoutFieldsSerializationNode(clazz));
-        clazz.getSerializer().serialize(o, sb);
+        replace(new SObjectWithoutFieldsSerializationNode(clazz)).serialize(o, sb);
       }
     }
 
     @Override
     public Object deserialize(final ByteBuffer sb) {
       if (clazz.getFactory().hasSlots()) {
-        clazz.setSerializer(
-            SObjectSerializationNode.create(clazz));
+        replace(SObjectSerializationNode.create(clazz));
         return clazz.getSerializer().deserialize(sb);
       } else {
-        clazz.setSerializer(
-            new SObjectWithoutFieldsSerializationNode(clazz));
+        replace(new SObjectWithoutFieldsSerializationNode(clazz));
         return clazz.getSerializer().deserialize(sb);
       }
     }
@@ -150,7 +145,7 @@ public abstract class ObjectSerializationNodes {
     @Children private CachedSlotRead[]          fieldReads;
     @Children private CachedSlotWrite[]         fieldWrites;
     @Children private CachedSerializationNode[] cachedSerializers;
-    protected ObjectLayout                      layout;
+    protected final ObjectLayout                layout;
 
     protected abstract void execute(SObject o, SnapshotBuffer sb);
 
@@ -177,18 +172,13 @@ public abstract class ObjectSerializationNodes {
       }
 
       if (!layout.isValid()) {
-        // deoptimize and adopt read nodes that fit the current layout
-        CompilerDirectives.transferToInterpreterAndInvalidate();
-        layout = clazz.getLayoutForInstancesUnsafe();
-        CachedSlotRead[] newChildren = createReadNodes(so);
-
-        for (int i = 0; i < fieldCnt; i++) {
-          fieldReads[i].replace(newChildren[i]);
-        }
-        fieldReads = newChildren;
+        // replace this with a new node for the new layout
+        SObjectSerializationNode replacement =
+            SObjectSerializationNode.create(clazz, createReadNodes(so));
+        replace(replacement).serialize(o, sb);
+      } else {
+        this.execute((SObject) o, sb);
       }
-
-      this.execute((SObject) o, sb);
     }
 
     protected final CachedSerializationNode[] getSerializers(final SObject o) {
@@ -217,8 +207,7 @@ public abstract class ObjectSerializationNodes {
 
         if (!sb.containsObject(value)) {
           // Referenced Object not yet in snapshot
-          SClass c = Types.getClassOf(value);
-          c.getSerializer().serialize(value, sb);
+          cachedSerializers[i].serialize(value, sb);
         }
 
         sb.putLongAt(base + (8 * i), sb.getObjectPointer(value));
@@ -253,6 +242,10 @@ public abstract class ObjectSerializationNodes {
 
   public static final class SObjectWithoutFieldsSerializationNode
       extends ObjectSerializationNode {
+
+    public static AbstractSerializationNode create(final SClass clazz) {
+      return new SObjectWithoutFieldsSerializationNode(clazz);
+    }
 
     public SObjectWithoutFieldsSerializationNode(final SClass clazz) {
       super(clazz);

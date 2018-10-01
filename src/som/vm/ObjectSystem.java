@@ -44,6 +44,7 @@ import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors;
 import tools.language.StructuralProbe;
+import tools.snapshot.nodes.SerializerFactory;
 
 
 public final class ObjectSystem {
@@ -210,6 +211,15 @@ public final class ObjectSystem {
 
   public static SClass newEmptyClassWithItsClass(final String name) {
     SClass clazz = new SClass(KernelObj.kernel);
+    SClass clazzClazz = new SClass(KernelObj.kernel);
+
+    initializeClassAndItsClass(name, clazz, clazzClazz);
+    return clazz;
+  }
+
+  public static SClass newEmptyClassWithItsClass(final String name,
+      final SerializerFactory factory) {
+    SClass clazz = new SClass(KernelObj.kernel, factory);
     SClass clazzClazz = new SClass(KernelObj.kernel);
 
     initializeClassAndItsClass(name, clazz, clazzClazz);
