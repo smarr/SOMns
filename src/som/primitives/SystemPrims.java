@@ -86,6 +86,7 @@ public final class SystemPrims {
       long[] stats = Arrays.copyOf(tracingStats, tracingStats.length + 5);
       stats[tracingStats.length] = ShadowStackEntry.numberOfAllocations;
       ShadowStackEntry.numberOfAllocations = 0;
+      stats[tracingStats.length + 1] = 0;
       stats[tracingStats.length + 2] = ShadowStackEntryLoad.cacheHit;
       ShadowStackEntryLoad.cacheHit = 0;
       stats[tracingStats.length + 3] = ShadowStackEntryLoad.megaMiss;

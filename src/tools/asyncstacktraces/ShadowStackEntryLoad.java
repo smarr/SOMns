@@ -35,4 +35,87 @@ public abstract class ShadowStackEntryLoad extends Node {
       final Object[] arguments) {
     arguments[arguments.length - 1] = shadowStackEntry;
   }
+
+  public static final class UninitializedShadowStackEntryLoad extends ShadowStackEntryLoad {
+
+    @Override
+    protected void loadShadowStackEntry(final Object[] arguments,
+        final ExpressionNode expression,
+        final ShadowStackEntry prevEntry,
+        final ShadowStackEntryLoad firstShadowStackEntryLoad,
+        final boolean async) {
+      ShadowStackEntry newEntry =
+          SArguments.instantiateShadowStackEntry(prevEntry, expression, async);
+      ShadowStackEntryLoad newLoad;
+      if (firstShadowStackEntryLoad.getCurrentCacheSize() > NUM_SHADOW_STACK_ENTRIES) {
+        newLoad = new GenericShadowStackEntryLoad();
+        // firstShadowStackEntryLoad.replace(newLoad);
+        replace(newLoad);
+      } else {
+        newLoad = new CachedShadowStackEntryLoad(prevEntry, newEntry);
+        replace(newLoad);
+      }
+      newLoad.loadShadowStackEntry(arguments, expression, prevEntry,
+          firstShadowStackEntryLoad, async);
+    }
+
+    @Override
+    public int getCurrentCacheSize() {
+      return 0;
+    }
+
+  }
+
+  public static final class CachedShadowStackEntryLoad extends ShadowStackEntryLoad {
+
+    @Child protected ShadowStackEntryLoad nextInCache;
+    protected final ShadowStackEntry      expectedShadowStackEntry;
+    protected final ShadowStackEntry      cachedShadowStackEntry;
+
+    public CachedShadowStackEntryLoad(final ShadowStackEntry prevEntry,
+        final ShadowStackEntry newEntry) {
+      this.expectedShadowStackEntry = prevEntry;
+      this.cachedShadowStackEntry = newEntry;
+      nextInCache = new UninitializedShadowStackEntryLoad();
+    }
+
+    @Override
+    public int getCurrentCacheSize() {
+      return 1 + nextInCache.getCurrentCacheSize();
+    }
+
+    @Override
+    protected void loadShadowStackEntry(final Object[] arguments,
+        final ExpressionNode expression,
+        final ShadowStackEntry prevEntry, final ShadowStackEntryLoad firstShadowStackEntryLoad,
+        final boolean async) {
+      if (prevEntry == expectedShadowStackEntry) {
+        setShadowStackEntry(cachedShadowStackEntry, arguments);
+        if (ANALYSIS) {
+          cacheHit++;
+        }
+      } else {
+        nextInCache.loadShadowStackEntry(arguments, expression, prevEntry,
+            firstShadowStackEntryLoad, async);
+      }
+    }
+  }
+
+  public static final class GenericShadowStackEntryLoad extends ShadowStackEntryLoad {
+
+    @Override
+    protected void loadShadowStackEntry(final Object[] arguments,
+        final ExpressionNode expression,
+        final ShadowStackEntry prevEntry, final ShadowStackEntryLoad firstShadowStackEntryLoad,
+        final boolean async) {
+      setShadowStackEntry(SArguments.instantiateShadowStackEntry(prevEntry, expression, async),
+          arguments);
+    }
+
+    @Override
+    public int getCurrentCacheSize() {
+      return 0;
+    }
+
+  }
 }
