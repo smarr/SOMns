@@ -38,7 +38,7 @@ import som.vmobjects.SSymbol;
 import tools.Send;
 import tools.SourceCoordinate;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
-import tools.asyncstacktraces.UninitializedShadowStackEntryLoad;
+import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
 import tools.dym.Tags.VirtualInvoke;
 
 

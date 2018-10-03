@@ -9,7 +9,7 @@ import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.VmSettings;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
-import tools.asyncstacktraces.UninitializedShadowStackEntryLoad;
+import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
 
 
 @NodeInfo(cost = NodeCost.NONE)
