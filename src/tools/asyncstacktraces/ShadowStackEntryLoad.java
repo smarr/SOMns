@@ -14,7 +14,6 @@ public abstract class ShadowStackEntryLoad extends Node {
   public static int           cacheHit     = 0;
   public static int           megaCacheHit = 0;
   public static int           megaMiss     = 0;
-  public static int           cacheMiss    = 0;
 
   public void loadShadowStackEntry(final Object[] arguments,
       final ExpressionNode expression,

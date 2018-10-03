@@ -15,11 +15,8 @@ public class UninitializedShadowStackEntryLoad extends ShadowStackEntryLoad {
     ShadowStackEntry newEntry =
         SArguments.instantiateShadowStackEntry(prevEntry, expression, async);
     ShadowStackEntryLoad newLoad;
-    if (ANALYSIS) {
-      cacheMiss++;
-    }
     if (firstShadowStackEntryLoad.getCurrentCacheSize() > NUM_SHADOW_STACK_ENTRIES) {
-      newLoad = new GenericShadowStackEntryLoad(prevEntry, newEntry);
+      newLoad = new GenericShadowStackEntryLoad();
       // firstShadowStackEntryLoad.replace(newLoad);
       replace(newLoad);
     } else {
