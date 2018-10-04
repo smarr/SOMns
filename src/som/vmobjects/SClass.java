@@ -76,7 +76,7 @@ public final class SClass extends SObjectWithClass {
 
   @CompilationFinal private ClassFactory instanceClassGroup; // the factory for this object
 
-  @CompilationFinal protected SerializerRootNode serializationRoot;
+  protected final SerializerRootNode serializationRoot;
 
   protected final SObjectWithClass enclosingObject;
   private final MaterializedFrame  context;
@@ -392,6 +392,6 @@ public final class SClass extends SObjectWithClass {
   }
 
   public AbstractSerializationNode getSerializer() {
-    return ((SerializerRootNode) serializationRoot.getRootNode()).getSerializer();
+    return serializationRoot.getSerializer();
   }
 }

@@ -20,8 +20,8 @@ THE SOFTWARE.
 *)
 class SerializationTests usingPlatform: platform testFramework: minitest = Value(
 | private TestContext = minitest TestContext.
-  private Actors = platform actors.
-  private String      = platform kernel String.
+  private actors = platform actors.
+  private String = platform kernel String.
   private Array = platform kernel Array.
   private TransferArray = platform kernel TransferArray.
   private ValueArray = platform kernel ValueArray.
@@ -31,12 +31,7 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
   public class ValueClass new: a and: b = Value (
   | public f1 = a.
     public f2 = b.|
-  )(
-    public verify: clone =(
-      con assert: f1 equals: clone f1.
-      con assert: f2 equals: clone f2.
-    )
-  )
+  )()
 
   public class SerializationTest = TestContext (
   | blockWC = [ :a :b |
@@ -68,23 +63,21 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
       )
     )
 
-
-
     public cloneAndVerify: obj = (
-      |clone|
-      clone:: Actors snapshotClone: obj.
+      | clone |
+      clone:: actors snapshotClone: obj.
       assert: (obj verify: clone).
     )
 
     public cloneAndEquals: obj = (
-      |clone|
-      clone:: Actors snapshotClone: obj.
+      | clone |
+      clone:: actors snapshotClone: obj.
       assert: obj equals: clone.
     )
 
-    public cloneAndVerifyArray: arr = (
+    public cloneAndEqualsArray: arr = (
       | clone |
-      clone:: Actors snapshotClone: arr.
+      clone:: actors snapshotClone: arr.
       arr doIndexes: [ :i |
         assert: (arr at: i) equals: (clone at: i).
       ]
@@ -102,16 +95,16 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
     )
 
     public testObjectWithoutFields = (
-      |original clone |
+      | original clone |
       original:: EmptyClass new.
-      clone:: Actors snapshotClone: original.
+      clone:: actors snapshotClone: original.
       assert: original test equals: clone test.
     )
 
     public testValues = (
       | original clone |
       original:: ValueClass new: 'test' and: 0.2.
-      clone:: Actors snapshotClone: original.
+      clone:: actors snapshotClone: original.
       assert: original f1 equals: clone f1.
       assert: original f2 equals: clone f2.
     )
@@ -134,7 +127,7 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
     public testClassReference = (
       | original clone |
       original:: SerializationTest.
-      clone:: Actors snapshotClone: original.
+      clone:: actors snapshotClone: original.
       assert: original is: clone.
     )
 
@@ -144,22 +137,22 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
     public testBlockWithoutContext = (
       | original clone |
       original:: blockWC.
-      clone:: Actors snapshotClone: original.
+      clone:: actors snapshotClone: original.
       assert: (original value: 21 with: 2) equals: (clone value: 21 with: 2).
     )
     *)
 
     public testSimpleArrays = (
-      cloneAndVerifyArray: { 1 . 20 . 33 . 404 }.
-      cloneAndVerifyArray: { 1.523 . 2.250 . 235.33 . 436.04 }.
-      cloneAndVerifyArray: { true . false . true . true }.
-      cloneAndVerifyArray: { '1' . 'eta' . 'lorem ipsum' . 'dolor' }.
+      cloneAndEqualsArray: { 1 . 20 . 33 . 404 }.
+      cloneAndEqualsArray: { 1.523 . 2.250 . 235.33 . 436.04 }.
+      cloneAndEqualsArray: { true . false . true . true }.
+      cloneAndEqualsArray: { '1' . 'eta' . 'lorem ipsum' . 'dolor' }.
     )
 
     public testMixedArrays = (
-      cloneAndVerifyArray: { 1 . 'asdg3hsh' . nil . 0.3 }.
-      cloneAndVerifyArray: { true . 5 . 23 . 6 }.
-      cloneAndVerifyArray: { true . 5 . 2.3 . 6 }.
+      cloneAndEqualsArray: { 1 . 'asdg3hsh' . nil . 0.3 }.
+      cloneAndEqualsArray: { true . 5 . 23 . 6 }.
+      cloneAndEqualsArray: { true . 5 . 2.3 . 6 }.
     )
 
     public testTransferArray = (
@@ -170,7 +163,7 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
       tarr at: 3 put: 'Thanks for all the fish'.
       tarr at: 4 put: -84.
       tarr at: 5 put: true.
-      cloneAndVerifyArray: tarr.
+      cloneAndEqualsArray: tarr.
     )
 
     public testValueArray = (
@@ -178,9 +171,9 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
       varr:: ValueArray new: 5 withAll: [ :i |
         ^i*i.
       ].
-      cloneAndVerifyArray: varr.
+      cloneAndEqualsArray: varr.
       assert: varr isValue.
-      assert: (Actors snapshotClone: varr) isValue.
+      assert: (actors snapshotClone: varr) isValue.
     )
   ) : ( TEST_CONTEXT = () )
 )

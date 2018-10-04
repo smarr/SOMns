@@ -179,17 +179,16 @@ public abstract class PrimitiveSerializationNodes {
       super(clazz);
     }
 
-    protected short getSymbolId(final Object o) {
-      assert o instanceof SClass;
-      return Symbols.symbolFor(((SClass) o).getMixinDefinition().getIdentifier())
+    protected short getSymbolId(final SClass cls) {
+      return Symbols.symbolFor(cls.getMixinDefinition().getIdentifier())
                     .getSymbolId();
     }
 
     @Specialization
-    protected void doCached(final Object o, final SnapshotBuffer sb,
-        @Cached("getSymbolId(o)") final short cachedId) {
+    protected void doCached(final SClass cls, final SnapshotBuffer sb,
+        @Cached("getSymbolId(clazz)") final short cachedId) {
       CompilerAsserts.compilationConstant(cachedId);
-      int base = sb.addObject(o, Classes.classClass, 2);
+      int base = sb.addObject(cls, Classes.classClass, 2);
       sb.putShortAt(base, cachedId);
     }
 

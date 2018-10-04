@@ -322,19 +322,14 @@ public final class SystemPrims {
 
   /**
    * This primitive serves testing purposes for the snapshot serialization by allowing to
-   * serialize
-   * objects on demand.
-   *
-   * @author dominikaumayr
-   *
+   * serialize objects on demand.
    */
-
   @GenerateNodeFactory
   @Primitive(primitive = "snapshot:")
   public abstract static class SnapshotPrim extends UnaryBasicOperation {
 
     @Specialization
-    public final long doSObject(final Object receiver) {
+    public final Object doSObject(final Object receiver) {
       if (VmSettings.SNAPSHOTS_ENABLED) {
         SnapshotBuffer sb = new SnapshotBuffer();
 
@@ -342,9 +337,8 @@ public final class SystemPrims {
           SClass sc = Types.getClassOf(receiver);
           sc.serialize(receiver, sb);
         }
-        return 0;
       }
-      return 0;
+      return receiver;
     }
   }
 
@@ -358,14 +352,13 @@ public final class SystemPrims {
         SnapshotBuffer sb = new SnapshotBuffer();
 
         if (!sb.containsObject(receiver)) {
-          SClass sc = Types.getClassOf(receiver);
-          sc.serialize(receiver, sb);
+          SClass clazz = Types.getClassOf(receiver);
+          clazz.serialize(receiver, sb);
           ByteBuffer bb = sb.getBuffer();
 
           short cId = bb.getShort();
-
-          SClass clazz = SnapshotBackend.lookupClass(cId);
-          Object o = clazz.getSerializer().deserialize(bb);
+          Object o = SnapshotBackend.lookupClass(cId).getSerializer().deserialize(bb);
+          assert Types.getClassOf(o) == clazz;
           return o;
         }
       }
