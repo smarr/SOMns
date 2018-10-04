@@ -1,5 +1,7 @@
 package som.compiler;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -851,12 +853,20 @@ public final class MixinDefinition implements SomInteropObject {
     return obj instanceof MixinDefinition;
   }
 
+  /**
+   * This method provides a String that can be used to identify a MixinDefinition.
+   * The String takes a shape like this: "relativePath:module.class.nestedClass"
+   * 
+   * @return the fully qualified name of this MixinDefinition
+   */
   public String getIdentifier() {
     MixinDefinition outer = getOuterMixinDefinition();
     if (outer != null) {
       return outer.getIdentifier() + "." + this.name.getString();
     } else if (this.isModule && this.sourceSection != null) {
-      return this.sourceSection.getSource().getPath() + ":" + this.name.getString();
+      Path absolute = Paths.get(this.sourceSection.getSource().getURI());
+      Path relative = Paths.get("").toAbsolutePath().relativize(absolute);
+      return relative.toString() + ":" + this.name.getString();
     }
     return this.name.getString();
   }

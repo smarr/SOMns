@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 
 import com.oracle.truffle.api.nodes.Node;
 
+import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
@@ -13,6 +14,7 @@ public abstract class AbstractSerializationNode extends Node {
   public final SClass clazz;
 
   public AbstractSerializationNode(final SClass clazz) {
+    assert VmSettings.SNAPSHOTS_ENABLED;
     this.clazz = clazz;
   }
 

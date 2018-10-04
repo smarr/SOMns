@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.NodeFactory;
@@ -89,7 +90,12 @@ public final class SClass extends SObjectWithClass {
       final NodeFactory<? extends AbstractSerializationNode> factory) {
     this.enclosingObject = enclosing;
     this.context = null;
-    this.serializationRoot = new SerializerRootNode(null, factory.createNode(this));
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      CompilerDirectives.transferToInterpreter();
+      this.serializationRoot = new SerializerRootNode(null, factory.createNode(this));
+    } else {
+      this.serializationRoot = null;
+    }
   }
 
   public SClass(final SObjectWithClass enclosing) {
@@ -105,20 +111,30 @@ public final class SClass extends SObjectWithClass {
     super(clazz, clazz.getInstanceFactory());
     this.enclosingObject = enclosing;
     this.context = null;
-    this.serializationRoot = new SerializerRootNode(null, factory.createNode(this));
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      CompilerDirectives.transferToInterpreter();
+      this.serializationRoot = new SerializerRootNode(null, factory.createNode(this));
+    } else {
+      this.serializationRoot = null;
+    }
   }
 
   public SClass(final SObjectWithClass enclosing, final SClass clazz) {
     super(clazz, clazz.getInstanceFactory());
     this.enclosingObject = enclosing;
     this.context = null;
-    if (clazz == Classes.metaclassClass) {
-      this.serializationRoot = new SerializerRootNode(null,
-          ClassSerializationNodeFactory.getInstance().createNode(this));
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      CompilerDirectives.transferToInterpreter();
+      if (clazz == Classes.metaclassClass) {
+        this.serializationRoot = new SerializerRootNode(null,
+            ClassSerializationNodeFactory.getInstance().createNode(this));
+      } else {
+        this.serializationRoot =
+            new SerializerRootNode(null,
+                ObjectSerializationNode.create(this));
+      }
     } else {
-      this.serializationRoot =
-          new SerializerRootNode(null,
-              ObjectSerializationNode.create(this));
+      this.serializationRoot = null;
     }
   }
 
@@ -133,7 +149,12 @@ public final class SClass extends SObjectWithClass {
     super(clazz, clazz.getInstanceFactory());
     this.enclosingObject = enclosing;
     this.context = frame;
-    this.serializationRoot = new SerializerRootNode(null, factory.createNode(this));
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      CompilerDirectives.transferToInterpreter();
+      this.serializationRoot = new SerializerRootNode(null, factory.createNode(this));
+    } else {
+      this.serializationRoot = null;
+    }
   }
 
   public SClass(final SObjectWithClass enclosing, final SClass clazz,
