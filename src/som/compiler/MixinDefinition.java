@@ -50,6 +50,7 @@ import som.interpreter.objectstorage.StorageLocation;
 import som.interpreter.transactions.CachedTxSlotRead;
 import som.interpreter.transactions.CachedTxSlotWrite;
 import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
@@ -884,7 +885,8 @@ public final class MixinDefinition implements SomInteropObject {
       return outer.getIdentifier() + "." + this.name.getString();
     } else if (this.isModule && this.sourceSection != null) {
       Path absolute = Paths.get(this.sourceSection.getSource().getURI());
-      Path relative = Paths.get("").toAbsolutePath().relativize(absolute);
+      Path relative =
+          Paths.get(VmSettings.BASE_DIRECTORY).toAbsolutePath().relativize(absolute);
       return relative.toString() + ":" + this.name.getString();
     }
     return this.name.getString();

@@ -35,6 +35,8 @@ public class VmSettings implements Settings {
   public static final boolean RECYCLE_BUFFERS;
   public static final int     BUFFER_TIMEOUT;
 
+  public static final String BASE_DIRECTORY;
+
   static {
     String prop = System.getProperty("som.threads");
     if (prop == null) {
@@ -74,6 +76,8 @@ public class VmSettings implements Settings {
     BUFFERS_PER_THREAD = getInteger("som.buffPerThread", 4);
     BUFFER_TIMEOUT = getInteger("som.buffDelay", 50);
     RECYCLE_BUFFERS = getBool("som.bufferRecycling", true);
+
+    BASE_DIRECTORY = System.getProperty("som.baseDir", System.getProperty("user.dir"));
   }
 
   private static boolean getBool(final String prop, final boolean defaultVal) {

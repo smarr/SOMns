@@ -389,6 +389,7 @@ if args.java_args:
     JAVA_ARGS += ['-' + property for property in args.java_args]
 
 flags += ['-Dsom.tools=' + BASE_DIR + '/tools']
+flags += ['-Dsom.baseDir=' + BASE_DIR]
 
 all_args = JAVA_ARGS + ['-classpath', CLASSPATH] + [BOOT_CLASSPATH] + flags + SOM_ARGS + args.args
 
