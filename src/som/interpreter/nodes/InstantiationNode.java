@@ -11,6 +11,7 @@ import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
+import tools.snapshot.nodes.ObjectSerializationNodesFactory.UninitializedObjectSerializationNodeFactory;
 
 
 public abstract class InstantiationNode extends Node {
@@ -30,7 +31,8 @@ public abstract class InstantiationNode extends Node {
   }
 
   protected final ClassFactory createClassFactory(final Object superclassAndMixins) {
-    return mixinDefinition.createClassFactory(superclassAndMixins, false, false, false);
+    return mixinDefinition.createClassFactory(superclassAndMixins, false, false, false,
+        UninitializedObjectSerializationNodeFactory.getInstance());
   }
 
   protected boolean sameSuperAndMixins(final Object superclassAndMixins, final Object cached) {

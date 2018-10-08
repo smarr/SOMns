@@ -5,8 +5,7 @@ import java.nio.ByteOrder;
 
 import org.graalvm.collections.EconomicMap;
 
-import som.vm.Symbols;
-import som.vmobjects.SClass;
+import som.interpreter.objectstorage.ClassFactory;
 import tools.concurrency.TraceBuffer;
 import tools.replay.nodes.TraceActorContextNode;
 
@@ -39,22 +38,23 @@ public class SnapshotBuffer extends TraceBuffer {
     return -1;
   }
 
-  public int addObject(final Object o, final SClass cls, final int payload) {
+  public int addObject(final Object o, final ClassFactory classFact, final int payload) {
     entries.put(o, (long) this.position);
     int oldPos = this.position;
     this.putShortAt(this.position,
-        Symbols.symbolFor(cls.getMixinDefinition().getIdentifier()).getSymbolId());
+        classFact.getIdentifier().getSymbolId());
     this.position += CLASS_ID_SIZE + payload;
     return oldPos + CLASS_ID_SIZE;
   }
 
-  public int addObjectWithFields(final Object o, final SClass cls, final int fieldCnt) {
+  public int addObjectWithFields(final Object o, final ClassFactory classFact,
+      final int fieldCnt) {
     assert fieldCnt < MAX_FIELD_CNT;
     entries.put(o, (long) this.position);
     int oldPos = this.position;
 
     this.putShortAt(this.position,
-        Symbols.symbolFor(cls.getMixinDefinition().getIdentifier()).getSymbolId());
+        classFact.getIdentifier().getSymbolId());
     this.position += CLASS_ID_SIZE + (FIELD_SIZE * fieldCnt);
     return oldPos + CLASS_ID_SIZE;
   }

@@ -12,11 +12,11 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import som.compiler.Variable.Internal;
 import som.interpreter.FrameOnStackMarker;
 import som.interpreter.Types;
+import som.interpreter.objectstorage.ClassFactory;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
-import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
@@ -27,8 +27,8 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
 
   private static final int SINVOKABLE_SIZE = Short.BYTES;
 
-  public BlockSerializationNode(final SClass clazz) {
-    super(clazz);
+  public BlockSerializationNode(final ClassFactory classFact) {
+    super(classFact);
   }
 
   @Specialization
@@ -37,7 +37,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
     MaterializedFrame mf = block.getContextOrNull();
 
     if (mf == null) {
-      int base = sb.addObject(block, Classes.blockClass, SINVOKABLE_SIZE + 2);
+      int base = sb.addObject(block, classFact, SINVOKABLE_SIZE + 2);
       SInvokable meth = block.getMethod();
       String sid = meth.getIdentifier();
       sb.putShortAt(base, Symbols.symbolFor(sid).getSymbolId());
@@ -47,7 +47,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
 
       Object[] args = mf.getArguments();
 
-      int start = sb.addObject(block, Classes.blockClass,
+      int start = sb.addObject(block, classFact,
           SINVOKABLE_SIZE + ((args.length + fd.getSlots().size()) * Long.BYTES) + 2);
       int base = start;
 

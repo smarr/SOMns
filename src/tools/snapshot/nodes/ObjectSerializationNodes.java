@@ -20,11 +20,12 @@ import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.interpreter.objectstorage.StorageLocation;
-import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
+import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
+import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.SObjectSerializationNodeFactory;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.SObjectWithoutFieldsSerializationNodeFactory;
@@ -35,19 +36,19 @@ public abstract class ObjectSerializationNodes {
 
   public abstract static class ObjectSerializationNode extends AbstractSerializationNode {
 
-    protected ObjectSerializationNode(final SClass clazz) {
-      super(clazz);
+    protected ObjectSerializationNode(final ClassFactory classFact) {
+      super(classFact);
     }
 
-    public static ObjectSerializationNode create(final SClass clazz) {
-      return UninitializedObjectSerializationNodeFactory.create(clazz);
+    public static ObjectSerializationNode create(final ClassFactory classFact) {
+      return UninitializedObjectSerializationNodeFactory.create(classFact);
     }
 
     protected final CachedSlotWrite[] createWriteNodes(final SObject o) {
       CompilerDirectives.transferToInterpreter();
 
       // sort slots so we get the right order
-      ObjectLayout layout = clazz.getLayoutForInstancesUnsafe();
+      ObjectLayout layout = classFact.getInstanceLayout();
       ArrayList<SlotDefinition> definitions = new ArrayList<>();
       layout.getStorageLocations().getKeys().forEach(sd -> definitions.add(sd));
       CachedSlotWrite[] writes = new CachedSlotWrite[definitions.size()];
@@ -62,7 +63,7 @@ public abstract class ObjectSerializationNodes {
 
         AbstractDispatchNode next =
             UninitializedDispatchNode.createLexicallyBound(loc.getSlot().getSourceSection(),
-                loc.getSlot().getName(), clazz.getMixinDefinition().getMixinId());
+                loc.getSlot().getName(), classFact.getMixinDefinition().getMixinId());
 
         writes[i] =
             loc.getWriteNode(loc.getSlot(), DispatchGuard.createSObjectCheck(o),
@@ -76,7 +77,7 @@ public abstract class ObjectSerializationNodes {
       CompilerDirectives.transferToInterpreter();
 
       ArrayList<SlotDefinition> definitions = new ArrayList<>();
-      ObjectLayout layout = clazz.getLayoutForInstancesUnsafe();
+      ObjectLayout layout = classFact.getInstanceLayout();
       layout.getStorageLocations().getKeys().forEach(sd -> definitions.add(sd));
       CachedSlotRead[] reads = new CachedSlotRead[definitions.size()];
 
@@ -92,7 +93,7 @@ public abstract class ObjectSerializationNodes {
 
         AbstractDispatchNode next =
             UninitializedDispatchNode.createLexicallyBound(loc.getSlot().getSourceSection(),
-                loc.getSlot().getName(), clazz.getMixinDefinition().getMixinId());
+                loc.getSlot().getName(), classFact.getMixinDefinition().getMixinId());
 
         reads[i] =
             loc.getReadNode(SlotAccess.FIELD_READ,
@@ -109,28 +110,30 @@ public abstract class ObjectSerializationNodes {
   public abstract static class UninitializedObjectSerializationNode
       extends ObjectSerializationNode {
 
-    protected UninitializedObjectSerializationNode(final SClass clazz) {
-      super(clazz);
+    protected UninitializedObjectSerializationNode(final ClassFactory classFact) {
+      super(classFact);
     }
 
     @Specialization
-    public void serialize(final Object o, final SnapshotBuffer sb) {
+    public void serialize(final SObjectWithClass o, final SnapshotBuffer sb) {
       if (o instanceof SObject) {
-        replace(SObjectSerializationNodeFactory.create(clazz,
-            createReadNodes((SObject) o))).serialize(o, sb);
+        replace(SObjectSerializationNodeFactory.create(classFact,
+            createReadNodes((SObject) o))).serialize((SObject) o, sb);
       } else if (o instanceof SObjectWithoutFields) {
-        replace(SObjectWithoutFieldsSerializationNodeFactory.create(clazz)).serialize(o, sb);
+        replace(SObjectWithoutFieldsSerializationNodeFactory.create(classFact)).serialize(
+            (SObjectWithoutFields) o,
+            sb);
       }
     }
 
     @Override
     public Object deserialize(final ByteBuffer sb) {
-      if (clazz.getFactory().hasSlots()) {
-        replace(SObjectSerializationNodeFactory.getInstance().createNode(clazz));
-        return clazz.getSerializer().deserialize(sb);
+      if (classFact.hasSlots()) {
+        return replace(SObjectSerializationNodeFactory.create(classFact, null)).deserialize(
+            sb);
       } else {
-        replace(SObjectWithoutFieldsSerializationNodeFactory.create(clazz));
-        return clazz.getSerializer().deserialize(sb);
+        return replace(
+            SObjectWithoutFieldsSerializationNodeFactory.create(classFact)).deserialize(sb);
       }
     }
   }
@@ -147,19 +150,16 @@ public abstract class ObjectSerializationNodes {
     @Children private CachedSerializationNode[] cachedSerializers;
     protected final ObjectLayout                layout;
 
-    protected SObjectSerializationNode(final SClass clazz,
+    protected SObjectSerializationNode(final ClassFactory classFact,
         final CachedSlotRead[] reads) {
-      super(clazz);
-      layout = clazz.getLayoutForInstancesUnsafe();
+      super(classFact);
+      layout = classFact.getInstanceLayout();
       fieldReads = insert(reads);
       fieldCnt = fieldReads.length;
     }
 
     @Specialization
-    public void serialize(final Object o, final SnapshotBuffer sb) {
-      assert o instanceof SObject;
-
-      SObject so = (SObject) o;
+    public void serialize(final SObject so, final SnapshotBuffer sb) {
       if (!so.isLayoutCurrent()) {
         ObjectTransitionSafepoint.INSTANCE.transitionObject(so);
       }
@@ -167,10 +167,10 @@ public abstract class ObjectSerializationNodes {
       if (!layout.isValid()) {
         // replace this with a new node for the new layout
         SObjectSerializationNode replacement =
-            SObjectSerializationNodeFactory.create(clazz, createReadNodes(so));
-        replace(replacement).serialize(o, sb);
+            SObjectSerializationNodeFactory.create(classFact, createReadNodes(so));
+        replace(replacement).serialize(so, sb);
       } else {
-        doCached((SObject) o, sb);
+        doCached(so, sb);
       }
     }
 
@@ -185,7 +185,7 @@ public abstract class ObjectSerializationNodes {
 
     @ExplodeLoop
     public void doCached(final SObject o, final SnapshotBuffer sb) {
-      int base = sb.addObjectWithFields(o, clazz, fieldCnt);
+      int base = sb.addObjectWithFields(o, classFact, fieldCnt);
 
       if (cachedSerializers == null) {
         cachedSerializers = insert(getSerializers(o));
@@ -208,15 +208,17 @@ public abstract class ObjectSerializationNodes {
 
     @Override
     public Object deserialize(final ByteBuffer sb) {
-      ClassFactory factory = clazz.getInstanceFactory();
       SObject o;
 
-      if (factory.hasOnlyImmutableFields()) {
-        o = new SImmutableObject(clazz, factory,
-            clazz.getInstanceFactory().getInstanceLayout());
+      if (classFact.hasOnlyImmutableFields()) {
+        o = new SImmutableObject(
+            SnapshotBackend.lookupClass(classFact.getIdentifier()),
+            classFact,
+            classFact.getInstanceLayout());
       } else {
-        o = new SMutableObject(clazz, factory,
-            clazz.getInstanceFactory().getInstanceLayout());
+        o = new SMutableObject(SnapshotBackend.lookupClass(classFact.getIdentifier()),
+            classFact,
+            classFact.getInstanceLayout());
       }
 
       if (fieldWrites == null) {
@@ -236,21 +238,20 @@ public abstract class ObjectSerializationNodes {
   public abstract static class SObjectWithoutFieldsSerializationNode
       extends ObjectSerializationNode {
 
-    protected SObjectWithoutFieldsSerializationNode(final SClass clazz) {
-      super(clazz);
+    protected SObjectWithoutFieldsSerializationNode(final ClassFactory classFact) {
+      super(classFact);
     }
 
     @ExplodeLoop
     @Specialization
-    public void serialize(final Object o, final SnapshotBuffer sb) {
-      assert o instanceof SObjectWithoutFields;
-      sb.addObject(o, clazz, 0);
+    public void serialize(final SObjectWithoutFields o, final SnapshotBuffer sb) {
+      sb.addObject(o, classFact, 0);
     }
 
     @Override
     public Object deserialize(final ByteBuffer sb) {
-      ClassFactory factory = clazz.getInstanceFactory();
-      return new SObjectWithoutFields(clazz, factory);
+      return new SObjectWithoutFields(SnapshotBackend.lookupClass(classFact.getIdentifier()),
+          classFact);
     }
   }
 }

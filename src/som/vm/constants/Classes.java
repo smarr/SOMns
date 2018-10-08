@@ -2,21 +2,6 @@ package som.vm.constants;
 
 import som.vm.ObjectSystem;
 import som.vmobjects.SClass;
-import tools.snapshot.nodes.AbstractArraySerializationNodeGen.ArraySerializationNodeFactory;
-import tools.snapshot.nodes.AbstractArraySerializationNodeGen.TransferArraySerializationNodeFactory;
-import tools.snapshot.nodes.AbstractArraySerializationNodeGen.ValueArraySerializationNodeFactory;
-import tools.snapshot.nodes.BlockSerializationNodeFactory;
-import tools.snapshot.nodes.ObjectSerializationNodesFactory.SObjectWithoutFieldsSerializationNodeFactory;
-import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.BooleanSerializationNodeFactory;
-import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.ClassSerializationNodeFactory;
-import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.DoubleSerializationNodeFactory;
-import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.FalseSerializationNodeFactory;
-import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.IntegerSerializationNodeFactory;
-import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.NilSerializationNodeFactory;
-import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.SInvokableSerializationNodeFactory;
-import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.StringSerializationNodeFactory;
-import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.SymbolSerializationNodeFactory;
-import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.TrueSerializationNodeFactory;
 
 
 public final class Classes {
@@ -49,53 +34,34 @@ public final class Classes {
   static {
     // Allocate the Metaclass classes
     metaclassClass = ObjectSystem.newMetaclassClass(KernelObj.kernel);
-    classClass = new SClass(KernelObj.kernel, ClassSerializationNodeFactory.getInstance());
+    classClass = new SClass(KernelObj.kernel);
     SClass classClassClass = new SClass(KernelObj.kernel);
     ObjectSystem.initializeClassAndItsClass("Class", classClass, classClassClass);
 
     // Allocate the rest of the system classes
 
-    topClass = ObjectSystem.newEmptyClassWithItsClass("Top",
-        SObjectWithoutFieldsSerializationNodeFactory.getInstance());
-    thingClass = ObjectSystem.newEmptyClassWithItsClass("Thing",
-        SObjectWithoutFieldsSerializationNodeFactory.getInstance());
-    objectClass = ObjectSystem.newEmptyClassWithItsClass("Object",
-        SObjectWithoutFieldsSerializationNodeFactory.getInstance());
-    valueClass = ObjectSystem.newEmptyClassWithItsClass("Value",
-        SObjectWithoutFieldsSerializationNodeFactory.getInstance());
-    transferClass = ObjectSystem.newEmptyClassWithItsClass("TransferObject",
-        SObjectWithoutFieldsSerializationNodeFactory.getInstance());
-    nilClass = ObjectSystem.newEmptyClassWithItsClass("Nil",
-        NilSerializationNodeFactory.getInstance());
+    topClass = ObjectSystem.newEmptyClassWithItsClass("Top");
+    thingClass = ObjectSystem.newEmptyClassWithItsClass("Thing");
+    objectClass = ObjectSystem.newEmptyClassWithItsClass("Object");
+    valueClass = ObjectSystem.newEmptyClassWithItsClass("Value");
+    transferClass = ObjectSystem.newEmptyClassWithItsClass("TransferObject");
+    nilClass = ObjectSystem.newEmptyClassWithItsClass("Nil");
 
-    arrayReadMixinClass = ObjectSystem.newEmptyClassWithItsClass("ArrayReadMixin",
-        SObjectWithoutFieldsSerializationNodeFactory.getInstance());
-    arrayClass = ObjectSystem.newEmptyClassWithItsClass("Array",
-        ArraySerializationNodeFactory.getInstance());
-    valueArrayClass = ObjectSystem.newEmptyClassWithItsClass("ValueArray",
-        ValueArraySerializationNodeFactory.getInstance());
-    transferArrayClass = ObjectSystem.newEmptyClassWithItsClass("TransferArray",
-        TransferArraySerializationNodeFactory.getInstance());
-    symbolClass = ObjectSystem.newEmptyClassWithItsClass("Symbol",
-        SymbolSerializationNodeFactory.getInstance());
-    methodClass = ObjectSystem.newEmptyClassWithItsClass("Method",
-        SInvokableSerializationNodeFactory.getInstance());
+    arrayReadMixinClass = ObjectSystem.newEmptyClassWithItsClass("ArrayReadMixin");
+    arrayClass = ObjectSystem.newEmptyClassWithItsClass("Array");
+    valueArrayClass = ObjectSystem.newEmptyClassWithItsClass("ValueArray");
+    transferArrayClass = ObjectSystem.newEmptyClassWithItsClass("TransferArray");
+    symbolClass = ObjectSystem.newEmptyClassWithItsClass("Symbol");
+    methodClass = ObjectSystem.newEmptyClassWithItsClass("Method");
 
-    integerClass = ObjectSystem.newEmptyClassWithItsClass("Integer",
-        IntegerSerializationNodeFactory.getInstance());
-    stringClass = ObjectSystem.newEmptyClassWithItsClass("String",
-        StringSerializationNodeFactory.getInstance());
-    doubleClass = ObjectSystem.newEmptyClassWithItsClass("Double",
-        DoubleSerializationNodeFactory.getInstance());
+    integerClass = ObjectSystem.newEmptyClassWithItsClass("Integer");
+    stringClass = ObjectSystem.newEmptyClassWithItsClass("String");
+    doubleClass = ObjectSystem.newEmptyClassWithItsClass("Double");
 
-    booleanClass = ObjectSystem.newEmptyClassWithItsClass("Boolean",
-        BooleanSerializationNodeFactory.getInstance());
-    trueClass = ObjectSystem.newEmptyClassWithItsClass("True",
-        TrueSerializationNodeFactory.getInstance());
-    falseClass = ObjectSystem.newEmptyClassWithItsClass("False",
-        FalseSerializationNodeFactory.getInstance());
+    booleanClass = ObjectSystem.newEmptyClassWithItsClass("Boolean");
+    trueClass = ObjectSystem.newEmptyClassWithItsClass("True");
+    falseClass = ObjectSystem.newEmptyClassWithItsClass("False");
 
-    blockClass = ObjectSystem.newEmptyClassWithItsClass("Block",
-        BlockSerializationNodeFactory.getInstance());
+    blockClass = ObjectSystem.newEmptyClassWithItsClass("Block");
   }
 }

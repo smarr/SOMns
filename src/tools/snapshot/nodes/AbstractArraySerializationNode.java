@@ -6,9 +6,9 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 import som.interpreter.Types;
+import som.interpreter.objectstorage.ClassFactory;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
-import som.vmobjects.SClass;
 import tools.snapshot.SnapshotBuffer;
 
 
@@ -20,8 +20,8 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   private static final byte TYPE_OBJECT  = 3;
   private static final byte TYPE_EMPTY   = 4;
 
-  public AbstractArraySerializationNode(final SClass clazz) {
-    super(clazz);
+  public AbstractArraySerializationNode(final ClassFactory classFact) {
+    super(classFact);
   }
 
   @Override
@@ -34,7 +34,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   protected void doBoolean(final SArray sa, final SnapshotBuffer sb) {
     boolean[] ba = sa.getBooleanStorage();
     int requiredSpace = ba.length;
-    int base = sb.addObject(sa, sa.getSOMClass(), requiredSpace + 5);
+    int base = sb.addObject(sa, classFact, requiredSpace + 5);
     sb.putByteAt(base, TYPE_BOOLEAN);
     sb.putIntAt(base + 1, ba.length);
     base += 5;
@@ -48,7 +48,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   protected void doDouble(final SArray sa, final SnapshotBuffer sb) {
     double[] da = sa.getDoubleStorage();
     int requiredSpace = da.length * Double.BYTES;
-    int base = sb.addObject(sa, sa.getSOMClass(), requiredSpace + 5);
+    int base = sb.addObject(sa, classFact, requiredSpace + 5);
     sb.putByteAt(base, TYPE_DOUBLE);
     sb.putIntAt(base + 1, da.length);
     base += 5;
@@ -62,7 +62,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   protected void doLong(final SArray sa, final SnapshotBuffer sb) {
     long[] la = sa.getLongStorage();
     int requiredSpace = la.length * Long.BYTES;
-    int base = sb.addObject(sa, sa.getSOMClass(), requiredSpace + 5);
+    int base = sb.addObject(sa, classFact, requiredSpace + 5);
     sb.putByteAt(base, TYPE_LONG);
     sb.putIntAt(base + 1, la.length);
     base += 5;
@@ -76,7 +76,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   protected void doObject(final SArray sa, final SnapshotBuffer sb) {
     Object[] oa = sa.getObjectStorage();
     int requiredSpace = oa.length * 8;
-    int base = sb.addObject(sa, sa.getSOMClass(), requiredSpace + 5);
+    int base = sb.addObject(sa, classFact, requiredSpace + 5);
     sb.putByteAt(base, TYPE_OBJECT);
     sb.putIntAt(base + 1, oa.length);
     base += 5;
@@ -90,7 +90,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
 
   @Specialization(guards = "sa.isEmptyType()")
   protected void doEmpty(final SArray sa, final SnapshotBuffer sb) {
-    int base = sb.addObject(sa, sa.getSOMClass(), 5);
+    int base = sb.addObject(sa, classFact, 5);
     sb.putByteAt(base, TYPE_EMPTY);
     sb.putIntAt(base + 1, sa.getEmptyStorage());
   }
@@ -141,8 +141,8 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   @GenerateNodeFactory
   public abstract static class ArraySerializationNode extends AbstractArraySerializationNode {
 
-    public ArraySerializationNode(final SClass clazz) {
-      super(clazz);
+    public ArraySerializationNode(final ClassFactory classFact) {
+      super(classFact);
     }
 
     @Override
@@ -155,8 +155,8 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   @GenerateNodeFactory
   public abstract static class TransferArraySerializationNode extends ArraySerializationNode {
 
-    public TransferArraySerializationNode(final SClass clazz) {
-      super(clazz);
+    public TransferArraySerializationNode(final ClassFactory classFact) {
+      super(classFact);
     }
 
     @Override
@@ -169,8 +169,8 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   @GenerateNodeFactory
   public abstract static class ValueArraySerializationNode extends ArraySerializationNode {
 
-    public ValueArraySerializationNode(final SClass clazz) {
-      super(clazz);
+    public ValueArraySerializationNode(final ClassFactory classFact) {
+      super(classFact);
     }
 
     @Override
