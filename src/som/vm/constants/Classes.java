@@ -39,21 +39,18 @@ public final class Classes {
     ObjectSystem.initializeClassAndItsClass("Class", classClass, classClassClass);
 
     // Allocate the rest of the system classes
-
     topClass = ObjectSystem.newEmptyClassWithItsClass("Top");
     thingClass = ObjectSystem.newEmptyClassWithItsClass("Thing");
     objectClass = ObjectSystem.newEmptyClassWithItsClass("Object");
     valueClass = ObjectSystem.newEmptyClassWithItsClass("Value");
     transferClass = ObjectSystem.newEmptyClassWithItsClass("TransferObject");
     nilClass = ObjectSystem.newEmptyClassWithItsClass("Nil");
-
     arrayReadMixinClass = ObjectSystem.newEmptyClassWithItsClass("ArrayReadMixin");
     arrayClass = ObjectSystem.newEmptyClassWithItsClass("Array");
     valueArrayClass = ObjectSystem.newEmptyClassWithItsClass("ValueArray");
     transferArrayClass = ObjectSystem.newEmptyClassWithItsClass("TransferArray");
     symbolClass = ObjectSystem.newEmptyClassWithItsClass("Symbol");
     methodClass = ObjectSystem.newEmptyClassWithItsClass("Method");
-
     integerClass = ObjectSystem.newEmptyClassWithItsClass("Integer");
     stringClass = ObjectSystem.newEmptyClassWithItsClass("String");
     doubleClass = ObjectSystem.newEmptyClassWithItsClass("Double");
