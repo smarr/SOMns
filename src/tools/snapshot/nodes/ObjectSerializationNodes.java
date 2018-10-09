@@ -3,6 +3,7 @@ package tools.snapshot.nodes;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -36,6 +37,13 @@ public abstract class ObjectSerializationNodes {
 
   public abstract static class ObjectSerializationNode extends AbstractSerializationNode {
 
+    protected class SlotDefinitionSorter implements Comparator<SlotDefinition> {
+      @Override
+      public int compare(final SlotDefinition o1, final SlotDefinition o2) {
+        return o1.getName().getString().compareTo(o2.getName().getString());
+      }
+    }
+
     protected ObjectSerializationNode(final ClassFactory classFact) {
       super(classFact);
     }
@@ -50,12 +58,12 @@ public abstract class ObjectSerializationNodes {
       // sort slots so we get the right order
       ObjectLayout layout = classFact.getInstanceLayout();
       ArrayList<SlotDefinition> definitions = new ArrayList<>();
-      layout.getStorageLocations().getKeys().forEach(sd -> definitions.add(sd));
+      for (SlotDefinition sd : layout.getStorageLocations().getKeys()) {
+        definitions.add(sd);
+      }
       CachedSlotWrite[] writes = new CachedSlotWrite[definitions.size()];
 
-      Collections.sort(definitions, (a, b) -> {
-        return a.getName().getString().compareTo(b.getName().getString());
-      });
+      Collections.sort(definitions, new SlotDefinitionSorter());
 
       for (int i = 0; i < writes.length; i++) {
         StorageLocation loc =
@@ -78,15 +86,15 @@ public abstract class ObjectSerializationNodes {
 
       ArrayList<SlotDefinition> definitions = new ArrayList<>();
       ObjectLayout layout = classFact.getInstanceLayout();
-      layout.getStorageLocations().getKeys().forEach(sd -> definitions.add(sd));
+      for (SlotDefinition sd : layout.getStorageLocations().getKeys()) {
+        definitions.add(sd);
+      }
       CachedSlotRead[] reads = new CachedSlotRead[definitions.size()];
 
       // Reads are ordered by the name of the slots
       // this way the entry order is deterministic and independent of layout changes
       // same order in replay when reading
-      Collections.sort(definitions, (a, b) -> {
-        return a.getName().getString().compareTo(b.getName().getString());
-      });
+      Collections.sort(definitions, new SlotDefinitionSorter());
 
       for (int i = 0; i < reads.length; i++) {
         StorageLocation loc = layout.getStorageLocation(definitions.get(i));
