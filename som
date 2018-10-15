@@ -93,7 +93,11 @@ tools.add_argument('-bpt', '--buffers-per-thread', help='used to calculate the n
 tools.add_argument('-bs', '--buffer-size', help='set the size of buffer used for tracing',
                     dest='buffer_size', default=1048576)
 tools.add_argument('-bd', '--buffer-delay', help='set the delay for checking if there are buffers to write',
-                    dest='buffer_delay', default=50)                    
+                    dest='buffer_delay', default=50)   
+tools.add_argument('-as', '--actor-snapshots', help='actor tracing/replay with snapshots',
+                    dest='actor_snapshots', action='store_true', default=False)       
+tools.add_argument('-tas', '--test-snapshots', help='actor tracing with snapshots',
+                    dest='test_actor_snapshots', action='store_true', default=False)                                        
 tools.add_argument('--coverage', help='determine SOMns code coverage and store in given file',
                    dest='coverage', default=None)
 tools.add_argument('--java-coverage', help='determine Java code coverage and store in given file',
@@ -331,6 +335,11 @@ if args.buffer_size:
     flags += ['-Dsom.buffDelay=%s' % args.buffer_delay ]
 if args.buffers_per_thread:
     flags += ['-Dsom.buffPerThread=%s' % args.buffers_per_thread ]
+if args.test_actor_snapshots:
+    flags += ['-Dsom.snapshotTest=true']
+if args.actor_snapshots:
+    flags += ['-Dsom.actorSnapshot=true']
+    
 
 if (args.truffle_profile or args.web_debugger or
     args.dynamic_metrics or args.coverage or args.si_candidates):
@@ -380,6 +389,7 @@ if args.java_args:
     JAVA_ARGS += ['-' + property for property in args.java_args]
 
 flags += ['-Dsom.tools=' + BASE_DIR + '/tools']
+flags += ['-Dsom.baseDir=' + BASE_DIR]
 
 all_args = JAVA_ARGS + ['-classpath', CLASSPATH] + [BOOT_CLASSPATH] + flags + SOM_ARGS + args.args
 

@@ -43,7 +43,11 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
+import som.vm.VmSettings;
 import som.vm.constants.Classes;
+import tools.snapshot.SnapshotBackend;
+import tools.snapshot.SnapshotBuffer;
+import tools.snapshot.nodes.AbstractSerializationNode;
 
 
 // TODO: should we move more of that out of SClass and use the corresponding
@@ -188,6 +192,10 @@ public final class SClass extends SObjectWithClass {
     this.isArray = isArray;
     this.instanceClassGroup = classFactory;
     // assert instanceClassGroup != null || !ObjectSystem.isInitialized();
+
+    if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
+      SnapshotBackend.registerClass(mixinDef.getIdentifier(), this);
+    }
   }
 
   /**
@@ -340,5 +348,14 @@ public final class SClass extends SObjectWithClass {
   @Override
   public MaterializedFrame getContext() {
     return context;
+  }
+
+  public void serialize(final Object o, final SnapshotBuffer sb) {
+    assert instanceClassGroup != null;
+    getSerializer().execute(o, sb);
+  }
+
+  public AbstractSerializationNode getSerializer() {
+    return instanceClassGroup.getSerializer();
   }
 }

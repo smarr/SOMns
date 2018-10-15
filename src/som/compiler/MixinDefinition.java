@@ -1,5 +1,7 @@
 package som.compiler;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,8 +12,10 @@ import org.graalvm.collections.MapCursor;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -47,6 +51,7 @@ import som.interpreter.objectstorage.StorageLocation;
 import som.interpreter.transactions.CachedTxSlotRead;
 import som.interpreter.transactions.CachedTxSlotWrite;
 import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
@@ -57,6 +62,9 @@ import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
+import tools.snapshot.nodes.AbstractSerializationNode;
+import tools.snapshot.nodes.ObjectSerializationNodesFactory.UninitializedObjectSerializationNodeFactory;
+import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.ClassSerializationNodeFactory;
 
 
 /**
@@ -95,6 +103,8 @@ public final class MixinDefinition implements SomInteropObject {
   // These nodes are used to throw the exception in the parser, where we don't have an AST.
   protected static final ExceptionSignalingNode notAValue;
   protected static final ExceptionSignalingNode cannotBeValues;
+
+  @CompilationFinal private SSymbol identifier;
 
   static {
     SourceSection ss =
@@ -199,10 +209,24 @@ public final class MixinDefinition implements SomInteropObject {
   public void initializeClass(final SClass result,
       final Object superclassAndMixins, final boolean isTheValueClass,
       final boolean isTheTransferObjectClass, final boolean isTheArrayClass) {
+    initializeClass(result, superclassAndMixins, isTheValueClass, isTheTransferObjectClass,
+        isTheArrayClass, UninitializedObjectSerializationNodeFactory.getInstance());
+  }
+
+  public void initializeClass(final SClass result,
+      final Object superclassAndMixins,
+      final NodeFactory<? extends AbstractSerializationNode> serializerFactory) {
+    initializeClass(result, superclassAndMixins, false, false, false, serializerFactory);
+  }
+
+  public void initializeClass(final SClass result,
+      final Object superclassAndMixins, final boolean isTheValueClass,
+      final boolean isTheTransferObjectClass, final boolean isTheArrayClass,
+      final NodeFactory<? extends AbstractSerializationNode> serializerFactory) {
     VM.callerNeedsToBeOptimized(
         "This is supposed to result in a cacheable object, and thus is only the fallback case.");
     ClassFactory factory = createClassFactory(superclassAndMixins,
-        isTheValueClass, isTheTransferObjectClass, isTheArrayClass);
+        isTheValueClass, isTheTransferObjectClass, isTheArrayClass, serializerFactory);
     if (result.getSOMClass() != null) {
       factory.getClassClassFactory().initializeClass(result.getSOMClass());
     }
@@ -290,7 +314,8 @@ public final class MixinDefinition implements SomInteropObject {
 
   public ClassFactory createClassFactory(final Object superclassAndMixins,
       final boolean isTheValueClass, final boolean isTheTransferObjectClass,
-      final boolean isTheArrayClass) {
+      final boolean isTheArrayClass,
+      final NodeFactory<? extends AbstractSerializationNode> serializerFactory) {
     CompilerAsserts.neverPartOfCompilation();
     VM.callerNeedsToBeOptimized(
         "This is supposed to result in a cacheable object, and thus is only the fallback case.");
@@ -341,13 +366,13 @@ public final class MixinDefinition implements SomInteropObject {
         new SClass[] {Classes.classClass}, true,
         // TODO: not passing a ClassFactory of the meta class here is incorrect,
         // might not matter in practice
-        null);
+        null, ClassSerializationNodeFactory.getInstance());
 
     ClassFactory classFactory = new ClassFactory(name, this,
         instanceSlots, dispatchables, instancesAreValues,
         instancesAreTransferObjects, instancesAreArrays,
         mixins, hasOnlyImmutableFields,
-        classClassFactory);
+        classClassFactory, serializerFactory);
 
     cache.add(classFactory);
 
@@ -512,7 +537,7 @@ public final class MixinDefinition implements SomInteropObject {
   public SClass instantiateClass(final SObjectWithClass outer,
       final Object superclassAndMixins) {
     ClassFactory factory = createClassFactory(superclassAndMixins,
-        false, false, false);
+        false, false, false, UninitializedObjectSerializationNodeFactory.getInstance());
     return ClassInstantiationNode.instantiate(outer, factory, notAValue,
         cannotBeValues);
   }
@@ -849,5 +874,31 @@ public final class MixinDefinition implements SomInteropObject {
    */
   public static boolean isInstance(final TruffleObject obj) {
     return obj instanceof MixinDefinition;
+  }
+
+  /**
+   * This method provides a String that can be used to identify a MixinDefinition.
+   * The String takes a shape like this: "relativePath:module.class.nestedClass"
+   *
+   * @return the fully qualified name of this MixinDefinition
+   */
+  public SSymbol getIdentifier() {
+    MixinDefinition outer = getOuterMixinDefinition();
+
+    if (identifier == null) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      if (outer != null) {
+        identifier = Symbols.symbolFor(outer.getIdentifier() + "." + this.name.getString());
+      } else if (this.isModule && this.sourceSection != null) {
+        Path absolute = Paths.get(this.sourceSection.getSource().getURI());
+        Path relative =
+            Paths.get(VmSettings.BASE_DIRECTORY).toAbsolutePath().relativize(absolute);
+        identifier = Symbols.symbolFor(relative.toString() + ":" + this.name.getString());
+      } else {
+        identifier = this.name;
+      }
+    }
+
+    return identifier;
   }
 }

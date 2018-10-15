@@ -370,6 +370,17 @@
       </exec>
     </target>
 
+    <target name="serialization-tests" depends="compile">
+      <exec executable="./som" failonerror="true">
+        <arg value="-G" />
+        <arg value="-at" />
+        <arg value="-tas" />
+        <arg value="${corelib.dir}/TestSuite/TestRunner.ns" />
+        <arg value="${corelib.dir}/TestSuite/Serialization.ns" /> 
+        <arg value="SerializationTest" />
+      </exec>
+    </target>
+
     <target name="dynamic-metrics-tests" depends="compile-som">
       <exec executable="tests/dym/test.sh" failonerror="true">
           <arg value="--coverage" />
@@ -444,7 +455,7 @@
 
     <target name="coverage" depends="send-java-coverage,send-somns-coverage" />
 
-    <target name="tests" depends="core-tests,replay-tests,coverage">
+    <target name="tests" depends="core-tests,serialization-tests,replay-tests,coverage">
     </target>
     
     <target name="native" depends="libs,compile-som">

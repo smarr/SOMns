@@ -50,6 +50,7 @@ import tools.debugger.WebDebugger;
 import tools.debugger.session.Breakpoints;
 import tools.dym.DynamicMetrics;
 import tools.language.StructuralProbe;
+import tools.snapshot.SnapshotBackend;
 import tools.superinstructions.CandidateIdentifier;
 
 
@@ -361,6 +362,12 @@ public final class VM {
       assert !options.dynamicMetricsEnabled : "Currently, DynamicMetrics and CandidateIdentifer are not compatible";
       structuralProbe = CandidateIdentifier.find(env);
       assert structuralProbe != null : "Initialization of CandidateIdentifer tool incomplete";
+    }
+
+    if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
+      assert !options.dynamicMetricsEnabled : "Currently, DynamicMetrics and Snapshots are not compatible";
+      assert !options.siCandidateIdentifierEnabled : "Currently, CandidateIdentifer and Snapshots are not compatible";
+      structuralProbe = SnapshotBackend.getProbe();
     }
   }
 

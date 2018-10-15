@@ -27,6 +27,9 @@ package som.vmobjects;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
+
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -42,6 +45,8 @@ import som.interpreter.nodes.dispatch.CachedDispatchNode;
 import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNode;
+import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vm.constants.Classes;
 
 
@@ -196,5 +201,21 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
   @Override
   public final String typeForErrors() {
     return "method";
+  }
+
+  public SSymbol getIdentifier() {
+    if (holder != null) {
+      return Symbols.symbolFor(
+          holder.getIdentifier().getString() + "." + this.signature.getString());
+    } else if (invokable.getSourceSection() != null) {
+      // TODO find a better solution than charIndex
+      Path absolute = Paths.get(invokable.getSourceSection().getSource().getURI());
+      Path relative =
+          Paths.get(VmSettings.BASE_DIRECTORY).toAbsolutePath().relativize(absolute);
+      return Symbols.symbolFor(relative.toString() + ":"
+          + invokable.getSourceSection().getCharIndex() + ":" + this.signature.getString());
+    } else {
+      return this.signature;
+    }
   }
 }

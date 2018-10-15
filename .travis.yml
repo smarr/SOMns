@@ -64,7 +64,7 @@ install: |
   export SG=-Dskip.graal=true
 
 script:
-  - if [ "$TASK" = "core-tests"    ]; then ant $SG core-tests    && ant $SG coverage; fi
+  - if [ "$TASK" = "core-tests"    ]; then ant $SG core-tests    && ant $SG serialization-tests && ant $SG coverage; fi
   - if [ "$TASK" = "checkstyle"    ]; then ant $SG checkstyle    && ant $SG eclipseformat-check && cd tools/kompos && nvm install 7 && npm install && npm run lint; fi
   - if [ "$TASK" = "kompos-tests"  ]; then nvm install 8         && ant $SG && cd tools/kompos && npm -s run verify && npm test; fi
   - if [ "$TASK" = "replay1-tests" ]; then ant $SG compile       && ./tests/replay/test.sh 1; fi
