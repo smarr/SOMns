@@ -280,54 +280,86 @@ public final class ObjectSystem {
     assert valueDef.getNumberOfSlots() == 0;
     assert transferDef.getNumberOfSlots() == 0;
 
-    topDef.initializeClass(Classes.topClass, null,
-        SObjectWithoutFieldsSerializationNodeFactory.getInstance()); // Top doesn't have a
-                                                                     // super class
-    thingDef.initializeClass(Classes.thingClass, Classes.topClass,
-        SObjectWithoutFieldsSerializationNodeFactory.getInstance());
-    valueDef.initializeClass(Classes.valueClass, Classes.thingClass, true, false, false,
-        SObjectWithoutFieldsSerializationNodeFactory.getInstance());
-    objectDef.initializeClass(Classes.objectClass, Classes.thingClass,
-        SObjectWithoutFieldsSerializationNodeFactory.getInstance());
-    classDef.initializeClass(Classes.classClass, Classes.objectClass,
-        ClassSerializationNodeFactory.getInstance());
-    transferDef.initializeClass(Classes.transferClass, Classes.objectClass, false, true,
-        false, SObjectWithoutFieldsSerializationNodeFactory.getInstance());
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      topDef.initializeClass(Classes.topClass, null,
+          SObjectWithoutFieldsSerializationNodeFactory.getInstance()); // Top doesn't have a
+                                                                       // super class
+      thingDef.initializeClass(Classes.thingClass, Classes.topClass,
+          SObjectWithoutFieldsSerializationNodeFactory.getInstance());
+      valueDef.initializeClass(Classes.valueClass, Classes.thingClass, true, false, false,
+          SObjectWithoutFieldsSerializationNodeFactory.getInstance());
+      objectDef.initializeClass(Classes.objectClass, Classes.thingClass,
+          SObjectWithoutFieldsSerializationNodeFactory.getInstance());
+      classDef.initializeClass(Classes.classClass, Classes.objectClass,
+          ClassSerializationNodeFactory.getInstance());
+      transferDef.initializeClass(Classes.transferClass, Classes.objectClass, false, true,
+          false, SObjectWithoutFieldsSerializationNodeFactory.getInstance());
 
-    metaclassDef.initializeClass(Classes.metaclassClass, Classes.classClass,
-        ClassSerializationNodeFactory.getInstance());
-    nilDef.initializeClass(Classes.nilClass, Classes.valueClass,
-        NilSerializationNodeFactory.getInstance());
+      metaclassDef.initializeClass(Classes.metaclassClass, Classes.classClass,
+          ClassSerializationNodeFactory.getInstance());
+      nilDef.initializeClass(Classes.nilClass, Classes.valueClass,
+          NilSerializationNodeFactory.getInstance());
 
-    arrayReadMixinDef.initializeClass(Classes.arrayReadMixinClass, Classes.objectClass,
-        SObjectWithoutFieldsSerializationNodeFactory.getInstance());
-    arrayDef.initializeClass(Classes.arrayClass,
-        new SClass[] {Classes.objectClass, Classes.arrayReadMixinClass}, false, false, true,
-        ArraySerializationNodeFactory.getInstance());
-    valueArrayDef.initializeClass(Classes.valueArrayClass,
-        new SClass[] {Classes.valueClass, Classes.arrayReadMixinClass}, false, false, true,
-        ValueArraySerializationNodeFactory.getInstance());
-    transferArrayDef.initializeClass(Classes.transferArrayClass,
-        new SClass[] {Classes.arrayClass, Classes.transferClass}, false, false, true,
-        TransferArraySerializationNodeFactory.getInstance());
-    integerDef.initializeClass(Classes.integerClass, Classes.valueClass,
-        IntegerSerializationNodeFactory.getInstance());
-    stringDef.initializeClass(Classes.stringClass, Classes.valueClass,
-        StringSerializationNodeFactory.getInstance());
-    doubleDef.initializeClass(Classes.doubleClass, Classes.valueClass,
-        DoubleSerializationNodeFactory.getInstance());
-    symbolDef.initializeClass(Classes.symbolClass, Classes.stringClass,
-        SymbolSerializationNodeFactory.getInstance());
+      arrayReadMixinDef.initializeClass(Classes.arrayReadMixinClass, Classes.objectClass,
+          SObjectWithoutFieldsSerializationNodeFactory.getInstance());
+      arrayDef.initializeClass(Classes.arrayClass,
+          new SClass[] {Classes.objectClass, Classes.arrayReadMixinClass}, false, false, true,
+          ArraySerializationNodeFactory.getInstance());
+      valueArrayDef.initializeClass(Classes.valueArrayClass,
+          new SClass[] {Classes.valueClass, Classes.arrayReadMixinClass}, false, false, true,
+          ValueArraySerializationNodeFactory.getInstance());
+      transferArrayDef.initializeClass(Classes.transferArrayClass,
+          new SClass[] {Classes.arrayClass, Classes.transferClass}, false, false, true,
+          TransferArraySerializationNodeFactory.getInstance());
+      integerDef.initializeClass(Classes.integerClass, Classes.valueClass,
+          IntegerSerializationNodeFactory.getInstance());
+      stringDef.initializeClass(Classes.stringClass, Classes.valueClass,
+          StringSerializationNodeFactory.getInstance());
+      doubleDef.initializeClass(Classes.doubleClass, Classes.valueClass,
+          DoubleSerializationNodeFactory.getInstance());
+      symbolDef.initializeClass(Classes.symbolClass, Classes.stringClass,
+          SymbolSerializationNodeFactory.getInstance());
 
-    booleanDef.initializeClass(Classes.booleanClass, Classes.valueClass,
-        BooleanSerializationNodeFactory.getInstance());
-    trueDef.initializeClass(Classes.trueClass, Classes.booleanClass,
-        TrueSerializationNodeFactory.getInstance());
-    falseDef.initializeClass(Classes.falseClass, Classes.booleanClass,
-        FalseSerializationNodeFactory.getInstance());
+      booleanDef.initializeClass(Classes.booleanClass, Classes.valueClass,
+          BooleanSerializationNodeFactory.getInstance());
+      trueDef.initializeClass(Classes.trueClass, Classes.booleanClass,
+          TrueSerializationNodeFactory.getInstance());
+      falseDef.initializeClass(Classes.falseClass, Classes.booleanClass,
+          FalseSerializationNodeFactory.getInstance());
 
-    blockDef.initializeClass(Classes.blockClass, Classes.objectClass,
-        BlockSerializationNodeFactory.getInstance());
+      blockDef.initializeClass(Classes.blockClass, Classes.objectClass,
+          BlockSerializationNodeFactory.getInstance());
+    } else {
+      topDef.initializeClass(Classes.topClass, null); // Top doesn't have a
+                                                      // super class
+      thingDef.initializeClass(Classes.thingClass, Classes.topClass);
+      valueDef.initializeClass(Classes.valueClass, Classes.thingClass, true, false, false);
+      objectDef.initializeClass(Classes.objectClass, Classes.thingClass);
+      classDef.initializeClass(Classes.classClass, Classes.objectClass);
+      transferDef.initializeClass(Classes.transferClass, Classes.objectClass, false, true,
+          false);
+
+      metaclassDef.initializeClass(Classes.metaclassClass, Classes.classClass);
+      nilDef.initializeClass(Classes.nilClass, Classes.valueClass);
+
+      arrayReadMixinDef.initializeClass(Classes.arrayReadMixinClass, Classes.objectClass);
+      arrayDef.initializeClass(Classes.arrayClass,
+          new SClass[] {Classes.objectClass, Classes.arrayReadMixinClass}, false, false, true);
+      valueArrayDef.initializeClass(Classes.valueArrayClass,
+          new SClass[] {Classes.valueClass, Classes.arrayReadMixinClass}, false, false, true);
+      transferArrayDef.initializeClass(Classes.transferArrayClass,
+          new SClass[] {Classes.arrayClass, Classes.transferClass}, false, false, true);
+      integerDef.initializeClass(Classes.integerClass, Classes.valueClass);
+      stringDef.initializeClass(Classes.stringClass, Classes.valueClass);
+      doubleDef.initializeClass(Classes.doubleClass, Classes.valueClass);
+      symbolDef.initializeClass(Classes.symbolClass, Classes.stringClass);
+
+      booleanDef.initializeClass(Classes.booleanClass, Classes.valueClass);
+      trueDef.initializeClass(Classes.trueClass, Classes.booleanClass);
+      falseDef.initializeClass(Classes.falseClass, Classes.booleanClass);
+
+      blockDef.initializeClass(Classes.blockClass, Classes.objectClass);
+    }
 
     Nil.nilObject.setClass(Classes.nilClass);
 
