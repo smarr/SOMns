@@ -6,24 +6,25 @@ import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.language.StructuralProbe;
 
 
 public class SnapshotBackend {
   private static byte snapshotVersion = 0;
 
-  private static final EconomicMap<Short, SSymbol>      symbolDictionary;
-  private static final EconomicMap<SSymbol, SClass>     classDictionary;
-  private static final EconomicMap<SSymbol, SInvokable> invokableDictionary;
+  private static final EconomicMap<Short, SSymbol>  symbolDictionary;
+  private static final EconomicMap<SSymbol, SClass> classDictionary;
+  private static final StructuralProbe              probe;
 
   static {
     if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
       classDictionary = EconomicMap.create();
-      invokableDictionary = EconomicMap.create();
       symbolDictionary = EconomicMap.create();
+      probe = new StructuralProbe();
     } else {
       classDictionary = null;
-      invokableDictionary = null;
       symbolDictionary = null;
+      probe = null;
     }
   }
 
@@ -41,11 +42,6 @@ public class SnapshotBackend {
     classDictionary.put(sym, clazz);
   }
 
-  public static void registerInvokable(final SSymbol sym, final SInvokable invokable) {
-    assert VmSettings.TRACK_SNAPSHOT_ENTITIES;
-    invokableDictionary.put(sym, invokable);
-  }
-
   public static SClass lookupClass(final SSymbol sym) {
     assert VmSettings.TRACK_SNAPSHOT_ENTITIES;
     return classDictionary.get(sym);
@@ -58,12 +54,12 @@ public class SnapshotBackend {
 
   public static SInvokable lookupInvokable(final SSymbol sym) {
     assert VmSettings.TRACK_SNAPSHOT_ENTITIES;
-    return invokableDictionary.get(sym);
+    return probe.lookupMethod(sym);
   }
 
   public static SInvokable lookupInvokable(final short sym) {
     assert VmSettings.TRACK_SNAPSHOT_ENTITIES;
-    return invokableDictionary.get(getSymbolForId(sym));
+    return probe.lookupMethod(getSymbolForId(sym));
   }
 
   public static synchronized void startSnapshot() {
@@ -76,5 +72,10 @@ public class SnapshotBackend {
     // intentionally unsynchronized, as a result the line between snapshots will be a bit
     // fuzzy.
     return snapshotVersion;
+  }
+
+  public static StructuralProbe getProbe() {
+    assert probe != null;
+    return probe;
   }
 }

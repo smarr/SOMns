@@ -4,8 +4,6 @@ import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.NodeFactory;
 
 import som.VM;
@@ -13,7 +11,6 @@ import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
@@ -66,8 +63,6 @@ public final class ClassFactory {
 
   protected final SerializerRootNode serializationRoot;
 
-  @CompilationFinal private SSymbol identifier;
-
   public ClassFactory(final SSymbol name, final MixinDefinition mixinDef,
       final EconomicSet<SlotDefinition> instanceSlots,
       final EconomicMap<SSymbol, Dispatchable> dispatchables,
@@ -93,7 +88,6 @@ public final class ClassFactory {
     this.superclassAndMixins = superclassAndMixins;
 
     if (VmSettings.SNAPSHOTS_ENABLED) {
-      CompilerDirectives.transferToInterpreter();
       this.serializationRoot =
           new SerializerRootNode(null, serializerFactory.createNode(this));
     } else {
@@ -204,11 +198,6 @@ public final class ClassFactory {
   }
 
   public SSymbol getIdentifier() {
-    if (identifier == null) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-      identifier = Symbols.symbolFor(mixinDef.getIdentifier());
-    }
-
-    return identifier;
+    return mixinDef.getIdentifier();
   }
 }

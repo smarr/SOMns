@@ -43,7 +43,6 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
-import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import tools.snapshot.SnapshotBackend;
@@ -195,7 +194,7 @@ public final class SClass extends SObjectWithClass {
     // assert instanceClassGroup != null || !ObjectSystem.isInitialized();
 
     if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
-      SnapshotBackend.registerClass(Symbols.symbolFor(mixinDef.getIdentifier()), this);
+      SnapshotBackend.registerClass(mixinDef.getIdentifier(), this);
     }
   }
 

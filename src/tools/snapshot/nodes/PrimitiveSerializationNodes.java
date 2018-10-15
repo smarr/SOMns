@@ -9,7 +9,6 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 import som.interpreter.objectstorage.ClassFactory;
-import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
@@ -181,7 +180,7 @@ public abstract class PrimitiveSerializationNodes {
     }
 
     protected short getSymbolId(final SClass clazz) {
-      return Symbols.symbolFor(clazz.getMixinDefinition().getIdentifier()).getSymbolId();
+      return clazz.getMixinDefinition().getIdentifier().getSymbolId();
     }
 
     @Specialization
@@ -211,7 +210,7 @@ public abstract class PrimitiveSerializationNodes {
       assert o instanceof SInvokable;
       SInvokable si = (SInvokable) o;
       int base = sb.addObject(si, classFact, Short.BYTES);
-      sb.putShortAt(base, Symbols.symbolFor(si.getIdentifier()).getSymbolId());
+      sb.putShortAt(base, si.getIdentifier().getSymbolId());
     }
 
     @Override

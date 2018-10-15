@@ -12,6 +12,7 @@ import org.graalvm.collections.MapCursor;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.NodeFactory;
@@ -102,6 +103,8 @@ public final class MixinDefinition implements SomInteropObject {
   // These nodes are used to throw the exception in the parser, where we don't have an AST.
   protected static final ExceptionSignalingNode notAValue;
   protected static final ExceptionSignalingNode cannotBeValues;
+
+  @CompilationFinal private SSymbol identifier;
 
   static {
     SourceSection ss =
@@ -876,19 +879,26 @@ public final class MixinDefinition implements SomInteropObject {
   /**
    * This method provides a String that can be used to identify a MixinDefinition.
    * The String takes a shape like this: "relativePath:module.class.nestedClass"
-   * 
+   *
    * @return the fully qualified name of this MixinDefinition
    */
-  public String getIdentifier() {
+  public SSymbol getIdentifier() {
     MixinDefinition outer = getOuterMixinDefinition();
-    if (outer != null) {
-      return outer.getIdentifier() + "." + this.name.getString();
-    } else if (this.isModule && this.sourceSection != null) {
-      Path absolute = Paths.get(this.sourceSection.getSource().getURI());
-      Path relative =
-          Paths.get(VmSettings.BASE_DIRECTORY).toAbsolutePath().relativize(absolute);
-      return relative.toString() + ":" + this.name.getString();
+
+    if (identifier == null) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      if (outer != null) {
+        identifier = Symbols.symbolFor(outer.getIdentifier() + "." + this.name.getString());
+      } else if (this.isModule && this.sourceSection != null) {
+        Path absolute = Paths.get(this.sourceSection.getSource().getURI());
+        Path relative =
+            Paths.get(VmSettings.BASE_DIRECTORY).toAbsolutePath().relativize(absolute);
+        identifier = Symbols.symbolFor(relative.toString() + ":" + this.name.getString());
+      } else {
+        identifier = this.name;
+      }
     }
-    return this.name.getString();
+
+    return identifier;
   }
 }

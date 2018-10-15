@@ -13,7 +13,6 @@ import som.compiler.Variable.Internal;
 import som.interpreter.FrameOnStackMarker;
 import som.interpreter.Types;
 import som.interpreter.objectstorage.ClassFactory;
-import som.vm.Symbols;
 import som.vm.constants.Classes;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
@@ -39,8 +38,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
     if (mf == null) {
       int base = sb.addObject(block, classFact, SINVOKABLE_SIZE + 2);
       SInvokable meth = block.getMethod();
-      String sid = meth.getIdentifier();
-      sb.putShortAt(base, Symbols.symbolFor(sid).getSymbolId());
+      sb.putShortAt(base, meth.getIdentifier().getSymbolId());
       sb.putShortAt(base + 2, (short) 0);
     } else {
       FrameDescriptor fd = mf.getFrameDescriptor();
@@ -52,8 +50,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
       int base = start;
 
       SInvokable meth = block.getMethod();
-      String sid = meth.getIdentifier();
-      sb.putShortAt(base, Symbols.symbolFor(sid).getSymbolId());
+      sb.putShortAt(base, meth.getIdentifier().getSymbolId());
       sb.putByteAt(base + 2, (byte) args.length);
       base += 3;
 

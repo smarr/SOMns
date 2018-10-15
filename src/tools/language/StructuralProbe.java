@@ -3,22 +3,25 @@ package tools.language;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.graalvm.collections.EconomicMap;
+
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 
 
 public class StructuralProbe {
 
-  protected final Set<MixinDefinition> classes;
-  protected final Set<SInvokable>      methods;
-  protected final Set<SlotDefinition>  slots;
-  protected final Set<Variable>        variables;
+  protected final Set<MixinDefinition>             classes;
+  protected final EconomicMap<SSymbol, SInvokable> methods;
+  protected final Set<SlotDefinition>              slots;
+  protected final Set<Variable>                    variables;
 
   public StructuralProbe() {
     classes = new HashSet<>();
-    methods = new HashSet<>();
+    methods = EconomicMap.create();
     slots = new HashSet<>();
     variables = new HashSet<>();
   }
@@ -28,7 +31,9 @@ public class StructuralProbe {
   }
 
   public synchronized void recordNewMethod(final SInvokable method) {
-    methods.add(method);
+    // make sure we don't lose an invokable
+    assert methods.get(method.getIdentifier(), method) == method;
+    methods.put(method.getIdentifier(), method);
   }
 
   public synchronized void recordNewSlot(final SlotDefinition slot) {
@@ -44,7 +49,11 @@ public class StructuralProbe {
   }
 
   public Set<SInvokable> getMethods() {
-    return methods;
+    HashSet<SInvokable> res = new HashSet<>();
+    for (SInvokable si : methods.getValues()) {
+      res.add(si);
+    }
+    return res;
   }
 
   public Set<SlotDefinition> getSlots() {
@@ -53,5 +62,9 @@ public class StructuralProbe {
 
   public Set<Variable> getVariables() {
     return variables;
+  }
+
+  public SInvokable lookupMethod(final SSymbol sym) {
+    return methods.get(sym);
   }
 }

@@ -43,9 +43,7 @@ import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNode;
 import som.vm.Symbols;
-import som.vm.VmSettings;
 import som.vm.constants.Classes;
-import tools.snapshot.SnapshotBackend;
 
 
 public class SInvokable extends SAbstractObject implements Dispatchable {
@@ -68,9 +66,6 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     this.invokable = invokable;
     this.callTarget = invokable.createCallTarget();
     this.embeddedBlocks = embeddedBlocks;
-    if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
-      SnapshotBackend.registerInvokable(Symbols.symbolFor(this.getIdentifier()), this);
-    }
   }
 
   public static class SInitializer extends SInvokable {
@@ -204,11 +199,12 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     return "method";
   }
 
-  public String getIdentifier() {
+  public SSymbol getIdentifier() {
     if (holder != null) {
-      return holder.getIdentifier() + "." + this.signature.getString();
+      return Symbols.symbolFor(
+          holder.getIdentifier().getString() + "." + this.signature.getString());
     } else {
-      return this.signature.getString();
+      return this.signature;
     }
   }
 }
