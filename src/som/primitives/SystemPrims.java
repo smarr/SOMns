@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.URI;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 
 import com.oracle.truffle.api.CompilerDirectives;
@@ -60,8 +59,8 @@ import tools.concurrency.TraceParser;
 import tools.concurrency.TracingBackend;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.nodes.TraceActorContextNode;
-import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
+import tools.snapshot.deserialization.DeserializationBuffer;
 
 
 public final class SystemPrims {
@@ -354,15 +353,13 @@ public final class SystemPrims {
         if (!sb.containsObject(receiver)) {
           SClass clazz = Types.getClassOf(receiver);
           clazz.serialize(receiver, sb);
-          ByteBuffer bb = sb.getBuffer();
-
-          short cId = bb.getShort();
-          Object o = SnapshotBackend.lookupClass(cId).getSerializer().deserialize(bb);
+          DeserializationBuffer bb = sb.getBuffer();
+          Object o = bb.deserialize();
           assert Types.getClassOf(o) == clazz;
           return o;
         }
       }
-      return null;
+      return Nil.nilObject;
     }
   }
 

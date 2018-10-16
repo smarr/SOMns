@@ -2,6 +2,8 @@ package tools.snapshot;
 
 import org.graalvm.collections.EconomicMap;
 
+import som.interpreter.actors.Actor;
+import som.interpreter.actors.EventualMessage;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
@@ -72,6 +74,11 @@ public class SnapshotBackend {
     // intentionally unsynchronized, as a result the line between snapshots will be a bit
     // fuzzy.
     return snapshotVersion;
+  }
+
+  public static Actor lookupActor(final int actorId) {
+    // TODO implement
+    return EventualMessage.getActorCurrentMessageIsExecutionOn();
   }
 
   public static StructuralProbe getProbe() {

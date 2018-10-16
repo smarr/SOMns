@@ -16,6 +16,8 @@ import tools.debugger.WebDebugger;
 import tools.debugger.entities.DynamicScopeType;
 import tools.replay.nodes.TraceMessageNode;
 import tools.replay.nodes.TraceMessageNodeGen;
+import tools.snapshot.nodes.MessageSerializationNode;
+import tools.snapshot.nodes.MessageSerializationNodeFactory;
 
 
 public abstract class ReceivedRootNode extends RootNode {
@@ -23,7 +25,8 @@ public abstract class ReceivedRootNode extends RootNode {
   @Child protected AbstractPromiseResolutionNode resolve;
   @Child protected AbstractPromiseResolutionNode error;
 
-  @Child protected TraceMessageNode msgTracer = TraceMessageNodeGen.create();
+  @Child protected TraceMessageNode         msgTracer = TraceMessageNodeGen.create();
+  @Child protected MessageSerializationNode serializer;
 
   private final VM            vm;
   protected final WebDebugger dbg;
@@ -40,6 +43,11 @@ public abstract class ReceivedRootNode extends RootNode {
       this.dbg = null;
     }
     this.sourceSection = sourceSection;
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      serializer = MessageSerializationNodeFactory.create();
+    } else {
+      serializer = null;
+    }
   }
 
   protected abstract Object executeBody(VirtualFrame frame, EventualMessage msg,
@@ -121,6 +129,10 @@ public abstract class ReceivedRootNode extends RootNode {
 
     // error promise
     error.executeEvaluated(frame, resolver, exception, haltOnResolver, haltOnResolution);
+  }
+
+  public MessageSerializationNode getSerializer() {
+    return serializer;
   }
 
   /**

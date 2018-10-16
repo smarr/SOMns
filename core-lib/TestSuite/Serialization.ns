@@ -20,6 +20,7 @@ THE SOFTWARE.
 *)
 class SerializationTests usingPlatform: platform testFramework: minitest = Value(
 | private TestContext = minitest TestContext.
+  private AsyncTestContext = minitest AsyncTestContext.
   private actors = platform actors.
   private String = platform kernel String.
   private Array = platform kernel Array.
@@ -33,11 +34,7 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
     public f2 = b.|
   )()
 
-  public class SerializationTest = TestContext (
-  | blockWC = [ :a :b |
-      ^ a * b.
-    ].
-  |)(
+  public class SerializationTest = AsyncTestContext ()(
 
     public class EmptyClass = ()(
       public test = (
@@ -175,5 +172,68 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
       assert: varr isValue.
       assert: (actors snapshotClone: varr) isValue.
     )
+
+    public testSimplePromise = (
+      | pp p pc|
+      pp:: actors createPromisePair.
+      p:: pp promise.
+      pc:: actors snapshotClone: p.
+
+    )
+
+    public testCloneNotResolved = (
+      | pp p pc|
+      pp:: actors createPromisePair.
+      p:: pp promise.
+      pc:: actors snapshotClone: p.
+      pc whenResolved: [ :v |
+        assert: false.
+      ].
+      pp resolve: 1.
+      assert: pp promise resolvedWith: 1.
+    )
+
+    public testSimpleResolver = (
+      | pp r rc|
+      pp:: actors createPromisePair.
+      r:: pp resolver.
+      rc:: actors snapshotClone: r.
+      rc resolve: 1.
+      r resolve: 2.
+    )
+
+    public testSimplePromisePair = (
+      | pp ppc|
+      pp:: actors createPromisePair.
+      ppc:: actors snapshotClone: pp.
+      pp resolve: 42.
+      assert: pp promise resolvedWith: 42.
+      ppc resolve: 21.
+      assert: ppc promise resolvedWith: 21.
+    )
+
+    public testCloneResolved = (
+      | pp p pc|
+      pp:: actors createPromisePair.
+      pp resolve: 84.
+      p:: pp promise.
+      pc:: actors snapshotClone: p.
+      assert: p resolvedWith: 84.
+      assert: pc resolvedWith: 84.
+    )
+
+    public testClonePromiseWithMessage = (
+      | pp ppc|
+      pp:: actors createPromisePair.
+      pp promise <-: value: 42.
+      ppc:: actors snapshotClone: pp.
+      ppc resolve: [ :v |
+        v println.
+      ].
+      pp resolve: [ :v |
+        v println.
+      ]
+    )
+
   ) : ( TEST_CONTEXT = () )
 )

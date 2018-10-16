@@ -194,7 +194,11 @@ public final class SClass extends SObjectWithClass {
     // assert instanceClassGroup != null || !ObjectSystem.isInitialized();
 
     if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
-      SnapshotBackend.registerClass(mixinDef.getIdentifier(), this);
+      if (mixinDef != null) {
+        SnapshotBackend.registerClass(mixinDef.getIdentifier(), this);
+      } else {
+        SnapshotBackend.registerClass(classFactory.getClassName(), this);
+      }
     }
   }
 
@@ -352,7 +356,9 @@ public final class SClass extends SObjectWithClass {
 
   public void serialize(final Object o, final SnapshotBuffer sb) {
     assert instanceClassGroup != null;
-    getSerializer().execute(o, sb);
+    if (!sb.containsObject(o)) {
+      getSerializer().execute(o, sb);
+    }
   }
 
   public AbstractSerializationNode getSerializer() {

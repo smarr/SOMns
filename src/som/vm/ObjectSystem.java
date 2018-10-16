@@ -11,6 +11,7 @@ import org.graalvm.collections.EconomicMap;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -33,6 +34,7 @@ import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualSendNode;
 import som.interpreter.actors.SPromise;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.constants.Classes;
 import som.vm.constants.KernelObj;
@@ -47,7 +49,9 @@ import tools.language.StructuralProbe;
 import tools.snapshot.nodes.AbstractArraySerializationNodeGen.ArraySerializationNodeFactory;
 import tools.snapshot.nodes.AbstractArraySerializationNodeGen.TransferArraySerializationNodeFactory;
 import tools.snapshot.nodes.AbstractArraySerializationNodeGen.ValueArraySerializationNodeFactory;
+import tools.snapshot.nodes.AbstractSerializationNode;
 import tools.snapshot.nodes.BlockSerializationNodeFactory;
+import tools.snapshot.nodes.MessageSerializationNodeFactory;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.SObjectWithoutFieldsSerializationNodeFactory;
 import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.BooleanSerializationNodeFactory;
 import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.ClassSerializationNodeFactory;
@@ -55,9 +59,11 @@ import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.DoubleSerializati
 import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.FalseSerializationNodeFactory;
 import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.IntegerSerializationNodeFactory;
 import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.NilSerializationNodeFactory;
+import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.SInvokableSerializationNodeFactory;
 import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.StringSerializationNodeFactory;
 import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.SymbolSerializationNodeFactory;
 import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.TrueSerializationNodeFactory;
+import tools.snapshot.nodes.SerializerRootNode;
 
 
 public final class ObjectSystem {
@@ -281,6 +287,8 @@ public final class ObjectSystem {
     assert transferDef.getNumberOfSlots() == 0;
 
     if (VmSettings.SNAPSHOTS_ENABLED) {
+      SerializerRootNode.initializeSerialization(compiler.getLanguage());
+
       topDef.initializeClass(Classes.topClass, null,
           SObjectWithoutFieldsSerializationNodeFactory.getInstance()); // Top doesn't have a
                                                                        // super class
@@ -402,6 +410,10 @@ public final class ObjectSystem {
     Classes.blockClass.getSOMClass()
                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
 
+    setDummyClassFactory(Classes.messageClass, MessageSerializationNodeFactory.getInstance());
+    setDummyClassFactory(Classes.methodClass,
+        SInvokableSerializationNodeFactory.getInstance());
+
     SClass kernelClass = kernelModule.instantiateClass(Nil.nilObject, Classes.objectClass);
     KernelObj.kernel.setClass(kernelClass);
 
@@ -443,6 +455,20 @@ public final class ObjectSystem {
 
     ObjectTransitionSafepoint.INSTANCE.unregister();
     return vmMirror;
+  }
+
+  public void setDummyClassFactory(final SClass clazz,
+      final NodeFactory<? extends AbstractSerializationNode> serializerFactory) {
+    if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
+      ClassFactory classFactory = new ClassFactory(clazz.getSOMClass().getName(), null,
+          null, null, true,
+          true, false,
+          null, false,
+          null, serializerFactory);
+
+      clazz.setClassGroup(classFactory);
+      clazz.initializeStructure(null, null, null, true, false, false, classFactory);
+    }
   }
 
   private static void setSlot(final SObject obj, final String slotName,

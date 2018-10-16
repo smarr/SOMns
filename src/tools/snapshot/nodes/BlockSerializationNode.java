@@ -1,7 +1,5 @@
 package tools.snapshot.nodes;
 
-import java.nio.ByteBuffer;
-
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -11,6 +9,7 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 
 import som.compiler.Variable.Internal;
 import som.interpreter.FrameOnStackMarker;
+import som.interpreter.Method;
 import som.interpreter.Types;
 import som.interpreter.objectstorage.ClassFactory;
 import som.vm.constants.Classes;
@@ -19,6 +18,8 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
+import tools.snapshot.deserialization.DeserializationBuffer;
+import tools.snapshot.deserialization.FixupInformation;
 
 
 @GenerateNodeFactory
@@ -92,9 +93,12 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
               Types.getClassOf(value).serialize(value, sb);
             }
             break;
+          case Illegal:
+            // Uninitialized variables
+            Types.getClassOf(fd.getDefaultValue()).serialize(fd.getDefaultValue(), sb);
+            break;
           default:
-            throw new IllegalStateException("We don't handle illegal frame slots");
-
+            throw new IllegalArgumentException("Unexpected SlotKind");
         }
 
         sb.putLongAt(base + (j * Long.BYTES), sb.getObjectPointer(value));
@@ -111,11 +115,14 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
   }
 
   @Override
-  public Object deserialize(final ByteBuffer bb) {
+  public Object deserialize(final DeserializationBuffer bb) {
     short sinv = bb.getShort();
 
     SInvokable invokable = SnapshotBackend.lookupInvokable(sinv);
-    FrameDescriptor fd = invokable.getInvokable().getFrameDescriptor();
+    FrameDescriptor fd = ((Method) invokable.getInvokable()).getLexicalScope().getOuterMethod()
+                                                            .getMethod().getFrameDescriptor();
+
+    // FrameDescriptor fd = invokable.getInvokable().getFrameDescriptor();
 
     // read num args
     int numArgs = bb.get();
@@ -123,44 +130,88 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
 
     // read args
     for (int i = 0; i < numArgs; i++) {
-      args[i] = deserializeReference(bb);
+      Object arg = bb.getReference();
+      if (DeserializationBuffer.needsFixup(arg)) {
+        bb.installFixup(new BlockArgumentFixup(args, i));
+      } else {
+        args[i] = arg;
+      }
     }
 
     MaterializedFrame frame = Truffle.getRuntime().createMaterializedFrame(args, fd);
 
     int numSlots = bb.get();
-    assert numSlots == fd.getSlots().size();
+    // assert numSlots == fd.getSlots().size();
 
     for (int i = 0; i < numSlots; i++) {
       FrameSlot slot = fd.getSlots().get(i);
 
-      Object o = deserializeReference(bb);
+      Object o = bb.getReference();
 
-      switch (fd.getFrameSlotKind(slot)) {
-        case Boolean:
-          frame.setBoolean(slot, (boolean) o);
-          break;
-        case Double:
-          frame.setDouble(slot, (double) o);
-          break;
-        case Long:
-          frame.setLong(slot, (long) o);
-          break;
-        case Object:
-          if (slot.getIdentifier() instanceof Internal) {
-            FrameOnStackMarker fosm = new FrameOnStackMarker();
-            if (!(boolean) o) {
-              fosm.frameNoLongerOnStack();
+      if (DeserializationBuffer.needsFixup(o)) {
+        bb.installFixup(new FrameSlotFixup(frame, slot));
+      } else {
+
+        switch (fd.getFrameSlotKind(slot)) {
+          case Boolean:
+            frame.setBoolean(slot, (boolean) o);
+            break;
+          case Double:
+            frame.setDouble(slot, (double) o);
+            break;
+          case Long:
+            frame.setLong(slot, (long) o);
+            break;
+          case Object:
+            if (slot.getIdentifier() instanceof Internal) {
+              FrameOnStackMarker fosm = new FrameOnStackMarker();
+              if (!(boolean) o) {
+                fosm.frameNoLongerOnStack();
+              }
+              o = fosm;
             }
-            o = fosm;
-          }
-          frame.setObject(slot, o);
-          break;
-        default:
-          throw new IllegalStateException("We don't handle illegal frame slots");
+            frame.setObject(slot, o);
+            break;
+          case Illegal:
+            // uninitialized variable, uses default
+            frame.setObject(slot, o);
+            break;
+          default:
+            throw new IllegalArgumentException("Unexpected SlotKind");
+        }
       }
     }
 
     return new SBlock(invokable, frame);
+  }
+
+  public static class BlockArgumentFixup extends FixupInformation {
+    Object[] args;
+    int      idx;
+
+    public BlockArgumentFixup(final Object[] args, final int idx) {
+      this.args = args;
+      this.idx = idx;
+    }
+
+    @Override
+    public void fixUp(final Object o) {
+      args[idx] = o;
+    }
+  }
+
+  public static class FrameSlotFixup extends FixupInformation {
+    FrameSlot         slot;
+    MaterializedFrame frame;
+
+    public FrameSlotFixup(final MaterializedFrame frame, final FrameSlot slot) {
+      this.frame = frame;
+      this.slot = slot;
+    }
+
+    @Override
+    public void fixUp(final Object o) {
+      frame.setObject(slot, o);
+    }
   }
 }

@@ -1,7 +1,5 @@
 package tools.snapshot.nodes;
 
-import java.nio.ByteBuffer;
-
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -10,6 +8,8 @@ import som.interpreter.objectstorage.ClassFactory;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import tools.snapshot.SnapshotBuffer;
+import tools.snapshot.deserialization.DeserializationBuffer;
+import tools.snapshot.deserialization.FixupInformation;
 
 
 public abstract class AbstractArraySerializationNode extends AbstractSerializationNode {
@@ -25,7 +25,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   }
 
   @Override
-  public Object deserialize(final ByteBuffer sb) {
+  public Object deserialize(final DeserializationBuffer sb) {
     // This is for the DSL Processor, without this it won't generate stuff
     throw new UnsupportedOperationException("This should never be called");
   }
@@ -95,7 +95,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
     sb.putIntAt(base + 1, sa.getEmptyStorage());
   }
 
-  protected Object parseBackingStorage(final ByteBuffer sb) {
+  protected Object parseBackingStorage(final DeserializationBuffer sb) {
     byte type = sb.get();
     int len = sb.getInt();
 
@@ -126,7 +126,12 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
       case TYPE_OBJECT:
         Object[] oa = new Object[len];
         for (int i = 0; i < len; i++) {
-          oa[i] = deserializeReference(sb);
+          Object o = sb.getReference();
+          if (DeserializationBuffer.needsFixup(o)) {
+            sb.installFixup(new ArrayEntryFixup(oa, i));
+          } else {
+            oa[i] = o;
+          }
         }
         backing = oa;
         break;
@@ -146,7 +151,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
     }
 
     @Override
-    public Object deserialize(final ByteBuffer sb) {
+    public Object deserialize(final DeserializationBuffer sb) {
       Object backing = parseBackingStorage(sb);
       return new SArray.SMutableArray(backing, Classes.arrayClass);
     }
@@ -160,7 +165,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
     }
 
     @Override
-    public Object deserialize(final ByteBuffer sb) {
+    public Object deserialize(final DeserializationBuffer sb) {
       Object backing = parseBackingStorage(sb);
       return new SArray.STransferArray(backing, Classes.transferArrayClass);
     }
@@ -174,9 +179,24 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
     }
 
     @Override
-    public Object deserialize(final ByteBuffer sb) {
+    public Object deserialize(final DeserializationBuffer sb) {
       Object backing = parseBackingStorage(sb);
       return new SArray.SImmutableArray(backing, Classes.valueArrayClass);
+    }
+  }
+
+  public static class ArrayEntryFixup extends FixupInformation {
+    Object[] args;
+    int      idx;
+
+    public ArrayEntryFixup(final Object[] args, final int idx) {
+      this.args = args;
+      this.idx = idx;
+    }
+
+    @Override
+    public void fixUp(final Object o) {
+      args[idx] = o;
     }
   }
 }
