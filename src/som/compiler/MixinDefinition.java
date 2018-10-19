@@ -551,8 +551,6 @@ public final class MixinDefinition implements SomInteropObject {
     private final boolean          immutable;
     protected final SourceSection  source;
 
-    @CompilationFinal protected CallTarget genericAccessTarget;
-
     public SlotDefinition(final SSymbol name,
         final AccessModifier acccessModifier, final boolean immutable,
         final SourceSection source) {
