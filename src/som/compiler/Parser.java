@@ -1238,6 +1238,9 @@ public class Parser {
         SInvokable blockMethod = bgenc.assemble(blockBody,
             AccessModifier.BLOCK_METHOD, lastMethodsSourceSection);
         builder.addEmbeddedBlockMethod(blockMethod);
+        if (structuralProbe != null) {
+          structuralProbe.recordNewMethod(blockMethod);
+        }
 
         ExpressionNode result;
         if (bgenc.requiresContext() || VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
