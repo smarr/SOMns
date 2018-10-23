@@ -99,12 +99,11 @@ public class DeserializationBuffer {
   }
 
   private void fixUpIfNecessary(final long reference, final Object result) {
-    if (deserialized.get(reference) != null) {
+    Object ref = deserialized.get(reference);
+    if (ref != null && ref instanceof FixupList) {
       // we have fixup information, this means that this object is part of a circular
       // relationship
-      FixupList fl = (FixupList) deserialized.get(reference);
-
-      for (FixupInformation fi : fl) {
+      for (FixupInformation fi : (FixupList) ref) {
         fi.fixUp(result);
       }
     }

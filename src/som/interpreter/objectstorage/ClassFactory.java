@@ -88,7 +88,6 @@ public final class ClassFactory {
     this.superclassAndMixins = superclassAndMixins;
 
     if (VmSettings.SNAPSHOTS_ENABLED) {
-
       this.serializationRoot =
           new SerializerRootNode(serializerFactory.createNode(this));
     } else {

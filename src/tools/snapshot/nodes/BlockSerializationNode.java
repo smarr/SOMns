@@ -122,8 +122,6 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
     FrameDescriptor fd = ((Method) invokable.getInvokable()).getLexicalScope().getOuterMethod()
                                                             .getMethod().getFrameDescriptor();
 
-    // FrameDescriptor fd = invokable.getInvokable().getFrameDescriptor();
-
     // read num args
     int numArgs = bb.get();
     Object[] args = new Object[numArgs];
@@ -141,7 +139,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
     MaterializedFrame frame = Truffle.getRuntime().createMaterializedFrame(args, fd);
 
     int numSlots = bb.get();
-    // assert numSlots == fd.getSlots().size();
+    assert numSlots == fd.getSlots().size();
 
     for (int i = 0; i < numSlots; i++) {
       FrameSlot slot = fd.getSlots().get(i);

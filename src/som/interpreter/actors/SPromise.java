@@ -40,10 +40,11 @@ public class SPromise extends SObjectWithClass {
     }
   }
 
-  public static SPromise createResolved(final Actor owner, final Object value) {
+  public static SPromise createResolved(final Actor owner, final Object value,
+      final Resolution state) {
     assert VmSettings.SNAPSHOTS_ENABLED;
     SPromise prom = createPromise(owner, false, false, null);
-    prom.resolutionState = Resolution.SUCCESSFUL;
+    prom.resolutionState = state;
     prom.value = value;
     return prom;
   }
@@ -112,7 +113,7 @@ public class SPromise extends SObjectWithClass {
    */
   public final Object getValue() {
     assert VmSettings.SNAPSHOTS_ENABLED;
-    assert resolutionState == Resolution.SUCCESSFUL;
+    assert resolutionState == Resolution.SUCCESSFUL || resolutionState == Resolution.ERRONEOUS;
     assert value != null;
     return value;
   }
@@ -123,7 +124,7 @@ public class SPromise extends SObjectWithClass {
    */
   public final void setValue(final Object value) {
     assert VmSettings.SNAPSHOTS_ENABLED;
-    assert resolutionState == Resolution.SUCCESSFUL;
+    assert resolutionState == Resolution.SUCCESSFUL || resolutionState == Resolution.ERRONEOUS;
     assert value != null;
     this.value = value;
   }

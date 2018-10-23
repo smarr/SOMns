@@ -364,7 +364,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
         onReceive = EventualSendNode.createOnReceiveCallTarget(selector, null,
             SomLanguage.getLanguage(getRootNode()));
 
-        // bakup value for resolution.
+        // backup value for resolution.
         Object value = args[0];
 
         if (!(args[0] instanceof SPromise)) {
@@ -403,9 +403,12 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     }
   }
 
-  // first reads number of arguments (byte) and then deserializes the referenced objects if
-  // necessary
-  // returns an array containg the references to the deserialized objects
+  /**
+   * First reads number of arguments (byte) and then deserializes the referenced objects if
+   * necessary.
+   *
+   * @return An array containing the references to the deserialized objects.
+   */
   private Object[] parseArguments(final DeserializationBuffer bb) {
     int argCnt = bb.get();
     Object[] args = new Object[argCnt];

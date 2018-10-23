@@ -128,8 +128,6 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
       assert: original is: clone.
     )
 
-    (*
-    not context free...*)
     public testBlock = (
       | original clone |
       original:: [ :val :val2 |

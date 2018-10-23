@@ -67,7 +67,6 @@ public class SnapshotBuffer extends TraceBuffer {
     // (either from a promise or a mailbox)
     int oldPos = this.position;
 
-    // TODO use Message Class
     this.putShortAt(this.position,
         Classes.messageClass.getFactory().getClassName().getSymbolId());
     this.position += CLASS_ID_SIZE + payload;

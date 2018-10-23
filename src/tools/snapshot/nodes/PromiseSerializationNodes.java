@@ -9,6 +9,7 @@ import som.interpreter.Types;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise;
+import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.objectstorage.ClassFactory;
 import tools.snapshot.SnapshotBuffer;
@@ -28,8 +29,18 @@ public abstract class PromiseSerializationNodes {
     @Specialization(guards = "prom.isCompleted()")
     public void doResolved(final SPromise prom, final SnapshotBuffer sb) {
       int base = sb.addObject(prom, classFact, 1 + Long.BYTES);
+
       // resolutionstate
-      sb.putByteAt(base, (byte) 1);
+      switch (prom.getResolutionStateUnsync()) {
+        case SUCCESSFUL:
+          sb.putByteAt(base, (byte) 1);
+          break;
+        case ERRONEOUS:
+          sb.putByteAt(base, (byte) 2);
+          break;
+        default:
+          throw new IllegalArgumentException("This shoud be unreachable");
+      }
 
       Object value = prom.getValue();
       if (!sb.containsObject(value)) {
@@ -47,7 +58,6 @@ public abstract class PromiseSerializationNodes {
       int base = sb.addObject(prom, classFact, 1 + 6 + Long.BYTES * (noe + nwr + ncp));
 
       // resolutionstate
-      // TODO errored Promises
       sb.putByteAt(base, (byte) 0);
 
       // whenResolvedMsgs
@@ -104,12 +114,15 @@ public abstract class PromiseSerializationNodes {
 
     @Override
     public SPromise deserialize(final DeserializationBuffer sb) {
-      boolean completed = sb.get() == 1;
-
-      if (completed) {
+      byte state = sb.get();
+      assert state >= 0 && state <= 2;
+      if (state > 0) {
+        // Completed promise
         Object value = sb.getReference();
+
         SPromise p = SPromise.createResolved(
-            EventualMessage.getActorCurrentMessageIsExecutionOn(), value);
+            EventualMessage.getActorCurrentMessageIsExecutionOn(), value,
+            state == 1 ? Resolution.SUCCESSFUL : Resolution.ERRONEOUS);
 
         if (DeserializationBuffer.needsFixup(value)) {
           sb.installFixup(new PromiseValueFixup(p));
@@ -117,10 +130,11 @@ public abstract class PromiseSerializationNodes {
 
         return p;
       } else {
+        // Incomplete promise
         SPromise promise = SPromise.createPromise(
             EventualMessage.getActorCurrentMessageIsExecutionOn(), false, false, null);
 
-        // These messages aren't referenced by anything else, no need to deal with fixup
+        // These messages aren't referenced by anything else, no need for fixup
         int whenResolvedCnt = sb.getShort();
         for (int i = 0; i < whenResolvedCnt; i++) {
           PromiseMessage pm = (PromiseMessage) sb.getReference();
@@ -158,10 +172,10 @@ public abstract class PromiseSerializationNodes {
   }
 
   // Resolvers are values and can be passed directly without being wrapped
-  // Problem how do i deal with identity of Resolvers
-  // from what i have seen there is only one resolver created for any promise.
-  // resolver only contains a reference to the promise
-  // a problem is that i'm missing ownership of the promise
+  // From what i have seen there is only one resolver created for any promise.
+  // Resolver contains a reference to the promise, which knows it's owner.
+  // If Identity of Resolvers becomes an issue just add the actor information and turn into a
+  // singleton when deserializing
 
   @GenerateNodeFactory
   public abstract static class ResolverSerializationNode extends AbstractSerializationNode {

@@ -235,7 +235,6 @@ public abstract class ObjectSerializationNodes {
       }
 
       for (int i = 0; i < fieldWrites.length; i++) {
-        // reference, writeNode
         Object ref = sb.getReference();
         if (DeserializationBuffer.needsFixup(ref)) {
           sb.installFixup(new SlotFixup(o, fieldWrites[i]));
@@ -258,7 +257,6 @@ public abstract class ObjectSerializationNodes {
 
       @Override
       public void fixUp(final Object res) {
-        // TODO Auto-generated method stub
         csw.doWrite(obj, res);
       }
 

@@ -43,10 +43,4 @@ public abstract class FixupInformation {
       };
     }
   }
-
-  public static abstract class FixupFactory {
-    public static FixupFactory instance;
-
-    public abstract FixupInformation create(final Object target, Object... args);
-  }
 }
