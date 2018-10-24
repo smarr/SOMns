@@ -129,6 +129,14 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   @CompilationFinal private VM        vm;
   @CompilationFinal private VmOptions options;
 
+  /** This is used by the Language Server to get to an initialized instance easily. */
+  private static SomLanguage current;
+
+  /** This is used by the Language Server to get to an initialized instance easily. */
+  public static SomLanguage getCurrent() {
+    return current;
+  }
+
   public static Source getSyntheticSource(final String text, final String name) {
     return Source.newBuilder(LANG_ID, text, name).internal(true).mimeType(MIME_TYPE)
                  .build();
@@ -182,6 +190,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
     if (vm != null) {
       vm.initalize(this);
     }
+    current = this;
   }
 
   @Override
@@ -190,6 +199,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
       assert vm == context;
       context.shutdown();
     }
+    current = null;
   }
 
   public VM getVM() {
