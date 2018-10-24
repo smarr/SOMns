@@ -259,7 +259,6 @@ public abstract class ObjectSerializationNodes {
       public void fixUp(final Object res) {
         csw.doWrite(obj, res);
       }
-
     }
   }
 

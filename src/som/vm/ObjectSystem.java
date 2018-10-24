@@ -410,6 +410,8 @@ public final class ObjectSystem {
     Classes.blockClass.getSOMClass()
                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
 
+    // these classes are not exposed in Newspeak directly, and thus, do not yet have a class
+    // factory
     setDummyClassFactory(Classes.messageClass, MessageSerializationNodeFactory.getInstance());
     setDummyClassFactory(Classes.methodClass,
         SInvokableSerializationNodeFactory.getInstance());

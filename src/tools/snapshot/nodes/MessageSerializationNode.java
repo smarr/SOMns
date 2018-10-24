@@ -291,7 +291,6 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
 
   @Override
   public EventualMessage deserialize(final DeserializationBuffer bb) {
-
     // commonalities
     MessageType type = MessageType.getMessageType(bb.get());
     SSymbol selector = SnapshotBackend.getSymbolForId(bb.getShort());
@@ -299,9 +298,9 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
 
     switch (type) {
       case CallbackMessage:
-        return deserializeCallback(selector, sender, bb, (SResolver) bb.getReference());
+        return deserializeCallback(sender, bb, (SResolver) bb.getReference());
       case CallbackMessageNR:
-        return deserializeCallback(selector, sender, bb, null);
+        return deserializeCallback(sender, bb, null);
       case DirectMessage:
         return deserializeDirect(selector, sender, bb, (SResolver) bb.getReference());
       case DirectMessageNR:
@@ -319,8 +318,8 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     }
   }
 
-  private PromiseCallbackMessage deserializeCallback(final SSymbol selector,
-      final Actor sender, final DeserializationBuffer bb, final SResolver resolver) {
+  private PromiseCallbackMessage deserializeCallback(final Actor sender,
+      final DeserializationBuffer bb, final SResolver resolver) {
 
     PromiseMessageFixup pmf = null;
     SPromise prom = null;

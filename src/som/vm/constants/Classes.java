@@ -65,6 +65,5 @@ public final class Classes {
     blockClass = ObjectSystem.newEmptyClassWithItsClass("Block");
 
     messageClass = ObjectSystem.newEmptyClassWithItsClass("Message");
-
   }
 }

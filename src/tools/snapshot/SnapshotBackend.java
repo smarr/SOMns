@@ -8,6 +8,7 @@ import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.concurrency.TracingActors.ReplayActor;
 import tools.language.StructuralProbe;
 
 
@@ -77,8 +78,12 @@ public class SnapshotBackend {
   }
 
   public static Actor lookupActor(final int actorId) {
-    // TODO implement
-    return EventualMessage.getActorCurrentMessageIsExecutionOn();
+    if (VmSettings.REPLAY) {
+      return ReplayActor.getActorWithId(actorId);
+    } else {
+      // For testing with snaphsotClone:
+      return EventualMessage.getActorCurrentMessageIsExecutionOn();
+    }
   }
 
   public static StructuralProbe getProbe() {

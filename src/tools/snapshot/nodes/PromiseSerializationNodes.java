@@ -42,7 +42,7 @@ public abstract class PromiseSerializationNodes {
           throw new IllegalArgumentException("This shoud be unreachable");
       }
 
-      Object value = prom.getValue();
+      Object value = prom.getValueForSnapshot();
       if (!sb.containsObject(value)) {
         Types.getClassOf(value).serialize(value, sb);
       }
@@ -188,7 +188,7 @@ public abstract class PromiseSerializationNodes {
 
       @Override
       public void fixUp(final Object o) {
-        promise.setValue(o);
+        promise.setValueFromSnapshot(o);
       }
     }
   }

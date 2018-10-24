@@ -116,5 +116,4 @@ public class DeserializationBuffer {
   public void position(final int newPosition) {
     wrapped.position(newPosition);
   }
-
 }

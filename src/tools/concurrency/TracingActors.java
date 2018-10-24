@@ -130,6 +130,10 @@ public class TracingActors {
       return 0;
     }
 
+    public static ReplayActor getActorWithId(final int id) {
+      return actorList.get(id);
+    }
+
     @Override
     public long getId() {
       return activityId;

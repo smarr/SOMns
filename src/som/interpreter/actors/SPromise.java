@@ -111,7 +111,7 @@ public class SPromise extends SObjectWithClass {
    *
    * @return the value this promise was resolved to
    */
-  public final Object getValue() {
+  public final Object getValueForSnapshot() {
     assert VmSettings.SNAPSHOTS_ENABLED;
     assert resolutionState == Resolution.SUCCESSFUL || resolutionState == Resolution.ERRONEOUS;
     assert value != null;
@@ -122,7 +122,7 @@ public class SPromise extends SObjectWithClass {
    * Do not use for things other than deserializing Promises.
    * This is necessary for circular object graphs.
    */
-  public final void setValue(final Object value) {
+  public final void setValueForSnapshot(final Object value) {
     assert VmSettings.SNAPSHOTS_ENABLED;
     assert resolutionState == Resolution.SUCCESSFUL || resolutionState == Resolution.ERRONEOUS;
     assert value != null;
