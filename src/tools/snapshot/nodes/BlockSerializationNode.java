@@ -139,43 +139,45 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
     MaterializedFrame frame = Truffle.getRuntime().createMaterializedFrame(args, fd);
 
     int numSlots = bb.get();
-    assert numSlots == fd.getSlots().size();
+    if (numSlots > 0) {
+      assert numSlots == fd.getSlots().size();
 
-    for (int i = 0; i < numSlots; i++) {
-      FrameSlot slot = fd.getSlots().get(i);
+      for (int i = 0; i < numSlots; i++) {
+        FrameSlot slot = fd.getSlots().get(i);
 
-      Object o = bb.getReference();
+        Object o = bb.getReference();
 
-      if (DeserializationBuffer.needsFixup(o)) {
-        bb.installFixup(new FrameSlotFixup(frame, slot));
-      } else {
+        if (DeserializationBuffer.needsFixup(o)) {
+          bb.installFixup(new FrameSlotFixup(frame, slot));
+        } else {
 
-        switch (fd.getFrameSlotKind(slot)) {
-          case Boolean:
-            frame.setBoolean(slot, (boolean) o);
-            break;
-          case Double:
-            frame.setDouble(slot, (double) o);
-            break;
-          case Long:
-            frame.setLong(slot, (long) o);
-            break;
-          case Object:
-            if (slot.getIdentifier() instanceof Internal) {
-              FrameOnStackMarker fosm = new FrameOnStackMarker();
-              if (!(boolean) o) {
-                fosm.frameNoLongerOnStack();
+          switch (fd.getFrameSlotKind(slot)) {
+            case Boolean:
+              frame.setBoolean(slot, (boolean) o);
+              break;
+            case Double:
+              frame.setDouble(slot, (double) o);
+              break;
+            case Long:
+              frame.setLong(slot, (long) o);
+              break;
+            case Object:
+              if (slot.getIdentifier() instanceof Internal) {
+                FrameOnStackMarker fosm = new FrameOnStackMarker();
+                if (!(boolean) o) {
+                  fosm.frameNoLongerOnStack();
+                }
+                o = fosm;
               }
-              o = fosm;
-            }
-            frame.setObject(slot, o);
-            break;
-          case Illegal:
-            // uninitialized variable, uses default
-            frame.setObject(slot, o);
-            break;
-          default:
-            throw new IllegalArgumentException("Unexpected SlotKind");
+              frame.setObject(slot, o);
+              break;
+            case Illegal:
+              // uninitialized variable, uses default
+              frame.setObject(slot, o);
+              break;
+            default:
+              throw new IllegalArgumentException("Unexpected SlotKind");
+          }
         }
       }
     }

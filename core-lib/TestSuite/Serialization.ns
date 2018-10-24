@@ -19,8 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
 class SerializationTests usingPlatform: platform testFramework: minitest = Value(
-| private TestContext = minitest TestContext.
-  private AsyncTestContext = minitest AsyncTestContext.
+| private AsyncTestContext = minitest AsyncTestContext.
   private actors = platform actors.
   private String = platform kernel String.
   private Array = platform kernel Array.

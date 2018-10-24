@@ -96,8 +96,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
   }
 
   /**
-   *
-   * Takes 7 bytes in the buffer
+   * Takes 7 bytes in the buffer.
    */
   protected final void doCommonalities(final MessageType type, final SSymbol selector,
       final TracingActor sender, final int base,
@@ -297,110 +296,126 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     MessageType type = MessageType.getMessageType(bb.get());
     SSymbol selector = SnapshotBackend.getSymbolForId(bb.getShort());
     Actor sender = SnapshotBackend.lookupActor(bb.getInt());
-    SResolver resolver = null;
 
-    if (type == MessageType.DirectMessage || type == MessageType.CallbackMessage
-        || type == MessageType.PromiseMessage
-        || type == MessageType.UndeliveredPromiseMessage) {
-      resolver = (SResolver) bb.getReference();
-    }
-
-    Object[] args;
-    SPromise prom;
-    Object promObj;
-    PromiseMessageFixup pmf = null;
     switch (type) {
       case CallbackMessage:
+        return deserializeCallback(selector, sender, bb, (SResolver) bb.getReference());
       case CallbackMessageNR:
-        promObj = bb.getReference();
-
-        if (DeserializationBuffer.needsFixup(promObj)) {
-          pmf = new PromiseMessageFixup();
-          bb.installFixup(pmf);
-          prom = null;
-        } else {
-          prom = (SPromise) promObj;
-        }
-        args = parseArguments(bb);
-
-        RootCallTarget onReceive = PromisePrims.createReceived((SBlock) args[0]);
-        PromiseCallbackMessage pcm =
-            new PromiseCallbackMessage(sender, (SBlock) args[0], resolver,
-                onReceive, false, false, prom);
-
-        if (pmf != null) {
-          pmf.setMessage(pcm);
-        }
-
-        // set the remaining arg, i.e. the value passed to the callback block
-        pcm.getArgs()[1] = args[1];
-        return pcm;
+        return deserializeCallback(selector, sender, bb, null);
       case DirectMessage:
+        return deserializeDirect(selector, sender, bb, (SResolver) bb.getReference());
       case DirectMessageNR:
-        args = parseArguments(bb);
-        onReceive = EventualSendNode.createOnReceiveCallTarget(selector, null,
-            SomLanguage.getLanguage(getRootNode()));
-
-        DirectMessage dm =
-            new DirectMessage(EventualMessage.getActorCurrentMessageIsExecutionOn(), selector,
-                args, sender, resolver,
-                onReceive, false, false);
-
-        return dm;
+        return deserializeDirect(selector, sender, bb, null);
       case PromiseMessage:
+        return deserializeDelivered(selector, sender, bb, (SResolver) bb.getReference());
       case PromiseMessageNR:
-        promObj = bb.getReference();
-
-        if (DeserializationBuffer.needsFixup(promObj)) {
-          pmf = new PromiseMessageFixup();
-          bb.installFixup(pmf);
-          prom = null;
-        } else {
-          prom = (SPromise) promObj;
-        }
-
-        Actor finalSender = SnapshotBackend.lookupActor(bb.getInt());
-        args = parseArguments(bb);
-        onReceive = EventualSendNode.createOnReceiveCallTarget(selector, null,
-            SomLanguage.getLanguage(getRootNode()));
-
-        // backup value for resolution.
-        Object value = args[0];
-
-        if (!(args[0] instanceof SPromise)) {
-          // expects args[0] to be a promise, which may not be the case with a circular
-          // dependency. We therefore use this placeholder as a workaround...
-          args[0] = SPromise.createPromise(sender, false, false, null);
-        }
-
-        PromiseSendMessage psm =
-            new PromiseSendMessage(selector, args, sender, resolver, onReceive, false, false);
-
-        if (pmf != null) {
-          pmf.setMessage(psm);
-        }
-        psm.resolve(value, EventualMessage.getActorCurrentMessageIsExecutionOn(),
-            finalSender);
-
-        return psm;
+        return deserializeDelivered(selector, sender, bb, null);
       case UndeliveredPromiseMessage:
+        return deserializeUndelivered(selector, sender, bb, (SResolver) bb.getReference());
       case UndeliveredPromiseMessageNR:
-        args = parseArguments(bb);
-        onReceive = EventualSendNode.createOnReceiveCallTarget(selector,
-            SomLanguage.getSyntheticSource("Deserialized Message", "Trace").createSection(1),
-            SomLanguage.getLanguage(this.getRootNode()));
-
-        if (!(args[0] instanceof SPromise)) {
-          // expects args[0] to be a promise
-          args[0] = SPromise.createPromise(sender, false, false, null);
-        }
-
-        psm =
-            new PromiseSendMessage(selector, args, sender, resolver, onReceive, false, false);
-        return psm;
+        return deserializeUndelivered(selector, sender, bb, null);
       default:
         throw new UnsupportedOperationException();
     }
+  }
+
+  private PromiseCallbackMessage deserializeCallback(final SSymbol selector,
+      final Actor sender, final DeserializationBuffer bb, final SResolver resolver) {
+
+    PromiseMessageFixup pmf = null;
+    SPromise prom = null;
+
+    Object promObj = bb.getReference();
+    if (DeserializationBuffer.needsFixup(promObj)) {
+      pmf = new PromiseMessageFixup();
+      bb.installFixup(pmf);
+    } else {
+      prom = (SPromise) promObj;
+    }
+    Object[] args = parseArguments(bb);
+
+    RootCallTarget onReceive = PromisePrims.createReceived((SBlock) args[0]);
+    PromiseCallbackMessage pcm =
+        new PromiseCallbackMessage(sender, (SBlock) args[0], resolver,
+            onReceive, false, false, prom);
+
+    if (pmf != null) {
+      pmf.setMessage(pcm);
+    }
+
+    // set the remaining arg, i.e. the value passed to the callback block
+    pcm.getArgs()[1] = args[1];
+    return pcm;
+  }
+
+  private DirectMessage deserializeDirect(final SSymbol selector, final Actor sender,
+      final DeserializationBuffer bb, final SResolver resolver) {
+    Object[] args = parseArguments(bb);
+    RootCallTarget onReceive = EventualSendNode.createOnReceiveCallTarget(selector, null,
+        SomLanguage.getLanguage(getRootNode()));
+
+    DirectMessage dm =
+        new DirectMessage(EventualMessage.getActorCurrentMessageIsExecutionOn(), selector,
+            args, sender, resolver,
+            onReceive, false, false);
+
+    return dm;
+  }
+
+  private PromiseSendMessage deserializeDelivered(final SSymbol selector, final Actor sender,
+      final DeserializationBuffer bb, final SResolver resolver) {
+    Object promObj = bb.getReference();
+    PromiseMessageFixup pmf = null;
+    SPromise prom = null;
+
+    if (DeserializationBuffer.needsFixup(promObj)) {
+      pmf = new PromiseMessageFixup();
+      bb.installFixup(pmf);
+    } else {
+      prom = (SPromise) promObj;
+    }
+
+    Actor finalSender = SnapshotBackend.lookupActor(bb.getInt());
+    Object[] args = parseArguments(bb);
+    RootCallTarget onReceive = EventualSendNode.createOnReceiveCallTarget(selector, null,
+        SomLanguage.getLanguage(getRootNode()));
+
+    // backup value for resolution.
+    Object value = args[0];
+
+    args[0] = prom;
+    if (!(args[0] instanceof SPromise)) {
+      // expects args[0] to be a promise
+      args[0] = SPromise.createPromise(sender, false, false, null);
+    }
+
+    PromiseSendMessage psm =
+        new PromiseSendMessage(selector, args, sender, resolver, onReceive, false, false);
+
+    if (pmf != null) {
+      pmf.setMessage(psm);
+    }
+    psm.resolve(value, EventualMessage.getActorCurrentMessageIsExecutionOn(),
+        finalSender);
+
+    return psm;
+  }
+
+  private PromiseSendMessage deserializeUndelivered(final SSymbol selector, final Actor sender,
+      final DeserializationBuffer bb, final SResolver resolver) {
+    Object[] args = parseArguments(bb);
+    RootCallTarget onReceive = EventualSendNode.createOnReceiveCallTarget(selector,
+        SomLanguage.getSyntheticSource("Deserialized Message", "Trace").createSection(1),
+        SomLanguage.getLanguage(this.getRootNode()));
+
+    if (!(args[0] instanceof SPromise)) {
+      // expects args[0] to be a promise
+      args[0] = SPromise.createPromise(sender, false, false, null);
+    }
+
+    PromiseSendMessage psm =
+        new PromiseSendMessage(selector, args, sender, resolver, onReceive, false, false);
+    return psm;
   }
 
   /**

@@ -304,37 +304,37 @@ public class SPromise extends SObjectWithClass {
     }
   }
 
-  /** Do not use for things other than serializing Promises */
+  /** Do not use for things other than serializing Promises. */
   public PromiseMessage getWhenResolved() {
     assert VmSettings.SNAPSHOTS_ENABLED;
     return whenResolved;
   }
 
-  /** Do not use for things other than serializing Promises */
+  /** Do not use for things other than serializing Promises. */
   public ArrayList<PromiseMessage> getWhenResolvedExt() {
     assert VmSettings.SNAPSHOTS_ENABLED;
     return whenResolvedExt;
   }
 
-  /** Do not use for things other than serializing Promises */
+  /** Do not use for things other than serializing Promises. */
   public PromiseMessage getOnError() {
     assert VmSettings.SNAPSHOTS_ENABLED;
     return onError;
   }
 
-  /** Do not use for things other than serializing Promises */
+  /** Do not use for things other than serializing Promises. */
   public ArrayList<PromiseMessage> getOnErrorExt() {
     assert VmSettings.SNAPSHOTS_ENABLED;
     return onErrorExt;
   }
 
-  /** Do not use for things other than serializing Promises */
+  /** Do not use for things other than serializing Promises. */
   public SPromise getChainedPromise() {
     assert VmSettings.SNAPSHOTS_ENABLED;
     return chainedPromise;
   }
 
-  /** Do not use for things other than serializing Promises */
+  /** Do not use for things other than serializing Promises. */
   public ArrayList<SPromise> getChainedPromiseExt() {
     assert VmSettings.SNAPSHOTS_ENABLED;
     return chainedPromiseExt;

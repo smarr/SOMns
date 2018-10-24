@@ -59,15 +59,22 @@ public abstract class PromiseSerializationNodes {
 
       // resolutionstate
       sb.putByteAt(base, (byte) 0);
+      base++;
+      base = serializeWhenResolvedMsgs(prom, base, nwr, sb);
+      base = serializeOnErrorMsgs(prom, base, noe, sb);
+      serializeChainedPromises(prom, base, ncp, sb);
+    }
 
-      // whenResolvedMsgs
-      sb.putShortAt(base + 1, (short) nwr);
-      base += 3;
-      if (nwr > 0) {
+    private int serializeWhenResolvedMsgs(final SPromise prom, final int start, final int cnt,
+        final SnapshotBuffer sb) {
+      int base = start;
+      sb.putShortAt(base, (short) cnt);
+      base += 2;
+      if (cnt > 0) {
         sb.putLongAt(base, prom.getWhenResolved().serialize(sb));
         base += Long.BYTES;
 
-        if (nwr > 1) {
+        if (cnt > 1) {
           List<PromiseMessage> wre = prom.getWhenResolvedExt();
           for (int i = 0; i < wre.size(); i++) {
             sb.putLongAt(base + i * Long.BYTES, wre.get(i).serialize(sb));
@@ -75,15 +82,19 @@ public abstract class PromiseSerializationNodes {
           base += wre.size() * Long.BYTES;
         }
       }
+      return base;
+    }
 
-      // onErrorMsgs
-      sb.putShortAt(base, (short) noe);
+    private int serializeOnErrorMsgs(final SPromise prom, final int start, final int cnt,
+        final SnapshotBuffer sb) {
+      int base = start;
+      sb.putShortAt(base, (short) cnt);
       base += 2;
-      if (noe > 0) {
+      if (cnt > 0) {
         sb.putLongAt(base, prom.getOnError().serialize(sb));
         base += Long.BYTES;
 
-        if (noe > 1) {
+        if (cnt > 1) {
           List<PromiseMessage> oee = prom.getOnErrorExt();
           for (int i = 0; i < oee.size(); i++) {
             sb.putLongAt(base + i * Long.BYTES, oee.get(i).serialize(sb));
@@ -91,17 +102,21 @@ public abstract class PromiseSerializationNodes {
           base += oee.size() * Long.BYTES;
         }
       }
+      return base;
+    }
 
-      // chainedPromises deal with as with far references(fixup)
-      sb.putShortAt(base, (short) ncp);
+    private void serializeChainedPromises(final SPromise prom, final int start, final int cnt,
+        final SnapshotBuffer sb) {
+      int base = start;
+      sb.putShortAt(base, (short) cnt);
       base += 2;
-      if (ncp > 0) {
+      if (cnt > 0) {
         SPromise p = prom.getChainedPromise();
         SPromise.getPromiseClass().serialize(p, sb);
         sb.putLongAt(base, sb.getObjectPointer(p));
         base += Long.BYTES;
 
-        if (ncp > 1) {
+        if (cnt > 1) {
           List<SPromise> cpe = prom.getChainedPromiseExt();
           for (int i = 0; i < cpe.size(); i++) {
             p = cpe.get(i);
@@ -117,44 +132,51 @@ public abstract class PromiseSerializationNodes {
       byte state = sb.get();
       assert state >= 0 && state <= 2;
       if (state > 0) {
-        // Completed promise
-        Object value = sb.getReference();
-
-        SPromise p = SPromise.createResolved(
-            EventualMessage.getActorCurrentMessageIsExecutionOn(), value,
-            state == 1 ? Resolution.SUCCESSFUL : Resolution.ERRONEOUS);
-
-        if (DeserializationBuffer.needsFixup(value)) {
-          sb.installFixup(new PromiseValueFixup(p));
-        }
-
-        return p;
+        return deserializeCompletedPromise(state, sb);
       } else {
-        // Incomplete promise
-        SPromise promise = SPromise.createPromise(
-            EventualMessage.getActorCurrentMessageIsExecutionOn(), false, false, null);
-
-        // These messages aren't referenced by anything else, no need for fixup
-        int whenResolvedCnt = sb.getShort();
-        for (int i = 0; i < whenResolvedCnt; i++) {
-          PromiseMessage pm = (PromiseMessage) sb.getReference();
-          promise.registerWhenResolvedUnsynced(pm);
-        }
-
-        int onErrorCnt = sb.getShort();
-        for (int i = 0; i < onErrorCnt; i++) {
-          PromiseMessage pm = (PromiseMessage) sb.getReference();
-          promise.registerOnErrorUnsynced(pm);
-        }
-
-        int chainedPromCnt = sb.getShort();
-        for (int i = 0; i < chainedPromCnt; i++) {
-          SPromise remote = (SPromise) sb.getReference();
-          promise.addChainedPromise(remote);
-        }
-
-        return promise;
+        return deserializeUnresolvedPromise(sb);
       }
+    }
+
+    private SPromise deserializeCompletedPromise(final byte state,
+        final DeserializationBuffer sb) {
+      Object value = sb.getReference();
+
+      SPromise p = SPromise.createResolved(
+          EventualMessage.getActorCurrentMessageIsExecutionOn(), value,
+          state == 1 ? Resolution.SUCCESSFUL : Resolution.ERRONEOUS);
+
+      if (DeserializationBuffer.needsFixup(value)) {
+        sb.installFixup(new PromiseValueFixup(p));
+      }
+
+      return p;
+    }
+
+    private SPromise deserializeUnresolvedPromise(final DeserializationBuffer sb) {
+      SPromise promise = SPromise.createPromise(
+          EventualMessage.getActorCurrentMessageIsExecutionOn(), false, false, null);
+
+      // These messages aren't referenced by anything else, no need for fixup
+      int whenResolvedCnt = sb.getShort();
+      for (int i = 0; i < whenResolvedCnt; i++) {
+        PromiseMessage pm = (PromiseMessage) sb.getReference();
+        promise.registerWhenResolvedUnsynced(pm);
+      }
+
+      int onErrorCnt = sb.getShort();
+      for (int i = 0; i < onErrorCnt; i++) {
+        PromiseMessage pm = (PromiseMessage) sb.getReference();
+        promise.registerOnErrorUnsynced(pm);
+      }
+
+      int chainedPromCnt = sb.getShort();
+      for (int i = 0; i < chainedPromCnt; i++) {
+        SPromise remote = (SPromise) sb.getReference();
+        promise.addChainedPromise(remote);
+      }
+
+      return promise;
     }
 
     public static class PromiseValueFixup extends FixupInformation {
@@ -171,11 +193,13 @@ public abstract class PromiseSerializationNodes {
     }
   }
 
-  // Resolvers are values and can be passed directly without being wrapped
-  // From what i have seen there is only one resolver created for any promise.
-  // Resolver contains a reference to the promise, which knows it's owner.
-  // If Identity of Resolvers becomes an issue just add the actor information and turn into a
-  // singleton when deserializing
+  /**
+   * Resolvers are values and can be passed directly without being wrapped.
+   * There is only a single resolver for every promise. But promises may be chained.
+   * Resolver contains a reference to the promise, which knows it's owner.
+   * If Identity of Resolvers becomes an issue, just add the actor information and turn into a
+   * singleton when deserializing
+   */
 
   @GenerateNodeFactory
   public abstract static class ResolverSerializationNode extends AbstractSerializationNode {

@@ -250,7 +250,7 @@ public abstract class ObjectSerializationNodes {
       final CachedSlotWrite csw;
       final SObject         obj;
 
-      public SlotFixup(final SObject obj, final CachedSlotWrite csw) {
+      SlotFixup(final SObject obj, final CachedSlotWrite csw) {
         this.csw = csw;
         this.obj = obj;
       }
