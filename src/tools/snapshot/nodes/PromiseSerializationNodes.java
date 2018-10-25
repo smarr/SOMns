@@ -51,9 +51,13 @@ public abstract class PromiseSerializationNodes {
 
     @Specialization(guards = "!prom.isCompleted()")
     public void doUnresolved(final SPromise prom, final SnapshotBuffer sb) {
-      int ncp, nwr, noe;
-      PromiseMessage whenRes, onError;
-      ArrayList<PromiseMessage> whenResExt, onErrorExt;
+      int ncp;
+      int nwr;
+      int noe;
+      PromiseMessage whenRes;
+      PromiseMessage onError;
+      ArrayList<PromiseMessage> whenResExt;
+      ArrayList<PromiseMessage> onErrorExt;
       SPromise chainedProm;
       ArrayList<SPromise> chainedPromExt;
       synchronized (prom) {
