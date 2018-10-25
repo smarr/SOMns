@@ -1,6 +1,6 @@
 package tools.snapshot.nodes;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -51,75 +51,98 @@ public abstract class PromiseSerializationNodes {
 
     @Specialization(guards = "!prom.isCompleted()")
     public void doUnresolved(final SPromise prom, final SnapshotBuffer sb) {
-      int ncp = prom.getNumChainedPromises();
-      int nwr = prom.getNumWhenResolved();
-      int noe = prom.getNumOnError();
+      int ncp, nwr, noe;
+      PromiseMessage whenRes, onError;
+      ArrayList<PromiseMessage> whenResExt, onErrorExt;
+      SPromise chainedProm;
+      ArrayList<SPromise> chainedPromExt;
+      synchronized (prom) {
+        chainedProm = prom.getChainedPromiseUnsync();
+        chainedPromExt = prom.getChainedPromiseExtUnsync();
+        ncp = getObjectCnt(chainedProm, chainedPromExt);
 
+        whenRes = prom.getWhenResolvedUnsync();
+        whenResExt = prom.getWhenResolvedExtUnsync();
+        nwr = getObjectCnt(whenRes, whenResExt);
+
+        onError = prom.getOnError();
+        onErrorExt = prom.getOnErrorExtUnsync();
+        noe = getObjectCnt(onError, onErrorExt);
+      }
       int base = sb.addObject(prom, classFact, 1 + 6 + Long.BYTES * (noe + nwr + ncp));
 
       // resolutionstate
       sb.putByteAt(base, (byte) 0);
       base++;
-      base = serializeWhenResolvedMsgs(prom, base, nwr, sb);
-      base = serializeOnErrorMsgs(prom, base, noe, sb);
-      serializeChainedPromises(prom, base, ncp, sb);
+      base = serializeWhenResolvedMsgs(base, nwr, whenRes, whenResExt, sb);
+      base = serializeOnErrorMsgs(base, noe, onError, onErrorExt, sb);
+      serializeChainedPromises(base, ncp, chainedProm, chainedPromExt, sb);
     }
 
-    private int serializeWhenResolvedMsgs(final SPromise prom, final int start, final int cnt,
+    private int getObjectCnt(final Object obj, final ArrayList<? extends Object> extension) {
+      if (obj == null) {
+        return 0;
+      } else if (extension == null) {
+        return 1;
+      } else {
+        return extension.size() + 1;
+      }
+    }
+
+    private int serializeWhenResolvedMsgs(final int start, final int cnt,
+        final PromiseMessage whenRes, final ArrayList<PromiseMessage> whenResExt,
         final SnapshotBuffer sb) {
       int base = start;
       sb.putShortAt(base, (short) cnt);
       base += 2;
       if (cnt > 0) {
-        sb.putLongAt(base, prom.getWhenResolved().serialize(sb));
+        sb.putLongAt(base, whenRes.serialize(sb));
         base += Long.BYTES;
 
         if (cnt > 1) {
-          List<PromiseMessage> wre = prom.getWhenResolvedExt();
-          for (int i = 0; i < wre.size(); i++) {
-            sb.putLongAt(base + i * Long.BYTES, wre.get(i).serialize(sb));
+          for (int i = 0; i < whenResExt.size(); i++) {
+            sb.putLongAt(base + i * Long.BYTES, whenResExt.get(i).serialize(sb));
           }
-          base += wre.size() * Long.BYTES;
+          base += whenResExt.size() * Long.BYTES;
         }
       }
       return base;
     }
 
-    private int serializeOnErrorMsgs(final SPromise prom, final int start, final int cnt,
+    private int serializeOnErrorMsgs(final int start, final int cnt,
+        final PromiseMessage onError, final ArrayList<PromiseMessage> onErrorExt,
         final SnapshotBuffer sb) {
       int base = start;
       sb.putShortAt(base, (short) cnt);
       base += 2;
       if (cnt > 0) {
-        sb.putLongAt(base, prom.getOnError().serialize(sb));
+        sb.putLongAt(base, onError.serialize(sb));
         base += Long.BYTES;
 
         if (cnt > 1) {
-          List<PromiseMessage> oee = prom.getOnErrorExt();
-          for (int i = 0; i < oee.size(); i++) {
-            sb.putLongAt(base + i * Long.BYTES, oee.get(i).serialize(sb));
+          for (int i = 0; i < onErrorExt.size(); i++) {
+            sb.putLongAt(base + i * Long.BYTES, onErrorExt.get(i).serialize(sb));
           }
-          base += oee.size() * Long.BYTES;
+          base += onErrorExt.size() * Long.BYTES;
         }
       }
       return base;
     }
 
-    private void serializeChainedPromises(final SPromise prom, final int start, final int cnt,
-        final SnapshotBuffer sb) {
+    private void serializeChainedPromises(final int start, final int cnt,
+        final SPromise chainedProm,
+        final ArrayList<SPromise> chainedPromExt, final SnapshotBuffer sb) {
       int base = start;
       sb.putShortAt(base, (short) cnt);
       base += 2;
       if (cnt > 0) {
-        SPromise p = prom.getChainedPromise();
-        SPromise.getPromiseClass().serialize(p, sb);
-        sb.putLongAt(base, sb.getObjectPointer(p));
+        SPromise.getPromiseClass().serialize(chainedProm, sb);
+        sb.putLongAt(base, sb.getObjectPointer(chainedProm));
         base += Long.BYTES;
 
         if (cnt > 1) {
-          List<SPromise> cpe = prom.getChainedPromiseExt();
-          for (int i = 0; i < cpe.size(); i++) {
-            p = cpe.get(i);
+          for (int i = 0; i < chainedPromExt.size(); i++) {
+            SPromise p = chainedPromExt.get(i);
             SPromise.getPromiseClass().serialize(p, sb);
             sb.putLongAt(base + i * Long.BYTES, sb.getObjectPointer(p));
           }

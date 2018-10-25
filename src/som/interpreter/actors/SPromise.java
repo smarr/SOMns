@@ -122,7 +122,7 @@ public class SPromise extends SObjectWithClass {
    * Do not use for things other than deserializing Promises.
    * This is necessary for circular object graphs.
    */
-  public final void setValueForSnapshot(final Object value) {
+  public final void setValueFromSnapshot(final Object value) {
     assert VmSettings.SNAPSHOTS_ENABLED;
     assert resolutionState == Resolution.SUCCESSFUL || resolutionState == Resolution.ERRONEOUS;
     assert value != null;
@@ -274,68 +274,38 @@ public class SPromise extends SObjectWithClass {
     return value;
   }
 
-  public int getNumChainedPromises() {
-    if (chainedPromise == null) {
-      return 0;
-    } else if (chainedPromiseExt == null) {
-      return 1;
-    } else {
-      return chainedPromiseExt.size() + 1;
-    }
-  }
-
-  public int getNumWhenResolved() {
-    if (whenResolved == null) {
-      return 0;
-    } else if (whenResolvedExt == null) {
-      return 1;
-    } else {
-      return whenResolvedExt.size() + 1;
-    }
-  }
-
-  public int getNumOnError() {
-    if (onError == null) {
-      return 0;
-    } else if (onErrorExt == null) {
-      return 1;
-    } else {
-      return onErrorExt.size() + 1;
-    }
-  }
-
-  /** Do not use for things other than serializing Promises. */
-  public PromiseMessage getWhenResolved() {
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public PromiseMessage getWhenResolvedUnsync() {
     assert VmSettings.SNAPSHOTS_ENABLED;
     return whenResolved;
   }
 
-  /** Do not use for things other than serializing Promises. */
-  public ArrayList<PromiseMessage> getWhenResolvedExt() {
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public ArrayList<PromiseMessage> getWhenResolvedExtUnsync() {
     assert VmSettings.SNAPSHOTS_ENABLED;
     return whenResolvedExt;
   }
 
-  /** Do not use for things other than serializing Promises. */
+  /** Do not use for things other than serializing Promises, requires synchronization. */
   public PromiseMessage getOnError() {
     assert VmSettings.SNAPSHOTS_ENABLED;
     return onError;
   }
 
-  /** Do not use for things other than serializing Promises. */
-  public ArrayList<PromiseMessage> getOnErrorExt() {
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public ArrayList<PromiseMessage> getOnErrorExtUnsync() {
     assert VmSettings.SNAPSHOTS_ENABLED;
     return onErrorExt;
   }
 
-  /** Do not use for things other than serializing Promises. */
-  public SPromise getChainedPromise() {
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public SPromise getChainedPromiseUnsync() {
     assert VmSettings.SNAPSHOTS_ENABLED;
     return chainedPromise;
   }
 
-  /** Do not use for things other than serializing Promises. */
-  public ArrayList<SPromise> getChainedPromiseExt() {
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public ArrayList<SPromise> getChainedPromiseExtUnsync() {
     assert VmSettings.SNAPSHOTS_ENABLED;
     return chainedPromiseExt;
   }
