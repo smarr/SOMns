@@ -40,6 +40,7 @@ public class SPromise extends SObjectWithClass {
     }
   }
 
+  /** Used by snapshot deserialization. */
   public static SPromise createResolved(final Actor owner, final Object value,
       final Resolution state) {
     assert VmSettings.SNAPSHOTS_ENABLED;
