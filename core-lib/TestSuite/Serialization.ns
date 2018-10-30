@@ -19,7 +19,7 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 *)
 class SerializationTests usingPlatform: platform testFramework: minitest = Value(
-| private TestContext = minitest TestContext.
+| private AsyncTestContext = minitest AsyncTestContext.
   private actors = platform actors.
   private String = platform kernel String.
   private Array = platform kernel Array.
@@ -33,11 +33,7 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
     public f2 = b.|
   )()
 
-  public class SerializationTest = TestContext (
-  | blockWC = [ :a :b |
-      ^ a * b.
-    ].
-  |)(
+  public class SerializationTest = AsyncTestContext ()(
 
     public class EmptyClass = ()(
       public test = (
@@ -131,16 +127,15 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
       assert: original is: clone.
     )
 
-    (*
-    not context free... context also contains a reference to the block itself,
-    such cyclic graphs are currently not surrported
-    public testBlockWithoutContext = (
+    public testBlock = (
       | original clone |
-      original:: blockWC.
+      original:: [ :val :val2 |
+          val * val2.
+      ].
       clone:: actors snapshotClone: original.
-      assert: (original value: 21 with: 2) equals: (clone value: 21 with: 2).
+      assert: (clone value: 21 with: 2) equals: (original value: 21 with: 2).
     )
-    *)
+
 
     public testSimpleArrays = (
       cloneAndEqualsArray: { 1 . 20 . 33 . 404 }.
@@ -175,5 +170,93 @@ class SerializationTests usingPlatform: platform testFramework: minitest = Value
       assert: varr isValue.
       assert: (actors snapshotClone: varr) isValue.
     )
+
+    public testSimplePromise = (
+      | pp p pc|
+      pp:: actors createPromisePair.
+      p:: pp promise.
+      pc:: actors snapshotClone: p.
+    )
+
+    public testAsyncCloneNotResolved = (
+      | pp p pc rp|
+      pp:: actors createPromisePair.
+      p:: pp promise.
+      pc:: actors snapshotClone: p.
+      pc whenResolved: [ :v |
+        assert: false.
+      ].
+      pp resolve: 1.
+      ^ (assert: pp promise resolvedWith: 1).
+    )
+
+    public testSimpleResolver = (
+      | pp r rc|
+      pp:: actors createPromisePair.
+      r:: pp resolver.
+      rc:: actors snapshotClone: r.
+      rc resolve: 1.
+      r resolve: 2.
+    )
+
+    public testAsyncSimplePromisePair = (
+      | pp ppc |
+      pp:: actors createPromisePair.
+      ppc:: actors snapshotClone: pp.
+      pp resolve: 42.
+      ppc resolve: 21.
+      ^ (assert: pp promise resolvedWith: 42),
+      (assert: ppc promise resolvedWith: 21).
+    )
+
+    public testAsyncCloneResolved = (
+      | pp p pc rp rp2|
+      pp:: actors createPromisePair.
+      pp resolve: 84.
+      p:: pp promise.
+      pc:: actors snapshotClone: p.
+      ^ (assert: p resolvedWith: 84),
+      (assert: pc resolvedWith: 84).
+    )
+
+     public testAsyncCloneChain = (
+      | pp pp2 pp3 ppc|
+      pp:: actors createPromisePair.
+      pp2:: actors createPromisePair.
+      pp3:: actors createPromisePair.
+      pp2 resolve: pp.
+      pp3 resolve: pp2.
+      ppc:: actors snapshotClone: pp.
+
+      ppc resolve: 42.
+      ^ assert: ppc promise resolvedWith: 42.
+      (*TODO check that pp2 and three were cloned...*)
+    )
+
+    public testAsyncClonePromiseWithMessage = (
+      | pp ppc|
+      pp:: actors createPromisePair.
+      pp promise <-: value: 42.
+      ppc:: actors snapshotClone: pp.
+      ppc resolve: [ :v |
+      ].
+      pp resolve: [ :v |
+      ].
+      ^ pp promise, ppc promise.
+    )
+
+    public testAsyncCloneCallback = (
+      | pp ppc rp |
+      pp:: actors createPromisePair.
+      pp promise whenResolved: [ :val |
+        assert: val equals: 42.
+      ].
+      ppc:: actors snapshotClone: pp.
+      pp resolve: 42.
+      ppc resolve: 42.
+      ^ (assert: pp promise resolvedWith: 42),
+      (assert: ppc promise resolvedWith: 42).
+  )
+
   ) : ( TEST_CONTEXT = () )
 )

@@ -2,10 +2,13 @@ package tools.snapshot;
 
 import org.graalvm.collections.EconomicMap;
 
+import som.interpreter.actors.Actor;
+import som.interpreter.actors.EventualMessage;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.concurrency.TracingActors.ReplayActor;
 import tools.language.StructuralProbe;
 
 
@@ -72,6 +75,15 @@ public class SnapshotBackend {
     // intentionally unsynchronized, as a result the line between snapshots will be a bit
     // fuzzy.
     return snapshotVersion;
+  }
+
+  public static Actor lookupActor(final int actorId) {
+    if (VmSettings.REPLAY) {
+      return ReplayActor.getActorWithId(actorId);
+    } else {
+      // For testing with snaphsotClone:
+      return EventualMessage.getActorCurrentMessageIsExecutionOn();
+    }
   }
 
   public static StructuralProbe getProbe() {

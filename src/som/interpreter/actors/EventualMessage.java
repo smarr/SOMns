@@ -2,6 +2,7 @@ package som.interpreter.actors;
 
 import java.util.Arrays;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -13,6 +14,7 @@ import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActivityThread;
+import tools.snapshot.SnapshotBuffer;
 
 
 public abstract class EventualMessage {
@@ -67,6 +69,12 @@ public abstract class EventualMessage {
 
   public SourceSection getTargetSourceSection() {
     return onReceive.getRootNode().getSourceSection();
+  }
+
+  public long serialize(final SnapshotBuffer sb) {
+    ReceivedRootNode rm = (ReceivedRootNode) this.onReceive.getRootNode();
+    // Not sure if this is optimized, worst case need to duplicate this for all messages
+    return rm.getSerializer().execute(this, sb);
   }
 
   /**
@@ -192,6 +200,11 @@ public abstract class EventualMessage {
 
     public abstract SPromise getPromise();
 
+    /**
+     * Used for Fixup in deserialization.
+     */
+    public abstract void setPromise(SPromise promise);
+
     @Override
     public boolean getHaltOnPromiseMessageResolution() {
       return getPromise().getHaltOnResolution();
@@ -203,10 +216,10 @@ public abstract class EventualMessage {
    * after the promise is resolved.
    */
   public abstract static class AbstractPromiseSendMessage extends PromiseMessage {
-    private final SSymbol    selector;
-    protected Actor          target;
-    protected Actor          finalSender;
-    protected final SPromise originalTarget;
+    private final SSymbol                selector;
+    protected Actor                      target;
+    protected Actor                      finalSender;
+    @CompilationFinal protected SPromise originalTarget;
 
     protected AbstractPromiseSendMessage(final SSymbol selector,
         final Object[] arguments, final Actor originalSender,
@@ -248,6 +261,10 @@ public abstract class EventualMessage {
       return target;
     }
 
+    public boolean isDelivered() {
+      return target != null;
+    }
+
     @Override
     public String toString() {
       String t;
@@ -264,10 +281,21 @@ public abstract class EventualMessage {
     public SPromise getPromise() {
       return originalTarget;
     }
+
+    @Override
+    public final void setPromise(final SPromise promise) {
+      assert VmSettings.SNAPSHOTS_ENABLED;
+      assert promise != null && originalTarget == null;
+      this.originalTarget = promise;
+    }
+
+    public Actor getFinalSender() {
+      return finalSender;
+    }
   }
 
   public static final class PromiseSendMessage extends AbstractPromiseSendMessage {
-    protected PromiseSendMessage(final SSymbol selector, final Object[] arguments,
+    public PromiseSendMessage(final SSymbol selector, final Object[] arguments,
         final Actor originalSender, final SResolver resolver, final RootCallTarget onReceive,
         final boolean triggerMessageReceiverBreakpoint,
         final boolean triggerPromiseResolverBreakpoint) {
@@ -281,7 +309,7 @@ public abstract class EventualMessage {
     /**
      * The promise on which this callback is registered on.
      */
-    protected final SPromise promise;
+    @CompilationFinal protected SPromise promise;
 
     protected AbstractPromiseCallbackMessage(final Actor owner, final SBlock callback,
         final SResolver resolver, final RootCallTarget onReceive,
@@ -326,6 +354,16 @@ public abstract class EventualMessage {
     @Override
     public SPromise getPromise() {
       return promise;
+    }
+
+    /**
+     * Used for Fixup in deserialization.
+     */
+    @Override
+    public final void setPromise(final SPromise promise) {
+      assert VmSettings.SNAPSHOTS_ENABLED;
+      assert promise != null && this.promise == null;
+      this.promise = promise;
     }
   }
 

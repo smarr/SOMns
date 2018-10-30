@@ -1,6 +1,5 @@
 package tools.snapshot.nodes;
 
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -28,6 +27,8 @@ import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
+import tools.snapshot.deserialization.DeserializationBuffer;
+import tools.snapshot.deserialization.FixupInformation;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.SObjectSerializationNodeFactory;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.SObjectWithoutFieldsSerializationNodeFactory;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.UninitializedObjectSerializationNodeFactory;
@@ -135,7 +136,7 @@ public abstract class ObjectSerializationNodes {
     }
 
     @Override
-    public Object deserialize(final ByteBuffer sb) {
+    public Object deserialize(final DeserializationBuffer sb) {
       if (classFact.hasSlots()) {
         return replace(SObjectSerializationNodeFactory.create(classFact, null)).deserialize(
             sb);
@@ -215,7 +216,7 @@ public abstract class ObjectSerializationNodes {
     }
 
     @Override
-    public Object deserialize(final ByteBuffer sb) {
+    public Object deserialize(final DeserializationBuffer sb) {
       SObject o;
 
       if (classFact.hasOnlyImmutableFields()) {
@@ -234,11 +235,30 @@ public abstract class ObjectSerializationNodes {
       }
 
       for (int i = 0; i < fieldWrites.length; i++) {
-        Object ref = deserializeReference(sb);
-        fieldWrites[i].doWrite(o, ref);
+        Object ref = sb.getReference();
+        if (DeserializationBuffer.needsFixup(ref)) {
+          sb.installFixup(new SlotFixup(o, fieldWrites[i]));
+        } else {
+          fieldWrites[i].doWrite(o, ref);
+        }
       }
 
       return o;
+    }
+
+    private static class SlotFixup extends FixupInformation {
+      final CachedSlotWrite csw;
+      final SObject         obj;
+
+      SlotFixup(final SObject obj, final CachedSlotWrite csw) {
+        this.csw = csw;
+        this.obj = obj;
+      }
+
+      @Override
+      public void fixUp(final Object res) {
+        csw.doWrite(obj, res);
+      }
     }
   }
 
@@ -257,7 +277,7 @@ public abstract class ObjectSerializationNodes {
     }
 
     @Override
-    public Object deserialize(final ByteBuffer sb) {
+    public Object deserialize(final DeserializationBuffer sb) {
       return new SObjectWithoutFields(SnapshotBackend.lookupClass(classFact.getIdentifier()),
           classFact);
     }

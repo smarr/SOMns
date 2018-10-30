@@ -9,6 +9,7 @@ import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.EventualMessage.PromiseMessage;
+import som.interpreter.objectstorage.ClassFactory;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
@@ -16,6 +17,8 @@ import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.entities.PassiveEntityType;
+import tools.snapshot.nodes.PromiseSerializationNodesFactory.PromiseSerializationNodeFactory;
+import tools.snapshot.nodes.PromiseSerializationNodesFactory.ResolverSerializationNodeFactory;
 
 
 public class SPromise extends SObjectWithClass {
@@ -35,6 +38,16 @@ public class SPromise extends SObjectWithClass {
     } else {
       return new SPromise(owner, haltOnResolver, haltOnResolution);
     }
+  }
+
+  /** Used by snapshot deserialization. */
+  public static SPromise createResolved(final Actor owner, final Object value,
+      final Resolution state) {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    SPromise prom = createPromise(owner, false, false, null);
+    prom.resolutionState = state;
+    prom.value = value;
+    return prom;
   }
 
   // THREAD-SAFETY: these fields are subject to race conditions and should only
@@ -94,6 +107,29 @@ public class SPromise extends SObjectWithClass {
     return false;
   }
 
+  /**
+   * Do not use for things other than serializing Promises.
+   *
+   * @return the value this promise was resolved to
+   */
+  public final Object getValueForSnapshot() {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    assert resolutionState == Resolution.SUCCESSFUL || resolutionState == Resolution.ERRONEOUS;
+    assert value != null;
+    return value;
+  }
+
+  /**
+   * Do not use for things other than deserializing Promises.
+   * This is necessary for circular object graphs.
+   */
+  public final void setValueFromSnapshot(final Object value) {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    assert resolutionState == Resolution.SUCCESSFUL || resolutionState == Resolution.ERRONEOUS;
+    assert value != null;
+    this.value = value;
+  }
+
   public long getPromiseId() {
     return 0;
   }
@@ -105,6 +141,15 @@ public class SPromise extends SObjectWithClass {
   public static void setSOMClass(final SClass cls) {
     assert promiseClass == null || cls == null;
     promiseClass = cls;
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      ClassFactory group = promiseClass.getInstanceFactory();
+      group.getSerializer().replace(PromiseSerializationNodeFactory.create(group));
+    }
+  }
+
+  public static SClass getPromiseClass() {
+    assert promiseClass != null;
+    return promiseClass;
   }
 
   public final synchronized SPromise getChainedPromiseFor(final Actor target) {
@@ -125,7 +170,7 @@ public class SPromise extends SObjectWithClass {
     return remote;
   }
 
-  final void registerWhenResolvedUnsynced(final PromiseMessage msg) {
+  public final void registerWhenResolvedUnsynced(final PromiseMessage msg) {
     if (whenResolved == null) {
       whenResolved = msg;
     } else {
@@ -141,7 +186,7 @@ public class SPromise extends SObjectWithClass {
     whenResolvedExt.add(msg);
   }
 
-  final void registerOnErrorUnsynced(final PromiseMessage msg) {
+  public final void registerOnErrorUnsynced(final PromiseMessage msg) {
     if (onError == null) {
       onError = msg;
     } else {
@@ -230,6 +275,42 @@ public class SPromise extends SObjectWithClass {
     return value;
   }
 
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public PromiseMessage getWhenResolvedUnsync() {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    return whenResolved;
+  }
+
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public ArrayList<PromiseMessage> getWhenResolvedExtUnsync() {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    return whenResolvedExt;
+  }
+
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public PromiseMessage getOnError() {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    return onError;
+  }
+
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public ArrayList<PromiseMessage> getOnErrorExtUnsync() {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    return onErrorExt;
+  }
+
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public SPromise getChainedPromiseUnsync() {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    return chainedPromise;
+  }
+
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public ArrayList<SPromise> getChainedPromiseExtUnsync() {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    return chainedPromiseExt;
+  }
+
   public static class STracingPromise extends SPromise {
 
     protected STracingPromise(final Actor owner, final boolean haltOnResolver,
@@ -240,7 +321,9 @@ public class SPromise extends SObjectWithClass {
     protected int resolvingActor;
 
     public int getResolvingActor() {
-      assert isCompleted();
+      if (!VmSettings.TRACK_SNAPSHOT_ENTITIES) {
+        assert isCompleted();
+      }
       return resolvingActor;
     }
 
@@ -295,6 +378,16 @@ public class SPromise extends SObjectWithClass {
     public static void setSOMClass(final SClass cls) {
       assert resolverClass == null || cls == null;
       resolverClass = cls;
+
+      if (VmSettings.SNAPSHOTS_ENABLED) {
+        ClassFactory group = resolverClass.getInstanceFactory();
+        group.getSerializer().replace(ResolverSerializationNodeFactory.create(group));
+      }
+    }
+
+    public static SClass getResolverClass() {
+      assert resolverClass != null;
+      return resolverClass;
     }
 
     public boolean assertNotCompleted() {

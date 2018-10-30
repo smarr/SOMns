@@ -1,6 +1,5 @@
 package tools.snapshot.nodes;
 
-import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -16,6 +15,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
+import tools.snapshot.deserialization.DeserializationBuffer;
 
 
 public abstract class PrimitiveSerializationNodes {
@@ -38,7 +38,7 @@ public abstract class PrimitiveSerializationNodes {
     }
 
     @Override
-    public Object deserialize(final ByteBuffer sb) {
+    public Object deserialize(final DeserializationBuffer sb) {
       int len = sb.getInt();
       byte[] b = new byte[len];
       sb.get(b);
@@ -63,7 +63,7 @@ public abstract class PrimitiveSerializationNodes {
     }
 
     @Override
-    public Object deserialize(final ByteBuffer sb) {
+    public Object deserialize(final DeserializationBuffer sb) {
       return sb.getLong();
     }
   }
@@ -84,7 +84,7 @@ public abstract class PrimitiveSerializationNodes {
     }
 
     @Override
-    public Object deserialize(final ByteBuffer sb) {
+    public Object deserialize(final DeserializationBuffer sb) {
       return sb.getDouble();
     }
   }
@@ -105,7 +105,7 @@ public abstract class PrimitiveSerializationNodes {
     }
 
     @Override
-    public Object deserialize(final ByteBuffer sb) {
+    public Object deserialize(final DeserializationBuffer sb) {
       return sb.get() == 1;
     }
   }
@@ -125,7 +125,7 @@ public abstract class PrimitiveSerializationNodes {
     }
 
     @Override
-    public Object deserialize(final ByteBuffer sb) {
+    public Object deserialize(final DeserializationBuffer sb) {
       return true;
     }
   }
@@ -145,7 +145,7 @@ public abstract class PrimitiveSerializationNodes {
     }
 
     @Override
-    public Object deserialize(final ByteBuffer sb) {
+    public Object deserialize(final DeserializationBuffer sb) {
       return false;
     }
   }
@@ -166,7 +166,7 @@ public abstract class PrimitiveSerializationNodes {
     }
 
     @Override
-    public Object deserialize(final ByteBuffer sb) {
+    public Object deserialize(final DeserializationBuffer sb) {
       short symid = sb.getShort();
       return SnapshotBackend.getSymbolForId(symid);
     }
@@ -192,7 +192,7 @@ public abstract class PrimitiveSerializationNodes {
     }
 
     @Override
-    public Object deserialize(final ByteBuffer sb) {
+    public Object deserialize(final DeserializationBuffer sb) {
       short id = sb.getShort();
       return SnapshotBackend.lookupClass(id);
     }
@@ -214,7 +214,7 @@ public abstract class PrimitiveSerializationNodes {
     }
 
     @Override
-    public Object deserialize(final ByteBuffer sb) {
+    public Object deserialize(final DeserializationBuffer sb) {
       short id = sb.getShort();
       SSymbol s = SnapshotBackend.getSymbolForId(id);
       return SnapshotBackend.lookupInvokable(s);
@@ -234,7 +234,7 @@ public abstract class PrimitiveSerializationNodes {
     }
 
     @Override
-    public Object deserialize(final ByteBuffer sb) {
+    public Object deserialize(final DeserializationBuffer sb) {
       return Nil.nilObject;
     }
   }

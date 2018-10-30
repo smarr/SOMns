@@ -1,7 +1,5 @@
 package tools.snapshot.nodes;
 
-import java.nio.ByteBuffer;
-
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -10,6 +8,7 @@ import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import som.interpreter.Types;
 import som.interpreter.nodes.dispatch.DispatchGuard;
 import tools.snapshot.SnapshotBuffer;
+import tools.snapshot.deserialization.DeserializationBuffer;
 
 
 @GenerateNodeFactory
@@ -39,7 +38,7 @@ public abstract class CachedSerializationNode extends AbstractSerializationNode 
   }
 
   @Override
-  public Object deserialize(final ByteBuffer sb) {
+  public Object deserialize(final DeserializationBuffer sb) {
     throw new UnsupportedOperationException("Use this node only for serialization");
   }
 }
