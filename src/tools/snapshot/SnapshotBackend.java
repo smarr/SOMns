@@ -1,5 +1,11 @@
 package tools.snapshot;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.util.concurrent.ConcurrentLinkedQueue;
+
 import org.graalvm.collections.EconomicMap;
 
 import som.interpreter.actors.Actor;
@@ -9,25 +15,34 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors.ReplayActor;
+import tools.concurrency.TracingBackend;
 import tools.language.StructuralProbe;
 
 
 public class SnapshotBackend {
   private static byte snapshotVersion = 0;
 
-  private static final EconomicMap<Short, SSymbol>  symbolDictionary;
-  private static final EconomicMap<SSymbol, SClass> classDictionary;
-  private static final StructuralProbe              probe;
+  private static final EconomicMap<Short, SSymbol>           symbolDictionary;
+  private static final EconomicMap<SSymbol, SClass>          classDictionary;
+  private static final StructuralProbe                       probe;
+  private static final ConcurrentLinkedQueue<SnapshotBuffer> buffers;
 
   static {
     if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
       classDictionary = EconomicMap.create();
       symbolDictionary = EconomicMap.create();
       probe = new StructuralProbe();
+      buffers = new ConcurrentLinkedQueue<>();
+    } else if (VmSettings.SNAPSHOTS_ENABLED) {
+      classDictionary = null;
+      symbolDictionary = null;
+      probe = null;
+      buffers = new ConcurrentLinkedQueue<>();
     } else {
       classDictionary = null;
       symbolDictionary = null;
       probe = null;
+      buffers = null;
     }
   }
 
@@ -68,6 +83,9 @@ public class SnapshotBackend {
   public static synchronized void startSnapshot() {
     assert VmSettings.SNAPSHOTS_ENABLED;
     snapshotVersion++;
+
+    // notify the worker in the tracingbackend about this change.
+    TracingBackend.switchTrace(snapshotVersion);
   }
 
   public static byte getSnapshotVersion() {
@@ -86,8 +104,35 @@ public class SnapshotBackend {
     }
   }
 
+  public static void registerSnapshotBuffer(final SnapshotBuffer sb) {
+    if (VmSettings.TEST_SERIALIZE_ALL) {
+      return;
+    }
+
+    assert sb != null;
+    buffers.add(sb);
+  }
+
   public static StructuralProbe getProbe() {
     assert probe != null;
     return probe;
+  }
+
+  public static void writeSnapshot() {
+    if (buffers.size() == 0) {
+      return;
+    }
+
+    String name = VmSettings.TRACE_FILE + snapshotVersion;
+    File f = new File(name + ".snap");
+    try (FileOutputStream fos = new FileOutputStream(f)) {
+      while (!buffers.isEmpty()) {
+        SnapshotBuffer sb = buffers.poll();
+        fos.getChannel().write(ByteBuffer.wrap(sb.getRawBuffer(), 0, sb.position()));
+        fos.flush();
+      }
+    } catch (IOException e1) {
+      e1.printStackTrace();
+    }
   }
 }

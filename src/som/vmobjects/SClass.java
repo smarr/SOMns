@@ -356,7 +356,7 @@ public final class SClass extends SObjectWithClass {
 
   public void serialize(final Object o, final SnapshotBuffer sb) {
     assert instanceClassGroup != null;
-    if (!sb.containsObject(o)) {
+    if (!sb.getRecord().containsObject(o)) {
       getSerializer().execute(o, sb);
     }
   }

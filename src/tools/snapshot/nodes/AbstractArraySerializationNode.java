@@ -82,7 +82,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
     base += 5;
     for (Object obj : oa) {
       Types.getClassOf(obj).serialize(obj, sb);
-      long pos = sb.getObjectPointer(obj);
+      long pos = sb.getRecord().getObjectPointer(obj);
       sb.putLongAt(base, pos);
       base += Long.BYTES;
     }

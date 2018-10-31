@@ -57,7 +57,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
 
       for (int i = 0; i < args.length; i++) {
         Types.getClassOf(args[i]).serialize(args[i], sb);
-        sb.putLongAt(base + (i * Long.BYTES), sb.getObjectPointer(args[i]));
+        sb.putLongAt(base + (i * Long.BYTES), sb.getRecord().getObjectPointer(args[i]));
       }
 
       base += (args.length * Long.BYTES);
@@ -101,7 +101,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
             throw new IllegalArgumentException("Unexpected SlotKind");
         }
 
-        sb.putLongAt(base + (j * Long.BYTES), sb.getObjectPointer(value));
+        sb.putLongAt(base + (j * Long.BYTES), sb.getRecord().getObjectPointer(value));
         j++;
         // dont redo frame!
         // just serialize locals and arguments ordered by their slotnumber

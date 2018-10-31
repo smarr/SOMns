@@ -1,5 +1,7 @@
 package tools.snapshot.nodes;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -7,15 +9,18 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import som.interpreter.actors.SFarReference;
 import som.interpreter.objectstorage.ClassFactory;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.concurrency.TracingActors.TracingActor;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
+import tools.snapshot.deserialization.FixupInformation;
 
 
 public abstract class PrimitiveSerializationNodes {
@@ -236,6 +241,70 @@ public abstract class PrimitiveSerializationNodes {
     @Override
     public Object deserialize(final DeserializationBuffer sb) {
       return Nil.nilObject;
+    }
+  }
+
+  @GenerateNodeFactory
+  public abstract static class FarRefSerializationNode extends AbstractSerializationNode {
+
+    public FarRefSerializationNode(final ClassFactory classFact) {
+      super(classFact);
+    }
+
+    @Specialization
+    public void serialize(final SFarReference o, final SnapshotBuffer sb) {
+      int base = sb.addObject(o, classFact, Integer.BYTES + Long.BYTES);
+      TracingActor other = (TracingActor) o.getActor();
+      sb.putIntAt(base, other.getActorId());
+
+      // writing the reference is done through this method.
+      // actual writing may happen at a later point in time if the object wasn't serialized
+      // yetD
+      other.getSnapshotRecord().farReference(o.getValue(), sb, base + Integer.BYTES);
+    }
+
+    @Override
+    public Object deserialize(final DeserializationBuffer sb) {
+      TracingActor other = (TracingActor) SnapshotBackend.lookupActor(sb.getInt());
+      DeserializationBuffer otherDB = other.getDeserializationBuffer();
+
+      Object value = otherDB.getReference();
+      SFarReference result = new SFarReference(other, value);
+
+      if (DeserializationBuffer.needsFixup(value)) {
+        otherDB.installFixup(new FarRefFixupInformation(result));
+      }
+
+      return result;
+    }
+
+    private static final class FarRefFixupInformation extends FixupInformation {
+      SFarReference ref;
+
+      public FarRefFixupInformation(final SFarReference ref) {
+        this.ref = ref;
+      }
+
+      @Override
+      public void fixUp(final Object o) {
+        // This may be an alternative to making final fields non-final.
+        // Only replay executions would be affected by this.
+        try {
+          Field field = SFarReference.class.getField("value");
+          Field modifiersField = Field.class.getDeclaredField("modifiers");
+          modifiersField.setAccessible(true);
+          modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+          field.set(ref, o);
+        } catch (NoSuchFieldException e) {
+          e.printStackTrace();
+        } catch (SecurityException e) {
+          e.printStackTrace();
+        } catch (IllegalArgumentException e) {
+          e.printStackTrace();
+        } catch (IllegalAccessException e) {
+          e.printStackTrace();
+        }
+      }
     }
   }
 }

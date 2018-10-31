@@ -18,10 +18,8 @@ public class ExternalEventualMessage {
     public ExternalDirectMessage(final Actor target, final SSymbol selector,
         final Object[] arguments,
         final Actor sender, final SResolver resolver, final RootCallTarget onReceive,
-        final boolean triggerMessageReceiverBreakpoint,
-        final boolean triggerPromiseResolverBreakpoint, final short method, final int dataId) {
-      super(target, selector, arguments, sender, resolver, onReceive,
-          triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
+        final short method, final int dataId) {
+      super(target, selector, arguments, sender, resolver, onReceive);
       this.method = method;
       this.dataId = dataId;
     }
