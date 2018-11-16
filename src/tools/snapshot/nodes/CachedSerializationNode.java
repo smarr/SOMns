@@ -7,6 +7,8 @@ import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 import som.interpreter.Types;
 import som.interpreter.nodes.dispatch.DispatchGuard;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
+import som.vmobjects.SObject;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 
@@ -31,8 +33,12 @@ public abstract class CachedSerializationNode extends AbstractSerializationNode 
         Types.getClassOf(o).serialize(o, sb);
       }
     } catch (InvalidAssumptionException e) {
-      // checked layout is outdated
       CompilerDirectives.transferToInterpreterAndInvalidate();
+      SObject so = (SObject) o;
+      if (!so.isLayoutCurrent()) {
+        // we have to update the layout to avoid stackoverflow
+        ObjectTransitionSafepoint.INSTANCE.transitionObject(so);
+      }
       replace(CachedSerializationNodeFactory.create(o)).serialize(o, sb);
     }
   }
