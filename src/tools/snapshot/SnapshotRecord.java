@@ -50,7 +50,9 @@ public class SnapshotRecord {
   }
 
   public void addObjectEntry(final Object o, final long offset) {
-    entries.put(o, offset);
+    synchronized (entries) {
+      entries.put(o, offset);
+    }
   }
 
   public void handleTodos(final SnapshotBuffer sb) {
@@ -79,9 +81,13 @@ public class SnapshotRecord {
    */
   public void farReference(final Object o, final SnapshotBuffer other,
       final int destination) {
-    // synchronization not necessary unless we have concurrent modification issues, but we
-    if (containsObject(o)) {
-      other.putLongAt(destination, getObjectPointer(o));
+    Long l;
+    synchronized (entries) {
+      l = entries.get(o);
+    }
+
+    if (l != null) {
+      other.putLongAt(destination, l);
     } else {
       // create externalReference entry;
       // TODO add fixup information
