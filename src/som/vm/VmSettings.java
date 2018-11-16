@@ -62,7 +62,7 @@ public class VmSettings implements Settings {
     ACTOR_TRACING = getBool("som.actorTracing", false);
 
     TEST_SNAPSHOTS = getBool("som.snapshotTest", false);
-    TEST_SERIALIZE_ALL = false;
+    TEST_SERIALIZE_ALL = getBool("som.actorSnapshotAll", false);
     SNAPSHOTS_ENABLED = getBool("som.actorSnapshot", false) || TEST_SNAPSHOTS;
     TRACK_SNAPSHOT_ENTITIES = (REPLAY && SNAPSHOTS_ENABLED) || TEST_SNAPSHOTS;
 
