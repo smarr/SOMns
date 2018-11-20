@@ -88,7 +88,6 @@ public class TracingBackend {
   private static FrontendConnector front = null;
 
   private static long collectedMemory = 0;
-
   private static TraceWorkerThread workerThread;
   private static TraceWorkerThread workerThread2;
 
@@ -265,7 +264,7 @@ public class TracingBackend {
       }
     }
 
-    // TODO forceSwap should only happen for kompos.
+    // forceSwap should only happen for kompos.
     // => only the first worker thread is used.
     while (!workerThread.fullBuffers.isEmpty()) {
       // wait until the worker thread processed all the buffers
@@ -328,9 +327,6 @@ public class TracingBackend {
       workerThread2 = new TraceWorkerThread(newSnapshotVersion);
       workerThread2.start();
     }
-
-    // ideally there is no more old trace-data being produced when we do another snapshot.
-    // need to verify this, may need synchronization.
 
     if (oldWorker != null) {
       oldWorker.cont = false;

@@ -77,7 +77,7 @@ public class TracingActors {
     }
 
     /**
-     * For testing purposes
+     * For testing purposes.
      */
     public void replaceSnapshotRecord() {
       this.snapshotRecord = new SnapshotRecord();
@@ -104,7 +104,7 @@ public class TracingActors {
     }
 
     /**
-     * To be Overrriden by ReplayActor
+     * To be Overrriden by ReplayActor.
      *
      * @return null
      */

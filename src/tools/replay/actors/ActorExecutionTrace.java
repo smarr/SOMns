@@ -109,12 +109,7 @@ public class ActorExecutionTrace {
   }
 
   public static class ActorTraceBuffer extends TraceBuffer {
-    TracingActor                       currentActor;
-    public final TracingActivityThread thread;
-
-    public ActorTraceBuffer(final TracingActivityThread thread) {
-      this.thread = thread;
-    }
+    TracingActor currentActor;
 
     @Override
     protected void swapBufferWhenNotEnoughSpace(final TraceActorContextNode tracer) {

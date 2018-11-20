@@ -281,7 +281,7 @@ public abstract class PrimitiveSerializationNodes {
     private static final class FarRefFixupInformation extends FixupInformation {
       SFarReference ref;
 
-      public FarRefFixupInformation(final SFarReference ref) {
+      FarRefFixupInformation(final SFarReference ref) {
         this.ref = ref;
       }
 
@@ -295,14 +295,8 @@ public abstract class PrimitiveSerializationNodes {
           modifiersField.setAccessible(true);
           modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
           field.set(ref, o);
-        } catch (NoSuchFieldException e) {
-          e.printStackTrace();
-        } catch (SecurityException e) {
-          e.printStackTrace();
-        } catch (IllegalArgumentException e) {
-          e.printStackTrace();
-        } catch (IllegalAccessException e) {
-          e.printStackTrace();
+        } catch (Exception e) {
+          throw new RuntimeException(e);
         }
       }
     }

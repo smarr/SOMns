@@ -89,7 +89,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
 
     if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
       threadId = threadIdGen.getAndIncrement();
-      traceBuffer = TraceBuffer.create(this);
+      traceBuffer = TraceBuffer.create(this.threadId);
       nextEntityId = 1 + (threadId << TraceData.ENTITY_ID_BITS);
       externalData = new Object[EXTERNAL_BUFFER_SIZE];
     } else {

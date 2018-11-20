@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 
 import com.oracle.truffle.api.CompilerDirectives;
 
+import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.vm.VmSettings;
 import sun.misc.Unsafe;
 import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
@@ -12,12 +13,12 @@ import tools.replay.nodes.TraceActorContextNode;
 
 public abstract class TraceBuffer {
 
-  public static TraceBuffer create(final TracingActivityThread thread) {
+  public static TraceBuffer create(final long threadId) {
     assert VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING;
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      return new KomposTrace.KomposTraceBuffer(thread.threadId);
+      return new KomposTrace.KomposTraceBuffer(threadId);
     } else {
-      return new ActorTraceBuffer(thread);
+      return new ActorTraceBuffer();
     }
   }
 
@@ -105,7 +106,7 @@ public abstract class TraceBuffer {
   public final void returnBuffer(final byte[] nextBuffer) {
     if (VmSettings.SNAPSHOTS_ENABLED) {
       TracingBackend.returnBuffer(buffer, position,
-          ((ActorTraceBuffer) this).thread.snapshotId);
+          ActorProcessingThread.currentThread().getSnapshotId());
     } else {
       TracingBackend.returnBuffer(buffer, position);
     }

@@ -89,8 +89,6 @@ public class SnapshotRecord {
     if (l != null) {
       other.putLongAt(destination, l);
     } else {
-      // create externalReference entry;
-      // TODO add fixup information
       externalReferences.offer(new FarRefTodo(other, destination, o));
     }
   }
@@ -100,7 +98,7 @@ public class SnapshotRecord {
     private final int            referenceOffset;
     final Object                 target;
 
-    public FarRefTodo(final SnapshotBuffer referer, final int referenceOffset,
+    FarRefTodo(final SnapshotBuffer referer, final int referenceOffset,
         final Object target) {
       this.referer = referer;
       this.referenceOffset = referenceOffset;

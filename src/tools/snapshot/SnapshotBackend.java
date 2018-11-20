@@ -132,7 +132,7 @@ public class SnapshotBackend {
         fos.flush();
       }
     } catch (IOException e1) {
-      e1.printStackTrace();
+      throw new RuntimeException(e1);
     }
   }
 }
