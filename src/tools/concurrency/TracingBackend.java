@@ -80,12 +80,6 @@ public class TracingBackend {
   private static final ArrayBlockingQueue<byte[]> emptyBuffers =
       new ArrayBlockingQueue<>(BUFFER_POOL_SIZE);
 
-  // private static final ArrayBlockingQueue<BufferAndLimit> fullBuffers =
-  // new ArrayBlockingQueue<>(BUFFER_POOL_SIZE);
-  //
-  // private static final ConcurrentLinkedQueue<ExternalData> externalData =
-  // new ConcurrentLinkedQueue<ExternalData>();
-
   // contains symbols that need to be written to file/sent to debugger,
   // e.g. actor type, message type
   private static final ArrayList<SSymbol> symbolsToWrite =
