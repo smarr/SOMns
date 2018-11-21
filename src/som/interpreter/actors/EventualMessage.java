@@ -25,7 +25,7 @@ public abstract class EventualMessage {
 
   /**
    * Contains the messageId for Kompos tracing.
-   * This field is reused for snapshotting, where it contains the the snapshot version at send
+   * This field is reused for snapshotting. It then contains the snapshot version at send
    * time. The snapshot version is used to determine whether the message needs to be
    * serialized.
    */
