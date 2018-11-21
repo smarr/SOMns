@@ -89,7 +89,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
 
     if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
       threadId = threadIdGen.getAndIncrement();
-      traceBuffer = TraceBuffer.create(this.threadId);
+      traceBuffer = TraceBuffer.create(threadId);
       nextEntityId = 1 + (threadId << TraceData.ENTITY_ID_BITS);
       externalData = new Object[EXTERNAL_BUFFER_SIZE];
     } else {
@@ -204,6 +204,9 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   }
 
   public SnapshotBuffer getSnapshotBuffer() {
+    if (SnapshotBackend.getSnapshotVersion() > this.snapshotId) {
+      newSnapshot();
+    }
     return snapshotBuffer;
   }
 
@@ -211,7 +214,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     return snapshotId;
   }
 
-  public SnapshotBuffer newSnapshot() {
+  private void newSnapshot() {
     traceBuffer.swapStorage();
     if (extIndex != 0) {
       TracingBackend.addExternalData(externalData, this);
@@ -222,7 +225,6 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
 
     // get net snapshotbuffer
     this.snapshotBuffer = new SnapshotBuffer((ActorProcessingThread) this);
-    return this.snapshotBuffer;
   }
 
 }

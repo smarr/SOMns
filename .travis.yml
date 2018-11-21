@@ -69,5 +69,6 @@ script:
   - if [ "$TASK" = "kompos-tests"  ]; then nvm install 8         && ant $SG && cd tools/kompos && npm -s run verify && npm test; fi
   - if [ "$TASK" = "replay1-tests" ]; then ant $SG compile       && ./tests/replay/test.sh 1; fi
   - if [ "$TASK" = "replay2-tests" ]; then ant $SG compile       && ./tests/replay/test.sh 2; fi
+  - if [ "$TASK" = "snapshot-tests" ]; then ant $SG compile       && ./tests/snapshot/test.sh; fi
   - if [ "$TASK" = "unit-tests"    ]; then ant compile           && ./som core-lib/TestSuite/TestRunner.ns; fi
   - if [ "$TASK" = "native"        ]; then ant native; fi

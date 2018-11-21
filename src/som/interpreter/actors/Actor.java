@@ -33,7 +33,6 @@ import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.DynamicScopeType;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.nodes.TraceActorContextNode;
-import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 
 
@@ -279,12 +278,6 @@ public class Actor implements Activity {
 
       if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS) {
         SnapshotBuffer sb = currentThread.getSnapshotBuffer();
-
-        if (SnapshotBackend.getSnapshotVersion() > sb.getSnapshotVersion()) {
-          // update version of currentThread
-          sb = currentThread.newSnapshot();
-        }
-
         sb.getRecord().handleTodos(sb);
         firstMessage.serialize(sb);
       }

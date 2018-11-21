@@ -85,7 +85,7 @@ public class SnapshotBackend {
     snapshotVersion++;
 
     // notify the worker in the tracingbackend about this change.
-    TracingBackend.switchTrace(snapshotVersion);
+    TracingBackend.newSnapshot(snapshotVersion);
   }
 
   public static byte getSnapshotVersion() {

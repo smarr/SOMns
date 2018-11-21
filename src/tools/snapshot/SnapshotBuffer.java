@@ -12,10 +12,11 @@ import tools.snapshot.deserialization.DeserializationBuffer;
 
 public class SnapshotBuffer extends TraceBuffer {
 
-  public static final int               FIELD_SIZE    = 8;
-  public static final int               CLASS_ID_SIZE = 2;
-  public static final int               MAX_FIELD_CNT = Byte.MAX_VALUE;
-  public static final int               THREAD_SHIFT  = Long.SIZE - Short.SIZE;
+  public static final int FIELD_SIZE    = 8;
+  public static final int CLASS_ID_SIZE = 2;
+  public static final int MAX_FIELD_CNT = Byte.MAX_VALUE;
+  public static final int THREAD_SHIFT  = Long.SIZE - Short.SIZE;
+
   protected final byte                  snapshotVersion;
   protected final ActorProcessingThread owner;
 
@@ -91,5 +92,10 @@ public class SnapshotBuffer extends TraceBuffer {
 
   public Byte getSnapshotVersion() {
     return snapshotVersion;
+  }
+
+  public boolean needsToBeSnapshot(final long messageId) {
+    return VmSettings.TEST_SNAPSHOTS || VmSettings.TEST_SERIALIZE_ALL
+        || snapshotVersion > messageId;
   }
 }

@@ -82,8 +82,7 @@ public abstract class EventualMessage {
   public long serialize(final SnapshotBuffer sb) {
     ReceivedRootNode rm = (ReceivedRootNode) this.onReceive.getRootNode();
 
-    if (VmSettings.TEST_SNAPSHOTS || VmSettings.TEST_SERIALIZE_ALL
-        || sb.getSnapshotVersion() > this.getMessageId()) {
+    if (sb.needsToBeSnapshot(getMessageId())) {
       // Not sure if this is optimized, worst case need to duplicate this for all messages
       return rm.getSerializer().execute(this, sb);
     } else {

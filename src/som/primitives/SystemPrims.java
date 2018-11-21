@@ -350,7 +350,7 @@ public final class SystemPrims {
         ActorProcessingThread atp =
             (ActorProcessingThread) ActorProcessingThread.currentThread();
         TracingActor ta = (TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
-        SnapshotBuffer sb = atp.newSnapshot();
+        SnapshotBuffer sb = new SnapshotBuffer(atp);
         ta.replaceSnapshotRecord();
 
         if (!sb.getRecord().containsObject(receiver)) {
