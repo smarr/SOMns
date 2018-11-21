@@ -22,6 +22,7 @@ matrix:
     - env: TASK=kompos-tests
     - env: TASK=replay1-tests
     - env: TASK=replay2-tests
+    - env: TASK=snapshot-tests
     - env: TASK=native
 
     - os:   linux
