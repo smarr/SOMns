@@ -5,17 +5,19 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlot;
+import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 
 import som.compiler.Variable.Internal;
 import som.interpreter.FrameOnStackMarker;
 import som.interpreter.Method;
 import som.interpreter.Types;
-import som.interpreter.objectstorage.ClassFactory;
 import som.vm.constants.Classes;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
+import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.SnapshotRecord;
@@ -28,8 +30,8 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
 
   private static final int SINVOKABLE_SIZE = Short.BYTES;
 
-  public BlockSerializationNode(final ClassFactory classFact) {
-    super(classFact);
+  public BlockSerializationNode(final SClass clazz) {
+    super(clazz);
   }
 
   // TODO specialize on different blocks
@@ -39,8 +41,9 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
     MaterializedFrame mf = block.getContextOrNull();
 
     if (mf == null) {
-      int base = sb.addObject(block, classFact, SINVOKABLE_SIZE + 2);
+      int base = sb.addObject(block, clazz, SINVOKABLE_SIZE + 2);
       SInvokable meth = block.getMethod();
+      // System.out.println("Block without frame " + meth.getIdentifier());
       sb.putShortAt(base, meth.getIdentifier().getSymbolId());
       sb.putShortAt(base + 2, (short) 0);
     } else {
@@ -48,12 +51,19 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
 
       Object[] args = mf.getArguments();
 
-      int start = sb.addObject(block, classFact,
+      int start = sb.addObject(block, clazz,
           SINVOKABLE_SIZE + ((args.length + fd.getSlots().size()) * Long.BYTES) + 2);
       int base = start;
 
       SInvokable meth = block.getMethod();
+      // System.out.println("Block " + meth.getIdentifier());
       sb.putShortAt(base, meth.getIdentifier().getSymbolId());
+      // System.out.println(
+      // "with " + args.length + " args at: " + base + " in " + sb.getOwner().getThreadId());
+      // for (Object o : args) {
+      // System.out.println("\t" + o);
+      // }
+
       sb.putByteAt(base + 2, (byte) args.length);
       base += 3;
 
@@ -77,6 +87,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
         // TODO optimization: MaterializedFrameSerialization Nodes that are associated with the
         // Invokables Frame Descriptor. Possibly use Local Var Read Nodes.
         Object value = mf.getValue(slot);
+        // System.out.println("Slot" + slot + value);
         switch (fd.getFrameSlotKind(slot)) {
           case Boolean:
             Classes.booleanClass.serialize(value, sb);
@@ -121,15 +132,19 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
   @Override
   public Object deserialize(final DeserializationBuffer bb) {
     short sinv = bb.getShort();
+    SSymbol inv = SnapshotBackend.getSymbolForId(sinv);
 
     SInvokable invokable = SnapshotBackend.lookupInvokable(sinv);
+    assert invokable != null : "Invokable not found";
     FrameDescriptor fd = ((Method) invokable.getInvokable()).getLexicalScope().getOuterMethod()
                                                             .getMethod().getFrameDescriptor();
+    // TODO Nullpointer when getting FD
 
     // read num args
     int numArgs = bb.get();
     Object[] args = new Object[numArgs];
 
+    // System.out.println("Block with " + inv);
     // read args
     for (int i = 0; i < numArgs; i++) {
       Object arg = bb.getReference();
@@ -139,6 +154,8 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
         args[i] = arg;
       }
     }
+
+    // System.out.println(Arrays.toString(args));
 
     MaterializedFrame frame = Truffle.getRuntime().createMaterializedFrame(args, fd);
 
@@ -154,37 +171,42 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
         if (DeserializationBuffer.needsFixup(o)) {
           bb.installFixup(new FrameSlotFixup(frame, slot));
         } else {
+          if (slot.getIdentifier() instanceof Internal) {
+            FrameOnStackMarker fosm = new FrameOnStackMarker();
+            if (!(boolean) o) {
+              fosm.frameNoLongerOnStack();
+            }
+            o = fosm;
+          }
 
-          switch (fd.getFrameSlotKind(slot)) {
-            case Boolean:
-              frame.setBoolean(slot, (boolean) o);
-              break;
-            case Double:
-              frame.setDouble(slot, (double) o);
-              break;
-            case Long:
-              frame.setLong(slot, (long) o);
-              break;
-            case Object:
-              if (slot.getIdentifier() instanceof Internal) {
-                FrameOnStackMarker fosm = new FrameOnStackMarker();
-                if (!(boolean) o) {
-                  fosm.frameNoLongerOnStack();
-                }
-                o = fosm;
-              }
-              frame.setObject(slot, o);
-              break;
-            case Illegal:
-              // uninitialized variable, uses default
-              frame.setObject(slot, o);
-              break;
-            default:
-              throw new IllegalArgumentException("Unexpected SlotKind");
+          boolean illegal = fd.getFrameSlotKind(slot) == FrameSlotKind.Illegal;
+
+          if (o instanceof Boolean) {
+            frame.setBoolean(slot, (boolean) o);
+            if (illegal) {
+              fd.setFrameSlotKind(slot, FrameSlotKind.Boolean);
+            }
+          } else if (o instanceof Double) {
+            frame.setDouble(slot, (double) o);
+            if (illegal) {
+              fd.setFrameSlotKind(slot, FrameSlotKind.Double);
+            }
+          } else if (o instanceof Long) {
+            frame.setLong(slot, (long) o);
+            if (illegal) {
+              fd.setFrameSlotKind(slot, FrameSlotKind.Long);
+            }
+          } else {
+            frame.setObject(slot, o);
+            if (illegal) {
+              fd.setFrameSlotKind(slot, FrameSlotKind.Object);
+            }
           }
         }
       }
     }
+
+    frame.materialize();
 
     return new SBlock(invokable, frame);
   }

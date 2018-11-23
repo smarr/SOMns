@@ -10,12 +10,12 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 import som.interpreter.actors.SFarReference;
-import som.interpreter.objectstorage.ClassFactory;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
@@ -27,8 +27,8 @@ public abstract class PrimitiveSerializationNodes {
   @GenerateNodeFactory
   public abstract static class StringSerializationNode extends AbstractSerializationNode {
 
-    public StringSerializationNode(final ClassFactory classFact) {
-      super(classFact);
+    public StringSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
     @Specialization
@@ -37,7 +37,7 @@ public abstract class PrimitiveSerializationNodes {
       String s = (String) o;
 
       byte[] data = s.getBytes(StandardCharsets.UTF_8);
-      int base = sb.addObject(o, classFact, data.length + 4);
+      int base = sb.addObject(o, clazz, data.length + 4);
       sb.putIntAt(base, data.length);
       sb.putBytesAt(base + 4, data);
     }
@@ -55,15 +55,15 @@ public abstract class PrimitiveSerializationNodes {
   @GenerateNodeFactory
   public abstract static class IntegerSerializationNode extends AbstractSerializationNode {
 
-    public IntegerSerializationNode(final ClassFactory classFact) {
-      super(classFact);
+    public IntegerSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
     @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof Long;
       long l = (long) o;
-      int base = sb.addObject(o, classFact, Long.BYTES);
+      int base = sb.addObject(o, clazz, Long.BYTES);
       sb.putLongAt(base, l);
     }
 
@@ -76,15 +76,15 @@ public abstract class PrimitiveSerializationNodes {
   @GenerateNodeFactory
   public abstract static class DoubleSerializationNode extends AbstractSerializationNode {
 
-    public DoubleSerializationNode(final ClassFactory classFact) {
-      super(classFact);
+    public DoubleSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
     @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof Double;
       double d = (double) o;
-      int base = sb.addObject(o, classFact, Double.BYTES);
+      int base = sb.addObject(o, clazz, Double.BYTES);
       sb.putDoubleAt(base, d);
     }
 
@@ -97,15 +97,15 @@ public abstract class PrimitiveSerializationNodes {
   @GenerateNodeFactory
   public abstract static class BooleanSerializationNode extends AbstractSerializationNode {
 
-    public BooleanSerializationNode(final ClassFactory classFact) {
-      super(classFact);
+    public BooleanSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
     @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof Boolean;
       boolean b = (boolean) o;
-      int base = sb.addObject(o, classFact, 1);
+      int base = sb.addObject(o, clazz, 1);
       sb.putByteAt(base, (byte) (b ? 1 : 0));
     }
 
@@ -118,15 +118,15 @@ public abstract class PrimitiveSerializationNodes {
   @GenerateNodeFactory
   public abstract static class TrueSerializationNode extends AbstractSerializationNode {
 
-    public TrueSerializationNode(final ClassFactory classFact) {
-      super(classFact);
+    public TrueSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
     @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof Boolean;
       assert ((boolean) o);
-      sb.addObject(o, classFact, 0);
+      sb.addObject(o, clazz, 0);
     }
 
     @Override
@@ -138,15 +138,15 @@ public abstract class PrimitiveSerializationNodes {
   @GenerateNodeFactory
   public abstract static class FalseSerializationNode extends AbstractSerializationNode {
 
-    public FalseSerializationNode(final ClassFactory classFact) {
-      super(classFact);
+    public FalseSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
     @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof Boolean;
       assert !((boolean) o);
-      sb.addObject(o, classFact, 0);
+      sb.addObject(o, clazz, 0);
     }
 
     @Override
@@ -158,15 +158,15 @@ public abstract class PrimitiveSerializationNodes {
   @GenerateNodeFactory
   public abstract static class SymbolSerializationNode extends AbstractSerializationNode {
 
-    public SymbolSerializationNode(final ClassFactory classFact) {
-      super(classFact);
+    public SymbolSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
     @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof SSymbol;
       SSymbol ss = (SSymbol) o;
-      int base = sb.addObject(o, classFact, 2);
+      int base = sb.addObject(o, clazz, 2);
       sb.putShortAt(base, ss.getSymbolId());
     }
 
@@ -180,41 +180,42 @@ public abstract class PrimitiveSerializationNodes {
   @GenerateNodeFactory
   public abstract static class ClassSerializationNode extends AbstractSerializationNode {
 
-    public ClassSerializationNode(final ClassFactory classFact) {
-      super(classFact);
+    public ClassSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
-    protected short getSymbolId(final SClass clazz) {
-      return clazz.getMixinDefinition().getIdentifier().getSymbolId();
+    protected int getSymbolId(final SClass clazzz) {
+      return clazzz.getIdentity();
     }
 
     @Specialization
     protected void doCached(final SClass cls, final SnapshotBuffer sb,
-        @Cached("getSymbolId(cls)") final short cachedId) {
+        @Cached("getSymbolId(cls)") final int cachedId) {
       CompilerAsserts.compilationConstant(cachedId);
-      int base = sb.addObject(cls, Classes.classClass.getFactory(), 2);
-      sb.putShortAt(base, cachedId);
+      int base = sb.addObject(cls, Classes.classClass, Integer.BYTES);
+      sb.putIntAt(base, cachedId);
     }
 
     @Override
     public Object deserialize(final DeserializationBuffer sb) {
-      short id = sb.getShort();
-      return SnapshotBackend.lookupClass(id);
+      int id = sb.getInt();
+      // If lookup yields null we need to fixup in caller
+      return SnapshotBackend.lookupClass(id, sb.position());
     }
   }
 
   @GenerateNodeFactory
   public abstract static class SInvokableSerializationNode extends AbstractSerializationNode {
 
-    public SInvokableSerializationNode(final ClassFactory classFact) {
-      super(classFact);
+    public SInvokableSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
     @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
       assert o instanceof SInvokable;
       SInvokable si = (SInvokable) o;
-      int base = sb.addObject(si, classFact, Short.BYTES);
+      int base = sb.addObject(si, clazz, Short.BYTES);
       sb.putShortAt(base, si.getIdentifier().getSymbolId());
     }
 
@@ -229,13 +230,13 @@ public abstract class PrimitiveSerializationNodes {
   @GenerateNodeFactory
   public abstract static class NilSerializationNode extends AbstractSerializationNode {
 
-    public NilSerializationNode(final ClassFactory classFact) {
-      super(classFact);
+    public NilSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
     @Specialization
     public void serialize(final Object o, final SnapshotBuffer sb) {
-      sb.addObject(o, classFact, 0);
+      sb.addObject(o, clazz, 0);
     }
 
     @Override
@@ -247,13 +248,13 @@ public abstract class PrimitiveSerializationNodes {
   @GenerateNodeFactory
   public abstract static class FarRefSerializationNode extends AbstractSerializationNode {
 
-    public FarRefSerializationNode(final ClassFactory classFact) {
-      super(classFact);
+    public FarRefSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
     @Specialization
     public void serialize(final SFarReference o, final SnapshotBuffer sb) {
-      int base = sb.addObject(o, classFact, Integer.BYTES + Long.BYTES);
+      int base = sb.addObject(o, clazz, Integer.BYTES + Long.BYTES);
       TracingActor other = (TracingActor) o.getActor();
       sb.putIntAt(base, other.getActorId());
 
@@ -265,14 +266,18 @@ public abstract class PrimitiveSerializationNodes {
 
     @Override
     public Object deserialize(final DeserializationBuffer sb) {
-      TracingActor other = (TracingActor) SnapshotBackend.lookupActor(sb.getInt());
-      DeserializationBuffer otherDB = other.getDeserializationBuffer();
+      int actorId = sb.getInt();
+      TracingActor other = (TracingActor) SnapshotBackend.lookupActor(actorId);
+      if (other == null) {
+        // no messages recorded for this actor, need to create it here.
+        other = ReplayActor.getActorWithId(actorId);
+      }
 
-      Object value = otherDB.getReference();
+      Object value = sb.getReference();
       SFarReference result = new SFarReference(other, value);
 
       if (DeserializationBuffer.needsFixup(value)) {
-        otherDB.installFixup(new FarRefFixupInformation(result));
+        sb.installFixup(new FarRefFixupInformation(result));
       }
 
       return result;

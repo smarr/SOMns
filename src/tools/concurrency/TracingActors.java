@@ -1,11 +1,11 @@
 package tools.concurrency;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.WeakHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
@@ -25,6 +25,7 @@ import tools.concurrency.TraceParser.MessageRecord;
 import tools.concurrency.TraceParser.PromiseMessageRecord;
 import tools.debugger.WebDebugger;
 import tools.replay.actors.ExternalMessage;
+import tools.replay.nodes.TraceActorContextNode;
 import tools.snapshot.SnapshotRecord;
 import tools.snapshot.deserialization.DeserializationBuffer;
 
@@ -65,6 +66,14 @@ public class TracingActors {
 
     public synchronized int getDataId() {
       return nextDataID++;
+    }
+
+    public synchronized int peekDataId() {
+      return nextDataID;
+    }
+
+    public TraceActorContextNode getActorContextNode() {
+      return this.executor.getActorContextNode();
     }
 
     public boolean isStepToNextTurn() {
@@ -124,7 +133,7 @@ public class TracingActors {
 
     static {
       if (VmSettings.REPLAY) {
-        actorList = new WeakHashMap<>();
+        actorList = new HashMap<>();
       }
     }
 
@@ -168,7 +177,11 @@ public class TracingActors {
 
     @TruffleBoundary
     public ReplayActor(final VM vm) {
-      super(vm, lookupId());
+      this(vm, lookupId());
+    }
+
+    public ReplayActor(final VM vm, final int id) {
+      super(vm, id);
 
       this.activityId = TracingActivityThread.newEntityId();
 
@@ -212,6 +225,16 @@ public class TracingActors {
       if ((!this.isExecuting) && this.replayCanProcess(msg)) {
         isExecuting = true;
         execute(actorPool);
+      }
+    }
+
+    public static void scheduleAllActors(final ForkJoinPool actorPool) {
+      for (ReplayActor ra : actorList.values()) {
+
+        if (ra.firstMessage != null && !ra.isExecuting) {
+          ra.isExecuting = true;
+          ra.execute(actorPool);
+        }
       }
     }
 
@@ -400,8 +423,8 @@ public class TracingActors {
           final WebDebugger dbg) {
         assert actor instanceof ReplayActor;
         assert size > 0;
-
         final ReplayActor a = (ReplayActor) actor;
+
         Queue<EventualMessage> todo = determineNextMessages(a.leftovers);
 
         for (EventualMessage msg : todo) {

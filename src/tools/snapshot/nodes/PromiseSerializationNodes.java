@@ -6,13 +6,15 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 import som.interpreter.Types;
-import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
-import som.interpreter.objectstorage.ClassFactory;
 import tools.concurrency.TracingActors.TracingActor;
+import som.interpreter.objectstorage.ClassFactory;
+import som.interpreter.actors.SPromise.STracingPromise;
+import som.vmobjects.SClass;
+import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.deserialization.FixupInformation;
@@ -23,13 +25,13 @@ public abstract class PromiseSerializationNodes {
   @GenerateNodeFactory
   public abstract static class PromiseSerializationNode extends AbstractSerializationNode {
 
-    public PromiseSerializationNode(final ClassFactory classFact) {
-      super(classFact);
+    public PromiseSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
     @Specialization(guards = "prom.isCompleted()")
     public void doResolved(final SPromise prom, final SnapshotBuffer sb) {
-      int base = sb.addObject(prom, classFact, 1 + Long.BYTES);
+      int base = sb.addObject(prom, clazz, 1 + Long.BYTES + Integer.BYTES);
 
       // resolutionstate
       switch (prom.getResolutionStateUnsync()) {
@@ -48,6 +50,7 @@ public abstract class PromiseSerializationNodes {
         Types.getClassOf(value).serialize(value, sb);
       }
       sb.putLongAt(base + 1, sb.getRecord().getObjectPointer(value));
+      sb.putIntAt(base + 1 + Long.BYTES, ((STracingPromise) prom).getResolvingActor());
     }
 
     @Specialization(guards = "!prom.isCompleted()")
@@ -74,7 +77,7 @@ public abstract class PromiseSerializationNodes {
         onErrorExt = prom.getOnErrorExtUnsync();
         noe = getObjectCnt(onError, onErrorExt);
       }
-      int base = sb.addObject(prom, classFact, 1 + 6 + Long.BYTES * (noe + nwr + ncp));
+      int base = sb.addObject(prom, clazz, 1 + 6 + Long.BYTES * (noe + nwr + ncp));
 
       // resolutionstate
       sb.putByteAt(base, (byte) 0);
@@ -169,10 +172,12 @@ public abstract class PromiseSerializationNodes {
     private SPromise deserializeCompletedPromise(final byte state,
         final DeserializationBuffer sb) {
       Object value = sb.getReference();
+      int resolver = sb.getInt();
 
       SPromise p = SPromise.createResolved(
-          EventualMessage.getActorCurrentMessageIsExecutionOn(), value,
+          SnapshotBackend.getCurrentActor(), value,
           state == 1 ? Resolution.SUCCESSFUL : Resolution.ERRONEOUS);
+      ((STracingPromise) p).setResolvingActorForSnapshot(resolver);
 
       if (DeserializationBuffer.needsFixup(value)) {
         sb.installFixup(new PromiseValueFixup(p));
@@ -183,7 +188,7 @@ public abstract class PromiseSerializationNodes {
 
     private SPromise deserializeUnresolvedPromise(final DeserializationBuffer sb) {
       SPromise promise = SPromise.createPromise(
-          EventualMessage.getActorCurrentMessageIsExecutionOn(), false, false, null);
+          SnapshotBackend.getCurrentActor(), false, false, null);
 
       // These messages aren't referenced by anything else, no need for fixup
       int whenResolvedCnt = sb.getShort();
@@ -231,13 +236,13 @@ public abstract class PromiseSerializationNodes {
 
   @GenerateNodeFactory
   public abstract static class ResolverSerializationNode extends AbstractSerializationNode {
-    public ResolverSerializationNode(final ClassFactory classFact) {
-      super(classFact);
+    public ResolverSerializationNode(final SClass clazz) {
+      super(clazz);
     }
 
     @Specialization
     public void doResolver(final SResolver resolver, final SnapshotBuffer sb) {
-      int base = sb.addObject(resolver, classFact, Long.BYTES);
+      int base = sb.addObject(resolver, clazz, Long.BYTES);
       SPromise prom = resolver.getPromise();
       if (prom.getOwner() == sb.getOwner().getCurrentActor()) {
         if (!sb.getRecord().containsObject(prom)) {

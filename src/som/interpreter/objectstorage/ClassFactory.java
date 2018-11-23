@@ -1,5 +1,7 @@
 package som.interpreter.objectstorage;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
 
@@ -15,7 +17,6 @@ import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 import tools.snapshot.nodes.AbstractSerializationNode;
-import tools.snapshot.nodes.SerializerRootNode;
 
 
 /**
@@ -61,7 +62,8 @@ public final class ClassFactory {
 
   private final ClassFactory classClassFactory;
 
-  protected final SerializerRootNode serializationRoot;
+  protected final AtomicInteger                                  identityGen;
+  private final NodeFactory<? extends AbstractSerializationNode> serializerFactory;
 
   public ClassFactory(final SSymbol name, final MixinDefinition mixinDef,
       final EconomicSet<SlotDefinition> instanceSlots,
@@ -88,10 +90,11 @@ public final class ClassFactory {
     this.superclassAndMixins = superclassAndMixins;
 
     if (VmSettings.SNAPSHOTS_ENABLED) {
-      this.serializationRoot =
-          new SerializerRootNode(serializerFactory.createNode(this));
+      this.serializerFactory = serializerFactory;
+      this.identityGen = new AtomicInteger(0);
     } else {
-      this.serializationRoot = null;
+      this.serializerFactory = null;
+      this.identityGen = null;
     }
 
     VM.callerNeedsToBeOptimized(
@@ -135,12 +138,12 @@ public final class ClassFactory {
     return superclassAndMixins;
   }
 
-  public AbstractSerializationNode getSerializer() {
-    return serializationRoot.getSerializer();
-  }
-
   public MixinDefinition getMixinDefinition() {
     return mixinDef;
+  }
+
+  public NodeFactory<? extends AbstractSerializationNode> getSerializerFactory() {
+    return this.serializerFactory;
   }
 
   /**
@@ -199,5 +202,12 @@ public final class ClassFactory {
 
   public SSymbol getIdentifier() {
     return mixinDef.getIdentifier();
+  }
+
+  public int createIdentity() {
+    if (mixinDef == null) {
+      return (className.getSymbolId() << 16) | identityGen.getAndIncrement();
+    }
+    return (mixinDef.getIdentifier().getSymbolId() << 16) | identityGen.getAndIncrement();
   }
 }

@@ -3,7 +3,6 @@ package tools.snapshot;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.graalvm.collections.EconomicMap;
-import org.graalvm.collections.EconomicSet;
 
 import som.interpreter.Types;
 
@@ -14,7 +13,6 @@ public class SnapshotRecord {
    * We can get the location of the serialized object in the trace
    */
   private final EconomicMap<Object, Long> entries;
-  private final EconomicSet<Long>         messageOffsets;
 
   /**
    * This list is used to keep track of references to unserialized objects in the actor owning
@@ -29,7 +27,6 @@ public class SnapshotRecord {
 
   public SnapshotRecord() {
     this.entries = EconomicMap.create();
-    this.messageOffsets = EconomicSet.create();
     this.externalReferences = new ConcurrentLinkedQueue<>();
   }
 
@@ -43,10 +40,6 @@ public class SnapshotRecord {
     }
     throw new IllegalArgumentException(
         "Cannot point to unserialized Objects, you are missing a serialization call: " + o);
-  }
-
-  public void addMessageEntry(final long offset) {
-    this.messageOffsets.add(offset);
   }
 
   public void addObjectEntry(final Object o, final long offset) {

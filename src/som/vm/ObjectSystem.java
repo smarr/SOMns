@@ -45,7 +45,10 @@ import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors;
+import tools.concurrency.TracingActors.ReplayActor;
 import tools.language.StructuralProbe;
+import tools.snapshot.SnapshotBackend;
+import tools.snapshot.deserialization.SnapshotParser;
 import tools.snapshot.nodes.AbstractArraySerializationNodeGen.ArraySerializationNodeFactory;
 import tools.snapshot.nodes.AbstractArraySerializationNodeGen.TransferArraySerializationNodeFactory;
 import tools.snapshot.nodes.AbstractArraySerializationNodeGen.ValueArraySerializationNodeFactory;
@@ -100,6 +103,11 @@ public final class ObjectSystem {
     this.compiler = compiler;
     structuralProbe = probe;
     loadedModules = EconomicMap.create();
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      // List is not modified, only used at program termination to know which modules need to
+      // be loaded in replay
+      SnapshotBackend.registerLoadedModules(loadedModules);
+    }
     this.vm = vm;
   }
 
@@ -154,6 +162,8 @@ public final class ObjectSystem {
       return loadedModules.get(uri);
     }
 
+    // System.out.println("Loaded: " + uri);
+
     MixinDefinition module;
     try {
       module = compiler.compileModule(source, structuralProbe);
@@ -163,6 +173,10 @@ public final class ObjectSystem {
       vm.errorExit(e.toString());
       throw new IOException(e);
     }
+  }
+
+  public EconomicMap<URI, MixinDefinition> getLoadedModulesForSnapshot() {
+    return loadedModules;
   }
 
   private SObjectWithoutFields constructVmMirror() {
@@ -481,6 +495,10 @@ public final class ObjectSystem {
   }
 
   private int handlePromiseResult(final SPromise promise) {
+    if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
+      SnapshotBackend.registerResultPromise(promise);
+    }
+
     // This is an attempt to prevent to get stuck indeterminately.
     // We check whether there is activity on any of the pools.
     // And, we exit when either the main promise is resolved, or an exit was requested.
@@ -529,6 +547,10 @@ public final class ObjectSystem {
     Object platform = platformModule.instantiateObject(platformClass, vmMirror);
     ObjectTransitionSafepoint.INSTANCE.unregister();
 
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      SnapshotBackend.initialize(vm);
+    }
+
     SSymbol start = Symbols.symbolFor("start");
     SourceSection source;
 
@@ -564,6 +586,24 @@ public final class ObjectSystem {
       e.printStackTrace();
       return Launcher.EXIT_WITH_ERROR;
     }
+  }
+
+  @TruffleBoundary
+  public int executeApplicationFromSnapshot(final SObjectWithoutFields vmMirror) {
+    mainThreadCompleted = new CompletableFuture<>();
+    System.out.println("Attemting to execute from Snapshot");
+    ObjectTransitionSafepoint.INSTANCE.register();
+    Object platform = platformModule.instantiateObject(platformClass, vmMirror);
+    ObjectTransitionSafepoint.INSTANCE.unregister();
+
+    SnapshotBackend.initialize(vm);
+    SnapshotParser.inflate(vm);
+    // System.out.println("Done with inflation!!!");
+    ReplayActor.scheduleAllActors(vm.getActorPool());
+    // System.out.println("Done scheduling actors");
+
+    SPromise result = SnapshotParser.getResultPromise();
+    return handlePromiseResult(result);
   }
 
   @TruffleBoundary

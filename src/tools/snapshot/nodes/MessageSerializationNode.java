@@ -16,11 +16,11 @@ import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.EventualSendNode;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
-import som.interpreter.objectstorage.ClassFactory;
 import som.primitives.actors.PromisePrims;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
+import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.snapshot.SnapshotBackend;
@@ -32,12 +32,12 @@ import tools.snapshot.deserialization.FixupInformation;
 @GenerateNodeFactory
 public abstract class MessageSerializationNode extends AbstractSerializationNode {
 
-  public MessageSerializationNode(final ClassFactory factory) {
-    super(factory);
+  public MessageSerializationNode(final SClass clazz) {
+    super(clazz);
   }
 
   public MessageSerializationNode() {
-    super(Classes.messageClass.getInstanceFactory());
+    super(Classes.messageClass);
   }
 
   protected static final int COMMONALITY_BYTES = 7;
@@ -309,6 +309,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     MessageType type = MessageType.getMessageType(bb.get());
     SSymbol selector = SnapshotBackend.getSymbolForId(bb.getShort());
     Actor sender = SnapshotBackend.lookupActor(bb.getInt());
+    assert sender != null;
 
     switch (type) {
       case CallbackMessage:
@@ -347,6 +348,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     }
     Object[] args = parseArguments(bb);
 
+    assert args[0] != null;
     RootCallTarget onReceive = PromisePrims.createReceived((SBlock) args[0]);
     PromiseCallbackMessage pcm =
         new PromiseCallbackMessage(sender, (SBlock) args[0], resolver,
@@ -364,11 +366,12 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
   private DirectMessage deserializeDirect(final SSymbol selector, final Actor sender,
       final DeserializationBuffer bb, final SResolver resolver) {
     Object[] args = parseArguments(bb);
-    RootCallTarget onReceive = EventualSendNode.createOnReceiveCallTarget(selector, null,
+    RootCallTarget onReceive = EventualSendNode.createOnReceiveCallTarget(selector,
+        SomLanguage.getSyntheticSource("Deserialized Message", "Trace").createSection(1),
         SomLanguage.getLanguage(getRootNode()));
 
     DirectMessage dm =
-        new DirectMessage(EventualMessage.getActorCurrentMessageIsExecutionOn(), selector,
+        new DirectMessage(SnapshotBackend.getCurrentActor(), selector,
             args, sender, resolver,
             onReceive, false, false);
 
@@ -390,7 +393,8 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
 
     Actor finalSender = SnapshotBackend.lookupActor(bb.getInt());
     Object[] args = parseArguments(bb);
-    RootCallTarget onReceive = EventualSendNode.createOnReceiveCallTarget(selector, null,
+    RootCallTarget onReceive = EventualSendNode.createOnReceiveCallTarget(selector,
+        SomLanguage.getSyntheticSource("Deserialized Message", "Trace").createSection(1),
         SomLanguage.getLanguage(getRootNode()));
 
     // backup value for resolution.
@@ -408,7 +412,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     if (pmf != null) {
       pmf.setMessage(psm);
     }
-    psm.resolve(value, EventualMessage.getActorCurrentMessageIsExecutionOn(),
+    psm.resolve(value, SnapshotBackend.getCurrentActor(),
         finalSender);
 
     return psm;

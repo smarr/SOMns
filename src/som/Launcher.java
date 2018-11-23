@@ -13,6 +13,7 @@ import som.vm.VmSettings;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingBackend;
 import tools.snapshot.SnapshotBackend;
+import tools.snapshot.deserialization.SnapshotParser;
 
 
 public final class Launcher {
@@ -29,6 +30,10 @@ public final class Launcher {
   public static void main(final String[] args) {
     StorageAccessor.initAccessors();
 
+    if (VmSettings.SNAPSHOT_REPLAY) {
+      SnapshotParser.preparations();
+    }
+
     Builder builder = createContextBuilder(args);
     Context context = builder.build();
 
@@ -41,7 +46,7 @@ public final class Launcher {
     }
 
     TracingBackend.waitForTrace();
-    if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS) {
+    if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS && !VmSettings.REPLAY) {
       SnapshotBackend.writeSnapshot();
     }
 

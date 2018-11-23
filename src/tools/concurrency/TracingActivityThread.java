@@ -9,9 +9,11 @@ import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.vm.Activity;
 import som.vm.VmSettings;
 import tools.TraceData;
+import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.SteppingStrategy;
 import tools.debugger.entities.EntityType;
 import tools.debugger.entities.SteppingType;
+import tools.replay.nodes.TraceActorContextNode;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 
@@ -31,6 +33,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
 
   protected final TraceBuffer traceBuffer;
   protected SnapshotBuffer    snapshotBuffer;
+  protected ArrayList<Long>   messageLocations;
   protected Object[]          externalData;
   protected int               extIndex = 0;
 
@@ -85,6 +88,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     super(pool);
     if (VmSettings.SNAPSHOTS_ENABLED) {
       this.snapshotBuffer = new SnapshotBuffer((ActorProcessingThread) this);
+      this.messageLocations = new ArrayList<>();
     }
 
     if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
@@ -165,6 +169,11 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     }
   }
 
+  public final void addMessageLocation(final int actorId, final long messageAdress) {
+    messageLocations.add((long) actorId);
+    messageLocations.add(messageAdress);
+  }
+
   @Override
   protected void onStart() {
     super.onStart();
@@ -181,7 +190,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
       TracingBackend.unregisterThread(this);
     }
     if (VmSettings.SNAPSHOTS_ENABLED) {
-      SnapshotBackend.registerSnapshotBuffer(snapshotBuffer);
+      SnapshotBackend.registerSnapshotBuffer(snapshotBuffer, messageLocations);
     }
     super.onTermination(exception);
   }
@@ -215,7 +224,13 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   }
 
   private void newSnapshot() {
+    TracingActor ta = (TracingActor) ((ActorProcessingThread) this).getCurrentActor();
+    TraceActorContextNode tracer = ta.getActorContextNode();// get from ta?
     traceBuffer.swapStorage();
+    if (tracer != null) {
+      tracer.trace(ta);
+    }
+
     if (extIndex != 0) {
       TracingBackend.addExternalData(externalData, this);
       externalData = new Object[EXTERNAL_BUFFER_SIZE];
@@ -225,6 +240,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
 
     // get net snapshotbuffer
     this.snapshotBuffer = new SnapshotBuffer((ActorProcessingThread) this);
+    this.messageLocations = new ArrayList<>();
   }
 
 }
