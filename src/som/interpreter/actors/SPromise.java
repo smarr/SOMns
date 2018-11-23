@@ -9,7 +9,6 @@ import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.interpreter.objectstorage.ClassFactory;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
@@ -142,8 +141,8 @@ public class SPromise extends SObjectWithClass {
     assert promiseClass == null || cls == null;
     promiseClass = cls;
     if (VmSettings.SNAPSHOTS_ENABLED) {
-      ClassFactory group = promiseClass.getInstanceFactory();
-      group.getSerializer().replace(PromiseSerializationNodeFactory.create(group));
+      promiseClass.getSerializer()
+                  .replace(PromiseSerializationNodeFactory.create(promiseClass));
     }
   }
 
@@ -327,6 +326,9 @@ public class SPromise extends SObjectWithClass {
       return resolvingActor;
     }
 
+    public void setResolvingActorForSnapshot(final int resolver) {
+      this.resolvingActor = resolver;
+    }
   }
 
   public static final class SMedeorPromise extends STracingPromise {
@@ -380,8 +382,8 @@ public class SPromise extends SObjectWithClass {
       resolverClass = cls;
 
       if (VmSettings.SNAPSHOTS_ENABLED) {
-        ClassFactory group = resolverClass.getInstanceFactory();
-        group.getSerializer().replace(ResolverSerializationNodeFactory.create(group));
+        resolverClass.getSerializer()
+                     .replace(ResolverSerializationNodeFactory.create(resolverClass));
       }
     }
 

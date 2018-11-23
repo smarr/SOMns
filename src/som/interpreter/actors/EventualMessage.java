@@ -112,7 +112,7 @@ public abstract class EventualMessage {
       this.sender = sender;
       this.target = target;
 
-      if (VmSettings.SNAPSHOTS_ENABLED) {
+      if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
         this.messageId = ActorProcessingThread.currentThread().getSnapshotId();
       }
 
@@ -133,7 +133,7 @@ public abstract class EventualMessage {
       this.sender = sender;
       this.target = target;
 
-      if (VmSettings.SNAPSHOTS_ENABLED) {
+      if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
         this.messageId = SnapshotBackend.getSnapshotVersion();
       }
 
@@ -238,7 +238,7 @@ public abstract class EventualMessage {
           triggerPromiseResolverBreakpoint);
       this.originalSender = originalSender;
 
-      if (VmSettings.SNAPSHOTS_ENABLED) {
+      if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
         this.messageId = ActorProcessingThread.currentThread().getSnapshotId();
       }
     }
@@ -284,6 +284,9 @@ public abstract class EventualMessage {
       this.selector = selector;
       assert (args[0] instanceof SPromise);
       this.originalTarget = (SPromise) args[0];
+      if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
+        this.messageId = ActorProcessingThread.currentThread().getSnapshotId();
+      }
     }
 
     @Override
@@ -301,7 +304,7 @@ public abstract class EventualMessage {
 
       this.target = finalTarget; // for sends to far references, we need to adjust the target
       this.finalSender = sendingActor;
-      if (VmSettings.SNAPSHOTS_ENABLED) {
+      if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
         this.messageId = Math.min(this.messageId,
             ActorProcessingThread.currentThread().getSnapshotId());
       }
@@ -375,6 +378,9 @@ public abstract class EventualMessage {
       super(new Object[] {callback, null}, owner, resolver, onReceive,
           triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
       this.promise = promiseRegisteredOn;
+      if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
+        this.messageId = ActorProcessingThread.currentThread().getSnapshotId();
+      }
     }
 
     @Override
@@ -390,9 +396,8 @@ public abstract class EventualMessage {
      */
     private void setPromiseValue(final Object value, final Actor resolvingActor) {
       args[1] = originalSender.wrapForUse(value, resolvingActor, null);
-      if (VmSettings.SNAPSHOTS_ENABLED) {
-        this.messageId = Math.min(this.messageId,
-            ActorProcessingThread.currentThread().getSnapshotId());
+      if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
+        this.messageId = ActorProcessingThread.currentThread().getSnapshotId();
       }
     }
 

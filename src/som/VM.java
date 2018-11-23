@@ -293,6 +293,7 @@ public final class VM {
 
     assert objectSystem == null;
     objectSystem = new ObjectSystem(new SourcecodeCompiler(lang), structuralProbe, this);
+
     objectSystem.loadKernelAndPlatform(options.platformFile, options.kernelFile);
 
     assert vmMirror == null : "VM seems to be initialized already";
@@ -316,7 +317,11 @@ public final class VM {
   }
 
   public int execute() {
-    return objectSystem.executeApplication(vmMirror, mainActor);
+    if (VmSettings.SNAPSHOT_REPLAY) {
+      return objectSystem.executeApplicationFromSnapshot(vmMirror);
+    } else {
+      return objectSystem.executeApplication(vmMirror, mainActor);
+    }
   }
 
   public Actor getMainActor() {

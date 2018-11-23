@@ -45,9 +45,11 @@ import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
+import tools.concurrency.TracingActivityThread;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.nodes.AbstractSerializationNode;
+import tools.snapshot.nodes.SerializerRootNode;
 
 
 // TODO: should we move more of that out of SClass and use the corresponding
@@ -69,6 +71,8 @@ public final class SClass extends SObjectWithClass {
   @CompilationFinal private boolean         isArray;          // is a subclass of Array
 
   @CompilationFinal private ClassFactory instanceClassGroup; // the factory for this object
+  @CompilationFinal private int          identity;
+  @CompilationFinal SerializerRootNode   serializationRoot;
 
   protected final SObjectWithClass enclosingObject;
   private final MaterializedFrame  context;
@@ -147,6 +151,7 @@ public final class SClass extends SObjectWithClass {
   public void initializeClass(final SSymbol name, final SClass superclass) {
     assert (this.name == null || this.name == name) && (this.superclass == null
         || this.superclass == superclass) : "Should only be initialized once";
+
     this.name = name;
     this.superclass = superclass;
   }
@@ -191,14 +196,30 @@ public final class SClass extends SObjectWithClass {
     this.isTransferObject = isTransferObject;
     this.isArray = isArray;
     this.instanceClassGroup = classFactory;
+
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      identity = instanceClassGroup.createIdentity();
+
+      if (!VmSettings.REPLAY && !VmSettings.TEST_SNAPSHOTS && enclosingObject != null
+          && Thread.currentThread() instanceof TracingActivityThread) {
+        // enclosingObject.getSOMClass().serialize(enclosingObject,
+        // TracingActivityThread.currentThread().getSnapshotBuffer());
+        // long outer = SnapshotBackend.getCurrentActor().getSnapshotRecord()
+        // .getObjectPointer(enclosingObject);
+        // we can find out the classslot identity by looking for a class with an outer that
+        // matches the current class...
+        // -> no need to go through all the slots in search of initialized class slots.
+        SnapshotBackend.registerClassEnclosure(this);
+      }
+
+      this.serializationRoot =
+          new SerializerRootNode(classFactory.getSerializerFactory().createNode(this));
+
+    }
     // assert instanceClassGroup != null || !ObjectSystem.isInitialized();
 
     if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
-      if (mixinDef != null) {
-        SnapshotBackend.registerClass(mixinDef.getIdentifier(), this);
-      } else {
-        SnapshotBackend.registerClass(classFactory.getClassName(), this);
-      }
+      SnapshotBackend.registerClass(this);
     }
   }
 
@@ -362,6 +383,11 @@ public final class SClass extends SObjectWithClass {
   }
 
   public AbstractSerializationNode getSerializer() {
-    return instanceClassGroup.getSerializer();
+    return serializationRoot.getSerializer();
+  }
+
+  public int getIdentity() {
+    assert identity != 0;
+    return identity;
   }
 }

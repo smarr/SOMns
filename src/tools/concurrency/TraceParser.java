@@ -42,9 +42,15 @@ public final class TraceParser {
 
   private static TraceParser parser;
   private static String      traceName =
-      VmSettings.TRACE_FILE + (VmSettings.SNAPSHOTS_ENABLED ? ".0" : "");
+      VmSettings.TRACE_FILE + (VmSettings.SNAPSHOTS_ENABLED ? ".1" : "");
 
   private final TraceRecord[] parseTable;
+
+  public static boolean hasExternalData() {
+    ReplayActor ra = (ReplayActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
+    long key = (((long) ra.getActorId()) << 32) | ra.peekDataId();
+    return parser.externalDataDict.containsKey(key);
+  }
 
   public static ByteBuffer getExternalData(final int actorId, final int dataId) {
     long key = (((long) actorId) << 32) | dataId;

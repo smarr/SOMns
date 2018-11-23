@@ -19,7 +19,7 @@ public abstract class CachedSerializationNode extends AbstractSerializationNode 
   private final AbstractSerializationNode cachedSerializer;
 
   public CachedSerializationNode(final Object o) {
-    super(null);
+    super();
     this.guard = DispatchGuard.create(o);
     this.cachedSerializer = Types.getClassOf(o).getSerializer();
   }

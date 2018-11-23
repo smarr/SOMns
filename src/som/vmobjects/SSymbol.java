@@ -53,6 +53,28 @@ public final class SSymbol extends SAbstractObject {
     }
   }
 
+  /**
+   * Used for snapshot-based replay.
+   */
+  public SSymbol(final String value, final short id) {
+    string = value;
+    numberOfSignatureArguments = determineNumberOfSignatureArguments();
+    symbolId = id;
+
+    // avoid multiple symbols with same id
+    if (id >= idGenerator.get()) {
+      idGenerator.set(id + 1);
+    }
+
+    if (VmSettings.KOMPOS_TRACING || VmSettings.ACTOR_TRACING) {
+      TracingBackend.logSymbol(this);
+    }
+
+    if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
+      SnapshotBackend.registerSymbol(this);
+    }
+  }
+
   @Override
   public SClass getSOMClass() {
     assert Classes.symbolClass != null;

@@ -1,9 +1,9 @@
 package tools.snapshot;
 
 import som.interpreter.actors.Actor.ActorProcessingThread;
-import som.interpreter.objectstorage.ClassFactory;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
+import som.vmobjects.SClass;
 import tools.concurrency.TraceBuffer;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.replay.nodes.TraceActorContextNode;
@@ -13,7 +13,7 @@ import tools.snapshot.deserialization.DeserializationBuffer;
 public class SnapshotBuffer extends TraceBuffer {
 
   public static final int FIELD_SIZE    = 8;
-  public static final int CLASS_ID_SIZE = 2;
+  public static final int CLASS_ID_SIZE = 4;
   public static final int MAX_FIELD_CNT = Byte.MAX_VALUE;
   public static final int THREAD_SHIFT  = Long.SIZE - Short.SIZE;
 
@@ -38,19 +38,18 @@ public class SnapshotBuffer extends TraceBuffer {
     return (owner.getThreadId() << THREAD_SHIFT) | start;
   }
 
-  public int addObject(final Object o, final ClassFactory classFact, final int payload) {
+  public int addObject(final Object o, final SClass clazz, final int payload) {
     assert !getRecord().containsObject(o) : "Object serialized multiple times";
 
     int oldPos = this.position;
     getRecord().addObjectEntry(o, calculateReference(oldPos));
 
-    this.putShortAt(this.position,
-        classFact.getIdentifier().getSymbolId());
+    this.putIntAt(this.position, clazz.getIdentity());
     this.position += CLASS_ID_SIZE + payload;
     return oldPos + CLASS_ID_SIZE;
   }
 
-  public int addObjectWithFields(final Object o, final ClassFactory classFact,
+  public int addObjectWithFields(final Object o, final SClass clazz,
       final int fieldCnt) {
     assert fieldCnt < MAX_FIELD_CNT;
     assert !getRecord().containsObject(o) : "Object serialized multiple times";
@@ -58,8 +57,7 @@ public class SnapshotBuffer extends TraceBuffer {
     int oldPos = this.position;
     getRecord().addObjectEntry(o, calculateReference(oldPos));
 
-    this.putShortAt(this.position,
-        classFact.getIdentifier().getSymbolId());
+    this.putIntAt(this.position, clazz.getIdentity());
     this.position += CLASS_ID_SIZE + (FIELD_SIZE * fieldCnt);
     return oldPos + CLASS_ID_SIZE;
   }
@@ -68,10 +66,10 @@ public class SnapshotBuffer extends TraceBuffer {
     // we dont put messages into our lookup table as there should be only one reference to it
     // (either from a promise or a mailbox)
     int oldPos = this.position;
-    getRecord().addMessageEntry(calculateReference(oldPos));
+    TracingActor ta = (TracingActor) owner.getCurrentActor();
+    // owner.addMessageLocation(ta.getActorId(), calculateReference(oldPos));
 
-    this.putShortAt(this.position,
-        Classes.messageClass.getFactory().getClassName().getSymbolId());
+    this.putIntAt(this.position, Classes.messageClass.getIdentity());
     this.position += CLASS_ID_SIZE + payload;
     return oldPos + CLASS_ID_SIZE;
   }

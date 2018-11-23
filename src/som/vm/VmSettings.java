@@ -39,6 +39,8 @@ public class VmSettings implements Settings {
 
   public static final String BASE_DIRECTORY;
 
+  public static final boolean SNAPSHOT_REPLAY;
+
   static {
     String prop = System.getProperty("som.threads");
     if (prop == null) {
@@ -65,6 +67,7 @@ public class VmSettings implements Settings {
     TEST_SERIALIZE_ALL = getBool("som.actorSnapshotAll", false);
     SNAPSHOTS_ENABLED = getBool("som.actorSnapshot", false) || TEST_SNAPSHOTS;
     TRACK_SNAPSHOT_ENTITIES = (REPLAY && SNAPSHOTS_ENABLED) || TEST_SNAPSHOTS;
+    SNAPSHOT_REPLAY = REPLAY && SNAPSHOTS_ENABLED;
 
     boolean dm = getBool("som.dynamicMetrics", false);
     DYNAMIC_METRICS = dm;

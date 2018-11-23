@@ -176,6 +176,14 @@ public class Actor implements Activity {
     doSend(msg, pool);
   }
 
+  public synchronized void sendSnapshotMessage(final EventualMessage msg) {
+    if (firstMessage != null) {
+      appendToMailbox(msg);
+    } else {
+      firstMessage = msg;
+    }
+  }
+
   private void doSend(final EventualMessage msg,
       final ForkJoinPool actorPool) {
     assert msg.getTarget() == this;
@@ -279,14 +287,22 @@ public class Actor implements Activity {
       if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS) {
         SnapshotBuffer sb = currentThread.getSnapshotBuffer();
         sb.getRecord().handleTodos(sb);
-        firstMessage.serialize(sb);
+        long loc = firstMessage.serialize(sb);
+        if (loc != -1) {
+          sb.getOwner().addMessageLocation(((TracingActor) actor).getActorId(),
+              sb.calculateReference(loc));
+        }
       }
       execute(firstMessage, currentThread, dbg);
 
       if (size > 1) {
         for (EventualMessage msg : mailboxExtension) {
           if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS) {
-            msg.serialize(currentThread.getSnapshotBuffer());
+            long loc = msg.serialize(currentThread.getSnapshotBuffer());
+            if (loc != -1) {
+              currentThread.addMessageLocation(((TracingActor) actor).getActorId(),
+                  currentThread.getSnapshotBuffer().calculateReference(loc));
+            }
           }
           execute(msg, currentThread, dbg);
         }
@@ -337,6 +353,10 @@ public class Actor implements Activity {
       }
 
       return true;
+    }
+
+    public TraceActorContextNode getActorContextNode() {
+      return tracer;
     }
   }
 
