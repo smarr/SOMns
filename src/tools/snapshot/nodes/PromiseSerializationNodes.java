@@ -12,6 +12,7 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.objectstorage.ClassFactory;
+import tools.concurrency.TracingActors.TracingActor;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.deserialization.FixupInformation;
@@ -238,10 +239,20 @@ public abstract class PromiseSerializationNodes {
     public void doResolver(final SResolver resolver, final SnapshotBuffer sb) {
       int base = sb.addObject(resolver, classFact, Long.BYTES);
       SPromise prom = resolver.getPromise();
-      if (!sb.getRecord().containsObject(prom)) {
-        SPromise.getPromiseClass().serialize(prom, sb);
+      if (prom.getOwner() == sb.getOwner().getCurrentActor()) {
+        if (!sb.getRecord().containsObject(prom)) {
+          SPromise.getPromiseClass().serialize(prom, sb);
+        }
+        sb.putLongAt(base, sb.getRecord().getObjectPointer(prom));
+      } else {
+        // The Promise belong to another Actor
+        TracingActor ta = (TracingActor) prom.getOwner();
+        if (!ta.getSnapshotRecord().containsObject(ta)) {
+          ta.getSnapshotRecord().farReference(prom, sb, base);
+        } else {
+          sb.putLongAt(base, ta.getSnapshotRecord().getObjectPointer(prom));
+        }
       }
-      sb.putLongAt(base, sb.getRecord().getObjectPointer(prom));
     }
 
     @Override
