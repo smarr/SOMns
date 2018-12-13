@@ -82,13 +82,13 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
       sb.putByteAt(base, (byte) args.length);
       for (int i = 0; i < args.length; i++) {
         if (args[i] == null) {
-          if (!sb.getRecord().containsObject(Nil.nilObject)) {
+          if (!sb.getRecord().containsObjectUnsync(Nil.nilObject)) {
             Classes.nilClass.serialize(Nil.nilObject, sb);
           }
           sb.putLongAt((base + 1) + i * Long.BYTES,
               sb.getRecord().getObjectPointer(Nil.nilObject));
         } else {
-          if (!sb.getRecord().containsObject(args[i])) {
+          if (!sb.getRecord().containsObjectUnsync(args[i])) {
             Types.getClassOf(args[i]).serialize(args[i], sb);
           }
           sb.putLongAt((base + 1) + i * Long.BYTES, sb.getRecord().getObjectPointer(args[i]));

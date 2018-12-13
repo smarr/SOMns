@@ -53,7 +53,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
       sb.putShortAt(base, meth.getIdentifier().getSymbolId());
       sb.putByteAt(base + 2, (byte) 1);
 
-      if (!sb.getRecord().containsObject(mf)) {
+      if (!sb.getRecord().containsObjectUnsync(mf)) {
         meth.getFrameSerializer().execute(block, sb);
       }
       sb.putLongAt(base + 3, sb.getRecord().getObjectPointer(mf));

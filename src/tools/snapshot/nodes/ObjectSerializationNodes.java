@@ -211,7 +211,7 @@ public abstract class ObjectSerializationNodes {
         // TODO optimize, maybe it is better to add an integer to the objects (indicating their
         // offset) rather than using a map.
 
-        if (!sb.getRecord().containsObject(value)) {
+        if (!sb.getRecord().containsObjectUnsync(value)) {
           // Referenced Object not yet in snapshot
           cachedSerializers[i].serialize(value, sb);
         }

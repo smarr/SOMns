@@ -353,7 +353,7 @@ public final class SystemPrims {
         SnapshotBuffer sb = new SnapshotBuffer(atp);
         ta.replaceSnapshotRecord();
 
-        if (!sb.getRecord().containsObject(receiver)) {
+        if (!sb.getRecord().containsObjectUnsync(receiver)) {
           SClass clazz = Types.getClassOf(receiver);
           clazz.serialize(receiver, sb);
           DeserializationBuffer bb = sb.getBuffer();
