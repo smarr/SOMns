@@ -10,6 +10,7 @@ import org.graalvm.collections.EconomicMap;
 import som.interpreter.nodes.dispatch.CachedSlotWrite;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.deserialization.FixupInformation.FixupList;
@@ -126,9 +127,7 @@ public class DeserializationBuffer {
       long current = position();
       printPosition(reference);
 
-      if (!deserialized.containsKey(reference)) {
-        deserialized.put(reference, null);
-      }
+      deserialized.put(reference, null);
 
       // prepare deserialize referenced object
       position(reference);
@@ -146,6 +145,32 @@ public class DeserializationBuffer {
       return o;
     } else {
       printPosition(reference);
+      return deserialized.get(reference);
+    }
+  }
+
+  public Object getMaterializedFrame(final SInvokable invokable) {
+    long reference = getLong();
+
+    lastRef = reference;
+    if (!deserialized.containsKey(reference)) {
+      long current = position();
+      deserialized.put(reference, null);
+
+      // prepare deserialize referenced object
+      position(reference);
+      // need to read the class ID even though it's actually unused
+      getInt();
+
+      depth++;
+      Object o = invokable.getFrameSerializer().deserialize(this);
+      depth--;
+      // continue with current object
+      position(current);
+      fixUpIfNecessary(reference, o);
+      deserialized.put(reference, o);
+      return o;
+    } else {
       return deserialized.get(reference);
     }
   }
