@@ -24,7 +24,7 @@ public abstract class PromiseSerializationNodes {
   private static void handleReferencedPromise(final SPromise prom,
       final SnapshotBuffer sb, final int location) {
     if (prom.getOwner() == sb.getOwner().getCurrentActor()) {
-      if (!sb.getRecord().containsObject(prom)) {
+      if (!sb.getRecord().containsObjectUnsync(prom)) {
         SPromise.getPromiseClass().serialize(prom, sb);
       }
       sb.putLongAt(location, sb.getRecord().getObjectPointer(prom));
@@ -86,7 +86,7 @@ public abstract class PromiseSerializationNodes {
       }
 
       Object value = prom.getValueForSnapshot();
-      if (!sb.getRecord().containsObject(value)) {
+      if (!sb.getRecord().containsObjectUnsync(value)) {
         Types.getClassOf(value).serialize(value, sb);
       }
       sb.putLongAt(base + 1, sb.getRecord().getObjectPointer(value));

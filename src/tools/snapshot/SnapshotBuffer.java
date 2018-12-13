@@ -39,7 +39,7 @@ public class SnapshotBuffer extends TraceBuffer {
   }
 
   public int addObject(final Object o, final SClass clazz, final int payload) {
-    assert !getRecord().containsObject(o) : "Object serialized multiple times";
+    assert !getRecord().containsObjectUnsync(o) : "Object serialized multiple times";
 
     int oldPos = this.position;
     getRecord().addObjectEntry(o, calculateReference(oldPos));
@@ -52,7 +52,7 @@ public class SnapshotBuffer extends TraceBuffer {
   public int addObjectWithFields(final Object o, final SClass clazz,
       final int fieldCnt) {
     assert fieldCnt < MAX_FIELD_CNT;
-    assert !getRecord().containsObject(o) : "Object serialized multiple times";
+    assert !getRecord().containsObjectUnsync(o) : "Object serialized multiple times";
 
     int oldPos = this.position;
     getRecord().addObjectEntry(o, calculateReference(oldPos));

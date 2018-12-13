@@ -30,8 +30,17 @@ public class SnapshotRecord {
     this.externalReferences = new ConcurrentLinkedQueue<>();
   }
 
-  public boolean containsObject(final Object o) {
+  /**
+   * only use this in the actor that owns this record (only the owner adds entries).
+   */
+  public boolean containsObjectUnsync(final Object o) {
     return entries.containsKey(o);
+  }
+
+  public boolean containsObject(final Object o) {
+    synchronized (entries) {
+      return entries.containsKey(o);
+    }
   }
 
   public long getObjectPointer(final Object o) {
@@ -54,7 +63,7 @@ public class SnapshotRecord {
 
       // ignore todos from a different snapshot
       if (frt.referer.snapshotVersion == sb.snapshotVersion) {
-        if (!this.containsObject(frt.target)) {
+        if (!this.containsObjectUnsync(frt.target)) {
           Types.getClassOf(frt.target).serialize(frt.target, sb);
         }
 

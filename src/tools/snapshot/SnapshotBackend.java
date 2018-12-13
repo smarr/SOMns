@@ -354,7 +354,7 @@ public class SnapshotBackend {
       // TODO if necessary keep actual ownership information, for now we assume all the class
       // creation is happening in the main actor.
       TracingActor owner = (TracingActor) vm.getMainActor();
-      if (!owner.getSnapshotRecord().containsObject(outer)) {
+      if (!owner.getSnapshotRecord().containsObjectUnsync(outer)) {
         // just use the first buffer available; that object isn't used anywhere else
         outer.getSOMClass().serialize(outer, buffers.peek());
       }
