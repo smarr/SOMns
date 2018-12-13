@@ -41,6 +41,8 @@ public final class TraceParser {
   private long parsedActors   = 0;
 
   private static TraceParser parser;
+  private static String      traceName =
+      VmSettings.TRACE_FILE + (VmSettings.SNAPSHOTS_ENABLED ? ".0" : "");
 
   private final TraceRecord[] parseTable;
 
@@ -112,7 +114,7 @@ public final class TraceParser {
 
   private void parseTrace() {
     boolean readMainActor = false;
-    File traceFile = new File(VmSettings.TRACE_FILE + ".trace");
+    File traceFile = new File(traceName + ".trace");
 
     int sender = 0;
     int resolver = 0;
@@ -255,7 +257,7 @@ public final class TraceParser {
   }
 
   private ByteBuffer readExternalData(final long position) {
-    File traceFile = new File(VmSettings.TRACE_FILE + ".dat");
+    File traceFile = new File(traceName + ".dat");
     try (FileInputStream fis = new FileInputStream(traceFile);
         FileChannel channel = fis.getChannel()) {
 
@@ -282,7 +284,7 @@ public final class TraceParser {
   }
 
   private void parseExternalData() {
-    File traceFile = new File(VmSettings.TRACE_FILE + ".dat");
+    File traceFile = new File(traceName + ".dat");
 
     ByteBuffer bb = ByteBuffer.allocate(12);
     bb.order(ByteOrder.LITTLE_ENDIAN);

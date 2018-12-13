@@ -35,6 +35,12 @@ replay_tests:
   script:
     - timeout 10m ant -Dskip.graal=true replay-tests
 
+snapshot_tests:
+  stage: full-test
+  tags: [benchmarks, infinity]
+  script:
+    - timeout 10m ant -Dskip.graal=true snapshot-tests
+
 svm_tests:
   stage: full-test
   tags: [benchmarks, infinity]

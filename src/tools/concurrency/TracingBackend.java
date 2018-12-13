@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
 
 import javax.management.Notification;
@@ -79,12 +80,6 @@ public class TracingBackend {
   private static final ArrayBlockingQueue<byte[]> emptyBuffers =
       new ArrayBlockingQueue<>(BUFFER_POOL_SIZE);
 
-  private static final ArrayBlockingQueue<BufferAndLimit> fullBuffers =
-      new ArrayBlockingQueue<>(BUFFER_POOL_SIZE);
-
-  private static final java.util.concurrent.ConcurrentLinkedQueue<Object[]> externalData =
-      new java.util.concurrent.ConcurrentLinkedQueue<Object[]>();
-
   // contains symbols that need to be written to file/sent to debugger,
   // e.g. actor type, message type
   private static final ArrayList<SSymbol> symbolsToWrite =
@@ -93,7 +88,17 @@ public class TracingBackend {
   private static FrontendConnector front = null;
 
   private static long              collectedMemory = 0;
-  private static TraceWorkerThread workerThread;
+  /**
+   * Used for writing the traces in normal actor Tracing.
+   * When snapshoting, this points to the worker responsible for the trace
+   * associated with the current snapshot.
+   */
+  private static TraceWorkerThread currentWorkerThread;
+  /**
+   * When snapshoting, this points to the worker that handles remaining
+   * trace data belonging to the previous snapshot.
+   */
+  private static TraceWorkerThread previousWorkerThread;
 
   static {
     if (VmSettings.MEMORY_TRACING) {
@@ -175,6 +180,15 @@ public class TracingBackend {
     returnBufferGlobally(new BufferAndLimit(buffer, pos));
   }
 
+  static void returnBuffer(final byte[] buffer, final int pos, final byte snapshotVersion) {
+    if (buffer == null) {
+      return;
+    }
+
+    returnBufferGlobally(snapshotVersion,
+        new BufferAndLimit(buffer, pos));
+  }
+
   private static final class BufferAndLimit {
     final byte[] buffer;
     final int    limit;
@@ -191,7 +205,19 @@ public class TracingBackend {
 
   @TruffleBoundary
   private static void returnBufferGlobally(final BufferAndLimit buffer) {
-    boolean inserted = fullBuffers.offer(buffer);
+    boolean inserted = currentWorkerThread.fullBuffers.offer(buffer);
+    assert inserted;
+  }
+
+  @TruffleBoundary
+  private static void returnBufferGlobally(final byte snapshotVersion,
+      final BufferAndLimit buffer) {
+    boolean inserted;
+    if (snapshotVersion == currentWorkerThread.snapshotVersion) {
+      inserted = currentWorkerThread.fullBuffers.offer(buffer);
+    } else {
+      inserted = previousWorkerThread.fullBuffers.offer(buffer);
+    }
     assert inserted;
   }
 
@@ -252,7 +278,9 @@ public class TracingBackend {
       }
     }
 
-    while (!fullBuffers.isEmpty()) {
+    // forceSwap should only happen for kompos.
+    // => only the first worker thread is used.
+    while (!currentWorkerThread.fullBuffers.isEmpty()) {
       // wait until the worker thread processed all the buffers
       try {
         Thread.sleep(1);
@@ -263,27 +291,57 @@ public class TracingBackend {
   }
 
   public static final long[] getStatistics() {
-    if (workerThread == null) {
+    if (currentWorkerThread == null) {
       return new long[] {0, 0};
     }
 
-    long[] stats = new long[] {workerThread.traceBytes, workerThread.externalBytes};
+    long[] stats =
+        new long[] {currentWorkerThread.traceBytes, currentWorkerThread.externalBytes};
 
-    workerThread.traceBytes = 0;
-    workerThread.externalBytes = 0;
+    currentWorkerThread.traceBytes = 0;
+    currentWorkerThread.externalBytes = 0;
     return stats;
   }
 
   @TruffleBoundary
-  public static final void addExternalData(final Object[] b) {
+  public static final void addExternalData(final Object[] b,
+      final TracingActivityThread thread) {
     assert b != null;
-    externalData.add(b);
+
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      if (thread.getSnapshotId() == currentWorkerThread.snapshotVersion) {
+        currentWorkerThread.externalData.add(b);
+      } else {
+        previousWorkerThread.externalData.add(b);
+      }
+    } else {
+      currentWorkerThread.externalData.add(b);
+    }
   }
 
   public static void startTracingBackend() {
     // start worker thread for trace processing
-    workerThread = new TraceWorkerThread();
-    workerThread.start();
+    currentWorkerThread = new TraceWorkerThread();
+    currentWorkerThread.start();
+  }
+
+  /**
+   * This Method notifies the TracingBackend that a new snapshot was triggered.
+   * As a result we need to update the workers accordingly.
+   */
+  @TruffleBoundary
+  public static void newSnapshot(final byte newSnapshotVersion) {
+    TraceWorkerThread outDatedWorker;
+
+    outDatedWorker = previousWorkerThread;
+    previousWorkerThread = currentWorkerThread;
+    currentWorkerThread = new TraceWorkerThread(newSnapshotVersion);
+    currentWorkerThread.start();
+
+    if (outDatedWorker != null) {
+      // worker will terminate
+      outDatedWorker.cont = false;
+    }
   }
 
   /**
@@ -300,15 +358,22 @@ public class TracingBackend {
   }
 
   public static void waitForTrace() {
-    if (workerThread == null) {
-      return;
+    if (currentWorkerThread != null) {
+      currentWorkerThread.cont = false;
+      try {
+        currentWorkerThread.join(TRACE_TIMEOUT);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
     }
 
-    workerThread.cont = false;
-    try {
-      workerThread.join(TRACE_TIMEOUT);
-    } catch (InterruptedException e) {
-      throw new RuntimeException(e);
+    if (previousWorkerThread != null) {
+      previousWorkerThread.cont = false;
+      try {
+        previousWorkerThread.join(TRACE_TIMEOUT);
+      } catch (InterruptedException e) {
+        throw new RuntimeException(e);
+      }
     }
   }
 
@@ -318,11 +383,24 @@ public class TracingBackend {
     protected long traceBytes;
     protected long externalBytes;
 
+    private final ArrayBlockingQueue<BufferAndLimit> fullBuffers  =
+        new ArrayBlockingQueue<>(BUFFER_POOL_SIZE);
+    private final ConcurrentLinkedQueue<Object[]>    externalData =
+        new ConcurrentLinkedQueue<Object[]>();
+
+    byte snapshotVersion;
+
+    protected TraceWorkerThread(final byte snapshotVersion) {
+      this.snapshotVersion = snapshotVersion;
+    }
+
+    protected TraceWorkerThread() {}
+
     private BufferAndLimit tryToObtainBuffer() {
       BufferAndLimit buffer;
       try {
         buffer =
-            TracingBackend.fullBuffers.poll(VmSettings.BUFFER_TIMEOUT, TimeUnit.MILLISECONDS);
+            fullBuffers.poll(VmSettings.BUFFER_TIMEOUT, TimeUnit.MILLISECONDS);
         if (buffer == null) {
           return null;
         } else {
@@ -335,8 +413,8 @@ public class TracingBackend {
 
     private void writeExternalData(final FileOutputStream edfos) throws IOException {
       while (!externalData.isEmpty()) {
-        Object[] o = externalData.poll();
-        for (Object oo : o) {
+        Object[] external = externalData.poll();
+        for (Object oo : external) {
           if (oo == null) {
             continue;
           }
@@ -461,6 +539,7 @@ public class TracingBackend {
         fos.getChannel().write(buffer.getReadingFromStartBuffer());
         fos.flush();
       }
+
       traceBytes += buffer.limit;
       if (VmSettings.RECYCLE_BUFFERS) {
         TracingBackend.emptyBuffers.add(buffer.buffer);
@@ -470,8 +549,7 @@ public class TracingBackend {
     private void processTraceData(final FileOutputStream traceDataStream,
         final FileOutputStream externalDataStream,
         final BufferedWriter symbolStream) throws IOException {
-      while (cont || !TracingBackend.fullBuffers.isEmpty()
-          || !TracingBackend.externalData.isEmpty()) {
+      while (cont || !fullBuffers.isEmpty() || !externalData.isEmpty()) {
         writeExternalData(externalDataStream);
 
         BufferAndLimit b = tryToObtainBuffer();
@@ -490,9 +568,12 @@ public class TracingBackend {
 
     @Override
     public void run() {
-      File f = new File(VmSettings.TRACE_FILE + ".trace");
-      File sf = new File(VmSettings.TRACE_FILE + ".sym");
-      File edf = new File(VmSettings.TRACE_FILE + ".dat");
+      String name =
+          VmSettings.TRACE_FILE + (VmSettings.SNAPSHOTS_ENABLED ? "." + snapshotVersion : "");
+
+      File f = new File(name + ".trace");
+      File sf = new File(name + ".sym");
+      File edf = new File(name + ".dat");
       f.getParentFile().mkdirs();
 
       try {

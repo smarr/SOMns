@@ -5,6 +5,7 @@ import java.nio.ByteOrder;
 
 import org.graalvm.collections.EconomicMap;
 
+import som.interpreter.actors.Actor;
 import som.vmobjects.SClass;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.deserialization.FixupInformation.FixupList;
@@ -46,18 +47,18 @@ public class DeserializationBuffer {
     return wrapped.getDouble();
   }
 
-  public Object deserialize() {
-    int current = position();
-    assert !deserialized.containsKey((long) current);
+  public Object deserialize(final long current) {
+    assert !deserialized.containsKey(current);
+    this.position((int) current);
 
     // to avoid endless loop, when null is read we replace it with a linked list containing
     // fixup information
-    deserialized.put((long) current, null);
+    deserialized.put(current, null);
     short cId = getShort();
     Object o = SnapshotBackend.lookupClass(cId).getSerializer().deserialize(this);
 
     fixUpIfNecessary(current, o);
-    deserialized.put((long) current, o);
+    deserialized.put(current, o);
     return o;
   }
 
@@ -89,7 +90,7 @@ public class DeserializationBuffer {
     return o == null || o instanceof FixupList;
   }
 
-  public void installFixup(final FixupInformation fi) {
+  public synchronized void installFixup(final FixupInformation fi) {
     FixupList fl = (FixupList) deserialized.get(lastRef);
     if (fl == null) {
       deserialized.put(lastRef, new FixupList(fi));
@@ -98,7 +99,7 @@ public class DeserializationBuffer {
     }
   }
 
-  private void fixUpIfNecessary(final long reference, final Object result) {
+  private synchronized void fixUpIfNecessary(final long reference, final Object result) {
     Object ref = deserialized.get(reference);
     if (ref instanceof FixupList) {
       // we have fixup information, this means that this object is part of a circular
@@ -115,5 +116,9 @@ public class DeserializationBuffer {
 
   public void position(final int newPosition) {
     wrapped.position(newPosition);
+  }
+
+  public Actor getActor() {
+    return null;
   }
 }

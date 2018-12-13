@@ -1,9 +1,12 @@
 package som.interpreter.actors;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+
+import som.interpreter.objectstorage.ClassFactory;
+import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
-
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.FarRefSerializationNodeFactory;
 
 
 public final class SFarReference extends SAbstractObject {
@@ -48,5 +51,9 @@ public final class SFarReference extends SAbstractObject {
   public static void setSOMClass(final SClass cls) {
     assert farReferenceClass == null || cls == null;
     farReferenceClass = cls;
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      ClassFactory group = farReferenceClass.getInstanceFactory();
+      group.getSerializer().replace(FarRefSerializationNodeFactory.create(group));
+    }
   }
 }

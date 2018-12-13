@@ -12,6 +12,7 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.objectstorage.ClassFactory;
+import tools.concurrency.TracingActors.TracingActor;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.deserialization.FixupInformation;
@@ -43,10 +44,10 @@ public abstract class PromiseSerializationNodes {
       }
 
       Object value = prom.getValueForSnapshot();
-      if (!sb.containsObject(value)) {
+      if (!sb.getRecord().containsObject(value)) {
         Types.getClassOf(value).serialize(value, sb);
       }
-      sb.putLongAt(base + 1, sb.getObjectPointer(value));
+      sb.putLongAt(base + 1, sb.getRecord().getObjectPointer(value));
     }
 
     @Specialization(guards = "!prom.isCompleted()")
@@ -141,14 +142,14 @@ public abstract class PromiseSerializationNodes {
       base += 2;
       if (cnt > 0) {
         SPromise.getPromiseClass().serialize(chainedProm, sb);
-        sb.putLongAt(base, sb.getObjectPointer(chainedProm));
+        sb.putLongAt(base, sb.getRecord().getObjectPointer(chainedProm));
         base += Long.BYTES;
 
         if (cnt > 1) {
           for (int i = 0; i < chainedPromExt.size(); i++) {
             SPromise p = chainedPromExt.get(i);
             SPromise.getPromiseClass().serialize(p, sb);
-            sb.putLongAt(base + i * Long.BYTES, sb.getObjectPointer(p));
+            sb.putLongAt(base + i * Long.BYTES, sb.getRecord().getObjectPointer(p));
           }
         }
       }
@@ -238,10 +239,20 @@ public abstract class PromiseSerializationNodes {
     public void doResolver(final SResolver resolver, final SnapshotBuffer sb) {
       int base = sb.addObject(resolver, classFact, Long.BYTES);
       SPromise prom = resolver.getPromise();
-      if (!sb.containsObject(prom)) {
-        SPromise.getPromiseClass().serialize(prom, sb);
+      if (prom.getOwner() == sb.getOwner().getCurrentActor()) {
+        if (!sb.getRecord().containsObject(prom)) {
+          SPromise.getPromiseClass().serialize(prom, sb);
+        }
+        sb.putLongAt(base, sb.getRecord().getObjectPointer(prom));
+      } else {
+        // The Promise belong to another Actor
+        TracingActor ta = (TracingActor) prom.getOwner();
+        if (!ta.getSnapshotRecord().containsObject(ta)) {
+          ta.getSnapshotRecord().farReference(prom, sb, base);
+        } else {
+          sb.putLongAt(base, ta.getSnapshotRecord().getObjectPointer(prom));
+        }
       }
-      sb.putLongAt(base, sb.getObjectPointer(prom));
     }
 
     @Override

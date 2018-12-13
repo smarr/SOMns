@@ -409,6 +409,11 @@
       </exec>
     </target>
 
+    <target name="snapshot-tests" depends="compile">
+      <exec executable="tests/snapshot/test.sh" failonerror="true">
+      </exec>
+    </target>
+
     <target name="core-tests" depends="unit-tests,som-tests,dynamic-metrics-tests,superinstructions-tests">
     </target>
 

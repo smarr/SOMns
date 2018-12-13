@@ -4,6 +4,7 @@ import java.lang.reflect.Field;
 
 import com.oracle.truffle.api.CompilerDirectives;
 
+import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.vm.VmSettings;
 import sun.misc.Unsafe;
 import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
@@ -47,11 +48,13 @@ public abstract class TraceBuffer {
         byte[].class) == 1 : "Expect byte elements to be exactly one byte in size.";
   }
 
-  protected byte[] buffer;
-  protected int    position;
+  protected byte[]  buffer;
+  protected int     position;
+  private final int bufferSize;
 
   protected TraceBuffer() {
     buffer = TracingBackend.getEmptyBuffer();
+    this.bufferSize = VmSettings.BUFFER_SIZE;
   }
 
   protected TraceBuffer(final boolean create) {
@@ -60,17 +63,23 @@ public abstract class TraceBuffer {
     } else {
       buffer = TracingBackend.getEmptyBuffer();
     }
+    this.bufferSize = VmSettings.BUFFER_SIZE;
+  }
+
+  protected TraceBuffer(final int size) {
+    this.buffer = new byte[size];
+    this.bufferSize = size;
   }
 
   public int position() {
-    assert position <= VmSettings.BUFFER_SIZE;
+    assert position <= bufferSize;
     assert position <= buffer.length;
     return position;
   }
 
   public void position(final int newPosition) {
     assert newPosition >= 0;
-    assert newPosition <= VmSettings.BUFFER_SIZE;
+    assert newPosition <= bufferSize;
     assert newPosition <= buffer.length;
     if (newPosition < 0) {
       CompilerDirectives.transferToInterpreter();
@@ -80,14 +89,14 @@ public abstract class TraceBuffer {
   }
 
   private int nextPutIndex() {
-    assert position + 1 <= VmSettings.BUFFER_SIZE;
+    assert position + 1 <= bufferSize;
     assert position + 1 <= buffer.length;
     return position++;
 
   }
 
   private int nextPutIndex(final int nb) {
-    assert position + nb <= VmSettings.BUFFER_SIZE;
+    assert position + nb <= bufferSize;
     assert position + nb <= buffer.length;
     int p = position;
     position += nb;
@@ -95,7 +104,12 @@ public abstract class TraceBuffer {
   }
 
   public final void returnBuffer(final byte[] nextBuffer) {
-    TracingBackend.returnBuffer(buffer, position);
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      TracingBackend.returnBuffer(buffer, position,
+          ActorProcessingThread.currentThread().getSnapshotId());
+    } else {
+      TracingBackend.returnBuffer(buffer, position);
+    }
     buffer = nextBuffer;
     position = 0;
   }
@@ -109,13 +123,13 @@ public abstract class TraceBuffer {
   }
 
   public boolean isFull() {
-    assert (position == VmSettings.BUFFER_SIZE) == ((buffer.length - position) == 0);
-    return position == VmSettings.BUFFER_SIZE;
+    assert (position == bufferSize) == ((buffer.length - position) == 0);
+    return position == bufferSize;
   }
 
   public final boolean ensureSufficientSpace(final int requiredSpace,
       final TraceActorContextNode tracer) {
-    if (position + requiredSpace >= VmSettings.BUFFER_SIZE) {
+    if (position + requiredSpace >= bufferSize) {
       swapBufferWhenNotEnoughSpace(tracer);
       return true;
     }
@@ -127,74 +141,74 @@ public abstract class TraceBuffer {
   }
 
   public void putByteAt(final int idx, final byte x) {
-    assert buffer.length >= VmSettings.BUFFER_SIZE;
-    assert 0 <= idx && idx < VmSettings.BUFFER_SIZE;
+    assert buffer.length >= bufferSize;
+    assert 0 <= idx && idx < bufferSize;
     UNSAFE.putByte(buffer, BYTE_ARR_BASE_OFFSET + idx, x);
   }
 
   public void putShortAt(final int idx, final short x) {
-    assert buffer.length >= VmSettings.BUFFER_SIZE;
-    assert 0 <= idx && (idx + 2) < VmSettings.BUFFER_SIZE;
+    assert buffer.length >= bufferSize;
+    assert 0 <= idx && (idx + 2) < bufferSize;
     UNSAFE.putShort(buffer, BYTE_ARR_BASE_OFFSET + idx, x);
   }
 
   public void putIntAt(final int idx, final int x) {
-    assert buffer.length >= VmSettings.BUFFER_SIZE;
-    assert 0 <= idx && (idx + 4) < VmSettings.BUFFER_SIZE;
+    assert buffer.length >= bufferSize;
+    assert 0 <= idx && (idx + 4) < bufferSize;
     UNSAFE.putInt(buffer, BYTE_ARR_BASE_OFFSET + idx, x);
   }
 
   public void putLongAt(final int idx, final long x) {
-    assert buffer.length >= VmSettings.BUFFER_SIZE;
-    assert 0 <= idx && (idx + 8) < VmSettings.BUFFER_SIZE;
+    assert buffer.length >= bufferSize;
+    assert 0 <= idx && (idx + 8) < bufferSize;
     UNSAFE.putLong(buffer, BYTE_ARR_BASE_OFFSET + idx, x);
   }
 
   public void putDoubleAt(final int idx, final double x) {
-    assert buffer.length >= VmSettings.BUFFER_SIZE;
-    assert 0 <= idx && (idx + 8) < VmSettings.BUFFER_SIZE;
+    assert buffer.length >= bufferSize;
+    assert 0 <= idx && (idx + 8) < bufferSize;
     UNSAFE.putDouble(buffer, BYTE_ARR_BASE_OFFSET + idx, x);
   }
 
   public void putByteShortAt(final int idx, final byte a, final short b) {
-    assert buffer.length >= VmSettings.BUFFER_SIZE;
-    assert 0 <= idx && (idx + 1 + 2) < VmSettings.BUFFER_SIZE;
+    assert buffer.length >= bufferSize;
+    assert 0 <= idx && (idx + 1 + 2) < bufferSize;
     UNSAFE.putByte(buffer, BYTE_ARR_BASE_OFFSET + idx, a);
     UNSAFE.putShort(buffer, BYTE_ARR_BASE_OFFSET + idx + 1, b);
   }
 
   protected final void put(final byte x) {
-    assert buffer.length >= VmSettings.BUFFER_SIZE;
-    assert 0 <= position && (position + 1) < VmSettings.BUFFER_SIZE;
+    assert buffer.length >= bufferSize;
+    assert 0 <= position && (position + 1) < bufferSize;
     UNSAFE.putByte(buffer, BYTE_ARR_BASE_OFFSET + nextPutIndex(), x);
   }
 
   public void putByteInt(final byte a, final int b) {
     int bi = nextPutIndex(1 + 4);
     putByteAt(bi, a);
-    assert buffer.length >= VmSettings.BUFFER_SIZE;
-    assert (0 <= bi + 1) && (bi + 1 + 4) < VmSettings.BUFFER_SIZE;
+    assert buffer.length >= bufferSize;
+    assert (0 <= bi + 1) && (bi + 1 + 4) < bufferSize;
     UNSAFE.putInt(buffer, BYTE_ARR_BASE_OFFSET + bi + 1, b);
   }
 
   protected final void putShort(final short x) {
     int bi = nextPutIndex(2);
-    assert buffer.length >= VmSettings.BUFFER_SIZE;
-    assert 0 <= bi && (bi + 2) < VmSettings.BUFFER_SIZE;
+    assert buffer.length >= bufferSize;
+    assert 0 <= bi && (bi + 2) < bufferSize;
     UNSAFE.putShort(buffer, BYTE_ARR_BASE_OFFSET + bi, x);
   }
 
   protected final void putInt(final int x) {
     int bi = nextPutIndex(4);
-    assert buffer.length >= VmSettings.BUFFER_SIZE;
-    assert 0 <= bi && (bi + 4) < VmSettings.BUFFER_SIZE;
+    assert buffer.length >= bufferSize;
+    assert 0 <= bi && (bi + 4) < bufferSize;
     UNSAFE.putInt(buffer, BYTE_ARR_BASE_OFFSET + bi, x);
   }
 
   protected final void putLong(final long x) {
     int bi = nextPutIndex(8);
-    assert buffer.length >= VmSettings.BUFFER_SIZE;
-    assert 0 <= bi && (bi + 8) < VmSettings.BUFFER_SIZE;
+    assert buffer.length >= bufferSize;
+    assert 0 <= bi && (bi + 8) < bufferSize;
     UNSAFE.putLong(buffer, BYTE_ARR_BASE_OFFSET + bi, x);
   }
 
@@ -203,8 +217,8 @@ public abstract class TraceBuffer {
   }
 
   public void putBytesAt(final int idx, final byte[] bytes) {
-    assert buffer.length >= VmSettings.BUFFER_SIZE;
-    assert 0 <= idx && (idx + bytes.length) < VmSettings.BUFFER_SIZE;
+    assert buffer.length >= bufferSize;
+    assert 0 <= idx && (idx + bytes.length) < bufferSize;
     UNSAFE.copyMemory(bytes, BYTE_ARR_BASE_OFFSET, buffer, BYTE_ARR_BASE_OFFSET + idx,
         bytes.length);
   }

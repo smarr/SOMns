@@ -18,6 +18,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
+import tools.snapshot.SnapshotRecord;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.deserialization.FixupInformation;
 
@@ -31,6 +32,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
     super(classFact);
   }
 
+  // TODO specialize on different blocks
   @Specialization
   public void serialize(final SBlock block, final SnapshotBuffer sb) {
 
@@ -55,9 +57,11 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
       sb.putByteAt(base + 2, (byte) args.length);
       base += 3;
 
+      SnapshotRecord record = sb.getRecord();
       for (int i = 0; i < args.length; i++) {
+        // TODO optimization: cache argument serialization
         Types.getClassOf(args[i]).serialize(args[i], sb);
-        sb.putLongAt(base + (i * Long.BYTES), sb.getObjectPointer(args[i]));
+        sb.putLongAt(base + (i * Long.BYTES), record.getObjectPointer(args[i]));
       }
 
       base += (args.length * Long.BYTES);
@@ -101,7 +105,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
             throw new IllegalArgumentException("Unexpected SlotKind");
         }
 
-        sb.putLongAt(base + (j * Long.BYTES), sb.getObjectPointer(value));
+        sb.putLongAt(base + (j * Long.BYTES), sb.getRecord().getObjectPointer(value));
         j++;
         // dont redo frame!
         // just serialize locals and arguments ordered by their slotnumber

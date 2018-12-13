@@ -461,7 +461,7 @@ public final class ObjectSystem {
 
   public void setDummyClassFactory(final SClass clazz,
       final NodeFactory<? extends AbstractSerializationNode> serializerFactory) {
-    if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
+    if (VmSettings.SNAPSHOTS_ENABLED) {
       ClassFactory classFactory = new ClassFactory(clazz.getSOMClass().getName(), null,
           null, null, true,
           true, false,
@@ -544,8 +544,7 @@ public final class ObjectSystem {
     DirectMessage msg = new DirectMessage(mainActor, start,
         new Object[] {platform}, mainActor,
         null, EventualSendNode.createOnReceiveCallTargetForVMMain(
-            start, 1, source, mainThreadCompleted, compiler.getLanguage()),
-        false, false);
+            start, 1, source, mainThreadCompleted, compiler.getLanguage()));
     mainActor.sendInitialStartMessage(msg, vm.getActorPool());
 
     try {

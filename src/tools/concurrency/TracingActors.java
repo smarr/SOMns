@@ -25,6 +25,8 @@ import tools.concurrency.TraceParser.MessageRecord;
 import tools.concurrency.TraceParser.PromiseMessageRecord;
 import tools.debugger.WebDebugger;
 import tools.replay.actors.ExternalMessage;
+import tools.snapshot.SnapshotRecord;
+import tools.snapshot.deserialization.DeserializationBuffer;
 
 
 public class TracingActors {
@@ -33,6 +35,7 @@ public class TracingActors {
     protected final int                actorId;
     protected short                    ordering;
     protected int                      nextDataID;
+    protected SnapshotRecord           snapshotRecord;
 
     /**
      * Flag that indicates if a step-to-next-turn action has been made in the previous message.
@@ -42,6 +45,9 @@ public class TracingActors {
     public TracingActor(final VM vm) {
       super(vm);
       this.actorId = IdGen.getAndIncrement();
+      if (VmSettings.SNAPSHOTS_ENABLED) {
+        snapshotRecord = new SnapshotRecord();
+      }
     }
 
     protected TracingActor(final VM vm, final int id) {
@@ -65,6 +71,18 @@ public class TracingActors {
       return stepToNextTurn;
     }
 
+    public SnapshotRecord getSnapshotRecord() {
+      assert VmSettings.SNAPSHOTS_ENABLED;
+      return snapshotRecord;
+    }
+
+    /**
+     * For testing purposes.
+     */
+    public void replaceSnapshotRecord() {
+      this.snapshotRecord = new SnapshotRecord();
+    }
+
     @Override
     public void setStepToNextTurn(final boolean stepToNextTurn) {
       this.stepToNextTurn = stepToNextTurn;
@@ -83,6 +101,15 @@ public class TracingActors {
       if (msg.getHaltOnPromiseMessageResolution()) {
         dbg.prepareSteppingUntilNextRootNode(Thread.currentThread());
       }
+    }
+
+    /**
+     * To be Overrriden by ReplayActor.
+     *
+     * @return null
+     */
+    public DeserializationBuffer getDeserializationBuffer() {
+      return null;
     }
   }
 

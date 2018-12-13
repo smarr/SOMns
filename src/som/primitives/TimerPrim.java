@@ -100,7 +100,7 @@ public abstract class TimerPrim extends BinarySystemOperation {
       public void run() {
         ExternalDirectMessage msg = new ExternalDirectMessage(targetActor,
             VALUE_SELECTOR, new Object[] {target}, timerActor, null, valueCallTarget,
-            false, false, (short) 0, id);
+            (short) 0, id);
         targetActor.send(msg, actorPool);
       }
     }, timeout);

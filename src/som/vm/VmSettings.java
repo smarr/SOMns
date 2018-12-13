@@ -21,6 +21,8 @@ public class VmSettings implements Settings {
   public static final boolean TRACE_SMALL_IDS;
   public static final boolean SNAPSHOTS_ENABLED;
   public static final boolean TRACK_SNAPSHOT_ENTITIES;
+  public static final boolean TEST_SNAPSHOTS;
+  public static final boolean TEST_SERIALIZE_ALL;
 
   public static final boolean TRUFFLE_DEBUGGER_ENABLED;
 
@@ -59,10 +61,10 @@ public class VmSettings implements Settings {
 
     ACTOR_TRACING = getBool("som.actorTracing", false);
 
-    SNAPSHOTS_ENABLED =
-        getBool("som.actorSnapshot", false) || getBool("som.snapshotTest", false);
-    TRACK_SNAPSHOT_ENTITIES =
-        (REPLAY && SNAPSHOTS_ENABLED) || getBool("som.snapshotTest", false);
+    TEST_SNAPSHOTS = getBool("som.snapshotTest", false);
+    TEST_SERIALIZE_ALL = getBool("som.actorSnapshotAll", false);
+    SNAPSHOTS_ENABLED = getBool("som.actorSnapshot", false) || TEST_SNAPSHOTS;
+    TRACK_SNAPSHOT_ENTITIES = (REPLAY && SNAPSHOTS_ENABLED) || TEST_SNAPSHOTS;
 
     boolean dm = getBool("som.dynamicMetrics", false);
     DYNAMIC_METRICS = dm;

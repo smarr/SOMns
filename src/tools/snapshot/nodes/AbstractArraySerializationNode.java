@@ -7,6 +7,7 @@ import som.interpreter.Types;
 import som.interpreter.objectstorage.ClassFactory;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
+import som.vmobjects.SArray.PartiallyEmptyArray;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.deserialization.FixupInformation;
@@ -82,7 +83,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
     base += 5;
     for (Object obj : oa) {
       Types.getClassOf(obj).serialize(obj, sb);
-      long pos = sb.getObjectPointer(obj);
+      long pos = sb.getRecord().getObjectPointer(obj);
       sb.putLongAt(base, pos);
       base += Long.BYTES;
     }
@@ -93,6 +94,24 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
     int base = sb.addObject(sa, classFact, 5);
     sb.putByteAt(base, TYPE_EMPTY);
     sb.putIntAt(base + 1, sa.getEmptyStorage());
+  }
+
+  @Specialization(guards = "sa.isPartiallyEmptyType()")
+  protected void doPartiallyEmpty(final SArray sa, final SnapshotBuffer sb) {
+    PartiallyEmptyArray pea = sa.getPartiallyEmptyStorage();
+
+    Object[] oa = pea.getStorage();
+    int requiredSpace = oa.length * 8;
+    int base = sb.addObject(sa, classFact, requiredSpace + 5);
+    sb.putByteAt(base, TYPE_OBJECT);
+    sb.putIntAt(base + 1, oa.length);
+    base += 5;
+    for (Object obj : oa) {
+      Types.getClassOf(obj).serialize(obj, sb);
+      long pos = sb.getRecord().getObjectPointer(obj);
+      sb.putLongAt(base, pos);
+      base += Long.BYTES;
+    }
   }
 
   protected Object parseBackingStorage(final DeserializationBuffer sb) {

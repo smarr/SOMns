@@ -14,6 +14,7 @@ import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActivityThread;
+import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 
 
@@ -21,7 +22,14 @@ public abstract class EventualMessage {
   protected final Object[]       args;
   protected final SResolver      resolver;
   protected final RootCallTarget onReceive;
-  protected final long           messageId;
+
+  /**
+   * Contains the messageId for Kompos tracing.
+   * This field is reused for snapshotting. It then contains the snapshot version at send
+   * time. The snapshot version is used to determine whether the message needs to be
+   * serialized.
+   */
+  @CompilationFinal protected long messageId;
 
   /**
    * Indicates the case that an asynchronous message has a receiver breakpoint.
@@ -73,8 +81,14 @@ public abstract class EventualMessage {
 
   public long serialize(final SnapshotBuffer sb) {
     ReceivedRootNode rm = (ReceivedRootNode) this.onReceive.getRootNode();
-    // Not sure if this is optimized, worst case need to duplicate this for all messages
-    return rm.getSerializer().execute(this, sb);
+
+    if (sb.needsToBeSnapshot(getMessageId())) {
+      // Not sure if this is optimized, worst case need to duplicate this for all messages
+      return rm.getSerializer().execute(this, sb);
+    } else {
+      // need to be careful, might interfere with promise serialization...
+      return -1;
+    }
   }
 
   /**
@@ -97,6 +111,31 @@ public abstract class EventualMessage {
       this.selector = selector;
       this.sender = sender;
       this.target = target;
+
+      if (VmSettings.SNAPSHOTS_ENABLED) {
+        this.messageId = ActorProcessingThread.currentThread().getSnapshotId();
+      }
+
+      assert target != null;
+      assert !(args[0] instanceof SFarReference) : "needs to be guaranted by call to this constructor";
+      assert !(args[0] instanceof SPromise);
+    }
+
+    /**
+     * Constructor for non TracingActivityThreads, i.e. used for the initial start message or
+     * TimerPrim
+     */
+    protected AbstractDirectMessage(final Actor target, final SSymbol selector,
+        final Object[] arguments, final Actor sender, final SResolver resolver,
+        final RootCallTarget onReceive) {
+      super(arguments, resolver, onReceive, false, false);
+      this.selector = selector;
+      this.sender = sender;
+      this.target = target;
+
+      if (VmSettings.SNAPSHOTS_ENABLED) {
+        this.messageId = SnapshotBackend.getSnapshotVersion();
+      }
 
       assert target != null;
       assert !(args[0] instanceof SFarReference) : "needs to be guaranted by call to this constructor";
@@ -141,6 +180,16 @@ public abstract class EventualMessage {
         final boolean triggerPromiseResolverBreakpoint) {
       super(target, selector, arguments, sender, resolver, onReceive,
           triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
+    }
+
+    /**
+     * Constructor for non TracingActivityThreads, i.e. used for the initial start message or
+     * TimerPrim
+     */
+    public DirectMessage(final Actor target, final SSymbol selector,
+        final Object[] arguments, final Actor sender, final SResolver resolver,
+        final RootCallTarget onReceive) {
+      super(target, selector, arguments, sender, resolver, onReceive);
     }
   }
 
@@ -188,6 +237,10 @@ public abstract class EventualMessage {
       super(arguments, resolver, onReceive, triggerMessageReceiverBreakpoint,
           triggerPromiseResolverBreakpoint);
       this.originalSender = originalSender;
+
+      if (VmSettings.SNAPSHOTS_ENABLED) {
+        this.messageId = ActorProcessingThread.currentThread().getSnapshotId();
+      }
     }
 
     public abstract void resolve(Object rcvr, Actor target, Actor sendingActor);
@@ -248,6 +301,10 @@ public abstract class EventualMessage {
 
       this.target = finalTarget; // for sends to far references, we need to adjust the target
       this.finalSender = sendingActor;
+      if (VmSettings.SNAPSHOTS_ENABLED) {
+        this.messageId = Math.min(this.messageId,
+            ActorProcessingThread.currentThread().getSnapshotId());
+      }
     }
 
     @Override
@@ -333,6 +390,10 @@ public abstract class EventualMessage {
      */
     private void setPromiseValue(final Object value, final Actor resolvingActor) {
       args[1] = originalSender.wrapForUse(value, resolvingActor, null);
+      if (VmSettings.SNAPSHOTS_ENABLED) {
+        this.messageId = Math.min(this.messageId,
+            ActorProcessingThread.currentThread().getSnapshotId());
+      }
     }
 
     @Override
