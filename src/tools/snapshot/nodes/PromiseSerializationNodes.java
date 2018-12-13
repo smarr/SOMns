@@ -10,10 +10,9 @@ import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
-import tools.concurrency.TracingActors.TracingActor;
-import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.actors.SPromise.STracingPromise;
 import som.vmobjects.SClass;
+import tools.concurrency.TracingActors.TracingActor;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
@@ -21,6 +20,24 @@ import tools.snapshot.deserialization.FixupInformation;
 
 
 public abstract class PromiseSerializationNodes {
+
+  private static void handleReferencedPromise(final SPromise prom,
+      final SnapshotBuffer sb, final int location) {
+    if (prom.getOwner() == sb.getOwner().getCurrentActor()) {
+      if (!sb.getRecord().containsObject(prom)) {
+        SPromise.getPromiseClass().serialize(prom, sb);
+      }
+      sb.putLongAt(location, sb.getRecord().getObjectPointer(prom));
+    } else {
+      // The Promise belong to another Actor
+      TracingActor ta = (TracingActor) prom.getOwner();
+      if (!ta.getSnapshotRecord().containsObject(ta)) {
+        ta.getSnapshotRecord().farReference(prom, sb, location);
+      } else {
+        sb.putLongAt(location, ta.getSnapshotRecord().getObjectPointer(prom));
+      }
+    }
+  }
 
   @GenerateNodeFactory
   public abstract static class PromiseSerializationNode extends AbstractSerializationNode {
@@ -31,7 +48,30 @@ public abstract class PromiseSerializationNodes {
 
     @Specialization(guards = "prom.isCompleted()")
     public void doResolved(final SPromise prom, final SnapshotBuffer sb) {
-      int base = sb.addObject(prom, clazz, 1 + Long.BYTES + Integer.BYTES);
+      int ncp;
+      int nwr;
+      int noe;
+      PromiseMessage whenRes;
+      PromiseMessage onError;
+      ArrayList<PromiseMessage> whenResExt;
+      ArrayList<PromiseMessage> onErrorExt;
+      SPromise chainedProm;
+      ArrayList<SPromise> chainedPromExt;
+      synchronized (prom) {
+        chainedProm = prom.getChainedPromiseUnsync();
+        chainedPromExt = prom.getChainedPromiseExtUnsync();
+        ncp = getObjectCnt(chainedProm, chainedPromExt);
+
+        whenRes = prom.getWhenResolvedUnsync();
+        whenResExt = prom.getWhenResolvedExtUnsync();
+        nwr = getObjectCnt(whenRes, whenResExt);
+
+        onError = prom.getOnError();
+        onErrorExt = prom.getOnErrorExtUnsync();
+        noe = getObjectCnt(onError, onErrorExt);
+      }
+      int base = sb.addObject(prom, clazz,
+          1 + 6 + Integer.BYTES + Long.BYTES * (noe + nwr + ncp + 1));
 
       // resolutionstate
       switch (prom.getResolutionStateUnsync()) {
@@ -51,6 +91,10 @@ public abstract class PromiseSerializationNodes {
       }
       sb.putLongAt(base + 1, sb.getRecord().getObjectPointer(value));
       sb.putIntAt(base + 1 + Long.BYTES, ((STracingPromise) prom).getResolvingActor());
+      base += (1 + Integer.BYTES + Long.BYTES);
+      base = serializeWhenResolvedMsgs(base, nwr, whenRes, whenResExt, sb);
+      base = serializeOnErrorMsgs(base, noe, onError, onErrorExt, sb);
+      serializeChainedPromises(base, ncp, chainedProm, chainedPromExt, sb);
     }
 
     @Specialization(guards = "!prom.isCompleted()")
@@ -104,12 +148,12 @@ public abstract class PromiseSerializationNodes {
       sb.putShortAt(base, (short) cnt);
       base += 2;
       if (cnt > 0) {
-        sb.putLongAt(base, whenRes.serialize(sb));
+        sb.putLongAt(base, whenRes.forceSerialize(sb));
         base += Long.BYTES;
 
         if (cnt > 1) {
           for (int i = 0; i < whenResExt.size(); i++) {
-            sb.putLongAt(base + i * Long.BYTES, whenResExt.get(i).serialize(sb));
+            sb.putLongAt(base + i * Long.BYTES, whenResExt.get(i).forceSerialize(sb));
           }
           base += whenResExt.size() * Long.BYTES;
         }
@@ -124,12 +168,12 @@ public abstract class PromiseSerializationNodes {
       sb.putShortAt(base, (short) cnt);
       base += 2;
       if (cnt > 0) {
-        sb.putLongAt(base, onError.serialize(sb));
+        sb.putLongAt(base, onError.forceSerialize(sb));
         base += Long.BYTES;
 
         if (cnt > 1) {
           for (int i = 0; i < onErrorExt.size(); i++) {
-            sb.putLongAt(base + i * Long.BYTES, onErrorExt.get(i).serialize(sb));
+            sb.putLongAt(base + i * Long.BYTES, onErrorExt.get(i).forceSerialize(sb));
           }
           base += onErrorExt.size() * Long.BYTES;
         }
@@ -150,9 +194,8 @@ public abstract class PromiseSerializationNodes {
 
         if (cnt > 1) {
           for (int i = 0; i < chainedPromExt.size(); i++) {
-            SPromise p = chainedPromExt.get(i);
-            SPromise.getPromiseClass().serialize(p, sb);
-            sb.putLongAt(base + i * Long.BYTES, sb.getRecord().getObjectPointer(p));
+            SPromise prom = chainedPromExt.get(i);
+            handleReferencedPromise(prom, sb, base + i * Long.BYTES);
           }
         }
       }
@@ -181,6 +224,24 @@ public abstract class PromiseSerializationNodes {
 
       if (DeserializationBuffer.needsFixup(value)) {
         sb.installFixup(new PromiseValueFixup(p));
+      }
+
+      int whenResolvedCnt = sb.getShort();
+      for (int i = 0; i < whenResolvedCnt; i++) {
+        PromiseMessage pm = (PromiseMessage) sb.getReference();
+        p.registerWhenResolvedUnsynced(pm);
+      }
+
+      int onErrorCnt = sb.getShort();
+      for (int i = 0; i < onErrorCnt; i++) {
+        PromiseMessage pm = (PromiseMessage) sb.getReference();
+        p.registerOnErrorUnsynced(pm);
+      }
+
+      int chainedPromCnt = sb.getShort();
+      for (int i = 0; i < chainedPromCnt; i++) {
+        SPromise remote = (SPromise) sb.getReference();
+        p.addChainedPromise(remote);
       }
 
       return p;
@@ -244,20 +305,7 @@ public abstract class PromiseSerializationNodes {
     public void doResolver(final SResolver resolver, final SnapshotBuffer sb) {
       int base = sb.addObject(resolver, clazz, Long.BYTES);
       SPromise prom = resolver.getPromise();
-      if (prom.getOwner() == sb.getOwner().getCurrentActor()) {
-        if (!sb.getRecord().containsObject(prom)) {
-          SPromise.getPromiseClass().serialize(prom, sb);
-        }
-        sb.putLongAt(base, sb.getRecord().getObjectPointer(prom));
-      } else {
-        // The Promise belong to another Actor
-        TracingActor ta = (TracingActor) prom.getOwner();
-        if (!ta.getSnapshotRecord().containsObject(ta)) {
-          ta.getSnapshotRecord().farReference(prom, sb, base);
-        } else {
-          sb.putLongAt(base, ta.getSnapshotRecord().getObjectPointer(prom));
-        }
-      }
+      handleReferencedPromise(prom, sb, base);
     }
 
     @Override

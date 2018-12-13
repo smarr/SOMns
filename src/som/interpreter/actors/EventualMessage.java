@@ -91,6 +91,11 @@ public abstract class EventualMessage {
     }
   }
 
+  public long forceSerialize(final SnapshotBuffer sb) {
+    ReceivedRootNode rm = (ReceivedRootNode) this.onReceive.getRootNode();
+    return rm.getSerializer().execute(this, sb);
+  }
+
   /**
    * A message to a known receiver that is to be executed on the actor owning
    * the receiver.
