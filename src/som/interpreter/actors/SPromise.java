@@ -471,7 +471,7 @@ public class SPromise extends SObjectWithClass {
         // because after resolving the promise, all clients will schedule their
         // callbacks/msg themselves
         synchronized (p) {
-          assert p.assertNotCompleted();
+          // assert p.assertNotCompleted();
           // TODO: is this correct? can we just resolve chained promises like this? this means,
           // their state changes twice. I guess it is ok, not sure about synchronization
           // thought. They are created as 'chained', and then there is the resolute propagation

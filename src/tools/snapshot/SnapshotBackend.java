@@ -171,7 +171,6 @@ public class SnapshotBackend {
       LinkedList<Long> todo = (LinkedList<Long>) current;
       DeserializationBuffer db = SnapshotParser.getDeserializationBuffer();
       for (long ref : todo) {
-        System.out.println("fixing" + result);
         db.fixUpIfNecessary(ref, result);
       }
     }

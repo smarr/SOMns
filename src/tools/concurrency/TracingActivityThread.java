@@ -225,7 +225,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
 
   private void newSnapshot() {
     TracingActor ta = (TracingActor) ((ActorProcessingThread) this).getCurrentActor();
-    TraceActorContextNode tracer = ta.getActorContextNode();// get from ta?
+    TraceActorContextNode tracer = ta.getActorContextNode();
     traceBuffer.swapStorage();
     if (tracer != null) {
       tracer.trace(ta);

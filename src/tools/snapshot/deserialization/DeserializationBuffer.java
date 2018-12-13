@@ -250,7 +250,7 @@ public class DeserializationBuffer {
 
       // cut away the thread identification
       // 0x FF FF FF FF FF FF
-      long offset = 0x0000FFFFFFFFFFFFl & newPosition;
+      long offset = 0x0000FFFFFFFFFFFFL & newPosition;
 
       // absolute position in file
       if (!VmSettings.TEST_SNAPSHOTS) {
