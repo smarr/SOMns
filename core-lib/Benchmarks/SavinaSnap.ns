@@ -81,8 +81,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       public ping = (
         pong <-: ping: self.
         (*('ping: ' + pingsLeft) println.*)
-        pingsLeft = 2500 ifTrue:[
-          'snapshot' println.
+        pingsLeft = (NumPings / 2) ifTrue:[
           actors snapshot: self.
         ].
         pingsLeft:: pingsLeft - 1.
@@ -143,6 +142,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       )
 
       public count: cnt = (
+        counter <-: dummy.
         completionRes resolve: cnt = limit
       )
     )
@@ -151,12 +151,19 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     | private count ::= 0. |
     ) (
       public increment = (
+        count = (limit / 2) ifTrue:[
+          actors snapshot: self.
+        ].
+
         count:: count + 1.
       )
 
       public requestCount: requester = (
         requester <-: count: count
       )
+
+      (*we need this because this actor is exceuted only once and doesnt handle its todos *)
+      public dummy = ()
     )
 
     public benchmark = (
