@@ -155,6 +155,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
         backing = oa;
         break;
       case TYPE_EMPTY:
+        backing = sb.getInt();
         break;
       default:
         throw new IllegalArgumentException();
@@ -172,6 +173,9 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
     @Override
     public Object deserialize(final DeserializationBuffer sb) {
       Object backing = parseBackingStorage(sb);
+      if (backing == null) {
+
+      }
       return new SArray.SMutableArray(backing, Classes.arrayClass);
     }
   }
