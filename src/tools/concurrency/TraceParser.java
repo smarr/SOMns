@@ -10,6 +10,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Queue;
 
 import som.Output;
@@ -88,7 +89,12 @@ public final class TraceParser {
       parser.parseTrace();
     }
 
-    return parser.actors.get(replayId).getExpectedMessages();
+    ActorNode an = parser.actors.get(replayId);
+    if (an != null) {
+      return an.getExpectedMessages();
+    } else {
+      return new LinkedList<TraceParser.MessageRecord>();
+    }
   }
 
   public static synchronized int getReplayId(final int parentId, final int childNo) {
