@@ -6,6 +6,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 import som.interpreter.Types;
+import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.Resolution;
@@ -71,7 +72,7 @@ public abstract class PromiseSerializationNodes {
         noe = getObjectCnt(onError, onErrorExt);
       }
       int base = sb.addObject(prom, clazz,
-          1 + 6 + Integer.BYTES + Long.BYTES * (noe + nwr + ncp + 1));
+          1 + 6 + Integer.BYTES + Integer.BYTES + Long.BYTES * (noe + nwr + ncp + 1));
 
       // resolutionstate
       switch (prom.getResolutionStateUnsync()) {
@@ -89,9 +90,11 @@ public abstract class PromiseSerializationNodes {
       if (!sb.getRecord().containsObjectUnsync(value)) {
         Types.getClassOf(value).serialize(value, sb);
       }
-      sb.putLongAt(base + 1, sb.getRecord().getObjectPointer(value));
-      sb.putIntAt(base + 1 + Long.BYTES, ((STracingPromise) prom).getResolvingActor());
-      base += (1 + Integer.BYTES + Long.BYTES);
+      sb.putIntAt(base + 1, ((TracingActor) prom.getOwner()).getActorId());
+      sb.putLongAt(base + 1 + Integer.BYTES, sb.getRecord().getObjectPointer(value));
+      sb.putIntAt(base + 1 + +Integer.BYTES + Long.BYTES,
+          ((STracingPromise) prom).getResolvingActor());
+      base += (1 + Integer.BYTES + Integer.BYTES + Long.BYTES);
       base = serializeWhenResolvedMsgs(base, nwr, whenRes, whenResExt, sb);
       base = serializeOnErrorMsgs(base, noe, onError, onErrorExt, sb);
       serializeChainedPromises(base, ncp, chainedProm, chainedPromExt, sb);
@@ -121,11 +124,13 @@ public abstract class PromiseSerializationNodes {
         onErrorExt = prom.getOnErrorExtUnsync();
         noe = getObjectCnt(onError, onErrorExt);
       }
-      int base = sb.addObject(prom, clazz, 1 + 6 + Long.BYTES * (noe + nwr + ncp));
+      int base =
+          sb.addObject(prom, clazz, 1 + Integer.BYTES + 6 + Long.BYTES * (noe + nwr + ncp));
 
       // resolutionstate
       sb.putByteAt(base, (byte) 0);
-      base++;
+      sb.putIntAt(base + 1, ((TracingActor) prom.getOwner()).getActorId());
+      base += 1 + Integer.BYTES;
       base = serializeWhenResolvedMsgs(base, nwr, whenRes, whenResExt, sb);
       base = serializeOnErrorMsgs(base, noe, onError, onErrorExt, sb);
       serializeChainedPromises(base, ncp, chainedProm, chainedPromExt, sb);
@@ -214,11 +219,12 @@ public abstract class PromiseSerializationNodes {
 
     private SPromise deserializeCompletedPromise(final byte state,
         final DeserializationBuffer sb) {
+      int ownerId = sb.getInt();
+      Actor owner = SnapshotBackend.lookupActor(ownerId);
       Object value = sb.getReference();
       int resolver = sb.getInt();
 
-      SPromise p = SPromise.createResolved(
-          SnapshotBackend.getCurrentActor(), value,
+      SPromise p = SPromise.createResolved(owner, value,
           state == 1 ? Resolution.SUCCESSFUL : Resolution.ERRONEOUS);
       ((STracingPromise) p).setResolvingActorForSnapshot(resolver);
 
@@ -248,8 +254,9 @@ public abstract class PromiseSerializationNodes {
     }
 
     private SPromise deserializeUnresolvedPromise(final DeserializationBuffer sb) {
-      SPromise promise = SPromise.createPromise(
-          SnapshotBackend.getCurrentActor(), false, false, null);
+      int ownerId = sb.getInt();
+      Actor owner = SnapshotBackend.lookupActor(ownerId);
+      SPromise promise = SPromise.createPromise(owner, false, false, null);
 
       // These messages aren't referenced by anything else, no need for fixup
       int whenResolvedCnt = sb.getShort();
