@@ -9,13 +9,16 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VM;
 import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
+import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.VmSettings;
 import tools.concurrency.KomposTrace;
+import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.DynamicScopeType;
 import tools.replay.nodes.TraceMessageNode;
 import tools.replay.nodes.TraceMessageNodeGen;
+import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.nodes.MessageSerializationNode;
 import tools.snapshot.nodes.MessageSerializationNodeFactory;
 
@@ -56,6 +59,19 @@ public abstract class ReceivedRootNode extends RootNode {
   @Override
   public final Object execute(final VirtualFrame frame) {
     EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
+
+    ActorProcessingThread currentThread = (ActorProcessingThread) Thread.currentThread();
+
+    if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS) {
+      SnapshotBuffer sb = currentThread.getSnapshotBuffer();
+      sb.getRecord().handleTodos(sb);
+      long loc = msg.serialize(sb);
+      if (loc != -1) {
+        sb.getOwner().addMessageLocation(
+            ((TracingActor) msg.getTarget()).getSnapshotRecord().getMessageIdentifier(),
+            sb.calculateReference(loc));
+      }
+    }
 
     boolean haltOnResolver;
     boolean haltOnResolution;
