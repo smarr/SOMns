@@ -5,6 +5,7 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import som.Output;
 import som.interpreter.SomLanguage;
 import som.interpreter.Types;
 import som.interpreter.actors.Actor;
@@ -200,8 +201,6 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     SPromise prom = dm.getPromise();
     TracingActor fsender = (TracingActor) dm.getFinalSender();
     Object[] args = dm.getArgs();
-    Object receiver = args[0];
-    args[0] = dm.getPromise();
 
     int payload = COMMONALITY_BYTES + Long.BYTES + Long.BYTES + Integer.BYTES + 1
         + (args.length * Long.BYTES);
@@ -220,7 +219,6 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     base += COMMONALITY_BYTES + Long.BYTES + Long.BYTES + Integer.BYTES;
 
     doArguments(args, base, sb);
-    args[0] = receiver;
 
     return sb.calculateReference(start);
   }
@@ -400,10 +398,11 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     // backup value for resolution.
     Object value = args[0];
 
-    args[0] = prom;
-    if (!(args[0] instanceof SPromise)) {
-      // expects args[0] to be a promise
+    // constructor expects args[0] to be a promise
+    if (prom == null) {
       args[0] = SPromise.createPromise(sender, false, false, null);
+    } else {
+      args[0] = prom;
     }
 
     PromiseSendMessage psm =
@@ -479,7 +478,10 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
 
     @Override
     public void fixUp(final Object o) {
-      assert pm != null;
+      if (o == null) {
+        Output.println("Test");
+      }
+      assert pm != null && o != null;
       this.pm.setPromise((SPromise) o);
     }
   }

@@ -350,7 +350,7 @@ public abstract class EventualMessage {
     @Override
     public final void setPromise(final SPromise promise) {
       assert VmSettings.SNAPSHOTS_ENABLED;
-      assert promise != null && originalTarget == null;
+      assert promise != null;
       this.originalTarget = promise;
     }
 
