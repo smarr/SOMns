@@ -27,8 +27,7 @@ public class ActorExecutionTrace {
   }
 
   public static void recordActorContext(final TracingActor actor,
-      final TraceActorContextNode tracer) {
-    TracingActivityThread t = getThread();
+      final TracingActivityThread t, final TraceActorContextNode tracer) {
     ((ActorTraceBuffer) t.getBuffer()).recordActorContext(actor, tracer);
   }
 
