@@ -231,6 +231,10 @@ public final class SnapshotParser {
     return parser.currentActor;
   }
 
+  public static void setCurrentActor(final ReplayActor current) {
+    parser.currentActor = current;
+  }
+
   public static SPromise getResultPromise() {
     assert parser.resultPromise != null;
     return parser.resultPromise;

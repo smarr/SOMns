@@ -21,6 +21,7 @@ import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.deserialization.FixupInformation;
+import tools.snapshot.deserialization.SnapshotParser;
 
 
 public abstract class PrimitiveSerializationNodes {
@@ -273,7 +274,11 @@ public abstract class PrimitiveSerializationNodes {
         other = ReplayActor.getActorWithId(actorId);
       }
 
+      TracingActor current = SnapshotBackend.getCurrentActor();
+      SnapshotParser.setCurrentActor((ReplayActor) other);
       Object value = sb.getReference();
+      SnapshotParser.setCurrentActor((ReplayActor) current);
+
       SFarReference result = new SFarReference(other, value);
 
       if (DeserializationBuffer.needsFixup(value)) {

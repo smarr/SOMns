@@ -204,8 +204,12 @@ public class DeserializationBuffer {
     }
   }
 
-  public synchronized void installObjectFixup(final SObject o, final CachedSlotWrite write) {
+  public synchronized void putObject(final SObject o) {
+    fixUpIfNecessary(lastRef, o);
     deserialized.put(lastRef, o);
+  }
+
+  public synchronized void installObjectFixup(final SObject o, final CachedSlotWrite write) {
     long backup = lastRef;
     long reference = getLong();
     long current = position();
