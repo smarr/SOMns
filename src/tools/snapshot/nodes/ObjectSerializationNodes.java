@@ -239,6 +239,8 @@ public abstract class ObjectSerializationNodes {
         fieldWrites = insert(createWriteNodes(o));
       }
 
+      sb.putObject(o);
+
       for (int i = 0; i < fieldWrites.length; i++) {
         sb.installObjectFixup(o, fieldWrites[i]);
       }
