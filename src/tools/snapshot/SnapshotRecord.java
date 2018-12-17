@@ -4,6 +4,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.graalvm.collections.EconomicMap;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+
 import som.interpreter.Types;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import tools.concurrency.TracingActors.TracingActor;
@@ -45,16 +47,19 @@ public class SnapshotRecord {
   /**
    * only use this in the actor that owns this record (only the owner adds entries).
    */
+  @TruffleBoundary
   public boolean containsObjectUnsync(final Object o) {
     return entries.containsKey(o);
   }
 
+  @TruffleBoundary
   public boolean containsObject(final Object o) {
     synchronized (entries) {
       return entries.containsKey(o);
     }
   }
 
+  @TruffleBoundary
   public long getObjectPointer(final Object o) {
     if (entries.containsKey(o)) {
       return entries.get(o);
@@ -63,6 +68,7 @@ public class SnapshotRecord {
         "Cannot point to unserialized Objects, you are missing a serialization call: " + o);
   }
 
+  @TruffleBoundary
   public void addObjectEntry(final Object o, final long offset) {
     synchronized (entries) {
       entries.put(o, offset);
