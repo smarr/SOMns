@@ -37,6 +37,7 @@ public final class SnapshotParser {
   private VM                                          vm;
   private EconomicMap<Integer, Long>                  outerMap;
   private DeserializationBuffer                       db;
+  private int                                         objectcnt;
 
   private SnapshotParser(final VM vm) {
     this.vm = vm;
@@ -166,6 +167,7 @@ public final class SnapshotParser {
       throw new RuntimeException(e);
     } finally {
       // prevent usage after closing
+      objectcnt = db.getNumObjects();
       db = null;
     }
   }
@@ -190,7 +192,8 @@ public final class SnapshotParser {
 
   public static long getFileOffset(final long address) {
     long threadId = address >> SnapshotBuffer.THREAD_SHIFT;
-    assert parser.heapOffsets.containsKey(threadId);
+    assert parser.heapOffsets.containsKey(
+        threadId) : "Probably some actor didn't get to finish it's todo list";
     return parser.heapOffsets.get(threadId);
   }
 
@@ -242,5 +245,9 @@ public final class SnapshotParser {
 
   public static DeserializationBuffer getDeserializationBuffer() {
     return parser.db;
+  }
+
+  public static int getObjectCnt() {
+    return parser.objectcnt;
   }
 }
