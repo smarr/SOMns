@@ -63,6 +63,10 @@ public class DeserializationBuffer {
     return deserialized.containsKey(reference);
   }
 
+  public int getNumObjects() {
+    return deserialized.size();
+  }
+
   private void printPosition(final long current) {
     // System.out.print(depth + " - " + getAbsolute(current) + " in " + (current >> 48) + " ");
   }

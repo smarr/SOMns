@@ -47,7 +47,7 @@ public class TracingActors {
       super(vm);
       this.actorId = IdGen.getAndIncrement();
       if (VmSettings.SNAPSHOTS_ENABLED) {
-        snapshotRecord = new SnapshotRecord();
+        snapshotRecord = new SnapshotRecord(this);
       }
     }
 
@@ -89,7 +89,7 @@ public class TracingActors {
      * For testing purposes.
      */
     public void replaceSnapshotRecord() {
-      this.snapshotRecord = new SnapshotRecord();
+      this.snapshotRecord = new SnapshotRecord(this);
     }
 
     @Override

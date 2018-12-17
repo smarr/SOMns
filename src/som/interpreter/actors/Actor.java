@@ -400,6 +400,10 @@ public class Actor implements Activity {
     public Actor getCurrentActor() {
       return currentlyExecutingActor;
     }
+
+    public void setCurrentActorSnapshot(final Actor current) {
+      this.currentlyExecutingActor = current;
+    }
   }
 
   @Override

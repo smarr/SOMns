@@ -13,6 +13,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.graalvm.collections.EconomicMap;
@@ -44,12 +45,13 @@ import tools.snapshot.nodes.ObjectSerializationNodesFactory.UninitializedObjectS
 public class SnapshotBackend {
   private static byte snapshotVersion = 0;
 
-  private static final EconomicMap<Short, SSymbol>            symbolDictionary;
-  private static final EconomicMap<Integer, Object>           classDictionary;
-  private static final StructuralProbe                        probe;
-  private static final ConcurrentLinkedQueue<SnapshotBuffer>  buffers;
-  private static final ConcurrentLinkedQueue<ArrayList<Long>> messages;
-  private static final ArrayList<SClass>                      classEnclosures;
+  private static final EconomicMap<Short, SSymbol>                symbolDictionary;
+  private static final EconomicMap<Integer, Object>               classDictionary;
+  private static final StructuralProbe                            probe;
+  private static final ConcurrentLinkedQueue<SnapshotBuffer>      buffers;
+  private static final ConcurrentLinkedQueue<ArrayList<Long>>     messages;
+  private static final ArrayList<SClass>                          classEnclosures;
+  private static final ConcurrentHashMap<SnapshotRecord, Integer> unfinishedSerializations;
 
   // this is a reference to the list maintained by the objectsystem
   private static EconomicMap<URI, MixinDefinition> loadedModules;
@@ -64,6 +66,7 @@ public class SnapshotBackend {
       buffers = new ConcurrentLinkedQueue<>();
       messages = new ConcurrentLinkedQueue<>();
       classEnclosures = new ArrayList<>();
+      unfinishedSerializations = new ConcurrentHashMap<>();
       // identity int, includes mixin info
       // long outer
       // essentially this is about capturing the outer
@@ -75,6 +78,7 @@ public class SnapshotBackend {
       buffers = new ConcurrentLinkedQueue<>();
       messages = new ConcurrentLinkedQueue<>();
       classEnclosures = new ArrayList<>();
+      unfinishedSerializations = new ConcurrentHashMap<>();
     } else {
       classDictionary = null;
       symbolDictionary = null;
@@ -82,6 +86,7 @@ public class SnapshotBackend {
       buffers = null;
       messages = null;
       classEnclosures = null;
+      unfinishedSerializations = null;
     }
   }
 
@@ -283,6 +288,14 @@ public class SnapshotBackend {
     messages.add(messageLocations);
   }
 
+  public static void addUnfinishedTodo(final SnapshotRecord sr) {
+    unfinishedSerializations.put(sr, 0);
+  }
+
+  public static void removeTodo(final SnapshotRecord sr) {
+    unfinishedSerializations.remove(sr);
+  }
+
   public static StructuralProbe getProbe() {
     assert probe != null;
     return probe;
@@ -310,6 +323,15 @@ public class SnapshotBackend {
       // Write Message Locations
       int offset = writeMessageLocations(fos);
       offset += writeClassEnclosures(fos);
+
+      // handle the unfinished serialization.
+      SnapshotBuffer buffer = buffers.peek();
+      for (SnapshotRecord sr : unfinishedSerializations.keySet()) {
+        assert sr.owner != null;
+        buffer.owner.setCurrentActorSnapshot(sr.owner);
+        sr.handleTodos(buffer);
+      }
+
       writeSymbolTable();
 
       // WriteHeapMap

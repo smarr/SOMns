@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.graalvm.collections.EconomicMap;
 
 import som.interpreter.Types;
+import tools.concurrency.TracingActors.TracingActor;
 
 
 public class SnapshotRecord {
@@ -13,6 +14,7 @@ public class SnapshotRecord {
    * We can get the location of the serialized object in the trace
    */
   private final EconomicMap<Object, Long> entries;
+  protected final TracingActor            owner;
 
   /**
    * This list is used to keep track of references to unserialized objects in the actor owning
@@ -25,9 +27,10 @@ public class SnapshotRecord {
    */
   private final ConcurrentLinkedQueue<FarRefTodo> externalReferences;
 
-  public SnapshotRecord() {
+  public SnapshotRecord(final TracingActor owner) {
     this.entries = EconomicMap.create();
     this.externalReferences = new ConcurrentLinkedQueue<>();
+    this.owner = owner;
   }
 
   /**
@@ -58,6 +61,7 @@ public class SnapshotRecord {
   }
 
   public void handleTodos(final SnapshotBuffer sb) {
+    SnapshotBackend.removeTodo(this);
     while (!externalReferences.isEmpty()) {
       FarRefTodo frt = externalReferences.poll();
 
@@ -70,6 +74,7 @@ public class SnapshotRecord {
         frt.resolve(getObjectPointer(frt.target));
       }
     }
+
   }
 
   /**
@@ -91,6 +96,9 @@ public class SnapshotRecord {
     if (l != null) {
       other.putLongAt(destination, l);
     } else {
+      if (externalReferences.isEmpty()) {
+        SnapshotBackend.addUnfinishedTodo(this);
+      }
       externalReferences.offer(new FarRefTodo(other, destination, o));
     }
   }
