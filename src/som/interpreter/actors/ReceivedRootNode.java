@@ -65,7 +65,19 @@ public abstract class ReceivedRootNode extends RootNode {
     if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS) {
       SnapshotBuffer sb = currentThread.getSnapshotBuffer();
       sb.getRecord().handleTodos(sb);
-      long loc = msg.serialize(sb);
+
+      long loc;
+      if (sb.needsToBeSnapshot(msg.getMessageId())) {
+        // Not sure if this is optimized, worst case need to duplicate this for all messages
+        if (sb.getRecord().containsObject(msg)) {
+          return sb.getRecord().getObjectPointer(msg);
+        }
+        loc = serializer.execute(msg, sb);
+      } else {
+        // need to be careful, might interfere with promise serialization...
+        loc = -1;
+      }
+
       if (loc != -1) {
         sb.getOwner().addMessageLocation(
             ((TracingActor) msg.getTarget()).getSnapshotRecord().getMessageIdentifier(),
