@@ -1,5 +1,7 @@
 package tools.snapshot;
 
+import com.oracle.truffle.api.CompilerDirectives;
+
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
 import som.vm.VmSettings;
@@ -28,7 +30,8 @@ public class SnapshotBuffer extends TraceBuffer {
   }
 
   public SnapshotRecord getRecord() {
-    return ((TracingActor) owner.getCurrentActor()).getSnapshotRecord();
+    return CompilerDirectives.castExact(owner.getCurrentActor(), TracingActor.class)
+                             .getSnapshotRecord();
   }
 
   public ActorProcessingThread getOwner() {
