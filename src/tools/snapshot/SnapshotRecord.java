@@ -8,6 +8,8 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import som.interpreter.Types;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
+import som.primitives.ObjectPrims.ClassPrim;
+import som.vmobjects.SClass;
 import tools.concurrency.TracingActors.TracingActor;
 
 
@@ -75,7 +77,7 @@ public class SnapshotRecord {
     }
   }
 
-  public void handleTodos(final SnapshotBuffer sb) {
+  public void handleTodos(final SnapshotBuffer sb, final ClassPrim classPrim) {
     // SnapshotBackend.removeTodo(this);
     while (!externalReferences.isEmpty()) {
       FarRefTodo frt = externalReferences.poll();
@@ -86,7 +88,8 @@ public class SnapshotRecord {
           if (frt.target instanceof PromiseMessage) {
             ((PromiseMessage) frt.target).forceSerialize(sb);
           } else {
-            Types.getClassOf(frt.target).serialize(frt.target, sb);
+            SClass clazz = classPrim.executeEvaluated(frt.target);
+            clazz.serialize(frt.target, sb);
           }
         }
         frt.resolve(getObjectPointer(frt.target));

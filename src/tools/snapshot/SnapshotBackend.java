@@ -20,6 +20,7 @@ import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.MapCursor;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import som.VM;
 import som.compiler.MixinDefinition;
@@ -29,6 +30,8 @@ import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SPromise;
 import som.interpreter.nodes.InstantiationNode.ClassInstantiationNode;
 import som.interpreter.objectstorage.ClassFactory;
+import som.primitives.ObjectPrims.ClassPrim;
+import som.primitives.ObjectPrimsFactory.ClassPrimFactory;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
@@ -293,10 +296,12 @@ public class SnapshotBackend {
     messages.add(messageLocations);
   }
 
+  @TruffleBoundary
   public static void addUnfinishedTodo(final SnapshotRecord sr) {
     unfinishedSerializations.put(sr, 0);
   }
 
+  @TruffleBoundary
   public static void removeTodo(final SnapshotRecord sr) {
     unfinishedSerializations.remove(sr);
   }
@@ -317,6 +322,8 @@ public class SnapshotBackend {
   /**
    * Persist the current snapshot to a file.
    */
+  private static final ClassPrim classPrim = ClassPrimFactory.create(null);
+
   public static void writeSnapshot() {
     if (buffers.size() == 0) {
       return;
@@ -337,7 +344,7 @@ public class SnapshotBackend {
           assert sr.owner != null;
           unfinishedSerializations.remove(sr);
           buffer.owner.setCurrentActorSnapshot(sr.owner);
-          sr.handleTodos(buffer);
+          sr.handleTodos(buffer, classPrim);
         }
       }
 

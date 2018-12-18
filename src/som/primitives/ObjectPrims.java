@@ -23,14 +23,17 @@ import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
+import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
+import som.vmobjects.SArray;
 import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
+import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.OpComparison;
@@ -74,7 +77,34 @@ public final class ObjectPrims {
     public abstract SClass executeEvaluated(Object receiver);
 
     @Specialization
+    public final SClass doArray(final SArray rcvr) {
+      return rcvr.getSOMClass();
+    }
+
+    @Specialization
+    public final SClass doBlock(final SBlock rcvr) {
+      return Classes.blockClass;
+    }
+
+    @Specialization
+    public final SClass doSymbol(final SSymbol rcvr) {
+      return Classes.symbolClass;
+    }
+
+    @Specialization
+    public final SClass doObjectWithClass(final SObjectWithClass rcvr) {
+      return rcvr.getSOMClass();
+    }
+
+    @Specialization
+    public final SClass doFarRef(final SFarReference rcvr) {
+      return rcvr.getSOMClass();
+    }
+
+    @Specialization
     public final SClass doSAbstractObject(final SAbstractObject receiver) {
+      VM.thisMethodNeedsToBeOptimized("Should specialize this if performance critical");
+      System.out.println(receiver.getSOMClass());
       return receiver.getSOMClass();
     }
 

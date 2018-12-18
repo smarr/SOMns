@@ -11,6 +11,8 @@ import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.SPromise.SResolver;
+import som.primitives.ObjectPrims.ClassPrim;
+import som.primitives.ObjectPrimsFactory.ClassPrimFactory;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.concurrency.KomposTrace;
@@ -32,6 +34,8 @@ public abstract class ReceivedRootNode extends RootNode {
   @Child protected TraceMessageNode         msgTracer = TraceMessageNodeGen.create();
   @Child protected MessageSerializationNode serializer;
 
+  @Child protected ClassPrim classPrim;
+
   private final VM            vm;
   protected final WebDebugger dbg;
   private final SourceSection sourceSection;
@@ -50,8 +54,10 @@ public abstract class ReceivedRootNode extends RootNode {
     this.sourceSection = sourceSection;
     if (VmSettings.SNAPSHOTS_ENABLED) {
       serializer = MessageSerializationNodeFactory.create(selector);
+      classPrim = ClassPrimFactory.create(null);
     } else {
       serializer = null;
+      classPrim = null;
     }
   }
 
@@ -66,7 +72,7 @@ public abstract class ReceivedRootNode extends RootNode {
 
     if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS) {
       SnapshotBuffer sb = currentThread.getSnapshotBuffer();
-      sb.getRecord().handleTodos(sb);
+      sb.getRecord().handleTodos(sb, classPrim);
 
       long loc;
       if (sb.needsToBeSnapshot(msg.getMessageId())) {
