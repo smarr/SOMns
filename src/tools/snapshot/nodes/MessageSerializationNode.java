@@ -29,6 +29,7 @@ import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
+import tools.snapshot.SnapshotRecord;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.deserialization.FixupInformation;
 
@@ -46,6 +47,10 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     super(clazz);
     this.selector = selector;
     this.argumentClasses = new ClassPrim[selector.getNumberOfSignatureArguments()];
+
+    assert argumentClasses.length < 2
+        * Byte.MAX_VALUE : "We assume the number of args is reasonable, but was huge: "
+            + argumentClasses.length;
 
     for (int i = 0; i < argumentClasses.length; i++) {
       this.argumentClasses[i] = ClassPrimFactory.create(null);
@@ -87,27 +92,29 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
   @ExplodeLoop
   protected final void doArguments(final Object[] args, final int base,
       final SnapshotBuffer sb) {
+    assert argumentClasses.length == args.length;
 
-    // assume number of args is reasonable
-    assert args.length < 2 * Byte.MAX_VALUE;
-    if (args.length > 0) {
-      // special case for callback message
-      sb.putByteAt(base, (byte) argumentClasses.length);
-      for (int i = 0; i < argumentClasses.length; i++) {
-        if (args[i] == null) {
-          if (!sb.getRecord().containsObjectUnsync(Nil.nilObject)) {
-            Classes.nilClass.serialize(Nil.nilObject, sb);
-          }
-          sb.putLongAt((base + 1) + i * Long.BYTES,
-              sb.getRecord().getObjectPointer(Nil.nilObject));
-        } else {
-          if (!sb.getRecord().containsObjectUnsync(args[i])) {
-            // TODO: can we specialize this on the ClassGroup/Factory?
-            SClass clazz = argumentClasses[i].executeEvaluated(args[i]);
-            clazz.serialize(args[i], sb);
-          }
-          sb.putLongAt((base + 1) + i * Long.BYTES, sb.getRecord().getObjectPointer(args[i]));
+    if (argumentClasses.length <= 0) {
+      return;
+    }
+
+    // special case for callback message
+    sb.putByteAt(base, (byte) argumentClasses.length);
+
+    for (int i = 0; i < argumentClasses.length; i++) {
+      SnapshotRecord record = sb.getRecord();
+      if (args[i] == null) {
+        if (!record.containsObjectUnsync(Nil.nilObject)) {
+          Classes.nilClass.serialize(Nil.nilObject, sb);
         }
+        sb.putLongAt((base + 1) + i * Long.BYTES, record.getObjectPointer(Nil.nilObject));
+      } else {
+        if (!record.containsObjectUnsync(args[i])) {
+          // TODO: can we specialize this on the ClassGroup/Factory?
+          SClass clazz = argumentClasses[i].executeEvaluated(args[i]);
+          clazz.serialize(args[i], sb);
+        }
+        sb.putLongAt((base + 1) + i * Long.BYTES, record.getObjectPointer(args[i]));
       }
     }
   }
