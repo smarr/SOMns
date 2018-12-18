@@ -125,9 +125,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     sb.putLongAt(base + COMMONALITY_BYTES, sb.getRecord().getObjectPointer(resolver));
     base += COMMONALITY_BYTES + Long.BYTES;
 
-    doArguments(args, base, sb);
-
-    return sb.calculateReference(start);
+    return processArguments(sb, args, base, start);
   }
 
   @Specialization
@@ -143,9 +141,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
         base, sb);
     base += COMMONALITY_BYTES;
 
-    doArguments(args, base, sb);
-
-    return sb.calculateReference(start);
+    return processArguments(sb, args, base, start);
   }
 
   @Specialization(guards = "dm.getResolver() != null")
@@ -167,9 +163,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     sb.putLongAt(base + COMMONALITY_BYTES + Long.BYTES, sb.getRecord().getObjectPointer(prom));
     base += COMMONALITY_BYTES + Long.BYTES + Long.BYTES;
 
-    doArguments(args, base, sb);
-
-    return sb.calculateReference(start);
+    return processArguments(sb, args, base, start);
   }
 
   @Specialization
@@ -189,6 +183,11 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     sb.putLongAt(base + COMMONALITY_BYTES, sb.getRecord().getObjectPointer(prom));
     base += COMMONALITY_BYTES + Long.BYTES;
 
+    return processArguments(sb, args, base, start);
+  }
+
+  private long processArguments(final SnapshotBuffer sb, final Object[] args, final int base,
+      final long start) {
     doArguments(args, base, sb);
 
     return sb.calculateReference(start);
@@ -218,9 +217,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     sb.putIntAt(base + COMMONALITY_BYTES + Long.BYTES + Long.BYTES, fsender.getActorId());
     base += COMMONALITY_BYTES + Long.BYTES + Long.BYTES + Integer.BYTES;
 
-    doArguments(args, base, sb);
-
-    return sb.calculateReference(start);
+    return processArguments(sb, args, base, start);
   }
 
   @Specialization(guards = "dm.isDelivered()")
@@ -245,9 +242,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     sb.putIntAt(base + COMMONALITY_BYTES + Long.BYTES, fsender.getActorId());
     base += COMMONALITY_BYTES + Long.BYTES + Integer.BYTES;
 
-    doArguments(args, base, sb);
-
-    return sb.calculateReference(start);
+    return processArguments(sb, args, base, start);
   }
 
   @Specialization(guards = {"!dm.isDelivered()", "dm.getResolver() != null"})
@@ -268,9 +263,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     sb.putLongAt(base + COMMONALITY_BYTES, sb.getRecord().getObjectPointer(resolver));
     base += COMMONALITY_BYTES + Long.BYTES;
 
-    doArguments(args, base, sb);
-
-    return sb.calculateReference(start);
+    return processArguments(sb, args, base, start);
   }
 
   @Specialization(guards = "!dm.isDelivered()")
@@ -286,9 +279,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
         (TracingActor) dm.getSender(), base, sb);
     base += COMMONALITY_BYTES;
 
-    doArguments(args, base, sb);
-
-    return sb.calculateReference(start);
+    return processArguments(sb, args, base, start);
   }
 
   @TruffleBoundary
