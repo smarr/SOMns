@@ -4,6 +4,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
@@ -40,6 +41,8 @@ public abstract class ReceivedRootNode extends RootNode {
   protected final WebDebugger dbg;
   private final SourceSection sourceSection;
 
+  private final ValueProfile msgClass;
+
   protected ReceivedRootNode(final SomLanguage language,
       final SourceSection sourceSection, final FrameDescriptor frameDescriptor,
       final SSymbol selector) {
@@ -55,9 +58,11 @@ public abstract class ReceivedRootNode extends RootNode {
     if (VmSettings.SNAPSHOTS_ENABLED) {
       serializer = MessageSerializationNodeFactory.create(selector);
       classPrim = ClassPrimFactory.create(null);
+      msgClass = ValueProfile.createClassProfile();
     } else {
       serializer = null;
       classPrim = null;
+      msgClass = null;
     }
   }
 
@@ -88,7 +93,7 @@ public abstract class ReceivedRootNode extends RootNode {
 
       if (loc != -1) {
         sb.getOwner().addMessageLocation(
-            ((TracingActor) msg.getTarget()).getSnapshotRecord().getMessageIdentifier(),
+            ((TracingActor) msgClass.profile(msg).getTarget()).getSnapshotRecord().getMessageIdentifier(),
             sb.calculateReference(loc));
       }
     }
