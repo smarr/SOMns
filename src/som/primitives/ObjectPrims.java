@@ -70,6 +70,9 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "objClass:")
   public abstract static class ClassPrim extends UnaryExpressionNode {
+
+    public abstract SClass executeEvaluated(Object receiver);
+
     @Specialization
     public final SClass doSAbstractObject(final SAbstractObject receiver) {
       return receiver.getSOMClass();
