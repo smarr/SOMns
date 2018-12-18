@@ -5,6 +5,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 import som.Output;
 import som.interpreter.SomLanguage;
@@ -83,8 +84,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
   // Do we want to serialize messages with other object and just keep their addresses ready,
   // or do we want to put them into a separate buffer performance wise there shoudn't be much
   // of a difference
-
-  // TODO possibly explode as optimization, use cached serialization nodes for the args...
+  @ExplodeLoop
   protected final void doArguments(final Object[] args, final int base,
       final SnapshotBuffer sb) {
 
