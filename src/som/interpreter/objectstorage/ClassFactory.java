@@ -143,7 +143,8 @@ public final class ClassFactory {
   }
 
   public NodeFactory<? extends AbstractSerializationNode> getSerializerFactory() {
-    return this.serializerFactory;
+    // serializerFactory can be null for Classes.messageClass
+    return serializerFactory;
   }
 
   /**

@@ -54,7 +54,6 @@ import tools.snapshot.nodes.AbstractArraySerializationNodeGen.TransferArraySeria
 import tools.snapshot.nodes.AbstractArraySerializationNodeGen.ValueArraySerializationNodeFactory;
 import tools.snapshot.nodes.AbstractSerializationNode;
 import tools.snapshot.nodes.BlockSerializationNodeFactory;
-import tools.snapshot.nodes.MessageSerializationNodeFactory;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.SObjectWithoutFieldsSerializationNodeFactory;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.UninitializedObjectSerializationNodeFactory;
 import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.BooleanSerializationNodeFactory;
@@ -427,7 +426,7 @@ public final class ObjectSystem {
 
     // these classes are not exposed in Newspeak directly, and thus, do not yet have a class
     // factory
-    setDummyClassFactory(Classes.messageClass, MessageSerializationNodeFactory.getInstance());
+    setDummyClassFactory(Classes.messageClass, null); // MessageSerializationNodeFactory.getInstance());
     setDummyClassFactory(Classes.frameClass,
         UninitializedObjectSerializationNodeFactory.getInstance());
     setDummyClassFactory(Classes.methodClass,

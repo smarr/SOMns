@@ -23,7 +23,7 @@ public class ReceivedMessage extends ReceivedRootNode {
 
   public ReceivedMessage(final AbstractMessageSendNode onReceive,
       final SSymbol selector, final SomLanguage lang) {
-    super(lang, onReceive.getSourceSection(), null);
+    super(lang, onReceive.getSourceSection(), null, selector);
     this.onReceive = onReceive;
     this.selector = selector;
     assert onReceive.getSourceSection() != null;
@@ -74,9 +74,9 @@ public class ReceivedMessage extends ReceivedRootNode {
   public static final class ReceivedCallback extends ReceivedRootNode {
     @Child protected DirectCallNode onReceive;
 
-    public ReceivedCallback(final RootCallTarget onReceive) {
+    public ReceivedCallback(final RootCallTarget onReceive, final SSymbol selector) {
       super(SomLanguage.getLanguage(onReceive.getRootNode()),
-          onReceive.getRootNode().getSourceSection(), null);
+          onReceive.getRootNode().getSourceSection(), null, selector);
       this.onReceive = Truffle.getRuntime().createDirectCallNode(onReceive);
     }
 

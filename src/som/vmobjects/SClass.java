@@ -31,6 +31,7 @@ import org.graalvm.collections.EconomicSet;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
@@ -212,9 +213,11 @@ public final class SClass extends SObjectWithClass {
         SnapshotBackend.registerClassEnclosure(this);
       }
 
-      this.serializationRoot =
-          new SerializerRootNode(classFactory.getSerializerFactory().createNode(this));
-
+      NodeFactory<? extends AbstractSerializationNode> factory =
+          classFactory.getSerializerFactory();
+      if (factory != null) {
+        this.serializationRoot = new SerializerRootNode(factory.createNode(this));
+      }
     }
     // assert instanceClassGroup != null || !ObjectSystem.isInitialized();
 
@@ -383,6 +386,7 @@ public final class SClass extends SObjectWithClass {
   }
 
   public AbstractSerializationNode getSerializer() {
+    assert serializationRoot != null : "Unclear what's wrong, but MessageSerializationNode can be null for Classes.messageClass";
     return serializationRoot.getSerializer();
   }
 
