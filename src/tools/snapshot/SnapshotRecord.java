@@ -6,7 +6,6 @@ import org.graalvm.collections.EconomicMap;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
-import som.interpreter.Types;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.primitives.ObjectPrims.ClassPrim;
 import som.vmobjects.SClass;
@@ -109,10 +108,7 @@ public class SnapshotRecord {
    */
   public void farReference(final Object o, final SnapshotBuffer other,
       final int destination) {
-    Long l;
-    synchronized (entries) {
-      l = entries.get(o);
-    }
+    Long l = getEntrySynced(o);
 
     if (l != null) {
       other.putLongAt(destination, l);
@@ -126,10 +122,7 @@ public class SnapshotRecord {
 
   public void farReferenceMessage(final PromiseMessage pm, final SnapshotBuffer other,
       final int destination) {
-    Long l;
-    synchronized (entries) {
-      l = entries.get(pm);
-    }
+    Long l = getEntrySynced(pm);
 
     if (l != null) {
       other.putLongAt(destination, l);
@@ -139,6 +132,15 @@ public class SnapshotRecord {
       }
       externalReferences.offer(new FarRefTodo(other, destination, pm));
     }
+  }
+
+  @TruffleBoundary
+  private Long getEntrySynced(final Object o) {
+    Long l;
+    synchronized (entries) {
+      l = entries.get(o);
+    }
+    return l;
   }
 
   public static final class FarRefTodo {
