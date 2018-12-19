@@ -10,6 +10,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 import som.compiler.MixinDefinition.SlotDefinition;
+import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotRead;
 import som.interpreter.nodes.dispatch.CachedSlotRead.SlotAccess;
@@ -124,6 +125,8 @@ public abstract class ObjectSerializationNodes {
 
     @Specialization
     public void serialize(final SObjectWithClass o, final SnapshotBuffer sb) {
+      TruffleCompiler.transferToInterpreterAndInvalidate(
+          "Initialize ObjectSerializationNode.");
       if (o instanceof SObject) {
         replace(SObjectSerializationNodeFactory.create(clazz,
             createReadNodes((SObject) o))).serialize((SObject) o, sb);
