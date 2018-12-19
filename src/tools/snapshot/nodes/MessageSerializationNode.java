@@ -1,6 +1,6 @@
 package tools.snapshot.nodes;
 
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -18,8 +18,6 @@ import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.EventualSendNode;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
-import som.primitives.ObjectPrims.ClassPrim;
-import som.primitives.ObjectPrimsFactory.ClassPrimFactory;
 import som.primitives.actors.PromisePrims;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
@@ -41,20 +39,17 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
 
   private final SSymbol selector;
 
-  @CompilationFinal(dimensions = 1) private final ClassPrim[] argumentClasses;
+  @Children private final CachedSerializationNode[] serializationNodes;
 
   public MessageSerializationNode(final SClass clazz, final SSymbol selector) {
     super(clazz);
     this.selector = selector;
-    this.argumentClasses = new ClassPrim[selector.getNumberOfSignatureArguments()];
+    this.serializationNodes =
+        new CachedSerializationNode[selector.getNumberOfSignatureArguments()];
 
-    assert argumentClasses.length < 2
+    assert serializationNodes.length < 2
         * Byte.MAX_VALUE : "We assume the number of args is reasonable, but was huge: "
-            + argumentClasses.length;
-
-    for (int i = 0; i < argumentClasses.length; i++) {
-      this.argumentClasses[i] = ClassPrimFactory.create(null);
-    }
+            + serializationNodes.length;
   }
 
   public MessageSerializationNode(final SSymbol selector) {
@@ -92,29 +87,38 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
   @ExplodeLoop
   protected final void doArguments(final Object[] args, final int base,
       final SnapshotBuffer sb) {
-    assert argumentClasses.length == args.length;
+    assert serializationNodes.length == args.length;
 
-    if (argumentClasses.length <= 0) {
+    if (serializationNodes.length <= 0) {
       return;
     }
 
     // special case for callback message
-    sb.putByteAt(base, (byte) argumentClasses.length);
+    sb.putByteAt(base, (byte) serializationNodes.length);
 
-    for (int i = 0; i < argumentClasses.length; i++) {
+    for (int i = 0; i < serializationNodes.length; i++) {
+      final Object obj = args[i];
+
       SnapshotRecord record = sb.getRecord();
-      if (args[i] == null) {
+      if (obj == null) {
         if (!record.containsObjectUnsync(Nil.nilObject)) {
           Classes.nilClass.serialize(Nil.nilObject, sb);
         }
         sb.putLongAt((base + 1) + i * Long.BYTES, record.getObjectPointer(Nil.nilObject));
       } else {
-        if (!record.containsObjectUnsync(args[i])) {
+        if (!record.containsObjectUnsync(obj)) {
           // TODO: can we specialize this on the ClassGroup/Factory?
-          SClass clazz = argumentClasses[i].executeEvaluated(args[i]);
-          clazz.serialize(args[i], sb);
+
+          if (!sb.getRecord().containsObjectUnsync(obj)) {
+            if (serializationNodes[i] == null) {
+              // initialize the node
+              CompilerDirectives.transferToInterpreterAndInvalidate();
+              serializationNodes[i] = CachedSerializationNodeFactory.create(obj);
+            }
+            serializationNodes[i].serialize(obj, sb);
+          }
         }
-        sb.putLongAt((base + 1) + i * Long.BYTES, record.getObjectPointer(args[i]));
+        sb.putLongAt((base + 1) + i * Long.BYTES, record.getObjectPointer(obj));
       }
     }
   }
@@ -135,7 +139,8 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     SResolver resolver = dm.getResolver();
     Object[] args = dm.getArgs();
 
-    int payload = COMMONALITY_BYTES + Long.BYTES + 1 + (argumentClasses.length * Long.BYTES);
+    int payload =
+        COMMONALITY_BYTES + Long.BYTES + 1 + (serializationNodes.length * Long.BYTES);
     int base = sb.addMessage(payload, dm);
     long start = base - SnapshotBuffer.CLASS_ID_SIZE;
 
@@ -155,7 +160,8 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
   protected long doDirectMessageNoResolver(final DirectMessage dm, final SnapshotBuffer sb) {
     Object[] args = dm.getArgs();
 
-    int payload = COMMONALITY_BYTES + Long.BYTES + 1 + (argumentClasses.length * Long.BYTES);
+    int payload =
+        COMMONALITY_BYTES + Long.BYTES + 1 + (serializationNodes.length * Long.BYTES);
     int base = sb.addMessage(payload, dm);
     long start = base - SnapshotBuffer.CLASS_ID_SIZE;
 
@@ -175,7 +181,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     Object[] args = dm.getArgs();
 
     int payload = COMMONALITY_BYTES + Long.BYTES + Long.BYTES + 1
-        + (argumentClasses.length * Long.BYTES);
+        + (serializationNodes.length * Long.BYTES);
     int base = sb.addMessage(payload, dm);
     long start = base - SnapshotBuffer.CLASS_ID_SIZE;
 
@@ -199,7 +205,8 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     SPromise prom = dm.getPromise();
     Object[] args = dm.getArgs();
 
-    int payload = COMMONALITY_BYTES + Long.BYTES + 1 + (argumentClasses.length * Long.BYTES);
+    int payload =
+        COMMONALITY_BYTES + Long.BYTES + 1 + (serializationNodes.length * Long.BYTES);
     int base = sb.addMessage(payload, dm);
     long start = base - SnapshotBuffer.CLASS_ID_SIZE;
 
@@ -231,7 +238,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     Object[] args = dm.getArgs();
 
     int payload = COMMONALITY_BYTES + Long.BYTES + Long.BYTES + Integer.BYTES + 1
-        + (argumentClasses.length * Long.BYTES);
+        + (serializationNodes.length * Long.BYTES);
     int base = sb.addMessage(payload, dm);
     long start = base - SnapshotBuffer.CLASS_ID_SIZE;
 
@@ -260,7 +267,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     Object[] args = dm.getArgs();
 
     int payload = COMMONALITY_BYTES + Long.BYTES + Integer.BYTES + 1
-        + (argumentClasses.length * Long.BYTES);
+        + (serializationNodes.length * Long.BYTES);
     int base = sb.addMessage(payload, dm);
     long start = base - SnapshotBuffer.CLASS_ID_SIZE;
 
@@ -285,7 +292,8 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     SResolver resolver = dm.getResolver();
     Object[] args = dm.getArgs();
 
-    int payload = COMMONALITY_BYTES + Long.BYTES + 1 + (argumentClasses.length * Long.BYTES);
+    int payload =
+        COMMONALITY_BYTES + Long.BYTES + 1 + (serializationNodes.length * Long.BYTES);
     int base = sb.addMessage(payload, dm);
     long start = base - SnapshotBuffer.CLASS_ID_SIZE;
 
@@ -306,7 +314,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
       final SnapshotBuffer sb) {
     Object[] args = dm.getArgs();
 
-    int payload = COMMONALITY_BYTES + 1 + (argumentClasses.length * Long.BYTES);
+    int payload = COMMONALITY_BYTES + 1 + (serializationNodes.length * Long.BYTES);
     int base = sb.addMessage(payload, dm);
     long start = base - SnapshotBuffer.CLASS_ID_SIZE;
 
