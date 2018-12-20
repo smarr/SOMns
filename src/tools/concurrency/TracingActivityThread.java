@@ -169,8 +169,8 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     }
   }
 
-  public final void addMessageLocation(final int actorId, final long messageAdress) {
-    messageLocations.add((long) actorId);
+  public final void addMessageLocation(final long actorId, final long messageAdress) {
+    messageLocations.add(actorId);
     messageLocations.add(messageAdress);
   }
 
