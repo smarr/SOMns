@@ -162,8 +162,6 @@ public final class ObjectSystem {
       return loadedModules.get(uri);
     }
 
-    // System.out.println("Loaded: " + uri);
-
     MixinDefinition module;
     try {
       module = compiler.compileModule(source, structuralProbe);
