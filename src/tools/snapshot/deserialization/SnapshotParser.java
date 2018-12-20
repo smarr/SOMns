@@ -9,7 +9,7 @@ import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
+import java.util.PriorityQueue;
 
 import org.graalvm.collections.EconomicMap;
 
@@ -30,14 +30,14 @@ public final class SnapshotParser {
 
   private static SnapshotParser parser;
 
-  private final EconomicMap<Long, Long>               heapOffsets;
-  private final EconomicMap<Integer, ArrayList<Long>> messageLocations;
-  private SPromise                                    resultPromise;
-  private ReplayActor                                 currentActor;
-  private VM                                          vm;
-  private EconomicMap<Integer, Long>                  outerMap;
-  private DeserializationBuffer                       db;
-  private int                                         objectcnt;
+  private EconomicMap<Long, Long>                              heapOffsets;
+  private EconomicMap<Integer, PriorityQueue<MessageLocation>> messageLocations;
+  private SPromise                                             resultPromise;
+  private ReplayActor                                          currentActor;
+  private VM                                                   vm;
+  private EconomicMap<Integer, Long>                           outerMap;
+  private DeserializationBuffer                                db;
+  private int                                                  objectcnt;
 
   private SnapshotParser(final VM vm) {
     this.vm = vm;
@@ -74,13 +74,15 @@ public final class SnapshotParser {
       long numMessages = b.getLong() / 2;
       for (int i = 0; i < numMessages; i++) {
         ensureRemaining(Long.BYTES * 2, b, channel);
-        int actorId = (int) b.getLong();
+        long messageIdentifier = b.getLong();
+        int actorId = (int) (messageIdentifier >> 32);
+        int msgNo = (int) messageIdentifier;
         long location = b.getLong();
 
         if (!messageLocations.containsKey(actorId)) {
-          messageLocations.put(actorId, new ArrayList<>());
+          messageLocations.put(actorId, new PriorityQueue<>());
         }
-        messageLocations.get(actorId).add(location);
+        messageLocations.get(actorId).add(new MessageLocation(msgNo, location));
       }
 
       long numOuters = b.getLong();
@@ -90,32 +92,6 @@ public final class SnapshotParser {
         long outer = b.getLong();
         outerMap.put(identity, outer);
       }
-
-      // ensureRemaining(Short.BYTES, b, channel);
-      // short numModules = b.getShort();
-      // for (int i = 0; i < numModules; i++) {
-      // ensureRemaining(Short.BYTES, b, channel);
-      // short symId = b.getShort();
-      // SSymbol sym = SnapshotBackend.getSymbolForId(symId);
-      // URI uri = new URI(sym.getString());
-      // String[] components = sym.getString().split(":");
-      // assert components.length == 2;
-      // String path = components[0];
-      //
-      // // I think extension modules are not added to the list we use...
-      // // for now this is not an issue but later we may need to solve this for acme
-      // // My understanding is that there is exactly one SClass object, which is returned when
-      // // loading the module.
-      // // By loading the module multiple times you would get a new SClass every time.
-      // if (path.endsWith(SystemPrims.EXTENSION_EXT)) {
-      // vm.loadExtensionModule(path);
-      // } else {
-      // MixinDefinition module;
-      // module = vm.loadModule(path);
-      // // TODO looks like the module paths we try to load are problematic.
-      // // probably a hashtag too many.
-      // }
-      // }
 
       ensureRemaining(Long.BYTES * 2, b, channel);
       long resultPromiseLocation = b.getLong();
@@ -130,12 +106,9 @@ public final class SnapshotParser {
       // At this point we now have read all of the metadata and can begin the process of
       // inflating the snapshot.
 
-      // EconomicMap<Integer, ReplayActor> actors = EconomicMap.create();
-
-      // lets create the Actor objects first, and add them to our list
+      // make sure all the actors exist, we resuse the mapping in ReplayActor
       for (int id : messageLocations.getKeys()) {
         SnapshotBackend.lookupActor(id);
-        // actors.put(id, ra);
       }
 
       db = new FileDeserializationBuffer(channel);
@@ -143,14 +116,15 @@ public final class SnapshotParser {
       // now let's go through the message list actor by actor, deserialize each message, and
       // add it to the actors mailbox.
       for (int id : messageLocations.getKeys()) {
-        ArrayList<Long> locations = messageLocations.get(id);
-        for (long location : locations) {
+        PriorityQueue<MessageLocation> locations = messageLocations.get(id);
+        MessageLocation ml = locations.poll();
+        while (ml != null) {
           // Deserialilze message
           currentActor = ReplayActor.getActorWithId(id);
-          // System.out.println(
-          // "Message at: " + (((int) location) + getFileOffset(location)));
-          EventualMessage em = (EventualMessage) db.deserializeWithoutContext(location);
+          EventualMessage em = (EventualMessage) db.deserializeWithoutContext(ml.location);
+          db.doUnserialized();
           currentActor.sendSnapshotMessage(em);
+          ml = locations.poll();
         }
       }
 
@@ -158,6 +132,9 @@ public final class SnapshotParser {
       if (resultPromise == null) {
         resultPromise = (SPromise) db.deserialize(resultPromiseLocation);
       }
+
+      outerMap = null;
+      messageLocations = null;
 
       assert resultPromise != null : "The result promise was not found";
     } catch (FileNotFoundException e) {
@@ -204,7 +181,6 @@ public final class SnapshotParser {
       long reference = parser.outerMap.get(identity);
       Object o = parser.db.getReference(reference);
       long pos = ((int) reference) + SnapshotParser.getFileOffset(reference);
-      // System.out.print("Outer - " + pos + " in " + (reference >> 48) + " ");
       if (!parser.db.allreadyDeserialized(reference)) {
         result = (SObjectWithClass) parser.db.deserialize(reference);
       } else if (parser.db.needsFixup(o)) {
@@ -249,5 +225,20 @@ public final class SnapshotParser {
 
   public static int getObjectCnt() {
     return parser.objectcnt;
+  }
+
+  private class MessageLocation implements Comparable<MessageLocation> {
+    final int  msgNo;
+    final long location;
+
+    public MessageLocation(final int msgNo, final long location) {
+      this.msgNo = msgNo;
+      this.location = location;
+    }
+
+    @Override
+    public int compareTo(final MessageLocation o) {
+      return Integer.compare(msgNo, o.msgNo);
+    }
   }
 }

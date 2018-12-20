@@ -15,6 +15,7 @@ public class SnapshotRecord {
    */
   private final EconomicMap<Object, Long> entries;
   protected final TracingActor            owner;
+  private int                             msgCnt;
 
   /**
    * This list is used to keep track of references to unserialized objects in the actor owning
@@ -31,6 +32,13 @@ public class SnapshotRecord {
     this.entries = EconomicMap.create();
     this.externalReferences = new ConcurrentLinkedQueue<>();
     this.owner = owner;
+    msgCnt = 0;
+  }
+
+  public long getMessageIdentifier() {
+    long result = (((long) owner.getActorId()) << 32) | msgCnt;
+    msgCnt++;
+    return result;
   }
 
   /**
