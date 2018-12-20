@@ -289,7 +289,8 @@ public class Actor implements Activity {
         sb.getRecord().handleTodos(sb);
         long loc = firstMessage.serialize(sb);
         if (loc != -1) {
-          sb.getOwner().addMessageLocation(((TracingActor) actor).getActorId(),
+          sb.getOwner().addMessageLocation(
+              ((TracingActor) actor).getSnapshotRecord().getMessageIdentifier(),
               sb.calculateReference(loc));
         }
       }
@@ -300,7 +301,8 @@ public class Actor implements Activity {
           if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS) {
             long loc = msg.serialize(currentThread.getSnapshotBuffer());
             if (loc != -1) {
-              currentThread.addMessageLocation(((TracingActor) actor).getActorId(),
+              currentThread.addMessageLocation(
+                  ((TracingActor) actor).getSnapshotRecord().getMessageIdentifier(),
                   currentThread.getSnapshotBuffer().calculateReference(loc));
             }
           }
