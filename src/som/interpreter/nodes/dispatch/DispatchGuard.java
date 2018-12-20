@@ -1,5 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
+import com.oracle.truffle.api.Assumption;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 import som.interpreter.objectstorage.ClassFactory;
@@ -12,8 +14,15 @@ import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 
 public abstract class DispatchGuard {
+  private static final Assumption alwaysValidAssumption =
+      Truffle.getRuntime().createAssumption("Global Guard Assumption, always valid");
+
   public abstract boolean entryMatches(Object obj)
       throws InvalidAssumptionException;
+
+  public Assumption getAssumption() {
+    return alwaysValidAssumption;
+  }
 
   public static DispatchGuard create(final Object obj) {
     if (obj == Boolean.TRUE) {
@@ -131,6 +140,11 @@ public abstract class DispatchGuard {
     }
 
     @Override
+    public Assumption getAssumption() {
+      return expected.getIsLatestAssumption();
+    }
+
+    @Override
     public SObject cast(final Object obj) {
       return (SMutableObject) obj;
     }
@@ -149,6 +163,11 @@ public abstract class DispatchGuard {
       expected.checkIsLatest();
       return obj instanceof SImmutableObject &&
           ((SImmutableObject) obj).getObjectLayout() == expected;
+    }
+
+    @Override
+    public Assumption getAssumption() {
+      return expected.getIsLatestAssumption();
     }
 
     @Override
