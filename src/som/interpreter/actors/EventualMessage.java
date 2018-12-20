@@ -3,6 +3,7 @@ package som.interpreter.actors;
 import java.util.Arrays;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -79,6 +80,10 @@ public abstract class EventualMessage {
     return onReceive.getRootNode().getSourceSection();
   }
 
+  @TruffleBoundary
+  // TODO: can we establish a structure for this? at the moment, we have an
+  // indirection here, which leads us to a serializer that's not compilation
+  // final, I think
   public long forceSerialize(final SnapshotBuffer sb) {
     if (sb.getRecord().containsObject(this)) {
       return sb.getRecord().getObjectPointer(this);
