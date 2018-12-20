@@ -184,6 +184,17 @@ public class Actor implements Activity {
     }
   }
 
+  public synchronized void executeIfNecessarry(final ForkJoinPool actorPool) {
+    if (firstMessage == null) {
+      return;
+    }
+
+    if (!isExecuting) {
+      isExecuting = true;
+      execute(actorPool);
+    }
+  }
+
   private void doSend(final EventualMessage msg,
       final ForkJoinPool actorPool) {
     assert msg.getTarget() == this;

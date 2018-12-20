@@ -230,11 +230,7 @@ public class TracingActors {
 
     public static void scheduleAllActors(final ForkJoinPool actorPool) {
       for (ReplayActor ra : actorList.values()) {
-
-        if (ra.firstMessage != null && !ra.isExecuting) {
-          ra.isExecuting = true;
-          ra.execute(actorPool);
-        }
+        ra.executeIfNecessarry(actorPool);
       }
     }
 
