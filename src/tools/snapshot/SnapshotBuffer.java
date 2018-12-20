@@ -1,6 +1,7 @@
 package tools.snapshot;
 
 import som.interpreter.actors.Actor.ActorProcessingThread;
+import som.interpreter.actors.EventualMessage;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vmobjects.SClass;
@@ -62,11 +63,12 @@ public class SnapshotBuffer extends TraceBuffer {
     return oldPos + CLASS_ID_SIZE;
   }
 
-  public int addMessage(final int payload) {
+  public int addMessage(final int payload, final EventualMessage msg) {
     // we dont put messages into our lookup table as there should be only one reference to it
     // (either from a promise or a mailbox)
     int oldPos = this.position;
     TracingActor ta = (TracingActor) owner.getCurrentActor();
+    getRecord().addObjectEntry(msg, calculateReference(oldPos));
     // owner.addMessageLocation(ta.getActorId(), calculateReference(oldPos));
 
     this.putIntAt(this.position, Classes.messageClass.getIdentity());

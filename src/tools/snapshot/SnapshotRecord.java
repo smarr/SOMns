@@ -5,6 +5,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import org.graalvm.collections.EconomicMap;
 
 import som.interpreter.Types;
+import som.interpreter.actors.EventualMessage.PromiseMessage;
 import tools.concurrency.TracingActors.TracingActor;
 
 
@@ -76,9 +77,12 @@ public class SnapshotRecord {
       // ignore todos from a different snapshot
       if (frt.referer.snapshotVersion == sb.snapshotVersion) {
         if (!this.containsObjectUnsync(frt.target)) {
-          Types.getClassOf(frt.target).serialize(frt.target, sb);
+          if (frt.target instanceof PromiseMessage) {
+            ((PromiseMessage) frt.target).forceSerialize(sb);
+          } else {
+            Types.getClassOf(frt.target).serialize(frt.target, sb);
+          }
         }
-
         frt.resolve(getObjectPointer(frt.target));
       }
     }
@@ -111,7 +115,24 @@ public class SnapshotRecord {
     }
   }
 
-  private final class FarRefTodo {
+  public void farReferenceMessage(final PromiseMessage pm, final SnapshotBuffer other,
+      final int destination) {
+    Long l;
+    synchronized (entries) {
+      l = entries.get(pm);
+    }
+
+    if (l != null) {
+      other.putLongAt(destination, l);
+    } else {
+      if (externalReferences.isEmpty()) {
+        SnapshotBackend.addUnfinishedTodo(this);
+      }
+      externalReferences.offer(new FarRefTodo(other, destination, pm));
+    }
+  }
+
+  public static final class FarRefTodo {
     private final SnapshotBuffer referer;
     private final int            referenceOffset;
     final Object                 target;

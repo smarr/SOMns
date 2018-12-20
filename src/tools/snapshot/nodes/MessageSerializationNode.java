@@ -115,7 +115,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     Object[] args = dm.getArgs();
 
     int payload = COMMONALITY_BYTES + Long.BYTES + 1 + (args.length * Long.BYTES);
-    int base = sb.addMessage(payload);
+    int base = sb.addMessage(payload, dm);
     long start = base - SnapshotBuffer.CLASS_ID_SIZE;
 
     doCommonalities(MessageType.DirectMessage, dm.getSelector(), (TracingActor) dm.getSender(),
@@ -135,7 +135,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     Object[] args = dm.getArgs();
 
     int payload = COMMONALITY_BYTES + Long.BYTES + 1 + (args.length * Long.BYTES);
-    int base = sb.addMessage(payload);
+    int base = sb.addMessage(payload, dm);
     long start = base - SnapshotBuffer.CLASS_ID_SIZE;
 
     doCommonalities(MessageType.DirectMessageNR, dm.getSelector(),
@@ -155,7 +155,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     Object[] args = dm.getArgs();
 
     int payload = COMMONALITY_BYTES + Long.BYTES + Long.BYTES + 1 + (args.length * Long.BYTES);
-    int base = sb.addMessage(payload);
+    int base = sb.addMessage(payload, dm);
     long start = base - SnapshotBuffer.CLASS_ID_SIZE;
 
     doCommonalities(MessageType.CallbackMessage, dm.getSelector(),
@@ -179,7 +179,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     Object[] args = dm.getArgs();
 
     int payload = COMMONALITY_BYTES + Long.BYTES + 1 + (args.length * Long.BYTES);
-    int base = sb.addMessage(payload);
+    int base = sb.addMessage(payload, dm);
     long start = base - SnapshotBuffer.CLASS_ID_SIZE;
 
     doCommonalities(MessageType.CallbackMessageNR, dm.getSelector(),
@@ -204,7 +204,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
 
     int payload = COMMONALITY_BYTES + Long.BYTES + Long.BYTES + Integer.BYTES + 1
         + (args.length * Long.BYTES);
-    int base = sb.addMessage(payload);
+    int base = sb.addMessage(payload, dm);
     long start = base - SnapshotBuffer.CLASS_ID_SIZE;
 
     doCommonalities(MessageType.PromiseMessage, dm.getSelector(),
@@ -233,7 +233,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
 
     int payload = COMMONALITY_BYTES + Long.BYTES + Integer.BYTES + 1
         + (args.length * Long.BYTES);
-    int base = sb.addMessage(payload);
+    int base = sb.addMessage(payload, dm);
     long start = base - SnapshotBuffer.CLASS_ID_SIZE;
 
     doCommonalities(MessageType.PromiseMessageNR, dm.getSelector(),
@@ -258,7 +258,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     Object[] args = dm.getArgs();
 
     int payload = COMMONALITY_BYTES + Long.BYTES + 1 + (args.length * Long.BYTES);
-    int base = sb.addMessage(payload);
+    int base = sb.addMessage(payload, dm);
     long start = base - SnapshotBuffer.CLASS_ID_SIZE;
 
     serializeResolver(resolver, sb);
@@ -279,7 +279,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     Object[] args = dm.getArgs();
 
     int payload = COMMONALITY_BYTES + 1 + (args.length * Long.BYTES);
-    int base = sb.addMessage(payload);
+    int base = sb.addMessage(payload, dm);
     long start = base - SnapshotBuffer.CLASS_ID_SIZE;
 
     doCommonalities(MessageType.UndeliveredPromiseMessageNR, dm.getSelector(),
