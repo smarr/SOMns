@@ -8,6 +8,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.SomLanguage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
@@ -127,6 +128,29 @@ public class SPromise extends SObjectWithClass {
     assert resolutionState == Resolution.SUCCESSFUL || resolutionState == Resolution.ERRONEOUS;
     assert value != null;
     this.value = value;
+  }
+
+  public final void resolveFromSnapshot(final Object value, final Resolution resolutionState,
+      final Actor resolver, final boolean schedule) {
+    assert value != null;
+    this.value = value;
+    this.resolutionState = resolutionState;
+    ForkJoinPool pool;
+    pool = SomLanguage.getCurrent().getVM().getActorPool();
+
+    if (schedule) {
+      if (resolutionState == Resolution.SUCCESSFUL) {
+        SResolver.scheduleAllWhenResolvedUnsync(this, value, resolver, pool, haltOnResolution,
+            null);
+      } else {
+        assert resolutionState == Resolution.ERRONEOUS;
+        SResolver.scheduleAllOnErrorUnsync(this, value, resolver, pool, haltOnResolution);
+      }
+      // resolveChainedPromisesUnsync(resolutionState, this, resolver, current, actorPool,
+      // haltOnResolution,
+      // whenResolvedProfile);
+    }
+
   }
 
   public long getPromiseId() {
