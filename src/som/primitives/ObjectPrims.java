@@ -104,7 +104,7 @@ public final class ObjectPrims {
     @Specialization
     public final SClass doSAbstractObject(final SAbstractObject receiver) {
       VM.thisMethodNeedsToBeOptimized("Should specialize this if performance critical");
-      System.out.println(receiver.getSOMClass());
+      Output.println(receiver.getSOMClass().toString());
       return receiver.getSOMClass();
     }
 

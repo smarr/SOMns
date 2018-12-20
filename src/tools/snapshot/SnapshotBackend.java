@@ -160,7 +160,7 @@ public class SnapshotBackend {
 
     // Step 1: install placeholder
     classDictionary.put(id, null);
-    // System.out.println("creating Class" + mixin.getIdentifier() + " : " + (short) id);
+    // Output.println("creating Class" + mixin.getIdentifier() + " : " + (short) id);
 
     // Step 2: get outer object
     SObjectWithClass enclosingObject = SnapshotParser.getOuterForClass(id);
