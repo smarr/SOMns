@@ -639,9 +639,13 @@ class Savina usingPlatform: platform andHarness: harness = Value (
             | rnd |
             rnd:: random next % 100.
             rnd < writePercentage
-              ifTrue:  [ dictionary <-: write: self key: random next % dataLimit value: random next ]
-              ifFalse: [ dictionary <-: read: self key: random next % dataLimit ] ]
-          ifFalse: [ master <-: endWork ].
+              ifTrue:  [
+                dictionary <-: write: self key: random next % dataLimit value: random next ]
+              ifFalse: [
+                dictionary <-: read: self key: random next % dataLimit ] ]
+          ifFalse: [
+            master <-: endWork
+          ].
       )
 
       public result: value = (
@@ -669,7 +673,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       )
 
       public read: sender key: key = (
-        sender <-: result: (dataMap at: key)
+        sender <-: result: (dataMap at: key).
       )
 
       public endWork = (
@@ -1588,6 +1592,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       private lastSender ::= nil.
       private waitingForReply ::= false.
       private requests = Vector new.
+      private id ::= id.
     |
     )(
       class Request credit: amount to: destAccount reply: sender = (
@@ -1642,6 +1647,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       | r |
       r:: result round.
 
+      numTransactions =   100 ifTrue: [ ^ r = 52558    ].
       numTransactions =   1000 ifTrue: [ ^ r = 516215    ].
       numTransactions =  10000 ifTrue: [ ^ r = 4975454   ].
       numTransactions =  50000 ifTrue: [ ^ r = 25057792  ].
@@ -1927,7 +1933,8 @@ class Savina usingPlatform: platform andHarness: harness = Value (
 
         size:: size + numChildren.
 
-        children do: [:c | c <-: tryGeneratedChildren ]
+        children do: [:c | c <-: tryGeneratedChildren ].
+        actors snapshot: self.
       )
 
       public shouldGenerateChildren: child height: childHeight = (
@@ -1992,14 +1999,15 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       private myHeight   = height.
       private myId       = id.
       private myCompSize = compSize.
-    |)(
+    |
+      )(
       public tryGeneratedChildren = (
         loop: avgCompSize / 50 with: busyLoopRan.
         myRoot <-: shouldGenerateChildren: self height: myHeight.
       )
 
       public generateChildren: currentId computation: compSize = (
-        | myArrayId childrenHeight idValue |
+        | myArrayId childrenHeight idValue cnt |
         myArrayId:: myId % numChildren.
         myParent <-: updateGrant: myArrayId.
         childrenHeight:: myHeight + 1.
@@ -2012,6 +2020,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
         ].
 
         hasChildren:: true.
+        cnt:: 0.
 
         children do: [:c | c <-: tryGeneratedChildren ].
       )
@@ -2051,7 +2060,6 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       completionPP:: actors createPromisePair.
       rootActor:: (actors createActorFromValue: RootActor) <-: new: completionPP resolver.
       rootActor <-: generateTree.
-      actors snapshot: self.
       ^ completionPP promise
     )
 

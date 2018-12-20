@@ -376,7 +376,7 @@
         <arg value="-at" />
         <arg value="-tas" />
         <arg value="${corelib.dir}/TestSuite/TestRunner.ns" />
-        <arg value="${corelib.dir}/TestSuite/Serialization.ns" /> 
+        <arg value="${corelib.dir}/TestSuite/Serialization.ns" />
         <arg value="SerializationTest" />
       </exec>
     </target>
@@ -405,6 +405,15 @@
           <arg value="1" />
       </exec>
       <exec executable="tests/replay/test.sh" failonerror="true">
+          <arg value="2" />
+      </exec>
+    </target>
+
+    <target name="snapshot-replay-tests" depends="">
+      <exec executable="tests/snapshot-replay/test.sh" failonerror="true">
+          <arg value="1" />
+      </exec>
+      <exec executable="tests/snapshot-replay/test.sh" failonerror="true">
           <arg value="2" />
       </exec>
     </target>
