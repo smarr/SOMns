@@ -594,16 +594,17 @@ public final class ObjectSystem {
   @TruffleBoundary
   public int executeApplicationFromSnapshot(final SObjectWithoutFields vmMirror) {
     mainThreadCompleted = new CompletableFuture<>();
-    System.out.println("Attemting to execute from Snapshot");
+    Output.println("Parsing Snapshot...");
     ObjectTransitionSafepoint.INSTANCE.register();
     Object platform = platformModule.instantiateObject(platformClass, vmMirror);
     ObjectTransitionSafepoint.INSTANCE.unregister();
 
     SnapshotBackend.initialize(vm);
     SnapshotParser.inflate(vm);
-    // System.out.println("Done with inflation!!!");
+
+    Output.println(
+        "Finished restoring snapshot with " + SnapshotParser.getObjectCnt() + " Objects");
     ReplayActor.scheduleAllActors(vm.getActorPool());
-    // System.out.println("Done scheduling actors");
 
     SPromise result = SnapshotParser.getResultPromise();
     return handlePromiseResult(result);
