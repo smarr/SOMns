@@ -115,7 +115,10 @@ public class SnapshotBackend {
   public static SClass lookupClass(final int id) {
     assert VmSettings.TRACK_SNAPSHOT_ENTITIES;
     if (classDictionary.containsKey(id)) {
-      // this method isn't designed for fixup
+      if (!(classDictionary.get(id) instanceof SClass)) {
+        return null;
+      }
+
       return (SClass) classDictionary.get(id);
     }
 
@@ -326,10 +329,14 @@ public class SnapshotBackend {
 
       // handle the unfinished serialization.
       SnapshotBuffer buffer = buffers.peek();
-      for (SnapshotRecord sr : unfinishedSerializations.keySet()) {
-        assert sr.owner != null;
-        buffer.owner.setCurrentActorSnapshot(sr.owner);
-        sr.handleTodos(buffer);
+
+      while (!unfinishedSerializations.isEmpty()) {
+        for (SnapshotRecord sr : unfinishedSerializations.keySet()) {
+          assert sr.owner != null;
+          unfinishedSerializations.remove(sr);
+          buffer.owner.setCurrentActorSnapshot(sr.owner);
+          sr.handleTodos(buffer);
+        }
       }
 
       writeSymbolTable();
