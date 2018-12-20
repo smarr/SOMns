@@ -84,6 +84,9 @@ public abstract class EventualMessage {
 
     if (sb.needsToBeSnapshot(getMessageId())) {
       // Not sure if this is optimized, worst case need to duplicate this for all messages
+      if (sb.getRecord().containsObject(this)) {
+        return sb.getRecord().getObjectPointer(this);
+      }
       return rm.getSerializer().execute(this, sb);
     } else {
       // need to be careful, might interfere with promise serialization...
@@ -92,6 +95,9 @@ public abstract class EventualMessage {
   }
 
   public long forceSerialize(final SnapshotBuffer sb) {
+    if (sb.getRecord().containsObject(this)) {
+      return sb.getRecord().getObjectPointer(this);
+    }
     ReceivedRootNode rm = (ReceivedRootNode) this.onReceive.getRootNode();
     return rm.getSerializer().execute(this, sb);
   }
@@ -263,6 +269,8 @@ public abstract class EventualMessage {
      */
     public abstract void setPromise(SPromise promise);
 
+    public abstract boolean isDelivered();
+
     @Override
     public boolean getHaltOnPromiseMessageResolution() {
       return getPromise().getHaltOnResolution();
@@ -310,8 +318,7 @@ public abstract class EventualMessage {
       this.target = finalTarget; // for sends to far references, we need to adjust the target
       this.finalSender = sendingActor;
       if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
-        this.messageId = Math.min(this.messageId,
-            ActorProcessingThread.currentThread().getSnapshotId());
+        this.messageId = ActorProcessingThread.currentThread().getSnapshotId();
       }
     }
 
@@ -326,6 +333,7 @@ public abstract class EventualMessage {
       return target;
     }
 
+    @Override
     public boolean isDelivered() {
       return target != null;
     }
@@ -435,6 +443,11 @@ public abstract class EventualMessage {
       assert VmSettings.SNAPSHOTS_ENABLED;
       assert promise != null && this.promise == null;
       this.promise = promise;
+    }
+
+    @Override
+    public boolean isDelivered() {
+      return originalSender != null;
     }
   }
 

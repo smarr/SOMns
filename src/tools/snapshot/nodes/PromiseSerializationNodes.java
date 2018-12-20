@@ -95,8 +95,8 @@ public abstract class PromiseSerializationNodes {
       sb.putIntAt(base + 1 + +Integer.BYTES + Long.BYTES,
           ((STracingPromise) prom).getResolvingActor());
       base += (1 + Integer.BYTES + Integer.BYTES + Long.BYTES);
-      base = serializeWhenResolvedMsgs(base, nwr, whenRes, whenResExt, sb);
-      base = serializeOnErrorMsgs(base, noe, onError, onErrorExt, sb);
+      base = serializeDeliveredMessages(base, nwr, whenRes, whenResExt, sb);
+      base = serializeDeliveredMessages(base, noe, onError, onErrorExt, sb);
       serializeChainedPromises(base, ncp, chainedProm, chainedPromExt, sb);
     }
 
@@ -131,8 +131,8 @@ public abstract class PromiseSerializationNodes {
       sb.putByteAt(base, (byte) 0);
       sb.putIntAt(base + 1, ((TracingActor) prom.getOwner()).getActorId());
       base += 1 + Integer.BYTES;
-      base = serializeWhenResolvedMsgs(base, nwr, whenRes, whenResExt, sb);
-      base = serializeOnErrorMsgs(base, noe, onError, onErrorExt, sb);
+      base = serializeMessages(base, nwr, whenRes, whenResExt, sb);
+      base = serializeMessages(base, noe, onError, onErrorExt, sb);
       serializeChainedPromises(base, ncp, chainedProm, chainedPromExt, sb);
     }
 
@@ -146,7 +146,7 @@ public abstract class PromiseSerializationNodes {
       }
     }
 
-    private int serializeWhenResolvedMsgs(final int start, final int cnt,
+    private int serializeMessages(final int start, final int cnt,
         final PromiseMessage whenRes, final ArrayList<PromiseMessage> whenResExt,
         final SnapshotBuffer sb) {
       int base = start;
@@ -166,24 +166,35 @@ public abstract class PromiseSerializationNodes {
       return base;
     }
 
-    private int serializeOnErrorMsgs(final int start, final int cnt,
-        final PromiseMessage onError, final ArrayList<PromiseMessage> onErrorExt,
+    private int serializeDeliveredMessages(final int start, final int cnt,
+        final PromiseMessage whenRes, final ArrayList<PromiseMessage> whenResExt,
         final SnapshotBuffer sb) {
       int base = start;
       sb.putShortAt(base, (short) cnt);
       base += 2;
       if (cnt > 0) {
-        sb.putLongAt(base, onError.forceSerialize(sb));
+        doMessage(whenRes, base, sb);
         base += Long.BYTES;
 
         if (cnt > 1) {
-          for (int i = 0; i < onErrorExt.size(); i++) {
-            sb.putLongAt(base + i * Long.BYTES, onErrorExt.get(i).forceSerialize(sb));
+          for (int i = 0; i < whenResExt.size(); i++) {
+            doMessage(whenResExt.get(i), base + i * Long.BYTES, sb);
           }
-          base += onErrorExt.size() * Long.BYTES;
+          base += whenResExt.size() * Long.BYTES;
         }
       }
       return base;
+    }
+
+    private void doMessage(final PromiseMessage pm, final int location,
+        final SnapshotBuffer sb) {
+      if (pm.isDelivered()
+          && pm.getTarget() != pm.getPromise().getOwner()) {
+        TracingActor ta = (TracingActor) pm.getTarget();
+        ta.getSnapshotRecord().farReferenceMessage(pm, sb, location);
+      } else {
+        sb.putLongAt(location, pm.forceSerialize(sb));
+      }
     }
 
     private void serializeChainedPromises(final int start, final int cnt,
@@ -247,9 +258,14 @@ public abstract class PromiseSerializationNodes {
       int chainedPromCnt = sb.getShort();
       for (int i = 0; i < chainedPromCnt; i++) {
         SPromise remote = (SPromise) sb.getReference();
-        p.addChainedPromise(remote);
-      }
+        boolean complete = remote.isCompleted();
 
+        p.addChainedPromise(remote);
+        remote.resolveFromSnapshot(value, p.getResolutionStateUnsync(),
+            SnapshotBackend.lookupActor(resolver), !complete);
+        ((STracingPromise) remote).setResolvingActorForSnapshot(resolver);
+
+      }
       return p;
     }
 
