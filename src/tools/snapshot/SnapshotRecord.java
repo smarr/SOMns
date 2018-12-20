@@ -70,7 +70,7 @@ public class SnapshotRecord {
   }
 
   public void handleTodos(final SnapshotBuffer sb) {
-    SnapshotBackend.removeTodo(this);
+    // SnapshotBackend.removeTodo(this);
     while (!externalReferences.isEmpty()) {
       FarRefTodo frt = externalReferences.poll();
 
