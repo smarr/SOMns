@@ -231,7 +231,7 @@ public final class SnapshotParser {
     final int  msgNo;
     final long location;
 
-    public MessageLocation(final int msgNo, final long location) {
+    MessageLocation(final int msgNo, final long location) {
       this.msgNo = msgNo;
       this.location = location;
     }
