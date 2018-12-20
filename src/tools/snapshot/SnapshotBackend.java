@@ -17,12 +17,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.graalvm.collections.EconomicMap;
+import org.graalvm.collections.MapCursor;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.interpreter.actors.Actor;
+import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SPromise;
 import som.interpreter.nodes.InstantiationNode.ClassInstantiationNode;
@@ -33,6 +35,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
+import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.concurrency.TracingBackend;
@@ -50,7 +53,7 @@ public class SnapshotBackend {
   private static final StructuralProbe                            probe;
   private static final ConcurrentLinkedQueue<SnapshotBuffer>      buffers;
   private static final ConcurrentLinkedQueue<ArrayList<Long>>     messages;
-  private static final ArrayList<SClass>                          classEnclosures;
+  private static final EconomicMap<SClass, TracingActor>          classEnclosures;
   private static final ConcurrentHashMap<SnapshotRecord, Integer> unfinishedSerializations;
 
   // this is a reference to the list maintained by the objectsystem
@@ -65,7 +68,7 @@ public class SnapshotBackend {
       probe = new StructuralProbe();
       buffers = new ConcurrentLinkedQueue<>();
       messages = new ConcurrentLinkedQueue<>();
-      classEnclosures = new ArrayList<>();
+      classEnclosures = EconomicMap.create();
       unfinishedSerializations = new ConcurrentHashMap<>();
       // identity int, includes mixin info
       // long outer
@@ -77,7 +80,7 @@ public class SnapshotBackend {
       probe = null;
       buffers = new ConcurrentLinkedQueue<>();
       messages = new ConcurrentLinkedQueue<>();
-      classEnclosures = new ArrayList<>();
+      classEnclosures = EconomicMap.create();
       unfinishedSerializations = new ConcurrentHashMap<>();
     } else {
       classDictionary = null;
@@ -103,7 +106,7 @@ public class SnapshotBackend {
     symbolDictionary.put(sym.getSymbolId(), sym);
   }
 
-  public static void registerClass(final SClass clazz) {
+  public static synchronized void registerClass(final SClass clazz) {
     assert VmSettings.TRACK_SNAPSHOT_ENTITIES;
     classDictionary.put(clazz.getIdentity(), clazz);
   }
@@ -154,6 +157,7 @@ public class SnapshotBackend {
 
     // Step 1: install placeholder
     classDictionary.put(id, null);
+    // System.out.println("creating Class" + mixin.getIdentifier() + " : " + (short) id);
 
     // Step 2: get outer object
     SObjectWithClass enclosingObject = SnapshotParser.getOuterForClass(id);
@@ -163,8 +167,6 @@ public class SnapshotBackend {
     Object superclassAndMixins =
         mixin.getSuperclassAndMixinResolutionInvokable().createCallTarget()
              .call(new Object[] {enclosingObject});
-
-    // System.out.println("creating Class" + mixin.getIdentifier() + " : " + (short) id);
 
     ClassFactory factory = mixin.createClassFactory(superclassAndMixins, false, false, false,
         UninitializedObjectSerializationNodeFactory.getInstance());
@@ -350,26 +352,10 @@ public class SnapshotBackend {
         fos.getChannel().write(ByteBuffer.wrap(sb.getRawBuffer(), 0, sb.position()));
         fos.flush();
       }
+
     } catch (IOException e1) {
       throw new RuntimeException(e1);
     }
-  }
-
-  private static int writeLoadedModules(final FileOutputStream fos) throws IOException {
-    int size = (loadedModules.size() + 1) * Short.BYTES;
-    ByteBuffer bb = ByteBuffer.allocate(size).order(ByteOrder.LITTLE_ENDIAN);
-    // by adding the uri strings to the symbol table we can use a compact represenation as part
-    // of the snap file.
-
-    bb.putShort((short) loadedModules.size());
-    for (MixinDefinition module : loadedModules.getValues()) {
-      bb.putShort(module.getIdentifier().getSymbolId());
-    }
-
-    bb.rewind();
-    fos.getChannel().write(bb);
-    fos.flush();
-    return size;
   }
 
   private static int writeClassEnclosures(final FileOutputStream fos) throws IOException {
@@ -377,15 +363,21 @@ public class SnapshotBackend {
     ByteBuffer bb = ByteBuffer.allocate(size).order(ByteOrder.LITTLE_ENDIAN);
 
     bb.putLong(classEnclosures.size());
-    for (SClass clazz : classEnclosures) {
+    MapCursor<SClass, TracingActor> cursor = classEnclosures.getEntries();
+
+    // just use the first buffer available; that object isn't used anywhere else
+    SnapshotBuffer buffer = buffers.peek();
+
+    while (cursor.advance()) {
+      SClass clazz = cursor.getKey();
+      TracingActor owner = cursor.getValue();
+
       bb.putLong(clazz.getIdentity());
       SObjectWithClass outer = clazz.getEnclosingObject();
-      // TODO if necessary keep actual ownership information, for now we assume all the class
-      // creation is happening in the main actor.
-      TracingActor owner = (TracingActor) vm.getMainActor();
+
       if (!owner.getSnapshotRecord().containsObjectUnsync(outer)) {
-        // just use the first buffer available; that object isn't used anywhere else
-        outer.getSOMClass().serialize(outer, buffers.peek());
+        buffer.owner.setCurrentActorSnapshot(owner);
+        outer.getSOMClass().serialize(outer, buffer);
       }
       bb.putLong(owner.getSnapshotRecord().getObjectPointer(outer));
     }
@@ -481,8 +473,10 @@ public class SnapshotBackend {
   }
 
   public static void registerClassEnclosure(final SClass clazz) {
+    ActorProcessingThread current =
+        (ActorProcessingThread) TracingActivityThread.currentThread();
     synchronized (classEnclosures) {
-      classEnclosures.add(clazz);
+      classEnclosures.put(clazz, (TracingActor) current.getCurrentActor());
     }
   }
 }
