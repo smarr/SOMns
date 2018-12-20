@@ -155,7 +155,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
         backing = oa;
         break;
       case TYPE_EMPTY:
-        backing = sb.getInt();
+        backing = len;
         break;
       default:
         throw new IllegalArgumentException();
