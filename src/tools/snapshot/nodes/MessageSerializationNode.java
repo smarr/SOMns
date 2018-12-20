@@ -87,6 +87,9 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
   @ExplodeLoop
   protected final void doArguments(final Object[] args, final int base,
       final SnapshotBuffer sb) {
+    CompilerAsserts.partialEvaluationConstant(serializationNodes.length);
+    CompilerAsserts.compilationConstant(serializationNodes.length);
+
     assert serializationNodes.length == args.length;
 
     if (serializationNodes.length <= 0) {
