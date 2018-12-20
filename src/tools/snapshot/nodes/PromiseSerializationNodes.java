@@ -2,6 +2,7 @@ package tools.snapshot.nodes;
 
 import java.util.ArrayList;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -197,6 +198,7 @@ public abstract class PromiseSerializationNodes {
       }
     }
 
+    @TruffleBoundary // TODO: can we do better than a boundary?
     private void serializeChainedPromises(final int start, final int cnt,
         final SPromise chainedProm,
         final ArrayList<SPromise> chainedPromExt, final SnapshotBuffer sb) {

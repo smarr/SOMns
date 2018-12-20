@@ -76,6 +76,7 @@ public class SnapshotRecord {
     }
   }
 
+  @TruffleBoundary // TODO: convert to an approach that constructs a cache
   public void handleObjectsReferencedFromFarRefs(final SnapshotBuffer sb,
       final ClassPrim classPrim) {
     // SnapshotBackend.removeTodo(this);
