@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
 
 import org.graalvm.collections.EconomicMap;
 
@@ -23,16 +24,19 @@ public class DeserializationBuffer {
   private final EconomicMap<Long, Object> deserialized;
   private long                            lastRef;
   int                                     depth = 0;
+  private ArrayList<Long>                 unserialized;
 
   public DeserializationBuffer(final byte[] backing) {
     buffer = ByteBuffer.wrap(backing).asReadOnlyBuffer().order(ByteOrder.LITTLE_ENDIAN);
     buffer.rewind();
     deserialized = EconomicMap.create();
+    unserialized = new ArrayList<>();
   }
 
   public DeserializationBuffer(final ByteBuffer buffer) {
     this.buffer = buffer;
     deserialized = EconomicMap.create();
+    unserialized = new ArrayList<>();
   }
 
   public byte get() {
@@ -112,6 +116,11 @@ public class DeserializationBuffer {
 
     depth++;
     SClass clazz = SnapshotBackend.lookupClass(cId);
+    if (clazz == null) {
+      unserialized.add(current);
+      depth--;
+      return null;
+    }
 
     Object o = clazz.getSerializer().deserialize(this);
 
@@ -140,6 +149,13 @@ public class DeserializationBuffer {
 
       depth++;
       SClass clazz = SnapshotBackend.lookupClass(cId);
+      if (clazz == null) {
+        unserialized.add(reference);
+        depth--;
+        position(current);
+        return null;
+      }
+
       Object o = clazz.getSerializer().deserialize(this);
       depth--;
       // continue with current object
@@ -204,6 +220,17 @@ public class DeserializationBuffer {
       // relationship
       for (FixupInformation fi : (FixupList) ref) {
         fi.fixUp(result);
+      }
+    }
+  }
+
+  public void doUnserialized() {
+    while (!unserialized.isEmpty()) {
+      ArrayList<Long> todo = unserialized;
+      unserialized = new ArrayList<>();
+
+      for (long ref : todo) {
+        deserializeWithoutContext(ref);
       }
     }
   }
