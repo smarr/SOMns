@@ -30,7 +30,7 @@ public class SnapshotRecord {
    * SnapshotBuffer is then known and used to fix the reference (writing a long in another
    * buffer at a specified location).
    */
-  private final ConcurrentLinkedQueue<FarRefTodo> externalReferences;
+  private final ConcurrentLinkedQueue<DeferredFarRefSerialization> externalReferences;
 
   public SnapshotRecord(final TracingActor owner) {
     this.entries = EconomicMap.create();
@@ -76,10 +76,11 @@ public class SnapshotRecord {
     }
   }
 
-  public void handleTodos(final SnapshotBuffer sb, final ClassPrim classPrim) {
+  public void handleObjectsReferencedFromFarRefs(final SnapshotBuffer sb,
+      final ClassPrim classPrim) {
     // SnapshotBackend.removeTodo(this);
     while (!externalReferences.isEmpty()) {
-      FarRefTodo frt = externalReferences.poll();
+      DeferredFarRefSerialization frt = externalReferences.poll();
 
       // ignore todos from a different snapshot
       if (frt.referer.snapshotVersion == sb.snapshotVersion) {
@@ -94,7 +95,6 @@ public class SnapshotRecord {
         frt.resolve(getObjectPointer(frt.target));
       }
     }
-
   }
 
   /**
@@ -114,9 +114,9 @@ public class SnapshotRecord {
       other.putLongAt(destination, l);
     } else {
       if (externalReferences.isEmpty()) {
-        SnapshotBackend.addUnfinishedTodo(this);
+        SnapshotBackend.deferSerialization(this);
       }
-      externalReferences.offer(new FarRefTodo(other, destination, o));
+      externalReferences.offer(new DeferredFarRefSerialization(other, destination, o));
     }
   }
 
@@ -128,9 +128,9 @@ public class SnapshotRecord {
       other.putLongAt(destination, l);
     } else {
       if (externalReferences.isEmpty()) {
-        SnapshotBackend.addUnfinishedTodo(this);
+        SnapshotBackend.deferSerialization(this);
       }
-      externalReferences.offer(new FarRefTodo(other, destination, pm));
+      externalReferences.offer(new DeferredFarRefSerialization(other, destination, pm));
     }
   }
 
@@ -143,12 +143,12 @@ public class SnapshotRecord {
     return l;
   }
 
-  public static final class FarRefTodo {
+  public static final class DeferredFarRefSerialization {
     private final SnapshotBuffer referer;
     private final int            referenceOffset;
     final Object                 target;
 
-    FarRefTodo(final SnapshotBuffer referer, final int referenceOffset,
+    DeferredFarRefSerialization(final SnapshotBuffer referer, final int referenceOffset,
         final Object target) {
       this.referer = referer;
       this.referenceOffset = referenceOffset;

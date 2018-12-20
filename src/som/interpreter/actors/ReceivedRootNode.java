@@ -77,7 +77,7 @@ public abstract class ReceivedRootNode extends RootNode {
 
     if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS) {
       SnapshotBuffer sb = currentThread.getSnapshotBuffer();
-      sb.getRecord().handleTodos(sb, classPrim);
+      sb.getRecord().handleObjectsReferencedFromFarRefs(sb, classPrim);
 
       long loc;
       if (sb.needsToBeSnapshot(msg.getMessageId())) {

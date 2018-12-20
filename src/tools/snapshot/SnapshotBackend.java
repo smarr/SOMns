@@ -57,7 +57,7 @@ public class SnapshotBackend {
   private static final ConcurrentLinkedQueue<SnapshotBuffer>      buffers;
   private static final ConcurrentLinkedQueue<ArrayList<Long>>     messages;
   private static final EconomicMap<SClass, TracingActor>          classEnclosures;
-  private static final ConcurrentHashMap<SnapshotRecord, Integer> unfinishedSerializations;
+  private static final ConcurrentHashMap<SnapshotRecord, Integer> deferredSerializations;
 
   // this is a reference to the list maintained by the objectsystem
   private static EconomicMap<URI, MixinDefinition> loadedModules;
@@ -72,7 +72,7 @@ public class SnapshotBackend {
       buffers = new ConcurrentLinkedQueue<>();
       messages = new ConcurrentLinkedQueue<>();
       classEnclosures = EconomicMap.create();
-      unfinishedSerializations = new ConcurrentHashMap<>();
+      deferredSerializations = new ConcurrentHashMap<>();
       // identity int, includes mixin info
       // long outer
       // essentially this is about capturing the outer
@@ -84,7 +84,7 @@ public class SnapshotBackend {
       buffers = new ConcurrentLinkedQueue<>();
       messages = new ConcurrentLinkedQueue<>();
       classEnclosures = EconomicMap.create();
-      unfinishedSerializations = new ConcurrentHashMap<>();
+      deferredSerializations = new ConcurrentHashMap<>();
     } else {
       classDictionary = null;
       symbolDictionary = null;
@@ -92,7 +92,7 @@ public class SnapshotBackend {
       buffers = null;
       messages = null;
       classEnclosures = null;
-      unfinishedSerializations = null;
+      deferredSerializations = null;
     }
   }
 
@@ -181,6 +181,7 @@ public class SnapshotBackend {
     // Step 4: fixup
     Object current = classDictionary.get(id);
     if (current instanceof LinkedList) {
+      @SuppressWarnings("unchecked")
       LinkedList<Long> todo = (LinkedList<Long>) current;
       DeserializationBuffer db = SnapshotParser.getDeserializationBuffer();
       for (long ref : todo) {
@@ -296,14 +297,18 @@ public class SnapshotBackend {
     messages.add(messageLocations);
   }
 
+  /**
+   * Serialization of objects referenced from far references need to be deferred to the owning
+   * actor.
+   */
   @TruffleBoundary
-  public static void addUnfinishedTodo(final SnapshotRecord sr) {
-    unfinishedSerializations.put(sr, 0);
+  public static void deferSerialization(final SnapshotRecord sr) {
+    deferredSerializations.put(sr, 0);
   }
 
   @TruffleBoundary
-  public static void removeTodo(final SnapshotRecord sr) {
-    unfinishedSerializations.remove(sr);
+  public static void completedSerialization(final SnapshotRecord sr) {
+    deferredSerializations.remove(sr);
   }
 
   public static StructuralProbe getProbe() {
@@ -339,12 +344,12 @@ public class SnapshotBackend {
       // handle the unfinished serialization.
       SnapshotBuffer buffer = buffers.peek();
 
-      while (!unfinishedSerializations.isEmpty()) {
-        for (SnapshotRecord sr : unfinishedSerializations.keySet()) {
+      while (!deferredSerializations.isEmpty()) {
+        for (SnapshotRecord sr : deferredSerializations.keySet()) {
           assert sr.owner != null;
-          unfinishedSerializations.remove(sr);
+          deferredSerializations.remove(sr);
           buffer.owner.setCurrentActorSnapshot(sr.owner);
-          sr.handleTodos(buffer, classPrim);
+          sr.handleObjectsReferencedFromFarRefs(buffer, classPrim);
         }
       }
 
