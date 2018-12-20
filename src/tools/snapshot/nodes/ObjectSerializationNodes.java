@@ -167,6 +167,11 @@ public abstract class ObjectSerializationNodes {
       layout = classFact.getInstanceLayout();
       fieldReads = insert(reads);
       fieldCnt = fieldReads.length;
+
+      cachedSerializers = new CachedSerializationNode[fieldCnt];
+      for (int i = 0; i < fieldCnt; i++) {
+        cachedSerializers[i] = CachedSerializationNodeFactory.create();
+      }
     }
 
     protected SObjectSerializationNode(final SClass clazz) {
@@ -178,6 +183,7 @@ public abstract class ObjectSerializationNodes {
     @Specialization
     public void serialize(final SObject so, final SnapshotBuffer sb) {
       if (!so.isLayoutCurrent()) {
+        CompilerDirectives.transferToInterpreter();
         ObjectTransitionSafepoint.INSTANCE.transitionObject(so);
       }
 
@@ -191,22 +197,9 @@ public abstract class ObjectSerializationNodes {
       }
     }
 
-    protected final CachedSerializationNode[] getSerializers(final SObject o) {
-      CachedSerializationNode[] nodes = new CachedSerializationNode[fieldCnt];
-      for (int i = 0; i < fieldCnt; i++) {
-        Object value = fieldReads[i].read(o);
-        nodes[i] = CachedSerializationNodeFactory.create(value);
-      }
-      return nodes;
-    }
-
     @ExplodeLoop
     public void doCached(final SObject o, final SnapshotBuffer sb) {
       int base = sb.addObjectWithFields(o, clazz, fieldCnt);
-
-      if (cachedSerializers == null) {
-        cachedSerializers = insert(getSerializers(o));
-      }
 
       for (int i = 0; i < fieldCnt; i++) {
         Object value = fieldReads[i].read(o);
@@ -216,7 +209,7 @@ public abstract class ObjectSerializationNodes {
 
         if (!sb.getRecord().containsObjectUnsync(value)) {
           // Referenced Object not yet in snapshot
-          cachedSerializers[i].serialize(value, sb);
+          cachedSerializers[i].execute(value, sb);
         }
 
         sb.putLongAt(base + (8 * i), sb.getRecord().getObjectPointer(value));

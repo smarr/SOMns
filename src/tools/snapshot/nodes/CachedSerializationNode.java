@@ -1,6 +1,8 @@
 package tools.snapshot.nodes;
 
+import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
@@ -15,23 +17,25 @@ import tools.snapshot.deserialization.DeserializationBuffer;
 
 @GenerateNodeFactory
 public abstract class CachedSerializationNode extends AbstractSerializationNode {
-  private final DispatchGuard             guard;
-  private final AbstractSerializationNode cachedSerializer;
 
-  public CachedSerializationNode(final Object o) {
+  public CachedSerializationNode() {
     super();
-    this.guard = DispatchGuard.create(o);
-    this.cachedSerializer = Types.getClassOf(o).getSerializer();
   }
 
-  @Specialization
-  public void serialize(final Object o, final SnapshotBuffer sb) {
+  protected static DispatchGuard createDispatchGuard(final Object o) {
+    return DispatchGuard.create(o);
+  }
+
+  protected static AbstractSerializationNode getSerializer(final Object o) {
+    // TODO: this is not yet creating a correct node. We have only a single node for all ASTs,
+    // and we also need to remove the dependency on the class
+    return Types.getClassOf(o).getSerializer();
+  }
+
+  protected static boolean execGuard(final Object o, final DispatchGuard guard,
+      final Assumption objectLayoutIsLatest) {
     try {
-      if (guard.entryMatches(o)) {
-        cachedSerializer.execute(o, sb);
-      } else {
-        Types.getClassOf(o).serialize(o, sb);
-      }
+      return guard.entryMatches(o);
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       SObject so = (SObject) o;
@@ -39,8 +43,17 @@ public abstract class CachedSerializationNode extends AbstractSerializationNode 
         // we have to update the layout to avoid stackoverflow
         ObjectTransitionSafepoint.INSTANCE.transitionObject(so);
       }
-      replace(CachedSerializationNodeFactory.create(o)).serialize(o, sb);
+      return false;
     }
+  }
+
+  @Specialization(guards = "execGuard(o, guard, objectLayoutIsLatest)",
+      assumptions = "objectLayoutIsLatest")
+  public void serialize(final Object o, final SnapshotBuffer sb,
+      @Cached("createDispatchGuard(o)") final DispatchGuard guard,
+      @Cached("guard.getAssumption()") final Assumption objectLayoutIsLatest,
+      @Cached("getSerializer(o)") final AbstractSerializationNode serializer) {
+    serializer.execute(o, sb);
   }
 
   @Override

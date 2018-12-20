@@ -1,6 +1,6 @@
 package tools.snapshot.nodes;
 
-import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
@@ -47,9 +47,12 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     this.serializationNodes =
         new CachedSerializationNode[selector.getNumberOfSignatureArguments()];
 
-    assert serializationNodes.length < 2
-        * Byte.MAX_VALUE : "We assume the number of args is reasonable, but was huge: "
-            + serializationNodes.length;
+    assert serializationNodes.length < 32 : "We assume the number of args is reasonable, but was huge: "
+        + serializationNodes.length;
+
+    for (int i = 0; i < serializationNodes.length; i++) {
+      serializationNodes[i] = CachedSerializationNodeFactory.create();
+    }
   }
 
   public MessageSerializationNode(final SSymbol selector) {
@@ -110,15 +113,8 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
         sb.putLongAt((base + 1) + i * Long.BYTES, record.getObjectPointer(Nil.nilObject));
       } else {
         if (!record.containsObjectUnsync(obj)) {
-          // TODO: can we specialize this on the ClassGroup/Factory?
-
           if (!sb.getRecord().containsObjectUnsync(obj)) {
-            if (serializationNodes[i] == null) {
-              // initialize the node
-              CompilerDirectives.transferToInterpreterAndInvalidate();
-              serializationNodes[i] = CachedSerializationNodeFactory.create(obj);
-            }
-            serializationNodes[i].serialize(obj, sb);
+            serializationNodes[i].execute(obj, sb);
           }
         }
         sb.putLongAt((base + 1) + i * Long.BYTES, record.getObjectPointer(obj));
