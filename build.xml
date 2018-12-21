@@ -99,6 +99,7 @@
     <condition property="kernel" value="darwin-amd64" else="linux-amd64">
         <os family="mac"/>
     </condition>
+    
     <travis target="env" start="Environment" />
     <echo>
         ant.java.version: ${ant.java.version}
@@ -122,13 +123,12 @@
     <target name="clean-truffle" depends="check-truffle-available" if="truffle.present">
         <travis target="clean-truffle" start="clean-truffle" />
         
-        <exec executable="${mx.cmd}" dir="${truffle.dir}">
-            <arg value="clean"/>
+        <exec executable="${mx.cmd}" dir="${svm.dir}">
+          <arg value="--dynamicimports"/>
+          <arg value="../truffle,../tools,../compiler,../sdk"/>
+          <arg value="clean"/>
         </exec>
-        <exec executable="${mx.cmd}" dir="${tools.dir}">
-            <arg value="clean"/>
-        </exec>
-        
+
         <travis target="clean-truffle" />
     </target>
 
@@ -153,34 +153,14 @@
 
     <target name="truffle-libs" unless="skip.truffle" depends="truffle-submodule">
         <travis target="truffle-libs" start="Build Truffle" />
-        <exec executable="${mx.cmd}" dir="${truffle.dir}" failonerror="true">
-            <arg value="build"/>
-            <arg value="--no-native"/>
-        </exec>
-        <exec executable="${mx.cmd}" dir="${tools.dir}" failonerror="true">
-            <arg value="build"/>
-        </exec>
         <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
+            <arg value="--dynamicimports"/>
+            <arg value="../truffle,../tools,../compiler,../sdk"/>
             <arg value="build"/>
+            <arg value="--no-native" unless:true="${build.native}" />
             <env key="JAVA_HOME" value="${env.JVMCI_HOME}" />
         </exec>
         <travis target="truffle-libs" />
-    </target>
-
-    <target name="build-graal" description="Build the embedded Graal" unless="skip.graal">
-      <travis target="build-graal" start="Build Graal" />
-      <echo unless:true="${is.atLeastJava9}" level="warning">
-          The used JDK needs to have JVMCI support, which is the case for Java 9.
-          If Java 8 is needed, see
-          http://www.oracle.com/technetwork/oracle-labs/program-languages/downloads/index.html
-          for a JVMCI JDK Download.
-      </echo>
-      
-      <exec executable="${mx.cmd}" dir="${graal.dir}" failonerror="true">
-        <arg value="build" />
-        <arg value="--no-native" />
-      </exec>
-      <travis target="build-graal" />
     </target>
 
     <target name="bd-libs"> <!-- implicit dependency on truffle-libs -->
@@ -198,16 +178,9 @@
     </target>
 
     <target name="ideinit" depends="source">
-        <exec executable="${mx.cmd}" dir="${truffle.dir}" failonerror="true">
-            <arg value="eclipseinit"/>
-        </exec>
-        <exec executable="${mx.cmd}" dir="${sdk.dir}" failonerror="true">
-            <arg value="eclipseinit"/>
-        </exec>
-        <exec executable="${mx.cmd}" dir="${tools.dir}" failonerror="true">
-            <arg value="eclipseinit"/>
-        </exec>
         <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
+            <arg value="--dynamicimports"/>
+            <arg value="../truffle,../tools,../compiler,../sdk"/>
             <arg value="eclipseinit"/>
         </exec>
     </target>
@@ -349,7 +322,7 @@
         <travis target="compile-som" />
     </target>
 
-    <target name="compile" depends="libs,compile-som,compile-test-extension,build-graal" description="Compile SOMns and dependencies">
+    <target name="compile" depends="libs,compile-som,compile-test-extension" description="Compile SOMns and dependencies">
     </target>
 
     <target name="compile-test-extension">
@@ -533,7 +506,7 @@
     <target name="tests" depends="core-tests,serialization-tests,replay-tests,coverage">
     </target>
     
-    <target name="native" depends="libs,compile-som">
+    <target name="native-build" depends="libs,compile-som">
       <travis target="native" start="Build Native Image" />
       <java classname="com.oracle.svm.hosted.NativeImageGeneratorRunner" fork="true" failonerror="true"
           jvm="${env.JVMCI_HOME}/bin/java">
@@ -568,5 +541,11 @@
 
       </java>
       <travis target="native" />
+    </target>
+    
+    <target name="native">
+      <antcall target="native-build">
+        <param name="build.native" value="true"/>
+      </antcall>
     </target>
 </project>

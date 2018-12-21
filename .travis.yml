@@ -74,8 +74,7 @@ install: |
     tar -C ${TRAVIS_BUILD_DIR}/.. -xzf ${ECLIPSE_TAR}
     export ECLIPSE_EXE=${TRAVIS_BUILD_DIR}/../eclipse/eclipse
   fi
-  export SG=-Dskip.graal=true
-  export ANT="ant -e $SG"
+  export ANT="ant -e"
   printf "travis_fold:end:downloads\n"
 
 

@@ -18,28 +18,28 @@ build_and_test_job:
   stage: build-and-test
   tags: [benchmarks, infinity]
   script:
-    - ant -Dskip.graal=true checkstyle
-    - ant -Dskip.graal=true eclipseformat-check
-    - timeout 5m ant -Dskip.graal=true unit-tests som-tests
+    - ant checkstyle
+    - ant eclipseformat-check
+    - timeout 5m ant unit-tests som-tests
 
 kompos_and_dym_tests:
   stage: full-test
   tags: [benchmarks, infinity]
   script:
-    - ant -Dskip.graal=true jacoco-lib compile dynamic-metrics-tests superinstructions-tests
+    - ant jacoco-lib compile dynamic-metrics-tests superinstructions-tests
     - (cd tools/kompos && npm install . && npm -s run verify && npm test)
 
 replay_tests:
   stage: full-test
   tags: [benchmarks, infinity]
   script:
-    - timeout 10m ant -Dskip.graal=true replay-tests
+    - timeout 10m ant replay-tests
 
 snapshot_tests:
   stage: full-test
   tags: [benchmarks, infinity]
   script:
-    - timeout 10m ant -Dskip.graal=true snapshot-tests
+    - timeout 10m ant snapshot-tests
 
 svm_tests:
   stage: full-test
@@ -52,7 +52,7 @@ benchmark_savina_job:
   tags: [benchmarks, infinity]
   allow_failure: true
   script:
-    - ant -Dskip.graal=true compile
+    - ant compile
     - export EXP=`if [[ "$CI_BUILD_REF_NAME" = "master" ]]; then echo "SOMns-Savina"; else echo "SOMns-Savina-exp"; fi`; rebench --without-nice -c --commit-id="$CI_BUILD_REF" --environment="`hostname` `cat /etc/issue | cut -d ' ' -f 1`" --project=SOMns-Savina --branch=master codespeed.conf $EXP
 
 benchmark_job:
@@ -60,7 +60,7 @@ benchmark_job:
   tags: [benchmarks, infinity]
   allow_failure: true
   script:
-    - ant -Dskip.graal=true compile
+    - ant compile
     - export EXP=`if [[ "$CI_BUILD_REF_NAME" = "master" ]]; then echo "SOMns"; else echo "SOMns-exp"; fi`; rebench --without-nice -c --commit-id="$CI_BUILD_REF" --environment="`hostname` `cat /etc/issue | cut -d ' ' -f 1`" --project=SOMns --branch=master codespeed.conf $EXP
 
 benchmark_interp_job:
@@ -68,7 +68,7 @@ benchmark_interp_job:
   tags: [benchmarks, infinity]
   allow_failure: true
   script:
-    - ant -Dskip.graal=true compile
+    - ant compile
     - export EXP=`if [[ "$CI_BUILD_REF_NAME" = "master" ]]; then echo "SOMns-interp"; else echo "SOMns-interp-exp"; fi`; rebench --without-nice -c --commit-id="$CI_BUILD_REF" --environment="`hostname` `cat /etc/issue | cut -d ' ' -f 1`" --project=SOMns --branch=master codespeed.conf $EXP
 
 benchmark_nightly_job:
@@ -78,6 +78,6 @@ benchmark_nightly_job:
   only:
     - triggers
   script:
-    - ant -Dskip.graal=true compile
+    - ant compile
     - rebench --without-nice -c --commit-id="$CI_BUILD_REF" --environment="`hostname` `cat /etc/issue | cut -d ' ' -f 1`" --project=SOMns --branch=master codespeed.conf nightly
     - rebench --without-nice -c --commit-id="$CI_BUILD_REF" --environment="`hostname` `cat /etc/issue | cut -d ' ' -f 1`" --project=SOMns --branch=master codespeed.conf SOMns-Savina-tracing
