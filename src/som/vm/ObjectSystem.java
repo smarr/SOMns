@@ -430,14 +430,16 @@ public final class ObjectSystem {
     Classes.blockClass.getSOMClass()
                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
 
-    // these classes are not exposed in Newspeak directly, and thus, do not yet have a class
-    // factory
-    setDummyClassFactory(Classes.messageClass, null, null); // MessageSerializationNodeFactory.getInstance());
-    setDummyClassFactory(Classes.frameClass, FrameSerializationNodeFactory.getInstance(),
-        null);
-    setDummyClassFactory(Classes.methodClass,
-        SInvokableSerializationNodeFactory.getInstance(),
-        SInvokableSerializationNodeFactory.create());
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      // these classes are not exposed in Newspeak directly, and thus, do not yet have a class
+      // factory
+      setDummyClassFactory(Classes.messageClass, null, null); // MessageSerializationNodeFactory.getInstance());
+      setDummyClassFactory(Classes.frameClass, FrameSerializationNodeFactory.getInstance(),
+          null);
+      setDummyClassFactory(Classes.methodClass,
+          SInvokableSerializationNodeFactory.getInstance(),
+          SInvokableSerializationNodeFactory.create());
+    }
 
     SClass kernelClass = kernelModule.instantiateClass(Nil.nilObject, Classes.objectClass);
     KernelObj.kernel.setClass(kernelClass);
