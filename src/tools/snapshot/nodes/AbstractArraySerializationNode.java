@@ -21,8 +21,10 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   private static final byte TYPE_OBJECT  = 3;
   private static final byte TYPE_EMPTY   = 4;
 
+  private final SClass clazz;
+
   public AbstractArraySerializationNode(final SClass clazz) {
-    super(clazz);
+    this.clazz = clazz;
   }
 
   @Override
@@ -166,25 +168,23 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   @GenerateNodeFactory
   public abstract static class ArraySerializationNode extends AbstractArraySerializationNode {
 
-    public ArraySerializationNode(final SClass clazz) {
-      super(clazz);
+    public ArraySerializationNode() {
+      super(Classes.arrayClass);
     }
 
     @Override
     public Object deserialize(final DeserializationBuffer sb) {
       Object backing = parseBackingStorage(sb);
-      if (backing == null) {
-
-      }
       return new SArray.SMutableArray(backing, Classes.arrayClass);
     }
   }
 
   @GenerateNodeFactory
-  public abstract static class TransferArraySerializationNode extends ArraySerializationNode {
+  public abstract static class TransferArraySerializationNode
+      extends AbstractArraySerializationNode {
 
-    public TransferArraySerializationNode(final SClass clazz) {
-      super(clazz);
+    public TransferArraySerializationNode() {
+      super(Classes.transferArrayClass);
     }
 
     @Override
@@ -195,10 +195,11 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   }
 
   @GenerateNodeFactory
-  public abstract static class ValueArraySerializationNode extends ArraySerializationNode {
+  public abstract static class ValueArraySerializationNode
+      extends AbstractArraySerializationNode {
 
-    public ValueArraySerializationNode(final SClass clazz) {
-      super(clazz);
+    public ValueArraySerializationNode() {
+      super(Classes.valueArrayClass);
     }
 
     @Override

@@ -17,7 +17,6 @@ import som.interpreter.Types;
 import som.vm.constants.Classes;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
-import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
@@ -31,10 +30,6 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
 
   private static final int SINVOKABLE_SIZE = Short.BYTES;
 
-  public BlockSerializationNode(final SClass clazz) {
-    super(clazz);
-  }
-
   // TODO specialize on different blocks
   @Specialization
   public void serialize(final SBlock block, final SnapshotBuffer sb) {
@@ -42,12 +37,12 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
     MaterializedFrame mf = block.getContextOrNull();
 
     if (mf == null) {
-      int base = sb.addObject(block, clazz, SINVOKABLE_SIZE + 1);
+      int base = sb.addObject(block, Classes.blockClass, SINVOKABLE_SIZE + 1);
       SInvokable meth = block.getMethod();
       sb.putShortAt(base, meth.getIdentifier().getSymbolId());
       sb.putByteAt(base + 2, (byte) 0);
     } else {
-      int base = sb.addObject(block, clazz, SINVOKABLE_SIZE + 1 + Long.BYTES);
+      int base = sb.addObject(block, Classes.blockClass, SINVOKABLE_SIZE + 1 + Long.BYTES);
 
       SInvokable meth = block.getMethod();
       sb.putShortAt(base, meth.getIdentifier().getSymbolId());
@@ -139,7 +134,6 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
     private final FrameDescriptor frameDescriptor;
 
     protected FrameSerializationNode(final FrameDescriptor frameDescriptor) {
-      super(Classes.frameClass);
       this.frameDescriptor = frameDescriptor;
     }
 

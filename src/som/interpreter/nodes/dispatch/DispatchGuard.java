@@ -64,6 +64,14 @@ public abstract class DispatchGuard {
     return new CheckSImmutableObject(((SImmutableObject) obj).getObjectLayout());
   }
 
+  public static CheckSObject createSObjectCheck(final ClassFactory factory) {
+    if (factory.hasOnlyImmutableFields()) {
+      return new CheckSImmutableObject(factory.getInstanceLayout());
+    } else {
+      return new CheckSMutableObject(factory.getInstanceLayout());
+    }
+  }
+
   private static final class CheckClass extends DispatchGuard {
 
     private final Class<?> expected;

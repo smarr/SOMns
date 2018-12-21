@@ -4,15 +4,18 @@ import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 import som.interpreter.Types;
 import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
+import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
+import tools.snapshot.nodes.ObjectSerializationNodes.SObjectSerializationNode;
 
 
 @GenerateNodeFactory
@@ -27,9 +30,14 @@ public abstract class CachedSerializationNode extends AbstractSerializationNode 
   }
 
   protected static AbstractSerializationNode getSerializer(final Object o) {
-    // TODO: this is not yet creating a correct node. We have only a single node for all ASTs,
-    // and we also need to remove the dependency on the class
-    return Types.getClassOf(o).getSerializer();
+    SClass clazz = Types.getClassOf(o);
+    NodeFactory<? extends AbstractSerializationNode> factory = clazz.getSerializerFactory();
+
+    if (factory.getNodeClass() == SObjectSerializationNode.class) {
+      return factory.createNode(clazz.getInstanceFactory());
+    }
+
+    return factory.createNode();
   }
 
   protected static boolean execGuard(final Object o, final DispatchGuard guard,

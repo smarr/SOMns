@@ -22,7 +22,6 @@ import som.primitives.actors.PromisePrims;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SBlock;
-import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.snapshot.SnapshotBackend;
@@ -41,8 +40,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
 
   @Children private final CachedSerializationNode[] serializationNodes;
 
-  public MessageSerializationNode(final SClass clazz, final SSymbol selector) {
-    super(clazz);
+  public MessageSerializationNode(final SSymbol selector) {
     this.selector = selector;
     this.serializationNodes =
         new CachedSerializationNode[selector.getNumberOfSignatureArguments()];
@@ -53,10 +51,6 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     for (int i = 0; i < serializationNodes.length; i++) {
       serializationNodes[i] = CachedSerializationNodeFactory.create();
     }
-  }
-
-  public MessageSerializationNode(final SSymbol selector) {
-    this(Classes.messageClass, selector);
   }
 
   public enum MessageType {

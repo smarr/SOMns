@@ -37,6 +37,10 @@ public final class SFarReference extends SAbstractObject {
     return farReferenceClass;
   }
 
+  public static SClass getFarRefClass() {
+    return farReferenceClass;
+  }
+
   @Override
   public String toString() {
     return "FarRef[" + value.toString() + ", " + actor.toString() + "]";
@@ -51,7 +55,9 @@ public final class SFarReference extends SAbstractObject {
     assert farReferenceClass == null || cls == null;
     farReferenceClass = cls;
     if (VmSettings.SNAPSHOTS_ENABLED) {
-      cls.getSerializer().replace(FarRefSerializationNodeFactory.create(cls));
+      cls.customizeSerializerFactory(
+          FarRefSerializationNodeFactory.getInstance(),
+          FarRefSerializationNodeFactory.create());
     }
   }
 }
