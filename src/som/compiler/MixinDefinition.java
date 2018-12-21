@@ -63,7 +63,7 @@ import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.snapshot.nodes.AbstractSerializationNode;
-import tools.snapshot.nodes.ObjectSerializationNodesFactory.UninitializedObjectSerializationNodeFactory;
+import tools.snapshot.nodes.ObjectSerializationNodes.ObjectSerializationNode;
 import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.ClassSerializationNodeFactory;
 
 
@@ -210,23 +210,30 @@ public final class MixinDefinition implements SomInteropObject {
       final Object superclassAndMixins, final boolean isTheValueClass,
       final boolean isTheTransferObjectClass, final boolean isTheArrayClass) {
     initializeClass(result, superclassAndMixins, isTheValueClass, isTheTransferObjectClass,
-        isTheArrayClass, UninitializedObjectSerializationNodeFactory.getInstance());
+        isTheArrayClass, null, null);
   }
 
   public void initializeClass(final SClass result,
       final Object superclassAndMixins,
-      final NodeFactory<? extends AbstractSerializationNode> serializerFactory) {
-    initializeClass(result, superclassAndMixins, false, false, false, serializerFactory);
+      final NodeFactory<? extends AbstractSerializationNode> serializerFactory,
+      final AbstractSerializationNode deserializer) {
+    initializeClass(result, superclassAndMixins, false, false, false, serializerFactory,
+        deserializer);
   }
 
   public void initializeClass(final SClass result,
       final Object superclassAndMixins, final boolean isTheValueClass,
       final boolean isTheTransferObjectClass, final boolean isTheArrayClass,
-      final NodeFactory<? extends AbstractSerializationNode> serializerFactory) {
+      final NodeFactory<? extends AbstractSerializationNode> serializerFactory,
+      final AbstractSerializationNode deserializer) {
     VM.callerNeedsToBeOptimized(
         "This is supposed to result in a cacheable object, and thus is only the fallback case.");
     ClassFactory factory = createClassFactory(superclassAndMixins,
-        isTheValueClass, isTheTransferObjectClass, isTheArrayClass, serializerFactory);
+        isTheValueClass, isTheTransferObjectClass, isTheArrayClass);
+    if (serializerFactory != null) {
+      factory.customizeSerialization(serializerFactory, deserializer);
+    }
+
     if (result.getSOMClass() != null) {
       factory.getClassClassFactory().initializeClass(result.getSOMClass());
     }
@@ -314,8 +321,7 @@ public final class MixinDefinition implements SomInteropObject {
 
   public ClassFactory createClassFactory(final Object superclassAndMixins,
       final boolean isTheValueClass, final boolean isTheTransferObjectClass,
-      final boolean isTheArrayClass,
-      final NodeFactory<? extends AbstractSerializationNode> serializerFactory) {
+      final boolean isTheArrayClass) {
     CompilerAsserts.neverPartOfCompilation();
     VM.callerNeedsToBeOptimized(
         "This is supposed to result in a cacheable object, and thus is only the fallback case.");
@@ -366,13 +372,22 @@ public final class MixinDefinition implements SomInteropObject {
         new SClass[] {Classes.classClass}, true,
         // TODO: not passing a ClassFactory of the meta class here is incorrect,
         // might not matter in practice
-        null, ClassSerializationNodeFactory.getInstance());
+        null);
 
     ClassFactory classFactory = new ClassFactory(name, this,
         instanceSlots, dispatchables, instancesAreValues,
         instancesAreTransferObjects, instancesAreArrays,
         mixins, hasOnlyImmutableFields,
-        classClassFactory, serializerFactory);
+        classClassFactory);
+
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      classClassFactory.customizeSerialization(
+          ClassSerializationNodeFactory.getInstance(),
+          ClassSerializationNodeFactory.create());
+      classFactory.customizeSerialization(
+          ObjectSerializationNode.getNodeFactory(classFactory),
+          ObjectSerializationNode.create(classFactory));
+    }
 
     cache.add(classFactory);
 
@@ -536,8 +551,7 @@ public final class MixinDefinition implements SomInteropObject {
 
   public SClass instantiateClass(final SObjectWithClass outer,
       final Object superclassAndMixins) {
-    ClassFactory factory = createClassFactory(superclassAndMixins,
-        false, false, false, UninitializedObjectSerializationNodeFactory.getInstance());
+    ClassFactory factory = createClassFactory(superclassAndMixins, false, false, false);
     return ClassInstantiationNode.instantiate(outer, factory, notAValue,
         cannotBeValues);
   }

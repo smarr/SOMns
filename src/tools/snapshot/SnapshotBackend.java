@@ -45,7 +45,6 @@ import tools.concurrency.TracingBackend;
 import tools.language.StructuralProbe;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.deserialization.SnapshotParser;
-import tools.snapshot.nodes.ObjectSerializationNodesFactory.UninitializedObjectSerializationNodeFactory;
 
 
 public class SnapshotBackend {
@@ -171,8 +170,7 @@ public class SnapshotBackend {
         mixin.getSuperclassAndMixinResolutionInvokable().createCallTarget()
              .call(new Object[] {enclosingObject});
 
-    ClassFactory factory = mixin.createClassFactory(superclassAndMixins, false, false, false,
-        UninitializedObjectSerializationNodeFactory.getInstance());
+    ClassFactory factory = mixin.createClassFactory(superclassAndMixins, false, false, false);
 
     SClass result = new SClass(enclosingObject,
         ClassInstantiationNode.instantiateMetaclassClass(factory, enclosingObject));

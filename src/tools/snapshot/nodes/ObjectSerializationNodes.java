@@ -6,17 +6,18 @@ import java.util.Comparator;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 import som.compiler.MixinDefinition.SlotDefinition;
-import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotRead;
 import som.interpreter.nodes.dispatch.CachedSlotRead.SlotAccess;
 import som.interpreter.nodes.dispatch.CachedSlotWrite;
 import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
+import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.interpreter.objectstorage.StorageLocation;
@@ -24,33 +25,47 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
-import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.deserialization.FixupInformation;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.SObjectSerializationNodeFactory;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.SObjectWithoutFieldsSerializationNodeFactory;
-import tools.snapshot.nodes.ObjectSerializationNodesFactory.UninitializedObjectSerializationNodeFactory;
 
 
 public abstract class ObjectSerializationNodes {
 
   public abstract static class ObjectSerializationNode extends AbstractSerializationNode {
 
-    protected class SlotDefinitionSorter implements Comparator<SlotDefinition> {
+    protected static class SlotDefinitionSorter implements Comparator<SlotDefinition> {
       @Override
       public int compare(final SlotDefinition o1, final SlotDefinition o2) {
         return o1.getName().getString().compareTo(o2.getName().getString());
       }
     }
 
-    protected ObjectSerializationNode(final SClass clazz) {
-      super(clazz);
+    protected final ClassFactory classFact;
+
+    protected ObjectSerializationNode(final ClassFactory instanceFactory) {
+      this.classFact = instanceFactory;
     }
 
-    public static ObjectSerializationNode create(final SClass clazz) {
-      return UninitializedObjectSerializationNodeFactory.create(clazz);
+    public static AbstractSerializationNode create(final ClassFactory instanceFactory) {
+      if (instanceFactory.hasSlots()) {
+        return SObjectSerializationNodeFactory.create(instanceFactory,
+            createReadNodes(instanceFactory));
+      } else {
+        return SObjectWithoutFieldsSerializationNodeFactory.create();
+      }
+    }
+
+    public static NodeFactory<? extends AbstractSerializationNode> getNodeFactory(
+        final ClassFactory instanceFactory) {
+      if (instanceFactory.hasSlots()) {
+        return SObjectSerializationNodeFactory.getInstance();
+      } else {
+        return SObjectWithoutFieldsSerializationNodeFactory.getInstance();
+      }
     }
 
     protected final CachedSlotWrite[] createWriteNodes(final SObject o) {
@@ -82,11 +97,11 @@ public abstract class ObjectSerializationNodes {
       return writes;
     }
 
-    protected final CachedSlotRead[] createReadNodes(final SObject o) {
+    protected static final CachedSlotRead[] createReadNodes(final ClassFactory factory) {
       CompilerDirectives.transferToInterpreter();
 
       ArrayList<SlotDefinition> definitions = new ArrayList<>();
-      ObjectLayout layout = classFact.getInstanceLayout();
+      ObjectLayout layout = factory.getInstanceLayout();
       for (SlotDefinition sd : layout.getStorageLocations().getKeys()) {
         definitions.add(sd);
       }
@@ -102,50 +117,13 @@ public abstract class ObjectSerializationNodes {
 
         AbstractDispatchNode next =
             UninitializedDispatchNode.createLexicallyBound(loc.getSlot().getSourceSection(),
-                loc.getSlot().getName(), classFact.getMixinDefinition().getMixinId());
+                loc.getSlot().getName(), factory.getMixinDefinition().getMixinId());
 
-        reads[i] =
-            loc.getReadNode(SlotAccess.FIELD_READ,
-                DispatchGuard.createSObjectCheck(o),
-                next,
-                false);
+        reads[i] = loc.getReadNode(
+            SlotAccess.FIELD_READ, DispatchGuard.createSObjectCheck(factory), next, false);
       }
 
       return reads;
-    }
-  }
-
-  @GenerateNodeFactory
-  public abstract static class UninitializedObjectSerializationNode
-      extends ObjectSerializationNode {
-
-    protected UninitializedObjectSerializationNode(final SClass clazz) {
-      super(clazz);
-    }
-
-    @Specialization
-    public void serialize(final SObjectWithClass o, final SnapshotBuffer sb) {
-      TruffleCompiler.transferToInterpreterAndInvalidate(
-          "Initialize ObjectSerializationNode.");
-      if (o instanceof SObject) {
-        replace(SObjectSerializationNodeFactory.create(clazz,
-            createReadNodes((SObject) o))).serialize((SObject) o, sb);
-      } else if (o instanceof SObjectWithoutFields) {
-        replace(SObjectWithoutFieldsSerializationNodeFactory.create(clazz)).serialize(
-            (SObjectWithoutFields) o,
-            sb);
-      }
-    }
-
-    @Override
-    public Object deserialize(final DeserializationBuffer sb) {
-      if (classFact.hasSlots()) {
-        return replace(SObjectSerializationNodeFactory.create(clazz)).deserialize(
-            sb);
-      } else {
-        return replace(
-            SObjectWithoutFieldsSerializationNodeFactory.create(clazz)).deserialize(sb);
-      }
     }
   }
 
@@ -161,9 +139,9 @@ public abstract class ObjectSerializationNodes {
     @Children private CachedSerializationNode[] cachedSerializers;
     protected final ObjectLayout                layout;
 
-    protected SObjectSerializationNode(final SClass clazz,
+    protected SObjectSerializationNode(final ClassFactory instanceFactory,
         final CachedSlotRead[] reads) {
-      super(clazz);
+      super(instanceFactory);
       layout = classFact.getInstanceLayout();
       fieldReads = insert(reads);
       fieldCnt = fieldReads.length;
@@ -174,10 +152,8 @@ public abstract class ObjectSerializationNodes {
       }
     }
 
-    protected SObjectSerializationNode(final SClass clazz) {
-      super(clazz);
-      layout = classFact.getInstanceLayout();
-      fieldCnt = layout.getNumberOfFields();
+    protected SObjectSerializationNode(final ClassFactory instanceFactory) {
+      this(instanceFactory, createReadNodes(instanceFactory));
     }
 
     @Specialization
@@ -190,7 +166,8 @@ public abstract class ObjectSerializationNodes {
       if (!layout.isValid()) {
         // replace this with a new node for the new layout
         SObjectSerializationNode replacement =
-            SObjectSerializationNodeFactory.create(clazz, createReadNodes(so));
+            SObjectSerializationNodeFactory.create(classFact,
+                createReadNodes(so.getFactory()));
         replace(replacement).serialize(so, sb);
       } else {
         doCached(so, sb);
@@ -199,7 +176,7 @@ public abstract class ObjectSerializationNodes {
 
     @ExplodeLoop
     public void doCached(final SObject o, final SnapshotBuffer sb) {
-      int base = sb.addObjectWithFields(o, clazz, fieldCnt);
+      int base = sb.addObjectWithFields(o, o.getSOMClass(), fieldCnt);
 
       for (int i = 0; i < fieldCnt; i++) {
         Object value = fieldReads[i].read(o);
@@ -218,6 +195,11 @@ public abstract class ObjectSerializationNodes {
 
     @Override
     public Object deserialize(final DeserializationBuffer sb) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object deserialize(final DeserializationBuffer sb, final SClass clazz) {
       SObject o;
 
       if (classFact.hasOnlyImmutableFields()) {
@@ -262,22 +244,22 @@ public abstract class ObjectSerializationNodes {
 
   @GenerateNodeFactory
   public abstract static class SObjectWithoutFieldsSerializationNode
-      extends ObjectSerializationNode {
-
-    protected SObjectWithoutFieldsSerializationNode(final SClass clazz) {
-      super(clazz);
-    }
+      extends AbstractSerializationNode {
 
     @ExplodeLoop
     @Specialization
     public void serialize(final SObjectWithoutFields o, final SnapshotBuffer sb) {
-      sb.addObject(o, clazz, 0);
+      sb.addObject(o, o.getSOMClass(), 0);
     }
 
     @Override
     public Object deserialize(final DeserializationBuffer sb) {
-      return new SObjectWithoutFields(clazz,
-          classFact);
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Object deserialize(final DeserializationBuffer sb, final SClass clazz) {
+      return new SObjectWithoutFields(clazz, clazz.getInstanceFactory());
     }
   }
 }

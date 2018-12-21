@@ -165,8 +165,9 @@ public class SPromise extends SObjectWithClass {
     assert promiseClass == null || cls == null;
     promiseClass = cls;
     if (VmSettings.SNAPSHOTS_ENABLED) {
-      promiseClass.getSerializer()
-                  .replace(PromiseSerializationNodeFactory.create(promiseClass));
+      promiseClass.customizeSerializerFactory(
+          PromiseSerializationNodeFactory.getInstance(),
+          PromiseSerializationNodeFactory.create());
     }
   }
 
@@ -406,8 +407,9 @@ public class SPromise extends SObjectWithClass {
       resolverClass = cls;
 
       if (VmSettings.SNAPSHOTS_ENABLED) {
-        resolverClass.getSerializer()
-                     .replace(ResolverSerializationNodeFactory.create(resolverClass));
+        resolverClass.customizeSerializerFactory(
+            ResolverSerializationNodeFactory.getInstance(),
+            ResolverSerializationNodeFactory.create());
       }
     }
 

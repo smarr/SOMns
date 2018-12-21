@@ -122,7 +122,7 @@ public class DeserializationBuffer {
       return null;
     }
 
-    Object o = clazz.getSerializer().deserialize(this);
+    Object o = clazz.deserialize(this);
 
     depth--;
     if (o != null) {
@@ -156,7 +156,7 @@ public class DeserializationBuffer {
         return null;
       }
 
-      Object o = clazz.getSerializer().deserialize(this);
+      Object o = clazz.deserialize(this);
       depth--;
       // continue with current object
       position(current);

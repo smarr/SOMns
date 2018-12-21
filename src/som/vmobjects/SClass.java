@@ -49,8 +49,8 @@ import som.vm.constants.Classes;
 import tools.concurrency.TracingActivityThread;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
+import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.nodes.AbstractSerializationNode;
-import tools.snapshot.nodes.SerializerRootNode;
 
 
 // TODO: should we move more of that out of SClass and use the corresponding
@@ -73,7 +73,6 @@ public final class SClass extends SObjectWithClass {
 
   @CompilationFinal private ClassFactory instanceClassGroup; // the factory for this object
   @CompilationFinal private int          identity;
-  @CompilationFinal SerializerRootNode   serializationRoot;
 
   protected final SObjectWithClass enclosingObject;
   private final MaterializedFrame  context;
@@ -212,18 +211,22 @@ public final class SClass extends SObjectWithClass {
         // -> no need to go through all the slots in search of initialized class slots.
         SnapshotBackend.registerClassEnclosure(this);
       }
-
-      NodeFactory<? extends AbstractSerializationNode> factory =
-          classFactory.getSerializerFactory();
-      if (factory != null) {
-        this.serializationRoot = new SerializerRootNode(factory.createNode(this));
-      }
     }
     // assert instanceClassGroup != null || !ObjectSystem.isInitialized();
 
     if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
       SnapshotBackend.registerClass(this);
     }
+  }
+
+  public void customizeSerializerFactory(
+      final NodeFactory<? extends AbstractSerializationNode> factory,
+      final AbstractSerializationNode deserializer) {
+    instanceClassGroup.customizeSerialization(factory, deserializer);
+  }
+
+  public NodeFactory<? extends AbstractSerializationNode> getSerializerFactory() {
+    return instanceClassGroup.getSerializerFactory();
   }
 
   /**
@@ -381,13 +384,12 @@ public final class SClass extends SObjectWithClass {
   public void serialize(final Object o, final SnapshotBuffer sb) {
     assert instanceClassGroup != null;
     if (!sb.getRecord().containsObjectUnsync(o)) {
-      getSerializer().execute(o, sb);
+      instanceClassGroup.serialize(o, sb);
     }
   }
 
-  public AbstractSerializationNode getSerializer() {
-    assert serializationRoot != null : "Unclear what's wrong, but MessageSerializationNode can be null for Classes.messageClass";
-    return serializationRoot.getSerializer();
+  public Object deserialize(final DeserializationBuffer bb) {
+    return this.instanceClassGroup.deserialize(bb, this);
   }
 
   public int getIdentity() {
