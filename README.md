@@ -107,13 +107,21 @@ Changes and releases are documented in our [CHANGELOG.md][cl].
 Academic Work
 -------------
 
-SOMns is designed as platform for research on concurrent programming models,
-and their interactions. Here, we collect related papers:
+SOMns is designed as platform for research with a special interest for
+concurrent programming models, their interactions, and tooling for debugging.
+
+Related papers:
+
+ - [Efficient and Deterministic Record & Replay for Actor Languages](http://stefan-marr.de/downloads/manlang18-aumayr-et-al-efficient-and-deterministic-record-and-replay-for-actor-languages.pdf),
+   D. Aumayr, S. Marr, C. Béra, E. Gonzalez Boix, H. Mössenböck; ManLang'18.
+
+ - [Newspeak and Truffle: A Platform for Grace?](http://stefan-marr.de/downloads/grace18-marr-et-al-newspeak-and-truffle-a-platform-for-grace.pdf),
+   S. Marr, R. Roberts, J. Noble; Grace'18.
+
+ - [Few Versatile vs. Many Specialized Collections: How to design a collection library for exploratory programming?](http://stefan-marr.de/papers/px-marr-daloze-few-versatile-vs-many-specialized-collections/) S. Marr, B. Daloze; Programming Experience Workshop, PX/18.
 
  - [A Concurrency-Agnostic Protocol for Multi-Paradigm Concurrent Debugging Tools](http://stefan-marr.de/papers/dls-marr-et-al-concurrency-agnostic-protocol-for-debugging/),
    S. Marr, C. Torres Lopez, D. Aumayr, E. Gonzalez Boix, H. Mössenböck; Dynamic Language Symposium'17.
-
- - [Few Versatile vs. Many Specialized Collections: How to design a collection library for exploratory programming?](http://stefan-marr.de/papers/px-marr-daloze-few-versatile-vs-many-specialized-collections/) S. Marr, B. Daloze ; Programming Experience Workshop, PX/18.
 
  - [Kómpos: A Platform for Debugging Complex Concurrent Applications](http://stefan-marr.de/downloads/progdemo-marr-et-al-kompos-a-platform-for-debugging-complex-concurrent-applications.pdf),
    S. Marr, C. Torres Lopez, D. Aumayr, E. Gonzalez Boix, H. Mössenböck; Demonstration at the &lt;Programming&gt;'17 conference.
