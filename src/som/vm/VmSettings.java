@@ -20,6 +20,9 @@ public class VmSettings implements Settings {
   public static final boolean KOMPOS_TRACING;
   public static final boolean TRACE_SMALL_IDS;
 
+  public static final boolean ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE;
+  public static final boolean ACTOR_ASYNC_STACK_TRACE_INLINE_CACHE;
+
   public static final boolean TRUFFLE_DEBUGGER_ENABLED;
 
   public static final boolean IGV_DUMP_AFTER_PARSING;
@@ -56,6 +59,13 @@ public class VmSettings implements Settings {
     TRACE_SMALL_IDS = getBool("som.smallIds", false);
 
     ACTOR_ASYNC_STACK_TRACE_STRUCTURE = getBool("som.actorAsyncStackTraceStructure", false);
+    if (ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE = true;
+      ACTOR_ASYNC_STACK_TRACE_INLINE_CACHE = true;
+    } else {
+      ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE = false;
+      ACTOR_ASYNC_STACK_TRACE_INLINE_CACHE = false;
+    }
 
     ACTOR_TRACING = getBool("som.actorTracing", false);
 

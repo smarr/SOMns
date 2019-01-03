@@ -33,12 +33,9 @@ import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.primitives.reflection.AbstractSymbolDispatch;
 import som.vm.NotYetImplementedException;
 import som.vm.Primitives;
-import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.Send;
 import tools.SourceCoordinate;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
-import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
 import tools.dym.Tags.VirtualInvoke;
 
 
@@ -121,9 +118,9 @@ public final class MessageSendNode {
       implements PreevaluatedExpression, Send {
 
     @Children protected final ExpressionNode[] argumentNodes;
-    @Child protected ShadowStackEntryLoad      shadowStackEntryLoad =
-        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-            : null;
+    // @Child protected ShadowStackEntryLoad shadowStackEntryLoad =
+    // VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
+    // : null;
 
     protected AbstractMessageSendNode(final ExpressionNode[] arguments) {
       this.argumentNodes = arguments;
@@ -155,8 +152,9 @@ public final class MessageSendNode {
         arguments[i] = argumentNodes[i].executeGeneric(frame);
         assert arguments[i] != null : "Some expression evaluated to null, which is not supported.";
       }
-      SArguments.setShadowStackEntryWithCache(arguments, this, shadowStackEntryLoad, frame,
-          false);
+      // We allocate room for the arguments, but it is not set if non
+      // SArguments.setShadowStackEntryWithCache(arguments, this, shadowStackEntryLoad, frame,
+      // false);
       return arguments;
     }
 

@@ -51,7 +51,13 @@ public abstract class ExceptionsPrims {
         @Cached("exceptionHandler.getMethod()") final SInvokable cachedExceptionMethod,
         @Cached("createCallNode(exceptionHandler)") final DirectCallNode exceptionCall) {
       try {
-        return bodyCall.call(new Object[] {body});
+        Object[] args;
+        if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+          args = new Object[] {body, null};
+        } else {
+          args = new Object[] {body};
+        }
+        return bodyCall.call(args);
       } catch (SomException e) {
         if (e.getSomObject().getSOMClass().isKindOf(exceptionClass)) {
           return exceptionCall.call(new Object[] {exceptionHandler, e.getSomObject()});

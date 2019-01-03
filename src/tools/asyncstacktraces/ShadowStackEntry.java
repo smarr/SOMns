@@ -11,6 +11,7 @@ import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
@@ -20,43 +21,57 @@ import som.interpreter.actors.Actor;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualSendNode;
-import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.SOMNode;
 import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 
 
 public class ShadowStackEntry {
 
   protected final ShadowStackEntry previous;
-  protected final ExpressionNode   expression;
+  protected final Node             expression;
 
   public static long numberOfAllocations;
 
   public static final boolean ALLOCATION_COUNT = false;
+
+  public Node getExpression() {
+    return expression;
+  }
+
+  public ShadowStackEntry getPreviousShadowStackEntry() {
+    return previous;
+  }
 
   public static ShadowStackEntry createRoot() {
     return new ShadowStackEntry(null, null);
   }
 
   public static ShadowStackEntry create(final ShadowStackEntry previous,
-      final ExpressionNode expr) {
+      final Node expr) {
     // TODO: assert previous != null;
-    return new ShadowStackEntry(previous, SOMNode.unwrapIfNecessary(expr));
+    return new ShadowStackEntry(previous, unwrapNodeIfNecessary(expr));
   }
 
   public static ShadowStackEntry createAtAsyncSend(final ShadowStackEntry previous,
-      final ExpressionNode expr) {
+      final Node expr) {
     // TODO: assert previous != null;
-    return new EntryAtMessageSend(previous, SOMNode.unwrapIfNecessary(expr));
+    return new EntryAtMessageSend(previous, unwrapNodeIfNecessary(expr));
   }
 
   public static ShadowStackEntry createAtPromiseResolution(final ShadowStackEntry previous,
-      final ExpressionNode expr) {
+      final Node expr) {
     // TODO: assert previous != null;
-    return new EntryForPromiseResolution(previous, SOMNode.unwrapIfNecessary(expr));
+    return new EntryForPromiseResolution(previous, unwrapNodeIfNecessary(expr));
   }
 
-  protected ShadowStackEntry(final ShadowStackEntry previous, final ExpressionNode expr) {
+  public static Node unwrapNodeIfNecessary(final Node node) {
+    if (node instanceof WrapperNode) {
+      return ((WrapperNode) node).getDelegateNode();
+    } else {
+      return node;
+    }
+  }
+
+  protected ShadowStackEntry(final ShadowStackEntry previous, final Node expr) {
     this.previous = previous;
     this.expression = expr;
     if (ALLOCATION_COUNT) {
@@ -87,7 +102,7 @@ public class ShadowStackEntry {
 
   private static final class EntryAtMessageSend extends ShadowStackEntry {
 
-    private EntryAtMessageSend(final ShadowStackEntry previous, final ExpressionNode expr) {
+    private EntryAtMessageSend(final ShadowStackEntry previous, final Node expr) {
       super(previous, expr);
     }
 
@@ -99,7 +114,7 @@ public class ShadowStackEntry {
 
   private static final class EntryForPromiseResolution extends ShadowStackEntry {
     private EntryForPromiseResolution(final ShadowStackEntry previous,
-        final ExpressionNode expr) {
+        final Node expr) {
       super(previous, expr);
     }
 

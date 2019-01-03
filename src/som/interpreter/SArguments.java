@@ -2,6 +2,7 @@ package som.interpreter;
 
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.Node;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.primitives.SizeAndLengthPrim;
@@ -141,6 +142,18 @@ public final class SArguments {
     }
   }
 
+  public static Object[] getPlainArguments(final Object[] args) {
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      Object[] newArgs = new Object[args.length + 1];
+      for (int i = 0; i < args.length; i++) {
+        newArgs[i] = args[i];
+      }
+      return newArgs;
+    } else {
+      return args;
+    }
+  }
+
   public static Object[] getPromiseCallbackArgumentArray(final SBlock callback) {
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       return new Object[] {callback, null, null};
@@ -150,7 +163,7 @@ public final class SArguments {
   }
 
   public static void setShadowStackEntryWithCache(final Object[] arguments,
-      final ExpressionNode expression,
+      final Node expression,
       final ShadowStackEntryLoad entryLoad,
       final VirtualFrame frame,
       final boolean async) {
@@ -160,7 +173,7 @@ public final class SArguments {
   }
 
   public static ShadowStackEntry instantiateShadowStackEntry(final ShadowStackEntry previous,
-      final ExpressionNode expr, final boolean async) {
+      final Node expr, final boolean async) {
     if (async) {
       return ShadowStackEntry.createAtAsyncSend(previous, expr);
     } else {
@@ -183,7 +196,7 @@ public final class SArguments {
 
   public static void setShadowStackEntry(final Object[] args,
       final ShadowStackEntry entry) {
-    assert args[args.length - 1] == null : "Assume shadow stack entry is not already set.";
+    // assert args[args.length - 1] == null : "Assume shadow stack entry is not already set.";
     args[args.length - 1] = entry;
   }
 
