@@ -444,8 +444,15 @@ public final class ObjectSystem {
           "ObjectSystem.executeApplication").createSection(1);
     }
 
+    Object[] args;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      args = new Object[] {platform, null};
+    } else {
+      args = new Object[] {platform};
+    }
+
     DirectMessage msg = new DirectMessage(mainActor, start,
-        new Object[] {platform}, mainActor,
+        args, mainActor,
         null, EventualSendNode.createOnReceiveCallTargetForVMMain(
             start, 1, source, mainThreadCompleted, compiler.getLanguage()),
         false, false);

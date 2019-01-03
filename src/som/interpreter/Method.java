@@ -21,6 +21,7 @@
  */
 package som.interpreter;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
@@ -32,14 +33,16 @@ import som.compiler.MethodBuilder;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
+import som.interpreter.nodes.dispatch.ShadowStackEntryMethodCacheCompatibleNode;
 import som.vmobjects.SInvokable;
 
 
 public final class Method extends Invokable {
 
-  private final MethodScope     methodScope;
-  private final SourceSection[] definition;
-  private final boolean         block;
+  private final MethodScope                                           methodScope;
+  private final SourceSection[]                                       definition;
+  private final boolean                                               block;
+  @CompilationFinal private ShadowStackEntryMethodCacheCompatibleNode uniqueCaller;
 
   public Method(final String name, final SourceSection sourceSection,
       final SourceSection[] definition,
@@ -55,6 +58,20 @@ public final class Method extends Invokable {
     this.methodScope = methodScope;
     assert methodScope.isFinalized();
     expressions.markAsRootExpression();
+  }
+
+  public void setNewCaller(final ShadowStackEntryMethodCacheCompatibleNode caller) {
+    if (uniqueCaller == null) {
+      uniqueCaller = caller;
+      caller.uniqueCaller();
+    } else {
+      uniqueCaller.multipleCaller();
+      caller.multipleCaller();
+    }
+  }
+
+  public ShadowStackEntryMethodCacheCompatibleNode getUniqueCaller() {
+    return uniqueCaller;
   }
 
   @Override

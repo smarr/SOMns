@@ -4,7 +4,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
 import som.interpreter.SArguments;
-import som.interpreter.nodes.ExpressionNode;
+import som.vm.VmSettings;
 
 
 public abstract class ShadowStackEntryLoad extends Node {
@@ -16,7 +16,7 @@ public abstract class ShadowStackEntryLoad extends Node {
   public static int           megaMiss     = 0;
 
   public void loadShadowStackEntry(final Object[] arguments,
-      final ExpressionNode expression,
+      final Node expression,
       final VirtualFrame frame,
       final boolean async) {
     ShadowStackEntry prevEntry = SArguments.getShadowStackEntry(frame);
@@ -24,7 +24,7 @@ public abstract class ShadowStackEntryLoad extends Node {
   }
 
   protected abstract void loadShadowStackEntry(Object[] arguments,
-      ExpressionNode expression,
+      Node expression,
       ShadowStackEntry prevEntry,
       ShadowStackEntryLoad firstShadowStackEntryLoad,
       boolean async);
@@ -33,17 +33,23 @@ public abstract class ShadowStackEntryLoad extends Node {
 
   protected void setShadowStackEntry(final ShadowStackEntry shadowStackEntry,
       final Object[] arguments) {
-    arguments[arguments.length - 1] = shadowStackEntry;
+    SArguments.setShadowStackEntry(arguments, shadowStackEntry);
   }
 
   public static final class UninitializedShadowStackEntryLoad extends ShadowStackEntryLoad {
 
     @Override
     protected void loadShadowStackEntry(final Object[] arguments,
-        final ExpressionNode expression,
+        final Node expression,
         final ShadowStackEntry prevEntry,
         final ShadowStackEntryLoad firstShadowStackEntryLoad,
         final boolean async) {
+      if (!VmSettings.ACTOR_ASYNC_STACK_TRACE_INLINE_CACHE) {
+        setShadowStackEntry(
+            SArguments.instantiateShadowStackEntry(prevEntry, expression, async),
+            arguments);
+        return;
+      }
       ShadowStackEntry newEntry =
           SArguments.instantiateShadowStackEntry(prevEntry, expression, async);
       ShadowStackEntryLoad newLoad;
@@ -86,7 +92,7 @@ public abstract class ShadowStackEntryLoad extends Node {
 
     @Override
     protected void loadShadowStackEntry(final Object[] arguments,
-        final ExpressionNode expression,
+        final Node expression,
         final ShadowStackEntry prevEntry, final ShadowStackEntryLoad firstShadowStackEntryLoad,
         final boolean async) {
       if (prevEntry == expectedShadowStackEntry) {
@@ -105,7 +111,7 @@ public abstract class ShadowStackEntryLoad extends Node {
 
     @Override
     protected void loadShadowStackEntry(final Object[] arguments,
-        final ExpressionNode expression,
+        final Node expression,
         final ShadowStackEntry prevEntry, final ShadowStackEntryLoad firstShadowStackEntryLoad,
         final boolean async) {
       setShadowStackEntry(SArguments.instantiateShadowStackEntry(prevEntry, expression, async),

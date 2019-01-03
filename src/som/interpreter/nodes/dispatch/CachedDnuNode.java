@@ -18,12 +18,17 @@ import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
 
 
 public final class CachedDnuNode extends AbstractDispatchNode {
 
-  @Child private DirectCallNode       cachedMethod;
-  @Child private AbstractDispatchNode nextInCache;
+  @Child private DirectCallNode         cachedMethod;
+  @Child private AbstractDispatchNode   nextInCache;
+  @Child protected ShadowStackEntryLoad shadowStackEntryLoad =
+      VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
+          : null;
 
   private final DispatchGuard guard;
   private final SSymbol       selector;
@@ -43,6 +48,13 @@ public final class CachedDnuNode extends AbstractDispatchNode {
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
     boolean match;
     Object rcvr = arguments[0];
+    // Here we fall back to the slow case since DNU sends
+    // are just too uncommon and we don't want to recreate
+    // the stack across DNUs
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      SArguments.setShadowStackEntryWithCache(arguments, this,
+          shadowStackEntryLoad, frame, false);
+    }
     try {
       match = guard.entryMatches(rcvr);
     } catch (InvalidAssumptionException e) {

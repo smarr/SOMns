@@ -115,7 +115,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
       createResolverCallTargets();
     }
 
-    Object superclassAndMixins = superclassAndMixinResolver.call(new Object[] {rcvr});
+    Object superclassAndMixins = superclassAndMixinResolver.call(new Object[] {rcvr, null});
     SClass classObject = instantiation.execute(rcvr, superclassAndMixins);
     return classObject;
   }

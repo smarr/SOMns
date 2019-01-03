@@ -9,6 +9,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.Output;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interop.SomInteropObject;
@@ -51,6 +52,9 @@ public final class UninitializedDispatchNode {
     private AbstractDispatchNode specialize(final Object[] arguments,
         final int chainDepth, final AbstractDispatchNode first) {
       Object rcvr = arguments[0];
+      if (rcvr == null) {
+        Output.println("1");
+      }
       assert rcvr != null;
 
       if (chainDepth < INLINE_CACHE_SIZE) {
