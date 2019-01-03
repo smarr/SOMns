@@ -11,7 +11,6 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.instrumentation.InstrumentableDirectCallNode;
 import som.interpreter.Method;
-import som.interpreter.SArguments;
 import som.vm.VmSettings;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
 import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
@@ -36,7 +35,7 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchNode
     super(source);
     cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
     requiresShadowStack = ShadowStackEntryMethodCacheCompatibleNode.requiresShadowStack(
-        (DefaultCallTarget) methodCallTarget, this);
+        (RootCallTarget) methodCallTarget, this);
     if (VmSettings.DYNAMIC_METRICS) {
       this.cachedMethod = insert(new InstrumentableDirectCallNode(cachedMethod, source));
     }
@@ -54,20 +53,8 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchNode
 
   @Override
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
-    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE) {
-      if (requiresShadowStack) {
-        if (uniqueCaller) {
-          assert frame.getArguments().length >= 2; // 1 for receiver 1 for SSentry
-          SArguments.setShadowStackEntry(arguments, SArguments.getShadowStackEntry(frame));
-        } else {
-          SArguments.setShadowStackEntryWithCache(arguments, this,
-              shadowStackEntryLoad, frame, false);
-        }
-      }
-    } else if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      SArguments.setShadowStackEntryWithCache(arguments, this,
-          shadowStackEntryLoad, frame, false);
-    }
+    ShadowStackEntryMethodCacheCompatibleNode.setShadowStackEntry(frame,
+        requiresShadowStack, uniqueCaller, arguments, this, shadowStackEntryLoad);
     return cachedMethod.call(arguments);
   }
 
