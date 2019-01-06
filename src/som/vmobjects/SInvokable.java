@@ -48,7 +48,6 @@ import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNode;
 import som.interpreter.nodes.dispatch.TypeCheckNode;
-import som.interpreter.nodes.dispatch.TypeCheckNodeGen;
 import som.vm.SomStructuralType;
 import som.vm.Symbols;
 import som.vm.VmSettings;
@@ -223,7 +222,7 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
       if (expectedType == null) {
         types.add(null);
       } else {
-        types.add(TypeCheckNodeGen.create(expectedType, getSourceSection()));
+        types.add(TypeCheckNode.create(expectedType, getSourceSection()));
       }
     }
 
