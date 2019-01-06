@@ -39,6 +39,7 @@ import java.util.Map;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
+import som.Output;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
 
@@ -58,9 +59,11 @@ enum SUBCLASS_STATE {
 };
 
 public final class SomStructuralType {
-  public static final SSymbol UNKNOWN = symbolFor("Unknown");
+  public static long numSignatureChecks;
+  public static long numSubclassChecks;
+  public static int  nTypes = 0;
 
-  private static int nTypes = 0;
+  public static final SSymbol UNKNOWN = symbolFor("Unknown");
 
   private static final int                MAX_TABLE_SIZE = 10000;
   private static final SUBCLASS_STATE[][] subtypingTable =
@@ -75,6 +78,15 @@ public final class SomStructuralType {
 
   @CompilationFinal private final int tableIndex;
 
+  public static void reportStats() {
+    if (!VmSettings.COLLECT_TYPE_STATS) {
+      return;
+    }
+    Output.println("Number of Signature Checks: " + numSignatureChecks);
+    Output.println("Number of Subclass Checks: " + numSubclassChecks);
+    Output.println("Number of Types: " + nTypes);
+  }
+
   private SomStructuralType(final List<SSymbol> signatures) {
     assert VmSettings.USE_TYPE_CHECKING : "SomStructuralType is created dispited USE_TYPE_CHECKING not being enabled";
 
@@ -85,6 +97,9 @@ public final class SomStructuralType {
 
   private SUBCLASS_STATE checkSignatures(final SomStructuralType other) {
     CompilerAsserts.neverPartOfCompilation();
+    if (VmSettings.COLLECT_TYPE_STATS) {
+      numSignatureChecks += 1;
+    }
 
     for (SSymbol sigOther : other.signatures) {
       boolean found = false;
@@ -103,6 +118,9 @@ public final class SomStructuralType {
 
   public boolean isSubclassOf(final SomStructuralType other) {
     CompilerAsserts.neverPartOfCompilation();
+    if (VmSettings.COLLECT_TYPE_STATS) {
+      numSubclassChecks += 1;
+    }
 
     if (other == null || Nil.nilObject.getFactory().type == other) {
       return true;

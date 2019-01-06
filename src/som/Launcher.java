@@ -9,6 +9,7 @@ import org.graalvm.polyglot.Value;
 
 import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.StorageAccessor;
+import som.vm.SomStructuralType;
 import som.vm.VmSettings;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingBackend;
@@ -56,6 +57,8 @@ public final class Launcher {
     if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS) {
       SnapshotBackend.writeSnapshot();
     }
+
+    SomStructuralType.reportStats();
 
     if (exitCode != 0) {
       ReplayActor.printMissingMessages();
