@@ -35,7 +35,6 @@ import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.DispatchGuard.CheckSObject;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.nodes.dispatch.TypeCheckNode;
-import som.interpreter.nodes.dispatch.TypeCheckNodeGen;
 import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.InitializerFieldWrite;
@@ -552,7 +551,7 @@ public final class MixinDefinition {
       CachedSlotRead read =
           createNode(loc, DispatchGuard.createSObjectCheck(rcvr),
               SomStructuralType.isNullOrUnknown(type) ? null
-                  : TypeCheckNodeGen.create(SomStructuralType.recallTypeByName(type),
+                  : TypeCheckNode.create(SomStructuralType.recallTypeByName(type),
                       loc.getSlot().getSourceSection()),
               next,
               isSet);
@@ -561,8 +560,7 @@ public final class MixinDefinition {
           getAccessType() == SlotAccess.FIELD_READ) {
         return new CachedTxSlotRead(getAccessType(), read,
             DispatchGuard.createSObjectCheck(rcvr),
-            TypeCheckNodeGen.create(SomStructuralType.recallTypeByName(type),
-                getSourceSection()),
+            TypeCheckNode.create(SomStructuralType.recallTypeByName(type), source),
             next);
       } else {
         return read;
@@ -629,7 +627,7 @@ public final class MixinDefinition {
       CachedSlotWrite write =
           loc.getWriteNode(mainSlot, DispatchGuard.createSObjectCheck(rcvr),
               SomStructuralType.isNullOrUnknown(type) ? null
-                  : TypeCheckNodeGen.create(SomStructuralType.recallTypeByName(type),
+                  : TypeCheckNode.create(SomStructuralType.recallTypeByName(type),
                       loc.getSlot().getSourceSection()),
               next,
               isSet);
@@ -637,7 +635,7 @@ public final class MixinDefinition {
       if (forAtomic) {
         return new CachedTxSlotWrite(write,
             DispatchGuard.createSObjectCheck(rcvr),
-            TypeCheckNodeGen.create(SomStructuralType.recallTypeByName(type),
+            TypeCheckNode.create(SomStructuralType.recallTypeByName(type),
                 loc.getSlot().getSourceSection()),
             next);
       } else {

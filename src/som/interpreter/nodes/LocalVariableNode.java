@@ -10,7 +10,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import bd.inlining.ScopeAdaptationVisitor;
 import som.compiler.Variable.Local;
 import som.interpreter.nodes.dispatch.TypeCheckNode;
-import som.interpreter.nodes.dispatch.TypeCheckNodeGen;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vm.SomStructuralType;
 import som.vm.constants.Nil;
@@ -22,17 +21,15 @@ import tools.dym.Tags.LocalVarWrite;
 
 
 public abstract class LocalVariableNode extends ExprWithTagsNode implements Send {
-  protected final FrameSlot         slot;
-  protected final Local             var;
-  protected final SomStructuralType type;
+  protected final FrameSlot slot;
+  protected final Local     var;
 
   @Child protected TypeCheckNode typeCheck;
 
   private LocalVariableNode(final Local var, final SomStructuralType type) {
     this.slot = var.getSlot();
     this.var = var;
-    this.type = type;
-    this.typeCheck = type == null ? null : TypeCheckNodeGen.create(type, var.source);
+    this.typeCheck = type == null ? null : TypeCheckNode.create(type, var.source);
   }
 
   public final Local getLocal() {

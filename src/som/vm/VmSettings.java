@@ -31,9 +31,10 @@ public class VmSettings implements Settings {
 
   public static final boolean ANSI_COLOR_IN_OUTPUT;
 
+  // Moth Experiments
   public static final boolean USE_TYPE_CHECKING;
-
   public static final boolean MUST_BE_FULLY_TYPED;
+  public static final boolean USE_OPT_TYPE_CHECK_NODE;
 
   public static final String INSTRUMENTATION_PROP = "som.instrumentation";
 
@@ -80,6 +81,8 @@ public class VmSettings implements Settings {
 
     USE_TYPE_CHECKING = getBool("som.useTypeChecking", false);
     MUST_BE_FULLY_TYPED = getBool("som.ensureFullyTyped", false);
+
+    USE_OPT_TYPE_CHECK_NODE = getBool("som.useOptTypeCheckNode", true);
   }
 
   private static boolean getBool(final String prop, final boolean defaultVal) {
