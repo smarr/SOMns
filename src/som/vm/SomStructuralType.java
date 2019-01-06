@@ -108,6 +108,10 @@ public final class SomStructuralType {
       return true;
     }
 
+    if (!VmSettings.USE_SUBTYPE_TABLE) {
+      return SUBCLASS_STATE.IS_SUBCLASS == checkSignatures(other);
+    }
+
     SUBCLASS_STATE state = subtypingTable[other.tableIndex][this.tableIndex];
     if (state == null) {
       subtypingTable[other.tableIndex][this.tableIndex] = checkSignatures(other);
