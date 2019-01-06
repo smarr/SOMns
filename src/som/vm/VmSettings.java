@@ -36,6 +36,7 @@ public class VmSettings implements Settings {
   public static final boolean MUST_BE_FULLY_TYPED;
   public static final boolean USE_OPT_TYPE_CHECK_NODE;
   public static final boolean USE_SUBTYPE_TABLE;
+  public static final boolean COLLECT_TYPE_STATS;
 
   public static final String INSTRUMENTATION_PROP = "som.instrumentation";
 
@@ -85,6 +86,7 @@ public class VmSettings implements Settings {
 
     USE_OPT_TYPE_CHECK_NODE = getBool("som.useOptTypeCheckNode", true);
     USE_SUBTYPE_TABLE = getBool("som.useSubtypeTable", true);
+    COLLECT_TYPE_STATS = getBool("som.collectTypeStats", false);
   }
 
   private static boolean getBool(final String prop, final boolean defaultVal) {

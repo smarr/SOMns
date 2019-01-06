@@ -41,6 +41,7 @@ import som.primitives.threading.TaskThreads.ForkJoinThreadFactory;
 import som.primitives.threading.ThreadingModule;
 import som.vm.ObjectSystem;
 import som.vm.Primitives;
+import som.vm.SomStructuralType;
 import som.vm.VmOptions;
 import som.vm.VmSettings;
 import som.vm.constants.KernelObj;
@@ -286,6 +287,7 @@ public final class VM {
 
     shutdownPools();
 
+    SomStructuralType.reportStats();
     Actor.reportStats();
     ActorExecutionTrace.waitForTrace();
 
