@@ -76,7 +76,7 @@ public final class SomStructuralType {
 
   @CompilationFinal(dimensions = 1) public final SSymbol[] signatures;
 
-  @CompilationFinal private final int tableIndex;
+  private final int tableIndex;
 
   public static void reportStats() {
     if (!VmSettings.COLLECT_TYPE_STATS) {
