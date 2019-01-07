@@ -133,17 +133,12 @@ public final class SomStructuralType {
       return SUBCLASS_STATE.IS_SUBCLASS == checkSignatures(other);
     }
 
-    SUBCLASS_STATE state = subtypingTable[other.tableIndex][this.tableIndex];
+    SUBCLASS_STATE state = subtypingTable[other.tableIndex][tableIndex];
     if (state == null) {
-      subtypingTable[other.tableIndex][this.tableIndex] = checkSignatures(other);
-      return isSubclassOf(other);
-    } else {
-      if (state == SUBCLASS_STATE.IS_SUBCLASS) {
-        return true;
-      } else {
-        return false;
-      }
+      state = checkSignatures(other);
+      subtypingTable[other.tableIndex][tableIndex] = state;
     }
+    return state == SUBCLASS_STATE.IS_SUBCLASS;
   }
 
   public static SomStructuralType makeType(final List<SSymbol> signatures) {
