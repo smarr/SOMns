@@ -82,9 +82,11 @@ public final class SomStructuralType {
     if (!VmSettings.COLLECT_TYPE_STATS) {
       return;
     }
-    Output.println("Number of Signature Checks: " + numSignatureChecks);
-    Output.println("Number of Subclass Checks: " + numSubclassChecks);
-    Output.println("Number of Types: " + nTypes);
+
+    Output.println("RESULT-NumberOfSignatureChecks: " + numSignatureChecks);
+    Output.println("RESULT-NumberOfSubclassChecks: " + numSubclassChecks);
+    Output.println("RESULT-NumberOfTypes: " + nTypes);
+    Output.println("RESULT-total: 0");
   }
 
   private SomStructuralType(final List<SSymbol> signatures) {
