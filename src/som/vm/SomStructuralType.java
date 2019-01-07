@@ -106,8 +106,9 @@ public final class SomStructuralType {
     for (SSymbol sigOther : other.signatures) {
       boolean found = false;
       for (SSymbol sigThis : signatures) {
-        if (sigThis.equals(sigOther)) {
+        if (sigThis == sigOther) {
           found = true;
+          break;
         }
       }
       if (!found) {
