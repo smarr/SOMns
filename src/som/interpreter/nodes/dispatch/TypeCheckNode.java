@@ -2,6 +2,7 @@ package som.interpreter.nodes.dispatch;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -64,6 +65,7 @@ public abstract class TypeCheckNode extends Node {
     }
 
     @Override
+    @TruffleBoundary
     public void executeTypeCheck(final Object obj) {
       SomStructuralType type = Types.getClassOf(obj).getFactory().type;
       if (!type.isSubclassOf(expected)) {
