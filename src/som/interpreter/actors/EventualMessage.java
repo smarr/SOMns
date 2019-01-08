@@ -358,7 +358,11 @@ public abstract class EventualMessage {
 
     assert onReceive.getRootNode() instanceof ReceivedMessage
         || onReceive.getRootNode() instanceof ReceivedCallback;
-    onReceive.call(this);
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      onReceive.call(this, args[args.length - 1]);
+    } else {
+      onReceive.call(this);
+    }
   }
 
   public static Actor getActorCurrentMessageIsExecutionOn() {

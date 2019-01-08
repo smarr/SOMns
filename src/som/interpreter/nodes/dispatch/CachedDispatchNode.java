@@ -13,6 +13,7 @@ import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import som.instrumentation.InstrumentableDirectCallNode;
 import som.interpreter.Method;
 import som.vm.VmSettings;
+import tools.asyncstacktraces.ShadowStackEntry;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
 import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
 
@@ -22,7 +23,6 @@ public final class CachedDispatchNode extends AbstractDispatchNode
 
   @Child private DirectCallNode         cachedMethod;
   @Child private AbstractDispatchNode   nextInCache;
-  private final boolean                 requiresShadowStack;
   @CompilationFinal private boolean     uniqueCaller;
   @Child protected ShadowStackEntryLoad shadowStackEntryLoad =
       VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
@@ -36,8 +36,6 @@ public final class CachedDispatchNode extends AbstractDispatchNode
     this.guard = guard;
     this.nextInCache = nextInCache;
     this.cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
-    requiresShadowStack = ShadowStackEntryMethodCacheCompatibleNode.requiresShadowStack(
-        (RootCallTarget) methodCallTarget, this);
     if (VmSettings.DYNAMIC_METRICS) {
       this.cachedMethod = insert(new InstrumentableDirectCallNode(cachedMethod,
           nextInCache.getSourceSection()));
@@ -64,8 +62,14 @@ public final class CachedDispatchNode extends AbstractDispatchNode
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
     try {
       if (guard.entryMatches(arguments[0])) {
+        assert arguments[arguments.length - 1] == null;
+        assert (frame.getArguments()[frame.getArguments().length - 1] == null)
+            || (frame.getArguments()[frame.getArguments().length
+                - 1] instanceof ShadowStackEntry);
         ShadowStackEntryMethodCacheCompatibleNode.setShadowStackEntry(frame,
-            requiresShadowStack, uniqueCaller, arguments, this, shadowStackEntryLoad);
+            uniqueCaller, arguments, this, shadowStackEntryLoad);
+        assert arguments[arguments.length - 1] != null
+            || (frame.getArguments()[frame.getArguments().length - 1] == null);
         return cachedMethod.call(arguments);
       } else {
         return nextInCache.executeDispatch(frame, arguments);

@@ -24,7 +24,6 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchNode
     implements ShadowStackEntryMethodCacheCompatibleNode {
 
   @Child private DirectCallNode         cachedMethod;
-  private final boolean                 requiresShadowStack;
   @CompilationFinal private boolean     uniqueCaller;
   @Child protected ShadowStackEntryLoad shadowStackEntryLoad =
       VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
@@ -34,8 +33,6 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchNode
       final CallTarget methodCallTarget) {
     super(source);
     cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
-    requiresShadowStack = ShadowStackEntryMethodCacheCompatibleNode.requiresShadowStack(
-        (RootCallTarget) methodCallTarget, this);
     if (VmSettings.DYNAMIC_METRICS) {
       this.cachedMethod = insert(new InstrumentableDirectCallNode(cachedMethod, source));
     }
@@ -54,7 +51,7 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchNode
   @Override
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
     ShadowStackEntryMethodCacheCompatibleNode.setShadowStackEntry(frame,
-        requiresShadowStack, uniqueCaller, arguments, this, shadowStackEntryLoad);
+        uniqueCaller, arguments, this, shadowStackEntryLoad);
     return cachedMethod.call(arguments);
   }
 
