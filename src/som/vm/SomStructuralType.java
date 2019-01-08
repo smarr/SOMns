@@ -128,7 +128,8 @@ public final class SomStructuralType {
       numSubclassChecks += 1;
     }
 
-    if (other == null || Nil.nilObject.getFactory().type == other) {
+    SomStructuralType nilType = Nil.nilObject.getFactory().type;
+    if (other == null || nilType == other || this == nilType) {
       return true;
     }
 
