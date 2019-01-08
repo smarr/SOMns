@@ -359,7 +359,10 @@ public abstract class EventualMessage {
     assert onReceive.getRootNode() instanceof ReceivedMessage
         || onReceive.getRootNode() instanceof ReceivedCallback;
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      onReceive.call(this, args[args.length - 1]);
+      assert args[args.length - 1] instanceof ShadowStackEntry;
+      ShadowStackEntry ssEntry = (ShadowStackEntry) args[args.length - 1];
+      args[args.length - 1] = null;
+      onReceive.call(this, ssEntry);
     } else {
       onReceive.call(this);
     }

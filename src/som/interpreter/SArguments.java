@@ -172,6 +172,10 @@ public final class SArguments {
     }
   }
 
+  public static ShadowStackEntry instantiateTopShadowStackEntry(final Node expr) {
+    return instantiateShadowStackEntry(null, expr, false);
+  }
+
   public static ShadowStackEntry instantiateShadowStackEntry(final ShadowStackEntry previous,
       final Node expr, final boolean async) {
     if (async) {

@@ -13,7 +13,6 @@ import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import som.instrumentation.InstrumentableDirectCallNode;
 import som.interpreter.Method;
 import som.vm.VmSettings;
-import tools.asyncstacktraces.ShadowStackEntry;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
 import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
 
@@ -62,10 +61,8 @@ public final class CachedDispatchNode extends AbstractDispatchNode
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
     try {
       if (guard.entryMatches(arguments[0])) {
+        assert frame.getArguments()[frame.getArguments().length - 1] != null;
         assert arguments[arguments.length - 1] == null;
-        assert (frame.getArguments()[frame.getArguments().length - 1] == null)
-            || (frame.getArguments()[frame.getArguments().length
-                - 1] instanceof ShadowStackEntry);
         ShadowStackEntryMethodCacheCompatibleNode.setShadowStackEntry(frame,
             uniqueCaller, arguments, this, shadowStackEntryLoad);
         assert arguments[arguments.length - 1] != null

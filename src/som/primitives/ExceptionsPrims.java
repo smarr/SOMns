@@ -8,6 +8,7 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 
 import bd.primitives.Primitive;
+import som.interpreter.SArguments;
 import som.interpreter.SomException;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
@@ -53,7 +54,8 @@ public abstract class ExceptionsPrims {
       try {
         Object[] args;
         if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-          args = new Object[] {body, null};
+          // We loose the ssEntry info here... problem again.
+          args = new Object[] {body, SArguments.instantiateTopShadowStackEntry(this)};
         } else {
           args = new Object[] {body};
         }
@@ -102,10 +104,21 @@ public abstract class ExceptionsPrims {
 
     @Specialization
     public final Object doException(final SBlock body, final SBlock ensureHandler) {
-      try {
-        return dispatchBody.executeDispatch(new Object[] {body});
-      } finally {
-        dispatchHandler.executeDispatch(new Object[] {ensureHandler});
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+        // losing SSEntry info here again
+        try {
+          return dispatchBody.executeDispatch(
+              new Object[] {body, SArguments.instantiateTopShadowStackEntry(this)});
+        } finally {
+          dispatchHandler.executeDispatch(
+              new Object[] {ensureHandler, SArguments.instantiateTopShadowStackEntry(this)});
+        }
+      } else {
+        try {
+          return dispatchBody.executeDispatch(new Object[] {body});
+        } finally {
+          dispatchHandler.executeDispatch(new Object[] {ensureHandler});
+        }
       }
     }
   }

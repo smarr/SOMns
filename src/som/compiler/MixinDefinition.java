@@ -27,6 +27,7 @@ import som.interop.SomInteropObject;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
+import som.interpreter.SArguments;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExceptionSignalingNode;
@@ -47,6 +48,7 @@ import som.interpreter.objectstorage.StorageLocation;
 import som.interpreter.transactions.CachedTxSlotRead;
 import som.interpreter.transactions.CachedTxSlotWrite;
 import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
@@ -504,7 +506,14 @@ public final class MixinDefinition implements SomInteropObject {
     VM.callerNeedsToBeOptimized(
         "only meant for code loading, which is supposed to be on the slowpath");
     CallTarget callTarget = superclassMixinResolution.createCallTarget();
-    SClass superClass = (SClass) callTarget.call(Nil.nilObject, null);
+    SClass superClass;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      superClass =
+          (SClass) callTarget.call(Nil.nilObject,
+              SArguments.instantiateTopShadowStackEntry(null));
+    } else {
+      superClass = (SClass) callTarget.call(Nil.nilObject, null);
+    }
     SClass classObject = instantiateClass(Nil.nilObject, superClass);
     return classObject;
   }

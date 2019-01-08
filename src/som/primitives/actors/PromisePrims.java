@@ -17,6 +17,7 @@ import bd.primitives.Primitive;
 import bd.primitives.Specializer;
 import som.VM;
 import som.compiler.AccessModifier;
+import som.interpreter.SArguments;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
@@ -102,7 +103,8 @@ public final class PromisePrims {
       SResolver resolver = SPromise.createResolver(promise);
       Object[] args;
       if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-        args = new Object[] {SPromise.pairClass, promise, resolver, null};
+        args = new Object[] {SPromise.pairClass, promise, resolver,
+            SArguments.instantiateTopShadowStackEntry(this)};
       } else {
         args = new Object[] {SPromise.pairClass, promise, resolver};
       }

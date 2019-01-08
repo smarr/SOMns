@@ -5,7 +5,6 @@ import com.oracle.truffle.api.nodes.Node;
 
 import som.interpreter.Method;
 import som.interpreter.SArguments;
-import som.interpreter.actors.EventualMessage;
 import som.vm.VmSettings;
 import tools.asyncstacktraces.ShadowStackEntry;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
@@ -37,20 +36,15 @@ public interface ShadowStackEntryMethodCacheCompatibleNode {
       final boolean uniqueCaller, final Object[] arguments,
       final Node expression,
       final ShadowStackEntryLoad shadowStackEntryLoad) {
-    assert arguments[arguments.length - 1] == null;
-    assert (frame.getArguments()[frame.getArguments().length - 1] == null)
-        || (frame.getArguments()[frame.getArguments().length
-            - 1] instanceof ShadowStackEntry);
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE) {
+      assert arguments[arguments.length - 1] == null;
+      // Aside from start message, 2 or more arguments and the last one is ssentry/null. It's
+      // null if duplicated directly from start.
+      assert (frame.getArguments()[frame.getArguments().length - 1] == null)
+          || (frame.getArguments()[frame.getArguments().length
+              - 1] instanceof ShadowStackEntry);
+      assert frame.getArguments().length >= 2;
       if (uniqueCaller) {
-        // At least two entries, receiver and ShadowStackEntry,
-        // Except from VM main (start) which we heuristically assert against start string
-        assert frame.getArguments().length >= 2 ||
-            ((frame.getArguments()[0] instanceof EventualMessage.DirectMessage)
-                && (((EventualMessage.DirectMessage) frame.getArguments()[0])).getSelector()
-                                                                              .getString()
-                                                                              .equals(
-                                                                                  "start"));
         SArguments.setShadowStackEntry(arguments, SArguments.getShadowStackEntry(frame));
       } else {
         SArguments.setShadowStackEntryWithCache(arguments, expression,
