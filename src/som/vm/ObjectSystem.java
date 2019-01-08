@@ -27,6 +27,7 @@ import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.SourcecodeCompiler;
 import som.interpreter.LexicalScope.MixinScope;
+import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage.DirectMessage;
@@ -431,7 +432,8 @@ public final class ObjectSystem {
     ObjectTransitionSafepoint.INSTANCE.register();
     Object platform;
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      platform = platformModule.instantiateObject(platformClass, vmMirror, null);
+      platform = platformModule.instantiateObject(platformClass, vmMirror,
+          SArguments.instantiateTopShadowStackEntry(null));
     } else {
       platform = platformModule.instantiateObject(platformClass, vmMirror);
     }
@@ -451,7 +453,7 @@ public final class ObjectSystem {
 
     Object[] args;
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      args = new Object[] {platform, null};
+      args = new Object[] {platform, SArguments.instantiateTopShadowStackEntry(null)};
     } else {
       args = new Object[] {platform};
     }

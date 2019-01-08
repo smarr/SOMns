@@ -9,11 +9,14 @@ import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.Invokable;
+import som.interpreter.SArguments;
 import som.interpreter.nodes.InstantiationNode.ClassInstantiationNode;
 import som.interpreter.nodes.InstantiationNodeFactory.ClassInstantiationNodeGen;
+import som.vm.VmSettings;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
+import tools.asyncstacktraces.ShadowStackEntry;
 
 
 /**
@@ -114,8 +117,13 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       createResolverCallTargets();
     }
-
-    Object superclassAndMixins = superclassAndMixinResolver.call(new Object[] {rcvr, null});
+    ShadowStackEntry extraArg = null;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      // Here we break the chain and won't know where that code comes from...
+      extraArg = SArguments.instantiateTopShadowStackEntry(this);
+    }
+    Object superclassAndMixins =
+        superclassAndMixinResolver.call(new Object[] {rcvr, extraArg});
     SClass classObject = instantiation.execute(rcvr, superclassAndMixins);
     return classObject;
   }
