@@ -1,5 +1,6 @@
 package som.interpreter.objectstorage;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -204,27 +205,25 @@ public final class ClassFactory {
       signatures.add(sig);
     }
 
-    for (int i = 0; i < superclassAndMixins.length; i++) {
-
-      if (superclassAndMixins[i] == null) {
-        break;
-      } else {
-
+    if (superclassAndMixins.length == 1 && superclassAndMixins[0] == null) {
+      assert className.getString().equals("Top");
+      // no op, this is the Top class, doesn't have a super class
+    } else {
+      for (int i = 0; i < superclassAndMixins.length; i++) {
         SClass clazz = superclassAndMixins[i];
-        if (clazz == null) {
-          continue;
-        } else {
-          SClass next = clazz;
-          while (next != null) {
-            EconomicMap<SSymbol, Dispatchable> dispatchablesOfMixin =
-                next.getDispatchables();
-            if (dispatchablesOfMixin != null) {
-              for (SSymbol sig : dispatchablesOfMixin.getKeys()) {
-                signatures.add(sig);
-              }
+        assert clazz != null : "Don't expect type to be null, but it was. superclassAndMixins: "
+            + Arrays.toString(superclassAndMixins) + " i: " + i;
+
+        SClass next = clazz;
+        while (next != null) {
+          EconomicMap<SSymbol, Dispatchable> dispatchablesOfMixin =
+              next.getDispatchables();
+          if (dispatchablesOfMixin != null) {
+            for (SSymbol sig : dispatchablesOfMixin.getKeys()) {
+              signatures.add(sig);
             }
-            next = next.getSuperClass();
           }
+          next = next.getSuperClass();
         }
       }
     }
