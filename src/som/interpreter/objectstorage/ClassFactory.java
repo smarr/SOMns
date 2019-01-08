@@ -245,6 +245,6 @@ public final class ClassFactory {
       }
     }
 
-    return SomStructuralType.makeType(signatures);
+    return SomStructuralType.makeType(className, signatures);
   }
 }

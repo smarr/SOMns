@@ -77,7 +77,8 @@ public final class SomStructuralType {
 
   @CompilationFinal(dimensions = 1) public final SSymbol[] signatures;
 
-  private final int tableIndex;
+  private final int     tableIndex;
+  private final SSymbol definitionName;
 
   public static void reportStats() {
     if (!VmSettings.COLLECT_TYPE_STATS) {
@@ -90,12 +91,13 @@ public final class SomStructuralType {
     Output.println("RESULT-total: 0");
   }
 
-  private SomStructuralType(final List<SSymbol> signatures) {
+  private SomStructuralType(final SSymbol name, final SSymbol[] signatures) {
     assert VmSettings.USE_TYPE_CHECKING : "SomStructuralType is created dispited USE_TYPE_CHECKING not being enabled";
 
-    this.signatures = signatures.toArray(new SSymbol[signatures.size()]);
+    this.signatures = signatures;
     this.tableIndex = nTypes;
     nTypes += 1;
+    this.definitionName = name;
   }
 
   private SUBCLASS_STATE checkSignatures(final SomStructuralType other) {
@@ -153,7 +155,7 @@ public final class SomStructuralType {
       }
     }
 
-    SomStructuralType ret = new SomStructuralType(signatures);
+    SomStructuralType ret = new SomStructuralType(name, sigs);
     allKnownTypes.add(ret);
     return ret;
   }
@@ -195,6 +197,6 @@ public final class SomStructuralType {
       s += " " + sig.getString() + ",";
     }
     s += " }";
-    return s;
+    return definitionName.getString() + " " + s;
   }
 }
