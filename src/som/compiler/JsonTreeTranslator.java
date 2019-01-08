@@ -740,8 +740,9 @@ public class JsonTreeTranslator {
 
     } else if (nodeType(node).equals("type-statement")) {
       if (VmSettings.USE_TYPE_CHECKING) {
-        SomStructuralType.recordTypeByName(symbolFor(name(node)),
-            SomStructuralType.makeType(parseTypeSignatures(node)));
+        SSymbol name = symbolFor(name(node));
+        SomStructuralType.recordTypeByName(name,
+            SomStructuralType.makeType(name, parseTypeSignatures(node)));
       }
       return null;
 
