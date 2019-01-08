@@ -1,7 +1,7 @@
 package som.interpreter.objectstorage;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
@@ -197,7 +197,7 @@ public final class ClassFactory {
       return null;
     }
 
-    List<SSymbol> signatures = new ArrayList<SSymbol>();
+    Set<SSymbol> signatures = new HashSet<>();
 
     EconomicMap<SSymbol, Dispatchable> dispatchables = mixinDef.getInstanceDispatchables();
     for (SSymbol sig : dispatchables.getKeys()) {

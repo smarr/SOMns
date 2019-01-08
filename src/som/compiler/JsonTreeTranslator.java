@@ -32,7 +32,9 @@ import static som.vm.Symbols.symbolFor;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -574,8 +576,8 @@ public class JsonTreeTranslator {
     return signature.matches("[+\\-*/<>]+");
   }
 
-  private List<SSymbol> parseTypeBody(final JsonObject node) {
-    List<SSymbol> signatures = new ArrayList<SSymbol>();
+  private Set<SSymbol> parseTypeBody(final JsonObject node) {
+    Set<SSymbol> signatures = new HashSet<>();
 
     if (!node.has("body")) {
       error("Some is wrong with the type literal?", node);
@@ -602,8 +604,8 @@ public class JsonTreeTranslator {
     return signatures;
   }
 
-  private List<SSymbol> parseAndType(final JsonObject node) {
-    List<SSymbol> signatures = new ArrayList<SSymbol>();
+  private Set<SSymbol> parseAndType(final JsonObject node) {
+    Set<SSymbol> signatures = new HashSet<>();
     JsonObject body = node.get("body").getAsJsonObject();
 
     JsonObject left = body.get("left").getAsJsonObject();
@@ -634,7 +636,7 @@ public class JsonTreeTranslator {
    * mappings (such as those for operators) are performed before this list of signatures is
    * returned; so the returned list will contain the NS `not` rather than the Grace `prefix!`.
    */
-  private List<SSymbol> parseTypeSignatures(final JsonObject node) {
+  private Set<SSymbol> parseTypeSignatures(final JsonObject node) {
 
     JsonObject body = node.get("body").getAsJsonObject();
     if (body.has("left")) {
