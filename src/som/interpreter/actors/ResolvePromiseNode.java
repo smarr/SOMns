@@ -10,6 +10,7 @@ import som.interpreter.actors.ResolvePromiseNodeFactory.ResolveNodeGen;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.vm.VmSettings;
 import tools.asyncstacktraces.ShadowStackEntry;
 
 
@@ -27,6 +28,7 @@ public abstract class ResolvePromiseNode extends BinaryExpressionNode {
   public SResolver normalResolution(final VirtualFrame frame, final SResolver resolver,
       final Object result) {
     ShadowStackEntry entry = SArguments.getShadowStackEntry(frame);
+    assert entry != null || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
     return (SResolver) resolve.executeEvaluated(frame, resolver, result, entry, false, false);
   }
 

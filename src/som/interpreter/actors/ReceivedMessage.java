@@ -47,6 +47,9 @@ public class ReceivedMessage extends ReceivedRootNode {
         ShadowStackEntry.createAtPromiseResolution(entry, (ExpressionNode) onReceive);
 
     try {
+      // We null the ShadowStackEntry which is going to be set later on depending on target
+      // instead of duplicating it.
+      msg.args[msg.args.length - 1] = null;
       Object result = onReceive.doPreEvaluated(frame, msg.args);
 
       resolvePromise(frame, msg.resolver, result,

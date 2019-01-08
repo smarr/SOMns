@@ -100,8 +100,13 @@ public final class PromisePrims {
           promiseResolutionBreakpoint.executeShouldHalt(),
           sourceSection);
       SResolver resolver = SPromise.createResolver(promise);
-      return (SImmutableObject) factory.call(
-          new Object[] {SPromise.pairClass, promise, resolver});
+      Object[] args;
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+        args = new Object[] {SPromise.pairClass, promise, resolver, null};
+      } else {
+        args = new Object[] {SPromise.pairClass, promise, resolver};
+      }
+      return (SImmutableObject) factory.call(args);
     }
 
     private static final SSymbol withAndFactory = Symbols.symbolFor("with:and:");

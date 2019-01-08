@@ -52,7 +52,8 @@ public class InternalObjectArrayNode extends ExprWithTagsNode {
       for (int i = 0; i < expressions.length; i++) {
         values[i] = expressions[i].executeGeneric(frame);
       }
-      SArguments.setShadowStackEntryWithCache(values, this, shadowStackEntryLoad, frame, true);
+      SArguments.setShadowStackEntryWithCache(values, this, shadowStackEntryLoad, frame,
+          true);
       return values;
     }
   }

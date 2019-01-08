@@ -429,7 +429,12 @@ public final class ObjectSystem {
     mainThreadCompleted = new CompletableFuture<>();
 
     ObjectTransitionSafepoint.INSTANCE.register();
-    Object platform = platformModule.instantiateObject(platformClass, vmMirror);
+    Object platform;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      platform = platformModule.instantiateObject(platformClass, vmMirror, null);
+    } else {
+      platform = platformModule.instantiateObject(platformClass, vmMirror);
+    }
     ObjectTransitionSafepoint.INSTANCE.unregister();
 
     SSymbol start = Symbols.symbolFor("start");
