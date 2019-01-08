@@ -67,7 +67,7 @@ public abstract class TypeCheckNode extends Node {
     @Override
     @TruffleBoundary
     public void executeTypeCheck(final Object obj) {
-      SomStructuralType type = Types.getClassOf(obj).getFactory().type;
+      SomStructuralType type = Types.getClassOf(obj).getInstanceFactory().type;
       if (!type.isSubclassOf(expected)) {
         throwTypeError(obj, type);
       }
@@ -84,7 +84,7 @@ public abstract class TypeCheckNode extends Node {
     }
 
     protected ClassFactory getFactoryForPrimitive(final Object obj) {
-      return Types.getClassOf(obj).getFactory();
+      return Types.getClassOf(obj).getInstanceFactory();
     }
 
     @Specialization(guards = {"obj.getObjectLayout() == cachedLayout",
