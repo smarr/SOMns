@@ -61,12 +61,8 @@ public final class CachedDispatchNode extends AbstractDispatchNode
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
     try {
       if (guard.entryMatches(arguments[0])) {
-        assert frame.getArguments()[frame.getArguments().length - 1] != null;
-        assert arguments[arguments.length - 1] == null;
         ShadowStackEntryMethodCacheCompatibleNode.setShadowStackEntry(frame,
             uniqueCaller, arguments, this, shadowStackEntryLoad);
-        assert arguments[arguments.length - 1] != null
-            || (frame.getArguments()[frame.getArguments().length - 1] == null);
         return cachedMethod.call(arguments);
       } else {
         return nextInCache.executeDispatch(frame, arguments);

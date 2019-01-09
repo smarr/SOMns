@@ -301,7 +301,11 @@ if args.coverage:
     SOM_ARGS += ['--coverage', args.coverage]
     
 if args.async_stack_traces_structure:
-	flags += ['-Dsom.actorAsyncStackTraceStructure=true']
+	flags += ['-Dsom.actorAsyncStackTraceStructure=true']	
+if args.async_stack_traces_method_cache:
+	flags += ['-Dsom.actorAsyncStackTraceMethodCache=true']
+if args.async_stack_traces_inline_cache:
+	flags += ['-Dsom.actorAsyncStackTraceInlineCache=true']
 
 if args.java_coverage:
     flags += ['-javaagent:' + BASE_DIR + '/libs/jacoco/lib/jacocoagent.jar=inclbootstrapclasses=true,destfile=' + args.java_coverage]
