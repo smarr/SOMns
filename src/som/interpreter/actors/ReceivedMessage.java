@@ -47,7 +47,8 @@ public class ReceivedMessage extends ReceivedRootNode {
         ShadowStackEntry.createAtPromiseResolution(entry, (ExpressionNode) onReceive);
 
     try {
-      assert msg.args[msg.args.length - 1] == null;
+      assert msg.args[msg.args.length - 1] == null
+          || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
       Object result = onReceive.doPreEvaluated(frame, msg.args);
 
       resolvePromise(frame, msg.resolver, result,

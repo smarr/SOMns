@@ -59,13 +59,10 @@ public class VmSettings implements Settings {
     TRACE_SMALL_IDS = getBool("som.smallIds", false);
 
     ACTOR_ASYNC_STACK_TRACE_STRUCTURE = getBool("som.actorAsyncStackTraceStructure", false);
-    if (ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE = true;
-      ACTOR_ASYNC_STACK_TRACE_INLINE_CACHE = true;
-    } else {
-      ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE = false;
-      ACTOR_ASYNC_STACK_TRACE_INLINE_CACHE = false;
-    }
+    ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE =
+        getBool("som.actorAsyncStackTraceMethodCache", false);
+    ACTOR_ASYNC_STACK_TRACE_INLINE_CACHE =
+        getBool("som.actorAsyncStackTraceInlineCache", false);
 
     ACTOR_TRACING = getBool("som.actorTracing", false);
 
