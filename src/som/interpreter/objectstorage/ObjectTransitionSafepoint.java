@@ -150,6 +150,17 @@ public final class ObjectTransitionSafepoint {
     replaceAssumptionAndWaitForSafepointEnd();
   }
 
+  public void ensureSlotAllocatedToAvoidDeadlock(final SObject obj,
+      final SlotDefinition slot) {
+    waitForSafepointStart();
+
+    // Safepoint phase, used to update the object
+    // object is required to handle updates from multiple threads correctly
+    obj.ensureSlotAllocatedToAvoidDeadlock(slot);
+
+    replaceAssumptionAndWaitForSafepointEnd();
+  }
+
   private void replaceAssumptionAndWaitForSafepointEnd() {
     // update the assumption
     synchronized (this) {

@@ -11,6 +11,7 @@ import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.InstantiationNode.ClassInstantiationNode;
 import som.interpreter.nodes.InstantiationNodeFactory.ClassInstantiationNodeGen;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
@@ -58,6 +59,11 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
     assert cachedValue != null;
     if (cachedValue != Nil.nilObject) {
       return (SClass) cachedValue;
+    }
+
+    if (!rcvr.isObjectSlotAllocated(slotDef)) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      ObjectTransitionSafepoint.INSTANCE.ensureSlotAllocatedToAvoidDeadlock(rcvr, slotDef);
     }
 
     synchronized (rcvr) {
