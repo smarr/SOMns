@@ -33,7 +33,12 @@ public final class ObjectTransitionSafepoint {
   @CompilationFinal private Assumption noSafePoint;
 
   private ObjectTransitionSafepoint() {
-    phaser = new Phaser();
+    phaser = new Phaser() {
+      @Override
+      protected boolean onAdvance(final int phase, final int registeredParties) {
+        return false;
+      }
+    };
     noSafePoint = create();
   }
 
@@ -59,6 +64,11 @@ public final class ObjectTransitionSafepoint {
   @TruffleBoundary
   public void register() {
     phaser.register();
+    try {
+      noSafePoint.check();
+    } catch (InvalidAssumptionException e) {
+      phaser.arriveAndAwaitAdvance();
+    }
   }
 
   /**
@@ -157,6 +167,8 @@ public final class ObjectTransitionSafepoint {
     // Note: The whole Safepoint is in the interpreter, so, the trigger can be too
     CompilerAsserts.neverPartOfCompilation(
         "Compilation not supported, expect to be in non-PEed code.");
+
+    assert !phaser.isTerminated() : "Phaser Termianted, this will render the Safepoint useless";
 
     // Ask all other threads to join in the safepoint
     noSafePoint.invalidate();
