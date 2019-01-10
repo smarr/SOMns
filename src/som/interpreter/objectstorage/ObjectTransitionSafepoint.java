@@ -71,6 +71,14 @@ public final class ObjectTransitionSafepoint {
       noSafePoint.check();
     } catch (InvalidAssumptionException e) {
       phaser.arriveAndAwaitAdvance();
+
+      // when threads register after the assumption was invalidated but before the next phase
+      // is reached we need to perform two arriveandawait -> therefore two checks
+      try {
+        noSafePoint.check();
+      } catch (InvalidAssumptionException e1) {
+        phaser.arriveAndAwaitAdvance();
+      }
     }
   }
 
