@@ -40,7 +40,7 @@ public abstract class ResolvePromiseNode extends BinaryExpressionNode {
      */
     @Specialization(guards = {"notAPromise(result)"})
     public SResolver normalResolution(final VirtualFrame frame,
-        final SResolver resolver, final Object result, final ShadowStackEntry entry,
+        final SResolver resolver, final Object result, final Object maybeEntry,
         final boolean haltOnResolver, final boolean haltOnResolution) {
       SPromise promise = resolver.getPromise();
 
@@ -48,7 +48,7 @@ public abstract class ResolvePromiseNode extends BinaryExpressionNode {
         haltNode.executeEvaluated(frame, result);
       }
 
-      resolvePromise(Resolution.SUCCESSFUL, resolver, result, entry,
+      resolvePromise(Resolution.SUCCESSFUL, resolver, result, maybeEntry,
           haltOnResolution || promise.getHaltOnResolution());
       return resolver;
     }
