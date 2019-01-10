@@ -6,6 +6,7 @@ import com.oracle.truffle.api.nodes.Node;
 import som.interpreter.Method;
 import som.interpreter.SArguments;
 import som.vm.VmSettings;
+import tools.asyncstacktraces.ShadowStackEntry;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
 
 
@@ -37,7 +38,8 @@ public interface ShadowStackEntryMethodCacheCompatibleNode {
       final ShadowStackEntryLoad shadowStackEntryLoad) {
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       assert arguments[arguments.length - 1] == null;
-      assert (frame.getArguments()[frame.getArguments().length - 1] == null);
+      assert (frame.getArguments()[frame.getArguments().length
+          - 1] instanceof ShadowStackEntry);
       assert frame.getArguments().length >= 2;
     }
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE) {

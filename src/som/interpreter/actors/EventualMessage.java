@@ -185,7 +185,7 @@ public abstract class EventualMessage {
     }
 
     public abstract void resolve(Object rcvr, Actor target, Actor sendingActor,
-        ShadowStackEntry entry);
+        Object maybeEntry);
 
     @Override
     public final Actor getSender() {
@@ -225,12 +225,12 @@ public abstract class EventualMessage {
 
     @Override
     public void resolve(final Object rcvr, final Actor target, final Actor sendingActor,
-        final ShadowStackEntry entry) {
-      determineAndSetTarget(rcvr, target, sendingActor, entry);
+        final Object maybeEntry) {
+      determineAndSetTarget(rcvr, target, sendingActor, maybeEntry);
     }
 
     private void determineAndSetTarget(final Object rcvr, final Actor target,
-        final Actor sendingActor, final ShadowStackEntry entry) {
+        final Actor sendingActor, final Object maybeEntry) {
       VM.thisMethodNeedsToBeOptimized("not optimized for compilation");
 
       args[PROMISE_RCVR_IDX] = rcvr;
@@ -300,9 +300,9 @@ public abstract class EventualMessage {
 
     @Override
     public void resolve(final Object rcvr, final Actor target, final Actor sendingActor,
-        final ShadowStackEntry entry) {
-      assert entry != null || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
-      setPromiseValue(rcvr, sendingActor, entry);
+        final Object maybeEntry) {
+      assert maybeEntry != null || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
+      setPromiseValue(rcvr, sendingActor, maybeEntry);
     }
 
     /**
@@ -312,9 +312,13 @@ public abstract class EventualMessage {
      * @param resolvingActor - the owner of the value, the promise was resolved to.
      */
     private void setPromiseValue(final Object value, final Actor resolvingActor,
-        final ShadowStackEntry entry) {
+        final Object maybeEntry) {
       args[PROMISE_VALUE_IDX] = originalSender.wrapForUse(value, resolvingActor, null);
-      SArguments.setShadowStackEntry(args, entry);
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+        assert maybeEntry instanceof ShadowStackEntry;
+        SArguments.setShadowStackEntry(args, (ShadowStackEntry) maybeEntry);
+      }
+
     }
 
     @Override

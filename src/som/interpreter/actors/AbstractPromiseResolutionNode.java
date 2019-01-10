@@ -95,7 +95,7 @@ public abstract class AbstractPromiseResolutionNode extends EagerlySpecializable
    */
   @Specialization(guards = {"resolver.getPromise() == result"})
   public SResolver selfResolution(final SResolver resolver,
-      final SPromise result, final ShadowStackEntry entry,
+      final SPromise result, final Object maybeEntry,
       final boolean haltOnResolver, final boolean haltOnResolution) {
     return resolver;
   }
@@ -105,9 +105,9 @@ public abstract class AbstractPromiseResolutionNode extends EagerlySpecializable
    */
   @Specialization(guards = {"resolver.getPromise() != promiseValue"})
   public SResolver chainedPromise(final VirtualFrame frame,
-      final SResolver resolver, final SPromise promiseValue, final ShadowStackEntry entry,
+      final SResolver resolver, final SPromise promiseValue, final Object maybeEntry,
       final boolean haltOnResolver, final boolean haltOnResolution) {
-    chainPromise(resolver, promiseValue, entry, haltOnResolver, haltOnResolution);
+    chainPromise(resolver, promiseValue, maybeEntry, haltOnResolver, haltOnResolution);
     return resolver;
   }
 
@@ -116,7 +116,7 @@ public abstract class AbstractPromiseResolutionNode extends EagerlySpecializable
   }
 
   protected void chainPromise(final SResolver resolver,
-      final SPromise promiseValue, final ShadowStackEntry entry,
+      final SPromise promiseValue, final Object maybeEntry,
       final boolean haltOnResolver, final boolean haltOnResolution) {
     assert resolver.assertNotCompleted();
     SPromise promiseToBeResolved = resolver.getPromise();
@@ -128,7 +128,7 @@ public abstract class AbstractPromiseResolutionNode extends EagerlySpecializable
     synchronized (promiseValue) {
       Resolution state = promiseValue.getResolutionStateUnsync();
       if (SPromise.isCompleted(state)) {
-        resolvePromise(state, resolver, promiseValue.getValueUnsync(), entry,
+        resolvePromise(state, resolver, promiseValue.getValueUnsync(), maybeEntry,
             haltOnResolution);
       } else {
         synchronized (promiseToBeResolved) { // TODO: is this really deadlock free?
@@ -142,22 +142,22 @@ public abstract class AbstractPromiseResolutionNode extends EagerlySpecializable
   }
 
   protected void resolvePromise(final Resolution type,
-      final SResolver resolver, final Object result, final ShadowStackEntry entry,
+      final SResolver resolver, final Object result, final Object maybeEntry,
       final boolean haltOnResolution) {
     SPromise promise = resolver.getPromise();
     Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-    resolve(type, wrapper, promise, result, current, actorPool, entry, haltOnResolution,
+    resolve(type, wrapper, promise, result, current, actorPool, maybeEntry, haltOnResolution,
         whenResolvedProfile);
   }
 
   public static void resolve(final Resolution type,
       final WrapReferenceNode wrapper, final SPromise promise,
       final Object result, final Actor current, final ForkJoinPool actorPool,
-      final ShadowStackEntry entry,
+      final Object maybeEntry,
       final boolean haltOnResolution, final ValueProfile whenResolvedProfile) {
     Object wrapped = wrapper.execute(result, promise.owner, current);
     SResolver.resolveAndTriggerListenersUnsynced(type, result, wrapped, promise,
-        current, actorPool, entry, haltOnResolution, whenResolvedProfile);
+        current, actorPool, maybeEntry, haltOnResolution, whenResolvedProfile);
   }
 }
