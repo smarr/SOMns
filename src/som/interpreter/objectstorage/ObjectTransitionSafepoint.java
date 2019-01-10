@@ -1,6 +1,7 @@
 package som.interpreter.objectstorage;
 
 import java.util.concurrent.Phaser;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerAsserts;
@@ -29,8 +30,9 @@ import som.vmobjects.SObject.SMutableObject;
  * DOI: 10.1145/2843915.2843921
  */
 public final class ObjectTransitionSafepoint {
-  @CompilationFinal private Phaser     phaser;
-  @CompilationFinal private Assumption noSafePoint;
+  @CompilationFinal private Phaser        phaser;
+  @CompilationFinal private Assumption    noSafePoint;
+  @CompilationFinal private AtomicInteger transitionsInProgress;
 
   private ObjectTransitionSafepoint() {
     phaser = new Phaser() {
@@ -39,6 +41,7 @@ public final class ObjectTransitionSafepoint {
         return false;
       }
     };
+    transitionsInProgress = new AtomicInteger(0);
     noSafePoint = create();
   }
 
@@ -163,10 +166,14 @@ public final class ObjectTransitionSafepoint {
 
   private void replaceAssumptionAndWaitForSafepointEnd() {
     // update the assumption
-    synchronized (this) {
-      // might have been replaced by another thread already
-      if (!noSafePoint.isValid()) {
-        noSafePoint = create();
+    int active = transitionsInProgress.decrementAndGet();
+
+    if (active == 0) {
+      synchronized (this) {
+        // might have been replaced by another thread already
+        if (!noSafePoint.isValid()) {
+          noSafePoint = create();
+        }
       }
     }
 
@@ -183,6 +190,7 @@ public final class ObjectTransitionSafepoint {
 
     // Ask all other threads to join in the safepoint
     noSafePoint.invalidate();
+    transitionsInProgress.incrementAndGet();
     phaser.arriveAndAwaitAdvance();
   }
 
