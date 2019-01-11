@@ -100,6 +100,13 @@ public class DeserializationBuffer {
   }
 
   public Object deserializeWithoutContext(final long current) {
+    if (deserialized.containsKey(current)) {
+      Object o = deserialized.get(current);
+      if (!needsFixup(o)) {
+        return o;
+      }
+    }
+
     lastRef = current;
     printPosition(current);
     this.position(current);
@@ -160,8 +167,10 @@ public class DeserializationBuffer {
       depth--;
       // continue with current object
       position(current);
-      fixUpIfNecessary(reference, o);
-      deserialized.put(reference, o);
+      if (o != null) {
+        fixUpIfNecessary(reference, o);
+        deserialized.put(reference, o);
+      }
       return o;
     } else {
       printPosition(reference);
