@@ -607,10 +607,11 @@ public final class ObjectSystem {
     Output.println("Parsing Snapshot...");
     ObjectTransitionSafepoint.INSTANCE.register();
     Object platform = platformModule.instantiateObject(platformClass, vmMirror);
-    ObjectTransitionSafepoint.INSTANCE.unregister();
 
     SnapshotBackend.initialize(vm);
     SnapshotParser.inflate(vm);
+
+    ObjectTransitionSafepoint.INSTANCE.unregister();
 
     Output.println(
         "Finished restoring snapshot with " + SnapshotParser.getObjectCnt() + " Objects");
