@@ -23,7 +23,6 @@ import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.NotYetImplementedException;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
-import tools.asyncstacktraces.ShadowStackEntry;
 import tools.concurrency.KomposTrace;
 
 
@@ -66,7 +65,7 @@ public abstract class AbstractPromiseResolutionNode extends EagerlySpecializable
   }
 
   public abstract Object executeEvaluated(VirtualFrame frame,
-      SResolver receiver, Object argument, ShadowStackEntry entry,
+      SResolver receiver, Object argument, Object maybeEntry,
       boolean haltOnResolver, boolean haltOnResolution);
 
   public abstract Object executeEvaluated(VirtualFrame frame, Object receiver,

@@ -134,7 +134,7 @@ public abstract class ReceivedRootNode extends RootNode {
   public final class NullResolver extends AbstractPromiseResolutionNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
-        final SResolver receiver, final Object argument, final ShadowStackEntry entry,
+        final SResolver receiver, final Object argument, final Object maybeEntry,
         final boolean haltOnResolver, final boolean haltOnResolution) {
       assert receiver == null;
       return null;
