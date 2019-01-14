@@ -34,4 +34,6 @@ public final class Unsafe {
   public native void putDouble(Object o, long offset, double value);
   
   public native void copyMemory(Object from, long offset, Object to, long offset2, long nBytes);
+  
+  public native boolean compareAndSwapLong(java.lang.Object arg0, long arg1, long arg2, long arg3);
 }
