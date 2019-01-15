@@ -10,6 +10,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import bd.primitives.Primitive;
 import som.interpreter.actors.SuspendExecutionNodeGen;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.threading.TaskThreads.SomTaskOrThread;
 import som.vm.VmSettings;
 import tools.concurrency.KomposTrace;
@@ -38,7 +39,12 @@ public class ActivityJoin {
 
     @TruffleBoundary
     private static Object doJoin(final SomTaskOrThread task) {
-      return task.join();
+      try {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
+        return task.join();
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.register();
+      }
     }
 
     @Specialization

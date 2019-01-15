@@ -4,6 +4,7 @@ import java.util.concurrent.SynchronousQueue;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.processes.ChannelPrimitives;
 import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
@@ -78,7 +79,12 @@ public class SChannel extends SAbstractObject {
 
     @TruffleBoundary
     public Object read() throws InterruptedException {
-      return cell.take();
+      ObjectTransitionSafepoint.INSTANCE.unregister();
+      try {
+        return cell.take();
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.register();
+      }
     }
 
     public final Object readAndSuspendWriter(final boolean doSuspend)
@@ -123,7 +129,12 @@ public class SChannel extends SAbstractObject {
 
     @TruffleBoundary
     public void write(final Object value) throws InterruptedException {
-      cell.put(value);
+      ObjectTransitionSafepoint.INSTANCE.unregister();
+      try {
+        cell.put(value);
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.register();
+      }
     }
 
     public final void writeAndSuspendReader(final Object value,

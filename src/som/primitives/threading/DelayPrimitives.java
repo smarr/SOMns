@@ -6,6 +6,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.constants.Nil;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
@@ -18,10 +19,12 @@ public final class DelayPrimitives {
     @TruffleBoundary
     public final SObjectWithoutFields doLong(final long milliseconds) {
       try {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
         Thread.sleep(milliseconds);
       } catch (InterruptedException e) {
         /* Not relevant for the moment */
       }
+      ObjectTransitionSafepoint.INSTANCE.register();
       return Nil.nilObject;
     }
   }
