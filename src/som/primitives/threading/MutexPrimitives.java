@@ -13,6 +13,7 @@ import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import tools.concurrency.Tags.AcquireLock;
@@ -27,7 +28,12 @@ public final class MutexPrimitives {
     @TruffleBoundary
     @Specialization
     public static final ReentrantLock lock(final ReentrantLock lock) {
-      lock.lock();
+      try {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
+        lock.lock();
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.register();
+      }
       return lock;
     }
 

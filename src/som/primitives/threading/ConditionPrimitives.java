@@ -10,6 +10,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 
 
 public final class ConditionPrimitives {
@@ -42,10 +43,13 @@ public final class ConditionPrimitives {
     @TruffleBoundary
     public final Condition doCondition(final Condition cond) {
       try {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
         cond.await();
       } catch (InterruptedException e) {
         /* doesn't tell us a lot at the moment, so it is ignored */
       }
+
+      ObjectTransitionSafepoint.INSTANCE.register();
       return cond;
     }
   }
@@ -57,9 +61,14 @@ public final class ConditionPrimitives {
     @TruffleBoundary
     public final boolean doCondition(final Condition cond, final long milliseconds) {
       try {
-        return cond.await(milliseconds, TimeUnit.MILLISECONDS);
-      } catch (InterruptedException e) {
-        return false;
+        ObjectTransitionSafepoint.INSTANCE.unregister();
+        try {
+          return cond.await(milliseconds, TimeUnit.MILLISECONDS);
+        } catch (InterruptedException e) {
+          return false;
+        }
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.register();
       }
     }
   }
