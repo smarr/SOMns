@@ -2,7 +2,9 @@
 
 ## [Unreleased] \(0.7.0\) - unnamed [v7]
 
-  -
+### Bug Fixes
+
+  - Fixed Races on Object Transitions  [\#285](https://github.com/smarr/SOMns/pull/285)
 
 ## [0.6.0] - Black Diamonds [v6]
 
