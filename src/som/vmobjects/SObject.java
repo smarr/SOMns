@@ -527,7 +527,6 @@ public abstract class SObject extends SObjectWithClass {
       final SlotDefinition slot) {
     StorageLocation loc = objectLayout.getStorageLocation(slot);
     if (!(loc instanceof ObjectStorageLocation)) {
-
       ObjectLayout layout =
           classGroup.updateInstanceLayoutWithGeneralizedField(slot);
 
