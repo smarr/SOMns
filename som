@@ -108,6 +108,13 @@ tools.add_argument('--java-coverage', help='determine Java code coverage and sto
 tools.add_argument('-kt', '--kompos-tracing', help='enable tracing of actor operations',
                    dest='kompos_tracing', action='store_true', default=False)
 
+tools.add_argument('--async_stack_traces_structure', help='Show async stack traces in debugging through a separate structure',
+dest='async_stack_traces_structure', default=False)
+tools.add_argument('--async_stack_traces_method_cache', help='Show async stack traces in debugging through a separate structure and add a per method backpointer cache',
+dest='async_stack_traces_method_cache', default=False)
+tools.add_argument('--async_stack_traces_inline_cache', help='Show async stack traces in debugging through a separate structure and add a per send site cache',
+dest='async_stack_traces_inline_cache', default=False)
+
 parser.add_argument('-o', '--only', help='only compile give methods, comma separated list',
                     dest='only_compile', default=None)
 parser.add_argument('-A', '--no-assert', help='execute with assertions disabled',
@@ -330,6 +337,13 @@ if args.truffle_profile:
 
 if args.coverage:
     SOM_ARGS += ['--coverage', args.coverage]
+    
+if args.async_stack_traces_structure:
+	flags += ['-Dsom.actorAsyncStackTraceStructure=true']	
+if args.async_stack_traces_method_cache:
+	flags += ['-Dsom.actorAsyncStackTraceMethodCache=true']
+if args.async_stack_traces_inline_cache:
+	flags += ['-Dsom.actorAsyncStackTraceInlineCache=true']
 
 if args.java_coverage:
     flags += ['-javaagent:' + BASE_DIR + '/libs/jacoco/lib/jacocoagent.jar=inclbootstrapclasses=true,destfile=' + args.java_coverage]

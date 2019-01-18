@@ -10,6 +10,7 @@ import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.vm.NotYetImplementedException;
+import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 
 
@@ -101,8 +102,13 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitiveNode {
     } catch (UnsupportedSpecializationException e) {
       TruffleCompiler.transferToInterpreterAndInvalidate(
           "Eager Primitive with unsupported specialization.");
-      return makeGenericSend().doPreEvaluated(frame,
-          new Object[] {receiver, argument});
+      Object[] args;
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+        args = new Object[] {receiver, argument, null};
+      } else {
+        args = new Object[] {receiver, argument};
+      }
+      return makeGenericSend().doPreEvaluated(frame, args);
     }
   }
 

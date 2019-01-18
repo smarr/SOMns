@@ -10,6 +10,8 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
@@ -31,6 +33,8 @@ import som.vm.VmSettings;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
+import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
 import tools.dym.Tags.OpClosureApplication;
 import tools.dym.profiles.DispatchProfile;
 
@@ -69,6 +73,9 @@ public abstract class BlockPrims {
       implements DispatchProfile, ValuePrimNode {
 
     protected @Child ExceptionSignalingNode argumentError;
+    @Child protected ShadowStackEntryLoad   shadowStackEntryLoad =
+        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
+            : null;
 
     protected final HashMap<Invokable, CountingDirectCallNode> targets =
         VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;
@@ -98,17 +105,20 @@ public abstract class BlockPrims {
     @Specialization(
         guards = {"cached == receiver.getMethod()", "cached.getNumberOfArguments() == 1"},
         limit = "CHAIN_LENGTH")
-    public final Object doCachedBlock(final SBlock receiver,
+    public final Object doCachedBlock(final VirtualFrame frame, final SBlock receiver,
         @Cached("createDirectCallNode(receiver, getThis())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
-      return call.call(new Object[] {receiver});
+      return call.call(SArguments.getPlainNoArgumentsWithReceiver(receiver, this,
+          shadowStackEntryLoad, frame));
     }
 
     @Specialization(replaces = "doCachedBlock")
-    public final Object doGeneric(final SBlock receiver,
+    public final Object doGeneric(final VirtualFrame frame, final SBlock receiver,
         @Cached("create()") final IndirectCallNode call) {
       checkArguments(receiver, 1, argumentError);
-      return receiver.getMethod().invoke(call, new Object[] {receiver});
+      return receiver.getMethod().invoke(call,
+          SArguments.getPlainNoArgumentsWithReceiver(receiver, this,
+              shadowStackEntryLoad, frame));
     }
 
     @Override
@@ -147,6 +157,9 @@ public abstract class BlockPrims {
       implements DispatchProfile, ValuePrimNode {
 
     protected @Child ExceptionSignalingNode argumentError;
+    @Child protected ShadowStackEntryLoad   shadowStackEntryLoad =
+        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
+            : null;
 
     protected final HashMap<Invokable, CountingDirectCallNode> targets =
         VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;
@@ -171,17 +184,22 @@ public abstract class BlockPrims {
     @Specialization(
         guards = {"cached == receiver.getMethod()", "cached.getNumberOfArguments() == 2"},
         limit = "CHAIN_LENGTH")
-    public final Object doCachedBlock(final SBlock receiver, final Object arg,
+    public final Object doCachedBlock(final VirtualFrame frame, final SBlock receiver,
+        final Object arg,
         @Cached("createDirectCallNode(receiver, getThis())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
-      return call.call(new Object[] {receiver, arg});
+      return call.call(SArguments.getPlain1ArgumentWithReceiver(receiver, arg, this,
+          shadowStackEntryLoad, frame));
     }
 
     @Specialization(replaces = "doCachedBlock")
-    public final Object doGeneric(final SBlock receiver, final Object arg,
+    public final Object doGeneric(final VirtualFrame frame, final SBlock receiver,
+        final Object arg,
         @Cached("create()") final IndirectCallNode call) {
       checkArguments(receiver, 2, argumentError);
-      return receiver.getMethod().invoke(call, new Object[] {receiver, arg});
+      return receiver.getMethod().invoke(call,
+          SArguments.getPlain1ArgumentWithReceiver(receiver, arg, this,
+              shadowStackEntryLoad, frame));
     }
 
     @Override
@@ -206,6 +224,9 @@ public abstract class BlockPrims {
       implements DispatchProfile, ValuePrimNode {
 
     protected @Child ExceptionSignalingNode argumentError;
+    @Child protected ShadowStackEntryLoad   shadowStackEntryLoad =
+        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
+            : null;
 
     protected final HashMap<Invokable, CountingDirectCallNode> targets =
         VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;
@@ -230,18 +251,23 @@ public abstract class BlockPrims {
     @Specialization(
         guards = {"cached == receiver.getMethod()", "cached.getNumberOfArguments() == 3"},
         limit = "CHAIN_LENGTH")
-    public final Object doCachedBlock(final SBlock receiver, final Object arg1,
+    public final Object doCachedBlock(final VirtualFrame frame, final SBlock receiver,
+        final Object arg1,
         final Object arg2,
         @Cached("createDirectCallNode(receiver, getThis())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
-      return call.call(new Object[] {receiver, arg1, arg2});
+      return call.call(SArguments.getPlain2ArgumentsWithReceiver(receiver, arg1, arg2, this,
+          shadowStackEntryLoad, frame));
     }
 
     @Specialization(replaces = "doCachedBlock")
-    public final Object doGeneric(final SBlock receiver, final Object arg1, final Object arg2,
+    public final Object doGeneric(final VirtualFrame frame, final SBlock receiver,
+        final Object arg1, final Object arg2,
         @Cached("create()") final IndirectCallNode call) {
       checkArguments(receiver, 3, argumentError);
-      return receiver.getMethod().invoke(call, new Object[] {receiver, arg1, arg2});
+      return receiver.getMethod().invoke(call,
+          SArguments.getPlain2ArgumentsWithReceiver(receiver, arg1, arg2, this,
+              shadowStackEntryLoad, frame));
     }
 
     @Override
@@ -266,9 +292,14 @@ public abstract class BlockPrims {
   public abstract static class ValueArgsPrim extends BinaryExpressionNode
       implements DispatchProfile, ValuePrimNode {
 
-    protected @Child SizeAndLengthPrim      size = SizeAndLengthPrimFactory.create(null);
-    protected @Child AtPrim                 at   = AtPrimFactory.create(null, null);
+    protected @Child SizeAndLengthPrim      size                 =
+        SizeAndLengthPrimFactory.create(null);
+    protected @Child AtPrim                 at                   =
+        AtPrimFactory.create(null, null);
     protected @Child ExceptionSignalingNode argumentError;
+    protected @Child ShadowStackEntryLoad   shadowStackEntryLoad =
+        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
+            : null;
 
     protected final HashMap<Invokable, CountingDirectCallNode> targets =
         VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;
@@ -298,19 +329,23 @@ public abstract class BlockPrims {
         guards = {"cached == receiver.getMethod()",
             "numArgs == cached.getNumberOfArguments()"},
         limit = "CHAIN_LENGTH")
-    public final Object doCachedBlock(final SBlock receiver, final SArray args,
+    public final Object doCachedBlock(final VirtualFrame frame, final SBlock receiver,
+        final SArray args,
         @Cached("getNumArgs(args)") final long numArgs,
         @Cached("createDirectCallNode(receiver, getThis())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
-      return call.call(SArguments.getPlainArgumentsWithReceiver(receiver, args, size, at));
+      return call.call(SArguments.getPlainArgumentsWithReceiver(receiver, args, size, at, this,
+          shadowStackEntryLoad, frame));
     }
 
     @Specialization(replaces = "doCachedBlock")
-    public final Object doGeneric(final SBlock receiver, final SArray args,
+    public final Object doGeneric(final VirtualFrame frame, final SBlock receiver,
+        final SArray args,
         @Cached("create()") final IndirectCallNode call) {
       checkArguments(receiver, (int) getNumArgs(args), argumentError);
       return receiver.getMethod().invoke(
-          call, SArguments.getPlainArgumentsWithReceiver(receiver, args, size, at));
+          call, SArguments.getPlainArgumentsWithReceiver(receiver, args, size, at, this,
+              shadowStackEntryLoad, frame));
     }
 
     @Override

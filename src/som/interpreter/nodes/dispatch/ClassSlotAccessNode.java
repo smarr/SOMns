@@ -132,8 +132,16 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       createResolverCallTargets();
     }
+    Object superclassAndMixins;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      // Here we break the chain and won't know where that code comes from...
+      superclassAndMixins =
+          superclassAndMixinResolver.call(
+              new Object[] {rcvr, SArguments.instantiateTopShadowStackEntry(this)});
+    } else {
+      superclassAndMixins = superclassAndMixinResolver.call(new Object[] {rcvr});
+    }
 
-    Object superclassAndMixins = superclassAndMixinResolver.call(new Object[] {rcvr});
     SClass classObject = instantiation.execute(rcvr, superclassAndMixins);
     return classObject;
   }

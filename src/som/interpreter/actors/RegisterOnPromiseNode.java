@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicLong;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
 import som.interpreter.actors.EventualMessage.AbstractPromiseSendMessage;
@@ -34,7 +35,8 @@ public abstract class RegisterOnPromiseNode {
       }
     }
 
-    public void register(final SPromise promise, final PromiseMessage msg,
+    public void register(final VirtualFrame frame, final SPromise promise,
+        final PromiseMessage msg,
         final Actor current) {
 
       Object promiseValue;
@@ -118,7 +120,7 @@ public abstract class RegisterOnPromiseNode {
         if (VmSettings.DYNAMIC_METRICS) {
           numScheduledWhenResolved.incrementAndGet();
         }
-        schedule.execute(promise, msg, current);
+        schedule.execute(frame, promise, msg, current);
       }
     }
   }
@@ -134,7 +136,8 @@ public abstract class RegisterOnPromiseNode {
       }
     }
 
-    public void register(final SPromise promise, final PromiseMessage msg,
+    public void register(final VirtualFrame frame, final SPromise promise,
+        final PromiseMessage msg,
         final Actor current) {
 
       Object promiseValue;
@@ -195,7 +198,7 @@ public abstract class RegisterOnPromiseNode {
         if (VmSettings.DYNAMIC_METRICS) {
           numScheduledOnError.incrementAndGet();
         }
-        schedule.execute(promise, msg, current);
+        schedule.execute(frame, promise, msg, current);
       }
     }
   }

@@ -3,16 +3,22 @@ package som.interpreter.actors;
 import java.util.concurrent.CompletableFuture;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.primitives.nodes.PreevaluatedExpression;
+import som.interpreter.Invokable;
+import som.interpreter.SArguments;
 import som.interpreter.SomException;
 import som.interpreter.SomLanguage;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
+import som.vm.VmSettings;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.asyncstacktraces.ShadowStackEntry;
 
 
 public class ReceivedMessage extends ReceivedRootNode {
@@ -30,14 +36,26 @@ public class ReceivedMessage extends ReceivedRootNode {
   }
 
   @Override
+  public String getName() {
+    return selector.toString();
+  }
+
+  @Override
   protected Object executeBody(final VirtualFrame frame, final EventualMessage msg,
       final boolean haltOnResolver, final boolean haltOnResolution) {
+    ShadowStackEntry entry = SArguments.getShadowStackEntry(frame.getArguments());
+    assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || entry != null;
+    ShadowStackEntry resolutionEntry =
+        ShadowStackEntry.createAtPromiseResolution(entry, (ExpressionNode) onReceive);
+
     try {
+      assert msg.args[msg.args.length - 1] == null
+        || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
       Object result = onReceive.executeEvaluated(frame, msg.args);
-      resolvePromise(frame, msg.resolver, result, haltOnResolver, haltOnResolution);
+      resolvePromise(frame, msg.resolver, result, resolutionEntry, haltOnResolver, haltOnResolution);
     } catch (SomException exception) {
       errorPromise(frame, msg.resolver, exception.getSomObject(),
-          haltOnResolver, haltOnResolution);
+          resolutionEntry, haltOnResolver, haltOnResolution);
     }
     return null;
   }
@@ -81,23 +99,35 @@ public class ReceivedMessage extends ReceivedRootNode {
 
   public static final class ReceivedCallback extends ReceivedRootNode {
     @Child protected DirectCallNode onReceive;
+    private final Invokable         onReceiveMethod;
 
-    public ReceivedCallback(final RootCallTarget onReceive) {
-      super(SomLanguage.getLanguage(onReceive.getRootNode()),
-          onReceive.getRootNode().getSourceSection(), null);
-      this.onReceive = Truffle.getRuntime().createDirectCallNode(onReceive);
+    public ReceivedCallback(final SInvokable onReceive) {
+      super(SomLanguage.getLanguage(onReceive.getInvokable()),
+          onReceive.getSourceSection(), null);
+      this.onReceive = Truffle.getRuntime().createDirectCallNode(onReceive.getCallTarget());
+      this.onReceiveMethod = onReceive.getInvokable();
+    }
+
+    @Override
+    public String getName() {
+      return onReceiveMethod.getName();
     }
 
     @Override
     protected Object executeBody(final VirtualFrame frame, final EventualMessage msg,
         final boolean haltOnResolver, final boolean haltOnResolution) {
+      ShadowStackEntry entry = SArguments.getShadowStackEntry(msg.args);
+      assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || entry != null;
+      ShadowStackEntry resolutionEntry =
+          ShadowStackEntry.createAtPromiseResolution(entry, onReceiveMethod.getRoot());
+
       try {
         Object result = onReceive.call(msg.args);
-        resolvePromise(frame, msg.resolver, result, haltOnResolver,
+        resolvePromise(frame, msg.resolver, result, resolutionEntry, haltOnResolver,
             haltOnResolution);
       } catch (SomException exception) {
         errorPromise(frame, msg.resolver, exception.getSomObject(),
-            haltOnResolver, haltOnResolution);
+            resolutionEntry, haltOnResolver, haltOnResolution);
       }
       return null;
     }
