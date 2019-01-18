@@ -28,6 +28,7 @@ import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.SourcecodeCompiler;
 import som.interpreter.LexicalScope.MixinScope;
+import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage.DirectMessage;
@@ -526,7 +527,14 @@ public final class ObjectSystem {
     mainThreadCompleted = new CompletableFuture<>();
 
     ObjectTransitionSafepoint.INSTANCE.register();
-    Object platform = platformModule.instantiateObject(platformClass, vmMirror);
+    Object platform;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      platform = platformModule.instantiateObject(platformClass, vmMirror,
+          SArguments.instantiateTopShadowStackEntry(null));
+    } else {
+      platform = platformModule.instantiateObject(platformClass, vmMirror);
+    }
+
     ObjectTransitionSafepoint.INSTANCE.unregister();
 
     SSymbol start = Symbols.symbolFor("start");
@@ -540,9 +548,14 @@ public final class ObjectSystem {
       source = SomLanguage.getSyntheticSource("",
           "ObjectSystem.executeApplication").createSection(1);
     }
-
+    Object[] args;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      args = new Object[] {platform, SArguments.instantiateTopShadowStackEntry(null)};
+    } else {
+      args = new Object[] {platform};
+    }
     DirectMessage msg = new DirectMessage(mainActor, start,
-        new Object[] {platform}, mainActor,
+        args, mainActor,
         null, EventualSendNode.createOnReceiveCallTargetForVMMain(
             start, 1, source, mainThreadCompleted, compiler.getLanguage()));
     mainActor.sendInitialStartMessage(msg, vm.getActorPool());

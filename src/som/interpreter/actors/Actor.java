@@ -180,6 +180,9 @@ public class Actor implements Activity {
       final ForkJoinPool actorPool) {
     assert msg.getTarget() == this;
 
+    assert msg.args[msg.args.length - 1] != null
+        || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
+
     if (firstMessage == null) {
       firstMessage = msg;
     } else {

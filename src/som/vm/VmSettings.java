@@ -37,6 +37,10 @@ public class VmSettings implements Settings {
   public static final boolean RECYCLE_BUFFERS;
   public static final int     BUFFER_TIMEOUT;
 
+  public static final boolean ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
+  public static final boolean ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE;
+  public static final boolean ACTOR_ASYNC_STACK_TRACE_INLINE_CACHE;
+
   public static final String BASE_DIRECTORY;
 
   static {
@@ -58,6 +62,12 @@ public class VmSettings implements Settings {
     KOMPOS_TRACING = TRUFFLE_DEBUGGER_ENABLED; // REPLAY;
     DISABLE_TRACE_FILE = getBool("som.disableTraceFile", false) || REPLAY;
     TRACE_SMALL_IDS = getBool("som.smallIds", false);
+
+    ACTOR_ASYNC_STACK_TRACE_STRUCTURE = getBool("som.actorAsyncStackTraceStructure", false);
+    ACTOR_ASYNC_STACK_TRACE_METHOD_CACHE =
+        getBool("som.actorAsyncStackTraceMethodCache", false);
+    ACTOR_ASYNC_STACK_TRACE_INLINE_CACHE =
+        getBool("som.actorAsyncStackTraceInlineCache", false);
 
     ACTOR_TRACING = getBool("som.actorTracing", false);
 

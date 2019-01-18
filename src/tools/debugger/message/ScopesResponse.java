@@ -2,7 +2,7 @@ package tools.debugger.message;
 
 import java.util.ArrayList;
 
-import com.oracle.truffle.api.debug.DebugStackFrame;
+import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 
@@ -13,6 +13,7 @@ import som.interpreter.SArguments;
 import som.interpreter.actors.ReceivedRootNode;
 import som.vmobjects.SBlock;
 import tools.TraceData;
+import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.Response;
 
@@ -67,25 +68,28 @@ public final class ScopesResponse extends Response {
 
   public static ScopesResponse create(final long globalFrameId, final Suspension suspension,
       final int requestId) {
-    DebugStackFrame frame = suspension.getFrame(globalFrameId);
+    StackFrame frame = suspension.getFrame(globalFrameId);
     ArrayList<Scope> scopes = new ArrayList<>(SMALL_INITIAL_SIZE);
-    MaterializedFrame mFrame = frame.getFrame();
 
-    RootNode invokable = frame.getRootNode();
-    if (invokable instanceof Method) {
-      Method m = (Method) invokable;
-      MethodScope scope = m.getLexicalScope();
-      long scopeId = suspension.addScope(mFrame, scope);
-      scopes.add(new Scope("Locals", scopeId, false));
+    if (frame.hasFrame()) {
+      Frame mFrame = frame.frame;
+      RootNode invokable = frame.getRootNode();
+      if (invokable instanceof Method) {
+        Method m = (Method) invokable;
+        MethodScope scope = m.getLexicalScope();
 
-      Object rcvr = SArguments.rcvr(mFrame);
-      addScopes(scopes, scope, rcvr, suspension);
-    } else if (invokable instanceof ReceivedRootNode) {
-      // NOOP, no scopes here
-      assert false : "This should not be reached. This scope should never get an id";
-    } else {
-      assert invokable instanceof Primitive : "Got a " + invokable.getClass().getSimpleName() +
-          " here. Means we need to add support";
+        long scopeId = suspension.addScope(mFrame, scope);
+        scopes.add(new Scope("Locals", scopeId, false));
+        Object rcvr = SArguments.rcvr(mFrame);
+        addScopes(scopes, scope, rcvr, suspension);
+      } else if (invokable instanceof ReceivedRootNode) {
+        // NOOP, no scopes here
+        assert false : "This should not be reached. This scope should never get an id";
+      } else {
+        assert invokable instanceof Primitive : "Got a " + invokable.getClass().getSimpleName()
+            +
+            " here. Means we need to add support";
+      }
     }
 
     return new ScopesResponse(globalFrameId, scopes.toArray(new Scope[0]), requestId);

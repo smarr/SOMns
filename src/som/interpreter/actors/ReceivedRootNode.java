@@ -9,6 +9,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VM;
 import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
+import som.interpreter.actors.ResolvePromiseNodeFactory.ResolveNodeGen;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.VmSettings;
 import tools.concurrency.KomposTrace;
@@ -96,7 +97,7 @@ public abstract class ReceivedRootNode extends RootNode {
   }
 
   protected final void resolvePromise(final VirtualFrame frame,
-      final SResolver resolver, final Object result,
+      final SResolver resolver, final Object result, final Object maybeEntry,
       final boolean haltOnResolver, final boolean haltOnResolution) {
     // lazy initialization of resolution node
     if (resolve == null) {
@@ -105,16 +106,18 @@ public abstract class ReceivedRootNode extends RootNode {
         this.resolve = insert(new NullResolver());
       } else {
         this.resolve = insert(
-            ResolvePromiseNodeFactory.create(null, null, null, null).initialize(vm));
+            ResolveNodeGen.create(null, null, null, null, null).initialize(vm));
       }
     }
 
     // resolve promise
-    resolve.executeEvaluated(frame, resolver, result, haltOnResolver, haltOnResolution);
+    resolve.executeEvaluated(frame, resolver, result, maybeEntry, haltOnResolver,
+        haltOnResolution);
   }
 
   protected final void errorPromise(final VirtualFrame frame,
       final SResolver resolver, final Object exception,
+      final Object maybeEntry,
       final boolean haltOnResolver, final boolean haltOnResolution) {
     // lazy initialization of resolution node
     if (error == null) {
@@ -123,12 +126,13 @@ public abstract class ReceivedRootNode extends RootNode {
         this.error = insert(new NullResolver());
       } else {
         this.error = insert(
-            ErrorPromiseNodeFactory.create(null, null, null, null).initialize(vm));
+            ErrorPromiseNodeFactory.create(null, null, null, null, null).initialize(vm));
       }
     }
 
     // error promise
-    error.executeEvaluated(frame, resolver, exception, haltOnResolver, haltOnResolution);
+    error.executeEvaluated(frame, resolver, exception, maybeEntry, haltOnResolver,
+        haltOnResolution);
   }
 
   public MessageSerializationNode getSerializer() {
@@ -141,7 +145,7 @@ public abstract class ReceivedRootNode extends RootNode {
   public final class NullResolver extends AbstractPromiseResolutionNode {
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
-        final SResolver receiver, final Object argument,
+        final SResolver receiver, final Object argument, final Object maybeEntry,
         final boolean haltOnResolver, final boolean haltOnResolution) {
       assert receiver == null;
       return null;
@@ -149,7 +153,8 @@ public abstract class ReceivedRootNode extends RootNode {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object rcvr,
-        final Object firstArg, final Object secondArg, final Object thirdArg) {
+        final Object firstArg, final Object secondArg, final Object thirdArg,
+        final Object forthArg) {
       return null;
     }
 

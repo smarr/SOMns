@@ -10,21 +10,23 @@ import som.interpreter.actors.SPromise.SResolver;
 
 
 @GenerateNodeFactory
-@Primitive(primitive = "actorsError:with:isBPResolver:isBPResolution:")
+@Primitive(primitive = "actorsError:with:entry:isBPResolver:isBPResolution:")
+
 public abstract class ErrorPromiseNode extends AbstractPromiseResolutionNode {
   /**
    * Standard error case, when the promise is errored with a value that's not a promise.
    */
   @Specialization(guards = {"notAPromise(result)"})
   public SResolver standardError(final VirtualFrame frame, final SResolver resolver,
-      final Object result, final boolean haltOnResolver, final boolean haltOnResolution) {
+      final Object result, final Object maybeEntry, final boolean haltOnResolver,
+      final boolean haltOnResolution) {
     SPromise promise = resolver.getPromise();
 
     if (haltOnResolver || promise.getHaltOnResolver()) {
       haltNode.executeEvaluated(frame, result);
     }
 
-    resolvePromise(Resolution.ERRONEOUS, resolver, result, haltOnResolution);
+    resolvePromise(Resolution.ERRONEOUS, resolver, result, maybeEntry, haltOnResolution);
     return resolver;
   }
 }

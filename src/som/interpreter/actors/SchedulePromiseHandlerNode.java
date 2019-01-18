@@ -4,14 +4,17 @@ import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.IntValueProfile;
 
 import som.VM;
+import som.interpreter.SArguments;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
+import tools.asyncstacktraces.ShadowStackEntry;
 
 
 /**
@@ -30,16 +33,26 @@ public abstract class SchedulePromiseHandlerNode extends Node {
     this.actorPool = actorPool;
   }
 
-  public abstract void execute(SPromise promise, PromiseMessage msg, Actor current);
+  public abstract void execute(VirtualFrame frame, SPromise promise, PromiseMessage msg,
+      Actor current);
 
   @Specialization
-  public final void schedule(final SPromise promise,
+  public final void schedule(final VirtualFrame frame, final SPromise promise,
       final PromiseCallbackMessage msg, final Actor current,
       @Cached("createWrapper()") final WrapReferenceNode wrapper) {
     assert promise.getOwner() != null;
 
     msg.args[PromiseMessage.PROMISE_VALUE_IDX] = wrapper.execute(
         promise.getValueUnsync(), msg.originalSender, current);
+
+    // TODO: I think, we need the info about the resolution context from the promise
+    // we want to know where it was resolved, where the value is coming from
+    ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
+        SArguments.getShadowStackEntry(frame),
+        getParent().getParent());
+
+    SArguments.setShadowStackEntry(msg.args, resolutionEntry);
+
     msg.originalSender.send(msg, actorPool);
   }
 
@@ -65,6 +78,9 @@ public abstract class SchedulePromiseHandlerNode extends Node {
       receiver = ((SFarReference) receiver).getValue();
     }
 
+    // TODO: we already have a shadow stack entry here, Don't think we need to do anything
+    // about it
+
     msg.args[PromiseMessage.PROMISE_RCVR_IDX] = receiver;
 
     assert !(receiver instanceof SFarReference) : "this should not happen, because we need to redirect messages to the other actor, and normally we just unwrapped this";
@@ -84,7 +100,8 @@ public abstract class SchedulePromiseHandlerNode extends Node {
   private void wrapArguments(final PromiseSendMessage msg, final Actor finalTarget,
       final WrapReferenceNode argWrapper) {
     // TODO: break that out into nodes
-    for (int i = 1; i < numArgs.profile(msg.args.length); i++) {
+    for (int i =
+        1; i < numArgs.profile(SArguments.getLengthWithoutShadowStack(msg.args)); i++) {
       msg.args[i] = argWrapper.execute(msg.args[i], finalTarget, msg.originalSender);
     }
   }
