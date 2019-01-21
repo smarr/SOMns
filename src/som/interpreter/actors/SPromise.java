@@ -8,7 +8,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.interpreter.SomLanguage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
@@ -299,6 +298,10 @@ public class SPromise extends SObjectWithClass {
   }
 
   public final boolean assertNotCompleted() {
+    if (VmSettings.SNAPSHOT_REPLAY) {
+      this.unresolveFromSnapshot(Resolution.UNRESOLVED);
+    }
+
     assert !isCompleted() : "Not sure yet what to do with re-resolving of promises? just ignore it? Error?";
     assert value == null : "If it isn't resolved yet, it shouldn't have a value";
     return true;

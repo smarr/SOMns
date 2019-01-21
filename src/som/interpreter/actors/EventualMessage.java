@@ -308,7 +308,8 @@ public abstract class EventualMessage {
       this.target = finalTarget; // for sends to far references, we need to adjust the target
       this.finalSender = sendingActor;
       if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
-        this.messageId = ActorProcessingThread.currentThread().getSnapshotId();
+        this.messageId =
+            Math.max(ActorProcessingThread.currentThread().getSnapshotId(), this.messageId);
       }
     }
 
