@@ -77,6 +77,8 @@ public class SnapshotBuffer extends TraceBuffer {
     // (either from a promise or a mailbox)
     int oldPos = this.position;
     TracingActor ta = (TracingActor) owner.getCurrentActor();
+    assert !getRecord().containsObjectUnsync(
+        msg) : "Message serialized twice, and on the same actor";
     getRecord().addObjectEntry(msg, calculateReference(oldPos));
     // owner.addMessageLocation(ta.getActorId(), calculateReference(oldPos));
 
