@@ -58,6 +58,11 @@ public class TracingActors {
       this.actorId = id;
     }
 
+    @Override
+    public String toString() {
+      return super.toString() + " #" + actorId;
+    }
+
     public final int getActorId() {
       return actorId;
     }
@@ -269,19 +274,25 @@ public class TracingActors {
           for (EventualMessage em : a.leftovers) {
             printMsg(em);
           }
-        } else if (a.firstMessage != null || a.mailboxExtension != null) {
+        } else if (a.firstMessage != null || a.mailboxExtension != null
+            || !a.leftovers.isEmpty()) {
 
           int n = a.firstMessage != null ? 1 : 0;
           n += a.mailboxExtension != null ? a.mailboxExtension.size() : 0;
 
           Output.println(
-              a.getName() + " [" + a.getId() + "] has " + n + " unexpected messages:");
+              a.getName() + " [" + a.getActorId() + "] has " + n + " unexpected messages:");
           if (a.firstMessage != null) {
             printMsg(a.firstMessage);
             if (a.mailboxExtension != null) {
               for (EventualMessage em : a.mailboxExtension) {
                 printMsg(em);
               }
+            }
+          }
+          if (a.leftovers != null) {
+            for (EventualMessage em : a.leftovers) {
+              printMsg(em);
             }
           }
         }
