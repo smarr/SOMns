@@ -41,25 +41,25 @@ public class ShadowStackEntry {
     return previous;
   }
 
-  public static ShadowStackEntry createRoot() {
-    return new ShadowStackEntry(null, null);
+  public static ShadowStackEntry createTop(final Node expr) {
+    return new ShadowStackEntry(null, expr);
   }
 
   public static ShadowStackEntry create(final ShadowStackEntry previous,
       final Node expr) {
-    // TODO: assert previous != null;
+    assert previous != null;
     return new ShadowStackEntry(previous, unwrapNodeIfNecessary(expr));
   }
 
   public static ShadowStackEntry createAtAsyncSend(final ShadowStackEntry previous,
       final Node expr) {
-    // TODO: assert previous != null;
+    assert previous != null;
     return new EntryAtMessageSend(previous, unwrapNodeIfNecessary(expr));
   }
 
   public static ShadowStackEntry createAtPromiseResolution(final ShadowStackEntry previous,
       final Node expr) {
-    // TODO: assert previous != null;
+    assert previous != null;
     return new EntryForPromiseResolution(previous, unwrapNodeIfNecessary(expr));
   }
 

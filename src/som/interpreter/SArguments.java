@@ -189,7 +189,7 @@ public final class SArguments {
   }
 
   public static ShadowStackEntry instantiateTopShadowStackEntry(final Node expr) {
-    return instantiateShadowStackEntry(null, expr, false);
+    return ShadowStackEntry.createTop(expr);
   }
 
   public static ShadowStackEntry instantiateShadowStackEntry(final ShadowStackEntry previous,
