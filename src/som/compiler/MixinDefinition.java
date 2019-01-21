@@ -532,6 +532,8 @@ public final class MixinDefinition implements SomInteropObject {
     CallTarget callTarget = superclassMixinResolution.createCallTarget();
     SClass superClass;
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      // Since this is outside of the main stacks, we create a separate top shadow stack entry
+      // to deal with async errors.
       superClass =
           (SClass) callTarget.call(Nil.nilObject,
               SArguments.instantiateTopShadowStackEntry(null));
