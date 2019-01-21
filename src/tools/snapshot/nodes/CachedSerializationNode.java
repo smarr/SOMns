@@ -1,7 +1,6 @@
 package tools.snapshot.nodes;
 
 import com.oracle.truffle.api.Assumption;
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
@@ -10,9 +9,7 @@ import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 import som.interpreter.Types;
 import som.interpreter.nodes.dispatch.DispatchGuard;
-import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vmobjects.SClass;
-import som.vmobjects.SObject;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.nodes.ObjectSerializationNodes.SObjectSerializationNode;
@@ -45,13 +42,7 @@ public abstract class CachedSerializationNode extends AbstractSerializationNode 
     try {
       return guard.entryMatches(o);
     } catch (InvalidAssumptionException e) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-      SObject so = (SObject) o;
-      if (!so.isLayoutCurrent()) {
-        // we have to update the layout to avoid stackoverflow
-        ObjectTransitionSafepoint.INSTANCE.transitionObject(so);
-      }
-      return false;
+      return false; // Layout in guard is outdated
     }
   }
 
@@ -62,6 +53,11 @@ public abstract class CachedSerializationNode extends AbstractSerializationNode 
       @Cached("guard.getAssumption()") final Assumption objectLayoutIsLatest,
       @Cached("getSerializer(o)") final AbstractSerializationNode serializer) {
     serializer.execute(o, sb);
+  }
+
+  @Specialization
+  public void fallback(final Object o, final SnapshotBuffer sb) {
+    Types.getClassOf(o).serialize(o, sb);
   }
 
   @Override
