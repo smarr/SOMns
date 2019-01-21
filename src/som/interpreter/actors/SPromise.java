@@ -335,6 +335,15 @@ public class SPromise extends SObjectWithClass {
     return chainedPromiseExt;
   }
 
+  public boolean hasChainedPromise(final SPromise prom) {
+    if (this.chainedPromise == prom) {
+      return true;
+    } else if (this.chainedPromiseExt != null) {
+      return chainedPromiseExt.contains(prom);
+    }
+    return false;
+  }
+
   public static class STracingPromise extends SPromise {
 
     protected STracingPromise(final Actor owner, final boolean haltOnResolver,
