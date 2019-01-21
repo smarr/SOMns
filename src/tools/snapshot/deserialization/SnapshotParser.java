@@ -129,6 +129,7 @@ public final class SnapshotParser {
       }
 
       db = new FileDeserializationBuffer(channel);
+      ArrayList<PromiseMessage> messagesNeedingFixup = new ArrayList<>();
 
       // now let's go through the message list actor by actor, deserialize each message, and
       // add it to the actors mailbox.
@@ -140,6 +141,19 @@ public final class SnapshotParser {
           currentActor = ReplayActor.getActorWithId(id);
           EventualMessage em = (EventualMessage) db.deserializeWithoutContext(ml.location);
           db.doUnserialized();
+
+          if (em instanceof PromiseMessage) {
+            if (em.getArgs()[0] instanceof SPromise) {
+              STracingPromise prom = (STracingPromise) ((PromiseMessage) em).getPromise();
+              if (prom.isCompleted()) {
+                ((PromiseMessage) em).resolve(prom.getValueForSnapshot(), currentActor,
+                    SnapshotBackend.lookupActor(prom.getResolvingActor()));
+              } else {
+                messagesNeedingFixup.add((PromiseMessage) em);
+              }
+            }
+          }
+
           currentActor.sendSnapshotMessage(em);
           ml = locations.poll();
         }
@@ -161,6 +175,14 @@ public final class SnapshotParser {
           prom.resolveFromSnapshot(result, Resolution.values()[resolutionState],
               SnapshotBackend.lookupActor(resolvingActor), true);
           prom.setResolvingActorForSnapshot(resolvingActor);
+        }
+      }
+
+      for (PromiseMessage em : messagesNeedingFixup) {
+        STracingPromise prom = (STracingPromise) em.getPromise();
+        if (em.getArgs()[0] instanceof SPromise) {
+          em.resolve(prom.getValueForSnapshot(), prom.getOwner(),
+              SnapshotBackend.lookupActor(prom.getResolvingActor()));
         }
       }
 
