@@ -20,6 +20,7 @@ public class SnapshotRecord {
   private final EconomicMap<Object, Long> entries;
   protected final TracingActor            owner;
   private int                             msgCnt;
+  private int                             snapshotVersion;
 
   /**
    * This list is used to keep track of references to unserialized objects in the actor owning
@@ -36,6 +37,7 @@ public class SnapshotRecord {
     this.entries = EconomicMap.create();
     this.externalReferences = new ConcurrentLinkedQueue<>();
     this.owner = owner;
+    this.snapshotVersion = SnapshotBackend.getSnapshotVersion();
     msgCnt = 0;
   }
 
@@ -142,6 +144,23 @@ public class SnapshotRecord {
       l = entries.get(o);
     }
     return l;
+  }
+
+  public int getSnapshotVersion() {
+    return snapshotVersion;
+  }
+
+  public void resetRecordifNecessary(final int newVersion) {
+    if (this.snapshotVersion == newVersion) {
+      return;
+    }
+
+    synchronized (entries) {
+      this.entries.clear();
+    }
+
+    this.msgCnt = 0;
+    this.snapshotVersion = newVersion;
   }
 
   public static final class DeferredFarRefSerialization {
