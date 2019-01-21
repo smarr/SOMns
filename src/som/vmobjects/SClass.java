@@ -51,6 +51,7 @@ import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.nodes.AbstractSerializationNode;
+import tools.snapshot.nodes.MessageSerializationNode;
 
 
 // TODO: should we move more of that out of SClass and use the corresponding
@@ -389,6 +390,10 @@ public final class SClass extends SObjectWithClass {
   }
 
   public Object deserialize(final DeserializationBuffer bb) {
+    if (this == Classes.messageClass) {
+      return MessageSerializationNode.deserializeMessage(bb);
+    }
+
     return this.instanceClassGroup.deserialize(bb, this);
   }
 
