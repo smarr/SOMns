@@ -410,7 +410,9 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     if (pmf != null) {
       pmf.setMessage(psm);
     }
-    // We lose ssentry info here but should be reasonnable.
+    // We lost the Shadow Stack Entry, not sure we can serialize that efficiently (would need
+    // to serialize a whole linked list)
+    // So we recreate the Promise with a new top Shadow Stack entry
     psm.resolve(value, EventualMessage.getActorCurrentMessageIsExecutionOn(),
         finalSender, SArguments.instantiateTopShadowStackEntry(this));
 
