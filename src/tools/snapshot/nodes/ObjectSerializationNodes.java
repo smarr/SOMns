@@ -27,6 +27,7 @@ import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.snapshot.SnapshotBuffer;
+import tools.snapshot.SnapshotRecord;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.deserialization.FixupInformation;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.SObjectSerializationNodeFactory;
@@ -178,18 +179,19 @@ public abstract class ObjectSerializationNodes {
     public void doCached(final SObject o, final SnapshotBuffer sb) {
       int base = sb.addObjectWithFields(o, o.getSOMClass(), fieldCnt);
 
+      SnapshotRecord record = sb.getRecord();
       for (int i = 0; i < fieldCnt; i++) {
         Object value = fieldReads[i].read(o);
         // TODO type profiles could be an optimization (separate profile for each slot)
         // TODO optimize, maybe it is better to add an integer to the objects (indicating their
         // offset) rather than using a map.
 
-        if (!sb.getRecord().containsObjectUnsync(value)) {
+        if (!record.containsObjectUnsync(value)) {
           // Referenced Object not yet in snapshot
           cachedSerializers[i].execute(value, sb);
         }
 
-        sb.putLongAt(base + (8 * i), sb.getRecord().getObjectPointer(value));
+        sb.putLongAt(base + (8 * i), record.getObjectPointer(value));
       }
     }
 
