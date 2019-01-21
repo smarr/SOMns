@@ -9,16 +9,23 @@ import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.PriorityQueue;
 
 import org.graalvm.collections.EconomicMap;
 
 import som.VM;
 import som.interpreter.actors.EventualMessage;
+import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise;
+import som.interpreter.actors.SPromise.Resolution;
+import som.interpreter.actors.SPromise.SResolver;
+import som.interpreter.actors.SPromise.STracingPromise;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vm.constants.Nil;
+import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.snapshot.SnapshotBackend;
@@ -38,12 +45,14 @@ public final class SnapshotParser {
   private EconomicMap<Integer, Long>                           outerMap;
   private DeserializationBuffer                                db;
   private int                                                  objectcnt;
+  private HashSet<EventualMessage>                             sentPMsgs;
 
   private SnapshotParser(final VM vm) {
     this.vm = vm;
     this.heapOffsets = EconomicMap.create();
     this.messageLocations = EconomicMap.create();
     this.outerMap = EconomicMap.create();
+    this.sentPMsgs = new HashSet<>();
   }
 
   // preparations to be done before anything else
@@ -174,6 +183,10 @@ public final class SnapshotParser {
       objectcnt = db.getNumObjects();
       db = null;
     }
+  }
+
+  public static boolean addPMsg(final EventualMessage msg) {
+    return parser.sentPMsgs.add(msg);
   }
 
   private static void parseSymbols() {
