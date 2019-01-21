@@ -7,12 +7,14 @@ import java.util.concurrent.atomic.AtomicLong;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
+import som.interpreter.SArguments;
 import som.interpreter.actors.EventualMessage.AbstractPromiseSendMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.SReplayPromise;
 import som.interpreter.actors.SPromise.STracingPromise;
 import som.vm.VmSettings;
 import tools.dym.DynamicMetrics;
+import tools.asyncstacktraces.ShadowStackEntry;
 import tools.replay.ReplayRecord;
 import tools.replay.TraceRecord;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
@@ -77,6 +79,14 @@ public abstract class RegisterOnPromiseNode {
         }
 
         if (!promise.isResolvedUnsync()) {
+            // TODO: I think, we need the info about the resolution context from the promise
+            // we want to know where it was resolved, where the value is coming from
+            ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
+                                                                                          SArguments.getShadowStackEntry(frame),
+                                                                                          getParent().getParent());
+            assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
+            SArguments.setShadowStackEntry(msg.args, resolutionEntry);
+            
           if (VmSettings.SENDER_SIDE_REPLAY) {
             ReplayRecord npr = current.getNextReplayEvent();
             assert npr.type == TraceRecord.MESSAGE;
@@ -160,6 +170,13 @@ public abstract class RegisterOnPromiseNode {
         }
 
         if (!promise.isErroredUnsync()) {
+            // TODO: I think, we need the info about the resolution context from the promise
+            // we want to know where it was resolved, where the value is coming from
+            ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
+                                                                                          SArguments.getShadowStackEntry(frame),
+                                                                                          getParent().getParent());
+            assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
+            SArguments.setShadowStackEntry(msg.args, resolutionEntry);
 
           if (VmSettings.SENDER_SIDE_TRACING) {
             // This is whenResolved

@@ -191,15 +191,16 @@ public final class PromisePrims {
       SResolver resolver = SPromise.createResolver(promise);
 
       PromiseCallbackMessage pcm = new PromiseCallbackMessage(rcvr.getOwner(),
-          block, resolver, blockCallTarget, false,
-          promiseResolverBreakpoint.executeShouldHalt(), rcvr);
+          block, resolver, blockCallTarget,
+          false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.PROMISE_MSG, pcm.getMessageId(),
             rcvr.getPromiseId());
       }
       registerNode.register(frame, rcvr, pcm, current);
-
+      assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
+          || pcm.getArgs()[pcm.getArgs().length - 1] != null;
       return promise;
     }
 
@@ -267,7 +268,8 @@ public final class PromisePrims {
             rcvr.getPromiseId());
       }
       registerNode.register(frame, rcvr, msg, current);
-
+      assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
+          || msg.getArgs()[msg.getArgs().length - 1] != null;
       return promise;
     }
 
@@ -342,7 +344,8 @@ public final class PromisePrims {
           new PromiseCallbackMessage(rcvr.getOwner(), resolved, resolver, resolverTarget,
               false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
       PromiseCallbackMessage onError = new PromiseCallbackMessage(rcvr.getOwner(), error,
-          resolver, errorTarget, false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
+          resolver, errorTarget, false,
+          promiseResolverBreakpoint.executeShouldHalt(), rcvr);
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.PROMISE_MSG, onResolved.getMessageId(),
@@ -355,6 +358,10 @@ public final class PromisePrims {
         registerWhenResolved.register(frame, rcvr, onResolved, current);
         registerOnError.register(frame, rcvr, onError, current);
       }
+      assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
+          || onResolved.getArgs()[onResolved.getArgs().length - 1] != null;
+      assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
+          || onError.getArgs()[onError.getArgs().length - 1] != null;
       return promise;
     }
 
