@@ -150,7 +150,21 @@ public class SPromise extends SObjectWithClass {
       // haltOnResolution,
       // whenResolvedProfile);
     }
+  }
 
+  public final void unresolveFromSnapshot(final Resolution resolutionState) {
+    this.value = null;
+    this.resolutionState = resolutionState;
+
+    if (chainedPromise != null) {
+      chainedPromise.unresolveFromSnapshot(Resolution.CHAINED);
+
+      if (chainedPromiseExt != null) {
+        for (SPromise prom : chainedPromiseExt) {
+          prom.unresolveFromSnapshot(Resolution.CHAINED);
+        }
+      }
+    }
   }
 
   public long getPromiseId() {

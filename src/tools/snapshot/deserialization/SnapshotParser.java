@@ -154,6 +154,13 @@ public final class SnapshotParser {
             }
           }
 
+          if (em.getResolver() != null && em.getResolver().getPromise().isCompleted()
+              && em.getArgs()[0] instanceof SClass) {
+            SPromise cp = em.getResolver().getPromise();
+            // need to unresolve this promise...
+            cp.unresolveFromSnapshot(Resolution.UNRESOLVED);
+          }
+
           currentActor.sendSnapshotMessage(em);
           ml = locations.poll();
         }
