@@ -133,18 +133,15 @@ public class SPromise extends SObjectWithClass {
   public final void resolveFromSnapshot(final Object value, final Resolution resolutionState,
       final Actor resolver, final boolean schedule) {
     assert value != null;
-    this.value = value;
+    this.value = owner.wrapForUse(value, resolver, null);
     this.resolutionState = resolutionState;
-    ForkJoinPool pool;
-    pool = SomLanguage.getCurrent().getVM().getActorPool();
 
     if (schedule) {
       if (resolutionState == Resolution.SUCCESSFUL) {
-        SResolver.scheduleAllWhenResolvedUnsync(this, value, resolver, pool, haltOnResolution,
-            null);
+        SResolver.scheduleAllWhenResolvedSnapshot(this, value, resolver);
       } else {
         assert resolutionState == Resolution.ERRONEOUS;
-        SResolver.scheduleAllOnErrorUnsync(this, value, resolver, pool, haltOnResolution);
+        SResolver.scheduleAllOnErrorSnapshot(this, value, resolver);
       }
       // resolveChainedPromisesUnsync(resolutionState, this, resolver, current, actorPool,
       // haltOnResolution,
@@ -200,7 +197,8 @@ public class SPromise extends SObjectWithClass {
       remote.value = value;
       remote.resolutionState = resolutionState;
       if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
-        ((STracingPromise) remote).resolvingActor = ((STracingPromise) this).resolvingActor;
+        ((STracingPromise) remote).setResolvingActorForSnapshot(
+            ((STracingPromise) this).resolvingActor);
       }
     } else {
       addChainedPromise(remote);
@@ -256,6 +254,14 @@ public class SPromise extends SObjectWithClass {
       msg.enableHaltOnReceive();
     }
     msg.getTarget().send(msg, actorPool);
+  }
+
+  protected final void scheduleCallbacksSnapshot(final Object result,
+      final PromiseMessage msg, final Actor current) {
+
+    assert owner != null;
+    msg.resolve(result, owner, current);
+    msg.getTarget().sendSnapshotMessage(msg);
   }
 
   public final synchronized void addChainedPromise(final SPromise remote) {
@@ -501,8 +507,8 @@ public class SPromise extends SObjectWithClass {
       assert !(result instanceof SPromise);
 
       if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
-        ((STracingPromise) p).resolvingActor =
-            ((TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn()).getActorId();
+        ((STracingPromise) p).setResolvingActorForSnapshot(
+            ((TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn()).getActorId());
       } else if (VmSettings.KOMPOS_TRACING) {
         if (type == Resolution.SUCCESSFUL && p.resolutionState != Resolution.CHAINED) {
           KomposTrace.promiseResolution(p.getPromiseId(), result);
@@ -585,6 +591,43 @@ public class SPromise extends SObjectWithClass {
             actorPool, haltOnResolution);
         scheduleExtensions(promise, promise.onErrorExt, result, current,
             actorPool, haltOnResolution);
+      }
+    }
+
+    /**
+     * Schedule all whenResolved callbacks for the promise.
+     */
+    protected static void scheduleAllWhenResolvedSnapshot(final SPromise promise,
+        final Object result, final Actor current) {
+      if (promise.whenResolved != null) {
+        promise.scheduleCallbacksSnapshot(result, promise.whenResolved, current);
+        scheduleExtensionsSnapshot(promise, promise.whenResolvedExt, result, current);
+      }
+    }
+
+    /**
+     * Schedule callbacks from the whenResolvedExt extension array.
+     */
+    @TruffleBoundary
+    private static void scheduleExtensionsSnapshot(final SPromise promise,
+        final ArrayList<PromiseMessage> extension,
+        final Object result, final Actor current) {
+      if (extension != null) {
+        for (int i = 0; i < extension.size(); i++) {
+          PromiseMessage callbackOrMsg = extension.get(i);
+          promise.scheduleCallbacksSnapshot(result, callbackOrMsg, current);
+        }
+      }
+    }
+
+    /**
+     * Schedule all onError callbacks for the promise.
+     */
+    protected static void scheduleAllOnErrorSnapshot(final SPromise promise,
+        final Object result, final Actor current) {
+      if (promise.onError != null) {
+        promise.scheduleCallbacksSnapshot(result, promise.onError, current);
+        scheduleExtensionsSnapshot(promise, promise.onErrorExt, result, current);
       }
     }
   }
