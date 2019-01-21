@@ -14,6 +14,7 @@ import som.interpreter.SArguments;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
+import som.vm.VmSettings;
 import tools.asyncstacktraces.ShadowStackEntry;
 
 
@@ -50,7 +51,7 @@ public abstract class SchedulePromiseHandlerNode extends Node {
     ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
         SArguments.getShadowStackEntry(frame),
         getParent().getParent());
-
+    assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
     SArguments.setShadowStackEntry(msg.args, resolutionEntry);
 
     msg.originalSender.send(msg, actorPool);
@@ -63,7 +64,6 @@ public abstract class SchedulePromiseHandlerNode extends Node {
       @Cached("createWrapper()") final WrapReferenceNode argWrapper) {
     VM.thisMethodNeedsToBeOptimized("Still needs to get out the extra cases and the wrapping");
     assert promise.getOwner() != null;
-
     Actor finalTarget = promise.getOwner();
 
     Object receiver = rcvrWrapper.execute(promise.getValueUnsync(),
