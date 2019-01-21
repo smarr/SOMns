@@ -37,6 +37,8 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SSymbol;
+import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
 import tools.concurrency.KomposTrace;
 import tools.concurrency.Tags.CreatePromisePair;
 import tools.concurrency.Tags.ExpressionBreakpoint;
@@ -73,6 +75,9 @@ public final class PromisePrims {
   public abstract static class CreatePromisePairPrim extends UnarySystemOperation {
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
+    @Child protected ShadowStackEntryLoad   shadowStackEntryLoad =
+        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
+            : null;
 
     protected static final DirectCallNode create() {
       Dispatchable disp = SPromise.pairClass.getSOMClass().lookupMessage(
@@ -91,7 +96,7 @@ public final class PromisePrims {
     }
 
     @Specialization
-    public final SImmutableObject createPromisePair(final Object nil,
+    public final SImmutableObject createPromisePair(final VirtualFrame frame, final Object nil,
         @Cached("create()") final DirectCallNode factory) {
 
       SPromise promise = SPromise.createPromise(
@@ -102,8 +107,9 @@ public final class PromisePrims {
       SResolver resolver = SPromise.createResolver(promise);
       Object[] args;
       if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-        args = new Object[] {SPromise.pairClass, promise, resolver,
-            SArguments.instantiateTopShadowStackEntry(this)};
+        args = new Object[] {SPromise.pairClass, promise, resolver, null};
+        SArguments.setShadowStackEntryWithCache(args, this, shadowStackEntryLoad,
+            frame, false);
       } else {
         args = new Object[] {SPromise.pairClass, promise, resolver};
       }

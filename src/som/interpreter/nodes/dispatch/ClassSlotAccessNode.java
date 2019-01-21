@@ -17,6 +17,7 @@ import som.vm.VmSettings;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
+import tools.asyncstacktraces.ShadowStackEntry;
 
 
 /**
@@ -55,6 +56,11 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
 
   @Override
   public SClass read(final SObject rcvr) {
+    return this.read(rcvr, null);
+  }
+
+  @Override
+  public SClass read(final SObject rcvr, final Object maybeEntry) {
     // here we need to synchronize, because this is actually something that
     // can happen concurrently, and we only want a single instance of the
     // class object
@@ -87,7 +93,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
 
       // check whether cache is initialized with class object
       if (cachedValue == Nil.nilObject) {
-        return instantiateAndWriteUnsynced(rcvr);
+        return instantiateAndWriteUnsynced(rcvr, maybeEntry);
       } else {
         assert cachedValue instanceof SClass;
         return (SClass) cachedValue;
@@ -98,8 +104,8 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
   /**
    * Caller needs to hold lock on {@code this}.
    */
-  private SClass instantiateAndWriteUnsynced(final SObject rcvr) {
-    SClass classObject = instantiateClassObject(rcvr);
+  private SClass instantiateAndWriteUnsynced(final SObject rcvr, final Object maybeEntry) {
+    SClass classObject = instantiateClassObject(rcvr, maybeEntry);
 
     try {
       // recheck guard under synchronized, don't want to access object if
@@ -123,17 +129,26 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
         invokable.createCallTarget()));
   }
 
-  private SClass instantiateClassObject(final SObject rcvr) {
+  private SClass instantiateClassObject(final SObject rcvr, final Object maybeEntry) {
     if (superclassAndMixinResolver == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       createResolverCallTargets();
     }
     Object superclassAndMixins;
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      // Here we break the chain and won't know where that code comes from...
+      // maybeEntry is set if coming from a cached dispatch node
+      // Not set if comes from elsewhere (materializer, etc.)..
+      // But it may not make sense.
+      ShadowStackEntry actualEntry;
+      if (maybeEntry != null) {
+        assert maybeEntry instanceof ShadowStackEntry;
+        actualEntry = (ShadowStackEntry) maybeEntry;
+      } else {
+        actualEntry = SArguments.instantiateTopShadowStackEntry(this);
+      }
       superclassAndMixins =
           superclassAndMixinResolver.call(
-              new Object[] {rcvr, SArguments.instantiateTopShadowStackEntry(this)});
+              new Object[] {rcvr, actualEntry});
     } else {
       superclassAndMixins = superclassAndMixinResolver.call(new Object[] {rcvr});
     }
