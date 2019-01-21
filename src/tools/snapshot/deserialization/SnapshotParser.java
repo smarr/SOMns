@@ -249,10 +249,9 @@ public final class SnapshotParser {
     if (parser.outerMap.containsKey(identity)) {
       long reference = parser.outerMap.get(identity);
       Object o = parser.db.getReference(reference);
-      long pos = ((int) reference) + SnapshotParser.getFileOffset(reference);
       if (!parser.db.allreadyDeserialized(reference)) {
         result = (SObjectWithClass) parser.db.deserialize(reference);
-      } else if (parser.db.needsFixup(o)) {
+      } else if (DeserializationBuffer.needsFixup(o)) {
         result = null;
       } else {
         result = (SObjectWithClass) o;
