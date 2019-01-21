@@ -24,10 +24,12 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import som.VM;
 import som.compiler.MixinDefinition;
+import som.interpreter.Types;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SPromise;
+import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.InstantiationNode.ClassInstantiationNode;
 import som.interpreter.objectstorage.ClassFactory;
 import som.primitives.ObjectPrims.ClassPrim;
@@ -58,6 +60,8 @@ public class SnapshotBackend {
   private static final EconomicMap<SClass, TracingActor>          classEnclosures;
   private static final ConcurrentHashMap<SnapshotRecord, Integer> deferredSerializations;
 
+  private static final ArrayList<Long> lostResolutions;
+
   // this is a reference to the list maintained by the objectsystem
   private static EconomicMap<URI, MixinDefinition> loadedModules;
   private static SPromise                          resultPromise;
@@ -72,6 +76,7 @@ public class SnapshotBackend {
       messages = new ConcurrentLinkedQueue<>();
       classEnclosures = EconomicMap.create();
       deferredSerializations = new ConcurrentHashMap<>();
+      lostResolutions = new ArrayList<>();
       // identity int, includes mixin info
       // long outer
       // essentially this is about capturing the outer
@@ -84,6 +89,7 @@ public class SnapshotBackend {
       messages = new ConcurrentLinkedQueue<>();
       classEnclosures = EconomicMap.create();
       deferredSerializations = new ConcurrentHashMap<>();
+      lostResolutions = new ArrayList<>();
     } else {
       classDictionary = null;
       symbolDictionary = null;
@@ -92,6 +98,7 @@ public class SnapshotBackend {
       messages = null;
       classEnclosures = null;
       deferredSerializations = null;
+      lostResolutions = null;
     }
   }
 
@@ -338,6 +345,7 @@ public class SnapshotBackend {
       // Write Message Locations
       int offset = writeMessageLocations(fos);
       offset += writeClassEnclosures(fos);
+      offset += writeLostResolutions(fos);
 
       // handle the unfinished serialization.
       SnapshotBuffer buffer = buffers.peek();
@@ -455,6 +463,26 @@ public class SnapshotBackend {
     return msgSize;
   }
 
+  private static int writeLostResolutions(final FileOutputStream fos) throws IOException {
+    int entryCount = 0;
+    for (ArrayList<Long> al : messages) {
+      assert al.size() % 2 == 0;
+      entryCount += al.size();
+    }
+
+    int size = (lostResolutions.size() + 1) * Long.BYTES;
+    ByteBuffer bb =
+        ByteBuffer.allocate(size).order(ByteOrder.LITTLE_ENDIAN);
+    bb.putLong(lostResolutions.size());
+    for (long l : lostResolutions) {
+      bb.putLong(l);
+    }
+
+    bb.rewind();
+    fos.getChannel().write(bb);
+    return size;
+  }
+
   private static void writeSymbolTable() {
     Collection<SSymbol> symbols = Symbols.getSymbols();
 
@@ -488,5 +516,36 @@ public class SnapshotBackend {
     synchronized (classEnclosures) {
       classEnclosures.put(clazz, (TracingActor) current.getCurrentActor());
     }
+  }
+
+  public static void registerLostResolution(final long resolver, final long result) {
+    synchronized (lostResolutions) {
+      lostResolutions.add(resolver);
+      lostResolutions.add(result);
+    }
+  }
+
+  public static void registerLostResolution(final SResolver resolver,
+      final SnapshotBuffer sb) {
+    // TODO Auto-generated method stub
+
+    SResolver.getResolverClass().serialize(resolver, sb);
+    Object result = resolver.getPromise().getValueForSnapshot();
+    Types.getClassOf(result).serialize(result, sb);
+
+    int base = sb.reserveSpace(Long.BYTES * 2 + Integer.BYTES + 1);
+    synchronized (lostResolutions) {
+      lostResolutions.add(sb.calculateReference(base));
+    }
+
+    sb.putLongAt(base, sb.getRecord().getObjectPointer(resolver));
+    sb.putLongAt(base + Long.BYTES, sb.getRecord().getObjectPointer(result));
+    sb.putIntAt(base + Long.BYTES * 2,
+        ((TracingActor) sb.getOwner().getCurrentActor()).getActorId());
+    sb.putByteAt(base + Long.BYTES * 2 + Integer.BYTES,
+        (byte) resolver.getPromise().getResolutionStateUnsync().ordinal());
+
+    Types.getClassOf(result).serialize(result, sb);
+
   }
 }

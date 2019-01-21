@@ -125,6 +125,21 @@ public abstract class ReceivedRootNode extends RootNode {
         msgTracer.execute(msg);
       }
 
+      // this has to be after the msgTracing, as otherwise we will expect messages we shoudln't
+      // expect.
+      // also the getSnapshotbuffer is necessary as it will be a new one.
+      if (VmSettings.SNAPSHOTS_ENABLED) {
+        if (msg.getResolver() != null
+            && currentThread.getSnapshotId() != SnapshotBackend.getSnapshotVersion()) {
+          // Snapshot was trigged while executing this message
+          // we need to serialize the promise and mark it.
+          SnapshotBuffer sb = currentThread.getSnapshotBuffer();
+          SResolver resolver = msg.getResolver();
+
+          SnapshotBackend.registerLostResolution(resolver, sb);
+        }
+      }
+
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.scopeEnd(DynamicScopeType.TURN);
       }

@@ -93,6 +93,14 @@ public final class SnapshotParser {
         outerMap.put(identity, outer);
       }
 
+      long numResolutions = b.getLong();
+      ArrayList<Long> lostResolutions = new ArrayList<>();
+      for (int i = 0; i < numResolutions; i++) {
+        ensureRemaining(Long.BYTES, b, channel);
+        long resolver = b.getLong();
+        lostResolutions.add(resolver);
+      }
+
       ensureRemaining(Long.BYTES * 2, b, channel);
       long resultPromiseLocation = b.getLong();
       long numHeaps = b.getLong();
@@ -125,6 +133,25 @@ public final class SnapshotParser {
           db.doUnserialized();
           currentActor.sendSnapshotMessage(em);
           ml = locations.poll();
+        }
+      }
+
+      for (long entry : lostResolutions) {
+        db.position(entry);
+        long resolverLoc = db.getLong();
+        long resultLoc = db.getLong();
+
+        int resolvingActor = db.getInt();
+        byte resolutionState = db.get();
+
+        SResolver resolver = (SResolver) db.deserializeWithoutContext(resolverLoc);
+        Object result = db.deserializeWithoutContext(resultLoc);
+
+        STracingPromise prom = (STracingPromise) resolver.getPromise();
+        if (!prom.isCompleted()) {
+          prom.resolveFromSnapshot(result, Resolution.values()[resolutionState],
+              SnapshotBackend.lookupActor(resolvingActor), true);
+          prom.setResolvingActorForSnapshot(resolvingActor);
         }
       }
 

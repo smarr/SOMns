@@ -42,6 +42,12 @@ public class SnapshotBuffer extends TraceBuffer {
     return (owner.getThreadId() << THREAD_SHIFT) | start;
   }
 
+  public int reserveSpace(final int bytes) {
+    int oldPos = this.position;
+    this.position += bytes;
+    return oldPos;
+  }
+
   public int addObject(final Object o, final SClass clazz, final int payload) {
     assert !getRecord().containsObjectUnsync(o) : "Object serialized multiple times";
 
