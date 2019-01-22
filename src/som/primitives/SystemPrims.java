@@ -307,37 +307,42 @@ public final class SystemPrims {
     public static void printStackTrace(final int skipDnuFrames, final SourceSection topNode) {
       ArrayList<String> method = new ArrayList<String>();
       ArrayList<String> location = new ArrayList<String>();
-      int[] maxLengthMethod = {0};
+      int maxLengthMethod = 0;
 
       Output.println("Stack Trace");
 
       HaltStackIterator stack = new HaltStackIterator(topNode);
       while (stack.hasNext()) {
         StackFrame frame = stack.next();
-
         method.add(frame.name);
-        maxLengthMethod[0] = Math.max(maxLengthMethod[0], frame.name.length());
-        // TODO: is this better `callNode.getEncapsulatingSourceSection();` ???
-
-        SourceSection nodeSS = frame.section;
-
-        if (nodeSS != null) {
-          location.add(nodeSS.getSource().getName()
-              + SourceCoordinate.getLocationQualifier(nodeSS));
-        } else {
-          location.add("");
-        }
+        maxLengthMethod = Math.max(maxLengthMethod, frame.name.length());
+        // TODO: is frame.section better `callNode.getEncapsulatingSourceSection();` ?
+        addSourceSection(frame.section, location);
       }
 
+      Output.print(stringStackTraceFrom(method, location, maxLengthMethod, skipDnuFrames));
+    }
+
+    private static String stringStackTraceFrom(final ArrayList<String> method,
+        final ArrayList<String> location, final int maxLengthMethod, final int skipDnuFrames) {
       StringBuilder sb = new StringBuilder();
       for (int i = method.size() - 1; i >= skipDnuFrames; i--) {
-        sb.append(String.format("\t%1$-" + (maxLengthMethod[0] + 4) + "s",
+        sb.append(String.format("\t%1$-" + (maxLengthMethod + 4) + "s",
             method.get(i)));
         sb.append(location.get(i));
         sb.append('\n');
       }
+      return sb.toString();
+    }
 
-      Output.print(sb.toString());
+    private static void addSourceSection(final SourceSection section,
+        final ArrayList<String> location) {
+      if (section != null) {
+        location.add(section.getSource().getName()
+            + SourceCoordinate.getLocationQualifier(section));
+      } else {
+        location.add("");
+      }
     }
   }
 
