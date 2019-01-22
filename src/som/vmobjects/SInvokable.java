@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
@@ -190,6 +191,7 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
 
   public FrameSerializationNode getFrameSerializer() {
     if (frameSerializer == null) {
+      CompilerDirectives.transferToInterpreter();
       FrameDescriptor fd = ((Method) invokable).getLexicalScope().getOuterMethod()
                                                .getMethod().getFrameDescriptor();
       frameSerializer = FrameSerializationNodeFactory.create(fd);
