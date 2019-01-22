@@ -2,7 +2,9 @@ package tools.snapshot.nodes;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.List;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -137,12 +139,21 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
       this.frameDescriptor = frameDescriptor;
     }
 
+    @TruffleBoundary
+    private List<? extends FrameSlot> getFrameslots() {
+      // TODO can we cache this?
+      return frameDescriptor.getSlots();
+    }
+
     // Truffle doesn't seem to like me passing a frame, so we pass the entire block
     @Specialization
     public void serialize(final SBlock block, final SnapshotBuffer sb) {
       MaterializedFrame frame = block.getContext();
       Object[] args = frame.getArguments();
-      int slotCnt = frameDescriptor.getSlots().size();
+
+      List<? extends FrameSlot> slots = getFrameslots();
+
+      int slotCnt = slots.size();
       assert slotCnt < 0xFF : "Too many slots";
       assert args.length < 0xFF : "Too many arguments";
 
@@ -166,7 +177,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
       sb.putByteAt(base, (byte) slotCnt);
       base++;
 
-      for (FrameSlot slot : frameDescriptor.getSlots()) {
+      for (FrameSlot slot : slots) {
         // assume this is ordered by index
         assert slot.getIndex() == j;
 
