@@ -8,6 +8,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
+import som.vm.VmSettings;
 
 
 public class ShadowStackEntry {
@@ -33,19 +34,19 @@ public class ShadowStackEntry {
 
   public static ShadowStackEntry create(final ShadowStackEntry previous,
       final Node expr) {
-    assert previous != null;
+    assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || previous != null;
     return new ShadowStackEntry(previous, unwrapNodeIfNecessary(expr));
   }
 
   public static ShadowStackEntry createAtAsyncSend(final ShadowStackEntry previous,
       final Node expr) {
-    assert previous != null;
+    assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || previous != null;
     return new EntryAtMessageSend(previous, unwrapNodeIfNecessary(expr));
   }
 
   public static ShadowStackEntry createAtPromiseResolution(final ShadowStackEntry previous,
       final Node expr) {
-    assert previous != null;
+    assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || previous != null;
     return new EntryForPromiseResolution(previous, unwrapNodeIfNecessary(expr));
   }
 
