@@ -9,7 +9,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.LexicalScope.MethodScope;
-import tools.asyncstacktraces.StackIterator.SuspensionStackIterator;
+import tools.asyncstacktraces.StackIterator;
 
 
 /**
@@ -68,8 +68,8 @@ public class ApplicationThreadStack {
 
   ArrayList<StackFrame> get() {
     if (stackFrames.isEmpty()) {
-      SuspensionStackIterator stack =
-          new SuspensionStackIterator(event.getStackFrames().iterator());
+      StackIterator stack =
+          StackIterator.createSuspensionIterator(event.getStackFrames().iterator());
 
       while (stack.hasNext()) {
         stackFrames.add(stack.next());
