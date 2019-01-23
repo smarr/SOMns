@@ -66,7 +66,7 @@ import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.asyncstacktraces.ShadowStackEntry;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
-import tools.asyncstacktraces.StackIterator.HaltStackIterator;
+import tools.asyncstacktraces.StackIterator;
 import tools.concurrency.TraceParser;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.concurrency.TracingBackend;
@@ -311,13 +311,15 @@ public final class SystemPrims {
 
       Output.println("Stack Trace");
 
-      HaltStackIterator stack = new HaltStackIterator(topNode);
+      StackIterator stack = StackIterator.createHaltIterator();
       while (stack.hasNext()) {
         StackFrame frame = stack.next();
-        method.add(frame.name);
-        maxLengthMethod = Math.max(maxLengthMethod, frame.name.length());
-        // TODO: is frame.section better `callNode.getEncapsulatingSourceSection();` ?
-        addSourceSection(frame.section, location);
+        if (frame != null) {
+          method.add(frame.name);
+          maxLengthMethod = Math.max(maxLengthMethod, frame.name.length());
+          // TODO: is frame.section better `callNode.getEncapsulatingSourceSection();` ?
+          addSourceSection(frame.section, location);
+        }
       }
 
       Output.print(stringStackTraceFrom(method, location, maxLengthMethod, skipDnuFrames));
