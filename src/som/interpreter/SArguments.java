@@ -110,7 +110,6 @@ public final class SArguments {
     }
 
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      int i = 1 / 0; // check that
       entryLoad.loadShadowStackEntry(result, expression, frame, false);
     }
     return result;

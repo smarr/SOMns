@@ -11,7 +11,7 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 import som.instrumentation.InstrumentableDirectCallNode;
-import som.interpreter.Method;
+import som.interpreter.Invokable;
 import som.vm.VmSettings;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
 import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
@@ -52,9 +52,9 @@ public final class CachedDispatchNode extends AbstractDispatchNode
   }
 
   @Override
-  public Method getCachedMethod() {
+  public Invokable getCachedMethod() {
     RootCallTarget ct = (DefaultCallTarget) cachedMethod.getCallTarget();
-    return (Method) ct.getRootNode();
+    return (Invokable) ct.getRootNode();
   }
 
   @Override

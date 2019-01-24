@@ -3,7 +3,7 @@ package som.interpreter.nodes.dispatch;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
-import som.interpreter.Method;
+import som.interpreter.Invokable;
 import som.interpreter.SArguments;
 import som.vm.VmSettings;
 import tools.asyncstacktraces.ShadowStackEntry;
@@ -42,6 +42,6 @@ public interface BackCacheCallNode {
 
   void multipleCaller();
 
-  Method getCachedMethod();
+  Invokable getCachedMethod();
 
 }
