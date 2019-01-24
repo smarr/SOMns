@@ -18,9 +18,6 @@ import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.Frame;
-import com.oracle.truffle.api.frame.FrameInstance;
-import com.oracle.truffle.api.frame.FrameInstance.FrameAccess;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
@@ -39,13 +36,11 @@ import som.VM;
 import som.compiler.MixinDefinition;
 import som.interop.ValueConversion.ToSomConversion;
 import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
-import som.interpreter.Method;
 import som.interpreter.Types;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.dispatch.BackCacheCallNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
@@ -345,89 +340,6 @@ public final class SystemPrims {
       } else {
         location.add("");
       }
-    }
-  }
-
-  @GenerateNodeFactory
-  @Primitive(primitive = "printAsyncStackTrace:")
-  public abstract static class PrintAsyncStackTracePrim extends UnaryExpressionNode {
-    @Specialization
-    public final Object doSObject(final Object receiver) {
-      printAsyncStackTrace(2, null);
-      return receiver;
-    }
-
-    public static boolean shouldUsePreviousShadowStackEntry(final Method currentMethod,
-        final Node prevExpression) {
-      if (prevExpression instanceof BackCacheCallNode) {
-        BackCacheCallNode ssNode =
-            (BackCacheCallNode) prevExpression;
-        return currentMethod == ssNode.getCachedMethod();
-      }
-      return true;
-    }
-
-    @TruffleBoundary
-    public static void printAsyncStackTrace(final int skipDnuFrames,
-        final SourceSection topNode) {
-
-      ArrayList<String> method = new ArrayList<String>();
-      ArrayList<String> location = new ArrayList<String>();
-      int[] maxLengthMethod = {0};
-
-      Output.println("Async Stack Trace");
-
-      // First we extract Shadow Stack entry and current method from the top stack frame
-      FrameInstance firstFrame = Truffle.getRuntime().getCallerFrame();
-      Frame firstFrameFrame = firstFrame.getFrame(FrameAccess.READ_ONLY);
-      ShadowStackEntry currentShadowStackEntry =
-          (ShadowStackEntry) firstFrameFrame.getArguments()[firstFrameFrame.getArguments().length
-              - 1];
-      RootCallTarget ct = (RootCallTarget) firstFrame.getCallTarget();
-      Method currentMethod = (Method) ct.getRootNode(); // Assumes Async stack trace printing
-                                                        // cannot be called from a primitive
-
-      // Set up Shadow Stack entry iteration: currentNode (typically cachedDispatchNode) and
-      // currentShadowStackEntry
-      Node currentNode;
-      if (shouldUsePreviousShadowStackEntry(currentMethod,
-          currentShadowStackEntry.getExpression())) {
-        currentShadowStackEntry = currentShadowStackEntry.getPreviousShadowStackEntry();
-        currentNode = currentShadowStackEntry.getExpression();
-      } else {
-        currentNode = (Node) currentMethod.getUniqueCaller();
-      }
-
-      // Main printing loop: we need to print and select each time if we
-      // use the uniqueCaller or the method or the shadow stack entry data
-      int debugStop = 500;
-      while (currentNode != null && debugStop > 0) {
-        debugStop--;
-        // First we print
-        currentMethod = (Method) currentNode.getRootNode();
-        method.add(currentMethod.getName());
-        SourceSection nodeSS = currentNode.getSourceSection();
-        location.add(nodeSS.getSource().getName()
-            + SourceCoordinate.getLocationQualifier(nodeSS));
-        // Then we compute next node to use
-        if (shouldUsePreviousShadowStackEntry(currentMethod,
-            currentShadowStackEntry.getExpression())) {
-          currentShadowStackEntry = currentShadowStackEntry.getPreviousShadowStackEntry();
-          currentNode = currentShadowStackEntry.getExpression();
-        } else {
-          currentNode = (Node) currentMethod.getUniqueCaller();
-        }
-      }
-
-      // Now compute the string and output it
-      StringBuilder sb = new StringBuilder();
-      for (int i = method.size() - 1; i >= skipDnuFrames; i--) {
-        sb.append(String.format("\t%1$-" + (maxLengthMethod[0] + 4) + "s",
-            method.get(i)));
-        sb.append(location.get(i));
-        sb.append('\n');
-      }
-      Output.print(sb.toString());
     }
   }
 

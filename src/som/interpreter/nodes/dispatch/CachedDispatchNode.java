@@ -53,9 +53,9 @@ public final class CachedDispatchNode extends AbstractDispatchNode
   }
 
   @Override
-  public Method getCachedMethod() {
+  public Invokable getCachedMethod() {
     RootCallTarget ct = (DefaultCallTarget) cachedMethod.getCallTarget();
-    return (Method) ct.getRootNode();
+    return (Invokable) ct.getRootNode();
   }
 
   @Override

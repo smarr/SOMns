@@ -16,7 +16,9 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.Invokable;
+import som.interpreter.Method;
 import som.interpreter.actors.EventualSendNode;
+import som.interpreter.nodes.dispatch.BackCacheCallNode;
 import som.vm.VmSettings;
 import tools.asyncstacktraces.ShadowStackEntry.EntryAtMessageSend;
 import tools.asyncstacktraces.ShadowStackEntry.EntryForPromiseResolution;
@@ -144,20 +146,22 @@ public abstract class StackIterator implements Iterator<StackFrame> {
    *         following stack entries
    */
   public abstract static class ShadowStackIterator extends StackIterator {
-    private ShadowStackEntry current;
+    private ShadowStackEntry currentSSEntry;
     protected boolean        first;
+    private Node             currentNode;
+    private Invokable        currentMethod;
 
     private ShadowStackEntry useAgain;
     private Frame            useAgainFrame;
 
     public ShadowStackIterator() {
-      current = null;
+      currentSSEntry = null;
       first = true;
     }
 
     @Override
     public boolean hasNext() {
-      return current != null || first || useAgain != null;
+      return currentSSEntry != null || first || useAgain != null;
     }
 
     protected abstract StackFrameDescription getFirstFrame();
@@ -177,15 +181,14 @@ public abstract class StackIterator implements Iterator<StackFrame> {
     protected StackFrame nextAsyncStackStructure() {
 
       ShadowStackEntry shadow = null;
-      boolean isFirst = first;
-
       Frame localFrame = null;
       boolean usedAgain = false;
-      if (isFirst) {
+
+      if (first) {
         localFrame = getFirstFrame().getFrame();
         Object[] args = localFrame.getArguments();
         assert args[args.length - 1] instanceof ShadowStackEntry;
-        current = (ShadowStackEntry) args[args.length - 1];
+        currentSSEntry = (ShadowStackEntry) args[args.length - 1];
         first = false;
       } else if (useAgain != null) {
         shadow = useAgain;
@@ -194,16 +197,12 @@ public abstract class StackIterator implements Iterator<StackFrame> {
         useAgain = null;
         useAgainFrame = null;
       } else {
-        shadow = current;
+        shadow = currentSSEntry;
         if (shadow != null) {
-          current = shadow.previous;
+          currentSSEntry = shadow.previous;
         }
       }
       return createStackFrame(shadow, localFrame, usedAgain);
-    }
-
-    protected StackFrame nextAsyncStackStructureMethodCache() {
-      return createStackFrame(null, null, false);
     }
 
     protected StackFrame createStackFrame(final ShadowStackEntry shadow,
@@ -244,6 +243,63 @@ public abstract class StackIterator implements Iterator<StackFrame> {
 
       return new StackFrame(name, shadow.getRootNode(),
           location, localFrame, contextTransitionElement);
+    }
+
+    // This version has to skip missing shadow stack entry using method back pointer cache
+    protected StackFrame nextAsyncStackStructureMethodCache() {
+      ShadowStackEntry shadow = null;
+      Frame localFrame = null;
+      boolean usedAgain = false;
+
+      if (first) {
+        localFrame = getFirstFrame().getFrame();
+        Object[] args = localFrame.getArguments();
+        assert args[args.length - 1] instanceof ShadowStackEntry;
+        currentSSEntry = (ShadowStackEntry) args[args.length - 1];
+        currentMethod = (Invokable) getFirstFrame().getRootNode();
+        first = false;
+      }
+
+      if (useAgain != null) {
+        shadow = useAgain;
+        usedAgain = true;
+        localFrame = useAgainFrame;
+        useAgain = null;
+        useAgainFrame = null;
+      } else {
+        if (shouldUsePreviousShadowStackEntry(currentMethod,
+            currentSSEntry.getExpression())) {
+          shadow = currentSSEntry;
+          currentSSEntry = currentSSEntry.getPreviousShadowStackEntry();
+          // null if start frame
+          if (currentSSEntry != null) {
+            currentNode = currentSSEntry.getExpression();
+          }
+        } else {
+          assert currentMethod instanceof Method;
+          currentNode = (Node) ((Method) currentMethod).getUniqueCaller();
+        }
+      }
+
+      if (shadow != null) {
+        return createStackFrame(shadow, localFrame, usedAgain);
+      } else {
+        return createStackFrame(localFrame, currentNode.getRootNode(),
+            currentNode.getRootNode().getName(), currentNode.getSourceSection());
+      }
+    }
+
+    public boolean shouldUsePreviousShadowStackEntry(final Invokable currentMethod,
+        final Node prevExpression) {
+      if (!(currentMethod instanceof Method)) {
+        return true;
+      }
+      if (prevExpression instanceof BackCacheCallNode) {
+        BackCacheCallNode ssNode =
+            (BackCacheCallNode) prevExpression;
+        return currentMethod == ssNode.getCachedMethod();
+      }
+      return true;
     }
 
     protected static final class StackFrameDescription {
