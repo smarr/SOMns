@@ -51,7 +51,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
         + serializationNodes.length;
 
     for (int i = 0; i < serializationNodes.length; i++) {
-      serializationNodes[i] = CachedSerializationNodeFactory.create();
+      serializationNodes[i] = CachedSerializationNodeFactory.create(0);
     }
   }
 

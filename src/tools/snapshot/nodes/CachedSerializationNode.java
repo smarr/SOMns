@@ -17,21 +17,25 @@ import tools.snapshot.nodes.ObjectSerializationNodes.SObjectSerializationNode;
 
 @GenerateNodeFactory
 public abstract class CachedSerializationNode extends AbstractSerializationNode {
+  public static final int MAX_DEPTH = 8;
 
-  public CachedSerializationNode() {
+  protected final int depth;
+
+  public CachedSerializationNode(final int depth) {
     super();
+    this.depth = depth;
   }
 
   protected static DispatchGuard createDispatchGuard(final Object o) {
     return DispatchGuard.create(o);
   }
 
-  protected static AbstractSerializationNode getSerializer(final Object o) {
+  protected static AbstractSerializationNode getSerializer(final Object o, final int depth) {
     SClass clazz = Types.getClassOf(o);
     NodeFactory<? extends AbstractSerializationNode> factory = clazz.getSerializerFactory();
 
     if (factory.getNodeClass() == SObjectSerializationNode.class) {
-      return factory.createNode(clazz.getInstanceFactory());
+      return factory.createNode(clazz.getInstanceFactory(), depth + 1);
     }
 
     return factory.createNode();
@@ -46,12 +50,12 @@ public abstract class CachedSerializationNode extends AbstractSerializationNode 
     }
   }
 
-  @Specialization(guards = "execGuard(o, guard, objectLayoutIsLatest)",
+  @Specialization(guards = {"execGuard(o, guard, objectLayoutIsLatest)", "depth < MAX_DEPTH"},
       assumptions = "objectLayoutIsLatest")
   public void serialize(final Object o, final SnapshotBuffer sb,
       @Cached("createDispatchGuard(o)") final DispatchGuard guard,
       @Cached("guard.getAssumption()") final Assumption objectLayoutIsLatest,
-      @Cached("getSerializer(o)") final AbstractSerializationNode serializer) {
+      @Cached("getSerializer(o, depth)") final AbstractSerializationNode serializer) {
     serializer.execute(o, sb);
   }
 

@@ -47,14 +47,23 @@ public abstract class ObjectSerializationNodes {
 
     protected final ClassFactory classFact;
 
+    protected final int depth;
+
     protected ObjectSerializationNode(final ClassFactory instanceFactory) {
       this.classFact = instanceFactory;
+      this.depth = 0;
     }
 
-    public static AbstractSerializationNode create(final ClassFactory instanceFactory) {
+    protected ObjectSerializationNode(final ClassFactory instanceFactory, final int depth) {
+      this.classFact = instanceFactory;
+      this.depth = depth;
+    }
+
+    public static AbstractSerializationNode create(final ClassFactory instanceFactory,
+        final int depth) {
       if (instanceFactory.hasSlots()) {
         return SObjectSerializationNodeFactory.create(instanceFactory,
-            createReadNodes(instanceFactory));
+            createReadNodes(instanceFactory), depth);
       } else {
         return SObjectWithoutFieldsSerializationNodeFactory.create();
       }
@@ -141,7 +150,7 @@ public abstract class ObjectSerializationNodes {
     protected final ObjectLayout                layout;
 
     protected SObjectSerializationNode(final ClassFactory instanceFactory,
-        final CachedSlotRead[] reads) {
+        final CachedSlotRead[] reads, final int depth) {
       super(instanceFactory);
       layout = classFact.getInstanceLayout();
       fieldReads = insert(reads);
@@ -149,12 +158,12 @@ public abstract class ObjectSerializationNodes {
 
       cachedSerializers = new CachedSerializationNode[fieldCnt];
       for (int i = 0; i < fieldCnt; i++) {
-        cachedSerializers[i] = CachedSerializationNodeFactory.create();
+        cachedSerializers[i] = CachedSerializationNodeFactory.create(depth);
       }
     }
 
-    protected SObjectSerializationNode(final ClassFactory instanceFactory) {
-      this(instanceFactory, createReadNodes(instanceFactory));
+    protected SObjectSerializationNode(final ClassFactory instanceFactory, final int depth) {
+      this(instanceFactory, createReadNodes(instanceFactory), depth);
     }
 
     @Specialization
@@ -168,7 +177,7 @@ public abstract class ObjectSerializationNodes {
         // replace this with a new node for the new layout
         SObjectSerializationNode replacement =
             SObjectSerializationNodeFactory.create(classFact,
-                createReadNodes(so.getFactory()));
+                createReadNodes(so.getFactory()), depth);
         replace(replacement).serialize(so, sb);
       } else {
         doCached(so, sb);

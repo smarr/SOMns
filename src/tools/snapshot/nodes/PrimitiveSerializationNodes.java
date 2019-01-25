@@ -7,11 +7,13 @@ import java.nio.charset.StandardCharsets;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
+import som.interpreter.SomLanguage;
 import som.interpreter.actors.SFarReference;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
@@ -151,17 +153,45 @@ public abstract class PrimitiveSerializationNodes {
   @GenerateNodeFactory
   public abstract static class ClassSerializationNode extends AbstractSerializationNode {
 
-    @Specialization
-    protected void doCached(final SClass cls, final SnapshotBuffer sb) {
-      int base = sb.addObject(cls, Classes.classClass, Integer.BYTES);
+    @Specialization(guards = "cls.isValue()")
+    protected void doValueClass(final SClass cls, final SnapshotBuffer sb) {
+      int base = sb.addObject(cls, Classes.classClass, Integer.BYTES + Long.BYTES);
       sb.putIntAt(base, cls.getIdentity());
+      SObjectWithClass outer = cls.getEnclosingObject();
+      outer.getSOMClass().serialize(outer, sb);
+      sb.putLongAt(base + Integer.BYTES, sb.getRecord().getObjectPointer(outer));
+
+      SnapshotBackend.registerClassLocation(cls.getIdentity(),
+          sb.getRecord().getObjectPointer(cls));
+    }
+
+    @Specialization(guards = "!cls.isValue()")
+    protected void doNotValueClass(final SClass cls, final SnapshotBuffer sb) {
+      int base = sb.addObject(cls, Classes.classClass, Integer.BYTES + Long.BYTES);
+      sb.putIntAt(base, cls.getIdentity());
+
+      SObjectWithClass outer = cls.getEnclosingObject();
+      assert outer != null;
+      TracingActor owner = cls.getOwnerOfOuter();
+      if (owner == null) {
+        owner = (TracingActor) SomLanguage.getVM(this).getMainActor();
+      }
+      owner.getSnapshotRecord().farReference(outer, sb, base + Integer.BYTES);
+
+      SnapshotBackend.registerClassLocation(cls.getIdentity(),
+          sb.getRecord().getObjectPointer(cls));
     }
 
     @Override
     public Object deserialize(final DeserializationBuffer sb) {
       int id = sb.getInt();
-      // If lookup yields null we need to fixup in caller
+      // SObjectWithClass outer = (SObjectWithClass) sb.getReference();
       return SnapshotBackend.lookupClass(id, sb.position());
+    }
+
+    public static long readOuterLocation(final DeserializationBuffer sb) {
+      sb.getInt();
+      return sb.getLong();
     }
   }
 

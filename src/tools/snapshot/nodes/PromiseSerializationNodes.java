@@ -137,8 +137,8 @@ public abstract class PromiseSerializationNodes {
       sb.putIntAt(base + 1 + +Integer.BYTES + Long.BYTES,
           ((STracingPromise) prom).getResolvingActor());
       base += (1 + Integer.BYTES + Integer.BYTES + Long.BYTES);
-      base = serializeDeliveredMessages(base, nwr, whenRes, whenResExt, sb);
-      base = serializeDeliveredMessages(base, noe, onError, onErrorExt, sb);
+      base = serializeMessages(base, nwr, whenRes, whenResExt, sb);
+      base = serializeMessages(base, noe, onError, onErrorExt, sb);
       serializeChainedPromises(base, ncp, chainedProm, chainedPromExt, sb);
     }
 
@@ -155,16 +155,27 @@ public abstract class PromiseSerializationNodes {
     private int serializeMessages(final int start, final int cnt,
         final PromiseMessage whenRes, final ArrayList<PromiseMessage> whenResExt,
         final SnapshotBuffer sb) {
+
       int base = start;
       sb.putShortAt(base, (short) cnt);
       base += 2;
       if (cnt > 0) {
-        sb.putLongAt(base, whenRes.forceSerialize(sb));
+        if (whenRes.isDelivered()) {
+          doDeliveredMessage(whenRes, base, sb);
+        } else {
+          sb.putLongAt(base, whenRes.forceSerialize(sb));
+        }
+
         base += Long.BYTES;
 
         if (cnt > 1) {
           for (int i = 0; i < whenResExt.size(); i++) {
-            sb.putLongAt(base + i * Long.BYTES, whenResExt.get(i).forceSerialize(sb));
+
+            if (whenRes.isDelivered()) {
+              doDeliveredMessage(whenResExt.get(i), base + i * Long.BYTES, sb);
+            } else {
+              sb.putLongAt(base + i * Long.BYTES, whenResExt.get(i).forceSerialize(sb));
+            }
           }
           base += whenResExt.size() * Long.BYTES;
         }

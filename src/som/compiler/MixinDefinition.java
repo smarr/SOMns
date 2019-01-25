@@ -386,7 +386,7 @@ public final class MixinDefinition implements SomInteropObject {
           ClassSerializationNodeFactory.create());
       classFactory.customizeSerialization(
           ObjectSerializationNode.getNodeFactory(classFactory),
-          ObjectSerializationNode.create(classFactory));
+          ObjectSerializationNode.create(classFactory, 0));
     }
 
     cache.add(classFactory);

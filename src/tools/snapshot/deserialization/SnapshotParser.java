@@ -42,7 +42,7 @@ public final class SnapshotParser {
   private SPromise                                             resultPromise;
   private ReplayActor                                          currentActor;
   private VM                                                   vm;
-  private EconomicMap<Integer, Long>                           outerMap;
+  private EconomicMap<Integer, Long>                           classLocations;
   private DeserializationBuffer                                db;
   private int                                                  objectcnt;
   private HashSet<EventualMessage>                             sentPMsgs;
@@ -51,7 +51,7 @@ public final class SnapshotParser {
     this.vm = vm;
     this.heapOffsets = EconomicMap.create();
     this.messageLocations = EconomicMap.create();
-    this.outerMap = EconomicMap.create();
+    this.classLocations = EconomicMap.create();
     this.sentPMsgs = new HashSet<>();
   }
 
@@ -98,8 +98,8 @@ public final class SnapshotParser {
       for (int i = 0; i < numOuters; i++) {
         ensureRemaining(Long.BYTES * 2, b, channel);
         int identity = (int) b.getLong();
-        long outer = b.getLong();
-        outerMap.put(identity, outer);
+        long classLocation = b.getLong();
+        classLocations.put(identity, classLocation);
       }
 
       long numResolutions = b.getLong();
@@ -198,7 +198,7 @@ public final class SnapshotParser {
         resultPromise = (SPromise) db.deserialize(resultPromiseLocation);
       }
 
-      outerMap = null;
+      classLocations = null;
       messageLocations = null;
 
       assert resultPromise != null : "The result promise was not found";
@@ -246,13 +246,14 @@ public final class SnapshotParser {
   public static SObjectWithClass getOuterForClass(final int identity) {
     SObjectWithClass result;
 
-    if (parser.outerMap.containsKey(identity)) {
-      long reference = parser.outerMap.get(identity);
+    if (parser.classLocations.containsKey(identity)) {
+      long reference = parser.db.readOuterForClass(parser.classLocations.get(identity));
       Object o = parser.db.getReference(reference);
       if (!parser.db.allreadyDeserialized(reference)) {
         result = (SObjectWithClass) parser.db.deserialize(reference);
       } else if (DeserializationBuffer.needsFixup(o)) {
         result = null;
+        // OuterFixup!!
       } else {
         result = (SObjectWithClass) o;
       }
