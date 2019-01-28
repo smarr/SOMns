@@ -21,7 +21,6 @@
  */
 package som.interpreter;
 
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
@@ -39,10 +38,10 @@ import som.vmobjects.SInvokable;
 
 public final class Method extends Invokable {
 
-  private final MethodScope                   methodScope;
-  private final SourceSection[]               definition;
-  private final boolean                       block;
-  @CompilationFinal private BackCacheCallNode uniqueCaller;
+  private final MethodScope     methodScope;
+  private final SourceSection[] definition;
+  private final boolean         block;
+  private BackCacheCallNode     uniqueCaller;
 
   public Method(final String name, final SourceSection sourceSection,
       final SourceSection[] definition,
