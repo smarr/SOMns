@@ -11,7 +11,6 @@ import som.interpreter.actors.SPromise.SResolver;
 
 @GenerateNodeFactory
 @Primitive(primitive = "actorsError:with:entry:isBPResolver:isBPResolution:")
-
 public abstract class ErrorPromiseNode extends AbstractPromiseResolutionNode {
   /**
    * Standard error case, when the promise is errored with a value that's not a promise.
