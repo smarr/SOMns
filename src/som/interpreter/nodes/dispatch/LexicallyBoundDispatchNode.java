@@ -7,6 +7,7 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.impl.DefaultCallTarget;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -23,7 +24,7 @@ import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntry
  * Private methods are special, they are linked unconditionally to the call site.
  * Thus, we don't need to check at the dispatch whether they apply or not.
  */
-public final class LexicallyBoundDispatchNode extends AbstractDispatchNode
+public abstract class LexicallyBoundDispatchNode extends AbstractDispatchNode
     implements BackCacheCallNode {
 
   private final Assumption              stillUniqueCaller;
@@ -41,6 +42,7 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchNode
     if (VmSettings.DYNAMIC_METRICS) {
       this.cachedMethod = new CountingDirectCallNode(this.cachedMethod);
     }
+    BackCacheCallNode.initializeUniqueCaller((RootCallTarget) methodCallTarget, this);
   }
 
   @Override
@@ -61,9 +63,19 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchNode
   }
 
   @Override
-  public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
+  public abstract Object executeDispatch(VirtualFrame frame, Object[] arguments);
+
+  @Specialization(assumptions = "stillUniqueCaller", guards = "uniqueCaller")
+  public Object uniqueCallerDispatch(final VirtualFrame frame, final Object[] arguments) {
     BackCacheCallNode.setShadowStackEntry(frame,
-        uniqueCaller, arguments, this, shadowStackEntryLoad);
+        true, arguments, this, shadowStackEntryLoad);
+    return cachedMethod.call(arguments);
+  }
+
+  @Specialization(guards = "!uniqueCaller")
+  public Object multipleCallerDispatch(final VirtualFrame frame, final Object[] arguments) {
+    BackCacheCallNode.setShadowStackEntry(frame,
+        false, arguments, this, shadowStackEntryLoad);
     return cachedMethod.call(arguments);
   }
 

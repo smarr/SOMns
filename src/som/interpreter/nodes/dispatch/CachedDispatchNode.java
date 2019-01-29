@@ -33,6 +33,12 @@ public final class CachedDispatchNode extends AbstractDispatchNode
 
   public CachedDispatchNode(final CallTarget methodCallTarget,
       final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
+    this(methodCallTarget, guard, nextInCache, true);
+  }
+
+  public CachedDispatchNode(final CallTarget methodCallTarget,
+      final DispatchGuard guard, final AbstractDispatchNode nextInCache,
+      final boolean defaultUniqueCaller) {
     super(nextInCache.getSourceSection());
     stillUniqueCaller = Truffle.getRuntime().createAssumption();
     this.guard = guard;
@@ -41,6 +47,14 @@ public final class CachedDispatchNode extends AbstractDispatchNode
     if (VmSettings.DYNAMIC_METRICS) {
       this.cachedMethod = new CountingDirectCallNode(this.cachedMethod);
     }
+    if (defaultUniqueCaller) {
+      BackCacheCallNode.initializeUniqueCaller((RootCallTarget) methodCallTarget, this);
+    }
+  }
+
+  public CachedDispatchNode(final CachedDispatchNode node, final boolean uniqueCaller) {
+    this(node.cachedMethod.getCallTarget(), node.guard, node.nextInCache, false);
+    this.uniqueCaller = uniqueCaller;
   }
 
   @Override
@@ -64,6 +78,7 @@ public final class CachedDispatchNode extends AbstractDispatchNode
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
     try {
       if (guard.entryMatches(arguments[0])) {
+        stillUniqueCaller.check();
         BackCacheCallNode.setShadowStackEntry(frame,
             uniqueCaller, arguments, this, shadowStackEntryLoad);
         return cachedMethod.call(arguments);
@@ -72,7 +87,7 @@ public final class CachedDispatchNode extends AbstractDispatchNode
       }
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      return replace(nextInCache).executeDispatch(frame, arguments);
+      return replace(new CachedDispatchNode(this, false)).executeDispatch(frame, arguments);
     }
   }
 
