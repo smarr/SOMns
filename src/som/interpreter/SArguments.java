@@ -115,45 +115,19 @@ public final class SArguments {
     return result;
   }
 
-  public static Object[] getPlainNoArgumentsWithReceiver(final Object receiver,
-      final ExpressionNode expression,
+  public static Object[] getPlainXArgumentsWithReceiver(final ExpressionNode expression,
       final ShadowStackEntryLoad entryLoad,
-      final VirtualFrame frame) {
+      final VirtualFrame frame,
+      final Object... rcvrAndArgs) {
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      Object[] arguments = new Object[] {receiver, null};
+      Object[] arguments = new Object[rcvrAndArgs.length + 1];
+      for (int i = 0; i < rcvrAndArgs.length; i++) {
+        arguments[i] = rcvrAndArgs[i];
+      }
       entryLoad.loadShadowStackEntry(arguments, expression, frame, false);
       return arguments;
     } else {
-      return new Object[] {receiver};
-    }
-  }
-
-  public static Object[] getPlain1ArgumentWithReceiver(final Object receiver,
-      final Object firstArg,
-      final ExpressionNode expression,
-      final ShadowStackEntryLoad entryLoad,
-      final VirtualFrame frame) {
-    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      Object[] arguments = new Object[] {receiver, firstArg, null};
-      entryLoad.loadShadowStackEntry(arguments, expression, frame, false);
-      return arguments;
-    } else {
-      return new Object[] {receiver, firstArg};
-    }
-  }
-
-  public static Object[] getPlain2ArgumentsWithReceiver(final Object receiver,
-      final Object firstArg,
-      final Object secondArg,
-      final ExpressionNode expression,
-      final ShadowStackEntryLoad entryLoad,
-      final VirtualFrame frame) {
-    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      Object[] arguments = new Object[] {receiver, firstArg, secondArg, null};
-      entryLoad.loadShadowStackEntry(arguments, expression, frame, false);
-      return arguments;
-    } else {
-      return new Object[] {receiver, firstArg, secondArg};
+      return rcvrAndArgs;
     }
   }
 

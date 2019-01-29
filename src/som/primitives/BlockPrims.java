@@ -97,8 +97,8 @@ public abstract class BlockPrims {
     public final Object doCachedBlock(final VirtualFrame frame, final SBlock receiver,
         @Cached("createDirectCallNode(receiver, getThis())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
-      return call.call(SArguments.getPlainNoArgumentsWithReceiver(receiver, this,
-          shadowStackEntryLoad, frame));
+      return call.call(SArguments.getPlainXArgumentsWithReceiver(this,
+          shadowStackEntryLoad, frame, receiver));
     }
 
     @Specialization(replaces = "doCachedBlock")
@@ -106,8 +106,8 @@ public abstract class BlockPrims {
         @Cached("create()") final IndirectCallNode call) {
       checkArguments(receiver, 1, argumentError);
       return receiver.getMethod().invoke(call,
-          SArguments.getPlainNoArgumentsWithReceiver(receiver, this,
-              shadowStackEntryLoad, frame));
+          SArguments.getPlainXArgumentsWithReceiver(this,
+              shadowStackEntryLoad, frame, receiver));
     }
   }
 
@@ -160,8 +160,8 @@ public abstract class BlockPrims {
         final Object arg,
         @Cached("createDirectCallNode(receiver, getThis())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
-      return call.call(SArguments.getPlain1ArgumentWithReceiver(receiver, arg, this,
-          shadowStackEntryLoad, frame));
+      return call.call(SArguments.getPlainXArgumentsWithReceiver(this,
+          shadowStackEntryLoad, frame, receiver, arg));
     }
 
     @Specialization(replaces = "doCachedBlock")
@@ -170,8 +170,8 @@ public abstract class BlockPrims {
         @Cached("create()") final IndirectCallNode call) {
       checkArguments(receiver, 2, argumentError);
       return receiver.getMethod().invoke(call,
-          SArguments.getPlain1ArgumentWithReceiver(receiver, arg, this,
-              shadowStackEntryLoad, frame));
+          SArguments.getPlainXArgumentsWithReceiver(this,
+              shadowStackEntryLoad, frame, receiver, arg));
     }
   }
 
@@ -211,8 +211,8 @@ public abstract class BlockPrims {
         final Object arg2,
         @Cached("createDirectCallNode(receiver, getThis())") final DirectCallNode call,
         @Cached("receiver.getMethod()") final SInvokable cached) {
-      return call.call(SArguments.getPlain2ArgumentsWithReceiver(receiver, arg1, arg2, this,
-          shadowStackEntryLoad, frame));
+      return call.call(SArguments.getPlainXArgumentsWithReceiver(this,
+          shadowStackEntryLoad, frame, receiver, arg1, arg2));
     }
 
     @Specialization(replaces = "doCachedBlock")
@@ -221,8 +221,8 @@ public abstract class BlockPrims {
         @Cached("create()") final IndirectCallNode call) {
       checkArguments(receiver, 3, argumentError);
       return receiver.getMethod().invoke(call,
-          SArguments.getPlain2ArgumentsWithReceiver(receiver, arg1, arg2, this,
-              shadowStackEntryLoad, frame));
+          SArguments.getPlainXArgumentsWithReceiver(this,
+              shadowStackEntryLoad, frame, receiver, arg1, arg2));
     }
   }
 
