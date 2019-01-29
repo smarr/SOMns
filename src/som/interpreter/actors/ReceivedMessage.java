@@ -120,7 +120,7 @@ public class ReceivedMessage extends ReceivedRootNode {
       ShadowStackEntry entry = SArguments.getShadowStackEntry(frame.getArguments());
       assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || entry != null;
       ShadowStackEntry resolutionEntry =
-          ShadowStackEntry.createAtPromiseResolution(entry, onReceiveMethod.getRoot());
+          ShadowStackEntry.createAtPromiseResolution(entry, onReceiveMethod.getBodyNode());
       SArguments.setShadowStackEntry(msg.getArgs(), resolutionEntry);
 
       try {

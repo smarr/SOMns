@@ -45,7 +45,7 @@ public abstract class Invokable extends RootNode {
     return isAtomic;
   }
 
-  public ExpressionNode getRoot() {
+  public ExpressionNode getBodyNode() {
     return expressionOrSequence;
   }
 
