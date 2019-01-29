@@ -21,7 +21,7 @@ import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntry
 
 public final class CachedDispatchNode extends AbstractDispatchNode
     implements BackCacheCallNode {
-
+  private final Assumption              stillUniqueCaller;
   @Child private DirectCallNode         cachedMethod;
   @Child private AbstractDispatchNode   nextInCache;
   @CompilationFinal private boolean     uniqueCaller;
@@ -34,6 +34,7 @@ public final class CachedDispatchNode extends AbstractDispatchNode
   public CachedDispatchNode(final CallTarget methodCallTarget,
       final DispatchGuard guard, final AbstractDispatchNode nextInCache) {
     super(nextInCache.getSourceSection());
+    stillUniqueCaller = Truffle.getRuntime().createAssumption();
     this.guard = guard;
     this.nextInCache = nextInCache;
     this.cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
@@ -43,13 +44,14 @@ public final class CachedDispatchNode extends AbstractDispatchNode
   }
 
   @Override
-  public void uniqueCaller() {
+  public void makeUniqueCaller() {
     uniqueCaller = true;
   }
 
   @Override
-  public void multipleCaller() {
+  public void makeMultipleCaller() {
     uniqueCaller = false;
+    stillUniqueCaller.invalidate();
   }
 
   @Override

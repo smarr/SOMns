@@ -2,6 +2,7 @@ package som.interpreter.nodes.dispatch;
 
 import java.util.Map;
 
+import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
@@ -25,6 +26,7 @@ import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntry
 public final class LexicallyBoundDispatchNode extends AbstractDispatchNode
     implements BackCacheCallNode {
 
+  private final Assumption              stillUniqueCaller;
   @Child private DirectCallNode         cachedMethod;
   @CompilationFinal private boolean     uniqueCaller;
   @Child protected ShadowStackEntryLoad shadowStackEntryLoad =
@@ -34,6 +36,7 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchNode
   public LexicallyBoundDispatchNode(final SourceSection source,
       final CallTarget methodCallTarget) {
     super(source);
+    stillUniqueCaller = Truffle.getRuntime().createAssumption();
     cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
     if (VmSettings.DYNAMIC_METRICS) {
       this.cachedMethod = new CountingDirectCallNode(this.cachedMethod);
@@ -41,13 +44,14 @@ public final class LexicallyBoundDispatchNode extends AbstractDispatchNode
   }
 
   @Override
-  public void uniqueCaller() {
+  public void makeUniqueCaller() {
     uniqueCaller = true;
   }
 
   @Override
-  public void multipleCaller() {
+  public void makeMultipleCaller() {
     uniqueCaller = false;
+    stillUniqueCaller.invalidate();
   }
 
   @Override

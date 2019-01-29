@@ -38,9 +38,9 @@ public interface BackCacheCallNode {
         || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
   }
 
-  void uniqueCaller();
+  void makeUniqueCaller();
 
-  void multipleCaller();
+  void makeMultipleCaller();
 
   Invokable getCachedMethod();
 

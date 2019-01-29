@@ -82,10 +82,10 @@ public final class Method extends Invokable {
   public void setNewCaller(final BackCacheCallNode caller) {
     if (uniqueCaller == null) {
       uniqueCaller = caller;
-      caller.uniqueCaller();
+      caller.makeUniqueCaller();
     } else {
-      uniqueCaller.multipleCaller();
-      caller.multipleCaller();
+      uniqueCaller.makeMultipleCaller();
+      caller.makeMultipleCaller();
     }
   }
 
