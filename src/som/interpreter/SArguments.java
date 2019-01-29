@@ -1,5 +1,6 @@
 package som.interpreter;
 
+import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
@@ -167,6 +168,7 @@ public final class SArguments {
 
   public static ShadowStackEntry instantiateShadowStackEntry(final ShadowStackEntry previous,
       final Node expr, final boolean async) {
+    CompilerAsserts.partialEvaluationConstant(async);
     if (async) {
       return ShadowStackEntry.createAtAsyncSend(previous, expr);
     } else {
