@@ -387,9 +387,7 @@ public class SafepointPhaser {
           long n = s & PARTIES_MASK; // base of next state
           int nextUnarrived = (int) n >>> PARTIES_SHIFT;
           if (root == this) {
-            if (onAdvance(phase, nextUnarrived)) {
-              n |= TERMINATION_BIT;
-            } else if (nextUnarrived == 0) {
+            if (nextUnarrived == 0) {
               n |= EMPTY;
             } else {
               n |= nextUnarrived;
@@ -694,9 +692,7 @@ public class SafepointPhaser {
         }
         long n = s & PARTIES_MASK; // base of next state
         int nextUnarrived = (int) n >>> PARTIES_SHIFT;
-        if (onAdvance(phase, nextUnarrived)) {
-          n |= TERMINATION_BIT;
-        } else if (nextUnarrived == 0) {
+        if (nextUnarrived == 0) {
           n |= EMPTY;
         } else {
           n |= nextUnarrived;
@@ -905,55 +901,6 @@ public class SafepointPhaser {
    */
   public boolean isTerminated() {
     return root.state < 0L;
-  }
-
-  /**
-   * Overridable method to perform an action upon impending phase
-   * advance, and to control termination. This method is invoked
-   * upon arrival of the party advancing this phaser (when all other
-   * waiting parties are dormant). If this method returns {@code
-   * true}, this phaser will be set to a final termination state
-   * upon advance, and subsequent calls to {@link #isTerminated}
-   * will return true. Any (unchecked) Exception or Error thrown by
-   * an invocation of this method is propagated to the party
-   * attempting to advance this phaser, in which case no advance
-   * occurs.
-   *
-   * <p>
-   * The arguments to this method provide the state of the phaser
-   * prevailing for the current transition. The effects of invoking
-   * arrival, registration, and waiting methods on this phaser from
-   * within {@code onAdvance} are unspecified and should not be
-   * relied on.
-   *
-   * <p>
-   * If this phaser is a member of a tiered set of phasers, then
-   * {@code onAdvance} is invoked only for its root phaser on each
-   * advance.
-   *
-   * <p>
-   * To support the most common use cases, the default
-   * implementation of this method returns {@code true} when the
-   * number of registered parties has become zero as the result of a
-   * party invoking {@code arriveAndDeregister}. You can disable
-   * this behavior, thus enabling continuation upon future
-   * registrations, by overriding this method to always return
-   * {@code false}:
-   *
-   * <pre>
-   *  {@code
-   * SafepointPhaser phaser = new SafepointPhaser() {
-   *   protected boolean onAdvance(int phase, int parties) { return false; }
-   * }}
-   * </pre>
-   *
-   * @param phase the current phase number on entry to this method,
-   *          before this phaser is advanced
-   * @param registeredParties the current number of registered parties
-   * @return {@code true} if this phaser should terminate
-   */
-  protected boolean onAdvance(final int phase, final int registeredParties) {
-    return registeredParties == 0;
   }
 
   /**
