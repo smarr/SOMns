@@ -191,7 +191,7 @@ public final class SArguments {
 
   public static void setShadowStackEntry(final Object[] args,
       final ShadowStackEntry entry) {
-    assert args[args.length - 1] == null : "Assume shadow stack entry is not already set.";
+    // assert args[args.length - 1] == null : "Assume shadow stack entry is not already set.";
     args[args.length - 1] = entry;
   }
 
