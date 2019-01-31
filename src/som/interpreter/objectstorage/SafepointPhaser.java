@@ -1026,10 +1026,8 @@ public class SafepointPhaser {
           queued = head.compareAndSet(q, node);
         }
       } else {
-        try {
-          ForkJoinPool.managedBlock(node);
-        } catch (InterruptedException cantHappen) {
-          node.wasInterrupted = true;
+        while (!node.isReleasable() && !node.block()) {
+          // nothing to do but to spin
         }
       }
     }
@@ -1052,7 +1050,7 @@ public class SafepointPhaser {
   /**
    * Wait nodes for Treiber stack representing wait queue.
    */
-  static final class QNode implements ForkJoinPool.ManagedBlocker {
+  static final class QNode {
     final SafepointPhaser phaser;
     final int             phase;
     final boolean         interruptible;
@@ -1074,8 +1072,7 @@ public class SafepointPhaser {
       thread = Thread.currentThread();
     }
 
-    @Override
-    public boolean isReleasable() {
+    boolean isReleasable() {
       if (thread == null) {
         return true;
       }
@@ -1098,8 +1095,7 @@ public class SafepointPhaser {
       return false;
     }
 
-    @Override
-    public boolean block() {
+    boolean block() {
       while (!isReleasable()) {
         if (timed) {
           LockSupport.parkNanos(this, nanos);
