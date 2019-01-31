@@ -87,7 +87,11 @@ public final class CachedDispatchNode extends AbstractDispatchNode
       }
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      return replace(new CachedDispatchNode(this, false)).executeDispatch(frame, arguments);
+      if (stillUniqueCaller.isValid()) {
+        return replace(nextInCache).executeDispatch(frame, arguments);
+      } else {
+        return replace(new CachedDispatchNode(this, false)).executeDispatch(frame, arguments);
+      }
     }
   }
 
