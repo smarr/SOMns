@@ -483,7 +483,8 @@ public class SafepointPhaser {
     final SafepointPhaser root = this.root;
     long s = state;
     if (root != this) {
-      int phase, p;
+      int phase;
+      int p;
       // CAS to root phase with current parties, tripping unarrived
       while ((phase = (int) (root.state >>> PHASE_SHIFT)) != (int) (s >>> PHASE_SHIFT) &&
           !U.compareAndSwapLong(this, STATE, s,
@@ -1023,7 +1024,7 @@ public class SafepointPhaser {
     }
   }
 
-  /** The number of CPUs, for spin control */
+  /** The number of CPUs, for spin control. */
   private static final int NCPU = Runtime.getRuntime().availableProcessors();
 
   /**
