@@ -296,7 +296,6 @@ public class SafepointPhaser {
   private static final int  PHASE_SHIFT     = 32;
   private static final int  UNARRIVED_MASK  = 0xffff;           // to mask ints
   private static final long PARTIES_MASK    = 0xffff0000L;      // to mask longs
-  private static final long COUNTS_MASK     = 0xffffffffL;
   private static final long TERMINATION_BIT = 1L << 63;
 
   // some special values
@@ -324,16 +323,6 @@ public class SafepointPhaser {
     int counts = (int) s;
     return (counts == EMPTY) ? 0 : (counts >>> PARTIES_SHIFT) - (counts & UNARRIVED_MASK);
   }
-
-  /**
-   * The parent of this phaser, or null if none.
-   */
-  private final SafepointPhaser parent;
-
-  /**
-   * The root of phaser tree. Equals this if not in a tree.
-   */
-  private final SafepointPhaser root;
 
   /**
    * Heads of Treiber stacks for waiting threads. To eliminate
@@ -370,9 +359,8 @@ public class SafepointPhaser {
    *          ONE_DEREGISTER for arriveAndDeregister
    */
   private int doArrive(final int adjust) {
-    final SafepointPhaser root = this.root;
     for (;;) {
-      long s = (root == this) ? state : reconcileState();
+      long s = state;
       int phase = (int) (s >>> PHASE_SHIFT);
       if (phase < 0) {
         return phase;
@@ -386,22 +374,15 @@ public class SafepointPhaser {
         if (unarrived == 1) {
           long n = s & PARTIES_MASK; // base of next state
           int nextUnarrived = (int) n >>> PARTIES_SHIFT;
-          if (root == this) {
-            if (nextUnarrived == 0) {
-              n |= EMPTY;
-            } else {
-              n |= nextUnarrived;
-            }
-            int nextPhase = (phase + 1) & MAX_PHASE;
-            n |= (long) nextPhase << PHASE_SHIFT;
-            U.compareAndSwapLong(this, STATE, s, n);
-            releaseWaiters(phase);
-          } else if (nextUnarrived == 0) { // propagate deregistration
-            phase = parent.doArrive(ONE_DEREGISTER);
-            U.compareAndSwapLong(this, STATE, s, s | EMPTY);
+          if (nextUnarrived == 0) {
+            n |= EMPTY;
           } else {
-            phase = parent.doArrive(ONE_ARRIVAL);
+            n |= nextUnarrived;
           }
+          int nextPhase = (phase + 1) & MAX_PHASE;
+          n |= (long) nextPhase << PHASE_SHIFT;
+          U.compareAndSwapLong(this, STATE, s, n);
+          releaseWaiters(phase);
         }
         return phase;
       }
@@ -417,10 +398,9 @@ public class SafepointPhaser {
   private int doRegister(final int registrations) {
     // adjustment to state
     long adjust = ((long) registrations << PARTIES_SHIFT) | registrations;
-    final SafepointPhaser parent = this.parent;
     int phase;
     for (;;) {
-      long s = (parent == null) ? state : reconcileState();
+      long s = state;
       int counts = (int) s;
       int parties = counts >>> PARTIES_SHIFT;
       int unarrived = counts & UNARRIVED_MASK;
@@ -432,36 +412,15 @@ public class SafepointPhaser {
         break;
       }
       if (counts != EMPTY) { // not 1st registration
-        if (parent == null || reconcileState() == s) {
-          if (unarrived == 0) {
-            root.internalAwaitAdvance(phase, null);
-          } else if (U.compareAndSwapLong(this, STATE, s, s + adjust)) {
-            break;
-          }
-        }
-      } else if (parent == null) { // 1st root registration
-        long next = ((long) phase << PHASE_SHIFT) | adjust;
-        if (U.compareAndSwapLong(this, STATE, s, next)) {
+        if (unarrived == 0) {
+          internalAwaitAdvance(phase, null);
+        } else if (U.compareAndSwapLong(this, STATE, s, s + adjust)) {
           break;
         }
       } else {
-        synchronized (this) { // 1st sub registration
-          if (state == s) { // recheck under lock
-            phase = parent.doRegister(1);
-            if (phase < 0) {
-              break;
-            }
-            // finish registration whenever parent registration
-            // succeeded, even when racing with termination,
-            // since these are part of the same "transaction".
-            while (!U.compareAndSwapLong(this, STATE, s,
-                ((long) phase << PHASE_SHIFT) | adjust)) {
-              s = state;
-              phase = (int) (root.state >>> PHASE_SHIFT);
-              // assert (int)s == EMPTY;
-            }
-            break;
-          }
+        long next = ((long) phase << PHASE_SHIFT) | adjust;
+        if (U.compareAndSwapLong(this, STATE, s, next)) {
+          break;
         }
       }
     }
@@ -469,99 +428,12 @@ public class SafepointPhaser {
   }
 
   /**
-   * Resolves lagged phase propagation from root if necessary.
-   * Reconciliation normally occurs when root has advanced but
-   * subphasers have not yet done so, in which case they must finish
-   * their own advance by setting unarrived to parties (or if
-   * parties is zero, resetting to unregistered EMPTY state).
-   *
-   * @return reconciled state
-   */
-  private long reconcileState() {
-    final SafepointPhaser root = this.root;
-    long s = state;
-    if (root != this) {
-      int phase;
-      int p;
-      // CAS to root phase with current parties, tripping unarrived
-      while ((phase = (int) (root.state >>> PHASE_SHIFT)) != (int) (s >>> PHASE_SHIFT) &&
-          !U.compareAndSwapLong(this, STATE, s,
-              s = (((long) phase << PHASE_SHIFT) |
-                  ((phase < 0) ? (s & COUNTS_MASK)
-                      : (((p = (int) s >>> PARTIES_SHIFT) == 0) ? EMPTY
-                          : ((s & PARTIES_MASK) | p)))))) {
-        s = state;
-      }
-    }
-    return s;
-  }
-
-  /**
-   * Creates a new phaser with no initially registered parties, no
-   * parent, and initial phase number 0. Any thread using this
-   * phaser will need to first register for it.
+   * Creates a new phaser without unarrived parties.
    */
   public SafepointPhaser() {
-    this(null, 0);
-  }
-
-  /**
-   * Creates a new phaser with the given number of registered
-   * unarrived parties, no parent, and initial phase number 0.
-   *
-   * @param parties the number of parties required to advance to the
-   *          next phase
-   * @throws IllegalArgumentException if parties less than zero
-   *           or greater than the maximum number of parties supported
-   */
-  public SafepointPhaser(final int parties) {
-    this(null, parties);
-  }
-
-  /**
-   * Equivalent to {@link #SafepointPhaser(SafepointPhaser, int) SafepointPhaser(parent, 0)}.
-   *
-   * @param parent the parent phaser
-   */
-  public SafepointPhaser(final SafepointPhaser parent) {
-    this(parent, 0);
-  }
-
-  /**
-   * Creates a new phaser with the given parent and number of
-   * registered unarrived parties. When the given parent is non-null
-   * and the given number of parties is greater than zero, this
-   * child phaser is registered with its parent.
-   *
-   * @param parent the parent phaser
-   * @param parties the number of parties required to advance to the
-   *          next phase
-   * @throws IllegalArgumentException if parties less than zero
-   *           or greater than the maximum number of parties supported
-   */
-  public SafepointPhaser(final SafepointPhaser parent, final int parties) {
-    if (parties >>> PARTIES_SHIFT != 0) {
-      throw new IllegalArgumentException("Illegal number of parties");
-    }
-    int phase = 0;
-    this.parent = parent;
-    if (parent != null) {
-      final SafepointPhaser root = parent.root;
-      this.root = root;
-      this.evenQ = root.evenQ;
-      this.oddQ = root.oddQ;
-      if (parties != 0) {
-        phase = parent.doRegister(1);
-      }
-    } else {
-      this.root = this;
-      this.evenQ = new AtomicReference<QNode>();
-      this.oddQ = new AtomicReference<QNode>();
-    }
-    this.state = (parties == 0) ? (long) EMPTY
-        : ((long) phase << PHASE_SHIFT) |
-            ((long) parties << PARTIES_SHIFT) |
-            (parties);
+    this.evenQ = new AtomicReference<QNode>();
+    this.oddQ = new AtomicReference<QNode>();
+    this.state = EMPTY;
   }
 
   /**
@@ -671,9 +543,8 @@ public class SafepointPhaser {
    */
   public int arriveAndAwaitAdvance() {
     // Specialization of doArrive+awaitAdvance eliminating some reads/paths
-    final SafepointPhaser root = this.root;
     for (;;) {
-      long s = (root == this) ? state : reconcileState();
+      long s = state;
       int phase = (int) (s >>> PHASE_SHIFT);
       if (phase < 0) {
         return phase;
@@ -685,10 +556,7 @@ public class SafepointPhaser {
       }
       if (U.compareAndSwapLong(this, STATE, s, s -= ONE_ARRIVAL)) {
         if (unarrived > 1) {
-          return root.internalAwaitAdvance(phase, null);
-        }
-        if (root != this) {
-          return parent.arriveAndAwaitAdvance();
+          return internalAwaitAdvance(phase, null);
         }
         long n = s & PARTIES_MASK; // base of next state
         int nextUnarrived = (int) n >>> PARTIES_SHIFT;
@@ -721,14 +589,13 @@ public class SafepointPhaser {
    *         if terminated
    */
   public int awaitAdvance(final int phase) {
-    final SafepointPhaser root = this.root;
-    long s = (root == this) ? state : reconcileState();
+    long s = state;
     int p = (int) (s >>> PHASE_SHIFT);
     if (phase < 0) {
       return phase;
     }
     if (p == phase) {
-      return root.internalAwaitAdvance(phase, null);
+      return internalAwaitAdvance(phase, null);
     }
     return p;
   }
@@ -750,15 +617,14 @@ public class SafepointPhaser {
    */
   public int awaitAdvanceInterruptibly(final int phase)
       throws InterruptedException {
-    final SafepointPhaser root = this.root;
-    long s = (root == this) ? state : reconcileState();
+    long s = state;
     int p = (int) (s >>> PHASE_SHIFT);
     if (phase < 0) {
       return phase;
     }
     if (p == phase) {
       QNode node = new QNode(this, phase, true, false, 0L);
-      p = root.internalAwaitAdvance(phase, node);
+      p = internalAwaitAdvance(phase, node);
       if (node.wasInterrupted) {
         throw new InterruptedException();
       }
@@ -790,15 +656,14 @@ public class SafepointPhaser {
       final long timeout, final TimeUnit unit)
       throws InterruptedException, TimeoutException {
     long nanos = unit.toNanos(timeout);
-    final SafepointPhaser root = this.root;
-    long s = (root == this) ? state : reconcileState();
+    long s = state;
     int p = (int) (s >>> PHASE_SHIFT);
     if (phase < 0) {
       return phase;
     }
     if (p == phase) {
       QNode node = new QNode(this, phase, true, true, nanos);
-      p = root.internalAwaitAdvance(phase, node);
+      p = internalAwaitAdvance(phase, node);
       if (node.wasInterrupted) {
         throw new InterruptedException();
       } else if (p == phase) {
@@ -819,10 +684,9 @@ public class SafepointPhaser {
    */
   public void forceTermination() {
     // Only need to change root state
-    final SafepointPhaser root = this.root;
     long s;
-    while ((s = root.state) >= 0) {
-      if (U.compareAndSwapLong(root, STATE, s, s | TERMINATION_BIT)) {
+    while ((s = state) >= 0) {
+      if (U.compareAndSwapLong(this, STATE, s, s | TERMINATION_BIT)) {
         // signal all threads
         releaseWaiters(0); // Waiters on evenQ
         releaseWaiters(1); // Waiters on oddQ
@@ -841,7 +705,7 @@ public class SafepointPhaser {
    * @return the phase number, or a negative value if terminated
    */
   public final int getPhase() {
-    return (int) (root.state >>> PHASE_SHIFT);
+    return (int) (state >>> PHASE_SHIFT);
   }
 
   /**
@@ -861,7 +725,7 @@ public class SafepointPhaser {
    * @return the number of arrived parties
    */
   public int getArrivedParties() {
-    return arrivedOf(reconcileState());
+    return arrivedOf(state);
   }
 
   /**
@@ -872,35 +736,7 @@ public class SafepointPhaser {
    * @return the number of unarrived parties
    */
   public int getUnarrivedParties() {
-    return unarrivedOf(reconcileState());
-  }
-
-  /**
-   * Returns the parent of this phaser, or {@code null} if none.
-   *
-   * @return the parent of this phaser, or {@code null} if none
-   */
-  public SafepointPhaser getParent() {
-    return parent;
-  }
-
-  /**
-   * Returns the root ancestor of this phaser, which is the same as
-   * this phaser if it has no parent.
-   *
-   * @return the root ancestor of this phaser
-   */
-  public SafepointPhaser getRoot() {
-    return root;
-  }
-
-  /**
-   * Returns {@code true} if this phaser has been terminated.
-   *
-   * @return {@code true} if this phaser has been terminated
-   */
-  public boolean isTerminated() {
-    return root.state < 0L;
+    return unarrivedOf(state);
   }
 
   /**
@@ -914,7 +750,7 @@ public class SafepointPhaser {
    */
   @Override
   public String toString() {
-    return stateToString(reconcileState());
+    return stateToString(state);
   }
 
   /**
@@ -937,7 +773,7 @@ public class SafepointPhaser {
     Thread t; // its thread
     AtomicReference<QNode> head = (phase & 1) == 0 ? evenQ : oddQ;
     while ((q = head.get()) != null &&
-        q.phase != (int) (root.state >>> PHASE_SHIFT)) {
+        q.phase != (int) (state >>> PHASE_SHIFT)) {
       if (head.compareAndSet(q, q.next) &&
           (t = q.thread) != null) {
         q.thread = null;
@@ -960,7 +796,7 @@ public class SafepointPhaser {
     for (;;) {
       Thread t;
       QNode q = head.get();
-      int p = (int) (root.state >>> PHASE_SHIFT);
+      int p = (int) (state >>> PHASE_SHIFT);
       if (q == null || ((t = q.thread) != null && q.phase == p)) {
         return p;
       }
