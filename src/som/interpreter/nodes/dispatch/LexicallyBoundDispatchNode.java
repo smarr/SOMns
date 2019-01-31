@@ -25,9 +25,9 @@ import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntry
 public abstract class LexicallyBoundDispatchNode extends AbstractDispatchNode
     implements BackCacheCallNode {
 
-  private final Assumption              stillUniqueCaller;
+  protected final Assumption            stillUniqueCaller;
   @Child private DirectCallNode         cachedMethod;
-  @CompilationFinal private boolean     uniqueCaller;
+  @CompilationFinal protected boolean   uniqueCaller;
   @Child protected ShadowStackEntryLoad shadowStackEntryLoad =
       VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
           : null;
