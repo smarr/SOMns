@@ -1,6 +1,5 @@
 package som.interpreter.objectstorage;
 
-import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import com.oracle.truffle.api.Assumption;
@@ -30,17 +29,12 @@ import som.vmobjects.SObject.SMutableObject;
  * DOI: 10.1145/2843915.2843921
  */
 public final class ObjectTransitionSafepoint {
-  @CompilationFinal private Phaser        phaser;
-  @CompilationFinal private Assumption    noSafePoint;
-  @CompilationFinal private AtomicInteger transitionsInProgress;
+  @CompilationFinal private SafepointPhaser phaser;
+  @CompilationFinal private Assumption      noSafePoint;
+  @CompilationFinal private AtomicInteger   transitionsInProgress;
 
   private ObjectTransitionSafepoint() {
-    phaser = new Phaser() {
-      @Override
-      protected boolean onAdvance(final int phase, final int registeredParties) {
-        return false;
-      }
-    };
+    phaser = new SafepointPhaser();
     transitionsInProgress = new AtomicInteger(0);
     noSafePoint = create();
   }
@@ -49,7 +43,7 @@ public final class ObjectTransitionSafepoint {
    * Only to be used in tests.
    */
   public static void reset() {
-    INSTANCE.phaser = new Phaser();
+    INSTANCE.phaser = new SafepointPhaser();
   }
 
   private static Assumption create() {
@@ -193,8 +187,6 @@ public final class ObjectTransitionSafepoint {
     // Note: The whole Safepoint is in the interpreter, so, the trigger can be too
     CompilerAsserts.neverPartOfCompilation(
         "Compilation not supported, expect to be in non-PEed code.");
-
-    assert !phaser.isTerminated() : "Phaser Termianted, this will render the Safepoint useless";
 
     // Ask all other threads to join in the safepoint
     noSafePoint.invalidate();
