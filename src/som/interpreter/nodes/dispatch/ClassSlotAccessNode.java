@@ -30,6 +30,7 @@ import som.vmobjects.SObject;
 public final class ClassSlotAccessNode extends CachedSlotRead {
   private final MixinDefinition mixinDef;
   private final SlotDefinition  slotDef;
+  private final boolean         objectSlotIsAllocated;
 
   @Child protected DirectCallNode         superclassAndMixinResolver;
   @Child protected ClassInstantiationNode instantiation;
@@ -47,6 +48,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
     this.mixinDef = mixinDef;
     this.slotDef = slotDef;
     this.instantiation = ClassInstantiationNodeGen.create(mixinDef);
+    this.objectSlotIsAllocated = guard.isObjectSlotAllocated(slotDef);
   }
 
   @Override
@@ -61,7 +63,11 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
       return (SClass) cachedValue;
     }
 
-    if (!rcvr.isObjectSlotAllocated(slotDef)) {
+    // NOTE: before going into the synchronized block, we make sure that the slot is
+    // available in the object, it is allocated. Allocation may trigger a
+    // safepoint and we can't hold a lock while going into a safepoint.
+    // Thus, we make sure we do not trigger one.
+    if (!objectSlotIsAllocated) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       ObjectTransitionSafepoint.INSTANCE.ensureSlotAllocatedToAvoidDeadlock(rcvr, slotDef);
     }

@@ -518,11 +518,6 @@ public abstract class SObject extends SObjectWithClass {
     location.write(this, value);
   }
 
-  public final boolean isObjectSlotAllocated(final SlotDefinition slot) {
-    StorageLocation loc = objectLayout.getStorageLocation(slot);
-    return loc instanceof ObjectStorageLocation;
-  }
-
   public final synchronized void ensureSlotAllocatedToAvoidDeadlock(
       final SlotDefinition slot) {
     StorageLocation loc = objectLayout.getStorageLocation(slot);

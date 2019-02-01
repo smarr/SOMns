@@ -2,8 +2,10 @@ package som.interpreter.nodes.dispatch;
 
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
+import som.interpreter.objectstorage.StorageLocation;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SObject.SImmutableObject;
@@ -112,15 +114,24 @@ public abstract class DispatchGuard {
   }
 
   public abstract static class CheckSObject extends DispatchGuard {
+    protected final ObjectLayout expected;
+
+    CheckSObject(final ObjectLayout expected) {
+      this.expected = expected;
+    }
+
     public abstract SObject cast(Object obj);
+
+    public final boolean isObjectSlotAllocated(final SlotDefinition slotDef) {
+      StorageLocation loc = expected.getStorageLocation(slotDef);
+      return loc.isObjectLocation();
+    }
   }
 
   private static final class CheckSMutableObject extends CheckSObject {
 
-    private final ObjectLayout expected;
-
     CheckSMutableObject(final ObjectLayout expected) {
-      this.expected = expected;
+      super(expected);
     }
 
     @Override
@@ -138,10 +149,8 @@ public abstract class DispatchGuard {
 
   private static final class CheckSImmutableObject extends CheckSObject {
 
-    private final ObjectLayout expected;
-
     CheckSImmutableObject(final ObjectLayout expected) {
-      this.expected = expected;
+      super(expected);
     }
 
     @Override
