@@ -1,7 +1,5 @@
 package som.interpreter.objectstorage;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
 import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -31,11 +29,9 @@ import som.vmobjects.SObject.SMutableObject;
 public final class ObjectTransitionSafepoint {
   @CompilationFinal private SafepointPhaser phaser;
   @CompilationFinal private Assumption      noSafePoint;
-  @CompilationFinal private AtomicInteger   transitionsInProgress;
 
   private ObjectTransitionSafepoint() {
-    phaser = new SafepointPhaser();
-    transitionsInProgress = new AtomicInteger(0);
+    phaser = new SafepointPhaser(this);
     noSafePoint = create();
   }
 
@@ -43,7 +39,7 @@ public final class ObjectTransitionSafepoint {
    * Only to be used in tests.
    */
   public static void reset() {
-    INSTANCE.phaser = new SafepointPhaser();
+    INSTANCE.phaser = new SafepointPhaser(INSTANCE);
   }
 
   private static Assumption create() {
@@ -61,19 +57,6 @@ public final class ObjectTransitionSafepoint {
   @TruffleBoundary
   public void register() {
     phaser.register();
-    try {
-      noSafePoint.check();
-    } catch (InvalidAssumptionException e) {
-      phaser.arriveAndAwaitAdvance();
-
-      // when threads register after the assumption was invalidated but before the next phase
-      // is reached we need to perform two arriveandawait -> therefore two checks
-      try {
-        noSafePoint.check();
-      } catch (InvalidAssumptionException e1) {
-        phaser.arriveAndAwaitAdvance();
-      }
-    }
   }
 
   /**
@@ -96,7 +79,7 @@ public final class ObjectTransitionSafepoint {
     try {
       noSafePoint.check();
     } catch (InvalidAssumptionException e) {
-      performSafepoint();
+      phaser.performSafepoint();
     }
   }
 
@@ -116,7 +99,7 @@ public final class ObjectTransitionSafepoint {
     // object is required to handle updates from multiple threads correctly
     obj.updateLayoutToMatchClass();
 
-    replaceAssumptionAndWaitForSafepointEnd();
+    phaser.finishSafepointAndAwaitCompletion();
   }
 
   /**
@@ -134,7 +117,7 @@ public final class ObjectTransitionSafepoint {
     // object is required to handle updates from multiple threads correctly
     obj.writeUninitializedSlot(slot, value);
 
-    replaceAssumptionAndWaitForSafepointEnd();
+    phaser.finishSafepointAndAwaitCompletion();
   }
 
   /**
@@ -152,7 +135,7 @@ public final class ObjectTransitionSafepoint {
     // object is required to handle updates from multiple threads correctly
     obj.writeAndGeneralizeSlot(slot, value);
 
-    replaceAssumptionAndWaitForSafepointEnd();
+    phaser.finishSafepointAndAwaitCompletion();
   }
 
   public void ensureSlotAllocatedToAvoidDeadlock(final SObject obj,
@@ -163,24 +146,11 @@ public final class ObjectTransitionSafepoint {
     // object is required to handle updates from multiple threads correctly
     obj.ensureSlotAllocatedToAvoidDeadlock(slot);
 
-    replaceAssumptionAndWaitForSafepointEnd();
+    phaser.finishSafepointAndAwaitCompletion();
   }
 
-  private void replaceAssumptionAndWaitForSafepointEnd() {
-    // update the assumption
-    int active = transitionsInProgress.decrementAndGet();
-
-    if (active == 0) {
-      synchronized (this) {
-        // might have been replaced by another thread already
-        if (!noSafePoint.isValid()) {
-          noSafePoint = create();
-        }
-      }
-    }
-
-    // Wait for all threads to be done with transitioning objects
-    phaser.arriveAndAwaitAdvance();
+  void renewAssumption() {
+    noSafePoint = create();
   }
 
   private void waitForSafepointStart() {
@@ -190,13 +160,8 @@ public final class ObjectTransitionSafepoint {
 
     // Ask all other threads to join in the safepoint
     noSafePoint.invalidate();
-    transitionsInProgress.incrementAndGet();
-    phaser.arriveAndAwaitAdvance();
-  }
 
-  private void performSafepoint() {
-    phaser.arriveAndAwaitAdvance(); // arrive to safepoint
-    phaser.arriveAndAwaitAdvance(); // await completion of object transition
+    phaser.arriveAtSafepointAndAwaitStart();
   }
 
   public static final ObjectTransitionSafepoint INSTANCE = new ObjectTransitionSafepoint();

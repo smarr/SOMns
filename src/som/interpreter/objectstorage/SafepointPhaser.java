@@ -277,18 +277,10 @@ public final class SafepointPhaser {
    * a single (atomic) long. Good performance relies on keeping
    * state decoding and encoding simple, and keeping race windows
    * short.
-   *
-   * All state updates are performed via CAS except initial
-   * registration of a sub-phaser (i.e., one with a non-null
-   * parent). In this (relatively rare) case, we use built-in
-   * synchronization to lock while first registering with its
-   * parent.
-   *
-   * The phase of a subphaser is allowed to lag that of its
-   * ancestors until it is actually accessed -- see method
-   * reconcileState.
    */
   private volatile long state;
+
+  private final ObjectTransitionSafepoint safepoint;
 
   private static final int  MAX_PARTIES    = 0xffff;
   private static final int  MAX_PHASE      = Integer.MAX_VALUE;
@@ -374,6 +366,7 @@ public final class SafepointPhaser {
             n |= nextUnarrived;
           }
           int nextPhase = (phase + 1) & MAX_PHASE;
+          onArrive(nextPhase);
           n |= (long) nextPhase << PHASE_SHIFT;
           U.compareAndSwapLong(this, STATE, s, n);
           releaseWaiters(phase);
@@ -424,7 +417,8 @@ public final class SafepointPhaser {
   /**
    * Creates a new phaser without unarrived parties.
    */
-  public SafepointPhaser() {
+  public SafepointPhaser(final ObjectTransitionSafepoint safepoint) {
+    this.safepoint = safepoint;
     this.evenQ = new AtomicReference<QNode>();
     this.oddQ = new AtomicReference<QNode>();
     this.state = EMPTY;
@@ -445,8 +439,12 @@ public final class SafepointPhaser {
    * @throws IllegalStateException if attempting to register more
    *           than the maximum supported number of parties
    */
-  int register() {
-    return doRegister(1);
+  void register() {
+    int phase = doRegister(1);
+
+    if ((phase & 1) == 1) { // isSafepointStarted(phase)
+      finishSafepointAndAwaitCompletion();
+    }
   }
 
   /**
@@ -470,6 +468,29 @@ public final class SafepointPhaser {
     return doArrive(ONE_DEREGISTER);
   }
 
+  void performSafepoint() {
+    arriveAtSafepointAndAwaitStart();
+    finishSafepointAndAwaitCompletion();
+  }
+
+  void arriveAtSafepointAndAwaitStart() {
+    int phase = arriveAndAwaitAdvance();
+    assert (phase & 1) == 1 : "Expect phase to be odd after start of safepoint, but was "
+        + phase;
+  }
+
+  void finishSafepointAndAwaitCompletion() {
+    int phase = arriveAndAwaitAdvance();
+    assert (phase & 1) == 0 : "Expect phase to be evem on completion of safepoint, but was "
+        + phase;
+  }
+
+  void onArrive(final int phase) {
+    if ((phase & 1) == 0) { // safepoint to be completed
+      safepoint.renewAssumption();
+    }
+  }
+
   /**
    * Arrives at this phaser and awaits others. Equivalent in effect
    * to {@code awaitAdvance(arrive())}. If you need to await with
@@ -489,7 +510,7 @@ public final class SafepointPhaser {
    * @throws IllegalStateException if not terminated and the number
    *           of unarrived parties would become negative
    */
-  int arriveAndAwaitAdvance() {
+  private int arriveAndAwaitAdvance() {
     // Specialization of doArrive+awaitAdvance eliminating some reads/paths
     for (;;) {
       long s = state;
@@ -514,6 +535,7 @@ public final class SafepointPhaser {
           n |= nextUnarrived;
         }
         int nextPhase = (phase + 1) & MAX_PHASE;
+        onArrive(nextPhase);
         n |= (long) nextPhase << PHASE_SHIFT;
         if (!U.compareAndSwapLong(this, STATE, s, n)) {
           return (int) (state >>> PHASE_SHIFT); // terminated
@@ -631,7 +653,6 @@ public final class SafepointPhaser {
    * @return current phase
    */
   private int internalAwaitAdvance(final int phase, QNode node) {
-    // assert root == this;
     releaseWaiters(phase - 1); // ensure old queue clean
     boolean queued = false; // true when node is enqueued
     int lastUnarrived = 0; // to increase spins upon change
