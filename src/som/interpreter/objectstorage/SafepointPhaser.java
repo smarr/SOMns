@@ -7,8 +7,6 @@
 package som.interpreter.objectstorage;
 
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
@@ -290,13 +288,12 @@ public class SafepointPhaser {
    */
   private volatile long state;
 
-  private static final int  MAX_PARTIES     = 0xffff;
-  private static final int  MAX_PHASE       = Integer.MAX_VALUE;
-  private static final int  PARTIES_SHIFT   = 16;
-  private static final int  PHASE_SHIFT     = 32;
-  private static final int  UNARRIVED_MASK  = 0xffff;           // to mask ints
-  private static final long PARTIES_MASK    = 0xffff0000L;      // to mask longs
-  private static final long TERMINATION_BIT = 1L << 63;
+  private static final int  MAX_PARTIES    = 0xffff;
+  private static final int  MAX_PHASE      = Integer.MAX_VALUE;
+  private static final int  PARTIES_SHIFT  = 16;
+  private static final int  PHASE_SHIFT    = 32;
+  private static final int  UNARRIVED_MASK = 0xffff;           // to mask ints
+  private static final long PARTIES_MASK   = 0xffff0000L;      // to mask longs
 
   // some special values
   private static final int ONE_ARRIVAL    = 1;
@@ -305,11 +302,6 @@ public class SafepointPhaser {
   private static final int EMPTY          = 1;
 
   // The following unpacking methods are usually manually inlined
-
-  private static int unarrivedOf(final long s) {
-    int counts = (int) s;
-    return (counts == EMPTY) ? 0 : (counts & UNARRIVED_MASK);
-  }
 
   private static int partiesOf(final long s) {
     return (int) s >>> PARTIES_SHIFT;
@@ -451,54 +443,8 @@ public class SafepointPhaser {
    * @throws IllegalStateException if attempting to register more
    *           than the maximum supported number of parties
    */
-  public int register() {
+  int register() {
     return doRegister(1);
-  }
-
-  /**
-   * Adds the given number of new unarrived parties to this phaser.
-   * If an ongoing invocation of {@link #onAdvance} is in progress,
-   * this method may await its completion before returning. If this
-   * phaser has a parent, and the given number of parties is greater
-   * than zero, and this phaser previously had no registered
-   * parties, this child phaser is also registered with its parent.
-   * If this phaser is terminated, the attempt to register has no
-   * effect, and a negative value is returned.
-   *
-   * @param parties the number of additional parties required to
-   *          advance to the next phase
-   * @return the arrival phase number to which this registration
-   *         applied. If this value is negative, then this phaser has
-   *         terminated, in which case registration has no effect.
-   * @throws IllegalStateException if attempting to register more
-   *           than the maximum supported number of parties
-   * @throws IllegalArgumentException if {@code parties < 0}
-   */
-  public int bulkRegister(final int parties) {
-    if (parties < 0) {
-      throw new IllegalArgumentException();
-    }
-    if (parties == 0) {
-      return getPhase();
-    }
-    return doRegister(parties);
-  }
-
-  /**
-   * Arrives at this phaser, without waiting for others to arrive.
-   *
-   * <p>
-   * It is a usage error for an unregistered party to invoke this
-   * method. However, this error may result in an {@code
-   * IllegalStateException} only upon some subsequent operation on
-   * this phaser, if ever.
-   *
-   * @return the arrival phase number, or a negative value if terminated
-   * @throws IllegalStateException if not terminated and the number
-   *           of unarrived parties would become negative
-   */
-  public int arrive() {
-    return doArrive(ONE_ARRIVAL);
   }
 
   /**
@@ -518,7 +464,7 @@ public class SafepointPhaser {
    * @throws IllegalStateException if not terminated and the number
    *           of registered or unarrived parties would become negative
    */
-  public int arriveAndDeregister() {
+  int arriveAndDeregister() {
     return doArrive(ONE_DEREGISTER);
   }
 
@@ -577,125 +523,6 @@ public class SafepointPhaser {
   }
 
   /**
-   * Awaits the phase of this phaser to advance from the given phase
-   * value, returning immediately if the current phase is not equal
-   * to the given phase value or this phaser is terminated.
-   *
-   * @param phase an arrival phase number, or negative value if
-   *          terminated; this argument is normally the value returned by a
-   *          previous call to {@code arrive} or {@code arriveAndDeregister}.
-   * @return the next arrival phase number, or the argument if it is
-   *         negative, or the (negative) {@linkplain #getPhase() current phase}
-   *         if terminated
-   */
-  public int awaitAdvance(final int phase) {
-    long s = state;
-    int p = (int) (s >>> PHASE_SHIFT);
-    if (phase < 0) {
-      return phase;
-    }
-    if (p == phase) {
-      return internalAwaitAdvance(phase, null);
-    }
-    return p;
-  }
-
-  /**
-   * Awaits the phase of this phaser to advance from the given phase
-   * value, throwing {@code InterruptedException} if interrupted
-   * while waiting, or returning immediately if the current phase is
-   * not equal to the given phase value or this phaser is
-   * terminated.
-   *
-   * @param phase an arrival phase number, or negative value if
-   *          terminated; this argument is normally the value returned by a
-   *          previous call to {@code arrive} or {@code arriveAndDeregister}.
-   * @return the next arrival phase number, or the argument if it is
-   *         negative, or the (negative) {@linkplain #getPhase() current phase}
-   *         if terminated
-   * @throws InterruptedException if thread interrupted while waiting
-   */
-  public int awaitAdvanceInterruptibly(final int phase)
-      throws InterruptedException {
-    long s = state;
-    int p = (int) (s >>> PHASE_SHIFT);
-    if (phase < 0) {
-      return phase;
-    }
-    if (p == phase) {
-      QNode node = new QNode(this, phase, true, false, 0L);
-      p = internalAwaitAdvance(phase, node);
-      if (node.wasInterrupted) {
-        throw new InterruptedException();
-      }
-    }
-    return p;
-  }
-
-  /**
-   * Awaits the phase of this phaser to advance from the given phase
-   * value or the given timeout to elapse, throwing {@code
-   * InterruptedException} if interrupted while waiting, or
-   * returning immediately if the current phase is not equal to the
-   * given phase value or this phaser is terminated.
-   *
-   * @param phase an arrival phase number, or negative value if
-   *          terminated; this argument is normally the value returned by a
-   *          previous call to {@code arrive} or {@code arriveAndDeregister}.
-   * @param timeout how long to wait before giving up, in units of
-   *          {@code unit}
-   * @param unit a {@code TimeUnit} determining how to interpret the
-   *          {@code timeout} parameter
-   * @return the next arrival phase number, or the argument if it is
-   *         negative, or the (negative) {@linkplain #getPhase() current phase}
-   *         if terminated
-   * @throws InterruptedException if thread interrupted while waiting
-   * @throws TimeoutException if timed out while waiting
-   */
-  public int awaitAdvanceInterruptibly(final int phase,
-      final long timeout, final TimeUnit unit)
-      throws InterruptedException, TimeoutException {
-    long nanos = unit.toNanos(timeout);
-    long s = state;
-    int p = (int) (s >>> PHASE_SHIFT);
-    if (phase < 0) {
-      return phase;
-    }
-    if (p == phase) {
-      QNode node = new QNode(this, phase, true, true, nanos);
-      p = internalAwaitAdvance(phase, node);
-      if (node.wasInterrupted) {
-        throw new InterruptedException();
-      } else if (p == phase) {
-        throw new TimeoutException();
-      }
-    }
-    return p;
-  }
-
-  /**
-   * Forces this phaser to enter termination state. Counts of
-   * registered parties are unaffected. If this phaser is a member
-   * of a tiered set of phasers, then all of the phasers in the set
-   * are terminated. If this phaser is already terminated, this
-   * method has no effect. This method may be useful for
-   * coordinating recovery after one or more tasks encounter
-   * unexpected exceptions.
-   */
-  public void forceTermination() {
-    // Only need to change root state
-    long s;
-    while ((s = state) >= 0) {
-      if (U.compareAndSwapLong(this, STATE, s, s | TERMINATION_BIT)) {
-        // signal all threads
-        releaseWaiters(0); // Waiters on evenQ
-        releaseWaiters(1); // Waiters on oddQ
-        return;
-      }
-    }
-  }
-
-  /**
    * Returns the current phase number. The maximum phase number is
    * {@code Integer.MAX_VALUE}, after which it restarts at
    * zero. Upon termination, the phase number is negative,
@@ -704,39 +531,8 @@ public class SafepointPhaser {
    *
    * @return the phase number, or a negative value if terminated
    */
-  public final int getPhase() {
+  final int getPhase() {
     return (int) (state >>> PHASE_SHIFT);
-  }
-
-  /**
-   * Returns the number of parties registered at this phaser.
-   *
-   * @return the number of parties
-   */
-  public int getRegisteredParties() {
-    return partiesOf(state);
-  }
-
-  /**
-   * Returns the number of registered parties that have arrived at
-   * the current phase of this phaser. If this phaser has terminated,
-   * the returned value is meaningless and arbitrary.
-   *
-   * @return the number of arrived parties
-   */
-  public int getArrivedParties() {
-    return arrivedOf(state);
-  }
-
-  /**
-   * Returns the number of registered parties that have not yet
-   * arrived at the current phase of this phaser. If this phaser has
-   * terminated, the returned value is meaningless and arbitrary.
-   *
-   * @return the number of unarrived parties
-   */
-  public int getUnarrivedParties() {
-    return unarrivedOf(state);
   }
 
   /**
