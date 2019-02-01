@@ -10,6 +10,8 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
+import tools.concurrency.TraceBuffer;
+
 
 /**
  * A reusable synchronization barrier, similar in functionality to
@@ -741,7 +743,7 @@ public class SafepointPhaser {
 
   // Unsafe mechanics
 
-  private static final sun.misc.Unsafe U = sun.misc.Unsafe.getUnsafe();
+  private static final sun.misc.Unsafe U = TraceBuffer.UNSAFE;
   private static final long            STATE;
   static {
     try {
@@ -749,9 +751,5 @@ public class SafepointPhaser {
     } catch (ReflectiveOperationException e) {
       throw new Error(e);
     }
-
-    // Reduce the risk of rare disastrous classloading in first call to
-    // LockSupport.park: https://bugs.openjdk.java.net/browse/JDK-8074773
-    Class<?> ensureLoaded = LockSupport.class;
   }
 }
