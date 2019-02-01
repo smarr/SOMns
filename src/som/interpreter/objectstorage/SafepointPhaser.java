@@ -647,7 +647,7 @@ public class SafepointPhaser {
         }
         boolean interrupted = Thread.interrupted();
         if (interrupted || --spins < 0) { // need node to record intr
-          node = new QNode(this, phase, false, false, 0L);
+          node = new QNode(this, phase);
           node.wasInterrupted = interrupted;
         }
       } else if (node.isReleasable()) {
@@ -670,7 +670,7 @@ public class SafepointPhaser {
       if (node.thread != null) {
         node.thread = null; // avoid need for unpark()
       }
-      if (node.wasInterrupted && !node.interruptible) {
+      if (node.wasInterrupted) {
         Thread.currentThread().interrupt();
       }
       if (p == phase && (p = (int) (state >>> PHASE_SHIFT)) == phase) {
@@ -684,25 +684,16 @@ public class SafepointPhaser {
   /**
    * Wait nodes for Treiber stack representing wait queue.
    */
-  static final class QNode {
-    final SafepointPhaser phaser;
-    final int             phase;
-    final boolean         interruptible;
-    final boolean         timed;
-    boolean               wasInterrupted;
-    long                  nanos;
-    final long            deadline;
-    volatile Thread       thread;        // nulled to cancel wait
-    QNode                 next;
+  private static final class QNode {
+    private final SafepointPhaser phaser;
+    private final int             phase;
+    private boolean               wasInterrupted;
+    private volatile Thread       thread;        // nulled to cancel wait
+    private QNode                 next;
 
-    QNode(final SafepointPhaser phaser, final int phase, final boolean interruptible,
-        final boolean timed, final long nanos) {
+    QNode(final SafepointPhaser phaser, final int phase) {
       this.phaser = phaser;
       this.phase = phase;
-      this.interruptible = interruptible;
-      this.nanos = nanos;
-      this.timed = timed;
-      this.deadline = timed ? System.nanoTime() + nanos : 0L;
       thread = Thread.currentThread();
     }
 
@@ -717,12 +708,7 @@ public class SafepointPhaser {
       if (Thread.interrupted()) {
         wasInterrupted = true;
       }
-      if (wasInterrupted && interruptible) {
-        thread = null;
-        return true;
-      }
-      if (timed &&
-          (nanos <= 0L || (nanos = deadline - System.nanoTime()) <= 0L)) {
+      if (wasInterrupted) {
         thread = null;
         return true;
       }
@@ -731,11 +717,7 @@ public class SafepointPhaser {
 
     boolean block() {
       while (!isReleasable()) {
-        if (timed) {
-          LockSupport.parkNanos(this, nanos);
-        } else {
-          LockSupport.park(this);
-        }
+        LockSupport.park(this);
       }
       return true;
     }
