@@ -254,7 +254,7 @@ import tools.concurrency.TraceBuffer;
  * @since 1.7
  * @author Doug Lea
  */
-public class SafepointPhaser {
+public final class SafepointPhaser {
   /*
    * This class implements an extension of X10 "clocks". Thanks to
    * Vijay Saraswat for the idea, and to Vivek Sarkar for
@@ -489,7 +489,7 @@ public class SafepointPhaser {
    * @throws IllegalStateException if not terminated and the number
    *           of unarrived parties would become negative
    */
-  public int arriveAndAwaitAdvance() {
+  int arriveAndAwaitAdvance() {
     // Specialization of doArrive+awaitAdvance eliminating some reads/paths
     for (;;) {
       long s = state;
@@ -533,7 +533,7 @@ public class SafepointPhaser {
    *
    * @return the phase number, or a negative value if terminated
    */
-  final int getPhase() {
+  private int getPhase() {
     return (int) (state >>> PHASE_SHIFT);
   }
 
@@ -619,7 +619,7 @@ public class SafepointPhaser {
    * SPINS_PER_ARRIVAL more times before blocking. The value trades
    * off good-citizenship vs big unnecessary slowdowns.
    */
-  static final int SPINS_PER_ARRIVAL = (NCPU < 2) ? 1 : 1 << 8;
+  private static final int SPINS_PER_ARRIVAL = (NCPU < 2) ? 1 : 1 << 8;
 
   /**
    * Possibly blocks and waits for phase to advance unless aborted.
