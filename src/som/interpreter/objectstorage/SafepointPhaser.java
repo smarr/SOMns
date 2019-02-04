@@ -134,14 +134,18 @@ public final class SafepointPhaser {
       }
       if (U.compareAndSwapLong(this, STATE, s, s -= adjust)) {
         if (unarrived == 1) {
+          int phaseIncrement = 1;
           long n = s & PARTIES_MASK; // base of next state
           int nextUnarrived = (int) n >>> PARTIES_SHIFT;
           if (nextUnarrived == 0) {
             n |= EMPTY;
+            assert (phase & 1) == 0 : "Can't unregister while a safepoint is in progress";
+            // need to make sure we do keep the even/odd distinction for phases correct
+            phaseIncrement = 2;
           } else {
             n |= nextUnarrived;
           }
-          int nextPhase = (phase + 1) & MAX_PHASE;
+          int nextPhase = (phase + phaseIncrement) & MAX_PHASE;
           onArrive(nextPhase);
           n |= (long) nextPhase << PHASE_SHIFT;
           U.compareAndSwapLong(this, STATE, s, n);
