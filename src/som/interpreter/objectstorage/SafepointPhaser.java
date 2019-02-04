@@ -335,7 +335,7 @@ public final class SafepointPhaser {
    *
    * @return the phase number, or a negative value if terminated
    */
-  private int getPhase() {
+  public int getPhase() {
     return (int) (state >>> PHASE_SHIFT);
   }
 
