@@ -33,13 +33,15 @@ public abstract class RegisterOnPromiseNode {
       synchronized (promise) {
         if (!promise.isResolvedUnsync()) {
 
-          // TODO: I think, we need the info about the resolution context from the promise
-          // we want to know where it was resolved, where the value is coming from
-          ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
-              SArguments.getShadowStackEntry(frame),
-              getParent().getParent());
-          assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
-          SArguments.setShadowStackEntry(msg.args, resolutionEntry);
+          if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+            // TODO: I think, we need the info about the resolution context from the promise
+            // we want to know where it was resolved, where the value is coming from
+            ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
+                SArguments.getShadowStackEntry(frame),
+                getParent().getParent());
+            assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
+            SArguments.setShadowStackEntry(msg.args, resolutionEntry);
+          }
 
           if (promise.isErroredUnsync()) {
             // short cut on error, this promise will never resolve successfully, so,
@@ -93,13 +95,15 @@ public abstract class RegisterOnPromiseNode {
       synchronized (promise) {
         if (!promise.isErroredUnsync()) {
 
-          // TODO: I think, we need the info about the resolution context from the promise
-          // we want to know where it was resolved, where the value is coming from
-          ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
-              SArguments.getShadowStackEntry(frame),
-              getParent().getParent());
-          assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
-          SArguments.setShadowStackEntry(msg.args, resolutionEntry);
+          if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+            // TODO: I think, we need the info about the resolution context from the promise
+            // we want to know where it was resolved, where the value is coming from
+            ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
+                SArguments.getShadowStackEntry(frame),
+                getParent().getParent());
+            assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
+            SArguments.setShadowStackEntry(msg.args, resolutionEntry);
+          }
 
           if (promise.isResolvedUnsync()) {
             // short cut on resolved, this promise will never error, so,

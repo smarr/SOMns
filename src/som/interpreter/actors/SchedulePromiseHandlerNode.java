@@ -46,13 +46,15 @@ public abstract class SchedulePromiseHandlerNode extends Node {
     msg.args[PromiseMessage.PROMISE_VALUE_IDX] = wrapper.execute(
         promise.getValueUnsync(), msg.originalSender, current);
 
-    // TODO: I think, we need the info about the resolution context from the promise
-    // we want to know where it was resolved, where the value is coming from
-    ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
-        SArguments.getShadowStackEntry(frame),
-        getParent().getParent());
-    assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
-    SArguments.setShadowStackEntry(msg.args, resolutionEntry);
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      // TODO: I think, we need the info about the resolution context from the promise
+      // we want to know where it was resolved, where the value is coming from
+      ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
+          SArguments.getShadowStackEntry(frame),
+          getParent().getParent());
+      assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
+      SArguments.setShadowStackEntry(msg.args, resolutionEntry);
+    }
 
     msg.originalSender.send(msg, actorPool);
   }
