@@ -517,4 +517,16 @@ public abstract class SObject extends SObjectWithClass {
     StorageLocation location = getLocation(slot);
     location.write(this, value);
   }
+
+  public final synchronized void ensureSlotAllocatedToAvoidDeadlock(
+      final SlotDefinition slot) {
+    StorageLocation loc = objectLayout.getStorageLocation(slot);
+    if (!(loc instanceof ObjectStorageLocation)) {
+      ObjectLayout layout =
+          classGroup.updateInstanceLayoutWithGeneralizedField(slot);
+
+      assert objectLayout != layout;
+      setLayoutAndTransferFields(layout);
+    }
+  }
 }

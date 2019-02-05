@@ -14,7 +14,12 @@ import java.util.concurrent.TimeUnit;
 public final class ParallelHelper {
 
   public static void executeNTimesInParallel(final Runnable task) throws InterruptedException {
-    int numThreads = Math.max(3, Runtime.getRuntime().availableProcessors());
+    executeNTimesInParallel(task, 10);
+  }
+
+  public static void executeNTimesInParallel(final Runnable task, final int timeoutInSeconds)
+      throws InterruptedException {
+    int numThreads = getNumberOfThreads();
 
     ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
 
@@ -37,7 +42,7 @@ public final class ParallelHelper {
           threadsDone.countDown();
         });
       }
-      boolean allArrivedWithinTime = threadsDone.await(10, TimeUnit.SECONDS);
+      boolean allArrivedWithinTime = threadsDone.await(timeoutInSeconds, TimeUnit.SECONDS);
       if (!exceptions.isEmpty()) {
         for (Throwable e : exceptions) {
           e.printStackTrace();
@@ -49,5 +54,9 @@ public final class ParallelHelper {
     } finally {
       threadPool.shutdownNow();
     }
+  }
+
+  public static int getNumberOfThreads() {
+    return Math.max(3, Runtime.getRuntime().availableProcessors());
   }
 }

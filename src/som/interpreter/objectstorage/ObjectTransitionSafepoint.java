@@ -1,7 +1,5 @@
 package som.interpreter.objectstorage;
 
-import java.util.concurrent.Phaser;
-
 import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -29,11 +27,11 @@ import som.vmobjects.SObject.SMutableObject;
  * DOI: 10.1145/2843915.2843921
  */
 public final class ObjectTransitionSafepoint {
-  @CompilationFinal private Phaser     phaser;
-  @CompilationFinal private Assumption noSafePoint;
+  @CompilationFinal private SafepointPhaser phaser;
+  @CompilationFinal private Assumption      noSafePoint;
 
   private ObjectTransitionSafepoint() {
-    phaser = new Phaser();
+    phaser = new SafepointPhaser(this);
     noSafePoint = create();
   }
 
@@ -41,7 +39,7 @@ public final class ObjectTransitionSafepoint {
    * Only to be used in tests.
    */
   public static void reset() {
-    INSTANCE.phaser = new Phaser();
+    INSTANCE.phaser = new SafepointPhaser(INSTANCE);
   }
 
   private static Assumption create() {
@@ -81,7 +79,7 @@ public final class ObjectTransitionSafepoint {
     try {
       noSafePoint.check();
     } catch (InvalidAssumptionException e) {
-      performSafepoint();
+      phaser.performSafepoint();
     }
   }
 
@@ -101,7 +99,7 @@ public final class ObjectTransitionSafepoint {
     // object is required to handle updates from multiple threads correctly
     obj.updateLayoutToMatchClass();
 
-    replaceAssumptionAndWaitForSafepointEnd();
+    phaser.finishSafepointAndAwaitCompletion();
   }
 
   /**
@@ -119,7 +117,7 @@ public final class ObjectTransitionSafepoint {
     // object is required to handle updates from multiple threads correctly
     obj.writeUninitializedSlot(slot, value);
 
-    replaceAssumptionAndWaitForSafepointEnd();
+    phaser.finishSafepointAndAwaitCompletion();
   }
 
   /**
@@ -137,20 +135,22 @@ public final class ObjectTransitionSafepoint {
     // object is required to handle updates from multiple threads correctly
     obj.writeAndGeneralizeSlot(slot, value);
 
-    replaceAssumptionAndWaitForSafepointEnd();
+    phaser.finishSafepointAndAwaitCompletion();
   }
 
-  private void replaceAssumptionAndWaitForSafepointEnd() {
-    // update the assumption
-    synchronized (this) {
-      // might have been replaced by another thread already
-      if (!noSafePoint.isValid()) {
-        noSafePoint = create();
-      }
-    }
+  public void ensureSlotAllocatedToAvoidDeadlock(final SObject obj,
+      final SlotDefinition slot) {
+    waitForSafepointStart();
 
-    // Wait for all threads to be done with transitioning objects
-    phaser.arriveAndAwaitAdvance();
+    // Safepoint phase, used to update the object
+    // object is required to handle updates from multiple threads correctly
+    obj.ensureSlotAllocatedToAvoidDeadlock(slot);
+
+    phaser.finishSafepointAndAwaitCompletion();
+  }
+
+  void renewAssumption() {
+    noSafePoint = create();
   }
 
   private void waitForSafepointStart() {
@@ -160,12 +160,8 @@ public final class ObjectTransitionSafepoint {
 
     // Ask all other threads to join in the safepoint
     noSafePoint.invalidate();
-    phaser.arriveAndAwaitAdvance();
-  }
 
-  private void performSafepoint() {
-    phaser.arriveAndAwaitAdvance(); // arrive to safepoint
-    phaser.arriveAndAwaitAdvance(); // await completion of object transition
+    phaser.arriveAtSafepointAndAwaitStart();
   }
 
   public static final ObjectTransitionSafepoint INSTANCE = new ObjectTransitionSafepoint();
