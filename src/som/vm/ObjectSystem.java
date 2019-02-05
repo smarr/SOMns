@@ -549,12 +549,8 @@ public final class ObjectSystem {
       source = SomLanguage.getSyntheticSource("",
           "ObjectSystem.executeApplication").createSection(1);
     }
-    Object[] args;
-    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      args = new Object[] {platform, SArguments.instantiateTopShadowStackEntry(null)};
-    } else {
-      args = new Object[] {platform};
-    }
+
+    Object[] args = SArguments.convertToArgumentArray(new Object[] {platform});
     DirectMessage msg = new DirectMessage(mainActor, start,
         args, mainActor,
         null, EventualSendNode.createOnReceiveCallTargetForVMMain(
@@ -586,7 +582,8 @@ public final class ObjectSystem {
         Symbols.symbolFor(selector), AccessModifier.PUBLIC);
     try {
       ObjectTransitionSafepoint.INSTANCE.register();
-      return method.invoke(new Object[] {platformClass});
+
+      return method.invoke(SArguments.convertToArgumentArray(new Object[] {platformClass}));
     } finally {
       ObjectTransitionSafepoint.INSTANCE.unregister();
     }
