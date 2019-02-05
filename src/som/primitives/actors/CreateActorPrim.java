@@ -57,8 +57,9 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
   }
 
   @Fallback
-  public final Object throwNotAValueException(final Object receiver, final Object argument) {
-    return notAValue.signal(argument);
+  public final Object throwNotAValueException(final VirtualFrame frame, final Object receiver,
+      final Object argument) {
+    return notAValue.signal(frame, argument);
   }
 
   @Override

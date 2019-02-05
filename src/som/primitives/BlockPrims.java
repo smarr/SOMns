@@ -104,18 +104,18 @@ public abstract class BlockPrims {
     @Specialization(replaces = "doCachedBlock")
     public final Object doGeneric(final VirtualFrame frame, final SBlock receiver,
         @Cached("create()") final IndirectCallNode call) {
-      checkArguments(receiver, 1, argumentError);
+      checkArguments(frame, receiver, 1, argumentError);
       return receiver.getMethod().invoke(call,
           SArguments.getPlainXArgumentsWithReceiver(this,
               shadowStackEntryLoad, frame, receiver));
     }
   }
 
-  private static void checkArguments(final SBlock receiver, final int expectedNumArgs,
-      final ExceptionSignalingNode argumentError) {
+  private static void checkArguments(final VirtualFrame frame, final SBlock receiver,
+      final int expectedNumArgs, final ExceptionSignalingNode argumentError) {
     int numArgs = receiver.getMethod().getNumberOfArguments();
     if (numArgs != expectedNumArgs) {
-      argumentError.signal(errorMsg(expectedNumArgs, numArgs));
+      argumentError.signal(frame, errorMsg(expectedNumArgs, numArgs));
     }
   }
 
@@ -168,7 +168,7 @@ public abstract class BlockPrims {
     public final Object doGeneric(final VirtualFrame frame, final SBlock receiver,
         final Object arg,
         @Cached("create()") final IndirectCallNode call) {
-      checkArguments(receiver, 2, argumentError);
+      checkArguments(frame, receiver, 2, argumentError);
       return receiver.getMethod().invoke(call,
           SArguments.getPlainXArgumentsWithReceiver(this,
               shadowStackEntryLoad, frame, receiver, arg));
@@ -219,7 +219,7 @@ public abstract class BlockPrims {
     public final Object doGeneric(final VirtualFrame frame, final SBlock receiver,
         final Object arg1, final Object arg2,
         @Cached("create()") final IndirectCallNode call) {
-      checkArguments(receiver, 3, argumentError);
+      checkArguments(frame, receiver, 3, argumentError);
       return receiver.getMethod().invoke(call,
           SArguments.getPlainXArgumentsWithReceiver(this,
               shadowStackEntryLoad, frame, receiver, arg1, arg2));
@@ -280,7 +280,7 @@ public abstract class BlockPrims {
     public final Object doGeneric(final VirtualFrame frame, final SBlock receiver,
         final SArray args,
         @Cached("create()") final IndirectCallNode call) {
-      checkArguments(receiver, (int) getNumArgs(args), argumentError);
+      checkArguments(frame, receiver, (int) getNumArgs(args), argumentError);
       return receiver.getMethod().invoke(
           call, SArguments.getPlainArgumentsWithReceiver(receiver, args, size, at, this,
               shadowStackEntryLoad, frame));

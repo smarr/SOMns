@@ -103,7 +103,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       if (allFieldsContainValues) {
         return rcvr;
       }
-      return notAValue.signal(rcvr);
+      return notAValue.signal(frame, rcvr);
     }
 
     private boolean allFieldsContainValues(final SImmutableObject rcvr) {

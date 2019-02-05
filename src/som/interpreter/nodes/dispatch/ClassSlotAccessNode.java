@@ -3,6 +3,7 @@ package som.interpreter.nodes.dispatch;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
@@ -93,7 +94,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
 
       // check whether cache is initialized with class object
       if (cachedValue == Nil.nilObject) {
-        return instantiateAndWriteUnsynced(rcvr, maybeEntry);
+        return instantiateAndWriteUnsynced(null, rcvr, maybeEntry);
       } else {
         assert cachedValue instanceof SClass;
         return (SClass) cachedValue;
@@ -104,8 +105,9 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
   /**
    * Caller needs to hold lock on {@code this}.
    */
-  private SClass instantiateAndWriteUnsynced(final SObject rcvr, final Object maybeEntry) {
-    SClass classObject = instantiateClassObject(rcvr, maybeEntry);
+  private SClass instantiateAndWriteUnsynced(final VirtualFrame frame, final SObject rcvr,
+      final Object maybeEntry) {
+    SClass classObject = instantiateClassObject(frame, rcvr, maybeEntry);
 
     try {
       // recheck guard under synchronized, don't want to access object if
@@ -129,7 +131,8 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
         invokable.createCallTarget()));
   }
 
-  private SClass instantiateClassObject(final SObject rcvr, final Object maybeEntry) {
+  private SClass instantiateClassObject(final VirtualFrame frame, final SObject rcvr,
+      final Object maybeEntry) {
     if (superclassAndMixinResolver == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       createResolverCallTargets();
@@ -153,7 +156,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
       superclassAndMixins = superclassAndMixinResolver.call(new Object[] {rcvr});
     }
 
-    SClass classObject = instantiation.execute(rcvr, superclassAndMixins);
+    SClass classObject = instantiation.execute(frame, rcvr, superclassAndMixins);
     return classObject;
   }
 }

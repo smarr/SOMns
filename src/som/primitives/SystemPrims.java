@@ -13,6 +13,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.interop.Message;
@@ -105,25 +106,30 @@ public final class SystemPrims {
     }
   }
 
-  public static Object loadModule(final VM vm, final String path,
+  public static Object loadModule(final VirtualFrame frame, final VM vm, final String path,
       final ExceptionSignalingNode ioException) {
     // TODO: a single node for the different exceptions?
     try {
-      if (path.endsWith(EXTENSION_EXT)) {
-        return vm.loadExtensionModule(path);
-      } else {
-        MixinDefinition module = vm.loadModule(path);
-        return module.instantiateModuleClass();
-      }
+      return loadModule(vm, path);
     } catch (FileNotFoundException e) {
-      ioException.signal(path, "Could not find module file. " + e.getMessage());
+      ioException.signal(frame, path, "Could not find module file. " + e.getMessage());
     } catch (NotAFileException e) {
-      ioException.signal(path, "Path does not seem to be a file. " + e.getMessage());
+      ioException.signal(frame, path, "Path does not seem to be a file. " + e.getMessage());
     } catch (IOException e) {
-      ioException.signal(e.getMessage());
+      ioException.signal(frame, e.getMessage());
     }
     assert false : "This should never be reached, because exceptions do not return";
     return Nil.nilObject;
+  }
+
+  @TruffleBoundary
+  private static Object loadModule(final VM vm, final String path) throws IOException {
+    if (path.endsWith(EXTENSION_EXT)) {
+      return vm.loadExtensionModule(path);
+    } else {
+      MixinDefinition module = vm.loadModule(path);
+      return module.instantiateModuleClass();
+    }
   }
 
   @GenerateNodeFactory
@@ -140,9 +146,8 @@ public final class SystemPrims {
     }
 
     @Specialization
-    @TruffleBoundary
-    public final Object doSObject(final String moduleName) {
-      return loadModule(vm, moduleName, ioException);
+    public final Object doSObject(final VirtualFrame frame, final String moduleName) {
+      return loadModule(frame, vm, moduleName, ioException);
     }
   }
 
@@ -160,13 +165,13 @@ public final class SystemPrims {
     }
 
     @Specialization
-    @TruffleBoundary
-    public final Object load(final String filename, final SObjectWithClass moduleObj) {
+    public final Object load(final VirtualFrame frame, final String filename,
+        final SObjectWithClass moduleObj) {
       String path = moduleObj.getSOMClass().getMixinDefinition().getSourceSection().getSource()
                              .getPath();
       File file = new File(URI.create(path).getPath());
 
-      return loadModule(vm, file.getParent() + File.separator + filename, ioException);
+      return loadModule(frame, vm, file.getParent() + File.separator + filename, ioException);
     }
   }
 
