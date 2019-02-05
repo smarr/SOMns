@@ -546,7 +546,7 @@ public final class MixinDefinition implements SomInteropObject {
     } else {
       superClass = (SClass) callTarget.call(Nil.nilObject, null);
     }
-    SClass classObject = instantiateClass(Nil.nilObject, superClass);
+    SClass classObject = instantiateClass(null, Nil.nilObject, superClass);
     return classObject;
   }
 
@@ -764,7 +764,7 @@ public final class MixinDefinition implements SomInteropObject {
         // ok, now it is for sure not initialized yet, instantiate class
         Object superclassAndMixins = mixinDefinition.getSuperclassAndMixinResolutionInvokable()
                                                     .getCallTarget().call(rcvr);
-        SClass clazz = mixinDefinition.instantiateClass(rcvr, superclassAndMixins);
+        SClass clazz = mixinDefinition.instantiateClass(null, rcvr, superclassAndMixins);
         rcvr.writeSlot(this, clazz);
         return clazz;
       }
