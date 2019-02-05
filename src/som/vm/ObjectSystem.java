@@ -131,7 +131,7 @@ public final class ObjectSystem {
     ExtensionLoader loader = new ExtensionLoader(filename, compiler.getLanguage());
     EconomicMap<SSymbol, Dispatchable> primitives = loader.getPrimitives();
     MixinDefinition mixin = constructPrimitiveMixin(filename, primitives);
-    return mixin.instantiateClass(Nil.nilObject, Classes.topClass);
+    return mixin.instantiateClass(null, Nil.nilObject, Classes.topClass);
   }
 
   public MixinDefinition loadModule(final String filename) throws IOException {
@@ -208,7 +208,7 @@ public final class ObjectSystem {
         true, true, true, null);
     scope.setMixinDefinition(vmMirrorDef, false);
 
-    SClass vmMirrorClass = vmMirrorDef.instantiateClass(Nil.nilObject,
+    SClass vmMirrorClass = vmMirrorDef.instantiateClass(null, Nil.nilObject,
         new SClass[] {Classes.topClass, Classes.valueClass});
     return vmMirrorClass;
   }
@@ -417,7 +417,8 @@ public final class ObjectSystem {
     setDummyClassFactory(Classes.methodClass,
         SInvokableSerializationNodeFactory.getInstance());
 
-    SClass kernelClass = kernelModule.instantiateClass(Nil.nilObject, Classes.objectClass);
+    SClass kernelClass =
+        kernelModule.instantiateClass(null, Nil.nilObject, Classes.objectClass);
     KernelObj.kernel.setClass(kernelClass);
 
     // create and initialize the vmMirror object
