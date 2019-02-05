@@ -62,7 +62,7 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
     try {
       if (guard.entryMatches(arguments[0])) {
-        return read(guard.cast(arguments[0]), SArguments.getShadowStackEntry(frame));
+        return read(frame, guard.cast(arguments[0]), SArguments.getShadowStackEntry(frame));
       } else {
         return nextInCache.executeDispatch(frame, arguments);
       }
@@ -72,10 +72,10 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
     }
   }
 
-  public abstract Object read(SObject rcvr);
+  public abstract Object read(VirtualFrame frame, SObject rcvr);
 
-  public Object read(final SObject rcvr, final Object maybeEntry) {
-    return read(rcvr);
+  public Object read(final VirtualFrame frame, final SObject rcvr, final Object maybeEntry) {
+    return read(frame, rcvr);
   }
 
   @Override
@@ -121,7 +121,7 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
     }
 
     @Override
-    public Object read(final SObject rcvr) {
+    public Object read(final VirtualFrame frame, final SObject rcvr) {
       return Nil.nilObject;
     }
   }
@@ -137,7 +137,7 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
     }
 
     @Override
-    public Object read(final SObject rcvr) {
+    public Object read(final VirtualFrame frame, final SObject rcvr) {
       return accessor.read(rcvr);
     }
   }
@@ -164,7 +164,7 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
     }
 
     @Override
-    public Object read(final SObject rcvr) {
+    public Object read(final VirtualFrame frame, final SObject rcvr) {
       if (accessor.isPrimitiveSet(rcvr, primMarkProfile)) {
         return accessor.readLong(rcvr);
       } else {
@@ -182,7 +182,7 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
     }
 
     @Override
-    public Object read(final SObject rcvr) {
+    public Object read(final VirtualFrame frame, final SObject rcvr) {
       if (accessor.isPrimitiveSet(rcvr, primMarkProfile)) {
         return accessor.readLong(rcvr);
       } else {
@@ -202,7 +202,7 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
     }
 
     @Override
-    public Object read(final SObject rcvr) {
+    public Object read(final VirtualFrame frame, final SObject rcvr) {
       if (accessor.isPrimitiveSet(rcvr, primMarkProfile)) {
         return accessor.readDouble(rcvr);
       } else {
@@ -220,7 +220,7 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
     }
 
     @Override
-    public Object read(final SObject rcvr) {
+    public Object read(final VirtualFrame frame, final SObject rcvr) {
       if (accessor.isPrimitiveSet(rcvr, primMarkProfile)) {
         return accessor.readDouble(rcvr);
       } else {

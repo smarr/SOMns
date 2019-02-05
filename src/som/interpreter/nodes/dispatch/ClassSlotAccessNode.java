@@ -58,16 +58,16 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
   }
 
   @Override
-  public SClass read(final SObject rcvr) {
-    return this.read(rcvr, null);
+  public SClass read(final VirtualFrame frame, final SObject rcvr) {
+    return this.read(frame, rcvr, null);
   }
 
   @Override
-  public SClass read(final SObject rcvr, final Object maybeEntry) {
+  public SClass read(final VirtualFrame frame, final SObject rcvr, final Object maybeEntry) {
     // here we need to synchronize, because this is actually something that
     // can happen concurrently, and we only want a single instance of the
     // class object
-    Object cachedValue = read.read(rcvr);
+    Object cachedValue = read.read(frame, rcvr);
 
     assert cachedValue != null;
     if (cachedValue != Nil.nilObject) {
@@ -89,7 +89,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
         // recheck guard under synchronized, don't want to access object if
         // layout might have changed, we are going to slow path in that case
         guard.entryMatches(rcvr);
-        cachedValue = read.read(rcvr);
+        cachedValue = read.read(frame, rcvr);
       } catch (InvalidAssumptionException e) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
         cachedValue = rcvr.readSlot(slotDef);
@@ -97,7 +97,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
 
       // check whether cache is initialized with class object
       if (cachedValue == Nil.nilObject) {
-        return instantiateAndWriteUnsynced(null, rcvr, maybeEntry);
+        return instantiateAndWriteUnsynced(frame, rcvr, maybeEntry);
       } else {
         assert cachedValue instanceof SClass;
         return (SClass) cachedValue;
