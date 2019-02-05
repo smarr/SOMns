@@ -1,5 +1,7 @@
 package som.interpreter;
 
+import java.util.Arrays;
+
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -31,6 +33,19 @@ public final class SArguments {
 
   public static Object rcvr(final Frame frame) {
     return arg(frame, RCVR_IDX);
+  }
+
+  public static Object[] convertToArgumentArray(final Object[] args) {
+    int argLength = args.length;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      argLength++;
+    } else {
+      return args;
+    }
+
+    Object[] array = Arrays.copyOf(args, argLength);
+    array[argLength - 1] = SArguments.instantiateTopShadowStackEntry(null);
+    return array;
   }
 
   public static Object[] allocateArgumentsArray(final ExpressionNode[] argumentNodes) {
