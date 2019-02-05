@@ -17,6 +17,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
@@ -192,15 +193,14 @@ public final class PathPrims {
     }
 
     @Specialization
-    @TruffleBoundary
-    public final Object lastModified(final String dir) {
+    public final Object lastModified(final VirtualFrame frame, final String dir) {
       try {
         return lastModifiedTime(dir);
       } catch (FileNotFoundException e) {
-        fileNotFound.signal(dir, e.getMessage());
+        fileNotFound.signal(frame, dir, e.getMessage());
         return Nil.nilObject;
       } catch (IOException e) {
-        ioException.signal(e.getMessage());
+        ioException.signal(frame, e.getMessage());
         return Nil.nilObject;
       }
     }
@@ -250,14 +250,13 @@ public final class PathPrims {
     }
 
     @Specialization
-    @TruffleBoundary
-    public final long getSize(final String dir) {
+    public final long getSize(final VirtualFrame frame, final String dir) {
       try {
         return size(dir);
       } catch (NoSuchFileException e) {
-        fileNotFound.signal(dir, e.getMessage());
+        fileNotFound.signal(frame, dir, e.getMessage());
       } catch (IOException e) {
-        ioException.signal(e.getMessage());
+        ioException.signal(frame, e.getMessage());
       }
       return -1;
     }

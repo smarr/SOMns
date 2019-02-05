@@ -17,6 +17,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.dsl.NodeFactory;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -549,11 +550,11 @@ public final class MixinDefinition implements SomInteropObject {
     return classObject;
   }
 
-  public SClass instantiateClass(final SObjectWithClass outer,
+  public SClass instantiateClass(final VirtualFrame frame, final SObjectWithClass outer,
       final Object superclassAndMixins) {
     ClassFactory factory = createClassFactory(superclassAndMixins,
         false, false, false, UninitializedObjectSerializationNodeFactory.getInstance());
-    return ClassInstantiationNode.instantiate(outer, factory, notAValue,
+    return ClassInstantiationNode.instantiate(frame, outer, factory, notAValue,
         cannotBeValues);
   }
 
