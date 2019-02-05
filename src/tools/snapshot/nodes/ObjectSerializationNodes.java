@@ -186,7 +186,7 @@ public abstract class ObjectSerializationNodes {
     protected final CachedSerializationNode[] getSerializers(final SObject o) {
       CachedSerializationNode[] nodes = new CachedSerializationNode[fieldCnt];
       for (int i = 0; i < fieldCnt; i++) {
-        Object value = fieldReads[i].read(o);
+        Object value = fieldReads[i].read(null, o);
         nodes[i] = CachedSerializationNodeFactory.create(value);
       }
       return nodes;
@@ -201,7 +201,7 @@ public abstract class ObjectSerializationNodes {
       }
 
       for (int i = 0; i < fieldCnt; i++) {
-        Object value = fieldReads[i].read(o);
+        Object value = fieldReads[i].read(null, o);
         // TODO type profiles could be an optimization (separate profile for each slot)
         // TODO optimize, maybe it is better to add an integer to the objects (indicating their
         // offset) rather than using a map.
