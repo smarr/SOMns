@@ -374,8 +374,7 @@ public abstract class EventualMessage {
      */
     @CompilationFinal protected SPromise promise;
 
-    protected AbstractPromiseCallbackMessage(final Actor owner,
-        final SBlock callback,
+    protected AbstractPromiseCallbackMessage(final Actor owner, final SBlock callback,
         final SResolver resolver, final RootCallTarget onReceive,
         final boolean triggerMessageReceiverBreakpoint,
         final boolean triggerPromiseResolverBreakpoint, final SPromise promiseRegisteredOn) {
@@ -444,8 +443,7 @@ public abstract class EventualMessage {
   }
 
   public static final class PromiseCallbackMessage extends AbstractPromiseCallbackMessage {
-    public PromiseCallbackMessage(final Actor owner,
-        final SBlock callback,
+    public PromiseCallbackMessage(final Actor owner, final SBlock callback,
         final SResolver resolver, final RootCallTarget onReceive,
         final boolean triggerMessageReceiverBreakpoint,
         final boolean triggerPromiseResolverBreakpoint, final SPromise promiseRegisteredOn) {
