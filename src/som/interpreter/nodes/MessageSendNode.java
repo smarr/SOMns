@@ -37,6 +37,9 @@ import som.primitives.reflection.AbstractSymbolDispatch;
 import som.vm.NotYetImplementedException;
 import som.vm.Primitives;
 import som.vmobjects.SSymbol;
+import tools.Send;
+import tools.SourceCoordinate;
+import tools.asyncstacktraces.ShadowStackEntry;
 import tools.dym.Tags.VirtualInvoke;
 import tools.dym.profiles.DispatchProfile;
 
@@ -162,6 +165,7 @@ public final class MessageSendNode {
         arguments[i] = argumentNodes[i].executeGeneric(frame);
         assert arguments[i] != null
             : "Some expression evaluated to null, which is not supported.";
+        assert !(arguments[i] instanceof ShadowStackEntry);
       }
       // We allocate room for the arguments, but it is not set if non
       // SArguments.setShadowStackEntryWithCache(arguments, this, shadowStackEntryLoad, frame,

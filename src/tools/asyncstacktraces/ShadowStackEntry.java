@@ -59,6 +59,7 @@ public class ShadowStackEntry {
   }
 
   protected ShadowStackEntry(final ShadowStackEntry previous, final Node expr) {
+    assert VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
     this.previous = previous;
     this.expression = expr;
     if (ALLOCATION_COUNT) {
