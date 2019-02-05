@@ -117,11 +117,14 @@ public class ReceivedMessage extends ReceivedRootNode {
     protected Object executeBody(final VirtualFrame frame, final EventualMessage msg,
         final boolean haltOnResolver, final boolean haltOnResolution) {
 
-      ShadowStackEntry entry = SArguments.getShadowStackEntry(frame.getArguments());
-      assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || entry != null;
-      ShadowStackEntry resolutionEntry =
-          ShadowStackEntry.createAtPromiseResolution(entry, onReceiveMethod.getBodyNode());
-      SArguments.setShadowStackEntry(msg.getArgs(), resolutionEntry);
+      ShadowStackEntry resolutionEntry = null;
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+        ShadowStackEntry entry = SArguments.getShadowStackEntry(frame.getArguments());
+        assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || entry != null;
+        resolutionEntry =
+            ShadowStackEntry.createAtPromiseResolution(entry, onReceiveMethod.getBodyNode());
+        SArguments.setShadowStackEntry(msg.getArgs(), resolutionEntry);
+      }
 
       try {
         Object result = onReceive.call(msg.args);
