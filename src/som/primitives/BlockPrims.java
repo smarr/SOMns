@@ -34,7 +34,6 @@ import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
-import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
 import tools.dym.Tags.OpClosureApplication;
 import tools.dym.profiles.DispatchProfile;
 
@@ -73,9 +72,8 @@ public abstract class BlockPrims {
       implements DispatchProfile, ValuePrimNode {
 
     protected @Child ExceptionSignalingNode argumentError;
-    @Child protected ShadowStackEntryLoad   shadowStackEntryLoad =
-        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-            : null;
+
+    @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
 
     protected final HashMap<Invokable, CountingDirectCallNode> targets =
         VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;
@@ -157,9 +155,8 @@ public abstract class BlockPrims {
       implements DispatchProfile, ValuePrimNode {
 
     protected @Child ExceptionSignalingNode argumentError;
-    @Child protected ShadowStackEntryLoad   shadowStackEntryLoad =
-        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-            : null;
+
+    @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
 
     protected final HashMap<Invokable, CountingDirectCallNode> targets =
         VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;
@@ -224,9 +221,8 @@ public abstract class BlockPrims {
       implements DispatchProfile, ValuePrimNode {
 
     protected @Child ExceptionSignalingNode argumentError;
-    @Child protected ShadowStackEntryLoad   shadowStackEntryLoad =
-        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-            : null;
+
+    @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
 
     protected final HashMap<Invokable, CountingDirectCallNode> targets =
         VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;
@@ -292,14 +288,12 @@ public abstract class BlockPrims {
   public abstract static class ValueArgsPrim extends BinaryExpressionNode
       implements DispatchProfile, ValuePrimNode {
 
-    protected @Child SizeAndLengthPrim      size                 =
-        SizeAndLengthPrimFactory.create(null);
-    protected @Child AtPrim                 at                   =
-        AtPrimFactory.create(null, null);
+    protected @Child SizeAndLengthPrim size = SizeAndLengthPrimFactory.create(null);
+    protected @Child AtPrim            at   = AtPrimFactory.create(null, null);
+
     protected @Child ExceptionSignalingNode argumentError;
-    protected @Child ShadowStackEntryLoad   shadowStackEntryLoad =
-        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-            : null;
+
+    @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
 
     protected final HashMap<Invokable, CountingDirectCallNode> targets =
         VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;

@@ -16,18 +16,16 @@ import som.instrumentation.CountingDirectCallNode;
 import som.interpreter.Invokable;
 import som.vm.VmSettings;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
-import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
 
 
 public final class CachedDispatchNode extends AbstractDispatchNode
     implements BackCacheCallNode {
-  private final Assumption              stillUniqueCaller;
-  @Child private DirectCallNode         cachedMethod;
-  @Child private AbstractDispatchNode   nextInCache;
-  @CompilationFinal private boolean     uniqueCaller;
-  @Child protected ShadowStackEntryLoad shadowStackEntryLoad =
-      VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-          : null;
+  private final Assumption            stillUniqueCaller;
+  @Child private DirectCallNode       cachedMethod;
+  @Child private AbstractDispatchNode nextInCache;
+  @CompilationFinal private boolean   uniqueCaller;
+
+  @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
 
   private final DispatchGuard guard;
 

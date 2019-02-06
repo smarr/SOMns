@@ -15,11 +15,18 @@ public abstract class ShadowStackEntryLoad extends Node {
   public static int           megaCacheHit = 0;
   public static int           megaMiss     = 0;
 
-  public void loadShadowStackEntry(final Object[] arguments,
-      final Node expression,
-      final VirtualFrame frame,
-      final boolean async) {
+  public static ShadowStackEntryLoad create() {
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      return new UninitializedShadowStackEntryLoad();
+    } else {
+      return null;
+    }
+  }
+
+  public void loadShadowStackEntry(final Object[] arguments, final Node expression,
+      final VirtualFrame frame, final boolean async) {
     ShadowStackEntry prevEntry = SArguments.getShadowStackEntry(frame);
+    assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || prevEntry != null;
     loadShadowStackEntry(arguments, expression, prevEntry, this, async);
   }
 
@@ -36,7 +43,7 @@ public abstract class ShadowStackEntryLoad extends Node {
     SArguments.setShadowStackEntry(arguments, shadowStackEntry);
   }
 
-  public static final class UninitializedShadowStackEntryLoad extends ShadowStackEntryLoad {
+  private static final class UninitializedShadowStackEntryLoad extends ShadowStackEntryLoad {
 
     @Override
     protected void loadShadowStackEntry(final Object[] arguments,
@@ -72,13 +79,13 @@ public abstract class ShadowStackEntryLoad extends Node {
 
   }
 
-  public static final class CachedShadowStackEntryLoad extends ShadowStackEntryLoad {
+  private static final class CachedShadowStackEntryLoad extends ShadowStackEntryLoad {
 
     @Child protected ShadowStackEntryLoad nextInCache;
     protected final ShadowStackEntry      expectedShadowStackEntry;
     protected final ShadowStackEntry      cachedShadowStackEntry;
 
-    public CachedShadowStackEntryLoad(final ShadowStackEntry prevEntry,
+    CachedShadowStackEntryLoad(final ShadowStackEntry prevEntry,
         final ShadowStackEntry newEntry) {
       this.expectedShadowStackEntry = prevEntry;
       this.cachedShadowStackEntry = newEntry;
@@ -107,7 +114,7 @@ public abstract class ShadowStackEntryLoad extends Node {
     }
   }
 
-  public static final class GenericShadowStackEntryLoad extends ShadowStackEntryLoad {
+  private static final class GenericShadowStackEntryLoad extends ShadowStackEntryLoad {
 
     @Override
     protected void loadShadowStackEntry(final Object[] arguments,
@@ -122,6 +129,5 @@ public abstract class ShadowStackEntryLoad extends Node {
     public int getCurrentCacheSize() {
       return 0;
     }
-
   }
 }

@@ -23,15 +23,12 @@ import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
-import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
 
 
 public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
   @Child protected IndirectCallNode     call;
   protected final SSymbol               selector;
-  @Child protected ShadowStackEntryLoad shadowStackEntryLoad =
-      VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-          : null;
+  @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
 
   public AbstractGenericDispatchNode(final SourceSection source,
       final SSymbol selector) {

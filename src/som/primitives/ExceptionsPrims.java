@@ -22,7 +22,6 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
-import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
 
 
 public abstract class ExceptionsPrims {
@@ -31,14 +30,13 @@ public abstract class ExceptionsPrims {
   @Primitive(primitive = "exceptionDo:catch:onException:")
   public abstract static class ExceptionDoOnPrim extends TernaryExpressionNode {
 
-    protected static final int            INLINE_CACHE_SIZE             =
-        VmSettings.DYNAMIC_METRICS ? 100 : 6;
-    @Child protected ShadowStackEntryLoad shadowStackEntryLoadBody      =
-        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-            : null;
+    protected static final int INLINE_CACHE_SIZE = VmSettings.DYNAMIC_METRICS ? 100 : 6;
+
+    @Child protected ShadowStackEntryLoad shadowStackEntryLoadBody =
+        ShadowStackEntryLoad.create();
+
     @Child protected ShadowStackEntryLoad shadowStackEntryLoadException =
-        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-            : null;
+        ShadowStackEntryLoad.create();
 
     protected static final IndirectCallNode indirect =
         Truffle.getRuntime().createIndirectCallNode();
@@ -135,16 +133,13 @@ public abstract class ExceptionsPrims {
       receiverType = SBlock.class)
   public abstract static class EnsurePrim extends BinaryComplexOperation {
 
-    @Child protected BlockDispatchNode    dispatchBody                =
-        BlockDispatchNodeGen.create();
-    @Child protected BlockDispatchNode    dispatchHandler             =
-        BlockDispatchNodeGen.create();
+    @Child protected BlockDispatchNode dispatchBody    = BlockDispatchNodeGen.create();
+    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
+
     @Child protected ShadowStackEntryLoad shadowStackEntryLoadBody    =
-        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-            : null;
+        ShadowStackEntryLoad.create();
     @Child protected ShadowStackEntryLoad shadowStackEntryLoadHandler =
-        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-            : null;
+        ShadowStackEntryLoad.create();
 
     @Specialization
     public final Object doException(final VirtualFrame frame, final SBlock body,
