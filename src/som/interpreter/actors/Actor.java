@@ -66,7 +66,7 @@ public class Actor implements Activity {
   public static Actor createActor(final VM vm) {
     if (VmSettings.REPLAY || VmSettings.KOMPOS_TRACING) {
       return new ReplayActor(vm);
-    } else if (VmSettings.ACTOR_TRACING) {
+    } else if (VmSettings.USE_TRACING_ACTORS) {
       return new TracingActor(vm);
     } else {
       return new Actor(vm);

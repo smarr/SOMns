@@ -331,6 +331,10 @@ public class TracingBackend {
    */
   @TruffleBoundary
   public static void newSnapshot(final byte newSnapshotVersion) {
+    if (!VmSettings.ACTOR_TRACING) {
+      return;
+    }
+
     TraceWorkerThread outDatedWorker;
 
     outDatedWorker = previousWorkerThread;

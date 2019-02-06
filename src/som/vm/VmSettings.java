@@ -19,6 +19,7 @@ public class VmSettings implements Settings {
   public static final boolean REPLAY;
   public static final boolean KOMPOS_TRACING;
   public static final boolean TRACE_SMALL_IDS;
+  public static final boolean USE_TRACING_ACTORS;
   public static final boolean SNAPSHOTS_ENABLED;
   public static final boolean TRACK_SNAPSHOT_ENTITIES;
   public static final boolean TEST_SNAPSHOTS;
@@ -76,6 +77,8 @@ public class VmSettings implements Settings {
     DNU_PRINT_STACK_TRACE = getBool("som.printStackTraceOnDNU", false);
     IGV_DUMP_AFTER_PARSING = getBool("som.igvDumpAfterParsing", false);
     ANSI_COLOR_IN_OUTPUT = getBool("som.useAnsiColoring", false);
+
+    USE_TRACING_ACTORS = ACTOR_TRACING || SNAPSHOTS_ENABLED;
 
     BUFFER_SIZE = getInteger("som.buffSize", 1024 * 1024);
     BUFFERS_PER_THREAD = getInteger("som.buffPerThread", 4);

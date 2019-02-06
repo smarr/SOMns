@@ -96,6 +96,11 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
       traceBuffer = TraceBuffer.create(threadId);
       nextEntityId = 1 + (threadId << TraceData.ENTITY_ID_BITS);
       externalData = new Object[EXTERNAL_BUFFER_SIZE];
+    } else if (VmSettings.SNAPSHOTS_ENABLED) {
+      threadId = threadIdGen.getAndIncrement();
+      nextEntityId = 0;
+      traceBuffer = null;
+      externalData = null;
     } else {
       threadId = 0;
       nextEntityId = 0;
@@ -225,17 +230,21 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
 
   private void newSnapshot() {
     TracingActor ta = (TracingActor) ((ActorProcessingThread) this).getCurrentActor();
-    TraceActorContextNode tracer = ta.getActorContextNode();
-    traceBuffer.swapStorage();
-    if (tracer != null) {
-      tracer.trace(ta);
+
+    if (VmSettings.ACTOR_TRACING) {
+      TraceActorContextNode tracer = ta.getActorContextNode();
+      traceBuffer.swapStorage();
+      if (tracer != null) {
+        tracer.trace(ta);
+      }
+
+      if (extIndex != 0) {
+        TracingBackend.addExternalData(externalData, this);
+        externalData = new Object[EXTERNAL_BUFFER_SIZE];
+        extIndex = 0;
+      }
     }
 
-    if (extIndex != 0) {
-      TracingBackend.addExternalData(externalData, this);
-      externalData = new Object[EXTERNAL_BUFFER_SIZE];
-      extIndex = 0;
-    }
     this.snapshotId = SnapshotBackend.getSnapshotVersion();
 
     // get net snapshotbuffer

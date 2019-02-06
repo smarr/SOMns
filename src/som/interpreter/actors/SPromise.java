@@ -32,7 +32,7 @@ public class SPromise extends SObjectWithClass {
       final SourceSection section) {
     if (VmSettings.KOMPOS_TRACING) {
       return new SMedeorPromise(owner, haltOnResolver, haltOnResolution, section);
-    } else if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
+    } else if (VmSettings.USE_TRACING_ACTORS || VmSettings.REPLAY) {
       return new STracingPromise(owner, haltOnResolver, haltOnResolution);
     } else {
       return new SPromise(owner, haltOnResolver, haltOnResolution);
@@ -195,7 +195,7 @@ public class SPromise extends SObjectWithClass {
     if (isCompleted()) {
       remote.value = value;
       remote.resolutionState = resolutionState;
-      if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
+      if (VmSettings.USE_TRACING_ACTORS || VmSettings.REPLAY) {
         ((STracingPromise) remote).setResolvingActorForSnapshot(
             ((STracingPromise) this).resolvingActor);
       }
@@ -509,7 +509,7 @@ public class SPromise extends SObjectWithClass {
         final ValueProfile whenResolvedProfile) {
       assert !(result instanceof SPromise);
 
-      if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
+      if (VmSettings.USE_TRACING_ACTORS || VmSettings.REPLAY) {
         ((STracingPromise) p).setResolvingActorForSnapshot(
             ((TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn()).getActorId());
       } else if (VmSettings.KOMPOS_TRACING) {
