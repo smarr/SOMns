@@ -19,16 +19,14 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
-import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
 
 
 public final class CachedDnuNode extends AbstractDispatchNode {
 
-  @Child private DirectCallNode         cachedMethod;
-  @Child private AbstractDispatchNode   nextInCache;
-  @Child protected ShadowStackEntryLoad shadowStackEntryLoad =
-      VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-          : null;
+  @Child private DirectCallNode       cachedMethod;
+  @Child private AbstractDispatchNode nextInCache;
+
+  @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
 
   private final DispatchGuard guard;
   private final SSymbol       selector;

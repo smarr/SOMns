@@ -15,7 +15,6 @@ import som.instrumentation.InstrumentableDirectCallNode;
 import som.interpreter.Method;
 import som.vm.VmSettings;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
-import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
 
 
 /**
@@ -25,12 +24,11 @@ import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntry
 public abstract class LexicallyBoundDispatchNode extends AbstractDispatchNode
     implements BackCacheCallNode {
 
-  protected final Assumption            stillUniqueCaller;
-  @Child private DirectCallNode         cachedMethod;
-  @CompilationFinal protected boolean   uniqueCaller;
-  @Child protected ShadowStackEntryLoad shadowStackEntryLoad =
-      VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-          : null;
+  protected final Assumption          stillUniqueCaller;
+  @Child private DirectCallNode       cachedMethod;
+  @CompilationFinal protected boolean uniqueCaller;
+
+  @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
 
   public LexicallyBoundDispatchNode(final SourceSection source,
       final CallTarget methodCallTarget) {

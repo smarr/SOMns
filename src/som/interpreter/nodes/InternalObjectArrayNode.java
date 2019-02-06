@@ -7,17 +7,14 @@ import com.oracle.truffle.api.nodes.NodeInfo;
 
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
-import som.vm.VmSettings;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
-import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
 
 
 @NodeInfo(cost = NodeCost.NONE)
 public class InternalObjectArrayNode extends ExprWithTagsNode {
   @Children protected final ExpressionNode[] expressions;
-  @Child protected ShadowStackEntryLoad      shadowStackEntryLoad =
-      VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-          : null;
+
+  @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
 
   public InternalObjectArrayNode(final ExpressionNode[] expressions) {
     this.expressions = expressions;

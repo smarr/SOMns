@@ -31,7 +31,6 @@ import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.asyncstacktraces.ShadowStackEntryLoad;
-import tools.asyncstacktraces.ShadowStackEntryLoad.UninitializedShadowStackEntryLoad;
 import tools.dym.Tags.OpClosureApplication;
 
 
@@ -65,9 +64,8 @@ public abstract class BlockPrims {
   public abstract static class ValueNonePrim extends UnaryExpressionNode {
 
     protected @Child ExceptionSignalingNode argumentError;
-    @Child protected ShadowStackEntryLoad   shadowStackEntryLoad =
-        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-            : null;
+
+    @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
 
     @Override
     public ExpressionNode initialize(final SourceSection sourceSection,
@@ -132,9 +130,8 @@ public abstract class BlockPrims {
   public abstract static class ValueOnePrim extends BinaryExpressionNode {
 
     protected @Child ExceptionSignalingNode argumentError;
-    @Child protected ShadowStackEntryLoad   shadowStackEntryLoad =
-        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-            : null;
+
+    @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
 
     @Override
     public ExpressionNode initialize(final SourceSection sourceSection,
@@ -182,9 +179,8 @@ public abstract class BlockPrims {
   public abstract static class ValueTwoPrim extends TernaryExpressionNode {
 
     protected @Child ExceptionSignalingNode argumentError;
-    @Child protected ShadowStackEntryLoad   shadowStackEntryLoad =
-        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-            : null;
+
+    @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
 
     @Override
     public ExpressionNode initialize(final SourceSection sourceSection,
@@ -233,14 +229,12 @@ public abstract class BlockPrims {
       receiverType = SBlock.class)
   public abstract static class ValueArgsPrim extends BinaryExpressionNode {
 
-    protected @Child SizeAndLengthPrim      size                 =
-        SizeAndLengthPrimFactory.create(null);
-    protected @Child AtPrim                 at                   =
-        AtPrimFactory.create(null, null);
+    protected @Child SizeAndLengthPrim size = SizeAndLengthPrimFactory.create(null);
+    protected @Child AtPrim            at   = AtPrimFactory.create(null, null);
+
     protected @Child ExceptionSignalingNode argumentError;
-    protected @Child ShadowStackEntryLoad   shadowStackEntryLoad =
-        VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE ? new UninitializedShadowStackEntryLoad()
-            : null;
+
+    @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
 
     @Override
     public ExpressionNode initialize(final SourceSection sourceSection,
