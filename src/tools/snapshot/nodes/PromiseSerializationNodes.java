@@ -170,32 +170,12 @@ public abstract class PromiseSerializationNodes {
 
         if (cnt > 1) {
           for (int i = 0; i < whenResExt.size(); i++) {
-
-            if (whenRes.isDelivered()) {
-              doDeliveredMessage(whenResExt.get(i), base + i * Long.BYTES, sb);
+            PromiseMessage msg = whenResExt.get(i);
+            if (msg.isDelivered()) {
+              doDeliveredMessage(msg, base + i * Long.BYTES, sb);
             } else {
-              sb.putLongAt(base + i * Long.BYTES, whenResExt.get(i).forceSerialize(sb));
+              sb.putLongAt(base + i * Long.BYTES, msg.forceSerialize(sb));
             }
-          }
-          base += whenResExt.size() * Long.BYTES;
-        }
-      }
-      return base;
-    }
-
-    private int serializeDeliveredMessages(final int start, final int cnt,
-        final PromiseMessage whenRes, final ArrayList<PromiseMessage> whenResExt,
-        final SnapshotBuffer sb) {
-      int base = start;
-      sb.putShortAt(base, (short) cnt);
-      base += 2;
-      if (cnt > 0) {
-        doDeliveredMessage(whenRes, base, sb);
-        base += Long.BYTES;
-
-        if (cnt > 1) {
-          for (int i = 0; i < whenResExt.size(); i++) {
-            doDeliveredMessage(whenResExt.get(i), base + i * Long.BYTES, sb);
           }
           base += whenResExt.size() * Long.BYTES;
         }

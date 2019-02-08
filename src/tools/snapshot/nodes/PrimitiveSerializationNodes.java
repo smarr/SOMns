@@ -4,6 +4,8 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.charset.StandardCharsets;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -165,8 +167,14 @@ public abstract class PrimitiveSerializationNodes {
           sb.getRecord().getObjectPointer(cls));
     }
 
+    protected TracingActor getMain() {
+      CompilerDirectives.transferToInterpreter();
+      return (TracingActor) SomLanguage.getCurrent().getVM().getMainActor();
+    }
+
     @Specialization(guards = "!cls.isValue()")
-    protected void doNotValueClass(final SClass cls, final SnapshotBuffer sb) {
+    protected void doNotValueClass(final SClass cls, final SnapshotBuffer sb,
+        @Cached("getMain()") final TracingActor main) {
       int base = sb.addObject(cls, Classes.classClass, Integer.BYTES + Long.BYTES);
       sb.putIntAt(base, cls.getIdentity());
 
@@ -174,7 +182,7 @@ public abstract class PrimitiveSerializationNodes {
       assert outer != null;
       TracingActor owner = cls.getOwnerOfOuter();
       if (owner == null) {
-        owner = (TracingActor) SomLanguage.getVM(this).getMainActor();
+        owner = main;
       }
       owner.getSnapshotRecord().farReference(outer, sb, base + Integer.BYTES);
 
