@@ -93,4 +93,19 @@ public class SafepointPhaserTest {
       ObjectTransitionSafepoint.INSTANCE.unregister();
     }, 60);
   }
+
+  @Test
+  public void testSafepointRegisterStorm() throws InterruptedException {
+    ObjectTransitionSafepoint.reset();
+    ParallelHelper.executeNTimesInParallel(() -> {
+      for (int i = 0; i < 100_000; i += 1) {
+        ObjectTransitionSafepoint.INSTANCE.register();
+
+        ObjectTransitionSafepoint.INSTANCE.transitionObject(
+            new SMutableObject(instanceClass, factory, layout));
+
+        ObjectTransitionSafepoint.INSTANCE.unregister();
+      }
+    }, 60);
+  }
 }
