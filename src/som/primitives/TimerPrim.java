@@ -7,7 +7,6 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -31,6 +30,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TraceParser;
 import tools.concurrency.TracingActors.ReplayActor;
+import tools.replay.ExternalDataSource;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.actors.ExternalEventualMessage.ExternalDirectMessage;
 import tools.replay.nodes.TraceActorContextNode;
@@ -121,9 +121,9 @@ public abstract class TimerPrim extends BinarySystemOperation {
     }
   }
 
-  private static final class TimeDataSource implements BiConsumer<Short, Integer> {
+  private static final class TimeDataSource implements ExternalDataSource {
     @Override
-    public void accept(final Short method, final Integer dataId) {
+    public void requestExternalMessage(final short method, final int dataId) {
       assert VmSettings.REPLAY;
       synchronized (REPLAY_LOCK) {
         SFarReference target = replayTargetMap.remove(dataId);

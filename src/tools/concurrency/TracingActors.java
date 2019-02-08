@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -25,6 +24,7 @@ import tools.concurrency.TraceParser.ExternalPromiseMessageRecord;
 import tools.concurrency.TraceParser.MessageRecord;
 import tools.concurrency.TraceParser.PromiseMessageRecord;
 import tools.debugger.WebDebugger;
+import tools.replay.ExternalDataSource;
 import tools.replay.actors.ExternalMessage;
 import tools.replay.nodes.TraceActorContextNode;
 import tools.snapshot.SnapshotRecord;
@@ -134,7 +134,7 @@ public class TracingActors {
     protected final Queue<MessageRecord>       expectedMessages;
     protected final ArrayList<EventualMessage> leftovers = new ArrayList<>();
     private static Map<Integer, ReplayActor>   actorList;
-    private BiConsumer<Short, Integer>         dataSource;
+    private ExternalDataSource                 dataSource;
     private int                                traceBufferId;
     private final long                         activityId;
 
@@ -144,12 +144,12 @@ public class TracingActors {
       }
     }
 
-    public BiConsumer<Short, Integer> getDataSource() {
+    public ExternalDataSource getDataSource() {
       assert dataSource != null;
       return dataSource;
     }
 
-    public void setDataSource(final BiConsumer<Short, Integer> ds) {
+    public void setDataSource(final ExternalDataSource ds) {
       if (dataSource != null) {
         throw new UnsupportedOperationException("Allready has a datasource!");
       }
@@ -370,12 +370,12 @@ public class TracingActors {
       if (a.expectedMessages.peek() != null && a.expectedMessages.peek().isExternal()) {
         if (a.expectedMessages.peek() instanceof ExternalMessageRecord) {
           ExternalMessageRecord emr = (ExternalMessageRecord) a.expectedMessages.peek();
-          actorList.get(emr.sender).getDataSource().accept(emr.method,
+          actorList.get(emr.sender).getDataSource().requestExternalMessage(emr.method,
               emr.dataId);
         } else {
           ExternalPromiseMessageRecord emr =
               (ExternalPromiseMessageRecord) a.expectedMessages.peek();
-          actorList.get(emr.pId).getDataSource().accept(emr.method,
+          actorList.get(emr.pId).getDataSource().requestExternalMessage(emr.method,
               emr.dataId);
         }
       }
