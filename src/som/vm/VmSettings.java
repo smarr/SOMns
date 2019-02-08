@@ -41,6 +41,7 @@ public class VmSettings implements Settings {
   public static final String BASE_DIRECTORY;
 
   public static final boolean SNAPSHOT_REPLAY;
+  public static final int     SNAPSHOT_INLINING_DEPTH;
 
   static {
     String prop = System.getProperty("som.threads");
@@ -84,6 +85,8 @@ public class VmSettings implements Settings {
     BUFFERS_PER_THREAD = getInteger("som.buffPerThread", 4);
     BUFFER_TIMEOUT = getInteger("som.buffDelay", 50);
     RECYCLE_BUFFERS = getBool("som.bufferRecycling", true);
+
+    SNAPSHOT_INLINING_DEPTH = getInteger("som.snapshotInliningDepth", 8);
 
     BASE_DIRECTORY = System.getProperty("som.baseDir", System.getProperty("user.dir"));
   }

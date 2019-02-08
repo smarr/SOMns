@@ -9,6 +9,8 @@ import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 
 import som.interpreter.Types;
 import som.interpreter.nodes.dispatch.DispatchGuard;
+import som.primitives.ObjectPrims.ClassPrim;
+import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
@@ -17,7 +19,8 @@ import tools.snapshot.nodes.ObjectSerializationNodes.SObjectSerializationNode;
 
 @GenerateNodeFactory
 public abstract class CachedSerializationNode extends AbstractSerializationNode {
-  public static final int MAX_DEPTH = 8;
+  public static final int MAX_DEPTH = VmSettings.SNAPSHOT_INLINING_DEPTH;
+  @Child ClassPrim        classprim;
 
   protected final int depth;
 
