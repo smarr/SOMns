@@ -275,9 +275,10 @@ public class BasicInterpreterTests {
         Boolean.class) : "INIT is exected to return true after initializing the Context";
 
     try {
-      ParallelHelper.executeNTimesInParallel(() -> {
+      ParallelHelper.executeNTimesInParallel((final int id) -> {
         Value actualResult = context.eval(Launcher.START);
         assertEqualsSOMValue(expectedResult, actualResult.as(Object.class));
+        return null;
       });
     } finally {
       context.close();

@@ -150,7 +150,9 @@ public final class ObjectTransitionSafepoint {
   }
 
   void renewAssumption() {
-    noSafePoint = create();
+    if (!noSafePoint.isValid()) {
+      noSafePoint = create();
+    }
   }
 
   private void waitForSafepointStart() {
