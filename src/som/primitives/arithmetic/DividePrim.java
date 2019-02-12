@@ -12,9 +12,17 @@ import bd.primitives.Primitive;
 @GenerateNodeFactory
 @Primitive(primitive = "int:divideBy:", selector = "/")
 public abstract class DividePrim extends ArithmeticPrim {
-  @Specialization
+  private static final BigInteger OVERFLOW_RESULT =
+      BigInteger.valueOf(Long.MIN_VALUE).divide(BigInteger.valueOf(-1));
+
+  @Specialization(guards = "!isOverflowDivision(left, right)")
   public final long doLong(final long left, final long right) {
     return left / right;
+  }
+
+  @Specialization(guards = "isOverflowDivision(left, right)")
+  public final Object doLongWithOverflow(final long left, final long right) {
+    return OVERFLOW_RESULT;
   }
 
   @Specialization
@@ -39,5 +47,9 @@ public abstract class DividePrim extends ArithmeticPrim {
   @Specialization
   public final Object doLong(final long left, final double right) {
     return (long) (left / right);
+  }
+
+  protected static final boolean isOverflowDivision(final long left, final long right) {
+    return left == Long.MIN_VALUE && right == -1;
   }
 }
