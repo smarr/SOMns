@@ -9,7 +9,6 @@ import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.interpreter.objectstorage.ClassFactory;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
@@ -33,7 +32,7 @@ public class SPromise extends SObjectWithClass {
       final SourceSection section) {
     if (VmSettings.KOMPOS_TRACING) {
       return new SMedeorPromise(owner, haltOnResolver, haltOnResolution, section);
-    } else if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
+    } else if (VmSettings.USE_TRACING_ACTORS || VmSettings.REPLAY) {
       return new STracingPromise(owner, haltOnResolver, haltOnResolution);
     } else {
       return new SPromise(owner, haltOnResolver, haltOnResolution);
@@ -130,6 +129,40 @@ public class SPromise extends SObjectWithClass {
     this.value = value;
   }
 
+  public final void resolveFromSnapshot(final Object value, final Resolution resolutionState,
+      final Actor resolver, final boolean schedule) {
+    assert value != null;
+    this.value = owner.wrapForUse(value, resolver, null);
+    this.resolutionState = resolutionState;
+
+    if (schedule) {
+      if (resolutionState == Resolution.SUCCESSFUL) {
+        SResolver.scheduleAllWhenResolvedSnapshot(this, value, resolver);
+      } else {
+        assert resolutionState == Resolution.ERRONEOUS;
+        SResolver.scheduleAllOnErrorSnapshot(this, value, resolver);
+      }
+      // resolveChainedPromisesUnsync(resolutionState, this, resolver, current, actorPool,
+      // haltOnResolution,
+      // whenResolvedProfile);
+    }
+  }
+
+  public final void unresolveFromSnapshot(final Resolution resolutionState) {
+    this.value = null;
+    this.resolutionState = resolutionState;
+
+    if (chainedPromise != null) {
+      chainedPromise.unresolveFromSnapshot(Resolution.CHAINED);
+
+      if (chainedPromiseExt != null) {
+        for (SPromise prom : chainedPromiseExt) {
+          prom.unresolveFromSnapshot(Resolution.CHAINED);
+        }
+      }
+    }
+  }
+
   public long getPromiseId() {
     return 0;
   }
@@ -142,8 +175,9 @@ public class SPromise extends SObjectWithClass {
     assert promiseClass == null || cls == null;
     promiseClass = cls;
     if (VmSettings.SNAPSHOTS_ENABLED) {
-      ClassFactory group = promiseClass.getInstanceFactory();
-      group.getSerializer().replace(PromiseSerializationNodeFactory.create(group));
+      promiseClass.customizeSerializerFactory(
+          PromiseSerializationNodeFactory.getInstance(),
+          PromiseSerializationNodeFactory.create());
     }
   }
 
@@ -161,8 +195,9 @@ public class SPromise extends SObjectWithClass {
     if (isCompleted()) {
       remote.value = value;
       remote.resolutionState = resolutionState;
-      if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
-        ((STracingPromise) remote).resolvingActor = ((STracingPromise) this).resolvingActor;
+      if (VmSettings.USE_TRACING_ACTORS || VmSettings.REPLAY) {
+        ((STracingPromise) remote).setResolvingActorForSnapshot(
+            ((STracingPromise) this).resolvingActor);
       }
     } else {
       addChainedPromise(remote);
@@ -220,6 +255,14 @@ public class SPromise extends SObjectWithClass {
     msg.getTarget().send(msg, actorPool);
   }
 
+  protected final void scheduleCallbacksSnapshot(final Object result,
+      final PromiseMessage msg, final Actor current) {
+
+    assert owner != null;
+    msg.resolve(result, owner, current);
+    msg.getTarget().sendSnapshotMessage(msg);
+  }
+
   public final synchronized void addChainedPromise(final SPromise remote) {
     assert remote != null;
     remote.resolutionState = Resolution.CHAINED;
@@ -255,6 +298,10 @@ public class SPromise extends SObjectWithClass {
   }
 
   public final boolean assertNotCompleted() {
+    if (VmSettings.SNAPSHOT_REPLAY) {
+      this.unresolveFromSnapshot(Resolution.UNRESOLVED);
+    }
+
     assert !isCompleted() : "Not sure yet what to do with re-resolving of promises? just ignore it? Error?";
     assert value == null : "If it isn't resolved yet, it shouldn't have a value";
     return true;
@@ -311,6 +358,15 @@ public class SPromise extends SObjectWithClass {
     return chainedPromiseExt;
   }
 
+  public boolean hasChainedPromise(final SPromise prom) {
+    if (this.chainedPromise == prom) {
+      return true;
+    } else if (this.chainedPromiseExt != null) {
+      return chainedPromiseExt.contains(prom);
+    }
+    return false;
+  }
+
   public static class STracingPromise extends SPromise {
 
     protected STracingPromise(final Actor owner, final boolean haltOnResolver,
@@ -327,6 +383,9 @@ public class SPromise extends SObjectWithClass {
       return resolvingActor;
     }
 
+    public void setResolvingActorForSnapshot(final int resolver) {
+      this.resolvingActor = resolver;
+    }
   }
 
   public static final class SMedeorPromise extends STracingPromise {
@@ -380,8 +439,9 @@ public class SPromise extends SObjectWithClass {
       resolverClass = cls;
 
       if (VmSettings.SNAPSHOTS_ENABLED) {
-        ClassFactory group = resolverClass.getInstanceFactory();
-        group.getSerializer().replace(ResolverSerializationNodeFactory.create(group));
+        resolverClass.customizeSerializerFactory(
+            ResolverSerializationNodeFactory.getInstance(),
+            ResolverSerializationNodeFactory.create());
       }
     }
 
@@ -449,9 +509,9 @@ public class SPromise extends SObjectWithClass {
         final ValueProfile whenResolvedProfile) {
       assert !(result instanceof SPromise);
 
-      if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
-        ((STracingPromise) p).resolvingActor =
-            ((TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn()).getActorId();
+      if (VmSettings.USE_TRACING_ACTORS || VmSettings.REPLAY) {
+        ((STracingPromise) p).setResolvingActorForSnapshot(
+            ((TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn()).getActorId());
       } else if (VmSettings.KOMPOS_TRACING) {
         if (type == Resolution.SUCCESSFUL && p.resolutionState != Resolution.CHAINED) {
           KomposTrace.promiseResolution(p.getPromiseId(), result);
@@ -534,6 +594,43 @@ public class SPromise extends SObjectWithClass {
             actorPool, haltOnResolution);
         scheduleExtensions(promise, promise.onErrorExt, result, current,
             actorPool, haltOnResolution);
+      }
+    }
+
+    /**
+     * Schedule all whenResolved callbacks for the promise.
+     */
+    protected static void scheduleAllWhenResolvedSnapshot(final SPromise promise,
+        final Object result, final Actor current) {
+      if (promise.whenResolved != null) {
+        promise.scheduleCallbacksSnapshot(result, promise.whenResolved, current);
+        scheduleExtensionsSnapshot(promise, promise.whenResolvedExt, result, current);
+      }
+    }
+
+    /**
+     * Schedule callbacks from the whenResolvedExt extension array.
+     */
+    @TruffleBoundary
+    private static void scheduleExtensionsSnapshot(final SPromise promise,
+        final ArrayList<PromiseMessage> extension,
+        final Object result, final Actor current) {
+      if (extension != null) {
+        for (int i = 0; i < extension.size(); i++) {
+          PromiseMessage callbackOrMsg = extension.get(i);
+          promise.scheduleCallbacksSnapshot(result, callbackOrMsg, current);
+        }
+      }
+    }
+
+    /**
+     * Schedule all onError callbacks for the promise.
+     */
+    protected static void scheduleAllOnErrorSnapshot(final SPromise promise,
+        final Object result, final Actor current) {
+      if (promise.onError != null) {
+        promise.scheduleCallbacksSnapshot(result, promise.onError, current);
+        scheduleExtensionsSnapshot(promise, promise.onErrorExt, result, current);
       }
     }
   }

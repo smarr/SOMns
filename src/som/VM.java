@@ -316,7 +316,11 @@ public final class VM {
   }
 
   public int execute() {
-    return objectSystem.executeApplication(vmMirror, mainActor);
+    if (VmSettings.SNAPSHOT_REPLAY) {
+      return objectSystem.executeApplicationFromSnapshot(vmMirror);
+    } else {
+      return objectSystem.executeApplication(vmMirror, mainActor);
+    }
   }
 
   public Actor getMainActor() {

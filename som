@@ -98,6 +98,8 @@ tools.add_argument('-as', '--actor-snapshots', help='actor tracing/replay with s
                     dest='actor_snapshots', action='store_true', default=False)
 tools.add_argument('-sam', '--snapshot-all-messages', help='snapshot all messages',
                     dest='actor_snapshots_all', action='store_true', default=False)
+tools.add_argument('-sind', '--snapshot-inlining-depth', help='set the inlining limit of snapshot serialization',
+                    dest='snapshot_inlining_depth', default=8)
 tools.add_argument('-tas', '--test-snapshots', help='actor tracing with snapshots',
                     dest='test_actor_snapshots', action='store_true', default=False)
 tools.add_argument('--coverage', help='determine SOMns code coverage and store in given file',
@@ -343,6 +345,8 @@ if args.actor_snapshots:
     flags += ['-Dsom.actorSnapshot=true']
 if args.actor_snapshots_all:
     flags += ['-Dsom.actorSnapshotAll=true']
+if args.snapshot_inlining_depth:
+    flags += ['-Dsom.snapshotInliningDepth=%s' % args.snapshot_inlining_depth ]
 
 if (args.truffle_profile or args.web_debugger or
     args.dynamic_metrics or args.coverage or args.si_candidates):

@@ -1,15 +1,15 @@
 package tools.concurrency;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
-import java.util.WeakHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import som.Output;
@@ -24,7 +24,9 @@ import tools.concurrency.TraceParser.ExternalPromiseMessageRecord;
 import tools.concurrency.TraceParser.MessageRecord;
 import tools.concurrency.TraceParser.PromiseMessageRecord;
 import tools.debugger.WebDebugger;
+import tools.replay.ExternalDataSource;
 import tools.replay.actors.ExternalMessage;
+import tools.replay.nodes.TraceActorContextNode;
 import tools.snapshot.SnapshotRecord;
 import tools.snapshot.deserialization.DeserializationBuffer;
 
@@ -35,7 +37,8 @@ public class TracingActors {
     protected final int                actorId;
     protected short                    ordering;
     protected int                      nextDataID;
-    protected SnapshotRecord           snapshotRecord;
+
+    @CompilationFinal protected SnapshotRecord snapshotRecord;
 
     /**
      * Flag that indicates if a step-to-next-turn action has been made in the previous message.
@@ -46,13 +49,18 @@ public class TracingActors {
       super(vm);
       this.actorId = IdGen.getAndIncrement();
       if (VmSettings.SNAPSHOTS_ENABLED) {
-        snapshotRecord = new SnapshotRecord();
+        snapshotRecord = new SnapshotRecord(this);
       }
     }
 
     protected TracingActor(final VM vm, final int id) {
       super(vm);
       this.actorId = id;
+    }
+
+    @Override
+    public String toString() {
+      return super.toString() + " #" + actorId;
     }
 
     public final int getActorId() {
@@ -65,6 +73,14 @@ public class TracingActors {
 
     public synchronized int getDataId() {
       return nextDataID++;
+    }
+
+    public synchronized int peekDataId() {
+      return nextDataID;
+    }
+
+    public TraceActorContextNode getActorContextNode() {
+      return this.executor.getActorContextNode();
     }
 
     public boolean isStepToNextTurn() {
@@ -80,7 +96,7 @@ public class TracingActors {
      * For testing purposes.
      */
     public void replaceSnapshotRecord() {
-      this.snapshotRecord = new SnapshotRecord();
+      this.snapshotRecord = new SnapshotRecord(this);
     }
 
     @Override
@@ -118,22 +134,22 @@ public class TracingActors {
     protected final Queue<MessageRecord>       expectedMessages;
     protected final ArrayList<EventualMessage> leftovers = new ArrayList<>();
     private static Map<Integer, ReplayActor>   actorList;
-    private BiConsumer<Short, Integer>         dataSource;
+    private ExternalDataSource                 dataSource;
     private int                                traceBufferId;
     private final long                         activityId;
 
     static {
       if (VmSettings.REPLAY) {
-        actorList = new WeakHashMap<>();
+        actorList = new HashMap<>();
       }
     }
 
-    public BiConsumer<Short, Integer> getDataSource() {
+    public ExternalDataSource getDataSource() {
       assert dataSource != null;
       return dataSource;
     }
 
-    public void setDataSource(final BiConsumer<Short, Integer> ds) {
+    public void setDataSource(final ExternalDataSource ds) {
       if (dataSource != null) {
         throw new UnsupportedOperationException("Allready has a datasource!");
       }
@@ -168,7 +184,11 @@ public class TracingActors {
 
     @TruffleBoundary
     public ReplayActor(final VM vm) {
-      super(vm, lookupId());
+      this(vm, lookupId());
+    }
+
+    public ReplayActor(final VM vm, final int id) {
+      super(vm, id);
 
       this.activityId = TracingActivityThread.newEntityId();
 
@@ -215,6 +235,12 @@ public class TracingActors {
       }
     }
 
+    public static void scheduleAllActors(final ForkJoinPool actorPool) {
+      for (ReplayActor ra : actorList.values()) {
+        ra.executeIfNecessarry(actorPool);
+      }
+    }
+
     /**
      * Prints a list of expected Messages and remaining mailbox content.
      *
@@ -248,19 +274,25 @@ public class TracingActors {
           for (EventualMessage em : a.leftovers) {
             printMsg(em);
           }
-        } else if (a.firstMessage != null || a.mailboxExtension != null) {
+        } else if (a.firstMessage != null || a.mailboxExtension != null
+            || !a.leftovers.isEmpty()) {
 
           int n = a.firstMessage != null ? 1 : 0;
           n += a.mailboxExtension != null ? a.mailboxExtension.size() : 0;
 
           Output.println(
-              a.getName() + " [" + a.getId() + "] has " + n + " unexpected messages:");
+              a.getName() + " [" + a.getActorId() + "] has " + n + " unexpected messages:");
           if (a.firstMessage != null) {
             printMsg(a.firstMessage);
             if (a.mailboxExtension != null) {
               for (EventualMessage em : a.mailboxExtension) {
                 printMsg(em);
               }
+            }
+          }
+          if (a.leftovers != null) {
+            for (EventualMessage em : a.leftovers) {
+              printMsg(em);
             }
           }
         }
@@ -338,12 +370,12 @@ public class TracingActors {
       if (a.expectedMessages.peek() != null && a.expectedMessages.peek().isExternal()) {
         if (a.expectedMessages.peek() instanceof ExternalMessageRecord) {
           ExternalMessageRecord emr = (ExternalMessageRecord) a.expectedMessages.peek();
-          actorList.get(emr.sender).getDataSource().accept(emr.method,
+          actorList.get(emr.sender).getDataSource().requestExternalMessage(emr.method,
               emr.dataId);
         } else {
           ExternalPromiseMessageRecord emr =
               (ExternalPromiseMessageRecord) a.expectedMessages.peek();
-          actorList.get(emr.pId).getDataSource().accept(emr.method,
+          actorList.get(emr.pId).getDataSource().requestExternalMessage(emr.method,
               emr.dataId);
         }
       }

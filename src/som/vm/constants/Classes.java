@@ -32,6 +32,7 @@ public final class Classes {
 
   // dummy class for message deserialization
   public static final SClass messageClass;
+  public static final SClass frameClass;
 
   // These classes can be statically preinitialized.
   static {
@@ -65,5 +66,6 @@ public final class Classes {
     blockClass = ObjectSystem.newEmptyClassWithItsClass("Block");
 
     messageClass = ObjectSystem.newEmptyClassWithItsClass("Message");
+    frameClass = ObjectSystem.newEmptyClassWithItsClass("BlockFrame");
   }
 }

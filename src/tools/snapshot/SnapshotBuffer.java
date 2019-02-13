@@ -1,9 +1,13 @@
 package tools.snapshot;
 
+import com.oracle.truffle.api.CompilerDirectives;
+
+import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor.ActorProcessingThread;
-import som.interpreter.objectstorage.ClassFactory;
+import som.interpreter.actors.EventualMessage;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
+import som.vmobjects.SClass;
 import tools.concurrency.TraceBuffer;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.replay.nodes.TraceActorContextNode;
@@ -13,7 +17,7 @@ import tools.snapshot.deserialization.DeserializationBuffer;
 public class SnapshotBuffer extends TraceBuffer {
 
   public static final int FIELD_SIZE    = 8;
-  public static final int CLASS_ID_SIZE = 2;
+  public static final int CLASS_ID_SIZE = 4;
   public static final int MAX_FIELD_CNT = Byte.MAX_VALUE;
   public static final int THREAD_SHIFT  = Long.SIZE - Short.SIZE;
 
@@ -27,7 +31,8 @@ public class SnapshotBuffer extends TraceBuffer {
   }
 
   public SnapshotRecord getRecord() {
-    return ((TracingActor) owner.getCurrentActor()).getSnapshotRecord();
+    return CompilerDirectives.castExact(owner.getCurrentActor(), TracingActor.class)
+                             .getSnapshotRecord();
   }
 
   public ActorProcessingThread getOwner() {
@@ -38,40 +43,43 @@ public class SnapshotBuffer extends TraceBuffer {
     return (owner.getThreadId() << THREAD_SHIFT) | start;
   }
 
-  public int addObject(final Object o, final ClassFactory classFact, final int payload) {
-    assert !getRecord().containsObject(o) : "Object serialized multiple times";
+  public int reserveSpace(final int bytes) {
+    int oldPos = this.position;
+    this.position += bytes;
+    return oldPos;
+  }
+
+  public int addObject(final Object o, final SClass clazz, final int payload) {
+    assert !getRecord().containsObjectUnsync(o) : "Object serialized multiple times";
 
     int oldPos = this.position;
     getRecord().addObjectEntry(o, calculateReference(oldPos));
 
-    this.putShortAt(this.position,
-        classFact.getIdentifier().getSymbolId());
+    if (clazz.getSOMClass() == Classes.classClass) {
+      TracingActor owner = clazz.getOwnerOfOuter();
+      if (owner == null) {
+        owner = (TracingActor) SomLanguage.getCurrent().getVM().getMainActor();
+      }
+
+      assert owner != null;
+      owner.getSnapshotRecord().farReference(clazz, null, 0);
+    }
+    this.putIntAt(this.position, clazz.getIdentity());
     this.position += CLASS_ID_SIZE + payload;
     return oldPos + CLASS_ID_SIZE;
   }
 
-  public int addObjectWithFields(final Object o, final ClassFactory classFact,
-      final int fieldCnt) {
-    assert fieldCnt < MAX_FIELD_CNT;
-    assert !getRecord().containsObject(o) : "Object serialized multiple times";
-
-    int oldPos = this.position;
-    getRecord().addObjectEntry(o, calculateReference(oldPos));
-
-    this.putShortAt(this.position,
-        classFact.getIdentifier().getSymbolId());
-    this.position += CLASS_ID_SIZE + (FIELD_SIZE * fieldCnt);
-    return oldPos + CLASS_ID_SIZE;
-  }
-
-  public int addMessage(final int payload) {
+  public int addMessage(final int payload, final EventualMessage msg) {
     // we dont put messages into our lookup table as there should be only one reference to it
     // (either from a promise or a mailbox)
     int oldPos = this.position;
-    getRecord().addMessageEntry(calculateReference(oldPos));
+    TracingActor ta = (TracingActor) owner.getCurrentActor();
+    assert !getRecord().containsObjectUnsync(
+        msg) : "Message serialized twice, and on the same actor";
+    getRecord().addObjectEntry(msg, calculateReference(oldPos));
+    // owner.addMessageLocation(ta.getActorId(), calculateReference(oldPos));
 
-    this.putShortAt(this.position,
-        Classes.messageClass.getFactory().getClassName().getSymbolId());
+    this.putIntAt(this.position, Classes.messageClass.getIdentity());
     this.position += CLASS_ID_SIZE + payload;
     return oldPos + CLASS_ID_SIZE;
   }

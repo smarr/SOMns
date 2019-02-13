@@ -32,6 +32,7 @@ import bd.basic.nodes.DummyParent;
 import som.VM;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
+import som.primitives.ObjectPrims.ClassPrim;
 import som.primitives.SizeAndLengthPrim;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.threading.TaskThreads.SomForkJoinTask;
@@ -67,6 +68,10 @@ import som.vmobjects.SSymbol;
     Object[].class}) // Object[] is only for argument passing
 public class Types {
 
+  /**
+   * This is a helper method to get the SClass of an object.
+   * If an optimized implementation is needed use {@link ClassPrim}.
+   */
   public static SClass getClassOf(final Object obj) {
     VM.callerNeedsToBeOptimized("If this is reached on a fast path, it indicates "
         + "that it doesn't use the correct nodes or unoptimized code");

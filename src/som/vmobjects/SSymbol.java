@@ -41,8 +41,7 @@ public final class SSymbol extends SAbstractObject {
   public SSymbol(final String value) {
     string = value;
     numberOfSignatureArguments = determineNumberOfSignatureArguments();
-    if (VmSettings.KOMPOS_TRACING || VmSettings.ACTOR_TRACING
-        || VmSettings.TRACK_SNAPSHOT_ENTITIES) {
+    if (VmSettings.KOMPOS_TRACING || VmSettings.SNAPSHOTS_ENABLED) {
       symbolId = (short) idGenerator.getAndIncrement();
       TracingBackend.logSymbol(this);
       if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
@@ -50,6 +49,24 @@ public final class SSymbol extends SAbstractObject {
       }
     } else {
       symbolId = 0;
+    }
+  }
+
+  /**
+   * Used for snapshot-based replay.
+   */
+  public SSymbol(final String value, final short id) {
+    string = value;
+    numberOfSignatureArguments = determineNumberOfSignatureArguments();
+    symbolId = id;
+
+    // avoid multiple symbols with same id
+    if (id >= idGenerator.get()) {
+      idGenerator.set(id + 1);
+    }
+
+    if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
+      SnapshotBackend.registerSymbol(this);
     }
   }
 

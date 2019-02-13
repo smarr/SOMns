@@ -19,6 +19,7 @@ public class VmSettings implements Settings {
   public static final boolean REPLAY;
   public static final boolean KOMPOS_TRACING;
   public static final boolean TRACE_SMALL_IDS;
+  public static final boolean USE_TRACING_ACTORS;
   public static final boolean SNAPSHOTS_ENABLED;
   public static final boolean TRACK_SNAPSHOT_ENTITIES;
   public static final boolean TEST_SNAPSHOTS;
@@ -38,6 +39,9 @@ public class VmSettings implements Settings {
   public static final int     BUFFER_TIMEOUT;
 
   public static final String BASE_DIRECTORY;
+
+  public static final boolean SNAPSHOT_REPLAY;
+  public static final int     SNAPSHOT_INLINING_DEPTH;
 
   static {
     String prop = System.getProperty("som.threads");
@@ -65,6 +69,7 @@ public class VmSettings implements Settings {
     TEST_SERIALIZE_ALL = getBool("som.actorSnapshotAll", false);
     SNAPSHOTS_ENABLED = getBool("som.actorSnapshot", false) || TEST_SNAPSHOTS;
     TRACK_SNAPSHOT_ENTITIES = (REPLAY && SNAPSHOTS_ENABLED) || TEST_SNAPSHOTS;
+    SNAPSHOT_REPLAY = REPLAY && SNAPSHOTS_ENABLED;
 
     boolean dm = getBool("som.dynamicMetrics", false);
     DYNAMIC_METRICS = dm;
@@ -74,10 +79,14 @@ public class VmSettings implements Settings {
     IGV_DUMP_AFTER_PARSING = getBool("som.igvDumpAfterParsing", false);
     ANSI_COLOR_IN_OUTPUT = getBool("som.useAnsiColoring", false);
 
+    USE_TRACING_ACTORS = ACTOR_TRACING || SNAPSHOTS_ENABLED;
+
     BUFFER_SIZE = getInteger("som.buffSize", 1024 * 1024);
     BUFFERS_PER_THREAD = getInteger("som.buffPerThread", 4);
     BUFFER_TIMEOUT = getInteger("som.buffDelay", 50);
     RECYCLE_BUFFERS = getBool("som.bufferRecycling", true);
+
+    SNAPSHOT_INLINING_DEPTH = getInteger("som.snapshotInliningDepth", 8);
 
     BASE_DIRECTORY = System.getProperty("som.baseDir", System.getProperty("user.dir"));
   }

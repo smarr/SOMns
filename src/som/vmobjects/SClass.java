@@ -31,6 +31,7 @@ import org.graalvm.collections.EconomicSet;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
@@ -40,14 +41,18 @@ import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.ClassSlotDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
+import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
+import tools.concurrency.TracingActors.TracingActor;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
+import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.nodes.AbstractSerializationNode;
+import tools.snapshot.nodes.MessageSerializationNode;
 
 
 // TODO: should we move more of that out of SClass and use the corresponding
@@ -69,6 +74,9 @@ public final class SClass extends SObjectWithClass {
   @CompilationFinal private boolean         isArray;          // is a subclass of Array
 
   @CompilationFinal private ClassFactory instanceClassGroup; // the factory for this object
+  @CompilationFinal private int          identity;
+
+  @CompilationFinal private TracingActor ownerOfOuter;
 
   protected final SObjectWithClass enclosingObject;
   private final MaterializedFrame  context;
@@ -191,15 +199,37 @@ public final class SClass extends SObjectWithClass {
     this.isTransferObject = isTransferObject;
     this.isArray = isArray;
     this.instanceClassGroup = classFactory;
+
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      identity = instanceClassGroup.createIdentity();
+
+      if (!VmSettings.REPLAY && !VmSettings.TEST_SNAPSHOTS && enclosingObject != null) {
+
+        if (Thread.currentThread() instanceof ActorProcessingThread) {
+          this.ownerOfOuter =
+              (TracingActor) ((ActorProcessingThread) Thread.currentThread()).getCurrentActor();
+        }
+      }
+    }
     // assert instanceClassGroup != null || !ObjectSystem.isInitialized();
 
     if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
-      if (mixinDef != null) {
-        SnapshotBackend.registerClass(mixinDef.getIdentifier(), this);
-      } else {
-        SnapshotBackend.registerClass(classFactory.getClassName(), this);
-      }
+      SnapshotBackend.registerClass(this);
     }
+  }
+
+  public TracingActor getOwnerOfOuter() {
+    return ownerOfOuter;
+  }
+
+  public void customizeSerializerFactory(
+      final NodeFactory<? extends AbstractSerializationNode> factory,
+      final AbstractSerializationNode deserializer) {
+    instanceClassGroup.customizeSerialization(factory, deserializer);
+  }
+
+  public NodeFactory<? extends AbstractSerializationNode> getSerializerFactory() {
+    return instanceClassGroup.getSerializerFactory();
   }
 
   /**
@@ -356,12 +386,21 @@ public final class SClass extends SObjectWithClass {
 
   public void serialize(final Object o, final SnapshotBuffer sb) {
     assert instanceClassGroup != null;
-    if (!sb.getRecord().containsObject(o)) {
-      getSerializer().execute(o, sb);
+    if (!sb.getRecord().containsObjectUnsync(o)) {
+      instanceClassGroup.serialize(o, sb);
     }
   }
 
-  public AbstractSerializationNode getSerializer() {
-    return instanceClassGroup.getSerializer();
+  public Object deserialize(final DeserializationBuffer bb) {
+    if (this == Classes.messageClass) {
+      return MessageSerializationNode.deserializeMessage(bb);
+    }
+
+    return this.instanceClassGroup.deserialize(bb, this);
+  }
+
+  public int getIdentity() {
+    assert identity != 0;
+    return identity;
   }
 }

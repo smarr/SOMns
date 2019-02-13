@@ -331,6 +331,10 @@ public class TracingBackend {
    */
   @TruffleBoundary
   public static void newSnapshot(final byte newSnapshotVersion) {
+    if (!VmSettings.ACTOR_TRACING) {
+      return;
+    }
+
     TraceWorkerThread outDatedWorker;
 
     outDatedWorker = previousWorkerThread;
@@ -581,10 +585,12 @@ public class TracingBackend {
           processTraceData(null, null, null);
         } else {
           try (FileOutputStream traceDataStream = new FileOutputStream(f);
-              FileOutputStream symbolStream = new FileOutputStream(sf);
+              FileOutputStream symbolStream =
+                  VmSettings.SNAPSHOTS_ENABLED ? null : new FileOutputStream(sf);
               FileOutputStream externalDataStream = new FileOutputStream(edf);
               BufferedWriter symbolWriter =
-                  new BufferedWriter(new OutputStreamWriter(symbolStream))) {
+                  VmSettings.SNAPSHOTS_ENABLED ? null
+                      : new BufferedWriter(new OutputStreamWriter(symbolStream))) {
             processTraceData(traceDataStream, externalDataStream, symbolWriter);
           } catch (FileNotFoundException e) {
             throw new RuntimeException(e);

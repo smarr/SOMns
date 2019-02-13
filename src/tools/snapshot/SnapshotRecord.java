@@ -3,9 +3,14 @@ package tools.snapshot;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.graalvm.collections.EconomicMap;
-import org.graalvm.collections.EconomicSet;
 
-import som.interpreter.Types;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+
+import som.interpreter.actors.EventualMessage.PromiseMessage;
+import som.primitives.ObjectPrims.ClassPrim;
+import som.vmobjects.SClass;
+import tools.concurrency.TracingActivityThread;
+import tools.concurrency.TracingActors.TracingActor;
 
 
 public class SnapshotRecord {
@@ -14,7 +19,9 @@ public class SnapshotRecord {
    * We can get the location of the serialized object in the trace
    */
   private final EconomicMap<Object, Long> entries;
-  private final EconomicSet<Long>         messageOffsets;
+  protected final TracingActor            owner;
+  private int                             msgCnt;
+  private int                             snapshotVersion;
 
   /**
    * This list is used to keep track of references to unserialized objects in the actor owning
@@ -25,18 +32,38 @@ public class SnapshotRecord {
    * SnapshotBuffer is then known and used to fix the reference (writing a long in another
    * buffer at a specified location).
    */
-  private final ConcurrentLinkedQueue<FarRefTodo> externalReferences;
+  private ConcurrentLinkedQueue<DeferredFarRefSerialization> externalReferences;
 
-  public SnapshotRecord() {
+  public SnapshotRecord(final TracingActor owner) {
     this.entries = EconomicMap.create();
-    this.messageOffsets = EconomicSet.create();
     this.externalReferences = new ConcurrentLinkedQueue<>();
+    this.owner = owner;
+    this.snapshotVersion = SnapshotBackend.getSnapshotVersion();
+    msgCnt = 0;
   }
 
-  public boolean containsObject(final Object o) {
+  public long getMessageIdentifier() {
+    long result = (((long) owner.getActorId()) << 32) | msgCnt;
+    msgCnt++;
+    return result;
+  }
+
+  /**
+   * only use this in the actor that owns this record (only the owner adds entries).
+   */
+  @TruffleBoundary
+  public boolean containsObjectUnsync(final Object o) {
     return entries.containsKey(o);
   }
 
+  @TruffleBoundary
+  public boolean containsObject(final Object o) {
+    synchronized (entries) {
+      return entries.containsKey(o);
+    }
+  }
+
+  @TruffleBoundary
   public long getObjectPointer(final Object o) {
     if (entries.containsKey(o)) {
       return entries.get(o);
@@ -45,26 +72,31 @@ public class SnapshotRecord {
         "Cannot point to unserialized Objects, you are missing a serialization call: " + o);
   }
 
-  public void addMessageEntry(final long offset) {
-    this.messageOffsets.add(offset);
-  }
-
+  @TruffleBoundary
   public void addObjectEntry(final Object o, final long offset) {
     synchronized (entries) {
       entries.put(o, offset);
     }
   }
 
-  public void handleTodos(final SnapshotBuffer sb) {
+  @TruffleBoundary // TODO: convert to an approach that constructs a cache
+  public void handleObjectsReferencedFromFarRefs(final SnapshotBuffer sb,
+      final ClassPrim classPrim) {
+    // SnapshotBackend.removeTodo(this);
     while (!externalReferences.isEmpty()) {
-      FarRefTodo frt = externalReferences.poll();
+      DeferredFarRefSerialization frt = externalReferences.poll();
+      assert frt != null;
 
       // ignore todos from a different snapshot
-      if (frt.referer.snapshotVersion == sb.snapshotVersion) {
-        if (!this.containsObject(frt.target)) {
-          Types.getClassOf(frt.target).serialize(frt.target, sb);
+      if (frt.isCurrent()) {
+        if (!this.containsObjectUnsync(frt.target)) {
+          if (frt.target instanceof PromiseMessage) {
+            ((PromiseMessage) frt.target).forceSerialize(sb);
+          } else {
+            SClass clazz = classPrim.executeEvaluated(frt.target);
+            clazz.serialize(frt.target, sb);
+          }
         }
-
         frt.resolve(getObjectPointer(frt.target));
       }
     }
@@ -81,32 +113,81 @@ public class SnapshotRecord {
    */
   public void farReference(final Object o, final SnapshotBuffer other,
       final int destination) {
-    Long l;
-    synchronized (entries) {
-      l = entries.get(o);
+    Long l = getEntrySynced(o);
+
+    if (l != null && other != null) {
+      other.putLongAt(destination, l);
+    } else if (l == null) {
+      if (externalReferences.isEmpty()) {
+        SnapshotBackend.deferSerialization(this);
+      }
+      externalReferences.offer(new DeferredFarRefSerialization(other, destination, o));
     }
+  }
+
+  public void farReferenceMessage(final PromiseMessage pm, final SnapshotBuffer other,
+      final int destination) {
+    Long l = getEntrySynced(pm);
 
     if (l != null) {
       other.putLongAt(destination, l);
     } else {
-      externalReferences.offer(new FarRefTodo(other, destination, o));
+      if (externalReferences.isEmpty()) {
+        SnapshotBackend.deferSerialization(this);
+      }
+      externalReferences.offer(new DeferredFarRefSerialization(other, destination, pm));
     }
   }
 
-  private final class FarRefTodo {
-    private final SnapshotBuffer referer;
-    private final int            referenceOffset;
-    final Object                 target;
+  @TruffleBoundary
+  private Long getEntrySynced(final Object o) {
+    Long l;
+    synchronized (entries) {
+      l = entries.get(o);
+    }
+    return l;
+  }
 
-    FarRefTodo(final SnapshotBuffer referer, final int referenceOffset,
+  public int getSnapshotVersion() {
+    return snapshotVersion;
+  }
+
+  public void resetRecordifNecessary(final int newVersion) {
+    if (this.snapshotVersion == newVersion) {
+      return;
+    }
+
+    synchronized (entries) {
+      this.entries.clear();
+    }
+
+    this.msgCnt = 0;
+    this.snapshotVersion = newVersion;
+  }
+
+  public static final class DeferredFarRefSerialization {
+    final Object         target;
+    final SnapshotBuffer referer;
+    final int            referenceOffset;
+
+    DeferredFarRefSerialization(final SnapshotBuffer referer, final int referenceOffset,
         final Object target) {
+      this.target = target;
       this.referer = referer;
       this.referenceOffset = referenceOffset;
-      this.target = target;
     }
 
     public void resolve(final long targetOffset) {
-      referer.putLongAt(referenceOffset, targetOffset);
+      if (referer != null) {
+        referer.putLongAt(referenceOffset, targetOffset);
+      }
+    }
+
+    public boolean isCurrent() {
+      if (referer == null || !(Thread.currentThread() instanceof TracingActivityThread)) {
+        return true;
+      }
+      return referer.snapshotVersion == TracingActivityThread.currentThread().getSnapshotId();
     }
   }
 }

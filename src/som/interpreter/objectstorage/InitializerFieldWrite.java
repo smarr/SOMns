@@ -99,7 +99,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   public final long longValueSet(final SImmutableObject rcvr, final long value,
       @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
-      @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
+      @Cached("cachedLayout.getIsLatestAssumption()") final Assumption isLatestLayout,
       @Cached("getLongAccessor(cachedLayout)") final AbstractPrimitiveAccessor accessor) {
     accessor.write(rcvr, value);
     return value;
@@ -114,7 +114,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   public final long longValueSetOrUnset(final SImmutableObject rcvr, final long value,
       @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
-      @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
+      @Cached("cachedLayout.getIsLatestAssumption()") final Assumption isLatestLayout,
       @Cached("getLongAccessor(cachedLayout)") final AbstractPrimitiveAccessor accessor) {
     accessor.write(rcvr, value);
     accessor.markPrimAsSet(rcvr, primMarkProfile);
@@ -131,7 +131,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   public final long longValueSet(final SMutableObject rcvr, final long value,
       @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
-      @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
+      @Cached("cachedLayout.getIsLatestAssumption()") final Assumption isLatestLayout,
       @Cached("getLongAccessor(cachedLayout)") final AbstractPrimitiveAccessor accessor) {
     accessor.write(rcvr, value);
     return value;
@@ -146,7 +146,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   public final long longValueSetOrUnset(final SMutableObject rcvr, final long value,
       @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
-      @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
+      @Cached("cachedLayout.getIsLatestAssumption()") final Assumption isLatestLayout,
       @Cached("getLongAccessor(cachedLayout)") final AbstractPrimitiveAccessor accessor) {
     accessor.write(rcvr, value);
     accessor.markPrimAsSet(rcvr, primMarkProfile);
@@ -162,7 +162,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   public final double doubleValueSet(final SMutableObject rcvr, final double value,
       @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
-      @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
+      @Cached("cachedLayout.getIsLatestAssumption()") final Assumption isLatestLayout,
       @Cached("getDoubleAccessor(cachedLayout)") final AbstractPrimitiveAccessor accessor) {
     accessor.write(rcvr, value);
     return value;
@@ -177,7 +177,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   public final double doubleValueSetOrUnset(final SMutableObject rcvr, final double value,
       @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
-      @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
+      @Cached("cachedLayout.getIsLatestAssumption()") final Assumption isLatestLayout,
       @Cached("getDoubleAccessor(cachedLayout)") final AbstractPrimitiveAccessor accessor) {
     accessor.write(rcvr, value);
     accessor.markPrimAsSet(rcvr, primMarkProfile);
@@ -193,7 +193,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   public final double doubleValueSet(final SImmutableObject rcvr, final double value,
       @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
-      @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
+      @Cached("cachedLayout.getIsLatestAssumption()") final Assumption isLatestLayout,
       @Cached("getDoubleAccessor(cachedLayout)") final AbstractPrimitiveAccessor accessor) {
     accessor.write(rcvr, value);
     return value;
@@ -208,7 +208,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   public final double doubleValueSetOrUnset(final SImmutableObject rcvr, final double value,
       @Cached("createProfile()") final IntValueProfile primMarkProfile,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
-      @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
+      @Cached("cachedLayout.getIsLatestAssumption()") final Assumption isLatestLayout,
       @Cached("getDoubleAccessor(cachedLayout)") final AbstractPrimitiveAccessor accessor) {
     accessor.write(rcvr, value);
     accessor.markPrimAsSet(rcvr, primMarkProfile);
@@ -222,7 +222,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
       limit = "LIMIT")
   public final Object objectValue(final SImmutableObject rcvr, final Object value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
-      @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
+      @Cached("cachedLayout.getIsLatestAssumption()") final Assumption isLatestLayout,
       @Cached("getObjectAccessor(cachedLayout)") final AbstractObjectAccessor accessor) {
     accessor.write(rcvr, value);
     return value;
@@ -235,7 +235,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
       limit = "LIMIT")
   public final Object objectValue(final SMutableObject rcvr, final Object value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
-      @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
+      @Cached("cachedLayout.getIsLatestAssumption()") final Assumption isLatestLayout,
       @Cached("getObjectAccessor(cachedLayout)") final AbstractObjectAccessor accessor) {
     accessor.write(rcvr, value);
     return value;
@@ -248,7 +248,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
       limit = "LIMIT")
   public final Object unwritten(final SObject rcvr, final Object value,
       @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedLayout,
-      @Cached("cachedLayout.getAssumption()") final Assumption isLatestLayout,
+      @Cached("cachedLayout.getIsLatestAssumption()") final Assumption isLatestLayout,
       @Cached("getUnwritten(cachedLayout)") final StorageLocation location) {
     CompilerAsserts.neverPartOfCompilation("should never be part of a compiled AST.");
     ObjectTransitionSafepoint.INSTANCE.writeUninitializedSlot(rcvr, slot, value);

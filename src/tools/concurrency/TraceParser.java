@@ -10,6 +10,7 @@ import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Queue;
 
 import som.Output;
@@ -42,9 +43,15 @@ public final class TraceParser {
 
   private static TraceParser parser;
   private static String      traceName =
-      VmSettings.TRACE_FILE + (VmSettings.SNAPSHOTS_ENABLED ? ".0" : "");
+      VmSettings.TRACE_FILE + (VmSettings.SNAPSHOTS_ENABLED ? ".1" : "");
 
   private final TraceRecord[] parseTable;
+
+  public static boolean hasExternalData() {
+    ReplayActor ra = (ReplayActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
+    long key = (((long) ra.getActorId()) << 32) | ra.peekDataId();
+    return parser.externalDataDict.containsKey(key);
+  }
 
   public static ByteBuffer getExternalData(final int actorId, final int dataId) {
     long key = (((long) actorId) << 32) | dataId;
@@ -82,7 +89,12 @@ public final class TraceParser {
       parser.parseTrace();
     }
 
-    return parser.actors.get(replayId).getExpectedMessages();
+    ActorNode an = parser.actors.get(replayId);
+    if (an != null) {
+      return an.getExpectedMessages();
+    } else {
+      return new LinkedList<TraceParser.MessageRecord>();
+    }
   }
 
   public static synchronized int getReplayId(final int parentId, final int childNo) {

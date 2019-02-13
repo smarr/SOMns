@@ -2,21 +2,23 @@ package tools.snapshot.nodes;
 
 import com.oracle.truffle.api.nodes.Node;
 
-import som.interpreter.objectstorage.ClassFactory;
 import som.vm.VmSettings;
+import som.vmobjects.SClass;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 
 
 public abstract class AbstractSerializationNode extends Node {
-  public final ClassFactory classFact;
 
-  public AbstractSerializationNode(final ClassFactory classFact) {
+  public AbstractSerializationNode() {
     assert VmSettings.SNAPSHOTS_ENABLED;
-    this.classFact = classFact;
   }
 
   public abstract void execute(Object o, SnapshotBuffer sb);
 
-  public abstract Object deserialize(DeserializationBuffer bb);
+  protected abstract Object deserialize(DeserializationBuffer bb);
+
+  public Object deserialize(final DeserializationBuffer bb, final SClass clazz) {
+    return deserialize(bb);
+  }
 }

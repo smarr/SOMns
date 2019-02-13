@@ -27,19 +27,23 @@ package som.vmobjects;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.AccessModifier;
 import som.compiler.MixinDefinition;
 import som.interpreter.Invokable;
+import som.interpreter.Method;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedDispatchNode;
 import som.interpreter.nodes.dispatch.DispatchGuard;
@@ -48,6 +52,8 @@ import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNode;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
+import tools.snapshot.nodes.BlockSerializationNode.FrameSerializationNode;
+import tools.snapshot.nodes.BlockSerializationNodeFactory.FrameSerializationNodeFactory;
 
 
 public class SInvokable extends SAbstractObject implements Dispatchable {
@@ -58,8 +64,9 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
   private final SSymbol        signature;
   private final SInvokable[]   embeddedBlocks;
 
-  @CompilationFinal private MixinDefinition holder;
-  @CompilationFinal private RootCallTarget  atomicCallTarget;
+  @CompilationFinal private FrameSerializationNode frameSerializer;
+  @CompilationFinal private MixinDefinition        holder;
+  @CompilationFinal private RootCallTarget         atomicCallTarget;
 
   public SInvokable(final SSymbol signature,
       final AccessModifier accessModifier,
@@ -182,6 +189,16 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     return invokable.getSourceSection();
   }
 
+  public FrameSerializationNode getFrameSerializer() {
+    if (frameSerializer == null) {
+      CompilerDirectives.transferToInterpreter();
+      FrameDescriptor fd = ((Method) invokable).getLexicalScope().getOuterMethod()
+                                               .getMethod().getFrameDescriptor();
+      frameSerializer = FrameSerializationNodeFactory.create(fd);
+    }
+    return frameSerializer;
+  }
+
   @Override
   public final AbstractDispatchNode getDispatchNode(final Object rcvr,
       final Object firstArg, final AbstractDispatchNode next, final boolean forAtomic) {
@@ -203,13 +220,18 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
     return "method";
   }
 
+  @TruffleBoundary
+  private URI getURI(final SourceSection source) {
+    return source.getSource().getURI();
+  }
+
   public SSymbol getIdentifier() {
     if (holder != null) {
       return Symbols.symbolFor(
           holder.getIdentifier().getString() + "." + this.signature.getString());
     } else if (invokable.getSourceSection() != null) {
       // TODO find a better solution than charIndex
-      Path absolute = Paths.get(invokable.getSourceSection().getSource().getURI());
+      Path absolute = Paths.get(getURI(invokable.getSourceSection()));
       Path relative =
           Paths.get(VmSettings.BASE_DIRECTORY).toAbsolutePath().relativize(absolute);
       return Symbols.symbolFor(relative.toString() + ":"

@@ -3,6 +3,7 @@ package som.interpreter.actors;
 import java.util.Arrays;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -79,16 +80,16 @@ public abstract class EventualMessage {
     return onReceive.getRootNode().getSourceSection();
   }
 
-  public long serialize(final SnapshotBuffer sb) {
-    ReceivedRootNode rm = (ReceivedRootNode) this.onReceive.getRootNode();
-
-    if (sb.needsToBeSnapshot(getMessageId())) {
-      // Not sure if this is optimized, worst case need to duplicate this for all messages
-      return rm.getSerializer().execute(this, sb);
-    } else {
-      // need to be careful, might interfere with promise serialization...
-      return -1;
+  @TruffleBoundary
+  // TODO: can we establish a structure for this? at the moment, we have an
+  // indirection here, which leads us to a serializer that's not compilation
+  // final, I think
+  public long forceSerialize(final SnapshotBuffer sb) {
+    if (sb.getRecord().containsObject(this)) {
+      return sb.getRecord().getObjectPointer(this);
     }
+    ReceivedRootNode rm = (ReceivedRootNode) this.onReceive.getRootNode();
+    return rm.getSerializer().execute(this, sb);
   }
 
   /**
@@ -112,7 +113,7 @@ public abstract class EventualMessage {
       this.sender = sender;
       this.target = target;
 
-      if (VmSettings.SNAPSHOTS_ENABLED) {
+      if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
         this.messageId = ActorProcessingThread.currentThread().getSnapshotId();
       }
 
@@ -133,7 +134,7 @@ public abstract class EventualMessage {
       this.sender = sender;
       this.target = target;
 
-      if (VmSettings.SNAPSHOTS_ENABLED) {
+      if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
         this.messageId = SnapshotBackend.getSnapshotVersion();
       }
 
@@ -238,7 +239,7 @@ public abstract class EventualMessage {
           triggerPromiseResolverBreakpoint);
       this.originalSender = originalSender;
 
-      if (VmSettings.SNAPSHOTS_ENABLED) {
+      if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
         this.messageId = ActorProcessingThread.currentThread().getSnapshotId();
       }
     }
@@ -257,6 +258,8 @@ public abstract class EventualMessage {
      * Used for Fixup in deserialization.
      */
     public abstract void setPromise(SPromise promise);
+
+    public abstract boolean isDelivered();
 
     @Override
     public boolean getHaltOnPromiseMessageResolution() {
@@ -284,6 +287,9 @@ public abstract class EventualMessage {
       this.selector = selector;
       assert (args[0] instanceof SPromise);
       this.originalTarget = (SPromise) args[0];
+      if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
+        this.messageId = ActorProcessingThread.currentThread().getSnapshotId();
+      }
     }
 
     @Override
@@ -301,9 +307,9 @@ public abstract class EventualMessage {
 
       this.target = finalTarget; // for sends to far references, we need to adjust the target
       this.finalSender = sendingActor;
-      if (VmSettings.SNAPSHOTS_ENABLED) {
-        this.messageId = Math.min(this.messageId,
-            ActorProcessingThread.currentThread().getSnapshotId());
+      if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
+        this.messageId =
+            Math.max(ActorProcessingThread.currentThread().getSnapshotId(), this.messageId);
       }
     }
 
@@ -318,6 +324,7 @@ public abstract class EventualMessage {
       return target;
     }
 
+    @Override
     public boolean isDelivered() {
       return target != null;
     }
@@ -342,7 +349,7 @@ public abstract class EventualMessage {
     @Override
     public final void setPromise(final SPromise promise) {
       assert VmSettings.SNAPSHOTS_ENABLED;
-      assert promise != null && originalTarget == null;
+      assert promise != null;
       this.originalTarget = promise;
     }
 
@@ -375,6 +382,9 @@ public abstract class EventualMessage {
       super(new Object[] {callback, null}, owner, resolver, onReceive,
           triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
       this.promise = promiseRegisteredOn;
+      if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
+        this.messageId = ActorProcessingThread.currentThread().getSnapshotId();
+      }
     }
 
     @Override
@@ -390,9 +400,8 @@ public abstract class EventualMessage {
      */
     private void setPromiseValue(final Object value, final Actor resolvingActor) {
       args[1] = originalSender.wrapForUse(value, resolvingActor, null);
-      if (VmSettings.SNAPSHOTS_ENABLED) {
-        this.messageId = Math.min(this.messageId,
-            ActorProcessingThread.currentThread().getSnapshotId());
+      if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.REPLAY) {
+        this.messageId = ActorProcessingThread.currentThread().getSnapshotId();
       }
     }
 
@@ -425,6 +434,11 @@ public abstract class EventualMessage {
       assert VmSettings.SNAPSHOTS_ENABLED;
       assert promise != null && this.promise == null;
       this.promise = promise;
+    }
+
+    @Override
+    public boolean isDelivered() {
+      return originalSender != null;
     }
   }
 

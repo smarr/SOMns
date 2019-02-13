@@ -1,5 +1,7 @@
 package som.vm;
 
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -24,11 +26,28 @@ public final class Symbols implements IdProvider<SSymbol> {
     return result;
   }
 
+  public static void addSymbolFor(final String string, final short id) {
+    String interned = string.intern();
+    SSymbol result = symbolTable.get(interned);
+
+    // have to do this due to the statically created symbols further down.
+    if (result != null) {
+      return;
+    }
+
+    result = new SSymbol(interned, id);
+    symbolTable.put(string, result);
+  }
+
   private Symbols() {}
 
   @Override
   public SSymbol getId(final String id) {
     return symbolFor(id);
+  }
+
+  public static Collection<SSymbol> getSymbols() {
+    return Collections.unmodifiableCollection(symbolTable.values());
   }
 
   private static final HashMap<String, SSymbol> symbolTable = new HashMap<>();

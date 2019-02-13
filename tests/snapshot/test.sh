@@ -36,7 +36,7 @@ for args in "${Savina[@]}"
 do
   echo "$args"
   echo "Tracing:"
-  $SOM_DIR/som -G -JXss4096k -at -as -sam -TF core-lib/Benchmarks/AsyncHarness.ns Savina.$args
+  $SOM_DIR/som -G -JXss8096k -at -as -sam -TF -sind=0 core-lib/Benchmarks/AsyncHarness.ns Savina.$args
   echo ""
   echo "========================================================"
   echo ""

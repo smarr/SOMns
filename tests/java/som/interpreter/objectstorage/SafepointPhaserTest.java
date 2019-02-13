@@ -28,7 +28,7 @@ public class SafepointPhaserTest {
 
     instanceClass = new SClass(null);
     factory = new ClassFactory(null, null, instanceSlots, null, false, false, false, null,
-        false, null, null);
+        false, null);
 
     instanceClass.initializeStructure(null, null, null, false, false, false, factory);
     layout = factory.getInstanceLayout();
