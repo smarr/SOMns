@@ -180,11 +180,9 @@ public final class ObjectPrims {
   @ImportStatic(Nil.class)
   @GenerateWrapper
   public abstract static class IsValue extends UnaryExpressionNode {
-    protected IsValue() {
-    }
+    protected IsValue() {}
 
-    protected IsValue(final IsValue node) {
-    }
+    protected IsValue(final IsValue node) {}
 
     @Override
     public abstract Object executeEvaluated(VirtualFrame frame, Object rcvr);

@@ -69,29 +69,6 @@ public class SnapshotBuffer extends TraceBuffer {
     return oldPos + CLASS_ID_SIZE;
   }
 
-  public int addObjectWithFields(final Object o, final SClass clazz,
-      final int fieldCnt) {
-    assert fieldCnt < MAX_FIELD_CNT;
-    assert !getRecord().containsObjectUnsync(o) : "Object serialized multiple times";
-
-    int oldPos = this.position;
-    getRecord().addObjectEntry(o, calculateReference(oldPos));
-
-    if (clazz.getSOMClass() == Classes.classClass) {
-      TracingActor owner = clazz.getOwnerOfOuter();
-      if (owner == null) {
-        owner = (TracingActor) SomLanguage.getCurrent().getVM().getMainActor();
-      }
-
-      assert owner != null;
-      owner.getSnapshotRecord().farReference(clazz, null, 0);
-    }
-
-    this.putIntAt(this.position, clazz.getIdentity());
-    this.position += CLASS_ID_SIZE + (FIELD_SIZE * fieldCnt);
-    return oldPos + CLASS_ID_SIZE;
-  }
-
   public int addMessage(final int payload, final EventualMessage msg) {
     // we dont put messages into our lookup table as there should be only one reference to it
     // (either from a promise or a mailbox)

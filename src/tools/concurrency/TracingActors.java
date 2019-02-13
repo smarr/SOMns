@@ -432,8 +432,8 @@ public class TracingActors {
           final WebDebugger dbg) {
         assert actor instanceof ReplayActor;
         assert size > 0;
-        final ReplayActor a = (ReplayActor) actor;
 
+        final ReplayActor a = (ReplayActor) actor;
         Queue<EventualMessage> todo = determineNextMessages(a.leftovers);
 
         for (EventualMessage msg : todo) {

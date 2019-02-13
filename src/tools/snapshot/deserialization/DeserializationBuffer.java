@@ -103,7 +103,7 @@ public class DeserializationBuffer {
   public long readOuterForClass(final long classLocation) {
     long previous = this.position();
     this.position(classLocation);
-    this.getInt();// consume the classclass information
+    this.getInt(); // consume the classclass information
     long result = ClassSerializationNode.readOuterLocation(this);
     this.position(previous);
     return result;
@@ -147,6 +147,7 @@ public class DeserializationBuffer {
 
   /**
    * This causes the lastRef to stay overwritten for fixup purposes!
+   * 
    * @return
    */
   public Object getReference() {

@@ -113,20 +113,6 @@ public class SnapshotRecord {
    */
   public void farReference(final Object o, final SnapshotBuffer other,
       final int destination) {
-
-    // Have to do this to avoid a memory leak, actors that are inactive for a long time, but
-    // farReffed by others ended up keeping alive a large number of SnapshotBuffers.
-
-    /*
-     * ConcurrentLinkedQueue<DeferredFarRefSerialization> oldReferences = externalReferences;
-     * externalReferences = new ConcurrentLinkedQueue<>();
-     * for (DeferredFarRefSerialization deffered : oldReferences) {
-     * if (deffered.referer.snapshotVersion == this.snapshotVersion) {
-     * externalReferences.add(deffered);
-     * }
-     * }
-     */
-
     Long l = getEntrySynced(o);
 
     if (l != null && other != null) {

@@ -7,7 +7,6 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
-import som.Output;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
@@ -547,9 +546,6 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
 
     @Override
     public void fixUp(final Object o) {
-      if (o == null) {
-        Output.println("Test");
-      }
       assert pm != null && o != null;
       this.pm.setPromise((SPromise) o);
     }

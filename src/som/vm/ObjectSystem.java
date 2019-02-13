@@ -102,9 +102,7 @@ public final class ObjectSystem {
     this.compiler = compiler;
     structuralProbe = probe;
     loadedModules = EconomicMap.create();
-    if (VmSettings.SNAPSHOTS_ENABLED) {
-      // List is not modified, only used at program termination to know which modules need to
-      // be loaded in replay
+    if (VmSettings.SNAPSHOT_REPLAY) {
       SnapshotBackend.registerLoadedModules(loadedModules);
     }
     this.vm = vm;
@@ -170,10 +168,6 @@ public final class ObjectSystem {
       vm.errorExit(e.toString());
       throw new IOException(e);
     }
-  }
-
-  public EconomicMap<URI, MixinDefinition> getLoadedModulesForSnapshot() {
-    return loadedModules;
   }
 
   private SObjectWithoutFields constructVmMirror() {

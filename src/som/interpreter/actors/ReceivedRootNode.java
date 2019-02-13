@@ -145,7 +145,7 @@ public abstract class ReceivedRootNode extends RootNode {
     return sourceSection;
   }
 
-  private final long serializeMessageIfNecessary(final EventualMessage msg,
+  private long serializeMessageIfNecessary(final EventualMessage msg,
       final SnapshotBuffer sb) {
 
     if (sb.getRecord().containsObject(msg)) {

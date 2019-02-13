@@ -292,7 +292,7 @@ public abstract class PromiseSerializationNodes {
       return promise;
     }
 
-    private static final void initialiseChainedPromise(final STracingPromise p,
+    private static void initialiseChainedPromise(final STracingPromise p,
         final SPromise remote) {
       boolean complete = remote.isCompleted();
       int resolver = p.getResolvingActor();

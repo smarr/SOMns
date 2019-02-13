@@ -35,6 +35,8 @@ import tools.snapshot.nodes.ObjectSerializationNodesFactory.SObjectWithoutFields
 
 
 public abstract class ObjectSerializationNodes {
+  public static final int FIELD_SIZE    = 8;
+  public static final int MAX_FIELD_CNT = Byte.MAX_VALUE;
 
   public abstract static class ObjectSerializationNode extends AbstractSerializationNode {
 
@@ -186,7 +188,9 @@ public abstract class ObjectSerializationNodes {
 
     @ExplodeLoop
     public void doCached(final SObject o, final SnapshotBuffer sb) {
-      int base = sb.addObjectWithFields(o, o.getSOMClass(), fieldCnt);
+      int base = sb.addObject(o, o.getSOMClass(), FIELD_SIZE * fieldCnt);
+
+      assert fieldCnt < MAX_FIELD_CNT;
 
       SnapshotRecord record = sb.getRecord();
       for (int i = 0; i < fieldCnt; i++) {

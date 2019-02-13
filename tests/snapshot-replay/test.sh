@@ -1,12 +1,12 @@
 #!/bin/bash
 # quit on first error
 set -e
-iterations=100
+iterations=1
 
 if [ "$1" = "1" ]
 then
   declare -a Savina=(
-  #"PingPong $iterations 0 40000"
+    "PingPong $iterations 0 40000"
     "Counting $iterations 0 50000"
     "ForkJoinThroughput $iterations 0 300:60"
     "ForkJoinActorCreation $iterations 0 4000"
@@ -43,16 +43,16 @@ SOM_DIR=$SCRIPT_PATH/../..
 for args in "${Savina[@]}"
 do
   counter=1
-  while [ $counter -le 1 ]
+  while [ $counter -le 10 ]
   do
 
       echo "$counter. $args"
       echo "Tracing:"
       $SOM_DIR/som -EG -as -at -JXmx3000m -JXss8192k core-lib/Benchmarks/AsyncHarness.ns SavinaSnap.$args
       echo ""
-      #echo "Replay:"
-      #$SOM_DIR/som -EG -as -r -JXmx2000m -JXss8192k -vmd core-lib/Benchmarks/AsyncHarness.ns SavinaSnap.$args
-      #echo ""
+      echo "Replay:"
+      $SOM_DIR/som -EG -as -r -JXmx2000m -JXss8192k -vmd core-lib/Benchmarks/AsyncHarness.ns SavinaSnap.$args
+      echo ""
       echo "========================================================"
       echo ""
       ((counter++))

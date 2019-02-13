@@ -244,7 +244,6 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
         extIndex = 0;
       }
     }
-
     this.snapshotId = SnapshotBackend.getSnapshotVersion();
 
     // get net snapshotbuffer

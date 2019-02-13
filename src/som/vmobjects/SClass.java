@@ -35,7 +35,6 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
-import som.Output;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
@@ -156,7 +155,6 @@ public final class SClass extends SObjectWithClass {
   public void initializeClass(final SSymbol name, final SClass superclass) {
     assert (this.name == null || this.name == name) && (this.superclass == null
         || this.superclass == superclass) : "Should only be initialized once";
-
     this.name = name;
     this.superclass = superclass;
   }
@@ -387,10 +385,6 @@ public final class SClass extends SObjectWithClass {
   }
 
   public void serialize(final Object o, final SnapshotBuffer sb) {
-    if (instanceClassGroup == null) {
-      Output.errorPrintln(this.toString());
-    }
-
     assert instanceClassGroup != null;
     if (!sb.getRecord().containsObjectUnsync(o)) {
       instanceClassGroup.serialize(o, sb);

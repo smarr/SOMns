@@ -359,7 +359,7 @@ public class SnapshotBackend {
         for (SnapshotRecord sr : deferredSerializations.keySet()) {
           assert sr.owner != null;
           deferredSerializations.remove(sr);
-          buffer.owner.setCurrentActorSnapshot(sr.owner);
+          buffer.owner.setCurrentActorForSnapshot(sr.owner);
           sr.handleObjectsReferencedFromFarRefs(buffer, classPrim);
         }
       }
@@ -532,6 +532,9 @@ public class SnapshotBackend {
   }
 
   public static void registerClassLocation(final int identity, final long classLocation) {
+    if (VmSettings.TEST_SNAPSHOTS) {
+      return;
+    }
     synchronized (classLocations) {
       classLocations.put(identity, classLocation);
     }
