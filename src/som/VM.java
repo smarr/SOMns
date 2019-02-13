@@ -293,7 +293,6 @@ public final class VM {
 
     assert objectSystem == null;
     objectSystem = new ObjectSystem(new SourcecodeCompiler(lang), structuralProbe, this);
-
     objectSystem.loadKernelAndPlatform(options.platformFile, options.kernelFile);
 
     assert vmMirror == null : "VM seems to be initialized already";
