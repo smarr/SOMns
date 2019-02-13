@@ -169,7 +169,7 @@ public abstract class ObjectSerializationNodes {
     }
 
     @Specialization
-    public void serialize(final SObject so, final SnapshotBuffer sb) {
+    public long serialize(final SObject so, final SnapshotBuffer sb) {
       if (!so.isLayoutCurrent()) {
         CompilerDirectives.transferToInterpreter();
         ObjectTransitionSafepoint.INSTANCE.transitionObject(so);
@@ -180,15 +180,16 @@ public abstract class ObjectSerializationNodes {
         SObjectSerializationNode replacement =
             SObjectSerializationNodeFactory.create(classFact,
                 createReadNodes(so.getFactory()), depth);
-        replace(replacement).serialize(so, sb);
+        return replace(replacement).execute(so, sb);
       } else {
-        doCached(so, sb);
+        return doCached(so, sb);
       }
     }
 
     @ExplodeLoop
-    public void doCached(final SObject o, final SnapshotBuffer sb) {
-      int base = sb.addObject(o, o.getSOMClass(), FIELD_SIZE * fieldCnt);
+    public long doCached(final SObject o, final SnapshotBuffer sb) {
+      int start = sb.addObject(o, o.getSOMClass(), FIELD_SIZE * fieldCnt);
+      int base = start;
 
       assert fieldCnt < MAX_FIELD_CNT;
 
@@ -199,13 +200,16 @@ public abstract class ObjectSerializationNodes {
         // TODO optimize, maybe it is better to add an integer to the objects (indicating their
         // offset) rather than using a map.
 
+        long loc;
         if (!record.containsObjectUnsync(value)) {
           // Referenced Object not yet in snapshot
-          cachedSerializers[i].execute(value, sb);
+          loc = cachedSerializers[i].execute(value, sb);
+        } else {
+          loc = record.getObjectPointer(value);
         }
-
-        sb.putLongAt(base + (8 * i), record.getObjectPointer(value));
+        sb.putLongAt(base + (8 * i), loc);
       }
+      return sb.calculateReferenceB(start);
     }
 
     @Override
@@ -263,8 +267,8 @@ public abstract class ObjectSerializationNodes {
 
     @ExplodeLoop
     @Specialization
-    public void serialize(final SObjectWithoutFields o, final SnapshotBuffer sb) {
-      sb.addObject(o, o.getSOMClass(), 0);
+    public long serialize(final SObjectWithoutFields o, final SnapshotBuffer sb) {
+      return sb.calculateReferenceB(sb.addObject(o, o.getSOMClass(), 0));
     }
 
     @Override

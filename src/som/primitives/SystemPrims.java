@@ -355,10 +355,8 @@ public final class SystemPrims {
 
         if (!sb.getRecord().containsObjectUnsync(receiver)) {
           SClass clazz = Types.getClassOf(receiver);
-          clazz.serialize(receiver, sb);
+          long ref = clazz.serialize(receiver, sb);
           DeserializationBuffer bb = sb.getBuffer();
-
-          long ref = sb.getRecord().getObjectPointer(receiver);
 
           Object o = bb.deserialize(ref);
           assert Types.getClassOf(o) == clazz;

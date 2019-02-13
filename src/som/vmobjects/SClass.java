@@ -384,11 +384,13 @@ public final class SClass extends SObjectWithClass {
     return context;
   }
 
-  public void serialize(final Object o, final SnapshotBuffer sb) {
+  public long serialize(final Object o, final SnapshotBuffer sb) {
     assert instanceClassGroup != null;
     if (!sb.getRecord().containsObjectUnsync(o)) {
-      instanceClassGroup.serialize(o, sb);
+      return instanceClassGroup.serialize(o, sb);
     }
+
+    return sb.getRecord().getObjectPointer(o);
   }
 
   public Object deserialize(final DeserializationBuffer bb) {

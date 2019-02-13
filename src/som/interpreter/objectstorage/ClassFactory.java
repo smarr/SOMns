@@ -166,11 +166,11 @@ public final class ClassFactory {
     return deserializer.deserialize(bb, clazz);
   }
 
-  public void serialize(final Object o, final SnapshotBuffer sb) {
+  public long serialize(final Object o, final SnapshotBuffer sb) {
     VM.callerNeedsToBeOptimized("This serialize method should not be used from PEed code.");
     // TODO: we are using the deserialize node here. The deserializer and serializer should be
     // split. This would also allow us to optimize deserialization.
-    deserializer.execute(o, sb);
+    return deserializer.execute(o, sb);
   }
 
   /**

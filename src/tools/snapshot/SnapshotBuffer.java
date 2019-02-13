@@ -43,6 +43,10 @@ public class SnapshotBuffer extends TraceBuffer {
     return (owner.getThreadId() << THREAD_SHIFT) | start;
   }
 
+  public final long calculateReferenceB(final long start) {
+    return (owner.getThreadId() << THREAD_SHIFT) | (start - Integer.BYTES);
+  }
+
   public int reserveSpace(final int bytes) {
     int oldPos = this.position;
     this.position += bytes;

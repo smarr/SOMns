@@ -14,7 +14,7 @@ public abstract class AbstractSerializationNode extends Node {
     assert VmSettings.SNAPSHOTS_ENABLED;
   }
 
-  public abstract void execute(Object o, SnapshotBuffer sb);
+  public abstract long execute(Object o, SnapshotBuffer sb);
 
   protected abstract Object deserialize(DeserializationBuffer bb);
 

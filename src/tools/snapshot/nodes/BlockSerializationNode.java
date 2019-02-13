@@ -34,18 +34,20 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
 
   // TODO specialize on different blocks
   @Specialization
-  public void serialize(final SBlock block, final SnapshotBuffer sb) {
+  public long serialize(final SBlock block, final SnapshotBuffer sb) {
 
     MaterializedFrame mf = block.getContextOrNull();
 
     if (mf == null) {
-      int base = sb.addObject(block, Classes.blockClass, SINVOKABLE_SIZE + 1);
+      int start = sb.addObject(block, Classes.blockClass, SINVOKABLE_SIZE + 1);
+      int base = start;
       SInvokable meth = block.getMethod();
       sb.putShortAt(base, meth.getIdentifier().getSymbolId());
       sb.putByteAt(base + 2, (byte) 0);
+      return sb.calculateReferenceB(start);
     } else {
-      int base = sb.addObject(block, Classes.blockClass, SINVOKABLE_SIZE + 1 + Long.BYTES);
-
+      int start = sb.addObject(block, Classes.blockClass, SINVOKABLE_SIZE + 1 + Long.BYTES);
+      int base = start;
       SInvokable meth = block.getMethod();
       sb.putShortAt(base, meth.getIdentifier().getSymbolId());
       sb.putByteAt(base + 2, (byte) 1);
@@ -54,6 +56,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
         meth.getFrameSerializer().execute(block, sb);
       }
       sb.putLongAt(base + 3, sb.getRecord().getObjectPointer(mf));
+      return sb.calculateReferenceB(start);
     }
   }
 
@@ -147,7 +150,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
 
     // Truffle doesn't seem to like me passing a frame, so we pass the entire block
     @Specialization
-    public void serialize(final SBlock block, final SnapshotBuffer sb) {
+    public long serialize(final SBlock block, final SnapshotBuffer sb) {
       MaterializedFrame frame = block.getContext();
       Object[] args = frame.getArguments();
 
@@ -166,8 +169,8 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
       SnapshotRecord record = sb.getRecord();
       for (int i = 0; i < args.length; i++) {
         // TODO optimization: cache argument serialization
-        Types.getClassOf(args[i]).serialize(args[i], sb);
-        sb.putLongAt(base + (i * Long.BYTES), record.getObjectPointer(args[i]));
+        sb.putLongAt(base + (i * Long.BYTES),
+            Types.getClassOf(args[i]).serialize(args[i], sb));
       }
 
       base += (args.length * Long.BYTES);
@@ -220,6 +223,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
         // we can get the frame from the invokables root node
       }
       base += j * Long.BYTES;
+      return sb.calculateReferenceB(base);
     }
 
     @Override

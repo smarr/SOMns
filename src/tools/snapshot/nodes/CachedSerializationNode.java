@@ -57,21 +57,21 @@ public abstract class CachedSerializationNode extends AbstractSerializationNode 
 
   @Specialization(guards = {"execGuard(o, guard, objectLayoutIsLatest)", "depth < MAX_DEPTH"},
       assumptions = "objectLayoutIsLatest")
-  public void serialize(final Object o, final SnapshotBuffer sb,
+  public long serialize(final Object o, final SnapshotBuffer sb,
       @Cached("createDispatchGuard(o)") final DispatchGuard guard,
       @Cached("guard.getAssumption()") final Assumption objectLayoutIsLatest,
       @Cached("getSerializer(o, depth)") final AbstractSerializationNode serializer) {
-    serializer.execute(o, sb);
+    return serializer.execute(o, sb);
   }
 
   @Specialization
-  public void fallback(final Object o, final SnapshotBuffer sb) {
+  public long fallback(final Object o, final SnapshotBuffer sb) {
     if (classprim == null) {
       CompilerDirectives.transferToInterpreter();
       classprim = ClassPrimFactory.create(null);
     }
 
-    classprim.executeEvaluated(o).serialize(o, sb);
+    return classprim.executeEvaluated(o).serialize(o, sb);
   }
 
   @Override

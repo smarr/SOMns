@@ -34,10 +34,11 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   }
 
   @Specialization(guards = "sa.isBooleanType()")
-  protected void doBoolean(final SArray sa, final SnapshotBuffer sb) {
+  protected long doBoolean(final SArray sa, final SnapshotBuffer sb) {
     boolean[] ba = sa.getBooleanStorage();
     int requiredSpace = ba.length;
-    int base = sb.addObject(sa, clazz, requiredSpace + 5);
+    int start = sb.addObject(sa, clazz, requiredSpace + 5);
+    int base = start;
     sb.putByteAt(base, TYPE_BOOLEAN);
     sb.putIntAt(base + 1, ba.length);
     base += 5;
@@ -45,13 +46,15 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
       sb.putByteAt(base, (byte) (b ? 1 : 0));
       base++;
     }
+    return sb.calculateReferenceB(start);
   }
 
   @Specialization(guards = "sa.isDoubleType()")
-  protected void doDouble(final SArray sa, final SnapshotBuffer sb) {
+  protected long doDouble(final SArray sa, final SnapshotBuffer sb) {
     double[] da = sa.getDoubleStorage();
     int requiredSpace = da.length * Double.BYTES;
-    int base = sb.addObject(sa, clazz, requiredSpace + 5);
+    int start = sb.addObject(sa, clazz, requiredSpace + 5);
+    int base = start;
     sb.putByteAt(base, TYPE_DOUBLE);
     sb.putIntAt(base + 1, da.length);
     base += 5;
@@ -59,13 +62,15 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
       sb.putDoubleAt(base, d);
       base += Double.BYTES;
     }
+    return sb.calculateReferenceB(start);
   }
 
   @Specialization(guards = "sa.isLongType()")
-  protected void doLong(final SArray sa, final SnapshotBuffer sb) {
+  protected long doLong(final SArray sa, final SnapshotBuffer sb) {
     long[] la = sa.getLongStorage();
     int requiredSpace = la.length * Long.BYTES;
-    int base = sb.addObject(sa, clazz, requiredSpace + 5);
+    int start = sb.addObject(sa, clazz, requiredSpace + 5);
+    int base = start;
     sb.putByteAt(base, TYPE_LONG);
     sb.putIntAt(base + 1, la.length);
     base += 5;
@@ -73,47 +78,53 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
       sb.putLongAt(base, l);
       base += Long.BYTES;
     }
+    return sb.calculateReferenceB(start);
   }
 
   @Specialization(guards = "sa.isObjectType()")
-  protected void doObject(final SArray sa, final SnapshotBuffer sb) {
+  protected long doObject(final SArray sa, final SnapshotBuffer sb) {
     Object[] oa = sa.getObjectStorage();
     int requiredSpace = oa.length * 8;
-    int base = sb.addObject(sa, clazz, requiredSpace + 5);
+    int start = sb.addObject(sa, clazz, requiredSpace + 5);
+    int base = start;
     sb.putByteAt(base, TYPE_OBJECT);
     sb.putIntAt(base + 1, oa.length);
     base += 5;
     for (Object obj : oa) {
-      Types.getClassOf(obj).serialize(obj, sb);
-      long pos = sb.getRecord().getObjectPointer(obj);
+      long pos = Types.getClassOf(obj).serialize(obj, sb);
       sb.putLongAt(base, pos);
       base += Long.BYTES;
     }
+    return sb.calculateReferenceB(start);
   }
 
   @Specialization(guards = "sa.isEmptyType()")
-  protected void doEmpty(final SArray sa, final SnapshotBuffer sb) {
-    int base = sb.addObject(sa, clazz, 5);
+  protected long doEmpty(final SArray sa, final SnapshotBuffer sb) {
+    int start = sb.addObject(sa, clazz, 5);
+    int base = start;
     sb.putByteAt(base, TYPE_EMPTY);
     sb.putIntAt(base + 1, sa.getEmptyStorage());
+    return sb.calculateReferenceB(start);
   }
 
   @Specialization(guards = "sa.isPartiallyEmptyType()")
-  protected void doPartiallyEmpty(final SArray sa, final SnapshotBuffer sb) {
+  protected long doPartiallyEmpty(final SArray sa, final SnapshotBuffer sb) {
     PartiallyEmptyArray pea = sa.getPartiallyEmptyStorage();
 
     Object[] oa = pea.getStorage();
     int requiredSpace = oa.length * 8;
-    int base = sb.addObject(sa, clazz, requiredSpace + 5);
+    int start = sb.addObject(sa, clazz, requiredSpace + 5);
+    int base = start;
     sb.putByteAt(base, TYPE_OBJECT);
     sb.putIntAt(base + 1, oa.length);
     base += 5;
     for (Object obj : oa) {
-      Types.getClassOf(obj).serialize(obj, sb);
-      long pos = sb.getRecord().getObjectPointer(obj);
+      long pos = Types.getClassOf(obj).serialize(obj, sb);
       sb.putLongAt(base, pos);
       base += Long.BYTES;
     }
+
+    return sb.calculateReferenceB(start);
   }
 
   protected Object parseBackingStorage(final DeserializationBuffer sb) {
