@@ -193,7 +193,7 @@ public abstract class PrimitiveSerializationNodes {
       if (owner == null) {
         owner = main;
       }
-      owner.getSnapshotRecord().farReference(outer, sb, base + Integer.BYTES);
+      owner.farReference(outer, sb, base + Integer.BYTES);
 
       long location = sb.calculateReferenceB(base);
       SnapshotBackend.registerClassLocation(cls.getIdentity(), location);
@@ -259,7 +259,7 @@ public abstract class PrimitiveSerializationNodes {
       // writing the reference is done through this method.
       // actual writing may happen at a later point in time if the object wasn't serialized
       // yetD
-      other.getSnapshotRecord().farReference(o.getValue(), sb, base + Integer.BYTES);
+      other.farReference(o.getValue(), sb, base + Integer.BYTES);
       return sb.calculateReferenceB(base);
     }
 

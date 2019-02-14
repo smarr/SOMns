@@ -12,6 +12,7 @@ import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.VmSettings;
+import som.vm.constants.Classes;
 import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActivityThread;
@@ -85,7 +86,7 @@ public abstract class EventualMessage {
   // indirection here, which leads us to a serializer that's not compilation
   // final, I think
   public long forceSerialize(final SnapshotBuffer sb) {
-    long location = sb.getRecord().getObjectPointerUnsync(this);
+    long location = Classes.messageClass.getObjectLocationUnsync(this);
     if (location != -1) {
       return location;
     }

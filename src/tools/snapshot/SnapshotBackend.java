@@ -51,13 +51,13 @@ import tools.snapshot.deserialization.SnapshotParser;
 public class SnapshotBackend {
   private static byte snapshotVersion = 0;
 
-  private static final EconomicMap<Short, SSymbol>                symbolDictionary;
-  private static final EconomicMap<Integer, Object>               classDictionary;
-  private static final StructuralProbe                            probe;
-  private static final ConcurrentLinkedQueue<SnapshotBuffer>      buffers;
-  private static final ConcurrentLinkedQueue<ArrayList<Long>>     messages;
-  private static final EconomicMap<Integer, Long>                 classLocations;
-  private static final ConcurrentHashMap<SnapshotRecord, Integer> deferredSerializations;
+  private static final EconomicMap<Short, SSymbol>              symbolDictionary;
+  private static final EconomicMap<Integer, Object>             classDictionary;
+  private static final StructuralProbe                          probe;
+  private static final ConcurrentLinkedQueue<SnapshotBuffer>    buffers;
+  private static final ConcurrentLinkedQueue<ArrayList<Long>>   messages;
+  private static final EconomicMap<Integer, Long>               classLocations;
+  private static final ConcurrentHashMap<TracingActor, Integer> deferredSerializations;
 
   private static final ArrayList<Long> lostResolutions;
 
@@ -312,12 +312,12 @@ public class SnapshotBackend {
    * actor.
    */
   @TruffleBoundary
-  public static void deferSerialization(final SnapshotRecord sr) {
+  public static void deferSerialization(final TracingActor sr) {
     deferredSerializations.put(sr, 0);
   }
 
   @TruffleBoundary
-  public static void completedSerialization(final SnapshotRecord sr) {
+  public static void completedSerialization(final TracingActor sr) {
     deferredSerializations.remove(sr);
   }
 
@@ -356,10 +356,10 @@ public class SnapshotBackend {
       SnapshotBuffer buffer = buffers.peek();
 
       while (!deferredSerializations.isEmpty()) {
-        for (SnapshotRecord sr : deferredSerializations.keySet()) {
-          assert sr.owner != null;
+        for (TracingActor sr : deferredSerializations.keySet()) {
+          assert sr != null;
           deferredSerializations.remove(sr);
-          buffer.owner.setCurrentActorForSnapshot(sr.owner);
+          buffer.owner.setCurrentActorForSnapshot(sr);
           sr.handleObjectsReferencedFromFarRefs(buffer, classPrim);
         }
       }
@@ -411,7 +411,7 @@ public class SnapshotBackend {
     ByteBuffer bb = ByteBuffer.allocate(registrySize).order(ByteOrder.LITTLE_ENDIAN);
     // get and write location of the promise
     TracingActor ta = (TracingActor) resultPromise.getOwner();
-    long location = ta.getSnapshotRecord().getObjectPointer(resultPromise);
+    long location = SPromise.getPromiseClass().getObjectLocation(resultPromise);
     if (location == -1) {
       location = SPromise.getPromiseClass().serialize(resultPromise, buffers.peek());
     }

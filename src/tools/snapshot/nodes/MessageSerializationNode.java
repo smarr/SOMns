@@ -8,6 +8,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 import som.interpreter.SomLanguage;
+import som.interpreter.Types;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.DirectMessage;
@@ -27,7 +28,6 @@ import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
-import tools.snapshot.SnapshotRecord;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.deserialization.FixupInformation;
 
@@ -100,7 +100,6 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
     for (int i = 0; i < serializationNodes.length; i++) {
       final Object obj = args[i];
 
-      SnapshotRecord record = sb.getRecord();
       if (obj == null) {
         // TODO cache this nil stuff, maye put the location as constatn in the valuePool
         long nilLocation = Classes.nilClass.serialize(Nil.nilObject, sb);
@@ -109,7 +108,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
         PromiseSerializationNodes.handleReferencedPromise((SPromise) obj, sb,
             (base + 1) + i * Long.BYTES);
       } else {
-        long objLocation = record.getObjectPointerUnsync(obj);
+        long objLocation = Types.getClassOf(obj).getObjectLocationUnsync(obj);
         if (objLocation == -1) {
           objLocation = serializationNodes[i].execute(obj, sb);
         }

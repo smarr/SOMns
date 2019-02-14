@@ -386,11 +386,55 @@ public final class SClass extends SObjectWithClass {
 
   public long serialize(final Object o, final SnapshotBuffer sb) {
     assert instanceClassGroup != null;
-    long loc = sb.getRecord().getObjectPointerUnsync(o);
+    long loc = this.getObjectLocationUnsync(o);
     if (loc == -1) {
       return instanceClassGroup.serialize(o, sb);
     } else {
       return loc;
+    }
+  }
+
+  public void registerLocation(final Object obj, final long location) {
+
+  }
+
+  public long getObjectLocation(final Object obj) {
+    if (declaredAsValue) {
+      // TODO ValuePool
+      return -1;
+    } else {
+      SAbstractObject aobj = (SAbstractObject) obj;
+      return aobj.getSnapshotLocation();
+    }
+  }
+
+  public long getObjectLocationUnsync(final Object obj) {
+    if (declaredAsValue) {
+      // TODO ValuePool
+      return -1;
+    } else {
+      SAbstractObject aobj = (SAbstractObject) obj;
+      return aobj.getSnapshotLocation();
+    }
+  }
+
+  public boolean isSerializedUnsync(final Object obj, final byte snapshot) {
+    if (declaredAsValue) {
+      // TODO ValuePool
+      return false;
+    } else {
+      SAbstractObject aobj = (SAbstractObject) obj;
+      return aobj.getSnapshotLocation() != -1 && aobj.getSnapshotVersion() == snapshot;
+    }
+  }
+
+  public boolean isSerialized(final Object obj, final byte snapshot) {
+    if (declaredAsValue) {
+      // TODO ValuePool
+      return false;
+    } else {
+      SAbstractObject aobj = (SAbstractObject) obj;
+      return aobj.getSnapshotLocation() != -1 && aobj.getSnapshotVersion() == snapshot;
     }
   }
 

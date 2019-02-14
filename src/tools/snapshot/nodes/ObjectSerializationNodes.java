@@ -11,6 +11,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 import som.compiler.MixinDefinition.SlotDefinition;
+import som.interpreter.Types;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotRead;
 import som.interpreter.nodes.dispatch.CachedSlotRead.SlotAccess;
@@ -27,7 +28,6 @@ import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.snapshot.SnapshotBuffer;
-import tools.snapshot.SnapshotRecord;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.deserialization.FixupInformation;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.SObjectSerializationNodeFactory;
@@ -193,14 +193,13 @@ public abstract class ObjectSerializationNodes {
 
       assert fieldCnt < MAX_FIELD_CNT;
 
-      SnapshotRecord record = sb.getRecord();
       for (int i = 0; i < fieldCnt; i++) {
         Object value = fieldReads[i].read(o);
         // TODO type profiles could be an optimization (separate profile for each slot)
         // TODO optimize, maybe it is better to add an integer to the objects (indicating their
         // offset) rather than using a map.
 
-        long loc = record.getObjectPointerUnsync(value);
+        long loc = Types.getClassOf(value).getObjectLocationUnsync(value);
         if (loc == -1) {
           // Referenced Object not yet in snapshot
           loc = cachedSerializers[i].execute(value, sb);

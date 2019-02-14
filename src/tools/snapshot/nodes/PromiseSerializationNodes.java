@@ -34,9 +34,9 @@ public abstract class PromiseSerializationNodes {
     } else {
       // The Promise belong to another Actor
       TracingActor ta = (TracingActor) prom.getOwner();
-      long promLocation = ta.getSnapshotRecord().getObjectPointer(prom);
+      long promLocation = SPromise.getPromiseClass().getObjectLocation(prom);
       if (promLocation == -1) {
-        ta.getSnapshotRecord().farReference(prom, sb, location);
+        ta.farReference(prom, sb, location);
       } else {
         sb.putLongAt(location, promLocation);
       }
@@ -194,7 +194,7 @@ public abstract class PromiseSerializationNodes {
         sb.putLongAt(location, pm.forceSerialize(sb));
       } else {
         TracingActor ta = (TracingActor) pm.getTarget();
-        ta.getSnapshotRecord().farReferenceMessage(pm, sb, location);
+        ta.farReferenceMessage(pm, sb, location);
       }
     }
 

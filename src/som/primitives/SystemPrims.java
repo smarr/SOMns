@@ -36,7 +36,6 @@ import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
 import som.interpreter.Invokable;
 import som.interpreter.Types;
 import som.interpreter.actors.Actor.ActorProcessingThread;
-import som.interpreter.actors.EventualMessage;
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
@@ -58,7 +57,6 @@ import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.SourceCoordinate;
 import tools.concurrency.TraceParser;
-import tools.concurrency.TracingActors.TracingActor;
 import tools.concurrency.TracingBackend;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.nodes.TraceActorContextNode;
@@ -349,20 +347,17 @@ public final class SystemPrims {
       if (VmSettings.SNAPSHOTS_ENABLED) {
         ActorProcessingThread atp =
             (ActorProcessingThread) ActorProcessingThread.currentThread();
-        TracingActor ta = (TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
         SnapshotBuffer sb = new SnapshotBuffer(atp);
-        ta.replaceSnapshotRecord();
 
-        if (!sb.getRecord().containsObjectUnsync(receiver)) {
-          SClass clazz = Types.getClassOf(receiver);
-          long ref = clazz.serialize(receiver, sb);
-          DeserializationBuffer bb = sb.getBuffer();
+        SClass clazz = Types.getClassOf(receiver);
+        long ref = clazz.serialize(receiver, sb);
+        DeserializationBuffer bb = sb.getBuffer();
 
-          Object o = bb.deserialize(ref);
-          assert Types.getClassOf(o) == clazz;
-          return o;
-        }
+        Object o = bb.deserialize(ref);
+        assert Types.getClassOf(o) == clazz;
+        return o;
       }
+
       return Nil.nilObject;
     }
   }

@@ -6,14 +6,14 @@ iterations=1
 if [ "$1" = "1" ]
 then
   declare -a Savina=(
-    "PingPong $iterations 0 40000"
-    "Counting $iterations 0 50000"
-    "ForkJoinThroughput $iterations 0 300:60"
-    "ForkJoinActorCreation $iterations 0 4000"
-    "ThreadRing $iterations 0 100:10000"
-    "Chameneos $iterations 0 100:10000"
-    "BigContention $iterations 0 20:12"
-    "ConcurrentDictionary $iterations 0 5:100:5"
+    #"PingPong $iterations 0 40000"
+    #"Counting $iterations 0 50000"
+    #"ForkJoinThroughput $iterations 0 300:60"
+    #"ForkJoinActorCreation $iterations 0 4000"
+    #"ThreadRing $iterations 0 100:10000"
+    #"Chameneos $iterations 0 100:10000"
+    #"BigContention $iterations 0 20:12"
+    #"ConcurrentDictionary $iterations 0 5:100:5"
     "ConcurrentSortedLinkedList $iterations 0 10:1500:10:1"
     "ProducerConsumerBoundedBuffer $iterations 0 40:10:10:60"
     "Philosophers $iterations 0 20:5000"
@@ -48,10 +48,10 @@ do
 
       echo "$counter. $args"
       echo "Tracing:"
-      $SOM_DIR/som -EG -as -at -JXmx3000m -JXss8192k core-lib/Benchmarks/AsyncHarness.ns SavinaSnap.$args
+      $SOM_DIR/som -EG -as -at -JXmx3000m -JXss16284k core-lib/Benchmarks/AsyncHarness.ns SavinaSnap.$args
       echo ""
       echo "Replay:"
-      $SOM_DIR/som -EG -as -r -JXmx2000m -JXss8192k -vmd core-lib/Benchmarks/AsyncHarness.ns SavinaSnap.$args
+      $SOM_DIR/som -EG -as -r -JXmx2000m -JXss16284k -vmd core-lib/Benchmarks/AsyncHarness.ns SavinaSnap.$args
       echo ""
       echo "========================================================"
       echo ""

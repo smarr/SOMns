@@ -11,11 +11,11 @@ import som.VM;
 import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor.ActorProcessingThread;
-import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.SPromise.SResolver;
 import som.primitives.ObjectPrims.ClassPrim;
 import som.primitives.ObjectPrimsFactory.ClassPrimFactory;
 import som.vm.VmSettings;
+import som.vm.constants.Classes;
 import som.vmobjects.SSymbol;
 import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActors.TracingActor;
@@ -25,7 +25,6 @@ import tools.replay.nodes.TraceMessageNode;
 import tools.replay.nodes.TraceMessageNodeGen;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
-import tools.snapshot.SnapshotRecord;
 import tools.snapshot.nodes.MessageSerializationNode;
 import tools.snapshot.nodes.MessageSerializationNodeFactory;
 
@@ -80,13 +79,11 @@ public abstract class ReceivedRootNode extends RootNode {
 
     if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS && !VmSettings.REPLAY) {
       SnapshotBuffer sb = currentThread.getSnapshotBuffer();
-      sb.getRecord().resetRecordifNecessary(currentThread.getSnapshotId());
       sb.getRecord().handleObjectsReferencedFromFarRefs(sb, classPrim);
 
       if (sb.needsToBeSnapshot(msg.getMessageId())) {
         long msgIdentifier =
-            ((TracingActor) msgClass.profile(msg).getTarget()).getSnapshotRecord()
-                                                              .getMessageIdentifier();
+            ((TracingActor) msgClass.profile(msg).getTarget()).getMessageIdentifier();
         long location = serializeMessageIfNecessary(msg, sb);
         sb.getOwner().addMessageLocation(msgIdentifier, location);
       }
@@ -148,19 +145,11 @@ public abstract class ReceivedRootNode extends RootNode {
   private long serializeMessageIfNecessary(final EventualMessage msg,
       final SnapshotBuffer sb) {
 
-    long msgLocation = sb.getRecord().getObjectPointerUnsync(msg);
+    // TODO might need synchronization!
+    long msgLocation = Classes.messageClass.getObjectLocationUnsync(msg);
     if (msgLocation != -1) {
       // location already known
       return msgLocation;
-    } else if (msg instanceof PromiseSendMessage) {
-      // check promise owner
-      PromiseSendMessage pm = (PromiseSendMessage) msg;
-      SnapshotRecord sr = ((TracingActor) pm.getPromise().getOwner()).getSnapshotRecord();
-      msgLocation = sr.getObjectPointer(msg);
-      if (msgLocation != -1) {
-        // location known by promise owner
-        return msgLocation;
-      }
     }
 
     // message wasn't serialized before

@@ -22,7 +22,6 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
-import tools.snapshot.SnapshotRecord;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.deserialization.FixupInformation;
 
@@ -52,7 +51,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
       sb.putShortAt(base, meth.getIdentifier().getSymbolId());
       sb.putByteAt(base + 2, (byte) 1);
 
-      long framelocation = sb.getRecord().getObjectPointerUnsync(mf);
+      long framelocation = Classes.frameClass.getObjectLocation(mf);
       if (framelocation == -1) {
         framelocation = meth.getFrameSerializer().execute(block, sb);
       }
@@ -168,7 +167,6 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
       sb.putByteAt(base, (byte) args.length);
       base++;
 
-      SnapshotRecord record = sb.getRecord();
       for (int i = 0; i < args.length; i++) {
         // TODO optimization: cache argument serialization
         sb.putLongAt(base + (i * Long.BYTES),

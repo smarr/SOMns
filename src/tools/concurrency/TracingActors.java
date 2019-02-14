@@ -6,19 +6,24 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
 import som.Output;
 import som.VM;
+import som.interpreter.Types;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
+import som.primitives.ObjectPrims.ClassPrim;
 import som.vm.VmSettings;
+import som.vm.constants.Classes;
+import som.vmobjects.SAbstractObject;
+import som.vmobjects.SClass;
 import tools.concurrency.TraceParser.ExternalMessageRecord;
 import tools.concurrency.TraceParser.ExternalPromiseMessageRecord;
 import tools.concurrency.TraceParser.MessageRecord;
@@ -27,18 +32,33 @@ import tools.debugger.WebDebugger;
 import tools.replay.ExternalDataSource;
 import tools.replay.actors.ExternalMessage;
 import tools.replay.nodes.TraceActorContextNode;
-import tools.snapshot.SnapshotRecord;
+import tools.snapshot.DeferredFarRefSerialization;
+import tools.snapshot.SnapshotBackend;
+import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 
 
 public class TracingActors {
+
   public static class TracingActor extends Actor {
     private static final AtomicInteger IdGen = new AtomicInteger(0);
     protected final int                actorId;
     protected short                    ordering;
     protected int                      nextDataID;
+    private long                       msgCnt;
 
-    @CompilationFinal protected SnapshotRecord snapshotRecord;
+    /**
+     * This list is used to keep track of references to unserialized objects in the actor
+     * owning
+     * this buffer.
+     * It serves both the purpose of being a todo-list and remembering to fix these references
+     * after they were serialized. The idea is that the owner regularly checks the queue, and
+     * for
+     * each element serializes the object if necessary. The offset of the object within this
+     * SnapshotBuffer is then known and used to fix the reference (writing a long in another
+     * buffer at a specified location).
+     */
+    private ConcurrentLinkedQueue<DeferredFarRefSerialization> externalReferences;
 
     /**
      * Flag that indicates if a step-to-next-turn action has been made in the previous message.
@@ -49,7 +69,7 @@ public class TracingActors {
       super(vm);
       this.actorId = IdGen.getAndIncrement();
       if (VmSettings.SNAPSHOTS_ENABLED) {
-        snapshotRecord = new SnapshotRecord(this);
+        this.externalReferences = new ConcurrentLinkedQueue<>();
       }
     }
 
@@ -87,18 +107,6 @@ public class TracingActors {
       return stepToNextTurn;
     }
 
-    public SnapshotRecord getSnapshotRecord() {
-      assert VmSettings.SNAPSHOTS_ENABLED;
-      return snapshotRecord;
-    }
-
-    /**
-     * For testing purposes.
-     */
-    public void replaceSnapshotRecord() {
-      this.snapshotRecord = new SnapshotRecord(this);
-    }
-
     @Override
     public void setStepToNextTurn(final boolean stepToNextTurn) {
       this.stepToNextTurn = stepToNextTurn;
@@ -116,6 +124,73 @@ public class TracingActors {
       // check if a step-return-from-turn-to-promise-resolution has been triggered
       if (msg.getHaltOnPromiseMessageResolution()) {
         dbg.prepareSteppingUntilNextRootNode(Thread.currentThread());
+      }
+    }
+
+    public long getMessageIdentifier() {
+      long result = (((long) actorId) << 32) | msgCnt;
+      msgCnt++;
+      return result;
+    }
+
+    @TruffleBoundary // TODO: convert to an approach that constructs a cache
+    public void handleObjectsReferencedFromFarRefs(final SnapshotBuffer sb,
+        final ClassPrim classPrim) {
+      // SnapshotBackend.removeTodo(this);
+      while (!externalReferences.isEmpty()) {
+        DeferredFarRefSerialization frt = externalReferences.poll();
+        assert frt != null;
+
+        // ignore todos from a different snapshot
+        if (frt.isCurrent()) {
+          long location = ((SAbstractObject) frt.target).getSnapshotLocation();
+          if (location == -1) {
+            if (frt.target instanceof PromiseMessage) {
+              location = ((PromiseMessage) frt.target).forceSerialize(sb);
+            } else {
+              SClass clazz = classPrim.executeEvaluated(frt.target);
+              location = clazz.serialize(frt.target, sb);
+            }
+          }
+          frt.resolve(location);
+        }
+      }
+    }
+
+    /**
+     * This method handles all the details of what to do when we want to serialize objects from
+     * another actor.
+     * Intended for use in FarReference serialization.
+     *
+     * @param o object far-referenced from {@code other}}
+     * @param other {SnapshotBuffer that contains the farReference}
+     * @param destination offset of the reference inside {@code other}
+     */
+    public void farReference(final Object o, final SnapshotBuffer other,
+        final int destination) {
+      Long l = Types.getClassOf(o).getObjectLocation(o);
+
+      if (l != null && other != null) {
+        other.putLongAt(destination, l);
+      } else if (l == null) {
+        if (externalReferences.isEmpty()) {
+          SnapshotBackend.deferSerialization(this);
+        }
+        externalReferences.offer(new DeferredFarRefSerialization(other, destination, o));
+      }
+    }
+
+    public void farReferenceMessage(final PromiseMessage pm, final SnapshotBuffer other,
+        final int destination) {
+      Long l = Classes.messageClass.getObjectLocation(pm);
+
+      if (l != null) {
+        other.putLongAt(destination, l);
+      } else {
+        if (externalReferences.isEmpty()) {
+          SnapshotBackend.deferSerialization(this);
+        }
+        externalReferences.offer(new DeferredFarRefSerialization(other, destination, pm));
       }
     }
 

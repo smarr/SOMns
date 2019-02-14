@@ -30,9 +30,8 @@ public class SnapshotBuffer extends TraceBuffer {
     this.snapshotVersion = owner.getSnapshotId();
   }
 
-  public SnapshotRecord getRecord() {
-    return CompilerDirectives.castExact(owner.getCurrentActor(), TracingActor.class)
-                             .getSnapshotRecord();
+  public TracingActor getRecord() {
+    return CompilerDirectives.castExact(owner.getCurrentActor(), TracingActor.class);
   }
 
   public ActorProcessingThread getOwner() {
@@ -54,10 +53,10 @@ public class SnapshotBuffer extends TraceBuffer {
   }
 
   public int addObject(final Object o, final SClass clazz, final int payload) {
-    assert !getRecord().containsObjectUnsync(o) : "Object serialized multiple times";
+    assert !clazz.isSerializedUnsync(o, snapshotVersion) : "Object serialized multiple times";
 
     int oldPos = this.position;
-    getRecord().addObjectEntry(o, calculateReference(oldPos));
+    clazz.registerLocation(o, calculateReference(oldPos));
 
     if (clazz.getSOMClass() == Classes.classClass) {
       TracingActor owner = clazz.getOwnerOfOuter();
@@ -66,7 +65,7 @@ public class SnapshotBuffer extends TraceBuffer {
       }
 
       assert owner != null;
-      owner.getSnapshotRecord().farReference(clazz, null, 0);
+      owner.farReference(clazz, null, 0);
     }
     this.putIntAt(this.position, clazz.getIdentity());
     this.position += CLASS_ID_SIZE + payload;
@@ -77,10 +76,9 @@ public class SnapshotBuffer extends TraceBuffer {
     // we dont put messages into our lookup table as there should be only one reference to it
     // (either from a promise or a mailbox)
     int oldPos = this.position;
-    TracingActor ta = (TracingActor) owner.getCurrentActor();
-    assert !getRecord().containsObjectUnsync(
-        msg) : "Message serialized twice, and on the same actor";
-    getRecord().addObjectEntry(msg, calculateReference(oldPos));
+    assert !Classes.messageClass.isSerializedUnsync(msg,
+        snapshotVersion) : "Message serialized twice, and on the same actor";
+    Classes.messageClass.registerLocation(msg, calculateReference(oldPos));
     // owner.addMessageLocation(ta.getActorId(), calculateReference(oldPos));
 
     this.putIntAt(this.position, Classes.messageClass.getIdentity());
