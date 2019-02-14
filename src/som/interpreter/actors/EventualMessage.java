@@ -85,8 +85,9 @@ public abstract class EventualMessage {
   // indirection here, which leads us to a serializer that's not compilation
   // final, I think
   public long forceSerialize(final SnapshotBuffer sb) {
-    if (sb.getRecord().containsObject(this)) {
-      return sb.getRecord().getObjectPointer(this);
+    long location = sb.getRecord().getObjectPointerUnsync(this);
+    if (location != -1) {
+      return location;
     }
     ReceivedRootNode rm = (ReceivedRootNode) this.onReceive.getRootNode();
     return rm.getSerializer().execute(this, sb);

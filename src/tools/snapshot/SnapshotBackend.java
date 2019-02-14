@@ -411,8 +411,10 @@ public class SnapshotBackend {
     ByteBuffer bb = ByteBuffer.allocate(registrySize).order(ByteOrder.LITTLE_ENDIAN);
     // get and write location of the promise
     TracingActor ta = (TracingActor) resultPromise.getOwner();
-    SPromise.getPromiseClass().serialize(resultPromise, buffers.peek());
     long location = ta.getSnapshotRecord().getObjectPointer(resultPromise);
+    if (location == -1) {
+      location = SPromise.getPromiseClass().serialize(resultPromise, buffers.peek());
+    }
     bb.putLong(location);
 
     bb.putLong(numBuffers);
@@ -506,7 +508,7 @@ public class SnapshotBackend {
   public static void registerLostResolution(final SResolver resolver,
       final SnapshotBuffer sb) {
 
-    SResolver.getResolverClass().serialize(resolver, sb);
+    long resolverLocation = SResolver.getResolverClass().serialize(resolver, sb);
 
     if (!resolver.getPromise().isCompleted()) {
       Output.println("skipped!!");
@@ -515,15 +517,15 @@ public class SnapshotBackend {
 
     Object result = resolver.getPromise().getValueForSnapshot();
 
-    Types.getClassOf(result).serialize(result, sb);
+    long resultLocation = Types.getClassOf(result).serialize(result, sb);
 
     int base = sb.reserveSpace(Long.BYTES * 2 + Integer.BYTES + 1);
     synchronized (lostResolutions) {
       lostResolutions.add(sb.calculateReference(base));
     }
 
-    sb.putLongAt(base, sb.getRecord().getObjectPointer(resolver));
-    sb.putLongAt(base + Long.BYTES, sb.getRecord().getObjectPointer(result));
+    sb.putLongAt(base, resolverLocation);
+    sb.putLongAt(base + Long.BYTES, resultLocation);
     sb.putIntAt(base + Long.BYTES * 2,
         ((TracingActor) sb.getOwner().getCurrentActor()).getActorId());
     sb.putByteAt(base + Long.BYTES * 2 + Integer.BYTES,

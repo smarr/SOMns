@@ -148,16 +148,18 @@ public abstract class ReceivedRootNode extends RootNode {
   private long serializeMessageIfNecessary(final EventualMessage msg,
       final SnapshotBuffer sb) {
 
-    if (sb.getRecord().containsObject(msg)) {
+    long msgLocation = sb.getRecord().getObjectPointerUnsync(msg);
+    if (msgLocation != -1) {
       // location already known
-      return sb.getRecord().getObjectPointer(msg);
+      return msgLocation;
     } else if (msg instanceof PromiseSendMessage) {
       // check promise owner
       PromiseSendMessage pm = (PromiseSendMessage) msg;
       SnapshotRecord sr = ((TracingActor) pm.getPromise().getOwner()).getSnapshotRecord();
-      if (sr.containsObject(msg)) {
+      msgLocation = sr.getObjectPointer(msg);
+      if (msgLocation != -1) {
         // location known by promise owner
-        return sr.getObjectPointer(msg);
+        return msgLocation;
       }
     }
 

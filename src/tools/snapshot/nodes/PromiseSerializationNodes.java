@@ -29,17 +29,16 @@ public abstract class PromiseSerializationNodes {
   static void handleReferencedPromise(final SPromise prom,
       final SnapshotBuffer sb, final int location) {
     if (prom.getOwner() == sb.getOwner().getCurrentActor()) {
-      if (!sb.getRecord().containsObjectUnsync(prom)) {
-        SPromise.getPromiseClass().serialize(prom, sb);
-      }
-      sb.putLongAt(location, sb.getRecord().getObjectPointer(prom));
+      long promLocation = SPromise.getPromiseClass().serialize(prom, sb);
+      sb.putLongAt(location, promLocation);
     } else {
       // The Promise belong to another Actor
       TracingActor ta = (TracingActor) prom.getOwner();
-      if (!ta.getSnapshotRecord().containsObject(ta)) {
+      long promLocation = ta.getSnapshotRecord().getObjectPointer(prom);
+      if (promLocation == -1) {
         ta.getSnapshotRecord().farReference(prom, sb, location);
       } else {
-        sb.putLongAt(location, ta.getSnapshotRecord().getObjectPointer(prom));
+        sb.putLongAt(location, promLocation);
       }
     }
   }

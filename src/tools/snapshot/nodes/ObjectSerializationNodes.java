@@ -200,12 +200,10 @@ public abstract class ObjectSerializationNodes {
         // TODO optimize, maybe it is better to add an integer to the objects (indicating their
         // offset) rather than using a map.
 
-        long loc;
-        if (!record.containsObjectUnsync(value)) {
+        long loc = record.getObjectPointerUnsync(value);
+        if (loc == -1) {
           // Referenced Object not yet in snapshot
           loc = cachedSerializers[i].execute(value, sb);
-        } else {
-          loc = record.getObjectPointer(value);
         }
         sb.putLongAt(base + (8 * i), loc);
       }

@@ -108,16 +108,13 @@ public class SnapshotRecord {
         long location = getObjectPointerUnsync(frt.target);
         if (location == -1) {
           if (frt.target instanceof PromiseMessage) {
-            assert false;
-            ((PromiseMessage) frt.target).forceSerialize(sb);
+            location = ((PromiseMessage) frt.target).forceSerialize(sb);
           } else {
             SClass clazz = classPrim.executeEvaluated(frt.target);
             location = clazz.serialize(frt.target, sb);
-            frt.resolve(location);
           }
-        } else {
-          frt.resolve(location);
         }
+        frt.resolve(location);
       }
     }
   }

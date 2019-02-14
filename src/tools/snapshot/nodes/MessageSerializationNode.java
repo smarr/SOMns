@@ -109,10 +109,11 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
         PromiseSerializationNodes.handleReferencedPromise((SPromise) obj, sb,
             (base + 1) + i * Long.BYTES);
       } else {
-        if (!record.containsObjectUnsync(obj)) {
-          serializationNodes[i].execute(obj, sb);
+        long objLocation = record.getObjectPointerUnsync(obj);
+        if (objLocation == -1) {
+          objLocation = serializationNodes[i].execute(obj, sb);
         }
-        sb.putLongAt((base + 1) + i * Long.BYTES, record.getObjectPointer(obj));
+        sb.putLongAt((base + 1) + i * Long.BYTES, objLocation);
       }
     }
   }

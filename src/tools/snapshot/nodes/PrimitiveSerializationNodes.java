@@ -171,9 +171,9 @@ public abstract class PrimitiveSerializationNodes {
       sb.putLongAt(base + Integer.BYTES,
           outer.getSOMClass().serialize(outer, sb));
 
-      SnapshotBackend.registerClassLocation(cls.getIdentity(),
-          sb.getRecord().getObjectPointer(cls));
-      return sb.calculateReferenceB(base);
+      long location = sb.calculateReferenceB(base);
+      SnapshotBackend.registerClassLocation(cls.getIdentity(), location);
+      return location;
     }
 
     protected TracingActor getMain() {
@@ -195,9 +195,9 @@ public abstract class PrimitiveSerializationNodes {
       }
       owner.getSnapshotRecord().farReference(outer, sb, base + Integer.BYTES);
 
-      SnapshotBackend.registerClassLocation(cls.getIdentity(),
-          sb.getRecord().getObjectPointer(cls));
-      return sb.calculateReferenceB(base);
+      long location = sb.calculateReferenceB(base);
+      SnapshotBackend.registerClassLocation(cls.getIdentity(), location);
+      return location;
     }
 
     @Override
