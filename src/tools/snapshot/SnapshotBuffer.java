@@ -22,12 +22,21 @@ public class SnapshotBuffer extends TraceBuffer {
   public static final int THREAD_SHIFT  = Long.SIZE - Short.SIZE;
 
   protected final byte                  snapshotVersion;
+  protected final long                  threadId;
   protected final ActorProcessingThread owner;
 
   public SnapshotBuffer(final ActorProcessingThread owner) {
     super(VmSettings.BUFFER_SIZE * 25);
     this.owner = owner;
+    this.threadId = owner.getThreadId();
     this.snapshotVersion = owner.getSnapshotId();
+  }
+
+  public SnapshotBuffer(final byte snapshotVersion) {
+    super(VmSettings.BUFFER_SIZE * 25);
+    this.owner = null;
+    this.threadId = 0;
+    this.snapshotVersion = snapshotVersion;
   }
 
   public TracingActor getRecord() {
@@ -39,11 +48,11 @@ public class SnapshotBuffer extends TraceBuffer {
   }
 
   public final long calculateReference(final long start) {
-    return (owner.getThreadId() << THREAD_SHIFT) | start;
+    return (threadId << THREAD_SHIFT) | start;
   }
 
   public final long calculateReferenceB(final long start) {
-    return (owner.getThreadId() << THREAD_SHIFT) | (start - Integer.BYTES);
+    return (threadId << THREAD_SHIFT) | (start - Integer.BYTES);
   }
 
   public int reserveSpace(final int bytes) {
@@ -56,7 +65,7 @@ public class SnapshotBuffer extends TraceBuffer {
     assert !clazz.isSerializedUnsync(o, snapshotVersion) : "Object serialized multiple times";
 
     int oldPos = this.position;
-    clazz.registerLocation(o, calculateReference(oldPos));
+    clazz.registerLocation(o, calculateReference(oldPos), snapshotVersion);
 
     if (clazz.getSOMClass() == Classes.classClass) {
       TracingActor owner = clazz.getOwnerOfOuter();
@@ -78,7 +87,7 @@ public class SnapshotBuffer extends TraceBuffer {
     int oldPos = this.position;
     assert !Classes.messageClass.isSerializedUnsync(msg,
         snapshotVersion) : "Message serialized twice, and on the same actor";
-    Classes.messageClass.registerLocation(msg, calculateReference(oldPos));
+    Classes.messageClass.registerLocation(msg, calculateReference(oldPos), snapshotVersion);
     // owner.addMessageLocation(ta.getActorId(), calculateReference(oldPos));
 
     this.putIntAt(this.position, Classes.messageClass.getIdentity());

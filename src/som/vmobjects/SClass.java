@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.NodeFactory;
@@ -394,14 +395,23 @@ public final class SClass extends SObjectWithClass {
     }
   }
 
-  public void registerLocation(final Object obj, final long location) {
-
+  public void registerLocation(final Object obj, final long location,
+      final byte snapshotVersion) {
+    if (declaredAsValue) {
+      CompilerDirectives.transferToInterpreter();
+      SnapshotBackend.getValuepool().put(obj, location);
+    } else {
+      SAbstractObject aobj = (SAbstractObject) obj;
+      aobj.updateSnapshotLocation(location, snapshotVersion);
+    }
   }
 
   public long getObjectLocation(final Object obj) {
     if (declaredAsValue) {
-      // TODO ValuePool
-      return -1;
+      synchronized (SnapshotBackend.getValuepool()) {
+        CompilerDirectives.transferToInterpreter();
+        return SnapshotBackend.getValuepool().getOrDefault(obj, (long) -1);
+      }
     } else {
       SAbstractObject aobj = (SAbstractObject) obj;
       return aobj.getSnapshotLocation();
@@ -410,8 +420,8 @@ public final class SClass extends SObjectWithClass {
 
   public long getObjectLocationUnsync(final Object obj) {
     if (declaredAsValue) {
-      // TODO ValuePool
-      return -1;
+      CompilerDirectives.transferToInterpreter();
+      return SnapshotBackend.getValuepool().getOrDefault(obj, (long) -1);
     } else {
       SAbstractObject aobj = (SAbstractObject) obj;
       return aobj.getSnapshotLocation();
@@ -420,8 +430,8 @@ public final class SClass extends SObjectWithClass {
 
   public boolean isSerializedUnsync(final Object obj, final byte snapshot) {
     if (declaredAsValue) {
-      // TODO ValuePool
-      return false;
+      CompilerDirectives.transferToInterpreter();
+      return SnapshotBackend.getValuepool().containsKey(obj);
     } else {
       SAbstractObject aobj = (SAbstractObject) obj;
       return aobj.getSnapshotLocation() != -1 && aobj.getSnapshotVersion() == snapshot;
@@ -430,8 +440,10 @@ public final class SClass extends SObjectWithClass {
 
   public boolean isSerialized(final Object obj, final byte snapshot) {
     if (declaredAsValue) {
-      // TODO ValuePool
-      return false;
+      synchronized (SnapshotBackend.getValuepool()) {
+        CompilerDirectives.transferToInterpreter();
+        return SnapshotBackend.getValuepool().containsKey(obj);
+      }
     } else {
       SAbstractObject aobj = (SAbstractObject) obj;
       return aobj.getSnapshotLocation() != -1 && aobj.getSnapshotVersion() == snapshot;

@@ -55,4 +55,9 @@ public abstract class SAbstractObject implements SomInteropObject {
   public byte getSnapshotVersion() {
     return snapshotVersion;
   }
+
+  public void updateSnapshotLocation(final long snapshotLocation, final byte version) {
+    this.snapshotLocation = snapshotLocation;
+    this.snapshotVersion = version;
+  }
 }

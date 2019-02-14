@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -58,6 +59,8 @@ public class SnapshotBackend {
   private static final ConcurrentLinkedQueue<ArrayList<Long>>   messages;
   private static final EconomicMap<Integer, Long>               classLocations;
   private static final ConcurrentHashMap<TracingActor, Integer> deferredSerializations;
+  private static final HashMap<Object, Long>                    valuePool;
+  private static SnapshotBuffer                                 valueBuffer;
 
   private static final ArrayList<Long> lostResolutions;
 
@@ -76,6 +79,7 @@ public class SnapshotBackend {
       deferredSerializations = new ConcurrentHashMap<>();
       lostResolutions = new ArrayList<>();
       classLocations = null;
+      valuePool = null;
       // identity int, includes mixin info
       // long outer
       // essentially this is about capturing the outer
@@ -89,6 +93,8 @@ public class SnapshotBackend {
       messages = new ConcurrentLinkedQueue<>();
       deferredSerializations = new ConcurrentHashMap<>();
       lostResolutions = new ArrayList<>();
+      valuePool = new HashMap<>();
+      valueBuffer = new SnapshotBuffer((byte) 0);
     } else {
       classDictionary = null;
       symbolDictionary = null;
@@ -98,6 +104,7 @@ public class SnapshotBackend {
       messages = null;
       deferredSerializations = null;
       lostResolutions = null;
+      valuePool = null;
     }
   }
 
@@ -267,6 +274,8 @@ public class SnapshotBackend {
     deferredSerializations.clear();
     lostResolutions.clear();
     buffers.clear();
+    valueBuffer = new SnapshotBuffer((byte) (snapshotVersion + 1));
+    valuePool.clear();
     synchronized (classLocations) {
       classLocations.clear();
     }
@@ -281,6 +290,14 @@ public class SnapshotBackend {
     // intentionally unsynchronized, as a result the line between snapshots will be a bit
     // fuzzy.
     return snapshotVersion;
+  }
+
+  public static HashMap<Object, Long> getValuepool() {
+    return valuePool;
+  }
+
+  public static SnapshotBuffer getValueBuffer() {
+    return valueBuffer;
   }
 
   public static Actor lookupActor(final int actorId) {
@@ -343,6 +360,8 @@ public class SnapshotBackend {
     if (buffers.size() == 0) {
       return;
     }
+
+    buffers.add(valueBuffer);
 
     String name = VmSettings.TRACE_FILE + '.' + snapshotVersion;
     File f = new File(name + ".snap");
@@ -421,7 +440,7 @@ public class SnapshotBackend {
 
     int bufferStart = msgSize + registrySize;
     for (SnapshotBuffer sb : buffers) {
-      long id = sb.owner.getThreadId();
+      long id = sb.threadId;
       bb.putLong(id);
       bb.putLong(bufferStart);
       bufferStart += sb.position();
