@@ -65,11 +65,27 @@ public class SnapshotRecord {
 
   @TruffleBoundary
   public long getObjectPointer(final Object o) {
-    if (entries.containsKey(o)) {
-      return entries.get(o);
+    Long location;
+    synchronized (entries) {
+      location = entries.get(o);
     }
-    throw new IllegalArgumentException(
-        "Cannot point to unserialized Objects, you are missing a serialization call: " + o);
+    if (location == null) {
+      return -1;
+    }
+
+    assert location != -1 : "-1 is reserved";
+    return location;
+  }
+
+  @TruffleBoundary
+  public long getObjectPointerUnsync(final Object o) {
+    Long location = entries.get(o);
+    if (location == null) {
+      return -1;
+    }
+
+    assert location != -1 : "-1 is reserved";
+    return location;
   }
 
   @TruffleBoundary
@@ -89,15 +105,19 @@ public class SnapshotRecord {
 
       // ignore todos from a different snapshot
       if (frt.isCurrent()) {
-        if (!this.containsObjectUnsync(frt.target)) {
+        long location = getObjectPointerUnsync(frt.target);
+        if (location == -1) {
           if (frt.target instanceof PromiseMessage) {
+            assert false;
             ((PromiseMessage) frt.target).forceSerialize(sb);
           } else {
             SClass clazz = classPrim.executeEvaluated(frt.target);
-            clazz.serialize(frt.target, sb);
+            location = clazz.serialize(frt.target, sb);
+            frt.resolve(location);
           }
+        } else {
+          frt.resolve(location);
         }
-        frt.resolve(getObjectPointer(frt.target));
       }
     }
   }
