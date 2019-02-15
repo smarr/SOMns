@@ -15,7 +15,8 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 
 import som.compiler.Variable.Internal;
 import som.interpreter.FrameOnStackMarker;
-import som.interpreter.Types;
+import som.primitives.ObjectPrims.ClassPrim;
+import som.primitives.ObjectPrimsFactory.ClassPrimFactory;
 import som.vm.constants.Classes;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
@@ -137,6 +138,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
   @GenerateNodeFactory
   public abstract static class FrameSerializationNode extends AbstractSerializationNode {
     private final FrameDescriptor frameDescriptor;
+    @Child ClassPrim              classPrim = ClassPrimFactory.create(null);
 
     protected FrameSerializationNode(final FrameDescriptor frameDescriptor) {
       this.frameDescriptor = frameDescriptor;
@@ -170,7 +172,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
       for (int i = 0; i < args.length; i++) {
         // TODO optimization: cache argument serialization
         sb.putLongAt(base + (i * Long.BYTES),
-            Types.getClassOf(args[i]).serialize(args[i], sb));
+            classPrim.executeEvaluated(args[i]).serialize(args[i], sb));
       }
 
       base += (args.length * Long.BYTES);
@@ -205,13 +207,13 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
               valueLocation = Classes.booleanClass.serialize(value, sb);
             } else {
               assert value instanceof SAbstractObject;
-              valueLocation = Types.getClassOf(value).serialize(value, sb);
+              valueLocation = classPrim.executeEvaluated(value).serialize(value, sb);
             }
             break;
           case Illegal:
             // Uninitialized variables
-            valueLocation = Types.getClassOf(frameDescriptor.getDefaultValue())
-                                 .serialize(frameDescriptor.getDefaultValue(), sb);
+            valueLocation = classPrim.executeEvaluated(frameDescriptor.getDefaultValue())
+                                     .serialize(frameDescriptor.getDefaultValue(), sb);
             break;
           default:
             throw new IllegalArgumentException("Unexpected SlotKind");

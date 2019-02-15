@@ -3,7 +3,8 @@ package tools.snapshot.nodes;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
-import som.interpreter.Types;
+import som.primitives.ObjectPrims.ClassPrim;
+import som.primitives.ObjectPrimsFactory.ClassPrimFactory;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.PartiallyEmptyArray;
@@ -22,6 +23,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
   private static final byte TYPE_EMPTY   = 4;
 
   private final SClass clazz;
+  @Child ClassPrim     classPrim = ClassPrimFactory.create(null);
 
   public AbstractArraySerializationNode(final SClass clazz) {
     this.clazz = clazz;
@@ -91,7 +93,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
     sb.putIntAt(base + 1, oa.length);
     base += 5;
     for (Object obj : oa) {
-      long pos = Types.getClassOf(obj).serialize(obj, sb);
+      long pos = classPrim.executeEvaluated(obj).serialize(obj, sb);
       sb.putLongAt(base, pos);
       base += Long.BYTES;
     }
@@ -119,7 +121,7 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
     sb.putIntAt(base + 1, oa.length);
     base += 5;
     for (Object obj : oa) {
-      long pos = Types.getClassOf(obj).serialize(obj, sb);
+      long pos = classPrim.executeEvaluated(obj).serialize(obj, sb);
       sb.putLongAt(base, pos);
       base += Long.BYTES;
     }

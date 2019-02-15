@@ -6,13 +6,14 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
-import som.interpreter.Types;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.actors.SPromise.STracingPromise;
+import som.primitives.ObjectPrims.ClassPrim;
+import som.primitives.ObjectPrimsFactory.ClassPrimFactory;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
@@ -45,6 +46,7 @@ public abstract class PromiseSerializationNodes {
 
   @GenerateNodeFactory
   public abstract static class PromiseSerializationNode extends AbstractSerializationNode {
+    @Child ClassPrim classPrim = ClassPrimFactory.create(null);
 
     @Specialization(guards = "!prom.isCompleted()")
     public long doUnresolved(final SPromise prom, final SnapshotBuffer sb) {
@@ -134,7 +136,7 @@ public abstract class PromiseSerializationNodes {
 
       sb.putIntAt(base + 1, ((TracingActor) prom.getOwner()).getActorId());
       sb.putLongAt(base + 1 + Integer.BYTES,
-          Types.getClassOf(value).serialize(value, sb));
+          classPrim.executeEvaluated(value).serialize(value, sb));
       sb.putIntAt(base + 1 + +Integer.BYTES + Long.BYTES,
           ((STracingPromise) prom).getResolvingActor());
       base += (1 + Integer.BYTES + Integer.BYTES + Long.BYTES);

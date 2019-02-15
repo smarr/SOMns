@@ -11,7 +11,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 import som.compiler.MixinDefinition.SlotDefinition;
-import som.interpreter.Types;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.CachedSlotRead;
 import som.interpreter.nodes.dispatch.CachedSlotRead.SlotAccess;
@@ -22,6 +21,8 @@ import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.interpreter.objectstorage.StorageLocation;
+import som.primitives.ObjectPrims.ClassPrim;
+import som.primitives.ObjectPrimsFactory.ClassPrimFactory;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SObject.SImmutableObject;
@@ -149,6 +150,7 @@ public abstract class ObjectSerializationNodes {
     @Children private CachedSlotRead[]          fieldReads;
     @Children private CachedSlotWrite[]         fieldWrites;
     @Children private CachedSerializationNode[] cachedSerializers;
+    @Child ClassPrim                            classPrim = ClassPrimFactory.create(null);
     protected final ObjectLayout                layout;
 
     protected SObjectSerializationNode(final ClassFactory instanceFactory,
@@ -199,7 +201,7 @@ public abstract class ObjectSerializationNodes {
         // TODO optimize, maybe it is better to add an integer to the objects (indicating their
         // offset) rather than using a map.
 
-        long loc = Types.getClassOf(value).getObjectLocationUnsync(value);
+        long loc = classPrim.executeEvaluated(value).getObjectLocationUnsync(value);
         if (loc == -1) {
           // Referenced Object not yet in snapshot
           loc = cachedSerializers[i].execute(value, sb);

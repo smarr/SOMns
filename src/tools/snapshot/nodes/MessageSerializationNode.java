@@ -8,7 +8,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 
 import som.interpreter.SomLanguage;
-import som.interpreter.Types;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.DirectMessage;
@@ -20,6 +19,8 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.actors.SPromise.STracingPromise;
+import som.primitives.ObjectPrims.ClassPrim;
+import som.primitives.ObjectPrimsFactory.ClassPrimFactory;
 import som.primitives.actors.PromisePrims;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
@@ -40,6 +41,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
   private final SSymbol selector;
 
   @Children private final CachedSerializationNode[] serializationNodes;
+  @Child ClassPrim                                  classPrim = ClassPrimFactory.create(null);
 
   public MessageSerializationNode(final SSymbol selector) {
     this.selector = selector;
@@ -108,7 +110,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
         PromiseSerializationNodes.handleReferencedPromise((SPromise) obj, sb,
             (base + 1) + i * Long.BYTES);
       } else {
-        long objLocation = Types.getClassOf(obj).getObjectLocationUnsync(obj);
+        long objLocation = classPrim.executeEvaluated(obj).getObjectLocationUnsync(obj);
         if (objLocation == -1) {
           objLocation = serializationNodes[i].execute(obj, sb);
         }
