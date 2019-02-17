@@ -650,6 +650,18 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     )
   )
 
+  public class Date new: timems = Value (
+    | time = timems.|
+  )(
+    public getTime = (
+      ^ time.
+    )
+  ) : (
+    public new = (
+      ^ Date new: (vmMirror systemTime: self).
+    )
+  )
+
   public class Pair withKey: aKey andValue: aValue = (
   | public key   ::= aKey.
     public value ::= aValue. |
@@ -740,6 +752,27 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
       self do: [ :it |
         it == object
+          ifTrue:  [ found:: true ]
+          ifFalse: [
+            newArray at: newLast put: it.
+            newLast:: newLast + 1.
+          ]
+      ].
+
+      storage:: newArray.
+      lastIdx:: newLast.
+      firstIdx:: 1.
+      ^ found
+    )
+
+    public removeValue: object = (
+      | newArray newLast found |
+      newArray:: Array new: self capacity.
+      newLast:: 1.
+      found:: false.
+
+      self do: [ :it |
+        it = object
           ifTrue:  [ found:: true ]
           ifFalse: [
             newArray at: newLast put: it.

@@ -649,4 +649,7 @@ DAMAGE.>> *)
     )
   )
 
+  public getUUIDV4 = (
+    ^ vmMirror uuidV4: nil.
+  )
 )
