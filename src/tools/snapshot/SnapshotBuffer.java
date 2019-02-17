@@ -48,10 +48,12 @@ public class SnapshotBuffer extends TraceBuffer {
   }
 
   public final long calculateReference(final long start) {
+    assert start != -1;
     return (threadId << THREAD_SHIFT) | start;
   }
 
   public final long calculateReferenceB(final long start) {
+    assert start != -1;
     return (threadId << THREAD_SHIFT) | (start - Integer.BYTES);
   }
 

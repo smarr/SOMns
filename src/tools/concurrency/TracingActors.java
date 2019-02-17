@@ -170,9 +170,9 @@ public class TracingActors {
         final int destination) {
       Long l = Types.getClassOf(o).getObjectLocation(o);
 
-      if (l != null && other != null) {
+      if (other != null && l != -1) {
         other.putLongAt(destination, l);
-      } else if (l == null) {
+      } else if (l == -1) {
         if (externalReferences.isEmpty()) {
           SnapshotBackend.deferSerialization(this);
         }
@@ -184,7 +184,7 @@ public class TracingActors {
         final int destination) {
       Long l = Classes.messageClass.getObjectLocation(pm);
 
-      if (l != null) {
+      if (l != -1) {
         other.putLongAt(destination, l);
       } else {
         if (externalReferences.isEmpty()) {
