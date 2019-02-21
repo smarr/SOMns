@@ -3,6 +3,7 @@ package tools.snapshot.nodes;
 import java.util.ArrayList;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -29,7 +30,7 @@ public abstract class PromiseSerializationNodes {
 
   static void handleReferencedPromise(final SPromise prom,
       final SnapshotBuffer sb, final int location) {
-    if (prom.getOwner() == sb.getOwner().getCurrentActor()) {
+    if (sb.getOwner() != null && prom.getOwner() == sb.getOwner().getCurrentActor()) {
       long promLocation = SPromise.getPromiseClass().serialize(prom, sb);
       sb.putLongAt(location, promLocation);
     } else {
@@ -346,12 +347,13 @@ public abstract class PromiseSerializationNodes {
   public abstract static class ResolverSerializationNode extends AbstractSerializationNode {
 
     @Specialization
-    public long doResolver(final SResolver resolver, final SnapshotBuffer sb) {
-      int base = sb.addObject(resolver, SResolver.getResolverClass(),
+    public long doResolver(final SResolver resolver, final SnapshotBuffer sb,
+        @Cached("getBuffer()") final SnapshotBuffer vb) {
+      int base = vb.addObject(resolver, SResolver.getResolverClass(),
           Long.BYTES);
       SPromise prom = resolver.getPromise();
-      handleReferencedPromise(prom, sb, base);
-      return sb.calculateReferenceB(base);
+      handleReferencedPromise(prom, vb, base);
+      return vb.calculateReferenceB(base);
     }
 
     @Override

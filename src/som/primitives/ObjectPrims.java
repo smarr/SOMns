@@ -17,6 +17,7 @@ import bd.tools.nodes.Operation;
 import som.Output;
 import som.VM;
 import som.interpreter.Types;
+import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
@@ -99,6 +100,11 @@ public final class ObjectPrims {
     @Specialization
     public final SClass doFarRef(final SFarReference rcvr) {
       return rcvr.getSOMClass();
+    }
+
+    @Specialization
+    public final SClass doMessage(final EventualMessage rcvr) {
+      return Classes.messageClass;
     }
 
     @Specialization

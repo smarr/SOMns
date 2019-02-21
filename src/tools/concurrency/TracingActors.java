@@ -22,7 +22,6 @@ import som.interpreter.actors.SPromise.STracingPromise;
 import som.primitives.ObjectPrims.ClassPrim;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import tools.concurrency.TraceParser.ExternalMessageRecord;
 import tools.concurrency.TraceParser.ExternalPromiseMessageRecord;
@@ -143,12 +142,12 @@ public class TracingActors {
 
         // ignore todos from a different snapshot
         if (frt.isCurrent()) {
-          long location = ((SAbstractObject) frt.target).getSnapshotLocation();
+          SClass clazz = classPrim.executeEvaluated(frt.target);
+          long location = clazz.getObjectLocationUnsync(frt.target);
           if (location == -1) {
             if (frt.target instanceof PromiseMessage) {
               location = ((PromiseMessage) frt.target).forceSerialize(sb);
             } else {
-              SClass clazz = classPrim.executeEvaluated(frt.target);
               location = clazz.serialize(frt.target, sb);
             }
           }

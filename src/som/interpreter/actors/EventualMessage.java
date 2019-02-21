@@ -13,14 +13,16 @@ import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.SPromise.SResolver;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
+import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActivityThread;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 
 
-public abstract class EventualMessage {
+public abstract class EventualMessage extends SAbstractObject {
   protected final Object[]       args;
   protected final SResolver      resolver;
   protected final RootCallTarget onReceive;
@@ -66,6 +68,16 @@ public abstract class EventualMessage {
   public abstract Actor getTarget();
 
   public abstract Actor getSender();
+
+  @Override
+  public SClass getSOMClass() {
+    return Classes.messageClass;
+  }
+
+  @Override
+  public boolean isValue() {
+    return false;
+  }
 
   public SResolver getResolver() {
     return resolver;

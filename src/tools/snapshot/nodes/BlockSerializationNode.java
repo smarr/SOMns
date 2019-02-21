@@ -52,10 +52,8 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
       sb.putShortAt(base, meth.getIdentifier().getSymbolId());
       sb.putByteAt(base + 2, (byte) 1);
 
-      long framelocation = Classes.frameClass.getObjectLocation(mf);
-      if (framelocation == -1) {
-        framelocation = meth.getFrameSerializer().execute(block, sb);
-      }
+      long framelocation = meth.getFrameSerializer().execute(block, sb);
+
       sb.putLongAt(base + 3, framelocation);
       return sb.calculateReferenceB(start);
     }
@@ -163,7 +161,7 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
       assert args.length < 0xFF : "Too many arguments";
 
       int start =
-          sb.addObject(frame, Classes.frameClass, 2 + ((args.length + slotCnt) * Long.BYTES));
+          sb.reserveSpace(2 + ((args.length + slotCnt) * Long.BYTES));
       int base = start;
 
       sb.putByteAt(base, (byte) args.length);

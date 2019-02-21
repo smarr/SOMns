@@ -9,6 +9,7 @@ import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vmobjects.SClass;
 import tools.concurrency.TraceBuffer;
+import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.replay.nodes.TraceActorContextNode;
 import tools.snapshot.deserialization.DeserializationBuffer;
@@ -21,8 +22,8 @@ public class SnapshotBuffer extends TraceBuffer {
   public static final int MAX_FIELD_CNT = Byte.MAX_VALUE;
   public static final int THREAD_SHIFT  = Long.SIZE - Short.SIZE;
 
-  protected final byte                  snapshotVersion;
-  protected final long                  threadId;
+  protected byte                        snapshotVersion;
+  public final long                     threadId;
   protected final ActorProcessingThread owner;
 
   public SnapshotBuffer(final ActorProcessingThread owner) {
@@ -35,7 +36,7 @@ public class SnapshotBuffer extends TraceBuffer {
   public SnapshotBuffer(final byte snapshotVersion) {
     super(VmSettings.BUFFER_SIZE * 25);
     this.owner = null;
-    this.threadId = 0;
+    this.threadId = TracingActivityThread.threadIdGen.getAndIncrement();
     this.snapshotVersion = snapshotVersion;
   }
 

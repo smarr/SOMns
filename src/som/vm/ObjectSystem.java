@@ -427,12 +427,12 @@ public final class ObjectSystem {
     if (VmSettings.SNAPSHOTS_ENABLED) {
       // these classes are not exposed in Newspeak directly, and thus, do not yet have a class
       // factory
-      setDummyClassFactory(Classes.messageClass, null, null); // MessageSerializationNodeFactory.getInstance());
+      setDummyClassFactory(Classes.messageClass, null, null, false); // MessageSerializationNodeFactory.getInstance());
       setDummyClassFactory(Classes.frameClass, FrameSerializationNodeFactory.getInstance(),
-          null);
+          null, false);
       setDummyClassFactory(Classes.methodClass,
           SInvokableSerializationNodeFactory.getInstance(),
-          SInvokableSerializationNodeFactory.create());
+          SInvokableSerializationNodeFactory.create(), true);
     }
 
     SClass kernelClass = kernelModule.instantiateClass(Nil.nilObject, Classes.objectClass);
@@ -480,17 +480,18 @@ public final class ObjectSystem {
 
   public void setDummyClassFactory(final SClass clazz,
       final NodeFactory<? extends AbstractSerializationNode> serializerFactory,
-      final AbstractSerializationNode deserializer) {
+      final AbstractSerializationNode deserializer,
+      final boolean isValue) {
     if (VmSettings.SNAPSHOTS_ENABLED) {
       ClassFactory classFactory = new ClassFactory(clazz.getSOMClass().getName(), null,
-          null, null, true,
-          true, false,
+          null, null, isValue,
+          false, false,
           null, false,
           null);
       classFactory.customizeSerialization(serializerFactory, deserializer);
 
       clazz.setClassGroup(classFactory);
-      clazz.initializeStructure(null, null, null, true, false, false, classFactory);
+      clazz.initializeStructure(null, null, null, isValue, false, false, classFactory);
     }
   }
 

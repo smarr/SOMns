@@ -396,7 +396,9 @@ public final class SClass extends SObjectWithClass {
 
   @TruffleBoundary
   private void putToBuffer(final Object obj, final long location) {
-    SnapshotBackend.getValuepool().put(obj, location);
+    synchronized (SnapshotBackend.getValuepool()) {
+      SnapshotBackend.getValuepool().put(obj, location);
+    }
   }
 
   @TruffleBoundary
@@ -406,12 +408,14 @@ public final class SClass extends SObjectWithClass {
 
   @TruffleBoundary
   private long getFromBuffer(final Object obj) {
-    return SnapshotBackend.getValuepool().getOrDefault(obj, (long) -1);
+    synchronized (SnapshotBackend.getValuepool()) {
+      return SnapshotBackend.getValuepool().getOrDefault(obj, (long) -1);
+    }
   }
 
   public void registerLocation(final Object obj, final long location,
       final byte snapshotVersion) {
-    if (declaredAsValue) {
+    if (declaredAsValue || (obj instanceof SClass && ((SClass) obj).isValue())) {
       putToBuffer(obj, location);
     } else {
       SAbstractObject aobj = (SAbstractObject) obj;
@@ -420,10 +424,8 @@ public final class SClass extends SObjectWithClass {
   }
 
   public long getObjectLocation(final Object obj) {
-    if (declaredAsValue) {
-      synchronized (SnapshotBackend.getValuepool()) {
-        return getFromBuffer(obj);
-      }
+    if (declaredAsValue || (obj instanceof SClass && ((SClass) obj).isValue())) {
+      return getFromBuffer(obj);
     } else {
       SAbstractObject aobj = (SAbstractObject) obj;
       return aobj.getSnapshotLocation();
@@ -431,7 +433,7 @@ public final class SClass extends SObjectWithClass {
   }
 
   public long getObjectLocationUnsync(final Object obj) {
-    if (declaredAsValue) {
+    if (declaredAsValue || (obj instanceof SClass && ((SClass) obj).isValue())) {
       return getFromBuffer(obj);
     } else {
       SAbstractObject aobj = (SAbstractObject) obj;
@@ -440,7 +442,7 @@ public final class SClass extends SObjectWithClass {
   }
 
   public boolean isSerializedUnsync(final Object obj, final byte snapshot) {
-    if (declaredAsValue) {
+    if (declaredAsValue || (obj instanceof SClass && ((SClass) obj).isValue())) {
       return contains(obj);
     } else {
       SAbstractObject aobj = (SAbstractObject) obj;
@@ -449,7 +451,7 @@ public final class SClass extends SObjectWithClass {
   }
 
   public boolean isSerialized(final Object obj, final byte snapshot) {
-    if (declaredAsValue) {
+    if (declaredAsValue || (obj instanceof SClass && ((SClass) obj).isValue())) {
       synchronized (SnapshotBackend.getValuepool()) {
         return contains(obj);
       }
