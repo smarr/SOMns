@@ -120,4 +120,13 @@ public class SnapshotBuffer extends TraceBuffer {
     return VmSettings.TEST_SNAPSHOTS || VmSettings.TEST_SERIALIZE_ALL
         || snapshotVersion > messageId;
   }
+
+  public boolean changeBufferIfNecessary() {
+    if (this.position >= (this.getRawBuffer().length / 2)) {
+      this.buffer = new byte[this.buffer.length];
+      this.position = 0;
+      return true;
+    }
+    return false;
+  }
 }

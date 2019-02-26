@@ -282,9 +282,15 @@ public class SnapshotBackend {
     lostResolutions.clear();
     buffers.clear();
     valueBuffer.snapshotVersion = (byte) (snapshotVersion + 1);
+    if (valueBuffer.changeBufferIfNecessary()) {
+      Output.println("SWAPPED");
+      valuePool.clear();
+    }
+
     synchronized (classLocations) {
       classLocations.clear();
     }
+
     snapshotVersion++;
 
     // notify the worker in the tracingbackend about this change.
