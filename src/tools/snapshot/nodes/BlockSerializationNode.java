@@ -18,6 +18,7 @@ import som.interpreter.FrameOnStackMarker;
 import som.primitives.ObjectPrims.ClassPrim;
 import som.primitives.ObjectPrimsFactory.ClassPrimFactory;
 import som.vm.constants.Classes;
+import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
@@ -188,33 +189,37 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
         // Invokables Frame Descriptor. Possibly use Local Var Read Nodes.
         Object value = frame.getValue(slot);
         long valueLocation;
-        switch (frameDescriptor.getFrameSlotKind(slot)) {
-          case Boolean:
-            valueLocation = Classes.booleanClass.serialize(value, sb);
-            break;
-          case Double:
-            valueLocation = Classes.doubleClass.serialize(value, sb);
-            break;
-          case Long:
-            valueLocation = Classes.integerClass.serialize(value, sb);
-            break;
-          case Object:
-            // We are going to represent this as a boolean, the slot will handled in replay
-            if (value instanceof FrameOnStackMarker) {
-              value = ((FrameOnStackMarker) value).isOnStack();
+        if (value == Nil.nilObject) {
+          valueLocation = Nil.nilObject.getSOMClass().serialize(Nil.nilObject, sb);
+        } else {
+          switch (frameDescriptor.getFrameSlotKind(slot)) {
+            case Boolean:
               valueLocation = Classes.booleanClass.serialize(value, sb);
-            } else {
-              assert value instanceof SAbstractObject;
-              valueLocation = classPrim.executeEvaluated(value).serialize(value, sb);
-            }
-            break;
-          case Illegal:
-            // Uninitialized variables
-            valueLocation = classPrim.executeEvaluated(frameDescriptor.getDefaultValue())
-                                     .serialize(frameDescriptor.getDefaultValue(), sb);
-            break;
-          default:
-            throw new IllegalArgumentException("Unexpected SlotKind");
+              break;
+            case Double:
+              valueLocation = Classes.doubleClass.serialize(value, sb);
+              break;
+            case Long:
+              valueLocation = Classes.integerClass.serialize(value, sb);
+              break;
+            case Object:
+              // We are going to represent this as a boolean, the slot will handled in replay
+              if (value instanceof FrameOnStackMarker) {
+                value = ((FrameOnStackMarker) value).isOnStack();
+                valueLocation = Classes.booleanClass.serialize(value, sb);
+              } else {
+                assert value instanceof SAbstractObject;
+                valueLocation = classPrim.executeEvaluated(value).serialize(value, sb);
+              }
+              break;
+            case Illegal:
+              // Uninitialized variables
+              valueLocation = classPrim.executeEvaluated(frameDescriptor.getDefaultValue())
+                                       .serialize(frameDescriptor.getDefaultValue(), sb);
+              break;
+            default:
+              throw new IllegalArgumentException("Unexpected SlotKind");
+          }
         }
 
         sb.putLongAt(base + (j * Long.BYTES), valueLocation);
