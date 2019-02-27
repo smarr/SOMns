@@ -172,6 +172,11 @@ public abstract class ObjectSerializationNodes {
 
     @Specialization
     public long serialize(final SObject so, final SnapshotBuffer sb) {
+      long location = getObjectLocation(so, sb.getSnapshotVersion());
+      if (location != -1) {
+        return location;
+      }
+
       if (!so.isLayoutCurrent()) {
         CompilerDirectives.transferToInterpreter();
         ObjectTransitionSafepoint.INSTANCE.transitionObject(so);
@@ -200,13 +205,7 @@ public abstract class ObjectSerializationNodes {
         // TODO type profiles could be an optimization (separate profile for each slot)
         // TODO optimize, maybe it is better to add an integer to the objects (indicating their
         // offset) rather than using a map.
-
-        long loc = classPrim.executeEvaluated(value).getObjectLocationUnsync(value);
-        if (loc == -1) {
-          // Referenced Object not yet in snapshot
-          loc = cachedSerializers[i].execute(value, sb);
-        }
-        sb.putLongAt(base + (8 * i), loc);
+        sb.putLongAt(base + (8 * i), cachedSerializers[i].execute(value, sb));
       }
       return sb.calculateReferenceB(start);
     }
@@ -267,6 +266,10 @@ public abstract class ObjectSerializationNodes {
     @ExplodeLoop
     @Specialization
     public long serialize(final SObjectWithoutFields o, final SnapshotBuffer sb) {
+      long location = getObjectLocation(o, sb.getSnapshotVersion());
+      if (location != -1) {
+        return location;
+      }
       return sb.calculateReferenceB(sb.addObject(o, o.getSOMClass(), 0));
     }
 

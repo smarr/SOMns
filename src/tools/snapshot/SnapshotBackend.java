@@ -283,7 +283,6 @@ public class SnapshotBackend {
     buffers.clear();
     valueBuffer.snapshotVersion = (byte) (snapshotVersion + 1);
     if (valueBuffer.changeBufferIfNecessary()) {
-      Output.println("SWAPPED");
       valuePool.clear();
     }
 

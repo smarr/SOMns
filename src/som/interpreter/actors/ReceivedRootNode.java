@@ -15,7 +15,6 @@ import som.interpreter.actors.SPromise.SResolver;
 import som.primitives.ObjectPrims.ClassPrim;
 import som.primitives.ObjectPrimsFactory.ClassPrimFactory;
 import som.vm.VmSettings;
-import som.vm.constants.Classes;
 import som.vmobjects.SSymbol;
 import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActors.TracingActor;
@@ -144,13 +143,6 @@ public abstract class ReceivedRootNode extends RootNode {
 
   private long serializeMessageIfNecessary(final EventualMessage msg,
       final SnapshotBuffer sb) {
-
-    // TODO might need synchronization!
-    long msgLocation = Classes.messageClass.getObjectLocationUnsync(msg);
-    if (msgLocation != -1) {
-      // location already known
-      return msgLocation;
-    }
 
     // message wasn't serialized before
     return sb.calculateReference(serializer.execute(msg, sb));

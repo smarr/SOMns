@@ -35,9 +35,15 @@ public abstract class PrimitiveSerializationNodes {
     public long serialize(final Object o, final SnapshotBuffer sb,
         @Cached("getBuffer()") final SnapshotBuffer vb) {
       assert o instanceof String;
+
+      long location = getValueLocation(o);
+      if (location != -1) {
+        return location;
+      }
+
       String s = (String) o;
       byte[] data = s.getBytes(StandardCharsets.UTF_8);
-      int start = vb.addObject(o, Classes.stringClass, data.length + 4);
+      int start = vb.addValueObject(o, Classes.stringClass, data.length + 4);
       int base = start;
       vb.putIntAt(base, data.length);
       vb.putBytesAt(base + 4, data);
@@ -61,8 +67,14 @@ public abstract class PrimitiveSerializationNodes {
     public long serialize(final Object o, final SnapshotBuffer sb,
         @Cached("getBuffer()") final SnapshotBuffer vb) {
       assert o instanceof Long;
+
+      long location = getValueLocation(o);
+      if (location != -1) {
+        return location;
+      }
+
       long l = (long) o;
-      int base = vb.addObject(o, Classes.integerClass, Long.BYTES);
+      int base = vb.addValueObject(o, Classes.integerClass, Long.BYTES);
       vb.putLongAt(base, l);
       return vb.calculateReferenceB(base);
     }
@@ -80,8 +92,14 @@ public abstract class PrimitiveSerializationNodes {
     public long serialize(final Object o, final SnapshotBuffer sb,
         @Cached("getBuffer()") final SnapshotBuffer vb) {
       assert o instanceof Double;
+
+      long location = getValueLocation(o);
+      if (location != -1) {
+        return location;
+      }
+
       double d = (double) o;
-      int base = vb.addObject(o, Classes.doubleClass, Double.BYTES);
+      int base = vb.addValueObject(o, Classes.doubleClass, Double.BYTES);
       vb.putDoubleAt(base, d);
       return vb.calculateReferenceB(base);
     }
@@ -99,8 +117,14 @@ public abstract class PrimitiveSerializationNodes {
     public long serialize(final Object o, final SnapshotBuffer sb,
         @Cached("getBuffer()") final SnapshotBuffer vb) {
       assert o instanceof Boolean;
+
+      long location = getValueLocation(o);
+      if (location != -1) {
+        return location;
+      }
+
       boolean b = (boolean) o;
-      int base = vb.addObject(o, Classes.booleanClass, 1);
+      int base = vb.addValueObject(o, Classes.booleanClass, 1);
       vb.putByteAt(base, (byte) (b ? 1 : 0));
       return vb.calculateReferenceB(base);
     }
@@ -119,7 +143,13 @@ public abstract class PrimitiveSerializationNodes {
         @Cached("getBuffer()") final SnapshotBuffer vb) {
       assert o instanceof Boolean;
       assert ((boolean) o);
-      int base = vb.addObject(o, Classes.trueClass, 0);
+
+      long location = getValueLocation(o);
+      if (location != -1) {
+        return location;
+      }
+
+      int base = vb.addValueObject(o, Classes.trueClass, 0);
       return vb.calculateReferenceB(base);
     }
 
@@ -137,7 +167,13 @@ public abstract class PrimitiveSerializationNodes {
         @Cached("getBuffer()") final SnapshotBuffer vb) {
       assert o instanceof Boolean;
       assert !((boolean) o);
-      int base = vb.addObject(o, Classes.falseClass, 0);
+
+      long location = getValueLocation(o);
+      if (location != -1) {
+        return location;
+      }
+
+      int base = vb.addValueObject(o, Classes.falseClass, 0);
       return vb.calculateReferenceB(base);
     }
 
@@ -154,8 +190,14 @@ public abstract class PrimitiveSerializationNodes {
     public long serialize(final Object o, final SnapshotBuffer sb,
         @Cached("getBuffer()") final SnapshotBuffer vb) {
       assert o instanceof SSymbol;
+
+      long location = getValueLocation(o);
+      if (location != -1) {
+        return location;
+      }
+
       SSymbol ss = (SSymbol) o;
-      int base = vb.addObject(o, Classes.symbolClass, 2);
+      int base = vb.addValueObject(o, Classes.symbolClass, 2);
       vb.putShortAt(base, ss.getSymbolId());
       return vb.calculateReferenceB(base);
     }
@@ -173,13 +215,19 @@ public abstract class PrimitiveSerializationNodes {
     @Specialization(guards = "cls.isValue()")
     protected long doValueClass(final SClass cls, final SnapshotBuffer sb,
         @Cached("getBuffer()") final SnapshotBuffer vb) {
-      int base = vb.addObject(cls, Classes.classClass, Integer.BYTES + Long.BYTES);
+
+      long location = getValueLocation(cls);
+      if (location != -1) {
+        return location;
+      }
+
+      int base = vb.addValueObject(cls, Classes.classClass, Integer.BYTES + Long.BYTES);
       vb.putIntAt(base, cls.getIdentity());
       SObjectWithClass outer = cls.getEnclosingObject();
       vb.putLongAt(base + Integer.BYTES,
           outer.getSOMClass().serialize(outer, vb));
 
-      long location = vb.calculateReferenceB(base);
+      location = vb.calculateReferenceB(base);
       SnapshotBackend.registerValueClassLocation(cls.getIdentity(), location);
       return location;
     }
@@ -228,6 +276,12 @@ public abstract class PrimitiveSerializationNodes {
     public long serialize(final Object o, final SnapshotBuffer sb,
         @Cached("getBuffer()") final SnapshotBuffer vb) {
       assert o instanceof SInvokable;
+
+      long location = getValueLocation(o);
+      if (location != -1) {
+        return location;
+      }
+
       SInvokable si = (SInvokable) o;
       int base = vb.addObject(si, Classes.methodClass, Short.BYTES);
       vb.putShortAt(base, si.getIdentifier().getSymbolId());
@@ -248,7 +302,13 @@ public abstract class PrimitiveSerializationNodes {
     @Specialization
     public long serialize(final Object o, final SnapshotBuffer sb,
         @Cached("getBuffer()") final SnapshotBuffer vb) {
-      return vb.calculateReferenceB(sb.addObject(o, Classes.nilClass, 0));
+
+      long location = getValueLocation(o);
+      if (location != -1) {
+        return location;
+      }
+
+      return vb.calculateReferenceB(sb.addValueObject(o, Classes.nilClass, 0));
     }
 
     @Override
@@ -263,7 +323,14 @@ public abstract class PrimitiveSerializationNodes {
     @Specialization
     public long serialize(final SFarReference o, final SnapshotBuffer sb,
         @Cached("getBuffer()") final SnapshotBuffer vb) {
-      int base = vb.addObject(o, SFarReference.getFarRefClass(), Integer.BYTES + Long.BYTES);
+
+      long location = getValueLocation(o);
+      if (location != -1) {
+        return location;
+      }
+
+      int base =
+          vb.addValueObject(o, SFarReference.getFarRefClass(), Integer.BYTES + Long.BYTES);
       TracingActor other = (TracingActor) o.getActor();
       vb.putIntAt(base, other.getActorId());
 

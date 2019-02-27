@@ -37,6 +37,11 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
 
   @Specialization(guards = "sa.isBooleanType()")
   protected long doBoolean(final SArray sa, final SnapshotBuffer sb) {
+    long location = getObjectLocation(sa, sb.getSnapshotVersion());
+    if (location != -1) {
+      return location;
+    }
+
     boolean[] ba = sa.getBooleanStorage();
     int requiredSpace = ba.length;
     int start = sb.addObject(sa, clazz, requiredSpace + 5);
@@ -53,6 +58,11 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
 
   @Specialization(guards = "sa.isDoubleType()")
   protected long doDouble(final SArray sa, final SnapshotBuffer sb) {
+    long location = getObjectLocation(sa, sb.getSnapshotVersion());
+    if (location != -1) {
+      return location;
+    }
+
     double[] da = sa.getDoubleStorage();
     int requiredSpace = da.length * Double.BYTES;
     int start = sb.addObject(sa, clazz, requiredSpace + 5);
@@ -69,6 +79,11 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
 
   @Specialization(guards = "sa.isLongType()")
   protected long doLong(final SArray sa, final SnapshotBuffer sb) {
+    long location = getObjectLocation(sa, sb.getSnapshotVersion());
+    if (location != -1) {
+      return location;
+    }
+
     long[] la = sa.getLongStorage();
     int requiredSpace = la.length * Long.BYTES;
     int start = sb.addObject(sa, clazz, requiredSpace + 5);
@@ -85,6 +100,11 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
 
   @Specialization(guards = "sa.isObjectType()")
   protected long doObject(final SArray sa, final SnapshotBuffer sb) {
+    long location = getObjectLocation(sa, sb.getSnapshotVersion());
+    if (location != -1) {
+      return location;
+    }
+
     Object[] oa = sa.getObjectStorage();
     int requiredSpace = oa.length * 8;
     int start = sb.addObject(sa, clazz, requiredSpace + 5);
@@ -102,6 +122,11 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
 
   @Specialization(guards = "sa.isEmptyType()")
   protected long doEmpty(final SArray sa, final SnapshotBuffer sb) {
+    long location = getObjectLocation(sa, sb.getSnapshotVersion());
+    if (location != -1) {
+      return location;
+    }
+
     int start = sb.addObject(sa, clazz, 5);
     int base = start;
     sb.putByteAt(base, TYPE_EMPTY);
@@ -111,6 +136,11 @@ public abstract class AbstractArraySerializationNode extends AbstractSerializati
 
   @Specialization(guards = "sa.isPartiallyEmptyType()")
   protected long doPartiallyEmpty(final SArray sa, final SnapshotBuffer sb) {
+    long location = getObjectLocation(sa, sb.getSnapshotVersion());
+    if (location != -1) {
+      return location;
+    }
+
     PartiallyEmptyArray pea = sa.getPartiallyEmptyStorage();
 
     Object[] oa = pea.getStorage();

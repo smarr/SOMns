@@ -143,14 +143,13 @@ public class TracingActors {
         // ignore todos from a different snapshot
         if (frt.isCurrent()) {
           SClass clazz = classPrim.executeEvaluated(frt.target);
-          long location = clazz.getObjectLocationUnsync(frt.target);
-          if (location == -1) {
-            if (frt.target instanceof PromiseMessage) {
-              location = ((PromiseMessage) frt.target).forceSerialize(sb);
-            } else {
-              location = clazz.serialize(frt.target, sb);
-            }
+          long location;
+          if (frt.target instanceof PromiseMessage) {
+            location = ((PromiseMessage) frt.target).forceSerialize(sb);
+          } else {
+            location = clazz.serialize(frt.target, sb);
           }
+
           frt.resolve(location);
         }
       }

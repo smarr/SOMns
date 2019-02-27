@@ -98,10 +98,6 @@ public abstract class EventualMessage extends SAbstractObject {
   // indirection here, which leads us to a serializer that's not compilation
   // final, I think
   public long forceSerialize(final SnapshotBuffer sb) {
-    long location = Classes.messageClass.getObjectLocationUnsync(this);
-    if (location != -1) {
-      return location;
-    }
     ReceivedRootNode rm = (ReceivedRootNode) this.onReceive.getRootNode();
     return rm.getSerializer().execute(this, sb);
   }

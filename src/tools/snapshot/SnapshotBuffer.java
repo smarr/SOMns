@@ -7,6 +7,7 @@ import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import tools.concurrency.TraceBuffer;
 import tools.concurrency.TracingActivityThread;
@@ -64,11 +65,12 @@ public class SnapshotBuffer extends TraceBuffer {
     return oldPos;
   }
 
-  public int addObject(final Object o, final SClass clazz, final int payload) {
-    assert !clazz.isSerializedUnsync(o, snapshotVersion) : "Object serialized multiple times";
+  public int addObject(final SAbstractObject o, final SClass clazz, final int payload) {
+    assert (o.getSnapshotLocation() == -1
+        || o.getSnapshotVersion() != snapshotVersion) : "Object serialized multiple times";
 
     int oldPos = this.position;
-    clazz.registerLocation(o, calculateReference(oldPos), snapshotVersion);
+    o.updateSnapshotLocation(calculateReference(oldPos), snapshotVersion);
 
     if (clazz.getSOMClass() == Classes.classClass) {
       TracingActor owner = clazz.getOwnerOfOuter();
@@ -84,13 +86,41 @@ public class SnapshotBuffer extends TraceBuffer {
     return oldPos + CLASS_ID_SIZE;
   }
 
+  public int addValueObject(final Object o, final SClass clazz, final int payload) {
+    assert !SnapshotBackend.getValuepool().containsKey(o) : "Object serialized multiple times";
+
+    int oldPos = this.position;
+
+    synchronized (SnapshotBackend.getValuepool()) {
+      SnapshotBackend.getValuepool().put(o, calculateReference(oldPos));
+    }
+
+    if (clazz.getSOMClass() == Classes.classClass) {
+      TracingActor owner = clazz.getOwnerOfOuter();
+      if (owner == null) {
+        owner = (TracingActor) SomLanguage.getCurrent().getVM().getMainActor();
+      }
+
+      assert owner != null;
+      owner.farReference(clazz, null, 0);
+    }
+    this.putIntAt(this.position, clazz.getIdentity());
+    this.position += CLASS_ID_SIZE + payload;
+    return oldPos + CLASS_ID_SIZE;
+  }
+
+  public int getSize() {
+    return buffer.length;
+  }
+
   public int addMessage(final int payload, final EventualMessage msg) {
     // we dont put messages into our lookup table as there should be only one reference to it
     // (either from a promise or a mailbox)
+    assert (msg.getSnapshotLocation() == -1
+        || msg.getSnapshotVersion() != snapshotVersion) : "Message serialized multiple times";
+
     int oldPos = this.position;
-    assert !Classes.messageClass.isSerializedUnsync(msg,
-        snapshotVersion) : "Message serialized twice, and on the same actor";
-    Classes.messageClass.registerLocation(msg, calculateReference(oldPos), snapshotVersion);
+    msg.updateSnapshotLocation(calculateReference(oldPos), snapshotVersion);
     // owner.addMessageLocation(ta.getActorId(), calculateReference(oldPos));
 
     this.putIntAt(this.position, Classes.messageClass.getIdentity());

@@ -218,7 +218,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   }
 
   public SnapshotBuffer getSnapshotBuffer() {
-    if (SnapshotBackend.getSnapshotVersion() > this.snapshotId) {
+    if (SnapshotBackend.getSnapshotVersion() != this.snapshotId) {
       newSnapshot();
     }
     return snapshotBuffer;

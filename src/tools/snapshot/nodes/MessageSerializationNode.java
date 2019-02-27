@@ -110,11 +110,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
         PromiseSerializationNodes.handleReferencedPromise((SPromise) obj, sb,
             (base + 1) + i * Long.BYTES);
       } else {
-        long objLocation = classPrim.executeEvaluated(obj).getObjectLocationUnsync(obj);
-        if (objLocation == -1) {
-          objLocation = serializationNodes[i].execute(obj, sb);
-        }
-        sb.putLongAt((base + 1) + i * Long.BYTES, objLocation);
+        sb.putLongAt((base + 1) + i * Long.BYTES, serializationNodes[i].execute(obj, sb));
       }
     }
   }
@@ -132,6 +128,11 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
 
   @Specialization(guards = "dm.getResolver() != null")
   protected long doDirectMessage(final DirectMessage dm, final SnapshotBuffer sb) {
+    long location = getObjectLocation(dm, sb.getSnapshotVersion());
+    if (location != -1) {
+      return location;
+    }
+
     SResolver resolver = dm.getResolver();
     Object[] args = dm.getArgs();
 
@@ -153,6 +154,11 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
 
   @Specialization
   protected long doDirectMessageNoResolver(final DirectMessage dm, final SnapshotBuffer sb) {
+    long location = getObjectLocation(dm, sb.getSnapshotVersion());
+    if (location != -1) {
+      return location;
+    }
+
     Object[] args = dm.getArgs();
 
     int payload =
@@ -171,6 +177,11 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
 
   @Specialization(guards = "dm.getResolver() != null")
   protected long doCallbackMessage(final PromiseCallbackMessage dm, final SnapshotBuffer sb) {
+    long location = getObjectLocation(dm, sb.getSnapshotVersion());
+    if (location != -1) {
+      return location;
+    }
+
     SResolver resolver = dm.getResolver();
     SPromise prom = dm.getPromise();
     Object[] args = dm.getArgs();
@@ -196,6 +207,11 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
   @Specialization
   protected long doCallbackMessageNoResolver(final PromiseCallbackMessage dm,
       final SnapshotBuffer sb) {
+    long location = getObjectLocation(dm, sb.getSnapshotVersion());
+    if (location != -1) {
+      return location;
+    }
+
     SPromise prom = dm.getPromise();
     Object[] args = dm.getArgs();
 
@@ -224,6 +240,10 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
 
   @Specialization(guards = {"dm.isDelivered()", "dm.getResolver() != null"})
   protected long doPromiseMessage(final PromiseSendMessage dm, final SnapshotBuffer sb) {
+    long location = getObjectLocation(dm, sb.getSnapshotVersion());
+    if (location != -1) {
+      return location;
+    }
 
     SResolver resolver = dm.getResolver();
     SPromise prom = dm.getPromise();
@@ -253,6 +273,10 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
   @Specialization(guards = "dm.isDelivered()")
   protected long doPromiseMessageNoResolver(final PromiseSendMessage dm,
       final SnapshotBuffer sb) {
+    long location = getObjectLocation(dm, sb.getSnapshotVersion());
+    if (location != -1) {
+      return location;
+    }
 
     SPromise prom = dm.getPromise();
     int fsender = ((STracingPromise) prom).getResolvingActor();
@@ -278,6 +302,10 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
   @Specialization(guards = {"!dm.isDelivered()", "dm.getResolver() != null"})
   protected long doUndeliveredPromiseMessage(final PromiseSendMessage dm,
       final SnapshotBuffer sb) {
+    long location = getObjectLocation(dm, sb.getSnapshotVersion());
+    if (location != -1) {
+      return location;
+    }
 
     SResolver resolver = dm.getResolver();
     Object[] args = dm.getArgs();
@@ -303,6 +331,11 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
   @Specialization(guards = "!dm.isDelivered()")
   protected long doUndeliveredPromiseMessageNoResolver(final PromiseSendMessage dm,
       final SnapshotBuffer sb) {
+    long location = getObjectLocation(dm, sb.getSnapshotVersion());
+    if (location != -1) {
+      return location;
+    }
+
     Object[] args = dm.getArgs();
 
     int payload =

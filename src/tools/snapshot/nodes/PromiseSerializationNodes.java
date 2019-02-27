@@ -51,6 +51,11 @@ public abstract class PromiseSerializationNodes {
 
     @Specialization(guards = "!prom.isCompleted()")
     public long doUnresolved(final SPromise prom, final SnapshotBuffer sb) {
+      long location = getObjectLocation(prom, sb.getSnapshotVersion());
+      if (location != -1) {
+        return location;
+      }
+
       int ncp;
       int nwr;
       int noe;
@@ -95,6 +100,11 @@ public abstract class PromiseSerializationNodes {
 
     @Specialization(guards = "prom.isCompleted()")
     public long doResolved(final SPromise prom, final SnapshotBuffer sb) {
+      long location = getObjectLocation(prom, sb.getSnapshotVersion());
+      if (location != -1) {
+        return location;
+      }
+
       int ncp;
       int nwr;
       int noe;
@@ -349,7 +359,13 @@ public abstract class PromiseSerializationNodes {
     @Specialization
     public long doResolver(final SResolver resolver, final SnapshotBuffer sb,
         @Cached("getBuffer()") final SnapshotBuffer vb) {
-      int base = vb.addObject(resolver, SResolver.getResolverClass(),
+
+      long location = getValueLocation(resolver);
+      if (location != -1) {
+        return location;
+      }
+
+      int base = vb.addValueObject(resolver, SResolver.getResolverClass(),
           Long.BYTES);
       SPromise prom = resolver.getPromise();
       handleReferencedPromise(prom, vb, base);
