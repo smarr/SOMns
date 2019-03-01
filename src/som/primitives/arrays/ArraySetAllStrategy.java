@@ -30,12 +30,12 @@ public final class ArraySetAllStrategy {
       final BlockDispatchNode blockDispatch, final Object first, final IsValue isValue,
       final ExceptionSignalingNode notAValue) {
     if (!isValue.executeBoolean(frame, first)) {
-      notAValue.signal(Classes.valueArrayClass);
+      notAValue.signal(frame, Classes.valueArrayClass);
     }
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
       Object result = blockDispatch.executeDispatch(new Object[] {block, (long) i + 1});
       if (!isValue.executeBoolean(frame, result)) {
-        notAValue.signal(Classes.valueArrayClass);
+        notAValue.signal(frame, Classes.valueArrayClass);
       } else {
         storage[i] = result;
       }

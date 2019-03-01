@@ -16,6 +16,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.NodeFactory;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.ForeignAccess;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -31,6 +32,7 @@ import som.interop.SomInteropObject;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
+import som.interpreter.SArguments;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExceptionSignalingNode;
@@ -529,16 +531,25 @@ public final class MixinDefinition implements SomInteropObject {
     VM.callerNeedsToBeOptimized(
         "only meant for code loading, which is supposed to be on the slowpath");
     CallTarget callTarget = superclassMixinResolution.createCallTarget();
-    SClass superClass = (SClass) callTarget.call(Nil.nilObject);
-    SClass classObject = instantiateClass(Nil.nilObject, superClass);
+    SClass superClass;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      // Since this is outside of the main stacks, we create a separate top shadow stack entry
+      // to deal with async errors.
+      superClass =
+          (SClass) callTarget.call(Nil.nilObject,
+              SArguments.instantiateTopShadowStackEntry(null));
+    } else {
+      superClass = (SClass) callTarget.call(Nil.nilObject, null);
+    }
+    SClass classObject = instantiateClass(null, Nil.nilObject, superClass);
     return classObject;
   }
 
-  public SClass instantiateClass(final SObjectWithClass outer,
+  public SClass instantiateClass(final VirtualFrame frame, final SObjectWithClass outer,
       final Object superclassAndMixins) {
     ClassFactory factory = createClassFactory(superclassAndMixins,
         false, false, false, UninitializedObjectSerializationNodeFactory.getInstance());
-    return ClassInstantiationNode.instantiate(outer, factory, notAValue,
+    return ClassInstantiationNode.instantiate(frame, outer, factory, notAValue,
         cannotBeValues);
   }
 
@@ -734,7 +745,7 @@ public final class MixinDefinition implements SomInteropObject {
         // ok, now it is for sure not initialized yet, instantiate class
         Object superclassAndMixins = mixinDefinition.getSuperclassAndMixinResolutionInvokable()
                                                     .createCallTarget().call(rcvr);
-        SClass clazz = mixinDefinition.instantiateClass(rcvr, superclassAndMixins);
+        SClass clazz = mixinDefinition.instantiateClass(null, rcvr, superclassAndMixins);
         rcvr.writeSlot(this, clazz);
         return clazz;
       }

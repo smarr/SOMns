@@ -32,6 +32,7 @@ import som.compiler.MethodBuilder;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
+import som.interpreter.nodes.dispatch.BackCacheCallNode;
 import som.vmobjects.SInvokable;
 
 
@@ -40,6 +41,7 @@ public final class Method extends Invokable {
   private final MethodScope     methodScope;
   private final SourceSection[] definition;
   private final boolean         block;
+  private BackCacheCallNode     uniqueCaller;
 
   public Method(final String name, final SourceSection sourceSection,
       final SourceSection[] definition,
@@ -75,6 +77,20 @@ public final class Method extends Invokable {
     assert !getSourceSection().equals(
         m.getSourceSection()) : "If that triggers, something with the source sections is wrong.";
     return false;
+  }
+
+  public void setNewCaller(final BackCacheCallNode caller) {
+    if (uniqueCaller == null) {
+      uniqueCaller = caller;
+      caller.makeUniqueCaller();
+    } else {
+      uniqueCaller.makeMultipleCaller();
+      caller.makeMultipleCaller();
+    }
+  }
+
+  public BackCacheCallNode getUniqueCaller() {
+    return uniqueCaller;
   }
 
   public SourceSection[] getDefinition() {

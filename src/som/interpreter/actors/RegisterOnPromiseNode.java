@@ -2,9 +2,13 @@ package som.interpreter.actors;
 
 import java.util.concurrent.ForkJoinPool;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
+import som.interpreter.SArguments;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
+import som.vm.VmSettings;
+import tools.asyncstacktraces.ShadowStackEntry;
 
 
 public abstract class RegisterOnPromiseNode {
@@ -16,7 +20,8 @@ public abstract class RegisterOnPromiseNode {
       schedule = SchedulePromiseHandlerNodeGen.create(actorPool);
     }
 
-    public void register(final SPromise promise, final PromiseMessage msg,
+    public void register(final VirtualFrame frame, final SPromise promise,
+        final PromiseMessage msg,
         final Actor current) {
 
       Object promiseValue;
@@ -27,6 +32,17 @@ public abstract class RegisterOnPromiseNode {
       // we need to schedule the callback/msg directly anyway
       synchronized (promise) {
         if (!promise.isResolvedUnsync()) {
+
+          if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+            // TODO: I think, we need the info about the resolution context from the promise
+            // we want to know where it was resolved, where the value is coming from
+            ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
+                SArguments.getShadowStackEntry(frame),
+                getParent().getParent());
+            assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
+            SArguments.setShadowStackEntry(msg.args, resolutionEntry);
+          }
+
           if (promise.isErroredUnsync()) {
             // short cut on error, this promise will never resolve successfully, so,
             // just return promise, don't use isSomehowResolved(), because the other
@@ -54,7 +70,7 @@ public abstract class RegisterOnPromiseNode {
         if (promise.getHaltOnResolution()) {
           msg.enableHaltOnReceive();
         }
-        schedule.execute(promise, msg, current);
+        schedule.execute(frame, promise, msg, current);
       }
     }
   }
@@ -66,7 +82,8 @@ public abstract class RegisterOnPromiseNode {
       this.schedule = SchedulePromiseHandlerNodeGen.create(actorPool);
     }
 
-    public void register(final SPromise promise, final PromiseMessage msg,
+    public void register(final VirtualFrame frame, final SPromise promise,
+        final PromiseMessage msg,
         final Actor current) {
 
       Object promiseValue;
@@ -77,6 +94,17 @@ public abstract class RegisterOnPromiseNode {
       // we need to schedule the callback/msg directly anyway
       synchronized (promise) {
         if (!promise.isErroredUnsync()) {
+
+          if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+            // TODO: I think, we need the info about the resolution context from the promise
+            // we want to know where it was resolved, where the value is coming from
+            ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
+                SArguments.getShadowStackEntry(frame),
+                getParent().getParent());
+            assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
+            SArguments.setShadowStackEntry(msg.args, resolutionEntry);
+          }
+
           if (promise.isResolvedUnsync()) {
             // short cut on resolved, this promise will never error, so,
             // just return promise, don't use isSomehowResolved(), because the other
@@ -101,7 +129,7 @@ public abstract class RegisterOnPromiseNode {
       // used to group setting the promise resolution state and processing the
       // message.
       synchronized (promiseValue) {
-        schedule.execute(promise, msg, current);
+        schedule.execute(frame, promise, msg, current);
       }
     }
   }

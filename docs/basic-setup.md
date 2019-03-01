@@ -70,4 +70,4 @@ Afterwards, the simple Hello World program is executed with:
 
 ```bash
 ./som core-lib/Hello.ns
-```
+``` 

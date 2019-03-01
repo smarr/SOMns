@@ -3,9 +3,8 @@ package tools.debugger.frontend;
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
 
-import com.oracle.truffle.api.debug.DebugStackFrame;
 import com.oracle.truffle.api.debug.SuspendedEvent;
-import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.frame.Frame;
 
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.actors.Actor;
@@ -20,6 +19,7 @@ import tools.concurrency.TracingActivityThread;
 import tools.debugger.FrontendConnector;
 import tools.debugger.entities.EntityType;
 import tools.debugger.entities.SteppingType;
+import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 import tools.debugger.frontend.ApplicationThreadTask.Resume;
 import tools.debugger.frontend.ApplicationThreadTask.SendStackTrace;
 import tools.debugger.message.VariablesRequest.FilterType;
@@ -56,7 +56,7 @@ public class Suspension {
     this.stack = new ApplicationThreadStack(e, this);
   }
 
-  public synchronized ArrayList<DebugStackFrame> getStackFrames() {
+  public synchronized ArrayList<StackFrame> getStackFrames() {
     return stack.get();
   }
 
@@ -64,7 +64,7 @@ public class Suspension {
     return activityThread.getConcurrentEntityScopes();
   }
 
-  public synchronized long addScope(final MaterializedFrame frame,
+  public synchronized long addScope(final Frame frame,
       final MethodScope lexicalScope) {
     return stack.addScope(frame, lexicalScope);
   }
@@ -97,7 +97,7 @@ public class Suspension {
     return TraceData.valIdFromGlobal(globalId);
   }
 
-  public synchronized DebugStackFrame getFrame(final long globalId) {
+  public synchronized StackFrame getFrame(final long globalId) {
     return stack.get().get(getLocalId(globalId));
   }
 
