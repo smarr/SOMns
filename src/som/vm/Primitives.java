@@ -63,6 +63,7 @@ import som.primitives.SizeAndLengthPrimFactory;
 import som.primitives.StringPrimsFactory;
 import som.primitives.SystemPrimsFactory;
 import som.primitives.TimerPrimFactory;
+import som.primitives.TypePrimsFactory;
 import som.primitives.UnequalsPrimFactory;
 import som.primitives.actors.ActorClassesFactory;
 import som.primitives.actors.CreateActorPrimFactory;
@@ -194,6 +195,7 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     addAll(allFactories, PromisePrimsFactory.getFactories());
     addAll(allFactories, StringPrimsFactory.getFactories());
     addAll(allFactories, SystemPrimsFactory.getFactories());
+    addAll(allFactories, TypePrimsFactory.getFactories());
 
     addAll(allFactories, ActivitySpawnFactory.getFactories());
     addAll(allFactories, ThreadingModuleFactory.getFactories());

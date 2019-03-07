@@ -12,7 +12,9 @@ class Platform usingVmMirror: vmMirror = Value (
   public collections = (vmMirror load: 'Collections.ns' nextTo: self) usingKernel: kernel.
   public streams     = (vmMirror load: 'Streams.ns' nextTo: self) usingPlatform: self.
   public files       = (vmMirror load: 'Files.ns' nextTo: self) usingVmMirror: vmMirror usingPlatform: self.
-|)(
+|
+  vmMirror typeClass: kernel Type.
+)(
   (* start executes the application code and returns an integer as error code,
      or in case of an application that uses actors, a promise that indicates
      program completion *)

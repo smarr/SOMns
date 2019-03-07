@@ -73,6 +73,11 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public asString = ( ^ 'instance of ' + (vmMirror objClassName: self) )
   )
 
+  public class Type = Value ()
+  (
+    public checkOrError: aObj = ( vmMirror type: self checkOrError: aObj )
+  )
+
   public class Object = Thing ()
   (
     public == other = ( ^ vmMirror object: self identicalTo: other )
@@ -325,12 +330,12 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     (* Comparing *)
     public = argument = ( ^ vmMirror string: self equals: argument )
-    
+
     public < argument = (
       | maxi |
       maxi:: length max: argument length.
 
-      1 to: maxi do: [ :i | 
+      1 to: maxi do: [ :i |
         | codePointA codePointB |
         codePointA:: (codepointAt: i).
         codePointB:: (argument codepointAt: i).
@@ -345,7 +350,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       | maxi |
       maxi:: length max: argument length.
 
-      1 to: maxi do: [ :i | 
+      1 to: maxi do: [ :i |
         | codePointA codePointB |
         codePointA:: (codepointAt: i).
         codePointB:: (argument codepointAt: i).
