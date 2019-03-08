@@ -747,8 +747,12 @@ public class JsonTreeTranslator {
         SomStructuralType.recordTypeByName(name,
             SomStructuralType.makeType(name, parseTypeSignatures(node)));
       }
-      return null;
+      SSymbol[] signatures = parseTypeSignatures(node).toArray(new SSymbol[] {});
+      ExpressionNode literal = astBuilder.literalBuilder.type(signatures, source(node));
 
+      astBuilder.objectBuilder.typeStatement(symbolFor(name(node)), null,
+          literal, source(node));
+      return null;
     } else if (nodeType(node).equals("block")) {
       return astBuilder.objectBuilder.block(parameters(node), typesForParameters(node),
           sourcesForParameters(node), locals(node), typesForLocals(node),

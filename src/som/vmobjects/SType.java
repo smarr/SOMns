@@ -25,7 +25,7 @@ public abstract class SType extends SObjectWithClass {
 
   public abstract boolean isSuperTypeOf(final SomStructuralType other);
 
-  public class InterfaceType extends SType {
+  public static class InterfaceType extends SType {
     @CompilationFinal(dimensions = 1) public final SSymbol[] signatures;
 
     public InterfaceType(final SSymbol[] signatures) {

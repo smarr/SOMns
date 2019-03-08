@@ -59,6 +59,7 @@ import som.interpreter.nodes.literals.IntegerLiteralNode;
 import som.interpreter.nodes.literals.LiteralNode;
 import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.nodes.literals.ObjectLiteralNode;
+import som.interpreter.nodes.literals.STypeLiteral;
 import som.interpreter.nodes.literals.StringLiteralNode;
 import som.vm.Symbols;
 import som.vmobjects.SInvokable;
@@ -662,6 +663,24 @@ public class AstBuilder {
       scopeManager.assembleCurrentMethod(
           SNodeFactory.createSequence(expressions, sourceSection), sourceSection);
     }
+
+    /**
+     * Adds a method with the given selector, variables, and body to the object at the top of
+     * the stack.
+     */
+    public void typeStatement(final SSymbol selector, final SSymbol returnType,
+        final ExpressionNode type, final SourceSection sourceSection) {
+      MethodBuilder builder = scopeManager.newMethod(selector, returnType);
+
+      // Set the parameters
+      builder.addArgument(Symbols.SELF, null, sourceManager.empty());
+
+      builder.setVarsOnMethodScope();
+      builder.finalizeMethodScope();
+
+      // Assemble and return the completed module
+      scopeManager.assembleCurrentMethod(type, sourceSection);
+    }
   }
 
   public class Requests {
@@ -846,6 +865,10 @@ public class AstBuilder {
 
     public ExpressionNode done(final SourceSection sourceSection) {
       return new NilLiteralNode().initialize(sourceSection);
+    }
+
+    public ExpressionNode type(final SSymbol[] signatures, final SourceSection sourceSection) {
+      return new STypeLiteral(signatures).initialize(sourceSection);
     }
 
     /**

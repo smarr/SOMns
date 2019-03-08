@@ -36,8 +36,9 @@ public final class TypePrims {
       SomStructuralType type = Types.getClassOf(obj).getFactory().type;
       int line = sourceSection.getStartLine();
       int column = sourceSection.getStartColumn();
-      String[] parts = sourceSection.getSource().getURI().getPath().split("/");
-      String suffix = parts[parts.length - 1] + " [" + line + "," + column + "]";
+      // String[] parts = sourceSection.getSource().getURI().getPath().split("/");
+      // String suffix = parts[parts.length - 1] + " [" + line + "," + column + "]";
+      String suffix = "{UNKNOWN-FILE} [" + line + "," + column + "]";
       KernelObj.signalException("signalTypeError:",
           suffix + " " + obj + " is not a subtype of " + expected
               + ", because it has the type " + type);
