@@ -1,5 +1,6 @@
 package som.compiler;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -903,7 +904,13 @@ public final class MixinDefinition implements SomInteropObject {
         identifier =
             Symbols.symbolFor(outer.getIdentifier().getString() + "." + this.name.getString());
       } else if (this.isModule && this.sourceSection != null) {
-        Path absolute = Paths.get(this.sourceSection.getSource().getURI());
+        URI uri = this.sourceSection.getSource().getURI();
+        Path absolute;
+        if (uri.getScheme().equals("truffle")) {
+          absolute = Paths.get(uri.getSchemeSpecificPart().split("/", 2)[1]);
+        } else {
+          absolute = Paths.get(this.sourceSection.getSource().getURI());
+        }
         Path relative =
             Paths.get(VmSettings.BASE_DIRECTORY).toAbsolutePath().relativize(absolute);
         identifier = Symbols.symbolFor(relative.toString() + ":" + this.name.getString());
