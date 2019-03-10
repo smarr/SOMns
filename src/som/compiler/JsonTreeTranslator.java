@@ -32,8 +32,10 @@ import static som.vm.Symbols.symbolFor;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import com.google.gson.JsonArray;
@@ -182,37 +184,6 @@ public class JsonTreeTranslator {
       return node.get("path").getAsJsonObject().get("raw").getAsString();
     } else {
       error("The translator doesn't understand how to get a path from " + nodeType(node),
-          node);
-      throw new RuntimeException();
-    }
-  }
-
-  /**
-   * Extracts a literal value from the {@link JsonObject}. The field containing the value
-   * depends on the type node.
-   */
-  private Object value(final JsonObject node) {
-    if (nodeType(node).equals("number")) {
-      return Double.parseDouble(node.get("digits").getAsString());
-
-    } else if (nodeType(node).equals("string-literal")) {
-      return node.get("raw").getAsString();
-
-    } else if (nodeType(node).equals("def-declaration")) {
-      return translate(node.get("value").getAsJsonObject());
-
-    } else if (nodeType(node).equals("var-declaration")) {
-      if (node.get("value").isJsonNull()) {
-        return null;
-      } else {
-        return translate(node.get("value").getAsJsonObject());
-      }
-
-    } else if (nodeType(node).equals("bind")) {
-      return translate(node.get("right").getAsJsonObject());
-
-    } else {
-      error("The translator doesn't understand how to get a value from " + nodeType(node),
           node);
       throw new RuntimeException();
     }
@@ -579,13 +550,8 @@ public class JsonTreeTranslator {
     return signature.matches("[+\\-*/<>]+");
   }
 
-  private Set<SSymbol> parseTypeBody(final JsonObject node) {
+  private SSymbol[] parseInterfaceSignatures(final JsonObject node) {
     Set<SSymbol> signatures = new HashSet<>();
-
-    if (!node.has("body")) {
-      error("Some is wrong with the type literal?", node);
-      throw new RuntimeException();
-    }
 
     JsonArray signatureNodes = node.get("body").getAsJsonArray();
     for (JsonElement signatureElement : signatureNodes) {
@@ -604,10 +570,11 @@ public class JsonTreeTranslator {
 
     }
 
-    return signatures;
+    return signatures.toArray(new SSymbol[] {});
   }
 
-  private Set<SSymbol> parseAndType(final JsonObject node) {
+  @Deprecated
+  private SSymbol[] parseAndType(final JsonObject node) {
     Set<SSymbol> signatures = new HashSet<>();
     JsonObject body = node.get("body").getAsJsonObject();
 
@@ -618,7 +585,7 @@ public class JsonTreeTranslator {
         signatures.add(sig);
       }
     } else {
-      signatures.addAll(parseTypeBody(left));
+      signatures.addAll(Arrays.asList(parseInterfaceSignatures(left)));
     }
 
     JsonObject right = body.get("right").getAsJsonObject();
@@ -628,10 +595,10 @@ public class JsonTreeTranslator {
         signatures.add(sig);
       }
     } else {
-      signatures.addAll(parseTypeBody(right));
+      signatures.addAll(Arrays.asList(parseInterfaceSignatures(right)));
     }
 
-    return signatures;
+    return signatures.toArray(new SSymbol[] {});
   }
 
   /**
@@ -639,7 +606,8 @@ public class JsonTreeTranslator {
    * mappings (such as those for operators) are performed before this list of signatures is
    * returned; so the returned list will contain the NS `not` rather than the Grace `prefix!`.
    */
-  private Set<SSymbol> parseTypeSignatures(final JsonObject node) {
+  @Deprecated
+  private SSymbol[] parseTypeSignatures(final JsonObject node) {
 
     JsonObject body = node.get("body").getAsJsonObject();
     if (body.has("left")) {
@@ -656,7 +624,7 @@ public class JsonTreeTranslator {
       }
     }
 
-    return parseTypeBody(body);
+    return parseInterfaceSignatures(body);
   }
 
   /**
@@ -667,12 +635,12 @@ public class JsonTreeTranslator {
       final JsonObject[] arguments, final SourceSection source) {
 
     // Translate the receiver
-    ExpressionNode translateReceiver = (ExpressionNode) translate(receiver);
+    ExpressionNode translateReceiver = translate(receiver);
 
     // Translate the arguments
     List<ExpressionNode> argumentExpressions = new ArrayList<ExpressionNode>();
     for (int i = 0; i < arguments.length; i++) {
-      ExpressionNode argumentExpression = (ExpressionNode) translate(arguments[i]);
+      ExpressionNode argumentExpression = translate(arguments[i]);
       argumentExpressions.add(argumentExpression);
     }
 
@@ -702,7 +670,7 @@ public class JsonTreeTranslator {
     // Otherwise, process the arguments and create a message send.
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
     for (int i = 0; i < argumentsNodes.length; i++) {
-      arguments.add((ExpressionNode) translate(argumentsNodes[i]));
+      arguments.add(translate(argumentsNodes[i]));
     }
 
     // Create the message send with information from the current method
@@ -713,7 +681,7 @@ public class JsonTreeTranslator {
    * The re-entry point for the translator, which continues the translation from the given
    * node. This method should be used by the {@link AstBuilder} in a recursive-descent style.
    */
-  public Object translate(final JsonObject node) {
+  public ExpressionNode translate(final JsonObject node) {
 
     if (nodeType(node).equals("comment")) {
       return null;
@@ -747,11 +715,8 @@ public class JsonTreeTranslator {
         SomStructuralType.recordTypeByName(name,
             SomStructuralType.makeType(name, parseTypeSignatures(node)));
       }
-      SSymbol[] signatures = parseTypeSignatures(node).toArray(new SSymbol[] {});
-      ExpressionNode literal = astBuilder.literalBuilder.type(signatures, source(node));
-
       astBuilder.objectBuilder.typeStatement(symbolFor(name(node)), null,
-          literal, source(node));
+          translate((JsonObject) node.get("body")), source(node));
       return null;
     } else if (nodeType(node).equals("block")) {
       return astBuilder.objectBuilder.block(parameters(node), typesForParameters(node),
@@ -760,17 +725,17 @@ public class JsonTreeTranslator {
 
     } else if (nodeType(node).equals("def-declaration")) {
       return astBuilder.requestBuilder.assignment(symbolFor(name(node)),
-          (ExpressionNode) value(node), source(node));
+          translate(node.get("value").getAsJsonObject()), source(node));
 
     } else if (nodeType(node).equals("var-declaration")) {
-      ExpressionNode value = (ExpressionNode) value(node);
-      if (value == null) {
+
+      if (node.get("value").isJsonNull()) {
         return null;
       } else {
-        return astBuilder.requestBuilder.assignment(symbolFor(name(node)), value,
+        return astBuilder.requestBuilder.assignment(symbolFor(name(node)),
+            translate(node.get("value").getAsJsonObject()),
             source(node));
       }
-
     } else if (nodeType(node).equals("identifier")) {
       return astBuilder.requestBuilder.implicit(symbolFor(name(node)), source(node));
 
@@ -786,7 +751,7 @@ public class JsonTreeTranslator {
             arguments(node), source(node));
       } else {
         return astBuilder.requestBuilder.assignment(symbolFor(name(node)),
-            (ExpressionNode) value(node), source(node));
+            translate(node.get("right").getAsJsonObject()), source(node));
       }
 
     } else if (nodeType(node).equals("operator")) {
@@ -804,7 +769,7 @@ public class JsonTreeTranslator {
         returnExpression = astBuilder.literalBuilder.done(source(node));
       } else {
         returnExpression =
-            (ExpressionNode) translate(node.get("returnvalue").getAsJsonObject());
+            translate(node.get("returnvalue").getAsJsonObject());
       }
 
       if (scopeManager.peekMethod().isBlockMethod()) {
@@ -848,11 +813,14 @@ public class JsonTreeTranslator {
           source(node));
       return null;
 
+    } else if (nodeType(node).equals("interface")) {
+      SSymbol[] signatures = parseInterfaceSignatures(node);
+      return astBuilder.literalBuilder.type(signatures, source(node));
     } else if (nodeType(node).equals("number")) {
-      return astBuilder.literalBuilder.number((double) value(node), source(node));
-
+      double value = Double.parseDouble(node.get("digits").getAsString());
+      return astBuilder.literalBuilder.number(value, source(node));
     } else if (nodeType(node).equals("string-literal")) {
-      return astBuilder.literalBuilder.string((String) value(node), source(node));
+      return astBuilder.literalBuilder.string(node.get("raw").getAsString(), source(node));
 
     } else if (nodeType(node).equals("interpolated-string")) {
       return astBuilder.requestBuilder.interpolatedString(node.get("parts").getAsJsonArray());

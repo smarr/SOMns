@@ -35,7 +35,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -146,9 +145,7 @@ public final class SomStructuralType {
   }
 
   public static SomStructuralType makeType(final SSymbol name,
-      final Set<SSymbol> signatures) {
-    SSymbol[] sigs = signatures.toArray(new SSymbol[0]);
-
+      final SSymbol[] sigs) {
     for (int i = 0; i < allKnownTypes.size(); i++) {
       SomStructuralType inRecord = allKnownTypes.get(i);
       if (Arrays.equals(sigs, inRecord.signatures)) {
