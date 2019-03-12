@@ -212,7 +212,8 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
                 value = ((FrameOnStackMarker) value).isOnStack();
                 valueLocation = Classes.booleanClass.serialize(value, sb);
               } else {
-                assert value instanceof SAbstractObject;
+              assert value instanceof SAbstractObject || value instanceof String : "was"
+                  + value.toString();
                 valueLocation = classPrim.executeEvaluated(value).serialize(value, sb);
               }
               break;
