@@ -135,7 +135,7 @@ public class TracingActors {
     @TruffleBoundary // TODO: convert to an approach that constructs a cache
     public void handleObjectsReferencedFromFarRefs(final SnapshotBuffer sb,
         final ClassPrim classPrim) {
-      // SnapshotBackend.removeTodo(this);
+
       while (!externalReferences.isEmpty()) {
         DeferredFarRefSerialization frt = externalReferences.poll();
         assert frt != null;
@@ -199,6 +199,28 @@ public class TracingActors {
      */
     public DeserializationBuffer getDeserializationBuffer() {
       return null;
+    }
+
+    public void handleObjectsReferencedFromFarRefs(final SnapshotBuffer sb) {
+      synchronized (externalReferences) {
+        while (!externalReferences.isEmpty()) {
+          DeferredFarRefSerialization frt = externalReferences.poll();
+          assert frt != null;
+
+          // ignore todos from a different snapshot
+
+          if (frt.isCurrent()) {
+            SClass clazz = Types.getClassOf(frt.target);
+            long location;
+            if (frt.target instanceof PromiseMessage) {
+              location = ((PromiseMessage) frt.target).forceSerialize(sb);
+            } else {
+              location = clazz.serialize(frt.target, sb);
+            }
+            frt.resolve(location);
+          }
+        }
+      }
     }
   }
 

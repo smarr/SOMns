@@ -93,6 +93,10 @@ public abstract class EventualMessage extends SAbstractObject {
     return onReceive.getRootNode().getSourceSection();
   }
 
+  public void setMessageIdSnapshot(final long messageId) {
+    this.messageId = messageId;
+  }
+
   @TruffleBoundary
   // TODO: can we establish a structure for this? at the moment, we have an
   // indirection here, which leads us to a serializer that's not compilation
