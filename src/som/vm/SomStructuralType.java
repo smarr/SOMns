@@ -53,12 +53,6 @@ import som.vmobjects.SSymbol;
  * to this type. For now, objects conform to the type when they can respond to each of method
  * names contained in this list.
  */
-
-enum SUBCLASS_STATE {
-  IS_SUBCLASS,
-  NOT_SUBCLASS
-};
-
 public final class SomStructuralType {
   public static long numSignatureChecks;
   public static long numSubclassChecks;
@@ -66,9 +60,14 @@ public final class SomStructuralType {
 
   public static final SSymbol UNKNOWN = symbolFor("Unknown");
 
-  private static final int                MAX_TABLE_SIZE = 10000;
-  private static final SUBCLASS_STATE[][] subtypingTable =
-      new SUBCLASS_STATE[MAX_TABLE_SIZE][MAX_TABLE_SIZE];
+  private static final int MAX_TABLE_SIZE = 1000;
+
+  private static final byte UNINITIALIZED = 0;
+  private static final byte IS_SUBCLASS   = 1;
+  private static final byte NOT_SUBCLASS  = 2;
+
+  private static final byte[][] isSubclassTable =
+      VmSettings.USE_TYPE_CHECKING ? new byte[MAX_TABLE_SIZE][MAX_TABLE_SIZE] : null;
 
   private static final List<SomStructuralType>         allKnownTypes =
       new ArrayList<SomStructuralType>();
@@ -100,7 +99,10 @@ public final class SomStructuralType {
     this.definitionName = name;
   }
 
-  private SUBCLASS_STATE checkSignatures(final SomStructuralType other) {
+  /**
+   * @return true, if it is a subclass
+   */
+  private boolean checkSignatures(final SomStructuralType other) {
     CompilerAsserts.neverPartOfCompilation();
     if (VmSettings.COLLECT_TYPE_STATS) {
       numSignatureChecks += 1;
@@ -115,11 +117,11 @@ public final class SomStructuralType {
         }
       }
       if (!found) {
-        return SUBCLASS_STATE.NOT_SUBCLASS;
+        return false;
       }
     }
 
-    return SUBCLASS_STATE.IS_SUBCLASS;
+    return true;
   }
 
   public boolean isSubclassOf(final SomStructuralType other) {
@@ -134,15 +136,15 @@ public final class SomStructuralType {
     }
 
     if (!VmSettings.USE_SUBTYPE_TABLE) {
-      return SUBCLASS_STATE.IS_SUBCLASS == checkSignatures(other);
+      return checkSignatures(other);
     }
 
-    SUBCLASS_STATE state = subtypingTable[other.tableIndex][tableIndex];
-    if (state == null) {
-      state = checkSignatures(other);
-      subtypingTable[other.tableIndex][tableIndex] = state;
+    byte isSubclass = isSubclassTable[other.tableIndex][tableIndex];
+    if (isSubclass == UNINITIALIZED) {
+      isSubclass = checkSignatures(other) ? IS_SUBCLASS : NOT_SUBCLASS;
+      isSubclassTable[other.tableIndex][tableIndex] = isSubclass;
     }
-    return state == SUBCLASS_STATE.IS_SUBCLASS;
+    return isSubclass == IS_SUBCLASS;
   }
 
   public static SomStructuralType makeType(final SSymbol name,
