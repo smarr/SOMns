@@ -30,6 +30,7 @@ package som.compiler;
 
 import java.util.Stack;
 
+import com.google.gson.JsonObject;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.tools.structure.StructuralProbe;
@@ -154,7 +155,7 @@ public class ScopeManager {
    *          code)
    * @return the builder
    */
-  public MethodBuilder newMethod(final SSymbol signature, final SSymbol returnType) {
+  public MethodBuilder newMethod(final SSymbol signature, final JsonObject returnType) {
     MethodBuilder builder = new MethodBuilder(peekObject(), probe);
     builder.setSignature(signature);
     builder.setReturnType(returnType);

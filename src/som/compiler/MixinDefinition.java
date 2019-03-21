@@ -44,14 +44,12 @@ import som.interpreter.nodes.dispatch.ClassSlotAccessNode;
 import som.interpreter.nodes.dispatch.DispatchGuard;
 import som.interpreter.nodes.dispatch.DispatchGuard.CheckSObject;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.interpreter.nodes.dispatch.TypeCheckNode;
 import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.InitializerFieldWrite;
 import som.interpreter.objectstorage.StorageLocation;
 import som.interpreter.transactions.CachedTxSlotRead;
 import som.interpreter.transactions.CachedTxSlotWrite;
-import som.vm.SomStructuralType;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
@@ -549,16 +547,14 @@ public final class MixinDefinition implements SomInteropObject {
   // perhaps move some of the responsibilities to SlotAccessNode???
   public static class SlotDefinition implements Dispatchable {
     private final SSymbol          name;
-    protected final SSymbol        type;
     protected final AccessModifier modifier;
     private final boolean          immutable;
     protected final SourceSection  source;
 
-    public SlotDefinition(final SSymbol name, final SSymbol type,
+    public SlotDefinition(final SSymbol name,
         final AccessModifier acccessModifier, final boolean immutable,
         final SourceSection source) {
       this.name = name;
-      this.type = type;
       this.modifier = acccessModifier;
       this.immutable = immutable;
       this.source = source;
@@ -599,9 +595,6 @@ public final class MixinDefinition implements SomInteropObject {
 
       CachedSlotRead read =
           createNode(loc, DispatchGuard.createSObjectCheck(rcvr),
-              SomStructuralType.isNullOrUnknown(type) ? null
-                  : TypeCheckNode.create(SomStructuralType.recallTypeByName(type),
-                      loc.getSlot().getSourceSection()),
               next,
               isSet);
 
@@ -609,9 +602,6 @@ public final class MixinDefinition implements SomInteropObject {
           getAccessType() == SlotAccess.FIELD_READ) {
         return new CachedTxSlotRead(getAccessType(), read,
             DispatchGuard.createSObjectCheck(rcvr),
-            SomStructuralType.isNullOrUnknown(type) ? null
-                : TypeCheckNode.create(SomStructuralType.recallTypeByName(type),
-                    source),
             next);
       } else {
         return read;
@@ -638,9 +628,9 @@ public final class MixinDefinition implements SomInteropObject {
     }
 
     protected CachedSlotRead createNode(final StorageLocation loc,
-        final CheckSObject guardForRcvr, final TypeCheckNode typeCheck,
+        final CheckSObject guardForRcvr,
         final AbstractDispatchNode next, final boolean isSet) {
-      return loc.getReadNode(getAccessType(), guardForRcvr, typeCheck, next, isSet);
+      return loc.getReadNode(getAccessType(), guardForRcvr, next, isSet);
     }
 
     protected SlotAccess getAccessType() {
@@ -661,10 +651,10 @@ public final class MixinDefinition implements SomInteropObject {
 
     private SlotDefinition mainSlot;
 
-    public SlotMutator(final SSymbol name, final SSymbol type,
+    public SlotMutator(final SSymbol name,
         final AccessModifier acccessModifier, final boolean immutable,
         final SourceSection source, final SlotDefinition mainSlot) {
-      super(name, type, acccessModifier, immutable, source);
+      super(name, acccessModifier, immutable, source);
       assert !immutable;
       this.mainSlot = mainSlot;
     }
@@ -677,18 +667,12 @@ public final class MixinDefinition implements SomInteropObject {
       boolean isSet = loc.isSet(rcvr);
       CachedSlotWrite write =
           loc.getWriteNode(mainSlot, DispatchGuard.createSObjectCheck(rcvr),
-              SomStructuralType.isNullOrUnknown(type) ? null
-                  : TypeCheckNode.create(SomStructuralType.recallTypeByName(type),
-                      loc.getSlot().getSourceSection()),
               next,
               isSet);
 
       if (forAtomic) {
         return new CachedTxSlotWrite(write,
             DispatchGuard.createSObjectCheck(rcvr),
-            SomStructuralType.isNullOrUnknown(type) ? null
-                : TypeCheckNode.create(SomStructuralType.recallTypeByName(type),
-                    loc.getSlot().getSourceSection()),
             next);
       } else {
         return write;
@@ -712,19 +696,19 @@ public final class MixinDefinition implements SomInteropObject {
   public static final class ClassSlotDefinition extends SlotDefinition {
     private final MixinDefinition mixinDefinition;
 
-    public ClassSlotDefinition(final SSymbol name, final SSymbol type,
+    public ClassSlotDefinition(final SSymbol name,
         final MixinDefinition mixinDefinition) {
-      super(name, type, mixinDefinition.getAccessModifier(), true,
+      super(name, mixinDefinition.getAccessModifier(), true,
           mixinDefinition.getSourceSection());
       this.mixinDefinition = mixinDefinition;
     }
 
     @Override
     protected CachedSlotRead createNode(final StorageLocation loc,
-        final CheckSObject guardForRcvr, final TypeCheckNode typeCheck,
+        final CheckSObject guardForRcvr,
         final AbstractDispatchNode next, final boolean isSet) {
-      CachedSlotRead read = super.createNode(loc, guardForRcvr, typeCheck, next, isSet);
-      CachedSlotWrite write = loc.getWriteNode(this, guardForRcvr, typeCheck, next, isSet);
+      CachedSlotRead read = super.createNode(loc, guardForRcvr, next, isSet);
+      CachedSlotWrite write = loc.getWriteNode(this, guardForRcvr, next, isSet);
 
       ClassSlotAccessNode node =
           new ClassSlotAccessNode(mixinDefinition, loc.getSlot(), read, write);
@@ -845,7 +829,7 @@ public final class MixinDefinition implements SomInteropObject {
     Method adaptedInvokable = originalInvokable.cloneAndAdaptAfterScopeChange(
         adaptedScope, appliesTo + 1, false, true);
     return new SInvokable(invokable.getSignature(), invokable.getAccessModifier(),
-        adaptedInvokable, invokable.getEmbeddedBlocks(), invokable.getExepctedTypes());
+        adaptedInvokable, invokable.getEmbeddedBlocks());
   }
 
   private void adaptFactoryMethods(final MethodScope scope, final int appliesTo) {

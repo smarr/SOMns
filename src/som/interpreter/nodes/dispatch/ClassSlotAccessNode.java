@@ -40,7 +40,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
 
   public ClassSlotAccessNode(final MixinDefinition mixinDef, final SlotDefinition slotDef,
       final CachedSlotRead read, final CachedSlotWrite write) {
-    super(SlotAccess.CLASS_READ, read.guardForRcvr, read.typeCheck, read.nextInCache);
+    super(SlotAccess.CLASS_READ, read.guardForRcvr, read.nextInCache);
 
     // TODO: can the slot read be an unwritten read? I'd think so.
     this.read = read;

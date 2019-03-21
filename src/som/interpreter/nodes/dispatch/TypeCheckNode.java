@@ -1,175 +1,102 @@
 package som.interpreter.nodes.dispatch;
 
-import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.GenerateNodeFactory;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.NodeChildren;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.SomException;
 import som.interpreter.Types;
 import som.interpreter.nodes.ExceptionSignalingNode;
-import som.interpreter.nodes.dispatch.TypeCheckNodeFactory.OptCheckNodeGen;
-import som.interpreter.objectstorage.ClassFactory;
-import som.interpreter.objectstorage.ObjectLayout;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.SomStructuralType;
 import som.vm.Symbols;
 import som.vm.VmSettings;
-import som.vm.constants.Nil;
-import som.vmobjects.SArray;
-import som.vmobjects.SBlock;
-import som.vmobjects.SClass;
-import som.vmobjects.SObject;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SObjectWithClass;
-import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 
 
-public abstract class TypeCheckNode extends Node {
+@NodeChildren({
+    @NodeChild(value = "receiver", type = ExpressionNode.class),
+    @NodeChild(value = "argument", type = ExpressionNode.class)})
+@GenerateNodeFactory
+public abstract class TypeCheckNode extends BinaryExpressionNode {
 
-  public static TypeCheckNode create(final SomStructuralType expected,
+  @Child ExceptionSignalingNode exception;
+
+  public static TypeCheckNode create(final ExpressionNode type, final ExpressionNode expr,
       final SourceSection sourceSection) {
-    if (VmSettings.USE_OPT_TYPE_CHECK_NODE) {
-      return OptCheckNodeGen.create(expected, sourceSection);
-    } else {
-      return new NoOptCheck(expected, sourceSection);
-    }
+    return TypeCheckNodeFactory.create(sourceSection, type, expr);
   }
 
-  protected final SomStructuralType expected;
-  protected final SourceSection     sourceSection;
-
-  protected TypeCheckNode(final SomStructuralType expected,
-      final SourceSection sourceSection) {
+  protected TypeCheckNode(final SourceSection sourceSection) {
     assert VmSettings.USE_TYPE_CHECKING : "Trying to create a TypeCheckNode, while USE_TYPE_CHECKING is disabled";
-    this.expected = expected;
     this.sourceSection = sourceSection;
   }
 
-  public abstract void executeTypeCheck(Object obj);
-
-  protected final void throwTypeError(final Object obj, final SomStructuralType actualType) {
-    CompilerDirectives.transferToInterpreter();
-
-    ExceptionSignalingNode exNode = ExceptionSignalingNode.createNode(
-        Symbols.symbolFor("TypeError"), sourceSection);
-    insert(exNode);
-
-    int line = sourceSection.getStartLine();
-    int column = sourceSection.getStartColumn();
-    String[] parts = sourceSection.getSource().getURI().getPath().split("/");
-    String suffix = parts[parts.length - 1] + " [" + line + "," + column + "]";
-    exNode.signal(suffix + " " + obj + " is not a subclass of " + expected
-        + ", because it has the type " + actualType);
-  }
-
-  protected static final class NoOptCheck extends TypeCheckNode {
-    protected NoOptCheck(final SomStructuralType expected, final SourceSection sourceSection) {
-      super(expected, sourceSection);
-    }
-
-    @Override
-    @TruffleBoundary
-    public void executeTypeCheck(final Object obj) {
-      SomStructuralType type = Types.getClassOf(obj).getInstanceFactory().type;
-      if (!type.isSubclassOf(expected)) {
-        throwTypeError(obj, type);
+  protected void ensureExceptionNode() {
+    if (exception == null) {
+      CompilerDirectives.transferToInterpreter();
+      // now we are outside of PE'ed code, and need to check again
+      if (exception == null) {
+        exception = insert(
+            ExceptionSignalingNode.createNode(Symbols.symbolFor("TypeError"), sourceSection));
       }
     }
   }
 
-  public abstract static class OptCheck extends TypeCheckNode {
-    protected OptCheck(final SomStructuralType expected, final SourceSection sourceSection) {
-      super(expected, sourceSection);
-    }
+  @Override
+  @Specialization
+  public Object executeEvaluated(final VirtualFrame frame, final Object receiver,
+      final Object argument) {
+    CallTarget target = null;
 
-    protected boolean isNil(final SObjectWithoutFields obj) {
-      return obj == Nil.nilObject;
-    }
-
-    protected ClassFactory getFactoryForPrimitive(final Object obj) {
-      return Types.getClassOf(obj).getInstanceFactory();
-    }
-
-    @Specialization(guards = {"obj.getObjectLayout() == cachedLayout",
-        "cachedFactory.type.isSubclassOf(expected)"}, limit = "6")
-    public void checkSObject(final SObject obj,
-        @Cached("obj.getFactory()") final ClassFactory cachedFactory,
-        @Cached("obj.getObjectLayout()") final ObjectLayout cachedLayout) {
-      // no op
-    }
-
-    @Specialization(guards = {"isNil(obj)"})
-    public void performTypeCheckOnNil(final SObjectWithoutFields obj) {
-      // no op
-    }
-
-    @Specialization(guards = {"obj.getFactory() == cachedFactory",
-        "cachedFactory.type.isSubclassOf(expected)"}, limit = "6")
-    public void checkSObjectWithoutFields(final SObjectWithoutFields obj,
-        @Cached("obj.getFactory()") final ClassFactory cachedFactory) {
-      // no op
-    }
-
-    @Specialization(guards = {"obj.getFactory() == cachedFactory",
-        "cachedFactory.type.isSubclassOf(expected)"}, limit = "6")
-    public void checkSClass(final SClass obj,
-        @Cached("obj.getFactory()") final ClassFactory cachedFactory) {
-      // no op
-    }
-
-    @Specialization(replaces = {"checkSObject", "checkSClass", "checkSObjectWithoutFields"})
-    public void checkObject(final SObjectWithClass obj) {
-      CompilerAsserts.neverPartOfCompilation(
-          "This specialization should not be part of our benchmark execution. If it is, figure out why");
-      if (obj.getFactory().type.isSubclassOf(expected)) {
-        // no op
-      } else {
-        CompilerDirectives.transferToInterpreter();
-        throwTypeError(obj, obj.getFactory().type);
+    SObjectWithClass expected = (SObjectWithClass) receiver;
+    for (SInvokable invoke : expected.getSOMClass().getMethods()) {
+      if (invoke.getSignature().getString().equals("checkOrError:")) {
+        target = invoke.getCallTarget();
+        break;
       }
     }
 
-    @Specialization(guards = {"cachedFactory.type.isSubclassOf(expected)"})
-    public void performTypeCheckOnBoolean(final boolean obj,
-        @Cached("getFactoryForPrimitive(obj)") final ClassFactory cachedFactory) {
-      // no op
+    if (target == null) {
+      ensureExceptionNode();
+
+      int line = sourceSection.getStartLine();
+      int column = sourceSection.getStartColumn();
+      String[] parts = sourceSection.getSource().getURI().getPath().split("/");
+      String suffix = parts[parts.length - 1] + " [" + line + "," + column + "]";
+
+      exception.signal(suffix + " " + expected + " is not a type");
+      return null;
     }
 
-    @Specialization(guards = {"cachedFactory.type.isSubclassOf(expected)"})
-    public void performTypeCheckOnLong(final long obj,
-        @Cached("getFactoryForPrimitive(obj)") final ClassFactory cachedFactory) {
-      // no op
-    }
+    try {
+      // TODO: this a performance issue
+      Truffle.getRuntime().createDirectCallNode(target)
+             .call(new Object[] {receiver, argument});
+    } catch (SomException e) {
+      ensureExceptionNode();
 
-    @Specialization(guards = {"cachedFactory.type.isSubclassOf(expected)"})
-    public void performTypeCheckOnDouble(final double obj,
-        @Cached("getFactoryForPrimitive(obj)") final ClassFactory cachedFactory) {
-      // no op
-    }
+      // TODO: this a performance issue
+      SomStructuralType type = Types.getClassOf(argument).getFactory().type;
+      int line = sourceSection.getStartLine();
+      int column = sourceSection.getStartColumn();
 
-    @Specialization(guards = {"cachedFactory.type.isSubclassOf(expected)"})
-    public void performTypeCheckOnString(final String obj,
-        @Cached("getFactoryForPrimitive(obj)") final ClassFactory cachedFactory) {
-      // no op
-    }
+      // TODO: Get the real source of the type check
+      String[] parts = sourceSection.getSource().getURI().getPath().split("/");
+      String suffix = parts[parts.length - 1] + " [" + line + "," + column + "]";
 
-    @Specialization(guards = {"cachedFactory.type.isSubclassOf(expected)"})
-    public void performTypeCheckOnString(final SArray obj,
-        @Cached("getFactoryForPrimitive(obj)") final ClassFactory cachedFactory) {
-      // no op
+      exception.signal(suffix + " " + argument + " is not a subtype of "
+          + sourceSection.getCharacters() + ", because it has the type " + type);
+      throw e;
     }
-
-    @Specialization(guards = {"cachedFactory.type.isSubclassOf(expected)"})
-    public void performTypeCheckOnString(final SBlock obj,
-        @Cached("getFactoryForPrimitive(obj)") final ClassFactory cachedFactory) {
-      // no op
-    }
-
-    @Fallback
-    public void typeCheckFailed(final Object obj) {
-      throwTypeError(obj, null);
-    }
+    return argument;
   }
 }

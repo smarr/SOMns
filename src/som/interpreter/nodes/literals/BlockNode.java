@@ -12,7 +12,6 @@ import som.compiler.Variable;
 import som.compiler.Variable.Argument;
 import som.interpreter.Method;
 import som.interpreter.nodes.ExpressionNode;
-import som.vm.SomStructuralType;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.debugger.Tags.LiteralTag;
@@ -75,7 +74,7 @@ public class BlockNode extends LiteralNode {
         inliner.outerScopeChanged());
     SInvokable adaptedIvk = new SInvokable(blockMethod.getSignature(),
         AccessModifier.BLOCK_METHOD,
-        adapted, blockMethod.getEmbeddedBlocks(), new SomStructuralType[] {null});
+        adapted, blockMethod.getEmbeddedBlocks());
     replace(createNode(adaptedIvk));
   }
 

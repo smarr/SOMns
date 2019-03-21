@@ -28,14 +28,12 @@ import tools.dym.Tags.FieldWrite;
 public abstract class CachedSlotWrite extends AbstractDispatchNode {
   @Child protected AbstractDispatchNode nextInCache;
 
-  protected final CheckSObject  guardForRcvr;
-  protected final TypeCheckNode typeCheck;
+  protected final CheckSObject guardForRcvr;
 
   public CachedSlotWrite(final CheckSObject guardForRcvr,
-      final TypeCheckNode typeCheck, final AbstractDispatchNode nextInCache) {
+      final AbstractDispatchNode nextInCache) {
     super(nextInCache.getSourceSection());
     this.guardForRcvr = guardForRcvr;
-    this.typeCheck = insert(typeCheck);
     this.nextInCache = nextInCache;
   }
 
@@ -54,9 +52,6 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
   public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
     try {
       if (guardForRcvr.entryMatches(arguments[0], null)) {
-        if (typeCheck != null) {
-          typeCheck.executeTypeCheck(arguments[1]);
-        }
         doWrite((SMutableObject) arguments[0], arguments[1]);
         return arguments[1];
       } else {
@@ -91,8 +86,8 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
     private final SlotDefinition slot;
 
     public UnwrittenSlotWrite(final SlotDefinition slot, final CheckSObject guardForRcvr,
-        final TypeCheckNode typeCheck, final AbstractDispatchNode nextInCache) {
-      super(guardForRcvr, typeCheck, nextInCache);
+        final AbstractDispatchNode nextInCache) {
+      super(guardForRcvr, nextInCache);
       this.slot = slot;
     }
 
@@ -107,9 +102,9 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
     private final AbstractObjectAccessor accessor;
 
     public ObjectSlotWrite(final AbstractObjectAccessor accessor,
-        final CheckSObject guardForRcvr, final TypeCheckNode typeCheck,
+        final CheckSObject guardForRcvr,
         final AbstractDispatchNode nextInCache) {
-      super(guardForRcvr, typeCheck, nextInCache);
+      super(guardForRcvr, nextInCache);
       this.accessor = accessor;
     }
 
@@ -125,9 +120,9 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
     protected final IntValueProfile           primMarkProfile;
 
     PrimSlotWrite(final SlotDefinition slot, final AbstractPrimitiveAccessor accessor,
-        final CheckSObject guardForRcvr, final TypeCheckNode typeCheck,
+        final CheckSObject guardForRcvr,
         final AbstractDispatchNode nextInCache) {
-      super(guardForRcvr, typeCheck, nextInCache);
+      super(guardForRcvr, nextInCache);
       this.accessor = accessor;
       this.slot = slot;
       this.primMarkProfile = IntValueProfile.createIdentityProfile();
@@ -138,8 +133,8 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
 
     public LongSlotWriteSetOrUnset(final SlotDefinition slot,
         final AbstractPrimitiveAccessor accessor, final CheckSObject guardForRcvr,
-        final TypeCheckNode typeCheck, final AbstractDispatchNode nextInCache) {
-      super(slot, accessor, guardForRcvr, typeCheck, nextInCache);
+        final AbstractDispatchNode nextInCache) {
+      super(slot, accessor, guardForRcvr, nextInCache);
     }
 
     @Override
@@ -158,8 +153,8 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
 
     public LongSlotWriteSet(final SlotDefinition slot,
         final AbstractPrimitiveAccessor accessor, final CheckSObject guardForRcvr,
-        final TypeCheckNode typeCheck, final AbstractDispatchNode nextInCache) {
-      super(slot, accessor, guardForRcvr, typeCheck, nextInCache);
+        final AbstractDispatchNode nextInCache) {
+      super(slot, accessor, guardForRcvr, nextInCache);
     }
 
     @Override
@@ -171,7 +166,7 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
           accessor.markPrimAsSet(obj);
 
           // fall back to LongSlotWriteSetOrUnset
-          replace(new LongSlotWriteSetOrUnset(slot, accessor, guardForRcvr, typeCheck,
+          replace(new LongSlotWriteSetOrUnset(slot, accessor, guardForRcvr,
               nextInCache));
         }
       } else {
@@ -185,8 +180,8 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
 
     public DoubleSlotWriteSetOrUnset(final SlotDefinition slot,
         final AbstractPrimitiveAccessor accessor, final CheckSObject guardForRcvr,
-        final TypeCheckNode typeCheck, final AbstractDispatchNode nextInCache) {
-      super(slot, accessor, guardForRcvr, typeCheck, nextInCache);
+        final AbstractDispatchNode nextInCache) {
+      super(slot, accessor, guardForRcvr, nextInCache);
     }
 
     @Override
@@ -205,8 +200,8 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
 
     public DoubleSlotWriteSet(final SlotDefinition slot,
         final AbstractPrimitiveAccessor accessor, final CheckSObject guardForRcvr,
-        final TypeCheckNode typeCheck, final AbstractDispatchNode nextInCache) {
-      super(slot, accessor, guardForRcvr, typeCheck, nextInCache);
+        final AbstractDispatchNode nextInCache) {
+      super(slot, accessor, guardForRcvr, nextInCache);
     }
 
     @Override
@@ -218,7 +213,7 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
           accessor.markPrimAsSet(obj);
 
           // fall back to LongSlotWriteSetOrUnset
-          replace(new DoubleSlotWriteSetOrUnset(slot, accessor, guardForRcvr, typeCheck,
+          replace(new DoubleSlotWriteSetOrUnset(slot, accessor, guardForRcvr,
               nextInCache));
         }
       } else {

@@ -21,7 +21,6 @@ import som.interpreter.nodes.dispatch.CachedSlotWrite.LongSlotWriteSetOrUnset;
 import som.interpreter.nodes.dispatch.CachedSlotWrite.ObjectSlotWrite;
 import som.interpreter.nodes.dispatch.CachedSlotWrite.UnwrittenSlotWrite;
 import som.interpreter.nodes.dispatch.DispatchGuard.CheckSObject;
-import som.interpreter.nodes.dispatch.TypeCheckNode;
 import som.interpreter.objectstorage.StorageAccessor.AbstractObjectAccessor;
 import som.interpreter.objectstorage.StorageAccessor.AbstractPrimitiveAccessor;
 import som.vm.constants.Nil;
@@ -72,10 +71,10 @@ public abstract class StorageLocation {
   public abstract boolean isObjectLocation();
 
   public abstract CachedSlotRead getReadNode(SlotAccess type, CheckSObject guardForRcvr,
-      TypeCheckNode typeCheck, AbstractDispatchNode nextInCache, boolean isSet);
+      AbstractDispatchNode nextInCache, boolean isSet);
 
   public abstract CachedSlotWrite getWriteNode(SlotDefinition slot, CheckSObject guardForRcvr,
-      TypeCheckNode typeCheck, AbstractDispatchNode next, boolean isSet);
+      AbstractDispatchNode next, boolean isSet);
 
   public abstract StorageAccessor getAccessor();
 
@@ -113,16 +112,16 @@ public abstract class StorageLocation {
 
     @Override
     public CachedSlotRead getReadNode(final SlotAccess type, final CheckSObject guardForRcvr,
-        final TypeCheckNode typeCheck, final AbstractDispatchNode nextInCache,
+        final AbstractDispatchNode nextInCache,
         final boolean isSet) {
-      return new UnwrittenSlotRead(type, guardForRcvr, typeCheck, nextInCache);
+      return new UnwrittenSlotRead(type, guardForRcvr, nextInCache);
     }
 
     @Override
     public CachedSlotWrite getWriteNode(final SlotDefinition slot,
-        final CheckSObject guardForRcvr, final TypeCheckNode typeCheck,
+        final CheckSObject guardForRcvr,
         final AbstractDispatchNode next, final boolean isSet) {
-      return new UnwrittenSlotWrite(slot, guardForRcvr, typeCheck, next);
+      return new UnwrittenSlotWrite(slot, guardForRcvr, next);
     }
 
     /**
@@ -174,16 +173,16 @@ public abstract class StorageLocation {
      */
     @Override
     public CachedSlotRead getReadNode(final SlotAccess type, final CheckSObject guardForRcvr,
-        final TypeCheckNode typeCheck, final AbstractDispatchNode nextInCache,
+        final AbstractDispatchNode nextInCache,
         final boolean isSet) {
-      return new ObjectSlotRead(accessor, type, guardForRcvr, typeCheck, nextInCache);
+      return new ObjectSlotRead(accessor, type, guardForRcvr, nextInCache);
     }
 
     @Override
     public CachedSlotWrite getWriteNode(final SlotDefinition slot,
-        final CheckSObject guardForRcvr, final TypeCheckNode typeCheck,
+        final CheckSObject guardForRcvr,
         final AbstractDispatchNode next, final boolean isSet) {
-      return new ObjectSlotWrite(accessor, guardForRcvr, typeCheck, next);
+      return new ObjectSlotWrite(accessor, guardForRcvr, next);
     }
 
     /**
@@ -257,25 +256,25 @@ public abstract class StorageLocation {
 
     @Override
     public CachedSlotRead getReadNode(final SlotAccess type,
-        final CheckSObject guardForRcvr, final TypeCheckNode typeCheck,
+        final CheckSObject guardForRcvr,
         final AbstractDispatchNode nextInCache,
         final boolean isSet) {
       if (isSet) {
-        return new LongSlotReadSet(accessor, type, guardForRcvr, typeCheck, nextInCache);
+        return new LongSlotReadSet(accessor, type, guardForRcvr, nextInCache);
       } else {
-        return new LongSlotReadSetOrUnset(accessor, type, guardForRcvr, typeCheck,
+        return new LongSlotReadSetOrUnset(accessor, type, guardForRcvr,
             nextInCache);
       }
     }
 
     @Override
     public CachedSlotWrite getWriteNode(final SlotDefinition slot,
-        final CheckSObject guardForRcvr, final TypeCheckNode typeCheck,
+        final CheckSObject guardForRcvr,
         final AbstractDispatchNode next, final boolean isSet) {
       if (isSet) {
-        return new LongSlotWriteSet(slot, accessor, guardForRcvr, typeCheck, next);
+        return new LongSlotWriteSet(slot, accessor, guardForRcvr, next);
       } else {
-        return new LongSlotWriteSetOrUnset(slot, accessor, guardForRcvr, typeCheck, next);
+        return new LongSlotWriteSetOrUnset(slot, accessor, guardForRcvr, next);
       }
     }
 
@@ -318,24 +317,24 @@ public abstract class StorageLocation {
 
     @Override
     public CachedSlotRead getReadNode(final SlotAccess type,
-        final CheckSObject guardForRcvr, final TypeCheckNode typeCheck,
+        final CheckSObject guardForRcvr,
         final AbstractDispatchNode nextInCache, final boolean isSet) {
       if (isSet) {
-        return new DoubleSlotReadSet(accessor, type, guardForRcvr, typeCheck, nextInCache);
+        return new DoubleSlotReadSet(accessor, type, guardForRcvr, nextInCache);
       } else {
-        return new DoubleSlotReadSetOrUnset(accessor, type, guardForRcvr, typeCheck,
+        return new DoubleSlotReadSetOrUnset(accessor, type, guardForRcvr,
             nextInCache);
       }
     }
 
     @Override
     public CachedSlotWrite getWriteNode(final SlotDefinition slot,
-        final CheckSObject guardForRcvr, final TypeCheckNode typeCheck,
+        final CheckSObject guardForRcvr,
         final AbstractDispatchNode next, final boolean isSet) {
       if (isSet) {
-        return new DoubleSlotWriteSet(slot, accessor, guardForRcvr, typeCheck, next);
+        return new DoubleSlotWriteSet(slot, accessor, guardForRcvr, next);
       } else {
-        return new DoubleSlotWriteSetOrUnset(slot, accessor, guardForRcvr, typeCheck, next);
+        return new DoubleSlotWriteSetOrUnset(slot, accessor, guardForRcvr, next);
       }
     }
 
