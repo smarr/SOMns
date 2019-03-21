@@ -10,7 +10,6 @@ import som.interpreter.Types;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ClassFactory;
-import som.vm.SomStructuralType;
 import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
@@ -39,7 +38,7 @@ public final class TypePrims {
 
     protected void throwTypeError(final SType expected, final Object obj) {
       CompilerDirectives.transferToInterpreter();
-      SomStructuralType type = Types.getClassOf(obj).getFactory().type;
+      Object type = Types.getClassOf(obj).getFactory().type;
       int line = sourceSection.getStartLine();
       int column = sourceSection.getStartColumn();
       // TODO: Get the real source of the type check

@@ -32,7 +32,6 @@ import static som.vm.Symbols.symbolFor;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -50,7 +49,6 @@ import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.LocalVariableNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
-import som.vm.SomStructuralType;
 import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -593,60 +591,6 @@ public class JsonTreeTranslator {
     return signatures.toArray(new SSymbol[] {});
   }
 
-  @Deprecated
-  private SSymbol[] parseAndType(final JsonObject node) {
-    Set<SSymbol> signatures = new HashSet<>();
-    JsonObject body = node.get("body").getAsJsonObject();
-
-    JsonObject left = body.get("left").getAsJsonObject();
-    if (nodeType(left).equals("identifier")) {
-      SomStructuralType leftType = SomStructuralType.recallTypeByName(name(left));
-      for (SSymbol sig : leftType.signatures) {
-        signatures.add(sig);
-      }
-    } else {
-      signatures.addAll(Arrays.asList(parseInterfaceSignatures(left)));
-    }
-
-    JsonObject right = body.get("right").getAsJsonObject();
-    if (nodeType(right).equals("identifier")) {
-      SomStructuralType rightType = SomStructuralType.recallTypeByName(name(right));
-      for (SSymbol sig : rightType.signatures) {
-        signatures.add(sig);
-      }
-    } else {
-      signatures.addAll(Arrays.asList(parseInterfaceSignatures(right)));
-    }
-
-    return signatures.toArray(new SSymbol[] {});
-  }
-
-  /**
-   * Extracts the list of signatures defined by a Grace interface node. Any Grace to SOM
-   * mappings (such as those for operators) are performed before this list of signatures is
-   * returned; so the returned list will contain the NS `not` rather than the Grace `prefix!`.
-   */
-  @Deprecated
-  private SSymbol[] parseTypeSignatures(final JsonObject node) {
-
-    JsonObject body = node.get("body").getAsJsonObject();
-    if (body.has("left")) {
-      String combination = body.get("operator").getAsString();
-      if (combination.equals("&")) {
-        return parseAndType(node);
-      } else {
-        error(
-            "The translator doesn't understand how to parse a " + combination
-                + " type combination"
-                + nodeType(node),
-            node);
-        throw new RuntimeException();
-      }
-    }
-
-    return parseInterfaceSignatures(body);
-  }
-
   /**
    * Builds an explicit send by translating the receiver and the arguments of the given
    * request node.
@@ -733,12 +677,6 @@ public class JsonTreeTranslator {
           isDefForLocals(node), sourcesForLocals(node), body(node), source(node));
 
     } else if (nodeType(node).equals("type-statement")) {
-      if (VmSettings.USE_TYPE_CHECKING) {
-        SSymbol name = symbolFor(name(node));
-        SomStructuralType.recordTypeByName(name,
-            SomStructuralType.makeType(name, parseTypeSignatures(node)));
-        // Output.println(name + "= " + prettyPrint(node, "\n ") + "\n\n");
-      }
       astBuilder.objectBuilder.typeStatement(symbolFor(name(node)),
           translate((JsonObject) node.get("body")), source(node));
       return null;

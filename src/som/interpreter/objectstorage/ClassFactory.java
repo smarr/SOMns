@@ -15,10 +15,10 @@ import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.vm.SomStructuralType;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
+import som.vmobjects.SType;
 import tools.snapshot.nodes.AbstractSerializationNode;
 import tools.snapshot.nodes.SerializerRootNode;
 
@@ -66,7 +66,7 @@ public final class ClassFactory {
 
   private final ClassFactory classClassFactory;
 
-  public final SomStructuralType type;
+  public final SType type;
 
   protected final SerializerRootNode serializationRoot;
 
@@ -209,7 +209,7 @@ public final class ClassFactory {
     return mixinDef.getIdentifier();
   }
 
-  private SomStructuralType getType() {
+  private SType getType() {
     if (!VmSettings.USE_TYPE_CHECKING) {
       return null;
     }
@@ -243,7 +243,6 @@ public final class ClassFactory {
         }
       }
     }
-
-    return SomStructuralType.makeType(className, signatures.toArray(new SSymbol[] {}));
+    return new SType.InterfaceType(signatures.toArray(new SSymbol[] {}));
   }
 }

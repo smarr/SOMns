@@ -335,8 +335,9 @@ public class AstBuilder {
         // Only add the check if it has a type. TODO: Also ignore if type is Unknown
         if (arg.type != null) {
           builder.addInitializerExpression(TypeCheckNode.create(arg.type,
-              arg.getReadNode(scopeManager.peekMethod().getContextLevel(arg.name), arg.source),
-              arg.source));
+              arg.getReadNode(scopeManager.peekMethod().getContextLevel(arg.name),
+                  arg.source),
+              arg.type.getSourceSection()));
         }
       }
 
@@ -638,7 +639,7 @@ public class AstBuilder {
         if (arg.type != null) {
           expressions.add(TypeCheckNode.create(arg.type,
               arg.getReadNode(builder.getContextLevel(arg.name), arg.source),
-              arg.source));
+              arg.type.getSourceSection()));
         }
       }
 
@@ -704,7 +705,7 @@ public class AstBuilder {
         if (arg.type != null) {
           expressions.add(TypeCheckNode.create(arg.type,
               arg.getReadNode(builder.getContextLevel(arg.name), arg.source),
-              arg.source));
+              arg.type.getSourceSection()));
         }
       }
 
@@ -776,7 +777,7 @@ public class AstBuilder {
       List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
       arguments.add(TypeCheckNode.create(last.type,
           last.getReadNode(builder.getContextLevel(last.name), last.source),
-          last.source));
+          last.type.getSourceSection()));
       expressions.add(requestBuilder.implicit(symbolFor("!!!" + selector),
           arguments, sourceSection));
       // Assemble and return the completed module
