@@ -52,6 +52,7 @@ import som.interpreter.nodes.dispatch.TypeCheckNode;
 import som.interpreter.objectstorage.InitializerFieldWrite;
 import som.primitives.NewObjectPrimNodeGen;
 import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 
@@ -394,7 +395,7 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
 
     dispatchables.put(name, slot);
     if (!immutable) {
-      if (type != null) {
+      if (type != null && VmSettings.USE_TYPE_CHECKING) {
         dispatchables.put(symbolFor("!!!" + getSetterName(name)),
             new SlotMutator(name, acccessModifier, immutable,
                 source, slot));
@@ -407,7 +408,7 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     }
 
     if (init != null) {
-      if (type != null) {
+      if (type != null && VmSettings.USE_TYPE_CHECKING) {
         init = TypeCheckNode.create(type, init, type.getSourceSection());
       }
       ExpressionNode self = initializer.getSelfRead(source);
