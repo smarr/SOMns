@@ -1,5 +1,8 @@
 package som.interpreter.nodes.dispatch;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
@@ -15,7 +18,6 @@ import som.interpreter.Types;
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
-import som.vm.SomStructuralType;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
@@ -29,6 +31,9 @@ import som.vmobjects.SObjectWithClass;
 public abstract class TypeCheckNode extends BinaryExpressionNode {
 
   @Child ExceptionSignalingNode exception;
+
+  private static final Map<Object, Map<Object, Boolean>> isSubclassTable =
+      VmSettings.USE_SUBTYPE_TABLE ? new HashMap<>() : null;
 
   public static ExpressionNode create(final ExpressionNode type, final ExpressionNode expr,
       final SourceSection sourceSection) {
@@ -58,9 +63,31 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
   @Specialization
   public Object executeEvaluated(final VirtualFrame frame, final Object receiver,
       final Object argument) {
+    SObjectWithClass expected = (SObjectWithClass) receiver;
+
+    if (!VmSettings.USE_SUBTYPE_TABLE) {
+      return check(expected, argument, null);
+    }
+
+    Object type = Types.getClassOf(argument).getFactory().type;
+    Map<Object, Boolean> isSuper = isSubclassTable.getOrDefault(type, null);
+    if (isSuper == null) {
+      isSuper = new HashMap<>();
+      isSubclassTable.put(type, isSuper);
+    } else if (isSuper.containsKey(receiver)) {
+      if (isSuper.get(receiver)) {
+        return argument;
+      } else {
+        throwTypeError(argument, type);
+      }
+    }
+    return check(expected, argument, isSuper);
+  }
+
+  protected final Object check(final SObjectWithClass expected, final Object argument,
+      final Map<Object, Boolean> isSuper) {
     CallTarget target = null;
 
-    SObjectWithClass expected = (SObjectWithClass) receiver;
     for (SInvokable invoke : expected.getSOMClass().getMethods()) {
       if (invoke.getSignature().getString().equals("checkOrError:")) {
         target = invoke.getCallTarget();
@@ -71,6 +98,9 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
     if (target == null) {
       ensureExceptionNode();
 
+      if (isSuper != null) {
+        isSuper.put(expected, false);
+      }
       int line = sourceSection.getStartLine();
       int column = sourceSection.getStartColumn();
       String[] parts = sourceSection.getSource().getURI().getPath().split("/");
@@ -83,23 +113,29 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
     try {
       // TODO: this a performance issue
       Truffle.getRuntime().createDirectCallNode(target)
-             .call(new Object[] {receiver, argument});
+             .call(new Object[] {expected, argument});
+      if (isSuper != null) {
+        isSuper.put(expected, true);
+      }
     } catch (SomException e) {
-      ensureExceptionNode();
-
-      // TODO: this a performance issue
-      SomStructuralType type = Types.getClassOf(argument).getFactory().type;
-      int line = sourceSection.getStartLine();
-      int column = sourceSection.getStartColumn();
-
-      // TODO: Get the real source of the type check
-      String[] parts = sourceSection.getSource().getURI().getPath().split("/");
-      String suffix = parts[parts.length - 1] + " [" + line + "," + column + "]";
-
-      exception.signal(suffix + " " + argument + " is not a subtype of "
-          + sourceSection.getCharacters() + ", because it has the type " + type);
+      if (isSuper != null) {
+        isSuper.put(expected, false);
+      }
+      throwTypeError(argument, Types.getClassOf(argument).getFactory().type);
       throw e;
     }
     return argument;
+  }
+
+  protected final void throwTypeError(final Object argument, final Object type) {
+    ensureExceptionNode();
+
+    int line = sourceSection.getStartLine();
+    int column = sourceSection.getStartColumn();
+    String[] parts = sourceSection.getSource().getURI().getPath().split("/");
+    String suffix = parts[parts.length - 1] + " [" + line + "," + column + "]";
+    exception.signal(
+        suffix + " " + argument + " is not a subtype of " + sourceSection.getCharacters()
+            + ", because it has the type " + type);
   }
 }
