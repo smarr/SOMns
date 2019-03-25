@@ -734,8 +734,10 @@ public class AstBuilder {
         if (expr != null && !returned) {
           if (element.get("nodetype").getAsString().equals("return") || i == body.size() - 1) {
             ExpressionNode returnTypeExpr = translator.translate(returnType);
-            expr =
-                TypeCheckNode.create(returnTypeExpr, expr, returnTypeExpr.getSourceSection());
+            if (returnTypeExpr != null) {
+              expr = TypeCheckNode.create(returnTypeExpr, expr,
+                  returnTypeExpr.getSourceSection());
+            }
             returned = true;
           }
           expressions.add(expr);
@@ -868,6 +870,8 @@ public class AstBuilder {
         return literalBuilder.bool(name.getString(), sourceSection);
       } else if (name.getString().equals("done")) {
         return literalBuilder.done(sourceSection);
+      } else if (name.getString().equals("Unknown")) {
+        return null;
       }
       MethodBuilder method = scopeManager.peekMethod();
       return method.getImplicitReceiverSend(name, sourceSection);
