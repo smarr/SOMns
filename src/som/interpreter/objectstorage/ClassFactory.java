@@ -1,9 +1,5 @@
 package som.interpreter.objectstorage;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
 
@@ -15,12 +11,8 @@ import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
-import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
-import som.vmobjects.SType;
-import tools.snapshot.nodes.AbstractSerializationNode;
-import tools.snapshot.nodes.SerializerRootNode;
 
 
 /**
@@ -66,8 +58,6 @@ public final class ClassFactory {
 
   private final ClassFactory classClassFactory;
 
-  public final SType type;
-
   protected final SerializerRootNode serializationRoot;
 
   public ClassFactory(final SSymbol name, final MixinDefinition mixinDef,
@@ -107,7 +97,6 @@ public final class ClassFactory {
         : new ObjectLayout(instanceSlots, this, isTransferObject);
 
     this.classClassFactory = classClassFactory;
-    this.type = getType();
   }
 
   public boolean isDeclaredAsValue() {
@@ -207,42 +196,5 @@ public final class ClassFactory {
 
   public SSymbol getIdentifier() {
     return mixinDef.getIdentifier();
-  }
-
-  private SType getType() {
-    if (!VmSettings.USE_TYPE_CHECKING) {
-      return null;
-    }
-
-    Set<SSymbol> signatures = new HashSet<>();
-
-    EconomicMap<SSymbol, Dispatchable> dispatchables = mixinDef.getInstanceDispatchables();
-    for (SSymbol sig : dispatchables.getKeys()) {
-      signatures.add(sig);
-    }
-
-    if (superclassAndMixins.length == 1 && superclassAndMixins[0] == null) {
-      assert className.getString().equals("Top");
-      // no op, this is the Top class, doesn't have a super class
-    } else {
-      for (int i = 0; i < superclassAndMixins.length; i++) {
-        SClass clazz = superclassAndMixins[i];
-        assert clazz != null : "Don't expect type to be null, but it was. superclassAndMixins: "
-            + Arrays.toString(superclassAndMixins) + " i: " + i;
-
-        SClass next = clazz;
-        while (next != null) {
-          EconomicMap<SSymbol, Dispatchable> dispatchablesOfMixin =
-              next.getDispatchables();
-          if (dispatchablesOfMixin != null) {
-            for (SSymbol sig : dispatchablesOfMixin.getKeys()) {
-              signatures.add(sig);
-            }
-          }
-          next = next.getSuperClass();
-        }
-      }
-    }
-    return new SType.InterfaceType(signatures.toArray(new SSymbol[] {}));
   }
 }

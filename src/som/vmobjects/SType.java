@@ -70,5 +70,45 @@ public abstract class SType extends SObjectWithClass {
     public SSymbol[] getSignatures() {
       return signatures;
     }
+
+    @Override
+    public String toString() {
+      String s = "interface {";
+      boolean first = true;
+      for (SSymbol sig : signatures) {
+        if (sig.getString().startsWith("!!!")) {
+          continue;
+        }
+        if (first) {
+          s += "'" + sig.getString() + "'";
+          first = false;
+        } else {
+          s += ", '" + sig.getString() + "'";
+        }
+      }
+      return s + "}";
+    }
+  }
+
+  public static class IntersectionType extends SType {
+
+    public final SType left;
+    public final SType right;
+
+    public IntersectionType(final SType left, final SType right) {
+      this.left = left;
+      this.right = right;
+    }
+
+    @Override
+    public boolean isSuperTypeOf(final SType other) {
+      return left.isSuperTypeOf(other) && right.isSuperTypeOf(other);
+    }
+
+    @Override
+    public SSymbol[] getSignatures() {
+      // TODO
+      return null;
+    }
   }
 }

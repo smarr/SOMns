@@ -8,6 +8,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 import bd.primitives.Primitive;
 import som.primitives.arithmetic.ArithmeticPrim;
+import som.vmobjects.SType;
 
 
 @GenerateNodeFactory
@@ -36,5 +37,11 @@ public abstract class BitAndPrim extends ArithmeticPrim {
   @TruffleBoundary
   public final Object doBigInteger(final BigInteger left, final long right) {
     return doBigInteger(left, BigInteger.valueOf(right));
+  }
+
+  @Specialization
+  @TruffleBoundary
+  public final Object doTypeIntersection(final SType left, final SType right) {
+    return new SType.IntersectionType(left, right);
   }
 }

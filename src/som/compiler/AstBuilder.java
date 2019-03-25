@@ -34,6 +34,8 @@ import static som.vm.Symbols.symbolFor;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.BiFunction;
+import java.util.function.Supplier;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -69,6 +71,7 @@ import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import som.vmobjects.SType;
 
 
 /**
@@ -104,6 +107,9 @@ public class AstBuilder {
     literalBuilder = new Literals();
   }
 
+  public BiFunction<JsonObject, JsonTreeTranslator, Supplier<ExpressionNode>> delayedTranslate =
+      (jo, translator) -> () -> translator.translate(jo);
+
   public class Objects {
 
     /**
@@ -133,9 +139,10 @@ public class AstBuilder {
       try {
         ExpressionNode typeExp = translator.translate(type);
         if (typeExp != null && VmSettings.USE_TYPE_CHECKING) {
-          slotWrite(symbolFor(slotName.getString() + ":"), typeExp, sourceSection);
+          slotWrite(symbolFor(slotName.getString() + ":"), () -> typeExp,
+              sourceSection);
         }
-        scopeManager.peekObject().addSlot(slotName, typeExp,
+        scopeManager.peekObject().addSlot(slotName, translator.translate(type),
             AccessModifier.PUBLIC, false, null,
             sourceSection);
       } catch (MixinDefinitionError e) {
@@ -289,7 +296,7 @@ public class AstBuilder {
       instanceFactory.addArgument(Symbols.SELF, null, sourceManager.empty());
       for (int i = 0; i < parameters.length; i++) {
         instanceFactory.addArgument(symbolFor(parameters[i].getString() + "'"),
-            translator.translate(parameterTypes[i]), parameterSources[i]);
+            delayedTranslate.apply(parameterTypes[i], translator), parameterSources[i]);
       }
 
       builder.setupInitializerBasedOnPrimaryFactory(sourceSection);
@@ -333,11 +340,12 @@ public class AstBuilder {
       // Add type checks for each of the arguments
       for (Argument arg : instanceFactory.getArguments()) {
         // Only add the check if it has a type. TODO: Also ignore if type is Unknown
-        if (arg.type != null) {
-          builder.addInitializerExpression(TypeCheckNode.create(arg.type,
+        ExpressionNode typeExpr = arg.type == null ? null : arg.type.get();
+        if (typeExpr != null) {
+          builder.addInitializerExpression(TypeCheckNode.create(typeExpr,
               arg.getReadNode(scopeManager.peekMethod().getContextLevel(arg.name),
                   arg.source),
-              arg.type.getSourceSection()));
+              typeExpr.getSourceSection()));
         }
       }
 
@@ -347,11 +355,7 @@ public class AstBuilder {
       while (iter.hasNext()) {
         ExpressionNode expr = translator.translate(iter.next().getAsJsonObject());
         if (expr != null) {
-          if (!iter.hasNext()) {
-            ExpressionNode returnTypeExpr = translator.translate(returnType);
-            expr =
-                TypeCheckNode.create(returnTypeExpr, expr, returnTypeExpr.getSourceSection());
-          }
+          // Don't add return type check to the last one due since that isn't what is returned
           builder.addInitializerExpression(expr);
         }
       }
@@ -375,7 +379,8 @@ public class AstBuilder {
       // Set the parameters
       builder.addArgument(Symbols.SELF, null, sourceManager.empty());
       for (int i = 0; i < parameters.length; i++) {
-        builder.addArgument(parameters[i], translator.translate(parameterTypes[i]),
+        builder.addArgument(parameters[i],
+            delayedTranslate.apply(parameterTypes[i], translator),
             parameterSources[i]);
       }
 
@@ -402,6 +407,12 @@ public class AstBuilder {
       // Create the new send
       ExpressionNode getInstance =
           requestBuilder.explicit(symbolFor(newSignature), getClazz, arguments, sourceSection);
+
+      ExpressionNode returnTypeExpr = translator.translate(returnType);
+      if (returnTypeExpr != null) {
+        getInstance = TypeCheckNode.create(returnTypeExpr,
+            getInstance, returnTypeExpr.getSourceSection());
+      }
 
       // Assemble and return the completed module
       scopeManager.assembleCurrentMethod(getInstance, sourceSection);
@@ -613,14 +624,15 @@ public class AstBuilder {
       // Set the parameters
       builder.addArgument(Symbols.BLOCK_SELF, null, sourceManager.empty());
       for (int i = 0; i < parameters.length; i++) {
-        builder.addArgument(parameters[i], translator.translate(parameterTypes[i]),
+        builder.addArgument(parameters[i],
+            delayedTranslate.apply(parameterTypes[i], translator),
             parameterSources[i]);
       }
 
       // Set the locals
       for (int i = 0; i < locals.length; i++) {
         try {
-          builder.addLocal(locals[i], translator.translate(localTypes[i]), false,
+          builder.addLocal(locals[i], delayedTranslate.apply(localTypes[i], translator), false,
               localSources[i]);
         } catch (MethodDefinitionError e) {
           language.getVM().errorExit("Failed to add " + locals[i] + " to "
@@ -636,10 +648,12 @@ public class AstBuilder {
       // Add type checks for each of the arguments
       for (Argument arg : builder.getArguments()) {
         // Only add the check if it has a type. TODO: Also ignore if type is Unknown
-        if (arg.type != null) {
-          expressions.add(TypeCheckNode.create(arg.type,
-              arg.getReadNode(builder.getContextLevel(arg.name), arg.source),
-              arg.type.getSourceSection()));
+        ExpressionNode typeExpr = arg.type == null ? null : arg.type.get();
+        if (typeExpr != null) {
+          expressions.add(TypeCheckNode.create(typeExpr,
+              arg.getReadNode(scopeManager.peekMethod().getContextLevel(arg.name),
+                  arg.source),
+              typeExpr.getSourceSection()));
         }
       }
 
@@ -679,14 +693,16 @@ public class AstBuilder {
       // Set the parameters
       builder.addArgument(Symbols.SELF, null, sourceManager.empty());
       for (int i = 0; i < parameters.length; i++) {
-        builder.addArgument(parameters[i], translator.translate(parameterTypes[i]),
+        builder.addArgument(parameters[i],
+            delayedTranslate.apply(parameterTypes[i], translator),
             parameterSources[i]);
       }
 
       // Set the locals
       for (int i = 0; i < locals.length; i++) {
         try {
-          builder.addLocal(locals[i], translator.translate(localTypes[i]), localImmutable[i],
+          builder.addLocal(locals[i], delayedTranslate.apply(localTypes[i], translator),
+              localImmutable[i],
               localSources[i]);
         } catch (MethodDefinitionError e) {
           language.getVM().errorExit("Failed to add " + locals[i] + " to "
@@ -702,10 +718,12 @@ public class AstBuilder {
       // Add type checks for each of the arguments
       for (Argument arg : builder.getArguments()) {
         // Only add the check if it has a type. TODO: Also ignore if type is Unknown
-        if (arg.type != null) {
-          expressions.add(TypeCheckNode.create(arg.type,
-              arg.getReadNode(builder.getContextLevel(arg.name), arg.source),
-              arg.type.getSourceSection()));
+        ExpressionNode typeExpr = arg.type == null ? null : arg.type.get();
+        if (typeExpr != null) {
+          expressions.add(TypeCheckNode.create(typeExpr,
+              arg.getReadNode(scopeManager.peekMethod().getContextLevel(arg.name),
+                  arg.source),
+              typeExpr.getSourceSection()));
         }
       }
 
@@ -760,7 +778,7 @@ public class AstBuilder {
       scopeManager.assembleCurrentMethod(type, sourceSection);
     }
 
-    public void slotWrite(final SSymbol selector, final ExpressionNode type,
+    public void slotWrite(final SSymbol selector, final Supplier<ExpressionNode> type,
         final SourceSection sourceSection) {
       MethodBuilder builder = scopeManager.newMethod(selector, null);
       // Set the parameters
@@ -774,10 +792,11 @@ public class AstBuilder {
       for (Argument arg : builder.getArguments()) {
         last = arg;
       }
+      ExpressionNode typeExpr = last.type.get();
       List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
-      arguments.add(TypeCheckNode.create(last.type,
+      arguments.add(TypeCheckNode.create(typeExpr,
           last.getReadNode(builder.getContextLevel(last.name), last.source),
-          last.type.getSourceSection()));
+          typeExpr.getSourceSection()));
       expressions.add(requestBuilder.implicit(symbolFor("!!!" + selector),
           arguments, sourceSection));
       // Assemble and return the completed module
@@ -980,7 +999,7 @@ public class AstBuilder {
     }
 
     public STypeLiteral type(final SSymbol[] signatures, final SourceSection sourceSection) {
-      return new STypeLiteral(signatures).initialize(sourceSection);
+      return new STypeLiteral(new SType.InterfaceType(signatures)).initialize(sourceSection);
     }
 
     /**

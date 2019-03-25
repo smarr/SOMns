@@ -28,6 +28,7 @@ import static som.vm.Symbols.symbolFor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 
 import org.graalvm.collections.EconomicMap;
 
@@ -541,7 +542,7 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
    * signature.
    */
   public void addArgumentToSuperClassResolutionBuilder(final SSymbol name,
-      final ExpressionNode type, final SourceSection sourceSection) {
+      final Supplier<ExpressionNode> type, final SourceSection sourceSection) {
     superclassAndMixinResolutionBuilder.addArgument(name, type, sourceSection);
     String newSelector = superclassAndMixinResolutionBuilder.getSignature().getString() + ":";
     superclassAndMixinResolutionBuilder.setSignature(symbolFor(newSelector));

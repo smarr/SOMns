@@ -9,7 +9,6 @@ import bd.primitives.Primitive;
 import som.interpreter.Types;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.interpreter.objectstorage.ClassFactory;
 import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
@@ -33,12 +32,25 @@ public final class TypePrims {
   }
 
   @GenerateNodeFactory
+  @Primitive(primitive = "type:intersect:")
+  @Primitive(selector = "intersect:", receiverType = SType.class)
+  public abstract static class TypeIntersectPrim extends BinaryExpressionNode {
+    // TODO: Add specialization for custom types (so don't only expect SType)
+
+    @Specialization
+    public Object performTypeCheckOnNil(final SType left, final SType right) {
+      return new SType.IntersectionType(left, right);
+    }
+
+  }
+
+  @GenerateNodeFactory
   @Primitive(primitive = "type:checkOrError:")
   public abstract static class TypeCheckPrim extends BinaryExpressionNode {
 
     protected void throwTypeError(final SType expected, final Object obj) {
       CompilerDirectives.transferToInterpreter();
-      Object type = Types.getClassOf(obj).getFactory().type;
+      Object type = Types.getClassOf(obj).type;
       int line = sourceSection.getStartLine();
       int column = sourceSection.getStartColumn();
       // TODO: Get the real source of the type check
@@ -50,8 +62,8 @@ public final class TypePrims {
               + ", because it has the type " + type);
     }
 
-    protected ClassFactory getPrimitiveFactory(final Object obj) {
-      return Types.getClassOf(obj).getInstanceFactory();
+    protected SClass getClass(final Object obj) {
+      return Types.getClassOf(obj);
     }
 
     protected boolean isNil(final SObjectWithoutFields obj) {
@@ -63,44 +75,44 @@ public final class TypePrims {
       return Nil.nilObject;
     }
 
-    @Specialization(guards = {"expected.isSuperTypeOf(obj.getFactory().type)"})
+    @Specialization(guards = {"expected.isSuperTypeOf(obj.getSOMClass().type)"})
     public Object checkObject(final SType expected, final SObjectWithClass obj) {
       return Nil.nilObject;
     }
 
     @Specialization(guards = {"expected.isSuperTypeOf(cachedFactory.type)"})
     public Object checkBoolean(final SType expected, final boolean obj,
-        @Cached("getPrimitiveFactory(obj)") final ClassFactory cachedFactory) {
+        @Cached("getClass(obj)") final SClass cachedFactory) {
       return Nil.nilObject;
     }
 
     @Specialization(guards = {"expected.isSuperTypeOf(cachedFactory.type)"})
     public Object checkLong(final SType expected, final long obj,
-        @Cached("getPrimitiveFactory(obj)") final ClassFactory cachedFactory) {
+        @Cached("getClass(obj)") final SClass cachedFactory) {
       return Nil.nilObject;
     }
 
     @Specialization(guards = {"expected.isSuperTypeOf(cachedFactory.type)"})
     public Object checkDouble(final SType expected, final double obj,
-        @Cached("getPrimitiveFactory(obj)") final ClassFactory cachedFactory) {
+        @Cached("getClass(obj)") final SClass cachedFactory) {
       return Nil.nilObject;
     }
 
     @Specialization(guards = {"expected.isSuperTypeOf(cachedFactory.type)"})
     public Object checkString(final SType expected, final String obj,
-        @Cached("getPrimitiveFactory(obj)") final ClassFactory cachedFactory) {
+        @Cached("getClass(obj)") final SClass cachedFactory) {
       return Nil.nilObject;
     }
 
     @Specialization(guards = {"expected.isSuperTypeOf(cachedFactory.type)"})
     public Object checkSArray(final SType expected, final SArray obj,
-        @Cached("getPrimitiveFactory(obj)") final ClassFactory cachedFactory) {
+        @Cached("getClass(obj)") final SClass cachedFactory) {
       return Nil.nilObject;
     }
 
     @Specialization(guards = {"expected.isSuperTypeOf(cachedFactory.type)"})
     public Object checkSBlock(final SType expected, final SBlock obj,
-        @Cached("getPrimitiveFactory(obj)") final ClassFactory cachedFactory) {
+        @Cached("getClass(obj)") final SClass cachedFactory) {
       return Nil.nilObject;
     }
 
