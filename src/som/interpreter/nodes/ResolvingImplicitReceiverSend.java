@@ -177,6 +177,7 @@ public class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
 
       msgArgNodes[0] = dialectExpr;
     }
+
     ExpressionNode replacementNode =
         MessageSendNode.createMessageSend(selector, msgArgNodes, sourceSection, vm);
 

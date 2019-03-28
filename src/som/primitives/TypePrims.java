@@ -45,6 +45,17 @@ public final class TypePrims {
   }
 
   @GenerateNodeFactory
+  @Primitive(selector = "|", receiverType = SType.class)
+  public abstract static class TypeVariantPrim extends BinaryExpressionNode {
+
+    @Specialization
+    public final Object doTypeVariant(final SType left, final SType right) {
+      return new SType.VariantType(left, right);
+    }
+
+  }
+
+  @GenerateNodeFactory
   @Primitive(primitive = "type:checkOrError:")
   public abstract static class TypeCheckPrim extends BinaryExpressionNode {
 
@@ -58,7 +69,7 @@ public final class TypePrims {
       // String suffix = parts[parts.length - 1] + " [" + line + "," + column + "]";
       String suffix = "{UNKNOWN-FILE} [" + line + "," + column + "]";
       KernelObj.signalException("signalTypeError:",
-          suffix + " " + obj + " is not a subtype of " + expected
+          suffix + " \"" + obj + "\" is not a subtype of " + expected
               + ", because it has the type " + type);
     }
 

@@ -1,7 +1,10 @@
 package som.vmobjects;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
@@ -90,6 +93,8 @@ public abstract class SType extends SObjectWithClass {
     }
   }
 
+  // SELF TYPE???
+
   public static class IntersectionType extends SType {
 
     public final SType left;
@@ -107,8 +112,32 @@ public abstract class SType extends SObjectWithClass {
 
     @Override
     public SSymbol[] getSignatures() {
-      // TODO
-      return null;
+      Set<SSymbol> set = new HashSet<>();
+      set.addAll(Arrays.asList(left.getSignatures()));
+      set.addAll(Arrays.asList(right.getSignatures()));
+      return set.toArray(new SSymbol[set.size()]);
+    }
+  }
+
+  public static class VariantType extends SType {
+
+    public final SType left;
+    public final SType right;
+
+    public VariantType(final SType left, final SType right) {
+      this.left = left;
+      this.right = right;
+    }
+
+    @Override
+    public boolean isSuperTypeOf(final SType other) {
+      return left.isSuperTypeOf(other) || right.isSuperTypeOf(other);
+    }
+
+    @Override
+    public SSymbol[] getSignatures() {
+      // Signatures from variant types are not usable
+      return new SSymbol[] {};
     }
   }
 }

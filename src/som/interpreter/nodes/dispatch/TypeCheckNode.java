@@ -77,7 +77,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
     String[] parts = sourceSection.getSource().getURI().getPath().split("/");
     String suffix = parts[parts.length - 1] + " [" + line + "," + column + "]";
     exception.signal(
-        suffix + " " + argument + " is not a subtype of " + sourceSection.getCharacters()
+        suffix + " \"" + argument + "\" is not a subtype of " + sourceSection.getCharacters()
             + ", because it has the type: \n" + type
             + "\n    when it was expected to have type: \n" + expected);
   }
@@ -204,7 +204,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
       }
 
       if (isSub != null) {
-        isSub.put(Types.getClassOf(argument).type, result);
+        isSub.put(type, result);
       }
       if (!result) {
         throwTypeError(argument, type, expected, sourceSection, exception);
