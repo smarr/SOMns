@@ -1,10 +1,12 @@
 package som.vmobjects;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.WeakHashMap;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 
@@ -43,7 +45,7 @@ public abstract class SType extends SObjectWithClass {
 
   public abstract SSymbol[] getSignatures();
 
-  public abstract boolean isSuperTypeOf(final SType other);
+  public abstract boolean isSuperTypeOf(final SType other, final Object inst);
 
   public static class InterfaceType extends SType {
     @CompilationFinal(dimensions = 1) public final SSymbol[] signatures;
@@ -53,7 +55,7 @@ public abstract class SType extends SObjectWithClass {
     }
 
     @Override
-    public boolean isSuperTypeOf(final SType other) {
+    public boolean isSuperTypeOf(final SType other, final Object inst) {
       for (SSymbol sigThis : signatures) {
         boolean found = false;
         for (SSymbol sigOther : other.getSignatures()) {
@@ -106,8 +108,8 @@ public abstract class SType extends SObjectWithClass {
     }
 
     @Override
-    public boolean isSuperTypeOf(final SType other) {
-      return left.isSuperTypeOf(other) && right.isSuperTypeOf(other);
+    public boolean isSuperTypeOf(final SType other, final Object inst) {
+      return left.isSuperTypeOf(other, inst) && right.isSuperTypeOf(other, inst);
     }
 
     @Override
@@ -130,14 +132,34 @@ public abstract class SType extends SObjectWithClass {
     }
 
     @Override
-    public boolean isSuperTypeOf(final SType other) {
-      return left.isSuperTypeOf(other) || right.isSuperTypeOf(other);
+    public boolean isSuperTypeOf(final SType other, final Object inst) {
+      return left.isSuperTypeOf(other, inst) || right.isSuperTypeOf(other, inst);
     }
 
     @Override
     public SSymbol[] getSignatures() {
       // Signatures from variant types are not usable
       return new SSymbol[] {};
+    }
+  }
+
+  public static class BrandType extends SType {
+
+    private final Set<Object> brandedObjects = Collections.newSetFromMap(new WeakHashMap<>());
+
+    @Override
+    public boolean isSuperTypeOf(final SType other, final Object inst) {
+      return brandedObjects.contains(inst);
+    }
+
+    @Override
+    public SSymbol[] getSignatures() {
+      // Signatures from brand types are not usable
+      return new SSymbol[] {};
+    }
+
+    public void brand(final Object o) {
+      brandedObjects.add(o);
     }
   }
 }

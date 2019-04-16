@@ -394,14 +394,18 @@ public final class SClass extends SObjectWithClass {
     Set<SSymbol> signatures = new HashSet<>();
 
     for (SSymbol sig : dispatchables.getKeys()) {
-      signatures.add(sig);
+      if (dispatchables.get(sig).getAccessModifier() == AccessModifier.PUBLIC) {
+        signatures.add(sig);
+      }
     }
 
     SClass sup = superclass;
     while (sup != null) {
       if (sup.dispatchables != null) {
         for (SSymbol sig : sup.dispatchables.getKeys()) {
-          signatures.add(sig);
+          if (sup.dispatchables.get(sig).getAccessModifier() == AccessModifier.PUBLIC) {
+            signatures.add(sig);
+          }
         }
       }
       sup = sup.superclass;

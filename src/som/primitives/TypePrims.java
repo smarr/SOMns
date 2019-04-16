@@ -1,7 +1,6 @@
 package som.primitives;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -11,12 +10,10 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
-import som.vmobjects.SArray;
-import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
-import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SType;
+import som.vmobjects.SType.BrandType;
 
 
 public final class TypePrims {
@@ -40,6 +37,28 @@ public final class TypePrims {
     @Specialization
     public Object performTypeCheckOnNil(final SType left, final SType right) {
       return new SType.IntersectionType(left, right);
+    }
+
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "typeNewBrand:")
+  public abstract static class CreateTypeBrandPrim extends UnaryExpressionNode {
+
+    @Specialization
+    public Object createBrand(final Object o) {
+      return new SType.BrandType();
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "brand:with:")
+  public abstract static class BrandObjectWithBrandPrim extends BinaryExpressionNode {
+
+    @Specialization
+    public Object createBrand(final Object o, final BrandType brand) {
+      brand.brand(o);
+      return Nil.nilObject;
     }
 
   }
@@ -83,60 +102,6 @@ public final class TypePrims {
 
     @Specialization(guards = {"isNil(obj)"})
     public Object performTypeCheckOnNil(final SType expected, final SObjectWithoutFields obj) {
-      return Nil.nilObject;
-    }
-
-    @Specialization(guards = {"expected.isSuperTypeOf(obj.getSOMClass().type)"})
-    public Object checkObject(final SType expected, final SObjectWithClass obj) {
-      return Nil.nilObject;
-    }
-
-    @Specialization(guards = {"expected.isSuperTypeOf(cachedFactory.type)"})
-    public Object checkBoolean(final SType expected, final boolean obj,
-        @Cached("getClass(obj)") final SClass cachedFactory) {
-      return Nil.nilObject;
-    }
-
-    @Specialization(guards = {"expected.isSuperTypeOf(cachedFactory.type)"})
-    public Object checkLong(final SType expected, final long obj,
-        @Cached("getClass(obj)") final SClass cachedFactory) {
-      return Nil.nilObject;
-    }
-
-    @Specialization(guards = {"expected.isSuperTypeOf(cachedFactory.type)"})
-    public Object checkDouble(final SType expected, final double obj,
-        @Cached("getClass(obj)") final SClass cachedFactory) {
-      return Nil.nilObject;
-    }
-
-    @Specialization(guards = {"expected.isSuperTypeOf(cachedFactory.type)"})
-    public Object checkString(final SType expected, final String obj,
-        @Cached("getClass(obj)") final SClass cachedFactory) {
-      return Nil.nilObject;
-    }
-
-    @Specialization(guards = {"expected.isSuperTypeOf(cachedFactory.type)"})
-    public Object checkSArray(final SType expected, final SArray obj,
-        @Cached("getClass(obj)") final SClass cachedFactory) {
-      return Nil.nilObject;
-    }
-
-    @Specialization(guards = {"expected.isSuperTypeOf(cachedFactory.type)"})
-    public Object checkSBlock(final SType expected, final SBlock obj,
-        @Cached("getClass(obj)") final SClass cachedFactory) {
-      return Nil.nilObject;
-    }
-
-    @Specialization
-    public Object typeCheckFailed(final SType expected, final Object argument) {
-      throwTypeError(expected, argument);
-      return null;
-    }
-
-    @Specialization
-    public Object executeEvaluated(final Object expected, final Object argument) {
-      KernelObj.signalException("signalTypeError:",
-          "The type has not defined the meaning of what it is to be a type.");
       return Nil.nilObject;
     }
   }

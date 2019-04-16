@@ -65,6 +65,7 @@ import som.interpreter.nodes.literals.LiteralNode;
 import som.interpreter.nodes.literals.NilLiteralNode;
 import som.interpreter.nodes.literals.ObjectLiteralNode;
 import som.interpreter.nodes.literals.STypeLiteral;
+import som.interpreter.nodes.literals.SVMLiteral;
 import som.interpreter.nodes.literals.StringLiteralNode;
 import som.interpreter.objectstorage.InitializerFieldWrite;
 import som.vm.Symbols;
@@ -200,6 +201,11 @@ public class AstBuilder {
         addImmutableSlot(Symbols.SECRET_DIALECT_SLOT, null,
             requestBuilder.importModule(symbolFor("standardGrace"), sourceSection),
             sourceSection);
+      } else {
+        // Add the SOM VM mirror as a secret slot on the standard grace module
+        addImmutableSlot(Symbols.VMMIRROR, null,
+            new SVMLiteral(language).initialize(sourceManager.empty()),
+            sourceManager.empty());
       }
 
       // Add all other slots for this module
