@@ -8,6 +8,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 
 import org.graalvm.collections.EconomicMap;
 
+import bd.tools.structure.StructuralProbe;
+import som.compiler.MixinDefinition;
+import som.compiler.MixinDefinition.SlotDefinition;
+import som.compiler.Variable;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.vm.VmSettings;
@@ -16,22 +20,23 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingBackend;
-import tools.language.StructuralProbe;
 
 
 public class SnapshotBackend {
   private static byte snapshotVersion = 0;
 
-  private static final EconomicMap<Short, SSymbol>           symbolDictionary;
-  private static final EconomicMap<SSymbol, SClass>          classDictionary;
-  private static final StructuralProbe                       probe;
+  private static final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> probe;
+
+  private static final EconomicMap<Short, SSymbol>  symbolDictionary;
+  private static final EconomicMap<SSymbol, SClass> classDictionary;
+
   private static final ConcurrentLinkedQueue<SnapshotBuffer> buffers;
 
   static {
     if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
       classDictionary = EconomicMap.create();
       symbolDictionary = EconomicMap.create();
-      probe = new StructuralProbe();
+      probe = new StructuralProbe<>();
       buffers = new ConcurrentLinkedQueue<>();
     } else if (VmSettings.SNAPSHOTS_ENABLED) {
       classDictionary = null;
@@ -113,7 +118,7 @@ public class SnapshotBackend {
     buffers.add(sb);
   }
 
-  public static StructuralProbe getProbe() {
+  public static StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> getProbe() {
     assert probe != null;
     return probe;
   }

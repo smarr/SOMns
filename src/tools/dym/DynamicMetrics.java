@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 
+import org.graalvm.collections.EconomicSet;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Instrument;
 
@@ -35,13 +36,17 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.tools.nodes.Operation;
+import bd.tools.structure.StructuralProbe;
 import som.compiler.MixinDefinition;
+import som.compiler.MixinDefinition.SlotDefinition;
+import som.compiler.Variable;
 import som.instrumentation.InstrumentableDirectCallNode;
 import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 import tools.debugger.Tags.LiteralTag;
 import tools.dym.Tags.ArgumentExpr;
 import tools.dym.Tags.BasicPrimitiveOperation;
@@ -88,7 +93,6 @@ import tools.dym.profiles.InvocationProfile;
 import tools.dym.profiles.LoopProfile;
 import tools.dym.profiles.OperationProfile;
 import tools.dym.profiles.ReadValueProfile;
-import tools.language.StructuralProbe;
 
 
 /**
@@ -106,7 +110,9 @@ public class DynamicMetrics extends TruffleInstrument {
 
   static final String ID = "dym-dynamic-metrics";
 
-  public static StructuralProbe find(final TruffleLanguage.Env env) {
+  @SuppressWarnings("unchecked")
+  public static StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> find(
+      final TruffleLanguage.Env env) {
     InstrumentInfo instrument = env.getInstruments().get(ID);
     if (instrument == null) {
       throw new IllegalStateException(
@@ -116,7 +122,9 @@ public class DynamicMetrics extends TruffleInstrument {
     return env.lookup(instrument, StructuralProbe.class);
   }
 
-  public static StructuralProbe find(final Engine engine) {
+  @SuppressWarnings("unchecked")
+  public static StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> find(
+      final Engine engine) {
     Instrument instrument = engine.getInstruments().get(ID);
     if (instrument == null) {
       throw new IllegalStateException(
@@ -147,7 +155,7 @@ public class DynamicMetrics extends TruffleInstrument {
   private final Map<SourceSection, ReadValueProfile> localsReadProfiles;
   private final Map<SourceSection, Counter>          localsWriteProfiles;
 
-  private final StructuralProbe structuralProbe;
+  private final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe;
 
   private final Set<RootNode> rootNodes;
 
@@ -162,7 +170,7 @@ public class DynamicMetrics extends TruffleInstrument {
   }
 
   public DynamicMetrics() {
-    structuralProbe = new StructuralProbe();
+    structuralProbe = new StructuralProbe<>();
 
     methodInvocationCounter = new HashMap<>();
     methodCallsiteProfiles = new HashMap<>();
@@ -479,8 +487,13 @@ public class DynamicMetrics extends TruffleInstrument {
   private void outputAllTruffleMethodsToIGV() {
     GraphPrintVisitor graphPrinter = new GraphPrintVisitor();
 
-    List<MixinDefinition> classes =
-        new ArrayList<MixinDefinition>(structuralProbe.getClasses());
+    EconomicSet<MixinDefinition> classSet = structuralProbe.getClasses();
+    List<MixinDefinition> classes = new ArrayList<MixinDefinition>(classSet.size());
+
+    for (MixinDefinition c : classSet) {
+      classes.add(c);
+    }
+
     Collections.sort(classes,
         (final MixinDefinition a,
             final MixinDefinition b) -> a.getName().getString()

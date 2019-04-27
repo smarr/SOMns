@@ -39,8 +39,10 @@ import com.oracle.truffle.api.source.SourceSection;
 import bd.inlining.ScopeAdaptationVisitor;
 import bd.inlining.nodes.Inlinable;
 import bd.source.SourceCoordinate;
+import bd.tools.structure.StructuralProbe;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable.AccessNodeState;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.ImmutableLocal;
@@ -60,7 +62,6 @@ import som.vm.constants.Nil;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SSymbol;
-import tools.language.StructuralProbe;
 
 
 public final class MethodBuilder extends ScopeBuilder<MethodScope>
@@ -90,10 +91,10 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
 
   private int cascadeId;
 
-  private final StructuralProbe structuralProbe;
+  private final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe;
 
   public MethodBuilder(final boolean withoutContext, final SomLanguage language,
-      final StructuralProbe probe) {
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> probe) {
     this(null, null, false, language, probe);
     assert withoutContext;
   }
@@ -102,12 +103,14 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     this(outer, outer.getScope(), true, outer.language, outer.structuralProbe);
   }
 
-  public MethodBuilder(final MixinBuilder outer, final StructuralProbe probe) {
+  public MethodBuilder(final MixinBuilder outer,
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> probe) {
     this(outer, outer.getScope(), false, outer.getLanguage(), probe);
   }
 
   public MethodBuilder(final ScopeBuilder<?> outer, final LexicalScope scope,
-      final boolean isBlockMethod, final SomLanguage language, final StructuralProbe probe) {
+      final boolean isBlockMethod, final SomLanguage language,
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> probe) {
     super(outer, scope);
     this.blockMethod = isBlockMethod;
     this.language = language;

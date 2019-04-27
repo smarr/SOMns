@@ -81,9 +81,11 @@ import com.oracle.truffle.api.source.SourceSection;
 import bd.basic.ProgramDefinitionError;
 import bd.inlining.InlinableNodes;
 import bd.source.SourceCoordinate;
+import bd.tools.structure.StructuralProbe;
 import som.Output;
 import som.compiler.Lexer.Peek;
 import som.compiler.MixinBuilder.MixinDefinitionError;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable.Local;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
@@ -115,7 +117,6 @@ import tools.debugger.Tags.KeywordTag;
 import tools.debugger.Tags.LiteralTag;
 import tools.debugger.Tags.LocalVariableTag;
 import tools.debugger.Tags.StatementSeparatorTag;
-import tools.language.StructuralProbe;
 
 
 public class Parser {
@@ -134,7 +135,8 @@ public class Parser {
 
   private SourceSection            lastMethodsSourceSection;
   private final Set<SourceSection> syntaxAnnotations;
-  private final StructuralProbe    structuralProbe;
+
+  private final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe;
 
   private final InlinableNodes<SSymbol> inlinableNodes;
 
@@ -267,7 +269,8 @@ public class Parser {
   }
 
   public Parser(final String content, final long fileSize, final Source source,
-      final StructuralProbe structuralProbe, final SomLanguage language) throws ParseError {
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe,
+      final SomLanguage language) throws ParseError {
     this.source = source;
     this.language = language;
 
@@ -848,7 +851,7 @@ public class Parser {
     SInvokable meth = builder.assemble(body, accessModifier, getSource(coord));
 
     if (structuralProbe != null) {
-      structuralProbe.recordNewMethod(meth);
+      structuralProbe.recordNewMethod(meth.getIdentifier(), meth);
     }
     mxnBuilder.addMethod(meth);
   }
@@ -1239,7 +1242,7 @@ public class Parser {
             AccessModifier.BLOCK_METHOD, lastMethodsSourceSection);
         builder.addEmbeddedBlockMethod(blockMethod);
         if (VmSettings.TRACK_SNAPSHOT_ENTITIES && structuralProbe != null) {
-          structuralProbe.recordNewMethod(blockMethod);
+          structuralProbe.recordNewMethod(blockMethod.getIdentifier(), blockMethod);
         }
 
         ExpressionNode result;

@@ -21,9 +21,12 @@ import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.tools.profiler.CPUSampler;
 
 import bd.inlining.InlinableNodes;
+import bd.tools.structure.StructuralProbe;
 import coveralls.truffle.Coverage;
 import som.compiler.MixinDefinition;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.SourcecodeCompiler;
+import som.compiler.Variable;
 import som.interpreter.Method;
 import som.interpreter.SomLanguage;
 import som.interpreter.TruffleCompiler;
@@ -42,6 +45,7 @@ import som.vm.Primitives;
 import som.vm.VmOptions;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 import tools.concurrency.KomposTrace;
@@ -49,16 +53,16 @@ import tools.concurrency.TracingBackend;
 import tools.debugger.WebDebugger;
 import tools.debugger.session.Breakpoints;
 import tools.dym.DynamicMetrics;
-import tools.language.StructuralProbe;
 import tools.snapshot.SnapshotBackend;
 import tools.superinstructions.CandidateIdentifier;
 
 
 public final class VM {
 
-  @CompilationFinal private StructuralProbe structuralProbe;
-  @CompilationFinal private WebDebugger     webDebugger;
-  @CompilationFinal private CPUSampler      truffleProfiler;
+  @CompilationFinal private StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe;
+
+  @CompilationFinal private WebDebugger webDebugger;
+  @CompilationFinal private CPUSampler  truffleProfiler;
 
   private final ForkJoinPool actorPool;
   private final ForkJoinPool forkJoinPool;

@@ -17,6 +17,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.ProgramDefinitionError;
 import bd.inlining.InlinableNodes;
+import bd.tools.structure.StructuralProbe;
 import som.Launcher;
 import som.Output;
 import som.VM;
@@ -27,6 +28,7 @@ import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.SourcecodeCompiler;
+import som.compiler.Variable;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor;
@@ -45,7 +47,6 @@ import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors;
-import tools.language.StructuralProbe;
 import tools.snapshot.nodes.AbstractArraySerializationNodeGen.ArraySerializationNodeFactory;
 import tools.snapshot.nodes.AbstractArraySerializationNodeGen.TransferArraySerializationNodeFactory;
 import tools.snapshot.nodes.AbstractArraySerializationNodeGen.ValueArraySerializationNodeFactory;
@@ -84,7 +85,8 @@ public final class ObjectSystem {
   @CompilationFinal private boolean initialized = false;
 
   private final SourcecodeCompiler compiler;
-  private final StructuralProbe    structuralProbe;
+
+  private final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe;
 
   private final Primitives primitives;
 
@@ -95,7 +97,8 @@ public final class ObjectSystem {
   private final VM vm;
 
   public ObjectSystem(final SourcecodeCompiler compiler,
-      final StructuralProbe probe, final VM vm) {
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> probe,
+      final VM vm) {
     this.primitives = new Primitives(compiler.getLanguage());
     this.compiler = compiler;
     structuralProbe = probe;

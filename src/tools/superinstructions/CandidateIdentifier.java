@@ -24,8 +24,13 @@ import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 
+import bd.tools.structure.StructuralProbe;
+import som.compiler.MixinDefinition;
+import som.compiler.MixinDefinition.SlotDefinition;
+import som.compiler.Variable;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 import tools.dym.Tags.AnyNode;
-import tools.language.StructuralProbe;
 
 
 /**
@@ -39,7 +44,9 @@ public class CandidateIdentifier extends TruffleInstrument {
 
   public static final String ID = "si-candidate-ider";
 
-  public static StructuralProbe find(final TruffleLanguage.Env env) {
+  @SuppressWarnings("unchecked")
+  public static StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> find(
+      final TruffleLanguage.Env env) {
     InstrumentInfo instrument = env.getInstruments().get(ID);
     if (instrument == null) {
       throw new IllegalStateException(
@@ -49,7 +56,9 @@ public class CandidateIdentifier extends TruffleInstrument {
     return env.lookup(instrument, StructuralProbe.class);
   }
 
-  public static StructuralProbe find(final Engine engine) {
+  @SuppressWarnings("unchecked")
+  public static StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> find(
+      final Engine engine) {
     Instrument instrument = engine.getInstruments().get(ID);
     if (instrument == null) {
       throw new IllegalStateException(
@@ -61,13 +70,13 @@ public class CandidateIdentifier extends TruffleInstrument {
 
   private final Map<Node, TypeCounter> activations;
 
-  private final StructuralProbe structuralProbe;
+  private final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe;
 
   private final Set<RootNode> rootNodes;
 
   public CandidateIdentifier() {
     activations = new HashMap<>();
-    structuralProbe = new StructuralProbe();
+    structuralProbe = new StructuralProbe<>();
     rootNodes = new HashSet<>();
   }
 
