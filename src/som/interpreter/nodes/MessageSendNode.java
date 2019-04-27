@@ -19,6 +19,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import bd.primitives.Specializer;
 import bd.primitives.nodes.PreevaluatedExpression;
 import bd.source.SourceCoordinate;
+import bd.tools.nodes.Invocation;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.Invokable;
@@ -34,7 +35,6 @@ import som.primitives.reflection.AbstractSymbolDispatch;
 import som.vm.NotYetImplementedException;
 import som.vm.Primitives;
 import som.vmobjects.SSymbol;
-import tools.Send;
 import tools.dym.Tags.VirtualInvoke;
 
 
@@ -114,7 +114,7 @@ public final class MessageSendNode {
 
   @GenerateWrapper
   public abstract static class AbstractMessageSendNode extends ExprWithTagsNode
-      implements PreevaluatedExpression, Send {
+      implements PreevaluatedExpression, Invocation<SSymbol> {
 
     @Children protected final ExpressionNode[] argumentNodes;
 
@@ -194,7 +194,7 @@ public final class MessageSendNode {
     }
 
     @Override
-    public SSymbol getSelector() {
+    public SSymbol getInvocationIdentifier() {
       return selector;
     }
 
@@ -323,7 +323,7 @@ public final class MessageSendNode {
     }
 
     @Override
-    public SSymbol getSelector() {
+    public SSymbol getInvocationIdentifier() {
       return selector;
     }
 

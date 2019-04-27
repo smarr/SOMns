@@ -147,7 +147,7 @@ public class ResolvingImplicitReceiverSend extends AbstractMessageSendNode {
   }
 
   @Override
-  public SSymbol getSelector() {
+  public SSymbol getInvocationIdentifier() {
     return selector;
   }
 

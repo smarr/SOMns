@@ -427,7 +427,7 @@ public class Parser {
               mxnBuilder.getInitializerMethodBuilder().getSelfRead(getSource(coord))});
 
       uniqueInitName = MixinBuilder.getInitializerName(
-          mixinFactorySend.getSelector(), mixinId);
+          mixinFactorySend.getInvocationIdentifier(), mixinId);
       mixinFactorySend = (AbstractUninitializedMessageSendNode) MessageSendNode.adaptSymbol(
           uniqueInitName, mixinFactorySend, language.getVM());
     } else {
@@ -460,7 +460,7 @@ public class Parser {
               mxnBuilder.getInitializerMethodBuilder().getSuperReadNode(getEmptySource())});
 
       SSymbol initializerName = MixinBuilder.getInitializerName(
-          ((AbstractUninitializedMessageSendNode) superFactorySend).getSelector());
+          ((AbstractUninitializedMessageSendNode) superFactorySend).getInvocationIdentifier());
 
       // TODO: the false we pass here, should that be conditional on the superFactorSend being
       // a #new send?
