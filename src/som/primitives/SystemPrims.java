@@ -27,6 +27,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
 import bd.primitives.Specializer;
+import bd.source.SourceCoordinate;
 import bd.tools.nodes.Operation;
 import som.Output;
 import som.VM;
@@ -56,7 +57,6 @@ import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
 import tools.concurrency.TraceParser;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.concurrency.TracingBackend;

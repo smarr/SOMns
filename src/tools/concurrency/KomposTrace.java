@@ -3,6 +3,7 @@ package tools.concurrency;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.source.SourceCoordinate;
 import som.interpreter.actors.Actor;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.Activity;
@@ -11,7 +12,6 @@ import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
 import tools.debugger.PrimitiveCallOrigin;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.DynamicScopeType;
@@ -250,7 +250,7 @@ public class KomposTrace {
 
       assert !origin.getSource()
                     .isInternal() : "Need special handling to ensure we see user code reported to trace/debugger";
-      putShort(SourceCoordinate.getURI(origin.getSource()).getSymbolId());
+      putShort(Symbols.symbolFor(SourceCoordinate.getURI(origin.getSource())).getSymbolId());
       putShort((short) origin.getStartLine());
       putShort((short) origin.getStartColumn());
       putShort((short) origin.getCharLength());

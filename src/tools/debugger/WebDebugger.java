@@ -23,9 +23,10 @@ import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.source.SourceCoordinate;
 import som.VM;
 import som.vm.Activity;
-import tools.SourceCoordinate;
+import som.vm.Symbols;
 import tools.TraceData;
 import tools.concurrency.TracingActivityThread;
 import tools.debugger.frontend.Suspension;
@@ -87,7 +88,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   public void reportLoadedSource(final Source source) {
     // register source URI as symbol to make sure it's send to the debugger
-    SourceCoordinate.getURI(source);
+    Symbols.symbolFor(SourceCoordinate.getURI(source));
     connector.sendLoadedSource(source, loadedSourcesTags, rootNodes);
   }
 

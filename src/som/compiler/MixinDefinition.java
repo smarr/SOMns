@@ -24,6 +24,7 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.nodes.DummyParent;
+import bd.source.SourceCoordinate;
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interop.MixinDefinitionInteropMessagesForeign;
@@ -61,7 +62,6 @@ import som.vmobjects.SObject;
 import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
 import tools.snapshot.nodes.AbstractSerializationNode;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.UninitializedObjectSerializationNodeFactory;
 import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.ClassSerializationNodeFactory;

@@ -18,6 +18,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Specializer;
 import bd.primitives.nodes.PreevaluatedExpression;
+import bd.source.SourceCoordinate;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.Invokable;
@@ -34,7 +35,6 @@ import som.vm.NotYetImplementedException;
 import som.vm.Primitives;
 import som.vmobjects.SSymbol;
 import tools.Send;
-import tools.SourceCoordinate;
 import tools.dym.Tags.VirtualInvoke;
 
 

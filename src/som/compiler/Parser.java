@@ -80,6 +80,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.ProgramDefinitionError;
 import bd.inlining.InlinableNodes;
+import bd.source.SourceCoordinate;
 import som.Output;
 import som.compiler.Lexer.Peek;
 import som.compiler.MixinBuilder.MixinDefinitionError;
@@ -105,7 +106,6 @@ import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
 import tools.debugger.Tags.ArgumentTag;
 import tools.debugger.Tags.CommentTag;
 import tools.debugger.Tags.DelimiterClosingTag;
@@ -182,7 +182,7 @@ public class Parser {
     ParseError(final String message, final Symbol expected, final Parser parser) {
       super(message);
       if (parser.lexer == null) {
-        this.sourceCoordinate = new SourceCoordinate(0, 0, 0, 0);
+        this.sourceCoordinate = SourceCoordinate.createEmpty();
         this.rawBuffer = "";
       } else {
         this.sourceCoordinate = parser.getCoordinate();

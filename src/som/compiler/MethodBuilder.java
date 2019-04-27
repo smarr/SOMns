@@ -38,6 +38,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.inlining.ScopeAdaptationVisitor;
 import bd.inlining.nodes.Inlinable;
+import bd.source.SourceCoordinate;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.Variable.AccessNodeState;
@@ -59,7 +60,6 @@ import som.vm.constants.Nil;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
 import tools.language.StructuralProbe;
 
 
