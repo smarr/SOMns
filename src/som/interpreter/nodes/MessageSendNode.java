@@ -127,6 +127,14 @@ public final class MessageSendNode {
       this.argumentNodes = null;
     }
 
+    /**
+     * HACK, TODO: remove if possible. This is a work around for a javac or TruffleDSL bug,
+     * which causes the generic parameter of {@link Invocation} to end up as ? in the generated
+     * file.
+     */
+    @Override
+    public abstract SSymbol getInvocationIdentifier();
+
     @Override
     public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == CallTag.class) {
