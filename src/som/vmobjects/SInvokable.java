@@ -206,16 +206,16 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
   public SSymbol getIdentifier() {
     if (holder != null) {
       return Symbols.symbolFor(
-          holder.getIdentifier().getString() + "." + this.signature.getString());
+          holder.getIdentifier().getString() + "." + signature.getString());
     } else if (invokable.getSourceSection() != null) {
       // TODO find a better solution than charIndex
       Path absolute = Paths.get(invokable.getSourceSection().getSource().getURI());
       Path relative =
           Paths.get(VmSettings.BASE_DIRECTORY).toAbsolutePath().relativize(absolute);
       return Symbols.symbolFor(relative.toString() + ":"
-          + invokable.getSourceSection().getCharIndex() + ":" + this.signature.getString());
+          + invokable.getSourceSection().getCharIndex() + ":" + signature.getString());
     } else {
-      return this.signature;
+      return signature;
     }
   }
 }
