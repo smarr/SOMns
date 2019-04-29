@@ -14,8 +14,8 @@ import org.junit.Test;
 
 import com.google.gson.Gson;
 
-import tools.SourceCoordinate;
-import tools.SourceCoordinate.FullSourceCoordinate;
+import bd.source.FullSourceCoordinate;
+import bd.source.SourceCoordinate;
 import tools.debugger.RuntimeReflectionRegistration;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;

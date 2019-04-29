@@ -1,6 +1,6 @@
 package tools.debugger.message;
 
-import tools.SourceCoordinate.TaggedSourceCoordinate;
+import bd.source.TaggedSourceCoordinate;
 import tools.debugger.message.Message.OutgoingMessage;
 
 

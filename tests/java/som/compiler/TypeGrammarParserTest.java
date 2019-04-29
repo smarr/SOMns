@@ -9,9 +9,9 @@ import org.junit.runners.Parameterized.Parameters;
 
 import com.oracle.truffle.api.source.Source;
 
+import bd.tools.structure.StructuralProbe;
 import som.compiler.Parser.ParseError;
 import som.interpreter.SomLanguage;
-import tools.language.StructuralProbe;
 
 
 @RunWith(Parameterized.class)
@@ -54,7 +54,7 @@ public class TypeGrammarParserTest {
   private TypeParser createParser(final String testString) throws ParseError {
     Source s = SomLanguage.getSyntheticSource(testString, "test.ns");
     Parser p = new Parser(
-        testString, testString.length(), s, new StructuralProbe(),
+        testString, testString.length(), s, new StructuralProbe<>(),
         new SomLanguage());
 
     TypeParser tp = new TypeParser(p);

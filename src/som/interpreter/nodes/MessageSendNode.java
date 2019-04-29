@@ -18,6 +18,8 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Specializer;
 import bd.primitives.nodes.PreevaluatedExpression;
+import bd.source.SourceCoordinate;
+import bd.tools.nodes.Invocation;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.Invokable;
@@ -33,8 +35,6 @@ import som.primitives.reflection.AbstractSymbolDispatch;
 import som.vm.NotYetImplementedException;
 import som.vm.Primitives;
 import som.vmobjects.SSymbol;
-import tools.Send;
-import tools.SourceCoordinate;
 import tools.dym.Tags.VirtualInvoke;
 
 
@@ -114,7 +114,7 @@ public final class MessageSendNode {
 
   @GenerateWrapper
   public abstract static class AbstractMessageSendNode extends ExprWithTagsNode
-      implements PreevaluatedExpression, Send {
+      implements PreevaluatedExpression, Invocation<SSymbol> {
 
     @Children protected final ExpressionNode[] argumentNodes;
 
@@ -126,6 +126,14 @@ public final class MessageSendNode {
     protected AbstractMessageSendNode() {
       this.argumentNodes = null;
     }
+
+    /**
+     * HACK, TODO: remove if possible. This is a work around for a javac or TruffleDSL bug,
+     * which causes the generic parameter of {@link Invocation} to end up as ? in the generated
+     * file.
+     */
+    @Override
+    public abstract SSymbol getInvocationIdentifier();
 
     @Override
     public boolean hasTag(final Class<? extends Tag> tag) {
@@ -194,7 +202,7 @@ public final class MessageSendNode {
     }
 
     @Override
-    public SSymbol getSelector() {
+    public SSymbol getInvocationIdentifier() {
       return selector;
     }
 
@@ -323,7 +331,7 @@ public final class MessageSendNode {
     }
 
     @Override
-    public SSymbol getSelector() {
+    public SSymbol getInvocationIdentifier() {
       return selector;
     }
 

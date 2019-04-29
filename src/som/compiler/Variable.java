@@ -10,6 +10,7 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.inlining.NodeState;
+import bd.source.SourceCoordinate;
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
@@ -25,7 +26,6 @@ import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableReadNod
 import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableWriteNodeGen;
 import som.vm.Symbols;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
 
 
 /**

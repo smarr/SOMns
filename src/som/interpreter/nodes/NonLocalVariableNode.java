@@ -12,16 +12,17 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.inlining.ScopeAdaptationVisitor;
+import bd.tools.nodes.Invocation;
 import som.compiler.Variable.Local;
 import som.vm.constants.Nil;
 import som.vmobjects.SSymbol;
-import tools.Send;
 import tools.debugger.Tags.LocalVariableTag;
 import tools.dym.Tags.LocalVarRead;
 import tools.dym.Tags.LocalVarWrite;
 
 
-public abstract class NonLocalVariableNode extends ContextualNode implements Send {
+public abstract class NonLocalVariableNode extends ContextualNode
+    implements Invocation<SSymbol> {
 
   protected final FrameSlot       slot;
   protected final FrameDescriptor descriptor;
@@ -43,7 +44,7 @@ public abstract class NonLocalVariableNode extends ContextualNode implements Sen
   }
 
   @Override
-  public final SSymbol getSelector() {
+  public final SSymbol getInvocationIdentifier() {
     return var.name;
   }
 

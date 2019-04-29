@@ -27,9 +27,12 @@ package som.compiler;
 import com.oracle.truffle.api.source.Source;
 
 import bd.basic.ProgramDefinitionError;
+import bd.source.SourceCoordinate;
+import bd.tools.structure.StructuralProbe;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.SomLanguage;
-import tools.SourceCoordinate;
-import tools.language.StructuralProbe;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 
 
 public class SourcecodeCompiler {
@@ -45,7 +48,7 @@ public class SourcecodeCompiler {
   }
 
   public MixinDefinition compileModule(final Source source,
-      final StructuralProbe structuralProbe)
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe)
       throws ProgramDefinitionError {
     Parser parser = new Parser(source.getCharacters().toString(), source.getLength(), source,
         structuralProbe, language);

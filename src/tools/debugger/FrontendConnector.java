@@ -22,10 +22,10 @@ import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.net.httpserver.HttpServer;
 
+import bd.source.SourceCoordinate;
+import bd.source.TaggedSourceCoordinate;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
-import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
 import tools.TraceData;
 import tools.concurrency.TracingBackend;

@@ -15,11 +15,11 @@ import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.source.FullSourceCoordinate;
+import bd.source.SourceCoordinate;
 import som.VM;
 import som.interpreter.actors.ReceivedRootNode;
 import som.vm.VmSettings;
-import tools.SourceCoordinate;
-import tools.SourceCoordinate.FullSourceCoordinate;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.BreakpointType;
@@ -137,7 +137,7 @@ public class Breakpoints {
   public static AbstractBreakpointNode create(final SourceSection source,
       final BreakpointType type, final VM vm) {
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
+      FullSourceCoordinate sourceCoord = SourceCoordinate.createFull(source);
       return BreakpointNodeGen.create(vm.getBreakpoints().getBreakpoint(sourceCoord, type));
     } else {
       return new DisabledBreakpointNode();

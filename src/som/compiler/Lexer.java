@@ -24,7 +24,7 @@
 
 package som.compiler;
 
-import tools.SourceCoordinate;
+import bd.source.SourceCoordinate;
 
 
 public final class Lexer {
@@ -113,7 +113,9 @@ public final class Lexer {
   }
 
   private static SourceCoordinate createSourceCoordinate(final LexerState state) {
-    return new SourceCoordinate(state.lineNumber, state.ptr - state.lastLineEnd,
+    // We use the coord.length to indicate the lastNonWhiteCharIdx
+    // TODO: fix this terrible hack, and make this explicit
+    return SourceCoordinate.create(state.lineNumber, state.ptr - state.lastLineEnd,
         state.ptr, state.lastNonWhiteCharIdx);
   }
 
