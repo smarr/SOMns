@@ -2,6 +2,7 @@ stages:
   - build-and-test
   - benchmark
   - full-test
+  - virtualbox-image
 
 variables:
   PYTHONUNBUFFERED: "true"
@@ -81,3 +82,11 @@ benchmark_nightly_job:
     - ant compile
     - rebench --without-nice -c --commit-id="$CI_BUILD_REF" --environment="`hostname` `cat /etc/issue | cut -d ' ' -f 1`" --project=SOMns --branch=master codespeed.conf nightly
     - rebench --without-nice -c --commit-id="$CI_BUILD_REF" --environment="`hostname` `cat /etc/issue | cut -d ' ' -f 1`" --project=SOMns --branch=master codespeed.conf SOMns-Savina-tracing
+
+build_virtualbox:
+  stage: virtualbox-image
+  tags: [benchmarks, infinity]
+  only:
+    - triggers
+  script:
+    - artifact/virtualbox.sh
