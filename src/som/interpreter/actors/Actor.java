@@ -30,7 +30,6 @@ import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
-import tools.debugger.entities.DynamicScopeType;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.nodes.TraceActorContextNode;
 import tools.snapshot.SnapshotBuffer;
@@ -301,15 +300,9 @@ public class Actor implements Activity {
       }
 
       try {
-        if (VmSettings.KOMPOS_TRACING) {
-          KomposTrace.scopeStart(DynamicScopeType.TURN, msg.getMessageId(),
-              msg.getTargetSourceSection());
-        }
         msg.execute();
       } finally {
-        if (VmSettings.KOMPOS_TRACING) {
-          KomposTrace.scopeEnd(DynamicScopeType.TURN);
-        }
+
       }
     }
 
