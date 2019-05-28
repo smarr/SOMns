@@ -404,7 +404,9 @@ public class TracingBackend {
       this.snapshotVersion = snapshotVersion;
     }
 
-    protected TraceWorkerThread() {}
+    protected TraceWorkerThread() {
+      super("TraceWorkerThread");
+    }
 
     private BufferAndLimit tryToObtainBuffer() {
       BufferAndLimit buffer;
