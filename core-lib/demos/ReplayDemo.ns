@@ -34,7 +34,7 @@ class ReplayDemo usingPlatform: platform = Value (
           flightPrices at: flightId put: (amount + 10) ]
         ifFalse:[
           (* didn't match price, fail *)
-          'Payment FAILED' println.
+          self error: 'Payment FAILED'.
           resolved ifFalse: [
             completionRes resolve: false.
             resolved:: true ] ]

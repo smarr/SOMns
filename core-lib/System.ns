@@ -26,7 +26,11 @@ class System usingVmMirror: vmMirror = Value (
   public exit: error  = ( vmMirror exit: error )
   public exit         = ( self exit: 0 )
   public warning: msg = ( vmMirror printWarning: msg. )
-  public error: msg   = ( vmMirror printError: msg. self exit: 1 )
+  public error: msg   = (
+    vmMirror printError: msg.
+    vmMirror markTurnErroneous: nil.
+    self exit: 1
+  )
 
   (* VM *)
   public arguments    = ( ^ vmMirror vmArguments: nil )

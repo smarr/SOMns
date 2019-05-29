@@ -26,7 +26,11 @@ class Kernel vmMirror: vmMirror = Object <: Value (
   private class Top = ()()
 
   public class Thing = Top ()(
-    protected error: msg = ( vmMirror printNewline: 'ERROR: ' + msg. vmMirror exit: 1 )
+    protected error: msg = (
+      vmMirror printNewline: 'ERROR: ' + msg.
+      vmMirror markTurnErroneous: nil.
+      vmMirror exit: 1
+    )
 
     (* Error recovering *)
     protected doesNotUnderstand: selector arguments: arguments = (

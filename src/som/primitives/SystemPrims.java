@@ -1,7 +1,9 @@
 package som.primitives;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
@@ -213,6 +215,32 @@ public final class SystemPrims {
     public final Object doSObject(final String argument) {
       Output.errorPrintln(argument);
       return argument;
+    }
+  }
+
+  /**
+   * This primitive is used be Kernel.ns and System.ns before the system is shut down with an
+   * error. We use this primitive to log the messageId of the turn the error occured in.
+   * The logged messageId can then be used in assisted debugging to backtrack from the error
+   * to the system start, and generate breakpoints for messages on that path.
+   */
+  @GenerateNodeFactory
+  @Primitive(primitive = "markTurnErroneous:")
+  public abstract static class MarkTurnErroneousPrim extends UnaryExpressionNode {
+    @Specialization
+    public final Object doSObject(final Object receiver) {
+      if (VmSettings.KOMPOS_TRACING) {
+        EventualMessage errorMsg = EventualMessage.getCurrentExecutingMessage();
+        long msgId = errorMsg.getMessageId();
+
+        File f = new File(VmSettings.TRACE_FILE + "_errorMsgId.trace");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(f))) {
+          writer.write(String.valueOf(msgId));
+        } catch (IOException e) {
+          throw new RuntimeException(e);
+        }
+      }
+      return receiver;
     }
   }
 
