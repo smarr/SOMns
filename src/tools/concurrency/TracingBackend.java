@@ -19,6 +19,7 @@ import java.util.Map;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.LockSupport;
 
 import javax.management.Notification;
 import javax.management.NotificationEmitter;
@@ -274,6 +275,10 @@ public class TracingBackend {
         } else if (t.swapTracingBufferIfThreadSuspendedInDebugger()) {
           runningThreads -= 1;
           result[i] = null;
+        } else if (isBlockedInJava(t)) {
+          runningThreads -= 1;
+          result[i] = null;
+          t.getBuffer().swapStorage();
         }
       }
     }
@@ -288,6 +293,11 @@ public class TracingBackend {
         throw new RuntimeException(e);
       }
     }
+  }
+
+  private static boolean isBlockedInJava(final Thread t) {
+    Object blocker = LockSupport.getBlocker(t);
+    return blocker != null;
   }
 
   public static final long[] getStatistics() {
@@ -394,7 +404,9 @@ public class TracingBackend {
       this.snapshotVersion = snapshotVersion;
     }
 
-    protected TraceWorkerThread() {}
+    protected TraceWorkerThread() {
+      super("TraceWorkerThread");
+    }
 
     private BufferAndLimit tryToObtainBuffer() {
       BufferAndLimit buffer;
