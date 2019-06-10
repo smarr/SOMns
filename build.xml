@@ -3,6 +3,35 @@
     xmlns:if="ant:if"
     xmlns:jacoco="antlib:org.jacoco.ant">
 
+    <macrodef name="travis">
+        <attribute name="target" />
+        <attribute name="start" default="" />
+        <sequential>
+            <echo message="travis_fold:start:@{target}${line.separator}@{start}${line.separator}" unless:blank="@{start}" if:true="${env.TRAVIS}" />
+            <echo message="travis_fold:end:@{target}${line.separator}"             if:blank="@{start}" if:true="${env.TRAVIS}" />
+        </sequential>
+    </macrodef>
+
+    <condition property="is.atLeastJava9" value="true" else="false">
+      <or>
+        <matches string="${java.version}" pattern="^9"/>
+        <matches string="${java.version}" pattern="^1[0-9]"/>
+      </or>
+    </condition>
+    <condition property="kernel" value="darwin-amd64" else="linux-amd64">
+        <os family="mac"/>
+    </condition>
+    
+    <travis target="env" start="Environment" />
+    <echo>
+        ant.java.version: ${ant.java.version}
+        java.version:     ${java.version}
+        is.atLeastJava9:  ${is.atLeastJava9}
+        kernel:           ${kernel}
+        env.TRAVIS:       ${env.TRAVIS}
+    </echo>
+    <travis target="env" />
+
     <property name="src.dir"     value="src"/>
     <property name="src_gen.dir" value="src_gen"/>
     <property name="lib.dir"     location="libs" />
@@ -15,11 +44,11 @@
     <property name="sdk.dir"     location="${lib.dir}/truffle/sdk" />
     <property name="tools.dir"   location="${lib.dir}/truffle/tools" />
     <property name="svm.dir"     location="${lib.dir}/truffle/substratevm" />
-    <property name="compiler.build" location="${graal.dir}/mxbuild/dists" />
-    <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists" />
-    <property name="tools.build" location="${tools.dir}/mxbuild/dists" />
-    <property name="svm.build"   location="${svm.dir}/mxbuild/dists" />
-    <property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
+    <property name="compiler.build" location="${graal.dir}/mxbuild/dists/jdk1.8" />
+    <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists/jdk1.8" />
+    <property name="tools.build" location="${tools.dir}/mxbuild/dists/jdk1.8" />
+    <property name="svm.build"   location="${svm.dir}/mxbuild/dists/jdk1.8" />
+    <property name="truffle.build" location="${truffle.dir}/mxbuild/dists/jdk1.8" />
     <property name="somns-deps.version" value="0.3.6" />
     <property name="checkstyle.version" value="8.11" />
     <property name="jacoco.version"     value="0.8.0" />
@@ -80,35 +109,6 @@
         <path refid="common.cp"/>
         <pathelement location="${svm.build}/library-support.jar" />
     </path>
-
-    <macrodef name="travis">
-        <attribute name="target" />
-        <attribute name="start" default="" />
-        <sequential>
-            <echo message="travis_fold:start:@{target}${line.separator}@{start}${line.separator}" unless:blank="@{start}" if:true="${env.TRAVIS}" />
-            <echo message="travis_fold:end:@{target}${line.separator}"             if:blank="@{start}" if:true="${env.TRAVIS}" />
-        </sequential>
-    </macrodef>
-
-    <condition property="is.atLeastJava9" value="true" else="false">
-      <or>
-        <matches string="${java.version}" pattern="^9"/>
-        <matches string="${java.version}" pattern="^1[0-9]"/>
-      </or>
-    </condition>
-    <condition property="kernel" value="darwin-amd64" else="linux-amd64">
-        <os family="mac"/>
-    </condition>
-    
-    <travis target="env" start="Environment" />
-    <echo>
-        ant.java.version: ${ant.java.version}
-        java.version:     ${java.version}
-        is.atLeastJava9:  ${is.atLeastJava9}
-        kernel:           ${kernel}
-        env.TRAVIS:       ${env.TRAVIS}
-    </echo>
-    <travis target="env" />
 
     <target name="clean" description="Remove build directories and generated code">
         <travis target="clean" start="clean" />

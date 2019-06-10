@@ -197,15 +197,15 @@ if java_bin == "java" and (not JAVA_MAJOR_VERSION or JAVA_MAJOR_VERSION < 9):
 
 CLASSPATH = (BASE_DIR + '/build/classes:'
            + BASE_DIR + '/libs/black-diamonds/build/classes:'
-           + TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-debug.jar:'
+           + TRUFFLE_DIR + '/truffle/mxbuild/dists/jdk1.8/truffle-debug.jar:'
            + BASE_DIR + '/libs/somns-deps.jar')
 
 BOOT_CLASSPATH = ('-Xbootclasspath/a:'
-             + TRUFFLE_DIR + '/sdk/mxbuild/dists/graal-sdk.jar:'
-             + TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-api.jar')
+             + TRUFFLE_DIR + '/sdk/mxbuild/dists/jdk1.8/graal-sdk.jar:'
+             + TRUFFLE_DIR + '/truffle/mxbuild/dists/jdk1.8/truffle-api.jar')
 
 GRAAL_JAVA_8_FLAGS = ['-Djvmci.Compiler=graal',
-  '-Djvmci.class.path.append=' + TRUFFLE_DIR + '/compiler/mxbuild/dists/graal.jar']
+  '-Djvmci.class.path.append=' + TRUFFLE_DIR + '/compiler/mxbuild/dists/jdk1.8/graal.jar']
 
 GRAAL_JAVA_9_FLAGS = [
   '--module-path=' + TRUFFLE_DIR + '/sdk/mxbuild/modules/org.graalvm.graal_sdk.jar:' +
