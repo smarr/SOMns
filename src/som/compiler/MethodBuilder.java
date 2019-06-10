@@ -220,8 +220,8 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
 
       frameOnStackVar = new Internal(FRAME_ON_STACK_SLOT_NAME);
       frameOnStackVar.init(
-          scope.getFrameDescriptor().addFrameSlot(
-              frameOnStackVar, FrameSlotKind.Object));
+          scope.getFrameDescriptor().addFrameSlot(frameOnStackVar, FrameSlotKind.Object),
+          scope.getFrameDescriptor());
       scope.addVariable(frameOnStackVar);
     }
     return frameOnStackVar;
@@ -395,7 +395,7 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     } else {
       l = new MutableLocal(name, source);
     }
-    l.init(scope.getFrameDescriptor().addFrameSlot(l));
+    l.init(scope.getFrameDescriptor().addFrameSlot(l), scope.getFrameDescriptor());
     locals.put(name, l);
 
     if (structuralProbe != null) {

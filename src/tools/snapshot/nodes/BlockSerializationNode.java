@@ -72,7 +72,6 @@ public abstract class BlockSerializationNode extends AbstractSerializationNode {
       base++;
       for (FrameSlot slot : fd.getSlots()) {
         // assume this is ordered by index
-        assert slot.getIndex() == j;
 
         // TODO optimization: MaterializedFrameSerialization Nodes that are associated with the
         // Invokables Frame Descriptor. Possibly use Local Var Read Nodes.

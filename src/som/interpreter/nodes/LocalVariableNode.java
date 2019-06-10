@@ -29,10 +29,9 @@ public abstract class LocalVariableNode extends ExprWithTagsNode
   // TODO: We currently assume that there is a 1:1 mapping between lexical contexts
   // and frame descriptors, which is apparently not strictly true anymore in Truffle 1.0.0.
   // Generally, we also need to revise everything in this area and address issue #240.
-  @SuppressWarnings("deprecation")
   private LocalVariableNode(final Local var) {
     this.slot = var.getSlot();
-    this.descriptor = slot.getFrameDescriptor();
+    this.descriptor = var.getFrameDescriptor();
     this.var = var;
   }
 
