@@ -123,7 +123,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   public static final String DOT_FILE_EXTENSION = "." + FILE_EXTENSION;
 
   @Option(help = "Selector for som.tests.BasicInterpreterTests",
-      category = OptionCategory.DEBUG) //
+      category = OptionCategory.INTERNAL) //
   static final OptionKey<String> TestSelector = new OptionKey<String>("");
 
   @CompilationFinal private VM        vm;
@@ -274,11 +274,6 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   protected Object findExportedSymbol(final VM context, final String globalName,
       final boolean onlyExplicit) {
     return context.getExport(globalName);
-  }
-
-  @Override
-  protected Object getLanguageGlobal(final VM context) {
-    return null;
   }
 
   @Override
