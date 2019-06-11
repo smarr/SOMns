@@ -38,8 +38,9 @@ import som.interpreter.nodes.specialized.IntToDoInlinedLiteralsNodeFactory;
 import som.interpreter.nodes.specialized.IntToDoMessageNodeFactory;
 import som.interpreter.nodes.specialized.NotMessageNodeFactory;
 import som.interpreter.nodes.specialized.OrMessageNodeFactory;
+import som.interpreter.nodes.specialized.whileloops.WhileFalsePrimitiveNodeFactory;
 import som.interpreter.nodes.specialized.whileloops.WhileInlinedLiteralsNode;
-import som.interpreter.nodes.specialized.whileloops.WhilePrimitiveNodeFactory;
+import som.interpreter.nodes.specialized.whileloops.WhileTruePrimitiveNodeFactory;
 import som.interpreter.nodes.specialized.whileloops.WhileWithStaticBlocksNode.WhileWithStaticBlocksNodeFactory;
 import som.primitives.ActivityJoinFactory;
 import som.primitives.ActivitySpawnFactory;
@@ -195,7 +196,6 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     addAll(allFactories, PromisePrimsFactory.getFactories());
     addAll(allFactories, StringPrimsFactory.getFactories());
     addAll(allFactories, SystemPrimsFactory.getFactories());
-    addAll(allFactories, WhilePrimitiveNodeFactory.getFactories());
 
     addAll(allFactories, ActivitySpawnFactory.getFactories());
     addAll(allFactories, ThreadingModuleFactory.getFactories());
@@ -206,6 +206,8 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     addAll(allFactories, ThreadPrimitivesFactory.getFactories());
     addAll(allFactories, ChannelPrimitivesFactory.getFactories());
 
+    add(allFactories, WhileTruePrimitiveNodeFactory.getInstance());
+    add(allFactories, WhileFalsePrimitiveNodeFactory.getInstance());
     add(allFactories, AdditionPrimFactory.getInstance());
     add(allFactories, AndMessageNodeFactory.getInstance());
     add(allFactories, AsStringPrimFactory.getInstance());

@@ -8,13 +8,10 @@ import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
 import bd.primitives.Primitive;
-import bd.tools.nodes.Operation;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.specialized.AndMessageNode.AndOrSplzr;
 import som.interpreter.nodes.specialized.OrMessageNode.OrSplzr;
-import som.interpreter.nodes.specialized.OrMessageNodeFactory.OrBoolMessageNodeFactory;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.dym.Tags.ControlFlowCondition;
@@ -62,34 +59,6 @@ public abstract class OrMessageNode extends BinaryComplexOperation {
       return true;
     } else {
       return (boolean) blockValueSend.call(new Object[] {argument});
-    }
-  }
-
-  @GenerateNodeFactory
-  public abstract static class OrBoolMessageNode extends BinaryBasicOperation
-      implements Operation {
-    @Override
-    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
-      if (tag == OpComparison.class) {
-        return true;
-      } else {
-        return super.hasTagIgnoringEagerness(tag);
-      }
-    }
-
-    @Specialization
-    public final boolean doOr(final boolean receiver, final boolean argument) {
-      return receiver || argument;
-    }
-
-    @Override
-    public String getOperation() {
-      return "||";
-    }
-
-    @Override
-    public int getNumArguments() {
-      return 2;
     }
   }
 }
