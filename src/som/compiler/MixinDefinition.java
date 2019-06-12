@@ -16,8 +16,8 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.NodeFactory;
-import com.oracle.truffle.api.interop.ForeignAccess;
-import com.oracle.truffle.api.interop.TruffleObject;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.Source;
@@ -27,7 +27,6 @@ import bd.basic.nodes.DummyParent;
 import bd.source.SourceCoordinate;
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
-import som.interop.MixinDefinitionInteropMessagesForeign;
 import som.interop.SomInteropObject;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.LexicalScope.MixinScope;
@@ -73,6 +72,7 @@ import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.ClassSerializatio
  * at runtime, which then also has the super class and mixins resolved to be
  * used to instantiate {@link SClass} objects.
  */
+@ExportLibrary(InteropLibrary.class)
 public final class MixinDefinition implements SomInteropObject {
   private final SSymbol       name;
   private final SourceSection nameSection;
@@ -860,18 +860,6 @@ public final class MixinDefinition implements SomInteropObject {
     clone.adaptFactoryMethods(adaptedScope, appliesTo);
     clone.adaptInvokableDispatchables(adaptedScope, appliesTo);
     return clone;
-  }
-
-  @Override
-  public ForeignAccess getForeignAccess() {
-    return MixinDefinitionInteropMessagesForeign.ACCESS;
-  }
-
-  /**
-   * Used by Truffle interop.
-   */
-  public static boolean isInstance(final TruffleObject obj) {
-    return obj instanceof MixinDefinition;
   }
 
   /**
