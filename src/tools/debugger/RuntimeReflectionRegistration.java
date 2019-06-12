@@ -7,8 +7,8 @@ import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
 
-import org.graalvm.nativeimage.Feature;
-import org.graalvm.nativeimage.RuntimeReflection;
+import org.graalvm.nativeimage.hosted.Feature;
+import org.graalvm.nativeimage.hosted.RuntimeReflection;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
