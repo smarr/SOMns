@@ -67,17 +67,23 @@ public abstract class ChannelPrimitives {
   }
 
   public static final class ProcessThreadFactory implements ForkJoinWorkerThreadFactory {
+    private final VM vm;
+
+    public ProcessThreadFactory(final VM vm) {
+      this.vm = vm;
+    }
+
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
-      return new ProcessThread(pool);
+      return new ProcessThread(pool, vm);
     }
   }
 
   public static final class ProcessThread extends TracingActivityThread {
     private Process current;
 
-    ProcessThread(final ForkJoinPool pool) {
-      super(pool);
+    ProcessThread(final ForkJoinPool pool, final VM vm) {
+      super(pool, vm);
     }
 
     @Override

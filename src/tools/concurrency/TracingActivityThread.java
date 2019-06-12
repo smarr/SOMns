@@ -5,6 +5,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import som.VM;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.vm.Activity;
 import som.vm.VmSettings;
@@ -17,6 +18,8 @@ import tools.snapshot.SnapshotBuffer;
 
 
 public abstract class TracingActivityThread extends ForkJoinWorkerThread {
+  private final VM vm;
+
   public static AtomicInteger threadIdGen = new AtomicInteger(1);
   protected final long        threadId;
   protected long              nextEntityId;
@@ -81,8 +84,10 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     return false;
   }
 
-  public TracingActivityThread(final ForkJoinPool pool) {
+  public TracingActivityThread(final ForkJoinPool pool, final VM vm) {
     super(pool);
+    this.vm = vm;
+
     if (VmSettings.SNAPSHOTS_ENABLED) {
       this.snapshotBuffer = new SnapshotBuffer((ActorProcessingThread) this);
     }
@@ -171,6 +176,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
       TracingBackend.registerThread(this);
     }
+    vm.enterContext();
   }
 
   @Override
@@ -183,6 +189,8 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     if (VmSettings.SNAPSHOTS_ENABLED) {
       SnapshotBackend.registerSnapshotBuffer(snapshotBuffer);
     }
+
+    vm.leaveContext();
     super.onTermination(exception);
   }
 

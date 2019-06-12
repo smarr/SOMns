@@ -12,6 +12,7 @@ import org.graalvm.polyglot.Engine;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.TruffleContext;
 import com.oracle.truffle.api.TruffleLanguage.Env;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.instrumentation.Tag;
@@ -64,6 +65,8 @@ public final class VM {
   @CompilationFinal private WebDebugger webDebugger;
   @CompilationFinal private CPUSampler  truffleProfiler;
 
+  @CompilationFinal private TruffleContext context;
+
   private final ForkJoinPool actorPool;
   private final ForkJoinPool forkJoinPool;
   private final ForkJoinPool processesPool;
@@ -86,13 +89,13 @@ public final class VM {
     options = vmOptions;
 
     actorPool = new ForkJoinPool(VmSettings.NUM_THREADS,
-        new ActorProcessingThreadFactory(), new UncaughtExceptions(this), true);
+        new ActorProcessingThreadFactory(this), new UncaughtExceptions(this), true);
     processesPool = new ForkJoinPool(VmSettings.NUM_THREADS,
-        new ProcessThreadFactory(), new UncaughtExceptions(this), true);
+        new ProcessThreadFactory(this), new UncaughtExceptions(this), true);
     forkJoinPool = new ForkJoinPool(VmSettings.NUM_THREADS,
-        new ForkJoinThreadFactory(), new UncaughtExceptions(this), false);
+        new ForkJoinThreadFactory(this), new UncaughtExceptions(this), false);
     threadPool = new ForkJoinPool(MAX_THREADS,
-        new ForkJoinThreadFactory(), new UncaughtExceptions(this), false);
+        new ForkJoinThreadFactory(this), new UncaughtExceptions(this), false);
   }
 
   /**
@@ -270,6 +273,10 @@ public final class VM {
     shutdownPools();
   }
 
+  public boolean isShutdown() {
+    return actorPool.isShutdown();
+  }
+
   /**
    * Request a shutdown and exit from the VM. This does not happen immediately.
    * Instead, we instruct the main thread to do it, and merely kill the current
@@ -327,11 +334,23 @@ public final class VM {
     return mainActor;
   }
 
+  public void enterContext() {
+    assert context != null : "setupInstruments(env) must have been called first";
+    context.enter();
+  }
+
+  public void leaveContext() {
+    assert context != null : "setupInstruments(env) must have been called first";
+    context.leave(null);
+  }
+
   /**
    * We only do this when we execute an application.
    * We don't setup the instruments for BasicInterpreterTests.
    */
   public void setupInstruments(final Env env) {
+    context = env.getContext();
+
     Engine engine = Context.getCurrent().getEngine();
 
     if (options.profilingEnabled) {

@@ -32,6 +32,7 @@ public class SomPolyglotTests {
   public void resetObjectSystem() {
     VM.resetClassReferences(true);
     if (context != null) {
+      context.eval(Launcher.SHUTDOWN);
       context.close();
     }
   }
@@ -49,7 +50,6 @@ public class SomPolyglotTests {
 
     Value result = context.eval(Launcher.START);
     assertNotNull(result);
-    context.close();
   }
 
   @Test
