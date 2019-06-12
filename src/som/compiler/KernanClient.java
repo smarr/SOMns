@@ -104,9 +104,6 @@ public class KernanClient {
    * This frame class partially implements the frame data structure defined by the Web-socket
    * protocol, @see <a href="https://tools.ietf.org/html/rfc6455">RFC 6455</a>.
    *
-   * Messages that fit into one frame (no more than 65536 bytes) can be sent. If it becomes
-   * necessary, I will extend this class to allow messages to span multiple frames.
-   *
    * Note: frames can only be created using the {@link KernanClient#buildFrame} method, in
    * which both the operation code and the message should be provided directly. Instances of
    * frame objects may only be used to query
@@ -116,14 +113,17 @@ public class KernanClient {
     private static final int OPCODE_INDEX        = 0;
     private static final int MESSAGE_126_INDEX   = 6;
     private static final int MESSAGE_65536_INDEX = 8;
+    private static final int MESSAGE_LONG_INDEX  = 14;
 
     private final byte[] data;
 
     private Frame(final int len) {
       if (len < 126) {
         data = new byte[MESSAGE_126_INDEX + len];
-      } else {
+      } else if (len <= 65536) {
         data = new byte[MESSAGE_65536_INDEX + len];
+      } else {
+        data = new byte[MESSAGE_LONG_INDEX + len];
       }
     }
 
@@ -131,39 +131,61 @@ public class KernanClient {
       data[OPCODE_INDEX] = (byte) code;
     }
 
-    private void setMessageWithLenLessThan126(final String message) {
-      boolean correct = data.length == (message.length() + MESSAGE_126_INDEX);
+    private void setMessageWithLenLessThan126(final byte[] message) {
+      boolean correct = data.length == (message.length + MESSAGE_126_INDEX);
       assert correct : "Message was not the correct size?";
 
-      data[1] = (byte) message.length();
-      for (int i = 0; i < message.length(); i++) {
-        char c = message.charAt(i);
-        data[MESSAGE_126_INDEX + i] = (byte) c;
+      data[1] = (byte) message.length;
+      for (int i = 0; i < message.length; i++) {
+        data[MESSAGE_126_INDEX + i] = message[i];
       }
     }
 
-    private void setMessageWithLenGreaterThanOrEqual126(final String message) {
-      boolean correct = data.length == (message.length() + MESSAGE_65536_INDEX);
+    private void setMessageWithLenGreaterThanOrEqual126(final byte[] message) {
+      boolean correct = data.length == (message.length + MESSAGE_65536_INDEX);
       assert correct : "Message was not the correct size?";
 
-      short messageLenIn16bits = (short) message.length();
+      short messageLenIn16bits = (short) message.length;
       data[1] = (byte) 126;
       data[2] = (byte) ((messageLenIn16bits >> 8) & 0xFF);
       data[3] = (byte) (messageLenIn16bits & 0xFF);
 
-      for (int i = 0; i < message.length(); i++) {
-        char c = message.charAt(i);
-        data[MESSAGE_65536_INDEX + i] = (byte) c;
+      for (int i = 0; i < message.length; i++) {
+        data[MESSAGE_65536_INDEX + i] = message[i];
       }
 
       return;
     }
 
-    private void setMessage(final String message) {
-      if (message.length() < 126) {
+    private void setMessageWithLenGreaterThan65536(final byte[] message) {
+      boolean correct = data.length == (message.length + MESSAGE_LONG_INDEX);
+      assert correct : "Message was not the correct size?";
+
+      long messageLenIn64bits = (long) message.length;
+      data[1] = (byte) 127;
+      data[2] = (byte) ((messageLenIn64bits >> 56) & 0xFF);
+      data[3] = (byte) ((messageLenIn64bits >> 48) & 0xFF);
+      data[4] = (byte) ((messageLenIn64bits >> 40) & 0xFF);
+      data[5] = (byte) ((messageLenIn64bits >> 32) & 0xFF);
+      data[6] = (byte) ((messageLenIn64bits >> 24) & 0xFF);
+      data[7] = (byte) ((messageLenIn64bits >> 16) & 0xFF);
+      data[8] = (byte) ((messageLenIn64bits >> 8) & 0xFF);
+      data[9] = (byte) (messageLenIn64bits & 0xFF);
+
+      for (int i = 0; i < message.length; i++) {
+        data[MESSAGE_LONG_INDEX + i] = message[i];
+      }
+
+      return;
+    }
+
+    private void setMessage(final byte[] message) {
+      if (message.length < 126) {
         setMessageWithLenLessThan126(message);
-      } else {
+      } else if (message.length <= 65536) {
         setMessageWithLenGreaterThanOrEqual126(message);
+      } else {
+        setMessageWithLenGreaterThan65536(message);
       }
     }
 
@@ -181,10 +203,13 @@ public class KernanClient {
    * @return - an instance of {@link Frame}
    */
   public Frame buildFrame(final int operationCode, final String message) {
-    Frame frame = new Frame(message.length());
-    frame.setOperationCode(operationCode);
-    frame.setMessage(message);
-    return frame;
+    try {
+        byte[] bytes = message.getBytes("UTF8");
+        Frame frame = new Frame(bytes.length);
+        frame.setOperationCode(operationCode);
+        frame.setMessage(bytes);
+        return frame;
+    } catch (java.io.UnsupportedEncodingException e) { assert false; return null; }
   }
 
   /**
@@ -357,12 +382,13 @@ public class KernanClient {
       }
 
       // And parse the message itself
-      StringBuilder builder = new StringBuilder();
+      byte[] result = new byte[(int)len];
       for (int i = 0; i < len; i++) {
-        char c = (char) readByte();
-        builder.append(c);
+        result[i] = readByte();
       }
-      String message = builder.toString();
+      String message = null;
+      try { message = new String(result, "UTF8"); }
+      catch (java.io.UnsupportedEncodingException e) { assert false; }
 
       // Record the message to the stack
       frames.add(buildFrame(op, message));
