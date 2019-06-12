@@ -171,7 +171,7 @@ public class KernanClient {
   public Frame buildFrame(final int operationCode, final String message) {
     byte[] bytes = null;
     try { message.getBytes("UTF8"); }
-    catch (java.io.UnsupportedEncodingException e) { assert false; }
+    catch (java.io.UnsupportedEncodingException e) { throw new RuntimeException(e); }
     Frame frame = new Frame(bytes.length);
     frame.setOperationCode(operationCode);
     frame.setMessage(bytes);
@@ -354,7 +354,7 @@ public class KernanClient {
       }
       String message = null;
       try { message = new String(result, "UTF8"); }
-      catch (java.io.UnsupportedEncodingException e) { assert false; }
+      catch (java.io.UnsupportedEncodingException e) { throw new RuntimeException(e); }
 
       // Record the message to the stack
       frames.add(buildFrame(op, message));
