@@ -111,81 +111,47 @@ public class KernanClient {
    */
   private final class Frame {
     private static final int OPCODE_INDEX        = 0;
-    private static final int MESSAGE_126_INDEX   = 6;
-    private static final int MESSAGE_65536_INDEX = 8;
+    private static final int MESSAGE_BYTE_INDEX  = 6;
+    private static final int MESSAGE_SHORT_INDEX = 8;
     private static final int MESSAGE_LONG_INDEX  = 14;
 
     private final byte[] data;
-
+    private final int message_index;
     private Frame(final int len) {
       if (len < 126) {
-        data = new byte[MESSAGE_126_INDEX + len];
+        message_index = MESSAGE_BYTE_INDEX;
       } else if (len <= 65536) {
-        data = new byte[MESSAGE_65536_INDEX + len];
+        message_index = MESSAGE_SHORT_INDEX;
       } else {
-        data = new byte[MESSAGE_LONG_INDEX + len];
+        message_index = MESSAGE_LONG_INDEX;
       }
+      data = new byte[message_index + len];
     }
 
     private void setOperationCode(final int code) {
       data[OPCODE_INDEX] = (byte) code;
     }
 
-    private void setMessageWithLenLessThan126(final byte[] message) {
-      boolean correct = data.length == (message.length + MESSAGE_126_INDEX);
-      assert correct : "Message was not the correct size?";
-
-      data[1] = (byte) message.length;
-      for (int i = 0; i < message.length; i++) {
-        data[MESSAGE_126_INDEX + i] = message[i];
-      }
-    }
-
-    private void setMessageWithLenGreaterThanOrEqual126(final byte[] message) {
-      boolean correct = data.length == (message.length + MESSAGE_65536_INDEX);
-      assert correct : "Message was not the correct size?";
-
-      short messageLenIn16bits = (short) message.length;
-      data[1] = (byte) 126;
-      data[2] = (byte) ((messageLenIn16bits >> 8) & 0xFF);
-      data[3] = (byte) (messageLenIn16bits & 0xFF);
-
-      for (int i = 0; i < message.length; i++) {
-        data[MESSAGE_65536_INDEX + i] = message[i];
-      }
-
-      return;
-    }
-
-    private void setMessageWithLenGreaterThan65536(final byte[] message) {
-      boolean correct = data.length == (message.length + MESSAGE_LONG_INDEX);
-      assert correct : "Message was not the correct size?";
-
-      long messageLenIn64bits = (long) message.length;
-      data[1] = (byte) 127;
-      data[2] = (byte) ((messageLenIn64bits >> 56) & 0xFF);
-      data[3] = (byte) ((messageLenIn64bits >> 48) & 0xFF);
-      data[4] = (byte) ((messageLenIn64bits >> 40) & 0xFF);
-      data[5] = (byte) ((messageLenIn64bits >> 32) & 0xFF);
-      data[6] = (byte) ((messageLenIn64bits >> 24) & 0xFF);
-      data[7] = (byte) ((messageLenIn64bits >> 16) & 0xFF);
-      data[8] = (byte) ((messageLenIn64bits >> 8) & 0xFF);
-      data[9] = (byte) (messageLenIn64bits & 0xFF);
-
-      for (int i = 0; i < message.length; i++) {
-        data[MESSAGE_LONG_INDEX + i] = message[i];
-      }
-
-      return;
-    }
-
     private void setMessage(final byte[] message) {
-      if (message.length < 126) {
-        setMessageWithLenLessThan126(message);
-      } else if (message.length <= 65536) {
-        setMessageWithLenGreaterThanOrEqual126(message);
+      assert data.length == (message.length + message_index) : "Message was not the correct size?";
+      int length_bytes;
+      if (message_index == MESSAGE_BYTE_INDEX) { // < 126
+        data[1] = (byte) message.length;
+        length_bytes = 0;
+      } else if (message_index == MESSAGE_SHORT_INDEX) { // <= 65536
+        data[1] = (byte) 126;
+        length_bytes = 2;
       } else {
-        setMessageWithLenGreaterThan65536(message);
+        assert message_index == MESSAGE_LONG_INDEX;
+        data[1] = (byte) 127;
+        length_bytes = 8;
+      }
+      for (int i = 1; i <= length_bytes; i++) {
+        data[1 + i] = (byte)((message.length >> 8*(length_bytes-i)) & 0xFF);
+      }
+
+      for (int i = 0; i < message.length; i++) {
+        data[message_index + i] = message[i];
       }
     }
 
@@ -203,13 +169,13 @@ public class KernanClient {
    * @return - an instance of {@link Frame}
    */
   public Frame buildFrame(final int operationCode, final String message) {
-    try {
-        byte[] bytes = message.getBytes("UTF8");
-        Frame frame = new Frame(bytes.length);
-        frame.setOperationCode(operationCode);
-        frame.setMessage(bytes);
-        return frame;
-    } catch (java.io.UnsupportedEncodingException e) { assert false; return null; }
+    byte[] bytes = null;
+    try { message.getBytes("UTF8"); }
+    catch (java.io.UnsupportedEncodingException e) { assert false; }
+    Frame frame = new Frame(bytes.length);
+    frame.setOperationCode(operationCode);
+    frame.setMessage(bytes);
+    return frame;
   }
 
   /**
