@@ -65,8 +65,9 @@ install: |
   then
     JDK_TAR=${TRAVIS_BUILD_DIR}/../jdk.tar.gz
     wget --progress=bar:force https://github.com/graalvm/openjdk8-jvmci-builder/releases/download/${JVMCI_VERSION}/openjdk-8u${JDK8_UPDATE_VERSION}-${JVMCI_VERSION}-linux-amd64.tar.gz -O ${JDK_TAR}
-    tar -C ${TRAVIS_BUILD_DIR}/.. -xzf ${JDK_TAR}
-    export JVMCI_HOME=${TRAVIS_BUILD_DIR}/../openjdk1.8.0_${JDK8_UPDATE_VERSION}-${JVMCI_VERSION}
+    mkdir -p ${TRAVIS_BUILD_DIR}/jdk-jvmci
+    tar -C ${TRAVIS_BUILD_DIR}/jdk-jvmci -xzf ${JDK_TAR} --strip 1
+    export JVMCI_HOME=${TRAVIS_BUILD_DIR}/jdk-jvmci
   fi
 
   if [ "$TASK" = "checkstyle" ]
