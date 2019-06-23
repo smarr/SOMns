@@ -88,7 +88,7 @@ public class SomPolyglotTests {
     assertTrue(sampler.isCollecting());
     assertTrue(sampler.getSampleCount() > 10);
     Collection<ProfilerNode<Payload>> samples = sampler.getRootNodes();
-    assertTrue(samples.iterator().next().getRootName().startsWith("Platform>>"));
+    assertTrue(samples.iterator().next().getRootName().contains(">>#"));
   }
 
   @Test
