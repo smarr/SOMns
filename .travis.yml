@@ -32,19 +32,9 @@ matrix:
       env:  TASK=unit-tests
 
     - os: osx
-      osx_image: xcode10
+      osx_image: xcode9.3
       language: generic
       env:  TASK=unit-tests
-      # before_install: |
-      #   brew update
-      #   ## the following is a hack to be able to install java
-      #   find "$(brew --prefix)/Caskroom/"*'/.metadata' -type f -name '*.rb' | xargs grep 'EOS.undent' --files-with-matches | xargs sed -i '' 's/EOS.undent/EOS/'
-      #   brew cask reinstall java
-      #   brew install ant
-      #   export JAVA_HOME=`/usr/libexec/java_home`
-
-  allow_failures:
-    - os: osx
 
 before_install:
   - |
@@ -57,6 +47,11 @@ before_install:
      printf "travis_fold:end:$ID\n"
      return $RESULT_EVAL
    }
+   if [ "$TRAVIS_OS_NAME" = "osx" ]
+   then
+     brew update
+     brew install ant
+   fi
 
 
 install: |
@@ -68,6 +63,17 @@ install: |
     mkdir -p ${TRAVIS_BUILD_DIR}/jdk-jvmci
     tar -C ${TRAVIS_BUILD_DIR}/jdk-jvmci -xzf ${JDK_TAR} --strip 1
     export JVMCI_HOME=${TRAVIS_BUILD_DIR}/jdk-jvmci
+    export JVMCI_BIN=${JVMCI_HOME}/bin/java
+  fi
+  
+  if [ "$TRAVIS_OS_NAME" = "osx" ]
+  then
+    JDK_TAR=${TRAVIS_BUILD_DIR}/../jdk.tar.gz
+    wget --progress=bar:force https://github.com/graalvm/openjdk8-jvmci-builder/releases/download/${JVMCI_VERSION}/openjdk-8u${JDK8_UPDATE_VERSION}-${JVMCI_VERSION}-darwin-amd64.tar.gz -O ${JDK_TAR}
+    mkdir -p ${TRAVIS_BUILD_DIR}/jdk-jvmci
+    tar -C ${TRAVIS_BUILD_DIR}/jdk-jvmci -xzf ${JDK_TAR} --strip 1
+    export JVMCI_HOME=${TRAVIS_BUILD_DIR}/jdk-jvmci/Contents/Home
+    export JVMCI_BIN=${JVMCI_HOME}/bin/java
   fi
 
   if [ "$TASK" = "checkstyle" ]
