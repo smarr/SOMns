@@ -13,6 +13,7 @@ import org.graalvm.polyglot.Context.Builder;
 import org.graalvm.polyglot.Value;
 import org.junit.After;
 import org.junit.Assume;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.oracle.truffle.tools.profiler.CPUSampler;
@@ -22,11 +23,18 @@ import com.oracle.truffle.tools.profiler.ProfilerNode;
 import som.Launcher;
 import som.VM;
 import som.interpreter.SomLanguage;
+import som.interpreter.objectstorage.StorageAccessor;
 
 
 public class SomPolyglotTests {
 
   Context context;
+
+  @BeforeClass
+  public static void setup() {
+    // Needed to be able to execute SOMns initialization
+    StorageAccessor.initAccessors();
+  }
 
   @After
   public void resetObjectSystem() {
