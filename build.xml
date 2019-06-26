@@ -67,17 +67,6 @@
         <pathelement location="${sdk.build}/graal-sdk.jar" />
         <pathelement location="${truffle.build}/truffle-api.jar" />
     </path>
-    
-    <path id="svm.cp">
-        <pathelement location="${svm.build}/objectfile.jar" />
-        <pathelement location="${svm.build}/pointsto.jar" />
-        <pathelement location="${svm.build}/svm.jar" />
-        <pathelement location="${compiler.build}/graal-management.jar" />
-        <pathelement location="${compiler.build}/graal.jar" />
-        
-        <pathelement location="${env.JVMCI_HOME}/jre/lib/jvmci/jvmci-api.jar" />
-        <pathelement location="${env.JVMCI_HOME}/jre/lib/jvmci/jvmci-hotspot.jar" />
-    </path>
 
     <path id="common.cp">
         <pathelement location="${classes.dir}" />
@@ -103,13 +92,6 @@
         <pathelement location="${truffle.build}/truffle-tck.jar" />
     </path>
     
-    <path id="image.cp">
-        <path refid="boot.cp"/>
-        <path refid="svm.cp"/>
-        <path refid="common.cp"/>
-        <pathelement location="${svm.build}/library-support.jar" />
-    </path>
-
     <target name="clean" description="Remove build directories and generated code">
         <travis target="clean" start="clean" />
 
@@ -185,16 +167,18 @@
         </exec>
     </target>
 
-    <target name="libs" depends="truffle-libs,bd-libs" unless="skip.libs">
-        <travis target="libs" start="Get Libs" />
+    <target name="som-libs">
+        <travis target="som-libs" start="Get Libs" />
         <get src="${lib.url}/somns-deps-${somns-deps.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/somns-deps.jar" />
         <get src="${lib.url}/somns-deps-dev-${somns-deps.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/somns-deps-dev.jar" />
-        <travis target="libs" />
+        <travis target="som-libs" />
     </target>
+    
+    <target name="libs" depends="truffle-libs,som-libs,bd-libs" unless="skip.libs" />
 
     <target name="source" description="Download Source Jars for development">
         <get src="${lib.url}/somns-deps-source-${somns-deps.version}.jar"
@@ -505,47 +489,26 @@
 
     <target name="tests" depends="core-tests,serialization-tests,replay-tests,coverage">
     </target>
-    
-    <target name="native-build" depends="libs,compile-som">
+
+    <target name="native" depends="libs,compile-som">
       <travis target="native" start="Build Native Image" />
-      <java classname="com.oracle.svm.hosted.NativeImageGeneratorRunner" fork="true" failonerror="true"
-          jvm="${env.JVMCI_HOME}/bin/java">
-        <classpath refid="svm.cp" />
-        <jvmarg line="-Xbootclasspath/a:${ant.refid:boot.cp}" />
-        <jvmarg line="-Djvmci.Compiler=graal -Djvmci.class.path.append=${compiler.build}/graal.jar" />
 
-        <jvmarg line="-server -d64 -noverify" />
-        <jvmarg line="-Dgraal.EagerSnippets=true" />
-        <jvmarg line="-Xss10m -Xms1g -Xmx13743895344" />
-        <jvmarg line="-XX:+UnlockExperimentalVMOptions" />
-        <jvmarg line="-XX:+EnableJVMCI" />
-        <jvmarg line="-XX:-UseJVMCIClassLoader" />
-        
-        <jvmarg line="-Duser.country=US -Duser.language=en " />
-        <jvmarg line="-Dgraalvm.version=dev -Dorg.graalvm.version=dev -Dcom.oracle.graalvm.isaot=true" />
-        <jvmarg line="-Dgraalvm.locatorDisabled=true -Dtruffle.TrustAllTruffleRuntimeProviders=true" />
-        <!-- <jvmarg line="-Dsom.instrumentation=true -Dsom.truffleDebugger=true" /> -->
-
-        <arg line="-imagecp ${ant.refid:image.cp}" />
+      <exec executable="${mx.cmd}" dir="${svm.dir}">
+        <env key="JAVA_HOME" value="${env.JVMCI_HOME}" />
+        <arg line="native-image" />
+        <arg line="--macro:truffle --no-fallback --initialize-at-build-time -H:+ReportExceptionStackTraces" />
+        <arg line="-H:-ThrowUnsafeOffsetErrors" />
         
         <!-- <arg line="-H:+PrintRuntimeCompileMethods" /> -->
-        <!-- <arg line="-H:+PrintMethodHistogram" /> -->
-        
-        <arg line="-H:Path=${basedir}" />
-        <arg line="-H:-ThrowUnsafeOffsetErrors" />
-        <arg line="-H:+RuntimeAssertions" />
-        <arg line="-H:MaxRuntimeCompileMethods=800" />
-        <arg line="-H:CLibraryPath=${svm.dir}/clibraries/${kernel}" />
-        <arg line="-H:Features=com.oracle.svm.truffle.TruffleFeature" />
-        <arg line="-H:Class=som.Launcher -H:Name=som-native" />
+        <!-- <arg line="-H:+PrintMethodHistogram" /> 
+             <arg line="-H:+RuntimeAssertions" />
+             <arg line="-H:+EnforceMaxRuntimeCompileMethods" /> -->
 
-      </java>
+        <arg line="-cp ${ant.refid:common.cp}" />
+        <arg line="som.Launcher" />
+        <arg line="som-native" />
+      </exec>
+      
       <travis target="native" />
-    </target>
-    
-    <target name="native">
-      <antcall target="native-build">
-        <param name="build.native" value="true"/>
-      </antcall>
     </target>
 </project>
