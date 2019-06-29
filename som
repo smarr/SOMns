@@ -11,9 +11,6 @@ JVMCI_BIN   = os.getenv('JVMCI_BIN',  None)
 GRAAL_HOME  = os.getenv('GRAAL_HOME',  None)
 GRAAL_FLAGS = os.getenv('GRAAL_FLAGS', None)
 
-GRAAL_LOCATIONS = ['~/.local/graal-core/',
-                   BASE_DIR + '/../graal/graal-jvmci-8']
-
 ##
 ## Defining Argument Parsing
 ##
@@ -153,27 +150,27 @@ if args.dynamic_metrics:
 if args.java_interpreter:
     args.interpreter = True
 
-graal_home = GRAAL_HOME
+# Determine JVM to be used
 java_bin = None
 
-if JAVA_HOME:
-  java_bin = JAVA_HOME + '/bin/java'
 if JVMCI_BIN:
   java_bin = JVMCI_BIN
+if not java_bin and GRAAL_HOME and os.path.isfile(graal_home + '/bin/java'):
+  java_bin = graal_home + '/bin/java'  
 
 if not java_bin:
-  if not graal_home:
-    # search known Graal locations
-    for d in GRAAL_LOCATIONS:
-      d = os.path.expanduser(d)
-      if os.path.isdir(d):
-        graal_home = d
-        break
+    # use local JVMCI, which ant already needed
+    local_jvmci_bin = BASE_DIR + '/libs/jvmci'
+    if sys.platform == 'darwin':
+      local_jvmci_bin += '/Contents/Home'
+    local_jvmci_bin += '/bin/java'
+    if os.path.isfile(local_jvmci_bin):
+      java_bin = local_jvmci_bin
 
-  if graal_home and os.path.isdir(graal_home + '/bin'):
-    java_bin = graal_home + '/bin/java'
+if not java_bin and JAVA_HOME:
+  java_bin = JAVA_HOME + '/bin/java'
 
-if java_bin is graal_home or not os.path.isfile(java_bin):
+if not java_bin:
   java_bin = "java"
 
 JAVA_MAJOR_VERSION = None
@@ -187,7 +184,7 @@ try:
 except:
   pass
 
-if java_bin == "java" and (not JAVA_MAJOR_VERSION or JAVA_MAJOR_VERSION < 9):
+if not args.interpreter and not java_bin.startswith(BASE_DIR + '/libs/jvmci') and (not JAVA_MAJOR_VERSION or JAVA_MAJOR_VERSION < 9):
   print "No compatible JDK found. Please set the GRAAL_HOME or JVMCI_BIN environment variables."
   sys.exit(1)
 

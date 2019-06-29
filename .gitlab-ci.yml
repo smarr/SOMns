@@ -6,8 +6,6 @@ stages:
 
 variables:
   PYTHONUNBUFFERED: "true"
-  JVMCI_BIN: /home/gitlab-runner/.local/graal-core/bin/java
-  JVMCI_HOME: /home/gitlab-runner/.local/graal-core/
   JVMCI_VERSION_CHECK: ignore
   ECLIPSE_EXE: /home/gitlab-runner/.local/eclipse/eclipse
   JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
