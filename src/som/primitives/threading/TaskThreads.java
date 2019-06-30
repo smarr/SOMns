@@ -6,11 +6,11 @@ import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveTask;
 
 import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.interop.ForeignAccess;
-import com.oracle.truffle.api.interop.TruffleObject;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.library.ExportLibrary;
 
+import som.VM;
 import som.interop.SomInteropObject;
-import som.interop.SomTaskOrThreadInteropMessagesForeign;
 import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.Activity;
@@ -25,6 +25,7 @@ import tools.debugger.entities.ActivityType;
 
 public final class TaskThreads {
 
+  @ExportLibrary(InteropLibrary.class)
   public abstract static class SomTaskOrThread extends RecursiveTask<Object>
       implements Activity, SomInteropObject {
     private static final long serialVersionUID = 4823503369882151811L;
@@ -77,18 +78,6 @@ public final class TaskThreads {
       throw new UnsupportedOperationException(
           "Step to next turn is not supported " +
               "for threads. This code should never be reached.");
-    }
-
-    @Override
-    public ForeignAccess getForeignAccess() {
-      return SomTaskOrThreadInteropMessagesForeign.ACCESS;
-    }
-
-    /**
-     * Used by Truffle interop.
-     */
-    public static boolean isInstance(final TruffleObject obj) {
-      return obj instanceof SomTaskOrThread;
     }
   }
 
@@ -209,17 +198,24 @@ public final class TaskThreads {
   }
 
   public static final class ForkJoinThreadFactory implements ForkJoinWorkerThreadFactory {
+
+    private final VM vm;
+
+    public ForkJoinThreadFactory(final VM vm) {
+      this.vm = vm;
+    }
+
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
-      return new ForkJoinThread(pool);
+      return new ForkJoinThread(pool, vm);
     }
   }
 
   private static final class ForkJoinThread extends TracingActivityThread {
     private SomTaskOrThread task;
 
-    protected ForkJoinThread(final ForkJoinPool pool) {
-      super(pool);
+    protected ForkJoinThread(final ForkJoinPool pool, final VM vm) {
+      super(pool, vm);
     }
 
     @Override

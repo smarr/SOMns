@@ -354,19 +354,27 @@ public class Actor implements Activity {
 
   public static final class ActorProcessingThreadFactory
       implements ForkJoinWorkerThreadFactory {
+
+    private final VM vm;
+
+    public ActorProcessingThreadFactory(final VM vm) {
+      this.vm = vm;
+    }
+
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
-      return new ActorProcessingThread(pool);
+      return new ActorProcessingThread(pool, vm);
     }
   }
 
   public static final class ActorProcessingThread extends TracingActivityThread {
+
     public EventualMessage currentMessage;
 
     protected Actor currentlyExecutingActor;
 
-    protected ActorProcessingThread(final ForkJoinPool pool) {
-      super(pool);
+    protected ActorProcessingThread(final ForkJoinPool pool, final VM vm) {
+      super(pool, vm);
     }
 
     @Override

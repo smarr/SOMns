@@ -59,6 +59,19 @@ const steppingTests: Test[] = [
         }]
       },
       {
+        // TODO: this is a point were truffle now stops,
+        // but we should try to get rid of it.
+        // not entirely sure how to solve this, so, included for now
+        type: ST.STEP_OVER,
+        activity: "main",
+        stops: [{
+          line: 43,
+          methodName: "STM>>#main:",
+          stackHeight: 6,
+          activity: "main"
+        }]
+      },
+      {
         type: ST.STEP_OVER,
         activity: "main",
         stops: [{

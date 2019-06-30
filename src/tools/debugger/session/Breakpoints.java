@@ -44,8 +44,9 @@ public class Breakpoints {
     this.truffleBreakpoints = new HashMap<>();
     this.breakpoints = new HashMap<>();
     @SuppressWarnings("unchecked")
-    Class<Tag>[] tags = new Class[] {ExpressionBreakpoint.class, RootTag.class};
-    this.debuggerSession = debugger.startSession(webDebugger, tags, SourceElement.STATEMENT);
+    Class<Tag>[] tags = new Class[] {ExpressionBreakpoint.class};
+    this.debuggerSession =
+        debugger.startSession(webDebugger, tags, SourceElement.STATEMENT, SourceElement.ROOT);
   }
 
   public void prepareSteppingUntilNextRootNode(final Thread thread) {

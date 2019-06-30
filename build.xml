@@ -2,6 +2,41 @@
     xmlns:unless="ant:unless"
     xmlns:if="ant:if"
     xmlns:jacoco="antlib:org.jacoco.ant">
+    
+    <property name="jvmci.version" value="jvmci-20-b04" />
+    <property name="jdk8.version"  value="212" />
+
+    <macrodef name="travis">
+        <attribute name="target" />
+        <attribute name="start" default="" />
+        <sequential>
+            <echo message="travis_fold:start:@{target}${line.separator}@{start}${line.separator}" unless:blank="@{start}" if:true="${env.TRAVIS}" />
+            <echo message="travis_fold:end:@{target}${line.separator}"             if:blank="@{start}" if:true="${env.TRAVIS}" />
+        </sequential>
+    </macrodef>
+
+    <condition property="is.atLeastJava9" value="true" else="false">
+      <or>
+        <matches string="${java.version}" pattern="^9"/>
+        <matches string="${java.version}" pattern="^1[0-9]"/>
+      </or>
+    </condition>
+    <condition property="kernel" value="darwin-amd64" else="linux-amd64">
+        <os family="mac"/>
+    </condition>
+    <condition property="home.ext" value="/Contents/Home" else="">
+        <os family="mac"/>
+    </condition>
+    
+    <travis target="env" start="Environment" />
+    <echo>
+        ant.java.version: ${ant.java.version}
+        java.version:     ${java.version}
+        is.atLeastJava9:  ${is.atLeastJava9}
+        kernel:           ${kernel}
+        env.TRAVIS:       ${env.TRAVIS}
+    </echo>
+    <travis target="env" />
 
     <property name="src.dir"     value="src"/>
     <property name="src_gen.dir" value="src_gen"/>
@@ -15,14 +50,15 @@
     <property name="sdk.dir"     location="${lib.dir}/truffle/sdk" />
     <property name="tools.dir"   location="${lib.dir}/truffle/tools" />
     <property name="svm.dir"     location="${lib.dir}/truffle/substratevm" />
-    <property name="compiler.build" location="${graal.dir}/mxbuild/dists" />
-    <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists" />
-    <property name="tools.build" location="${tools.dir}/mxbuild/dists" />
-    <property name="svm.build"   location="${svm.dir}/mxbuild/dists" />
-    <property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
+    <property name="compiler.build" location="${graal.dir}/mxbuild/dists/jdk1.8" />
+    <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists/jdk1.8" />
+    <property name="tools.build" location="${tools.dir}/mxbuild/dists/jdk1.8" />
+    <property name="svm.build"   location="${svm.dir}/mxbuild/dists/jdk1.8" />
+    <property name="truffle.build" location="${truffle.dir}/mxbuild/dists/jdk1.8" />
     <property name="somns-deps.version" value="0.3.6" />
     <property name="checkstyle.version" value="8.11" />
     <property name="jacoco.version"     value="0.8.0" />
+    <property name="jvmci.home"  location="${lib.dir}/jvmci${home.ext}" />
 
     <!-- <property name="lib.url" value="https://dl.bintray.com/smarr/SOM" /> -->
     <property name="lib.url" value="http://stefan-marr.de/dev" />
@@ -37,17 +73,6 @@
     <path id="boot.cp">
         <pathelement location="${sdk.build}/graal-sdk.jar" />
         <pathelement location="${truffle.build}/truffle-api.jar" />
-    </path>
-    
-    <path id="svm.cp">
-        <pathelement location="${svm.build}/objectfile.jar" />
-        <pathelement location="${svm.build}/pointsto.jar" />
-        <pathelement location="${svm.build}/svm.jar" />
-        <pathelement location="${compiler.build}/graal-management.jar" />
-        <pathelement location="${compiler.build}/graal.jar" />
-        
-        <pathelement location="${env.JVMCI_HOME}/jre/lib/jvmci/jvmci-api.jar" />
-        <pathelement location="${env.JVMCI_HOME}/jre/lib/jvmci/jvmci-hotspot.jar" />
     </path>
 
     <path id="common.cp">
@@ -74,42 +99,6 @@
         <pathelement location="${truffle.build}/truffle-tck.jar" />
     </path>
     
-    <path id="image.cp">
-        <path refid="boot.cp"/>
-        <path refid="svm.cp"/>
-        <path refid="common.cp"/>
-        <pathelement location="${svm.build}/library-support.jar" />
-    </path>
-
-    <macrodef name="travis">
-        <attribute name="target" />
-        <attribute name="start" default="" />
-        <sequential>
-            <echo message="travis_fold:start:@{target}${line.separator}@{start}${line.separator}" unless:blank="@{start}" if:true="${env.TRAVIS}" />
-            <echo message="travis_fold:end:@{target}${line.separator}"             if:blank="@{start}" if:true="${env.TRAVIS}" />
-        </sequential>
-    </macrodef>
-
-    <condition property="is.atLeastJava9" value="true" else="false">
-      <or>
-        <matches string="${java.version}" pattern="^9"/>
-        <matches string="${java.version}" pattern="^1[0-9]"/>
-      </or>
-    </condition>
-    <condition property="kernel" value="darwin-amd64" else="linux-amd64">
-        <os family="mac"/>
-    </condition>
-    
-    <travis target="env" start="Environment" />
-    <echo>
-        ant.java.version: ${ant.java.version}
-        java.version:     ${java.version}
-        is.atLeastJava9:  ${is.atLeastJava9}
-        kernel:           ${kernel}
-        env.TRAVIS:       ${env.TRAVIS}
-    </echo>
-    <travis target="env" />
-
     <target name="clean" description="Remove build directories and generated code">
         <travis target="clean" start="clean" />
 
@@ -151,14 +140,14 @@
       </exec>
     </target>
 
-    <target name="truffle-libs" unless="skip.truffle" depends="truffle-submodule">
+    <target name="truffle-libs" unless="skip.truffle" depends="jvmci-libs,truffle-submodule">
         <travis target="truffle-libs" start="Build Truffle" />
         <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
             <arg value="--dynamicimports"/>
             <arg value="../truffle,../tools,../compiler,../sdk"/>
             <arg value="build"/>
             <arg value="--no-native" unless:true="${build.native}" />
-            <env key="JAVA_HOME" value="${env.JVMCI_HOME}" />
+            <env key="JAVA_HOME" value="${jvmci.home}" />
         </exec>
         <travis target="truffle-libs" />
     </target>
@@ -184,17 +173,33 @@
             <arg value="eclipseinit"/>
         </exec>
     </target>
+    
+    <target name="jvmci-libs">
+        <get src="https://github.com/graalvm/openjdk8-jvmci-builder/releases/download/${jvmci.version}/openjdk-8u${jdk8.version}-${jvmci.version}-${kernel}.tar.gz"
+             usetimestamp="true"
+             dest="${lib.dir}/jvmci.tar.gz" />
+        <mkdir dir="${lib.dir}/jvmci" />
+        <exec executable="tar" dir="${basedir}" failonerror="true">
+          <arg line="-C ${lib.dir}/jvmci -xzf ${lib.dir}/jvmci.tar.gz --strip 1"/>
+        </exec>
+    </target>
+    
+    <target name="jvmci-home">
+        <echo>${jvmci.home}</echo>
+    </target>
 
-    <target name="libs" depends="truffle-libs,bd-libs" unless="skip.libs">
-        <travis target="libs" start="Get Libs" />
+    <target name="som-libs">
+        <travis target="som-libs" start="Get Libs" />
         <get src="${lib.url}/somns-deps-${somns-deps.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/somns-deps.jar" />
         <get src="${lib.url}/somns-deps-dev-${somns-deps.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/somns-deps-dev.jar" />
-        <travis target="libs" />
+        <travis target="som-libs" />
     </target>
+    
+    <target name="libs" depends="truffle-libs,som-libs,bd-libs" unless="skip.libs" />
 
     <target name="source" description="Download Source Jars for development">
         <get src="${lib.url}/somns-deps-source-${somns-deps.version}.jar"
@@ -505,47 +510,26 @@
 
     <target name="tests" depends="core-tests,serialization-tests,replay-tests,coverage">
     </target>
-    
-    <target name="native-build" depends="libs,compile-som">
+
+    <target name="native" depends="libs,jvmci-libs,compile-som">
       <travis target="native" start="Build Native Image" />
-      <java classname="com.oracle.svm.hosted.NativeImageGeneratorRunner" fork="true" failonerror="true"
-          jvm="${env.JVMCI_HOME}/bin/java">
-        <classpath refid="svm.cp" />
-        <jvmarg line="-Xbootclasspath/a:${ant.refid:boot.cp}" />
-        <jvmarg line="-Djvmci.Compiler=graal -Djvmci.class.path.append=${compiler.build}/graal.jar" />
 
-        <jvmarg line="-server -d64 -noverify" />
-        <jvmarg line="-Dgraal.EagerSnippets=true" />
-        <jvmarg line="-Xss10m -Xms1g -Xmx13743895344" />
-        <jvmarg line="-XX:+UnlockExperimentalVMOptions" />
-        <jvmarg line="-XX:+EnableJVMCI" />
-        <jvmarg line="-XX:-UseJVMCIClassLoader" />
-        
-        <jvmarg line="-Duser.country=US -Duser.language=en " />
-        <jvmarg line="-Dgraalvm.version=dev -Dorg.graalvm.version=dev -Dcom.oracle.graalvm.isaot=true" />
-        <jvmarg line="-Dgraalvm.locatorDisabled=true -Dtruffle.TrustAllTruffleRuntimeProviders=true" />
-        <!-- <jvmarg line="-Dsom.instrumentation=true -Dsom.truffleDebugger=true" /> -->
-
-        <arg line="-imagecp ${ant.refid:image.cp}" />
+      <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
+        <env key="JAVA_HOME" value="${jvmci.home}" />
+        <arg line="native-image" />
+        <arg line="--macro:truffle --no-fallback --initialize-at-build-time -H:+ReportExceptionStackTraces" />
+        <arg line="-H:-ThrowUnsafeOffsetErrors" />
         
         <!-- <arg line="-H:+PrintRuntimeCompileMethods" /> -->
-        <!-- <arg line="-H:+PrintMethodHistogram" /> -->
-        
-        <arg line="-H:Path=${basedir}" />
-        <arg line="-H:-ThrowUnsafeOffsetErrors" />
-        <arg line="-H:+RuntimeAssertions" />
-        <arg line="-H:MaxRuntimeCompileMethods=800" />
-        <arg line="-H:CLibraryPath=${svm.dir}/clibraries/${kernel}" />
-        <arg line="-H:Features=com.oracle.svm.truffle.TruffleFeature" />
-        <arg line="-H:Class=som.Launcher -H:Name=som-native" />
+        <!-- <arg line="-H:+PrintMethodHistogram" /> 
+             <arg line="-H:+RuntimeAssertions" />
+             <arg line="-H:+EnforceMaxRuntimeCompileMethods" /> -->
 
-      </java>
+        <arg line="-cp ${ant.refid:common.cp}" />
+        <arg line="som.Launcher" />
+        <arg line="som-native" />
+      </exec>
+      
       <travis target="native" />
-    </target>
-    
-    <target name="native">
-      <antcall target="native-build">
-        <param name="build.native" value="true"/>
-      </antcall>
     </target>
 </project>

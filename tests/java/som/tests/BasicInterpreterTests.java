@@ -260,6 +260,7 @@ public class BasicInterpreterTests {
       assertEqualsSOMValue(expectedResult,
           actualResult == null ? null : actualResult.as(Object.class));
     } finally {
+      context.eval(Launcher.SHUTDOWN);
       context.close();
       VM.resetClassReferences(true);
     }
@@ -281,6 +282,7 @@ public class BasicInterpreterTests {
         return null;
       });
     } finally {
+      context.eval(Launcher.SHUTDOWN);
       context.close();
       VM.resetClassReferences(true);
     }

@@ -17,11 +17,11 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
 import com.oracle.truffle.api.interop.ArityException;
-import com.oracle.truffle.api.interop.ForeignAccess;
-import com.oracle.truffle.api.interop.Message;
+import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
+import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -433,13 +433,14 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemApply:with:")
   public abstract static class ApplyWithPrim extends BinaryComplexOperation {
+    protected static final int INLINE_CACHE_SIZE = VmSettings.DYNAMIC_METRICS ? 100 : 6;
+
     @Child protected SizeAndLengthPrim size    = SizeAndLengthPrimFactory.create(null);
     @Child protected ToSomConversion   convert = ToSomConversionNodeGen.create(null);
 
-    @Specialization
-    public final Object doApply(final TruffleObject fun, final SArray args) {
-      Node execNode = Message.createExecute((int) size.executeEvaluated(args)).createNode();
-
+    @Specialization(limit = "INLINE_CACHE_SIZE")
+    public final Object doApply(final TruffleObject fun, final SArray args,
+        @CachedLibrary("fun") final InteropLibrary interop) {
       Object[] arguments;
       if (args.isLongType()) {
         long[] arr = args.getLongStorage();
@@ -455,7 +456,7 @@ public final class SystemPrims {
       }
 
       try {
-        Object result = ForeignAccess.sendExecute(execNode, fun, arguments);
+        Object result = interop.execute(fun, arguments);
         return convert.executeEvaluated(result);
       } catch (UnsupportedTypeException | ArityException
           | UnsupportedMessageException e) {

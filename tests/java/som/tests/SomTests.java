@@ -100,6 +100,7 @@ public class SomTests {
       Value v = context.eval(Launcher.START);
       assertEquals(0, (int) v.as(Integer.class));
     } finally {
+      context.eval(Launcher.SHUTDOWN);
       context.close();
       VM.resetClassReferences(true);
     }

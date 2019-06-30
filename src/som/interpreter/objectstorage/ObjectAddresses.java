@@ -2,7 +2,7 @@ package som.interpreter.objectstorage;
 
 import java.lang.reflect.Field;
 
-import org.graalvm.nativeimage.Feature;
+import org.graalvm.nativeimage.hosted.Feature;
 
 import com.oracle.svm.core.annotate.AutomaticFeature;
 

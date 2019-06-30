@@ -401,3 +401,20 @@ const steppingTests: Test[] = [
 ];
 
 describeDebuggerTests("Actor Stepping", steppingTests);
+
+const breakpointTests: Test[] = [
+  {
+    title: "stepping to message receiver on same actor",
+    test: ACTOR2_FILE,
+    testArg: "stepToResolutionOnError",
+    initialBreakpoints: [
+      createSectionBreakpointData(ACTOR2_URI, 96, 14, 49, BT.PROMISE_RESOLVER, true)],
+    initialStop: {
+      line: 97,
+      methodName: "ActC>>#λonError@96@23:",
+      stackHeight: 1,
+      activity: "actC"
+    }
+  }];
+
+describeDebuggerTests("Actor Breakpoints", breakpointTests);

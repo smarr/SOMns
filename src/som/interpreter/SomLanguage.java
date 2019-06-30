@@ -115,15 +115,16 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
   public static final String LANG_ID = "SOMns";
 
-  public static final String START_SOURCE = "START";
-  public static final String INIT_SOURCE  = "INIT";
+  public static final String START_SOURCE    = "START";
+  public static final String INIT_SOURCE     = "INIT";
+  public static final String SHUTDOWN_SOURCE = "SHUTDOWN";
 
   public static final String MIME_TYPE          = "application/x-newspeak-som-ns";
   public static final String FILE_EXTENSION     = "ns";
   public static final String DOT_FILE_EXTENSION = "." + FILE_EXTENSION;
 
   @Option(help = "Selector for som.tests.BasicInterpreterTests",
-      category = OptionCategory.DEBUG) //
+      category = OptionCategory.INTERNAL) //
   static final OptionKey<String> TestSelector = new OptionKey<String>("");
 
   @CompilationFinal private VM        vm;
@@ -197,7 +198,7 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   protected void disposeContext(final VM context) {
     if (context != null) {
       assert vm == context;
-      context.shutdown();
+      assert vm.isShutdown();
     }
     current = null;
   }
@@ -251,6 +252,21 @@ public final class SomLanguage extends TruffleLanguage<VM> {
     }
   }
 
+  private static class ShutdownContext extends RootNode {
+    private final VM vm;
+
+    protected ShutdownContext(final SomLanguage lang) {
+      super(lang, null);
+      this.vm = lang.getVM();
+    }
+
+    @Override
+    public Object execute(final VirtualFrame frame) {
+      vm.shutdown();
+      return true;
+    }
+  }
+
   @Override
   protected CallTarget parse(final ParsingRequest request) throws IOException {
     Source code = request.getSource();
@@ -259,6 +275,9 @@ public final class SomLanguage extends TruffleLanguage<VM> {
     } else if ((code.getCharacters().equals(INIT_SOURCE)
         && code.getName().equals(INIT_SOURCE))) {
       return Truffle.getRuntime().createCallTarget(new InitializeContext(this));
+    } else if ((code.getCharacters().equals(SHUTDOWN_SOURCE))
+        && code.getName().equals(SHUTDOWN_SOURCE)) {
+      return Truffle.getRuntime().createCallTarget(new ShutdownContext(this));
     }
 
     try {
@@ -274,11 +293,6 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   protected Object findExportedSymbol(final VM context, final String globalName,
       final boolean onlyExplicit) {
     return context.getExport(globalName);
-  }
-
-  @Override
-  protected Object getLanguageGlobal(final VM context) {
-    return null;
   }
 
   @Override

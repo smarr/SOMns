@@ -606,7 +606,20 @@ public final class MetricsCsvWriter {
       return 1;
     }
 
-    return a.toString().compareTo(b.toString());
+    int result = a.getName().getString().compareTo(b.getName().getString());
+    if (result != 0) {
+      return result;
+    }
+
+    result = a.getSourceSection().getSource().getPath().compareTo(
+        b.getSourceSection().getSource().getPath());
+    if (result != 0) {
+      return result;
+    }
+
+    return Integer.compare(
+        a.getSourceSection().getCharIndex(),
+        b.getSourceSection().getCharIndex());
   }
 
   private static SortedSet<MixinDefinition> sortMD(final EconomicSet<MixinDefinition> set) {

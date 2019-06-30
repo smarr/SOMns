@@ -23,6 +23,11 @@ public final class Launcher {
   /** This source is a marker to initialize the {@link Context}, but nothing else. */
   public static final Source INIT = createMarkerSource(SomLanguage.INIT_SOURCE);
 
+  /**
+   * This source is a marker to shutdown the {@link Context}, which is needed to avoid races.
+   */
+  public static final Source SHUTDOWN = createMarkerSource(SomLanguage.SHUTDOWN_SOURCE);
+
   /** Standard code for exiting with an error. */
   public static final int EXIT_WITH_ERROR = 1;
 
@@ -32,14 +37,21 @@ public final class Launcher {
     Builder builder = createContextBuilder(args);
     Context context = builder.build();
 
-    int exitCode;
+    int exitCode = 0;
     try {
       Value result = context.eval(START);
       exitCode = result.as(Integer.class);
     } finally {
-      context.close();
+      context.eval(SHUTDOWN);
+      context.close(true);
+      finalizeExecution(exitCode);
     }
 
+    // TODO: TruffleException has a way to communicate exit code
+    System.exit(exitCode);
+  }
+
+  private static void finalizeExecution(final int exitCode) {
     TracingBackend.waitForTrace();
     if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS) {
       SnapshotBackend.writeSnapshot();
@@ -52,9 +64,6 @@ public final class Launcher {
     if (VmSettings.MEMORY_TRACING) {
       TracingBackend.reportPeakMemoryUsage();
     }
-
-    // TODO: TruffleException has a way to communicate exit code
-    System.exit(exitCode);
   }
 
   public static Builder createContextBuilder(final String[] args) {
