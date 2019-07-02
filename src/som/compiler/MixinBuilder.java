@@ -397,7 +397,7 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     dispatchables.put(name, slot);
     if (!immutable) {
       if (type != null && VmSettings.USE_TYPE_CHECKING) {
-        dispatchables.put(symbolFor("!!!" + getSetterName(name)),
+        dispatchables.put(symbolFor("!!!" + getSetterName(name).getString()),
             new SlotMutator(name, acccessModifier, immutable,
                 source, slot));
       } else {

@@ -27,6 +27,7 @@ import som.interpreter.nodes.LocalVariableNodeFactory.LocalVariableWriteNodeGen;
 import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableReadNodeGen;
 import som.interpreter.nodes.NonLocalVariableNodeFactory.NonLocalVariableWriteNodeGen;
 import som.interpreter.nodes.dispatch.TypeCheckNode;
+import som.interpreter.nodes.dispatch.TypeCheckNode.ATypeCheckNode;
 import som.vm.Symbols;
 import som.vmobjects.SSymbol;
 
@@ -237,7 +238,8 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
       }
       ExpressionNode node;
       if (contextLevel == 0) {
-        ExpressionNode typeExpr = type == null ? null : type.get();
+        ExpressionNode typeExpr =
+            valueExpr instanceof ATypeCheckNode || type == null ? null : type.get();
         node = LocalVariableWriteNodeGen.create(this,
             typeExpr != null
                 ? TypeCheckNode.create(typeExpr, valueExpr,

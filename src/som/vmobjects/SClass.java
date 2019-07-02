@@ -390,7 +390,12 @@ public final class SClass extends SObjectWithClass {
     if (!VmSettings.USE_TYPE_CHECKING) {
       return null;
     }
+    SType type = instanceClassGroup.getType();
+    if (type != null) {
+      return type;
+    }
 
+    CompilerDirectives.transferToInterpreterAndInvalidate();
     Set<SSymbol> signatures = new HashSet<>();
 
     for (SSymbol sig : dispatchables.getKeys()) {
@@ -410,7 +415,8 @@ public final class SClass extends SObjectWithClass {
       }
       sup = sup.superclass;
     }
-
-    return new SType.InterfaceType(signatures.toArray(new SSymbol[] {}));
+    type = new SType.InterfaceType(signatures.toArray(new SSymbol[] {}));
+    instanceClassGroup.setType(type);
+    return type;
   }
 }

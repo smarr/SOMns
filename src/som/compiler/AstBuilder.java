@@ -140,7 +140,8 @@ public class AstBuilder {
       try {
         ExpressionNode typeExp = translator.translate(type);
         if (typeExp != null && VmSettings.USE_TYPE_CHECKING) {
-          slotWrite(symbolFor(slotName.getString() + ":"), () -> typeExp,
+          slotWrite(symbolFor(slotName.getString() + ":"),
+              delayedTranslate.apply(type, translator),
               sourceSection);
         }
         scopeManager.peekObject().addSlot(slotName, translator.translate(type),
@@ -299,7 +300,7 @@ public class AstBuilder {
 
       instanceFactory.setReturnType(returnType);
       instanceFactory.setSignature(symbolFor(instanceFactoryName));
-      instanceFactory.addArgument(Symbols.SELF, null, sourceManager.empty());
+      instanceFactory.addArgument(Symbols.SELF, null, sourceSection);
       for (int i = 0; i < parameters.length; i++) {
         instanceFactory.addArgument(symbolFor(parameters[i].getString() + "'"),
             delayedTranslate.apply(parameterTypes[i], translator), parameterSources[i]);
@@ -791,21 +792,17 @@ public class AstBuilder {
       MethodBuilder builder = scopeManager.newMethod(selector, null);
       // Set the parameters
       builder.addArgument(Symbols.SELF, null, sourceManager.empty());
-      builder.addArgument(symbolFor("value"), type, sourceSection);
+      builder.addArgument(symbolFor("value"), null, sourceSection);
       builder.setVarsOnMethodScope();
       builder.finalizeMethodScope();
       List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
       // Add type checks for each of the arguments
-      Argument last = null;
-      for (Argument arg : builder.getArguments()) {
-        last = arg;
-      }
-      ExpressionNode typeExpr = last.type.get();
+      ExpressionNode typeExpr = type.get();
       List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
       arguments.add(TypeCheckNode.create(typeExpr,
-          last.getReadNode(builder.getContextLevel(last.name), last.source),
+          builder.getReadNode(symbolFor("value"), sourceSection),
           typeExpr.getSourceSection()));
-      expressions.add(requestBuilder.implicit(symbolFor("!!!" + selector),
+      expressions.add(requestBuilder.implicit(symbolFor("!!!" + selector.getString()),
           arguments, sourceSection));
       // Assemble and return the completed module
       scopeManager.assembleCurrentMethod(

@@ -17,6 +17,9 @@ import som.vm.VmSettings;
 public abstract class SType extends SObjectWithClass {
   @CompilationFinal public static SClass typeClass;
   public static List<SType>              missingClass = new LinkedList<>();
+  private static int                     count        = 0;
+
+  public final int id;
 
   public static void setSOMClass(final SClass cls) {
     typeClass = cls;
@@ -36,6 +39,7 @@ public abstract class SType extends SObjectWithClass {
     if (VmSettings.COLLECT_TYPE_STATS) {
       ++TypeCheckNode.nTypes;
     }
+    id = count++;
   }
 
   @Override

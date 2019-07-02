@@ -5,6 +5,7 @@ import java.util.Map;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -46,6 +47,10 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
   public static int  numTypeCheckLocations;
   public static int  nTypes;
 
+  public static final byte MISSING = 0;
+  public static final byte SUBTYPE = 1;
+  public static final byte FAIL    = 2;
+
   public static void reportStats() {
     if (!VmSettings.COLLECT_TYPE_STATS) {
       return;
@@ -59,6 +64,8 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
   private static final Map<Object, Map<Object, Boolean>> isSuperclassTable =
       VmSettings.USE_SUBTYPE_TABLE ? new HashMap<>() : null;
+  private static final byte[][]                          isSuperclassArray =
+      VmSettings.USE_SUBTYPE_TABLE ? new byte[1000][1000] : null;
 
   public static ExpressionNode create(final ExpressionNode type, final ExpressionNode expr,
       final SourceSection sourceSection) {
@@ -72,6 +79,8 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
     }
     return expr;
   }
+
+  public static interface ATypeCheckNode {}
 
   protected static ExceptionSignalingNode createExceptionNode(final SourceSection ss) {
     CompilerDirectives.transferToInterpreter();
@@ -93,17 +102,16 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
   }
 
   protected interface TypeCheckingNode<Expected> {
-    default Object checkTable(final Map<Object, Boolean> isSub,
+    default Object checkTable(final byte[] isSub,
         final SObjectWithClass expected, final Object argument,
         final SourceSection sourceSection, final ExceptionSignalingNode exception) {
 
       SType argType = Types.getClassOf(argument).type;
-      if (isSub.containsKey(argType)) {
-        if (isSub.get(argType)) {
-          return argument;
-        } else {
-          throwTypeError(argument, argType, expected, sourceSection, exception);
-        }
+      byte sub = isSub[argType.id];
+      if (sub == SUBTYPE) {
+        return argument;
+      } else if (sub == FAIL) {
+        throwTypeError(argument, argType, expected, sourceSection, exception);
       }
       return null;
     }
@@ -114,7 +122,8 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
   }
 
   @GenerateNodeFactory
-  public abstract static class UnresolvedTypeCheckNode extends BinaryExpressionNode {
+  public abstract static class UnresolvedTypeCheckNode extends BinaryExpressionNode
+      implements ATypeCheckNode {
 
     protected UnresolvedTypeCheckNode(final SourceSection sourceSection) {
       this.sourceSection = sourceSection;
@@ -123,21 +132,17 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
     @Specialization
     public Object executeEvaluated(final VirtualFrame frame, final SObjectWithClass expected,
         final Object argument) {
-      Map<Object, Boolean> isSub = null;
-      if (VmSettings.USE_SUBTYPE_TABLE) {
-        isSub = isSuperclassTable.getOrDefault(expected, null);
-        if (isSub == null) {
-          isSub = new HashMap<>();
-          isSuperclassTable.put(expected, isSub);
-        }
-      }
-
       ExpressionNode argumentExpr = null;
       for (Node node : this.getChildren()) {
         argumentExpr = (ExpressionNode) node;
       }
 
       if (expected instanceof SType) {
+        byte[] isSub = null;
+        if (VmSettings.USE_SUBTYPE_TABLE) {
+          isSub = isSuperclassArray[((SType) expected).id];
+        }
+
         if (expected instanceof InterfaceType
             && ((SType) expected).getSignatures().length == 0) {
           replace(argumentExpr);
@@ -199,6 +204,19 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
         return null;
       }
 
+      Map<Object, Boolean> isSub = null;
+      if (VmSettings.USE_SUBTYPE_TABLE) {
+        // Using HashMap so don't inline (don't need invalidate since the node will be
+        // replaced)
+        CompilerDirectives.transferToInterpreter();
+
+        isSub = isSuperclassTable.getOrDefault(expected, null);
+        if (isSub == null) {
+          isSub = new HashMap<>();
+          isSuperclassTable.put(expected, isSub);
+        }
+      }
+
       CustomTypeCheckNode node =
           CustomTypeCheckNodeFactory.create(expected, target, isSub, sourceSection,
               argumentExpr);
@@ -208,13 +226,14 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
   }
 
   public abstract static class PrimitiveTypeCheckNode extends UnaryExpressionNode
-      implements TypeCheckingNode<SType> {
+      implements TypeCheckingNode<SType>, ATypeCheckNode {
 
-    protected final SType                expected;
-    protected final Map<Object, Boolean> isSub;
-    @Child ExceptionSignalingNode        exception;
+    protected final SType  expected;
+    protected final byte[] isSub;
 
-    protected PrimitiveTypeCheckNode(final SType expected, final Map<Object, Boolean> isSub,
+    @Child ExceptionSignalingNode exception;
+
+    protected PrimitiveTypeCheckNode(final SType expected, final byte[] isSub,
         final SourceSection sourceSection) {
       this.expected = expected;
       this.isSub = isSub;
@@ -222,13 +241,14 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
       this.exception = createExceptionNode(sourceSection);
     }
 
+    @TruffleBoundary
     public Object executeEvaluated(final Object argument) {
       if (VmSettings.COLLECT_TYPE_STATS) {
         ++numSubclassChecks;
       }
 
       if (VmSettings.USE_SUBTYPE_TABLE) {
-        Object result = checkTable(isSub, expected, argument, sourceSection);
+        Object result = checkTable(isSub, expected, argument, sourceSection, exception);
         if (result != null) {
           return result;
         }
@@ -248,10 +268,10 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
       }
 
       if (isSub != null) {
-        isSub.put(type, result);
+        isSub[type.id] = result ? SUBTYPE : FAIL;
       }
       if (!result) {
-        throwTypeError(argument, type, expected, sourceSection);
+        throwTypeError(argument, type, expected, sourceSection, exception);
       }
       return argument;
     }
@@ -259,12 +279,14 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
   @GenerateNodeFactory
   public abstract static class NonPrimitiveTypeCheckNode extends UnaryExpressionNode
-      implements TypeCheckingNode<SType> {
+      implements TypeCheckingNode<SType>, ATypeCheckNode {
 
-    protected final SType                expected;
-    protected final Map<Object, Boolean> isSub;
+    protected final SType  expected;
+    protected final byte[] isSub;
 
-    protected NonPrimitiveTypeCheckNode(final SType expected, final Map<Object, Boolean> isSub,
+    @Child ExceptionSignalingNode exception;
+
+    protected NonPrimitiveTypeCheckNode(final SType expected, final byte[] isSub,
         final SourceSection sourceSection) {
       this.expected = expected;
       this.isSub = isSub;
@@ -346,7 +368,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
       }
 
       if (isSub != null) {
-        isSub.put(type, result);
+        isSub[type.id] = result ? SUBTYPE : FAIL;
       }
       if (!result) {
         throwTypeError(argument, type, expected, sourceSection, exception);
@@ -357,7 +379,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
   @GenerateNodeFactory
   public abstract static class LongTypeCheckNode extends PrimitiveTypeCheckNode {
-    protected LongTypeCheckNode(final SType expected, final Map<Object, Boolean> isSub,
+    protected LongTypeCheckNode(final SType expected, final byte[] isSub,
         final SourceSection sourceSection) {
       super(expected, isSub, sourceSection);
     }
@@ -375,7 +397,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
   @GenerateNodeFactory
   public abstract static class BooleanTypeCheckNode extends PrimitiveTypeCheckNode {
-    protected BooleanTypeCheckNode(final SType expected, final Map<Object, Boolean> isSub,
+    protected BooleanTypeCheckNode(final SType expected, final byte[] isSub,
         final SourceSection sourceSection) {
       super(expected, isSub, sourceSection);
     }
@@ -393,7 +415,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
   @GenerateNodeFactory
   public abstract static class DoubleTypeCheckNode extends PrimitiveTypeCheckNode {
-    protected DoubleTypeCheckNode(final SType expected, final Map<Object, Boolean> isSub,
+    protected DoubleTypeCheckNode(final SType expected, final byte[] isSub,
         final SourceSection sourceSection) {
       super(expected, isSub, sourceSection);
     }
@@ -411,7 +433,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
   @GenerateNodeFactory
   public abstract static class StringTypeCheckNode extends PrimitiveTypeCheckNode {
-    protected StringTypeCheckNode(final SType expected, final Map<Object, Boolean> isSub,
+    protected StringTypeCheckNode(final SType expected, final byte[] isSub,
         final SourceSection sourceSection) {
       super(expected, isSub, sourceSection);
     }
@@ -429,7 +451,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
   @GenerateNodeFactory
   public abstract static class SArrayTypeCheckNode extends PrimitiveTypeCheckNode {
-    protected SArrayTypeCheckNode(final SType expected, final Map<Object, Boolean> isSub,
+    protected SArrayTypeCheckNode(final SType expected, final byte[] isSub,
         final SourceSection sourceSection) {
       super(expected, isSub, sourceSection);
     }
@@ -447,7 +469,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
   @GenerateNodeFactory
   public abstract static class SBlockTypeCheckNode extends PrimitiveTypeCheckNode {
-    protected SBlockTypeCheckNode(final SType expected, final Map<Object, Boolean> isSub,
+    protected SBlockTypeCheckNode(final SType expected, final byte[] isSub,
         final SourceSection sourceSection) {
       super(expected, isSub, sourceSection);
     }
@@ -465,7 +487,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
   @GenerateNodeFactory
   public abstract static class CustomTypeCheckNode extends UnaryExpressionNode
-      implements TypeCheckingNode<SObjectWithClass> {
+      implements TypeCheckingNode<SObjectWithClass>, ATypeCheckNode {
 
     protected final SObjectWithClass     expected;
     protected final CallTarget           target;
@@ -489,7 +511,16 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
       }
 
       if (VmSettings.USE_SUBTYPE_TABLE) {
-        Object result = checkTable(isSub, expected, argument, sourceSection, exception);
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        Object result = null;
+        SType argType = Types.getClassOf(argument).type;
+        if (isSub.containsKey(argType)) {
+          if (isSub.get(argType)) {
+            result = argument;
+          } else {
+            throwTypeError(argument, argType, expected, sourceSection, exception);
+          }
+        }
         if (result != null) {
           return result;
         }
@@ -500,6 +531,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
       }
 
       try {
+        CompilerDirectives.transferToInterpreterAndInvalidate();
         Truffle.getRuntime().createDirectCallNode(target)
                .call(new Object[] {expected, argument});
         if (isSub != null) {

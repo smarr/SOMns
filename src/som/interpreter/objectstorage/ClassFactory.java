@@ -4,6 +4,7 @@ import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.NodeFactory;
 
 import som.VM;
@@ -11,8 +12,12 @@ import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
+import som.vmobjects.SType;
+import tools.snapshot.nodes.AbstractSerializationNode;
+import tools.snapshot.nodes.SerializerRootNode;
 
 
 /**
@@ -58,6 +63,8 @@ public final class ClassFactory {
 
   private final ClassFactory classClassFactory;
 
+  private @CompilationFinal SType type;
+
   protected final SerializerRootNode serializationRoot;
 
   public ClassFactory(final SSymbol name, final MixinDefinition mixinDef,
@@ -97,6 +104,16 @@ public final class ClassFactory {
         : new ObjectLayout(instanceSlots, this, isTransferObject);
 
     this.classClassFactory = classClassFactory;
+
+    this.type = null;
+  }
+
+  public void setType(final SType type) {
+    this.type = type;
+  }
+
+  public SType getType() {
+    return type;
   }
 
   public boolean isDeclaredAsValue() {
