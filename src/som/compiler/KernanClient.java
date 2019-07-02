@@ -116,7 +116,8 @@ public class KernanClient {
     private static final int MESSAGE_LONG_INDEX  = 14;
 
     private final byte[] data;
-    private final int message_index;
+    private final int    message_index;
+
     private Frame(final int len) {
       if (len < 126) {
         message_index = MESSAGE_BYTE_INDEX;
@@ -133,7 +134,8 @@ public class KernanClient {
     }
 
     private void setMessage(final byte[] message) {
-      assert data.length == (message.length + message_index) : "Message was not the correct size?";
+      assert data.length == (message.length
+          + message_index) : "Message was not the correct size?";
       int length_bytes;
       if (message_index == MESSAGE_BYTE_INDEX) { // < 126
         data[1] = (byte) message.length;
@@ -147,7 +149,7 @@ public class KernanClient {
         length_bytes = 8;
       }
       for (int i = 1; i <= length_bytes; i++) {
-        data[1 + i] = (byte)((message.length >> 8*(length_bytes-i)) & 0xFF);
+        data[1 + i] = (byte) ((message.length >> 8 * (length_bytes - i)) & 0xFF);
       }
 
       for (int i = 0; i < message.length; i++) {
@@ -170,8 +172,11 @@ public class KernanClient {
    */
   public Frame buildFrame(final int operationCode, final String message) {
     byte[] bytes = null;
-    try { message.getBytes("UTF8"); }
-    catch (java.io.UnsupportedEncodingException e) { throw new RuntimeException(e); }
+    try {
+      bytes = message.getBytes("UTF8");
+    } catch (java.io.UnsupportedEncodingException e) {
+      throw new RuntimeException(e);
+    }
     Frame frame = new Frame(bytes.length);
     frame.setOperationCode(operationCode);
     frame.setMessage(bytes);
@@ -348,13 +353,16 @@ public class KernanClient {
       }
 
       // And parse the message itself
-      byte[] result = new byte[(int)len];
+      byte[] result = new byte[(int) len];
       for (int i = 0; i < len; i++) {
         result[i] = readByte();
       }
       String message = null;
-      try { message = new String(result, "UTF8"); }
-      catch (java.io.UnsupportedEncodingException e) { throw new RuntimeException(e); }
+      try {
+        message = new String(result, "UTF8");
+      } catch (java.io.UnsupportedEncodingException e) {
+        throw new RuntimeException(e);
+      }
 
       // Record the message to the stack
       frames.add(buildFrame(op, message));
