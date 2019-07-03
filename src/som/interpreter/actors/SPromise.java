@@ -411,10 +411,12 @@ public class SPromise extends SObjectWithClass {
       // lead to a stack overflow.
       // TODO: restore 10000 as parameter in testAsyncDeeplyChainedResolution
       if (promise.chainedPromise != null) {
-        Object wrapped = promise.chainedPromise.owner.wrapForUse(result, current, null);
+        SPromise chainedPromise = promise.chainedPromise;
+        promise.chainedPromise = null;
+        Object wrapped = chainedPromise.owner.wrapForUse(result, current, null);
         resolveAndTriggerListenersUnsynced(type, result, wrapped,
-            promise.chainedPromise, current, actorPool,
-            promise.chainedPromise.haltOnResolution, whenResolvedProfile);
+            chainedPromise, current, actorPool,
+            chainedPromise.haltOnResolution, whenResolvedProfile);
         resolveMoreChainedPromisesUnsynced(type, promise, result, current,
             actorPool, haltOnResolution, whenResolvedProfile);
       }
@@ -429,8 +431,10 @@ public class SPromise extends SObjectWithClass {
         final ForkJoinPool actorPool, final boolean haltOnResolution,
         final ValueProfile whenResolvedProfile) {
       if (promise.chainedPromiseExt != null) {
+        ArrayList<SPromise> chainedPromiseExt = promise.chainedPromiseExt;
+        promise.chainedPromiseExt = null;
 
-        for (SPromise p : promise.chainedPromiseExt) {
+        for (SPromise p : chainedPromiseExt) {
           Object wrapped = p.owner.wrapForUse(result, current, null);
           resolveAndTriggerListenersUnsynced(type, result, wrapped, p, current,
               actorPool, haltOnResolution, whenResolvedProfile);
@@ -498,11 +502,15 @@ public class SPromise extends SObjectWithClass {
         final Object result, final Actor current, final ForkJoinPool actorPool,
         final boolean haltOnResolution, final ValueProfile whenResolvedProfile) {
       if (promise.whenResolved != null) {
+        PromiseMessage whenResolved = promise.whenResolved;
+        ArrayList<PromiseMessage> whenResolvedExt = promise.whenResolvedExt;
+        promise.whenResolved = null;
+        promise.whenResolvedExt = null;
+
         promise.scheduleCallbacksOnResolution(result,
-            whenResolvedProfile.profile(promise.whenResolved), current, actorPool,
+            whenResolvedProfile.profile(whenResolved), current, actorPool, haltOnResolution);
+        scheduleExtensions(promise, whenResolvedExt, result, current, actorPool,
             haltOnResolution);
-        scheduleExtensions(promise, promise.whenResolvedExt, result, current,
-            actorPool, haltOnResolution);
       }
     }
 
@@ -530,10 +538,14 @@ public class SPromise extends SObjectWithClass {
         final Object result, final Actor current,
         final ForkJoinPool actorPool, final boolean haltOnResolution) {
       if (promise.onError != null) {
-        promise.scheduleCallbacksOnResolution(result, promise.onError, current,
-            actorPool, haltOnResolution);
-        scheduleExtensions(promise, promise.onErrorExt, result, current,
-            actorPool, haltOnResolution);
+        PromiseMessage onError = promise.onError;
+        ArrayList<PromiseMessage> onErrorExt = promise.onErrorExt;
+        promise.onError = null;
+        promise.onErrorExt = null;
+
+        promise.scheduleCallbacksOnResolution(result, onError, current, actorPool,
+            haltOnResolution);
+        scheduleExtensions(promise, onErrorExt, result, current, actorPool, haltOnResolution);
       }
     }
   }
