@@ -63,7 +63,7 @@ public final class ClassFactory {
 
   private final ClassFactory classClassFactory;
 
-  private @CompilationFinal SType type;
+  public @CompilationFinal SType type;
 
   protected final SerializerRootNode serializationRoot;
 

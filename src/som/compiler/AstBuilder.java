@@ -639,7 +639,8 @@ public class AstBuilder {
       // Set the locals
       for (int i = 0; i < locals.length; i++) {
         try {
-          builder.addLocal(locals[i], delayedTranslate.apply(localTypes[i], translator), false,
+          builder.addLocal(locals[i], delayedTranslate.apply(localTypes[i], translator),
+              localImmutable[i],
               localSources[i]);
         } catch (MethodDefinitionError e) {
           language.getVM().errorExit("Failed to add " + locals[i] + " to "

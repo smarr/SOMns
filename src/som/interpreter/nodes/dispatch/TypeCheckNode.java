@@ -5,8 +5,8 @@ import java.util.Map;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -31,6 +31,7 @@ import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Symbols;
 import som.vm.VmSettings;
+import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
@@ -80,7 +81,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
     return expr;
   }
 
-  public static interface ATypeCheckNode {}
+  public interface ATypeCheckNode {}
 
   protected static ExceptionSignalingNode createExceptionNode(final SourceSection ss) {
     CompilerDirectives.transferToInterpreter();
@@ -102,16 +103,14 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
   }
 
   protected interface TypeCheckingNode<Expected> {
-    default Object checkTable(final byte[] isSub,
-        final SObjectWithClass expected, final Object argument,
+    default <E> E checkTable(final byte[] isSub,
+        final SObjectWithClass expected, final E argument, final SType type,
         final SourceSection sourceSection, final ExceptionSignalingNode exception) {
-
-      SType argType = Types.getClassOf(argument).type;
-      byte sub = isSub[argType.id];
+      byte sub = isSub[type.id];
       if (sub == SUBTYPE) {
         return argument;
       } else if (sub == FAIL) {
-        throwTypeError(argument, argType, expected, sourceSection, exception);
+        throwTypeError(argument, type, expected, sourceSection, exception);
       }
       return null;
     }
@@ -149,34 +148,41 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
           return argument;
         }
 
-        PrimitiveTypeCheckNode node = null;
+        PrimitiveTypeCheckNode node;
+        SType type;
         if (argument instanceof Long) {
           node = LongTypeCheckNodeFactory.create((SType) expected,
               isSub, sourceSection, argumentExpr);
+          type = Classes.integerClass.type;
         } else if (argument instanceof Boolean) {
           node = BooleanTypeCheckNodeFactory.create((SType) expected,
               isSub, sourceSection, argumentExpr);
+          type = ((boolean) argument) ? Classes.trueClass.type : Classes.falseClass.type;
         } else if (argument instanceof Double) {
           node = DoubleTypeCheckNodeFactory.create((SType) expected,
               isSub, sourceSection, argumentExpr);
+          type = Classes.doubleClass.type;
         } else if (argument instanceof String) {
           node = StringTypeCheckNodeFactory.create((SType) expected,
               isSub, sourceSection, argumentExpr);
+          type = Classes.stringClass.type;
         } else if (argument instanceof SArray) {
           node = SArrayTypeCheckNodeFactory.create((SType) expected,
               isSub, sourceSection, argumentExpr);
+          type = Classes.arrayClass.type;
         } else if (argument instanceof SBlock) {
           node = SBlockTypeCheckNodeFactory.create((SType) expected,
               isSub, sourceSection, argumentExpr);
+          type = Classes.blockClass.type;
         } else {
-
           NonPrimitiveTypeCheckNode nonPrimNode =
               NonPrimitiveTypeCheckNodeFactory.create((SType) expected,
                   isSub, sourceSection, argumentExpr);
           replace(nonPrimNode);
-          return nonPrimNode.executeEvaluated(frame, argument);
+          return nonPrimNode.check(argument, ((SObjectWithClass) argument).getSOMClass().type);
         }
-        node.executeEvaluated(argument);
+
+        node.check(argument, type);
         replace(node);
         return argument;
       }
@@ -241,14 +247,13 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
       this.exception = createExceptionNode(sourceSection);
     }
 
-    @TruffleBoundary
-    public Object executeEvaluated(final Object argument) {
+    public <E> E check(final E argument, final SType type) {
       if (VmSettings.COLLECT_TYPE_STATS) {
         ++numSubclassChecks;
       }
 
       if (VmSettings.USE_SUBTYPE_TABLE) {
-        Object result = checkTable(isSub, expected, argument, sourceSection, exception);
+        E result = checkTable(isSub, expected, argument, type, sourceSection, exception);
         if (result != null) {
           return result;
         }
@@ -258,7 +263,6 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
         ++numTypeCheckExecutions;
       }
 
-      SType type = Types.getClassOf(argument).type;
       boolean result;
       if (argument == Nil.nilObject) {
         // Force nil object to subtype
@@ -279,7 +283,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
   @GenerateNodeFactory
   public abstract static class NonPrimitiveTypeCheckNode extends UnaryExpressionNode
-      implements TypeCheckingNode<SType>, ATypeCheckNode {
+      implements ATypeCheckNode {
 
     protected final SType  expected;
     protected final byte[] isSub;
@@ -295,7 +299,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
     @Specialization
     public boolean checkBoolean(final boolean obj) {
-      executeEvaluated(obj);
+      check(obj, obj ? Classes.trueClass.type : Classes.falseClass.type);
       replace(BooleanTypeCheckNodeFactory.create(expected, isSub, sourceSection,
           (ExpressionNode) this.getChildren().iterator().next()));
       return obj;
@@ -303,7 +307,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
     @Specialization
     public long checkLong(final long obj) {
-      executeEvaluated(obj);
+      check(obj, Classes.integerClass.type);
       replace(LongTypeCheckNodeFactory.create(expected, isSub, sourceSection,
           (ExpressionNode) this.getChildren().iterator().next()));
       return obj;
@@ -311,7 +315,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
     @Specialization
     public double checkDouble(final double obj) {
-      executeEvaluated(obj);
+      check(obj, Classes.doubleClass.type);
       replace(DoubleTypeCheckNodeFactory.create(expected, isSub, sourceSection,
           (ExpressionNode) this.getChildren().iterator().next()));
       return obj;
@@ -319,7 +323,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
     @Specialization
     public String checkString(final String obj) {
-      executeEvaluated(obj);
+      check(obj, Classes.stringClass.type);
       replace(StringTypeCheckNodeFactory.create(expected, isSub, sourceSection,
           (ExpressionNode) this.getChildren().iterator().next()));
       return obj;
@@ -327,7 +331,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
     @Specialization
     public SArray checkSArray(final SArray obj) {
-      executeEvaluated(obj);
+      check(obj, Classes.arrayClass.type);
       replace(SArrayTypeCheckNodeFactory.create(expected, isSub, sourceSection,
           (ExpressionNode) this.getChildren().iterator().next()));
       return obj;
@@ -335,22 +339,29 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
     @Specialization
     public SBlock checkSBlock(final SBlock obj) {
-      executeEvaluated(obj);
+      check(obj, Classes.blockClass.type);
       replace(SBlockTypeCheckNodeFactory.create(expected, isSub, sourceSection,
           (ExpressionNode) this.getChildren().iterator().next()));
       return obj;
     }
 
     @Specialization
-    public Object executeEvaluated(final Object argument) {
+    public SObjectWithClass checkSObject(final SObjectWithClass obj,
+        @Cached("obj.getSOMClass().type") final SType type) {
+      return check(obj, type);
+    }
+
+    public <E> E check(final E argument, final SType type) {
       if (VmSettings.COLLECT_TYPE_STATS) {
         ++numSubclassChecks;
       }
 
       if (VmSettings.USE_SUBTYPE_TABLE) {
-        Object result = checkTable(isSub, expected, argument, sourceSection, exception);
-        if (result != null) {
-          return result;
+        byte sub = isSub[type.id];
+        if (sub == SUBTYPE) {
+          return argument;
+        } else if (sub == FAIL) {
+          throwTypeError(argument, type, expected, sourceSection, exception);
         }
       }
 
@@ -358,7 +369,6 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
         ++numTypeCheckExecutions;
       }
 
-      SType type = Types.getClassOf(argument).type;
       boolean result;
       if (argument == Nil.nilObject) {
         // Force nil object to subtype
@@ -391,7 +401,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
     @Specialization
     public Object typeCheckFail(final Object argument) {
-      return super.executeEvaluated(argument);
+      return super.check(argument, Types.getClassOf(argument).type);
     }
   }
 
@@ -409,7 +419,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
     @Specialization
     public Object typeCheckFail(final Object argument) {
-      return super.executeEvaluated(argument);
+      return super.check(argument, Types.getClassOf(argument).type);
     }
   }
 
@@ -427,7 +437,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
     @Specialization
     public Object typeCheckFail(final Object argument) {
-      return super.executeEvaluated(argument);
+      return super.check(argument, Types.getClassOf(argument).type);
     }
   }
 
@@ -445,7 +455,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
     @Specialization
     public Object typeCheckFail(final Object argument) {
-      return super.executeEvaluated(argument);
+      return super.check(argument, Types.getClassOf(argument).type);
     }
   }
 
@@ -463,7 +473,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
     @Specialization
     public Object typeCheckFail(final Object argument) {
-      return super.executeEvaluated(argument);
+      return super.check(argument, Types.getClassOf(argument).type);
     }
   }
 
@@ -481,7 +491,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
 
     @Specialization
     public Object typeCheckFail(final Object argument) {
-      return super.executeEvaluated(argument);
+      return super.check(argument, Types.getClassOf(argument).type);
     }
   }
 
