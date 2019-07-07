@@ -1,0 +1,87 @@
+<project name="extension-test" basedir="." default="jar"
+    xmlns:unless="ant:unless" xmlns:if="ant:if">
+
+  <property name="som.dir"     location="../../.."/>
+  <property name="src.dir"     location="src"/>
+  <property name="src_dep.dir" location="src-cp-dep"/>
+  <property name="src_gen.dir" location="src_gen"/>
+  <property name="lib.dir"     location="${som.dir}/libs" />
+  <property name="bd.dir"      location="${lib.dir}/black-diamonds" />
+  <property name="truffle.dir" location="${lib.dir}/truffle/truffle" />
+  <property name="truffle.build" location="${truffle.dir}/mxbuild/dists/jdk1.8" />
+  
+  <property name="build.dir"   location="build"/>
+  <property name="classes.dir" location="${build.dir}/classes"/>
+  <property name="classes_dep.dir" location="${build.dir}/classes-dep"/>
+
+  <property environment="env"/>
+
+  <path id="project.classpath">
+      <pathelement location="${classes.dir}" />
+      <pathelement location="${classes_dep.dir}" />
+      
+      <pathelement location="${som.dir}/build/classes/" />
+      <pathelement location="${bd.dir}/build/classes" />
+      <pathelement location="${truffle.build}/truffle-api.jar" />
+      <pathelement location="${truffle.build}/truffle-dsl-processor.jar" />
+  </path>
+    
+  <condition property="is.atLeastJava9" value="true" else="false">
+    <or>
+      <matches string="${java.version}" pattern="^9"/>
+      <matches string="${java.version}" pattern="^1[0-9]"/>
+    </or>
+  </condition>
+  <echo>
+      ant.java.version: ${ant.java.version}
+      java.version:     ${java.version}
+      is.atLeastJava9:  ${is.atLeastJava9}
+  </echo>
+
+  <target name="clean" description="Remove build directories and generated code">
+      <delete dir="${build.dir}"/>
+      <delete dir="${src_gen.dir}"/>
+  </target>
+
+  <target name="compile" description="Compile Extension Test JAR">
+    <mkdir dir="${build.dir}"/>
+    <mkdir dir="${classes.dir}" />
+    <mkdir dir="${classes_dep.dir}" />
+    <mkdir dir="${src_gen.dir}" />
+
+    <javac includeantruntime="false" srcdir="${src_dep.dir}" destdir="${classes_dep.dir}" debug="true">
+      <compilerarg line="-Xlint:all" />
+      <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
+    </javac>
+
+    <javac includeantruntime="false" srcdir="${src.dir}" destdir="${classes.dir}" debug="true">
+      <classpath refid="project.classpath" />
+      <compilerarg line="-s ${src_gen.dir}" />
+      <compilerarg line="-XDignore.symbol.file" />
+      <compilerarg line="-Xlint:all" />
+      <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
+    </javac>
+    <javac includeantruntime="false" srcdir="${src_gen.dir}" destdir="${classes.dir}" debug="true">
+      <classpath refid="project.classpath" />
+      <compilerarg line="-s ${src_gen.dir}" />
+      <compilerarg line="-Xlint:all" />
+      <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
+    </javac>
+    
+    <!-- Register the extension class -->
+    <propertyfile file="${classes.dir}/somns.extension" comment="Extension Configuration">
+      <entry key="class" value="ext.Extension" />
+    </propertyfile>
+  </target>
+
+  <target name="jar" depends="compile" description="Package as JAR">
+    <jar destfile="${build.dir}/test-extension.jar" basedir="${classes.dir}">
+      <manifest>
+        <attribute name="Class-Path" value="extension-dep.jar" />
+      </manifest>
+    </jar>
+    <jar destfile="${build.dir}/extension-dep.jar" basedir="${classes_dep.dir}">
+    </jar>
+  </target>
+
+</project>

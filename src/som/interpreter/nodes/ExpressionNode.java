@@ -24,9 +24,9 @@ package som.interpreter.nodes;
 import java.math.BigInteger;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
-import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.instrumentation.GenerateWrapper;
+import com.oracle.truffle.api.instrumentation.InstrumentableNode;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 
@@ -42,16 +42,12 @@ import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
 
 
-@Instrumentable(factory = ExpressionNodeWrapper.class)
-public abstract class ExpressionNode extends SOMNode {
+@GenerateWrapper
+public abstract class ExpressionNode extends SOMNode implements InstrumentableNode {
 
   protected ExpressionNode() {}
 
   protected ExpressionNode(final ExpressionNode wrapped) {}
-
-  public boolean assertIsStatement() {
-    return isTaggedWith(StatementTag.class);
-  }
 
   public void markAsRootExpression() {
     throw new UnsupportedOperationException();
@@ -69,7 +65,7 @@ public abstract class ExpressionNode extends SOMNode {
     throw new UnsupportedOperationException();
   }
 
-  public void markAsPrimitiveArgument() {
+  public void markAsArgument() {
     throw new UnsupportedOperationException();
   }
 
@@ -159,7 +155,17 @@ public abstract class ExpressionNode extends SOMNode {
   }
 
   @Override
+  public boolean isInstrumentable() {
+    return true;
+  }
+
+  @Override
+  public WrapperNode createWrapper(final ProbeNode probe) {
+    return new ExpressionNodeWrapper(this, probe);
+  }
+
+  @Override
   public String toString() {
-    return getClass().getSimpleName() + "(" + sourceSection.toString() + ")";
+    return getClass().getSimpleName() + "(" + String.valueOf(sourceSection) + ")";
   }
 }

@@ -107,7 +107,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
   public class Class = Object ()
   (
     (* Allocation *)
-    public new = ( self error: 'never execute should be:'  (* ^ (vmMirror instantiate: self) initialize`new *) )
+    public new = ( self error: 'Class>>new method should never be executed. Instantiation works differently.'  (* ^ (vmMirror instantiate: self) initialize`new *) )
   )
 
   public class Metaclass = Class ()()
@@ -1012,22 +1012,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
   )
 
   (* Short cut from VM. Likely to be removed when optimized. *)
-  private signalNotAValueWith: aClass = (
-    NotAValue signalWith: aClass
-  )
-
-  (* Short cut from VM. Likely to be removed when optimized. *)
-  private signalTOCannotBeValues: aClass = (
-    TransferObjectsCannotBeValues signalWith: aClass
-  )
-
-  private signalArgumentError: message = (
-    ArgumentError signalWith: message.
-  )
-
-  (* Short cut from VM. Likely to be removed when optimized. *)
   private signalTypeError: message = (
     TypeError signalWith: message.
   )
-
 )

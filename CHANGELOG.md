@@ -1,8 +1,66 @@
 # Change Log
 
-## [Unreleased] \(0.7.0\) - unnamed [v7]
+## [Unreleased] \(0.8.0\) - unnamed [v8]
 
-  -
+## [0.7.0] - Extension Modules, Snapshots, Artifacts [v7]
+
+The release includes extension modules, support for snapshot writing, and major
+fixes for concurrency issues. The update to to GraalVM 19 should eventually
+bring Windows support.
+
+For more reproducible research, SOMns comes now with a maintained artifact setup
+out of the box.
+
+### New Features
+
+ - Add support for extension modules              [\#252](https://github.com/smarr/SOMns/pull/252)
+ - Object heap serialization                      [\#278](https://github.com/smarr/SOMns/pull/278),
+                                                  [\#271](https://github.com/smarr/SOMns/pull/271),
+                                                  [\#276](https://github.com/smarr/SOMns/pull/276)
+ - Optimized tracing and restoring replay support [\#261](https://github.com/smarr/SOMns/pull/261),
+                                                  [\#257](https://github.com/smarr/SOMns/pull/257)
+ - Added VirtualBox artifact                      [\#296](https://github.com/smarr/SOMns/pull/296),
+                                                  [\#299](https://github.com/smarr/SOMns/pull/299)
+
+### Concurrency Issues
+
+ - Swap tracing buffers for blocked threads                            [\#297](https://github.com/smarr/SOMns/pull/297)
+ - Renew Safepoint assumption only when invalid                        [\#291](https://github.com/smarr/SOMns/pull/291)
+ - Blocking primitives cannot participate in safepoints                [\#288](https://github.com/smarr/SOMns/pull/288),
+                                                                       [\#286](https://github.com/smarr/SOMns/issues/286)
+ - Fix object layout races                                             [\#285](https://github.com/smarr/SOMns/pull/285)
+
+### General Maintenance
+
+ - Update Truffle to \>19.0.1 release                                  [\#298](https://github.com/smarr/SOMns/pull/298)
+ - Update Truffle to 1.0.0-rc5                                         [\#266](https://github.com/smarr/SOMns/pull/266),
+                                                                       [\#295](https://github.com/smarr/SOMns/pull/295),
+                                                                       [\#267](https://github.com/smarr/SOMns/pull/267)
+ - Make the current instance of SomLanguage accessible for language server [\#277](https://github.com/smarr/SOMns/pull/277)
+ - VMM'18 Demo and Kompos improvements                                 [\#270](https://github.com/smarr/SOMns/pull/270)
+ - Add Kent CI and update ReBench, Checkstyle, and Kompos dependencies [\#258](https://github.com/smarr/SOMns/pull/258)
+ - Improve readability of Travis CI Logs by using folding              [\#281](https://github.com/smarr/SOMns/pull/281)
+ - Update basic-setup documentation                                    [\#284](https://github.com/smarr/SOMns/pull/284)
+ - Update list of publications in README                               [\#283](https://github.com/smarr/SOMns/pull/283)
+ - Use CompilerDirectives::castExact instead of ValueProfiles          [\#256](https://github.com/smarr/SOMns/pull/256)
+ - Move Actor mailbox loop to Truffle                                  [\#250](https://github.com/smarr/SOMns/pull/250)
+ - Change Warmup in harnesses to simply disregard measurements         [\#249](https://github.com/smarr/SOMns/pull/249)
+ - Remove All.ns                                                       [\#248](https://github.com/smarr/SOMns/pull/248)
+
+### Bug Fixes
+
+ - Set promise data fields to null on resolution             [\#300](https://github.com/smarr/SOMns/pull/300),
+                                                             [\#294](https://github.com/smarr/SOMns/issues/294)
+ - Fix Travis Error codes and Codespeed URL                  [\#287](https://github.com/smarr/SOMns/pull/287)
+ - Minimize the Truffle-related building                     [\#282](https://github.com/smarr/SOMns/pull/282)
+ - Remove dead code                                          [\#275](https://github.com/smarr/SOMns/pull/275)
+ - Fix potential NPE in ExpressionNode.toString              [\#269](https://github.com/smarr/SOMns/pull/269)
+ - Fix replay test flakiness                                 [\#268](https://github.com/smarr/SOMns/pull/268)
+ - Redesign Timer Prim                                       [\#264](https://github.com/smarr/SOMns/pull/264)
+ - Trace TimerPrim                                           [\#262](https://github.com/smarr/SOMns/issues/262)
+ - Ensure charAt: and file read/write are compatible with PE [\#260](https://github.com/smarr/SOMns/pull/260)
+ - Signal exceptions without helper methods                  [\#251](https://github.com/smarr/SOMns/pull/251),
+                                                             [\#214](https://github.com/smarr/SOMns/issues/214)
 
 ## [0.6.0] - Black Diamonds [v6]
 
@@ -275,6 +333,7 @@ data visualization
 This is the first tagged version. For previous changes, please refer to the
 [pull requests][OldPRs] from around that time.
 
+[v8]: https://github.com/smarr/SOMns/milestone/9?closed=1
 [v7]: https://github.com/smarr/SOMns/milestone/8?closed=1
 [v6]: https://github.com/smarr/SOMns/milestone/7?closed=1
 [v5]: https://github.com/smarr/SOMns/milestone/6?closed=1
@@ -282,7 +341,8 @@ This is the first tagged version. For previous changes, please refer to the
 [v3]: https://github.com/smarr/SOMns/milestone/3?closed=1
 [v2]: https://github.com/smarr/SOMns/milestone/2?closed=1
 [v1]: https://github.com/smarr/SOMns/milestone/1?closed=1
-[Unreleased]: https://github.com/smarr/SOMns/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/smarr/SOMns/compare/v0.7.0...dev
+[0.7.0]:      https://github.com/smarr/SOMns/compare/v0.6.0...v0.7.0
 [0.6.0]:      https://github.com/smarr/SOMns/compare/v0.5.0...v0.6.0
 [0.5.0]:      https://github.com/smarr/SOMns/compare/v0.4.0...v0.5.0
 [0.4.0]:      https://github.com/smarr/SOMns/compare/v0.3.0...v0.4.0

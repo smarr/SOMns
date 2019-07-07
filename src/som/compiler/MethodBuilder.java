@@ -38,8 +38,11 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.inlining.ScopeAdaptationVisitor;
 import bd.inlining.nodes.Inlinable;
+import bd.source.SourceCoordinate;
+import bd.tools.structure.StructuralProbe;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable.AccessNodeState;
 import som.compiler.Variable.Argument;
 import som.compiler.Variable.ImmutableLocal;
@@ -60,8 +63,6 @@ import som.vm.constants.Nil;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SInvokable.SInitializer;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
-import tools.language.StructuralProbe;
 
 
 public final class MethodBuilder extends ScopeBuilder<MethodScope>
@@ -92,10 +93,10 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
 
   private int cascadeId;
 
-  private final StructuralProbe structuralProbe;
+  private final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe;
 
   public MethodBuilder(final boolean withoutContext, final SomLanguage language,
-      final StructuralProbe probe) {
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> probe) {
     this(null, null, false, language, probe);
     assert withoutContext;
   }
@@ -104,12 +105,14 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     this(outer, outer.getScope(), true, outer.language, outer.structuralProbe);
   }
 
-  public MethodBuilder(final MixinBuilder outer, final StructuralProbe probe) {
+  public MethodBuilder(final MixinBuilder outer,
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> probe) {
     this(outer, outer.getScope(), false, outer.getLanguage(), probe);
   }
 
   public MethodBuilder(final ScopeBuilder<?> outer, final LexicalScope scope,
-      final boolean isBlockMethod, final SomLanguage language, final StructuralProbe probe) {
+      final boolean isBlockMethod, final SomLanguage language,
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> probe) {
     super(outer, scope);
     this.blockMethod = isBlockMethod;
     this.language = language;
@@ -221,8 +224,8 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
 
       frameOnStackVar = new Internal(FRAME_ON_STACK_SLOT_NAME);
       frameOnStackVar.init(
-          scope.getFrameDescriptor().addFrameSlot(
-              frameOnStackVar, FrameSlotKind.Object));
+          scope.getFrameDescriptor().addFrameSlot(frameOnStackVar, FrameSlotKind.Object),
+          scope.getFrameDescriptor());
       scope.addVariable(frameOnStackVar);
     }
     return frameOnStackVar;
@@ -270,7 +273,8 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
       final ExpressionNode body, final AccessModifier accessModifier,
       final SourceSection sourceSection) {
     MethodScope splitScope = scope.split();
-    ExpressionNode splitBody = ScopeAdaptationVisitor.adapt(body, splitScope, 0, false);
+    ExpressionNode splitBody = ScopeAdaptationVisitor.adapt(body, splitScope, 0, false,
+        language);
     Method truffleMeth = assembleInvokable(splitBody, splitScope, sourceSection);
 
     // TODO: not sure whether it is safe to use the embeddedBlockMethods here,
@@ -419,7 +423,7 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     } else {
       l = new MutableLocal(name, type, source);
     }
-    l.init(scope.getFrameDescriptor().addFrameSlot(l));
+    l.init(scope.getFrameDescriptor().addFrameSlot(l), scope.getFrameDescriptor());
     locals.put(name, l);
 
     if (structuralProbe != null) {

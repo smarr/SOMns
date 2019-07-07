@@ -27,6 +27,8 @@ package som.vmobjects;
 
 import static som.interpreter.TruffleCompiler.transferToInterpreterAndInvalidate;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -48,6 +50,7 @@ import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNode;
 import som.interpreter.nodes.dispatch.TypeCheckNode;
 import som.interpreter.nodes.dispatch.TypeCheckNodeGen;
 import som.vm.SomStructuralType;
+import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
 
@@ -231,5 +234,21 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
   @Override
   public final String typeForErrors() {
     return "method";
+  }
+
+  public SSymbol getIdentifier() {
+    if (holder != null) {
+      return Symbols.symbolFor(
+          holder.getIdentifier().getString() + "." + signature.getString());
+    } else if (invokable.getSourceSection() != null) {
+      // TODO find a better solution than charIndex
+      Path absolute = Paths.get(invokable.getSourceSection().getSource().getURI());
+      Path relative =
+          Paths.get(VmSettings.BASE_DIRECTORY).toAbsolutePath().relativize(absolute);
+      return Symbols.symbolFor(relative.toString() + ":"
+          + invokable.getSourceSection().getCharIndex() + ":" + signature.getString());
+    } else {
+      return signature;
+    }
   }
 }

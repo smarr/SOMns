@@ -4,10 +4,13 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
 import bd.primitives.Specializer;
 import som.VM;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
@@ -28,9 +31,8 @@ import som.vmobjects.SSymbol;
     specializer = NewImmutableArrayNode.IsValueArrayClass.class)
 public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
   public static class IsValueArrayClass extends Specializer<VM, ExpressionNode, SSymbol> {
-    public IsValueArrayClass(final Primitive prim, final NodeFactory<ExpressionNode> fact,
-        final VM vm) {
-      super(prim, fact, vm);
+    public IsValueArrayClass(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact);
     }
 
     @Override
@@ -44,23 +46,32 @@ public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
     }
   }
 
-  @Child protected BlockDispatchNode block   = BlockDispatchNodeGen.create();
-  @Child protected IsValue           isValue = IsValueFactory.create(null);
+  @Child protected BlockDispatchNode      block   = BlockDispatchNodeGen.create();
+  @Child protected IsValue                isValue = IsValueFactory.create(null);
+  @Child protected ExceptionSignalingNode notAValue;
+
+  @Override
+  @SuppressWarnings("unchecked")
+  public NewImmutableArrayNode initialize(final SourceSection sourceSection) {
+    super.initialize(sourceSection);
+    notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
+    return this;
+  }
 
   public static boolean isValueArrayClass(final SClass valueArrayClass) {
     return Classes.valueArrayClass == valueArrayClass;
   }
 
   @Specialization(guards = "isValueArrayClass(valueArrayClass)")
-  public SImmutableArray create(final SClass valueArrayClass, final long size,
-      final SBlock block) {
+  public SImmutableArray create(final VirtualFrame frame, final SClass valueArrayClass,
+      final long size, final SBlock block) {
     if (size <= 0) {
       return new SImmutableArray(0, valueArrayClass);
     }
 
     try {
       Object newStorage = ArraySetAllStrategy.evaluateFirstDetermineStorageAndEvaluateRest(
-          block, size, this.block, isValue);
+          frame, block, size, this.block, isValue, notAValue);
       return new SImmutableArray(newStorage, valueArrayClass);
     } finally {
       if (CompilerDirectives.inInterpreter()) {

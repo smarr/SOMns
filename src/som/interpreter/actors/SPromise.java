@@ -5,16 +5,20 @@ import java.util.concurrent.ForkJoinPool;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.profiles.ValueProfile;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.primitives.TimerPrim;
+import som.interpreter.objectstorage.ClassFactory;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActivityThread;
+import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.entities.PassiveEntityType;
+import tools.snapshot.nodes.PromiseSerializationNodesFactory.PromiseSerializationNodeFactory;
+import tools.snapshot.nodes.PromiseSerializationNodesFactory.ResolverSerializationNodeFactory;
 
 
 public class SPromise extends SObjectWithClass {
@@ -27,13 +31,23 @@ public class SPromise extends SObjectWithClass {
   public static SPromise createPromise(final Actor owner,
       final boolean haltOnResolver, final boolean haltOnResolution,
       final SourceSection section) {
-    if (VmSettings.REPLAY) {
-      return new SReplayPromise(owner, haltOnResolver, haltOnResolution, section);
-    } else if (VmSettings.PROMISE_CREATION) {
-      return new STracingPromise(owner, haltOnResolver, haltOnResolution, section);
+    if (VmSettings.KOMPOS_TRACING) {
+      return new SMedeorPromise(owner, haltOnResolver, haltOnResolution, section);
+    } else if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
+      return new STracingPromise(owner, haltOnResolver, haltOnResolution);
     } else {
       return new SPromise(owner, haltOnResolver, haltOnResolution);
     }
+  }
+
+  /** Used by snapshot deserialization. */
+  public static SPromise createResolved(final Actor owner, final Object value,
+      final Resolution state) {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    SPromise prom = createPromise(owner, false, false, null);
+    prom.resolutionState = state;
+    prom.value = value;
+    return prom;
   }
 
   // THREAD-SAFETY: these fields are subject to race conditions and should only
@@ -93,6 +107,29 @@ public class SPromise extends SObjectWithClass {
     return false;
   }
 
+  /**
+   * Do not use for things other than serializing Promises.
+   *
+   * @return the value this promise was resolved to
+   */
+  public final Object getValueForSnapshot() {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    assert resolutionState == Resolution.SUCCESSFUL || resolutionState == Resolution.ERRONEOUS;
+    assert value != null;
+    return value;
+  }
+
+  /**
+   * Do not use for things other than deserializing Promises.
+   * This is necessary for circular object graphs.
+   */
+  public final void setValueFromSnapshot(final Object value) {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    assert resolutionState == Resolution.SUCCESSFUL || resolutionState == Resolution.ERRONEOUS;
+    assert value != null;
+    this.value = value;
+  }
+
   public long getPromiseId() {
     return 0;
   }
@@ -104,19 +141,28 @@ public class SPromise extends SObjectWithClass {
   public static void setSOMClass(final SClass cls) {
     assert promiseClass == null || cls == null;
     promiseClass = cls;
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      ClassFactory group = promiseClass.getInstanceFactory();
+      group.getSerializer().replace(PromiseSerializationNodeFactory.create(group));
+    }
+  }
+
+  public static SClass getPromiseClass() {
+    assert promiseClass != null;
+    return promiseClass;
   }
 
   public final synchronized SPromise getChainedPromiseFor(final Actor target) {
     SPromise remote = SPromise.createPromise(target, haltOnResolver,
         haltOnResolution, null);
-    if (VmSettings.PROMISE_RESOLUTION) {
-      ActorExecutionTrace.promiseChained(getPromiseId(), remote.getPromiseId());
+    if (VmSettings.KOMPOS_TRACING) {
+      KomposTrace.promiseChained(getPromiseId(), remote.getPromiseId());
     }
     if (isCompleted()) {
       remote.value = value;
       remote.resolutionState = resolutionState;
-      if (VmSettings.REPLAY) {
-        ((SReplayPromise) remote).resolvingActor = ((SReplayPromise) this).resolvingActor;
+      if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
+        ((STracingPromise) remote).resolvingActor = ((STracingPromise) this).resolvingActor;
       }
     } else {
       addChainedPromise(remote);
@@ -124,7 +170,7 @@ public class SPromise extends SObjectWithClass {
     return remote;
   }
 
-  final void registerWhenResolvedUnsynced(final PromiseMessage msg) {
+  public final void registerWhenResolvedUnsynced(final PromiseMessage msg) {
     if (whenResolved == null) {
       whenResolved = msg;
     } else {
@@ -140,7 +186,7 @@ public class SPromise extends SObjectWithClass {
     whenResolvedExt.add(msg);
   }
 
-  final void registerOnErrorUnsynced(final PromiseMessage msg) {
+  public final void registerOnErrorUnsynced(final PromiseMessage msg) {
     if (onError == null) {
       onError = msg;
     } else {
@@ -229,34 +275,74 @@ public class SPromise extends SObjectWithClass {
     return value;
   }
 
-  protected static class STracingPromise extends SPromise {
-    protected final long promiseId;
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public PromiseMessage getWhenResolvedUnsync() {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    return whenResolved;
+  }
+
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public ArrayList<PromiseMessage> getWhenResolvedExtUnsync() {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    return whenResolvedExt;
+  }
+
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public PromiseMessage getOnError() {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    return onError;
+  }
+
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public ArrayList<PromiseMessage> getOnErrorExtUnsync() {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    return onErrorExt;
+  }
+
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public SPromise getChainedPromiseUnsync() {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    return chainedPromise;
+  }
+
+  /** Do not use for things other than serializing Promises, requires synchronization. */
+  public ArrayList<SPromise> getChainedPromiseExtUnsync() {
+    assert VmSettings.SNAPSHOTS_ENABLED;
+    return chainedPromiseExt;
+  }
+
+  public static class STracingPromise extends SPromise {
 
     protected STracingPromise(final Actor owner, final boolean haltOnResolver,
+        final boolean haltOnResolution) {
+      super(owner, haltOnResolver, haltOnResolution);
+    }
+
+    protected int resolvingActor;
+
+    public int getResolvingActor() {
+      if (!VmSettings.TRACK_SNAPSHOT_ENTITIES) {
+        assert isCompleted();
+      }
+      return resolvingActor;
+    }
+
+  }
+
+  public static final class SMedeorPromise extends STracingPromise {
+    protected final long promiseId;
+
+    protected SMedeorPromise(final Actor owner, final boolean haltOnResolver,
         final boolean haltOnResolution, final SourceSection section) {
       super(owner, haltOnResolver, haltOnResolution);
       promiseId = TracingActivityThread.newEntityId();
-      ActorExecutionTrace.passiveEntityCreation(
+      KomposTrace.passiveEntityCreation(
           PassiveEntityType.PROMISE, promiseId, section);
     }
 
     @Override
     public long getPromiseId() {
       return promiseId;
-    }
-  }
-
-  public static final class SReplayPromise extends STracingPromise {
-    protected SReplayPromise(final Actor owner, final boolean haltOnResolver,
-        final boolean haltOnResolution, final SourceSection section) {
-      super(owner, haltOnResolver, haltOnResolution, section);
-    }
-
-    protected long resolvingActor;
-
-    public long getResolvingActor() {
-      assert isCompleted();
-      return resolvingActor;
     }
   }
 
@@ -292,6 +378,16 @@ public class SPromise extends SObjectWithClass {
     public static void setSOMClass(final SClass cls) {
       assert resolverClass == null || cls == null;
       resolverClass = cls;
+
+      if (VmSettings.SNAPSHOTS_ENABLED) {
+        ClassFactory group = resolverClass.getInstanceFactory();
+        group.getSerializer().replace(ResolverSerializationNodeFactory.create(group));
+      }
+    }
+
+    public static SClass getResolverClass() {
+      assert resolverClass != null;
+      return resolverClass;
     }
 
     public boolean assertNotCompleted() {
@@ -307,19 +403,22 @@ public class SPromise extends SObjectWithClass {
     @TruffleBoundary
     protected static void resolveChainedPromisesUnsync(final Resolution type,
         final SPromise promise, final Object result, final Actor current,
-        final ForkJoinPool actorPool, final boolean haltOnResolution) {
+        final ForkJoinPool actorPool, final boolean haltOnResolution,
+        final ValueProfile whenResolvedProfile) {
       // TODO: we should change the implementation of chained promises to
       // always move all the handlers to the other promise, then we
       // don't need to worry about traversing the chain, which can
       // lead to a stack overflow.
       // TODO: restore 10000 as parameter in testAsyncDeeplyChainedResolution
       if (promise.chainedPromise != null) {
-        Object wrapped = promise.chainedPromise.owner.wrapForUse(result, current, null);
+        SPromise chainedPromise = promise.chainedPromise;
+        promise.chainedPromise = null;
+        Object wrapped = chainedPromise.owner.wrapForUse(result, current, null);
         resolveAndTriggerListenersUnsynced(type, result, wrapped,
-            promise.chainedPromise, current, actorPool,
-            promise.chainedPromise.haltOnResolution);
+            chainedPromise, current, actorPool,
+            chainedPromise.haltOnResolution, whenResolvedProfile);
         resolveMoreChainedPromisesUnsynced(type, promise, result, current,
-            actorPool, haltOnResolution);
+            actorPool, haltOnResolution, whenResolvedProfile);
       }
     }
 
@@ -329,13 +428,16 @@ public class SPromise extends SObjectWithClass {
     @TruffleBoundary
     private static void resolveMoreChainedPromisesUnsynced(final Resolution type,
         final SPromise promise, final Object result, final Actor current,
-        final ForkJoinPool actorPool, final boolean haltOnResolution) {
+        final ForkJoinPool actorPool, final boolean haltOnResolution,
+        final ValueProfile whenResolvedProfile) {
       if (promise.chainedPromiseExt != null) {
+        ArrayList<SPromise> chainedPromiseExt = promise.chainedPromiseExt;
+        promise.chainedPromiseExt = null;
 
-        for (SPromise p : promise.chainedPromiseExt) {
+        for (SPromise p : chainedPromiseExt) {
           Object wrapped = p.owner.wrapForUse(result, current, null);
           resolveAndTriggerListenersUnsynced(type, result, wrapped, p, current,
-              actorPool, haltOnResolution);
+              actorPool, haltOnResolution, whenResolvedProfile);
         }
       }
     }
@@ -346,27 +448,19 @@ public class SPromise extends SObjectWithClass {
      * If the promise was chained with other promises, the chained promises are also resolved.
      */
     protected static void resolveAndTriggerListenersUnsynced(final Resolution type,
-        final Object result, final Object wrapped, final SPromise p,
-        final Actor current, final ForkJoinPool actorPool,
-        final boolean haltOnResolution) {
+        final Object result, final Object wrapped, final SPromise p, final Actor current,
+        final ForkJoinPool actorPool, final boolean haltOnResolution,
+        final ValueProfile whenResolvedProfile) {
       assert !(result instanceof SPromise);
 
-      if (VmSettings.PROMISE_RESOLUTION) {
-        if (VmSettings.REPLAY) {
-          // Promises resolved by the TimerPrim will appear as if they have been resolved by
-          // the main actor.
-          if (TimerPrim.isTimerThread(Thread.currentThread())) {
-            ((SReplayPromise) p).resolvingActor = 0;
-          } else {
-            ((SReplayPromise) p).resolvingActor =
-                EventualMessage.getActorCurrentMessageIsExecutionOn().getId();
-          }
-        }
-
+      if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
+        ((STracingPromise) p).resolvingActor =
+            ((TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn()).getActorId();
+      } else if (VmSettings.KOMPOS_TRACING) {
         if (type == Resolution.SUCCESSFUL && p.resolutionState != Resolution.CHAINED) {
-          ActorExecutionTrace.promiseResolution(p.getPromiseId(), result);
+          KomposTrace.promiseResolution(p.getPromiseId(), result);
         } else if (type == Resolution.ERRONEOUS) {
-          ActorExecutionTrace.promiseError(p.getPromiseId(), result);
+          KomposTrace.promiseError(p.getPromiseId(), result);
         }
       }
 
@@ -390,12 +484,14 @@ public class SPromise extends SObjectWithClass {
         }
 
         if (type == Resolution.SUCCESSFUL) {
-          scheduleAllWhenResolvedUnsync(p, result, current, actorPool, haltOnResolution);
+          scheduleAllWhenResolvedUnsync(p, result, current, actorPool, haltOnResolution,
+              whenResolvedProfile);
         } else {
           assert type == Resolution.ERRONEOUS;
           scheduleAllOnErrorUnsync(p, result, current, actorPool, haltOnResolution);
         }
-        resolveChainedPromisesUnsync(type, p, result, current, actorPool, haltOnResolution);
+        resolveChainedPromisesUnsync(type, p, result, current, actorPool, haltOnResolution,
+            whenResolvedProfile);
       }
     }
 
@@ -403,13 +499,18 @@ public class SPromise extends SObjectWithClass {
      * Schedule all whenResolved callbacks for the promise.
      */
     protected static void scheduleAllWhenResolvedUnsync(final SPromise promise,
-        final Object result, final Actor current,
-        final ForkJoinPool actorPool, final boolean haltOnResolution) {
+        final Object result, final Actor current, final ForkJoinPool actorPool,
+        final boolean haltOnResolution, final ValueProfile whenResolvedProfile) {
       if (promise.whenResolved != null) {
-        promise.scheduleCallbacksOnResolution(result, promise.whenResolved,
-            current, actorPool, haltOnResolution);
-        scheduleExtensions(promise, promise.whenResolvedExt, result, current,
-            actorPool, haltOnResolution);
+        PromiseMessage whenResolved = promise.whenResolved;
+        ArrayList<PromiseMessage> whenResolvedExt = promise.whenResolvedExt;
+        promise.whenResolved = null;
+        promise.whenResolvedExt = null;
+
+        promise.scheduleCallbacksOnResolution(result,
+            whenResolvedProfile.profile(whenResolved), current, actorPool, haltOnResolution);
+        scheduleExtensions(promise, whenResolvedExt, result, current, actorPool,
+            haltOnResolution);
       }
     }
 
@@ -437,10 +538,14 @@ public class SPromise extends SObjectWithClass {
         final Object result, final Actor current,
         final ForkJoinPool actorPool, final boolean haltOnResolution) {
       if (promise.onError != null) {
-        promise.scheduleCallbacksOnResolution(result, promise.onError, current,
-            actorPool, haltOnResolution);
-        scheduleExtensions(promise, promise.onErrorExt, result, current,
-            actorPool, haltOnResolution);
+        PromiseMessage onError = promise.onError;
+        ArrayList<PromiseMessage> onErrorExt = promise.onErrorExt;
+        promise.onError = null;
+        promise.onErrorExt = null;
+
+        promise.scheduleCallbacksOnResolution(result, onError, current, actorPool,
+            haltOnResolution);
+        scheduleExtensions(promise, onErrorExt, result, current, actorPool, haltOnResolution);
       }
     }
   }

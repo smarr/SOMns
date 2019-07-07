@@ -16,18 +16,19 @@ import org.java_websocket.WebSocket;
 
 import com.google.gson.Gson;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.sun.net.httpserver.HttpServer;
 
+import bd.source.SourceCoordinate;
+import bd.source.TaggedSourceCoordinate;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
-import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.Tagging;
 import tools.TraceData;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.TracingBackend;
 import tools.debugger.WebSocketHandler.MessageHandler;
 import tools.debugger.WebSocketHandler.TraceHandler;
 import tools.debugger.entities.ActivityType;
@@ -92,7 +93,7 @@ public class FrontendConnector {
   private final Gson       gson;
   private static final int MESSAGE_PORT   = 7977;
   private static final int TRACE_PORT     = 7978;
-  private static final int HTTP_PORT      = 8888;
+  private static final int HTTP_PORT      = 8880;
   private static final int EPHEMERAL_PORT = 0;
 
   private final ArrayList<Source> sourceToBeSent = new ArrayList<>();
@@ -186,10 +187,10 @@ public class FrontendConnector {
 
   // TODO: simplify, way to convoluted
   private static TaggedSourceCoordinate[] createSourceSections(final Source source,
-      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> sourcesTags,
+      final Map<Source, Map<SourceSection, Set<Class<? extends Tag>>>> sourcesTags,
       final Instrumenter instrumenter, final Set<RootNode> rootNodes) {
     Set<SourceSection> sections = new HashSet<>();
-    Map<SourceSection, Set<Class<? extends Tags>>> tagsForSections = sourcesTags.get(source);
+    Map<SourceSection, Set<Class<? extends Tag>>> tagsForSections = sourcesTags.get(source);
 
     if (tagsForSections != null) {
       Tagging.collectSourceSectionsAndTags(rootNodes, tagsForSections, instrumenter);
@@ -211,7 +212,7 @@ public class FrontendConnector {
   }
 
   private void sendSource(final Source source,
-      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
+      final Map<Source, Map<SourceSection, Set<Class<? extends Tag>>>> loadedSourcesTags,
       final Set<RootNode> rootNodes) {
     SourceData data = new SourceData(source.getCharacters().toString(), source.getMimeType(),
         source.getName(), source.getURI().toString(),
@@ -226,7 +227,7 @@ public class FrontendConnector {
   }
 
   private void sendBufferedSources(
-      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
+      final Map<Source, Map<SourceSection, Set<Class<? extends Tag>>>> loadedSourcesTags,
       final Map<Source, Set<RootNode>> rootNodes) {
     if (!sourceToBeSent.isEmpty()) {
       for (Source s : sourceToBeSent) {
@@ -237,7 +238,7 @@ public class FrontendConnector {
   }
 
   public void sendLoadedSource(final Source source,
-      final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags,
+      final Map<Source, Map<SourceSection, Set<Class<? extends Tag>>>> loadedSourcesTags,
       final Map<Source, Set<RootNode>> rootNodes) {
     if (messageHandler == null || messageSocket == null) {
       sourceToBeSent.add(source);
@@ -253,12 +254,12 @@ public class FrontendConnector {
     send(new SymbolMessage(symbolsToWrite));
   }
 
-  public void sendTracingData(final ByteBuffer b) {
-    traceSocket.send(b);
+  public void sendTracingData(final ByteBuffer buffer) {
+    traceSocket.send(buffer);
   }
 
   public void awaitClient() {
-    assert VmSettings.ACTOR_TRACING && VmSettings.TRUFFLE_DEBUGGER_ENABLED;
+    assert VmSettings.KOMPOS_TRACING && VmSettings.TRUFFLE_DEBUGGER_ENABLED;
     assert clientConnected != null;
     assert messageSocket == null && traceSocket == null;
     assert traceHandler.getConnection() != null;
@@ -266,11 +267,14 @@ public class FrontendConnector {
     log("[DEBUGGER] Waiting for debugger to connect.");
     try {
       messageSocket = clientConnected.get();
+      assert messageSocket != null;
+
       traceSocket = traceHandler.getConnection().get();
+      assert traceSocket != null;
     } catch (InterruptedException | ExecutionException ex) {
       throw new RuntimeException(ex);
     }
-    ActorExecutionTrace.setFrontEnd(this);
+    TracingBackend.setFrontEnd(this);
     log("[DEBUGGER] Debugger connected.");
   }
 
@@ -295,8 +299,8 @@ public class FrontendConnector {
   }
 
   public void sendTracingData() {
-    if (VmSettings.ACTOR_TRACING) {
-      ActorExecutionTrace.forceSwapBuffers();
+    if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
+      TracingBackend.forceSwapBuffers();
     }
   }
 

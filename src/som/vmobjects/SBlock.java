@@ -25,15 +25,26 @@
 package som.vmobjects;
 
 import com.oracle.truffle.api.frame.MaterializedFrame;
-import com.oracle.truffle.api.interop.ForeignAccess;
-import com.oracle.truffle.api.interop.TruffleObject;
+import com.oracle.truffle.api.interop.ArityException;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.interop.UnsupportedMessageException;
+import com.oracle.truffle.api.interop.UnsupportedTypeException;
+import com.oracle.truffle.api.library.ExportLibrary;
+import com.oracle.truffle.api.library.ExportMessage;
 
-import som.interop.SBlockInteropMessageResolutionForeign;
+import som.VM;
+import som.interop.ValueConversion;
+import som.interop.ValueConversion.ToSomConversion;
+import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
+import som.interpreter.nodes.dispatch.BlockDispatchNode;
+import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.constants.Classes;
+import som.vm.constants.Nil;
 
 
-public final class SBlock extends SAbstractObject
-    implements TruffleObject, SObjectWithContext {
+@ExportLibrary(InteropLibrary.class)
+public final class SBlock extends SAbstractObject implements SObjectWithContext {
 
   private final SInvokable        method;
   private final MaterializedFrame context;
@@ -53,6 +64,10 @@ public final class SBlock extends SAbstractObject
     return context;
   }
 
+  public MaterializedFrame getContextOrNull() {
+    return context;
+  }
+
   @Override
   public SClass getSOMClass() {
     return Classes.blockClass;
@@ -68,8 +83,32 @@ public final class SBlock extends SAbstractObject
     return super.toString() + "[" + method.toString() + "]";
   }
 
-  @Override
-  public ForeignAccess getForeignAccess() {
-    return SBlockInteropMessageResolutionForeign.ACCESS;
+  @ExportMessage
+  public boolean isExecutable() {
+    return true;
+  }
+
+  @ExportMessage
+  public Object execute(final Object[] args)
+      throws UnsupportedTypeException, ArityException, UnsupportedMessageException {
+    VM.thisMethodNeedsToBeOptimized(
+        "Not ready for compilation, just moved from old interop code");
+    final BlockDispatchNode block = BlockDispatchNodeGen.create();
+    final ToSomConversion convert = ToSomConversionNodeGen.create(null);
+
+    ObjectTransitionSafepoint.INSTANCE.register();
+
+    try {
+      Object[] arguments = ValueConversion.convertToArgArray(convert, this, args);
+      Object result = block.executeDispatch(arguments);
+
+      if (result == Nil.nilObject) {
+        return null;
+      } else {
+        return result;
+      }
+    } finally {
+      ObjectTransitionSafepoint.INSTANCE.unregister();
+    }
   }
 }

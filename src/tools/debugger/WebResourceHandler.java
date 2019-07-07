@@ -10,6 +10,7 @@ import java.nio.charset.Charset;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
+import som.Output;
 import som.vm.NotYetImplementedException;
 
 
@@ -24,7 +25,17 @@ class WebResourceHandler implements HttpHandler {
 
   @Override
   public void handle(final HttpExchange exchange) throws IOException {
-    String rootFolder = System.getProperty("som.tools") + "/kompos";
+    String toolsFolder = System.getProperty("som.tools");
+    if (toolsFolder == null) {
+      Output.errorPrintln(
+          "The som.tools property with the path to the tools folder is not set. "
+              + "It should be set, for instance with -Dsom.tools=/my/path");
+      exchange.sendResponseHeaders(500, 0);
+      exchange.close();
+      return;
+    }
+
+    String rootFolder = toolsFolder + "/kompos";
 
     String requestedFile = exchange.getRequestURI().getPath();
     if ("/".equals(requestedFile)) {

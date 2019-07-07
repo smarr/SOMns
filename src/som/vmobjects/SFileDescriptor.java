@@ -4,21 +4,22 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.util.Objects;
 
-import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.profiles.BranchProfile;
 
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
-import som.primitives.PathPrims;
 import som.vm.NotYetImplementedException;
 import som.vm.Symbols;
 import som.vm.constants.Classes;
-import som.vm.constants.KernelObj;
 import som.vmobjects.SArray.SMutableArray;
 
 
 public class SFileDescriptor extends SObjectWithClass {
+
   @CompilationFinal public static SClass fileDescriptorClass;
 
   private static final SSymbol FILE_NOT_FOUND  = Symbols.symbolFor("FileNotFound");
@@ -39,6 +40,7 @@ public class SFileDescriptor extends SObjectWithClass {
     fileDescriptorClass = cls;
   }
 
+  @TruffleBoundary
   public SFileDescriptor(final String uri) {
     super(fileDescriptorClass, fileDescriptorClass.getInstanceFactory());
     f = new File(uri);
@@ -49,7 +51,7 @@ public class SFileDescriptor extends SObjectWithClass {
     buffer = new SMutableArray(storage, Classes.arrayClass);
 
     try {
-      raf = new RandomAccessFile(f, accessMode.mode);
+      raf = open();
     } catch (FileNotFoundException e) {
       return dispatchHandler.executeDispatch(new Object[] {fail, FILE_NOT_FOUND});
     }
@@ -57,32 +59,44 @@ public class SFileDescriptor extends SObjectWithClass {
     return this;
   }
 
-  public void closeFile() {
+  @TruffleBoundary
+  private RandomAccessFile open() throws FileNotFoundException {
+    return new RandomAccessFile(f, accessMode.mode);
+  }
+
+  public void closeFile(final ExceptionSignalingNode ioException) {
     if (raf == null) {
       return;
     }
 
     try {
-      raf.close();
-      raf = null;
+      closeFile();
     } catch (IOException e) {
-      PathPrims.signalIOException(e.getMessage());
+      ioException.signal(e.getMessage());
     }
   }
 
+  @TruffleBoundary
+  private void closeFile() throws IOException {
+    raf.close();
+    raf = null;
+  }
+
   public int read(final long position, final SBlock fail,
-      final BlockDispatchNode dispatchHandler) {
+      final BlockDispatchNode dispatchHandler, final BranchProfile errorCases) {
     if (raf == null) {
+      errorCases.enter();
       fail.getMethod().invoke(new Object[] {fail, FILE_IS_CLOSED});
       return 0;
     }
 
     if (accessMode == AccessModes.write) {
+      errorCases.enter();
       fail.getMethod().invoke(new Object[] {fail, WRITE_ONLY_MODE});
       return 0;
     }
 
-    long[] storage = (long[]) buffer.getStoragePlain();
+    long[] storage = buffer.getLongStorage();
     byte[] buff = new byte[bufferSize];
     int bytes = 0;
 
@@ -90,10 +104,10 @@ public class SFileDescriptor extends SObjectWithClass {
       assert raf != null;
 
       // set position in file
-      raf.seek(position);
-      bytes = raf.read(buff);
+      bytes = read(position, buff);
     } catch (IOException e) {
-      dispatchHandler.executeDispatch(new Object[] {fail, e.toString()});
+      errorCases.enter();
+      dispatchHandler.executeDispatch(new Object[] {fail, toString(e)});
     }
 
     // move read data to the storage
@@ -104,44 +118,78 @@ public class SFileDescriptor extends SObjectWithClass {
     return bytes;
   }
 
+  @TruffleBoundary
+  private int read(final long position, final byte[] buff) throws IOException {
+    int bytes;
+    raf.seek(position);
+    bytes = raf.read(buff);
+    return bytes;
+  }
+
+  @TruffleBoundary
+  private String toString(final IOException e) {
+    return e.toString();
+  }
+
   public void write(final int nBytes, final long position, final SBlock fail,
-      final BlockDispatchNode dispatchHandler) {
+      final BlockDispatchNode dispatchHandler, final ExceptionSignalingNode ioException,
+      final BranchProfile errorCases) {
     if (raf == null) {
+      errorCases.enter();
       dispatchHandler.executeDispatch(new Object[] {fail, FILE_IS_CLOSED});
       return;
     }
 
     if (accessMode == AccessModes.read) {
+      errorCases.enter();
       fail.getMethod().invoke(new Object[] {fail, READ_ONLY_MODE});
       return;
     }
 
-    long[] storage = (long[]) buffer.getStoragePlain();
+    long[] storage = buffer.getLongStorage();
     byte[] buff = new byte[bufferSize];
 
     for (int i = 0; i < bufferSize; i++) {
-      if (storage[i] <= Byte.MIN_VALUE && Byte.MAX_VALUE <= storage[i]) {
-        PathPrims.signalIOException(
-            "Buffer only supports values in the range -128 to 127 (" + storage[i] + ")");
+      long val = storage[i];
+      if (val <= Byte.MIN_VALUE && Byte.MAX_VALUE <= val) {
+        errorCases.enter();
+        ioException.signal(errorMsg(val));
       }
-      buff[i] = (byte) storage[i];
+      buff[i] = (byte) val;
     }
 
     try {
-      raf.seek(position);
-      raf.write(buff, 0, nBytes);
+      write(nBytes, position, buff);
     } catch (IOException e) {
-      dispatchHandler.executeDispatch(new Object[] {fail, e.toString()});
+      errorCases.enter();
+      dispatchHandler.executeDispatch(new Object[] {fail, toString(e)});
     }
   }
 
-  public long getFileSize() {
+  @TruffleBoundary
+  private static String errorMsg(final long val) {
+    return "Buffer only supports values in the range -128 to 127 (" + val + ")";
+  }
+
+  @TruffleBoundary
+  private void write(final int nBytes, final long position, final byte[] buff)
+      throws IOException {
+    raf.seek(position);
+    raf.write(buff, 0, nBytes);
+  }
+
+  public long getFileSize(final ExceptionSignalingNode ioException) {
     try {
-      return raf.length();
+      return length();
     } catch (IOException e) {
-      PathPrims.signalIOException(e.getMessage());
+      ioException.signal(e.getMessage());
     }
     return 0;
+  }
+
+  @TruffleBoundary
+  private long length() throws IOException {
+    return raf.length();
   }
 
   public boolean isClosed() {
@@ -161,27 +209,23 @@ public class SFileDescriptor extends SObjectWithClass {
     return bufferSize;
   }
 
+  public static String getValidAccessModes() {
+    return AccessModes.VALID_MODES;
+  }
+
   public void setBufferSize(final int bufferSize) {
     // buffer size only changeable for closed files.
     if (raf == null) {
       this.bufferSize = bufferSize;
     } else {
+      CompilerDirectives.transferToInterpreter();
       throw new NotYetImplementedException();
     }
   }
 
+  @TruffleBoundary
   public void setMode(final SSymbol mode) {
-    try {
-      this.accessMode = AccessModes.valueOf(mode.getString());
-    } catch (IllegalArgumentException e) {
-      signalInvalidAccessMode(mode.getString());
-    }
-  }
-
-  public static void signalInvalidAccessMode(final Object mode) {
-    CompilerAsserts.neverPartOfCompilation();
-    KernelObj.signalException("signalArgumentError:", "File access mode invalid, was: "
-        + Objects.toString(mode) + " " + AccessModes.VALID_MODES);
+    this.accessMode = AccessModes.valueOf(mode.getString());
   }
 
   private enum AccessModes {

@@ -14,9 +14,9 @@ import org.junit.Test;
 
 import com.google.gson.Gson;
 
-import tools.SourceCoordinate;
-import tools.SourceCoordinate.FullSourceCoordinate;
-import tools.debugger.WebDebugger;
+import bd.source.FullSourceCoordinate;
+import bd.source.SourceCoordinate;
+import tools.debugger.RuntimeReflectionRegistration;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.DynamicScopeType;
@@ -37,7 +37,7 @@ import tools.debugger.session.SectionBreakpoint;
 
 
 public class JsonTests {
-  private final Gson gson = WebDebugger.createJsonProcessor();
+  private final Gson gson = RuntimeReflectionRegistration.createJsonProcessor();
 
   private static final String               FULL_COORD     =
       "{\"uri\":\"file:/test\",\"startLine\":2,\"startColumn\":3,\"charLength\":55}";

@@ -11,9 +11,6 @@ JVMCI_BIN   = os.getenv('JVMCI_BIN',  None)
 GRAAL_HOME  = os.getenv('GRAAL_HOME',  None)
 GRAAL_FLAGS = os.getenv('GRAAL_FLAGS', None)
 
-GRAAL_LOCATIONS = ['~/.local/graal-core/',
-                   BASE_DIR + '/../graal/graal-jvmci-8']
-
 ##
 ## Defining Argument Parsing
 ##
@@ -76,8 +73,8 @@ tools.add_argument('-si', '--si-candidates', help='Identify candidates for super
                     dest='si_candidates', action='store_true', default=False)
 tools.add_argument('-at', '--actor-tracing', help='enable tracing of actor operations',
                     dest='actor_tracing', action='store_true', default=False)
-tools.add_argument('-atcfg', '--actor-tracing-cfg', help='Configuration string for actor tracing',
-                    dest='actor_tracing_cfg', default='')
+tools.add_argument('-sid', '--small-ids', help='use small id optimization to reduce trace size',
+                    dest='small_ids', action='store_true', default=False)
 tools.add_argument('-mt', '--memory-tracing', help='enable tracing of memory usage and GC',
                     dest='memory_tracing', action='store_true', default=False)
 tools.add_argument('-tf', '--trace-file', help='Trace file destination, default: traces/trace',
@@ -86,6 +83,20 @@ tools.add_argument('-TF', '--disable-trace-file', help='trace file wont be writt
                     dest='disable_trace_file', action='store_true', default=False)
 tools.add_argument('-r', '--replay', help='execution of the program is guided by an existing trace file',
                     dest='replay', action='store_true', default=False)
+tools.add_argument('-BR', '--no-buffer-recycling', help='create singe-use buffers only',
+                    dest='buffer_recycling', action='store_true', default=False)
+tools.add_argument('-bpt', '--buffers-per-thread', help='used to calculate the number of buffers to use for tracing',
+                    dest='buffers_per_thread', default=4)
+tools.add_argument('-bs', '--buffer-size', help='set the size of buffer used for tracing',
+                    dest='buffer_size', default=1048576)
+tools.add_argument('-bd', '--buffer-delay', help='set the delay for checking if there are buffers to write',
+                    dest='buffer_delay', default=50)
+tools.add_argument('-as', '--actor-snapshots', help='actor tracing/replay with snapshots',
+                    dest='actor_snapshots', action='store_true', default=False)
+tools.add_argument('-sam', '--snapshot-all-messages', help='snapshot all messages',
+                    dest='actor_snapshots_all', action='store_true', default=False)
+tools.add_argument('-tas', '--test-snapshots', help='actor tracing with snapshots',
+                    dest='test_actor_snapshots', action='store_true', default=False)
 tools.add_argument('--coverage', help='determine SOMns code coverage and store in given file',
                    dest='coverage', default=None)
 tools.add_argument('--java-coverage', help='determine Java code coverage and store in given file',
@@ -145,27 +156,27 @@ if args.dynamic_metrics:
 if args.java_interpreter:
     args.interpreter = True
 
-graal_home = GRAAL_HOME
+# Determine JVM to be used
 java_bin = None
 
-if JAVA_HOME:
-  java_bin = JAVA_HOME + '/bin/java'
 if JVMCI_BIN:
   java_bin = JVMCI_BIN
+if not java_bin and GRAAL_HOME and os.path.isfile(graal_home + '/bin/java'):
+  java_bin = graal_home + '/bin/java'  
 
 if not java_bin:
-  if not graal_home:
-    # search known Graal locations
-    for d in GRAAL_LOCATIONS:
-      d = os.path.expanduser(d)
-      if os.path.isdir(d):
-        graal_home = d
-        break
+    # use local JVMCI, which ant already needed
+    local_jvmci_bin = BASE_DIR + '/libs/jvmci'
+    if sys.platform == 'darwin':
+      local_jvmci_bin += '/Contents/Home'
+    local_jvmci_bin += '/bin/java'
+    if os.path.isfile(local_jvmci_bin):
+      java_bin = local_jvmci_bin
 
-  if graal_home and os.path.isdir(graal_home + '/bin'):
-    java_bin = graal_home + '/bin/java'
+if not java_bin and JAVA_HOME:
+  java_bin = JAVA_HOME + '/bin/java'
 
-if java_bin is graal_home or not os.path.isfile(java_bin):
+if not java_bin:
   java_bin = "java"
 
 JAVA_MAJOR_VERSION = None
@@ -179,7 +190,7 @@ try:
 except:
   pass
 
-if java_bin == "java" and (not JAVA_MAJOR_VERSION or JAVA_MAJOR_VERSION < 9):
+if not args.interpreter and not java_bin.startswith(BASE_DIR + '/libs/jvmci') and (not JAVA_MAJOR_VERSION or JAVA_MAJOR_VERSION < 9):
   print "No compatible JDK found. Please set the GRAAL_HOME or JVMCI_BIN environment variables."
   sys.exit(1)
 
@@ -189,22 +200,22 @@ if java_bin == "java" and (not JAVA_MAJOR_VERSION or JAVA_MAJOR_VERSION < 9):
 
 CLASSPATH = (BASE_DIR + '/build/classes:'
            + BASE_DIR + '/libs/black-diamonds/build/classes:'
-           + TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-debug.jar:'
+           + TRUFFLE_DIR + '/truffle/mxbuild/dists/jdk1.8/truffle-debug.jar:'
            + BASE_DIR + '/libs/somns-deps.jar')
 
 BOOT_CLASSPATH = ('-Xbootclasspath/a:'
-             + TRUFFLE_DIR + '/sdk/mxbuild/dists/graal-sdk.jar:'
-             + TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-api.jar')
+             + TRUFFLE_DIR + '/sdk/mxbuild/dists/jdk1.8/graal-sdk.jar:'
+             + TRUFFLE_DIR + '/truffle/mxbuild/dists/jdk1.8/truffle-api.jar')
 
 GRAAL_JAVA_8_FLAGS = ['-Djvmci.Compiler=graal',
-  '-Djvmci.class.path.append=' + TRUFFLE_DIR + '/compiler/mxbuild/dists/graal.jar']
+  '-Djvmci.class.path.append=' + TRUFFLE_DIR + '/compiler/mxbuild/dists/jdk1.8/graal.jar']
 
 GRAAL_JAVA_9_FLAGS = [
   '--module-path=' + TRUFFLE_DIR + '/sdk/mxbuild/modules/org.graalvm.graal_sdk.jar:' +
        TRUFFLE_DIR + '/truffle/mxbuild/modules/com.oracle.truffle.truffle_api.jar',
   '--upgrade-module-path=' + TRUFFLE_DIR + '/compiler/mxbuild/modules/jdk.internal.vm.compiler.jar']
 
-SOM_ARGS = ['-Dbd.settings=som.vm.VmSettings', 'som.VM',
+SOM_ARGS = ['-Dbd.settings=som.vm.VmSettings', 'som.Launcher',
             '--platform', args.som_platform, '--kernel', args.som_kernel]
 
 # == Compiler Settings
@@ -317,8 +328,8 @@ if args.vmdebug:
 
 if args.actor_tracing:
     flags += ['-Dsom.actorTracing=true']
-if args.actor_tracing_cfg:
-    flags += ['-Dsom.actorTracingCfg=%s' % args.actor_tracing_cfg ]
+if args.small_ids:
+    flags += ['-Dsom.smallIds=true']
 if args.trace_file:
     flags += ['-Dsom.traceFile=%s' % args.trace_file ]
 if args.memory_tracing:
@@ -327,6 +338,20 @@ if args.disable_trace_file:
     flags += ['-Dsom.disableTraceFile=true']
 if args.replay:
     flags += ['-Dsom.replay=true']
+if args.buffer_recycling:
+    flags += ['-Dsom.bufferRecycling=false']
+if args.buffer_size:
+    flags += ['-Dsom.buffSize=%s' % args.buffer_size ]
+if args.buffer_size:
+    flags += ['-Dsom.buffDelay=%s' % args.buffer_delay ]
+if args.buffers_per_thread:
+    flags += ['-Dsom.buffPerThread=%s' % args.buffers_per_thread ]
+if args.test_actor_snapshots:
+    flags += ['-Dsom.snapshotTest=true']
+if args.actor_snapshots:
+    flags += ['-Dsom.actorSnapshot=true']
+if args.actor_snapshots_all:
+    flags += ['-Dsom.actorSnapshotAll=true']
 
 if (args.truffle_profile or args.web_debugger or
     args.dynamic_metrics or args.coverage or args.si_candidates):
@@ -376,6 +401,7 @@ if args.java_args:
     JAVA_ARGS += ['-' + property for property in args.java_args]
 
 flags += ['-Dsom.tools=' + BASE_DIR + '/tools']
+flags += ['-Dsom.baseDir=' + BASE_DIR]
 
 all_args = JAVA_ARGS + ['-classpath', CLASSPATH] + [BOOT_CLASSPATH] + flags + SOM_ARGS + args.args
 

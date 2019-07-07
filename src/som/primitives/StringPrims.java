@@ -4,17 +4,20 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.profiles.BranchProfile;
+import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
 import som.VM;
+import som.interpreter.nodes.ExceptionSignalingNode;
+import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.Symbols;
-import som.vm.constants.KernelObj;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray;
 import som.vmobjects.SSymbol;
@@ -28,11 +31,11 @@ public class StringPrims {
   @Primitive(primitive = "string:concat:")
   public abstract static class ConcatPrim extends BinaryComplexOperation {
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == StringAccess.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 
@@ -65,11 +68,11 @@ public class StringPrims {
   @Primitive(primitive = "stringAsSymbol:")
   public abstract static class AsSymbolPrim extends UnaryBasicOperation {
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == StringAccess.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 
@@ -91,13 +94,13 @@ public class StringPrims {
     private final BranchProfile invalidArgs = BranchProfile.create();
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == StringAccess.class) {
         return true;
       } else if (tag == ComplexPrimitiveOperation.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 
@@ -138,13 +141,13 @@ public class StringPrims {
     private final BranchProfile invalidArgs = BranchProfile.create();
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == StringAccess.class) {
         return true;
       } else if (tag == ComplexPrimitiveOperation.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 
@@ -168,11 +171,21 @@ public class StringPrims {
   @Primitive(primitive = "stringFromArray:")
   public abstract static class FromArrayPrim extends UnaryExpressionNode {
 
+    @Child protected ExceptionSignalingNode argumentError;
+
+    @Override
+    public ExpressionNode initialize(final SourceSection sourceSection,
+        final boolean eagerlyWrapped) {
+      super.initialize(sourceSection, eagerlyWrapped);
+      argumentError = insert(ExceptionSignalingNode.createArgumentErrorNode(sourceSection));
+      return this;
+    }
+
     @Specialization
     public final String doString(final SArray chars) {
       VM.thisMethodNeedsToBeOptimized(
           "Method not yet optimal for compilation, should speculate or use branch profile in the loop");
-      Object[] storage = chars.getObjectStorage(SArray.ObjectStorageType);
+      Object[] storage = chars.getObjectStorage();
       StringBuilder sb = new StringBuilder(storage.length);
       for (Object o : storage) {
         if (o instanceof String) {
@@ -181,23 +194,37 @@ public class StringPrims {
           sb.append(((SSymbol) o).getString());
         } else {
           // TODO: there should be a Smalltalk asString message here, I think
-          KernelObj.signalException("signalArgumentError:",
-              "Array can't contain non-string objects, but has " + o.toString());
+          argumentError.signal(errorMsg(o));
         }
       }
 
       return sb.toString();
     }
 
+    @TruffleBoundary
+    private static String errorMsg(final Object o) {
+      return "Array can't contain non-string objects, but has " + o.toString();
+    }
+
     @Fallback
     public final void doGeneric(final Object obj) {
-      KernelObj.signalException("signalInvalidArgument:", obj);
+      argumentError.signal(obj);
     }
   }
 
   @GenerateNodeFactory
   @Primitive(primitive = "stringFromCodepoint:")
   public abstract static class FromCodepointPrim extends UnaryExpressionNode {
+
+    @Child protected ExceptionSignalingNode argumentError;
+
+    @Override
+    public ExpressionNode initialize(final SourceSection sourceSection,
+        final boolean eagerlyWrapped) {
+      super.initialize(sourceSection, eagerlyWrapped);
+      argumentError = insert(ExceptionSignalingNode.createArgumentErrorNode(sourceSection));
+      return this;
+    }
 
     protected static final boolean isStrictlyBmpCodePoint(final long val) {
       // SM: Based on Character.isBmpCodePoint(val)
@@ -235,8 +262,7 @@ public class StringPrims {
 
     @Fallback
     public final void doGeneric(final Object val) {
-      KernelObj.signalException("signalArgumentError:",
-          "The value " + val + " is not a valid Unicode code point.");
+      argumentError.signal("The value " + val + " is not a valid Unicode code point.");
     }
   }
 

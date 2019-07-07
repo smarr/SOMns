@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" path="src"/>
+	<classpathentry kind="src" path="src-cp-dep"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="src" path="/com.oracle.truffle.api.dsl"/>
+	<classpathentry kind="src" path="/BlackDiamonds"/>
+	<classpathentry kind="src" path="/SOMns"/>
+	<classpathentry kind="src" path="src_gen">
+		<attributes>
+			<attribute name="optional" value="true"/>
+		</attributes>
+	</classpathentry>
+	<classpathentry kind="lib" path="build/classes-dep"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api"/>
+	<classpathentry kind="output" path="build/classes"/>
+</classpath>

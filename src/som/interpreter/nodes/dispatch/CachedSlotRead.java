@@ -1,6 +1,10 @@
 package som.interpreter.nodes.dispatch;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.GenerateWrapper;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.profiles.IntValueProfile;
 
@@ -25,6 +29,7 @@ import tools.dym.Tags.FieldRead;
  * This allows for a small optimization of handling the bit that indicates for
  * primitive slot whether it is set to `nil` or an actual value.
  */
+@GenerateWrapper
 public abstract class CachedSlotRead extends AbstractDispatchNode {
   @Child protected AbstractDispatchNode nextInCache;
   @Child protected TypeCheckNode        typeCheck;
@@ -42,17 +47,26 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
     assert nextInCache != null;
   }
 
+  /**
+   * For wrapped nodes only.
+   */
+  protected CachedSlotRead() {
+    super(null);
+    this.type = null;
+    this.guard = null;
+  }
+
   @Override
-  public Object executeDispatch(final Object[] arguments) {
+  public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
     try {
       if (guardForRcvr.entryMatches(arguments[0], null)) {
         return read(guardForRcvr.cast(arguments[0]));
       } else {
-        return nextInCache.executeDispatch(arguments);
+        return nextInCache.executeDispatch(frame, arguments);
       }
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      return replace(nextInCache).executeDispatch(arguments);
+      return replace(nextInCache).executeDispatch(frame, arguments);
     }
   }
 
@@ -64,13 +78,22 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
   }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  public boolean hasTag(final Class<? extends Tag> tag) {
     if (tag == ClassRead.class) {
       return type == SlotAccess.CLASS_READ;
     } else if (tag == FieldRead.class) {
       return type == SlotAccess.FIELD_READ;
     } else {
-      return super.isTaggedWith(tag);
+      return false;
+    }
+  }
+
+  @Override
+  public WrapperNode createWrapper(final ProbeNode probe) {
+    if (getParent() instanceof ClassSlotAccessNode) {
+      return new CachedSlotReadWrapper(this, probe);
+    } else {
+      return new AbstractDispatchNodeWrapper(this, probe);
     }
   }
 

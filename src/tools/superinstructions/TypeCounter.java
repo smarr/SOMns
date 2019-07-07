@@ -3,6 +3,7 @@ package tools.superinstructions;
 import java.util.HashMap;
 import java.util.Map;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 
 
@@ -23,6 +24,7 @@ final class TypeCounter {
     return source;
   }
 
+  @TruffleBoundary
   public void recordType(final Object result) {
     Class<?> type = result.getClass();
     activations.merge(type, 1L, Long::sum);

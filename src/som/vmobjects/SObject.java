@@ -81,11 +81,11 @@ public abstract class SObject extends SObjectWithClass {
       this.isValue = old.isValue;
     }
 
-    @CompilationFinal protected long primField1;
-    @CompilationFinal protected long primField2;
-    @CompilationFinal protected long primField3;
-    @CompilationFinal protected long primField4;
-    @CompilationFinal protected long primField5;
+    @CompilationFinal public long primField1;
+    @CompilationFinal public long primField2;
+    @CompilationFinal public long primField3;
+    @CompilationFinal public long primField4;
+    @CompilationFinal public long primField5;
 
     @CompilationFinal public Object field1;
     @CompilationFinal public Object field2;
@@ -114,17 +114,17 @@ public abstract class SObject extends SObjectWithClass {
   }
 
   public static final class SMutableObject extends SObject {
-    private long primField1;
-    private long primField2;
-    private long primField3;
-    private long primField4;
-    private long primField5;
+    public long primField1;
+    public long primField2;
+    public long primField3;
+    public long primField4;
+    public long primField5;
 
-    private Object field1;
-    private Object field2;
-    private Object field3;
-    private Object field4;
-    private Object field5;
+    public Object field1;
+    public Object field2;
+    public Object field3;
+    public Object field4;
+    public Object field5;
 
     // this field exists because HotSpot reorders fields, and we need to keep
     // the layouts in sync to avoid having to manage different offsets for
@@ -516,5 +516,17 @@ public abstract class SObject extends SObjectWithClass {
 
     StorageLocation location = getLocation(slot);
     location.write(this, value);
+  }
+
+  public final synchronized void ensureSlotAllocatedToAvoidDeadlock(
+      final SlotDefinition slot) {
+    StorageLocation loc = objectLayout.getStorageLocation(slot);
+    if (!(loc instanceof ObjectStorageLocation)) {
+      ObjectLayout layout =
+          classGroup.updateInstanceLayoutWithGeneralizedField(slot);
+
+      assert objectLayout != layout;
+      setLayoutAndTransferFields(layout);
+    }
   }
 }

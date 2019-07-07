@@ -25,6 +25,7 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
   private Vector          = platform kernel Vector.
   private Exception       = platform kernel Exception.
   private ObjectMirror    = platform mirrors ObjectMirror.
+  private FilePath        = platform files FilePath.
   private one = 5555.
 |
 )(
@@ -655,6 +656,60 @@ class LanguageFeaturesSuite usingPlatform: platform andHarness: harness = (
 
     public verifyResult: result = (
       ^ 1000 = result
+    )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run innerIterations: 1 )
+  )
+
+  public class StringCharAt = Benchmark (
+  | private str = '012345678901234567890123456789012345678901234567890123456789'. |
+  )(
+    public benchmark = (
+      | i ::= 1. |
+      1 to: 6 do: [:k |
+        0 to: 9 do: [:j |
+          | chr |
+          chr:: str charAt: i.
+          j asString = chr ifFalse: [ ^ false ].
+          i:: i + 1. ] ].
+      ^ true
+    )
+
+    public verifyResult: result = (
+      ^ true
+    )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run innerIterations: 1 )
+  )
+
+  public class FileReadWrite = Benchmark (
+  | private modulePath = (ObjectMirror reflecting: self) classMirror classDefinition filePath.
+    private path = ((FilePath for: modulePath)
+                      containingDirectory
+                      containingDirectory
+                      containingDirectory / 'tests' / 'files') pattern.
+    private f = FilePath for: path + '/benchmark-tmp'.
+    private d = f open: #readWrite.
+  |
+    0 to: 255 do:[ :i|
+      d buffer at: i + 1 put: i - 128.
+    ].
+  )(
+    public innerBenchmarkLoop: innerIterations numThreads: threads = (
+      | result |
+      result:: super innerBenchmarkLoop: innerIterations numThreads: threads.
+      ^ result
+    )
+
+    public benchmark = (
+      d write: 256 at: 0.
+      ^ d readAt: 0
+    )
+
+    public verifyResult: result = (
+      ^ result = 256
     )
   ) : (
     public newInstance = ( ^ self new )

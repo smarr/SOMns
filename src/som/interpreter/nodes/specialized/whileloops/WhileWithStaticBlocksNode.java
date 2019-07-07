@@ -26,8 +26,8 @@ public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
     private final boolean whileTrueOrFalse;
 
     protected WhileSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact,
-        final VM vm, final boolean whileTrueOrFalse) {
-      super(prim, fact, vm);
+        final boolean whileTrueOrFalse) {
+      super(prim, fact);
       this.whileTrueOrFalse = whileTrueOrFalse;
     }
 
@@ -40,7 +40,7 @@ public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
     @Override
     public WhileWithStaticBlocksNode create(final Object[] arguments,
         final ExpressionNode[] argNodes, final SourceSection section,
-        final boolean eagerWrapper) {
+        final boolean eagerWrapper, final VM vm) {
       assert !eagerWrapper;
       BlockNode argBlockNode = (BlockNode) unwrapIfNecessary(argNodes[1]);
       SBlock argBlock = (SBlock) arguments[1];
@@ -51,16 +51,14 @@ public final class WhileWithStaticBlocksNode extends AbstractWhileNode {
   }
 
   public static final class WhileTrueSplzr extends WhileSplzr {
-    public WhileTrueSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact,
-        final VM vm) {
-      super(prim, fact, vm, true);
+    public WhileTrueSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact, true);
     }
   }
 
   public static final class WhileFalseSplzr extends WhileSplzr {
-    public WhileFalseSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact,
-        final VM vm) {
-      super(prim, fact, vm, false);
+    public WhileFalseSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact, false);
     }
   }
 

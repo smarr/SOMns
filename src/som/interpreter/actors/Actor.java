@@ -6,10 +6,15 @@ import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RejectedExecutionException;
 
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.RootNode;
 
-import som.Output;
 import som.VM;
+import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.IsValue;
 import som.vm.Activity;
@@ -19,14 +24,16 @@ import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.ObjectBuffer;
-import tools.TraceData;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.DynamicScopeType;
+import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.nodes.TraceActorContextNode;
+import tools.snapshot.SnapshotBuffer;
 
 
 /**
@@ -48,8 +55,15 @@ import tools.debugger.entities.DynamicScopeType;
  */
 public class Actor implements Activity {
 
+  @CompilationFinal protected static RootCallTarget executorRoot;
+
+  public static void initializeActorSystem(final SomLanguage lang) {
+    ExecutorRootNode root = new ExecutorRootNode(lang);
+    executorRoot = Truffle.getRuntime().createCallTarget(root);
+  }
+
   public static Actor createActor(final VM vm) {
-    if (VmSettings.REPLAY) {
+    if (VmSettings.REPLAY || VmSettings.KOMPOS_TRACING) {
       return new ReplayActor(vm);
     } else if (VmSettings.ACTOR_TRACING) {
       return new TracingActor(vm);
@@ -68,18 +82,11 @@ public class Actor implements Activity {
   protected EventualMessage               firstMessage;
   protected ObjectBuffer<EventualMessage> mailboxExtension;
 
-  protected long               firstMessageTimeStamp;
-  protected ObjectBuffer<Long> mailboxExtensionTimeStamps;
-
   /** Flag to indicate whether there is currently a F/J task executing. */
   protected boolean isExecuting;
 
   /** Is scheduled on the pool, and executes messages to this actor. */
   protected final ExecAllMessages executor;
-
-  // used to collect absolute numbers from the threads
-  private static Object statsLock          = new Object();
-  private static long   numCreatedEntities = 0;
 
   /**
    * Possible roles for an actor.
@@ -189,9 +196,22 @@ public class Actor implements Activity {
   protected void appendToMailbox(final EventualMessage msg) {
     if (mailboxExtension == null) {
       mailboxExtension = new ObjectBuffer<>(MAILBOX_EXTENSION_SIZE);
-      mailboxExtensionTimeStamps = new ObjectBuffer<>(MAILBOX_EXTENSION_SIZE);
     }
     mailboxExtension.append(msg);
+  }
+
+  public static final class ExecutorRootNode extends RootNode {
+
+    private ExecutorRootNode(final SomLanguage language) {
+      super(language);
+    }
+
+    @Override
+    public Object execute(final VirtualFrame frame) {
+      ExecAllMessages executor = (ExecAllMessages) frame.getArguments()[0];
+      executor.doRun();
+      return null;
+    }
   }
 
   /**
@@ -212,8 +232,15 @@ public class Actor implements Activity {
       this.vm = vm;
     }
 
+    private static final TraceActorContextNode tracer = new TraceActorContextNode();
+
     @Override
     public void run() {
+      assert executorRoot != null : "Actor system not initalized, call to initializeActorSystem(.) missing?";
+      executorRoot.call(this);
+    }
+
+    void doRun() {
       ObjectTransitionSafepoint.INSTANCE.register();
 
       ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
@@ -226,7 +253,9 @@ public class Actor implements Activity {
       t.currentlyExecutingActor = actor;
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.currentActivity(actor);
+        ActorExecutionTrace.recordActorContext((TracingActor) actor, tracer);
+      } else if (VmSettings.KOMPOS_TRACING) {
+        KomposTrace.currentActivity(actor);
       }
 
       try {
@@ -237,6 +266,9 @@ public class Actor implements Activity {
         ObjectTransitionSafepoint.INSTANCE.unregister();
       }
 
+      if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
+        t.swapTracingBufferIfRequestedUnsync();
+      }
       t.currentlyExecutingActor = null;
     }
 
@@ -244,17 +276,19 @@ public class Actor implements Activity {
         final WebDebugger dbg) {
       assert size > 0;
 
-      try {
-        execute(firstMessage, currentThread, dbg);
+      if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS) {
+        SnapshotBuffer sb = currentThread.getSnapshotBuffer();
+        sb.getRecord().handleTodos(sb);
+        firstMessage.serialize(sb);
+      }
+      execute(firstMessage, currentThread, dbg);
 
-        if (size > 1) {
-          for (EventualMessage msg : mailboxExtension) {
-            execute(msg, currentThread, dbg);
+      if (size > 1) {
+        for (EventualMessage msg : mailboxExtension) {
+          if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS) {
+            msg.serialize(currentThread.getSnapshotBuffer());
           }
-        }
-      } finally {
-        if (VmSettings.ACTOR_TRACING) {
-          currentThread.createdMessages += size;
+          execute(msg, currentThread, dbg);
         }
       }
     }
@@ -267,14 +301,14 @@ public class Actor implements Activity {
       }
 
       try {
-        if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.scopeStart(DynamicScopeType.TURN, msg.getMessageId(),
+        if (VmSettings.KOMPOS_TRACING) {
+          KomposTrace.scopeStart(DynamicScopeType.TURN, msg.getMessageId(),
               msg.getTargetSourceSection());
         }
         msg.execute();
       } finally {
-        if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.scopeEnd(DynamicScopeType.TURN);
+        if (VmSettings.KOMPOS_TRACING) {
+          KomposTrace.scopeEnd(DynamicScopeType.TURN);
         }
       }
     }
@@ -289,8 +323,8 @@ public class Actor implements Activity {
           assert mailboxExtension == null;
           // complete execution after all messages are processed
           actor.isExecuting = false;
-          if (VmSettings.ACTOR_TRACING) {
-            ActorExecutionTrace.clearCurrentActivity(actor);
+          if (VmSettings.KOMPOS_TRACING) {
+            KomposTrace.clearCurrentActivity(actor);
           }
           size = 0;
           return false;
@@ -320,19 +354,27 @@ public class Actor implements Activity {
 
   public static final class ActorProcessingThreadFactory
       implements ForkJoinWorkerThreadFactory {
+
+    private final VM vm;
+
+    public ActorProcessingThreadFactory(final VM vm) {
+      this.vm = vm;
+    }
+
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
-      return new ActorProcessingThread(pool);
+      return new ActorProcessingThread(pool, vm);
     }
   }
 
   public static final class ActorProcessingThread extends TracingActivityThread {
+
     public EventualMessage currentMessage;
 
     protected Actor currentlyExecutingActor;
 
-    protected ActorProcessingThread(final ForkJoinPool pool) {
-      super(pool);
+    protected ActorProcessingThread(final ForkJoinPool pool, final VM vm) {
+      super(pool, vm);
     }
 
     @Override
@@ -343,27 +385,8 @@ public class Actor implements Activity {
       return currentMessage.getTarget();
     }
 
-    @Override
-    protected void onTermination(final Throwable exception) {
-      if (VmSettings.ACTOR_TRACING) {
-        long createdEntities = nextEntityId - 1 - (threadId << TraceData.ENTITY_ID_BITS);
-
-        Output.printConcurrencyEntitiesReport(
-            "[Thread " + threadId + "]\tE#" + createdEntities);
-
-        synchronized (statsLock) {
-          numCreatedEntities += createdEntities;
-        }
-      }
-      super.onTermination(exception);
-    }
-  }
-
-  public static final void reportStats() {
-    if (VmSettings.ACTOR_TRACING) {
-      synchronized (statsLock) {
-        Output.printConcurrencyEntitiesReport("[Total]\tE#" + numCreatedEntities);
-      }
+    public Actor getCurrentActor() {
+      return currentlyExecutingActor;
     }
   }
 

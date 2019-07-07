@@ -14,6 +14,7 @@ pages:
       - Repository and Code Layout: repo-layout.md
       - Development Infrastructure: infrastructure.md
       - Release Checklist: release-checklist.md
+      - Extensions: extensions.md
   - SOMns Design Notes:
       - Naming Conventions: naming.md
       - Interaction with Kompos Debugger: kompos-connection.md

@@ -5,47 +5,32 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.graalvm.polyglot.Engine;
+import org.graalvm.polyglot.Instrument;
+
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.InstrumentInfo;
+import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.SuspendedCallback;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.source.SourceCoordinate;
 import som.VM;
 import som.vm.Activity;
-import tools.SourceCoordinate;
+import som.vm.Symbols;
 import tools.TraceData;
 import tools.concurrency.TracingActivityThread;
 import tools.debugger.frontend.Suspension;
-import tools.debugger.message.InitializationResponse;
-import tools.debugger.message.InitializeConnection;
-import tools.debugger.message.Message.IncommingMessage;
-import tools.debugger.message.Message.OutgoingMessage;
-import tools.debugger.message.ProgramInfoRequest;
-import tools.debugger.message.ProgramInfoResponse;
-import tools.debugger.message.ScopesRequest;
-import tools.debugger.message.ScopesResponse;
-import tools.debugger.message.SourceMessage;
-import tools.debugger.message.StackTraceRequest;
-import tools.debugger.message.StackTraceResponse;
-import tools.debugger.message.StepMessage;
-import tools.debugger.message.StoppedMessage;
-import tools.debugger.message.SymbolMessage;
-import tools.debugger.message.TraceDataRequest;
-import tools.debugger.message.UpdateBreakpoint;
-import tools.debugger.message.VariablesRequest;
-import tools.debugger.message.VariablesResponse;
-import tools.debugger.session.BreakpointInfo;
 import tools.debugger.session.Breakpoints;
-import tools.debugger.session.LineBreakpoint;
-import tools.debugger.session.SectionBreakpoint;
 
 
 /**
@@ -56,7 +41,27 @@ import tools.debugger.session.SectionBreakpoint;
     services = {WebDebugger.class})
 public class WebDebugger extends TruffleInstrument implements SuspendedCallback {
 
-  public static final String ID = "web-debugger";
+  static final String ID = "web-debugger";
+
+  public static WebDebugger find(final TruffleLanguage.Env env) {
+    InstrumentInfo instrument = env.getInstruments().get(ID);
+    if (instrument == null) {
+      throw new IllegalStateException(
+          "WebDebugger not properly installed into polyglot.Engine");
+    }
+
+    return env.lookup(instrument, WebDebugger.class);
+  }
+
+  public static WebDebugger find(final Engine engine) {
+    Instrument instrument = engine.getInstruments().get(ID);
+    if (instrument == null) {
+      throw new IllegalStateException(
+          "WebDebugger not properly installed into polyglot.Engine");
+    }
+
+    return instrument.lookup(WebDebugger.class);
+  }
 
   private FrontendConnector connector;
   private Instrumenter      instrumenter;
@@ -64,26 +69,26 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   @CompilationFinal VM vm;
 
-  private final Map<Source, Map<SourceSection, Set<Class<? extends Tags>>>> loadedSourcesTags =
+  private final Map<Source, Map<SourceSection, Set<Class<? extends Tag>>>> loadedSourcesTags =
       new HashMap<>();
-  private final Map<Source, Set<RootNode>>                                  rootNodes         =
-      new HashMap<>();
+
+  private final Map<Source, Set<RootNode>> rootNodes = new HashMap<>();
 
   private final Map<Activity, Suspension> activityToSuspension = new HashMap<>();
   private final Map<Long, Suspension>     idToSuspension       = new HashMap<>();
 
-  public void reportSyntaxElement(final Class<? extends Tags> type,
+  public void reportSyntaxElement(final Class<? extends Tag> type,
       final SourceSection source) {
-    Map<SourceSection, Set<Class<? extends Tags>>> sections =
+    Map<SourceSection, Set<Class<? extends Tag>>> sections =
         loadedSourcesTags.computeIfAbsent(
             source.getSource(), s -> new HashMap<>());
-    Set<Class<? extends Tags>> tags = sections.computeIfAbsent(source, s -> new HashSet<>(2));
+    Set<Class<? extends Tag>> tags = sections.computeIfAbsent(source, s -> new HashSet<>(2));
     tags.add(type);
   }
 
   public void reportLoadedSource(final Source source) {
     // register source URI as symbol to make sure it's send to the debugger
-    SourceCoordinate.getURI(source);
+    Symbols.symbolFor(SourceCoordinate.getURI(source));
     connector.sendLoadedSource(source, loadedSourcesTags, rootNodes);
   }
 
@@ -95,12 +100,12 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     roots.add(rootNode);
   }
 
-  public void prepareSteppingUntilNextRootNode() {
-    breakpoints.prepareSteppingUntilNextRootNode();
+  public void prepareSteppingUntilNextRootNode(final Thread thread) {
+    breakpoints.prepareSteppingUntilNextRootNode(thread);
   }
 
-  public void prepareSteppingAfterNextRootNode() {
-    breakpoints.prepareSteppingAfterNextRootNode();
+  public void prepareSteppingAfterNextRootNode(final Thread thread) {
+    breakpoints.prepareSteppingAfterNextRootNode(thread);
   }
 
   Suspension getSuspension(final long activityId) {
@@ -165,8 +170,7 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     assert vm != null;
     this.vm = vm;
     breakpoints = new Breakpoints(dbg, this);
-    connector = new FrontendConnector(breakpoints, instrumenter, this,
-        createJsonProcessor());
+    connector = new FrontendConnector(breakpoints, instrumenter, this, jsonProcessor);
     connector.awaitClient();
   }
 
@@ -174,36 +178,5 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     return breakpoints;
   }
 
-  public static Gson createJsonProcessor() {
-    ClassHierarchyAdapterFactory<OutgoingMessage> outMsgAF =
-        new ClassHierarchyAdapterFactory<>(OutgoingMessage.class, "type");
-    outMsgAF.register("source", SourceMessage.class);
-    outMsgAF.register(InitializationResponse.class);
-    outMsgAF.register(StoppedMessage.class);
-    outMsgAF.register(SymbolMessage.class);
-    outMsgAF.register(StackTraceResponse.class);
-    outMsgAF.register(ScopesResponse.class);
-    outMsgAF.register(VariablesResponse.class);
-    outMsgAF.register(ProgramInfoResponse.class);
-
-    ClassHierarchyAdapterFactory<IncommingMessage> inMsgAF =
-        new ClassHierarchyAdapterFactory<>(IncommingMessage.class, "action");
-    inMsgAF.register(InitializeConnection.class);
-    inMsgAF.register("updateBreakpoint", UpdateBreakpoint.class);
-    inMsgAF.register(StepMessage.class);
-    inMsgAF.register(StackTraceRequest.class);
-    inMsgAF.register(ScopesRequest.class);
-    inMsgAF.register(VariablesRequest.class);
-    inMsgAF.register(ProgramInfoRequest.class);
-    inMsgAF.register(TraceDataRequest.class);
-
-    ClassHierarchyAdapterFactory<BreakpointInfo> breakpointAF =
-        new ClassHierarchyAdapterFactory<>(BreakpointInfo.class, "type");
-    breakpointAF.register(LineBreakpoint.class);
-    breakpointAF.register(SectionBreakpoint.class);
-
-    return new GsonBuilder().registerTypeAdapterFactory(outMsgAF)
-                            .registerTypeAdapterFactory(inMsgAF)
-                            .registerTypeAdapterFactory(breakpointAF).create();
-  }
+  private static Gson jsonProcessor = RuntimeReflectionRegistration.createJsonProcessor();
 }

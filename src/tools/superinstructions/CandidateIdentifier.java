@@ -9,6 +9,11 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import org.graalvm.polyglot.Engine;
+import org.graalvm.polyglot.Instrument;
+
+import com.oracle.truffle.api.InstrumentInfo;
+import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.instrumentation.EventContext;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNodeFactory;
 import com.oracle.truffle.api.instrumentation.Instrumenter;
@@ -19,8 +24,13 @@ import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 
+import bd.tools.structure.StructuralProbe;
+import som.compiler.MixinDefinition;
+import som.compiler.MixinDefinition.SlotDefinition;
+import som.compiler.Variable;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 import tools.dym.Tags.AnyNode;
-import tools.language.StructuralProbe;
 
 
 /**
@@ -34,15 +44,39 @@ public class CandidateIdentifier extends TruffleInstrument {
 
   public static final String ID = "si-candidate-ider";
 
+  @SuppressWarnings("unchecked")
+  public static StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> find(
+      final TruffleLanguage.Env env) {
+    InstrumentInfo instrument = env.getInstruments().get(ID);
+    if (instrument == null) {
+      throw new IllegalStateException(
+          "CandidateIdentifier not properly installed into polyglot.Engine");
+    }
+
+    return env.lookup(instrument, StructuralProbe.class);
+  }
+
+  @SuppressWarnings("unchecked")
+  public static StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> find(
+      final Engine engine) {
+    Instrument instrument = engine.getInstruments().get(ID);
+    if (instrument == null) {
+      throw new IllegalStateException(
+          "CandidateIdentifier not properly installed into polyglot.Engine");
+    }
+
+    return instrument.lookup(StructuralProbe.class);
+  }
+
   private final Map<Node, TypeCounter> activations;
 
-  private final StructuralProbe structuralProbe;
+  private final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe;
 
   private final Set<RootNode> rootNodes;
 
   public CandidateIdentifier() {
     activations = new HashMap<>();
-    structuralProbe = new StructuralProbe();
+    structuralProbe = new StructuralProbe<>();
     rootNodes = new HashSet<>();
   }
 
@@ -67,7 +101,7 @@ public class CandidateIdentifier extends TruffleInstrument {
           k -> new TypeCounter(ctx.getInstrumentedSourceSection()));
       return new TypeCountingNode(p);
     };
-    instrumenter.attachFactory(filter, factory);
+    instrumenter.attachExecutionEventFactory(filter, factory);
   }
 
   @Override

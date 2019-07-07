@@ -1,29 +1,48 @@
 {
-  "version": "0.1.0",
-  "command": "npm",
-  "isShellCommand": true,
-  "showOutput": "always",
+  "version": "2.0.0",
   "echoCommand": true,
-  "suppressTaskName": true,
   "options": {
     "cwd": "${workspaceRoot}"
   },
   "tasks": [
     {
-      "taskName": "continuous compilation",
+      "type": "process",
+      "group": "build",
+      "label": "continuous compilation",
+      "command": "npm",
       "isBackground": true,
       "args": ["run", "watch"],
-      "problemMatcher": "$tsc-watch"
+      "problemMatcher": "$tsc-watch",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
     },
     {
-      "taskName": "test",
+      "type": "process",
+      "label": "test",
+      "group": "test",
+      "command": "npm",
       "isBackground": false,
-      "args": []
+      "args": ["test"],
+      "presentation": {
+        "echo": true,
+        "reveal": "always",
+        "focus": true,
+        "clear": true
+      }
     },
     {
-      "taskName": "format",
+      "type": "process",
+      "command": "npm",
+      "label": "format",
+      "group": "build",
       "isBackground": false,
-      "args": ["run", "format"]
+      "args": ["run", "format"],
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
     }
   ]
 }

@@ -14,7 +14,6 @@ import som.interpreter.objectstorage.StorageLocation;
 import som.vm.NotYetImplementedException;
 import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
-import som.vmobjects.SArray;
 import som.vmobjects.SArray.PartiallyEmptyArray;
 import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
@@ -100,7 +99,7 @@ public final class TransferObject {
     transferMap.put(arr, newObj);
 
     if (newObj.isObjectType()) {
-      Object[] storage = newObj.getObjectStorage(SArray.ObjectStorageType);
+      Object[] storage = newObj.getObjectStorage();
 
       for (int i = 0; i < storage.length; i++) {
         Object orgObj = storage[i];
@@ -115,7 +114,7 @@ public final class TransferObject {
       }
     } else if (newObj.isPartiallyEmptyType()) {
       PartiallyEmptyArray parr =
-          newObj.getPartiallyEmptyStorage(SArray.PartiallyEmptyStorageType);
+          newObj.getPartiallyEmptyStorage();
       Object[] storage = parr.getStorage();
 
       for (int i = 0; i < storage.length; i++) {

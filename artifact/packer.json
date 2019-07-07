@@ -1,0 +1,83 @@
+{
+  "_COMMENT": "This file instructs packer to compose the artifact, and execute the setup scripts",
+  
+  "variables": {
+    "_COMMENT": "environment variables are defined in config.inc",
+    
+    "box_name":     "{{env `BOX_NAME`}}",
+    "rebench_conf": "{{env `REBENCH_CONF`}}",
+    "commit_sha":   "{{env `COMMIT_SHA`}}",
+    "git_repo":     "{{env `GIT_REPO`}}",
+    "repo_name":    "{{env `REPO_NAME`}}",
+    "home":         "{{env `HOME`}}",
+    
+    "vm_description": "Development Image for working on SOMns",
+    "vm_version": "0.1.0",
+    "hostname": "artifact",
+    "headless": "true", 
+    "base_image": "xenial64/artifact-base-xenial64.ova",
+    
+    "memory": "6144",
+    "ssh_username": "artifact",
+    "ssh_password": "artifact"
+  },
+
+  "builders" : [ {
+    "type": "virtualbox-ovf",
+    "format": "ova",
+    "source_path": "{{user `home`}}/artifacts/{{user `base_image`}}",
+    "checksum_type": "none",
+    "headless": "{{ user `headless` }}",
+    "output_directory": "{{user `home`}}/artifacts/{{user `box_name`}}",
+    "shutdown_command": "echo 'artifact' | sudo -S shutdown -P now",
+    "ssh_password": "{{user `ssh_password`}}",
+    "ssh_port": 22,
+    "ssh_username": "{{user `ssh_username`}}",
+    "ssh_wait_timeout": "10000s",
+    "export_opts": [
+      "--manifest",
+      "--vsys", "0",
+      "--description", "{{user `vm_description`}}",
+      "--version",     "{{user `vm_version`}}"
+    ],
+    "vm_name": "{{ user `box_name` }}"
+  } ],
+  "provisioners": [
+    {
+      "execute_command": "echo 'artifact' | {{.Vars}} sudo -S -E bash -eux '{{.Path}}'",
+      "expect_disconnect": true,
+      "environment_vars": [
+        "REBENCH_CONF={{user `rebench_conf`}}",
+        "COMMIT_SHA={{user `commit_sha`}}",
+        "GIT_REPO={{user `git_repo`}}"
+      ],
+      "scripts": [
+        "provision.sh"
+      ],
+      "type": "shell"
+    },
+    {
+      "expect_disconnect": true,
+      "environment_vars": [
+        "REBENCH_CONF={{user `rebench_conf`}}",
+        "COMMIT_SHA={{user `commit_sha`}}",
+        "GIT_REPO={{user `git_repo`}}",
+        "REPO_NAME={{user `repo_name`}}"
+      ],
+      "scripts": [
+        "build.sh",
+        "customize.sh"
+      ],
+      "type": "shell"
+    },
+    {
+      "execute_command": "echo 'artifact' | {{.Vars}} sudo -S -E bash -eux '{{.Path}}'",
+      "expect_disconnect": true,
+      "scripts": [
+        "clean.sh"
+      ],
+      "type": "shell"
+    }
+  ]
+}
+

@@ -1,7 +1,7 @@
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -9,7 +9,6 @@ import som.VM;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.ObjectPrims.IsValue;
-import som.vm.constants.KernelObj;
 import som.vmobjects.SObject.SImmutableObject;
 
 
@@ -44,6 +43,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
       return specialize(frame, receiver);
     }
 
@@ -72,7 +72,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
         // in case there is a wrapper, get rid of it first
         Node wrapper = getParent();
         wrapper.replace(self);
-        VM.insertInstrumentationWrapper(self);
+        notifyInserted(self);
       } else {
         replace(self);
       }
@@ -80,8 +80,19 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
   }
 
   private static final class ValueCheckNode extends IsValueCheckNode {
+
+    @Child protected ExceptionSignalingNode notAValue;
+
     ValueCheckNode(final ExpressionNode self) {
       super(self);
+    }
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public ValueCheckNode initialize(final SourceSection sourceSection) {
+      super.initialize(sourceSection);
+      notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
+      return this;
     }
 
     @Override
@@ -92,7 +103,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       if (allFieldsContainValues) {
         return rcvr;
       }
-      return KernelObj.signalExceptionWithClass("signalNotAValueWith:", receiver);
+      return notAValue.signal(rcvr);
     }
 
     private boolean allFieldsContainValues(final SImmutableObject rcvr) {

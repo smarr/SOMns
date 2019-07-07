@@ -7,22 +7,32 @@ import com.oracle.truffle.api.nodes.Node;
 
 import som.compiler.MixinDefinition;
 import som.interpreter.objectstorage.ClassFactory;
+import som.vm.Symbols;
 import som.vm.constants.Classes;
-import som.vm.constants.KernelObj;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
+import tools.snapshot.nodes.ObjectSerializationNodesFactory.UninitializedObjectSerializationNodeFactory;
 
 
-public class InstantiationNode extends Node {
+public abstract class InstantiationNode extends Node {
 
   private final MixinDefinition mixinDefinition;
 
-  public InstantiationNode(final MixinDefinition mixinDef) {
-    this.mixinDefinition = mixinDef;
+  @Child protected ExceptionSignalingNode notAValue;
+  @Child protected ExceptionSignalingNode cannotBeValues;
+
+  protected InstantiationNode(final MixinDefinition mixinDef) {
+    mixinDefinition = mixinDef;
+    notAValue = insert(ExceptionSignalingNode.createNotAValueNode(
+        mixinDefinition.getInitializerSourceSection()));
+    cannotBeValues = insert(ExceptionSignalingNode.createNode(
+        Symbols.TransferObjectsCannotBeValues,
+        mixinDefinition.getInitializerSourceSection()));
   }
 
   protected final ClassFactory createClassFactory(final Object superclassAndMixins) {
-    return mixinDefinition.createClassFactory(superclassAndMixins, false, false, false);
+    return mixinDefinition.createClassFactory(superclassAndMixins, false, false, false,
+        UninitializedObjectSerializationNodeFactory.getInstance());
   }
 
   protected boolean sameSuperAndMixins(final Object superclassAndMixins, final Object cached) {
@@ -36,19 +46,20 @@ public class InstantiationNode extends Node {
     return metaclassClass;
   }
 
-  public static SClass singalExceptionsIfFaultFoundElseReturnClassObject(
+  public static SClass signalExceptionsIfFaultFoundElseReturnClassObject(
       final SObjectWithClass outerObj,
-      final ClassFactory factory, final SClass classObj) {
+      final ClassFactory factory, final SClass classObj,
+      final ExceptionSignalingNode notAValue, final ExceptionSignalingNode cannotBeValue) {
     factory.initializeClass(classObj);
 
     if (factory.isDeclaredAsValue() && factory.isTransferObject()) {
       // REM: cast is fine here, because we never return anyway
-      return (SClass) KernelObj.signalExceptionWithClass("signalTOCannotBeValues:", classObj);
+      cannotBeValue.signal(classObj);
     }
 
     if ((factory.isTransferObject() || factory.isDeclaredAsValue()) &&
         !outerObj.isValue()) {
-      return (SClass) KernelObj.signalExceptionWithClass("signalNotAValueWith:", classObj);
+      notAValue.signal(classObj);
     }
 
     return classObj;
@@ -67,13 +78,15 @@ public class InstantiationNode extends Node {
         final Object superclassAndMixins,
         @Cached("superclassAndMixins") final Object cachedSuperMixins,
         @Cached("createClassFactory(superclassAndMixins)") final ClassFactory factory) {
-      return instantiate(outerObj, factory);
+      return instantiate(outerObj, factory, notAValue, cannotBeValues);
     }
 
     public static SClass instantiate(final SObjectWithClass outerObj,
-        final ClassFactory factory) {
+        final ClassFactory factory, final ExceptionSignalingNode notAValue,
+        final ExceptionSignalingNode cannotBeValues) {
       SClass classObj = new SClass(outerObj, instantiateMetaclassClass(factory, outerObj));
-      return singalExceptionsIfFaultFoundElseReturnClassObject(outerObj, factory, classObj);
+      return signalExceptionsIfFaultFoundElseReturnClassObject(outerObj, factory, classObj,
+          notAValue, cannotBeValues);
     }
 
     @Specialization(replaces = "instantiateClass")
@@ -98,7 +111,7 @@ public class InstantiationNode extends Node {
         final Object superclassAndMixins, final MaterializedFrame frame,
         @Cached("superclassAndMixins") final Object cachedSuperMixins,
         @Cached("createClassFactory(superclassAndMixins)") final ClassFactory factory) {
-      return instantiate(outerObj, factory, frame);
+      return instantiate(outerObj, factory, frame, this);
     }
 
     /**
@@ -110,10 +123,12 @@ public class InstantiationNode extends Node {
      * @return an object instantiated from the newly created class.
      */
     private static SClass instantiate(final SObjectWithClass outerObj,
-        final ClassFactory factory, final MaterializedFrame frame) {
+        final ClassFactory factory, final MaterializedFrame frame,
+        final InstantiationNode inst) {
       SClass classObj =
           new SClass(outerObj, instantiateMetaclassClass(factory, outerObj), frame);
-      return singalExceptionsIfFaultFoundElseReturnClassObject(outerObj, factory, classObj);
+      return signalExceptionsIfFaultFoundElseReturnClassObject(outerObj, factory, classObj,
+          inst.notAValue, inst.cannotBeValues);
     }
 
     @Specialization(replaces = "instantiateClass")

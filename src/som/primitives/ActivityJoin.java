@@ -4,15 +4,17 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
-import som.VM;
 import som.interpreter.actors.SuspendExecutionNodeGen;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.threading.TaskThreads.SomTaskOrThread;
 import som.vm.VmSettings;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.KomposTrace;
+import tools.concurrency.Tags;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.entities.ReceiveOp;
 
@@ -31,14 +33,18 @@ public class ActivityJoin {
       super.initialize(source);
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
         haltNode = insert(SuspendExecutionNodeGen.create(0, null).initialize(source));
-        VM.insertInstrumentationWrapper(haltNode);
       }
       return this;
     }
 
     @TruffleBoundary
     private static Object doJoin(final SomTaskOrThread task) {
-      return task.join();
+      try {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
+        return task.join();
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.register();
+      }
     }
 
     @Specialization
@@ -49,18 +55,19 @@ public class ActivityJoin {
         haltNode.executeEvaluated(frame, result);
       }
 
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.receiveOperation(ReceiveOp.TASK_JOIN, task.getId());
+      if (VmSettings.KOMPOS_TRACING) {
+        KomposTrace.receiveOperation(ReceiveOp.TASK_JOIN, task.getId());
       }
+
       return result;
     }
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-      if (tag == ActivityJoin.class || tag == ExpressionBreakpoint.class) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
+      if (tag == Tags.ActivityJoin.class || tag == ExpressionBreakpoint.class) {
         return true;
       }
-      return super.isTaggedWith(tag);
+      return super.hasTag(tag);
     }
   }
 }

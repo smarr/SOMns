@@ -15,7 +15,7 @@ public class StepMessage extends IncommingMessage {
   /**
    * Note: meant for serialization.
    */
-  public StepMessage() {
+  StepMessage() {
     activityId = -1;
     step = null;
   }

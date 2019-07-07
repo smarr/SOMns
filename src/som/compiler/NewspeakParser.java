@@ -74,14 +74,18 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.ProgramDefinitionError;
 import bd.inlining.InlinableNodes;
+import bd.source.SourceCoordinate;
+import bd.tools.structure.StructuralProbe;
 import som.Output;
 import som.compiler.Lexer.Peek;
 import som.compiler.MixinBuilder.MixinDefinitionError;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable.Local;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
@@ -104,8 +108,6 @@ import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
-import tools.debugger.Tags;
 import tools.debugger.Tags.ArgumentTag;
 import tools.debugger.Tags.CommentTag;
 import tools.debugger.Tags.DelimiterClosingTag;
@@ -115,7 +117,6 @@ import tools.debugger.Tags.KeywordTag;
 import tools.debugger.Tags.LiteralTag;
 import tools.debugger.Tags.LocalVariableTag;
 import tools.debugger.Tags.StatementSeparatorTag;
-import tools.language.StructuralProbe;
 
 
 public class NewspeakParser {
@@ -128,11 +129,14 @@ public class NewspeakParser {
   protected Symbol sym;
   private String   text;
   private Symbol   nextSym;
-  private String   nextText;
+
+  @SuppressWarnings("unused") // for debugging
+  private String nextText;
 
   private SourceSection            lastMethodsSourceSection;
   private final Set<SourceSection> syntaxAnnotations;
-  private final StructuralProbe    structuralProbe;
+
+  private final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe;
 
   private final InlinableNodes<SSymbol> inlinableNodes;
 
@@ -180,7 +184,7 @@ public class NewspeakParser {
     ParseError(final String message, final Symbol expected, final NewspeakParser parser) {
       super(message);
       if (parser.lexer == null) {
-        this.sourceCoordinate = new SourceCoordinate(0, 0, 0, 0);
+        this.sourceCoordinate = SourceCoordinate.createEmpty();
         this.rawBuffer = "";
       } else {
         this.sourceCoordinate = parser.getCoordinate();
@@ -265,7 +269,8 @@ public class NewspeakParser {
   }
 
   public NewspeakParser(final String content, final long fileSize, final Source source,
-      final StructuralProbe structuralProbe, final SomLanguage language) throws ParseError {
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe,
+      final SomLanguage language) throws ParseError {
     this.source = source;
     this.language = language;
 
@@ -369,10 +374,8 @@ public class NewspeakParser {
   private void defaultSuperclassAndBody(final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
     SourceSection source = getEmptySource();
-    MethodBuilder def = mxnBuilder.getClassInstantiationMethodBuilder();
-    ExpressionNode selfRead = def.getSelfRead(source);
-    ExpressionNode superClass = createMessageSend(Symbols.OBJECT,
-        new ExpressionNode[] {selfRead}, false, source, null, language);
+    ExpressionNode superClass =
+        mxnBuilder.constructSuperClassResolution(Symbols.OBJECT, source);
     mxnBuilder.setSuperClassResolution(superClass);
 
     mxnBuilder.setSuperclassFactorySend(
@@ -424,7 +427,7 @@ public class NewspeakParser {
               mxnBuilder.getInitializerMethodBuilder().getSelfRead(getSource(coord))});
 
       uniqueInitName = MixinBuilder.getInitializerName(
-          mixinFactorySend.getSelector(), mixinId);
+          mixinFactorySend.getInvocationIdentifier(), mixinId);
       mixinFactorySend = (AbstractUninitializedMessageSendNode) MessageSendNode.adaptSymbol(
           uniqueInitName, mixinFactorySend, language.getVM());
     } else {
@@ -457,7 +460,7 @@ public class NewspeakParser {
               mxnBuilder.getInitializerMethodBuilder().getSuperReadNode(getEmptySource())});
 
       SSymbol initializerName = MixinBuilder.getInitializerName(
-          ((AbstractUninitializedMessageSendNode) superFactorySend).getSelector());
+          ((AbstractUninitializedMessageSendNode) superFactorySend).getInvocationIdentifier());
 
       // TODO: the false we pass here, should that be conditional on the superFactorSend being
       // a #new send?
@@ -744,7 +747,7 @@ public class NewspeakParser {
   }
 
   private boolean acceptIdentifier(final String identifier,
-      final Class<? extends Tags> tag) {
+      final Class<? extends Tag> tag) {
     if (sym == Identifier && identifier.equals(text)) {
       accept(Identifier, tag);
       return true;
@@ -752,7 +755,7 @@ public class NewspeakParser {
     return false;
   }
 
-  private boolean accept(final Symbol s, final Class<? extends Tags> tag) {
+  private boolean accept(final Symbol s, final Class<? extends Tag> tag) {
     if (sym == s) {
       SourceCoordinate coord = tag == null ? null : getCoordinate();
       getSymbolFromLexer();
@@ -764,7 +767,7 @@ public class NewspeakParser {
     return false;
   }
 
-  private boolean acceptOneOf(final Symbol[] ss, final Class<? extends Tags> tag) {
+  private boolean acceptOneOf(final Symbol[] ss, final Class<? extends Tag> tag) {
     if (symIn(ss)) {
       SourceCoordinate coord = tag == null ? null : getCoordinate();
       getSymbolFromLexer();
@@ -777,7 +780,7 @@ public class NewspeakParser {
   }
 
   private void expectIdentifier(final String identifier, final String msg,
-      final Class<? extends Tags> tag) throws ParseError {
+      final Class<? extends Tag> tag) throws ParseError {
     if (acceptIdentifier(identifier, tag)) {
       return;
     }
@@ -786,13 +789,13 @@ public class NewspeakParser {
   }
 
   private void expectIdentifier(final String identifier,
-      final Class<? extends Tags> tag) throws ParseError {
+      final Class<? extends Tag> tag) throws ParseError {
     expectIdentifier(identifier, "Unexpected token. Expected '" + identifier +
         "', but found %(found)s", tag);
   }
 
   private void expect(final Symbol s, final String msg,
-      final Class<? extends Tags> tag) throws ParseError {
+      final Class<? extends Tag> tag) throws ParseError {
     if (accept(s, tag)) {
       return;
     }
@@ -800,11 +803,11 @@ public class NewspeakParser {
     throw new ParseError(msg, s, this);
   }
 
-  protected void expect(final Symbol s, final Class<? extends Tags> tag) throws ParseError {
+  protected void expect(final Symbol s, final Class<? extends Tag> tag) throws ParseError {
     expect(s, "Unexpected symbol. Expected %(expected)s, but found %(found)s", tag);
   }
 
-  private boolean expectOneOf(final Symbol[] ss, final Class<? extends Tags> tag)
+  private boolean expectOneOf(final Symbol[] ss, final Class<? extends Tag> tag)
       throws ParseError {
     if (acceptOneOf(ss, tag)) {
       return true;
@@ -848,7 +851,7 @@ public class NewspeakParser {
     SInvokable meth = builder.assemble(body, accessModifier, getSource(coord));
 
     if (structuralProbe != null) {
-      structuralProbe.recordNewMethod(meth);
+      structuralProbe.recordNewMethod(meth.getIdentifier(), meth);
     }
     mxnBuilder.addMethod(meth);
   }
@@ -1238,6 +1241,9 @@ public class NewspeakParser {
         SInvokable blockMethod = bgenc.assemble(blockBody,
             AccessModifier.BLOCK_METHOD, lastMethodsSourceSection);
         builder.addEmbeddedBlockMethod(blockMethod);
+        if (VmSettings.TRACK_SNAPSHOT_ENTITIES && structuralProbe != null) {
+          structuralProbe.recordNewMethod(blockMethod.getIdentifier(), blockMethod);
+        }
 
         ExpressionNode result;
         if (bgenc.requiresContext() || VmSettings.TRUFFLE_DEBUGGER_ENABLED) {

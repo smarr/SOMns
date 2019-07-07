@@ -1,0 +1,262 @@
+(* Copyright (c) 2001-2015 see AUTHORS file
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the 'Software'), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED 'AS IS', WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+*)
+class SerializationTests usingPlatform: platform testFramework: minitest = Value(
+| private AsyncTestContext = minitest AsyncTestContext.
+  private actors = platform actors.
+  private String = platform kernel String.
+  private Array = platform kernel Array.
+  private TransferArray = platform kernel TransferArray.
+  private ValueArray = platform kernel ValueArray.
+  private Vector = platform kernel Vector.
+|)(
+
+  public class ValueClass new: a and: b = Value (
+  | public f1 = a.
+    public f2 = b.|
+  )()
+
+  public class SerializationTest = AsyncTestContext ()(
+
+    public class EmptyClass = ()(
+      public test = (
+        ^1.
+      )
+    )
+
+    public class ClassWithFields new: a and: b = (
+    | public f1 ::= a.
+      public f2 ::= b.
+      public f3
+      public f4
+      public f5
+      public f6
+    |)(
+      public verify: clone =(
+        ^(((((f1 = clone f1) and:
+        (f1 = clone f1)) and:
+        (f1 = clone f1)) and:
+        (f1 = clone f1)) and:
+        (f1 = clone f1)) and:
+        (f1 = clone f1)
+      )
+    )
+
+    public cloneAndVerify: obj = (
+      | clone |
+      clone:: actors snapshotClone: obj.
+      assert: (obj verify: clone).
+    )
+
+    public cloneAndEquals: obj = (
+      | clone |
+      clone:: actors snapshotClone: obj.
+      assert: obj equals: clone.
+    )
+
+    public cloneAndEqualsArray: arr = (
+      | clone |
+      clone:: actors snapshotClone: arr.
+      arr doIndexes: [ :i |
+        assert: (arr at: i) equals: (clone at: i).
+      ]
+    )
+
+    public testPrimitives = (
+      cloneAndEquals: true.
+      cloneAndEquals: false.
+      cloneAndEquals: 754235.
+      cloneAndEquals: -12312684.
+      cloneAndEquals: 234.64563.
+      cloneAndEquals: nil.
+      cloneAndEquals: 'testString123'.
+      cloneAndEquals: ''.
+    )
+
+    public testObjectWithoutFields = (
+      | original clone |
+      original:: EmptyClass new.
+      clone:: actors snapshotClone: original.
+      assert: original test equals: clone test.
+    )
+
+    public testValues = (
+      | original clone |
+      original:: ValueClass new: 'test' and: 0.2.
+      clone:: actors snapshotClone: original.
+      assert: original f1 equals: clone f1.
+      assert: original f2 equals: clone f2.
+    )
+
+    public testMutableFields = (
+      | original |
+      original:: ClassWithFields new: '' and: 0.2.
+      original f1: 'test'.
+      original f2: 15.
+      original f3: 1.634.
+      original f4: true.
+      original f5: (Array new: 3).
+      original f5 at: 1 put: 2.
+      original f5 at: 2 put: 5.
+      original f5 at: 3 put: 1.
+      original f5: EmptyClass new.
+      cloneAndVerify: original.
+    )
+
+    public testClassReference = (
+      | original clone |
+      original:: SerializationTest.
+      clone:: actors snapshotClone: original.
+      assert: original is: clone.
+    )
+
+    public testBlock = (
+      | original clone |
+      original:: [ :val :val2 |
+          val * val2.
+      ].
+      clone:: actors snapshotClone: original.
+      assert: (clone value: 21 with: 2) equals: (original value: 21 with: 2).
+    )
+
+
+    public testSimpleArrays = (
+      cloneAndEqualsArray: { 1 . 20 . 33 . 404 }.
+      cloneAndEqualsArray: { 1.523 . 2.250 . 235.33 . 436.04 }.
+      cloneAndEqualsArray: { true . false . true . true }.
+      cloneAndEqualsArray: { '1' . 'eta' . 'lorem ipsum' . 'dolor' }.
+    )
+
+    public testMixedArrays = (
+      cloneAndEqualsArray: { 1 . 'asdg3hsh' . nil . 0.3 }.
+      cloneAndEqualsArray: { true . 5 . 23 . 6 }.
+      cloneAndEqualsArray: { true . 5 . 2.3 . 6 }.
+    )
+
+    public testTransferArray = (
+      | tarr |
+      tarr:: TransferArray new: 5.
+      tarr at: 1 put: 42.
+      tarr at: 2 put: 2.1.
+      tarr at: 3 put: 'Thanks for all the fish'.
+      tarr at: 4 put: -84.
+      tarr at: 5 put: true.
+      cloneAndEqualsArray: tarr.
+    )
+
+    public testValueArray = (
+      | varr |
+      varr:: ValueArray new: 5 withAll: [ :i |
+        ^i*i.
+      ].
+      cloneAndEqualsArray: varr.
+      assert: varr isValue.
+      assert: (actors snapshotClone: varr) isValue.
+    )
+
+    public testSimplePromise = (
+      | pp p pc|
+      pp:: actors createPromisePair.
+      p:: pp promise.
+      pc:: actors snapshotClone: p.
+    )
+
+    public testAsyncCloneNotResolved = (
+      | pp p pc rp|
+      pp:: actors createPromisePair.
+      p:: pp promise.
+      pc:: actors snapshotClone: p.
+      pc whenResolved: [ :v |
+        assert: false.
+      ].
+      pp resolve: 1.
+      ^ (assert: pp promise resolvedWith: 1).
+    )
+
+    public testSimpleResolver = (
+      | pp r rc|
+      pp:: actors createPromisePair.
+      r:: pp resolver.
+      rc:: actors snapshotClone: r.
+      rc resolve: 1.
+      r resolve: 2.
+    )
+
+    public testAsyncSimplePromisePair = (
+      | pp ppc |
+      pp:: actors createPromisePair.
+      ppc:: actors snapshotClone: pp.
+      pp resolve: 42.
+      ppc resolve: 21.
+      ^ (assert: pp promise resolvedWith: 42),
+      (assert: ppc promise resolvedWith: 21).
+    )
+
+    public testAsyncCloneResolved = (
+      | pp p pc rp rp2|
+      pp:: actors createPromisePair.
+      pp resolve: 84.
+      p:: pp promise.
+      pc:: actors snapshotClone: p.
+      ^ (assert: p resolvedWith: 84),
+      (assert: pc resolvedWith: 84).
+    )
+
+     public testAsyncCloneChain = (
+      | pp pp2 pp3 ppc|
+      pp:: actors createPromisePair.
+      pp2:: actors createPromisePair.
+      pp3:: actors createPromisePair.
+      pp2 resolve: pp.
+      pp3 resolve: pp2.
+      ppc:: actors snapshotClone: pp.
+
+      ppc resolve: 42.
+      ^ assert: ppc promise resolvedWith: 42.
+      (*TODO check that pp2 and three were cloned...*)
+    )
+
+    public testAsyncClonePromiseWithMessage = (
+      | pp ppc|
+      pp:: actors createPromisePair.
+      pp promise <-: value: 42.
+      ppc:: actors snapshotClone: pp.
+      ppc resolve: [ :v |
+      ].
+      pp resolve: [ :v |
+      ].
+      ^ pp promise, ppc promise.
+    )
+
+    public testAsyncCloneCallback = (
+      | pp ppc rp |
+      pp:: actors createPromisePair.
+      pp promise whenResolved: [ :val |
+        assert: val equals: 42.
+      ].
+      ppc:: actors snapshotClone: pp.
+      pp resolve: 42.
+      ppc resolve: 42.
+      ^ (assert: pp promise resolvedWith: 42),
+      (assert: ppc promise resolvedWith: 42).
+  )
+
+  ) : ( TEST_CONTEXT = () )
+)

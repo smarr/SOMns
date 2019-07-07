@@ -117,8 +117,8 @@ class ActorHeading {
       .attr("font-size", "20px")
       .attr("text-anchor", "middle")
       .html(
-      metaModel.getActivityDef(this.activity).marker +
-      " " + this.activity.name);
+        metaModel.getActivityDef(this.activity).marker +
+        " " + this.activity.name);
 
     const that = this;
     // center position after text was rendered, and we can determine its width

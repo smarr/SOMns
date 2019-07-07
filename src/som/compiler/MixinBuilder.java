@@ -33,6 +33,7 @@ import org.graalvm.collections.EconomicMap;
 
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.tools.structure.StructuralProbe;
 import som.compiler.MixinDefinition.ClassSlotDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.MixinDefinition.SlotMutator;
@@ -52,7 +53,6 @@ import som.primitives.NewObjectPrimNodeGen;
 import som.vm.Symbols;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.language.StructuralProbe;
 
 
 /**
@@ -107,7 +107,7 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
 
   private final MixinDefinitionId mixinId;
 
-  private final StructuralProbe structuralProbe;
+  private final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe;
 
   private final SomLanguage language;
 
@@ -136,7 +136,8 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
 
   public MixinBuilder(final ScopeBuilder<?> outer, final AccessModifier accessModifier,
       final SSymbol name, final SourceSection nameSection,
-      final StructuralProbe structuralProbe, final SomLanguage language) {
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe,
+      final SomLanguage language) {
     super(outer, outer == null ? null : outer.getScope());
     this.name = name;
     this.nameSection = nameSection;
@@ -255,6 +256,14 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     mixinResolversSource = mixin;
   }
 
+  public ExpressionNode constructSuperClassResolution(final SSymbol superClass,
+      final SourceSection source) {
+    MethodBuilder def = getClassInstantiationMethodBuilder();
+    ExpressionNode selfRead = def.getSelfRead(source);
+    return SNodeFactory.createMessageSend(superClass,
+        new ExpressionNode[] {selfRead}, false, source, null, language);
+  }
+
   /**
    * The method that is used to instantiate the class object.
    * This method is based on the inheritance definition of the class.
@@ -320,6 +329,15 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     } else {
       addFactoryMethod(meth, name, false);
     }
+  }
+
+  /**
+   * Add a pre-determined set of methods to the mixin.
+   * This is currently used for constructing the class
+   * that contains primitive methods of extension modules.
+   */
+  public void addMethods(final EconomicMap<SSymbol, Dispatchable> disps) {
+    dispatchables.putAll(disps);
   }
 
   private void addFactoryMethod(final SInvokable meth, final SSymbol name,

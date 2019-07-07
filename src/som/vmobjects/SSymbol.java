@@ -28,7 +28,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.TracingBackend;
+import tools.snapshot.SnapshotBackend;
 
 
 public final class SSymbol extends SAbstractObject {
@@ -40,9 +41,13 @@ public final class SSymbol extends SAbstractObject {
   public SSymbol(final String value) {
     string = value;
     numberOfSignatureArguments = determineNumberOfSignatureArguments();
-    if (VmSettings.ACTOR_TRACING) {
+    if (VmSettings.KOMPOS_TRACING || VmSettings.ACTOR_TRACING
+        || VmSettings.TRACK_SNAPSHOT_ENTITIES) {
       symbolId = (short) idGenerator.getAndIncrement();
-      ActorExecutionTrace.logSymbol(this);
+      TracingBackend.logSymbol(this);
+      if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
+        SnapshotBackend.registerSymbol(this);
+      }
     } else {
       symbolId = 0;
     }

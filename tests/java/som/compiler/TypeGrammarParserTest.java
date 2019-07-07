@@ -1,17 +1,17 @@
 package som.compiler;
 
+import static org.junit.Assert.assertTrue;
+
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import com.oracle.truffle.api.source.MissingMIMETypeException;
-import com.oracle.truffle.api.source.MissingNameException;
 import com.oracle.truffle.api.source.Source;
 
+import bd.tools.structure.StructuralProbe;
 import som.compiler.NewspeakParser.ParseError;
 import som.interpreter.SomLanguage;
-import tools.language.StructuralProbe;
 
 
 @RunWith(Parameterized.class)
@@ -34,33 +34,30 @@ public class TypeGrammarParserTest {
   }
 
   @Test
-  public void testNormalType() throws RuntimeException,
-      MissingMIMETypeException, MissingNameException, ParseError {
+  public void testNormalType() throws RuntimeException, ParseError {
     // add a space so that lexer stops lexing
     String testString = content + " ";
     TypeParser tp = createParser(testString);
     tp.parseType();
+    assertTrue("Should reach here, and parse without error", true);
   }
 
   @Test
-  public void testReturnType() throws RuntimeException,
-      MissingMIMETypeException, MissingNameException, ParseError {
+  public void testReturnType() throws RuntimeException, ParseError {
     // add a space so that lexer stops lexing
     String testString = "^ " + content + " ";
     TypeParser tp = createParser(testString);
     tp.parseReturnType();
+    assertTrue("Should reach here, and parse without error", true);
   }
 
-  private TypeParser createParser(final String testString)
-      throws MissingMIMETypeException, MissingNameException, ParseError {
-    Source s =
-        Source.newBuilder(testString).name("test.ns").mimeType(SomLanguage.MIME_TYPE).build();
+  private TypeParser createParser(final String testString) throws ParseError {
+    Source s = SomLanguage.getSyntheticSource(testString, "test.ns");
     NewspeakParser p = new NewspeakParser(
-        testString, testString.length(), s, new StructuralProbe(),
+        testString, testString.length(), s, new StructuralProbe<>(),
         new SomLanguage());
 
     TypeParser tp = new TypeParser(p);
     return tp;
   }
-
 }

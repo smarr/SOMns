@@ -3,6 +3,7 @@ package som.primitives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.Primitive;
 import bd.primitives.Specializer;
@@ -23,11 +24,11 @@ public abstract class DoublePrims {
       receiverType = Double.class)
   public abstract static class RoundPrim extends UnaryBasicOperation {
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == OpArithmetic.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 
@@ -42,11 +43,11 @@ public abstract class DoublePrims {
       receiverType = Double.class)
   public abstract static class AsIntPrim extends UnaryBasicOperation {
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == OpArithmetic.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 
@@ -57,9 +58,8 @@ public abstract class DoublePrims {
   }
 
   public static class IsDoubleClass extends Specializer<VM, ExpressionNode, SSymbol> {
-    public IsDoubleClass(final Primitive prim, final NodeFactory<ExpressionNode> fact,
-        final VM vm) {
-      super(prim, fact, vm);
+    public IsDoubleClass(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact);
     }
 
     @Override
@@ -79,11 +79,11 @@ public abstract class DoublePrims {
       specializer = IsDoubleClass.class)
   public abstract static class PositiveInfinityPrim extends UnaryExpressionNode {
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == LiteralTag.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 

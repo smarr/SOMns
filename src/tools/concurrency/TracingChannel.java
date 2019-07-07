@@ -33,7 +33,7 @@ public final class TracingChannel extends SChannel {
       try {
         return super.read();
       } finally {
-        ActorExecutionTrace.receiveOperation(ReceiveOp.CHANNEL_RCV, current.channelId);
+        KomposTrace.receiveOperation(ReceiveOp.CHANNEL_RCV, current.channelId);
       }
     }
   }
@@ -52,7 +52,7 @@ public final class TracingChannel extends SChannel {
         current.messageId += 1;
         super.write(value);
       } finally {
-        ActorExecutionTrace.sendOperation(
+        KomposTrace.sendOperation(
             SendOp.CHANNEL_SEND, current.messageId, current.channelId);
       }
     }

@@ -9,6 +9,7 @@ import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
 import bd.primitives.Primitive;
@@ -34,7 +35,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SSymbol;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.KomposTrace;
 import tools.concurrency.Tags.CreatePromisePair;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.Tags.OnError;
@@ -49,9 +50,8 @@ import tools.debugger.session.Breakpoints;
 public final class PromisePrims {
 
   public static class IsActorModule extends Specializer<VM, ExpressionNode, SSymbol> {
-    public IsActorModule(final Primitive prim, final NodeFactory<ExpressionNode> fact,
-        final VM vm) {
-      super(prim, fact, vm);
+    public IsActorModule(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact);
     }
 
     @Override
@@ -105,12 +105,12 @@ public final class PromisePrims {
     private static final SSymbol withAndFactory = Symbols.symbolFor("with:and:");
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == CreatePromisePair.class || tag == ExpressionBreakpoint.class
           || tag == StatementTag.class) {
         return true;
       }
-      return super.isTaggedWithIgnoringEagerness(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
 
   }
@@ -172,8 +172,9 @@ public final class PromisePrims {
       PromiseCallbackMessage pcm = new PromiseCallbackMessage(rcvr.getOwner(),
           block, resolver, blockCallTarget, false,
           promiseResolverBreakpoint.executeShouldHalt(), rcvr);
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, pcm.getMessageId(),
+
+      if (VmSettings.KOMPOS_TRACING) {
+        KomposTrace.sendOperation(SendOp.PROMISE_MSG, pcm.getMessageId(),
             rcvr.getPromiseId());
       }
       registerNode.register(rcvr, pcm, current);
@@ -182,12 +183,12 @@ public final class PromisePrims {
     }
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == WhenResolved.class || tag == ExpressionBreakpoint.class
           || tag == StatementTag.class) {
         return true;
       }
-      return super.isTaggedWithIgnoringEagerness(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
   }
 
@@ -238,8 +239,9 @@ public final class PromisePrims {
       PromiseCallbackMessage msg = new PromiseCallbackMessage(rcvr.getOwner(),
           block, resolver, blockCallTarget, false,
           promiseResolverBreakpoint.executeShouldHalt(), rcvr);
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(),
+
+      if (VmSettings.KOMPOS_TRACING) {
+        KomposTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(),
             rcvr.getPromiseId());
       }
       registerNode.register(rcvr, msg, current);
@@ -248,12 +250,12 @@ public final class PromisePrims {
     }
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == OnError.class || tag == ExpressionBreakpoint.class
           || tag == StatementTag.class) {
         return true;
       }
-      return super.isTaggedWithIgnoringEagerness(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
   }
 
@@ -317,10 +319,10 @@ public final class PromisePrims {
       PromiseCallbackMessage onError = new PromiseCallbackMessage(rcvr.getOwner(), error,
           resolver, errorTarget, false, promiseResolverBreakpoint.executeShouldHalt(), rcvr);
 
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, onResolved.getMessageId(),
+      if (VmSettings.KOMPOS_TRACING) {
+        KomposTrace.sendOperation(SendOp.PROMISE_MSG, onResolved.getMessageId(),
             rcvr.getPromiseId());
-        ActorExecutionTrace.sendOperation(SendOp.PROMISE_MSG, onError.getMessageId(),
+        KomposTrace.sendOperation(SendOp.PROMISE_MSG, onError.getMessageId(),
             rcvr.getPromiseId());
       }
 
@@ -332,12 +334,12 @@ public final class PromisePrims {
     }
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == WhenResolvedOnError.class || tag == ExpressionBreakpoint.class
           || tag == StatementTag.class) {
         return true;
       }
-      return super.isTaggedWithIgnoringEagerness(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
 
   }

@@ -157,7 +157,7 @@ class FileTests usingPlatform: platform testFramework: minitest = Value (
       assert: cnt = 3.
     )
 
-    public testMove =(
+    public testMove = (
       | f g |
       f:: FilePath for: path + '/tmp'.
       f open: #readWrite.

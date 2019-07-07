@@ -4,17 +4,14 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
 import bd.primitives.Primitive;
-import bd.tools.nodes.Operation;
-import som.VM;
 import som.interpreter.nodes.ExpressionNode;
-import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.specialized.AndMessageNode.AndOrSplzr;
 import som.interpreter.nodes.specialized.OrMessageNode.OrSplzr;
-import som.interpreter.nodes.specialized.OrMessageNodeFactory.OrBoolMessageNodeFactory;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.dym.Tags.ControlFlowCondition;
@@ -27,8 +24,8 @@ import tools.dym.Tags.OpComparison;
 public abstract class OrMessageNode extends BinaryComplexOperation {
   public static final class OrSplzr extends AndOrSplzr {
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public OrSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact, final VM vm) {
-      super(prim, fact, (NodeFactory) OrBoolMessageNodeFactory.getInstance(), vm);
+    public OrSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact, (NodeFactory) OrBoolMessageNodeFactory.getInstance());
     }
   }
 
@@ -42,13 +39,13 @@ public abstract class OrMessageNode extends BinaryComplexOperation {
   }
 
   @Override
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
     if (tag == ControlFlowCondition.class) {
       return true;
     } else if (tag == OpComparison.class) {
       return true;
     } else {
-      return super.isTaggedWithIgnoringEagerness(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
   }
 
@@ -62,34 +59,6 @@ public abstract class OrMessageNode extends BinaryComplexOperation {
       return true;
     } else {
       return (boolean) blockValueSend.call(new Object[] {argument});
-    }
-  }
-
-  @GenerateNodeFactory
-  public abstract static class OrBoolMessageNode extends BinaryBasicOperation
-      implements Operation {
-    @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-      if (tag == OpComparison.class) {
-        return true;
-      } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
-      }
-    }
-
-    @Specialization
-    public final boolean doOr(final boolean receiver, final boolean argument) {
-      return receiver || argument;
-    }
-
-    @Override
-    public String getOperation() {
-      return "||";
-    }
-
-    @Override
-    public int getNumArguments() {
-      return 2;
     }
   }
 }

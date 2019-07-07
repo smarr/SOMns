@@ -10,8 +10,8 @@ import bd.primitives.Primitive;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
+import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.nodes.specialized.SomLoop;
-import som.primitives.SizeAndLengthPrim;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray.SMutableArray;
@@ -23,7 +23,7 @@ import som.vmobjects.SObjectWithClass;
 @ImportStatic(Nil.class)
 @Primitive(selector = "putAll:", disabled = true,
     extraChild = SizeAndLengthPrimFactory.class, receiverType = SMutableArray.class)
-@NodeChild(value = "length", type = SizeAndLengthPrim.class, executeWith = "receiver")
+@NodeChild(value = "length", type = UnaryExpressionNode.class, executeWith = "receiver")
 public abstract class PutAllNode extends BinaryComplexOperation {
   @Child protected BlockDispatchNode block = BlockDispatchNodeGen.create();
   // TODO: tag properly, it is a loop, and array access

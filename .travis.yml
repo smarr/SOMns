@@ -1,6 +1,7 @@
 language: java
 jdk:
   - oraclejdk8
+dist: trusty
 sudo: false
 env:
   global:
@@ -19,54 +20,58 @@ matrix:
     - env: TASK=kompos-tests
     - env: TASK=replay1-tests
     - env: TASK=replay2-tests
+    - env: TASK=snapshot-tests
+    - env: TASK=native
 
     - os:   linux
       dist: trusty
-      jdk:  oraclejdk9
+      jdk:  openjdk11
       env:  TASK=unit-tests
-
-    - os:   linux
-      dist: trusty
-      jdk:  oraclejdk8
-      env:  TASK=unit-tests JDK=10
-      before_install: |
-        mkdir jdk10
-        cd jdk10
-        wget https://download.java.net/java/GA/jdk10/10/binaries/openjdk-10_linux-x64_bin.tar.gz
-        tar -xzf openjdk-10_linux-x64_bin.tar.gz
-        export JAVA_HOME=`pwd`/jdk-10
-        export PATH=${JAVA_HOME}/bin:$PATH
-        cd ..
 
     - os: osx
-      osx_image: xcode9.2
+      osx_image: xcode9.3
       language: generic
       env:  TASK=unit-tests
-      before_install: |
-        brew tap caskroom/versions
-        brew cask reinstall java
-        brew install ant
-        export JAVA_HOME=`/usr/libexec/java_home`
 
-  allow_failures:
-    - env: TASK=replay1-tests
-    - env: TASK=replay2-tests
+before_install:
+  - |
+   run() {
+     ID=`echo "$@" | sed -e 's/ /_/g'`
+     STR=`echo "$@"`
+     printf "travis_fold:start:$ID\n$STR\n"
+     eval "$@"
+     RESULT_EVAL=$?
+     printf "travis_fold:end:$ID\n"
+     return $RESULT_EVAL
+   }
+   if [ "$TRAVIS_OS_NAME" = "osx" ]
+   then
+     brew update
+     brew install ant
+   fi
+
 
 install: |
+  printf "travis_fold:start:downloads\nLoad JDK and/or Eclipse\n"
+
   if [ "$TASK" = "checkstyle" ]
   then
     export ECLIPSE_TAR=eclipse.tar.gz
     export ECLIPSE_URL=http://archive.eclipse.org/eclipse/downloads/drops4/R-4.6.3-201703010400/eclipse-SDK-4.6.3-linux-gtk-x86_64.tar.gz
-    wget ${ECLIPSE_URL} -O ${ECLIPSE_TAR}
+    wget --progress=bar:force ${ECLIPSE_URL} -O ${ECLIPSE_TAR}
     tar -C ${TRAVIS_BUILD_DIR}/.. -xzf ${ECLIPSE_TAR}
     export ECLIPSE_EXE=${TRAVIS_BUILD_DIR}/../eclipse/eclipse
   fi
-  export SG=-Dskip.graal=true
+  export ANT="ant -e"
+  printf "travis_fold:end:downloads\n"
+
 
 script:
-  - if [ "$TASK" = "core-tests"    ]; then ant $SG core-tests    && ant $SG coverage; fi
-  - if [ "$TASK" = "checkstyle"    ]; then ant $SG checkstyle    && ant $SG eclipseformat-check && cd tools/kompos && nvm install 7 && npm install && npm run lint; fi
-  - if [ "$TASK" = "kompos-tests"  ]; then nvm install 8         && ant $SG && cd tools/kompos && npm -s run verify && npm test; fi
-  - if [ "$TASK" = "replay1-tests" ]; then ant $SG compile       && ./tests/replay/test.sh 1; fi
-  - if [ "$TASK" = "replay2-tests" ]; then ant $SG compile       && ./tests/replay/test.sh 2; fi
-  - if [ "$TASK" = "unit-tests"    ]; then ant compile           && ./som core-lib/TestSuite/TestRunner.ns; fi
+  - if [ "$TASK" = "core-tests"    ]; then $ANT core-tests    && $ANT serialization-tests && $ANT coverage; fi
+  - if [ "$TASK" = "checkstyle"    ]; then $ANT checkstyle    && $ANT eclipseformat-check && run cd tools/kompos && nvm install 7 && run npm install && run npm run lint; fi
+  - if [ "$TASK" = "kompos-tests"  ]; then run nvm install 8  && $ANT && cd tools/kompos  && run npm -s run verify && run npm test; fi
+  - if [ "$TASK" = "replay1-tests" ]; then $ANT compile       && run ./tests/replay/test.sh 1; fi
+  - if [ "$TASK" = "replay2-tests" ]; then $ANT compile       && run ./tests/replay/test.sh 2; fi
+  - if [ "$TASK" = "snapshot-tests" ]; then $ANT compile      && run ./tests/snapshot/test.sh; fi
+  - if [ "$TASK" = "unit-tests"    ]; then $ANT compile       && run ./som core-lib/TestSuite/TestRunner.ns; fi
+  - if [ "$TASK" = "native"        ]; then $ANT native; fi

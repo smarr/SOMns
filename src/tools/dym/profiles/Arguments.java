@@ -25,12 +25,29 @@ public final class Arguments {
 
   private static Class<?>[] getJavaTypes(final Object[] args) {
     // remove the <?> because of checkstyle issue
-    return Arrays.stream(args).map(e -> e.getClass()).toArray(Class[]::new);
+    Class<?>[] result = new Class<?>[args.length];
+
+    for (int i = 0; i < args.length; i += 1) {
+      Object e = args[i];
+      if (e != null) {
+        result[i] = e.getClass();
+      }
+    }
+
+    return result;
   }
 
   private static ClassFactory[] getSomTypes(final Object[] args) {
-    return Arrays.stream(args).map(e -> Types.getClassOf(e).getInstanceFactory())
-                 .toArray(ClassFactory[]::new);
+    ClassFactory[] result = new ClassFactory[args.length];
+
+    for (int i = 0; i < args.length; i += 1) {
+      Object e = args[i];
+      if (e != null) {
+        result[i] = Types.getClassOf(e).getInstanceFactory();
+      }
+    }
+
+    return result;
   }
 
   @Override

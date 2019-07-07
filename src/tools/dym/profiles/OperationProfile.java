@@ -34,6 +34,7 @@ public final class OperationProfile extends Counter {
         new Arguments(args), 1, Integer::sum);
   }
 
+  @TruffleBoundary
   public void enterMainNode() {
     argumentsForExecutions.push(new Object[numArgsAndResult]);
   }

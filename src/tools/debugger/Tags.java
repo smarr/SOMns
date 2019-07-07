@@ -21,6 +21,7 @@
  */
 package tools.debugger;
 
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.SourceSection;
 
 
@@ -32,14 +33,14 @@ public abstract class Tags {
    * Elements that are not preserved in the AST should reported via
    * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
-  public final class KeywordTag extends Tags {
+  public final class KeywordTag extends Tag {
     private KeywordTag() {}
   }
 
   /**
    * Marks literal values.
    */
-  public final class LiteralTag extends Tags {
+  public final class LiteralTag extends Tag {
     private LiteralTag() {}
   }
 
@@ -48,7 +49,7 @@ public abstract class Tags {
    * Elements that are not preserved in the AST should reported via
    * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
-  public final class CommentTag extends Tags {
+  public final class CommentTag extends Tag {
     private CommentTag() {}
   }
 
@@ -58,7 +59,7 @@ public abstract class Tags {
    * Elements that are not preserved in the AST should reported via
    * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
-  public final class IdentifierTag extends Tags {
+  public final class IdentifierTag extends Tag {
     private IdentifierTag() {}
   }
 
@@ -67,7 +68,7 @@ public abstract class Tags {
    * Formal arguments that are not preserved in the AST should reported via
    * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
-  public final class ArgumentTag extends Tags {
+  public final class ArgumentTag extends Tag {
     private ArgumentTag() {}
   }
 
@@ -76,7 +77,7 @@ public abstract class Tags {
    * Variable declarations that are not part of the AST should be reported via
    * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
-  public final class LocalVariableTag extends Tags {
+  public final class LocalVariableTag extends Tag {
     private LocalVariableTag() {}
   }
 
@@ -85,7 +86,7 @@ public abstract class Tags {
    * Elements that are not preserved in the AST should reported via
    * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
-  public final class StatementSeparatorTag extends Tags {
+  public final class StatementSeparatorTag extends Tag {
     private StatementSeparatorTag() {}
   }
 
@@ -94,7 +95,7 @@ public abstract class Tags {
    * Elements that are not preserved in the AST should reported via
    * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
-  public final class DelimiterOpeningTag extends Tags {
+  public final class DelimiterOpeningTag extends Tag {
     private DelimiterOpeningTag() {}
   }
 
@@ -103,7 +104,7 @@ public abstract class Tags {
    * Elements that are not preserved in the AST should reported via
    * {@link VM#reportSyntaxElement(Class, SourceSection)}.
    */
-  public final class DelimiterClosingTag extends Tags {
+  public final class DelimiterClosingTag extends Tag {
     private DelimiterClosingTag() {}
   }
 }

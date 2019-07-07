@@ -113,7 +113,7 @@ class ImpactHarness usingPlatform: platform = Value (
         pp:: actors createPromisePair.
 
         timeout > 0 ifTrue: [
-          actors after: timeout do: [ :r |
+          actors after: timeout do: [
             pp resolve: 1.
         ] ].
 

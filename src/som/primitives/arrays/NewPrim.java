@@ -3,6 +3,7 @@ package som.primitives.arrays;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.Primitive;
 import bd.primitives.Specializer;
@@ -23,9 +24,8 @@ import tools.dym.Tags.NewArray;
     specializer = NewPrim.IsArrayClass.class)
 public abstract class NewPrim extends BinaryExpressionNode {
   public static class IsArrayClass extends Specializer<VM, ExpressionNode, SSymbol> {
-    public IsArrayClass(final Primitive prim, final NodeFactory<ExpressionNode> fact,
-        final VM vm) {
-      super(prim, fact, vm);
+    public IsArrayClass(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact);
     }
 
     @Override
@@ -35,11 +35,11 @@ public abstract class NewPrim extends BinaryExpressionNode {
   }
 
   @Override
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
     if (tag == NewArray.class) {
       return true;
     } else {
-      return super.isTaggedWithIgnoringEagerness(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
   }
 

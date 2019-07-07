@@ -8,22 +8,22 @@ class StreamTests usingPlatform: platform testFramework: minitest = Value (
   private Array       = platform kernel Array.
   private ObjectMirror = platform mirrors ObjectMirror.
   private errorTestMessage = 'test exception 1'.
-  private Streams = platform streams.
-  private Files = platform files.
-  private fdes = Files FileDescriptor.
-  private filePath = Files FilePath.
-|
-)(
+  private streams     = platform streams.
+  private FileDescriptor = platform files FileDescriptor.
+  private FilePath    = platform files FilePath.
+  private modulePath = (platform mirrors ObjectMirror reflecting: self) classMirror classDefinition filePath.
+|)(
   public class BasicStreamTests = TestContext (
-    | path testString|
-    path:: (filePath currentDirectory / 'tests' / 'streams') pattern.
-    testString:: 'This is a test String, it is written to a file via a 
-    readWriteStream, and then read and checked to make sure it works'.
-  )(
+  | private path = ((FilePath for: modulePath)
+                     containingDirectory
+                     containingDirectory
+                     containingDirectory / 'tests' / 'streams') pattern.
+    private testString = 'This is a test String, it is written to a file via a readWriteStream, and then read and checked to make sure it works.'.
+  |)(
     public testReadBinary = (
       | fp cc b |
       (*file contains bytes with increasing values, starting with 1*)
-      fp:: filePath for: path + '/Binary.blob'.
+      fp:: FilePath for: path + '/Binary.blob'.
       cc:: fp readStream.
 
       (*verify stream is at beginning*)
@@ -48,26 +48,26 @@ class StreamTests usingPlatform: platform testFramework: minitest = Value (
 
       (*stream is at end*)
       assert: cc atEnd.
-      
+
       cc close.
     )
 
     public testWriteBinary = (
       | fp cc t |
-      fp:: filePath for: path + '/a.txt'.
+      fp:: FilePath for: path + '/a.txt'.
       cc:: fp writeStream.
       1 to: 20 do: [ :i|
         cc put: i.
       ].
-      
+
       cc close.
     )
 
 
     public testReadWriteBinary = (
       | fp cc t |
-        
-      fp:: filePath for: path + '/bin.txt'.
+
+      fp:: FilePath for: path + '/bin.txt'.
       cc:: fp readWriteStream.
 
       assert: cc position = 0.
@@ -78,7 +78,7 @@ class StreamTests usingPlatform: platform testFramework: minitest = Value (
       cc close.
 
 
-      fp:: filePath for: path + '/bin.txt'.
+      fp:: FilePath for: path + '/bin.txt'.
       cc:: fp readWriteStream.
       deny: cc atEnd.
       t:: (cc next: (cc size)).
@@ -90,8 +90,8 @@ class StreamTests usingPlatform: platform testFramework: minitest = Value (
 
     public testReadCharacter = (
       | fp cc t |
-      fp:: filePath for: path + '/Text.t'.
-      cc:: Streams CharacterReadConverter on: fp readStream.
+      fp:: FilePath for: path + '/Text.t'.
+      cc:: streams CharacterReadConverter on: fp readStream.
 
       deny: cc atEnd.
 
@@ -103,21 +103,21 @@ class StreamTests usingPlatform: platform testFramework: minitest = Value (
 
     public testReadWriteCharacter = (
       | fp cc t |
-      fp:: filePath for: path + '/test.txt'.
-      cc:: Streams CharacterInputOutputConverter on: fp readWriteStream.
+      fp:: FilePath for: path + '/test.txt'.
+      cc:: streams CharacterInputOutputConverter on: fp readWriteStream.
       cc putAll: testString.
       cc close.
 
-      fp:: filePath for: path + '/test.txt'.
-      cc:: Streams CharacterInputOutputConverter on: fp readWriteStream.
+      fp:: FilePath for: path + '/test.txt'.
+      cc:: streams CharacterInputOutputConverter on: fp readWriteStream.
 
-      assert: cc position = 0.
-      deny: cc atEnd.
+      assert: cc position equals: 0.
+      deny: cc atEnd description: 'Stream cannot to be at end when just opend'.
 
       t:: (cc next: (cc size)).
       cc close.
 
-      assert: t = testString.
+      assert: t equals: testString.
     )
 
     public testCollectionReadStream = (
@@ -127,7 +127,7 @@ class StreamTests usingPlatform: platform testFramework: minitest = Value (
         v append: i.
       ].
 
-      cs:: Streams SeqCltnReadStream on: v.
+      cs:: streams SeqCltnReadStream on: v.
       assert: cs position = 0.
       deny: cs atEnd.
 
@@ -140,7 +140,7 @@ class StreamTests usingPlatform: platform testFramework: minitest = Value (
     public testCollectionReadWriteStream = (
       | v cs |
       v:: Array new: 20.
-      cs:: Streams SeqCltnReadWriteStream on: v.
+      cs:: streams SeqCltnReadWriteStream on: v.
       1 to: 20 do: [ :i|
         cs put: i.
       ].

@@ -7,7 +7,10 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.GenerateWrapper;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.Primitive;
 import bd.tools.nodes.Operation;
@@ -56,11 +59,11 @@ public final class ObjectPrims {
     }
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == AlwaysHalt.class) {
         return true;
       }
-      return super.isTaggedWithIgnoringEagerness(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
   }
 
@@ -83,11 +86,11 @@ public final class ObjectPrims {
   @Primitive(selector = "isNil", noWrapper = true)
   public abstract static class IsNilNode extends UnaryBasicOperation implements Operation {
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == OpComparison.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 
@@ -112,11 +115,11 @@ public final class ObjectPrims {
   public abstract static class NotNilNode extends UnaryBasicOperation
       implements Operation {
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == OpComparison.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 
@@ -142,13 +145,21 @@ public final class ObjectPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "objIsValue:")
   @ImportStatic(Nil.class)
-  @Instrumentable(factory = IsValueWrapper.class)
+  @GenerateWrapper
   public abstract static class IsValue extends UnaryExpressionNode {
     protected IsValue() {}
 
     protected IsValue(final IsValue node) {}
 
-    public abstract boolean executeEvaluated(Object rcvr);
+    @Override
+    public abstract Object executeEvaluated(VirtualFrame frame, Object rcvr);
+
+    public abstract boolean executeBoolean(VirtualFrame frame, Object rcvr);
+
+    @Override
+    public WrapperNode createWrapper(final ProbeNode probe) {
+      return new IsValueWrapper(this, probe);
+    }
 
     public static IsValue createSubNode() {
       return IsValueFactory.create(null);
@@ -205,9 +216,9 @@ public final class ObjectPrims {
     }
 
     @Specialization
-    public final boolean isValue(final SClass rcvr,
+    public final boolean isValue(final VirtualFrame frame, final SClass rcvr,
         @Cached("createSubNode()") final IsValue enclosingObj) {
-      return enclosingObj.executeEvaluated(rcvr.getEnclosingObject());
+      return enclosingObj.executeBoolean(frame, rcvr.getEnclosingObject());
     }
 
     @Specialization
