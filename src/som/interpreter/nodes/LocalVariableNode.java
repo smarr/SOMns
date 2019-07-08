@@ -25,9 +25,9 @@ import tools.dym.Tags.LocalVarWrite;
 
 public abstract class LocalVariableNode extends ExprWithTagsNode
     implements Invocation<SSymbol> {
-  protected final FrameSlot       slot;
-  protected final FrameDescriptor descriptor;
-  protected final Local           var;
+  protected final FrameSlot         slot;
+  protected final FrameDescriptor   descriptor;
+  protected final Local             var;
   protected final SomStructuralType type;
 
   @Child protected TypeCheckNode typeCheck;
