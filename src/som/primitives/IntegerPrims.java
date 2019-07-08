@@ -171,11 +171,11 @@ public abstract class IntegerPrims {
       selector = "intAsCodepointString", receiverType = Long.class)
   public abstract static class IntAsCodepointStringPrim extends UnaryBasicOperation {
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == OpArithmetic.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
 
