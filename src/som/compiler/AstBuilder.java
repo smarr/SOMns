@@ -472,7 +472,9 @@ public class AstBuilder {
         if (!(argumentExpression instanceof LiteralNode)) {
           if ((argumentExpression instanceof ResolvingImplicitReceiverSend)) {
             String argName =
-                ((AbstractMessageSendNode) argumentExpression).getSelector().getString() + "'";
+                ((AbstractMessageSendNode) argumentExpression).getInvocationIdentifier()
+                                                              .getString()
+                    + "'";
             argumentExpression =
                 builder.getInitializerMethodBuilder().getReadNode(symbolFor(argName),
                     sourceSection);
@@ -516,7 +518,9 @@ public class AstBuilder {
         if (!(argumentExpression instanceof LiteralNode)) {
           if ((argumentExpression instanceof ResolvingImplicitReceiverSend)) {
             String argName =
-                ((AbstractMessageSendNode) argumentExpression).getSelector().getString() + "'";
+                ((AbstractMessageSendNode) argumentExpression).getInvocationIdentifier()
+                                                              .getString()
+                    + "'";
             argumentExpression =
                 builder.getInitializerMethodBuilder().getReadNode(symbolFor(argName),
                     sourceSection);
