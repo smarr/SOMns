@@ -53,7 +53,7 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
   protected CachedSlotRead() {
     super(null);
     this.type = null;
-    this.guard = null;
+    this.guardForRcvr = null;
   }
 
   @Override

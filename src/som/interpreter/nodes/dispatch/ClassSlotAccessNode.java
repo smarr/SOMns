@@ -48,7 +48,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
     this.mixinDef = mixinDef;
     this.slotDef = slotDef;
     this.instantiation = ClassInstantiationNodeGen.create(mixinDef);
-    this.objectSlotIsAllocated = guard.isObjectSlotAllocated(slotDef);
+    this.objectSlotIsAllocated = guardForRcvr.isObjectSlotAllocated(slotDef);
   }
 
   @Override
