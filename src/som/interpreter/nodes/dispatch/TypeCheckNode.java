@@ -134,5 +134,5 @@ public abstract class TypeCheckNode extends Node {
     throwTypeError(obj, null);
   }
 
-  public abstract void executeTypeCheck(final Object obj);
+  public abstract void executeTypeCheck(Object obj);
 }

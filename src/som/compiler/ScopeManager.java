@@ -118,7 +118,7 @@ public class ScopeManager {
 
   /**
    * Creates a builder that makes a class for the object sitting at the top of the object
-   * stack
+   * stack.
    */
   public MixinBuilder newClazz(final SSymbol name, final SourceSection sourceSection) {
     MixinBuilder builder =
@@ -131,7 +131,7 @@ public class ScopeManager {
   }
 
   /**
-   * Creates a builder that makes an object literal inside the current method
+   * Creates a builder that makes an object literal inside the current method.
    */
   public MixinBuilder newObject(final SSymbol clazzName, final SourceSection empty) {
     MixinBuilder builder =
@@ -145,7 +145,7 @@ public class ScopeManager {
 
   /**
    * Creates a builder that makes a method for the object sitting at the top of the object
-   * stack
+   * stack.
    *
    * @param name - the name for the module
    * @param sourceSection - the source for the module (can be line 1, column 1 of the source
@@ -161,7 +161,7 @@ public class ScopeManager {
   }
 
   /**
-   * Creates a builder that makes a block in the method sitting at the top of the method stack
+   * Creates a builder that makes a block in the method sitting at the top of the method stack.
    */
   public MethodBuilder newBlock(final SSymbol signature) {
     MethodBuilder builder = new MethodBuilder(peekMethod());

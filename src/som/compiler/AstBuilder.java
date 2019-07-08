@@ -759,7 +759,7 @@ public class AstBuilder {
     }
 
     /**
-     * Creates a request to the SOM platform module
+     * Creates a request to the SOM platform module.
      */
     private ExpressionNode platformModule() {
       MethodBuilder method = scopeManager.peekMethod();

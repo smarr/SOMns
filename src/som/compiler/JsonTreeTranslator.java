@@ -170,7 +170,7 @@ public class JsonTreeTranslator {
   }
 
   /**
-   * Gets the value of the path field in a {@link JsonObject}
+   * Gets the value of the path field in a {@link JsonObject}.
    */
   private String path(final JsonObject node) {
     if (node.get("path").isJsonObject()) {
@@ -656,7 +656,7 @@ public class JsonTreeTranslator {
 
   /**
    * Builds an explicit send by translating the receiver and the arguments of the given
-   * request node
+   * request node.
    */
   public ExpressionNode explicit(final SSymbol selector, final JsonObject receiver,
       final JsonObject[] arguments, final SourceSection source) {
