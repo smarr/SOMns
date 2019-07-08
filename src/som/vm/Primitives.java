@@ -217,12 +217,10 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     add(allFactories, BitXorPrimFactory.getInstance());
     add(allFactories, CopyPrimFactory.getInstance());
     add(allFactories, CosPrimFactory.getInstance());
-    add(allFactories, DividePrimFactory.getInstance());
     add(allFactories, DoIndexesPrimFactory.getInstance());
     add(allFactories, DoPrimFactory.getInstance());
     add(allFactories, DoubleDivPrimFactory.getInstance());
     add(allFactories, EqualsEqualsPrimFactory.getInstance());
-    add(allFactories, EqualsPrimFactory.getInstance());
     add(allFactories, ExpPrimFactory.getInstance());
     add(allFactories, GreaterThanOrEqualPrimFactory.getInstance());
     add(allFactories, GreaterThanPrimFactory.getInstance());
