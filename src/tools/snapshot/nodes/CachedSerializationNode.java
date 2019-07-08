@@ -27,7 +27,7 @@ public abstract class CachedSerializationNode extends AbstractSerializationNode 
   @Specialization
   public void serialize(final Object o, final SnapshotBuffer sb) {
     try {
-      if (guard.entryMatches(o)) {
+      if (guard.entryMatches(o, null)) {
         cachedSerializer.execute(o, sb);
       } else {
         Types.getClassOf(o).serialize(o, sb);

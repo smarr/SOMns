@@ -184,7 +184,7 @@ public final class ObjectSystem {
         ss, null, compiler.getLanguage());
     MethodBuilder primFactor = mixin.getPrimaryFactoryMethodBuilder();
 
-    primFactor.addArgument(Symbols.SELF, ss);
+    primFactor.addArgument(Symbols.SELF, null, ss);
     primFactor.setSignature(Symbols.NEW);
 
     mixin.setupInitializerBasedOnPrimaryFactory(ss);

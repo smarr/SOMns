@@ -22,7 +22,8 @@ public class SafepointPhaserTest {
   private final ObjectLayout layout;
 
   public SafepointPhaserTest() {
-    SlotDefinition slotDef = new SlotDefinition(null, AccessModifier.PUBLIC, false, null);
+    SlotDefinition slotDef = new SlotDefinition(
+        null, null, AccessModifier.PUBLIC, false, null);
     EconomicSet<SlotDefinition> instanceSlots = EconomicSet.create();
     instanceSlots.add(slotDef);
 
