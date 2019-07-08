@@ -40,13 +40,15 @@ import com.google.gson.JsonObject;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.tools.structure.StructuralProbe;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
 import som.vm.SomStructuralType;
 import som.vm.VmSettings;
+import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.language.StructuralProbe;
 
 
 /**
@@ -69,7 +71,8 @@ public class JsonTreeTranslator {
   private final JsonObject jsonAST;
 
   public JsonTreeTranslator(final JsonObject jsonAST, final Source source,
-      final SomLanguage language, final StructuralProbe probe) {
+      final SomLanguage language,
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> probe) {
     this.language = language;
 
     this.scopeManager = new ScopeManager(language, probe);

@@ -79,7 +79,7 @@ public class SourcecodeCompiler {
   private Map<String, MixinDefinition> alreadyLoaded = new HashMap<String, MixinDefinition>();
 
   public MixinDefinition compileGraceModule(final Source source,
-      final StructuralProbe structuralProbe)
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe)
       throws ProgramDefinitionError, IOException {
     String filepath = source.getURI().getPath();
     if (alreadyLoaded.containsKey(filepath)) {
@@ -123,7 +123,7 @@ public class SourcecodeCompiler {
    * @throws IOException
    */
   public MixinDefinition compileModule(final Source source,
-      final StructuralProbe structuralProbe)
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe)
       throws ProgramDefinitionError, IOException {
     final String path = source.getURI().getPath();
 
