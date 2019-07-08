@@ -10,11 +10,12 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.Types;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectLayout;
 import som.vm.SomStructuralType;
+import som.vm.Symbols;
 import som.vm.VmSettings;
-import som.vm.constants.KernelObj;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
@@ -37,13 +38,15 @@ public abstract class TypeCheckNode extends Node {
 
   private void throwTypeError(final Object obj, final SomStructuralType actualType) {
     CompilerDirectives.transferToInterpreter();
+
+    ExceptionSignalingNode exNode = ExceptionSignalingNode.createNode(
+        Symbols.symbolFor("signalTypeError:"), sourceSection);
     int line = sourceSection.getStartLine();
     int column = sourceSection.getStartColumn();
     String[] parts = sourceSection.getSource().getURI().getPath().split("/");
     String suffix = parts[parts.length - 1] + " [" + line + "," + column + "]";
-    KernelObj.signalException("signalTypeError:",
-        suffix + " " + obj + " is not a subclass of " + expected + ", because it has the type "
-            + actualType);
+    exNode.signal(suffix + " " + obj + " is not a subclass of " + expected
+        + ", because it has the type " + actualType);
   }
 
   protected boolean isNil(final SObjectWithoutFields obj) {
