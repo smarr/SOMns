@@ -610,8 +610,9 @@ public final class MixinDefinition implements SomInteropObject {
           getAccessType() == SlotAccess.FIELD_READ) {
         return new CachedTxSlotRead(getAccessType(), read,
             DispatchGuard.createSObjectCheck(rcvr),
-            TypeCheckNodeGen.create(SomStructuralType.recallTypeByName(type),
-                getSourceSection()),
+            SomStructuralType.isNullOrUnknown(type) ? null
+                : TypeCheckNodeGen.create(SomStructuralType.recallTypeByName(type),
+                    getSourceSection()),
             next);
       } else {
         return read;
@@ -686,8 +687,9 @@ public final class MixinDefinition implements SomInteropObject {
       if (forAtomic) {
         return new CachedTxSlotWrite(write,
             DispatchGuard.createSObjectCheck(rcvr),
-            TypeCheckNodeGen.create(SomStructuralType.recallTypeByName(type),
-                loc.getSlot().getSourceSection()),
+            SomStructuralType.isNullOrUnknown(type) ? null
+                : TypeCheckNodeGen.create(SomStructuralType.recallTypeByName(type),
+                    loc.getSlot().getSourceSection()),
             next);
       } else {
         return write;
