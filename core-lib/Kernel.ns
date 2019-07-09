@@ -1010,9 +1010,4 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       ^ 'TransferObjectsCannotBeValues(' + (vmMirror mirrorAClassesName: class) + ')'
     )
   )
-
-  (* Short cut from VM. Likely to be removed when optimized. *)
-  private signalTypeError: message = (
-    TypeError signalWith: message.
-  )
 )
