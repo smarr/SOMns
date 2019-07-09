@@ -506,7 +506,10 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
     @Child ExceptionSignalingNode exception;
 
     protected CustomTypeCheckNode(final SObjectWithClass expected, final CallTarget target,
-        final Map<Object, Boolean> isSub, final SourceSection sourceSection) {
+        final Object isSub_TRUFFLE_REGRESSION, final SourceSection sourceSection) {
+      // Truffle is currently failing to generate correct code for this
+      @SuppressWarnings("unchecked")
+      Map<Object, Boolean> isSub = (Map<Object, Boolean>) isSub_TRUFFLE_REGRESSION;
       this.expected = expected;
       this.target = target;
       this.isSub = isSub;
