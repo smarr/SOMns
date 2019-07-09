@@ -35,7 +35,7 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
       final TypeCheckNode typeCheck, final AbstractDispatchNode nextInCache) {
     super(nextInCache.getSourceSection());
     this.guardForRcvr = guardForRcvr;
-    this.typeCheck = typeCheck;
+    this.typeCheck = insert(typeCheck);
     this.nextInCache = nextInCache;
   }
 

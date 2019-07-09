@@ -41,6 +41,8 @@ public abstract class TypeCheckNode extends Node {
 
     ExceptionSignalingNode exNode = ExceptionSignalingNode.createNode(
         Symbols.symbolFor("TypeError"), sourceSection);
+    insert(exNode);
+
     int line = sourceSection.getStartLine();
     int column = sourceSection.getStartColumn();
     String[] parts = sourceSection.getSource().getURI().getPath().split("/");
