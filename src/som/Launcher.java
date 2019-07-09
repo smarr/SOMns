@@ -8,8 +8,8 @@ import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 
 import som.interpreter.SomLanguage;
+import som.interpreter.nodes.dispatch.TypeCheckNode;
 import som.interpreter.objectstorage.StorageAccessor;
-import som.vm.SomStructuralType;
 import som.vm.VmSettings;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingBackend;
@@ -58,7 +58,7 @@ public final class Launcher {
       SnapshotBackend.writeSnapshot();
     }
 
-    SomStructuralType.reportStats();
+    TypeCheckNode.reportStats();
 
     if (exitCode != 0) {
       ReplayActor.printMissingMessages();
