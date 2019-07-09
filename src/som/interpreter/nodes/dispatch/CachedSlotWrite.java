@@ -43,7 +43,6 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
   protected CachedSlotWrite() {
     super(null);
     this.guardForRcvr = null;
-    this.typeCheck = null;
   }
 
   public abstract void doWrite(SObject obj, Object value);

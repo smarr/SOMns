@@ -75,7 +75,7 @@ public abstract class ObjectSerializationNodes {
                 loc.getSlot().getName(), classFact.getMixinDefinition().getMixinId());
 
         writes[i] =
-            loc.getWriteNode(loc.getSlot(), DispatchGuard.createSObjectCheck(o), null,
+            loc.getWriteNode(loc.getSlot(), DispatchGuard.createSObjectCheck(o),
                 next,
                 false);
       }
@@ -106,7 +106,7 @@ public abstract class ObjectSerializationNodes {
 
         reads[i] =
             loc.getReadNode(SlotAccess.FIELD_READ,
-                DispatchGuard.createSObjectCheck(o), null,
+                DispatchGuard.createSObjectCheck(o),
                 next,
                 false);
       }

@@ -23,7 +23,7 @@ public class SafepointPhaserTest {
 
   public SafepointPhaserTest() {
     SlotDefinition slotDef = new SlotDefinition(
-        null, null, AccessModifier.PUBLIC, false, null);
+        null, AccessModifier.PUBLIC, false, null);
     EconomicSet<SlotDefinition> instanceSlots = EconomicSet.create();
     instanceSlots.add(slotDef);
 

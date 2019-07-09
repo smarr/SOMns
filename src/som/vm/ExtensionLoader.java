@@ -129,6 +129,6 @@ public final class ExtensionLoader extends PrimitiveLoader<VM, ExpressionNode, S
     som.interpreter.Primitive primMethodNode = new som.interpreter.Primitive(name,
         primNode, prim.getScope().getFrameDescriptor(),
         (ExpressionNode) primNode.deepCopy(), false, lang);
-    return new SInvokable(signature, AccessModifier.PUBLIC, primMethodNode, null, null);
+    return new SInvokable(signature, AccessModifier.PUBLIC, primMethodNode, null);
   }
 }
