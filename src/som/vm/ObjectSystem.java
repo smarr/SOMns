@@ -530,7 +530,9 @@ public final class ObjectSystem {
   }
 
   public void releaseMainThread(final int errorCode) {
-    mainThreadCompleted.complete(errorCode);
+    if (mainThreadCompleted != null) {
+      mainThreadCompleted.complete(errorCode);
+    }
   }
 
   @TruffleBoundary
