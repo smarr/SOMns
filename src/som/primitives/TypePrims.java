@@ -6,9 +6,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 import bd.primitives.Primitive;
 import som.interpreter.Types;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
-import som.vm.constants.KernelObj;
+import som.vm.Symbols;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
@@ -80,6 +81,10 @@ public final class TypePrims {
 
     protected void throwTypeError(final SType expected, final Object obj) {
       CompilerDirectives.transferToInterpreter();
+
+      ExceptionSignalingNode exception = insert(
+          ExceptionSignalingNode.createNode(Symbols.symbolFor("TypeError"), sourceSection));
+
       Object type = Types.getClassOf(obj).type;
       int line = sourceSection.getStartLine();
       int column = sourceSection.getStartColumn();
@@ -87,7 +92,7 @@ public final class TypePrims {
       // String[] parts = sourceSection.getSource().getURI().getPath().split("/");
       // String suffix = parts[parts.length - 1] + " [" + line + "," + column + "]";
       String suffix = "{UNKNOWN-FILE} [" + line + "," + column + "]";
-      KernelObj.signalException("signalTypeError:",
+      exception.signal(
           suffix + " \"" + obj + "\" is not a subtype of " + expected
               + ", because it has the type " + type);
     }
