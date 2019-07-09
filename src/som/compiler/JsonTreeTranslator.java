@@ -252,7 +252,7 @@ public class JsonTreeTranslator {
         throw new RuntimeException();
       }
 
-      return null;// SomStructuralType.UNKNOWN;
+      return null; // SomStructuralType.UNKNOWN;
     } else {
       return signatureNode.get("returntype").getAsJsonObject();
 
@@ -439,7 +439,7 @@ public class JsonTreeTranslator {
       throw new RuntimeException();
     }
     // TODO: Is this the best way to get types???
-    return null;// SomStructuralType.UNKNOWN;
+    return null; // SomStructuralType.UNKNOWN;
   }
 
   /**

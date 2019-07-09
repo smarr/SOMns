@@ -49,7 +49,7 @@ public abstract class SType extends SObjectWithClass {
 
   public abstract SSymbol[] getSignatures();
 
-  public abstract boolean isSuperTypeOf(final SType other, final Object inst);
+  public abstract boolean isSuperTypeOf(SType other, Object inst);
 
   public static class InterfaceType extends SType {
     @CompilationFinal(dimensions = 1) public final SSymbol[] signatures;
