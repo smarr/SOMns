@@ -35,6 +35,7 @@ import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
+import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
@@ -91,6 +92,7 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
   private static void throwTypeError(final Object argument, final Object type,
       final Object expected, final SourceSection sourceSection,
       final ExceptionSignalingNode exception) {
+    CompilerDirectives.transferToInterpreter();
 
     int line = sourceSection.getStartLine();
     int column = sourceSection.getStartColumn();
@@ -345,10 +347,11 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
       return obj;
     }
 
-    @Specialization
+    @Specialization(guards = "obj.getSOMClass() == clazz")
     public SObjectWithClass checkSObject(final SObjectWithClass obj,
-        @Cached("obj.getSOMClass().type") final SType type) {
-      return check(obj, type);
+        @Cached("obj.getSOMClass()") final SClass clazz,
+        @Cached("check(obj, clazz.type)") final Object initialRcvrUnused) {
+      return obj;
     }
 
     public <E> E check(final E argument, final SType type) {
