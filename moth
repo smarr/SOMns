@@ -7,7 +7,9 @@ if "MOTH_HOME" not in env:
     env["MOTH_HOME"] = "/".join(os.path.realpath(__file__).split("/")[:-1])
 
 script_dir = os.path.dirname(__file__)
+args = list(sys.argv)
+args.insert(1, "--moth")
 
 # Execute SOMns with the update environment
 os.system(script_dir + "/libs/kernan/Grace/grace --ws > /dev/null 2>&1 &")
-os.execvpe(script_dir + "/som", sys.argv, env)
+os.execvpe(script_dir + "/som", args, env)

@@ -458,13 +458,18 @@ public final class ObjectSystem {
 
     platformClass = platformModule.instantiateModuleClass();
 
-    try {
-      vm.loadModule(System.getenv("MOTH_HOME") + "/grace-lib/Modules/standardGrace.grace");
-      vm.loadModule(System.getenv("MOTH_HOME") + "/grace-lib/Modules/io.grace");
-      vm.loadModule(System.getenv("MOTH_HOME") + "/grace-lib/Modules/mirrors.grace");
-      vm.loadModule(System.getenv("MOTH_HOME") + "/grace-lib/Modules/random.grace");
-    } catch (IOException e) {
-      vm.errorExit("Failed to preload Grace modules: " + e.getMessage());
+    if (VmSettings.IS_MOTH) {
+      String mothHome = System.getenv("MOTH_HOME");
+      assert mothHome != null : "Started as Moth, but MOTH_HOME env var not set";
+
+      try {
+        vm.loadModule(mothHome + "/grace-lib/Modules/standardGrace.grace");
+        vm.loadModule(mothHome + "/grace-lib/Modules/io.grace");
+        vm.loadModule(mothHome + "/grace-lib/Modules/mirrors.grace");
+        vm.loadModule(mothHome + "/grace-lib/Modules/random.grace");
+      } catch (IOException e) {
+        vm.errorExit("Failed to preload Grace modules: " + e.getMessage());
+      }
     }
 
     ObjectTransitionSafepoint.INSTANCE.unregister();

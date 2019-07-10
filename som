@@ -17,6 +17,9 @@ GRAAL_FLAGS = os.getenv('GRAAL_FLAGS', None)
 parser = argparse.ArgumentParser(
     description='Helper script to run SOMns with/without Graal')
 
+parser.add_argument('-m', '--moth', help='run as Moth',
+                    dest='moth', action='store_true', default=False)
+
 parser.add_argument('-d', '--debug', help='wait for debugger to attach',
                     dest='debug', action='store_true', default=False)
 parser.add_argument('-t', '--num-threads', help='number of threads to be used',
@@ -393,6 +396,9 @@ if args.java_interpreter:
     flags += ['-Xint']
 if args.print_graal_options:
     flags += ['-XX:+JVMCIPrintProperties']
+
+if args.moth:
+    flags += ['-Dsom.moth=true']
 
 if args.java_properties:
     flags += ['-D' + property for property in args.java_properties]

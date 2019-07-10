@@ -43,6 +43,8 @@ public class VmSettings implements Settings {
 
   public static final String BASE_DIRECTORY;
 
+  public static final boolean IS_MOTH;
+
   static {
     String prop = System.getProperty("som.threads");
     if (prop == null) {
@@ -87,6 +89,8 @@ public class VmSettings implements Settings {
 
     USE_TYPE_CHECKING = getBool("som.useTypeChecking", false);
     MUST_BE_FULLY_TYPED = getBool("som.ensureFullyTyped", false);
+
+    IS_MOTH = getBool("som.moth", false);
   }
 
   private static boolean getBool(final String prop, final boolean defaultVal) {
