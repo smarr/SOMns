@@ -10,6 +10,7 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
@@ -35,7 +36,6 @@ import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
-import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
@@ -347,10 +347,22 @@ public abstract class TypeCheckNode extends BinaryExpressionNode {
       return obj;
     }
 
-    @Specialization(guards = "obj.getSOMClass() == clazz")
+    protected static final DispatchGuard createGuard(final Object obj) {
+      return DispatchGuard.create(obj);
+    }
+
+    protected static final boolean checkGuard(final DispatchGuard guard,
+        final SObjectWithClass obj) {
+      try {
+        return guard.entryMatches(obj, null);
+      } catch (InvalidAssumptionException e) {} catch (IllegalArgumentException e) {}
+      return false;
+    }
+
+    @Specialization(guards = "checkGuard(guard, obj)")
     public SObjectWithClass checkSObject(final SObjectWithClass obj,
-        @Cached("obj.getSOMClass()") final SClass clazz,
-        @Cached("check(obj, clazz.type)") final Object initialRcvrUnused) {
+        @Cached("createGuard(obj)") final DispatchGuard guard,
+        @Cached("check(obj, obj.getSOMClass().type)") final Object initialRcvrUnused) {
       return obj;
     }
 
