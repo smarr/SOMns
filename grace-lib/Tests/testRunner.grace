@@ -41,9 +41,9 @@ method runTests(moduleName: String) -> Done {
 method exe(args: Unknown) -> Done {
   def n: Number = args.size
   (n == 1).ifTrue {
-    runTests("GraceLibrary/Tests/language.grace")
-    runTests("GraceLibrary/Tests/modules.grace")
-    runTests("GraceLibrary/Tests/types.grace")
+    runTests("grace-lib/Tests/language.grace")
+    runTests("grace-lib/Tests/modules.grace")
+    runTests("grace-lib/Tests/types.grace")
   } ifFalse {
     runTests(args.at(2.asInteger))
   }

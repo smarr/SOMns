@@ -459,10 +459,10 @@ public final class ObjectSystem {
     platformClass = platformModule.instantiateModuleClass();
 
     try {
-      vm.loadModule(System.getenv("MOTH_HOME") + "/GraceLibrary/Modules/standardGrace.grace");
-      vm.loadModule(System.getenv("MOTH_HOME") + "/GraceLibrary/Modules/io.grace");
-      vm.loadModule(System.getenv("MOTH_HOME") + "/GraceLibrary/Modules/mirrors.grace");
-      vm.loadModule(System.getenv("MOTH_HOME") + "/GraceLibrary/Modules/random.grace");
+      vm.loadModule(System.getenv("MOTH_HOME") + "/grace-lib/Modules/standardGrace.grace");
+      vm.loadModule(System.getenv("MOTH_HOME") + "/grace-lib/Modules/io.grace");
+      vm.loadModule(System.getenv("MOTH_HOME") + "/grace-lib/Modules/mirrors.grace");
+      vm.loadModule(System.getenv("MOTH_HOME") + "/grace-lib/Modules/random.grace");
     } catch (IOException e) {
       vm.errorExit("Failed to preload Grace modules: " + e.getMessage());
     }

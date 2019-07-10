@@ -97,7 +97,7 @@ public class SourceManager {
 
   public String pathForModuleNamed(final SSymbol moduleName) {
     if (builtinModules.contains(moduleName.getString())) {
-      return System.getenv("MOTH_HOME") + "/GraceLibrary/Modules/" + moduleName.getString()
+      return System.getenv("MOTH_HOME") + "/grace-lib/Modules/" + moduleName.getString()
           + ".grace";
     }
     String[] pathParts = source.getPath().split("/");
