@@ -1,4 +1,4 @@
-<project name="som" basedir="." default="compile-all"
+<project name="som" basedir="." default="compile-moth"
     xmlns:unless="ant:unless"
     xmlns:if="ant:if"
     xmlns:jacoco="antlib:org.jacoco.ant">
@@ -59,6 +59,8 @@
     <property name="checkstyle.version" value="8.11" />
     <property name="jacoco.version"     value="0.8.0" />
     <property name="jvmci.home"  location="${lib.dir}/jvmci${home.ext}" />
+    
+    <property name="kernan.dir"  location="${lib.dir}/kernan/" />
 
     <property name="lib.url" value="https://dl.bintray.com/smarr/SOM" />
     <!-- <property name="lib.url" value="http://stefan-marr.de/dev" /> -->
@@ -347,6 +349,9 @@
 
     <target name="compile-all" depends="compile,kompos" description="Build SOMns and Kompos">
     </target>
+    
+    <target name="compile-moth" depends="compile-kernan,compile" description="Build bits to use Moth">
+    </target>
 
     <target name="jar" depends="compile" description="Package as JAR">
         <jar destfile="${build.dir}/som.jar" basedir="${classes.dir}"></jar>
@@ -508,7 +513,7 @@
 
     <target name="coverage" depends="send-java-coverage,send-somns-coverage" />
 
-    <target name="tests" depends="core-tests,serialization-tests,replay-tests,coverage">
+    <target name="tests" depends="core-tests,moth-tests,serialization-tests,replay-tests,coverage">
     </target>
 
     <target name="native" depends="libs,jvmci-libs,compile-som">
@@ -532,4 +537,16 @@
       
       <travis target="native" />
     </target>
+    
+    <target name="compile-kernan" description="Compile Kernan">
+        <echo message="Compiling Kernan"/>
+        <exec executable="xbuild" dir="${kernan.dir}"/>
+    </target>
+    
+    <target name="moth-tests" description="Run basic moth tests">
+        <exec executable="./moth" failonerror="true">
+          <arg value="grace-lib/Tests/testRunner.grace" />
+        </exec>
+    </target>
+    
 </project>
