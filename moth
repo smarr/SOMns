@@ -1,0 +1,13 @@
+#!/usr/bin/env python
+import subprocess, sys, os
+
+# Add current directory as MOTH_HOME
+env = os.environ.copy()
+if "MOTH_HOME" not in env:
+    env["MOTH_HOME"] = "/".join(os.path.realpath(__file__).split("/")[:-1])
+
+script_dir = os.path.dirname(__file__)
+
+# Execute SOMns with the update environment
+os.system(script_dir + "/libs/kernan/Grace/grace --ws > /dev/null 2>&1 &")
+os.execvpe(script_dir + "/som", sys.argv, env)
