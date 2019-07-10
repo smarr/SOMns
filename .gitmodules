@@ -9,3 +9,7 @@
 [submodule "libs/black-diamonds"]
 	path = libs/black-diamonds
 	url = https://github.com/SOM-st/black-diamonds.git
+[submodule "libs/kernan"]
+	path = libs/kernan
+	branch = master	
+	url = https://github.com/mwh/kernan.git
