@@ -32,6 +32,22 @@ matrix:
       osx_image: xcode9.3
       language: generic
       env:  TASK=unit-tests
+    
+    - name: Test Moth
+      sudo: true
+      before_script: 
+        - |
+         sudo apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF 
+         sudo apt install apt-transport-https 
+         echo "deb https://download.mono-project.com/repo/ubuntu stable-trusty main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list 
+         sudo apt update -qq 
+         sudo apt install mono-devel -y
+      script:
+        - |
+         ant compile-moth
+         ./moth -tc grace-lib/hello.grace 
+         ./moth -tc grace-lib/Tests/testRunner.grace 
+         ./runBenchmarks.sh
 
 before_install:
   - |

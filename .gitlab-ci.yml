@@ -13,6 +13,15 @@ variables:
 before_script:
   - git submodule update --init
 
+build_and_test_moth_job:
+  stage: build-and-test
+  tags: [benchmarks, infinity]
+  script:
+    - ant compile-moth
+    - ./moth -tc grace-lib/hello.grace 
+    - ./moth -tc grace-lib/Tests/testRunner.grace 
+    - rebench -B -S codespeed.conf grace-tests  
+
 build_and_test_job:
   stage: build-and-test
   tags: [benchmarks, infinity]
