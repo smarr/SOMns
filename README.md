@@ -1,5 +1,5 @@
-SOMns - A Simple Newspeak Implementation
-========================================
+SOMns - A Newspeak for Concurrency Research
+===========================================
 
 Introduction
 ------------
@@ -13,6 +13,10 @@ implemented using the [Truffle framework][T] and runs on the JVM platform.
 Truffle provides just-in-time compilation based on the Graal compiler,
 which enables SOMns to reach [performance that is on par][AWFY] with
 state-of-the-art VMs for dynamic languages, including V8.
+
+SOMns is built and maintained with the goal to facilitate research onf
+concurrency models, their safe interactions, and tooling to make it possible to
+build more correct systems more easily.
 
 A simple Hello World program looks like:
 
@@ -29,7 +33,7 @@ Obtaining and Running SOMns
 ---------------------------
 
 The basic requirements for SOMns are a system with Java 9 or later, git, ant,
-and Python. Windows is currently not supported, but we test on Linux and macOS.
+and Python. Windows is not yet fully supported. SOMns is tested on Linux and macOS.
 
 To checkout the code:
 
@@ -75,13 +79,19 @@ the specifications are as follows:
    parser limitations
 
 
-License and Author Information
-------------------------------
+License, Author Information, Citation
+-------------------------------------
 
 This code is distributed under the MIT License. Please see the LICENSE file for
 details. All contributions to the project are implicitly assumed to be under the
 MIT License. If this is not desired, we ask that it is stated explicitly.
 Information on previous authors are included in the AUTHORS file.
+
+If you use SOMns for your research, please cite it is as follows:
+
+> Stefan Marr et al. SOMns: A Newspeak for Concurrency Research. https://doi.org/10.5281/zenodo.3270908 
+
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.3270908.svg)](https://doi.org/10.5281/zenodo.3270908)
 
 Setup Development Environment with Eclipse and VS Code
 ------------------------------------------------------
