@@ -85,7 +85,7 @@ install: |
 script:
   - if [ "$TASK" = "core-tests"    ]; then $ANT core-tests    && $ANT serialization-tests && $ANT coverage; fi
   - if [ "$TASK" = "checkstyle"    ]; then $ANT checkstyle    && $ANT eclipseformat-check && run cd tools/kompos && nvm install 7 && run npm install && run npm run lint; fi
-  - if [ "$TASK" = "kompos-tests"  ]; then run nvm install 8  && $ANT && cd tools/kompos  && run npm -s run verify && run npm test; fi
+  - if [ "$TASK" = "kompos-tests"  ]; then run nvm install 8  && $ANT compile-all && cd tools/kompos  && run npm -s run verify && run npm test; fi
   - if [ "$TASK" = "replay1-tests" ]; then $ANT compile       && run ./tests/replay/test.sh 1; fi
   - if [ "$TASK" = "replay2-tests" ]; then $ANT compile       && run ./tests/replay/test.sh 2; fi
   - if [ "$TASK" = "snapshot-tests" ]; then $ANT compile      && run ./tests/snapshot/test.sh; fi
