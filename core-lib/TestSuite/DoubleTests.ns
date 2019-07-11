@@ -25,7 +25,7 @@ class DoubleTests usingPlatform: platform testFramework: minitest = (
 
   public class DoubleTest = TestContext ()(
 
-    public testIntegerDivision = (
+    public DEACTIVATEDtestIntegerDivision = (
       self assert: 1 equals: (4/3) + (4/5)
     )
 

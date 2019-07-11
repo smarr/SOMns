@@ -248,7 +248,7 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
   )
 
   public class SetTest = TestContext ()(
-    public testBasics = (
+    public DEACTIVATEDtestBasics = (
       | a b t |
       a:: Set new.
       b:: Set new.

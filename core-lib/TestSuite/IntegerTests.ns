@@ -186,7 +186,8 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
       self assert:  12 equals: (-3* -4).
     )
 
-    public testDivision = (
+    (* Not supported by Moth *)
+    public DEACTIVATEDtestDivision = (
       self assert:  1 equals: (  1/  1).
       self assert:  1 equals: (  3/  2).
       self assert: -2 equals: (  4/ -2).
