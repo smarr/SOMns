@@ -92,11 +92,21 @@ public abstract class AtPrim extends BinaryBasicOperation {
   }
 
   @Specialization(guards = "receiver.isEmptyType()")
+  public final Object doEmptySArray(final SArray receiver, final double idx) {
+    return doEmptySArray(receiver, (long) idx);
+  }
+
+  @Specialization(guards = "receiver.isEmptyType()")
   public final Object doEmptySArray(final SArray receiver, final long idx) {
     if (idx < 1 || idx > receiver.getEmptyStorage()) {
       return triggerException(receiver, idx);
     }
     return Nil.nilObject;
+  }
+
+  @Specialization(guards = "receiver.isPartiallyEmptyType()")
+  public final Object doPartiallyEmptySArray(final SArray receiver, final double idx) {
+    return doObjectSArray(receiver, (long) idx);
   }
 
   @Specialization(guards = "receiver.isPartiallyEmptyType()")
@@ -109,12 +119,22 @@ public abstract class AtPrim extends BinaryBasicOperation {
   }
 
   @Specialization(guards = "receiver.isObjectType()")
+  public final Object doObjectSArray(final SArray receiver, final double idx) {
+    return doObjectSArray(receiver, (long) idx);
+  }
+
+  @Specialization(guards = "receiver.isObjectType()")
   public final Object doObjectSArray(final SArray receiver, final long idx) {
     try {
       return receiver.getObjectStorage()[(int) idx - 1];
     } catch (IndexOutOfBoundsException e) {
       return triggerException(receiver, idx);
     }
+  }
+
+  @Specialization(guards = "receiver.isLongType()")
+  public final long doLongSArray(final SArray receiver, final double idx) {
+    return doLongSArray(receiver, (long) idx);
   }
 
   @Specialization(guards = "receiver.isLongType()")
@@ -127,12 +147,22 @@ public abstract class AtPrim extends BinaryBasicOperation {
   }
 
   @Specialization(guards = "receiver.isDoubleType()")
+  public final double doDoubleSArray(final SArray receiver, final double idx) {
+    return doDoubleSArray(receiver, (long) idx);
+  }
+
+  @Specialization(guards = "receiver.isDoubleType()")
   public final double doDoubleSArray(final SArray receiver, final long idx) {
     try {
       return receiver.getDoubleStorage()[(int) idx - 1];
     } catch (IndexOutOfBoundsException e) {
       return (double) triggerException(receiver, idx);
     }
+  }
+
+  @Specialization(guards = "receiver.isBooleanType()")
+  public final boolean doBooleanSArray(final SArray receiver, final double idx) {
+    return doBooleanSArray(receiver, (long) idx);
   }
 
   @Specialization(guards = "receiver.isBooleanType()")
