@@ -77,7 +77,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
         // recheck guard under synchronized, don't want to access object if
         // layout might have changed, we are going to slow path in that case
         // TODO(SM): After merging th 0.7.0 SOMns, do I still need `guardForRcvr`?
-        read.guardForRcvr.entryMatches(rcvr, null);
+        guardForRcvr.entryMatches(rcvr, null);
         cachedValue = read.read(rcvr);
       } catch (InvalidAssumptionException e) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -107,7 +107,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
       // at this point the guard will fail, if it failed for the read guard,
       // but we simply recheck here to avoid impact on fast path
       // TODO(SM): After merging th 0.7.0 SOMns, do I still need `guardForRcvr`?
-      write.guardForRcvr.entryMatches(rcvr, null);
+      guardForRcvr.entryMatches(rcvr, null);
       write.doWrite(rcvr, classObject);
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
