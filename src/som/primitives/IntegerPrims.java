@@ -164,6 +164,11 @@ public abstract class IntegerPrims {
     public final long doLong(final long receiver) {
       return Math.abs(receiver);
     }
+
+    @Specialization
+    public final double doLong(final double receiver) {
+      return Math.abs(receiver);
+    }
   }
 
   @GenerateNodeFactory

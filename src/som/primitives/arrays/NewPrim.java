@@ -53,15 +53,33 @@ public abstract class NewPrim extends BinaryExpressionNode {
     return new SMutableArray(length, receiver);
   }
 
+  @Specialization(guards = {"receiver.isArray()", "!receiver.isTransferObject()",
+      "!receiver.declaredAsValue()"})
+  public static final SMutableArray createArray(final SClass receiver, final double length) {
+    return new SMutableArray((long) length, receiver);
+  }
+
   @Specialization(guards = {"receiver.isArray()", "receiver.declaredAsValue()"})
   public static final SImmutableArray createValueArray(final SClass receiver,
       final long length) {
     return new SImmutableArray(length, receiver);
   }
 
+  @Specialization(guards = {"receiver.isArray()", "receiver.declaredAsValue()"})
+  public static final SImmutableArray createValueArray(final SClass receiver,
+      final double length) {
+    return new SImmutableArray((long) length, receiver);
+  }
+
   @Specialization(guards = {"receiver.isArray()", "receiver.isTransferObject()"})
   protected static final STransferArray createTransferArray(
       final SClass receiver, final long length) {
     return new STransferArray(length, receiver);
+  }
+
+  @Specialization(guards = {"receiver.isArray()", "receiver.isTransferObject()"})
+  protected static final STransferArray createTransferArray(
+      final SClass receiver, final double length) {
+    return new STransferArray((long) length, receiver);
   }
 }

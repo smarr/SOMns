@@ -151,6 +151,12 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = {"receiver.isEmptyType()"})
+  public final long doEmptySArray(final SMutableArray receiver, final double index,
+      final long value) {
+    return doEmptySArray(receiver, (long) index, value);
+  }
+
+  @Specialization(guards = {"receiver.isEmptyType()"})
   public final double doEmptySArray(final SMutableArray receiver, final long index,
       final double value) {
     try {
@@ -172,6 +178,12 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     }
   }
 
+  @Specialization(guards = {"receiver.isEmptyType()"})
+  public final boolean doEmptySArray(final SMutableArray receiver, final double index,
+      final boolean value) {
+    return doEmptySArray(receiver, (long) index, value);
+  }
+
   @Specialization(guards = {"receiver.isEmptyType()", "valueIsNotNil(value)",
       "valueNotLongDoubleBoolean(value)"})
   public final Object doEmptySArray(final SMutableArray receiver, final long index,
@@ -191,6 +203,13 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     }
   }
 
+  @Specialization(guards = {"receiver.isEmptyType()", "valueIsNotNil(value)",
+      "valueNotLongDoubleBoolean(value)"})
+  public final Object doEmptySArray(final SMutableArray receiver, final double index,
+      final Object value) {
+    return doEmptySArray(receiver, (long) index, value);
+  }
+
   @Specialization(guards = {"receiver.isEmptyType()", "valueIsNil(value)"})
   public final Object doEmptySArrayWithNil(final SMutableArray receiver, final long index,
       final Object value) {
@@ -199,6 +218,12 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
       return triggerException(receiver, index);
     }
     return Nil.nilObject;
+  }
+
+  @Specialization(guards = {"receiver.isEmptyType()", "valueIsNil(value)"})
+  public final Object doEmptySArrayWithNil(final SMutableArray receiver, final double index,
+      final Object value) {
+    return doEmptySArrayWithNil(receiver, (long) index, value);
   }
 
   @Specialization(guards = "receiver.isPartiallyEmptyType()")
@@ -213,6 +238,12 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = "receiver.isPartiallyEmptyType()")
+  public final long doPartiallyEmptySArray(final SMutableArray receiver, final double index,
+      final long value) {
+    return doPartiallyEmptySArray(receiver, (long) index, value);
+  }
+
+  @Specialization(guards = "receiver.isPartiallyEmptyType()")
   public final double doPartiallyEmptySArray(final SMutableArray receiver, final long index,
       final double value) {
     try {
@@ -224,6 +255,12 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
   }
 
   @Specialization(guards = "receiver.isPartiallyEmptyType()")
+  public final double doPartiallyEmptySArray(final SMutableArray receiver, final double index,
+      final double value) {
+    return doPartiallyEmptySArray(receiver, (long) index, value);
+  }
+
+  @Specialization(guards = "receiver.isPartiallyEmptyType()")
   public final boolean doPartiallyEmptySArray(final SMutableArray receiver, final long index,
       final boolean value) {
     try {
@@ -232,6 +269,12 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     } catch (IndexOutOfBoundsException e) {
       return (boolean) triggerException(receiver, index);
     }
+  }
+
+  @Specialization(guards = "receiver.isPartiallyEmptyType()")
+  public final boolean doPartiallyEmptySArray(final SMutableArray receiver, final double index,
+      final boolean value) {
+    return doPartiallyEmptySArray(receiver, (long) index, value);
   }
 
   @Specialization(guards = {"receiver.isPartiallyEmptyType()", "valueIsNil(value)"})
@@ -251,6 +294,12 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     }
   }
 
+  @Specialization(guards = {"receiver.isPartiallyEmptyType()", "valueIsNil(value)"})
+  public final Object doPartiallyEmptySArrayWithNil(final SMutableArray receiver,
+      final double index, final Object value) {
+    return doPartiallyEmptySArrayWithNil(receiver, (long) index, value);
+  }
+
   @Specialization(guards = {"receiver.isPartiallyEmptyType()", "valueIsNotNil(value)"})
   public final Object doPartiallyEmptySArray(final SMutableArray receiver, final long index,
       final Object value) {
@@ -260,6 +309,12 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     } catch (IndexOutOfBoundsException e) {
       return triggerException(receiver, index);
     }
+  }
+
+  @Specialization(guards = {"receiver.isPartiallyEmptyType()", "valueIsNotNil(value)"})
+  public final Object doPartiallyEmptySArray(final SMutableArray receiver, final double index,
+      final Object value) {
+    return doPartiallyEmptySArray(receiver, (long) index, value);
   }
 
   @Specialization(guards = "receiver.isObjectType()")
@@ -273,6 +328,12 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     }
   }
 
+  @Specialization(guards = "receiver.isObjectType()")
+  public final Object doObjectSArray(final SMutableArray receiver, final double index,
+      final Object value) {
+    return doObjectSArray(receiver, (long) index, value);
+  }
+
   @Specialization(guards = "receiver.isLongType()")
   public final long doObjectSArray(final SMutableArray receiver, final long index,
       final long value) {
@@ -282,6 +343,12 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     } catch (IndexOutOfBoundsException e) {
       return (long) triggerException(receiver, index);
     }
+  }
+
+  @Specialization(guards = "receiver.isLongType()")
+  public final long doObjectSArray(final SMutableArray receiver, final double index,
+      final long value) {
+    return doObjectSArray(receiver, (long) index, value);
   }
 
   @Specialization(guards = {"receiver.isLongType()", "valueIsNotLong(value)"})
@@ -300,6 +367,12 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     }
   }
 
+  @Specialization(guards = {"receiver.isLongType()", "valueIsNotLong(value)"})
+  public final Object doLongSArray(final SMutableArray receiver, final double index,
+      final Object value) {
+    return doLongSArray(receiver, (long) index, value);
+  }
+
   @Specialization(guards = "receiver.isDoubleType()")
   public final double doDoubleSArray(final SMutableArray receiver, final long index,
       final double value) {
@@ -309,6 +382,12 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     } catch (IndexOutOfBoundsException e) {
       return (double) triggerException(receiver, index);
     }
+  }
+
+  @Specialization(guards = "receiver.isDoubleType()")
+  public final double doDoubleSArray(final SMutableArray receiver, final double index,
+      final double value) {
+    return doDoubleSArray(receiver, (long) index, value);
   }
 
   @Specialization(guards = {"receiver.isDoubleType()", "valueIsNotDouble(value)"})
@@ -326,6 +405,12 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     }
   }
 
+  @Specialization(guards = {"receiver.isDoubleType()", "valueIsNotDouble(value)"})
+  public final Object doDoubleSArray(final SMutableArray receiver, final double index,
+      final Object value) {
+    return doDoubleSArray(receiver, (long) index, value);
+  }
+
   @Specialization(guards = "receiver.isBooleanType()")
   public final boolean doBooleanSArray(final SMutableArray receiver, final long index,
       final boolean value) {
@@ -335,6 +420,12 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     } catch (IndexOutOfBoundsException e) {
       return (boolean) triggerException(receiver, index);
     }
+  }
+
+  @Specialization(guards = "receiver.isBooleanType()")
+  public final boolean doBooleanSArray(final SMutableArray receiver, final double index,
+      final boolean value) {
+    return doBooleanSArray(receiver, (long) index, value);
   }
 
   @Specialization(guards = {"receiver.isBooleanType()", "valueIsNotBoolean(value)"})
@@ -350,5 +441,11 @@ public abstract class AtPutPrim extends TernaryExpressionNode {
     } catch (IndexOutOfBoundsException e) {
       return triggerException(receiver, index);
     }
+  }
+
+  @Specialization(guards = {"receiver.isBooleanType()", "valueIsNotBoolean(value)"})
+  public final Object doBooleanSArray(final SMutableArray receiver, final double index,
+      final Object value) {
+    return doBooleanSArray(receiver, (long) index, value);
   }
 }

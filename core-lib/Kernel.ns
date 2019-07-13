@@ -279,6 +279,16 @@ class Kernel vmMirror: vmMirror = Object <: Value (
     public negated     = ( ^ 0.0 - self )
     public round       = ( ^ vmMirror doubleRound: self )
 
+    (* Bit operations *)
+    public & argument  = ( ^ vmMirror double: self bitAnd: argument )
+    public bitAnd: argument  = ( ^ self & argument )
+    public << argument = ( ^ vmMirror double: self leftShift: argument )
+    public bitLeftShift: argument = ( ^ self << argument )
+    public >>> argument= ( ^ vmMirror double: self unsignedRightShift: argument )
+    public bitRightShift: argument = ( ^ self >>> argument )
+    public bitOr: argument  = ( ^ vmMirror double: self bitOr: argument )
+    public bitXor: argument = ( ^ vmMirror double: self bitXor: argument )
+
     (* Comparing *)
     public =  argument = ( ^ vmMirror double: self equals: argument )
     public <  argument = ( ^ vmMirror double: self lessThan: argument )
@@ -325,12 +335,12 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     (* Comparing *)
     public = argument = ( ^ vmMirror string: self equals: argument )
-    
+
     public < argument = (
       | maxi |
       maxi:: length max: argument length.
 
-      1 to: maxi do: [ :i | 
+      1 to: maxi do: [ :i |
         | codePointA codePointB |
         codePointA:: (codepointAt: i).
         codePointB:: (argument codepointAt: i).
@@ -345,7 +355,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       | maxi |
       maxi:: length max: argument length.
 
-      1 to: maxi do: [ :i | 
+      1 to: maxi do: [ :i |
         | codePointA codePointB |
         codePointA:: (codepointAt: i).
         codePointB:: (argument codepointAt: i).
