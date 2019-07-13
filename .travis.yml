@@ -42,12 +42,13 @@ matrix:
          echo "deb https://download.mono-project.com/repo/ubuntu stable-trusty main" | sudo tee /etc/apt/sources.list.d/mono-official-stable.list 
          sudo apt update -qq 
          sudo apt install mono-devel -y
+         sudo pip install git+https://github.com/smarr/ReBench.git
       script:
         - |
          ant compile-moth
          ./moth -tc grace-lib/hello.grace 
          ./moth -tc grace-lib/Tests/testRunner.grace 
-         ./runBenchmarks.sh
+         rebench -B -S codespeed.conf grace-tests
 
 before_install:
   - |
