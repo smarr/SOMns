@@ -18,9 +18,11 @@ matrix:
     - env: TASK=core-tests
     - env: TASK=checkstyle
     - env: TASK=kompos-tests
-    - env: TASK=replay1-tests
-    - env: TASK=replay2-tests
-    - env: TASK=snapshot-tests
+    # Moth: Replay and Snapshotting are unsupported for Moth at the moment.
+    # This means, it's only working partially
+    # - env: TASK=replay1-tests
+    # - env: TASK=replay2-tests
+    # - env: TASK=snapshot-tests
     - env: TASK=native
 
     - os:   linux
