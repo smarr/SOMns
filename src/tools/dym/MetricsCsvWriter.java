@@ -265,7 +265,7 @@ public final class MetricsCsvWriter {
       throw new NotYetImplementedException();
     } else if (tags.contains(ArrayRead.class) || tags.contains(ArrayWrite.class)) {
       assert a.argTypeIs(1, "Array") || a.argTypeIs(1, "ValueArray");
-      assert a.argTypeIs(2, "Integer");
+      assert a.argTypeIs(2, "Integer") || a.argTypeIs(2, "Double");
       if (tags.contains(ArrayRead.class)) {
         return typeCategory(a.getArgType(0));
       } else {
