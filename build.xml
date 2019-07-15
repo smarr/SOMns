@@ -2,6 +2,41 @@
     xmlns:unless="ant:unless"
     xmlns:if="ant:if"
     xmlns:jacoco="antlib:org.jacoco.ant">
+    
+    <property name="jvmci.version" value="jvmci-20-b04" />
+    <property name="jdk8.version"  value="212" />
+
+    <macrodef name="travis">
+        <attribute name="target" />
+        <attribute name="start" default="" />
+        <sequential>
+            <echo message="travis_fold:start:@{target}${line.separator}@{start}${line.separator}" unless:blank="@{start}" if:true="${env.TRAVIS}" />
+            <echo message="travis_fold:end:@{target}${line.separator}"             if:blank="@{start}" if:true="${env.TRAVIS}" />
+        </sequential>
+    </macrodef>
+
+    <condition property="is.atLeastJava9" value="true" else="false">
+      <or>
+        <matches string="${java.version}" pattern="^9"/>
+        <matches string="${java.version}" pattern="^1[0-9]"/>
+      </or>
+    </condition>
+    <condition property="kernel" value="darwin-amd64" else="linux-amd64">
+        <os family="mac"/>
+    </condition>
+    <condition property="home.ext" value="/Contents/Home" else="">
+        <os family="mac"/>
+    </condition>
+    
+    <travis target="env" start="Environment" />
+    <echo>
+        ant.java.version: ${ant.java.version}
+        java.version:     ${java.version}
+        is.atLeastJava9:  ${is.atLeastJava9}
+        kernel:           ${kernel}
+        env.TRAVIS:       ${env.TRAVIS}
+    </echo>
+    <travis target="env" />
 
     <property name="src.dir"     location="src"/>
     <property name="src_gen.dir" location="src_gen"/>
@@ -9,14 +44,21 @@
     <property name="bd.dir"      location="${lib.dir}/black-diamonds/" />
     <property name="unit.dir"    value="tests/java" />
     <property name="kompos.dir"  value="tools/kompos" />
+    <property name="corelib.dir" location="core-lib" />
     <property name="graal.dir"   location="${lib.dir}/truffle/compiler" />
     <property name="truffle.dir" location="${lib.dir}/truffle/truffle" />
     <property name="sdk.dir"     location="${lib.dir}/truffle/sdk" />
-    <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists" />
-    <property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
-    <property name="somns-deps.version" value="0.3.3" />
-    <property name="checkstyle.version" value="8.8" />
+    <property name="tools.dir"   location="${lib.dir}/truffle/tools" />
+    <property name="svm.dir"     location="${lib.dir}/truffle/substratevm" />
+    <property name="compiler.build" location="${graal.dir}/mxbuild/dists/jdk1.8" />
+    <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists/jdk1.8" />
+    <property name="tools.build" location="${tools.dir}/mxbuild/dists/jdk1.8" />
+    <property name="svm.build"   location="${svm.dir}/mxbuild/dists/jdk1.8" />
+    <property name="truffle.build" location="${truffle.dir}/mxbuild/dists/jdk1.8" />
+    <property name="somns-deps.version" value="0.3.6" />
+    <property name="checkstyle.version" value="8.11" />
     <property name="jacoco.version"     value="0.8.0" />
+    <property name="jvmci.home"  location="${lib.dir}/jvmci${home.ext}" />
 
     <property name="lib.url" value="https://dl.bintray.com/smarr/SOM" />
     <!-- <property name="lib.url" value="http://stefan-marr.de/dev" /> -->
@@ -28,80 +70,90 @@
 
     <property environment="env"/>
 
-    <path id="project.classpath">
-        <pathelement location="${classes.dir}" />
-        <pathelement location="${unit.dir}" />
-        <pathelement location="${bd.dir}/build/classes" />
+    <path id="boot.cp">
         <pathelement location="${sdk.build}/graal-sdk.jar" />
-        <pathelement location="${sdk.build}/word-api.jar" />
-        <pathelement location="${lib.dir}/somns-deps-dev.jar" />
-        <pathelement location="${lib.dir}/somns-deps.jar" />
         <pathelement location="${truffle.build}/truffle-api.jar" />
+    </path>
+
+    <path id="common.cp">
+        <pathelement location="${classes.dir}" />
+        <pathelement location="${bd.dir}/build/classes" />
+        <pathelement location="${lib.dir}/somns-deps.jar" />
+        
+        <pathelement location="${svm.build}/svm-core.jar" />
+        <pathelement location="${tools.build}/truffle-profiler.jar" />
+    </path>
+    
+    <path id="som.cp">
+        <path refid="boot.cp"/>
+        <path refid="common.cp"/>
+        <pathelement location="${unit.dir}" />
+
+        <pathelement location="${sdk.build}/word-api.jar" />
+        <pathelement location="${sdk.build}/polyglot-tck.jar" />
+        <pathelement location="${lib.dir}/somns-deps-dev.jar" />
+        
+
         <pathelement location="${truffle.build}/truffle-debug.jar" />
         <pathelement location="${truffle.build}/truffle-dsl-processor.jar" />
         <pathelement location="${truffle.build}/truffle-tck.jar" />
     </path>
     
-    <condition property="is.atLeastJava9" value="true" else="false">
-      <or>
-        <matches string="${java.version}" pattern="^9"/>
-        <matches string="${java.version}" pattern="^1[0-9]"/>
-      </or>
-    </condition>
-    <echo>
-        ant.java.version: ${ant.java.version}
-        java.version:     ${java.version}
-        is.atLeastJava9:  ${is.atLeastJava9}
-    </echo>
-
     <target name="clean" description="Remove build directories and generated code">
+        <travis target="clean" start="clean" />
+
         <delete dir="${build.dir}"/>
         <delete dir="${src_gen.dir}"/>
+        <ant dir="${corelib.dir}/TestSuite/extension" useNativeBasedir="true" target="clean" inheritAll="false" />
+
+        <travis target="clean" />        
     </target>
 
     <target name="clean-truffle" depends="check-truffle-available" if="truffle.present">
-        <exec executable="${mx.cmd}" dir="${truffle.dir}">
-            <arg value="clean"/>
+        <travis target="clean-truffle" start="clean-truffle" />
+        
+        <exec executable="${mx.cmd}" dir="${svm.dir}">
+          <arg value="--dynamicimports"/>
+          <arg value="../truffle,../tools,../compiler,../sdk"/>
+          <arg value="clean"/>
         </exec>
+
+        <travis target="clean-truffle" />
     </target>
 
     <target name="clobber" description="Do clean, and also clean truffle build" depends="clean,clean-truffle">
+        <travis target="clobber" start="clobber" />
+        
         <delete dir="${kompos.dir}/out"/>
         <delete dir="${kompos.dir}/node_modules"/>
         <ant dir="${bd.dir}" useNativeBasedir="true" target="clean" inheritAll="false"/>
+        
+        <travis target="clobber" />
     </target>
 
     <target name="check-truffle-available">
-        <available file="${lib.dir}/truffle/.git" property="truffle.present"/>
+        <available file="${truffle.dir}" property="truffle.present"/>
     </target>
-    <target name="truffle" depends="check-truffle-available"
+    <target name="truffle-submodule" depends="check-truffle-available"
             unless="truffle.present">
       <exec executable="./.gitloadmodules" failonerror="true">
       </exec>
     </target>
 
-    <target name="truffle-libs" unless="skip.libs" depends="truffle,build-graal">
-        <exec executable="${mx.cmd}" dir="${truffle.dir}" failonerror="true">
+    <target name="truffle-libs" unless="skip.truffle" depends="jvmci-libs,truffle-submodule">
+        <travis target="truffle-libs" start="Build Truffle" />
+        <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
+            <arg value="--dynamicimports"/>
+            <arg value="../truffle,../tools,../compiler,../sdk"/>
             <arg value="build"/>
-            <arg value="--no-native"/>
+            <arg value="--no-native" unless:true="${build.native}" />
+            <env key="JAVA_HOME" value="${jvmci.home}" />
         </exec>
-    </target>
-
-    <target name="build-graal" description="Build the embedded Graal" unless="skip.graal">
-      <echo unless:true="${is.atLeastJava9}" level="warning">
-          The used JDK needs to have JVMCI support, which is the case for Java 9.
-          If Java 8 is needed, see
-          http://www.oracle.com/technetwork/oracle-labs/program-languages/downloads/index.html
-          for a JVMCI JDK Download.
-      </echo>
-      
-      <exec executable="${mx.cmd}" dir="${graal.dir}" failonerror="true">
-        <arg value="build" />
-        <arg value="--no-native" />
-      </exec>
+        <travis target="truffle-libs" />
     </target>
 
     <target name="bd-libs"> <!-- implicit dependency on truffle-libs -->
+        <travis target="bd-libs" start="Build Black Diamonds" />
         <ant dir="${bd.dir}" useNativeBasedir="true" target="libs-junit" inheritAll="false">
             <property name="force.java8"   value="${is.atLeastJava9}" />
         </ant>
@@ -111,25 +163,43 @@
             <property name="truffle.build" value="${truffle.build}" />
             <property name="force.java8"   value="${is.atLeastJava9}" />
         </ant>
+        <travis target="bd-libs" />
     </target>
 
     <target name="ideinit" depends="source">
-        <exec executable="${mx.cmd}" dir="${truffle.dir}" failonerror="true">
-            <arg value="eclipseinit"/>
-        </exec>
-        <exec executable="${mx.cmd}" dir="${sdk.dir}" failonerror="true">
+        <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
+            <arg value="--dynamicimports"/>
+            <arg value="../truffle,../tools,../compiler,../sdk"/>
             <arg value="eclipseinit"/>
         </exec>
     </target>
+    
+    <target name="jvmci-libs">
+        <get src="https://github.com/graalvm/openjdk8-jvmci-builder/releases/download/${jvmci.version}/openjdk-8u${jdk8.version}-${jvmci.version}-${kernel}.tar.gz"
+             usetimestamp="true"
+             dest="${lib.dir}/jvmci.tar.gz" />
+        <mkdir dir="${lib.dir}/jvmci" />
+        <exec executable="tar" dir="${basedir}" failonerror="true">
+          <arg line="-C ${lib.dir}/jvmci -xzf ${lib.dir}/jvmci.tar.gz --strip 1"/>
+        </exec>
+    </target>
+    
+    <target name="jvmci-home">
+        <echo>${jvmci.home}</echo>
+    </target>
 
-    <target name="libs" depends="truffle-libs,bd-libs" unless="skip.libs">
+    <target name="som-libs">
+        <travis target="som-libs" start="Get Libs" />
         <get src="${lib.url}/somns-deps-${somns-deps.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/somns-deps.jar" />
         <get src="${lib.url}/somns-deps-dev-${somns-deps.version}.jar"
             usetimestamp="true"
             dest="${lib.dir}/somns-deps-dev.jar" />
+        <travis target="som-libs" />
     </target>
+    
+    <target name="libs" depends="truffle-libs,som-libs,bd-libs" unless="skip.libs" />
 
     <target name="source" description="Download Source Jars for development">
         <get src="${lib.url}/somns-deps-source-${somns-deps.version}.jar"
@@ -138,11 +208,15 @@
     </target>
 
     <target name="eclipseformat">
+        <travis target="eclipseformat" start="Format code with Eclipse" />
         <pathconvert pathsep=" " property="javafiles">
             <fileset dir="${src.dir}">
                 <include name="**/*.java"/>
             </fileset>
             <fileset dir="${unit.dir}">
+                <include name="**/*.java"/>
+            </fileset>
+            <fileset dir="${corelib.dir}">
                 <include name="**/*.java"/>
             </fileset>
         </pathconvert>
@@ -159,9 +233,11 @@
             <arg value="${basedir}/.settings/org.eclipse.jdt.core.prefs"/>
             <arg line="${javafiles}"/>
         </exec>
+        <travis target="eclipseformat" />
     </target>
 
     <target name="eclipseformat-check" depends="eclipseformat">
+        <travis target="eclipseformat-check" start="Check Eclipse Format" />
         <exec executable="git" dir="${basedir}">
             <arg value="status" />
             <arg value="*.java" />
@@ -173,23 +249,31 @@
             <arg value="--ignore-submodules" />
             <arg value="HEAD" />
         </exec>
+        <travis target="eclipseformat-check" />
     </target>
 
     <target name="checkstyle-jar">
-        <get src="http://tenet.dl.sourceforge.net/project/checkstyle/checkstyle/${checkstyle.version}/checkstyle-${checkstyle.version}-all.jar"
+        <travis target="checkstyle-jar" start="Get Checkstyle Jar" />
+        <get src="https://github.com/checkstyle/checkstyle/releases/download/checkstyle-${checkstyle.version}/checkstyle-${checkstyle.version}-all.jar"
             usetimestamp="true"
             dest="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
+        <travis target="checkstyle-jar" />
     </target>
 
     <target name="checkstyle" depends="checkstyle-jar" description="Check Code with Checkstyle">
+        <travis target="checkstyle" start="Run Checkstyle" />
         <taskdef resource="com/puppycrawl/tools/checkstyle/ant/checkstyle-ant-task.properties" classpath="${lib.dir}/checkstyle-${checkstyle.version}-all.jar" />
         <checkstyle config=".checkstyle_checks.xml">
-          <fileset dir="src" includes="**/*.java"/>
+          <fileset dir="${src.dir}" includes="**/*.java"/>
+          <fileset dir="${unit.dir}" includes="**/*.java"/>
+          <fileset dir="${corelib.dir}" includes="**/*.java"/>
           <formatter type="plain"/>
         </checkstyle>
+        <travis target="checkstyle" />
     </target>
 
     <target name="jacoco-lib" description="Get JaCoCo dependency">
+        <travis target="jacoco-lib" start="Get JaCoCo" />
         <get src="http://search.maven.org/remotecontent?filepath=org/jacoco/jacoco/${jacoco.version}/jacoco-${jacoco.version}.zip"
             usetimestamp="true"
             dest="${lib.dir}/jacoco-${jacoco.version}.zip" />
@@ -197,52 +281,68 @@
         <taskdef uri="antlib:org.jacoco.ant"
             resource="org/jacoco/ant/antlib.xml"
             classpath="${lib.dir}/jacoco/lib/jacocoant.jar" />
+        <travis target="jacoco-lib" />
     </target>
 
     <target name="codacy-coverage-lib" description="Report Coverage to Codacy">
+        <travis target="codacy-lib" start="Get Codacy Lib" />
         <get src="https://oss.sonatype.org/service/local/repositories/releases/content/com/codacy/codacy-coverage-reporter/2.0.2/codacy-coverage-reporter-2.0.2-assembly.jar"
             usetimestamp="true"
             dest="${lib.dir}/codacy-coverage-reporter.jar" />
+        <travis target="codacy-lib" />
     </target>
 
     <target name="java8-on-java9" description="Support Java 9 or later" if="${is.atLeastJava9}">
+      <travis target="java89" start="Support Java 9" />
       <mkdir dir="${classes.dir}" />
       <javac includeantruntime="false" srcdir="${lib.dir}/java8" destdir="${classes.dir}" debug="true">
         <compilerarg line="--release 8" />
       </javac>
+      <travis target="java89" />
     </target>
 
     <target name="compile-som" description="Compile SOMns" depends="java8-on-java9">
+        <travis target="compile-som" start="Compilse SOMns" />
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${classes.dir}" />
         <mkdir dir="${src_gen.dir}" />
-        <javac includeantruntime="false" srcdir="${src.dir}" destdir="${classes.dir}" debug="true">
-          <classpath refid="project.classpath" />
+        <javac includeantruntime="false" srcdir="${src.dir}" destdir="${classes.dir}" debug="true"> <!-- for debugging: fork="true"  -->
+          <!-- for debugging: <compilerarg line="-J-Xdebug -J-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000" /> -->
+          <classpath refid="som.cp" />
           <compilerarg line="-s ${src_gen.dir}" />
           <compilerarg line="-XDignore.symbol.file" />
           <compilerarg line="-Xlint:all" />
           <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
         </javac>
         <javac includeantruntime="false" srcdir="${src_gen.dir}" destdir="${classes.dir}" debug="true">
-          <classpath refid="project.classpath" />
+          <classpath refid="som.cp" />
           <compilerarg line="-s ${src_gen.dir}" />
           <compilerarg line="-Xlint:all" />
           <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
         </javac>
         <javac includeantruntime="false" srcdir="${unit.dir}" destdir="${classes.dir}" debug="true">
-          <classpath refid="project.classpath" />
+          <classpath refid="som.cp" />
           <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
         </javac>
+        <travis target="compile-som" />
     </target>
 
-    <target name="compile" depends="libs,compile-som" description="Compile SOMns and dependencies">
+    <target name="compile" depends="libs,compile-som,compile-test-extension" description="Compile SOMns and dependencies">
+    </target>
+
+    <target name="compile-test-extension">
+      <travis target="compile-test-extension" start="Compile an Extension for Testing" />
+      <ant dir="${corelib.dir}/TestSuite/extension" useNativeBasedir="true" target="jar" inheritAll="false" />
+      <travis target="compile-test-extension" />
     </target>
 
     <target name="kompos" description="Build Kompos">
+        <travis target="kompos" start="Build Kompos" />
         <exec executable="npm" dir="${kompos.dir}" failonerror="true">
             <arg value="--quiet"/>
             <arg value="install"/>
         </exec>
+        <travis target="kompos" />
     </target>
 
     <target name="compile-all" depends="compile,kompos" description="Build SOMns and Kompos">
@@ -253,12 +353,13 @@
     </target>
 
     <target name="unit-tests" depends="compile,jacoco-lib" description="Execute tests">
+      <travis target="unit-tests" start="Execute Tests" />
       <jacoco:coverage>
         <junit haltonerror="false" haltonfailure="false" failureproperty="test.failed"
             outputtoformatters="true" fork="true" forkmode="once">
             <jvmarg value="-ea" />
             <jvmarg value="-esa" />
-            <classpath refid="project.classpath" />
+            <classpath refid="som.cp" />
             <batchtest fork="yes" filtertrace="false">
               <fileset dir="${unit.dir}">
                   <include name="**/*Test*.java"/>
@@ -270,18 +371,20 @@
      </jacoco:coverage>
 
      <jacoco:coverage>
-        <java classname="som.VM" fork="true" failonerror="true">
-            <classpath refid="project.classpath" />
+        <java classname="som.Launcher" fork="true" failonerror="true">
+            <classpath refid="som.cp" />
             <jvmarg value="-ea" />
             <jvmarg value="-esa" />
-            <arg line="core-lib/TestSuite/TestRunner.ns" />
+            <arg line="${corelib.dir}/TestSuite/TestRunner.ns" />
         </java>
      </jacoco:coverage>
 
      <fail message="Basic tests failed." if="test.failed" />
+     <travis target="unit-tests" />
     </target>
 
     <target name="som-tests" depends="compile">
+      <travis target="som-tests" start="Run SOMns Tests" />
       <!-- delete old coverage data, this should be the first task generating coverage data -->
       <delete file="all.gcov" />
 
@@ -291,23 +394,41 @@
         <arg value="--java-coverage" />
         <arg value="jacoco.exec" />
         <arg value="-G" />
-        <arg value="core-lib/TestSuite/TestRunner.ns" />
+        <arg value="${corelib.dir}/TestSuite/TestRunner.ns" />
       </exec>
 
       <exec executable="./som" failonerror="true">
         <arg value="-X" />
-        <arg value="core-lib/TestSuite/TestRunner.ns" />
+        <arg value="${corelib.dir}/TestSuite/TestRunner.ns" />
       </exec>
+      <travis target="som-tests" />
+    </target>
+
+    <target name="serialization-tests" depends="compile">
+      <travis target="serialization-tests" start="Test Snapshot Serialization" />
+      <exec executable="./som" failonerror="true">
+        <arg value="-G" />
+        <arg value="-at" />
+        <arg value="-tas" />
+        <arg value="${corelib.dir}/TestSuite/TestRunner.ns" />
+        <arg value="${corelib.dir}/TestSuite/Serialization.ns" /> 
+        <arg value="SerializationTest" />
+      </exec>
+      <travis target="serialization-tests" />
     </target>
 
     <target name="dynamic-metrics-tests" depends="compile-som">
+      <travis target="dym-tests" start="Test Dynamic Metric Tool" />
       <exec executable="tests/dym/test.sh" failonerror="true">
           <arg value="--coverage" />
       </exec>
+      <travis target="dym-tests" />
     </target>
 
     <target name="superinstructions-tests" depends="compile-som">
+      <travis target="si-tests" start="Test Superinstruction Tool" />
       <exec executable="tests/superinstructions/test.sh" failonerror="true"></exec>
+      <travis target="si-tests" />
     </target>
     
     <target name="update-test-data" depends="compile-som" description="Updates the test data for DynamicMetrics and SuperInstructions">
@@ -320,18 +441,28 @@
     </target>
 
     <target name="replay-tests" depends="compile">
+      <travis target="replay-tests" start="Test Trace Replay" />
       <exec executable="tests/replay/test.sh" failonerror="true">
           <arg value="1" />
       </exec>
       <exec executable="tests/replay/test.sh" failonerror="true">
           <arg value="2" />
       </exec>
+      <travis target="replay-tests" />
+    </target>
+
+    <target name="snapshot-tests" depends="compile">
+      <travis target="snapshot-tests" start="Tests Snapshotting" />
+      <exec executable="tests/snapshot/test.sh" failonerror="true">
+      </exec>
+      <travis target="snapshot-tests" />
     </target>
 
     <target name="core-tests" depends="unit-tests,som-tests,dynamic-metrics-tests,superinstructions-tests">
     </target>
 
     <target name="send-java-coverage" depends="jacoco-lib,codacy-coverage-lib">
+      <travis target="send-java-coverage" start="Send Java Coverage" />
       <jacoco:report>
         <executiondata>
           <file file="jacoco.exec"/>
@@ -361,19 +492,44 @@
         <arg value="-r" />
         <arg value="jacoco.xml" />
       </java>
+      <travis target="send-java-coverage" />
     </target>
 
     <target name="send-somns-coverage">
+        <travis target="send-somns-coverage" start="Send SOMns Coverage" />
         <!-- submit coverage data -->
         <java classname="coveralls.Report" fork="true" failonerror="true">
-            <classpath refid="project.classpath" />
+            <classpath refid="som.cp" />
             <arg value="${env.COVERALLS_REPO_TOKEN}" />
             <arg value="all.gcov" />
         </java>
+        <travis target="send-somns-coverage" />
     </target>
 
     <target name="coverage" depends="send-java-coverage,send-somns-coverage" />
 
-    <target name="tests" depends="core-tests,replay-tests,coverage">
+    <target name="tests" depends="core-tests,serialization-tests,replay-tests,coverage">
+    </target>
+
+    <target name="native" depends="libs,jvmci-libs,compile-som">
+      <travis target="native" start="Build Native Image" />
+
+      <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
+        <env key="JAVA_HOME" value="${jvmci.home}" />
+        <arg line="native-image" />
+        <arg line="--macro:truffle --no-fallback --initialize-at-build-time -H:+ReportExceptionStackTraces" />
+        <arg line="-H:-ThrowUnsafeOffsetErrors" />
+        
+        <!-- <arg line="-H:+PrintRuntimeCompileMethods" /> -->
+        <!-- <arg line="-H:+PrintMethodHistogram" /> 
+             <arg line="-H:+RuntimeAssertions" />
+             <arg line="-H:+EnforceMaxRuntimeCompileMethods" /> -->
+
+        <arg line="-cp ${ant.refid:common.cp}" />
+        <arg line="som.Launcher" />
+        <arg line="som-native" />
+      </exec>
+      
+      <travis target="native" />
     </target>
 </project>

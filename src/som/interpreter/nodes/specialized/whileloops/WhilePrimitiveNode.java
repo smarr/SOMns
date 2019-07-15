@@ -1,8 +1,7 @@
 package som.interpreter.nodes.specialized.whileloops;
 
-import com.oracle.truffle.api.dsl.GenerateNodeFactory;
-import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.nodes.ExpressionNode;
@@ -12,7 +11,6 @@ import som.vmobjects.SObjectWithClass;
 import tools.dym.Tags.LoopNode;
 
 
-@GenerateNodeFactory
 public abstract class WhilePrimitiveNode extends BinaryComplexOperation {
   final boolean               predicateBool;
   @Child protected WhileCache whileNode;
@@ -27,31 +25,16 @@ public abstract class WhilePrimitiveNode extends BinaryComplexOperation {
   }
 
   @Override
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
     if (tag == LoopNode.class) {
       return true;
     } else {
-      return super.isTaggedWithIgnoringEagerness(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
   }
 
-  @Specialization
-  protected SObjectWithClass doWhileConditionally(final VirtualFrame frame,
-      final SBlock loopCondition, final SBlock loopBody) {
-    return (SObjectWithClass) whileNode.executeEvaluated(frame, loopCondition, loopBody);
-  }
-
-  public abstract static class WhileTruePrimitiveNode extends WhilePrimitiveNode {
-    public WhileTruePrimitiveNode(final SourceSection source) {
-      super(source, true);
-    }
-  }
-
-  public abstract static class WhileFalsePrimitiveNode extends WhilePrimitiveNode {
-    public WhileFalsePrimitiveNode(final SourceSection source) {
-      super(source, false);
-    }
-  }
+  protected abstract SObjectWithClass doWhileConditionally(VirtualFrame frame,
+      SBlock loopCondition, SBlock loopBody);
 
   @Override
   public boolean isResultUsed(final ExpressionNode child) {

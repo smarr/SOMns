@@ -7,6 +7,7 @@ import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.dsl.NodeFactory;
 
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
@@ -17,6 +18,8 @@ import som.vm.SomStructuralType;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
+import tools.snapshot.nodes.AbstractSerializationNode;
+import tools.snapshot.nodes.SerializerRootNode;
 
 
 /**
@@ -64,6 +67,8 @@ public final class ClassFactory {
 
   public final SomStructuralType type;
 
+  protected final SerializerRootNode serializationRoot;
+
   public ClassFactory(final SSymbol name, final MixinDefinition mixinDef,
       final EconomicSet<SlotDefinition> instanceSlots,
       final EconomicMap<SSymbol, Dispatchable> dispatchables,
@@ -72,7 +77,8 @@ public final class ClassFactory {
       final boolean isArray,
       final SClass[] superclassAndMixins,
       final boolean hasOnlyImmutableFields,
-      final ClassFactory classClassFactory) {
+      final ClassFactory classClassFactory,
+      final NodeFactory<? extends AbstractSerializationNode> serializerFactory) {
     assert instanceSlots == null || instanceSlots.size() > 0;
 
     this.className = name;
@@ -86,6 +92,13 @@ public final class ClassFactory {
     this.hasOnlyImmutableFields = hasOnlyImmutableFields;
 
     this.superclassAndMixins = superclassAndMixins;
+
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      this.serializationRoot =
+          new SerializerRootNode(serializerFactory.createNode(this));
+    } else {
+      this.serializationRoot = null;
+    }
 
     VM.callerNeedsToBeOptimized(
         "instanceLayout should only be accessed on slow path. (and ClassFactory should only be instantiated on slowpath, too)");
@@ -127,6 +140,14 @@ public final class ClassFactory {
 
   public SClass[] getSuperclassAndMixins() {
     return superclassAndMixins;
+  }
+
+  public AbstractSerializationNode getSerializer() {
+    return serializationRoot.getSerializer();
+  }
+
+  public MixinDefinition getMixinDefinition() {
+    return mixinDef;
   }
 
   /**
@@ -174,22 +195,17 @@ public final class ClassFactory {
     return instanceLayout;
   }
 
-  private static String getFullyQualifiedName(final MixinDefinition d) {
-    MixinDefinition o = d.getOuterMixinDefinition();
-    String result = d.getName().getString();
-    if (o != null) {
-      result = getFullyQualifiedName(o) + "." + result;
-    }
-    return result;
-  }
-
   @Override
   public String toString() {
     String s = "";
     for (SClass sc : superclassAndMixins) {
       s += ", " + sc.getName().getString();
     }
-    return "ClsFct[" + getFullyQualifiedName(mixinDef) + s + "]";
+    return "ClsFct[" + mixinDef.getIdentifier() + s + "]";
+  }
+
+  public SSymbol getIdentifier() {
+    return mixinDef.getIdentifier();
   }
 
   private SomStructuralType getType() {

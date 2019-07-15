@@ -6,14 +6,18 @@ import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RecursiveTask;
 
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.library.ExportLibrary;
 
+import som.VM;
+import som.interop.SomInteropObject;
 import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.Activity;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
@@ -21,8 +25,9 @@ import tools.debugger.entities.ActivityType;
 
 public final class TaskThreads {
 
+  @ExportLibrary(InteropLibrary.class)
   public abstract static class SomTaskOrThread extends RecursiveTask<Object>
-      implements Activity {
+      implements Activity, SomInteropObject {
     private static final long serialVersionUID = 4823503369882151811L;
 
     protected final Object[] argArray;
@@ -54,10 +59,10 @@ public final class TaskThreads {
         RootCallTarget target = ((SBlock) argArray[0]).getMethod().getCallTarget();
         if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRoot) {
           WebDebugger dbg = SomLanguage.getVM(target.getRootNode()).getWebDebugger();
-          dbg.prepareSteppingUntilNextRootNode();
+          dbg.prepareSteppingUntilNextRootNode(Thread.currentThread());
         }
-        if (VmSettings.ACTOR_TRACING) {
-          ActorExecutionTrace.currentActivity(this);
+        if (VmSettings.KOMPOS_TRACING) {
+          KomposTrace.currentActivity(this);
         }
 
         ForkJoinThread thread = (ForkJoinThread) Thread.currentThread();
@@ -193,17 +198,24 @@ public final class TaskThreads {
   }
 
   public static final class ForkJoinThreadFactory implements ForkJoinWorkerThreadFactory {
+
+    private final VM vm;
+
+    public ForkJoinThreadFactory(final VM vm) {
+      this.vm = vm;
+    }
+
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
-      return new ForkJoinThread(pool);
+      return new ForkJoinThread(pool, vm);
     }
   }
 
   private static final class ForkJoinThread extends TracingActivityThread {
     private SomTaskOrThread task;
 
-    protected ForkJoinThread(final ForkJoinPool pool) {
-      super(pool);
+    protected ForkJoinThread(final ForkJoinPool pool, final VM vm) {
+      super(pool, vm);
     }
 
     @Override

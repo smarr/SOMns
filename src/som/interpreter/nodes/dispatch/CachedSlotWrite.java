@@ -1,6 +1,10 @@
 package som.interpreter.nodes.dispatch;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.GenerateWrapper;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.profiles.IntValueProfile;
 
@@ -20,6 +24,7 @@ import tools.dym.Tags.FieldWrite;
  * {@link CachedSlotRead} and embeds the field writing operations into a
  * dispatch chain. See {@link CachedSlotRead} for more details on the design.
  */
+@GenerateWrapper
 public abstract class CachedSlotWrite extends AbstractDispatchNode {
   @Child protected AbstractDispatchNode nextInCache;
 
@@ -30,14 +35,23 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
       final TypeCheckNode typeCheck, final AbstractDispatchNode nextInCache) {
     super(nextInCache.getSourceSection());
     this.guardForRcvr = guardForRcvr;
-    this.typeCheck = typeCheck;
+    this.typeCheck = insert(typeCheck);
     this.nextInCache = nextInCache;
+  }
+
+  /**
+   * For wrapped nodes only.
+   */
+  protected CachedSlotWrite() {
+    super(null);
+    this.guardForRcvr = null;
+    this.typeCheck = null;
   }
 
   public abstract void doWrite(SObject obj, Object value);
 
   @Override
-  public final Object executeDispatch(final Object[] arguments) {
+  public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
     try {
       if (guardForRcvr.entryMatches(arguments[0], null)) {
         if (typeCheck != null) {
@@ -46,26 +60,31 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
         doWrite((SMutableObject) arguments[0], arguments[1]);
         return arguments[1];
       } else {
-        return nextInCache.executeDispatch(arguments);
+        return nextInCache.executeDispatch(frame, arguments);
       }
     } catch (InvalidAssumptionException e) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      return replace(nextInCache).executeDispatch(arguments);
+      return replace(nextInCache).executeDispatch(frame, arguments);
     }
   }
 
   @Override
-  protected final boolean isTaggedWith(final Class<?> tag) {
-    if (tag == FieldWrite.class) {
-      return true;
-    } else {
-      return super.isTaggedWith(tag);
-    }
+  public boolean hasTag(final Class<? extends Tag> tag) {
+    return tag == FieldWrite.class;
   }
 
   @Override
   public final int lengthOfDispatchChain() {
     return 1 + nextInCache.lengthOfDispatchChain();
+  }
+
+  @Override
+  public WrapperNode createWrapper(final ProbeNode probe) {
+    if (getParent() instanceof ClassSlotAccessNode) {
+      return new CachedSlotWriteWrapper(this, probe);
+    } else {
+      return new AbstractDispatchNodeWrapper(this, probe);
+    }
   }
 
   public static final class UnwrittenSlotWrite extends CachedSlotWrite {

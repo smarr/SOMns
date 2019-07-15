@@ -1,6 +1,5 @@
 import {
-  IdMap, Source, StackFrame, SourceMessage, TaggedSourceCoordinate,
-  getSectionId
+  IdMap, Source, SourceMessage, TaggedSourceCoordinate, getSectionId
 } from "./messages";
 import { Breakpoint } from "./breakpoints";
 
@@ -41,15 +40,6 @@ export class Debugger {
 
   public getSource(id: string): Source {
     return this.sources[id];
-  }
-
-  public getSectionIdFromFrame(sourceId: string, frame: StackFrame) {
-    const line = frame.line,
-      column = frame.column,
-      length = frame.length;
-
-    return getSectionId(sourceId,
-      { startLine: line, startColumn: column, charLength: length });
   }
 
   public addSource(msg: SourceMessage): Source {

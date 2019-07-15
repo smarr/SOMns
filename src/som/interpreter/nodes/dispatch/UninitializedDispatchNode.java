@@ -3,15 +3,15 @@ package som.interpreter.nodes.dispatch;
 import java.util.concurrent.locks.Lock;
 
 import com.oracle.truffle.api.CompilerAsserts;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.interop.SomInteropObject;
 import som.interpreter.Invokable;
 import som.interpreter.SomLanguage;
 import som.interpreter.TruffleCompiler;
@@ -19,7 +19,6 @@ import som.interpreter.Types;
 import som.interpreter.nodes.ISuperReadNode;
 import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
@@ -63,17 +62,15 @@ public final class UninitializedDispatchNode {
 
     protected final AbstractDispatchNode insertSpecialization(final Object rcvr,
         final Object[] arguments) {
-      VM.insertInstrumentationWrapper(this);
-
       AbstractDispatchNode node;
-      if (!(rcvr instanceof SAbstractObject) && rcvr instanceof TruffleObject) {
+      if (rcvr instanceof TruffleObject && !(rcvr instanceof SomInteropObject)) {
         node = createForeignDispatchNode(arguments.length);
       } else {
         node = createSomDispatchNode(rcvr, arguments);
       }
 
       replace(node);
-      VM.insertInstrumentationWrapper(node);
+      notifyInserted(node);
       return node;
     }
 
@@ -95,7 +92,7 @@ public final class UninitializedDispatchNode {
       AbstractDispatchNode node;
       if (dispatchable == null) {
         node = new CachedDnuNode(rcvrClass, selector,
-            DispatchGuard.create(rcvr), SomLanguage.getVM(getRootNode()), newChainEnd);
+            DispatchGuard.create(rcvr), SomLanguage.getVM(this), newChainEnd);
       } else {
         node = dispatchable.getDispatchNode(rcvr, arguments, newChainEnd, forAtomic());
       }
@@ -128,9 +125,9 @@ public final class UninitializedDispatchNode {
     }
 
     @Override
-    public final Object executeDispatch(final Object[] arguments) {
+    public final Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Initialize a dispatch node.");
-      return specialize(arguments).executeDispatch(arguments);
+      return specialize(arguments).executeDispatch(frame, arguments);
     }
 
     private AbstractDispatchNode specialize(final Object[] arguments) {

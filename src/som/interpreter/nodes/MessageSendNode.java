@@ -8,8 +8,10 @@ import java.util.concurrent.locks.Lock;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.GenerateWrapper;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeCost;
@@ -17,19 +19,23 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Specializer;
 import bd.primitives.nodes.PreevaluatedExpression;
+import bd.source.SourceCoordinate;
+import bd.tools.nodes.Invocation;
 import som.VM;
 import som.compiler.AccessModifier;
-import som.instrumentation.MessageSendNodeWrapper;
+import som.interpreter.Invokable;
 import som.interpreter.TruffleCompiler;
+import som.interpreter.actors.ReceivedMessage;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
 import som.interpreter.nodes.dispatch.DispatchChain.Cost;
 import som.interpreter.nodes.dispatch.UninitializedDispatchNode;
+import som.interpreter.nodes.nary.EagerPrimitiveNode;
 import som.interpreter.nodes.nary.EagerlySpecializableNode;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
+import som.primitives.reflection.AbstractSymbolDispatch;
+import som.vm.NotYetImplementedException;
 import som.vm.Primitives;
 import som.vmobjects.SSymbol;
-import tools.Send;
-import tools.SourceCoordinate;
 import tools.dym.Tags.VirtualInvoke;
 
 
@@ -37,15 +43,16 @@ public final class MessageSendNode {
 
   public static ExpressionNode createMessageSend(final SSymbol selector,
       final ExpressionNode[] arguments, final SourceSection source, final VM vm) {
+    for (ExpressionNode exp : arguments) {
+      unwrapIfNecessary(exp).markAsArgument();
+    }
+
     Primitives prims = vm.getPrimitives();
     Specializer<VM, ExpressionNode, SSymbol> specializer =
         prims.getParserSpecializer(selector, arguments);
     if (specializer != null) {
       EagerlySpecializableNode newNode = (EagerlySpecializableNode) specializer.create(null,
-          arguments, source, !specializer.noWrapper());
-      for (ExpressionNode exp : arguments) {
-        unwrapIfNecessary(exp).markAsPrimitiveArgument();
-      }
+          arguments, source, !specializer.noWrapper(), vm);
       if (specializer.noWrapper()) {
         return newNode;
       } else {
@@ -106,8 +113,9 @@ public final class MessageSendNode {
     return result;
   }
 
+  @GenerateWrapper
   public abstract static class AbstractMessageSendNode extends ExprWithTagsNode
-      implements PreevaluatedExpression, Send {
+      implements PreevaluatedExpression, Invocation<SSymbol> {
 
     @Children protected final ExpressionNode[] argumentNodes;
 
@@ -115,12 +123,25 @@ public final class MessageSendNode {
       this.argumentNodes = arguments;
     }
 
+    /** For wrappers only. */
+    protected AbstractMessageSendNode() {
+      this.argumentNodes = null;
+    }
+
+    /**
+     * HACK, TODO: remove if possible. This is a work around for a javac or TruffleDSL bug,
+     * which causes the generic parameter of {@link Invocation} to end up as ? in the generated
+     * file.
+     */
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    public abstract SSymbol getInvocationIdentifier();
+
+    @Override
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == CallTag.class) {
         return true;
       }
-      return super.isTaggedWith(tag);
+      return super.hasTag(tag);
     }
 
     @Override
@@ -137,6 +158,29 @@ public final class MessageSendNode {
         assert arguments[i] != null : "Some expression evaluated to null, which is not supported.";
       }
       return arguments;
+    }
+
+    @Override
+    public WrapperNode createWrapper(final ProbeNode probe) {
+      Node parent = getParent();
+      // this.isSafelyReplaceableBy(newNode)
+      if (parent instanceof ReceivedMessage) {
+        return new AbstractMessageSendNodeWrapper(this, probe);
+      } else if (parent instanceof Invokable || parent instanceof SequenceNode
+          || parent instanceof ExprWithTagsNode
+          || parent instanceof ExceptionSignalingNode
+          || parent instanceof EagerPrimitiveNode) {
+        return new ExpressionNodeWrapper(this, probe);
+      }
+
+      if (parent.getClass().getSuperclass() == Node.class) {
+        parent = parent.getParent();
+        if (parent instanceof AbstractSymbolDispatch) {
+          return new AbstractMessageSendNodeWrapper(this, probe);
+        }
+      }
+
+      throw new NotYetImplementedException();
     }
 
     public abstract void addSuffixToSelector(String suffix);
@@ -161,7 +205,7 @@ public final class MessageSendNode {
     }
 
     @Override
-    public SSymbol getSelector() {
+    public SSymbol getInvocationIdentifier() {
       return selector;
     }
 
@@ -195,7 +239,7 @@ public final class MessageSendNode {
           boolean noWrapper = specializer.noWrapper();
           EagerlySpecializableNode newNode =
               (EagerlySpecializableNode) specializer.create(arguments, argumentNodes,
-                  sourceSection, !noWrapper);
+                  sourceSection, !noWrapper, vm);
           if (noWrapper) {
             return replace(newNode);
           } else {
@@ -221,20 +265,13 @@ public final class MessageSendNode {
     }
 
     private PreevaluatedExpression makeEagerPrimUnsyced(final EagerlySpecializableNode prim) {
-      VM.insertInstrumentationWrapper(this);
       assert prim.getSourceSection() != null;
 
       PreevaluatedExpression result =
           (PreevaluatedExpression) replace(
               prim.wrapInEagerWrapper(selector, argumentNodes, vm));
 
-      VM.insertInstrumentationWrapper((Node) result);
-
-      for (ExpressionNode exp : argumentNodes) {
-        unwrapIfNecessary(exp).markAsPrimitiveArgument();
-        VM.insertInstrumentationWrapper(exp);
-      }
-
+      notifyInserted((Node) result);
       return result;
     }
 
@@ -244,8 +281,7 @@ public final class MessageSendNode {
     }
   }
 
-  @Instrumentable(factory = MessageSendNodeWrapper.class)
-  private static final class UninitializedMessageSendNode
+  protected static class UninitializedMessageSendNode
       extends AbstractUninitializedMessageSendNode {
 
     protected UninitializedMessageSendNode(final SSymbol selector,
@@ -256,17 +292,15 @@ public final class MessageSendNode {
     /**
      * For wrapper use only.
      */
-    protected UninitializedMessageSendNode(final UninitializedMessageSendNode wrappedNode) {
-      super(wrappedNode.selector, null, null);
+    protected UninitializedMessageSendNode() {
+      super(null, null, null);
     }
 
     @Override
     protected GenericMessageSendNode makeSend() {
-      VM.insertInstrumentationWrapper(this);
       GenericMessageSendNode send = createGeneric(selector, argumentNodes, sourceSection);
       replace(send);
-      VM.insertInstrumentationWrapper(send);
-      VM.insertInstrumentationWrapper(argumentNodes[0]);
+      notifyInserted(send);
       return send;
     }
   }
@@ -286,9 +320,7 @@ public final class MessageSendNode {
     }
   }
 
-  @Instrumentable(factory = MessageSendNodeWrapper.class)
-  public static final class GenericMessageSendNode
-      extends AbstractMessageSendNode {
+  public static class GenericMessageSendNode extends AbstractMessageSendNode {
 
     private SSymbol selector;
 
@@ -301,24 +333,28 @@ public final class MessageSendNode {
       this.dispatchNode = dispatchNode;
     }
 
+    /** For wrappers. */
+    protected GenericMessageSendNode() {
+      this(null, null, null);
+    }
+
     @Override
-    public SSymbol getSelector() {
+    public SSymbol getInvocationIdentifier() {
       return selector;
     }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == VirtualInvoke.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.hasTag(tag);
       }
     }
 
     @Override
-    public Object doPreEvaluated(final VirtualFrame frame,
-        final Object[] arguments) {
-      return dispatchNode.executeDispatch(arguments);
+    public Object doPreEvaluated(final VirtualFrame frame, final Object[] arguments) {
+      return dispatchNode.executeDispatch(frame, arguments);
     }
 
     public AbstractDispatchNode getDispatchListHead() {

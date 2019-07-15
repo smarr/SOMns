@@ -1,17 +1,19 @@
 package som.interpreter.nodes;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.Instrumentable;
+import com.oracle.truffle.api.instrumentation.GenerateWrapper;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.profiles.ValueProfile;
 
 import bd.inlining.ScopeAdaptationVisitor;
+import bd.tools.nodes.Invocation;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.Variable.AccessNodeState;
 import som.compiler.Variable.Argument;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.vmobjects.SSymbol;
-import tools.Send;
 import tools.debugger.Tags.ArgumentTag;
 import tools.debugger.Tags.KeywordTag;
 import tools.dym.Tags.LocalArgRead;
@@ -19,8 +21,9 @@ import tools.dym.Tags.LocalArgRead;
 
 public abstract class ArgumentReadNode {
 
-  @Instrumentable(factory = LocalArgumentReadNodeWrapper.class)
-  public static class LocalArgumentReadNode extends ExprWithTagsNode implements Send {
+  @GenerateWrapper
+  public static class LocalArgumentReadNode extends ExprWithTagsNode
+      implements Invocation<SSymbol> {
     protected final int      argumentIndex;
     protected final Argument arg;
 
@@ -33,9 +36,9 @@ public abstract class ArgumentReadNode {
     }
 
     /** For Wrapper use only. */
-    protected LocalArgumentReadNode(final LocalArgumentReadNode wrappedNode) {
-      this.argumentIndex = wrappedNode.argumentIndex;
-      this.arg = wrappedNode.arg;
+    protected LocalArgumentReadNode() {
+      this.argumentIndex = 0;
+      this.arg = null;
     }
 
     /** For use in primitives only. */
@@ -45,12 +48,17 @@ public abstract class ArgumentReadNode {
       assert insidePrim : "Only to be used for primitive nodes";
     }
 
+    @Override
+    public WrapperNode createWrapper(final ProbeNode probe) {
+      return new LocalArgumentReadNodeWrapper(this, probe);
+    }
+
     public Argument getArg() {
       return arg;
     }
 
     @Override
-    public final SSymbol getSelector() {
+    public final SSymbol getInvocationIdentifier() {
       return arg.name;
     }
 
@@ -60,13 +68,13 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == ArgumentTag.class) {
         return true;
       } else if (tag == LocalArgRead.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.hasTag(tag);
       }
     }
 
@@ -117,16 +125,17 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == KeywordTag.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.hasTag(tag);
       }
     }
   }
 
-  public static class NonLocalArgumentReadNode extends ContextualNode implements Send {
+  public static class NonLocalArgumentReadNode extends ContextualNode
+      implements Invocation<SSymbol> {
     protected final int      argumentIndex;
     protected final Argument arg;
 
@@ -145,7 +154,7 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    public final SSymbol getSelector() {
+    public final SSymbol getInvocationIdentifier() {
       return arg.name;
     }
 
@@ -160,13 +169,13 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == ArgumentTag.class) {
         return true;
       } else if (tag == LocalArgRead.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.hasTag(tag);
       }
     }
   }
@@ -209,11 +218,11 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == KeywordTag.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.hasTag(tag);
       }
     }
   }
@@ -247,11 +256,11 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == KeywordTag.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.hasTag(tag);
       }
     }
   }
@@ -286,11 +295,11 @@ public abstract class ArgumentReadNode {
     }
 
     @Override
-    protected boolean isTaggedWith(final Class<?> tag) {
+    public boolean hasTag(final Class<? extends Tag> tag) {
       if (tag == KeywordTag.class) {
         return true;
       } else {
-        return super.isTaggedWith(tag);
+        return super.hasTag(tag);
       }
     }
   }

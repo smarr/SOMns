@@ -593,7 +593,7 @@ DAMAGE.>> *)
     )
 
     public simpleName ^ <String> = (
-      ^ elements last name
+      ^ elements last pattern
     )
 
     public charInputStream ^ <CharInputStream> = (
@@ -605,27 +605,15 @@ DAMAGE.>> *)
     )
 
     public readStream ^ <ExternalReadStream> = (
-      ^ExternalReadStream onDescriptor: (
-        self open: #read ifFail: [ :err <Exception> | 
-          self error: err 
-        ]
-      )
+      ^ExternalReadStream onDescriptor: (self open: #read)
     )
 
     public readWriteStream ^ <ExternalReadWriteStream> = (
-      ^ExternalReadWriteStream onDescriptor: (
-        self open: #readWrite ifFail: [ :err <Exception> | 
-          self error: err 
-        ]
-      )
+      ^ExternalReadWriteStream onDescriptor: (self open: #readWrite)
     )
 
     public writeStream ^ <ExternalReadWriteStream> = (
-      ^ExternalOutputStream onDescriptor: (
-        self open: #write ifFail: [ :err <Exception> | 
-          self error: err 
-        ]
-      )
+      ^ExternalOutputStream onDescriptor: (self open: #write)
     )
   ) : (
     public currentDirectory ^<FilePath> = (
@@ -661,13 +649,4 @@ DAMAGE.>> *)
     )
   )
 
-  (* Short cut from VM. To be removed when optimized. *)
-  private signalIOException: aMessage = (
-    IOException signalWith: aMessage
-  )
-
-  (* Short cut from VM. To be removed when optimized. *)
-  private signalFileNotFoundException: fileName with: aMessage = (
-    FileNotFoundException signalFor: fileName with: aMessage
-  )
 )

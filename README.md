@@ -107,25 +107,36 @@ Changes and releases are documented in our [CHANGELOG.md][cl].
 Academic Work
 -------------
 
-SOMns is designed as platform for research on concurrent programming models,
-and their interactions. Here, we collect related papers:
+SOMns is designed as platform for research with a special interest for
+concurrent programming models, their interactions, and tooling for debugging.
 
- - [A Concurrency-Agnostic Protocol for Multi-Paradigm Concurrent Debugging Tools](http://stefan-marr.de/papers/dls-marr-et-al-concurrency-agnostic-protocol-for-debugging/),
+Related papers:
+
+ - [Transient Typechecks are (Almost) Free](https://stefan-marr.de/downloads/ecoop19-roberts-et-al-transient-typechecks-are-almost-free.pdf),
+   R. Roberts, S. Marr, M. Homer, J. Noble; ECOOP'19.
+
+ - [Efficient and Deterministic Record & Replay for Actor Languages](https://stefan-marr.de/downloads/manlang18-aumayr-et-al-efficient-and-deterministic-record-and-replay-for-actor-languages.pdf),
+   D. Aumayr, S. Marr, C. Béra, E. Gonzalez Boix, H. Mössenböck; ManLang'18.
+
+ - [Newspeak and Truffle: A Platform for Grace?](https://stefan-marr.de/downloads/grace18-marr-et-al-newspeak-and-truffle-a-platform-for-grace.pdf),
+   S. Marr, R. Roberts, J. Noble; Grace'18.
+
+ - [Few Versatile vs. Many Specialized Collections: How to design a collection library for exploratory programming?](https://stefan-marr.de/papers/px-marr-daloze-few-versatile-vs-many-specialized-collections/) S. Marr, B. Daloze; Programming Experience Workshop, PX/18.
+
+ - [A Concurrency-Agnostic Protocol for Multi-Paradigm Concurrent Debugging Tools](https://stefan-marr.de/papers/dls-marr-et-al-concurrency-agnostic-protocol-for-debugging/),
    S. Marr, C. Torres Lopez, D. Aumayr, E. Gonzalez Boix, H. Mössenböck; Dynamic Language Symposium'17.
 
- - [Few Versatile vs. Many Specialized Collections: How to design a collection library for exploratory programming?](http://stefan-marr.de/papers/px-marr-daloze-few-versatile-vs-many-specialized-collections/) S. Marr, B. Daloze ; Programming Experience Workshop, PX/18.
-
- - [Kómpos: A Platform for Debugging Complex Concurrent Applications](http://stefan-marr.de/downloads/progdemo-marr-et-al-kompos-a-platform-for-debugging-complex-concurrent-applications.pdf),
+ - [Kómpos: A Platform for Debugging Complex Concurrent Applications](https://stefan-marr.de/downloads/progdemo-marr-et-al-kompos-a-platform-for-debugging-complex-concurrent-applications.pdf),
    S. Marr, C. Torres Lopez, D. Aumayr, E. Gonzalez Boix, H. Mössenböck; Demonstration at the &lt;Programming&gt;'17 conference.
 
- - [Toward Virtual Machine Adaption Rather than Reimplementation: Adapting SOMns for Grace](http://stefan-marr.de/downloads/morevms17-roberts-et-al-toward-virtual-machine-adaption.pdf),
+ - [Toward Virtual Machine Adaption Rather than Reimplementation: Adapting SOMns for Grace](https://stefan-marr.de/downloads/morevms17-roberts-et-al-toward-virtual-machine-adaption.pdf),
    R. Roberts, S. Marr, M. Homer, J. Noble;
    Presentation at the MoreVMs'17 workshop at the &lt;Programming&gt;'17 conference.
 
- - [Optimizing Communicating Event-Loop Languages with Truffle](http://stefan-marr.de/2015/10/optimizing-communicating-event-loop-languages-with-truffle/),
+ - [Optimizing Communicating Event-Loop Languages with Truffle](https://stefan-marr.de/2015/10/optimizing-communicating-event-loop-languages-with-truffle/),
     S. Marr, H. Mössenböck; Presentation at the AGERE!’15 Workshop, co-located with SPLASH’15.
 
- - [Cross-Language Compiler Benchmarking: Are We Fast Yet?](http://stefan-marr.de/papers/dls-marr-et-al-cross-language-compiler-benchmarking-are-we-fast-yet/)
+ - [Cross-Language Compiler Benchmarking: Are We Fast Yet?](https://stefan-marr.de/papers/dls-marr-et-al-cross-language-compiler-benchmarking-are-we-fast-yet/)
     S. Marr, B. Daloze, H. Mössenböck at the 12th Symposium on
     Dynamic Languages co-located with SPLASH'16.
 

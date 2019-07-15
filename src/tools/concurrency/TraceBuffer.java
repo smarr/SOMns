@@ -1,304 +1,225 @@
 package tools.concurrency;
 
-import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
+import java.lang.reflect.Field;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.CompilerDirectives;
 
-import som.interpreter.actors.Actor;
-import som.interpreter.nodes.dispatch.Dispatchable;
-import som.vm.Activity;
-import som.vm.ObjectSystem;
-import som.vm.Symbols;
+import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.vm.VmSettings;
-import som.vmobjects.SInvokable;
-import tools.SourceCoordinate;
-import tools.debugger.entities.ActivityType;
-import tools.debugger.entities.DynamicScopeType;
-import tools.debugger.entities.Implementation;
-import tools.debugger.entities.PassiveEntityType;
-import tools.debugger.entities.ReceiveOp;
-import tools.debugger.entities.SendOp;
+import sun.misc.Unsafe;
+import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
+import tools.replay.nodes.TraceActorContextNode;
 
 
-public class TraceBuffer {
+public abstract class TraceBuffer {
 
-  public static TraceBuffer create() {
-    assert VmSettings.ACTOR_TRACING;
+  public static TraceBuffer create(final long threadId) {
+    assert VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING;
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      return new SyncedTraceBuffer();
+      return new KomposTrace.KomposTraceBuffer(threadId);
     } else {
-      return new TraceBuffer();
+      return new ActorTraceBuffer();
     }
   }
 
-  private ByteBuffer storage;
+  public static final Unsafe UNSAFE;
+  public static final long   BYTE_ARR_BASE_OFFSET;
 
-  /**
-   * Id of the implementation-level thread.
-   * Thus, not an application-level thread.
-   */
-  private long implThreadId;
+  private static Unsafe loadUnsafe() {
+    try {
+      return Unsafe.getUnsafe();
+    } catch (SecurityException e) {
+      // can fail, is ok, just to the fallback below
+    }
+    try {
+      Field theUnsafeInstance = Unsafe.class.getDeclaredField("theUnsafe");
+      theUnsafeInstance.setAccessible(true);
+      return (Unsafe) theUnsafeInstance.get(Unsafe.class);
+    } catch (Exception e) {
+      throw new RuntimeException(
+          "exception while trying to get Unsafe.theUnsafe via reflection:", e);
+    }
+  }
 
-  /** Id of the last activity that was running on this buffer. */
-  private Activity lastActivity;
+  static {
+    UNSAFE = loadUnsafe();
+    BYTE_ARR_BASE_OFFSET = UNSAFE.arrayBaseOffset(byte[].class);
+    assert UNSAFE.arrayIndexScale(
+        byte[].class) == 1 : "Expect byte elements to be exactly one byte in size.";
+  }
+
+  protected byte[]  buffer;
+  protected int     position;
+  private final int bufferSize;
 
   protected TraceBuffer() {
-    lastActivity = null;
+    buffer = TracingBackend.getEmptyBuffer();
+    this.bufferSize = VmSettings.BUFFER_SIZE;
   }
 
-  public void resetLastActivity() {
-    lastActivity = null;
+  protected TraceBuffer(final boolean create) {
+    if (create) {
+      this.buffer = new byte[VmSettings.BUFFER_SIZE];
+    } else {
+      buffer = TracingBackend.getEmptyBuffer();
+    }
+    this.bufferSize = VmSettings.BUFFER_SIZE;
   }
 
-  public void init(final ByteBuffer storage, final long implThreadId) {
-    this.storage = storage;
-    this.implThreadId = implThreadId;
-    this.lastActivity = null;
-    assert storage.order() == ByteOrder.BIG_ENDIAN;
-    recordThreadId();
+  protected TraceBuffer(final int size) {
+    this.buffer = new byte[size];
+    this.bufferSize = size;
   }
 
-  public void returnBuffer() {
-    ActorExecutionTrace.returnBuffer(storage);
-    storage = null;
+  public int position() {
+    assert position <= bufferSize;
+    assert position <= buffer.length;
+    return position;
+  }
+
+  public void position(final int newPosition) {
+    assert newPosition >= 0;
+    assert newPosition <= bufferSize;
+    assert newPosition <= buffer.length;
+    if (newPosition < 0) {
+      CompilerDirectives.transferToInterpreter();
+      throw new IllegalArgumentException();
+    }
+    position = newPosition;
+  }
+
+  private int nextPutIndex() {
+    assert position + 1 <= bufferSize;
+    assert position + 1 <= buffer.length;
+    return position++;
+
+  }
+
+  private int nextPutIndex(final int nb) {
+    assert position + nb <= bufferSize;
+    assert position + nb <= buffer.length;
+    int p = position;
+    position += nb;
+    return p;
+  }
+
+  public final void returnBuffer(final byte[] nextBuffer) {
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      TracingBackend.returnBuffer(buffer, position,
+          ActorProcessingThread.currentThread().getSnapshotId());
+    } else {
+      TracingBackend.returnBuffer(buffer, position);
+    }
+    buffer = nextBuffer;
+    position = 0;
+  }
+
+  public final void swapStorage() {
+    returnBuffer(TracingBackend.getEmptyBuffer());
   }
 
   public boolean isEmpty() {
-    return storage.position() == 0;
+    return position == 0;
   }
 
   public boolean isFull() {
-    return storage.remaining() == 0;
+    assert (position == bufferSize) == ((buffer.length - position) == 0);
+    return position == bufferSize;
   }
 
-  boolean swapStorage(final Activity current) {
-    if (storage == null ||
-        storage.position() <= (Implementation.IMPL_THREAD.getSize() +
-            Implementation.IMPL_CURRENT_ACTIVITY.getSize())) {
-      return false;
-    }
-    ActorExecutionTrace.returnBuffer(storage);
-    init(ActorExecutionTrace.getEmptyBuffer(), implThreadId);
-    recordCurrentActivity(current);
-    return true;
-  }
-
-  private void recordThreadId() {
-    final int start = storage.position();
-    assert start == 0;
-
-    storage.put(Implementation.IMPL_THREAD.getId());
-    storage.putLong(implThreadId);
-
-    assert storage.position() == start + Implementation.IMPL_THREAD.getSize();
-  }
-
-  public void recordCurrentActivity(final Activity current) {
-    if (current == lastActivity || current == null) {
-      return;
-    }
-
-    ensureSufficientSpace(Implementation.IMPL_CURRENT_ACTIVITY.getSize(), current);
-
-    lastActivity = current;
-
-    final int start = storage.position();
-
-    storage.put(Implementation.IMPL_CURRENT_ACTIVITY.getId());
-    storage.putLong(current.getId());
-    storage.putInt(current.getNextTraceBufferId());
-
-    assert storage.position() == start + Implementation.IMPL_CURRENT_ACTIVITY.getSize();
-  }
-
-  @TruffleBoundary
-  protected boolean ensureSufficientSpace(final int requiredSpace,
-      final Activity current) {
-    if (storage.remaining() < requiredSpace) {
-      boolean didSwap = swapStorage(current);
-      assert didSwap;
-      return didSwap;
+  public final boolean ensureSufficientSpace(final int requiredSpace,
+      final TraceActorContextNode tracer) {
+    if (position + requiredSpace >= bufferSize) {
+      swapBufferWhenNotEnoughSpace(tracer);
+      return true;
     }
     return false;
   }
 
-  public final void recordMainActor(final Actor mainActor,
-      final ObjectSystem objectSystem) {
-    SourceSection section;
-
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      Dispatchable disp =
-          objectSystem.getPlatformClass().getDispatchables().get(Symbols.symbolFor("start"));
-      SInvokable method = (SInvokable) disp;
-
-      section = method.getInvokable().getSourceSection();
-    } else {
-      section = null;
-    }
-
-    recordActivityCreation(ActivityType.ACTOR, mainActor.getId(),
-        objectSystem.getPlatformClass().getName().getSymbolId(), section, mainActor);
+  protected void swapBufferWhenNotEnoughSpace(final TraceActorContextNode tracer) {
+    swapStorage();
   }
 
-  /** REM: Ensure it is in sync with {@link TraceSemantics#SOURCE_SECTION_SIZE}. */
-  private void writeSourceSection(final SourceSection origin) {
-    /*
-     * TODO: make sure there is always a sourcesection
-     * right now promises created by getChainedPromiseFor have no sourceSection and
-     * caused a Nullpointer exception in this method.
-     * The following if is a workaround.
-     */
-    if (origin == null) {
-      storage.putLong(0);
-      return;
-    }
-
-    assert !origin.getSource()
-                  .isInternal() : "Need special handling to ensure we see user code reported to trace/debugger";
-    storage.putShort(SourceCoordinate.getURI(origin.getSource()).getSymbolId());
-    storage.putShort((short) origin.getStartLine());
-    storage.putShort((short) origin.getStartColumn());
-    storage.putShort((short) origin.getCharLength());
+  public void putByteAt(final int idx, final byte x) {
+    assert buffer.length >= bufferSize;
+    assert 0 <= idx && idx < bufferSize;
+    UNSAFE.putByte(buffer, BYTE_ARR_BASE_OFFSET + idx, x);
   }
 
-  public void recordActivityCreation(final ActivityType entity, final long activityId,
-      final short symbolId, final SourceSection sourceSection, final Activity current) {
-    int requiredSpace = entity.getCreationSize();
-    ensureSufficientSpace(requiredSpace, current);
-
-    final int start = storage.position();
-
-    assert entity.getCreationMarker() != 0;
-
-    storage.put(entity.getCreationMarker());
-    storage.putLong(activityId);
-    storage.putShort(symbolId);
-
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      writeSourceSection(sourceSection);
-    }
-    assert storage.position() == start + requiredSpace;
+  public void putShortAt(final int idx, final short x) {
+    assert buffer.length >= bufferSize;
+    assert 0 <= idx && (idx + 2) < bufferSize;
+    UNSAFE.putShort(buffer, BYTE_ARR_BASE_OFFSET + idx, x);
   }
 
-  public void recordActivityCompletion(final ActivityType entity, final Activity current) {
-    int requireSize = entity.getCompletionSize();
-    ensureSufficientSpace(requireSize, current);
-
-    final int start = storage.position();
-    storage.put(entity.getCompletionMarker());
-    assert storage.position() == start + requireSize;
+  public void putIntAt(final int idx, final int x) {
+    assert buffer.length >= bufferSize;
+    assert 0 <= idx && (idx + 4) < bufferSize;
+    UNSAFE.putInt(buffer, BYTE_ARR_BASE_OFFSET + idx, x);
   }
 
-  private void recordEventWithIdAndSource(final byte eventMarker, final int eventSize,
-      final long id, final SourceSection section, final Activity current) {
-    ensureSufficientSpace(eventSize, current);
-
-    final int start = storage.position();
-
-    storage.put(eventMarker);
-    storage.putLong(id);
-
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      writeSourceSection(section);
-    }
-    assert storage.position() == start + eventSize;
+  public void putLongAt(final int idx, final long x) {
+    assert buffer.length >= bufferSize;
+    assert 0 <= idx && (idx + 8) < bufferSize;
+    UNSAFE.putLong(buffer, BYTE_ARR_BASE_OFFSET + idx, x);
   }
 
-  public void recordScopeStart(final DynamicScopeType entity, final long scopeId,
-      final SourceSection section, final Activity current) {
-    recordEventWithIdAndSource(entity.getStartMarker(), entity.getStartSize(),
-        scopeId, section, current);
+  public void putDoubleAt(final int idx, final double x) {
+    assert buffer.length >= bufferSize;
+    assert 0 <= idx && (idx + 8) < bufferSize;
+    UNSAFE.putDouble(buffer, BYTE_ARR_BASE_OFFSET + idx, x);
   }
 
-  public void recordScopeEnd(final DynamicScopeType entity, final Activity current) {
-    int requiredSpace = entity.getEndSize();
-    ensureSufficientSpace(requiredSpace, current);
-
-    final int start = storage.position();
-    storage.put(entity.getEndMarker());
-
-    assert storage.position() == start + requiredSpace;
+  public void putByteShortAt(final int idx, final byte a, final short b) {
+    assert buffer.length >= bufferSize;
+    assert 0 <= idx && (idx + 1 + 2) < bufferSize;
+    UNSAFE.putByte(buffer, BYTE_ARR_BASE_OFFSET + idx, a);
+    UNSAFE.putShort(buffer, BYTE_ARR_BASE_OFFSET + idx + 1, b);
   }
 
-  public void recordPassiveEntityCreation(final PassiveEntityType entity,
-      final long entityId, final SourceSection section, final Activity current) {
-    recordEventWithIdAndSource(entity.getCreationMarker(),
-        entity.getCreationSize(), entityId, section, current);
+  protected final void put(final byte x) {
+    assert buffer.length >= bufferSize;
+    assert 0 <= position && (position + 1) < bufferSize;
+    UNSAFE.putByte(buffer, BYTE_ARR_BASE_OFFSET + nextPutIndex(), x);
   }
 
-  public void recordReceiveOperation(final ReceiveOp op, final long sourceId,
-      final Activity current) {
-    int requiredSpace = op.getSize();
-    ensureSufficientSpace(requiredSpace, current);
-
-    final int start = storage.position();
-    storage.put(op.getId());
-    storage.putLong(sourceId);
-
-    assert storage.position() == start + requiredSpace;
+  public void putByteInt(final byte a, final int b) {
+    int bi = nextPutIndex(1 + 4);
+    putByteAt(bi, a);
+    assert buffer.length >= bufferSize;
+    assert (0 <= bi + 1) && (bi + 1 + 4) < bufferSize;
+    UNSAFE.putInt(buffer, BYTE_ARR_BASE_OFFSET + bi + 1, b);
   }
 
-  public void recordSendOperation(final SendOp op, final long entityId,
-      final long targetId, final Activity current) {
-    int requiredSpace = op.getSize();
-    ensureSufficientSpace(requiredSpace, current);
-
-    final int start = storage.position();
-    storage.put(op.getId());
-    storage.putLong(entityId);
-    storage.putLong(targetId);
-
-    assert storage.position() == start + requiredSpace;
+  protected final void putShort(final short x) {
+    int bi = nextPutIndex(2);
+    assert buffer.length >= bufferSize;
+    assert 0 <= bi && (bi + 2) < bufferSize;
+    UNSAFE.putShort(buffer, BYTE_ARR_BASE_OFFSET + bi, x);
   }
 
-  private static class SyncedTraceBuffer extends TraceBuffer {
-    protected SyncedTraceBuffer() {
-      super();
-    }
+  protected final void putInt(final int x) {
+    int bi = nextPutIndex(4);
+    assert buffer.length >= bufferSize;
+    assert 0 <= bi && (bi + 4) < bufferSize;
+    UNSAFE.putInt(buffer, BYTE_ARR_BASE_OFFSET + bi, x);
+  }
 
-    @Override
-    public synchronized void recordActivityCreation(final ActivityType entity,
-        final long activityId, final short symbolId,
-        final SourceSection section, final Activity current) {
-      super.recordActivityCreation(entity, activityId, symbolId, section, current);
-    }
+  protected final void putLong(final long x) {
+    int bi = nextPutIndex(8);
+    assert buffer.length >= bufferSize;
+    assert 0 <= bi && (bi + 8) < bufferSize;
+    UNSAFE.putLong(buffer, BYTE_ARR_BASE_OFFSET + bi, x);
+  }
 
-    @Override
-    public synchronized void recordScopeStart(final DynamicScopeType entity,
-        final long scopeId, final SourceSection section, final Activity current) {
-      super.recordScopeStart(entity, scopeId, section, current);
-    }
+  protected final void putDouble(final double x) {
+    putLong(Double.doubleToRawLongBits(x));
+  }
 
-    @Override
-    public synchronized void recordScopeEnd(final DynamicScopeType entity,
-        final Activity current) {
-      super.recordScopeEnd(entity, current);
-    }
-
-    @Override
-    public synchronized void recordPassiveEntityCreation(final PassiveEntityType entity,
-        final long entityId, final SourceSection section, final Activity current) {
-      super.recordPassiveEntityCreation(entity, entityId, section, current);
-    }
-
-    @Override
-    public synchronized void recordActivityCompletion(final ActivityType entity,
-        final Activity current) {
-      super.recordActivityCompletion(entity, current);
-    }
-
-    @Override
-    public synchronized void recordReceiveOperation(final ReceiveOp op,
-        final long sourceId, final Activity current) {
-      super.recordReceiveOperation(op, sourceId, current);
-    }
-
-    @Override
-    public synchronized void recordSendOperation(final SendOp op,
-        final long entityId, final long targetId, final Activity current) {
-      super.recordSendOperation(op, entityId, targetId, current);
-    }
+  public void putBytesAt(final int idx, final byte[] bytes) {
+    assert buffer.length >= bufferSize;
+    assert 0 <= idx && (idx + bytes.length) < bufferSize;
+    UNSAFE.copyMemory(bytes, BYTE_ARR_BASE_OFFSET, buffer, BYTE_ARR_BASE_OFFSET + idx,
+        bytes.length);
   }
 }

@@ -27,13 +27,13 @@ const steppingTests: Test[] = [
         activity: "main",
         stops: [{
           line: 11,
-          methodName: "STM>>#doCount:",
+          methodName: "STM>>#doCount:id:",
           stackHeight: 6,
           activity: "main"
         },
         {
           line: 11,
-          methodName: "STM>>#doCount:",
+          methodName: "STM>>#doCount:id:",
           stackHeight: 2,
           activity: "thread2"
         }]
@@ -43,7 +43,7 @@ const steppingTests: Test[] = [
         activity: "main",
         stops: [{
           line: 13,
-          methodName: "STM>>#λdoCount@11@16",
+          methodName: "STM>>#λdoCountid@11@16",
           stackHeight: 7,
           activity: "main"
         }]
@@ -53,9 +53,22 @@ const steppingTests: Test[] = [
         activity: "thread2",
         stops: [{
           line: 13,
-          methodName: "STM>>#λdoCount@11@16",
+          methodName: "STM>>#λdoCountid@11@16",
           stackHeight: 3,
           activity: "thread2"
+        }]
+      },
+      {
+        // TODO: this is a point were truffle now stops,
+        // but we should try to get rid of it.
+        // not entirely sure how to solve this, so, included for now
+        type: ST.STEP_OVER,
+        activity: "main",
+        stops: [{
+          line: 43,
+          methodName: "STM>>#main:",
+          stackHeight: 6,
+          activity: "main"
         }]
       },
       {
@@ -63,7 +76,7 @@ const steppingTests: Test[] = [
         activity: "main",
         stops: [{
           line: 17,
-          methodName: "STM>>#doCount:",
+          methodName: "STM>>#doCount:id:",
           stackHeight: 6,
           activity: "main"
         }]
@@ -73,7 +86,7 @@ const steppingTests: Test[] = [
         activity: "thread2",
         stops: [{
           line: 13,
-          methodName: "STM>>#λdoCount@11@16",
+          methodName: "STM>>#λdoCountid@11@16",
           stackHeight: 3,
           activity: "thread2"
         }]

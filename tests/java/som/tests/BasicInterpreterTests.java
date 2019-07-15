@@ -25,8 +25,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Context.Builder;
+import org.graalvm.polyglot.Value;
 import org.junit.After;
 import org.junit.Assume;
 import org.junit.Test;
@@ -34,15 +38,10 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import com.oracle.truffle.api.interop.TruffleObject;
-import com.oracle.truffle.api.vm.PolyglotEngine;
-import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
-import com.oracle.truffle.api.vm.PolyglotEngine.Value;
-
+import som.Launcher;
 import som.VM;
-import som.interpreter.SomLanguage;
 import som.interpreter.Types;
-import som.vm.VmOptions;
+import som.interpreter.objectstorage.StorageAccessor;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
@@ -182,6 +181,10 @@ public class BasicInterpreterTests {
 
   private final String ignoreForParallelExecutionReason;
 
+  static {
+    StorageAccessor.initAccessors();
+  }
+
   public BasicInterpreterTests(final String testClass,
       final String testSelector,
       final Object expectedResult,
@@ -207,14 +210,14 @@ public class BasicInterpreterTests {
 
     if (resultType == SClass.class) {
       String expected = (String) expectedResult;
-      String actual = ((SClass) actualResult).getName().getString();
+      String actual = ((SClass) readValue((Value) actualResult)).getName().getString();
       assertEquals(expected, actual);
       return;
     }
 
     if (resultType == SSymbol.class) {
       String expected = (String) expectedResult;
-      String actual = ((SSymbol) actualResult).getString();
+      String actual = ((SSymbol) readValue((Value) actualResult)).getString();
       assertEquals(expected, actual);
       return;
     }
@@ -222,25 +225,43 @@ public class BasicInterpreterTests {
     if (resultType == Object.class) {
       // The Truffle Interop returns `a Nil` as `null`, but wrapped
       // the following test is a little general, but 'good enough' for now
-      if (expectedResult == null && actualResult instanceof TruffleObject) {
+      if (expectedResult == null && actualResult == null) {
         return;
       }
-      String objClassName = Types.getClassOf(actualResult).getName().getString();
+      String objClassName =
+          Types.getClassOf(readValue((Value) actualResult)).getName().getString();
       assertEquals(expectedResult, objClassName);
       return;
     }
     fail("SOM Value handler missing");
   }
 
+  private Object readValue(final Value val) {
+    Field f;
+    try {
+      f = val.getClass().getDeclaredField("receiver");
+    } catch (NoSuchFieldException | SecurityException e) {
+      throw new RuntimeException(e);
+    }
+    f.setAccessible(true);
+    try {
+      return f.get(val);
+    } catch (IllegalArgumentException | IllegalAccessException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   @Test
   public void testBasicInterpreterBehavior() throws IOException {
-    PolyglotEngine engine = getInitializedVm();
+    Context context = getInitializedVm();
 
     try {
-      Value actualResult = engine.eval(SomLanguage.START);
-      assertEqualsSOMValue(expectedResult, actualResult.as(Object.class));
+      Value actualResult = context.eval(Launcher.START);
+      assertEqualsSOMValue(expectedResult,
+          actualResult == null ? null : actualResult.as(Object.class));
     } finally {
-      engine.dispose();
+      context.eval(Launcher.SHUTDOWN);
+      context.close();
       VM.resetClassReferences(true);
     }
   }
@@ -249,15 +270,20 @@ public class BasicInterpreterTests {
   public void testInParallel() throws InterruptedException, IOException {
     Assume.assumeTrue(ignoreForParallelExecutionReason,
         ignoreForParallelExecutionReason == null);
-    PolyglotEngine engine = getInitializedVm();
+    Context context = getInitializedVm();
+    Value trueVal = context.eval(Launcher.INIT);
+    assert trueVal.as(
+        Boolean.class) : "INIT is exected to return true after initializing the Context";
 
     try {
-      ParallelHelper.executeNTimesInParallel(() -> {
-        Value actualResult = engine.eval(SomLanguage.START);
+      ParallelHelper.executeNTimesInParallel((final int id) -> {
+        Value actualResult = context.eval(Launcher.START);
         assertEqualsSOMValue(expectedResult, actualResult.as(Object.class));
+        return null;
       });
     } finally {
-      engine.dispose();
+      context.eval(Launcher.SHUTDOWN);
+      context.close();
       VM.resetClassReferences(true);
     }
   }
@@ -267,20 +293,14 @@ public class BasicInterpreterTests {
     VM.resetClassReferences(true);
   }
 
-  protected PolyglotEngine getInitializedVm() throws IOException {
-    VM vm = new VM(getVmArguments(), true);
-    Builder builder = vm.createPolyglotBuilder();
-    PolyglotEngine engine = builder.build();
-
-    engine.getRuntime().getInstruments().values().forEach(i -> i.setEnabled(false));
-    return engine;
-  }
-
-  protected VmOptions getVmArguments() {
-    return new VmOptions(new String[] {
+  protected Context getInitializedVm() throws IOException {
+    String[] args = new String[] {
         "--platform",
-        "core-lib/TestSuite/BasicInterpreterTests/" + testClass + ".ns"},
-        testSelector);
+        "core-lib/TestSuite/BasicInterpreterTests/" + testClass + ".ns"};
+    Builder builder = Launcher.createContextBuilder(args);
+    builder.option("SOMns.TestSelector", testSelector);
+
+    return builder.build();
   }
 
   @Override

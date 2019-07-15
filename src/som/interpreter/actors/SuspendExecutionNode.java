@@ -2,6 +2,7 @@ package som.interpreter.actors;
 
 import com.oracle.truffle.api.debug.DebuggerTags.AlwaysHalt;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 
@@ -19,11 +20,11 @@ public abstract class SuspendExecutionNode extends UnaryExpressionNode {
   }
 
   @Override
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
     if (tag == AlwaysHalt.class) {
       return true;
     }
-    return super.isTaggedWithIgnoringEagerness(tag);
+    return super.hasTagIgnoringEagerness(tag);
   }
 
   public int getSkipFrames() {

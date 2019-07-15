@@ -3,7 +3,6 @@ package som.primitives.arrays;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.profiles.ValueProfile;
 
 import bd.primitives.Primitive;
 import som.interpreter.nodes.ExpressionNode;
@@ -20,8 +19,6 @@ import som.vmobjects.SBlock;
 @GenerateNodeFactory
 @Primitive(selector = "do:", receiverType = SArray.class, disabled = true)
 public abstract class DoPrim extends BinaryComplexOperation {
-  private final ValueProfile storageType = ValueProfile.createClassProfile();
-
   @Child private BlockDispatchNode block = BlockDispatchNodeGen.create();
 
   // TODO: tag properly, it is a loop and an access
@@ -32,7 +29,7 @@ public abstract class DoPrim extends BinaryComplexOperation {
 
   @Specialization(guards = "arr.isEmptyType()")
   public final SArray doEmptyArray(final SArray arr, final SBlock block) {
-    int length = arr.getEmptyStorage(storageType);
+    int length = arr.getEmptyStorage();
     try {
       if (SArray.FIRST_IDX < length) {
         execBlock(block, Nil.nilObject);
@@ -50,7 +47,7 @@ public abstract class DoPrim extends BinaryComplexOperation {
 
   @Specialization(guards = "arr.isPartiallyEmptyType()")
   public final SArray doPartiallyEmptyArray(final SArray arr, final SBlock block) {
-    PartiallyEmptyArray storage = arr.getPartiallyEmptyStorage(storageType);
+    PartiallyEmptyArray storage = arr.getPartiallyEmptyStorage();
     int length = storage.getLength();
     try {
       if (SArray.FIRST_IDX < length) {
@@ -69,7 +66,7 @@ public abstract class DoPrim extends BinaryComplexOperation {
 
   @Specialization(guards = "arr.isObjectType()")
   public final SArray doObjectArray(final SArray arr, final SBlock block) {
-    Object[] storage = arr.getObjectStorage(storageType);
+    Object[] storage = arr.getObjectStorage();
     int length = storage.length;
     try {
       if (SArray.FIRST_IDX < length) {
@@ -88,7 +85,7 @@ public abstract class DoPrim extends BinaryComplexOperation {
 
   @Specialization(guards = "arr.isLongType()")
   public final SArray doLongArray(final SArray arr, final SBlock block) {
-    long[] storage = arr.getLongStorage(storageType);
+    long[] storage = arr.getLongStorage();
     int length = storage.length;
     try {
       if (SArray.FIRST_IDX < length) {
@@ -107,7 +104,7 @@ public abstract class DoPrim extends BinaryComplexOperation {
 
   @Specialization(guards = "arr.isDoubleType()")
   public final SArray doDoubleArray(final SArray arr, final SBlock block) {
-    double[] storage = arr.getDoubleStorage(storageType);
+    double[] storage = arr.getDoubleStorage();
     int length = storage.length;
     try {
       if (SArray.FIRST_IDX < length) {
@@ -126,7 +123,7 @@ public abstract class DoPrim extends BinaryComplexOperation {
 
   @Specialization(guards = "arr.isBooleanType()")
   public final SArray doBooleanArray(final SArray arr, final SBlock block) {
-    boolean[] storage = arr.getBooleanStorage(storageType);
+    boolean[] storage = arr.getBooleanStorage();
     int length = storage.length;
     try {
       if (SArray.FIRST_IDX < length) {

@@ -1,6 +1,7 @@
 package som.interpreter.nodes.nary;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.nodes.WithContext;
 import som.VM;
@@ -15,11 +16,11 @@ import tools.dym.Tags.ComplexPrimitiveOperation;
  */
 public abstract class BinaryComplexOperation extends BinaryExpressionNode {
   @Override
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
     if (tag == ComplexPrimitiveOperation.class) {
       return true;
     } else {
-      return super.isTaggedWithIgnoringEagerness(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
   }
 

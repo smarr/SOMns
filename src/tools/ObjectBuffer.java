@@ -3,6 +3,8 @@ package tools;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 
+import com.oracle.truffle.api.CompilerDirectives;
+
 
 /**
  * Simple buffer class to efficiently record objects with minimal possible
@@ -128,6 +130,7 @@ public class ObjectBuffer<T> implements Iterable<T> {
     @Override
     public T next() {
       if (current == null || (current.next == null && currentIdx > lastIdxInLastEntry)) {
+        CompilerDirectives.transferToInterpreter();
         throw new NoSuchElementException();
       }
 

@@ -9,6 +9,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.Primitive;
 import som.VM;
@@ -16,6 +17,7 @@ import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.SuspendExecutionNodeGen;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -28,12 +30,11 @@ import som.primitives.ObjectPrims.IsValue;
 import som.vm.Activity;
 import som.vm.Symbols;
 import som.vm.VmSettings;
-import som.vm.constants.KernelObj;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObjectWithClass;
-import tools.concurrency.ActorExecutionTrace;
+import tools.concurrency.KomposTrace;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.ExpressionBreakpoint;
@@ -66,17 +67,23 @@ public abstract class ChannelPrimitives {
   }
 
   public static final class ProcessThreadFactory implements ForkJoinWorkerThreadFactory {
+    private final VM vm;
+
+    public ProcessThreadFactory(final VM vm) {
+      this.vm = vm;
+    }
+
     @Override
     public ForkJoinWorkerThread newThread(final ForkJoinPool pool) {
-      return new ProcessThread(pool);
+      return new ProcessThread(pool, vm);
     }
   }
 
   public static final class ProcessThread extends TracingActivityThread {
     private Process current;
 
-    ProcessThread(final ForkJoinPool pool) {
-      super(pool);
+    ProcessThread(final ForkJoinPool pool, final VM vm) {
+      super(pool, vm);
     }
 
     @Override
@@ -158,10 +165,10 @@ public abstract class ChannelPrimitives {
     protected void beforeExec(final SInvokable disp) {
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRootNode) {
         WebDebugger dbg = SomLanguage.getVM(disp.getInvokable()).getWebDebugger();
-        dbg.prepareSteppingUntilNextRootNode();
+        dbg.prepareSteppingUntilNextRootNode(Thread.currentThread());
       }
 
-      ActorExecutionTrace.currentActivity(this);
+      KomposTrace.currentActivity(this);
     }
 
     @Override
@@ -169,8 +176,8 @@ public abstract class ChannelPrimitives {
       try {
         super.run();
       } finally {
-        assert VmSettings.ACTOR_TRACING;
-        ActorExecutionTrace.activityCompletion(ActivityType.PROCESS);
+        assert VmSettings.KOMPOS_TRACING;
+        KomposTrace.activityCompletion(ActivityType.PROCESS);
       }
     }
 
@@ -227,11 +234,11 @@ public abstract class ChannelPrimitives {
     }
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == ChannelRead.class || tag == ExpressionBreakpoint.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
   }
@@ -247,20 +254,23 @@ public abstract class ChannelPrimitives {
     /** Breakpoint info for triggering suspension after read. */
     @Child protected AbstractBreakpointNode afterRead;
 
+    @Child protected ExceptionSignalingNode notAValue;
+
     @Override
     public final WritePrim initialize(final VM vm) {
       super.initialize(vm);
-      haltNode = SuspendExecutionNodeGen.create(0, null).initialize(sourceSection);
-      afterRead = insert(
-          Breakpoints.create(sourceSection, BreakpointType.CHANNEL_AFTER_RCV, vm));
+      haltNode = insert(SuspendExecutionNodeGen.create(0, null).initialize(sourceSection));
+      afterRead =
+          insert(Breakpoints.create(sourceSection, BreakpointType.CHANNEL_AFTER_RCV, vm));
+      notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
       return this;
     }
 
     @Specialization
     public final Object write(final VirtualFrame frame, final SChannelOutput out,
         final Object val) {
-      if (!isVal.executeEvaluated(val)) {
-        KernelObj.signalExceptionWithClass("signalNotAValueWith:", val);
+      if (!isVal.executeBoolean(frame, val)) {
+        notAValue.signal(val);
       }
       try {
         out.writeAndSuspendReader(val, afterRead.executeShouldHalt());
@@ -275,11 +285,11 @@ public abstract class ChannelPrimitives {
     }
 
     @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
       if (tag == ChannelWrite.class || tag == ExpressionBreakpoint.class) {
         return true;
       } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
+        return super.hasTagIgnoringEagerness(tag);
       }
     }
   }
@@ -300,9 +310,9 @@ public abstract class ChannelPrimitives {
     public final SChannel newChannel(final Object module) {
       SChannel result = SChannel.create();
 
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.passiveEntityCreation(PassiveEntityType.CHANNEL,
-            result.getId(), ActorExecutionTrace.getPrimitiveCaller(sourceSection));
+      if (VmSettings.KOMPOS_TRACING) {
+        KomposTrace.passiveEntityCreation(PassiveEntityType.CHANNEL,
+            result.getId(), KomposTrace.getPrimitiveCaller(sourceSection));
       }
       return result;
     }

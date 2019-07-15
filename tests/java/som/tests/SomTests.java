@@ -26,19 +26,18 @@ import static org.junit.Assert.assertEquals;
 import java.io.IOException;
 import java.util.Arrays;
 
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Context.Builder;
+import org.graalvm.polyglot.Value;
 import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
-import com.oracle.truffle.api.vm.PolyglotEngine;
-import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
-import com.oracle.truffle.api.vm.PolyglotEngine.Value;
-
+import som.Launcher;
 import som.VM;
-import som.interpreter.SomLanguage;
-import som.vm.VmOptions;
+import som.interpreter.objectstorage.StorageAccessor;
 
 
 @RunWith(Parameterized.class)
@@ -66,13 +65,20 @@ public class SomTests {
         {"TransactionTests", null},
         {"TransferObjectTests", null},
         {"ObjectLiteralTests", null},
+        {"ExtensionTests", null},
         {"MinitestTests",
             "DISABLED, see issue #10 Failing MinitestTests in JUnit Harness, caching causes comparison of Exception object with old one to fail"},
+
+        {"FileTests", null},
     });
   }
 
   private final String testName;
   private final String ignoreReason;
+
+  static {
+    StorageAccessor.initAccessors();
+  }
 
   public SomTests(final String testName, final String ignoreReason) {
     this.testName = testName;
@@ -83,20 +89,19 @@ public class SomTests {
   public void testSomeTest() throws IOException {
     Assume.assumeTrue(ignoreReason, ignoreReason == null);
 
-    VM vm = new VM(new VmOptions(new String[] {
+    String[] args = new String[] {
         "core-lib/TestSuite/TestRunner.ns",
-        "core-lib/TestSuite/" + testName + ".ns"}), true);
+        "core-lib/TestSuite/" + testName + ".ns"};
 
-    Builder builder = vm.createPolyglotBuilder();
-    PolyglotEngine engine = builder.build();
-
-    engine.getRuntime().getInstruments().values().forEach(i -> i.setEnabled(false));
+    Builder builder = Launcher.createContextBuilder(args);
+    Context context = builder.build();
 
     try {
-      Value v = engine.eval(SomLanguage.START);
+      Value v = context.eval(Launcher.START);
       assertEquals(0, (int) v.as(Integer.class));
     } finally {
-      engine.dispose();
+      context.eval(Launcher.SHUTDOWN);
+      context.close();
       VM.resetClassReferences(true);
     }
   }

@@ -4,6 +4,7 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.Primitive;
 import som.VM;
@@ -57,7 +58,7 @@ public abstract class AtomicPrim extends BinarySystemOperation {
           // TODO: here we are using a different approach for stepping, and for breakpointing,
           // should unify
           if (beforeCommit.executeShouldHalt()) {
-            vm.getWebDebugger().prepareSteppingAfterNextRootNode();
+            vm.getWebDebugger().prepareSteppingAfterNextRootNode(Thread.currentThread());
           }
         }
 
@@ -103,12 +104,12 @@ public abstract class AtomicPrim extends BinarySystemOperation {
   }
 
   @Override
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
     if (tag == Atomic.class ||
         tag == ExpressionBreakpoint.class ||
         tag == StatementTag.class) {
       return true;
     }
-    return super.isTaggedWith(tag);
+    return super.hasTag(tag);
   }
 }

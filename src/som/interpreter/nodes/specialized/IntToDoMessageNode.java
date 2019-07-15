@@ -5,6 +5,7 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
 import bd.primitives.Primitive;
@@ -25,9 +26,8 @@ import tools.dym.Tags.LoopNode;
     specializer = ToDoSplzr.class, inParser = false)
 public abstract class IntToDoMessageNode extends TernaryExpressionNode {
   public static class ToDoSplzr extends Specializer<VM, ExpressionNode, SSymbol> {
-    public ToDoSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact,
-        final VM vm) {
-      super(prim, fact, vm);
+    public ToDoSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      super(prim, fact);
     }
 
     @Override
@@ -43,11 +43,11 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode {
   }
 
   @Override
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
     if (tag == LoopNode.class) {
       return true;
     } else {
-      return super.isTaggedWithIgnoringEagerness(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
   }
 

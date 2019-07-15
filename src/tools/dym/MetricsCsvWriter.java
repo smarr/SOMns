@@ -13,11 +13,15 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 
 import org.graalvm.collections.EconomicMap;
+import org.graalvm.collections.EconomicSet;
 
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.tools.structure.StructuralProbe;
 import som.compiler.MixinDefinition;
+import som.compiler.MixinDefinition.SlotDefinition;
+import som.compiler.Variable;
 import som.interpreter.Invokable;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.interpreter.objectstorage.ClassFactory;
@@ -42,7 +46,6 @@ import tools.dym.profiles.InvocationProfile;
 import tools.dym.profiles.LoopProfile;
 import tools.dym.profiles.OperationProfile;
 import tools.dym.profiles.ReadValueProfile;
-import tools.language.StructuralProbe;
 
 
 public final class MetricsCsvWriter {
@@ -51,14 +54,15 @@ public final class MetricsCsvWriter {
   private final String                                                      metricsFolder;
 
   // TODO: not sure, we should probably not depend on the probe here
-  private final StructuralProbe structuralProbe;
+  private final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe;
 
   private final int                 maxStackHeight;
   private final List<SourceSection> allStatements;
 
   private MetricsCsvWriter(
       final Map<String, Map<SourceSection, ? extends JsonSerializable>> data,
-      final String metricsFolder, final StructuralProbe probe,
+      final String metricsFolder,
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> probe,
       final int maxStackHeight, final List<SourceSection> allStatements) {
     this.data = data;
     this.metricsFolder = metricsFolder;
@@ -70,8 +74,8 @@ public final class MetricsCsvWriter {
   public static void fileOut(
       final Map<String, Map<SourceSection, ? extends JsonSerializable>> data,
       final String metricsFolder,
-      final StructuralProbe structuralProbe, // TODO: remove direct StructuralProbe passing
-                                             // hack
+      // TODO: remove direct StructuralProbe passing hack
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe,
       final int maxStackHeight, final List<SourceSection> allStatements) {
     new MetricsCsvWriter(data, metricsFolder, structuralProbe, maxStackHeight,
         allStatements).createCsvFiles();
@@ -602,12 +606,27 @@ public final class MetricsCsvWriter {
       return 1;
     }
 
-    return a.toString().compareTo(b.toString());
+    int result = a.getName().getString().compareTo(b.getName().getString());
+    if (result != 0) {
+      return result;
+    }
+
+    result = a.getSourceSection().getSource().getPath().compareTo(
+        b.getSourceSection().getSource().getPath());
+    if (result != 0) {
+      return result;
+    }
+
+    return Integer.compare(
+        a.getSourceSection().getCharIndex(),
+        b.getSourceSection().getCharIndex());
   }
 
-  private static SortedSet<MixinDefinition> sortMD(final Set<MixinDefinition> set) {
+  private static SortedSet<MixinDefinition> sortMD(final EconomicSet<MixinDefinition> set) {
     TreeSet<MixinDefinition> sortedSet = new TreeSet<>((a, b) -> compare(a, b));
-    sortedSet.addAll(set);
+    for (MixinDefinition m : set) {
+      sortedSet.add(m);
+    }
     assert sortedSet.size() == set.size();
     return sortedSet;
   }
@@ -639,9 +658,11 @@ public final class MetricsCsvWriter {
     return compare(a.getHolder(), b.getHolder());
   }
 
-  private static SortedSet<SInvokable> sortInv(final Set<SInvokable> set) {
+  private static SortedSet<SInvokable> sortInv(final EconomicSet<SInvokable> set) {
     TreeSet<SInvokable> sortedSet = new TreeSet<>((a, b) -> compare(a, b));
-    sortedSet.addAll(set);
+    for (SInvokable i : set) {
+      sortedSet.add(i);
+    }
     assert sortedSet.size() == set.size();
     return sortedSet;
   }

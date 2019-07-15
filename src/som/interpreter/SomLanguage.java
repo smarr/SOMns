@@ -1,24 +1,34 @@
 package som.interpreter;
 
+import java.io.File;
 import java.io.IOException;
+
+import org.graalvm.options.OptionCategory;
+import org.graalvm.options.OptionDescriptors;
+import org.graalvm.options.OptionKey;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.Option;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.debug.DebuggerTags.AlwaysHalt;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.ProvidedTags;
 import com.oracle.truffle.api.instrumentation.StandardTags.CallTag;
+import com.oracle.truffle.api.instrumentation.StandardTags.ExpressionTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
 import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.Source;
 
+import som.Launcher;
 import som.VM;
 import som.compiler.MixinDefinition;
 import som.vm.NotYetImplementedException;
+import som.vm.VmOptions;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import tools.concurrency.Tags.AcquireLock;
@@ -44,6 +54,7 @@ import tools.debugger.Tags.LiteralTag;
 import tools.debugger.Tags.LocalVariableTag;
 import tools.debugger.Tags.StatementSeparatorTag;
 import tools.dym.Tags.AnyNode;
+import tools.dym.Tags.ArgumentExpr;
 import tools.dym.Tags.ArrayRead;
 import tools.dym.Tags.ArrayWrite;
 import tools.dym.Tags.BasicPrimitiveOperation;
@@ -65,18 +76,17 @@ import tools.dym.Tags.OpArithmetic;
 import tools.dym.Tags.OpClosureApplication;
 import tools.dym.Tags.OpComparison;
 import tools.dym.Tags.OpLength;
-import tools.dym.Tags.PrimitiveArgument;
 import tools.dym.Tags.StringAccess;
 import tools.dym.Tags.UnspecifiedInvoke;
 import tools.dym.Tags.VirtualInvoke;
 import tools.dym.Tags.VirtualInvokeReceiver;
 
 
-@TruffleLanguage.Registration(id = "SOMns", name = "SOMns", version = "0.1.0",
+@TruffleLanguage.Registration(id = "SOMns", name = "SOMns", version = "0.6.0",
     interactive = false, internal = false,
-    mimeType = "application/x-newspeak-som-ns")
+    characterMimeTypes = "application/x-newspeak-som-ns")
 @ProvidedTags({
-    RootTag.class, StatementTag.class, CallTag.class,
+    RootTag.class, StatementTag.class, CallTag.class, ExpressionTag.class,
 
     AlwaysHalt.class,
 
@@ -91,7 +101,7 @@ import tools.dym.Tags.VirtualInvokeReceiver;
     ControlFlowCondition.class, FieldRead.class, FieldWrite.class, ClassRead.class,
     LocalVarRead.class, LocalVarWrite.class, LocalArgRead.class, ArrayRead.class,
     ArrayWrite.class, LoopNode.class, LoopBody.class, BasicPrimitiveOperation.class,
-    ComplexPrimitiveOperation.class, PrimitiveArgument.class,
+    ComplexPrimitiveOperation.class, ArgumentExpr.class,
     StringAccess.class, OpClosureApplication.class, OpArithmetic.class,
     OpComparison.class, OpLength.class,
 
@@ -103,16 +113,44 @@ import tools.dym.Tags.VirtualInvokeReceiver;
 })
 public final class SomLanguage extends TruffleLanguage<VM> {
 
+  public static final String LANG_ID = "SOMns";
+
+  public static final String START_SOURCE    = "START";
+  public static final String INIT_SOURCE     = "INIT";
+  public static final String SHUTDOWN_SOURCE = "SHUTDOWN";
+
   public static final String MIME_TYPE          = "application/x-newspeak-som-ns";
-  public static final String VM_OBJECT          = "vm-object";
   public static final String FILE_EXTENSION     = "ns";
   public static final String DOT_FILE_EXTENSION = "." + FILE_EXTENSION;
 
-  @CompilationFinal private VM vm;
+  @Option(help = "Selector for som.tests.BasicInterpreterTests",
+      category = OptionCategory.INTERNAL) //
+  static final OptionKey<String> TestSelector = new OptionKey<String>("");
+
+  @CompilationFinal private VM        vm;
+  @CompilationFinal private VmOptions options;
+
+  /** This is used by the Language Server to get to an initialized instance easily. */
+  private static SomLanguage current;
+
+  /** This is used by the Language Server to get to an initialized instance easily. */
+  public static SomLanguage getCurrent() {
+    return current;
+  }
 
   public static Source getSyntheticSource(final String text, final String name) {
-    return Source.newBuilder(text).internal().name(name).mimeType(SomLanguage.MIME_TYPE)
+    return Source.newBuilder(LANG_ID, text, name).internal(true).mimeType(MIME_TYPE)
                  .build();
+  }
+
+  public static Source getSource(final File file) throws IOException {
+    return Source.newBuilder(SomLanguage.LANG_ID, file.toURI().toURL()).mimeType(MIME_TYPE)
+                 .build();
+  }
+
+  @Override
+  protected OptionDescriptors getOptionDescriptors() {
+    return new SomLanguageOptionDescriptors();
   }
 
   private static final class ParseResult extends RootNode {
@@ -132,32 +170,52 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
   @Override
   protected VM createContext(final Env env) {
-    vm = (VM) env.getConfig().get(VM_OBJECT);
-    try {
-      vm.initalize(this);
-    } catch (IOException e) {
-      throw new RuntimeException("Failed accessing kernel or platform code of SOMns.", e);
+    this.options = new VmOptions(
+        env.getApplicationArguments(), env.getOptions().get(TestSelector));
+
+    if (options.isConfigUsable()) {
+      vm = new VM(options);
+
+      if (!options.isTestExecution()) {
+        vm.setupInstruments(env);
+      }
+
+      return vm;
+    } else {
+      return null;
     }
-    return vm;
+  }
+
+  @Override
+  protected void initializeContext(final VM vm) throws Exception {
+    if (vm != null) {
+      vm.initalize(this);
+    }
+    current = this;
   }
 
   @Override
   protected void disposeContext(final VM context) {
-    assert vm == context;
+    if (context != null) {
+      assert vm == context;
+      assert vm.isShutdown();
+    }
+    current = null;
   }
 
   public VM getVM() {
     return vm;
   }
 
-  public static VM getVM(final RootNode root) {
-    CompilerAsserts.neverPartOfCompilation(
-        "This is a simple hack to get the VM object, and should never be on the fast path");
-    return root.getLanguage(SomLanguage.class).getVM();
+  public static VM getVM(final Node node) {
+    return getLanguage(node).getVM();
   }
 
-  // Marker source used to start execution with command line arguments
-  public static final Source START = getSyntheticSource("", "START");
+  public static SomLanguage getLanguage(final Node node) {
+    CompilerAsserts.neverPartOfCompilation(
+        "This is a simple hack to get the VM object, and should never be on the fast path");
+    return node.getRootNode().getLanguage(SomLanguage.class);
+  }
 
   private static class StartInterpretation extends RootNode {
 
@@ -170,25 +228,56 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
     @Override
     public Object execute(final VirtualFrame frame) {
+      if (vm == null) {
+        return Launcher.EXIT_WITH_ERROR;
+      }
+
       String selector = vm.getTestSelector();
       if (selector == null) {
-        vm.execute();
-        return vm.lastExitCode();
+        return vm.execute();
       } else {
         return vm.execute(selector);
       }
     }
   }
 
-  private CallTarget createStartCallTarget() {
-    return Truffle.getRuntime().createCallTarget(new StartInterpretation(this));
+  private static class InitializeContext extends RootNode {
+    protected InitializeContext(final SomLanguage lang) {
+      super(lang, null);
+    }
+
+    @Override
+    public Object execute(final VirtualFrame frame) {
+      return true;
+    }
+  }
+
+  private static class ShutdownContext extends RootNode {
+    private final VM vm;
+
+    protected ShutdownContext(final SomLanguage lang) {
+      super(lang, null);
+      this.vm = lang.getVM();
+    }
+
+    @Override
+    public Object execute(final VirtualFrame frame) {
+      vm.shutdown();
+      return true;
+    }
   }
 
   @Override
   protected CallTarget parse(final ParsingRequest request) throws IOException {
     Source code = request.getSource();
-    if (code == START || (code.getLength() == 0 && code.getName().equals("START"))) {
-      return createStartCallTarget();
+    if (code.getCharacters().equals(START_SOURCE) && code.getName().equals(START_SOURCE)) {
+      return Truffle.getRuntime().createCallTarget(new StartInterpretation(this));
+    } else if ((code.getCharacters().equals(INIT_SOURCE)
+        && code.getName().equals(INIT_SOURCE))) {
+      return Truffle.getRuntime().createCallTarget(new InitializeContext(this));
+    } else if ((code.getCharacters().equals(SHUTDOWN_SOURCE))
+        && code.getName().equals(SHUTDOWN_SOURCE)) {
+      return Truffle.getRuntime().createCallTarget(new ShutdownContext(this));
     }
 
     try {
@@ -204,11 +293,6 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   protected Object findExportedSymbol(final VM context, final String globalName,
       final boolean onlyExplicit) {
     return context.getExport(globalName);
-  }
-
-  @Override
-  protected Object getLanguageGlobal(final VM context) {
-    return null;
   }
 
   @Override

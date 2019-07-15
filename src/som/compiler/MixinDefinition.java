@@ -1,5 +1,7 @@
 package som.compiler;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -10,20 +12,28 @@ import org.graalvm.collections.MapCursor;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.NodeFactory;
+import com.oracle.truffle.api.interop.InteropLibrary;
+import com.oracle.truffle.api.library.ExportLibrary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.basic.nodes.DummyParent;
+import bd.source.SourceCoordinate;
 import som.VM;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.interop.SomInteropObject;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.Method;
 import som.interpreter.SNodeFactory;
 import som.interpreter.SomLanguage;
+import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.InstantiationNode.ClassInstantiationNode;
 import som.interpreter.nodes.dispatch.AbstractDispatchNode;
@@ -44,6 +54,7 @@ import som.interpreter.transactions.CachedTxSlotRead;
 import som.interpreter.transactions.CachedTxSlotWrite;
 import som.vm.SomStructuralType;
 import som.vm.Symbols;
+import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
@@ -53,7 +64,9 @@ import som.vmobjects.SObject;
 import som.vmobjects.SObject.SMutableObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
-import tools.SourceCoordinate;
+import tools.snapshot.nodes.AbstractSerializationNode;
+import tools.snapshot.nodes.ObjectSerializationNodesFactory.UninitializedObjectSerializationNodeFactory;
+import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.ClassSerializationNodeFactory;
 
 
 /**
@@ -62,7 +75,8 @@ import tools.SourceCoordinate;
  * at runtime, which then also has the super class and mixins resolved to be
  * used to instantiate {@link SClass} objects.
  */
-public final class MixinDefinition {
+@ExportLibrary(InteropLibrary.class)
+public final class MixinDefinition implements SomInteropObject {
   private final SSymbol       name;
   private final SourceSection nameSection;
 
@@ -89,8 +103,25 @@ public final class MixinDefinition {
 
   private final EconomicMap<SSymbol, MixinDefinition> nestedMixinDefinitions;
 
-  public MixinDefinition(final SSymbol name,
-      final SourceSection nameSection,
+  // These nodes are used to throw the exception in the parser, where we don't have an AST.
+  protected static final ExceptionSignalingNode notAValue;
+  protected static final ExceptionSignalingNode cannotBeValues;
+
+  @CompilationFinal private SSymbol identifier;
+
+  static {
+    SourceSection ss =
+        SomLanguage.getSyntheticSource("", "ClassInstantiation instantiate").createSection(1);
+
+    notAValue = ExceptionSignalingNode.createNotAValueNode(ss);
+    cannotBeValues =
+        ExceptionSignalingNode.createNode(Symbols.TransferObjectsCannotBeValues, ss);
+
+    new DummyParent(null, notAValue);
+    new DummyParent(null, cannotBeValues);
+  }
+
+  public MixinDefinition(final SSymbol name, final SourceSection nameSection,
       final SSymbol primaryFactoryName,
       final List<ExpressionNode> initializerBody,
       final MethodBuilder initializerBuilder,
@@ -139,6 +170,10 @@ public final class MixinDefinition {
     return nameSection;
   }
 
+  public SourceSection getInitializerSourceSection() {
+    return initializerSource;
+  }
+
   /**
    * Used by the SOMns Language Server.
    */
@@ -177,10 +212,24 @@ public final class MixinDefinition {
   public void initializeClass(final SClass result,
       final Object superclassAndMixins, final boolean isTheValueClass,
       final boolean isTheTransferObjectClass, final boolean isTheArrayClass) {
+    initializeClass(result, superclassAndMixins, isTheValueClass, isTheTransferObjectClass,
+        isTheArrayClass, UninitializedObjectSerializationNodeFactory.getInstance());
+  }
+
+  public void initializeClass(final SClass result,
+      final Object superclassAndMixins,
+      final NodeFactory<? extends AbstractSerializationNode> serializerFactory) {
+    initializeClass(result, superclassAndMixins, false, false, false, serializerFactory);
+  }
+
+  public void initializeClass(final SClass result,
+      final Object superclassAndMixins, final boolean isTheValueClass,
+      final boolean isTheTransferObjectClass, final boolean isTheArrayClass,
+      final NodeFactory<? extends AbstractSerializationNode> serializerFactory) {
     VM.callerNeedsToBeOptimized(
         "This is supposed to result in a cacheable object, and thus is only the fallback case.");
     ClassFactory factory = createClassFactory(superclassAndMixins,
-        isTheValueClass, isTheTransferObjectClass, isTheArrayClass);
+        isTheValueClass, isTheTransferObjectClass, isTheArrayClass, serializerFactory);
     if (result.getSOMClass() != null) {
       factory.getClassClassFactory().initializeClass(result.getSOMClass());
     }
@@ -268,7 +317,8 @@ public final class MixinDefinition {
 
   public ClassFactory createClassFactory(final Object superclassAndMixins,
       final boolean isTheValueClass, final boolean isTheTransferObjectClass,
-      final boolean isTheArrayClass) {
+      final boolean isTheArrayClass,
+      final NodeFactory<? extends AbstractSerializationNode> serializerFactory) {
     CompilerAsserts.neverPartOfCompilation();
     VM.callerNeedsToBeOptimized(
         "This is supposed to result in a cacheable object, and thus is only the fallback case.");
@@ -319,13 +369,13 @@ public final class MixinDefinition {
         new SClass[] {Classes.classClass}, true,
         // TODO: not passing a ClassFactory of the meta class here is incorrect,
         // might not matter in practice
-        null);
+        null, ClassSerializationNodeFactory.getInstance());
 
     ClassFactory classFactory = new ClassFactory(name, this,
         instanceSlots, dispatchables, instancesAreValues,
         instancesAreTransferObjects, instancesAreArrays,
         mixins, hasOnlyImmutableFields,
-        classClassFactory);
+        classClassFactory, serializerFactory);
 
     cache.add(classFactory);
 
@@ -490,8 +540,9 @@ public final class MixinDefinition {
   public SClass instantiateClass(final SObjectWithClass outer,
       final Object superclassAndMixins) {
     ClassFactory factory = createClassFactory(superclassAndMixins,
-        false, false, false);
-    return ClassInstantiationNode.instantiate(outer, factory);
+        false, false, false, UninitializedObjectSerializationNodeFactory.getInstance());
+    return ClassInstantiationNode.instantiate(outer, factory, notAValue,
+        cannotBeValues);
   }
 
   // TODO: need to rename this, it doesn't really fulfill this role anymore
@@ -503,8 +554,6 @@ public final class MixinDefinition {
     protected final AccessModifier modifier;
     private final boolean          immutable;
     protected final SourceSection  source;
-
-    @CompilationFinal protected CallTarget genericAccessTarget;
 
     public SlotDefinition(final SSymbol name, final SSymbol type,
         final AccessModifier acccessModifier, final boolean immutable,
@@ -561,8 +610,9 @@ public final class MixinDefinition {
           getAccessType() == SlotAccess.FIELD_READ) {
         return new CachedTxSlotRead(getAccessType(), read,
             DispatchGuard.createSObjectCheck(rcvr),
-            TypeCheckNodeGen.create(SomStructuralType.recallTypeByName(type),
-                getSourceSection()),
+            SomStructuralType.isNullOrUnknown(type) ? null
+                : TypeCheckNodeGen.create(SomStructuralType.recallTypeByName(type),
+                    getSourceSection()),
             next);
       } else {
         return read;
@@ -637,8 +687,9 @@ public final class MixinDefinition {
       if (forAtomic) {
         return new CachedTxSlotWrite(write,
             DispatchGuard.createSObjectCheck(rcvr),
-            TypeCheckNodeGen.create(SomStructuralType.recallTypeByName(type),
-                loc.getSlot().getSourceSection()),
+            SomStructuralType.isNullOrUnknown(type) ? null
+                : TypeCheckNodeGen.create(SomStructuralType.recallTypeByName(type),
+                    loc.getSlot().getSourceSection()),
             next);
       } else {
         return write;
@@ -832,5 +883,31 @@ public final class MixinDefinition {
     clone.adaptFactoryMethods(adaptedScope, appliesTo);
     clone.adaptInvokableDispatchables(adaptedScope, appliesTo);
     return clone;
+  }
+
+  /**
+   * This method provides a String that can be used to identify a MixinDefinition.
+   * The String takes a shape like this: "relativePath:module.class.nestedClass"
+   *
+   * @return the fully qualified name of this MixinDefinition
+   */
+  public SSymbol getIdentifier() {
+    MixinDefinition outer = getOuterMixinDefinition();
+
+    if (identifier == null) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      if (outer != null) {
+        identifier = Symbols.symbolFor(outer.getIdentifier() + "." + this.name.getString());
+      } else if (this.isModule && this.sourceSection != null) {
+        Path absolute = Paths.get(this.sourceSection.getSource().getURI());
+        Path relative =
+            Paths.get(VmSettings.BASE_DIRECTORY).toAbsolutePath().relativize(absolute);
+        identifier = Symbols.symbolFor(relative.toString() + ":" + this.name.getString());
+      } else {
+        identifier = this.name;
+      }
+    }
+
+    return identifier;
   }
 }

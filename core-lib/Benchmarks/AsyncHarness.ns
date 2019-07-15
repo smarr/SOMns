@@ -63,40 +63,12 @@ class AsyncHarness usingPlatform: platform = Value (
     public runBenchmark = (
       | result |
 
-      ('Starting ' + name + ' benchmark ... ') print.
+      ('Starting ' + name + ' benchmark ...\n') println.
 
-      ^ self doWarmup whenResolved: [:r |
-          self doRuns whenResolved: [:result |
-            self reportBenchmark: result.
-            total:: total + result.
-            '' println ] ]
-    )
-
-    doWarmup = (
-      | numIterationsTmp printAllTmp maxRuntimeTmp |
-      warmUp = 0 ifTrue: [
-        | pp |
-        pp:: actors createPromisePair.
-        pp resolve: self.
-        '' println.
-        ^ pp promise ].
-
-      numIterationsTmp:: numIterations.
-      printAllTmp::      printAll.
-      maxRuntimeTmp::    maxRuntime.
-
-      numIterations:: warmUp.
-      printAll::      false.
-      maxRuntime::    nil.
-
-      ' warmup ...' print.
-      ^ self doRuns whenResolved: [:r |
-        numIterations:: numIterationsTmp.
-        printAll::      printAllTmp.
-        maxRuntime::    maxRuntimeTmp.
-
-        ' completed.' println
-      ]
+      ^ self doRuns whenResolved: [:result |
+          self reportBenchmark: result.
+          total:: total + result.
+          '' println ]
     )
 
     doRuns = (
@@ -118,7 +90,8 @@ class AsyncHarness usingPlatform: platform = Value (
             runTime:: endTime - startTime.
             printAll ifTrue: [ self printRun: runTime ].
 
-            total:: total + runTime.
+            i > warmUp ifTrue: [
+              total:: total + runTime ].
 
             maxRuntime ifNotNil: [
               total > maxRuntime ifTrue: [
@@ -138,7 +111,7 @@ class AsyncHarness usingPlatform: platform = Value (
       out:: out + ': iterations='.
       out:: out + numIterations.
       out:: out + ' average: '.
-      out:: out + (result / numIterations * numThreads).
+      out:: out + (result / (numIterations - warmUp) * numThreads).
       out:: out + 'us'.
       out:: out + ' total: '.
       out:: out + result.
@@ -147,6 +120,9 @@ class AsyncHarness usingPlatform: platform = Value (
     )
 
     printRun: runTime = (
+      | stats = system traceStatistics. |
+      (name + ': trace size:    ' + (stats at: 1) + 'byte') println.
+      (name + ': external data: ' + (stats at: 2) + 'byte') println.
       (name + ': iterations=1' + ' runtime: ' + runTime + 'us') println
     )
 
@@ -189,7 +165,7 @@ class AsyncHarness usingPlatform: platform = Value (
     '  benchmark      - benchmark class name (supports nested classes with ".") ' println.
     '                   examples: Queens, Fibonacci, Sort.QuickSort, LanguageFeatures.Dispatch' println.
     '  num-iterations - number of times to execute benchmark, default: 1' println.
-    '  warm-up        - number of times to execute benchmark before measuring, default: 0' println.
+    '  warm-up        - number of samples to discard as warmup, default: 0' println.
     '  prob-size      - problem size, a benchmark specific value/value range, ' println.
     '                   which is measured in total, default: 1' println.
     '  num-threads    - number of threads executing, each doing num-iterations, default: 1' println.

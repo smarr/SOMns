@@ -30,6 +30,9 @@ public final class Classes {
 
   public static final SClass blockClass;
 
+  // dummy class for message deserialization
+  public static final SClass messageClass;
+
   // These classes can be statically preinitialized.
   static {
     // Allocate the Metaclass classes
@@ -60,5 +63,7 @@ public final class Classes {
     falseClass = ObjectSystem.newEmptyClassWithItsClass("False");
 
     blockClass = ObjectSystem.newEmptyClassWithItsClass("Block");
+
+    messageClass = ObjectSystem.newEmptyClassWithItsClass("Message");
   }
 }

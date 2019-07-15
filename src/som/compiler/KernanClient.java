@@ -48,9 +48,12 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.oracle.truffle.api.source.Source;
 
+import bd.tools.structure.StructuralProbe;
 import som.VM;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.SomLanguage;
-import tools.language.StructuralProbe;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 
 
 /**
@@ -82,12 +85,12 @@ import tools.language.StructuralProbe;
  */
 public class KernanClient {
 
-  private final static String address = "127.0.0.1";
-  private final static int    port    = 25447;
+  private static final String address = "127.0.0.1";
+  private static final int    port    = 25447;
 
   // RFC operation codes
-  private final static int OPCODE_RUN   = 1;
-  private final static int OPCODE_CLOSE = 8;
+  private static final int OPCODE_RUN   = 1;
+  private static final int OPCODE_CLOSE = 8;
 
   private final Source   source;
   private final VM       vm;
@@ -109,10 +112,10 @@ public class KernanClient {
    * frame objects may only be used to query
    *
    */
-  private class Frame {
-    private final static int OPCODE_INDEX        = 0;
-    private final static int MESSAGE_126_INDEX   = 6;
-    private final static int MESSAGE_65536_INDEX = 8;
+  private final class Frame {
+    private static final int OPCODE_INDEX        = 0;
+    private static final int MESSAGE_126_INDEX   = 6;
+    private static final int MESSAGE_65536_INDEX = 8;
 
     private final byte[] data;
 
@@ -192,7 +195,7 @@ public class KernanClient {
    * this websocket.
    */
   public KernanClient(final Source source, final SomLanguage language,
-      final StructuralProbe structuralProbe) {
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe) {
     this.source = source;
     this.vm = language.getVM();
 
@@ -242,7 +245,7 @@ public class KernanClient {
 
     private final Stack<Frame> frames;
 
-    public Receiver() {
+    Receiver() {
       frames = new Stack<Frame>();
 
       try {
@@ -387,7 +390,7 @@ public class KernanClient {
     private final Stack<Frame>     frames;
     private final DataOutputStream stream;
 
-    public Sender() {
+    Sender() {
       frames = new Stack<Frame>();
 
       try {
@@ -425,7 +428,7 @@ public class KernanClient {
     }
 
     /**
-     * Used by {@link KernanClient#sendCloseFrame()} to send any remaining frames to Kernan
+     * Used by {@link KernanClient#sendCloseFrame()} to send any remaining frames to Kernan.
      */
     public void sendAnyRemainingFrames() {
       run();

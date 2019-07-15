@@ -9,15 +9,17 @@ import com.oracle.truffle.api.debug.Breakpoint;
 import com.oracle.truffle.api.debug.Breakpoint.SimpleCondition;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.debug.DebuggerSession;
+import com.oracle.truffle.api.debug.SourceElement;
 import com.oracle.truffle.api.debug.SuspendAnchor;
 import com.oracle.truffle.api.instrumentation.StandardTags.RootTag;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.source.FullSourceCoordinate;
+import bd.source.SourceCoordinate;
 import som.VM;
 import som.interpreter.actors.ReceivedRootNode;
 import som.vm.VmSettings;
-import tools.SourceCoordinate;
-import tools.SourceCoordinate.FullSourceCoordinate;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.BreakpointType;
@@ -41,15 +43,18 @@ public class Breakpoints {
   public Breakpoints(final Debugger debugger, final WebDebugger webDebugger) {
     this.truffleBreakpoints = new HashMap<>();
     this.breakpoints = new HashMap<>();
-    this.debuggerSession = debugger.startSession(webDebugger);
+    @SuppressWarnings("unchecked")
+    Class<Tag>[] tags = new Class[] {ExpressionBreakpoint.class};
+    this.debuggerSession =
+        debugger.startSession(webDebugger, tags, SourceElement.STATEMENT, SourceElement.ROOT);
   }
 
-  public void prepareSteppingUntilNextRootNode() {
-    debuggerSession.prepareSteppingUntilNextRootNode();
+  public void prepareSteppingUntilNextRootNode(final Thread thread) {
+    debuggerSession.prepareStepUntilNext(RootTag.class, SuspendAnchor.BEFORE, thread);
   }
 
-  public void prepareSteppingAfterNextRootNode() {
-    debuggerSession.prepareSteppingAfterNextRootNode();
+  public void prepareSteppingAfterNextRootNode(final Thread thread) {
+    debuggerSession.prepareStepUntilNext(RootTag.class, SuspendAnchor.AFTER, thread);
   }
 
   public synchronized void addOrUpdate(final LineBreakpoint bId) {
@@ -88,18 +93,20 @@ public class Breakpoints {
   }
 
   public synchronized void addOrUpdateAsyncAfter(final SectionBreakpoint bId) {
-    Breakpoint bp =
-        saveTruffleBasedBreakpoints(bId, RootTag.class, SuspendAnchor.AFTER);
+    Breakpoint bp = saveTruffleBasedBreakpoints(bId, RootTag.class, SuspendAnchor.AFTER);
     bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
   }
 
   private Breakpoint saveTruffleBasedBreakpoints(final SectionBreakpoint bId,
-      final Class<?> tag, final SuspendAnchor anchor) {
+      final Class<? extends Tag> tag, final SuspendAnchor anchor) {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {
+      WebDebugger.log("SectionBreakpoint: " + bId);
       bp = Breakpoint.newBuilder(bId.getCoordinate().uri).lineIs(bId.getCoordinate().startLine)
                      .columnIs(bId.getCoordinate().startColumn)
-                     .sectionLength(bId.getCoordinate().charLength).tag(tag)
+                     .sectionLength(bId.getCoordinate().charLength)
+                     .sourceElements(SourceElement.EXPRESSION)
+                     .tag(tag)
                      .suspendAnchor(anchor).build();
       debuggerSession.install(bp);
       truffleBreakpoints.put(bId, bp);
@@ -131,7 +138,7 @@ public class Breakpoints {
   public static AbstractBreakpointNode create(final SourceSection source,
       final BreakpointType type, final VM vm) {
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      FullSourceCoordinate sourceCoord = SourceCoordinate.create(source);
+      FullSourceCoordinate sourceCoord = SourceCoordinate.createFull(source);
       return BreakpointNodeGen.create(vm.getBreakpoints().getBreakpoint(sourceCoord, type));
     } else {
       return new DisabledBreakpointNode();

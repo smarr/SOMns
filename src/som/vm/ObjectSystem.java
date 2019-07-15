@@ -11,18 +11,24 @@ import org.graalvm.collections.EconomicMap;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.ProgramDefinitionError;
 import bd.inlining.InlinableNodes;
+import bd.tools.structure.StructuralProbe;
+import som.Launcher;
 import som.Output;
 import som.VM;
 import som.compiler.AccessModifier;
+import som.compiler.MethodBuilder;
+import som.compiler.MixinBuilder;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.SourcecodeCompiler;
+import som.compiler.Variable;
 import som.interpreter.LexicalScope.MixinScope;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor;
@@ -30,6 +36,7 @@ import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualSendNode;
 import som.interpreter.actors.SPromise;
 import som.interpreter.nodes.dispatch.Dispatchable;
+import som.interpreter.objectstorage.ClassFactory;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.constants.Classes;
 import som.vm.constants.KernelObj;
@@ -40,10 +47,32 @@ import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors;
-import tools.language.StructuralProbe;
+import tools.snapshot.nodes.AbstractArraySerializationNodeGen.ArraySerializationNodeFactory;
+import tools.snapshot.nodes.AbstractArraySerializationNodeGen.TransferArraySerializationNodeFactory;
+import tools.snapshot.nodes.AbstractArraySerializationNodeGen.ValueArraySerializationNodeFactory;
+import tools.snapshot.nodes.AbstractSerializationNode;
+import tools.snapshot.nodes.BlockSerializationNodeFactory;
+import tools.snapshot.nodes.MessageSerializationNodeFactory;
+import tools.snapshot.nodes.ObjectSerializationNodesFactory.SObjectWithoutFieldsSerializationNodeFactory;
+import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.BooleanSerializationNodeFactory;
+import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.ClassSerializationNodeFactory;
+import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.DoubleSerializationNodeFactory;
+import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.FalseSerializationNodeFactory;
+import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.IntegerSerializationNodeFactory;
+import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.NilSerializationNodeFactory;
+import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.SInvokableSerializationNodeFactory;
+import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.StringSerializationNodeFactory;
+import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.SymbolSerializationNodeFactory;
+import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.TrueSerializationNodeFactory;
+import tools.snapshot.nodes.SerializerRootNode;
 
 
 public final class ObjectSystem {
+
+  static {
+    inlinableNodes = new InlinableNodes<>(Symbols.PROVIDER,
+        Primitives.getInlinableNodes(), Primitives.getInlinableFactories());
+  }
 
   private final EconomicMap<URI, MixinDefinition> loadedModules;
 
@@ -56,21 +85,21 @@ public final class ObjectSystem {
   @CompilationFinal private boolean initialized = false;
 
   private final SourcecodeCompiler compiler;
-  private final StructuralProbe    structuralProbe;
+
+  private final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe;
 
   private final Primitives primitives;
 
-  private final InlinableNodes<SSymbol> inlinableNodes;
+  private static final InlinableNodes<SSymbol> inlinableNodes;
 
   private CompletableFuture<Object> mainThreadCompleted;
 
   private final VM vm;
 
   public ObjectSystem(final SourcecodeCompiler compiler,
-      final StructuralProbe probe, final VM vm) {
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> probe,
+      final VM vm) {
     this.primitives = new Primitives(compiler.getLanguage());
-    this.inlinableNodes = new InlinableNodes<>(Symbols.PROVIDER,
-        Primitives.getInlinableNodes(), Primitives.getInlinableFactories());
     this.compiler = compiler;
     structuralProbe = probe;
     loadedModules = EconomicMap.create();
@@ -100,6 +129,13 @@ public final class ObjectSystem {
     return platformClass;
   }
 
+  public SClass loadExtensionModule(final String filename) {
+    ExtensionLoader loader = new ExtensionLoader(filename, compiler.getLanguage());
+    EconomicMap<SSymbol, Dispatchable> primitives = loader.getPrimitives();
+    MixinDefinition mixin = constructPrimitiveMixin(filename, primitives);
+    return mixin.instantiateClass(Nil.nilObject, Classes.topClass);
+  }
+
   public MixinDefinition loadModule(final String filename) throws IOException {
     File file = new File(filename);
 
@@ -111,7 +147,7 @@ public final class ObjectSystem {
       throw new NotAFileException(filename);
     }
 
-    Source source = Source.newBuilder(file).mimeType(SomLanguage.MIME_TYPE).build();
+    Source source = SomLanguage.getSource(file);
     return loadModule(source);
   }
 
@@ -134,18 +170,49 @@ public final class ObjectSystem {
 
   private SObjectWithoutFields constructVmMirror() {
     EconomicMap<SSymbol, Dispatchable> vmMirrorMethods = primitives.takeVmMirrorPrimitives();
+    SClass vmMirrorClass = constructPrimitiveClass(vmMirrorMethods);
+    return new SObjectWithoutFields(vmMirrorClass, vmMirrorClass.getInstanceFactory());
+  }
+
+  private MixinDefinition constructPrimitiveMixin(final String module,
+      final EconomicMap<SSymbol, Dispatchable> primitives) {
+    SSymbol moduleName = Symbols.symbolFor(module);
+    Source source = SomLanguage.getSyntheticSource("", module + "-extension-primitives");
+    SourceSection ss = source.createSection(1);
+
+    MixinBuilder mixin = new MixinBuilder(null, AccessModifier.PUBLIC, moduleName,
+        ss, null, compiler.getLanguage());
+    MethodBuilder primFactor = mixin.getPrimaryFactoryMethodBuilder();
+
+    primFactor.addArgument(Symbols.SELF, null, ss);
+    primFactor.setSignature(Symbols.NEW);
+
+    mixin.setupInitializerBasedOnPrimaryFactory(ss);
+    mixin.setInitializerSource(ss);
+    mixin.finalizeInitializer();
+    mixin.setSuperClassResolution(mixin.constructSuperClassResolution(Symbols.TOP, ss));
+
+    // we do not need any initialization, and super is top, so, simply return self
+    mixin.setSuperclassFactorySend(mixin.getInitializerMethodBuilder().getSelfRead(ss), false);
+
+    mixin.addMethods(primitives);
+
+    return mixin.assemble(ss);
+  }
+
+  private SClass constructPrimitiveClass(final EconomicMap<SSymbol, Dispatchable> primitives) {
     MixinScope scope = new MixinScope(null);
 
     MixinDefinition vmMirrorDef = new MixinDefinition(
         Symbols.VMMIRROR, null, null, null, null, null, null, null,
-        vmMirrorMethods, null,
+        primitives, null,
         null, new MixinDefinitionId(Symbols.VMMIRROR), AccessModifier.PUBLIC, scope, scope,
         true, true, true, null);
     scope.setMixinDefinition(vmMirrorDef, false);
 
     SClass vmMirrorClass = vmMirrorDef.instantiateClass(Nil.nilObject,
         new SClass[] {Classes.topClass, Classes.valueClass});
-    return new SObjectWithoutFields(vmMirrorClass, vmMirrorClass.getInstanceFactory());
+    return vmMirrorClass;
   }
 
   /**
@@ -222,34 +289,88 @@ public final class ObjectSystem {
     assert valueDef.getNumberOfSlots() == 0;
     assert transferDef.getNumberOfSlots() == 0;
 
-    topDef.initializeClass(Classes.topClass, null); // Top doesn't have a super class
-    thingDef.initializeClass(Classes.thingClass, Classes.topClass);
-    valueDef.initializeClass(Classes.valueClass, Classes.thingClass, true, false, false);
-    objectDef.initializeClass(Classes.objectClass, Classes.thingClass);
-    classDef.initializeClass(Classes.classClass, Classes.objectClass);
-    transferDef.initializeClass(Classes.transferClass, Classes.objectClass, false, true,
-        false);
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      SerializerRootNode.initializeSerialization(compiler.getLanguage());
 
-    metaclassDef.initializeClass(Classes.metaclassClass, Classes.classClass);
-    nilDef.initializeClass(Classes.nilClass, Classes.valueClass);
+      topDef.initializeClass(Classes.topClass, null,
+          SObjectWithoutFieldsSerializationNodeFactory.getInstance()); // Top doesn't have a
+                                                                       // super class
+      thingDef.initializeClass(Classes.thingClass, Classes.topClass,
+          SObjectWithoutFieldsSerializationNodeFactory.getInstance());
+      valueDef.initializeClass(Classes.valueClass, Classes.thingClass, true, false, false,
+          SObjectWithoutFieldsSerializationNodeFactory.getInstance());
+      objectDef.initializeClass(Classes.objectClass, Classes.thingClass,
+          SObjectWithoutFieldsSerializationNodeFactory.getInstance());
+      classDef.initializeClass(Classes.classClass, Classes.objectClass,
+          ClassSerializationNodeFactory.getInstance());
+      transferDef.initializeClass(Classes.transferClass, Classes.objectClass, false, true,
+          false, SObjectWithoutFieldsSerializationNodeFactory.getInstance());
 
-    arrayReadMixinDef.initializeClass(Classes.arrayReadMixinClass, Classes.objectClass);
-    arrayDef.initializeClass(Classes.arrayClass,
-        new SClass[] {Classes.objectClass, Classes.arrayReadMixinClass}, false, false, true);
-    valueArrayDef.initializeClass(Classes.valueArrayClass,
-        new SClass[] {Classes.valueClass, Classes.arrayReadMixinClass}, false, false, true);
-    transferArrayDef.initializeClass(Classes.transferArrayClass,
-        new SClass[] {Classes.arrayClass, Classes.transferClass}, false, false, true);
-    integerDef.initializeClass(Classes.integerClass, Classes.valueClass);
-    stringDef.initializeClass(Classes.stringClass, Classes.valueClass);
-    doubleDef.initializeClass(Classes.doubleClass, Classes.valueClass);
-    symbolDef.initializeClass(Classes.symbolClass, Classes.stringClass);
+      metaclassDef.initializeClass(Classes.metaclassClass, Classes.classClass,
+          ClassSerializationNodeFactory.getInstance());
+      nilDef.initializeClass(Classes.nilClass, Classes.valueClass,
+          NilSerializationNodeFactory.getInstance());
 
-    booleanDef.initializeClass(Classes.booleanClass, Classes.valueClass);
-    trueDef.initializeClass(Classes.trueClass, Classes.booleanClass);
-    falseDef.initializeClass(Classes.falseClass, Classes.booleanClass);
+      arrayReadMixinDef.initializeClass(Classes.arrayReadMixinClass, Classes.objectClass,
+          SObjectWithoutFieldsSerializationNodeFactory.getInstance());
+      arrayDef.initializeClass(Classes.arrayClass,
+          new SClass[] {Classes.objectClass, Classes.arrayReadMixinClass}, false, false, true,
+          ArraySerializationNodeFactory.getInstance());
+      valueArrayDef.initializeClass(Classes.valueArrayClass,
+          new SClass[] {Classes.valueClass, Classes.arrayReadMixinClass}, false, false, true,
+          ValueArraySerializationNodeFactory.getInstance());
+      transferArrayDef.initializeClass(Classes.transferArrayClass,
+          new SClass[] {Classes.arrayClass, Classes.transferClass}, false, false, true,
+          TransferArraySerializationNodeFactory.getInstance());
+      integerDef.initializeClass(Classes.integerClass, Classes.valueClass,
+          IntegerSerializationNodeFactory.getInstance());
+      stringDef.initializeClass(Classes.stringClass, Classes.valueClass,
+          StringSerializationNodeFactory.getInstance());
+      doubleDef.initializeClass(Classes.doubleClass, Classes.valueClass,
+          DoubleSerializationNodeFactory.getInstance());
+      symbolDef.initializeClass(Classes.symbolClass, Classes.stringClass,
+          SymbolSerializationNodeFactory.getInstance());
 
-    blockDef.initializeClass(Classes.blockClass, Classes.objectClass);
+      booleanDef.initializeClass(Classes.booleanClass, Classes.valueClass,
+          BooleanSerializationNodeFactory.getInstance());
+      trueDef.initializeClass(Classes.trueClass, Classes.booleanClass,
+          TrueSerializationNodeFactory.getInstance());
+      falseDef.initializeClass(Classes.falseClass, Classes.booleanClass,
+          FalseSerializationNodeFactory.getInstance());
+
+      blockDef.initializeClass(Classes.blockClass, Classes.objectClass,
+          BlockSerializationNodeFactory.getInstance());
+    } else {
+      topDef.initializeClass(Classes.topClass, null); // Top doesn't have a
+                                                      // super class
+      thingDef.initializeClass(Classes.thingClass, Classes.topClass);
+      valueDef.initializeClass(Classes.valueClass, Classes.thingClass, true, false, false);
+      objectDef.initializeClass(Classes.objectClass, Classes.thingClass);
+      classDef.initializeClass(Classes.classClass, Classes.objectClass);
+      transferDef.initializeClass(Classes.transferClass, Classes.objectClass, false, true,
+          false);
+
+      metaclassDef.initializeClass(Classes.metaclassClass, Classes.classClass);
+      nilDef.initializeClass(Classes.nilClass, Classes.valueClass);
+
+      arrayReadMixinDef.initializeClass(Classes.arrayReadMixinClass, Classes.objectClass);
+      arrayDef.initializeClass(Classes.arrayClass,
+          new SClass[] {Classes.objectClass, Classes.arrayReadMixinClass}, false, false, true);
+      valueArrayDef.initializeClass(Classes.valueArrayClass,
+          new SClass[] {Classes.valueClass, Classes.arrayReadMixinClass}, false, false, true);
+      transferArrayDef.initializeClass(Classes.transferArrayClass,
+          new SClass[] {Classes.arrayClass, Classes.transferClass}, false, false, true);
+      integerDef.initializeClass(Classes.integerClass, Classes.valueClass);
+      stringDef.initializeClass(Classes.stringClass, Classes.valueClass);
+      doubleDef.initializeClass(Classes.doubleClass, Classes.valueClass);
+      symbolDef.initializeClass(Classes.symbolClass, Classes.stringClass);
+
+      booleanDef.initializeClass(Classes.booleanClass, Classes.valueClass);
+      trueDef.initializeClass(Classes.trueClass, Classes.booleanClass);
+      falseDef.initializeClass(Classes.falseClass, Classes.booleanClass);
+
+      blockDef.initializeClass(Classes.blockClass, Classes.objectClass);
+    }
 
     Nil.nilObject.setClass(Classes.nilClass);
 
@@ -291,6 +412,12 @@ public final class ObjectSystem {
                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
     Classes.blockClass.getSOMClass()
                       .setClassGroup(Classes.metaclassClass.getInstanceFactory());
+
+    // these classes are not exposed in Newspeak directly, and thus, do not yet have a class
+    // factory
+    setDummyClassFactory(Classes.messageClass, MessageSerializationNodeFactory.getInstance());
+    setDummyClassFactory(Classes.methodClass,
+        SInvokableSerializationNodeFactory.getInstance());
 
     SClass kernelClass = kernelModule.instantiateClass(Nil.nilObject, Classes.objectClass);
     KernelObj.kernel.setClass(kernelClass);
@@ -344,6 +471,20 @@ public final class ObjectSystem {
     return vmMirror;
   }
 
+  public void setDummyClassFactory(final SClass clazz,
+      final NodeFactory<? extends AbstractSerializationNode> serializerFactory) {
+    if (VmSettings.SNAPSHOTS_ENABLED) {
+      ClassFactory classFactory = new ClassFactory(clazz.getSOMClass().getName(), null,
+          null, null, true,
+          true, false,
+          null, false,
+          null, serializerFactory);
+
+      clazz.setClassGroup(classFactory);
+      clazz.initializeStructure(null, null, null, true, false, false, classFactory);
+    }
+  }
+
   private static void setSlot(final SObject obj, final String slotName,
       final Object value, final MixinDefinition classDef) {
     SlotDefinition slot = (SlotDefinition) classDef.getInstanceDispatchables().get(
@@ -351,26 +492,21 @@ public final class ObjectSystem {
     slot.setValueDuringBootstrap(obj, value);
   }
 
-  private void handlePromiseResult(final SPromise promise) {
+  private int handlePromiseResult(final SPromise promise) {
+    // This is an attempt to prevent to get stuck indeterminately.
+    // We check whether there is activity on any of the pools.
+    // And, we exit when either the main promise is resolved, or an exit was requested.
     int emptyFJPool = 0;
     while (emptyFJPool < 120) {
       if (promise.isCompleted()) {
-        if (vm.isAvoidingExit()) {
-          return;
-        }
-
         if (promise.isErroredUnsync()) {
-          vm.shutdownAndExit(1);
-        } else {
-          vm.shutdownAndExit(0);
+          return Launcher.EXIT_WITH_ERROR;
         }
+        return vm.lastExitCode();
       }
 
       if (vm.shouldExit()) {
-        if (vm.isAvoidingExit()) {
-          return;
-        }
-        vm.shutdownAndExit(vm.lastExitCode());
+        return vm.lastExitCode();
       }
 
       try {
@@ -390,15 +526,17 @@ public final class ObjectSystem {
     Output.errorPrintln(
         "VM seems to have exited prematurely. The actor pool has been idle for "
             + emptyFJPool + " checks in a row.");
-    vm.shutdownAndExit(1); // just in case it was disable for VM.errorExit
+    return Launcher.EXIT_WITH_ERROR;
   }
 
   public void releaseMainThread(final int errorCode) {
-    mainThreadCompleted.complete(errorCode);
+    if (mainThreadCompleted != null) {
+      mainThreadCompleted.complete(errorCode);
+    }
   }
 
   @TruffleBoundary
-  public void executeApplication(final SObjectWithoutFields vmMirror, final Actor mainActor) {
+  public int executeApplication(final SObjectWithoutFields vmMirror, final Actor mainActor) {
     mainThreadCompleted = new CompletableFuture<>();
 
     ObjectTransitionSafepoint.INSTANCE.register();
@@ -420,8 +558,7 @@ public final class ObjectSystem {
     DirectMessage msg = new DirectMessage(mainActor, start,
         new Object[] {platform}, mainActor,
         null, EventualSendNode.createOnReceiveCallTargetForVMMain(
-            start, 1, source, mainThreadCompleted, compiler.getLanguage()),
-        false, false);
+            start, 1, source, mainThreadCompleted, compiler.getLanguage()));
     mainActor.sendInitialStartMessage(msg, vm.getActorPool());
 
     try {
@@ -429,23 +566,17 @@ public final class ObjectSystem {
 
       if (result instanceof Long || result instanceof Integer) {
         int exitCode = (result instanceof Long) ? (int) (long) result : (int) result;
-        if (vm.isAvoidingExit()) {
-          return;
-        } else {
-          vm.shutdownAndExit(exitCode);
-        }
+        return exitCode;
       } else if (result instanceof SPromise) {
-        handlePromiseResult((SPromise) result);
-        return;
+        return handlePromiseResult((SPromise) result);
       } else {
         Output.errorPrintln("The application's #main: method returned a " + result.toString()
             + ", but it needs to return a Promise or Integer as return value.");
-        vm.shutdownAndExit(1);
+        return Launcher.EXIT_WITH_ERROR;
       }
     } catch (InterruptedException | ExecutionException e) {
-      // TODO Auto-generated catch block
       e.printStackTrace();
-      vm.shutdownAndExit(1);
+      return Launcher.EXIT_WITH_ERROR;
     }
   }
 

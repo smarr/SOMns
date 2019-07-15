@@ -2,10 +2,9 @@ package som.interpreter.nodes.nary;
 
 import com.oracle.truffle.api.dsl.UnsupportedSpecializationException;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.InstrumentableFactory.WrapperNode;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.Node;
 
-import som.VM;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.MessageSendNode;
@@ -33,9 +32,9 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitiveNode {
   }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
-    assert !(primitive instanceof WrapperNode);
-    return primitive.isTaggedWithIgnoringEagerness(tag);
+  public boolean hasTag(final Class<? extends Tag> tag) {
+    assert !(primitive instanceof WrapperNode) : "Eager primitives are expected to point directly to primitive nodes, and do not have wrapper nodes. I think, we wanted the wrapper nodes to be strictly around the eager wrappers.";
+    return primitive.hasTagIgnoringEagerness(tag);
   }
 
   @Override
@@ -59,8 +58,8 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitiveNode {
   }
 
   @Override
-  public void markAsPrimitiveArgument() {
-    primitive.markAsPrimitiveArgument();
+  public void markAsArgument() {
+    primitive.markAsArgument();
   }
 
   @Override
@@ -111,16 +110,10 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitiveNode {
   }
 
   private AbstractMessageSendNode makeGenericSend() {
-    VM.insertInstrumentationWrapper(this);
-
     GenericMessageSendNode node = MessageSendNode.createGeneric(selector,
-        new ExpressionNode[] {receiver, argument1, argument2},
-        getSourceSection());
+        new ExpressionNode[] {receiver, argument1, argument2}, sourceSection);
     replace(node);
-    VM.insertInstrumentationWrapper(node);
-    VM.insertInstrumentationWrapper(receiver);
-    VM.insertInstrumentationWrapper(argument1);
-    VM.insertInstrumentationWrapper(argument2);
+    notifyInserted(node);
     return node;
   }
 

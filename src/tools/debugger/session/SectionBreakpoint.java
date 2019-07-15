@@ -2,7 +2,7 @@ package tools.debugger.session;
 
 import java.util.Objects;
 
-import tools.SourceCoordinate.FullSourceCoordinate;
+import bd.source.FullSourceCoordinate;
 import tools.debugger.FrontendConnector;
 import tools.debugger.entities.BreakpointType;
 

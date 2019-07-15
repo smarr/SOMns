@@ -22,7 +22,7 @@ fi
 mkdir -p $SCRIPT_PATH/results/
 
 ## extract expected results
-tar xf $SCRIPT_PATH/expected-results.tar.bz2 -C $SCRIPT_PATH/
+tar --exclude='._*' -xf $SCRIPT_PATH/expected-results.tar.bz2 -C $SCRIPT_PATH/
 
 NEEDS_UPDATE=false
 
@@ -74,5 +74,5 @@ then
   mv $SCRIPT_PATH/expected-results $SCRIPT_PATH/old-results
   mv $SCRIPT_PATH/results $SCRIPT_PATH/expected-results
   ## update the archive
-  tar cjf $SCRIPT_PATH/expected-results.tar.bz2 -C $SCRIPT_PATH expected-results
+  tar --exclude='._*' -cjf $SCRIPT_PATH/expected-results.tar.bz2 -C $SCRIPT_PATH expected-results
 fi

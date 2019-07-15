@@ -2,7 +2,7 @@ package som.primitives;
 
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.profiles.ValueProfile;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
@@ -17,45 +17,44 @@ import tools.dym.Tags.OpLength;
 @Primitive(primitive = "stringLength:", selector = "length", receiverType = String.class,
     inParser = false)
 public abstract class SizeAndLengthPrim extends UnaryBasicOperation {
-  private final ValueProfile storageType = ValueProfile.createClassProfile();
 
   @Override
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
     if (tag == OpLength.class) {
       return true;
     } else {
-      return super.isTaggedWithIgnoringEagerness(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
   }
 
   @Specialization(guards = "receiver.isEmptyType()")
   public final long doEmptySArray(final SArray receiver) {
-    return receiver.getEmptyStorage(storageType);
+    return receiver.getEmptyStorage();
   }
 
   @Specialization(guards = "receiver.isPartiallyEmptyType()")
   public final long doPartialEmptySArray(final SArray receiver) {
-    return receiver.getPartiallyEmptyStorage(storageType).getLength();
+    return receiver.getPartiallyEmptyStorage().getLength();
   }
 
   @Specialization(guards = "receiver.isObjectType()")
   public final long doObjectSArray(final SArray receiver) {
-    return receiver.getObjectStorage(storageType).length;
+    return receiver.getObjectStorage().length;
   }
 
   @Specialization(guards = "receiver.isLongType()")
   public final long doLongSArray(final SArray receiver) {
-    return receiver.getLongStorage(storageType).length;
+    return receiver.getLongStorage().length;
   }
 
   @Specialization(guards = "receiver.isDoubleType()")
   public final long doDoubleSArray(final SArray receiver) {
-    return receiver.getDoubleStorage(storageType).length;
+    return receiver.getDoubleStorage().length;
   }
 
   @Specialization(guards = "receiver.isBooleanType()")
   public final long doBooleanSArray(final SArray receiver) {
-    return receiver.getBooleanStorage(storageType).length;
+    return receiver.getBooleanStorage().length;
   }
 
   public abstract long executeEvaluated(Object receiver);

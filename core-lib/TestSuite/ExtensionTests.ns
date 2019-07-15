@@ -1,0 +1,71 @@
+(* Testing SOMns' extension mechanism.
+
+   SOMns extensions are special jar files that contain primitives.
+   They are loaded like a normal module and behave the same.
+   Thus, from the perspective of the user, they are not distinguishable from
+   other modules.
+*)
+class ExtensionTests usingPlatform: platform testFramework: minitest = Value (
+| private TestContext  = minitest TestContext.
+  private ObjectMirror = platform mirrors ObjectMirror.
+  private FilePath     = platform files FilePath.
+
+  private system = platform system.
+
+  private jarName    = 'extension/build/test-extension.jar'.
+  private modulePath = (ObjectMirror reflecting: self) classMirror classDefinition filePath.
+  private jarPath    = ((FilePath for: modulePath) containingDirectory / jarName) pattern.
+|)(
+  public class BasicTest = TestContext ()(
+
+    private loadModule = (
+      ^ system loadModule: jarName nextTo: self.
+    )
+
+    (* Make sure the test extension has been compiled. *)
+    public testExtensionJarAvailable = (
+      assert: (FilePath for: jarPath) exists description: 'The ' + jarName + ' is missing. Please ensure building the extension.'.
+    )
+
+    (* The same as a normal module, loading it returns the class object. *)
+    public testModuleLoadReturnsClass = (
+      | module = loadModule new.
+        mirror = ObjectMirror reflecting: module. |
+      assert: (mirror className endsWith: jarName).
+    )
+
+    public testModuleMethodsWorking = (
+      | m = loadModule new. |
+      assert: m counter equals: 0.
+      m inc.
+      assert: m counter equals: 1.
+      m inc.
+      m inc.
+      assert: m counter equals: 3.
+    )
+
+    (* Modules that are loaded multiple times
+       should be isolated from each other.*)
+    public testIsolationOfModules = (
+      | m1 = loadModule new.
+        m2 = loadModule new. |
+      assert: m1 counter equals: 0.
+      assert: m2 counter equals: 0.
+
+      m1 inc.
+      assert: m1 counter equals: 1.
+      assert: m2 counter equals: 0.
+
+      m2 inc. m2 inc.
+      assert: m1 counter equals: 1.
+      assert: m2 counter equals: 2.
+    )
+
+    (* JARs can define classpath dependencies with the Class-Path attribute.
+       Check that the extension jar is able to access the dependent jar. *)
+    public testClassPathDependency = (
+      | m = loadModule new. |
+      assert: m valueFromClasspath equals: 42.
+    )
+  ) : ( TEST_CONTEXT = () )
+)

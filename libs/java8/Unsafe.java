@@ -10,11 +10,21 @@ public final class Unsafe {
   }
 
   public native long objectFieldOffset(Field f);
+  
+  public native int arrayBaseOffset(Class<?> clazz);
+  
+  public native int arrayIndexScale(Class<?> clazz);
 
   public native Object getObject(Object o, long offset);
 
   public native void putObject(Object o, long offset, Object value);
 
+  public native void putByte(Object o, long offset, byte value);
+
+  public native void putShort(Object o, long offset, short value);
+  
+  public native void putInt(Object o, long offset, int value);
+  
   public native long getLong(Object o, long offset);
 
   public native void putLong(Object o, long offset, long value);
@@ -22,4 +32,8 @@ public final class Unsafe {
   public native double getDouble(Object o, long offset);
 
   public native void putDouble(Object o, long offset, double value);
+  
+  public native void copyMemory(Object from, long offset, Object to, long offset2, long nBytes);
+  
+  public native boolean compareAndSwapLong(java.lang.Object arg0, long arg1, long arg2, long arg3);
 }

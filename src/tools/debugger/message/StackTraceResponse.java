@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import com.oracle.truffle.api.debug.DebugStackFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.actors.Actor.ExecutorRootNode;
 import som.interpreter.actors.ReceivedRootNode;
 import tools.TraceData;
 import tools.debugger.entities.EntityType;
@@ -46,7 +47,7 @@ public final class StackTraceResponse extends Response {
     }
   }
 
-  static class StackFrame {
+  private static class StackFrame {
     /**
      * Id for the frame, unique across all threads.
      */
@@ -88,12 +89,27 @@ public final class StackTraceResponse extends Response {
     }
   }
 
+  private static int getNumRootNodesToSkip(final ArrayList<DebugStackFrame> frames) {
+    int skip = 0;
+    int size = frames.size();
+
+    // Actor-specific infrastructure, to be skipped from stack traces
+    if (frames.get(size - 1).getRootNode() instanceof ExecutorRootNode) {
+      skip += 1;
+    }
+
+    // Actor-specific infrastructure, to be skipped from stack traces
+    if (size >= 2 && frames.get(size - 2).getRootNode() instanceof ReceivedRootNode) {
+      skip += 1;
+    }
+
+    return skip;
+  }
+
   public static StackTraceResponse create(final int startFrame, final int levels,
       final Suspension suspension, final int requestId) {
     ArrayList<DebugStackFrame> frames = suspension.getStackFrames();
     int skipFrames = suspension.getFrameSkipCount();
-    DebugStackFrame lastFrame = frames.get(frames.size() - 1);
-    final boolean ignoreLast = lastFrame.getRootNode() instanceof ReceivedRootNode;
 
     if (startFrame > skipFrames) {
       skipFrames = startFrame;
@@ -104,10 +120,7 @@ public final class StackTraceResponse extends Response {
       numFrames = Integer.MAX_VALUE;
     }
     numFrames = Math.min(frames.size(), numFrames);
-    numFrames -= skipFrames;
-    if (ignoreLast) {
-      numFrames -= 1;
-    }
+    numFrames -= skipFrames + getNumRootNodesToSkip(frames);
 
     StackFrame[] arr = new StackFrame[numFrames];
 

@@ -54,7 +54,7 @@ public class SourceManager {
   }
 
   /**
-   * Creates a section that doesn't correspond to any part of the source code
+   * Creates a section that doesn't correspond to any part of the source code.
    */
   public SourceSection empty() {
     return source.createUnavailableSection();
@@ -86,7 +86,7 @@ public class SourceManager {
    * @return
    */
 
-  private final static List<String> builtinModules = new ArrayList<String>();
+  private static final List<String> builtinModules = new ArrayList<String>();
   static {
     builtinModules.add("standardGrace");
     builtinModules.add("io");

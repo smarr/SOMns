@@ -4,21 +4,18 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
 import bd.primitives.Specializer;
-import bd.tools.nodes.Operation;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.literals.BlockNode;
-import som.interpreter.nodes.nary.BinaryBasicOperation;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.specialized.AndMessageNode.AndOrSplzr;
-import som.interpreter.nodes.specialized.AndMessageNodeFactory.AndBoolMessageNodeFactory;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
@@ -34,14 +31,13 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
     protected final NodeFactory<ExpressionNode> boolFact;
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public AndOrSplzr(final Primitive prim,
-        final NodeFactory<ExpressionNode> fact, final VM vm) {
-      this(prim, fact, (NodeFactory) AndBoolMessageNodeFactory.getInstance(), vm);
+    public AndOrSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
+      this(prim, fact, (NodeFactory) AndBoolMessageNodeFactory.getInstance());
     }
 
     protected AndOrSplzr(final Primitive prim, final NodeFactory<ExpressionNode> msgFact,
-        final NodeFactory<ExpressionNode> boolFact, final VM vm) {
-      super(prim, msgFact, vm);
+        final NodeFactory<ExpressionNode> boolFact) {
+      super(prim, msgFact);
       this.boolFact = boolFact;
     }
 
@@ -60,7 +56,7 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
     @Override
     public final BinaryExpressionNode create(final Object[] arguments,
         final ExpressionNode[] argNodes, final SourceSection section,
-        final boolean eagerWrapper) {
+        final boolean eagerWrapper, final VM vm) {
       BinaryExpressionNode node;
       if (unwrapIfNecessary(argNodes[1]) instanceof BlockNode) {
         node = (BinaryExpressionNode) fact.createNode(
@@ -88,13 +84,13 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
   }
 
   @Override
-  protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
     if (tag == ControlFlowCondition.class) {
       return true;
     } else if (tag == OpComparison.class) {
       return true;
     } else {
-      return super.isTaggedWithIgnoringEagerness(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
   }
 
@@ -104,35 +100,6 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
       return false;
     } else {
       return (boolean) blockValueSend.call(new Object[] {argument});
-    }
-  }
-
-  @GenerateNodeFactory
-  public abstract static class AndBoolMessageNode extends BinaryBasicOperation
-      implements Operation {
-    @Override
-    protected boolean isTaggedWithIgnoringEagerness(final Class<?> tag) {
-      if (tag == OpComparison.class) {
-        return true;
-      } else {
-        return super.isTaggedWithIgnoringEagerness(tag);
-      }
-    }
-
-    @Specialization
-    public final boolean doAnd(final VirtualFrame frame, final boolean receiver,
-        final boolean argument) {
-      return receiver && argument;
-    }
-
-    @Override
-    public String getOperation() {
-      return "&&";
-    }
-
-    @Override
-    public int getNumArguments() {
-      return 2;
     }
   }
 }

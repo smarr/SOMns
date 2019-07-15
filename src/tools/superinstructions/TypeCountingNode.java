@@ -1,5 +1,6 @@
 package tools.superinstructions;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.ExecutionEventNode;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
@@ -37,6 +38,7 @@ final class TypeCountingNode extends ExecutionEventNode {
       // If the SOMns code throws an exception, we should just ignore this.
       return;
     } else {
+      CompilerDirectives.transferToInterpreter();
       throw new NotYetImplementedException();
     }
   }

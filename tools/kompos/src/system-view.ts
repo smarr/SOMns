@@ -26,6 +26,23 @@ export function getLightTangoColor(actType: ActivityType, actId: number) {
   return getTangoColors(actType)[3 + (actId % 4)];
 }
 
+function drawEdgesWithPaddingFromCenter(d: EntityLink) {
+  const target = <EntityNode> d.target;
+  const source = <EntityNode> d.source;
+  const deltaX = target.x - source.x,
+    deltaY = target.y - source.y,
+    dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
+    normX = dist === 0 ? 0 : deltaX / dist,
+    normY = dist === 0 ? 0 : deltaY / dist,
+    sourcePadding = d.left ? 17 : 12,
+    targetPadding = d.right ? 17 : 12,
+    sourceX = source.x + (sourcePadding * normX),
+    sourceY = source.y + (sourcePadding * normY),
+    targetX = target.x - (targetPadding * normX),
+    targetY = target.y - (targetPadding * normY);
+  return `M${sourceX},${sourceY}L${targetX},${targetY}`;
+}
+
 export class SystemView {
   private readonly data: SystemViewData;
 
@@ -39,6 +56,8 @@ export class SystemView {
 
   private zoomScale = 1;
   private zoomTransl = [0, 0];
+
+  private forceLayout;
 
   private metaModel: KomposMetaModel;
 
@@ -89,7 +108,7 @@ export class SystemView {
     const allEntities = this.activities.concat(<any[]> this.passiveEntities);
 
     // init D3 force layout
-    const forceLayout = d3.layout.force()
+    this.forceLayout = d3.layout.force()
       .nodes(allEntities)
       .links(this.links)
       .size([canvas.width(), canvas.height()])
@@ -97,7 +116,7 @@ export class SystemView {
       .charge(-500)
       .on("tick", () => this.forceLayoutUpdateIteration());
 
-    forceLayout.linkStrength((link: EntityLink) => {
+    this.forceLayout.linkStrength((link: EntityLink) => {
       return link.messageCount / this.data.getMaxMessageSends();
     });
 
@@ -108,7 +127,8 @@ export class SystemView {
     createArrowMarker(svg, "end-arrow-creator", 6, "M0,-5L10,0L0,5", "#aaa");
     createArrowMarker(svg, "start-arrow-creator", 4, "M10,-5L0,0L10,5", "#aaa");
 
-    this.renderSystemView(forceLayout, svg);
+    const layout = this.forceLayout;
+    setTimeout(() => this.renderSystemView(layout, svg), 100);
   }
 
   private zoomed() {
@@ -131,22 +151,7 @@ export class SystemView {
 
   private forceLayoutUpdateIteration() {
     // draw directed edges with proper padding from node centers
-    this.entityLinks.attr("d", (d: EntityLink) => {
-      const target = <EntityNode> d.target;
-      const source = <EntityNode> d.source;
-      const deltaX = target.x - source.x,
-        deltaY = target.y - source.y,
-        dist = Math.sqrt(deltaX * deltaX + deltaY * deltaY),
-        normX = deltaX / dist,
-        normY = deltaY / dist,
-        sourcePadding = d.left ? 17 : 12,
-        targetPadding = d.right ? 17 : 12,
-        sourceX = source.x + (sourcePadding * normX),
-        sourceY = source.y + (sourcePadding * normY),
-        targetX = target.x - (targetPadding * normX),
-        targetY = target.y - (targetPadding * normY);
-      return `M${sourceX},${sourceY}L${targetX},${targetY}`;
-    });
+    this.entityLinks.attr("d", drawEdgesWithPaddingFromCenter);
 
     this.activityNodes.attr("transform", (d: ActivityNode) => {
       const x = this.zoomTransl[0] + d.x * this.zoomScale;
@@ -164,6 +169,11 @@ export class SystemView {
   private renderSystemView(forceLayout:
     d3.layout.Force<d3.layout.force.Link<d3.layout.force.Node>, d3.layout.force.Node>,
     svg: d3.Selection<any>) {
+    if (forceLayout !== this.forceLayout) {
+      // ok, looks like we got new data, let's not do this anymore
+      return;
+    }
+
     // handles to link and node element groups
     this.entityLinks = svg.append("svg:g")
       .selectAll("path")
@@ -212,6 +222,17 @@ export class SystemView {
     // remove old nodes
     this.activityNodes.exit().remove();
     this.entityNodes.exit().remove();
+
+    // delay the execution of the layouting, it may be invalidated soon
+    setTimeout(() => this.layoutView(forceLayout), 100);
+  }
+
+  private layoutView(forceLayout:
+    d3.layout.Force<d3.layout.force.Link<d3.layout.force.Node>, d3.layout.force.Node>) {
+    if (forceLayout !== this.forceLayout) {
+      // ok, looks like we got new data, let's not do this anymore
+      return;
+    }
 
     // set the graph in motion
     forceLayout.start();

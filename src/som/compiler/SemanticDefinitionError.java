@@ -3,7 +3,7 @@ package som.compiler;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.basic.ProgramDefinitionError;
-import tools.SourceCoordinate;
+import bd.source.SourceCoordinate;
 
 
 public abstract class SemanticDefinitionError extends ProgramDefinitionError {

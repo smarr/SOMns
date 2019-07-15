@@ -2,22 +2,22 @@ package som.interpreter.actors;
 
 import java.util.concurrent.CompletableFuture;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
-import som.interpreter.SArguments;
+import bd.primitives.nodes.PreevaluatedExpression;
 import som.interpreter.SomException;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
-import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 
 
 public class ReceivedMessage extends ReceivedRootNode {
 
-  @Child protected AbstractMessageSendNode onReceive;
+  @Child protected PreevaluatedExpression onReceive;
 
   private final SSymbol selector;
 
@@ -30,15 +30,8 @@ public class ReceivedMessage extends ReceivedRootNode {
   }
 
   @Override
-  public Object execute(final VirtualFrame frame) {
-    EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
-    boolean haltOnResolver = msg.getHaltOnResolver();
-    boolean haltOnResolution = msg.getHaltOnResolution();
-
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && haltOnResolver) {
-      dbg.prepareSteppingAfterNextRootNode();
-    }
-
+  protected Object executeBody(final VirtualFrame frame, final EventualMessage msg,
+      final boolean haltOnResolver, final boolean haltOnResolution) {
     try {
       Object result = onReceive.doPreEvaluated(frame, msg.args);
       resolvePromise(frame, msg.resolver, result, haltOnResolver, haltOnResolution);
@@ -65,16 +58,16 @@ public class ReceivedMessage extends ReceivedRootNode {
     }
 
     @Override
-    public Object execute(final VirtualFrame frame) {
-      EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
-
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && msg.getHaltOnResolver()) {
-        dbg.prepareSteppingAfterNextRootNode();
-      }
-
+    protected Object executeBody(final VirtualFrame frame, final EventualMessage msg,
+        final boolean haltOnResolver, final boolean haltOnResolution) {
       Object result = onReceive.doPreEvaluated(frame, msg.args);
-      future.complete(result);
+      resolveFuture(result);
       return result;
+    }
+
+    @TruffleBoundary
+    private void resolveFuture(final Object result) {
+      future.complete(result);
     }
   }
 
@@ -82,21 +75,14 @@ public class ReceivedMessage extends ReceivedRootNode {
     @Child protected DirectCallNode onReceive;
 
     public ReceivedCallback(final RootCallTarget onReceive) {
-      super(onReceive.getRootNode().getLanguage(SomLanguage.class),
+      super(SomLanguage.getLanguage(onReceive.getRootNode()),
           onReceive.getRootNode().getSourceSection(), null);
       this.onReceive = Truffle.getRuntime().createDirectCallNode(onReceive);
     }
 
     @Override
-    public Object execute(final VirtualFrame frame) {
-      EventualMessage msg = (EventualMessage) SArguments.rcvr(frame);
-      boolean haltOnResolver = msg.getHaltOnResolver();
-      boolean haltOnResolution = msg.getHaltOnResolution();
-
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && haltOnResolver) {
-        dbg.prepareSteppingAfterNextRootNode();
-      }
-
+    protected Object executeBody(final VirtualFrame frame, final EventualMessage msg,
+        final boolean haltOnResolver, final boolean haltOnResolution) {
       try {
         Object result = onReceive.call(msg.args);
         resolvePromise(frame, msg.resolver, result, haltOnResolver,

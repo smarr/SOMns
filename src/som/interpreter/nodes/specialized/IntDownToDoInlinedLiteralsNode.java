@@ -7,6 +7,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlot;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.inlining.Inline;
 import bd.inlining.ScopeAdaptationVisitor;
@@ -37,6 +38,7 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
 
   public abstract ExpressionNode getTo();
 
+  @SuppressWarnings("deprecation") // set LocalVariableNode about descriptor and slots
   public IntDownToDoInlinedLiteralsNode(final ExpressionNode originalBody,
       final ExpressionNode body, final Local loopIndex) {
     this.body = body;
@@ -50,11 +52,11 @@ public abstract class IntDownToDoInlinedLiteralsNode extends ExprWithTagsNode {
   }
 
   @Override
-  protected boolean isTaggedWith(final Class<?> tag) {
+  public boolean hasTag(final Class<? extends Tag> tag) {
     if (tag == LoopNode.class) {
       return true;
     } else {
-      return super.isTaggedWith(tag);
+      return super.hasTag(tag);
     }
   }
 

@@ -544,7 +544,7 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
     public testAsyncTimeoutWorking = (
       | p |
       p:: actors createPromisePair.
-      actors after: 50 do: [ :r|
+      actors after: 50 do: [
         p resolve: true.
       ].
       ^ (assert: p promise resolvedWith: true).
@@ -553,12 +553,12 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
     public testAsyncTimeoutOrder = (
       | p done |
       p:: actors createPromisePair.
-      actors after: 50 do: [ :r|
+      actors after: 50 do: [
         assert: done.
         p resolve: true.
       ].
 
-      actors after: 25 do: [ :r|
+      actors after: 25 do: [
         done:: true.
       ].
 

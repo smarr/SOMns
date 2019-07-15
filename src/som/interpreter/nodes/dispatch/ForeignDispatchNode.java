@@ -1,66 +1,65 @@
 package som.interpreter.nodes.dispatch;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.ArityException;
-import com.oracle.truffle.api.interop.ForeignAccess;
-import com.oracle.truffle.api.interop.Message;
+import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
 import com.oracle.truffle.api.interop.UnknownIdentifierException;
 import com.oracle.truffle.api.interop.UnsupportedMessageException;
 import com.oracle.truffle.api.interop.UnsupportedTypeException;
-import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.library.LibraryFactory;
 
 import som.VM;
+import som.interop.SomInteropObject;
 import som.interpreter.SArguments;
-import som.vmobjects.SAbstractObject;
 
 
 public final class ForeignDispatchNode extends AbstractDispatchNode {
   private final String selector;
 
   @Child private AbstractDispatchNode nextInCache;
-  @Child private Node                 invoke;
-  @Child private Node                 read;
-  @Child private Node                 write;
+
+  private final LibraryFactory<InteropLibrary> factory;
+  private final int                            numArgs;
 
   public ForeignDispatchNode(final int numArgs, final String selector,
       final AbstractDispatchNode next) {
     super(next.getSourceSection());
     this.selector = selector.replaceAll(":", "");
     this.nextInCache = next;
-    invoke = Message.createInvoke(numArgs).createNode();
 
-    if (numArgs == 1) {
-      read = Message.READ.createNode();
-    } else if (numArgs == 2) {
-      write = Message.WRITE.createNode();
-    }
+    this.numArgs = numArgs;
+    this.factory = InteropLibrary.getFactory();
   }
 
   @Override
-  @TruffleBoundary
   // TODO: needs to be optimized for compilation
-  public Object executeDispatch(final Object[] arguments) {
+  public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
+
     VM.thisMethodNeedsToBeOptimized("");
+    CompilerDirectives.transferToInterpreter();
     Object rcvr = arguments[0];
-    if (rcvr instanceof TruffleObject && !(rcvr instanceof SAbstractObject)) {
+    if (rcvr instanceof TruffleObject && !(rcvr instanceof SomInteropObject)) {
       TruffleObject r = (TruffleObject) rcvr;
+      InteropLibrary interop = factory.getUncached(rcvr);
       try {
-        return ForeignAccess.sendInvoke(invoke, r,
-            selector, SArguments.getPlainArgumentWithoutReceiver(arguments));
+        return interop.invokeMember(r, selector,
+            SArguments.getPlainArgumentWithoutReceiver(arguments));
       } catch (UnsupportedTypeException | ArityException
           | UnknownIdentifierException | UnsupportedMessageException e) {
-        if (read != null) {
+        if (numArgs == 1) {
           try {
-            return ForeignAccess.sendRead(read, r, selector);
+            return interop.readMember(r, selector);
           } catch (UnknownIdentifierException
               | UnsupportedMessageException e1) {
             throw new RuntimeException(e1);
           }
         } else {
-          assert write != null;
+          assert numArgs == 2;
           try {
-            return ForeignAccess.sendWrite(write, r, selector, arguments[1]);
+            interop.writeMember(r, selector, arguments[1]);
+            return arguments[1];
           } catch (UnknownIdentifierException | UnsupportedTypeException
               | UnsupportedMessageException e1) {
             throw new RuntimeException(e1);
@@ -68,7 +67,7 @@ public final class ForeignDispatchNode extends AbstractDispatchNode {
         }
       }
     } else {
-      return nextInCache.executeDispatch(arguments);
+      return nextInCache.executeDispatch(frame, arguments);
     }
   }
 

@@ -159,6 +159,14 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
     ^ vmMirror actors: nil createFromValue: aValue
   )
 
+  public snapshot: obj = (
+    vmMirror snapshot: obj.
+  )
+
+  public snapshotClone: obj = (
+    ^ vmMirror snapshotClone: obj.
+  )
+
   (* Can't be part of kernel, don't have promises in the kernel... *)
   private async: collection do: aBlock next: i prevPromise: prev
       completionResolver: resolver = (
@@ -258,9 +266,6 @@ class Actors usingVmMirror: vmMirror usingKernel: kernel = Value (
   )
 
   public after: milliseconds do: aBlock = (
-    | promisePair |
-    promisePair:: createPromisePair.
-    promisePair promise whenResolved: aBlock.
-    vmMirror actorResolveProm: (promisePair resolver) after: milliseconds.
+    vmMirror actorDo: aBlock after: milliseconds.
   )
 )

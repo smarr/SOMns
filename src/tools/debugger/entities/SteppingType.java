@@ -1,10 +1,9 @@
 package tools.debugger.entities;
 
 import com.google.gson.annotations.SerializedName;
-import com.oracle.truffle.api.debug.SuspendedEvent;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import som.vm.NotYetImplementedException;
-import tools.concurrency.Tags;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
@@ -74,7 +73,8 @@ public enum SteppingType {
   },
 
   @SerializedName("stepIntoActivity")
-  STEP_INTO_ACTIVITY("stepIntoActivity", "Step into Activity", Group.ACTIVITY_STEPPING, "arrow-down", new Class[] {ActivityCreation.class}) {
+  STEP_INTO_ACTIVITY("stepIntoActivity", "Step into Activity", Group.ACTIVITY_STEPPING,
+      "arrow-down", new Class[] {ActivityCreation.class}) {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareStepOver(1);
@@ -83,8 +83,8 @@ public enum SteppingType {
   },
 
   @SerializedName("returnFromActivity")
-  RETURN_FROM_ACTIVITY("returnFromActivity", "Return from Activity", Group.ACTIVITY_STEPPING, "arrow-left",
-      null,
+  RETURN_FROM_ACTIVITY("returnFromActivity", "Return from Activity", Group.ACTIVITY_STEPPING,
+      "arrow-left", null,
       new ActivityType[] {ActivityType.PROCESS, ActivityType.TASK, ActivityType.THREAD}) {
     @Override
     public void process(final Suspension susp) {
@@ -94,7 +94,8 @@ public enum SteppingType {
   },
 
   @SerializedName("stepToChannelRcvr")
-  STEP_TO_CHANNEL_RCVR("stepToChannelRcvr", "Step to Receiver", Group.PROCESS_STEPPING, "arrow-right", new Class[] {ChannelWrite.class}) {
+  STEP_TO_CHANNEL_RCVR("stepToChannelRcvr", "Step to Receiver", Group.PROCESS_STEPPING,
+      "arrow-right", new Class[] {ChannelWrite.class}) {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareStepOver(1);
@@ -103,7 +104,8 @@ public enum SteppingType {
   },
 
   @SerializedName("stepToChannelSender")
-  STEP_TO_CHANNEL_SENDER("stepToChannelSender", "Step to Sender", Group.PROCESS_STEPPING, "arrow-left", new Class[] {ChannelRead.class}) {
+  STEP_TO_CHANNEL_SENDER("stepToChannelSender", "Step to Sender", Group.PROCESS_STEPPING,
+      "arrow-left", new Class[] {ChannelRead.class}) {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareStepInto(1);
@@ -112,7 +114,8 @@ public enum SteppingType {
   },
 
   @SerializedName("stepToNextTx")
-  STEP_TO_NEXT_TX("stepToNextTx", "Step to next Transaction", Group.ACTIVITY_STEPPING, "arrow-right", null, null) {
+  STEP_TO_NEXT_TX("stepToNextTx", "Step to next Transaction", Group.ACTIVITY_STEPPING,
+      "arrow-right", null, null) {
     @Override
     public void process(final Suspension susp) {
       susp.getEvent().prepareContinue();
@@ -211,11 +214,9 @@ public enum SteppingType {
   }
 
   private static void handleFrameSkip(final Suspension susp) {
-    if (susp.getFrameSkipCount() > 0) {
-      SuspendedEvent event = susp.getEvent();
-      for (int i = 0; i < susp.getFrameSkipCount(); i += 1) {
-        event.prepareStepOut(1);
-      }
+    int skipCnt = susp.getFrameSkipCount();
+    if (skipCnt > 1) {
+      susp.getEvent().prepareStepOut(skipCnt - 1); // -1 for correct step-out semantics
     }
   }
 
@@ -230,7 +231,7 @@ public enum SteppingType {
    * Tag to identify the source sections at which this step operation makes sense.
    * If no tags are given, it is assumed the operation is always valid.
    */
-  public final Class<? extends Tags>[] applicableTo;
+  public final Class<? extends Tag>[] applicableTo;
 
   /**
    * Stepping operation is only available when in the dynamic scope of the given entity.
@@ -239,17 +240,17 @@ public enum SteppingType {
   public final EntityType[] inScope;
 
   SteppingType(final String name, final String label, final Group group, final String icon,
-      final Class<? extends Tags>[] applicableTo) {
+      final Class<? extends Tag>[] applicableTo) {
     this(name, label, group, icon, applicableTo, null, null);
   }
 
   SteppingType(final String name, final String label, final Group group, final String icon,
-      final Class<? extends Tags>[] applicableTo, final ActivityType[] forActivities) {
+      final Class<? extends Tag>[] applicableTo, final ActivityType[] forActivities) {
     this(name, label, group, icon, applicableTo, forActivities, null);
   }
 
   SteppingType(final String name, final String label, final Group group, final String icon,
-      final Class<? extends Tags>[] applicableTo, final ActivityType[] forActivities,
+      final Class<? extends Tag>[] applicableTo, final ActivityType[] forActivities,
       final EntityType[] inScope) {
     this.name = name;
     this.label = label;

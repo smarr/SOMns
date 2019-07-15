@@ -32,9 +32,12 @@ import com.google.gson.JsonObject;
 import com.oracle.truffle.api.source.Source;
 
 import bd.basic.ProgramDefinitionError;
+import bd.source.SourceCoordinate;
+import bd.tools.structure.StructuralProbe;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.SomLanguage;
-import tools.SourceCoordinate;
-import tools.language.StructuralProbe;
+import som.vmobjects.SInvokable;
+import som.vmobjects.SSymbol;
 
 
 public class SourcecodeCompiler {
@@ -55,7 +58,7 @@ public class SourcecodeCompiler {
    * @return - a finished SOM class created from the given module
    */
   public MixinDefinition compileSomModule(final Source source,
-      final StructuralProbe structuralProbe)
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe)
       throws ProgramDefinitionError {
     NewspeakParser parser =
         new NewspeakParser(source.getCharacters().toString(), source.getLength(), source,
@@ -76,7 +79,7 @@ public class SourcecodeCompiler {
   private Map<String, MixinDefinition> alreadyLoaded = new HashMap<String, MixinDefinition>();
 
   public MixinDefinition compileGraceModule(final Source source,
-      final StructuralProbe structuralProbe)
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe)
       throws ProgramDefinitionError, IOException {
     String filepath = source.getURI().getPath();
     if (alreadyLoaded.containsKey(filepath)) {
@@ -120,7 +123,7 @@ public class SourcecodeCompiler {
    * @throws IOException
    */
   public MixinDefinition compileModule(final Source source,
-      final StructuralProbe structuralProbe)
+      final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe)
       throws ProgramDefinitionError, IOException {
     final String path = source.getURI().getPath();
 

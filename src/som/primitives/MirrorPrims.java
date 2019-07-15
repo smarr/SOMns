@@ -1,5 +1,6 @@
 package som.primitives;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 
@@ -153,10 +154,12 @@ public abstract class MirrorPrims {
   @Primitive(primitive = "classDefFilePath:")
   public abstract static class ClassDefFilePathPrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final String getFilePath(final Object mixinHandle) {
       assert mixinHandle instanceof MixinDefinition;
       MixinDefinition def = (MixinDefinition) mixinHandle;
-      return def.getSourceSection().getSource().getPath();
+      String path = def.getSourceSection().getSource().getPath();
+      return URI.create(path).getPath();
     }
   }
 

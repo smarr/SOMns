@@ -1,13 +1,13 @@
 package som.interpreter.nodes.nary;
 
 import bd.primitives.nodes.EagerPrimitive;
+import bd.tools.nodes.Invocation;
 import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;
-import tools.Send;
 
 
 public abstract class EagerPrimitiveNode extends ExpressionNode
-    implements EagerPrimitive, Send {
+    implements EagerPrimitive, Invocation<SSymbol> {
   protected final SSymbol selector;
 
   protected EagerPrimitiveNode(final SSymbol selector) {
@@ -15,7 +15,7 @@ public abstract class EagerPrimitiveNode extends ExpressionNode
   }
 
   @Override
-  public SSymbol getSelector() {
+  public SSymbol getInvocationIdentifier() {
     return selector;
   }
 }

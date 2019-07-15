@@ -6,9 +6,10 @@ import java.util.Set;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
+import bd.source.FullSourceCoordinate;
+import bd.source.SourceCoordinate;
+import bd.source.TaggedSourceCoordinate;
 import som.interpreter.Method;
-import tools.SourceCoordinate;
-import tools.SourceCoordinate.TaggedSourceCoordinate;
 import tools.debugger.message.Message.OutgoingMessage;
 
 
@@ -41,13 +42,13 @@ public class SourceMessage extends OutgoingMessage {
     }
   }
 
-  protected static class MethodData {
-    private final String             name;
-    private final SourceCoordinate[] definition;
-    private final SourceCoordinate   sourceSection;
+  private static class MethodData {
+    private final String               name;
+    private final SourceCoordinate[]   definition;
+    private final FullSourceCoordinate sourceSection;
 
     protected MethodData(final String name, final SourceCoordinate[] definition,
-        final SourceCoordinate sourceSection) {
+        final FullSourceCoordinate sourceSection) {
       this.name = name;
       this.definition = definition;
       this.sourceSection = sourceSection;
@@ -68,11 +69,11 @@ public class SourceMessage extends OutgoingMessage {
       SourceSection[] defs = m.getDefinition();
       SourceCoordinate[] definition = new SourceCoordinate[defs.length];
       for (int j = 0; j < defs.length; j += 1) {
-        definition[j] = SourceCoordinate.createCoord(defs[j]);
+        definition[j] = SourceCoordinate.create(defs[j]);
       }
 
       methods.add(new MethodData(
-          m.getName(), definition, SourceCoordinate.create(m.getRootNodeSource())));
+          m.getName(), definition, SourceCoordinate.createFull(m.getRootNodeSource())));
     }
     return methods.toArray(new MethodData[0]);
   }

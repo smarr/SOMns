@@ -6,103 +6,105 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 import java.io.IOException;
+import java.util.Collection;
 
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.Context.Builder;
+import org.graalvm.polyglot.Value;
 import org.junit.After;
 import org.junit.Assume;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.oracle.truffle.api.vm.PolyglotEngine;
-import com.oracle.truffle.api.vm.PolyglotEngine.Builder;
-import com.oracle.truffle.api.vm.PolyglotEngine.Value;
-import com.oracle.truffle.api.vm.PolyglotRuntime.Instrument;
-import com.oracle.truffle.tools.ProfilerInstrument;
+import com.oracle.truffle.tools.profiler.CPUSampler;
+import com.oracle.truffle.tools.profiler.CPUSampler.Payload;
+import com.oracle.truffle.tools.profiler.ProfilerNode;
 
+import som.Launcher;
 import som.VM;
 import som.interpreter.SomLanguage;
-import som.vm.VmOptions;
+import som.interpreter.objectstorage.StorageAccessor;
 
 
 public class SomPolyglotTests {
 
-  PolyglotEngine engine;
+  Context context;
+
+  @BeforeClass
+  public static void setup() {
+    // Needed to be able to execute SOMns initialization
+    StorageAccessor.initAccessors();
+  }
 
   @After
   public void resetObjectSystem() {
     VM.resetClassReferences(true);
-    if (engine != null) {
-      engine.dispose();
+    if (context != null) {
+      context.eval(Launcher.SHUTDOWN);
+      context.close();
     }
   }
 
   @Test
   public void engineKnowsSomLanguage() {
-    PolyglotEngine vm = PolyglotEngine.newBuilder().build();
-    assertTrue(vm.getLanguages().containsKey(SomLanguage.MIME_TYPE));
+    Context vm = Context.newBuilder().build();
+    assertTrue(vm.getEngine().getLanguages().containsKey(SomLanguage.LANG_ID));
   }
 
   @Test
   public void startEngineWithCommandLineParametersForHelloWorld() throws IOException {
-    VmOptions options = new VmOptions(new String[] {"core-lib/Hello.ns"});
-    VM vm = new VM(options, true);
+    Builder builder = Launcher.createContextBuilder(new String[] {"core-lib/Hello.ns"});
+    context = builder.build();
 
-    Builder builder = vm.createPolyglotBuilder();
-    PolyglotEngine engine = builder.build();
-
-    Value result = engine.eval(SomLanguage.START);
+    Value result = context.eval(Launcher.START);
     assertNotNull(result);
-    engine.dispose();
   }
 
   @Test
   public void startEngineForTesting() throws IOException {
-    VM vm = new VM(new VmOptions(new String[] {
-        "--platform", "core-lib/TestSuite/BasicInterpreterTests/Arrays.ns"},
-        "testEmptyToInts"), true);
-    Builder builder = vm.createPolyglotBuilder();
-    engine = builder.build();
-
-    engine.getRuntime().getInstruments().values().forEach(i -> i.setEnabled(false));
+    Builder builder = Launcher.createContextBuilder(new String[] {
+        "--platform", "core-lib/TestSuite/BasicInterpreterTests/Arrays.ns"});
+    builder.option("SOMns.TestSelector", "testEmptyToInts");
+    context = builder.build();
 
     // Trigger initialization of SOMns
-    engine.getLanguages().get(SomLanguage.MIME_TYPE).getGlobalObject();
-    Value result = engine.eval(SomLanguage.START);
-    assertEquals((long) 3, (long) result.as(Long.class));
+    context.getBindings(SomLanguage.LANG_ID);
+
+    Value result = context.eval(Launcher.START);
+    assertEquals(3, (long) result.as(Long.class));
   }
 
   @Test
   public void executeHelloWorldWithTruffleProfiler() throws IOException {
-    VM vm = new VM(new VmOptions(new String[] {"core-lib/Hello.ns"}), true);
+    Builder builder = Launcher.createContextBuilder(new String[] {"core-lib/Hello.ns"});
+    context = builder.build();
 
-    Builder builder = vm.createPolyglotBuilder();
-    engine = builder.build();
+    CPUSampler sampler = CPUSampler.find(context.getEngine());
+    Assume.assumeNotNull(sampler);
+    sampler.setCollecting(true);
 
-    Instrument profiler = engine.getRuntime().getInstruments().get(ProfilerInstrument.ID);
-
-    Assume.assumeNotNull(profiler);
-    profiler.setEnabled(true);
-
-    assertTrue(profiler.isEnabled());
-    Value result = engine.eval(SomLanguage.START);
-    assertTrue(profiler.isEnabled());
+    Value result = context.eval(Launcher.START);
     assertNotNull(result);
+    assertTrue(sampler.isCollecting());
+    assertTrue(sampler.getSampleCount() > 10);
+    Collection<ProfilerNode<Payload>> samples = sampler.getRootNodes();
+    assertTrue(samples.iterator().next().getRootName().contains(">>#"));
   }
 
   @Test
   public void executeHelloWorldWithoutTruffleProfiler() throws IOException {
-    VM vm = new VM(new VmOptions(new String[] {"core-lib/Hello.ns"}), true);
+    Builder builder = Launcher.createContextBuilder(new String[] {"core-lib/Hello.ns"});
+    context = builder.build();
 
-    Builder builder = vm.createPolyglotBuilder();
-    engine = builder.build();
+    CPUSampler sampler = CPUSampler.find(context.getEngine());
+    Assume.assumeNotNull(sampler);
+    sampler.setCollecting(true);
+    assertTrue(sampler.isCollecting());
 
-    Instrument profiler = engine.getRuntime().getInstruments().get(ProfilerInstrument.ID);
-
-    Assume.assumeNotNull(profiler);
-
-    profiler.setEnabled(true);
-    assertTrue(profiler.isEnabled());
-    profiler.setEnabled(false);
-    Value result = engine.eval(SomLanguage.START);
-    assertFalse(profiler.isEnabled());
+    sampler.setCollecting(false);
+    Value result = context.eval(Launcher.START);
     assertNotNull(result);
+    assertFalse(sampler.isCollecting());
+    assertEquals(0, sampler.getSampleCount());
   }
 }
