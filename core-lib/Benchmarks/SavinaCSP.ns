@@ -7,9 +7,7 @@ class SavinaCSP usingPlatform: platform andHarness: harness = Value (
 |)(
   (* === Savina Microbenchmarks === *)
 
-  public class PingPong new: numPings = Benchmark <: Value (
-  | private NumPings = numPings.
-  |)(
+  public class PingPong new = Benchmark <: Value ()(
     class Ping new: cnt with: toPong and: fromPong = Process (
     | private pingsLeft ::= cnt.
       private toPong    = toPong.
@@ -41,23 +39,226 @@ class SavinaCSP usingPlatform: platform andHarness: harness = Value (
       )
     )
 
-    public benchmark = (
-      | chDone chToPing chToPong |
+    public innerBenchmarkLoop: numPings numThreads: threads = (
+    | chDone chToPing chToPong |
       chDone::   Channel new.
       chToPing:: Channel new.
       chToPong:: Channel new.
 
-      processes spawn: Ping with: { NumPings.   chToPong out. chToPing in }.
+      processes spawn: Ping with: { numPings.   chToPong out. chToPing in }.
       processes spawn: Pong with: { chDone out. chToPing out. chToPong in }.
 
-      ^ chDone in read
+      ^ chDone in read = numPings.
+    )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run problemSize )
+  )
+
+
+  public class ForkJoinThroughput new = Benchmark <: Value ()(
+    class ThroughputProcess new: fromMaster done: toDone = Process (
+    | private messagesProcessed  ::= 0.
+      private toDone = toDone.
+      private fromMaster = fromMaster.
+    |
+    )(
+      private performComputation: theta = (
+        | sint res |
+        sint:: theta sin.
+        res:: sint * sint.
+
+        (* defeat dead code elimination *)
+        res <= 0.0 ifTrue: [
+          system error: 'Benchmark calculated unrealistic res value ' + res asString ]
+      )
+
+      public run = (
+        [ fromMaster read = #stop ] whileFalse: [
+          messagesProcessed:: messagesProcessed + 1.
+          self performComputation: 37.2.
+        ].
+
+        toDone write: #stop.
+      )
+    )
+
+    public innerBenchmarkLoop: numMessages numThreads: numProcesses = (
+    | chDone benchProcesses |
+      chDone::   Channel new.
+
+      benchProcesses:: Array new: numProcesses withAll: [
+        |chToWorker|
+        chToWorker::   Channel new.
+        processes spawn: ThroughputProcess with: { chToWorker in. chDone out }.
+        chToWorker out.
+      ].
+
+      numMessages timesRepeat: [
+        benchProcesses do: [:toWorker |
+          toWorker write: #process.
+        ]
+      ].
+
+      benchProcesses do: [:toWorker |
+        toWorker write: #stop.
+      ].
+
+      2 to: numProcesses do: [:toWorker |
+        chDone in read.
+      ].
+
+      ^ verifyResult: chDone in read.
     )
 
     public verifyResult: result = (
-      ^ result = NumPings
+      ^ true
     )
   ) : (
-    public newInstance = ( ^ self new: 2000 )
-    public setupVerifiedRun: run = ( run problemSize )
+    public newInstance = (
+      ^ self new
+    )
+    public setupVerifiedRun: run = ( run problemSize: '100:1000' )
+  )
+
+
+  (* Concurrency Benchmarks*)
+  public class Philosophers new = Benchmark <: Value ()(
+
+    private class ChannelMessage new: sym toPhil: toPhil leftFork: leftFork = Value(
+    | public sym = sym.
+      public toPhil = toPhil.
+      public leftFork = leftFork.
+    |)()
+
+    private class PhilosopherActor new: id rounds: rounds arbitrator: arbitrator toPhilosopher: toPhil = Process(
+    | private roundsSoFar  ::= 0.
+      private id     = id.
+      private rounds = rounds.
+      private arbitrator = arbitrator.
+      private toPhil = toPhil.
+      private exited ::= false.
+    |)(
+
+      public run = (
+        [ exited ] whileFalse: [
+          | input |
+          input:: toPhil in read.
+
+          input = #start ifTrue: [
+            arbitrator write: (ChannelMessage new: #hungry toPhil: toPhil out leftFork: id).
+          ].
+
+          input = #denied ifTrue:[
+            arbitrator write: (ChannelMessage new: #hungry toPhil: toPhil out leftFork: id).
+          ].
+
+          input = #eat ifTrue: [
+            roundsSoFar:: roundsSoFar + 1.
+
+            arbitrator write: (ChannelMessage new: #done toPhil: nil leftFork: id).
+            roundsSoFar < rounds
+              ifTrue:  [ arbitrator write: (ChannelMessage new: #hungry toPhil: toPhil out leftFork: id) ]
+              ifFalse: [
+                exited:: true.
+                arbitrator write: #exit.
+              ]
+          ]
+        ]
+      )
+    )
+
+    private class ArbitratorActor new: numForks toDone: toDone arbitratorChannel: fromPhilosophers = Process(
+    | private numForks = numForks.
+      private forks    = Array new: numForks withAll: false.
+      private numExitedPhilosophers ::= 0.
+      private toDone = toDone.
+      private fromPhilosophers = fromPhilosophers.
+    |)(
+
+      public run = (
+        [ numForks = numExitedPhilosophers ] whileFalse: [
+          | input |
+          input:: fromPhilosophers read.
+
+          #exit = input ifTrue: [
+            numExitedPhilosophers:: numExitedPhilosophers + 1.
+
+            numForks = numExitedPhilosophers ifTrue: [
+              | forksTaken |
+              forksTaken:: 0.
+              forks do: [:f | f ifTrue: [ forksTaken:: forksTaken + 1 ] ].
+              toDone write: forksTaken ]
+          ] ifFalse: [
+            (input sym) = #hungry ifTrue: [
+              hungry: (input toPhil) id: (input leftFork).
+            ].
+
+            (input sym) = #done ifTrue: [
+              done: (input leftFork).
+            ].
+          ].
+        ].
+      )
+
+      private hungry: philosopher id: leftForkId = (
+        | rightForkId |
+        (*('Hungry: ' + leftForkId) println.*)
+        rightForkId:: 1 + ((leftForkId + 1) % numForks).
+
+        ((forks at: leftForkId) or: [forks at: rightForkId])
+          ifTrue:  [
+            (*('Denied: ' + leftForkId) println.*)
+            philosopher write: #denied
+          ]
+          ifFalse: [
+            (*('Eat: ' + leftForkId) println.*)
+            forks at: leftForkId  put: true.
+            forks at: rightForkId put: true.
+            philosopher write: #eat ]
+      )
+
+      private done: leftForkId = (
+        | rightForkId |
+        (*('Done: ' + leftForkId) println.*)
+        rightForkId:: 1 + ((leftForkId + 1) % numForks).
+
+        forks at: leftForkId  put: false.
+        forks at: rightForkId put: false.
+      )
+    )
+
+    public innerBenchmarkLoop: numRounds numThreads: threads = (
+      | chDone chToArbitrator philosophers numPhil|
+      numPhil:: threads - 1.
+
+      chDone:: Channel new.
+      chToArbitrator:: Channel new.
+      processes spawn: ArbitratorActor with: { numPhil. chDone out. chToArbitrator in }.
+
+      philosophers:: Array new: numPhil.
+      philosophers doIndexes: [:i |
+        | toPhil |
+        toPhil:: Channel new.
+        philosophers at: i put: toPhil out.
+        processes spawn: PhilosopherActor with: { i. numRounds. chToArbitrator out. toPhil }.
+      ].
+
+      philosophers do: [:ph | ph write: #start ].
+
+      ^ verifyResult: chDone in read
+    )
+
+    public verifyResult: result = (
+      ^ result = 0
+    )
+  ) : (
+    public newInstance = (
+      ^ self new
+    )
+
+    public setupVerifiedRun: run = (
+      run problemSize: '3:2000'
+    )
   )
 )
