@@ -14,7 +14,7 @@ public final class TraceActorContextNode extends TraceNode {
     int pos = buffer.position();
 
     int idLen = id.execute(buffer, pos + 3, actor.getActorId());
-    int idBit = (idLen - 1) << 4;
+    int idBit = (idLen - 1) << ActorExecutionTrace.SmallIdShift;
 
     buffer.putByteAt(pos, (byte) (ActorExecutionTrace.ACTOR_CONTEXT | idBit));
     buffer.putShortAt(pos + 1, actor.getOrdering());

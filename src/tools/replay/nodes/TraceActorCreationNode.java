@@ -18,7 +18,7 @@ public final class TraceActorCreationNode extends TraceNode {
     int pos = buffer.position();
 
     int idLen = id.execute(buffer, pos + 1, actor.getActorId());
-    int idBit = (idLen - 1) << 4;
+    int idBit = (idLen - 1) << ActorExecutionTrace.SmallIdShift;
 
     buffer.putByteAt(pos, (byte) (ActorExecutionTrace.ACTOR_CREATION | idBit));
     buffer.position(pos + idLen + 1);

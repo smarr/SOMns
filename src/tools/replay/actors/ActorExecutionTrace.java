@@ -20,6 +20,9 @@ public class ActorExecutionTrace {
   // flags
   public static final byte EXTERNAL_BIT = 8;
 
+  // shifts
+  public static final int SmallIdShift = 6;
+
   private static TracingActivityThread getThread() {
     Thread current = Thread.currentThread();
     assert current instanceof TracingActivityThread;

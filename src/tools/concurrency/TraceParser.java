@@ -147,7 +147,7 @@ public final class TraceParser {
 
         final int start = b.position();
         final byte type = b.get();
-        final int numbytes = ((type >> 4) & 3) + 1;
+        final int numbytes = ((type >> 6) & 3) + 1;
         boolean external = (type & 8) != 0;
         TraceRecord recordType = parseTable[type & 7];
         switch (recordType) {
