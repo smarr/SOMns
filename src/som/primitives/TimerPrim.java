@@ -33,7 +33,8 @@ import tools.concurrency.TraceParser;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.actors.ExternalEventualMessage.ExternalDirectMessage;
-import tools.replay.nodes.TraceContextNodes.TraceActorContextNode;
+import tools.replay.nodes.TraceContextNode;
+import tools.replay.nodes.TraceContextNodeGen;
 
 
 @GenerateNodeFactory
@@ -70,7 +71,7 @@ public abstract class TimerPrim extends BinarySystemOperation {
     }
   }
 
-  @Child protected TraceActorContextNode tracer = new TraceActorContextNode();
+  @Child protected TraceContextNode tracer = TraceContextNodeGen.create();
 
   @Specialization
   public final Object doResolveAfter(final SBlock target, final long timeout) {

@@ -14,7 +14,6 @@ import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
 import tools.replay.actors.ExternalEventualMessage.ExternalDirectMessage;
 import tools.replay.actors.ExternalEventualMessage.ExternalPromiseCallbackMessage;
 import tools.replay.actors.ExternalEventualMessage.ExternalPromiseSendMessage;
-import tools.replay.nodes.TraceContextNodes.TraceActorContextNode;
 
 
 public abstract class TraceMessageNode extends TraceNode {
@@ -24,7 +23,7 @@ public abstract class TraceMessageNode extends TraceNode {
   private static final int EXT_DIRECT_MSG_SIZE  = 11;
   private static final int EXT_PROMISE_MSG_SIZE = 15;
 
-  @Child TraceActorContextNode    tracer = new TraceActorContextNode();
+  @Child TraceContextNode         tracer = TraceContextNodeGen.create();
   @Child protected RecordIdNode   id     = RecordIdNodeGen.create();
   @Child protected RecordIdIdNode idid   = RecordIdIdNodeGen.create();
 

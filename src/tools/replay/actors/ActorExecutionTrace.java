@@ -7,7 +7,7 @@ import tools.concurrency.TraceBuffer;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.replay.StringWrapper;
-import tools.replay.nodes.TraceContextNodes.TraceActorContextNode;
+import tools.replay.nodes.TraceContextNode;
 
 
 public class ActorExecutionTrace {
@@ -30,22 +30,22 @@ public class ActorExecutionTrace {
   }
 
   public static void recordActorContext(final TracingActor actor,
-      final TraceActorContextNode tracer) {
+      final TraceContextNode tracer) {
     TracingActivityThread t = getThread();
     ((ActorTraceBuffer) t.getBuffer()).recordActorContext(actor, tracer);
   }
 
-  public static void recordSystemCall(final int dataId, final TraceActorContextNode tracer) {
+  public static void recordSystemCall(final int dataId, final TraceContextNode tracer) {
     TracingActivityThread t = getThread();
     ((ActorTraceBuffer) t.getBuffer()).recordSystemCall(dataId, tracer);
   }
 
-  public static void recordSystemCall(final int dataId, final TraceActorContextNode tracer,
+  public static void recordSystemCall(final int dataId, final TraceContextNode tracer,
       final TracingActivityThread t) {
     ((ActorTraceBuffer) t.getBuffer()).recordSystemCall(dataId, tracer);
   }
 
-  public static void intSystemCall(final int i, final TraceActorContextNode tracer) {
+  public static void intSystemCall(final int i, final TraceContextNode tracer) {
     ActorProcessingThread t = (ActorProcessingThread) getThread();
     TracingActor ta = (TracingActor) t.getCurrentActor();
     int dataId = ta.getDataId();
@@ -56,7 +56,7 @@ public class ActorExecutionTrace {
     t.addExternalData(b);
   }
 
-  public static void longSystemCall(final long l, final TraceActorContextNode tracer) {
+  public static void longSystemCall(final long l, final TraceContextNode tracer) {
     ActorProcessingThread t = (ActorProcessingThread) getThread();
     TracingActor ta = (TracingActor) t.getCurrentActor();
     int dataId = ta.getDataId();
@@ -67,7 +67,7 @@ public class ActorExecutionTrace {
     t.addExternalData(b);
   }
 
-  public static void doubleSystemCall(final double d, final TraceActorContextNode tracer) {
+  public static void doubleSystemCall(final double d, final TraceContextNode tracer) {
     ActorProcessingThread t = (ActorProcessingThread) getThread();
     TracingActor ta = (TracingActor) t.getCurrentActor();
     int dataId = ta.getDataId();
@@ -80,7 +80,7 @@ public class ActorExecutionTrace {
 
   private static final int EXT_DATA_HEADER_SIZE = 3 * 4;
 
-  public static void stringSystemCall(final String s, final TraceActorContextNode tracer) {
+  public static void stringSystemCall(final String s, final TraceContextNode tracer) {
     ActorProcessingThread t = (ActorProcessingThread) getThread();
     TracingActor ta = (TracingActor) t.getCurrentActor();
     int dataId = ta.getDataId();
@@ -115,22 +115,22 @@ public class ActorExecutionTrace {
     TracingActor currentActor;
 
     @Override
-    protected void swapBufferWhenNotEnoughSpace(final TraceActorContextNode tracer) {
+    protected void swapBufferWhenNotEnoughSpace(final TraceContextNode tracer) {
       swapStorage();
       if (tracer != null) {
-        tracer.trace(currentActor);
+        tracer.execute(currentActor);
       }
     }
 
     public void recordActorContext(final TracingActor actor,
-        final TraceActorContextNode tracer) {
+        final TraceContextNode tracer) {
       ensureSufficientSpace(7, null); // null, because we don't need to write actor context,
                                       // and going to do it ourselves
       currentActor = actor;
-      tracer.trace(actor);
+      tracer.execute(actor);
     }
 
-    public void recordSystemCall(final int dataId, final TraceActorContextNode tracer) {
+    public void recordSystemCall(final int dataId, final TraceContextNode tracer) {
       ensureSufficientSpace(5, tracer);
       putByteInt(SYSTEM_CALL, dataId);
     }

@@ -31,7 +31,8 @@ import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.replay.actors.ActorExecutionTrace;
-import tools.replay.nodes.TraceContextNodes.TraceActorContextNode;
+import tools.replay.nodes.TraceContextNode;
+import tools.replay.nodes.TraceContextNodeGen;
 import tools.snapshot.SnapshotBuffer;
 
 
@@ -231,7 +232,7 @@ public class Actor implements Activity {
       this.vm = vm;
     }
 
-    private static final TraceActorContextNode tracer = new TraceActorContextNode();
+    private static final TraceContextNode tracer = TraceContextNodeGen.create();
 
     @Override
     public void run() {

@@ -3,15 +3,14 @@ package tools.replay.nodes;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
-import tools.replay.nodes.TraceContextNodes.TraceActorContextNode;
 
 
 public final class TraceActorCreationNode extends TraceNode {
 
   private static final int TRACE_ENTRY_SIZE = 5;
 
-  @Child protected TraceActorContextNode tracer = new TraceActorContextNode();
-  @Child protected RecordIdNode          id     = RecordIdNodeGen.create();
+  @Child protected TraceContextNode tracer = TraceContextNodeGen.create();
+  @Child protected RecordIdNode     id     = RecordIdNodeGen.create();
 
   public void trace(final TracingActor actor) {
     ActorTraceBuffer buffer = getCurrentBuffer();

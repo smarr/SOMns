@@ -6,7 +6,7 @@ import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import tools.concurrency.TraceBuffer;
 import tools.concurrency.TracingActors.TracingActor;
-import tools.replay.nodes.TraceContextNodes.TraceActorContextNode;
+import tools.replay.nodes.TraceContextNode;
 import tools.snapshot.deserialization.DeserializationBuffer;
 
 
@@ -77,7 +77,7 @@ public class SnapshotBuffer extends TraceBuffer {
   }
 
   @Override
-  protected void swapBufferWhenNotEnoughSpace(final TraceActorContextNode tracer) {
+  protected void swapBufferWhenNotEnoughSpace(final TraceContextNode tracer) {
     throw new UnsupportedOperationException("TODO find a solution for snapshot size");
   }
 
