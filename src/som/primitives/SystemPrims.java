@@ -63,7 +63,7 @@ import tools.concurrency.TraceParser;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.concurrency.TracingBackend;
 import tools.replay.actors.ActorExecutionTrace;
-import tools.replay.nodes.TraceActorContextNode;
+import tools.replay.nodes.TraceContextNodes.TraceActorContextNode;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;

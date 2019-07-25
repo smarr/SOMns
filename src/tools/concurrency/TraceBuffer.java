@@ -8,7 +8,7 @@ import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.vm.VmSettings;
 import sun.misc.Unsafe;
 import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
-import tools.replay.nodes.TraceActorContextNode;
+import tools.replay.nodes.TraceContextNodes.TraceActorContextNode;
 
 
 public abstract class TraceBuffer {

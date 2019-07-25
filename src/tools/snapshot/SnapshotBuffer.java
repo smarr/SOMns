@@ -6,7 +6,7 @@ import som.vm.VmSettings;
 import som.vm.constants.Classes;
 import tools.concurrency.TraceBuffer;
 import tools.concurrency.TracingActors.TracingActor;
-import tools.replay.nodes.TraceActorContextNode;
+import tools.replay.nodes.TraceContextNodes.TraceActorContextNode;
 import tools.snapshot.deserialization.DeserializationBuffer;
 
 

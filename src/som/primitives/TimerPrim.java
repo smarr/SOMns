@@ -33,7 +33,7 @@ import tools.concurrency.TraceParser;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.actors.ExternalEventualMessage.ExternalDirectMessage;
-import tools.replay.nodes.TraceActorContextNode;
+import tools.replay.nodes.TraceContextNodes.TraceActorContextNode;
 
 
 @GenerateNodeFactory

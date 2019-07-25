@@ -31,7 +31,7 @@ import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.replay.actors.ActorExecutionTrace;
-import tools.replay.nodes.TraceActorContextNode;
+import tools.replay.nodes.TraceContextNodes.TraceActorContextNode;
 import tools.snapshot.SnapshotBuffer;
 
 
