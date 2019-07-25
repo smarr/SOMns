@@ -32,10 +32,10 @@ public final class TraceParser {
     SYSTEM_CALL
   }
 
-  private ByteBuffer                        b                =
+  private ByteBuffer                     b                =
       ByteBuffer.allocate(VmSettings.BUFFER_SIZE);
-  private final HashMap<Integer, ActorNode> actors           = new HashMap<>();
-  private final HashMap<Long, Long>         externalDataDict = new HashMap<>();
+  private final HashMap<Long, ActorNode> actors           = new HashMap<>();
+  private final HashMap<Long, Long>      externalDataDict = new HashMap<>();
 
   private long parsedMessages = 0;
   private long parsedActors   = 0;
@@ -76,7 +76,7 @@ public final class TraceParser {
     return new String(bb.array());
   }
 
-  public static synchronized Queue<MessageRecord> getExpectedMessages(final int replayId) {
+  public static synchronized Queue<MessageRecord> getExpectedMessages(final long replayId) {
     if (parser == null) {
       parser = new TraceParser();
       parser.parseTrace();
@@ -85,11 +85,12 @@ public final class TraceParser {
     return parser.actors.get(replayId).getExpectedMessages();
   }
 
-  public static synchronized int getReplayId(final int parentId, final int childNo) {
+  public static synchronized int getReplayId(final long parentId, final int childNo) {
     if (parser == null) {
       parser = new TraceParser();
       parser.parseTrace();
     }
+
     assert parser.actors.containsKey(parentId) : "Parent doesn't exist";
     return (int) parser.actors.get(parentId).getChild(childNo).actorId;
   }
@@ -116,9 +117,9 @@ public final class TraceParser {
     boolean readMainActor = false;
     File traceFile = new File(traceName + ".trace");
 
-    int sender = 0;
-    int resolver = 0;
-    int currentActor = 0;
+    long sender = 0;
+    long resolver = 0;
+    long currentActor = 0;
     int ordering = 0;
     short method = 0;
     int dataId = 0;
@@ -152,7 +153,7 @@ public final class TraceParser {
         TraceRecord recordType = parseTable[type & 7];
         switch (recordType) {
           case ACTOR_CREATION:
-            int newActorId = getId(numbytes);
+            long newActorId = getId(numbytes);
             if (newActorId == 0) {
               assert !readMainActor : "There should be only one main actor.";
               readMainActor = true;
@@ -191,7 +192,7 @@ public final class TraceParser {
              */
 
             ordering = Short.toUnsignedInt(b.getShort());
-            currentActor = getId(numbytes);
+            currentActor = getId(Long.BYTES);
 
             if (!actors.containsKey(currentActor)) {
               actors.put(currentActor, new ActorNode(currentActor));
@@ -201,7 +202,7 @@ public final class TraceParser {
             assert current != null;
             contextMessages = new ArrayList<>();
             current.addMessageRecords(contextMessages, ordering);
-            assert b.position() == start + (numbytes + 2 + 1);
+            assert b.position() == start + (Long.BYTES + 2 + 1);
             break;
           case MESSAGE:
             parsedMessages++;
@@ -317,16 +318,18 @@ public final class TraceParser {
     }
   }
 
-  private int getId(final int numbytes) {
+  private long getId(final int numbytes) {
     switch (numbytes) {
       case 1:
         return 0 | b.get();
-      case 2:
+      case Short.BYTES:
         return 0 | b.getShort();
       case 3:
         return (b.get() << 16) | b.getShort();
-      case 4:
+      case Integer.BYTES:
         return b.getInt();
+      case Long.BYTES:
+        return b.getLong();
     }
     assert false : "should not happen";
     return 0;
@@ -448,9 +451,9 @@ public final class TraceParser {
   }
 
   public static class MessageRecord {
-    public final int sender;
+    public final long sender;
 
-    public MessageRecord(final int sender) {
+    public MessageRecord(final long sender) {
       super();
       this.sender = sender;
     }
@@ -464,7 +467,7 @@ public final class TraceParser {
     public final short method;
     public final int   dataId;
 
-    public ExternalMessageRecord(final int sender, final short method, final int dataId) {
+    public ExternalMessageRecord(final long sender, final short method, final int dataId) {
       super(sender);
       this.method = method;
       this.dataId = dataId;
@@ -477,11 +480,11 @@ public final class TraceParser {
   }
 
   public static class PromiseMessageRecord extends MessageRecord {
-    public int pId;
+    public long pId;
 
-    public PromiseMessageRecord(final int sender, final int pId) {
+    public PromiseMessageRecord(final long sender, final long resolver) {
       super(sender);
-      this.pId = pId;
+      this.pId = resolver;
     }
   }
 
@@ -489,9 +492,10 @@ public final class TraceParser {
     public final int   dataId;
     public final short method;
 
-    public ExternalPromiseMessageRecord(final int sender, final int pId, final short method,
+    public ExternalPromiseMessageRecord(final long sender, final long resolver,
+        final short method,
         final int extData) {
-      super(sender, pId);
+      super(sender, resolver);
       this.method = method;
       this.dataId = extData;
     }

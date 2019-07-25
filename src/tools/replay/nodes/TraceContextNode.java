@@ -14,7 +14,7 @@ public abstract class TraceContextNode extends TraceNode {
 
   @Specialization
   protected void recordActorContext(final TracingActor actor) {
-    writeContext(actor.getId(), actor.getNextTraceBufferId());
+    writeContext(actor.getActorId(), actor.getNextTraceBufferId());
   }
 
   @Specialization
