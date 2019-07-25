@@ -33,9 +33,9 @@ public class TracingActors {
   public static class TracingActor extends Actor {
     private static final AtomicInteger IdGen = new AtomicInteger(0);
     protected final int                actorId;
-    protected short                    ordering;
     protected int                      nextDataID;
     protected SnapshotRecord           snapshotRecord;
+    private int                        traceBufferId;
 
     /**
      * Flag that indicates if a step-to-next-turn action has been made in the previous message.
@@ -59,10 +59,12 @@ public class TracingActors {
       return actorId;
     }
 
-    public short getOrdering() {
-      return ordering++;
+    @Override
+    public int getNextTraceBufferId() {
+      return traceBufferId++;
     }
 
+    @Override
     public synchronized int getDataId() {
       return nextDataID++;
     }
@@ -119,7 +121,6 @@ public class TracingActors {
     protected final ArrayList<EventualMessage> leftovers = new ArrayList<>();
     private static Map<Integer, ReplayActor>   actorList;
     private BiConsumer<Short, Integer>         dataSource;
-    private int                                traceBufferId;
     private final long                         activityId;
 
     static {
@@ -138,11 +139,6 @@ public class TracingActors {
         throw new UnsupportedOperationException("Allready has a datasource!");
       }
       dataSource = ds;
-    }
-
-    @Override
-    public int getNextTraceBufferId() {
-      return traceBufferId++;
     }
 
     private static int lookupId() {

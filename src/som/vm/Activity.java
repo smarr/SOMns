@@ -14,6 +14,14 @@ public interface Activity {
     return 0;
   }
 
+  /**
+   * Returns an id for external data.
+   * Implementation should be synchronized, can't add that to the default though.
+   */
+  default int getDataId() {
+    return 0;
+  }
+
   ActivityType getType();
 
   /**

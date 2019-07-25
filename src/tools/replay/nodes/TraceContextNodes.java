@@ -18,7 +18,7 @@ public final class TraceContextNodes {
       int idBit = (idLen - 1) << ActorExecutionTrace.SmallIdShift;
 
       buffer.putByteAt(pos, (byte) (ActorExecutionTrace.ACTOR_CONTEXT | idBit));
-      buffer.putShortAt(pos + 1, actor.getOrdering());
+      buffer.putShortAt(pos + 1, (short) actor.getNextTraceBufferId());
 
       buffer.position(pos + idLen + 1 + 2);
     }
