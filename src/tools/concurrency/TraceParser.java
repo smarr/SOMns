@@ -29,7 +29,12 @@ public final class TraceParser {
     ACTOR_CONTEXT,
     MESSAGE,
     PROMISE_MESSAGE,
-    SYSTEM_CALL
+    SYSTEM_CALL,
+    CHANNEL_CREATION,
+    PROCESS_CONTEXT,
+    CHANNEL_READ,
+    CHANNEL_WRITE,
+    PROCESS_CREATION
   }
 
   private ByteBuffer                     b      =
@@ -102,13 +107,18 @@ public final class TraceParser {
   }
 
   private TraceRecord[] createParseTable() {
-    TraceRecord[] result = new TraceRecord[8];
+    TraceRecord[] result = new TraceRecord[16];
 
     result[ActorExecutionTrace.ACTOR_CREATION] = TraceRecord.ACTOR_CREATION;
     result[ActorExecutionTrace.ACTOR_CONTEXT] = TraceRecord.ACTOR_CONTEXT;
     result[ActorExecutionTrace.MESSAGE] = TraceRecord.MESSAGE;
     result[ActorExecutionTrace.PROMISE_MESSAGE] = TraceRecord.PROMISE_MESSAGE;
     result[ActorExecutionTrace.SYSTEM_CALL] = TraceRecord.SYSTEM_CALL;
+    result[ActorExecutionTrace.CHANNEL_CREATE] = TraceRecord.CHANNEL_CREATION;
+    result[ActorExecutionTrace.PROCESS_CONTEXT] = TraceRecord.PROCESS_CONTEXT;
+    result[ActorExecutionTrace.CHANNEL_READ] = TraceRecord.CHANNEL_READ;
+    result[ActorExecutionTrace.CHANNEL_WRITE] = TraceRecord.CHANNEL_WRITE;
+    result[ActorExecutionTrace.PROCESS_CREATE] = TraceRecord.PROCESS_CREATION;
 
     return result;
   }
@@ -119,7 +129,7 @@ public final class TraceParser {
 
     long sender = 0;
     long resolver = 0;
-    long currentActor = 0;
+    long currentActivity = 0;
     int ordering = 0;
     long edat = 0;
     short method = 0;
@@ -133,7 +143,7 @@ public final class TraceParser {
         FileChannel channel = fis.getChannel()) {
       channel.read(b);
       b.flip(); // prepare for reading from buffer
-      ActorNode current = null;
+      ActorNode currentActor = null;
 
       while (channel.position() < channel.size() || b.remaining() > 0) {
         // read from file if buffer is empty
@@ -150,8 +160,8 @@ public final class TraceParser {
         final int start = b.position();
         final byte type = b.get();
         final int numbytes = Long.BYTES;
-        boolean external = (type & 8) != 0;
-        TraceRecord recordType = parseTable[type & 7];
+        boolean external = (type & ActorExecutionTrace.EXTERNAL_BIT) != 0;
+        TraceRecord recordType = parseTable[type & (ActorExecutionTrace.EXTERNAL_BIT - 1)];
         switch (recordType) {
           case ACTOR_CREATION:
             long newActorId = getId(numbytes);
@@ -162,8 +172,10 @@ public final class TraceParser {
                 actors.put(newActorId, new ActorNode(newActorId));
               }
             } else {
-              if (!actors.containsKey(currentActor)) {
-                actors.put(currentActor, new ActorNode(currentActor));
+              if (!actors.containsKey(currentActivity)) {
+                actors.put(currentActivity, new ActorNode(currentActivity));// TODO need to
+                                                                            // make this safe
+                                                                            // for non actors
               }
 
               ActorNode node;
@@ -175,7 +187,7 @@ public final class TraceParser {
               }
 
               node.mailboxNo = ordering;
-              actors.get(currentActor).addChild(node);
+              actors.get(currentActivity).addChild(node);
             }
             parsedActors++;
 
@@ -186,23 +198,23 @@ public final class TraceParser {
             /*
              * make two buckets, one for the current 65k contexs, and one for those that we
              * encounter prematurely
-             * decision wher stuff goes is made based on bitset or whether the ordering byte
+             * decision where stuff goes is made based on bitset or whether the ordering byte
              * already is used in the first bucket
              * when a bucket is full, we sort the contexts and put the messages inside a queue,
              * context can then be reclaimed by GC
              */
 
             ordering = Short.toUnsignedInt(b.getShort());
-            currentActor = getId(Long.BYTES);
+            currentActivity = getId(Long.BYTES);
 
-            if (!actors.containsKey(currentActor)) {
-              actors.put(currentActor, new ActorNode(currentActor));
+            if (!actors.containsKey(currentActivity)) {
+              actors.put(currentActivity, new ActorNode(currentActivity));
             }
 
-            current = actors.get(currentActor);
-            assert current != null;
+            currentActor = actors.get(currentActivity);
+            assert currentActor != null;
             contextMessages = new ArrayList<>();
-            current.addMessageRecords(contextMessages, ordering);
+            currentActor.addMessageRecords(contextMessages, ordering);
             assert b.position() == start + 11;
             break;
           case MESSAGE:
@@ -242,6 +254,36 @@ public final class TraceParser {
           case SYSTEM_CALL:
             dataId = b.getInt();
             break;
+          case CHANNEL_CREATION:
+            long newChannelId = getId(numbytes);
+            assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
+            break;
+          case PROCESS_CREATION:
+            long newProcId = getId(numbytes);
+            assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
+            break;
+          case PROCESS_CONTEXT:
+            ordering = Short.toUnsignedInt(b.getShort());
+            currentActivity = getId(Long.BYTES);
+            currentActor = null; // safety measure
+            assert b.position() == start + 11;
+            break;
+          case CHANNEL_READ:
+            long channelRId = b.getLong();
+            long nread = b.getLong();
+            // give the specified channel a priorityqueue
+            // add the current activity Id with priority nreads
+            // The priority queue then contains the order in which activities read
+            assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
+            break;
+          case CHANNEL_WRITE:
+            long channelWId = b.getLong();
+            long nwrite = b.getLong();
+            // give the specified channel a priorityqueue
+            // add the current activity Id with priority nwrites
+            // The priority queue then contains the order in which activities write
+            assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
+            break;
           default:
             assert false;
         }
@@ -252,6 +294,8 @@ public final class TraceParser {
     } catch (IOException e) {
       throw new RuntimeException(e);
     } catch (AssertionError e) {
+      e.printStackTrace();
+    } catch (Throwable e) {
       e.printStackTrace();
     }
 

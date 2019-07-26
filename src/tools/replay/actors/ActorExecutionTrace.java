@@ -17,11 +17,18 @@ public class ActorExecutionTrace {
   public static final byte MESSAGE         = 2;
   public static final byte PROMISE_MESSAGE = 3;
   public static final byte SYSTEM_CALL     = 4;
+
+  public static final byte CHANNEL_CREATE  = 5;
+  public static final byte PROCESS_CONTEXT = 6;
+  public static final byte CHANNEL_READ    = 7;
+  public static final byte CHANNEL_WRITE   = 8;
+  public static final byte PROCESS_CREATE  = 9;
+
   // flags
-  public static final byte EXTERNAL_BIT = 8;
+  public static final byte EXTERNAL_BIT = 16;
 
   // shifts
-  public static final int SmallIdShift = 6;
+  public static final int SmallIdShift = 6;// bytes
 
   private static TracingActivityThread getThread() {
     Thread current = Thread.currentThread();

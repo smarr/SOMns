@@ -9,6 +9,7 @@ import som.primitives.processes.ChannelPrimitives;
 import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
+import tools.concurrency.RecordEventNodes.RecordTwoEvent;
 import tools.concurrency.TracingChannel;
 import tools.concurrency.TracingChannel.TracingChannelInput;
 import tools.concurrency.TracingChannel.TracingChannelOutput;
@@ -17,7 +18,7 @@ import tools.concurrency.TracingChannel.TracingChannelOutput;
 public class SChannel extends SAbstractObject {
 
   public static SChannel create() {
-    if (VmSettings.KOMPOS_TRACING) {
+    if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
       return new TracingChannel();
     } else {
       return new SChannel();
@@ -70,6 +71,7 @@ public class SChannel extends SAbstractObject {
 
     private final SynchronousQueue<Object> cell;
     protected final SChannel               channel;
+    private int                            numReads;
 
     public SChannelInput(final SynchronousQueue<Object> cell,
         final SChannel channel) {
@@ -78,19 +80,24 @@ public class SChannel extends SAbstractObject {
     }
 
     @TruffleBoundary
-    public Object read() throws InterruptedException {
+    public Object read(final RecordTwoEvent traceRead) throws InterruptedException {
       ObjectTransitionSafepoint.INSTANCE.unregister();
       try {
+        if (VmSettings.ACTOR_TRACING) {
+          traceRead.record(channel.getId(), numReads);
+          numReads++;
+        }
         return cell.take();
       } finally {
         ObjectTransitionSafepoint.INSTANCE.register();
       }
     }
 
-    public final Object readAndSuspendWriter(final boolean doSuspend)
+    public final Object readAndSuspendWriter(final boolean doSuspend,
+        final RecordTwoEvent traceRead)
         throws InterruptedException {
       channel.breakAfterWrite = doSuspend;
-      return read();
+      return read(traceRead);
     }
 
     public final boolean shouldBreakAfterRead() {
@@ -121,6 +128,7 @@ public class SChannel extends SAbstractObject {
 
     private final SynchronousQueue<Object> cell;
     protected final SChannel               channel;
+    private int                            numWrites;
 
     protected SChannelOutput(final SynchronousQueue<Object> cell, final SChannel channel) {
       this.cell = cell;
@@ -128,9 +136,14 @@ public class SChannel extends SAbstractObject {
     }
 
     @TruffleBoundary
-    public void write(final Object value) throws InterruptedException {
+    public void write(final Object value, final RecordTwoEvent traceWrite)
+        throws InterruptedException {
       ObjectTransitionSafepoint.INSTANCE.unregister();
       try {
+        if (VmSettings.ACTOR_TRACING) {
+          traceWrite.record(channel.getId(), numWrites);// TODO may need synchronization.
+          numWrites++;
+        }
         cell.put(value);
       } finally {
         ObjectTransitionSafepoint.INSTANCE.register();
@@ -138,9 +151,9 @@ public class SChannel extends SAbstractObject {
     }
 
     public final void writeAndSuspendReader(final Object value,
-        final boolean doSuspend) throws InterruptedException {
+        final boolean doSuspend, final RecordTwoEvent traceWrite) throws InterruptedException {
       channel.breakAfterRead = doSuspend;
-      write(value);
+      write(value, traceWrite);
     }
 
     public final boolean shouldBreakAfterWrite() {

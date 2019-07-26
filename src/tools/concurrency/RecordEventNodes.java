@@ -92,8 +92,8 @@ public final class RecordEventNodes {
       storage.putByteAt(pos, eventType);
       storage.putLongAt(pos + 1, id1);
       storage.putLongAt(pos + 1 + Long.BYTES, id2);
-
-      storage.position(pos + TWO_EVENT_SIZE);
+      storage.putLongAt(pos + 1 + Long.BYTES + Long.BYTES, id3);
+      storage.position(pos + THREE_EVENT_SIZE);
     }
   }
 }

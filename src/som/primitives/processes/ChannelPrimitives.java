@@ -35,6 +35,8 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.KomposTrace;
+import tools.concurrency.RecordEventNodes.RecordOneEvent;
+import tools.concurrency.RecordEventNodes.RecordTwoEvent;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.ExpressionBreakpoint;
@@ -45,6 +47,9 @@ import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.PassiveEntityType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
+import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.nodes.TraceContextNode;
+import tools.replay.nodes.TraceContextNodeGen;
 
 
 public abstract class ChannelPrimitives {
@@ -148,6 +153,8 @@ public abstract class ChannelPrimitives {
     private final boolean stopOnRootNode;
     private boolean       stopOnJoin;
 
+    private final TraceContextNode trace = TraceContextNodeGen.create();
+
     public TracingProcess(final SObjectWithClass obj, final boolean stopOnRootNode) {
       super(obj);
       this.stopOnRootNode = stopOnRootNode;
@@ -168,7 +175,11 @@ public abstract class ChannelPrimitives {
         dbg.prepareSteppingUntilNextRootNode(Thread.currentThread());
       }
 
-      KomposTrace.currentActivity(this);
+      if (VmSettings.KOMPOS_TRACING) {
+        KomposTrace.currentActivity(this);
+      } else if (VmSettings.ACTOR_TRACING) {
+        trace.execute(this);
+      }
     }
 
     @Override
@@ -210,6 +221,9 @@ public abstract class ChannelPrimitives {
     /** Breakpoint info for triggering suspension after write. */
     @Child protected AbstractBreakpointNode afterWrite;
 
+    @Child protected RecordTwoEvent traceRead =
+        new RecordTwoEvent(ActorExecutionTrace.CHANNEL_READ);
+
     @Override
     public final ReadPrim initialize(final VM vm) {
       super.initialize(vm);
@@ -222,7 +236,7 @@ public abstract class ChannelPrimitives {
     @Specialization
     public final Object read(final VirtualFrame frame, final SChannelInput in) {
       try {
-        Object result = in.readAndSuspendWriter(afterWrite.executeShouldHalt());
+        Object result = in.readAndSuspendWriter(afterWrite.executeShouldHalt(), traceRead);
         if (in.shouldBreakAfterRead()) {
           haltNode.executeEvaluated(frame, result);
         }
@@ -256,6 +270,9 @@ public abstract class ChannelPrimitives {
 
     @Child protected ExceptionSignalingNode notAValue;
 
+    @Child protected RecordTwoEvent traceWrite =
+        new RecordTwoEvent(ActorExecutionTrace.CHANNEL_WRITE);
+
     @Override
     public final WritePrim initialize(final VM vm) {
       super.initialize(vm);
@@ -273,7 +290,7 @@ public abstract class ChannelPrimitives {
         notAValue.signal(val);
       }
       try {
-        out.writeAndSuspendReader(val, afterRead.executeShouldHalt());
+        out.writeAndSuspendReader(val, afterRead.executeShouldHalt(), traceWrite);
         if (out.shouldBreakAfterWrite()) {
           haltNode.executeEvaluated(frame, val);
         }
@@ -306,6 +323,9 @@ public abstract class ChannelPrimitives {
   @Primitive(primitive = "procChannelNew:")
   @GenerateNodeFactory
   public abstract static class ChannelNewPrim extends UnaryExpressionNode {
+
+    @Child RecordOneEvent trace = new RecordOneEvent(ActorExecutionTrace.CHANNEL_CREATE);
+
     @Specialization
     public final SChannel newChannel(final Object module) {
       SChannel result = SChannel.create();
@@ -313,6 +333,8 @@ public abstract class ChannelPrimitives {
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.passiveEntityCreation(PassiveEntityType.CHANNEL,
             result.getId(), KomposTrace.getPrimitiveCaller(sourceSection));
+      } else if (VmSettings.ACTOR_TRACING) {
+        trace.record(result.getId());
       }
       return result;
     }

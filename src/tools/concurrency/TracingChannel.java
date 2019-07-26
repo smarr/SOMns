@@ -3,6 +3,7 @@ package tools.concurrency;
 import java.util.concurrent.SynchronousQueue;
 
 import som.interpreter.processes.SChannel;
+import tools.concurrency.RecordEventNodes.RecordTwoEvent;
 import tools.debugger.entities.ReceiveOp;
 import tools.debugger.entities.SendOp;
 
@@ -28,10 +29,10 @@ public final class TracingChannel extends SChannel {
     }
 
     @Override
-    public Object read() throws InterruptedException {
+    public Object read(final RecordTwoEvent traceRead) throws InterruptedException {
       TracingChannel current = (TracingChannel) channel;
       try {
-        return super.read();
+        return super.read(traceRead);
       } finally {
         KomposTrace.receiveOperation(ReceiveOp.CHANNEL_RCV, current.channelId);
       }
@@ -45,12 +46,13 @@ public final class TracingChannel extends SChannel {
     }
 
     @Override
-    public void write(final Object value) throws InterruptedException {
+    public void write(final Object value, final RecordTwoEvent traceWrite)
+        throws InterruptedException {
       TracingChannel current = ((TracingChannel) channel);
 
       try {
         current.messageId += 1;
-        super.write(value);
+        super.write(value, traceWrite);
       } finally {
         KomposTrace.sendOperation(
             SendOp.CHANNEL_SEND, current.messageId, current.channelId);
