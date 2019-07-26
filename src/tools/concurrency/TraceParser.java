@@ -46,8 +46,8 @@ public final class TraceParser {
 
   private final TraceRecord[] parseTable;
 
-  public static ByteBuffer getExternalData(final int actorId, final int dataId) {
-    long key = (((long) actorId) << 32) | dataId;
+  public static ByteBuffer getExternalData(final long actorId, final int dataId) {
+    long key = (actorId << 32) | dataId;
     long pos = parser.externalDataDict.get(key);
     return parser.readExternalData(pos);
   }
@@ -121,6 +121,7 @@ public final class TraceParser {
     long resolver = 0;
     long currentActor = 0;
     int ordering = 0;
+    long edat = 0;
     short method = 0;
     int dataId = 0;
     long startTime = System.currentTimeMillis();
@@ -148,7 +149,7 @@ public final class TraceParser {
 
         final int start = b.position();
         final byte type = b.get();
-        final int numbytes = ((type >> 6) & 3) + 1;
+        final int numbytes = Long.BYTES;// ((type >> 6) & 3) + 1;
         boolean external = (type & 8) != 0;
         TraceRecord recordType = parseTable[type & 7];
         switch (recordType) {
@@ -178,7 +179,7 @@ public final class TraceParser {
             }
             parsedActors++;
 
-            assert b.position() == start + (numbytes + 1);
+            assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;// (numbytes + 1);
             break;
 
           case ACTOR_CONTEXT:
@@ -202,7 +203,7 @@ public final class TraceParser {
             assert current != null;
             contextMessages = new ArrayList<>();
             current.addMessageRecords(contextMessages, ordering);
-            assert b.position() == start + (Long.BYTES + 2 + 1);
+            assert b.position() == start + 11;// (numbytes + 2 + 1);
             break;
           case MESSAGE:
             parsedMessages++;
@@ -210,13 +211,15 @@ public final class TraceParser {
             sender = getId(numbytes);
 
             if (external) {
-              method = b.getShort();
-              dataId = b.getInt();
+              edat = b.getLong();
+              method = (short) (edat >> 32);
+              dataId = (int) edat;
               contextMessages.add(new ExternalMessageRecord(sender, method, dataId));
-              assert b.position() == start + (numbytes + 1 + 6);
+              assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;// (numbytes + 1 +
+                                                                             // 8);
             } else {
               contextMessages.add(new MessageRecord(sender));
-              assert b.position() == start + (numbytes + 1);
+              assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;// (numbytes + 1);
             }
             break;
           case PROMISE_MESSAGE:
@@ -225,14 +228,17 @@ public final class TraceParser {
             resolver = getId(numbytes);
 
             if (external) {
-              method = b.getShort();
-              dataId = b.getInt();
+              edat = b.getLong();
+              method = (short) (edat >> 32);
+              dataId = (int) edat;
               contextMessages.add(
                   new ExternalPromiseMessageRecord(sender, resolver, method, dataId));
-              assert b.position() == start + 1 + 6 + 2 * (numbytes);
+              assert b.position() == start + RecordEventNodes.THREE_EVENT_SIZE;// 1 + 8 + 2 *
+                                                                               // (numbytes);
             } else {
               contextMessages.add(new PromiseMessageRecord(sender, resolver));
-              assert b.position() == start + 1 + 2 * (numbytes);
+              assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;// 1 + 2 *
+                                                                             // (numbytes);
             }
 
             break;
@@ -248,6 +254,8 @@ public final class TraceParser {
       throw new RuntimeException(e);
     } catch (IOException e) {
       throw new RuntimeException(e);
+    } catch (AssertionError e) {
+      e.printStackTrace();
     }
 
     parseExternalData();
