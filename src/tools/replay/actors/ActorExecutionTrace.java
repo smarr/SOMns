@@ -78,7 +78,7 @@ public class ActorExecutionTrace {
     t.addExternalData(b);
   }
 
-  private static final int EXT_DATA_HEADER_SIZE = 3 * 4;
+  private static final int EXT_DATA_HEADER_SIZE = 16;
 
   public static void stringSystemCall(final String s, final TraceContextNode tracer) {
     ActorProcessingThread t = (ActorProcessingThread) getThread();
@@ -91,23 +91,23 @@ public class ActorExecutionTrace {
     t.addExternalData(sw);
   }
 
-  public static byte[] getExtDataByteBuffer(final int actor, final int dataId,
+  public static byte[] getExtDataByteBuffer(final long actor, final int dataId,
       final int size) {
     byte[] buffer = new byte[size + EXT_DATA_HEADER_SIZE];
     Arrays.fill(buffer, (byte) -1);
-    TraceBuffer.UNSAFE.putInt(buffer, TraceBuffer.BYTE_ARR_BASE_OFFSET, actor);
-    TraceBuffer.UNSAFE.putInt(buffer, TraceBuffer.BYTE_ARR_BASE_OFFSET + 4, dataId);
-    TraceBuffer.UNSAFE.putInt(buffer, TraceBuffer.BYTE_ARR_BASE_OFFSET + 8, size);
+    TraceBuffer.UNSAFE.putLong(buffer, TraceBuffer.BYTE_ARR_BASE_OFFSET, actor);
+    TraceBuffer.UNSAFE.putInt(buffer, TraceBuffer.BYTE_ARR_BASE_OFFSET + 8, dataId);
+    TraceBuffer.UNSAFE.putInt(buffer, TraceBuffer.BYTE_ARR_BASE_OFFSET + 12, size);
     return buffer;
   }
 
-  public static byte[] getExtDataHeader(final int actor, final int dataId,
+  public static byte[] getExtDataHeader(final long actor, final int dataId,
       final int size) {
     byte[] buffer = new byte[EXT_DATA_HEADER_SIZE];
     Arrays.fill(buffer, (byte) -1);
-    TraceBuffer.UNSAFE.putInt(buffer, TraceBuffer.BYTE_ARR_BASE_OFFSET, actor);
-    TraceBuffer.UNSAFE.putInt(buffer, TraceBuffer.BYTE_ARR_BASE_OFFSET + 4, dataId);
-    TraceBuffer.UNSAFE.putInt(buffer, TraceBuffer.BYTE_ARR_BASE_OFFSET + 8, size);
+    TraceBuffer.UNSAFE.putLong(buffer, TraceBuffer.BYTE_ARR_BASE_OFFSET, actor);
+    TraceBuffer.UNSAFE.putInt(buffer, TraceBuffer.BYTE_ARR_BASE_OFFSET + 8, dataId);
+    TraceBuffer.UNSAFE.putInt(buffer, TraceBuffer.BYTE_ARR_BASE_OFFSET + 12, size);
     return buffer;
   }
 

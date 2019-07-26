@@ -32,10 +32,9 @@ public final class TraceParser {
     SYSTEM_CALL
   }
 
-  private ByteBuffer                     b                =
+  private ByteBuffer                     b      =
       ByteBuffer.allocate(VmSettings.BUFFER_SIZE);
-  private final HashMap<Long, ActorNode> actors           = new HashMap<>();
-  private final HashMap<Long, Long>      externalDataDict = new HashMap<>();
+  private final HashMap<Long, ActorNode> actors = new HashMap<>();
 
   private long parsedMessages = 0;
   private long parsedActors   = 0;
@@ -47,8 +46,7 @@ public final class TraceParser {
   private final TraceRecord[] parseTable;
 
   public static ByteBuffer getExternalData(final long actorId, final int dataId) {
-    long key = (actorId << 32) | dataId;
-    long pos = parser.externalDataDict.get(key);
+    long pos = parser.actors.get(actorId).externalData.get(dataId);
     return parser.readExternalData(pos);
   }
 
@@ -149,7 +147,7 @@ public final class TraceParser {
 
         final int start = b.position();
         final byte type = b.get();
-        final int numbytes = Long.BYTES;// ((type >> 6) & 3) + 1;
+        final int numbytes = Long.BYTES;
         boolean external = (type & 8) != 0;
         TraceRecord recordType = parseTable[type & 7];
         switch (recordType) {
@@ -179,7 +177,7 @@ public final class TraceParser {
             }
             parsedActors++;
 
-            assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;// (numbytes + 1);
+            assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
             break;
 
           case ACTOR_CONTEXT:
@@ -203,7 +201,7 @@ public final class TraceParser {
             assert current != null;
             contextMessages = new ArrayList<>();
             current.addMessageRecords(contextMessages, ordering);
-            assert b.position() == start + 11;// (numbytes + 2 + 1);
+            assert b.position() == start + 11;
             break;
           case MESSAGE:
             parsedMessages++;
@@ -215,11 +213,10 @@ public final class TraceParser {
               method = (short) (edat >> 32);
               dataId = (int) edat;
               contextMessages.add(new ExternalMessageRecord(sender, method, dataId));
-              assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;// (numbytes + 1 +
-                                                                             // 8);
+              assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
             } else {
               contextMessages.add(new MessageRecord(sender));
-              assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;// (numbytes + 1);
+              assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
             }
             break;
           case PROMISE_MESSAGE:
@@ -233,12 +230,10 @@ public final class TraceParser {
               dataId = (int) edat;
               contextMessages.add(
                   new ExternalPromiseMessageRecord(sender, resolver, method, dataId));
-              assert b.position() == start + RecordEventNodes.THREE_EVENT_SIZE;// 1 + 8 + 2 *
-                                                                               // (numbytes);
+              assert b.position() == start + RecordEventNodes.THREE_EVENT_SIZE;
             } else {
               contextMessages.add(new PromiseMessageRecord(sender, resolver));
-              assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;// 1 + 2 *
-                                                                             // (numbytes);
+              assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
             }
 
             break;
@@ -270,19 +265,19 @@ public final class TraceParser {
     try (FileInputStream fis = new FileInputStream(traceFile);
         FileChannel channel = fis.getChannel()) {
 
-      ByteBuffer bb = ByteBuffer.allocate(12);
+      ByteBuffer bb = ByteBuffer.allocate(16);
       bb.order(ByteOrder.LITTLE_ENDIAN);
 
       channel.read(bb, position);
       bb.flip();
 
-      bb.getInt(); // actorId
+      bb.getLong(); // actorId
       bb.getInt(); // dataId
       int len = bb.getInt();
 
       ByteBuffer res = ByteBuffer.allocate(len);
       res.order(ByteOrder.LITTLE_ENDIAN);
-      channel.read(res, position + 12);
+      channel.read(res, position + 16);
       res.flip();
       return res;
     } catch (FileNotFoundException e) {
@@ -295,7 +290,7 @@ public final class TraceParser {
   private void parseExternalData() {
     File traceFile = new File(traceName + ".dat");
 
-    ByteBuffer bb = ByteBuffer.allocate(12);
+    ByteBuffer bb = ByteBuffer.allocate(16);
     bb.order(ByteOrder.LITTLE_ENDIAN);
 
     try (FileInputStream fis = new FileInputStream(traceFile);
@@ -308,12 +303,17 @@ public final class TraceParser {
         channel.read(bb);
         bb.flip();
 
-        long actor = bb.getInt();
-        long dataId = bb.getInt();
+        long actor = bb.getLong();
+        int dataId = bb.getInt();
         int len = bb.getInt();
 
-        long key = (actor << 32) | dataId;
-        externalDataDict.put(key, position);
+        ActorNode an = actors.get(actor);
+        assert an != null;
+        if (an.externalData == null) {
+          an.externalData = new HashMap<>();
+        }
+
+        an.externalData.put(dataId, position);
 
         position = channel.position();
         channel.position(position + len);
@@ -355,6 +355,7 @@ public final class TraceParser {
     HashMap<Integer, ArrayList<MessageRecord>> bucket1          = new HashMap<>();
     HashMap<Integer, ArrayList<MessageRecord>> bucket2          = new HashMap<>();
     Queue<MessageRecord>                       expectedMessages = new java.util.LinkedList<>();
+    HashMap<Integer, Long>                     externalData;
     int                                        max              = 0;
     int                                        max2             = 0;
 
