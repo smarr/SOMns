@@ -49,7 +49,7 @@ public class ActorExecutionTrace {
     ActorProcessingThread t = (ActorProcessingThread) getThread();
     TracingActor ta = (TracingActor) t.getCurrentActor();
     int dataId = ta.getDataId();
-    byte[] b = getExtDataByteBuffer(ta.getActorId(), dataId, Integer.BYTES);
+    byte[] b = getExtDataByteBuffer(ta.getId(), dataId, Integer.BYTES);
     TraceBuffer.UNSAFE.putInt(
         b, TraceBuffer.BYTE_ARR_BASE_OFFSET + EXT_DATA_HEADER_SIZE, i);
     recordSystemCall(dataId, tracer);
@@ -60,7 +60,7 @@ public class ActorExecutionTrace {
     ActorProcessingThread t = (ActorProcessingThread) getThread();
     TracingActor ta = (TracingActor) t.getCurrentActor();
     int dataId = ta.getDataId();
-    byte[] b = getExtDataByteBuffer(ta.getActorId(), dataId, Long.BYTES);
+    byte[] b = getExtDataByteBuffer(ta.getId(), dataId, Long.BYTES);
     TraceBuffer.UNSAFE.putLong(
         b, TraceBuffer.BYTE_ARR_BASE_OFFSET + EXT_DATA_HEADER_SIZE, l);
     recordSystemCall(dataId, tracer);
@@ -71,7 +71,7 @@ public class ActorExecutionTrace {
     ActorProcessingThread t = (ActorProcessingThread) getThread();
     TracingActor ta = (TracingActor) t.getCurrentActor();
     int dataId = ta.getDataId();
-    byte[] b = getExtDataByteBuffer(ta.getActorId(), dataId, Double.BYTES);
+    byte[] b = getExtDataByteBuffer(ta.getId(), dataId, Double.BYTES);
     TraceBuffer.UNSAFE.putDouble(
         b, TraceBuffer.BYTE_ARR_BASE_OFFSET + EXT_DATA_HEADER_SIZE, d);
     recordSystemCall(dataId, tracer);
@@ -86,7 +86,7 @@ public class ActorExecutionTrace {
     int dataId = ta.getDataId();
     recordSystemCall(dataId, tracer);
     StringWrapper sw =
-        new StringWrapper(s, ta.getActorId(), dataId);
+        new StringWrapper(s, ta.getId(), dataId);
 
     t.addExternalData(sw);
   }

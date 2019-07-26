@@ -10,6 +10,6 @@ public final class TraceActorCreationNode extends TraceNode {
       new RecordOneEvent(ActorExecutionTrace.ACTOR_CREATION);
 
   public void trace(final TracingActor actor) {
-    roe.record(actor.getActorId());
+    roe.record(actor.getId());
   }
 }

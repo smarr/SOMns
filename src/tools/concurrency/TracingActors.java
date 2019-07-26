@@ -7,7 +7,6 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.WeakHashMap;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -31,11 +30,10 @@ import tools.snapshot.deserialization.DeserializationBuffer;
 
 public class TracingActors {
   public static class TracingActor extends Actor {
-    private static final AtomicInteger IdGen = new AtomicInteger(0);
-    protected final int                actorId;
-    protected int                      nextDataID;
-    protected SnapshotRecord           snapshotRecord;
-    private int                        traceBufferId;
+    protected final long     activityId;
+    protected int            nextDataID;
+    protected SnapshotRecord snapshotRecord;
+    private int              traceBufferId;
 
     /**
      * Flag that indicates if a step-to-next-turn action has been made in the previous message.
@@ -44,19 +42,25 @@ public class TracingActors {
 
     public TracingActor(final VM vm) {
       super(vm);
-      this.actorId = IdGen.getAndIncrement();
+      this.activityId = TracingActivityThread.newEntityId();
+      assert this.activityId >= 0;
       if (VmSettings.SNAPSHOTS_ENABLED) {
         snapshotRecord = new SnapshotRecord();
       }
     }
 
-    protected TracingActor(final VM vm, final int id) {
+    protected TracingActor(final VM vm, final long id) {
       super(vm);
-      this.actorId = id;
+      this.activityId = id;
     }
 
     public final int getActorId() {
-      return actorId;
+      throw new UnsupportedOperationException("Please remove this call and use getId instead");
+    }
+
+    @Override
+    public long getId() {
+      return activityId;
     }
 
     @Override
@@ -119,9 +123,8 @@ public class TracingActors {
     protected int                              children;
     protected final Queue<MessageRecord>       expectedMessages;
     protected final ArrayList<EventualMessage> leftovers = new ArrayList<>();
-    private static Map<Integer, ReplayActor>   actorList;
+    private static Map<Long, ReplayActor>      actorList;
     private BiConsumer<Short, Integer>         dataSource;
-    private final long                         activityId;
 
     static {
       if (VmSettings.REPLAY) {
@@ -141,11 +144,11 @@ public class TracingActors {
       dataSource = ds;
     }
 
-    private static int lookupId() {
+    private static long lookupId() {
       if (VmSettings.REPLAY && Thread.currentThread() instanceof ActorProcessingThread) {
         ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
         ReplayActor parent = (ReplayActor) t.currentMessage.getTarget();
-        int parentId = parent.getActorId();
+        long parentId = parent.getId();
         int childNo = parent.addChild();
         return TraceParser.getReplayId(parentId, childNo);
       }
@@ -153,26 +156,19 @@ public class TracingActors {
       return 0;
     }
 
-    public static ReplayActor getActorWithId(final int id) {
+    public static ReplayActor getActorWithId(final long id) {
       return actorList.get(id);
-    }
-
-    @Override
-    public long getId() {
-      return activityId;
     }
 
     @TruffleBoundary
     public ReplayActor(final VM vm) {
       super(vm, lookupId());
 
-      this.activityId = TracingActivityThread.newEntityId();
-
       if (VmSettings.REPLAY) {
-        expectedMessages = TraceParser.getExpectedMessages(actorId);
+        expectedMessages = TraceParser.getExpectedMessages(activityId);
 
         synchronized (actorList) {
-          actorList.put(actorId, this);
+          actorList.put(activityId, this);
         }
       } else {
         expectedMessages = null;
@@ -227,7 +223,7 @@ public class TracingActors {
         if (ra.expectedMessages != null && ra.expectedMessages.peek() != null) {
           result = true; // program did not execute all messages
           Output.println("===========================================");
-          Output.println("Actor " + ra.getActorId());
+          Output.println("Actor " + ra.getId());
           Output.println("Expected: ");
           printMsg(ra.expectedMessages.peek());
 
@@ -272,12 +268,12 @@ public class TracingActors {
 
       if (msg instanceof PromiseMessage) {
         Output.println("PromiseMessage " + msg.getSelector()
-            + " from " + ((TracingActor) msg.getSender()).getActorId() + " PID "
+            + " from " + ((TracingActor) msg.getSender()).getId() + " PID "
             + ((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
       } else {
         Output.println(
             "Message" + msg.getSelector() + " from "
-                + ((TracingActor) msg.getSender()).getActorId());
+                + ((TracingActor) msg.getSender()).getId());
       }
     }
 
@@ -320,7 +316,7 @@ public class TracingActors {
         return false;
       }
 
-      return ((ReplayActor) msg.getSender()).getActorId() == other.sender;
+      return ((ReplayActor) msg.getSender()).getId() == other.sender;
     }
 
     protected int addChild() {

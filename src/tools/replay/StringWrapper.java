@@ -2,13 +2,13 @@ package tools.replay;
 
 public class StringWrapper {
   public final String s;
-  public final int    actorId;
+  public final long   actorId;
   public final int    dataId;
 
-  public StringWrapper(final String s, final int actorId, final int dataId) {
+  public StringWrapper(final String s, final long l, final int dataId) {
     super();
     this.s = s;
-    this.actorId = actorId;
+    this.actorId = l;
     this.dataId = dataId;
   }
 }

@@ -52,25 +52,25 @@ public final class TraceParser {
 
   public static int getIntegerSysCallResult() {
     ReplayActor ra = (ReplayActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
-    ByteBuffer bb = getExternalData(ra.getActorId(), ra.getDataId());
+    ByteBuffer bb = getExternalData(ra.getId(), ra.getDataId());
     return bb.getInt();
   }
 
   public static long getLongSysCallResult() {
     ReplayActor ra = (ReplayActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
-    ByteBuffer bb = getExternalData(ra.getActorId(), ra.getDataId());
+    ByteBuffer bb = getExternalData(ra.getId(), ra.getDataId());
     return bb.getLong();
   }
 
   public static double getDoubleSysCallResult() {
     ReplayActor ra = (ReplayActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
-    ByteBuffer bb = getExternalData(ra.getActorId(), ra.getDataId());
+    ByteBuffer bb = getExternalData(ra.getId(), ra.getDataId());
     return bb.getDouble();
   }
 
   public static String getStringSysCallResult() {
     ReplayActor ra = (ReplayActor) EventualMessage.getActorCurrentMessageIsExecutionOn();
-    ByteBuffer bb = getExternalData(ra.getActorId(), ra.getDataId());
+    ByteBuffer bb = getExternalData(ra.getId(), ra.getDataId());
     return new String(bb.array());
   }
 
@@ -80,17 +80,19 @@ public final class TraceParser {
       parser.parseTrace();
     }
 
+    assert parser.actors.containsKey(replayId) : "Missing expected Messages for Actor: "
+        + replayId;
     return parser.actors.get(replayId).getExpectedMessages();
   }
 
-  public static synchronized int getReplayId(final long parentId, final int childNo) {
+  public static synchronized long getReplayId(final long parentId, final int childNo) {
     if (parser == null) {
       parser = new TraceParser();
       parser.parseTrace();
     }
 
     assert parser.actors.containsKey(parentId) : "Parent doesn't exist";
-    return (int) parser.actors.get(parentId).getChild(childNo).actorId;
+    return parser.actors.get(parentId).getChild(childNo).actorId;
   }
 
   private TraceParser() {

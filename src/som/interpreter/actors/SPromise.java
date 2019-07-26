@@ -318,9 +318,9 @@ public class SPromise extends SObjectWithClass {
       super(owner, haltOnResolver, haltOnResolution);
     }
 
-    protected int resolvingActor;
+    protected long resolvingActor;
 
-    public int getResolvingActor() {
+    public long getResolvingActor() {
       if (!VmSettings.TRACK_SNAPSHOT_ENTITIES) {
         assert isCompleted();
       }
@@ -455,7 +455,7 @@ public class SPromise extends SObjectWithClass {
 
       if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
         ((STracingPromise) p).resolvingActor =
-            ((TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn()).getActorId();
+            ((TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn()).getId();
       } else if (VmSettings.KOMPOS_TRACING) {
         if (type == Resolution.SUCCESSFUL && p.resolutionState != Resolution.CHAINED) {
           KomposTrace.promiseResolution(p.getPromiseId(), result);

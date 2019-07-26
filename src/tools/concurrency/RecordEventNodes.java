@@ -31,6 +31,7 @@ public final class RecordEventNodes {
       ActorTraceBuffer storage = getStorage(ONE_EVENT_SIZE);
       int pos = storage.position();
 
+      assert id >= 0;
       storage.putByteAt(pos, eventType);
       storage.putLongAt(pos + 1, id);
 
@@ -57,6 +58,8 @@ public final class RecordEventNodes {
     public void record(final long id1, final long id2) {
       ActorTraceBuffer storage = getStorage(TWO_EVENT_SIZE);
       int pos = storage.position();
+
+      assert id1 >= 0 && id2 >= 0;
 
       storage.putByteAt(pos, eventType);
       storage.putLongAt(pos + 1, id1);
@@ -85,7 +88,7 @@ public final class RecordEventNodes {
     public void record(final long id1, final long id2, final long id3) {
       ActorTraceBuffer storage = getStorage(TWO_EVENT_SIZE);
       int pos = storage.position();
-
+      assert id1 >= 0 && id2 >= 0 && id3 >= 0;
       storage.putByteAt(pos, eventType);
       storage.putLongAt(pos + 1, id1);
       storage.putLongAt(pos + 1 + Long.BYTES, id2);

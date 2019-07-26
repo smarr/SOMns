@@ -199,7 +199,8 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   }
 
   public static long newEntityId() {
-    if (VmSettings.KOMPOS_TRACING && Thread.currentThread() instanceof TracingActivityThread) {
+    if ((VmSettings.KOMPOS_TRACING | VmSettings.ACTOR_TRACING)
+        && Thread.currentThread() instanceof TracingActivityThread) {
       TracingActivityThread t = TracingActivityThread.currentThread();
       return t.generateEntityId();
     } else {

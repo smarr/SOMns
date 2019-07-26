@@ -33,38 +33,38 @@ public abstract class TraceMessageNode extends TraceNode {
 
   @Specialization
   public void trace(final DirectMessage msg) {
-    recDMsg.record(((TracingActor) msg.getSender()).getActorId());
+    recDMsg.record(((TracingActor) msg.getSender()).getId());
   }
 
   @Specialization
   public void trace(final ExternalDirectMessage msg) {
     long edata = (msg.getMethod() << Integer.BYTES) | msg.getDataId();
-    recEDMsg.record(((TracingActor) msg.getSender()).getActorId(), edata);
+    recEDMsg.record(((TracingActor) msg.getSender()).getId(), edata);
   }
 
   @Specialization
   public void trace(final PromiseCallbackMessage msg) {
-    recPromMsg.record(((TracingActor) msg.getSender()).getActorId(),
+    recPromMsg.record(((TracingActor) msg.getSender()).getId(),
         ((STracingPromise) msg.getPromise()).getResolvingActor());
   }
 
   @Specialization
   public void trace(final PromiseSendMessage msg) {
-    recPromMsg.record(((TracingActor) msg.getSender()).getActorId(),
+    recPromMsg.record(((TracingActor) msg.getSender()).getId(),
         ((STracingPromise) msg.getPromise()).getResolvingActor());
   }
 
   @Specialization
   public void trace(final ExternalPromiseCallbackMessage msg) {
     long edata = (msg.getMethod() << Integer.BYTES) | msg.getDataId();
-    recEPromMsg.record(((TracingActor) msg.getSender()).getActorId(),
+    recEPromMsg.record(((TracingActor) msg.getSender()).getId(),
         ((STracingPromise) msg.getPromise()).getResolvingActor(), edata);
   }
 
   @Specialization
   public void trace(final ExternalPromiseSendMessage msg) {
     long edata = (msg.getMethod() << Integer.BYTES) | msg.getDataId();
-    recEPromMsg.record(((TracingActor) msg.getSender()).getActorId(),
+    recEPromMsg.record(((TracingActor) msg.getSender()).getId(),
         ((STracingPromise) msg.getPromise()).getResolvingActor(), edata);
   }
 }
