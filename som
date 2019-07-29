@@ -101,6 +101,8 @@ tools.add_argument('--coverage', help='determine SOMns code coverage and store i
                    dest='coverage', default=None)
 tools.add_argument('--java-coverage', help='determine Java code coverage and store in given file',
                    dest='java_coverage', default=None)
+tools.add_argument('-kt', '--kompos-tracing', help='enable tracing of actor operations',
+                   dest='kompos_tracing', action='store_true', default=False)
 
 parser.add_argument('-o', '--only', help='only compile give methods, comma separated list',
                     dest='only_compile', default=None)
@@ -316,6 +318,8 @@ if args.vmdebug:
 
 if args.actor_tracing:
     flags += ['-Dsom.actorTracing=true']
+if args.kompos_tracing:
+    flags += ['-Dsom.komposTracing=true']
 if args.small_ids:
     flags += ['-Dsom.smallIds=true']
 if args.trace_file:

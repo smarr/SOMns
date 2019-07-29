@@ -283,7 +283,7 @@ public class KomposTrace {
       putLong(activityId);
       putShort(symbolId);
 
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED || VmSettings.KOMPOS_TRACING) {
         writeSourceSection(sourceSection);
       }
       assert position == start + requiredSpace;
@@ -307,7 +307,7 @@ public class KomposTrace {
       put(eventMarker);
       putLong(id);
 
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED || VmSettings.KOMPOS_TRACING) {
         writeSourceSection(section);
       }
       assert position == start + eventSize;

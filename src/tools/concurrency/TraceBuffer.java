@@ -15,7 +15,7 @@ public abstract class TraceBuffer {
 
   public static TraceBuffer create(final long threadId) {
     assert VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING;
-    if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+    if (VmSettings.KOMPOS_TRACING) {
       return new KomposTrace.KomposTraceBuffer(threadId);
     } else {
       return new ActorTraceBuffer();
