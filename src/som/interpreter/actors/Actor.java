@@ -299,11 +299,7 @@ public class Actor implements Activity {
         TracingActor.handleBreakpointsAndStepping(msg, dbg, actor);
       }
 
-      try {
-        msg.execute();
-      } finally {
-
-      }
+      msg.execute();
     }
 
     private boolean getCurrentMessagesOrCompleteExecution() {
