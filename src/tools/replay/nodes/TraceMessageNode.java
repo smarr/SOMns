@@ -7,14 +7,14 @@ import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
-import tools.concurrency.RecordEventNodes.RecordOneEvent;
-import tools.concurrency.RecordEventNodes.RecordThreeEvent;
-import tools.concurrency.RecordEventNodes.RecordTwoEvent;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.actors.ExternalEventualMessage.ExternalDirectMessage;
 import tools.replay.actors.ExternalEventualMessage.ExternalPromiseCallbackMessage;
 import tools.replay.actors.ExternalEventualMessage.ExternalPromiseSendMessage;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
+import tools.replay.nodes.RecordEventNodes.RecordThreeEvent;
+import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
 
 
 public abstract class TraceMessageNode extends TraceNode {

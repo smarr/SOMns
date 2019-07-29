@@ -40,7 +40,6 @@ import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.concurrency.KomposTrace;
-import tools.concurrency.RecordEventNodes.RecordOneEvent;
 import tools.concurrency.Tags.ActivityCreation;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.debugger.entities.ActivityType;
@@ -48,6 +47,7 @@ import tools.debugger.entities.BreakpointType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
 
 public abstract class ActivitySpawn {

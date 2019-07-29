@@ -17,6 +17,7 @@ import som.interpreter.actors.EventualMessage;
 import som.vm.VmSettings;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.nodes.RecordEventNodes;
 
 
 public final class TraceParser {
@@ -37,12 +38,12 @@ public final class TraceParser {
     PROCESS_CREATION
   }
 
-  private ByteBuffer                     b      =
+  private ByteBuffer                      b        =
       ByteBuffer.allocate(VmSettings.BUFFER_SIZE);
-  private final HashMap<Long, ActorNode> actors = new HashMap<>();
+  private final HashMap<Long, EntityNode> entities = new HashMap<>();
 
   private long parsedMessages = 0;
-  private long parsedActors   = 0;
+  private long parsedEntities = 0;
 
   private static TraceParser parser;
   private static String      traceName =
@@ -50,8 +51,10 @@ public final class TraceParser {
 
   private final TraceRecord[] parseTable;
 
+  private boolean readMainActor = false;
+
   public static ByteBuffer getExternalData(final long actorId, final int dataId) {
-    long pos = parser.actors.get(actorId).externalData.get(dataId);
+    long pos = parser.entities.get(actorId).externalData.get(dataId);
     return parser.readExternalData(pos);
   }
 
@@ -85,9 +88,10 @@ public final class TraceParser {
       parser.parseTrace();
     }
 
-    assert parser.actors.containsKey(replayId) : "Missing expected Messages for Actor: "
+    assert parser.entities.containsKey(replayId) : "Missing expected Messages for Actor: "
         + replayId;
-    return parser.actors.get(replayId).getExpectedMessages();
+    assert parser.entities.get(replayId) instanceof ActorNode;
+    return ((ActorNode) parser.entities.get(replayId)).getExpectedMessages();
   }
 
   public static synchronized long getReplayId(final long parentId, final int childNo) {
@@ -96,8 +100,8 @@ public final class TraceParser {
       parser.parseTrace();
     }
 
-    assert parser.actors.containsKey(parentId) : "Parent doesn't exist";
-    return parser.actors.get(parentId).getChild(childNo).actorId;
+    assert parser.entities.containsKey(parentId) : "Parent doesn't exist";
+    return parser.entities.get(parentId).getChild(childNo).entityId;
   }
 
   private TraceParser() {
@@ -124,28 +128,32 @@ public final class TraceParser {
   }
 
   private void parseTrace() {
-    boolean readMainActor = false;
+
     File traceFile = new File(traceName + ".trace");
 
-    long sender = 0;
-    long resolver = 0;
-    long currentActivity = 0;
-    int ordering = 0;
-    long edat = 0;
-    short method = 0;
-    int dataId = 0;
     long startTime = System.currentTimeMillis();
-    ArrayList<MessageRecord> contextMessages = null;
 
     Output.println("Parsing Trace ...");
 
     try (FileInputStream fis = new FileInputStream(traceFile);
         FileChannel channel = fis.getChannel()) {
+
+      // event context
+      EntityNode currentEntity = null;
+      long currentEntityId = 0;
+      int ordering = 0;
+
       channel.read(b);
       b.flip(); // prepare for reading from buffer
-      ActorNode currentActor = null;
 
       while (channel.position() < channel.size() || b.remaining() > 0) {
+
+        long sender = 0;
+        long resolver = 0;
+        long edat = 0;
+        short method = 0;
+        int dataId = 0;
+
         // read from file if buffer is empty
         if (!b.hasRemaining()) {
           b.clear();
@@ -162,74 +170,48 @@ public final class TraceParser {
         final int numbytes = Long.BYTES;
         boolean external = (type & ActorExecutionTrace.EXTERNAL_BIT) != 0;
         TraceRecord recordType = parseTable[type & (ActorExecutionTrace.EXTERNAL_BIT - 1)];
+
         switch (recordType) {
           case ACTOR_CREATION:
-            long newActorId = getId(numbytes);
-            if (newActorId == 0) {
+          case CHANNEL_CREATION:
+          case PROCESS_CREATION:
+            long newEntityId = getId(numbytes);
+
+            if (newEntityId == 0) {
               assert !readMainActor : "There should be only one main actor.";
               readMainActor = true;
-              if (!actors.containsKey(newActorId)) {
-                actors.put(newActorId, new ActorNode(newActorId));
-              }
-            } else {
-              if (!actors.containsKey(currentActivity)) {
-                actors.put(currentActivity, new ActorNode(currentActivity));// TODO need to
-                                                                            // make this safe
-                                                                            // for non actors
-              }
-
-              ActorNode node;
-              if (actors.containsKey(newActorId)) {
-                node = actors.get(newActorId);
-              } else {
-                node = new ActorNode(newActorId);
-                actors.put(newActorId, node);
-              }
-
-              node.mailboxNo = ordering;
-              actors.get(currentActivity).addChild(node);
             }
-            parsedActors++;
 
+            EntityNode newEntity = getOrCreateEntityEntry(recordType, newEntityId);
+            newEntity.ordering = ordering;
+            currentEntity.addChild(newEntity);
+            parsedEntities++;
             assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
             break;
 
           case ACTOR_CONTEXT:
-            /*
-             * make two buckets, one for the current 65k contexs, and one for those that we
-             * encounter prematurely
-             * decision where stuff goes is made based on bitset or whether the ordering byte
-             * already is used in the first bucket
-             * when a bucket is full, we sort the contexts and put the messages inside a queue,
-             * context can then be reclaimed by GC
-             */
-
+          case PROCESS_CONTEXT:
             ordering = Short.toUnsignedInt(b.getShort());
-            currentActivity = getId(Long.BYTES);
-
-            if (!actors.containsKey(currentActivity)) {
-              actors.put(currentActivity, new ActorNode(currentActivity));
-            }
-
-            currentActor = actors.get(currentActivity);
-            assert currentActor != null;
-            contextMessages = new ArrayList<>();
-            currentActor.addMessageRecords(contextMessages, ordering);
+            currentEntityId = getId(Long.BYTES);
+            currentEntity = getOrCreateEntityEntry(recordType, currentEntityId);
+            assert currentEntity != null;
+            currentEntity.onContextStart(ordering);
             assert b.position() == start + 11;
             break;
+
           case MESSAGE:
             parsedMessages++;
-            assert contextMessages != null;
             sender = getId(numbytes);
 
             if (external) {
               edat = b.getLong();
               method = (short) (edat >> 32);
               dataId = (int) edat;
-              contextMessages.add(new ExternalMessageRecord(sender, method, dataId));
+              ((ActorNode) currentEntity).addMessageRecord(
+                  new ExternalMessageRecord(sender, method, dataId));
               assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
             } else {
-              contextMessages.add(new MessageRecord(sender));
+              ((ActorNode) currentEntity).addMessageRecord(new MessageRecord(sender));
               assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
             }
             break;
@@ -242,31 +224,18 @@ public final class TraceParser {
               edat = b.getLong();
               method = (short) (edat >> 32);
               dataId = (int) edat;
-              contextMessages.add(
+              ((ActorNode) currentEntity).addMessageRecord(
                   new ExternalPromiseMessageRecord(sender, resolver, method, dataId));
               assert b.position() == start + RecordEventNodes.THREE_EVENT_SIZE;
             } else {
-              contextMessages.add(new PromiseMessageRecord(sender, resolver));
+              ((ActorNode) currentEntity).addMessageRecord(
+                  new PromiseMessageRecord(sender, resolver));
               assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
             }
 
             break;
           case SYSTEM_CALL:
             dataId = b.getInt();
-            break;
-          case CHANNEL_CREATION:
-            long newChannelId = getId(numbytes);
-            assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
-            break;
-          case PROCESS_CREATION:
-            long newProcId = getId(numbytes);
-            assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
-            break;
-          case PROCESS_CONTEXT:
-            ordering = Short.toUnsignedInt(b.getShort());
-            currentActivity = getId(Long.BYTES);
-            currentActor = null; // safety measure
-            assert b.position() == start + 11;
             break;
           case CHANNEL_READ:
             long channelRId = b.getLong();
@@ -302,8 +271,34 @@ public final class TraceParser {
     parseExternalData();
 
     long end = System.currentTimeMillis();
-    Output.println("Trace with " + parsedMessages + " Messages and " + parsedActors
+    Output.println("Trace with " + parsedMessages + " Messages and " + parsedEntities
         + " Actors sucessfully parsed in " + (end - startTime) + "ms !");
+  }
+
+  private EntityNode getOrCreateEntityEntry(final TraceRecord type, final long entityId) {
+    if (entities.containsKey(entityId)) {
+      return entities.get(entityId);
+    } else {
+      EntityNode newNode = null;
+      switch (type) {
+        case ACTOR_CONTEXT:
+        case ACTOR_CREATION:
+          newNode = new ActorNode(entityId);
+          break;
+        case CHANNEL_CREATION:
+          // TODO
+          break;
+        case PROCESS_CONTEXT:
+        case PROCESS_CREATION:
+          // TODO
+          break;
+        default:
+          throw new IllegalArgumentException("Should never happen" + type);
+      }
+
+      entities.put(entityId, newNode);
+      return newNode;
+    }
   }
 
   private ByteBuffer readExternalData(final long position) {
@@ -353,13 +348,13 @@ public final class TraceParser {
         int dataId = bb.getInt();
         int len = bb.getInt();
 
-        ActorNode an = actors.get(actor);
-        assert an != null;
-        if (an.externalData == null) {
-          an.externalData = new HashMap<>();
+        EntityNode en = entities.get(actor);
+        assert en != null;
+        if (en.externalData == null) {
+          en.externalData = new HashMap<>();
         }
 
-        an.externalData.put(dataId, position);
+        en.externalData.put(dataId, position);
 
         position = channel.position();
         channel.position(position + len);
@@ -389,41 +384,19 @@ public final class TraceParser {
     return 0;
   }
 
-  /**
-   * Node in actor creation hierarchy.
-   */
-  private static class ActorNode implements Comparable<ActorNode> {
-    final long                                 actorId;
-    int                                        childNo;
-    int                                        mailboxNo;
-    boolean                                    sorted           = false;
-    ArrayList<ActorNode>                       children;
-    HashMap<Integer, ArrayList<MessageRecord>> bucket1          = new HashMap<>();
-    HashMap<Integer, ArrayList<MessageRecord>> bucket2          = new HashMap<>();
-    Queue<MessageRecord>                       expectedMessages = new java.util.LinkedList<>();
-    HashMap<Integer, Long>                     externalData;
-    int                                        max              = 0;
-    int                                        max2             = 0;
+  private static abstract class EntityNode implements Comparable<EntityNode> {
+    final long             entityId;
+    int                    childNo;
+    HashMap<Integer, Long> externalData;
+    int                    ordering;
+    ArrayList<EntityNode>  children;
+    boolean                childrenSorted = false;
 
-    ActorNode(final long actorId) {
-      super();
-      this.actorId = actorId;
+    public EntityNode(final long entityId) {
+      this.entityId = entityId;
     }
 
-    @Override
-    public int compareTo(final ActorNode o) {
-      int i = Integer.compare(mailboxNo, o.mailboxNo);
-      if (i == 0) {
-        i = Integer.compare(childNo, o.childNo);
-      }
-      if (i == 0) {
-        i = Long.compare(actorId, o.actorId);
-      }
-
-      return i;
-    }
-
-    private void addChild(final ActorNode child) {
+    void addChild(final EntityNode child) {
       if (children == null) {
         children = new ArrayList<>();
       }
@@ -432,31 +405,78 @@ public final class TraceParser {
       children.add(child);
     }
 
-    protected ActorNode getChild(final int childNo) {
+    protected EntityNode getChild(final int childNo) {
       assert children != null : "Actor does not exist in trace!";
       assert children.size() > childNo : "Actor does not exist in trace!";
 
-      if (!sorted) {
+      if (!childrenSorted) {
         Collections.sort(children);
-        sorted = true;
+        childrenSorted = true;
       }
 
       return children.get(childNo);
     }
 
-    private void addMessageRecords(final ArrayList<MessageRecord> mr, final int order) {
-      assert mr != null;
+    @Override
+    public int compareTo(final EntityNode o) {
+      int i = Integer.compare(ordering, o.ordering);
+      if (i == 0) {
+        i = Integer.compare(childNo, o.childNo);
+      }
+      if (i == 0) {
+        i = Long.compare(entityId, o.entityId);
+      }
 
-      if (bucket1.containsKey(order)) {
+      return i;
+    }
+
+    public void onContextStart(final int ordering) {}
+
+    @Override
+    public String toString() {
+      return "" + entityId + ":" + childNo;
+    }
+  }
+
+  /**
+   * Node in actor creation hierarchy.
+   */
+  private static class ActorNode extends EntityNode {
+
+    HashMap<Integer, ArrayList<MessageRecord>> bucket1          = new HashMap<>();
+    HashMap<Integer, ArrayList<MessageRecord>> bucket2          = new HashMap<>();
+    Queue<MessageRecord>                       expectedMessages = new java.util.LinkedList<>();
+    int                                        max              = 0;
+    int                                        max2             = 0;
+    ArrayList<MessageRecord>                   mailbox          = null;
+
+    int currentOrdering;
+
+    ActorNode(final long actorId) {
+      super(actorId);
+    }
+
+    /*
+     * make two buckets, one for the current 65k contexs, and one for those that we
+     * encounter prematurely
+     * decision where stuff goes is made based on bitset or whether the ordering byte
+     * already is used in the first bucket
+     * when a bucket is full, we sort the contexts and put the messages inside a queue,
+     * context can then be reclaimed by GC
+     */
+    private void newMailbox() {
+      mailbox = new ArrayList<>();
+
+      if (bucket1.containsKey(currentOrdering)) {
         // use bucket two
-        assert !bucket2.containsKey(order);
-        bucket2.put(order, mr);
-        max2 = Math.max(max2, order);
+        assert !bucket2.containsKey(currentOrdering);
+        bucket2.put(currentOrdering, mailbox);
+        max2 = Math.max(max2, currentOrdering);
         assert max2 < 0x8FFF;
       } else {
-        assert !bucket2.containsKey(order);
-        bucket1.put(order, mr);
-        max = Math.max(max, order);
+        assert !bucket2.containsKey(currentOrdering);
+        bucket1.put(currentOrdering, mailbox);
+        max = Math.max(max, currentOrdering);
         if (max == 0xFFFF) {
           // Bucket 1 is full, switch
           assert max2 < 0x8FFF;
@@ -474,7 +494,19 @@ public final class TraceParser {
           max2 = 0;
         }
       }
+    }
 
+    private void addMessageRecord(final MessageRecord mr) {
+      if (mailbox == null) {
+        newMailbox();
+      }
+      mailbox.add(mr);
+    }
+
+    @Override
+    public void onContextStart(final int ordering) {
+      currentOrdering = ordering;
+      mailbox = null;
     }
 
     public Queue<MessageRecord> getExpectedMessages() {
@@ -497,11 +529,6 @@ public final class TraceParser {
         }
       }
       return expectedMessages;
-    }
-
-    @Override
-    public String toString() {
-      return "" + actorId + ":" + childNo;
     }
   }
 

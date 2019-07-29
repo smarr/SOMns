@@ -1,8 +1,8 @@
 package tools.replay.nodes;
 
-import tools.concurrency.RecordEventNodes.RecordOneEvent;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
 
 public final class TraceActorCreationNode extends TraceNode {

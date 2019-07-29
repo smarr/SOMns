@@ -9,10 +9,10 @@ import som.primitives.processes.ChannelPrimitives;
 import som.vm.VmSettings;
 import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
-import tools.concurrency.RecordEventNodes.RecordTwoEvent;
 import tools.concurrency.TracingChannel;
 import tools.concurrency.TracingChannel.TracingChannelInput;
 import tools.concurrency.TracingChannel.TracingChannelOutput;
+import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
 
 
 public class SChannel extends SAbstractObject {

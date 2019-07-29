@@ -3,9 +3,9 @@ package tools.concurrency;
 import java.util.concurrent.SynchronousQueue;
 
 import som.interpreter.processes.SChannel;
-import tools.concurrency.RecordEventNodes.RecordTwoEvent;
 import tools.debugger.entities.ReceiveOp;
 import tools.debugger.entities.SendOp;
+import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
 
 
 public final class TracingChannel extends SChannel {

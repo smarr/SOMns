@@ -35,8 +35,6 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.KomposTrace;
-import tools.concurrency.RecordEventNodes.RecordOneEvent;
-import tools.concurrency.RecordEventNodes.RecordTwoEvent;
 import tools.concurrency.Tags.ChannelRead;
 import tools.concurrency.Tags.ChannelWrite;
 import tools.concurrency.Tags.ExpressionBreakpoint;
@@ -50,6 +48,8 @@ import tools.debugger.session.Breakpoints;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
+import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
 
 
 public abstract class ChannelPrimitives {

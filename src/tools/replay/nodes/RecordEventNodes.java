@@ -1,9 +1,7 @@
-package tools.concurrency;
+package tools.replay.nodes;
 
 import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
-import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
-import tools.replay.nodes.TraceNode;
 
 
 public final class RecordEventNodes {
