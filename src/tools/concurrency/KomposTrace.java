@@ -2,8 +2,6 @@ package tools.concurrency;
 
 import bd.source.SourceCoordinate;
 import som.interpreter.actors.Actor;
-import som.interpreter.actors.Actor.ActorProcessingThread;
-import som.interpreter.actors.EventualMessage;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.Activity;
 import som.vm.ObjectSystem;
@@ -170,20 +168,9 @@ public class KomposTrace {
               Implementation.IMPL_CURRENT_ACTIVITY.getSize())) {
         return false;
       }
-
       super.swapStorage();
       this.lastActivity = null;
       recordCurrentActivity(current);
-
-      if (Thread.currentThread() instanceof ActorProcessingThread) {
-        EventualMessage msg = EventualMessage.getCurrentExecutingMessage();
-        ActorProcessingThread apt =
-            (ActorProcessingThread) ActorProcessingThread.currentThread();
-
-        if (apt.getCurrentActor() != null && msg != null) {
-          scopeStart(DynamicScopeType.TURN, msg.getMessageId(), msg.getTargetSourceSection());
-        }
-      }
 
       return true;
     }
