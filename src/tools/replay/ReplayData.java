@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Queue;
 
-import tools.replay.TraceParser.MessageRecord;
+import tools.replay.ReplayRecord.MessageRecord;
 
 
 public class ReplayData {

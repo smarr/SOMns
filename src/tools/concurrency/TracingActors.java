@@ -9,8 +9,6 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.BiConsumer;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-
 import som.Output;
 import som.VM;
 import som.interpreter.actors.Actor;
@@ -18,12 +16,14 @@ import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
 import som.vm.VmSettings;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import tools.debugger.WebDebugger;
+import tools.replay.ReplayRecord;
+import tools.replay.ReplayRecord.ExternalMessageRecord;
+import tools.replay.ReplayRecord.ExternalPromiseMessageRecord;
+import tools.replay.ReplayRecord.MessageRecord;
+import tools.replay.ReplayRecord.PromiseMessageRecord;
 import tools.replay.TraceParser;
-import tools.replay.TraceParser.ExternalMessageRecord;
-import tools.replay.TraceParser.ExternalPromiseMessageRecord;
-import tools.replay.TraceParser.MessageRecord;
-import tools.replay.TraceParser.PromiseMessageRecord;
 import tools.replay.actors.ExternalMessage;
 import tools.snapshot.SnapshotRecord;
 import tools.snapshot.deserialization.DeserializationBuffer;
@@ -307,13 +307,13 @@ public class TracingActors {
 
       MessageRecord other = expectedMessages.peek();
 
-      if ((msg instanceof PromiseMessage) != (other instanceof TraceParser.PromiseMessageRecord)) {
+      if ((msg instanceof PromiseMessage) != (other instanceof ReplayRecord.PromiseMessageRecord)) {
         return false;
       }
 
       // handle promise messages
       if (msg instanceof PromiseMessage
-          && (((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor() != ((TraceParser.PromiseMessageRecord) other).pId)) {
+          && (((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor() != ((ReplayRecord.PromiseMessageRecord) other).pId)) {
         return false;
       }
 
