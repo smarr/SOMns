@@ -1,8 +1,5 @@
 package tools.concurrency;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.source.SourceSection;
-
 import bd.source.SourceCoordinate;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.Actor.ActorProcessingThread;
@@ -14,6 +11,8 @@ import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import src.com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import src.com.oracle.truffle.api.source.SourceSection;
 import tools.debugger.PrimitiveCallOrigin;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.DynamicScopeType;
@@ -283,7 +282,7 @@ public class KomposTrace {
       putLong(activityId);
       putShort(symbolId);
 
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED || VmSettings.KOMPOS_TRACING) {
+      if (VmSettings.KOMPOS_TRACING) {
         writeSourceSection(sourceSection);
       }
       assert position == start + requiredSpace;
@@ -307,7 +306,7 @@ public class KomposTrace {
       put(eventMarker);
       putLong(id);
 
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED || VmSettings.KOMPOS_TRACING) {
+      if (VmSettings.KOMPOS_TRACING) {
         writeSourceSection(section);
       }
       assert position == start + eventSize;
