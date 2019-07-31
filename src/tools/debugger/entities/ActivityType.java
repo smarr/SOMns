@@ -1,6 +1,5 @@
 package tools.debugger.entities;
 
-import som.vm.VmSettings;
 import tools.TraceData;
 
 
@@ -54,7 +53,7 @@ public enum ActivityType {
   }
 
   public int getCreationSize() {
-    return VmSettings.TRUFFLE_DEBUGGER_ENABLED ? (11 + TraceData.SOURCE_SECTION_SIZE) : 11;
+    return 11 + TraceData.SOURCE_SECTION_SIZE;
   }
 
   public int getCompletionSize() {

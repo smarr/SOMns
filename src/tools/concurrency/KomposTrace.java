@@ -177,7 +177,7 @@ public class KomposTrace {
 
     @TruffleBoundary
     protected boolean ensureSufficientSpace(final int requiredSpace, final Activity current) {
-      if (position + requiredSpace < VmSettings.BUFFER_SIZE) {
+      if ((position + requiredSpace) >= VmSettings.BUFFER_SIZE) {
         boolean didSwap = swapStorage(current);
         return didSwap;
       }
@@ -269,7 +269,7 @@ public class KomposTrace {
       putLong(activityId);
       putShort(symbolId);
 
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      if (VmSettings.KOMPOS_TRACING) {
         writeSourceSection(sourceSection);
       }
       assert position == start + requiredSpace;
@@ -293,7 +293,7 @@ public class KomposTrace {
       put(eventMarker);
       putLong(id);
 
-      if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      if (VmSettings.KOMPOS_TRACING) {
         writeSourceSection(section);
       }
       assert position == start + eventSize;

@@ -241,7 +241,7 @@ public class TracingBackend {
 
   public static final void forceSwapBuffers() {
     assert VmSettings.ACTOR_TRACING
-        || (VmSettings.TRUFFLE_DEBUGGER_ENABLED && VmSettings.KOMPOS_TRACING);
+        || (VmSettings.TRUFFLE_DEBUGGER_ENABLED);
     TracingActivityThread[] result;
     synchronized (tracingThreads) {
       result = tracingThreads.toArray(new TracingActivityThread[0]);
@@ -583,9 +583,19 @@ public class TracingBackend {
       String name =
           VmSettings.TRACE_FILE + (VmSettings.SNAPSHOTS_ENABLED ? "." + snapshotVersion : "");
 
-      File f = new File(name + ".trace");
-      File sf = new File(name + ".sym");
-      File edf = new File(name + ".dat");
+      File f;
+      File sf;
+      File edf;
+      if (VmSettings.KOMPOS_TRACING) {
+        f = new File(name + ".ktrace");
+        sf = new File(name + ".ksym");
+        edf = new File(name + ".kdat");
+      } else {
+        f = new File(name + ".trace");
+        sf = new File(name + ".sym");
+        edf = new File(name + ".dat");
+      }
+
       f.getParentFile().mkdirs();
 
       try {

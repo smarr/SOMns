@@ -8,7 +8,8 @@ import som.vm.VmSettings;
  */
 public class TraceData {
 
-  public static final int SOURCE_SECTION_SIZE = VmSettings.TRUFFLE_DEBUGGER_ENABLED ? 8 : 0;
+  public static final int SOURCE_SECTION_SIZE =
+      VmSettings.KOMPOS_TRACING ? 8 : 0;
 
   public static final long ENTITY_ID_BITS = 30;
   public static final long THREAD_ID_BITS = 10;

@@ -406,7 +406,7 @@ public class TracingActors {
 
         for (EventualMessage msg : todo) {
           currentThread.currentMessage = msg;
-          handleBreakpointsAndStepping(firstMessage, dbg, a);
+          handleBreakpointsAndStepping(msg, dbg, a);
           msg.execute();
         }
 

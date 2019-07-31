@@ -259,7 +259,7 @@ public class FrontendConnector {
   }
 
   public void awaitClient() {
-    assert VmSettings.KOMPOS_TRACING && VmSettings.TRUFFLE_DEBUGGER_ENABLED;
+    assert VmSettings.TRUFFLE_DEBUGGER_ENABLED;
     assert clientConnected != null;
     assert messageSocket == null && traceSocket == null;
     assert traceHandler.getConnection() != null;
