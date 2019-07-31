@@ -85,19 +85,24 @@ public final class TraceParser {
   public static synchronized Queue<MessageRecord> getExpectedMessages(final long replayId) {
     if (parser == null) {
       parser = new TraceParser();
-      parser.parseTrace();
+      parser.parseTrace(true, 0, null);
+      parser.parseExternalData();
     }
 
-    assert parser.entities.containsKey(replayId) : "Missing expected Messages for Actor: "
-        + replayId;
-    assert parser.entities.get(replayId) instanceof ActorNode;
-    return ((ActorNode) parser.entities.get(replayId)).getExpectedMessages();
+    ActorNode actor = (ActorNode) parser.entities.get(replayId);
+    assert actor != null : "Missing expected Messages for Actor: ";
+    if (!actor.contextsParsed) {
+      actor.parseContexts();
+    }
+
+    return actor.getExpectedMessages();
   }
 
   public static synchronized long getReplayId(final long parentId, final int childNo) {
     if (parser == null) {
       parser = new TraceParser();
-      parser.parseTrace();
+      parser.parseTrace(true, 0, null);
+      parser.parseExternalData();
     }
 
     assert parser.entities.containsKey(parentId) : "Parent doesn't exist";
@@ -127,24 +132,31 @@ public final class TraceParser {
     return result;
   }
 
-  private void parseTrace() {
+  private void parseTrace(final boolean scanning, final long startOffset,
+      final EntityNode context) {
 
     File traceFile = new File(traceName + ".trace");
 
     long startTime = System.currentTimeMillis();
 
-    Output.println("Parsing Trace ...");
+    if (scanning) {
+      Output.println("Scanning Trace ...");
+    }
 
     try (FileInputStream fis = new FileInputStream(traceFile);
         FileChannel channel = fis.getChannel()) {
 
       // event context
-      EntityNode currentEntity = null;
-      long currentEntityId = 0;
-      int ordering = 0;
+      EntityNode currentEntity = context;
+      int ordering = 0; // only used during scanning!
 
+      b.clear();
+      channel.position(startOffset);
       channel.read(b);
       b.flip(); // prepare for reading from buffer
+
+      boolean once = true;
+      boolean first = true;
 
       while (channel.position() < channel.size() || b.remaining() > 0) {
 
@@ -169,34 +181,55 @@ public final class TraceParser {
         final byte type = b.get();
         final int numbytes = Long.BYTES;
         boolean external = (type & ActorExecutionTrace.EXTERNAL_BIT) != 0;
+
         TraceRecord recordType = parseTable[type & (ActorExecutionTrace.EXTERNAL_BIT - 1)];
 
+        if (!scanning & first) {
+          assert recordType == TraceRecord.ACTOR_CONTEXT;
+        }
+        first = false;
         switch (recordType) {
           case ACTOR_CREATION:
           case CHANNEL_CREATION:
           case PROCESS_CREATION:
             long newEntityId = getId(numbytes);
 
-            if (newEntityId == 0) {
-              assert !readMainActor : "There should be only one main actor.";
-              readMainActor = true;
-            }
+            if (scanning) {
+              if (newEntityId == 0) {
+                assert !readMainActor : "There should be only one main actor.";
+                readMainActor = true;
+              }
 
-            EntityNode newEntity = getOrCreateEntityEntry(recordType, newEntityId);
-            newEntity.ordering = ordering;
-            currentEntity.addChild(newEntity);
-            parsedEntities++;
+              EntityNode newEntity = getOrCreateEntityEntry(recordType, newEntityId);
+              newEntity.ordering = ordering;
+              currentEntity.addChild(newEntity);
+              parsedEntities++;
+            }
             assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
             break;
 
           case ACTOR_CONTEXT:
           case PROCESS_CONTEXT:
-            ordering = Short.toUnsignedInt(b.getShort());
-            currentEntityId = getId(Long.BYTES);
-            currentEntity = getOrCreateEntityEntry(recordType, currentEntityId);
-            assert currentEntity != null;
-            currentEntity.onContextStart(ordering);
-            assert b.position() == start + 11;
+            if (scanning) {
+              ordering = Short.toUnsignedInt(b.getShort());
+              long currentEntityId = getId(Long.BYTES);
+              currentEntity = getOrCreateEntityEntry(recordType, currentEntityId);
+              assert currentEntity != null;
+              currentEntity.registerContext(ordering,
+                  (channel.position() - b.remaining() - 11));
+              assert b.position() == start + 11;
+            } else {
+              if (once) {
+                ordering = Short.toUnsignedInt(b.getShort());
+                getId(Long.BYTES);
+                once = false;
+              } else {
+                // When we are not scanning for contexts, this means that the context we wanted
+                // to process is over.
+                return;
+              }
+            }
+
             break;
 
           case MESSAGE:
@@ -205,15 +238,20 @@ public final class TraceParser {
 
             if (external) {
               edat = b.getLong();
-              method = (short) (edat >> 32);
-              dataId = (int) edat;
-              ((ActorNode) currentEntity).addMessageRecord(
-                  new ExternalMessageRecord(sender, method, dataId));
+              if (!scanning) {
+                method = (short) (edat >> 32);
+                dataId = (int) edat;
+                ((ActorNode) currentEntity).addMessageRecord(
+                    new ExternalMessageRecord(sender, method, dataId));
+              }
               assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
-            } else {
-              ((ActorNode) currentEntity).addMessageRecord(new MessageRecord(sender));
-              assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
+              continue;
             }
+
+            if (!scanning) {
+              ((ActorNode) currentEntity).addMessageRecord(new MessageRecord(sender));
+            }
+            assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
             break;
           case PROMISE_MESSAGE:
             parsedMessages++;
@@ -224,14 +262,18 @@ public final class TraceParser {
               edat = b.getLong();
               method = (short) (edat >> 32);
               dataId = (int) edat;
-              ((ActorNode) currentEntity).addMessageRecord(
-                  new ExternalPromiseMessageRecord(sender, resolver, method, dataId));
+              if (!scanning) {
+                ((ActorNode) currentEntity).addMessageRecord(
+                    new ExternalPromiseMessageRecord(sender, resolver, method, dataId));
+              }
               assert b.position() == start + RecordEventNodes.THREE_EVENT_SIZE;
-            } else {
+              continue;
+            }
+            if (!scanning) {
               ((ActorNode) currentEntity).addMessageRecord(
                   new PromiseMessageRecord(sender, resolver));
-              assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
             }
+            assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
 
             break;
           case SYSTEM_CALL:
@@ -268,11 +310,11 @@ public final class TraceParser {
       e.printStackTrace();
     }
 
-    parseExternalData();
-
-    long end = System.currentTimeMillis();
-    Output.println("Trace with " + parsedMessages + " Messages and " + parsedEntities
-        + " Actors sucessfully parsed in " + (end - startTime) + "ms !");
+    if (scanning) {
+      long end = System.currentTimeMillis();
+      Output.println("Trace with " + parsedMessages + " Messages and " + parsedEntities
+          + " Actors sucessfully scanned in " + (end - startTime) + "ms !");
+    }
   }
 
   private EntityNode getOrCreateEntityEntry(final TraceRecord type, final long entityId) {
@@ -365,6 +407,10 @@ public final class TraceParser {
     } catch (IOException e) {
       throw new RuntimeException(e);
     }
+  }
+
+  protected static void processContext(final long location, final EntityNode context) {
+    parser.parseTrace(false, location, context);
   }
 
   private long getId(final int numbytes) {
