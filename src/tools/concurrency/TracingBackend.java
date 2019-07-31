@@ -26,6 +26,8 @@ import javax.management.NotificationEmitter;
 import javax.management.NotificationListener;
 import javax.management.openmbean.CompositeData;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.sun.management.GarbageCollectionNotificationInfo;
 
 import som.Output;
@@ -36,8 +38,6 @@ import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SSymbol;
-import src.com.oracle.truffle.api.CompilerDirectives;
-import src.com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import tools.debugger.FrontendConnector;
 import tools.replay.StringWrapper;
 import tools.replay.TwoDArrayWrapper;

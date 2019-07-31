@@ -1,5 +1,8 @@
 package tools.concurrency;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.source.SourceSection;
+
 import bd.source.SourceCoordinate;
 import som.interpreter.actors.Actor;
 import som.interpreter.nodes.dispatch.Dispatchable;
@@ -9,8 +12,6 @@ import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import src.com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import src.com.oracle.truffle.api.source.SourceSection;
 import tools.debugger.PrimitiveCallOrigin;
 import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.DynamicScopeType;
@@ -171,7 +172,6 @@ public class KomposTrace {
       super.swapStorage();
       this.lastActivity = null;
       recordCurrentActivity(current);
-
       return true;
     }
 
