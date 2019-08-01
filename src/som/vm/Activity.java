@@ -22,6 +22,13 @@ public interface Activity {
     return 0;
   }
 
+  /**
+   * used in replay to keep track of children
+   */
+  default int addChild() {
+    return 0;
+  }
+
   ActivityType getType();
 
   /**

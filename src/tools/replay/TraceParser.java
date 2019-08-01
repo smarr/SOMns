@@ -12,10 +12,14 @@ import java.util.Queue;
 
 import som.Output;
 import som.interpreter.actors.EventualMessage;
+import som.vm.Activity;
 import som.vm.VmSettings;
+import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.replay.ReplayData.ActorNode;
 import tools.replay.ReplayData.EntityNode;
+import tools.replay.ReplayRecord.ChannelReadRecord;
+import tools.replay.ReplayRecord.ChannelWriteRecord;
 import tools.replay.ReplayRecord.ExternalMessageRecord;
 import tools.replay.ReplayRecord.ExternalPromiseMessageRecord;
 import tools.replay.ReplayRecord.MessageRecord;
@@ -102,15 +106,44 @@ public final class TraceParser {
     return actor.getExpectedMessages();
   }
 
-  public static synchronized long getReplayId(final long parentId, final int childNo) {
+  public static synchronized Queue<ReplayRecord> getReplayEventsForEntity(
+      final long replayId) {
     if (parser == null) {
       parser = new TraceParser();
       parser.parseTrace(true, 0, null);
       parser.parseExternalData();
     }
 
-    assert parser.entities.containsKey(parentId) : "Parent doesn't exist";
-    return parser.entities.get(parentId).getChild(childNo).entityId;
+    EntityNode entity = parser.entities.get(replayId);
+    assert entity != null : "Missing Entity: " + replayId;
+    if (!entity.contextsParsed) {
+      entity.parseContexts();
+    }
+
+    return entity.getReplayEvents();
+  }
+
+  /**
+   * Determines the id a newly created entity should have according to the creating entity.
+   */
+  public static long getReplayId() {
+    if (VmSettings.REPLAY && Thread.currentThread() instanceof TracingActivityThread) {
+      TracingActivityThread t = (TracingActivityThread) Thread.currentThread();
+
+      Activity parent = t.getActivity();
+      long parentId = parent.getId();
+      int childNo = parent.addChild();
+      if (parser == null) {
+        parser = new TraceParser();
+        parser.parseTrace(true, 0, null);
+        parser.parseExternalData();
+      }
+
+      assert parser.entities.containsKey(parentId) : "Parent doesn't exist";
+      return parser.entities.get(parentId).getChild(childNo).entityId;
+    }
+
+    return 0;
   }
 
   private TraceParser() {

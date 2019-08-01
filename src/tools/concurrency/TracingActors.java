@@ -9,6 +9,8 @@ import java.util.WeakHashMap;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.BiConsumer;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+
 import som.Output;
 import som.VM;
 import som.interpreter.actors.Actor;
@@ -16,7 +18,6 @@ import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
 import som.vm.VmSettings;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import tools.debugger.WebDebugger;
 import tools.replay.ReplayRecord;
 import tools.replay.ReplayRecord.ExternalMessageRecord;
@@ -145,25 +146,13 @@ public class TracingActors {
       dataSource = ds;
     }
 
-    private static long lookupId() {
-      if (VmSettings.REPLAY && Thread.currentThread() instanceof ActorProcessingThread) {
-        ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
-        ReplayActor parent = (ReplayActor) t.currentMessage.getTarget();
-        long parentId = parent.getId();
-        int childNo = parent.addChild();
-        return TraceParser.getReplayId(parentId, childNo);
-      }
-
-      return 0;
-    }
-
     public static ReplayActor getActorWithId(final long id) {
       return actorList.get(id);
     }
 
     @TruffleBoundary
     public ReplayActor(final VM vm) {
-      super(vm, lookupId());
+      super(vm);
 
       if (VmSettings.REPLAY) {
         expectedMessages = TraceParser.getExpectedMessages(activityId);
@@ -320,7 +309,8 @@ public class TracingActors {
       return ((ReplayActor) msg.getSender()).getId() == other.sender;
     }
 
-    protected int addChild() {
+    @Override
+    public int addChild() {
       return children++;
     }
 
