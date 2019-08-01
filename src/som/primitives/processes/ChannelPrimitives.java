@@ -1,5 +1,6 @@
 package som.primitives.processes;
 
+import java.util.Queue;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
@@ -45,11 +46,13 @@ import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.PassiveEntityType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
+import tools.replay.ReplayRecord;
+import tools.replay.TraceParser;
 import tools.replay.actors.ActorExecutionTrace;
-import tools.replay.nodes.TraceContextNode;
-import tools.replay.nodes.TraceContextNodeGen;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
+import tools.replay.nodes.TraceContextNode;
+import tools.replay.nodes.TraceContextNodeGen;
 
 
 public abstract class ChannelPrimitives {
@@ -178,7 +181,7 @@ public abstract class ChannelPrimitives {
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.currentActivity(this);
       } else if (VmSettings.ACTOR_TRACING) {
-        trace.execute(this);
+        ActorExecutionTrace.recordActivityContext(this, trace);
       }
     }
 
@@ -200,6 +203,26 @@ public abstract class ChannelPrimitives {
     @Override
     public void setStepToJoin(final boolean val) {
       stopOnJoin = val;
+    }
+  }
+
+  public static class ReplayProcess extends TracingProcess {
+    private final Queue<ReplayRecord> replayEvents;
+    private int                       children = 0;
+
+    public ReplayProcess(final SObjectWithClass obj, final boolean stopOnRootNode) {
+      super(obj, stopOnRootNode);
+      replayEvents = TraceParser.getReplayEventsForEntity(processId);
+    }
+
+    @Override
+    public int addChild() {
+      return children++;
+    }
+
+    @Override
+    public ReplayRecord getNextReplayEvent() {
+      return replayEvents.poll();
     }
   }
 

@@ -222,7 +222,8 @@ public final class TraceParser {
         TraceRecord recordType = parseTable[type & (ActorExecutionTrace.EXTERNAL_BIT - 1)];
 
         if (!scanning & first) {
-          assert recordType == TraceRecord.ACTOR_CONTEXT;
+          assert recordType == TraceRecord.ACTOR_CONTEXT
+              || recordType == TraceRecord.PROCESS_CONTEXT;
         }
         first = false;
         switch (recordType) {
@@ -319,17 +320,13 @@ public final class TraceParser {
           case CHANNEL_READ:
             long channelRId = b.getLong();
             long nread = b.getLong();
-            // give the specified channel a priorityqueue
-            // add the current activity Id with priority nreads
-            // The priority queue then contains the order in which activities read
+            currentEntity.addReplayEvent(new ChannelReadRecord(channelRId, nread));
             assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
             break;
           case CHANNEL_WRITE:
             long channelWId = b.getLong();
             long nwrite = b.getLong();
-            // give the specified channel a priorityqueue
-            // add the current activity Id with priority nwrites
-            // The priority queue then contains the order in which activities write
+            currentEntity.addReplayEvent(new ChannelWriteRecord(channelWId, nwrite));
             assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
             break;
           default:
@@ -364,15 +361,8 @@ public final class TraceParser {
         case ACTOR_CREATION:
           newNode = new ActorNode(entityId);
           break;
-        case CHANNEL_CREATION:
-          // TODO
-          break;
-        case PROCESS_CONTEXT:
-        case PROCESS_CREATION:
-          // TODO
-          break;
         default:
-          throw new IllegalArgumentException("Should never happen" + type);
+          newNode = new EntityNode(entityId);
       }
 
       entities.put(entityId, newNode);

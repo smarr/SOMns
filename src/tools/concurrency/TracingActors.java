@@ -57,6 +57,7 @@ public class TracingActors {
     }
 
     public final int getActorId() {
+      // TODO: remove after rebasing snapshot PR
       throw new UnsupportedOperationException("Please remove this call and use getId instead");
     }
 
@@ -124,6 +125,7 @@ public class TracingActors {
   public static final class ReplayActor extends TracingActor {
     protected int                              children;
     protected final Queue<MessageRecord>       expectedMessages;
+    private final Queue<ReplayRecord>          replayEvents;
     protected final ArrayList<EventualMessage> leftovers = new ArrayList<>();
     private static Map<Long, ReplayActor>      actorList;
     private BiConsumer<Short, Integer>         dataSource;
@@ -146,6 +148,11 @@ public class TracingActors {
       dataSource = ds;
     }
 
+    @Override
+    public ReplayRecord getNextReplayEvent() {
+      return replayEvents.poll();
+    }
+
     public static ReplayActor getActorWithId(final long id) {
       return actorList.get(id);
     }
@@ -156,12 +163,14 @@ public class TracingActors {
 
       if (VmSettings.REPLAY) {
         expectedMessages = TraceParser.getExpectedMessages(activityId);
+        replayEvents = TraceParser.getReplayEventsForEntity(activityId);
 
         synchronized (actorList) {
           actorList.put(activityId, this);
         }
       } else {
         expectedMessages = null;
+        replayEvents = null;
       }
     }
 

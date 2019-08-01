@@ -3,12 +3,44 @@ package tools.replay;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Queue;
 
+import som.vm.Activity;
+import tools.concurrency.TracingActivityThread;
 import tools.replay.ReplayRecord.MessageRecord;
+import tools.replay.ReplayRecord.NumberedPassiveRecord;
 
 
 public class ReplayData {
+
+  /***
+   * This Method delays interaction of an activity with a passive entity until the passive
+   * entity is in the right state, i.e., all predecessor events have been processed.
+   *
+   * @param pe The passive entity the current activity will interact with.
+   * @param l
+   * @param expectedNo The sequence number of the event to be performed.
+   */
+  public static void replayDelayNumberedEvent(final PassiveEntityWithEvents pe,
+      final long passiveEntityId) {
+
+    Activity reader = TracingActivityThread.currentThread().getActivity();
+    NumberedPassiveRecord npr = (NumberedPassiveRecord) reader.getNextReplayEvent();
+    assert npr != null : reader;
+    assert passiveEntityId == npr.passiveEntityId;
+
+    try {
+      while (pe.getNextEventNumber() != npr.eventNo) {
+        Thread.sleep(5);
+        // temporary solution for proof of concept.
+        // maybe use some wait/notify all construct.
+      }
+    } catch (InterruptedException e) {
+      throw new RuntimeException(e);
+    }
+  }
+
   protected static class EntityNode implements Comparable<EntityNode> {
     final long             entityId;
     int                    childNo;
@@ -18,6 +50,7 @@ public class ReplayData {
     boolean                childrenSorted = false;
     HashMap<Integer, Long> contextLocations;
     boolean                contextsParsed = false;
+    Queue<ReplayRecord>    replayEvents;
 
     public EntityNode(final long entityId) {
       this.entityId = entityId;
@@ -65,6 +98,20 @@ public class ReplayData {
         }
       }
       contextsParsed = true;
+    }
+
+    protected void addReplayEvent(final ReplayRecord mr) {
+      if (replayEvents == null) {
+        replayEvents = new LinkedList<>();
+      }
+      replayEvents.add(mr);
+    }
+
+    public Queue<ReplayRecord> getReplayEvents() {
+      if (replayEvents == null) {
+        replayEvents = new LinkedList<>();
+      }
+      return replayEvents;
     }
 
     @Override

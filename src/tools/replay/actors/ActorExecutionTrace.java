@@ -3,6 +3,7 @@ package tools.replay.actors;
 import java.util.Arrays;
 
 import som.interpreter.actors.Actor.ActorProcessingThread;
+import som.vm.Activity;
 import tools.concurrency.TraceBuffer;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.TracingActor;
@@ -28,7 +29,7 @@ public class ActorExecutionTrace {
   public static final byte EXTERNAL_BIT = 16;
 
   // shifts
-  public static final int SmallIdShift = 6;// bytes
+  public static final int SmallIdShift = 6;
 
   private static TracingActivityThread getThread() {
     Thread current = Thread.currentThread();
@@ -36,10 +37,10 @@ public class ActorExecutionTrace {
     return (TracingActivityThread) current;
   }
 
-  public static void recordActorContext(final TracingActor actor,
+  public static void recordActivityContext(final Activity activity,
       final TraceContextNode tracer) {
     TracingActivityThread t = getThread();
-    ((ActorTraceBuffer) t.getBuffer()).recordActorContext(actor, tracer);
+    ((ActorTraceBuffer) t.getBuffer()).recordActivityContext(activity, tracer);
   }
 
   public static void recordSystemCall(final int dataId, final TraceContextNode tracer) {
@@ -85,7 +86,7 @@ public class ActorExecutionTrace {
     t.addExternalData(b);
   }
 
-  private static final int EXT_DATA_HEADER_SIZE = 16;
+  private static final int EXT_DATA_HEADER_SIZE = 2 * Integer.BYTES + Long.BYTES;
 
   public static void stringSystemCall(final String s, final TraceContextNode tracer) {
     ActorProcessingThread t = (ActorProcessingThread) getThread();
@@ -119,22 +120,22 @@ public class ActorExecutionTrace {
   }
 
   public static class ActorTraceBuffer extends TraceBuffer {
-    TracingActor currentActor;
+    Activity currentActivity;
 
     @Override
     protected void swapBufferWhenNotEnoughSpace(final TraceContextNode tracer) {
       swapStorage();
       if (tracer != null) {
-        tracer.execute(currentActor);
+        tracer.execute(currentActivity);
       }
     }
 
-    public void recordActorContext(final TracingActor actor,
+    public void recordActivityContext(final Activity activity,
         final TraceContextNode tracer) {
       ensureSufficientSpace(11, null); // null, because we don't need to write actor context,
                                        // and going to do it ourselves
-      currentActor = actor;
-      tracer.execute(actor);
+      currentActivity = activity;
+      tracer.execute(activity);
     }
 
     public void recordSystemCall(final int dataId, final TraceContextNode tracer) {

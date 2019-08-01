@@ -24,6 +24,7 @@ import som.primitives.arrays.ToArgumentsArrayFactory;
 import som.primitives.arrays.ToArgumentsArrayNode;
 import som.primitives.processes.ChannelPrimitives;
 import som.primitives.processes.ChannelPrimitives.Process;
+import som.primitives.processes.ChannelPrimitives.ReplayProcess;
 import som.primitives.processes.ChannelPrimitives.TracingProcess;
 import som.primitives.threading.TaskThreads.SomForkJoinTask;
 import som.primitives.threading.TaskThreads.SomThreadTask;
@@ -82,7 +83,9 @@ public abstract class ActivitySpawn {
   private static Process createProcess(final SObjectWithClass obj,
       final SourceSection origin, final boolean stopOnRoot,
       final RecordOneEvent traceProcCreation) {
-    if (VmSettings.KOMPOS_TRACING || VmSettings.ACTOR_TRACING) {
+    if (VmSettings.REPLAY) {
+      return new ReplayProcess(obj, stopOnRoot);
+    } else if (VmSettings.KOMPOS_TRACING || VmSettings.ACTOR_TRACING) {
       TracingProcess result = new TracingProcess(obj, stopOnRoot);
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.activityCreation(ActivityType.PROCESS,

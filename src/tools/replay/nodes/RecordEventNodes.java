@@ -1,7 +1,6 @@
 package tools.replay.nodes;
 
 import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
-import tools.replay.nodes.TraceContextNodeGen;
 
 
 public final class RecordEventNodes {
@@ -24,7 +23,6 @@ public final class RecordEventNodes {
       return buffer;
     }
 
-    // TODO make the context recording more general
     public void record(final long id) {
       ActorTraceBuffer storage = getStorage(ONE_EVENT_SIZE);
       int pos = storage.position();
@@ -52,7 +50,6 @@ public final class RecordEventNodes {
       return buffer;
     }
 
-    // TODO make the context recording more general
     public void record(final long id1, final long id2) {
       ActorTraceBuffer storage = getStorage(TWO_EVENT_SIZE);
       int pos = storage.position();
@@ -82,7 +79,6 @@ public final class RecordEventNodes {
       return buffer;
     }
 
-    // TODO make the context recording more general
     public void record(final long id1, final long id2, final long id3) {
       ActorTraceBuffer storage = getStorage(TWO_EVENT_SIZE);
       int pos = storage.position();

@@ -1,6 +1,7 @@
 package som.vm;
 
 import tools.debugger.entities.ActivityType;
+import tools.replay.ReplayRecord;
 
 
 public interface Activity {
@@ -23,13 +24,17 @@ public interface Activity {
   }
 
   /**
-   * used in replay to keep track of children
+   * Used in replay to keep track of created children.
    */
   default int addChild() {
     return 0;
   }
 
   ActivityType getType();
+
+  default ReplayRecord getNextReplayEvent() {
+    return null;
+  }
 
   /**
    * The id for the next trace buffer used with this activity.
