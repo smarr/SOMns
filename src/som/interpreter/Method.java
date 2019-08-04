@@ -54,7 +54,6 @@ public final class Method extends Invokable {
     this.block = block;
     this.methodScope = methodScope;
     assert methodScope.isFinalized();
-    expressions.markAsRootExpression();
   }
 
   @Override
