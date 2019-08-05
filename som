@@ -67,6 +67,10 @@ profile.add_argument('-tp', '--truffle-profile', help='enable Graal-level profil
 tools = parser.add_argument_group('Tools', 'Additional Tools')
 tools.add_argument('-wd', '--web-debugger', help='start Web debugger',
                     dest='web_debugger', action='store_true', default=False)
+tools.add_argument('-ad', '--assisted-debugging', help='enable assisted debugging',
+                    dest='assisted_debugging', action='store_true', default=False)
+tools.add_argument('-adbp', '--assisted-debugging-breakpoints', help='set assisted debugging breakpoints limit',
+                    dest='assisted_debugging_breakpoints', default=0)
 tools.add_argument('-dm', '--dynamic-metrics', help='Capture Dynamic Metrics',
                     dest='dynamic_metrics', action='store_true', default=False)
 tools.add_argument('-si', '--si-candidates', help='Identify candidates for super-instructions',
@@ -351,6 +355,14 @@ if (args.truffle_profile or args.web_debugger or
 
 if args.web_debugger:
     flags += ['-Dsom.truffleDebugger=true']
+
+if args.assisted_debugging:
+    flags += ['-Dsom.assistedDebugging=true']
+
+if args.assisted_debugging_breakpoints:
+    flags += ['-Dsom.assistedDebugging=true']
+if args.assisted_debugging_breakpoints:
+    flags += ['-Dsom.assistedDebuggingBp=%s' % args.assisted_debugging_breakpoints ]
 
 if not args.interpreter and args.perf_warnings:
     flags += ['-Dgraal.TruffleCompilationExceptionsAreFatal=true',

@@ -18,6 +18,8 @@ public class VmSettings implements Settings {
   public static final boolean DNU_PRINT_STACK_TRACE;
   public static final boolean REPLAY;
   public static final boolean KOMPOS_TRACING;
+  public static final boolean ASSISTED_DEBUGGING;
+
   public static final boolean TRACE_SMALL_IDS;
   public static final boolean SNAPSHOTS_ENABLED;
   public static final boolean TRACK_SNAPSHOT_ENTITIES;
@@ -34,6 +36,7 @@ public class VmSettings implements Settings {
 
   public static final int     BUFFERS_PER_THREAD;
   public static final int     BUFFER_SIZE;
+  public static final int     ASSISTED_DEBUGGING_BREAKPOINTS;
   public static final boolean RECYCLE_BUFFERS;
   public static final int     BUFFER_TIMEOUT;
 
@@ -56,6 +59,7 @@ public class VmSettings implements Settings {
     MEMORY_TRACING = getBool("som.memoryTracing", false);
     REPLAY = getBool("som.replay", false);
     KOMPOS_TRACING = getBool("som.komposTracing", false) || TRUFFLE_DEBUGGER_ENABLED; // REPLAY;
+    ASSISTED_DEBUGGING = getBool("som.assistedDebugging", false) && KOMPOS_TRACING;
     DISABLE_TRACE_FILE = getBool("som.disableTraceFile", false) || (REPLAY && !KOMPOS_TRACING);
     TRACE_SMALL_IDS = getBool("som.smallIds", false);
 
@@ -74,6 +78,7 @@ public class VmSettings implements Settings {
     IGV_DUMP_AFTER_PARSING = getBool("som.igvDumpAfterParsing", false);
     ANSI_COLOR_IN_OUTPUT = getBool("som.useAnsiColoring", false);
 
+    ASSISTED_DEBUGGING_BREAKPOINTS = getInteger("som.assistedDebuggingBp", -1);
     BUFFER_SIZE = getInteger("som.buffSize", 1024 * 1024);
     BUFFERS_PER_THREAD = getInteger("som.buffPerThread", 4);
     BUFFER_TIMEOUT = getInteger("som.buffDelay", 50);

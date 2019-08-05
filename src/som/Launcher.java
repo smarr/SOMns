@@ -12,6 +12,7 @@ import som.interpreter.objectstorage.StorageAccessor;
 import som.vm.VmSettings;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingBackend;
+import tools.parser.KomposTraceParser;
 import tools.snapshot.SnapshotBackend;
 
 
@@ -63,6 +64,14 @@ public final class Launcher {
 
     if (VmSettings.MEMORY_TRACING) {
       TracingBackend.reportPeakMemoryUsage();
+    }
+
+    // Note: Kompos Trace is parsed right after writing it
+    // to produce the list of messages on the erroneous path.
+    // Could be done at the beginning of assisted debugging.
+    if (VmSettings.KOMPOS_TRACING) {
+      KomposTraceParser tp = new KomposTraceParser();
+      tp.createStackTraceFile(VmSettings.TRACE_FILE);
     }
   }
 
