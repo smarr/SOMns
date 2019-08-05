@@ -195,6 +195,11 @@ class IntegerTests usingPlatform: platform testFramework: minitest = (
 
       self assert:  3 equals: 7 / 2.0.
       self assert:  2 equals: 7 / 3.5.
+
+      self assert: 9223372036854775808 equals: (* Java.MIN_VALUE *)   -9223372036854775808 / -1.
+
+      (* To trigger issue, we need to compute the value, because it is otherwise parsed as a big integer *)
+      self assert: 9223372036854775808 equals: (* Java.MIN_VALUE *) ((-922337203685477580 * 10) - 8) / -1.
     )
 
     public testDouble = (
