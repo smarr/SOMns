@@ -411,7 +411,7 @@
         <arg value="-at" />
         <arg value="-tas" />
         <arg value="${corelib.dir}/TestSuite/TestRunner.ns" />
-        <arg value="${corelib.dir}/TestSuite/Serialization.ns" /> 
+        <arg value="${corelib.dir}/TestSuite/Serialization.ns" />
         <arg value="SerializationTest" />
       </exec>
       <travis target="serialization-tests" />
@@ -508,7 +508,8 @@
 
     <target name="coverage" depends="send-java-coverage,send-somns-coverage" />
 
-    <target name="tests" depends="core-tests,serialization-tests,replay-tests,coverage">
+    <!-- TODO enable test afte Snapshot PR is merged: serialization-tests -->
+    <target name="tests" depends="core-tests,replay-tests,coverage">
     </target>
 
     <target name="native" depends="libs,jvmci-libs,compile-som">
@@ -529,7 +530,7 @@
         <arg line="som.Launcher" />
         <arg line="som-native" />
       </exec>
-      
+
       <travis target="native" />
     </target>
 </project>
