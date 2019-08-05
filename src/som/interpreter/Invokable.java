@@ -35,6 +35,7 @@ public abstract class Invokable extends RootNode {
     this.uninitializedBody = uninitialized;
     this.isAtomic = isAtomic;
     this.sourceSection = sourceSection;
+    expressionOrSequence.markAsRootExpression();
   }
 
   @Override
