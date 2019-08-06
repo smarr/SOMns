@@ -76,11 +76,13 @@ public abstract class IntegerPrims {
     }
 
     @Specialization
+    @TruffleBoundary
     public final Object doSClass(final String argument) {
       return Long.parseLong(argument);
     }
 
     @Specialization
+    @TruffleBoundary
     public final Object doSClass(final SSymbol argument) {
       return Long.parseLong(argument.getString());
     }
