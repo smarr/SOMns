@@ -1,0 +1,94 @@
+class Philosophers usingPlatform: platform = Value (
+| private Condition    = platform threading Condition.
+  private Delay        = platform threading Delay.
+  private Mutex        = platform threading Mutex.
+  private Thread       = platform threading Thread.
+  private Array     = platform kernel Array.
+|)(
+
+  private class ArbitratorActor new: numPhil numRounds: numRounds = (
+  | private numPhil = numPhil.
+    private numRounds = numRounds.
+    private forks    = Array new: numPhil withAll: false.
+    private numExitedPhilosophers ::= 0.
+    private m = Mutex new.
+    private m2 = Mutex new.
+  |)(
+
+    private hungry: leftForkId = (
+    | rightForkId |
+    ('Hungry: ' + leftForkId) println.
+    rightForkId:: 1 + ((leftForkId + 1) % numPhil).
+
+    ((forks at: leftForkId) or: [forks at: rightForkId])
+      ifTrue:  [
+        ('Denied: ' + leftForkId) println.
+        ^ false.
+      ]
+      ifFalse: [
+        ('Eat: ' + leftForkId) println.
+        forks at: leftForkId  put: true.
+        forks at: rightForkId put: true.
+        ^ true ]
+    )
+
+    private done: leftForkId = (
+      | rightForkId |
+      ('Done: ' + leftForkId) println.
+      rightForkId:: 1 + ((leftForkId + 1) % numPhil).
+
+      forks at: leftForkId  put: false.
+      forks at: rightForkId put: false.
+    )
+
+    private exit = (
+      numExitedPhilosophers:: numExitedPhilosophers + 1.
+      'exiting' println.
+
+      numPhil = numExitedPhilosophers ifTrue: [
+        | forksTaken |
+        forksTaken:: 0.
+        forks do: [:f | f ifTrue: [ forksTaken:: forksTaken + 1 ] ].
+        forksTaken = 0 ifFalse: [
+          self error: 'invalid benchmark result'.
+        ].
+
+      ]
+    )
+
+    public benchmark = (
+      |philosophers|
+      philosophers:: Array new: numPhil.
+      philosophers doIndexes: [:i |
+        philosophers at: i put: (Thread spawn: [:id |
+        | roundsSoFar isEating |
+          roundsSoFar:: 0.
+          [roundsSoFar < numRounds] whileTrue: [
+            m critical: [
+              isEating:: (hungry: id).
+            ].
+
+            isEating ifTrue: [
+              roundsSoFar:: roundsSoFar + 1.
+              m critical: [done: id].
+            ].
+          ].
+
+          m2 critical: [
+            exit.
+          ].
+        ] with: { i })
+      ].
+
+      philosophers do: [:ph | ph join ].
+      ^ 0
+    )
+  )
+
+  public main: args = (
+  | arbitrator |
+
+    arbitrator:: ArbitratorActor new: 3 numRounds: 10.
+    ^ arbitrator benchmark
+  )
+)
