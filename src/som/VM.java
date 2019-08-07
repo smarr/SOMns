@@ -251,7 +251,7 @@ public final class VM {
         new ForkJoinPool[] {actorPool, processesPool, forkJoinPool, threadPool};
 
     for (ForkJoinPool pool : pools) {
-      pool.shutdown();
+      pool.shutdownNow();
       try {
         pool.awaitTermination(10, TimeUnit.SECONDS);
       } catch (InterruptedException e) {

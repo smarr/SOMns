@@ -44,7 +44,7 @@ public final class Launcher {
       exitCode = result.as(Integer.class);
     } finally {
       context.eval(SHUTDOWN);
-      context.close(true);
+      context.close();
       finalizeExecution(exitCode);
     }
 
