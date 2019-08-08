@@ -8,6 +8,7 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.Queue;
 
 import som.Output;
@@ -83,7 +84,7 @@ public final class TraceParser {
     return new String(bb.array());
   }
 
-  public static Queue<MessageRecord> getExpectedMessages(final long replayId) {
+  public static LinkedList<MessageRecord> getExpectedMessages(final long replayId) {
     synchronized (entities) {
       if (!traceScanned) {
         parseTrace(true, 0, null);
@@ -91,17 +92,13 @@ public final class TraceParser {
         traceScanned = true;
       }
     }
+
     ActorNode actor = (ActorNode) entities.get(replayId);
     assert actor != null : "Missing expected Messages for Actor: ";
-    if (!actor.contextsParsed) {
-      actor.parseContexts();
-    }
-
     return actor.getExpectedMessages();
   }
 
-  public static Queue<ReplayRecord> getReplayEventsForEntity(
-      final long replayId) {
+  public static Queue<ReplayRecord> getReplayEventsForEntity(final long replayId) {
     synchronized (entities) {
       if (!traceScanned) {
         parseTrace(true, 0, null);
@@ -111,12 +108,16 @@ public final class TraceParser {
     }
 
     EntityNode entity = entities.get(replayId);
+    assert !entity.retrieved;
+    entity.retrieved = true;
     assert entity != null : "Missing Entity: " + replayId;
-    if (!entity.contextsParsed) {
-      entity.parseContexts();
-    }
-
     return entity.getReplayEvents();
+  }
+
+  public static boolean getMoreEventsForEntity(final long replayId) {
+    EntityNode entity = entities.get(replayId);
+    assert entity != null : "Missing Entity: " + replayId;
+    return entity.parseContexts();
   }
 
   /**

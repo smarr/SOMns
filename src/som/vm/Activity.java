@@ -1,7 +1,10 @@
 package som.vm;
 
+import java.util.Queue;
+
 import tools.debugger.entities.ActivityType;
 import tools.replay.ReplayRecord;
+import tools.replay.TraceParser;
 
 
 public interface Activity {
@@ -33,6 +36,15 @@ public interface Activity {
   ActivityType getType();
 
   default ReplayRecord getNextReplayEvent() {
+    Queue<ReplayRecord> q = getReplayEventBuffer();
+    if (q.isEmpty()) {
+      TraceParser.getMoreEventsForEntity(getId());
+    }
+
+    return q.remove();
+  }
+
+  default Queue<ReplayRecord> getReplayEventBuffer() {
     return null;
   }
 
@@ -50,7 +62,8 @@ public interface Activity {
    * Set the flag that indicates a breakpoint on joining activity.
    * Does nothing for non-tracing activities, i.e., when debugging is disabled.
    */
-  default void setStepToJoin(final boolean val) {}
+  default void setStepToJoin(final boolean val) {
+  }
 
   void setStepToNextTurn(boolean val);
 }

@@ -112,7 +112,8 @@ public abstract class ChannelPrimitives {
       return ActivityType.PROCESS;
     }
 
-    protected void beforeExec(final SInvokable disp) {}
+    protected void beforeExec(final SInvokable disp) {
+    }
 
     @Override
     public void run() {
@@ -221,8 +222,8 @@ public abstract class ChannelPrimitives {
     }
 
     @Override
-    public ReplayRecord getNextReplayEvent() {
-      return replayEvents.poll();
+    public Queue<ReplayRecord> getReplayEventBuffer() {
+      return this.replayEvents;
     }
   }
 
