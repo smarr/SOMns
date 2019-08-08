@@ -1,6 +1,7 @@
 package som.vm;
 
 import tools.debugger.entities.ActivityType;
+import tools.replay.ReplayRecord;
 
 
 public interface Activity {
@@ -14,7 +15,26 @@ public interface Activity {
     return 0;
   }
 
+  /**
+   * Returns an id for external data.
+   * Implementation should be synchronized, can't add that to the default though.
+   */
+  default int getDataId() {
+    return 0;
+  }
+
+  /**
+   * Used in replay to keep track of created children.
+   */
+  default int addChild() {
+    return 0;
+  }
+
   ActivityType getType();
+
+  default ReplayRecord getNextReplayEvent() {
+    return null;
+  }
 
   /**
    * The id for the next trace buffer used with this activity.

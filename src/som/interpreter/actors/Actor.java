@@ -31,7 +31,8 @@ import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.replay.actors.ActorExecutionTrace;
-import tools.replay.nodes.TraceActorContextNode;
+import tools.replay.nodes.TraceContextNode;
+import tools.replay.nodes.TraceContextNodeGen;
 import tools.snapshot.SnapshotBuffer;
 
 
@@ -231,7 +232,7 @@ public class Actor implements Activity {
       this.vm = vm;
     }
 
-    private static final TraceActorContextNode tracer = new TraceActorContextNode();
+    private static final TraceContextNode tracer = TraceContextNodeGen.create();
 
     @Override
     public void run() {
@@ -252,7 +253,7 @@ public class Actor implements Activity {
       t.currentlyExecutingActor = actor;
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.recordActorContext((TracingActor) actor, tracer);
+        ActorExecutionTrace.recordActivityContext((TracingActor) actor, tracer);
       } else if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.currentActivity(actor);
       }

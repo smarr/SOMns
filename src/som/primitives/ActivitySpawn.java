@@ -24,6 +24,7 @@ import som.primitives.arrays.ToArgumentsArrayFactory;
 import som.primitives.arrays.ToArgumentsArrayNode;
 import som.primitives.processes.ChannelPrimitives;
 import som.primitives.processes.ChannelPrimitives.Process;
+import som.primitives.processes.ChannelPrimitives.ReplayProcess;
 import som.primitives.processes.ChannelPrimitives.TracingProcess;
 import som.primitives.threading.TaskThreads.SomForkJoinTask;
 import som.primitives.threading.TaskThreads.SomThreadTask;
@@ -46,6 +47,8 @@ import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
+import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
 
 public abstract class ActivitySpawn {
@@ -78,11 +81,18 @@ public abstract class ActivitySpawn {
   }
 
   private static Process createProcess(final SObjectWithClass obj,
-      final SourceSection origin, final boolean stopOnRoot) {
-    if (VmSettings.KOMPOS_TRACING) {
+      final SourceSection origin, final boolean stopOnRoot,
+      final RecordOneEvent traceProcCreation) {
+    if (VmSettings.REPLAY) {
+      return new ReplayProcess(obj, stopOnRoot);
+    } else if (VmSettings.KOMPOS_TRACING || VmSettings.ACTOR_TRACING) {
       TracingProcess result = new TracingProcess(obj, stopOnRoot);
-      KomposTrace.activityCreation(ActivityType.PROCESS,
-          result.getId(), result.getProcObject().getSOMClass().getName(), origin);
+      if (VmSettings.KOMPOS_TRACING) {
+        KomposTrace.activityCreation(ActivityType.PROCESS,
+            result.getId(), result.getProcObject().getSOMClass().getName(), origin);
+      } else if (VmSettings.ACTOR_TRACING) {
+        traceProcCreation.record(result.getId());
+      }
       return result;
     } else {
       return new Process(obj);
@@ -106,6 +116,8 @@ public abstract class ActivitySpawn {
     /** Breakpoint info for triggering suspension on first execution of code in activity. */
     @Child protected AbstractBreakpointNode onExec;
     @Child protected ExceptionSignalingNode notAValue;
+    @Child RecordOneEvent                   traceProcCreation =
+        new RecordOneEvent(ActorExecutionTrace.PROCESS_CREATE);
 
     @Override
     public final SpawnPrim initialize(final VM vm) {
@@ -145,18 +157,18 @@ public abstract class ActivitySpawn {
         notAValue.signal(procCls);
       }
 
-      spawnProcess(procCls);
+      spawnProcess(procCls, traceProcCreation);
       return Nil.nilObject;
     }
 
     @TruffleBoundary
-    private void spawnProcess(final SClass procCls) {
+    private void spawnProcess(final SClass procCls, final RecordOneEvent traceProcCreation) {
       SSymbol sel = procCls.getMixinDefinition().getPrimaryFactorySelector();
       SInvokable disp = procCls.getMixinDefinition().getFactoryMethods().get(sel);
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(new Object[] {procCls});
 
       processesPool.submit(createProcess(obj, sourceSection,
-          onExec.executeShouldHalt()));
+          onExec.executeShouldHalt(), traceProcCreation));
     }
 
     @Override
@@ -189,6 +201,9 @@ public abstract class ActivitySpawn {
     @Child protected AbstractBreakpointNode onExec;
 
     @Child protected ExceptionSignalingNode notAValue;
+
+    @Child RecordOneEvent traceProcCreation =
+        new RecordOneEvent(ActorExecutionTrace.PROCESS_CREATE);
 
     @Override
     public final SpawnWithPrim initialize(final VM vm) {
@@ -231,18 +246,19 @@ public abstract class ActivitySpawn {
         notAValue.signal(procCls);
       }
 
-      spawnProcess(procCls, argArr);
+      spawnProcess(procCls, argArr, traceProcCreation);
       return Nil.nilObject;
     }
 
     @TruffleBoundary
-    private void spawnProcess(final SClass procCls, final Object[] argArr) {
+    private void spawnProcess(final SClass procCls, final Object[] argArr,
+        final RecordOneEvent traceProcCreation) {
       SSymbol sel = procCls.getMixinDefinition().getPrimaryFactorySelector();
       SInvokable disp = procCls.getMixinDefinition().getFactoryMethods().get(sel);
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(argArr);
 
       processesPool.submit(createProcess(obj, sourceSection,
-          onExec.executeShouldHalt()));
+          onExec.executeShouldHalt(), traceProcCreation));
     }
 
     @Override

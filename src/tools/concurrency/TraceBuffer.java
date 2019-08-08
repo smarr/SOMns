@@ -8,7 +8,7 @@ import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.vm.VmSettings;
 import sun.misc.Unsafe;
 import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
-import tools.replay.nodes.TraceActorContextNode;
+import tools.replay.nodes.TraceContextNode;
 
 
 public abstract class TraceBuffer {
@@ -128,7 +128,7 @@ public abstract class TraceBuffer {
   }
 
   public final boolean ensureSufficientSpace(final int requiredSpace,
-      final TraceActorContextNode tracer) {
+      final TraceContextNode tracer) {
     if (position + requiredSpace >= bufferSize) {
       swapBufferWhenNotEnoughSpace(tracer);
       return true;
@@ -136,7 +136,7 @@ public abstract class TraceBuffer {
     return false;
   }
 
-  protected void swapBufferWhenNotEnoughSpace(final TraceActorContextNode tracer) {
+  protected void swapBufferWhenNotEnoughSpace(final TraceContextNode tracer) {
     swapStorage();
   }
 

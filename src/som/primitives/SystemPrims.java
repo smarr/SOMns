@@ -59,11 +59,12 @@ import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
-import tools.concurrency.TraceParser;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.concurrency.TracingBackend;
+import tools.replay.TraceParser;
 import tools.replay.actors.ActorExecutionTrace;
-import tools.replay.nodes.TraceActorContextNode;
+import tools.replay.nodes.TraceContextNode;
+import tools.replay.nodes.TraceContextNodeGen;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
@@ -335,7 +336,7 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemTime:")
   public abstract static class TimePrim extends UnaryBasicOperation {
-    @Child TraceActorContextNode tracer = new TraceActorContextNode();
+    @Child TraceContextNode tracer = TraceContextNodeGen.create();
 
     @Specialization
     public final long doSObject(final Object receiver) {
@@ -416,7 +417,7 @@ public final class SystemPrims {
   @Primitive(primitive = "systemTicks:", selector = "ticks",
       specializer = IsSystemModule.class, noWrapper = true)
   public abstract static class TicksPrim extends UnaryBasicOperation implements Operation {
-    @Child TraceActorContextNode tracer = new TraceActorContextNode();
+    @Child TraceContextNode tracer = TraceContextNodeGen.create();
 
     @Specialization
     public final long doSObject(final Object receiver) {

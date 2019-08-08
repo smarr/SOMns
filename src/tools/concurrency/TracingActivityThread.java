@@ -13,6 +13,7 @@ import tools.TraceData;
 import tools.debugger.SteppingStrategy;
 import tools.debugger.entities.EntityType;
 import tools.debugger.entities.SteppingType;
+import tools.replay.TraceParser;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 
@@ -199,7 +200,10 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   }
 
   public static long newEntityId() {
-    if (VmSettings.KOMPOS_TRACING && Thread.currentThread() instanceof TracingActivityThread) {
+    if (VmSettings.REPLAY && Thread.currentThread() instanceof TracingActivityThread) {
+      return TraceParser.getReplayId();
+    } else if ((VmSettings.KOMPOS_TRACING | VmSettings.ACTOR_TRACING)
+        && Thread.currentThread() instanceof TracingActivityThread) {
       TracingActivityThread t = TracingActivityThread.currentThread();
       return t.generateEntityId();
     } else {

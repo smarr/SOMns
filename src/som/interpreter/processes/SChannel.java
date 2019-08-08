@@ -12,12 +12,15 @@ import som.vmobjects.SClass;
 import tools.concurrency.TracingChannel;
 import tools.concurrency.TracingChannel.TracingChannelInput;
 import tools.concurrency.TracingChannel.TracingChannelOutput;
+import tools.replay.PassiveEntityWithEvents;
+import tools.replay.ReplayData;
+import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
 
 
 public class SChannel extends SAbstractObject {
 
   public static SChannel create() {
-    if (VmSettings.KOMPOS_TRACING) {
+    if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING || VmSettings.REPLAY) {
       return new TracingChannel();
     } else {
       return new SChannel();
@@ -58,7 +61,8 @@ public class SChannel extends SAbstractObject {
     return false;
   }
 
-  public static class SChannelInput extends SAbstractObject {
+  public static class SChannelInput extends SAbstractObject
+      implements PassiveEntityWithEvents {
     public static SChannelInput create(final SynchronousQueue<Object> cell,
         final SChannel channel) {
       if (VmSettings.KOMPOS_TRACING) {
@@ -70,6 +74,7 @@ public class SChannel extends SAbstractObject {
 
     private final SynchronousQueue<Object> cell;
     protected final SChannel               channel;
+    private int                            numReads = 0;
 
     public SChannelInput(final SynchronousQueue<Object> cell,
         final SChannel channel) {
@@ -78,19 +83,34 @@ public class SChannel extends SAbstractObject {
     }
 
     @TruffleBoundary
-    public Object read() throws InterruptedException {
+    public Object read(final RecordTwoEvent traceRead) throws InterruptedException {
       ObjectTransitionSafepoint.INSTANCE.unregister();
+
+      if (VmSettings.REPLAY) {
+        ReplayData.replayDelayNumberedEvent(this, channel.getId());
+      }
+
       try {
-        return cell.take();
+        synchronized (this) {
+          if (VmSettings.ACTOR_TRACING) {
+            traceRead.record(channel.getId(), numReads);
+            numReads++;
+          }
+          return cell.take();
+        }
       } finally {
+        if (VmSettings.REPLAY) {
+          numReads++;
+        }
         ObjectTransitionSafepoint.INSTANCE.register();
       }
     }
 
-    public final Object readAndSuspendWriter(final boolean doSuspend)
+    public final Object readAndSuspendWriter(final boolean doSuspend,
+        final RecordTwoEvent traceRead)
         throws InterruptedException {
       channel.breakAfterWrite = doSuspend;
-      return read();
+      return read(traceRead);
     }
 
     public final boolean shouldBreakAfterRead() {
@@ -107,9 +127,17 @@ public class SChannel extends SAbstractObject {
     public final boolean isValue() {
       return true;
     }
+
+    @Override
+    public int getNextEventNumber() {
+      synchronized (this) {
+        return numReads;
+      }
+    }
   }
 
-  public static class SChannelOutput extends SAbstractObject {
+  public static class SChannelOutput extends SAbstractObject
+      implements PassiveEntityWithEvents {
     public static SChannelOutput create(final SynchronousQueue<Object> cell,
         final SChannel channel) {
       if (VmSettings.KOMPOS_TRACING) {
@@ -121,6 +149,7 @@ public class SChannel extends SAbstractObject {
 
     private final SynchronousQueue<Object> cell;
     protected final SChannel               channel;
+    private int                            numWrites = 0;
 
     protected SChannelOutput(final SynchronousQueue<Object> cell, final SChannel channel) {
       this.cell = cell;
@@ -128,19 +157,37 @@ public class SChannel extends SAbstractObject {
     }
 
     @TruffleBoundary
-    public void write(final Object value) throws InterruptedException {
+    public void write(final Object value, final RecordTwoEvent traceWrite)
+        throws InterruptedException {
       ObjectTransitionSafepoint.INSTANCE.unregister();
+
+      if (VmSettings.REPLAY) {
+        ReplayData.replayDelayNumberedEvent(this, channel.getId());
+      }
+
       try {
-        cell.put(value);
+        synchronized (this) {
+          if (VmSettings.ACTOR_TRACING) {
+            traceWrite.record(channel.getId(), numWrites);
+            numWrites++;
+          }
+          cell.put(value);
+        }
+
       } finally {
+        if (VmSettings.REPLAY) {
+          synchronized (this) {
+            numWrites++;
+          }
+        }
         ObjectTransitionSafepoint.INSTANCE.register();
       }
     }
 
     public final void writeAndSuspendReader(final Object value,
-        final boolean doSuspend) throws InterruptedException {
+        final boolean doSuspend, final RecordTwoEvent traceWrite) throws InterruptedException {
       channel.breakAfterRead = doSuspend;
-      write(value);
+      write(value, traceWrite);
     }
 
     public final boolean shouldBreakAfterWrite() {
@@ -156,6 +203,13 @@ public class SChannel extends SAbstractObject {
     @Override
     public final boolean isValue() {
       return true;
+    }
+
+    @Override
+    public int getNextEventNumber() {
+      synchronized (this) {
+        return numWrites;
+      }
     }
   }
 }
