@@ -32,7 +32,7 @@ replay_tests:
   stage: full-test
   tags: [benchmarks, infinity]
   script:
-    - timeout 10m ant replay-tests
+    - timeout 30m ant replay-tests
 
 # Disabled due to breaking changes in the tracing infrastructure. Not fixed to make merge of Snapshotting PR(#293) easier.
 #snapshot_tests:
