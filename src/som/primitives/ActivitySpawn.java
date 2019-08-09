@@ -47,7 +47,7 @@ import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
-import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.TraceRecord;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
 
@@ -82,11 +82,11 @@ public abstract class ActivitySpawn {
 
   private static Process createProcess(final SObjectWithClass obj,
       final SourceSection origin, final boolean stopOnRoot,
-      final RecordOneEvent traceProcCreation) {
+      final RecordOneEvent traceProcCreation, final VM vm) {
     if (VmSettings.REPLAY) {
-      return new ReplayProcess(obj, stopOnRoot);
+      return new ReplayProcess(obj, stopOnRoot, vm);
     } else if (VmSettings.KOMPOS_TRACING || VmSettings.ACTOR_TRACING) {
-      TracingProcess result = new TracingProcess(obj, stopOnRoot);
+      TracingProcess result = new TracingProcess(obj, stopOnRoot, vm);
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.activityCreation(ActivityType.PROCESS,
             result.getId(), result.getProcObject().getSOMClass().getName(), origin);
@@ -117,7 +117,7 @@ public abstract class ActivitySpawn {
     @Child protected AbstractBreakpointNode onExec;
     @Child protected ExceptionSignalingNode notAValue;
     @Child RecordOneEvent                   traceProcCreation =
-        new RecordOneEvent(ActorExecutionTrace.PROCESS_CREATE);
+        new RecordOneEvent(TraceRecord.PROCESS_CREATION);
 
     @Override
     public final SpawnPrim initialize(final VM vm) {
@@ -168,7 +168,7 @@ public abstract class ActivitySpawn {
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(new Object[] {procCls});
 
       processesPool.submit(createProcess(obj, sourceSection,
-          onExec.executeShouldHalt(), traceProcCreation));
+          onExec.executeShouldHalt(), traceProcCreation, vm));
     }
 
     @Override
@@ -202,8 +202,7 @@ public abstract class ActivitySpawn {
 
     @Child protected ExceptionSignalingNode notAValue;
 
-    @Child RecordOneEvent traceProcCreation =
-        new RecordOneEvent(ActorExecutionTrace.PROCESS_CREATE);
+    @Child RecordOneEvent traceProcCreation = new RecordOneEvent(TraceRecord.PROCESS_CREATION);
 
     @Override
     public final SpawnWithPrim initialize(final VM vm) {
@@ -258,7 +257,7 @@ public abstract class ActivitySpawn {
       SObjectWithClass obj = (SObjectWithClass) disp.invoke(argArr);
 
       processesPool.submit(createProcess(obj, sourceSection,
-          onExec.executeShouldHalt(), traceProcCreation));
+          onExec.executeShouldHalt(), traceProcCreation, vm));
     }
 
     @Override

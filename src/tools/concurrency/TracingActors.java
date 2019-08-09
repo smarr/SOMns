@@ -44,7 +44,7 @@ public class TracingActors {
 
     public TracingActor(final VM vm) {
       super(vm);
-      this.activityId = TracingActivityThread.newEntityId();
+      this.activityId = TracingActivityThread.newEntityId(vm);
       assert this.activityId >= 0;
       if (VmSettings.SNAPSHOTS_ENABLED) {
         snapshotRecord = new SnapshotRecord();
@@ -131,10 +131,17 @@ public class TracingActors {
     private BiConsumer<Short, Integer>          dataSource;
     private MessageRecord                       nextExpectedMessage;
 
+    private final TraceParser traceParser;
+
     static {
       if (VmSettings.REPLAY) {
         actorList = new WeakHashMap<>();
       }
+    }
+
+    @Override
+    public TraceParser getTraceParser() {
+      return traceParser;
     }
 
     public BiConsumer<Short, Integer> getDataSource() {
@@ -163,16 +170,18 @@ public class TracingActors {
       super(vm);
 
       if (VmSettings.REPLAY) {
-        expectedMessages = TraceParser.getExpectedMessages(activityId);
-        replayEvents = TraceParser.getReplayEventsForEntity(activityId);
+        expectedMessages = vm.getTraceParser().getExpectedMessages(activityId);
+        replayEvents = vm.getTraceParser().getReplayEventsForEntity(activityId);
 
         synchronized (actorList) {
           assert !actorList.containsKey(activityId);
           actorList.put(activityId, this);
         }
+        traceParser = vm.getTraceParser();
       } else {
         expectedMessages = null;
         replayEvents = null;
+        traceParser = null;
       }
     }
 
@@ -366,7 +375,8 @@ public class TracingActors {
     private MessageRecord getExpected() {
       if (expectedMessages.isEmpty()) {
         ObjectTransitionSafepoint.INSTANCE.unregister();
-        while (TraceParser.getMoreEventsForEntity(getId()) && expectedMessages.isEmpty()) {
+        while (traceParser.getMoreEventsForEntity(getId())
+            && expectedMessages.isEmpty()) {
           // NOOP
         }
         ObjectTransitionSafepoint.INSTANCE.register();
@@ -377,7 +387,7 @@ public class TracingActors {
     private MessageRecord peekExpected() {
       if (expectedMessages.isEmpty()) {
         ObjectTransitionSafepoint.INSTANCE.unregister();
-        while (TraceParser.getMoreEventsForEntity(getId()) && expectedMessages.isEmpty()) {
+        while (traceParser.getMoreEventsForEntity(getId()) && expectedMessages.isEmpty()) {
           // NOOP
         }
         ObjectTransitionSafepoint.INSTANCE.register();
