@@ -124,6 +124,13 @@
     <target name="clobber" description="Do clean, and also clean truffle build" depends="clean,clean-truffle">
         <travis target="clobber" start="clobber" />
         
+        <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
+            <arg value="--dynamicimports"/>
+            <arg value="../truffle,../tools,../compiler,../sdk"/>
+            <arg value="fsckprojects"/>
+            <env key="JAVA_HOME" value="${jvmci.home}" />
+        </exec>
+        
         <delete dir="${kompos.dir}/out"/>
         <delete dir="${kompos.dir}/node_modules"/>
         <ant dir="${bd.dir}" useNativeBasedir="true" target="clean" inheritAll="false"/>
