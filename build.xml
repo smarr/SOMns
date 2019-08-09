@@ -168,6 +168,7 @@
 
     <target name="ideinit" depends="source">
         <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
+            <env key="JAVA_HOME" value="${jvmci.home}" />
             <arg value="--dynamicimports"/>
             <arg value="../truffle,../tools,../compiler,../sdk"/>
             <arg value="eclipseinit"/>
