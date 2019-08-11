@@ -127,6 +127,12 @@ public final class TraceParser implements Closeable {
     return entity.parseContexts(this);
   }
 
+  public int getNumberOfSubtraces(final long replayId) {
+    EntityNode entity = entities.get(replayId);
+    assert entity != null : "Missing Entity: " + replayId;
+    return entity.subtraces.size();
+  }
+
   /**
    * Determines the id a newly created entity should have according to the creating entity.
    */
