@@ -564,12 +564,13 @@ public class TracingBackend {
       while (cont || !fullBuffers.isEmpty() || !externalData.isEmpty()) {
         writeExternalData(externalDataStream);
 
+        writeSymbols(symbolStream);
+
         BufferAndLimit b = tryToObtainBuffer();
         if (b == null) {
           continue;
         }
 
-        writeSymbols(symbolStream);
         if (front != null) {
           front.sendTracingData(b.getReadingFromStartBuffer());
         }
