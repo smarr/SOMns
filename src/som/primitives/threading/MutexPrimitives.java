@@ -139,7 +139,8 @@ public final class MutexPrimitives {
     @TruffleBoundary
     public Condition doLock(final ReentrantLock lock) {
       if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
-        TracingCondition result = new TracingCondition(lock.newCondition());
+        TracingCondition result =
+            new TracingCondition(lock.newCondition(), (TracingLock) lock);
         if (VmSettings.ACTOR_TRACING) {
           trace.record(result.getId());
         }

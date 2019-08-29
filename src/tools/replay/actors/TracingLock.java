@@ -69,7 +69,8 @@ public final class TracingLock extends ReentrantLock implements PassiveEntityWit
         while (queueSizePreAwait == owner.getWaitQueueLength(wrapped)) {
           try {
             Thread.sleep(5);
-          } catch (InterruptedException e) {}
+          } catch (InterruptedException e) {
+          }
         }
 
         // reset for next await
@@ -139,17 +140,21 @@ public final class TracingLock extends ReentrantLock implements PassiveEntityWit
       signalAll();
     }
 
-    public synchronized void tracingAwait(final RecordTwoEvent traceSignal)
+    public void tracingAwait(final RecordTwoEvent traceSignal)
         throws InterruptedException {
-      traceSignal.record(id, eventNo);
-      eventNo++;
+      synchronized (this) {
+        traceSignal.record(id, eventNo);
+        eventNo++;
+      }
       await();
     }
 
-    public synchronized boolean tracingAwait(final RecordTwoEvent traceSignal,
+    public boolean tracingAwait(final RecordTwoEvent traceSignal,
         final long milliseconds) throws InterruptedException {
-      traceSignal.record(id, eventNo);
-      eventNo++;
+      synchronized (this) {
+        traceSignal.record(id, eventNo);
+        eventNo++;
+      }
       return await(milliseconds, TimeUnit.MILLISECONDS);
     }
   }
