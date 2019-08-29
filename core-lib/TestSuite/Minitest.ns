@@ -441,12 +441,12 @@ OTHER DEALINGS IN THE SOFTWARE. *)
               exClass:: (ClassMirror reflecting: e) classObject.
               exClass == TestFailureException ifTrue: [
                 promisePair resolve: (testContextInstance
-                  ifNil:    [ TestFailure case: self description: ex messageText]
-                  ifNotNil: [:it | it createFailureResultFor: self description: ex messageText])
+                  ifNil:    [ TestFailure case: self description: e messageText ]
+                  ifNotNil: [:it | it createFailureResultFor: self description: e messageText ])
               ] ifFalse: [
                 promisePair resolve: (testContextInstance
-                  ifNil:    [ TestError case: self exception: ex ]
-                  ifNotNil: [:it | it createErrorResultFor: self exception: ex ])
+                  ifNil:    [ TestError case: self exception: e ]
+                  ifNotNil: [:it | it createErrorResultFor: self exception: e ])
               ]
             ]
         ] on: TestFailureException
