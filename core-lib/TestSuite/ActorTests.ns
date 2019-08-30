@@ -214,21 +214,20 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
       ^ pp promise
     )
 
-    public testAssertionFailed= (
-      | bobP peterP assertPromise r |
+    public testAsyncAssertionFailed= (
+      | bobP peterP assertP resultP whenP |
           peterP:: (actors createActorFromValue: Peter).
           bobP:: (actors createActorFromValue: Bob) <-: meet: peterP.
-          r:: bobP whenResolved: [:bob |
+          resultP:: bobP whenResolved: [:bob |
                  (bob <-: answerFarRef)
                  whenResolved: [:peter | peter = bob ]
                  ].
 
-         assertPromise:: assert: r resolvedWith: true.
+         assertP:: assert: resultP resolvedWith: true.
 
-         assertPromise whenResolved:[:v | NoExceptionReceivedException signal ]
-                       onError: [:e | assert: e messageText equals: 'Equality assertion failed; expected: true, was: false' ].
-
-         ^ assertPromise
+         whenP:: assertP whenResolved:[:v | NoExceptionReceivedException signal ]
+                     onError: [:e | assert: e messageText equals: 'Equality assertion failed; expected: true, was: false' ].
+         ^ whenP
     )
 
   ) : (
