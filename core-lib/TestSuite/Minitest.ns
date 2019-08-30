@@ -59,6 +59,32 @@ test framework recognize this class as a test context and scan it for test
 methods. Eventually, when Newspeak supports it, class metadata will be used
 instead to mark classes as test contexts.
 
+Asynchronous tests can be defined implementing a subclass of AsyncTestContext.
+Both synchronous and asynchronous tests can be included. Method names for synchronous tests
+should begin with 'test' and for asynchronous tests with 'testAsync'.
+
+ class Math = () (
+     public factorial: n = (
+       n = 0 ifTrue: [ ^ 1 ].
+       ^ (self <-: factorial: n - 1) <-: * n
+     )
+ )
+
+public class MathAsyncTest = AsyncTestContext () (
+
+    public testAsyncFactorial = (
+      | mathP |
+      mathP:: (actors createActorFromValue: Math) <-: new.
+
+      ^ assert: (mathP <-: factorial: 4) resolvedWith: 24.
+    )
+    ) : (
+        TEST_CONTEXT = ()
+    )
+
+This asychronous test context defines one test method, which starts with 'testAsync' and returns a promise
+of the result corresponding to the evaluation of the assertion.
+
 This important point is worth reiterating. A class is a test context if and
 only if it contains a class-side method named TEST_CONTEXT. Inheriting from
 TestContext by itself does NOT make a class a test context, it only provides it
@@ -339,9 +365,10 @@ OTHER DEALINGS IN THE SOFTWARE. *)
 |)(
   class TestCase env: testEnvironment selector: selector = (
     (* Represents a particular test (a method with the selector that begins with
-       'test') in a text context. This class, unlike SUnit's class by the same
+       'test' or 'testAsync') in a text context. This class, unlike SUnit's class by the same
        name, is internal to the framework and is not intended to be subclassed
-       or instantiated by framework users. See TestContext.
+       or instantiated by framework users. See TestContext. For asynchronous tests
+       see AsyncTestCase and AsyncTestContext.
 
        An instance holds onto a test environment (which indirectly identifies
        the test context class) and a selector within the class. While a test
@@ -419,7 +446,11 @@ OTHER DEALINGS IN THE SOFTWARE. *)
   )
 
   class AsyncTestCase env: testEnvironment selector: selector
-    = TestCase env: testEnvironment selector: selector ()(
+    = TestCase env: testEnvironment selector: selector (
+    (* Represents a particular test (a method with the selector that begins with
+                  'testAsync') in a text context. See AsyncTestContext. *)
+    )(
+
     public isAsync = ( ^ true )
 
     public runUsing: tester = (
@@ -436,17 +467,17 @@ OTHER DEALINGS IN THE SOFTWARE. *)
               immediately garbage-collectable, which is an important property for large test suites. *)
               cleanUp.
               promisePair resolve: testSuccess ]
-            onError: [:e |
+            onError: [:ex |
               | exClass |
               exClass:: (ClassMirror reflecting: e) classObject.
               exClass == TestFailureException ifTrue: [
                 promisePair resolve: (testContextInstance
-                  ifNil:    [ TestFailure case: self description: e messageText ]
-                  ifNotNil: [:it | it createFailureResultFor: self description: e messageText ])
+                  ifNil:    [ TestFailure case: self description: ex messageText ]
+                  ifNotNil: [:it | it createFailureResultFor: self description: ex messageText ])
               ] ifFalse: [
                 promisePair resolve: (testContextInstance
-                  ifNil:    [ TestError case: self exception: e ]
-                  ifNotNil: [:it | it createErrorResultFor: self exception: e ])
+                  ifNil:    [ TestError case: self exception: ex ]
+                  ifNotNil: [:it | it createErrorResultFor: self exception: ex ])
               ]
             ]
         ] on: TestFailureException
@@ -758,7 +789,13 @@ OTHER DEALINGS IN THE SOFTWARE. *)
     )
   )
 
-  public class AsyncTestContext = TestContext <: Value ()(
+  public class AsyncTestContext = TestContext <: Value (
+  (* An object for defining and running individual asynchronous tests. Instances of this class
+     need to implement test methods which start with the 'testAsync' prefix. Although methods starting with
+     'test' can also be implemented, they will execute only assertions declared in TestContext.
+     See Minitest.ns#L416.
+  *)
+  )(
     assert: promise resolvedWith: expectedResolution = (
       (* TODO: add timeout support *)
       ^ promise

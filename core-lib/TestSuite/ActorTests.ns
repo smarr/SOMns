@@ -15,12 +15,6 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
     msg:: errorTestMessage.
   )()
 
-  private class NoExceptionReceivedException signal = Exception (
-          | public msg |
-          msg:: 'received value, expected exception'.
-          self signal.
-  )()
-
   class Bob meet: a = (
     | private alice = a. |
   ) (
@@ -29,8 +23,6 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
     public answerValue    = ( ^ 42           )
     public raiseException = ( ^ Exception signal )
   )
-
-  class Peter = () ()
 
   class DeepChain = (
     |exception|
@@ -212,22 +204,6 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
         pp resolve: nil
       ].
       ^ pp promise
-    )
-
-    public testAsyncAssertionFailed= (
-      | bobP peterP assertP resultP whenP |
-          peterP:: (actors createActorFromValue: Peter).
-          bobP:: (actors createActorFromValue: Bob) <-: meet: peterP.
-          resultP:: bobP whenResolved: [:bob |
-                 (bob <-: answerFarRef)
-                 whenResolved: [:peter | peter = bob ]
-                 ].
-
-         assertP:: assert: resultP resolvedWith: true.
-
-         whenP:: assertP whenResolved:[:v | NoExceptionReceivedException signal ]
-                     onError: [:e | assert: e messageText equals: 'Equality assertion failed; expected: true, was: false' ].
-         ^ whenP
     )
 
   ) : (
@@ -635,6 +611,11 @@ class ActorTests usingPlatform: platform testFramework: minitest = Value (
   public class PromiseErrored = AsyncTestContext (
   | private Exception = kernel Exception. aliceValue = 10. bobValue = 20.|
   )(
+     private class NoExceptionReceivedException signal = Exception (
+        | public msg |
+        msg:: 'received value, expected exception'.
+        self signal.
+    )()
 
     private class Alice new = (
     | exception |

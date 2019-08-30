@@ -1,4 +1,4 @@
-class MinitestTests usingPlatform: platform testFramework: minitest = (
+class MinitestTests usingPlatform: platform testFramework: minitest = Value (
   (* Tests of the Minitest framework (that is, meta-tests). *)
 |
   private Exception     = platform kernel Exception.
@@ -6,6 +6,8 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
   private TestContext   = minitest TestContext.
   private TestCatalog   = minitest TestCatalog.
   private Tester        = minitest Tester.
+  private AsyncTestContext   = minitest AsyncTestContext.
+  private actors   = platform actors.
 |
 ) (
   public class AssertionTests = TestContext (
@@ -297,6 +299,31 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
     )
   ) : (
     TEST_CONTEXT = ()
+  )
+
+  public class Math = () (
+     public factorial: n = (
+       n = 0 ifTrue: [ ^ 1 ].
+       ^ (self <-: factorial: n - 1) <-: * n
+      )
+  )
+
+  public class AsyncAssertionTest = AsyncTestContext (
+    (* Test class to test asynchronous assertions failing *)
+  ) (
+
+     public testAsyncAssertionFailed = (
+       | mathP whenP assertP |
+       mathP:: (actors createActorFromValue: Math) <-: new.
+
+       assertP:: assert: (mathP <-: factorial: 4) resolvedWith: 0.
+
+       whenP:: assertP whenResolved:[:v | NoExceptionReceivedException signal ]
+                       onError: [:e | assert: e messageText equals: 'Equality assertion failed; expected: 0, was: 24' ].
+       ^ whenP
+       )
+     ) : (
+        TEST_CONTEXT = ()
   )
 
   public class TestLifecycleTests = TestContext (
