@@ -98,7 +98,17 @@
         <pathelement location="${truffle.build}/truffle-dsl-processor.jar" />
         <pathelement location="${truffle.build}/truffle-tck.jar" />
     </path>
+
+    <available file="${truffle.dir}" type="dir" property="truffle.present"/>
+    <available file="${jvmci.home}"  type="dir" property="jvmci.home.present" />
     
+    <condition property="truffle.and.jvmci.present">
+      <and>
+        <available file="${truffle.dir}" />
+        <available file="${jvmci.home}" />
+       </and>
+    </condition>
+
     <target name="clean" description="Remove build directories and generated code">
         <travis target="clean" start="clean" />
 
@@ -109,13 +119,14 @@
         <travis target="clean" />        
     </target>
 
-    <target name="clean-truffle" depends="check-truffle-available" if="truffle.present">
+    <target name="clean-truffle" if="truffle.and.jvmci.present">
         <travis target="clean-truffle" start="clean-truffle" />
         
         <exec executable="${mx.cmd}" dir="${svm.dir}">
           <arg value="--dynamicimports"/>
           <arg value="../truffle,../tools,../compiler,../sdk"/>
           <arg value="clean"/>
+          <env key="JAVA_HOME" value="${jvmci.home}" />
         </exec>
 
         <travis target="clean-truffle" />
@@ -138,10 +149,7 @@
         <travis target="clobber" />
     </target>
 
-    <target name="check-truffle-available">
-        <available file="${truffle.dir}" property="truffle.present"/>
-    </target>
-    <target name="truffle-submodule" depends="check-truffle-available"
+    <target name="truffle-submodule" 
             unless="truffle.present">
       <exec executable="./.gitloadmodules" failonerror="true">
       </exec>
