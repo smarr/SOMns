@@ -5,7 +5,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import som.primitives.processes.ChannelPrimitives.Process;
 import som.vm.Activity;
 import tools.concurrency.TracingActors.TracingActor;
-import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.TraceRecord;
 import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
 
 
@@ -15,20 +15,19 @@ public abstract class TraceContextNode extends TraceNode {
 
   @Specialization
   protected void recordActorContext(final TracingActor actor) {
-    writeContext(actor.getId(), actor.getNextTraceBufferId(),
-        ActorExecutionTrace.ACTOR_CONTEXT);
+    writeContext(actor.getId(), actor.getNextTraceBufferId(), TraceRecord.ACTOR_CONTEXT.value);
   }
 
   @Specialization
   protected void recordProcess(final Process process) {
     writeContext(process.getId(), process.getNextTraceBufferId(),
-        ActorExecutionTrace.PROCESS_CONTEXT);
+        TraceRecord.PROCESS_CONTEXT.value);
   }
 
   @Specialization
   protected void recordGeneric(final Activity activity) {
     writeContext(activity.getId(), activity.getNextTraceBufferId(),
-        ActorExecutionTrace.ACTOR_CONTEXT);
+        TraceRecord.ACTOR_CONTEXT.value);
   }
 
   protected void writeContext(final long id, final int bufferId, final byte contextKind) {

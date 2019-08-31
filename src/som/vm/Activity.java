@@ -1,7 +1,10 @@
 package som.vm;
 
+import java.util.Queue;
+
 import tools.debugger.entities.ActivityType;
 import tools.replay.ReplayRecord;
+import tools.replay.TraceParser;
 
 
 public interface Activity {
@@ -32,7 +35,21 @@ public interface Activity {
 
   ActivityType getType();
 
+  default TraceParser getTraceParser() {
+    assert VmSettings.REPLAY;
+    throw new UnsupportedOperationException();
+  }
+
   default ReplayRecord getNextReplayEvent() {
+    Queue<ReplayRecord> q = getReplayEventBuffer();
+    if (q.isEmpty()) {
+      getTraceParser().getMoreEventsForEntity(getId());
+    }
+
+    return q.remove();
+  }
+
+  default Queue<ReplayRecord> getReplayEventBuffer() {
     return null;
   }
 

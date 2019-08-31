@@ -8,7 +8,7 @@ import som.interpreter.actors.EventualMessage.PromiseCallbackMessage;
 import som.interpreter.actors.EventualMessage.PromiseSendMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
 import tools.concurrency.TracingActors.TracingActor;
-import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.TraceRecord;
 import tools.replay.actors.ExternalEventualMessage.ExternalDirectMessage;
 import tools.replay.actors.ExternalEventualMessage.ExternalPromiseCallbackMessage;
 import tools.replay.actors.ExternalEventualMessage.ExternalPromiseSendMessage;
@@ -21,13 +21,13 @@ public abstract class TraceMessageNode extends TraceNode {
 
   @Child TraceContextNode           tracer      = TraceContextNodeGen.create();
   @Child protected RecordOneEvent   recDMsg     =
-      new RecordOneEvent(ActorExecutionTrace.MESSAGE);
+      new RecordOneEvent(TraceRecord.MESSAGE);
   @Child protected RecordTwoEvent   recEDMsg    = new RecordTwoEvent(
-      (byte) (ActorExecutionTrace.EXTERNAL_BIT | ActorExecutionTrace.MESSAGE));
+      (byte) (TraceRecord.EXTERNAL_BIT | TraceRecord.MESSAGE.value));
   @Child protected RecordTwoEvent   recPromMsg  =
-      new RecordTwoEvent(ActorExecutionTrace.PROMISE_MESSAGE);
+      new RecordTwoEvent(TraceRecord.PROMISE_MESSAGE.value);
   @Child protected RecordThreeEvent recEPromMsg = new RecordThreeEvent(
-      (byte) (ActorExecutionTrace.EXTERNAL_BIT | ActorExecutionTrace.PROMISE_MESSAGE));
+      (byte) (TraceRecord.EXTERNAL_BIT | TraceRecord.PROMISE_MESSAGE.value));
 
   public abstract void execute(EventualMessage msg);
 

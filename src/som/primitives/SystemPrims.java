@@ -18,6 +18,7 @@ import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameInstance;
 import com.oracle.truffle.api.frame.FrameInstanceVisitor;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.interop.TruffleObject;
@@ -61,7 +62,7 @@ import som.vmobjects.SObjectWithClass;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.concurrency.TracingBackend;
-import tools.replay.TraceParser;
+import tools.dym.Tags.BasicPrimitiveOperation;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
@@ -335,13 +336,13 @@ public final class SystemPrims {
 
   @GenerateNodeFactory
   @Primitive(primitive = "systemTime:")
-  public abstract static class TimePrim extends UnaryBasicOperation {
+  public abstract static class TimePrim extends UnarySystemOperation {
     @Child TraceContextNode tracer = TraceContextNodeGen.create();
 
     @Specialization
     public final long doSObject(final Object receiver) {
       if (VmSettings.REPLAY) {
-        return TraceParser.getLongSysCallResult();
+        return vm.getTraceParser().getLongSysCallResult();
       }
 
       long res = System.currentTimeMillis() - startTime;
@@ -349,6 +350,15 @@ public final class SystemPrims {
         ActorExecutionTrace.longSystemCall(res, tracer);
       }
       return res;
+    }
+
+    @Override
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
+      if (tag == BasicPrimitiveOperation.class) {
+        return true;
+      } else {
+        return super.hasTagIgnoringEagerness(tag);
+      }
     }
   }
 
@@ -416,13 +426,13 @@ public final class SystemPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "systemTicks:", selector = "ticks",
       specializer = IsSystemModule.class, noWrapper = true)
-  public abstract static class TicksPrim extends UnaryBasicOperation implements Operation {
+  public abstract static class TicksPrim extends UnarySystemOperation implements Operation {
     @Child TraceContextNode tracer = TraceContextNodeGen.create();
 
     @Specialization
     public final long doSObject(final Object receiver) {
       if (VmSettings.REPLAY) {
-        return TraceParser.getLongSysCallResult();
+        return vm.getTraceParser().getLongSysCallResult();
       }
 
       long res = System.nanoTime() / 1000L - startMicroTime;
@@ -441,6 +451,15 @@ public final class SystemPrims {
     @Override
     public int getNumArguments() {
       return 1;
+    }
+
+    @Override
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
+      if (tag == BasicPrimitiveOperation.class) {
+        return true;
+      } else {
+        return super.hasTagIgnoringEagerness(tag);
+      }
     }
   }
 

@@ -54,7 +54,7 @@ public abstract class EventualMessage {
     this.haltOnReceive = haltOnReceive;
     this.haltOnResolver = haltOnResolver;
     if (VmSettings.KOMPOS_TRACING) {
-      this.messageId = TracingActivityThread.newEntityId();
+      this.messageId = TracingActivityThread.newEntityId(null);
       if (VmSettings.ASSISTED_DEBUGGING) {
         if (KomposTraceParser.isMessageInErrorStackTrace(this.messageId)
             || this.messageId == 0) {

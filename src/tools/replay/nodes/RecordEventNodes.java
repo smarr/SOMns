@@ -1,5 +1,6 @@
 package tools.replay.nodes;
 
+import tools.replay.TraceRecord;
 import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
 
 
@@ -11,9 +12,9 @@ public final class RecordEventNodes {
   public static class RecordOneEvent extends TraceNode {
     @Child TraceContextNode tracer = TraceContextNodeGen.create();
 
-    private final byte eventType;
+    private final TraceRecord eventType;
 
-    public RecordOneEvent(final byte eventType) {
+    public RecordOneEvent(final TraceRecord eventType) {
       this.eventType = eventType;
     }
 
@@ -28,7 +29,7 @@ public final class RecordEventNodes {
       int pos = storage.position();
 
       assert id >= 0;
-      storage.putByteAt(pos, eventType);
+      storage.putByteAt(pos, eventType.value);
       storage.putLongAt(pos + 1, id);
 
       storage.position(pos + ONE_EVENT_SIZE);

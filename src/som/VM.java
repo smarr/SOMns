@@ -54,6 +54,7 @@ import tools.concurrency.TracingBackend;
 import tools.debugger.WebDebugger;
 import tools.debugger.session.Breakpoints;
 import tools.dym.DynamicMetrics;
+import tools.replay.TraceParser;
 import tools.snapshot.SnapshotBackend;
 import tools.superinstructions.CandidateIdentifier;
 
@@ -83,6 +84,8 @@ public final class VM {
   @CompilationFinal private SObjectWithoutFields vmMirror;
   @CompilationFinal private Actor                mainActor;
 
+  private final TraceParser traceParser;
+
   private static final int MAX_THREADS = 0x7fff;
 
   public VM(final VmOptions vmOptions) {
@@ -96,6 +99,12 @@ public final class VM {
         new ForkJoinThreadFactory(this), new UncaughtExceptions(this), false);
     threadPool = new ForkJoinPool(MAX_THREADS,
         new ForkJoinThreadFactory(this), new UncaughtExceptions(this), false);
+
+    if (VmSettings.REPLAY) {
+      traceParser = new TraceParser(VmSettings.TRACE_FILE);
+    } else {
+      traceParser = null;
+    }
   }
 
   /**
@@ -109,6 +118,13 @@ public final class VM {
     processesPool = null;
     forkJoinPool = null;
     threadPool = null;
+
+    traceParser = null;
+  }
+
+  public TraceParser getTraceParser() {
+    assert VmSettings.REPLAY : "Is expected to be used only for replay";
+    return traceParser;
   }
 
   public WebDebugger getWebDebugger() {
@@ -271,6 +287,14 @@ public final class VM {
     }
 
     shutdownPools();
+
+    if (VmSettings.REPLAY) {
+      try {
+        traceParser.close();
+      } catch (IOException e) {
+        throw new RuntimeException(e);
+      }
+    }
   }
 
   public boolean isShutdown() {
@@ -308,6 +332,10 @@ public final class VM {
 
     assert vmMirror == null : "VM seems to be initialized already";
     assert mainActor == null : "VM seems to be initialized already";
+
+    if (VmSettings.REPLAY) {
+      traceParser.initialize();
+    }
 
     mainActor = Actor.createActor(this);
     vmMirror = objectSystem.initialize();

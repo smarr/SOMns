@@ -16,7 +16,6 @@ import bd.primitives.Primitive;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
-import som.interpreter.SomLanguage;
 import som.interpreter.actors.SuspendExecutionNodeGen;
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.nary.BinaryComplexOperation.BinarySystemOperation;
@@ -48,6 +47,7 @@ import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 import tools.replay.ReplayRecord;
 import tools.replay.TraceParser;
+import tools.replay.TraceRecord;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
@@ -156,12 +156,16 @@ public abstract class ChannelPrimitives {
     private final boolean stopOnRootNode;
     private boolean       stopOnJoin;
 
+    protected final VM vm;
+
     private final TraceContextNode trace = TraceContextNodeGen.create();
 
-    public TracingProcess(final SObjectWithClass obj, final boolean stopOnRootNode) {
+    public TracingProcess(final SObjectWithClass obj, final boolean stopOnRootNode,
+        final VM vm) {
       super(obj);
       this.stopOnRootNode = stopOnRootNode;
-      processId = TracingActivityThread.newEntityId();
+      processId = TracingActivityThread.newEntityId(vm);
+      this.vm = vm;
     }
 
     @Override
@@ -174,7 +178,7 @@ public abstract class ChannelPrimitives {
     @Override
     protected void beforeExec(final SInvokable disp) {
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED && stopOnRootNode) {
-        WebDebugger dbg = SomLanguage.getVM(disp.getInvokable()).getWebDebugger();
+        WebDebugger dbg = vm.getWebDebugger();
         dbg.prepareSteppingUntilNextRootNode(Thread.currentThread());
       }
 
@@ -210,9 +214,10 @@ public abstract class ChannelPrimitives {
     private final Queue<ReplayRecord> replayEvents;
     private int                       children = 0;
 
-    public ReplayProcess(final SObjectWithClass obj, final boolean stopOnRootNode) {
-      super(obj, stopOnRootNode);
-      replayEvents = TraceParser.getReplayEventsForEntity(processId);
+    public ReplayProcess(final SObjectWithClass obj, final boolean stopOnRootNode,
+        final VM vm) {
+      super(obj, stopOnRootNode, vm);
+      replayEvents = vm.getTraceParser().getReplayEventsForEntity(processId);
     }
 
     @Override
@@ -221,8 +226,13 @@ public abstract class ChannelPrimitives {
     }
 
     @Override
-    public ReplayRecord getNextReplayEvent() {
-      return replayEvents.poll();
+    public Queue<ReplayRecord> getReplayEventBuffer() {
+      return this.replayEvents;
+    }
+
+    @Override
+    public TraceParser getTraceParser() {
+      return vm.getTraceParser();
     }
   }
 
@@ -245,7 +255,7 @@ public abstract class ChannelPrimitives {
     @Child protected AbstractBreakpointNode afterWrite;
 
     @Child protected RecordTwoEvent traceRead =
-        new RecordTwoEvent(ActorExecutionTrace.CHANNEL_READ);
+        new RecordTwoEvent(TraceRecord.CHANNEL_READ.value);
 
     @Override
     public final ReadPrim initialize(final VM vm) {
@@ -294,7 +304,7 @@ public abstract class ChannelPrimitives {
     @Child protected ExceptionSignalingNode notAValue;
 
     @Child protected RecordTwoEvent traceWrite =
-        new RecordTwoEvent(ActorExecutionTrace.CHANNEL_WRITE);
+        new RecordTwoEvent(TraceRecord.CHANNEL_WRITE.value);
 
     @Override
     public final WritePrim initialize(final VM vm) {
@@ -347,7 +357,7 @@ public abstract class ChannelPrimitives {
   @GenerateNodeFactory
   public abstract static class ChannelNewPrim extends UnaryExpressionNode {
 
-    @Child RecordOneEvent trace = new RecordOneEvent(ActorExecutionTrace.CHANNEL_CREATE);
+    @Child RecordOneEvent trace = new RecordOneEvent(TraceRecord.CHANNEL_CREATION);
 
     @Specialization
     public final SChannel newChannel(final Object module) {

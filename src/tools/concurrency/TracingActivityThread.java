@@ -6,6 +6,7 @@ import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import som.VM;
+import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.vm.Activity;
 import som.vm.VmSettings;
@@ -13,7 +14,6 @@ import tools.TraceData;
 import tools.debugger.SteppingStrategy;
 import tools.debugger.entities.EntityType;
 import tools.debugger.entities.SteppingType;
-import tools.replay.TraceParser;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 
@@ -200,8 +200,16 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   }
 
   public static long newEntityId() {
+    if (VmSettings.REPLAY) {
+      return newEntityId(SomLanguage.getCurrent().getVM());
+    } else {
+      return newEntityId(null);
+    }
+  }
+
+  public static long newEntityId(final VM vm) {
     if (VmSettings.REPLAY && Thread.currentThread() instanceof TracingActivityThread) {
-      return TraceParser.getReplayId();
+      return vm.getTraceParser().getReplayId();
     } else if ((VmSettings.KOMPOS_TRACING | VmSettings.ACTOR_TRACING)
         && Thread.currentThread() instanceof TracingActivityThread) {
       TracingActivityThread t = TracingActivityThread.currentThread();

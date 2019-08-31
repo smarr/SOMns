@@ -41,6 +41,15 @@ public class ReplayData {
     }
   }
 
+  protected static class Subtrace {
+    public final long startOffset;
+    public long       length;
+
+    Subtrace(final long startOffset) {
+      this.startOffset = startOffset;
+    }
+  }
+
   protected static class EntityNode implements Comparable<EntityNode> {
     final long             entityId;
     int                    childNo;
@@ -48,9 +57,12 @@ public class ReplayData {
     int                    ordering;
     ArrayList<EntityNode>  children;
     boolean                childrenSorted = false;
-    HashMap<Integer, Long> contextLocations;
-    boolean                contextsParsed = false;
-    Queue<ReplayRecord>    replayEvents;
+
+    HashMap<Integer, Subtrace> subtraces;
+
+    Queue<ReplayRecord> replayEvents;
+    int                 nextContext = 0;
+    boolean             retrieved   = false;
 
     public EntityNode(final long entityId) {
       this.entityId = entityId;
@@ -77,27 +89,30 @@ public class ReplayData {
       return children.get(childNo);
     }
 
-    protected void registerContext(int ordering, final long location) {
-      if (contextLocations == null) {
-        contextLocations = new HashMap<>();
+    protected Subtrace registerContext(int ordering, final long location) {
+      if (subtraces == null) {
+        subtraces = new HashMap<>();
       }
 
       // TODO probably can be done more efficiently
-      while (contextLocations.containsKey(ordering)) {
+      while (subtraces.containsKey(ordering) || ordering < nextContext) {
         ordering += 0xFFFF;
       }
 
-      contextLocations.put(ordering, location);
+      Subtrace detail = new Subtrace(location);
+      subtraces.put(ordering, detail);
+      return detail;
     }
 
-    protected void parseContexts() {
-      for (int i = 0; i < contextLocations.size(); i++) {
-        Long location = contextLocations.get(i);
-        if (location != null) {
-          TraceParser.processContext(location, this);
-        }
+    protected boolean parseContexts(final TraceParser parser) {
+      Subtrace detail = subtraces.get(nextContext);
+      if (detail != null) {
+        parser.processContext(detail, this);
+        nextContext++;
+        return true;
+      } else {
+        return false;
       }
-      contextsParsed = true;
     }
 
     protected void addReplayEvent(final ReplayRecord mr) {
@@ -139,7 +154,7 @@ public class ReplayData {
    * Node in actor creation hierarchy.
    */
   protected static class ActorNode extends EntityNode {
-    Queue<MessageRecord> expectedMessages = new java.util.LinkedList<>();
+    LinkedList<MessageRecord> expectedMessages = new LinkedList<>();
 
     ActorNode(final long actorId) {
       super(actorId);
@@ -149,7 +164,7 @@ public class ReplayData {
       expectedMessages.add(mr);
     }
 
-    public Queue<MessageRecord> getExpectedMessages() {
+    public LinkedList<MessageRecord> getExpectedMessages() {
       return expectedMessages;
     }
   }

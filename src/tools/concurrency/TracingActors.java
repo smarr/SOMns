@@ -1,8 +1,7 @@
 package tools.concurrency;
 
-import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Queue;
 import java.util.WeakHashMap;
@@ -17,6 +16,7 @@ import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
+import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.VmSettings;
 import tools.debugger.WebDebugger;
 import tools.replay.ReplayRecord;
@@ -44,7 +44,7 @@ public class TracingActors {
 
     public TracingActor(final VM vm) {
       super(vm);
-      this.activityId = TracingActivityThread.newEntityId();
+      this.activityId = TracingActivityThread.newEntityId(vm);
       assert this.activityId >= 0;
       if (VmSettings.SNAPSHOTS_ENABLED) {
         snapshotRecord = new SnapshotRecord();
@@ -123,17 +123,25 @@ public class TracingActors {
   }
 
   public static final class ReplayActor extends TracingActor {
-    protected int                              children;
-    protected final Queue<MessageRecord>       expectedMessages;
-    private final Queue<ReplayRecord>          replayEvents;
-    protected final ArrayList<EventualMessage> leftovers = new ArrayList<>();
-    private static Map<Long, ReplayActor>      actorList;
-    private BiConsumer<Short, Integer>         dataSource;
+    protected int                               children;
+    protected final LinkedList<MessageRecord>   expectedMessages;
+    private final Queue<ReplayRecord>           replayEvents;
+    protected final LinkedList<EventualMessage> leftovers = new LinkedList<>();
+    private static Map<Long, ReplayActor>       actorList;
+    private BiConsumer<Short, Integer>          dataSource;
+    private MessageRecord                       nextExpectedMessage;
+
+    private final TraceParser traceParser;
 
     static {
       if (VmSettings.REPLAY) {
         actorList = new WeakHashMap<>();
       }
+    }
+
+    @Override
+    public TraceParser getTraceParser() {
+      return traceParser;
     }
 
     public BiConsumer<Short, Integer> getDataSource() {
@@ -149,8 +157,8 @@ public class TracingActors {
     }
 
     @Override
-    public ReplayRecord getNextReplayEvent() {
-      return replayEvents.poll();
+    public Queue<ReplayRecord> getReplayEventBuffer() {
+      return this.replayEvents;
     }
 
     public static ReplayActor getActorWithId(final long id) {
@@ -162,15 +170,18 @@ public class TracingActors {
       super(vm);
 
       if (VmSettings.REPLAY) {
-        expectedMessages = TraceParser.getExpectedMessages(activityId);
-        replayEvents = TraceParser.getReplayEventsForEntity(activityId);
+        expectedMessages = vm.getTraceParser().getExpectedMessages(activityId);
+        replayEvents = vm.getTraceParser().getReplayEventsForEntity(activityId);
 
         synchronized (actorList) {
+          assert !actorList.containsKey(activityId);
           actorList.put(activityId, this);
         }
+        traceParser = vm.getTraceParser();
       } else {
         expectedMessages = null;
         replayEvents = null;
+        traceParser = null;
       }
     }
 
@@ -219,12 +230,12 @@ public class TracingActors {
       boolean result = false;
       for (ReplayActor a : actorList.values()) {
         ReplayActor ra = a;
-        if (ra.expectedMessages != null && ra.expectedMessages.peek() != null) {
+        if (ra.expectedMessages != null && ra.peekExpected() != null) {
           result = true; // program did not execute all messages
           Output.println("===========================================");
           Output.println("Actor " + ra.getId());
           Output.println("Expected: ");
-          printMsg(ra.expectedMessages.peek());
+          printMsg(ra.peekExpected());
 
           Output.println("Mailbox: ");
           if (a.firstMessage != null) {
@@ -297,25 +308,35 @@ public class TracingActors {
       }
 
       assert expectedMessages != null;
+      if (nextExpectedMessage == null) {
+        nextExpectedMessage = peekExpected();
+      }
 
-      if (expectedMessages.size() == 0) {
+      return replayCanProcess(nextExpectedMessage, msg);
+    }
+
+    protected boolean replayCanProcess(final MessageRecord expected,
+        final EventualMessage msg) {
+      if (!VmSettings.REPLAY) {
+        return true;
+      }
+
+      if (expected == null) {
         // actor no longer executes messages
         return false;
       }
 
-      MessageRecord other = expectedMessages.peek();
-
-      if ((msg instanceof PromiseMessage) != (other instanceof ReplayRecord.PromiseMessageRecord)) {
+      if ((msg instanceof PromiseMessage) != (expected instanceof ReplayRecord.PromiseMessageRecord)) {
         return false;
       }
 
       // handle promise messages
       if (msg instanceof PromiseMessage
-          && (((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor() != ((ReplayRecord.PromiseMessageRecord) other).pId)) {
+          && (((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor() != ((ReplayRecord.PromiseMessageRecord) expected).pId)) {
         return false;
       }
 
-      return ((ReplayActor) msg.getSender()).getId() == other.sender;
+      return ((ReplayActor) msg.getSender()).getId() == expected.sender;
     }
 
     @Override
@@ -323,23 +344,55 @@ public class TracingActors {
       return children++;
     }
 
+    /**
+     *
+     * @param a
+     * @return The next expected Message
+     */
     private static void removeFirstExpectedMessage(final ReplayActor a) {
-      MessageRecord first = a.expectedMessages.peek();
-      MessageRecord removed = a.expectedMessages.remove();
+      synchronized (a) {
+        MessageRecord removed = a.getExpected();
+        assert a.nextExpectedMessage == removed;
 
-      if (a.expectedMessages.peek() != null && a.expectedMessages.peek().isExternal()) {
-        if (a.expectedMessages.peek() instanceof ExternalMessageRecord) {
-          ExternalMessageRecord emr = (ExternalMessageRecord) a.expectedMessages.peek();
-          actorList.get(emr.sender).getDataSource().accept(emr.method,
-              emr.dataId);
-        } else {
-          ExternalPromiseMessageRecord emr =
-              (ExternalPromiseMessageRecord) a.expectedMessages.peek();
-          actorList.get(emr.pId).getDataSource().accept(emr.method,
-              emr.dataId);
+        MessageRecord peek = a.peekExpected();
+
+        if (peek != null && peek.isExternal()) {
+          if (peek instanceof ExternalMessageRecord) {
+            ExternalMessageRecord emr = (ExternalMessageRecord) peek;
+            actorList.get(emr.sender).getDataSource().accept(emr.method,
+                emr.dataId);
+          } else {
+            ExternalPromiseMessageRecord emr = (ExternalPromiseMessageRecord) peek;
+            actorList.get(emr.pId).getDataSource().accept(emr.method,
+                emr.dataId);
+          }
         }
+
+        a.nextExpectedMessage = peek;
       }
-      assert first == removed;
+    }
+
+    private MessageRecord getExpected() {
+      if (expectedMessages.isEmpty()) {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
+        while (traceParser.getMoreEventsForEntity(getId())
+            && expectedMessages.isEmpty()) {
+          // NOOP
+        }
+        ObjectTransitionSafepoint.INSTANCE.register();
+      }
+      return expectedMessages.poll();
+    }
+
+    private MessageRecord peekExpected() {
+      if (expectedMessages.isEmpty()) {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
+        while (traceParser.getMoreEventsForEntity(getId()) && expectedMessages.isEmpty()) {
+          // NOOP
+        }
+        ObjectTransitionSafepoint.INSTANCE.register();
+      }
+      return expectedMessages.peek();
     }
 
     private static class ExecAllMessagesReplay extends ExecAllMessages {
@@ -348,15 +401,26 @@ public class TracingActors {
       }
 
       private Queue<EventualMessage> determineNextMessages(
-          final List<EventualMessage> postponedMsgs) {
+          final LinkedList<EventualMessage> postponedMsgs) {
         final ReplayActor a = (ReplayActor) actor;
         int numReceivedMsgs = 1 + (mailboxExtension == null ? 0 : mailboxExtension.size());
         numReceivedMsgs += postponedMsgs.size();
 
         Queue<EventualMessage> todo = new LinkedList<>();
 
-        if (a.replayCanProcess(firstMessage)) {
+        if (a.nextExpectedMessage == null) {
+          a.nextExpectedMessage = a.peekExpected();
+        }
+
+        if (a.nextExpectedMessage == null) {
+          return todo;
+        }
+
+        boolean progress = false;
+
+        if (a.replayCanProcess(a.nextExpectedMessage, firstMessage)) {
           todo.add(firstMessage);
+          progress = true;
           removeFirstExpectedMessage(a);
         } else {
           postponedMsgs.add(firstMessage);
@@ -364,19 +428,35 @@ public class TracingActors {
 
         if (mailboxExtension != null) {
           for (EventualMessage msg : mailboxExtension) {
-            postponedMsgs.add(msg);
+            if (!progress && a.replayCanProcess(a.nextExpectedMessage, msg)) {
+              todo.add(msg);
+              progress = true;
+              removeFirstExpectedMessage(a);
+            } else {
+              postponedMsgs.add(msg);
+            }
           }
+        }
+
+        if (!progress) {
+          return todo;
         }
 
         boolean foundNextMessage = true;
         while (foundNextMessage) {
           foundNextMessage = false;
-          for (EventualMessage msg : postponedMsgs) {
-            if (a.replayCanProcess(msg)) {
+
+          Iterator<EventualMessage> iter = postponedMsgs.iterator();
+          while (iter.hasNext() && a.nextExpectedMessage != null) {
+            EventualMessage msg = iter.next();
+            if (a.replayCanProcess(a.nextExpectedMessage, msg)) {
+              iter.remove();
               todo.add(msg);
               removeFirstExpectedMessage(a);
-              postponedMsgs.remove(msg);
               foundNextMessage = true;
+              if (a.nextExpectedMessage == null) {
+                return todo;
+              }
               break;
             }
           }

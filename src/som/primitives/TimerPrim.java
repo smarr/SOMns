@@ -53,6 +53,7 @@ public abstract class TimerPrim extends BinarySystemOperation {
 
   @CompilationFinal private static List<Integer>                   todoList;
   @CompilationFinal private static HashMap<Integer, SFarReference> replayTargetMap;
+  @CompilationFinal private static TraceParser                     traceParser;
 
   public static void initializeTimer(final VM vm) {
     timer = new Timer();
@@ -68,6 +69,7 @@ public abstract class TimerPrim extends BinarySystemOperation {
       ((ReplayActor) vm.getMainActor()).setDataSource(new TimeDataSource());
       todoList = new ArrayList<>();
       replayTargetMap = new HashMap<>();
+      traceParser = vm.getTraceParser();
     }
   }
 
@@ -112,7 +114,7 @@ public abstract class TimerPrim extends BinarySystemOperation {
     SFarReference ref = new SFarReference(targetActor, target);
 
     synchronized (REPLAY_LOCK) {
-      int m = TraceParser.getIntegerSysCallResult();
+      int m = traceParser.getIntegerSysCallResult();
       if (todoList.contains(m)) {
         todoList.remove((Integer) m);
         TimerPrim.sendMessage(ref);
