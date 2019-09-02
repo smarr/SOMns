@@ -1,5 +1,6 @@
 package som.primitives.threading;
 
+import java.util.Queue;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
@@ -21,6 +22,10 @@ import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
+import tools.replay.ReplayRecord;
+import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.nodes.TraceContextNode;
+import tools.replay.nodes.TraceContextNodeGen;
 
 
 public final class TaskThreads {
@@ -63,6 +68,8 @@ public final class TaskThreads {
         }
         if (VmSettings.KOMPOS_TRACING) {
           KomposTrace.currentActivity(this);
+        } else if (VmSettings.ACTOR_TRACING && this instanceof TracedThreadTask) {
+          ActorExecutionTrace.recordActivityContext(this, ((TracedThreadTask) this).trace);
         }
 
         ForkJoinThread thread = (ForkJoinThread) Thread.currentThread();
@@ -167,11 +174,15 @@ public final class TaskThreads {
     private final long id;
     protected boolean  stopOnJoin;
 
-    private int nextTraceBufferId;
+    private int                    nextTraceBufferId;
+    private final TraceContextNode trace = TraceContextNodeGen.create();
 
-    public TracedThreadTask(final Object[] argArray, final boolean stopOnRoot) {
+    protected final VM vm;
+
+    public TracedThreadTask(final Object[] argArray, final boolean stopOnRoot, final VM vm) {
       super(argArray, stopOnRoot);
       this.id = TracingActivityThread.newEntityId();
+      this.vm = vm;
     }
 
     @Override
@@ -194,6 +205,26 @@ public final class TaskThreads {
     @Override
     public long getId() {
       return id;
+    }
+  }
+
+  public static class ReplayThreadTask extends TracedThreadTask {
+    private final Queue<ReplayRecord> replayEvents;
+    private int                       children = 0;
+
+    public ReplayThreadTask(final Object[] argArray, final boolean stopOnRoot, final VM vm) {
+      super(argArray, stopOnRoot, vm);
+      replayEvents = vm.getTraceParser().getReplayEventsForEntity(this.getId());
+    }
+
+    @Override
+    public int addChild() {
+      return children++;
+    }
+
+    @Override
+    public ReplayRecord getNextReplayEvent() {
+      return replayEvents.poll();
     }
   }
 

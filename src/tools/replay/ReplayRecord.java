@@ -68,15 +68,21 @@ public class ReplayRecord {
     }
   }
 
-  public static class ChannelReadRecord extends NumberedPassiveRecord {
-    public ChannelReadRecord(final long channelId, final long readNo) {
-      super(channelId, readNo);
+  public static class IsLockedRecord extends ReplayRecord {
+    public final long    lockId;
+    public final boolean isLocked;
+
+    public IsLockedRecord(final long lockid, final long isLocked) {
+      this.lockId = lockid;
+      this.isLocked = isLocked == 1;
     }
   }
 
-  public static class ChannelWriteRecord extends NumberedPassiveRecord {
-    public ChannelWriteRecord(final long channelId, final long writeNo) {
-      super(channelId, writeNo);
+  public static class AwaitTimeoutRecord extends ReplayRecord {
+    public final boolean isSignaled;
+
+    public AwaitTimeoutRecord(final long isSignaled) {
+      this.isSignaled = isSignaled == 1;
     }
   }
 }
