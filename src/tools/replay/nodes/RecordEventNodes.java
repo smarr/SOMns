@@ -45,6 +45,10 @@ public final class RecordEventNodes {
       this.eventType = eventType;
     }
 
+    public RecordTwoEvent(final TraceRecord eventType) {
+      this.eventType = eventType.value;
+    }
+
     private ActorTraceBuffer getStorage(final int entrySize) {
       ActorTraceBuffer buffer = getCurrentBuffer();
       buffer.ensureSufficientSpace(entrySize, tracer);

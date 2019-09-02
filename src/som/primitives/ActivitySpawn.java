@@ -70,13 +70,13 @@ public abstract class ActivitySpawn {
 
   private static SomThreadTask createThread(final Object[] argArray,
       final boolean stopOnRoot, final SBlock block, final SourceSection section,
-      final RecordOneEvent traceThreadCreation) {
+      final RecordOneEvent traceThreadCreation, final VM vm) {
     SomThreadTask thread;
 
     if (VmSettings.REPLAY) {
-      return new ReplayThreadTask(argArray, stopOnRoot);
+      return new ReplayThreadTask(argArray, stopOnRoot, vm);
     } else if (VmSettings.KOMPOS_TRACING || VmSettings.ACTOR_TRACING) {
-      thread = new TracedThreadTask(argArray, stopOnRoot);
+      thread = new TracedThreadTask(argArray, stopOnRoot, vm);
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.activityCreation(ActivityType.THREAD, thread.getId(),
@@ -155,7 +155,7 @@ public abstract class ActivitySpawn {
     @TruffleBoundary
     public final SomThreadTask spawnThread(final SClass clazz, final SBlock block) {
       SomThreadTask thread = createThread(new Object[] {block},
-          onExec.executeShouldHalt(), block, sourceSection, traceProcCreation);
+          onExec.executeShouldHalt(), block, sourceSection, traceProcCreation, vm);
       threadPool.execute(thread);
       return thread;
     }
@@ -242,7 +242,7 @@ public abstract class ActivitySpawn {
     public SomThreadTask spawnThread(final SClass clazz, final SBlock block,
         final SArray somArgArr, final Object[] argArr) {
       SomThreadTask thread = createThread(argArr,
-          onExec.executeShouldHalt(), block, sourceSection, traceProcCreation);
+          onExec.executeShouldHalt(), block, sourceSection, traceProcCreation, vm);
       threadPool.execute(thread);
       return thread;
     }

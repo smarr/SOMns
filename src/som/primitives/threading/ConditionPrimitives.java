@@ -16,7 +16,7 @@ import som.vm.VmSettings;
 import tools.concurrency.TracingActivityThread;
 import tools.replay.ReplayData;
 import tools.replay.ReplayRecord.AwaitTimeoutRecord;
-import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.TraceRecord;
 import tools.replay.actors.TracingLock.TracingCondition;
 import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
 
@@ -26,7 +26,7 @@ public final class ConditionPrimitives {
   @Primitive(primitive = "threadingSignalOne:")
   public abstract static class SignalOnePrim extends UnaryExpressionNode {
     @Child static protected RecordTwoEvent traceSignal =
-        new RecordTwoEvent(ActorExecutionTrace.CONDITION_SIGNALONE);
+        new RecordTwoEvent(TraceRecord.CONDITION_SIGNALONE);
 
     @Specialization
     @TruffleBoundary
@@ -51,7 +51,7 @@ public final class ConditionPrimitives {
   @Primitive(primitive = "threadingSignalAll:")
   public abstract static class SignalAllPrim extends UnaryExpressionNode {
     @Child static protected RecordTwoEvent traceSignal =
-        new RecordTwoEvent(ActorExecutionTrace.CONDITION_SIGNALALL);
+        new RecordTwoEvent(TraceRecord.CONDITION_SIGNALALL);
 
     @Specialization
     @TruffleBoundary
@@ -73,7 +73,7 @@ public final class ConditionPrimitives {
   @Primitive(primitive = "threadingAwait:")
   public abstract static class AwaitPrim extends UnaryExpressionNode {
     @Child static protected RecordTwoEvent traceSignal =
-        new RecordTwoEvent(ActorExecutionTrace.CONDITION_WAIT);
+        new RecordTwoEvent(TraceRecord.CONDITION_WAIT);
 
     @Specialization
     @TruffleBoundary
@@ -104,9 +104,9 @@ public final class ConditionPrimitives {
   @Primitive(primitive = "threadingAwait:for:")
   public abstract static class AwaitForPrim extends BinaryExpressionNode {
     @Child static protected RecordTwoEvent traceSignal =
-        new RecordTwoEvent(ActorExecutionTrace.CONDITION_AWAITTIMEOUT);
+        new RecordTwoEvent(TraceRecord.CONDITION_AWAITTIMEOUT);
     @Child static protected RecordTwoEvent traceResult =
-        new RecordTwoEvent(ActorExecutionTrace.CONDITION_AWAITTIMEOUT_RES);
+        new RecordTwoEvent(TraceRecord.CONDITION_AWAITTIMEOUT_RES);
 
     @Specialization
     @TruffleBoundary

@@ -24,7 +24,7 @@ import tools.concurrency.Tags.ReleaseLock;
 import tools.concurrency.TracingActivityThread;
 import tools.replay.ReplayData;
 import tools.replay.ReplayRecord.IsLockedRecord;
-import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.TraceRecord;
 import tools.replay.actors.TracingLock;
 import tools.replay.actors.TracingLock.TracingCondition;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
@@ -36,7 +36,7 @@ public final class MutexPrimitives {
   @Primitive(primitive = "threadingLock:", selector = "lock")
   public abstract static class LockPrim extends UnaryExpressionNode {
     @Child static protected RecordTwoEvent traceLock =
-        new RecordTwoEvent(ActorExecutionTrace.LOCK_LOCK);
+        new RecordTwoEvent(TraceRecord.LOCK_LOCK);
 
     @TruffleBoundary
     @Specialization
@@ -112,7 +112,7 @@ public final class MutexPrimitives {
   @Primitive(primitive = "threadingIsLocked:")
   public abstract static class IsLockedPrim extends UnaryExpressionNode {
     @Child protected RecordTwoEvent traceIsLocked =
-        new RecordTwoEvent(ActorExecutionTrace.LOCK_ISLOCKED);
+        new RecordTwoEvent(TraceRecord.LOCK_ISLOCKED);
 
     @Specialization
     @TruffleBoundary
@@ -133,7 +133,7 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingConditionFor:")
   public abstract static class ConditionForPrim extends UnaryExpressionNode {
-    @Child RecordOneEvent trace = new RecordOneEvent(ActorExecutionTrace.CONDITION_CREATE);
+    @Child RecordOneEvent trace = new RecordOneEvent(TraceRecord.CONDITION_CREATE);
 
     @Specialization
     @TruffleBoundary
@@ -153,7 +153,7 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingMutexNew:")
   public abstract static class MutexNewPrim extends UnaryExpressionNode {
-    @Child RecordOneEvent trace = new RecordOneEvent(ActorExecutionTrace.LOCK_CREATE);
+    @Child RecordOneEvent trace = new RecordOneEvent(TraceRecord.LOCK_CREATE);
 
     // TODO: should I guard this on the mutex class?
     @Specialization

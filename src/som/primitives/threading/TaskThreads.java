@@ -23,7 +23,6 @@ import tools.concurrency.TracingActivityThread;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.replay.ReplayRecord;
-import tools.replay.TraceParser;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
@@ -178,9 +177,12 @@ public final class TaskThreads {
     private int                    nextTraceBufferId;
     private final TraceContextNode trace = TraceContextNodeGen.create();
 
-    public TracedThreadTask(final Object[] argArray, final boolean stopOnRoot) {
+    protected final VM vm;
+
+    public TracedThreadTask(final Object[] argArray, final boolean stopOnRoot, final VM vm) {
       super(argArray, stopOnRoot);
       this.id = TracingActivityThread.newEntityId();
+      this.vm = vm;
     }
 
     @Override
@@ -210,9 +212,9 @@ public final class TaskThreads {
     private final Queue<ReplayRecord> replayEvents;
     private int                       children = 0;
 
-    public ReplayThreadTask(final Object[] argArray, final boolean stopOnRoot) {
-      super(argArray, stopOnRoot);
-      replayEvents = TraceParser.getReplayEventsForEntity(this.getId());
+    public ReplayThreadTask(final Object[] argArray, final boolean stopOnRoot, final VM vm) {
+      super(argArray, stopOnRoot, vm);
+      replayEvents = vm.getTraceParser().getReplayEventsForEntity(this.getId());
     }
 
     @Override

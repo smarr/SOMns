@@ -21,8 +21,6 @@ import tools.concurrency.TracingActors.ReplayActor;
 import tools.replay.ReplayData.ActorNode;
 import tools.replay.ReplayData.EntityNode;
 import tools.replay.ReplayData.Subtrace;
-import tools.replay.ReplayRecord.ChannelReadRecord;
-import tools.replay.ReplayRecord.ChannelWriteRecord;
 import tools.replay.ReplayRecord.AwaitTimeoutRecord;
 import tools.replay.ReplayRecord.ExternalMessageRecord;
 import tools.replay.ReplayRecord.ExternalPromiseMessageRecord;
@@ -168,17 +166,19 @@ public final class TraceParser implements Closeable {
     result[TraceRecord.CHANNEL_WRITE.value] = TraceRecord.CHANNEL_WRITE;
     result[TraceRecord.PROCESS_CREATION.value] = TraceRecord.PROCESS_CREATION;
 
-    result[ActorExecutionTrace.LOCK_ISLOCKED] = TraceRecord.LOCK_ISLOCKED;
-    result[ActorExecutionTrace.CONDITION_AWAITTIMEOUT_RES] =
+    result[TraceRecord.LOCK_ISLOCKED.value] = TraceRecord.LOCK_ISLOCKED;
+    result[TraceRecord.CONDITION_AWAITTIMEOUT_RES.value] =
         TraceRecord.CONDITION_AWAITTIMEOUT_RES;
 
-    result[ActorExecutionTrace.CHANNEL_READ] = TraceRecord.NUMBERED_PASSIVE_EVENT;
-    result[ActorExecutionTrace.CHANNEL_WRITE] = TraceRecord.NUMBERED_PASSIVE_EVENT;
-    result[ActorExecutionTrace.LOCK_LOCK] = TraceRecord.NUMBERED_PASSIVE_EVENT;
-    result[ActorExecutionTrace.CONDITION_WAIT] = TraceRecord.NUMBERED_PASSIVE_EVENT;
-    result[ActorExecutionTrace.CONDITION_AWAITTIMEOUT] = TraceRecord.NUMBERED_PASSIVE_EVENT;
-    result[ActorExecutionTrace.CONDITION_SIGNALONE] = TraceRecord.NUMBERED_PASSIVE_EVENT;
-    result[ActorExecutionTrace.CONDITION_SIGNALALL] = TraceRecord.NUMBERED_PASSIVE_EVENT;
+    result[TraceRecord.LOCK_CREATE.value] = TraceRecord.LOCK_CREATE;
+    result[TraceRecord.CONDITION_CREATE.value] = TraceRecord.CONDITION_CREATE;
+    result[TraceRecord.CHANNEL_READ.value] = TraceRecord.CHANNEL_READ;
+    result[TraceRecord.CHANNEL_WRITE.value] = TraceRecord.CHANNEL_WRITE;
+    result[TraceRecord.LOCK_LOCK.value] = TraceRecord.LOCK_LOCK;
+    result[TraceRecord.CONDITION_WAIT.value] = TraceRecord.CONDITION_WAIT;
+    result[TraceRecord.CONDITION_AWAITTIMEOUT.value] = TraceRecord.CONDITION_AWAITTIMEOUT;
+    result[TraceRecord.CONDITION_SIGNALONE.value] = TraceRecord.CONDITION_SIGNALONE;
+    result[TraceRecord.CONDITION_SIGNALALL.value] = TraceRecord.CONDITION_SIGNALALL;
 
     return result;
   }
@@ -288,6 +288,8 @@ public final class TraceParser implements Closeable {
       case ACTOR_CREATION:
       case CHANNEL_CREATION:
       case PROCESS_CREATION:
+      case CONDITION_CREATE:
+      case LOCK_CREATE:
         long newEntityId = getId(b, numbytes);
 
         if (scanning) {
@@ -380,16 +382,29 @@ public final class TraceParser implements Closeable {
       case SYSTEM_CALL:
         dataId = b.getInt();
         break;
-      case CHANNEL_READ:
-        long channelRId = b.getLong();
-        long nread = b.getLong();
-        ctx.currentEntity.addReplayEvent(new ChannelReadRecord(channelRId, nread));
+
+      case LOCK_ISLOCKED:
+        long passiveId = b.getLong();
+        long result = b.getLong();
+        ctx.currentEntity.addReplayEvent(new IsLockedRecord(passiveId, result));
         assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
         break;
+      case CONDITION_AWAITTIMEOUT_RES:
+        long condId = b.getLong();
+        long isSignaled = b.getLong();
+        ctx.currentEntity.addReplayEvent(new AwaitTimeoutRecord(condId, isSignaled));
+        assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
+        break;
+      case CHANNEL_READ:
       case CHANNEL_WRITE:
-        long channelWId = b.getLong();
-        long nwrite = b.getLong();
-        ctx.currentEntity.addReplayEvent(new ChannelWriteRecord(channelWId, nwrite));
+      case LOCK_LOCK:
+      case CONDITION_WAIT:
+      case CONDITION_AWAITTIMEOUT:
+      case CONDITION_SIGNALONE:
+      case CONDITION_SIGNALALL:
+        long passiveEntityId = b.getLong();
+        long eventNo = b.getLong();
+        ctx.currentEntity.addReplayEvent(new NumberedPassiveRecord(passiveEntityId, eventNo));
         assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
         break;
       default:
@@ -406,8 +421,8 @@ public final class TraceParser implements Closeable {
     } else {
       EntityNode newNode = null;
       switch (type) {
-        case ActorExecutionTrace.ACTOR_CONTEXT:
-        case ActorExecutionTrace.ACTOR_CREATION:
+        case ACTOR_CONTEXT:
+        case ACTOR_CREATION:
           newNode = new ActorNode(entityId);
           break;
         default:
