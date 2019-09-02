@@ -14,25 +14,43 @@ import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
+import som.vm.Activity;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import tools.concurrency.Tags.AcquireLock;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.Tags.ReleaseLock;
+import tools.concurrency.TracingActivityThread;
+import tools.replay.ReplayData;
+import tools.replay.ReplayRecord.IsLockedRecord;
+import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.actors.TracingLock;
+import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
 
 
 public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingLock:", selector = "lock")
   public abstract static class LockPrim extends UnaryExpressionNode {
+    @Child static protected RecordTwoEvent traceLock =
+        new RecordTwoEvent(ActorExecutionTrace.LOCK_ISLOCKED);
+
     @TruffleBoundary
     @Specialization
     public static final ReentrantLock lock(final ReentrantLock lock) {
       try {
         ObjectTransitionSafepoint.INSTANCE.unregister();
-        lock.lock();
+        if (VmSettings.REPLAY) {
+          ReplayData.replayDelayNumberedEvent((TracingLock) lock,
+              ((TracingLock) lock).getId());
+        }
+
+        if (VmSettings.ACTOR_TRACING) {
+          ((TracingLock) lock).tracingLock(traceLock);
+        } else {
+          lock.lock();
+        }
       } finally {
         ObjectTransitionSafepoint.INSTANCE.register();
       }
@@ -88,9 +106,20 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingIsLocked:")
   public abstract static class IsLockedPrim extends UnaryExpressionNode {
+    @Child protected RecordTwoEvent traceIsLocked =
+        new RecordTwoEvent(ActorExecutionTrace.LOCK_ISLOCKED);
+
     @Specialization
     @TruffleBoundary
     public boolean doLock(final ReentrantLock lock) {
+      if (VmSettings.REPLAY) {
+        Activity reader = TracingActivityThread.currentThread().getActivity();
+        IsLockedRecord ilr = (IsLockedRecord) reader.getNextReplayEvent();
+        return ilr.isLocked;
+      } else if (VmSettings.ACTOR_TRACING) {
+        return ((TracingLock) lock).tracingIsLocked(traceIsLocked);
+      }
+
       return lock.isLocked();
     }
   }

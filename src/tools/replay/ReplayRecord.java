@@ -79,4 +79,14 @@ public class ReplayRecord {
       super(channelId, writeNo);
     }
   }
+
+  public static class IsLockedRecord extends ReplayRecord {
+    public final long    lockId;
+    public final boolean isLocked;
+
+    public IsLockedRecord(final long lockid, final long isLocked) {
+      this.lockId = lockid;
+      this.isLocked = isLocked == 1;
+    }
+  }
 }

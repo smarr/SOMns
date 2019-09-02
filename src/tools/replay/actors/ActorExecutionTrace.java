@@ -13,6 +13,12 @@ import tools.replay.nodes.TraceContextNode;
 
 
 public class ActorExecutionTrace {
+  public static final byte LOCK_ISLOCKED          = 10;
+  public static final byte LOCK_LOCK              = 11;
+  public static final byte CONDITION_SIGNALONE    = 12;
+  public static final byte CONDITION_SIGNALALL    = 13;
+  public static final byte CONDITION_WAIT         = 14;
+  public static final byte CONDITION_AWAITTIMEOUT = 15;
   // shifts
   public static final int SmallIdShift = 6;
 
