@@ -26,6 +26,8 @@ import tools.replay.ReplayData;
 import tools.replay.ReplayRecord.IsLockedRecord;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.actors.TracingLock;
+import tools.replay.actors.TracingLock.TracingCondition;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
 
 
@@ -115,6 +117,7 @@ public final class MutexPrimitives {
       if (VmSettings.REPLAY) {
         Activity reader = TracingActivityThread.currentThread().getActivity();
         IsLockedRecord ilr = (IsLockedRecord) reader.getNextReplayEvent();
+        assert ilr.lockId == ((TracingLock) lock).getId();
         return ilr.isLocked;
       } else if (VmSettings.ACTOR_TRACING) {
         return ((TracingLock) lock).tracingIsLocked(traceIsLocked);
@@ -127,9 +130,18 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingConditionFor:")
   public abstract static class ConditionForPrim extends UnaryExpressionNode {
+    @Child RecordOneEvent trace = new RecordOneEvent(ActorExecutionTrace.CONDITION_CREATE);
+
     @Specialization
     @TruffleBoundary
     public Condition doLock(final ReentrantLock lock) {
+      if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
+        TracingCondition result = new TracingCondition(lock.newCondition());
+        if (VmSettings.ACTOR_TRACING) {
+          trace.record(result.getId());
+        }
+        return result;
+      }
       return lock.newCondition();
     }
   }
@@ -137,12 +149,18 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingMutexNew:")
   public abstract static class MutexNewPrim extends UnaryExpressionNode {
+    @Child RecordOneEvent trace = new RecordOneEvent(ActorExecutionTrace.LOCK_CREATE);
+
     // TODO: should I guard this on the mutex class?
     @Specialization
     @TruffleBoundary
     public final ReentrantLock doSClass(final SClass clazz) {
       if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
-        return new TracingLock();
+        TracingLock result = new TracingLock();
+        if (VmSettings.ACTOR_TRACING) {
+          trace.record(result.getId());
+        }
+        return result;
       }
       return new ReentrantLock();
     }

@@ -11,16 +11,35 @@ import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
+import som.vm.VmSettings;
+import tools.replay.ReplayData;
+import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.actors.TracingLock.TracingCondition;
+import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
 
 
 public final class ConditionPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingSignalOne:")
   public abstract static class SignalOnePrim extends UnaryExpressionNode {
+    @Child static protected RecordTwoEvent traceSignal =
+        new RecordTwoEvent(ActorExecutionTrace.CONDITION_SIGNALONE);
+
     @Specialization
     @TruffleBoundary
     public final Condition doCondition(final Condition cond) {
-      cond.signal();
+
+      if (VmSettings.REPLAY) {
+        ReplayData.replayDelayNumberedEvent((TracingCondition) cond,
+            ((TracingCondition) cond).getId());
+      }
+
+      if (VmSettings.ACTOR_TRACING) {
+        ((TracingCondition) cond).tracingSignal(traceSignal);
+      } else {
+        cond.signal();
+      }
+
       return cond;
     }
   }
@@ -28,10 +47,21 @@ public final class ConditionPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingSignalAll:")
   public abstract static class SignalAllPrim extends UnaryExpressionNode {
+    @Child static protected RecordTwoEvent traceSignal =
+        new RecordTwoEvent(ActorExecutionTrace.CONDITION_SIGNALALL);
+
     @Specialization
     @TruffleBoundary
     public final Condition doCondition(final Condition cond) {
-      cond.signalAll();
+      if (VmSettings.REPLAY) {
+        ReplayData.replayDelayNumberedEvent((TracingCondition) cond,
+            ((TracingCondition) cond).getId());
+      }
+      if (VmSettings.ACTOR_TRACING) {
+        ((TracingCondition) cond).tracingSignalAll(traceSignal);
+      } else {
+        cond.signalAll();
+      }
       return cond;
     }
   }
@@ -39,12 +69,25 @@ public final class ConditionPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingAwait:")
   public abstract static class AwaitPrim extends UnaryExpressionNode {
+    @Child static protected RecordTwoEvent traceSignal =
+        new RecordTwoEvent(ActorExecutionTrace.CONDITION_WAIT);
+
     @Specialization
     @TruffleBoundary
     public final Condition doCondition(final Condition cond) {
+
       try {
         ObjectTransitionSafepoint.INSTANCE.unregister();
-        cond.await();
+        if (VmSettings.REPLAY) {
+          ReplayData.replayDelayNumberedEvent((TracingCondition) cond,
+              ((TracingCondition) cond).getId());
+        }
+
+        if (VmSettings.ACTOR_TRACING) {
+          ((TracingCondition) cond).tracingAwait(traceSignal);
+        } else {
+          cond.await();
+        }
       } catch (InterruptedException e) {
         /* doesn't tell us a lot at the moment, so it is ignored */
       }
@@ -57,13 +100,24 @@ public final class ConditionPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingAwait:for:")
   public abstract static class AwaitForPrim extends BinaryExpressionNode {
+    @Child static protected RecordTwoEvent traceSignal =
+        new RecordTwoEvent(ActorExecutionTrace.CONDITION_AWAITTIMEOUT);
+
     @Specialization
     @TruffleBoundary
     public final boolean doCondition(final Condition cond, final long milliseconds) {
       try {
         ObjectTransitionSafepoint.INSTANCE.unregister();
+        if (VmSettings.REPLAY) {
+          ReplayData.replayDelayNumberedEvent((TracingCondition) cond,
+              ((TracingCondition) cond).getId());
+        }
         try {
-          return cond.await(milliseconds, TimeUnit.MILLISECONDS);
+          if (VmSettings.ACTOR_TRACING) {
+            return ((TracingCondition) cond).tracingAwait(traceSignal, milliseconds);
+          } else {
+            return cond.await(milliseconds, TimeUnit.MILLISECONDS);
+          }
         } catch (InterruptedException e) {
           return false;
         }

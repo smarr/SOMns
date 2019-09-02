@@ -68,18 +68,6 @@ public class ReplayRecord {
     }
   }
 
-  public static class ChannelReadRecord extends NumberedPassiveRecord {
-    public ChannelReadRecord(final long channelId, final long readNo) {
-      super(channelId, readNo);
-    }
-  }
-
-  public static class ChannelWriteRecord extends NumberedPassiveRecord {
-    public ChannelWriteRecord(final long channelId, final long writeNo) {
-      super(channelId, writeNo);
-    }
-  }
-
   public static class IsLockedRecord extends ReplayRecord {
     public final long    lockId;
     public final boolean isLocked;
