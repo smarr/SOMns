@@ -11,8 +11,11 @@ import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
+import som.vm.Activity;
 import som.vm.VmSettings;
+import tools.concurrency.TracingActivityThread;
 import tools.replay.ReplayData;
+import tools.replay.ReplayRecord.AwaitTimeoutRecord;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.actors.TracingLock.TracingCondition;
 import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
@@ -102,23 +105,42 @@ public final class ConditionPrimitives {
   public abstract static class AwaitForPrim extends BinaryExpressionNode {
     @Child static protected RecordTwoEvent traceSignal =
         new RecordTwoEvent(ActorExecutionTrace.CONDITION_AWAITTIMEOUT);
+    @Child static protected RecordTwoEvent traceResult =
+        new RecordTwoEvent(ActorExecutionTrace.CONDITION_AWAITTIMEOUT_RES);
 
     @Specialization
     @TruffleBoundary
     public final boolean doCondition(final Condition cond, final long milliseconds) {
       try {
         ObjectTransitionSafepoint.INSTANCE.unregister();
-        if (VmSettings.REPLAY) {
-          ReplayData.replayDelayNumberedEvent((TracingCondition) cond,
-              ((TracingCondition) cond).getId());
-        }
+
         try {
-          if (VmSettings.ACTOR_TRACING) {
-            return ((TracingCondition) cond).tracingAwait(traceSignal, milliseconds);
+          if (VmSettings.REPLAY) {
+            ReplayData.replayDelayNumberedEvent((TracingCondition) cond,
+                ((TracingCondition) cond).getId());
+
+            Activity reader = TracingActivityThread.currentThread().getActivity();
+            AwaitTimeoutRecord atr = (AwaitTimeoutRecord) reader.getNextReplayEvent();
+
+            if (atr.isSignaled) {
+              // original did not time out and was signaled
+              cond.await();
+              return true;
+            }
+
+            // original timed out, we dont wait
+            return false;
+          } else if (VmSettings.ACTOR_TRACING) {
+            boolean result = ((TracingCondition) cond).tracingAwait(traceSignal, milliseconds);
+            traceResult.record(((TracingCondition) cond).getId(), result ? 1 : 0);
+            return result;
           } else {
             return cond.await(milliseconds, TimeUnit.MILLISECONDS);
           }
         } catch (InterruptedException e) {
+          if (VmSettings.ACTOR_TRACING) {
+            traceResult.record(((TracingCondition) cond).getId(), 0);
+          }
           return false;
         }
       } finally {

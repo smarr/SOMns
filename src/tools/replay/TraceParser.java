@@ -25,6 +25,7 @@ import tools.replay.ReplayRecord.ChannelReadRecord;
 import tools.replay.ReplayRecord.ChannelWriteRecord;
 import tools.replay.ReplayRecord.ExternalMessageRecord;
 import tools.replay.ReplayRecord.ExternalPromiseMessageRecord;
+import tools.replay.ReplayRecord.IsLockedRecord;
 import tools.replay.ReplayRecord.MessageRecord;
 import tools.replay.ReplayRecord.NumberedPassiveRecord;
 import tools.replay.ReplayRecord.PromiseMessageRecord;
@@ -167,6 +168,8 @@ public final class TraceParser implements Closeable {
     result[TraceRecord.PROCESS_CREATION.value] = TraceRecord.PROCESS_CREATION;
 
     result[ActorExecutionTrace.LOCK_ISLOCKED] = TraceRecord.LOCK_ISLOCKED;
+    result[ActorExecutionTrace.CONDITION_AWAITTIMEOUT_RES] =
+        TraceRecord.CONDITION_AWAITTIMEOUT_RES;
 
     result[ActorExecutionTrace.CHANNEL_READ] = TraceRecord.NUMBERED_PASSIVE_EVENT;
     result[ActorExecutionTrace.CHANNEL_WRITE] = TraceRecord.NUMBERED_PASSIVE_EVENT;

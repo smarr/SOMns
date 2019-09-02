@@ -77,4 +77,14 @@ public class ReplayRecord {
       this.isLocked = isLocked == 1;
     }
   }
+
+  public static class AwaitTimeoutRecord extends ReplayRecord {
+    public final long    conditionId;
+    public final boolean isSignaled;
+
+    public AwaitTimeoutRecord(final long conditionId, final long isSignaled) {
+      this.conditionId = conditionId;
+      this.isSignaled = isSignaled == 1;
+    }
+  }
 }

@@ -21,6 +21,7 @@ public class ActorExecutionTrace {
   public static final byte CONDITION_AWAITTIMEOUT = 15;
   public static final byte LOCK_CREATE            = 16;
   public static final byte CONDITION_CREATE       = 17;
+  public static final byte CONDITION_AWAITTIMEOUT_RES = 18;
   // shifts
   public static final int SmallIdShift = 6;
 
