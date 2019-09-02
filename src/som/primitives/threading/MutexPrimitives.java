@@ -14,11 +14,13 @@ import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
+import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import tools.concurrency.Tags.AcquireLock;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.Tags.ReleaseLock;
+import tools.replay.actors.TracingLock;
 
 
 public final class MutexPrimitives {
@@ -110,6 +112,9 @@ public final class MutexPrimitives {
     @Specialization
     @TruffleBoundary
     public final ReentrantLock doSClass(final SClass clazz) {
+      if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
+        return new TracingLock();
+      }
       return new ReentrantLock();
     }
   }
