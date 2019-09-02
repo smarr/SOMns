@@ -36,7 +36,7 @@ public final class MutexPrimitives {
   @Primitive(primitive = "threadingLock:", selector = "lock")
   public abstract static class LockPrim extends UnaryExpressionNode {
     @Child static protected RecordTwoEvent traceLock =
-        new RecordTwoEvent(ActorExecutionTrace.LOCK_ISLOCKED);
+        new RecordTwoEvent(ActorExecutionTrace.LOCK_LOCK);
 
     @TruffleBoundary
     @Specialization
@@ -76,6 +76,9 @@ public final class MutexPrimitives {
     @Specialization
     public static final ReentrantLock unlock(final ReentrantLock lock) {
       lock.unlock();
+      if (VmSettings.REPLAY) {
+        ((TracingLock) lock).replayIncrementEventNo();
+      }
       return lock;
     }
 

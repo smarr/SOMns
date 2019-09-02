@@ -23,6 +23,7 @@ import tools.replay.ReplayData.EntityNode;
 import tools.replay.ReplayData.Subtrace;
 import tools.replay.ReplayRecord.ChannelReadRecord;
 import tools.replay.ReplayRecord.ChannelWriteRecord;
+import tools.replay.ReplayRecord.AwaitTimeoutRecord;
 import tools.replay.ReplayRecord.ExternalMessageRecord;
 import tools.replay.ReplayRecord.ExternalPromiseMessageRecord;
 import tools.replay.ReplayRecord.IsLockedRecord;

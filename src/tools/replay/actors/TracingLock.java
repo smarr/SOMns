@@ -5,6 +5,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import som.vm.VmSettings;
 import tools.concurrency.TracingActivityThread;
 import tools.replay.PassiveEntityWithEvents;
 import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
@@ -12,7 +13,7 @@ import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
 
 public final class TracingLock extends ReentrantLock implements PassiveEntityWithEvents {
   private static final long serialVersionUID = -3346973644925799901L;
-  long                      id;
+  final long                id;
   int                       eventNo          = 0;
 
   public TracingLock() {
@@ -29,6 +30,10 @@ public final class TracingLock extends ReentrantLock implements PassiveEntityWit
     return isLocked;
   }
 
+  public void replayIncrementEventNo() {
+    this.eventNo++;
+  }
+
   public final synchronized void tracingLock(final RecordTwoEvent traceLock) {
     traceLock.record(id, eventNo);
     eventNo++;
@@ -41,12 +46,16 @@ public final class TracingLock extends ReentrantLock implements PassiveEntityWit
   }
 
   public static final class TracingCondition implements PassiveEntityWithEvents, Condition {
-    Condition wrapped;
-    long      id;
-    int       eventNo = 0;
+    final Condition   wrapped;
+    final TracingLock owner;
+    final long        id;
+    int               eventNo         = 0;
+    boolean           blockUntilAwait = false;
+    int               queueSizePreAwait;
 
-    public TracingCondition(final Condition c) {
+    public TracingCondition(final Condition c, final TracingLock owner) {
       this.wrapped = c;
+      this.owner = owner;
       this.id = TracingActivityThread.newEntityId();
     }
 
@@ -54,19 +63,43 @@ public final class TracingLock extends ReentrantLock implements PassiveEntityWit
       return id;
     }
 
+    public void replayEnsureNextEventAfterAwait() {
+      if (blockUntilAwait) {
+        // block thread until wait queue length indicates that wait registered.
+        while (queueSizePreAwait == owner.getWaitQueueLength(wrapped)) {
+          try {
+            Thread.sleep(5);
+          } catch (InterruptedException e) {}
+        }
+
+        // reset for next await
+        blockUntilAwait = false;
+      }
+    }
+
+    public void replayPrepareAwait() {
+      assert !blockUntilAwait;
+      queueSizePreAwait = owner.getWaitQueueLength(wrapped);
+      blockUntilAwait = true;
+      this.eventNo++;
+    }
+
     @Override
     public void await() throws InterruptedException {
+      if (VmSettings.REPLAY) {
+        replayPrepareAwait();
+      }
       wrapped.await();
     }
 
     @Override
     public void awaitUninterruptibly() {
-      wrapped.awaitUninterruptibly();
+      throw new UnsupportedOperationException();
     }
 
     @Override
     public long awaitNanos(final long nanosTimeout) throws InterruptedException {
-      return wrapped.awaitNanos(nanosTimeout);
+      throw new UnsupportedOperationException();
     }
 
     @Override
@@ -76,7 +109,7 @@ public final class TracingLock extends ReentrantLock implements PassiveEntityWit
 
     @Override
     public boolean awaitUntil(final Date deadline) throws InterruptedException {
-      return wrapped.awaitUntil(deadline);
+      throw new UnsupportedOperationException();
     }
 
     @Override
