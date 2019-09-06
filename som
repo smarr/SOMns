@@ -161,8 +161,8 @@ java_bin = None
 
 if JVMCI_BIN:
   java_bin = JVMCI_BIN
-if not java_bin and GRAAL_HOME and os.path.isfile(graal_home + '/bin/java'):
-  java_bin = graal_home + '/bin/java'  
+if not java_bin and GRAAL_HOME and os.path.isfile(GRAAL_HOME + '/bin/java'):
+  java_bin = GRAAL_HOME + '/bin/java'  
 
 if not java_bin:
     # use local JVMCI, which ant already needed
