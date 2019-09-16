@@ -10,14 +10,14 @@ class MinitestTests usingPlatform: platform testFramework: minitest = Value (
   private actors   = platform actors.
 |
 ) (
-  public class AssertionTests = TestContext (
+  public class AssertionTests = AsyncTestContext (
     (* Describe the class in this comment. *)
   | guineaPig = GuineaPigTestModule testFramework: testFramework.
     catalog = TestCatalog forModule: guineaPig.
     tester
   |
   ) (
-    public class GuineaPigTestModule testFramework: testFramework = (
+    public class GuineaPigTestModule testFramework: testFramework = Value (
       | private TestContext = testFramework TestContext. |
     ) (
       public class AssertEqualsTestContext = TestContext ()(
@@ -195,6 +195,30 @@ class MinitestTests usingPlatform: platform testFramework: minitest = Value (
         TEST_CONTEXT = ()
       )
 
+      public class AssertAsyncTestContext = AsyncTestContext (
+      (* Class for testing asynchronous assertions. *)
+      )(
+         public testAsyncAssertResolvedWithPass = (
+         | completionPP |
+
+         completionPP:: actors createPromisePair.
+         completionPP resolver resolve: 4.
+
+         ^ assert: completionPP promise resolvedWith: 4
+         )
+
+         public testAsyncAssertResolvedWithFail = (
+           | completionPP |
+
+           completionPP:: actors createPromisePair.
+           completionPP resolver resolve: 4.
+
+           ^ assert: completionPP promise resolvedWith: 5
+         )
+       ): (
+         TEST_CONTEXT = ()
+      )
+
       class GenericException = Exception (
         | public messageText |
       )()
@@ -297,33 +321,20 @@ class MinitestTests usingPlatform: platform testFramework: minitest = Value (
           assert: tester successes containsSelector: #testShouldntIsNotFailingTestForOtherException.
       ]
     )
+
+    public testAsyncAssertResolved = (
+      tester:: Tester testSuite: (catalog testSuiteNamed: 'AssertAsyncTestContext').
+      ^ tester runAll whenResolved: [:r |
+                         assert: tester errors size equals: 0.
+                         assert: tester failures size equals: 1.
+                         assert: tester failures containsSelector: #testAsyncAssertResolvedWithFail.
+                         assert: tester successes size equals: 1.
+                         assert: tester successes containsSelector: #testAsyncAssertResolvedWithPass.
+      ]
+    )
+
   ) : (
     TEST_CONTEXT = ()
-  )
-
-  public class Math = () (
-     public factorial: n = (
-       n = 0 ifTrue: [ ^ 1 ].
-       ^ (self <-: factorial: n - 1) <-: * n
-      )
-  )
-
-  public class AsyncAssertionTest = AsyncTestContext (
-    (* Test class to test asynchronous assertions failing *)
-  ) (
-
-     public testAsyncAssertionFailed = (
-       | mathP whenP assertP |
-       mathP:: (actors createActorFromValue: Math) <-: new.
-
-       assertP:: assert: (mathP <-: factorial: 4) resolvedWith: 0.
-
-       whenP:: assertP whenResolved:[:v | NoExceptionReceivedException signal ]
-                       onError: [:e | assert: e messageText equals: 'Equality assertion failed; expected: 0, was: 24' ].
-       ^ whenP
-       )
-     ) : (
-        TEST_CONTEXT = ()
   )
 
   public class TestLifecycleTests = TestContext (
