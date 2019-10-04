@@ -9,6 +9,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.Primitive;
+import som.Output;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
@@ -26,7 +27,6 @@ import tools.replay.ReplayData;
 import tools.replay.ReplayRecord.IsLockedRecord;
 import tools.replay.TraceRecord;
 import tools.replay.actors.TracingLock;
-import tools.replay.actors.TracingLock.TracingCondition;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
 
@@ -42,6 +42,8 @@ public final class MutexPrimitives {
     @Specialization
     public static final ReentrantLock lock(final ReentrantLock lock) {
       try {
+        long aid = TracingActivityThread.currentThread().getActivity().getId();
+
         ObjectTransitionSafepoint.INSTANCE.unregister();
         if (VmSettings.REPLAY) {
           ReplayData.replayDelayNumberedEvent((TracingLock) lock,
@@ -50,9 +52,18 @@ public final class MutexPrimitives {
 
         if (VmSettings.ACTOR_TRACING) {
           ((TracingLock) lock).tracingLock(traceLock);
+          Output.println(
+              "" + aid + " acquired lock v" + (((TracingLock) lock).getNextEventNumber() - 1));
         } else {
           lock.lock();
+          if (VmSettings.REPLAY) {
+            ((TracingLock) lock).replayIncrementEventNo();
+            ((TracingLock) lock).replayCondition.signalAll();
+          }
+          Output.println(
+              "" + aid + " acquired lock v" + (((TracingLock) lock).getNextEventNumber() - 1));
         }
+
       } finally {
         ObjectTransitionSafepoint.INSTANCE.register();
       }
@@ -76,9 +87,6 @@ public final class MutexPrimitives {
     @Specialization
     public static final ReentrantLock unlock(final ReentrantLock lock) {
       lock.unlock();
-      if (VmSettings.REPLAY) {
-        ((TracingLock) lock).replayIncrementEventNo();
-      }
       return lock;
     }
 
@@ -133,19 +141,10 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingConditionFor:")
   public abstract static class ConditionForPrim extends UnaryExpressionNode {
-    @Child RecordOneEvent trace = new RecordOneEvent(TraceRecord.CONDITION_CREATE);
 
     @Specialization
     @TruffleBoundary
     public Condition doLock(final ReentrantLock lock) {
-      if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
-        TracingCondition result =
-            new TracingCondition(lock.newCondition(), (TracingLock) lock);
-        if (VmSettings.ACTOR_TRACING) {
-          trace.record(result.getId());
-        }
-        return result;
-      }
       return lock.newCondition();
     }
   }

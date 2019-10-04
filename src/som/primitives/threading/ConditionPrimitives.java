@@ -8,16 +8,17 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 import bd.primitives.Primitive;
+import som.Output;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.Activity;
 import som.vm.VmSettings;
 import tools.concurrency.TracingActivityThread;
-import tools.replay.ReplayData;
 import tools.replay.ReplayRecord.AwaitTimeoutRecord;
 import tools.replay.TraceRecord;
 import tools.replay.actors.TracingLock.TracingCondition;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
 
 
@@ -25,24 +26,11 @@ public final class ConditionPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingSignalOne:")
   public abstract static class SignalOnePrim extends UnaryExpressionNode {
-    @Child static protected RecordTwoEvent traceSignal =
-        new RecordTwoEvent(TraceRecord.CONDITION_SIGNALONE);
 
     @Specialization
     @TruffleBoundary
     public final Condition doCondition(final Condition cond) {
-
-      if (VmSettings.REPLAY) {
-        ReplayData.replayDelayNumberedEvent((TracingCondition) cond,
-            ((TracingCondition) cond).getId());
-      }
-
-      if (VmSettings.ACTOR_TRACING) {
-        ((TracingCondition) cond).tracingSignal(traceSignal);
-      } else {
-        cond.signal();
-      }
-
+      cond.signal();
       return cond;
     }
   }
@@ -50,21 +38,11 @@ public final class ConditionPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingSignalAll:")
   public abstract static class SignalAllPrim extends UnaryExpressionNode {
-    @Child static protected RecordTwoEvent traceSignal =
-        new RecordTwoEvent(TraceRecord.CONDITION_SIGNALALL);
 
     @Specialization
     @TruffleBoundary
     public final Condition doCondition(final Condition cond) {
-      if (VmSettings.REPLAY) {
-        ReplayData.replayDelayNumberedEvent((TracingCondition) cond,
-            ((TracingCondition) cond).getId());
-      }
-      if (VmSettings.ACTOR_TRACING) {
-        ((TracingCondition) cond).tracingSignalAll(traceSignal);
-      } else {
-        cond.signalAll();
-      }
+      cond.signalAll();
       return cond;
     }
   }
@@ -72,25 +50,25 @@ public final class ConditionPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingAwait:")
   public abstract static class AwaitPrim extends UnaryExpressionNode {
-    @Child static protected RecordTwoEvent traceSignal =
-        new RecordTwoEvent(TraceRecord.CONDITION_WAIT);
+
+    @Child static protected RecordTwoEvent traceWakeup =
+        new RecordTwoEvent(TraceRecord.CONDITION_WAKEUP);
 
     @Specialization
     @TruffleBoundary
     public final Condition doCondition(final Condition cond) {
+      long aid = TracingActivityThread.currentThread().getActivity().getId();
 
       try {
         ObjectTransitionSafepoint.INSTANCE.unregister();
-        if (VmSettings.REPLAY) {
-          ReplayData.replayDelayNumberedEvent((TracingCondition) cond,
-              ((TracingCondition) cond).getId());
+        cond.await();
+        if (VmSettings.ACTOR_TRACING) {
+          TracingCondition tc = (TracingCondition) cond;
+          traceWakeup.record(tc.owner.getId(), tc.owner.getNextEventNumber());
+          tc.owner.replayIncrementEventNo();
         }
 
-        if (VmSettings.ACTOR_TRACING) {
-          ((TracingCondition) cond).tracingAwait(traceSignal);
-        } else {
-          cond.await();
-        }
+        Output.println("Activity " + aid + " woke up");
       } catch (InterruptedException e) {
         /* doesn't tell us a lot at the moment, so it is ignored */
       }
@@ -103,10 +81,10 @@ public final class ConditionPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingAwait:for:")
   public abstract static class AwaitForPrim extends BinaryExpressionNode {
-    @Child static protected RecordTwoEvent traceSignal =
-        new RecordTwoEvent(TraceRecord.CONDITION_AWAITTIMEOUT);
-    @Child static protected RecordTwoEvent traceResult =
-        new RecordTwoEvent(TraceRecord.CONDITION_AWAITTIMEOUT_RES);
+    @Child static protected RecordOneEvent traceResult =
+        new RecordOneEvent(TraceRecord.CONDITION_AWAITTIMEOUT_RES);
+    @Child static protected RecordTwoEvent traceWakeup =
+        new RecordTwoEvent(TraceRecord.CONDITION_WAKEUP);
 
     @Specialization
     @TruffleBoundary
@@ -116,9 +94,6 @@ public final class ConditionPrimitives {
 
         try {
           if (VmSettings.REPLAY) {
-            ReplayData.replayDelayNumberedEvent((TracingCondition) cond,
-                ((TracingCondition) cond).getId());
-
             Activity reader = TracingActivityThread.currentThread().getActivity();
             AwaitTimeoutRecord atr = (AwaitTimeoutRecord) reader.getNextReplayEvent();
 
@@ -130,16 +105,23 @@ public final class ConditionPrimitives {
 
             // original timed out, we dont wait
             return false;
-          } else if (VmSettings.ACTOR_TRACING) {
-            boolean result = ((TracingCondition) cond).tracingAwait(traceSignal, milliseconds);
-            traceResult.record(((TracingCondition) cond).getId(), result ? 1 : 0);
-            return result;
           } else {
-            return cond.await(milliseconds, TimeUnit.MILLISECONDS);
+            boolean result = cond.await(milliseconds, TimeUnit.MILLISECONDS);
+
+            if (VmSettings.ACTOR_TRACING) {
+              traceResult.record(result ? 1 : 0);
+              if (result) {
+                TracingCondition tc = (TracingCondition) cond;
+                traceWakeup.record(tc.owner.getId(), tc.owner.getNextEventNumber());
+                tc.owner.replayIncrementEventNo();
+              }
+            }
+
+            return result;
           }
         } catch (InterruptedException e) {
           if (VmSettings.ACTOR_TRACING) {
-            traceResult.record(((TracingCondition) cond).getId(), 0);
+            traceResult.record(0);
           }
           return false;
         }

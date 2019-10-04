@@ -153,7 +153,7 @@ public final class TraceParser implements Closeable {
   }
 
   private static TraceRecord[] createParseTable() {
-    TraceRecord[] result = new TraceRecord[16];
+    TraceRecord[] result = new TraceRecord[19];
 
     result[TraceRecord.ACTOR_CREATION.value] = TraceRecord.ACTOR_CREATION;
     result[TraceRecord.ACTOR_CONTEXT.value] = TraceRecord.ACTOR_CONTEXT;
@@ -177,7 +177,7 @@ public final class TraceParser implements Closeable {
     result[TraceRecord.LOCK_LOCK.value] = TraceRecord.LOCK_LOCK;
     result[TraceRecord.CONDITION_WAIT.value] = TraceRecord.CONDITION_WAIT;
     result[TraceRecord.CONDITION_AWAITTIMEOUT.value] = TraceRecord.CONDITION_AWAITTIMEOUT;
-    result[TraceRecord.CONDITION_SIGNALONE.value] = TraceRecord.CONDITION_SIGNALONE;
+    result[TraceRecord.CONDITION_WAKEUP.value] = TraceRecord.CONDITION_WAKEUP;
     result[TraceRecord.CONDITION_SIGNALALL.value] = TraceRecord.CONDITION_SIGNALALL;
 
     return result;
@@ -390,17 +390,16 @@ public final class TraceParser implements Closeable {
         assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
         break;
       case CONDITION_AWAITTIMEOUT_RES:
-        long condId = b.getLong();
         long isSignaled = b.getLong();
-        ctx.currentEntity.addReplayEvent(new AwaitTimeoutRecord(condId, isSignaled));
-        assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
+        ctx.currentEntity.addReplayEvent(new AwaitTimeoutRecord(isSignaled));
+        assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
         break;
       case CHANNEL_READ:
       case CHANNEL_WRITE:
       case LOCK_LOCK:
       case CONDITION_WAIT:
       case CONDITION_AWAITTIMEOUT:
-      case CONDITION_SIGNALONE:
+      case CONDITION_WAKEUP:
       case CONDITION_SIGNALALL:
         long passiveEntityId = b.getLong();
         long eventNo = b.getLong();

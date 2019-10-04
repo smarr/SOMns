@@ -8,16 +8,23 @@ import java.util.concurrent.locks.ReentrantLock;
 import som.vm.VmSettings;
 import tools.concurrency.TracingActivityThread;
 import tools.replay.PassiveEntityWithEvents;
+import tools.replay.ReplayRecord.NumberedPassiveRecord;
 import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
 
 
 public final class TracingLock extends ReentrantLock implements PassiveEntityWithEvents {
   private static final long serialVersionUID = -3346973644925799901L;
   final long                id;
-  int                       eventNo          = 0;
+  volatile int              eventNo          = 0;
+  public final Condition    replayCondition;
 
   public TracingLock() {
     id = TracingActivityThread.newEntityId();
+    if (VmSettings.REPLAY) {
+      replayCondition = super.newCondition();
+    } else {
+      replayCondition = null;
+    }
   }
 
   public long getId() {
@@ -34,10 +41,15 @@ public final class TracingLock extends ReentrantLock implements PassiveEntityWit
     this.eventNo++;
   }
 
+  @Override
+  public Condition newCondition() {
+    return new TracingCondition(this, super.newCondition());
+  }
+
   public final synchronized void tracingLock(final RecordTwoEvent traceLock) {
+    lock();
     traceLock.record(id, eventNo);
     eventNo++;
-    lock();
   }
 
   @Override
@@ -45,62 +57,41 @@ public final class TracingLock extends ReentrantLock implements PassiveEntityWit
     return eventNo;
   }
 
-  public static final class TracingCondition implements PassiveEntityWithEvents, Condition {
-    final Condition   wrapped;
-    final TracingLock owner;
-    final long        id;
-    int               eventNo         = 0;
-    boolean           blockUntilAwait = false;
-    int               queueSizePreAwait;
+  public static final class TracingCondition implements Condition {
+    public final TracingLock owner;
+    final Condition          wrapped;
 
-    public TracingCondition(final Condition c, final TracingLock owner) {
-      this.wrapped = c;
+    public TracingCondition(final TracingLock owner, final Condition wrapped) {
       this.owner = owner;
-      this.id = TracingActivityThread.newEntityId();
-    }
-
-    public long getId() {
-      return id;
-    }
-
-    public void replayEnsureNextEventAfterAwait() {
-      if (blockUntilAwait) {
-        // block thread until wait queue length indicates that wait registered.
-        while (queueSizePreAwait == owner.getWaitQueueLength(wrapped)) {
-          try {
-            Thread.sleep(5);
-          } catch (InterruptedException e) {
-          }
-        }
-
-        // reset for next await
-        blockUntilAwait = false;
-      }
-    }
-
-    public void replayPrepareAwait() {
-      assert !blockUntilAwait;
-      queueSizePreAwait = owner.getWaitQueueLength(wrapped);
-      blockUntilAwait = true;
-      this.eventNo++;
+      this.wrapped = wrapped;
     }
 
     @Override
     public void await() throws InterruptedException {
-      if (VmSettings.REPLAY) {
-        replayPrepareAwait();
-      }
       wrapped.await();
+
+      if (VmSettings.REPLAY) {
+        NumberedPassiveRecord npr =
+            (NumberedPassiveRecord) TracingActivityThread.currentThread().getActivity()
+                                                         .getNextReplayEvent();
+
+        while (owner.getNextEventNumber() != npr.eventNo) {
+          owner.replayCondition.await();
+        }
+
+        owner.replayIncrementEventNo();
+        owner.replayCondition.signalAll();
+      }
     }
 
     @Override
     public void awaitUninterruptibly() {
-      throw new UnsupportedOperationException();
+      wrapped.awaitUninterruptibly();
     }
 
     @Override
     public long awaitNanos(final long nanosTimeout) throws InterruptedException {
-      throw new UnsupportedOperationException();
+      return wrapped.awaitNanos(nanosTimeout);
     }
 
     @Override
@@ -110,7 +101,7 @@ public final class TracingLock extends ReentrantLock implements PassiveEntityWit
 
     @Override
     public boolean awaitUntil(final Date deadline) throws InterruptedException {
-      throw new UnsupportedOperationException();
+      return awaitUntil(deadline);
     }
 
     @Override
@@ -121,41 +112,6 @@ public final class TracingLock extends ReentrantLock implements PassiveEntityWit
     @Override
     public void signalAll() {
       wrapped.signalAll();
-    }
-
-    @Override
-    public int getNextEventNumber() {
-      return eventNo;
-    }
-
-    public synchronized void tracingSignal(final RecordTwoEvent traceSignal) {
-      traceSignal.record(id, eventNo);
-      eventNo++;
-      signal();
-    }
-
-    public synchronized void tracingSignalAll(final RecordTwoEvent traceSignal) {
-      traceSignal.record(id, eventNo);
-      eventNo++;
-      signalAll();
-    }
-
-    public void tracingAwait(final RecordTwoEvent traceSignal)
-        throws InterruptedException {
-      synchronized (this) {
-        traceSignal.record(id, eventNo);
-        eventNo++;
-      }
-      await();
-    }
-
-    public boolean tracingAwait(final RecordTwoEvent traceSignal,
-        final long milliseconds) throws InterruptedException {
-      synchronized (this) {
-        traceSignal.record(id, eventNo);
-        eventNo++;
-      }
-      return await(milliseconds, TimeUnit.MILLISECONDS);
     }
   }
 }

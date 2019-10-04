@@ -10,7 +10,6 @@ import som.vm.Activity;
 import tools.concurrency.TracingActivityThread;
 import tools.replay.ReplayRecord.MessageRecord;
 import tools.replay.ReplayRecord.NumberedPassiveRecord;
-import tools.replay.actors.TracingLock.TracingCondition;
 
 
 public class ReplayData {
@@ -36,11 +35,6 @@ public class ReplayData {
         Thread.sleep(5);
         // temporary solution for proof of concept.
         // maybe use some wait/notify all construct.
-
-        if (pe instanceof TracingCondition) {
-          // have to ensure that await finished registration before we proceed
-          ((TracingCondition) pe).replayEnsureNextEventAfterAwait();
-        }
       }
     } catch (InterruptedException e) {
       throw new RuntimeException(e);
@@ -148,7 +142,8 @@ public class ReplayData {
       return i;
     }
 
-    protected void onContextStart(final int ordering) {}
+    protected void onContextStart(final int ordering) {
+    }
 
     @Override
     public String toString() {

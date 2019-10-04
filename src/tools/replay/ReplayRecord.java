@@ -79,11 +79,9 @@ public class ReplayRecord {
   }
 
   public static class AwaitTimeoutRecord extends ReplayRecord {
-    public final long    conditionId;
     public final boolean isSignaled;
 
-    public AwaitTimeoutRecord(final long conditionId, final long isSignaled) {
-      this.conditionId = conditionId;
+    public AwaitTimeoutRecord(final long isSignaled) {
       this.isSignaled = isSignaled == 1;
     }
   }
