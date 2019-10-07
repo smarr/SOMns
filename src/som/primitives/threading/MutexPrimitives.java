@@ -9,7 +9,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.Primitive;
-import som.Output;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
@@ -52,16 +51,16 @@ public final class MutexPrimitives {
 
         if (VmSettings.ACTOR_TRACING) {
           ((TracingLock) lock).tracingLock(traceLock);
-          Output.println(
-              "" + aid + " acquired lock v" + (((TracingLock) lock).getNextEventNumber() - 1));
+          // Output.println(
+          // "" + aid + " acquired lock v" + (((TracingLock) lock).getNextEventNumber() - 1));
         } else {
           lock.lock();
           if (VmSettings.REPLAY) {
             ((TracingLock) lock).replayIncrementEventNo();
             ((TracingLock) lock).replayCondition.signalAll();
           }
-          Output.println(
-              "" + aid + " acquired lock v" + (((TracingLock) lock).getNextEventNumber() - 1));
+          // Output.println(
+          // "" + aid + " acquired lock v" + (((TracingLock) lock).getNextEventNumber() - 1));
         }
 
       } finally {

@@ -179,9 +179,9 @@ class MutexSuite usingPlatform: platform andHarness: harness = Value (
         public offer: val = (
           mutex critical: [
             (size = capacity) ifTrue: [
-              'producer wait' println.
+              (*'producer wait' println.*)
               waitingProducers await.
-              'producer woke up' println.
+              (*'producer woke up' println.*)
             ].
 
             add: val.
@@ -195,9 +195,9 @@ class MutexSuite usingPlatform: platform andHarness: harness = Value (
           mutex critical: [
             |res|
             size > 0 ifFalse: [
-              'consumer wait' println.
+              (*'consumer wait' println.*)
               waitingConsumers await.
-              'consumer woke up' println.
+              (*'consumer woke up' println.*)
             ].
             res:: remove.
             size < capacity ifTrue:[

@@ -8,7 +8,6 @@ import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
 import bd.primitives.Primitive;
-import som.Output;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
@@ -68,7 +67,7 @@ public final class ConditionPrimitives {
           tc.owner.replayIncrementEventNo();
         }
 
-        Output.println("Activity " + aid + " woke up");
+        // Output.println("Activity " + aid + " woke up");
       } catch (InterruptedException e) {
         /* doesn't tell us a lot at the moment, so it is ignored */
       }
