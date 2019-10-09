@@ -57,7 +57,7 @@ public abstract class InteropDispatch extends Node {
     return MessageSendNode.createForPerformNodes(null, firstFit, vm);
   }
 
-  @Specialization(guards = {"selector == cachedSelector"},
+  @Specialization(guards = {"selector.equals(cachedSelector)"},
       limit = "INLINE_CACHE_SIZE")
   public static Object cachedDispatch(final VirtualFrame frame,
       final String selector, final Object[] args,
