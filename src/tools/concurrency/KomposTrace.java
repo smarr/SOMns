@@ -28,7 +28,7 @@ public class KomposTrace {
     KomposTraceBuffer buffer = KomposTraceBuffer.create(0);
     buffer.recordCurrentActivity(mainActor);
     buffer.recordMainActor(mainActor, objectSystem);
-    buffer.recordSendOperation(SendOp.ACTOR_MSG, 0, mainActor.getId(), mainActor);
+    buffer.recordSendOperation(SendOp.ACTOR_MSG, 0, mainActor.getId(), mainActor, (short) 0, 0, null);
     buffer.returnBuffer(null);
   }
 
@@ -84,7 +84,7 @@ public class KomposTrace {
 
     ((KomposTraceBuffer) t.getBuffer()).recordSendOperation(SendOp.PROMISE_RESOLUTION, 0,
         promiseId,
-        t.getActivity());
+        t.getActivity(), (short) 0, 0, null);
     t.resolvedPromises++;
   }
 
@@ -94,7 +94,7 @@ public class KomposTrace {
     TracingActivityThread t = (TracingActivityThread) current;
     ((KomposTraceBuffer) t.getBuffer()).recordSendOperation(SendOp.PROMISE_RESOLUTION, 0,
         promiseId,
-        t.getActivity());
+        t.getActivity(), (short) 0, 0, null);
     t.erroredPromises++;
   }
 
@@ -107,15 +107,15 @@ public class KomposTrace {
   public static void promiseChained(final long promiseValueId, final long promiseId) {
     TracingActivityThread t = getThread();
     ((KomposTraceBuffer) t.getBuffer()).recordSendOperation(
-        SendOp.PROMISE_RESOLUTION, promiseValueId, promiseId, t.getActivity());
+        SendOp.PROMISE_RESOLUTION, promiseValueId, promiseId, t.getActivity(), (short) 0, 0, null);
     t.resolvedPromises++;
   }
 
   public static void sendOperation(final SendOp op, final long entityId,
-      final long targetId) {
+      final long targetId, final SSymbol selector, long targetActorId, SourceSection msgSourceCoordinate) {
     TracingActivityThread t = getThread();
     ((KomposTraceBuffer) t.getBuffer()).recordSendOperation(op, entityId, targetId,
-        t.getActivity());
+        t.getActivity(), selector.getSymbolId(), targetActorId, msgSourceCoordinate);
   }
 
   public static void receiveOperation(final ReceiveOp op, final long sourceId) {
@@ -334,7 +334,7 @@ public class KomposTrace {
     }
 
     public void recordSendOperation(final SendOp op, final long entityId,
-        final long targetId, final Activity current) {
+        final long targetId, final Activity current, final short symbolId, long targetActorId, SourceSection msgSourceCoordinate) {
       int requiredSpace = op.getSize();
       ensureSufficientSpace(requiredSpace, current);
 
@@ -342,6 +342,12 @@ public class KomposTrace {
       put(op.getId());
       putLong(entityId);
       putLong(targetId);
+      putLong(targetActorId);
+      putShort(symbolId);
+
+      if (VmSettings.KOMPOS_TRACING) {
+         writeSourceSection(msgSourceCoordinate);
+      }
 
       assert position == start + requiredSpace;
     }
@@ -391,8 +397,8 @@ public class KomposTrace {
 
       @Override
       public synchronized void recordSendOperation(final SendOp op,
-          final long entityId, final long targetId, final Activity current) {
-        super.recordSendOperation(op, entityId, targetId, current);
+          final long entityId, final long targetId, final Activity current, final short symbol, final long targetActorId, final SourceSection section) {
+        super.recordSendOperation(op, entityId, targetId, current, symbol, targetActorId, section);
       }
     }
   }

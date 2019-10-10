@@ -175,7 +175,7 @@ public final class PromisePrims {
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.PROMISE_MSG, pcm.getMessageId(),
-            rcvr.getPromiseId());
+            rcvr.getPromiseId(), pcm.getSelector(), rcvr.getOwner().getId(), pcm.getTargetSourceSection());
       }
       registerNode.register(rcvr, pcm, current);
 
@@ -242,7 +242,7 @@ public final class PromisePrims {
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(),
-            rcvr.getPromiseId());
+            rcvr.getPromiseId(), msg.getSelector(), rcvr.getOwner().getId(), msg.getTargetSourceSection());
       }
       registerNode.register(rcvr, msg, current);
 
@@ -321,9 +321,9 @@ public final class PromisePrims {
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.PROMISE_MSG, onResolved.getMessageId(),
-            rcvr.getPromiseId());
+            rcvr.getPromiseId(), onResolved.getSelector(), onResolved.getTarget().getId(), onResolved.getTargetSourceSection());
         KomposTrace.sendOperation(SendOp.PROMISE_MSG, onError.getMessageId(),
-            rcvr.getPromiseId());
+            rcvr.getPromiseId(), onError.getSelector(), onError.getTarget().getId(), onResolved.getTargetSourceSection());
       }
 
       synchronized (rcvr) {
