@@ -1,0 +1,96 @@
+class InternetCafeAppTest usingPlatform: platform testFramework: minitest = Value (
+| private AsyncTestContext = minitest AsyncTestContext.
+  private actors = platform actors.
+  private Exception   = platform kernel Exception.
+  private cafeApp = (platform system loadModule: '../../demos/applications/InternetCafeApplication.ns' nextTo: self) usingPlatform: platform.
+  private InternetCafe = cafeApp InternetCafe.
+|
+)(
+
+  public class CafeTest = AsyncTestContext () (
+
+        public testAsyncAskComputer = (
+          | cafeActor numberComputers numberCustomers pCustomer pResult |
+
+             numberComputers:: 3.
+             numberCustomers:: 1.
+
+             cafeActor:: (actors createActorFromValue: InternetCafe) <-: new: numberComputers totalCustomers: numberCustomers.
+
+             pCustomer:: cafeActor <-: createCustomer: 'Paul' room: cafeActor.
+
+             pResult:: pCustomer <-: askComputer.
+
+             ^ pResult whenResolved:[: array |
+                      assert: (array at: 1) equals:'Paul'.
+                      assert: (array at: 2) equals: 1.
+             ].
+        )
+
+        public testAsyncFullRoom = (
+          | cafeActor numberComputers numberCustomers pResult1 pResult2 pResult3 pCustomer1 pCustomer2 pCustomer3 pp |
+
+          numberComputers:: 2.
+          numberCustomers:: 3.
+
+          cafeActor:: (actors createActorFromValue: InternetCafe) <-: new: numberComputers totalCustomers: numberCustomers.
+
+          pCustomer1:: cafeActor <-: createCustomer: 'Paul' room: cafeActor.
+          pCustomer2:: cafeActor <-: createCustomer: 'Jane' room: cafeActor.
+          pCustomer3:: cafeActor <-: createCustomer: 'Julia' room: cafeActor.
+
+          pResult1:: pCustomer1 <-: askComputer.
+          pResult2:: pCustomer2 <-: askComputer.
+          pResult3:: pCustomer3 <-: askComputer.
+
+          ^ pResult1 whenResolved:[:r1 |
+                assert: (r1 at: 1) equals:'Paul'.
+                assert: (r1 at: 2) equals: 1.
+
+              pResult2 whenResolved:[:r2 |
+                assert: (r2 at: 1) equals:'Jane'.
+                assert: (r2 at: 2) equals: 2.
+
+                pResult3 whenResolved:[:r3 |
+                  assert: (r3 at: 1) equals:'Julia'.
+                  assert: ((r3 at: 2) asString) equals:'instance of FarReference'.
+                  (* far reference that represents the promise pair created because there is no computer availability *)
+                ].
+              ].
+            ].
+        )
+
+        public testAsyncReleaseComputer = (
+          | cafeActor numberComputers numberCustomers pResult1 pResult2 pCustomer1 pCustomer2 completionPP pReleased |
+
+            completionPP:: actors createPromisePair.
+
+            numberComputers:: 1.
+            numberCustomers:: 2.
+
+            cafeActor:: (actors createActorFromValue: InternetCafe) <-: new: numberComputers totalCustomers: numberCustomers.
+
+            pCustomer1:: cafeActor <-: createCustomer: 'Paul' room: cafeActor.
+            pCustomer2:: cafeActor <-: createCustomer: 'Jane' room: cafeActor.
+
+            pResult1:: pCustomer1 <-: askComputer.
+
+            actors after: 10 do: [
+              pReleased:: pCustomer1 <-: releaseComputer: 1.
+              pReleased whenResolved: [:r7 |
+                  cafeActor <-: resolvePendingPromise: 1.
+              ].
+
+             pResult2:: pCustomer2 <-: askComputer.
+              pResult2 whenResolved:[:r |
+                  assert: (r at: 1) equals:'Jane'.
+                  completionPP resolver resolve: (r at: 2).
+              ].
+            ].
+
+            ^ assert: completionPP promise resolvedWith: 1
+        )
+
+  ) : (
+       TEST_CONTEXT = () )
+)

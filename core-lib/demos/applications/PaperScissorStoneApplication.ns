@@ -1,0 +1,420 @@
+class PaperScissorStoneApplication usingPlatform: platform = Value (
+| private actors = platform actors.
+  private TransferArray = platform kernel TransferArray.
+  private Array = platform kernel Array.
+  private harness   = (platform system loadModule: '../../Benchmarks/Harness.ns' nextTo: self) usingPlatform: platform.
+  private Random    = harness Random.
+  private Vector = platform kernel Vector.
+  private TransferObject = platform kernel TransferObject.
+|
+)(
+
+public class Peer new: id name: name resolver: resolver iterations: size = (
+  | private resolver = resolver.
+    private games ::= Vector new: size.
+    private counter ::= 0.
+    private playerActors ::= nil.
+    private score ::= 0.
+    private flagCoordinator ::= false.
+    private name = name.
+    private id = id.
+    private myLastGame ::= nil.
+    private requests ::= nil.
+  |
+)(
+
+  (* invoked only by the coordinator which selects randomly two peers to play a game *)
+  public startGame: peerActors gameNumber: gameNumber = (
+    | player1 player2 gameFinish playerId1 playerId2 randomPair randomValue1 randomValue2 |
+
+      playerActors:: peerActors.
+      ('Total players: '+ playerActors size ) println.
+
+      (* select players and play *)
+      randomPair:: getRandomPair: playerActors size gameNumber: gameNumber.
+
+      randomValue1:: randomPair at: 1.
+      randomValue2:: randomPair at: 2.
+
+      player1:: playerActors at: randomValue1.
+      player2:: playerActors at: randomValue2.
+
+      gameFinish:: play: player1 andPlayer: player2.
+      gameFinish whenResolved:[: finished |
+
+        finished = 'ok'
+        ifTrue:[
+
+        ('* Game: '+ counter) println.
+        player1 <-: displayGameResults.
+        player2 <-: displayGameResults.
+
+        counter:: counter + 1.
+
+        counter = games capacity
+          ifTrue:[
+            (* endApplication.*)
+            printAllGameResults: 1 players: playerActors winner: nil winnerScore: 0 msg: '----Final Games Result----- \n'.
+          ]
+          ifFalse:[
+              (* check for new join requests *)
+              (requests notNil)
+                  ifTrue: [
+                    playerActors:: TransferArray new: (peerActors size + requests size).
+
+                    peerActors doIndexes:[: i |
+                      playerActors at: i put: (peerActors at: i).
+                    ].
+
+                    requests doIndexes:[: i |
+                     playerActors at: (peerActors size + i) put: (requests at: i).
+                    ].
+
+                    ('Total players: '+ playerActors size + ' - Added '+ requests size +' peers to the game.') println.
+
+                    requests:: nil. (* reset the array *)
+                  ].
+
+            startGame: playerActors gameNumber: counter.
+          ].
+        ].
+      ].
+  )
+
+  public getId = (
+    ^ id
+  )
+
+  public getScore = (
+    ^ score
+  )
+
+  public getName = (
+    ^ name
+  )
+
+  public getNumberPlayers = (
+    | size |
+
+    (playerActors isNil)
+    ifTrue:[
+        size:: 0.
+    ]
+    ifFalse:[
+        size:: (playerActors size).
+    ].
+
+    ^ size
+  )
+
+  public getAllGames = (
+    ^ games
+  )
+
+  (* if the case did not exist then none score is updated, no winners *)
+  public updateScore: existedCase winner: winnerFlag = (
+    existedCase
+    ifTrue:[
+        winnerFlag
+            ifTrue:[
+              score:: score + 1.
+            ]
+            ifFalse:[
+              score > 0
+                ifTrue:[
+                   score:: score - 1.
+                ]
+                ifFalse: [
+                  score:: 0.
+                ].
+            ].
+    ].
+
+    ^ score
+  )
+
+  public getAnswer = (
+    | r a options position |
+
+     options:: Array new: 3.
+     options at: 1 put: 'scissor'.
+     options at: 2 put: 'paper'.
+     options at: 3 put: 'stone'.
+
+     position:: getRandomNumber: options size.
+
+     ^ options at: position
+  )
+
+  private getRandomNumber: totalItems = (
+    | val random |
+
+    random:: Random new: getId + 73425.
+
+    val:: 1 + (random next % totalItems).
+
+    ^ val
+  )
+
+  public getRandomPair: totalItems gameNumber: gameNumber = (
+    | selection random |
+
+    selection:: TransferArray new: 2.
+
+    1 to: 2 do: [:i |
+     | random val |
+
+     random:: Random new: i + 73425 + gameNumber.
+
+     val:: 1 + (random next % totalItems).
+     selection at: i put: val.
+    ].
+
+    ^ selection
+  )
+
+  public updateLastGame: game = (
+    myLastGame:: game.
+  )
+
+  public getLastGame = (
+   ^ myLastGame
+  )
+
+  public play: player1 andPlayer: player2 = (
+    | game a1 a2 p1 p2 winner pp firstWin total |
+
+    pp:: actors createPromisePair.
+
+    p1:: player1 <-: getAnswer.
+    p2:: player2 <-: getAnswer.
+
+    total:: getNumberPlayers.
+
+    p1 whenResolved:[: answer1 |
+      a1:: answer1.
+
+      p2 whenResolved:[: answer2 |
+       a2:: answer2.
+
+       firstWin:: isFirstAnswerWinner: a1 andAnswer: a2.
+       game:: Game new. (* game object with the results *)
+
+        (* update score *)
+          firstWin
+          ifTrue:[
+              winner:: player1.
+              player1 <-: updateScore: true winner: true.
+              player2 <-: updateScore: true winner: false.
+              game createGame: player1 player2: player2 answer1: a1 answer2: a2 winner: winner total: total.
+          ]
+          ifFalse:[
+              winner:: player2.
+              player1 <-: updateScore: false winner: false.
+              player2 <-: updateScore: false winner: false.
+              game createGame: player1 player2: player2 answer1: a1 answer2: a2 winner: nil total: total.
+          ].
+
+          games append: game.
+
+          player1 <-: updateLastGame: game.
+          player2 <-: updateLastGame: game.
+
+          pp resolver resolve: 'ok'.
+
+      ].
+    ].
+
+     ^ pp promise
+  )
+
+  (* returns true if a1 wins over a2, returns false otherwise *)
+  public isFirstAnswerWinner: a1 andAnswer: a2 = (
+    | flag |
+
+     flag:: (((a1 = 'scissor') and: (a2 = 'paper')) or: [(a1 = 'paper') and: (a2 = 'stone')]) or: [(a1 = 'stone') and: (a2 = 'scissor')] .
+
+     flag
+     ifTrue:[
+       ^ true
+     ]
+     ifFalse:[
+       ^ false
+     ].
+  )
+
+  public printAllGameResults: index players: playerList winner: winnerName winnerScore: winnerScore msg: msg = (
+    | player name score pName pScore result |
+
+     result:: msg.
+     player:: playerList at: index.
+     pName:: player <-: getName.
+     pScore:: player <-: getScore.
+
+     pName whenResolved:[:name |
+       pScore whenResolved:[:score |
+
+          result:: result concatenate: (' - Player: '+ name + ' score: '+ score + '\n').
+
+          playerList size = index
+          ifTrue:[
+             result:: result concatenate: (' * Winner * '+ winnerName).
+             resolver resolve: result.
+          ]
+          ifFalse:[
+            score > winnerScore
+               ifTrue:[
+                 printAllGameResults: index + 1 players: playerList winner: name winnerScore: score msg: result.
+               ]
+               ifFalse:[
+                 printAllGameResults: index + 1 players: playerList winner: winnerName  winnerScore: winnerScore msg: result.
+               ].
+          ].
+       ].
+     ].
+  )
+
+  (* in a distributed language the following methods can be implemented in a separate remote object contained by the actor *)
+ public setCoordinatorPeer = (
+    flagCoordinator:: true.
+    ('Peer '+ getName + ' has been set as new coordinator.') println.
+ )
+
+ public isCoordinatorPeer = (
+     ^ flagCoordinator
+ )
+
+ (* print the results of a last game played *)
+ public displayGameResults = (
+   | player1 player2 answer1 answer2 winner lastGame name1 name2 winnerName total |
+
+      lastGame:: getLastGame.
+
+      player1:: lastGame getFirstPlayer.
+      player2:: lastGame getSecondPlayer.
+      winner:: lastGame getWinner.
+      total:: lastGame getTotal.
+
+      name1:: player1 <-: getName.
+      name2:: player2 <-: getName.
+
+      name1 whenResolved:[:n1 |
+        name2 whenResolved:[:n2 |
+
+             winner asString = 'instance of Promise'
+             ifTrue:[
+                winnerName:: winner <-: getName.
+                winnerName whenResolved:[: wn|
+                 answer1:: lastGame getFirstAnswer.
+                 answer2:: lastGame getSecondAnswer.
+
+                 ('- '+getName+' screen>> '+n1 + ' says '+ answer1+ ', and '+ n2 + ' says '+ answer2 + ' : Winner -> '+ wn + ' - Total: '+ total) println.
+                ].
+             ]
+             ifFalse:[
+                answer1:: lastGame getFirstAnswer.
+                answer2:: lastGame getSecondAnswer.
+
+                ('- '+getName+' screen>> '+n1 + ' says '+ answer1+ ', and '+ n2 + ' says '+ answer2 + ' : No winner' + ' - Total: '+ total) println.
+             ].
+        ].
+      ].
+ )
+
+ public joinRequest: newPeerActor = (
+ | index newcoll |
+      requests isNil
+      ifTrue:[
+       index:: 1.
+       requests:: TransferArray new: index.
+       requests at: index put: newPeerActor.
+      ]
+      ifFalse:[
+       index:: requests size + 1.
+       newcoll:: TransferArray new: index.
+
+       requests doIndexes:[:i |
+          newcoll at: i put: (requests at: i).
+       ].
+       newcoll at: index put: newPeerActor.
+
+       requests:: newcoll.
+      ].
+ )
+
+)
+
+public class Game = TransferObject (
+ | player1 player2 answer1 answer2 winner total |
+ )(
+    public createGame: p1 player2: p2 answer1: a1 answer2: a2 winner: win total: t = (
+        player1:: p1.
+        player2:: p2.
+        answer1:: a1.
+        answer2:: a2.
+        winner:: win.
+        total:: t.
+    )
+
+    public getFirstPlayer = (
+      ^ player1
+    )
+
+    public getSecondPlayer = (
+      ^ player2
+    )
+
+    public getFirstAnswer = (
+      ^ answer1
+    )
+
+    public getSecondAnswer = (
+      ^ answer2
+    )
+
+    public getWinner = (
+      ^ winner
+    )
+
+    public getTotal = (
+      ^ total
+    )
+)
+
+  public main: args = (
+    | completionPP players peerActors firstCoordinator |
+
+    completionPP:: actors createPromisePair.
+
+    '[PAPER SCISSOR STONE Game] Starting' println.
+
+       players:: TransferArray new: 5.
+       players at: 1 put: 'Joe'.
+       players at: 2 put: 'Marie'.
+       players at: 3 put: 'Tim'.
+       players at: 4 put: 'Jane'.
+       players at: 5 put: 'Bob'.
+
+       peerActors:: TransferArray new: 5.
+
+       players doIndexes:[: i |
+       | peer |
+           peer:: (actors createActorFromValue: Peer) <-: new: i name: (players at: i) resolver: completionPP resolver iterations: 10.
+           peerActors at: i put: peer.
+       ].
+
+       (* set last peer as first coordinator *)
+       firstCoordinator:: peerActors at: peerActors size.
+       firstCoordinator <-: setCoordinatorPeer.
+
+       firstCoordinator <-: startGame: peerActors gameNumber: 1.
+
+       firstCoordinator <-: joinRequest: ((actors createActorFromValue: Peer) <-: new: (players size + 1) name: 'Mike' resolver: completionPP resolver iterations: 10).
+
+    ^ completionPP promise whenResolved: [: result|
+        result println.
+        '\n\n''[PAPER SCISSOR STONE Game] Ending' println.
+    ].
+ )
+
+)

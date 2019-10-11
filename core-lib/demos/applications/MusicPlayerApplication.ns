@@ -1,0 +1,274 @@
+class MusicPlayerApplication usingPlatform: platform = Value (
+| private actors = platform actors.
+  private TransferArray = platform kernel TransferArray.
+  private Array = platform kernel Array.
+  private TransferObject = platform kernel TransferObject.
+|
+)(
+
+public class MusicPlayer new: name songlist: list = (
+  | private mySongList = list.
+    private username = name.
+    private session = Session new: name songlist: list. |
+)(
+
+   public startExchange: remotePlayer = (
+      | pDiscover pSession pp |
+
+         pp:: actors createPromisePair.
+
+         pDiscover:: self addPlayer: remotePlayer. (* returns a far reference of the remote messenger *)
+
+           pSession:: pDiscover <-: openSession.
+             pSession whenResolved:[: session |
+                | i |
+                 i:: 1.
+
+                 (* async loop for sending the songs to the remotePlayer *)
+                 (actors async: getLibraryList do: [:song |
+                 | p songPromise promisefinalMsg |
+
+                  p:: actors createPromisePair.
+
+                  songPromise:: session <-: receiveSong: song index: i.
+                  songPromise whenResolved:[: result |
+                      result = 'ok'
+                      ifTrue:[
+                        (getLibraryList size) = i
+                        ifTrue:[
+                            promisefinalMsg:: session <-: endExchange: getName.
+                            promisefinalMsg whenResolved:[:endMsg |
+                              pp resolve: endMsg.
+                            ].
+                        ]
+                        ifFalse:[
+                          i:: i + 1.
+                          p resolve: i.
+                        ].
+                      ]
+                      ifFalse: [
+                        ('Problem when uploading song at index '+ i) println.
+                        p resolve: i.
+                      ].
+                  ].
+
+                  p promise
+                 ]).
+             ].
+
+       ^ pp promise
+   )
+
+   public getLibraryList = (
+       ^ mySongList
+   )
+
+   public getName = (
+       ^ username
+   )
+
+   public addPlayer: remoteUser = (
+     ^ session addPlayer: remoteUser.
+   )
+
+   public openSession = (
+       ^ session
+   )
+)
+
+public class Session new: name songlist: list  = (
+ | private mySongList = list.
+   private username = name.
+   private remoteSongList ::= nil.
+ |
+)(
+      (* discover the new player and initialize the list of songs that the player will send *)
+      public addPlayer: otherPlayer = (
+           | plist pp pRemoteName |
+
+           pp:: actors createPromisePair.
+
+           plist:: otherPlayer <-: getLibraryList.
+
+           pRemoteName:: otherPlayer <-: getName.
+
+           plist whenResolved: [: secondSongList|
+               remoteSongList:: TransferArray new: secondSongList size.
+
+               pRemoteName whenResolved:[: remotePlayerName |
+                    (username +' has discovered player '+ remotePlayerName ) println.
+                    pp resolver resolve: otherPlayer.
+               ].
+           ]
+           onError:[:e|
+              ('-Error getting the list of the remote player: ' + e) println.
+              pp resolver resolve: nil.
+           ].
+
+
+          ^ pp promise
+      )
+
+      public receiveSong: song index: i = (
+        remoteSongList at: i put: song.
+
+         ^ 'ok'
+      )
+
+     public endExchange: senderName = (
+         | percentage threshold |
+
+         threshold:: 40.
+
+         percentage:: getPercentageCommonSongs.
+               (percentage > threshold)
+               ifTrue:[
+                 ^ username +' has similar musical taste to '+ senderName + ' -> '  + percentage +'%'.
+               ]
+               ifFalse:[
+                 ^ username + ' has different musical taste than '+ senderName +' -> '+ percentage +'%'.
+               ].
+     )
+
+     public getPercentageCommonSongs  = (
+       | percentage commonSongs |
+
+       percentage:: 0.
+
+       remoteSongList size > 0
+          ifTrue:[
+            commonSongs:: getCommonSongs: mySongList remoteList: remoteSongList.
+               ('- Common songs: ' + commonSongs) println.
+
+                  commonSongs > 0
+                  ifTrue:[
+                     percentage:: (commonSongs * 100) / (mySongList size).
+                  ]
+       ].
+
+       ^ percentage
+     )
+
+     private getCommonSongs: list remoteList: remoteList = (
+        | song flagContains commonSongs |
+
+        commonSongs:: 0.
+
+        list doIndexes: [:i |
+            song:: list at: i.
+
+            flagContains:: containsSong: song remoteList: remoteList.
+                  flagContains
+                   ifTrue:[
+                      commonSongs:: commonSongs + 1.
+                   ].
+
+        ].
+
+        ^ commonSongs
+     )
+
+     public containsSong: songToCompare remoteList: remoteList = (
+       | song flag |
+
+       flag:: false.
+
+          remoteList doIndexes: [:i |
+           song:: remoteList at: i.
+
+           flag:: song equal: songToCompare.
+            flag
+            ifTrue:[
+                ^ true
+            ].
+          ].
+
+       ^ false
+     )
+)
+
+public class Song = TransferObject (
+ | private array = TransferArray new: 2.|
+)(
+
+  public init: title artist: artist = (
+    array at: 1 put: title.
+    array at: 2 put: artist.
+  )
+
+  public getTitle = (
+    ^ array at: 1.
+  )
+
+  public getArtist = (
+      ^ array at: 2.
+  )
+
+  public equal: song = (
+  | title artist |
+
+     title:: song getTitle.
+     artist:: song getArtist.
+
+     ((artist = getArtist) and: (title = getTitle))
+     ifTrue:[
+        ^ true
+     ].
+
+     ^ false
+  )
+)
+
+  public main: args = (
+  | resultPromise1 resultPromise2 users mplayerActor1 mplayerActor2 songlist1 songlist2
+    s1 s2 s3 s4 s5 s6
+  |
+
+      '[MUSIC PLAYER APPLICATION] Starting' println.
+
+       users:: Array new: 2.
+       users at: 1 put: 'Joe'.
+       users at: 2 put: 'Marie'.
+
+       s1:: Song new.
+       s1 init: 'S1' artist: 'A1'.
+       s2:: Song new.
+       s2 init: 'S2' artist: 'A2'.
+       s3:: Song new.
+       s3 init: 'S3' artist: 'A3'.
+       s4:: Song new.
+       s4 init: 'S4' artist: 'A4'.
+       s5:: Song new.
+       s5 init: 'S5' artist: 'A5'.
+       s6:: Song new.
+       s6 init: 'S6' artist: 'A6'.
+
+       songlist1:: TransferArray new: 3.
+       songlist1 at: 1 put: s1.
+       songlist1 at: 2 put: s2.
+       songlist1 at: 3 put: s3.
+
+       songlist2:: TransferArray new: 5.
+       songlist2 at: 1 put: s4.
+       songlist2 at: 2 put: s5.
+       songlist2 at: 3 put: s2.
+       songlist2 at: 4 put: s3.
+       songlist2 at: 5 put: s6.
+
+       mplayerActor1:: (actors createActorFromValue: MusicPlayer) <-: new: (users at: 1) songlist: songlist1.
+       mplayerActor2:: (actors createActorFromValue: MusicPlayer) <-: new: (users at: 2) songlist: songlist2.
+
+       resultPromise1:: mplayerActor1 <-: startExchange: mplayerActor2.
+       resultPromise2:: mplayerActor2 <-: startExchange: mplayerActor1.
+
+     ^ resultPromise1 whenResolved: [: result1|
+                  result1 println.
+
+                  resultPromise2 whenResolved: [: result2|
+                    result2 println.
+                    '\n\n''[MUSIC PLAYER APPLICATION] Ending' println.
+                  ].
+      ].
+ )
+
+)

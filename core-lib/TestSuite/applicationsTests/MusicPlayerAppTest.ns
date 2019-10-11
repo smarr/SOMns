@@ -1,0 +1,103 @@
+class MusicPlayerAppTest usingPlatform: platform testFramework: minitest = Value (
+| private actors = platform actors.
+  private AsyncTestContext = minitest AsyncTestContext.
+  private musicApp = (platform system loadModule: '../../demos/applications/MusicPlayerApplication.ns' nextTo: self) usingPlatform: platform.
+  private MusicPlayer = musicApp MusicPlayer.
+  private Song = musicApp Song.
+  private TransferArray = platform kernel TransferArray.
+|
+)(
+
+  public class MusicPlayerTest = AsyncTestContext () (
+
+    public testAsyncAddUser = (
+       | pp users mplayerActor1 mplayerActor2 songlist1 songlist2
+             s1 s2 s3 s4 s5 s6 pPlayer pName |
+
+       pp:: actors createPromisePair.
+
+       s1:: Song new.
+       s1 init: 'S1' artist: 'A1'.
+       s2:: Song new.
+       s2 init: 'S2' artist: 'A2'.
+       s3:: Song new.
+       s3 init: 'S3' artist: 'A3'.
+       s4:: Song new.
+       s4 init: 'S4' artist: 'A4'.
+       s5:: Song new.
+       s5 init: 'S5' artist: 'A5'.
+       s6:: Song new.
+       s6 init: 'S6' artist: 'A6'.
+
+       songlist1:: TransferArray new: 3.
+       songlist1 at: 1 put: s1.
+       songlist1 at: 2 put: s2.
+       songlist1 at: 3 put: s3.
+
+       songlist2:: TransferArray new: 5.
+       songlist2 at: 1 put: s4.
+       songlist2 at: 2 put: s5.
+       songlist2 at: 3 put: s2.
+       songlist2 at: 4 put: s3.
+       songlist2 at: 5 put: s6.
+
+       mplayerActor1:: (actors createActorFromValue: MusicPlayer) <-: new: 'Joe' songlist: songlist1.
+       mplayerActor2:: (actors createActorFromValue: MusicPlayer) <-: new: 'Marie' songlist: songlist2.
+
+       pPlayer:: mplayerActor1 <-: addPlayer: mplayerActor2.
+
+       pName:: pPlayer <-: getName.
+
+       pName whenResolved: [:r |
+         pp resolver resolve: r
+       ].
+
+       ^ assert: pp promise resolvedWith:  'Marie'
+    )
+
+     public testAsyncExchangeSongs = (
+       | pp users mplayerActor1 mplayerActor2 songlist1 songlist2
+                     s1 s2 s3 s4 s5 s6 resultPromise1 resultPromise2 |
+
+       pp:: actors createPromisePair.
+
+       s1:: Song new.
+       s1 init: 'S1' artist: 'A1'.
+       s2:: Song new.
+       s2 init: 'S2' artist: 'A2'.
+       s3:: Song new.
+       s3 init: 'S3' artist: 'A3'.
+       s4:: Song new.
+       s4 init: 'S4' artist: 'A4'.
+       s5:: Song new.
+       s5 init: 'S5' artist: 'A5'.
+       s6:: Song new.
+       s6 init: 'S6' artist: 'A6'.
+
+       songlist1:: TransferArray new: 3.
+       songlist1 at: 1 put: s1.
+       songlist1 at: 2 put: s2.
+       songlist1 at: 3 put: s3.
+
+       songlist2:: TransferArray new: 5.
+       songlist2 at: 1 put: s4.
+       songlist2 at: 2 put: s5.
+       songlist2 at: 3 put: s2.
+       songlist2 at: 4 put: s3.
+       songlist2 at: 5 put: s6.
+
+       mplayerActor1:: (actors createActorFromValue: MusicPlayer) <-: new: 'Joe' songlist: songlist1.
+       mplayerActor2:: (actors createActorFromValue: MusicPlayer) <-: new: 'Marie' songlist: songlist2.
+
+       resultPromise1:: mplayerActor1 <-: startExchange: mplayerActor2.
+       resultPromise2:: mplayerActor2 <-: startExchange: mplayerActor1.
+
+       ^ (assert: resultPromise1 resolvedWith: 'Marie has different musical taste than Joe -> 40%'),
+         (assert: resultPromise2 resolvedWith: 'Joe has similar musical taste to Marie -> 66%')
+     )
+
+
+  ) : ( TEST_CONTEXT = () )
+
+  )
+

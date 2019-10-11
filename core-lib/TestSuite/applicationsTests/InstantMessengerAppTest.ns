@@ -1,0 +1,75 @@
+class InstantMessengerAppTest usingPlatform: platform testFramework: minitest = Value (
+| private AsyncTestContext = minitest AsyncTestContext.
+  private actors = platform actors.
+  private messengerApp = (platform system loadModule: '../../demos/applications/InstantMessengerApplication.ns' nextTo: self) usingPlatform: platform.
+  private InstantMessenger = messengerApp InstantMessenger.
+|
+
+)(
+
+  public class MessengerTest = AsyncTestContext () (
+
+    public testAsyncAddMessenger = (
+      | messenger1 messenger2 pMessenger pName pp |
+
+      pp:: actors createPromisePair.
+
+      messenger1:: (actors createActorFromValue: InstantMessenger) <-: new: 'Joe' total: 2.
+      messenger2:: (actors createActorFromValue: InstantMessenger) <-: new: 'Marie' total: 2.
+
+      pMessenger:: messenger2 <-: addMessenger: messenger1.
+
+      pMessenger whenResolved:[: farRefRemoteMessenger |
+          pName:: farRefRemoteMessenger <-: getName.
+
+          pName whenResolved: [: r |
+            pp resolver resolve: r
+          ].
+      ].
+
+      ^ assert: pp promise resolvedWith:  'Joe'
+    )
+
+    public testAsyncSendMessage = (
+      | messenger1 messenger2 pDiscover pp pName msg pSend |
+
+      pp:: actors createPromisePair.
+
+      messenger1:: (actors createActorFromValue: InstantMessenger) <-: new: 'Joe' total: 2.
+      messenger2:: (actors createActorFromValue: InstantMessenger) <-: new: 'Marie' total: 2.
+
+      pDiscover:: messenger1 <-: addMessenger: messenger2.
+
+      pName:: pDiscover <-: getName.
+      pName whenResolved: [: remoteName |
+              msg:: ('Hello ' + remoteName).
+              pSend:: messenger1 <-: sendMessage: remoteName contentMsg: msg.
+
+              pSend whenResolved:[: r|
+                pp resolver resolve: r.
+              ].
+
+      ].
+
+      ^ assert: pp promise resolvedWith: 'ok'
+    )
+
+    public testAsyncChat = (
+      | messenger1 messenger2 p array |
+
+      messenger1:: (actors createActorFromValue: InstantMessenger) <-: new: 'Joe' total: 2.
+      messenger2:: (actors createActorFromValue: InstantMessenger) <-: new: 'Marie' total: 2.
+
+      p:: messenger1 <-: startChat: messenger2.
+
+      ^ p whenResolved:[: result|
+                  result
+                  ifNotNil:[
+                     assert: (result at: 1) equals:'Joe'.
+                     assert: (result at: 2) equals:'Hello Marie'.
+                  ].
+      ].
+    )
+
+  ) : ( TEST_CONTEXT = () )
+)

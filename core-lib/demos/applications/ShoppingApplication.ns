@@ -1,0 +1,162 @@
+class ShoppingApplication usingPlatform: platform = Value (
+| private actors = platform actors.
+  private Vector = platform kernel Vector.
+|
+)(
+
+  public class Buyer new = (
+  | private customer = 'West Coast Buyers'.
+    private profile = 'West Coast Buyers Profile'.
+    private shoppingCart = Vector new.
+  |
+  )(
+
+    (* Create the teller and send the validation messages to the services *)
+    public checkoutShoppingCart: product account: account shipper: shipper = (
+      | teller listener completionPP prom |
+
+           completionPP:: actors createPromisePair.
+
+           (* object to notify when the replies are received. It uses as argument a block to execute. *)
+           listener:: Listener new: [:p1 | self <-: placeOrder: completionPP resolver.].
+
+           teller:: Teller new: (shoppingCart size + 2) listener: listener.
+
+           product <-: checkStockConnection.
+
+           shoppingCart doIndexes:[:i |
+              | partNo |
+              partNo:: shoppingCart at: i.
+              product <-: partInStock: partNo teller: teller.
+           ].
+
+           account <-: checkCredit: customer teller: teller.
+           shipper <-: canDeliver: profile teller: teller.
+
+           ^ completionPP promise
+    )
+
+    public placeOrder: resolver = (
+        resolver resolve: 'The order has been placed successfully'.
+    )
+
+    public addItem: item = (
+           shoppingCart append: item.
+           ('- Items added in Shopping Cart: ' + item) println.
+     ^ 'ok'
+    )
+
+   )
+
+  public class Listener new: block = (
+    | private block = block. |
+  )(
+
+        public run = (
+          ('- All conditions has been met. ' ) println.
+
+          1 timesRepeat: [block value: true].
+        )
+  )
+
+  public class Teller new: limit listener: listener = (
+    | public limit = limit.
+      public listener  = listener.
+      private localCounter ::= 1.
+    |
+    )(
+
+       (* All conditions must be met before an order is placed. *)
+       public asyncAnd: answer = (
+
+           answer
+           ifTrue: [
+             (localCounter = limit)
+             ifTrue: [
+               listener <-: run.
+               ^ true
+             ]
+             ifFalse: [
+               localCounter:: localCounter + 1.
+               ^ false
+             ].
+           ]
+           ifFalse: [
+             ^ false
+           ].
+       )
+   )
+
+  (* Inventory *)
+  public class Product = (
+  )(
+
+    public partInStock: itemNo teller: teller = (
+        ('partInStock true') println.
+        ^ teller <-: asyncAnd: true.
+    )
+
+    public checkStockConnection = (
+        ^ true
+    )
+
+  )
+
+  (* Check customer payment info *)
+  public class Account = ()(
+
+    public checkCredit: customerName teller: teller = (
+        ('checkCredit true') println.
+        ^ teller <-: asyncAnd: true.
+    )
+
+  )
+
+  (* Check availability of shipper *)
+  public class Shipper = ()(
+
+    public canDeliver: address teller: teller = (
+        ('canDeliver true') println.
+        ^ teller <-: asyncAnd: true.
+    )
+
+  )
+
+  public main: args = (
+   | checkOutPromise buyer product account shipper cart items asyncPromise promiseItem finalPromise |
+
+   '[SHOPPING APPLICATION] Starting' println.
+    items:: Vector new.
+    items append: 'phone'.
+    items append: 'laptop'.
+    items append: 'screen'.
+
+    product:: (actors createActorFromValue: Product) <-: new.
+    account:: (actors createActorFromValue: Account)  <-: new.
+    shipper:: (actors createActorFromValue: Shipper)  <-: new.
+    buyer:: (actors createActorFromValue: Buyer) <-: new.
+
+    asyncPromise:: actors async: items do:[: i |
+      | timeoutProm |
+      timeoutProm:: actors createPromisePair.
+
+          actors after: 1000 do: [
+             buyer <-: addItem: i.
+             timeoutProm resolver resolve: i.
+          ].
+
+      timeoutProm promise
+    ].
+
+    finalPromise:: asyncPromise whenResolved:[: r |
+        checkOutPromise:: buyer <-: checkoutShoppingCart: product account: account shipper: shipper.
+    ].
+
+     ^ finalPromise whenResolved: [: r2|
+           r2 println.
+         '\n\n[SHOPPING APPLICATION] Ending' println.
+    ].
+
+ )
+
+)
