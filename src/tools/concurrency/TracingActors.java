@@ -1,10 +1,6 @@
 package tools.concurrency;
 
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Map;
-import java.util.Queue;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.concurrent.ForkJoinPool;
 import java.util.function.BiConsumer;
 
@@ -41,6 +37,11 @@ public class TracingActors {
      * Flag that indicates if a step-to-next-turn action has been made in the previous message.
      */
     protected boolean stepToNextTurn;
+
+    /**
+     * Saves all ids and the instances of the actors created in the system.
+     */
+    private static Map<Long, Actor> allActors = new HashMap<>();
 
     public TracingActor(final VM vm) {
       super(vm);
@@ -119,6 +120,14 @@ public class TracingActors {
      */
     public DeserializationBuffer getDeserializationBuffer() {
       return null;
+    }
+
+    public static void saveActor(Actor actor) {
+      allActors.put(actor.getId(), actor);
+    }
+
+    public static Actor getActorById(long actorId){
+      return allActors.get(actorId);
     }
   }
 
