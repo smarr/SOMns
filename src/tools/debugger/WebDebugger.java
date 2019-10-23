@@ -25,10 +25,12 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.source.SourceCoordinate;
 import som.VM;
+import som.interpreter.actors.Actor;
 import som.vm.Activity;
 import som.vm.Symbols;
 import tools.TraceData;
 import tools.concurrency.TracingActivityThread;
+import tools.concurrency.TracingActors;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.session.Breakpoints;
 
@@ -176,6 +178,10 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   public Breakpoints getBreakpoints() {
     return breakpoints;
+  }
+
+  public Actor getActorById(long actorId) {
+    return TracingActors.TracingActor.getActorById(actorId);
   }
 
   private static Gson jsonProcessor = RuntimeReflectionRegistration.createJsonProcessor();

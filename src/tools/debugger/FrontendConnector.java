@@ -24,6 +24,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import bd.source.SourceCoordinate;
 import bd.source.TaggedSourceCoordinate;
+import som.interpreter.actors.Actor;
 import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.Tagging;
@@ -41,18 +42,10 @@ import tools.debugger.entities.ReceiveOp;
 import tools.debugger.entities.SendOp;
 import tools.debugger.entities.SteppingType;
 import tools.debugger.frontend.Suspension;
-import tools.debugger.message.InitializationResponse;
-import tools.debugger.message.Message;
+import tools.debugger.message.*;
 import tools.debugger.message.Message.OutgoingMessage;
-import tools.debugger.message.ProgramInfoResponse;
-import tools.debugger.message.ScopesResponse;
-import tools.debugger.message.SourceMessage;
 import tools.debugger.message.SourceMessage.SourceData;
-import tools.debugger.message.StackTraceResponse;
-import tools.debugger.message.StoppedMessage;
-import tools.debugger.message.SymbolMessage;
 import tools.debugger.message.VariablesRequest.FilterType;
-import tools.debugger.message.VariablesResponse;
 import tools.debugger.session.Breakpoints;
 import tools.debugger.session.LineBreakpoint;
 
@@ -320,7 +313,11 @@ public class FrontendConnector {
     return webDebugger.getSuspension(TraceData.getActivityIdFromGlobalValId(globalId));
   }
 
-  static void log(final String str) {
+  public Actor getActorById(final long activityId) {
+    return webDebugger.getActorById(activityId);
+  }
+
+  public static void log(final String str) {
     // Checkstyle: stop
     System.out.println(str);
     // Checkstyle: resume
