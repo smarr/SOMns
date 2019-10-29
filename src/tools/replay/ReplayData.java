@@ -142,8 +142,7 @@ public class ReplayData {
       return i;
     }
 
-    protected void onContextStart(final int ordering) {
-    }
+    protected void onContextStart(final int ordering) {}
 
     @Override
     public String toString() {
