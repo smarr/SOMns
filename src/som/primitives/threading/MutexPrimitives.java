@@ -34,7 +34,7 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingLock:", selector = "lock")
   public abstract static class LockPrim extends UnaryExpressionNode {
-    @Child static protected RecordTwoEvent traceLock =
+    @Child protected static RecordTwoEvent traceLock =
         new RecordTwoEvent(TraceRecord.LOCK_LOCK);
 
     @TruffleBoundary

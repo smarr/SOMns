@@ -50,7 +50,7 @@ public final class ConditionPrimitives {
   @Primitive(primitive = "threadingAwait:")
   public abstract static class AwaitPrim extends UnaryExpressionNode {
 
-    @Child static protected RecordTwoEvent traceWakeup =
+    @Child protected static RecordTwoEvent traceWakeup =
         new RecordTwoEvent(TraceRecord.CONDITION_WAKEUP);
 
     @Specialization
@@ -80,9 +80,9 @@ public final class ConditionPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingAwait:for:")
   public abstract static class AwaitForPrim extends BinaryExpressionNode {
-    @Child static protected RecordOneEvent traceResult =
+    @Child protected static RecordOneEvent traceResult =
         new RecordOneEvent(TraceRecord.CONDITION_AWAITTIMEOUT_RES);
-    @Child static protected RecordTwoEvent traceWakeup =
+    @Child protected static RecordTwoEvent traceWakeup =
         new RecordTwoEvent(TraceRecord.CONDITION_WAKEUP);
 
     @Specialization

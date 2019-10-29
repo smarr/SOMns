@@ -31,7 +31,7 @@ public final class TracingLock extends ReentrantLock implements PassiveEntityWit
     return id;
   }
 
-  public final synchronized boolean tracingIsLocked(final RecordTwoEvent traceIsLocked) {
+  public synchronized boolean tracingIsLocked(final RecordTwoEvent traceIsLocked) {
     boolean isLocked = isLocked();
     traceIsLocked.record(id, isLocked ? 1 : 0);
     return isLocked;
@@ -46,7 +46,7 @@ public final class TracingLock extends ReentrantLock implements PassiveEntityWit
     return new TracingCondition(this, super.newCondition());
   }
 
-  public final synchronized void tracingLock(final RecordTwoEvent traceLock) {
+  public synchronized void tracingLock(final RecordTwoEvent traceLock) {
     lock();
     traceLock.record(id, eventNo);
     eventNo++;
