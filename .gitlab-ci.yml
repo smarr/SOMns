@@ -63,6 +63,15 @@ benchmark_savina_csp_job:
     - ant compile
     - export EXP=`if [[ "$CI_BUILD_REF_NAME" = "master" ]]; then echo "SOMns-SavinaCSP"; else echo "SOMns-SavinaCSP-exp"; fi`; rebench --without-nice -c --commit-id="$CI_BUILD_REF" --environment="`hostname` `cat /etc/issue | cut -d ' ' -f 1`" --project=SOMns-SavinaCSP --branch=master codespeed.conf $EXP
 
+benchmark_mutex_job:
+  stage: benchmark
+  tags: [benchmarks, infinity]
+  allow_failure: true
+  script:
+    - ant compile
+    - export EXP=`if [[ "$CI_BUILD_REF_NAME" = "master" ]]; then echo "SOMns-Mutex"; else echo "SOMns-Mutex-exp"; fi`; rebench --without-nice -c --commit-id="$CI_BUILD_REF" --environment="`hostname` `cat /etc/issue | cut -d ' ' -f 1`" --project=SOMns-Mutex --branch=master codespeed.conf $EXP
+
+
 benchmark_job:
   stage: benchmark
   tags: [benchmarks, infinity]
