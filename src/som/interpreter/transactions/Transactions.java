@@ -4,8 +4,13 @@ import java.util.IdentityHashMap;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
+import som.vm.Activity;
+import som.vm.VmSettings;
 import som.vmobjects.SArray.SMutableArray;
 import som.vmobjects.SObject.SMutableObject;
+import tools.concurrency.TracingActivityThread;
+import tools.replay.ReplayRecord;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
 
 /**
@@ -39,8 +44,10 @@ public final class Transactions {
   private IdentityHashMap<SMutableArray, ArrayChange>   arrays;
 
   private static Object globalCommitLock = new Object();
+  private static long   version;
 
-  private Transactions() {}
+  private Transactions() {
+  }
 
   private abstract static class Change {
     abstract boolean hasChange();
@@ -151,13 +158,30 @@ public final class Transactions {
   }
 
   /**
+   * @param recordCommit
    * @return true on success, otherwise false.
    */
   @TruffleBoundary
-  public boolean commit() {
+  public boolean commit(final RecordOneEvent recordCommit) {
     synchronized (globalCommitLock) {
       if (hasConflicts()) {
         return false;
+      }
+
+      if (VmSettings.REPLAY) {
+        // Check version and abort if necessary
+        Activity tat = TracingActivityThread.currentThread().getActivity();
+        ReplayRecord rr = tat.peekNextReplayEvent();
+        if (version != rr.eventNo) {
+          // simulate conflict if this is not supposed to commit yet!
+          return false;
+        }
+
+        tat.getNextReplayEvent();// consume event
+        version++;
+      } else if (VmSettings.ACTOR_TRACING) {
+        recordCommit.record(version);
+        version++;
       }
 
       applyChanges();

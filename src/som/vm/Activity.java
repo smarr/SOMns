@@ -1,5 +1,6 @@
 package som.vm;
 
+import java.util.LinkedList;
 import java.util.Queue;
 
 import tools.debugger.entities.ActivityType;
@@ -43,13 +44,28 @@ public interface Activity {
   default ReplayRecord getNextReplayEvent() {
     Queue<ReplayRecord> q = getReplayEventBuffer();
     if (q.isEmpty()) {
-      getTraceParser().getMoreEventsForEntity(getId());
+      boolean more = getTraceParser().getMoreEventsForEntity(getId());
+      while (q.isEmpty() && more) {
+        more = getTraceParser().getMoreEventsForEntity(getId());
+      }
     }
 
     return q.remove();
   }
 
-  default Queue<ReplayRecord> getReplayEventBuffer() {
+  default ReplayRecord peekNextReplayEvent() {
+    Queue<ReplayRecord> q = getReplayEventBuffer();
+    if (q.isEmpty()) {
+      boolean more = getTraceParser().getMoreEventsForEntity(getId());
+      while (q.isEmpty() && more) {
+        more = getTraceParser().getMoreEventsForEntity(getId());
+      }
+    }
+
+    return q.peek();
+  }
+
+  default LinkedList<ReplayRecord> getReplayEventBuffer() {
     return null;
   }
 
@@ -67,7 +83,8 @@ public interface Activity {
    * Set the flag that indicates a breakpoint on joining activity.
    * Does nothing for non-tracing activities, i.e., when debugging is disabled.
    */
-  default void setStepToJoin(final boolean val) {}
+  default void setStepToJoin(final boolean val) {
+  }
 
   void setStepToNextTurn(boolean val);
 }

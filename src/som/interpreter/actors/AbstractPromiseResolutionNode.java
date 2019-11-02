@@ -13,11 +13,17 @@ import com.oracle.truffle.api.source.SourceSection;
 import bd.primitives.nodes.WithContext;
 import som.VM;
 import som.interpreter.actors.SPromise.Resolution;
+import som.interpreter.actors.SPromise.SReplayPromise;
 import som.interpreter.actors.SPromise.SResolver;
+import som.interpreter.actors.SPromise.STracingPromise;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.vm.VmSettings;
 import tools.concurrency.KomposTrace;
+import tools.concurrency.TracingActivityThread;
+import tools.replay.ReplayRecord;
+import tools.replay.TraceRecord;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
 
 @GenerateWrapper
@@ -27,11 +33,19 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
 
   @Child protected WrapReferenceNode   wrapper = WrapReferenceNodeGen.create();
   @Child protected UnaryExpressionNode haltNode;
+  @Child protected RecordOneEvent      tracePromiseResolution;
+  @Child protected RecordOneEvent      tracePromiseResolutionEnd;
+  @Child protected RecordOneEvent      tracePromiseChaining;
 
   private final ValueProfile whenResolvedProfile = ValueProfile.createClassProfile();
 
   protected AbstractPromiseResolutionNode() {
     haltNode = insert(SuspendExecutionNodeGen.create(0, null));
+    if (VmSettings.ACTOR_TRACING) {
+      tracePromiseResolution = new RecordOneEvent(TraceRecord.PROMISE_RESOLUTION);
+      tracePromiseResolutionEnd = new RecordOneEvent(TraceRecord.PROMISE_RESOLUTION_END);
+      tracePromiseChaining = new RecordOneEvent(TraceRecord.PROMISE_CHAINED);
+    }
   }
 
   protected AbstractPromiseResolutionNode(final AbstractPromiseResolutionNode node) {
@@ -98,6 +112,17 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
 
     synchronized (promiseValue) {
       Resolution state = promiseValue.getResolutionStateUnsync();
+
+      if (VmSettings.REPLAY) {
+        ReplayRecord npr = TracingActivityThread.currentThread().getActivity()
+                                                .peekNextReplayEvent();
+        if (npr.type == TraceRecord.PROMISE_CHAINED) {
+          ((SReplayPromise) promiseValue).registerChainedPromiseReplay(
+              (SReplayPromise) promiseToBeResolved);
+          return;
+        }
+      }
+
       if (SPromise.isCompleted(state)) {
         resolvePromise(state, resolver, promiseValue.getValueUnsync(),
             haltOnResolution);
@@ -105,6 +130,18 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
         synchronized (promiseToBeResolved) { // TODO: is this really deadlock free?
           if (haltOnResolution || promiseValue.getHaltOnResolution()) {
             promiseToBeResolved.enableHaltOnResolution();
+          }
+
+          if (VmSettings.REPLAY) {
+            ReplayRecord npr = TracingActivityThread.currentThread().getActivity()
+                                                    .peekNextReplayEvent();
+            assert npr.type == TraceRecord.PROMISE_RESOLUTION;
+            ((SReplayPromise) promiseValue).consumeEventsForDelayedResolution();
+          }
+
+          if (VmSettings.ACTOR_TRACING) {
+            tracePromiseChaining.record(((STracingPromise) promiseValue).version);
+            ((STracingPromise) promiseValue).version++;
           }
           promiseValue.addChainedPromise(promiseToBeResolved);
         }
@@ -119,15 +156,18 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
     Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
     resolve(type, wrapper, promise, result, current, actorPool, haltOnResolution,
-        whenResolvedProfile);
+        whenResolvedProfile, tracePromiseResolution, tracePromiseResolutionEnd);
   }
 
   public static void resolve(final Resolution type,
       final WrapReferenceNode wrapper, final SPromise promise,
       final Object result, final Actor current, final ForkJoinPool actorPool,
-      final boolean haltOnResolution, final ValueProfile whenResolvedProfile) {
+      final boolean haltOnResolution, final ValueProfile whenResolvedProfile,
+      final RecordOneEvent tracePromiseResolution2,
+      final RecordOneEvent tracePromiseResolutionEnd2) {
     Object wrapped = wrapper.execute(result, promise.owner, current);
     SResolver.resolveAndTriggerListenersUnsynced(type, result, wrapped, promise,
-        current, actorPool, haltOnResolution, whenResolvedProfile);
+        current, actorPool, haltOnResolution, whenResolvedProfile, tracePromiseResolution2,
+        tracePromiseResolutionEnd2);
   }
 }

@@ -8,7 +8,7 @@ import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
 public final class TraceActorCreationNode extends TraceNode {
   @Child protected RecordOneEvent roe =
-      new RecordOneEvent(TraceRecord.ACTOR_CREATION);
+      new RecordOneEvent(TraceRecord.ACTIVITY_CREATION);
 
   private TraceActorCreationNode() {}
 

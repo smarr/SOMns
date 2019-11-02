@@ -8,13 +8,21 @@ import com.oracle.truffle.api.nodes.Node;
 import som.VM;
 import som.primitives.ObjectPrims.IsValue;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
-import som.vmobjects.SAbstractObject;
+import som.vm.VmSettings;
 import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
-import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
+import tools.replay.TraceRecord;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
 
 public abstract class WrapReferenceNode extends Node {
+  @Child protected RecordOneEvent tracePromiseChaining;
+
+  public WrapReferenceNode() {
+    if (VmSettings.ACTOR_TRACING) {
+      tracePromiseChaining = new RecordOneEvent(TraceRecord.PROMISE_CHAINED);
+    }
+  }
 
   public abstract Object execute(Object ref, Actor target, Actor owner);
 
@@ -49,7 +57,7 @@ public abstract class WrapReferenceNode extends Node {
   @Specialization(guards = "promise.getOwner() != target")
   protected static SPromise promiseNotOwnedByTarget(final SPromise promise, final Actor target,
       final Actor owner) {
-    return promise.getChainedPromiseFor(target);
+    return promise.getChainedPromiseFor(target, tracePromiseChaining);
   }
 
   protected static final boolean isNeitherFarRefNorPromise(final Object obj) {

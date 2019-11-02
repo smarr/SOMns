@@ -44,6 +44,8 @@ import tools.debugger.entities.SendOp;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
 import tools.dym.DynamicMetrics;
+import tools.replay.ReplayRecord;
+import tools.replay.TraceRecord;
 
 
 @GenerateWrapper
@@ -215,6 +217,12 @@ public class EventualSendNode extends ExprWithTagsNode {
           messageReceiverBreakpoint.executeShouldHalt(),
           promiseResolverBreakpoint.executeShouldHalt());
 
+      if (VmSettings.REPLAY) {
+        ReplayRecord npr = owner.getNextReplayEvent();
+        assert npr.type == TraceRecord.MESSAGE;
+        msg.setReplayVersion(npr.eventNo);
+      }
+
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
             target.getId());
@@ -294,6 +302,12 @@ public class EventualSendNode extends ExprWithTagsNode {
             current.getId());
       }
 
+      if (VmSettings.REPLAY) {
+        ReplayRecord npr = current.getNextReplayEvent();
+        assert npr.type == TraceRecord.MESSAGE;
+        msg.setReplayVersion(npr.eventNo);
+      }
+
       current.send(msg, actorPool);
 
       return result;
@@ -337,6 +351,14 @@ public class EventualSendNode extends ExprWithTagsNode {
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.sendOperation(SendOp.ACTOR_MSG, msg.getMessageId(),
             current.getId());
+      }
+
+      if (VmSettings.REPLAY) {
+        // TODO similar thing for any other usages of actor.send(). especially in timer prim
+        // and any external modules!
+        ReplayRecord npr = current.getNextReplayEvent();
+        assert npr.type == TraceRecord.MESSAGE;
+        msg.setReplayVersion(npr.eventNo);
       }
 
       current.send(msg, actorPool);

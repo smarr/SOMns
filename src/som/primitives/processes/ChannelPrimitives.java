@@ -1,6 +1,6 @@
 package som.primitives.processes;
 
-import java.util.Queue;
+import java.util.LinkedList;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
@@ -50,7 +50,6 @@ import tools.replay.TraceParser;
 import tools.replay.TraceRecord;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
-import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
 
@@ -112,7 +111,8 @@ public abstract class ChannelPrimitives {
       return ActivityType.PROCESS;
     }
 
-    protected void beforeExec(final SInvokable disp) {}
+    protected void beforeExec(final SInvokable disp) {
+    }
 
     @Override
     public void run() {
@@ -211,8 +211,8 @@ public abstract class ChannelPrimitives {
   }
 
   public static class ReplayProcess extends TracingProcess {
-    private final Queue<ReplayRecord> replayEvents;
-    private int                       children = 0;
+    private final LinkedList<ReplayRecord> replayEvents;
+    private int                            children = 0;
 
     public ReplayProcess(final SObjectWithClass obj, final boolean stopOnRootNode,
         final VM vm) {
@@ -226,7 +226,7 @@ public abstract class ChannelPrimitives {
     }
 
     @Override
-    public Queue<ReplayRecord> getReplayEventBuffer() {
+    public LinkedList<ReplayRecord> getReplayEventBuffer() {
       return this.replayEvents;
     }
 
@@ -254,8 +254,8 @@ public abstract class ChannelPrimitives {
     /** Breakpoint info for triggering suspension after write. */
     @Child protected AbstractBreakpointNode afterWrite;
 
-    @Child protected RecordTwoEvent traceRead =
-        new RecordTwoEvent(TraceRecord.CHANNEL_READ.value);
+    @Child protected RecordOneEvent traceRead =
+        new RecordOneEvent(TraceRecord.CHANNEL_READ);
 
     @Override
     public final ReadPrim initialize(final VM vm) {
@@ -303,8 +303,8 @@ public abstract class ChannelPrimitives {
 
     @Child protected ExceptionSignalingNode notAValue;
 
-    @Child protected RecordTwoEvent traceWrite =
-        new RecordTwoEvent(TraceRecord.CHANNEL_WRITE.value);
+    @Child protected RecordOneEvent traceWrite =
+        new RecordOneEvent(TraceRecord.CHANNEL_WRITE);
 
     @Override
     public final WritePrim initialize(final VM vm) {
@@ -357,7 +357,7 @@ public abstract class ChannelPrimitives {
   @GenerateNodeFactory
   public abstract static class ChannelNewPrim extends UnaryExpressionNode {
 
-    @Child RecordOneEvent trace = new RecordOneEvent(TraceRecord.CHANNEL_CREATION);
+    @Child RecordOneEvent trace = new RecordOneEvent(TraceRecord.ACTIVITY_CREATION);
 
     @Specialization
     public final SChannel newChannel(final Object module) {

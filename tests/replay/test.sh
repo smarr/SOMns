@@ -26,6 +26,8 @@ then
   declare -a CSP=()
 
   declare -a Threads=()
+
+  declare -a STM=()
 else
   declare -a Savina=(
     "BankTransaction 1 0 1000:100000"
@@ -37,11 +39,12 @@ else
   )
 
   declare -a Validation=(
-    "Counting 100 0 1000"
-    "Philosophers 100 0 5:5 25"
-    "DeadLock 100 0 4:2:3"
-    "Messages 100 0 1000"
-    "Sequence 100 0 100"
+    #Currently broken due to timerthread being incompatible
+    #"Counting 100 0 1000"
+    #"Philosophers 100 0 5:5 25"
+    #"DeadLock 100 0 4:2:3"
+    #"Messages 100 0 1000"
+    #"Sequence 100 0 100"
   )
 
   declare -a CSP=(
@@ -51,9 +54,17 @@ else
   )
 
   declare -a Threads=(
-    "ProducerConsumer 1 0 10 4"
-    "Philosophers 1 0 500 4"
+    "MutexSuite.ProducerConsumer 1 0 10 4"
+    "MutexSuite.Philosophers 1 0 500 4"
+    "Lee 1 0 4 4"
+    "Vacation 1 0 7 4"
   )
+
+  declare -a STM=(
+    "LeeSTM 1 0 4 4"
+    "VacationSTM 1 0 7 4"
+  )
+
 fi
 
 ## Determine absolute path of script
@@ -111,10 +122,24 @@ for args in "${Threads[@]}"
 do
   echo "$args"
   echo "Tracing:"
-  $SOM_DIR/som -t8 -G -JXmx1500m -at core-lib/Benchmarks/Harness.ns MutexSuite.$args
+  $SOM_DIR/som -t8 -G -JXmx1500m -at core-lib/Benchmarks/Harness.ns $args
   echo ""
   echo "Replay:"
-  $SOM_DIR/som -t8 -G -JXmx1500m -vmd -r core-lib/Benchmarks/Harness.ns MutexSuite.$args
+  $SOM_DIR/som -t8 -G -JXmx1500m -vmd -r core-lib/Benchmarks/Harness.ns $args
+  echo ""
+  echo "========================================================"
+  echo ""
+done
+
+echo   "====================== STM Replay ======================"
+for args in "${STM[@]}"
+do
+  echo "$args"
+  echo "Tracing:"
+  $SOM_DIR/som -t8 -G -JXmx1500m -at core-lib/Benchmarks/Harness.ns $args
+  echo ""
+  echo "Replay:"
+  $SOM_DIR/som -t8 -G -JXmx1500m -vmd -r core-lib/Benchmarks/Harness.ns $args
   echo ""
   echo "========================================================"
   echo ""

@@ -23,6 +23,8 @@ import tools.debugger.entities.EntityType;
 import tools.debugger.entities.SteppingType;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
+import tools.replay.TraceRecord;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
 
 @GenerateNodeFactory
@@ -30,6 +32,8 @@ import tools.debugger.session.Breakpoints;
 public abstract class AtomicPrim extends BinarySystemOperation {
   @Child protected AbstractBreakpointNode beforeCommit;
   @Child protected UnaryExpressionNode    haltNode;
+  @Child protected RecordOneEvent         recordCommit =
+      new RecordOneEvent(TraceRecord.TRANSACTION_COMMIT);
 
   @Override
   public final AtomicPrim initialize(final VM vm) {
@@ -69,7 +73,7 @@ public abstract class AtomicPrim extends BinarySystemOperation {
           haltNode.executeEvaluated(frame, result);
         }
 
-        if (tx.commit()) {
+        if (tx.commit(recordCommit)) {
           if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
               SteppingType.STEP_AFTER_COMMIT.isSet()) {
             haltNode.executeEvaluated(frame, result);
@@ -85,7 +89,7 @@ public abstract class AtomicPrim extends BinarySystemOperation {
           haltNode.executeEvaluated(frame, t);
         }
 
-        if (tx.commit()) {
+        if (tx.commit(recordCommit)) {
           if (VmSettings.TRUFFLE_DEBUGGER_ENABLED &&
               SteppingType.STEP_AFTER_COMMIT.isSet()) {
             haltNode.executeEvaluated(frame, t);

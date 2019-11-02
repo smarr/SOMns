@@ -10,7 +10,6 @@ import org.graalvm.polyglot.Value;
 import som.interpreter.SomLanguage;
 import som.interpreter.objectstorage.StorageAccessor;
 import som.vm.VmSettings;
-import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingBackend;
 import tools.parser.KomposTraceParser;
 import tools.snapshot.SnapshotBackend;
@@ -56,10 +55,6 @@ public final class Launcher {
     TracingBackend.waitForTrace();
     if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS) {
       SnapshotBackend.writeSnapshot();
-    }
-
-    if (exitCode != 0) {
-      ReplayActor.printMissingMessages();
     }
 
     if (VmSettings.MEMORY_TRACING) {

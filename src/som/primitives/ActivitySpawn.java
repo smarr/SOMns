@@ -55,13 +55,19 @@ import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 public abstract class ActivitySpawn {
 
   private static SomForkJoinTask createTask(final Object[] argArray,
-      final boolean stopOnRoot, final SBlock block, final SourceSection section) {
+      final boolean stopOnRoot, final SBlock block, final SourceSection section,
+      final RecordOneEvent traceThreadCreation) {
     SomForkJoinTask task;
 
-    if (VmSettings.KOMPOS_TRACING) {
+    if (VmSettings.KOMPOS_TRACING || VmSettings.ACTOR_TRACING) {
       task = new TracedForkJoinTask(argArray, stopOnRoot);
-      KomposTrace.activityCreation(ActivityType.TASK, task.getId(),
-          block.getMethod().getSignature(), section);
+
+      if (VmSettings.KOMPOS_TRACING) {
+        KomposTrace.activityCreation(ActivityType.TASK, task.getId(),
+            block.getMethod().getSignature(), section);
+      } else if (VmSettings.ACTOR_TRACING) {
+        traceThreadCreation.record(task.getId());
+      }
     } else {
       task = new SomForkJoinTask(argArray, stopOnRoot);
     }
@@ -127,7 +133,7 @@ public abstract class ActivitySpawn {
     @Child protected AbstractBreakpointNode onExec;
     @Child protected ExceptionSignalingNode notAValue;
     @Child RecordOneEvent                   traceProcCreation =
-        new RecordOneEvent(TraceRecord.PROCESS_CREATION);
+        new RecordOneEvent(TraceRecord.ACTIVITY_CREATION);
 
     @Override
     public final SpawnPrim initialize(final VM vm) {
@@ -146,7 +152,7 @@ public abstract class ActivitySpawn {
     @TruffleBoundary
     public final SomForkJoinTask spawnTask(final SClass clazz, final SBlock block) {
       SomForkJoinTask task = createTask(new Object[] {block},
-          onExec.executeShouldHalt(), block, sourceSection);
+          onExec.executeShouldHalt(), block, sourceSection, traceProcCreation);
       forkJoinPool.execute(task);
       return task;
     }
@@ -212,7 +218,8 @@ public abstract class ActivitySpawn {
 
     @Child protected ExceptionSignalingNode notAValue;
 
-    @Child RecordOneEvent traceProcCreation = new RecordOneEvent(TraceRecord.PROCESS_CREATION);
+    @Child RecordOneEvent traceProcCreation =
+        new RecordOneEvent(TraceRecord.ACTIVITY_CREATION);
 
     @Override
     public final SpawnWithPrim initialize(final VM vm) {
@@ -232,7 +239,7 @@ public abstract class ActivitySpawn {
     public SomForkJoinTask spawnTask(final SClass clazz, final SBlock block,
         final SArray somArgArr, final Object[] argArr) {
       SomForkJoinTask task = createTask(argArr,
-          onExec.executeShouldHalt(), block, sourceSection);
+          onExec.executeShouldHalt(), block, sourceSection, traceProcCreation);
       forkJoinPool.execute(task);
       return task;
     }

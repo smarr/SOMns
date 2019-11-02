@@ -5,21 +5,22 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
+import som.Output;
+import som.vm.Activity;
 import som.vm.VmSettings;
 import tools.concurrency.TracingActivityThread;
 import tools.replay.PassiveEntityWithEvents;
-import tools.replay.ReplayRecord.NumberedPassiveRecord;
-import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
+import tools.replay.ReplayRecord;
+import tools.replay.TraceRecord;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
 
 public final class TracingLock extends ReentrantLock implements PassiveEntityWithEvents {
   private static final long serialVersionUID = -3346973644925799901L;
-  final long                id;
   volatile int              eventNo          = 0;
   public final Condition    replayCondition;
 
   public TracingLock() {
-    id = TracingActivityThread.newEntityId();
     if (VmSettings.REPLAY) {
       replayCondition = super.newCondition();
     } else {
@@ -27,13 +28,9 @@ public final class TracingLock extends ReentrantLock implements PassiveEntityWit
     }
   }
 
-  public long getId() {
-    return id;
-  }
-
-  public synchronized boolean tracingIsLocked(final RecordTwoEvent traceIsLocked) {
+  public synchronized boolean tracingIsLocked(final RecordOneEvent traceIsLocked) {
     boolean isLocked = isLocked();
-    traceIsLocked.record(id, isLocked ? 1 : 0);
+    traceIsLocked.record(isLocked ? 1 : 0);
     return isLocked;
   }
 
@@ -46,9 +43,9 @@ public final class TracingLock extends ReentrantLock implements PassiveEntityWit
     return new TracingCondition(this, super.newCondition());
   }
 
-  public synchronized void tracingLock(final RecordTwoEvent traceLock) {
+  public synchronized void tracingLock(final RecordOneEvent traceLock) {
     lock();
-    traceLock.record(id, eventNo);
+    traceLock.record(eventNo);
     eventNo++;
   }
 
@@ -71,9 +68,8 @@ public final class TracingLock extends ReentrantLock implements PassiveEntityWit
       wrapped.await();
 
       if (VmSettings.REPLAY) {
-        NumberedPassiveRecord npr =
-            (NumberedPassiveRecord) TracingActivityThread.currentThread().getActivity()
-                                                         .getNextReplayEvent();
+        ReplayRecord npr = TracingActivityThread.currentThread().getActivity()
+                                                .getNextReplayEvent();
 
         while (owner.getNextEventNumber() != npr.eventNo) {
           owner.replayCondition.await();
@@ -96,6 +92,32 @@ public final class TracingLock extends ReentrantLock implements PassiveEntityWit
 
     @Override
     public boolean await(final long time, final TimeUnit unit) throws InterruptedException {
+      if (VmSettings.REPLAY) {
+        Activity reader = TracingActivityThread.currentThread().getActivity();
+        ReplayRecord rr = reader.getNextReplayEvent();
+        boolean result = true;
+
+        if (rr.type == TraceRecord.CONDITION_WAKEUP) {
+          // original was successful
+          wrapped.await();
+        } else if (rr.type == TraceRecord.CONDITION_TIMEOUT) {
+          // original timed out
+          result = false;
+        } else {
+          assert false;
+        }
+
+        // delay until supposed to wake up and hold lock
+        while (owner.getNextEventNumber() != rr.eventNo) {
+          owner.replayCondition.await();
+        }
+
+        owner.replayIncrementEventNo();
+        owner.replayCondition.signalAll();
+
+        return result;
+      }
+
       return wrapped.await(time, unit);
     }
 

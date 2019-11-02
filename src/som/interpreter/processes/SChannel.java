@@ -14,7 +14,7 @@ import tools.concurrency.TracingChannel.TracingChannelInput;
 import tools.concurrency.TracingChannel.TracingChannelOutput;
 import tools.replay.PassiveEntityWithEvents;
 import tools.replay.ReplayData;
-import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
 
 public class SChannel extends SAbstractObject {
@@ -83,8 +83,12 @@ public class SChannel extends SAbstractObject {
     }
 
     @TruffleBoundary
-    public Object read(final RecordTwoEvent traceRead) throws InterruptedException {
+    public Object read(final RecordOneEvent traceRead) throws InterruptedException {
       ObjectTransitionSafepoint.INSTANCE.unregister();
+
+      if (VmSettings.REPLAY) {
+        ReplayData.replayDelayNumberedEvent(this);
+      }
 
       try {
         if (VmSettings.REPLAY) {
@@ -93,7 +97,7 @@ public class SChannel extends SAbstractObject {
 
         synchronized (this) {
           if (VmSettings.ACTOR_TRACING) {
-            traceRead.record(channel.getId(), numReads);
+            traceRead.record(numReads);
             numReads++;
           }
           return cell.take();
@@ -107,7 +111,7 @@ public class SChannel extends SAbstractObject {
     }
 
     public final Object readAndSuspendWriter(final boolean doSuspend,
-        final RecordTwoEvent traceRead)
+        final RecordOneEvent traceRead)
         throws InterruptedException {
       channel.breakAfterWrite = doSuspend;
       return read(traceRead);
@@ -157,9 +161,13 @@ public class SChannel extends SAbstractObject {
     }
 
     @TruffleBoundary
-    public void write(final Object value, final RecordTwoEvent traceWrite)
+    public void write(final Object value, final RecordOneEvent traceWrite)
         throws InterruptedException {
       ObjectTransitionSafepoint.INSTANCE.unregister();
+
+      if (VmSettings.REPLAY) {
+        ReplayData.replayDelayNumberedEvent(this);
+      }
 
       try {
         if (VmSettings.REPLAY) {
@@ -168,7 +176,7 @@ public class SChannel extends SAbstractObject {
 
         synchronized (this) {
           if (VmSettings.ACTOR_TRACING) {
-            traceWrite.record(channel.getId(), numWrites);
+            traceWrite.record(numWrites);
             numWrites++;
           }
           cell.put(value);
@@ -185,7 +193,7 @@ public class SChannel extends SAbstractObject {
     }
 
     public final void writeAndSuspendReader(final Object value,
-        final boolean doSuspend, final RecordTwoEvent traceWrite) throws InterruptedException {
+        final boolean doSuspend, final RecordOneEvent traceWrite) throws InterruptedException {
       channel.breakAfterRead = doSuspend;
       write(value, traceWrite);
     }

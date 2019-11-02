@@ -4,12 +4,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Queue;
 
 import som.vm.Activity;
 import tools.concurrency.TracingActivityThread;
-import tools.replay.ReplayRecord.MessageRecord;
-import tools.replay.ReplayRecord.NumberedPassiveRecord;
 
 
 public class ReplayData {
@@ -22,13 +19,12 @@ public class ReplayData {
    * @param l
    * @param expectedNo The sequence number of the event to be performed.
    */
-  public static void replayDelayNumberedEvent(final PassiveEntityWithEvents pe,
-      final long passiveEntityId) {
+  public static void replayDelayNumberedEvent(final PassiveEntityWithEvents pe) {
 
     Activity reader = TracingActivityThread.currentThread().getActivity();
-    NumberedPassiveRecord npr = (NumberedPassiveRecord) reader.getNextReplayEvent();
-    assert npr != null : reader;
-    assert passiveEntityId == npr.passiveEntityId;
+    ReplayRecord npr = reader.getNextReplayEvent();
+
+    assert npr != null : reader.getId();
 
     try {
       while (pe.getNextEventNumber() != npr.eventNo) {
@@ -60,9 +56,9 @@ public class ReplayData {
 
     HashMap<Integer, Subtrace> subtraces;
 
-    Queue<ReplayRecord> replayEvents;
-    int                 nextContext = 0;
-    boolean             retrieved   = false;
+    LinkedList<ReplayRecord> replayEvents;
+    int                      nextContext = 0;
+    boolean                  retrieved   = false;
 
     public EntityNode(final long entityId) {
       this.entityId = entityId;
@@ -122,7 +118,7 @@ public class ReplayData {
       replayEvents.add(mr);
     }
 
-    public Queue<ReplayRecord> getReplayEvents() {
+    public LinkedList<ReplayRecord> getReplayEvents() {
       if (replayEvents == null) {
         replayEvents = new LinkedList<>();
       }
@@ -142,36 +138,12 @@ public class ReplayData {
       return i;
     }
 
-    protected void onContextStart(final int ordering) {}
+    protected void onContextStart(final int ordering) {
+    }
 
     @Override
     public String toString() {
       return "" + entityId + ":" + childNo;
-    }
-  }
-
-  /**
-   * Node in actor creation hierarchy.
-   */
-  protected static class ActorNode extends EntityNode {
-    LinkedList<MessageRecord> expectedMessages = new LinkedList<>();
-
-    ActorNode(final long actorId) {
-      super(actorId);
-    }
-
-    protected void addMessageRecord(final MessageRecord mr) {
-      expectedMessages.add(mr);
-    }
-
-    public LinkedList<MessageRecord> getExpectedMessages() {
-      return expectedMessages;
-    }
-  }
-
-  protected static class ChannelNode extends EntityNode {
-    public ChannelNode(final long entityId) {
-      super(entityId);
     }
   }
 }

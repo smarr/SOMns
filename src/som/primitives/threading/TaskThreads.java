@@ -1,6 +1,6 @@
 package som.primitives.threading;
 
-import java.util.Queue;
+import java.util.LinkedList;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
@@ -23,6 +23,7 @@ import tools.concurrency.TracingActivityThread;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.replay.ReplayRecord;
+import tools.replay.TraceParser;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
@@ -209,12 +210,14 @@ public final class TaskThreads {
   }
 
   public static class ReplayThreadTask extends TracedThreadTask {
-    private final Queue<ReplayRecord> replayEvents;
-    private int                       children = 0;
+    private final LinkedList<ReplayRecord> replayEvents;
+    private int                            children = 0;
+    private final TraceParser              traceParser;
 
     public ReplayThreadTask(final Object[] argArray, final boolean stopOnRoot, final VM vm) {
       super(argArray, stopOnRoot, vm);
       replayEvents = vm.getTraceParser().getReplayEventsForEntity(this.getId());
+      this.traceParser = vm.getTraceParser();
     }
 
     @Override
@@ -223,8 +226,13 @@ public final class TaskThreads {
     }
 
     @Override
-    public ReplayRecord getNextReplayEvent() {
-      return replayEvents.poll();
+    public LinkedList<ReplayRecord> getReplayEventBuffer() {
+      return this.replayEvents;
+    }
+
+    @Override
+    public TraceParser getTraceParser() {
+      return traceParser;
     }
   }
 
