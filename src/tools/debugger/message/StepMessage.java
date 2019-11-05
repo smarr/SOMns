@@ -26,5 +26,9 @@ public class StepMessage extends IncommingMessage {
     assert susp != null : "Failed to get suspension for activityId: " + activityId;
     step.process(susp);
     susp.resume();
+
+    if (step == SteppingType.RESUME) {
+      FrontendConnector.log("[DEBUGGER] Resuming actor "+activityId);
+    }
   }
 }

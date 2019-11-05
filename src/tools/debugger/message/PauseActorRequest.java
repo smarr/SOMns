@@ -21,5 +21,6 @@ public class PauseActorRequest extends Message.IncommingMessage {
         assert actor != null : "Failed to get actor for activityId: " + this.actorId;
         actor.setStepToNextTurn(true);
         FrontendConnector.log("[DEBUGGER] Actor "+actor.getId() +" will pause before processing the next message.");
+        connector.sendPauseActorResponse(this.actorId);
     }
 }

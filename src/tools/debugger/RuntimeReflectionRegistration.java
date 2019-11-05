@@ -64,6 +64,7 @@ public class RuntimeReflectionRegistration implements Feature {
     outMsgs.register(ScopesResponse.class);
     outMsgs.register(VariablesResponse.class);
     outMsgs.register(ProgramInfoResponse.class);
+    outMsgs.register("pauseActorResponse", PauseActorResponse.class);
 
     ClassGroup inMsgs = new ClassGroup(IncommingMessage.class, "action", true);
     inMsgs.register(InitializeConnection.class);

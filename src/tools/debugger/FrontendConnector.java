@@ -301,6 +301,10 @@ public class FrontendConnector {
     send(ProgramInfoResponse.create(webDebugger.vm.getArguments()));
   }
 
+  public void sendPauseActorResponse(long pausedActorId) {
+    send(PauseActorResponse.create(pausedActorId));
+  }
+
   public void registerOrUpdate(final LineBreakpoint bp) {
     breakpoints.addOrUpdate(bp);
   }
