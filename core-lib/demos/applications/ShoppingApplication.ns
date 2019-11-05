@@ -5,44 +5,41 @@ class ShoppingApplication usingPlatform: platform = Value (
 )(
 
   public class Buyer new = (
-  | private customer = 'West Coast Buyers'.
-    private profile = 'West Coast Buyers Profile'.
+  | private customerInfo = 'West Coast Buyers'.
+    private profileInfo = 'West Coast Buyers Profile'.
     private shoppingCart = Vector new.
   |
   )(
 
-    (* Create the teller and send the validation messages to the services *)
-    public checkoutShoppingCart: product account: account shipper: shipper = (
-      | teller listener completionPP prom |
+   (* Create the teller and send the validation messages to the services *)
+   public checkoutShoppingCart: product account: account shipper: shipper = (
+     | teller listener completionPP pConnection |
 
-           completionPP:: actors createPromisePair.
+          completionPP:: actors createPromisePair.
 
-           (* object to notify when the replies are received. It uses as argument a block to execute. *)
-           listener:: Listener new: [:p1 | self <-: placeOrder: completionPP resolver.].
+          (* object to notify when the replies are received. It uses as argument a block to execute. *)
+          listener:: Listener new: [:p1 | self <-: placeOrder: completionPP resolver.].
 
-           teller:: Teller new: (shoppingCart size + 2) listener: listener.
+          teller:: Teller new: (shoppingCart size + 2) listener: listener.
 
-           product <-: checkStockConnection.
-
-           shoppingCart doIndexes:[:i |
-              | partNo |
+          shoppingCart doIndexes:[:i |
+             | partNo |
               partNo:: shoppingCart at: i.
               product <-: partInStock: partNo teller: teller.
-           ].
+          ].
 
-           account <-: checkCredit: customer teller: teller.
-           shipper <-: canDeliver: profile teller: teller.
+          account <-: checkCredit: customerInfo teller: teller.
+          shipper <-: canDeliver: profileInfo teller: teller.
 
-           ^ completionPP promise
-    )
+          ^ completionPP promise
+   )
 
-    public placeOrder: resolver = (
+   public placeOrder: resolver = (
         resolver resolve: 'The order has been placed successfully'.
-    )
+   )
 
     public addItem: item = (
            shoppingCart append: item.
-           ('- Items added in Shopping Cart: ' + item) println.
      ^ 'ok'
     )
 
@@ -51,11 +48,10 @@ class ShoppingApplication usingPlatform: platform = Value (
   public class Listener new: block = (
     | private block = block. |
   )(
-
         public run = (
           ('- All conditions has been met. ' ) println.
 
-          1 timesRepeat: [block value: true].
+         block value: true.
         )
   )
 
@@ -92,12 +88,8 @@ class ShoppingApplication usingPlatform: platform = Value (
   )(
 
     public partInStock: itemNo teller: teller = (
-        ('partInStock true') println.
+        ('partInStock true for ' + itemNo) println.
         ^ teller <-: asyncAnd: true.
-    )
-
-    public checkStockConnection = (
-        ^ true
     )
 
   )
@@ -109,7 +101,6 @@ class ShoppingApplication usingPlatform: platform = Value (
         ('checkCredit true') println.
         ^ teller <-: asyncAnd: true.
     )
-
   )
 
   (* Check availability of shipper *)
@@ -123,7 +114,7 @@ class ShoppingApplication usingPlatform: platform = Value (
   )
 
   public main: args = (
-   | checkOutPromise buyer product account shipper cart items asyncPromise promiseItem finalPromise |
+   | buyer product account shipper cart items asyncPromise finalPromise |
 
    '[SHOPPING APPLICATION] Starting' println.
     items:: Vector new.
@@ -137,19 +128,16 @@ class ShoppingApplication usingPlatform: platform = Value (
     buyer:: (actors createActorFromValue: Buyer) <-: new.
 
     asyncPromise:: actors async: items do:[: i |
-      | timeoutProm |
-      timeoutProm:: actors createPromisePair.
-
-          actors after: 1000 do: [
-             buyer <-: addItem: i.
-             timeoutProm resolver resolve: i.
-          ].
-
-      timeoutProm promise
+      (buyer <-: addItem: i) whenResolved: [: r |
+       r = 'ok'
+       ifTrue:[
+        ('-items added in shopping cart: ' + i) println.
+       ].
+      ].
     ].
 
     finalPromise:: asyncPromise whenResolved:[: r |
-        checkOutPromise:: buyer <-: checkoutShoppingCart: product account: account shipper: shipper.
+        buyer <-: checkoutShoppingCart: product account: account shipper: shipper.
     ].
 
      ^ finalPromise whenResolved: [: r2|

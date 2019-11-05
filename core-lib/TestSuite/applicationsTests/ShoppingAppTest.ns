@@ -62,13 +62,12 @@ class ShoppingAppTest usingPlatform: platform testFramework: minitest = Value (
                 shoppingCart append: 'screen'.
 
                 asyncPromise:: actors async: shoppingCart do:[: i |
-                      | timeoutProm |
-                      timeoutProm:: actors createPromisePair.
-
-                      buyer <-: addItem: i.
-                      timeoutProm resolver resolve: i.
-
-                      timeoutProm promise
+                  (buyer <-: addItem: i) whenResolved: [: r |
+                   r = 'ok'
+                   ifTrue:[
+                    ('-items added in shopping cart: ' + i) println.
+                   ].
+                  ].
                 ].
 
                 finalPromise:: asyncPromise whenResolved:[: r |
