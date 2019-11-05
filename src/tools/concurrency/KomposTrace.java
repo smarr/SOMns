@@ -136,6 +136,10 @@ public class KomposTrace {
     return (TracingActivityThread) current;
   }
 
+  public static void recordSuspendedActivityByDebugger(TracingActivityThread t) {
+    ((KomposTraceBuffer) t.getBuffer()).recordPausedActivity(t.getActivity());
+  }
+
   public static class KomposTraceBuffer extends TraceBuffer {
 
     /**
@@ -173,6 +177,10 @@ public class KomposTrace {
       this.lastActivity = null;
       recordCurrentActivity(current);
       return true;
+    }
+
+    public void recordPausedActivity(final Activity current) {
+      recordCurrentActivity(current);
     }
 
     @TruffleBoundary
@@ -218,7 +226,7 @@ public class KomposTrace {
 
     public void recordCurrentActivity(final Activity current) {
 
-      if (current == lastActivity || current == null) {
+      if (current == null) {
         return;
       }
 
