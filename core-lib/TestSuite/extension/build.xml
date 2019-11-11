@@ -7,7 +7,9 @@
   <property name="src_gen.dir" location="src_gen"/>
   <property name="lib.dir"     location="${som.dir}/libs" />
   <property name="bd.dir"      location="${lib.dir}/black-diamonds" />
+  <property name="sdk.dir"     location="${lib.dir}/truffle/sdk" />
   <property name="truffle.dir" location="${lib.dir}/truffle/truffle" />
+  <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists/jdk1.8" />
   <property name="truffle.build" location="${truffle.dir}/mxbuild/dists/jdk1.8" />
   
   <property name="build.dir"   location="build"/>
@@ -22,6 +24,7 @@
       
       <pathelement location="${som.dir}/build/classes/" />
       <pathelement location="${bd.dir}/build/classes" />
+      <pathelement location="${sdk.build}/graal-sdk.jar" />
       <pathelement location="${truffle.build}/truffle-api.jar" />
       <pathelement location="${truffle.build}/truffle-dsl-processor.jar" />
   </path>
