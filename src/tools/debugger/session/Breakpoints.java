@@ -60,7 +60,7 @@ public class Breakpoints {
   public synchronized void addOrUpdate(final LineBreakpoint bId) {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {
-      WebDebugger.log("LineBreakpoint: " + bId);
+      WebDebugger.log("[DEBUGGER] LineBreakpoint: " + bId);
       bp = Breakpoint.newBuilder(bId.getURI()).lineIs(bId.getLine()).build();
       debuggerSession.install(bp);
       truffleBreakpoints.put(bId, bp);
@@ -74,8 +74,10 @@ public class Breakpoints {
     if (existingBP == null) {
       existingBP = new BreakpointEnabling(bId);
       breakpoints.put(loc, existingBP);
+      WebDebugger.log("[DEBUGGER] SectionBreakpoint: " + bId);
     } else {
       existingBP.setEnabled(bId.isEnabled());
+      WebDebugger.log("[DEBUGGER] Enable SectionBreakpoint: " + bId);
     }
   }
 
@@ -101,7 +103,7 @@ public class Breakpoints {
       final Class<? extends Tag> tag, final SuspendAnchor anchor) {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {
-      WebDebugger.log("SectionBreakpoint: " + bId);
+      WebDebugger.log("[DEBUGGER] SectionBreakpoint: " + bId);
       bp = Breakpoint.newBuilder(bId.getCoordinate().uri).lineIs(bId.getCoordinate().startLine)
                      .columnIs(bId.getCoordinate().startColumn)
                      .sectionLength(bId.getCoordinate().charLength)
