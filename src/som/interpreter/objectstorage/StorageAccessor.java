@@ -5,7 +5,6 @@ import java.lang.reflect.Field;
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.profiles.IntValueProfile;
 
 import som.compiler.MixinDefinition.SlotDefinition;
@@ -26,22 +25,28 @@ import sun.misc.Unsafe;
  * {@link SMutableObject}.
  */
 public abstract class StorageAccessor {
-  private static final Unsafe unsafe;
+  private static final Unsafe unsafe = loadUnsafe();
 
   private static final int MAX_OBJECT_FIELDS = 50;
   private static final int MAX_PRIM_FIELDS   = 30;
 
-  @CompilationFinal(
-      dimensions = 1) private static final AbstractObjectAccessor[]                  objAccessors;
-  @CompilationFinal(
-      dimensions = 1) private static final AbstractPrimitiveAccessor[]               primAccessors;
+  private static final long SMO_PRIM_FIELD_1_OFFSET = getFieldOffset("primField1");
+  private static final long SMO_PRIM_FIELD_2_OFFSET = getFieldOffset("primField2");
+  private static final long SMO_PRIM_FIELD_3_OFFSET = getFieldOffset("primField3");
+  private static final long SMO_PRIM_FIELD_4_OFFSET = getFieldOffset("primField4");
+  private static final long SMO_PRIM_FIELD_5_OFFSET = getFieldOffset("primField5");
+  private static final long SMO_FIELD_1_OFFSET      = getFieldOffset("field1");
+  private static final long SMO_FIELD_2_OFFSET      = getFieldOffset("field2");
+  private static final long SMO_FIELD_3_OFFSET      = getFieldOffset("field3");
+  private static final long SMO_FIELD_4_OFFSET      = getFieldOffset("field4");
+  private static final long SMO_FIELD_5_OFFSET      = getFieldOffset("field5");
 
-  static {
-    unsafe = loadUnsafe();
-
-    objAccessors = new AbstractObjectAccessor[MAX_OBJECT_FIELDS];
-    primAccessors = new AbstractPrimitiveAccessor[MAX_PRIM_FIELDS];
-  }
+  @CompilationFinal(
+      dimensions = 1) private static final AbstractObjectAccessor[]                  objAccessors  =
+          new AbstractObjectAccessor[MAX_OBJECT_FIELDS];
+  @CompilationFinal(
+      dimensions = 1) private static final AbstractPrimitiveAccessor[]               primAccessors =
+          new AbstractPrimitiveAccessor[MAX_PRIM_FIELDS];
 
   private static long getFieldOffset(final String fieldName) {
     try {
@@ -78,37 +83,22 @@ public abstract class StorageAccessor {
   }
 
   private static void initObjectAccessors() {
-    if (TruffleOptions.AOT) {
-      objAccessors[0] = new DirectObjectAccessor(ObjectAddresses.field1Offset);
-      objAccessors[1] = new DirectObjectAccessor(ObjectAddresses.field2Offset);
-      objAccessors[2] = new DirectObjectAccessor(ObjectAddresses.field3Offset);
-      objAccessors[3] = new DirectObjectAccessor(ObjectAddresses.field4Offset);
-      objAccessors[4] = new DirectObjectAccessor(ObjectAddresses.field5Offset);
-    } else {
-      for (int i = 0; i < SObject.NUM_OBJECT_FIELDS; i += 1) {
-        objAccessors[i] = new DirectObjectAccessor(getFieldOffset("field" + (i + 1)));
-      }
-    }
-
+    objAccessors[0] = new DirectObjectAccessor(SMO_FIELD_1_OFFSET);
+    objAccessors[1] = new DirectObjectAccessor(SMO_FIELD_2_OFFSET);
+    objAccessors[2] = new DirectObjectAccessor(SMO_FIELD_3_OFFSET);
+    objAccessors[3] = new DirectObjectAccessor(SMO_FIELD_4_OFFSET);
+    objAccessors[4] = new DirectObjectAccessor(SMO_FIELD_5_OFFSET);
     for (int i = SObject.NUM_OBJECT_FIELDS; i < MAX_OBJECT_FIELDS; i += 1) {
       objAccessors[i] = new ExtensionObjectAccessor(i);
     }
   }
 
   private static void initPrimitiveAccessors() {
-    if (TruffleOptions.AOT) {
-      primAccessors[0] = new DirectPrimitiveAccessor(ObjectAddresses.prim1Offset, 0);
-      primAccessors[1] = new DirectPrimitiveAccessor(ObjectAddresses.prim2Offset, 1);
-      primAccessors[2] = new DirectPrimitiveAccessor(ObjectAddresses.prim3Offset, 2);
-      primAccessors[3] = new DirectPrimitiveAccessor(ObjectAddresses.prim4Offset, 3);
-      primAccessors[4] = new DirectPrimitiveAccessor(ObjectAddresses.prim5Offset, 4);
-    } else {
-      for (int i = 0; i < SObject.NUM_PRIMITIVE_FIELDS; i += 1) {
-        primAccessors[i] =
-            new DirectPrimitiveAccessor(getFieldOffset("primField" + (i + 1)), i);
-      }
-    }
-
+    primAccessors[0] = new DirectPrimitiveAccessor(SMO_PRIM_FIELD_1_OFFSET, 0);
+    primAccessors[1] = new DirectPrimitiveAccessor(SMO_PRIM_FIELD_2_OFFSET, 1);
+    primAccessors[2] = new DirectPrimitiveAccessor(SMO_PRIM_FIELD_3_OFFSET, 2);
+    primAccessors[3] = new DirectPrimitiveAccessor(SMO_PRIM_FIELD_4_OFFSET, 3);
+    primAccessors[4] = new DirectPrimitiveAccessor(SMO_PRIM_FIELD_5_OFFSET, 4);
     for (int i = SObject.NUM_PRIMITIVE_FIELDS; i < MAX_PRIM_FIELDS; i += 1) {
       primAccessors[i] = new ExtensionPrimitiveAccessor(i);
     }
