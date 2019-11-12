@@ -3,8 +3,8 @@
     xmlns:if="ant:if"
     xmlns:jacoco="antlib:org.jacoco.ant">
     
-    <property name="jvmci.version" value="jvmci-19.3-b01" />
-    <property name="jdk8.version"  value="222" />
+    <property name="jvmci.version" value="jvmci-19.3-b04" />
+    <property name="jdk8.version"  value="232" />
 
     <macrodef name="travis">
         <attribute name="target" />
@@ -57,7 +57,7 @@
     <property name="truffle.build" location="${truffle.dir}/mxbuild/dists/jdk1.8" />
     <property name="somns-deps.version" value="0.3.6" />
     <property name="checkstyle.version" value="8.11" />
-    <property name="jacoco.version"     value="0.8.0" />
+    <property name="jacoco.version"     value="0.8.5" />
     <property name="jvmci.home"  location="${lib.dir}/jvmci${home.ext}" />
 
     <!-- <property name="lib.url" value="https://dl.bintray.com/smarr/SOM" /> -->
