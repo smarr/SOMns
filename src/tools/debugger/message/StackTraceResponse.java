@@ -5,7 +5,9 @@ import java.util.ArrayList;
 import com.oracle.truffle.api.debug.DebugStackFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
+import som.interpreter.actors.Actor;
 import som.interpreter.actors.Actor.ExecutorRootNode;
+import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.ReceivedRootNode;
 import tools.TraceData;
 import tools.debugger.entities.EntityType;
@@ -21,6 +23,7 @@ public final class StackTraceResponse extends Response {
   // but that would make tracking more difficult
   private final byte[] concurrentEntityScopes;
   private final long   activityId;
+  private long messageId;
 
   /**
    * Total number of frames available.
@@ -29,13 +32,14 @@ public final class StackTraceResponse extends Response {
 
   private StackTraceResponse(final long activityId,
       final StackFrame[] stackFrames, final int totalFrames,
-      final int requestId, final byte[] concurrentEntityScopes) {
+      final int requestId, final byte[] concurrentEntityScopes, final long messageId) {
     super(requestId);
     assert TraceData.isWithinJSIntValueRange(activityId);
     this.activityId = activityId;
     this.stackFrames = stackFrames;
     this.totalFrames = totalFrames;
     this.concurrentEntityScopes = concurrentEntityScopes;
+    this.messageId = messageId;
 
     boolean assertsOn = false;
     assert assertsOn = true;
@@ -135,8 +139,18 @@ public final class StackTraceResponse extends Response {
 
     EntityType[] concEntityScopes = suspension.getCurrentEntityScopes();
 
+    // determine the message id to which this trace corresponds
+    long messageId = -1;
+
+    Actor actorCurrentMessageIsExecutionOn = EventualMessage.getActorCurrentMessageIsExecutionOn();
+
+    if (actorCurrentMessageIsExecutionOn.getId() == suspension.getActivity().getId()) {
+      EventualMessage message = EventualMessage.getCurrentExecutingMessage();
+      messageId = message.getMessageId();
+    }
+
     return new StackTraceResponse(suspension.activityId, arr, frames.size(),
-        requestId, EntityType.getIds(concEntityScopes));
+        requestId, EntityType.getIds(concEntityScopes), messageId);
   }
 
   private static StackFrame createFrame(final Suspension suspension,
