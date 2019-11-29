@@ -13,7 +13,6 @@ import som.VM;
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
-import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.specialized.SomLoop;
 import som.primitives.ObjectPrims.IsValue;
@@ -46,7 +45,7 @@ public abstract class NewImmutableArrayNode extends TernaryExpressionNode {
     }
   }
 
-  @Child protected BlockDispatchNode      block   = BlockDispatchNodeGen.create();
+  @Child protected BlockDispatchNode      block   = BlockDispatchNode.create();
   @Child protected IsValue                isValue = IsValueFactory.create(null);
   @Child protected ExceptionSignalingNode notAValue;
 

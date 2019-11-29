@@ -37,7 +37,6 @@ import som.interop.ValueConversion;
 import som.interop.ValueConversion.ToSomConversion;
 import som.interop.ValueConversionFactory.ToSomConversionNodeGen;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
-import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.constants.Classes;
 import som.vm.constants.Nil;
@@ -93,7 +92,7 @@ public final class SBlock extends SAbstractObject implements SObjectWithContext 
       throws UnsupportedTypeException, ArityException, UnsupportedMessageException {
     VM.thisMethodNeedsToBeOptimized(
         "Not ready for compilation, just moved from old interop code");
-    final BlockDispatchNode block = BlockDispatchNodeGen.create();
+    final BlockDispatchNode block = BlockDispatchNode.create();
     final ToSomConversion convert = ToSomConversionNodeGen.create(null);
 
     ObjectTransitionSafepoint.INSTANCE.register();

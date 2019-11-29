@@ -14,7 +14,6 @@ import bd.primitives.Primitive;
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
-import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
@@ -176,7 +175,7 @@ public final class FilePrims {
   @GenerateNodeFactory
   @Primitive(primitive = "file:openIfFail:")
   public abstract static class FileOpenPrim extends BinaryExpressionNode {
-    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
+    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNode.create();
 
     @Specialization
     public final Object fileOpen(final SFileDescriptor file, final SBlock handler) {
@@ -189,7 +188,7 @@ public final class FilePrims {
   public abstract static class ReadFilePrim extends TernaryExpressionNode {
     private final BranchProfile errorCases = BranchProfile.create();
 
-    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
+    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNode.create();
 
     @Specialization
     public final long read(final SFileDescriptor file, final long offset,
@@ -203,7 +202,7 @@ public final class FilePrims {
   public abstract static class WriteFilePrim extends QuaternaryExpressionNode {
     private final BranchProfile errorCases = BranchProfile.create();
 
-    @Child protected BlockDispatchNode      dispatchHandler = BlockDispatchNodeGen.create();
+    @Child protected BlockDispatchNode      dispatchHandler = BlockDispatchNode.create();
     @Child protected ExceptionSignalingNode ioException;
 
     @Override

@@ -8,7 +8,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 
 import bd.primitives.Primitive;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
-import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.nodes.specialized.SomLoop;
@@ -25,7 +24,7 @@ import som.vmobjects.SObjectWithClass;
     extraChild = SizeAndLengthPrimFactory.class, receiverType = SMutableArray.class)
 @NodeChild(value = "length", type = UnaryExpressionNode.class, executeWith = "receiver")
 public abstract class PutAllNode extends BinaryComplexOperation {
-  @Child protected BlockDispatchNode block = BlockDispatchNodeGen.create();
+  @Child protected BlockDispatchNode block = BlockDispatchNode.create();
   // TODO: tag properly, it is a loop, and array access
 
   protected static final boolean valueOfNoOtherSpecialization(final Object value) {
