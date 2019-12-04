@@ -1,10 +1,11 @@
 (* *)
-class LeeTM usingPlatform: platform andHarness: harness = (
+class LeeSTM usingPlatform: platform andHarness: harness = (
 | private Benchmark = harness Benchmark.
   private Array     = platform kernel Array.
   private Vector    = platform kernel Vector.
   private Mutex     = platform threading Mutex.
   private Thread    = platform threading Thread.
+  private Transaction = platform transactions Transaction.
   private system    = platform system.
 
   private EMPTY      = 0.
@@ -196,7 +197,6 @@ class LeeTM usingPlatform: platform andHarness: harness = (
   class LeeRouter new: data gridSize: size = (
   | public gridSize  = size.
     private grid     = Grid width: size height: size depth: 2.
-    private gridLock = Mutex new.
 
     private netNo      ::= 0.
     private failures   ::= 0.
@@ -206,7 +206,6 @@ class LeeTM usingPlatform: platform andHarness: harness = (
     private inputLine ::= nil.
     private linePos   ::= 1.
 
-    private queueLock = Mutex new.
     private work      = WorkQueue new.
   |
     parseData: data.
@@ -252,7 +251,7 @@ class LeeTM usingPlatform: platform andHarness: harness = (
     )
 
     public nextTrack = (
-      queueLock critical: [
+      Transaction atomic: [
         work next notNil ifTrue: [
           ^ work dequeue
       ] ].
@@ -263,7 +262,7 @@ class LeeTM usingPlatform: platform andHarness: harness = (
       | done |
       (* start transaction *)
       done:: false.
-      gridLock critical: [
+      Transaction atomic: [
         done:: connectXs: q x1 ys: q y1 xg: q x2 yg: q y2 netNo: q nn tempg: tempg ].
       (* end transaction *)
       ^ done.
@@ -309,6 +308,7 @@ class LeeTM usingPlatform: platform andHarness: harness = (
       | front tmpFront extraIterations reached0 reached1 tf |
       front::    Vector new.
       tmpFront:: Vector new.
+
       ((tempg at: x) at: y) at: 1 put: 1. (* set grid (x,y) as 1 *)
       ((tempg at: x) at: y) at: 2 put: 1. (* set grid (x,y) as 1 *)
 
@@ -325,9 +325,10 @@ class LeeTM usingPlatform: platform andHarness: harness = (
           f:: front first.
           front removeFirst.
           f dw > 0 ifTrue: [
-            tmpFront append: (Frontier x: f x y: f y z: f z dw: f dw - 1)
+            tmpFront append: (Frontier x: f x y: f y z: f z dw: f dw - 1).
           ] ifFalse: [
             | reached |
+
             expandTo: xGoal and: yGoal on: tempg and: tmpFront for: f to:  0 and:  1. (* looking north *)
             expandTo: xGoal and: yGoal on: tempg and: tmpFront for: f to:  1 and:  0. (* looking easy  *)
             expandTo: xGoal and: yGoal on: tempg and: tmpFront for: f to:  0 and: -1. (* looking south *)
@@ -368,6 +369,7 @@ class LeeTM usingPlatform: platform andHarness: harness = (
 
     private expandTo: xGoal and: yGoal on: tempg and: tmpFront for: f to: dirX and: dirY = (
       | weight prevVal reached |
+
       weight::  (grid pointX: f x + dirX y: f y + dirY z: f z) + 1.
       prevVal:: ((tempg at: f x + dirX) at: f y + dirY) at: f z.
       reached:: (f x + dirX) = xGoal and: [ (f y + dirY) = yGoal ].
@@ -377,7 +379,10 @@ class LeeTM usingPlatform: platform andHarness: harness = (
         (okX: f x + dirX y: f y + dirY) ifTrue: [
           ((tempg at: f x + dirX) at: f y + dirY) at: f z put: (((tempg at: f x) at: f y) at: f z) + weight.
           reached ifFalse: [
-            tmpFront append: (Frontier x: f x + dirX y: f y + dirY z: f z dw: 0) ] ] ].
+            tmpFront append: (Frontier x: f x + dirX y: f y + dirY z: f z dw: 0).
+             ] ] ].
+
+
     )
 
     private pathFromOtherSide: g x: x y: y z: z = (
