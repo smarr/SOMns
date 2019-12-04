@@ -329,4 +329,32 @@ class TransactionTests usingPlatform: platform testFramework: minitest = (
         assert: (set contains: each) ]
     )
   ) : ( TEST_CONTEXT = () )
+
+  public class PrimitiveValuesTests = TestContext ()(
+    class Fields = (
+    | public a
+      public b
+      public c
+      public d
+      public e
+      public f |
+    )()
+
+    (* This is a regression test for an issue committing primitive fields.
+       Primitive fields would be read as object fields and the freshly boxed
+       values compared by identity, which necessarily failed.
+       Before the bug was fixed, this test would loop infinetly. *)
+    public testCommitOfObjectWithPrimitiveSlots = (
+      | obj = Fields new. |
+      obj a: 1.
+      obj b: 2.
+      obj c: 3.
+      obj d: 1.1.
+      obj e: 2.2.
+      obj f: 3.3.
+
+      assert: (Transaction atomic: [
+        obj c: 6. true ]).
+    )
+  ) : ( TEST_CONTEXT = () )
 )
