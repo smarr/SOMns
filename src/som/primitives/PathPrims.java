@@ -23,6 +23,7 @@ import bd.primitives.Primitive;
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
+import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -83,7 +84,7 @@ public final class PathPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "path:copyAs:ifFail:")
   public abstract static class FileCopyPrim extends TernaryExpressionNode {
-    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNode.create();
+    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
     public final Object copyAs(final String source, final String dest, final SBlock fail) {
@@ -104,7 +105,7 @@ public final class PathPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "pathCreateDirectory:ifFail:")
   public abstract static class CreateDirectoryPrim extends BinaryExpressionNode {
-    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNode.create();
+    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
     public final Object createDirectory(final String dir, final SBlock fail) {
@@ -125,7 +126,7 @@ public final class PathPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "pathDeleteFileDir:ifFail:")
   public abstract static class DeleteDirectoryPrim extends BinaryExpressionNode {
-    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNode.create();
+    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
     public final Object delteDirectory(final String dir, final SBlock fail) {
@@ -212,7 +213,7 @@ public final class PathPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "path:moveAs:ifFail:")
   public abstract static class FileMovePrim extends TernaryExpressionNode {
-    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNode.create();
+    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
     public final Object moveAs(final String source, final String dest, final SBlock fail) {

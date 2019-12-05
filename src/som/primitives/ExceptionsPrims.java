@@ -10,6 +10,7 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import bd.primitives.Primitive;
 import som.interpreter.SomException;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
+import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.TernaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
@@ -90,8 +91,8 @@ public abstract class ExceptionsPrims {
       receiverType = SBlock.class)
   public abstract static class EnsurePrim extends BinaryComplexOperation {
 
-    @Child protected BlockDispatchNode dispatchBody    = BlockDispatchNode.create();
-    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNode.create();
+    @Child protected BlockDispatchNode dispatchBody    = BlockDispatchNodeGen.create();
+    @Child protected BlockDispatchNode dispatchHandler = BlockDispatchNodeGen.create();
 
     @Specialization
     public final Object doException(final SBlock body, final SBlock ensureHandler) {

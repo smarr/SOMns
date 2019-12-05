@@ -9,6 +9,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import bd.primitives.Primitive;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
+import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.nodes.specialized.SomLoop;
@@ -20,7 +21,7 @@ import som.vmobjects.SBlock;
 @GenerateNodeFactory
 @Primitive(selector = "doIndexes:", receiverType = SArray.class, disabled = true)
 public abstract class DoIndexesPrim extends BinaryComplexOperation {
-  @Child protected BlockDispatchNode   block = BlockDispatchNode.create();
+  @Child protected BlockDispatchNode   block = BlockDispatchNodeGen.create();
   @Child protected UnaryExpressionNode length;
   // TODO: tag properly, this is a loop, but without array access
 

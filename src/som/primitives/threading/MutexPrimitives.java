@@ -10,6 +10,7 @@ import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.Primitive;
 import som.interpreter.nodes.dispatch.BlockDispatchNode;
+import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
@@ -69,7 +70,7 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(selector = "critical:", receiverType = ReentrantLock.class)
   public abstract static class CritialPrim extends BinaryExpressionNode {
-    @Child protected BlockDispatchNode dispatchBody = BlockDispatchNode.create();
+    @Child protected BlockDispatchNode dispatchBody = BlockDispatchNodeGen.create();
 
     @Specialization
     public Object critical(final ReentrantLock lock, final SBlock block) {
