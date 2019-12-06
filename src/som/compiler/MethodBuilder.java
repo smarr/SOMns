@@ -703,8 +703,13 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
 
     MixinBuilder current = enclosing;
     while (!outerName.equals(current.getName())) {
-      current = current.getOuter().getMixin();
-      if (current == null) {
+      boolean error = false;
+      if (current.getOuter() == null) {
+        error = true;
+      } else {
+        current = current.getOuter().getMixin();
+      }
+      if (error || current == null) {
         throw new MixinDefinitionError(
             "Outer send `outer " + outerName + "` could not be resolved", source);
       }

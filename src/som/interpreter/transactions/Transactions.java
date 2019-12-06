@@ -159,9 +159,10 @@ public final class Transactions {
       if (hasConflicts()) {
         return false;
       }
+
+      applyChanges();
     }
 
-    applyChanges();
     return true;
   }
 

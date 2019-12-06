@@ -224,7 +224,8 @@ public abstract class SObject extends SObjectWithClass {
       MapCursor<SlotDefinition, StorageLocation> e = locs.getEntries();
       while (e.advance()) {
         // need to ignore mutators and class slots
-        if (e.getKey().getClass() == SlotDefinition.class &&
+        // ignore primitives, have been checked separately before
+        if (e.getKey().getClass() == SlotDefinition.class && e.getValue().isObjectLocation() &&
             e.getValue().read(this) != oLocs.get(e.getKey()).read(o)) {
           return false;
         }
