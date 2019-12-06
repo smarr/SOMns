@@ -3,7 +3,6 @@ class LeeSTM usingPlatform: platform andHarness: harness = (
 | private Benchmark = harness Benchmark.
   private Array     = platform kernel Array.
   private Vector    = platform kernel Vector.
-  private Mutex     = platform threading Mutex.
   private Thread    = platform threading Thread.
   private Transaction = platform transactions Transaction.
   private system    = platform system.
@@ -25,7 +24,6 @@ class LeeSTM usingPlatform: platform andHarness: harness = (
   |)(
     public innerBenchmarkLoop: problemSize numThreads: numThreads = (
       | totalLaidTracks lr threads m |
-      m:: Mutex new.
       data isNil ifTrue: [ loadData: problemSize ].
 
       totalLaidTracks:: 0.
@@ -35,9 +33,9 @@ class LeeSTM usingPlatform: platform andHarness: harness = (
         Thread spawn: [ | t |
           t:: LeeThread new: lr.
           t run.
-          m critical: [
+          Transaction atomic: [
             totalLaidTracks:: totalLaidTracks + t myLaidTracks
-          ]  ]
+          ] ]
       ].
 
       threads do: [:t | t join ].
