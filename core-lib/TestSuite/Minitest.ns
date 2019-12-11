@@ -436,9 +436,9 @@ OTHER DEALINGS IN THE SOFTWARE. *)
               immediately garbage-collectable, which is an important property for large test suites. *)
               cleanUp.
               promisePair resolve: testSuccess ]
-            onError: [:e |
+            onError: [:ex |
               | exClass |
-              exClass:: (ClassMirror reflecting: e) classObject.
+              exClass:: (ClassMirror reflecting: ex) classObject.
               exClass == TestFailureException ifTrue: [
                 promisePair resolve: (testContextInstance
                   ifNil:    [ TestFailure case: self description: ex messageText]
