@@ -514,6 +514,15 @@ public final class SystemPrims {
     }
   }
 
+  @GenerateNodeFactory
+  @Primitive(primitive = "featuresSupportsExtensions:")
+  public abstract static class SupportExtensionPrim extends UnarySystemOperation {
+    @Specialization
+    public final boolean doSObject(final Object receiver) {
+      return VM.isHotSpotVM();
+    }
+  }
+
   static {
     long current = System.nanoTime() / 1000L;
     startMicroTime = current;

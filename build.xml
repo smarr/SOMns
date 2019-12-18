@@ -477,6 +477,16 @@
     <target name="core-tests" depends="unit-tests,som-tests,dynamic-metrics-tests,superinstructions-tests">
     </target>
 
+    <target name="native-tests" depends="native">
+      <travis target="native-tests" start="Run SOMns native image Tests" />
+
+      <exec executable="./som-native" failonerror="true">
+        <arg value="${corelib.dir}/TestSuite/TestRunner.ns" />
+      </exec>
+
+      <travis target="native-tests" />
+    </target>
+
     <target name="send-java-coverage" depends="jacoco-lib,codacy-coverage-lib">
       <travis target="send-java-coverage" start="Send Java Coverage" />
       <jacoco:report>
@@ -544,7 +554,7 @@
 
         <arg line="-cp ${ant.refid:common.cp}" />
         <arg line="som.Launcher" />
-        <arg line="som-native" />
+        <arg line="../../../som-native" />
       </exec>
 
       <travis target="native" />
