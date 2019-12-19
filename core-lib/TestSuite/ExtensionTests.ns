@@ -15,6 +15,9 @@ class ExtensionTests usingPlatform: platform testFramework: minitest = Value (
   private jarName    = 'extension/build/test-extension.jar'.
   private modulePath = (ObjectMirror reflecting: self) classMirror classDefinition filePath.
   private jarPath    = ((FilePath for: modulePath) containingDirectory / jarName) pattern.
+
+  (* The tests may be skipped if the runtime in use does not support extensions *)
+  private shouldBeSkipped = system supportsExtensions not.
 |)(
   public class BasicTest = TestContext ()(
 
@@ -24,18 +27,23 @@ class ExtensionTests usingPlatform: platform testFramework: minitest = Value (
 
     (* Make sure the test extension has been compiled. *)
     public testExtensionJarAvailable = (
+      shouldBeSkipped ifTrue: [ ^ self ].
       assert: (FilePath for: jarPath) exists description: 'The ' + jarName + ' is missing. Please ensure building the extension.'.
     )
 
     (* The same as a normal module, loading it returns the class object. *)
     public testModuleLoadReturnsClass = (
-      | module = loadModule new.
-        mirror = ObjectMirror reflecting: module. |
+      | module mirror |
+      shouldBeSkipped ifTrue: [ ^ self ].
+      module:: loadModule new.
+      mirror:: ObjectMirror reflecting: module.
       assert: (mirror className endsWith: jarName).
     )
 
     public testModuleMethodsWorking = (
-      | m = loadModule new. |
+      | m  |
+      shouldBeSkipped ifTrue: [ ^ self ].
+      m:: loadModule new.
       assert: m counter equals: 0.
       m inc.
       assert: m counter equals: 1.
@@ -47,8 +55,10 @@ class ExtensionTests usingPlatform: platform testFramework: minitest = Value (
     (* Modules that are loaded multiple times
        should be isolated from each other.*)
     public testIsolationOfModules = (
-      | m1 = loadModule new.
-        m2 = loadModule new. |
+      | m1 m2 |
+      shouldBeSkipped ifTrue: [ ^ self ].
+      m1:: loadModule new.
+      m2:: loadModule new.
       assert: m1 counter equals: 0.
       assert: m2 counter equals: 0.
 
@@ -64,7 +74,9 @@ class ExtensionTests usingPlatform: platform testFramework: minitest = Value (
     (* JARs can define classpath dependencies with the Class-Path attribute.
        Check that the extension jar is able to access the dependent jar. *)
     public testClassPathDependency = (
-      | m = loadModule new. |
+      | m  |
+      shouldBeSkipped ifTrue: [ ^ self ].
+      m:: loadModule new.
       assert: m valueFromClasspath equals: 42.
     )
   ) : ( TEST_CONTEXT = () )
