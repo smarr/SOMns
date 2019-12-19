@@ -554,8 +554,10 @@
 
         <arg line="-cp ${ant.refid:common.cp}" />
         <arg line="som.Launcher" />
-        <arg line="../../../som-native" />
+        <arg line="som-native" />
       </exec>
+
+      <move file="${svm.dir}/som-native" todir="${src.dir}/../" />
 
       <travis target="native" />
     </target>
