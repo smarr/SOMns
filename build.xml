@@ -135,7 +135,7 @@
     <target name="clobber" description="Do clean, and also clean truffle build" depends="clean,clean-truffle">
         <travis target="clobber" start="clobber" />
         
-        <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
+        <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true" if:true="${truffle.and.jvmci.present}">
             <arg value="--dynamicimports"/>
             <arg value="../truffle,../tools,../compiler,../sdk"/>
             <arg value="fsckprojects"/>
