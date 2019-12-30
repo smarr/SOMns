@@ -30,7 +30,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.sun.management.GarbageCollectionNotificationInfo;
 
-import som.Output;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
@@ -139,24 +138,33 @@ public class TracingBackend {
     }
   }
 
-  public static void reportPeakMemoryUsage() {
+  public static long[] getMemoryStatistics() {
     List<MemoryPoolMXBean> pools = ManagementFactory.getMemoryPoolMXBeans();
     long totalHeap = 0;
     long totalNonHeap = 0;
     long gcTime = 0;
-    for (MemoryPoolMXBean memoryPoolMXBean : pools) {
-      long peakUsed = memoryPoolMXBean.getPeakUsage().getUsed();
-      if (memoryPoolMXBean.getType() == MemoryType.HEAP) {
-        totalHeap += peakUsed;
-      } else if (memoryPoolMXBean.getType() == MemoryType.NON_HEAP) {
-        totalNonHeap += peakUsed;
+    long[] stats = new long[4];
+
+    if (VmSettings.MEMORY_TRACING) {
+      for (MemoryPoolMXBean memoryPoolMXBean : pools) {
+        long peakUsed = memoryPoolMXBean.getPeakUsage().getUsed();
+        if (memoryPoolMXBean.getType() == MemoryType.HEAP) {
+          totalHeap += peakUsed;
+        } else if (memoryPoolMXBean.getType() == MemoryType.NON_HEAP) {
+          totalNonHeap += peakUsed;
+        }
       }
+      for (GarbageCollectorMXBean garbageCollectorMXBean : ManagementFactory.getGarbageCollectorMXBeans()) {
+        gcTime += garbageCollectorMXBean.getCollectionTime();
+      }
+
+      stats[0] = totalHeap;
+      stats[1] = totalNonHeap;
+      stats[2] = collectedMemory;
+      stats[3] = gcTime;
     }
-    for (GarbageCollectorMXBean garbageCollectorMXBean : ManagementFactory.getGarbageCollectorMXBeans()) {
-      gcTime += garbageCollectorMXBean.getCollectionTime();
-    }
-    Output.println("[Memstat] Heap: " + totalHeap + "B\tNonHeap: " + totalNonHeap
-        + "B\tCollected: " + collectedMemory + "B\tGC-Time: " + gcTime + "ms");
+
+    return stats;
   }
 
   @TruffleBoundary

@@ -48,6 +48,8 @@ class System usingVmMirror: vmMirror = Value (
 
   (* Actor Tracing Statistics *)
   public traceStatistics = ( ^ vmMirror traceStatistics: nil )
+  public memoryStatistics = ( ^ vmMirror memoryStatistics: nil )
+  public hasMemoryStatistics = (^ vmMirror hasMemoryStatistics: nil)
 
   (* Force Garbage Collection *)
   public fullGC = ( ^ vmMirror systemGC: nil )

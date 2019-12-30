@@ -57,10 +57,6 @@ public final class Launcher {
       SnapshotBackend.writeSnapshot();
     }
 
-    if (VmSettings.MEMORY_TRACING) {
-      TracingBackend.reportPeakMemoryUsage();
-    }
-
     // Note: Kompos Trace is parsed right after writing it
     // to produce the list of messages on the erroneous path.
     // Could be done at the beginning of assisted debugging.

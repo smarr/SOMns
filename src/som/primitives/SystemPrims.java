@@ -100,6 +100,27 @@ public final class SystemPrims {
     }
   }
 
+  @GenerateNodeFactory
+  @Primitive(primitive = "memoryStatistics:")
+  public abstract static class MemoryStatisticsPrim extends UnarySystemOperation {
+    @Specialization
+    @TruffleBoundary
+    public final Object doSObject(final Object module) {
+      long[] stats = TracingBackend.getMemoryStatistics();
+      return new SImmutableArray(stats, Classes.valueArrayClass);
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "hasMemoryStatistics:")
+  public abstract static class HasMemoryStatisticsPrim extends UnarySystemOperation {
+    @Specialization
+    @TruffleBoundary
+    public final Object doSObject(final Object module) {
+      return VmSettings.MEMORY_TRACING;
+    }
+  }
+
   public static Object loadModule(final VM vm, final String path,
       final ExceptionSignalingNode ioException) {
     // TODO: a single node for the different exceptions?

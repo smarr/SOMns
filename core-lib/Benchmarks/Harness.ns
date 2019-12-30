@@ -145,6 +145,18 @@ class Harness usingPlatform: platform = Value (
     )
 
     print: bench run: runTime = (
+      | stats = system traceStatistics.
+        memstats = system memoryStatistics.
+      |
+      (name + ': trace size:    ' + (stats at: 1) + 'byte') println.
+      (name + ': external data: ' + (stats at: 2) + 'byte') println.
+
+      system hasMemoryStatistics ifTrue:[
+        (name + ': heap:    ' + (memstats at: 1) + 'byte') println.
+        (name + ': non-heap: ' + (memstats at: 2) + 'byte') println.
+        (name + ': collected:    ' + (memstats at: 3) + 'byte') println.
+        (name + ': gc-time: ' + (memstats at: 4) + 'ms') println.
+      ].
       (name + ': iterations=1' + ' runtime: ' + runTime + 'us') println
     )
 
