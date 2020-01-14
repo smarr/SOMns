@@ -12,27 +12,69 @@ notifications:
   slack:
     secure: I4ZII92TFLy6vlyX98ns7BaFwA4Qo/o7Av2fnUQW6FfW13EF7Taregu20BIYFFMsiigXCAtvPjqH4HVLpZgK6gZXhbCuI8kl15ZsfRWXcgGSfGZw2De8YS845+QXjc0fq0i46IAVWIey/ImfJrmP7aqjQfWS3XRRpz1kVf7A3/UYghn4GYfJ4VvCglU+LI6qa5lbEXeZAWR0Ndelhuwj7cBSWlLNM2PEmhnf4FsOVQ986S0nmlmjybkYu2NmO+tBmoydjLr5cLt3U9maiLruJ/01ebxfML37W1GOGRUqkSc2G95TohKyiTkluL/HqBMiXXD7cXkuldpTLREnrdQqImyvqu5nq0Tr8vOjJ776LCHDFHv//CkBF1W8n7H9QHwEQonq+Hu2iPOec23Os0b1SlqLVc+1Fy88G7KkvFN430ugiJBzW5+Qk9TUE8CBwL4FixeO3nv0UYleigjGgrpYRL+yWPqwxEMQAWZN6W2YGY10rPYT0eooukEbmNphWzz/vFO4UCphMSMt6SLoN7r3br7DYLRUevdK8vrIUb1LUQPGMYf7WIdMnckme7y+oJ3SR2YO6+vs3EyQsF1AdJqpbvag0/AbWHFVi2vfwrvKZwperPLtXE+EXh8B+Ck62gcYsTyUuMpoEws/+DqHUFByOgDbPDFBmFYwPWCoZh4h3Rw=
 
-matrix:
+jobs:
   fast_finish: true
   include:
-    - env: TASK=core-tests
-    - env: TASK=checkstyle
-    - env: TASK=kompos-tests
-    - env: TASK=replay1-tests
-    - env: TASK=replay2-tests
-    # Disabled due to breaking changes in the tracing infrastructure. Not fixed to make merge of Snapshotting PR(#293) easier.
-    #- env: TASK=snapshot-tests
-    - env: TASK=native
+    - name: Core Tests
+      script:
+        - $ANT core-tests
+        - $ANT coverage
+    - name: Checkstyle
+      install: |
+        printf "travis_fold:start:downloads\nLoad JDK and/or Eclipse\n"
+        export ECLIPSE_TAR=eclipse.tar.gz
+        export ECLIPSE_URL=http://archive.eclipse.org/eclipse/downloads/drops4/R-4.6.3-201703010400/eclipse-SDK-4.6.3-linux-gtk-x86_64.tar.gz
+        wget --progress=bar:force ${ECLIPSE_URL} -O ${ECLIPSE_TAR}
+        tar -C ${TRAVIS_BUILD_DIR}/.. -xzf ${ECLIPSE_TAR}
+        export ECLIPSE_EXE=${TRAVIS_BUILD_DIR}/../eclipse/eclipse
+        printf "travis_fold:end:downloads\n"    
+      script:
+        - $ANT checkstyle
+        - $ANT eclipseformat-check
+        - cd tools/kompos
+        - nvm install 8
+        - run npm install
+        - run npm run lint
+    - name: Kompos Tests
+      script:
+        - run nvm install 8
+        - $ANT
+        - cd tools/kompos
+        - run npm -s run verify
+        - run npm test
+    - name: Replay Tests 1
+      script:
+        - $ANT compile
+        - run ./tests/replay/test.sh 1
+    - name: Replay Tests 2
+      script:
+        - $ANT compile
+        - run ./tests/replay/test.sh 2
 
-    - os:   linux
+    # Disabled due to breaking changes in the tracing infrastructure. Not fixed to make merge of Snapshotting PR(#293) easier.
+    #- name: Snapshot Tests
+      # script:
+      #   - run ./tests/snapshot/test.sh
+      #   - $ANT serialization-tests
+    - name: Build Native Image
+      script:
+        - $ANT native
+
+    - name: Linux OpenJDK 11 Unit Tests
+      os:   linux
       dist: trusty
       jdk:  openjdk11
-      env:  TASK=unit-tests
+      script:
+        - $ANT compile
+        - run ./som core-lib/TestSuite/TestRunner.ns
 
-    - os: osx
+    - name: macOS Unit Tests
+      os: osx
       osx_image: xcode9.3
       language: generic
-      env:  TASK=unit-tests
+      script:
+        - $ANT compile
+        - run ./som core-lib/TestSuite/TestRunner.ns
 
 before_install:
   - |
@@ -50,29 +92,4 @@ before_install:
      brew update
      brew install ant
    fi
-
-
-install: |
-  printf "travis_fold:start:downloads\nLoad JDK and/or Eclipse\n"
-
-  if [ "$TASK" = "checkstyle" ]
-  then
-    export ECLIPSE_TAR=eclipse.tar.gz
-    export ECLIPSE_URL=http://archive.eclipse.org/eclipse/downloads/drops4/R-4.6.3-201703010400/eclipse-SDK-4.6.3-linux-gtk-x86_64.tar.gz
-    wget --progress=bar:force ${ECLIPSE_URL} -O ${ECLIPSE_TAR}
-    tar -C ${TRAVIS_BUILD_DIR}/.. -xzf ${ECLIPSE_TAR}
-    export ECLIPSE_EXE=${TRAVIS_BUILD_DIR}/../eclipse/eclipse
-  fi
-  export ANT="ant -e"
-  printf "travis_fold:end:downloads\n"
-
-
-script:
-  - if [ "$TASK" = "core-tests"    ]; then $ANT core-tests    && $ANT coverage; fi
-  - if [ "$TASK" = "checkstyle"    ]; then $ANT checkstyle    && $ANT eclipseformat-check && run cd tools/kompos && nvm install 7 && run npm install && run npm run lint; fi
-  - if [ "$TASK" = "kompos-tests"  ]; then run nvm install 8  && $ANT && cd tools/kompos  && run npm -s run verify && run npm test; fi
-  - if [ "$TASK" = "replay1-tests" ]; then $ANT compile       && run ./tests/replay/test.sh 1; fi
-  - if [ "$TASK" = "replay2-tests" ]; then $ANT compile       && run ./tests/replay/test.sh 2; fi
-  - if [ "$TASK" = "snapshot-tests" ]; then $ANT compile      && run ./tests/snapshot/test.sh && $ANT serialization-tests; fi
-  - if [ "$TASK" = "unit-tests"    ]; then $ANT compile       && run ./som core-lib/TestSuite/TestRunner.ns; fi
-  - if [ "$TASK" = "native"        ]; then $ANT native; fi
+   export ANT="ant -e"
