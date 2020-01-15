@@ -454,8 +454,4 @@ public final class VM {
 
     ChannelPrimitives.resetClassReferences();
   }
-
-  public static boolean isHotSpotVM() {
-    return true;
-  }
 }
