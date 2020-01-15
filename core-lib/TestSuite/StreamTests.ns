@@ -1,9 +1,6 @@
 class StreamTests usingPlatform: platform testFramework: minitest = Value (
 | private TestContext = minitest TestContext.
-  private AsyncTestContext = minitest AsyncTestContext.
-  private actors      = platform actors.
   private Exception   = platform kernel Exception.
-  private NotAValue   = platform kernel NotAValue.
   private Vector      = platform kernel Vector.
   private Array       = platform kernel Array.
   private ObjectMirror = platform mirrors ObjectMirror.
