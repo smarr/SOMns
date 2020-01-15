@@ -63,21 +63,19 @@ Asynchronous tests can be defined implementing a subclass of AsyncTestContext.
 Both synchronous and asynchronous tests can be included. Method names for synchronous tests
 should begin with 'test' and for asynchronous tests with 'testAsync'.
 
- class Math = () (
-     public factorial: n = (
-       n = 0 ifTrue: [ ^ 1 ].
-       ^ (self <-: factorial: n - 1) <-: * n
-     )
- )
-
-public class MathAsyncTest = AsyncTestContext () (
-
-    public testAsyncFactorial = (
-      | mathP |
-      mathP:: (actors createActorFromValue: Math) <-: new.
-
-      ^ assert: (mathP <-: factorial: 4) resolvedWith: 24.
+    class Math = () (
+        public factorial: n = (
+            n = 0 ifTrue: [ ^ 1 ].
+            ^ (self <-: factorial: n - 1) <-: * n
+        )
     )
+
+    public class MathAsyncTest = AsyncTestContext () (
+        public testAsyncFactorial = (
+            | mathP |
+            mathP:: (actors createActorFromValue: Math) <-: new.
+            ^ assert: (mathP <-: factorial: 4) resolvedWith: 24.
+        )
     ) : (
         TEST_CONTEXT = ()
     )
@@ -448,9 +446,8 @@ OTHER DEALINGS IN THE SOFTWARE. *)
   class AsyncTestCase env: testEnvironment selector: selector
     = TestCase env: testEnvironment selector: selector (
     (* Represents a particular test (a method with the selector that begins with
-                  'testAsync') in a text context. See AsyncTestContext. *)
-    )(
-
+       'testAsync') in a text context. See AsyncTestContext. *)
+  )(
     public isAsync = ( ^ true )
 
     public runUsing: tester = (
@@ -790,11 +787,9 @@ OTHER DEALINGS IN THE SOFTWARE. *)
   )
 
   public class AsyncTestContext = TestContext <: Value (
-  (* An object for defining and running individual asynchronous tests. Instances of this class
-     need to implement test methods which start with the 'testAsync' prefix. Although methods starting with
-     'test' can also be implemented, they will execute only assertions declared in TestContext.
-     See Minitest.ns#L416.
-  *)
+    (* An object for defining and running individual asynchronous tests.
+       Instances of this class need to implement test methods which start with
+       the 'testAsync' prefix. *)
   )(
     assert: promise resolvedWith: expectedResolution = (
       (* TODO: add timeout support *)

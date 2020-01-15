@@ -13,10 +13,8 @@ class MinitestTests usingPlatform: platform testFramework: minitest = Value (
   public class AssertionTests = AsyncTestContext (
     (* Describe the class in this comment. *)
   | guineaPig = GuineaPigTestModule testFramework: testFramework.
-    catalog = TestCatalog forModule: guineaPig.
-    tester
-  |
-  ) (
+    catalog = TestCatalog forModule: guineaPig. (* catalog is not a value... *)
+  |)(
     public class GuineaPigTestModule testFramework: testFramework = Value (
       | private TestContext = testFramework TestContext. |
     ) (
@@ -196,23 +194,17 @@ class MinitestTests usingPlatform: platform testFramework: minitest = Value (
       )
 
       public class AssertAsyncTestContext = AsyncTestContext (
-      (* Class for testing asynchronous assertions. *)
+        (* Class for testing asynchronous assertions. *)
       )(
          public testAsyncAssertResolvedWithPass = (
-         | completionPP |
-
-         completionPP:: actors createPromisePair.
-         completionPP resolver resolve: 4.
-
-         ^ assert: completionPP promise resolvedWith: 4
+           | completionPP = actors createPromisePair. |
+           completionPP resolver resolve: 4.
+           ^ assert: completionPP promise resolvedWith: 4
          )
 
          public testAsyncAssertResolvedWithFail = (
-           | completionPP |
-
-           completionPP:: actors createPromisePair.
+           | completionPP = actors createPromisePair. |
            completionPP resolver resolve: 4.
-
            ^ assert: completionPP promise resolvedWith: 5
          )
        ): (
@@ -238,6 +230,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = Value (
     )
 
     public testAsyncAssertEquals = (
+      | tester |
       tester:: Tester testSuite: (catalog testSuiteNamed: 'AssertEqualsTestContext').
       ^ tester runAll whenResolved: [:r |
           assert: tester errors size equals: 0.
@@ -252,6 +245,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = Value (
     )
 
     public testAsyncAsserts = (
+      | tester |
       tester:: Tester testSuite: (catalog testSuiteNamed: 'AssertTestContext').
       ^ tester runAll whenResolved: [:r |
           assert: tester errors size equals: 3.
@@ -273,6 +267,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = Value (
     )
 
     public testAsyncDenials = (
+      | tester |
       tester:: Tester testSuite: (catalog testSuiteNamed: 'DenyTestContext').
       ^ tester runAll whenResolved: [:r |
           assert: tester errors size equals: 2.
@@ -291,6 +286,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = Value (
     )
 
     public testAsyncResultCreation = (
+      | tester |
       tester:: Tester testSuite: (catalog testSuiteNamed: 'ResultCreationTestContext').
       ^ tester runAll whenResolved: [:r |
           assert: tester failures size equals: 1.
@@ -305,6 +301,7 @@ class MinitestTests usingPlatform: platform testFramework: minitest = Value (
     )
 
     public testAsyncShouldShouldnt = (
+      | tester |
       tester:: Tester testSuite: (catalog testSuiteNamed: 'ShouldShouldntTestContext').
       ^ tester runAll whenResolved: [:r |
           assert: tester errors size equals: 0.
@@ -323,16 +320,16 @@ class MinitestTests usingPlatform: platform testFramework: minitest = Value (
     )
 
     public testAsyncAssertResolved = (
+      | tester |
       tester:: Tester testSuite: (catalog testSuiteNamed: 'AssertAsyncTestContext').
       ^ tester runAll whenResolved: [:r |
-                         assert: tester errors size equals: 0.
-                         assert: tester failures size equals: 1.
-                         assert: tester failures containsSelector: #testAsyncAssertResolvedWithFail.
-                         assert: tester successes size equals: 1.
-                         assert: tester successes containsSelector: #testAsyncAssertResolvedWithPass.
+          assert: tester errors size equals: 0.
+          assert: tester failures size equals: 1.
+          assert: tester failures containsSelector: #testAsyncAssertResolvedWithFail.
+          assert: tester successes size equals: 1.
+          assert: tester successes containsSelector: #testAsyncAssertResolvedWithPass.
       ]
     )
-
   ) : (
     TEST_CONTEXT = ()
   )
