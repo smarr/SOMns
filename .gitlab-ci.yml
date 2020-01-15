@@ -45,7 +45,7 @@ svm_tests:
   stage: full-test
   tags: [benchmarks, infinity]
   script:
-    - ant native
+    - ant native-tests
 
 benchmark_savina_job:
   stage: benchmark

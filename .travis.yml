@@ -58,7 +58,7 @@ jobs:
       #   - $ANT serialization-tests
     - name: Build Native Image
       script:
-        - $ANT native
+        - $ANT native-tests
 
     - name: Linux OpenJDK 11 Unit Tests
       os:   linux

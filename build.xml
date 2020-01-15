@@ -480,7 +480,7 @@
     <target name="native-tests" depends="native">
       <travis target="native-tests" start="Run SOMns native image Tests" />
 
-      <exec executable="./som-native" failonerror="true">
+      <exec executable="${src.dir}/../som-native" failonerror="true">
         <arg value="${corelib.dir}/TestSuite/TestRunner.ns" />
       </exec>
 
