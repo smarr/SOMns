@@ -26,9 +26,17 @@ class Kernel vmMirror: vmMirror = Object <: Value (
   private class Top = ()()
 
   public class Thing = Top ()(
+   (* protected error: msg = (
+      vmMirror printNewline: 'ERROR: ' + msg.
+      vmMirror markTurnErroneous: nil.
+      vmMirror exit: 1
+    ) *)
+
+    (* use the next implementation instead of the previous one to enable printing async stack trace when an error is thrown *)
     protected error: msg = (
       vmMirror printNewline: 'ERROR: ' + msg.
       vmMirror markTurnErroneous: nil.
+      vmMirror printStackTrace: nil.
       vmMirror exit: 1
     )
 

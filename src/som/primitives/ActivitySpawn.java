@@ -176,7 +176,7 @@ public abstract class ActivitySpawn {
     public final Object spawnProcess(final VirtualFrame frame, final SImmutableObject procMod,
         final SClass procCls, @Cached("createIsValue()") final IsValue isVal) {
       if (!isVal.executeBoolean(frame, procCls)) {
-        notAValue.signal(procCls);
+        notAValue.signal(frame, procCls);
       }
 
       spawnProcess(procCls, traceProcCreation);
@@ -268,7 +268,7 @@ public abstract class ActivitySpawn {
         final SClass procCls, final SArray arg, final Object[] argArr,
         @Cached("createIsValue()") final IsValue isVal) {
       if (!isVal.executeBoolean(frame, procCls)) {
-        notAValue.signal(procCls);
+        notAValue.signal(frame, procCls);
       }
 
       spawnProcess(procCls, argArr, traceProcCreation);

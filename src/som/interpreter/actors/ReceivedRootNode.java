@@ -115,7 +115,7 @@ public abstract class ReceivedRootNode extends RootNode {
   }
 
   protected final void resolvePromise(final VirtualFrame frame,
-      final SResolver resolver, final Object result,
+      final SResolver resolver, final Object result, final Object maybeEntry,
       final boolean haltOnResolver, final boolean haltOnResolution) {
     // lazy initialization of resolution node
     if (resolve == null) {
@@ -126,8 +126,8 @@ public abstract class ReceivedRootNode extends RootNode {
       if (resolver == null) {
         resolve = insert(new NullResolver());
       } else {
-        resolve = insert(
-            ResolvePromiseNodeFactory.create(null, null, null, null).initialize(vm));
+       resolve = insert(
+                ResolveNodeGen.create(null, null, null, null, null).initialize(vm));
       }
       resolve.initialize(sourceSection);
       this.resolve = resolve;
@@ -135,11 +135,11 @@ public abstract class ReceivedRootNode extends RootNode {
     }
 
     // resolve promise
-    resolve.executeEvaluated(frame, resolver, result, haltOnResolver, haltOnResolution);
+    resolve.executeEvaluated(frame, resolver, result, maybeEntry, haltOnResolver, haltOnResolution);
   }
 
   protected final void errorPromise(final VirtualFrame frame,
-      final SResolver resolver, final Object exception,
+      final SResolver resolver, final Object exception, final Object maybeEntry,
       final boolean haltOnResolver, final boolean haltOnResolution) {
     // lazy initialization of resolution node
     if (error == null) {
@@ -151,7 +151,7 @@ public abstract class ReceivedRootNode extends RootNode {
         error = insert(new NullResolver());
       } else {
         error = insert(
-            ErrorPromiseNodeFactory.create(null, null, null, null).initialize(vm));
+                ErrorPromiseNodeFactory.create(null, null, null, null, null).initialize(vm));
       }
       this.error = error;
       this.error.initialize(sourceSection);
@@ -159,7 +159,7 @@ public abstract class ReceivedRootNode extends RootNode {
     }
 
     // error promise
-    error.executeEvaluated(frame, resolver, exception, haltOnResolver, haltOnResolution);
+    error.executeEvaluated(frame, resolver, exception, maybeEntry, haltOnResolver, haltOnResolution);
   }
 
   public MessageSerializationNode getSerializer() {
@@ -175,7 +175,7 @@ public abstract class ReceivedRootNode extends RootNode {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
-        final SResolver receiver, final Object argument,
+        final SResolver receiver, final Object argument, final Object maybeEntry,
         final boolean haltOnResolver, final boolean haltOnResolution) {
       assert receiver == null;
       if (VmSettings.DYNAMIC_METRICS) {
@@ -186,7 +186,7 @@ public abstract class ReceivedRootNode extends RootNode {
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object rcvr,
-        final Object firstArg, final Object secondArg, final Object thirdArg) {
+        final Object firstArg, final Object secondArg, final Object thirdArg, final Object fourthArg) {
       if (VmSettings.DYNAMIC_METRICS) {
         numImplicitNullResolutions.getAndIncrement();
       }

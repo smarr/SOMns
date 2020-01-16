@@ -28,6 +28,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import som.vmobjects.SFileDescriptor;
 import som.vmobjects.SSymbol;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public final class FilePrims {
@@ -68,8 +69,8 @@ public final class FilePrims {
     }
 
     @Specialization
-    public final Object closeFile(final SFileDescriptor file) {
-      file.closeFile(ioException);
+    public final Object closeFile(final VirtualFrame frame, final SFileDescriptor file) {
+      file.closeFile(frame, ioException);
       return file;
     }
   }
@@ -122,18 +123,18 @@ public final class FilePrims {
     }
 
     @Specialization
-    public final Object setModeSymbol(final SFileDescriptor file, final SSymbol mode) {
+    public final Object setModeSymbol(final VirtualFrame frame, final SFileDescriptor file, final SSymbol mode) {
       try {
         file.setMode(mode);
       } catch (IllegalArgumentException e) {
-        argumentError.signal(mode.getString());
+        argumentError.signal(frame, mode.getString());
       }
       return file;
     }
 
     @Fallback
-    public final Object setWithUnsupportedValue(final Object file, final Object mode) {
-      argumentError.signal(errorMsg(mode));
+    public final Object setWithUnsupportedValue(final VirtualFrame frame, final Object file, final Object mode) {
+      argumentError.signal(frame, errorMsg(mode));
       return file;
     }
 
@@ -159,8 +160,8 @@ public final class FilePrims {
     }
 
     @Specialization
-    public final long getFileSize(final SFileDescriptor file) {
-      return file.getFileSize(ioException);
+    public final long getFileSize(final VirtualFrame frame, final SFileDescriptor file) {
+      return file.getFileSize(frame, ioException);
     }
   }
 
@@ -216,9 +217,9 @@ public final class FilePrims {
     }
 
     @Specialization
-    public final Object write(final SFileDescriptor file, final long nBytes,
+    public final Object write(final VirtualFrame frame, final SFileDescriptor file, final long nBytes,
         final long offset, final SBlock fail) {
-      file.write((int) nBytes, offset, fail, dispatchHandler, ioException, errorCases);
+      file.write(frame, (int) nBytes, offset, fail, dispatchHandler, ioException, errorCases);
       return file;
     }
   }

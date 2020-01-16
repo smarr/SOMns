@@ -14,6 +14,7 @@ import com.oracle.truffle.api.nodes.RootNode;
 import som.interpreter.Invokable;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
+import som.vm.VmSettings;
 
 
 public abstract class BlockDispatchNode extends Node {
@@ -33,7 +34,9 @@ public abstract class BlockDispatchNode extends Node {
 
   protected static final SInvokable getMethod(final Object[] arguments) {
     SInvokable method = ((SBlock) arguments[0]).getMethod();
-    assert method.getNumberOfArguments() == arguments.length;
+    assert method.getNumberOfArguments() == arguments.length
+            || (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
+            && (method.getNumberOfArguments() == arguments.length - 1));
     return method;
   }
 

@@ -8,6 +8,7 @@ import java.io.RandomAccessFile;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.profiles.BranchProfile;
 
 import som.interpreter.nodes.ExceptionSignalingNode;
@@ -65,8 +66,7 @@ public class SFileDescriptor extends SObjectWithClass {
     return new RandomAccessFile(f, accessMode.mode);
   }
 
-  @TruffleBoundary
-  public void closeFile(final ExceptionSignalingNode ioException) {
+  public void closeFile(final VirtualFrame frame, final ExceptionSignalingNode ioException) {
     if (raf == null) {
       return;
     }
@@ -74,7 +74,7 @@ public class SFileDescriptor extends SObjectWithClass {
     try {
       closeFile();
     } catch (IOException e) {
-      ioException.signal(e.getMessage());
+      ioException.signal(frame, e.getMessage());
     }
   }
 
@@ -133,9 +133,9 @@ public class SFileDescriptor extends SObjectWithClass {
     return e.toString();
   }
 
-  public void write(final int nBytes, final long position, final SBlock fail,
-      final BlockDispatchNode dispatchHandler, final ExceptionSignalingNode ioException,
-      final BranchProfile errorCases) {
+  public void write(final VirtualFrame frame, final int nBytes, final long position,
+                    final SBlock fail, final BlockDispatchNode dispatchHandler,
+                    final ExceptionSignalingNode ioException, final BranchProfile errorCases) {
     if (raf == null) {
       errorCases.enter();
       dispatchHandler.executeDispatch(new Object[] {fail, FILE_IS_CLOSED});
@@ -155,7 +155,7 @@ public class SFileDescriptor extends SObjectWithClass {
       long val = storage[i];
       if (val <= Byte.MIN_VALUE && Byte.MAX_VALUE <= val) {
         errorCases.enter();
-        ioException.signal(errorMsg(val));
+        ioException.signal(frame, errorMsg(val));
       }
       buff[i] = (byte) val;
     }
@@ -175,17 +175,16 @@ public class SFileDescriptor extends SObjectWithClass {
 
   @TruffleBoundary
   private void write(final int nBytes, final long position, final byte[] buff)
-      throws IOException {
+          throws IOException {
     raf.seek(position);
     raf.write(buff, 0, nBytes);
   }
 
-  @TruffleBoundary
-  public long getFileSize(final ExceptionSignalingNode ioException) {
+  public long getFileSize(final VirtualFrame frame, final ExceptionSignalingNode ioException) {
     try {
       return length();
     } catch (IOException e) {
-      ioException.signal(e.getMessage());
+      ioException.signal(frame, e.getMessage());
     }
     return 0;
   }

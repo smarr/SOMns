@@ -38,7 +38,8 @@ import som.vm.Primitives;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.VirtualInvoke;
 import tools.dym.profiles.DispatchProfile;
-
+import som.interpreter.SArguments;
+import tools.asyncstacktraces.ShadowStackEntry;
 
 public final class MessageSendNode {
 
@@ -156,12 +157,15 @@ public final class MessageSendNode {
 
     @ExplodeLoop
     private Object[] evaluateArguments(final VirtualFrame frame) {
-      Object[] arguments = new Object[argumentNodes.length];
+      Object[] arguments = SArguments.allocateArgumentsArray(argumentNodes);
       for (int i = 0; i < argumentNodes.length; i++) {
         arguments[i] = argumentNodes[i].executeGeneric(frame);
-        assert arguments[i] != null
-            : "Some expression evaluated to null, which is not supported.";
+        assert arguments[i] != null : "Some expression evaluated to null, which is not supported.";
+        assert !(arguments[i] instanceof ShadowStackEntry);
       }
+      // We allocate room for the arguments, but it is not set if non
+      // SArguments.setShadowStackEntryWithCache(arguments, this, shadowStackEntryLoad, frame,
+      // false);
       return arguments;
     }
 

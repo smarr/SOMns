@@ -5,6 +5,7 @@ import som.interpreter.nodes.dispatch.CachedSlotRead;
 import som.interpreter.nodes.dispatch.DispatchGuard.CheckSObject;
 import som.vmobjects.SObject;
 import som.vmobjects.SObject.SMutableObject;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public final class CachedTxSlotRead extends CachedSlotRead {
@@ -19,8 +20,8 @@ public final class CachedTxSlotRead extends CachedSlotRead {
   }
 
   @Override
-  public Object read(final SObject rcvr) {
+  public Object read(final VirtualFrame frame, final SObject rcvr) {
     SMutableObject workingCopy = Transactions.workingCopy((SMutableObject) rcvr);
-    return read.read(workingCopy);
+    return read.read(frame, workingCopy);
   }
 }

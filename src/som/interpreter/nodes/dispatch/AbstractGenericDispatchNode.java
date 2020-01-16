@@ -22,11 +22,13 @@ import som.vm.VmSettings;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
+import tools.asyncstacktraces.ShadowStackEntryLoad;
 
 
 public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
-  @Child protected IndirectCallNode call;
-  protected final SSymbol           selector;
+  @Child protected IndirectCallNode     call;
+  protected final SSymbol               selector;
+  @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
 
   public AbstractGenericDispatchNode(final SourceSection source,
       final SSymbol selector) {
@@ -42,6 +44,13 @@ public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
     Object rcvr = arguments[0];
     SClass rcvrClass = Types.getClassOf(rcvr);
     Dispatchable method = doLookup(rcvrClass);
+
+    // Here we fall back to the slow case since megamorphic sends
+    // are just not present in benchmarks
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      SArguments.setShadowStackEntryWithCache(arguments, this,
+              shadowStackEntryLoad, frame, false);
+    }
 
     if (method != null) {
       return method.invoke(call, arguments);

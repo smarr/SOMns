@@ -12,6 +12,7 @@ import som.vm.constants.KernelObj;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
 import som.vmobjects.SSymbol;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public abstract class ExceptionSignalingNode extends Node {
@@ -44,7 +45,7 @@ public abstract class ExceptionSignalingNode extends Node {
     return new ResolveModule(exceptionSelector, factorySelector, sourceSection, resolver);
   }
 
-  public abstract Object signal(Object... args);
+  public abstract Object signal(VirtualFrame frame, Object... args);
 
   private static final class ResolvedModule extends ExceptionSignalingNode {
     @Child protected ExpressionNode getExceptionClassNode;
@@ -63,11 +64,11 @@ public abstract class ExceptionSignalingNode extends Node {
     }
 
     @Override
-    public Object signal(final Object... args) {
+    public Object signal(VirtualFrame frame, final Object... args) {
       SClass exceptionClass =
-          (SClass) ((PreevaluatedExpression) getExceptionClassNode).doPreEvaluated(null,
+          (SClass) ((PreevaluatedExpression) getExceptionClassNode).doPreEvaluated(frame,
               new Object[] {module});
-      return ((PreevaluatedExpression) signalExceptionNode).doPreEvaluated(null,
+      return ((PreevaluatedExpression) signalExceptionNode).doPreEvaluated(frame,
           mergeObjectWithArray(exceptionClass, args));
     }
 
@@ -96,12 +97,12 @@ public abstract class ExceptionSignalingNode extends Node {
     }
 
     @Override
-    public Object signal(final Object... args) {
+    public Object signal(VirtualFrame frame, final Object... args) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       SObject module = resolver.get();
       assert module != null : "Delayed lookup of module failed, still not available";
       return replace(new ResolvedModule(module, exceptionSelector, factorySelector,
-          sourceSection)).signal(args);
+          sourceSection)).signal(frame, args);
     }
   }
 
@@ -121,10 +122,10 @@ public abstract class ExceptionSignalingNode extends Node {
     }
 
     @Override
-    public Object signal(final Object... args) {
+    public Object signal(VirtualFrame frame, final Object... args) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       return replace(new ResolvedModule(module, exceptionSelector, factorySelector,
-          sourceSection)).signal(args);
+          sourceSection)).signal(frame, args);
     }
   }
 }

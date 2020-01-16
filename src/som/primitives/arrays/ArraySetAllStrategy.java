@@ -18,24 +18,24 @@ import som.vmobjects.SBlock;
 public final class ArraySetAllStrategy {
 
   public static void evalBlockForRemaining(final SBlock block,
-      final long length, final Object[] storage,
-      final BlockDispatchNode blockDispatch) {
+                                           final long length, final Object[] storage,
+                                           final BlockDispatchNode blockDispatch) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
       storage[i] = blockDispatch.executeDispatch(new Object[] {block});
     }
   }
 
   public static void evalBlockWithArgForRemaining(final VirtualFrame frame,
-      final SBlock block, final long length, final Object[] storage,
-      final BlockDispatchNode blockDispatch, final Object first, final IsValue isValue,
-      final ExceptionSignalingNode notAValue) {
+                                                  final SBlock block, final long length, final Object[] storage,
+                                                  final BlockDispatchNode blockDispatch, final Object first, final IsValue isValue,
+                                                  final ExceptionSignalingNode notAValue) {
     if (!isValue.executeBoolean(frame, first)) {
-      notAValue.signal(Classes.valueArrayClass);
+      notAValue.signal(frame, Classes.valueArrayClass);
     }
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
       Object result = blockDispatch.executeDispatch(new Object[] {block, (long) i + 1});
       if (!isValue.executeBoolean(frame, result)) {
-        notAValue.signal(Classes.valueArrayClass);
+        notAValue.signal(frame, Classes.valueArrayClass);
       } else {
         storage[i] = result;
       }
@@ -43,59 +43,59 @@ public final class ArraySetAllStrategy {
   }
 
   public static void evalBlockForRemaining(final SBlock block,
-      final long length, final long[] storage,
-      final BlockDispatchNode blockDispatch) {
+                                           final long length, final long[] storage,
+                                           final BlockDispatchNode blockDispatch) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
       storage[i] = (long) blockDispatch.executeDispatch(new Object[] {block});
     }
   }
 
   public static void evalBlockForRemaining(final SBlock block,
-      final long length, final double[] storage,
-      final BlockDispatchNode blockDispatch) {
+                                           final long length, final double[] storage,
+                                           final BlockDispatchNode blockDispatch) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
       storage[i] = (double) blockDispatch.executeDispatch(new Object[] {block});
     }
   }
 
   public static void evalBlockForRemaining(final SBlock block,
-      final long length, final boolean[] storage,
-      final BlockDispatchNode blockDispatch) {
+                                           final long length, final boolean[] storage,
+                                           final BlockDispatchNode blockDispatch) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
       storage[i] = (boolean) blockDispatch.executeDispatch(new Object[] {block});
     }
   }
 
   public static void evalBlockWithArgForRemaining(final SBlock block,
-      final long length, final long[] storage,
-      final BlockDispatchNode blockDispatch) {
+                                                  final long length, final long[] storage,
+                                                  final BlockDispatchNode blockDispatch) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
       storage[i] = (long) blockDispatch.executeDispatch(
-          new Object[] {block, (long) i + 1});
+              new Object[] {block, (long) i + 1});
     }
   }
 
   public static void evalBlockWithArgForRemaining(final SBlock block,
-      final long length, final double[] storage,
-      final BlockDispatchNode blockDispatch) {
+                                                  final long length, final double[] storage,
+                                                  final BlockDispatchNode blockDispatch) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
       storage[i] = (double) blockDispatch.executeDispatch(
-          new Object[] {block, (long) i + 1});
+              new Object[] {block, (long) i + 1});
     }
   }
 
   public static void evalBlockWithArgForRemaining(final SBlock block,
-      final long length, final boolean[] storage,
-      final BlockDispatchNode blockDispatch) {
+                                                  final long length, final boolean[] storage,
+                                                  final BlockDispatchNode blockDispatch) {
     for (int i = SArray.FIRST_IDX + 1; i < length; i++) {
       storage[i] = (boolean) blockDispatch.executeDispatch(
-          new Object[] {block, (long) i + 1});
+              new Object[] {block, (long) i + 1});
     }
   }
 
   @ExplodeLoop
   public static Object evalForRemaining(final VirtualFrame frame,
-      final ExpressionNode[] exprs, final long[] storage, final int next) {
+                                        final ExpressionNode[] exprs, final long[] storage, final int next) {
     for (int i = next; i < exprs.length; i++) {
       try {
         storage[i] = exprs[i].executeLong(frame);
@@ -113,7 +113,7 @@ public final class ArraySetAllStrategy {
 
   @ExplodeLoop
   public static Object evalForRemaining(final VirtualFrame frame,
-      final ExpressionNode[] exprs, final boolean[] storage, final int next) {
+                                        final ExpressionNode[] exprs, final boolean[] storage, final int next) {
     for (int i = next; i < exprs.length; i++) {
       try {
         storage[i] = exprs[i].executeBoolean(frame);
@@ -131,7 +131,7 @@ public final class ArraySetAllStrategy {
 
   @ExplodeLoop
   public static Object evalForRemaining(final VirtualFrame frame,
-      final ExpressionNode[] exprs, final double[] storage, final int next) {
+                                        final ExpressionNode[] exprs, final double[] storage, final int next) {
     for (int i = next; i < exprs.length; i++) {
       try {
         storage[i] = exprs[i].executeDouble(frame);
@@ -149,7 +149,7 @@ public final class ArraySetAllStrategy {
 
   @ExplodeLoop
   public static Object evalForRemaining(final VirtualFrame frame,
-      final ExpressionNode[] exprs, final Object[] storage, final int next) {
+                                        final ExpressionNode[] exprs, final Object[] storage, final int next) {
     for (int i = next; i < exprs.length; i++) {
       storage[i] = exprs[i].executeGeneric(frame);
     }
@@ -158,7 +158,7 @@ public final class ArraySetAllStrategy {
 
   @ExplodeLoop
   public static Object evalForRemainingNils(final VirtualFrame frame,
-      final ExpressionNode[] exprs, final int next) {
+                                            final ExpressionNode[] exprs, final int next) {
     for (int i = next; i < exprs.length; i++) {
       Object result = exprs[i].executeGeneric(frame);
       if (result != Nil.nilObject) {
@@ -177,8 +177,8 @@ public final class ArraySetAllStrategy {
   }
 
   public static Object evaluateFirstDetermineStorageAndEvaluateRest(
-      final SBlock blockNoArg, final long length,
-      final BlockDispatchNode blockDispatch) {
+          final SBlock blockNoArg, final long length,
+          final BlockDispatchNode blockDispatch) {
     // TODO: this version does not handle the case that a subsequent value is
     // not of the expected type...
     Object result = blockDispatch.executeDispatch(new Object[] {blockNoArg});
@@ -206,9 +206,9 @@ public final class ArraySetAllStrategy {
   }
 
   public static Object evaluateFirstDetermineStorageAndEvaluateRest(final VirtualFrame frame,
-      final SBlock blockWithArg, final long length,
-      final BlockDispatchNode blockDispatch, final IsValue isValue,
-      final ExceptionSignalingNode notAValue) {
+                                                                    final SBlock blockWithArg, final long length,
+                                                                    final BlockDispatchNode blockDispatch, final IsValue isValue,
+                                                                    final ExceptionSignalingNode notAValue) {
     // TODO: this version does not handle the case that a subsequent value is
     // not of the expected type...
     Object result = blockDispatch.executeDispatch(new Object[] {blockWithArg, (long) 1});
@@ -231,14 +231,14 @@ public final class ArraySetAllStrategy {
     } else {
       Object[] newStorage = new Object[(int) length];
       evalBlockWithArgForRemaining(frame, blockWithArg, length, newStorage, blockDispatch,
-          result,
-          isValue, notAValue);
+              result,
+              isValue, notAValue);
       return newStorage;
     }
   }
 
   public static Object evaluateFirstDetermineStorageAndEvaluateRest(
-      final VirtualFrame frame, final ExpressionNode[] exprs) {
+          final VirtualFrame frame, final ExpressionNode[] exprs) {
     Object result = exprs[0].executeGeneric(frame);
     if (result == Nil.nilObject) {
       return evalForRemainingNils(frame, exprs, SArray.FIRST_IDX + 1);

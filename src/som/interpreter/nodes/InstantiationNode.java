@@ -12,6 +12,7 @@ import som.vm.constants.Classes;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.UninitializedObjectSerializationNodeFactory;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public abstract class InstantiationNode extends Node {
@@ -47,19 +48,19 @@ public abstract class InstantiationNode extends Node {
   }
 
   public static SClass signalExceptionsIfFaultFoundElseReturnClassObject(
-      final SObjectWithClass outerObj,
-      final ClassFactory factory, final SClass classObj,
-      final ExceptionSignalingNode notAValue, final ExceptionSignalingNode cannotBeValue) {
+          final VirtualFrame frame, final SObjectWithClass outerObj, final ClassFactory factory,
+          final SClass classObj, final ExceptionSignalingNode notAValue,
+          final ExceptionSignalingNode cannotBeValue) {
     factory.initializeClass(classObj);
 
     if (factory.isDeclaredAsValue() && factory.isTransferObject()) {
       // REM: cast is fine here, because we never return anyway
-      cannotBeValue.signal(classObj);
+      cannotBeValue.signal(frame, classObj);
     }
 
     if ((factory.isTransferObject() || factory.isDeclaredAsValue()) &&
         !outerObj.isValue()) {
-      notAValue.signal(classObj);
+      notAValue.signal(frame, classObj);
     }
 
     return classObj;
@@ -71,28 +72,28 @@ public abstract class InstantiationNode extends Node {
       super(mixinDefinition);
     }
 
-    public abstract SClass execute(SObjectWithClass outerObj, Object superclassAndMixins);
+    public abstract SClass execute(VirtualFrame frame, SObjectWithClass outerObj, Object superclassAndMixins);
 
     @Specialization(guards = {"sameSuperAndMixins(superclassAndMixins, cachedSuperMixins)"})
-    public SClass instantiateClass(final SObjectWithClass outerObj,
+    public SClass instantiateClass(final VirtualFrame frame, final SObjectWithClass outerObj,
         final Object superclassAndMixins,
         @Cached("superclassAndMixins") final Object cachedSuperMixins,
         @Cached("createClassFactory(superclassAndMixins)") final ClassFactory factory) {
-      return instantiate(outerObj, factory, notAValue, cannotBeValues);
+      return instantiate(frame, outerObj, factory, notAValue, cannotBeValues);
     }
 
-    public static SClass instantiate(final SObjectWithClass outerObj,
+    public static SClass instantiate(final VirtualFrame frame, final SObjectWithClass outerObj,
         final ClassFactory factory, final ExceptionSignalingNode notAValue,
         final ExceptionSignalingNode cannotBeValues) {
       SClass classObj = new SClass(outerObj, instantiateMetaclassClass(factory, outerObj));
-      return signalExceptionsIfFaultFoundElseReturnClassObject(outerObj, factory, classObj,
+      return signalExceptionsIfFaultFoundElseReturnClassObject(frame, outerObj, factory, classObj,
           notAValue, cannotBeValues);
     }
 
     @Specialization(replaces = "instantiateClass")
-    public SClass instantiateClassWithNewClassFactory(final SObjectWithClass outerObj,
+    public SClass instantiateClassWithNewClassFactory(final VirtualFrame frame, final SObjectWithClass outerObj,
         final Object superclassAndMixins) {
-      return instantiateClass(outerObj, superclassAndMixins, null,
+      return instantiateClass(frame, outerObj, superclassAndMixins, null,
           createClassFactory(superclassAndMixins));
     }
   }
@@ -127,7 +128,7 @@ public abstract class InstantiationNode extends Node {
         final InstantiationNode inst) {
       SClass classObj =
           new SClass(outerObj, instantiateMetaclassClass(factory, outerObj), frame);
-      return signalExceptionsIfFaultFoundElseReturnClassObject(outerObj, factory, classObj,
+      return signalExceptionsIfFaultFoundElseReturnClassObject(frame, outerObj, factory, classObj,
           inst.notAValue, inst.cannotBeValues);
     }
 

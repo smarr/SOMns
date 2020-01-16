@@ -42,6 +42,8 @@ import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.SendOp;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
+import som.interpreter.SArguments;
+import som.interpreter.nodes.InternalObjectArrayNode.ArgumentEvaluationNode;
 import tools.dym.DynamicMetrics;
 import tools.replay.ReplayRecord;
 import tools.replay.TraceRecord;
@@ -52,11 +54,11 @@ public class EventualSendNode extends ExprWithTagsNode {
   public static final AtomicLong numPromisesAvoided =
       DynamicMetrics.createLong("Num.Promises.Avoided");
 
-  @Child protected InternalObjectArrayNode arguments;
+  @Child protected ArgumentEvaluationNode arguments;
   @Child protected SendNode                send;
 
   public EventualSendNode(final SSymbol selector, final int numArgs,
-      final InternalObjectArrayNode arguments, final SourceSection source,
+      final ArgumentEvaluationNode arguments, final SourceSection source,
       final SourceSection sendOperator, final SomLanguage lang) {
     this.arguments = arguments;
     this.send = SendNodeGen.create(selector, createArgWrapper(numArgs),
@@ -77,6 +79,10 @@ public class EventualSendNode extends ExprWithTagsNode {
   public Object executeGeneric(final VirtualFrame frame) {
     Object[] args = arguments.executeObjectArray(frame);
     return send.execute(frame, args);
+  }
+
+  public SSymbol getSentSymbol() {
+    return SOMNode.unwrapIfNecessary(send).getSelector();
   }
 
   public static RootCallTarget createOnReceiveCallTarget(final SSymbol selector,
@@ -204,7 +210,7 @@ public class EventualSendNode extends ExprWithTagsNode {
       SFarReference rcvr = (SFarReference) args[0];
       Actor target = rcvr.getActor();
 
-      for (int i = 0; i < args.length; i++) {
+      for (int i = 0; i < SArguments.getLengthWithoutShadowStack(args); i++) {
         args[i] = wrapArgs[i].execute(args[i], target, owner);
       }
 
@@ -231,10 +237,10 @@ public class EventualSendNode extends ExprWithTagsNode {
       target.send(msg, actorPool);
     }
 
-    protected void sendPromiseMessage(final Object[] args, final SPromise rcvr,
-        final SResolver resolver, final RegisterWhenResolved registerNode) {
-      assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn()
-          : "think this should be true because the promise is an Object and owned by this specific actor";
+    protected void sendPromiseMessage(final VirtualFrame frame, final Object[] args,
+                                                                       final SPromise rcvr, final SResolver resolver,
+                                                                       final RegisterWhenResolved registerNode) {
+      assert rcvr.getOwner() == EventualMessage.getActorCurrentMessageIsExecutionOn() : "think this should be true because the promise is an Object and owned by this specific actor";
 
       PromiseSendMessage msg = new PromiseSendMessage(selector, args,
           rcvr.getOwner(), resolver, onReceive,
@@ -252,11 +258,15 @@ public class EventualSendNode extends ExprWithTagsNode {
             rcvr.getPromiseId(), msg.getSelector(), target != null ? target.getId() : -1, msg.getTargetSourceSection());
       }
 
-      registerNode.register(rcvr, msg, rcvr.getOwner());
+      registerNode.register(frame, rcvr, msg, rcvr.getOwner());
     }
 
     protected RegisterWhenResolved createRegisterNode() {
       return new RegisterWhenResolved(actorPool);
+    }
+
+    public SSymbol getSelector() {
+      return selector;
     }
 
     @Override
@@ -278,7 +288,8 @@ public class EventualSendNode extends ExprWithTagsNode {
     }
 
     @Specialization(guards = {"isResultUsed()", "isPromiseRcvr(args)"})
-    public final SPromise toPromiseWithResultPromise(final Object[] args,
+    public final SPromise toPromiseWithResultPromise(final VirtualFrame frame,
+                                                     final Object[] args,
         @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
       SPromise rcvr = (SPromise) args[0];
 
@@ -287,7 +298,7 @@ public class EventualSendNode extends ExprWithTagsNode {
           false, promiseResolutionBreakpoint.executeShouldHalt(), source);
       SResolver resolver = SPromise.createResolver(promise);
 
-      sendPromiseMessage(args, rcvr, resolver, registerNode);
+      sendPromiseMessage(frame, args, rcvr, resolver, registerNode);
       return promise;
     }
 
@@ -334,9 +345,9 @@ public class EventualSendNode extends ExprWithTagsNode {
     }
 
     @Specialization(guards = {"!isResultUsed()", "isPromiseRcvr(args)"})
-    public final Object toPromiseWithoutResultPromise(final Object[] args,
+    public final Object toPromiseWithoutResultPromise(final VirtualFrame frame, final Object[] args,
         @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
-      sendPromiseMessage(args, (SPromise) args[0], null, registerNode);
+      sendPromiseMessage(frame, args, (SPromise) args[0], null, registerNode);
 
       if (VmSettings.DYNAMIC_METRICS) {
         numPromisesAvoided.getAndIncrement();

@@ -12,26 +12,69 @@ import som.instrumentation.CountingDirectCallNode;
 import som.interpreter.Invokable;
 import som.vm.VmSettings;
 
+import com.oracle.truffle.api.Assumption;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.impl.DefaultCallTarget;
+import som.interpreter.Method;
+import tools.asyncstacktraces.ShadowStackEntryLoad;
+
 
 /**
  * Private methods are special, they are linked unconditionally to the call site.
  * Thus, we don't need to check at the dispatch whether they apply or not.
  */
-public final class LexicallyBoundDispatchNode extends AbstractDispatchNode {
+public abstract class LexicallyBoundDispatchNode extends AbstractDispatchNode implements BackCacheCallNode {
 
-  @Child private DirectCallNode cachedMethod;
+  protected final Assumption          stillUniqueCaller;
+  @Child private DirectCallNode       cachedMethod;
+  @CompilationFinal protected boolean uniqueCaller;
+
+  @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
 
   public LexicallyBoundDispatchNode(final SourceSection source,
       final CallTarget methodCallTarget) {
     super(source);
+    stillUniqueCaller = Truffle.getRuntime().createAssumption();
     cachedMethod = Truffle.getRuntime().createDirectCallNode(methodCallTarget);
     if (VmSettings.DYNAMIC_METRICS) {
       this.cachedMethod = new CountingDirectCallNode(this.cachedMethod);
     }
+    BackCacheCallNode.initializeUniqueCaller((RootCallTarget) methodCallTarget, this);
   }
 
   @Override
-  public Object executeDispatch(final VirtualFrame frame, final Object[] arguments) {
+  public void makeUniqueCaller() {
+    uniqueCaller = true;
+  }
+
+  @Override
+  public void makeMultipleCaller() {
+    uniqueCaller = false;
+    stillUniqueCaller.invalidate();
+  }
+
+  @Override
+  public Method getCachedMethod() {
+    RootCallTarget ct = (DefaultCallTarget) cachedMethod.getCallTarget();
+    return (Method) ct.getRootNode();
+  }
+
+  @Override
+  public abstract Object executeDispatch(VirtualFrame frame, Object[] arguments);
+
+  @Specialization(assumptions = "stillUniqueCaller", guards = "uniqueCaller")
+  public Object uniqueCallerDispatch(final VirtualFrame frame, final Object[] arguments) {
+    BackCacheCallNode.setShadowStackEntry(frame,
+            true, arguments, this, shadowStackEntryLoad);
+    return cachedMethod.call(arguments);
+  }
+
+  @Specialization(guards = "!uniqueCaller")
+  public Object multipleCallerDispatch(final VirtualFrame frame, final Object[] arguments) {
+    BackCacheCallNode.setShadowStackEntry(frame,
+            false, arguments, this, shadowStackEntryLoad);
     return cachedMethod.call(arguments);
   }
 

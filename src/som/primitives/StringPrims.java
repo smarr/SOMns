@@ -23,6 +23,7 @@ import som.vmobjects.SArray;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 import tools.dym.Tags.StringAccess;
+import com.oracle.truffle.api.frame.VirtualFrame;
 
 
 public class StringPrims {
@@ -182,7 +183,7 @@ public class StringPrims {
     }
 
     @Specialization
-    public final String doString(final SArray chars) {
+    public final String doString(final VirtualFrame frame, final SArray chars) {
       VM.thisMethodNeedsToBeOptimized(
           "Method not yet optimal for compilation, should speculate or use branch profile in the loop");
       return doStringWithBoundary(chars);
@@ -199,7 +200,7 @@ public class StringPrims {
           sb.append(((SSymbol) o).getString());
         } else {
           // TODO: there should be a Smalltalk asString message here, I think
-          argumentError.signal(errorMsg(o));
+          argumentError.signal(frame, errorMsg(o));
         }
       }
 
@@ -212,8 +213,8 @@ public class StringPrims {
     }
 
     @Fallback
-    public final void doGeneric(final Object obj) {
-      argumentError.signal(obj);
+    public final void doGeneric(final VirtualFrame frame, final Object obj) {
+      argumentError.signal(frame, obj);
     }
   }
 
@@ -268,8 +269,8 @@ public class StringPrims {
     }
 
     @Fallback
-    public final void doGeneric(final Object val) {
-      argumentError.signal("The value " + val + " is not a valid Unicode code point.");
+    public final void doGeneric(final VirtualFrame frame, final Object val) {
+      argumentError.signal(frame, "The value " + val + " is not a valid Unicode code point.");
     }
   }
 

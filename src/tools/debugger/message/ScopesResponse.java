@@ -16,15 +16,16 @@ import som.vmobjects.SBlock;
 import tools.TraceData;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.Message.Response;
-
+import com.oracle.truffle.api.frame.Frame;
+import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 
 @SuppressWarnings("unused")
 public final class ScopesResponse extends Response {
   private final Scope[] scopes;
-  private final long    variablesReference;
+  private final long variablesReference;
 
   private ScopesResponse(final long globalFrameId, final Scope[] scopes,
-      final int requestId) {
+                         final int requestId) {
     super(requestId);
     assert TraceData.isWithinJSIntValueRange(globalFrameId);
     this.variablesReference = globalFrameId;
@@ -32,7 +33,9 @@ public final class ScopesResponse extends Response {
   }
 
   private static final class Scope {
-    /** Name of the scope such as 'Arguments', 'Locals'. */
+    /**
+     * Name of the scope such as 'Arguments', 'Locals'.
+     */
     private final String name;
 
     /**
@@ -41,11 +44,13 @@ public final class ScopesResponse extends Response {
      */
     private final long variablesReference;
 
-    /** If true, the number of variables in this scope is large or expensive to retrieve. */
+    /**
+     * If true, the number of variables in this scope is large or expensive to retrieve.
+     */
     private final boolean expensive;
 
     private Scope(final String name, final long globalVarRef,
-        final boolean expensive) {
+                  final boolean expensive) {
       assert TraceData.isWithinJSIntValueRange(globalVarRef);
       this.name = name;
       this.variablesReference = globalVarRef;
@@ -54,7 +59,7 @@ public final class ScopesResponse extends Response {
   }
 
   private static void addScopes(final ArrayList<Scope> scopes,
-      final MethodScope method, final Object rcvr, final Suspension suspension) {
+                                final MethodScope method, final Object rcvr, final Suspension suspension) {
     MethodScope outer = method.getOuterScopeOrNull();
     if (outer != null) {
       assert rcvr instanceof SBlock;
@@ -67,28 +72,30 @@ public final class ScopesResponse extends Response {
   private static final int SMALL_INITIAL_SIZE = 5;
 
   public static ScopesResponse create(final long globalFrameId, final Suspension suspension,
-      final int requestId) {
-    DebugStackFrame frame = suspension.getFrame(globalFrameId);
+                                      final int requestId) {
+    StackFrame frame = suspension.getFrame(globalFrameId);
     ArrayList<Scope> scopes = new ArrayList<>(SMALL_INITIAL_SIZE);
-    Frame actualFrame = frame.getFrame();
+    if (frame.hasFrame()) {
+      Frame actualFrame = frame.frame;
+      RootNode invokable = frame.getRootNode();
+      if (invokable instanceof Method) {
+        Method m = (Method) invokable;
+        MethodScope scope = m.getLexicalScope();
 
-    RootNode invokable = frame.getRootNode();
-    if (invokable instanceof Method) {
-      Method m = (Method) invokable;
-      MethodScope scope = m.getLexicalScope();
-      long scopeId = suspension.addScope(actualFrame, scope);
-      scopes.add(new Scope("Locals", scopeId, false));
-
-      Object rcvr = SArguments.rcvr(actualFrame);
-      addScopes(scopes, scope, rcvr, suspension);
-    } else if (invokable instanceof ReceivedRootNode) {
-      // NOOP, no scopes here
-      assert false : "This should not be reached. This scope should never get an id";
-    } else {
-      assert invokable instanceof Primitive : "Got a " + invokable.getClass().getSimpleName() +
-          " here. Means we need to add support";
+        long scopeId = suspension.addScope(actualFrame, scope);
+        scopes.add(new Scope("Locals", scopeId, false));
+        Object rcvr = SArguments.rcvr(actualFrame);
+        addScopes(scopes, scope, rcvr, suspension);
+      } else if (invokable instanceof ReceivedRootNode) {
+        // NOOP, no scopes here
+        assert false : "This should not be reached. This scope should never get an id";
+      } else {
+        assert invokable instanceof Primitive : "Got a " + invokable.getClass().getSimpleName()
+                +
+                " here. Means we need to add support";
+      }
     }
-
     return new ScopesResponse(globalFrameId, scopes.toArray(new Scope[0]), requestId);
+
   }
 }

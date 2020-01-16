@@ -5,7 +5,11 @@ import java.util.HashMap;
 
 import com.oracle.truffle.api.debug.DebugStackFrame;
 import com.oracle.truffle.api.debug.SuspendedEvent;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.Frame;
+import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.source.SourceSection;
+import tools.asyncstacktraces.StackIterator;
 
 import som.interpreter.LexicalScope.MethodScope;
 
@@ -14,7 +18,7 @@ import som.interpreter.LexicalScope.MethodScope;
  * Keeps information on the run-time stack of an application thread for
  * requests from the front-end. Is populated only on demand.
  */
-class ApplicationThreadStack {
+public class ApplicationThreadStack {
 
   /**
    * Track scopes that contain variables as well as objects.
@@ -24,9 +28,37 @@ class ApplicationThreadStack {
   final ArrayList<Object>     scopesAndObjects;
   final HashMap<Object, Long> scopesAndObjectsSet;
 
-  private final ArrayList<DebugStackFrame> stackFrames;
-  private final SuspendedEvent             event;
-  private final Suspension                 suspension;
+  private final ArrayList<StackFrame> stackFrames;
+  private final SuspendedEvent        event;
+  private final Suspension            suspension;
+
+  public static final class StackFrame {
+    public final String        name;
+    public final SourceSection section;
+
+    public final Frame frame;
+
+    public final boolean asyncSeparator;
+
+    private final RootNode root;
+
+    public StackFrame(final String name, final RootNode root, final SourceSection section,
+                      final Frame frame, final boolean asyncSeparator) {
+      this.name = name;
+      this.root = root;
+      this.section = section;
+      this.frame = frame;
+      this.asyncSeparator = asyncSeparator;
+    }
+
+    public RootNode getRootNode() {
+      return root;
+    }
+
+    public boolean hasFrame() {
+      return frame != null;
+    }
+  }
 
   ApplicationThreadStack(final SuspendedEvent event, final Suspension suspension) {
     this.event = event;
@@ -36,10 +68,13 @@ class ApplicationThreadStack {
     this.suspension = suspension;
   }
 
-  ArrayList<DebugStackFrame> get() {
+  ArrayList<StackFrame> get() {
     if (stackFrames.isEmpty()) {
-      for (DebugStackFrame frame : event.getStackFrames()) {
-        stackFrames.add(frame);
+      StackIterator stack =
+              StackIterator.createSuspensionIterator(event.getStackFrames().iterator());
+
+      while (stack.hasNext()) {
+        stackFrames.add(stack.next());
       }
       assert !stackFrames.isEmpty()
           : "We expect that there is always at least one stack frame";

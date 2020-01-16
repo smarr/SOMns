@@ -71,6 +71,12 @@ import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 
+import java.util.Arrays;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import tools.asyncstacktraces.ShadowStackEntry;
+import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.asyncstacktraces.StackIterator;
+import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 
 public final class SystemPrims {
 
@@ -95,7 +101,17 @@ public final class SystemPrims {
     @Specialization
     @TruffleBoundary
     public final Object doSObject(final Object module) {
-      long[] stats = TracingBackend.getStatistics();
+      long[] tracingStats = TracingBackend.getStatistics();
+      long[] stats = Arrays.copyOf(tracingStats, tracingStats.length + 5);
+      stats[tracingStats.length] = ShadowStackEntry.numberOfAllocations;
+      ShadowStackEntry.numberOfAllocations = 0;
+      stats[tracingStats.length + 1] = 0;
+      stats[tracingStats.length + 2] = ShadowStackEntryLoad.cacheHit;
+      ShadowStackEntryLoad.cacheHit = 0;
+      stats[tracingStats.length + 3] = ShadowStackEntryLoad.megaMiss;
+      ShadowStackEntryLoad.megaMiss = 0;
+      stats[tracingStats.length + 4] = ShadowStackEntryLoad.megaCacheHit;
+      ShadowStackEntryLoad.megaCacheHit = 0;
       return new SImmutableArray(stats, Classes.valueArrayClass);
     }
   }
@@ -131,25 +147,30 @@ public final class SystemPrims {
     }
   }
 
-  public static Object loadModule(final VM vm, final String path,
+  public static Object loadModule(final VirtualFrame frame, final VM vm, final String path,
       final ExceptionSignalingNode ioException) {
     // TODO: a single node for the different exceptions?
     try {
-      if (path.endsWith(EXTENSION_EXT)) {
-        return vm.loadExtensionModule(path);
-      } else {
-        MixinDefinition module = vm.loadModule(path);
-        return module.instantiateModuleClass();
-      }
+     return loadModule(vm, path);
     } catch (FileNotFoundException e) {
-      ioException.signal(path, "Could not find module file. " + e.getMessage());
+      ioException.signal(frame, path, "Could not find module file. " + e.getMessage());
     } catch (NotAFileException e) {
-      ioException.signal(path, "Path does not seem to be a file. " + e.getMessage());
+      ioException.signal(frame, path, "Path does not seem to be a file. " + e.getMessage());
     } catch (IOException e) {
-      ioException.signal(e.getMessage());
+      ioException.signal(frame, e.getMessage());
     }
     assert false : "This should never be reached, because exceptions do not return";
     return Nil.nilObject;
+  }
+
+  @TruffleBoundary
+  private static Object loadModule(final VM vm, final String path) throws IOException {
+    if (path.endsWith(EXTENSION_EXT)) {
+      return vm.loadExtensionModule(path);
+    } else {
+      MixinDefinition module = vm.loadModule(path);
+      return module.instantiateModuleClass();
+    }
   }
 
   @GenerateNodeFactory
@@ -166,9 +187,8 @@ public final class SystemPrims {
     }
 
     @Specialization
-    @TruffleBoundary
-    public final Object doSObject(final String moduleName) {
-      return loadModule(vm, moduleName, ioException);
+    public final Object doSObject(final VirtualFrame frame, final String moduleName) {
+      return loadModule(frame, vm, moduleName, ioException);
     }
   }
 
@@ -186,13 +206,12 @@ public final class SystemPrims {
     }
 
     @Specialization
-    @TruffleBoundary
-    public final Object load(final String filename, final SObjectWithClass moduleObj) {
+    public final Object load(final VirtualFrame frame, final String filename, final SObjectWithClass moduleObj) {
       String path = moduleObj.getSOMClass().getMixinDefinition().getSourceSection().getSource()
                              .getPath();
       File file = new File(URI.create(path).getPath());
 
-      return loadModule(vm, file.getParent() + File.separator + filename, ioException);
+      return loadModule(frame, vm, file.getParent() + File.separator + filename, ioException);
     }
   }
 
@@ -291,57 +310,52 @@ public final class SystemPrims {
     public static void printStackTrace(final int skipDnuFrames, final SourceSection topNode) {
       ArrayList<String> method = new ArrayList<String>();
       ArrayList<String> location = new ArrayList<String>();
-      int[] maxLengthMethod = {0};
-      boolean[] first = {true};
+      int maxLengthMethod = 0;
+
       Output.println("Stack Trace");
 
-      Truffle.getRuntime().iterateFrames(new FrameInstanceVisitor<Object>() {
-        @Override
-        public Object visitFrame(final FrameInstance frameInstance) {
-          RootCallTarget ct = (RootCallTarget) frameInstance.getCallTarget();
-
-          // TODO: do we need to handle other kinds of root nodes?
-          if (!(ct.getRootNode() instanceof Invokable)) {
-            return null;
-          }
-
-          Invokable m = (Invokable) ct.getRootNode();
-
-          String id = m.getName();
-          method.add(id);
-          maxLengthMethod[0] = Math.max(maxLengthMethod[0], id.length());
-          Node callNode = frameInstance.getCallNode();
-          if (callNode != null || first[0]) {
-            SourceSection nodeSS;
-            if (first[0]) {
-              first[0] = false;
-              nodeSS = topNode;
-            } else {
-              nodeSS = callNode.getEncapsulatingSourceSection();
-            }
-            if (nodeSS != null) {
-              location.add(nodeSS.getSource().getName()
-                  + SourceCoordinate.getLocationQualifier(nodeSS));
-            } else {
-              location.add("");
-            }
-          } else {
-            location.add("");
-          }
-
-          return null;
+      StackIterator stack = StackIterator.createHaltIterator();
+      while (stack.hasNext()) {
+        StackFrame frame = stack.next();
+        if (frame != null) {
+          method.add(frame.name);
+          maxLengthMethod = Math.max(maxLengthMethod, frame.name.length());
+          // TODO: is frame.section better `callNode.getEncapsulatingSourceSection();` ?
+          addSourceSection(frame.section, location);
         }
-      });
 
+        StringBuilder sb = new StringBuilder();
+        for (int i = method.size() - 1; i >= skipDnuFrames; i--) {
+          sb.append(String.format("\t%1$-" + (maxLengthMethod + 4) + "s",
+                  method.get(i)));
+          sb.append(location.get(i));
+          sb.append('\n');
+        }
+      }
+
+      Output.print(stringStackTraceFrom(method, location, maxLengthMethod, skipDnuFrames));
+    }
+
+    private static String stringStackTraceFrom(final ArrayList<String> method,
+    final ArrayList<String> location, final int maxLengthMethod, final int skipDnuFrames) {
       StringBuilder sb = new StringBuilder();
       for (int i = method.size() - 1; i >= skipDnuFrames; i--) {
-        sb.append(String.format("\t%1$-" + (maxLengthMethod[0] + 4) + "s",
-            method.get(i)));
+        sb.append(String.format("\t%1$-" + (maxLengthMethod + 4) + "s",
+                method.get(i)));
         sb.append(location.get(i));
         sb.append('\n');
       }
+      return sb.toString();
+    }
 
-      Output.print(sb.toString());
+    private static void addSourceSection(final SourceSection section,
+                                         final ArrayList<String> location) {
+      if (section != null) {
+        location.add(section.getSource().getName()
+                + SourceCoordinate.getLocationQualifier(section));
+      } else {
+        location.add("");
+      }
     }
   }
 

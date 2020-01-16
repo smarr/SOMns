@@ -64,6 +64,7 @@ import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.StringSerializati
 import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.SymbolSerializationNodeFactory;
 import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.TrueSerializationNodeFactory;
 import tools.snapshot.nodes.SerializerRootNode;
+import som.interpreter.SArguments;
 
 
 public final class ObjectSystem {
@@ -132,7 +133,7 @@ public final class ObjectSystem {
     ExtensionLoader loader = new ExtensionLoader(filename, compiler.getLanguage());
     EconomicMap<SSymbol, Dispatchable> primitives = loader.getPrimitives();
     MixinDefinition mixin = constructPrimitiveMixin(filename, primitives);
-    return mixin.instantiateClass(Nil.nilObject, Classes.topClass);
+    return mixin.instantiateClass(null, Nil.nilObject, Classes.topClass);
   }
 
   public MixinDefinition loadModule(final String filename) throws IOException {
@@ -209,7 +210,7 @@ public final class ObjectSystem {
         true, true, true, null);
     scope.setMixinDefinition(vmMirrorDef, false);
 
-    SClass vmMirrorClass = vmMirrorDef.instantiateClass(Nil.nilObject,
+    SClass vmMirrorClass = vmMirrorDef.instantiateClass(null, Nil.nilObject,
         new SClass[] {Classes.topClass, Classes.valueClass});
     return vmMirrorClass;
   }
@@ -418,7 +419,7 @@ public final class ObjectSystem {
     setDummyClassFactory(Classes.methodClass,
         SInvokableSerializationNodeFactory.getInstance());
 
-    SClass kernelClass = kernelModule.instantiateClass(Nil.nilObject, Classes.objectClass);
+    SClass kernelClass = kernelModule.instantiateClass(null, Nil.nilObject, Classes.objectClass);
     KernelObj.kernel.setClass(kernelClass);
 
     // create and initialize the vmMirror object
@@ -527,7 +528,14 @@ public final class ObjectSystem {
     mainThreadCompleted = new CompletableFuture<>();
 
     ObjectTransitionSafepoint.INSTANCE.register();
-    Object platform = platformModule.instantiateObject(platformClass, vmMirror);
+    Object platform;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      platform = platformModule.instantiateObject(platformClass, vmMirror,
+              SArguments.instantiateTopShadowStackEntry(null));
+    } else {
+      platform = platformModule.instantiateObject(platformClass, vmMirror);
+    }
+
     ObjectTransitionSafepoint.INSTANCE.unregister();
 
     SSymbol start = Symbols.symbolFor("start");
@@ -542,8 +550,10 @@ public final class ObjectSystem {
           "ObjectSystem.executeApplication").createSection(1);
     }
 
+    Object[] args = SArguments.convertToArgumentArray(new Object[] {platform});
+
     DirectMessage msg = new DirectMessage(mainActor, start,
-        new Object[] {platform}, mainActor,
+        args, mainActor,
         null, EventualSendNode.createOnReceiveCallTargetForVMMain(
             start, 1, source, mainThreadCompleted, compiler.getLanguage()));
     mainActor.sendInitialStartMessage(msg, vm.getActorPool());
@@ -573,7 +583,7 @@ public final class ObjectSystem {
         Symbols.symbolFor(selector), AccessModifier.PUBLIC);
     try {
       ObjectTransitionSafepoint.INSTANCE.register();
-      return method.invoke(new Object[] {platformClass});
+      return method.invoke(SArguments.convertToArgumentArray(new Object[] {platformClass}));
     } finally {
       ObjectTransitionSafepoint.INSTANCE.unregister();
     }

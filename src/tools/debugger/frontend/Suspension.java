@@ -23,6 +23,8 @@ import tools.debugger.entities.SteppingType;
 import tools.debugger.frontend.ApplicationThreadTask.Resume;
 import tools.debugger.frontend.ApplicationThreadTask.SendStackTrace;
 import tools.debugger.message.VariablesRequest.FilterType;
+import com.oracle.truffle.api.frame.Frame;
+import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 
 
 /**
@@ -56,7 +58,7 @@ public class Suspension {
     this.stack = new ApplicationThreadStack(e, this);
   }
 
-  public synchronized ArrayList<DebugStackFrame> getStackFrames() {
+  public synchronized ArrayList<StackFrame> getStackFrames() {
     return stack.get();
   }
 
@@ -97,7 +99,7 @@ public class Suspension {
     return TraceData.valIdFromGlobal(globalId);
   }
 
-  public synchronized DebugStackFrame getFrame(final long globalId) {
+  public synchronized StackFrame getFrame(final long globalId) {
     return stack.get().get(getLocalId(globalId));
   }
 

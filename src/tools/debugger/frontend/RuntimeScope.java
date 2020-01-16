@@ -4,6 +4,7 @@ import com.oracle.truffle.api.frame.Frame;
 
 import som.compiler.Variable;
 import som.interpreter.LexicalScope.MethodScope;
+import com.oracle.truffle.api.frame.Frame;
 
 
 public class RuntimeScope {

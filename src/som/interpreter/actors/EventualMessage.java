@@ -18,6 +18,8 @@ import tools.parser.KomposTraceParser;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
+import som.interpreter.SArguments;
+import tools.asyncstacktraces.ShadowStackEntry;
 
 
 public abstract class EventualMessage {
@@ -240,7 +242,7 @@ public abstract class EventualMessage {
         : "this should not happen, because we need to redirect messages to the other actor, and normally we just unwrapped this";
     assert !(receiver instanceof SPromise);
 
-    for (int i = 1; i < arguments.length; i++) {
+    for (int i = 1; i < SArguments.getLengthWithoutShadowStack(arguments); i++) {
       arguments[i] = WrapReferenceNode.wrapForUse(target, arguments[i], originalSender, null);
     }
 
@@ -267,8 +269,8 @@ public abstract class EventualMessage {
       }
     }
 
-    public abstract void resolve(Object rcvr, Actor target, Actor sendingActor);
-
+    public abstract void resolve(Object rcvr, Actor target, Actor sendingActor,
+                                 Object maybeEntry);
     @Override
     public final Actor getSender() {
       assert originalSender != null;
@@ -306,20 +308,20 @@ public abstract class EventualMessage {
       super(arguments, originalSender, resolver, onReceive, triggerMessageReceiverBreakpoint,
           triggerPromiseResolverBreakpoint);
       this.selector = selector;
-      assert (args[0] instanceof SPromise);
-      this.originalTarget = (SPromise) args[0];
+      assert (args[PROMISE_RCVR_IDX] instanceof SPromise);
+      this.originalTarget = (SPromise) args[PROMISE_RCVR_IDX];
     }
 
     @Override
-    public void resolve(final Object rcvr, final Actor target, final Actor sendingActor) {
-      determineAndSetTarget(rcvr, target, sendingActor);
+    public void resolve(final Object rcvr, final Actor target, final Actor sendingActor, final Object maybeEntry) {
+      determineAndSetTarget(rcvr, target, sendingActor, maybeEntry);
     }
 
     private void determineAndSetTarget(final Object rcvr, final Actor target,
-        final Actor sendingActor) {
+        final Actor sendingActor, final Object maybeEntry) {
       VM.thisMethodNeedsToBeOptimized("not optimized for compilation");
 
-      args[0] = rcvr;
+      args[PROMISE_RCVR_IDX] = rcvr;
       Actor finalTarget =
           determineTargetAndWrapArguments(args, target, sendingActor, originalSender);
 
@@ -329,6 +331,7 @@ public abstract class EventualMessage {
         this.messageId = Math.min(this.messageId,
             ActorProcessingThread.currentThread().getSnapshotId());
       }
+      // TODO: what do I do with the shadow stack entry here. give it two parents?
     }
 
     @Override
@@ -396,14 +399,17 @@ public abstract class EventualMessage {
         final SResolver resolver, final RootCallTarget onReceive,
         final boolean triggerMessageReceiverBreakpoint,
         final boolean triggerPromiseResolverBreakpoint, final SPromise promiseRegisteredOn) {
-      super(new Object[] {callback, null}, owner, resolver, onReceive,
+      super(SArguments.getPromiseCallbackArgumentArray(callback), owner,
+              resolver, onReceive,
           triggerMessageReceiverBreakpoint, triggerPromiseResolverBreakpoint);
       this.promise = promiseRegisteredOn;
     }
 
     @Override
-    public void resolve(final Object rcvr, final Actor target, final Actor sendingActor) {
-      setPromiseValue(rcvr, sendingActor);
+    public void resolve(final Object rcvr, final Actor target, final Actor sendingActor,
+                        final Object maybeEntry) {
+      assert maybeEntry != null || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
+      setPromiseValue(rcvr, sendingActor, maybeEntry);
     }
 
     /**
@@ -412,8 +418,13 @@ public abstract class EventualMessage {
      *
      * @param resolvingActor - the owner of the value, the promise was resolved to.
      */
-    private void setPromiseValue(final Object value, final Actor resolvingActor) {
-      args[1] = WrapReferenceNode.wrapForUse(originalSender, value, resolvingActor, null);
+    private void setPromiseValue(final Object value, final Actor resolvingActor,
+                                 final Object maybeEntry) {
+      args[PROMISE_VALUE_IDX] = WrapReferenceNode.wrapForUse(originalSender, value, resolvingActor, null);
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+        assert maybeEntry instanceof ShadowStackEntry;
+        SArguments.setShadowStackEntry(args, (ShadowStackEntry) maybeEntry);
+      }
       if (VmSettings.SNAPSHOTS_ENABLED) {
         this.messageId = Math.min(this.messageId,
             ActorProcessingThread.currentThread().getSnapshotId());
@@ -422,7 +433,7 @@ public abstract class EventualMessage {
 
     @Override
     public SSymbol getSelector() {
-      return ((SBlock) args[0]).getMethod().getSignature();
+      return ((SBlock) args[PROMISE_RCVR_IDX]).getMethod().getSignature();
     }
 
     @Override
@@ -471,7 +482,14 @@ public abstract class EventualMessage {
 
     assert onReceive.getRootNode() instanceof ReceivedMessage
         || onReceive.getRootNode() instanceof ReceivedCallback;
-    onReceive.call(this);
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      assert args[args.length - 1] instanceof ShadowStackEntry;
+      ShadowStackEntry ssEntry = (ShadowStackEntry) args[args.length - 1];
+      args[args.length - 1] = null;
+      onReceive.call(this, ssEntry);
+    } else {
+      onReceive.call(this);
+    }
   }
 
   public static Actor getActorCurrentMessageIsExecutionOn() {

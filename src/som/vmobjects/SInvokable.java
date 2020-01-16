@@ -48,6 +48,7 @@ import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNode;
 import som.vm.Symbols;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
+import som.interpreter.nodes.dispatch.LexicallyBoundDispatchNodeGen;
 
 
 public class SInvokable extends SAbstractObject implements Dispatchable {
@@ -191,7 +192,7 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
 
     // In case it's a private method, it is directly linked and doesn't need guards
     if (accessModifier == AccessModifier.PRIVATE) {
-      return new LexicallyBoundDispatchNode(next.getSourceSection(), ct);
+      return LexicallyBoundDispatchNodeGen.create(next.getSourceSection(), ct);
     }
 
     DispatchGuard guard = DispatchGuard.create(rcvr);

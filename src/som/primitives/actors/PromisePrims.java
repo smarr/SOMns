@@ -46,6 +46,9 @@ import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.SendOp;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import som.interpreter.SArguments;
+import tools.asyncstacktraces.ShadowStackEntryLoad;
 
 
 public final class PromisePrims {
@@ -74,6 +77,8 @@ public final class PromisePrims {
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
+    @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
+
     protected static final DirectCallNode create() {
       Dispatchable disp = SPromise.pairClass.getSOMClass().lookupMessage(
           withAndFactory, AccessModifier.PUBLIC);
@@ -91,7 +96,7 @@ public final class PromisePrims {
     }
 
     @Specialization
-    public final SImmutableObject createPromisePair(final Object nil,
+    public final SImmutableObject createPromisePair(final VirtualFrame frame, final Object nil,
         @Cached("create()") final DirectCallNode factory) {
 
       SPromise promise = SPromise.createPromise(
@@ -100,8 +105,15 @@ public final class PromisePrims {
           promiseResolutionBreakpoint.executeShouldHalt(),
           sourceSection);
       SResolver resolver = SPromise.createResolver(promise);
-      return (SImmutableObject) factory.call(
-          new Object[] {SPromise.pairClass, promise, resolver});
+      Object[] args;
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+        args = new Object[] {SPromise.pairClass, promise, resolver, null};
+        SArguments.setShadowStackEntryWithCache(args, this, shadowStackEntryLoad,
+                frame, false);
+      } else {
+        args = new Object[] {SPromise.pairClass, promise, resolver};
+      }
+      return (SImmutableObject) factory.call(args);
     }
 
     private static final SSymbol withAndFactory = Symbols.symbolFor("with:and:");
@@ -130,8 +142,7 @@ public final class PromisePrims {
   // does not require node creation? Might need a generic received node.
   @TruffleBoundary
   public static RootCallTarget createReceived(final SBlock callback) {
-    RootCallTarget target = callback.getMethod().getCallTarget();
-    ReceivedCallback node = new ReceivedCallback(target);
+    ReceivedCallback node = new ReceivedCallback(callback.getMethod());
     return node.getCallTarget();
   }
 
@@ -157,19 +168,19 @@ public final class PromisePrims {
     }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
-    public final SPromise whenResolved(final SPromise promise,
+    public final SPromise whenResolved(final VirtualFrame frame, final SPromise promise,
         final SBlock callback,
         @Cached("callback.getMethod()") final SInvokable blockMethod,
         @Cached("createReceived(callback)") final RootCallTarget blockCallTarget) {
-      return registerWhenResolved(promise, callback, blockCallTarget, registerNode);
+      return registerWhenResolved(frame, promise, callback, blockCallTarget, registerNode);
     }
 
     @Specialization(replaces = "whenResolved")
-    public final SPromise whenResolvedUncached(final SPromise promise, final SBlock callback) {
-      return registerWhenResolved(promise, callback, createReceived(callback), registerNode);
+    public final SPromise whenResolvedUncached(final VirtualFrame frame, final SPromise promise, final SBlock callback) {
+      return registerWhenResolved(frame, promise, callback, createReceived(callback), registerNode);
     }
 
-    protected final SPromise registerWhenResolved(final SPromise rcvr,
+    protected final SPromise registerWhenResolved(final VirtualFrame frame, final SPromise rcvr,
         final SBlock block, final RootCallTarget blockCallTarget,
         final RegisterWhenResolved registerNode) {
       assert block.getMethod().getNumberOfArguments() == 2;
@@ -188,7 +199,9 @@ public final class PromisePrims {
         KomposTrace.sendOperation(SendOp.PROMISE_MSG, pcm.getMessageId(),
             rcvr.getPromiseId(), pcm.getSelector(), rcvr.getOwner().getId(), pcm.getTargetSourceSection());
       }
-      registerNode.register(rcvr, pcm, current);
+      registerNode.register(frame, rcvr, pcm, current);
+      assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
+              || pcm.getArgs()[pcm.getArgs().length - 1] != null;
 
       return promise;
     }
@@ -224,19 +237,19 @@ public final class PromisePrims {
     }
 
     @Specialization(guards = "blockMethod == callback.getMethod()", limit = "10")
-    public final SPromise onError(final SPromise promise,
+    public final SPromise onError(final VirtualFrame frame, final SPromise promise,
         final SBlock callback,
         @Cached("callback.getMethod()") final SInvokable blockMethod,
         @Cached("createReceived(callback)") final RootCallTarget blockCallTarget) {
-      return registerOnError(promise, callback, blockCallTarget, registerNode);
+      return registerOnError(frame, promise, callback, blockCallTarget, registerNode);
     }
 
     @Specialization(replaces = "onError")
-    public final SPromise whenResolvedUncached(final SPromise promise, final SBlock callback) {
-      return registerOnError(promise, callback, createReceived(callback), registerNode);
+    public final SPromise whenResolvedUncached(final VirtualFrame frame, final SPromise promise, final SBlock callback) {
+      return registerOnError(frame, promise, callback, createReceived(callback), registerNode);
     }
 
-    protected final SPromise registerOnError(final SPromise rcvr,
+    protected final SPromise registerOnError(final VirtualFrame frame, final SPromise rcvr,
         final SBlock block, final RootCallTarget blockCallTarget,
         final RegisterOnError registerNode) {
       assert block.getMethod().getNumberOfArguments() == 2;
@@ -255,7 +268,9 @@ public final class PromisePrims {
         KomposTrace.sendOperation(SendOp.PROMISE_MSG, msg.getMessageId(),
             rcvr.getPromiseId(), msg.getSelector(), rcvr.getOwner().getId(), msg.getTargetSourceSection());
       }
-      registerNode.register(rcvr, msg, current);
+      registerNode.register(frame, rcvr, msg, current);
+      assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
+              || msg.getArgs()[msg.getArgs().length - 1] != null;
 
       return promise;
     }
@@ -293,24 +308,24 @@ public final class PromisePrims {
 
     @Specialization(guards = {"resolvedMethod == resolved.getMethod()",
         "errorMethod == error.getMethod()"})
-    public final SPromise whenResolvedOnError(final SPromise promise,
+    public final SPromise whenResolvedOnError(final VirtualFrame frame, final SPromise promise,
         final SBlock resolved, final SBlock error,
         @Cached("resolved.getMethod()") final SInvokable resolvedMethod,
         @Cached("createReceived(resolved)") final RootCallTarget resolvedTarget,
         @Cached("error.getMethod()") final SInvokable errorMethod,
         @Cached("createReceived(error)") final RootCallTarget errorTarget) {
-      return registerWhenResolvedOrError(promise, resolved, error, resolvedTarget,
+      return registerWhenResolvedOrError(frame, promise, resolved, error, resolvedTarget,
           errorTarget, registerWhenResolved, registerOnError);
     }
 
     @Specialization(replaces = "whenResolvedOnError")
-    public final SPromise whenResolvedOnErrorUncached(final SPromise promise,
+    public final SPromise whenResolvedOnErrorUncached(final VirtualFrame frame, final SPromise promise,
         final SBlock resolved, final SBlock error) {
-      return registerWhenResolvedOrError(promise, resolved, error, createReceived(resolved),
+      return registerWhenResolvedOrError(frame, promise, resolved, error, createReceived(resolved),
           createReceived(error), registerWhenResolved, registerOnError);
     }
 
-    protected final SPromise registerWhenResolvedOrError(final SPromise rcvr,
+    protected final SPromise registerWhenResolvedOrError(final VirtualFrame frame, final SPromise rcvr,
         final SBlock resolved, final SBlock error,
         final RootCallTarget resolverTarget, final RootCallTarget errorTarget,
         final RegisterWhenResolved registerWhenResolved,
@@ -338,9 +353,13 @@ public final class PromisePrims {
       }
 
       synchronized (rcvr) {
-        registerWhenResolved.register(rcvr, onResolved, current);
-        registerOnError.register(rcvr, onError, current);
+        registerWhenResolved.register(frame, rcvr, onResolved, current);
+        registerOnError.register(frame, rcvr, onError, current);
       }
+      assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
+              || onResolved.getArgs()[onResolved.getArgs().length - 1] != null;
+      assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE
+              || onError.getArgs()[onError.getArgs().length - 1] != null;
       return promise;
     }
 

@@ -19,6 +19,10 @@ import som.vm.VmSettings;
 import som.vm.constants.Nil;
 import som.vmobjects.SClass;
 import som.vmobjects.SObject;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import som.interpreter.SArguments;
+import som.vm.VmSettings;
+import tools.asyncstacktraces.ShadowStackEntry;
 
 
 /**
@@ -57,11 +61,16 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
   }
 
   @Override
-  public SClass read(final SObject rcvr) {
+  public SClass read(final VirtualFrame frame, final SObject rcvr) {
+    return this.read(frame, rcvr, null);
+  }
+
+  @Override
+  public SClass read(final VirtualFrame frame, final SObject rcvr, final Object maybeEntry) {
     // here we need to synchronize, because this is actually something that
     // can happen concurrently, and we only want a single instance of the
     // class object
-    Object cachedValue = read.read(rcvr);
+    Object cachedValue = read.read(frame, rcvr);
 
     assert cachedValue != null;
     if (cachedValue != Nil.nilObject) {
@@ -83,7 +92,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
         // recheck guard under synchronized, don't want to access object if
         // layout might have changed, we are going to slow path in that case
         guard.entryMatches(rcvr);
-        cachedValue = read.read(rcvr);
+        cachedValue = read.read(frame, rcvr);
       } catch (InvalidAssumptionException e) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
         cachedValue = rcvr.readSlot(slotDef);
@@ -91,7 +100,7 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
 
       // check whether cache is initialized with class object
       if (cachedValue == Nil.nilObject) {
-        return instantiateAndWriteUnsynced(rcvr);
+        return instantiateAndWriteUnsynced(frame, rcvr, maybeEntry);
       } else {
         assert cachedValue instanceof SClass;
         return (SClass) cachedValue;
@@ -102,8 +111,9 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
   /**
    * Caller needs to hold lock on {@code this}.
    */
-  private SClass instantiateAndWriteUnsynced(final SObject rcvr) {
-    SClass classObject = instantiateClassObject(rcvr);
+  private SClass instantiateAndWriteUnsynced(final VirtualFrame frame, final SObject rcvr,
+                                             final Object maybeEntry) {
+    SClass classObject = instantiateClassObject(frame, rcvr, maybeEntry);
 
     try {
       // recheck guard under synchronized, don't want to access object if
@@ -127,14 +137,33 @@ public final class ClassSlotAccessNode extends CachedSlotRead {
         invokable.getCallTarget()));
   }
 
-  private SClass instantiateClassObject(final SObject rcvr) {
+  private SClass instantiateClassObject(final VirtualFrame frame, final SObject rcvr,
+                                        final Object maybeEntry) {
     if (superclassAndMixinResolver == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       createResolverCallTargets();
     }
 
-    Object superclassAndMixins = superclassAndMixinResolver.call(new Object[] {rcvr});
-    SClass classObject = instantiation.execute(rcvr, superclassAndMixins);
+    Object superclassAndMixins;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      // maybeEntry is set if coming from a cached dispatch node
+      // Not set if comes from elsewhere (materializer, etc.)..
+      // But it may not make sense.
+      ShadowStackEntry actualEntry;
+      if (maybeEntry != null) {
+        assert maybeEntry instanceof ShadowStackEntry;
+        actualEntry = (ShadowStackEntry) maybeEntry;
+      } else {
+        actualEntry = SArguments.instantiateTopShadowStackEntry(this);
+      }
+      superclassAndMixins =
+              superclassAndMixinResolver.call(
+                      new Object[] {rcvr, actualEntry});
+    } else {
+      superclassAndMixins = superclassAndMixinResolver.call(new Object[] {rcvr});
+    }
+
+    SClass classObject = instantiation.execute(frame, rcvr, superclassAndMixins);
     return classObject;
   }
 }

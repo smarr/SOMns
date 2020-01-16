@@ -133,7 +133,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       if (allFieldsContainValues) {
         return rcvr;
       }
-      return notAValue.signal(rcvr);
+      return notAValue.signal(frame, rcvr);
     }
 
     protected static final class FieldTester extends Node {

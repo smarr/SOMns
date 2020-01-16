@@ -66,6 +66,8 @@ import tools.snapshot.nodes.AbstractSerializationNode;
 import tools.snapshot.nodes.ObjectSerializationNodesFactory.UninitializedObjectSerializationNodeFactory;
 import tools.snapshot.nodes.PrimitiveSerializationNodesFactory.ClassSerializationNodeFactory;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import som.interpreter.SArguments;
 
 /**
  * Produced by a {@link MixinBuilder}, contains all static information on a
@@ -534,16 +536,27 @@ public final class MixinDefinition implements SomInteropObject {
     VM.callerNeedsToBeOptimized(
         "only meant for code loading, which is supposed to be on the slowpath");
     CallTarget callTarget = superclassMixinResolution.getCallTarget();
-    SClass superClass = (SClass) callTarget.call(Nil.nilObject);
-    SClass classObject = instantiateClass(Nil.nilObject, superClass);
+//    SClass superClass = (SClass) callTarget.call(Nil.nilObject);
+//    SClass classObject = instantiateClass(Nil.nilObject, superClass);
+    SClass superClass;
+    if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+      // Since this is outside of the main stacks, we create a separate top shadow stack entry
+      // to deal with async errors.
+      superClass =
+              (SClass) callTarget.call(Nil.nilObject,
+                      SArguments.instantiateTopShadowStackEntry(null));
+    } else {
+      superClass = (SClass) callTarget.call(Nil.nilObject, null);
+    }
+    SClass classObject = instantiateClass(null, Nil.nilObject, superClass);
     return classObject;
   }
 
-  public SClass instantiateClass(final SObjectWithClass outer,
+  public SClass instantiateClass(final VirtualFrame frame, final SObjectWithClass outer,
       final Object superclassAndMixins) {
     ClassFactory factory = createClassFactory(superclassAndMixins,
         false, false, false, UninitializedObjectSerializationNodeFactory.getInstance());
-    return ClassInstantiationNode.instantiate(outer, factory, notAValue,
+    return ClassInstantiationNode.instantiate(frame, outer, factory, notAValue,
         cannotBeValues);
   }
 
@@ -753,7 +766,7 @@ public final class MixinDefinition implements SomInteropObject {
         // ok, now it is for sure not initialized yet, instantiate class
         Object superclassAndMixins = mixinDefinition.getSuperclassAndMixinResolutionInvokable()
                                                     .getCallTarget().call(rcvr);
-        SClass clazz = mixinDefinition.instantiateClass(rcvr, superclassAndMixins);
+        SClass clazz = mixinDefinition.instantiateClass(null, rcvr, superclassAndMixins);
         rcvr.writeSlot(this, clazz);
         return clazz;
       }

@@ -25,9 +25,24 @@ import tools.replay.ReplayRecord;
 import tools.replay.TraceRecord;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.NodeChildren;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.EagerPrimitiveNode;
+import som.interpreter.nodes.nary.EagerlySpecializableNode;
+import som.vm.NotYetImplementedException;
+import som.vmobjects.SSymbol;
+
 
 @GenerateWrapper
-public abstract class AbstractPromiseResolutionNode extends QuaternaryExpressionNode
+//public abstract class AbstractPromiseResolutionNode extends QuaternaryExpressionNode
+@NodeChildren({
+        @NodeChild(value = "receiver", type = ExpressionNode.class),
+        @NodeChild(value = "firstArg", type = ExpressionNode.class),
+        @NodeChild(value = "secondArg", type = ExpressionNode.class),
+        @NodeChild(value = "thirdArg", type = ExpressionNode.class),
+        @NodeChild(value = "fourthArg", type = ExpressionNode.class)})
+public abstract class AbstractPromiseResolutionNode extends EagerlySpecializableNode
     implements WithContext<AbstractPromiseResolutionNode, VM> {
   @CompilationFinal private ForkJoinPool actorPool;
 
@@ -67,8 +82,24 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
   }
 
   public abstract Object executeEvaluated(VirtualFrame frame,
-      SResolver receiver, Object argument, boolean haltOnResolver,
-      boolean haltOnResolution);
+    SResolver receiver, Object argument, Object maybeEntry,
+    boolean haltOnResolver, boolean haltOnResolution);
+
+  public abstract Object executeEvaluated(VirtualFrame frame, Object receiver,
+                                          Object firstArg, Object secondArg, Object thirdArg, Object forth);
+
+  @Override
+  public final Object doPreEvaluated(final VirtualFrame frame,
+                                     final Object[] arguments) {
+    return executeEvaluated(frame, arguments[0], arguments[1], arguments[2],
+            arguments[3], arguments[4]);
+  }
+
+  @Override
+  public EagerPrimitiveNode wrapInEagerWrapper(final SSymbol selector,
+                                               final ExpressionNode[] arguments, final VM vm) {
+    throw new NotYetImplementedException(); // wasn't needed so far
+  }
 
   @Override
   public WrapperNode createWrapper(final ProbeNode probe) {
@@ -80,8 +111,8 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
    */
   @Specialization(guards = {"resolver.getPromise() == result"})
   public SResolver selfResolution(final SResolver resolver,
-      final SPromise result, final boolean haltOnResolver,
-      final boolean haltOnResolution) {
+        final SPromise result, final Object maybeEntry,
+        final boolean haltOnResolver, final boolean haltOnResolution) {
     return resolver;
   }
 
@@ -90,9 +121,9 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
    */
   @Specialization(guards = {"resolver.getPromise() != promiseValue"})
   public SResolver chainedPromise(final VirtualFrame frame,
-      final SResolver resolver, final SPromise promiseValue,
+      final SResolver resolver, final SPromise promiseValue, final Object maybeEntry,
       final boolean haltOnResolver, final boolean haltOnResolution) {
-    chainPromise(resolver, promiseValue, haltOnResolver, haltOnResolution);
+    chainPromise(resolver, promiseValue, maybeEntry, haltOnResolver, haltOnResolution);
     return resolver;
   }
 
@@ -101,8 +132,8 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
   }
 
   protected void chainPromise(final SResolver resolver,
-      final SPromise promiseValue, final boolean haltOnResolver,
-      final boolean haltOnResolution) {
+                              final SPromise promiseValue, final Object maybeEntry,
+                              final boolean haltOnResolver, final boolean haltOnResolution) {
     assert resolver.assertNotCompleted();
     SPromise promiseToBeResolved = resolver.getPromise();
     if (VmSettings.KOMPOS_TRACING) {
@@ -124,7 +155,7 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
       }
 
       if (SPromise.isCompleted(state)) {
-        resolvePromise(state, resolver, promiseValue.getValueUnsync(),
+        resolvePromise(state, resolver, promiseValue.getValueUnsync(), maybeEntry,
             haltOnResolution);
       } else {
         synchronized (promiseToBeResolved) { // TODO: is this really deadlock free?
@@ -150,24 +181,24 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
   }
 
   protected void resolvePromise(final Resolution type,
-      final SResolver resolver, final Object result,
+      final SResolver resolver, final Object result, final Object maybeEntry,
       final boolean haltOnResolution) {
     SPromise promise = resolver.getPromise();
     Actor current = EventualMessage.getActorCurrentMessageIsExecutionOn();
 
-    resolve(type, wrapper, promise, result, current, actorPool, haltOnResolution,
+    resolve(type, wrapper, promise, result, current, actorPool, maybeEntry, haltOnResolution,
         whenResolvedProfile, tracePromiseResolution, tracePromiseResolutionEnd);
   }
 
   public static void resolve(final Resolution type,
       final WrapReferenceNode wrapper, final SPromise promise,
-      final Object result, final Actor current, final ForkJoinPool actorPool,
+      final Object result, final Actor current, final ForkJoinPool actorPool, maybeEntry,
       final boolean haltOnResolution, final ValueProfile whenResolvedProfile,
       final RecordOneEvent tracePromiseResolution2,
       final RecordOneEvent tracePromiseResolutionEnd2) {
     Object wrapped = wrapper.execute(result, promise.owner, current);
     SResolver.resolveAndTriggerListenersUnsynced(type, result, wrapped, promise,
-        current, actorPool, haltOnResolution, whenResolvedProfile, tracePromiseResolution2,
+        current, actorPool, maybeEntry, haltOnResolution, whenResolvedProfile, tracePromiseResolution2,
         tracePromiseResolutionEnd2);
   }
 }

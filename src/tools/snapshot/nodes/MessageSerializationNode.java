@@ -27,6 +27,7 @@ import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import tools.snapshot.deserialization.DeserializationBuffer;
 import tools.snapshot.deserialization.FixupInformation;
+import som.interpreter.SArguments;
 
 
 @GenerateNodeFactory
@@ -410,7 +411,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
       pmf.setMessage(psm);
     }
     psm.resolve(value, EventualMessage.getActorCurrentMessageIsExecutionOn(),
-        finalSender);
+        finalSender, SArguments.instantiateTopShadowStackEntry(this));
 
     return psm;
   }
