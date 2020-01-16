@@ -13,6 +13,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -511,6 +512,15 @@ public final class SystemPrims {
         CompilerDirectives.transferToInterpreter();
         throw new RuntimeException(e);
       }
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "featuresSupportsExtensions:")
+  public abstract static class SupportExtensionPrim extends UnarySystemOperation {
+    @Specialization
+    public final boolean doObject(final Object receiver) {
+      return !TruffleOptions.AOT;
     }
   }
 
