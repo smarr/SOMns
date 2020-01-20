@@ -13,6 +13,7 @@ import som.interpreter.actors.SPromise.SReplayPromise;
 import som.interpreter.actors.SPromise.STracingPromise;
 import som.interpreter.SArguments;
 import som.vm.VmSettings;
+import som.vmobjects.SBlock;
 import tools.asyncstacktraces.ShadowStackEntry;
 import tools.dym.DynamicMetrics;
 import tools.replay.ReplayRecord;
@@ -85,7 +86,21 @@ public abstract class RegisterOnPromiseNode {
                     SArguments.getShadowStackEntry(frame),
                     getParent().getParent());
             assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
-            SArguments.setShadowStackEntry(msg.args, resolutionEntry);
+
+            for (Object obj: msg.args) {
+              if (obj instanceof SPromise) {
+                if (((SPromise) promise).isCompleted()) {
+                  //if promise is resolved set EntryForPromiseResolution
+                  SArguments.setShadowStackEntry(msg.args, resolutionEntry);
+                } else {
+                  //if promise is unresolved then the EntryAtMessageSend should be already set
+                  //no entry of type EntryForPromiseResolution should be set because the promise has not been completed
+                  assert msg.args[msg.args.length - 1] != null;
+                }
+              } else if (obj instanceof SBlock) { //for whenResolved blocks
+                SArguments.setShadowStackEntry(msg.args, resolutionEntry);
+              }
+            }
           }
             
           if (VmSettings.SENDER_SIDE_REPLAY) {
