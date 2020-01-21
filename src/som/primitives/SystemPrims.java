@@ -320,7 +320,8 @@ public final class SystemPrims {
         if (frame != null) {
           method.add(frame.name);
           maxLengthMethod = Math.max(maxLengthMethod, frame.name.length());
-          // TODO: is frame.section better `callNode.getEncapsulatingSourceSection();` ?
+          // note: `callNode.getEncapsulatingSourceSection();` is better than  frame.section
+          // because with this one we can get the source section while the other option returns null
           addSourceSection(frame.section, location);
         }
 
