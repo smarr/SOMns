@@ -129,7 +129,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
             Invokable rootNode = (Invokable) rt.getRootNode();
             SourceSection ss = null;
             if (next.getCallNode() != null) {
-                ss = next.getCallNode().getSourceSection();
+                ss = next.getCallNode().getEncapsulatingSourceSection();
             }
             return createStackFrame(next.getFrame(FrameAccess.READ_ONLY),
                     rootNode,
@@ -227,10 +227,10 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                 if (shadow instanceof EntryAtMessageSend) {
                     Node sendNode = shadow.expression.getParent();
                     if (sendNode instanceof EventualSendNode) {
-                        name = "Send: " + ((EventualSendNode) sendNode).getSentSymbol();
+                        name = "Sent: " + ((EventualSendNode) sendNode).getSentSymbol();
 
                     } else {
-                        name = "Send: " + name;
+                        name = "Sent: " + name;
                     }
                     useAgain = shadow;
                     useAgainFrame = localFrame;
