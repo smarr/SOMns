@@ -76,6 +76,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
 
         public SuspensionIterator(final Iterator<DebugStackFrame> localStack) {
             assert localStack != null;
+            frames = new ArrayList<DebugStackFrame>();
             while (localStack.hasNext()) {
                 frames.add(localStack.next());
             }
@@ -151,8 +152,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
         protected boolean        first;
         private Node             currentNode;
         private Invokable        currentMethod;
-
-        private ShadowStackEntry useAgain;
+        private ShadowStackEntry useAgainShadowEntry;
         private Frame            useAgainFrame;
 
         public ShadowStackIterator() {
@@ -162,7 +162,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
 
         @Override
         public boolean hasNext() {
-            return currentSSEntry != null || first || useAgain != null;
+            return currentSSEntry != null || first || useAgainShadowEntry != null;
         }
 
         protected abstract StackFrameDescription getFirstFrame();
@@ -191,11 +191,11 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                 assert args[args.length - 1] instanceof ShadowStackEntry;
                 currentSSEntry = (ShadowStackEntry) args[args.length - 1];
                 first = false;
-            } else if (useAgain != null) {
-                shadow = useAgain;
+            } else if (useAgainShadowEntry != null) {
+                shadow = useAgainShadowEntry;
                 usedAgain = true;
                 localFrame = useAgainFrame;
-                useAgain = null;
+                useAgainShadowEntry = null;
                 useAgainFrame = null;
             } else {
                 shadow = currentSSEntry;
@@ -219,6 +219,8 @@ public abstract class StackIterator implements Iterator<StackFrame> {
             String name = shadow.getRootNode().getName();
             SourceSection location = shadow.getSourceSection();
 
+//            System.out.println(name +" "+shadow.getClass().getName() + " "+location.getStartLine());
+
             if (!usedAgain && (shadow instanceof EntryAtMessageSend
                     || shadow instanceof EntryForPromiseResolution)) {
                 contextTransitionElement = true;
@@ -236,7 +238,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                     } else {
                         prefix = "Sent: "; //TODO check if needed
                     }
-                    useAgain = shadow;
+                    useAgainShadowEntry = shadow;
                     useAgainFrame = localFrame;
                 } else if (shadow instanceof EntryForPromiseResolution) {
                     prefix = "Resolved: ";
@@ -266,11 +268,11 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                 first = false;
             }
 
-            if (useAgain != null) {
-                shadow = useAgain;
+            if (useAgainShadowEntry != null) {
+                shadow = useAgainShadowEntry;
                 usedAgain = true;
                 localFrame = useAgainFrame;
-                useAgain = null;
+                useAgainShadowEntry = null;
                 useAgainFrame = null;
             } else {
                 if (shouldUsePreviousShadowStackEntry(currentMethod,

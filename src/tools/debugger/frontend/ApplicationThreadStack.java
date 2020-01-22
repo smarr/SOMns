@@ -35,11 +35,8 @@ public class ApplicationThreadStack {
   public static final class StackFrame {
     public final String        name;
     public final SourceSection section;
-
     public final Frame frame;
-
     public final boolean asyncSeparator;
-
     private final RootNode root;
 
     public StackFrame(final String name, final RootNode root, final SourceSection section,
@@ -74,7 +71,10 @@ public class ApplicationThreadStack {
               StackIterator.createSuspensionIterator(event.getStackFrames().iterator());
 
       while (stack.hasNext()) {
-        stackFrames.add(stack.next());
+        StackFrame next = stack.next();
+        if (next != null) { //this validation is needed because at the moment ShadowStackIterator.next can return null values
+          stackFrames.add(next);
+        }
       }
       assert !stackFrames.isEmpty()
           : "We expect that there is always at least one stack frame";
