@@ -1,6 +1,3 @@
 <factorypath>
-    <factorypathentry kind="WKSPJAR" id="/TRUFFLE_API/truffle-api.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="WKSPJAR" id="/TRUFFLE_DSL_PROCESSOR/truffle-dsl-processor.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="WKSPJAR" id="/TRUFFLE_DSL_PROCESSOR_INTERNAL/truffle-dsl-processor-internal.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="WKSPJAR" id="/TRUFFLE_DSL_PROCESSOR_INTEROP_INTERNAL/truffle-dsl-processor-interop-internal.jar" enabled="true" runInBatchMode="false"/>
 </factorypath>
