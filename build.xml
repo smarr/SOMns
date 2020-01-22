@@ -56,7 +56,7 @@
     <property name="svm.build"   location="${svm.dir}/mxbuild/dists/jdk1.8" />
     <property name="truffle.build" location="${truffle.dir}/mxbuild/dists/jdk1.8" />
     <property name="somns-deps.version" value="0.3.6" />
-    <property name="checkstyle.version" value="8.11" />
+    <property name="checkstyle.version" value="8.28" />
     <property name="jacoco.version"     value="0.8.5" />
     <property name="jvmci.home"  location="${lib.dir}/jvmci${home.ext}" />
 
