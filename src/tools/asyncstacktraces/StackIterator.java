@@ -217,29 +217,34 @@ public abstract class StackIterator implements Iterator<StackFrame> {
             boolean contextTransitionElement;
 
             String name = shadow.getRootNode().getName();
-            SourceSection location;
+            SourceSection location = shadow.getSourceSection();
 
             if (!usedAgain && (shadow instanceof EntryAtMessageSend
                     || shadow instanceof EntryForPromiseResolution)) {
                 contextTransitionElement = true;
-                location = null;
+                location = null; //because the previous frame should correspond to the method name,
+                // and shows the corresponding location already
+                String prefix = "";
 
                 if (shadow instanceof EntryAtMessageSend) {
                     Node sendNode = shadow.expression.getParent();
+                    name = ((EventualSendNode) sendNode).getSentSymbol().getString();
+
                     if (sendNode instanceof EventualSendNode) {
-                        name = "Sent: " + ((EventualSendNode) sendNode).getSentSymbol();
+                        prefix = "at message sent: ";
 
                     } else {
-                        name = "Sent: " + name;
+                        prefix = "Sent: "; //TODO check if needed
                     }
                     useAgain = shadow;
                     useAgainFrame = localFrame;
                 } else if (shadow instanceof EntryForPromiseResolution) {
-                    name = "Resolved: " + name;
+                    prefix = "Resolved: ";
                 }
+                name = prefix + name;
+
             } else {
                 contextTransitionElement = false;
-                location = shadow.getSourceSection();
             }
 
             return new StackFrame(name, shadow.getRootNode(),

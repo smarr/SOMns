@@ -39,7 +39,7 @@ public interface BackCacheCallNode {
                 SArguments.setShadowStackEntryWithCache(arguments, expression,
                         shadowStackEntryLoad, frame, false);
             }
-        } else if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+        } else if (VmSettings.ACTOR_ASYNC_STACK_TRACE_INLINE_CACHE) {
             SArguments.setShadowStackEntryWithCache(arguments, expression,
                     shadowStackEntryLoad, frame, false);
         }

@@ -312,9 +312,17 @@ public final class SystemPrims {
       ArrayList<String> location = new ArrayList<String>();
       int maxLengthMethod = 0;
 
-      Output.println("Stack Trace");
-
       StackIterator stack = StackIterator.createHaltIterator();
+
+      boolean asyncTrace = false;
+
+      if (stack instanceof StackIterator.ShadowStackIterator.HaltShadowStackIterator) {
+        Output.println("- Async Stack Trace -");
+        asyncTrace = true;
+      } else {
+        Output.println("- Stack Trace -");
+      }
+
       while (stack.hasNext()) {
         StackFrame frame = stack.next();
         if (frame != null) {
@@ -324,17 +332,10 @@ public final class SystemPrims {
           // because with this one we can get the source section while the other option returns null
           addSourceSection(frame.section, location);
         }
-
-        StringBuilder sb = new StringBuilder();
-        for (int i = method.size() - 1; i >= skipDnuFrames; i--) {
-          sb.append(String.format("\t%1$-" + (maxLengthMethod + 4) + "s",
-                  method.get(i)));
-          sb.append(location.get(i));
-          sb.append('\n');
-        }
       }
 
-      Output.print(stringStackTraceFrom(method, location, maxLengthMethod, skipDnuFrames));
+      //for async traces hide only 1 frame: Thing>>#error:, because we want to show the last frame although is not async
+      Output.print(stringStackTraceFrom(method, location, maxLengthMethod, asyncTrace == false ? skipDnuFrames : 1));
     }
 
     private static String stringStackTraceFrom(final ArrayList<String> method,
