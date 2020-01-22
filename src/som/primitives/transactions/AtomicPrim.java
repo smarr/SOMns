@@ -37,7 +37,7 @@ public abstract class AtomicPrim extends BinarySystemOperation {
   @Override
   public final AtomicPrim initialize(final VM vm) {
     super.initialize(vm);
-    if (VmSettings.ACTOR_TRACING) {
+    if (VmSettings.UNIFORM_TRACING) {
       recordCommit = insert(new RecordOneEvent(TraceRecord.TRANSACTION_COMMIT));
     }
     beforeCommit = insert(

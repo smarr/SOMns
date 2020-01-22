@@ -29,7 +29,7 @@ public abstract class RegisterOnPromiseNode {
 
     public RegisterWhenResolved(final ForkJoinPool actorPool) {
       schedule = SchedulePromiseHandlerNodeGen.create(actorPool);
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         promiseMsgSend = new RecordOneEvent(TraceRecord.PROMISE_MESSAGE);
       }
     }
@@ -81,7 +81,7 @@ public abstract class RegisterOnPromiseNode {
             msg.messageId = npr.eventNo;
           }
 
-          if (VmSettings.ACTOR_TRACING) {
+          if (VmSettings.UNIFORM_TRACING) {
             // This is whenResolved
             promiseMsgSend.record(((STracingPromise) promise).version);
             ((STracingPromise) promise).version++;
@@ -129,7 +129,7 @@ public abstract class RegisterOnPromiseNode {
 
     public RegisterOnError(final ForkJoinPool actorPool) {
       this.schedule = SchedulePromiseHandlerNodeGen.create(actorPool);
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         this.promiseMsgSend = new RecordOneEvent(TraceRecord.PROMISE_MESSAGE);
       }
     }
@@ -161,7 +161,7 @@ public abstract class RegisterOnPromiseNode {
 
         if (!promise.isErroredUnsync()) {
 
-          if (VmSettings.ACTOR_TRACING) {
+          if (VmSettings.UNIFORM_TRACING) {
             // This is whenResolved
             promiseMsgSend.record(((STracingPromise) promise).version);
             ((STracingPromise) promise).version++;

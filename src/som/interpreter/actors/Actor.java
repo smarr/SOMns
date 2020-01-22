@@ -68,7 +68,7 @@ public class Actor implements Activity {
 
     if (VmSettings.REPLAY || VmSettings.KOMPOS_TRACING) {
       return new ReplayActor(vm);
-    } else if (VmSettings.ACTOR_TRACING) {
+    } else if (VmSettings.UNIFORM_TRACING) {
       return new TracingActor(vm);
     } else {
       return new Actor(vm);
@@ -212,7 +212,7 @@ public class Actor implements Activity {
     private ExecutorRootNode(final SomLanguage language) {
       super(language);
 
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         this.recordPromiseChaining = new RecordOneEvent(TraceRecord.PROMISE_CHAINED);
       }
     }
@@ -284,7 +284,7 @@ public class Actor implements Activity {
 
       t.currentlyExecutingActor = actor;
 
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         ActorExecutionTrace.recordActivityContext(actor, tracer);
       } else if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.currentActivity(actor);
@@ -293,6 +293,11 @@ public class Actor implements Activity {
       while (getCurrentMessagesOrCompleteExecution()) {
         processCurrentMessages(t, dbg);
       }
+
+      if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
+        t.swapTracingBufferIfRequestedUnsync();
+      }
+      t.currentlyExecutingActor = null;
     }
 
     protected void processCurrentMessages(final ActorProcessingThread currentThread,
@@ -366,8 +371,7 @@ public class Actor implements Activity {
   }
 
   @Override
-  public void setStepToNextTurn(final boolean val) {
-  }
+  public void setStepToNextTurn(final boolean val) {}
 
   public static final class ActorProcessingThreadFactory
       implements ForkJoinWorkerThreadFactory {

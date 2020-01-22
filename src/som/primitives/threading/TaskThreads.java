@@ -69,7 +69,7 @@ public final class TaskThreads {
         }
         if (VmSettings.KOMPOS_TRACING) {
           KomposTrace.currentActivity(this);
-        } else if (VmSettings.ACTOR_TRACING && this instanceof TracedThreadTask) {
+        } else if (VmSettings.UNIFORM_TRACING && this instanceof TracedThreadTask) {
           ActorExecutionTrace.recordActivityContext(this, ((TracedThreadTask) this).trace);
         }
 
@@ -218,11 +218,6 @@ public final class TaskThreads {
       super(argArray, stopOnRoot, vm);
       replayEvents = vm.getTraceParser().getReplayEventsForEntity(this.getId());
       this.traceParser = vm.getTraceParser();
-    }
-
-    @Override
-    public int addChild() {
-      return children++;
     }
 
     @Override

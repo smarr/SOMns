@@ -38,7 +38,7 @@ public class TracingActors {
 
     public TracingActor(final VM vm) {
       super(vm);
-      this.activityId = TracingActivityThread.newEntityId(vm);
+      this.activityId = TracingActivityThread.newEntityId();
       this.version = 0;
       assert this.activityId >= 0;
       if (VmSettings.SNAPSHOTS_ENABLED) {
@@ -61,7 +61,7 @@ public class TracingActors {
     public synchronized void send(final EventualMessage msg,
         final ForkJoinPool actorPool) {
       super.send(msg, actorPool);
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         msg.getTracingNode().record(this.version);
         this.version++;
         // TODO maybe try to get the recording itself done outside the synchronized method
@@ -74,7 +74,7 @@ public class TracingActors {
         final ForkJoinPool pool) {
       super.sendInitialStartMessage(msg, pool);
 
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         this.version++;
       }
     }
@@ -148,6 +148,7 @@ public class TracingActors {
         new PriorityQueue<>(new MessageComparator());
     private static Map<Long, ReplayActor>          actorList;
     private BiConsumer<Short, Integer>             dataSource;
+    public boolean                                 poisoned        = false;
 
     private final TraceParser traceParser;
 
@@ -236,8 +237,13 @@ public class TracingActors {
         appendToMailbox(msg);
       }
 
+      if (!this.poisoned && this.replayEvents.isEmpty()
+          && this.peekNextReplayEvent() == null) {
+        this.poisoned = true;
+      }
+
       // actor remains dormant until the expected message arrives
-      if ((!this.isExecuting) && this.replayCanProcess(msg)) {
+      if ((!this.isExecuting) && this.replayCanProcess(msg) && !this.poisoned) {
         isExecuting = true;
         execute(actorPool);
       }
@@ -249,11 +255,6 @@ public class TracingActors {
       }
 
       return msg.getMessageId() == this.version;
-    }
-
-    @Override
-    public int addChild() {
-      return children++;
     }
 
     private static class ExecAllMessagesReplay extends ExecAllMessages {
@@ -309,6 +310,12 @@ public class TracingActors {
         Queue<EventualMessage> todo = determineNextMessages(a.orderedMessages);
 
         for (EventualMessage msg : todo) {
+          if (!a.poisoned && a.replayEvents.isEmpty()
+              && a.peekNextReplayEvent() == null) {
+            a.poisoned = true;
+            return;
+          }
+
           currentThread.currentMessage = msg;
           handleBreakpointsAndStepping(msg, dbg, a);
           msg.execute();

@@ -27,13 +27,6 @@ public interface Activity {
     return 0;
   }
 
-  /**
-   * Used in replay to keep track of created children.
-   */
-  default int addChild() {
-    return 0;
-  }
-
   ActivityType getType();
 
   default TraceParser getTraceParser() {
@@ -42,27 +35,31 @@ public interface Activity {
   }
 
   default ReplayRecord getNextReplayEvent() {
-    Queue<ReplayRecord> q = getReplayEventBuffer();
-    if (q.isEmpty()) {
-      boolean more = getTraceParser().getMoreEventsForEntity(getId());
-      while (q.isEmpty() && more) {
-        more = getTraceParser().getMoreEventsForEntity(getId());
-      }
-    }
 
-    return q.remove();
+    Queue<ReplayRecord> q = getReplayEventBuffer();
+    synchronized (q) {
+      if (q.isEmpty()) {
+        boolean more = getTraceParser().getMoreEventsForEntity(getId());
+        while (q.isEmpty() && more) {
+          more = getTraceParser().getMoreEventsForEntity(getId());
+        }
+      }
+      return q.remove();
+    }
   }
 
   default ReplayRecord peekNextReplayEvent() {
     Queue<ReplayRecord> q = getReplayEventBuffer();
-    if (q.isEmpty()) {
-      boolean more = getTraceParser().getMoreEventsForEntity(getId());
-      while (q.isEmpty() && more) {
-        more = getTraceParser().getMoreEventsForEntity(getId());
+    synchronized (q) {
+      if (q.isEmpty()) {
+        boolean more = getTraceParser().getMoreEventsForEntity(getId());
+        while (q.isEmpty() && more) {
+          more = getTraceParser().getMoreEventsForEntity(getId());
+        }
       }
-    }
 
-    return q.peek();
+      return q.peek();
+    }
   }
 
   default LinkedList<ReplayRecord> getReplayEventBuffer() {
@@ -83,8 +80,7 @@ public interface Activity {
    * Set the flag that indicates a breakpoint on joining activity.
    * Does nothing for non-tracing activities, i.e., when debugging is disabled.
    */
-  default void setStepToJoin(final boolean val) {
-  }
+  default void setStepToJoin(final boolean val) {}
 
   void setStepToNextTurn(boolean val);
 }

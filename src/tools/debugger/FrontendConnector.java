@@ -299,7 +299,7 @@ public class FrontendConnector {
   }
 
   public void sendTracingData() {
-    if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
+    if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
       TracingBackend.forceSwapBuffers();
     }
   }

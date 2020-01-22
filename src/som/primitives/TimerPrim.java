@@ -94,7 +94,7 @@ public abstract class TimerPrim extends BinarySystemOperation {
     }
 
     int id = nextTimerTaskId.getAndIncrement();
-    if (VmSettings.ACTOR_TRACING) {
+    if (VmSettings.UNIFORM_TRACING) {
       ActorExecutionTrace.intSystemCall(id, tracer);
     }
 

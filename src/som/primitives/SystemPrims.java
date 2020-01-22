@@ -368,7 +368,7 @@ public final class SystemPrims {
       }
 
       long res = System.currentTimeMillis() - startTime;
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         ActorExecutionTrace.longSystemCall(res, tracer);
       }
       return res;
@@ -459,7 +459,7 @@ public final class SystemPrims {
 
       long res = System.nanoTime() / 1000L - startMicroTime;
 
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         ActorExecutionTrace.longSystemCall(res, tracer);
       }
       return res;

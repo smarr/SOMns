@@ -55,7 +55,7 @@ public abstract class EventualMessage {
     this.haltOnReceive = haltOnReceive;
     this.haltOnResolver = haltOnResolver;
     if (VmSettings.KOMPOS_TRACING) {
-      this.messageId = TracingActivityThread.newEntityId(null);
+      this.messageId = TracingActivityThread.newEntityId();
       if (VmSettings.ASSISTED_DEBUGGING) {
         if (KomposTraceParser.isMessageInErrorStackTrace(this.messageId)
             || this.messageId == 0) {
@@ -89,7 +89,7 @@ public abstract class EventualMessage {
 
   public RecordOneEvent getTracingNode() {
     assert onReceive != null;
-    assert VmSettings.ACTOR_TRACING;
+    assert VmSettings.UNIFORM_TRACING;
     ReceivedRootNode rrn = (ReceivedRootNode) onReceive.getRootNode();
     return rrn.messageTracer;
   }

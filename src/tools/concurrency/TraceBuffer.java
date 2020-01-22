@@ -14,7 +14,7 @@ import tools.replay.nodes.TraceContextNode;
 public abstract class TraceBuffer {
 
   public static TraceBuffer create(final long threadId) {
-    assert VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING;
+    assert VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING;
     if (VmSettings.KOMPOS_TRACING) {
       return new KomposTrace.KomposTraceBuffer(threadId);
     } else {

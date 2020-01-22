@@ -49,7 +49,7 @@ public final class ConditionPrimitives {
     @Child protected static RecordOneEvent traceWakeup;
 
     public AwaitPrim() {
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         traceWakeup = new RecordOneEvent(TraceRecord.CONDITION_WAKEUP);
       }
     }
@@ -61,7 +61,7 @@ public final class ConditionPrimitives {
       try {
         ObjectTransitionSafepoint.INSTANCE.unregister();
         cond.await();
-        if (VmSettings.ACTOR_TRACING) {
+        if (VmSettings.UNIFORM_TRACING) {
           TracingCondition tc = (TracingCondition) cond;
           traceWakeup.record(tc.owner.getNextEventNumber());
           tc.owner.replayIncrementEventNo();
@@ -82,7 +82,7 @@ public final class ConditionPrimitives {
     @Child protected static RecordOneEvent traceWakeup;
 
     public AwaitForPrim() {
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         traceTimeout = new RecordOneEvent(TraceRecord.CONDITION_TIMEOUT);
         traceWakeup = new RecordOneEvent(TraceRecord.CONDITION_WAKEUP);
       }
@@ -97,7 +97,7 @@ public final class ConditionPrimitives {
         try {
           boolean result = cond.await(milliseconds, TimeUnit.MILLISECONDS);
 
-          if (VmSettings.ACTOR_TRACING) {
+          if (VmSettings.UNIFORM_TRACING) {
             TracingCondition tc = (TracingCondition) cond;
             if (result) {
               traceWakeup.record(tc.owner.getNextEventNumber());
@@ -109,7 +109,7 @@ public final class ConditionPrimitives {
           return result;
 
         } catch (InterruptedException e) {
-          if (VmSettings.ACTOR_TRACING) {
+          if (VmSettings.UNIFORM_TRACING) {
             traceTimeout.record(0);
           }
           return false;

@@ -61,7 +61,7 @@ benchmark_mutex_job:
   allow_failure: true
   script:
     - ant compile
-    - export EXP=`if [[ "$CI_BUILD_REF_NAME" = "master" ]]; then echo "SOMns-Mutex"; else echo "SOMns-Mutex-exp"; fi`; rebench --without-nice -c --commit-id="$CI_BUILD_REF" --environment="`hostname` `cat /etc/issue | cut -d ' ' -f 1`" --project=SOMns-Mutex --branch=master codespeed.conf $EXP
+    - rebench --without-nice --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-Mutex
 
 
 benchmark_job:

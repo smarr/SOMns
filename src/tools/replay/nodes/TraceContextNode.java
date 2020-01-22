@@ -2,7 +2,9 @@ package tools.replay.nodes;
 
 import com.oracle.truffle.api.dsl.Specialization;
 
-import som.primitives.processes.ChannelPrimitives.Process;
+import som.primitives.processes.ChannelPrimitives.TracingProcess;
+import som.primitives.threading.TaskThreads.TracedForkJoinTask;
+import som.primitives.threading.TaskThreads.TracedThreadTask;
 import som.vm.Activity;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.replay.TraceRecord;
@@ -19,8 +21,18 @@ public abstract class TraceContextNode extends TraceNode {
   }
 
   @Specialization
-  protected void recordProcess(final Process process) {
+  protected void recordProcess(final TracingProcess process) {
     writeContext(process.getId(), process.getNextTraceBufferId());
+  }
+
+  @Specialization
+  protected void recordTask(final TracedForkJoinTask activity) {
+    writeContext(activity.getId(), activity.getNextTraceBufferId());
+  }
+
+  @Specialization
+  protected void recordThread(final TracedThreadTask activity) {
+    writeContext(activity.getId(), activity.getNextTraceBufferId());
   }
 
   @Specialization

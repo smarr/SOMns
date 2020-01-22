@@ -63,7 +63,7 @@ public class SPromise extends SObjectWithClass {
       return new SMedeorPromise(owner, haltOnResolver, haltOnResolution, section);
     } else if (VmSettings.REPLAY) {
       return new SReplayPromise(owner, haltOnResolver, haltOnResolution);
-    } else if (VmSettings.ACTOR_TRACING) {
+    } else if (VmSettings.UNIFORM_TRACING) {
       return new STracingPromise(owner, haltOnResolver, haltOnResolution);
     } else {
       return new SPromise(owner, haltOnResolver, haltOnResolution);
@@ -204,7 +204,7 @@ public class SPromise extends SObjectWithClass {
       remote.resolutionState = resolutionState;
     } else {
 
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         recordPromiseChaining.record(((STracingPromise) this).version);
         ((STracingPromise) this).version++;
       }
@@ -395,6 +395,7 @@ public class SPromise extends SObjectWithClass {
     ValueProfile                                      whenResolvedProfile;
     boolean                                           untrackedResolution = false;
     LinkedList<ReplayRecord>                          eventsForDelayedResolution;
+    boolean                                           handled             = false;
 
     protected SReplayPromise(final Actor owner, final boolean haltOnResolver,
         final boolean haltOnResolution) {
@@ -405,6 +406,9 @@ public class SPromise extends SObjectWithClass {
     public void handleReplayResolution(final boolean haltOnResolution, final Actor resolver,
         final Resolution type, final ValueProfile whenResolvedProfile) {
 
+      assert !handled;
+      handled = true;
+
       Activity current = TracingActivityThread.currentThread().getActivity();
       if (untrackedResolution) {
         assert this.onResolvedReplay == null;
@@ -414,8 +418,6 @@ public class SPromise extends SObjectWithClass {
         assert eventsForDelayedResolution == null;
         return;
       }
-
-      assert this.eventsForDelayedResolution == null;
 
       ReplayRecord npr = current.peekNextReplayEvent();
       assert npr != null;
@@ -431,7 +433,9 @@ public class SPromise extends SObjectWithClass {
         this.whenResolvedProfile = whenResolvedProfile;
         this.type = type;
 
-        consumeEventsForDelayedResolution();
+        if (eventsForDelayedResolution == null) {
+          consumeEventsForDelayedResolution();
+        }
         return;
       }
 
@@ -528,7 +532,12 @@ public class SPromise extends SObjectWithClass {
         assert this.eventsForDelayedResolution != null;
         assert this.eventsForDelayedResolution.size() >= 2 : ""
             + this.eventsForDelayedResolution.size();
-        current.getReplayEventBuffer().addAll(0, this.eventsForDelayedResolution);
+
+        LinkedList<ReplayRecord> eb = current.getReplayEventBuffer();
+        synchronized (eb) {
+          eb.addAll(0, this.eventsForDelayedResolution);
+        }
+
         ReplayRecord npr = current.getNextReplayEvent();
         assert npr.type == TraceRecord.PROMISE_RESOLUTION : " was " + npr.type;
 
@@ -839,7 +848,7 @@ public class SPromise extends SObjectWithClass {
           }
         }
 
-        if (VmSettings.ACTOR_TRACING) {
+        if (VmSettings.UNIFORM_TRACING) {
           tracePromiseResolution2.record(((STracingPromise) p).version);
         }
 
@@ -853,7 +862,7 @@ public class SPromise extends SObjectWithClass {
         resolveChainedPromisesUnsync(type, p, result, current, actorPool, haltOnResolution,
             whenResolvedProfile, tracePromiseResolution2, tracePromiseResolutionEnd2);
 
-        if (VmSettings.ACTOR_TRACING) {
+        if (VmSettings.UNIFORM_TRACING) {
           tracePromiseResolutionEnd2.record(((STracingPromise) p).version);
         }
       }

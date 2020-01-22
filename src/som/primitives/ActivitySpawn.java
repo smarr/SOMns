@@ -59,13 +59,13 @@ public abstract class ActivitySpawn {
       final RecordOneEvent traceThreadCreation) {
     SomForkJoinTask task;
 
-    if (VmSettings.KOMPOS_TRACING || VmSettings.ACTOR_TRACING) {
+    if (VmSettings.KOMPOS_TRACING || VmSettings.UNIFORM_TRACING) {
       task = new TracedForkJoinTask(argArray, stopOnRoot);
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.activityCreation(ActivityType.TASK, task.getId(),
             block.getMethod().getSignature(), section);
-      } else if (VmSettings.ACTOR_TRACING) {
+      } else if (VmSettings.UNIFORM_TRACING) {
         traceThreadCreation.record(task.getId());
       }
     } else {
@@ -81,13 +81,13 @@ public abstract class ActivitySpawn {
 
     if (VmSettings.REPLAY) {
       return new ReplayThreadTask(argArray, stopOnRoot, vm);
-    } else if (VmSettings.KOMPOS_TRACING || VmSettings.ACTOR_TRACING) {
+    } else if (VmSettings.KOMPOS_TRACING || VmSettings.UNIFORM_TRACING) {
       thread = new TracedThreadTask(argArray, stopOnRoot, vm);
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.activityCreation(ActivityType.THREAD, thread.getId(),
             block.getMethod().getSignature(), section);
-      } else if (VmSettings.ACTOR_TRACING) {
+      } else if (VmSettings.UNIFORM_TRACING) {
         traceThreadCreation.record(thread.getId());
       }
     } else {
@@ -101,12 +101,12 @@ public abstract class ActivitySpawn {
       final RecordOneEvent traceProcCreation, final VM vm) {
     if (VmSettings.REPLAY) {
       return new ReplayProcess(obj, stopOnRoot, vm);
-    } else if (VmSettings.KOMPOS_TRACING || VmSettings.ACTOR_TRACING) {
+    } else if (VmSettings.KOMPOS_TRACING || VmSettings.UNIFORM_TRACING) {
       TracingProcess result = new TracingProcess(obj, stopOnRoot, vm);
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.activityCreation(ActivityType.PROCESS,
             result.getId(), result.getProcObject().getSOMClass().getName(), origin);
-      } else if (VmSettings.ACTOR_TRACING) {
+      } else if (VmSettings.UNIFORM_TRACING) {
         traceProcCreation.record(result.getId());
       }
       return result;
@@ -140,7 +140,7 @@ public abstract class ActivitySpawn {
       onExec = insert(Breakpoints.create(sourceSection, BreakpointType.ACTIVITY_ON_EXEC, vm));
       notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
 
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         traceProcCreation = insert(new RecordOneEvent(TraceRecord.ACTIVITY_CREATION));
       }
 
@@ -229,7 +229,7 @@ public abstract class ActivitySpawn {
       onExec = insert(Breakpoints.create(sourceSection, BreakpointType.ACTIVITY_ON_EXEC, vm));
       notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
 
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         traceProcCreation = insert(new RecordOneEvent(TraceRecord.ACTIVITY_CREATION));
       }
 

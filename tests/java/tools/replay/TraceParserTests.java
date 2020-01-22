@@ -30,9 +30,9 @@ public class TraceParserTests {
       "fj-throughput"};
 
   private static final Object[] EXPECTED_RESULTS = new Object[] {
-      new Object[] {9, 1674, 0, 1646},
-      new Object[] {33, 3301, 0, 3221},
-      new Object[] {6, 31, 0, 15}
+      new Object[] {9, 120, 60},
+      new Object[] {33, 3412, 3197},
+      new Object[] {6, 120, 15}
   };
 
   private static final int[] BUFFER_SIZES =
@@ -53,7 +53,6 @@ public class TraceParserTests {
   private final TraceParser parser;
 
   private final int expectedEntities;
-  private final int expectedMessages;
   private final int expectedReplayEvents;
   private final int expectedSubtraces;
 
@@ -63,9 +62,8 @@ public class TraceParserTests {
     String traceName = folder + "trace";
     parser = new TraceParser(traceName, bufferSize);
     this.expectedEntities = (int) expectedResults[0];
-    this.expectedMessages = (int) expectedResults[1];
-    this.expectedReplayEvents = (int) expectedResults[2];
-    this.expectedSubtraces = (int) expectedResults[3];
+    this.expectedReplayEvents = (int) expectedResults[1];
+    this.expectedSubtraces = (int) expectedResults[2];
   }
 
   @Before
@@ -85,7 +83,6 @@ public class TraceParserTests {
 
   @Test
   public void testGetEntities() {
-    int numMessages = 0;
     int numReplayEvents = 0;
     int numSubtraces = 0;
 
@@ -94,12 +91,10 @@ public class TraceParserTests {
         // NOOP
       }
 
-      // numMessages += parser.getExpectedMessages(e.getKey()).size();
       numReplayEvents += parser.getReplayEventsForEntity(e.getKey()).size();
       numSubtraces += parser.getNumberOfSubtraces(e.getKey());
     }
 
-    // assertEquals(expectedMessages, numMessages);
     assertEquals(expectedReplayEvents, numReplayEvents);
     assertEquals(expectedSubtraces, numSubtraces);
   }

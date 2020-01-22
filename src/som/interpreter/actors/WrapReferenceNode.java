@@ -19,7 +19,7 @@ public abstract class WrapReferenceNode extends Node {
   @Child protected RecordOneEvent tracePromiseChaining;
 
   public WrapReferenceNode() {
-    if (VmSettings.ACTOR_TRACING) {
+    if (VmSettings.UNIFORM_TRACING) {
       tracePromiseChaining = new RecordOneEvent(TraceRecord.PROMISE_CHAINED);
     }
   }

@@ -39,7 +39,7 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
   @Override
   public final CreateActorPrim initialize(final VM vm) {
     super.initialize(vm);
-    if (VmSettings.ACTOR_TRACING) {
+    if (VmSettings.UNIFORM_TRACING) {
       trace = insert(new RecordOneEvent(TraceRecord.ACTIVITY_CREATION));
     }
     notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
@@ -52,7 +52,7 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
     Actor actor = Actor.createActor(vm);
     SFarReference ref = new SFarReference(actor, argument);
 
-    if (VmSettings.ACTOR_TRACING) {
+    if (VmSettings.UNIFORM_TRACING) {
       trace.record(((TracingActor) actor).getId());
     } else if (VmSettings.KOMPOS_TRACING) {
       assert argument instanceof SClass;

@@ -111,8 +111,7 @@ public abstract class ChannelPrimitives {
       return ActivityType.PROCESS;
     }
 
-    protected void beforeExec(final SInvokable disp) {
-    }
+    protected void beforeExec(final SInvokable disp) {}
 
     @Override
     public void run() {
@@ -164,7 +163,7 @@ public abstract class ChannelPrimitives {
         final VM vm) {
       super(obj);
       this.stopOnRootNode = stopOnRootNode;
-      processId = TracingActivityThread.newEntityId(vm);
+      processId = TracingActivityThread.newEntityId();
       this.vm = vm;
     }
 
@@ -184,7 +183,7 @@ public abstract class ChannelPrimitives {
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.currentActivity(this);
-      } else if (VmSettings.ACTOR_TRACING) {
+      } else if (VmSettings.UNIFORM_TRACING) {
         ActorExecutionTrace.recordActivityContext(this, trace);
       }
     }
@@ -218,11 +217,6 @@ public abstract class ChannelPrimitives {
         final VM vm) {
       super(obj, stopOnRootNode, vm);
       replayEvents = vm.getTraceParser().getReplayEventsForEntity(processId);
-    }
-
-    @Override
-    public int addChild() {
-      return children++;
     }
 
     @Override
@@ -260,7 +254,7 @@ public abstract class ChannelPrimitives {
     public final ReadPrim initialize(final VM vm) {
       super.initialize(vm);
       haltNode = SuspendExecutionNodeGen.create(0, null).initialize(sourceSection);
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         traceRead = insert(new RecordOneEvent(TraceRecord.CHANNEL_READ));
       }
       afterWrite = insert(
@@ -313,7 +307,7 @@ public abstract class ChannelPrimitives {
       haltNode = insert(SuspendExecutionNodeGen.create(0, null).initialize(sourceSection));
       afterRead =
           insert(Breakpoints.create(sourceSection, BreakpointType.CHANNEL_AFTER_RCV, vm));
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         traceWrite = insert(new RecordOneEvent(TraceRecord.CHANNEL_WRITE));
       }
       notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
@@ -364,7 +358,7 @@ public abstract class ChannelPrimitives {
     @Child RecordOneEvent trace;
 
     public ChannelNewPrim() {
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         trace = new RecordOneEvent(TraceRecord.ACTIVITY_CREATION);
       }
     }
@@ -376,7 +370,7 @@ public abstract class ChannelPrimitives {
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.passiveEntityCreation(PassiveEntityType.CHANNEL,
             result.getId(), KomposTrace.getPrimitiveCaller(sourceSection));
-      } else if (VmSettings.ACTOR_TRACING) {
+      } else if (VmSettings.UNIFORM_TRACING) {
         trace.record(result.getId());
       }
       return result;

@@ -36,7 +36,7 @@ public final class MutexPrimitives {
     @Child protected static RecordOneEvent traceLock;
 
     public LockPrim() {
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         traceLock = new RecordOneEvent(TraceRecord.LOCK_LOCK);
       }
     }
@@ -50,7 +50,7 @@ public final class MutexPrimitives {
           ReplayData.replayDelayNumberedEvent((TracingLock) lock);
         }
 
-        if (VmSettings.ACTOR_TRACING) {
+        if (VmSettings.UNIFORM_TRACING) {
           ((TracingLock) lock).tracingLock(traceLock);
         } else {
           lock.lock();
@@ -118,7 +118,7 @@ public final class MutexPrimitives {
     @Child protected RecordOneEvent traceIsLocked;
 
     public IsLockedPrim() {
-      if (VmSettings.ACTOR_TRACING) {
+      if (VmSettings.UNIFORM_TRACING) {
         traceIsLocked = new RecordOneEvent(TraceRecord.LOCK_ISLOCKED);
       }
     }
@@ -131,7 +131,7 @@ public final class MutexPrimitives {
         ReplayRecord rr = reader.getNextReplayEvent();
         assert rr.type == TraceRecord.LOCK_ISLOCKED;
         return rr.getBoolean();
-      } else if (VmSettings.ACTOR_TRACING) {
+      } else if (VmSettings.UNIFORM_TRACING) {
         return ((TracingLock) lock).tracingIsLocked(traceIsLocked);
       }
 
@@ -158,7 +158,7 @@ public final class MutexPrimitives {
     @Specialization
     @TruffleBoundary
     public final ReentrantLock doSClass(final SClass clazz) {
-      if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
+      if (VmSettings.UNIFORM_TRACING || VmSettings.REPLAY) {
         TracingLock result = new TracingLock();
         return result;
       }

@@ -501,8 +501,7 @@ public final class ObjectSystem {
 
       try {
         Thread.sleep(500);
-      } catch (InterruptedException e) {
-      }
+      } catch (InterruptedException e) {}
 
       // never timeout when debugging
       if (vm.isPoolIdle() && !VmSettings.TRUFFLE_DEBUGGER_ENABLED) {

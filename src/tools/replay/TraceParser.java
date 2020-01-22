@@ -13,9 +13,7 @@ import java.util.LinkedList;
 
 import som.Output;
 import som.interpreter.actors.EventualMessage;
-import som.vm.Activity;
 import som.vm.VmSettings;
-import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.replay.ReplayData.EntityNode;
 import tools.replay.ReplayData.Subtrace;
@@ -119,24 +117,6 @@ public final class TraceParser implements Closeable {
     return entity.subtraces.size();
   }
 
-  /**
-   * Determines the id a newly created entity should have according to the creating entity.
-   */
-  public long getReplayId() {
-    if (VmSettings.REPLAY && Thread.currentThread() instanceof TracingActivityThread) {
-      TracingActivityThread t = (TracingActivityThread) Thread.currentThread();
-
-      Activity parent = t.getActivity();
-      long parentId = parent.getId();
-      int childNo = parent.addChild();
-
-      assert entities.containsKey(parentId) : "Parent doesn't exist";
-      return entities.get(parentId).getChild(childNo).entityId;
-    }
-
-    return 0;
-  }
-
   private static TraceRecord[] createParseTable() {
     TraceRecord[] result = new TraceRecord[22];
 
@@ -168,18 +148,19 @@ public final class TraceParser implements Closeable {
     int        ordering;     // only used during scanning!
     EntityNode currentEntity;
     boolean    once;
-    boolean    readMainActor;
 
     Subtrace entityLocation;
 
-    final long startTime      = System.currentTimeMillis();
-    long       parsedMessages = 0;
-    long       parsedEntities = 0;
+    final long startTime = System.currentTimeMillis();
+    long[]     metrics   = new long[parseTable.length];
 
     EventParseContext(final EntityNode context) {
       this.currentEntity = context;
       this.once = true;
-      this.readMainActor = false;
+    }
+
+    public long getMetric(final TraceRecord tr) {
+      return metrics[tr.value];
     }
   }
 
@@ -233,8 +214,9 @@ public final class TraceParser implements Closeable {
 
     if (scanning) {
       long end = System.currentTimeMillis();
-      Output.println("Trace with " + ctx.parsedMessages + " Messages and " + ctx.parsedEntities
-          + " Actors sucessfully scanned in " + (end - ctx.startTime) + "ms !");
+      Output.println("Trace with " + ctx.getMetric(TraceRecord.MESSAGE) + " Messages and "
+          + ctx.getMetric(TraceRecord.ACTIVITY_CREATION)
+          + " Activities sucessfully scanned in " + (end - ctx.startTime) + "ms !");
     }
   }
 
@@ -250,7 +232,6 @@ public final class TraceParser implements Closeable {
 
     final int start = b.position();
     final byte type = b.get();
-    final int numbytes = Long.BYTES;
 
     TraceRecord recordType = parseTable[type];
 
@@ -259,28 +240,12 @@ public final class TraceParser implements Closeable {
     }
 
     switch (recordType) {
-      case ACTIVITY_CREATION:
-        long newEntityId = getId(b, numbytes);
-
-        if (scanning) {
-          if (newEntityId == 0) {
-            assert !ctx.readMainActor : "There should be only one main actor.";
-            ctx.readMainActor = true;
-          }
-
-          EntityNode newEntity = getOrCreateEntityEntry(recordType, newEntityId);
-          newEntity.ordering = ctx.ordering;
-          ctx.currentEntity.addChild(newEntity);
-          ctx.parsedEntities++;
-        }
-        assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
-        break;
-
       case ACTIVITY_CONTEXT:
         if (scanning) {
           if (ctx.currentEntity != null) {
             ctx.entityLocation.length = startPosition + start - ctx.entityLocation.startOffset;
           }
+          ctx.metrics[type]++;
           ctx.ordering = Short.toUnsignedInt(b.getShort());
           long currentEntityId = getId(b, Long.BYTES);
           ctx.currentEntity = getOrCreateEntityEntry(recordType, currentEntityId);
@@ -303,6 +268,9 @@ public final class TraceParser implements Closeable {
         }
         break;
       case SYSTEM_CALL:
+        if (scanning) {
+          ctx.metrics[type]++;
+        }
         b.getInt();
         break;
 
@@ -318,11 +286,15 @@ public final class TraceParser implements Closeable {
       case LOCK_LOCK:
       case CONDITION_WAKEUP:
       case TRANSACTION_COMMIT:
+      case ACTIVITY_CREATION:
         long eventData = b.getLong();
+
         if (!scanning) {
           ctx.currentEntity.addReplayEvent(
               new ReplayRecord(eventData, recordType));
 
+        } else {
+          ctx.metrics[type]++;
         }
         assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
         break;

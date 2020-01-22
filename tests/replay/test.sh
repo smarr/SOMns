@@ -61,8 +61,8 @@ else
   )
 
   declare -a STM=(
-    "LeeSTM 1 0 4 4"
-    "VacationSTM 1 0 7 4"
+    "LeeSTM 1 0 4 1"
+    "VacationSTM 1 0 7 1"
   )
 
 fi

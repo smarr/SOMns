@@ -52,7 +52,7 @@ public abstract class ReceivedRootNode extends RootNode {
       serializer = null;
     }
 
-    if (VmSettings.ACTOR_TRACING) {
+    if (VmSettings.UNIFORM_TRACING) {
       messageTracer = new RecordOneEvent(TraceRecord.MESSAGE);
     }
   }

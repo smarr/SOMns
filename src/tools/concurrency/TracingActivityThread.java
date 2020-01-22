@@ -9,7 +9,6 @@ import com.oracle.truffle.api.TruffleOptions;
 
 import net.openhft.affinity.AffinityLock;
 import som.VM;
-import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.vm.Activity;
 import som.vm.VmSettings;
@@ -17,6 +16,8 @@ import tools.TraceData;
 import tools.debugger.SteppingStrategy;
 import tools.debugger.entities.EntityType;
 import tools.debugger.entities.SteppingType;
+import tools.replay.ReplayRecord;
+import tools.replay.TraceRecord;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 
@@ -100,7 +101,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
       this.snapshotBuffer = new SnapshotBuffer((ActorProcessingThread) this);
     }
 
-    if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
+    if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
       threadId = threadIdGen.getAndIncrement();
       traceBuffer = TraceBuffer.create(threadId);
       nextEntityId = 1 + (threadId << TraceData.ENTITY_ID_BITS);
@@ -182,7 +183,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   @Override
   protected void onStart() {
     super.onStart();
-    if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
+    if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
       TracingBackend.registerThread(this);
     }
 
@@ -195,7 +196,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
 
   @Override
   protected void onTermination(final Throwable exception) {
-    if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
+    if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
       traceBuffer.returnBuffer(null);
       TracingBackend.addExternalData(externalData, this);
       TracingBackend.unregisterThread(this);
@@ -217,17 +218,12 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   }
 
   public static long newEntityId() {
-    if (VmSettings.REPLAY) {
-      return newEntityId(SomLanguage.getCurrent().getVM());
-    } else {
-      return newEntityId(null);
-    }
-  }
-
-  public static long newEntityId(final VM vm) {
     if (VmSettings.REPLAY && Thread.currentThread() instanceof TracingActivityThread) {
-      return vm.getTraceParser().getReplayId();
-    } else if ((VmSettings.KOMPOS_TRACING | VmSettings.ACTOR_TRACING)
+      ReplayRecord rr =
+          TracingActivityThread.currentThread().getActivity().getNextReplayEvent();
+      assert rr.type == TraceRecord.ACTIVITY_CREATION;
+      return rr.eventNo;
+    } else if ((VmSettings.KOMPOS_TRACING | VmSettings.UNIFORM_TRACING)
         && Thread.currentThread() instanceof TracingActivityThread) {
       TracingActivityThread t = TracingActivityThread.currentThread();
       return t.generateEntityId();

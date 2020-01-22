@@ -106,7 +106,7 @@ public class TracingBackend {
     }
 
     if (VmSettings.RECYCLE_BUFFERS
-        && (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING)) {
+        && (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING)) {
       for (int i = 0; i < BUFFER_POOL_SIZE; i++) {
         emptyBuffers.add(new byte[VmSettings.BUFFER_SIZE]);
       }
@@ -248,7 +248,7 @@ public class TracingBackend {
   }
 
   public static final void forceSwapBuffers() {
-    assert VmSettings.ACTOR_TRACING
+    assert VmSettings.UNIFORM_TRACING
         || (VmSettings.TRUFFLE_DEBUGGER_ENABLED);
     TracingActivityThread[] result;
     synchronized (tracingThreads) {

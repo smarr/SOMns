@@ -1,7 +1,5 @@
 package tools.replay;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
 
@@ -46,13 +44,9 @@ public class ReplayData {
     }
   }
 
-  protected static class EntityNode implements Comparable<EntityNode> {
+  protected static class EntityNode {
     final long             entityId;
-    int                    childNo;
     HashMap<Integer, Long> externalData;
-    int                    ordering;
-    ArrayList<EntityNode>  children;
-    boolean                childrenSorted = false;
 
     HashMap<Integer, Subtrace> subtraces;
 
@@ -62,27 +56,6 @@ public class ReplayData {
 
     public EntityNode(final long entityId) {
       this.entityId = entityId;
-    }
-
-    void addChild(final EntityNode child) {
-      if (children == null) {
-        children = new ArrayList<>();
-      }
-
-      child.childNo = children.size();
-      children.add(child);
-    }
-
-    protected EntityNode getChild(final int childNo) {
-      assert children != null : "Actor does not exist in trace!";
-      assert children.size() > childNo : "Actor does not exist in trace!";
-
-      if (!childrenSorted) {
-        Collections.sort(children);
-        childrenSorted = true;
-      }
-
-      return children.get(childNo);
     }
 
     protected Subtrace registerContext(int ordering, final long location) {
@@ -125,25 +98,11 @@ public class ReplayData {
       return replayEvents;
     }
 
-    @Override
-    public int compareTo(final EntityNode o) {
-      int i = Integer.compare(ordering, o.ordering);
-      if (i == 0) {
-        i = Integer.compare(childNo, o.childNo);
-      }
-      if (i == 0) {
-        i = Long.compare(entityId, o.entityId);
-      }
-
-      return i;
-    }
-
-    protected void onContextStart(final int ordering) {
-    }
+    protected void onContextStart(final int ordering) {}
 
     @Override
     public String toString() {
-      return "" + entityId + ":" + childNo;
+      return "" + entityId;
     }
   }
 }
