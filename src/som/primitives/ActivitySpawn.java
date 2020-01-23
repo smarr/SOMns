@@ -132,14 +132,17 @@ public abstract class ActivitySpawn {
     /** Breakpoint info for triggering suspension on first execution of code in activity. */
     @Child protected AbstractBreakpointNode onExec;
     @Child protected ExceptionSignalingNode notAValue;
-    @Child RecordOneEvent                   traceProcCreation =
-        new RecordOneEvent(TraceRecord.ACTIVITY_CREATION);
+    @Child RecordOneEvent                   traceProcCreation;
 
     @Override
     public final SpawnPrim initialize(final VM vm) {
       super.initialize(vm);
       onExec = insert(Breakpoints.create(sourceSection, BreakpointType.ACTIVITY_ON_EXEC, vm));
       notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
+
+      if (VmSettings.ACTOR_TRACING) {
+        traceProcCreation = insert(new RecordOneEvent(TraceRecord.ACTIVITY_CREATION));
+      }
 
       forkJoinPool = vm.getForkJoinPool();
       processesPool = vm.getProcessPool();
@@ -218,14 +221,17 @@ public abstract class ActivitySpawn {
 
     @Child protected ExceptionSignalingNode notAValue;
 
-    @Child RecordOneEvent traceProcCreation =
-        new RecordOneEvent(TraceRecord.ACTIVITY_CREATION);
+    @Child RecordOneEvent traceProcCreation;
 
     @Override
     public final SpawnWithPrim initialize(final VM vm) {
       super.initialize(vm);
       onExec = insert(Breakpoints.create(sourceSection, BreakpointType.ACTIVITY_ON_EXEC, vm));
       notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
+
+      if (VmSettings.ACTOR_TRACING) {
+        traceProcCreation = insert(new RecordOneEvent(TraceRecord.ACTIVITY_CREATION));
+      }
 
       forkJoinPool = vm.getForkJoinPool();
       processesPool = vm.getProcessPool();

@@ -22,7 +22,8 @@ import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.entities.ActivityType;
 import tools.dym.Tags.CreateActor;
-import tools.replay.nodes.TraceActorCreationNode;
+import tools.replay.TraceRecord;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
 
 @GenerateNodeFactory
@@ -31,12 +32,16 @@ import tools.replay.nodes.TraceActorCreationNode;
 public abstract class CreateActorPrim extends BinarySystemOperation {
   @Child protected IsValue                isValue = IsValueNodeGen.createSubNode();
   @Child protected ExceptionSignalingNode notAValue;
+  @Child protected RecordOneEvent         trace;
 
   @Child protected TraceActorCreationNode trace = TraceActorCreationNode.create();
 
   @Override
   public final CreateActorPrim initialize(final VM vm) {
     super.initialize(vm);
+    if (VmSettings.ACTOR_TRACING) {
+      trace = insert(new RecordOneEvent(TraceRecord.ACTIVITY_CREATION));
+    }
     notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
     return this;
   }
@@ -48,7 +53,7 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
     SFarReference ref = new SFarReference(actor, argument);
 
     if (VmSettings.ACTOR_TRACING) {
-      trace.trace((TracingActor) actor);
+      trace.record(((TracingActor) actor).getId());
     } else if (VmSettings.KOMPOS_TRACING) {
       assert argument instanceof SClass;
       final SClass actorClass = (SClass) argument;

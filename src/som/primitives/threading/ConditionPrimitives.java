@@ -46,8 +46,13 @@ public final class ConditionPrimitives {
   @Primitive(primitive = "threadingAwait:")
   public abstract static class AwaitPrim extends UnaryExpressionNode {
 
-    @Child protected static RecordOneEvent traceWakeup =
-        new RecordOneEvent(TraceRecord.CONDITION_WAKEUP);
+    @Child protected static RecordOneEvent traceWakeup;
+
+    public AwaitPrim() {
+      if (VmSettings.ACTOR_TRACING) {
+        traceWakeup = new RecordOneEvent(TraceRecord.CONDITION_WAKEUP);
+      }
+    }
 
     @Specialization
     @TruffleBoundary
@@ -61,8 +66,6 @@ public final class ConditionPrimitives {
           traceWakeup.record(tc.owner.getNextEventNumber());
           tc.owner.replayIncrementEventNo();
         }
-
-        // Output.println("Activity " + aid + " woke up");
       } catch (InterruptedException e) {
         /* doesn't tell us a lot at the moment, so it is ignored */
       } finally {
@@ -75,10 +78,15 @@ public final class ConditionPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingAwait:for:")
   public abstract static class AwaitForPrim extends BinaryExpressionNode {
-    @Child protected static RecordOneEvent traceTimeout =
-        new RecordOneEvent(TraceRecord.CONDITION_TIMEOUT);
-    @Child protected static RecordOneEvent traceWakeup  =
-        new RecordOneEvent(TraceRecord.CONDITION_WAKEUP);
+    @Child protected static RecordOneEvent traceTimeout;
+    @Child protected static RecordOneEvent traceWakeup;
+
+    public AwaitForPrim() {
+      if (VmSettings.ACTOR_TRACING) {
+        traceTimeout = new RecordOneEvent(TraceRecord.CONDITION_TIMEOUT);
+        traceWakeup = new RecordOneEvent(TraceRecord.CONDITION_WAKEUP);
+      }
+    }
 
     @Specialization
     @TruffleBoundary

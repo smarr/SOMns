@@ -227,8 +227,7 @@ public final class TraceParser implements Closeable {
           first = false;
         }
       }
-    } catch (Throwable e) {
-      e.printStackTrace();
+    } catch (IOException e) {
       throw new RuntimeException(e);
     }
 
@@ -252,9 +251,8 @@ public final class TraceParser implements Closeable {
     final int start = b.position();
     final byte type = b.get();
     final int numbytes = Long.BYTES;
-    // boolean external = (type & TraceRecord.EXTERNAL_BIT) != 0;
 
-    TraceRecord recordType = parseTable[type];// & (TraceRecord.EXTERNAL_BIT - 1)];
+    TraceRecord recordType = parseTable[type];
 
     if (!scanning && first) {
       assert recordType == TraceRecord.ACTIVITY_CONTEXT;
@@ -329,7 +327,6 @@ public final class TraceParser implements Closeable {
         assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
         break;
       default:
-        Output.println("MISSING");
         assert false;
     }
 

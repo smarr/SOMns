@@ -32,12 +32,14 @@ import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 public abstract class AtomicPrim extends BinarySystemOperation {
   @Child protected AbstractBreakpointNode beforeCommit;
   @Child protected UnaryExpressionNode    haltNode;
-  @Child protected RecordOneEvent         recordCommit =
-      new RecordOneEvent(TraceRecord.TRANSACTION_COMMIT);
+  @Child protected RecordOneEvent         recordCommit;
 
   @Override
   public final AtomicPrim initialize(final VM vm) {
     super.initialize(vm);
+    if (VmSettings.ACTOR_TRACING) {
+      recordCommit = insert(new RecordOneEvent(TraceRecord.TRANSACTION_COMMIT));
+    }
     beforeCommit = insert(
         Breakpoints.create(sourceSection, BreakpointType.ATOMIC_BEFORE_COMMIT, vm));
     haltNode = SuspendExecutionNodeGen.create(0, null).initialize(sourceSection);

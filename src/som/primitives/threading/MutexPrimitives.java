@@ -33,15 +33,18 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingLock:", selector = "lock")
   public abstract static class LockPrim extends UnaryExpressionNode {
-    @Child protected static RecordOneEvent traceLock =
-        new RecordOneEvent(TraceRecord.LOCK_LOCK);
+    @Child protected static RecordOneEvent traceLock;
+
+    public LockPrim() {
+      if (VmSettings.ACTOR_TRACING) {
+        traceLock = new RecordOneEvent(TraceRecord.LOCK_LOCK);
+      }
+    }
 
     @TruffleBoundary
     @Specialization
     public static final ReentrantLock lock(final ReentrantLock lock) {
       try {
-        long aid = TracingActivityThread.currentThread().getActivity().getId();
-
         ObjectTransitionSafepoint.INSTANCE.unregister();
         if (VmSettings.REPLAY) {
           ReplayData.replayDelayNumberedEvent((TracingLock) lock);
@@ -49,16 +52,12 @@ public final class MutexPrimitives {
 
         if (VmSettings.ACTOR_TRACING) {
           ((TracingLock) lock).tracingLock(traceLock);
-          // Output.println(
-          // "" + aid + " acquired lock v" + (((TracingLock) lock).getNextEventNumber() - 1));
         } else {
           lock.lock();
           if (VmSettings.REPLAY) {
             ((TracingLock) lock).replayIncrementEventNo();
             ((TracingLock) lock).replayCondition.signalAll();
           }
-          // Output.println(
-          // "" + aid + " acquired lock v" + (((TracingLock) lock).getNextEventNumber() - 1));
         }
 
       } finally {
@@ -116,8 +115,13 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingIsLocked:")
   public abstract static class IsLockedPrim extends UnaryExpressionNode {
-    @Child protected RecordOneEvent traceIsLocked =
-        new RecordOneEvent(TraceRecord.LOCK_ISLOCKED);
+    @Child protected RecordOneEvent traceIsLocked;
+
+    public IsLockedPrim() {
+      if (VmSettings.ACTOR_TRACING) {
+        traceIsLocked = new RecordOneEvent(TraceRecord.LOCK_ISLOCKED);
+      }
+    }
 
     @Specialization
     @TruffleBoundary

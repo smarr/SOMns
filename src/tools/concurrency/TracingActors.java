@@ -1,8 +1,9 @@
 package tools.concurrency;
 
-import java.util.Iterator;
+import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.WeakHashMap;
 import java.util.concurrent.ForkJoinPool;
@@ -141,13 +142,21 @@ public class TracingActors {
 
   public static final class ReplayActor extends TracingActor
       implements PassiveEntityWithEvents {
-    protected int                               children;
-    private final LinkedList<ReplayRecord>      replayEvents;
-    protected final LinkedList<EventualMessage> leftovers = new LinkedList<>();
-    private static Map<Long, ReplayActor>       actorList;
-    private BiConsumer<Short, Integer>          dataSource;
+    protected int                                  children;
+    private final LinkedList<ReplayRecord>         replayEvents;
+    protected final PriorityQueue<EventualMessage> orderedMessages =
+        new PriorityQueue<>(new MessageComparator());
+    private static Map<Long, ReplayActor>          actorList;
+    private BiConsumer<Short, Integer>             dataSource;
 
     private final TraceParser traceParser;
+
+    class MessageComparator implements Comparator<EventualMessage> {
+      @Override
+      public int compare(final EventualMessage o1, final EventualMessage o2) {
+        return Long.compare(o1.getMessageId(), o2.getMessageId());
+      }
+    }
 
     static {
       if (VmSettings.REPLAY) {
@@ -188,9 +197,11 @@ public class TracingActors {
       if (VmSettings.REPLAY) {
         replayEvents = vm.getTraceParser().getReplayEventsForEntity(activityId);
 
-        synchronized (actorList) {
-          assert !actorList.containsKey(activityId);
-          actorList.put(activityId, this);
+        if (VmSettings.SNAPSHOTS_ENABLED) {
+          synchronized (actorList) {
+            assert !actorList.containsKey(activityId);
+            actorList.put(activityId, this);
+          }
         }
         traceParser = vm.getTraceParser();
       } else {
@@ -251,59 +262,40 @@ public class TracingActors {
       }
 
       private Queue<EventualMessage> determineNextMessages(
-          final LinkedList<EventualMessage> postponedMsgs) {
+          final PriorityQueue<EventualMessage> orderedMessages) {
         final ReplayActor a = (ReplayActor) actor;
         int numReceivedMsgs = 1 + (mailboxExtension == null ? 0 : mailboxExtension.size());
-        numReceivedMsgs += postponedMsgs.size();
+        numReceivedMsgs += orderedMessages.size();
 
-        Queue<EventualMessage> todo = new LinkedList<>();
-
-        boolean progress = false;
+        Queue<EventualMessage> toProcess = new LinkedList<>();
 
         if (a.replayCanProcess(firstMessage)) {
-          todo.add(firstMessage);
+          toProcess.add(firstMessage);
           a.version++;
-          progress = true;
         } else {
-          postponedMsgs.add(firstMessage);
+          orderedMessages.add(firstMessage);
         }
 
         if (mailboxExtension != null) {
           for (EventualMessage msg : mailboxExtension) {
-            if (!progress && a.replayCanProcess(msg)) {
-              todo.add(msg);
-              a.version++;
-              progress = true;
-            } else {
-              postponedMsgs.add(msg);
-            }
-          }
-        }
-
-        if (!progress) {
-          return todo;
-        }
-
-        boolean foundNextMessage = true;
-        while (foundNextMessage) {
-          foundNextMessage = false;
-
-          Iterator<EventualMessage> iter = postponedMsgs.iterator();
-          while (iter.hasNext()) {
-            EventualMessage msg = iter.next();
             if (a.replayCanProcess(msg)) {
-              iter.remove();
-              todo.add(msg);
+              toProcess.add(msg);
               a.version++;
-              foundNextMessage = true;
-              break;
+            } else {
+              orderedMessages.add(msg);
             }
           }
         }
 
-        assert todo.size()
-            + postponedMsgs.size() == numReceivedMsgs : "We shouldn't lose any messages here.";
-        return todo;
+        while (!orderedMessages.isEmpty() && a.replayCanProcess(orderedMessages.peek())) {
+          EventualMessage msg = orderedMessages.poll();
+          toProcess.add(msg);
+          a.version++;
+        }
+
+        assert toProcess.size()
+            + orderedMessages.size() == numReceivedMsgs : "We shouldn't lose any messages here.";
+        return toProcess;
       }
 
       @Override
@@ -313,7 +305,8 @@ public class TracingActors {
         assert size > 0;
 
         final ReplayActor a = (ReplayActor) actor;
-        Queue<EventualMessage> todo = determineNextMessages(a.leftovers);
+
+        Queue<EventualMessage> todo = determineNextMessages(a.orderedMessages);
 
         for (EventualMessage msg : todo) {
           currentThread.currentMessage = msg;

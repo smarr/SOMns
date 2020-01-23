@@ -254,13 +254,15 @@ public abstract class ChannelPrimitives {
     /** Breakpoint info for triggering suspension after write. */
     @Child protected AbstractBreakpointNode afterWrite;
 
-    @Child protected RecordOneEvent traceRead =
-        new RecordOneEvent(TraceRecord.CHANNEL_READ);
+    @Child protected RecordOneEvent traceRead;
 
     @Override
     public final ReadPrim initialize(final VM vm) {
       super.initialize(vm);
       haltNode = SuspendExecutionNodeGen.create(0, null).initialize(sourceSection);
+      if (VmSettings.ACTOR_TRACING) {
+        traceRead = insert(new RecordOneEvent(TraceRecord.CHANNEL_READ));
+      }
       afterWrite = insert(
           Breakpoints.create(sourceSection, BreakpointType.CHANNEL_AFTER_SEND, vm));
       return this;
@@ -303,8 +305,7 @@ public abstract class ChannelPrimitives {
 
     @Child protected ExceptionSignalingNode notAValue;
 
-    @Child protected RecordOneEvent traceWrite =
-        new RecordOneEvent(TraceRecord.CHANNEL_WRITE);
+    @Child protected RecordOneEvent traceWrite;
 
     @Override
     public final WritePrim initialize(final VM vm) {
@@ -312,6 +313,9 @@ public abstract class ChannelPrimitives {
       haltNode = insert(SuspendExecutionNodeGen.create(0, null).initialize(sourceSection));
       afterRead =
           insert(Breakpoints.create(sourceSection, BreakpointType.CHANNEL_AFTER_RCV, vm));
+      if (VmSettings.ACTOR_TRACING) {
+        traceWrite = insert(new RecordOneEvent(TraceRecord.CHANNEL_WRITE));
+      }
       notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
       return this;
     }
@@ -357,7 +361,13 @@ public abstract class ChannelPrimitives {
   @GenerateNodeFactory
   public abstract static class ChannelNewPrim extends UnaryExpressionNode {
 
-    @Child RecordOneEvent trace = new RecordOneEvent(TraceRecord.ACTIVITY_CREATION);
+    @Child RecordOneEvent trace;
+
+    public ChannelNewPrim() {
+      if (VmSettings.ACTOR_TRACING) {
+        trace = new RecordOneEvent(TraceRecord.ACTIVITY_CREATION);
+      }
+    }
 
     @Specialization
     public final SChannel newChannel(final Object module) {
