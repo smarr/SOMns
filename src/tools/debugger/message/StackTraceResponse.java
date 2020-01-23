@@ -8,6 +8,7 @@ import som.interpreter.actors.Actor;
 import som.interpreter.actors.Actor.ExecutorRootNode;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.ReceivedRootNode;
+import som.vm.VmSettings;
 import tools.TraceData;
 import tools.debugger.entities.EntityType;
 import tools.debugger.frontend.Suspension;
@@ -30,9 +31,11 @@ public final class StackTraceResponse extends Response {
    */
   private final int totalFrames;
 
+  private boolean asyncStack;
+
   private StackTraceResponse(final long activityId,
       final StackFrame[] stackFrames, final int totalFrames,
-      final int requestId, final byte[] concurrentEntityScopes, final long messageId) {
+      final int requestId, final byte[] concurrentEntityScopes, final long messageId, final boolean asyncStack) {
     super(requestId);
     assert TraceData.isWithinJSIntValueRange(activityId);
     this.activityId = activityId;
@@ -40,6 +43,7 @@ public final class StackTraceResponse extends Response {
     this.totalFrames = totalFrames;
     this.concurrentEntityScopes = concurrentEntityScopes;
     this.messageId = messageId;
+    this.asyncStack = asyncStack;
 
     boolean assertsOn = false;
     assert assertsOn = true;
@@ -78,9 +82,12 @@ public final class StackTraceResponse extends Response {
     /** An optional number of characters in the range. */
     private final int length;
 
+    /** Indicates if the frame corresponds to an async operation */
+    private final boolean async;
+
     StackFrame(final long globalId, final String name, final String sourceUri,
         final int line, final int column, final int endLine,
-        final int endColumn, final int length) {
+        final int endColumn, final int length, final boolean async) {
       assert TraceData.isWithinJSIntValueRange(globalId);
       this.id = globalId;
       this.name = name;
@@ -90,6 +97,7 @@ public final class StackTraceResponse extends Response {
       this.endLine = endLine;
       this.endColumn = endColumn;
       this.length = length;
+      this.async = async;
     }
   }
 
@@ -152,7 +160,7 @@ public final class StackTraceResponse extends Response {
     }
 
     return new StackTraceResponse(suspension.activityId, arr, frames.size(),
-        requestId, EntityType.getIds(concEntityScopes), messageId);
+        requestId, EntityType.getIds(concEntityScopes), messageId, VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE);
   }
 
   private static StackFrame createFrame(final Suspension suspension,
@@ -186,6 +194,9 @@ public final class StackTraceResponse extends Response {
       endColumn = 0;
       length = 0;
     }
-    return new StackFrame(id, name, sourceUri, line, column, endLine, endColumn, length);
+
+    boolean async = frame.asyncOperation;
+
+    return new StackFrame(id, name, sourceUri, line, column, endLine, endColumn, length, async);
   }
 }

@@ -3,9 +3,7 @@ package tools.debugger.frontend;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-import com.oracle.truffle.api.debug.DebugStackFrame;
 import com.oracle.truffle.api.debug.SuspendedEvent;
-import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
@@ -36,16 +34,16 @@ public class ApplicationThreadStack {
     public final String        name;
     public final SourceSection section;
     public final Frame frame;
-    public final boolean asyncSeparator;
+    public final boolean asyncOperation;
     private final RootNode root;
 
     public StackFrame(final String name, final RootNode root, final SourceSection section,
-                      final Frame frame, final boolean asyncSeparator) {
+                      final Frame frame, final boolean asyncOperation) {
       this.name = name;
       this.root = root;
       this.section = section;
       this.frame = frame;
-      this.asyncSeparator = asyncSeparator;
+      this.asyncOperation = asyncOperation;
     }
 
     public RootNode getRootNode() {
@@ -70,9 +68,15 @@ public class ApplicationThreadStack {
       StackIterator stack =
               StackIterator.createSuspensionIterator(event.getStackFrames().iterator());
 
+      if (stack instanceof StackIterator.ShadowStackIterator.SuspensionShadowStackIterator) {
+        StackFrame topFrame = ((StackIterator.ShadowStackIterator.SuspensionShadowStackIterator) stack).getTopFrame();
+        //get top frame first
+        stackFrames.add(topFrame);
+      }
+
       while (stack.hasNext()) {
         StackFrame next = stack.next();
-        if (next != null) { //this validation is needed because at the moment ShadowStackIterator.next can return null values
+        if (next != null) { //this validation is needed because at the moment ShadowStackIterator.next can return null values for null shadows
           stackFrames.add(next);
         }
       }
