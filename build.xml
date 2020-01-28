@@ -546,6 +546,7 @@
         <arg line="native-image" />
         <arg line="--macro:truffle --no-fallback --initialize-at-build-time -H:+ReportExceptionStackTraces" />
         <arg line="-H:-ThrowUnsafeOffsetErrors" />
+        <arg line="-Dbd.settings=som.vm.VmSettings" />
         
         <!-- <arg line="-H:+PrintRuntimeCompileMethods" /> -->
         <!-- <arg line="-H:+PrintMethodHistogram" /> 
