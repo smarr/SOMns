@@ -44,6 +44,7 @@ public abstract class BlockPrims {
 
     if (VmSettings.DYNAMIC_METRICS) {
       callNode = new InstrumentableBlockApplyNode(callNode, node.getSourceSection());
+      // trigger instrumentation by Truffle
       new DummyParent(lang, callNode).notifyInserted();
       assert callNode.getParent() instanceof WrapperNode;
       callNode = (DirectCallNode) callNode.getParent();

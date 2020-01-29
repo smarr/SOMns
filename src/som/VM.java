@@ -403,20 +403,17 @@ public final class VM {
       }
     }
 
-    if (options.dynamicMetricsEnabled) {
-      assert VmSettings.DYNAMIC_METRICS;
+    if (VmSettings.DYNAMIC_METRICS) {
       structuralProbe = DynamicMetrics.find(engine);
       assert structuralProbe != null : "Initialization of DynamicMetrics tool incomplete";
     }
 
     if (options.siCandidateIdentifierEnabled) {
-      assert !options.dynamicMetricsEnabled : "Currently, DynamicMetrics and CandidateIdentifer are not compatible";
       structuralProbe = CandidateIdentifier.find(env);
       assert structuralProbe != null : "Initialization of CandidateIdentifer tool incomplete";
     }
 
     if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
-      assert !options.dynamicMetricsEnabled : "Currently, DynamicMetrics and Snapshots are not compatible";
       assert !options.siCandidateIdentifierEnabled : "Currently, CandidateIdentifer and Snapshots are not compatible";
       structuralProbe = SnapshotBackend.getProbe();
     }
