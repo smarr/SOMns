@@ -1,4 +1,4 @@
-class MinitestTests usingPlatform: platform testFramework: minitest = (
+class MinitestTests usingPlatform: platform testFramework: minitest = Value (
   (* Tests of the Minitest framework (that is, meta-tests). *)
 |
   private Exception     = platform kernel Exception.
@@ -6,16 +6,18 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
   private TestContext   = minitest TestContext.
   private TestCatalog   = minitest TestCatalog.
   private Tester        = minitest Tester.
+  private AsyncTestContext   = minitest AsyncTestContext.
+  private actors   = platform actors.
 |
 ) (
-  public class AssertionTests = TestContext (
+  public class AssertionTests = AsyncTestContext (
     (* Describe the class in this comment. *)
   | guineaPig = GuineaPigTestModule testFramework: testFramework.
     catalog = TestCatalog forModule: guineaPig.
     tester
   |
   ) (
-    public class GuineaPigTestModule testFramework: testFramework = (
+    public class GuineaPigTestModule testFramework: testFramework = Value (
       | private TestContext = testFramework TestContext. |
     ) (
       public class AssertEqualsTestContext = TestContext ()(
@@ -195,6 +197,30 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
         TEST_CONTEXT = ()
       )
 
+      public class AssertAsyncTestContext = AsyncTestContext (
+      (* Class for testing asynchronous assertions. *)
+      )(
+         public testAsyncAssertResolvedWithPass = (
+         | completionPP |
+
+         completionPP:: actors createPromisePair.
+         completionPP resolver resolve: 4.
+
+         ^ assert: completionPP promise resolvedWith: 4
+         )
+
+         public testAsyncAssertResolvedWithFail = (
+           | completionPP |
+
+           completionPP:: actors createPromisePair.
+           completionPP resolver resolve: 4.
+
+           ^ assert: completionPP promise resolvedWith: 5
+         )
+       ): (
+         TEST_CONTEXT = ()
+      )
+
       class GenericException = Exception (
         | public messageText |
       )()
@@ -291,6 +317,18 @@ class MinitestTests usingPlatform: platform testFramework: minitest = (
           'assert: tester successes containsSelector: #testShouldntPass'.
       ]
     )
+
+    public testAsyncAssertResolved = (
+      tester:: Tester testSuite: (catalog testSuiteNamed: 'AssertAsyncTestContext').
+      ^ tester runAll whenResolved: [:r |
+                         assert: tester errors size equals: 0.
+                         assert: tester failures size equals: 1.
+                         assert: tester failures containsSelector: #testAsyncAssertResolvedWithFail.
+                         assert: tester successes size equals: 1.
+                         assert: tester successes containsSelector: #testAsyncAssertResolvedWithPass.
+      ]
+    )
+
   ) : (
     TEST_CONTEXT = ()
   )

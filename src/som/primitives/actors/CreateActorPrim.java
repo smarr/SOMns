@@ -8,6 +8,7 @@ import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.Primitive;
 import som.VM;
+import som.interpreter.Types;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.SFarReference;
 import som.interpreter.nodes.ExceptionSignalingNode;
@@ -58,7 +59,11 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
 
   @Fallback
   public final Object throwNotAValueException(final Object receiver, final Object argument) {
-    return notAValue.signal(argument);
+    if (argument instanceof SClass) {
+      return notAValue.signal(argument);
+    } else {
+      return notAValue.signal(Types.getClassOf(argument));
+    }
   }
 
   @Override

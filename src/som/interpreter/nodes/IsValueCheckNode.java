@@ -7,6 +7,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
 import som.interpreter.TruffleCompiler;
+import som.interpreter.Types;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.primitives.ObjectPrims.IsValue;
 import som.vmobjects.SObject.SImmutableObject;
@@ -103,7 +104,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       if (allFieldsContainValues) {
         return rcvr;
       }
-      return notAValue.signal(rcvr);
+      return notAValue.signal(Types.getClassOf(rcvr));
     }
 
     private boolean allFieldsContainValues(final SImmutableObject rcvr) {

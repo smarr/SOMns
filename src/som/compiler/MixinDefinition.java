@@ -448,8 +448,18 @@ public final class MixinDefinition implements SomInteropObject {
     boolean declaredAsValue = superIsValue || mixinsIncludeValue || isValueClass;
 
     if (declaredAsValue && !allSlotsAreImmutable) {
+      String mutableSlots = "";
+      for (SlotDefinition sd : slots.getValues()) {
+        if (!sd.isImmutable()) {
+          if (!mutableSlots.equals("")) {
+            mutableSlots += ", ";
+          }
+          mutableSlots += sd.getName().getString();
+        }
+      }
+
       reportErrorAndExit(": The class ",
-          " is declared as value, but also declared mutable slots");
+          " is declared as value, but also declared mutable slots: " + mutableSlots);
     }
     if (declaredAsValue && !hasOnlyImmutableFields) {
       reportErrorAndExit(": The class ",
