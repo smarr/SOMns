@@ -33,9 +33,6 @@
       <property name="format" value="^[A-Z][_a-zA-Z0-9]*$"/>
     </module>
     <module name="RedundantImport"/>
-    <module name="LineLength">
-      <property name="max" value="550"/>
-    </module>
     <module name="MethodParamPad"/>
     <module name="NoWhitespaceAfter">
       <property name="tokens" value="ARRAY_INIT,BNOT,DEC,DOT,INC,LNOT,UNARY_MINUS,UNARY_PLUS"/>
@@ -176,4 +173,7 @@
     <property name="message" value="illegal Windows line ending"/>
   </module>
   <module name="Translation"/>
+  <module name="LineLength">
+    <property name="max" value="550"/>
+  </module>
 </module>

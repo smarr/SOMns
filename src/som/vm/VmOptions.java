@@ -1,5 +1,6 @@
 package som.vm;
 
+import java.io.File;
 import java.util.Arrays;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
@@ -93,6 +94,20 @@ public class VmOptions {
   }
 
   public boolean isConfigUsable() {
+    boolean noPlatformFile = !(new File(platformFile)).exists();
+    if (noPlatformFile) {
+      Output.errorPrintln("The platformFile " + platformFile
+          + " was not found. Please check the --platform setting.");
+    }
+    boolean noKernelFile = !(new File(kernelFile)).exists();
+    if (noKernelFile) {
+      Output.errorPrintln("The kernelFile " + kernelFile
+          + " was not found. Please check the --kernel setting.");
+    }
+    if (noPlatformFile || noKernelFile) {
+      return false;
+    }
+
     if (!showUsage) {
       return true;
     }

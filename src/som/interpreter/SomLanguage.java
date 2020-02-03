@@ -262,7 +262,9 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
     @Override
     public Object execute(final VirtualFrame frame) {
-      vm.shutdown();
+      if (vm != null) {
+        vm.shutdown();
+      }
       return true;
     }
   }
