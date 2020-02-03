@@ -309,7 +309,6 @@ if args.java_coverage:
 if args.web_debugger:
     SOM_ARGS += ['--web-debug']
 if args.dynamic_metrics:
-    SOM_ARGS += ['--dynamic-metrics']
     flags += ['-Dsom.dynamicMetrics=true']
 if args.si_candidates:
     SOM_ARGS += ['--si-candidates']
