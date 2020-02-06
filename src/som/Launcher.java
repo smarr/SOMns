@@ -57,7 +57,11 @@ public final class Launcher {
     // Note: Kompos Trace is parsed right after writing it
     // to produce the list of messages on the erroneous path.
     // Could be done at the beginning of assisted debugging.
-    if (VmSettings.KOMPOS_TRACING) {
+
+    //Note2: added VmSettings.ASSISTED_DEBUGGING flag because at the moment the parser
+    // does not works correctly with this implementation.
+    // TODO check the assertion error KomposTraceParser 220
+    if (VmSettings.KOMPOS_TRACING && VmSettings.ASSISTED_DEBUGGING) {
       KomposTraceParser tp = new KomposTraceParser();
       tp.createStackTraceFile(VmSettings.TRACE_FILE);
     }

@@ -355,7 +355,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
             public SuspensionShadowStackIterator(final Iterator<DebugStackFrame> localStack) {
                 assert localStack != null;
                 assert localStack.hasNext();
-                firstDebugFrame = localStack.next();
+                firstDebugFrame = localStack.next(); //only takes the first frame
                 firstFrameDescription = null;
             }
 
