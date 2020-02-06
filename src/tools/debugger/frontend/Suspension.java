@@ -1,12 +1,7 @@
 package tools.debugger.frontend;
 
-import java.util.ArrayList;
-import java.util.concurrent.ArrayBlockingQueue;
-
-import com.oracle.truffle.api.debug.DebugStackFrame;
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.frame.Frame;
-
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
@@ -20,11 +15,13 @@ import tools.concurrency.TracingActivityThread;
 import tools.debugger.FrontendConnector;
 import tools.debugger.entities.EntityType;
 import tools.debugger.entities.SteppingType;
+import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 import tools.debugger.frontend.ApplicationThreadTask.Resume;
 import tools.debugger.frontend.ApplicationThreadTask.SendStackTrace;
 import tools.debugger.message.VariablesRequest.FilterType;
-import com.oracle.truffle.api.frame.Frame;
-import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
+
+import java.util.ArrayList;
+import java.util.concurrent.ArrayBlockingQueue;
 
 
 /**
@@ -176,6 +173,16 @@ public class Suspension {
             SResolver resolver = turnMessage.getResolver();
             if (resolver != null) {
               resolver.getPromise().enableHaltOnResolution();
+            }
+          }
+          else if (activityThread.isStepping(
+                  SteppingType.STEP_TO_END_TURN)) {
+            assert activity instanceof Actor;
+            EventualMessage turnMessage = EventualMessage.getCurrentExecutingMessage();
+
+            SResolver resolver = turnMessage.getResolver();
+            if (resolver != null) {
+              resolver.getPromise().enableHaltOnResolver();
             }
           }
         }
