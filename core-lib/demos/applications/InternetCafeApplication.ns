@@ -3,18 +3,13 @@ class InternetCafeApplication usingPlatform: platform = Value (
   private Array = platform kernel Array.
   private Vector = platform kernel Vector.
   private TransferArray = platform kernel TransferArray.
-|
-)(
+|)(
 
  public class Customer new: newName room: room = (
    | private name = newName.
     private computerRoom = room.
     private left ::= false.
-   |
- )(
-    public getName = (
-      ^ name
-    )
+   |)(
 
     public askComputer = (
       | p |

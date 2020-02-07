@@ -2,12 +2,14 @@ class InternetCafeAppTest usingPlatform: platform testFramework: minitest = Valu
 | private AsyncTestContext = minitest AsyncTestContext.
   private actors = platform actors.
   private Exception   = platform kernel Exception.
-  private cafeApp = (platform system loadModule: '../../demos/applications/InternetCafeApplication.ns' nextTo: self) usingPlatform: platform.
+  private cafeApp = (platform system
+    loadModule: '../../demos/applications/InternetCafeApplication.ns' nextTo: self)
+      usingPlatform: platform.
   private InternetCafe = cafeApp InternetCafe.
 |
 )(
 
-  public class CafeTest = AsyncTestContext () (
+  public class CafeTest = AsyncTestContext ()(
 
         public testAsyncAskComputer = (
           | cafeActor numberComputers numberCustomers pCustomer pResult |

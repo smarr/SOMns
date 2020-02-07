@@ -1,15 +1,13 @@
 class ShoppingApplication usingPlatform: platform = Value (
 | private actors = platform actors.
   private Vector = platform kernel Vector.
-|
-)(
+|)(
 
-  public class Buyer new = (
+  public class Buyer = (
   | private customerInfo = 'West Coast Buyers'.
     private profileInfo = 'West Coast Buyers Profile'.
     private shoppingCart = Vector new.
-  |
-  )(
+  |)(
 
    (* Create the teller and send the validation messages to the services *)
    public checkoutShoppingCart: product account: account shipper: shipper = (
@@ -18,7 +16,7 @@ class ShoppingApplication usingPlatform: platform = Value (
           completionPP:: actors createPromisePair.
 
           (* object to notify when the replies are received. It uses as argument a block to execute. *)
-          listener:: Listener new: [:p1 | self <-: placeOrder: completionPP resolver.].
+          listener:: Listener new: [:p1 | self placeOrder: completionPP resolver.].
 
           teller:: Teller new: (shoppingCart size + 2) listener: listener.
 
@@ -40,7 +38,7 @@ class ShoppingApplication usingPlatform: platform = Value (
 
     public addItem: item = (
            shoppingCart append: item.
-     ^ 'ok'
+     ^ #ok
     )
 
    )
@@ -59,8 +57,7 @@ class ShoppingApplication usingPlatform: platform = Value (
     | public limit = limit.
       public listener  = listener.
       private localCounter ::= 1.
-    |
-    )(
+    |)(
 
        (* All conditions must be met before an order is placed. *)
        public asyncAnd: answer = (
@@ -84,14 +81,12 @@ class ShoppingApplication usingPlatform: platform = Value (
    )
 
   (* Inventory *)
-  public class Product = (
-  )(
+  public class Product = ()(
 
     public partInStock: itemNo teller: teller = (
         ('partInStock true for ' + itemNo) println.
         ^ teller <-: asyncAnd: true.
     )
-
   )
 
   (* Check customer payment info *)
@@ -110,7 +105,6 @@ class ShoppingApplication usingPlatform: platform = Value (
         ('canDeliver true') println.
         ^ teller <-: asyncAnd: true.
     )
-
   )
 
   public main: args = (
@@ -129,7 +123,7 @@ class ShoppingApplication usingPlatform: platform = Value (
 
     asyncPromise:: actors async: items do:[: i |
       (buyer <-: addItem: i) whenResolved: [: r |
-       r = 'ok'
+       r = #ok
        ifTrue:[
         ('-items added in shopping cart: ' + i) println.
        ].
@@ -144,7 +138,5 @@ class ShoppingApplication usingPlatform: platform = Value (
            r2 println.
          '\n\n[SHOPPING APPLICATION] Ending' println.
     ].
-
  )
-
 )

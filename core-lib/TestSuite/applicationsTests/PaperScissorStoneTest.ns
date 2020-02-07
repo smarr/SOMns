@@ -2,12 +2,13 @@ class PaperScissorStoneTest usingPlatform: platform testFramework: minitest = Va
 | private actors = platform actors.
   private TestContext = minitest TestContext.
   private AsyncTestContext = minitest AsyncTestContext.
-  private paperScissorStoneApp = (platform system loadModule: '../../demos/applications/PaperScissorStoneApplication.ns' nextTo: self) usingPlatform: platform.
+  private paperScissorStoneApp = (platform system
+    loadModule: '../../demos/applications/PaperScissorStoneApplication.ns' nextTo: self)
+      usingPlatform: platform.
   private Peer = paperScissorStoneApp Peer.
   private TransferArray = platform kernel TransferArray.
-|
-)(
-     public class PaperScissorStoneTests = AsyncTestContext () (
+|)(
+     public class PaperScissorStoneTests = AsyncTestContext ()(
 
         public testAsyncPlay = (
           | completionPP players peerActors firstCoordinator gameFinish numberPlayers |
@@ -62,7 +63,7 @@ class PaperScissorStoneTest usingPlatform: platform testFramework: minitest = Va
 
           ^ playPromise whenResolved:[: finished |
 
-           finished = 'ok'
+           finished = #ok
            ifTrue:[
              gamePromise:: firstCoordinator <-: getLastGame.
 

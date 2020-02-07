@@ -1,14 +1,16 @@
 class MusicPlayerAppTest usingPlatform: platform testFramework: minitest = Value (
 | private actors = platform actors.
   private AsyncTestContext = minitest AsyncTestContext.
-  private musicApp = (platform system loadModule: '../../demos/applications/MusicPlayerApplication.ns' nextTo: self) usingPlatform: platform.
+  private musicApp = (platform system
+    loadModule: '../../demos/applications/MusicPlayerApplication.ns' nextTo: self)
+      usingPlatform: platform.
   private MusicPlayer = musicApp MusicPlayer.
   private Song = musicApp Song.
   private TransferArray = platform kernel TransferArray.
 |
 )(
 
-  public class MusicPlayerTest = AsyncTestContext () (
+  public class MusicPlayerTest = AsyncTestContext ()(
 
     public testAsyncAddUser = (
        | pp users mplayerActor1 mplayerActor2 songlist1 songlist2

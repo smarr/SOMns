@@ -6,8 +6,7 @@ class PaperScissorStoneApplication usingPlatform: platform = Value (
   private Random    = harness Random.
   private Vector = platform kernel Vector.
   private TransferObject = platform kernel TransferObject.
-|
-)(
+|)(
 
 public class Peer new: id name: name resolver: resolver iterations: size = (
   | private resolver = resolver.
@@ -20,8 +19,7 @@ public class Peer new: id name: name resolver: resolver iterations: size = (
     private id = id.
     private myLastGame ::= nil.
     private requests ::= nil.
-  |
-)(
+  |)(
 
   (* invoked only by the coordinator which selects randomly two peers to play a game *)
   public startGame: peerActors gameNumber: gameNumber = (
@@ -42,7 +40,7 @@ public class Peer new: id name: name resolver: resolver iterations: size = (
       gameFinish:: play: player1 andPlayer: player2.
       gameFinish whenResolved:[: finished |
 
-        finished = 'ok'
+        finished = #ok
         ifTrue:[
 
         ('* Game: '+ counter) println.
@@ -220,7 +218,7 @@ public class Peer new: id name: name resolver: resolver iterations: size = (
           player1 <-: updateLastGame: game.
           player2 <-: updateLastGame: game.
 
-          pp resolver resolve: 'ok'.
+          pp resolver resolve: #ok.
 
       ].
     ].
@@ -276,12 +274,12 @@ public class Peer new: id name: name resolver: resolver iterations: size = (
 
   (* in a distributed language the following methods can be implemented in a separate remote object contained by the actor *)
  public setCoordinatorPeer = (
-    flagCoordinator:: true.
-    ('Peer '+ getName + ' has been set as new coordinator.') println.
+   flagCoordinator:: true.
+   ('Peer '+ getName + ' has been set as new coordinator.') println.
  )
 
  public isCoordinatorPeer = (
-     ^ flagCoordinator
+   ^ flagCoordinator
  )
 
  (* print the results of a last game played *)

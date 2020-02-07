@@ -3,14 +3,13 @@ class MusicPlayerApplication usingPlatform: platform = Value (
   private TransferArray = platform kernel TransferArray.
   private Array = platform kernel Array.
   private TransferObject = platform kernel TransferObject.
-|
-)(
+|)(
 
 public class MusicPlayer new: name songlist: list = (
   | private mySongList = list.
     private username = name.
-    private session = Session new: name songlist: list. |
-)(
+    private session = Session new: name songlist: list.
+  |)(
 
    public startExchange: remotePlayer = (
       | pDiscover pSession pp |
@@ -80,8 +79,7 @@ public class Session new: name songlist: list  = (
  | private mySongList = list.
    private username = name.
    private remoteSongList ::= nil.
- |
-)(
+ |)(
       (* discover the new player and initialize the list of songs that the player will send *)
       public addPlayer: otherPlayer = (
            | plist pp pRemoteName |
@@ -188,8 +186,8 @@ public class Session new: name songlist: list  = (
 )
 
 public class Song = TransferObject (
- | private array = TransferArray new: 2.|
-)(
+ | private array = TransferArray new: 2.
+ |)(
 
   public init: title artist: artist = (
     array at: 1 put: title.

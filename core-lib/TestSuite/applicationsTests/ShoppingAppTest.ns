@@ -11,10 +11,9 @@ class ShoppingAppTest usingPlatform: platform testFramework: minitest = Value (
   private Shipper    = shoppingApp Shipper.
   private Buyer    = shoppingApp Buyer.
   private Vector = platform kernel Vector.
-|
-)(
+|)(
 
-  public class ShoppingTests = AsyncTestContext () (
+  public class ShoppingTests = AsyncTestContext ()(
 
           public testAsyncAnd = (
                | p1 p2 p3 listener teller product account shipper shoppingCart |
@@ -63,7 +62,7 @@ class ShoppingAppTest usingPlatform: platform testFramework: minitest = Value (
 
                 asyncPromise:: actors async: shoppingCart do:[: i |
                   (buyer <-: addItem: i) whenResolved: [: r |
-                   r = 'ok'
+                   r = #ok
                    ifTrue:[
                     ('-items added in shopping cart: ' + i) println.
                    ].
