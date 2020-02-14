@@ -2,6 +2,8 @@ package tools.debugger.frontend;
 
 import com.oracle.truffle.api.debug.SuspendedEvent;
 import com.oracle.truffle.api.frame.Frame;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.RootNode;
 import som.interpreter.LexicalScope.MethodScope;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
@@ -10,6 +12,7 @@ import som.interpreter.actors.SuspendExecutionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.HaltPrim;
 import som.vm.Activity;
+import som.vmobjects.SObjectWithClass;
 import tools.TraceData;
 import tools.concurrency.TracingActivityThread;
 import tools.debugger.FrontendConnector;
@@ -179,11 +182,24 @@ public class Suspension {
                   SteppingType.STEP_TO_END_TURN)) {
             assert activity instanceof Actor;
             EventualMessage turnMessage = EventualMessage.getCurrentExecutingMessage();
-
-            SResolver resolver = turnMessage.getResolver();
-            if (resolver != null) {
-              resolver.getPromise().enableHaltOnResolver();
+            String actorName = "";
+            Object[] args = turnMessage.getArgs();
+            if (args.length > 0) {
+              final SObjectWithClass actorObject = (SObjectWithClass) args[0];
+              actorName = actorObject.getSOMClass().getName().getString();
             }
+
+            String turnName = actorName.concat(">>#").concat(turnMessage.getSelector().getString());
+
+            Node suspendedNode = this.getEvent().getNode();
+            ArrayList<StackFrame> stackFrames = this.getStackFrames();
+            ArrayList<RootNode> rootNodeFrames = new ArrayList<>();
+            //get root nodes for the frames in the stack
+            for (StackFrame frame: stackFrames) {
+              rootNodeFrames.add(frame.getRootNode());
+            }
+
+            this.getEvent().getSession().prepareStepEndTurn(Thread.currentThread(), suspendedNode, turnName, rootNodeFrames);
           }
         }
       } catch (InterruptedException e) { /* Just continue waiting */ }
