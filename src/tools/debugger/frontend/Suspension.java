@@ -5,6 +5,7 @@ import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import som.interpreter.LexicalScope.MethodScope;
+import som.interpreter.Method;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.SPromise.SResolver;
@@ -184,12 +185,17 @@ public class Suspension {
             EventualMessage turnMessage = EventualMessage.getCurrentExecutingMessage();
             String actorName = "";
             Object[] args = turnMessage.getArgs();
-            if (args.length > 0) {
+            if (args.length > 0 && args[0] instanceof SObjectWithClass) {
               final SObjectWithClass actorObject = (SObjectWithClass) args[0];
               actorName = actorObject.getSOMClass().getName().getString();
             }
 
-            String turnName = actorName.concat(">>#").concat(turnMessage.getSelector().getString());
+            String turnName;
+            if (actorName.isEmpty()) {
+              turnName = turnMessage.getSelector().getString();
+            } else {
+              turnName = actorName.concat(">>#").concat(turnMessage.getSelector().getString());
+            }
 
             Node suspendedNode = this.getEvent().getNode();
             ArrayList<StackFrame> stackFrames = this.getStackFrames();
