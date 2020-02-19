@@ -26,6 +26,7 @@ public abstract class ResolveNode extends AbstractPromiseResolutionNode {
 
         SPromise promise = resolver.getPromise();
 
+        //this is needed to suspend on explicit promises (which resolved to a a value different from another promise)
         if (haltOnResolver || promise.getHaltOnResolver()) {
             haltNode.executeEvaluated(frame, result);
         }
