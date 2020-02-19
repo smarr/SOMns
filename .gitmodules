@@ -1,7 +1,8 @@
 [submodule "libs/truffle"]
 	path = libs/truffle
-	url = https://github.com/smarr/Truffle.git
+	url = https://github.com/ctrlpz/truffle.git
 	shallow = false
+	branch = debugger/step-end-turn
 [submodule "libs/mx"]
 	path = libs/mx
 	url = https://github.com/smarr/mx.git
