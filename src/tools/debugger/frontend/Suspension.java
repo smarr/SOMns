@@ -13,6 +13,7 @@ import som.interpreter.actors.SuspendExecutionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.primitives.ObjectPrims.HaltPrim;
 import som.vm.Activity;
+import som.vmobjects.SBlock;
 import som.vmobjects.SObjectWithClass;
 import tools.TraceData;
 import tools.concurrency.TracingActivityThread;
@@ -184,17 +185,24 @@ public class Suspension {
             assert activity instanceof Actor;
             EventualMessage turnMessage = EventualMessage.getCurrentExecutingMessage();
             String actorName = "";
+            String turnName = "";
+
             Object[] args = turnMessage.getArgs();
-            if (args.length > 0 && args[0] instanceof SObjectWithClass) {
+            if (args.length > 0 && args[0] instanceof SObjectWithClass) { //e.g. PromiseSendMessage, DirectMessage
               final SObjectWithClass actorObject = (SObjectWithClass) args[0];
               actorName = actorObject.getSOMClass().getName().getString();
             }
+            if (args.length > 0 && args[0] instanceof SBlock) { //e.g. PromiseCallbackMessage
+              SBlock block = (SBlock) args[0];
+              turnName = block.getMethod().getInvokable().getName();
+            }
 
-            String turnName;
-            if (actorName.isEmpty()) {
-              turnName = turnMessage.getSelector().getString();
-            } else {
-              turnName = actorName.concat(">>#").concat(turnMessage.getSelector().getString());
+            if (turnName.isEmpty()) {
+              if (actorName.isEmpty()) {
+                turnName = turnMessage.getSelector().getString();
+              } else {
+                turnName = actorName.concat(">>#").concat(turnMessage.getSelector().getString());
+              }
             }
 
             Node suspendedNode = this.getEvent().getNode();
