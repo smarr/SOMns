@@ -168,7 +168,12 @@ public final class SystemPrims {
     if (path.endsWith(EXTENSION_EXT)) {
       return vm.loadExtensionModule(path);
     } else {
-      MixinDefinition module = vm.loadModule(path);
+      String modulePath = path;
+      if (path.startsWith("core-lib")) {
+        String classPath = System.getProperty("java.class.path").split("build")[0];
+        modulePath = classPath.concat(path);
+      }
+      MixinDefinition module = vm.loadModule(modulePath);
       return module.instantiateModuleClass();
     }
   }
@@ -209,6 +214,11 @@ public final class SystemPrims {
     public final Object load(final VirtualFrame frame, final String filename, final SObjectWithClass moduleObj) {
       String path = moduleObj.getSOMClass().getMixinDefinition().getSourceSection().getSource()
                              .getPath();
+
+      if (filename.startsWith("src")) {
+        path = path.split("test")[0].concat("test");
+      }
+
       File file = new File(URI.create(path).getPath());
 
       return loadModule(frame, vm, file.getParent() + File.separator + filename, ioException);
