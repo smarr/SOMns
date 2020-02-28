@@ -312,7 +312,7 @@ public final class MessageSendNode {
     }
   }
 
-  public static class GenericMessageSendNode extends AbstractMessageSendNode {
+  public static final class GenericMessageSendNode extends AbstractMessageSendNode {
 
     private final SSymbol selector;
 
