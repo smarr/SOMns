@@ -219,6 +219,10 @@ public final class SystemPrims {
         path = path.split("test")[0].concat("test");
       }
 
+      if (filename.startsWith("core-lib")) {
+        return loadModule(frame, vm, filename, ioException);
+      }
+
       File file = new File(URI.create(path).getPath());
 
       return loadModule(frame, vm, file.getParent() + File.separator + filename, ioException);
