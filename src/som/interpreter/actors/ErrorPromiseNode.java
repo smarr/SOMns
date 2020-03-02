@@ -7,29 +7,30 @@ import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.Primitive;
 import bd.tools.nodes.Operation;
+import som.interpreter.SArguments;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
+import som.interpreter.nodes.nary.BinaryExpressionNode;
+import som.vm.VmSettings;
+import tools.asyncstacktraces.ShadowStackEntry;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 
 
 @GenerateNodeFactory
-@Primitive(primitive = "actorsError:with:entry:isBPResolver:isBPResolution:")
-public abstract class ErrorPromiseNode extends AbstractPromiseResolutionNode
-    implements Operation {
-  /**
-   * Standard error case, when the promise is errored with a value that's not a promise.
-   */
-  @Specialization(guards = {"notAPromise(result)"})
+@Primitive(primitive = "actorsError:with:")
+public abstract class ErrorPromiseNode extends BinaryExpressionNode implements Operation {
+  @Child protected ErrorNode errorNode;
+
+  public ErrorPromiseNode() {
+    errorNode = ErrorNodeGen.create(null, null, null, null, null);
+  }
+
+  @Specialization
   public SResolver standardError(final VirtualFrame frame, final SResolver resolver,
-      final Object result, final Object maybeEntry, final boolean haltOnResolver, final boolean haltOnResolution) {
-    SPromise promise = resolver.getPromise();
-
-    if (haltOnResolver || promise.getHaltOnResolver()) {
-      haltNode.executeEvaluated(frame, result);
-    }
-
-    resolvePromise(Resolution.ERRONEOUS, resolver, result, maybeEntry, haltOnResolution);
-    return resolver;
+      final Object result) {
+    ShadowStackEntry entry = SArguments.getShadowStackEntry(frame);
+    assert entry != null || !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE;
+    return (SResolver) errorNode.executeEvaluated(frame, resolver, result, entry, false, false);
   }
 
   @Override

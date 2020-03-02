@@ -35,7 +35,6 @@ import som.vmobjects.SSymbol;
 
 
 @GenerateWrapper
-//public abstract class AbstractPromiseResolutionNode extends QuaternaryExpressionNode
 @NodeChildren({
         @NodeChild(value = "receiver", type = ExpressionNode.class),
         @NodeChild(value = "firstArg", type = ExpressionNode.class),

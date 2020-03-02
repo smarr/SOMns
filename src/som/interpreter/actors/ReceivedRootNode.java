@@ -126,7 +126,7 @@ public abstract class ReceivedRootNode extends RootNode {
       if (resolver == null) {
         resolve = insert(new NullResolver());
       } else {
-       resolve = insert(
+        resolve = insert(
                 ResolveNodeGen.create(null, null, null, null, null).initialize(vm));
       }
       resolve.initialize(sourceSection);
@@ -151,7 +151,7 @@ public abstract class ReceivedRootNode extends RootNode {
         error = insert(new NullResolver());
       } else {
         error = insert(
-                ErrorPromiseNodeFactory.create(null, null, null, null, null).initialize(vm));
+                ErrorNodeGen.create(null, null, null, null, null).initialize(vm));
       }
       this.error = error;
       this.error.initialize(sourceSection);
