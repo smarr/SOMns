@@ -97,7 +97,7 @@ public abstract class IntegerPrims {
       assert right >= 0; // currently not defined for negative values of right
 
       if (Long.SIZE - Long.numberOfLeadingZeros(receiver) + right > Long.SIZE - 1) {
-        CompilerDirectives.transferToInterpreter();
+        CompilerDirectives.transferToInterpreterAndInvalidate();
         throw new ArithmeticException("shift overflows long");
       }
       return receiver << right;
