@@ -128,7 +128,7 @@ public class SPromise extends SObjectWithClass {
 
   @Override
   public String toString() {
-    String r = "Promise[" + owner.toString();
+    String r = "Promise[" + getPromiseId() + ", " + owner.toString();
     r += ", " + resolutionState.name();
     return r + (value == null ? "" : ", " + value.toString()) + "]";
   }
