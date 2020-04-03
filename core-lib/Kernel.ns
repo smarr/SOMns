@@ -777,7 +777,7 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       found:: false.
 
       self do: [ :it |
-        it == object
+        it = object
           ifTrue:  [ found:: true ]
           ifFalse: [
             newArray at: newLast put: it.
