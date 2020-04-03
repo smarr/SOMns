@@ -83,6 +83,8 @@ public class FrontendConnector {
    */
   private CompletableFuture<WebSocket> clientConnected;
 
+  private CompletableFuture<WebSocket> messageSocketInitialized;
+
   private final Gson       gson;
   private static final int MESSAGE_PORT   = 7977;
   private static final int TRACE_PORT     = 7978;
@@ -100,6 +102,7 @@ public class FrontendConnector {
     this.gson = gson;
 
     clientConnected = new CompletableFuture<WebSocket>();
+    messageSocketInitialized = new CompletableFuture<WebSocket>();
 
     try {
       log("[DEBUGGER] Initialize HTTP and WebSocket Server for Debugger");
@@ -261,6 +264,7 @@ public class FrontendConnector {
     try {
       messageSocket = clientConnected.get();
       assert messageSocket != null;
+      messageSocketInitialized.complete(messageSocket);
 
       traceSocket = traceHandler.getConnection().get();
       assert traceSocket != null;
@@ -331,10 +335,18 @@ public class FrontendConnector {
     Runtime.getRuntime().addShutdownHook(new Thread(() -> closeAllSockets()));
 
     clientConnected.complete(conn);
+
+    //when the server has really started, i.e. the client has connected, then do the send
+    messageSocketInitialized.thenRun(() -> sendInitResponse());
+  }
+
+  private void sendInitResponse() {
+    log("[DEBUGGER] Message socket initialized "+messageSocketInitialized.isDone());
+
     send(InitializationResponse.create(EntityType.values(),
-        ActivityType.values(), PassiveEntityType.values(),
-        DynamicScopeType.values(), SendOp.values(), ReceiveOp.values(),
-        BreakpointType.values(), SteppingType.values(), Implementation.values()));
+            ActivityType.values(), PassiveEntityType.values(),
+            DynamicScopeType.values(), SendOp.values(), ReceiveOp.values(),
+            BreakpointType.values(), SteppingType.values(), Implementation.values()));
   }
 
   private void closeAllSockets() {
