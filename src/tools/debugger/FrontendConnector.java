@@ -302,7 +302,8 @@ public class FrontendConnector {
   }
 
   public void sendProgramInfo() {
-    send(ProgramInfoResponse.create(webDebugger.vm.getArguments()));
+    //when the server has really started, i.e. the client has connected, then do the send
+    messageSocketInitialized.thenRun(() -> send(ProgramInfoResponse.create(webDebugger.vm.getArguments())));
   }
 
   public void sendPauseActorResponse(long pausedActorId) {
@@ -341,7 +342,7 @@ public class FrontendConnector {
   }
 
   private void sendInitResponse() {
-    log("[DEBUGGER] Message socket initialized "+messageSocketInitialized.isDone());
+//    log("[DEBUGGER] Message socket initialized "+messageSocketInitialized.isDone());
 
     send(InitializationResponse.create(EntityType.values(),
             ActivityType.values(), PassiveEntityType.values(),
