@@ -15,6 +15,7 @@ import bd.inlining.Scope;
 import som.compiler.MixinBuilder.MixinDefinitionId;
 import som.compiler.MixinDefinition;
 import som.compiler.Variable;
+import som.compiler.Variable.Internal;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vmobjects.SSymbol;
 
@@ -193,8 +194,18 @@ public abstract class LexicalScope {
 
     public void setVariables(final Variable[] variables) {
       assert variables != null : "variables are expected to be != null once set";
-      assert this.variables == null;
-      this.variables = variables;
+      assert this.variables == null
+          || (this.variables.length == 1 && this.variables[0] instanceof Internal);
+      if (this.variables == null) {
+        this.variables = variables;
+      } else {
+        Variable internal = this.variables[0];
+        this.variables = new Variable[variables.length + 1];
+        for (int i = 0; i < variables.length; i += 1) {
+          this.variables[i] = variables[i];
+        }
+        this.variables[variables.length] = internal;
+      }
     }
 
     /**
@@ -207,6 +218,11 @@ public abstract class LexicalScope {
     }
 
     public void addVariable(final Variable var) {
+      if (variables == null) {
+        variables = new Variable[] {var};
+        return;
+      }
+
       int length = variables.length;
       variables = Arrays.copyOf(variables, length + 1);
       variables[length] = var;

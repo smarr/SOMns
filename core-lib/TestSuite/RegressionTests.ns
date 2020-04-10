@@ -26,7 +26,7 @@ class RegressionTests usingPlatform: platform testFramework: minitest = (
     class B = ()( public foo = ( ^ 2 ) ) : ( public bar = ( ^ 2 ))
 
     make: cls = ( ^ cls new )
-    
+
     bar: cls = ( ^ cls bar )
 
     public testMake = (
@@ -34,11 +34,27 @@ class RegressionTests usingPlatform: platform testFramework: minitest = (
       self assert: (make: B) foo equals: 2.
       self assert: (make: A) foo equals: 1.
     )
-    
+
     public testClassMethod = (
       self assert: (bar: A) equals: 1.
       self assert: (bar: B) equals: 2.
       self assert: (bar: A) equals: 1.
+    )
+  ) : ( TEST_CONTEXT = () )
+
+  public class VariableAccessInLocalDefinition = TestContext ()(
+    public testSelfInBlock = (
+      | var = [ self ] value. |
+      self assert: var is: self.
+    )
+
+    public returnSelfFromBlock = (
+      | var = [ ^ self ] value. |
+      ^ #error
+    )
+
+    public testReturnSelfFromBlock = (
+      self assert: returnSelfFromBlock is: self
     )
   ) : ( TEST_CONTEXT = () )
 )
