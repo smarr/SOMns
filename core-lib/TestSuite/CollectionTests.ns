@@ -454,6 +454,31 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
       self assert: (dict values contains: 55).
     )
 
+    public testRemoveOneByOne = (
+      | dict result |
+      dict:: Dictionary new.
+
+      self assert: dict size equals: 0 description: 'Empty after creation'.
+
+      dict at: #ee put: 5.
+      dict at: #e1 put: 66.
+      dict at: #e2 put: 444.
+
+      self assert: dict size equals: 3 description: 'After inserting 3 elements'.
+
+      self assert: 66 equals: (dict remove: #e1).
+      self assert: dict size equals: 2.
+      self assert: nil is: (dict remove: #e1).
+
+      self assert: 5 equals: (dict remove: #ee).
+      self assert: nil is: (dict remove: #ee).
+      self assert: dict size equals: 1.
+
+      self assert: 444 equals: (dict remove: #e2).
+      self assert: nil is: (dict remove: #e2).
+      self assert: dict size equals: 0.
+    )
+
     public testRemoveAll = (
       | dict |
       dict:: Dictionary new.

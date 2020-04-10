@@ -142,6 +142,16 @@ class Collections usingKernel: kernel = Value (
       items do: [ :it | it == anObject ifTrue: [ ^ true ] ].
       ^ false
     )
+
+    public remove: anObject = (
+      | newItems |
+      newItems:: Vector new.
+      [ items isEmpty ]
+        whileFalse: [ | it |
+          it:: items remove.
+          it == anObject ifFalse: [ newItems append: it ] ].
+      items:: newItems
+    )
   ) : (
     public new = ( ^ self new: initialSize )
   )
@@ -237,6 +247,41 @@ class Collections usingKernel: kernel = Value (
           size_:: size_ + 1.
           current next: (newEntry: key value: value hash: hash).
           ^ self ].
+        current:: current next ]
+    )
+
+    public remove: aKey = (
+      ^ remove: aKey ifAbsent: nil
+    )
+
+    public remove: aKey ifAbsent: aBlock = (
+      | hash i current |
+      hash:: hash: aKey.
+      i:: bucketIdx: hash.
+      current:: buckets at: i.
+
+      current isNil
+        ifTrue: [ ^ aBlock value ]
+        ifFalse: [
+          ^ removeBucketEntry: aKey hash: hash idx: i head: current ifAbsent: aBlock ]
+    )
+
+    private removeBucketEntry: key hash: hash idx: i head: head ifAbsent: aBlock = (
+      | current prev |
+      current:: head.
+
+      [true] whileTrue: [
+        (current match: hash key: key) ifTrue: [
+          prev isNil
+            ifTrue: [ buckets at: i put: current next ]
+            ifFalse: [ prev next: current next ].
+          size_:: size_ - 1.
+          ^ current value ].
+
+        current next isNil ifTrue: [
+          ^ aBlock value ].
+
+        prev:: current.
         current:: current next ]
     )
 
