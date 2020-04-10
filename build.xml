@@ -2,7 +2,7 @@
     xmlns:unless="ant:unless"
     xmlns:if="ant:if"
     xmlns:jacoco="antlib:org.jacoco.ant">
-    
+
     <property name="jvmci.version" value="jvmci-19.3-b04" />
     <property name="jdk8.version"  value="232" />
 
@@ -27,7 +27,7 @@
     <condition property="home.ext" value="/Contents/Home" else="">
         <os family="mac"/>
     </condition>
-    
+
     <travis target="env" start="Environment" />
     <echo>
         ant.java.version: ${ant.java.version}
@@ -79,11 +79,11 @@
         <pathelement location="${classes.dir}" />
         <pathelement location="${bd.dir}/build/classes" />
         <pathelement location="${lib.dir}/somns-deps.jar" />
-        
+
         <pathelement location="${svm.build}/svm-core.jar" />
         <pathelement location="${tools.build}/truffle-profiler.jar" />
     </path>
-    
+
     <path id="som.cp">
         <path refid="boot.cp"/>
         <path refid="common.cp"/>
@@ -92,7 +92,7 @@
         <pathelement location="${sdk.build}/word-api.jar" />
         <pathelement location="${sdk.build}/polyglot-tck.jar" />
         <pathelement location="${lib.dir}/somns-deps-dev.jar" />
-        
+
 
         <pathelement location="${truffle.build}/truffle-debug.jar" />
         <pathelement location="${truffle.build}/truffle-dsl-processor.jar" />
@@ -101,7 +101,7 @@
 
     <available file="${truffle.dir}" type="dir" property="truffle.present"/>
     <available file="${jvmci.home}"  type="dir" property="jvmci.home.present" />
-    
+
     <condition property="truffle.and.jvmci.present">
       <and>
         <available file="${truffle.dir}" />
@@ -116,12 +116,12 @@
         <delete dir="${src_gen.dir}"/>
         <ant dir="${corelib.dir}/TestSuite/extension" useNativeBasedir="true" target="clean" inheritAll="false" />
 
-        <travis target="clean" />        
+        <travis target="clean" />
     </target>
 
     <target name="clean-truffle" if="truffle.and.jvmci.present">
         <travis target="clean-truffle" start="clean-truffle" />
-        
+
         <exec executable="${mx.cmd}" dir="${svm.dir}">
           <arg value="--dynamicimports"/>
           <arg value="../truffle,../tools,../compiler,../sdk"/>
@@ -134,22 +134,22 @@
 
     <target name="clobber" description="Do clean, and also clean truffle build" depends="clean,clean-truffle">
         <travis target="clobber" start="clobber" />
-        
+
         <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true" if:true="${truffle.and.jvmci.present}">
             <arg value="--dynamicimports"/>
             <arg value="../truffle,../tools,../compiler,../sdk"/>
             <arg value="fsckprojects"/>
             <env key="JAVA_HOME" value="${jvmci.home}" />
         </exec>
-        
+
         <delete dir="${kompos.dir}/out"/>
         <delete dir="${kompos.dir}/node_modules"/>
         <ant dir="${bd.dir}" useNativeBasedir="true" target="clean" inheritAll="false"/>
-        
+
         <travis target="clobber" />
     </target>
 
-    <target name="truffle-submodule" 
+    <target name="truffle-submodule"
             unless="truffle.present">
       <exec executable="./.gitloadmodules" failonerror="true">
       </exec>
@@ -169,6 +169,7 @@
 
     <target name="bd-libs"> <!-- implicit dependency on truffle-libs -->
         <travis target="bd-libs" start="Build Black Diamonds" />
+
         <ant dir="${bd.dir}" useNativeBasedir="true" target="libs-junit" inheritAll="false">
             <property name="force.java8"   value="${is.atLeastJava9}" />
         </ant>
@@ -178,6 +179,7 @@
             <property name="truffle.build" value="${truffle.build}" />
             <property name="force.java8"   value="${is.atLeastJava9}" />
         </ant>
+
         <travis target="bd-libs" />
     </target>
 
@@ -189,7 +191,7 @@
             <arg value="eclipseinit"/>
         </exec>
     </target>
-    
+
     <target name="jvmci-libs">
         <get src="https://github.com/graalvm/openjdk8-jvmci-builder/releases/download/${jvmci.version}/openjdk-8u${jdk8.version}-${jvmci.version}-${kernel}.tar.gz"
              usetimestamp="true"
@@ -199,7 +201,7 @@
           <arg line="-C ${lib.dir}/jvmci -xzf ${lib.dir}/jvmci.tar.gz --strip 1"/>
         </exec>
     </target>
-    
+
     <target name="jvmci-home">
         <echo>${jvmci.home}</echo>
     </target>
@@ -214,7 +216,7 @@
             dest="${lib.dir}/somns-deps-dev.jar" />
         <travis target="som-libs" />
     </target>
-    
+
     <target name="libs" depends="truffle-libs,som-libs,bd-libs" unless="skip.libs" />
 
     <target name="source" description="Download Source Jars for development">
@@ -446,7 +448,7 @@
       <exec executable="tests/superinstructions/test.sh" failonerror="true"></exec>
       <travis target="si-tests" />
     </target>
-    
+
     <target name="update-test-data" depends="compile-som" description="Updates the test data for DynamicMetrics and SuperInstructions">
       <exec executable="tests/dym/test.sh" failonerror="true">
         <arg value="update" />
@@ -547,9 +549,9 @@
         <arg line="--macro:truffle --no-fallback --initialize-at-build-time -H:+ReportExceptionStackTraces" />
         <arg line="-H:-ThrowUnsafeOffsetErrors" />
         <arg line="-Dbd.settings=som.vm.VmSettings" />
-        
+
         <!-- <arg line="-H:+PrintRuntimeCompileMethods" /> -->
-        <!-- <arg line="-H:+PrintMethodHistogram" /> 
+        <!-- <arg line="-H:+PrintMethodHistogram" />
              <arg line="-H:+RuntimeAssertions" />
              <arg line="-H:+EnforceMaxRuntimeCompileMethods" /> -->
 
