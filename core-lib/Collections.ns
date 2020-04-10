@@ -129,6 +129,10 @@ class Collections usingKernel: kernel = Value (
     public removeAll = (
       items removeAll
     )
+
+    public asArray = (
+      ^ items asArray
+    )
   ) : (
     public new = ( ^ self new: initialSize )
   )
