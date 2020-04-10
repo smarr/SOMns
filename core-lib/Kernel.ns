@@ -512,6 +512,20 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       self doIndexes: [ :i | result at: i put: (aBlock value: (self at: i)) ].
       ^ result
     )
+
+    public join: joiner = (
+      | result first |
+      first:: true.
+
+      self do: [:e |
+        first
+          ifTrue: [
+            result:: e.
+            first:: false ]
+          ifFalse: [
+            result:: result + joiner + e ] ].
+      ^ result
+    )
   )
 
   public class Array = Object <: ArrayReadMixin ()
