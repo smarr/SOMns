@@ -513,6 +513,24 @@ class Kernel vmMirror: vmMirror = Object <: Value (
       ^ result
     )
 
+    public prependedWith: val = (
+      | result |
+      result:: Array new: self size + 1.
+      self doIndexes: [:i |
+        result at: i + 1 put: (self at: i)].
+      result at: 1 put: val.
+      ^ result
+    )
+
+    public extendedWith: val = (
+      | result |
+      result:: Array new: self size + 1.
+      self doIndexes: [:i |
+        result at: i put: (self at: i)].
+      result at: result size put: val.
+      ^ result
+    )
+
     public join: joiner = (
       | result first |
       first:: true.

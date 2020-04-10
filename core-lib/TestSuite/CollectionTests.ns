@@ -306,6 +306,40 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
       self assert: (c contains: #c).
     )
 
+    public testPrependedWith = (
+      | arr result |
+      arr:: Array new: 0.
+      result:: arr prependedWith: 0.
+
+      assert: 1 equals: result size.
+      assert: 0 equals: (result at: 1).
+
+      arr:: Array with: 1 with: 2.
+      result:: arr prependedWith: 0.
+
+      assert: 3 equals: result size.
+      assert: 0 equals: (result at: 1).
+      assert: 1 equals: (result at: 2).
+      assert: 2 equals: (result at: 3).
+    )
+
+    public testExtendedWith = (
+      | arr result |
+      arr:: Array new: 0.
+      result:: arr extendedWith: 0.
+
+      assert: 1 equals: result size.
+      assert: 0 equals: (result at: 1).
+
+      arr:: Array with: 1 with: 2.
+      result:: arr extendedWith: 3.
+
+      assert: 3 equals: result size.
+      assert: 1 equals: (result at: 1).
+      assert: 2 equals: (result at: 2).
+      assert: 3 equals: (result at: 3).
+    )
+
     public testAsArray = (
       | set result |
       set:: Set new.
