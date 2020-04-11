@@ -162,7 +162,7 @@ java_bin = None
 if JVMCI_BIN:
   java_bin = JVMCI_BIN
 if not java_bin and GRAAL_HOME and os.path.isfile(GRAAL_HOME + '/bin/java'):
-  java_bin = GRAAL_HOME + '/bin/java'  
+  java_bin = GRAAL_HOME + '/bin/java'
 
 if not java_bin:
     # use local JVMCI, which ant already needed
@@ -363,8 +363,7 @@ if not args.interpreter and args.perf_warnings:
     flags += ['-Dgraal.TruffleCompilationExceptionsAreFatal=true',
               '-Dgraal.TraceTrufflePerformanceWarnings=true',
               '-Dgraal.TraceTruffleCompilation=true',
-              '-Dgraal.TraceTruffleCompilationDetails=true',
-              '-Dgraal.TraceTruffleExpansionSource=true']
+              '-Dgraal.TraceTruffleCompilationDetails=true']
 if not args.fail_missing_opts:
     flags += ['-DfailOnMissingOptimization=true']
 if not args.interpreter and args.trace_invalidation:

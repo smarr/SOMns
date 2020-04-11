@@ -7,6 +7,7 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.Output;
+import som.VM;
 import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.Types;
@@ -46,6 +47,9 @@ public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
   public static Object performDnu(final Object[] arguments, final Object rcvr,
       final SClass rcvrClass, final SSymbol selector,
       final IndirectCallNode call) {
+    VM.callerNeedsToBeOptimized(
+        "This method should only be called on the slow path. Use CachedDNUNode instead of this method.");
+
     if (VmSettings.DNU_PRINT_STACK_TRACE) {
       PrintStackTracePrim.printStackTrace(0, null);
       Output.errorPrintln("Lookup of " + selector + " failed in "

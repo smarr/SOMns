@@ -23,6 +23,6 @@ class MethodCall = ()():(
     public test = (
         ^ self test2
     )
-    
+
     public test2 = ( ^ 42 )
 )
