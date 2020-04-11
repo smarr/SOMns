@@ -147,22 +147,4 @@ public abstract class IntegerPrims {
       return new SMutableArray(arr, Classes.arrayClass);
     }
   }
-
-  @GenerateNodeFactory
-  @Primitive(selector = "abs", receiverType = Long.class)
-  public abstract static class AbsPrim extends UnaryBasicOperation {
-    @Override
-    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
-      if (tag == OpArithmetic.class) {
-        return true;
-      } else {
-        return super.hasTagIgnoringEagerness(tag);
-      }
-    }
-
-    @Specialization
-    public final long doLong(final long receiver) {
-      return Math.abs(receiver);
-    }
-  }
 }
