@@ -475,8 +475,8 @@ public final class MetricsCsvWriter {
   }
 
   private static String getSourceSectionAbbrv(final SourceSection source) {
-    String result = source.getSource().getName() + " pos=" + source.getCharIndex() + " len="
-        + source.getCharLength();
+    String result = source.getSource().getName() + ":" + source.getStartLine() + ":"
+        + source.getStartColumn() + ":" + source.getCharLength();
     return result;
   }
 
