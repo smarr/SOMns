@@ -305,6 +305,65 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
       self assert: (c contains: #b).
       self assert: (c contains: #c).
     )
+
+    public testPrependedWith = (
+      | arr result |
+      arr:: Array new: 0.
+      result:: arr prependedWith: 0.
+
+      assert: 1 equals: result size.
+      assert: 0 equals: (result at: 1).
+
+      arr:: Array with: 1 with: 2.
+      result:: arr prependedWith: 0.
+
+      assert: 3 equals: result size.
+      assert: 0 equals: (result at: 1).
+      assert: 1 equals: (result at: 2).
+      assert: 2 equals: (result at: 3).
+    )
+
+    public testExtendedWith = (
+      | arr result |
+      arr:: Array new: 0.
+      result:: arr extendedWith: 0.
+
+      assert: 1 equals: result size.
+      assert: 0 equals: (result at: 1).
+
+      arr:: Array with: 1 with: 2.
+      result:: arr extendedWith: 3.
+
+      assert: 3 equals: result size.
+      assert: 1 equals: (result at: 1).
+      assert: 2 equals: (result at: 2).
+      assert: 3 equals: (result at: 3).
+    )
+
+    public testAsArray = (
+      | set result |
+      set:: Set new.
+      10 to: 110 do: [:i |
+        set add: i].
+
+      result:: set asArray.
+      self assert: 101 equals: set size.
+
+      10 to: 110 do: [:i |
+        self assert: i equals: (result at: i - 9) ]
+    )
+
+    public testJoin = (
+      | arr |
+      arr:: Array new: 0.
+      self assert: nil is: (arr join: ', ').
+
+      arr:: Array with: 1 with: 10 with: 100.
+      self assert: 1 + 20000 + 10 + 20000 + 100 equals: (arr join: 20000).
+
+      arr:: Array with: 'a' with: 'b' with: 'c'.
+      self assert: 'a, b, c' equals: (arr join: ', ').
+    )
   ) : ( TEST_CONTEXT = () )
 
   public class VectorTest = TestContext (
@@ -427,6 +486,31 @@ class CollectionTests usingPlatform: platform testFramework: minitest = (
 
       self assert: (dict keys contains: #ee).
       self assert: (dict values contains: 55).
+    )
+
+    public testRemoveOneByOne = (
+      | dict result |
+      dict:: Dictionary new.
+
+      self assert: dict size equals: 0 description: 'Empty after creation'.
+
+      dict at: #ee put: 5.
+      dict at: #e1 put: 66.
+      dict at: #e2 put: 444.
+
+      self assert: dict size equals: 3 description: 'After inserting 3 elements'.
+
+      self assert: 66 equals: (dict remove: #e1).
+      self assert: dict size equals: 2.
+      self assert: nil is: (dict remove: #e1).
+
+      self assert: 5 equals: (dict remove: #ee).
+      self assert: nil is: (dict remove: #ee).
+      self assert: dict size equals: 1.
+
+      self assert: 444 equals: (dict remove: #e2).
+      self assert: nil is: (dict remove: #e2).
+      self assert: dict size equals: 0.
     )
 
     public testRemoveAll = (

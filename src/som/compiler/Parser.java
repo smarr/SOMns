@@ -1402,7 +1402,15 @@ public class Parser {
       evenutalSend = accept(EventualSend, KeywordTag.class);
     }
 
-    assert !evenutalSend : "eventualSend should not be true, because that means we steal it from the next operation (think here shouldn't be one, but still...)";
+    if (evenutalSend) {
+      // eventualSend should not be true, because that means we steal it from the next
+      // operation (think here shouldn't be one, but still...)
+      throw new ParseError(
+          "Parsing something unexpectedly as eventual send. " +
+              "Perhaps some variable declaration statement is not terminated?",
+          Symbol.NONE, this);
+    }
+
     return operand;
   }
 
