@@ -28,6 +28,7 @@ import som.interpreter.objectstorage.ClassFactory;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.concurrency.Tags.WhenResolved;
 import tools.dym.Tags.ArrayRead;
 import tools.dym.Tags.ArrayWrite;
 import tools.dym.Tags.OpArithmetic;
@@ -207,6 +208,12 @@ public final class MetricsCsvWriter {
       case "True":
       case "False":
         return "bool";
+      case "Promise":
+        return "promise";
+      case "FarReference":
+        return "farRef";
+      case "Resolver":
+        return "resolver";
       default:
         return "ref";
     }
@@ -223,6 +230,7 @@ public final class MetricsCsvWriter {
           p.getOperation().equals("sqrt") ||
           p.getOperation().equals("sin") ||
           p.getOperation().equals("cos") ||
+          p.getOperation().equals("log") ||
           p.getOperation().equals("asInteger") ||
           p.getOperation().equals("round")) {
         return typeCategory(a.getArgType(1));
@@ -264,7 +272,8 @@ public final class MetricsCsvWriter {
       }
       throw new NotYetImplementedException();
     } else if (tags.contains(ArrayRead.class) || tags.contains(ArrayWrite.class)) {
-      assert a.argTypeIs(1, "Array") || a.argTypeIs(1, "ValueArray");
+      assert a.argTypeIs(1, "Array") || a.argTypeIs(1, "ValueArray")
+          || a.argTypeIs(1, "TransferArray");
       assert a.argTypeIs(2, "Integer");
       if (tags.contains(ArrayRead.class)) {
         return typeCategory(a.getArgType(0));
@@ -279,6 +288,8 @@ public final class MetricsCsvWriter {
       return "str";
     } else if (p.getOperation().equals("ticks")) {
       return "int";
+    } else if (tags.contains(WhenResolved.class)) {
+      return typeCategory(a.getArgType(0));
     }
     throw new NotYetImplementedException();
   }

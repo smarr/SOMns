@@ -7,6 +7,9 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 
 import som.interpreter.Types;
+import som.interpreter.actors.SFarReference;
+import som.interpreter.actors.SPromise;
+import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.objectstorage.ClassFactory;
 import som.vmobjects.SArray.SImmutableArray;
 import som.vmobjects.SArray.SMutableArray;
@@ -75,6 +78,24 @@ public abstract class TypeProfileNode extends Node {
 
   @Specialization
   public void doSSymbol(final SSymbol obj,
+      @Cached("create(obj)") final ProfileCounter cnt) {
+    cnt.inc();
+  }
+
+  @Specialization
+  public void doSPromise(final SPromise obj,
+      @Cached("create(obj)") final ProfileCounter cnt) {
+    cnt.inc();
+  }
+
+  @Specialization
+  public void doSFarRef(final SFarReference obj,
+      @Cached("create(obj)") final ProfileCounter cnt) {
+    cnt.inc();
+  }
+
+  @Specialization
+  public void doSResolver(final SResolver obj,
       @Cached("create(obj)") final ProfileCounter cnt) {
     cnt.inc();
   }
