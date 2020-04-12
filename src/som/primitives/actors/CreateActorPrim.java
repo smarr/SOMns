@@ -30,7 +30,8 @@ import tools.replay.nodes.TraceActorCreationNode;
 public abstract class CreateActorPrim extends BinarySystemOperation {
   @Child protected IsValue                isValue = IsValueNodeGen.createSubNode();
   @Child protected ExceptionSignalingNode notAValue;
-  @Child protected TraceActorCreationNode trace   = new TraceActorCreationNode();
+
+  @Child protected TraceActorCreationNode trace = TraceActorCreationNode.create();
 
   @Override
   public final CreateActorPrim initialize(final VM vm) {
