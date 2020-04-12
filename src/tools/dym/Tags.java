@@ -124,4 +124,12 @@ public abstract class Tags {
   public final class AnyNode extends Tag {
     private AnyNode() {}
   }
+
+  /*
+   * Tags for actor-related concepts.
+   */
+
+  public final class CreateActor extends Tag {
+    private CreateActor() {}
+  }
 }

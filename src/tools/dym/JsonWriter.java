@@ -31,6 +31,8 @@ public final class JsonWriter {
   public static final String OPERATIONS                = "operations";
   public static final String LOOPS                     = "loops";
 
+  public static final String ACTOR_CREATION = "actorCreation";
+
   private final Map<String, Map<SourceSection, ? extends JsonSerializable>> data;
   private final String                                                      outputFile;
 

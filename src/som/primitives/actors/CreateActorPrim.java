@@ -21,6 +21,7 @@ import tools.concurrency.KomposTrace;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.entities.ActivityType;
+import tools.dym.Tags.CreateActor;
 import tools.replay.nodes.TraceActorCreationNode;
 
 
@@ -66,7 +67,10 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
   protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
     if (tag == ExpressionBreakpoint.class) {
       return true;
+    } else if (tag == CreateActor.class) {
+      return true;
     }
+
     return super.hasTag(tag);
   }
 }

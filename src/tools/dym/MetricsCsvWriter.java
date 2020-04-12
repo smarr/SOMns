@@ -36,6 +36,7 @@ import tools.dym.Tags.OpClosureApplication;
 import tools.dym.Tags.OpComparison;
 import tools.dym.Tags.OpLength;
 import tools.dym.Tags.StringAccess;
+import tools.dym.profiles.ActorCreationProfile;
 import tools.dym.profiles.AllocationProfile;
 import tools.dym.profiles.Arguments;
 import tools.dym.profiles.ArrayCreationProfile;
@@ -97,6 +98,8 @@ public final class MetricsCsvWriter {
     branchProfiles();
     operationProfiles();
     loopProfiles();
+
+    actorCreation();
   }
 
   private static void processCoverage(final long counterVal,
@@ -481,6 +484,28 @@ public final class MetricsCsvWriter {
         Counter p = e.getValue();
         String abbrv = getSourceSectionAbbrv(p.getSourceSection());
         file.write(abbrv, "write", "ALL", p.getValue());
+      }
+    }
+  }
+
+  private void actorCreation() {
+    @SuppressWarnings("unchecked")
+    Map<SourceSection, ActorCreationProfile> profiles =
+        (Map<SourceSection, ActorCreationProfile>) data.get(JsonWriter.ACTOR_CREATION);
+
+    try (CsvWriter file = new CsvWriter(metricsFolder, "actor-creation.csv",
+        "Source Section", "New Arrays", "Size")) {
+      for (Entry<SourceSection, ActorCreationProfile> ee : sortSS(profiles)) {
+        ActorCreationProfile p = ee.getValue();
+        String abbrv = getSourceSectionAbbrv(p.getSourceSection());
+        for (Entry<ClassFactory, Integer> e : sortCF(p.getTypes())) {
+          file.write(
+              abbrv,
+              e.getKey().getClassName().getString(),
+              e.getValue());
+        }
+
+        file.write(abbrv, "ALL", p.getValue());
       }
     }
   }

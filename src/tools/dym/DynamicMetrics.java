@@ -55,6 +55,7 @@ import tools.dym.Tags.CachedVirtualInvoke;
 import tools.dym.Tags.ClassRead;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 import tools.dym.Tags.ControlFlowCondition;
+import tools.dym.Tags.CreateActor;
 import tools.dym.Tags.FieldRead;
 import tools.dym.Tags.FieldWrite;
 import tools.dym.Tags.LocalArgRead;
@@ -73,6 +74,7 @@ import tools.dym.nodes.CallTargetNode;
 import tools.dym.nodes.ClosureTargetNode;
 import tools.dym.nodes.ControlFlowProfileNode;
 import tools.dym.nodes.CountingNode;
+import tools.dym.nodes.FarRefTypeProfilingNode;
 import tools.dym.nodes.InvocationProfilingNode;
 import tools.dym.nodes.LateCallTargetNode;
 import tools.dym.nodes.LateClosureTargetNode;
@@ -83,6 +85,7 @@ import tools.dym.nodes.OperationProfilingNode;
 import tools.dym.nodes.ReadProfilingNode;
 import tools.dym.nodes.ReportReceiverNode;
 import tools.dym.nodes.ReportResultNode;
+import tools.dym.profiles.ActorCreationProfile;
 import tools.dym.profiles.AllocationProfile;
 import tools.dym.profiles.ArrayCreationProfile;
 import tools.dym.profiles.BranchProfile;
@@ -155,6 +158,11 @@ public class DynamicMetrics extends TruffleInstrument {
   private final Map<SourceSection, ReadValueProfile> localsReadProfiles;
   private final Map<SourceSection, Counter>          localsWriteProfiles;
 
+  private final Map<SourceSection, ActorCreationProfile> actorCreationProfile;
+  // private final Map<SourceSection, CallsiteProfile> messageSendsiteProfile;
+  // private final Map<SourceSection, ?> explicitPromiseResolutionCounter;
+  // private final Map<SourceSection, ?> implicitPromiseResolutionCounter;
+
   private final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe;
 
   private final Set<RootNode> rootNodes;
@@ -190,6 +198,8 @@ public class DynamicMetrics extends TruffleInstrument {
     localsReadProfiles = new HashMap<>();
     localsWriteProfiles = new HashMap<>();
 
+    actorCreationProfile = new HashMap<>();
+
     rootNodes = new HashSet<>();
 
     assert "DefaultTruffleRuntime".equals(
@@ -213,8 +223,8 @@ public class DynamicMetrics extends TruffleInstrument {
       final Map<SourceSection, PRO> storageMap,
       final Class<?>[] tagsIs,
       final Class<?>[] tagsIsNot,
-      final Function<SourceSection, PRO> pCtor,
-      final Function<PRO, N> nCtor) {
+      final Function<SourceSection, PRO> profileCtor,
+      final Function<PRO, N> nodeCtor) {
     Builder filters = SourceSectionFilter.newBuilder();
     if (tagsIs != null && tagsIs.length > 0) {
       filters.tagIs(tagsIs);
@@ -224,8 +234,8 @@ public class DynamicMetrics extends TruffleInstrument {
     }
 
     ExecutionEventNodeFactory factory = (final EventContext ctx) -> {
-      PRO p = storageMap.computeIfAbsent(ctx.getInstrumentedSourceSection(), pCtor);
-      return nCtor.apply(p);
+      PRO p = storageMap.computeIfAbsent(ctx.getInstrumentedSourceSection(), profileCtor);
+      return nodeCtor.apply(p);
     };
 
     instrumenter.attachExecutionEventFactory(filters.build(), factory);
@@ -313,7 +323,7 @@ public class DynamicMetrics extends TruffleInstrument {
     });
   }
 
-  private void addCalltargetInstrumentation(final Instrumenter instrumenter,
+  private void addCallTargetInstrumentation(final Instrumenter instrumenter,
       final ExecutionEventNodeFactory virtInvokeFactory) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(CachedVirtualInvoke.class);
@@ -371,7 +381,7 @@ public class DynamicMetrics extends TruffleInstrument {
         new Class<?>[] {VirtualInvoke.class}, NO_TAGS,
         CallsiteProfile::new, CountingNode<CallsiteProfile>::new);
     addReceiverInstrumentation(instrumenter, virtInvokeFactory);
-    addCalltargetInstrumentation(instrumenter, virtInvokeFactory);
+    addCallTargetInstrumentation(instrumenter, virtInvokeFactory);
 
     ExecutionEventNodeFactory closureApplicationFactory = addInstrumentation(
         instrumenter, closureProfiles,
@@ -422,6 +432,12 @@ public class DynamicMetrics extends TruffleInstrument {
 
     addLoopBodyInstrumentation(instrumenter, loopProfileFactory);
 
+    // Instrumentation for Actor Constructs
+    addInstrumentation(instrumenter, actorCreationProfile,
+        new Class<?>[] {CreateActor.class}, NO_TAGS,
+        ActorCreationProfile::new, FarRefTypeProfilingNode::new);
+
+    // record all rootNodes to easily get all methods
     instrumenter.attachLoadSourceSectionListener(
         SourceSectionFilter.newBuilder().tagIs(RootTag.class).build(),
         e -> rootNodes.add(e.getNode().getRootNode()),
@@ -531,6 +547,8 @@ public class DynamicMetrics extends TruffleInstrument {
     data.put(JsonWriter.LOCAL_WRITES, localsWriteProfiles);
     data.put(JsonWriter.OPERATIONS, operationProfiles);
     data.put(JsonWriter.LOOPS, loopProfiles);
+
+    data.put(JsonWriter.ACTOR_CREATION, actorCreationProfile);
     return data;
   }
 
