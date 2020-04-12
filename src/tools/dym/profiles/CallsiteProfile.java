@@ -16,16 +16,14 @@ import tools.dym.profiles.ReadValueProfile.ProfileCounter;
 
 public class CallsiteProfile extends Counter implements CreateCounter {
 
-  private final Map<Invokable, Counter>    callTargetMap;
-  private final Map<ClassFactory, Integer> receiverMap;
-  private final List<ProfileCounter>       counters;
+  private final Map<Invokable, Counter> callTargetMap;
+  private final List<ProfileCounter>    counters;
 
   @SuppressWarnings("unused") private TypeProfileNode typeProfile;
 
   public CallsiteProfile(final SourceSection source) {
     super(source);
     callTargetMap = new HashMap<>();
-    receiverMap = new HashMap<>();
     counters = new ArrayList<>();
   }
 
@@ -59,16 +57,7 @@ public class CallsiteProfile extends Counter implements CreateCounter {
   }
 
   public Map<ClassFactory, Integer> getReceivers() {
-    Map<ClassFactory, Integer> result = new HashMap<>(receiverMap);
-    for (ProfileCounter c : counters) {
-      Integer val = result.get(c.getType());
-      if (val == null) {
-        result.put(c.getType(), c.getValue());
-      } else {
-        result.put(c.getType(), c.getValue() + val);
-      }
-    }
-    return result;
+    return CreateCounter.getResults(counters);
   }
 
   public static final class Counter {
