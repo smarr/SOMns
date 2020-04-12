@@ -14,6 +14,7 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 
 import bd.primitives.Primitive;
 import bd.primitives.Specializer;
+import bd.tools.nodes.Operation;
 import som.VM;
 import som.compiler.AccessModifier;
 import som.interpreter.actors.Actor;
@@ -68,7 +69,8 @@ public final class PromisePrims {
   @GenerateNodeFactory
   @Primitive(primitive = "actorsCreatePromisePair:", selector = "createPromisePair",
       specializer = IsActorModule.class, noWrapper = true)
-  public abstract static class CreatePromisePairPrim extends UnarySystemOperation {
+  public abstract static class CreatePromisePairPrim extends UnarySystemOperation
+      implements Operation {
     @Child protected AbstractBreakpointNode promiseResolverBreakpoint;
     @Child protected AbstractBreakpointNode promiseResolutionBreakpoint;
 
@@ -113,6 +115,15 @@ public final class PromisePrims {
       return super.hasTagIgnoringEagerness(tag);
     }
 
+    @Override
+    public String getOperation() {
+      return "createPromise";
+    }
+
+    @Override
+    public int getNumArguments() {
+      return 1;
+    }
   }
 
   // TODO: can we find another solution for megamorphics callers that

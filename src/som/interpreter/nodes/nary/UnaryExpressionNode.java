@@ -5,11 +5,13 @@ import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
 import com.oracle.truffle.api.instrumentation.ProbeNode;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.nodes.WithContext;
 import som.VM;
 import som.interpreter.nodes.ExpressionNode;
 import som.vmobjects.SSymbol;
+import tools.dym.Tags.ComplexPrimitiveOperation;
 
 
 @GenerateWrapper
@@ -41,7 +43,18 @@ public abstract class UnaryExpressionNode extends EagerlySpecializableNode {
     return result;
   }
 
-  public abstract static class UnarySystemOperation extends UnaryExpressionNode
+  public abstract static class UnaryComplexOperation extends UnaryExpressionNode {
+    @Override
+    protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
+      if (tag == ComplexPrimitiveOperation.class) {
+        return true;
+      } else {
+        return super.hasTagIgnoringEagerness(tag);
+      }
+    }
+  }
+
+  public abstract static class UnarySystemOperation extends UnaryComplexOperation
       implements WithContext<UnarySystemOperation, VM> {
     @CompilationFinal protected VM vm;
 
