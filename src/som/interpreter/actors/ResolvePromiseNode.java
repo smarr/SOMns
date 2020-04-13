@@ -3,15 +3,19 @@ package som.interpreter.actors;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.Tag;
 
 import bd.primitives.Primitive;
+import bd.tools.nodes.Operation;
 import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
+import tools.dym.Tags.ComplexPrimitiveOperation;
 
 
 @GenerateNodeFactory
 @Primitive(primitive = "actorsResolve:with:isBPResolver:isBPResolution:")
-public abstract class ResolvePromiseNode extends AbstractPromiseResolutionNode {
+public abstract class ResolvePromiseNode extends AbstractPromiseResolutionNode
+    implements Operation {
   /**
    * Normal case, when the promise is resolved with a value that's not a promise.
    * Here we need to distinguish the explicit promises to ask directly to the promise
@@ -30,5 +34,24 @@ public abstract class ResolvePromiseNode extends AbstractPromiseResolutionNode {
     resolvePromise(Resolution.SUCCESSFUL, resolver, result,
         haltOnResolution || promise.getHaltOnResolution());
     return resolver;
+  }
+
+  @Override
+  protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
+    if (tag == ComplexPrimitiveOperation.class) {
+      return true;
+    } else {
+      return super.hasTagIgnoringEagerness(tag);
+    }
+  }
+
+  @Override
+  public String getOperation() {
+    return "resolve";
+  }
+
+  @Override
+  public int getNumArguments() {
+    return 5;
   }
 }

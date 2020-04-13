@@ -296,6 +296,8 @@ public final class MetricsCsvWriter {
       return typeCategory(a.getArgType(0));
     } else if (p.getOperation().equals("createPromise")) {
       return "ref";
+    } else if (p.getOperation().equals("resolve")) {
+      return "val";
     }
     throw new NotYetImplementedException();
   }
