@@ -47,6 +47,7 @@ import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.concurrency.Tags.EventualMessageSend;
 import tools.debugger.Tags.LiteralTag;
 import tools.dym.Tags.ArgumentExpr;
 import tools.dym.Tags.BasicPrimitiveOperation;
@@ -159,6 +160,8 @@ public class DynamicMetrics extends TruffleInstrument {
   private final Map<SourceSection, Counter>          localsWriteProfiles;
 
   private final Map<SourceSection, ActorCreationProfile> actorCreationProfile;
+  private final Map<SourceSection, Counter>              messageSends;
+
   // private final Map<SourceSection, CallsiteProfile> messageSendsiteProfile;
   // private final Map<SourceSection, ?> explicitPromiseResolutionCounter;
   // private final Map<SourceSection, ?> implicitPromiseResolutionCounter;
@@ -199,6 +202,7 @@ public class DynamicMetrics extends TruffleInstrument {
     localsWriteProfiles = new HashMap<>();
 
     actorCreationProfile = new HashMap<>();
+    messageSends = new HashMap<>();
 
     rootNodes = new HashSet<>();
 
@@ -436,6 +440,9 @@ public class DynamicMetrics extends TruffleInstrument {
     addInstrumentation(instrumenter, actorCreationProfile,
         new Class<?>[] {CreateActor.class}, NO_TAGS,
         ActorCreationProfile::new, FarRefTypeProfilingNode::new);
+    addInstrumentation(instrumenter, messageSends,
+        new Class<?>[] {EventualMessageSend.class}, NO_TAGS,
+        Counter::new, CountingNode<Counter>::new);
 
     // record all rootNodes to easily get all methods
     instrumenter.attachLoadSourceSectionListener(
@@ -549,6 +556,7 @@ public class DynamicMetrics extends TruffleInstrument {
     data.put(JsonWriter.LOOPS, loopProfiles);
 
     data.put(JsonWriter.ACTOR_CREATION, actorCreationProfile);
+    data.put(JsonWriter.MESSAGE_SENDS, messageSends);
     return data;
   }
 

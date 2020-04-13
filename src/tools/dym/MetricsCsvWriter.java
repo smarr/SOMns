@@ -100,6 +100,7 @@ public final class MetricsCsvWriter {
     loopProfiles();
 
     actorCreation();
+    messageSends();
   }
 
   private static void processCoverage(final long counterVal,
@@ -507,6 +508,21 @@ public final class MetricsCsvWriter {
               e.getValue());
         }
 
+        file.write(abbrv, "ALL", p.getValue());
+      }
+    }
+  }
+
+  private void messageSends() {
+    @SuppressWarnings("unchecked")
+    Map<SourceSection, Counter> sends =
+        (Map<SourceSection, Counter>) data.get(JsonWriter.MESSAGE_SENDS);
+
+    try (CsvWriter file = new CsvWriter(metricsFolder, "message-sends.csv",
+        "Source Section", "Data Type", "Count")) {
+      for (Entry<SourceSection, Counter> e : sortSS(sends)) {
+        Counter p = e.getValue();
+        String abbrv = getSourceSectionAbbrv(p.getSourceSection());
         file.write(abbrv, "ALL", p.getValue());
       }
     }
