@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
@@ -29,6 +30,7 @@ import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.concurrency.Tags.WhenResolved;
+import tools.dym.DynamicMetrics.ActorStats;
 import tools.dym.Tags.ArrayRead;
 import tools.dym.Tags.ArrayWrite;
 import tools.dym.Tags.OpArithmetic;
@@ -61,16 +63,20 @@ public final class MetricsCsvWriter {
   private final int                 maxStackHeight;
   private final List<SourceSection> allStatements;
 
+  private final Map<String, AtomicLong> generalStats;
+
   private MetricsCsvWriter(
       final Map<String, Map<SourceSection, ? extends JsonSerializable>> data,
       final String metricsFolder,
       final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> probe,
-      final int maxStackHeight, final List<SourceSection> allStatements) {
+      final int maxStackHeight, final List<SourceSection> allStatements,
+      final Map<String, AtomicLong> generalStats) {
     this.data = data;
     this.metricsFolder = metricsFolder;
     this.structuralProbe = probe;
     this.maxStackHeight = maxStackHeight;
     this.allStatements = allStatements;
+    this.generalStats = generalStats;
   }
 
   public static void fileOut(
@@ -78,9 +84,10 @@ public final class MetricsCsvWriter {
       final String metricsFolder,
       // TODO: remove direct StructuralProbe passing hack
       final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe,
-      final int maxStackHeight, final List<SourceSection> allStatements) {
+      final int maxStackHeight, final List<SourceSection> allStatements,
+      final Map<String, AtomicLong> generalStats) {
     new MetricsCsvWriter(data, metricsFolder, structuralProbe, maxStackHeight,
-        allStatements).createCsvFiles();
+        allStatements, generalStats).createCsvFiles();
   }
 
   private void createCsvFiles() {
@@ -194,6 +201,10 @@ public final class MetricsCsvWriter {
       file.write("Lines Loaded", stats.linesLoaded);
       file.write("Lines Executed", stats.linesExecuted);
       file.write("Lines With Statements", stats.linesWithStatements);
+
+      for (Entry<String, AtomicLong> e : generalStats.entrySet()) {
+        file.write(e.getKey(), e.getValue().get());
+      }
     }
   }
 

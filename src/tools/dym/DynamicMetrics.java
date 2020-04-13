@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
 import org.graalvm.collections.EconomicSet;
@@ -43,8 +44,12 @@ import som.compiler.Variable;
 import som.instrumentation.InstrumentableDirectCallNode;
 import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
 import som.interpreter.Invokable;
+import som.interpreter.actors.Actor;
+import som.interpreter.actors.EventualSendNode;
+import som.interpreter.actors.SPromise;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.NotYetImplementedException;
+import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.concurrency.Tags.EventualMessageSend;
@@ -165,6 +170,21 @@ public class DynamicMetrics extends TruffleInstrument {
   // private final Map<SourceSection, CallsiteProfile> messageSendsiteProfile;
   // private final Map<SourceSection, ?> explicitPromiseResolutionCounter;
   // private final Map<SourceSection, ?> implicitPromiseResolutionCounter;
+
+  private static final Map<String, AtomicLong> generalMetrics =
+      VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;
+
+  public static AtomicLong createLong(final String metric) {
+    if (!VmSettings.DYNAMIC_METRICS) {
+      return null;
+    }
+    AtomicLong counter = generalMetrics.get(metric);
+    if (counter == null) {
+      counter = new AtomicLong();
+      generalMetrics.put(metric, counter);
+    }
+    return counter;
+  }
 
   private final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe;
 
@@ -475,7 +495,7 @@ public class DynamicMetrics extends TruffleInstrument {
 
     String metricsFolder = System.getProperty("dm.metrics", "metrics");
     MetricsCsvWriter.fileOut(data, metricsFolder, structuralProbe,
-        maxStackDepth, getAllStatementsAlsoNotExecuted());
+        maxStackDepth, getAllStatementsAlsoNotExecuted(), generalMetrics);
 
     outputAllTruffleMethodsToIGV();
   }

@@ -1,13 +1,20 @@
 package som.interpreter.actors;
 
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.oracle.truffle.api.nodes.Node;
 
 import som.interpreter.actors.EventualMessage.PromiseMessage;
+import som.vm.VmSettings;
+import tools.dym.DynamicMetrics;
 
 
 public abstract class RegisterOnPromiseNode {
+  private static final AtomicLong numScheduledWhenResolved =
+      DynamicMetrics.createLong("Num.Scheduled.WhenResolved");
+  private static final AtomicLong numScheduledOnError      =
+      DynamicMetrics.createLong("Num.Scheduled.OnError");
 
   public static final class RegisterWhenResolved extends Node {
     @Child protected SchedulePromiseHandlerNode schedule;
@@ -53,6 +60,9 @@ public abstract class RegisterOnPromiseNode {
       synchronized (promiseValue) {
         if (promise.getHaltOnResolution()) {
           msg.enableHaltOnReceive();
+        }
+        if (VmSettings.DYNAMIC_METRICS) {
+          numScheduledWhenResolved.incrementAndGet();
         }
         schedule.execute(promise, msg, current);
       }
@@ -101,6 +111,12 @@ public abstract class RegisterOnPromiseNode {
       // used to group setting the promise resolution state and processing the
       // message.
       synchronized (promiseValue) {
+        if (promise.getHaltOnResolution()) {
+          msg.enableHaltOnReceive();
+        }
+        if (VmSettings.DYNAMIC_METRICS) {
+          numScheduledOnError.incrementAndGet();
+        }
         schedule.execute(promise, msg, current);
       }
     }

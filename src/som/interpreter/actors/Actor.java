@@ -5,6 +5,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -30,6 +31,7 @@ import tools.concurrency.TracingActors.ReplayActor;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
+import tools.dym.DynamicMetrics;
 import tools.replay.actors.ActorExecutionTrace;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
@@ -54,6 +56,7 @@ import tools.snapshot.SnapshotBuffer;
  * + - and sequentially executes all messages
  */
 public class Actor implements Activity {
+  public static final AtomicLong numActors = DynamicMetrics.createLong("Num.Actors");
 
   @CompilationFinal protected static RootCallTarget executorRoot;
 
@@ -63,6 +66,10 @@ public class Actor implements Activity {
   }
 
   public static Actor createActor(final VM vm) {
+    if (VmSettings.DYNAMIC_METRICS) {
+      numActors.getAndIncrement();
+    }
+
     if (VmSettings.REPLAY || VmSettings.KOMPOS_TRACING) {
       return new ReplayActor(vm);
     } else if (VmSettings.ACTOR_TRACING) {
@@ -214,6 +221,11 @@ public class Actor implements Activity {
     }
   }
 
+  private static final AtomicLong numTurns = DynamicMetrics.createLong("Num.Turns");
+
+  private static final AtomicLong numTurnBatches =
+      DynamicMetrics.createLong("Num.Turn.Batches");
+
   /**
    * Is scheduled on the fork/join pool and executes messages for a specific
    * actor.
@@ -241,6 +253,9 @@ public class Actor implements Activity {
     }
 
     void doRun() {
+      if (VmSettings.DYNAMIC_METRICS) {
+        numTurnBatches.incrementAndGet();
+      }
       ObjectTransitionSafepoint.INSTANCE.register();
 
       ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
@@ -253,7 +268,7 @@ public class Actor implements Activity {
       t.currentlyExecutingActor = actor;
 
       if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.recordActivityContext((TracingActor) actor, tracer);
+        ActorExecutionTrace.recordActivityContext(actor, tracer);
       } else if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.currentActivity(actor);
       }
@@ -300,6 +315,9 @@ public class Actor implements Activity {
         TracingActor.handleBreakpointsAndStepping(msg, dbg, actor);
       }
 
+      if (VmSettings.DYNAMIC_METRICS) {
+        numTurns.incrementAndGet();
+      }
       msg.execute();
     }
 
