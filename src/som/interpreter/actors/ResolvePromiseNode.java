@@ -47,7 +47,11 @@ public abstract class ResolvePromiseNode extends AbstractPromiseResolutionNode
 
   @Override
   public String getOperation() {
-    return "resolve";
+    if (getRootNode() instanceof ReceivedRootNode) {
+      return "implicitPromiseResolve";
+    } else {
+      return "explicitPromiseResolve";
+    }
   }
 
   @Override
