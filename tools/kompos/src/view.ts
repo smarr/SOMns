@@ -548,14 +548,6 @@ export class View {
 
   private enableBreakpointMenu(fileNode, tag: string, menu: Element) {
     const sourceSection = fileNode.find("." + tag);
-    sourceSection.attr({
-      "data-toggle": "popover",
-      "data-trigger": "click hover",
-      "title": "Breakpoints",
-      "data-html": "true",
-      "data-animation": "false",
-      "data-placement": "top"
-    });
 
     let getId;
     // NOTE: For MethodDeclaration breakpoints, we have special handling,
@@ -572,13 +564,20 @@ export class View {
       };
     }
 
-    sourceSection.attr("data-content", function() {
-      const content = $(menu).clone(true);
-      // capture the source section id, and store it on the buttons
-      $(content).find("button").attr("data-ss-id", getId(this));
-      return $(content).html();
+    sourceSection.popover({
+      "trigger": "click hover",
+      "title": "Breakpoints",
+      "html": true,
+      "animation": false,
+      "placement": "top",
+      "sanitize": false,
+      "content": function() {
+        const content = $(menu).clone(true);
+        // capture the source section id, and store it on the buttons
+        $(content).find("button").attr("data-ss-id", getId(this));
+        return $(content).html();
+      }
     });
-    sourceSection.popover();
   }
 
   private createSteppingButtons(actId: string, stepBtns: JQuery) {
