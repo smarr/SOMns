@@ -124,6 +124,7 @@ public class KomposTraceParser {
     return result;
   }
 
+  @SuppressWarnings({"resource", "unused"})
   private void parse(final String path) {
     File traceFile = new File(path);
     HashMap<Long, Long> openTurns = new HashMap<>();
@@ -316,6 +317,7 @@ public class KomposTraceParser {
     }
   }
 
+  @SuppressWarnings("unused")
   private void readSourceSection() {
     short fileId = byteBuffer.getShort();
     short startLine = byteBuffer.getShort();
