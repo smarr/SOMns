@@ -144,6 +144,9 @@ public final class MessageSendNode {
       return super.hasTag(tag);
     }
 
+    /** Introduced for the TruffleDSL to generate the method on the wrapper. */
+    public abstract Object executeEvaluated(VirtualFrame frame, Object[] arguments);
+
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       Object[] arguments = evaluateArguments(frame);
@@ -212,6 +215,11 @@ public final class MessageSendNode {
       // This is a branch never taken, none of the code here should be compiled.
       CompilerDirectives.transferToInterpreterAndInvalidate();
       return super.executeGeneric(frame);
+    }
+
+    @Override
+    public Object executeEvaluated(final VirtualFrame frame, final Object[] arguments) {
+      return doPreEvaluated(frame, arguments);
     }
 
     @Override
@@ -343,6 +351,11 @@ public final class MessageSendNode {
       } else {
         return super.hasTag(tag);
       }
+    }
+
+    @Override
+    public Object executeEvaluated(final VirtualFrame frame, final Object[] arguments) {
+      return doPreEvaluated(frame, arguments);
     }
 
     @Override
