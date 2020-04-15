@@ -29,8 +29,9 @@ import som.interpreter.objectstorage.ClassFactory;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.concurrency.Tags.OnError;
 import tools.concurrency.Tags.WhenResolved;
-import tools.dym.DynamicMetrics.ActorStats;
+import tools.concurrency.Tags.WhenResolvedOnError;
 import tools.dym.Tags.ArrayRead;
 import tools.dym.Tags.ArrayWrite;
 import tools.dym.Tags.OpArithmetic;
@@ -303,7 +304,8 @@ public final class MetricsCsvWriter {
       return "str";
     } else if (p.getOperation().equals("ticks")) {
       return "int";
-    } else if (tags.contains(WhenResolved.class)) {
+    } else if (tags.contains(WhenResolved.class) || tags.contains(OnError.class)
+        || tags.contains(WhenResolvedOnError.class)) {
       return typeCategory(a.getArgType(0));
     } else if (p.getOperation().equals("createPromise")) {
       return "ref";
