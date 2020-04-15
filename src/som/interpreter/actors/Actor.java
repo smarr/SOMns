@@ -259,6 +259,19 @@ public class Actor implements Activity {
       ObjectTransitionSafepoint.INSTANCE.register();
 
       ActorProcessingThread t = (ActorProcessingThread) Thread.currentThread();
+      try {
+        doRunWithObjectSafepoints(t);
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
+
+        if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
+          t.swapTracingBufferIfRequestedUnsync();
+        }
+        t.currentlyExecutingActor = null;
+      }
+    }
+
+    public void doRunWithObjectSafepoints(final ActorProcessingThread t) {
       WebDebugger dbg = null;
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
         dbg = vm.getWebDebugger();
@@ -273,18 +286,9 @@ public class Actor implements Activity {
         KomposTrace.currentActivity(actor);
       }
 
-      try {
-        while (getCurrentMessagesOrCompleteExecution()) {
-          processCurrentMessages(t, dbg);
-        }
-      } finally {
-        ObjectTransitionSafepoint.INSTANCE.unregister();
+      while (getCurrentMessagesOrCompleteExecution()) {
+        processCurrentMessages(t, dbg);
       }
-
-      if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
-        t.swapTracingBufferIfRequestedUnsync();
-      }
-      t.currentlyExecutingActor = null;
     }
 
     protected void processCurrentMessages(final ActorProcessingThread currentThread,

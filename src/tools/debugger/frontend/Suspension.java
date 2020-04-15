@@ -146,8 +146,17 @@ public class Suspension {
   public void suspend() {
     // don't participate in safepoints while being suspended
     ObjectTransitionSafepoint.INSTANCE.unregister();
-    activityThread.markThreadAsSuspendedInDebugger();
 
+    try {
+      activityThread.markThreadAsSuspendedInDebugger();
+      suspendWithoutObjectSafepoints();
+    } finally {
+      activityThread.markThreadAsResumedFromDebugger();
+      ObjectTransitionSafepoint.INSTANCE.register();
+    }
+  }
+
+  public void suspendWithoutObjectSafepoints() {
     boolean continueWaiting = true;
     while (continueWaiting) {
       try {
@@ -174,9 +183,6 @@ public class Suspension {
       suspendedEvent = null;
       stack = null;
     }
-
-    activityThread.markThreadAsResumedFromDebugger();
-    ObjectTransitionSafepoint.INSTANCE.register();
   }
 
   public TracingActivityThread getActivityThread() {
