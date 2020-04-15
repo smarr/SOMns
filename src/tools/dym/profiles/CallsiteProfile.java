@@ -4,11 +4,12 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.nodes.Node;
 
 import som.interpreter.Invokable;
+import som.interpreter.actors.ReceivedRootNode;
+import som.interpreter.nodes.MessageSendNode.GenericMessageSendNode;
 import som.interpreter.objectstorage.ClassFactory;
 import tools.dym.nodes.TypeProfileNode;
 import tools.dym.profiles.ReadValueProfile.ProfileCounter;
@@ -16,21 +17,21 @@ import tools.dym.profiles.ReadValueProfile.ProfileCounter;
 
 public class CallsiteProfile extends Counter implements CreateCounter {
 
-  private final Map<Invokable, Counter> callTargetMap;
-  private final List<ProfileCounter>    counters;
+  private final Node                 instrumentedNode;
+  private final List<ProfileCounter> receiverCounters;
 
   @SuppressWarnings("unused") private TypeProfileNode typeProfile;
 
-  public CallsiteProfile(final SourceSection source) {
-    super(source);
-    callTargetMap = new HashMap<>();
-    counters = new ArrayList<>();
+  public CallsiteProfile(final Node instrumentedNode) {
+    super(instrumentedNode.getSourceSection());
+    this.instrumentedNode = instrumentedNode;
+    receiverCounters = new ArrayList<>();
   }
 
   @Override
   public ProfileCounter createCounter(final ClassFactory type) {
     ProfileCounter counter = new ProfileCounter(type);
-    counters.add(counter);
+    receiverCounters.add(counter);
     return counter;
   }
 
@@ -38,33 +39,20 @@ public class CallsiteProfile extends Counter implements CreateCounter {
     this.typeProfile = rcvrProfile;
   }
 
-  public Counter createCounter(final Invokable invokable) {
-    Counter c = callTargetMap.get(invokable);
-    if (c != null) {
-      return c;
-    }
-    c = new Counter();
-    callTargetMap.put(invokable, c);
-    return c;
-  }
-
   public Map<Invokable, Integer> getCallTargets() {
     HashMap<Invokable, Integer> result = new HashMap<>();
-    for (Entry<Invokable, Counter> e : callTargetMap.entrySet()) {
-      result.put(e.getKey(), e.getValue().val);
-    }
+
+    GenericMessageSendNode sendNode = (GenericMessageSendNode) instrumentedNode;
+    sendNode.collectDispatchStatistics(result);
+
     return result;
   }
 
   public Map<ClassFactory, Integer> getReceivers() {
-    return CreateCounter.getResults(counters);
+    return CreateCounter.getResults(receiverCounters);
   }
 
-  public static final class Counter {
-    private int val;
-
-    public void inc() {
-      val += 1;
-    }
+  public boolean isEventualMessageSend() {
+    return instrumentedNode.getRootNode() instanceof ReceivedRootNode;
   }
 }

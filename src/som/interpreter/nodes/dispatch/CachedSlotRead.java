@@ -1,5 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
+import java.util.HashMap;
+
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
@@ -8,6 +10,7 @@ import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.profiles.IntValueProfile;
 
+import som.interpreter.Invokable;
 import som.interpreter.nodes.dispatch.DispatchGuard.CheckSObject;
 import som.interpreter.objectstorage.StorageAccessor.AbstractObjectAccessor;
 import som.interpreter.objectstorage.StorageAccessor.AbstractPrimitiveAccessor;
@@ -73,6 +76,12 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
   @Override
   public int lengthOfDispatchChain() {
     return 1 + nextInCache.lengthOfDispatchChain();
+  }
+
+  @Override
+  public void collectDispatchStatistics(final HashMap<Invokable, Integer> result) {
+    // This is a slot access, so, not a invocation target
+    // NO OP
   }
 
   @Override

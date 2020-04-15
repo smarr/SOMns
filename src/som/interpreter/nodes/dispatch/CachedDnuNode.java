@@ -1,5 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
+import java.util.HashMap;
+
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
@@ -10,6 +12,8 @@ import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import som.Output;
 import som.VM;
 import som.compiler.AccessModifier;
+import som.instrumentation.CountingDirectCallNode;
+import som.interpreter.Invokable;
 import som.interpreter.SArguments;
 import som.interpreter.Types;
 import som.primitives.SystemPrims.PrintStackTracePrim;
@@ -80,6 +84,13 @@ public final class CachedDnuNode extends AbstractDispatchNode {
           + missingSymbol.toString());
     }
     return ((SInvokable) disp).getCallTarget();
+  }
+
+  @Override
+  public void collectDispatchStatistics(final HashMap<Invokable, Integer> result) {
+    CountingDirectCallNode node = (CountingDirectCallNode) this.cachedMethod;
+    result.put(node.getInvokable(), node.getCount());
+    nextInCache.collectDispatchStatistics(result);
   }
 
   @Override

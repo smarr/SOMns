@@ -2,6 +2,7 @@ package som.interpreter.nodes;
 
 import static som.interpreter.nodes.SOMNode.unwrapIfNecessary;
 
+import java.util.HashMap;
 import java.util.concurrent.locks.Lock;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -377,6 +378,10 @@ public final class MessageSendNode {
     @Override
     public NodeCost getCost() {
       return Cost.getCost(dispatchNode);
+    }
+
+    public void collectDispatchStatistics(final HashMap<Invokable, Integer> result) {
+      dispatchNode.collectDispatchStatistics(result);
     }
   }
 }

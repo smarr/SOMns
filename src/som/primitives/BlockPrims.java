@@ -6,17 +6,14 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-import bd.basic.nodes.DummyParent;
 import bd.primitives.Primitive;
-import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
+import som.instrumentation.CountingDirectCallNode;
 import som.interpreter.SArguments;
-import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
 import som.interpreter.nodes.SOMNode;
@@ -37,18 +34,14 @@ public abstract class BlockPrims {
 
   public static final DirectCallNode createDirectCallNode(final SBlock receiver,
       final SOMNode node) {
-    SomLanguage lang = SomLanguage.getLanguage(node);
     assert null != receiver.getMethod().getCallTarget();
     DirectCallNode callNode = Truffle.getRuntime().createDirectCallNode(
         receiver.getMethod().getCallTarget());
 
     if (VmSettings.DYNAMIC_METRICS) {
-      callNode = new InstrumentableBlockApplyNode(callNode, node.getSourceSection());
-      // trigger instrumentation by Truffle
-      new DummyParent(lang, callNode).notifyInserted();
-      assert callNode.getParent() instanceof WrapperNode;
-      callNode = (DirectCallNode) callNode.getParent();
+      callNode = new CountingDirectCallNode(callNode);
     }
+
     return callNode;
   }
 
