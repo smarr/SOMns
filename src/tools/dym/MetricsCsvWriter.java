@@ -603,7 +603,7 @@ public final class MetricsCsvWriter {
       for (SInvokable i : sortInv(structuralProbe.getMethods())) {
         int numInvokations = methodInvocationCount(i, profiles.values());
         String executed = (numInvokations == 0) ? "false" : "true";
-        file.write(i.toString(), executed, numInvokations);
+        file.write(i.getIdentifier().getString(), executed, numInvokations);
       }
     }
   }
