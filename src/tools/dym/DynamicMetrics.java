@@ -16,7 +16,6 @@ import org.graalvm.polyglot.Instrument;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.InstrumentInfo;
-import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.instrumentation.EventContext;
@@ -41,12 +40,7 @@ import bd.tools.structure.StructuralProbe;
 import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable;
-import som.instrumentation.InstrumentableDirectCallNode;
-import som.instrumentation.InstrumentableDirectCallNode.InstrumentableBlockApplyNode;
 import som.interpreter.Invokable;
-import som.interpreter.actors.Actor;
-import som.interpreter.actors.EventualSendNode;
-import som.interpreter.actors.SPromise;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.NotYetImplementedException;
 import som.vm.VmSettings;
@@ -56,8 +50,6 @@ import tools.concurrency.Tags.EventualMessageSend;
 import tools.debugger.Tags.LiteralTag;
 import tools.dym.Tags.ArgumentExpr;
 import tools.dym.Tags.BasicPrimitiveOperation;
-import tools.dym.Tags.CachedClosureInvoke;
-import tools.dym.Tags.CachedVirtualInvoke;
 import tools.dym.Tags.ClassRead;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 import tools.dym.Tags.ControlFlowCondition;
@@ -76,14 +68,10 @@ import tools.dym.Tags.VirtualInvoke;
 import tools.dym.Tags.VirtualInvokeReceiver;
 import tools.dym.nodes.AllocationProfilingNode;
 import tools.dym.nodes.ArrayAllocationProfilingNode;
-import tools.dym.nodes.CallTargetNode;
-import tools.dym.nodes.ClosureTargetNode;
 import tools.dym.nodes.ControlFlowProfileNode;
 import tools.dym.nodes.CountingNode;
 import tools.dym.nodes.FarRefTypeProfilingNode;
 import tools.dym.nodes.InvocationProfilingNode;
-import tools.dym.nodes.LateCallTargetNode;
-import tools.dym.nodes.LateClosureTargetNode;
 import tools.dym.nodes.LateReportResultNode;
 import tools.dym.nodes.LoopIterationReportNode;
 import tools.dym.nodes.LoopProfilingNode;
@@ -166,10 +154,6 @@ public class DynamicMetrics extends TruffleInstrument {
 
   private final Map<SourceSection, ActorCreationProfile> actorCreationProfile;
   private final Map<SourceSection, Counter>              messageSends;
-
-  // private final Map<SourceSection, CallsiteProfile> messageSendsiteProfile;
-  // private final Map<SourceSection, ?> explicitPromiseResolutionCounter;
-  // private final Map<SourceSection, ?> implicitPromiseResolutionCounter;
 
   private static final Map<String, AtomicLong> generalMetrics =
       VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;
@@ -347,49 +331,20 @@ public class DynamicMetrics extends TruffleInstrument {
     });
   }
 
-  private void addCallTargetInstrumentation(final Instrumenter instrumenter,
-      final ExecutionEventNodeFactory virtInvokeFactory) {
+  private ExecutionEventNodeFactory addVirtualInvokeInstrumentation(
+      final Instrumenter instrumenter) {
     Builder filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(CachedVirtualInvoke.class);
+    filters.tagIs(VirtualInvoke.class);
 
-    instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
-      ExecutionEventNode parent = ctx.findParentEventNode(virtInvokeFactory);
-      InstrumentableDirectCallNode disp =
-          (InstrumentableDirectCallNode) ctx.getInstrumentedNode();
+    ExecutionEventNodeFactory factory = (final EventContext ctx) -> {
+      CallsiteProfile profile = methodCallsiteProfiles.computeIfAbsent(
+          ctx.getInstrumentedSourceSection(),
+          (final SourceSection source) -> new CallsiteProfile(ctx.getInstrumentedNode()));
+      return new CountingNode<CallsiteProfile>(profile);
+    };
 
-      if (parent == null) {
-        return new LateCallTargetNode(ctx, virtInvokeFactory);
-      }
-
-      @SuppressWarnings("unchecked")
-      CountingNode<CallsiteProfile> p = (CountingNode<CallsiteProfile>) parent;
-      CallsiteProfile profile = p.getProfile();
-      RootCallTarget root = (RootCallTarget) disp.getCallTarget();
-      return new CallTargetNode(profile, (Invokable) root.getRootNode());
-    });
-  }
-
-  private void addClosureTargetInstrumentation(final Instrumenter instrumenter,
-      final ExecutionEventNodeFactory factory) {
-    Builder filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(CachedClosureInvoke.class);
-
-    instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
-      ExecutionEventNode parent = ctx.findParentEventNode(factory);
-      InstrumentableBlockApplyNode disp =
-          (InstrumentableBlockApplyNode) ctx.getInstrumentedNode();
-
-      if (parent == null) {
-        return new LateClosureTargetNode(ctx, factory);
-      }
-
-      @SuppressWarnings("unchecked")
-      CountingNode<ClosureApplicationProfile> p =
-          (CountingNode<ClosureApplicationProfile>) parent;
-      ClosureApplicationProfile profile = p.getProfile();
-      RootCallTarget root = (RootCallTarget) disp.getCallTarget();
-      return new ClosureTargetNode(profile, (Invokable) root.getRootNode());
-    });
+    instrumenter.attachExecutionEventFactory(filters.build(), factory);
+    return factory;
   }
 
   private static final Class<?>[] NO_TAGS = new Class<?>[0];
@@ -400,18 +355,14 @@ public class DynamicMetrics extends TruffleInstrument {
 
     addRootTagInstrumentation(instrumenter);
 
-    ExecutionEventNodeFactory virtInvokeFactory = addInstrumentation(
-        instrumenter, methodCallsiteProfiles,
-        new Class<?>[] {VirtualInvoke.class}, NO_TAGS,
-        CallsiteProfile::new, CountingNode<CallsiteProfile>::new);
+    ExecutionEventNodeFactory virtInvokeFactory =
+        addVirtualInvokeInstrumentation(instrumenter);
     addReceiverInstrumentation(instrumenter, virtInvokeFactory);
-    addCallTargetInstrumentation(instrumenter, virtInvokeFactory);
 
-    ExecutionEventNodeFactory closureApplicationFactory = addInstrumentation(
+    addInstrumentation(
         instrumenter, closureProfiles,
         new Class<?>[] {OpClosureApplication.class}, NO_TAGS,
         ClosureApplicationProfile::new, CountingNode<ClosureApplicationProfile>::new);
-    addClosureTargetInstrumentation(instrumenter, closureApplicationFactory);
 
     addInstrumentation(instrumenter, newObjectCounter,
         new Class<?>[] {NewObject.class}, NO_TAGS,
