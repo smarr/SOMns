@@ -1,5 +1,7 @@
 package som.interpreter.actors;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -14,6 +16,7 @@ import som.vm.VmSettings;
 import tools.concurrency.KomposTrace;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.DynamicScopeType;
+import tools.dym.DynamicMetrics;
 import tools.replay.nodes.TraceMessageNode;
 import tools.replay.nodes.TraceMessageNodeGen;
 import tools.snapshot.nodes.MessageSerializationNode;
@@ -142,23 +145,35 @@ public abstract class ReceivedRootNode extends RootNode {
   /**
    * Promise resolver for the case that the actual promise has been optimized out.
    */
-  public final class NullResolver extends AbstractPromiseResolutionNode {
+  public static final class NullResolver extends AbstractPromiseResolutionNode {
+    private static final AtomicLong numImplicitNullResolutions =
+        DynamicMetrics.createLong("Num.ImplicitNullResolutions");
+
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
         final SResolver receiver, final Object argument,
         final boolean haltOnResolver, final boolean haltOnResolution) {
       assert receiver == null;
+      if (VmSettings.DYNAMIC_METRICS) {
+        numImplicitNullResolutions.getAndIncrement();
+      }
       return null;
     }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object rcvr,
         final Object firstArg, final Object secondArg, final Object thirdArg) {
+      if (VmSettings.DYNAMIC_METRICS) {
+        numImplicitNullResolutions.getAndIncrement();
+      }
       return null;
     }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
+      if (VmSettings.DYNAMIC_METRICS) {
+        numImplicitNullResolutions.getAndIncrement();
+      }
       return null;
     }
   }
