@@ -107,6 +107,8 @@ public abstract class ReceivedRootNode extends RootNode {
         this.resolve = insert(
             ResolvePromiseNodeFactory.create(null, null, null, null).initialize(vm));
       }
+      this.resolve.initialize(sourceSection);
+      notifyInserted(this.resolve);
     }
 
     // resolve promise
@@ -125,6 +127,8 @@ public abstract class ReceivedRootNode extends RootNode {
         this.error = insert(
             ErrorPromiseNodeFactory.create(null, null, null, null).initialize(vm));
       }
+      this.error.initialize(sourceSection);
+      notifyInserted(this.error);
     }
 
     // error promise
