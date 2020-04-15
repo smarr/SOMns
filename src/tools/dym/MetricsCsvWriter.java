@@ -368,7 +368,7 @@ public final class MetricsCsvWriter {
         (Map<SourceSection, CallsiteProfile>) data.get(JsonWriter.METHOD_CALLSITE);
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "method-callsites.csv",
-        "Source Section", "Call Count", "Num Rcvrs", "Num Targets")) {
+        "Source Section", "Eventual Message Send", "Call Count", "Num Rcvrs", "Num Targets")) {
       for (Entry<SourceSection, CallsiteProfile> e : sortSS(profiles)) {
         CallsiteProfile p = e.getValue();
         if (data.get(JsonWriter.FIELD_READS).containsKey(p.getSourceSection()) ||
@@ -386,6 +386,7 @@ public final class MetricsCsvWriter {
 
         file.write(
             abbrv,
+            p.isEventualMessageSend() ? "true" : "false",
             p.getValue(),
             receivers.values().size(),
             calltargets.values().size());
