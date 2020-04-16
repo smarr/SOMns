@@ -22,6 +22,8 @@ import som.interpreter.actors.SPromise;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.UnaryBasicOperation;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.processes.SChannel.SChannelInput;
+import som.interpreter.processes.SChannel.SChannelOutput;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
 import som.vm.constants.Nil;
 import som.vmobjects.SAbstractObject;
@@ -238,6 +240,16 @@ public final class ObjectPrims {
 
     @Specialization
     public final boolean isValue(final SResolver rcvr) {
+      return true;
+    }
+
+    @Specialization
+    public final boolean isValue(final SChannelInput rcvr) {
+      return true;
+    }
+
+    @Specialization
+    public final boolean isValue(final SChannelOutput rcvr) {
       return true;
     }
 
