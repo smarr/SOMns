@@ -14,25 +14,31 @@ class KomposBench usingPlatform: platform andHarness: harness = Value (
   private Task      = platform threading Task.
 |
 )(
-  class BenchMain = Benchmark <: Value ()(
+  class BenchMain new: repeat = Benchmark <: Value (
+  | private repeat =  repeat asInteger. |
+  )(
     public benchmark = (
       | completionPP generator json data report |
 
       completionPP:: actors createPromisePair.
       report:: (actors createActorFromValue: ReportActor) <-: new: completionPP resolver.
-      data::   (actors createActorFromValue: DataActor) <-: new: report.
+      data::   (actors createActorFromValue: DataActor) <-: new: report repeat: repeat.
       json::   (actors createActorFromValue: JsonInputActor) <-: new: data.
       json <-: start.
 
-      generator:: (actors createActorFromValue: InputGeneratorActor) <-: new: json.
+      generator:: (actors createActorFromValue: InputGeneratorActor) <-: new: json repeat: repeat.
       generator <-: start.
 
       ^ completionPP promise
     )
 
     public verifyResult: result = (
-      result println.
-      ^ true. (* result = 16839 *)
+      repeat =   1 ifTrue: [^ result =     16839].
+      repeat = 100 ifTrue: [^ result = 133551900].
+
+      'No result defined for repeat: ' print. repeat println.
+      '  Result: ' print. result println.
+      ^ false
     )
   )
 
@@ -297,8 +303,9 @@ class KomposBench usingPlatform: platform andHarness: harness = Value (
   )
 
   (* Actor generating input for the whole system *)
-  class InputGeneratorActor new: jsonInput = (
+  class InputGeneratorActor new: jsonInput repeat: anInt = (
   | private jsonInput = jsonInput.
+    private repeat    = anInt.
   |)(
     private jsonStreamInput = (
       ^ { '{"price":10,"quantity": 87,"customer": "Medesign","address":"993 Kensington Walk, Cassel, Tennessee, 8882","item": "strawberry"}'.
@@ -314,20 +321,22 @@ class KomposBench usingPlatform: platform andHarness: harness = Value (
     )
 
     public start = (
-      jsonStreamInput do: [:str |
-        jsonInput <-: stream: str. ].
+      repeat timesRepeat: [
+        jsonStreamInput do: [:str |
+          jsonInput <-: stream: str. #noPromise (* just suppressing the promise *) ] ].
       jsonInput <-: stream: nil. (* signal end of stream *)
     )
   )
 
-  class DataActor new: reportActor = (
-  | private data        = Vector new: 10.
+  class DataActor new: reportActor repeat: repeat = (
+  | private dataItems   = repeat * 10.
+    private data        = Vector new: dataItems.
     private reportActor = reportActor.
   |)(
     public data: aRelevantDatum = (
       data append: aRelevantDatum.
 
-      (data size % 10) = 0
+      data size = dataItems
         ifTrue: [ sendReport ]
     )
 
@@ -375,7 +384,6 @@ class KomposBench usingPlatform: platform andHarness: harness = Value (
       right:: buildParallelSumTree: data from: (high + low) / 2 to: high.
 
       left:: leftTask join.
-      'buildParallelSumTree after join' println.
 
       ^  TempTreeNode left: left right: right sum: left sum + right sum low: low high: high
     )
@@ -385,15 +393,12 @@ class KomposBench usingPlatform: platform andHarness: harness = Value (
         ifTrue: [
           | sum |
           sum:: (input at: tempNode low) + leftSum.
-          sum println.
           result at: tempNode low put: sum ]
         ifFalse: [
           | leftTask |
           leftTask:: Task spawn: [ calculateSumOf: tempNode left with: leftSum from: input into: result ].
           calculateSumOf: tempNode right with: leftSum + tempNode left sum from: input into: result.
-          leftTask join.
-          'calculateSumOf after join' println.
-        ]
+          leftTask join ]
     )
 
     private calculateParallelPrefixSum: arr = (
@@ -411,8 +416,8 @@ class KomposBench usingPlatform: platform andHarness: harness = Value (
 
       prefixSum doIndexes: [:i |
         (prefixSum at: i) = (prefixSumCheck at: i) ifFalse: [
-          'prefixSum incorrect ' print.
-          ('  i: ' + i asString + ' val: ' + (prefixSum at: i) asString + ' expected: ' + (prefixSumCheck at: i) asString) println.
+          self error: 'prefixSum incorrect ' +
+            ('  i: ' + i asString + ' val: ' + (prefixSum at: i) asString + ' expected: ' + (prefixSumCheck at: i) asString).
           resolver resolve: -1.
           ^ false
           (* error: 'Prefix Sum incorrect' *)] ].
@@ -422,5 +427,5 @@ class KomposBench usingPlatform: platform andHarness: harness = Value (
     )
   )
 
-  public newInstance: problemSize = ( ^ BenchMain new )
+  public newInstance: problemSize = ( ^ BenchMain new: problemSize )
 )
