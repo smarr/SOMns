@@ -1,13 +1,27 @@
 package som.interpreter.nodes;
 
+import java.util.ArrayList;
+
+import org.graalvm.collections.EconomicMap;
+
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.ExplodeLoop.LoopExplosionKind;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
+import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.TruffleCompiler;
+import som.interpreter.nodes.IsValueCheckNodeFactory.ValueCheckNodeGen;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
+import som.interpreter.objectstorage.ObjectLayout;
+import som.interpreter.objectstorage.StorageAccessor.AbstractObjectAccessor;
+import som.interpreter.objectstorage.StorageLocation;
 import som.primitives.ObjectPrims.IsValue;
 import som.vmobjects.SObject.SImmutableObject;
 
@@ -24,21 +38,17 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
     return new UninitializedNode(self).initialize(source);
   }
 
-  @Child protected ExpressionNode self;
-
-  protected IsValueCheckNode(final ExpressionNode self) {
-    this.self = self;
-  }
-
   private static final class UninitializedNode extends IsValueCheckNode {
+    @Child protected ExpressionNode self;
+
     UninitializedNode(final ExpressionNode self) {
-      super(self);
+      this.self = self;
     }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       TruffleCompiler.transferToInterpreterAndInvalidate("Need to specialize node");
-      return super.executeGeneric(frame);
+      return executeEvaluated(frame, self.executeGeneric(frame));
     }
 
     @Override
@@ -58,7 +68,7 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       SImmutableObject rcvr = (SImmutableObject) receiver;
 
       if (rcvr.isValue()) {
-        ValueCheckNode node = new ValueCheckNode(self).initialize(sourceSection);
+        ValueCheckNode node = ValueCheckNodeGen.create(self).initialize(sourceSection);
         return replace(node).executeEvaluated(frame, receiver);
       } else {
         // neither transfer object nor value, so nothing to check
@@ -79,13 +89,9 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
     }
   }
 
-  private static final class ValueCheckNode extends IsValueCheckNode {
+  protected abstract static class ValueCheckNode extends IsValueCheckNode {
 
     @Child protected ExceptionSignalingNode notAValue;
-
-    ValueCheckNode(final ExpressionNode self) {
-      super(self);
-    }
 
     @Override
     @SuppressWarnings("unchecked")
@@ -95,15 +101,65 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       return this;
     }
 
-    @Override
-    public Object executeEvaluated(final VirtualFrame frame, final Object receiver) {
-      SImmutableObject rcvr = (SImmutableObject) receiver;
+    protected FieldTester createTester(final ObjectLayout objectLayout) {
+      ArrayList<AbstractObjectAccessor> accessors = new ArrayList<>();
 
+      EconomicMap<SlotDefinition, StorageLocation> fields = objectLayout.getStorageLocations();
+      for (StorageLocation location : fields.getValues()) {
+        if (location.isObjectLocation()) {
+          AbstractObjectAccessor accessor = (AbstractObjectAccessor) location.getAccessor();
+          accessors.add(accessor);
+        }
+      }
+
+      return new FieldTester(accessors.toArray(new AbstractObjectAccessor[0]));
+    }
+
+    @Specialization(guards = "rcvr.getObjectLayout() == cachedObjectLayout")
+    public Object allFieldsAreValues(final VirtualFrame frame, final SImmutableObject rcvr,
+        @Cached("rcvr.getObjectLayout()") final ObjectLayout cachedObjectLayout,
+        @Cached("createTester(cachedObjectLayout)") final FieldTester cachedTester) {
+      if (cachedTester.allFieldsContainValues(rcvr)) {
+        return rcvr;
+      } else {
+        return notAValue.signal(rcvr);
+      }
+    }
+
+    @Specialization
+    public Object fallback(final Object receiver) {
+      SImmutableObject rcvr = (SImmutableObject) receiver;
       boolean allFieldsContainValues = allFieldsContainValues(rcvr);
       if (allFieldsContainValues) {
         return rcvr;
       }
       return notAValue.signal(rcvr);
+    }
+
+    protected static final class FieldTester extends Node {
+      @Children private final IsValue[] isValueNodes;
+
+      @CompilationFinal(dimensions = 1) private final AbstractObjectAccessor[] fieldAccessors;
+
+      protected FieldTester(final AbstractObjectAccessor[] accessors) {
+        fieldAccessors = accessors;
+        isValueNodes = new IsValue[accessors.length];
+
+        for (int i = 0; i < isValueNodes.length; i++) {
+          isValueNodes[i] = IsValue.createSubNode();
+        }
+      }
+
+      @ExplodeLoop(kind = LoopExplosionKind.FULL_UNROLL)
+      public boolean allFieldsContainValues(final SImmutableObject obj) {
+        for (int i = 0; i < isValueNodes.length; i++) {
+          Object value = fieldAccessors[i].read(obj);
+          if (!isValueNodes[i].executeBoolean(null, value)) {
+            return false;
+          }
+        }
+        return true;
+      }
     }
 
     private boolean allFieldsContainValues(final SImmutableObject rcvr) {
@@ -146,10 +202,5 @@ public abstract class IsValueCheckNode extends UnaryExpressionNode {
       }
       return true;
     }
-  }
-
-  @Override
-  public Object executeGeneric(final VirtualFrame frame) {
-    return executeEvaluated(frame, self.executeGeneric(frame));
   }
 }
