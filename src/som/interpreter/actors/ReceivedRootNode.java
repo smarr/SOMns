@@ -104,13 +104,17 @@ public abstract class ReceivedRootNode extends RootNode {
     // lazy initialization of resolution node
     if (resolve == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
+      // Warning: this is racy, thus, we do everything on a local,
+      // and only publish the result at the end
+      AbstractPromiseResolutionNode resolve;
       if (resolver == null) {
-        this.resolve = insert(new NullResolver());
+        resolve = insert(new NullResolver());
       } else {
-        this.resolve = insert(
+        resolve = insert(
             ResolvePromiseNodeFactory.create(null, null, null, null).initialize(vm));
       }
-      this.resolve.initialize(sourceSection);
+      resolve.initialize(sourceSection);
+      this.resolve = resolve;
       notifyInserted(this.resolve);
     }
 
@@ -124,12 +128,16 @@ public abstract class ReceivedRootNode extends RootNode {
     // lazy initialization of resolution node
     if (error == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
+      // Warning: this is racy, thus, we do everything on a local,
+      // and only publish the result at the end
+      AbstractPromiseResolutionNode error;
       if (resolver == null) {
-        this.error = insert(new NullResolver());
+        error = insert(new NullResolver());
       } else {
-        this.error = insert(
+        error = insert(
             ErrorPromiseNodeFactory.create(null, null, null, null).initialize(vm));
       }
+      this.error = error;
       this.error.initialize(sourceSection);
       notifyInserted(this.error);
     }
