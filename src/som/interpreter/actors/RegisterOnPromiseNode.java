@@ -45,7 +45,7 @@ public abstract class RegisterOnPromiseNode {
       // we need to schedule the callback/msg directly anyway
 
       synchronized (promise) {
-        if (VmSettings.REPLAY) {
+        if (VmSettings.SENDER_SIDE_REPLAY) {
           ReplayRecord npr = current.peekNextReplayEvent();
           if (npr.type == TraceRecord.PROMISE_CHAINED && !promise.isResolvedUnsync()) {
             npr = current.getNextReplayEvent();
@@ -75,13 +75,13 @@ public abstract class RegisterOnPromiseNode {
         }
 
         if (!promise.isResolvedUnsync()) {
-          if (VmSettings.REPLAY) {
+          if (VmSettings.SENDER_SIDE_REPLAY) {
             ReplayRecord npr = current.getNextReplayEvent();
             assert npr.type == TraceRecord.MESSAGE;
             msg.messageId = npr.eventNo;
           }
 
-          if (VmSettings.UNIFORM_TRACING) {
+          if (VmSettings.SENDER_SIDE_TRACING) {
             // This is whenResolved
             promiseMsgSend.record(((STracingPromise) promise).version);
             ((STracingPromise) promise).version++;
@@ -147,7 +147,7 @@ public abstract class RegisterOnPromiseNode {
       // of handlers. We can split the case for a resolved promise out, because
       // we need to schedule the callback/msg directly anyway
       synchronized (promise) {
-        if (VmSettings.REPLAY) {
+        if (VmSettings.SENDER_SIDE_REPLAY) {
           ReplayRecord npr = current.getNextReplayEvent();
           assert npr.type == TraceRecord.PROMISE_MESSAGE
               || npr.type == TraceRecord.MESSAGE;
@@ -161,7 +161,7 @@ public abstract class RegisterOnPromiseNode {
 
         if (!promise.isErroredUnsync()) {
 
-          if (VmSettings.UNIFORM_TRACING) {
+          if (VmSettings.SENDER_SIDE_TRACING) {
             // This is whenResolved
             promiseMsgSend.record(((STracingPromise) promise).version);
             ((STracingPromise) promise).version++;

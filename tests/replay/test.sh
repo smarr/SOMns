@@ -75,7 +75,7 @@ popd > /dev/null
 SOM_DIR=$SCRIPT_PATH/../..
 
 
-echo   "===================== Actor Replay ====================="
+echo   "===================== Actor Replay Sender Side ====================="
 for args in "${Savina[@]}"
 do
   echo "$args"
@@ -84,6 +84,20 @@ do
   echo ""
   echo "Replay:"
   $SOM_DIR/som -G -JXmx1500m -vmd -r core-lib/Benchmarks/AsyncHarness.ns Savina.$args
+  echo ""
+  echo "========================================================"
+  echo ""
+done
+
+echo   "===================== Actor Replay Receiver Side ====================="
+for args in "${Savina[@]}"
+do
+  echo "$args"
+  echo "Tracing:"
+  $SOM_DIR/som -G -JXmx1500m -at -art core-lib/Benchmarks/AsyncHarness.ns Savina.$args
+  echo ""
+  echo "Replay:"
+  $SOM_DIR/som -G -JXmx1500m -r -art core-lib/Benchmarks/AsyncHarness.ns Savina.$args
   echo ""
   echo "========================================================"
   echo ""

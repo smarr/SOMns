@@ -44,7 +44,7 @@ public abstract class SchedulePromiseHandlerNode extends Node {
     msg.args[PromiseMessage.PROMISE_VALUE_IDX] = wrapper.execute(
         promise.getValueUnsync(), msg.originalSender, current);
 
-    if (VmSettings.REPLAY) {
+    if (VmSettings.SENDER_SIDE_REPLAY) {
       ReplayRecord npr = current.getNextReplayEvent();
       assert npr.type == TraceRecord.MESSAGE;
       msg.messageId = npr.eventNo;
@@ -85,7 +85,7 @@ public abstract class SchedulePromiseHandlerNode extends Node {
     msg.target = finalTarget; // for sends to far references, we need to adjust the target
     msg.finalSender = current;
 
-    if (VmSettings.REPLAY) {
+    if (VmSettings.SENDER_SIDE_REPLAY) {
       ReplayRecord npr = current.getNextReplayEvent();
       assert npr.type == TraceRecord.MESSAGE;
       msg.messageId = npr.eventNo;

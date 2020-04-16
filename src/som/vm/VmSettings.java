@@ -40,6 +40,12 @@ public class VmSettings implements Settings {
   public static final boolean RECYCLE_BUFFERS;
   public static final int     BUFFER_TIMEOUT;
 
+  public static final boolean SENDER_SIDE_TRACING;
+  public static final boolean RECEIVER_SIDE_TRACING;
+
+  public static final boolean SENDER_SIDE_REPLAY;
+  public static final boolean RECEIVER_SIDE_REPLAY;
+
   public static final String BASE_DIRECTORY;
 
   public static final boolean USE_PINNING;
@@ -66,6 +72,12 @@ public class VmSettings implements Settings {
     TRACE_SMALL_IDS = getBool("som.smallIds", false);
 
     UNIFORM_TRACING = getBool("som.actorTracing", false);
+    boolean receiverSide = getBool("som.actorReceiverTracing", false);
+    SENDER_SIDE_TRACING = UNIFORM_TRACING && !receiverSide;
+    RECEIVER_SIDE_TRACING = UNIFORM_TRACING && receiverSide;
+
+    SENDER_SIDE_REPLAY = REPLAY && !receiverSide;
+    RECEIVER_SIDE_REPLAY = REPLAY && receiverSide;
 
     TEST_SNAPSHOTS = getBool("som.snapshotTest", false);
     TEST_SERIALIZE_ALL = getBool("som.actorSnapshotAll", false);

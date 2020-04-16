@@ -23,6 +23,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActivityThread;
+import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.entities.PassiveEntityType;
 import tools.dym.DynamicMetrics;
 import tools.replay.PassiveEntityWithEvents;
@@ -190,7 +191,7 @@ public class SPromise extends SObjectWithClass {
       KomposTrace.promiseChained(getPromiseId(), remote.getPromiseId());
     }
 
-    if (VmSettings.REPLAY) {
+    if (VmSettings.SENDER_SIDE_REPLAY) {
       ReplayRecord npr = TracingActivityThread.currentThread().getActivity()
                                               .peekNextReplayEvent();
       if (npr.type == TraceRecord.PROMISE_CHAINED) {
@@ -202,13 +203,16 @@ public class SPromise extends SObjectWithClass {
     if (isCompleted()) {
       remote.value = value;
       remote.resolutionState = resolutionState;
+      if (VmSettings.RECEIVER_SIDE_TRACING || VmSettings.RECEIVER_SIDE_REPLAY) {
+        ((STracingPromise) remote).resolvingActor = ((STracingPromise) this).resolvingActor;
+      }
     } else {
 
-      if (VmSettings.UNIFORM_TRACING) {
+      if (VmSettings.SENDER_SIDE_TRACING) {
         recordPromiseChaining.record(((STracingPromise) this).version);
         ((STracingPromise) this).version++;
       }
-      if (VmSettings.REPLAY) {
+      if (VmSettings.SENDER_SIDE_REPLAY) {
         ((SReplayPromise) remote).untrackedResolution = true;
       }
 
@@ -373,11 +377,18 @@ public class SPromise extends SObjectWithClass {
       version = 0;
     }
 
-    protected int version;
+    protected int  version;
+    protected long resolvingActor;
 
     @Override
     public int getNextEventNumber() {
       return version;
+    }
+
+    public long getResolvingActor() {
+      assert VmSettings.RECEIVER_SIDE_TRACING || VmSettings.RECEIVER_SIDE_REPLAY;
+      assert isCompleted();
+      return resolvingActor;
     }
   }
 
@@ -816,7 +827,10 @@ public class SPromise extends SObjectWithClass {
         final RecordOneEvent tracePromiseResolutionEnd2) {
       assert !(result instanceof SPromise);
 
-      if (VmSettings.KOMPOS_TRACING) {
+      if (VmSettings.RECEIVER_SIDE_TRACING || VmSettings.RECEIVER_SIDE_REPLAY) {
+        ((STracingPromise) p).resolvingActor =
+            ((TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn()).getId();
+      } else if (VmSettings.KOMPOS_TRACING) {
         if (type == Resolution.SUCCESSFUL && p.resolutionState != Resolution.CHAINED) {
           KomposTrace.promiseResolution(p.getPromiseId(), result);
         } else if (type == Resolution.ERRONEOUS) {
@@ -842,13 +856,13 @@ public class SPromise extends SObjectWithClass {
           p.value = wrapped;
           p.resolutionState = type;
 
-          if (VmSettings.REPLAY) {
+          if (VmSettings.SENDER_SIDE_REPLAY) {
             ((SReplayPromise) p).handleReplayResolution(haltOnResolution, current, type,
                 whenResolvedProfile);
           }
         }
 
-        if (VmSettings.UNIFORM_TRACING) {
+        if (VmSettings.SENDER_SIDE_TRACING) {
           tracePromiseResolution2.record(((STracingPromise) p).version);
         }
 
@@ -862,7 +876,7 @@ public class SPromise extends SObjectWithClass {
         resolveChainedPromisesUnsync(type, p, result, current, actorPool, haltOnResolution,
             whenResolvedProfile, tracePromiseResolution2, tracePromiseResolutionEnd2);
 
-        if (VmSettings.UNIFORM_TRACING) {
+        if (VmSettings.SENDER_SIDE_TRACING) {
           tracePromiseResolutionEnd2.record(((STracingPromise) p).version);
         }
       }

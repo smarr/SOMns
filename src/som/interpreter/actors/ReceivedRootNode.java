@@ -11,9 +11,12 @@ import com.oracle.truffle.api.source.SourceSection;
 import som.VM;
 import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
+import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.SResolver;
+import som.interpreter.actors.SPromise.STracingPromise;
 import som.vm.VmSettings;
 import tools.concurrency.KomposTrace;
+import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.DynamicScopeType;
 import tools.dym.DynamicMetrics;
@@ -29,6 +32,7 @@ public abstract class ReceivedRootNode extends RootNode {
   @Child protected AbstractPromiseResolutionNode error;
 
   @Child protected RecordOneEvent           messageTracer;
+  @Child protected RecordOneEvent           promiseMessageTracer;
   @Child protected MessageSerializationNode serializer;
 
   private final VM            vm;
@@ -54,6 +58,9 @@ public abstract class ReceivedRootNode extends RootNode {
 
     if (VmSettings.UNIFORM_TRACING) {
       messageTracer = new RecordOneEvent(TraceRecord.MESSAGE);
+    }
+    if (VmSettings.RECEIVER_SIDE_TRACING) {
+      promiseMessageTracer = new RecordOneEvent(TraceRecord.PROMISE_MESSAGE);
     }
   }
 
@@ -82,6 +89,15 @@ public abstract class ReceivedRootNode extends RootNode {
     if (VmSettings.KOMPOS_TRACING) {
       KomposTrace.scopeStart(DynamicScopeType.TURN, msg.getMessageId(),
           msg.getTargetSourceSection());
+    }
+
+    if (VmSettings.RECEIVER_SIDE_TRACING) {
+      if (msg instanceof PromiseMessage) {
+        PromiseMessage pmsg = (PromiseMessage) msg;
+        STracingPromise tprom = (STracingPromise) pmsg.getPromise();
+        promiseMessageTracer.record(tprom.getResolvingActor());
+      }
+      messageTracer.record(((TracingActor) msg.getSender()).getId());
     }
 
     try {

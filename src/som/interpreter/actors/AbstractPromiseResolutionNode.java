@@ -113,7 +113,7 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
     synchronized (promiseValue) {
       Resolution state = promiseValue.getResolutionStateUnsync();
 
-      if (VmSettings.REPLAY) {
+      if (VmSettings.SENDER_SIDE_REPLAY) {
         ReplayRecord npr = TracingActivityThread.currentThread().getActivity()
                                                 .peekNextReplayEvent();
         if (npr.type == TraceRecord.PROMISE_CHAINED) {
@@ -132,14 +132,14 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
             promiseToBeResolved.enableHaltOnResolution();
           }
 
-          if (VmSettings.REPLAY) {
+          if (VmSettings.SENDER_SIDE_REPLAY) {
             ReplayRecord npr = TracingActivityThread.currentThread().getActivity()
                                                     .peekNextReplayEvent();
             assert npr.type == TraceRecord.PROMISE_RESOLUTION;
             ((SReplayPromise) promiseToBeResolved).consumeEventsForDelayedResolution();
           }
 
-          if (VmSettings.UNIFORM_TRACING) {
+          if (VmSettings.SENDER_SIDE_TRACING) {
             tracePromiseChaining.record(((STracingPromise) promiseValue).version);
             ((STracingPromise) promiseValue).version++;
           }

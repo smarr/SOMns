@@ -67,7 +67,8 @@ public class EventualSendNode extends ExprWithTagsNode {
   }
 
   /** For wrappers. */
-  protected EventualSendNode() {}
+  protected EventualSendNode() {
+  }
 
   @Override
   public WrapperNode createWrapper(final ProbeNode probe) {
@@ -217,7 +218,7 @@ public class EventualSendNode extends ExprWithTagsNode {
           messageReceiverBreakpoint.executeShouldHalt(),
           promiseResolverBreakpoint.executeShouldHalt());
 
-      if (VmSettings.REPLAY) {
+      if (VmSettings.SENDER_SIDE_REPLAY) {
         ReplayRecord npr = owner.getNextReplayEvent();
         assert npr.type == TraceRecord.MESSAGE;
         msg.setReplayVersion(npr.eventNo);
@@ -302,7 +303,7 @@ public class EventualSendNode extends ExprWithTagsNode {
             current.getId());
       }
 
-      if (VmSettings.REPLAY) {
+      if (VmSettings.SENDER_SIDE_REPLAY) {
         ReplayRecord npr = current.getNextReplayEvent();
         assert npr.type == TraceRecord.MESSAGE;
         msg.setReplayVersion(npr.eventNo);
@@ -353,7 +354,7 @@ public class EventualSendNode extends ExprWithTagsNode {
             current.getId());
       }
 
-      if (VmSettings.REPLAY) {
+      if (VmSettings.SENDER_SIDE_REPLAY) {
         // TODO similar thing for any other usages of actor.send(). especially in timer prim
         // and any external modules!
         ReplayRecord npr = current.getNextReplayEvent();
