@@ -398,7 +398,7 @@ class KomposBench usingPlatform: platform andHarness: harness = Value (
 
     private calculateParallelPrefixSum: arr = (
       | tempTree result |
-      result:: Array new: arr size.
+      result:: Array new: arr size withAll: 0.
       tempTree:: buildParallelSumTree: arr from: 1 to: arr size + 1.
       calculateSumOf: tempTree with: 0 from: arr into: result.
       ^ result
