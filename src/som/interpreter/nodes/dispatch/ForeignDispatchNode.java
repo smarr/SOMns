@@ -1,5 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
+import java.util.HashMap;
+
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.interop.ArityException;
@@ -12,7 +14,9 @@ import com.oracle.truffle.api.library.LibraryFactory;
 
 import som.VM;
 import som.interop.SomInteropObject;
+import som.interpreter.Invokable;
 import som.interpreter.SArguments;
+import som.vm.NotYetImplementedException;
 
 
 public final class ForeignDispatchNode extends AbstractDispatchNode {
@@ -74,5 +78,10 @@ public final class ForeignDispatchNode extends AbstractDispatchNode {
   @Override
   public int lengthOfDispatchChain() {
     return 1 + nextInCache.lengthOfDispatchChain();
+  }
+
+  @Override
+  public void collectDispatchStatistics(final HashMap<Invokable, Integer> result) {
+    throw new NotYetImplementedException();
   }
 }

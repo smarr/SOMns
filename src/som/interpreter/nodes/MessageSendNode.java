@@ -2,6 +2,7 @@ package som.interpreter.nodes;
 
 import static som.interpreter.nodes.SOMNode.unwrapIfNecessary;
 
+import java.util.HashMap;
 import java.util.concurrent.locks.Lock;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -143,6 +144,9 @@ public final class MessageSendNode {
       return super.hasTag(tag);
     }
 
+    /** Introduced for the TruffleDSL to generate the method on the wrapper. */
+    public abstract Object executeEvaluated(VirtualFrame frame, Object[] arguments);
+
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
       Object[] arguments = evaluateArguments(frame);
@@ -211,6 +215,11 @@ public final class MessageSendNode {
       // This is a branch never taken, none of the code here should be compiled.
       CompilerDirectives.transferToInterpreterAndInvalidate();
       return super.executeGeneric(frame);
+    }
+
+    @Override
+    public Object executeEvaluated(final VirtualFrame frame, final Object[] arguments) {
+      return doPreEvaluated(frame, arguments);
     }
 
     @Override
@@ -345,6 +354,11 @@ public final class MessageSendNode {
     }
 
     @Override
+    public Object executeEvaluated(final VirtualFrame frame, final Object[] arguments) {
+      return doPreEvaluated(frame, arguments);
+    }
+
+    @Override
     public Object doPreEvaluated(final VirtualFrame frame, final Object[] arguments) {
       return dispatchNode.executeDispatch(frame, arguments);
     }
@@ -377,6 +391,10 @@ public final class MessageSendNode {
     @Override
     public NodeCost getCost() {
       return Cost.getCost(dispatchNode);
+    }
+
+    public void collectDispatchStatistics(final HashMap<Invokable, Integer> result) {
+      dispatchNode.collectDispatchStatistics(result);
     }
   }
 }

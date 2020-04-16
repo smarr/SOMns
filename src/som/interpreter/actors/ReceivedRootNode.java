@@ -1,5 +1,7 @@
 package som.interpreter.actors;
 
+import java.util.concurrent.atomic.AtomicLong;
+
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -14,6 +16,7 @@ import som.vm.VmSettings;
 import tools.concurrency.KomposTrace;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.DynamicScopeType;
+import tools.dym.DynamicMetrics;
 import tools.replay.nodes.TraceMessageNode;
 import tools.replay.nodes.TraceMessageNodeGen;
 import tools.snapshot.nodes.MessageSerializationNode;
@@ -101,12 +104,18 @@ public abstract class ReceivedRootNode extends RootNode {
     // lazy initialization of resolution node
     if (resolve == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
+      // Warning: this is racy, thus, we do everything on a local,
+      // and only publish the result at the end
+      AbstractPromiseResolutionNode resolve;
       if (resolver == null) {
-        this.resolve = insert(new NullResolver());
+        resolve = insert(new NullResolver());
       } else {
-        this.resolve = insert(
+        resolve = insert(
             ResolvePromiseNodeFactory.create(null, null, null, null).initialize(vm));
       }
+      resolve.initialize(sourceSection);
+      this.resolve = resolve;
+      notifyInserted(this.resolve);
     }
 
     // resolve promise
@@ -119,12 +128,18 @@ public abstract class ReceivedRootNode extends RootNode {
     // lazy initialization of resolution node
     if (error == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
+      // Warning: this is racy, thus, we do everything on a local,
+      // and only publish the result at the end
+      AbstractPromiseResolutionNode error;
       if (resolver == null) {
-        this.error = insert(new NullResolver());
+        error = insert(new NullResolver());
       } else {
-        this.error = insert(
+        error = insert(
             ErrorPromiseNodeFactory.create(null, null, null, null).initialize(vm));
       }
+      this.error = error;
+      this.error.initialize(sourceSection);
+      notifyInserted(this.error);
     }
 
     // error promise
@@ -138,23 +153,35 @@ public abstract class ReceivedRootNode extends RootNode {
   /**
    * Promise resolver for the case that the actual promise has been optimized out.
    */
-  public final class NullResolver extends AbstractPromiseResolutionNode {
+  public static final class NullResolver extends AbstractPromiseResolutionNode {
+    private static final AtomicLong numImplicitNullResolutions =
+        DynamicMetrics.createLong("Num.ImplicitNullResolutions");
+
     @Override
     public Object executeEvaluated(final VirtualFrame frame,
         final SResolver receiver, final Object argument,
         final boolean haltOnResolver, final boolean haltOnResolution) {
       assert receiver == null;
+      if (VmSettings.DYNAMIC_METRICS) {
+        numImplicitNullResolutions.getAndIncrement();
+      }
       return null;
     }
 
     @Override
     public Object executeEvaluated(final VirtualFrame frame, final Object rcvr,
         final Object firstArg, final Object secondArg, final Object thirdArg) {
+      if (VmSettings.DYNAMIC_METRICS) {
+        numImplicitNullResolutions.getAndIncrement();
+      }
       return null;
     }
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
+      if (VmSettings.DYNAMIC_METRICS) {
+        numImplicitNullResolutions.getAndIncrement();
+      }
       return null;
     }
   }

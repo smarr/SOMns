@@ -1,0 +1,167 @@
+(* This is a test program for the Actor support of the DynamicMetrics tool.
+   It uses all actor language features so that we can confirm the expected
+   output of the tool.*)
+class ActorDynamicMetricsTests usingPlatform: platform = Value (
+| private actors = platform actors.
+
+  private Array = platform kernel Array.
+|
+)(
+  class ActorA = Value ()(
+    public instanceMethod = ( ^ #aa )
+  ) : (
+    public classMethod = ( ^ #a )
+  )
+
+  class ActorB = Value ()(
+    public self = (
+      ^ self
+    )
+  )
+
+  class ActorC = Value ()(
+    public instanceMethod = ( ^ #cc )
+  ) : (
+    public classMethod = ( ^ #c )
+  )
+
+  private createActors = (
+    | arr = Array with: ActorA with: ActorB with: ActorC. |
+
+    10 timesRepeat: [
+      actors createActorFromValue: ActorA ].
+
+    10 timesRepeat: [
+      arr do: [:actorVal |
+        actors createActorFromValue: actorVal ] ].
+  )
+
+  private farRefMessageSends = (
+    | actorA actorC arr |
+    (* monomorphic *)
+    actorA:: actors createActorFromValue: ActorA.
+    actorC:: actors createActorFromValue: ActorC.
+
+    actorA <-: classMethod.
+
+    5 timesRepeat: [
+      actorC <-: classMethod ].
+
+    (* polymorphic *)
+    arr:: Array with: actorA with: actorC.
+    5 timesRepeat: [
+      arr do: [:actor |
+        actor <-: classMethod ] ].
+
+    (* Races... with completion of message sends *)
+  )
+
+  private promiseMessageSends = (
+    | actorA actorC arr |
+    (* monomorphic *)
+    actorA:: (actors createActorFromValue: ActorA) <-: new.
+    actorC:: (actors createActorFromValue: ActorC) <-: new.
+
+    actorA <-: instanceMethod.
+
+    5 timesRepeat: [
+      actorC <-: instanceMethod ].
+
+    (* polymorphic *)
+    arr:: Array with: actorA with: actorC.
+    5 timesRepeat: [
+      arr do: [:actor |
+        actor <-: instanceMethod ] ].
+
+    (* Races... with completion of message sends *)
+  )
+
+  (* There's no farRef version of this,
+     because we can't register resolution callbacks on far refs.
+     FarRefs are always resolved already. *)
+  private promiseCallbacks = (
+    | actorA actorC arr blocks |
+    (* monomorphic *)
+    actorA:: (actors createActorFromValue: ActorA) <-: new.
+    actorC:: (actors createActorFromValue: ActorC) <-: new.
+
+    actorA whenResolved: [:r | 1 ].
+    actorA onError: [:ex | 2 ].
+    actorA whenResolved: [:r | 3 ] onError: [:ex | 4 ].
+
+    (* rcvr polymorphic *)
+    arr:: Array with: actorA with: actorC.
+    arr do: [:actor |
+      actor whenResolved: [:r | 5 ].
+      actor onError: [:ex | 6 ].
+      actor whenResolved: [:r | 7 ] onError: [:ex | 8 ] ].
+
+    (* block polymorphic *)
+    blocks:: Array with: [:r | 10 ] with: [:r | 11 ] with: [:r | 12 ].
+    blocks do: [:b |
+      actorA whenResolved: b ]
+
+    (* Races... with completion of message sends *)
+  )
+
+  private promiseCapture = (
+    | actorA promise |
+    actorA:: (actors createActorFromValue: ActorA) <-: new.
+
+    (* not capturing *)       actorA <-: instanceMethod.
+    (* capturing *) promise:: actorA <-: instanceMethod.
+
+    (* not capturing *)       actorA whenResolved: [:r | 1 ].
+    (* capturing *) promise:: actorA whenResolved: [:r | 2 ].
+
+    (* not capturing *)       actorA onError: [:ex | 3 ].
+    (* capturing *) promise:: actorA onError: [:ex | 4 ].
+
+    (* not capturing *)       actorA whenResolved: [:r | 5 ] onError: [:ex | 6 ].
+    (* capturing *) promise:: actorA whenResolved: [:r | 7 ] onError: [:ex | 8 ]
+  )
+
+  private explicitPromise = (
+    | pp arr |
+    pp:: actors createPromisePair.
+
+    arr:: Array new: 4 withAll: [ actors createPromisePair ].
+
+    pp resolver resolve: 1.
+
+    arr do: [:promisePair |
+      promisePair resolver resolve: 2 ]
+  )
+
+  private promiseChains = (
+    | actorB = (actors createActorFromValue: ActorB) <-: new. |
+    actorB
+      <-: self
+      <-: self
+      <-: self
+      <-: self.
+
+    (((actorB
+      whenResolved: [:actor | actor ])
+      whenResolved: [:actor | actor ])
+      whenResolved: [:actor | actor ]).
+  )
+
+  public main: args = (
+    | pp = actors createPromisePair. |
+
+    createActors.
+    farRefMessageSends.
+    promiseMessageSends.
+    promiseCallbacks.
+    promiseCapture.
+
+    explicitPromise.
+
+    promiseChains.
+
+    (* let's assume all of the execution takes much less than 500ms *)
+    actors after: 500 do: [ pp resolver resolve: 0 ].
+    ^ pp promise
+  )
+)

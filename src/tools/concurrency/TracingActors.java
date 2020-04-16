@@ -375,11 +375,14 @@ public class TracingActors {
     private MessageRecord getExpected() {
       if (expectedMessages.isEmpty()) {
         ObjectTransitionSafepoint.INSTANCE.unregister();
-        while (traceParser.getMoreEventsForEntity(getId())
-            && expectedMessages.isEmpty()) {
-          // NOOP
+        try {
+          while (traceParser.getMoreEventsForEntity(getId())
+              && expectedMessages.isEmpty()) {
+            // NOOP
+          }
+        } finally {
+          ObjectTransitionSafepoint.INSTANCE.register();
         }
-        ObjectTransitionSafepoint.INSTANCE.register();
       }
       return expectedMessages.poll();
     }
@@ -387,10 +390,13 @@ public class TracingActors {
     private MessageRecord peekExpected() {
       if (expectedMessages.isEmpty()) {
         ObjectTransitionSafepoint.INSTANCE.unregister();
-        while (traceParser.getMoreEventsForEntity(getId()) && expectedMessages.isEmpty()) {
-          // NOOP
+        try {
+          while (traceParser.getMoreEventsForEntity(getId()) && expectedMessages.isEmpty()) {
+            // NOOP
+          }
+        } finally {
+          ObjectTransitionSafepoint.INSTANCE.register();
         }
-        ObjectTransitionSafepoint.INSTANCE.register();
       }
       return expectedMessages.peek();
     }

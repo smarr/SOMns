@@ -23,8 +23,9 @@ public final class DelayPrimitives {
         Thread.sleep(milliseconds);
       } catch (InterruptedException e) {
         /* Not relevant for the moment */
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.register();
       }
-      ObjectTransitionSafepoint.INSTANCE.register();
       return Nil.nilObject;
     }
   }

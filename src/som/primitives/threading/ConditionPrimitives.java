@@ -47,9 +47,9 @@ public final class ConditionPrimitives {
         cond.await();
       } catch (InterruptedException e) {
         /* doesn't tell us a lot at the moment, so it is ignored */
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.register();
       }
-
-      ObjectTransitionSafepoint.INSTANCE.register();
       return cond;
     }
   }

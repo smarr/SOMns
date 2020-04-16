@@ -31,7 +31,7 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
   private final ValueProfile whenResolvedProfile = ValueProfile.createClassProfile();
 
   protected AbstractPromiseResolutionNode() {
-    haltNode = insert(SuspendExecutionNodeGen.create(2, null));
+    haltNode = insert(SuspendExecutionNodeGen.create(0, null));
   }
 
   protected AbstractPromiseResolutionNode(final AbstractPromiseResolutionNode node) {

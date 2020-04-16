@@ -8,7 +8,6 @@ import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
-import bd.primitives.nodes.PreevaluatedExpression;
 import som.interpreter.SomException;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.MessageSendNode.AbstractMessageSendNode;
@@ -17,7 +16,7 @@ import som.vmobjects.SSymbol;
 
 public class ReceivedMessage extends ReceivedRootNode {
 
-  @Child protected PreevaluatedExpression onReceive;
+  @Child protected AbstractMessageSendNode onReceive;
 
   private final SSymbol selector;
 
@@ -33,7 +32,7 @@ public class ReceivedMessage extends ReceivedRootNode {
   protected Object executeBody(final VirtualFrame frame, final EventualMessage msg,
       final boolean haltOnResolver, final boolean haltOnResolution) {
     try {
-      Object result = onReceive.doPreEvaluated(frame, msg.args);
+      Object result = onReceive.executeEvaluated(frame, msg.args);
       resolvePromise(frame, msg.resolver, result, haltOnResolver, haltOnResolution);
     } catch (SomException exception) {
       errorPromise(frame, msg.resolver, exception.getSomObject(),
@@ -60,7 +59,7 @@ public class ReceivedMessage extends ReceivedRootNode {
     @Override
     protected Object executeBody(final VirtualFrame frame, final EventualMessage msg,
         final boolean haltOnResolver, final boolean haltOnResolution) {
-      Object result = onReceive.doPreEvaluated(frame, msg.args);
+      Object result = onReceive.executeEvaluated(frame, msg.args);
       resolveFuture(result);
       return result;
     }

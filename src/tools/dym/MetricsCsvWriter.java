@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.atomic.AtomicLong;
 
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
@@ -28,6 +29,9 @@ import som.interpreter.objectstorage.ClassFactory;
 import som.vm.NotYetImplementedException;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.concurrency.Tags.OnError;
+import tools.concurrency.Tags.WhenResolved;
+import tools.concurrency.Tags.WhenResolvedOnError;
 import tools.dym.Tags.ArrayRead;
 import tools.dym.Tags.ArrayWrite;
 import tools.dym.Tags.OpArithmetic;
@@ -35,6 +39,7 @@ import tools.dym.Tags.OpClosureApplication;
 import tools.dym.Tags.OpComparison;
 import tools.dym.Tags.OpLength;
 import tools.dym.Tags.StringAccess;
+import tools.dym.profiles.ActorCreationProfile;
 import tools.dym.profiles.AllocationProfile;
 import tools.dym.profiles.Arguments;
 import tools.dym.profiles.ArrayCreationProfile;
@@ -59,16 +64,20 @@ public final class MetricsCsvWriter {
   private final int                 maxStackHeight;
   private final List<SourceSection> allStatements;
 
+  private final Map<String, AtomicLong> generalStats;
+
   private MetricsCsvWriter(
       final Map<String, Map<SourceSection, ? extends JsonSerializable>> data,
       final String metricsFolder,
       final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> probe,
-      final int maxStackHeight, final List<SourceSection> allStatements) {
+      final int maxStackHeight, final List<SourceSection> allStatements,
+      final Map<String, AtomicLong> generalStats) {
     this.data = data;
     this.metricsFolder = metricsFolder;
     this.structuralProbe = probe;
     this.maxStackHeight = maxStackHeight;
     this.allStatements = allStatements;
+    this.generalStats = generalStats;
   }
 
   public static void fileOut(
@@ -76,9 +85,10 @@ public final class MetricsCsvWriter {
       final String metricsFolder,
       // TODO: remove direct StructuralProbe passing hack
       final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe,
-      final int maxStackHeight, final List<SourceSection> allStatements) {
+      final int maxStackHeight, final List<SourceSection> allStatements,
+      final Map<String, AtomicLong> generalStats) {
     new MetricsCsvWriter(data, metricsFolder, structuralProbe, maxStackHeight,
-        allStatements).createCsvFiles();
+        allStatements, generalStats).createCsvFiles();
   }
 
   private void createCsvFiles() {
@@ -96,6 +106,9 @@ public final class MetricsCsvWriter {
     branchProfiles();
     operationProfiles();
     loopProfiles();
+
+    actorCreation();
+    messageSends();
   }
 
   private static void processCoverage(final long counterVal,
@@ -189,6 +202,10 @@ public final class MetricsCsvWriter {
       file.write("Lines Loaded", stats.linesLoaded);
       file.write("Lines Executed", stats.linesExecuted);
       file.write("Lines With Statements", stats.linesWithStatements);
+
+      for (Entry<String, AtomicLong> e : generalStats.entrySet()) {
+        file.write(e.getKey(), e.getValue().get());
+      }
     }
   }
 
@@ -207,6 +224,12 @@ public final class MetricsCsvWriter {
       case "True":
       case "False":
         return "bool";
+      case "Promise":
+        return "promise";
+      case "FarReference":
+        return "farRef";
+      case "Resolver":
+        return "resolver";
       default:
         return "ref";
     }
@@ -223,6 +246,7 @@ public final class MetricsCsvWriter {
           p.getOperation().equals("sqrt") ||
           p.getOperation().equals("sin") ||
           p.getOperation().equals("cos") ||
+          p.getOperation().equals("log") ||
           p.getOperation().equals("asInteger") ||
           p.getOperation().equals("round")) {
         return typeCategory(a.getArgType(1));
@@ -264,7 +288,8 @@ public final class MetricsCsvWriter {
       }
       throw new NotYetImplementedException();
     } else if (tags.contains(ArrayRead.class) || tags.contains(ArrayWrite.class)) {
-      assert a.argTypeIs(1, "Array") || a.argTypeIs(1, "ValueArray");
+      assert a.argTypeIs(1, "Array") || a.argTypeIs(1, "ValueArray")
+          || a.argTypeIs(1, "TransferArray");
       assert a.argTypeIs(2, "Integer");
       if (tags.contains(ArrayRead.class)) {
         return typeCategory(a.getArgType(0));
@@ -279,6 +304,16 @@ public final class MetricsCsvWriter {
       return "str";
     } else if (p.getOperation().equals("ticks")) {
       return "int";
+    } else if (tags.contains(WhenResolved.class) || tags.contains(OnError.class)
+        || tags.contains(WhenResolvedOnError.class)) {
+      return typeCategory(a.getArgType(0));
+    } else if (p.getOperation().equals("createPromise")) {
+      return "ref";
+    } else if (p.getOperation().equals("implicitPromiseResolve")
+        || p.getOperation().equals("implicitPromiseError")
+        || p.getOperation().equals("explicitPromiseResolve")
+        || p.getOperation().equals("explicitPromiseError")) {
+      return "val";
     }
     throw new NotYetImplementedException();
   }
@@ -338,7 +373,7 @@ public final class MetricsCsvWriter {
         (Map<SourceSection, CallsiteProfile>) data.get(JsonWriter.METHOD_CALLSITE);
 
     try (CsvWriter file = new CsvWriter(metricsFolder, "method-callsites.csv",
-        "Source Section", "Call Count", "Num Rcvrs", "Num Targets")) {
+        "Source Section", "Eventual Message Send", "Call Count", "Num Rcvrs", "Num Targets")) {
       for (Entry<SourceSection, CallsiteProfile> e : sortSS(profiles)) {
         CallsiteProfile p = e.getValue();
         if (data.get(JsonWriter.FIELD_READS).containsKey(p.getSourceSection()) ||
@@ -356,6 +391,7 @@ public final class MetricsCsvWriter {
 
         file.write(
             abbrv,
+            p.isEventualMessageSend() ? "true" : "false",
             p.getValue(),
             receivers.values().size(),
             calltargets.values().size());
@@ -474,9 +510,46 @@ public final class MetricsCsvWriter {
     }
   }
 
+  private void actorCreation() {
+    @SuppressWarnings("unchecked")
+    Map<SourceSection, ActorCreationProfile> profiles =
+        (Map<SourceSection, ActorCreationProfile>) data.get(JsonWriter.ACTOR_CREATION);
+
+    try (CsvWriter file = new CsvWriter(metricsFolder, "actor-creation.csv",
+        "Source Section", "New Arrays", "Size")) {
+      for (Entry<SourceSection, ActorCreationProfile> ee : sortSS(profiles)) {
+        ActorCreationProfile p = ee.getValue();
+        String abbrv = getSourceSectionAbbrv(p.getSourceSection());
+        for (Entry<ClassFactory, Integer> e : sortCF(p.getTypes())) {
+          file.write(
+              abbrv,
+              e.getKey().getClassName().getString(),
+              e.getValue());
+        }
+
+        file.write(abbrv, "ALL", p.getValue());
+      }
+    }
+  }
+
+  private void messageSends() {
+    @SuppressWarnings("unchecked")
+    Map<SourceSection, Counter> sends =
+        (Map<SourceSection, Counter>) data.get(JsonWriter.MESSAGE_SENDS);
+
+    try (CsvWriter file = new CsvWriter(metricsFolder, "message-sends.csv",
+        "Source Section", "Data Type", "Count")) {
+      for (Entry<SourceSection, Counter> e : sortSS(sends)) {
+        Counter p = e.getValue();
+        String abbrv = getSourceSectionAbbrv(p.getSourceSection());
+        file.write(abbrv, "ALL", p.getValue());
+      }
+    }
+  }
+
   private static String getSourceSectionAbbrv(final SourceSection source) {
-    String result = source.getSource().getName() + " pos=" + source.getCharIndex() + " len="
-        + source.getCharLength();
+    String result = source.getSource().getName() + ":" + source.getStartLine() + ":"
+        + source.getStartColumn() + ":" + source.getCharLength();
     return result;
   }
 
@@ -535,7 +608,7 @@ public final class MetricsCsvWriter {
       for (SInvokable i : sortInv(structuralProbe.getMethods())) {
         int numInvokations = methodInvocationCount(i, profiles.values());
         String executed = (numInvokations == 0) ? "false" : "true";
-        file.write(i.toString(), executed, numInvokations);
+        file.write(i.getIdentifier().getString(), executed, numInvokations);
       }
     }
   }

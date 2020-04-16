@@ -10,11 +10,11 @@ import tools.dym.Tags.OpArithmetic;
 
 
 @GenerateNodeFactory
-@Primitive(primitive = "doubleLog:", selector = "log", receiverType = Double.class)
-public abstract class LogPrim extends UnaryBasicOperation {
+@Primitive(selector = "abs", receiverType = {Long.class, Double.class})
+public abstract class AbsPrim extends UnaryBasicOperation {
   @Override
   protected boolean hasTagIgnoringEagerness(final Class<? extends Tag> tag) {
-    if (tag == OpArithmetic.class) { // TODO: is this good enough?
+    if (tag == OpArithmetic.class) {
       return true;
     } else {
       return super.hasTagIgnoringEagerness(tag);
@@ -22,7 +22,12 @@ public abstract class LogPrim extends UnaryBasicOperation {
   }
 
   @Specialization
-  public final double doLog(final double rcvr) {
-    return Math.log(rcvr);
+  public final long doLong(final long receiver) {
+    return Math.abs(receiver);
+  }
+
+  @Specialization
+  public final double doDouble(final double receiver) {
+    return Math.abs(receiver);
   }
 }

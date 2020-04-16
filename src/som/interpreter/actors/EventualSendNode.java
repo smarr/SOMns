@@ -2,6 +2,7 @@ package som.interpreter.actors;
 
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.RootCallTarget;
@@ -42,10 +43,14 @@ import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.SendOp;
 import tools.debugger.nodes.AbstractBreakpointNode;
 import tools.debugger.session.Breakpoints;
+import tools.dym.DynamicMetrics;
 
 
 @GenerateWrapper
 public class EventualSendNode extends ExprWithTagsNode {
+  public static final AtomicLong numPromisesAvoided =
+      DynamicMetrics.createLong("Num.Promises.Avoided");
+
   @Child protected InternalObjectArrayNode arguments;
   @Child protected SendNode                send;
 
@@ -300,6 +305,10 @@ public class EventualSendNode extends ExprWithTagsNode {
 
       sendDirectMessage(args, owner, null);
 
+      if (VmSettings.DYNAMIC_METRICS) {
+        numPromisesAvoided.getAndIncrement();
+      }
+
       return Nil.nilObject;
     }
 
@@ -307,6 +316,11 @@ public class EventualSendNode extends ExprWithTagsNode {
     public final Object toPromiseWithoutResultPromise(final Object[] args,
         @Cached("createRegisterNode()") final RegisterWhenResolved registerNode) {
       sendPromiseMessage(args, (SPromise) args[0], null, registerNode);
+
+      if (VmSettings.DYNAMIC_METRICS) {
+        numPromisesAvoided.getAndIncrement();
+      }
+
       return Nil.nilObject;
     }
 
@@ -326,6 +340,10 @@ public class EventualSendNode extends ExprWithTagsNode {
       }
 
       current.send(msg, actorPool);
+
+      if (VmSettings.DYNAMIC_METRICS) {
+        numPromisesAvoided.getAndIncrement();
+      }
       return Nil.nilObject;
     }
 

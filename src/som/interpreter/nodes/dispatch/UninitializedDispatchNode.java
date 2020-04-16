@@ -1,5 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
+import java.util.HashMap;
 import java.util.concurrent.locks.Lock;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -172,6 +173,12 @@ public final class UninitializedDispatchNode {
       } finally {
         lock.unlock();
       }
+    }
+
+    @Override
+    public void collectDispatchStatistics(final HashMap<Invokable, Integer> result) {
+      // This is the end of the chain
+      // NO OP
     }
 
     @Override

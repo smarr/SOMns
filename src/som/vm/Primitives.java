@@ -18,6 +18,7 @@ import som.compiler.AccessModifier;
 import som.compiler.MethodBuilder;
 import som.interpreter.Primitive;
 import som.interpreter.SomLanguage;
+import som.interpreter.actors.EagerResolvePromiseNodeFactory;
 import som.interpreter.actors.ErrorPromiseNodeFactory;
 import som.interpreter.actors.ResolvePromiseNodeFactory;
 import som.interpreter.nodes.ArgumentReadNode.LocalArgumentReadNode;
@@ -68,6 +69,7 @@ import som.primitives.UnequalsPrimFactory;
 import som.primitives.actors.ActorClassesFactory;
 import som.primitives.actors.CreateActorPrimFactory;
 import som.primitives.actors.PromisePrimsFactory;
+import som.primitives.arithmetic.AbsPrimFactory;
 import som.primitives.arithmetic.AdditionPrimFactory;
 import som.primitives.arithmetic.DividePrimFactory;
 import som.primitives.arithmetic.DoubleDivPrimFactory;
@@ -208,6 +210,7 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
 
     add(allFactories, WhileTruePrimitiveNodeFactory.getInstance());
     add(allFactories, WhileFalsePrimitiveNodeFactory.getInstance());
+    add(allFactories, AbsPrimFactory.getInstance());
     add(allFactories, AdditionPrimFactory.getInstance());
     add(allFactories, AndMessageNodeFactory.getInstance());
     add(allFactories, AsStringPrimFactory.getInstance());
@@ -223,6 +226,7 @@ public class Primitives extends PrimitiveLoader<VM, ExpressionNode, SSymbol> {
     add(allFactories, DoIndexesPrimFactory.getInstance());
     add(allFactories, DoPrimFactory.getInstance());
     add(allFactories, DoubleDivPrimFactory.getInstance());
+    add(allFactories, EagerResolvePromiseNodeFactory.getInstance());
     add(allFactories, EqualsEqualsPrimFactory.getInstance());
     add(allFactories, EqualsPrimFactory.getInstance());
     add(allFactories, ExpPrimFactory.getInstance());

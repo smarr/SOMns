@@ -63,6 +63,7 @@ import tools.dym.Tags.CachedVirtualInvoke;
 import tools.dym.Tags.ClassRead;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 import tools.dym.Tags.ControlFlowCondition;
+import tools.dym.Tags.CreateActor;
 import tools.dym.Tags.FieldRead;
 import tools.dym.Tags.FieldWrite;
 import tools.dym.Tags.LocalArgRead;
@@ -109,7 +110,9 @@ import tools.dym.Tags.VirtualInvokeReceiver;
     ExpressionBreakpoint.class, CreatePromisePair.class, WhenResolved.class,
     WhenResolvedOnError.class, OnError.class, ActivityCreation.class,
     ActivityJoin.class, Atomic.class, AcquireLock.class, ReleaseLock.class,
-    AnyNode.class
+    AnyNode.class,
+
+    CreateActor.class
 })
 public final class SomLanguage extends TruffleLanguage<VM> {
 

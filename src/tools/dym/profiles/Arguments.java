@@ -104,6 +104,9 @@ public final class Arguments {
   public String toString() {
     String result = "";
     for (ClassFactory c : argSomTypes) {
+      if (c == null) {
+        continue;
+      }
       if ("".equals(result)) {
         result = c.getClassName().getString();
       } else {

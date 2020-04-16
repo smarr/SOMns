@@ -1,10 +1,14 @@
 package som.interpreter.nodes.dispatch;
 
+import java.util.HashMap;
+
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.compiler.AccessModifier;
 import som.compiler.MixinBuilder.MixinDefinitionId;
+import som.interpreter.Invokable;
+import som.vm.NotYetImplementedException;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
 
@@ -29,5 +33,10 @@ public final class GenericDispatchNode extends AbstractGenericDispatchNode {
     } else {
       return rcvrClass.lookupMessage(selector, minimalVisibility);
     }
+  }
+
+  @Override
+  public void collectDispatchStatistics(final HashMap<Invokable, Integer> result) {
+    throw new NotYetImplementedException();
   }
 }

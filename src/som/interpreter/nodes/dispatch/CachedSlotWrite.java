@@ -1,5 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
+import java.util.HashMap;
+
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
@@ -9,6 +11,7 @@ import com.oracle.truffle.api.nodes.InvalidAssumptionException;
 import com.oracle.truffle.api.profiles.IntValueProfile;
 
 import som.compiler.MixinDefinition.SlotDefinition;
+import som.interpreter.Invokable;
 import som.interpreter.TruffleCompiler;
 import som.interpreter.nodes.dispatch.DispatchGuard.CheckSObject;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
@@ -65,6 +68,12 @@ public abstract class CachedSlotWrite extends AbstractDispatchNode {
   @Override
   public boolean hasTag(final Class<? extends Tag> tag) {
     return tag == FieldWrite.class;
+  }
+
+  @Override
+  public void collectDispatchStatistics(final HashMap<Invokable, Integer> result) {
+    // This is a slot access, so, not a invocation target
+    // NO OP
   }
 
   @Override

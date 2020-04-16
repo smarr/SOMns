@@ -874,7 +874,8 @@ public final class MixinDefinition implements SomInteropObject {
     if (identifier == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       if (outer != null) {
-        identifier = Symbols.symbolFor(outer.getIdentifier() + "." + this.name.getString());
+        identifier =
+            Symbols.symbolFor(outer.getIdentifier().getString() + "." + this.name.getString());
       } else if (this.isModule && this.sourceSection != null) {
         Path absolute = Paths.get(this.sourceSection.getSource().getURI());
         Path relative =

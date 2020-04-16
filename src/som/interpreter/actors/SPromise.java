@@ -2,6 +2,7 @@ package som.interpreter.actors;
 
 import java.util.ArrayList;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicLong;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -17,11 +18,24 @@ import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.entities.PassiveEntityType;
+import tools.dym.DynamicMetrics;
 import tools.snapshot.nodes.PromiseSerializationNodesFactory.PromiseSerializationNodeFactory;
 import tools.snapshot.nodes.PromiseSerializationNodesFactory.ResolverSerializationNodeFactory;
 
 
 public class SPromise extends SObjectWithClass {
+  private static final AtomicLong numPromises  = DynamicMetrics.createLong("Num.Promises");
+  private static final AtomicLong numResolvers = DynamicMetrics.createLong("Num.Resolvers");
+
+  private static final AtomicLong numRegisteredWhenResolved =
+      DynamicMetrics.createLong("Num.Registered.WhenResolved");
+  private static final AtomicLong numRegisteredOnError      =
+      DynamicMetrics.createLong("Num.Registered.OnError");
+  private static final AtomicLong numScheduledWhenResolved  =
+      DynamicMetrics.createLong("Num.Scheduled.WhenResolved");
+  private static final AtomicLong numScheduledOnError       =
+      DynamicMetrics.createLong("Num.Scheduled.OnError");
+
   public enum Resolution {
     UNRESOLVED, ERRONEOUS, SUCCESSFUL, CHAINED
   }
@@ -31,6 +45,10 @@ public class SPromise extends SObjectWithClass {
   public static SPromise createPromise(final Actor owner,
       final boolean haltOnResolver, final boolean haltOnResolution,
       final SourceSection section) {
+    if (VmSettings.DYNAMIC_METRICS) {
+      numPromises.getAndIncrement();
+    }
+
     if (VmSettings.KOMPOS_TRACING) {
       return new SMedeorPromise(owner, haltOnResolver, haltOnResolution, section);
     } else if (VmSettings.ACTOR_TRACING || VmSettings.REPLAY) {
@@ -171,6 +189,9 @@ public class SPromise extends SObjectWithClass {
   }
 
   public final void registerWhenResolvedUnsynced(final PromiseMessage msg) {
+    if (VmSettings.DYNAMIC_METRICS) {
+      numRegisteredWhenResolved.incrementAndGet();
+    }
     if (whenResolved == null) {
       whenResolved = msg;
     } else {
@@ -187,6 +208,9 @@ public class SPromise extends SObjectWithClass {
   }
 
   public final void registerOnErrorUnsynced(final PromiseMessage msg) {
+    if (VmSettings.DYNAMIC_METRICS) {
+      numRegisteredOnError.incrementAndGet();
+    }
     if (onError == null) {
       onError = msg;
     } else {
@@ -347,6 +371,10 @@ public class SPromise extends SObjectWithClass {
   }
 
   public static SResolver createResolver(final SPromise promise) {
+    if (VmSettings.DYNAMIC_METRICS) {
+      numResolvers.getAndIncrement();
+    }
+
     return new SResolver(promise);
   }
 
@@ -507,6 +535,11 @@ public class SPromise extends SObjectWithClass {
         promise.whenResolved = null;
         promise.whenResolvedExt = null;
 
+        if (VmSettings.DYNAMIC_METRICS) {
+          int count = whenResolvedExt == null ? 0 : whenResolvedExt.size();
+          numScheduledWhenResolved.addAndGet(1 + count);
+        }
+
         promise.scheduleCallbacksOnResolution(result,
             whenResolvedProfile.profile(whenResolved), current, actorPool, haltOnResolution);
         scheduleExtensions(promise, whenResolvedExt, result, current, actorPool,
@@ -542,6 +575,11 @@ public class SPromise extends SObjectWithClass {
         ArrayList<PromiseMessage> onErrorExt = promise.onErrorExt;
         promise.onError = null;
         promise.onErrorExt = null;
+
+        if (VmSettings.DYNAMIC_METRICS) {
+          int count = onErrorExt == null ? 0 : onErrorExt.size();
+          numScheduledOnError.addAndGet(1 + onErrorExt.size());
+        }
 
         promise.scheduleCallbacksOnResolution(result, onError, current, actorPool,
             haltOnResolution);
