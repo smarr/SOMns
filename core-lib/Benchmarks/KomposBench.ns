@@ -291,7 +291,8 @@ class KomposBench usingPlatform: platform andHarness: harness = Value (
        *)
       stringOut write: str.
       (* this is blocking, too. *)
-      dataActor <-: data: dataIn read.
+      str notNil ifTrue: [
+        dataActor <-: data: dataIn read ]
     )
   )
 
