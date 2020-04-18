@@ -24,8 +24,9 @@ import tools.dym.Tags.OpComparison;
 
 
 @GenerateNodeFactory
-@Primitive(selector = "and:", noWrapper = true, specializer = AndOrSplzr.class)
-@Primitive(selector = "&&", noWrapper = true, specializer = AndOrSplzr.class)
+@Primitive(selector = "and:", noWrapper = true, specializer = AndOrSplzr.class,
+    disabled = true)
+@Primitive(selector = "&&", noWrapper = true, specializer = AndOrSplzr.class, disabled = true)
 public abstract class AndMessageNode extends BinaryComplexOperation {
   public static class AndOrSplzr extends Specializer<VM, ExpressionNode, SSymbol> {
     protected final NodeFactory<ExpressionNode> boolFact;
