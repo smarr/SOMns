@@ -62,6 +62,24 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
   )
 
+  (** Used as baseline to determine the size of the benchmarks **)
+  public class Empty = Benchmark <: Value (
+  )(
+    public benchmark = (
+      | completionPP |
+      completionPP:: actors createPromisePair.
+      completionPP resolver resolve: 0.
+      ^ completionPP promise
+    )
+
+    public verifyResult: result = (
+      ^ true
+    )
+  ) : (
+    public newInstance: problemSize = ( ^ self new )
+    public setupVerifiedRun: run = ( run problemSize: 1 )
+  )
+
   (* === Savina Microbenchmarks === *)
 
   public class PingPong new: numPings = Benchmark <: Value (
