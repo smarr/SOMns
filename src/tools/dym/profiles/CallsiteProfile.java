@@ -42,7 +42,7 @@ public class CallsiteProfile extends Counter implements CreateCounter {
   public Map<Invokable, Integer> getCallTargets() {
     HashMap<Invokable, Integer> result = new HashMap<>();
 
-    GenericMessageSendNode sendNode = (GenericMessageSendNode) instrumentedNode;
+    DispatchProfile sendNode = (GenericMessageSendNode) instrumentedNode;
     sendNode.collectDispatchStatistics(result);
 
     return result;

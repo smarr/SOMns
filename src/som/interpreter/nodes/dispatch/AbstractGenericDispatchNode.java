@@ -1,5 +1,7 @@
 package som.interpreter.nodes.dispatch;
 
+import java.util.Map;
+
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
@@ -10,10 +12,12 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import som.Output;
 import som.VM;
+import som.interpreter.Invokable;
 import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.Types;
 import som.primitives.SystemPrims.PrintStackTracePrim;
+import som.vm.NotYetImplementedException;
 import som.vm.VmSettings;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
@@ -72,5 +76,10 @@ public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
   @Override
   public final int lengthOfDispatchChain() {
     return 1000;
+  }
+
+  @Override
+  public final void collectDispatchStatistics(final Map<Invokable, Integer> result) {
+    throw new NotYetImplementedException();
   }
 }

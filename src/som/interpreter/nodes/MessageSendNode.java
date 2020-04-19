@@ -2,7 +2,7 @@ package som.interpreter.nodes;
 
 import static som.interpreter.nodes.SOMNode.unwrapIfNecessary;
 
-import java.util.HashMap;
+import java.util.Map;
 import java.util.concurrent.locks.Lock;
 
 import com.oracle.truffle.api.CompilerAsserts;
@@ -37,6 +37,7 @@ import som.vm.NotYetImplementedException;
 import som.vm.Primitives;
 import som.vmobjects.SSymbol;
 import tools.dym.Tags.VirtualInvoke;
+import tools.dym.profiles.DispatchProfile;
 
 
 public final class MessageSendNode {
@@ -322,7 +323,8 @@ public final class MessageSendNode {
     }
   }
 
-  public static final class GenericMessageSendNode extends AbstractMessageSendNode {
+  public static final class GenericMessageSendNode extends AbstractMessageSendNode
+      implements DispatchProfile {
 
     private final SSymbol selector;
 
@@ -394,7 +396,8 @@ public final class MessageSendNode {
       return Cost.getCost(dispatchNode);
     }
 
-    public void collectDispatchStatistics(final HashMap<Invokable, Integer> result) {
+    @Override
+    public void collectDispatchStatistics(final Map<Invokable, Integer> result) {
       dispatchNode.collectDispatchStatistics(result);
     }
   }

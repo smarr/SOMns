@@ -1,6 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
-import java.util.HashMap;
+import java.util.Map;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.GenerateWrapper;
@@ -48,5 +48,5 @@ public abstract class AbstractDispatchNode extends Node
     return new AbstractDispatchNodeWrapper(this, probe);
   }
 
-  public abstract void collectDispatchStatistics(HashMap<Invokable, Integer> result);
+  public abstract void collectDispatchStatistics(Map<Invokable, Integer> result);
 }

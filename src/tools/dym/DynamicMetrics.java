@@ -348,6 +348,21 @@ public class DynamicMetrics extends TruffleInstrument {
     return factory;
   }
 
+  private void addClosureApplicationInstrumentation(final Instrumenter instrumenter) {
+    Builder filters = SourceSectionFilter.newBuilder();
+    filters.tagIs(OpClosureApplication.class);
+
+    ExecutionEventNodeFactory factory = (final EventContext ctx) -> {
+      ClosureApplicationProfile profile = closureProfiles.computeIfAbsent(
+          ctx.getInstrumentedSourceSection(),
+          (final SourceSection source) -> new ClosureApplicationProfile(
+              ctx.getInstrumentedNode()));
+      return new CountingNode<ClosureApplicationProfile>(profile);
+    };
+
+    instrumenter.attachExecutionEventFactory(filters.build(), factory);
+  }
+
   private static final Class<?>[] NO_TAGS = new Class<?>[0];
 
   @Override
@@ -360,10 +375,7 @@ public class DynamicMetrics extends TruffleInstrument {
         addVirtualInvokeInstrumentation(instrumenter);
     addReceiverInstrumentation(instrumenter, virtInvokeFactory);
 
-    addInstrumentation(
-        instrumenter, closureProfiles,
-        new Class<?>[] {OpClosureApplication.class}, NO_TAGS,
-        ClosureApplicationProfile::new, CountingNode<ClosureApplicationProfile>::new);
+    addClosureApplicationInstrumentation(instrumenter);
 
     addInstrumentation(instrumenter, newObjectCounter,
         new Class<?>[] {NewObject.class}, NO_TAGS,
