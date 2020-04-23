@@ -243,9 +243,10 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                     if (sendNode instanceof EventualSendNode) {
                         name = "at message sent: " + symbol;
 
-                    } else {
-                        name = "Sent: "; //TODO check if needed
                     }
+//                    else {
+//                        name = "Sent: "; //TODO check if needed
+//                    }
                     useAgainShadowEntry = shadow;
                     useAgainFrame = localFrame;
                 } else if (shadow instanceof EntryForPromiseResolution) {
@@ -254,7 +255,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                         name = "resolved before callback: " + node.getOperation(); //this means the promise of this callback was resolved
                     } else {
 
-                        name = "resolved at: "+shadow.expression.getRootNode().getName();
+                        name = "on callback: "+shadow.expression.getRootNode().getName();
                     }
                 }
 
