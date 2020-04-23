@@ -5,6 +5,7 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 
@@ -18,6 +19,7 @@ import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
+import tools.asyncstacktraces.ShadowStackEntryLoad;
 import tools.dym.Tags.LoopNode;
 
 
@@ -25,6 +27,9 @@ import tools.dym.Tags.LoopNode;
 @Primitive(selector = "to:do:", noWrapper = true, disabled = true,
     specializer = ToDoSplzr.class, inParser = false)
 public abstract class IntToDoMessageNode extends TernaryExpressionNode {
+
+  @Child protected ShadowStackEntryLoad shadowStackEntryLoad = ShadowStackEntryLoad.create();
+
   public static class ToDoSplzr extends Specializer<VM, ExpressionNode, SSymbol> {
     public ToDoSplzr(final Primitive prim, final NodeFactory<ExpressionNode> fact) {
       super(prim, fact);
@@ -52,20 +57,20 @@ public abstract class IntToDoMessageNode extends TernaryExpressionNode {
   }
 
   @Specialization(guards = "block.getMethod() == blockMethod")
-  public long doIntToDo(final long receiver, final long limit, final SBlock block,
-      @Cached("block.getMethod()") final SInvokable blockMethod,
-      @Cached("create(blockMethod)") final DirectCallNode valueSend) {
-    return IntToByDoMessageNode.doLoop(valueSend, this, receiver,
-        limit, 1, block);
+  public long doIntToDo(final VirtualFrame frame, final long receiver, final long limit, final SBlock block,
+                        @Cached("block.getMethod()") final SInvokable blockMethod,
+                        @Cached("create(blockMethod)") final DirectCallNode valueSend) {
+    return IntToByDoMessageNode.doLoop(frame, valueSend, this, receiver,
+        limit, 1, block, shadowStackEntryLoad);
   }
 
   @Specialization(guards = "block.getMethod() == blockMethod")
-  public long doIntToDo(final long receiver, final double dLimit,
+  public long doIntToDo(final VirtualFrame frame, final long receiver, final double dLimit,
       final SBlock block,
       @Cached("block.getMethod()") final SInvokable blockMethod,
       @Cached("create(blockMethod)") final DirectCallNode valueSend) {
-    return IntToByDoMessageNode.doLoop(valueSend, this, receiver,
-        (long) dLimit, 1, block);
+    return IntToByDoMessageNode.doLoop(frame, valueSend, this, receiver,
+        (long) dLimit, 1, block, shadowStackEntryLoad);
   }
 
   @Override
