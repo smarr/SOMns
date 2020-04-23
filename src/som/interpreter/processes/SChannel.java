@@ -86,13 +86,9 @@ public class SChannel extends SAbstractObject {
     public Object read(final RecordOneEvent traceRead) throws InterruptedException {
       ObjectTransitionSafepoint.INSTANCE.unregister();
 
-      if (VmSettings.REPLAY) {
-        ReplayData.replayDelayNumberedEvent(this);
-      }
-
       try {
         if (VmSettings.REPLAY) {
-          ReplayData.replayDelayNumberedEvent(this, channel.getId());
+          ReplayData.replayDelayNumberedEvent(this);
         }
 
         synchronized (this) {
@@ -165,13 +161,9 @@ public class SChannel extends SAbstractObject {
         throws InterruptedException {
       ObjectTransitionSafepoint.INSTANCE.unregister();
 
-      if (VmSettings.REPLAY) {
-        ReplayData.replayDelayNumberedEvent(this);
-      }
-
       try {
         if (VmSettings.REPLAY) {
-          ReplayData.replayDelayNumberedEvent(this, channel.getId());
+          ReplayData.replayDelayNumberedEvent(this);
         }
 
         synchronized (this) {

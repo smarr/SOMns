@@ -34,8 +34,6 @@ public abstract class CreateActorPrim extends BinarySystemOperation {
   @Child protected ExceptionSignalingNode notAValue;
   @Child protected RecordOneEvent         trace;
 
-  @Child protected TraceActorCreationNode trace = TraceActorCreationNode.create();
-
   @Override
   public final CreateActorPrim initialize(final VM vm) {
     super.initialize(vm);

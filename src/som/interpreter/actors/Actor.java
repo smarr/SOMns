@@ -268,7 +268,7 @@ public class Actor implements Activity {
       } finally {
         ObjectTransitionSafepoint.INSTANCE.unregister();
 
-        if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
+        if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
           t.swapTracingBufferIfRequestedUnsync();
         }
         t.currentlyExecutingActor = null;
@@ -371,7 +371,8 @@ public class Actor implements Activity {
   }
 
   @Override
-  public void setStepToNextTurn(final boolean val) {}
+  public void setStepToNextTurn(final boolean val) {
+  }
 
   public static final class ActorProcessingThreadFactory
       implements ForkJoinWorkerThreadFactory {
