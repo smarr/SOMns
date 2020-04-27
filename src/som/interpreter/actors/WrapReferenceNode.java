@@ -13,7 +13,11 @@ public abstract class WrapReferenceNode extends Node {
 
   public abstract Object execute(Object ref, Actor target, Actor owner);
 
-  @Specialization(guards = "target == owner")
+  protected static final boolean notFarRef(final Object ref) {
+    return !(ref instanceof SFarReference);
+  }
+
+  @Specialization(guards = {"target == owner", "notFarRef(ref)"})
   public Object inSameActor(final Object ref, final Actor target, final Actor owner) {
     return ref;
   }
