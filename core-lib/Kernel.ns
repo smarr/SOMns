@@ -791,6 +791,8 @@ class Kernel vmMirror: vmMirror = Object <: Value (
 
     (* Preserves capacity *)
     public removeAll = (
+      firstIdx:: 1.
+      lastIdx:: 1.
       storage:: Array new: storage size.
     )
 
