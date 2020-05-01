@@ -735,6 +735,27 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     definition.add(source);
   }
 
+  private String stripColonsAndSourceLocation(String str) {
+    int startOfSource = str.indexOf('@');
+    if (startOfSource > -1) {
+      str = str.substring(0, startOfSource);
+    }
+    return str.replace(":", "");
+  }
+
+  public void setBlockSignature(final SourceCoordinate coord) {
+    String outerMethodName = stripColonsAndSourceLocation(getOuter().getName());
+
+    int argSize = getNumberOfArguments();
+    String blockSig = "λ" + outerMethodName + "@" + coord.startLine + "@" + coord.startColumn;
+
+    for (int i = 1; i < argSize; i++) {
+      blockSig += ":";
+    }
+
+    setSignature(symbolFor(blockSig));
+  }
+
   @Override
   public String toString() {
     MixinBuilder mixin = getMixin();
