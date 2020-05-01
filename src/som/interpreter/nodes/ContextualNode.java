@@ -21,6 +21,7 @@
  */
 package som.interpreter.nodes;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -78,6 +79,7 @@ public abstract class ContextualNode extends ExprWithTagsNode {
     if (i > 0) {
       boolean doBuildChain = determineContext == null;
       if (doBuildChain) {
+        CompilerDirectives.transferToInterpreterAndInvalidate();
         determineContext = buildChain(self, i);
       }
 
