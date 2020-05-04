@@ -5,9 +5,7 @@ import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
 
 
 public final class RecordEventNodes {
-  public static final int ONE_EVENT_SIZE   = 1 + Long.BYTES;
-  public static final int TWO_EVENT_SIZE   = 1 + (2 * Long.BYTES);
-  public static final int THREE_EVENT_SIZE = 1 + (3 * Long.BYTES);
+  public static final int ONE_EVENT_SIZE = 1 + Long.BYTES;
 
   public static class RecordOneEvent extends TraceNode {
     @Child TraceContextNode tracer = TraceContextNodeGen.create();

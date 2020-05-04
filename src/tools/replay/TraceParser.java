@@ -99,7 +99,8 @@ public final class TraceParser implements Closeable {
 
   public LinkedList<ReplayRecord> getReplayEventsForEntity(final long replayId) {
     EntityNode entity = entities.get(replayId);
-    assert !entity.retrieved;
+    assert entity != null : "No Data for Activity " + replayId;
+    assert !entity.retrieved : "Activity " + replayId + " was already retrieved";
     entity.retrieved = true;
     assert entity != null : "Missing Entity: " + replayId;
     return entity.getReplayEvents();

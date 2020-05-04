@@ -71,6 +71,8 @@ public final class TaskThreads {
           KomposTrace.currentActivity(this);
         } else if (VmSettings.UNIFORM_TRACING && this instanceof TracedThreadTask) {
           ActorExecutionTrace.recordActivityContext(this, ((TracedThreadTask) this).trace);
+        } else if (VmSettings.UNIFORM_TRACING && this instanceof TracedForkJoinTask) {
+          ActorExecutionTrace.recordActivityContext(this, ((TracedForkJoinTask) this).trace);
         }
 
         ForkJoinThread thread = (ForkJoinThread) Thread.currentThread();
@@ -110,14 +112,16 @@ public final class TaskThreads {
   public static class TracedForkJoinTask extends SomForkJoinTask {
     private static final long serialVersionUID = -2763766745049695112L;
 
-    private final long id;
-    protected boolean  stopOnJoin;
+    private final long             id;
+    protected boolean              stopOnJoin;
+    protected final VM             vm;
+    private int                    nextTraceBufferId;
+    private final TraceContextNode trace = TraceContextNodeGen.create();
 
-    private int nextTraceBufferId;
-
-    public TracedForkJoinTask(final Object[] argArray, final boolean stopOnRoot) {
+    public TracedForkJoinTask(final Object[] argArray, final boolean stopOnRoot, final VM vm) {
       super(argArray, stopOnRoot);
       this.id = TracingActivityThread.newEntityId();
+      this.vm = vm;
     }
 
     @Override
@@ -140,6 +144,27 @@ public final class TaskThreads {
     @Override
     public long getId() {
       return id;
+    }
+  }
+
+  public static class ReplayForkJoinTask extends TracedForkJoinTask {
+    private final LinkedList<ReplayRecord> replayEvents;
+    private final TraceParser              traceParser;
+
+    public ReplayForkJoinTask(final Object[] argArray, final boolean stopOnRoot, final VM vm) {
+      super(argArray, stopOnRoot, vm);
+      replayEvents = vm.getTraceParser().getReplayEventsForEntity(this.getId());
+      this.traceParser = vm.getTraceParser();
+    }
+
+    @Override
+    public LinkedList<ReplayRecord> getReplayEventBuffer() {
+      return this.replayEvents;
+    }
+
+    @Override
+    public TraceParser getTraceParser() {
+      return traceParser;
     }
   }
 
@@ -211,7 +236,6 @@ public final class TaskThreads {
 
   public static class ReplayThreadTask extends TracedThreadTask {
     private final LinkedList<ReplayRecord> replayEvents;
-    private int                            children = 0;
     private final TraceParser              traceParser;
 
     public ReplayThreadTask(final Object[] argArray, final boolean stopOnRoot, final VM vm) {

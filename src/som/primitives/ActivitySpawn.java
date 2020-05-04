@@ -26,6 +26,7 @@ import som.primitives.processes.ChannelPrimitives;
 import som.primitives.processes.ChannelPrimitives.Process;
 import som.primitives.processes.ChannelPrimitives.ReplayProcess;
 import som.primitives.processes.ChannelPrimitives.TracingProcess;
+import som.primitives.threading.TaskThreads.ReplayForkJoinTask;
 import som.primitives.threading.TaskThreads.ReplayThreadTask;
 import som.primitives.threading.TaskThreads.SomForkJoinTask;
 import som.primitives.threading.TaskThreads.SomThreadTask;
@@ -56,11 +57,13 @@ public abstract class ActivitySpawn {
 
   private static SomForkJoinTask createTask(final Object[] argArray,
       final boolean stopOnRoot, final SBlock block, final SourceSection section,
-      final RecordOneEvent traceThreadCreation) {
+      final RecordOneEvent traceThreadCreation, final VM vm) {
     SomForkJoinTask task;
 
-    if (VmSettings.KOMPOS_TRACING || VmSettings.UNIFORM_TRACING) {
-      task = new TracedForkJoinTask(argArray, stopOnRoot);
+    if (VmSettings.REPLAY) {
+      return new ReplayForkJoinTask(argArray, stopOnRoot, vm);
+    } else if (VmSettings.KOMPOS_TRACING || VmSettings.UNIFORM_TRACING) {
+      task = new TracedForkJoinTask(argArray, stopOnRoot, vm);
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.activityCreation(ActivityType.TASK, task.getId(),
@@ -155,7 +158,7 @@ public abstract class ActivitySpawn {
     @TruffleBoundary
     public final SomForkJoinTask spawnTask(final SClass clazz, final SBlock block) {
       SomForkJoinTask task = createTask(new Object[] {block},
-          onExec.executeShouldHalt(), block, sourceSection, traceProcCreation);
+          onExec.executeShouldHalt(), block, sourceSection, traceProcCreation, vm);
       forkJoinPool.execute(task);
       return task;
     }
@@ -245,7 +248,7 @@ public abstract class ActivitySpawn {
     public SomForkJoinTask spawnTask(final SClass clazz, final SBlock block,
         final SArray somArgArr, final Object[] argArr) {
       SomForkJoinTask task = createTask(argArr,
-          onExec.executeShouldHalt(), block, sourceSection, traceProcCreation);
+          onExec.executeShouldHalt(), block, sourceSection, traceProcCreation, vm);
       forkJoinPool.execute(task);
       return task;
     }
