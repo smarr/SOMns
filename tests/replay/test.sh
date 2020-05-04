@@ -158,3 +158,17 @@ do
   echo "========================================================"
   echo ""
 done
+
+echo   "====================== STM Replay ======================"
+for args in "${STM[@]}"
+do
+  echo "$args"
+  echo "Tracing:"
+  $SOM_DIR/som -t8 -G -JXmx1500m -at core-lib/Benchmarks/AsyncHarness.ns MultiParadigmBench 1000 0 100
+  echo ""
+  echo "Replay:"
+  $SOM_DIR/som -t8 -G -JXmx1500m -vmd -r core-lib/Benchmarks/AsyncHarness.ns MultiParadigmBench 1000 0 100
+  echo ""
+  echo "========================================================"
+  echo ""
+done
