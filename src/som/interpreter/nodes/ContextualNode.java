@@ -58,7 +58,8 @@ public abstract class ContextualNode extends ExprWithTagsNode {
 
   private DetermineContext buildChain(final SObjectWithContext self, final int i) {
     if (i > 0) {
-      DetermineContext outer = buildChain(self.getOuterSelf(rcvrType), i - 1);
+      DetermineContext outer =
+          buildChain(self.getOuterSelf(ValueProfile.createClassProfile()), i - 1);
       if (self instanceof SBlock) {
         return new BlockContext(outer);
       } else if (self instanceof SClass) {
