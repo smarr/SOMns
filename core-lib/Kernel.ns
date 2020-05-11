@@ -696,9 +696,9 @@ class Kernel vmMirror: vmMirror = Object <: Value (
   )
 
   public class Vector new: size = (
-  | private firstIdx ::= 1.
-    private lastIdx  ::= 1.
-    private storage  ::= Array new: size. |
+  | protected firstIdx ::= 1.
+    protected lastIdx  ::= 1.
+    protected storage  ::= Array new: size. |
   ) (
     (* Accessing *)
     public at: index = (
