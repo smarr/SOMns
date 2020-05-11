@@ -2,11 +2,11 @@ package som.primitives;
 
 import java.math.BigInteger;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.instrumentation.Tag;
-import com.oracle.truffle.api.profiles.BranchProfile;
 
 import bd.primitives.Primitive;
 import som.interpreter.nodes.nary.BinaryComplexOperation;
@@ -91,14 +91,13 @@ public abstract class IntegerPrims {
   @GenerateNodeFactory
   @Primitive(primitive = "int:leftShift:", selector = "<<", receiverType = Long.class)
   public abstract static class LeftShiftPrim extends ArithmeticPrim {
-    private final BranchProfile overflow = BranchProfile.create();
 
     @Specialization(rewriteOn = ArithmeticException.class)
     public final long doLong(final long receiver, final long right) {
       assert right >= 0; // currently not defined for negative values of right
 
       if (Long.SIZE - Long.numberOfLeadingZeros(receiver) + right > Long.SIZE - 1) {
-        overflow.enter();
+        CompilerDirectives.transferToInterpreterAndInvalidate();
         throw new ArithmeticException("shift overflows long");
       }
       return receiver << right;
