@@ -212,7 +212,7 @@ public class Actor implements Activity {
     private ExecutorRootNode(final SomLanguage language) {
       super(language);
 
-      if (VmSettings.UNIFORM_TRACING) {
+      if (VmSettings.SENDER_SIDE_TRACING) {
         this.recordPromiseChaining = new RecordOneEvent(TraceRecord.PROMISE_CHAINED);
       }
     }

@@ -41,7 +41,7 @@ public abstract class AbstractPromiseResolutionNode extends QuaternaryExpression
 
   protected AbstractPromiseResolutionNode() {
     haltNode = insert(SuspendExecutionNodeGen.create(0, null));
-    if (VmSettings.UNIFORM_TRACING) {
+    if (VmSettings.SENDER_SIDE_TRACING) {
       tracePromiseResolution = new RecordOneEvent(TraceRecord.PROMISE_RESOLUTION);
       tracePromiseResolutionEnd = new RecordOneEvent(TraceRecord.PROMISE_RESOLUTION_END);
       tracePromiseChaining = new RecordOneEvent(TraceRecord.PROMISE_CHAINED);

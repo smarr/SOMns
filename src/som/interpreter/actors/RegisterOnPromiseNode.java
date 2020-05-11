@@ -29,7 +29,7 @@ public abstract class RegisterOnPromiseNode {
 
     public RegisterWhenResolved(final ForkJoinPool actorPool) {
       schedule = SchedulePromiseHandlerNodeGen.create(actorPool);
-      if (VmSettings.UNIFORM_TRACING) {
+      if (VmSettings.SENDER_SIDE_TRACING) {
         promiseMsgSend = new RecordOneEvent(TraceRecord.PROMISE_MESSAGE);
       }
     }
@@ -129,7 +129,7 @@ public abstract class RegisterOnPromiseNode {
 
     public RegisterOnError(final ForkJoinPool actorPool) {
       this.schedule = SchedulePromiseHandlerNodeGen.create(actorPool);
-      if (VmSettings.UNIFORM_TRACING) {
+      if (VmSettings.SENDER_SIDE_TRACING) {
         this.promiseMsgSend = new RecordOneEvent(TraceRecord.PROMISE_MESSAGE);
       }
     }
