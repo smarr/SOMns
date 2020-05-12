@@ -192,7 +192,7 @@
         </exec>
     </target>
 
-    <target name="jvmci-libs">
+    <target name="jvmci-libs" unless="skip.libs">
         <get src="https://github.com/graalvm/openjdk8-jvmci-builder/releases/download/${jvmci.version}/openjdk-8u${jdk8.version}-${jvmci.version}-${kernel}.tar.gz"
              usetimestamp="true"
              dest="${lib.dir}/jvmci.tar.gz" />
