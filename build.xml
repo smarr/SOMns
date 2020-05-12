@@ -61,7 +61,7 @@
     <property name="jvmci.home"  location="${lib.dir}/jvmci${home.ext}" />
 
     <!-- <property name="lib.url" value="https://dl.bintray.com/smarr/SOM" /> -->
-    <property name="lib.url" value="http://stefan-marr.de/dev" />
+    <property name="lib.url" value="https://stefan-marr.de/dev" />
 
     <property name="mx.cmd" value="../../mx/mx" />
 
@@ -292,7 +292,7 @@
 
     <target name="jacoco-lib" description="Get JaCoCo dependency">
         <travis target="jacoco-lib" start="Get JaCoCo" />
-        <get src="http://search.maven.org/remotecontent?filepath=org/jacoco/jacoco/${jacoco.version}/jacoco-${jacoco.version}.zip"
+        <get src="https://search.maven.org/remotecontent?filepath=org/jacoco/jacoco/${jacoco.version}/jacoco-${jacoco.version}.zip"
             usetimestamp="true"
             dest="${lib.dir}/jacoco-${jacoco.version}.zip" />
         <unzip src="${lib.dir}/jacoco-${jacoco.version}.zip" dest="${lib.dir}/jacoco"/>
