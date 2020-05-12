@@ -28,7 +28,9 @@ public abstract class ReceivedRootNode extends RootNode {
   @Child protected AbstractPromiseResolutionNode resolve;
   @Child protected AbstractPromiseResolutionNode error;
 
-  @Child protected TraceMessageNode         msgTracer = TraceMessageNodeGen.create();
+  @Child protected TraceMessageNode msgTracer =
+      VmSettings.ACTOR_TRACING ? TraceMessageNodeGen.create() : null;
+
   @Child protected MessageSerializationNode serializer;
 
   private final VM            vm;
