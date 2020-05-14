@@ -14,6 +14,7 @@ public enum SendOp {
 
   private static final int SYMBOL_ID_SIZE = 2;
   private static final int RECEIVER_ACTOR_ID_SIZE = 8;
+  private static final int PROMISE_VALUE_SIZE = 4;
 
   SendOp(final byte id, final EntityType entity, final EntityType target) {
     this.id = id;
@@ -35,5 +36,10 @@ public enum SendOp {
 
   public int getSize() {
     return 17 + RECEIVER_ACTOR_ID_SIZE + SYMBOL_ID_SIZE + TraceData.SOURCE_SECTION_SIZE;
+  }
+
+  //Adds the promise value size and the number of bytes for an integer (4), which is also recorded
+  public int getSize(byte[] promiseValue) {
+    return 17 + RECEIVER_ACTOR_ID_SIZE + SYMBOL_ID_SIZE + TraceData.SOURCE_SECTION_SIZE + promiseValue.length + PROMISE_VALUE_SIZE;
   }
 }

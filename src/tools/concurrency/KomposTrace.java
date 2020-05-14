@@ -4,6 +4,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.source.SourceSection;
 
 import bd.source.SourceCoordinate;
+import som.interpreter.Types;
 import som.interpreter.actors.Actor;
 import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.Activity;
@@ -28,7 +29,7 @@ public class KomposTrace {
     KomposTraceBuffer buffer = KomposTraceBuffer.create(0);
     buffer.recordCurrentActivity(mainActor);
     buffer.recordMainActor(mainActor, objectSystem);
-    buffer.recordSendOperation(SendOp.ACTOR_MSG, 0, mainActor.getId(), mainActor, (short) 0, 0, null);
+    buffer.recordSendOperation(SendOp.ACTOR_MSG, 0, mainActor.getId(), mainActor, (short) 0, 0, null, null);
     buffer.returnBuffer(null);
   }
 
@@ -82,9 +83,12 @@ public class KomposTrace {
     assert current instanceof TracingActivityThread;
     TracingActivityThread t = (TracingActivityThread) current;
 
+    String name = Types.toDebuggerString(value);
+    byte[] nameBytes = name.getBytes();
+
     ((KomposTraceBuffer) t.getBuffer()).recordSendOperation(SendOp.PROMISE_RESOLUTION, 0,
         promiseId,
-        t.getActivity(), (short) 0, 0, null);
+        t.getActivity(), (short) 0, 0, null, nameBytes);
     t.resolvedPromises++;
   }
 
@@ -92,9 +96,11 @@ public class KomposTrace {
     Thread current = Thread.currentThread();
     assert current instanceof TracingActivityThread;
     TracingActivityThread t = (TracingActivityThread) current;
+    String error = Types.toDebuggerString(value);
+    byte[] errorBytes = error.getBytes();
     ((KomposTraceBuffer) t.getBuffer()).recordSendOperation(SendOp.PROMISE_RESOLUTION, 0,
         promiseId,
-        t.getActivity(), (short) 0, 0, null);
+        t.getActivity(), (short) 0, 0, null, errorBytes);
     t.erroredPromises++;
   }
 
@@ -107,7 +113,7 @@ public class KomposTrace {
   public static void promiseChained(final long promiseValueId, final long promiseId) {
     TracingActivityThread t = getThread();
     ((KomposTraceBuffer) t.getBuffer()).recordSendOperation(
-        SendOp.PROMISE_RESOLUTION, promiseValueId, promiseId, t.getActivity(), (short) 0, 0, null);
+        SendOp.PROMISE_RESOLUTION, promiseValueId, promiseId, t.getActivity(), (short) 0, 0, null, null);
     t.resolvedPromises++;
   }
 
@@ -115,7 +121,7 @@ public class KomposTrace {
       final long targetId, final SSymbol selector, long targetActorId, SourceSection msgSourceCoordinate) {
     TracingActivityThread t = getThread();
     ((KomposTraceBuffer) t.getBuffer()).recordSendOperation(op, entityId, targetId,
-        t.getActivity(), selector.getSymbolId(), targetActorId, msgSourceCoordinate);
+        t.getActivity(), selector.getSymbolId(), targetActorId, msgSourceCoordinate, null);
   }
 
   public static void receiveOperation(final ReceiveOp op, final long sourceId) {
@@ -343,8 +349,14 @@ public class KomposTrace {
     }
 
     public void recordSendOperation(final SendOp op, final long entityId,
-        final long targetId, final Activity current, final short symbolId, long targetActorId, SourceSection msgSourceCoordinate) {
-      int requiredSpace = op.getSize();
+        final long targetId, final Activity current, final short symbolId, long targetActorId, SourceSection msgSourceCoordinate, byte[] value) {
+      int requiredSpace;
+      if (value == null) {
+        requiredSpace = op.getSize();
+      } else {
+        requiredSpace = op.getSize(value);
+      }
+
       ensureSufficientSpace(requiredSpace, current);
 
       final int start = position;
@@ -356,6 +368,13 @@ public class KomposTrace {
 
       if (VmSettings.KOMPOS_TRACING) {
          writeSourceSection(msgSourceCoordinate);
+      }
+
+      if(value != null) {
+        putInt(value.length);
+        for (byte b : value) {
+          put(b);
+        }
       }
 
       assert position == start + requiredSpace;
@@ -406,8 +425,8 @@ public class KomposTrace {
 
       @Override
       public synchronized void recordSendOperation(final SendOp op,
-          final long entityId, final long targetId, final Activity current, final short symbol, final long targetActorId, final SourceSection section) {
-        super.recordSendOperation(op, entityId, targetId, current, symbol, targetActorId, section);
+          final long entityId, final long targetId, final Activity current, final short symbol, final long targetActorId, final SourceSection section, byte[] value) {
+        super.recordSendOperation(op, entityId, targetId, current, symbol, targetActorId, section, value);
       }
     }
   }
