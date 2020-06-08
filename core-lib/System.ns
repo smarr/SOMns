@@ -48,6 +48,7 @@ class System usingVmMirror: vmMirror = Value (
 
   (* Actor Tracing Statistics *)
   public traceStatistics = ( ^ vmMirror traceStatistics: nil )
+  public hasTraceStatistics = (^ vmMirror hasTraceStatistics: nil)
   public memoryStatistics = ( ^ vmMirror memoryStatistics: nil )
   public hasMemoryStatistics = (^ vmMirror hasMemoryStatistics: nil)
 

@@ -123,8 +123,11 @@ class AsyncHarness usingPlatform: platform = Value (
       | stats = system traceStatistics.
         memstats = system memoryStatistics.
       |
-      (name + ': trace size:    ' + (stats at: 1) + 'byte') println.
-      (name + ': external data: ' + (stats at: 2) + 'byte') println.
+
+      system hasTraceStatistics ifTrue:[
+        (name + ': trace size:    ' + (stats at: 1) + 'byte') println.
+        (name + ': external data: ' + (stats at: 2) + 'byte') println.
+      ].
 
       system hasMemoryStatistics ifTrue:[
         (name + ': heap:    ' + (memstats at: 1) + 'byte') println.

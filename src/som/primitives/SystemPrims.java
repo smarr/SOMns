@@ -101,6 +101,16 @@ public final class SystemPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive(primitive = "hasTraceStatistics:")
+  public abstract static class HasTraceStatisticsPrim extends UnarySystemOperation {
+    @Specialization
+    @TruffleBoundary
+    public final Object doSObject(final Object module) {
+      return VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING;
+    }
+  }
+
+  @GenerateNodeFactory
   @Primitive(primitive = "memoryStatistics:")
   public abstract static class MemoryStatisticsPrim extends UnarySystemOperation {
     @Specialization
