@@ -64,7 +64,7 @@ import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.concurrency.TracingBackend;
 import tools.dym.Tags.BasicPrimitiveOperation;
-import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.actors.UniformExecutionTrace;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
 import tools.snapshot.SnapshotBackend;
@@ -379,7 +379,7 @@ public final class SystemPrims {
 
       long res = System.currentTimeMillis() - startTime;
       if (VmSettings.UNIFORM_TRACING) {
-        ActorExecutionTrace.longSystemCall(res, tracer);
+        UniformExecutionTrace.longSystemCall(res, tracer);
       }
       return res;
     }
@@ -470,7 +470,7 @@ public final class SystemPrims {
       long res = System.nanoTime() / 1000L - startMicroTime;
 
       if (VmSettings.UNIFORM_TRACING) {
-        ActorExecutionTrace.longSystemCall(res, tracer);
+        UniformExecutionTrace.longSystemCall(res, tracer);
       }
       return res;
     }

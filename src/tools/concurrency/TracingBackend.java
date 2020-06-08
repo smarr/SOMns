@@ -40,7 +40,7 @@ import som.vmobjects.SSymbol;
 import tools.debugger.FrontendConnector;
 import tools.replay.StringWrapper;
 import tools.replay.TwoDArrayWrapper;
-import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.actors.UniformExecutionTrace;
 
 
 /**
@@ -442,7 +442,7 @@ public class TracingBackend {
             StringWrapper sw = (StringWrapper) oo;
             byte[] bytes = sw.s.getBytes();
             byte[] header =
-                ActorExecutionTrace.getExtDataHeader(sw.actorId, sw.dataId, bytes.length);
+                UniformExecutionTrace.getExtDataHeader(sw.actorId, sw.dataId, bytes.length);
 
             if (edfos != null) {
               edfos.getChannel().write(ByteBuffer.wrap(header));
@@ -517,7 +517,7 @@ public class TracingBackend {
       }
 
       byte[] header =
-          ActorExecutionTrace.getExtDataHeader(aw.actorId, aw.dataId, numBytes);
+          UniformExecutionTrace.getExtDataHeader(aw.actorId, aw.dataId, numBytes);
 
       if (edfos != null) {
         edfos.getChannel().write(ByteBuffer.wrap(header));

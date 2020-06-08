@@ -7,7 +7,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.vm.VmSettings;
 import sun.misc.Unsafe;
-import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
+import tools.replay.actors.UniformExecutionTrace.UniformTraceBuffer;
 import tools.replay.nodes.TraceContextNode;
 
 
@@ -18,7 +18,7 @@ public abstract class TraceBuffer {
     if (VmSettings.KOMPOS_TRACING) {
       return new KomposTrace.KomposTraceBuffer(threadId);
     } else {
-      return new ActorTraceBuffer();
+      return new UniformTraceBuffer();
     }
   }
 

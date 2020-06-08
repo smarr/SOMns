@@ -48,7 +48,7 @@ import tools.debugger.session.Breakpoints;
 import tools.replay.ReplayRecord;
 import tools.replay.TraceParser;
 import tools.replay.TraceRecord;
-import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.actors.UniformExecutionTrace;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
@@ -184,7 +184,7 @@ public abstract class ChannelPrimitives {
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.currentActivity(this);
       } else if (VmSettings.UNIFORM_TRACING) {
-        ActorExecutionTrace.recordActivityContext(this, trace);
+        UniformExecutionTrace.recordActivityContext(this, trace);
       }
     }
 

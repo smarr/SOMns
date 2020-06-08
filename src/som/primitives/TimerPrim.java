@@ -31,7 +31,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors.ReplayActor;
 import tools.replay.TraceParser;
-import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.actors.UniformExecutionTrace;
 import tools.replay.actors.ExternalEventualMessage.ExternalDirectMessage;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
@@ -95,7 +95,7 @@ public abstract class TimerPrim extends BinarySystemOperation {
 
     int id = nextTimerTaskId.getAndIncrement();
     if (VmSettings.UNIFORM_TRACING) {
-      ActorExecutionTrace.intSystemCall(id, tracer);
+      UniformExecutionTrace.intSystemCall(id, tracer);
     }
 
     timer.schedule(new TimerTask() {

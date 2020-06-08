@@ -1,7 +1,7 @@
 package tools.replay.nodes;
 
 import tools.replay.TraceRecord;
-import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
+import tools.replay.actors.UniformExecutionTrace.UniformTraceBuffer;
 
 
 public final class RecordEventNodes {
@@ -17,14 +17,14 @@ public final class RecordEventNodes {
       this.eventType = eventType;
     }
 
-    private ActorTraceBuffer getStorage(final int entrySize) {
-      ActorTraceBuffer buffer = getCurrentBuffer();
+    private UniformTraceBuffer getStorage(final int entrySize) {
+      UniformTraceBuffer buffer = getCurrentBuffer();
       buffer.ensureSufficientSpace(entrySize, tracer);
       return buffer;
     }
 
     public void record(final long id) {
-      ActorTraceBuffer storage = getStorage(ONE_EVENT_SIZE);
+      UniformTraceBuffer storage = getStorage(ONE_EVENT_SIZE);
       int pos = storage.position();
 
       assert id >= 0;

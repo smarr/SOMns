@@ -8,7 +8,7 @@ import som.primitives.threading.TaskThreads.TracedThreadTask;
 import som.vm.Activity;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.replay.TraceRecord;
-import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
+import tools.replay.actors.UniformExecutionTrace.UniformTraceBuffer;
 
 
 public abstract class TraceContextNode extends TraceNode {
@@ -41,7 +41,7 @@ public abstract class TraceContextNode extends TraceNode {
   }
 
   protected void writeContext(final long id, final int bufferId) {
-    ActorTraceBuffer buffer = getCurrentBuffer();
+    UniformTraceBuffer buffer = getCurrentBuffer();
     int pos = buffer.position();
 
     buffer.putByteAt(pos, TraceRecord.ACTIVITY_CONTEXT.value);

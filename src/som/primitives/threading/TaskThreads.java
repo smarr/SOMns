@@ -24,7 +24,7 @@ import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.replay.ReplayRecord;
 import tools.replay.TraceParser;
-import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.actors.UniformExecutionTrace;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
 
@@ -70,9 +70,9 @@ public final class TaskThreads {
         if (VmSettings.KOMPOS_TRACING) {
           KomposTrace.currentActivity(this);
         } else if (VmSettings.UNIFORM_TRACING && this instanceof TracedThreadTask) {
-          ActorExecutionTrace.recordActivityContext(this, ((TracedThreadTask) this).trace);
+          UniformExecutionTrace.recordActivityContext(this, ((TracedThreadTask) this).trace);
         } else if (VmSettings.UNIFORM_TRACING && this instanceof TracedForkJoinTask) {
-          ActorExecutionTrace.recordActivityContext(this, ((TracedForkJoinTask) this).trace);
+          UniformExecutionTrace.recordActivityContext(this, ((TracedForkJoinTask) this).trace);
         }
 
         ForkJoinThread thread = (ForkJoinThread) Thread.currentThread();

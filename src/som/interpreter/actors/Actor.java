@@ -27,7 +27,7 @@ import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.dym.DynamicMetrics;
 import tools.replay.TraceRecord;
-import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.actors.UniformExecutionTrace;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
@@ -285,7 +285,7 @@ public class Actor implements Activity {
       t.currentlyExecutingActor = actor;
 
       if (VmSettings.UNIFORM_TRACING) {
-        ActorExecutionTrace.recordActivityContext(actor, tracer);
+        UniformExecutionTrace.recordActivityContext(actor, tracer);
       } else if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.currentActivity(actor);
       }
