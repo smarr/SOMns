@@ -371,8 +371,7 @@ public class Actor implements Activity {
   }
 
   @Override
-  public void setStepToNextTurn(final boolean val) {
-  }
+  public void setStepToNextTurn(final boolean val) { }
 
   public static final class ActorProcessingThreadFactory
       implements ForkJoinWorkerThreadFactory {

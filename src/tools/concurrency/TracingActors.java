@@ -498,12 +498,12 @@ public class TracingActors {
       long    sender;
       long    resolver;
 
-      public MessageRecord(final long sender) {
+      MessageRecord(final long sender) {
         this.sender = sender;
         this.isPromiseMessage = false;
       }
 
-      public MessageRecord(final long sender, final long resolver) {
+      MessageRecord(final long sender, final long resolver) {
         this.sender = sender;
         this.resolver = resolver;
         this.isPromiseMessage = true;

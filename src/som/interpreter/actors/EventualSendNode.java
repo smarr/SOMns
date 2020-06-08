@@ -67,8 +67,7 @@ public class EventualSendNode extends ExprWithTagsNode {
   }
 
   /** For wrappers. */
-  protected EventualSendNode() {
-  }
+  protected EventualSendNode() { }
 
   @Override
   public WrapperNode createWrapper(final ProbeNode probe) {
