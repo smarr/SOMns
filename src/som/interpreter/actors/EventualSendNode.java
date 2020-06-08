@@ -355,8 +355,9 @@ public class EventualSendNode extends ExprWithTagsNode {
       }
 
       if (VmSettings.SENDER_SIDE_REPLAY) {
-        // TODO similar thing for any other usages of actor.send(). especially in timer prim
-        // and any external modules!
+        // Note: When implementing external events, such as timers or HTTP servers,
+        // that use actor.send() to directly insert messages to the mailbox,
+        // the following steps need to be performed first.
         ReplayRecord npr = current.getNextReplayEvent();
         assert npr.type == TraceRecord.MESSAGE;
         msg.setReplayVersion(npr.eventNo);
