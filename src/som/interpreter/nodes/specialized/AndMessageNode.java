@@ -60,10 +60,14 @@ public abstract class AndMessageNode extends BinaryComplexOperation {
       BinaryExpressionNode node;
       if (unwrapIfNecessary(argNodes[1]) instanceof BlockNode) {
         node = (BinaryExpressionNode) fact.createNode(
-            arguments[1], argNodes[0], argNodes[1]);
+            arguments[1],
+            eagerWrapper ? null : argNodes[0],
+            eagerWrapper ? null : argNodes[1]);
       } else {
         assert arguments == null || arguments[1] instanceof Boolean;
-        node = (BinaryExpressionNode) boolFact.createNode(argNodes[0], argNodes[1]);
+        node = (BinaryExpressionNode) boolFact.createNode(
+            eagerWrapper ? null : argNodes[0],
+            eagerWrapper ? null : argNodes[1]);
       }
       node.initialize(section, eagerWrapper);
       return node;
