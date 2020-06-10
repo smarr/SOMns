@@ -3,6 +3,7 @@ package tools.debugger.message;
 import java.util.ArrayList;
 
 import com.oracle.truffle.api.debug.DebugStackFrame;
+import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 
@@ -69,16 +70,16 @@ public final class ScopesResponse extends Response {
       final int requestId) {
     DebugStackFrame frame = suspension.getFrame(globalFrameId);
     ArrayList<Scope> scopes = new ArrayList<>(SMALL_INITIAL_SIZE);
-    MaterializedFrame mFrame = frame.getFrame();
+    Frame actualFrame = frame.getFrame();
 
     RootNode invokable = frame.getRootNode();
     if (invokable instanceof Method) {
       Method m = (Method) invokable;
       MethodScope scope = m.getLexicalScope();
-      long scopeId = suspension.addScope(mFrame, scope);
+      long scopeId = suspension.addScope(actualFrame, scope);
       scopes.add(new Scope("Locals", scopeId, false));
 
-      Object rcvr = SArguments.rcvr(mFrame);
+      Object rcvr = SArguments.rcvr(actualFrame);
       addScopes(scopes, scope, rcvr, suspension);
     } else if (invokable instanceof ReceivedRootNode) {
       // NOOP, no scopes here

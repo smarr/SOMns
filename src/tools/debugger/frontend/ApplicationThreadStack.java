@@ -5,7 +5,7 @@ import java.util.HashMap;
 
 import com.oracle.truffle.api.debug.DebugStackFrame;
 import com.oracle.truffle.api.debug.SuspendedEvent;
-import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.frame.Frame;
 
 import som.interpreter.LexicalScope.MethodScope;
 
@@ -46,8 +46,7 @@ class ApplicationThreadStack {
     return stackFrames;
   }
 
-  long addScope(final MaterializedFrame frame,
-      final MethodScope lexicalScope) {
+  long addScope(final Frame frame, final MethodScope lexicalScope) {
     scopesAndObjects.add(new RuntimeScope(frame, lexicalScope));
     return getLastScopeOrVarId();
   }
