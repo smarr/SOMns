@@ -64,20 +64,29 @@ public class SafepointPhaserTest {
 
     ParallelHelper.executeNTimesInParallel((final int id) -> {
 
-      ObjectTransitionSafepoint.INSTANCE.register();
-
       try {
-        barrier.await();
-      } catch (InterruptedException | BrokenBarrierException e) {
-        throw new RuntimeException(e);
+        ObjectTransitionSafepoint.INSTANCE.register();
+
+        try {
+          barrier.await();
+        } catch (InterruptedException | BrokenBarrierException e) {
+          throw new RuntimeException(e);
+        }
+
+        ObjectTransitionSafepoint.INSTANCE.transitionObject(
+            new SMutableObject(instanceClass, factory, layout));
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
       }
-
-      ObjectTransitionSafepoint.INSTANCE.transitionObject(
-          new SMutableObject(instanceClass, factory, layout));
-
-      ObjectTransitionSafepoint.INSTANCE.unregister();
       return null;
     });
+  }
+
+  private void transitionObject() {
+    for (int i = 0; i < 1181; i += 1) {
+      ObjectTransitionSafepoint.INSTANCE.transitionObject(
+          new SMutableObject(instanceClass, factory, layout));
+    }
   }
 
   @Test
@@ -85,37 +94,39 @@ public class SafepointPhaserTest {
     ObjectTransitionSafepoint.reset();
     ParallelHelper.executeNTimesInParallel((final int id) -> {
 
-      ObjectTransitionSafepoint.INSTANCE.register();
+      try {
+        ObjectTransitionSafepoint.INSTANCE.register();
 
-      for (int i = 0; i < 500_000; i += 1) {
-        ObjectTransitionSafepoint.INSTANCE.transitionObject(
-            new SMutableObject(instanceClass, factory, layout));
+        for (int i = 0; i < 1181; i += 1) {
+          transitionObject();
+        }
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
       }
-
-      ObjectTransitionSafepoint.INSTANCE.unregister();
       return null;
-    }, 60);
+    }, 240);
   }
 
   @Test
   public void testSingleSafepointStorm() throws InterruptedException {
     ObjectTransitionSafepoint.reset();
     ParallelHelper.executeNTimesInParallel((final int id) -> {
+      try {
+        ObjectTransitionSafepoint.INSTANCE.register();
 
-      ObjectTransitionSafepoint.INSTANCE.register();
-
-      for (int i = 0; i < 100_000; i += 1) {
-        if (id == 0) {
-          ObjectTransitionSafepoint.INSTANCE.transitionObject(
-              new SMutableObject(instanceClass, factory, layout));
-        } else {
-          ObjectTransitionSafepoint.INSTANCE.checkAndPerformSafepoint();
+        for (int i = 0; i < 100_000; i += 1) {
+          if (id == 0) {
+            ObjectTransitionSafepoint.INSTANCE.transitionObject(
+                new SMutableObject(instanceClass, factory, layout));
+          } else {
+            ObjectTransitionSafepoint.INSTANCE.checkAndPerformSafepoint();
+          }
         }
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
       }
-
-      ObjectTransitionSafepoint.INSTANCE.unregister();
       return null;
-    }, 60);
+    }, 120);
   }
 
   @Test
@@ -123,15 +134,17 @@ public class SafepointPhaserTest {
     ObjectTransitionSafepoint.reset();
     ParallelHelper.executeNTimesInParallel((final int id) -> {
       for (int i = 0; i < 100_000; i += 1) {
-        ObjectTransitionSafepoint.INSTANCE.register();
+        try {
+          ObjectTransitionSafepoint.INSTANCE.register();
 
-        ObjectTransitionSafepoint.INSTANCE.transitionObject(
-            new SMutableObject(instanceClass, factory, layout));
-
-        ObjectTransitionSafepoint.INSTANCE.unregister();
+          ObjectTransitionSafepoint.INSTANCE.transitionObject(
+              new SMutableObject(instanceClass, factory, layout));
+        } finally {
+          ObjectTransitionSafepoint.INSTANCE.unregister();
+        }
       }
       return null;
-    }, 60);
+    }, 120);
   }
 
   @Test
@@ -139,16 +152,18 @@ public class SafepointPhaserTest {
     ObjectTransitionSafepoint.reset();
     ParallelHelper.executeNTimesInParallel((final int id) -> {
       for (int i = 0; i < 100_000; i += 1) {
-        ObjectTransitionSafepoint.INSTANCE.register();
+        try {
+          ObjectTransitionSafepoint.INSTANCE.register();
 
-        if (id == 0) {
-          ObjectTransitionSafepoint.INSTANCE.transitionObject(
-              new SMutableObject(instanceClass, factory, layout));
-        } else {
-          ObjectTransitionSafepoint.INSTANCE.checkAndPerformSafepoint();
+          if (id == 0) {
+            ObjectTransitionSafepoint.INSTANCE.transitionObject(
+                new SMutableObject(instanceClass, factory, layout));
+          } else {
+            ObjectTransitionSafepoint.INSTANCE.checkAndPerformSafepoint();
+          }
+        } finally {
+          ObjectTransitionSafepoint.INSTANCE.unregister();
         }
-
-        ObjectTransitionSafepoint.INSTANCE.unregister();
       }
       return null;
     }, 60);
@@ -159,8 +174,11 @@ public class SafepointPhaserTest {
     ObjectTransitionSafepoint.reset();
     ParallelHelper.executeNTimesInParallel((final int id) -> {
       for (int i = 0; i < 100_000; i += 1) {
-        ObjectTransitionSafepoint.INSTANCE.register();
-        ObjectTransitionSafepoint.INSTANCE.unregister();
+        try {
+          ObjectTransitionSafepoint.INSTANCE.register();
+        } finally {
+          ObjectTransitionSafepoint.INSTANCE.unregister();
+        }
       }
       return null;
     }, 60);
