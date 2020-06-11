@@ -1,5 +1,6 @@
 package som.interpreter.nodes.literals;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.SourceSection;
@@ -95,7 +96,9 @@ public abstract class ArrayLiteralNode extends LiteralNode {
     public final Object executeGeneric(final VirtualFrame frame) {
       Object storage = executeSpecialized(frame);
       SMutableArray result = new SMutableArray(storage, Classes.arrayClass);
+
       if (!expectedType(result)) {
+        CompilerDirectives.transferToInterpreterAndInvalidate();
         replace(new Objects(expressions).initialize(sourceSection));
       }
       return result;
