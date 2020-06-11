@@ -24,6 +24,8 @@
 
 package som.vmobjects;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.interop.ArityException;
 import com.oracle.truffle.api.interop.InteropLibrary;
@@ -93,6 +95,11 @@ public final class SBlock extends SAbstractObject implements SObjectWithContext 
       throws UnsupportedTypeException, ArityException, UnsupportedMessageException {
     VM.thisMethodNeedsToBeOptimized(
         "Not ready for compilation, just moved from old interop code");
+
+    if (TruffleOptions.AOT) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+    }
+
     final BlockDispatchNode block = BlockDispatchNodeGen.create();
     final ToSomConversion convert = ToSomConversionNodeGen.create(null);
 

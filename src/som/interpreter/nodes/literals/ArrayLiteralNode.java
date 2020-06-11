@@ -58,6 +58,8 @@ public abstract class ArrayLiteralNode extends LiteralNode {
 
     @Override
     public Object executeGeneric(final VirtualFrame frame) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+
       Object storage =
           ArraySetAllStrategy.evaluateFirstDetermineStorageAndEvaluateRest(frame, expressions);
       SMutableArray arr = new SMutableArray(storage, Classes.arrayClass);

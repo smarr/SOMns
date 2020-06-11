@@ -1,6 +1,6 @@
 package som.interpreter.nodes.specialized;
 
-import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -71,11 +71,10 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
   @Specialization(replaces = {"doIfTrueIfFalseWithInliningTwoBlocks"})
   public final Object doIfTrueIfFalse(final boolean receiver,
       final SBlock trueBlock, final SBlock falseBlock) {
-    CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.10");
     if (condProf.profile(receiver)) {
-      return trueBlock.getMethod().invoke(call, new Object[] {trueBlock});
+      return invokeBlock(trueBlock);
     } else {
-      return falseBlock.getMethod().invoke(call, new Object[] {falseBlock});
+      return invokeBlock(falseBlock);
     }
   }
 
@@ -105,8 +104,7 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
     if (condProf.profile(receiver)) {
       return trueValue;
     } else {
-      CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.20");
-      return falseBlock.getMethod().invoke(call, new Object[] {falseBlock});
+      return invokeBlock(falseBlock);
     }
   }
 
@@ -114,11 +112,15 @@ public abstract class IfTrueIfFalseMessageNode extends TernaryExpressionNode {
   public final Object doIfTrueIfFalseFalseValue(final boolean receiver,
       final SBlock trueBlock, final Object falseValue) {
     if (condProf.profile(receiver)) {
-      CompilerAsserts.neverPartOfCompilation("IfTrueIfFalseMessageNode.30");
-      return trueBlock.getMethod().invoke(call, new Object[] {trueBlock});
+      return invokeBlock(trueBlock);
     } else {
       return falseValue;
     }
+  }
+
+  @TruffleBoundary
+  private Object invokeBlock(final SBlock block) {
+    return block.getMethod().invoke(call, new Object[] {block});
   }
 
   @Specialization

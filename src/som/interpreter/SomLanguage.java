@@ -9,10 +9,12 @@ import org.graalvm.options.OptionKey;
 
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.Option;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.debug.DebuggerTags.AlwaysHalt;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.ProvidedTags;
@@ -217,6 +219,10 @@ public final class SomLanguage extends TruffleLanguage<VM> {
   public static SomLanguage getLanguage(final Node node) {
     CompilerAsserts.neverPartOfCompilation(
         "This is a simple hack to get the VM object, and should never be on the fast path");
+    if (TruffleOptions.AOT) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+    }
+
     return node.getRootNode().getLanguage(SomLanguage.class);
   }
 
