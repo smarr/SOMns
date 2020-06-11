@@ -59,7 +59,7 @@ public final class Primitive extends Invokable {
     if (n != expressionOrSequence) {
       nodeType += " (wrapped)"; // indicate that it is wrapped
     }
-    return "Primitive " + nodeType + "@" + Integer.toHexString(hashCode());
+    return nodeType + "\t@" + Integer.toHexString(hashCode());
   }
 
   @Override

@@ -82,7 +82,7 @@ public final class Method extends Invokable {
 
   @Override
   public String toString() {
-    return "Method " + getName() + "\t@" + Integer.toHexString(hashCode());
+    return getName() + "\t@" + Integer.toHexString(hashCode());
   }
 
   @Override
