@@ -126,7 +126,7 @@ public class SafepointPhaserTest {
         ObjectTransitionSafepoint.INSTANCE.unregister();
       }
       return null;
-    }, 120);
+    }, 240);
   }
 
   @Test
