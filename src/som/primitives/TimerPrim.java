@@ -1,23 +1,14 @@
 package som.primitives;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.BiConsumer;
-
+import bd.primitives.Primitive;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
-
-import bd.primitives.Primitive;
 import som.VM;
 import som.compiler.AccessModifier;
+import som.interpreter.SArguments;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage.DirectMessage;
 import som.interpreter.actors.EventualSendNode;
@@ -35,6 +26,11 @@ import tools.replay.actors.UniformExecutionTrace;
 import tools.replay.actors.ExternalEventualMessage.ExternalDirectMessage;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
+
+import java.util.*;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BiConsumer;
 
 
 @GenerateNodeFactory
@@ -101,8 +97,10 @@ public abstract class TimerPrim extends BinarySystemOperation {
     timer.schedule(new TimerTask() {
       @Override
       public void run() {
+        Object[] args = SArguments.convertToArgumentArray(new Object[] {target});
+
         ExternalDirectMessage msg = new ExternalDirectMessage(targetActor,
-            VALUE_SELECTOR, new Object[] {target}, timerActor, null, valueCallTarget,
+            VALUE_SELECTOR, args, timerActor, null, valueCallTarget,
             (short) 0, id);
         targetActor.send(msg, actorPool);
       }
