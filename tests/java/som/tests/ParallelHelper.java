@@ -53,7 +53,7 @@ public final class ParallelHelper {
       }
 
       assertTrue("Failed parallel test with: " + exceptions, exceptions.isEmpty());
-      assertTrue(allArrivedWithinTime);
+      assertTrue("Some threads timed out on threadsDone", allArrivedWithinTime);
     } finally {
       threadPool.shutdownNow();
     }
