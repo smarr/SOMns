@@ -24,10 +24,9 @@ public final class ParallelHelper {
     int numThreads = getNumberOfThreads();
 
     ExecutorService threadPool = Executors.newFixedThreadPool(numThreads);
+    List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
 
     try {
-      List<Throwable> exceptions = Collections.synchronizedList(new ArrayList<Throwable>());
-
       CountDownLatch threadsInitialized = new CountDownLatch(numThreads);
       CountDownLatch threadsDone = new CountDownLatch(numThreads);
 
@@ -41,8 +40,9 @@ public final class ParallelHelper {
             task.apply(id);
           } catch (Throwable t) {
             exceptions.add(t);
+          } finally {
+            threadsDone.countDown();
           }
-          threadsDone.countDown();
         });
       }
       boolean allArrivedWithinTime = threadsDone.await(timeoutInSeconds, TimeUnit.SECONDS);
@@ -53,7 +53,7 @@ public final class ParallelHelper {
       }
 
       assertTrue("Failed parallel test with: " + exceptions, exceptions.isEmpty());
-      assertTrue(allArrivedWithinTime);
+      assertTrue("Some threads timed out on threadsDone", allArrivedWithinTime);
     } finally {
       threadPool.shutdownNow();
     }

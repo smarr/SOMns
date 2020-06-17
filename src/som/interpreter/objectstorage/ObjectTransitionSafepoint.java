@@ -95,11 +95,13 @@ public final class ObjectTransitionSafepoint {
   public void transitionObject(final SObject obj) {
     waitForSafepointStart();
 
-    // Safepoint phase, used to update the object
-    // object is required to handle updates from multiple threads correctly
-    obj.updateLayoutToMatchClass();
-
-    phaser.finishSafepointAndAwaitCompletion();
+    try {
+      // Safepoint phase, used to update the object
+      // object is required to handle updates from multiple threads correctly
+      obj.updateLayoutToMatchClass();
+    } finally {
+      phaser.finishSafepointAndAwaitCompletion();
+    }
   }
 
   /**
@@ -113,11 +115,13 @@ public final class ObjectTransitionSafepoint {
       final Object value) {
     waitForSafepointStart();
 
-    // Safepoint phase, used to update the object
-    // object is required to handle updates from multiple threads correctly
-    obj.writeUninitializedSlot(slot, value);
-
-    phaser.finishSafepointAndAwaitCompletion();
+    try {
+      // Safepoint phase, used to update the object
+      // object is required to handle updates from multiple threads correctly
+      obj.writeUninitializedSlot(slot, value);
+    } finally {
+      phaser.finishSafepointAndAwaitCompletion();
+    }
   }
 
   /**
@@ -131,22 +135,26 @@ public final class ObjectTransitionSafepoint {
       final Object value) {
     waitForSafepointStart();
 
-    // Safepoint phase, used to update the object
-    // object is required to handle updates from multiple threads correctly
-    obj.writeAndGeneralizeSlot(slot, value);
-
-    phaser.finishSafepointAndAwaitCompletion();
+    try {
+      // Safepoint phase, used to update the object
+      // object is required to handle updates from multiple threads correctly
+      obj.writeAndGeneralizeSlot(slot, value);
+    } finally {
+      phaser.finishSafepointAndAwaitCompletion();
+    }
   }
 
   public void ensureSlotAllocatedToAvoidDeadlock(final SObject obj,
       final SlotDefinition slot) {
     waitForSafepointStart();
 
-    // Safepoint phase, used to update the object
-    // object is required to handle updates from multiple threads correctly
-    obj.ensureSlotAllocatedToAvoidDeadlock(slot);
-
-    phaser.finishSafepointAndAwaitCompletion();
+    try {
+      // Safepoint phase, used to update the object
+      // object is required to handle updates from multiple threads correctly
+      obj.ensureSlotAllocatedToAvoidDeadlock(slot);
+    } finally {
+      phaser.finishSafepointAndAwaitCompletion();
+    }
   }
 
   void renewAssumption() {

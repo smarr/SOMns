@@ -261,7 +261,7 @@ public final class SafepointPhaser {
 
   void finishSafepointAndAwaitCompletion() {
     int phase = arriveAndAwaitAdvance();
-    assert (phase & 1) == 0 : "Expect phase to be evem on completion of safepoint, but was "
+    assert (phase & 1) == 0 : "Expect phase to be even on completion of safepoint, but was "
         + phase;
   }
 
