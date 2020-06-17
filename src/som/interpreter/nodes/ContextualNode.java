@@ -40,6 +40,7 @@ public abstract class ContextualNode extends ExprWithTagsNode {
   protected final int        contextLevel;
   private final ValueProfile frameType;
   private final ValueProfile outerType;
+  private final ValueProfile rcvrType;
 
   @CompilationFinal DetermineContext determineContext;
 
@@ -47,6 +48,7 @@ public abstract class ContextualNode extends ExprWithTagsNode {
     this.contextLevel = contextLevel;
     this.frameType = ValueProfile.createClassProfile();
     this.outerType = ValueProfile.createClassProfile();
+    this.rcvrType = ValueProfile.createClassProfile();
   }
 
   public final int getContextLevel() {
@@ -55,7 +57,7 @@ public abstract class ContextualNode extends ExprWithTagsNode {
 
   private DetermineContext buildChain(final SObjectWithContext self, final int i) {
     if (i > 0) {
-      DetermineContext outer = buildChain(self.getOuterSelf(), i - 1);
+      DetermineContext outer = buildChain(self.getOuterSelf(rcvrType), i - 1);
       if (self instanceof SBlock) {
         return new BlockContext(outer);
       } else if (self instanceof SClass) {
@@ -71,7 +73,7 @@ public abstract class ContextualNode extends ExprWithTagsNode {
 
   @ExplodeLoop
   protected final MaterializedFrame determineContext(final Frame frame) {
-    SObjectWithContext self = (SObjectWithContext) SArguments.rcvr(frame);
+    SObjectWithContext self = (SObjectWithContext) rcvrType.profile(SArguments.rcvr(frame));
 
     int i = contextLevel - 1;
 
@@ -96,15 +98,17 @@ public abstract class ContextualNode extends ExprWithTagsNode {
    */
   public abstract static class DetermineContext {
     protected final DetermineContext next;
+    protected final ValueProfile     rcvrType;
 
     protected DetermineContext(final DetermineContext next) {
       this.next = next;
+      this.rcvrType = ValueProfile.createClassProfile();
     }
 
     protected abstract SObjectWithContext getOuterSelf(SObjectWithContext obj);
 
     protected final SObjectWithContext getOuter(final SObjectWithContext obj) {
-      SObjectWithContext outer = obj.getOuterSelf();
+      SObjectWithContext outer = obj.getOuterSelf(rcvrType);
       if (next != null) {
         return next.getOuterSelf(outer);
       } else {

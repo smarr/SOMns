@@ -1,6 +1,7 @@
 package som.vmobjects;
 
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.profiles.ValueProfile;
 
 import som.interpreter.SArguments;
 
@@ -29,8 +30,8 @@ public interface SObjectWithContext {
    * Return the object enclosing the current object,
    * which is the receiver of this object.
    */
-  default SObjectWithContext getOuterSelf() {
-    return (SObjectWithContext) SArguments.rcvr(getContext());
+  default SObjectWithContext getOuterSelf(final ValueProfile rcvrType) {
+    return (SObjectWithContext) rcvrType.profile(SArguments.rcvr(getContext()));
   }
 
 }
