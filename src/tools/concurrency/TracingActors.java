@@ -162,7 +162,7 @@ public class TracingActors {
     public static void stopActorsIfSuspended() {
       for (long actorId: allActors.keySet()) {
         if (actorId > 0) { //do not stop Platform actor
-          Suspension suspension = debugger.getSuspensionByActorId(actorId);
+          Suspension suspension = debugger.getSuspension(actorId);
           if (suspension != null && suspension.getEvent() != null) {
             suspension.getEvent().prepareKill();
             suspension.resume();
