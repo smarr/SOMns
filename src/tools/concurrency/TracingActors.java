@@ -13,6 +13,7 @@ import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
 import som.vm.VmSettings;
 import tools.debugger.WebDebugger;
+import tools.debugger.frontend.Suspension;
 import tools.replay.PassiveEntityWithEvents;
 import tools.replay.ReplayRecord;
 import tools.replay.TraceParser;
@@ -39,6 +40,8 @@ public class TracingActors {
      */
     private static Map<Long, Actor> allActors = new HashMap<>();
 
+    private static WebDebugger debugger;
+
     public TracingActor(final VM vm) {
       super(vm);
       this.activityId = TracingActivityThread.newEntityId();
@@ -46,6 +49,9 @@ public class TracingActors {
       assert this.activityId >= 0;
       if (VmSettings.SNAPSHOTS_ENABLED) {
         snapshotRecord = new SnapshotRecord();
+      }
+      if(VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+        debugger = vm.getWebDebugger();
       }
     }
 
@@ -146,8 +152,23 @@ public class TracingActors {
       allActors.put(actor.getId(), actor);
     }
 
-    public static Actor getActorById(long actorId){
+    public static Actor getActorById(long actorId) {
       return allActors.get(actorId);
+    }
+
+    /**
+     * Stop actor execution if they are paused to avoid open threads before system shutdown
+     */
+    public static void stopActorsIfSuspended() {
+      for (long actorId: allActors.keySet()) {
+        if (actorId > 0) { //do not stop Platform actor
+          Suspension suspension = debugger.getSuspensionByActorId(actorId);
+          if (suspension != null && suspension.getEvent() != null) {
+            suspension.getEvent().prepareKill();
+            suspension.resume();
+          }
+        }
+      }
     }
   }
 

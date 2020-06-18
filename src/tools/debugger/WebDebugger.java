@@ -142,6 +142,13 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     return getSuspension(current, activityThread);
   }
 
+  public synchronized Suspension getSuspensionByActorId(final long actorId) {
+    if (idToSuspension.containsKey(actorId)) {
+      return idToSuspension.get(actorId);
+    }
+    return null;
+  }
+
   @Override
   public void onSuspend(final SuspendedEvent e) {
     Suspension suspension = getSuspension();
