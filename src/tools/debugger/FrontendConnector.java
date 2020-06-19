@@ -310,6 +310,10 @@ public class FrontendConnector {
     send(PauseActorResponse.create(pausedActorId));
   }
 
+  public void sendResumeActorResponse(long actorId) {
+    send(ResumeActorResponse.create(actorId));
+  }
+
   public void registerOrUpdate(final LineBreakpoint bp) {
     breakpoints.addOrUpdate(bp);
   }
