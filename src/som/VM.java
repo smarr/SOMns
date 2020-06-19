@@ -50,6 +50,7 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
 import tools.concurrency.KomposTrace;
+import tools.concurrency.TracingActors;
 import tools.concurrency.TracingBackend;
 import tools.debugger.WebDebugger;
 import tools.debugger.session.Breakpoints;
@@ -335,6 +336,7 @@ public final class VM {
     }
     if (VmSettings.KOMPOS_TRACING) {
       KomposTrace.recordMainActor(mainActor, objectSystem);
+      TracingActors.TracingActor.saveActor(mainActor);
     }
 
     language = lang;
