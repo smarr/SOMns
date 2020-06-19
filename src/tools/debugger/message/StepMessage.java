@@ -28,7 +28,7 @@ public class StepMessage extends IncommingMessage {
     if (susp != null && susp.getEvent() != null) {
       step.process(susp);
       susp.resume();
-      FrontendConnector.log("[DEBUGGER] Executing step "+ step.name +" for actor "+activityId);
+      FrontendConnector.log("[DEBUGGER] Executing "+ step.name +" for actor "+activityId);
     } else if(step == SteppingType.RESUME) {
       //notify frontend the actor that can be resumed in the GUI because the actor is not suspended,
       //this is needed for actors that are paused explicitly in the frontend, and they are not actually suspended yet (mailbox is empty)
