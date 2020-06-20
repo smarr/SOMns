@@ -7,6 +7,7 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.source.SourceSection;
 
 import som.interpreter.SomException;
 import som.interpreter.SomLanguage;
@@ -44,6 +45,14 @@ public class ReceivedMessage extends ReceivedRootNode {
   @Override
   public String toString() {
     return "RcvdMsg(" + selector.toString() + ")";
+  }
+
+  @Override
+  public String getQualifiedName() {
+    SourceSection ss = getSourceSection();
+    return "RcvdMsg(" + selector.getString() + ":" + ss.getSource().getName() + ":"
+        + ss.getStartLine() + ":"
+        + ss.getStartColumn() + ")";
   }
 
   public static final class ReceivedMessageForVMMain extends ReceivedMessage {
@@ -91,6 +100,13 @@ public class ReceivedMessage extends ReceivedRootNode {
             haltOnResolver, haltOnResolution);
       }
       return null;
+    }
+
+    @Override
+    public String getQualifiedName() {
+      SourceSection ss = getSourceSection();
+      return "RcvdCallback(" + ss.getSource().getName() + ":" + ss.getStartLine() + ":"
+          + ss.getStartColumn() + ")";
     }
   }
 }
