@@ -441,7 +441,8 @@ public class SPromise extends SObjectWithClass {
       if (promise.chainedPromise != null) {
         SPromise chainedPromise = promise.chainedPromise;
         promise.chainedPromise = null;
-        Object wrapped = chainedPromise.owner.wrapForUse(result, current, null);
+        Object wrapped =
+            WrapReferenceNode.wrapForUse(chainedPromise.owner, result, current, null);
         resolveAndTriggerListenersUnsynced(type, result, wrapped,
             chainedPromise, current, actorPool,
             chainedPromise.haltOnResolution, whenResolvedProfile);
@@ -463,7 +464,7 @@ public class SPromise extends SObjectWithClass {
         promise.chainedPromiseExt = null;
 
         for (SPromise p : chainedPromiseExt) {
-          Object wrapped = p.owner.wrapForUse(result, current, null);
+          Object wrapped = WrapReferenceNode.wrapForUse(p.owner, result, current, null);
           resolveAndTriggerListenersUnsynced(type, result, wrapped, p, current,
               actorPool, haltOnResolution, whenResolvedProfile);
         }

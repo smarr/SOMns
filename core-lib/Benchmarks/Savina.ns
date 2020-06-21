@@ -1008,20 +1008,13 @@ class Savina usingPlatform: platform andHarness: harness = Value (
   | private numPhil   = numPhil.
     private numRounds = numRounds.
   |)(
-    private class Counter = (
-    | private value ::= 0. |
-    )(
-      public inc: anInt = ( value:: value + anInt. )
-      public get = ( ^ value )
-    )
 
-    private class PhilosopherActor new: id rounds: rounds counter: aCounter arbitrator: arbitrator = (
+    private class PhilosopherActor new: id rounds: rounds arbitrator: arbitrator = (
     | private localCounter ::= 0.
       private roundsSoFar  ::= 0.
       private id     = id.
       private rounds = rounds.
       private arbitrator = arbitrator.
-      private counter    = aCounter.
     |)(
       public denied = (
         localCounter:: localCounter + 1.
@@ -1031,7 +1024,6 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       public eat = (
         roundsSoFar:: roundsSoFar + 1.
         localCounter > 0 ifTrue: [
-          counter <-: inc: localCounter.
           localCounter:: 0. ].
 
         arbitrator <-: done: id.
@@ -1084,8 +1076,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
     )
 
     public benchmark = (
-      | counter completionPP arbitrator philosophers |
-      counter:: Counter new.
+      | completionPP arbitrator philosophers |
       completionPP:: actors createPromisePair.
 
       arbitrator:: (actors createActorFromValue: ArbitratorActor) <-: new: numPhil resolver: completionPP resolver.
@@ -1093,7 +1084,7 @@ class Savina usingPlatform: platform andHarness: harness = Value (
       philosophers doIndexes: [:i |
         | ph |
         ph:: (actors createActorFromValue: PhilosopherActor) <-: new: i
-                        rounds: numRounds counter: counter arbitrator: arbitrator.
+                        rounds: numRounds arbitrator: arbitrator.
         philosophers at: i put: ph ].
 
       philosophers do: [:ph | ph <-: start ].

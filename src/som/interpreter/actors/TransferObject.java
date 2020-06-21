@@ -71,7 +71,7 @@ public final class TransferObject {
         // if it was already transfered, take it from the map, otherwise, handle it
         Object trnfObj = transferMap.get(orgObj);
         if (trnfObj == null) {
-          trnfObj = target.wrapForUse(orgObj, origin, transferMap);
+          trnfObj = WrapReferenceNode.wrapForUse(target, orgObj, origin, transferMap);
         }
         location.write(newObj, trnfObj);
       }
@@ -107,7 +107,7 @@ public final class TransferObject {
         // if it was already transfered, take it from the map, otherwise, handle it
         Object trnfObj = transferMap.get(orgObj);
         if (trnfObj == null) {
-          trnfObj = target.wrapForUse(orgObj, origin, transferMap);
+          trnfObj = WrapReferenceNode.wrapForUse(target, orgObj, origin, transferMap);
         }
 
         storage[i] = trnfObj;
@@ -127,7 +127,7 @@ public final class TransferObject {
         // if it was already transfered, take it from the map, otherwise, handle it
         Object trnfObj = transferMap.get(orgObj);
         if (trnfObj == null) {
-          trnfObj = target.wrapForUse(orgObj, origin, transferMap);
+          trnfObj = WrapReferenceNode.wrapForUse(target, orgObj, origin, transferMap);
         }
 
         storage[i] = trnfObj;
