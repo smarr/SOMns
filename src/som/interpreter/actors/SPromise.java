@@ -677,7 +677,7 @@ public class SPromise extends SObjectWithClass {
       if (replayChainedPromises != null) {
         while (!replayChainedPromises.isEmpty()) {
           SReplayPromise rp = replayChainedPromises.remove();
-          Object wrapped = rp.owner.wrapForUse(value, resolver, null);
+          Object wrapped = WrapReferenceNode.wrapForUse(rp.owner, value, resolver, null);
 
           SResolver.resolveAndTriggerListenersUnsynced(type, value, wrapped, rp, resolver,
               SomLanguage.getCurrent().getVM().getActorPool(), haltOnResolution,

@@ -6,11 +6,14 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 
 import som.VM;
+import som.interpreter.actors.Actor.ExecutorRootNode;
 import som.primitives.ObjectPrims.IsValue;
 import som.primitives.ObjectPrimsFactory.IsValueFactory;
 import som.vm.VmSettings;
+import som.vmobjects.SAbstractObject;
 import som.vmobjects.SArray.STransferArray;
 import som.vmobjects.SObject;
+import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import tools.replay.TraceRecord;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
@@ -55,7 +58,7 @@ public abstract class WrapReferenceNode extends Node {
   }
 
   @Specialization(guards = "promise.getOwner() != target")
-  protected static SPromise promiseNotOwnedByTarget(final SPromise promise, final Actor target,
+  protected SPromise promiseNotOwnedByTarget(final SPromise promise, final Actor target,
       final Actor owner) {
     return promise.getChainedPromiseFor(target, tracePromiseChaining);
   }
@@ -133,7 +136,8 @@ public abstract class WrapReferenceNode extends Node {
         return orgProm;
       } else {
         // promiseNotOwnedByTarget
-        return orgProm.getChainedPromiseFor(target);
+        return orgProm.getChainedPromiseFor(target,
+            ((ExecutorRootNode) Actor.executorRoot.getRootNode()).recordPromiseChaining);
       }
     }
 

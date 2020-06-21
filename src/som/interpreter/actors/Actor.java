@@ -54,7 +54,7 @@ import tools.snapshot.SnapshotBuffer;
 public class Actor implements Activity {
   public static final AtomicLong numActors = DynamicMetrics.createLong("Num.Actors");
 
-  @CompilationFinal protected static RootCallTarget executorRoot;
+  @CompilationFinal public static RootCallTarget executorRoot;
 
   public static void initializeActorSystem(final SomLanguage lang) {
     ExecutorRootNode root = new ExecutorRootNode(lang);
@@ -111,51 +111,6 @@ public class Actor implements Activity {
 
   protected ExecAllMessages createExecutor(final VM vm) {
     return new ExecAllMessages(this, vm);
-  }
-
-  public final Object wrapForUse(final Object o, final Actor owner,
-      final Map<SAbstractObject, SAbstractObject> transferedObjects) {
-    VM.thisMethodNeedsToBeOptimized("This should probably be optimized");
-
-    if (this == owner) {
-      return o;
-    }
-
-    if (o instanceof SFarReference) {
-      if (((SFarReference) o).getActor() == this) {
-        return ((SFarReference) o).getValue();
-      }
-    } else if (o instanceof SPromise) {
-      // promises cannot just be wrapped in far references, instead, other actors
-      // should get a new promise that is going to be resolved once the original
-      // promise gets resolved
-
-      SPromise orgProm = (SPromise) o;
-      // assert orgProm.getOwner() == owner; this can be another actor, which initialized a
-      // scheduled eventual send by resolving a promise, that's the promise pipelining...
-      if (orgProm.getOwner() == this) {
-        return orgProm;
-      }
-
-      return orgProm.getChainedPromiseFor(this,
-          ((ExecutorRootNode) this.executorRoot.getRootNode()).recordPromiseChaining);
-    } else if (!IsValue.isObjectValue(o)) {
-      // Corresponds to TransferObject.isTransferObject()
-      if ((o instanceof SObject && ((SObject) o).getSOMClass().isTransferObject())) {
-        return TransferObject.transfer((SObject) o, owner, this,
-            transferedObjects);
-      } else if (o instanceof STransferArray) {
-        return TransferObject.transfer((STransferArray) o, owner, this,
-            transferedObjects);
-      } else if (o instanceof SObjectWithoutFields
-          && ((SObjectWithoutFields) o).getSOMClass().isTransferObject()) {
-        return TransferObject.transfer((SObjectWithoutFields) o, owner, this,
-            transferedObjects);
-      } else {
-        return new SFarReference(owner, o);
-      }
-    }
-    return o;
   }
 
   @Override
