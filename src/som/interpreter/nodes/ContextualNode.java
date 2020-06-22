@@ -38,8 +38,10 @@ import som.vmobjects.SObjectWithContext;
 
 public abstract class ContextualNode extends ExprWithTagsNode {
 
-  protected final int        contextLevel;
-  private final ValueProfile frameType;
+  private static final ValueProfile frameType = ValueProfile.createClassProfile();
+
+  protected final int contextLevel;
+
   private final ValueProfile outerType;
   private final ValueProfile rcvrType;
 
@@ -47,7 +49,6 @@ public abstract class ContextualNode extends ExprWithTagsNode {
 
   public ContextualNode(final int contextLevel) {
     this.contextLevel = contextLevel;
-    this.frameType = ValueProfile.createClassProfile();
     this.outerType = ValueProfile.createClassProfile();
     this.rcvrType = ValueProfile.createClassProfile();
   }
