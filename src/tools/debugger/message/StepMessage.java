@@ -28,7 +28,9 @@ public class StepMessage extends IncommingMessage {
     if (susp != null && susp.getEvent() != null) {
       step.process(susp);
       susp.resume();
-      FrontendConnector.log("[DEBUGGER] Executing "+ step.name +" for actor "+activityId);
+      if (step != SteppingType.RESUME) {
+        FrontendConnector.log("[DEBUGGER] Executing "+ step.name +" for actor "+activityId);
+      }
     } else if(step == SteppingType.RESUME) {
       //notify frontend the actor that can be resumed in the GUI because the actor is not suspended,
       //this is needed for actors that are paused explicitly in the frontend, and they are not actually suspended yet (mailbox is empty)
@@ -36,11 +38,18 @@ public class StepMessage extends IncommingMessage {
       assert actor != null : "Failed to get actor for activityId: " + this.activityId;
       //reset step next turn flag to false
       actor.setStepToNextTurn(false);
+    } else {
+      FrontendConnector.log("[DEBUGGER]: Failed to get suspension for activityId: " + activityId);
+    }
+
+    sendResumeMessage(connector);
+  }
+
+  private void sendResumeMessage(FrontendConnector connector) {
+    if(step == SteppingType.RESUME) {
       //send resume message
       connector.sendResumeActorResponse(this.activityId);
       FrontendConnector.log("[DEBUGGER] Resuming actor "+activityId);
-    } else {
-      FrontendConnector.log("[DEBUGGER]: Failed to get suspension for activityId: " + activityId);
     }
   }
 }
