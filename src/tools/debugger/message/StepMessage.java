@@ -46,7 +46,7 @@ public class StepMessage extends IncommingMessage {
   }
 
   private void sendResumeMessage(FrontendConnector connector) {
-    if(step == SteppingType.RESUME) {
+    if(step == SteppingType.RESUME || step == SteppingType.RETURN_FROM_TURN_TO_PROMISE_RESOLUTION) {
       //send resume message
       connector.sendResumeActorResponse(this.activityId);
       FrontendConnector.log("[DEBUGGER] Resuming actor "+activityId);
