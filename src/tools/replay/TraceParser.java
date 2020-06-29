@@ -192,7 +192,7 @@ public final class TraceParser implements Closeable {
 
       while ((!readAll && nextReadPosition < traceChannel.size()) || b.hasRemaining()) {
         if (!readAll
-            && b.remaining() < RecordEventNodes.THREE_EVENT_SIZE /* longest possible event */
+            && b.remaining() < RecordEventNodes.ONE_EVENT_SIZE
             && nextReadPosition < traceChannel.size()) {
           int remaining = b.remaining();
           startPosition += b.position();

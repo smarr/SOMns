@@ -5,8 +5,7 @@ import tools.replay.actors.UniformExecutionTrace.UniformTraceBuffer;
 
 
 public final class RecordEventNodes {
-  public static final int ONE_EVENT_SIZE   = 1 + Long.BYTES;
-  public static final int THREE_EVENT_SIZE = 1 + Long.BYTES + Long.BYTES + Long.BYTES;
+  public static final int ONE_EVENT_SIZE = 1 + Long.BYTES;
 
   public static class RecordOneEvent extends TraceNode {
     @Child TraceContextNode tracer = TraceContextNodeGen.create();
