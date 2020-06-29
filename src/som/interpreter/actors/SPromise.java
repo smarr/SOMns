@@ -632,7 +632,6 @@ public class SPromise extends SObjectWithClass {
     /**
      * Stores Message Objects in a priority Queue, to bring the messages in the original order.
      * Use resolveReplay method before resolving promise.
-     *
      */
     public void registerOnResolvedReplay(final PromiseMessage msg) {
       if (this.onResolvedReplay == null) {
