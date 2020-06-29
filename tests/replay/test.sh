@@ -4,8 +4,9 @@ set -e
 
 function cleanup()
 {
-  tar -cjf traces.tar.bz2 traces
-  curl --upload-file ./traces.tar.bz2 https://transfer.sh/traces.tar.bz2
+  echo "saving trace"
+  #tar -cjf traces.tar.bz2 traces
+  #curl --upload-file ./traces.tar.bz2 https://transfer.sh/traces.tar.bz2
 }
 
 trap cleanup EXIT
@@ -73,6 +74,10 @@ else
     "VacationSTM 1 0 7 1"
   )
 
+  declare -a Multi=(
+    "MultiParadigmBench 10 0 100"
+  )
+
 fi
 
 ## Determine absolute path of script
@@ -82,101 +87,53 @@ popd > /dev/null
 
 SOM_DIR=$SCRIPT_PATH/../..
 
+function test {
+  local title="$1"
+  shift
+  local settings="$1"
+  shift
+  local harness="$1"
+  shift
+  local argss=("$@")
 
-echo   "===================== Actor Replay Sender Side ====================="
-for args in "${Savina[@]}"
-do
-  echo "$args"
-  echo "Tracing:"
-  $SOM_DIR/som -G -JXmx1500m -at core-lib/Benchmarks/AsyncHarness.ns Savina.$args
-  echo ""
-  echo "Replay:"
-  $SOM_DIR/som -G -JXmx1500m -vmd -r core-lib/Benchmarks/AsyncHarness.ns Savina.$args
-  echo ""
-  echo "========================================================"
-  echo ""
-done
+  echo   "===================== $title ====================="
+  for i in "${argss[@]}"
+  do
+    echo "$args"
+    echo "Tracing:"
+    echo "$SOM_DIR/som $settings -at core-lib/Benchmarks/$harness$i"
+    $SOM_DIR/som $settings -at core-lib/Benchmarks/$harness$i
+    echo ""
+    echo "Replay:"
+    $SOM_DIR/som $settings -r core-lib/Benchmarks/$harness$i
+    echo ""
+    echo "========================================================"
+    echo ""
+  done
+}
 
-echo   "===================== Actor Replay Receiver Side ====================="
-for args in "${Savina[@]}"
-do
-  echo "$args"
-  echo "Tracing:"
-  $SOM_DIR/som -G -JXmx1500m -at -art core-lib/Benchmarks/AsyncHarness.ns Savina.$args
-  echo ""
-  echo "Replay:"
-  $SOM_DIR/som -G -JXmx1500m -r -art core-lib/Benchmarks/AsyncHarness.ns Savina.$args
-  echo ""
-  echo "========================================================"
-  echo ""
-done
+test "Actor Replay Sender Side" "-G -JXmx1500m" "AsyncHarness.ns Savina." "${Savina[@]}"
 
-for args in "${Validation[@]}"
-do
-  echo "$args"
-  echo "Tracing:"
-  $SOM_DIR/som -G -JXmx1500m -at core-lib/Benchmarks/ImpactHarness.ns Validation.$args | grep -o 'success: .*' > $SCRIPT_PATH/orig.txt
-  echo ""
-  echo "Replay:"
-  $SOM_DIR/som -G -JXmx1500m -vmd -r core-lib/Benchmarks/ImpactHarness.ns Validation.$args | grep -o 'success: .*' > $SCRIPT_PATH/repl.txt
-  diff $SCRIPT_PATH/orig.txt $SCRIPT_PATH/repl.txt
-  echo ""
-  echo "========================================================"
-  echo ""
-done
+test "Actor Replay Receiver Side" "-G -JXmx1500m -art" "AsyncHarness.ns Savina." "${Savina[@]}"
 
-echo   "====================== CSP Replay ======================"
-for args in "${CSP[@]}"
-do
-  echo "$args"
-  echo "Tracing:"
-  $SOM_DIR/som -t8 -G -JXmx1500m -at core-lib/Benchmarks/Harness.ns SavinaCSP.$args
-  echo ""
-  echo "Replay:"
-  $SOM_DIR/som -t8 -G -JXmx1500m -vmd -r core-lib/Benchmarks/Harness.ns SavinaCSP.$args
-  echo ""
-  echo "========================================================"
-  echo ""
-done
+#for args in "${Validation[@]}"
+#do
+#  echo "$args"
+#  echo "Tracing:"
+#  $SOM_DIR/som -G -JXmx1500m -at core-lib/Benchmarks/ImpactHarness.ns Validation.$args | grep -o 'success: .*' > $SCRIPT_PATH/orig.txt
+#  echo ""
+#  echo "Replay:"
+#  $SOM_DIR/som -G -JXmx1500m -vmd -r core-lib/Benchmarks/ImpactHarness.ns Validation.$args | grep -o 'success: .*' > $SCRIPT_PATH/repl.txt
+#  diff $SCRIPT_PATH/orig.txt $SCRIPT_PATH/repl.txt
+#  echo ""
+#  echo "========================================================"
+#  echo ""
+#done
 
-echo   "================ Thread & Locks Replay ================="
-for args in "${Threads[@]}"
-do
-  echo "$args"
-  echo "Tracing:"
-  $SOM_DIR/som -t8 -G -JXmx1500m -at core-lib/Benchmarks/Harness.ns $args
-  echo ""
-  echo "Replay:"
-  $SOM_DIR/som -t8 -G -JXmx1500m -vmd -r core-lib/Benchmarks/Harness.ns $args
-  echo ""
-  echo "========================================================"
-  echo ""
-done
+test "CSP Replay" "-t8 -G -JXmx1500m -vmd" "Harness.ns SavinaCSP." "${CSP[@]}"
 
-echo   "====================== STM Replay ======================"
-for args in "${STM[@]}"
-do
-  echo "$args"
-  echo "Tracing:"
-  $SOM_DIR/som -t8 -G -JXmx1500m -at core-lib/Benchmarks/Harness.ns $args
-  echo ""
-  echo "Replay:"
-  $SOM_DIR/som -t8 -G -JXmx1500m -vmd -r core-lib/Benchmarks/Harness.ns $args
-  echo ""
-  echo "========================================================"
-  echo ""
-done
+test "Thread & Locks Replay" "-t8 -G -JXmx1500m -vmd" "Harness.ns " "${Threads[@]}"
 
-echo   "====================== STM Replay ======================"
-for args in "${STM[@]}"
-do
-  echo "$args"
-  echo "Tracing:"
-  $SOM_DIR/som -t8 -G -JXmx1500m -at core-lib/Benchmarks/AsyncHarness.ns MultiParadigmBench 1000 0 100
-  echo ""
-  echo "Replay:"
-  $SOM_DIR/som -t8 -G -JXmx1500m -vmd -r core-lib/Benchmarks/AsyncHarness.ns MultiParadigmBench 1000 0 100
-  echo ""
-  echo "========================================================"
-  echo ""
-done
+test "STM Replay" "-t8 -G -JXmx1500m -vmd" "Harness.ns " "${STM[@]}"
+
+test "STM Replay" "-t8 -G -JXmx1500m -vmd" "AsyncHarness.ns " "${Multi[@]}"
