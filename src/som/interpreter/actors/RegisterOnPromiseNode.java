@@ -137,9 +137,6 @@ public abstract class RegisterOnPromiseNode {
     public void register(final SPromise promise, final PromiseMessage msg,
         final Actor current) {
 
-      // Output.println("try register onerror " + promise.hashCode() + " in "
-      // + TracingActivityThread.currentThread().getActivity().getId());
-
       Object promiseValue;
       // LOCKING NOTE: this handling of the check for resolution and the
       // registering of the callback/msg needs to be done in the same step
