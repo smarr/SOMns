@@ -4,9 +4,8 @@ set -e
 
 function cleanup()
 {
-  echo "saving trace"
-  #tar -cjf traces.tar.bz2 traces
-  #curl --upload-file ./traces.tar.bz2 https://transfer.sh/traces.tar.bz2
+  tar -cjf traces.tar.bz2 traces
+  curl --upload-file ./traces.tar.bz2 https://transfer.sh/traces.tar.bz2
 }
 
 trap cleanup EXIT
