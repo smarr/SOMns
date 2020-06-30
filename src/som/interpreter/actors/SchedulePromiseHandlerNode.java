@@ -50,11 +50,11 @@ public abstract class SchedulePromiseHandlerNode extends Node {
         promise.getValueUnsync(), msg.originalSender, current);
 
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-      // TODO: I think, we need the info about the resolution context from the promise
+      // Get info about the resolution context from the promise
       // we want to know where it was resolved, where the value is coming from
       ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
               SArguments.getShadowStackEntry(frame),
-              getParent().getParent());
+              getParent().getParent(), ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_SCHEDULE_PROMISE);
       assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
       SArguments.setShadowStackEntry(msg.args, resolutionEntry);
     }

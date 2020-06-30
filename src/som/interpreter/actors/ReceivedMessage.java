@@ -3,7 +3,6 @@ package som.interpreter.actors;
 import java.util.concurrent.CompletableFuture;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -48,7 +47,7 @@ public class ReceivedMessage extends ReceivedRootNode {
       ShadowStackEntry entry = SArguments.getShadowStackEntry(frame.getArguments());
       assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || entry != null;
       resolutionEntry =
-              ShadowStackEntry.createAtPromiseResolution(entry, (ExpressionNode) onReceive);
+              ShadowStackEntry.createAtPromiseResolution(entry, (ExpressionNode) onReceive, ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_RECEIVE_MESSAGE);
     }
 
     try {
@@ -125,7 +124,7 @@ public class ReceivedMessage extends ReceivedRootNode {
         ShadowStackEntry entry = SArguments.getShadowStackEntry(frame.getArguments());
         assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || entry != null;
         resolutionEntry =
-                ShadowStackEntry.createAtPromiseResolution(entry, onReceiveMethod.getBodyNode());
+                ShadowStackEntry.createAtPromiseResolution(entry, onReceiveMethod.getBodyNode(), ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_CALLBACK);
         SArguments.setShadowStackEntry(msg.getArgs(), resolutionEntry);
       }
 
