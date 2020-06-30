@@ -428,13 +428,13 @@ public abstract class EventualMessage {
     private void setPromiseValue(final Object value, final Actor resolvingActor,
                                  final Object maybeEntry) {
       args[PROMISE_VALUE_IDX] = WrapReferenceNode.wrapForUse(originalSender, value, resolvingActor, null);
-//      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-//        assert maybeEntry instanceof ShadowStackEntry;
-////        SArguments.setShadowStackEntry(args, (ShadowStackEntry) maybeEntry);
-//        ShadowStackEntry resolutionEntry =
-//                  ShadowStackEntry.createAtPromiseResolution((ShadowStackEntry) maybeEntry,this.onReceive.getRootNode(), ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_CALLBACK);
-//        SArguments.setShadowStackEntry(args, resolutionEntry);
-//      }
+      //save promise resolution entry corresponding to the promise to which this callback is registered
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+        assert maybeEntry != null && maybeEntry instanceof ShadowStackEntry;
+        assert args[args.length - 1] instanceof ShadowStackEntry;
+        ShadowStackEntry currentStack = (ShadowStackEntry) args[args.length - 1];
+        SArguments.addEntryForPromiseResolution(currentStack, (ShadowStackEntry) maybeEntry);
+      }
       if (VmSettings.SNAPSHOTS_ENABLED) {
         this.messageId = Math.min(this.messageId,
             ActorProcessingThread.currentThread().getSnapshotId());

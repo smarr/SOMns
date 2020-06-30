@@ -113,7 +113,7 @@ public class ShadowStackEntry {
             ERROR("on error"), SUCCESSFUL ("on resolution"),
             CHAINED("on chain"), ON_CALLBACK("on callback"),
             ON_WHEN_RESOLVED("on when resolved"), ON_CALLBACK_ERROR("on callback error"),
-            ON_RECEIVE_MESSAGE("on async send receiver"), ON_SCHEDULE_PROMISE ("on schedule");
+            ON_RECEIVE_MESSAGE("on receive message"), ON_SCHEDULE_PROMISE ("on schedule");
 
             private final String value;
 
