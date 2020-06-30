@@ -93,19 +93,9 @@ public class ShadowStackEntry {
 
     public static final class EntryAtMessageSend extends ShadowStackEntry {
 
-//        EntryForPromiseResolution promiseResolutionEntry;
-
         private EntryAtMessageSend(final ShadowStackEntry previous, final Node expr) {
             super(previous, expr);
         }
-
-//        public EntryForPromiseResolution getPromiseResolutionEntry() {
-//            return promiseResolutionEntry;
-//        }
-//
-//        public void setPromiseResolutionEntry(EntryForPromiseResolution promiseResolutionEntry) {
-//            this.promiseResolutionEntry = promiseResolutionEntry;
-//        }
     }
 
     public static final class EntryForPromiseResolution extends ShadowStackEntry {
