@@ -12,7 +12,7 @@ import som.vm.VmSettings;
 
 public class ShadowStackEntry {
 
-    protected final ShadowStackEntry previous;
+    protected ShadowStackEntry previous;
     protected final Node             expression;
 
     public static long numberOfAllocations;
@@ -44,9 +44,9 @@ public class ShadowStackEntry {
     }
 
     public static ShadowStackEntry createAtPromiseResolution(final ShadowStackEntry previous,
-                                                             final Node expr) {
+                                                             final Node expr, final EntryForPromiseResolution.ResolutionLocation resolutionType) {
         assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || previous != null;
-        return new EntryForPromiseResolution(previous, unwrapNodeIfNecessary(expr));
+        return new EntryForPromiseResolution(previous, unwrapNodeIfNecessary(expr), resolutionType);
     }
 
     public static Node unwrapNodeIfNecessary(final Node node) {
@@ -87,22 +87,50 @@ public class ShadowStackEntry {
         return false;
     }
 
+    public void setPrevious(ShadowStackEntry maybeEntry) {
+        previous = maybeEntry;
+    }
+
     public static final class EntryAtMessageSend extends ShadowStackEntry {
+
+//        EntryForPromiseResolution promiseResolutionEntry;
 
         private EntryAtMessageSend(final ShadowStackEntry previous, final Node expr) {
             super(previous, expr);
         }
 
-        @Override
-        public boolean isAsync() {
-            return true;
-        }
+//        public EntryForPromiseResolution getPromiseResolutionEntry() {
+//            return promiseResolutionEntry;
+//        }
+//
+//        public void setPromiseResolutionEntry(EntryForPromiseResolution promiseResolutionEntry) {
+//            this.promiseResolutionEntry = promiseResolutionEntry;
+//        }
     }
 
     public static final class EntryForPromiseResolution extends ShadowStackEntry {
+        public enum ResolutionLocation {
+            ERROR("on error"), SUCCESSFUL ("on resolution"),
+            CHAINED("on chain"), ON_CALLBACK("on callback"),
+            ON_WHEN_RESOLVED("on when resolved"), ON_CALLBACK_ERROR("on callback error"),
+            ON_RECEIVE_MESSAGE("on async send receiver"), ON_SCHEDULE_PROMISE ("on schedule");
+
+            private final String value;
+
+            ResolutionLocation(String value) {
+                this.value = value;
+            }
+
+            public String getValue() {
+                return value;
+            }
+        }
+        ResolutionLocation resolutionLocation;
+
         private EntryForPromiseResolution(final ShadowStackEntry previous,
-                                          final Node expr) {
+                                          final Node expr, ResolutionLocation resolutionLocation) {
             super(previous, expr);
+            this.resolutionLocation = resolutionLocation;
         }
 
         @Override

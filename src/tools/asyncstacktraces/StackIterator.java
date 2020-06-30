@@ -206,6 +206,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                     currentSSEntry = shadow.previous;
                 }
             }
+
             return createStackFrame(shadow, localFrame, usedAgain);
         }
 
@@ -241,21 +242,21 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                     String symbol = ((EventualSendNode) sendNode).getSentSymbol().getString();
 
                     if (sendNode instanceof EventualSendNode) {
-                        name = "at message sent: " + symbol;
+                        name = "at async message: " + symbol;
 
+                    } else {
+                        name = "EntryAtMessageSend: " + shadow.expression.getRootNode().getName();
                     }
-//                    else {
-//                        name = "Sent: "; //TODO check if needed
-//                    }
                     useAgainShadowEntry = shadow;
                     useAgainFrame = localFrame;
                 } else if (shadow instanceof EntryForPromiseResolution) {
+                    EntryForPromiseResolution.ResolutionLocation resolutionLocation = ((EntryForPromiseResolution) shadow).resolutionLocation;
                     if (shadow.expression instanceof EagerBinaryPrimitiveNode) {
                         EagerBinaryPrimitiveNode node = (EagerBinaryPrimitiveNode)shadow.expression;
-                        name = "resolved before callback: " + node.getOperation(); //this means the promise of this callback was resolved
-                    } else {
+                        name = resolutionLocation.getValue() +": "+node.getOperation(); //this means the promise of this callback was resolved
 
-                        name = "on callback: "+shadow.expression.getRootNode().getName();
+                    } else {
+                        name = resolutionLocation.getValue() +": "+shadow.expression.getRootNode().getName();
                     }
                 }
 

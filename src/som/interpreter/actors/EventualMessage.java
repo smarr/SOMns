@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
-import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
@@ -332,7 +331,14 @@ public abstract class EventualMessage {
         this.messageId = Math.min(this.messageId,
             ActorProcessingThread.currentThread().getSnapshotId());
       }
-      // TODO: what do I do with the shadow stack entry here. give it two parents?
+
+      //save promise resolution entry corresponding to the promise to which the message is sent
+      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+        assert maybeEntry != null && maybeEntry instanceof ShadowStackEntry.EntryForPromiseResolution;
+        assert args[args.length - 1] instanceof ShadowStackEntry.EntryAtMessageSend;
+        ShadowStackEntry.EntryAtMessageSend currentStack = (ShadowStackEntry.EntryAtMessageSend) args[args.length - 1];
+        SArguments.addEntryForPromiseResolution(currentStack, (ShadowStackEntry.EntryForPromiseResolution)maybeEntry);
+      }
     }
 
     @Override
@@ -422,10 +428,13 @@ public abstract class EventualMessage {
     private void setPromiseValue(final Object value, final Actor resolvingActor,
                                  final Object maybeEntry) {
       args[PROMISE_VALUE_IDX] = WrapReferenceNode.wrapForUse(originalSender, value, resolvingActor, null);
-      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-        assert maybeEntry instanceof ShadowStackEntry;
-       // SArguments.setShadowStackEntry(args, (ShadowStackEntry) maybeEntry);
-      }
+//      if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
+//        assert maybeEntry instanceof ShadowStackEntry;
+////        SArguments.setShadowStackEntry(args, (ShadowStackEntry) maybeEntry);
+//        ShadowStackEntry resolutionEntry =
+//                  ShadowStackEntry.createAtPromiseResolution((ShadowStackEntry) maybeEntry,this.onReceive.getRootNode(), ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_CALLBACK);
+//        SArguments.setShadowStackEntry(args, resolutionEntry);
+//      }
       if (VmSettings.SNAPSHOTS_ENABLED) {
         this.messageId = Math.min(this.messageId,
             ActorProcessingThread.currentThread().getSnapshotId());

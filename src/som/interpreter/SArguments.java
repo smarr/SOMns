@@ -226,4 +226,9 @@ public final class SArguments {
       return arguments.length;
     }
   }
+
+  public static void addEntryForPromiseResolution(ShadowStackEntry.EntryAtMessageSend current, ShadowStackEntry.EntryForPromiseResolution promiseStack) {
+//    current.setPromiseResolutionEntry(promiseStack);
+    current.setPrevious(promiseStack);
+  }
 }
