@@ -72,7 +72,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
     public static class SuspensionIterator extends StackIterator {
 
         protected ArrayList<DebugStackFrame> frames;
-        protected int                        currentIndex = 0;
+        protected int currentIndex = 0;
 
         public SuspensionIterator(final Iterator<DebugStackFrame> localStack) {
             assert localStack != null;
@@ -101,7 +101,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
     public static class HaltIterator extends StackIterator {
 
         protected ArrayList<FrameInstance> frameInstances;
-        protected int                      currentIndex = 0;
+        protected int currentIndex = 0;
 
         public HaltIterator() {
             frameInstances = new ArrayList<FrameInstance>();
@@ -140,20 +140,19 @@ public abstract class StackIterator implements Iterator<StackFrame> {
     }
 
     /**
-     *
      * @author clementbera
-     *
-     *         By contrast to HaltIterator and Suspension Iterator, the ShadowStackIterator use
-     *         the stack for the first frame only and then rely on shadow stack entry to get the
-     *         following stack entries
+     * <p>
+     * By contrast to HaltIterator and Suspension Iterator, the ShadowStackIterator use
+     * the stack for the first frame only and then rely on shadow stack entry to get the
+     * following stack entries
      */
     public abstract static class ShadowStackIterator extends StackIterator {
         private ShadowStackEntry currentSSEntry;
-        protected boolean        first;
-        private Node             currentNode;
-        private Invokable        currentMethod;
+        protected boolean first;
+        private Node currentNode;
+        private Invokable currentMethod;
         private ShadowStackEntry useAgainShadowEntry;
-        private Frame            useAgainFrame;
+        private Frame useAgainFrame;
         private StackFrame topFrame;
 
         public ShadowStackIterator() {
@@ -251,13 +250,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                     useAgainFrame = localFrame;
                 } else if (shadow instanceof EntryForPromiseResolution) {
                     EntryForPromiseResolution.ResolutionLocation resolutionLocation = ((EntryForPromiseResolution) shadow).resolutionLocation;
-                    if (shadow.expression instanceof EagerBinaryPrimitiveNode) {
-                        EagerBinaryPrimitiveNode node = (EagerBinaryPrimitiveNode)shadow.expression;
-                        name = resolutionLocation.getValue() +": "+node.getOperation(); //this means the promise of this callback was resolved
-
-                    } else {
-                        name = resolutionLocation.getValue() +": "+shadow.expression.getRootNode().getName();
-                    }
+                    name = resolutionLocation.getValue() + ": " + shadow.expression.getRootNode().getName();
                 }
 
             } else {
@@ -327,8 +320,8 @@ public abstract class StackIterator implements Iterator<StackFrame> {
 
         protected static final class StackFrameDescription {
             SourceSection sourceSection;
-            Frame         frame;
-            RootNode      rootNode;
+            Frame frame;
+            RootNode rootNode;
 
             public StackFrameDescription(final SourceSection sourceSection,
                                          final Frame frame, final RootNode rootNode) {
