@@ -227,13 +227,13 @@ public final class SArguments {
     }
   }
 
-  private static void addEntryForPromiseResolution(ShadowStackEntry currentStack, ShadowStackEntry previousStack) {
+  private static void setEntryForPromiseResolution(ShadowStackEntry currentStack, ShadowStackEntry previousStack) {
     currentStack.setPrevious(previousStack);
   }
 
   public static void saveCausalEntryForPromiseInAsyncStack(Object previousPromiseStack, Object currentPromiseStack) {
       assert previousPromiseStack != null && previousPromiseStack instanceof ShadowStackEntry;
       assert currentPromiseStack != null && currentPromiseStack instanceof ShadowStackEntry;
-      SArguments.addEntryForPromiseResolution((ShadowStackEntry) currentPromiseStack, (ShadowStackEntry) previousPromiseStack);
+      SArguments.setEntryForPromiseResolution((ShadowStackEntry) currentPromiseStack, (ShadowStackEntry) previousPromiseStack);
   }
 }
