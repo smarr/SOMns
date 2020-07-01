@@ -249,7 +249,7 @@ else:
   flags += GRAAL_JVMCI_FLAGS
   if args.embedded_graal:
     flags += GRAAL_EMBEDDED_FLAGS
-  flags += ['-Dgraal.TruffleCompilationThreshold=25']
+  flags += ['-Dgraal.TruffleCompilationThreshold=25', '-Dgraal.TruffleOSRCompilationThreshold=1000']
 
 if args.som_dnu:
     flags += ['-Dsom.printStackTraceOnDNU=true']
