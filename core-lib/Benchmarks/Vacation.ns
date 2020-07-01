@@ -28,15 +28,17 @@ class Vacation usingPlatform: platform andHarness: harness = (
       manager:: initializeManager: problemSize.
       clients:: initializeClients: manager for: numThreads and: problemSize.
 
-      i:: 0.
-      threads:: Array new: numThreads withAll: [
-        i:: i + 1.
-        Thread spawn: [:i |
-          (clients at: i) run
-        ] with: { i }
-      ].
+      numThreads = 1
+        ifTrue: [ (clients at: 1) run ]
+        ifFalse: [
+          i:: 0.
+          threads:: Array new: numThreads withAll: [
+            i:: i + 1.
+            Thread spawn: [:i |
+              (clients at: i) run
+            ] with: { i } ].
 
-      threads do: [:t | t join ].
+          threads do: [:t | t join ] ].
 
       ^ checkTables: manager problemSize: problemSize
     )
