@@ -7,7 +7,8 @@ import som.primitives.arrays.AtPrim;
 import som.vm.constants.Classes;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.SImmutableArray;
-import java.util.Arrays;
+
+import java.util.*;
 
 import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -227,13 +228,61 @@ public final class SArguments {
     }
   }
 
-  private static void setEntryForPromiseResolution(ShadowStackEntry currentStack, ShadowStackEntry previousStack) {
-    currentStack.setPrevious(previousStack);
-  }
-
+  //set the resolution of the promise for the registered callback
   public static void saveCausalEntryForPromiseInAsyncStack(Object previousPromiseStack, Object currentPromiseStack) {
       assert previousPromiseStack != null && previousPromiseStack instanceof ShadowStackEntry;
       assert currentPromiseStack != null && currentPromiseStack instanceof ShadowStackEntry;
-      SArguments.setEntryForPromiseResolution((ShadowStackEntry) currentPromiseStack, (ShadowStackEntry) previousPromiseStack);
+      ((ShadowStackEntry) currentPromiseStack).setPreviousShadowStackEntry((ShadowStackEntry) previousPromiseStack);
+  }
+
+  private static Map<Long, ShadowStackEntry> previousPromiseInGroupByActor = null;
+
+  public static void setEntryForPromiseGroup(Object previousPromiseStack, Object callbackPromiseStack, long actorId) {
+    if (previousPromiseInGroupByActor != null && previousPromiseInGroupByActor.containsKey(actorId)) {
+      ShadowStackEntry firstPromise = previousPromiseInGroupByActor.get(actorId).getPreviousShadowStackEntry();
+
+      //group frames of the previous promise with the frames of the new promise, and then set the grouped stack entries for the callback
+      ShadowStackEntry groupedFrames = groupFrames(firstPromise, (ShadowStackEntry) previousPromiseStack);
+      saveCausalEntryForPromiseInAsyncStack(groupedFrames, callbackPromiseStack);
+
+    } else {
+      saveCausalEntryForPromiseInAsyncStack(previousPromiseStack, callbackPromiseStack);
+      previousPromiseInGroupByActor = new HashMap<>();
+      previousPromiseInGroupByActor.put(actorId, (ShadowStackEntry) callbackPromiseStack);
+    }
+  }
+
+  //group non repeated frames
+  private static ShadowStackEntry groupFrames(ShadowStackEntry firstPromiseStack, ShadowStackEntry secondPromiseStack) {
+    List<ShadowStackEntry> listSecond = getAllEntries(secondPromiseStack, new ArrayList<>());
+    List<ShadowStackEntry> listFirst = getAllEntries(firstPromiseStack, new ArrayList<>());
+
+    ShadowStackEntry group = setNewEntryAtEqualSourceSection(firstPromiseStack, listFirst, listSecond);
+
+    return group;
+  }
+
+  private static List<ShadowStackEntry> getAllEntries(ShadowStackEntry stackEntry, List<ShadowStackEntry> list) {
+    if (stackEntry == null) {
+      return list;
+    } else {
+      list.add(stackEntry);
+      getAllEntries(stackEntry.getPreviousShadowStackEntry(), list);
+    }
+    return list;
+  }
+
+  private static ShadowStackEntry setNewEntryAtEqualSourceSection(ShadowStackEntry stackEntryToSet, List<ShadowStackEntry> listFirst, List<ShadowStackEntry> listSecond ) {
+    for (ShadowStackEntry entrySecond: listSecond) {
+      for (ShadowStackEntry entryFirst: listFirst) {
+        boolean entryFirstNotNull = entryFirst.getPreviousShadowStackEntry()!= null && entryFirst.getPreviousShadowStackEntry().getExpression()!= null;
+        boolean entrySecondNotNull = entrySecond.getPreviousShadowStackEntry()!= null && entrySecond.getPreviousShadowStackEntry().getExpression()!= null;
+        if (entryFirstNotNull && entrySecondNotNull && entrySecond.getPreviousShadowStackEntry().getSourceSection().equals(entryFirst.getPreviousShadowStackEntry().getSourceSection())) {
+          entrySecond.setPreviousShadowStackEntry(stackEntryToSet);
+          return listSecond.get(0); //return top entry with the update
+        }
+      }
+    }
+    return listSecond.get(0);//return top entry
   }
 }

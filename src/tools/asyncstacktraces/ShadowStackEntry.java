@@ -13,7 +13,7 @@ import som.vm.VmSettings;
 public class ShadowStackEntry {
 
     protected ShadowStackEntry previous;
-    protected final Node             expression;
+    protected final Node expression;
 
     public static long numberOfAllocations;
 
@@ -66,14 +66,14 @@ public class ShadowStackEntry {
         }
     }
 
-    public static Actor getCurrentActorOrNull() {
-        Thread t = Thread.currentThread();
-        if (t instanceof ActorProcessingThread) {
-            return EventualMessage.getActorCurrentMessageIsExecutionOn();
-        } else {
-            return null;
-        }
-    }
+//    public static Actor getCurrentActorOrNull() {
+//        Thread t = Thread.currentThread();
+//        if (t instanceof ActorProcessingThread) {
+//            return EventualMessage.getActorCurrentMessageIsExecutionOn();
+//        } else {
+//            return null;
+//        }
+//    }
 
     public RootNode getRootNode() {
         return expression.getRootNode();
@@ -87,7 +87,7 @@ public class ShadowStackEntry {
         return false;
     }
 
-    public void setPrevious(ShadowStackEntry maybeEntry) {
+    public void setPreviousShadowStackEntry(ShadowStackEntry maybeEntry) {
         previous = maybeEntry;
     }
 
@@ -100,10 +100,10 @@ public class ShadowStackEntry {
 
     public static final class EntryForPromiseResolution extends ShadowStackEntry {
         public enum ResolutionLocation {
-            ERROR("on error"), SUCCESSFUL ("on resolution"),
+            ERROR("on error"), SUCCESSFUL("on resolution"),
             CHAINED("on chain"), ON_CALLBACK("on callback"),
             ON_WHEN_RESOLVED("on when resolved"), ON_CALLBACK_ERROR("on callback error"),
-            ON_RECEIVE_MESSAGE("on receive message"), ON_SCHEDULE_PROMISE ("on schedule");
+            ON_RECEIVE_MESSAGE("on receive message"), ON_SCHEDULE_PROMISE("on schedule");
 
             private final String value;
 
@@ -115,7 +115,8 @@ public class ShadowStackEntry {
                 return value;
             }
         }
-        ResolutionLocation resolutionLocation;
+
+        public ResolutionLocation resolutionLocation;
 
         private EntryForPromiseResolution(final ShadowStackEntry previous,
                                           final Node expr, ResolutionLocation resolutionLocation) {
@@ -127,5 +128,6 @@ public class ShadowStackEntry {
         public boolean isAsync() {
             return true;
         }
+
     }
 }
