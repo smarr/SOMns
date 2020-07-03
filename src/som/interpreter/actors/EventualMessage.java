@@ -335,7 +335,7 @@ public abstract class EventualMessage {
 
       //save promise resolution entry corresponding to the promise to which the message is sent
       if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-        SArguments.saveCausalEntryForPromiseInAsyncStack(maybeEntry, args[args.length - 1]);
+        SArguments.saveCausalEntryForPromise(maybeEntry, args[args.length - 1]);
       }
     }
 
@@ -433,9 +433,9 @@ public abstract class EventualMessage {
 //        System.out.println("owner "+promise.getOwner().getId() + " group "+promiseGroup + " maybe "+((ShadowStackEntry)maybeEntry).getSourceSection() + " callback "+ ((ShadowStackEntry)args[args.length - 1]).getSourceSection());
 
         if (promiseGroup) {
-          SArguments.setEntryForPromiseGroup(maybeEntry, args[args.length - 1], promise.getOwner().getId());
+          SArguments.saveCausalEntryForPromiseGroup(maybeEntry, args[args.length - 1], promise.getOwner().getId());
         } else {
-          SArguments.saveCausalEntryForPromiseInAsyncStack(maybeEntry, args[args.length - 1]);
+          SArguments.saveCausalEntryForPromise(maybeEntry, args[args.length - 1]);
         }
       }
 

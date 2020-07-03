@@ -228,8 +228,8 @@ public final class SArguments {
     }
   }
 
-  //set the resolution of the promise for the registered callback
-  public static void saveCausalEntryForPromiseInAsyncStack(Object previousPromiseStack, Object currentPromiseStack) {
+  //set the resolution of the promise for the registered callback or message sent to a promise
+  public static void saveCausalEntryForPromise(Object previousPromiseStack, Object currentPromiseStack) {
       assert previousPromiseStack != null && previousPromiseStack instanceof ShadowStackEntry;
       assert currentPromiseStack != null && currentPromiseStack instanceof ShadowStackEntry;
       ((ShadowStackEntry) currentPromiseStack).setPreviousShadowStackEntry((ShadowStackEntry) previousPromiseStack);
@@ -237,16 +237,16 @@ public final class SArguments {
 
   private static Map<Long, ShadowStackEntry> previousPromiseInGroupByActor = null;
 
-  public static void setEntryForPromiseGroup(Object previousPromiseStack, Object callbackPromiseStack, long actorId) {
+  public static void saveCausalEntryForPromiseGroup(Object previousPromiseStack, Object callbackPromiseStack, long actorId) {
     if (previousPromiseInGroupByActor != null && previousPromiseInGroupByActor.containsKey(actorId)) {
       ShadowStackEntry firstPromise = previousPromiseInGroupByActor.get(actorId).getPreviousShadowStackEntry();
 
       //group frames of the previous promise with the frames of the new promise, and then set the grouped stack entries for the callback
       ShadowStackEntry groupedFrames = groupFrames(firstPromise, (ShadowStackEntry) previousPromiseStack);
-      saveCausalEntryForPromiseInAsyncStack(groupedFrames, callbackPromiseStack);
+      saveCausalEntryForPromise(groupedFrames, callbackPromiseStack);
 
     } else {
-      saveCausalEntryForPromiseInAsyncStack(previousPromiseStack, callbackPromiseStack);
+      saveCausalEntryForPromise(previousPromiseStack, callbackPromiseStack);
       previousPromiseInGroupByActor = new HashMap<>();
       previousPromiseInGroupByActor.put(actorId, (ShadowStackEntry) callbackPromiseStack);
     }
@@ -272,13 +272,14 @@ public final class SArguments {
     return list;
   }
 
-  private static ShadowStackEntry setNewEntryAtEqualSourceSection(ShadowStackEntry stackEntryToSet, List<ShadowStackEntry> listFirst, List<ShadowStackEntry> listSecond ) {
+  //equal source section corresponds to the turn node, from there on the stack frames are the same for both promises stacks
+  private static ShadowStackEntry setNewEntryAtEqualSourceSection(ShadowStackEntry stackEntryToAdd, List<ShadowStackEntry> listFirst, List<ShadowStackEntry> listSecond ) {
     for (ShadowStackEntry entrySecond: listSecond) {
       for (ShadowStackEntry entryFirst: listFirst) {
         boolean entryFirstNotNull = entryFirst.getPreviousShadowStackEntry()!= null && entryFirst.getPreviousShadowStackEntry().getExpression()!= null;
         boolean entrySecondNotNull = entrySecond.getPreviousShadowStackEntry()!= null && entrySecond.getPreviousShadowStackEntry().getExpression()!= null;
         if (entryFirstNotNull && entrySecondNotNull && entrySecond.getPreviousShadowStackEntry().getSourceSection().equals(entryFirst.getPreviousShadowStackEntry().getSourceSection())) {
-          entrySecond.setPreviousShadowStackEntry(stackEntryToSet);
+          entrySecond.setPreviousShadowStackEntry(stackEntryToAdd);
           return listSecond.get(0); //return top entry with the update
         }
       }
