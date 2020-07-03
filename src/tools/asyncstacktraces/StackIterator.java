@@ -241,7 +241,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                     String symbol = ((EventualSendNode) sendNode).getSentSymbol().getString();
 
                     if (sendNode instanceof EventualSendNode) {
-                        name = "at async message: " + symbol;
+                        name = "on async message send: " + symbol;
 
                     } else {
                         name = "EntryAtMessageSend: " + shadow.expression.getRootNode().getName();
