@@ -14,6 +14,7 @@ public class ShadowStackEntry {
 
     protected ShadowStackEntry previous;
     protected final Node expression;
+    protected final long actorId;
 
     public static long numberOfAllocations;
 
@@ -64,16 +65,17 @@ public class ShadowStackEntry {
         if (ALLOCATION_COUNT) {
             numberOfAllocations++;
         }
+        this.actorId = getCurrentActor();
     }
 
-//    public static Actor getCurrentActorOrNull() {
-//        Thread t = Thread.currentThread();
-//        if (t instanceof ActorProcessingThread) {
-//            return EventualMessage.getActorCurrentMessageIsExecutionOn();
-//        } else {
-//            return null;
-//        }
-//    }
+    public long getCurrentActor() {
+        Thread t = Thread.currentThread();
+        if (t instanceof ActorProcessingThread) {
+            return EventualMessage.getActorCurrentMessageIsExecutionOn().getId();
+        } else {
+            return -1l;
+        }
+    }
 
     public RootNode getRootNode() {
         return expression.getRootNode();
@@ -100,12 +102,13 @@ public class ShadowStackEntry {
 
     public static final class EntryForPromiseResolution extends ShadowStackEntry {
         public enum ResolutionLocation {
-            ERROR("on error"), SUCCESSFUL("on resolution"),
-            CHAINED("on chain"), ON_CALLBACK("on callback"),
-            ON_WHEN_RESOLVED("on when resolved"), ON_CALLBACK_ERROR("on callback error"),
+            SUCCESSFUL("resolved with a value"), ERROR("resolved with an error"),
+            CHAINED("resolved with a promise"), ON_WHEN_RESOLVED_BLOCK("on whenResolved block"),
+            ON_WHEN_RESOLVED("on whenResolved"), ON_WHEN_RESOLVED_ERROR("on whenResolved error"),
             ON_RECEIVE_MESSAGE("on receive message"), ON_SCHEDULE_PROMISE("on schedule");
 
             private final String value;
+            private String arg = "";
 
             ResolutionLocation(String value) {
                 this.value = value;
@@ -113,6 +116,14 @@ public class ShadowStackEntry {
 
             public String getValue() {
                 return value;
+            }
+
+            public String getArg() {
+                return arg;
+            }
+
+            public void setArg(String arg){
+                this.arg = arg;
             }
         }
 

@@ -66,7 +66,7 @@ public class ApplicationThreadStack {
   ArrayList<StackFrame> get() {
     if (stackFrames.isEmpty()) {
       StackIterator stack =
-              StackIterator.createSuspensionIterator(event.getStackFrames().iterator());
+              StackIterator.createSuspensionIterator(event.getStackFrames().iterator(), suspension.getActivity().getId());
 
       if (stack instanceof StackIterator.ShadowStackIterator.SuspensionShadowStackIterator) {
         StackFrame topFrame = ((StackIterator.ShadowStackIterator.SuspensionShadowStackIterator) stack).getTopFrame();

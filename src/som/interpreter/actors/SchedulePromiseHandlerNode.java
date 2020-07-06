@@ -52,9 +52,12 @@ public abstract class SchedulePromiseHandlerNode extends Node {
     if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
       // Get info about the resolution context from the promise
       // we want to know where it was resolved, where the value is coming from
+      ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation onReceiveLocation =
+              ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_SCHEDULE_PROMISE;
+//      onReceiveLocation.setArg(msg.getTarget().getId() + " send by actor "+ msg.getSender().getId());
       ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
               SArguments.getShadowStackEntry(frame),
-              getParent().getParent(), ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_SCHEDULE_PROMISE);
+              getParent().getParent(), onReceiveLocation);
       assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
       SArguments.setShadowStackEntry(msg.args, resolutionEntry);
     }

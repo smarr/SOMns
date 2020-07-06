@@ -7,6 +7,7 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.source.SourceSection;
 
 import som.VM;
+import som.interpreter.Method;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.ReceivedMessage.ReceivedCallback;
 import som.interpreter.actors.SPromise.SResolver;
@@ -429,7 +430,12 @@ public abstract class EventualMessage {
       args[PROMISE_VALUE_IDX] = WrapReferenceNode.wrapForUse(originalSender, alue, resolvingActor, null);
       //save promise resolution entry corresponding to the promise to which this callback is registered on
       if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-        boolean promiseGroup = this.callback.getMethod().getInvokable().getName().startsWith("PromiseGroup");
+        assert args[args.length - 1] instanceof ShadowStackEntry;
+        ShadowStackEntry callPromiseStack = (ShadowStackEntry) args[args.length - 1];
+        boolean promiseGroup = false;
+        if (callPromiseStack.getExpression().getParent().getParent() instanceof Method) {
+          promiseGroup = ((Method)callPromiseStack.getExpression().getParent().getParent()).getName().startsWith("PromiseGroup");
+        }
 //        System.out.println("owner "+promise.getOwner().getId() + " group "+promiseGroup + " maybe "+((ShadowStackEntry)maybeEntry).getSourceSection() + " callback "+ ((ShadowStackEntry)args[args.length - 1]).getSourceSection());
 
         if (promiseGroup) {

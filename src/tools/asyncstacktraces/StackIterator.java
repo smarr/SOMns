@@ -61,9 +61,9 @@ public abstract class StackIterator implements Iterator<StackFrame> {
     }
 
     public static StackIterator createSuspensionIterator(
-            final Iterator<DebugStackFrame> localStack) {
+            final Iterator<DebugStackFrame> localStack, long actorId) {
         if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
-            return new SuspensionShadowStackIterator(localStack);
+            return new SuspensionShadowStackIterator(localStack, actorId);
         } else {
             return new SuspensionIterator(localStack);
         }
@@ -212,8 +212,8 @@ public abstract class StackIterator implements Iterator<StackFrame> {
         public StackFrame getTopFrame() {
             if (first) {
                 StackFrameDescription frameDescription = getFirstFrame();
-
-                topFrame = new StackFrame(frameDescription.getRootNode().getName(), frameDescription.getRootNode(),
+                String actor = "actor " + frameDescription.getActorId() + ", ";
+                topFrame = new StackFrame(actor.concat(frameDescription.getRootNode().getName()), frameDescription.getRootNode(),
                         frameDescription.getSourceSection(), frameDescription.getFrame(), false);
             }
             return topFrame;
@@ -229,7 +229,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
             }
             boolean contextTransitionElement;
 
-            String name = shadow.getRootNode().getName();
+            String name = "actor " + shadow.actorId + ", " + shadow.getRootNode().getName();
             SourceSection location = shadow.getSourceSection();
 
             if (!usedAgain && (shadow instanceof EntryAtMessageSend
@@ -241,16 +241,14 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                     String symbol = ((EventualSendNode) sendNode).getSentSymbol().getString();
 
                     if (sendNode instanceof EventualSendNode) {
-                        name = "on async message send: " + symbol;
+                        name = "actor " + shadow.actorId + ", on async message send: " + symbol;
 
-                    } else {
-                        name = "EntryAtMessageSend: " + shadow.expression.getRootNode().getName();
                     }
                     useAgainShadowEntry = shadow;
                     useAgainFrame = localFrame;
                 } else if (shadow instanceof EntryForPromiseResolution) {
                     EntryForPromiseResolution.ResolutionLocation resolutionLocation = ((EntryForPromiseResolution) shadow).resolutionLocation;
-                    name = resolutionLocation.getValue() + ": " + shadow.expression.getRootNode().getName();
+                    name = "actor " + shadow.actorId + ", "+resolutionLocation.getValue() + ": " + shadow.expression.getRootNode().getName() + " "+resolutionLocation.getArg();
                 }
 
             } else {
@@ -322,12 +320,14 @@ public abstract class StackIterator implements Iterator<StackFrame> {
             SourceSection sourceSection;
             Frame frame;
             RootNode rootNode;
+            long actorId;
 
             public StackFrameDescription(final SourceSection sourceSection,
-                                         final Frame frame, final RootNode rootNode) {
+                                         final Frame frame, final RootNode rootNode, long actorId) {
                 this.sourceSection = sourceSection;
                 this.frame = frame;
                 this.rootNode = rootNode;
+                this.actorId = actorId;
             }
 
             public SourceSection getSourceSection() {
@@ -341,17 +341,23 @@ public abstract class StackIterator implements Iterator<StackFrame> {
             public RootNode getRootNode() {
                 return rootNode;
             }
+
+            public long getActorId() {
+                return actorId;
+            }
         }
 
         public static final class SuspensionShadowStackIterator extends ShadowStackIterator {
             private final DebugStackFrame firstDebugFrame;
             private StackFrameDescription firstFrameDescription;
+            private long actorId;
 
-            public SuspensionShadowStackIterator(final Iterator<DebugStackFrame> localStack) {
+            public SuspensionShadowStackIterator(final Iterator<DebugStackFrame> localStack, long actorId) {
                 assert localStack != null;
                 assert localStack.hasNext();
                 firstDebugFrame = localStack.next(); //only takes the first frame
                 firstFrameDescription = null;
+                this.actorId = actorId;
             }
 
             @Override
@@ -359,7 +365,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                 assert first;
                 if (firstFrameDescription == null) {
                     firstFrameDescription = new StackFrameDescription(firstDebugFrame.getSourceSection(), firstDebugFrame.getFrame(),
-                            firstDebugFrame.getRootNode());
+                            firstDebugFrame.getRootNode(), this.actorId);
                 }
                 return firstFrameDescription;
             }
@@ -390,7 +396,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                 }
                 return new StackFrameDescription(ss,
                         firstFrameInstance.getFrame(FrameAccess.READ_ONLY),
-                        rootNode);
+                        rootNode, -1);
             }
         }
     }
