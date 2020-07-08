@@ -47,13 +47,13 @@ before_script:
 #   script:
 #     - ant native-tests
 
-benchmark_savina_job:
-  stage: benchmark
-  tags: [benchmarks, infinity]
-  allow_failure: true
-  script:
-    - ant libgraal-jdk compile
-    - rebench --without-nice --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-Savina
+# benchmark_savina_job:
+#   stage: benchmark
+#   tags: [benchmarks, infinity]
+#   allow_failure: true
+#   script:
+#     - ant libgraal-jdk compile
+#     - rebench --without-nice --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-Savina
 
 # benchmark_savina_csp_job:
 #   stage: benchmark
@@ -69,7 +69,7 @@ benchmark_job:
   allow_failure: true
   script:
     - ant libgraal-jdk compile
-    - rebench --without-nice --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns
+    - rebench -it 5000 -in 30 --without-nice --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns
 
 # benchmark_interp_job:
 #   stage: benchmark
