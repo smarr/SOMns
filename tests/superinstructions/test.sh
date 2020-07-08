@@ -23,7 +23,7 @@ NEEDS_UPDATE=false
 
 function runBenchmark {
   BENCH=$1
-  HARNESS="${SOM_DIR}/som -si -Dsi.output=${SCRIPT_PATH}/results/${BENCH}.txt \
+  HARNESS="${SOM_DIR}/som --no-libgraal -si -Dsi.output=${SCRIPT_PATH}/results/${BENCH}.txt \
     -G $SOM_DIR/core-lib/Benchmarks/Harness.ns"
   echo $HARNESS $@
   $HARNESS $@
