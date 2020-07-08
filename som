@@ -179,20 +179,31 @@ if not java_bin and JAVA_HOME:
 if not java_bin:
   java_bin = "java"
 
-JAVA_MAJOR_VERSION = None
-try:
-  j_ver_str = os.popen(java_bin + " -version 2>&1").read()
-  j_arr = j_ver_str.split("\"")
-  if j_arr[1].startswith("1.8"):
-    JAVA_MAJOR_VERSION = 8
-  else:
-    JAVA_MAJOR_VERSION = int(j_arr[1].split(".")[0])
-except:
-  pass
+# JAVA_MAJOR_VERSION = None
+# try:
+#   j_ver_str = os.popen(java_bin + " -version 2>&1").read()
+#   j_arr = j_ver_str.split("\"")
+#   if j_arr[1].startswith("1.8"):
+JAVA_MAJOR_VERSION = 8
+#   else:
+#     JAVA_MAJOR_VERSION = int(j_arr[1].split(".")[0])
+# except:
+#   pass
+#
+# if not args.interpreter and not java_bin.startswith(BASE_DIR + '/libs/jvmci') and (not JAVA_MAJOR_VERSION or JAVA_MAJOR_VERSION < 9):
+#   print "No compatible JDK found. Please set the GRAAL_HOME or JVMCI_BIN environment variables."
+#   sys.exit(1)
 
-if not args.interpreter and not java_bin.startswith(BASE_DIR + '/libs/jvmci') and (not JAVA_MAJOR_VERSION or JAVA_MAJOR_VERSION < 9):
-  print "No compatible JDK found. Please set the GRAAL_HOME or JVMCI_BIN environment variables."
-  sys.exit(1)
+print(java_bin)
+from subprocess import check_output, STDOUT, CalledProcessError
+# libgraal_jdk_home = check_output([BASE_DIR + '/libs/mx/mx', 'graalvm-home'], cwd = BASE_DIR + '/libs/truffle/vm', env = {'JAVA_HOME': java_bin})
+try:
+  libgraal_jdk_home = check_output([BASE_DIR + '/libs/mx/mx', '--primary-suite-path', BASE_DIR + '/libs/truffle/vm', 'graalvm-home'], stderr=STDOUT, env = {'JAVA_HOME': java_bin.replace('/bin/java', '')})
+except CalledProcessError as e:
+  print(e.output)
+
+java_bin = libgraal_jdk_home.strip() + '/bin/java'
+print(java_bin)
 
 ##
 ## Defining Necessary Parameter Bits
@@ -207,8 +218,10 @@ BOOT_CLASSPATH = ('-Xbootclasspath/a:'
              + TRUFFLE_DIR + '/sdk/mxbuild/dists/jdk1.8/graal-sdk.jar:'
              + TRUFFLE_DIR + '/truffle/mxbuild/dists/jdk1.8/truffle-api.jar')
 
-GRAAL_JAVA_8_FLAGS = ['-Djvmci.Compiler=graal',
-  '-Djvmci.class.path.append=' + TRUFFLE_DIR + '/compiler/mxbuild/dists/jdk1.8/graal.jar']
+# GRAAL_JAVA_8_FLAGS = ['-Djvmci.Compiler=graal',
+#   '-Djvmci.class.path.append=' + TRUFFLE_DIR + '/compiler/mxbuild/dists/jdk1.8/graal.jar']
+
+GRAAL_JAVA_8_FLAGS = ['-XX:+UseJVMCICompiler', '-XX:+UseJVMCINativeLibrary', '-XX:-UseJVMCIClassLoader', '-Dgraalvm.locatorDisabled=true']
 
 GRAAL_JAVA_9_FLAGS = [
   '--module-path=' + TRUFFLE_DIR + '/sdk/mxbuild/modules/org.graalvm.graal_sdk.jar:' +
@@ -223,7 +236,7 @@ TWEAK_INLINING = ['-Dgraal.TruffleCompilationThreshold=191',
                   '-Dgraal.TruffleInliningMaxCallerSize=10000',
                   '-Dgraal.TruffleSplittingMaxCalleeSize=100000']
 
-GRAAL_JVMCI_FLAGS = ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', '-XX:-UseJVMCICompiler']
+GRAAL_JVMCI_FLAGS = [] # ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', '-XX:-UseJVMCICompiler']
 
 JAVA_ARGS = ['-server']
 

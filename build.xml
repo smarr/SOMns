@@ -167,6 +167,15 @@
         <travis target="truffle-libs" />
     </target>
 
+    <target name="libgraal-jdk" unless="skip.truffle" depends="jvmci-libs,truffle-submodule">
+        <travis target="libgraal-jdk" start="Build LibGraal-enabled JDK" />
+        <exec executable="${mx.cmd}" dir="${vm.dir}" failonerror="true">
+            <arg line="--env libgraal build"/>
+            <env key="JAVA_HOME" value="${jvmci.home}" />
+        </exec>
+        <travis target="libgraal-jdk" />
+    </target>
+
     <target name="bd-libs"> <!-- implicit dependency on truffle-libs -->
         <travis target="bd-libs" start="Build Black Diamonds" />
 
@@ -217,7 +226,7 @@
         <travis target="som-libs" />
     </target>
 
-    <target name="libs" depends="truffle-libs,som-libs,bd-libs" unless="skip.libs" />
+    <target name="libs" depends="libgraal-jdk,truffle-libs,som-libs,bd-libs" unless="skip.libs" />
 
     <target name="source" description="Download Source Jars for development">
         <get src="${lib.url}/somns-deps-source-${somns-deps.version}.jar"
