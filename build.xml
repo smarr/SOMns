@@ -50,6 +50,7 @@
     <property name="tools.dir"   location="${lib.dir}/truffle/tools" />
     <property name="truffle.dir" location="${lib.dir}/truffle/truffle" />
     <property name="svm.dir"     location="${lib.dir}/truffle/substratevm" />
+    <property name="vm.dir"      location="${lib.dir}/truffle/vm" />
     <property name="compiler.build" location="${graal.dir}/mxbuild/dists/jdk1.8" />
     <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists/jdk1.8" />
     <property name="tools.build" location="${tools.dir}/mxbuild/dists/jdk1.8" />
