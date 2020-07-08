@@ -184,7 +184,7 @@ public class SInvokable extends SAbstractObject implements Dispatchable {
 
   @Override
   public final AbstractDispatchNode getDispatchNode(final Object rcvr,
-      final Object firstArg, final AbstractDispatchNode next, final boolean forAtomic) {
+      final AbstractDispatchNode next, final boolean forAtomic) {
     assert next != null : "Pass the old node, just need the source section";
 
     CallTarget ct = forAtomic ? getAtomicCallTarget() : callTarget;

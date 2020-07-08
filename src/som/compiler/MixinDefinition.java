@@ -587,8 +587,7 @@ public final class MixinDefinition implements SomInteropObject {
 
     @Override
     public AbstractDispatchNode getDispatchNode(final Object receiver,
-        final Object firstArg, final AbstractDispatchNode next,
-        final boolean forAtomic) {
+        final AbstractDispatchNode next, final boolean forAtomic) {
       SObject rcvr = (SObject) receiver;
       StorageLocation loc = rcvr.getObjectLayout().getStorageLocation(this);
       boolean isSet = loc.isSet(rcvr);
@@ -658,7 +657,7 @@ public final class MixinDefinition implements SomInteropObject {
 
     @Override
     public AbstractDispatchNode getDispatchNode(final Object receiver,
-        final Object firstArg, final AbstractDispatchNode next, final boolean forAtomic) {
+        final AbstractDispatchNode next, final boolean forAtomic) {
       SObject rcvr = (SObject) receiver;
       StorageLocation loc = rcvr.getObjectLayout().getStorageLocation(mainSlot);
       boolean isSet = loc.isSet(rcvr);

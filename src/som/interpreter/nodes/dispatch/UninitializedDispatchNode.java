@@ -55,20 +55,19 @@ public final class UninitializedDispatchNode {
       assert rcvr != null;
 
       if (chainDepth < INLINE_CACHE_SIZE) {
-        Object firstArg = arguments.length > 1 ? arguments[1] : null;
-        return insertSpecialization(rcvr, firstArg, arguments.length);
+        return insertSpecialization(rcvr, arguments.length);
       } else {
         return generalizeChain((GenericMessageSendNode) first.getParent());
       }
     }
 
     protected final AbstractDispatchNode insertSpecialization(final Object rcvr,
-        final Object firstArg, final int numArgs) {
+        final int numArgs) {
       AbstractDispatchNode node;
       if (rcvr instanceof TruffleObject && !(rcvr instanceof SomInteropObject)) {
         node = createForeignDispatchNode(numArgs);
       } else {
-        node = createSomDispatchNode(rcvr, firstArg);
+        node = createSomDispatchNode(rcvr);
       }
 
       replace(node);
@@ -80,8 +79,7 @@ public final class UninitializedDispatchNode {
       return new ForeignDispatchNode(numArgs, selector.getString(), this);
     }
 
-    private AbstractDispatchNode createSomDispatchNode(final Object rcvr,
-        final Object firstArg) {
+    private AbstractDispatchNode createSomDispatchNode(final Object rcvr) {
       SClass rcvrClass = Types.getClassOf(rcvr);
       Dispatchable dispatchable = doLookup(rcvrClass);
 
@@ -96,7 +94,7 @@ public final class UninitializedDispatchNode {
         node = new CachedDnuNode(rcvrClass, selector,
             DispatchGuard.create(rcvr), SomLanguage.getVM(this), newChainEnd);
       } else {
-        node = dispatchable.getDispatchNode(rcvr, firstArg, newChainEnd, forAtomic());
+        node = dispatchable.getDispatchNode(rcvr, newChainEnd, forAtomic());
       }
       return node;
     }
