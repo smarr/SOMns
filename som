@@ -198,7 +198,7 @@ print(java_bin)
 from subprocess import check_output, STDOUT, CalledProcessError
 # libgraal_jdk_home = check_output([BASE_DIR + '/libs/mx/mx', 'graalvm-home'], cwd = BASE_DIR + '/libs/truffle/vm', env = {'JAVA_HOME': java_bin})
 try:
-  libgraal_jdk_home = check_output([BASE_DIR + '/libs/mx/mx', '--primary-suite-path', BASE_DIR + '/libs/truffle/vm', 'graalvm-home'], stderr=STDOUT, env = {'JAVA_HOME': java_bin.replace('/bin/java', '')})
+  libgraal_jdk_home = check_output([BASE_DIR + '/libs/mx/mx', '--primary-suite-path', '--env', 'libgraal', BASE_DIR + '/libs/truffle/vm', 'graalvm-home'], stderr=STDOUT, env = {'JAVA_HOME': java_bin.replace('/bin/java', '')})
 except CalledProcessError as e:
   print(e.output)
 

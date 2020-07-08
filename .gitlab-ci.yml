@@ -52,7 +52,7 @@ benchmark_savina_job:
   tags: [benchmarks, infinity]
   allow_failure: true
   script:
-    - ant compile
+    - ant libgraal-jdk compile
     - rebench --without-nice --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-Savina
 
 benchmark_savina_csp_job:
@@ -60,7 +60,7 @@ benchmark_savina_csp_job:
   tags: [benchmarks, infinity]
   allow_failure: true
   script:
-    - ant compile
+    - ant libgraal-jdk compile
     - rebench --without-nice --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-SavinaCSP
 
 benchmark_job:
@@ -68,7 +68,7 @@ benchmark_job:
   tags: [benchmarks, infinity]
   allow_failure: true
   script:
-    - ant compile
+    - ant libgraal-jdk compile
     - rebench --without-nice --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns
 
 benchmark_interp_job:
@@ -76,7 +76,7 @@ benchmark_interp_job:
   tags: [benchmarks, infinity]
   allow_failure: true
   script:
-    - ant compile
+    - ant libgraal-jdk compile
     - rebench --without-nice --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-interp
 
 benchmark_nightly_job:
@@ -86,7 +86,7 @@ benchmark_nightly_job:
   only:
     - triggers
   script:
-    - ant compile
+    - ant libgraal-jdk compile
     - rebench --without-nice --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf nightly
     - rebench --without-nice --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-Savina-tracing
 

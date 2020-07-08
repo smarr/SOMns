@@ -227,7 +227,7 @@
         <travis target="som-libs" />
     </target>
 
-    <target name="libs" depends="libgraal-jdk,truffle-libs,som-libs,bd-libs" unless="skip.libs" />
+    <target name="libs" depends="truffle-libs,som-libs,bd-libs" unless="skip.libs" />
 
     <target name="source" description="Download Source Jars for development">
         <get src="${lib.url}/somns-deps-source-${somns-deps.version}.jar"
