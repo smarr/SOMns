@@ -13,26 +13,26 @@ variables:
 before_script:
   - git submodule update --init
 
-build_and_test_job:
-  stage: build-and-test
-  tags: [benchmarks, infinity]
-  script:
-    - ant checkstyle
-    - ant eclipseformat-check
-    - timeout 5m ant unit-tests som-tests
-
-kompos_and_dym_tests:
-  stage: full-test
-  tags: [benchmarks, infinity]
-  script:
-    - ant jacoco-lib compile dynamic-metrics-tests superinstructions-tests
-    - (cd tools/kompos && npm install . && npm -s run verify && npm test)
-
-replay_tests:
-  stage: full-test
-  tags: [benchmarks, infinity]
-  script:
-    - timeout 30m ant replay-tests
+# build_and_test_job:
+#   stage: build-and-test
+#   tags: [benchmarks, infinity]
+#   script:
+#     - ant checkstyle
+#     - ant eclipseformat-check
+#     - timeout 5m ant unit-tests som-tests
+#
+# kompos_and_dym_tests:
+#   stage: full-test
+#   tags: [benchmarks, infinity]
+#   script:
+#     - ant jacoco-lib compile dynamic-metrics-tests superinstructions-tests
+#     - (cd tools/kompos && npm install . && npm -s run verify && npm test)
+#
+# replay_tests:
+#   stage: full-test
+#   tags: [benchmarks, infinity]
+#   script:
+#     - timeout 30m ant replay-tests
 
 # Disabled due to breaking changes in the tracing infrastructure. Not fixed to make merge of Snapshotting PR(#293) easier.
 #snapshot_tests:
@@ -41,11 +41,11 @@ replay_tests:
 #  script:
 #    - timeout 10m ant snapshot-tests
 
-svm_tests:
-  stage: full-test
-  tags: [benchmarks, infinity]
-  script:
-    - ant native-tests
+# svm_tests:
+#   stage: full-test
+#   tags: [benchmarks, infinity]
+#   script:
+#     - ant native-tests
 
 benchmark_savina_job:
   stage: benchmark
