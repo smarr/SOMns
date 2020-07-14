@@ -80,6 +80,7 @@
         <pathelement location="${classes.dir}" />
         <pathelement location="${bd.dir}/build/classes" />
         <pathelement location="${lib.dir}/somns-deps.jar" />
+        <pathelement location="${lib.dir}/affinity.jar" />
 
         <pathelement location="${svm.build}/svm-core.jar" />
         <pathelement location="${tools.build}/truffle-profiler.jar" />
