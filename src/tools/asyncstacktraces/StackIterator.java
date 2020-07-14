@@ -191,8 +191,11 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                 StackFrameDescription firstFrame = getFirstFrame();
                 localFrame = firstFrame.getFrame();
                 Object[] args = localFrame.getArguments();
-                assert args[args.length - 1] instanceof ShadowStackEntry;
-                currentSSEntry = (ShadowStackEntry) args[args.length - 1];
+             //   assert args[args.length - 1] instanceof ShadowStackEntry;
+                if(args[args.length - 1] instanceof ShadowStackEntry) {
+                    currentSSEntry = (ShadowStackEntry) args[args.length - 1];
+                }
+
                 first = false;
 
             } else if (useAgainShadowEntry != null) {
@@ -215,8 +218,16 @@ public abstract class StackIterator implements Iterator<StackFrame> {
             if (first) {
                 StackFrameDescription frameDescription = getFirstFrame();
                 String actor = "actor " + frameDescription.getActorId() + ", ";
-                topFrame = new StackFrame(actor.concat(frameDescription.getRootNode().getName()), frameDescription.getRootNode(),
+                String name;
+                if (frameDescription.getRootNode().getName() != null) { //case of ExecutorRootNode
+                    String rootNodeName = frameDescription.getRootNode().getName();
+                    name = actor.concat(rootNodeName);
+                } else {
+                    name = actor;
+                }
+                topFrame = new StackFrame(name, frameDescription.getRootNode(),
                         frameDescription.getSourceSection(), frameDescription.getFrame(), false);
+
             }
             return topFrame;
         }
