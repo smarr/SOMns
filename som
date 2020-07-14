@@ -227,7 +227,7 @@ TWEAK_INLINING = ['-Dgraal.TruffleCompilationThreshold=191',
 
 GRAAL_JVMCI_FLAGS = ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', '-XX:-UseJVMCICompiler']
 
-JAVA_ARGS = ['-server']
+JAVA_ARGS = ['-server', '-XX:+UseThreadPriorities']
 
 if JAVA_MAJOR_VERSION == 8:
   JAVA_ARGS += ['-d64']

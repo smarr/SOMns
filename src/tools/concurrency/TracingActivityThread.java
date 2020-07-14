@@ -106,6 +106,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     }
 
     setName(getClass().getSimpleName() + "-" + threadId);
+    setPriority(MAX_PRIORITY);
   }
 
   public abstract Activity getActivity();
