@@ -5,6 +5,7 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import net.openhft.affinity.AffinityLock;
 import som.VM;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor.ActorProcessingThread;
@@ -23,6 +24,8 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
 
   public static final AtomicInteger threadIdGen =
       (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) ? new AtomicInteger(1) : null;
+
+  private AffinityLock affinity;
 
   protected final long threadId;
   protected long       nextEntityId;
@@ -180,6 +183,9 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
       TracingBackend.registerThread(this);
     }
+
+    affinity = AffinityLock.acquireLock();
+
     vm.enterContext();
   }
 
@@ -193,6 +199,8 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     if (VmSettings.SNAPSHOTS_ENABLED) {
       SnapshotBackend.registerSnapshotBuffer(snapshotBuffer);
     }
+
+    affinity.release();
 
     vm.leaveContext();
     super.onTermination(exception);

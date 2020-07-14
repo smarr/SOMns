@@ -212,7 +212,12 @@ print(java_bin)
 CLASSPATH = (BASE_DIR + '/build/classes:'
            + BASE_DIR + '/libs/black-diamonds/build/classes:'
            + TRUFFLE_DIR + '/truffle/mxbuild/dists/jdk1.8/truffle-debug.jar:'
-           + BASE_DIR + '/libs/somns-deps.jar')
+           + BASE_DIR + '/libs/somns-deps.jar:'
+           + BASE_DIR + '/libs/affinity.jar:'
+           + BASE_DIR + '/libs/sl4j-api.jar:'
+           + BASE_DIR + '/libs/sl4j-simple.jar:'
+           + BASE_DIR + '/libs/jna-platform.jar:'
+           + BASE_DIR + '/libs/jna.jar')
 
 BOOT_CLASSPATH = ('-Xbootclasspath/a:'
              + TRUFFLE_DIR + '/sdk/mxbuild/dists/jdk1.8/graal-sdk.jar:'
