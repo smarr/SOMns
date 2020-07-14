@@ -11,10 +11,10 @@ public class RuntimeScope {
   private final Frame       frame;
   private final MethodScope lexicalScope;
 
-  public RuntimeScope(final Frame frame, final MethodScope lexcialScope) {
+  public RuntimeScope(final Frame frame, final MethodScope lexicalScope) {
     this.frame = frame;
-    this.lexicalScope = lexcialScope;
-    assert frame.getFrameDescriptor() == lexcialScope.getFrameDescriptor();
+    this.lexicalScope = lexicalScope;
+    assert frame.getFrameDescriptor() == lexicalScope.getFrameDescriptor();
   }
 
   public Variable[] getVariables() {
