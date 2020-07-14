@@ -383,14 +383,13 @@ public abstract class StackIterator implements Iterator<StackFrame> {
             }
 
             public StackFrameDescription getFrameBySource(SourceSection sourceSection) {
-                if (!allFrames.isEmpty()) {
-                    for (DebugStackFrame debugStackFrame : allFrames) {
-                        if (debugStackFrame.getSourceSection() != null && debugStackFrame.getSourceSection().equals(sourceSection)) {
-                            return new StackFrameDescription(debugStackFrame.getSourceSection(), debugStackFrame.getFrame(),
-                                    debugStackFrame.getRootNode(), this.actorId);
-                        }
+                for (DebugStackFrame debugStackFrame : allFrames) {
+                    if (debugStackFrame.getSourceSection() != null && debugStackFrame.getSourceSection().equals(sourceSection)) {
+                        return new StackFrameDescription(debugStackFrame.getSourceSection(), debugStackFrame.getFrame(),
+                                debugStackFrame.getRootNode(), this.actorId);
                     }
                 }
+
                 return null;
             }
         }
