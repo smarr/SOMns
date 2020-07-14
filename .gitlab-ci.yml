@@ -69,7 +69,7 @@ benchmark_job:
   allow_failure: true
   script:
     - ant libgraal-jdk compile
-    - rebench -it 5000 -in 30 --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns
+    - rebench -it 4000 -in 30 --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns
 
 # benchmark_interp_job:
 #   stage: benchmark
