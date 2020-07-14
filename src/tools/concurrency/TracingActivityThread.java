@@ -21,10 +21,12 @@ import tools.snapshot.SnapshotBuffer;
 public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   private final VM vm;
 
-  public static AtomicInteger threadIdGen = new AtomicInteger(1);
-  protected final long        threadId;
-  protected long              nextEntityId;
-  protected byte              snapshotId;
+  public static final AtomicInteger threadIdGen =
+      (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) ? new AtomicInteger(1) : null;
+
+  protected final long threadId;
+  protected long       nextEntityId;
+  protected byte       snapshotId;
 
   public static final int EXTERNAL_BUFFER_SIZE = 500;
 
