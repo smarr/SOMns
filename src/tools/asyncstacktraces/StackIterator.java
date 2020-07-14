@@ -14,7 +14,6 @@ import som.interpreter.Invokable;
 import som.interpreter.Method;
 import som.interpreter.actors.EventualSendNode;
 import som.interpreter.nodes.dispatch.BackCacheCallNode;
-import som.interpreter.nodes.nary.EagerBinaryPrimitiveNode;
 import som.vm.VmSettings;
 import tools.asyncstacktraces.ShadowStackEntry.EntryAtMessageSend;
 import tools.asyncstacktraces.ShadowStackEntry.EntryForPromiseResolution;
@@ -24,6 +23,7 @@ import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 
@@ -168,6 +168,8 @@ public abstract class StackIterator implements Iterator<StackFrame> {
 
         protected abstract StackFrameDescription getFirstFrame();
 
+        protected abstract StackFrameDescription getFrameBySource(SourceSection sourceSection);
+
         @Override
         public StackFrame next() {
             if (!hasNext()) {
@@ -220,7 +222,7 @@ public abstract class StackIterator implements Iterator<StackFrame> {
         }
 
         protected StackFrame createStackFrame(final ShadowStackEntry shadow,
-                                              final Frame localFrame, final boolean usedAgain) {
+                                              Frame localFrame, final boolean usedAgain) {
             if (shadow == null) {
                 return null;
             }
@@ -248,10 +250,14 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                     useAgainFrame = localFrame;
                 } else if (shadow instanceof EntryForPromiseResolution) {
                     EntryForPromiseResolution.ResolutionLocation resolutionLocation = ((EntryForPromiseResolution) shadow).resolutionLocation;
-                    name = "actor " + shadow.actorId + ", "+resolutionLocation.getValue() + ": " + shadow.expression.getRootNode().getName() + " "+resolutionLocation.getArg();
+                    name = "actor " + shadow.actorId + ", " + resolutionLocation.getValue() + ": " + shadow.expression.getRootNode().getName() + " " + resolutionLocation.getArg();
                 }
 
             } else {
+                StackFrameDescription frameByName = getFrameBySource(location);
+                if (frameByName != null && localFrame == null) {
+                    localFrame = frameByName.frame;
+                }
                 contextTransitionElement = false;
             }
 
@@ -351,13 +357,19 @@ public abstract class StackIterator implements Iterator<StackFrame> {
             private final DebugStackFrame firstDebugFrame;
             private StackFrameDescription firstFrameDescription;
             private long actorId;
+            private List<DebugStackFrame> allFrames;
 
             public SuspensionShadowStackIterator(final Iterator<DebugStackFrame> localStack, long actorId) {
                 assert localStack != null;
                 assert localStack.hasNext();
-                firstDebugFrame = localStack.next(); //only takes the first frame
+                firstDebugFrame = localStack.next(); //first frame
                 firstFrameDescription = null;
                 this.actorId = actorId;
+
+                allFrames = new ArrayList<DebugStackFrame>();
+                while (localStack.hasNext()) {
+                    allFrames.add(localStack.next()); //save all frames
+                }
             }
 
             @Override
@@ -368,6 +380,18 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                             firstDebugFrame.getRootNode(), this.actorId);
                 }
                 return firstFrameDescription;
+            }
+
+            public StackFrameDescription getFrameBySource(SourceSection sourceSection) {
+                if (!allFrames.isEmpty()) {
+                    for (DebugStackFrame debugStackFrame : allFrames) {
+                        if (debugStackFrame.getSourceSection() != null && debugStackFrame.getSourceSection().equals(sourceSection)) {
+                            return new StackFrameDescription(debugStackFrame.getSourceSection(), debugStackFrame.getFrame(),
+                                    debugStackFrame.getRootNode(), this.actorId);
+                        }
+                    }
+                }
+                return null;
             }
         }
 
@@ -397,6 +421,11 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                 return new StackFrameDescription(ss,
                         firstFrameInstance.getFrame(FrameAccess.READ_ONLY),
                         rootNode, -1);
+            }
+
+            @Override
+            protected StackFrameDescription getFrameBySource(SourceSection sourceSection) {
+                return null;
             }
         }
     }

@@ -78,8 +78,6 @@ public class ApplicationThreadStack {
         StackFrame next = stack.next();
         if (next != null) { //this validation is needed because at the moment ShadowStackIterator.next can return null values for null shadows
           stackFrames.add(next);
-        } else {
-//          System.out.println("null frame");
         }
       }
       assert !stackFrames.isEmpty()
