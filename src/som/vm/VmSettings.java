@@ -42,6 +42,8 @@ public class VmSettings implements Settings {
 
   public static final String BASE_DIRECTORY;
 
+  public static final boolean USE_PINNING;
+
   static {
     String prop = System.getProperty("som.threads");
     if (prop == null) {
@@ -85,6 +87,8 @@ public class VmSettings implements Settings {
     RECYCLE_BUFFERS = getBool("som.bufferRecycling", true);
 
     BASE_DIRECTORY = System.getProperty("som.baseDir", System.getProperty("user.dir"));
+
+    USE_PINNING = getBool("som.usePinning", true);
   }
 
   private static boolean getBool(final String prop, final boolean defaultVal) {
