@@ -45,9 +45,12 @@ public final class StoppedMessage extends OutgoingMessage {
       reason = Reason.breakpoint;
     }
 
+    String suspendedPosition = suspension.getEvent().getSuspendAnchor().name();
+
     ActivityType type = suspension.getActivity().getType();
 
     // TODO: look into additional details that can be provided as text
-    return new StoppedMessage(reason, suspension.activityId, type, "");
+    //at the moment pass the suspendedPosition as text
+    return new StoppedMessage(reason, suspension.activityId, type, suspendedPosition);
   }
 }
