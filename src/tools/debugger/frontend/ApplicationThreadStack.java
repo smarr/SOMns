@@ -55,8 +55,8 @@ public class ApplicationThreadStack {
         }
     }
 
-    ApplicationThreadStack(final SuspendedEvent event, final Suspension suspension) {
-        this.event = event;
+    ApplicationThreadStack(final Suspension suspension) {
+        this.event = suspension.getEvent();
         this.stackFrames = new ArrayList<>();
         this.scopesAndObjects = new ArrayList<>();
         this.scopesAndObjectsSet = new HashMap<>();

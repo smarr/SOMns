@@ -57,7 +57,7 @@ public class Suspension {
 
   public synchronized void update(final SuspendedEvent e) {
     this.suspendedEvent = e;
-    this.stack = new ApplicationThreadStack(e, this);
+    this.stack = new ApplicationThreadStack(this);
   }
 
   public synchronized ArrayList<StackFrame> getStackFrames() {
