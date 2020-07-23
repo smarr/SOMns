@@ -436,7 +436,6 @@ public abstract class EventualMessage {
         if (callPromiseStack.getExpression().getParent().getParent() instanceof Method) {
           promiseGroup = ((Method)callPromiseStack.getExpression().getParent().getParent()).getName().startsWith("PromiseGroup");
         }
-//        System.out.println("owner "+promise.getOwner().getId() + " group "+promiseGroup + " maybe "+((ShadowStackEntry)maybeEntry).getSourceSection() + " callback "+ ((ShadowStackEntry)args[args.length - 1]).getSourceSection());
 
         if (promiseGroup) {
           SArguments.saveCausalEntryForPromiseGroup(maybeEntry, args[args.length - 1], promise.getOwner().getId());
