@@ -235,7 +235,7 @@ public final class SArguments {
       ((ShadowStackEntry) currentPromiseStack).setPreviousShadowStackEntry((ShadowStackEntry) previousPromiseStack);
   }
 
-  private static Map<Long, ShadowStackEntry> previousPromiseInGroupByActor = null;
+  private static Map<Long, ShadowStackEntry> previousPromiseInGroupByActor = new HashMap<>();
 
   public static void saveCausalEntryForPromiseGroup(Object previousPromiseStack, Object callbackPromiseStack, long actorId) {
     if (previousPromiseInGroupByActor != null && previousPromiseInGroupByActor.containsKey(actorId)) {
@@ -247,7 +247,6 @@ public final class SArguments {
 
     } else {
       saveCausalEntryForPromise(previousPromiseStack, callbackPromiseStack);
-      previousPromiseInGroupByActor = new HashMap<>();
       previousPromiseInGroupByActor.put(actorId, (ShadowStackEntry) callbackPromiseStack);
     }
   }
