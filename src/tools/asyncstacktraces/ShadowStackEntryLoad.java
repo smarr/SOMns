@@ -1,5 +1,6 @@
 package tools.asyncstacktraces;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 
@@ -14,6 +15,7 @@ public abstract class ShadowStackEntryLoad extends Node {
     public static int           megaCacheHit = 0;
     public static int           megaMiss     = 0;
 
+    @CompilerDirectives.TruffleBoundary
     public static ShadowStackEntryLoad create() {
         if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
             return new UninitializedShadowStackEntryLoad();
@@ -44,6 +46,7 @@ public abstract class ShadowStackEntryLoad extends Node {
 
     private static final class UninitializedShadowStackEntryLoad extends ShadowStackEntryLoad {
 
+        @CompilerDirectives.TruffleBoundary
         @Override
         protected void loadShadowStackEntry(final Object[] arguments,
                                             final Node expression,
@@ -84,6 +87,7 @@ public abstract class ShadowStackEntryLoad extends Node {
         protected final ShadowStackEntry      expectedShadowStackEntry;
         protected final ShadowStackEntry      cachedShadowStackEntry;
 
+        @CompilerDirectives.TruffleBoundary
         CachedShadowStackEntryLoad(final ShadowStackEntry prevEntry,
                                    final ShadowStackEntry newEntry) {
             this.expectedShadowStackEntry = prevEntry;
