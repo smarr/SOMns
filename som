@@ -118,6 +118,8 @@ parser.add_argument('-C', '--no-compilation', help='disable Truffle compilation'
                     dest='no_compilation', action='store_true', default=False)
 parser.add_argument('-G', '--interpreter', help='run without Graal',
                     dest='interpreter', action='store_true', default=False)
+parser.add_argument('-E', '--no-early-compilation', help='start compilation using default trigger values. SOMns triggers it earlier to make benchmarking faster',
+                    dest='early_compilation', action='store_false', default=True)
 parser.add_argument('-EG', '--no-embedded-graal', help='run without the embedded Graal',
                     dest='embedded_graal', action='store_false', default=True)
 parser.add_argument('-X', '--java-interpreter', help='run without Graal, and only the Java interpreter',
@@ -249,6 +251,8 @@ else:
   flags += GRAAL_JVMCI_FLAGS
   if args.embedded_graal:
     flags += GRAAL_EMBEDDED_FLAGS
+  if args.early_compilation:
+    flags += ['-Dgraal.TruffleCompilationThreshold=25', '-Dgraal.TruffleOSRCompilationThreshold=1000']
 
 if args.som_dnu:
     flags += ['-Dsom.printStackTraceOnDNU=true']
