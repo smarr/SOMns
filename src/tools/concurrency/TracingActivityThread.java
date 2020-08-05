@@ -5,6 +5,9 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import com.oracle.truffle.api.TruffleOptions;
+
+import net.openhft.affinity.AffinityLock;
 import som.VM;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.Actor.ActorProcessingThread;
@@ -21,10 +24,14 @@ import tools.snapshot.SnapshotBuffer;
 public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   private final VM vm;
 
-  public static AtomicInteger threadIdGen = new AtomicInteger(1);
-  protected final long        threadId;
-  protected long              nextEntityId;
-  protected byte              snapshotId;
+  public static final AtomicInteger threadIdGen =
+      (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) ? new AtomicInteger(1) : null;
+
+  private Object /* AffinityLock */ affinity;
+
+  protected final long threadId;
+  protected long       nextEntityId;
+  protected byte       snapshotId;
 
   public static final int EXTERNAL_BUFFER_SIZE = 500;
 
@@ -106,6 +113,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     }
 
     setName(getClass().getSimpleName() + "-" + threadId);
+    setPriority(MAX_PRIORITY);
   }
 
   public abstract Activity getActivity();
@@ -177,6 +185,11 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
       TracingBackend.registerThread(this);
     }
+
+    if (!TruffleOptions.AOT && VmSettings.USE_PINNING) {
+      affinity = AffinityLock.acquireLock();
+    }
+
     vm.enterContext();
   }
 
@@ -189,6 +202,10 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
     }
     if (VmSettings.SNAPSHOTS_ENABLED) {
       SnapshotBackend.registerSnapshotBuffer(snapshotBuffer);
+    }
+
+    if (!TruffleOptions.AOT && VmSettings.USE_PINNING) {
+      ((AffinityLock) affinity).release();
     }
 
     vm.leaveContext();

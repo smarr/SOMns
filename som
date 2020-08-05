@@ -114,6 +114,8 @@ parser.add_argument('-A', '--no-assert', help='execute with assertions disabled'
                     dest='assert_', action='store_false', default=True)
 parser.add_argument('-B', '--no-background', help='disable background compilation',
                     dest='background_compilation', action='store_false', default=True)
+parser.add_argument('-P', '--no-pinning', help='disable pinning of threads to cores',
+                    dest='use_pinning', action='store_false', default=True)
 parser.add_argument('-C', '--no-compilation', help='disable Truffle compilation',
                     dest='no_compilation', action='store_true', default=False)
 parser.add_argument('-G', '--interpreter', help='run without Graal',
@@ -203,7 +205,12 @@ if not args.interpreter and not java_bin.startswith(BASE_DIR + '/libs/jvmci') an
 CLASSPATH = (BASE_DIR + '/build/classes:'
            + BASE_DIR + '/libs/black-diamonds/build/classes:'
            + TRUFFLE_DIR + '/truffle/mxbuild/dists/jdk1.8/truffle-debug.jar:'
-           + BASE_DIR + '/libs/somns-deps.jar')
+           + BASE_DIR + '/libs/somns-deps.jar:'
+           + BASE_DIR + '/libs/affinity.jar:'
+           + BASE_DIR + '/libs/slf4j-api.jar:'
+           + BASE_DIR + '/libs/slf4j-simple.jar:'
+           + BASE_DIR + '/libs/jna-platform.jar:'
+           + BASE_DIR + '/libs/jna.jar')
 
 BOOT_CLASSPATH = ('-Xbootclasspath/a:'
              + TRUFFLE_DIR + '/sdk/mxbuild/dists/jdk1.8/graal-sdk.jar:'
@@ -227,7 +234,7 @@ TWEAK_INLINING = ['-Dgraal.TruffleCompilationThreshold=191',
 
 GRAAL_JVMCI_FLAGS = ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', '-XX:-UseJVMCICompiler']
 
-JAVA_ARGS = ['-server']
+JAVA_ARGS = ['-server', '-XX:+UseThreadPriorities']
 
 if JAVA_MAJOR_VERSION == 8:
   JAVA_ARGS += ['-d64']
@@ -404,6 +411,22 @@ if args.java_args:
 
 flags += ['-Dsom.tools=' + BASE_DIR + '/tools']
 flags += ['-Dsom.baseDir=' + BASE_DIR]
+
+if args.use_pinning:
+  ## check whether there are any known restrictions to core usage
+  ## that needs to be considered for pinning
+  core_set = os.environ.get('REBENCH_DENOISE_CORE_SET', None)
+  if core_set:
+    ## calculate the mask for cores, as hexadecimal representation
+    core_set = core_set.split("-")
+    core_set[0] = int(core_set[0])
+    core_set[1] = int(core_set[1])
+    bit_mask = 0
+    for c in range(core_set[0], core_set[1] + 1):
+      bit_mask += 1 << c
+    flags += ['-Daffinity.reserved=' + hex(bit_mask).lstrip("0x")]
+else:
+  flags += ['-Dsom.usePinning=false']
 
 all_args = JAVA_ARGS + ['-classpath', CLASSPATH] + [BOOT_CLASSPATH] + flags + SOM_ARGS + args.args
 

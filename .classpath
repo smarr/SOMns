@@ -23,5 +23,6 @@
 	<classpathentry kind="src" path="/com.oracle.truffle.tools.profiler"/>
 	<classpathentry kind="src" path="/org.graalvm.polyglot.tck"/>
 	<classpathentry kind="src" path="/com.oracle.svm.core"/>
+	<classpathentry kind="lib" path="libs/affinity.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>
