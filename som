@@ -124,6 +124,8 @@ parser.add_argument('-E', '--no-early-compilation', help='start compilation usin
                     dest='early_compilation', action='store_false', default=True)
 parser.add_argument('-EG', '--no-embedded-graal', help='run without the embedded Graal',
                     dest='embedded_graal', action='store_false', default=True)
+parser.add_argument('-LG', '--no-libgraal', help='run without using the embedded libgraal. Settings like JVMCI_BIN and GRAAL_HOME are ignored as long as libgraal is not disabled.',
+                    dest='use_libgraal', action='store_false', default=True)
 parser.add_argument('-X', '--java-interpreter', help='run without Graal, and only the Java interpreter',
                     dest='java_interpreter', action='store_true', default=False)
 parser.add_argument('-T', '--no-trace', help='do not print truffle compilation info',
@@ -160,13 +162,17 @@ if args.dynamic_metrics:
 if args.java_interpreter:
     args.interpreter = True
 
+if args.interpreter:
+    args.use_libgraal = False
+
 # Determine JVM to be used
 java_bin = None
 
-if JVMCI_BIN:
-  java_bin = JVMCI_BIN
-if not java_bin and GRAAL_HOME and os.path.isfile(GRAAL_HOME + '/bin/java'):
-  java_bin = GRAAL_HOME + '/bin/java'
+if not args.use_libgraal:
+  if JVMCI_BIN:
+    java_bin = JVMCI_BIN
+  if not java_bin and GRAAL_HOME and os.path.isfile(GRAAL_HOME + '/bin/java'):
+    java_bin = GRAAL_HOME + '/bin/java'
 
 if not java_bin:
     # use local JVMCI, which ant already needed
@@ -198,6 +204,16 @@ if not args.interpreter and not java_bin.startswith(BASE_DIR + '/libs/jvmci') an
   print "No compatible JDK found. Please set the GRAAL_HOME or JVMCI_BIN environment variables."
   sys.exit(1)
 
+if args.use_libgraal:
+  from subprocess import check_output, STDOUT, CalledProcessError
+  try:
+    libgraal_jdk_home = check_output([BASE_DIR + '/libs/mx/mx', '--primary-suite-path', BASE_DIR + '/libs/truffle/vm', '--env', 'libgraal', 'graalvm-home'], stderr=STDOUT, env = {'JAVA_HOME': java_bin.replace('/bin/java', '')})
+    java_bin = libgraal_jdk_home.strip() + '/bin/java'
+  except CalledProcessError as e:
+    print "Failed to determine location of libgraal"
+    print e.output
+    sys.exit(1)
+
 ##
 ## Defining Necessary Parameter Bits
 ##
@@ -216,8 +232,15 @@ BOOT_CLASSPATH = ('-Xbootclasspath/a:'
              + TRUFFLE_DIR + '/sdk/mxbuild/dists/jdk1.8/graal-sdk.jar:'
              + TRUFFLE_DIR + '/truffle/mxbuild/dists/jdk1.8/truffle-api.jar')
 
-GRAAL_JAVA_8_FLAGS = ['-Djvmci.Compiler=graal',
-  '-Djvmci.class.path.append=' + TRUFFLE_DIR + '/compiler/mxbuild/dists/jdk1.8/graal.jar']
+if args.use_libgraal:
+  GRAAL_JAVA_8_FLAGS = ['-XX:+UseJVMCICompiler', '-XX:+UseJVMCINativeLibrary',
+    '-XX:-UseJVMCIClassLoader', '-Dgraalvm.locatorDisabled=true']
+  GRAAL_JVMCI_FLAGS = []
+else:
+  GRAAL_JAVA_8_FLAGS = ['-Djvmci.Compiler=graal',
+    '-Djvmci.class.path.append=' + TRUFFLE_DIR + '/compiler/mxbuild/dists/jdk1.8/graal.jar']
+  GRAAL_JVMCI_FLAGS = ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', '-XX:-UseJVMCICompiler']
+
 
 GRAAL_JAVA_9_FLAGS = [
   '--module-path=' + TRUFFLE_DIR + '/sdk/mxbuild/modules/org.graalvm.graal_sdk.jar:' +
@@ -231,8 +254,6 @@ SOM_ARGS = ['-Dbd.settings=som.vm.VmSettings', 'som.Launcher',
 TWEAK_INLINING = ['-Dgraal.TruffleCompilationThreshold=191',
                   '-Dgraal.TruffleInliningMaxCallerSize=10000',
                   '-Dgraal.TruffleSplittingMaxCalleeSize=100000']
-
-GRAAL_JVMCI_FLAGS = ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', '-XX:-UseJVMCICompiler']
 
 JAVA_ARGS = ['-server', '-XX:+UseThreadPriorities']
 

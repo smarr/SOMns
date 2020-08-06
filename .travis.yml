@@ -38,17 +38,17 @@ jobs:
     - name: Kompos Tests
       script:
         - run nvm install 8
-        - $ANT
+        - $ANT jar kompos
         - cd tools/kompos
         - run npm -s run verify
         - run npm test
     - name: Replay Tests 1
       script:
-        - $ANT compile
+        - $ANT jar
         - run ./tests/replay/test.sh 1
     - name: Replay Tests 2
       script:
-        - $ANT compile
+        - $ANT jar
         - run ./tests/replay/test.sh 2
 
     # Disabled due to breaking changes in the tracing infrastructure. Not fixed to make merge of Snapshotting PR(#293) easier.
@@ -65,16 +65,16 @@ jobs:
       dist: trusty
       jdk:  openjdk11
       script:
-        - $ANT compile
-        - run ./som core-lib/TestSuite/TestRunner.ns
+        - $ANT jar
+        - run ./som --no-libgraal core-lib/TestSuite/TestRunner.ns
 
     - name: macOS Unit Tests
       os: osx
       osx_image: xcode9.3
       language: generic
       script:
-        - $ANT compile
-        - run ./som core-lib/TestSuite/TestRunner.ns
+        - $ANT jar
+        - run ./som --no-libgraal core-lib/TestSuite/TestRunner.ns
 
 before_install:
   - |

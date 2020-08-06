@@ -50,6 +50,7 @@
     <property name="tools.dir"   location="${lib.dir}/truffle/tools" />
     <property name="truffle.dir" location="${lib.dir}/truffle/truffle" />
     <property name="svm.dir"     location="${lib.dir}/truffle/substratevm" />
+    <property name="vm.dir"      location="${lib.dir}/truffle/vm" />
     <property name="compiler.build" location="${graal.dir}/mxbuild/dists/jdk1.8" />
     <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists/jdk1.8" />
     <property name="tools.build" location="${tools.dir}/mxbuild/dists/jdk1.8" />
@@ -142,7 +143,7 @@
 
         <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true" if:true="${truffle.and.jvmci.present}">
             <arg value="--dynamicimports"/>
-            <arg value="../truffle,../tools,../compiler,../sdk"/>
+            <arg value="../truffle,../tools,../compiler,../sdk,../vm"/>
             <arg value="fsckprojects"/>
             <env key="JAVA_HOME" value="${jvmci.home}" />
         </exec>
@@ -160,6 +161,7 @@
       </exec>
     </target>
 
+    <!-- libgraal-jdk also implicitly builds truffle-libs -->
     <target name="truffle-libs" unless="skip.truffle" depends="jvmci-libs,truffle-submodule">
         <travis target="truffle-libs" start="Build Truffle and Graal" />
         <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
@@ -172,7 +174,20 @@
         <travis target="truffle-libs" />
     </target>
 
-    <target name="bd-libs"> <!-- implicit dependency on truffle-libs -->
+    <target name="libgraal-jdk" unless="skip.truffle" depends="jvmci-libs,truffle-submodule">
+        <travis target="libgraal-jdk" start="Build LibGraal-enabled JDK" />
+        <exec executable="${mx.cmd}" dir="${vm.dir}" failonerror="true">
+            <env key="JAVA_HOME" value="${jvmci.home}" />
+            <env key="DYNAMIC_IMPORTS" value="/substratevm,/tools,/truffle,/sdk,/compiler" />
+            <env key="FORCE_BASH_LAUNCHERS" value="true" />
+            <env key="DISABLE_LIBPOLYGLOT" value="true" />
+            <env key="EXCLUDE_COMPONENTS" value="svmag,nju,nic,ni,nil" />
+            <arg line="build"/>
+        </exec>
+        <travis target="libgraal-jdk" />
+    </target>
+
+    <target name="bd-libs"> <!-- implicit dependency on truffle-libs/libgraal-jdk -->
         <travis target="bd-libs" start="Build Black Diamonds" />
 
         <ant dir="${bd.dir}" useNativeBasedir="true" target="libs-junit" inheritAll="false">
@@ -240,7 +255,7 @@
         <travis target="som-libs" />
     </target>
 
-    <target name="libs" depends="truffle-libs,som-libs,bd-libs" unless="skip.libs" />
+    <target name="libs" depends="som-libs,bd-libs" unless="skip.libs" />
 
     <target name="source" description="Download Source Jars for development">
         <get src="${lib.url}/somns-deps-source-${somns-deps.version}.jar"
@@ -368,7 +383,10 @@
         <travis target="compile-som" />
     </target>
 
-    <target name="compile" depends="libs,compile-som,compile-test-extension" description="Compile SOMns and dependencies">
+    <target name="compile-core" depends="libs,compile-som,compile-test-extension" description="Compile libs and core">
+    </target>
+    
+    <target name="compile" depends="libgraal-jdk,compile-core" description="Compile SOMns and dependencies">
     </target>
 
     <target name="compile-test-extension">
@@ -389,11 +407,11 @@
     <target name="compile-all" depends="compile,kompos" description="Build SOMns and Kompos">
     </target>
 
-    <target name="jar" depends="compile" description="Package as JAR">
+    <target name="jar" depends="truffle-libs,compile-core" description="Package as JAR">
         <jar destfile="${build.dir}/som.jar" basedir="${classes.dir}"></jar>
     </target>
 
-    <target name="unit-tests" depends="compile,jacoco-lib" description="Execute tests">
+    <target name="unit-tests" depends="truffle-libs,compile-core,jacoco-lib" description="Execute tests">
       <travis target="unit-tests" start="Execute Tests" />
       <jacoco:coverage>
         <junit haltonerror="false" haltonfailure="false" failureproperty="test.failed"
@@ -424,7 +442,7 @@
      <travis target="unit-tests" />
     </target>
 
-    <target name="som-tests" depends="compile">
+    <target name="som-tests" depends="truffle-libs,compile-core">
       <travis target="som-tests" start="Run SOMns Tests" />
       <!-- delete old coverage data, this should be the first task generating coverage data -->
       <delete file="all.gcov" />
@@ -445,7 +463,7 @@
       <travis target="som-tests" />
     </target>
 
-    <target name="serialization-tests" depends="compile">
+    <target name="serialization-tests" depends="truffle-libs,compile-core">
       <travis target="serialization-tests" start="Test Snapshot Serialization" />
       <exec executable="./som" failonerror="true">
         <arg value="-G" />
@@ -481,7 +499,7 @@
       </exec>
     </target>
 
-    <target name="replay-tests" depends="compile">
+    <target name="replay-tests" depends="truffle-libs,compile-core">
       <travis target="replay-tests" start="Test Trace Replay" />
       <exec executable="tests/replay/test.sh" failonerror="true">
           <arg value="1" />
@@ -492,7 +510,7 @@
       <travis target="replay-tests" />
     </target>
 
-    <target name="snapshot-tests" depends="compile">
+    <target name="snapshot-tests" depends="truffle-libs,compile-core">
       <travis target="snapshot-tests" start="Tests Snapshotting" />
       <exec executable="tests/snapshot/test.sh" failonerror="true">
       </exec>
@@ -563,7 +581,7 @@
     <target name="tests" depends="core-tests,replay-tests,coverage">
     </target>
 
-    <target name="native" depends="libs,jvmci-libs,compile-som">
+    <target name="native" depends="truffle-libs,libs,jvmci-libs,compile-som">
       <travis target="native" start="Build Native Image" />
 
       <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
