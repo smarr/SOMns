@@ -207,7 +207,17 @@ if not args.interpreter and not java_bin.startswith(BASE_DIR + '/libs/jvmci') an
 if args.use_libgraal:
   from subprocess import check_output, STDOUT, CalledProcessError
   try:
-    libgraal_jdk_home = check_output([BASE_DIR + '/libs/mx/mx', '--primary-suite-path', BASE_DIR + '/libs/truffle/vm', '--env', 'libgraal', 'graalvm-home'], stderr=STDOUT, env = {'JAVA_HOME': java_bin.replace('/bin/java', '')})
+    libgraal_jdk_home = check_output(
+      [BASE_DIR + '/libs/mx/mx', '--primary-suite-path', BASE_DIR + '/libs/truffle/vm', 'graalvm-home'],
+      stderr=STDOUT,
+      env = {
+        'JAVA_HOME':            java_bin.replace('/bin/java', ''),
+        # REM: This needs to match build.xml:libgraal-jdk
+        'DYNAMIC_IMPORTS':      '/substratevm,/tools,/truffle,/sdk,/compiler',
+        'FORCE_BASH_LAUNCHERS': 'true',
+        'DISABLE_LIBPOLYGLOT':  'true',
+        'EXCLUDE_COMPONENTS':   'svmag,nju,nic,ni,nil'
+      })
     java_bin = libgraal_jdk_home.strip() + '/bin/java'
   except CalledProcessError as e:
     print "Failed to determine location of libgraal"
