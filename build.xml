@@ -178,6 +178,7 @@
         <travis target="libgraal-jdk" start="Build LibGraal-enabled JDK" />
         <exec executable="${mx.cmd}" dir="${vm.dir}" failonerror="true">
             <env key="JAVA_HOME" value="${jvmci.home}" />
+            <!-- REM: This needs to match ./som -->
             <env key="DYNAMIC_IMPORTS" value="/substratevm,/tools,/truffle,/sdk,/compiler" />
             <env key="FORCE_BASH_LAUNCHERS" value="true" />
             <env key="DISABLE_LIBPOLYGLOT" value="true" />
