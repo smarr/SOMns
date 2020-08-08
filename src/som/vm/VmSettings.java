@@ -88,7 +88,9 @@ public class VmSettings implements Settings {
 
     BASE_DIRECTORY = System.getProperty("som.baseDir", System.getProperty("user.dir"));
 
-    USE_PINNING = getBool("som.usePinning", true);
+    String osName = System.getProperty("os.name", "generic").toLowerCase();
+    boolean isLinux = osName.contains("linux");
+    USE_PINNING = getBool("som.usePinning", true) && isLinux;
   }
 
   private static boolean getBool(final String prop, final boolean defaultVal) {
