@@ -14,6 +14,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.TruffleContext;
 import com.oracle.truffle.api.TruffleLanguage.Env;
+import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.GraphPrintVisitor;
@@ -88,6 +89,7 @@ public final class VM {
 
   private static final int MAX_THREADS = 0x7fff;
 
+  @TruffleBoundary
   public VM(final VmOptions vmOptions) {
     options = vmOptions;
 
@@ -177,13 +179,13 @@ public final class VM {
   }
 
   public static void thisMethodNeedsToBeOptimized(final String msg) {
-    if (VmSettings.FAIL_ON_MISSING_OPTIMIZATIONS) {
+    if (VmSettings.FAIL_ON_MISSING_OPTIMIZATIONS && !TruffleOptions.AOT) {
       CompilerAsserts.neverPartOfCompilation(msg);
     }
   }
 
   public static void callerNeedsToBeOptimized(final String msg) {
-    if (VmSettings.FAIL_ON_MISSING_OPTIMIZATIONS) {
+    if (VmSettings.FAIL_ON_MISSING_OPTIMIZATIONS && !TruffleOptions.AOT) {
       CompilerAsserts.neverPartOfCompilation(msg);
     }
   }

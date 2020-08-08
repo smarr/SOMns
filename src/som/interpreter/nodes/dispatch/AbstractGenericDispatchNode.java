@@ -1,7 +1,9 @@
 package som.interpreter.nodes.dispatch;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
@@ -49,6 +51,10 @@ public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {
       final IndirectCallNode call) {
     VM.callerNeedsToBeOptimized(
         "This method should only be called on the slow path. Use CachedDNUNode instead of this method.");
+
+    if (TruffleOptions.AOT) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+    }
 
     if (VmSettings.DNU_PRINT_STACK_TRACE) {
       PrintStackTracePrim.printStackTrace(0, null);

@@ -15,6 +15,7 @@ import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.dsl.NodeFactory;
 import com.oracle.truffle.api.interop.InteropLibrary;
 import com.oracle.truffle.api.library.ExportLibrary;
@@ -316,6 +317,10 @@ public final class MixinDefinition implements SomInteropObject {
       final boolean isTheValueClass, final boolean isTheTransferObjectClass,
       final boolean isTheArrayClass,
       final NodeFactory<? extends AbstractSerializationNode> serializerFactory) {
+    if (TruffleOptions.AOT) {
+      CompilerDirectives.transferToInterpreter();
+    }
+
     CompilerAsserts.neverPartOfCompilation();
     VM.callerNeedsToBeOptimized(
         "This is supposed to result in a cacheable object, and thus is only the fallback case.");
@@ -618,6 +623,11 @@ public final class MixinDefinition implements SomInteropObject {
     public Object invoke(final IndirectCallNode call, final Object[] arguments) {
       VM.callerNeedsToBeOptimized(
           "call without proper call cache. Find better way if this is performance critical.");
+
+      if (TruffleOptions.AOT) {
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+      }
+
       assert arguments.length == 1;
       SObject rcvr = (SObject) arguments[0];
       return rcvr.readSlot(this);
@@ -676,6 +686,11 @@ public final class MixinDefinition implements SomInteropObject {
     public Object invoke(final IndirectCallNode call, final Object[] arguments) {
       VM.callerNeedsToBeOptimized(
           "call without proper call cache. Find better way if this is performance critical.");
+
+      if (TruffleOptions.AOT) {
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+      }
+
       SObject rcvr = (SObject) arguments[0];
       rcvr.writeSlot(this, arguments[1]);
       return rcvr;
@@ -716,6 +731,11 @@ public final class MixinDefinition implements SomInteropObject {
     @Override
     public Object invoke(final IndirectCallNode call, final Object[] arguments) {
       VM.callerNeedsToBeOptimized("this should not be on the compiled-code path");
+
+      if (TruffleOptions.AOT) {
+        CompilerDirectives.transferToInterpreter();
+      }
+
       assert arguments.length == 1;
       SObject rcvr = (SObject) arguments[0];
       Object result = rcvr.readSlot(this);

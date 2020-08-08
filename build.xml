@@ -3,8 +3,8 @@
     xmlns:if="ant:if"
     xmlns:jacoco="antlib:org.jacoco.ant">
 
-    <property name="jvmci.version" value="jvmci-19.3-b04" />
-    <property name="jdk8.version"  value="232" />
+    <property name="jvmci.version" value="jvmci-20.2-b03" />
+    <property name="jdk8.version"  value="262+10" />
 
     <macrodef name="travis">
         <attribute name="target" />
@@ -214,7 +214,7 @@
     </target>
 
     <target name="jvmci-libs" unless="skip.libs">
-        <get src="https://github.com/graalvm/openjdk8-jvmci-builder/releases/download/${jvmci.version}/openjdk-8u${jdk8.version}-${jvmci.version}-${kernel}.tar.gz"
+        <get src="https://github.com/graalvm/graal-jvmci-8/releases/download/${jvmci.version}/openjdk-8u${jdk8.version}-${jvmci.version}-${kernel}.tar.gz"
              usetimestamp="true"
              dest="${lib.dir}/jvmci.tar.gz" />
         <mkdir dir="${lib.dir}/jvmci" />

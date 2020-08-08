@@ -442,6 +442,7 @@ if args.java_args:
 
 flags += ['-Dsom.tools=' + BASE_DIR + '/tools']
 flags += ['-Dsom.baseDir=' + BASE_DIR]
+flags += ['-Dgraal.TruffleLanguageAgnosticInlining=false']
 
 if args.use_pinning:
   ## check whether there are any known restrictions to core usage
