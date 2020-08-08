@@ -238,6 +238,9 @@
         <get src="https://repo1.maven.org/maven2/net/openhft/affinity/3.2.3/affinity-3.2.3.jar"
             usetimestamp="true"
             dest="${lib.dir}/affinity.jar" />
+        <get src="https://repo1.maven.org/maven2/net/openhft/affinity/3.2.3/affinity-3.2.3-sources.jar"
+            usetimestamp="true"
+            dest="${lib.dir}/affinity-sources.jar" />
         <get src="https://repo1.maven.org/maven2/org/slf4j/slf4j-api/1.7.30/slf4j-api-1.7.30.jar"
             usetimestamp="true"
             dest="${lib.dir}/slf4j-api.jar" />
