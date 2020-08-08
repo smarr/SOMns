@@ -261,9 +261,9 @@ SOM_ARGS = ['-Dbd.settings=som.vm.VmSettings', 'som.Launcher',
             '--platform', args.som_platform, '--kernel', args.som_kernel]
 
 # == Compiler Settings
-TWEAK_INLINING = ['-Dgraal.TruffleCompilationThreshold=191',
-                  '-Dgraal.TruffleInliningMaxCallerSize=10000',
-                  '-Dgraal.TruffleSplittingMaxCalleeSize=100000']
+TWEAK_INLINING = ['-Dpolyglot.engine.CompilationThreshold=191',
+                  '-Dpolyglot.engine.InliningMaxCallerSize=10000',
+                  '-Dpolyglot.engine.SplittingMaxCalleeSize=100000']
 
 JAVA_ARGS = ['-server', '-XX:+UseThreadPriorities']
 
@@ -290,7 +290,7 @@ else:
   if args.embedded_graal:
     flags += GRAAL_EMBEDDED_FLAGS
   if args.early_compilation:
-    flags += ['-Dgraal.TruffleCompilationThreshold=25', '-Dgraal.TruffleOSRCompilationThreshold=1000']
+    flags += ['-Dpolyglot.engine.CompilationThreshold=25', '-Dpolyglot.engine.OSRCompilationThreshold=1000']
 
 if args.som_dnu:
     flags += ['-Dsom.printStackTraceOnDNU=true']
@@ -334,9 +334,9 @@ if not args.interpreter and (args.graal_profile or args.graal_profile_allocation
         flags += ['-Dgraal.BenchmarkDynamicCounters=out,completed,total']
 
 if not args.interpreter and args.graal_branch_profile:
-    flags += ['-Dgraal.TruffleInstrumentBranches=true',
-              '-Dgraal.TruffleInstrumentBranchesFilter=*',
-              '-Dgraal.TruffleInstrumentBranchesPerInlineSite=true']
+    flags += ['-Dpolyglot.engine.InstrumentBranches=true',
+              '-Dpolyglot.engine.InstrumentBranchesFilter=*',
+              '-Dpolyglot.engine.InstrumentBranchesPerInlineSite=true']
 
 if args.truffle_profile:
     flags += ['-Dtruffle.profiling.enabled=true']
@@ -402,17 +402,17 @@ if args.assisted_debugging_breakpoints:
     flags += ['-Dsom.assistedDebuggingBp=%s' % args.assisted_debugging_breakpoints ]
 
 if not args.interpreter and args.perf_warnings:
-    flags += ['-Dgraal.TruffleCompilationExceptionsAreFatal=true',
-              '-Dgraal.TraceTrufflePerformanceWarnings=true',
-              '-Dgraal.TraceTruffleCompilation=true',
-              '-Dgraal.TraceTruffleCompilationDetails=true']
+    flags += ['-Dpolyglot.engine.CompilationExceptionsAreFatal=true',
+              '-Dpolyglot.engine.TracePerformanceWarnings=all',
+              '-Dpolyglot.engine.TraceCompilation=true',
+              '-Dpolyglot.engine.TraceCompilationDetails=true']
 if not args.fail_missing_opts:
     flags += ['-DfailOnMissingOptimization=true']
 if not args.interpreter and args.trace_invalidation:
-    flags += ['-Dgraal.TraceTruffleTransferToInterpreter=true',
-              '-Dgraal.TraceTruffleAssumptions=true']
+    flags += ['-Dpolyglot.engine.TraceTransferToInterpreter=true',
+              '-Dpolyglot.engine.TraceAssumptions=true']
 if not args.interpreter and args.only_compile:
-    flags.append("-Dgraal.TruffleCompileOnly=%s" % args.only_compile)
+    flags.append("-Dpolyglot.engine.CompileOnly=%s" % args.only_compile)
 if args.visual_vm:
     flags += ['-agentpath:/Users/smarr/Downloads/visualvm_143/profiler/lib/deployed/jdk16/mac/libprofilerinterface.jnilib=/Users/smarr/Downloads/visualvm_143/profiler/lib,5140']
 if args.assert_:
@@ -420,11 +420,11 @@ if args.assert_:
 else:
     flags += ['-dsa', '-da']
 if not args.interpreter and not args.background_compilation:
-    flags += ['-Dgraal.TruffleBackgroundCompilation=false']
+    flags += ['-Dpolyglot.engine.BackgroundCompilation=false']
 if not args.interpreter and args.no_compilation:
-    flags.append('-Dgraal.TruffleCompileOnly=__FAKE_METHOD_NON_EXISTING__')
+    flags.append('-Dpolyglot.engine.CompileOnly=__FAKE_METHOD_NON_EXISTING__')
 if not args.interpreter and args.no_trace and not args.perf_warnings:
-    flags += ['-Dgraal.TraceTruffleInlining=false', '-Dgraal.TraceTruffleCompilation=false']
+    flags += ['-Dpolyglot.engine.TraceInlining=false', '-Dpolyglot.engine.TraceCompilation=false']
 if not args.interpreter and not args.graph_pe:
     flags += ['-Dgraal.GraphPE=false']
 if args.threads:
@@ -442,7 +442,9 @@ if args.java_args:
 
 flags += ['-Dsom.tools=' + BASE_DIR + '/tools']
 flags += ['-Dsom.baseDir=' + BASE_DIR]
-flags += ['-Dgraal.TruffleLanguageAgnosticInlining=false']
+
+if not args.interpreter:
+  flags += ['-Dpolyglot.engine.LanguageAgnosticInlining=false']
 
 if args.use_pinning:
   ## check whether there are any known restrictions to core usage
