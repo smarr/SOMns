@@ -63,13 +63,13 @@ benchmark_job:
     - ant compile
     - rebench --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns
 
-benchmark_csp_and_interp_job:
+benchmark_job_others:
   stage: benchmark
   tags: [benchmarks, infinity]
   allow_failure: true
   script:
     - ant compile
-    - rebench --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-SavinaCSP
+    - rebench --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-concurrency-models
     - rebench --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-interp
 
 benchmark_nightly_job:

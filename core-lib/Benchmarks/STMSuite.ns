@@ -1,0 +1,149 @@
+class STMSuite usingPlatform: platform andHarness: harness = Value (
+| private Benchmark = harness Benchmark.
+  private processes = platform processes.
+  private Channel   = processes Channel.
+  private Process   = processes Process.
+  private Array     = platform kernel Array.
+  private Condition    = platform threading Condition.
+  private Delay        = platform threading Delay.
+  private Transaction = platform transactions Transaction.
+  private Thread       = platform threading Thread.
+|)(
+  (* A simple PRNG, to be as portable as possible. *)
+  public class Random new: seed = (
+    | private seed ::= seed.
+      private gotNextGaussian  ::= false.
+      private nextNextGaussian ::= 0.0. |
+  ) (
+    public next = (
+      seed:: ((seed * 1309) + 13849) & 65535.
+      ^ seed
+    )
+
+    (* Returns an integer within the range of [0, bound) *)
+    public next: bound = (
+      ^ next % bound
+    )
+
+    (* Returns a double uniformly distributed in the range of [0.0, 1.0) *)
+    public nextDouble = (
+      ^ next // 65536
+    )
+
+    public nextBoolean = (
+      ^ next < 32768
+    )
+
+    (* Returns a double normally distributed with mean 0.0
+       and standard deviation of 1.0 *)
+    public nextGaussian = (
+      | v1 v2 s multiplier |
+      gotNextGaussian ifTrue: [
+        gotNextGaussian:: false.
+        ^ nextNextGaussian ].
+
+      v1:: (2.0 * nextDouble) - 1.0.
+      v2:: (2.0 * nextDouble) - 1.0.
+      s::  (v1 * v1) + (v2 * v2).
+
+      [s >= 1.0 or: [s = 0.0]] whileTrue: [
+        v1:: (2.0 * nextDouble) - 1.0.
+        v2:: (2.0 * nextDouble) - 1.0.
+        s::  (v1 * v1) + (v2 * v2).
+      ].
+
+      multiplier:: (-2.0 * s log // s) sqrt.
+      nextNextGaussian:: v2 * multiplier.
+      gotNextGaussian:: true.
+      ^ v1 * multiplier
+    )
+  ) : (
+    public new = (
+      ^ new: 74755
+    )
+  )
+
+  (* === Savina Microbenchmarks === *)
+
+  public class Philosophers new = Benchmark <: Value ()(
+
+    private class Arbitrator new: numPhil numRounds: numRounds = (
+    | private numPhil = numPhil.
+      private numRounds = numRounds.
+      private forks    = Array new: numPhil withAll: false.
+      private numExitedPhilosophers ::= 0.
+    |)(
+      private hungry: leftForkId = (
+      | rightForkId |
+      rightForkId:: 1 + ((leftForkId + 1) % numPhil).
+
+      ((forks at: leftForkId) or: [forks at: rightForkId])
+        ifTrue:  [
+          ^ false.
+        ]
+        ifFalse: [
+          forks at: leftForkId  put: true.
+          forks at: rightForkId put: true.
+          ^ true ]
+      )
+
+      private done: leftForkId = (
+        | rightForkId |
+        rightForkId:: 1 + ((leftForkId + 1) % numPhil).
+
+        forks at: leftForkId  put: false.
+        forks at: rightForkId put: false.
+      )
+
+      private exit = (
+        numExitedPhilosophers:: numExitedPhilosophers + 1.
+
+        numPhil = numExitedPhilosophers ifTrue: [
+          | forksTaken |
+          forksTaken:: 0.
+          forks do: [:f | f ifTrue: [ forksTaken:: forksTaken + 1 ] ].
+          forksTaken = 0 ifFalse: [
+            self error: 'invalid benchmark result'.
+          ].
+        ]
+      )
+
+      public benchmark = (
+        |philosophers|
+        philosophers:: Array new: numPhil.
+        philosophers doIndexes: [:i |
+          philosophers at: i put: (Thread spawn: [:id |
+          | roundsSoFar isEating |
+            roundsSoFar:: 0.
+            [roundsSoFar < numRounds] whileTrue: [
+              Transaction atomic: [
+                isEating:: (hungry: id).
+              ].
+
+              isEating ifTrue: [
+                roundsSoFar:: roundsSoFar + 1.
+                Transaction atomic: [done: id].
+              ].
+            ].
+
+            Transaction atomic: [
+              exit.
+            ].
+          ] with: { i })
+        ].
+
+        philosophers do: [:ph | ph join ].
+        ^ true.
+      )
+    )
+
+    public innerBenchmarkLoop: numRounds numThreads: threads = (
+      | arbitrator |
+      arbitrator:: Arbitrator new: (threads - 1) numRounds: numRounds.
+      ^ arbitrator benchmark
+    )
+  ) : (
+    public newInstance = ( ^ self new )
+    public setupVerifiedRun: run = ( run problemSize )
+  )
+)
