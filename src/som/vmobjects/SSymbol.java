@@ -28,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
+import tools.concurrency.TracingBackend;
 import tools.snapshot.SnapshotBackend;
 
 
@@ -42,6 +43,10 @@ public final class SSymbol extends SAbstractObject {
     numberOfSignatureArguments = determineNumberOfSignatureArguments();
     if (VmSettings.KOMPOS_TRACING || VmSettings.TRACK_SNAPSHOT_ENTITIES) {
       symbolId = (short) idGenerator.getAndIncrement();
+
+      if (VmSettings.KOMPOS_TRACING) {
+        TracingBackend.logSymbol(this);
+      }
 
       if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
         SnapshotBackend.registerSymbol(this);
