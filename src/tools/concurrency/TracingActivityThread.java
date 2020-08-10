@@ -26,7 +26,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
   private final VM vm;
 
   public static final AtomicInteger threadIdGen =
-      (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) ? new AtomicInteger(1) : null;
+      (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) ? new AtomicInteger(1) : null;
 
   private Object /* AffinityLock */ affinity;
 
