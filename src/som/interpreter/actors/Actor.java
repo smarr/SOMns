@@ -230,7 +230,7 @@ public class Actor implements Activity {
       }
     }
 
-    public void doRunWithObjectSafepoints(final ActorProcessingThread t) {
+    private void doRunWithObjectSafepoints(final ActorProcessingThread t) {
       WebDebugger dbg = null;
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
         dbg = vm.getWebDebugger();
@@ -248,11 +248,6 @@ public class Actor implements Activity {
       while (getCurrentMessagesOrCompleteExecution()) {
         processCurrentMessages(t, dbg);
       }
-
-      if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
-        t.swapTracingBufferIfRequestedUnsync();
-      }
-      t.currentlyExecutingActor = null;
     }
 
     protected void processCurrentMessages(final ActorProcessingThread currentThread,
