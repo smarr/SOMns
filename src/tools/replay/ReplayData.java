@@ -1,15 +1,10 @@
 package tools.replay;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Queue;
 
 import som.vm.Activity;
 import tools.concurrency.TracingActivityThread;
-import tools.replay.ReplayRecord.MessageRecord;
-import tools.replay.ReplayRecord.NumberedPassiveRecord;
 
 
 public class ReplayData {
@@ -22,13 +17,12 @@ public class ReplayData {
    * @param l
    * @param expectedNo The sequence number of the event to be performed.
    */
-  public static void replayDelayNumberedEvent(final PassiveEntityWithEvents pe,
-      final long passiveEntityId) {
+  public static void replayDelayNumberedEvent(final PassiveEntityWithEvents pe) {
 
     Activity reader = TracingActivityThread.currentThread().getActivity();
-    NumberedPassiveRecord npr = (NumberedPassiveRecord) reader.getNextReplayEvent();
-    assert npr != null : reader;
-    assert passiveEntityId == npr.passiveEntityId;
+    ReplayRecord npr = reader.getNextReplayEvent();
+
+    assert npr != null : reader.getId();
 
     try {
       while (pe.getNextEventNumber() != npr.eventNo) {
@@ -50,43 +44,18 @@ public class ReplayData {
     }
   }
 
-  protected static class EntityNode implements Comparable<EntityNode> {
+  protected static class EntityNode {
     final long             entityId;
-    int                    childNo;
     HashMap<Integer, Long> externalData;
-    int                    ordering;
-    ArrayList<EntityNode>  children;
-    boolean                childrenSorted = false;
 
     HashMap<Integer, Subtrace> subtraces;
 
-    Queue<ReplayRecord> replayEvents;
-    int                 nextContext = 0;
-    boolean             retrieved   = false;
+    LinkedList<ReplayRecord> replayEvents;
+    int                      nextContext = 0;
+    boolean                  retrieved   = false;
 
     public EntityNode(final long entityId) {
       this.entityId = entityId;
-    }
-
-    void addChild(final EntityNode child) {
-      if (children == null) {
-        children = new ArrayList<>();
-      }
-
-      child.childNo = children.size();
-      children.add(child);
-    }
-
-    protected EntityNode getChild(final int childNo) {
-      assert children != null : "Actor does not exist in trace!";
-      assert children.size() > childNo : "Actor does not exist in trace!";
-
-      if (!childrenSorted) {
-        Collections.sort(children);
-        childrenSorted = true;
-      }
-
-      return children.get(childNo);
     }
 
     protected Subtrace registerContext(int ordering, final long location) {
@@ -122,56 +91,18 @@ public class ReplayData {
       replayEvents.add(mr);
     }
 
-    public Queue<ReplayRecord> getReplayEvents() {
+    public LinkedList<ReplayRecord> getReplayEvents() {
       if (replayEvents == null) {
         replayEvents = new LinkedList<>();
       }
       return replayEvents;
     }
 
-    @Override
-    public int compareTo(final EntityNode o) {
-      int i = Integer.compare(ordering, o.ordering);
-      if (i == 0) {
-        i = Integer.compare(childNo, o.childNo);
-      }
-      if (i == 0) {
-        i = Long.compare(entityId, o.entityId);
-      }
-
-      return i;
-    }
-
     protected void onContextStart(final int ordering) {}
 
     @Override
     public String toString() {
-      return "" + entityId + ":" + childNo;
-    }
-  }
-
-  /**
-   * Node in actor creation hierarchy.
-   */
-  protected static class ActorNode extends EntityNode {
-    LinkedList<MessageRecord> expectedMessages = new LinkedList<>();
-
-    ActorNode(final long actorId) {
-      super(actorId);
-    }
-
-    protected void addMessageRecord(final MessageRecord mr) {
-      expectedMessages.add(mr);
-    }
-
-    public LinkedList<MessageRecord> getExpectedMessages() {
-      return expectedMessages;
-    }
-  }
-
-  protected static class ChannelNode extends EntityNode {
-    public ChannelNode(final long entityId) {
-      super(entityId);
+      return "" + entityId;
     }
   }
 }

@@ -342,7 +342,7 @@ public final class VM {
     mainActor = Actor.createActor(this);
     vmMirror = objectSystem.initialize();
 
-    if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
+    if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
       TracingBackend.startTracingBackend();
     }
     if (VmSettings.KOMPOS_TRACING) {

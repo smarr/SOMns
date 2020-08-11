@@ -1,40 +1,28 @@
 package tools.replay.nodes;
 
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.profiles.ValueProfile;
 
-import som.primitives.processes.ChannelPrimitives.Process;
 import som.vm.Activity;
-import tools.concurrency.TracingActors.TracingActor;
 import tools.replay.TraceRecord;
-import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
+import tools.replay.actors.UniformExecutionTrace.UniformTraceBuffer;
 
 
 public abstract class TraceContextNode extends TraceNode {
+  private final ValueProfile vp = ValueProfile.createClassProfile();
 
   public abstract void execute(Activity a);
 
   @Specialization
-  protected void recordActorContext(final TracingActor actor) {
-    writeContext(actor.getId(), actor.getNextTraceBufferId(), TraceRecord.ACTOR_CONTEXT.value);
-  }
-
-  @Specialization
-  protected void recordProcess(final Process process) {
-    writeContext(process.getId(), process.getNextTraceBufferId(),
-        TraceRecord.PROCESS_CONTEXT.value);
-  }
-
-  @Specialization
   protected void recordGeneric(final Activity activity) {
-    writeContext(activity.getId(), activity.getNextTraceBufferId(),
-        TraceRecord.ACTOR_CONTEXT.value);
+    writeContext(vp.profile(activity).getId(), vp.profile(activity).getNextTraceBufferId());
   }
 
-  protected void writeContext(final long id, final int bufferId, final byte contextKind) {
-    ActorTraceBuffer buffer = getCurrentBuffer();
+  protected void writeContext(final long id, final int bufferId) {
+    UniformTraceBuffer buffer = getCurrentBuffer();
     int pos = buffer.position();
 
-    buffer.putByteAt(pos, contextKind);
+    buffer.putByteAt(pos, TraceRecord.ACTIVITY_CONTEXT.value);
     buffer.putShortAt(pos + 1, (short) bufferId);
     buffer.putLongAt(pos + 3, id);
 

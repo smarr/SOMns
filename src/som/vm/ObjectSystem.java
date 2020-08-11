@@ -46,7 +46,6 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SObject;
 import som.vmobjects.SObjectWithClass.SObjectWithoutFields;
 import som.vmobjects.SSymbol;
-import tools.concurrency.TracingActors;
 import tools.snapshot.nodes.AbstractArraySerializationNodeGen.ArraySerializationNodeFactory;
 import tools.snapshot.nodes.AbstractArraySerializationNodeGen.TransferArraySerializationNodeFactory;
 import tools.snapshot.nodes.AbstractArraySerializationNodeGen.ValueArraySerializationNodeFactory;
@@ -513,7 +512,6 @@ public final class ObjectSystem {
     }
 
     assert !vm.shouldExit();
-    TracingActors.ReplayActor.printMissingMessages();
     Output.errorPrintln(
         "VM seems to have exited prematurely. The actor pool has been idle for "
             + emptyFJPool + " checks in a row.");

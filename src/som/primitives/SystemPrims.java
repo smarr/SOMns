@@ -64,7 +64,7 @@ import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActors.TracingActor;
 import tools.concurrency.TracingBackend;
 import tools.dym.Tags.BasicPrimitiveOperation;
-import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.actors.UniformExecutionTrace;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
 import tools.snapshot.SnapshotBackend;
@@ -97,6 +97,37 @@ public final class SystemPrims {
     public final Object doSObject(final Object module) {
       long[] stats = TracingBackend.getStatistics();
       return new SImmutableArray(stats, Classes.valueArrayClass);
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "hasTraceStatistics:")
+  public abstract static class HasTraceStatisticsPrim extends UnarySystemOperation {
+    @Specialization
+    @TruffleBoundary
+    public final Object doSObject(final Object module) {
+      return VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING;
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "memoryStatistics:")
+  public abstract static class MemoryStatisticsPrim extends UnarySystemOperation {
+    @Specialization
+    @TruffleBoundary
+    public final Object doSObject(final Object module) {
+      long[] stats = TracingBackend.getMemoryStatistics();
+      return new SImmutableArray(stats, Classes.valueArrayClass);
+    }
+  }
+
+  @GenerateNodeFactory
+  @Primitive(primitive = "hasMemoryStatistics:")
+  public abstract static class HasMemoryStatisticsPrim extends UnarySystemOperation {
+    @Specialization
+    @TruffleBoundary
+    public final Object doSObject(final Object module) {
+      return VmSettings.MEMORY_TRACING;
     }
   }
 
@@ -347,8 +378,8 @@ public final class SystemPrims {
       }
 
       long res = System.currentTimeMillis() - startTime;
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.longSystemCall(res, tracer);
+      if (VmSettings.UNIFORM_TRACING) {
+        UniformExecutionTrace.longSystemCall(res, tracer);
       }
       return res;
     }
@@ -438,8 +469,8 @@ public final class SystemPrims {
 
       long res = System.nanoTime() / 1000L - startMicroTime;
 
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.longSystemCall(res, tracer);
+      if (VmSettings.UNIFORM_TRACING) {
+        UniformExecutionTrace.longSystemCall(res, tracer);
       }
       return res;
     }

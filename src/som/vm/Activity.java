@@ -1,5 +1,6 @@
 package som.vm;
 
+import java.util.LinkedList;
 import java.util.Queue;
 
 import tools.debugger.entities.ActivityType;
@@ -26,13 +27,6 @@ public interface Activity {
     return 0;
   }
 
-  /**
-   * Used in replay to keep track of created children.
-   */
-  default int addChild() {
-    return 0;
-  }
-
   ActivityType getType();
 
   default TraceParser getTraceParser() {
@@ -41,15 +35,34 @@ public interface Activity {
   }
 
   default ReplayRecord getNextReplayEvent() {
-    Queue<ReplayRecord> q = getReplayEventBuffer();
-    if (q.isEmpty()) {
-      getTraceParser().getMoreEventsForEntity(getId());
-    }
 
-    return q.remove();
+    Queue<ReplayRecord> q = getReplayEventBuffer();
+    synchronized (q) {
+      if (q.isEmpty()) {
+        boolean more = getTraceParser().getMoreEventsForEntity(getId());
+        while (q.isEmpty() && more) {
+          more = getTraceParser().getMoreEventsForEntity(getId());
+        }
+      }
+      return q.remove();
+    }
   }
 
-  default Queue<ReplayRecord> getReplayEventBuffer() {
+  default ReplayRecord peekNextReplayEvent() {
+    Queue<ReplayRecord> q = getReplayEventBuffer();
+    synchronized (q) {
+      if (q.isEmpty()) {
+        boolean more = getTraceParser().getMoreEventsForEntity(getId());
+        while (q.isEmpty() && more) {
+          more = getTraceParser().getMoreEventsForEntity(getId());
+        }
+      }
+
+      return q.peek();
+    }
+  }
+
+  default LinkedList<ReplayRecord> getReplayEventBuffer() {
     return null;
   }
 

@@ -26,6 +26,8 @@ import som.primitives.processes.ChannelPrimitives;
 import som.primitives.processes.ChannelPrimitives.Process;
 import som.primitives.processes.ChannelPrimitives.ReplayProcess;
 import som.primitives.processes.ChannelPrimitives.TracingProcess;
+import som.primitives.threading.TaskThreads.ReplayForkJoinTask;
+import som.primitives.threading.TaskThreads.ReplayThreadTask;
 import som.primitives.threading.TaskThreads.SomForkJoinTask;
 import som.primitives.threading.TaskThreads.SomThreadTask;
 import som.primitives.threading.TaskThreads.TracedForkJoinTask;
@@ -54,13 +56,21 @@ import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 public abstract class ActivitySpawn {
 
   private static SomForkJoinTask createTask(final Object[] argArray,
-      final boolean stopOnRoot, final SBlock block, final SourceSection section) {
+      final boolean stopOnRoot, final SBlock block, final SourceSection section,
+      final RecordOneEvent traceThreadCreation, final VM vm) {
     SomForkJoinTask task;
 
-    if (VmSettings.KOMPOS_TRACING) {
-      task = new TracedForkJoinTask(argArray, stopOnRoot);
-      KomposTrace.activityCreation(ActivityType.TASK, task.getId(),
-          block.getMethod().getSignature(), section);
+    if (VmSettings.REPLAY) {
+      return new ReplayForkJoinTask(argArray, stopOnRoot, vm);
+    } else if (VmSettings.KOMPOS_TRACING || VmSettings.UNIFORM_TRACING) {
+      task = new TracedForkJoinTask(argArray, stopOnRoot, vm);
+
+      if (VmSettings.KOMPOS_TRACING) {
+        KomposTrace.activityCreation(ActivityType.TASK, task.getId(),
+            block.getMethod().getSignature(), section);
+      } else if (VmSettings.UNIFORM_TRACING) {
+        traceThreadCreation.record(task.getId());
+      }
     } else {
       task = new SomForkJoinTask(argArray, stopOnRoot);
     }
@@ -68,12 +78,21 @@ public abstract class ActivitySpawn {
   }
 
   private static SomThreadTask createThread(final Object[] argArray,
-      final boolean stopOnRoot, final SBlock block, final SourceSection section) {
+      final boolean stopOnRoot, final SBlock block, final SourceSection section,
+      final RecordOneEvent traceThreadCreation, final VM vm) {
     SomThreadTask thread;
-    if (VmSettings.KOMPOS_TRACING) {
-      thread = new TracedThreadTask(argArray, stopOnRoot);
-      KomposTrace.activityCreation(ActivityType.THREAD, thread.getId(),
-          block.getMethod().getSignature(), section);
+
+    if (VmSettings.REPLAY) {
+      return new ReplayThreadTask(argArray, stopOnRoot, vm);
+    } else if (VmSettings.KOMPOS_TRACING || VmSettings.UNIFORM_TRACING) {
+      thread = new TracedThreadTask(argArray, stopOnRoot, vm);
+
+      if (VmSettings.KOMPOS_TRACING) {
+        KomposTrace.activityCreation(ActivityType.THREAD, thread.getId(),
+            block.getMethod().getSignature(), section);
+      } else if (VmSettings.UNIFORM_TRACING) {
+        traceThreadCreation.record(thread.getId());
+      }
     } else {
       thread = new SomThreadTask(argArray, stopOnRoot);
     }
@@ -85,12 +104,12 @@ public abstract class ActivitySpawn {
       final RecordOneEvent traceProcCreation, final VM vm) {
     if (VmSettings.REPLAY) {
       return new ReplayProcess(obj, stopOnRoot, vm);
-    } else if (VmSettings.KOMPOS_TRACING || VmSettings.ACTOR_TRACING) {
+    } else if (VmSettings.KOMPOS_TRACING || VmSettings.UNIFORM_TRACING) {
       TracingProcess result = new TracingProcess(obj, stopOnRoot, vm);
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.activityCreation(ActivityType.PROCESS,
             result.getId(), result.getProcObject().getSOMClass().getName(), origin);
-      } else if (VmSettings.ACTOR_TRACING) {
+      } else if (VmSettings.UNIFORM_TRACING) {
         traceProcCreation.record(result.getId());
       }
       return result;
@@ -116,14 +135,17 @@ public abstract class ActivitySpawn {
     /** Breakpoint info for triggering suspension on first execution of code in activity. */
     @Child protected AbstractBreakpointNode onExec;
     @Child protected ExceptionSignalingNode notAValue;
-    @Child RecordOneEvent                   traceProcCreation =
-        new RecordOneEvent(TraceRecord.PROCESS_CREATION);
+    @Child RecordOneEvent                   traceProcCreation;
 
     @Override
     public final SpawnPrim initialize(final VM vm) {
       super.initialize(vm);
       onExec = insert(Breakpoints.create(sourceSection, BreakpointType.ACTIVITY_ON_EXEC, vm));
       notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
+
+      if (VmSettings.UNIFORM_TRACING) {
+        traceProcCreation = insert(new RecordOneEvent(TraceRecord.ACTIVITY_CREATION));
+      }
 
       forkJoinPool = vm.getForkJoinPool();
       processesPool = vm.getProcessPool();
@@ -136,7 +158,7 @@ public abstract class ActivitySpawn {
     @TruffleBoundary
     public final SomForkJoinTask spawnTask(final SClass clazz, final SBlock block) {
       SomForkJoinTask task = createTask(new Object[] {block},
-          onExec.executeShouldHalt(), block, sourceSection);
+          onExec.executeShouldHalt(), block, sourceSection, traceProcCreation, vm);
       forkJoinPool.execute(task);
       return task;
     }
@@ -145,7 +167,7 @@ public abstract class ActivitySpawn {
     @TruffleBoundary
     public final SomThreadTask spawnThread(final SClass clazz, final SBlock block) {
       SomThreadTask thread = createThread(new Object[] {block},
-          onExec.executeShouldHalt(), block, sourceSection);
+          onExec.executeShouldHalt(), block, sourceSection, traceProcCreation, vm);
       threadPool.execute(thread);
       return thread;
     }
@@ -202,13 +224,17 @@ public abstract class ActivitySpawn {
 
     @Child protected ExceptionSignalingNode notAValue;
 
-    @Child RecordOneEvent traceProcCreation = new RecordOneEvent(TraceRecord.PROCESS_CREATION);
+    @Child RecordOneEvent traceProcCreation;
 
     @Override
     public final SpawnWithPrim initialize(final VM vm) {
       super.initialize(vm);
       onExec = insert(Breakpoints.create(sourceSection, BreakpointType.ACTIVITY_ON_EXEC, vm));
       notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
+
+      if (VmSettings.UNIFORM_TRACING) {
+        traceProcCreation = insert(new RecordOneEvent(TraceRecord.ACTIVITY_CREATION));
+      }
 
       forkJoinPool = vm.getForkJoinPool();
       processesPool = vm.getProcessPool();
@@ -222,7 +248,7 @@ public abstract class ActivitySpawn {
     public SomForkJoinTask spawnTask(final SClass clazz, final SBlock block,
         final SArray somArgArr, final Object[] argArr) {
       SomForkJoinTask task = createTask(argArr,
-          onExec.executeShouldHalt(), block, sourceSection);
+          onExec.executeShouldHalt(), block, sourceSection, traceProcCreation, vm);
       forkJoinPool.execute(task);
       return task;
     }
@@ -232,7 +258,7 @@ public abstract class ActivitySpawn {
     public SomThreadTask spawnThread(final SClass clazz, final SBlock block,
         final SArray somArgArr, final Object[] argArr) {
       SomThreadTask thread = createThread(argArr,
-          onExec.executeShouldHalt(), block, sourceSection);
+          onExec.executeShouldHalt(), block, sourceSection, traceProcCreation, vm);
       threadPool.execute(thread);
       return thread;
     }

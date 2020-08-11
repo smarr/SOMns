@@ -1,6 +1,6 @@
 package som.primitives.processes;
 
-import java.util.Queue;
+import java.util.LinkedList;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
 import java.util.concurrent.ForkJoinWorkerThread;
@@ -48,9 +48,8 @@ import tools.debugger.session.Breakpoints;
 import tools.replay.ReplayRecord;
 import tools.replay.TraceParser;
 import tools.replay.TraceRecord;
-import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.actors.UniformExecutionTrace;
 import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
-import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
 
@@ -164,7 +163,7 @@ public abstract class ChannelPrimitives {
         final VM vm) {
       super(obj);
       this.stopOnRootNode = stopOnRootNode;
-      processId = TracingActivityThread.newEntityId(vm);
+      processId = TracingActivityThread.newEntityId();
       this.vm = vm;
     }
 
@@ -184,8 +183,8 @@ public abstract class ChannelPrimitives {
 
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.currentActivity(this);
-      } else if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.recordActivityContext(this, trace);
+      } else if (VmSettings.UNIFORM_TRACING) {
+        UniformExecutionTrace.recordActivityContext(this, trace);
       }
     }
 
@@ -211,8 +210,8 @@ public abstract class ChannelPrimitives {
   }
 
   public static class ReplayProcess extends TracingProcess {
-    private final Queue<ReplayRecord> replayEvents;
-    private int                       children = 0;
+    private final LinkedList<ReplayRecord> replayEvents;
+    private int                            children = 0;
 
     public ReplayProcess(final SObjectWithClass obj, final boolean stopOnRootNode,
         final VM vm) {
@@ -221,12 +220,7 @@ public abstract class ChannelPrimitives {
     }
 
     @Override
-    public int addChild() {
-      return children++;
-    }
-
-    @Override
-    public Queue<ReplayRecord> getReplayEventBuffer() {
+    public LinkedList<ReplayRecord> getReplayEventBuffer() {
       return this.replayEvents;
     }
 
@@ -254,13 +248,15 @@ public abstract class ChannelPrimitives {
     /** Breakpoint info for triggering suspension after write. */
     @Child protected AbstractBreakpointNode afterWrite;
 
-    @Child protected RecordTwoEvent traceRead =
-        new RecordTwoEvent(TraceRecord.CHANNEL_READ.value);
+    @Child protected RecordOneEvent traceRead;
 
     @Override
     public final ReadPrim initialize(final VM vm) {
       super.initialize(vm);
       haltNode = SuspendExecutionNodeGen.create(0, null).initialize(sourceSection);
+      if (VmSettings.UNIFORM_TRACING) {
+        traceRead = insert(new RecordOneEvent(TraceRecord.CHANNEL_READ));
+      }
       afterWrite = insert(
           Breakpoints.create(sourceSection, BreakpointType.CHANNEL_AFTER_SEND, vm));
       return this;
@@ -303,8 +299,7 @@ public abstract class ChannelPrimitives {
 
     @Child protected ExceptionSignalingNode notAValue;
 
-    @Child protected RecordTwoEvent traceWrite =
-        new RecordTwoEvent(TraceRecord.CHANNEL_WRITE.value);
+    @Child protected RecordOneEvent traceWrite;
 
     @Override
     public final WritePrim initialize(final VM vm) {
@@ -312,6 +307,9 @@ public abstract class ChannelPrimitives {
       haltNode = insert(SuspendExecutionNodeGen.create(0, null).initialize(sourceSection));
       afterRead =
           insert(Breakpoints.create(sourceSection, BreakpointType.CHANNEL_AFTER_RCV, vm));
+      if (VmSettings.UNIFORM_TRACING) {
+        traceWrite = insert(new RecordOneEvent(TraceRecord.CHANNEL_WRITE));
+      }
       notAValue = insert(ExceptionSignalingNode.createNotAValueNode(sourceSection));
       return this;
     }
@@ -357,7 +355,13 @@ public abstract class ChannelPrimitives {
   @GenerateNodeFactory
   public abstract static class ChannelNewPrim extends UnaryExpressionNode {
 
-    @Child RecordOneEvent trace = new RecordOneEvent(TraceRecord.CHANNEL_CREATION);
+    @Child RecordOneEvent trace;
+
+    public ChannelNewPrim() {
+      if (VmSettings.UNIFORM_TRACING) {
+        trace = new RecordOneEvent(TraceRecord.ACTIVITY_CREATION);
+      }
+    }
 
     @Specialization
     public final SChannel newChannel(final Object module) {
@@ -366,7 +370,7 @@ public abstract class ChannelPrimitives {
       if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.passiveEntityCreation(PassiveEntityType.CHANNEL,
             result.getId(), KomposTrace.getPrimitiveCaller(sourceSection));
-      } else if (VmSettings.ACTOR_TRACING) {
+      } else if (VmSettings.UNIFORM_TRACING) {
         trace.record(result.getId());
       }
       return result;

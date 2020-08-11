@@ -15,6 +15,7 @@ import som.vmobjects.SBlock;
 import som.vmobjects.SSymbol;
 import tools.concurrency.TracingActivityThread;
 import tools.parser.KomposTraceParser;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 
@@ -54,7 +55,7 @@ public abstract class EventualMessage {
     this.haltOnReceive = haltOnReceive;
     this.haltOnResolver = haltOnResolver;
     if (VmSettings.KOMPOS_TRACING) {
-      this.messageId = TracingActivityThread.newEntityId(null);
+      this.messageId = TracingActivityThread.newEntityId();
       if (VmSettings.ASSISTED_DEBUGGING) {
         if (KomposTraceParser.isMessageInErrorStackTrace(this.messageId)
             || this.messageId == 0) {
@@ -84,6 +85,18 @@ public abstract class EventualMessage {
 
   public SourceSection getTargetSourceSection() {
     return onReceive.getRootNode().getSourceSection();
+  }
+
+  public RecordOneEvent getTracingNode() {
+    assert onReceive != null;
+    assert VmSettings.UNIFORM_TRACING;
+    ReceivedRootNode rrn = (ReceivedRootNode) onReceive.getRootNode();
+    return rrn.messageTracer;
+  }
+
+  public void setReplayVersion(final long version) {
+    assert VmSettings.REPLAY;
+    this.messageId = version;
   }
 
   public long serialize(final SnapshotBuffer sb) {

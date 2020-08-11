@@ -1,8 +1,10 @@
 package tools.concurrency;
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.PriorityQueue;
 import java.util.Queue;
 import java.util.WeakHashMap;
 import java.util.concurrent.ForkJoinPool;
@@ -10,22 +12,17 @@ import java.util.function.BiConsumer;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
-import som.Output;
 import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
-import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vm.VmSettings;
 import tools.debugger.WebDebugger;
+import tools.replay.PassiveEntityWithEvents;
 import tools.replay.ReplayRecord;
-import tools.replay.ReplayRecord.ExternalMessageRecord;
-import tools.replay.ReplayRecord.ExternalPromiseMessageRecord;
-import tools.replay.ReplayRecord.MessageRecord;
-import tools.replay.ReplayRecord.PromiseMessageRecord;
 import tools.replay.TraceParser;
-import tools.replay.actors.ExternalMessage;
+import tools.replay.TraceRecord;
 import tools.snapshot.SnapshotRecord;
 import tools.snapshot.deserialization.DeserializationBuffer;
 
@@ -36,6 +33,7 @@ public class TracingActors {
     protected int            nextDataID;
     protected SnapshotRecord snapshotRecord;
     private int              traceBufferId;
+    protected int            version;
 
     /**
      * Flag that indicates if a step-to-next-turn action has been made in the previous message.
@@ -44,7 +42,8 @@ public class TracingActors {
 
     public TracingActor(final VM vm) {
       super(vm);
-      this.activityId = TracingActivityThread.newEntityId(vm);
+      this.activityId = TracingActivityThread.newEntityId();
+      this.version = 0;
       assert this.activityId >= 0;
       if (VmSettings.SNAPSHOTS_ENABLED) {
         snapshotRecord = new SnapshotRecord();
@@ -59,6 +58,29 @@ public class TracingActors {
     public final int getActorId() {
       // TODO: remove after rebasing snapshot PR
       throw new UnsupportedOperationException("Please remove this call and use getId instead");
+    }
+
+    @Override
+    @TruffleBoundary
+    public synchronized void send(final EventualMessage msg,
+        final ForkJoinPool actorPool) {
+      super.send(msg, actorPool);
+      if (VmSettings.SENDER_SIDE_TRACING) {
+        msg.getTracingNode().record(this.version);
+        this.version++;
+        // TODO maybe try to get the recording itself done outside the synchronized method
+      }
+
+    }
+
+    @Override
+    public synchronized void sendInitialStartMessage(final EventualMessage msg,
+        final ForkJoinPool pool) {
+      super.sendInitialStartMessage(msg, pool);
+
+      if (VmSettings.SENDER_SIDE_TRACING) {
+        this.version++;
+      }
     }
 
     @Override
@@ -122,16 +144,26 @@ public class TracingActors {
     }
   }
 
-  public static final class ReplayActor extends TracingActor {
-    protected int                               children;
-    protected final LinkedList<MessageRecord>   expectedMessages;
-    private final Queue<ReplayRecord>           replayEvents;
-    protected final LinkedList<EventualMessage> leftovers = new LinkedList<>();
-    private static Map<Long, ReplayActor>       actorList;
-    private BiConsumer<Short, Integer>          dataSource;
-    private MessageRecord                       nextExpectedMessage;
+  public static final class ReplayActor extends TracingActor
+      implements PassiveEntityWithEvents {
+    protected int                                  children;
+    private final LinkedList<ReplayRecord>         replayEvents;
+    protected final PriorityQueue<EventualMessage> orderedMessages =
+        new PriorityQueue<>(new MessageComparator());
+    private static Map<Long, ReplayActor>          actorList;
+    private BiConsumer<Short, Integer>             dataSource;
+    public boolean                                 poisoned        = false;
+    protected final LinkedList<EventualMessage>    leftovers       = new LinkedList<>();
+    private MessageRecord                          nextExpectedMessage;
 
     private final TraceParser traceParser;
+
+    class MessageComparator implements Comparator<EventualMessage> {
+      @Override
+      public int compare(final EventualMessage o1, final EventualMessage o2) {
+        return Long.compare(o1.getMessageId(), o2.getMessageId());
+      }
+    }
 
     static {
       if (VmSettings.REPLAY) {
@@ -157,7 +189,7 @@ public class TracingActors {
     }
 
     @Override
-    public Queue<ReplayRecord> getReplayEventBuffer() {
+    public LinkedList<ReplayRecord> getReplayEventBuffer() {
       return this.replayEvents;
     }
 
@@ -170,16 +202,16 @@ public class TracingActors {
       super(vm);
 
       if (VmSettings.REPLAY) {
-        expectedMessages = vm.getTraceParser().getExpectedMessages(activityId);
         replayEvents = vm.getTraceParser().getReplayEventsForEntity(activityId);
 
-        synchronized (actorList) {
-          assert !actorList.containsKey(activityId);
-          actorList.put(activityId, this);
+        if (VmSettings.SNAPSHOTS_ENABLED) {
+          synchronized (actorList) {
+            assert !actorList.containsKey(activityId);
+            actorList.put(activityId, this);
+          }
         }
         traceParser = vm.getTraceParser();
       } else {
-        expectedMessages = null;
         replayEvents = null;
         traceParser = null;
       }
@@ -196,7 +228,8 @@ public class TracingActors {
 
     @Override
     @TruffleBoundary
-    public synchronized void send(final EventualMessage msg, final ForkJoinPool actorPool) {
+    public synchronized void send(final EventualMessage msg,
+        final ForkJoinPool actorPool) {
       assert msg.getTarget() == this;
 
       if (!VmSettings.REPLAY) {
@@ -210,95 +243,15 @@ public class TracingActors {
         appendToMailbox(msg);
       }
 
+      if (!this.poisoned && this.replayEvents.isEmpty()
+          && this.peekNextReplayEvent() == null) {
+        this.poisoned = true;
+      }
+
       // actor remains dormant until the expected message arrives
-      if ((!this.isExecuting) && this.replayCanProcess(msg)) {
+      if ((!this.isExecuting) && this.replayCanProcess(msg) && !this.poisoned) {
         isExecuting = true;
         execute(actorPool);
-      }
-    }
-
-    /**
-     * Prints a list of expected Messages and remaining mailbox content.
-     *
-     * @return true if there are actors expecting messages, false otherwise.
-     */
-    public static boolean printMissingMessages() {
-      if (!(VmSettings.REPLAY && VmSettings.DEBUG_MODE)) {
-        return false;
-      }
-
-      boolean result = false;
-      for (ReplayActor a : actorList.values()) {
-        ReplayActor ra = a;
-        if (ra.expectedMessages != null && ra.peekExpected() != null) {
-          result = true; // program did not execute all messages
-          Output.println("===========================================");
-          Output.println("Actor " + ra.getId());
-          Output.println("Expected: ");
-          printMsg(ra.peekExpected());
-
-          Output.println("Mailbox: ");
-          if (a.firstMessage != null) {
-            printMsg(a.firstMessage);
-            if (a.mailboxExtension != null) {
-              for (EventualMessage em : a.mailboxExtension) {
-                printMsg(em);
-              }
-            }
-          }
-
-          for (EventualMessage em : a.leftovers) {
-            printMsg(em);
-          }
-        } else if (a.firstMessage != null || a.mailboxExtension != null) {
-
-          int n = a.firstMessage != null ? 1 : 0;
-          n += a.mailboxExtension != null ? a.mailboxExtension.size() : 0;
-
-          Output.println(
-              a.getName() + " [" + a.getId() + "] has " + n + " unexpected messages:");
-          if (a.firstMessage != null) {
-            printMsg(a.firstMessage);
-            if (a.mailboxExtension != null) {
-              for (EventualMessage em : a.mailboxExtension) {
-                printMsg(em);
-              }
-            }
-          }
-        }
-      }
-      return result;
-    }
-
-    private static void printMsg(final EventualMessage msg) {
-      Output.print("\t");
-      if (msg instanceof ExternalMessage) {
-        Output.print("external ");
-      }
-
-      if (msg instanceof PromiseMessage) {
-        Output.println("PromiseMessage " + msg.getSelector()
-            + " from " + ((TracingActor) msg.getSender()).getId() + " PID "
-            + ((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor());
-      } else {
-        Output.println(
-            "Message" + msg.getSelector() + " from "
-                + ((TracingActor) msg.getSender()).getId());
-      }
-    }
-
-    private static void printMsg(final MessageRecord msg) {
-      Output.print("\t");
-      if (msg.isExternal()) {
-        Output.print("external ");
-      }
-
-      if (msg instanceof PromiseMessageRecord) {
-        Output.println("PromiseMessage "
-            + " from " + msg.sender + " PID "
-            + ((PromiseMessageRecord) msg).pId);
-      } else {
-        Output.println("Message" + " from " + msg.sender);
       }
     }
 
@@ -307,12 +260,33 @@ public class TracingActors {
         return true;
       }
 
-      assert expectedMessages != null;
-      if (nextExpectedMessage == null) {
-        nextExpectedMessage = peekExpected();
+      if (VmSettings.SENDER_SIDE_REPLAY) {
+        return msg.getMessageId() == this.version;
+      } else if (VmSettings.RECEIVER_SIDE_REPLAY) {
+        if (nextExpectedMessage == null) {
+          nextExpectedMessage = getExpected();
+        }
+        return replayCanProcess(nextExpectedMessage, msg);
+      } else {
+        assert false : "unreachable";
+        return false;
       }
+    }
 
-      return replayCanProcess(nextExpectedMessage, msg);
+    private MessageRecord getExpected() {
+      ReplayRecord rr = this.peekNextReplayEvent();
+      assert rr != null;
+      assert rr.type == TraceRecord.MESSAGE || rr.type == TraceRecord.PROMISE_MESSAGE : "was "
+          + rr.type;
+
+      if (rr.type == TraceRecord.PROMISE_MESSAGE) {
+        this.getNextReplayEvent();
+        ReplayRecord r2 = this.getNextReplayEvent();
+        return new MessageRecord(r2.eventNo, rr.eventNo);
+      } else {
+        this.getNextReplayEvent();
+        return new MessageRecord(rr.eventNo);
+      }
     }
 
     protected boolean replayCanProcess(final MessageRecord expected,
@@ -326,79 +300,17 @@ public class TracingActors {
         return false;
       }
 
-      if ((msg instanceof PromiseMessage) != (expected instanceof ReplayRecord.PromiseMessageRecord)) {
+      if ((msg instanceof PromiseMessage) != (expected.isPromiseMessage())) {
         return false;
       }
 
       // handle promise messages
       if (msg instanceof PromiseMessage
-          && (((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor() != ((ReplayRecord.PromiseMessageRecord) expected).pId)) {
+          && (((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor() != expected.getResolver())) {
         return false;
       }
 
       return ((ReplayActor) msg.getSender()).getId() == expected.sender;
-    }
-
-    @Override
-    public int addChild() {
-      return children++;
-    }
-
-    /**
-     *
-     * @param a
-     * @return The next expected Message
-     */
-    private static void removeFirstExpectedMessage(final ReplayActor a) {
-      synchronized (a) {
-        MessageRecord removed = a.getExpected();
-        assert a.nextExpectedMessage == removed;
-
-        MessageRecord peek = a.peekExpected();
-
-        if (peek != null && peek.isExternal()) {
-          if (peek instanceof ExternalMessageRecord) {
-            ExternalMessageRecord emr = (ExternalMessageRecord) peek;
-            actorList.get(emr.sender).getDataSource().accept(emr.method,
-                emr.dataId);
-          } else {
-            ExternalPromiseMessageRecord emr = (ExternalPromiseMessageRecord) peek;
-            actorList.get(emr.pId).getDataSource().accept(emr.method,
-                emr.dataId);
-          }
-        }
-
-        a.nextExpectedMessage = peek;
-      }
-    }
-
-    private MessageRecord getExpected() {
-      if (expectedMessages.isEmpty()) {
-        ObjectTransitionSafepoint.INSTANCE.unregister();
-        try {
-          while (traceParser.getMoreEventsForEntity(getId())
-              && expectedMessages.isEmpty()) {
-            // NOOP
-          }
-        } finally {
-          ObjectTransitionSafepoint.INSTANCE.register();
-        }
-      }
-      return expectedMessages.poll();
-    }
-
-    private MessageRecord peekExpected() {
-      if (expectedMessages.isEmpty()) {
-        ObjectTransitionSafepoint.INSTANCE.unregister();
-        try {
-          while (traceParser.getMoreEventsForEntity(getId()) && expectedMessages.isEmpty()) {
-            // NOOP
-          }
-        } finally {
-          ObjectTransitionSafepoint.INSTANCE.register();
-        }
-      }
-      return expectedMessages.peek();
     }
 
     private static class ExecAllMessagesReplay extends ExecAllMessages {
@@ -406,71 +318,117 @@ public class TracingActors {
         super(actor, vm);
       }
 
-      private Queue<EventualMessage> determineNextMessages(
+      private Queue<EventualMessage> determineNextMessagesSenderSide(
+          final PriorityQueue<EventualMessage> orderedMessages) {
+        final ReplayActor a = (ReplayActor) actor;
+        int numReceivedMsgs = 1 + (mailboxExtension == null ? 0 : mailboxExtension.size());
+        numReceivedMsgs += orderedMessages.size();
+
+        Queue<EventualMessage> toProcess = new LinkedList<>();
+
+        if (a.replayCanProcess(firstMessage)) {
+          toProcess.add(firstMessage);
+          a.version++;
+        } else {
+          orderedMessages.add(firstMessage);
+        }
+
+        if (mailboxExtension != null) {
+          for (EventualMessage msg : mailboxExtension) {
+            if (a.replayCanProcess(msg)) {
+              toProcess.add(msg);
+              a.version++;
+            } else {
+              orderedMessages.add(msg);
+            }
+          }
+        }
+
+        while (!orderedMessages.isEmpty() && a.replayCanProcess(orderedMessages.peek())) {
+          EventualMessage msg = orderedMessages.poll();
+          toProcess.add(msg);
+          a.version++;
+        }
+
+        assert toProcess.size()
+            + orderedMessages.size() == numReceivedMsgs : "We shouldn't lose any messages here.";
+        return toProcess;
+      }
+
+      private Queue<EventualMessage> determineNextMessagesReceiverSide(
           final LinkedList<EventualMessage> postponedMsgs) {
         final ReplayActor a = (ReplayActor) actor;
         int numReceivedMsgs = 1 + (mailboxExtension == null ? 0 : mailboxExtension.size());
         numReceivedMsgs += postponedMsgs.size();
 
+        // Output.println(
+        // "" + firstMessage + a.nextExpectedMessage + firstMessage.getSender().getId());
+
         Queue<EventualMessage> todo = new LinkedList<>();
 
         if (a.nextExpectedMessage == null) {
-          a.nextExpectedMessage = a.peekExpected();
+          a.nextExpectedMessage = a.getExpected();
         }
 
         if (a.nextExpectedMessage == null) {
           return todo;
         }
 
-        boolean progress = false;
-
         if (a.replayCanProcess(a.nextExpectedMessage, firstMessage)) {
           todo.add(firstMessage);
-          progress = true;
-          removeFirstExpectedMessage(a);
+          a.nextExpectedMessage = null;
         } else {
           postponedMsgs.add(firstMessage);
         }
 
         if (mailboxExtension != null) {
           for (EventualMessage msg : mailboxExtension) {
-            if (!progress && a.replayCanProcess(a.nextExpectedMessage, msg)) {
+            if (todo.isEmpty() && a.replayCanProcess(a.nextExpectedMessage, msg)) {
               todo.add(msg);
-              progress = true;
-              removeFirstExpectedMessage(a);
+              a.nextExpectedMessage = null;
             } else {
               postponedMsgs.add(msg);
             }
           }
         }
 
-        if (!progress) {
-          return todo;
-        }
-
-        boolean foundNextMessage = true;
-        while (foundNextMessage) {
-          foundNextMessage = false;
-
-          Iterator<EventualMessage> iter = postponedMsgs.iterator();
-          while (iter.hasNext() && a.nextExpectedMessage != null) {
-            EventualMessage msg = iter.next();
-            if (a.replayCanProcess(a.nextExpectedMessage, msg)) {
-              iter.remove();
-              todo.add(msg);
-              removeFirstExpectedMessage(a);
-              foundNextMessage = true;
-              if (a.nextExpectedMessage == null) {
-                return todo;
-              }
-              break;
-            }
+        if (todo.isEmpty()) {
+          EventualMessage emsg = determineNextMessagePostponed(postponedMsgs);
+          if (emsg != null) {
+            todo.add(emsg);
           }
+          assert todo.isEmpty() : "just in case";
         }
 
+        assert todo.size() <= 1;
         assert todo.size()
             + postponedMsgs.size() == numReceivedMsgs : "We shouldn't lose any messages here.";
         return todo;
+      }
+
+      private EventualMessage determineNextMessagePostponed(
+          final LinkedList<EventualMessage> postponedMsgs) {
+        final ReplayActor a = (ReplayActor) actor;
+
+        if (a.nextExpectedMessage == null) {
+          a.nextExpectedMessage = a.getExpected();
+        }
+
+        if (a.nextExpectedMessage == null) {
+          return null;
+        }
+
+        Iterator<EventualMessage> iter = postponedMsgs.iterator();
+        while (iter.hasNext() && a.nextExpectedMessage != null) {
+          EventualMessage msg = iter.next();
+          if (a.replayCanProcess(a.nextExpectedMessage, msg)) {
+            iter.remove();
+            a.nextExpectedMessage = null;
+            return msg;
+          }
+        }
+
+        return null;
       }
 
       @Override
@@ -480,15 +438,96 @@ public class TracingActors {
         assert size > 0;
 
         final ReplayActor a = (ReplayActor) actor;
-        Queue<EventualMessage> todo = determineNextMessages(a.leftovers);
+        Queue<EventualMessage> todo = null;
+
+        if (VmSettings.SENDER_SIDE_REPLAY) {
+          todo = determineNextMessagesSenderSide(a.orderedMessages);
+        } else if (VmSettings.RECEIVER_SIDE_REPLAY) {
+          todo = determineNextMessagesReceiverSide(a.leftovers);
+          assert todo.size() <= 1;
+        }
 
         for (EventualMessage msg : todo) {
+          if (VmSettings.SENDER_SIDE_REPLAY) {
+            if (!a.poisoned && a.replayEvents.isEmpty()
+                && a.peekNextReplayEvent() == null) {
+              a.poisoned = true;
+              return;
+            }
+          }
+
           currentThread.currentMessage = msg;
           handleBreakpointsAndStepping(msg, dbg, a);
           msg.execute();
         }
 
         currentThread.createdMessages += todo.size();
+
+        if (VmSettings.RECEIVER_SIDE_REPLAY) {
+
+          if (!todo.isEmpty() && !a.leftovers.isEmpty()) {
+            boolean more = a.nextExpectedMessage != null || !a.replayEvents.isEmpty()
+                || a.peekNextReplayEvent() != null;
+
+            while (more && !a.leftovers.isEmpty()) {
+              EventualMessage msg = determineNextMessagePostponed(a.leftovers);
+
+              if (msg == null) {
+                break;
+              }
+
+              currentThread.currentMessage = msg;
+              handleBreakpointsAndStepping(msg, dbg, a);
+              msg.execute();
+
+              more = a.nextExpectedMessage != null || !a.replayEvents.isEmpty()
+                  || a.peekNextReplayEvent() != null;
+            }
+          }
+        }
+      }
+    }
+
+    @Override
+    public int getNextEventNumber() {
+      return this.version;
+    }
+
+    class MessageRecord {
+      boolean isPromiseMessage;
+      long    sender;
+      long    resolver;
+
+      MessageRecord(final long sender) {
+        this.sender = sender;
+        this.isPromiseMessage = false;
+      }
+
+      MessageRecord(final long sender, final long resolver) {
+        this.sender = sender;
+        this.resolver = resolver;
+        this.isPromiseMessage = true;
+      }
+
+      public boolean isPromiseMessage() {
+        return isPromiseMessage;
+      }
+
+      public long getSender() {
+        return sender;
+      }
+
+      public long getResolver() {
+        return resolver;
+      }
+
+      @Override
+      public String toString() {
+        if (isPromiseMessage) {
+          return "PromsieMessage from " + sender + " and " + resolver;
+        } else {
+          return "Message from " + sender;
+        }
       }
     }
   }

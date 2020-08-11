@@ -5,7 +5,7 @@ import java.util.concurrent.SynchronousQueue;
 import som.interpreter.processes.SChannel;
 import tools.debugger.entities.ReceiveOp;
 import tools.debugger.entities.SendOp;
-import tools.replay.nodes.RecordEventNodes.RecordTwoEvent;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
 
 public final class TracingChannel extends SChannel {
@@ -29,7 +29,7 @@ public final class TracingChannel extends SChannel {
     }
 
     @Override
-    public Object read(final RecordTwoEvent traceRead) throws InterruptedException {
+    public Object read(final RecordOneEvent traceRead) throws InterruptedException {
       TracingChannel current = (TracingChannel) channel;
       try {
         return super.read(traceRead);
@@ -46,7 +46,7 @@ public final class TracingChannel extends SChannel {
     }
 
     @Override
-    public void write(final Object value, final RecordTwoEvent traceWrite)
+    public void write(final Object value, final RecordOneEvent traceWrite)
         throws InterruptedException {
       TracingChannel current = ((TracingChannel) channel);
 

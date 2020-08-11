@@ -14,23 +14,52 @@ import som.interpreter.nodes.dispatch.BlockDispatchNodeGen;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.interpreter.nodes.nary.UnaryExpressionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
+import som.vm.Activity;
+import som.vm.VmSettings;
 import som.vmobjects.SBlock;
 import som.vmobjects.SClass;
 import tools.concurrency.Tags.AcquireLock;
 import tools.concurrency.Tags.ExpressionBreakpoint;
 import tools.concurrency.Tags.ReleaseLock;
+import tools.concurrency.TracingActivityThread;
+import tools.replay.ReplayData;
+import tools.replay.ReplayRecord;
+import tools.replay.TraceRecord;
+import tools.replay.actors.TracingLock;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 
 
 public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingLock:", selector = "lock")
   public abstract static class LockPrim extends UnaryExpressionNode {
+    @Child protected static RecordOneEvent traceLock;
+
+    public LockPrim() {
+      if (VmSettings.UNIFORM_TRACING) {
+        traceLock = new RecordOneEvent(TraceRecord.LOCK_LOCK);
+      }
+    }
+
     @TruffleBoundary
     @Specialization
     public static final ReentrantLock lock(final ReentrantLock lock) {
       try {
         ObjectTransitionSafepoint.INSTANCE.unregister();
-        lock.lock();
+        if (VmSettings.REPLAY) {
+          ReplayData.replayDelayNumberedEvent((TracingLock) lock);
+        }
+
+        if (VmSettings.UNIFORM_TRACING) {
+          ((TracingLock) lock).tracingLock(traceLock);
+        } else {
+          lock.lock();
+          if (VmSettings.REPLAY) {
+            ((TracingLock) lock).replayIncrementEventNo();
+            ((TracingLock) lock).replayCondition.signalAll();
+          }
+        }
+
       } finally {
         ObjectTransitionSafepoint.INSTANCE.register();
       }
@@ -86,9 +115,26 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingIsLocked:")
   public abstract static class IsLockedPrim extends UnaryExpressionNode {
+    @Child protected RecordOneEvent traceIsLocked;
+
+    public IsLockedPrim() {
+      if (VmSettings.UNIFORM_TRACING) {
+        traceIsLocked = new RecordOneEvent(TraceRecord.LOCK_ISLOCKED);
+      }
+    }
+
     @Specialization
     @TruffleBoundary
     public boolean doLock(final ReentrantLock lock) {
+      if (VmSettings.REPLAY) {
+        Activity reader = TracingActivityThread.currentThread().getActivity();
+        ReplayRecord rr = reader.getNextReplayEvent();
+        assert rr.type == TraceRecord.LOCK_ISLOCKED;
+        return rr.getBoolean();
+      } else if (VmSettings.UNIFORM_TRACING) {
+        return ((TracingLock) lock).tracingIsLocked(traceIsLocked);
+      }
+
       return lock.isLocked();
     }
   }
@@ -96,6 +142,7 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingConditionFor:")
   public abstract static class ConditionForPrim extends UnaryExpressionNode {
+
     @Specialization
     @TruffleBoundary
     public Condition doLock(final ReentrantLock lock) {
@@ -106,10 +153,15 @@ public final class MutexPrimitives {
   @GenerateNodeFactory
   @Primitive(primitive = "threadingMutexNew:")
   public abstract static class MutexNewPrim extends UnaryExpressionNode {
+
     // TODO: should I guard this on the mutex class?
     @Specialization
     @TruffleBoundary
     public final ReentrantLock doSClass(final SClass clazz) {
+      if (VmSettings.UNIFORM_TRACING || VmSettings.REPLAY) {
+        TracingLock result = new TracingLock();
+        return result;
+      }
       return new ReentrantLock();
     }
   }

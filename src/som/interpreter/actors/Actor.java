@@ -26,7 +26,9 @@ import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.WebDebugger;
 import tools.debugger.entities.ActivityType;
 import tools.dym.DynamicMetrics;
-import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.TraceRecord;
+import tools.replay.actors.UniformExecutionTrace;
+import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 import tools.replay.nodes.TraceContextNode;
 import tools.replay.nodes.TraceContextNodeGen;
 import tools.snapshot.SnapshotBuffer;
@@ -52,7 +54,7 @@ import tools.snapshot.SnapshotBuffer;
 public class Actor implements Activity {
   public static final AtomicLong numActors = DynamicMetrics.createLong("Num.Actors");
 
-  @CompilationFinal protected static RootCallTarget executorRoot;
+  @CompilationFinal public static RootCallTarget executorRoot;
 
   public static void initializeActorSystem(final SomLanguage lang) {
     ExecutorRootNode root = new ExecutorRootNode(lang);
@@ -66,7 +68,7 @@ public class Actor implements Activity {
 
     if (VmSettings.REPLAY || VmSettings.KOMPOS_TRACING) {
       return new ReplayActor(vm);
-    } else if (VmSettings.ACTOR_TRACING) {
+    } else if (VmSettings.UNIFORM_TRACING) {
       return new TracingActor(vm);
     } else {
       return new Actor(vm);
@@ -160,8 +162,14 @@ public class Actor implements Activity {
 
   public static final class ExecutorRootNode extends RootNode {
 
+    @Child protected RecordOneEvent recordPromiseChaining;
+
     private ExecutorRootNode(final SomLanguage language) {
       super(language);
+
+      if (VmSettings.SENDER_SIDE_TRACING) {
+        this.recordPromiseChaining = new RecordOneEvent(TraceRecord.PROMISE_CHAINED);
+      }
     }
 
     @Override
@@ -215,14 +223,14 @@ public class Actor implements Activity {
       } finally {
         ObjectTransitionSafepoint.INSTANCE.unregister();
 
-        if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
+        if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
           t.swapTracingBufferIfRequestedUnsync();
         }
         t.currentlyExecutingActor = null;
       }
     }
 
-    public void doRunWithObjectSafepoints(final ActorProcessingThread t) {
+    private void doRunWithObjectSafepoints(final ActorProcessingThread t) {
       WebDebugger dbg = null;
       if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
         dbg = vm.getWebDebugger();
@@ -231,8 +239,8 @@ public class Actor implements Activity {
 
       t.currentlyExecutingActor = actor;
 
-      if (VmSettings.ACTOR_TRACING) {
-        ActorExecutionTrace.recordActivityContext(actor, tracer);
+      if (VmSettings.UNIFORM_TRACING) {
+        UniformExecutionTrace.recordActivityContext(actor, tracer);
       } else if (VmSettings.KOMPOS_TRACING) {
         KomposTrace.currentActivity(actor);
       }

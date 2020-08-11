@@ -30,7 +30,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.sun.management.GarbageCollectionNotificationInfo;
 
-import som.Output;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
@@ -41,7 +40,7 @@ import som.vmobjects.SSymbol;
 import tools.debugger.FrontendConnector;
 import tools.replay.StringWrapper;
 import tools.replay.TwoDArrayWrapper;
-import tools.replay.actors.ActorExecutionTrace;
+import tools.replay.actors.UniformExecutionTrace;
 
 
 /**
@@ -107,7 +106,7 @@ public class TracingBackend {
     }
 
     if (VmSettings.RECYCLE_BUFFERS
-        && (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING)) {
+        && (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING)) {
       for (int i = 0; i < BUFFER_POOL_SIZE; i++) {
         emptyBuffers.add(new byte[VmSettings.BUFFER_SIZE]);
       }
@@ -139,24 +138,33 @@ public class TracingBackend {
     }
   }
 
-  public static void reportPeakMemoryUsage() {
+  public static long[] getMemoryStatistics() {
     List<MemoryPoolMXBean> pools = ManagementFactory.getMemoryPoolMXBeans();
     long totalHeap = 0;
     long totalNonHeap = 0;
     long gcTime = 0;
-    for (MemoryPoolMXBean memoryPoolMXBean : pools) {
-      long peakUsed = memoryPoolMXBean.getPeakUsage().getUsed();
-      if (memoryPoolMXBean.getType() == MemoryType.HEAP) {
-        totalHeap += peakUsed;
-      } else if (memoryPoolMXBean.getType() == MemoryType.NON_HEAP) {
-        totalNonHeap += peakUsed;
+    long[] stats = new long[4];
+
+    if (VmSettings.MEMORY_TRACING) {
+      for (MemoryPoolMXBean memoryPoolMXBean : pools) {
+        long peakUsed = memoryPoolMXBean.getPeakUsage().getUsed();
+        if (memoryPoolMXBean.getType() == MemoryType.HEAP) {
+          totalHeap += peakUsed;
+        } else if (memoryPoolMXBean.getType() == MemoryType.NON_HEAP) {
+          totalNonHeap += peakUsed;
+        }
       }
+      for (GarbageCollectorMXBean garbageCollectorMXBean : ManagementFactory.getGarbageCollectorMXBeans()) {
+        gcTime += garbageCollectorMXBean.getCollectionTime();
+      }
+
+      stats[0] = totalHeap;
+      stats[1] = totalNonHeap;
+      stats[2] = collectedMemory;
+      stats[3] = gcTime;
     }
-    for (GarbageCollectorMXBean garbageCollectorMXBean : ManagementFactory.getGarbageCollectorMXBeans()) {
-      gcTime += garbageCollectorMXBean.getCollectionTime();
-    }
-    Output.println("[Memstat] Heap: " + totalHeap + "B\tNonHeap: " + totalNonHeap
-        + "B\tCollected: " + collectedMemory + "B\tGC-Time: " + gcTime + "ms");
+
+    return stats;
   }
 
   @TruffleBoundary
@@ -240,7 +248,7 @@ public class TracingBackend {
   }
 
   public static final void forceSwapBuffers() {
-    assert VmSettings.ACTOR_TRACING
+    assert VmSettings.UNIFORM_TRACING
         || (VmSettings.TRUFFLE_DEBUGGER_ENABLED);
     TracingActivityThread[] result;
     synchronized (tracingThreads) {
@@ -434,7 +442,7 @@ public class TracingBackend {
             StringWrapper sw = (StringWrapper) oo;
             byte[] bytes = sw.s.getBytes();
             byte[] header =
-                ActorExecutionTrace.getExtDataHeader(sw.actorId, sw.dataId, bytes.length);
+                UniformExecutionTrace.getExtDataHeader(sw.actorId, sw.dataId, bytes.length);
 
             if (edfos != null) {
               edfos.getChannel().write(ByteBuffer.wrap(header));
@@ -509,7 +517,7 @@ public class TracingBackend {
       }
 
       byte[] header =
-          ActorExecutionTrace.getExtDataHeader(aw.actorId, aw.dataId, numBytes);
+          UniformExecutionTrace.getExtDataHeader(aw.actorId, aw.dataId, numBytes);
 
       if (edfos != null) {
         edfos.getChannel().write(ByteBuffer.wrap(header));

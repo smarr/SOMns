@@ -4,7 +4,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.Node;
 
 import som.vm.VmSettings;
-import tools.replay.actors.ActorExecutionTrace.ActorTraceBuffer;
+import tools.replay.actors.UniformExecutionTrace.UniformTraceBuffer;
 
 
 public abstract class RecordIdNode extends Node {
@@ -13,7 +13,7 @@ public abstract class RecordIdNode extends Node {
   private static final int THREE_BYTE_LEN = 3;
   private static final int INT_LEN        = 4;
 
-  public abstract int execute(ActorTraceBuffer buffer, int idx, int id);
+  public abstract int execute(UniformTraceBuffer buffer, int idx, int id);
 
   protected static boolean smallIds() {
     return VmSettings.TRACE_SMALL_IDS;
@@ -32,27 +32,27 @@ public abstract class RecordIdNode extends Node {
   }
 
   @Specialization(guards = {"smallIds()", "byteId(id)"})
-  public int traceByteId(final ActorTraceBuffer buffer, final int idx, final int id) {
+  public int traceByteId(final UniformTraceBuffer buffer, final int idx, final int id) {
     buffer.putByteAt(idx, (byte) id);
     return BYTE_LEN;
   }
 
   @Specialization(guards = {"smallIds()", "shortId(id)"},
       replaces = "traceByteId")
-  public int traceShortId(final ActorTraceBuffer buffer, final int idx, final int id) {
+  public int traceShortId(final UniformTraceBuffer buffer, final int idx, final int id) {
     buffer.putShortAt(idx, (short) id);
     return SHORT_LEN;
   }
 
   @Specialization(guards = {"smallIds()", "threeByteId(id)"},
       replaces = {"traceShortId", "traceByteId"})
-  public int traceThreeByteId(final ActorTraceBuffer buffer, final int idx, final int id) {
+  public int traceThreeByteId(final UniformTraceBuffer buffer, final int idx, final int id) {
     buffer.putByteShortAt(idx, (byte) (id >> 16), (short) id);
     return THREE_BYTE_LEN;
   }
 
   @Specialization(replaces = {"traceShortId", "traceByteId", "traceThreeByteId"})
-  public int traceStandardId(final ActorTraceBuffer buffer, final int idx, final int id) {
+  public int traceStandardId(final UniformTraceBuffer buffer, final int idx, final int id) {
     buffer.putIntAt(idx, id);
     return INT_LEN;
   }

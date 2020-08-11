@@ -77,6 +77,8 @@ tools.add_argument('-si', '--si-candidates', help='Identify candidates for super
                     dest='si_candidates', action='store_true', default=False)
 tools.add_argument('-at', '--actor-tracing', help='enable tracing of actor operations',
                     dest='actor_tracing', action='store_true', default=False)
+tools.add_argument('-art', '--actor-receiver-tracing', help='enable tracing of actor operations on the receiver side',
+                    dest='actor_receiver_tracing', action='store_true', default=False)
 tools.add_argument('-sid', '--small-ids', help='use small id optimization to reduce trace size',
                     dest='small_ids', action='store_true', default=False)
 tools.add_argument('-mt', '--memory-tracing', help='enable tracing of memory usage and GC',
@@ -359,6 +361,8 @@ if args.vmdebug:
 
 if args.actor_tracing:
     flags += ['-Dsom.actorTracing=true']
+if args.actor_receiver_tracing:
+    flags += ['-Dsom.actorReceiverTracing=true']
 if args.kompos_tracing:
     flags += ['-Dsom.komposTracing=true']
 if args.small_ids:

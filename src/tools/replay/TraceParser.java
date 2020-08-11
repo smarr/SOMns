@@ -10,23 +10,13 @@ import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.util.HashMap;
 import java.util.LinkedList;
-import java.util.Queue;
 
 import som.Output;
 import som.interpreter.actors.EventualMessage;
-import som.vm.Activity;
 import som.vm.VmSettings;
-import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.ReplayActor;
-import tools.replay.ReplayData.ActorNode;
 import tools.replay.ReplayData.EntityNode;
 import tools.replay.ReplayData.Subtrace;
-import tools.replay.ReplayRecord.ChannelReadRecord;
-import tools.replay.ReplayRecord.ChannelWriteRecord;
-import tools.replay.ReplayRecord.ExternalMessageRecord;
-import tools.replay.ReplayRecord.ExternalPromiseMessageRecord;
-import tools.replay.ReplayRecord.MessageRecord;
-import tools.replay.ReplayRecord.PromiseMessageRecord;
 import tools.replay.nodes.RecordEventNodes;
 
 
@@ -107,15 +97,10 @@ public final class TraceParser implements Closeable {
     return new String(bb.array());
   }
 
-  public LinkedList<MessageRecord> getExpectedMessages(final long replayId) {
-    ActorNode actor = (ActorNode) entities.get(replayId);
-    assert actor != null : "Missing expected Messages for Actor: ";
-    return actor.getExpectedMessages();
-  }
-
-  public Queue<ReplayRecord> getReplayEventsForEntity(final long replayId) {
+  public LinkedList<ReplayRecord> getReplayEventsForEntity(final long replayId) {
     EntityNode entity = entities.get(replayId);
-    assert !entity.retrieved;
+    assert entity != null : "No Data for Activity " + replayId;
+    assert !entity.retrieved : "Activity " + replayId + " was already retrieved";
     entity.retrieved = true;
     assert entity != null : "Missing Entity: " + replayId;
     return entity.getReplayEvents();
@@ -133,37 +118,29 @@ public final class TraceParser implements Closeable {
     return entity.subtraces.size();
   }
 
-  /**
-   * Determines the id a newly created entity should have according to the creating entity.
-   */
-  public long getReplayId() {
-    if (VmSettings.REPLAY && Thread.currentThread() instanceof TracingActivityThread) {
-      TracingActivityThread t = (TracingActivityThread) Thread.currentThread();
-
-      Activity parent = t.getActivity();
-      long parentId = parent.getId();
-      int childNo = parent.addChild();
-
-      assert entities.containsKey(parentId) : "Parent doesn't exist";
-      return entities.get(parentId).getChild(childNo).entityId;
-    }
-
-    return 0;
-  }
-
   private static TraceRecord[] createParseTable() {
-    TraceRecord[] result = new TraceRecord[16];
+    TraceRecord[] result = new TraceRecord[22];
 
-    result[TraceRecord.ACTOR_CREATION.value] = TraceRecord.ACTOR_CREATION;
-    result[TraceRecord.ACTOR_CONTEXT.value] = TraceRecord.ACTOR_CONTEXT;
+    result[TraceRecord.ACTIVITY_CREATION.value] = TraceRecord.ACTIVITY_CREATION;
+    result[TraceRecord.ACTIVITY_CONTEXT.value] = TraceRecord.ACTIVITY_CONTEXT;
     result[TraceRecord.MESSAGE.value] = TraceRecord.MESSAGE;
     result[TraceRecord.PROMISE_MESSAGE.value] = TraceRecord.PROMISE_MESSAGE;
     result[TraceRecord.SYSTEM_CALL.value] = TraceRecord.SYSTEM_CALL;
-    result[TraceRecord.CHANNEL_CREATION.value] = TraceRecord.CHANNEL_CREATION;
-    result[TraceRecord.PROCESS_CONTEXT.value] = TraceRecord.PROCESS_CONTEXT;
     result[TraceRecord.CHANNEL_READ.value] = TraceRecord.CHANNEL_READ;
     result[TraceRecord.CHANNEL_WRITE.value] = TraceRecord.CHANNEL_WRITE;
-    result[TraceRecord.PROCESS_CREATION.value] = TraceRecord.PROCESS_CREATION;
+
+    result[TraceRecord.LOCK_ISLOCKED.value] = TraceRecord.LOCK_ISLOCKED;
+    result[TraceRecord.CONDITION_TIMEOUT.value] =
+        TraceRecord.CONDITION_TIMEOUT;
+
+    result[TraceRecord.CHANNEL_READ.value] = TraceRecord.CHANNEL_READ;
+    result[TraceRecord.CHANNEL_WRITE.value] = TraceRecord.CHANNEL_WRITE;
+    result[TraceRecord.LOCK_LOCK.value] = TraceRecord.LOCK_LOCK;
+    result[TraceRecord.CONDITION_WAKEUP.value] = TraceRecord.CONDITION_WAKEUP;
+    result[TraceRecord.PROMISE_RESOLUTION.value] = TraceRecord.PROMISE_RESOLUTION;
+    result[TraceRecord.PROMISE_CHAINED.value] = TraceRecord.PROMISE_CHAINED;
+    result[TraceRecord.PROMISE_RESOLUTION_END.value] = TraceRecord.PROMISE_RESOLUTION_END;
+    result[TraceRecord.TRANSACTION_COMMIT.value] = TraceRecord.TRANSACTION_COMMIT;
 
     return result;
   }
@@ -172,18 +149,19 @@ public final class TraceParser implements Closeable {
     int        ordering;     // only used during scanning!
     EntityNode currentEntity;
     boolean    once;
-    boolean    readMainActor;
 
     Subtrace entityLocation;
 
-    final long startTime      = System.currentTimeMillis();
-    long       parsedMessages = 0;
-    long       parsedEntities = 0;
+    final long startTime = System.currentTimeMillis();
+    long[]     metrics   = new long[parseTable.length];
 
     EventParseContext(final EntityNode context) {
       this.currentEntity = context;
       this.once = true;
-      this.readMainActor = false;
+    }
+
+    public long getMetric(final TraceRecord tr) {
+      return metrics[tr.value];
     }
   }
 
@@ -214,7 +192,7 @@ public final class TraceParser implements Closeable {
 
       while ((!readAll && nextReadPosition < traceChannel.size()) || b.hasRemaining()) {
         if (!readAll
-            && b.remaining() < RecordEventNodes.THREE_EVENT_SIZE /* longest possible event */
+            && b.remaining() < (1 + Long.BYTES * 3)
             && nextReadPosition < traceChannel.size()) {
           int remaining = b.remaining();
           startPosition += b.position();
@@ -237,8 +215,9 @@ public final class TraceParser implements Closeable {
 
     if (scanning) {
       long end = System.currentTimeMillis();
-      Output.println("Trace with " + ctx.parsedMessages + " Messages and " + ctx.parsedEntities
-          + " Actors sucessfully scanned in " + (end - ctx.startTime) + "ms !");
+      Output.println("Trace with " + ctx.getMetric(TraceRecord.MESSAGE) + " Messages and "
+          + ctx.getMetric(TraceRecord.ACTIVITY_CREATION)
+          + " Activities sucessfully scanned in " + (end - ctx.startTime) + "ms !");
     }
   }
 
@@ -251,50 +230,23 @@ public final class TraceParser implements Closeable {
 
   private boolean readTrace(final boolean first, final boolean scanning, final ByteBuffer b,
       final EventParseContext ctx, final int startPosition, final int nextReadPosition) {
-    long sender = 0;
-    long resolver = 0;
-    long edat = 0;
-    short method = 0;
-    int dataId = 0;
 
     final int start = b.position();
     final byte type = b.get();
-    final int numbytes = Long.BYTES;
-    boolean external = (type & TraceRecord.EXTERNAL_BIT) != 0;
 
-    TraceRecord recordType = parseTable[type & (TraceRecord.EXTERNAL_BIT - 1)];
+    TraceRecord recordType = parseTable[type];
 
-    if (!scanning & first) {
-      assert recordType == TraceRecord.ACTOR_CONTEXT
-          || recordType == TraceRecord.PROCESS_CONTEXT;
+    if (!scanning && first) {
+      assert recordType == TraceRecord.ACTIVITY_CONTEXT;
     }
 
     switch (recordType) {
-      case ACTOR_CREATION:
-      case CHANNEL_CREATION:
-      case PROCESS_CREATION:
-        long newEntityId = getId(b, numbytes);
-
-        if (scanning) {
-          if (newEntityId == 0) {
-            assert !ctx.readMainActor : "There should be only one main actor.";
-            ctx.readMainActor = true;
-          }
-
-          EntityNode newEntity = getOrCreateEntityEntry(recordType, newEntityId);
-          newEntity.ordering = ctx.ordering;
-          ctx.currentEntity.addChild(newEntity);
-          ctx.parsedEntities++;
-        }
-        assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
-        break;
-
-      case ACTOR_CONTEXT:
-      case PROCESS_CONTEXT:
+      case ACTIVITY_CONTEXT:
         if (scanning) {
           if (ctx.currentEntity != null) {
             ctx.entityLocation.length = startPosition + start - ctx.entityLocation.startOffset;
           }
+          ctx.metrics[type]++;
           ctx.ordering = Short.toUnsignedInt(b.getShort());
           long currentEntityId = getId(b, Long.BYTES);
           ctx.currentEntity = getOrCreateEntityEntry(recordType, currentEntityId);
@@ -315,67 +267,37 @@ public final class TraceParser implements Closeable {
             return true;
           }
         }
-
-        break;
-
-      case MESSAGE:
-        ctx.parsedMessages++;
-        sender = getId(b, numbytes);
-
-        if (external) {
-          edat = b.getLong();
-          if (!scanning) {
-            method = (short) (edat >> 32);
-            dataId = (int) edat;
-            ((ActorNode) ctx.currentEntity).addMessageRecord(
-                new ExternalMessageRecord(sender, method, dataId));
-          }
-          assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
-          return false;
-        }
-
-        if (!scanning) {
-          ((ActorNode) ctx.currentEntity).addMessageRecord(new MessageRecord(sender));
-        }
-        assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
-        break;
-      case PROMISE_MESSAGE:
-        ctx.parsedMessages++;
-        sender = getId(b, numbytes);
-        resolver = getId(b, numbytes);
-
-        if (external) {
-          edat = b.getLong();
-          method = (short) (edat >> 32);
-          dataId = (int) edat;
-          if (!scanning) {
-            ((ActorNode) ctx.currentEntity).addMessageRecord(
-                new ExternalPromiseMessageRecord(sender, resolver, method, dataId));
-          }
-          assert b.position() == start + RecordEventNodes.THREE_EVENT_SIZE;
-          return false;
-        }
-        if (!scanning) {
-          ((ActorNode) ctx.currentEntity).addMessageRecord(
-              new PromiseMessageRecord(sender, resolver));
-        }
-        assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
-
         break;
       case SYSTEM_CALL:
-        dataId = b.getInt();
+        if (scanning) {
+          ctx.metrics[type]++;
+        }
+        b.getInt();
         break;
+
+      case CONDITION_TIMEOUT:
+      case LOCK_ISLOCKED:
+      case PROMISE_MESSAGE:
+      case PROMISE_RESOLUTION:
+      case PROMISE_RESOLUTION_END:
+      case PROMISE_CHAINED:
+      case MESSAGE:
       case CHANNEL_READ:
-        long channelRId = b.getLong();
-        long nread = b.getLong();
-        ctx.currentEntity.addReplayEvent(new ChannelReadRecord(channelRId, nread));
-        assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
-        break;
       case CHANNEL_WRITE:
-        long channelWId = b.getLong();
-        long nwrite = b.getLong();
-        ctx.currentEntity.addReplayEvent(new ChannelWriteRecord(channelWId, nwrite));
-        assert b.position() == start + RecordEventNodes.TWO_EVENT_SIZE;
+      case LOCK_LOCK:
+      case CONDITION_WAKEUP:
+      case TRANSACTION_COMMIT:
+      case ACTIVITY_CREATION:
+        long eventData = b.getLong();
+
+        if (!scanning) {
+          ctx.currentEntity.addReplayEvent(
+              new ReplayRecord(eventData, recordType));
+
+        } else {
+          ctx.metrics[type]++;
+        }
+        assert b.position() == start + RecordEventNodes.ONE_EVENT_SIZE;
         break;
       default:
         assert false;
@@ -389,16 +311,7 @@ public final class TraceParser implements Closeable {
     if (entities.containsKey(entityId)) {
       return entities.get(entityId);
     } else {
-      EntityNode newNode = null;
-      switch (type) {
-        case ACTOR_CONTEXT:
-        case ACTOR_CREATION:
-          newNode = new ActorNode(entityId);
-          break;
-        default:
-          newNode = new EntityNode(entityId);
-      }
-
+      EntityNode newNode = new EntityNode(entityId);
       entities.put(entityId, newNode);
       return newNode;
     }

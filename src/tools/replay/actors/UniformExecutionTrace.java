@@ -12,7 +12,7 @@ import tools.replay.TraceRecord;
 import tools.replay.nodes.TraceContextNode;
 
 
-public class ActorExecutionTrace {
+public class UniformExecutionTrace {
   // shifts
   public static final int SmallIdShift = 6;
 
@@ -25,17 +25,17 @@ public class ActorExecutionTrace {
   public static void recordActivityContext(final Activity activity,
       final TraceContextNode tracer) {
     TracingActivityThread t = getThread();
-    ((ActorTraceBuffer) t.getBuffer()).recordActivityContext(activity, tracer);
+    ((UniformTraceBuffer) t.getBuffer()).recordActivityContext(activity, tracer);
   }
 
   public static void recordSystemCall(final int dataId, final TraceContextNode tracer) {
     TracingActivityThread t = getThread();
-    ((ActorTraceBuffer) t.getBuffer()).recordSystemCall(dataId, tracer);
+    ((UniformTraceBuffer) t.getBuffer()).recordSystemCall(dataId, tracer);
   }
 
   public static void recordSystemCall(final int dataId, final TraceContextNode tracer,
       final TracingActivityThread t) {
-    ((ActorTraceBuffer) t.getBuffer()).recordSystemCall(dataId, tracer);
+    ((UniformTraceBuffer) t.getBuffer()).recordSystemCall(dataId, tracer);
   }
 
   public static void intSystemCall(final int i, final TraceContextNode tracer) {
@@ -104,7 +104,7 @@ public class ActorExecutionTrace {
     return buffer;
   }
 
-  public static class ActorTraceBuffer extends TraceBuffer {
+  public static class UniformTraceBuffer extends TraceBuffer {
     Activity currentActivity;
 
     @Override
