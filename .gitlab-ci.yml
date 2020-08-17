@@ -53,7 +53,7 @@ benchmark_savina_job:
   allow_failure: true
   script:
     - ant compile
-    - rebench --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-Savina
+    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-Savina
 
 benchmark_job:
   stage: benchmark
@@ -61,7 +61,7 @@ benchmark_job:
   allow_failure: true
   script:
     - ant compile
-    - rebench --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns
+    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns
 
 benchmark_job_others:
   stage: benchmark
@@ -69,8 +69,9 @@ benchmark_job_others:
   allow_failure: true
   script:
     - ant compile
-    - rebench --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-concurrency-models
-    - rebench --experiment="CI Benchmark Run Pipeline ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-interp
+    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-concurrency-models
+    - rebench --experiment="CI ID $CI_PIPELINE_ID" --branch="$CI_COMMIT_REF_NAME" -c codespeed.conf SOMns-interp
+    - rebench --experiment="CI ID $CI_PIPELINE_ID" --report-completion codespeed.conf
 
 benchmark_nightly_job:
   stage: benchmark
