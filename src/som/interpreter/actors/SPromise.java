@@ -23,7 +23,6 @@ import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
 import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActivityThread;
-import tools.concurrency.TracingActors.TracingActor;
 import tools.debugger.entities.PassiveEntityType;
 import tools.dym.DynamicMetrics;
 import tools.replay.PassiveEntityWithEvents;
@@ -203,9 +202,6 @@ public class SPromise extends SObjectWithClass {
     if (isCompleted()) {
       remote.value = value;
       remote.resolutionState = resolutionState;
-      if (VmSettings.RECEIVER_SIDE_TRACING || VmSettings.RECEIVER_SIDE_REPLAY) {
-        ((STracingPromise) remote).resolvingActor = ((STracingPromise) this).resolvingActor;
-      }
     } else {
 
       if (VmSettings.SENDER_SIDE_TRACING) {
@@ -377,18 +373,11 @@ public class SPromise extends SObjectWithClass {
       version = 0;
     }
 
-    protected int  version;
-    protected long resolvingActor;
+    protected int version;
 
     @Override
     public int getNextEventNumber() {
       return version;
-    }
-
-    public long getResolvingActor() {
-      assert VmSettings.RECEIVER_SIDE_TRACING || VmSettings.RECEIVER_SIDE_REPLAY;
-      assert isCompleted();
-      return resolvingActor;
     }
   }
 
@@ -826,10 +815,7 @@ public class SPromise extends SObjectWithClass {
         final RecordOneEvent tracePromiseResolutionEnd2) {
       assert !(result instanceof SPromise);
 
-      if (VmSettings.RECEIVER_SIDE_TRACING || VmSettings.RECEIVER_SIDE_REPLAY) {
-        ((STracingPromise) p).resolvingActor =
-            ((TracingActor) EventualMessage.getActorCurrentMessageIsExecutionOn()).getId();
-      } else if (VmSettings.KOMPOS_TRACING) {
+      if (VmSettings.KOMPOS_TRACING) {
         if (type == Resolution.SUCCESSFUL && p.resolutionState != Resolution.CHAINED) {
           KomposTrace.promiseResolution(p.getPromiseId(), result);
         } else if (type == Resolution.ERRONEOUS) {

@@ -16,7 +16,6 @@ import som.VM;
 import som.interpreter.actors.Actor;
 import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
-import som.interpreter.actors.SPromise.STracingPromise;
 import som.vm.VmSettings;
 import tools.debugger.WebDebugger;
 import tools.replay.PassiveEntityWithEvents;
@@ -34,6 +33,7 @@ public class TracingActors {
     protected SnapshotRecord snapshotRecord;
     private int              traceBufferId;
     protected int            version;
+    private long             nextPMsgNumber;
 
     /**
      * Flag that indicates if a step-to-next-turn action has been made in the previous message.
@@ -141,6 +141,15 @@ public class TracingActors {
      */
     public DeserializationBuffer getDeserializationBuffer() {
       return null;
+    }
+
+    /**
+     * Only to be used by the thread executing this actor
+     *
+     * @return
+     */
+    public long getNextPromiseMsgNumber() {
+      return nextPMsgNumber++;
     }
   }
 
@@ -306,7 +315,7 @@ public class TracingActors {
 
       // handle promise messages
       if (msg instanceof PromiseMessage
-          && (((STracingPromise) ((PromiseMessage) msg).getPromise()).getResolvingActor() != expected.getResolver())) {
+          && msg.getMessageId() != expected.getMessageId()) {
         return false;
       }
 
@@ -517,7 +526,7 @@ public class TracingActors {
         return sender;
       }
 
-      public long getResolver() {
+      public long getMessageId() {
         return resolver;
       }
 
