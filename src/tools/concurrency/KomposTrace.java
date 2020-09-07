@@ -14,12 +14,7 @@ import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.debugger.PrimitiveCallOrigin;
-import tools.debugger.entities.ActivityType;
-import tools.debugger.entities.DynamicScopeType;
-import tools.debugger.entities.Implementation;
-import tools.debugger.entities.PassiveEntityType;
-import tools.debugger.entities.ReceiveOp;
-import tools.debugger.entities.SendOp;
+import tools.debugger.entities.*;
 
 
 public class KomposTrace {
@@ -144,6 +139,11 @@ public class KomposTrace {
 
   public static void recordSuspendedActivityByDebugger(TracingActivityThread t) {
     ((KomposTraceBuffer) t.getBuffer()).recordPausedActivity(t.getActivity());
+  }
+
+  public static void messageReception(long messageId) {
+    TracingActivityThread t = getThread();
+    ((KomposTraceBuffer) t.getBuffer()).recordMessageReceived(MessageReception.MESSAGE_RCV, t.getActivity(), messageId);
   }
 
   public static class KomposTraceBuffer extends TraceBuffer {
@@ -376,6 +376,17 @@ public class KomposTrace {
           put(b);
         }
       }
+
+      assert position == start + requiredSpace;
+    }
+
+    public void recordMessageReceived(MessageReception mr, final Activity current, final long messageId) {
+      int requiredSpace = mr.getSize();
+      ensureSufficientSpace(requiredSpace, current);
+
+      final int start = position;
+      put(mr.getId());
+      putLong(messageId);
 
       assert position == start + requiredSpace;
     }

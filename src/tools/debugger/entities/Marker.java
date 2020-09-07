@@ -34,4 +34,6 @@ public class Marker {
 
   public static final byte PROMISE_MSG_SEND = 22;
 
+  public static final byte ACTOR_MSG_RECEIVE     = 23;
+
 }

@@ -32,15 +32,7 @@ import tools.TraceData;
 import tools.concurrency.TracingBackend;
 import tools.debugger.WebSocketHandler.MessageHandler;
 import tools.debugger.WebSocketHandler.TraceHandler;
-import tools.debugger.entities.ActivityType;
-import tools.debugger.entities.BreakpointType;
-import tools.debugger.entities.DynamicScopeType;
-import tools.debugger.entities.EntityType;
-import tools.debugger.entities.Implementation;
-import tools.debugger.entities.PassiveEntityType;
-import tools.debugger.entities.ReceiveOp;
-import tools.debugger.entities.SendOp;
-import tools.debugger.entities.SteppingType;
+import tools.debugger.entities.*;
 import tools.debugger.frontend.Suspension;
 import tools.debugger.message.*;
 import tools.debugger.message.Message.OutgoingMessage;
@@ -351,7 +343,7 @@ public class FrontendConnector {
     send(InitializationResponse.create(EntityType.values(),
             ActivityType.values(), PassiveEntityType.values(),
             DynamicScopeType.values(), SendOp.values(), ReceiveOp.values(),
-            BreakpointType.values(), SteppingType.values(), Implementation.values()));
+            BreakpointType.values(), SteppingType.values(), Implementation.values(), MessageReception.values()));
   }
 
   private void closeAllSockets() {
