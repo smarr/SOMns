@@ -289,7 +289,8 @@ public class FrontendConnector {
 
   public void sendTracingData() {
     if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
-      TracingBackend.forceSwapBuffers();
+      this.webDebugger.getSuspendedFuture().thenRun(() ->
+         TracingBackend.forceSwapBuffers());
     }
   }
 

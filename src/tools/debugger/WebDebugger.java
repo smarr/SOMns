@@ -4,6 +4,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Instrument;
@@ -44,6 +45,8 @@ import tools.debugger.session.Breakpoints;
 public class WebDebugger extends TruffleInstrument implements SuspendedCallback {
 
   static final String ID = "web-debugger";
+
+  private CompletableFuture<Boolean> suspendedFuture;
 
   public static WebDebugger find(final TruffleLanguage.Env env) {
     InstrumentInfo instrument = env.getInstruments().get(ID);
@@ -147,8 +150,14 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     Suspension suspension = getSuspension();
     suspension.update(e);
 
+    suspendedFuture = new CompletableFuture<>();
+
     connector.sendStoppedMessage(suspension);
-    suspension.suspend();
+    suspension.suspend(suspendedFuture);
+  }
+
+  public CompletableFuture<Boolean> getSuspendedFuture() {
+    return suspendedFuture;
   }
 
   public static void log(final String str) {

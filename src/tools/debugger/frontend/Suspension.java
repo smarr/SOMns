@@ -27,6 +27,7 @@ import tools.debugger.message.VariablesRequest.FilterType;
 
 import java.util.ArrayList;
 import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.CompletableFuture;
 
 
 /**
@@ -147,12 +148,12 @@ public class Suspension {
   /**
    * Suspend the current thread, and process tasks from the front-end.
    */
-  public void suspend() {
+  public void suspend(CompletableFuture<Boolean> suspendedFuture) {
     // don't participate in safepoints while being suspended
     ObjectTransitionSafepoint.INSTANCE.unregister();
 
     try {
-      activityThread.markThreadAsSuspendedInDebugger();
+      activityThread.markThreadAsSuspendedInDebugger(suspendedFuture);
       suspendWithoutObjectSafepoints();
     } finally {
       activityThread.markThreadAsResumedFromDebugger();
