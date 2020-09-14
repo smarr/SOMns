@@ -148,7 +148,7 @@ public class Suspension {
   /**
    * Suspend the current thread, and process tasks from the front-end.
    */
-  public void suspend(CompletableFuture<Boolean> suspendedFuture) {
+  public void suspend(CompletableFuture<Long> suspendedFuture) {
     // don't participate in safepoints while being suspended
     ObjectTransitionSafepoint.INSTANCE.unregister();
 

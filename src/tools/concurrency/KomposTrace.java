@@ -16,8 +16,27 @@ import som.vmobjects.SSymbol;
 import tools.debugger.PrimitiveCallOrigin;
 import tools.debugger.entities.*;
 
+import java.util.*;
+
 
 public class KomposTrace {
+
+  private static Map<Long, List<Integer>> buffersByActor = new HashMap<>();
+
+  public static boolean missingBuffers(long actorSuspendedId) {
+    List<Integer> buffers = buffersByActor.get(actorSuspendedId);
+    Collections.sort(buffers);
+
+    for (int i = 1; i < buffers.size(); i++) {
+      int previous = buffers.get(i - 1);
+      int current = buffers.get(i);
+      if (current != (previous + 1)) {
+        return true;
+      }
+    }
+
+    return false;
+  }
 
   public static void recordMainActor(final Actor mainActor,
       final ObjectSystem objectSystem) {
@@ -243,8 +262,20 @@ public class KomposTrace {
       final int start = position;
 
       put(Implementation.IMPL_CURRENT_ACTIVITY.getId());
-      putLong(current.getId());
-      putInt(current.getNextTraceBufferId());
+      long actorId = current.getId();
+      int bufferId = current.getNextTraceBufferId();
+
+      putLong(actorId);
+      putInt(bufferId);
+
+      List<Integer> bufferList;
+      if (buffersByActor.containsKey(actorId)) {
+        bufferList = buffersByActor.get(actorId);
+      } else {
+        bufferList = new ArrayList<>();
+      }
+      bufferList.add(bufferId);
+      buffersByActor.put(actorId, bufferList);
 
       assert position == start + Implementation.IMPL_CURRENT_ACTIVITY.getSize();
     }

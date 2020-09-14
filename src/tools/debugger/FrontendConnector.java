@@ -4,10 +4,7 @@ import java.io.IOException;
 import java.net.BindException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
@@ -29,6 +26,7 @@ import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.Tagging;
 import tools.TraceData;
+import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingBackend;
 import tools.debugger.WebSocketHandler.MessageHandler;
 import tools.debugger.WebSocketHandler.TraceHandler;
@@ -76,6 +74,8 @@ public class FrontendConnector {
   private CompletableFuture<WebSocket> clientConnected;
 
   private CompletableFuture<WebSocket> messageSocketInitialized;
+
+  private List<ByteBuffer> buffers = new ArrayList<>();
 
   private final Gson       gson;
   private static final int MESSAGE_PORT   = 7977;
@@ -242,10 +242,6 @@ public class FrontendConnector {
     send(new SymbolMessage(symbolsToWrite));
   }
 
-  public void sendTracingData(final ByteBuffer buffer) {
-    traceSocket.send(buffer);
-  }
-
   public void awaitClient() {
     assert VmSettings.TRUFFLE_DEBUGGER_ENABLED;
     assert clientConnected != null;
@@ -287,17 +283,55 @@ public class FrontendConnector {
     send(StoppedMessage.create(suspension));
   }
 
-  public void sendTracingData() {
-    if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
-      this.webDebugger.getSuspendedFuture().thenRun(() ->
-         TracingBackend.forceSwapBuffers());
-    }
-  }
+//  public void sendTracingData() {
+//    if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
+//      this.webDebugger.getSuspendedFuture().thenRun(() ->
+//         TracingBackend.forceSwapBuffers());
+//    }
+//  }
+//
+//  public void sendTracingData(final ByteBuffer buffer) {
+//    traceSocket.send(buffer);
+//  }
 
-  public void sendProgramInfo() {
-    //when the server has really started, i.e. the client has connected, then do the send
-    messageSocketInitialized.thenRun(() -> send(ProgramInfoResponse.create(webDebugger.vm.getArguments())));
-  }
+    public void sendTracingData(final ByteBuffer buffer) {
+        System.out.println("-Add buffer");
+        if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
+            buffers.add(buffer);
+        }
+    }
+
+    private void sendAllBuffers() {
+        System.out.println("buffers--" + buffers.size());
+        for (ByteBuffer buffer : buffers) {
+            traceSocket.send(buffer);
+        }
+        //reset list
+        buffers = new ArrayList<>();
+    }
+
+    public void sendTracingData() {
+        System.out.println("-Send buffer");
+        if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
+            this.webDebugger.getSuspendedFuture().thenAccept(actorSuspendedId ->
+                    checkBuffersAndSend(actorSuspendedId));
+        }
+    }
+
+    private void checkBuffersAndSend(long actorSuspendedId) {
+        TracingBackend.forceSwapBuffers();
+        //check if there are missing buffers for the actor of the suspension
+        while (KomposTrace.missingBuffers(actorSuspendedId)) {
+            TracingBackend.forceSwapBuffers();
+        }
+
+        sendAllBuffers();
+    }
+
+    public void sendProgramInfo() {
+      //when the server has really started, i.e. the client has connected, then do the send
+      messageSocketInitialized.thenRun(() -> send(ProgramInfoResponse.create(webDebugger.vm.getArguments())));
+    }
 
   public void sendPauseActorResponse(long pausedActorId) {
     send(PauseActorResponse.create(pausedActorId));
