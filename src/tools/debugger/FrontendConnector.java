@@ -295,23 +295,12 @@ public class FrontendConnector {
 //  }
 
     public void sendTracingData(final ByteBuffer buffer) {
-        System.out.println("-Add buffer");
         if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
             buffers.add(buffer);
         }
     }
 
-    private void sendAllBuffers() {
-        System.out.println("buffers--" + buffers.size());
-        for (ByteBuffer buffer : buffers) {
-            traceSocket.send(buffer);
-        }
-        //reset list
-        buffers = new ArrayList<>();
-    }
-
     public void sendTracingData() {
-        System.out.println("-Send buffer");
         if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
             this.webDebugger.getSuspendedFuture().thenAccept(actorSuspendedId ->
                     checkBuffersAndSend(actorSuspendedId));
@@ -326,6 +315,15 @@ public class FrontendConnector {
         }
 
         sendAllBuffers();
+    }
+
+    private void sendAllBuffers() {
+      for (ByteBuffer buffer : buffers) {
+        traceSocket.send(buffer);
+      }
+      log("[DEBUGGER] Trace buffers sent: "+buffers.size());
+      //reset list
+      buffers = new ArrayList<>();
     }
 
     public void sendProgramInfo() {
