@@ -321,7 +321,7 @@ public class FrontendConnector {
       for (ByteBuffer buffer : buffers) {
         traceSocket.send(buffer);
       }
-      log("[DEBUGGER] Trace buffers sent: "+buffers.size());
+//      log("[DEBUGGER] Trace buffers sent: "+buffers.size());
       //reset list
       buffers = new ArrayList<>();
     }
