@@ -296,32 +296,40 @@ public class FrontendConnector {
 
     public void sendTracingData(final ByteBuffer buffer) {
         if (VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING) {
-            buffers.add(buffer);
+          buffers.add(buffer);
+
+          if (this.webDebugger.getSuspendedFuture() != null && this.webDebugger.getSuspendedFuture().isDone()) {
+            //the suspension has been done and there are more actors running, then send new buffers
+            sendAllBuffers();
+          }
         }
     }
 
     public void sendTracingData() {
         if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
             this.webDebugger.getSuspendedFuture().thenAccept(actorSuspendedId ->
-                    checkBuffersAndSend(actorSuspendedId));
+                    swapBuffersAndSend(actorSuspendedId));
         }
     }
 
-    private void checkBuffersAndSend(long actorSuspendedId) {
+    private void swapBuffersAndSend(long actorSuspendedId) {
         TracingBackend.forceSwapBuffers();
         //check if there are missing buffers for the actor of the suspension
         while (KomposTrace.missingBuffers(actorSuspendedId)) {
             TracingBackend.forceSwapBuffers();
         }
 
-        sendAllBuffers();
+      sendAllBuffers();
     }
 
     private void sendAllBuffers() {
       for (ByteBuffer buffer : buffers) {
-        traceSocket.send(buffer);
+        if (traceSocket.isOpen()) {
+          traceSocket.send(buffer);
+//          log("[DEBUGGER] Trace buffers sent: "+buffer);
+        }
       }
-//      log("[DEBUGGER] Trace buffers sent: "+buffers.size());
+
       //reset list
       buffers = new ArrayList<>();
     }
