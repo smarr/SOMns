@@ -160,8 +160,7 @@ public class KomposTrace {
     ((KomposTraceBuffer) t.getBuffer()).recordPausedActivity(t.getActivity());
   }
 
-  public static void messageReception(long messageId) {
-    TracingActivityThread t = getThread();
+  public static void messageReception(long messageId, TracingActivityThread t) {
     ((KomposTraceBuffer) t.getBuffer()).recordMessageReceived(MessageReception.MESSAGE_RCV, t.getActivity(), messageId);
   }
 

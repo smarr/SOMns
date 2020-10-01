@@ -12,6 +12,7 @@ import som.interpreter.actors.EventualMessage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.STracingPromise;
 import som.vm.VmSettings;
+import tools.ObjectBuffer;
 import tools.debugger.WebDebugger;
 import tools.debugger.frontend.Suspension;
 import tools.replay.PassiveEntityWithEvents;
@@ -58,6 +59,20 @@ public class TracingActors {
     protected TracingActor(final VM vm, final long id) {
       super(vm);
       this.activityId = id;
+    }
+
+    public static void saveMessagesReceived(Actor actor, EventualMessage firstMessage, ObjectBuffer<EventualMessage> mailboxExtension) {
+      TracingActivityThread tracingActivityThread = TracingBackend.getTracingActivityThread(actor.getId());
+      if (tracingActivityThread != null) {
+        KomposTrace.messageReception(firstMessage.getMessageId(), tracingActivityThread);
+        if (mailboxExtension!= null && mailboxExtension.size() > 1) {
+          for (EventualMessage msgInMailbox : mailboxExtension) {
+            KomposTrace.messageReception(msgInMailbox.getMessageId(), tracingActivityThread);
+          }
+        }
+        //forceSwap to ensure that message information is sent, although the actor is paused
+        TracingBackend.forceSwapBuffers();
+      }
     }
 
     public final int getActorId() {
