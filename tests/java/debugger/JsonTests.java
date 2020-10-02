@@ -17,15 +17,7 @@ import com.google.gson.Gson;
 import bd.source.FullSourceCoordinate;
 import bd.source.SourceCoordinate;
 import tools.debugger.RuntimeReflectionRegistration;
-import tools.debugger.entities.ActivityType;
-import tools.debugger.entities.BreakpointType;
-import tools.debugger.entities.DynamicScopeType;
-import tools.debugger.entities.EntityType;
-import tools.debugger.entities.Implementation;
-import tools.debugger.entities.PassiveEntityType;
-import tools.debugger.entities.ReceiveOp;
-import tools.debugger.entities.SendOp;
-import tools.debugger.entities.SteppingType;
+import tools.debugger.entities.*;
 import tools.debugger.message.InitializationResponse;
 import tools.debugger.message.InitializeConnection;
 import tools.debugger.message.Message.IncommingMessage;
@@ -192,7 +184,7 @@ public class JsonTests {
     String result = gson.toJson(InitializationResponse.create(
         EntityType.values(), ActivityType.values(), PassiveEntityType.values(),
         DynamicScopeType.values(), SendOp.values(), ReceiveOp.values(),
-        BreakpointType.values(), SteppingType.values(), Implementation.values()),
+        BreakpointType.values(), SteppingType.values(), Implementation.values(), MessageReception.values()),
         OutgoingMessage.class);
     // This test is only doing a very basic sanity check
     assertTrue(1000 < result.length());
