@@ -46,8 +46,6 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
 
   static final String ID = "web-debugger";
 
-  private CompletableFuture<Long> suspendedFuture;
-
   public static WebDebugger find(final TruffleLanguage.Env env) {
     InstrumentInfo instrument = env.getInstruments().get(ID);
     if (instrument == null) {
@@ -150,14 +148,8 @@ public class WebDebugger extends TruffleInstrument implements SuspendedCallback 
     Suspension suspension = getSuspension();
     suspension.update(e);
 
-    suspendedFuture = new CompletableFuture<>();
-
     connector.sendStoppedMessage(suspension);
-    suspension.suspend(suspendedFuture);
-  }
-
-  public CompletableFuture<Long> getSuspendedFuture() {
-    return suspendedFuture;
+    suspension.suspend();
   }
 
   public static void log(final String str) {
