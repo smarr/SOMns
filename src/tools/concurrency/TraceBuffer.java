@@ -92,6 +92,13 @@ public abstract class TraceBuffer {
   }
 
   public final void returnBuffer(final byte[] nextBuffer) {
+    //do not swap if buffer is empty
+    if (VmSettings.KOMPOS_TRACING) {
+      if (isEmpty()){
+        return;
+      }
+    }
+
     if (VmSettings.SNAPSHOTS_ENABLED) {
       TracingBackend.returnBuffer(buffer, position,
           ActorProcessingThread.currentThread().getSnapshotId());
