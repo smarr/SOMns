@@ -61,17 +61,10 @@ public class TracingActors {
       this.activityId = id;
     }
 
-    public static void saveMessagesReceived(Actor actor, EventualMessage firstMessage, ObjectBuffer<EventualMessage> mailboxExtension) {
+    public static void saveMessageReceived(Actor actor, EventualMessage message) {
       TracingActivityThread tracingActivityThread = TracingBackend.getTracingActivityThread(actor.getId());
       if (tracingActivityThread != null) {
-        KomposTrace.messageReception(firstMessage.getMessageId(), tracingActivityThread);
-        if (mailboxExtension!= null && mailboxExtension.size() > 1) {
-          for (EventualMessage msgInMailbox : mailboxExtension) {
-            if (msgInMailbox.getMessageId() != firstMessage.getMessageId()) { //TODO check why the same message can be added more than once in mailbox
-              KomposTrace.messageReception(msgInMailbox.getMessageId(), tracingActivityThread);
-            }
-          }
-        }
+        KomposTrace.messageReception(message.getMessageId(), tracingActivityThread);
       }
     }
 
