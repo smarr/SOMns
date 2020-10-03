@@ -67,7 +67,9 @@ public class TracingActors {
         KomposTrace.messageReception(firstMessage.getMessageId(), tracingActivityThread);
         if (mailboxExtension!= null && mailboxExtension.size() > 1) {
           for (EventualMessage msgInMailbox : mailboxExtension) {
-            KomposTrace.messageReception(msgInMailbox.getMessageId(), tracingActivityThread);
+            if (msgInMailbox.getMessageId() != firstMessage.getMessageId()) { //TODO check why the same message can be added more than once in mailbox
+              KomposTrace.messageReception(msgInMailbox.getMessageId(), tracingActivityThread);
+            }
           }
         }
       }
