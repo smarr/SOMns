@@ -290,7 +290,7 @@ public class FrontendConnector {
   }
 
   public void sendTracingData(final ByteBuffer buffer) {
-    log("[DEBUGGER] Trace buffers sent: "+buffer);
+//    log("[DEBUGGER] Trace buffers sent: "+buffer);
     traceSocket.send(buffer);
   }
 
