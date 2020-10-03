@@ -148,7 +148,8 @@ public class Actor implements Activity {
       appendToMailbox(msg);
     }
     System.out.println("message received "+msg.getMessageId() + " actor "+getId());
-    //save messages appended in mailbox in the trace when they are received
+    //save messages in the trace when they are received
+    //here we only save messages if the actor is suspended in debugger
     if (VmSettings.KOMPOS_TRACING) {
       TracingActor.saveMessageReceived(this, msg);
     }
@@ -261,6 +262,16 @@ public class Actor implements Activity {
     protected void processCurrentMessages(final ActorProcessingThread currentThread,
         final WebDebugger dbg) {
       assert size > 0;
+      //save messages appended in mailbox in the trace before execute them
+      if (VmSettings.KOMPOS_TRACING) {
+        KomposTrace.messageReception(firstMessage.getMessageId(), currentThread);
+        if (size > 1) {
+          for (EventualMessage msg : mailboxExtension) {
+            KomposTrace.messageReception(msg.getMessageId(), currentThread);
+          }
+        }
+      }
+
 
       if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS) {
         SnapshotBuffer sb = currentThread.getSnapshotBuffer();

@@ -63,7 +63,7 @@ public class TracingActors {
 
     public static void saveMessageReceived(Actor actor, EventualMessage message) {
       TracingActivityThread tracingActivityThread = TracingBackend.getTracingActivityThread(actor.getId());
-      if (tracingActivityThread != null) {
+      if (tracingActivityThread != null && tracingActivityThread.suspendedInDebugger) { //only record new msg for suspended actors
         KomposTrace.messageReception(message.getMessageId(), tracingActivityThread);
       }
     }
