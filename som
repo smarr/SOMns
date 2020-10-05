@@ -230,6 +230,7 @@ else:
 
 classpath = (BASE_DIR + '/build/classes:'
            + BASE_DIR + '/libs/black-diamonds/build/classes:'
+           + BASE_DIR + '/libs/Java-WebSocket-1.5.1.jar:'
            + BASE_DIR + '/libs/somns-deps.jar:'
            + BASE_DIR + '/libs/affinity.jar:'
            + BASE_DIR + '/libs/slf4j-api.jar:'
