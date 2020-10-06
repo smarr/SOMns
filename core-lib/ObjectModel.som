@@ -1,0 +1,60 @@
+class ObjectModel usingPlatform: platform = Value (
+| private ObjectMirror = platform mirrors ObjectMirror.
+  private ClassMirror  = platform mirrors ClassMirror.
+  private Thing        = platform kernel Thing. |
+)(
+  public class Snake = ()()
+
+  private printInstanceAndSuperclassOf: classMirror = (
+    classMirror name print. ' is instance of ' print.
+    classMirror classMirror name println.
+    classMirror name print. ' is subclass of ' print.
+    classMirror superclassName println.
+  )
+
+  public main: args = (
+    | snake snakeMirror obj objMirror thing thingMirror |
+    snake := Snake new.
+    snakeMirror := (ObjectMirror reflecting: snake).
+    'snake is instance of ' print.
+    snakeMirror className println.
+
+    printInstanceAndSuperclassOf: snakeMirror classMirror.
+    printInstanceAndSuperclassOf: snakeMirror classMirror classMirror.
+    printInstanceAndSuperclassOf: snakeMirror classMirror classMirror classMirror.
+    printInstanceAndSuperclassOf: snakeMirror classMirror classMirror classMirror classMirror.
+    printInstanceAndSuperclassOf: snakeMirror classMirror classMirror classMirror classMirror classMirror.
+
+    '' println. '' println.
+    'Superclass hierarchy:' println.
+    '' println.
+
+    obj := Object new.
+    objMirror := (ObjectMirror reflecting: obj).
+    'obj is instance of ' print.
+    objMirror className println.
+
+    printInstanceAndSuperclassOf: objMirror classMirror.
+    printInstanceAndSuperclassOf: objMirror classMirror classMirror.
+    printInstanceAndSuperclassOf: objMirror classMirror classMirror classMirror.
+    printInstanceAndSuperclassOf: objMirror classMirror classMirror classMirror classMirror.
+    printInstanceAndSuperclassOf: objMirror classMirror classMirror classMirror classMirror classMirror.
+
+    '' println. '' println.
+    'In SOMns there is still Thing:' println.
+    '' println.
+
+    thing := Thing new.
+    thingMirror := (ObjectMirror reflecting: thing).
+    'thing is instance of ' print.
+    thingMirror className println.
+
+    printInstanceAndSuperclassOf: thingMirror classMirror.
+    printInstanceAndSuperclassOf: thingMirror classMirror classMirror.
+    printInstanceAndSuperclassOf: thingMirror classMirror classMirror classMirror.
+    printInstanceAndSuperclassOf: thingMirror classMirror classMirror classMirror classMirror.
+    printInstanceAndSuperclassOf: thingMirror classMirror classMirror classMirror classMirror classMirror.
+
+    ^ 0
+  )
+)

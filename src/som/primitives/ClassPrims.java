@@ -34,6 +34,7 @@ public class ClassPrims {
   }
 
   @GenerateNodeFactory
+  @Primitive(primitive = "mirrorSuperclass:")
   public abstract static class SuperClassPrim extends UnaryExpressionNode {
     @Specialization
     public final SAbstractObject doSClass(final SClass receiver) {

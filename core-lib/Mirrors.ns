@@ -28,10 +28,11 @@ class Mirrors usingVmMirror: vmMirror = Value (
     (*:TODO: Not happy with the naming of the mirror methods yet,
              they are not unambiguous, about whether they apply to the object,
              or to the object class *)
-    public name       = ( ^ vmMirror mirrorAClassesName: obj  )
+    public name       = ( ^ vmMirror mirrorClassName: obj  )
     public classObject= ( ^ vmMirror objClass: obj         )
     public classMirror= ( ^ ClassMirror reflecting: classObject )
-    public superclass = ( ^ vmMirror mirrorSuperclass: obj )
+    public superclass = ( ^ vmMirror mirrorSuperclass: classObject )
+    public superclassName = ( ^ vmMirror mirrorAClassesName: (vmMirror mirrorSuperclass: classObject) )
     public slots      = ( ^ vmMirror mirrorSlots: obj      )
 
     public classDefinition = (
