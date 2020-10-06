@@ -26,7 +26,6 @@ import som.vm.VmSettings;
 import som.vmobjects.SSymbol;
 import tools.Tagging;
 import tools.TraceData;
-import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingBackend;
 import tools.debugger.WebSocketHandler.MessageHandler;
 import tools.debugger.WebSocketHandler.TraceHandler;
@@ -74,8 +73,6 @@ public class FrontendConnector {
   private CompletableFuture<WebSocket> clientConnected;
 
   private CompletableFuture<WebSocket> messageSocketInitialized;
-
-  private List<ByteBuffer> buffers = new ArrayList<>();
 
   private final Gson       gson;
   private static final int MESSAGE_PORT   = 7977;
