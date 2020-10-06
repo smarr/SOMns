@@ -19,16 +19,6 @@
     </content>
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="BlackDiamonds" />
-    <orderEntry type="module" module-name="org.graalvm.polyglot.tck" />
-    <orderEntry type="module" module-name="com.oracle.svm.core" />
-    <orderEntry type="module" module-name="org.graalvm.polyglot" />
-    <orderEntry type="module" module-name="com.oracle.truffle.api" />
-    <orderEntry type="module" module-name="com.oracle.truffle.api.debug" />
-    <orderEntry type="module" module-name="com.oracle.truffle.api.dsl" />
-    <orderEntry type="module" module-name="com.oracle.truffle.api.instrumentation" />
-    <orderEntry type="module" module-name="com.oracle.truffle.api.profiles" />
-    <orderEntry type="module" module-name="org.graalvm.collections1" />
     <orderEntry type="module-library">
       <library>
         <CLASSES>
@@ -38,6 +28,16 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module" module-name="org.graalvm.polyglot.tck" />
+    <orderEntry type="module" module-name="com.oracle.svm.core" />
+    <orderEntry type="module" module-name="org.graalvm.polyglot" />
+    <orderEntry type="module" module-name="com.oracle.truffle.api" />
+    <orderEntry type="module" module-name="com.oracle.truffle.api.debug" />
+    <orderEntry type="module" module-name="com.oracle.truffle.api.dsl" />
+    <orderEntry type="module" module-name="com.oracle.truffle.api.instrumentation" />
+    <orderEntry type="module" module-name="com.oracle.truffle.api.profiles" />
+    <orderEntry type="module" module-name="org.graalvm.collections1" />
+    <orderEntry type="module" module-name="BlackDiamonds" />
     <orderEntry type="module-library">
       <library name="somns-deps-dev.jar">
         <CLASSES>
