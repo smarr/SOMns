@@ -23,8 +23,6 @@ public abstract class WebSocketHandler extends WebSocketServer {
   WebSocketHandler(final int port) {
     super(new InetSocketAddress(port), NUM_THREADS);
     this.connectionPort = new CompletableFuture<>();
-    setReuseAddr(true);
-    setConnectionLostTimeout(0);
   }
 
   @Override
@@ -66,6 +64,7 @@ public abstract class WebSocketHandler extends WebSocketServer {
     public MessageHandler(final int port, final FrontendConnector connector,
         final Gson gson) {
       super(port);
+      this.setReuseAddr(true);
       this.connector = connector;
       this.gson = gson;
     }
@@ -88,6 +87,7 @@ public abstract class WebSocketHandler extends WebSocketServer {
 
     public TraceHandler(final int port) {
       super(port);
+      this.setReuseAddr(true);
       connection = new CompletableFuture<>();
     }
 
