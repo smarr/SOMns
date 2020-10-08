@@ -147,6 +147,7 @@ public class Actor implements Activity {
     } else {
       appendToMailbox(msg);
     }
+    System.out.println("doSend "+msg.getMessageId() + " actor "+this.getId());
     //save messages in the trace when they are received
     //here we only save messages if the actor is suspended in debugger
     if (VmSettings.KOMPOS_TRACING) {
@@ -253,24 +254,36 @@ public class Actor implements Activity {
         KomposTrace.currentActivity(actor);
       }
 
-      while (getCurrentMessagesOrCompleteExecution()) {
-        processCurrentMessages(t, dbg);
+      try {
+        while (getCurrentMessagesOrCompleteExecution()) {
+          saveReceivedMessages(t);
+          processCurrentMessages(t, dbg);
+        }
+      } finally {
+        ObjectTransitionSafepoint.INSTANCE.unregister();
+      }
+
+      if (VmSettings.ACTOR_TRACING || VmSettings.KOMPOS_TRACING) {
+        t.swapTracingBufferIfRequestedUnsync();
+      }
+      t.currentlyExecutingActor = null;
+    }
+
+    private void saveReceivedMessages(ActorProcessingThread t) {
+      //save messages appended in mailbox in the trace before execute them
+      if (VmSettings.KOMPOS_TRACING) {
+        KomposTrace.actorMessageReception(firstMessage.getMessageId(), t);
+        if (size > 1) {
+          for (EventualMessage msg : mailboxExtension) {
+            KomposTrace.actorMessageReception(msg.getMessageId(), t);
+          }
+        }
       }
     }
 
     protected void processCurrentMessages(final ActorProcessingThread currentThread,
         final WebDebugger dbg) {
       assert size > 0;
-      //save messages appended in mailbox in the trace before execute them
-      if (VmSettings.KOMPOS_TRACING) {
-        KomposTrace.messageReception(firstMessage.getMessageId(), currentThread);
-        if (size > 1) {
-          for (EventualMessage msg : mailboxExtension) {
-            KomposTrace.messageReception(msg.getMessageId(), currentThread);
-          }
-        }
-      }
-
 
       if (VmSettings.SNAPSHOTS_ENABLED && !VmSettings.TEST_SNAPSHOTS) {
         SnapshotBuffer sb = currentThread.getSnapshotBuffer();

@@ -22,6 +22,7 @@ import java.util.*;
 public class KomposTrace {
 
   private static Map<Long, List<Integer>> buffersByActor = new HashMap<>();
+  private static Map<Long, List<Long>> messagesReceivedByActor = new HashMap<>();
 
   public static boolean missingBuffers(long actorSuspendedId) {
     List<Integer> buffers = buffersByActor.get(actorSuspendedId);
@@ -160,8 +161,43 @@ public class KomposTrace {
     ((KomposTraceBuffer) t.getBuffer()).recordPausedActivity(t.getActivity());
   }
 
-  public static void messageReception(long messageId, TracingActivityThread t) {
-    ((KomposTraceBuffer) t.getBuffer()).recordMessageReceived(MessageReception.MESSAGE_RCV, t.getActivity(), messageId);
+  public static void actorMessageReception(long messageId, TracingActivityThread t) {
+//    System.out.println("***** "+((Actor.ActorProcessingThread)t).getCurrentActor() +" activity "+((Actor.ActorProcessingThread)t).getActivity());
+    Activity activity = t.getActivity();
+    if (activity == null) {
+      activity = ((Actor.ActorProcessingThread) t).getCurrentActor();
+    }
+
+    if (!messageReceivedRecorded(messageId, activity.getId())) {
+      ((KomposTraceBuffer) t.getBuffer()).recordMessageReceived(MessageReception.MESSAGE_RCV, activity, messageId);
+    }
+  }
+
+  /**
+   * Check the message has not been saved before.
+   * Messages received can be repeated because we record them at the point where the message is sent and when the messages are processed.
+   * This is needed because at the point where the message is append in the mailbox the TracingActivityThread may not be available,
+   * they become available when the actor is about to process the messages.
+   *
+   * @param messageId
+   * @param actorId
+   * @return
+   */
+  private static boolean messageReceivedRecorded(long messageId, long actorId) {
+    List<Long> messages;
+    if (!messagesReceivedByActor.containsKey(actorId)) {
+      messages = new ArrayList<>();
+    } else {
+      messages = messagesReceivedByActor.get(actorId);
+    }
+
+    if (messages.contains(messageId)) {
+      return true;
+    } else { //new message
+      messages.add(messageId);
+      messagesReceivedByActor.put(actorId, messages);
+    }
+    return false;
   }
 
   public static class KomposTraceBuffer extends TraceBuffer {
@@ -245,6 +281,8 @@ public class KomposTrace {
       put(Implementation.IMPL_THREAD.getId());
       putLong(implThreadId);
 
+//      System.out.println("thread "+implThreadId);
+
       assert position == start + Implementation.IMPL_THREAD.getSize();
     }
 
@@ -266,6 +304,8 @@ public class KomposTrace {
 
       putLong(actorId);
       putInt(bufferId);
+
+//      System.out.println("recordCurrentActivity "+actorId +" "+bufferId);
 
       List<Integer> bufferList;
       if (buffersByActor.containsKey(actorId)) {
@@ -417,6 +457,12 @@ public class KomposTrace {
       final int start = position;
       put(mr.getId());
       putLong(messageId);
+
+      System.out.println("-message received "+messageId +" actor "+current.getId());
+
+      if (position != start + requiredSpace ) {
+        System.out.println();
+      }
 
       assert position == start + requiredSpace;
     }

@@ -27,6 +27,8 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.sun.management.GarbageCollectionNotificationInfo;
 
+import som.Output;
+import som.interpreter.actors.Actor;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.vm.VmSettings;
 import som.vm.constants.Classes;
@@ -244,16 +246,31 @@ public class TracingBackend {
     }
   }
 
+//  public static TracingActivityThread getTracingActivityThread(long actorId) {
+//    synchronized (tracingThreads) {
+//      TracingActivityThread[] result = tracingThreads.toArray(new TracingActivityThread[0]);
+//      for (TracingActivityThread tracingActivityThread: result) {
+//        if (tracingActivityThread.getActivity()!= null && tracingActivityThread.getActivity().getId() == actorId) {
+//          return tracingActivityThread;
+//        }
+//      }
+//      return null;
+//    }
+//  }
+
   public static TracingActivityThread getTracingActivityThread(long actorId) {
     synchronized (tracingThreads) {
       TracingActivityThread[] result = tracingThreads.toArray(new TracingActivityThread[0]);
-      for (TracingActivityThread tracingActivityThread: result) {
-        if (tracingActivityThread.getActivity()!= null && tracingActivityThread.getActivity().getId() == actorId) {
-          return tracingActivityThread;
+      for (TracingActivityThread tracingActivityThread : result) {
+        if ((tracingActivityThread instanceof ActorProcessingThread)) {
+          Actor currentActor = ((ActorProcessingThread) tracingActivityThread).getCurrentActor();
+          if (currentActor != null && currentActor.getId() == actorId) {
+            return tracingActivityThread;
+          }
         }
       }
-      return null;
     }
+    return null;
   }
 
   public static final void forceSwapBuffers() {
