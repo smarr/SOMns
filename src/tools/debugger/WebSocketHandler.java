@@ -65,6 +65,7 @@ public abstract class WebSocketHandler extends WebSocketServer {
         final Gson gson) {
       super(port);
       this.setReuseAddr(true);
+//      this.setConnectionLostTimeout(0); //uncomment if timeout fails
       this.connector = connector;
       this.gson = gson;
     }
@@ -88,6 +89,7 @@ public abstract class WebSocketHandler extends WebSocketServer {
     public TraceHandler(final int port) {
       super(port);
       this.setReuseAddr(true);
+//      this.setConnectionLostTimeout(0); //uncomment if timeout fails
       connection = new CompletableFuture<>();
     }
 

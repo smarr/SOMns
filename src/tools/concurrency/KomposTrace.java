@@ -458,7 +458,7 @@ public class KomposTrace {
       put(mr.getId());
       putLong(messageId);
 
-      System.out.println("-message received "+messageId +" actor "+current.getId());
+//      System.out.println("-message received "+messageId +" actor "+current.getId());
 
       if (position != start + requiredSpace ) {
         System.out.println();
