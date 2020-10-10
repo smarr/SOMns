@@ -64,6 +64,8 @@ public class Breakpoints {
       bp = Breakpoint.newBuilder(bId.getURI()).lineIs(bId.getLine()).build();
       debuggerSession.install(bp);
       truffleBreakpoints.put(bId, bp);
+    } else {
+      WebDebugger.log("[DEBUGGER] Update LineBreakpoint: " + bId + " Enabled: "+bId.isEnabled());
     }
     bp.setEnabled(bId.isEnabled());
   }
