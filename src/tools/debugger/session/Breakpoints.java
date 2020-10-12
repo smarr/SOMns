@@ -76,7 +76,7 @@ public class Breakpoints {
     if (existingBP == null) {
       existingBP = new BreakpointEnabling(bId);
       breakpoints.put(loc, existingBP);
-      WebDebugger.log("[DEBUGGER] SectionBreakpoint: " + bId);
+      WebDebugger.log("[DEBUGGER] SectionBreakpoint: " + bId +" Enabled: "+bId.isEnabled());
     } else {
       existingBP.setEnabled(bId.isEnabled());
       WebDebugger.log("[DEBUGGER] Update SectionBreakpoint: " + bId + " Enabled: "+bId.isEnabled());
