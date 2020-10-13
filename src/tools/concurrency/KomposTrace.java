@@ -312,11 +312,6 @@ public class KomposTrace {
 //      bufferList.add(bufferId);
 //      buffersByActor.put(actorId, bufferList);
 
-      if (position != (start + Implementation.IMPL_CURRENT_ACTIVITY.getSize())) {
-        System.out.println(position +" "+(start + Implementation.IMPL_CURRENT_ACTIVITY.getSize()));
-      }
-
-
       assert position == start + Implementation.IMPL_CURRENT_ACTIVITY.getSize();
     }
 
