@@ -246,18 +246,6 @@ public class TracingBackend {
     }
   }
 
-//  public static TracingActivityThread getTracingActivityThread(long actorId) {
-//    synchronized (tracingThreads) {
-//      TracingActivityThread[] result = tracingThreads.toArray(new TracingActivityThread[0]);
-//      for (TracingActivityThread tracingActivityThread: result) {
-//        if (tracingActivityThread.getActivity()!= null && tracingActivityThread.getActivity().getId() == actorId) {
-//          return tracingActivityThread;
-//        }
-//      }
-//      return null;
-//    }
-//  }
-
   public static TracingActivityThread getTracingActivityThread(long actorId) {
     synchronized (tracingThreads) {
       TracingActivityThread[] result = tracingThreads.toArray(new TracingActivityThread[0]);
