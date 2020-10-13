@@ -515,7 +515,11 @@ public class KomposTrace {
           final long entityId, final long targetId, final Activity current, final short symbol, final long targetActorId, final SourceSection section, byte[] value) {
         super.recordSendOperation(op, entityId, targetId, current, symbol, targetActorId, section, value);
       }
+
+      @Override
+      public synchronized void recordMessageReceived(MessageReception mr, final Activity current, final long messageId) {
+        super.recordMessageReceived(mr, current, messageId);
+      }
     }
   }
-
 }
