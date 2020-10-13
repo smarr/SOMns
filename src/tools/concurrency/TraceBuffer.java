@@ -15,8 +15,8 @@ public abstract class TraceBuffer {
 
   public static TraceBuffer create(final long threadId) {
     assert VmSettings.UNIFORM_TRACING || VmSettings.KOMPOS_TRACING;
-    if (VmSettings.KOMPOS_TRACING) {
-      return new KomposTrace.KomposTraceBuffer(threadId);
+    if (VmSettings.KOMPOS_TRACING || VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
+      return new KomposTrace.KomposTraceBuffer.SyncedKomposTraceBuffer(threadId);
     } else {
       return new UniformTraceBuffer();
     }
