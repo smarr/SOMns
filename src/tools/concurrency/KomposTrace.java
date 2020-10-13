@@ -21,23 +21,23 @@ import java.util.*;
 
 public class KomposTrace {
 
-  private static Map<Long, List<Integer>> buffersByActor = new HashMap<>();
   private static Map<Long, List<Long>> messagesReceivedByActor = new HashMap<>();
 
-  public static boolean missingBuffers(long actorSuspendedId) {
-    List<Integer> buffers = buffersByActor.get(actorSuspendedId);
-    Collections.sort(buffers);
-
-    for (int i = 1; i < buffers.size(); i++) {
-      int previous = buffers.get(i - 1);
-      int current = buffers.get(i);
-      if (current != (previous + 1)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
+//  private static Map<Long, List<Integer>> buffersByActor = new HashMap<>();
+//  public static boolean missingBuffers(long actorSuspendedId) {
+//    List<Integer> buffers = buffersByActor.get(actorSuspendedId);
+//    Collections.sort(buffers);
+//
+//    for (int i = 1; i < buffers.size(); i++) {
+//      int previous = buffers.get(i - 1);
+//      int current = buffers.get(i);
+//      if (current != (previous + 1)) {
+//        return true;
+//      }
+//    }
+//
+//    return false;
+//  }
 
   public static void recordMainActor(final Actor mainActor,
       final ObjectSystem objectSystem) {
@@ -281,12 +281,10 @@ public class KomposTrace {
       put(Implementation.IMPL_THREAD.getId());
       putLong(implThreadId);
 
-//      System.out.println("thread "+implThreadId);
-
       assert position == start + Implementation.IMPL_THREAD.getSize();
     }
 
-    public void recordCurrentActivity(final Activity current) {
+    public synchronized void recordCurrentActivity(final Activity current) {
 
       if (current == null) {
         return;
@@ -305,16 +303,19 @@ public class KomposTrace {
       putLong(actorId);
       putInt(bufferId);
 
-//      System.out.println("recordCurrentActivity "+actorId +" "+bufferId);
+//      List<Integer> bufferList;
+//      if (buffersByActor.containsKey(actorId)) {
+//        bufferList = buffersByActor.get(actorId);
+//      } else {
+//        bufferList = new ArrayList<>();
+//      }
+//      bufferList.add(bufferId);
+//      buffersByActor.put(actorId, bufferList);
 
-      List<Integer> bufferList;
-      if (buffersByActor.containsKey(actorId)) {
-        bufferList = buffersByActor.get(actorId);
-      } else {
-        bufferList = new ArrayList<>();
+      if (position != (start + Implementation.IMPL_CURRENT_ACTIVITY.getSize())) {
+        System.out.println(position +" "+(start + Implementation.IMPL_CURRENT_ACTIVITY.getSize()));
       }
-      bufferList.add(bufferId);
-      buffersByActor.put(actorId, bufferList);
+
 
       assert position == start + Implementation.IMPL_CURRENT_ACTIVITY.getSize();
     }
