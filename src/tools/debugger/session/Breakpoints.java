@@ -84,32 +84,32 @@ public class Breakpoints {
   }
 
   public synchronized void addOrUpdateBeforeExpression(final SectionBreakpoint bId) {
-    saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class, SuspendAnchor.BEFORE);
+    saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class, SuspendAnchor.BEFORE, SourceElement.EXPRESSION);
   }
 
   public synchronized void addOrUpdateAfterExpression(final SectionBreakpoint bId) {
-    saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class, SuspendAnchor.AFTER);
+    saveTruffleBasedBreakpoints(bId, ExpressionBreakpoint.class, SuspendAnchor.AFTER, SourceElement.EXPRESSION);
   }
 
   public synchronized void addOrUpdateAsyncBefore(final SectionBreakpoint bId) {
-    Breakpoint bp = saveTruffleBasedBreakpoints(bId, RootTag.class, SuspendAnchor.BEFORE);
+    Breakpoint bp = saveTruffleBasedBreakpoints(bId, RootTag.class, SuspendAnchor.BEFORE, SourceElement.ROOT);
     bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
   }
 
   public synchronized void addOrUpdateAsyncAfter(final SectionBreakpoint bId) {
-    Breakpoint bp = saveTruffleBasedBreakpoints(bId, RootTag.class, SuspendAnchor.AFTER);
+    Breakpoint bp = saveTruffleBasedBreakpoints(bId, RootTag.class, SuspendAnchor.AFTER, SourceElement.ROOT);
     bp.setCondition(BreakWhenActivatedByAsyncMessage.INSTANCE);
   }
 
   private Breakpoint saveTruffleBasedBreakpoints(final SectionBreakpoint bId,
-      final Class<? extends Tag> tag, final SuspendAnchor anchor) {
+      final Class<? extends Tag> tag, final SuspendAnchor anchor, SourceElement sourceElement) {
     Breakpoint bp = truffleBreakpoints.get(bId);
     if (bp == null) {
       WebDebugger.log("[DEBUGGER] SectionBreakpoint: " + bId);
       bp = Breakpoint.newBuilder(bId.getCoordinate().uri).lineIs(bId.getCoordinate().startLine)
                      .columnIs(bId.getCoordinate().startColumn)
                      .sectionLength(bId.getCoordinate().charLength)
-                     .sourceElements(SourceElement.EXPRESSION)
+                     .sourceElements(sourceElement)
                      .tag(tag)
                      .suspendAnchor(anchor).build();
       debuggerSession.install(bp);
