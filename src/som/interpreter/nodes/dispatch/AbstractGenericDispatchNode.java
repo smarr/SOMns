@@ -22,7 +22,7 @@ import som.vm.VmSettings;
 import som.vmobjects.SArray;
 import som.vmobjects.SClass;
 import som.vmobjects.SSymbol;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 public abstract class AbstractGenericDispatchNode extends AbstractDispatchNode {

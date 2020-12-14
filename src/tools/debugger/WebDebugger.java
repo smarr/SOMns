@@ -4,7 +4,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
 
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Instrument;
@@ -33,7 +32,7 @@ import tools.TraceData;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors;
 import tools.debugger.frontend.Suspension;
-import tools.debugger.session.Breakpoints;
+import tools.debugger.breakpoints.Breakpoints;
 
 
 /**

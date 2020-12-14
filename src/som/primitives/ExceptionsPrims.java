@@ -21,7 +21,7 @@ import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import som.interpreter.SArguments;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 public abstract class ExceptionsPrims {

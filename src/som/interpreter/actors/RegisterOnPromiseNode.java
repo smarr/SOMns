@@ -15,7 +15,7 @@ import som.interpreter.SArguments;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
-import tools.asyncstacktraces.ShadowStackEntry;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
 import tools.dym.DynamicMetrics;
 import tools.replay.ReplayRecord;
 import tools.replay.TraceRecord;

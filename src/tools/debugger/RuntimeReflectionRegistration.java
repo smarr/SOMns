@@ -16,9 +16,9 @@ import com.google.gson.GsonBuilder;
 import tools.debugger.message.*;
 import tools.debugger.message.Message.IncommingMessage;
 import tools.debugger.message.Message.OutgoingMessage;
-import tools.debugger.session.BreakpointInfo;
-import tools.debugger.session.LineBreakpoint;
-import tools.debugger.session.SectionBreakpoint;
+import tools.debugger.breakpoints.BreakpointInfo;
+import tools.debugger.breakpoints.LineBreakpoint;
+import tools.debugger.breakpoints.SectionBreakpoint;
 
 
 /**

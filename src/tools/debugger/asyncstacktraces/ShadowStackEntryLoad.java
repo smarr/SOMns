@@ -1,4 +1,4 @@
-package tools.asyncstacktraces;
+package tools.debugger.asyncstacktraces;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;

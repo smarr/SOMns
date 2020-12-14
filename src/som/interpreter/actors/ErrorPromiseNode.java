@@ -8,11 +8,10 @@ import com.oracle.truffle.api.instrumentation.Tag;
 import bd.primitives.Primitive;
 import bd.tools.nodes.Operation;
 import som.interpreter.SArguments;
-import som.interpreter.actors.SPromise.Resolution;
 import som.interpreter.actors.SPromise.SResolver;
 import som.interpreter.nodes.nary.BinaryExpressionNode;
 import som.vm.VmSettings;
-import tools.asyncstacktraces.ShadowStackEntry;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
 import tools.dym.Tags.ComplexPrimitiveOperation;
 
 

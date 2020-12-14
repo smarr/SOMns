@@ -17,7 +17,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.impl.DefaultCallTarget;
 import som.interpreter.Invokable;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 public final class CachedDispatchNode extends AbstractDispatchNode implements BackCacheCallNode {

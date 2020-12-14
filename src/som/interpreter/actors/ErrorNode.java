@@ -7,7 +7,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.vm.VmSettings;
-import tools.asyncstacktraces.ShadowStackEntry;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
 
 public abstract class ErrorNode extends AbstractPromiseResolutionNode {
     @CompilerDirectives.CompilationFinal

@@ -1,4 +1,4 @@
-package tools.debugger.session;
+package tools.debugger.breakpoints;
 
 import java.util.HashMap;
 import java.util.Map;

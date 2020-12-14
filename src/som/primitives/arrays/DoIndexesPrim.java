@@ -17,7 +17,7 @@ import som.interpreter.nodes.specialized.SomLoop;
 import som.primitives.SizeAndLengthPrimFactory;
 import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 @GenerateNodeFactory

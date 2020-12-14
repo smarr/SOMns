@@ -35,8 +35,8 @@ import tools.debugger.message.*;
 import tools.debugger.message.Message.OutgoingMessage;
 import tools.debugger.message.SourceMessage.SourceData;
 import tools.debugger.message.VariablesRequest.FilterType;
-import tools.debugger.session.Breakpoints;
-import tools.debugger.session.LineBreakpoint;
+import tools.debugger.breakpoints.Breakpoints;
+import tools.debugger.breakpoints.LineBreakpoint;
 
 
 /**

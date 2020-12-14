@@ -10,7 +10,7 @@ import bd.primitives.Primitive;
 import som.interpreter.nodes.specialized.IntToDoMessageNode.ToDoSplzr;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 @GenerateNodeFactory

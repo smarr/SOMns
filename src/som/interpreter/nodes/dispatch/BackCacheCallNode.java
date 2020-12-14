@@ -9,8 +9,8 @@ import som.interpreter.Invokable;
 import som.interpreter.Method;
 import som.interpreter.SArguments;
 import som.vm.VmSettings;
-import tools.asyncstacktraces.ShadowStackEntry;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 public interface BackCacheCallNode {
 

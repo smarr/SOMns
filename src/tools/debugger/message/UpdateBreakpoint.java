@@ -4,7 +4,7 @@ import org.java_websocket.WebSocket;
 
 import tools.debugger.FrontendConnector;
 import tools.debugger.message.Message.IncommingMessage;
-import tools.debugger.session.BreakpointInfo;
+import tools.debugger.breakpoints.BreakpointInfo;
 
 
 public class UpdateBreakpoint extends IncommingMessage {

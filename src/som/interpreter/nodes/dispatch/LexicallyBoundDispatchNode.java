@@ -18,7 +18,7 @@ import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.impl.DefaultCallTarget;
 import som.interpreter.Method;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 /**

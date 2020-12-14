@@ -7,7 +7,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.nodes.Node;
 
 import bd.primitives.Primitive;
 import som.interpreter.SArguments;
@@ -16,7 +15,7 @@ import som.interpreter.nodes.nary.QuaternaryExpressionNode;
 import som.interpreter.objectstorage.ObjectTransitionSafepoint;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 import tools.dym.Tags.LoopNode;
 
 

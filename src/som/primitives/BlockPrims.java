@@ -34,7 +34,7 @@ import som.vmobjects.SInvokable;
 import tools.dym.Tags.OpClosureApplication;
 import tools.dym.profiles.DispatchProfile;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 public abstract class BlockPrims {

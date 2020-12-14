@@ -7,7 +7,7 @@ import com.oracle.truffle.api.nodes.NodeInfo;
 
 import som.interpreter.nodes.nary.ExprWithTagsNode;
 import som.interpreter.SArguments;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 @NodeInfo(cost = NodeCost.NONE)

@@ -1,4 +1,4 @@
-package tools.debugger.session;
+package tools.debugger.breakpoints;
 
 import java.net.URI;
 import java.util.Objects;

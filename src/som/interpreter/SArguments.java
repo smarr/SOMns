@@ -17,8 +17,8 @@ import com.oracle.truffle.api.nodes.Node;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.VmSettings;
 import som.vmobjects.SBlock;
-import tools.asyncstacktraces.ShadowStackEntry;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 public final class SArguments {

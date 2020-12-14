@@ -16,8 +16,8 @@ import tools.concurrency.Tags.OnError;
 import tools.concurrency.Tags.ReleaseLock;
 import tools.concurrency.Tags.WhenResolved;
 import tools.concurrency.Tags.WhenResolvedOnError;
-import tools.debugger.session.Breakpoints;
-import tools.debugger.session.SectionBreakpoint;
+import tools.debugger.breakpoints.Breakpoints;
+import tools.debugger.breakpoints.SectionBreakpoint;
 
 
 @SuppressWarnings({"unchecked", "rawtypes"})

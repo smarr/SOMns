@@ -16,7 +16,7 @@ import som.vm.constants.Nil;
 import som.vmobjects.SArray;
 import som.vmobjects.SArray.PartiallyEmptyArray;
 import som.vmobjects.SBlock;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 @GenerateNodeFactory

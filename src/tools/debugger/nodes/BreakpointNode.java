@@ -4,7 +4,7 @@ import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 
-import tools.debugger.session.BreakpointEnabling;
+import tools.debugger.breakpoints.BreakpointEnabling;
 
 
 /**

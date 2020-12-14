@@ -20,7 +20,7 @@ import tools.replay.nodes.RecordEventNodes.RecordOneEvent;
 import tools.snapshot.SnapshotBackend;
 import tools.snapshot.SnapshotBuffer;
 import som.interpreter.SArguments;
-import tools.asyncstacktraces.ShadowStackEntry;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
 
 
 public abstract class EventualMessage {

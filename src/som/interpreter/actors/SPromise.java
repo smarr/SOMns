@@ -11,7 +11,6 @@ import java.util.concurrent.atomic.AtomicLong;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.profiles.ValueProfile;
@@ -25,7 +24,7 @@ import som.vm.Activity;
 import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SObjectWithClass;
-import tools.asyncstacktraces.ShadowStackEntry;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
 import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActivityThread;
 import tools.concurrency.TracingActors.TracingActor;

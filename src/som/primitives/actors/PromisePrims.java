@@ -45,10 +45,10 @@ import tools.concurrency.Tags.WhenResolvedOnError;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.SendOp;
 import tools.debugger.nodes.AbstractBreakpointNode;
-import tools.debugger.session.Breakpoints;
+import tools.debugger.breakpoints.Breakpoints;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import som.interpreter.SArguments;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 public final class PromisePrims {

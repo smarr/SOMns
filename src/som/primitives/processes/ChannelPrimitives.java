@@ -44,7 +44,7 @@ import tools.debugger.entities.ActivityType;
 import tools.debugger.entities.BreakpointType;
 import tools.debugger.entities.PassiveEntityType;
 import tools.debugger.nodes.AbstractBreakpointNode;
-import tools.debugger.session.Breakpoints;
+import tools.debugger.breakpoints.Breakpoints;
 import tools.replay.ReplayRecord;
 import tools.replay.TraceParser;
 import tools.replay.TraceRecord;

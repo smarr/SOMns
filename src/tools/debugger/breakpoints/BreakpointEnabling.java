@@ -1,4 +1,4 @@
-package tools.debugger.session;
+package tools.debugger.breakpoints;
 
 import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.Truffle;

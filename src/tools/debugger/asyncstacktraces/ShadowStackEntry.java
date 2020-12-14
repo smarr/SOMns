@@ -1,11 +1,10 @@
-package tools.asyncstacktraces;
+package tools.debugger.asyncstacktraces;
 
 import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 
-import som.interpreter.actors.Actor;
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.interpreter.actors.EventualMessage;
 import som.vm.VmSettings;

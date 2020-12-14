@@ -1,4 +1,4 @@
-package tools.asyncstacktraces;
+package tools.debugger.asyncstacktraces;
 
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.Truffle;
@@ -15,10 +15,10 @@ import som.interpreter.Method;
 import som.interpreter.actors.EventualSendNode;
 import som.interpreter.nodes.dispatch.BackCacheCallNode;
 import som.vm.VmSettings;
-import tools.asyncstacktraces.ShadowStackEntry.EntryAtMessageSend;
-import tools.asyncstacktraces.ShadowStackEntry.EntryForPromiseResolution;
-import tools.asyncstacktraces.StackIterator.ShadowStackIterator.HaltShadowStackIterator;
-import tools.asyncstacktraces.StackIterator.ShadowStackIterator.SuspensionShadowStackIterator;
+import tools.debugger.asyncstacktraces.ShadowStackEntry.EntryAtMessageSend;
+import tools.debugger.asyncstacktraces.ShadowStackEntry.EntryForPromiseResolution;
+import tools.debugger.asyncstacktraces.StackIterator.ShadowStackIterator.HaltShadowStackIterator;
+import tools.debugger.asyncstacktraces.StackIterator.ShadowStackIterator.SuspensionShadowStackIterator;
 import tools.debugger.frontend.ApplicationThreadStack.StackFrame;
 
 import java.util.ArrayList;

@@ -19,7 +19,7 @@ import tools.replay.TraceRecord;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import som.interpreter.SArguments;
 import som.vm.VmSettings;
-import tools.asyncstacktraces.ShadowStackEntry;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
 
 
 /**

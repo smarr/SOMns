@@ -39,7 +39,7 @@ import som.vmobjects.SSymbol;
 import tools.dym.Tags.VirtualInvoke;
 import tools.dym.profiles.DispatchProfile;
 import som.interpreter.SArguments;
-import tools.asyncstacktraces.ShadowStackEntry;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
 
 public final class MessageSendNode {
 

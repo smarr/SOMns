@@ -17,7 +17,7 @@ import som.interpreter.SArguments;
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
-import tools.asyncstacktraces.ShadowStackEntry;
+import tools.debugger.asyncstacktraces.ShadowStackEntry;
 
 
 public class ReceivedMessage extends ReceivedRootNode {

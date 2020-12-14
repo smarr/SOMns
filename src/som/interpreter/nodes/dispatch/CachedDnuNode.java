@@ -22,7 +22,7 @@ import som.vm.VmSettings;
 import som.vmobjects.SClass;
 import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
-import tools.asyncstacktraces.ShadowStackEntryLoad;
+import tools.debugger.asyncstacktraces.ShadowStackEntryLoad;
 
 
 public final class CachedDnuNode extends AbstractDispatchNode {
