@@ -67,7 +67,7 @@ public class ActivityJoin {
       if (tag == Tags.ActivityJoin.class || tag == ExpressionBreakpoint.class) {
         return true;
       }
-      return super.hasTag(tag);
+      return super.hasTagIgnoringEagerness(tag);
     }
   }
 }
