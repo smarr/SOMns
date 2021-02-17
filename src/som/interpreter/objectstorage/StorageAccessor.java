@@ -12,6 +12,7 @@ import som.vmobjects.SObject;
 import som.vmobjects.SObject.SImmutableObject;
 import som.vmobjects.SObject.SMutableObject;
 import sun.misc.Unsafe;
+import tools.UnsafeUtil;
 
 
 /**
@@ -25,7 +26,7 @@ import sun.misc.Unsafe;
  * {@link SMutableObject}.
  */
 public abstract class StorageAccessor {
-  private static final Unsafe unsafe = loadUnsafe();
+  private static final Unsafe unsafe = UnsafeUtil.load();
 
   private static final int MAX_OBJECT_FIELDS = 50;
   private static final int MAX_PRIM_FIELDS   = 30;
@@ -238,22 +239,6 @@ public abstract class StorageAccessor {
     @Override
     public void write(final SObject obj, final double value) {
       obj.getExtendedPrimFields()[extensionIndex] = Double.doubleToRawLongBits(value);
-    }
-  }
-
-  private static Unsafe loadUnsafe() {
-    try {
-      return Unsafe.getUnsafe();
-    } catch (SecurityException e) {
-      // can fail, is ok, just to the fallback below
-    }
-    try {
-      Field theUnsafeInstance = Unsafe.class.getDeclaredField("theUnsafe");
-      theUnsafeInstance.setAccessible(true);
-      return (Unsafe) theUnsafeInstance.get(Unsafe.class);
-    } catch (Exception e) {
-      throw new RuntimeException(
-          "exception while trying to get Unsafe.theUnsafe via reflection:", e);
     }
   }
 }
