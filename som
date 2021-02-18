@@ -448,7 +448,8 @@ flags += ['-Dsom.tools=' + BASE_DIR + '/tools']
 flags += ['-Dsom.baseDir=' + BASE_DIR]
 
 if not args.interpreter:
-  flags += ['-Dpolyglot.engine.LanguageAgnosticInlining=false']
+  flags += ['-Dpolyglot.engine.LanguageAgnosticInlining=false',
+            '-Dpolyglot.engine.CompilerThreads=0']
 
 if args.use_pinning:
   ## check whether there are any known restrictions to core usage

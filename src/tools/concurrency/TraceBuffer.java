@@ -1,12 +1,12 @@
 package tools.concurrency;
 
-import java.lang.reflect.Field;
-
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.TruffleOptions;
 
 import som.interpreter.actors.Actor.ActorProcessingThread;
 import som.vm.VmSettings;
 import sun.misc.Unsafe;
+import tools.UnsafeUtil;
 import tools.replay.actors.UniformExecutionTrace.UniformTraceBuffer;
 import tools.replay.nodes.TraceContextNode;
 
@@ -25,27 +25,15 @@ public abstract class TraceBuffer {
   public static final Unsafe UNSAFE;
   public static final long   BYTE_ARR_BASE_OFFSET;
 
-  private static Unsafe loadUnsafe() {
-    try {
-      return Unsafe.getUnsafe();
-    } catch (SecurityException e) {
-      // can fail, is ok, just to the fallback below
-    }
-    try {
-      Field theUnsafeInstance = Unsafe.class.getDeclaredField("theUnsafe");
-      theUnsafeInstance.setAccessible(true);
-      return (Unsafe) theUnsafeInstance.get(Unsafe.class);
-    } catch (Exception e) {
-      throw new RuntimeException(
-          "exception while trying to get Unsafe.theUnsafe via reflection:", e);
-    }
-  }
-
   static {
-    UNSAFE = loadUnsafe();
-    BYTE_ARR_BASE_OFFSET = UNSAFE.arrayBaseOffset(byte[].class);
-    assert UNSAFE.arrayIndexScale(
-        byte[].class) == 1 : "Expect byte elements to be exactly one byte in size.";
+    UNSAFE = UnsafeUtil.load();
+    if (!TruffleOptions.AOT) {
+      BYTE_ARR_BASE_OFFSET = UNSAFE.arrayBaseOffset(byte[].class);
+      assert UNSAFE.arrayIndexScale(
+          byte[].class) == 1 : "Expect byte elements to be exactly one byte in size.";
+    } else {
+      BYTE_ARR_BASE_OFFSET = 1;
+    }
   }
 
   protected byte[]  buffer;

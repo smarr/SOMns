@@ -9,6 +9,8 @@ package som.interpreter.objectstorage;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.LockSupport;
 
+import sun.misc.Unsafe;
+import tools.UnsafeUtil;
 import tools.concurrency.TraceBuffer;
 
 
@@ -526,10 +528,11 @@ public final class SafepointPhaser {
 
   // Unsafe mechanics
 
-  private static final sun.misc.Unsafe U = TraceBuffer.UNSAFE;
+  private static final sun.misc.Unsafe U;
   private static final long            STATE;
   static {
     try {
+      U = UnsafeUtil.load();
       STATE = U.objectFieldOffset(SafepointPhaser.class.getDeclaredField("state"));
     } catch (ReflectiveOperationException e) {
       throw new Error(e);

@@ -116,6 +116,6 @@ public abstract class AtomicPrim extends BinarySystemOperation {
         tag == StatementTag.class) {
       return true;
     }
-    return super.hasTag(tag);
+    return super.hasTagIgnoringEagerness(tag);
   }
 }

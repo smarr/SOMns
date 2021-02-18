@@ -5,8 +5,6 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import com.oracle.truffle.api.TruffleOptions;
-
 import net.openhft.affinity.AffinityLock;
 import som.VM;
 import som.interpreter.actors.Actor.ActorProcessingThread;
@@ -187,7 +185,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
       TracingBackend.registerThread(this);
     }
 
-    if (!TruffleOptions.AOT && VmSettings.USE_PINNING) {
+    if (VmSettings.USE_PINNING) {
       affinity = AffinityLock.acquireLock();
     }
 
@@ -205,7 +203,7 @@ public abstract class TracingActivityThread extends ForkJoinWorkerThread {
       SnapshotBackend.registerSnapshotBuffer(snapshotBuffer);
     }
 
-    if (!TruffleOptions.AOT && VmSettings.USE_PINNING) {
+    if (VmSettings.USE_PINNING) {
       ((AffinityLock) affinity).release();
     }
 
