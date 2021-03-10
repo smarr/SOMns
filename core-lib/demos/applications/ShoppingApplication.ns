@@ -1,0 +1,142 @@
+class ShoppingApplication usingPlatform: platform = Value (
+| private actors = platform actors.
+  private Vector = platform kernel Vector.
+|)(
+
+  public class Buyer = (
+  | private customerInfo = 'West Coast Buyers'.
+    private profileInfo = 'West Coast Buyers Profile'.
+    private shoppingCart = Vector new.
+  |)(
+
+   (* Create the teller and send the validation messages to the services *)
+   public checkoutShoppingCart: product account: account shipper: shipper = (
+     | teller listener completionPP pConnection |
+
+          completionPP:: actors createPromisePair.
+
+          (* object to notify when the replies are received. It uses as argument a block to execute. *)
+          listener:: Listener new: [:p1 | self placeOrder: completionPP resolver.].
+
+          teller:: Teller new: (shoppingCart size + 2) listener: listener.
+
+          shoppingCart doIndexes:[:i |
+             | partNo |
+              partNo:: shoppingCart at: i.
+              product <-: partInStock: partNo teller: teller.
+          ].
+
+          account <-: checkCredit: customerInfo teller: teller.
+          shipper <-: canDeliver: profileInfo teller: teller.
+
+          ^ completionPP promise
+   )
+
+   public placeOrder: resolver = (
+        resolver resolve: 'The order has been placed successfully'.
+   )
+
+    public addItem: item = (
+           shoppingCart append: item.
+     ^ #ok
+    )
+
+   )
+
+  public class Listener new: block = (
+    | private block = block. |
+  )(
+        public run = (
+          ('- All conditions has been met. ' ) println.
+
+         block value: true.
+        )
+  )
+
+  public class Teller new: limit listener: listener = (
+    | public limit = limit.
+      public listener  = listener.
+      private localCounter ::= 1.
+    |)(
+
+       (* All conditions must be met before an order is placed. *)
+       public asyncAnd: answer = (
+
+           answer
+           ifTrue: [
+             (localCounter = limit)
+             ifTrue: [
+               listener <-: run.
+               ^ true
+             ]
+             ifFalse: [
+               localCounter:: localCounter + 1.
+               ^ false
+             ].
+           ]
+           ifFalse: [
+             ^ false
+           ].
+       )
+   )
+
+  (* Inventory *)
+  public class Product = ()(
+
+    public partInStock: itemNo teller: teller = (
+        ('partInStock true for ' + itemNo) println.
+        ^ teller <-: asyncAnd: true.
+    )
+  )
+
+  (* Check customer payment info *)
+  public class Account = ()(
+
+    public checkCredit: customerName teller: teller = (
+        ('checkCredit true') println.
+        ^ teller <-: asyncAnd: true.
+    )
+  )
+
+  (* Check availability of shipper *)
+  public class Shipper = ()(
+
+    public canDeliver: address teller: teller = (
+        ('canDeliver true') println.
+        ^ teller <-: asyncAnd: true.
+    )
+  )
+
+  public main: args = (
+   | buyer product account shipper cart items asyncPromise finalPromise |
+
+   '[SHOPPING APPLICATION] Starting' println.
+    items:: Vector new.
+    items append: 'phone'.
+    items append: 'laptop'.
+    items append: 'screen'.
+
+    product:: (actors createActorFromValue: Product) <-: new.
+    account:: (actors createActorFromValue: Account)  <-: new.
+    shipper:: (actors createActorFromValue: Shipper)  <-: new.
+    buyer:: (actors createActorFromValue: Buyer) <-: new.
+
+    asyncPromise:: actors async: items do:[: i |
+      (buyer <-: addItem: i) whenResolved: [: r |
+       r = #ok
+       ifTrue:[
+        ('-items added in shopping cart: ' + i) println.
+       ].
+      ].
+    ].
+
+    finalPromise:: asyncPromise whenResolved:[: r |
+        buyer <-: checkoutShoppingCart: product account: account shipper: shipper.
+    ].
+
+     ^ finalPromise whenResolved: [: r2|
+           r2 println.
+         '\n\n[SHOPPING APPLICATION] Ending' println.
+    ].
+ )
+)
