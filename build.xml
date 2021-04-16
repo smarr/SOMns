@@ -361,7 +361,7 @@
     </target>
 
     <target name="compile-som" description="Compile SOMns" depends="java8-on-java9">
-        <travis target="compile-som" start="Compilse SOMns" />
+        <travis target="compile-som" start="Compile SOMns" />
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${classes.dir}" />
         <mkdir dir="${src_gen.dir}" />
