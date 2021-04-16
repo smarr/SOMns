@@ -1,7 +1,6 @@
 package tools.dym;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -10,7 +9,6 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 
-import org.graalvm.collections.EconomicSet;
 import org.graalvm.polyglot.Engine;
 import org.graalvm.polyglot.Instrument;
 
@@ -30,7 +28,6 @@ import com.oracle.truffle.api.instrumentation.StandardTags.StatementTag;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument;
 import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
-import com.oracle.truffle.api.nodes.GraphPrintVisitor;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
@@ -41,7 +38,6 @@ import som.compiler.MixinDefinition;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.compiler.Variable;
 import som.interpreter.Invokable;
-import som.interpreter.nodes.dispatch.Dispatchable;
 import som.vm.NotYetImplementedException;
 import som.vm.VmSettings;
 import som.vmobjects.SInvokable;
@@ -212,8 +208,7 @@ public class DynamicMetrics extends TruffleInstrument {
 
     assert "DefaultTruffleRuntime".equals(
         Truffle.getRuntime().getClass()
-               .getSimpleName())
-        : "To get metrics for the lexical, unoptimized behavior, please run this tool without Graal";
+               .getSimpleName()) : "To get metrics for the lexical, unoptimized behavior, please run this tool without Graal";
   }
 
   public void enterMethod() {
@@ -445,8 +440,7 @@ public class DynamicMetrics extends TruffleInstrument {
 
     instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
       ExecutionEventNode parent = ctx.findDirectParentEventNode(loopProfileFactory);
-      assert parent != null
-          : "Direct parent does not seem to be set up properly with event node and/or wrapping";
+      assert parent != null : "Direct parent does not seem to be set up properly with event node and/or wrapping";
       LoopProfilingNode p = (LoopProfilingNode) parent;
       return new LoopIterationReportNode(p.getProfile());
     });
@@ -461,8 +455,6 @@ public class DynamicMetrics extends TruffleInstrument {
     String metricsFolder = System.getProperty("dm.metrics", "metrics");
     MetricsCsvWriter.fileOut(data, metricsFolder, structuralProbe,
         maxStackDepth, getAllStatementsAlsoNotExecuted(), generalMetrics);
-
-    outputAllTruffleMethodsToIGV();
   }
 
   private List<SourceSection> getAllStatementsAlsoNotExecuted() {
@@ -489,38 +481,6 @@ public class DynamicMetrics extends TruffleInstrument {
     }
 
     return allSourceSections;
-  }
-
-  @SuppressWarnings("deprecation")
-  private void outputAllTruffleMethodsToIGV() {
-    GraphPrintVisitor graphPrinter = new GraphPrintVisitor();
-
-    EconomicSet<MixinDefinition> classSet = structuralProbe.getClasses();
-    List<MixinDefinition> classes = new ArrayList<MixinDefinition>(classSet.size());
-
-    for (MixinDefinition c : classSet) {
-      classes.add(c);
-    }
-
-    Collections.sort(classes,
-        (final MixinDefinition a,
-            final MixinDefinition b) -> a.getName().getString()
-                                         .compareTo(b.getName().getString()));
-
-    for (MixinDefinition mixin : classes) {
-      graphPrinter.beginGroup(mixin.getName().getString());
-
-      for (Dispatchable disp : mixin.getInstanceDispatchables().getValues()) {
-        if (disp instanceof SInvokable) {
-          SInvokable i = (SInvokable) disp;
-          graphPrinter.beginGraph(i.toString()).visit(i.getCallTarget().getRootNode());
-        }
-      }
-      graphPrinter.endGroup();
-    }
-
-    graphPrinter.printToNetwork(true);
-    graphPrinter.close();
   }
 
   private Map<String, Map<SourceSection, ? extends JsonSerializable>> collectData() {

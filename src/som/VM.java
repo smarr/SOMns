@@ -17,7 +17,6 @@ import com.oracle.truffle.api.TruffleLanguage.Env;
 import com.oracle.truffle.api.TruffleOptions;
 import com.oracle.truffle.api.debug.Debugger;
 import com.oracle.truffle.api.instrumentation.Tag;
-import com.oracle.truffle.api.nodes.GraphPrintVisitor;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
 import com.oracle.truffle.tools.profiler.CPUSampler;
@@ -190,16 +189,6 @@ public final class VM {
     }
   }
 
-  @SuppressWarnings("deprecation")
-  private static void outputToIGV(final Method method) {
-    GraphPrintVisitor graphPrinter = new GraphPrintVisitor();
-
-    graphPrinter.beginGraph(method.toString()).visit(method);
-
-    graphPrinter.printToNetwork(true);
-    graphPrinter.close();
-  }
-
   public ForkJoinPool getActorPool() {
     return actorPool;
   }
@@ -239,10 +228,6 @@ public final class VM {
   public void reportParsedRootNode(final Method rootNode) {
     if (webDebugger != null) {
       webDebugger.reportRootNodeAfterParsing(rootNode);
-    }
-
-    if (VmSettings.IGV_DUMP_AFTER_PARSING) {
-      outputToIGV(rootNode);
     }
   }
 
@@ -328,8 +313,7 @@ public final class VM {
   public void initalize(final SomLanguage lang) throws IOException {
     Actor.initializeActorSystem(language);
 
-    assert objectSystem == null
-        : "VM is reinitialized accidently? objectSystem is already set.";
+    assert objectSystem == null : "VM is reinitialized accidently? objectSystem is already set.";
     objectSystem = new ObjectSystem(new SourcecodeCompiler(lang), structuralProbe, this);
     objectSystem.loadKernelAndPlatform(options.platformFile, options.kernelFile);
 
@@ -390,8 +374,7 @@ public final class VM {
     }
 
     if (VmSettings.TRUFFLE_DEBUGGER_ENABLED) {
-      assert options.webDebuggerEnabled
-          : "If debugging is enabled, we currently expect the web debugger to be used.";
+      assert options.webDebuggerEnabled : "If debugging is enabled, we currently expect the web debugger to be used.";
       Debugger debugger = Debugger.find(env);
 
       webDebugger = WebDebugger.find(env);
@@ -418,8 +401,7 @@ public final class VM {
     }
 
     if (VmSettings.TRACK_SNAPSHOT_ENTITIES) {
-      assert !options.siCandidateIdentifierEnabled
-          : "Currently, CandidateIdentifer and Snapshots are not compatible";
+      assert !options.siCandidateIdentifierEnabled : "Currently, CandidateIdentifer and Snapshots are not compatible";
       structuralProbe = SnapshotBackend.getProbe();
     }
   }

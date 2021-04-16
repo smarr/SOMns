@@ -30,8 +30,6 @@ public class VmSettings implements Settings {
 
   public static final boolean TRUFFLE_DEBUGGER_ENABLED;
 
-  public static final boolean IGV_DUMP_AFTER_PARSING;
-
   public static final boolean ANSI_COLOR_IN_OUTPUT;
 
   public static final String INSTRUMENTATION_PROP = "som.instrumentation";
@@ -92,7 +90,6 @@ public class VmSettings implements Settings {
     INSTRUMENTATION = dm || getBool(INSTRUMENTATION_PROP, false);
 
     DNU_PRINT_STACK_TRACE = getBool("som.printStackTraceOnDNU", false);
-    IGV_DUMP_AFTER_PARSING = getBool("som.igvDumpAfterParsing", false);
     ANSI_COLOR_IN_OUTPUT = getBool("som.useAnsiColoring", false);
 
     ASSISTED_DEBUGGING_BREAKPOINTS = getInteger("som.assistedDebuggingBp", -1);

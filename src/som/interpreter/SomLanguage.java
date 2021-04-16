@@ -29,9 +29,7 @@ import com.oracle.truffle.api.source.Source;
 import som.Launcher;
 import som.VM;
 import som.compiler.MixinDefinition;
-import som.vm.NotYetImplementedException;
 import som.vm.VmOptions;
-import som.vmobjects.SAbstractObject;
 import som.vmobjects.SClass;
 import tools.concurrency.Tags.AcquireLock;
 import tools.concurrency.Tags.ActivityCreation;
@@ -298,20 +296,6 @@ public final class SomLanguage extends TruffleLanguage<VM> {
     } catch (ThreadDeath t) {
       throw new IOException(t);
     }
-  }
-
-  @Override
-  protected Object findExportedSymbol(final VM context, final String globalName,
-      final boolean onlyExplicit) {
-    return context.getExport(globalName);
-  }
-
-  @Override
-  protected boolean isObjectOfLanguage(final Object object) {
-    if (object instanceof SAbstractObject) {
-      return true;
-    }
-    throw new NotYetImplementedException();
   }
 
   @Override

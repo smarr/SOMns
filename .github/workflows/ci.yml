@@ -12,15 +12,12 @@ jobs:
             job: test-osx
 
           - os: ubuntu-20.04
-            java: 8
             job: test-1
 
           - os: ubuntu-20.04
-            java: 11
             job: test-2
 
           - os: ubuntu-20.04
-            java: 11
             job: lint
 
 
@@ -34,25 +31,25 @@ jobs:
       - name: Compile SOMns Jar and Unit Tests
         if: matrix.job != 'lint'
         run: |
-          export JAVA_HOME=$JAVA_HOME_${{ matrix.java }}_X64
+          export JAVA_HOME=$JAVA_HOME_17_X64
           ant -e jar unit-tests
 
       - name: SOMns Test Suite
         if: matrix.job != 'lint'
         run: |
-          export JAVA_HOME=$JAVA_HOME_${{ matrix.java }}_X64
+          export JAVA_HOME=$JAVA_HOME_17_X64
           ./som --no-libgraal core-lib/TestSuite/TestRunner.ns
 
       - name: Build Native Image
         if: matrix.job == 'test-1'
         run: |
-          export JAVA_HOME=$JAVA_HOME_${{ matrix.java }}_X64
+          export JAVA_HOME=$JAVA_HOME_17_X64
           ant -e native-tests
 
       - name: Kompos Tests
         if: matrix.job == 'test-2'
         run: |
-          export JAVA_HOME=$JAVA_HOME_${{ matrix.java }}_X64
+          export JAVA_HOME=$JAVA_HOME_17_X64
           ant -e kompos
           cd tools/kompos
           npm test
@@ -60,25 +57,25 @@ jobs:
       - name: Dynamic Metrics Tests
         if: matrix.job == 'test-osx'
         run: |
-          export JAVA_HOME=$JAVA_HOME_${{ matrix.java }}_X64
+          export JAVA_HOME=$JAVA_HOME_17_X64
           ant -e dynamic-metrics-tests
 
       - name: Super Instructions Tests
         if: matrix.job == 'test-2'
         run: |
-          export JAVA_HOME=$JAVA_HOME_${{ matrix.java }}_X64
+          export JAVA_HOME=$JAVA_HOME_17_X64
           ant -e superinstructions-tests
 
       - name: Replay Tests 1
         if: matrix.job == 'test-1'
         run: |
-          export JAVA_HOME=$JAVA_HOME_${{ matrix.java }}_X64
+          export JAVA_HOME=$JAVA_HOME_17_X64
           ./tests/replay/test.sh 1
 
       - name: Replay Tests 2
         if: matrix.job == 'test-2'
         run: |
-          export JAVA_HOME=$JAVA_HOME_${{ matrix.java }}_X64
+          export JAVA_HOME=$JAVA_HOME_17_X64
           ./tests/replay/test.sh 2
 
     # Disabled due to breaking changes in the tracing infrastructure. Not fixed to make merge of Snapshotting PR(#293) easier.
@@ -105,7 +102,7 @@ jobs:
         if: matrix.job == 'lint'
         run: |
           export ECLIPSE_EXE=${GITHUB_WORKSPACE}/../eclipse/eclipse
-          export JAVA_HOME=$JAVA_HOME_11_X64
+          export JAVA_HOME=$JAVA_HOME_17_X64
           ant -e eclipseformat-check
 
       - name: Lint Kompos

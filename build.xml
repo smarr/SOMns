@@ -3,9 +3,6 @@
     xmlns:if="ant:if"
     xmlns:jacoco="antlib:org.jacoco.ant">
 
-    <property name="jvmci.version" value="jvmci-20.3-b09" />
-    <property name="jdk8.version"  value="282+07" />
-
     <macrodef name="travis">
         <attribute name="target" />
         <attribute name="start" default="" />
@@ -15,12 +12,9 @@
         </sequential>
     </macrodef>
 
-    <condition property="is.atLeastJava9" value="true" else="false">
-      <or>
-        <matches string="${java.version}" pattern="^9"/>
-        <matches string="${java.version}" pattern="^1[0-9]"/>
-      </or>
-    </condition>
+    <property name="jvmci.version" value="jvmci-22.0-b05" />
+    <property name="jdk.version"   value="17.0.2+8" />
+
     <condition property="kernel" value="darwin-amd64" else="linux-amd64">
         <os family="mac"/>
     </condition>
@@ -29,36 +23,33 @@
     </condition>
 
     <travis target="env" start="Environment" />
-    <echo>
-        ant.java.version: ${ant.java.version}
-        java.version:     ${java.version}
-        is.atLeastJava9:  ${is.atLeastJava9}
-        kernel:           ${kernel}
-        env.TRAVIS:       ${env.TRAVIS}
-    </echo>
     <travis target="env" />
 
-    <property name="src.dir"     value="src"/>
-    <property name="src_gen.dir" value="src_gen"/>
+    <echo>ant.java.version: ${ant.java.version}
+java.version:     ${java.version}
+kernel:           ${kernel}</echo>
+
+    <property name="src.dir"     location="src"/>
+    <property name="src_gen.dir" location="src_gen"/>
     <property name="lib.dir"     location="libs" />
     <property name="bd.dir"      location="${lib.dir}/black-diamonds/" />
-    <property name="unit.dir"    value="tests/java" />
-    <property name="kompos.dir"  value="tools/kompos" />
+    <property name="unit.dir"    location="tests/java" />
+    <property name="kompos.dir"  location="tools/kompos" />
     <property name="corelib.dir" location="core-lib" />
-    <property name="graal.dir"   location="${lib.dir}/truffle/compiler" />
     <property name="sdk.dir"     location="${lib.dir}/truffle/sdk" />
     <property name="tools.dir"   location="${lib.dir}/truffle/tools" />
     <property name="truffle.dir" location="${lib.dir}/truffle/truffle" />
     <property name="svm.dir"     location="${lib.dir}/truffle/substratevm" />
     <property name="vm.dir"      location="${lib.dir}/truffle/vm" />
-    <property name="compiler.build" location="${graal.dir}/mxbuild/dists/jdk1.8" />
-    <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists/jdk1.8" />
-    <property name="tools.build" location="${tools.dir}/mxbuild/dists/jdk1.8" />
-    <property name="svm.build"   location="${svm.dir}/mxbuild/dists/jdk1.8" />
-    <property name="truffle.build" location="${truffle.dir}/mxbuild/dists/jdk1.8" />
+    <property name="compiler.dir" location="${lib.dir}/truffle/compiler" />
+    <property name="compiler.build" location="${compiler.dir}/mxbuild/dists" />
+    <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists" />
+    <property name="tools.build" location="${tools.dir}/mxbuild/dists" />
+    <property name="svm.build"   location="${svm.dir}/mxbuild/dists" />
+    <property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
     <property name="somns-deps.version" value="0.3.6" />
-    <property name="checkstyle.version" value="8.28" />
-    <property name="jacoco.version"     value="0.8.5" />
+    <property name="checkstyle.version" value="8.36" />
+    <property name="jacoco.version"     value="0.8.8" />
     <property name="jvmci.home"  location="${lib.dir}/jvmci${home.ext}" />
 
     <!-- <property name="lib.url" value="https://dl.bintray.com/smarr/SOM" /> -->
@@ -87,7 +78,7 @@
         <pathelement location="${lib.dir}/jna-platform.jar" />
         <pathelement location="${lib.dir}/jna.jar" />
 
-        <pathelement location="${svm.build}/svm-core.jar" />
+        <pathelement location="${svm.build}/svm.jar" />
         <pathelement location="${tools.build}/truffle-profiler.jar" />
     </path>
 
@@ -127,9 +118,9 @@
     <target name="clean-truffle" if="truffle.and.jvmci.present">
         <travis target="clean-truffle" start="clean-truffle" />
 
-        <exec executable="${mx.cmd}" dir="${svm.dir}">
+        <exec executable="${mx.cmd}" dir="${vm.dir}">
           <arg value="--dynamicimports"/>
-          <arg value="../truffle,../tools,../compiler,../sdk"/>
+          <arg value="../substratevm,../tools,../truffle,../sdk,../compiler"/>
           <arg value="clean"/>
           <env key="JAVA_HOME" value="${jvmci.home}" />
         </exec>
@@ -163,9 +154,9 @@
     <!-- libgraal-jdk also implicitly builds truffle-libs -->
     <target name="truffle-libs" unless="skip.truffle" depends="jvmci-libs,truffle-submodule">
         <travis target="truffle-libs" start="Build Truffle and Graal" />
-        <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true">
-            <arg value="--dynamicimports"/>
-            <arg value="../truffle,../tools,../compiler,../sdk"/>
+        <exec executable="${mx.cmd}" dir="${compiler.dir}" failonerror="true">
+            <env key="DYNAMIC_IMPORTS" value="/tools" />
+            <env key="EXCLUDE_COMPONENTS" value="svmag,nju,nic,ni,nil,ins,dap,lsp,insight,insightheap,vvm" />
             <arg value="build"/>
             <arg value="--no-native" unless:true="${build.native}" />
             <env key="JAVA_HOME" value="${jvmci.home}" />
@@ -181,7 +172,7 @@
             <env key="DYNAMIC_IMPORTS" value="/substratevm,/tools,/truffle,/sdk,/compiler" />
             <env key="FORCE_BASH_LAUNCHERS" value="true" />
             <env key="DISABLE_LIBPOLYGLOT" value="true" />
-            <env key="EXCLUDE_COMPONENTS" value="svmag,nju,nic,ni,nil" />
+            <env key="EXCLUDE_COMPONENTS" value="svmag,nju,nic,ni,nil,ins,dap,lsp,insight,insightheap,vvm" />
             <arg line="build"/>
         </exec>
         <travis target="libgraal-jdk" />
@@ -191,13 +182,11 @@
         <travis target="bd-libs" start="Build Black Diamonds" />
 
         <ant dir="${bd.dir}" useNativeBasedir="true" target="libs-junit" inheritAll="false">
-            <property name="force.java8"   value="${is.atLeastJava9}" />
         </ant>
         <ant dir="${bd.dir}" useNativeBasedir="true" target="compile-nodeps" inheritAll="false">
             <property name="sdk.build"   value="${sdk.build}" />
             <property name="truffle.dir" value="${truffle.dir}" />
             <property name="truffle.build" value="${truffle.build}" />
-            <property name="force.java8"   value="${is.atLeastJava9}" />
         </ant>
 
         <travis target="bd-libs" />
@@ -213,7 +202,7 @@
     </target>
 
     <target name="jvmci-libs" unless="skip.libs">
-        <get src="https://github.com/graalvm/graal-jvmci-8/releases/download/${jvmci.version}/openjdk-8u${jdk8.version}-${jvmci.version}-${kernel}.tar.gz"
+        <get src="https://github.com/graalvm/labs-openjdk-17/releases/download/${jvmci.version}/labsjdk-ce-${jdk.version}-${jvmci.version}-${kernel}.tar.gz"
              usetimestamp="true"
              dest="${lib.dir}/jvmci.tar.gz" />
         <mkdir dir="${lib.dir}/jvmci" />
@@ -351,17 +340,8 @@
         <travis target="codacy-lib" />
     </target>
 
-    <target name="java8-on-java9" description="Support Java 9 or later" if="${is.atLeastJava9}">
-      <travis target="java89" start="Support Java 9" />
-      <mkdir dir="${classes.dir}" />
-      <javac includeantruntime="false" srcdir="${lib.dir}/java8" destdir="${classes.dir}" debug="true">
-        <compilerarg line="--release 8" />
-      </javac>
-      <travis target="java89" />
-    </target>
-
-    <target name="compile-som" description="Compile SOMns" depends="java8-on-java9">
         <travis target="compile-som" start="Compile SOMns" />
+    <target name="compile-som" description="Compile SOMns">
         <mkdir dir="${build.dir}"/>
         <mkdir dir="${classes.dir}" />
         <mkdir dir="${src_gen.dir}" />
@@ -371,17 +351,14 @@
           <compilerarg line="-s ${src_gen.dir}" />
           <compilerarg line="-XDignore.symbol.file" />
           <compilerarg line="-Xlint:all" />
-          <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
         </javac>
         <javac includeantruntime="false" srcdir="${src_gen.dir}" destdir="${classes.dir}" debug="true">
           <classpath refid="som.cp" />
           <compilerarg line="-s ${src_gen.dir}" />
           <compilerarg line="-Xlint:all" />
-          <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
         </javac>
         <javac includeantruntime="false" srcdir="${unit.dir}" destdir="${classes.dir}" debug="true">
           <classpath refid="som.cp" />
-          <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
         </javac>
         <travis target="compile-som" />
     </target>
