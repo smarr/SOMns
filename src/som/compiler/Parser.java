@@ -268,7 +268,7 @@ public class Parser {
     }
   }
 
-  public Parser(final String content, final long fileSize, final Source source,
+  public Parser(final String content, final Source source,
       final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe,
       final SomLanguage language) throws ParseError {
     this.source = source;
@@ -277,7 +277,7 @@ public class Parser {
     sym = NONE;
     nextSym = NONE;
 
-    if (fileSize == 0) {
+    if (content.length() == 0) {
       throw new ParseError("Provided file is empty.", NONE, this);
     }
 

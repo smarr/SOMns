@@ -53,9 +53,7 @@ public class TypeGrammarParserTest {
 
   private TypeParser createParser(final String testString) throws ParseError {
     Source s = SomLanguage.getSyntheticSource(testString, "test.ns");
-    Parser p = new Parser(
-        testString, testString.length(), s, new StructuralProbe<>(),
-        new SomLanguage());
+    Parser p = new Parser(testString, s, new StructuralProbe<>(), new SomLanguage());
 
     TypeParser tp = new TypeParser(p);
     return tp;

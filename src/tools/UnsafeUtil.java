@@ -21,5 +21,4 @@ public class UnsafeUtil {
           "exception while trying to get Unsafe.theUnsafe via reflection:", e);
     }
   }
-
 }
