@@ -9,7 +9,6 @@ import com.oracle.truffle.api.nodes.Node;
 
 import som.interpreter.nodes.ExpressionNode;
 import som.vm.NotYetImplementedException;
-import tools.dym.Tags.ArgumentExpr;
 import tools.dym.Tags.ControlFlowCondition;
 import tools.dym.Tags.LoopBody;
 import tools.dym.Tags.VirtualInvokeReceiver;
@@ -37,19 +36,14 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
   private static final byte CONTROL_FLOW_CONDITION = 1 << 2;
 
   /**
-   * Indicates that this node is an argument to a send.
-   */
-  private static final byte ARGUMENT = 1 << 3;
-
-  /**
    * Indicates that this node determines a receiver for an invoke.
    */
-  private static final byte VIRTUAL_INVOKE_RECEIVER = 1 << 4;
+  private static final byte VIRTUAL_INVOKE_RECEIVER = 1 << 3;
 
   /**
    * Indicate that this node is the first/root node of a statement.
    */
-  private static final byte STATEMENT = 1 << 5;
+  private static final byte STATEMENT = 1 << 4;
 
   private boolean isTagged(final byte mask) {
     return (tagMark & mask) != 0;
@@ -66,7 +60,6 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
   public void markAsRootExpression() {
     assert !isTagged(ROOT_EXPR);
     assert !isTagged(LOOP_BODY);
-    assert !isTagged(ARGUMENT);
     assert !isTagged(CONTROL_FLOW_CONDITION);
     assert getSourceSection() != null;
     tagWith(ROOT_EXPR);
@@ -91,12 +84,6 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
     assert !isTagged(ROOT_EXPR);
     assert getSourceSection() != null;
     tagWith(CONTROL_FLOW_CONDITION);
-  }
-
-  @Override
-  public void markAsArgument() {
-    assert getSourceSection() != null;
-    tagWith(ARGUMENT);
   }
 
   @Override
@@ -139,8 +126,6 @@ public abstract class ExprWithTagsNode extends ExpressionNode {
       return isTagged(LOOP_BODY);
     } else if (tag == ControlFlowCondition.class) {
       return isTagged(CONTROL_FLOW_CONDITION);
-    } else if (tag == ArgumentExpr.class) {
-      return isTagged(ARGUMENT);
     } else if (tag == VirtualInvokeReceiver.class) {
       return isTagged(VIRTUAL_INVOKE_RECEIVER);
     } else {

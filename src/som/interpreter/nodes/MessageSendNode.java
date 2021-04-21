@@ -43,10 +43,6 @@ public final class MessageSendNode {
 
   public static ExpressionNode createMessageSend(final SSymbol selector,
       final ExpressionNode[] arguments, final SourceSection source, final VM vm) {
-    for (ExpressionNode exp : arguments) {
-      unwrapIfNecessary(exp).markAsArgument();
-    }
-
     Primitives prims = vm.getPrimitives();
     Specializer<VM, ExpressionNode, SSymbol> specializer =
         prims.getParserSpecializer(selector, arguments);

@@ -56,11 +56,6 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitiveNode {
   }
 
   @Override
-  public void markAsArgument() {
-    primitive.markAsArgument();
-  }
-
-  @Override
   public void markAsVirtualInvokeReceiver() {
     primitive.markAsVirtualInvokeReceiver();
   }

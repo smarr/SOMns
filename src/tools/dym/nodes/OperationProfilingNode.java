@@ -3,13 +3,9 @@ package tools.dym.nodes;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.instrumentation.EventContext;
-import com.oracle.truffle.api.nodes.Node;
 
 import som.interpreter.ReturnException;
-import som.interpreter.nodes.SOMNode;
 import som.vm.NotYetImplementedException;
-import tools.dym.DynamicMetrics;
-import tools.dym.Tags.ArgumentExpr;
 import tools.dym.profiles.OperationProfile;
 
 
@@ -18,12 +14,8 @@ import tools.dym.profiles.OperationProfile;
  */
 public final class OperationProfilingNode extends CountingNode<OperationProfile> {
 
-  private final EventContext context;
-
-  public OperationProfilingNode(
-      final OperationProfile profile, final EventContext context) {
+  public OperationProfilingNode(final OperationProfile profile) {
     super(profile);
-    this.context = context;
   }
 
   @Override
@@ -43,6 +35,12 @@ public final class OperationProfilingNode extends CountingNode<OperationProfile>
   }
 
   @Override
+  protected void onInputValue(final VirtualFrame frame, final EventContext inputContext,
+      final int inputIndex, final Object inputValue) {
+    counter.profileArgument(inputIndex, inputValue);
+  }
+
+  @Override
   protected void onReturnExceptional(final VirtualFrame frame, final Throwable e) {
     // TODO: make language independent
     if (e instanceof ReturnException) {
@@ -51,27 +49,5 @@ public final class OperationProfilingNode extends CountingNode<OperationProfile>
       CompilerDirectives.transferToInterpreter();
       throw new NotYetImplementedException();
     }
-  }
-
-  public int registerSubexpressionAndGetIdx(final Node subExpr) {
-    int idx = getChildIdx(subExpr);
-    assert idx >= 0 : "Subexpression was not found. Something seems to be wrong with the instrumentation.";
-    return idx + 1; // + 1 is used to represent the index of the storage array used to hold the
-                    // result. Return value is at 0 index.
-  }
-
-  private int getChildIdx(final Node subExpr) {
-    int taggedIdx = 0;
-    for (Node n : context.getInstrumentedNode().getChildren()) {
-      Node child = SOMNode.unwrapIfNecessary(n);
-
-      if (child == subExpr) {
-        assert DynamicMetrics.hasTag(child, ArgumentExpr.class);
-        return taggedIdx;
-      } else if (DynamicMetrics.hasTag(child, ArgumentExpr.class)) {
-        taggedIdx += 1;
-      }
-    }
-    return -1;
   }
 }

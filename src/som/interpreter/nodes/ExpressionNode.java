@@ -65,10 +65,6 @@ public abstract class ExpressionNode extends SOMNode implements InstrumentableNo
     throw new UnsupportedOperationException();
   }
 
-  public void markAsArgument() {
-    throw new UnsupportedOperationException();
-  }
-
   public void markAsVirtualInvokeReceiver() {
     throw new UnsupportedOperationException();
   }

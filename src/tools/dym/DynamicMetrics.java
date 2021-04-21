@@ -48,7 +48,6 @@ import som.vmobjects.SInvokable;
 import som.vmobjects.SSymbol;
 import tools.concurrency.Tags.EventualMessageSend;
 import tools.debugger.Tags.LiteralTag;
-import tools.dym.Tags.ArgumentExpr;
 import tools.dym.Tags.BasicPrimitiveOperation;
 import tools.dym.Tags.ClassRead;
 import tools.dym.Tags.ComplexPrimitiveOperation;
@@ -72,13 +71,11 @@ import tools.dym.nodes.ControlFlowProfileNode;
 import tools.dym.nodes.CountingNode;
 import tools.dym.nodes.FarRefTypeProfilingNode;
 import tools.dym.nodes.InvocationProfilingNode;
-import tools.dym.nodes.LateReportResultNode;
 import tools.dym.nodes.LoopIterationReportNode;
 import tools.dym.nodes.LoopProfilingNode;
 import tools.dym.nodes.OperationProfilingNode;
 import tools.dym.nodes.ReadProfilingNode;
 import tools.dym.nodes.ReportReceiverNode;
-import tools.dym.nodes.ReportResultNode;
 import tools.dym.profiles.ActorCreationProfile;
 import tools.dym.profiles.AllocationProfile;
 import tools.dym.profiles.ArrayCreationProfile;
@@ -277,8 +274,7 @@ public class DynamicMetrics extends TruffleInstrument {
     throw new NotYetImplementedException();
   }
 
-  private ExecutionEventNodeFactory addOperationInstrumentation(
-      final Instrumenter instrumenter) {
+  private void addOperationInstrumentation(final Instrumenter instrumenter) {
     Builder filters = SourceSectionFilter.newBuilder();
     filters.tagIs(ComplexPrimitiveOperation.class, BasicPrimitiveOperation.class);
 
@@ -291,29 +287,11 @@ public class DynamicMetrics extends TruffleInstrument {
           ctx.getInstrumentedSourceSection(),
           (final SourceSection src) -> new OperationProfile(
               src, operation, tags, numArgsAndResult));
-      return new OperationProfilingNode(p, ctx);
+      return new OperationProfilingNode(p);
     };
 
-    instrumenter.attachExecutionEventFactory(filters.build(), primExpFactory);
-    return primExpFactory;
-  }
-
-  private void addSubexpressionInstrumentation(final Instrumenter instrumenter,
-      final ExecutionEventNodeFactory factory) {
-    Builder filters = SourceSectionFilter.newBuilder();
-    filters.tagIs(ArgumentExpr.class);
-
-    instrumenter.attachExecutionEventFactory(filters.build(), (final EventContext ctx) -> {
-      ExecutionEventNode parent = ctx.findDirectParentEventNode(factory);
-
-      if (parent == null) {
-        return new LateReportResultNode(ctx, factory);
-      }
-
-      OperationProfilingNode p = (OperationProfilingNode) parent;
-      int idx = p.registerSubexpressionAndGetIdx(ctx.getInstrumentedNode());
-      return new ReportResultNode(p.getProfile(), idx);
-    });
+    SourceSectionFilter filter = filters.build();
+    instrumenter.attachExecutionEventFactory(filter, SourceSectionFilter.ANY, primExpFactory);
   }
 
   private void addReceiverInstrumentation(final Instrumenter instrumenter,
@@ -375,8 +353,7 @@ public class DynamicMetrics extends TruffleInstrument {
         new Class<?>[] {LiteralTag.class}, NO_TAGS,
         Counter::new, CountingNode<Counter>::new);
 
-    ExecutionEventNodeFactory opInstrumentFact = addOperationInstrumentation(instrumenter);
-    addSubexpressionInstrumentation(instrumenter, opInstrumentFact);
+    addOperationInstrumentation(instrumenter);
 
     addInstrumentation(instrumenter, fieldReadProfiles,
         new Class<?>[] {FieldRead.class}, NO_TAGS,

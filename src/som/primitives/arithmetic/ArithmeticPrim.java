@@ -3,6 +3,7 @@ package som.primitives.arithmetic;
 import java.math.BigInteger;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.instrumentation.Tag;
 
 import som.interpreter.nodes.nary.BinaryBasicOperation;
@@ -26,5 +27,10 @@ public abstract class ArithmeticPrim extends BinaryBasicOperation {
     } else {
       return result.longValue();
     }
+  }
+
+  @Fallback
+  public final Object doGenericSend(final Object left, final Object right) {
+    return null;
   }
 }
