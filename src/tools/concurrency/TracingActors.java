@@ -351,7 +351,8 @@ public class TracingActors {
         }
 
         assert toProcess.size()
-            + orderedMessages.size() == numReceivedMsgs : "We shouldn't lose any messages here.";
+            + orderedMessages.size() == numReceivedMsgs
+            : "We shouldn't lose any messages here.";
         return toProcess;
       }
 

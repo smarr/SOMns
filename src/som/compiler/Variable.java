@@ -82,7 +82,8 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
       return true;
     }
     assert source == null || !source.equals(
-        var.source) : "Why are there multiple objects for this source section? might need to fix comparison above";
+        var.source)
+        : "Why are there multiple objects for this source section? might need to fix comparison above";
     return false;
   }
 
@@ -310,7 +311,8 @@ public abstract class Variable implements bd.inlining.Variable<ExpressionNode> {
     public Variable split(final FrameDescriptor descriptor) {
       Internal newInternal = new Internal(name);
       assert frameDescriptor.getFrameSlotKind(
-          slot) == FrameSlotKind.Object : "We only have the on stack marker currently, so, we expect those not to specialize";
+          slot) == FrameSlotKind.Object
+          : "We only have the on stack marker currently, so, we expect those not to specialize";
       newInternal.init(
           descriptor.addFrameSlot(newInternal, frameDescriptor.getFrameSlotKind(slot)),
           descriptor);

@@ -33,7 +33,8 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitiveNode {
 
   @Override
   public boolean hasTag(final Class<? extends Tag> tag) {
-    assert !(primitive instanceof WrapperNode) : "Eager primitives are expected to point directly to primitive nodes, and do not have wrapper nodes. I think, we wanted the wrapper nodes to be strictly around the eager wrappers.";
+    assert !(primitive instanceof WrapperNode)
+        : "Eager primitives are expected to point directly to primitive nodes, and do not have wrapper nodes. I think, we wanted the wrapper nodes to be strictly around the eager wrappers.";
     return primitive.hasTagIgnoringEagerness(tag);
   }
 
@@ -127,7 +128,8 @@ public final class EagerTernaryPrimitiveNode extends EagerPrimitiveNode {
     if (newNode instanceof ExprWithTagsNode) {
       ((ExprWithTagsNode) newNode).tagMark = primitive.tagMark;
     } else if (newNode instanceof WrapperNode) {
-      assert ((WrapperNode) newNode).getDelegateNode() == this : "Wrapping should not also do specialization or other changes, I think";
+      assert ((WrapperNode) newNode).getDelegateNode() == this
+          : "Wrapping should not also do specialization or other changes, I think";
     } else {
       throw new NotYetImplementedException();
     }

@@ -1,0 +1,116 @@
+name: Tests
+
+on: [push, pull_request]
+
+jobs:
+  test_som:
+    strategy:
+      fail-fast: false # we want all jobs to run, because they may fail independently
+      matrix:
+        include:
+          - os: macos-latest
+            job: test-osx
+
+          - os: ubuntu-20.04
+            java: 8
+            job: test-1
+
+          - os: ubuntu-20.04
+            java: 11
+            job: test-2
+
+          - os: ubuntu-20.04
+            java: 11
+            job: lint
+    
+    
+    runs-on: ubuntu-20.04 # ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+        with:
+          submodules: true
+
+      - name: Compile SOMns Jar and Unit Tests
+        if: matrix.job != 'lint'
+        run: |
+          export JAVA_HOME=$JAVA_HOME_${{ matrix.java }}_X64
+          ant -e jar unit-tests
+      
+      - name: SOMns Test Suite
+        if: matrix.job != 'lint'
+        run: |
+          export JAVA_HOME=$JAVA_HOME_${{ matrix.java }}_X64
+          ./som --no-libgraal core-lib/TestSuite/TestRunner.ns
+
+      - name: Build Native Image
+        if: matrix.job == 'test-1'
+        run: |
+          export JAVA_HOME=$JAVA_HOME_${{ matrix.java }}_X64
+          ant -e native-tests
+
+      - name: Kompos Tests
+        if: matrix.job == 'test-2'
+        run: |
+          export JAVA_HOME=$JAVA_HOME_${{ matrix.java }}_X64
+          ant -e kompos
+          cd tools/kompos
+          npm test
+
+      - name: Dynamic Metrics Tests
+        if: matrix.job == 'test-osx'
+        run: |
+          export JAVA_HOME=$JAVA_HOME_${{ matrix.java }}_X64
+          ant -e dynamic-metrics-tests
+
+      - name: Super Instructions Tests
+        if: matrix.job == 'test-2'
+        run: |
+          export JAVA_HOME=$JAVA_HOME_${{ matrix.java }}_X64
+          ant -e superinstructions-tests
+
+      - name: Replay Tests 1
+        if: matrix.job == 'test-1'
+        run: |
+          export JAVA_HOME=$JAVA_HOME_${{ matrix.java }}_X64
+          ./tests/replay/test.sh 1
+
+      - name: Replay Tests 2
+        if: matrix.job == 'test-2'
+        run: |
+          export JAVA_HOME=$JAVA_HOME_${{ matrix.java }}_X64
+          ./tests/replay/test.sh 2
+
+    # Disabled due to breaking changes in the tracing infrastructure. Not fixed to make merge of Snapshotting PR(#293) easier.
+    #- name: Snapshot Tests
+      # script:
+      #   - run ./tests/snapshot/test.sh
+      #   - $ANT serialization-tests
+
+
+      - name: CheckStyle
+        if: matrix.job == 'lint'
+        run: |
+          ant -e checkstyle
+  
+      - name: Download Eclipse
+        if: matrix.job == 'lint'
+        run: |
+           export ECLIPSE_TAR=eclipse.tar.gz
+           export ECLIPSE_URL=https://ftp.halifax.rwth-aachen.de/eclipse/eclipse/downloads/drops4/R-4.17-202009021800/eclipse-SDK-4.17-linux-gtk-x86_64.tar.gz
+           curl ${ECLIPSE_URL} -o ${ECLIPSE_TAR}
+           tar -C ${GITHUB_WORKSPACE}/.. -xzf ${ECLIPSE_TAR}
+      
+      - name: Check Eclipse Format
+        if: matrix.job == 'lint'
+        run: |
+          export ECLIPSE_EXE=${GITHUB_WORKSPACE}/../eclipse/eclipse
+          export JAVA_HOME=$JAVA_HOME_11_X64
+          ant -e eclipseformat-check
+  
+      - name: Lint Kompos
+        if: matrix.job == 'lint'
+        run: |
+          cd tools/kompos
+          npm install
+          npm run verify

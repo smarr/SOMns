@@ -249,7 +249,8 @@ public class KomposTrace {
       }
 
       assert !origin.getSource()
-                    .isInternal() : "Need special handling to ensure we see user code reported to trace/debugger";
+                    .isInternal()
+          : "Need special handling to ensure we see user code reported to trace/debugger";
       putShort(Symbols.symbolFor(SourceCoordinate.getURI(origin.getSource())).getSymbolId());
       putShort((short) origin.getStartLine());
       putShort((short) origin.getStartColumn());

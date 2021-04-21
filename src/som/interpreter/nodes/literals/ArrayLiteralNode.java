@@ -78,7 +78,8 @@ public abstract class ArrayLiteralNode extends LiteralNode {
       } else if (storage.isLongType()) {
         node = new Longs(expressions);
       } else {
-        assert storage.isObjectType() : "Partially empty is not supported yet. Should be simple to add.";
+        assert storage.isObjectType()
+            : "Partially empty is not supported yet. Should be simple to add.";
         node = new Objects(expressions);
       }
       replace(node.initialize(sourceSection));

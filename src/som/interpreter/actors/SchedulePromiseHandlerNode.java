@@ -65,7 +65,8 @@ public abstract class SchedulePromiseHandlerNode extends Node {
 
     Object receiver = rcvrWrapper.execute(promise.getValueUnsync(),
         finalTarget, current);
-    assert !(receiver instanceof SPromise) : "TODO: handle this case as well?? Is it possible? didn't think about it";
+    assert !(receiver instanceof SPromise)
+        : "TODO: handle this case as well?? Is it possible? didn't think about it";
 
     // TODO: might want to handle that in a specialization
     if (receiver instanceof SFarReference) {
@@ -77,7 +78,8 @@ public abstract class SchedulePromiseHandlerNode extends Node {
 
     msg.args[PromiseMessage.PROMISE_RCVR_IDX] = receiver;
 
-    assert !(receiver instanceof SFarReference) : "this should not happen, because we need to redirect messages to the other actor, and normally we just unwrapped this";
+    assert !(receiver instanceof SFarReference)
+        : "this should not happen, because we need to redirect messages to the other actor, and normally we just unwrapped this";
     assert !(receiver instanceof SPromise);
 
     wrapArguments(msg, finalTarget, argWrapper);

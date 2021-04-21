@@ -313,7 +313,8 @@ public class SPromise extends SObjectWithClass {
   }
 
   public final boolean assertNotCompleted() {
-    assert !isCompleted() : "Not sure yet what to do with re-resolving of promises? just ignore it? Error?";
+    assert !isCompleted()
+        : "Not sure yet what to do with re-resolving of promises? just ignore it? Error?";
     assert value == null : "If it isn't resolved yet, it shouldn't have a value";
     return true;
   }
