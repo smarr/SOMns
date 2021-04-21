@@ -1,6 +1,5 @@
 package som.interpreter.objectstorage;
 
-import com.oracle.truffle.api.Assumption;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
@@ -89,7 +88,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   }
 
   @Specialization(
-      assumptions = {"cachedLayout.getAssumption()"},
+      assumptions = {"cachedLayout.getIsLatestLayoutForClassAssumption()"},
       guards = {
           "accessor != null",
           "cachedLayout == rcvr.getObjectLayout()",
@@ -104,7 +103,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   }
 
   @Specialization(
-      assumptions = {"cachedLayout.getAssumption()"},
+      assumptions = {"cachedLayout.getIsLatestLayoutForClassAssumption()"},
       guards = {
           "accessor != null",
           "cachedLayout == rcvr.getObjectLayout()",
@@ -119,7 +118,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   }
 
   @Specialization(
-      assumptions = {"cachedLayout.getAssumption()"},
+      assumptions = {"cachedLayout.getIsLatestLayoutForClassAssumption()"},
       guards = {"accessor != null",
           "cachedLayout == rcvr.getObjectLayout()"},
       replaces = "longValueSet",
@@ -134,7 +133,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   }
 
   @Specialization(
-      assumptions = {"cachedLayout.getAssumption()"},
+      assumptions = {"cachedLayout.getIsLatestLayoutForClassAssumption()"},
       guards = {"accessor != null",
           "cachedLayout == rcvr.getObjectLayout()"},
       replaces = "longValueSet",
@@ -149,7 +148,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   }
 
   @Specialization(
-      assumptions = {"cachedLayout.getAssumption()"},
+      assumptions = {"cachedLayout.getIsLatestLayoutForClassAssumption()"},
       guards = {"accessor != null",
           "cachedLayout == rcvr.getObjectLayout()",
           "accessor.isPrimitiveSet(rcvr, primMarkProfile)"},
@@ -163,7 +162,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   }
 
   @Specialization(
-      assumptions = {"cachedLayout.getAssumption()"},
+      assumptions = {"cachedLayout.getIsLatestLayoutForClassAssumption()"},
       guards = {"accessor != null",
           "cachedLayout == rcvr.getObjectLayout()",
           "accessor.isPrimitiveSet(rcvr, primMarkProfile)"},
@@ -177,7 +176,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   }
 
   @Specialization(
-      assumptions = {"cachedLayout.getAssumption()"},
+      assumptions = {"cachedLayout.getIsLatestLayoutForClassAssumption()"},
       guards = {"accessor != null",
           "cachedLayout == rcvr.getObjectLayout()"},
       replaces = "doubleValueSet",
@@ -192,7 +191,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   }
 
   @Specialization(
-      assumptions = {"cachedLayout.getAssumption()"},
+      assumptions = {"cachedLayout.getIsLatestLayoutForClassAssumption()"},
       guards = {"accessor != null",
           "cachedLayout == rcvr.getObjectLayout()"},
       replaces = "doubleValueSet",
@@ -207,7 +206,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   }
 
   @Specialization(
-      assumptions = {"cachedLayout.getAssumption()"},
+      assumptions = {"cachedLayout.getIsLatestLayoutForClassAssumption()"},
       guards = {"accessor != null",
           "cachedLayout == rcvr.getObjectLayout()"},
       limit = "LIMIT")
@@ -219,7 +218,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   }
 
   @Specialization(
-      assumptions = {"cachedLayout.getAssumption()"},
+      assumptions = {"cachedLayout.getIsLatestLayoutForClassAssumption()"},
       guards = {"accessor != null",
           "cachedLayout == rcvr.getObjectLayout()"},
       limit = "LIMIT")
@@ -231,7 +230,7 @@ public abstract class InitializerFieldWrite extends ExprWithTagsNode {
   }
 
   @Specialization(
-      assumptions = {"cachedLayout.getAssumption()"},
+      assumptions = {"cachedLayout.getIsLatestLayoutForClassAssumption()"},
       guards = {"location != null",
           "cachedLayout == rcvr.getObjectLayout()"},
       limit = "LIMIT")
