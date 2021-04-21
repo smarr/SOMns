@@ -108,9 +108,9 @@ and on [ReadTheDocs][RTD].
 Development Status
 ------------------
 
-Active development of SOMns happens on the `dev` branch [![Build Status](https://travis-ci.org/smarr/SOMns.png?branch=dev)](https://travis-ci.org/smarr/SOMns/tree/dev).
+Active development of SOMns happens on the `dev` branch ![Build Status](https://github.com/smarr/SOMns/actions/workflows/ci.yml/badge.svg?branch=dev).
 
-The latest release is reflected by the `release` branch [![Build Status](https://travis-ci.org/smarr/SOMns.png?branch=release)](https://travis-ci.org/smarr/SOMns).
+The latest release is reflected by the `release` branch ![Build Status](https://github.com/smarr/SOMns/actions/workflows/ci.yml/badge.svg?branch=release).
 
 Changes and releases are documented in our [CHANGELOG.md][cl].
 
@@ -121,6 +121,12 @@ SOMns is designed as platform for research with a special interest for
 concurrent programming models, their interactions, and tooling for debugging.
 
 Related papers:
+
+ - [Capturing High-level Nondeterminism in Concurrent Programs for Practical Concurrency Model Agnostic Record & Replay](https://doi.org/10.22152/programming-journal.org/2021/5/14),
+   D. Aumayr, S. Marr, S. Kaleba, E. Gonzalez Boix, H. Mössenböck; <Programming>'21.
+
+ - [Asynchronous Snapshots of Actor Systems for Latency-Sensitive Applications](https://stefan-marr.de/downloads/mplr19-aumayr-et-al-asynchronous-snapshots-of-actor-systems-for-latency-sensitive-applications.pdf),
+   D. Aumayr, S. Marr, E. Gonzalez Boix, H. Mössenböck; MPLR'19.
 
  - [Transient Typechecks are (Almost) Free](https://stefan-marr.de/downloads/ecoop19-roberts-et-al-transient-typechecks-are-almost-free.pdf),
    R. Roberts, S. Marr, M. Homer, J. Noble; ECOOP'19.

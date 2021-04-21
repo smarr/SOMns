@@ -7,8 +7,6 @@ which is needed for the Kómpos Web Debugger.
 On Ubuntu, the necessary software can be installed with:
 
 ```bash
-## First, register the Node.js package repository
-curl -sL https://deb.nodesource.com/setup_9.x | sudo -E bash -
 sudo apt install npm nodejs
 ```
 
@@ -41,7 +39,7 @@ Eclipse Project outline.
 SOMns is currently developed with Eclipse. While other Java IDEs can also be
 used, for brevity, we'll focus on Eclipse only.
 
-At the time of writing, I am using [Eclipse Oxygen 4.7](https://eclipse.org/downloads/).
+At the time of writing, I am using [Eclipse 2021-03](https://eclipse.org/downloads/).
 Please also install the **Eclipse Checkstyle Plugin** from the [Eclipse Marketplace](http://eclipse-cs.sourceforge.net/#!/install).
 
 For development, we also need to setup all Eclipse projects:
@@ -84,7 +82,7 @@ in Eclipse. After starting SOMns, it should tell you that it is waiting on port
 
 A brief list of steps:
 
-1. Install software dependencies: Ant, git, Java 10, Eclipse 4.7 (or later),
+1. Install software dependencies: Ant, git, Java 10, Eclipse 2021-03 (or later),
    VS Code 1.21 (or later), Node.js, NPM, Graal JIT compiler
 
 2. Create Truffle Eclipse projects: `ant ideinit`
