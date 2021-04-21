@@ -85,10 +85,10 @@ package ext;
 
 public class Extension implements som.vm.Extension {
   @Override
-  public List<NodeFactory<? extends ExpressionNode>> getFactories() {
-    ArrayList<NodeFactory<? extends ExpressionNode>> result = new ArrayList<>();
-    result.add(IncPrimFactory.getFactory());
-    return result;
+  public List<Specializer<VM, ExpressionNode, SSymbol>> getSpecializers() {
+    List<Specializer<VM, ExpressionNode, SSymbol>> specializers = new ArrayList<>();
+    PrimitiveLoader.add(specializers, IncPrimFactory.getFactory());
+    return specializers;
   }
 }
 ```
