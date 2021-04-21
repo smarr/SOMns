@@ -26,6 +26,11 @@ public final class EagerUnaryPrimitiveNode extends EagerPrimitiveNode {
   }
 
   @Override
+  public EagerlySpecializableNode getPrimitiveNode() {
+    return primitive;
+  }
+
+  @Override
   public boolean hasTag(final Class<? extends Tag> tag) {
     assert !(primitive instanceof WrapperNode);
     return primitive.hasTagIgnoringEagerness(tag);

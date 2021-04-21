@@ -28,6 +28,11 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitiveNode {
   }
 
   @Override
+  public EagerlySpecializableNode getPrimitiveNode() {
+    return primitive;
+  }
+
+  @Override
   public boolean hasTag(final Class<? extends Tag> tag) {
     assert !(primitive instanceof WrapperNode)
         : "primitive can't be WrapperNodes to avoid double wrapping. It is: "
