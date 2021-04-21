@@ -52,20 +52,23 @@ See the [STM pull request](https://github.com/smarr/SOMns/pull/81#pullrequestrev
 ## Development Support
 
 **Continuous Integration:** To automatically run unit tests for the interpreter, SOMns, and the debugger,
-we use [Travis CI](https://travis-ci.org/smarr/SOMns/builds) (see `.travis.yml`)
+we use [GitHub Actions](https://github.com/smarr/SOMns/actions) (see `.github/workflows/ci.yml`)
 as well as a private GitLab instance to run benchmarks (see `.gitlab-ci.yml`).
 
-In case you forked SOMns on GitHub for your own work, please consider [enabling Travis CI](https://docs.travis-ci.com/user/getting-started/).
+The current build status of the release branch is: ![Build Status](https://github.com/smarr/SOMns/actions/workflows/ci.yml/badge.svg?branch=release).
 
-The current build status of the release branch is: [![Build Status](https://travis-ci.org/smarr/SOMns.png?branch=release)](https://travis-ci.org/smarr/SOMns)
+The status of the development branch `dev` is: ![Build Status](https://github.com/smarr/SOMns/actions/workflows/ci.yml/badge.svg?branch=dev).
 
-The status of the development branch `dev` is: [![Build Status](https://travis-ci.org/smarr/SOMns.png?branch=dev)](https://travis-ci.org/smarr/SOMns/tree/dev).
+Active development of SOMns happens on the `dev` branch 
+
+The latest release is reflected by the `release` branch .
+
 
 **Performance Tracking:**
 Since one goal of SOMns is to be a platform for research on concurrency with
 performance close to state-of-the-art JVMs, we continuously track benchmark
 performance, for startup as well as peak performance with
-[Codespeed](http://somns-speed.stefan-marr.de/timeline/#/?exe=14,23,19,21,22,20,16,17,15,18&base=none&ben=peak.Havlak&env=1&revs=10&equid=off).
+[ReBenchDB](https://rebench.stefan-marr.de/#SOMns).
 It is run on every change to the dev branch, and can be used to track and
 compare performance of experimental changes as well.
 
