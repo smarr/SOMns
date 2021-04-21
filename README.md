@@ -122,6 +122,12 @@ concurrent programming models, their interactions, and tooling for debugging.
 
 Related papers:
 
+ - [Capturing High-level Nondeterminism in Concurrent Programs for Practical Concurrency Model Agnostic Record & Replay](https://doi.org/10.22152/programming-journal.org/2021/5/14),
+   D. Aumayr, S. Marr, S. Kaleba, E. Gonzalez Boix, H. Mössenböck; <Programming>'21.
+
+ - [Asynchronous Snapshots of Actor Systems for Latency-Sensitive Applications](https://stefan-marr.de/downloads/mplr19-aumayr-et-al-asynchronous-snapshots-of-actor-systems-for-latency-sensitive-applications.pdf),
+   D. Aumayr, S. Marr, E. Gonzalez Boix, H. Mössenböck; MPLR'19.
+
  - [Transient Typechecks are (Almost) Free](https://stefan-marr.de/downloads/ecoop19-roberts-et-al-transient-typechecks-are-almost-free.pdf),
    R. Roberts, S. Marr, M. Homer, J. Noble; ECOOP'19.
 
