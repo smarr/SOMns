@@ -41,7 +41,8 @@ class ApplicationThreadStack {
       for (DebugStackFrame frame : event.getStackFrames()) {
         stackFrames.add(frame);
       }
-      assert !stackFrames.isEmpty() : "We expect that there is always at least one stack frame";
+      assert !stackFrames.isEmpty()
+          : "We expect that there is always at least one stack frame";
     }
     return stackFrames;
   }

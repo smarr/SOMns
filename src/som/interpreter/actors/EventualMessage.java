@@ -137,7 +137,8 @@ public abstract class EventualMessage {
       }
 
       assert target != null;
-      assert !(args[0] instanceof SFarReference) : "needs to be guaranted by call to this constructor";
+      assert !(args[0] instanceof SFarReference)
+          : "needs to be guaranted by call to this constructor";
       assert !(args[0] instanceof SPromise);
     }
 
@@ -158,7 +159,8 @@ public abstract class EventualMessage {
       }
 
       assert target != null;
-      assert !(args[0] instanceof SFarReference) : "needs to be guaranted by call to this constructor";
+      assert !(args[0] instanceof SFarReference)
+          : "needs to be guaranted by call to this constructor";
       assert !(args[0] instanceof SPromise);
     }
 
@@ -222,7 +224,8 @@ public abstract class EventualMessage {
     // we need to redirect the message to the owner of that far reference
 
     Object receiver = WrapReferenceNode.wrapForUse(target, arguments[0], currentSender, null);
-    assert !(receiver instanceof SPromise) : "TODO: handle this case as well?? Is it possible? didn't think about it";
+    assert !(receiver instanceof SPromise)
+        : "TODO: handle this case as well?? Is it possible? didn't think about it";
 
     if (receiver instanceof SFarReference) {
       // now we are about to send a message to a far reference, so, it
@@ -233,7 +236,8 @@ public abstract class EventualMessage {
 
     arguments[0] = receiver;
 
-    assert !(receiver instanceof SFarReference) : "this should not happen, because we need to redirect messages to the other actor, and normally we just unwrapped this";
+    assert !(receiver instanceof SFarReference)
+        : "this should not happen, because we need to redirect messages to the other actor, and normally we just unwrapped this";
     assert !(receiver instanceof SPromise);
 
     for (int i = 1; i < arguments.length; i++) {

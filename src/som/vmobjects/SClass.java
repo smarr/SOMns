@@ -328,7 +328,8 @@ public final class SClass extends SObjectWithClass {
    */
   public Dispatchable lookupMessage(final SSymbol selector,
       final AccessModifier hasAtLeast) {
-    assert hasAtLeast.ordinal() >= AccessModifier.PROTECTED.ordinal() : "Access modifier should be protected or public";
+    assert hasAtLeast.ordinal() >= AccessModifier.PROTECTED.ordinal()
+        : "Access modifier should be protected or public";
     VM.callerNeedsToBeOptimized("should never be called on fast path");
 
     Dispatchable disp = dispatchables.get(selector);

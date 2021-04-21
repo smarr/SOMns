@@ -207,7 +207,8 @@ public class Actor implements Activity {
 
     @Override
     public void run() {
-      assert executorRoot != null : "Actor system not initalized, call to initializeActorSystem(.) missing?";
+      assert executorRoot != null
+          : "Actor system not initalized, call to initializeActorSystem(.) missing?";
       executorRoot.call(this);
     }
 

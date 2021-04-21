@@ -92,7 +92,8 @@ public class Suspension {
 
   private int getLocalId(final long globalId) {
     assert TraceData.getActivityIdFromGlobalValId(
-        globalId) == activityId : "should be an id for current activity, otherwise, something is wrong";
+        globalId) == activityId
+        : "should be an id for current activity, otherwise, something is wrong";
     return TraceData.valIdFromGlobal(globalId);
   }
 

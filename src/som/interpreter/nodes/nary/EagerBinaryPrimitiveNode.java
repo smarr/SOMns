@@ -29,9 +29,10 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitiveNode {
 
   @Override
   public boolean hasTag(final Class<? extends Tag> tag) {
-    assert !(primitive instanceof WrapperNode) : "primitive can't be WrapperNodes to avoid double wrapping. It is: "
-        + primitive.getClass().getSimpleName() + " and contains a "
-        + ((WrapperNode) primitive).getDelegateNode().getClass().getSimpleName();
+    assert !(primitive instanceof WrapperNode)
+        : "primitive can't be WrapperNodes to avoid double wrapping. It is: "
+            + primitive.getClass().getSimpleName() + " and contains a "
+            + ((WrapperNode) primitive).getDelegateNode().getClass().getSimpleName();
     return primitive.hasTagIgnoringEagerness(tag);
   }
 
@@ -124,7 +125,8 @@ public final class EagerBinaryPrimitiveNode extends EagerPrimitiveNode {
     if (newNode instanceof ExprWithTagsNode) {
       ((ExprWithTagsNode) newNode).tagMark = primitive.tagMark;
     } else if (newNode instanceof WrapperNode) {
-      assert ((WrapperNode) newNode).getDelegateNode() == this : "Wrapping should not also do specialization or other changes, I think";
+      assert ((WrapperNode) newNode).getDelegateNode() == this
+          : "Wrapping should not also do specialization or other changes, I think";
     } else {
       throw new NotYetImplementedException();
     }

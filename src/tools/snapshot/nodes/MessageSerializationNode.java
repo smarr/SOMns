@@ -45,6 +45,7 @@ public abstract class MessageSerializationNode extends AbstractSerializationNode
   public enum MessageType {
     DirectMessage, CallbackMessage, PromiseMessage, UndeliveredPromiseMessage, DirectMessageNR,
     CallbackMessageNR, PromiseMessageNR, UndeliveredPromiseMessageNR;
+
     public byte getValue() {
       return (byte) this.ordinal();
     }

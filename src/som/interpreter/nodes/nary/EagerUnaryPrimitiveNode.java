@@ -117,7 +117,8 @@ public final class EagerUnaryPrimitiveNode extends EagerPrimitiveNode {
     if (newNode instanceof ExprWithTagsNode) {
       ((ExprWithTagsNode) newNode).tagMark = primitive.tagMark;
     } else if (newNode instanceof WrapperNode) {
-      assert ((WrapperNode) newNode).getDelegateNode() == this : "Wrapping should not also do specialization or other changes, I think";
+      assert ((WrapperNode) newNode).getDelegateNode() == this
+          : "Wrapping should not also do specialization or other changes, I think";
     } else {
       throw new NotYetImplementedException();
     }

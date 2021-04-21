@@ -60,7 +60,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
     this.expression = expression;
     this.frameOnStackMarker = frameOnStackMarker.getSlot();
     this.onStackMarkerVar = frameOnStackMarker;
-    assert this.frameOnStackMarker.getIdentifier() == frameOnStackMarker : "We expect slots to use `Variable` objects as identity";
+    assert this.frameOnStackMarker.getIdentifier() == frameOnStackMarker
+        : "We expect slots to use `Variable` objects as identity";
   }
 
   public ReturnNonLocalNode(final ReturnNonLocalNode node,
@@ -181,7 +182,8 @@ public final class ReturnNonLocalNode extends ContextualNode {
       this.nonLocalReturnHandler = BranchProfile.create();
       this.frameOnStackMarker = frameOnStackMarker.getSlot();
       this.frameOnStackMarkerVar = frameOnStackMarker;
-      assert this.frameOnStackMarker.getIdentifier() == frameOnStackMarker : "We expect slots to use `Variable` objects as identity";
+      assert this.frameOnStackMarker.getIdentifier() == frameOnStackMarker
+          : "We expect slots to use `Variable` objects as identity";
 
       this.doCatch = BranchProfile.create();
       this.doPropagate = BranchProfile.create();
