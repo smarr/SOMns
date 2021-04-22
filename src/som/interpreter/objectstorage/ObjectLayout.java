@@ -95,7 +95,7 @@ public final class ObjectLayout {
     latestLayoutForClass.check();
   }
 
-  Assumption getAssumption() {
+  Assumption getIsLatestLayoutForClassAssumption() {
     return latestLayoutForClass;
   }
 
