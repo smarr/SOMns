@@ -220,6 +220,8 @@ public final class MetricsCsvWriter {
       case "Symbol":
         return "Symbol"; // TODO: keep this?
       case "Array":
+      case "ValueArray":
+      case "TransferArray":
         return "arr";
       case "True":
       case "False":

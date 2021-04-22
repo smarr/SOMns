@@ -1,6 +1,6 @@
 package som.interpreter.nodes.dispatch;
 
-import java.util.HashMap;
+import java.util.Map;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -79,7 +79,7 @@ public abstract class CachedSlotRead extends AbstractDispatchNode {
   }
 
   @Override
-  public void collectDispatchStatistics(final HashMap<Invokable, Integer> result) {
+  public void collectDispatchStatistics(final Map<Invokable, Integer> result) {
     // This is a slot access, so, not a invocation target
     // NO OP
   }

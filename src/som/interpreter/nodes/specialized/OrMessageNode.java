@@ -19,8 +19,8 @@ import tools.dym.Tags.OpComparison;
 
 
 @GenerateNodeFactory
-@Primitive(selector = "or:", noWrapper = true, specializer = OrSplzr.class)
-@Primitive(selector = "||", noWrapper = true, specializer = OrSplzr.class)
+@Primitive(selector = "or:", noWrapper = true, specializer = OrSplzr.class, disabled = true)
+@Primitive(selector = "||", noWrapper = true, specializer = OrSplzr.class, disabled = true)
 public abstract class OrMessageNode extends BinaryComplexOperation {
   public static final class OrSplzr extends AndOrSplzr {
     @SuppressWarnings({"unchecked", "rawtypes"})

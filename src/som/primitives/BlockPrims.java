@@ -1,5 +1,9 @@
 package som.primitives;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.dsl.Cached;
@@ -13,6 +17,7 @@ import com.oracle.truffle.api.source.SourceSection;
 
 import bd.primitives.Primitive;
 import som.instrumentation.CountingDirectCallNode;
+import som.interpreter.Invokable;
 import som.interpreter.SArguments;
 import som.interpreter.nodes.ExceptionSignalingNode;
 import som.interpreter.nodes.ExpressionNode;
@@ -27,10 +32,15 @@ import som.vmobjects.SArray;
 import som.vmobjects.SBlock;
 import som.vmobjects.SInvokable;
 import tools.dym.Tags.OpClosureApplication;
+import tools.dym.profiles.DispatchProfile;
 
 
 public abstract class BlockPrims {
   public static final int CHAIN_LENGTH = VmSettings.DYNAMIC_METRICS ? 100 : 6;
+
+  protected interface ValuePrimNode {
+    void record(Invokable ivkbl, CountingDirectCallNode countingNode);
+  }
 
   public static final DirectCallNode createDirectCallNode(final SBlock receiver,
       final SOMNode node) {
@@ -40,6 +50,8 @@ public abstract class BlockPrims {
 
     if (VmSettings.DYNAMIC_METRICS) {
       callNode = new CountingDirectCallNode(callNode);
+      ((ValuePrimNode) node).record(receiver.getMethod().getInvokable(),
+          (CountingDirectCallNode) callNode);
     }
 
     return callNode;
@@ -53,9 +65,13 @@ public abstract class BlockPrims {
   @ImportStatic(BlockPrims.class)
   @Primitive(primitive = "blockValue:", selector = "value", inParser = false,
       receiverType = {SBlock.class, Boolean.class})
-  public abstract static class ValueNonePrim extends UnaryExpressionNode {
+  public abstract static class ValueNonePrim extends UnaryExpressionNode
+      implements DispatchProfile, ValuePrimNode {
 
     protected @Child ExceptionSignalingNode argumentError;
+
+    protected final HashMap<Invokable, CountingDirectCallNode> targets =
+        VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;
 
     @Override
     public ExpressionNode initialize(final SourceSection sourceSection,
@@ -94,6 +110,19 @@ public abstract class BlockPrims {
       checkArguments(receiver, 1, argumentError);
       return receiver.getMethod().invoke(call, new Object[] {receiver});
     }
+
+    @Override
+    public final void collectDispatchStatistics(final Map<Invokable, Integer> result) {
+      for (Entry<Invokable, CountingDirectCallNode> e : targets.entrySet()) {
+        result.put(e.getKey(), e.getValue().getCount());
+      }
+    }
+
+    @Override
+    public final void record(final Invokable ivkbl,
+        final CountingDirectCallNode countingNode) {
+      targets.put(ivkbl, countingNode);
+    }
   }
 
   private static void checkArguments(final SBlock receiver, final int expectedNumArgs,
@@ -114,9 +143,13 @@ public abstract class BlockPrims {
   @ImportStatic(BlockPrims.class)
   @Primitive(primitive = "blockValue:with:", selector = "value:", inParser = false,
       receiverType = SBlock.class)
-  public abstract static class ValueOnePrim extends BinaryExpressionNode {
+  public abstract static class ValueOnePrim extends BinaryExpressionNode
+      implements DispatchProfile, ValuePrimNode {
 
     protected @Child ExceptionSignalingNode argumentError;
+
+    protected final HashMap<Invokable, CountingDirectCallNode> targets =
+        VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;
 
     @Override
     public ExpressionNode initialize(final SourceSection sourceSection,
@@ -150,15 +183,32 @@ public abstract class BlockPrims {
       checkArguments(receiver, 2, argumentError);
       return receiver.getMethod().invoke(call, new Object[] {receiver, arg});
     }
+
+    @Override
+    public final void collectDispatchStatistics(final Map<Invokable, Integer> result) {
+      for (Entry<Invokable, CountingDirectCallNode> e : targets.entrySet()) {
+        result.put(e.getKey(), e.getValue().getCount());
+      }
+    }
+
+    @Override
+    public final void record(final Invokable ivkbl,
+        final CountingDirectCallNode countingNode) {
+      targets.put(ivkbl, countingNode);
+    }
   }
 
   @GenerateNodeFactory
   @ImportStatic(BlockPrims.class)
   @Primitive(primitive = "blockValue:with:with:", selector = "value:with:", inParser = false,
       receiverType = SBlock.class)
-  public abstract static class ValueTwoPrim extends TernaryExpressionNode {
+  public abstract static class ValueTwoPrim extends TernaryExpressionNode
+      implements DispatchProfile, ValuePrimNode {
 
     protected @Child ExceptionSignalingNode argumentError;
+
+    protected final HashMap<Invokable, CountingDirectCallNode> targets =
+        VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;
 
     @Override
     public ExpressionNode initialize(final SourceSection sourceSection,
@@ -193,6 +243,19 @@ public abstract class BlockPrims {
       checkArguments(receiver, 3, argumentError);
       return receiver.getMethod().invoke(call, new Object[] {receiver, arg1, arg2});
     }
+
+    @Override
+    public final void collectDispatchStatistics(final Map<Invokable, Integer> result) {
+      for (Entry<Invokable, CountingDirectCallNode> e : targets.entrySet()) {
+        result.put(e.getKey(), e.getValue().getCount());
+      }
+    }
+
+    @Override
+    public final void record(final Invokable ivkbl,
+        final CountingDirectCallNode countingNode) {
+      targets.put(ivkbl, countingNode);
+    }
   }
 
   @GenerateNodeFactory
@@ -200,11 +263,15 @@ public abstract class BlockPrims {
   @Primitive(primitive = "blockValue:withArguments:", selector = "valueWithArguments:",
       inParser = false,
       receiverType = SBlock.class)
-  public abstract static class ValueArgsPrim extends BinaryExpressionNode {
+  public abstract static class ValueArgsPrim extends BinaryExpressionNode
+      implements DispatchProfile, ValuePrimNode {
 
     protected @Child SizeAndLengthPrim      size = SizeAndLengthPrimFactory.create(null);
     protected @Child AtPrim                 at   = AtPrimFactory.create(null, null);
     protected @Child ExceptionSignalingNode argumentError;
+
+    protected final HashMap<Invokable, CountingDirectCallNode> targets =
+        VmSettings.DYNAMIC_METRICS ? new HashMap<>() : null;
 
     @Override
     public ExpressionNode initialize(final SourceSection sourceSection,
@@ -244,6 +311,19 @@ public abstract class BlockPrims {
       checkArguments(receiver, (int) getNumArgs(args), argumentError);
       return receiver.getMethod().invoke(
           call, SArguments.getPlainArgumentsWithReceiver(receiver, args, size, at));
+    }
+
+    @Override
+    public final void collectDispatchStatistics(final Map<Invokable, Integer> result) {
+      for (Entry<Invokable, CountingDirectCallNode> e : targets.entrySet()) {
+        result.put(e.getKey(), e.getValue().getCount());
+      }
+    }
+
+    @Override
+    public final void record(final Invokable ivkbl,
+        final CountingDirectCallNode countingNode) {
+      targets.put(ivkbl, countingNode);
     }
   }
 

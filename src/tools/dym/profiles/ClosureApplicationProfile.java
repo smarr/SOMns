@@ -2,47 +2,30 @@ package tools.dym.profiles;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 
-import com.oracle.truffle.api.source.SourceSection;
+import com.oracle.truffle.api.nodes.Node;
 
 import som.interpreter.Invokable;
+import som.interpreter.nodes.ExpressionNode;
+import som.interpreter.nodes.nary.EagerPrimitiveNode;
 
 
 public class ClosureApplicationProfile extends Counter {
 
-  private final Map<Invokable, ActivationCounter> callTargetMap;
+  private final Node instrumentedNode;
 
-  public ClosureApplicationProfile(final SourceSection source) {
-    super(source);
-    callTargetMap = new HashMap<>();
-  }
-
-  // TODO: remove code duplication with CallsiteProfile
-
-  public ActivationCounter createCounter(final Invokable invokable) {
-    ActivationCounter c = callTargetMap.get(invokable);
-    if (c != null) {
-      return c;
-    }
-    c = new ActivationCounter();
-    callTargetMap.put(invokable, c);
-    return c;
+  public ClosureApplicationProfile(final Node instrumentedNode) {
+    super(instrumentedNode.getSourceSection());
+    this.instrumentedNode = instrumentedNode;
   }
 
   public Map<Invokable, Integer> getCallTargets() {
     HashMap<Invokable, Integer> result = new HashMap<>();
-    for (Entry<Invokable, ActivationCounter> e : callTargetMap.entrySet()) {
-      result.put(e.getKey(), e.getValue().val);
-    }
+
+    DispatchProfile valuePrim = (DispatchProfile) EagerPrimitiveNode.unwrapIfNecessary(
+        (ExpressionNode) instrumentedNode);
+    valuePrim.collectDispatchStatistics(result);
+
     return result;
-  }
-
-  public static final class ActivationCounter {
-    private int val;
-
-    public void inc() {
-      val += 1;
-    }
   }
 }

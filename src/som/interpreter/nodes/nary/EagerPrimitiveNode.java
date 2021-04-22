@@ -18,4 +18,15 @@ public abstract class EagerPrimitiveNode extends ExpressionNode
   public SSymbol getInvocationIdentifier() {
     return selector;
   }
+
+  protected abstract EagerlySpecializableNode getPrimitive();
+
+  public static ExpressionNode unwrapIfNecessary(final ExpressionNode node) {
+    if (node instanceof EagerPrimitiveNode) {
+      EagerPrimitiveNode n = (EagerPrimitiveNode) node;
+      return n.getPrimitive();
+    } else {
+      return node;
+    }
+  }
 }

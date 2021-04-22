@@ -61,8 +61,8 @@ public abstract class BooleanInlinedLiteralNode extends ExprWithTagsNode {
     }
   }
 
-  @Inline(selector = "and:", inlineableArgIdx = 1)
-  @Inline(selector = "&&", inlineableArgIdx = 1)
+  @Inline(selector = "and:", inlineableArgIdx = 1, disabled = true)
+  @Inline(selector = "&&", inlineableArgIdx = 1, disabled = true)
   public static final class AndInlinedLiteralNode extends BooleanInlinedLiteralNode {
 
     public AndInlinedLiteralNode(final ExpressionNode receiverNode,
@@ -85,8 +85,8 @@ public abstract class BooleanInlinedLiteralNode extends ExprWithTagsNode {
     }
   }
 
-  @Inline(selector = "or:", inlineableArgIdx = 1)
-  @Inline(selector = "||", inlineableArgIdx = 1)
+  @Inline(selector = "or:", inlineableArgIdx = 1, disabled = true)
+  @Inline(selector = "||", inlineableArgIdx = 1, disabled = true)
   public static final class OrInlinedLiteralNode extends BooleanInlinedLiteralNode {
 
     public OrInlinedLiteralNode(final ExpressionNode receiverNode,
