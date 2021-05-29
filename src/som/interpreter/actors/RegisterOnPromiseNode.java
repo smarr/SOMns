@@ -95,7 +95,7 @@ public abstract class RegisterOnPromiseNode {
                 //for whenResolved blocks or if promise is resolved, then create EntryForPromiseResolution
                 ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
                         SArguments.getShadowStackEntry(frame),
-                        getParent().getParent(), onReceiveLocation);
+                        getParent().getParent(), onReceiveLocation, "");
                 assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
                 SArguments.setShadowStackEntry(msg.args, resolutionEntry);
               }
@@ -206,7 +206,7 @@ public abstract class RegisterOnPromiseNode {
             // we want to know where it was resolved, where the value is coming from
             ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
                     SArguments.getShadowStackEntry(frame),
-                    getParent().getParent(), ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_WHEN_RESOLVED_ERROR);
+                    getParent().getParent(), ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ON_WHEN_RESOLVED_ERROR, "");
             assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
             SArguments.setShadowStackEntry(msg.args, resolutionEntry);
           }

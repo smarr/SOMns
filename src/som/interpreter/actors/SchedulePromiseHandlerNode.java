@@ -57,7 +57,7 @@ public abstract class SchedulePromiseHandlerNode extends Node {
 //      onReceiveLocation.setArg(msg.getTarget().getId() + " send by actor "+ msg.getSender().getId());
       ShadowStackEntry resolutionEntry = ShadowStackEntry.createAtPromiseResolution(
               SArguments.getShadowStackEntry(frame),
-              getParent().getParent(), onReceiveLocation);
+              getParent().getParent(), onReceiveLocation, "");
       assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || resolutionEntry != null;
       SArguments.setShadowStackEntry(msg.args, resolutionEntry);
     }

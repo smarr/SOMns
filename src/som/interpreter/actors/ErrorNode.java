@@ -37,9 +37,8 @@ public abstract class ErrorNode extends AbstractPromiseResolutionNode {
             ShadowStackEntry entry = SArguments.getShadowStackEntry(frame.getArguments());
             assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || entry != null;
             ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation location = ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.ERROR;
-            location.setArg(", error: "+result.toString());
             resolutionEntry =
-                    ShadowStackEntry.createAtPromiseResolution(entry, this.getParent(), location);
+                    ShadowStackEntry.createAtPromiseResolution(entry, this.getParent(), location, "error: "+result.toString());
             SArguments.saveCausalEntryForPromise(maybeEntry, resolutionEntry);
         }
 

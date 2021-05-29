@@ -38,10 +38,9 @@ public abstract class ResolveNode extends AbstractPromiseResolutionNode {
         if (VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE) {
             ShadowStackEntry entry = SArguments.getShadowStackEntry(frame.getArguments());
             assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || entry != null;
-            ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation location = ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.SUCCESSFUL;
-            location.setArg(", value: "+result.toString());
+            final ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation location = ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.SUCCESSFUL;
             resolutionEntry =
-                    ShadowStackEntry.createAtPromiseResolution(entry, this.getParent(), location);
+                    ShadowStackEntry.createAtPromiseResolution(entry, this.getParent(), location, "value: "+result.toString());
             SArguments.saveCausalEntryForPromise(maybeEntry, resolutionEntry);
         }
 

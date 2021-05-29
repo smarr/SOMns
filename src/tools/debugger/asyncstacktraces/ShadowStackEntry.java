@@ -44,9 +44,9 @@ public class ShadowStackEntry {
     }
 
     public static ShadowStackEntry createAtPromiseResolution(final ShadowStackEntry previous,
-                                                             final Node expr, final EntryForPromiseResolution.ResolutionLocation resolutionType) {
+                                                             final Node expr, final EntryForPromiseResolution.ResolutionLocation resolutionType, final String resolutionValue) {
         assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || previous != null;
-        return new EntryForPromiseResolution(previous, unwrapNodeIfNecessary(expr), resolutionType);
+        return new EntryForPromiseResolution(previous, unwrapNodeIfNecessary(expr), resolutionType, resolutionValue);
     }
 
     public static Node unwrapNodeIfNecessary(final Node node) {
@@ -106,32 +106,25 @@ public class ShadowStackEntry {
             ON_WHEN_RESOLVED("on whenResolved"), ON_WHEN_RESOLVED_ERROR("on whenResolved error"),
             ON_RECEIVE_MESSAGE("on receive message"), ON_SCHEDULE_PROMISE("on schedule");
 
-            private final String value;
-            private String arg = "";
+            private final String label;
 
-            ResolutionLocation(String value) {
-                this.value = value;
+            ResolutionLocation(String label) {
+                this.label = label;
             }
 
             public String getValue() {
-                return value;
-            }
-
-            public String getArg() {
-                return arg;
-            }
-
-            public void setArg(String arg){
-                this.arg = arg;
+                return label;
             }
         }
 
         public ResolutionLocation resolutionLocation;
+        public String resolutionValue;
 
         private EntryForPromiseResolution(final ShadowStackEntry previous,
-                                          final Node expr, ResolutionLocation resolutionLocation) {
+                                          final Node expr, ResolutionLocation resolutionLocation, String resolutionValue) {
             super(previous, expr);
             this.resolutionLocation = resolutionLocation;
+            this.resolutionValue = resolutionValue;
         }
 
         @Override

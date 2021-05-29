@@ -261,7 +261,8 @@ public abstract class StackIterator implements Iterator<StackFrame> {
                     useAgainFrame = localFrame;
                 } else if (shadow instanceof EntryForPromiseResolution) {
                     EntryForPromiseResolution.ResolutionLocation resolutionLocation = ((EntryForPromiseResolution) shadow).resolutionLocation;
-                    name = "actor " + shadow.actorId + ", " + resolutionLocation.getValue() + ": " + shadow.expression.getRootNode().getName() + " " + resolutionLocation.getArg();
+                    String resolutionValue = ((EntryForPromiseResolution) shadow).resolutionValue;
+                    name = "actor " + shadow.actorId + ", " + resolutionLocation.getValue() + ": " + shadow.expression.getRootNode().getName() + " " + resolutionValue;
                 }
 
             } else {

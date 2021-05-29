@@ -798,9 +798,8 @@ public class SPromise extends SObjectWithClass {
             ShadowStackEntry entry = SArguments.getShadowStackEntry(frame.getArguments());
             assert !VmSettings.ACTOR_ASYNC_STACK_TRACE_STRUCTURE || maybeEntry != null;
             ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation location = ShadowStackEntry.EntryForPromiseResolution.ResolutionLocation.CHAINED;
-            location.setArg(", promise: "+promise.toString());
             resolutionEntry =
-                    ShadowStackEntry.createAtPromiseResolution(entry, expression, location);
+                    ShadowStackEntry.createAtPromiseResolution(entry, expression, location, "promise: "+promise.toString());
 
             SArguments.saveCausalEntryForPromise(maybeEntry, resolutionEntry);
           }
