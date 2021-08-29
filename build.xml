@@ -100,7 +100,6 @@
         <pathelement location="${sdk.build}/polyglot-tck.jar" />
         <pathelement location="${lib.dir}/somns-deps-dev.jar" />
 
-        <pathelement location="${truffle.build}/truffle-debug.jar" />
         <pathelement location="${truffle.build}/truffle-dsl-processor.jar" />
         <pathelement location="${truffle.build}/truffle-tck.jar" />
     </path>

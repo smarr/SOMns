@@ -232,7 +232,6 @@ if args.use_libgraal:
 
 CLASSPATH = (BASE_DIR + '/build/classes:'
            + BASE_DIR + '/libs/black-diamonds/build/classes:'
-           + TRUFFLE_DIR + '/truffle/mxbuild/dists/jdk1.8/truffle-debug.jar:'
            + BASE_DIR + '/libs/somns-deps.jar:'
            + BASE_DIR + '/libs/affinity.jar:'
            + BASE_DIR + '/libs/slf4j-api.jar:'
