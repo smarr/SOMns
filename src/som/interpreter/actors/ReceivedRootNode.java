@@ -13,7 +13,6 @@ import som.interpreter.SArguments;
 import som.interpreter.SomLanguage;
 import som.interpreter.actors.EventualMessage.PromiseMessage;
 import som.interpreter.actors.SPromise.SResolver;
-import som.interpreter.actors.SPromise.STracingPromise;
 import som.vm.VmSettings;
 import tools.concurrency.KomposTrace;
 import tools.concurrency.TracingActors.TracingActor;
@@ -93,9 +92,7 @@ public abstract class ReceivedRootNode extends RootNode {
 
     if (VmSettings.RECEIVER_SIDE_TRACING) {
       if (msg instanceof PromiseMessage) {
-        PromiseMessage pmsg = (PromiseMessage) msg;
-        STracingPromise tprom = (STracingPromise) pmsg.getPromise();
-        promiseMessageTracer.record(tprom.getResolvingActor());
+        promiseMessageTracer.record(msg.messageId);
       }
       messageTracer.record(((TracingActor) msg.getSender()).getId());
     }
