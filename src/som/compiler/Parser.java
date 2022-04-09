@@ -1831,80 +1831,16 @@ public class Parser {
     return sym == Numeral || sym.compareTo(STString) >= 0;
   }
 
-  // protected void storeClassNamePosition(final SourceCoordinate coord, final String name,
-  // final SourceSection source, final AccessModifier accessModifier) {
-  // // this method is meant to be overide so it dose nothing in the parser
-  // }
-  //
-  // protected void storeMethodNamePosition(final SourceCoordinate coord,
-  // final SInvokable method) {
-  // // this method is meant to be overide so it dose nothing in the parser
-  // }
-
-  // protected void storeLiteralStringPosition(final SourceCoordinate coord,
-  // final String litString) {
-  // // this method is meant to be overide so it dose nothing in the parser
-  // }
-
-  // protected void storeLocalVariableDec(final SourceCoordinate coord,
-  // final String accessToken, final String name) {
-  // // this method is meant to be overide so it dose nothing in the parser
-  // }
-
   protected void storeCommentPosition(final SourceCoordinate startCoords,
       final SourceCoordinate endCoords,
       final String commentLength) {
     // this method is meant to be overide so it dose nothing in the parser
   }
 
-  // protected void storeLocalPosition(final SourceCoordinate coords,
-  // final String localLength) {
-  // // this method is meant to be overide so it dose nothing in the parser
-  // }
-
-  // protected void storeIdentifierPosition(final SourceCoordinate coords,
-  // final String identifierLength) {
-  // // this method is meant to be overide so it dose nothing in the parser
-  // }
-
-  protected void storeEvaluationPosition(final SourceCoordinate coords,
-      final String identifierLength) {
-    // this method is meant to be overide so it dose nothing in the parser
-  }
-
-  // protected void storeimplicitUnaryMessagePositions(final SourceCoordinate coords,
-  // final String identifierLength) {
-  // // this method is meant to be overide so it dose nothing in the parser
-  // }
-
-  // protected void storeUnaryMessagesPositions(final SourceCoordinate coords,
-  // final String identifierLength) {
-  // // this method is meant to be overide so it dose nothing in the parser
-  // }
-
-  // protected void storeReferencePositions(final SourceCoordinate coords,
-  // final String identifierLength) {
-  // // this method is meant to be overide so it dose nothing in the parser
-  // }
-
-  // protected void storeUsingPosition(final SourceCoordinate coords,
-  // final String identifierLength) {
-  //
-  // }
-
   protected void storeSymbolPosition(final SourceCoordinate coords,
       final String identifierLength) {
 
   }
-
-  // protected void storeBlockPatternPositions(final SourceCoordinate coords,
-  // final String identifier) {
-  //
-  // }
-
-  // protected void storeBooleanPositions(final SourceCoordinate coords,
-  // final String identifier) {
-  // }
 
   protected void storePosition(final SourceCoordinate coords, final String length,
       final int tokenTypevalue) {
