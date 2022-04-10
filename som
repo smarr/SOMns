@@ -122,9 +122,9 @@ parser.add_argument('-G', '--interpreter', help='run without Graal',
                     dest='interpreter', action='store_true', default=False)
 parser.add_argument('-E', '--no-early-compilation', help='start compilation using default trigger values. SOMns triggers it earlier to make benchmarking faster',
                     dest='early_compilation', action='store_false', default=True)
-parser.add_argument('-EG', '--no-embedded-graal', help='run without the embedded Graal',
-                    dest='embedded_graal', action='store_false', default=True)
-parser.add_argument('-LG', '--no-libgraal', help='run without using the embedded libgraal. Settings like JVMCI_BIN and GRAAL_HOME are ignored as long as libgraal is not disabled.',
+parser.add_argument('-EG', '--no-embedded-graal', help='run without the embedded Graal. Settings like JVMCI_BIN and GRAAL_HOME are ignored as long as the embedded Graal is not disabled.',
+                    dest='use_embedded_graal', action='store_false', default=True)
+parser.add_argument('-LG', '--no-libgraal', help='run without using the embedded libgraal, which is a precompiled Graal',
                     dest='use_libgraal', action='store_false', default=True)
 parser.add_argument('-X', '--java-interpreter', help='run without Graal, and only the Java interpreter',
                     dest='java_interpreter', action='store_true', default=False)
@@ -163,25 +163,27 @@ if args.java_interpreter:
     args.interpreter = True
 
 if args.interpreter:
+    args.use_embedded_graal = False
+
+# Handle executable names
+if sys.argv[0].endswith('fast'):
+    args.assert_ = False
+    args.no_trace = True
+if sys.argv[0].endswith('debug'):
+    args.perf_warnings = True
+    args.background_compilation = False
     args.use_libgraal = False
 
 # Determine JVM to be used
 java_bin = None
 
-if not args.use_libgraal:
-  if JVMCI_BIN:
-    java_bin = JVMCI_BIN
-  if not java_bin and GRAAL_HOME and os.path.isfile(GRAAL_HOME + '/bin/java'):
-    java_bin = GRAAL_HOME + '/bin/java'
-
-if not java_bin:
-    # use local JVMCI, which ant already needed
-    local_jvmci_bin = BASE_DIR + '/libs/jvmci'
-    if sys.platform == 'darwin':
-      local_jvmci_bin += '/Contents/Home'
-    local_jvmci_bin += '/bin/java'
-    if os.path.isfile(local_jvmci_bin):
-      java_bin = local_jvmci_bin
+# try local JVMCI, which ant already needed
+local_jvmci_bin = BASE_DIR + '/libs/jvmci'
+if sys.platform == 'darwin':
+  local_jvmci_bin += '/Contents/Home'
+local_jvmci_bin += '/bin/java'
+if os.path.isfile(local_jvmci_bin):
+  java_bin = local_jvmci_bin
 
 if not java_bin and JAVA_HOME:
   java_bin = JAVA_HOME + '/bin/java'
@@ -189,22 +191,7 @@ if not java_bin and JAVA_HOME:
 if not java_bin:
   java_bin = "java"
 
-JAVA_MAJOR_VERSION = None
-try:
-  j_ver_str = os.popen(java_bin + " -version 2>&1").read()
-  j_arr = j_ver_str.split("\"")
-  if j_arr[1].startswith("1.8"):
-    JAVA_MAJOR_VERSION = 8
-  else:
-    JAVA_MAJOR_VERSION = int(j_arr[1].split(".")[0])
-except:
-  pass
-
-if not args.interpreter and not java_bin.startswith(BASE_DIR + '/libs/jvmci') and (not JAVA_MAJOR_VERSION or JAVA_MAJOR_VERSION < 9):
-  print "No compatible JDK found. Please set the GRAAL_HOME or JVMCI_BIN environment variables."
-  sys.exit(1)
-
-if args.use_libgraal:
+if args.use_embedded_graal:
   from subprocess import check_output, STDOUT, CalledProcessError
   try:
     libgraal_jdk_home = check_output(
@@ -212,49 +199,59 @@ if args.use_libgraal:
       stderr=STDOUT,
       env = {
         'JAVA_HOME':            java_bin.replace('/bin/java', ''),
+        'PATH':                 os.getenv('PATH',  ''),
         # REM: This needs to match build.xml:libgraal-jdk
         'DYNAMIC_IMPORTS':      '/substratevm,/tools,/truffle,/sdk,/compiler',
         'FORCE_BASH_LAUNCHERS': 'true',
         'DISABLE_LIBPOLYGLOT':  'true',
-        'EXCLUDE_COMPONENTS':   'svmag,nju,nic,ni,nil'
+        'EXCLUDE_COMPONENTS':   'svmag,nju,nic,ni,nil,ins,dap,lsp,insight,insightheap,vvm'
       })
     java_bin = libgraal_jdk_home.strip() + '/bin/java'
   except CalledProcessError as e:
     print "Failed to determine location of libgraal"
     print e.output
     sys.exit(1)
+else:
+  if JVMCI_BIN:
+    java_bin = JVMCI_BIN
+  if not java_bin and GRAAL_HOME and os.path.isfile(GRAAL_HOME + '/bin/java'):
+    java_bin = GRAAL_HOME + '/bin/java'
 
 ##
 ## Defining Necessary Parameter Bits
 ##
 
-CLASSPATH = (BASE_DIR + '/build/classes:'
+classpath = (BASE_DIR + '/build/classes:'
            + BASE_DIR + '/libs/black-diamonds/build/classes:'
            + BASE_DIR + '/libs/somns-deps.jar:'
            + BASE_DIR + '/libs/affinity.jar:'
            + BASE_DIR + '/libs/slf4j-api.jar:'
            + BASE_DIR + '/libs/slf4j-simple.jar:'
            + BASE_DIR + '/libs/jna-platform.jar:'
-           + BASE_DIR + '/libs/jna.jar')
+           + BASE_DIR + '/libs/jna.jar:'
+           + TRUFFLE_DIR + '/sdk/mxbuild/dists/graal-sdk.jar:'
+           + TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-api.jar')
 
-BOOT_CLASSPATH = ('-Xbootclasspath/a:'
-             + TRUFFLE_DIR + '/sdk/mxbuild/dists/jdk1.8/graal-sdk.jar:'
-             + TRUFFLE_DIR + '/truffle/mxbuild/dists/jdk1.8/truffle-api.jar')
+TRUFFLE_API_CLASSPATH = (
+    TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-api.jar')
 
 if args.use_libgraal:
-  GRAAL_JAVA_8_FLAGS = ['-XX:+UseJVMCICompiler', '-XX:+UseJVMCINativeLibrary',
-    '-XX:-UseJVMCIClassLoader', '-Dgraalvm.locatorDisabled=true']
-  GRAAL_JVMCI_FLAGS = []
+  GRAAL_JVMCI_FLAGS = ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', '-XX:+UseJVMCICompiler', '-XX:+UseJVMCINativeLibrary']
 else:
-  GRAAL_JAVA_8_FLAGS = ['-Djvmci.Compiler=graal',
-    '-Djvmci.class.path.append=' + TRUFFLE_DIR + '/compiler/mxbuild/dists/jdk1.8/graal.jar']
-  GRAAL_JVMCI_FLAGS = ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', '-XX:-UseJVMCICompiler']
+  GRAAL_JVMCI_FLAGS = ['-XX:+UnlockExperimentalVMOptions', '-XX:+EnableJVMCI', '-XX:+UseJVMCICompiler', '-XX:-UseJVMCINativeLibrary']
 
 
-GRAAL_JAVA_9_FLAGS = [
-  '--module-path=' + TRUFFLE_DIR + '/sdk/mxbuild/modules/org.graalvm.graal_sdk.jar:' +
-       TRUFFLE_DIR + '/truffle/mxbuild/modules/com.oracle.truffle.truffle_api.jar',
-  '--upgrade-module-path=' + TRUFFLE_DIR + '/compiler/mxbuild/modules/jdk.internal.vm.compiler.jar']
+GRAAL_TRUFFLE_FLAGS = [
+  '--module-path=' + TRUFFLE_DIR + '/sdk/mxbuild/dists/graal-sdk.jar:' +
+      TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-api.jar',
+  '--upgrade-module-path=' + TRUFFLE_DIR + '/compiler/mxbuild/dists/graal-truffle-compiler-libgraal.jar'
+]
+
+ADD_OPEN_FLAGS = [
+  '--add-opens=org.graalvm.truffle/com.oracle.truffle.api=ALL-UNNAMED',
+  '--add-opens=org.graalvm.truffle/com.oracle.truffle.api.interop=ALL-UNNAMED',
+  '--add-opens=org.graalvm.truffle/com.oracle.truffle.api.nodes=ALL-UNNAMED'
+]
 
 SOM_ARGS = ['-Dbd.settings=som.vm.VmSettings', 'som.Launcher',
             '--platform', args.som_platform, '--kernel', args.som_kernel]
@@ -264,14 +261,7 @@ TWEAK_INLINING = ['-Dpolyglot.engine.CompilationThreshold=191',
                   '-Dpolyglot.engine.InliningMaxCallerSize=10000',
                   '-Dpolyglot.engine.SplittingMaxCalleeSize=100000']
 
-JAVA_ARGS = ['-server', '-XX:+UseThreadPriorities']
-
-if JAVA_MAJOR_VERSION == 8:
-  JAVA_ARGS += ['-d64']
-  GRAAL_EMBEDDED_FLAGS = GRAAL_JAVA_8_FLAGS
-
-if JAVA_MAJOR_VERSION > 8:
-  GRAAL_EMBEDDED_FLAGS = GRAAL_JAVA_9_FLAGS
+JAVA_ARGS = ['-server', '-XX:+UseThreadPriorities', '-XX:+UseParallelGC']
 
 ##
 ## Processing Parameters and Assembling Command Line
@@ -282,29 +272,25 @@ if not args.interpreter and GRAAL_FLAGS:
 else:
     flags = []
 
+flags += GRAAL_TRUFFLE_FLAGS
+
 if args.interpreter:
     flags += ['-Dtruffle.TruffleRuntime=com.oracle.truffle.api.impl.DefaultTruffleRuntime',
               '-Dpolyglot.engine.WarnInterpreterOnly=false']
 else:
-  flags += GRAAL_JVMCI_FLAGS
-  if args.embedded_graal:
-    flags += GRAAL_EMBEDDED_FLAGS
+  flags += GRAAL_JVMCI_FLAGS + ADD_OPEN_FLAGS
+  flags += ['-Dpolyglot.engine.CompilationFailureAction=ExitVM',
+            '-Dpolyglot.engine.MultiTier=false']
   if args.early_compilation:
-    flags += ['-Dpolyglot.engine.CompilationThreshold=25', '-Dpolyglot.engine.OSRCompilationThreshold=1000']
+    flags += ['-Dpolyglot.engine.DynamicCompilationThresholds=false',
+              '-Dpolyglot.engine.SingleTierCompilationThreshold=25',
+              '-Dpolyglot.engine.OSRCompilationThreshold=1000']
 
 if args.som_dnu:
     flags += ['-Dsom.printStackTraceOnDNU=true']
 
 if args.use_ansi_coloring:
     flags += ['-Dsom.useAnsiColoring=' + str(args.use_ansi_coloring).lower()]
-
-# Handle executable names
-if sys.argv[0].endswith('fast'):
-    args.assert_ = False
-    args.no_trace = True
-if sys.argv[0].endswith('debug'):
-    args.perf_warnings = True
-    args.background_compilation = False
 
 if args.only_igv:
     args.igv = True
@@ -314,22 +300,22 @@ if args.debug:
               '-Xrunjdwp:transport=dt_socket,server=y,suspend=y,address=8000']
 if not args.interpreter and (args.igv or args.igv_to_file):
     flags += ['-Dgraal.Dump=Truffle,TruffleTree:2']
-if  not args.interpreter and args.only_igv:
-    flags += ['-Dgraal.MethodFilter=' + args.only_igv]
+if not args.interpreter and args.only_igv:
+    flags += ['-Dpolyglot.engine.MethodFilter=' + args.only_igv]
 if not args.interpreter and args.igv_to_file:
-    flags += ['-Dgraal.PrintIdealGraphFile=true']
+    flags += ['-Dpolyglot.engine.PrintIdealGraphFile=true']
 if args.low_level:
     flags += ['-XX:+UnlockDiagnosticVMOptions', '-XX:+LogCompilation',
               '-XX:+TraceDeoptimization']
 if not args.interpreter and (args.graal_profile or args.graal_profile_allocations or args.graal_profile_timed):
-    flags += ['-XX:JVMCICounterSize=5000', '-Dgraal.ProfileCompiledMethods=true',
+    flags += ['-XX:JVMCICounterSize=5000', '-Dpolyglot.engine.ProfileCompiledMethods=true',
               '-DProfileCompiledMethodsPhase.WITH_SECTION_HEADER=true']
     if args.graal_profile_allocations:
-        flags += ['-Dgraal.ProfileAllocations=true']
+        flags += ['-Dpolyglot.engine.ProfileAllocations=true']
     if args.graal_profile_timed:
-        flags += ['-Dgraal.TimedDynamicCounters=1000']
+        flags += ['-Dpolyglot.engine.TimedDynamicCounters=1000']
     if args.graal_profile:
-        flags += ['-Dgraal.BenchmarkDynamicCounters=out,completed,total']
+        flags += ['-Dpolyglot.engine.BenchmarkDynamicCounters=out,completed,total']
 
 if not args.interpreter and args.graal_branch_profile:
     flags += ['-Dpolyglot.engine.InstrumentBranches=true',
@@ -426,7 +412,7 @@ if not args.interpreter and args.no_compilation:
 if not args.interpreter and args.no_trace and not args.perf_warnings:
     flags += ['-Dpolyglot.engine.TraceInlining=false', '-Dpolyglot.engine.TraceCompilation=false']
 if not args.interpreter and not args.graph_pe:
-    flags += ['-Dgraal.GraphPE=false']
+    flags += ['-Dpolyglot.engine.GraphPE=false']
 if args.threads:
     flags += ['-Dsom.threads=%s' % args.threads ]
 if args.java_interpreter:
@@ -462,7 +448,7 @@ if args.use_pinning:
 else:
   flags += ['-Dsom.usePinning=false']
 
-all_args = JAVA_ARGS + ['-classpath', CLASSPATH] + [BOOT_CLASSPATH] + flags + SOM_ARGS + args.args
+all_args = JAVA_ARGS + ['-classpath', classpath, '-Dtruffle.class.path.append=' + classpath] + flags + SOM_ARGS + args.args
 
 if args.verbose:
     print "CMD: " + java_bin + ' ' + ' '.join(all_args)
@@ -470,4 +456,9 @@ if args.verbose:
 env = dict(os.environ)
 env['JVMCI_VERSION_CHECK'] = 'ignore'
 
-os.execvpe(java_bin, all_args, env)
+try:
+  os.execvpe(java_bin, all_args, env)
+except OSError as e:
+  if e.errno == 2 and e.strerror == "No such file or directory":
+    print("Could not find JVM: " + java_bin)
+    sys.exit(1)
