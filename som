@@ -283,7 +283,8 @@ else:
     flags = []
 
 if args.interpreter:
-    flags += ['-Dtruffle.TruffleRuntime=com.oracle.truffle.api.impl.DefaultTruffleRuntime']
+    flags += ['-Dtruffle.TruffleRuntime=com.oracle.truffle.api.impl.DefaultTruffleRuntime',
+              '-Dpolyglot.engine.WarnInterpreterOnly=false']
 else:
   flags += GRAAL_JVMCI_FLAGS
   if args.embedded_graal:
