@@ -108,7 +108,13 @@ kernel:           ${kernel}</echo>
         </exec>
     </target>
 
-    <target name="clobber" description="Do clean, and also clean truffle build" depends="clean,clean-truffle">
+    <target name="clobber-truffle" >
+      <exec executable="git" dir="${lib.dir}/truffle">
+        <arg line="clean -f -f -d -x" />
+      </exec>
+    </target>
+
+    <target name="clobber" description="Do clean, and also clean truffle build" depends="clean,clobber-truffle">
         <exec executable="${mx.cmd}" dir="${svm.dir}" failonerror="true" if:true="${truffle.and.jvmci.present}">
             <arg value="--dynamicimports"/>
             <arg value="../truffle,../tools,../compiler,../sdk,../vm"/>
