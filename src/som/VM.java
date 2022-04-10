@@ -311,10 +311,12 @@ public final class VM {
   }
 
   public void initalize(final SomLanguage lang) throws IOException {
+    if (objectSystem != null) {
+      return;
+    }
+
     Actor.initializeActorSystem(language);
 
-    assert objectSystem == null
-        : "VM is reinitialized accidently? objectSystem is already set.";
     objectSystem = new ObjectSystem(new SourcecodeCompiler(lang), structuralProbe, this);
     objectSystem.loadKernelAndPlatform(options.platformFile, options.kernelFile);
 

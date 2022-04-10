@@ -8,7 +8,6 @@ import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 
 import som.interpreter.SomLanguage;
-import som.interpreter.objectstorage.StorageAccessor;
 import som.vm.VmSettings;
 import tools.concurrency.TracingBackend;
 import tools.parser.KomposTraceParser;
@@ -32,8 +31,6 @@ public final class Launcher {
   public static final int EXIT_WITH_ERROR = 1;
 
   public static void main(final String[] args) {
-    StorageAccessor.initAccessors();
-
     Builder builder = createContextBuilder(args);
     Context context = builder.build();
 

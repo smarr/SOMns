@@ -81,6 +81,10 @@ public abstract class StorageAccessor {
    */
   @TruffleBoundary
   public static void initAccessors() {
+    if (objAccessors[0] != null) {
+      return;
+    }
+
     initObjectAccessors();
     initPrimitiveAccessors();
   }

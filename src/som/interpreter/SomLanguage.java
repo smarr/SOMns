@@ -29,6 +29,7 @@ import com.oracle.truffle.api.source.Source;
 import som.Launcher;
 import som.VM;
 import som.compiler.MixinDefinition;
+import som.interpreter.objectstorage.StorageAccessor;
 import som.vm.VmOptions;
 import som.vmobjects.SClass;
 import tools.concurrency.Tags.AcquireLock;
@@ -173,6 +174,8 @@ public final class SomLanguage extends TruffleLanguage<VM> {
 
   @Override
   protected VM createContext(final Env env) {
+    StorageAccessor.initAccessors();
+
     this.options = new VmOptions(
         env.getApplicationArguments(), env.getOptions().get(TestSelector));
 
