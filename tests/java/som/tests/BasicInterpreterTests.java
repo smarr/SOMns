@@ -239,7 +239,7 @@ public class BasicInterpreterTests {
   private Object readValue(final Value val) {
     Field f;
     try {
-      f = val.getClass().getDeclaredField("receiver");
+      f = val.getClass().getSuperclass().getDeclaredField("receiver");
     } catch (NoSuchFieldException | SecurityException e) {
       throw new RuntimeException(e);
     }
