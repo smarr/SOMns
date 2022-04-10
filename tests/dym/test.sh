@@ -15,7 +15,9 @@ SOM_DIR=$SCRIPT_PATH/../..
 
 if [ "$1" = "--coverage" ]
 then
-  COVERAGE="--java-coverage $SOM_DIR/jacoco.exec "
+  COVERAGE=""
+  echo Java coverage tracking not currently supported. JaCoCo crashes JDK17 at the moment.
+  # COVERAGE="--java-coverage $SOM_DIR/jacoco.exec "
 fi
 
 ## create folder for new results

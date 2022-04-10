@@ -390,8 +390,8 @@ kernel:           ${kernel}</echo>
       <exec executable="./som" failonerror="true">
         <arg value="--coverage" />
         <arg value="all.gcov" />
-        <arg value="--java-coverage" />
-        <arg value="jacoco.exec" />
+        <!-- <arg value="- -java-coverage" />
+        <arg value="jacoco.exec" /> -->
         <arg value="-G" />
         <arg value="${corelib.dir}/TestSuite/TestRunner.ns" />
       </exec>
@@ -496,7 +496,7 @@ kernel:           ${kernel}</echo>
         </java>
     </target>
 
-    <target name="coverage" depends="send-java-coverage,send-somns-coverage" />
+    <target name="coverage" depends="" /> <!-- send-java-coverage,send-somns-coverage -->
 
     <!-- TODO enable test afte Snapshot PR is merged: serialization-tests -->
     <target name="tests" depends="core-tests,replay-tests,coverage">
