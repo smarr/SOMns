@@ -12,7 +12,6 @@ import org.graalvm.nativeimage.hosted.RuntimeReflection;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.oracle.svm.core.annotate.AutomaticFeature;
 
 import tools.debugger.message.InitializationResponse;
 import tools.debugger.message.InitializeConnection;
@@ -41,7 +40,6 @@ import tools.debugger.session.SectionBreakpoint;
  * Registers classes that are necessary for Gson serialization/deserialization.
  * The classes are registered with SubstrateVM, and also provided as JsonProcessor.
  */
-@AutomaticFeature
 public class RuntimeReflectionRegistration implements Feature {
 
   private static class ClassGroup {
