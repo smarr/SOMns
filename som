@@ -243,9 +243,11 @@ else:
 
 GRAAL_TRUFFLE_FLAGS = [
   '--module-path=' + TRUFFLE_DIR + '/sdk/mxbuild/dists/graal-sdk.jar:' +
-      TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-api.jar',
-  '--upgrade-module-path=' + TRUFFLE_DIR + '/compiler/mxbuild/dists/graal-truffle-compiler-libgraal.jar'
+      TRUFFLE_DIR + '/truffle/mxbuild/dists/truffle-api.jar'
 ]
+
+if not args.interpreter:
+  GRAAL_TRUFFLE_FLAGS.append('--upgrade-module-path=' + TRUFFLE_DIR + '/compiler/mxbuild/dists/graal-truffle-compiler-libgraal.jar')
 
 ADD_OPEN_FLAGS = [
   '--add-opens=org.graalvm.truffle/com.oracle.truffle.api=ALL-UNNAMED',
