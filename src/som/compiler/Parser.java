@@ -74,6 +74,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.source.Source;
 import com.oracle.truffle.api.source.SourceSection;
@@ -205,6 +206,7 @@ public class Parser {
     }
 
     @Override
+    @TruffleBoundary
     public String getMessage() {
       String msg = super.getMessage();
 
