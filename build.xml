@@ -3,8 +3,8 @@
     xmlns:if="ant:if"
     xmlns:jacoco="antlib:org.jacoco.ant">
 
-    <property name="jvmci.version" value="jvmci-22.0-b05" />
-    <property name="jdk.version"   value="17.0.2+8" />
+    <property name="jvmci.version" value="jvmci-22.1-b05" />
+    <property name="jdk.version"   value="17.0.3+5" />
 
     <condition property="kernel" value="darwin-amd64" else="linux-amd64">
         <os family="mac"/>
