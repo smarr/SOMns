@@ -38,7 +38,7 @@ jobs:
         if: matrix.job != 'lint'
         run: |
           export JAVA_HOME=$JAVA_HOME_17_X64
-          ./som --no-embedded-graal core-lib/TestSuite/TestRunner.ns
+          ./som -G core-lib/TestSuite/TestRunner.ns
 
       - name: Build Native Image
         if: matrix.job == 'test-1'
