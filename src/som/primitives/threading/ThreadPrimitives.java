@@ -1,5 +1,6 @@
 package som.primitives.threading;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.GenerateNodeFactory;
 import com.oracle.truffle.api.dsl.Specialization;
 
@@ -18,6 +19,7 @@ public final class ThreadPrimitives {
   @Primitive(primitive = "threadingName:")
   public abstract static class NamePrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final Object doThread(final SomThreadTask thread) {
       String name = thread.getName();
       if (name == null) {
@@ -32,6 +34,7 @@ public final class ThreadPrimitives {
   @Primitive(primitive = "threadingName:set:")
   public abstract static class NameSetPrim extends BinaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final Object doThread(final SomThreadTask thread, final String name) {
       thread.setName(name);
       return Nil.nilObject;
@@ -56,6 +59,7 @@ public final class ThreadPrimitives {
   @Primitive(primitive = "threadingYieldCurrent:")
   public abstract static class YieldPrim extends UnaryExpressionNode {
     @Specialization
+    @TruffleBoundary
     public final SClass doSClass(final SClass module) {
       Thread.yield();
       return module;

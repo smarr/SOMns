@@ -46,6 +46,7 @@ public class SFileDescriptor extends SObjectWithClass {
     f = new File(uri);
   }
 
+  @TruffleBoundary
   public Object openFile(final SBlock fail, final BlockDispatchNode dispatchHandler) {
     long[] storage = new long[bufferSize];
     buffer = new SMutableArray(storage, Classes.arrayClass);
@@ -64,6 +65,7 @@ public class SFileDescriptor extends SObjectWithClass {
     return new RandomAccessFile(f, accessMode.mode);
   }
 
+  @TruffleBoundary
   public void closeFile(final ExceptionSignalingNode ioException) {
     if (raf == null) {
       return;
@@ -178,6 +180,7 @@ public class SFileDescriptor extends SObjectWithClass {
     raf.write(buff, 0, nBytes);
   }
 
+  @TruffleBoundary
   public long getFileSize(final ExceptionSignalingNode ioException) {
     try {
       return length();

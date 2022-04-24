@@ -192,6 +192,7 @@ public final class PathPrims {
     }
 
     @Specialization
+    @TruffleBoundary
     public final Object lastModified(final String dir) {
       try {
         return lastModifiedTime(dir);
@@ -249,6 +250,7 @@ public final class PathPrims {
     }
 
     @Specialization
+    @TruffleBoundary
     public final long getSize(final String dir) {
       try {
         return size(dir);

@@ -185,6 +185,11 @@ public class StringPrims {
     public final String doString(final SArray chars) {
       VM.thisMethodNeedsToBeOptimized(
           "Method not yet optimal for compilation, should speculate or use branch profile in the loop");
+      return doStringWithBoundary(chars);
+    }
+
+    @TruffleBoundary
+    private String doStringWithBoundary(final SArray chars) {
       Object[] storage = chars.getObjectStorage();
       StringBuilder sb = new StringBuilder(storage.length);
       for (Object o : storage) {
@@ -232,6 +237,7 @@ public class StringPrims {
     }
 
     @Specialization(guards = "isStrictlyBmpCodePoint(val)")
+    @TruffleBoundary
     public final String doString(final long val) {
       return new String(new char[] {(char) val});
     }
@@ -254,6 +260,7 @@ public class StringPrims {
     }
 
     @Specialization(guards = "isValidCodePointButNotBmp(val)")
+    @TruffleBoundary
     public final String doUnicodeChar(final long val) {
       char[] result = new char[2];
       toSurrogates((int) val, result, 0);
