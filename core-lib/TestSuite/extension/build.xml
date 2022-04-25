@@ -9,8 +9,8 @@
   <property name="bd.dir"      location="${lib.dir}/black-diamonds" />
   <property name="sdk.dir"     location="${lib.dir}/truffle/sdk" />
   <property name="truffle.dir" location="${lib.dir}/truffle/truffle" />
-  <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists/jdk1.8" />
-  <property name="truffle.build" location="${truffle.dir}/mxbuild/dists/jdk1.8" />
+  <property name="sdk.build"   location="${sdk.dir}/mxbuild/dists" />
+  <property name="truffle.build" location="${truffle.dir}/mxbuild/dists" />
   
   <property name="build.dir"   location="build"/>
   <property name="classes.dir" location="${build.dir}/classes"/>
@@ -29,17 +29,8 @@
       <pathelement location="${truffle.build}/truffle-dsl-processor.jar" />
   </path>
     
-  <condition property="is.atLeastJava9" value="true" else="false">
-    <or>
-      <matches string="${java.version}" pattern="^9"/>
-      <matches string="${java.version}" pattern="^1[0-9]"/>
-    </or>
-  </condition>
-  <echo>
-      ant.java.version: ${ant.java.version}
-      java.version:     ${java.version}
-      is.atLeastJava9:  ${is.atLeastJava9}
-  </echo>
+  <echo>ant.java.version: ${ant.java.version}
+java.version:     ${java.version}</echo>
 
   <target name="clean" description="Remove build directories and generated code">
       <delete dir="${build.dir}"/>
@@ -54,7 +45,6 @@
 
     <javac includeantruntime="false" srcdir="${src_dep.dir}" destdir="${classes_dep.dir}" debug="true">
       <compilerarg line="-Xlint:all" />
-      <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
     </javac>
 
     <javac includeantruntime="false" srcdir="${src.dir}" destdir="${classes.dir}" debug="true">
@@ -62,13 +52,11 @@
       <compilerarg line="-s ${src_gen.dir}" />
       <compilerarg line="-XDignore.symbol.file" />
       <compilerarg line="-Xlint:all" />
-      <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
     </javac>
     <javac includeantruntime="false" srcdir="${src_gen.dir}" destdir="${classes.dir}" debug="true">
       <classpath refid="project.classpath" />
       <compilerarg line="-s ${src_gen.dir}" />
       <compilerarg line="-Xlint:all" />
-      <compilerarg line="--release 8" if:true="${is.atLeastJava9}" />
     </javac>
     
     <!-- Register the extension class -->

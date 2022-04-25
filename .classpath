@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry combineaccessrules="false" kind="src" path="/com.oracle.truffle.api.jdk8"/>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="tests/java"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
@@ -22,7 +21,6 @@
 	<classpathentry combineaccessrules="false" kind="src" path="/BlackDiamonds"/>
 	<classpathentry kind="src" path="/com.oracle.truffle.tools.profiler"/>
 	<classpathentry kind="src" path="/org.graalvm.polyglot.tck"/>
-	<classpathentry kind="src" path="/com.oracle.svm.core"/>
 	<classpathentry kind="lib" path="libs/affinity.jar" sourcepath="libs/affinity-sources.jar"/>
 	<classpathentry kind="output" path="build/classes"/>
 </classpath>

@@ -1,5 +1,6 @@
 package tools.dym.nodes;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 
 import som.interpreter.actors.SFarReference;
@@ -22,6 +23,7 @@ public class FarRefTypeProfilingNode extends CountingNode<ActorCreationProfile> 
       SFarReference obj = (SFarReference) result;
       type.executeProfiling(obj.getValue());
     } else {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
       throw new NotYetImplementedException();
     }
   }

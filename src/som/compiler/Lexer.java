@@ -30,13 +30,13 @@ import bd.source.SourceCoordinate;
 public final class Lexer {
 
   public static class Peek {
+    public final Symbol nextSym;
+    public final String nextText;
+
     public Peek(final Symbol sym, final String text) {
       nextSym = sym;
       nextText = text;
     }
-
-    public final Symbol nextSym;
-    public final String nextText;
   }
 
   private static class LexerState {
@@ -330,36 +330,82 @@ public final class Lexer {
       while (isOperator(currentChar())) {
         state.text.append(bufchar(state.incPtr()));
       }
-    } else if (currentChar() == '~') {
+      return;
+    }
+
+    if (currentChar() == '~') {
       match(Symbol.Not);
-    } else if (currentChar() == '&') {
+      return;
+    }
+
+    if (currentChar() == '&') {
       match(Symbol.And);
-    } else if (currentChar() == '|') {
+      return;
+    }
+
+    if (currentChar() == '|') {
       match(Symbol.Or);
-    } else if (currentChar() == '*') {
+      return;
+    }
+
+    if (currentChar() == '*') {
       match(Symbol.Star);
-    } else if (currentChar() == '/') {
+      return;
+    }
+
+    if (currentChar() == '/') {
       match(Symbol.Div);
-    } else if (currentChar() == '\\') {
+      return;
+    }
+
+    if (currentChar() == '\\') {
       match(Symbol.Mod);
-    } else if (currentChar() == '+') {
+      return;
+    }
+
+    if (currentChar() == '+') {
       match(Symbol.Plus);
-    } else if (currentChar() == '=') {
+      return;
+    }
+
+    if (currentChar() == '=') {
       match(Symbol.Equal);
-    } else if (currentChar() == '>') {
+      return;
+    }
+
+    if (currentChar() == '>') {
       match(Symbol.More);
-    } else if (currentChar() == '<') {
+      return;
+    }
+
+    if (currentChar() == '<') {
       match(Symbol.Less);
-    } else if (currentChar() == ',') {
+      return;
+    }
+
+    if (currentChar() == ',') {
       match(Symbol.Comma);
-    } else if (currentChar() == '@') {
+      return;
+    }
+
+    if (currentChar() == '@') {
       match(Symbol.At);
-    } else if (currentChar() == '%') {
+      return;
+    }
+
+    if (currentChar() == '%') {
       match(Symbol.Per);
-    } else if (currentChar() == '-') {
+      return;
+    }
+
+    if (currentChar() == '-') {
       match(Symbol.Minus);
-    } else if (currentChar() == '!') {
+      return;
+    }
+
+    if (currentChar() == '!') {
       match(Symbol.OperatorSequence);
+      return;
     }
   }
 

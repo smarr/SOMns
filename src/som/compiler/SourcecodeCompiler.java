@@ -50,8 +50,8 @@ public class SourcecodeCompiler {
   public MixinDefinition compileModule(final Source source,
       final StructuralProbe<SSymbol, MixinDefinition, SInvokable, SlotDefinition, Variable> structuralProbe)
       throws ProgramDefinitionError {
-    Parser parser = new Parser(source.getCharacters().toString(), source.getLength(), source,
-        structuralProbe, language);
+    Parser parser =
+        new Parser(source.getCharacters().toString(), source, structuralProbe, language);
     return compile(parser, source);
   }
 

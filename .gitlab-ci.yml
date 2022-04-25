@@ -7,8 +7,8 @@ stages:
 variables:
   PYTHONUNBUFFERED: "true"
   JVMCI_VERSION_CHECK: ignore
-  ECLIPSE_EXE: /home/gitlab-runner/.local/eclipse/eclipse
-  JAVA_HOME: /usr/lib/jvm/java-8-openjdk-amd64
+  ECLIPSE_EXE: /home/gitlab-runner/.local/eclipse4.23/eclipse
+  JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
 
 before_script:
   - git submodule update --init
