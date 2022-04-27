@@ -40,7 +40,8 @@ public final class Lexer {
   }
 
   private static class LexerState {
-    LexerState() {}
+    LexerState() {
+    }
 
     LexerState(final LexerState old) {
       lineNumber = old.lineNumber;
@@ -74,6 +75,7 @@ public final class Lexer {
     private int lastNonWhiteCharIdx;
 
     private int ptr;
+    private int humanPtr;
 
     private Symbol        sym;
     private char          symc;
@@ -91,6 +93,7 @@ public final class Lexer {
       int cur = ptr;
       ptr += val;
       lastNonWhiteCharIdx = ptr;
+      humanPtr += val;
       return cur;
     }
   }
@@ -107,8 +110,9 @@ public final class Lexer {
     state = new LexerState();
     state.text = new StringBuilder();
     state.ptr = 0;
-    state.lineNumber = 1;
-    state.lastLineEnd = 0;
+    state.humanPtr = 1;
+    state.lineNumber = 0;
+    state.lastLineEnd = -1;
     state.lastNonWhiteCharIdx = 0;
   }
 
@@ -138,6 +142,7 @@ public final class Lexer {
   }
 
   private Symbol doSym() {
+
     if (peekDone) {
       peekDone = false;
       state = stateAfterPeek;
@@ -246,7 +251,7 @@ public final class Lexer {
       lexNumber();
     } else {
       state.set(Symbol.NONE, currentChar(), "" + currentChar());
-      state.ptr++;
+      state.incPtr();
     }
 
     return state.sym;
@@ -479,8 +484,9 @@ public final class Lexer {
       if (curr == '\n') {
         state.lineNumber += 1;
         state.lastLineEnd = state.ptr;
+        state.humanPtr = state.ptr;
       }
-      state.ptr++;
+      state.incPtr();
     }
   }
 

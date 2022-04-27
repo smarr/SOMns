@@ -11,6 +11,8 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Parameterized;
 import org.junit.runners.Parameterized.Parameters;
 
+import bd.source.SourceCoordinate;
+
 
 @RunWith(Enclosed.class)
 public class NumericLexerTest {
@@ -196,6 +198,40 @@ public class NumericLexerTest {
 
       Assert.assertSame(Symbol.Numeral, l.getSym());
       Assert.assertEquals("1", l.getText());
+    }
+
+    @Test
+    public void testSourceCordinates() {
+      Lexer l = new Lexer("class Hello usingPlatform: platform = Value ()(\n" +
+          "  public main: args = (\n" +
+          "    'Hello World!' println.\n" +
+          "    args from: 2 to: args size do: [ :arg | arg print. ' ' print ].\n" +
+          "    '' println.\n" +
+          "    ^ 0\n" +
+          "  )\n" +
+          ")\n" +
+          "");
+      // start line 1 col 1
+      l.getSym();
+      SourceCoordinate coords = l.getStartCoordinate();
+      // Assert.assertEquals(1, coords.startColumn);
+      // second token
+      l.getSym();
+      coords = l.getStartCoordinate();
+      // Assert.assertEquals(7, coords.startColumn);
+
+      for (int i = 0; i < 7; i++) {
+        l.getSym();
+        coords = l.getStartCoordinate();
+      }
+
+      // line 2
+      l.getSym();
+      coords = l.getStartCoordinate();
+      Assert.assertEquals(3, coords.startColumn);
+      l.getSym();
+      coords = l.getStartCoordinate();
+
     }
   }
 }
