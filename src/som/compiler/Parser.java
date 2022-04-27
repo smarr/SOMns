@@ -325,20 +325,16 @@ public class Parser {
     return mixinName;
   }
 
-  protected MixinBuilder classDeclaration(final MixinBuilder outerBuilder,
+  private MixinBuilder classDeclaration(final MixinBuilder outerBuilder,
       final AccessModifier accessModifier) throws ProgramDefinitionError {
-    SourceCoordinate coord = getCoordinate();
     expectIdentifier("class", "Found unexpected token %(found)s. " +
         "Tried parsing a class declaration and expected 'class' instead.",
         KeywordTag.class);
 
-    storePosition(coord, "class", SemanticTokenType.KEYWORD.value);
-    coord = getCoordinate();
+    SourceCoordinate coord = getCoordinate();
     String mixinName = className();
 
-    storePosition(coord, mixinName, SemanticTokenType.CLASS.value);
     SourceSection nameSS = getSource(coord);
-    // storeClassNamePosition(coord, mixinName, nameSS, accessModifier);
 
     MixinBuilder mxnBuilder = new MixinBuilder(outerBuilder, accessModifier,
         symbolFor(mixinName), nameSS, structuralProbe, language);
@@ -366,7 +362,6 @@ public class Parser {
         KeywordTag.class);
 
     inheritanceListAndOrBody(mxnBuilder);
-
     return mxnBuilder;
   }
 
@@ -507,10 +502,7 @@ public class Parser {
     } else if (acceptIdentifier("self", KeywordTag.class)) {
       self = meth.getSelfRead(getSource(coord));
     } else {
-      SourceCoordinate coord2 = getCoordinate();
       SSymbol unarySelector = unarySelector();
-      // storeUnaryMessagesPositions(coord2, unarySelector.getString());
-      storePosition(coord, unarySelector.getString(), SemanticTokenType.METHOD.value);
       return implicitUnaryMessage(meth, unarySelector, getSource(coord));
     }
     return unaryMessage(self, false, null);
@@ -592,9 +584,9 @@ public class Parser {
     return comment;
   }
 
-  private String comment() throws ParseError {
+  protected String comment() throws ParseError {
     SourceCoordinate coord = getCoordinate();
-    SourceSection source = getSource(coord);
+
     expect(BeginComment, null);
 
     String comment = "";
@@ -685,18 +677,14 @@ public class Parser {
   }
 
   private AccessModifier accessModifier() {
-    SourceCoordinate coord = getCoordinate();
     if (sym == Identifier) {
       if (acceptIdentifier("private", KeywordTag.class)) {
-        storePosition(coord, "private", SemanticTokenType.KEYWORD.value);
         return AccessModifier.PRIVATE;
       }
       if (acceptIdentifier("protected", KeywordTag.class)) {
-        storePosition(coord, "protected", SemanticTokenType.KEYWORD.value);
         return AccessModifier.PROTECTED;
       }
       if (acceptIdentifier("public", KeywordTag.class)) {
-        storePosition(coord, "public", SemanticTokenType.KEYWORD.value);
         return AccessModifier.PUBLIC;
       }
     }
@@ -768,7 +756,7 @@ public class Parser {
     return arrayContains(ss, sym);
   }
 
-  private boolean acceptIdentifier(final String identifier,
+  protected boolean acceptIdentifier(final String identifier,
       final Class<? extends Tag> tag) {
     if (sym == Identifier && identifier.equals(text)) {
       accept(Identifier, tag);
@@ -1255,23 +1243,16 @@ public class Parser {
         // Parse true, false, and nil as keyword-like constructs
         // (cf. Newspeak spec on reserved words)
         if (acceptIdentifier("true", LiteralTag.class)) {
-          // storeBooleanPositions(coord, "true");
-          storePosition(coord, "true", SemanticTokenType.KEYWORD.value);
-
           comments();
           return new TrueLiteralNode().initialize(getSource(coord));
         }
 
         if (acceptIdentifier("false", LiteralTag.class)) {
-          // storeBooleanPositions(coord, "false");
-          storePosition(coord, "false", SemanticTokenType.KEYWORD.value);
           comments();
           return new FalseLiteralNode().initialize(getSource(coord));
         }
 
         if (acceptIdentifier("nil", LiteralTag.class)) {
-          // storeBooleanPositions(coord, "nil");
-          storePosition(coord, "nil", SemanticTokenType.KEYWORD.value);
           comments();
           return new NilLiteralNode().initialize(getSource(coord));
         }
@@ -1581,7 +1562,7 @@ public class Parser {
     }
   }
 
-  private LiteralNode literalNumber() throws ParseError {
+  protected LiteralNode literalNumber() throws ParseError {
     SourceCoordinate coord = getCoordinate();
 
     NumeralParser parser = lexer.getNumeralParser();
@@ -1621,7 +1602,7 @@ public class Parser {
     }
   }
 
-  private LiteralNode literalSymbol() throws ParseError {
+  protected LiteralNode literalSymbol() throws ParseError {
     SourceCoordinate coord = getCoordinate();
 
     SSymbol symb;
@@ -1636,7 +1617,7 @@ public class Parser {
     return new SymbolLiteralNode(symb).initialize(getSource(coord));
   }
 
-  private LiteralNode literalString() throws ParseError {
+  protected LiteralNode literalString() throws ParseError {
     SourceCoordinate coord = getCoordinate();
     String s = string();
     // storeLiteralStringPosition(coord, s);
@@ -1644,7 +1625,7 @@ public class Parser {
     return new StringLiteralNode(s).initialize(getSource(coord));
   }
 
-  private LiteralNode literalChar() throws ParseError {
+  protected LiteralNode literalChar() throws ParseError {
     SourceCoordinate coord = getCoordinate();
     String s = character();
 
