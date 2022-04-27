@@ -621,9 +621,7 @@ public class Parser {
       }
     }
     expect(EndComment, null);
-
-    storeCommentPosition(coord, getCoordinate(), comment);
-    language.getVM().reportSyntaxElement(CommentTag.class, getSource(coord));
+    reportSyntaxElement(CommentTag.class, getSource(coord));
     return comment;
   }
 
@@ -795,7 +793,7 @@ public class Parser {
       SourceCoordinate coord = tag == null ? null : getCoordinate();
       getSymbolFromLexer();
       if (tag != null) {
-        language.getVM().reportSyntaxElement(tag, getSource(coord));
+        reportSyntaxElement(tag, getSource(coord));
       }
       return true;
     }
@@ -807,7 +805,7 @@ public class Parser {
       SourceCoordinate coord = tag == null ? null : getCoordinate();
       getSymbolFromLexer();
       if (tag != null) {
-        language.getVM().reportSyntaxElement(tag, getSource(coord));
+        reportSyntaxElement(tag, getSource(coord));
       }
       return true;
     }
@@ -1023,7 +1021,7 @@ public class Parser {
 
     comments();
 
-    language.getVM().reportSyntaxElement(ArgumentTag.class, getSource(coord));
+    reportSyntaxElement(ArgumentTag.class, getSource(coord));
     return id;
   }
 
@@ -1074,9 +1072,8 @@ public class Parser {
     SourceCoordinate coord = getCoordinate();
     String slotName = slotDecl();
     SourceSection source = getSource(coord);
-    // storeLocalPosition(coord, slotName);
-    storePosition(coord, slotName, SemanticTokenType.VARIABLE.value);
-    language.getVM().reportSyntaxElement(LocalVariableTag.class, source);
+
+    reportSyntaxElement(LocalVariableTag.class, source);
 
     boolean immutable;
     ExpressionNode initializer;
@@ -1867,5 +1864,10 @@ public class Parser {
       this.value = value;
     }
   }
+  protected void reportSyntaxElement(final Class<? extends Tag> type,
+      final SourceSection source) {
+    language.getVM().reportSyntaxElement(CommentTag.class, source);
+  }
+
 
 }
