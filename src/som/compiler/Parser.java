@@ -181,11 +181,9 @@ public class Parser {
     private final String           fileName;
     private final Symbol           expected;
     private final Symbol           found;
-    public SourceCoordinate        errorTokenSourceCoordinate;
 
     ParseError(final String message, final Symbol expected, final Parser parser) {
       super(message);
-      errorTokenSourceCoordinate = parser.lexer.getStartCoordinate();
       if (parser.lexer == null) {
         this.sourceCoordinate = SourceCoordinate.createEmpty();
         this.rawBuffer = "";
@@ -205,10 +203,6 @@ public class Parser {
 
     public SourceCoordinate getSourceCoordinate() {
       return sourceCoordinate;
-    }
-
-    public SourceCoordinate getErrorToken() {
-      return errorTokenSourceCoordinate;
     }
 
     @Override
@@ -309,11 +303,6 @@ public class Parser {
 
   public SourceCoordinate getCoordinate() {
     return lexer.getStartCoordinate();
-  }
-
-  public int getCoordinateWithoutWhiteSpace() {
-    return lexer.getNumberOfNonWhiteCharsRead();
-
   }
 
   private void compatibilityNewspeakVersionAndFileCategory() throws ParseError {
