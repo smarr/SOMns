@@ -1798,42 +1798,6 @@ public class Parser {
     return sym == Numeral || sym.compareTo(STString) >= 0;
   }
 
-  protected void storeCommentPosition(final SourceCoordinate startCoords,
-      final SourceCoordinate endCoords,
-      final String commentLength) {
-    // this method is meant to be overide so it dose nothing in the parser
-  }
-
-  protected void storeSymbolPosition(final SourceCoordinate coords,
-      final String identifierLength) {
-
-  }
-
-  protected void storePosition(final SourceCoordinate coords, final String length,
-      final int tokenTypevalue) {
-    // method stub
-  }
-
-  public enum SemanticTokenType {
-    CLASS(0),
-    KEYWORD(1),
-    METHOD(2),
-    STRING(3),
-    VARIABLE(4),
-    COMMENT(5),
-    TYPE(6),
-    PROPERTY(7),
-    OPERATIOR(8),
-    PARAMETER(9),
-    FUNCTION(10),
-    NUMBER(11);
-
-    public final int value;
-
-    private SemanticTokenType(final int value) {
-      this.value = value;
-    }
-  }
   protected void reportSyntaxElement(final Class<? extends Tag> type,
       final SourceSection source) {
     language.getVM().reportSyntaxElement(CommentTag.class, source);
