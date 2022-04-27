@@ -650,8 +650,9 @@ public class Parser {
     comments();
     SourceCoordinate coord = getCoordinate();
     String slotName = slotDecl();
-    storePosition(coord, slotName, SemanticTokenType.VARIABLE.value);
-    // storeLocalVariableDec(coord, acccessModifier.toString(), slotName);
+
+    SourceSection source = getSource(coord);
+
     boolean immutable;
     ExpressionNode init;
 
@@ -667,8 +668,7 @@ public class Parser {
       immutable = false;
       init = null;
     }
-    mxnBuilder.addSlot(symbolFor(slotName), acccessModifier, immutable, init,
-        getSource(coord));
+    mxnBuilder.addSlot(symbolFor(slotName), acccessModifier, immutable, init, source);
   }
 
   private AccessModifier accessModifier() {
