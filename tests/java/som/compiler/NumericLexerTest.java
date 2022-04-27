@@ -214,24 +214,26 @@ public class NumericLexerTest {
       // start line 1 col 1
       l.getSym();
       SourceCoordinate coords = l.getStartCoordinate();
-      // Assert.assertEquals(1, coords.startColumn);
+      Assert.assertEquals(0, coords.startColumn);
+      Assert.assertEquals(1, coords.startLine);
+
       // second token
       l.getSym();
       coords = l.getStartCoordinate();
-      // Assert.assertEquals(7, coords.startColumn);
+      Assert.assertEquals(6, coords.startColumn);
+      Assert.assertEquals(1, coords.startLine);
 
       for (int i = 0; i < 7; i++) {
         l.getSym();
         coords = l.getStartCoordinate();
+        Assert.assertEquals(1, coords.startLine);
       }
 
       // line 2
       l.getSym();
       coords = l.getStartCoordinate();
       Assert.assertEquals(3, coords.startColumn);
-      l.getSym();
-      coords = l.getStartCoordinate();
-
+      Assert.assertEquals(2, coords.startLine);
     }
   }
 }
