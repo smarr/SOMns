@@ -686,9 +686,16 @@ public class Parser {
     return AccessModifier.PROTECTED;
   }
 
-  private String slotDecl() throws ParseError {
+  protected String slotDecl() throws ParseError {
+    return slotOrLocalDecl();
+  }
+
+  protected String localDecl() throws ParseError {
+    return slotOrLocalDecl();
+  }
+
+  private String slotOrLocalDecl() throws ParseError {
     String id = identifier();
-    SourceCoordinate coord = getCoordinate();
 
     comments();
 
@@ -1012,7 +1019,7 @@ public class Parser {
     }
 
     SourceCoordinate coord = getCoordinate();
-    String slotName = slotDecl();
+    String slotName = localDecl();
     SourceSection source = getSource(coord);
 
     reportSyntaxElement(LocalVariableTag.class, source);
