@@ -1764,6 +1764,6 @@ public class Parser {
 
   protected void reportSyntaxElement(final Class<? extends Tag> type,
       final SourceSection source) {
-    language.getVM().reportSyntaxElement(CommentTag.class, source);
+    language.getVM().reportSyntaxElement(type, source);
   }
 }
