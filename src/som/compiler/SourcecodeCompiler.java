@@ -27,7 +27,6 @@ package som.compiler;
 import com.oracle.truffle.api.source.Source;
 
 import bd.basic.ProgramDefinitionError;
-import bd.source.SourceCoordinate;
 import bd.tools.structure.StructuralProbe;
 import som.compiler.MixinDefinition.SlotDefinition;
 import som.interpreter.SomLanguage;
@@ -57,7 +56,7 @@ public class SourcecodeCompiler {
 
   protected final MixinDefinition compile(final Parser parser,
       final Source source) throws ProgramDefinitionError {
-    SourceCoordinate coord = parser.getCoordinate();
+    int coord = parser.getStartIndex();
     MixinBuilder mxnBuilder = parser.moduleDeclaration();
     MixinDefinition result = mxnBuilder.assemble(parser.getSource(coord));
     language.getVM().reportLoadedSource(source);

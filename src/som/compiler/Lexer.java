@@ -24,9 +24,6 @@
 
 package som.compiler;
 
-import bd.source.SourceCoordinate;
-
-
 public final class Lexer {
 
   public static class Peek {
@@ -50,7 +47,8 @@ public final class Lexer {
       sym = old.sym;
       symc = old.symc;
       text = new StringBuilder(old.text);
-      startCoord = old.startCoord;
+      startPtr = old.startPtr;
+      startLastNonWhiteCharIdx = old.startLastNonWhiteCharIdx;
       numeralParser = old.numeralParser;
     }
 
@@ -79,9 +77,10 @@ public final class Lexer {
     private char          symc;
     private StringBuilder text;
 
-    private NumeralParser numeralParser;
+    private int startPtr;
+    private int startLastNonWhiteCharIdx;
 
-    private SourceCoordinate startCoord;
+    private NumeralParser numeralParser;
 
     int incPtr() {
       return incPtr(1);
@@ -110,17 +109,6 @@ public final class Lexer {
     state.lineNumber = 1;
     state.lastLineEnd = 0;
     state.lastNonWhiteCharIdx = 0;
-  }
-
-  private static SourceCoordinate createSourceCoordinate(final LexerState state) {
-    // We use the coord.length to indicate the lastNonWhiteCharIdx
-    // TODO: fix this terrible hack, and make this explicit
-    return SourceCoordinate.create(state.lineNumber, state.ptr - state.lastLineEnd,
-        state.ptr, state.lastNonWhiteCharIdx);
-  }
-
-  public SourceCoordinate getStartCoordinate() {
-    return state.startCoord;
   }
 
   protected Symbol getSym() {
@@ -153,7 +141,8 @@ public final class Lexer {
 
     skipWhiteSpace();
 
-    state.startCoord = createSourceCoordinate(state);
+    state.startPtr = state.ptr;
+    state.startLastNonWhiteCharIdx = state.lastNonWhiteCharIdx;
 
     if (currentChar() == '\'') {
       lexString();
@@ -441,12 +430,12 @@ public final class Lexer {
   }
 
   protected int getNumberOfNonWhiteCharsRead() {
-    return state.startCoord.charLength;
+    return state.startLastNonWhiteCharIdx;
   }
 
-  // All characters read and processed, including current line
+  /** All characters read and processed, including current line. */
   protected int getNumberOfCharactersRead() {
-    return state.startCoord.charIndex;
+    return state.startPtr;
   }
 
   protected String getCommentPart() {

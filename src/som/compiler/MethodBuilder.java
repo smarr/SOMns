@@ -743,11 +743,11 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     return str.replace(":", "");
   }
 
-  public void setBlockSignature(final SourceCoordinate coord) {
+  public void setBlockSignature(final int line, final int column) {
     String outerMethodName = stripColonsAndSourceLocation(getOuter().getName());
 
     int argSize = getNumberOfArguments();
-    String blockSig = "λ" + outerMethodName + "@" + coord.startLine + "@" + coord.startColumn;
+    String blockSig = "λ" + outerMethodName + "@" + line + "@" + column;
 
     for (int i = 1; i < argSize; i++) {
       blockSig += ":";
