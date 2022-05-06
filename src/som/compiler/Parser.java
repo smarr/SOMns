@@ -122,8 +122,8 @@ import tools.debugger.Tags.StatementSeparatorTag;
 
 public class Parser {
 
-  protected final Lexer lexer;
-  private final Source  source;
+  protected final Lexer  lexer;
+  protected final Source source;
 
   private final SomLanguage language;
 
@@ -984,7 +984,7 @@ public class Parser {
     return s;
   }
 
-  private String argument() throws ParseError {
+  protected String argument() throws ParseError {
     int coord = getStartIndex();
     String id = identifier();
 
