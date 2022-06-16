@@ -140,6 +140,18 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     return language;
   }
 
+  public Argument getArgument(final int index) {
+    int i = 0;
+    for (Argument a : arguments.getValues()) {
+      if (i == index) {
+        return a;
+      }
+      i += 1;
+    }
+    throw new IllegalArgumentException(
+        "Tried to access argument " + index + " but there are only " + arguments.size());
+  }
+
   public Iterable<Argument> getArguments() {
     return arguments.getValues();
   }
