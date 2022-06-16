@@ -427,7 +427,7 @@ public class Parser {
     classBody(mxnBuilder);
   }
 
-  private void mixinApplication(final MixinBuilder mxnBuilder, final int mixinId)
+  protected void mixinApplication(final MixinBuilder mxnBuilder, final int mixinId)
       throws ProgramDefinitionError {
     expect(MixinOperator, KeywordTag.class);
     int coord = getStartIndex();
@@ -521,7 +521,7 @@ public class Parser {
     return unaryMessage(self, false, null);
   }
 
-  private void classBody(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
+  protected void classBody(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
     classHeader(mxnBuilder);
     sideDeclaration(mxnBuilder);
     if (sym == Colon) {
@@ -529,7 +529,7 @@ public class Parser {
     }
   }
 
-  private void classSideDecl(final MixinBuilder mxnBuilder)
+  protected void classSideDecl(final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
     mxnBuilder.switchToClassSide();
 
@@ -1657,7 +1657,7 @@ public class Parser {
    * Realizing this syntax requires more advanced look ahead than what is currently
    * provided by the lexer.
    */
-  private ExpressionNode literalObject(final MethodBuilder builder)
+  protected ExpressionNode literalObject(final MethodBuilder builder)
       throws ProgramDefinitionError {
     // Generate the class's signature
     SourceSection source = getSource(getStartIndex());
@@ -1713,7 +1713,7 @@ public class Parser {
     return s;
   }
 
-  private ExpressionNode nestedBlock(final MethodBuilder builder)
+  protected ExpressionNode nestedBlock(final MethodBuilder builder)
       throws ProgramDefinitionError {
     int coord = getStartIndex();
     expect(NewBlock, DelimiterOpeningTag.class);
