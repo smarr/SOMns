@@ -768,10 +768,14 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     setSignature(symbolFor(blockSig));
   }
 
-  @Override
-  public String toString() {
+  public String getFullName() {
     MixinBuilder mixin = getMixin();
     String name = mixin == null ? "" : mixin.getName();
-    return "MethodBuilder(" + name + ">>" + signature.toString() + ")";
+    return name + ">>" + signature.toString();
+  }
+
+  @Override
+  public String toString() {
+    return "MethodBuilder(" + getFullName() + ")";
   }
 }
