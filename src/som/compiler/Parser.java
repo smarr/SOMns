@@ -517,7 +517,7 @@ public class Parser {
     } else if (acceptIdentifier("self", KeywordTag.class)) {
       self = meth.getSelfRead(getSource(coord));
     } else {
-      return implicitUnaryMessage(meth, unarySelector(), getSource(coord));
+      return implicitUnaryMessage(meth, implicitUnarySelector(), getSource(coord));
     }
     return unaryMessage(self, false, null);
   }
@@ -945,7 +945,23 @@ public class Parser {
     return symbolFor(identifier());
   }
 
+  protected SSymbol implicitUnarySelector() throws ParseError {
+    return symbolFor(identifier());
+  }
+
+  protected SSymbol unarySendSelector() throws ParseError {
+    return symbolFor(identifier());
+  }
+
   protected SSymbol binarySelector() throws ParseError {
+    return binarySelectorImpl();
+  }
+
+  protected SSymbol binarySendSelector() throws ParseError {
+    return binarySelectorImpl();
+  }
+
+  private SSymbol binarySelectorImpl() throws ParseError {
     String s = text;
 
     // Checkstyle: stop   @formatter:off
@@ -1252,7 +1268,7 @@ public class Parser {
           return outerSend(builder);
         }
 
-        SSymbol selector = unarySelector();
+        SSymbol selector = implicitUnarySelector();
 
         comments();
 
@@ -1372,7 +1388,7 @@ public class Parser {
   protected ExpressionNode unaryMessage(final ExpressionNode receiver,
       final boolean eventualSend, final SourceSection sendOperator) throws ParseError {
     int coord = getStartIndex();
-    SSymbol selector = unarySelector();
+    SSymbol selector = unarySendSelector();
 
     comments();
     return createMessageSend(selector, new ExpressionNode[] {receiver},
@@ -1393,7 +1409,7 @@ public class Parser {
       final ExpressionNode receiver, final boolean eventualSend,
       final SourceSection sendOperator) throws ProgramDefinitionError {
     int coord = getStartIndex();
-    SSymbol msg = binarySelector();
+    SSymbol msg = binarySendSelector();
 
     comments();
 
