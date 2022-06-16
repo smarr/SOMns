@@ -140,6 +140,18 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     return language;
   }
 
+  public Argument getArgument(final int index) {
+    int i = 0;
+    for (Argument a : arguments.getValues()) {
+      if (i == index) {
+        return a;
+      }
+      i += 1;
+    }
+    throw new IllegalArgumentException(
+        "Tried to access argument " + index + " but there are only " + arguments.size());
+  }
+
   public Iterable<Argument> getArguments() {
     return arguments.getValues();
   }
@@ -359,7 +371,7 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     signature = sig;
   }
 
-  public void addArgument(final SSymbol arg, final SourceSection source) {
+  public Argument addArgument(final SSymbol arg, final SourceSection source) {
     if ((Symbols.SELF == arg || Symbols.BLOCK_SELF == arg) && arguments.size() > 0) {
       throw new IllegalStateException(
           "The self argument always has to be the first argument of a method");
@@ -371,6 +383,7 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     if (structuralProbe != null) {
       structuralProbe.recordNewVariable(argument);
     }
+    return argument;
   }
 
   public Local addMessageCascadeTemp(final SourceSection source) throws MethodDefinitionError {
@@ -743,11 +756,11 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     return str.replace(":", "");
   }
 
-  public void setBlockSignature(final SourceCoordinate coord) {
+  public void setBlockSignature(final int line, final int column) {
     String outerMethodName = stripColonsAndSourceLocation(getOuter().getName());
 
     int argSize = getNumberOfArguments();
-    String blockSig = "λ" + outerMethodName + "@" + coord.startLine + "@" + coord.startColumn;
+    String blockSig = "λ" + outerMethodName + "@" + line + "@" + column;
 
     for (int i = 1; i < argSize; i++) {
       blockSig += ":";
@@ -756,10 +769,14 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     setSignature(symbolFor(blockSig));
   }
 
-  @Override
-  public String toString() {
+  public String getFullName() {
     MixinBuilder mixin = getMixin();
     String name = mixin == null ? "" : mixin.getName();
-    return "MethodBuilder(" + name + ">>" + signature.toString() + ")";
+    return name + ">>" + signature.toString();
+  }
+
+  @Override
+  public String toString() {
+    return "MethodBuilder(" + getFullName() + ")";
   }
 }

@@ -87,6 +87,7 @@ import som.Output;
 import som.compiler.Lexer.Peek;
 import som.compiler.MixinBuilder.MixinDefinitionError;
 import som.compiler.MixinDefinition.SlotDefinition;
+import som.compiler.Variable.Argument;
 import som.compiler.Variable.Local;
 import som.interpreter.SomLanguage;
 import som.interpreter.nodes.ExpressionNode;
@@ -122,8 +123,8 @@ import tools.debugger.Tags.StatementSeparatorTag;
 
 public class Parser {
 
-  protected final Lexer lexer;
-  private final Source  source;
+  protected final Lexer  lexer;
+  protected final Source source;
 
   private final SomLanguage language;
 
@@ -170,27 +171,33 @@ public class Parser {
 
   @Override
   public String toString() {
-    return "Parser(" + source.getName() + ", " + this.getCoordinate().toString() + ")";
+    String name = source.getName();
+    String loc = SourceCoordinate.getLocationQualifier(getStartIndex(), source);
+    return "Parser(" + name + loc + ")";
   }
 
   public static class ParseError extends ProgramDefinitionError {
-    private static final long      serialVersionUID = 425390202979033628L;
-    private final SourceCoordinate sourceCoordinate;
-    private final String           text;
-    private final String           rawBuffer;
-    private final String           fileName;
-    private final Symbol           expected;
-    private final Symbol           found;
+    private static final long serialVersionUID = 425390202979033628L;
+
+    private final int startIndex;
+
+    private final Source source;
+    private final String text;
+    private final String rawBuffer;
+    private final String fileName;
+    private final Symbol expected;
+    private final Symbol found;
 
     ParseError(final String message, final Symbol expected, final Parser parser) {
       super(message);
       if (parser.lexer == null) {
-        this.sourceCoordinate = SourceCoordinate.createEmpty();
+        this.startIndex = 0;
         this.rawBuffer = "";
       } else {
-        this.sourceCoordinate = parser.getCoordinate();
+        this.startIndex = parser.getStartIndex();
         this.rawBuffer = new String(parser.lexer.getCurrentLine());
       }
+      this.source = parser.source;
       this.text = parser.text;
       this.fileName = parser.source.getName();
       this.expected = expected;
@@ -201,8 +208,18 @@ public class Parser {
       return expected.toString();
     }
 
-    public SourceCoordinate getSourceCoordinate() {
-      return sourceCoordinate;
+    /**
+     * Used by Language Server.
+     */
+    public int getLine() {
+      return source.getLineNumber(startIndex);
+    }
+
+    /**
+     * Used by Language Server.
+     */
+    public int getColumn() {
+      return source.getColumnNumber(startIndex);
     }
 
     @Override
@@ -237,9 +254,8 @@ public class Parser {
       String expectedStr = expectedSymbolAsString();
 
       msg = msg.replace("%(file)s", fileName);
-      msg = msg.replace("%(line)d", java.lang.Integer.toString(sourceCoordinate.startLine));
-      msg =
-          msg.replace("%(column)d", java.lang.Integer.toString(sourceCoordinate.startColumn));
+      msg = msg.replace("%(line)d", "" + getLine());
+      msg = msg.replace("%(column)d", "" + getColumn());
       msg = msg.replace("%(expected)s", expectedStr);
       msg = msg.replace("%(found)s", foundStr);
       return msg;
@@ -301,8 +317,8 @@ public class Parser {
     return syntaxAnnotations;
   }
 
-  public SourceCoordinate getCoordinate() {
-    return lexer.getStartCoordinate();
+  public int getStartIndex() {
+    return lexer.getNumberOfCharactersRead();
   }
 
   private void compatibilityNewspeakVersionAndFileCategory() throws ParseError {
@@ -331,7 +347,7 @@ public class Parser {
         "Tried parsing a class declaration and expected 'class' instead.",
         KeywordTag.class);
 
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     String mixinName = className();
     SourceSection nameSS = getSource(coord);
 
@@ -339,7 +355,7 @@ public class Parser {
         symbolFor(mixinName), nameSS, structuralProbe, language);
 
     MethodBuilder primaryFactory = mxnBuilder.getPrimaryFactoryMethodBuilder();
-    coord = getCoordinate();
+    coord = getStartIndex();
 
     // Newspeak-spec: this is not strictly sufficient for Newspeak
     // it could also parse a binary selector here, I think
@@ -388,7 +404,7 @@ public class Parser {
 
   private void explicitInheritanceListAndOrBody(final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
-    SourceCoordinate superAndMixinCoord = getCoordinate();
+    int superAndMixinCoord = getStartIndex();
     inheritanceClause(mxnBuilder);
 
     final boolean hasMixins = sym == MixinOperator;
@@ -401,7 +417,7 @@ public class Parser {
 
     if (hasMixins) {
       mxnBuilder.setMixinResolverSource(getSource(superAndMixinCoord));
-      SourceCoordinate initCoord = getCoordinate();
+      int initCoord = getStartIndex();
       if (accept(Period, StatementSeparatorTag.class)) {
         // TODO: what else do we need to do here?
         mxnBuilder.setInitializerSource(getSource(initCoord));
@@ -412,10 +428,10 @@ public class Parser {
     classBody(mxnBuilder);
   }
 
-  private void mixinApplication(final MixinBuilder mxnBuilder, final int mixinId)
+  protected void mixinApplication(final MixinBuilder mxnBuilder, final int mixinId)
       throws ProgramDefinitionError {
     expect(MixinOperator, KeywordTag.class);
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
 
     ExpressionNode mixinResolution = inheritancePrefixAndSuperclass(mxnBuilder);
     mxnBuilder.addMixinResolver(mixinResolution);
@@ -483,7 +499,7 @@ public class Parser {
   private ExpressionNode inheritancePrefixAndSuperclass(
       final MixinBuilder mxnBuilder) throws ParseError, MixinDefinitionError {
     MethodBuilder meth = mxnBuilder.getClassInstantiationMethodBuilder();
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
 
     if (acceptIdentifier("outer", KeywordTag.class)) {
       String outer = identifier();
@@ -501,12 +517,12 @@ public class Parser {
     } else if (acceptIdentifier("self", KeywordTag.class)) {
       self = meth.getSelfRead(getSource(coord));
     } else {
-      return implicitUnaryMessage(meth, unarySelector(), getSource(coord));
+      return implicitUnaryMessage(meth, implicitUnarySelector(), getSource(coord));
     }
     return unaryMessage(self, false, null);
   }
 
-  private void classBody(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
+  protected void classBody(final MixinBuilder mxnBuilder) throws ProgramDefinitionError {
     classHeader(mxnBuilder);
     sideDeclaration(mxnBuilder);
     if (sym == Colon) {
@@ -514,7 +530,7 @@ public class Parser {
     }
   }
 
-  private void classSideDecl(final MixinBuilder mxnBuilder)
+  protected void classSideDecl(final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
     mxnBuilder.switchToClassSide();
 
@@ -523,7 +539,7 @@ public class Parser {
 
     while (sym != EndTerm) {
       comments();
-      SourceCoordinate coord = getCoordinate();
+      int coord = getStartIndex();
       AccessModifier accessModifier = accessModifier();
       methodDeclaration(accessModifier, coord, mxnBuilder);
       comments();
@@ -532,12 +548,12 @@ public class Parser {
     expect(EndTerm, null);
   }
 
-  private void classHeader(final MixinBuilder mxnBuilder)
+  protected void classHeader(final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
     expect(NewTerm, null);
     classComment(mxnBuilder);
 
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     if (sym == Or) {
       slotDeclarations(mxnBuilder);
     }
@@ -582,8 +598,8 @@ public class Parser {
     return comment;
   }
 
-  private String comment() throws ParseError {
-    SourceCoordinate coord = getCoordinate();
+  protected String comment() throws ParseError {
+    int coord = getStartIndex();
 
     expect(BeginComment, null);
 
@@ -600,7 +616,7 @@ public class Parser {
       }
     }
     expect(EndComment, null);
-    language.getVM().reportSyntaxElement(CommentTag.class, getSource(coord));
+    reportSyntaxElement(CommentTag.class, getSource(coord));
     return comment;
   }
 
@@ -645,12 +661,14 @@ public class Parser {
       return;
     }
 
-    SourceCoordinate coord = getCoordinate();
     AccessModifier acccessModifier = accessModifier();
 
     comments();
-
+    int coord = getStartIndex();
     String slotName = slotDecl();
+
+    SourceSection source = getSource(coord);
+
     boolean immutable;
     ExpressionNode init;
 
@@ -666,8 +684,7 @@ public class Parser {
       immutable = false;
       init = null;
     }
-    mxnBuilder.addSlot(symbolFor(slotName), acccessModifier, immutable, init,
-        getSource(coord));
+    mxnBuilder.addSlot(symbolFor(slotName), acccessModifier, immutable, init, source);
   }
 
   private AccessModifier accessModifier() {
@@ -685,7 +702,15 @@ public class Parser {
     return AccessModifier.PROTECTED;
   }
 
-  private String slotDecl() throws ParseError {
+  protected String slotDecl() throws ParseError {
+    return slotOrLocalDecl();
+  }
+
+  protected String localDecl() throws ParseError {
+    return slotOrLocalDecl();
+  }
+
+  private String slotOrLocalDecl() throws ParseError {
     String id = identifier();
 
     comments();
@@ -712,7 +737,7 @@ public class Parser {
     expect(NewTerm, DelimiterOpeningTag.class);
     comments();
 
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     AccessModifier accessModifier = accessModifier();
     peekForNextSymbolFromLexer();
 
@@ -720,7 +745,7 @@ public class Parser {
       nestedClassDeclaration(accessModifier, coord, mxnBuilder);
       comments();
 
-      coord = getCoordinate();
+      coord = getStartIndex();
       accessModifier = accessModifier();
       peekForNextSymbolFromLexer();
     }
@@ -730,7 +755,7 @@ public class Parser {
       methodDeclaration(accessModifier, coord, mxnBuilder);
       comments();
 
-      coord = getCoordinate();
+      coord = getStartIndex();
       accessModifier = accessModifier();
     }
 
@@ -738,7 +763,7 @@ public class Parser {
   }
 
   private void nestedClassDeclaration(final AccessModifier accessModifier,
-      final SourceCoordinate coord, final MixinBuilder mxnBuilder)
+      final int coord, final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
     MixinBuilder nestedCls = classDeclaration(mxnBuilder, accessModifier);
     mxnBuilder.addNestedMixin(nestedCls.assemble(getSource(coord)));
@@ -748,7 +773,7 @@ public class Parser {
     return arrayContains(ss, sym);
   }
 
-  private boolean acceptIdentifier(final String identifier,
+  protected boolean acceptIdentifier(final String identifier,
       final Class<? extends Tag> tag) {
     if (sym == Identifier && identifier.equals(text)) {
       accept(Identifier, tag);
@@ -759,10 +784,10 @@ public class Parser {
 
   private boolean accept(final Symbol s, final Class<? extends Tag> tag) {
     if (sym == s) {
-      SourceCoordinate coord = tag == null ? null : getCoordinate();
+      int coord = tag == null ? 0 : getStartIndex();
       getSymbolFromLexer();
       if (tag != null) {
-        language.getVM().reportSyntaxElement(tag, getSource(coord));
+        reportSyntaxElement(tag, getSource(coord));
       }
       return true;
     }
@@ -771,10 +796,10 @@ public class Parser {
 
   private boolean acceptOneOf(final Symbol[] ss, final Class<? extends Tag> tag) {
     if (symIn(ss)) {
-      SourceCoordinate coord = tag == null ? null : getCoordinate();
+      int coord = tag == null ? 0 : getStartIndex();
       getSymbolFromLexer();
       if (tag != null) {
-        language.getVM().reportSyntaxElement(tag, getSource(coord));
+        reportSyntaxElement(tag, getSource(coord));
       }
       return true;
     }
@@ -820,19 +845,19 @@ public class Parser {
   }
 
   SourceSection getEmptySource() {
-    SourceCoordinate coord = getCoordinate();
-    return source.createSection(coord.charIndex, 0);
+    int coord = getStartIndex();
+    return source.createSection(coord, 0);
   }
 
-  public SourceSection getSource(final SourceCoordinate coord) {
-    assert lexer.getNumberOfCharactersRead() - coord.charIndex >= 0;
-    SourceSection ss = source.createSection(coord.charIndex,
-        Math.max(lexer.getNumberOfNonWhiteCharsRead() - coord.charIndex, 0));
+  public SourceSection getSource(final int startIndex) {
+    assert lexer.getNumberOfCharactersRead() - startIndex >= 0;
+    SourceSection ss = source.createSection(startIndex,
+        Math.max(lexer.getNumberOfNonWhiteCharsRead() - startIndex, 0));
     return ss;
   }
 
-  private void methodDeclaration(final AccessModifier accessModifier,
-      final SourceCoordinate coord, final MixinBuilder mxnBuilder)
+  protected MethodBuilder methodDeclaration(final AccessModifier accessModifier,
+      final int coord, final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
     MethodBuilder builder = new MethodBuilder(mxnBuilder, structuralProbe);
 
@@ -856,6 +881,7 @@ public class Parser {
       structuralProbe.recordNewMethod(meth.getIdentifier(), meth);
     }
     mxnBuilder.addMethod(meth);
+    return builder;
   }
 
   private void messagePattern(final MethodBuilder builder) throws ParseError {
@@ -878,29 +904,27 @@ public class Parser {
   }
 
   protected void unaryPattern(final MethodBuilder builder) throws ParseError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     builder.setSignature(unarySelector());
     builder.addMethodDefinitionSource(getSource(coord));
   }
 
   protected void binaryPattern(final MethodBuilder builder) throws ParseError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     builder.setSignature(binarySelector());
     builder.addMethodDefinitionSource(getSource(coord));
 
-    coord = getCoordinate();
-    builder.addArgument(symbolFor(argument()), getSource(coord));
+    argument(builder);
   }
 
   protected void keywordPattern(final MethodBuilder builder) throws ParseError {
     StringBuilder kw = new StringBuilder();
     do {
-      SourceCoordinate coord = getCoordinate();
+      int coord = getStartIndex();
       kw.append(keyword());
       builder.addMethodDefinitionSource(getSource(coord));
 
-      coord = getCoordinate();
-      builder.addArgument(symbolFor(argument()), getSource(coord));
+      argument(builder);
     } while (sym == Keyword);
 
     builder.setSignature(symbolFor(kw.toString()));
@@ -908,7 +932,7 @@ public class Parser {
 
   private ExpressionNode methodBlock(final MethodBuilder builder)
       throws ProgramDefinitionError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     expect(NewTerm, DelimiterOpeningTag.class);
 
     ExpressionNode methodBody = blockContents(builder);
@@ -921,7 +945,23 @@ public class Parser {
     return symbolFor(identifier());
   }
 
+  protected SSymbol implicitUnarySelector() throws ParseError {
+    return symbolFor(identifier());
+  }
+
+  protected SSymbol unarySendSelector() throws ParseError {
+    return symbolFor(identifier());
+  }
+
   protected SSymbol binarySelector() throws ParseError {
+    return binarySelectorImpl();
+  }
+
+  protected SSymbol binarySendSelector() throws ParseError {
+    return binarySelectorImpl();
+  }
+
+  private SSymbol binarySelectorImpl() throws ParseError {
     String s = text;
 
     // Checkstyle: stop   @formatter:off
@@ -960,9 +1000,10 @@ public class Parser {
     return s;
   }
 
-  private String argument() throws ParseError {
-    SourceCoordinate coord = getCoordinate();
-    String id = identifier();
+  protected Argument argument(final MethodBuilder builder) throws ParseError {
+    int coord = getStartIndex();
+    SSymbol name = symbolFor(identifier());
+    Argument arg = builder.addArgument(name, getSource(coord));
 
     comments();
 
@@ -970,8 +1011,8 @@ public class Parser {
 
     comments();
 
-    language.getVM().reportSyntaxElement(ArgumentTag.class, getSource(coord));
-    return id;
+    reportSyntaxElement(ArgumentTag.class, getSource(coord));
+    return arg;
   }
 
   private ExpressionNode blockContents(final MethodBuilder builder)
@@ -1002,18 +1043,18 @@ public class Parser {
     parsingSlotDefs -= 1;
   }
 
-  private void localDefinition(final MethodBuilder builder,
+  protected Local localDefinition(final MethodBuilder builder,
       final List<ExpressionNode> expressions) throws ProgramDefinitionError {
     comments();
     if (sym == Or) {
-      return;
+      return null;
     }
 
-    SourceCoordinate coord = getCoordinate();
-    String slotName = slotDecl();
+    int coord = getStartIndex();
+    String slotName = localDecl();
     SourceSection source = getSource(coord);
 
-    language.getVM().reportSyntaxElement(LocalVariableTag.class, source);
+    reportSyntaxElement(LocalVariableTag.class, source);
 
     boolean immutable;
     ExpressionNode initializer;
@@ -1038,11 +1079,13 @@ public class Parser {
       ExpressionNode writeNode = local.getWriteNode(0, initializer, write);
       expressions.add(writeNode);
     }
+
+    return local;
   }
 
   private ExpressionNode blockBody(final MethodBuilder builder,
       final List<ExpressionNode> expressions) throws ProgramDefinitionError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
 
     boolean sawPeriod = true;
 
@@ -1078,7 +1121,7 @@ public class Parser {
 
   private ExpressionNode result(final MethodBuilder builder)
       throws ProgramDefinitionError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
 
     ExpressionNode exp = expression(builder);
     accept(Period, StatementSeparatorTag.class);
@@ -1104,7 +1147,7 @@ public class Parser {
 
   protected ExpressionNode setterSends(final MethodBuilder builder)
       throws ProgramDefinitionError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
 
     if (sym != Symbol.SetterKeyword) {
       throw new ParseError("Expected setter send, but found instead a %(found)s",
@@ -1136,7 +1179,7 @@ public class Parser {
     }
 
     if (symIsMessageSend()) {
-      SourceCoordinate coord = getCoordinate();
+      int coord = getStartIndex();
       ExpressionNode[] lastReceiver = new ExpressionNode[] {exp};
 
       exp = messages(builder, lastReceiver);
@@ -1153,7 +1196,7 @@ public class Parser {
 
   private ExpressionNode msgCascade(final ExpressionNode nonEmptyMessage,
       final ExpressionNode lastReceiver, final MethodBuilder builder,
-      final SourceCoordinate coord) throws ProgramDefinitionError {
+      final int coord) throws ProgramDefinitionError {
     List<ExpressionNode> cascade = new ArrayList<>();
     SourceSection tmpSource = getSource(coord);
 
@@ -1201,7 +1244,7 @@ public class Parser {
   private ExpressionNode primary(final MethodBuilder builder) throws ProgramDefinitionError {
     switch (sym) {
       case Identifier: {
-        SourceCoordinate coord = getCoordinate();
+        int coord = getStartIndex();
         // Parse true, false, and nil as keyword-like constructs
         // (cf. Newspeak spec on reserved words)
         if (acceptIdentifier("true", LiteralTag.class)) {
@@ -1225,7 +1268,7 @@ public class Parser {
           return outerSend(builder);
         }
 
-        SSymbol selector = unarySelector();
+        SSymbol selector = implicitUnarySelector();
 
         comments();
 
@@ -1271,7 +1314,7 @@ public class Parser {
 
   private ExpressionNode outerSend(final MethodBuilder builder)
       throws ProgramDefinitionError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     expectIdentifier("outer", KeywordTag.class);
     String outer = identifier();
 
@@ -1289,7 +1332,7 @@ public class Parser {
       boolean eventualSend, SourceSection sendOp) throws ProgramDefinitionError {
     while (sym == OperatorSequence || symIn(binaryOpSyms)) {
       operand = binaryMessage(builder, operand, eventualSend, sendOp);
-      SourceCoordinate coord = getCoordinate();
+      int coord = getStartIndex();
 
       eventualSend = accept(EventualSend, KeywordTag.class);
       if (eventualSend) {
@@ -1303,7 +1346,7 @@ public class Parser {
       final ExpressionNode[] lastReceiver) throws ProgramDefinitionError {
     ExpressionNode msg = lastReceiver[0];
 
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     boolean eventualSend = accept(EventualSend, KeywordTag.class);
 
     SourceSection sendOp = null;
@@ -1344,8 +1387,8 @@ public class Parser {
 
   protected ExpressionNode unaryMessage(final ExpressionNode receiver,
       final boolean eventualSend, final SourceSection sendOperator) throws ParseError {
-    SourceCoordinate coord = getCoordinate();
-    SSymbol selector = unarySelector();
+    int coord = getStartIndex();
+    SSymbol selector = unarySendSelector();
 
     comments();
     return createMessageSend(selector, new ExpressionNode[] {receiver},
@@ -1353,7 +1396,7 @@ public class Parser {
   }
 
   private ExpressionNode tryInliningBinaryMessage(final MethodBuilder builder,
-      final ExpressionNode receiver, final SourceCoordinate coord, final SSymbol msg,
+      final ExpressionNode receiver, final int coord, final SSymbol msg,
       final ExpressionNode operand) throws ProgramDefinitionError {
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
     arguments.add(receiver);
@@ -1365,8 +1408,8 @@ public class Parser {
   protected ExpressionNode binaryMessage(final MethodBuilder builder,
       final ExpressionNode receiver, final boolean eventualSend,
       final SourceSection sendOperator) throws ProgramDefinitionError {
-    SourceCoordinate coord = getCoordinate();
-    SSymbol msg = binarySelector();
+    int coord = getStartIndex();
+    SSymbol msg = binarySendSelector();
 
     comments();
 
@@ -1393,7 +1436,7 @@ public class Parser {
     // a binary operand can receive unaryMessages
     // Example: 2 * 3 asString
     // is evaluated as 2 * (3 asString)
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     boolean evenutalSend = accept(EventualSend, KeywordTag.class);
     while (sym == Identifier) {
       SourceSection sendOp = null;
@@ -1424,7 +1467,7 @@ public class Parser {
       final boolean eventualSend, final SourceSection sendOperator)
       throws ProgramDefinitionError {
     assert !(!explicitRcvr && eventualSend);
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     List<ExpressionNode> arguments = new ArrayList<ExpressionNode>();
     StringBuilder kw = new StringBuilder();
 
@@ -1474,7 +1517,7 @@ public class Parser {
   private ExpressionNode formula(final MethodBuilder builder)
       throws ProgramDefinitionError {
     ExpressionNode operand = binaryOperand(builder);
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     boolean evenutalSend = accept(EventualSend, KeywordTag.class);
     SourceSection sendOp = null;
     if (evenutalSend) {
@@ -1509,8 +1552,8 @@ public class Parser {
     }
   }
 
-  private LiteralNode literalNumber() throws ParseError {
-    SourceCoordinate coord = getCoordinate();
+  protected LiteralNode literalNumber() throws ParseError {
+    int coord = getStartIndex();
 
     NumeralParser parser = lexer.getNumeralParser();
     expect(Numeral, null);
@@ -1549,8 +1592,8 @@ public class Parser {
     }
   }
 
-  private LiteralNode literalSymbol() throws ParseError {
-    SourceCoordinate coord = getCoordinate();
+  protected LiteralNode literalSymbol() throws ParseError {
+    int coord = getStartIndex();
 
     SSymbol symb;
     expect(Pound, null);
@@ -1564,22 +1607,21 @@ public class Parser {
     return new SymbolLiteralNode(symb).initialize(getSource(coord));
   }
 
-  private LiteralNode literalString() throws ParseError {
-    SourceCoordinate coord = getCoordinate();
+  protected LiteralNode literalString() throws ParseError {
+    int coord = getStartIndex();
     String s = string();
-
     return new StringLiteralNode(s).initialize(getSource(coord));
   }
 
-  private LiteralNode literalChar() throws ParseError {
-    SourceCoordinate coord = getCoordinate();
+  protected LiteralNode literalChar() throws ParseError {
+    int coord = getStartIndex();
     String s = character();
 
     return new StringLiteralNode(s).initialize(getSource(coord));
   }
 
   private LiteralNode literalArray(final MethodBuilder builder) throws ProgramDefinitionError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     List<ExpressionNode> expressions = new ArrayList<ExpressionNode>();
 
     expect(LCurly, DelimiterOpeningTag.class);
@@ -1634,10 +1676,10 @@ public class Parser {
    * Realizing this syntax requires more advanced look ahead than what is currently
    * provided by the lexer.
    */
-  private ExpressionNode literalObject(final MethodBuilder builder)
+  protected ExpressionNode literalObject(final MethodBuilder builder)
       throws ProgramDefinitionError {
     // Generate the class's signature
-    SourceSection source = getSource(getCoordinate());
+    SourceSection source = getSource(getStartIndex());
     SSymbol signature =
         symbolFor("objL@" + lexer.getCurrentLineNumber() + "@" + lexer.getCurrentColumn());
     MixinBuilder classBuilder = new MixinBuilder(builder,
@@ -1690,9 +1732,9 @@ public class Parser {
     return s;
   }
 
-  private ExpressionNode nestedBlock(final MethodBuilder builder)
+  protected ExpressionNode nestedBlock(final MethodBuilder builder)
       throws ProgramDefinitionError {
-    SourceCoordinate coord = getCoordinate();
+    int coord = getStartIndex();
     expect(NewBlock, DelimiterOpeningTag.class);
 
     builder.addArgument(Symbols.BLOCK_SELF, getEmptySource());
@@ -1701,7 +1743,7 @@ public class Parser {
       blockPattern(builder);
     }
 
-    builder.setBlockSignature(coord);
+    builder.setBlockSignature(source.getLineNumber(coord), source.getColumnNumber(coord));
 
     ExpressionNode expressions = blockContents(builder);
 
@@ -1719,8 +1761,7 @@ public class Parser {
   private void blockArguments(final MethodBuilder builder) throws ParseError {
     do {
       expect(Colon, KeywordTag.class);
-      SourceCoordinate coord = getCoordinate();
-      builder.addArgument(symbolFor(argument()), getSource(coord));
+      argument(builder);
     } while (sym == Colon);
   }
 
@@ -1737,5 +1778,10 @@ public class Parser {
 
   private static boolean printableSymbol(final Symbol sym) {
     return sym == Numeral || sym.compareTo(STString) >= 0;
+  }
+
+  protected void reportSyntaxElement(final Class<? extends Tag> type,
+      final SourceSection source) {
+    language.getVM().reportSyntaxElement(type, source);
   }
 }
