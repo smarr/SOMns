@@ -856,7 +856,7 @@ public class Parser {
     return ss;
   }
 
-  private void methodDeclaration(final AccessModifier accessModifier,
+  protected MethodBuilder methodDeclaration(final AccessModifier accessModifier,
       final int coord, final MixinBuilder mxnBuilder)
       throws ProgramDefinitionError {
     MethodBuilder builder = new MethodBuilder(mxnBuilder, structuralProbe);
@@ -881,6 +881,7 @@ public class Parser {
       structuralProbe.recordNewMethod(meth.getIdentifier(), meth);
     }
     mxnBuilder.addMethod(meth);
+    return builder;
   }
 
   private void messagePattern(final MethodBuilder builder) throws ParseError {
@@ -1026,11 +1027,11 @@ public class Parser {
     parsingSlotDefs -= 1;
   }
 
-  private void localDefinition(final MethodBuilder builder,
+  protected Local localDefinition(final MethodBuilder builder,
       final List<ExpressionNode> expressions) throws ProgramDefinitionError {
     comments();
     if (sym == Or) {
-      return;
+      return null;
     }
 
     int coord = getStartIndex();
@@ -1062,6 +1063,8 @@ public class Parser {
       ExpressionNode writeNode = local.getWriteNode(0, initializer, write);
       expressions.add(writeNode);
     }
+
+    return local;
   }
 
   private ExpressionNode blockBody(final MethodBuilder builder,
