@@ -315,6 +315,10 @@ public final class MixinBuilder extends ScopeBuilder<MixinScope> {
     initializerSource = sourceSection;
   }
 
+  public SourceSection getInitializerSource() {
+    return initializerSource;
+  }
+
   public void addMethod(final SInvokable meth) throws MixinDefinitionError {
     SSymbol name = meth.getSignature();
     if (!classSide) {
