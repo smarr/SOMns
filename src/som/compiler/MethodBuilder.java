@@ -371,7 +371,7 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     signature = sig;
   }
 
-  public void addArgument(final SSymbol arg, final SourceSection source) {
+  public Argument addArgument(final SSymbol arg, final SourceSection source) {
     if ((Symbols.SELF == arg || Symbols.BLOCK_SELF == arg) && arguments.size() > 0) {
       throw new IllegalStateException(
           "The self argument always has to be the first argument of a method");
@@ -383,6 +383,7 @@ public final class MethodBuilder extends ScopeBuilder<MethodScope>
     if (structuralProbe != null) {
       structuralProbe.recordNewVariable(argument);
     }
+    return argument;
   }
 
   public Local addMessageCascadeTemp(final SourceSection source) throws MethodDefinitionError {
